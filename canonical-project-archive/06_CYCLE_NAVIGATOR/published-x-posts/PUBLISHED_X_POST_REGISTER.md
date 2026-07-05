@@ -25,6 +25,7 @@ Use this format:
 | #12 | 2026-06-15 | June 15 - June 21, 2026 | CN_012_PUBLISHED_X_POST_2026-06-15.md | FULL_TEXT_ARCHIVED | User-provided from Grok/X profile |
 | #11 | 2026-06-08 | June 8 - June 14, 2026 | CN_011_PUBLISHED_X_POST_2026-06-08.md | FULL_TEXT_ARCHIVED | User-provided from Grok/X profile |
 | #9 | 2026-05-25 | May 25 - May 31, 2026 | CN_009_PUBLISHED_X_POST_2026-05-25.md | FULL_TEXT_ARCHIVED | User-provided from Grok/X profile |
+| #8 | 2026-05-18 | May 18 - May 24, 2026 | CN_008_PUBLISHED_X_POST_2026-05-18.md | FULL_TEXT_ARCHIVED | User-provided from Grok/X profile |
 
 ## Status values
 
@@ -45,3 +46,4 @@ Only add a row when a specific published post has been received or verified.
 - 2026-07-05: Added CN #12 published X post.
 - 2026-07-05: Added CN #11 published X post.
 - 2026-07-05: Added CN #9 published X post.
+- 2026-07-05: Added CN #8 published X post.
