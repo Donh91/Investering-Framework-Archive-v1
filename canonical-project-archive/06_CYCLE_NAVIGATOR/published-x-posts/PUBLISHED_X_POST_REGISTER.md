@@ -20,7 +20,7 @@ Use this format:
 
 | CN | Published date | Week range | File | Status | Notes |
 |---|---|---|---|---|---|
-| TBD | TBD | TBD | TBD | Waiting for Grok/X source | User will provide posts one by one |
+| #14 | 2026-06-29 | June 29 - July 5, 2026 | CN_014_PUBLISHED_X_POST_2026-06-29.md | FULL_TEXT_ARCHIVED | User-provided from Grok/X profile |
 
 ## Status values
 
@@ -36,3 +36,4 @@ Only add a row when a specific published post has been received or verified.
 ## Update log
 
 - 2026-07-05: Created.
+- 2026-07-05: Added CN #14 published X post.
