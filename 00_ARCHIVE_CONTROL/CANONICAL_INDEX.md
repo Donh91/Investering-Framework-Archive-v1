@@ -56,6 +56,35 @@ Secondary domains:
 05_CYCLE_NAVIGATOR/templates
 ```
 
+### Canonical Backbone engine
+
+```text
+Current canonical engine as of 2026-07-05: Canonical Weekly Backbone Engine v3.0.
+CWB v2.1 remains LEGACY_FALLBACK.
+```
+
+Relevant file:
+
+```text
+01_CORE_FRAMEWORK/engines/2026-07-05__canonical-weekly-backbone-engine-v3-framework-operating-system__canonical.md
+```
+
+Status:
+
+```text
+CANONICAL
+```
+
+Operational effect:
+
+```text
+GitHub-first Framework Operating System.
+CANONICAL_INDEX.md is read first.
+Highest active DATA PING version is discovered automatically.
+Shadow rows must be checked or explicitly marked inaccessible.
+Every weekly run must include VERSION_UPGRADE_DIAGNOSTIC and ARCHIVE_RECOMMENDATION.
+```
+
 ---
 
 ## 2026-07 entries
@@ -162,6 +191,61 @@ Boundary:
 
 ```text
 FRED Macro context cannot determine recovery, rotation, rebuy, deployment, official row or FNP/PATH alone.
+```
+
+---
+
+### 2026-07-05, Canonical Weekly Backbone Engine v3.0
+
+Path:
+
+```text
+01_CORE_FRAMEWORK/engines/2026-07-05__canonical-weekly-backbone-engine-v3-framework-operating-system__canonical.md
+```
+
+Status:
+
+```text
+CANONICAL
+```
+
+Contains:
+
+```text
+GitHub-first Framework Operating System
+CANONICAL_INDEX.md-first rule
+Highest active DATA PING discovery
+DATA PING TRIGGER PROTOCOL v0.1 shadow ingestion
+Repository completeness scoring
+Run-status logic: AUTO_PASS / MANUAL_BACKFILL_PASS / BLOCKED
+Adaptive weekly VERSION_UPGRADE_DIAGNOSTIC
+Canonical Learning Queue
+Archive recommendation rule
+CWB v2.1 = LEGACY_FALLBACK
+CWB v3.0 = CANONICAL_CURRENT when GitHub connector access exists
+```
+
+Use for:
+
+```text
+Canonical Backbone
+Master Monday readiness
+Weekly RAW Learning Snapshot
+GitHub Archive Sync
+Auto Stabilizer
+DATA PING V5+ handover
+Framework version governance
+```
+
+Operational rule:
+
+```text
+Read GitHub first when access exists.
+Use CANONICAL_INDEX.md as the navigation layer.
+Use highest active DATA PING version.
+Do not silently ignore shadow rows.
+Do not score unverified ranges.
+Always end with version-upgrade diagnostic and archive recommendation.
 ```
 
 ---
