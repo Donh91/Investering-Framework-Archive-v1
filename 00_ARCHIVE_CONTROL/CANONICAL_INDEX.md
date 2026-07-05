@@ -120,6 +120,52 @@ Keep logging.
 
 ---
 
+### 2026-07-05, FRED Classic Targeted Series Production Upgrade
+
+Path:
+
+```text
+04_MARKET_LEARNING/macro_shadow/2026-07-05__fred-classic-targeted-series-production-upgrade__canonical.md
+```
+
+Status:
+
+```text
+CANONICAL
+```
+
+Contains:
+
+```text
+FRED Classic v1.2 targeted-series production status
+FRED_MACRO_STATUS = BACKTEST_READY_FULL
+43/43 observations PASS
+5/5 metadata PASS
+8/8 vintage/backtest PASS
+FRED Bulk = discovery only
+FRED Targeted Series = production macro context
+FRED Vintage = backtest integrity layer
+Macro Shadow digest and boundary rules
+```
+
+Use for:
+
+```text
+Master Monday macro calibration
+Weekly RAW macro context
+Research Lab historical replay
+Point-in-time backtest control
+Macro Shadow Layer
+```
+
+Boundary:
+
+```text
+FRED Macro context cannot determine recovery, rotation, rebuy, deployment, official row or FNP/PATH alone.
+```
+
+---
+
 ## Folder map
 
 Full routing rules:
