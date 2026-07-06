@@ -85,6 +85,35 @@ Shadow rows must be checked or explicitly marked inaccessible.
 Every weekly run must include VERSION_UPGRADE_DIAGNOSTIC and ARCHIVE_RECOMMENDATION.
 ```
 
+### Farside ETF Flow Ledger
+
+```text
+Current canonical ETF-flow source integration as of 2026-07-06: Farside ETF Flow Ledger for DATA PING.
+```
+
+Relevant file:
+
+```text
+02_DATA_PING/source_integrations/2026-07-06__farside-etf-flow-ledger-data-ping-integration__canonical.md
+```
+
+Status:
+
+```text
+CANONICAL
+```
+
+Operational effect:
+
+```text
+Farside API is accepted as primary machine-readable ETF-flow source for DATA PING.
+BTC, ETH and SOL ETF-flow must be logged as print-vs-trend ledgers.
+BTC 2026-07-02 first positive print is verified, but BTC W27 trend remains negative.
+ETH ETF flow is relatively stronger and near-neutral weekly.
+SOL ETF flow is shadow-only selective L1 context.
+Farside NAV metadata is source context only.
+```
+
 ---
 
 ## 2026-07 entries
@@ -246,6 +275,65 @@ Use highest active DATA PING version.
 Do not silently ignore shadow rows.
 Do not score unverified ranges.
 Always end with version-upgrade diagnostic and archive recommendation.
+```
+
+---
+
+### 2026-07-06, Farside ETF Flow Ledger DATA PING Integration
+
+Path:
+
+```text
+02_DATA_PING/source_integrations/2026-07-06__farside-etf-flow-ledger-data-ping-integration__canonical.md
+```
+
+Status:
+
+```text
+CANONICAL
++
+DATA_PING_SOURCE_INTEGRATION
++
+MASTER_MONDAY_FLOW_CALIBRATION
+```
+
+Contains:
+
+```text
+Farside API as primary machine-readable ETF-flow source
+BTC ETF flow ledger with latest print, 3D/5D/7D net, weekly net and streaks
+ETH ETF flow ledger with core ex-ETHE and ETHE legacy-drag split
+SOL ETF flow ledger as selective L1 shadow-only sensor
+Relative ETF flow snapshot for BTC vs ETH vs SOL
+Farside NAV metadata classification as source context only
+Holiday / zero-row / staking-fee metadata rules
+Print-vs-trend status labels
+Governance boundary for DATA PING and Master Monday
+```
+
+Use for:
+
+```text
+DATA PING V4+
+Master Monday W28 flow calibration
+RAW 1–3D and RAW 5–7D confidence
+ETF-era absorption diagnostics
+Early Rotation Watch diagnostics
+FNP opportunity-cost visibility
+Cycle Navigator calibration context
+```
+
+Operational state at archive time:
+
+```text
+BTC ETF latest print verified positive at +223.5M on 2026-07-02.
+BTC W27 ETF net remains negative at -526.1M.
+ETH ETF latest print positive at +29.0M and W27 near-neutral at -13.7M.
+SOL W27 small positive at +5.7M, shadow-only.
+ETF missing blocker removed.
+Flow trend not confirmed.
+Validated de-escalation candidate, not confirmed recovery or rotation.
+Rebuy remains locked pending persistence.
 ```
 
 ---
