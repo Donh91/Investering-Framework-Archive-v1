@@ -142,6 +142,34 @@ They do not overwrite automation-generated pre-DATA-PING Master Monday files.
 Only FRAMEWORK_RATIFIED_FINAL should drive Cycle Navigator and weekly scoring unless explicitly marked provisional.
 ```
 
+### Cycle Navigator mobile-first visual template
+
+```text
+Current canonical Cycle Navigator image standard as of 2026-07-06: Mobile-first three-section visual template.
+```
+
+Relevant file:
+
+```text
+05_CYCLE_NAVIGATOR/templates/2026-07-06__cycle-navigator-mobile-first-image-template__canonical.md
+```
+
+Status:
+
+```text
+CANONICAL
+```
+
+Operational effect:
+
+```text
+Future Cycle Navigator weekly images should be vertical / mobile-first and iPhone-readable.
+Keep only three image sections: Week Outlook, Altseason Countdown and Track Record Summary.
+Remove separate Weekly Outlook and Precision Methodology panels from the image.
+Preserve the established phase timeline and do not invent new actual phases.
+Highlight Selective Alt Rotation as the phase to watch closely before broad altseason.
+```
+
 ---
 
 ## 2026-07 entries
@@ -453,6 +481,52 @@ Use for:
 Audit trail for how active DATA PING V4 changed W28 Master Monday
 Potential source for later 03_framework_ratified_final.md
 Cycle Navigator handoff only after ratification
+```
+
+---
+
+### 2026-07-06, Cycle Navigator Mobile-First Image Template
+
+Path:
+
+```text
+05_CYCLE_NAVIGATOR/templates/2026-07-06__cycle-navigator-mobile-first-image-template__canonical.md
+```
+
+Status:
+
+```text
+CANONICAL
++
+CYCLE_NAVIGATOR_VISUAL_TEMPLATE
++
+MOBILE_FIRST_STANDARD
+```
+
+Contains:
+
+```text
+Mobile-first Cycle Navigator image standard
+Three required image sections only: Week Outlook, Altseason Countdown, Track Record Summary
+Removal of separate Weekly Outlook and Precision Methodology panels from the image
+Altseason Countdown phase-line guardrails
+Selective Alt Rotation as the phase to watch closely
+CN #15 reference values and future image prompt block
+```
+
+Use for:
+
+```text
+Future Cycle Navigator weekly images
+Visual consistency after CN #15
+Mobile/iPhone-friendly X posting
+Cycle Navigator template generation
+```
+
+Operational effect:
+
+```text
+Future images should be simpler, vertical and iPhone-readable while preserving the established Cycle Navigator phase logic.
 ```
 
 ---
