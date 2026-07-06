@@ -1,0 +1,65 @@
+{
+  "as_of": "2026-07-06",
+  "status": "PARTIAL",
+  "live_feed": "DATA PING V4",
+  "source_roles": {
+    "custom_gpt_user_verified_actuals": "truth_layer",
+    "grok": "shadow_adversarial_context",
+    "claude_research_lab": "audit_challenger",
+    "chatgpt": "governance_ratification",
+    "github": "durable_archive_canonical_memory"
+  },
+  "available_shadow_inputs": [
+    {
+      "name": "DATA PING V4 operations update",
+      "path": "changelog/2026-07-05_framework_operations_update_data_ping_v4_shadow_macro.md",
+      "status": "CANONICAL_ARCHIVE",
+      "contains": [
+        "Recovery Attempt Quality Doctrine",
+        "PTR sequence learning",
+        "FNP diagnostic ARMED/WATCH",
+        "breadth hierarchy",
+        "source role governance",
+        "Master Monday must-read notes"
+      ]
+    },
+    {
+      "name": "Farside ETF Flow Ledger",
+      "path": "02_DATA_PING/source_integrations/2026-07-06__farside-etf-flow-ledger-data-ping-integration__canonical.md",
+      "status": "CANONICAL",
+      "contains": [
+        "BTC ETF print-vs-trend ledger",
+        "ETH ETF print-vs-trend ledger",
+        "SOL selective L1 shadow ledger",
+        "relative ETF flow snapshot",
+        "Master Monday flow calibration rule"
+      ]
+    },
+    {
+      "name": "FRED macro shadow status",
+      "path": "04_MARKET_LEARNING/macro_shadow/2026-07-05__fred-classic-targeted-series-production-upgrade__canonical.md",
+      "status": "CANONICAL",
+      "contains": [
+        "FRED_MACRO_STATUS BACKTEST_READY_FULL",
+        "macro shadow digest",
+        "macro boundary rules"
+      ]
+    },
+    {
+      "name": "2026-W27 verified range ledger",
+      "path": "03_WEEKLY_OPERATIONS/range_audits/2026-07-05__weekly-range-2026-w27__verified.md",
+      "status": "VERIFIED_ACTUAL_RANGE"
+    }
+  ],
+  "missing_or_not_separately_addressable": [
+    "separate silent RAW 1-3d row file",
+    "separate silent RAW 5-7d row file",
+    "separate source-conflict row file",
+    "separate calibration tag file",
+    "separate Master Monday eligibility note file",
+    "prior 2026-W27 official forecast ledger"
+  ],
+  "master_monday_rule": "Do not mark SHADOW_ROWS_NOT_ACCESSIBLE when canonical shadow summaries are available but separate row files are missing. Mark PARTIAL and list missing row classes.",
+  "range_rule": "Verified actual ranges can be used for market evaluation even if prior forecast ledger is missing. In that case exact range score is partial, not price-unverified.",
+  "next_week_required_upgrade": "Generate separate shadow row files or append rows to a weekly shadow ledger before Master Monday output."
+}
