@@ -1,0 +1,43 @@
+{
+  "as_of": "2026-07-06",
+  "timezone": "Europe/Copenhagen",
+  "repository": "Donh91/Investering-Framework-Archive-v1",
+  "canonical_index": "00_ARCHIVE_CONTROL/CANONICAL_INDEX.md",
+  "active_data_ping": "DATA PING V4",
+  "highest_active_data_ping_version": 4,
+  "data_ping_governance": "HIGHEST_ACTIVE_DATA_PING_VERSION_WINS",
+  "latest_master_monday": {
+    "week": "2026-W28",
+    "date": "2026-07-06",
+    "path": "03_WEEKLY_OPERATIONS/master_monday/2026-07-06__master-monday-2026-w28__raw.md",
+    "pointer": "03_WEEKLY_OPERATIONS/master_monday/latest_master_monday.json",
+    "run_status": "MANUAL_BACKFILL_PASS"
+  },
+  "latest_verified_weekly_range": {
+    "week": "2026-W27",
+    "run_id": "WEEKLY_RANGE_2026_27_20260705_2010",
+    "path": "03_WEEKLY_OPERATIONS/range_audits/2026-07-05__weekly-range-2026-w27__verified.md",
+    "pointer": "03_WEEKLY_OPERATIONS/range_audits/latest_verified_weekly_range.json",
+    "price_source": "USER_VERIFIED"
+  },
+  "latest_forecast_ledger": {
+    "week": "2026-W28",
+    "path": "03_WEEKLY_OPERATIONS/forecast_ledger/2026-07-06__forecast-ledger-2026-w28__official.md",
+    "pointer": "03_WEEKLY_OPERATIONS/forecast_ledger/latest_forecast_ledger.json"
+  },
+  "latest_shadow_ledger": {
+    "pointer": "03_WEEKLY_OPERATIONS/shadow_ledger/latest_shadow_ledger_manifest.json",
+    "status": "PARTIAL"
+  },
+  "latest_macro_status": {
+    "fred_macro_status": "BACKTEST_READY_FULL",
+    "path": "04_MARKET_LEARNING/macro_shadow/2026-07-05__fred-classic-targeted-series-production-upgrade__canonical.md"
+  },
+  "latest_etf_ledger": {
+    "status": "CANONICAL",
+    "path": "02_DATA_PING/source_integrations/2026-07-06__farside-etf-flow-ledger-data-ping-integration__canonical.md"
+  },
+  "master_monday_preflight_rule": "Read CANONICAL_INDEX.md, latest_valid.json, latest_verified_weekly_range.json, latest_forecast_ledger.json, latest_shadow_ledger_manifest.json, ETF ledger and FRED macro before producing output.",
+  "range_precision_rule": "If actual range exists but prior forecast is missing, mark ACTUAL_RANGE_VERIFIED + FORECAST_LEDGER_MISSING + RANGE_SCORE_PARTIAL, not PRICE_UNVERIFIED.",
+  "status": "CANONICAL_LATEST_POINTER"
+}
