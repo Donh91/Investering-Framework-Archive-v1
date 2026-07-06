@@ -114,6 +114,34 @@ SOL ETF flow is shadow-only selective L1 context.
 Farside NAV metadata is source context only.
 ```
 
+### Master Monday archive version chain
+
+```text
+Current canonical Master Monday archive process as of 2026-07-06: Master Monday Version-Chain Protocol.
+```
+
+Relevant file:
+
+```text
+03_WEEKLY_OPERATIONS/master_monday/process/2026-07-06__master-monday-archive-version-chain-protocol__canonical.md
+```
+
+Status:
+
+```text
+CANONICAL
+```
+
+Operational effect:
+
+```text
+Master Monday is archived as a weekly version chain, not one overwriteable file.
+PRE_DATA_PING, DATA_PING_DERIVED, FRAMEWORK_RATIFIED_FINAL and CYCLE_NAVIGATOR_HANDOFF are separate states.
+DATA PING-derived Master Mondays belong in 03_WEEKLY_OPERATIONS/master_monday/YYYY-W##/02_data_ping_derived_raw.md.
+They do not overwrite automation-generated pre-DATA-PING Master Monday files.
+Only FRAMEWORK_RATIFIED_FINAL should drive Cycle Navigator and weekly scoring unless explicitly marked provisional.
+```
+
 ---
 
 ## 2026-07 entries
@@ -334,6 +362,97 @@ ETF missing blocker removed.
 Flow trend not confirmed.
 Validated de-escalation candidate, not confirmed recovery or rotation.
 Rebuy remains locked pending persistence.
+```
+
+---
+
+### 2026-07-06, Master Monday Archive Version-Chain Protocol
+
+Path:
+
+```text
+03_WEEKLY_OPERATIONS/master_monday/process/2026-07-06__master-monday-archive-version-chain-protocol__canonical.md
+```
+
+Status:
+
+```text
+CANONICAL
++
+MASTER_MONDAY_ARCHIVE_PROCESS
++
+WEEKLY_OPERATIONS_GOVERNANCE
+```
+
+Contains:
+
+```text
+Master Monday weekly version-chain folder structure
+PRE_DATA_PING vs DATA_PING_DERIVED vs FRAMEWORK_RATIFIED_FINAL separation
+Rule that DATA PING-derived Master Mondays must not overwrite system-generated pre-DATA-PING Master Mondays
+Rule that final ratified Master Monday is the only normal Cycle Navigator / weekly score basis
+Weekly folder standard: 03_WEEKLY_OPERATIONS/master_monday/YYYY-W##/
+File standard: 01_system_generated_pre_data_ping.md, 02_data_ping_derived_raw.md, 03_framework_ratified_final.md, 04_cycle_navigator_handoff_notes.md
+```
+
+Use for:
+
+```text
+Master Monday archiving
+GitHub Archive Sync
+Canonical Backbone weekly run checks
+Cycle Navigator handoff discipline
+Weekly RAW Learning Snapshot source traceability
+```
+
+Operational effect:
+
+```text
+Master Mondays are now stored as process states, not overwritten outputs.
+DATA PING-derived Master Mondays are preserved as audit/history but not automatically final.
+FRAMEWORK_RATIFIED_FINAL must be explicit before Cycle Navigator uses the file as final basis.
+```
+
+---
+
+### 2026-07-06, W28 DATA PING-derived Master Monday raw
+
+Path:
+
+```text
+03_WEEKLY_OPERATIONS/master_monday/2026-W28/02_data_ping_derived_raw.md
+```
+
+Status:
+
+```text
+DATA_PING_DERIVED
++
+OPERATIONAL_HISTORY
++
+NOT_FINAL_UNLESS_PROMOTED
+```
+
+Contains:
+
+```text
+DATA PING V4-derived W28 Master Monday state
+BTC 61.9K survival test passed
+BTC 63.3K reclaimed intraday but no completed close above 63.3K yet
+3 BTC closes above 61.9K
+3 ETH/BTC closes above 0.0275
+ETF print positive, trend not confirmed
+24H breadth weak, 7D breadth strong
+OI down while price higher
+F2-watch improved, no clean F2, no rotation
+```
+
+Use for:
+
+```text
+Audit trail for how active DATA PING V4 changed W28 Master Monday
+Potential source for later 03_framework_ratified_final.md
+Cycle Navigator handoff only after ratification
 ```
 
 ---
