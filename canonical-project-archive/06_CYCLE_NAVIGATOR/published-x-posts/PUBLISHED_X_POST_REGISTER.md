@@ -8,6 +8,7 @@ Applies to: published Cycle Navigator posts on X
 
 | CN | Date | File | Status |
 |---|---|---|---|
+| #15 | 2026-07-06 | CN_015_PUBLISHED_X_POST_2026-07-06.md | FULL_TEXT_ARCHIVED |
 | #14 | 2026-06-29 | CN_014_PUBLISHED_X_POST_2026-06-29.md | FULL_TEXT_ARCHIVED |
 | #13 | 2026-06-22 | CN_013_PUBLISHED_X_POST_2026-06-22.md | FULL_TEXT_ARCHIVED |
 | #12 | 2026-06-15 | CN_012_PUBLISHED_X_POST_2026-06-15.md | FULL_TEXT_ARCHIVED |
@@ -28,4 +29,5 @@ Applies to: published Cycle Navigator posts on X
 
 ## Update log
 
+- 2026-07-06: CN #15 full published post archived.
 - 2026-07-05: CN #3 upgraded to chunked full archive.
