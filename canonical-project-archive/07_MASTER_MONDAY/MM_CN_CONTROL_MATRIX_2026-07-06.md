@@ -3,12 +3,25 @@
 Status: Active control matrix
 Date added: 2026-07-06
 Applies to: Master Monday, Cycle Navigator, verified actuals, Forecast Ledger
+Canonical role: SUBORDINATE_EVIDENCE_LAYER
+
+## Canonical hierarchy
+
+This file is subordinate to:
+
+1. 00_ARCHIVE_CONTROL/CANONICAL_INDEX.md
+2. 01_CORE_FRAMEWORK/engines/2026-07-05__canonical-weekly-backbone-engine-v3-framework-operating-system__canonical.md
+3. Highest active DATA PING version governance
+4. Verified actuals governance
+
+This matrix is an index and evidence-control layer only.
+It must not overrule Canonical Weekly Backbone Engine v3.0, DATA PING highest-version-wins, verified actuals, trigger protocol, VERSION_UPGRADE_DIAGNOSTIC, or ARCHIVE_RECOMMENDATION.
 
 ## Purpose
 
 This file is the operational bridge between the public Cycle Navigator archive and the Master Monday decision archive.
 
-Read this before using historical CN or MM records.
+Read this before using historical CN or MM records, after reading CANONICAL_INDEX and the canonical engine.
 
 ## Source files
 
@@ -44,6 +57,7 @@ Read this before using historical CN or MM records.
 5. Public score remains historical public record and should not be silently rewritten.
 6. Gaps must stay visible until source text is found.
 7. Do not invent missing CN #6 or CN #10.
+8. This matrix is subordinate to canonical framework governance.
 
 ## Current gaps
 
@@ -60,12 +74,15 @@ Read this before using historical CN or MM records.
 
 Before producing or scoring a new Cycle Navigator output, read:
 
-1. this control matrix
-2. the published CN register
-3. the Master Monday register
-4. the verified weekly actuals file
-5. the highest active DATA PING version
+1. CANONICAL_INDEX
+2. Canonical Weekly Backbone Engine v3.0
+3. this control matrix
+4. the published CN register
+5. the Master Monday register
+6. the verified weekly actuals file
+7. the highest active DATA PING version
 
 ## Update log
 
 - 2026-07-06: Created.
+- 2026-07-06: Patched as subordinate evidence layer under canonical governance.
