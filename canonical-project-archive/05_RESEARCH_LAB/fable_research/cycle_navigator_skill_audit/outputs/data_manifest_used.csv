@@ -1,0 +1,10 @@
+file,description,usage,purpose,confidence
+btc_ohlc_master_p1b.csv,BTC OHLC 2023-2026-07-02,USED,"E7 BTC B&H, CN independent actuals, baselines",HIGH (6/6 anchors P1b)
+eth_ohlc_investing_2015_2026.csv,ETH OHLC 2016-2026-06-14,USED,"E7 ETH B&H, CN #7 ETH actual",MEDIUM (Investing.com PDF parse; ends 06-14)
+ethbtc_daily_2023_2026.csv,ETH/BTC daily 2023-2026-06-14,USED,E2 rotation gate,MEDIUM (derived; ends 06-14)
+cn_range_metrics_seed.csv,CN #2-#8 forecast rows,USED (#2-#7 only),CN precision + phase/rotation,MEDIUM (actuals self-reported eval sections)
+weekly_canonical_actuals_W22_W27.csv,User-verified weekly actuals,NOT USED for CN scoring,CN #2-#7 predate W22; no overlap,HIGH but non-overlapping
+btc_etf_flow_daily.csv,ETF flows 2024-2026,CONTEXT ONLY,not needed for P2 blocks,HIGH
+master_monday_sourcebacked_rows_v0_2_abridged.csv,MM internal rows,NOT SCORED,kept separate from CN per rule 6,MIXED
+daily_replay_rows_partial_compact.csv,32 gate-replay rows,CONTEXT ONLY,mechanical scaffolding,PARTIAL
+liquidity.csv,1 partial TVL row,DATA_MISSING,stablecoin endpoint failed,LOW
