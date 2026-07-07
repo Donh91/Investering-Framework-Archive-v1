@@ -1,0 +1,9 @@
+item_name,item_type,required_for,impact_if_missing,status
+Forecast Ledger raw export,CSV,Range calibration / confidence reliability,CRITICAL - precision cannot be fully audited,STILL_MISSING
+Framework decision ledger,CSV,E7 framework-vs-benchmark return/Sharpe,CRITICAL - framework edge is PROXY_LIMITED without it,STILL_MISSING
+Canonical DATA PING 22:00 rows,CSV,"Meta-score audit, regime/rotation replay",HIGH - blocks independent phase/rotation labels,STILL_MISSING
+Meta-score formulas AQS/TPS/SEI/DRS/HDS/FTP,MD,Legacy redundancy audit,HIGH,STILL_MISSING
+Independent phase/rotation labels,CSV,Confirm regime skill independently,HIGH - current phase match is self-graded,STILL_MISSING
+Sequence Ledger export,CSV,F->G/F->I base rates,HIGH,STILL_MISSING
+ETHBTC + ETH beyond 2026-06-14,CSV,Complete current-episode E2/rotation,MEDIUM,PARTIAL (ends 06-14)
+CN independent actual ledger,CSV,Replace CN self-reported actuals,HIGH - self-reported actuals shown biased vs OHLC,STILL_MISSING
