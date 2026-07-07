@@ -1,0 +1,1 @@
+/mnt/data/price_ranges_archive_unpacked/2026-07-07__btc_usd_yahoo_finance_weekly_range_blocks_2020.csv
