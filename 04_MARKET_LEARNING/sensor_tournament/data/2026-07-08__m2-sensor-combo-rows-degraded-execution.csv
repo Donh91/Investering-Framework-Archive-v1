@@ -1,0 +1,29 @@
+run_id,track,combo_id,sensors,n_events,n_warnings,recall_wave,recall_storm,far_wave,far_storm,median_lead_C12,trim_edge_pct,insurance_ratio,missed_events,marginal_value_vs_ablation,verdict,confidence,data_quality,notes
+M2_DEGRADED_20260708,PULLBACK,A_only,A1+A2+A3,9,71,9/9,4/4,0.24,0.47,23.5,-1.3,10.2,0,"vs C: +15d lead, -19.8pp trim",SHADOW_ONLY(urgency-only),,DEGRADED,duMean=1.11;clust=0.63
+M2_DEGRADED_20260708,PULLBACK,C_only,C1+C2,9,38,8/9,4/4,0.18,0.62,8.5,+18.5,4.4,0,baseline family,KEEP(lean warning),,DEGRADED,clust=0.26 mest uafh.
+M2_DEGRADED_20260708,PULLBACK,D_only,D1+D2+D3,9,40,4/9,4/4,0.0,0.23,7.0,+7.5,13.0,0,baseline,KEEP(confirmation),,DEGRADED,0 FA
+M2_DEGRADED_20260708,PULLBACK,A+C,A1+A2+A3+C1+C2,9,102,9/9,4/4,0.23,0.49,23.5,-6.8,7.9,0,"vs C_only: +15d lead, -25.3pp trim",SHADOW_ONLY(urgency-only),,DEGRADED,
+M2_DEGRADED_20260708,PULLBACK,A+D,A..+D..,9,95,9/9,4/4,0.23,0.39,23.5,-1.3,9.5,0,D tilfoejer intet til A,NEEDS_MORE_ROWS,,DEGRADED,
+M2_DEGRADED_20260708,PULLBACK,C+D,C1+C2+D1+D2+D3,9,71,8/9,4/4,0.15,0.42,9.5,+16.3,6.8,0,vs D_only: +8.8pp trim +2.5d,KEEP(challenger-core),,DEGRADED,TRIAD-kerne
+M2_DEGRADED_20260708,PULLBACK,A+C+D,alle 8,9,122,9/9,4/4,0.23,0.43,23.5,-6.8,7.6,0,vs A+C: Δ=0.0 paa ALT,REDUCE_WEIGHT(som trim-trigger),,DEGRADED,D marginal=0 i union
+M2_DEGRADED_20260708,PULLBACK,A_wo_A3,A1+A2,9,38,7/9,4/4,0.14,0.31,20.5,+23.1,20.9,0,"vs A_only: +24.4pp trim, -0.10 FAR","SHADOW_ONLY(prune-kandidat, kraever forward rows)",,DEGRADED,A3 = naesten al FA-cost
+M2_DEGRADED_20260708,PULLBACK,A3_only,A3,9,39,7/9,4/4,0.27,0.48,16.0,+3.2,7.9,0,5/7 af alle FALSE,ONLY_WORKS_IN_REGIME_X(outflow-regime),,DEGRADED,regime-blind i rallies
+M2_DEGRADED_20260708,PULLBACK,C2_only,C2,9,35,8/9,3/4,0.18,0.67,9.0,+18.5,3.5,1,billigste enkeltregel,NEEDS_MORE_ROWS,,DEGRADED,miss=PW05? nej se rapport
+M2_DEGRADED_20260708,PULLBACK,D3_only,D3,9,28,3/9,4/4,0.0,0.18,6.0,-0.4,11.6,0,ren men sen og trim-flad,KEEP(confirmation-only),,DEGRADED,
+M2_DEGRADED_20260708,PULLBACK,BEST2:A2+D1,A2+D1,9,26,5/9,4/4,0.2,,17.0,+35.5,16.1,0,in-sample-selektion over 28 par,NEEDS_MORE_ROWS(selection bias),,DEGRADED,ofrer wave-recall
+M2_DEGRADED_20260708,PULLBACK,BEST3:A2+C1+D1,A2+C1+D1,9,32,5/9,4/4,0.2,,17.0,+35.5,18.5,0,in-sample-selektion over 56 tripler,NEEDS_MORE_ROWS(selection bias),,DEGRADED,
+M2_DEGRADED_20260708,PULLBACK,FULLSTACK_DEGRADED,A+C+D(+G sep.),9,122,9/9,4/4,0.23,0.43,23.5,-6.8,7.6,0,,REDUCE_WEIGHT(exec)/KEEP(urgency),,DEGRADED,
+
+run_id,track,combo_id,features,n_crosses,fake_fast_caught,fake_standard_caught,slow_bleed_caught,real_candidate_retained,false_rejection_risk,overfit_risk,verdict,confidence,data_quality,notes
+M2_DEGRADED_20260708,ROTATION,gate0275_alone,gate>=0.0275,16,2/8,1/4,0/1,2/3,1 real afvist,lav (kanonisk),KEEP(repair-marker only)/REJECT(standalone-signal),,DEGRADED,81% pooled fake
+M2_DEGRADED_20260708,ROTATION,gate0300_alone,gate=0.0300,16,4/8,3/4,0/1,1/3,2 real afvist,lav,REJECT(kvalitetslaesning af niveau),,DEGRADED,hoejeste fake-rate 6/7
+M2_DEGRADED_20260708,ROTATION,hold3,hold>=3,16,7/8,0/4,0/1,3/3,0,circ. delvis,KEEP(minimum-gulv),,DEGRADED,filtrerer kun FF
+M2_DEGRADED_20260708,ROTATION,hold14,hold>=14,16,8/8,4/4,0/1,3/3,0,CIRKULARITET(SB def.),NEEDS_MORE_ROWS,,DEGRADED,misser slow-bleed
+M2_DEGRADED_20260708,ROTATION,hold30,hold>=30,16,8/8,4/4,1/1,3/3,0,FULD CIRKULARITET(=label),"ingen info, definition",,DEGRADED,—
+M2_DEGRADED_20260708,ROTATION,BASE_DEPTH10,depth<=-10% ILLUS,16,8/8,4/4,1/1,3/3,0,OVERFIT_RISK_HIGH,SHADOW_ONLY,,DEGRADED,perfekt in-sample
+M2_DEGRADED_20260708,ROTATION,BELOW60_50,below60>=50 ILLUS,16,8/8,4/4,1/1,3/3,0,OVERFIT + restates depth,SHADOW_ONLY,,DEGRADED,korreleret m. depth
+M2_DEGRADED_20260708,ROTATION,BTC_EMA50,BTC>EMA50,16,7/8,3/4,1/1,3/3,0,moderat (uafh. af ratio),SHADOW_ONLY(exploratory),,DEGRADED,mest uafhaengige feature
+M2_DEGRADED_20260708,ROTATION,SIG_A,GRIND-accept,16,0/8,1/4,0/1,1/3,2 real afvist,—,REJECT(single label),,DEGRADED,flagger real som spike
+M2_DEGRADED_20260708,ROTATION,SIG_B,GRIND-accept,16,4/8,0/4,1/1,3/3,0,same-sample origin,SHADOW_ONLY(dual-log),,DEGRADED,5/5 UP-kryds fake in-sample
+M2_DEGRADED_20260708,ROTATION,DEPTH+BTC,kombi ILLUS,16,8/8,4/4,1/1,3/3,0,OVERFIT_RISK_HIGH,SHADOW_ONLY,,DEGRADED,perfekt = advarselsprofil
+M2_DEGRADED_20260708,ROTATION,LADDER,fresh climb<=5d,16,8/8,4/4,1/1,3/3,0,n(real)=1,NEEDS_MORE_ROWS,,DEGRADED,
