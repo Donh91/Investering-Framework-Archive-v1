@@ -1,6 +1,6 @@
 # Rule and Evidence Registry
 
-**Dato:** 2026-07-10  
+**Dato:** 2026-07-11  
 **Status:** CANONICAL  
 **Område:** governance / evidence / rule survival  
 **Primary folder:** `01_CORE_FRAMEWORK/governance/`  
@@ -67,7 +67,7 @@ LEGACY
 | BTC_PARTIAL_PERMISSION | FORWARD_TEST | Tests asset-tiered BTC permission versus WAIT | 0 valid divergence rows at audit | WAIT | NEEDS_ROWS | Research Lab / Governance | Suspend if no decision divergence in defined review window; promote only on outcome-adjusted benefit |
 | GRADUATED_ALT_DEPLOYMENT | BLOCKED | Tests staged alt permission | 0 valid rows | WAIT | DATA_BLOCKED | Research Lab | Remains blocked until breadth, BTC.D and deployment fields are complete |
 | FNP_OPPORTUNITY_COST | ACTIVE_LEDGER_REQUIREMENT | Measures genuine missed action versus correct restraint | insufficient cumulative live rows | WAIT / frozen horizon | NEEDS_ROWS | Governance / Research Lab | Kill or redesign if horizons are not frozen or no usable divergence is produced |
-| TECHDEV_MACRO_COMPASS | ACTIVE | Supports roadmap and PREPARE context, never standalone DEPLOY | source claims exist; scoring ledger new | simple timing/range benchmarks pending | PARTIALLY_SUPPORTED | Governance / Research Lab | Execution authority remains zero; reduce weight if claim ledger shows poor calibration |
+| TECHDEV_MACRO_COMPASS | ACTIVE_RESEARCH_INPUT | Supports roadmap and PREPARE context, never standalone DEPLOY or execution | 120 source-backed claim rows plus 7 historical signal snapshots / 0 outcome rows | category-specific time, range, trade and action baselines pending | PARTIALLY_SUPPORTED / NEEDS_OUTCOME_ROWS | Governance / Research Lab | Execution authority remains zero; retain original claims and revisions; reduce weight only after frozen category-specific calibration shows poor performance |
 | MULTI_PING_AGGREGATION | FEATURE_TEST_ONLY | May reduce false state flips | 0 benchmarked rows | latest ping alone | WRITTEN_NOT_PROVEN | DATA PING / Research Lab | Kill as named concept if no false-flip improvement or delay is excessive |
 | CHIEF_ACTION_COMPRESSION | ACTIVE_CONTRACT | Compresses framework judgment into clear action language | no reproducibility series found | same input repeated | NEEDS_TEST | Governance | Modify if identical inputs yield materially inconsistent classes |
 | CN_PUBLIC_TRACK_RECORD | LOCKED | Prevents unverified historical precision marketing | historical reconciliation incomplete | independent ledger | GOVERNANCE_LOCK | Cycle Navigator | Unlock only after verified actuals, baselines and separate score categories are reconciled |
@@ -75,12 +75,29 @@ LEGACY
 
 ---
 
+## TechDev evidence boundary
+
+```text
+SOURCE_DOCUMENTS_ACCOUNTED_FOR: 94
+SOURCE_BACKED_CLAIM_ROWS: 120
+HISTORICAL_SIGNAL_SNAPSHOTS: 7
+OUTCOME_ROWS: 0
+SCORING_STATUS: BLOCKED_PENDING_FROZEN_METHOD
+LIVE_FRAMEWORK_WEIGHT_CHANGE: NONE
+```
+
+Historical ingestion supports governance hygiene but does not itself prove forecast accuracy.
+
+---
+
 ## Review rule
 
 Every weekly review must update only fields supported by new evidence.
 
-Do not convert `NEEDS_ROWS` into `FUNCTIONING` because a schema or prompt exists.
+Do not convert `NEEDS_ROWS` into `FUNCTIONING` because a schema, prompt or source archive exists.
 
 Do not convert `SPEC_INCOMPLETE` into a market state.
 
 Do not convert `DATA_BLOCKED` into daily pseudo-rows.
+
+Do not convert source-backed claims into scored outcome rows.
