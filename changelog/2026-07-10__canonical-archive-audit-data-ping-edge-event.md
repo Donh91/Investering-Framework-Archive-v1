@@ -22,6 +22,7 @@ Primary checks:
 - 24H outcome integrity
 - pending 72H/7D/event-close rows
 - weekly Canonical Backbone archive reconciliation
+- preservation of calibration-relevant RAW rows
 
 ---
 
@@ -31,6 +32,7 @@ Primary checks:
 02_DATA_PING/protocols/2026-07-10__data-ping-hybrid-v0-5-1-auto-edge-escalator-consolidated__canonical.md
 02_DATA_PING/live_state_handover/2026-07-10__active-gate-and-edge-event-registry__canonical.md
 02_DATA_PING/live_state_handover/2026-07-08__pullback-edge-20260708-01__event-ledger.md
+03_WEEKLY_OPERATIONS/weekly_raw/2026-W28__pullback-edge-20260708-01__raw-ledger.md
 04_MARKET_LEARNING/stress_flush/2026-07-08__pullback-edge-20260708-01__calibration-v3.md
 03_WEEKLY_OPERATIONS/canonical_backbone/2026-07-10__edge-event-archive-reconciliation-addendum__canonical.md
 00_ARCHIVE_CONTROL/2026-07-10__archive-candidate-queue__operational.md
@@ -81,6 +83,17 @@ EVENT_CLOSE: PENDING
 
 ---
 
+## RAW preservation status
+
+```text
+W28_EDGE_EVENT_RAW_LEDGER: WRITTEN
+MATERIAL_STATE_TRANSITIONS: PRESERVED
+CALIBRATION_RELEVANT_SENSOR_ROWS: PRESERVED
+ROUTINE_UNCHANGED_PINGS: NOT_PROMOTED_TO_CANONICAL_INDEX
+```
+
+---
+
 ## Unresolved archive items
 
 - canonical first WATCH anchor
@@ -126,6 +139,7 @@ Future Canonical Weekly Backbone runs must inspect:
 - archive-candidate queue
 - runtime gate/event registry
 - open edge-event ledgers
+- weekly RAW event ledgers
 - matured and pending outcome rows
 - source lineage and supersession
 
