@@ -1,21 +1,26 @@
 # Canonical Archive Index
 
-**Dato:** 2026-07-05  
-**Status:** Canonical archive control  
-**Formål:** Hurtig oversigt over aktuelle canonical eller operationelt vigtige arkivfiler.
+**Dato:** 2026-07-10  
+**Status:** CANONICAL_ARCHIVE_CONTROL  
+**Formål:** Navigation til de nyeste operative og canonical framework-filer.  
+**Previous index history:** Preserved in Git commit history; this refresh compresses the navigation layer and removes outdated duplication.
 
 ---
 
 ## How to use this index
 
-This file is the navigation layer.
+```text
+1. Read this file first.
+2. If a newer canonical file conflicts with an older file, the newer canonical file wins.
+3. Read runtime registries separately from permanent methodology.
+4. Read index addenda when listed below.
+5. Do not treat RAW or shadow rows as canonical learning without main-framework ratification.
+```
 
-Use it to find the latest operative rule before relying on older archive files.
-
-Rule:
+Full routing rules:
 
 ```text
-If a newer canonical file conflicts with an older archive file, the newer canonical file wins.
+00_ARCHIVE_CONTROL/ARCHIVE_MAP_AND_ROUTING.md
 ```
 
 ---
@@ -26,44 +31,136 @@ If a newer canonical file conflicts with an older archive file, the newer canoni
 
 ```text
 Highest active DATA PING version wins.
-Current active feed as of 2026-07-05: DATA PING V4.
+Current active operational feed: DATA PING V4.
+Older versions: ARCHIVE CONTEXT unless explicitly reactivated.
 ```
 
-Relevant file:
+Primary operational receipt:
 
 ```text
 changelog/2026-07-05_framework_operations_update_data_ping_v4_shadow_macro.md
 ```
 
+### DATA PING role governance
+
+```text
+Custom GPT = verified DATA PING truth-layer.
+Grok = standalone shadow sensor.
+ChatGPT/main framework = governance, interpretation and ratification.
+```
+
+Canonical file:
+
+```text
+02_DATA_PING/protocols/2026-07-06__custom-gpt-truth-layer-grok-shadow-v10-26__canonical.md
+```
+
+### DATA PING Hybrid v0.5.1
+
+```text
+Current canonical edge-state, auto-escalation, downgrade, event-ledger and calibration protocol.
+```
+
+Canonical file:
+
+```text
+02_DATA_PING/protocols/2026-07-10__data-ping-hybrid-v0-5-1-auto-edge-escalator-consolidated__canonical.md
+```
+
 Status:
 
 ```text
-CANONICAL_ARCHIVE
+CANONICAL_CURRENT
 ```
 
-Primary domain:
+Supersedes as active edge protocol:
 
 ```text
-03_WEEKLY_OPERATIONS/operations_updates
+02_DATA_PING/protocols/2026-07-07__data-ping-alert-router-v0-1__canonical.md
+STATUS: SUPERSEDED_AS_ACTIVE_EDGE_PROTOCOL / RETAIN_HISTORICAL_CONTEXT
 ```
 
-Secondary domains:
+Operational effect:
+
+- dynamic active gate types, not permanent price hard-coding
+- EDGE_STATE separated from ALERT_STATUS
+- mandatory downgrade check
+- EDGE_MODE_COMPACT versus EDGE_MODE_FULL
+- hourly ledger when available
+- historical anchors owned by main framework
+- calibration rows require framework-approved anchors
+- fixed methodology separated from runtime configuration
+- DATA PING supplies evidence; main framework supplies judgment
+
+### Active gate and edge-event runtime registry
 
 ```text
-02_DATA_PING/protocols
-04_MARKET_LEARNING/recovery_attempts
-04_MARKET_LEARNING/macro_shadow
-05_CYCLE_NAVIGATOR/templates
+02_DATA_PING/live_state_handover/2026-07-10__active-gate-and-edge-event-registry__canonical.md
 ```
 
-### Canonical Backbone engine
+Status:
 
 ```text
-Current canonical engine as of 2026-07-05: Canonical Weekly Backbone Engine v3.0.
-CWB v2.1 remains LEGACY_FALLBACK.
+CANONICAL_RUNTIME_CONFIGURATION
 ```
 
-Relevant file:
+Current runtime event:
+
+```text
+EDGE_EVENT_ID: PULLBACK_EDGE_20260708_01
+FRAMEWORK_EDGE_STATE: WATCH
+ALERT_STATUS: RESOLVING
+EVENT_STATUS: OPEN_RESOLVING
+```
+
+Runtime values may be superseded by a newer explicit main-framework registry without changing DATA PING methodology.
+
+### Active edge-event ledger
+
+```text
+02_DATA_PING/live_state_handover/2026-07-08__pullback-edge-20260708-01__event-ledger.md
+```
+
+Status:
+
+```text
+OPERATIONAL_EVENT_LEDGER / APPEND_ONLY
+```
+
+Contains the material path from early warning through PRESENT, downgrade and resolving WATCH.
+
+### Active pullback calibration
+
+```text
+04_MARKET_LEARNING/stress_flush/2026-07-08__pullback-edge-20260708-01__calibration-v3.md
+```
+
+Status:
+
+```text
+CALIBRATION_ACTIVE / PROVISIONAL_LEARNING_ONLY
+```
+
+Version chain:
+
+```text
+VERSION_1: SUPERSEDED
+VERSION_2: SUPERSEDED
+VERSION_3: CORRECTED_ACTIVE
+```
+
+Outcome status:
+
+```text
+24H: MATURED
+72H: PENDING
+7D: PENDING
+EVENT_CLOSE: PENDING
+```
+
+No final learning is ratified before sufficient maturity.
+
+### Canonical Weekly Backbone engine
 
 ```text
 01_CORE_FRAMEWORK/engines/2026-07-05__canonical-weekly-backbone-engine-v3-framework-operating-system__canonical.md
@@ -72,26 +169,33 @@ Relevant file:
 Status:
 
 ```text
-CANONICAL
+CWB_V3.0_CANONICAL_CURRENT
+CWB_V2.1_LEGACY_FALLBACK
 ```
 
-Operational effect:
+Mandatory operative addendum:
 
 ```text
-GitHub-first Framework Operating System.
-CANONICAL_INDEX.md is read first.
-Highest active DATA PING version is discovered automatically.
-Shadow rows must be checked or explicitly marked inaccessible.
-Every weekly run must include VERSION_UPGRADE_DIAGNOSTIC and ARCHIVE_RECOMMENDATION.
+03_WEEKLY_OPERATIONS/canonical_backbone/2026-07-10__edge-event-archive-reconciliation-addendum__canonical.md
 ```
+
+The addendum requires future weekly runs to inspect newest DATA PING, Master Monday, Cycle Navigator, framework governance, archive-candidate queue, runtime registry, open edge events, matured/pending outcomes, supersession and lineage.
+
+### Archive candidate queue
+
+```text
+00_ARCHIVE_CONTROL/2026-07-10__archive-candidate-queue__operational.md
+```
+
+Status:
+
+```text
+OPERATIONAL_PENDING_QUEUE
+```
+
+Only unresolved candidates remain in the queue.
 
 ### Farside ETF Flow Ledger
-
-```text
-Current canonical ETF-flow source integration as of 2026-07-06: Farside ETF Flow Ledger for DATA PING.
-```
-
-Relevant file:
 
 ```text
 02_DATA_PING/source_integrations/2026-07-06__farside-etf-flow-ledger-data-ping-integration__canonical.md
@@ -105,22 +209,12 @@ CANONICAL
 
 Operational effect:
 
-```text
-Farside API is accepted as primary machine-readable ETF-flow source for DATA PING.
-BTC, ETH and SOL ETF-flow must be logged as print-vs-trend ledgers.
-BTC 2026-07-02 first positive print is verified, but BTC W27 trend remains negative.
-ETH ETF flow is relatively stronger and near-neutral weekly.
-SOL ETF flow is shadow-only selective L1 context.
-Farside NAV metadata is source context only.
-```
+- Farside is the primary machine-readable ETF-flow source
+- BTC/ETH/SOL print-versus-trend ledgers
+- pending/zero/holiday handling
+- latest print separated from 3D/5D/7D trend
 
 ### Master Monday archive version chain
-
-```text
-Current canonical Master Monday archive process as of 2026-07-06: Master Monday Version-Chain Protocol.
-```
-
-Relevant file:
 
 ```text
 03_WEEKLY_OPERATIONS/master_monday/process/2026-07-06__master-monday-archive-version-chain-protocol__canonical.md
@@ -132,23 +226,24 @@ Status:
 CANONICAL
 ```
 
-Operational effect:
+Weekly states remain separate:
 
 ```text
-Master Monday is archived as a weekly version chain, not one overwriteable file.
-PRE_DATA_PING, DATA_PING_DERIVED, FRAMEWORK_RATIFIED_FINAL and CYCLE_NAVIGATOR_HANDOFF are separate states.
-DATA PING-derived Master Mondays belong in 03_WEEKLY_OPERATIONS/master_monday/YYYY-W##/02_data_ping_derived_raw.md.
-They do not overwrite automation-generated pre-DATA-PING Master Monday files.
-Only FRAMEWORK_RATIFIED_FINAL should drive Cycle Navigator and weekly scoring unless explicitly marked provisional.
+01_system_generated_pre_data_ping.md
+02_data_ping_derived_raw.md
+03_framework_ratified_final.md
+04_cycle_navigator_handoff_notes.md
 ```
 
-### Cycle Navigator mobile-first visual template
+Only framework-ratified final should normally drive Cycle Navigator and weekly scoring.
+
+Current W28 raw file:
 
 ```text
-Current canonical Cycle Navigator image standard as of 2026-07-06: Mobile-first three-section visual template.
+03_WEEKLY_OPERATIONS/master_monday/2026-W28/02_data_ping_derived_raw.md
 ```
 
-Relevant file:
+### Cycle Navigator mobile-first template
 
 ```text
 05_CYCLE_NAVIGATOR/templates/2026-07-06__cycle-navigator-mobile-first-image-template__canonical.md
@@ -160,83 +255,7 @@ Status:
 CANONICAL
 ```
 
-Operational effect:
-
-```text
-Future Cycle Navigator weekly images should be vertical / mobile-first and iPhone-readable.
-Keep only three image sections: Week Outlook, Altseason Countdown and Track Record Summary.
-Remove separate Weekly Outlook and Precision Methodology panels from the image.
-Preserve the established phase timeline and do not invent new actual phases.
-Highlight Selective Alt Rotation as the phase to watch closely before broad altseason.
-```
-
----
-
-## 2026-07 entries
-
-### 2026-07-05, DATA PING V4 + Shadow Ledger + Macro Ops Update
-
-Path:
-
-```text
-changelog/2026-07-05_framework_operations_update_data_ping_v4_shadow_macro.md
-```
-
-Status:
-
-```text
-CANONICAL_ARCHIVE
-+
-WEEKLY_LEARNING
-+
-GOVERNANCE_OPERATIONS_UPDATE
-```
-
-Contains:
-
-```text
-DATA PING V4 Sensor Discipline Doctrine
-Recovery Attempt Quality Doctrine
-GeckoTerminal / DEX shadow-only rule
-FRED targeted-series rule
-Grok role governance
-Breadth hierarchy
-FNP / opportunity-cost status
-Shadow Ledger Automation Patch
-DATA PING Trigger Protocol v0.1 handover
-Cycle Navigator staged rotation language
-Master Monday must-read notes
-Current operational state
-```
-
-Use for:
-
-```text
-Master Monday
-Weekly RAW Learning Snapshot
-Canonical Backbone
-GitHub Archive Sync
-Auto Stabilizer
-DATA PING V5+ handover
-Cycle Navigator calibration
-```
-
-Operational state at archive time:
-
-```text
-Recovery-attempt alive.
-Quality fragile.
-No chase.
-No rebuy.
-No confirmed rotation.
-Keep logging.
-```
-
----
-
-### 2026-07-05, FRED Classic Targeted Series Production Upgrade
-
-Path:
+### FRED macro shadow production rule
 
 ```text
 04_MARKET_LEARNING/macro_shadow/2026-07-05__fred-classic-targeted-series-production-upgrade__canonical.md
@@ -245,493 +264,100 @@ Path:
 Status:
 
 ```text
-CANONICAL
+CANONICAL_MACRO_SHADOW
 ```
 
-Contains:
+FRED macro context cannot determine recovery, rotation, rebuy, deployment or official execution state alone.
+
+---
+
+## 2026-07-10 audit and index receipt
+
+Index addendum with detailed archive classification:
 
 ```text
-FRED Classic v1.2 targeted-series production status
-FRED_MACRO_STATUS = BACKTEST_READY_FULL
-43/43 observations PASS
-5/5 metadata PASS
-8/8 vintage/backtest PASS
-FRED Bulk = discovery only
-FRED Targeted Series = production macro context
-FRED Vintage = backtest integrity layer
-Macro Shadow digest and boundary rules
+00_ARCHIVE_CONTROL/2026-07-10__index-addendum-data-ping-hybrid-edge-event-archive.md
 ```
 
-Use for:
+Canonical audit receipt:
 
 ```text
-Master Monday macro calibration
-Weekly RAW macro context
-Research Lab historical replay
-Point-in-time backtest control
-Macro Shadow Layer
-```
-
-Boundary:
-
-```text
-FRED Macro context cannot determine recovery, rotation, rebuy, deployment, official row or FNP/PATH alone.
+changelog/2026-07-10__canonical-archive-audit-data-ping-edge-event.md
 ```
 
 ---
 
-### 2026-07-05, Canonical Weekly Backbone Engine v3.0
-
-Path:
+## Source precedence
 
 ```text
-01_CORE_FRAMEWORK/engines/2026-07-05__canonical-weekly-backbone-engine-v3-framework-operating-system__canonical.md
+1. User-verified actuals / Custom GPT verified DATA PING truth-layer
+2. Main-framework accepted canonical state and runtime configuration
+3. GitHub canonical governance and archive history
+4. Grok shadow context
+5. Claude / Research Lab challenger context
+6. Memory-only or unverified context
 ```
 
-Status:
-
-```text
-CANONICAL
-```
-
-Contains:
-
-```text
-GitHub-first Framework Operating System
-CANONICAL_INDEX.md-first rule
-Highest active DATA PING discovery
-DATA PING TRIGGER PROTOCOL v0.1 shadow ingestion
-Repository completeness scoring
-Run-status logic: AUTO_PASS / MANUAL_BACKFILL_PASS / BLOCKED
-Adaptive weekly VERSION_UPGRADE_DIAGNOSTIC
-Canonical Learning Queue
-Archive recommendation rule
-CWB v2.1 = LEGACY_FALLBACK
-CWB v3.0 = CANONICAL_CURRENT when GitHub connector access exists
-```
-
-Use for:
-
-```text
-Canonical Backbone
-Master Monday readiness
-Weekly RAW Learning Snapshot
-GitHub Archive Sync
-Auto Stabilizer
-DATA PING V5+ handover
-Framework version governance
-```
-
-Operational rule:
-
-```text
-Read GitHub first when access exists.
-Use CANONICAL_INDEX.md as the navigation layer.
-Use highest active DATA PING version.
-Do not silently ignore shadow rows.
-Do not score unverified ranges.
-Always end with version-upgrade diagnostic and archive recommendation.
-```
+If Grok conflicts with Custom GPT verified values, Custom GPT wins. Shadow sources may reduce confidence but cannot unlock rebuy, rotation or deployment alone.
 
 ---
 
-### 2026-07-06, Farside ETF Flow Ledger DATA PING Integration
-
-Path:
+## Permanent methodology versus runtime configuration
 
 ```text
-02_DATA_PING/source_integrations/2026-07-06__farside-etf-flow-ledger-data-ping-integration__canonical.md
+FIXED METHODOLOGY:
+- source hierarchy and fallbacks
+- calculation formulas
+- missing-data discipline
+- persistence definitions
+- status-label logic
+- calibration hygiene
+
+RUNTIME CONFIGURATION:
+- active gates
+- active event ID
+- framework-approved historical anchors
+- accepted current framework state
 ```
 
-Status:
-
-```text
-CANONICAL
-+
-DATA_PING_SOURCE_INTEGRATION
-+
-MASTER_MONDAY_FLOW_CALIBRATION
-```
-
-Contains:
-
-```text
-Farside API as primary machine-readable ETF-flow source
-BTC ETF flow ledger with latest print, 3D/5D/7D net, weekly net and streaks
-ETH ETF flow ledger with core ex-ETHE and ETHE legacy-drag split
-SOL ETF flow ledger as selective L1 shadow-only sensor
-Relative ETF flow snapshot for BTC vs ETH vs SOL
-Farside NAV metadata classification as source context only
-Holiday / zero-row / staking-fee metadata rules
-Print-vs-trend status labels
-Governance boundary for DATA PING and Master Monday
-```
-
-Use for:
-
-```text
-DATA PING V4+
-Master Monday W28 flow calibration
-RAW 1–3D and RAW 5–7D confidence
-ETF-era absorption diagnostics
-Early Rotation Watch diagnostics
-FNP opportunity-cost visibility
-Cycle Navigator calibration context
-```
-
-Operational state at archive time:
-
-```text
-BTC ETF latest print verified positive at +223.5M on 2026-07-02.
-BTC W27 ETF net remains negative at -526.1M.
-ETH ETF latest print positive at +29.0M and W27 near-neutral at -13.7M.
-SOL W27 small positive at +5.7M, shadow-only.
-ETF missing blocker removed.
-Flow trend not confirmed.
-Validated de-escalation candidate, not confirmed recovery or rotation.
-Rebuy remains locked pending persistence.
-```
+Runtime configuration is framework-owned. Missing runtime config does not stop raw data collection.
 
 ---
 
-### 2026-07-06, Master Monday Archive Version-Chain Protocol
-
-Path:
-
-```text
-03_WEEKLY_OPERATIONS/master_monday/process/2026-07-06__master-monday-archive-version-chain-protocol__canonical.md
-```
-
-Status:
-
-```text
-CANONICAL
-+
-MASTER_MONDAY_ARCHIVE_PROCESS
-+
-WEEKLY_OPERATIONS_GOVERNANCE
-```
-
-Contains:
-
-```text
-Master Monday weekly version-chain folder structure
-PRE_DATA_PING vs DATA_PING_DERIVED vs FRAMEWORK_RATIFIED_FINAL separation
-Rule that DATA PING-derived Master Mondays must not overwrite system-generated pre-DATA-PING Master Mondays
-Rule that final ratified Master Monday is the only normal Cycle Navigator / weekly score basis
-Weekly folder standard: 03_WEEKLY_OPERATIONS/master_monday/YYYY-W##/
-File standard: 01_system_generated_pre_data_ping.md, 02_data_ping_derived_raw.md, 03_framework_ratified_final.md, 04_cycle_navigator_handoff_notes.md
-```
-
-Use for:
-
-```text
-Master Monday archiving
-GitHub Archive Sync
-Canonical Backbone weekly run checks
-Cycle Navigator handoff discipline
-Weekly RAW Learning Snapshot source traceability
-```
-
-Operational effect:
-
-```text
-Master Mondays are now stored as process states, not overwritten outputs.
-DATA PING-derived Master Mondays are preserved as audit/history but not automatically final.
-FRAMEWORK_RATIFIED_FINAL must be explicit before Cycle Navigator uses the file as final basis.
-```
-
----
-
-### 2026-07-06, W28 DATA PING-derived Master Monday raw
-
-Path:
-
-```text
-03_WEEKLY_OPERATIONS/master_monday/2026-W28/02_data_ping_derived_raw.md
-```
-
-Status:
-
-```text
-DATA_PING_DERIVED
-+
-OPERATIONAL_HISTORY
-+
-NOT_FINAL_UNLESS_PROMOTED
-```
-
-Contains:
-
-```text
-DATA PING V4-derived W28 Master Monday state
-BTC 61.9K survival test passed
-BTC 63.3K reclaimed intraday but no completed close above 63.3K yet
-3 BTC closes above 61.9K
-3 ETH/BTC closes above 0.0275
-ETF print positive, trend not confirmed
-24H breadth weak, 7D breadth strong
-OI down while price higher
-F2-watch improved, no clean F2, no rotation
-```
-
-Use for:
-
-```text
-Audit trail for how active DATA PING V4 changed W28 Master Monday
-Potential source for later 03_framework_ratified_final.md
-Cycle Navigator handoff only after ratification
-```
-
----
-
-### 2026-07-06, Cycle Navigator Mobile-First Image Template
-
-Path:
-
-```text
-05_CYCLE_NAVIGATOR/templates/2026-07-06__cycle-navigator-mobile-first-image-template__canonical.md
-```
-
-Status:
-
-```text
-CANONICAL
-+
-CYCLE_NAVIGATOR_VISUAL_TEMPLATE
-+
-MOBILE_FIRST_STANDARD
-```
-
-Contains:
-
-```text
-Mobile-first Cycle Navigator image standard
-Three required image sections only: Week Outlook, Altseason Countdown, Track Record Summary
-Removal of separate Weekly Outlook and Precision Methodology panels from the image
-Altseason Countdown phase-line guardrails
-Selective Alt Rotation as the phase to watch closely
-CN #15 reference values and future image prompt block
-```
-
-Use for:
-
-```text
-Future Cycle Navigator weekly images
-Visual consistency after CN #15
-Mobile/iPhone-friendly X posting
-Cycle Navigator template generation
-```
-
-Operational effect:
-
-```text
-Future images should be simpler, vertical and iPhone-readable while preserving the established Cycle Navigator phase logic.
-```
-
----
-
-## Folder map
-
-Full routing rules:
-
-```text
-00_ARCHIVE_CONTROL/ARCHIVE_MAP_AND_ROUTING.md
-```
-
----
-
-## Placement rule for future updates
-
-### Governance / framework-wide rules
-
-Place in:
-
-```text
-01_CORE_FRAMEWORK/governance/
-```
-
-Examples:
-
-```text
-F12
-F12.5
-FNP
-Kill Criteria
-Research Lab governance
-Precedence maps
-```
-
-### DATA PING behavior
-
-Place in:
-
-```text
-02_DATA_PING/
-```
-
-Examples:
-
-```text
-DATA PING Trigger Protocol
-Version governance
-Source QA
-Custom GPT patches
-Sensor rules
-```
-
-### Weekly operations
-
-Place in:
-
-```text
-03_WEEKLY_OPERATIONS/
-```
-
-Examples:
-
-```text
-Master Monday
-Weekly RAW
-Canonical Backbone
-Automation patches
-Operations updates
-Verified range audits
-```
-
-### Market learning
-
-Place in:
-
-```text
-04_MARKET_LEARNING/
-```
-
-Examples:
-
-```text
-ETF-era absorption
-Recovery Attempt Quality
-Rotation survival
-Stress / flush learning
-FRED macro shadow
-FNP opportunity-cost learning
-```
-
-### Cycle Navigator
-
-Place in:
-
-```text
-05_CYCLE_NAVIGATOR/
-```
-
-Examples:
-
-```text
-Weekly posts
-Visual templates
-Altseason language
-Precision score calibration
-Checkpoints
-```
-
-### Research Lab
-
-Place in:
-
-```text
-06_RESEARCH_LAB/
-```
-
-Examples:
-
-```text
-Claude / Grok audit summaries
-Historical replay summaries
-Forward tests
-Red-team outputs
-```
-
-### Prompts and agents
-
-Place in:
-
-```text
-07_PROMPTS_AND_AGENTS/
-```
-
-Examples:
-
-```text
-Claude prompt standards
-Custom GPT prompt patches
-GitHub archive agent prompts
-Research Lab prompt templates
-```
-
-### Source material
-
-Place in:
-
-```text
-08_SOURCE_MATERIAL/
-```
-
-Examples:
-
-```text
-TechDev source notes
-CoinGecko reports
-FRED references
-Glassnode notes
-Screenshots / external evidence
-```
-
-### Unclear
-
-Place temporarily in:
-
-```text
-09_ARCHIVE_INBOX/to_classify/
-```
+## Weekly archive reconciliation rule
+
+Every Canonical Weekly Backbone run must:
+
+1. read this index first;
+2. determine highest active DATA PING version;
+3. inspect newest DATA PING, Master Monday, Cycle Navigator and governance discussion;
+4. read archive-candidate queue;
+5. reconcile open edge events and matured outcomes;
+6. preserve supersession and source lineage;
+7. clear processed candidates and retain unresolved blockers;
+8. never promote RAW directly into canonical learning;
+9. report archive drift, missing lineage and write failures;
+10. end with VERSION_UPGRADE_DIAGNOSTIC and ARCHIVE_RECOMMENDATION.
 
 ---
 
 ## Index maintenance rule
 
-Add a file to this index if it is:
+Index files that are:
 
 - canonical
 - operationally important
 - governance relevant
-- used by Master Monday
-- used by DATA PING
-- used by Cycle Navigator
-- used by Research Lab
-- a major weekly learning update
+- used by DATA PING, Master Monday, Cycle Navigator or Research Lab
+- major accepted weekly learning
 
-Do not index every source note.
-
----
-
-## Archive health note
-
-The archive should stay useful.
-
-Avoid archive inflation.
+Do not index every raw ping or source note.
 
 Preferred pattern:
 
 ```text
 Many raw inputs
-→ one distilled canonical note
+→ one append-only event/weekly ledger
+→ one distilled canonical note when justified
 → index entry
-```
-
-Not:
-
-```text
-Every chat output
-→ canonical source
 ```
