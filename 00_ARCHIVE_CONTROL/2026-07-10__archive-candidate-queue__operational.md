@@ -8,24 +8,13 @@
 
 ---
 
-## Processed in this audit
+## Queue state
 
 ```text
-PROCESSED:
-- DATA PING Hybrid v0.5.1 consolidated protocol
-- stateful EDGE_STATE versus ALERT_STATUS standard
-- mandatory downgrade check
-- EDGE MODE COMPACT versus FULL
-- DATA PING invariance clarification
-- historical state anchor ownership
-- active gate and edge-event runtime registry
-- PULLBACK_EDGE_20260708_01 append-only event ledger
-- calibration version chain v1/v2 SUPERSEDED, v3 ACTIVE
-- matured 24H outcome
-- weekly backbone archive reconciliation addendum
+PROCESSED_ITEMS_PRESENT: NO
+ONLY_UNRESOLVED_ITEMS_REMAIN: YES
+PROCESSED_HISTORY_LOCATION: changelog/2026-07-10__canonical-archive-audit-data-ping-edge-event.md
 ```
-
-These items are no longer pending archive candidates.
 
 ---
 
@@ -100,13 +89,12 @@ action: MAIN_FRAMEWORK_REVIEW_AFTER_MATURITY
 
 ## Queue rule
 
-Only unresolved items remain in this file.
-
 Future Canonical Weekly Backbone runs must:
 
 1. read this queue;
 2. process matured items;
 3. preserve source lineage and supersession;
-4. remove completed candidates;
+4. remove completed candidates from the queue;
 5. retain unresolved candidates with exact blockers;
-6. report archive drift and write failures.
+6. record processed history in changelog/audit receipt;
+7. report archive drift and write failures.
