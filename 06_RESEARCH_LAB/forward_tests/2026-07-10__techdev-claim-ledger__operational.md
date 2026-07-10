@@ -1,7 +1,7 @@
 # TechDev Claim and Revision Ledger
 
 **Dato:** 2026-07-10  
-**Status:** OPERATIONAL_APPEND_ONLY / SOURCE_IMPORT_PENDING  
+**Status:** OPERATIONAL_APPEND_ONLY / SOURCE_IMPORT_PARTIAL_COMPLETE  
 **Område:** TechDev roadmap / timing / range / trade calibration  
 **Primary folder:** `06_RESEARCH_LAB/forward_tests/`  
 **Related folders:** `08_SOURCE_MATERIAL/techdev/`, `01_CORE_FRAMEWORK/governance/`  
@@ -30,13 +30,31 @@ These categories must never be blended into one score.
 ## Current status
 
 ```yaml
-rows_total: 0_SOURCE_BACKED_ROWS
-valid_rows: 0
-source_import_status: PENDING_ORIGINAL_ISSUE_EXTRACTION
-scoring_status: BLOCKED_UNTIL_ORIGINAL_SOURCE_LINKED
+source_sequence: ISSUES_81_TO_95
+issues_expected: 15
+issues_imported: 12
+issues_missing: [87, 88, 90]
+source_backed_claim_rows: 55
+valid_source_rows: 55_UNSCORED
+valid_outcome_rows: 0
+scored_rows: 0
+source_import_status: PARTIAL_COMPLETE_MISSING_87_88_90
+scoring_status: BLOCKED_PENDING_SEPARATE_OUTCOME_PASS
 ```
 
-The fresh-eyes audit identified claims from Issues #92, #94 and #95, but this file does not convert audit summaries into scorable rows.
+Primary source-backed extraction:
+
+```text
+06_RESEARCH_LAB/forward_tests/2026-07-10__techdev-claims-issues-81-95__source-backed-extraction-v0-1.md
+```
+
+Source manifest:
+
+```text
+08_SOURCE_MATERIAL/techdev/2026-07-10__techdev-issues-81-95__source-manifest.md
+```
+
+Issue #90 is especially important because Issue #91 reports BITI/ETHD outcomes and revisions from trades introduced in #90. Those derivative reports are preserved, but original-entry scoring remains blocked until #90 is supplied.
 
 ---
 
@@ -54,6 +72,7 @@ claim_type:
   TIMING_WINDOW
   PRICE_RANGE
   TRADE
+  TRADE_POLICY
   SECTOR
 original_claim_verbatim_or_precise_paraphrase:
 target_low:
@@ -92,6 +111,21 @@ A revised target may be useful, but it does not retroactively improve the origin
 
 ---
 
+## Source-status rule
+
+```text
+SOURCE_BACKED_CLAIM:
+  may_be_imported: YES
+  may_be_scored_without_actuals: NO
+
+LATER_ISSUE_DESCRIPTION_OF_MISSING_ORIGINAL:
+  may_be_preserved: YES
+  may_replace_original_source: NO
+  scoring_status: BLOCKED_FOR_ORIGINAL_CLAIM_ACCURACY
+```
+
+---
+
 ## Weighting rule
 
 ```yaml
@@ -107,12 +141,22 @@ sector_selection: WATCHLIST_INPUT
 ## Weekly summary
 
 ```yaml
-source_rows_imported:
-roadmap_rows_scored:
-timing_rows_scored:
-range_rows_scored:
-trade_rows_scored:
-revisions_logged:
-framework_actions_influenced:
-calibration_change_recommended:
+source_rows_imported: 55
+source_issues_imported: 12
+source_issues_missing: 3
+roadmap_rows_scored: 0
+timing_rows_scored: 0
+range_rows_scored: 0
+trade_rows_scored: 0
+revisions_logged: SOURCE_CHAINS_FROZEN
+framework_actions_influenced: NOT_BACKFILLED
+calibration_change_recommended: NONE_BEFORE_OUTCOME_PASS
 ```
+
+## Next review
+
+1. Import Issues #87, #88 and especially #90 if supplied.
+2. Freeze verified actual-data methodology before scoring.
+3. Score roadmap, timing, range and trades separately.
+4. Preserve original claims next to all later revisions.
+5. Do not alter TechDev's framework weight from this extraction alone.
