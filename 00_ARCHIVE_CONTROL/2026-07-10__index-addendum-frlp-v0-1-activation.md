@@ -21,9 +21,17 @@ OPERATIONAL_PROTOCOL
 +
 GOVERNANCE_BINDINGS_APPROVED
 +
-FORWARD_TEST_ACTIVE_FROM_CN_12
+FORWARD_TEST_ACTIVE_FROM_CN_15
 +
 NO_MODEL_PROMOTION
+```
+
+## Sequence correction
+
+```text
+Last public Cycle Navigator post before FRLP: CN #14
+First real FRLP forward row: CN #15
+Any earlier CN #12 reference is superseded by this correction.
 ```
 
 ## Governance binding
@@ -57,7 +65,7 @@ The included EXAMPLE_ONLY rows are schema examples and are never forecasts or sc
 
 ## Operational precedence
 
-From the first resumed Cycle Navigator post / CN #12:
+From CN #15, after CN #14 was the last published post:
 
 ```text
 1. Freeze official range and baselines before publication.
