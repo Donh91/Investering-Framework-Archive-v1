@@ -1,10 +1,10 @@
-# Archive Candidate Queue — 2026-07-10
+# Archive Candidate Queue — 2026-07-11 Sync
 
-**Dato:** 2026-07-10  
+**Original queue date:** 2026-07-10  
+**Last sync:** 2026-07-11  
 **Status:** OPERATIONAL_PENDING_QUEUE  
 **Område:** archive control / unresolved candidates / weekly reconciliation  
-**Primary folder:** `00_ARCHIVE_CONTROL/`  
-**Depends on:** Canonical Weekly Backbone Edge Event Archive Reconciliation Addendum; GPT-5.6 Fresh Eyes Audit Implementation
+**Depends on:** Canonical Weekly Backbone; GPT-5.6 Fresh Eyes Audit Implementation
 
 ---
 
@@ -12,10 +12,11 @@
 
 ```text
 PROCESSED_ITEMS_PRESENT: NO
-ONLY_UNRESOLVED_ITEMS_REMAIN: YES
+ONLY_UNRESOLVED_OR_CONTINUING_ITEMS_REMAIN: YES
 PROCESSED_HISTORY_LOCATION:
 - changelog/2026-07-10__canonical-archive-audit-data-ping-edge-event.md
 - changelog/2026-07-10__gpt-5-6-fresh-eyes-audit-implementation-receipt.md
+- changelog/2026-07-11__techdev-historical-paid-archive-batch-1-import.md
 ```
 
 ---
@@ -50,9 +51,9 @@ action: RETAIN_CANDIDATE_WITHOUT_PROMOTION
 ```yaml
 archive_class: CALIBRATION
 edge_event_id: PULLBACK_EDGE_20260708_01
-status: PENDING
+status: MATURED_PENDING_RECONCILIATION
 maturity_time: 2026-07-11T14:03:00Z
-action: APPEND_WHEN_MATURED
+action: GENERATE_SOURCE_BACKED_ROW_THEN_APPEND_AFTER_MAIN_FRAMEWORK_AUDIT
 ```
 
 ### A4. 7D outcome
@@ -89,7 +90,7 @@ action: MAIN_FRAMEWORK_REVIEW_AFTER_MATURITY
 
 ---
 
-## B. Fresh-eyes governance and lineage candidates
+## B. Governance, lineage and evidence candidates
 
 ### B1. W28 Forecast Ledger source repair
 
@@ -139,10 +140,7 @@ action: SOURCE_BACKED_SPEC_OR_RETAIN_GUIDANCE_ONLY
 archive_class: CALIBRATION
 status: LOCKED
 current_template: 05_CYCLE_NAVIGATOR/templates/2026-07-06__cycle-navigator-mobile-first-image-template__canonical.md
-blocker:
-  - INDEPENDENT_ACTUALS_INCOMPLETE
-  - BASELINE_RECONCILIATION_INCOMPLETE
-  - CATEGORY_SCORE_SEPARATION_INCOMPLETE
+blocker: [INDEPENDENT_ACTUALS_INCOMPLETE, BASELINE_RECONCILIATION_INCOMPLETE, CATEGORY_SCORE_SEPARATION_INCOMPLETE]
 action: CONTINUE_FRLP_FORWARD_TEST_AND_KEEP_FORWARD_TEST_STATUS_PANEL
 ```
 
@@ -152,10 +150,7 @@ action: CONTINUE_FRLP_FORWARD_TEST_AND_KEEP_FORWARD_TEST_STATUS_PANEL
 archive_class: ARCHIVE_CONTROL
 status: SOURCE_TEXT_REQUIRED
 current_register: 01_CORE_FRAMEWORK/governance/2026-07-10__open-questions-register-v1-2__canonical.md
-legacy_ids:
-  - OQ-001
-  - OQ-002
-  - OQ-015
+legacy_ids: [OQ-001, OQ-002, OQ-015]
 blocker: ORIGINAL_QUESTION_TEXT_NOT_AVAILABLE_IN_EXECUTION_CONTEXT
 action: LOCATE_V1_1_AND_APPEND_SOURCE_BACKED_MAPPING
 ```
@@ -170,14 +165,21 @@ blocker: RELEVANT_LEGACY_FILES_NOT_YET_ALL_CROSSLINKED
 action: CLASSIFY_ON_DEMAND_NO_MASS_COPY
 ```
 
-### B8. TechDev original-source row import
+### B8. TechDev historical source continuation
 
 ```yaml
 archive_class: FORWARD_TEST_DATA
-status: PENDING_SOURCE_EXTRACTION
+status: BATCH_1_COMPLETE_CONTINUATION_OPEN
+unique_source_documents_accounted_for: 94
+exact_duplicate_upload_copies_ignored: 21
+source_backed_claim_rows: 120
+historical_signal_snapshot_rows: 7
 current_ledger: 06_RESEARCH_LAB/forward_tests/2026-07-10__techdev-claim-ledger__operational.md
-blocker: ORIGINAL_ISSUE_ROWS_NOT_IMPORTED
-action: IMPORT_ORIGINAL_CLAIMS_AND_REVISIONS_WITHOUT_RETROACTIVE_REWRITE
+batch_manifest: 08_SOURCE_MATERIAL/techdev/2026-07-11__techdev-historical-paid-archive-batch-1__source-manifest.md
+continuation_handoff: 00_ARCHIVE_CONTROL/2026-07-11__techdev-historical-archive-continuation-handoff.md
+blocker: ADDITIONAL_HISTORICAL_FILES_EXPECTED_IN_NEW_THREAD
+action: CONTINUE_HASH_DEDUPED_SOURCE_IMPORT_WITHOUT_RETROACTIVE_REWRITE
+outcome_scoring_status: BLOCKED_PENDING_FROZEN_METHOD
 ```
 
 ### B9. Existing-test row production
@@ -186,15 +188,29 @@ action: IMPORT_ORIGINAL_CLAIMS_AND_REVISIONS_WITHOUT_RETROACTIVE_REWRITE
 archive_class: FORWARD_TEST_DATA
 status: ACTIVE_NEEDS_ROWS
 registry: 06_RESEARCH_LAB/forward_tests/2026-07-10__active-test-registry__canonical.md
-priority:
-  - FRLP
-  - BTC_PARTIAL_VS_WAIT
-  - FNP
-  - EDGE_EVENT_OUTCOMES
-  - ROTATION_SURVIVAL_WHEN_DATA_COMPLETE
-  - MULTI_PING_AGGREGATION
-  - CHIEF_REPRODUCIBILITY
+priority: [FRLP, BTC_PARTIAL_VS_WAIT, FNP, EDGE_EVENT_OUTCOMES, ROTATION_SURVIVAL_WHEN_DATA_COMPLETE, MULTI_PING_AGGREGATION, CHIEF_REPRODUCIBILITY]
 action: PRODUCE_ROWS_NOT_NEW_SPECS
+```
+
+### B10. TechDev outcome-method freeze
+
+```yaml
+archive_class: CALIBRATION_GOVERNANCE
+status: PENDING_SEPARATE_PROTOCOL
+source_rows_ready: 120
+outcome_rows_ready: 0
+required_before_scoring:
+  - VERIFIED_ACTUAL_SOURCE
+  - PRICE_SAMPLING_CONVENTION
+  - CLAIM_CATEGORY_RULES
+  - FORECAST_WINDOW_RULE
+  - REVISION_TREATMENT
+  - CATEGORY_SPECIFIC_BASELINE
+  - RANGE_AND_TIMING_ERROR_FORMULAS
+  - ACTION_COUNTERFACTUAL_RULE
+blocker: METHOD_NOT_FROZEN
+action: CREATE_ONE_SCORING_PROTOCOL_AFTER_SOURCE_IMPORT_CONTINUATION_OR_WHEN_USER_PRIORITIZES_OUTCOME_AUDIT
+new_engine: NO
 ```
 
 ---
@@ -207,7 +223,8 @@ Future Canonical Weekly Backbone runs must:
 2. process matured items;
 3. preserve source lineage and supersession;
 4. remove completed candidates from the queue;
-5. retain unresolved candidates with exact blockers;
-6. record processed history in changelog/audit receipt;
+5. retain unresolved or continuing candidates with exact blockers;
+6. record processed history in changelog/audit receipts;
 7. update Rule and Evidence Registry and Active Test Registry counts;
-8. report archive drift, lineage failures and new-engine-freeze breaches.
+8. report archive drift, lineage failures and new-engine-freeze breaches;
+9. never treat a source-backed TechDev claim as a scored outcome row.
