@@ -1,7 +1,8 @@
 # FRLP v0.1 — First Post Launch Checklist
 
 **Activated:** 2026-07-10  
-**Use from:** First resumed Cycle Navigator post / CN #12  
+**Use from:** First resumed Cycle Navigator post under FRLP / CN #15  
+**Last public post before FRLP:** CN #14  
 **Status:** CANONICAL OPERATING CHECKLIST
 
 ---
@@ -88,7 +89,7 @@
 ## Public CN skeleton
 
 ```text
-CYCLE NAVIGATOR — #N
+CYCLE NAVIGATOR — #15
 
 1. PHASE / STRUCTURE
 [short familiar phase/structure summary]
@@ -120,5 +121,6 @@ TRIAD [state] · [one line]
 ```text
 Internal machinery may be complex.
 Public output remains curated and familiar.
+CN #15 is the first real FRLP forward row.
 No market or portfolio authority is created by this checklist.
 ```
