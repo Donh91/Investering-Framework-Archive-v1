@@ -18,23 +18,18 @@
 6. The active top-level namespace is authoritative; canonical-project-archive/ is legacy read-only context.
 ```
 
-Full routing rules:
+Routing and detailed addenda:
 
 ```text
 00_ARCHIVE_CONTROL/ARCHIVE_MAP_AND_ROUTING.md
-```
-
-Legacy namespace manifest:
-
-```text
+00_ARCHIVE_CONTROL/2026-07-10__index-addendum-data-ping-hybrid-edge-event-archive.md
+00_ARCHIVE_CONTROL/2026-07-10__index-addendum-gpt-5-6-fresh-eyes-audit-implementation.md
 00_ARCHIVE_CONTROL/2026-07-10__legacy-namespace-manifest__canonical.md
 ```
 
 ---
 
-## Current live operational anchors
-
-### DATA PING live feed
+## DATA PING operational anchors
 
 ```text
 Highest active DATA PING version wins.
@@ -42,13 +37,7 @@ Current active operational feed: DATA PING V4.
 Older versions: ARCHIVE CONTEXT unless explicitly reactivated.
 ```
 
-Primary operational receipt:
-
-```text
-changelog/2026-07-05_framework_operations_update_data_ping_v4_shadow_macro.md
-```
-
-### DATA PING role governance
+Role governance:
 
 ```text
 Custom GPT = verified DATA PING truth-layer.
@@ -56,48 +45,48 @@ Grok = standalone shadow sensor.
 ChatGPT/main framework = governance, interpretation and ratification.
 ```
 
-Canonical file:
+Canonical role file:
 
 ```text
 02_DATA_PING/protocols/2026-07-06__custom-gpt-truth-layer-grok-shadow-v10-26__canonical.md
 ```
 
-### DATA PING Hybrid v0.5.1
+Primary Hybrid protocol:
 
 ```text
 02_DATA_PING/protocols/2026-07-10__data-ping-hybrid-v0-5-1-auto-edge-escalator-consolidated__canonical.md
 ```
 
-Status:
+Mandatory GPT-5.6 tightening:
 
 ```text
-CANONICAL_CURRENT
+02_DATA_PING/protocols/2026-07-10__data-ping-hybrid-v0-5-1-gpt-5-6-audit-tightening__canonical.md
 ```
 
-Operational effect:
+Current rules include:
 
 - dynamic framework-owned gates;
 - EDGE_STATE separate from ALERT_STATUS;
 - mandatory downgrade check;
-- EDGE MODE COMPACT/FULL;
 - source invariance and stale-config handling;
-- framework-owned historical anchors;
+- historical anchors owned by main framework;
 - calibration maturity and supersession;
-- DATA PING supplies evidence, main framework supplies judgment.
+- explicit authority fields;
+- `DATA_MISSING = UNKNOWN`;
+- mechanical rotation components only;
+- separate BTC and alt evidence lanes;
+- multi-ping aggregation as feature-only;
+- pre-registered RAW 1–3D and 5–7D rows.
 
-The older Alert Router v0.1 is:
+The older Alert Router v0.1 is `SUPERSEDED_AS_ACTIVE_EDGE_PROTOCOL / HISTORICAL_CONTEXT`.
 
-```text
-SUPERSEDED_AS_ACTIVE_EDGE_PROTOCOL / HISTORICAL_CONTEXT
-```
-
-### Active gate and edge-event runtime registry
+Runtime registry:
 
 ```text
 02_DATA_PING/live_state_handover/2026-07-10__active-gate-and-edge-event-registry__canonical.md
 ```
 
-Current runtime event:
+Active event:
 
 ```text
 EDGE_EVENT_ID: PULLBACK_EDGE_20260708_01
@@ -106,17 +95,10 @@ ALERT_STATUS: RESOLVING
 EVENT_STATUS: OPEN_RESOLVING
 ```
 
-### Active event and calibration
-
-Event ledger:
+Event ledger and calibration:
 
 ```text
 02_DATA_PING/live_state_handover/2026-07-08__pullback-edge-20260708-01__event-ledger.md
-```
-
-Calibration:
-
-```text
 04_MARKET_LEARNING/stress_flush/2026-07-08__pullback-edge-20260708-01__calibration-v3.md
 ```
 
@@ -129,13 +111,11 @@ Outcome status:
 EVENT_CLOSE: PENDING
 ```
 
-No final learning is ratified before sufficient maturity.
-
 ---
 
 ## GPT-5.6 Fresh Eyes Audit — binding implementation
 
-Primary governance file:
+Primary governance:
 
 ```text
 01_CORE_FRAMEWORK/governance/2026-07-10__gpt-5-6-fresh-eyes-audit-implementation__canonical.md
@@ -153,69 +133,25 @@ BTC permission lane separated from alt permission lane
 DATA_MISSING = UNKNOWN, not bearish evidence
 ```
 
-### Rule and Evidence Registry
+Supporting canonical files:
 
 ```text
 01_CORE_FRAMEWORK/governance/2026-07-10__rule-and-evidence-registry__canonical.md
-```
-
-Every active rule must expose evidence state, rows, baseline, behavior change, promotion condition and kill condition.
-
-### Active Test Registry
-
-```text
-06_RESEARCH_LAB/forward_tests/2026-07-10__active-test-registry__canonical.md
-```
-
-No new test or engine during the freeze unless it replaces, merges or repairs an existing listed item.
-
-### Simplified active framework map
-
-```text
+01_CORE_FRAMEWORK/governance/2026-07-10__f12-f12-5-reproducibility-freeze__canonical.md
+01_CORE_FRAMEWORK/governance/2026-07-10__pullback-policy-v0-2-reproducibility-correction__canonical.md
+01_CORE_FRAMEWORK/governance/2026-07-10__open-questions-register-v1-2__canonical.md
 01_CORE_FRAMEWORK/architecture/2026-07-10__simplified-active-framework-map-and-crosswalk__canonical.md
 ```
 
-Contains:
-
-- five diagnostic families;
-- Consensus renamed `MULTI_PING_AGGREGATION` and reduced to a feature;
-- BTC versus alt permission lanes;
-- capital-state/public-phase crosswalk;
-- unified score families.
-
-### F12 / F12.5 reproducibility freeze
+Status highlights:
 
 ```text
-01_CORE_FRAMEWORK/governance/2026-07-10__f12-f12-5-reproducibility-freeze__canonical.md
+F12 / F12.5: SPEC_INCOMPLETE / NOT_EVALUABLE
+Pullback Policy v0.2: GUIDANCE_ONLY
+Consensus Layer: replaced by MULTI_PING_AGGREGATION feature-only
+Public CN track record: LOCKED
+Blended precision: FORBIDDEN
 ```
-
-Status:
-
-```text
-SPEC_INCOMPLETE
-OPERATIONAL_EVALUATION: SUSPENDED
-OUTPUT: NOT_EVALUABLE until source-backed reproducible specification exists
-```
-
-### Pullback Policy v0.2 correction
-
-```text
-01_CORE_FRAMEWORK/governance/2026-07-10__pullback-policy-v0-2-reproducibility-correction__canonical.md
-```
-
-Status:
-
-```text
-GUIDANCE_ONLY until exact bands, anchors and hard triggers are frozen
-```
-
-### Open Questions v1.2
-
-```text
-01_CORE_FRAMEWORK/governance/2026-07-10__open-questions-register-v1-2__canonical.md
-```
-
-This is the active unresolved-question navigation layer.
 
 ---
 
@@ -233,7 +169,7 @@ Mandatory operative addendum:
 03_WEEKLY_OPERATIONS/canonical_backbone/2026-07-10__edge-event-archive-reconciliation-addendum__canonical.md
 ```
 
-The addendum now requires future weekly runs to inspect:
+Weekly runs must inspect:
 
 - newest DATA PING, Master Monday, Cycle Navigator and governance;
 - archive candidate queue;
@@ -245,21 +181,19 @@ The addendum now requires future weekly runs to inspect:
 - forecast lineage;
 - public track-record lock;
 - legacy namespace drift;
-- row production and new-engine-freeze compliance.
+- valid row production and new-engine-freeze compliance.
 
-### Archive candidate queue
+Archive queue:
 
 ```text
 00_ARCHIVE_CONTROL/2026-07-10__archive-candidate-queue__operational.md
 ```
 
-Only unresolved items remain.
-
 ---
 
 ## Master Monday and Forecast Ledger integrity
 
-Master Monday version-chain protocol:
+Version-chain protocol:
 
 ```text
 03_WEEKLY_OPERATIONS/master_monday/process/2026-07-06__master-monday-archive-version-chain-protocol__canonical.md
@@ -277,14 +211,14 @@ W28 lineage correction:
 03_WEEKLY_OPERATIONS/master_monday/2026-W28/05_forecast-ledger-lineage-correction.md
 ```
 
-Status:
+Current status:
 
 ```text
 W28_FORECAST_LEDGER_SOURCE_STATUS: SOURCE_LINEAGE_UNRESOLVED
 W28_SCORING_ELIGIBILITY: NO
 ```
 
-An official forecast must trace:
+Official lineage must be:
 
 ```text
 ratified Master Monday → frozen Forecast Ledger → CN handoff → verified actual → score row
@@ -294,39 +228,33 @@ ratified Master Monday → frozen Forecast Ledger → CN handoff → verified ac
 
 ## Cycle Navigator
 
-Current mobile-first template:
+Current template:
 
 ```text
 05_CYCLE_NAVIGATOR/templates/2026-07-06__cycle-navigator-mobile-first-image-template__canonical.md
 ```
 
-Current correction:
+Current rule:
 
 ```text
-Third panel = FORWARD TEST STATUS
-Historical precision bars = SUSPENDED
-Blended score = FORBIDDEN
-Calendar countdowns = only if pre-registered and later scored
+Third panel: FORWARD TEST STATUS
+Historical precision bars: SUSPENDED
+Blended precision: FORBIDDEN
+Calendar countdowns: only if pre-registered and scored
 FRLP forward series starts at CN #15
 ```
 
 ---
 
-## Forward-test and accountability ledgers
-
-BTC partial and FNP divergence ledger:
+## Forward-test and accountability anchors
 
 ```text
+06_RESEARCH_LAB/forward_tests/2026-07-10__active-test-registry__canonical.md
 06_RESEARCH_LAB/forward_tests/2026-07-10__offensive-divergence-and-fnp-ledger__operational.md
-```
-
-TechDev claim and revision ledger:
-
-```text
 06_RESEARCH_LAB/forward_tests/2026-07-10__techdev-claim-ledger__operational.md
 ```
 
-Current evidence discipline:
+Rules:
 
 ```text
 Schema/init rows are not valid rows.
@@ -344,13 +272,13 @@ Farside ETF Flow Ledger:
 02_DATA_PING/source_integrations/2026-07-06__farside-etf-flow-ledger-data-ping-integration__canonical.md
 ```
 
-FRED macro shadow production rule:
+FRED macro shadow:
 
 ```text
 04_MARKET_LEARNING/macro_shadow/2026-07-05__fred-classic-targeted-series-production-upgrade__canonical.md
 ```
 
-FRED and TechDev may inform context and readiness but cannot independently determine execution, recovery, rotation, rebuy or deployment.
+TechDev remains macro compass and roadmap input, never standalone execution authority.
 
 ---
 
@@ -365,37 +293,20 @@ FRED and TechDev may inform context and readiness but cannot independently deter
 6. Legacy or memory-only context
 ```
 
-If Grok conflicts with Custom GPT verified values, Custom GPT wins.
-
 ---
 
-## Permanent methodology versus runtime configuration
+## Audit receipts
 
 ```text
-FIXED METHODOLOGY:
-- source hierarchy and fallbacks
-- calculation formulas
-- missing-data discipline
-- persistence definitions
-- status-label logic
-- calibration hygiene
-
-RUNTIME CONFIGURATION:
-- active gates
-- active event ID
-- framework-approved historical anchors
-- accepted current framework state
+changelog/2026-07-10__canonical-archive-audit-data-ping-edge-event.md
+changelog/2026-07-10__gpt-5-6-fresh-eyes-audit-implementation-receipt.md
 ```
-
-Missing runtime configuration does not stop raw data collection.
 
 ---
 
 ## Index maintenance rule
 
-Index files that are canonical, operationally important, governance relevant or used by DATA PING, Master Monday, Cycle Navigator or Research Lab.
-
-Do not index every raw ping or source note.
+Index canonical, operationally important and governance-relevant files. Do not index every raw ping.
 
 Preferred pattern:
 
