@@ -1,6 +1,6 @@
 # Canonical Archive Index
 
-**Dato:** 2026-07-10  
+**Dato:** 2026-07-11  
 **Status:** CANONICAL_ARCHIVE_CONTROL  
 **Formål:** Navigation til de nyeste operative og canonical framework-filer.  
 **Previous index history:** Preserved in Git commit history.
@@ -16,14 +16,16 @@
 4. RAW, shadow and initialized ledgers do not become canonical learning without main-framework ratification.
 5. Written governance is not functioning governance unless behavior or valid rows exist.
 6. The active top-level namespace is authoritative; canonical-project-archive/ is legacy read-only context.
+7. Source-backed claim rows are not outcome rows.
 ```
 
-Routing and detailed addenda:
+Routing and index addenda:
 
 ```text
 00_ARCHIVE_CONTROL/ARCHIVE_MAP_AND_ROUTING.md
 00_ARCHIVE_CONTROL/2026-07-10__index-addendum-data-ping-hybrid-edge-event-archive.md
 00_ARCHIVE_CONTROL/2026-07-10__index-addendum-gpt-5-6-fresh-eyes-audit-implementation.md
+00_ARCHIVE_CONTROL/2026-07-11__index-addendum-techdev-historical-batch-1.md
 00_ARCHIVE_CONTROL/2026-07-10__legacy-namespace-manifest__canonical.md
 ```
 
@@ -45,40 +47,26 @@ Grok = standalone shadow sensor.
 ChatGPT/main framework = governance, interpretation and ratification.
 ```
 
-Canonical role file:
+Canonical role and protocol files:
 
 ```text
 02_DATA_PING/protocols/2026-07-06__custom-gpt-truth-layer-grok-shadow-v10-26__canonical.md
-```
-
-Primary Hybrid protocol:
-
-```text
 02_DATA_PING/protocols/2026-07-10__data-ping-hybrid-v0-5-1-auto-edge-escalator-consolidated__canonical.md
-```
-
-Mandatory GPT-5.6 tightening:
-
-```text
 02_DATA_PING/protocols/2026-07-10__data-ping-hybrid-v0-5-1-gpt-5-6-audit-tightening__canonical.md
 ```
 
 Current rules include:
 
 - dynamic framework-owned gates;
-- EDGE_STATE separate from ALERT_STATUS;
-- mandatory downgrade check;
+- `EDGE_STATE` separate from `ALERT_STATUS`;
+- mandatory downgrade checks;
 - source invariance and stale-config handling;
-- historical anchors owned by main framework;
-- calibration maturity and supersession;
+- main-framework ownership of historical anchors;
 - explicit authority fields;
 - `DATA_MISSING = UNKNOWN`;
-- mechanical rotation components only;
 - separate BTC and alt evidence lanes;
 - multi-ping aggregation as feature-only;
 - pre-registered RAW 1–3D and 5–7D rows.
-
-The older Alert Router v0.1 is `SUPERSEDED_AS_ACTIVE_EDGE_PROTOCOL / HISTORICAL_CONTEXT`.
 
 Runtime registry:
 
@@ -106,7 +94,7 @@ Outcome status:
 
 ```text
 24H: MATURED
-72H: PENDING
+72H: MATURED_PENDING_RECONCILIATION
 7D: PENDING
 EVENT_CLOSE: PENDING
 ```
@@ -157,15 +145,10 @@ Blended precision: FORBIDDEN
 
 ## Canonical Weekly Backbone
 
-Primary engine:
+Primary engine and mandatory addendum:
 
 ```text
 01_CORE_FRAMEWORK/engines/2026-07-05__canonical-weekly-backbone-engine-v3-framework-operating-system__canonical.md
-```
-
-Mandatory operative addendum:
-
-```text
 03_WEEKLY_OPERATIONS/canonical_backbone/2026-07-10__edge-event-archive-reconciliation-addendum__canonical.md
 ```
 
@@ -181,7 +164,9 @@ Weekly runs must inspect:
 - forecast lineage;
 - public track-record lock;
 - legacy namespace drift;
-- valid row production and new-engine-freeze compliance.
+- valid row production;
+- TechDev continuation handoff and claim-ledger counts;
+- new-engine-freeze compliance.
 
 Archive queue:
 
@@ -193,21 +178,9 @@ Archive queue:
 
 ## Master Monday and Forecast Ledger integrity
 
-Version-chain protocol:
-
 ```text
 03_WEEKLY_OPERATIONS/master_monday/process/2026-07-06__master-monday-archive-version-chain-protocol__canonical.md
-```
-
-Current W28 raw file:
-
-```text
 03_WEEKLY_OPERATIONS/master_monday/2026-W28/02_data_ping_derived_raw.md
-```
-
-W28 lineage correction:
-
-```text
 03_WEEKLY_OPERATIONS/master_monday/2026-W28/05_forecast-ledger-lineage-correction.md
 ```
 
@@ -259,7 +232,50 @@ Rules:
 ```text
 Schema/init rows are not valid rows.
 DATA_BLOCKED tests do not create pseudo-evidence.
-Roadmap, timing, range and trade accuracy remain separate.
+Roadmap, timing, range, trade and framework-action impact remain separate.
+Source-backed claims are not scored outcomes.
+```
+
+---
+
+## TechDev historical source archive
+
+Primary Batch 1 anchors:
+
+```text
+08_SOURCE_MATERIAL/techdev/2026-07-11__techdev-historical-paid-archive-batch-1__source-manifest.md
+06_RESEARCH_LAB/forward_tests/2026-07-11__techdev-historical-claims-and-revisions-2021-2025__source-backed-extraction-v0-3.md
+04_MARKET_LEARNING/macro_shadow/2026-07-11__techdev-historical-revision-and-governance-patterns__calibration-note.md
+00_ARCHIVE_CONTROL/2026-07-11__techdev-historical-archive-continuation-handoff.md
+```
+
+Later sequence and signal anchors:
+
+```text
+08_SOURCE_MATERIAL/techdev/2026-07-10__techdev-issues-81-95__source-manifest.md
+08_SOURCE_MATERIAL/techdev/2026-07-10__techdev-topping-signals-updates-1-8__source-manifest.md
+```
+
+Current accounting:
+
+```yaml
+unique_source_documents_accounted_for: 94
+exact_duplicate_upload_copies_ignored: 21
+source_backed_claim_rows: 120
+historical_topping_signal_snapshot_rows: 7
+valid_outcome_rows: 0
+scored_rows: 0
+continuation_status: OPEN_FOR_NEW_THREAD_BATCHES
+```
+
+Binding TechDev role:
+
+```text
+Macro compass and roadmap research input.
+Exact timing remains medium-low weight until scored.
+Standalone execution authority: ZERO.
+Rotation confirmation authority: SHADOW_ONLY.
+Historical import does not alter current market state, gates, locks or portfolio action.
 ```
 
 ---
@@ -277,8 +293,6 @@ FRED macro shadow:
 ```text
 04_MARKET_LEARNING/macro_shadow/2026-07-05__fred-classic-targeted-series-production-upgrade__canonical.md
 ```
-
-TechDev remains macro compass and roadmap input, never standalone execution authority.
 
 ---
 
@@ -300,19 +314,20 @@ TechDev remains macro compass and roadmap input, never standalone execution auth
 ```text
 changelog/2026-07-10__canonical-archive-audit-data-ping-edge-event.md
 changelog/2026-07-10__gpt-5-6-fresh-eyes-audit-implementation-receipt.md
+changelog/2026-07-11__techdev-historical-paid-archive-batch-1-import.md
 ```
 
 ---
 
 ## Index maintenance rule
 
-Index canonical, operationally important and governance-relevant files. Do not index every raw ping.
+Index canonical, operationally important and governance-relevant files. Do not index every raw ping or every source document.
 
 Preferred pattern:
 
 ```text
 Many raw inputs
-→ append-only ledgers
+→ hash-deduplicated manifests and append-only ledgers
 → benchmarked outcomes
 → distilled canonical learning when justified
 → index entry
