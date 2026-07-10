@@ -1,150 +1,108 @@
 # Cycle Navigator Mobile-First Image Template
 
 **Dato:** 2026-07-06  
-**Status:** CANONICAL  
-**Område:** Cycle Navigator / visual template  
+**Updated:** 2026-07-10  
+**Status:** CANONICAL / SCORING_GOVERNANCE_CORRECTED  
+**Område:** Cycle Navigator / visual template / public accountability  
 **Primary folder:** `05_CYCLE_NAVIGATOR/templates/`  
-**Related folders:** `05_CYCLE_NAVIGATOR/visuals/`, `05_CYCLE_NAVIGATOR/weekly_posts/`, `03_WEEKLY_OPERATIONS/master_monday/`  
-**Supersedes:** earlier wide dashboard-only visual preference for Cycle Navigator weekly images  
-**Depends on:** CN #14 published visual, CN #15 mobile-first revision, Master Monday archive version-chain protocol
+**Related folders:** `05_CYCLE_NAVIGATOR/visuals/`, `05_CYCLE_NAVIGATOR/weekly_posts/`, `03_WEEKLY_OPERATIONS/master_monday/`, `06_RESEARCH_LAB/forward_tests/`  
+**Supersedes:** earlier wide dashboard preference and the prior requirement to display unreconciled historical track-record bars  
+**Depends on:** Master Monday version chain; verified scoring governance; FRLP v0.1; GPT-5.6 Fresh Eyes Audit Implementation
 
 ---
 
 ## 1. Purpose
 
-This file preserves the approved visual direction for future Cycle Navigator weekly images after the CN #15 redesign.
-
-The new standard is:
+The visual standard remains mobile-first, simple and iPhone-readable.
 
 ```text
 Mobile-first.
-Simpler.
-Fewer panels.
-Same framework logic.
-More readable on iPhone/X feed.
+Three sections.
+Clear uncertainty.
+Frozen forecasts.
+No historical precision overclaim.
 ```
-
-The image should still feel like the same Cycle Navigator product as #14, but should no longer be a very wide desktop dashboard when the content is mainly three core sections.
 
 ---
 
-## 2. Core design decision
+## 2. Binding scoring correction
 
-The approved layout removes unnecessary right-side dashboard density.
+```text
+PUBLIC_TRACK_RECORD_STATUS: LOCKED_PENDING_INDEPENDENT_RECONCILIATION
+HISTORICAL_PRECISION_BARS: SUSPENDED
+BLENDED_PRECISION_SCORE: FORBIDDEN
+RANGE_PHASE_ROTATION_SCORES: SEPARATE
+FIRST_TRUE_FRLP_FORWARD_ROW: CN_15
+```
 
-Keep only:
+The previous mandatory `Track Record Summary` panel is suspended while the public track record is locked.
+
+The third section must now be:
+
+```text
+FORWARD TEST STATUS
+```
+
+Historical bars may return only after verified actuals, frozen baselines, complete source lineage, separate score categories and no-retroactive-adjustment checks are complete.
+
+---
+
+## 3. Required three-section layout
 
 ```text
 1. Week Outlook
-2. Altseason Countdown
-3. Track Record Summary
+2. Altseason / Rotation Path
+3. Forward Test Status
 ```
 
-Remove from the visual image:
+Remove:
+
+- separate methodology panels;
+- unreconciled historical score bars;
+- average precision claims;
+- dense dashboard columns;
+- explanatory text that belongs in the written post.
+
+Recommended format:
 
 ```text
-- Separate Weekly Outlook panel
-- Precision Methodology panel
-- Extra explanatory boxes that repeat the post text
-```
-
-The written X post can contain the full explanation. The image should be a simple visual anchor.
-
----
-
-## 3. Format
-
-Recommended image format:
-
-```text
-Vertical / mobile-first
-Approx. 4:5 or 2:3 ratio
-Readable on iPhone without zooming
-Single-page infographic
-```
-
-Avoid:
-
-```text
-Ultra-wide 16:9 dashboard
-Too many tiny subpanels
-Small methodology text
-Duplicated explanations
+Vertical 4:5 or 2:3
+Single page
+Readable on iPhone without zoom
+Institutional and clean
 ```
 
 ---
 
-## 4. Required layout
+## 4. Section 1 — Week Outlook
 
-### Header
-
-Include:
+Required:
 
 ```text
-Cycle Navigator logo
-CYCLE NAVIGATOR #XX
-Weekly Framework Report
-Date range
-```
-
-Style:
-
-```text
-Institutional, clean, navy/blue, strong hierarchy.
-```
-
----
-
-### Section 1 — Week Outlook
-
-Required content:
-
-```text
-BTC Forecast Range
-BTC forecast path chart
+BTC Official Forecast Range
+Frozen baseline ranges: DUMB_1.5 and DUMB_2.0, in post or compact note
 Bias
 Key Levels
 Signal
 Risk
+Invalidation
 ```
 
-Example for CN #15:
+Rules:
 
-```text
-BTC Forecast Range:
-60.9K – 67.2K
+- one official range only;
+- range frozen before the forecast window;
+- do not describe the range as proven edge;
+- actual scoring waits for independently verified high/low;
+- phase and rotation are not blended into range accuracy.
 
-Bias:
-Repair Test
-
-Key Levels:
-61.9K Hold
-63.3K Confirm
-
-Signal:
-ETH/BTC > 0.0275
-
-Risk:
-False Reclaim
-```
-
-Design note:
-
-```text
-The forecast path chart can sit next to the range box on mobile layout if readable.
-The four bottom labels must be short and icon-led.
-No long prose in this panel.
-```
+A simple path sketch is allowed, but must not imply precision beyond the frozen forecast.
 
 ---
 
-### Section 2 — Altseason Countdown
+## 5. Section 2 — Altseason / Rotation Path
 
-This is mandatory and should preserve the existing timeline logic.
-
-Use the established phase line. Do not invent new actual phases.
-
-Approved phase line:
+Use only the established public phase line:
 
 ```text
 Pre-Rotation
@@ -155,214 +113,162 @@ Pre-Rotation
 → Late Cycle / Exit
 ```
 
-For CN #15:
+Do not invent diagnostic states as public phases.
+
+Required fields:
 
 ```text
-Current Phase:
-BTC Dominance Expansion
-
-Marker:
-WE ARE HERE
+Current Phase
+Next Conditional Phase
+Evidence Needed
+Failure Condition
+Asset-Tier Permission
 ```
 
-Important rule:
+### Countdown rule
+
+Specific calendar countdowns are allowed only when they are explicitly pre-registered forecasts with a frozen source and later outcome row.
+
+Otherwise use:
 
 ```text
-Current phase must remain one of the existing timeline phases.
-Diagnostic comments such as repair attempt, de-escalation or F2-watch must not be inserted as new phases.
+CONDITIONAL WINDOW
+NOT YET EVIDENCE-SUPPORTED
+TIMING UNCONFIRMED
 ```
 
-Required countdown rows:
+Do not publish `altseason in 8–16 weeks` as a standing estimate unless it is frozen and scored as a timing forecast.
+
+Selective Alt Rotation should remain the key phase to monitor before broad altseason.
+
+### Unlock row
+
+Use no more than three measurable unlocks.
+
+Prefer categories such as:
 
 ```text
-Next Phase:
-Early Rotation Watch — 1–4 weeks
-
-Phase to Watch Closely:
-Selective Alt Rotation — 4–10+ weeks
-
-Broad Altseason:
-8–16+ weeks
+BTC structure survives
+ETH/BTC repair persists
+Breadth / BTC.D / deployment confirm transmission
 ```
 
-Core message:
-
-```text
-Selective Alt Rotation is the phase to watch closely before broad altseason.
-```
-
-Keep this sentence short and visible.
+Exact gates must come from the current ratified Master Monday/runtime registry, not from stale template values.
 
 ---
 
-### Section 2 bottom row — unlocks
+## 6. Section 3 — Forward Test Status
 
-Use max three unlocks. Avoid long lists.
-
-Approved CN #15 unlock row:
+Required while public track record is locked:
 
 ```text
-BTC holds 61.9K
-BTC closes above 63.3K
-ETH/BTC trends toward 0.0300
+Forward Test Status
+Range protocol: FRLP v0.1
+Forward series start: CN #15
+Official range frozen: YES / NO
+Baselines frozen: YES / NO
+Verified actual: PENDING / VERIFIED
+Current outcome: UNSCORED / RANGE / PHASE / ROTATION
+Historical scores: UNDER INDEPENDENT RECONCILIATION
+No retroactive changes
 ```
 
-Avoid adding every possible gate in the image. Full gate logic belongs in the written X post.
+Optional, only after a row matures:
+
+```text
+Official Range Score
+DUMB_1.5 Score
+DUMB_2.0 Score
+Baseline Delta
+```
+
+Do not display a cumulative public average until the scoring governance explicitly unlocks it.
 
 ---
 
-### Section 3 — Track Record Summary
-
-Track record must be included.
-
-Required content:
-
-```text
-Track Record Summary (#1–#latest completed)
-Bar series
-Current/latest completed week highlighted
-Short no-retroactive-adjustment note
-```
-
-Example:
-
-```text
-Track Record Summary (#1–#14)
-#14 highlighted
-History is locked — no retroactive adjustments. Each week scored as published.
-```
-
-Average precision can be included only if recalculated correctly from the displayed bars.
-If uncertain, omit average precision from the visual or mark it separately in the post.
-
----
-
-## 5. Visual style
+## 7. Visual style
 
 Use:
 
 ```text
 White background
 Dark navy headers
-Bright blue for primary data
-Orange for current phase / cycle emphasis
-Red only for risk
-Clean card borders
+Bright blue primary data
+Orange current phase
+Red only for risk/invalidation
 Large readable numbers
-Consistent icon language
+Consistent icons
 ```
 
-Do not use:
+Avoid:
 
 ```text
-Dense explanatory paragraphs
-Multiple small text blocks competing for attention
-Extra methodology panels
-Extra right-hand dashboard column
-Tiny footnotes beyond one short locked-history note
+Tiny footnotes
+Dense methodology
+Desktop-wide layouts
+Prestige metrics without verified lineage
 ```
 
 ---
 
-## 6. Content hierarchy
+## 8. Five-second content test
 
-The image should answer three questions in under five seconds:
-
-```text
-1. What is this week's BTC range?
-2. Where are we in the altseason timeline?
-3. How has the framework performed historically?
-```
-
-Everything else belongs in the written X post.
-
----
-
-## 7. Future image generation prompt block
-
-Use this prompt pattern for future Cycle Navigator images:
+The image should answer:
 
 ```text
-Create a mobile-first vertical Cycle Navigator weekly framework report image.
-Build on the previous Cycle Navigator visual identity: navy headers, white cards, blue primary data, orange cycle-phase highlight, red risk accents, clean institutional research style, compass logo, @TheDonH91 branding.
-
-Use only three main sections:
-1. Week #XX Outlook
-2. Altseason Countdown
-3. Track Record Summary
-
-Remove any separate Weekly Outlook panel and Precision Methodology panel.
-Keep the layout compact and iPhone-readable.
-
-Section 1 must include BTC Forecast Range, a simple BTC forecast path chart, and four short icon labels: Bias, Key Levels, Signal, Risk.
-Section 2 must include the established phase timeline: Pre-Rotation → BTC Dominance Expansion → Early Rotation Watch → Selective Alt Rotation → Broad Altseason → Late Cycle / Exit. Do not invent new phases. Mark the current phase only from that timeline.
-Section 2 must also include: Next Phase with estimated time, Phase to Watch Closely with estimated time, Broad Altseason estimate, and max three unlock gates.
-Section 3 must include a compact track record bar chart and the note: History is locked — no retroactive adjustments.
-
-Make it clean, readable, less wide, and optimized for iPhone/X feed viewing.
+1. What is the frozen weekly range and invalidation?
+2. What public phase are we in, and what evidence moves it?
+3. What is the current forward-test and scoring status?
 ```
 
 ---
 
-## 8. CN #15 reference values
+## 9. Future image-generation prompt block
 
-The approved CN #15 mobile-first content reference:
+```text
+Create a mobile-first vertical Cycle Navigator weekly framework report.
+Use three sections only:
+1. Week Outlook
+2. Altseason / Rotation Path
+3. Forward Test Status
 
-```yaml
-cycle_navigator_number: 15
-date_range: July 6 – July 12, 2026
-btc_forecast_range: 60.9K – 67.2K
-current_phase: BTC Dominance Expansion
-next_phase: Early Rotation Watch
-next_phase_time: 1–4 weeks
-phase_to_watch_closely: Selective Alt Rotation
-phase_to_watch_time: 4–10+ weeks
-broad_altseason_time: 8–16+ weeks
-bias: Repair Test
-key_levels: 61.9K Hold / 63.3K Confirm
-signal: ETH/BTC > 0.0275
-risk: False Reclaim
-unlock_gates:
-  - BTC holds 61.9K
-  - BTC closes above 63.3K
-  - ETH/BTC trends toward 0.0300
-track_record: #1–#14
-highlight_week: #14
+Section 1: show one frozen BTC forecast range, bias, key levels, signal, risk and invalidation. Do not call the range proven edge.
+
+Section 2: use only the established phase line: Pre-Rotation → BTC Dominance Expansion → Early Rotation Watch → Selective Alt Rotation → Broad Altseason → Late Cycle / Exit. Show Current Phase, Next Conditional Phase, max three measurable unlocks and a failure condition. Use a calendar countdown only if the timing claim is explicitly pre-registered.
+
+Section 3: show FRLP v0.1 forward-test status from CN #15 onward. State whether the official range, baselines and verified actuals are frozen/available. Historical scores remain under independent reconciliation. Do not show historical precision bars or a blended score.
+
+Make the design clean, institutional, navy/white/blue with orange phase emphasis, and readable on iPhone/X without zoom.
 ```
 
 ---
 
-## 9. Credibility guardrails
+## 10. Public wording guardrails
 
-Do not break phase logic.
+Forbidden until scoring unlock:
 
 ```text
-Actual phases and current phases must come from the established phase timeline.
+88% range precision
+track record proves edge
+price forecast accuracy
+verified historical average
 ```
 
-Allowed comments:
+Allowed:
 
 ```text
-repair attempt
-support test
-reclaim attempt
-Early Rotation Watch strengthening
-F2-watch improved
-```
-
-But these must appear as comments or state descriptions, not as new timeline phases.
-
-Do not over-explain unlocks in the image.
-
-```text
-The image is a compass.
-The written post is the explanation.
+forward test
+frozen forecast
+verified actual pending
+range result
+phase result
+rotation result
+baseline delta
+historical reconciliation in progress
 ```
 
 ---
 
-## 10. Canonical summary
+## 11. Canonical summary
 
-```text
-Future Cycle Navigator weekly images should use the CN #15 mobile-first standard: vertical, iPhone-readable, three main sections only, preserving Week Outlook, Altseason Countdown and Track Record Summary. The separate Weekly Outlook and Precision Methodology panels should be removed from the image. The Altseason Countdown must preserve the existing phase timeline and must not invent new phases. The image should clearly show the next phase, the phase to watch closely, and broad altseason timing, with Selective Alt Rotation highlighted as the personal focus phase before broad altseason.
-```
+Future Cycle Navigator visuals remain three-section and mobile-first, but the third section is `Forward Test Status`, not an unreconciled historical track record. Calendar countdowns are conditional and must be pre-registered to be scored. Range, phase and rotation accountability remain separate. Scoring governance overrides any older visual instruction that requires historical precision bars.
