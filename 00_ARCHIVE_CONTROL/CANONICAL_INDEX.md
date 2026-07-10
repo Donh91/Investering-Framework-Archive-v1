@@ -3,7 +3,7 @@
 **Dato:** 2026-07-10  
 **Status:** CANONICAL_ARCHIVE_CONTROL  
 **Formål:** Navigation til de nyeste operative og canonical framework-filer.  
-**Previous index history:** Preserved in Git commit history; this refresh compresses the navigation layer and removes outdated duplication.
+**Previous index history:** Preserved in Git commit history.
 
 ---
 
@@ -11,16 +11,23 @@
 
 ```text
 1. Read this file first.
-2. If a newer canonical file conflicts with an older file, the newer canonical file wins.
-3. Read runtime registries separately from permanent methodology.
-4. Read index addenda when listed below.
-5. Do not treat RAW or shadow rows as canonical learning without main-framework ratification.
+2. Newer canonical files override older conflicting files.
+3. Runtime configuration is separate from permanent methodology.
+4. RAW, shadow and initialized ledgers do not become canonical learning without main-framework ratification.
+5. Written governance is not functioning governance unless behavior or valid rows exist.
+6. The active top-level namespace is authoritative; canonical-project-archive/ is legacy read-only context.
 ```
 
 Full routing rules:
 
 ```text
 00_ARCHIVE_CONTROL/ARCHIVE_MAP_AND_ROUTING.md
+```
+
+Legacy namespace manifest:
+
+```text
+00_ARCHIVE_CONTROL/2026-07-10__legacy-namespace-manifest__canonical.md
 ```
 
 ---
@@ -58,12 +65,6 @@ Canonical file:
 ### DATA PING Hybrid v0.5.1
 
 ```text
-Current canonical edge-state, auto-escalation, downgrade, event-ledger and calibration protocol.
-```
-
-Canonical file:
-
-```text
 02_DATA_PING/protocols/2026-07-10__data-ping-hybrid-v0-5-1-auto-edge-escalator-consolidated__canonical.md
 ```
 
@@ -73,35 +74,27 @@ Status:
 CANONICAL_CURRENT
 ```
 
-Supersedes as active edge protocol:
-
-```text
-02_DATA_PING/protocols/2026-07-07__data-ping-alert-router-v0-1__canonical.md
-STATUS: SUPERSEDED_AS_ACTIVE_EDGE_PROTOCOL / RETAIN_HISTORICAL_CONTEXT
-```
-
 Operational effect:
 
-- dynamic active gate types, not permanent price hard-coding
-- EDGE_STATE separated from ALERT_STATUS
-- mandatory downgrade check
-- EDGE_MODE_COMPACT versus EDGE_MODE_FULL
-- hourly ledger when available
-- historical anchors owned by main framework
-- calibration rows require framework-approved anchors
-- fixed methodology separated from runtime configuration
-- DATA PING supplies evidence; main framework supplies judgment
+- dynamic framework-owned gates;
+- EDGE_STATE separate from ALERT_STATUS;
+- mandatory downgrade check;
+- EDGE MODE COMPACT/FULL;
+- source invariance and stale-config handling;
+- framework-owned historical anchors;
+- calibration maturity and supersession;
+- DATA PING supplies evidence, main framework supplies judgment.
+
+The older Alert Router v0.1 is:
+
+```text
+SUPERSEDED_AS_ACTIVE_EDGE_PROTOCOL / HISTORICAL_CONTEXT
+```
 
 ### Active gate and edge-event runtime registry
 
 ```text
 02_DATA_PING/live_state_handover/2026-07-10__active-gate-and-edge-event-registry__canonical.md
-```
-
-Status:
-
-```text
-CANONICAL_RUNTIME_CONFIGURATION
 ```
 
 Current runtime event:
@@ -113,40 +106,18 @@ ALERT_STATUS: RESOLVING
 EVENT_STATUS: OPEN_RESOLVING
 ```
 
-Runtime values may be superseded by a newer explicit main-framework registry without changing DATA PING methodology.
+### Active event and calibration
 
-### Active edge-event ledger
+Event ledger:
 
 ```text
 02_DATA_PING/live_state_handover/2026-07-08__pullback-edge-20260708-01__event-ledger.md
 ```
 
-Status:
-
-```text
-OPERATIONAL_EVENT_LEDGER / APPEND_ONLY
-```
-
-Contains the material path from early warning through PRESENT, downgrade and resolving WATCH.
-
-### Active pullback calibration
+Calibration:
 
 ```text
 04_MARKET_LEARNING/stress_flush/2026-07-08__pullback-edge-20260708-01__calibration-v3.md
-```
-
-Status:
-
-```text
-CALIBRATION_ACTIVE / PROVISIONAL_LEARNING_ONLY
-```
-
-Version chain:
-
-```text
-VERSION_1: SUPERSEDED
-VERSION_2: SUPERSEDED
-VERSION_3: CORRECTED_ACTIVE
 ```
 
 Outcome status:
@@ -160,17 +131,100 @@ EVENT_CLOSE: PENDING
 
 No final learning is ratified before sufficient maturity.
 
-### Canonical Weekly Backbone engine
+---
+
+## GPT-5.6 Fresh Eyes Audit — binding implementation
+
+Primary governance file:
 
 ```text
-01_CORE_FRAMEWORK/engines/2026-07-05__canonical-weekly-backbone-engine-v3-framework-operating-system__canonical.md
+01_CORE_FRAMEWORK/governance/2026-07-10__gpt-5-6-fresh-eyes-audit-implementation__canonical.md
+```
+
+Binding decisions:
+
+```text
+TIGHTEN CURRENT ARCHITECTURE
+SIMPLIFY BEFORE EXPANDING
+NEW_ENGINE_FREEZE: ACTIVE through 2026-08-09
+ROWS BEFORE NEW DOCUMENTS
+PUBLIC RANGE-PRECISION MARKETING: SUSPENDED
+BTC permission lane separated from alt permission lane
+DATA_MISSING = UNKNOWN, not bearish evidence
+```
+
+### Rule and Evidence Registry
+
+```text
+01_CORE_FRAMEWORK/governance/2026-07-10__rule-and-evidence-registry__canonical.md
+```
+
+Every active rule must expose evidence state, rows, baseline, behavior change, promotion condition and kill condition.
+
+### Active Test Registry
+
+```text
+06_RESEARCH_LAB/forward_tests/2026-07-10__active-test-registry__canonical.md
+```
+
+No new test or engine during the freeze unless it replaces, merges or repairs an existing listed item.
+
+### Simplified active framework map
+
+```text
+01_CORE_FRAMEWORK/architecture/2026-07-10__simplified-active-framework-map-and-crosswalk__canonical.md
+```
+
+Contains:
+
+- five diagnostic families;
+- Consensus renamed `MULTI_PING_AGGREGATION` and reduced to a feature;
+- BTC versus alt permission lanes;
+- capital-state/public-phase crosswalk;
+- unified score families.
+
+### F12 / F12.5 reproducibility freeze
+
+```text
+01_CORE_FRAMEWORK/governance/2026-07-10__f12-f12-5-reproducibility-freeze__canonical.md
 ```
 
 Status:
 
 ```text
-CWB_V3.0_CANONICAL_CURRENT
-CWB_V2.1_LEGACY_FALLBACK
+SPEC_INCOMPLETE
+OPERATIONAL_EVALUATION: SUSPENDED
+OUTPUT: NOT_EVALUABLE until source-backed reproducible specification exists
+```
+
+### Pullback Policy v0.2 correction
+
+```text
+01_CORE_FRAMEWORK/governance/2026-07-10__pullback-policy-v0-2-reproducibility-correction__canonical.md
+```
+
+Status:
+
+```text
+GUIDANCE_ONLY until exact bands, anchors and hard triggers are frozen
+```
+
+### Open Questions v1.2
+
+```text
+01_CORE_FRAMEWORK/governance/2026-07-10__open-questions-register-v1-2__canonical.md
+```
+
+This is the active unresolved-question navigation layer.
+
+---
+
+## Canonical Weekly Backbone
+
+Primary engine:
+
+```text
+01_CORE_FRAMEWORK/engines/2026-07-05__canonical-weekly-backbone-engine-v3-framework-operating-system__canonical.md
 ```
 
 Mandatory operative addendum:
@@ -179,7 +233,19 @@ Mandatory operative addendum:
 03_WEEKLY_OPERATIONS/canonical_backbone/2026-07-10__edge-event-archive-reconciliation-addendum__canonical.md
 ```
 
-The addendum requires future weekly runs to inspect newest DATA PING, Master Monday, Cycle Navigator, framework governance, archive-candidate queue, runtime registry, open edge events, matured/pending outcomes, supersession and lineage.
+The addendum now requires future weekly runs to inspect:
+
+- newest DATA PING, Master Monday, Cycle Navigator and governance;
+- archive candidate queue;
+- runtime registry and open events;
+- matured/pending outcomes;
+- Rule and Evidence Registry;
+- Active Test Registry;
+- Open Questions v1.2;
+- forecast lineage;
+- public track-record lock;
+- legacy namespace drift;
+- row production and new-engine-freeze compliance.
 
 ### Archive candidate queue
 
@@ -187,55 +253,17 @@ The addendum requires future weekly runs to inspect newest DATA PING, Master Mon
 00_ARCHIVE_CONTROL/2026-07-10__archive-candidate-queue__operational.md
 ```
 
-Status:
+Only unresolved items remain.
 
-```text
-OPERATIONAL_PENDING_QUEUE
-```
+---
 
-Only unresolved candidates remain in the queue.
+## Master Monday and Forecast Ledger integrity
 
-### Farside ETF Flow Ledger
-
-```text
-02_DATA_PING/source_integrations/2026-07-06__farside-etf-flow-ledger-data-ping-integration__canonical.md
-```
-
-Status:
-
-```text
-CANONICAL
-```
-
-Operational effect:
-
-- Farside is the primary machine-readable ETF-flow source
-- BTC/ETH/SOL print-versus-trend ledgers
-- pending/zero/holiday handling
-- latest print separated from 3D/5D/7D trend
-
-### Master Monday archive version chain
+Master Monday version-chain protocol:
 
 ```text
 03_WEEKLY_OPERATIONS/master_monday/process/2026-07-06__master-monday-archive-version-chain-protocol__canonical.md
 ```
-
-Status:
-
-```text
-CANONICAL
-```
-
-Weekly states remain separate:
-
-```text
-01_system_generated_pre_data_ping.md
-02_data_ping_derived_raw.md
-03_framework_ratified_final.md
-04_cycle_navigator_handoff_notes.md
-```
-
-Only framework-ratified final should normally drive Cycle Navigator and weekly scoring.
 
 Current W28 raw file:
 
@@ -243,47 +271,86 @@ Current W28 raw file:
 03_WEEKLY_OPERATIONS/master_monday/2026-W28/02_data_ping_derived_raw.md
 ```
 
-### Cycle Navigator mobile-first template
+W28 lineage correction:
+
+```text
+03_WEEKLY_OPERATIONS/master_monday/2026-W28/05_forecast-ledger-lineage-correction.md
+```
+
+Status:
+
+```text
+W28_FORECAST_LEDGER_SOURCE_STATUS: SOURCE_LINEAGE_UNRESOLVED
+W28_SCORING_ELIGIBILITY: NO
+```
+
+An official forecast must trace:
+
+```text
+ratified Master Monday → frozen Forecast Ledger → CN handoff → verified actual → score row
+```
+
+---
+
+## Cycle Navigator
+
+Current mobile-first template:
 
 ```text
 05_CYCLE_NAVIGATOR/templates/2026-07-06__cycle-navigator-mobile-first-image-template__canonical.md
 ```
 
-Status:
+Current correction:
 
 ```text
-CANONICAL
+Third panel = FORWARD TEST STATUS
+Historical precision bars = SUSPENDED
+Blended score = FORBIDDEN
+Calendar countdowns = only if pre-registered and later scored
+FRLP forward series starts at CN #15
 ```
 
-### FRED macro shadow production rule
+---
+
+## Forward-test and accountability ledgers
+
+BTC partial and FNP divergence ledger:
+
+```text
+06_RESEARCH_LAB/forward_tests/2026-07-10__offensive-divergence-and-fnp-ledger__operational.md
+```
+
+TechDev claim and revision ledger:
+
+```text
+06_RESEARCH_LAB/forward_tests/2026-07-10__techdev-claim-ledger__operational.md
+```
+
+Current evidence discipline:
+
+```text
+Schema/init rows are not valid rows.
+DATA_BLOCKED tests do not create pseudo-evidence.
+Roadmap, timing, range and trade accuracy remain separate.
+```
+
+---
+
+## Other current source anchors
+
+Farside ETF Flow Ledger:
+
+```text
+02_DATA_PING/source_integrations/2026-07-06__farside-etf-flow-ledger-data-ping-integration__canonical.md
+```
+
+FRED macro shadow production rule:
 
 ```text
 04_MARKET_LEARNING/macro_shadow/2026-07-05__fred-classic-targeted-series-production-upgrade__canonical.md
 ```
 
-Status:
-
-```text
-CANONICAL_MACRO_SHADOW
-```
-
-FRED macro context cannot determine recovery, rotation, rebuy, deployment or official execution state alone.
-
----
-
-## 2026-07-10 audit and index receipt
-
-Index addendum with detailed archive classification:
-
-```text
-00_ARCHIVE_CONTROL/2026-07-10__index-addendum-data-ping-hybrid-edge-event-archive.md
-```
-
-Canonical audit receipt:
-
-```text
-changelog/2026-07-10__canonical-archive-audit-data-ping-edge-event.md
-```
+FRED and TechDev may inform context and readiness but cannot independently determine execution, recovery, rotation, rebuy or deployment.
 
 ---
 
@@ -292,13 +359,13 @@ changelog/2026-07-10__canonical-archive-audit-data-ping-edge-event.md
 ```text
 1. User-verified actuals / Custom GPT verified DATA PING truth-layer
 2. Main-framework accepted canonical state and runtime configuration
-3. GitHub canonical governance and archive history
+3. Current GitHub canonical governance and archive history
 4. Grok shadow context
 5. Claude / Research Lab challenger context
-6. Memory-only or unverified context
+6. Legacy or memory-only context
 ```
 
-If Grok conflicts with Custom GPT verified values, Custom GPT wins. Shadow sources may reduce confidence but cannot unlock rebuy, rotation or deployment alone.
+If Grok conflicts with Custom GPT verified values, Custom GPT wins.
 
 ---
 
@@ -320,36 +387,13 @@ RUNTIME CONFIGURATION:
 - accepted current framework state
 ```
 
-Runtime configuration is framework-owned. Missing runtime config does not stop raw data collection.
-
----
-
-## Weekly archive reconciliation rule
-
-Every Canonical Weekly Backbone run must:
-
-1. read this index first;
-2. determine highest active DATA PING version;
-3. inspect newest DATA PING, Master Monday, Cycle Navigator and governance discussion;
-4. read archive-candidate queue;
-5. reconcile open edge events and matured outcomes;
-6. preserve supersession and source lineage;
-7. clear processed candidates and retain unresolved blockers;
-8. never promote RAW directly into canonical learning;
-9. report archive drift, missing lineage and write failures;
-10. end with VERSION_UPGRADE_DIAGNOSTIC and ARCHIVE_RECOMMENDATION.
+Missing runtime configuration does not stop raw data collection.
 
 ---
 
 ## Index maintenance rule
 
-Index files that are:
-
-- canonical
-- operationally important
-- governance relevant
-- used by DATA PING, Master Monday, Cycle Navigator or Research Lab
-- major accepted weekly learning
+Index files that are canonical, operationally important, governance relevant or used by DATA PING, Master Monday, Cycle Navigator or Research Lab.
 
 Do not index every raw ping or source note.
 
@@ -357,7 +401,8 @@ Preferred pattern:
 
 ```text
 Many raw inputs
-→ one append-only event/weekly ledger
-→ one distilled canonical note when justified
+→ append-only ledgers
+→ benchmarked outcomes
+→ distilled canonical learning when justified
 → index entry
 ```
