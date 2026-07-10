@@ -1,20 +1,21 @@
 # Canonical Weekly Backbone — Edge Event Archive Reconciliation Addendum
 
 **Dato:** 2026-07-10  
+**Updated:** 2026-07-10  
 **Status:** CANONICAL  
-**Område:** Canonical Weekly Backbone / archive reconciliation / edge-event lifecycle  
+**Område:** Canonical Weekly Backbone / archive reconciliation / edge-event lifecycle / evidence discipline  
 **Primary folder:** `03_WEEKLY_OPERATIONS/canonical_backbone/`  
-**Related folders:** `00_ARCHIVE_CONTROL/`, `02_DATA_PING/`, `04_MARKET_LEARNING/`  
-**Depends on:** Canonical Weekly Backbone Engine v3.0; DATA PING Hybrid v0.5.1 consolidated  
+**Related folders:** `00_ARCHIVE_CONTROL/`, `01_CORE_FRAMEWORK/`, `02_DATA_PING/`, `04_MARKET_LEARNING/`, `05_CYCLE_NAVIGATOR/`, `06_RESEARCH_LAB/`  
+**Depends on:** Canonical Weekly Backbone Engine v3.0; DATA PING Hybrid v0.5.1 consolidated; GPT-5.6 Fresh Eyes Audit Implementation  
 **Supersedes:** none; this is an operative addendum to CWB v3.0
 
 ---
 
 ## 1. Canonical decision
 
-Every future Canonical Weekly Backbone run must reconcile the archive state of DATA PING edge events, not only summarize the latest market state.
+Every future Canonical Weekly Backbone run must reconcile the archive state of DATA PING edge events and the evidence state of active rules/tests, not only summarize the latest market state.
 
-This addendum is mandatory whenever open or recently closed edge events exist.
+This addendum is mandatory whenever open/recently closed edge events, active tests or unresolved lineage items exist.
 
 ---
 
@@ -33,9 +34,15 @@ After reading `00_ARCHIVE_CONTROL/CANONICAL_INDEX.md`, every run must inspect:
 - matured and pending 24H / 72H / 7D / EVENT_CLOSE rows
 - supersession and source-lineage status
 - shadow context availability
+- Rule and Evidence Registry
+- Active Test Registry
+- Open Questions Register v1.2
+- legacy namespace drift
+- public track-record lock status
+- W28 and future forecast lineage
 ```
 
-If any of these are inaccessible, report exact missing inputs. Do not silently omit them.
+If any item is inaccessible, report exact missing inputs. Do not silently omit them.
 
 ---
 
@@ -82,14 +89,14 @@ DATA PING cannot create canonical event IDs, canonical anchors or event-close de
 
 Weekly Backbone must verify:
 
-- framework-approved reference time and trigger price exist
-- older calibration versions are preserved as `SUPERSEDED`
-- no silent overwrite occurred
-- exact horizon state is not backfilled from a distant prior run
-- interval counts are not mislabeled as clock duration
-- pending outcomes remain `PENDING`
-- source candidates are not promoted to canonical anchors without framework acceptance
-- sensor state is not promoted to framework judgment
+- framework-approved reference time and trigger price exist;
+- older calibration versions are preserved as `SUPERSEDED`;
+- no silent overwrite occurred;
+- exact horizon state is not backfilled from a distant prior run;
+- interval counts are not mislabeled as clock duration;
+- pending outcomes remain `PENDING`;
+- source candidates are not promoted to canonical anchors without framework acceptance;
+- sensor state is not promoted to framework judgment.
 
 If any check fails:
 
@@ -121,7 +128,130 @@ TACTICAL_EXECUTION_EDGE_VALUE
 
 ---
 
-## 7. Mandatory weekly output additions
+## 7. Governance-theater check
+
+Every active rule/test must report:
+
+```text
+rows_total
+valid_rows
+decision_divergence
+baseline_status
+behavior_changed
+evidence_status
+promotion_condition
+kill_condition
+last_review
+```
+
+If a rule has documentation but no behavioral evidence, classify it:
+
+```text
+WRITTEN_NOT_PROVEN
+```
+
+If a test has schema/init rows but no valid rows, report `VALID_ROWS: 0`.
+
+Do not count prompts, schemas, initialized ledgers or retrospective explanations as evidence rows.
+
+---
+
+## 8. New-engine freeze enforcement
+
+Through 2026-08-09:
+
+```text
+NEW_ENGINE_FREEZE: ACTIVE
+```
+
+Weekly Backbone must flag:
+
+- any new named engine;
+- any new shadow layer;
+- any new test outside the Active Test Registry;
+- any duplicate scoring concept;
+- any pseudo-row created while a test is DATA_BLOCKED.
+
+Allowed changes are bug fixes, lineage repair, data completion, row production, archive consolidation, reproducibility corrections and retirement/compression.
+
+---
+
+## 9. Forecast and public-scoring integrity
+
+Every official forecast must have:
+
+```text
+source Master Monday
+→ framework ratification
+→ frozen Forecast Ledger
+→ Cycle Navigator handoff
+→ verified actual
+→ score row
+```
+
+If incomplete:
+
+```text
+FORECAST_LINEAGE_STATUS: INCOMPLETE
+SCORING_STATUS: BLOCKED
+```
+
+While public track record is locked:
+
+- no historical precision bars;
+- no blended precision score;
+- no `88% precision` language;
+- CN third panel must be `Forward Test Status`;
+- range, phase and rotation remain separate.
+
+---
+
+## 10. Missing-data discipline
+
+```text
+DATA_MISSING = UNKNOWN
+DATA_MISSING != BEARISH_EVIDENCE
+```
+
+Missing critical data may block permission or reduce confidence. It may not be counted as a negative sensor observation.
+
+---
+
+## 11. Rule/test survival review
+
+Every weekly run must classify each active rule/test:
+
+```text
+KEEP
+MODIFY
+SUSPEND
+KILL
+BLOCKED
+```
+
+Required weekly evidence block:
+
+```yaml
+RULE_AND_TEST_REVIEW:
+  rules_reviewed:
+  tests_reviewed:
+  rows_added:
+  valid_rows_added:
+  decision_divergence_days:
+  baseline_results:
+  behavior_changes:
+  manual_interventions:
+  missing_field_rate:
+  items_suspended:
+  items_killed:
+  new_engine_freeze_breaches:
+```
+
+No promotion is implied by elapsed time alone.
+
+---
+
+## 12. Mandatory weekly output additions
 
 Every weekly run must include:
 
@@ -144,19 +274,28 @@ ARCHIVE_CANDIDATE_RECONCILIATION:
   candidates_left_pending:
   index_updates:
   archive_drift_detected:
+
+EVIDENCE_PRODUCTION_STATUS:
+  active_rule_rows:
+  active_test_rows:
+  valid_rows:
+  data_blocked_tests:
+  lineage_blocked_forecasts:
+  public_track_record_lock:
+  legacy_namespace_new_writes:
 ```
 
 Existing mandatory v3.0 fields remain required:
 
-- repository completeness
-- VERSION_UPGRADE_DIAGNOSTIC
-- CANONICAL_LEARNING_QUEUE
-- ARCHIVE_RECOMMENDATION
-- run status
+- repository completeness;
+- VERSION_UPGRADE_DIAGNOSTIC;
+- CANONICAL_LEARNING_QUEUE;
+- ARCHIVE_RECOMMENDATION;
+- run status.
 
 ---
 
-## 8. Post-audit automation rule
+## 13. Post-audit automation rule
 
 After a successful weekly reconciliation:
 
@@ -169,11 +308,13 @@ After a successful weekly reconciliation:
 6. Never promote RAW observations into canonical learning.
 7. Promote weekly learning only after sufficient maturity.
 8. Report archive drift, missing lineage and write failures.
+9. Update rows_total and valid_rows in the registries.
+10. Preserve the new-engine freeze unless main framework explicitly lifts it.
 ```
 
 ---
 
-## 9. Current event handoff
+## 14. Current event handoff
 
 As of this addendum:
 
