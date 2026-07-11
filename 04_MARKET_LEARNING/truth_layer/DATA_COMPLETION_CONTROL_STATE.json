@@ -1,0 +1,59 @@
+{
+  "as_of": "2026-07-12",
+  "control_state_version": "1.0",
+  "recovery_process_complete": true,
+  "btc_d": {
+    "status": "MANUAL_EXPORT_REQUIRED",
+    "full_m1_ready": false,
+    "required_symbol": "CRYPTOCAP:BTC.D",
+    "required_interval": "1D",
+    "required_start_date": "2023-01-01",
+    "required_file": "CRYPTOCAP_BTC.D_1D_2023-01-01_to_latest_complete_UTC.csv",
+    "next_owner": "USER",
+    "next_handoff": "CHATGPT_VALIDATION_AND_FULL_M1_REPLAY"
+  },
+  "stablecoin_deployment_proxy": {
+    "status": "WORKFLOW_INSTALLED_AWAITING_MANUAL_DISPATCH",
+    "history_ready": false,
+    "execution_repository": "Donh91/Eksperimenter-framework-",
+    "workflow": ".github/workflows/fetch_defillama_history_manual.yml",
+    "artifact_name": "DEFILLAMA_STABLECOIN_AND_DEX_HISTORY_6_ENTITIES",
+    "required_raw_endpoints": 12,
+    "next_owner": "USER",
+    "next_handoff": "CHATGPT_ARTIFACT_VALIDATION_AND_CANONICAL_INGESTION"
+  },
+  "m3": {
+    "status": "FORWARD_COLLECTION_ACTIVE_CI_GUARDED",
+    "ledger_coverage_ready": false,
+    "baseline_eligible_rows": 13,
+    "forward_eligible_rows": 0,
+    "eligible_rows_total": 13,
+    "independent_event_windows": 1,
+    "source_families": 4,
+    "largest_window_concentration_pct": 100.0,
+    "targets": {
+      "eligible_rows": 30,
+      "independent_event_windows": 3,
+      "source_families": 3,
+      "largest_window_concentration_pct_max": 50.0
+    },
+    "validator": "04_MARKET_LEARNING/truth_layer/tools/validate_m3_coverage.py",
+    "ci_workflow": ".github/workflows/validate_m3_forward_ledger.yml",
+    "next_owner": "SUNDAY_CLOSEOUT_AND_MASTER_MONDAY"
+  },
+  "frlp": {
+    "status": "FORWARD_TEST_ACTIVE",
+    "b3_revisit": "LOCKED_UNTIL_8_SCORED_FORWARD_ROWS"
+  },
+  "w28": {
+    "forecast_values": "FROZEN_UNSCORED",
+    "source_lineage": "UNRESOLVED",
+    "scoring_eligibility": false
+  },
+  "authority_boundary": {
+    "market_call": false,
+    "portfolio_action": false,
+    "outcome_scoring_from_this_control_state": false,
+    "rule_ratification": false
+  }
+}
