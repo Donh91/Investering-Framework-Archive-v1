@@ -1,6 +1,8 @@
 {
-  "schema_version": "1.0",
+  "schema_version": "1.1",
   "policy_file": "01_CORE_FRAMEWORK/governance/2026-07-11__repository-safety-and-backup-policy-v1__canonical.md",
+  "vault_activation_addendum": "01_CORE_FRAMEWORK/governance/2026-07-11__external-vault-activation-and-snapshot-contract-v1-1__canonical.md",
+  "backup_registry": "00_ARCHIVE_CONTROL/vault_backup_registry.json",
   "cycle_length_weeks": 4,
   "last_completed_position": 4,
   "next_position": 1,
@@ -22,16 +24,28 @@
     "status": "VERIFIED_CREATED"
   },
   "external_vault": {
-    "required_repository": "Donh91/Investering-Framework-Vault",
-    "status": "NOT_CONFIGURED",
-    "independent_repository_required": true,
+    "repository": "Donh91/Investering-Framework-Vault",
+    "status": "CONFIGURED_WRITABLE",
+    "visibility": "private",
+    "independent_repository_verified": true,
     "must_not_be_fork": true,
-    "credential_status": "NOT_CONFIGURED",
-    "last_verified_backup": null
+    "connector_access": "READ_WRITE_VERIFIED",
+    "vault_initialization_commit": "c580b1b38cb743f284bdc152ca1c3a32c7205c56",
+    "vault_policy_commit": "49d29977dbd53363b8de432ef3dc50085e47f807",
+    "connectivity_receipt_commit": "50f1350f4e3e5e4ed7fe235f3de3c948762992b9",
+    "connectivity_receipt_path": "receipts/2026-07-11__vault-connectivity-receipt.json",
+    "snapshot_mode": "CANONICAL_DISASTER_RECOVERY_SNAPSHOT",
+    "canonical_snapshot_pipeline": "ARMED",
+    "full_git_mirror_status": "NOT_CONFIGURED",
+    "last_verified_canonical_snapshot": null,
+    "last_connectivity_verification": "2026-07-11"
   },
   "next_full_backup_trigger": "BACKUP_TIMER_4_OF_4",
+  "next_backup_product": "PASS_CANONICAL_SNAPSHOT_OR_EXACT_PARTIAL_RECEIPT",
   "high_impact_override": {
     "enabled": true,
+    "requires_internal_safepoint": true,
+    "requires_out_of_cycle_vault_snapshot": true,
     "file_delete_threshold": 10,
     "repository_percent_threshold": 5,
     "top_level_directory_change": true,
