@@ -1,0 +1,35 @@
+{
+  "schema_version": "1.0",
+  "policy_file": "01_CORE_FRAMEWORK/governance/2026-07-11__repository-safety-and-backup-policy-v1__canonical.md",
+  "cycle_length_weeks": 4,
+  "last_completed_position": 4,
+  "next_position": 1,
+  "last_rotation_reset_date": "2026-07-11",
+  "counter_owner": "GitHub Archive Sync",
+  "counter_rule": "Increment once per successful scheduled weekly archive sync. Do not double-increment retries for the same ISO week.",
+  "last_internal_safepoint": {
+    "date": "2026-07-11",
+    "branch": "backup-safepoint/2026-07-11-initial-safety-freeze",
+    "source_branch": "main",
+    "source_commit_sha": "8aad34fcc0302f61f1282128f4c943433e6d8429",
+    "status": "VERIFIED_CREATED"
+  },
+  "external_vault": {
+    "required_repository": "Donh91/Investering-Framework-Vault",
+    "status": "NOT_CONFIGURED",
+    "independent_repository_required": true,
+    "must_not_be_fork": true,
+    "credential_status": "NOT_CONFIGURED",
+    "last_verified_backup": null
+  },
+  "next_full_backup_trigger": "BACKUP_TIMER_4_OF_4",
+  "high_impact_override": {
+    "enabled": true,
+    "file_delete_threshold": 10,
+    "repository_percent_threshold": 5,
+    "top_level_directory_change": true,
+    "canonical_index_or_governance_change": true,
+    "workflow_or_security_change": true
+  },
+  "last_updated": "2026-07-11"
+}
