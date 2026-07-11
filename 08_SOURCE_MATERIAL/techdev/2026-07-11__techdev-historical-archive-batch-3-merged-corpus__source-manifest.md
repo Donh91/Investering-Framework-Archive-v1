@@ -1,7 +1,7 @@
 # TechDev Historical Archive Batch 3 - Merged Corpus Source Manifest
 
 **Import date:** 2026-07-11  
-**Status:** SOURCE_MANIFEST / BATCH_3_SPLIT_COMPLETE / ANALYSIS_READY  
+**Status:** SOURCE_MANIFEST / BATCH_3_COMPLETE / ANALYSIS_READY  
 **Scope:** One merged and compressed 203-page PDF, with one TechDev article per page.
 
 ## Provenance and deduplication
@@ -11,15 +11,22 @@ merged_container_sha256: 68f52fef31bb52a1a2d48cf9c17de65f63bcee080eef23326a8e9ea
 merged_pages_or_articles: 203
 standalone_split_pdfs_created: 203
 raw_text_records_created: 203
-new_unique_source_documents_imported: 73
-prior_archive_identity_duplicates: 128
-intra_batch_duplicate_aliases: 1
+unique_normalized_page_contents: 202
+prior_manifested_pages_present: 128
+new_unique_source_documents_imported: 72
+source_identity_repairs: 1
+intra_batch_exact_duplicate_aliases: 1
 prior_archive_resend_aliases: 1
-cumulative_unique_source_documents_accounted_for: 214
+cumulative_unique_source_documents_accounted_for: 213
+new_source_backed_claim_rows: 71
+cumulative_source_backed_claim_rows: 257
+historical_topping_signal_snapshot_rows: 8
+valid_outcome_rows: 0
+scored_rows: 0
 outcome_scoring_performed: NO
 ```
 
-The merged and recompressed container changes binary file structure, so its split-page PDF hashes are not directly comparable with hashes of prior standalone PDFs. SHA-256 was retained for the merged container, every split PDF and every normalized text body. Cross-batch deduplication therefore used source identity, issue/part, publication date, title and normalized extracted text. Duplicate sources were not counted as corroborating evidence.
+The merged and recompressed container changes binary file structure, so split-page PDF hashes cannot be expected to equal hashes of prior standalone PDFs. SHA-256 was retained for the merged container, every split PDF and every normalized text body. Cross-batch deduplication therefore used source identity, issue/part, publication date, title and normalized extracted text. Duplicate sources were not counted as corroborating evidence.
 
 The exact split-file and normalized-text hashes are preserved in four append-only page-index files:
 
@@ -30,11 +37,17 @@ The exact split-file and normalized-text hashes are preserved in four append-onl
 08_SOURCE_MATERIAL/techdev/batch_3_page_index/2026-07-11__techdev-batch-3-page-index-part-4-of-4.md
 ```
 
+## Dedupe reconciliation
+
+- Merged page 1, Top Gauge Issue #5, identifies the prior generic `TechDev Newsletter Substack.pdf` artifact. It is a source-identity repair, not a new unique source.
+- Merged pages 54 and 72 are exact normalized-text duplicates. Page 72 is an alias only.
+- Merged page 143 is a re-send of page 23 with minor wrapper differences. It is a republication alias, not independent evidence.
+- Page-index Part 1 originally labeled page 1 `NEW_UNIQUE_CANDIDATE`. This manifest supersedes that provisional status with `PRIOR_SOURCE_IDENTITY_REPAIR_TOP_GAUGE_5`.
+
 ## Newly imported unique source coverage
 
 ```yaml
 full_issues: [7, 10, 39]
-top_gauge: [5]
 topping_signals: [5]
 market_updates:
   - 15-18
@@ -88,6 +101,14 @@ top_gauge_not_present_in_complete_user_export: [13,15,16,18,19,21]
 ```
 
 Absence from the complete user export is not treated as proof that an issue was never published. These identifiers remain explicit archive absences and must not be reconstructed from neighboring articles.
+
+## Analysis anchors
+
+```text
+06_RESEARCH_LAB/forward_tests/2026-07-11__techdev-historical-claims-batch-3__source-backed-extraction-v0-5.md
+06_RESEARCH_LAB/forward_tests/2026-07-11__techdev-topping-signals-update-5__historical-extraction-addendum.md
+04_MARKET_LEARNING/macro_shadow/2026-07-11__techdev-complete-archive-coverage-and-analysis-readiness__calibration-note.md
+```
 
 ## Archive boundary
 
