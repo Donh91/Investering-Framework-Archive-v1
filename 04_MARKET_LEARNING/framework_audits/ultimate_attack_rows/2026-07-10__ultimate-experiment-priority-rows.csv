@@ -1,0 +1,11 @@
+experiment_id,question,hypothesis,data_needed,horizon,scoring,minimum_sample,kill_criteria,expected_value,effort,priority,status,notes
+E01,FRLP forward-raekker,FRLP maaler range-skill aerligt,koerer (CN15->),8 uger,Winkler-blok,8,K1-K3,MEGET HOEJ,lav,1,ACTIVE,
+E02,FULL M1,ETF+BTC.D+ratio slaar pris alene paa IR,BTC.D-serie,replay+fwd,M1-metrikker,5 storme,FAR>0.6,HOEJ,med,2,BLOCKED(BTC.D),
+E03,B3-revisit,2.0 er den haardere bar ogsaa forward,FRL-raekker,8-16 uger,median-Winkler h2h,8,-,HOEJ,lav,3,PENDING,cross-regime-fund N2
+E04,Percentil-gates,cyklus-neutrale gates >= fixed,ratio-historik (har),pr. kryds,FP-rate h2h,10 kryds,taber til fixed,HOEJ,lav,4,READY_SHADOW,N4
+E05,M2 forward-logging,skyggefelter overlever forward,loebende,pr. event,pr. felt,8,felt-specifik,MED,lav,5,ACTIVE,
+E06,M3 Challenger,TRIAD-challenger vs frameworkets faktiske kald,decision ledger+tabsfunktion,replay+8 uger,6-akset,10 events,K-C1..3,HOEJ,hoej,6,BLOCKED,
+E07,Exit-ladder-skygge,E-states kan times uden falske exits,rotation+flow (har delvist),fwd,trin-praecision,8 pr. trin,trin-falsifier,MEGET HOEJ (haullukning),med,7,READY_SHADOW,N7
+E08,RotEngine-ben-operationalisering,stablecoin-inflow/vol-share kan defineres,kildevalg,-,definitionstest,-,ingen kilde -> arkivér,MED,med,8,NEEDS_DECISION,N8
+E09,ETF-placebo,A-lead er ikke event-densitets-artefakt,ETF-serie (har),engangs,placebo-lead vs aegte,-,placebo~aegte -> nedgradér D06,MED,lav,9,READY,
+E10,Alt-phase-label-audit v2,"0-fwd-vaerdi skyldes labeldef, ikke koncept",label-definition fra kilde,engangs,fwd-ret pr. ny def,-,-,MED,lav,10,NEEDS_INPUT,N9-def som challenger
