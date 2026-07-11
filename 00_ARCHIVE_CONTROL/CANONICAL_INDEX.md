@@ -27,6 +27,7 @@ Routing and index addenda:
 00_ARCHIVE_CONTROL/2026-07-10__index-addendum-gpt-5-6-fresh-eyes-audit-implementation.md
 00_ARCHIVE_CONTROL/2026-07-11__index-addendum-techdev-historical-batch-1.md
 00_ARCHIVE_CONTROL/2026-07-11__index-addendum-techdev-historical-batch-2.md
+00_ARCHIVE_CONTROL/2026-07-11__index-addendum-techdev-historical-batch-3.md
 00_ARCHIVE_CONTROL/2026-07-10__legacy-namespace-manifest__canonical.md
 ```
 
@@ -102,7 +103,7 @@ EVENT_CLOSE: PENDING
 
 ---
 
-## GPT-5.6 Fresh Eyes Audit — binding implementation
+## GPT-5.6 Fresh Eyes Audit - binding implementation
 
 Primary governance:
 
@@ -173,6 +174,7 @@ Archive queue:
 
 ```text
 00_ARCHIVE_CONTROL/2026-07-10__archive-candidate-queue__operational.md
+00_ARCHIVE_CONTROL/2026-07-11__archive-candidate-queue-techdev-batch-3-sync__operational-addendum.md
 ```
 
 ---
@@ -224,8 +226,10 @@ FRLP forward series starts at CN #15
 
 ```text
 06_RESEARCH_LAB/forward_tests/2026-07-10__active-test-registry__canonical.md
+06_RESEARCH_LAB/forward_tests/2026-07-11__active-test-registry-techdev-batch-3-sync__canonical-addendum.md
 06_RESEARCH_LAB/forward_tests/2026-07-10__offensive-divergence-and-fnp-ledger__operational.md
 06_RESEARCH_LAB/forward_tests/2026-07-10__techdev-claim-ledger__operational.md
+06_RESEARCH_LAB/forward_tests/2026-07-11__techdev-claim-ledger-batch-3-corpus-sync__operational-addendum.md
 ```
 
 Rules:
@@ -241,16 +245,22 @@ Source-backed claims are not scored outcomes.
 
 ## TechDev historical source archive
 
-Frozen Batch 1 and Batch 2 anchors:
+Frozen Batch 1, Batch 2 and Batch 3 anchors:
 
 ```text
 08_SOURCE_MATERIAL/techdev/2026-07-11__techdev-historical-paid-archive-batch-1__source-manifest.md
 08_SOURCE_MATERIAL/techdev/2026-07-11__techdev-historical-paid-archive-batch-2__source-manifest.md
+08_SOURCE_MATERIAL/techdev/2026-07-11__techdev-historical-archive-batch-3-merged-corpus__source-manifest.md
+08_SOURCE_MATERIAL/techdev/batch_3_page_index/2026-07-11__techdev-batch-3-page-index-part-1-of-4.md
+08_SOURCE_MATERIAL/techdev/batch_3_page_index/2026-07-11__techdev-batch-3-page-index-part-2-of-4.md
+08_SOURCE_MATERIAL/techdev/batch_3_page_index/2026-07-11__techdev-batch-3-page-index-part-3-of-4.md
+08_SOURCE_MATERIAL/techdev/batch_3_page_index/2026-07-11__techdev-batch-3-page-index-part-4-of-4.md
 06_RESEARCH_LAB/forward_tests/2026-07-11__techdev-historical-claims-and-revisions-2021-2025__source-backed-extraction-v0-3.md
 06_RESEARCH_LAB/forward_tests/2026-07-11__techdev-historical-claims-and-revisions-batch-2__source-backed-extraction-v0-4.md
+06_RESEARCH_LAB/forward_tests/2026-07-11__techdev-complete-corpus-analysis-readiness-batch-3__operational.md
 04_MARKET_LEARNING/macro_shadow/2026-07-11__techdev-historical-revision-and-governance-patterns__calibration-note.md
 04_MARKET_LEARNING/macro_shadow/2026-07-11__techdev-historical-revision-patterns-batch-2__calibration-note.md
-00_ARCHIVE_CONTROL/2026-07-11__techdev-historical-archive-continuation-handoff-batch-2.md
+00_ARCHIVE_CONTROL/2026-07-11__techdev-historical-archive-continuation-handoff-batch-3.md
 ```
 
 Later sequence and signal anchors:
@@ -258,27 +268,31 @@ Later sequence and signal anchors:
 ```text
 08_SOURCE_MATERIAL/techdev/2026-07-10__techdev-issues-81-95__source-manifest.md
 08_SOURCE_MATERIAL/techdev/2026-07-10__techdev-topping-signals-updates-1-8__source-manifest.md
+06_RESEARCH_LAB/forward_tests/2026-07-11__techdev-topping-signals-update-5__historical-extraction-addendum.md
 ```
 
 Current accounting:
 
 ```yaml
-unique_source_documents_accounted_for: 141
-exact_duplicate_upload_copies_ignored: 72
-source_backed_claim_rows: 186
-historical_topping_signal_snapshot_rows: 7
+unique_source_documents_accounted_for: 214
+exact_binary_duplicate_upload_copies_ignored_before_batch_3: 72
+batch_3_prior_archive_identity_duplicates: 128
+batch_3_intra_batch_duplicate_aliases: 1
+batch_3_prior_resend_aliases: 1
+source_backed_claim_rows: 186_EXISTING_BATCH_3_EXTRACTION_PENDING
+historical_topping_signal_snapshot_rows: 8
 valid_outcome_rows: 0
 scored_rows: 0
-continuation_status: OPEN_FOR_BATCH_3
+continuation_status: BATCH_3_SOURCE_SPLIT_COMPLETE_ANALYSIS_READY
 ```
 
-Current priority gaps:
+Current source coverage:
 
 ```yaml
-full_issues: [7, 10, 39]
-top_gauge: [5, 13, 15, 16, 18, 19, 21]
-market_update: [15-23, 24_PART_1, 25-28, 32_PART_1, 34-48, 50-63, 67, 69, 71, 74, 77-79]
-topping_signals: [5]
+full_issues_1_60: COMPLETE
+market_updates_1_95: COMPLETE
+topping_signals_1_8: COMPLETE
+top_gauge_not_present_in_complete_user_export: [13,15,16,18,19,21]
 ```
 
 Binding TechDev role:
@@ -329,6 +343,7 @@ changelog/2026-07-10__canonical-archive-audit-data-ping-edge-event.md
 changelog/2026-07-10__gpt-5-6-fresh-eyes-audit-implementation-receipt.md
 changelog/2026-07-11__techdev-historical-paid-archive-batch-1-import.md
 changelog/2026-07-11__techdev-historical-paid-archive-batch-2-import.md
+changelog/2026-07-11__techdev-historical-archive-batch-3-merged-corpus-ingestion.md
 ```
 
 ---
