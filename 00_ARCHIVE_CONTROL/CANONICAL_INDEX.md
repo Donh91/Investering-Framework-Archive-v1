@@ -26,6 +26,7 @@ Routing and index addenda:
 00_ARCHIVE_CONTROL/2026-07-10__index-addendum-data-ping-hybrid-edge-event-archive.md
 00_ARCHIVE_CONTROL/2026-07-10__index-addendum-gpt-5-6-fresh-eyes-audit-implementation.md
 00_ARCHIVE_CONTROL/2026-07-11__index-addendum-techdev-historical-batch-1.md
+00_ARCHIVE_CONTROL/2026-07-11__index-addendum-techdev-historical-batch-2.md
 00_ARCHIVE_CONTROL/2026-07-10__legacy-namespace-manifest__canonical.md
 ```
 
@@ -240,13 +241,16 @@ Source-backed claims are not scored outcomes.
 
 ## TechDev historical source archive
 
-Primary Batch 1 anchors:
+Frozen Batch 1 and Batch 2 anchors:
 
 ```text
 08_SOURCE_MATERIAL/techdev/2026-07-11__techdev-historical-paid-archive-batch-1__source-manifest.md
+08_SOURCE_MATERIAL/techdev/2026-07-11__techdev-historical-paid-archive-batch-2__source-manifest.md
 06_RESEARCH_LAB/forward_tests/2026-07-11__techdev-historical-claims-and-revisions-2021-2025__source-backed-extraction-v0-3.md
+06_RESEARCH_LAB/forward_tests/2026-07-11__techdev-historical-claims-and-revisions-batch-2__source-backed-extraction-v0-4.md
 04_MARKET_LEARNING/macro_shadow/2026-07-11__techdev-historical-revision-and-governance-patterns__calibration-note.md
-00_ARCHIVE_CONTROL/2026-07-11__techdev-historical-archive-continuation-handoff.md
+04_MARKET_LEARNING/macro_shadow/2026-07-11__techdev-historical-revision-patterns-batch-2__calibration-note.md
+00_ARCHIVE_CONTROL/2026-07-11__techdev-historical-archive-continuation-handoff-batch-2.md
 ```
 
 Later sequence and signal anchors:
@@ -259,13 +263,22 @@ Later sequence and signal anchors:
 Current accounting:
 
 ```yaml
-unique_source_documents_accounted_for: 94
-exact_duplicate_upload_copies_ignored: 21
-source_backed_claim_rows: 120
+unique_source_documents_accounted_for: 141
+exact_duplicate_upload_copies_ignored: 72
+source_backed_claim_rows: 186
 historical_topping_signal_snapshot_rows: 7
 valid_outcome_rows: 0
 scored_rows: 0
-continuation_status: OPEN_FOR_NEW_THREAD_BATCHES
+continuation_status: OPEN_FOR_BATCH_3
+```
+
+Current priority gaps:
+
+```yaml
+full_issues: [7, 10, 39]
+top_gauge: [5, 13, 15, 16, 18, 19, 21]
+market_update: [15-23, 24_PART_1, 25-28, 32_PART_1, 34-48, 50-63, 67, 69, 71, 74, 77-79]
+topping_signals: [5]
 ```
 
 Binding TechDev role:
@@ -315,6 +328,7 @@ FRED macro shadow:
 changelog/2026-07-10__canonical-archive-audit-data-ping-edge-event.md
 changelog/2026-07-10__gpt-5-6-fresh-eyes-audit-implementation-receipt.md
 changelog/2026-07-11__techdev-historical-paid-archive-batch-1-import.md
+changelog/2026-07-11__techdev-historical-paid-archive-batch-2-import.md
 ```
 
 ---
