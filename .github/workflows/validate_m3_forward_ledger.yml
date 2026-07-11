@@ -1,0 +1,73 @@
+name: Validate M3 forward evidence
+run-name: M3 evidence validation — ${{ github.sha }}
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "04_MARKET_LEARNING/truth_layer/M3_FORWARD_DECISION_LEDGER_v0_1.csv"
+      - "04_MARKET_LEARNING/truth_layer/M3_BASELINE_EVENT_WINDOW_MAP_v0_1.csv"
+      - "04_MARKET_LEARNING/truth_layer/2026-07-12__decision-ledger-private-github-lineage-upgrade.csv"
+      - "04_MARKET_LEARNING/truth_layer/tools/validate_m3_coverage.py"
+  pull_request:
+    paths:
+      - "04_MARKET_LEARNING/truth_layer/M3_FORWARD_DECISION_LEDGER_v0_1.csv"
+      - "04_MARKET_LEARNING/truth_layer/M3_BASELINE_EVENT_WINDOW_MAP_v0_1.csv"
+      - "04_MARKET_LEARNING/truth_layer/2026-07-12__decision-ledger-private-github-lineage-upgrade.csv"
+      - "04_MARKET_LEARNING/truth_layer/tools/validate_m3_coverage.py"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: m3-validation-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Validate baseline plus forward ledger
+        id: validator
+        shell: bash
+        run: |
+          set +e
+          mkdir -p validation_output
+          python 04_MARKET_LEARNING/truth_layer/tools/validate_m3_coverage.py \
+            --baseline 04_MARKET_LEARNING/truth_layer/2026-07-12__decision-ledger-private-github-lineage-upgrade.csv \
+            --forward 04_MARKET_LEARNING/truth_layer/M3_FORWARD_DECISION_LEDGER_v0_1.csv \
+            --baseline-window-map 04_MARKET_LEARNING/truth_layer/M3_BASELINE_EVENT_WINDOW_MAP_v0_1.csv \
+            --report validation_output/M3_COVERAGE_VALIDATION_REPORT.json
+          code=$?
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Upload validation receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: M3_COVERAGE_VALIDATION_REPORT
+          path: validation_output/
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Enforce validation result
+        if: always()
+        shell: bash
+        run: |
+          code="${{ steps.validator.outputs.exit_code }}"
+          if [ -z "$code" ]; then
+            exit 2
+          fi
+          exit "$code"
