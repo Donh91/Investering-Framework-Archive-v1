@@ -75,6 +75,21 @@ FORWARD_TEST_ONLY
 04_MARKET_LEARNING/framework_audits/2026-07-11__techdev-2021-2026-counterfactual-retrospective__canonical.md
 ```
 
+## Undefined sensor-leg source design
+
+```text
+04_MARKET_LEARNING/external_research/2026-07-11__undefined-sensor-legs-source-design-v0-1__canonical.md
+```
+
+Covers:
+
+```text
+BTC.D total and optional ex-stables source design
+forward-only constituent-frozen breadth snapshots
+DeFiLlama stablecoin deployment proxy
+true stablecoin velocity remains DATA_MISSING and non-blocking
+```
+
 ## Operational automation state
 
 Three active weekly jobs:
