@@ -1,14 +1,18 @@
 {
   "as_of": "2026-07-12",
-  "status": "FORWARD_COLLECTION_ACTIVE",
+  "status": "FORWARD_COLLECTION_ACTIVE_CI_GUARDED",
   "historical_backfill_status": "LIMIT_REACHED_WITH_CURRENT_ORIGINALS",
+  "baseline_source_file": "04_MARKET_LEARNING/truth_layer/2026-07-12__decision-ledger-private-github-lineage-upgrade.csv",
+  "baseline_event_window_map": "04_MARKET_LEARNING/truth_layer/M3_BASELINE_EVENT_WINDOW_MAP_v0_1.csv",
   "baseline_eligible_rows": 13,
   "baseline_independent_event_windows": 1,
+  "baseline_source_families": 4,
   "baseline_largest_event_window_share_pct": 100.0,
   "baseline_event_window_id": "PULLBACK_EDGE_20260708_01",
   "new_forward_rows_after_activation": 0,
   "eligible_rows_total": 13,
   "independent_event_windows_total": 1,
+  "source_families_total": 4,
   "coverage_targets": {
     "minimum_eligible_rows": 30,
     "minimum_independent_event_windows": 3,
@@ -19,9 +23,13 @@
   "M3_ledger_coverage_ready": "NO",
   "protocol": "04_MARKET_LEARNING/truth_layer/2026-07-12__m3-forward-decision-collection-protocol-v0-1__canonical.md",
   "forward_ledger": "04_MARKET_LEARNING/truth_layer/M3_FORWARD_DECISION_LEDGER_v0_1.csv",
+  "validator": "04_MARKET_LEARNING/truth_layer/tools/validate_m3_coverage.py",
+  "ci_workflow": ".github/workflows/validate_m3_forward_ledger.yml",
   "notes": [
+    "The frozen baseline is stored separately from the prospective append-only forward ledger.",
     "Schema rows do not count as evidence.",
     "No retrospective source promotion.",
-    "Outcome fields remain blank until frozen horizons close."
+    "Outcome fields remain blank until frozen horizons close.",
+    "Passing coverage gates allows governance review only; it does not authorize scoring or promotion."
   ]
 }
