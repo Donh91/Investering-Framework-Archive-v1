@@ -1,0 +1,9 @@
+automation_id,name,schedule,role,inputs,outputs,duplication,failure_risk,connector_dependency,recommended_action,replacement_or_merge,priority,notes
+AU1,Weekly RAW Learning Snapshot,soen 20:30,scoring/laering,ledgers+actuals,learning-raekker,delvis m. Backbone,MED (BLOCKED-historik loest),GitHub/filer,MERGE,-> SUNDAY CLOSEOUT (del 1),1,scoring FOER kanonisering
+AU2,Canonical Backbone,soen 21:00 (fix-doc: 20:30 = SCHED-DRIFT),kanonisk state,RAW+DATA PING+arkiv,backbone-raekke,duplikerer MM-preflight,MED,GitHub,MERGE,-> SUNDAY CLOSEOUT (del 2),1,sched-inkonsistens dokumenteret
+AU3,Master Monday,man 09:00,ugekalibrering,Closeout-raekke,MM-pakke + commit,-,LAV,GitHub-write,KEEP (starter fra Closeout; committer selv),-,1,§12-redesign af layout
+AU4,Auto Stabilizer,man 10:30,drift-detektion,prompts/outputs,patches (human-gated),stoej hver uge,LAV,-,CONVERT,-> DRIFT WATCH (trigger+maanedlig),2,kun ved format-fejl/manglende commit
+AU5,GitHub Archive Sync,man 11:15,arkivering,MM-outputs,commits,duplikerer MM-writes,MED (dobbelt-arkiv),GitHub,RETIRE,MM committer selv,1,sluk efter 1 uges dobbeltverifikation
+AU6,SUNDAY CLOSEOUT (ny),soen 20:30,scor+kanoniser i EET raekkefoelge,ledgers+actuals+PING,learning+backbone-raekke,-,LAV,GitHub (degrade-safe),CREATE,erstatter AU1+AU2,1,
+AU7,DRIFT WATCH (ny),condition + maanedlig,drift kun ved trigger,output-format/commit-status,flag,-,LAV,-,CREATE,erstatter AU4,2,
+AU8,FREEZE PING (manuel),man morgen (CN-uger),12-punkts freeze,settled candles+prints,frosne Group F-felter,-,LAV (menneske),FMP/Farside,KEEP MANUAL,-,1,"iPhone, ~10 min"
