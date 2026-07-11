@@ -1,5 +1,5 @@
 {
-  "schema_version": "1.1",
+  "schema_version": "1.2",
   "policy_file": "01_CORE_FRAMEWORK/governance/2026-07-11__repository-safety-and-backup-policy-v1__canonical.md",
   "vault_activation_addendum": "01_CORE_FRAMEWORK/governance/2026-07-11__external-vault-activation-and-snapshot-contract-v1-1__canonical.md",
   "backup_registry": "00_ARCHIVE_CONTROL/vault_backup_registry.json",
@@ -35,8 +35,18 @@
     "connectivity_receipt_commit": "50f1350f4e3e5e4ed7fe235f3de3c948762992b9",
     "connectivity_receipt_path": "receipts/2026-07-11__vault-connectivity-receipt.json",
     "snapshot_mode": "CANONICAL_DISASTER_RECOVERY_SNAPSHOT",
-    "canonical_snapshot_pipeline": "ARMED",
+    "canonical_snapshot_pipeline": "ARMED_AND_TESTED",
     "full_git_mirror_status": "NOT_CONFIGURED",
+    "last_copy_pipeline_test": {
+      "date": "2026-07-11",
+      "source_main_sha": "d6445e1cc1017725663d6208e18e0bf8e9bbee55",
+      "snapshot_root": "snapshots/2026-07-11-test/source-tree/",
+      "receipt_path": "receipts/2026-07-11__path-preserving-copy-test-receipt.json",
+      "paths_expected": 2,
+      "paths_verified": 2,
+      "blob_sha_matches": 2,
+      "result": "PASS_TEST_ONLY"
+    },
     "last_verified_canonical_snapshot": null,
     "last_connectivity_verification": "2026-07-11"
   },
