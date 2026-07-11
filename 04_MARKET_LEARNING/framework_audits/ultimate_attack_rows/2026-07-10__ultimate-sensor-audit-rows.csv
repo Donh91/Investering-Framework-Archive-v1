@@ -1,0 +1,27 @@
+sensor_id,sensor_name,family,source,direct_or_derived,latency,revision_risk,independence,redundancy,row_evidence,regime_dependence,false_positive_mode,false_negative_mode,recommended_role,verdict,confidence,data_quality,notes
+S01,A1 ETF-5d-net<-500,A,Farside,direct,1d(+prov.risiko),MED(+143->-84.9),hoej vs pris,lav,M1: lead-bidrag,single-regime,sjaelden,lag v. smaa outflows,URGENCY,KEEP(urgency-only),med,FULL,
+S02,A2 outflow-streak>=3,A,Farside,direct,1d,MED,hoej,lav,M1: lav FA; i begge best-combos,single-regime,faa,streak-brud v. enkeltprint,URGENCY,KEEP(urgency-only),med,FULL,
+S03,A3 print<mu-1sigma,A,Farside,direct,1d,MED,hoej,lav,M1: 5/7 af ALLE FA,regime-blind i rallies,rally-FA-klynger,-,URGENCY(karantaene),ONLY_WORKS_IN_REGIME_X,hoej,FULL,prune-beslutning kraever forward rows
+S04,C1 ratio-tab/quick-loss,C,afledt ratio,derived,0d,lav,middel,deler ratio m. gates,M1: PW10-fangst; 4 fires hoej vaerdi,single-regime,faa,sjaelden fire,WARNING,KEEP,med,FULL,
+S05,C2 ratio-5d<=-3%,C,afledt ratio,derived,0d,lav,middel,ratio-familie,M1: billigste enkeltregel +18.5%,single-regime,2 FA apr-26,1 storm-miss,WARNING,KEEP,med,FULL,
+S06,Fixed gates 0.0265/75/0300,C/rotation,ratio,derived,0d,lav,middel,ratio-familie,M4: 81% FP standalone; ATTACK: gate=40% af 2023-niveau vs 112% af 2025,CYKLUSBUNDET (kvantificeret),pokes fra hoej base,gate irrelevant naeste cyklus,WARNING(repair-markoer),KEEP denne cyklus + REPLACE-kandidat (percentil),hoej,FULL,percentil-skygge fra dag et
+S07,D1 ATR-ekspansion,D,OHLC,derived,0d,lav,lav(pris),pris-familie,M1: sjaelden; i best-combos,ukendt,faa,lagger flush-start,CONFIRMATION,NEEDS_MORE_ROWS,lav,FULL,
+S08,D2 close<EMA50+swingDOWN,D,OHLC,derived,0d(bekraeftelse 5d med),lav,lav,pris-familie x6,M1: 0 FA; ATTACK 16y: P(7d<=-8%)=18% ALLE regimer n=4921,koincident overalt,-,sen (median 5d lag),CONFIRMATION/VETO,"KEEP (veto, ALDRIG prognose)",hoej,FULL,cross-regime bekraeftet ikke-praediktiv
+S09,D3 20d-range-brud,D,OHLC,derived,0d,lav,lav,pris-familie,"M1: 0 FA, trim-flad",ukendt,-,sen,CONFIRMATION,KEEP(confirmation-only),med,FULL,
+S10,EMA50-kontekst,context,OHLC,derived,0d,lav,lav,=D2-ben,M1 CE-2: FA 7/22 over vs 0/19 under; M4: 11/11 kryds<EMA50 doede,single-regime,mekanisk delvist,-,CONTEXT,SHADOW_ONLY,med,FULL,
+S11,ATR14 Wilder,infra,OHLC,derived,0d,lav,-,-,baseline-infrastruktur,robust,-,-,CONTEXT/infra,KEEP,hoej,FULL,B4-frosset
+S12,Prisstruktur/swing m=2.0,D,OHLC,derived,median 5d lag,lav,lav,=D2,M4-maskineri attesteret,taerskel-sensitiv (m=1.5 katastrofal),regimebrud-fejl (5/2-UP),lag,CONFIRMATION,KEEP m. m-audit-pligt,med,FULL,
+S13,BTC.D,rotation,ingen kilde,-,-,-,-,-,ingen raekker,-,denominator-forvraengning,-,WARNING(fake-detektor),NEEDS_MORE_ROWS(DATA_MISSING),-,DATA_MISSING,dual-konvention paakraevet
+S14,Breadth,rotation,UDEFINERET,-,-,-,-,-,ingen,-,-,-,GATEKEEPER,NEEDS_MORE_ROWS + DEFINITIONSPLIGT,-,DATA_MISSING,ikke-falsificerbar gatekeeper (W1)
+S15,Stablecoin deployment,liquidity,UDEFINERET,-,-,-,-,-,ingen,-,-,-,GATEKEEPER,NEEDS_MORE_ROWS + DEFINITIONSPLIGT,-,DATA_MISSING,W2
+S16,Funding/OI/Liq,stress,ingen serie,-,-,MED,-,-,ingen,-,-,-,CONTEXT/stress,NEEDS_MORE_ROWS,-,DATA_MISSING,
+S17,CFGI,sentiment,ingen serie,-,-,lav,-,-,ingen,-,ekstrem-fear persisterer i fald,-,CONTEXT,NEEDS_MORE_ROWS,-,DATA_MISSING,
+S18,"TechDev/makro (PMI,Copper/Gold)",macro,nyhedsbrev/off. data,direct,uger-mdr lead,lav,HOEJ vs kryptopris,lav,"TD-ledger frossen, uafgjort",cross-cycle pr. natur,tidlig,sen transmission,CONTEXT (zero exec),KEEP(kontekst) + maanedlig kadence,lav-med,DEGRADED,staerkeste uafhaengige ben paa papiret
+S19,Likviditetsproxyer,liquidity,UDEFINERET,-,-,-,-,-,ingen,-,-,-,CONTEXT,NEEDS_MORE_ROWS,-,DATA_MISSING,
+S20,BASE_DEPTH,rotation-shadow,ratio,derived,0d,lav,JA,delvis DAYS_BELOW,M4/M2: 13/13+3/3 perfekt in-sample,single-regime,overfit-profil,-,SHADOW,SHADOW_ONLY,med,FULL,log hvert kryds
+S21,DAYS_BELOW_GATE,rotation-shadow,ratio,derived,0d,lav,restater S20,hoej m. S20,perfekt in-sample,single-regime,overfit,-,SHADOW,SHADOW_ONLY,lav,FULL,
+S22,LADDER_COMPLETION,rotation-shadow,ratio,derived,0d,lav,ja,gate-familie,n(real)=1,single-regime,-,-,SHADOW,NEEDS_MORE_ROWS,lav,FULL,
+S23,hold_days,rotation,ratio,derived,0d,lav,nej(varighed),-,M4: P(14|3)=4/9; >=14/30 label-cirkulaere,single-regime,-,exit-blind (307d forbi top),CLASSIFICATION-gulv,KEEP(minimum) m. cirkularitets-note,med,FULL,
+S24,SIG_A/SIG_B spike-grind,rotation-shadow,ratio,derived,0d,lav,ja,-,definitionsafhaengig; SIG_A afviser real,single-regime,SIG_A flagger real,-,SHADOW dual-log,SIG_A REJECT / SIG_B SHADOW_ONLY,med,FULL,
+S25,TRIAD-arbejdsdeling,meta,A/C/D,derived,-,-,-,-,M1/M2: laed/praecisions-split raekkebekraeftet,single-regime,-,-,META,KEEP,hoej,FULL,frameworkets staerkeste raekkefund
+S26,F1/F2 + range-baselines + human-adj + shadow-reanchor + RotEngine-ben,div,div,div,-,-,-,-,F2 1/1; ranges NOT_SUPPORTED; adj UNTESTED(alpha); reanchor SHADOW; RotEngine-ben UDEFINEREDE,-,-,-,div,se rapport §3+§5,-,MIXED,RotEngine: Execute-semantik omdoebes
