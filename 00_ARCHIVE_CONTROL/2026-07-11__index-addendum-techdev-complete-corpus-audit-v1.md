@@ -1,7 +1,7 @@
 # Canonical Archive Index Addendum - TechDev Complete Corpus Audit v1
 
 **Date:** 2026-07-11  
-**Status:** CANONICAL_INDEX_ADDENDUM
+**Status:** CANONICAL_INDEX_ADDENDUM / COMPLETE_AUDIT_SYNC
 
 ## Primary audit anchors
 
@@ -15,6 +15,14 @@
 01_CORE_FRAMEWORK/governance/2026-07-11__techdev-evidence-weighting-and-framework-impact-v1__ratification.md
 ```
 
+## Registry, queue and receipt sync
+
+```text
+06_RESEARCH_LAB/forward_tests/2026-07-11__active-test-registry-techdev-complete-audit-sync__canonical-addendum.md
+00_ARCHIVE_CONTROL/2026-07-11__archive-candidate-queue-techdev-complete-audit-sync__operational-addendum.md
+changelog/2026-07-11__techdev-complete-corpus-audit-v1.md
+```
+
 ## Current state
 
 ```yaml
@@ -22,13 +30,23 @@ unique_source_documents: 213
 source_backed_claim_rows: 257
 historical_topping_signal_snapshots: 8
 wave_1_scored_priority_rows: 24
-exhaustive_minor_alt_target_scoring: NOT_COMPLETED_DATA_DEPENDENT
+mature_supported: 5
+mature_partial: 5
+mature_not_supported: 8
+not_evaluable: 3
+open_or_mixed_open: 3
+exhaustive_minor_alt_target_scoring: DEFERRED_DATA_DEPENDENT
 standalone_execution_authority: ZERO
 rotation_authority: SHADOW_ONLY
 macro_context_weight: MEDIUM
 exact_timing_weight: LOW
+exact_target_weight: LOW
 ```
+
+## Supersession rule
+
+This addendum supersedes older TechDev counts and pending-analysis status in `00_ARCHIVE_CONTROL/CANONICAL_INDEX.md` until that parent index is next consolidated. Earlier source manifests and claim rows remain frozen and authoritative for lineage.
 
 ## Binding conclusion
 
-TechDev remains a macro compass, scenario generator and research input. Exact timing, exact targets, rotation permission and execution require independent framework evidence. Historical outcomes do not change current market state or portfolio action automatically.
+TechDev remains a macro compass, scenario generator and research input. Exact timing, exact targets, rotation permission and execution require independent framework evidence. Historical outcomes do not change current market state, gates, locks or portfolio action automatically.
