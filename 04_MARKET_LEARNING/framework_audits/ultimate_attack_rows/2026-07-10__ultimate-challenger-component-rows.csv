@@ -1,0 +1,10 @@
+system_id,component_id,component,inputs,logic,output,authority,scoring,expected_advantage,expected_weakness,overfit_risk,kill_criteria,verdict,notes
+S1_CLEANED,S1_CLEANED_TRIAD-core,TRIAD-core,A1A2C1C2D2D3,"M1-regler, A3 karantaene",urgency/warning/veto,0 exec,M1-metrikker,bevarer lead+renhed,single-regime,lav,8-ugers vinduer,KEEP,
+S2_MINIMAL,S2_MINIMAL_C+D+ATR+FRLP,C+D+ATR+FRLP,ratio+OHLC,faerrest sensorer,warning/veto/range,0 exec,FRLP,simplest,mister A-lead+laeringsflade,lavest,-,DESIGN_ONLY,
+S3_FABLE_OS,S3_FABLE_OS_TRIAD-core,TRIAD-core,som S1,som S1,-,0 exec,-,-,-,lav,-,KEEP,
+S3_FABLE_OS,S3_FABLE_OS_PERCENTIL-GA,PERCENTIL-GATES,ratio 365d-fordeling,"repair>p60, kandidat>p80 (skygge)",parallelle gate-labels,shadow,vs fixed pr. kryds,cyklus-neutral (gate-drift-fix),utestet,MED,taber til fixed over 10 kryds -> doed,NEEDS_FORWARD_ROWS,N4
+S3_FABLE_OS,S3_FABLE_OS_MAKRO-BEN,MAKRO-BEN,PMI+Copper/Gold+TD,"maanedlig kontekstblok, TD-ledger-format",kontekst-tag,0 exec,lead-vaerdi over 2 kvartaler,uafhaengigt ben,langsomt/stoejet,LAV,0 lead-vaerdi 2 kvartaler -> arkiv,NEEDS_FORWARD_ROWS,
+S3_FABLE_OS,S3_FABLE_OS_EXIT-LADDER ,EXIT-LADDER E0-E7,rotation+flow+struktur+TD,"7 trin, walk-forward, kun E5+ har handlingssprog",E-state-raekker,governance-gated,forward-raekker pr. trin,lukker exit-blindheden (M4),falske E4 i chop,MED,8-raekkers krav pr. trin,NEEDS_FORWARD_ROWS,N7
+S3_FABLE_OS,S3_FABLE_OS_ALPHA-LEDGER,ALPHA-LEDGER,FRL,adjustment_alpha=B15-CN,falsificerbar skill-delta,maaling,FRL,skill maalbar,ingen,LAV,K1,KEEP (koerer fra CN15),
+S3_FABLE_OS,S3_FABLE_OS_3-JOB-AUTOMA,3-JOB-AUTOMATION,se AU6-8,Closeout+MM+DriftWatch,drift,-,sundhedslog,faerre fejlpunkter,-,LAV,-,KEEP,
+S4_HYBRID,S4_HYBRID_S1-kerne i d,S1-kerne i drift + S3-tilfoejelser i skygge,alle,evidens-loyal kombination,-,0 exec,forward-vinduer,eneste kombination uden promotion-brud,langsommere,LAV,arver alle K,ANBEFALET TARGET-STATE,=verdictet
