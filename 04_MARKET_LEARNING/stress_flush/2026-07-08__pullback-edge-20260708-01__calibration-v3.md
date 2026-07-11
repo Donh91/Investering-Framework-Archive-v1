@@ -215,3 +215,29 @@ CALIBRATION_CORRECTION_LOG:
   interpretation_change: NONE
   signal_scoring_change: NONE
 ```
+
+---
+
+## Field-Level Alert Lineage Correction
+
+```yaml
+CALIBRATION_CORRECTION_LOG:
+  correction_id: CAL_CORR_20260710T172931_ALERT_LINEAGE_V1
+  correction_authority: MAIN_FRAMEWORK
+  correction_status: APPLIED
+  affected_run_id: DATA_PING_HYBRID_v0_5_1_20260710T172931Z
+  affected_row: RAW_CALIBRATION_ROW
+  affected_field: FRAMEWORK_ACCEPTED_ALERT_FROM_PRIOR_FEEDBACK
+  prior_value: WATCH
+  corrected_value: RESOLVING
+  prior_row_status: PRESERVED_AS_SUPERSEDED_AT_FIELD_LEVEL
+  active_field_value: RESOLVING
+  silent_overwrite: NO
+  raw_market_measurements_changed: NO
+  sensor_state_changed: NO
+  framework_history_reinterpreted: NO
+  source_status: FRAMEWORK_SUPPLIED
+  framework_acceptance: ACCEPTED
+```
+
+This correction changes lineage metadata only. It does not change the market observations, accepted sensor state, current framework state, or signal assessment.
