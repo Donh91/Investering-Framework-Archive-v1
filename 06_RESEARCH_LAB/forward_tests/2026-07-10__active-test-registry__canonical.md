@@ -151,17 +151,18 @@ owner: RESEARCH_LAB
 
 ```yaml
 test_id: TECHDEV_CLAIM_LEDGER
-status: ACTIVE_SOURCE_IMPORT_COMPLETE_BATCH_1_CONTINUATION_OPEN
+status: ACTIVE_SOURCE_IMPORT_COMPLETE_BATCH_2_CONTINUATION_OPEN
 question: How accurate are TechDev roadmap, timing, range and trade claims when scored separately?
 source_scope:
   historical_paid_archive_batch_1: 2021-11-04_TO_2025-10-13
+  historical_paid_archive_batch_2: 2022-03-06_TO_2025-02-09
   later_issue_sequence: ISSUES_81_TO_95
   topping_signal_sequence: UPDATES_1_2_3_4_6_7_8
-source_documents_accounted_for: 94
-exact_duplicate_upload_copies_ignored: 21
+source_documents_accounted_for: 141
+exact_duplicate_upload_copies_ignored: 72
 required_fields: [claim_id, issue_date, original_claim, target, time_window, invalidation, revision, final_outcome, timing_error, range_error, trade_result_if_applicable, framework_action_impact]
-rows_total: 120_SOURCE_BACKED_CLAIM_ROWS_PLUS_7_HISTORICAL_SIGNAL_SNAPSHOTS
-valid_source_rows: 120_UNSCORED
+rows_total: 186_SOURCE_BACKED_CLAIM_ROWS_PLUS_7_HISTORICAL_SIGNAL_SNAPSHOTS
+valid_source_rows: 186_UNSCORED
 valid_outcome_rows: 0
 scored_rows: 0
 benchmark: CATEGORY_SPECIFIC_SIMPLE_TIME_RANGE_AND_ACTION_BASELINES
@@ -170,8 +171,10 @@ next_review: NEW_SOURCE_BATCH_OR_SCORING_PROTOCOL_FREEZE
 promotion_condition: enough original-source rows and verified outcomes for category-specific calibration
 kill_condition: none for archive continuity; reduce framework weight if calibrated results are poor
 owner: RESEARCH_LAB
-source_manifest: 08_SOURCE_MATERIAL/techdev/2026-07-11__techdev-historical-paid-archive-batch-1__source-manifest.md
-continuation_handoff: 00_ARCHIVE_CONTROL/2026-07-11__techdev-historical-archive-continuation-handoff.md
+source_manifests:
+  - 08_SOURCE_MATERIAL/techdev/2026-07-11__techdev-historical-paid-archive-batch-1__source-manifest.md
+  - 08_SOURCE_MATERIAL/techdev/2026-07-11__techdev-historical-paid-archive-batch-2__source-manifest.md
+continuation_handoff: 00_ARCHIVE_CONTROL/2026-07-11__techdev-historical-archive-continuation-handoff-batch-2.md
 ```
 
 Rules for T7:
@@ -181,6 +184,8 @@ Roadmap, timing, range, trade and framework-action impact remain separate.
 Original claims and later revisions remain side by side.
 Historical source ingestion does not change live gates or portfolio action.
 Invalidation drift, analogy flexibility and correlated confluence are metadata flags, not scores.
+Author-reported backtests remain unverified until independently reproduced.
+Mechanical signal outcomes and discretionary overrides must be separated.
 ```
 
 ## T8 — Multi-Ping Aggregation Value
