@@ -17,6 +17,7 @@ PROCESSED_HISTORY_LOCATION:
 - changelog/2026-07-10__canonical-archive-audit-data-ping-edge-event.md
 - changelog/2026-07-10__gpt-5-6-fresh-eyes-audit-implementation-receipt.md
 - changelog/2026-07-11__techdev-historical-paid-archive-batch-1-import.md
+- changelog/2026-07-11__techdev-historical-paid-archive-batch-2-import.md
 ```
 
 ---
@@ -169,15 +170,22 @@ action: CLASSIFY_ON_DEMAND_NO_MASS_COPY
 
 ```yaml
 archive_class: FORWARD_TEST_DATA
-status: BATCH_1_COMPLETE_CONTINUATION_OPEN
-unique_source_documents_accounted_for: 94
-exact_duplicate_upload_copies_ignored: 21
-source_backed_claim_rows: 120
+status: BATCH_2_COMPLETE_CONTINUATION_OPEN
+unique_source_documents_accounted_for: 141
+exact_duplicate_upload_copies_ignored: 72
+source_backed_claim_rows: 186
 historical_signal_snapshot_rows: 7
 current_ledger: 06_RESEARCH_LAB/forward_tests/2026-07-10__techdev-claim-ledger__operational.md
-batch_manifest: 08_SOURCE_MATERIAL/techdev/2026-07-11__techdev-historical-paid-archive-batch-1__source-manifest.md
-continuation_handoff: 00_ARCHIVE_CONTROL/2026-07-11__techdev-historical-archive-continuation-handoff.md
-blocker: ADDITIONAL_HISTORICAL_FILES_EXPECTED_IN_NEW_THREAD
+batch_manifests:
+  - 08_SOURCE_MATERIAL/techdev/2026-07-11__techdev-historical-paid-archive-batch-1__source-manifest.md
+  - 08_SOURCE_MATERIAL/techdev/2026-07-11__techdev-historical-paid-archive-batch-2__source-manifest.md
+continuation_handoff: 00_ARCHIVE_CONTROL/2026-07-11__techdev-historical-archive-continuation-handoff-batch-2.md
+remaining_priority_gaps:
+  full_issues: [7, 10, 39]
+  top_gauge: [5, 13, 15, 16, 18, 19, 21]
+  market_update: [15-23, 24_PART_1, 25-28, 32_PART_1, 34-48, 50-63, 67, 69, 71, 74, 77-79]
+  topping_signals: [5]
+blocker: ADDITIONAL_HISTORICAL_FILES_EXPECTED_IN_LATER_BATCH
 action: CONTINUE_HASH_DEDUPED_SOURCE_IMPORT_WITHOUT_RETROACTIVE_REWRITE
 outcome_scoring_status: BLOCKED_PENDING_FROZEN_METHOD
 ```
@@ -197,7 +205,7 @@ action: PRODUCE_ROWS_NOT_NEW_SPECS
 ```yaml
 archive_class: CALIBRATION_GOVERNANCE
 status: PENDING_SEPARATE_PROTOCOL
-source_rows_ready: 120
+source_rows_ready: 186
 outcome_rows_ready: 0
 required_before_scoring:
   - VERIFIED_ACTUAL_SOURCE
@@ -208,6 +216,8 @@ required_before_scoring:
   - CATEGORY_SPECIFIC_BASELINE
   - RANGE_AND_TIMING_ERROR_FORMULAS
   - ACTION_COUNTERFACTUAL_RULE
+  - MECHANICAL_VS_DISCRETIONARY_TREATMENT
+  - AUTHOR_REPORTED_BACKTEST_REPRODUCTION_RULE
 blocker: METHOD_NOT_FROZEN
 action: CREATE_ONE_SCORING_PROTOCOL_AFTER_SOURCE_IMPORT_CONTINUATION_OR_WHEN_USER_PRIORITIZES_OUTCOME_AUDIT
 new_engine: NO
