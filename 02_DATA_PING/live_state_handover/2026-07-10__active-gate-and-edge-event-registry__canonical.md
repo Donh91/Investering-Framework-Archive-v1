@@ -1,9 +1,9 @@
 # Active Gate and Edge Event Registry
 
 **Initial date:** 2026-07-10  
-**Last framework review:** 2026-07-11T00:05:00Z  
+**Last framework review:** 2026-07-11T14:33:24Z  
 **Status:** CANONICAL_RUNTIME_CONFIGURATION  
-**Område:** DATA PING runtime handover / active gates / active edge event  
+**Område:** DATA PING runtime handover / active gates / edge-event state  
 **Primary folder:** `02_DATA_PING/live_state_handover/`  
 **Related folders:** `02_DATA_PING/protocols/`, `04_MARKET_LEARNING/stress_flush/`  
 **Depends on:** `2026-07-10__data-ping-hybrid-v0-5-1-auto-edge-escalator-consolidated__canonical.md`
@@ -17,11 +17,10 @@ ACTIVE_GATE_REGISTRY_OWNER: MAIN_FRAMEWORK / CHATGPT
 EDGE_EVENT_ID_OWNER: MAIN_FRAMEWORK / CHATGPT
 USER_MANUAL_GATE_ANALYSIS_REQUIRED: NO
 DATA_PING_MAY_INFER_OR_CHANGE_VALUES: NO
+EVENT_CLOSE_AUTHORITY: MAIN_FRAMEWORK_ONLY
 ```
 
-This file is runtime configuration. It is not permanent sensor methodology.
-
-A newer explicit main-framework registry supersedes this file's values.
+This file is runtime configuration, not permanent sensor methodology. A newer explicit main-framework registry supersedes these values.
 
 ---
 
@@ -34,17 +33,16 @@ ACTIVE_GATE_REGISTRY:
   gate_registry_timestamp: 2026-07-10T11:59:38Z
   gate_registry_confidence: HIGH
   gate_registry_status: CURRENT
-  last_framework_confirmation_time: 2026-07-11T00:05:00Z
+  last_framework_confirmation_time: 2026-07-11T14:33:24Z
   btc_reclaim_gate: 63300
   btc_survival_gate: 61900
   btc_deterioration_gate: 59400
   ethbtc_repair_gate: 0.0275
   ethbtc_confirmation_gate: 0.0300
   notes:
-    - Values are active runtime gates for the current W28 context.
-    - They are not permanent hard-coded price levels.
-    - Main framework must issue the next registry update when active structure changes.
-    - DATA PING runs after this review should not mark the registry lineage stale if they consume this exact registry identity and timestamp.
+    - Values remain active runtime gates for the current W28 context.
+    - They are not permanent hard-coded levels.
+    - DATA PING must not infer replacements.
 ```
 
 ---
@@ -53,55 +51,76 @@ ACTIVE_GATE_REGISTRY:
 
 ```yaml
 ACTIVE_EDGE_EVENT:
-  edge_event_id: PULLBACK_EDGE_20260708_01
-  edge_event_type: PULLBACK_EDGE
-  event_status: OPEN_RESOLVING
-  framework_edge_state: WATCH
-  framework_alert_status: RESOLVING
-  canonical_first_present_time: 2026-07-08T14:03:00Z
-  canonical_first_present_run_id: DEEP_DATA_PING_V4_20260708T140300Z
-  canonical_trigger_price_btc: 61784.48
-  canonical_first_resolving_time: 2026-07-08T20:06:00Z
-  canonical_first_watch_time: FRAMEWORK_PENDING_EXACT_ANCHOR
-  canonical_first_near_present_time: FRAMEWORK_PENDING_EARLIER_HISTORY_CHECK
-  earliest_source_backed_near_present_candidate_time: 2026-07-08T11:15:00Z
-  earliest_source_backed_near_present_candidate_run: DATA_PING_V4_20260708T111500Z
-  latest_framework_accepted_run_id: DATA_PING_HYBRID_v0_5_1_20260710T233405Z
-  latest_framework_accepted_run_time: 2026-07-10T23:34:05Z
-  latest_material_transition: BTC_FIRST_DAILY_CLOSE_ABOVE_63300_WITH_ETHBTC_REPAIR_HELD
-  event_close_candidate: YES_AFTER_72H_MATURITY_IF_NO_REESCALATION
-  event_close_time: PENDING
-  event_close_authority: MAIN_FRAMEWORK_ONLY
+  status: NONE
+  prior_event_id: PULLBACK_EDGE_20260708_01
+  prior_event_status: CLOSED_RESOLVED
+  event_close_time: 2026-07-11T14:33:24Z
+  event_close_run_id: DATA_PING_HYBRID_v0_5_1_20260711T143324Z
+  event_close_authority: MAIN_FRAMEWORK
+  close_basis:
+    - 72H_OUTCOME_MATURED
+    - BTC_RECLAIMED_AND_HELD_63300_AT_HORIZON
+    - BTC_SURVIVAL_GATE_RECLAIMED
+    - ETHBTC_REPAIR_GATE_HELD
+    - NO_REESCALATION
+    - 1H_AND_24H_BREADTH_REPAIRED_AT_REVIEW
+  close_does_not_mean:
+    - BROAD_RECOVERY_CONFIRMED
+    - ROTATION_CONFIRMED
+    - REBUY_UNLOCKED
+    - LARGE_CAP_DEPLOYMENT_OPEN
+```
+
+The prior event is archived in:
+
+```text
+02_DATA_PING/live_state_handover/2026-07-11__pullback-edge-20260708-01__72h-event-close-receipt.md
+04_MARKET_LEARNING/stress_flush/2026-07-11__pullback-edge-20260708-01__72h-close-calibration-addendum.md
 ```
 
 ---
 
-## Accepted Current State
+## Last Closed Event
 
-As of the latest reviewed truth-layer run:
+```yaml
+LAST_CLOSED_EDGE_EVENT:
+  edge_event_id: PULLBACK_EDGE_20260708_01
+  edge_event_type: PULLBACK_EDGE
+  canonical_first_present_time: 2026-07-08T14:03:00Z
+  canonical_first_present_run_id: DEEP_DATA_PING_V4_20260708T140300Z
+  canonical_trigger_price_btc: 61784.48
+  canonical_first_resolving_time: 2026-07-08T20:06:00Z
+  event_close_time: 2026-07-11T14:33:24Z
+  event_close_run_id: DATA_PING_HYBRID_v0_5_1_20260711T143324Z
+  horizon_72h_close: 64248.00
+  horizon_72h_close_move_pct: 3.9873
+  post_trigger_max_additional_downside_pct: 0.3883
+  post_trigger_max_rebound_pct: 4.7073
+  tactical_trim_edge_at_24h_72h: NOT_SUPPORTED
+  market_stress_detection_value: PARTIALLY_SUPPORTED_SHORT_LIVED_STRESS
+  final_7d_calibration: PENDING
+```
+
+---
+
+## Accepted Current Framework State
 
 ```text
-FRAMEWORK_EDGE_STATE: WATCH
-ALERT_STATUS: RESOLVING
-EVENT_STATUS: OPEN_RESOLVING / CLOSURE_CANDIDATE
-SELL_A_BID_EDGE: INACTIVE_FOR_NEW_TRIM
+FRAMEWORK_EDGE_STATE: NONE
+ALERT_STATUS: CLOSED
+EVENT_STATUS: CLOSED_RESOLVED
 NEW_PULLBACK_ALERT: NO
 ACTIVE_TRIM_SIGNAL: NO
-BTC_RECLAIM_STATUS: FIRST_DAILY_CLOSE_CONFIRMED / PERSISTENCE_PENDING
+SELL_A_BID_EDGE: INACTIVE
+BTC_RECLAIM_STATUS: RECLAIMED_AND_HELD_AT_72H_HORIZON
 ETHBTC_REPAIR_STATUS: HELD / 0.0300_CONFIRMATION_NOT_REACHED
+BROAD_RECOVERY_STATUS: NOT_FULLY_CONFIRMED
 REBUY_STATUS: LOCKED
 ROTATION_STATUS: NO_ROTATION
 LARGE_CAP_BUY_WINDOW: WATCH_ONLY / NOT_OPEN
 ```
 
-Framework interpretation:
-
-- The first completed BTC daily close above 63.3K materially de-escalates the original pullback event.
-- It does not by itself prove broad recovery, rotation or deployment because 7D breadth remains weak, completed ETF flow is mixed/negative, stablecoin deployment is unknown and leverage is rebuilding.
-- Preserve WATCH / RESOLVING through the 72H maturity point unless the event re-escalates.
-- If the 72H row matures without renewed loss of 63.3K/61.9K, ETH/BTC repair loss or broad deterioration, main framework should review formal event close.
-
-This state is an operational framework interpretation, not a DATA PING sensor conclusion.
+Closing this event removes the old pullback alert. It does not create an offensive market permission.
 
 ---
 
@@ -109,24 +128,17 @@ This state is an operational framework interpretation, not a DATA PING sensor co
 
 ```yaml
 framework_acceptance_status_current_run: ACCEPTED
-accepted_run_id: DATA_PING_HYBRID_v0_5_1_20260710T233405Z
+accepted_run_id: DATA_PING_HYBRID_v0_5_1_20260711T143324Z
 accepted_sensor_state: WATCH
-accepted_alert_status: RESOLVING
+accepted_sensor_alert_status: RESOLVING
+framework_post_review_edge_state: NONE
+framework_post_review_alert_status: CLOSED
 accepted_gate_registry_id: GATE_REGISTRY_2026W28_V1
 accepted_gate_registry_timestamp: 2026-07-10T11:59:38Z
 accepted_gate_registry_confidence: HIGH
 accepted_event_id: PULLBACK_EDGE_20260708_01
-accepted_new_alert: NO
+accepted_event_close: YES
 accepted_portfolio_action: NO_NEW_ACTION
-```
-
-Historical field hygiene:
-
-```text
-The intermediate 2026-07-10T17:29:31Z RAW_CALIBRATION_ROW field
-FRAMEWORK_ACCEPTED_ALERT_FROM_PRIOR_FEEDBACK: WATCH
-was incorrect. The prior accepted alert status was RESOLVING.
-Preserve the old row and append a correction; do not silently overwrite it.
 ```
 
 ---
