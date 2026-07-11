@@ -1,7 +1,7 @@
 # TechDev Historical Archive - Continuation Handoff after Batch 3
 
 **Date:** 2026-07-11  
-**Status:** OPERATIONAL_HANDOFF / BATCH_3_SOURCE_SPLIT_COMPLETE / CONTINUATION_OPEN  
+**Status:** OPERATIONAL_HANDOFF / BATCH_3_COMPLETE / CONTINUATION_OPEN  
 **Purpose:** Continue TechDev archive work without rewriting the three frozen source-ingestion batches.
 
 ## Completed accounting
@@ -11,19 +11,22 @@ batch_3_input_files: 1_MERGED_COMPRESSED_PDF
 batch_3_article_pages: 203
 batch_3_split_source_pdfs: 203
 batch_3_extracted_text_records: 203
-batch_3_new_unique_source_documents: 73
+batch_3_unique_normalized_page_contents: 202
+batch_3_new_unique_source_documents: 72
 batch_3_prior_archive_identity_duplicates: 128
-batch_3_intra_batch_duplicate_aliases: 1
+batch_3_source_identity_repairs: 1
+batch_3_intra_batch_exact_duplicate_aliases: 1
 batch_3_prior_archive_resend_aliases: 1
-cumulative_unique_source_documents_accounted_for: 214
-cumulative_exact_binary_duplicate_copies_ignored_before_batch_3: 72
-cumulative_source_backed_claim_rows_already_extracted: 186
+cumulative_unique_source_documents_accounted_for: 213
+cumulative_source_backed_claim_rows: 257
 historical_topping_signal_snapshot_rows: 8
 valid_outcome_rows: 0
 scored_rows: 0
 ```
 
 Batch 3 used source-identity and normalized-text comparison for cross-batch deduplication because the user merged and recompressed the original PDFs. The merged container and every split page retain SHA-256 lineage.
+
+Top Gauge Issue #5 is an identity repair for the prior generic `TechDev Newsletter Substack.pdf` artifact. It is not counted as a new unique source.
 
 ## Frozen Batch 3 anchors
 
@@ -34,7 +37,10 @@ Batch 3 used source-identity and normalized-text comparison for cross-batch dedu
 08_SOURCE_MATERIAL/techdev/batch_3_page_index/2026-07-11__techdev-batch-3-page-index-part-3-of-4.md
 08_SOURCE_MATERIAL/techdev/batch_3_page_index/2026-07-11__techdev-batch-3-page-index-part-4-of-4.md
 06_RESEARCH_LAB/forward_tests/2026-07-11__techdev-complete-corpus-analysis-readiness-batch-3__operational.md
+06_RESEARCH_LAB/forward_tests/2026-07-11__techdev-historical-claims-batch-3__source-backed-extraction-v0-5.md
 06_RESEARCH_LAB/forward_tests/2026-07-11__techdev-topping-signals-update-5__historical-extraction-addendum.md
+04_MARKET_LEARNING/macro_shadow/2026-07-11__techdev-complete-archive-coverage-and-analysis-readiness__calibration-note.md
+00_ARCHIVE_CONTROL/2026-07-11__index-addendum-techdev-historical-batch-3.md
 ```
 
 Prior Batch 1, Batch 2, Issues #81-#95 and Topping Signals manifests remain frozen and authoritative for their original imports.
@@ -50,22 +56,9 @@ top_gauge_not_present_in_complete_user_export: [13,15,16,18,19,21]
 
 The six Top Gauge absences may not be inferred or reconstructed.
 
-## Next research task
+## Analysis state
 
-Append a complete source-backed claim and revision extraction for the 73 new unique Batch 3 sources. Preserve:
-
-```text
-original confidence language
-original target and timing window
-original invalidation
-later target or timing revision
-model-family change
-mechanical signal status
-analyst override
-framework-action impact, if source-backed
-```
-
-The existing 186 claim rows must not be rewritten. New Batch 3 rows must receive new IDs and remain unscored.
+Batch 3 claim-navigation rows TDH_187 through TDH_257 are appended and unscored. The cumulative corpus now supports full chronological analysis across complete Full Issues #1-#60, Market Updates #1-#95 and Topping Signals #1-#8. Complete performance scoring remains blocked until the actual-source and category-scoring protocol is frozen.
 
 ## Protocol for later uploads
 
