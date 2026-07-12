@@ -1,16 +1,25 @@
-# Investering Agent Skills v0.1.1
+# Investering Agent Skills v0.2
 
 **Dato:** 2026-07-12  
 **Status:** CANONICAL  
-**Område:** agent workflows / repository operating layer / reproducibility  
+**Område:** agent workflows / repository operating layer / reproducibility / prospective evidence  
 **Primary folder:** `07_PROMPTS_AND_AGENTS/github_agent/`  
-**Related folders:** `.agents/skills/`, `00_ARCHIVE_CONTROL/`  
-**Depends on:** `AGENTS.md`, Canonical Archive Index, Index Addendum Registry, Archive Map and Routing, GPT-5.6 Fresh Eyes Audit, Repository Safety and Backup Policy  
-**Supersedes:** v0.1 behavior where contradicted by the v0.1.1 hardening controls in this owner
+**Related folders:** `.agents/skills/`, `00_ARCHIVE_CONTROL/`, `06_RESEARCH_LAB/forward_tests/`  
+**Depends on:** `AGENTS.md`, Canonical Archive Index, Index Addendum Registry, Archive Map and Routing, Rule and Evidence Registry, Active Test Registry, Repository Safety and Backup Policy  
+**Supersedes:** Agent Skills v0.1.1 behavior where contradicted by the v0.2 additions in this owner
 
 ## 1. Executive decision
 
-Investering Agent Skills v0.1.1 is the active hardened pilot operating layer for repository-aware agents.
+Investering Agent Skills v0.2 is the active hardened pilot operating layer for repository-aware agents.
+
+It contains four procedure Skills:
+
+```text
+canonical-context-router
+prospective-evidence-ledger
+archive-governance
+research-lab-red-team
+```
 
 It is not:
 
@@ -18,21 +27,24 @@ It is not:
 - a new shadow layer;
 - a market model;
 - a source of live thresholds;
+- a scoring engine;
 - an automation scheduler;
 - a portfolio-action system;
 - evidence of trading edge.
 
-It converts repeated repository procedures into on-demand, version-controlled instructions.
-
 ```yaml
-stack_version: 0.1.1
+stack_version: 0.2
 status: PILOT_ACTIVE_HARDENED
-skills: 3
-qualified_uses: 1
+skills: 4
+stack_qualified_uses: 1
+prospective_evidence_ledger_version: 0.1
+prospective_evidence_ledger_qualified_uses: 0
 trading_logic_changed: NO
 framework_authority_changed: NO
 new_engine_created: NO
 new_shadow_layer_created: NO
+new_test_created: NO
+new_ledger_created: NO
 new_score_created: NO
 ```
 
@@ -41,16 +53,19 @@ new_score_created: NO
 The repository contains strong canonical governance, but agents can still fail operationally by:
 
 - reading old files before current owner files;
-- overlooking valid index addenda not directly listed in the canonical index;
+- overlooking valid index addenda;
 - reactivating superseded rules;
 - treating source material as doctrine;
 - creating duplicate canonical documents;
-- archiving entire discussions instead of durable learning;
 - promoting explanatory research without rows;
 - relying on a connector default and writing to `main`;
-- creating placeholder files while probing tool behavior;
-- overstating targeted or pre-merge backup coverage;
-- relying on conversation memory instead of GitHub state.
+- overstating backup coverage;
+- treating a source row or schema as outcome evidence;
+- reconstructing forecasts after outcomes;
+- rewriting frozen inputs;
+- scoring before a method is frozen;
+- counting overlapping observations as independent;
+- treating validator or coverage readiness as edge.
 
 The Skill layer addresses procedure, not market intelligence.
 
@@ -70,16 +85,27 @@ AGENTS.md
 = repository-wide non-negotiable operating rules
 
 SKILL_REGISTRY.md
-= active skill inventory, routing and pilot governance
+= active Skill inventory, routing and pilot governance
 
 .agents/skills/*/SKILL.md
 = task-specific procedures loaded when relevant
+
+Active Test Registry
+= authorized forward-test navigation
+
+Domain ledgers
+= frozen inputs, outcomes and accountability
+
+Domain validators and scorers
+= row integrity, coverage and owner-defined measurement
 
 GitHub branches and pull requests
 = reviewed execution and receipts
 ```
 
-Default composition:
+## 4. Composition
+
+General framework work:
 
 ```text
 canonical-context-router
@@ -88,22 +114,35 @@ canonical-context-router
 -> archive-governance before repository writes
 ```
 
-## 4. Implemented files
+Active test and ledger work:
+
+```text
+canonical-context-router
+-> prospective-evidence-ledger
+-> existing domain validator or scorer
+-> research-lab-red-team only for interpretation, test survival or promotion review
+-> archive-governance before repository writes
+```
+
+## 5. Implemented files
 
 ```text
 AGENTS.md
 00_ARCHIVE_CONTROL/SKILL_REGISTRY.md
 00_ARCHIVE_CONTROL/INDEX_ADDENDUM_REGISTRY.md
 .agents/skills/canonical-context-router/SKILL.md
+.agents/skills/prospective-evidence-ledger/SKILL.md
 .agents/skills/archive-governance/SKILL.md
 .agents/skills/research-lab-red-team/SKILL.md
 07_PROMPTS_AND_AGENTS/github_agent/2026-07-12__investering-agent-skills-v0-1__canonical.md
 00_ARCHIVE_CONTROL/2026-07-12__index-addendum-investering-agent-skills-v0-1.md
 ```
 
-## 5. Skill responsibilities
+The historical filenames retain `v0-1` for path continuity. Their document headers and content identify the active stack as v0.2.
 
-### canonical-context-router
+## 6. Skill responsibilities
+
+### 6.1 canonical-context-router
 
 Resolves:
 
@@ -111,15 +150,50 @@ Resolves:
 - current canonical owner;
 - highest active version;
 - operational runtime registry;
-- directly index-listed addenda;
-- registry-discoverable addenda;
+- directly index-listed and registry-discoverable addenda;
 - relevant ledgers;
 - explicit overrules;
 - unresolved conflicts.
 
 It is read-only and cannot make portfolio decisions or write files.
 
-### archive-governance
+### 6.2 prospective-evidence-ledger
+
+Governs the lifecycle of evidence rows for already registered active tests.
+
+It resolves:
+
+- active test and owner;
+- ledger path and schema;
+- frozen input fields;
+- outcome fields and maturity rule;
+- source contract;
+- duplicate and event-window rules;
+- validator and scorer owners;
+- owner-defined coverage calculation.
+
+It enforces:
+
+- causal pre-registration;
+- exact timezone-aware timestamps;
+- frozen-field immutability;
+- full horizon maturity;
+- source-lineage completeness;
+- duplicate idempotency;
+- event-window dependence disclosure;
+- delegation to existing validators and scorers;
+- separation of row validity, coverage readiness and promotion status.
+
+It cannot:
+
+- create a new test, ledger, schema or scorer;
+- interpret edge;
+- promote a rule;
+- change live market state;
+- produce portfolio action;
+- schedule collection.
+
+### 6.3 archive-governance
 
 Controls:
 
@@ -139,7 +213,7 @@ Controls:
 
 It cannot write without explicit user intent.
 
-### research-lab-red-team
+### 6.4 research-lab-red-team
 
 Tests:
 
@@ -155,101 +229,168 @@ Tests:
 
 It cannot self-promote findings or create live execution authority.
 
-## 6. Why only three skills
+## 7. Why the fourth Skill is justified
 
-The framework is under an active simplify-before-expanding and new-engine freeze.
-
-The first skill set therefore targets the highest-frequency operational failure modes:
+The initial three-Skill stack targeted:
 
 1. wrong or incomplete context;
 2. wrong archive behavior;
 3. unsupported framework promotion.
 
-DATA PING execution, weekly range audit, Master Monday and Cycle Navigator publication are not built in v0.1.1.
+The current framework stage exposed a separate repeated operational gap: active tests exist, but forward row production, maturity handling, source lineage, frozen-input protection and coverage classification are distributed across multiple owners and ledgers.
 
-They remain possible later candidates only after the first stack demonstrates measurable value.
+The repeated gap appears across:
 
-## 7. v0.1.1 hardening
+- M3 decision-ledger collection;
+- FRLP weekly outcome rows;
+- BTC Partial versus WAIT;
+- cumulative FNP rows;
+- Pullback Edge maturity windows;
+- Transmission Matrix prospective falsification;
+- TechDev claim outcomes;
+- Archive Lineage Integrity.
 
-The first qualified archive-governance run successfully found an existing owner, avoided a duplicate, preserved negative research evidence and used an existing index addendum. It also exposed four control gaps.
+The new Skill does not add theory. It turns existing owner contracts into a repeatable evidence-lifecycle procedure.
 
-### 7.1 Explicit branch assertion
+## 8. Prospective evidence contract
 
-Before every write call:
-
-```yaml
-target_branch_explicitly_supplied: REQUIRED
-target_branch_verified_to_exist: REQUIRED
-target_branch_is_default_branch: MUST_BE_NO
-target_branch_is_backup_branch: MUST_BE_NO
-```
-
-Missing verification produces `WRITE_BRANCH_UNVERIFIED`.
-
-Connector-default branch behavior is forbidden. Placeholder and tool-probe files are forbidden in production repositories.
-
-### 7.2 Incident-aware scoring
-
-A remediated write incident cannot receive an unqualified write-governance `PASS`.
-
-Required separation:
-
-```yaml
-archive_content_result: PASS | PARTIAL | FAIL
-write_governance_result: PASS | PARTIAL_REMEDIATED | FAIL
-final_repository_state: PASS | PARTIAL | FAIL
-incident_count:
-remediation_commits:
-```
-
-### 7.3 Addendum registry
-
-`INDEX_ADDENDUM_REGISTRY.md` is now read after the canonical index.
-
-It improves discoverability without forcing frequent high-impact modifications to `CANONICAL_INDEX.md`. A registry row remains navigation only and does not grant authority.
-
-### 7.4 Backup-scope truth
-
-Every backup claim must distinguish:
+Core rule:
 
 ```text
-backup product
-snapshot frozen source SHA
-current owner or merge SHA
-whether the current version is inside the snapshot
-post-merge delta status
+The test owner defines the question.
+The ledger owner defines the schema.
+The source proves what existed.
+The clock determines maturity.
+The validator determines row validity.
+The scorer determines the score.
+Governance determines promotion.
 ```
 
-A pre-merge targeted snapshot may protect the research package while leaving the later owner update pending backup.
-
-## 8. How it works across environments
-
-### Repository-aware coding agents
-
-Agents that support repository-local skills can discover `.agents/skills/` and load a matching `SKILL.md` on demand.
-
-### ChatGPT with GitHub access
-
-The same procedures can be read directly from GitHub and followed as repository runbooks. Automatic trigger behavior may differ by product surface, but the files remain the shared procedure source.
-
-### Claude or other agents
-
-The skill files can be provided as project instructions or read from the repository. Current canonical owner files still outrank the skills.
-
-## 9. Authority boundary
+Required classification boundaries:
 
 ```text
-Skills define how to work.
-Canonical files define what is true.
-Automations define when work runs.
-Ledgers show whether it worked.
+SOURCE_CLAIM_ROW != OUTCOME_ROW
+FROZEN_INPUT_ROW != VALID_OUTCOME_ROW
+COVERAGE_RECEIPT != PERFORMANCE_EVIDENCE
 ```
 
-A Skill must never copy live market rules and become a parallel doctrine source.
+Required result separation:
 
-If a canonical owner changes, the Skill should continue pointing to the owner rather than requiring duplicated threshold updates.
+```yaml
+row_validity:
+coverage_readiness:
+edge_or_promotion_status:
+```
 
-## 10. Write safety
+A validator PASS is not a performance PASS.
+
+A coverage gate may permit governance review but cannot automatically promote a rule.
+
+## 9. Active-test and owner boundary
+
+The target test must exist in:
+
+```text
+06_RESEARCH_LAB/forward_tests/2026-07-10__active-test-registry__canonical.md
+```
+
+The new Skill may not create registry entries or new tests.
+
+Before processing a row, it must resolve:
+
+```yaml
+test_id:
+test_owner:
+ledger_owner:
+ledger_path:
+row_identity_field:
+frozen_input_fields:
+mutable_outcome_fields:
+effective_horizon:
+evaluation_timezone:
+maturity_rule:
+source_contract:
+duplicate_key:
+event_window_rule:
+validator_path:
+scorer_path:
+write_mode:
+```
+
+An incomplete contract produces `LEDGER_CONTRACT_INCOMPLETE`, not schema invention.
+
+## 10. Causality and immutability
+
+A forward-eligible row requires:
+
+- an exact timezone-aware issued timestamp;
+- source existence before the outcome window;
+- frozen horizon and benchmark;
+- frozen forecast or decision;
+- source path and excerpt or machine row;
+- source hash and commit receipt when required;
+- no retrospective reconstruction.
+
+Once frozen, the forecast, decision, horizon, invalidators, benchmark, source excerpt, hash and issued timestamp cannot be silently changed.
+
+Corrections require an owner-defined correction row or receipt that preserves the original value and Git history.
+
+## 11. Maturity and missing data
+
+Outcomes may only be attached after the full owner-defined horizon has elapsed and the actual source is complete.
+
+The Skill must not treat:
+
+- intraday values as daily closes;
+- preliminary values as settled actuals;
+- partial horizons as mature;
+- missing endpoints as zero;
+- inferred values as observed actuals.
+
+```text
+DATA_MISSING = UNKNOWN
+```
+
+Missing data cannot become a negative signal, failed test, zero, inferred outcome, pseudo-row or eligibility PASS.
+
+## 12. Duplicate and event-window controls
+
+An exact duplicate is a no-op.
+
+The same row ID with materially different content is a conflict, not a new row opportunity.
+
+A new row ID does not prove event-window independence. Overlapping observations may remain valid observations but may not automatically increase independent-window coverage.
+
+## 13. Validator and scorer delegation
+
+The Skill must use existing owner-defined executable validators when available.
+
+Current M3 example:
+
+```text
+04_MARKET_LEARNING/truth_layer/tools/validate_m3_coverage.py
+.github/workflows/validate_m3_forward_ledger.yml
+```
+
+The Skill does not duplicate or manually reinterpret validator logic.
+
+Scoring is permitted only when the method, benchmark and category are frozen by the owner. Otherwise the result is `SCORE_METHOD_UNFROZEN`.
+
+## 14. Repository write boundary
+
+The Skill may prepare a row and evidence decision manifest.
+
+Any GitHub mutation requires:
+
+```yaml
+user_write_intent: EXPLICIT
+archive_governance_invoked: YES
+target_branch_verified: YES
+```
+
+`archive-governance` retains ownership of branch assertions, PR flow, read-back, discoverability and backup-scope reporting.
+
+## 15. Write hardening retained
 
 The active implementation requires:
 
@@ -261,97 +402,68 @@ The active implementation requires:
 - no placeholder or tool-probe files;
 - no force operation;
 - no hidden deletion;
-- no workflow or security modification without high-impact governance;
-- no direct `CANONICAL_INDEX.md` change without the safepoint and vault sequence;
+- no direct `CANONICAL_INDEX.md` change without the safepoint sequence;
 - pull request and read-back validation.
 
-## 11. First live-run learning
+## 16. Pilot evaluation
 
-The first qualified use is recorded at:
+Shared stack review occurs after 10 qualified tasks or 2026-08-09, whichever comes first.
 
-```text
-07_PROMPTS_AND_AGENTS/skill_runs/2026-07-12__archive-governance-full-sensor-backtest__receipt.md
-```
+The new Skill requires at least three real uses before KEEP is justified.
 
-Corrected result:
+Recommended initial production cases:
 
-```yaml
-archive_content_result: PASS
-context_routing: PASS
-duplicate_avoidance: PASS
-authority_boundary: PASS
-write_governance_result: PARTIAL_REMEDIATED
-final_repository_state: PASS
-incident_count: 1
-research_package_backup: PASS_TARGETED_RESEARCH_SNAPSHOT
-current_owner_version_in_snapshot: NO
-post_merge_delta_status: PENDING
-```
+1. one valid M3 prospective decision row;
+2. one retrospective row that must be blocked;
+3. one Transmission Matrix frozen input row;
+4. one maturity check;
+5. one duplicate attempt;
+6. one event-window overlap;
+7. one source-hash mismatch;
+8. one FRLP actual with a frozen scorer;
+9. one unfrozen-score case;
+10. one coverage gate that cannot self-promote.
 
-The incident is retained as pilot evidence and is not hidden by the clean final repository state.
-
-## 12. Pilot evaluation
-
-Review after 10 qualified tasks or 2026-08-09, whichever occurs first.
-
-Primary metrics:
-
-- correct trigger;
-- correct owner files found;
-- valid addenda found;
-- legacy-as-current errors;
-- duplicate documents avoided;
-- unsupported promotions blocked;
-- explicit branch assertion;
-- write incidents;
-- manual corrections required;
-- backup-scope accuracy;
-- final repository state.
-
-Review states:
+Synthetic evaluation cases are stored at:
 
 ```text
-KEEP
-MODIFY
-SUSPEND
-KILL
+07_PROMPTS_AND_AGENTS/github_agent/skill_evals/2026-07-12__prospective-evidence-ledger-v0-1__eval-cases.md
 ```
 
-## 13. Kill criteria
+## 17. Kill criteria
 
-The stack or individual skills must be modified, suspended or killed if they:
+The new Skill must be immediately modified or suspended if it:
 
-- create parallel truth;
-- repeatedly route to old authority;
-- miss valid registered addenda;
-- increase archive inflation;
-- silently alter framework behavior;
-- infer missing data;
-- create unsupported promotions;
-- write without explicit user intent;
-- omit the explicit task branch;
-- create placeholder files in production repositories;
-- overstate backup coverage;
-- conflict with repository safety;
-- fail to reduce manual correction after the pilot gate.
+- marks a retrospective row as forward eligible;
+- changes a frozen forecast or decision;
+- creates duplicate evidence rows;
+- counts source rows as outcomes;
+- misses material source-lineage defects;
+- overstates event-window independence;
+- becomes a parallel scorer;
+- treats coverage readiness as edge;
+- creates tests or schemas without authority;
+- produces market or portfolio language;
+- increases archive inflation or manual repair.
 
-## 14. Expansion gate
+## 18. Expansion gate
 
-A new skill requires a demonstrated repeated workflow gap, explicit inputs and outputs, a validation loop, an authority boundary and a kill criterion.
+No further Skill is authorized merely because a workflow could theoretically be automated.
 
-No skill is added merely because the workflow could theoretically be automated.
+Potential later candidates such as DATA PING execution, weekly range audit, Master Monday, Cycle Navigator publication, research-package ingest and agent loops remain `NOT_AUTHORIZED_FOR_BUILD` until a separate repeated gap is demonstrated and the current stack produces pilot evidence.
 
-## 15. Expected benefit
+## 19. Expected benefit
 
-The expected value is operational consistency:
+The expected value is operational evidence quality:
 
-- less context reconstruction;
-- fewer version and addendum-discovery errors;
-- fewer duplicate documents;
-- safer GitHub writes;
-- stronger cross-agent continuity;
-- more reproducible Research Lab classification;
-- accurate incident and backup reporting;
-- clearer separation between procedure and framework truth.
+- more valid prospective rows;
+- less hindsight reconstruction;
+- stronger frozen-input integrity;
+- fewer duplicate and pseudo-rows;
+- clearer maturity handling;
+- better source lineage;
+- correct event-window and coverage accounting;
+- reliable delegation to existing validators and scorers;
+- clearer separation between evidence availability and actual edge.
 
 No improvement in market performance is claimed from the infrastructure alone.
