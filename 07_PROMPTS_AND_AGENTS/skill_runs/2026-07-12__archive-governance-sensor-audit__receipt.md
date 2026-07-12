@@ -15,14 +15,16 @@ operation: CREATE_UPDATE_INDEX_BACKUP
 canonical_index_change: NO
 indexing_method: REGISTERED_INDEX_ADDENDUM
 high_impact_gate: NOT_REQUIRED_NONDESTRUCTIVE_ADDITION
+source_main_sha_at_branch_creation: b0116cf2660ae9319fa2a55e8539059ecfe65f9f
 extra_safepoint: backup-safepoint/2026-07-12-sensor-survival-audit
 task_branch: agent/task-20260712-sensor-survival-machine-improvement
 source_package_sha256: 2c8f09873c117d9e10ab269e7a147e363475f0e87258052ca0aae8bdb971febb
 package_files: 35
 zip_integrity: PASS
 internal_checksums: 34_OF_34_PASS
-text_bundle_sha256: f4cd078fbc0d7a0113a789f094c88b1c6246fd974d4a3749fda97d606f281f9f
-binary_charts: NOT_DUPLICATED_TEXT_CONNECTOR_LIMITATION
+repository_changed_paths: 27
+repository_deletions: 0
+binary_charts_and_full_scripts: HASH_RECEIPTS_ONLY_TEXT_CONNECTOR_LIMITATION
 pull_request: PENDING
 merge_commit: PENDING
 ```
@@ -32,10 +34,31 @@ merge_commit: PENDING
 - one canonical audit owner;
 - one sensor-role and M1-integrity governance patch;
 - Rule/Evidence, Active Test and Open Questions addenda;
-- updated BTC.D/stablecoin role freeze and control state;
-- registered index addendum;
-- key machine-readable tables plus a complete non-binary text bundle;
+- updated BTC.D/stablecoin role freeze and Truth-Layer control state;
+- one registered index addendum without modifying `CANONICAL_INDEX.md`;
+- key machine-readable survival, timing, placebo, latency, redundancy and regime tables;
+- source and package manifests with hashes for all 35 files;
 - prospective-evidence and archive-governance receipts.
+
+The validated external ZIP remains the complete frozen package. The repository stores the durable and machine-relevant subset plus exact receipts for the four binary charts and two full reproduction scripts.
+
+## Validation before PR
+
+```yaml
+branch_ahead_by: 28
+branch_behind_by: 0
+changed_paths: 27
+created_paths: 24
+modified_paths: 3
+deleted_paths: 0
+addendum_registered: YES
+canonical_index_changed: NO
+retrospective_rows_counted_as_forward: 0
+new_test_created: NO
+new_engine_created: NO
+new_score_created: NO
+rule_promotion: NONE
+```
 
 ## Pilot metrics
 
@@ -54,4 +77,8 @@ incident_count: 0
 write_governance_result: PASS_PENDING_PR
 final_repository_state: PENDING_PR
 backup_product: TARGETED_SNAPSHOT_PLANNED
+snapshot_frozen_source_sha: PENDING_POST_MERGE_FREEZE
+current_owner_or_merge_sha: PENDING
+current_version_in_snapshot: PENDING
+post_merge_delta_status: PENDING
 ```
