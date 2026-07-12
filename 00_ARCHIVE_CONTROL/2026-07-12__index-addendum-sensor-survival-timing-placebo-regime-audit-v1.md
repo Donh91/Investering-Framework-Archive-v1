@@ -13,6 +13,7 @@
 01_CORE_FRAMEWORK/governance/2026-07-12__rule-and-evidence-registry-sensor-audit-v1__canonical-addendum.md
 06_RESEARCH_LAB/forward_tests/2026-07-12__active-test-registry-sensor-audit-v1__canonical-addendum.md
 01_CORE_FRAMEWORK/governance/2026-07-12__open-questions-sensor-audit-v1__canonical-addendum.md
+03_WEEKLY_OPERATIONS/automation_patches/2026-07-12__sensor-audit-automation-integration-v1__canonical.md
 ```
 
 ## Updated existing owners
@@ -29,6 +30,16 @@
 ```
 
 The repository preserves the key survival, timing, placebo, denominator, latency, redundancy and regime tables, plus source/package manifests and method documentation. The validated 35-file external ZIP remains the complete frozen package. Binary charts and the two full reproduction scripts are represented by exact filenames, byte sizes and SHA-256 receipts because the current connector is text-only.
+
+## Automation integration
+
+```text
+Sunday Closeout v1.3
+Master Monday vNext v1.1
+GitHub Archive Sync + Backup v1.5
+```
+
+Schedules are unchanged. The prompts now enforce registered-addendum discovery, sensor-role separation, C2 forward instrumentation, denominator/attribution integrity, stablecoin-axis compression, breadth-blocker accuracy and prospective-evidence validation.
 
 ## Binding consequence
 
