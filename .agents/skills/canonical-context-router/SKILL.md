@@ -1,6 +1,6 @@
 ---
 name: canonical-context-router
-description: 'Resolve the current authoritative Investering framework context before analysis or execution. Use for framework, DATA PING, Master Monday, Cycle Navigator, governance, active-version, current-rule, precedence, or cross-domain questions. Differentiator: identifies the canonical owner files and overrules before any task-specific reasoning begins.'
+description: 'Resolve the current authoritative Investering framework context before analysis or execution. Use for framework, DATA PING, Master Monday, Cycle Navigator, governance, active-version, current-rule, precedence, or cross-domain questions. Differentiator: identifies the canonical owner files, registered index addenda and overrules before any task-specific reasoning begins.'
 ---
 
 # Canonical Context Router
@@ -13,11 +13,12 @@ Build a small, verified context packet from the repository's current authority s
 
 1. Read `AGENTS.md`.
 2. Read `00_ARCHIVE_CONTROL/CANONICAL_INDEX.md`.
-3. Read `00_ARCHIVE_CONTROL/ARCHIVE_MAP_AND_ROUTING.md`.
-4. Read `00_ARCHIVE_CONTROL/SKILL_REGISTRY.md`.
-5. Identify the task domain.
-6. Read the current owner files named by the index for that domain.
-7. Read only directly relevant addenda, ledgers and runtime registries.
+3. Read `00_ARCHIVE_CONTROL/INDEX_ADDENDUM_REGISTRY.md`.
+4. Read `00_ARCHIVE_CONTROL/ARCHIVE_MAP_AND_ROUTING.md`.
+5. Read `00_ARCHIVE_CONTROL/SKILL_REGISTRY.md`.
+6. Identify the task domain.
+7. Read the current owner files named by the index or registered addenda for that domain.
+8. Read only directly relevant addenda, ledgers and runtime registries.
 
 Do not load the entire archive by default.
 
@@ -56,7 +57,8 @@ Within one domain:
 - canonical beats shadow;
 - runtime state does not rewrite permanent methodology;
 - source material supports claims but does not become doctrine;
-- legacy and superseded files remain historical context only.
+- legacy and superseded files remain historical context only;
+- an index-addendum registry entry is a discovery pointer, not independent authority.
 
 ## Workflow
 
@@ -80,10 +82,13 @@ Find:
 
 - canonical owner file;
 - active version or runtime registry;
-- directly relevant addenda;
+- directly index-listed addenda;
+- registry-discoverable addenda for the domain;
 - open ledger or forward-test state when applicable;
 - any explicit supersession or overrule;
 - required source material.
+
+For every registry-discoverable addendum, verify the path and its declared owner before using it.
 
 ### 3. Separate state classes
 
@@ -127,7 +132,9 @@ Task domain:
 Current owner:
 Active version or runtime:
 Required files:
-Relevant addenda or ledgers:
+Index-listed addenda:
+Registry-discoverable addenda:
+Relevant ledgers:
 Explicit overrules:
 Historical context allowed:
 Missing or unresolved:
@@ -143,10 +150,11 @@ Keep the packet concise. Reference paths rather than copying whole documents.
 - Do not infer missing market values.
 - Do not treat `DATA_MISSING` as bearish evidence.
 - Do not create or modify files.
-- Do not declare a rule active because it is merely written.
+- Do not declare a rule active because it is merely written or registered.
 - Do not use conversation memory as a substitute for repository verification.
 - Do not treat a source-backed claim row as an outcome row.
 - Do not use a legacy namespace when the active top-level namespace exists.
+- Do not use a broken or missing addendum pointer.
 
 ## Validation loop
 
@@ -154,15 +162,18 @@ Before completing:
 
 1. Verify every listed required path exists.
 2. Verify active versions against the canonical index or runtime registry.
-3. Verify no legacy or superseded file is presented as current.
-4. Verify all unresolved conflicts are explicit.
-5. Re-read the request and confirm the packet contains only task-relevant context.
+3. Verify every used registered addendum exists and points to valid owner files.
+4. Verify no legacy or superseded file is presented as current.
+5. Verify all unresolved conflicts are explicit.
+6. Re-read the request and confirm the packet contains only task-relevant context.
 
 If any check fails, correct the packet and re-run all checks.
 
 ## Failure modes
 
 - **Index path missing** -> stop and report `CANONICAL_INDEX_UNAVAILABLE`.
+- **Addendum registry missing** -> report `ADDENDUM_REGISTRY_UNAVAILABLE` and use only directly index-listed material.
+- **Registered addendum missing** -> report `ADDENDUM_PATH_MISSING` and do not use it.
 - **Owner file missing** -> report exact missing path and `OWNER_FILE_MISSING`.
 - **Two current canonical files conflict** -> report `UNRESOLVED_CANONICAL_CONFLICT`.
 - **Requested live state has no current registry** -> report `LIVE_STATE_NOT_VERIFIED`.
@@ -170,4 +181,4 @@ If any check fails, correct the packet and re-run all checks.
 
 ## Pilot review
 
-The skill remains useful only if it reduces wrong-version use, legacy reactivation and unnecessary archive loading. Review under `00_ARCHIVE_CONTROL/SKILL_REGISTRY.md` after the pilot gate.
+The skill remains useful only if it reduces wrong-version use, missed addenda, legacy reactivation and unnecessary archive loading. Review under `00_ARCHIVE_CONTROL/SKILL_REGISTRY.md` after the pilot gate.
