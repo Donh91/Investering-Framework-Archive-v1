@@ -1,6 +1,6 @@
 {
   "as_of": "2026-07-12",
-  "control_state_version": "1.2",
+  "control_state_version": "1.3",
   "recovery_process_complete": true,
   "btc_d": {
     "status": "CMC_DIRECT_SOURCE_READY",
@@ -9,29 +9,60 @@
     "tradingview_equivalent": false,
     "period": "2023-01-01/2026-07-11",
     "numeric_rows": 1287,
-    "source_gap_dates": ["2023-01-05"],
+    "source_gap_dates": [
+      "2023-01-05"
+    ],
     "coverage_pct": 99.92236,
     "m1_b_leg_completion": "COMPLETE",
     "m1_strict_three_leg_hypothesis": "NOT_SUPPORTED_IN_SAMPLE",
-    "m1_b1_early_warning_status": "NOT_SUPPORTED",
-    "m1_b1_mechanical_trim_status": "NOT_SUPPORTED",
-    "allowed_role": "SHADOW_ROTATION_SURVIVAL_AND_RECLAIM_CONTEXT",
+    "m1_b1_early_warning_status": "NOT_SUPPORTED_ZERO_WEIGHT",
+    "m1_b1_mechanical_trim_status": "NOT_SUPPORTED_ZERO_WEIGHT",
+    "allowed_role": "SHADOW_ROTATION_SURVIVAL_RECLAIM_AND_POST_STRESS_CONTEXT",
     "standalone_action_authority": false,
-    "m1_original_report_exact_reproduction": "PARTIAL_SOURCE_CONFLICT"
+    "m1_original_report_exact_reproduction": "PARTIAL_SOURCE_CONFLICT",
+    "b1_fire_reproducibility": {
+      "frozen_rows": 21,
+      "direct_recomputation": 22,
+      "additional_date": "2025-03-04",
+      "status": "OPEN_SOURCE_CONFLICT"
+    }
   },
   "stablecoin_deployment_proxy": {
     "status": "HISTORY_READY_SHADOW_RESEARCH",
     "history_ready": true,
     "provider": "DeFiLlama",
     "period": "2024-01-01/2026-07-10",
-    "entities": ["TOTAL", "Ethereum", "Solana", "BSC", "Base", "Arbitrum"],
+    "entities": [
+      "TOTAL",
+      "Ethereum",
+      "Solana",
+      "BSC",
+      "Base",
+      "Arbitrum"
+    ],
     "rows": 5532,
     "proxy_name": "STABLECOIN_DEPLOYMENT_PROXY",
     "velocity_claim_allowed": false,
     "tvl_substitution": false,
-    "standalone_prediction_status": "NOT_SUPPORTED",
-    "allowed_role": "SHADOW_TRANSMISSION_QUALITY_CONTEXT",
+    "standalone_prediction_status": "NOT_SUPPORTED_ZERO_WEIGHT",
+    "operational_latency_robustness": "FAILED_HISTORICALLY",
+    "allowed_role": "SHADOW_LIQUIDITY_AND_ACTIVITY_CONTEXT",
+    "activity_axis_compression": "DEX_CHANGE_AND_DEX_SUPPLY_RATIO_ONE_FAMILY",
     "standalone_action_authority": false
+  },
+  "sensor_audit_v1": {
+    "status": "COMPLETE_CANONICAL_RESEARCH_EVIDENCE",
+    "canonical_report": "06_RESEARCH_LAB/audit_summaries/2026-07-12__sensor-survival-timing-placebo-regime-audit-v1__canonical.md",
+    "package_sha256": "2c8f09873c117d9e10ab269e7a147e363475f0e87258052ca0aae8bdb971febb",
+    "strongest_survivor": "C2_FORWARD_ROWS_LEAN_WARNING",
+    "strongest_demotion": "A3_QUARANTINE_ZERO_EXEC_WEIGHT",
+    "role_freeze": {
+      "A1_A2": "URGENCY_ONLY",
+      "C1_C2": "LEAN_WARNING",
+      "D": "CONFIRMATION_OR_VETO"
+    },
+    "historical_breadth_priority": "HIGHEST_DATA_EXPANSION_PRIORITY",
+    "rule_promotion": "NONE"
   },
   "simulation": {
     "status": "FULL_SENSOR_LEVEL_BACKTEST_COMPLETE",
@@ -59,6 +90,11 @@
     "full_replay_status": "PARTIAL_HISTORICAL_BREADTH_MISSING",
     "exploratory_joint_signature": "FORWARD_FALSIFICATION_ONLY",
     "standalone_action_authority": false
+  },
+  "active_test_repairs": {
+    "GRADUATED_DEPLOYMENT_V1_1": "PARTIALLY_UNBLOCKED_BREADTH_BLOCKED",
+    "ROTATION_SURVIVAL_FORWARD": "QUEUED_BREADTH_BLOCKED",
+    "PULLBACK_EDGE_C2_INSTRUMENTATION": "REQUIRED_FOR_FUTURE_ROWS"
   },
   "m3": {
     "status": "FORWARD_COLLECTION_ACTIVE_CI_GUARDED",

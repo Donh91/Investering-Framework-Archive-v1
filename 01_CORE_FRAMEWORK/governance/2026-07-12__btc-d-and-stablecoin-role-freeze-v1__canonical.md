@@ -1,24 +1,23 @@
-# BTC.D and Stablecoin Role Freeze v1
+# BTC.D and Stablecoin Role Freeze v1.1
 
-**Date:** 2026-07-12  
-**Status:** CANONICAL_GOVERNANCE_PATCH  
-**Basis:** CMC BTC.D completion, DeFiLlama history and Full Sensor-Level Simulation & Backtest v1.
+**Dato:** 2026-07-12  
+**Status:** CANONICAL  
+**Område:** BTC.D and stablecoin source/authority governance  
+**Primary folder:** `01_CORE_FRAMEWORK/governance/`  
+**Basis:** CMC BTC.D completion, DeFiLlama history, Full Sensor Backtest and Sensor Survival Audit v1.
 
 ## Purpose
 
-Freeze source conventions and prevent negative research results from being reintroduced later as unsupported action logic.
+Freeze source conventions and prevent negative or latency-fragile research from being reintroduced as unsupported action logic.
 
 ## BTC.D source convention
-
-The active historical research series is:
 
 ```text
 provider: CoinMarketCap
 convention: CMC_DIRECT_SOURCE_CONVENTION
 symbol label: CMC_GLOBAL_METRICS_BTC_DOMINANCE
+TradingView CRYPTOCAP equivalence: NO
 ```
-
-It must not be described as TradingView `CRYPTOCAP:BTC.D` or assumed denominator-equivalent.
 
 ## BTC.D authority
 
@@ -28,54 +27,57 @@ standalone portfolio action: FORBIDDEN
 B1 early pullback-warning weight: 0
 B1 mechanical trim authority: 0
 rotation-survival/reclaim context: SHADOW_ALLOWED
+post-stress/rebound context: SHADOW_ALLOWED
 ```
 
-The fixed B1 condition may remain logged for research continuity:
+The fixed historical B1 condition may remain logged for continuity:
 
 ```text
 BTC.D(t) - BTC.D(t-5 calendar days) >= +0.75 percentage point
 rising edge only
 ```
 
-It may not be loosened post hoc. The completed simulation found positive BTC returns after B1 fires and no protective trim edge.
+It may not be loosened or optimized post hoc.
+
+## B1 reproducibility receipt
+
+```text
+frozen canonical fires with price follow-through: 21
+direct recomputation: 22
+additional date: 2025-03-04
+status: SOURCE_CONFLICT_REPRODUCIBILITY_OPEN
+```
+
+Preserve the frozen 21-fire result until the exact warm-up, eligibility or boundary cause is resolved. Do not select the more attractive version.
 
 ## Stablecoin architecture
 
-Keep three fields separate:
+Keep liquidity availability separate from realized activity:
 
-1. stablecoin supply / liquidity availability;
-2. DEX activity;
-3. DEX volume divided by stablecoin supply as `STABLECOIN_DEPLOYMENT_PROXY`.
+```text
+stablecoin supply change: LIQUIDITY_AVAILABILITY
+one normalized DEX activity measure: REALIZED_ACTIVITY
+chain-positive share: SHADOW_DISTRIBUTIONAL_CONFIRMATION
+```
 
-Prohibited labels:
+DEX-volume change and DEX/supply-ratio change are highly redundant and may not count as two confirmations. `DEX/supply` remains a proxy and must not be called velocity.
 
-- velocity;
-- net inflow;
-- exchange reserves;
-- proof of deployment;
-- automatic risk-on signal.
+Prohibited labels include net inflow, exchange reserves, proof of deployment and automatic risk-on signal.
 
-## Stablecoin authority
+## Stablecoin authority and latency
 
 ```text
 standalone prediction authority: 0
 standalone portfolio action: 0
 transmission-quality context: SHADOW_ALLOWED
+operational-latency robustness: FAILED_HISTORICALLY
 ```
 
-`EXPANDING_DEPLOYMENT` is descriptive. It did not show robust forward ETH/BTC prediction across regimes.
+An additional one-day operational delay changed the historical expanding-deployment strategy from +17.54% to -4.98% and worsened drawdown. This blocks standalone production use.
 
 ## Joint transmission hypothesis
 
-The combination:
-
-```text
-falling BTC.D
-+ expanding deployment
-+ no recent dominance reclaim
-```
-
-is retained only as a forward falsification hypothesis.
+Falling BTC.D plus expanding deployment plus no recent dominance reclaim remains forward-falsification only:
 
 ```text
 weight: 0
@@ -83,12 +85,10 @@ action authority: 0
 promotion status: NOT_ELIGIBLE
 ```
 
-The one successful July 2025 M4 episode does not generalize in the broader daily/weekly simulation.
-
 ## Required remaining confirmation axis
 
-Historical and prospective altcoin participation breadth remains an independent required axis. Stablecoin chain breadth is not a substitute for altcoin market breadth.
+Historical and prospective frozen-universe altcoin participation breadth remains independently required. Stablecoin chain breadth is not a substitute.
 
 ## Governance boundary
 
-This patch freezes roles and language. It does not change portfolio state, market state, thresholds, allocations or public Cycle Navigator output by itself.
+This patch freezes roles and language. It does not change portfolio state, market state, allocations, thresholds or public Cycle Navigator output by itself.
