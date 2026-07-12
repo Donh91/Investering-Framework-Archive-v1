@@ -1,0 +1,71 @@
+name: Investering Agent Command
+description: Queue a bounded repository task from iPhone
+title: "[AGENT QUEUE] "
+body:
+  - type: dropdown
+    id: task_class
+    attributes:
+      label: Task class
+      description: Choose the closest existing workflow.
+      options:
+        - INTEGRITY_CANARY
+        - ARCHIVE_OR_GOVERNANCE
+        - RESEARCH_INTAKE
+        - PROSPECTIVE_EVIDENCE_ROW
+        - RED_TEAM_AUDIT
+        - REPOSITORY_MAINTENANCE
+    validations:
+      required: true
+
+  - type: textarea
+    id: requested_action
+    attributes:
+      label: Requested action
+      description: State the exact outcome. Keep one Issue to one task.
+      placeholder: "Inspect, implement, verify and open a draft PR for..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: sources
+    attributes:
+      label: Source links or repository paths
+      description: Add X links, documents, Issue references or current owner paths.
+      placeholder: |
+        https://x.com/...
+        07_PROMPTS_AND_AGENTS/...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected_output
+    attributes:
+      label: Expected output
+      description: Describe the usable deliverable and verification expected.
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: write_intent
+    attributes:
+      label: Write authorization
+      description: Repository mutation is blocked unless this is checked.
+      options:
+        - label: I explicitly authorize repository writes on an isolated `agent/task-*` branch and a draft pull request.
+          required: true
+
+  - type: checkboxes
+    id: boundaries
+    attributes:
+      label: Safety boundaries
+      options:
+        - label: No direct write to `main`, no auto-merge and maximum two implementation-verification iterations.
+          required: true
+        - label: This Issue does not authorize market calls, portfolio action, threshold changes or unsupported promotion.
+          required: true
+
+  - type: textarea
+    id: constraints
+    attributes:
+      label: Optional constraints
+      description: Add deadlines, paths that must not change or preferred output format.
