@@ -25,8 +25,9 @@ internal_checksums: 34_OF_34_PASS
 repository_changed_paths: 27
 repository_deletions: 0
 binary_charts_and_full_scripts: HASH_RECEIPTS_ONLY_TEXT_CONNECTOR_LIMITATION
-pull_request: PENDING
-merge_commit: PENDING
+pull_request: 11
+pull_request_url: https://github.com/Donh91/Investering-Framework-Archive-v1/pull/11
+merge_commit: PENDING_MERGE
 ```
 
 ## Durable content
@@ -45,7 +46,7 @@ The validated external ZIP remains the complete frozen package. The repository s
 ## Validation before PR
 
 ```yaml
-branch_ahead_by: 28
+branch_ahead_before_receipt_finalization: 29
 branch_behind_by: 0
 changed_paths: 27
 created_paths: 24
@@ -74,8 +75,8 @@ branch_assertion: PASS
 explicit_branch_on_every_write: YES
 manual_corrections_required: 0
 incident_count: 0
-write_governance_result: PASS_PENDING_PR
-final_repository_state: PENDING_PR
+write_governance_result: PASS_PENDING_MERGE
+final_repository_state: PENDING_MERGE
 backup_product: TARGETED_SNAPSHOT_PLANNED
 snapshot_frozen_source_sha: PENDING_POST_MERGE_FREEZE
 current_owner_or_merge_sha: PENDING
