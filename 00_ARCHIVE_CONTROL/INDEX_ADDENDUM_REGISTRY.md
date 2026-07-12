@@ -42,6 +42,7 @@ A registry entry is a navigation pointer only. The referenced file's own status,
 | `00_ARCHIVE_CONTROL/2026-07-12__index-addendum-sensor-survival-timing-placebo-regime-audit-v1.md` | sensor audit / machine improvement | REGISTRY_DISCOVERABLE |
 | `00_ARCHIVE_CONTROL/2026-07-12__index-addendum-agent-control-loop-v0-1.md` | agent workflows / automation integrity | REGISTRY_DISCOVERABLE |
 | `00_ARCHIVE_CONTROL/2026-07-12__index-addendum-marginal-decision-value-and-breadth-truth-v1.md` | Research Lab / frozen breadth / marginal sensor value | REGISTRY_DISCOVERABLE |
+| `00_ARCHIVE_CONTROL/2026-07-12__index-addendum-daily-sensor-pair-discovery-lab-v0-1.md` | prospective sensor pairs / DATA PING thread integration | REGISTRY_DISCOVERABLE |
 
 ## Registration contract
 
