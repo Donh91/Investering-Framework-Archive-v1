@@ -79,7 +79,11 @@ safepoint: backup-safepoint/2026-07-12-mdv-breadth-archive
 canonical_index_change: NO
 addendum_registry_change: YES
 high_impact_gate: NOT_REQUIRED
+paths_changed: 14
 paths_deleted_intentionally: 0
+pull_request: 17
+pull_request_url: https://github.com/Donh91/Investering-Framework-Archive-v1/pull/17
+pull_request_head_sha_before_receipt_update: 8957ac7d11841275b39b0a5735456d7f68436693
 backup_scope: TARGETED_SNAPSHOT_AFTER_MERGE
 validation_plan:
   - read_back_every_created_or_updated_owner
@@ -102,10 +106,11 @@ incident_type: DEFAULT_BRANCH_PLACEHOLDER_WRITE
 content: x
 ```
 
-The file was immediately scheduled for removal on the verified task branch:
+The file is removed through the reviewed task branch and PR:
 
 ```yaml
 remediation_delete_commit: 751c39659483ab8e5ba22cbd3da919a60b30e0a3
+remediation_pull_request: 17
 history_rewrite: NO
 force_push: NO
 remediation_method: NORMAL_PULL_REQUEST_DELETE
@@ -114,10 +119,26 @@ remediation_method: NORMAL_PULL_REQUEST_DELETE
 Per archive-governance policy, this prevents an unqualified write-governance PASS even after successful remediation.
 
 ```text
-archive_content_result: PENDING_PR_VALIDATION
+archive_content_result: PASS_PRE_MERGE_VALIDATION
 write_governance_result: PARTIAL_REMEDIATED
 final_repository_state: PENDING_PR_MERGE
 incident_count: 1
+```
+
+## Pre-merge validation
+
+```yaml
+branch_ahead_before_receipt_update: 14
+branch_behind: 0
+changed_paths: 14
+canonical_index_changed: NO
+addendum_created: YES
+addendum_registered: YES
+retrospective_rows_counted_as_forward: 0
+new_test_created: NO
+new_engine_created: NO
+new_score_created: NO
+rule_promotion: NONE
 ```
 
 ## Backup truth
