@@ -8,6 +8,7 @@
 
 ```text
 06_RESEARCH_LAB/forward_tests/2026-07-12__daily-sensor-pair-discovery-lab-v0-1__canonical.md
+06_RESEARCH_LAB/forward_tests/2026-07-12__active-test-registry-sensor-pair-discovery-v0-1__canonical-addendum.md
 07_PROMPTS_AND_AGENTS/github_agent/2026-07-12__thread-first-agent-control-addendum-v0-1.md
 07_PROMPTS_AND_AGENTS/github_agent/2026-07-12__daily-sensor-pair-discovery-lab-v0-1__operational.md
 ```
