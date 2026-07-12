@@ -1,11 +1,11 @@
 # Active Gate and Edge Event Registry
 
 **Initial date:** 2026-07-10  
-**Last framework review:** 2026-07-11T14:33:24Z  
+**Last framework review:** 2026-07-12T00:39:18Z  
 **Status:** CANONICAL_RUNTIME_CONFIGURATION  
 **Område:** DATA PING runtime handover / active gates / edge-event state  
 **Primary folder:** `02_DATA_PING/live_state_handover/`  
-**Related folders:** `02_DATA_PING/protocols/`, `04_MARKET_LEARNING/stress_flush/`  
+**Related folders:** `02_DATA_PING/protocols/`, `04_MARKET_LEARNING/`  
 **Depends on:** `2026-07-10__data-ping-hybrid-v0-5-1-auto-edge-escalator-consolidated__canonical.md`
 
 ---
@@ -33,7 +33,7 @@ ACTIVE_GATE_REGISTRY:
   gate_registry_timestamp: 2026-07-10T11:59:38Z
   gate_registry_confidence: HIGH
   gate_registry_status: CURRENT
-  last_framework_confirmation_time: 2026-07-11T14:33:24Z
+  last_framework_confirmation_time: 2026-07-12T00:39:18Z
   btc_reclaim_gate: 63300
   btc_survival_gate: 61900
   btc_deterioration_gate: 59400
@@ -51,32 +51,37 @@ ACTIVE_GATE_REGISTRY:
 
 ```yaml
 ACTIVE_EDGE_EVENT:
-  status: NONE
-  prior_event_id: PULLBACK_EDGE_20260708_01
-  prior_event_status: CLOSED_RESOLVED
-  event_close_time: 2026-07-11T14:33:24Z
-  event_close_run_id: DATA_PING_HYBRID_v0_5_1_20260711T143324Z
-  event_close_authority: MAIN_FRAMEWORK
-  close_basis:
-    - 72H_OUTCOME_MATURED
-    - BTC_RECLAIMED_AND_HELD_63300_AT_HORIZON
-    - BTC_SURVIVAL_GATE_RECLAIMED
-    - ETHBTC_REPAIR_GATE_HELD
-    - NO_REESCALATION
-    - 1H_AND_24H_BREADTH_REPAIRED_AT_REVIEW
-  close_does_not_mean:
-    - BROAD_RECOVERY_CONFIRMED
-    - ROTATION_CONFIRMED
-    - REBUY_UNLOCKED
-    - LARGE_CAP_DEPLOYMENT_OPEN
+  edge_event_id: ROTATION_REPAIR_EDGE_20260712_01
+  edge_event_type: ROTATION_REPAIR_TEST
+  event_status: OPEN_WATCH
+  framework_edge_state: WATCH
+  framework_alert_status: WATCH
+  canonical_start_time: 2026-07-12T00:39:18Z
+  canonical_start_run_id: DATA_PING_HYBRID_v0_5_1_20260712T003918Z
+  canonical_start_btc_price: 63780.65
+  canonical_start_ethbtc: 0.027990
+  accepted_sensor_edge_candidate: NEAR_PRESENT
+  accepted_sensor_alert_candidate: WATCH
+  latest_framework_accepted_run_id: DATA_PING_HYBRID_v0_5_1_20260712T003918Z
+  latest_framework_accepted_run_time: 2026-07-12T00:39:18Z
+  event_open_reason:
+    - ETHBTC_WITHIN_REPAIR_PROXIMITY_BAND
+    - BREADTH_1H_24H_7D_SIMULTANEOUSLY_WEAK
+    - LATEST_TAKER_SELL_SKEW
+    - ETH_OI_ELEVATED
+    - FLOW_CONFIRMATION_MISSING
+  state_moderation_reason:
+    - BTC_CURRENT_AND_COMPLETED_CLOSES_STILL_ABOVE_63300
+    - ETHBTC_CURRENT_AND_COMPLETED_CLOSE_STILL_ABOVE_0275
+    - NO_ACUTE_FUNDING_STRESS
+  new_pullback_alert: NO
+  active_trim_signal: NO
+  event_close_time: PENDING
+  event_close_authority: MAIN_FRAMEWORK_ONLY
+  event_ledger: 02_DATA_PING/live_state_handover/2026-07-12__rotation-repair-edge-20260712-01__event-ledger.md
 ```
 
-The prior event is archived in:
-
-```text
-02_DATA_PING/live_state_handover/2026-07-11__pullback-edge-20260708-01__72h-event-close-receipt.md
-04_MARKET_LEARNING/stress_flush/2026-07-11__pullback-edge-20260708-01__72h-close-calibration-addendum.md
-```
+This is a new watch event. The closed pullback event is not reopened.
 
 ---
 
@@ -106,38 +111,40 @@ LAST_CLOSED_EDGE_EVENT:
 ## Accepted Current Framework State
 
 ```text
-FRAMEWORK_EDGE_STATE: NONE
-ALERT_STATUS: CLOSED
-EVENT_STATUS: CLOSED_RESOLVED
+FRAMEWORK_EDGE_STATE: WATCH
+ALERT_STATUS: WATCH
+EVENT_STATUS: OPEN_WATCH
 NEW_PULLBACK_ALERT: NO
 ACTIVE_TRIM_SIGNAL: NO
-SELL_A_BID_EDGE: INACTIVE
-BTC_RECLAIM_STATUS: RECLAIMED_AND_HELD_AT_72H_HORIZON
-ETHBTC_REPAIR_STATUS: HELD / 0.0300_CONFIRMATION_NOT_REACHED
-BROAD_RECOVERY_STATUS: NOT_FULLY_CONFIRMED
+SELL_A_BID_EDGE: WATCH_ONLY_NOT_ACTIONABLE
+BTC_RECLAIM_STATUS: CURRENT_AND_CLOSE_HOLD_ABOVE_63300
+ETHBTC_REPAIR_STATUS: HOLDS_BUT_WITHIN_PROXIMITY_BAND
+BREADTH_STATUS: WEAK_1H_24H_7D
+BROAD_RECOVERY_STATUS: NOT_CONFIRMED
 REBUY_STATUS: LOCKED
 ROTATION_STATUS: NO_ROTATION
 LARGE_CAP_BUY_WINDOW: WATCH_ONLY / NOT_OPEN
 ```
 
-Closing this event removes the old pullback alert. It does not create an offensive market permission.
+The event monitors deterioration in rotation repair and breadth. It does not create a trim or deployment instruction.
 
 ---
 
 ## Current-run acceptance packet
 
 ```yaml
-framework_acceptance_status_current_run: ACCEPTED
-accepted_run_id: DATA_PING_HYBRID_v0_5_1_20260711T143324Z
-accepted_sensor_state: WATCH
-accepted_sensor_alert_status: RESOLVING
-framework_post_review_edge_state: NONE
-framework_post_review_alert_status: CLOSED
+framework_acceptance_status_current_run: ACCEPTED_WITH_STATE_MODERATION
+accepted_run_id: DATA_PING_HYBRID_v0_5_1_20260712T003918Z
+accepted_sensor_state: NEAR_PRESENT
+accepted_sensor_alert_status: WATCH
+framework_post_review_edge_state: WATCH
+framework_post_review_alert_status: WATCH
 accepted_gate_registry_id: GATE_REGISTRY_2026W28_V1
 accepted_gate_registry_timestamp: 2026-07-10T11:59:38Z
 accepted_gate_registry_confidence: HIGH
-accepted_event_id: PULLBACK_EDGE_20260708_01
-accepted_event_close: YES
+accepted_event_id: ROTATION_REPAIR_EDGE_20260712_01
+accepted_new_event: YES
+accepted_new_pullback_alert: NO
 accepted_portfolio_action: NO_NEW_ACTION
 ```
 
