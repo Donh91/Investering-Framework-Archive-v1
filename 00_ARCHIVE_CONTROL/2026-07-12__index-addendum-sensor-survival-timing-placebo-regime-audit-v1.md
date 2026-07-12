@@ -28,7 +28,7 @@
 06_RESEARCH_LAB/audit_summaries/sensor_survival_v1/
 ```
 
-Key files include Sensor Survival Matrix, M1 timing atlases, placebo and denominator controls, BTC.D reproducibility discrepancy, stablecoin operational-latency test, regime transport/decay tables and a complete text bundle preserving all 31 non-binary package files with per-file hashes and contents.
+The repository preserves the key survival, timing, placebo, denominator, latency, redundancy and regime tables, plus source/package manifests and method documentation. The validated 35-file external ZIP remains the complete frozen package. Binary charts and the two full reproduction scripts are represented by exact filenames, byte sizes and SHA-256 receipts because the current connector is text-only.
 
 ## Binding consequence
 
