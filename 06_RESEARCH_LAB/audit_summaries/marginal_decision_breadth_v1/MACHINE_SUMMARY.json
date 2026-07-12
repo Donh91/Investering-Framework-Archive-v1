@@ -1,0 +1,69 @@
+{
+  "run_date": "2026-07-12",
+  "program": "MARGINAL_DECISION_VALUE_AND_BREADTH_TRUTH_PROGRAM_v1",
+  "status": "CANONICAL_RESEARCH_EVIDENCE_ARCHIVED",
+  "source_truth": {
+    "provider": "CoinMarketCap historical weekly snapshots",
+    "source_convention": "CMC_HISTORICAL_WEEKLY_FROZEN_UNIVERSE",
+    "period": "2023-01-01/2026-07-05",
+    "source_artifact_sha256": "5664e81a38161486d21fa01116a5ee9f88ec60a1f9ce36bc9da003b9a4a2050c",
+    "program_package_sha256": "84d1614e5fdeb2477853fe980f588450e099a9b9ea852bb13a141f1e640481ca",
+    "github_actions_run_id": 29200348955,
+    "github_artifact_id": 8262211530,
+    "github_artifact_digest": "sha256:5664e81a38161486d21fa01116a5ee9f88ec60a1f9ce36bc9da003b9a4a2050c",
+    "snapshots_expected": 184,
+    "snapshots_passed": 184,
+    "frozen_universe_rows": 18400,
+    "top_n": 100,
+    "interpolation": false,
+    "current_constituent_backfill_used_for_truth": false,
+    "daily_breadth": "DATA_MISSING",
+    "historical_30dma_breadth": "DATA_MISSING"
+  },
+  "primary_verdicts": {
+    "breadth_predictive_gate": "NOT_SUPPORTED",
+    "breadth_role": "DESCRIPTIVE_PARTICIPATION_CONFIRMATION_ZERO_WEIGHT",
+    "breadth_standalone_action_authority": 0,
+    "btc_d_predictive_weight": 0,
+    "btc_d_role": "SHADOW_SURVIVAL_RECLAIM_CONTEXT",
+    "stablecoin_standalone_authority": 0,
+    "stablecoin_role": "LIQUIDITY_AVAILABILITY_PLUS_ONE_ACTIVITY_AXIS",
+    "c2": "EXPAND_PROSPECTIVE_ROWS_NO_AUTHORITY_INCREASE",
+    "a3": "QUARANTINE_ZERO_WEIGHT",
+    "d_family": "CONFIRMATION_OR_VETO",
+    "legacy_alt_phase": "REJECT_AS_BREADTH_SUBSTITUTE"
+  },
+  "breadth_magnitude_mae_delta_pp_vs_price": {
+    "7d": 0.8366,
+    "14d": 1.0762,
+    "28d": 3.7377
+  },
+  "survivorship_bias": {
+    "first_to_latest_universe_overlap_pct": 45.0,
+    "median_overlap_with_latest_pct": 62.0,
+    "median_weekly_jaccard_turnover_pct": 5.83,
+    "mean_positive_7d_bias_pp": -0.17,
+    "max_absolute_positive_7d_bias_pp": 14.31
+  },
+  "active_test_consequence": {
+    "historical_weekly_frozen_breadth": "AVAILABLE",
+    "daily_breadth": "DATA_MISSING",
+    "historical_30dma_breadth": "DATA_MISSING",
+    "breadth_predictive_gate": "NOT_SUPPORTED",
+    "T3_T6_status": "FORWARD_ONLY_NOT_PROMOTION_READY"
+  },
+  "prospective_evidence": {
+    "rows_appended": 0,
+    "retrospective_rows_promoted": 0,
+    "row_validity": "NOT_APPLICABLE_NO_NEW_ROW",
+    "coverage_readiness": "FORWARD_ROWS_INSUFFICIENT",
+    "promotion_status": "NO_CHANGE"
+  },
+  "authority_boundary": {
+    "rule_promotion": false,
+    "new_engine": false,
+    "new_score": false,
+    "market_call": false,
+    "portfolio_action": false
+  }
+}
