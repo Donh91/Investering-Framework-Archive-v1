@@ -1,0 +1,37 @@
+name: Fetch free CoinMarketCap BTC dominance history
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - ".github/btc-d-recovery-trigger/**"
+
+permissions:
+  contents: read
+
+jobs:
+  fetch-btc-d:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Fetch, preserve and validate BTC dominance
+        run: python scripts/fetch_btc_d_cmc_free.py
+
+      - name: Upload data artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: BTC_D_COINMARKETCAP_DIRECT_2023_CURRENT
+          path: btc_d_output/
+          if-no-files-found: error
+          retention-days: 7
