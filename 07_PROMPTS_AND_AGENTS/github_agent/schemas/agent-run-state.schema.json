@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Donh91/Investering-Framework-Archive-v1/agent-run-state.schema.json",
+  "title": "Investering Agent Run State",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "run_id",
+    "status",
+    "task_class",
+    "requested_action",
+    "write_intent",
+    "originating_issue",
+    "base_sha",
+    "target_branch",
+    "iteration_count",
+    "max_iterations",
+    "canary_execution_mode",
+    "canary_result",
+    "verifier_result",
+    "changed_paths",
+    "stop_reason",
+    "incident_count",
+    "final_repository_state"
+  ],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "run_id": {"type": "string", "minLength": 8},
+    "status": {
+      "enum": [
+        "QUEUED",
+        "CONTEXT_RESOLVED",
+        "IMPLEMENTING",
+        "VERIFYING",
+        "CORRECTING",
+        "DRAFT_PR_OPEN",
+        "COMPLETE",
+        "PARTIAL",
+        "BLOCKED"
+      ]
+    },
+    "task_class": {"type": "string", "minLength": 1},
+    "requested_action": {"type": "string", "minLength": 1},
+    "write_intent": {"enum": ["EXPLICIT", "NOT_EXPLICIT"]},
+    "originating_issue": {"type": ["integer", "null"], "minimum": 1},
+    "base_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "target_branch": {"type": "string", "pattern": "^agent/task-[0-9]{8}-[a-z0-9-]+$"},
+    "iteration_count": {"type": "integer", "minimum": 0, "maximum": 2},
+    "max_iterations": {"const": 2},
+    "canary_execution_mode": {
+      "enum": ["PYTHON_CORE", "PYTHON_FULL", "CONNECTOR_EQUIVALENT", "NOT_APPLICABLE"]
+    },
+    "canary_result": {"enum": ["PASS", "PARTIAL", "FAIL", "NOT_APPLICABLE"]},
+    "verifier_result": {"enum": ["PASS", "PARTIAL", "FAIL", "NOT_APPLICABLE"]},
+    "changed_paths": {
+      "type": "array",
+      "items": {"type": "string"},
+      "uniqueItems": true
+    },
+    "pull_request": {"type": ["integer", "null"], "minimum": 1},
+    "stop_reason": {"type": "string", "minLength": 1},
+    "incident_count": {"type": "integer", "minimum": 0},
+    "final_repository_state": {"enum": ["PASS", "PARTIAL", "FAIL", "NOT_APPLICABLE"]},
+    "unresolved_items": {"type": "array", "items": {"type": "string"}}
+  }
+}
