@@ -1,9 +1,33 @@
 # Full Sensor-Level Simulation & Backtest v1
 
-**Run date:** 2026-07-12  
-**Status:** CANONICAL_RESEARCH_EVIDENCE  
+**Dato:** 2026-07-12  
+**Status:** CANONICAL  
+**Evidence class:** CANONICAL_RESEARCH_EVIDENCE  
+**Område:** market learning / full sensor backtest / signal-role governance  
+**Primary folder:** `04_MARKET_LEARNING/full_backtests/`  
+**Related folders:** `01_CORE_FRAMEWORK/governance/`, `03_WEEKLY_OPERATIONS/shadow_ledger/`, `04_MARKET_LEARNING/truth_layer/`, `06_RESEARCH_LAB/forward_tests/`  
+**Depends on:** `04_MARKET_LEARNING/truth_layer/DATA_COMPLETION_CONTROL_STATE.json`, `01_CORE_FRAMEWORK/governance/2026-07-12__btc-d-and-stablecoin-role-freeze-v1__canonical.md`, `06_RESEARCH_LAB/forward_tests/2026-07-12__transmission-matrix-forward-falsification-protocol-v0-1__canonical.md`  
+**Index route:** `00_ARCHIVE_CONTROL/2026-07-12__index-addendum-full-sensor-simulation-backtest-v1.md`  
 **Source package SHA-256:** `75e4a4635e390b955cb3b1531cfd004cc2eda9180cb8706e318e69765af26198`  
 **Simulation package SHA-256:** `d75eb50829a4d9be51240e8fcf04930a85e85d455e23c6855e45718c67b83c5d`
+
+## Archive decision
+
+```yaml
+classification: EXISTING_OWNER_UPDATE
+primary_owner: 04_MARKET_LEARNING/full_backtests/2026-07-12__full-sensor-simulation-backtest-v1__canonical.md
+durable_unit:
+  - completed sensor-level backtest
+  - negative evidence blocking unsupported promotion
+  - retained shadow-only roles
+  - full-portfolio identifiability boundary
+  - forward-falsification continuation path
+duplicate_policy: NO_PARALLEL_CANONICAL_DOCUMENT
+canonical_index_change: NO
+indexing_method: EXISTING_INDEX_ADDENDUM
+```
+
+The conversational explanation is not archived verbatim. This owner file preserves the durable learning and governance consequence.
 
 ## Scope
 
@@ -32,6 +56,18 @@ BTC_D_ROTATION_SURVIVAL_VETO: PLAUSIBLE_SHADOW_ROLE_ONLY
 HISTORICAL_BREADTH_BLOCKER: REMAINS
 RULE_PROMOTION: NONE
 ```
+
+## Source and convention boundary
+
+```text
+BTC.D provider: CoinMarketCap
+BTC.D convention: CMC_DIRECT_SOURCE_CONVENTION
+TradingView CRYPTOCAP equivalence: NO
+Stablecoin proxy: STABLECOIN_DEPLOYMENT_PROXY
+Velocity claim allowed: NO
+```
+
+The CMC series may be used only under its declared provider convention. It must not be silently relabelled as TradingView `CRYPTOCAP:BTC.D` or granted denominator-equivalent threshold authority.
 
 ## M1 B1 result
 
@@ -114,6 +150,19 @@ Stablecoin deployment transmission context: RETAIN_SHADOW
 Joint transmission signature: FORWARD_FALSIFICATION_ONLY
 ```
 
+This role freeze is owned by:
+
+```text
+01_CORE_FRAMEWORK/governance/2026-07-12__btc-d-and-stablecoin-role-freeze-v1__canonical.md
+```
+
+Prospective continuation is owned by:
+
+```text
+06_RESEARCH_LAB/forward_tests/2026-07-12__transmission-matrix-forward-falsification-protocol-v0-1__canonical.md
+03_WEEKLY_OPERATIONS/shadow_ledger/TRANSMISSION_MATRIX_FORWARD_LOG_v0_1.csv
+```
+
 ## Full portfolio boundary
 
 A defensible portfolio replay still requires frozen historical:
@@ -124,5 +173,27 @@ A defensible portfolio replay still requires frozen historical:
 - liquidity and transaction-cost assumptions by tier;
 - rebuy and exit execution rules;
 - broader source-backed M3 decisions.
+
+A present-day reconstruction of those missing inputs would create false precision and is rejected.
+
+## Backup and recovery
+
+The canonical research subset is preserved in the independent Vault as a targeted research snapshot:
+
+```text
+snapshot_root: snapshots/2026-07-12-full-sensor-backtest/source-tree/
+manifest: manifests/2026-07-12__full-sensor-backtest-targeted-snapshot-manifest.md
+receipt: receipts/2026-07-12__full-sensor-backtest-targeted-snapshot-receipt.json
+result: PASS_TARGETED_RESEARCH_SNAPSHOT
+paths_verified: 11/11
+```
+
+This is a selected canonical research snapshot, not a full Git mirror.
+
+## Implementation receipt
+
+```text
+07_PROMPTS_AND_AGENTS/skill_runs/2026-07-12__archive-governance-full-sensor-backtest__receipt.md
+```
 
 No market call. No portfolio action. No automatic rule ratification.
