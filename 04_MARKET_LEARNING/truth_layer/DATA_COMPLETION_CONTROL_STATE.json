@@ -1,26 +1,43 @@
 {
   "as_of": "2026-07-12",
-  "control_state_version": "1.0",
+  "control_state_version": "1.1",
   "recovery_process_complete": true,
   "btc_d": {
-    "status": "MANUAL_EXPORT_REQUIRED",
-    "full_m1_ready": false,
-    "required_symbol": "CRYPTOCAP:BTC.D",
-    "required_interval": "1D",
-    "required_start_date": "2023-01-01",
-    "required_file": "CRYPTOCAP_BTC.D_1D_2023-01-01_to_latest_complete_UTC.csv",
-    "next_owner": "USER",
-    "next_handoff": "CHATGPT_VALIDATION_AND_FULL_M1_REPLAY"
+    "status": "CMC_DIRECT_SOURCE_READY",
+    "provider": "CoinMarketCap",
+    "source_convention": "CMC_DIRECT_SOURCE_CONVENTION",
+    "tradingview_equivalent": false,
+    "period": "2023-01-01/2026-07-11",
+    "numeric_rows": 1287,
+    "source_gap_dates": ["2023-01-05"],
+    "coverage_pct": 99.92236,
+    "role": "DIRECTIONAL_AND_RESEARCH",
+    "hard_absolute_threshold_authority": false,
+    "m1_b_leg_completion": "COMPLETE",
+    "m1_strict_three_leg_hypothesis": "NOT_SUPPORTED_IN_SAMPLE",
+    "m1_original_report_exact_reproduction": "PARTIAL_SOURCE_CONFLICT"
   },
   "stablecoin_deployment_proxy": {
-    "status": "WORKFLOW_INSTALLED_AWAITING_MANUAL_DISPATCH",
-    "history_ready": false,
-    "execution_repository": "Donh91/Eksperimenter-framework-",
-    "workflow": ".github/workflows/fetch_defillama_history_manual.yml",
-    "artifact_name": "DEFILLAMA_STABLECOIN_AND_DEX_HISTORY_6_ENTITIES",
-    "required_raw_endpoints": 12,
-    "next_owner": "USER",
-    "next_handoff": "CHATGPT_ARTIFACT_VALIDATION_AND_CANONICAL_INGESTION"
+    "status": "HISTORY_READY_SHADOW",
+    "history_ready": true,
+    "period": "2024-01-01/2026-07-10",
+    "entities": ["TOTAL", "Ethereum", "Solana", "BSC", "Base", "Arbitrum"],
+    "rows": 5532,
+    "proxy_name": "STABLECOIN_DEPLOYMENT_PROXY",
+    "velocity_claim_allowed": false,
+    "tvl_substitution": false,
+    "role": "SHADOW_RESEARCH_AND_FORWARD_CONTEXT"
+  },
+  "m4": {
+    "btc_d_enrichment": "COMPLETE",
+    "deployment_enrichment": "COMPLETE",
+    "attempt_rows": 18,
+    "independent_episodes": 6,
+    "resolved_real_episodes": 1,
+    "resolved_fake_episodes": 4,
+    "unresolved_episodes": 1,
+    "full_replay_status": "PARTIAL_HISTORICAL_BREADTH_MISSING",
+    "exploratory_joint_signature": "SHADOW_ONLY_FORWARD_FALSIFICATION"
   },
   "m3": {
     "status": "FORWARD_COLLECTION_ACTIVE_CI_GUARDED",
@@ -53,7 +70,6 @@
   "authority_boundary": {
     "market_call": false,
     "portfolio_action": false,
-    "outcome_scoring_from_this_control_state": false,
     "rule_ratification": false
   }
 }
