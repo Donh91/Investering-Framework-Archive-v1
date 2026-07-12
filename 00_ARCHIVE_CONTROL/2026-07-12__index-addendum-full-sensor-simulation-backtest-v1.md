@@ -16,7 +16,7 @@
 04_MARKET_LEARNING/full_backtests/data/2026-07-12__m4-transmission-walk-forward-year-v1.csv
 04_MARKET_LEARNING/full_backtests/data/2026-07-12__m4-episode-direct-forward-returns-v1.csv
 04_MARKET_LEARNING/truth_layer/DATA_COMPLETION_CONTROL_STATE.json
-06_RESEARCH_LAB/forward_tests/2026-07-12__transmission-matrix-forward-falsification-protocol-v0-1__canonical.md
+04_MARKET_LEARNING/shadow_protocols/2026-07-12__transmission-matrix-forward-falsification-protocol-v0-1__canonical.md
 03_WEEKLY_OPERATIONS/shadow_ledger/TRANSMISSION_MATRIX_FORWARD_LOG_v0_1.csv
 ```
 
