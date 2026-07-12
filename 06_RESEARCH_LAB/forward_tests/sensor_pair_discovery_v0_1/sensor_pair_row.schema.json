@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "sensor_pair_row.schema.json",
+  "title": "Sensor Pair Discovery Prospective Row",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "row_id",
+    "test_id",
+    "source",
+    "pair_id",
+    "horizon",
+    "frozen_at",
+    "eligibility",
+    "sensor_a_state",
+    "sensor_b_state",
+    "pair_state",
+    "controls",
+    "outcome_status",
+    "promotion_status"
+  ],
+  "properties": {
+    "row_id": {"type": "string", "pattern": "^SPDL_[0-9]{8}T[0-9]{6}Z_P0[1-8]_(24H|72H|7D)$"},
+    "test_id": {"const": "SENSOR_PAIR_DISCOVERY_LAB_V0_1"},
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "data_ping_version", "thread_title", "source_timestamp", "source_hash", "data_quality"],
+      "properties": {
+        "mode": {"enum": ["DIRECT_PROJECT_THREAD", "THREAD_DERIVED_HANDOFF"]},
+        "data_ping_version": {"type": "integer", "minimum": 1},
+        "thread_title": {"type": "string", "minLength": 1},
+        "source_timestamp": {"type": "string", "format": "date-time"},
+        "source_hash": {"type": "string", "minLength": 12},
+        "schema_version": {"type": ["string", "null"]},
+        "data_quality": {"enum": ["HIGH", "MEDIUM", "LOW", "DEGRADED"]}
+      }
+    },
+    "pair_id": {"enum": ["P01", "P02", "P03", "P04", "P05", "P06", "P07", "P08"]},
+    "horizon": {"enum": ["24h", "72h", "7d"]},
+    "frozen_at": {"type": "string", "format": "date-time"},
+    "evaluation_due_at": {"type": "string", "format": "date-time"},
+    "eligibility": {"enum": ["ELIGIBLE", "INELIGIBLE_MISSING_SENSOR", "INELIGIBLE_STALE_SOURCE", "INELIGIBLE_DUPLICATE", "INELIGIBLE_SOURCE_CONFLICT"]},
+    "ineligibility_reason": {"type": ["string", "null"]},
+    "sensor_a_state": {"type": ["string", "number", "boolean", "null"]},
+    "sensor_b_state": {"type": ["string", "number", "boolean", "null"]},
+    "pair_state": {"type": ["string", "number", "boolean", "null"]},
+    "pair_interpretation_frozen": {"type": ["string", "null"]},
+    "controls": {
+      "type": "object",
+      "required": ["sensor_a_only", "sensor_b_only", "price_regime_baseline", "always_wait", "deterministic_placebo", "current_framework_interpretation"],
+      "properties": {
+        "sensor_a_only": {},
+        "sensor_b_only": {},
+        "price_regime_baseline": {},
+        "always_wait": {},
+        "deterministic_placebo": {},
+        "current_framework_interpretation": {}
+      }
+    },
+    "outcome_status": {"enum": ["NOT_DUE", "DUE_DATA_MISSING", "MATURE"]},
+    "outcome": {
+      "type": ["object", "null"],
+      "properties": {
+        "direction_result": {"enum": ["CORRECT", "WRONG", "PARTIAL", "NOT_APPLICABLE", "DATA_MISSING"]},
+        "false_positive": {"type": ["boolean", "null"]},
+        "false_negative": {"type": ["boolean", "null"]},
+        "realized_move": {"type": ["number", "null"]},
+        "maximum_adverse_excursion": {"type": ["number", "null"]},
+        "lead_time_hours": {"type": ["number", "null"]},
+        "decision_divergence_from_wait": {"type": ["boolean", "null"]},
+        "outcome_source_timestamp": {"type": ["string", "null"], "format": "date-time"},
+        "outcome_source_hash": {"type": ["string", "null"]}
+      }
+    },
+    "event_window_id": {"type": ["string", "null"]},
+    "frozen_fields_hash": {"type": "string", "minLength": 12},
+    "promotion_status": {"const": "NO_AUTOMATIC_PROMOTION"}
+  }
+}
