@@ -1,0 +1,72 @@
+{
+  "catalog_version": "0.1",
+  "test_id": "SENSOR_PAIR_DISCOVERY_LAB_V0_1",
+  "frozen_at": "2026-07-12T00:00:00+02:00",
+  "source_policy": "LATEST_USED_HIGHEST_VERSION_DATA_PING_THREAD_ONLY",
+  "horizons": ["24h", "72h", "7d"],
+  "pairs": [
+    {
+      "pair_id": "P01",
+      "sensor_a": "ETHBTC_STATE",
+      "sensor_b": "POINT_IN_TIME_BREADTH_STATE",
+      "question": "real_rotation_discrimination",
+      "constraints": ["breadth_zero_action_weight"]
+    },
+    {
+      "pair_id": "P02",
+      "sensor_a": "ETF_FLOW_STATE",
+      "sensor_b": "PRICE_ABSORPTION_STATE",
+      "question": "repair_vs_short_squeeze"
+    },
+    {
+      "pair_id": "P03",
+      "sensor_a": "FUNDING_OI_STATE",
+      "sensor_b": "FOLLOW_THROUGH_STATE",
+      "question": "false_breakout_reduction"
+    },
+    {
+      "pair_id": "P04",
+      "sensor_a": "STABLECOIN_AVAILABILITY_STATE",
+      "sensor_b": "NORMALIZED_DEX_ACTIVITY_STATE",
+      "question": "available_vs_deployed_liquidity",
+      "constraints": ["no_deployment_proof_claim"]
+    },
+    {
+      "pair_id": "P05",
+      "sensor_a": "BTCD_SURVIVAL_RECLAIM_CONTEXT",
+      "sensor_b": "ETHBTC_STATE",
+      "question": "residual_btcd_value",
+      "constraints": ["btcd_predictive_weight_zero"]
+    },
+    {
+      "pair_id": "P06",
+      "sensor_a": "A1_A2_URGENCY_STATE",
+      "sensor_b": "C1_C2_LEAN_WARNING_STATE",
+      "question": "pullback_lead_value",
+      "constraints": ["A3_excluded", "D_not_pair_vote"]
+    },
+    {
+      "pair_id": "P07",
+      "sensor_a": "SENTIMENT_EXTREME_STATE",
+      "sensor_b": "PRICE_ABSORPTION_STATE",
+      "question": "conditional_sentiment_value"
+    },
+    {
+      "pair_id": "P08",
+      "sensor_a": "BREADTH_PARTICIPATION_STATE",
+      "sensor_b": "DERIVATIVES_POSITIONING_STATE",
+      "question": "broad_repair_vs_leverage_only",
+      "constraints": ["breadth_zero_action_weight"]
+    }
+  ],
+  "required_controls": [
+    "SENSOR_A_ONLY",
+    "SENSOR_B_ONLY",
+    "PRICE_REGIME_BASELINE",
+    "ALWAYS_WAIT",
+    "DETERMINISTIC_PLACEBO",
+    "CURRENT_FRAMEWORK_INTERPRETATION"
+  ],
+  "promotion_authority": "NONE",
+  "portfolio_authority": "ZERO"
+}
