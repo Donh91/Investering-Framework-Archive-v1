@@ -1,113 +1,72 @@
 ---
 name: prospective-evidence-ledger
-description: 'Capture, mature, classify, validate, and route prospective evidence rows for active Investering tests and ledgers. Use when the user asks to freeze a forecast or decision, add a forward row, attach verified actuals, close an outcome horizon, update M3, FRLP, FNP, Pullback Edge, Transmission Matrix, or another registered forward ledger, reconcile source lineage, or check coverage readiness. Differentiator: enforces active-owner discovery, causal pre-registration, frozen-field immutability, outcome maturity, source lineage, duplicate and event-window controls, existing-validator delegation, and strict no-promotion boundaries before any row is counted.'
+description: 'Capture, mature, classify, validate, and route prospective evidence rows for active Investering tests and ledgers. Use when the user asks to freeze a forecast or decision, add a forward row, attach verified actuals, close an outcome horizon, update M3, FRLP, FNP, Pullback Edge, Transmission Matrix, reconcile source lineage, or check coverage readiness. Differentiator: enforces active-owner discovery, causal pre-registration, frozen-field immutability, maturity, lineage, duplicate and event-window controls, validator delegation, and no-promotion boundaries before any row is counted.'
 ---
 
 # Prospective Evidence Ledger
 
 ## Purpose
 
-Govern the lifecycle of prospective evidence for existing Investering tests and ledgers.
+Govern prospective evidence for existing registered tests and owner-defined ledgers.
 
-This skill determines whether a proposed input, source, decision or outcome row is:
+The Skill verifies that a row is attached to the correct owner, existed before the outcome, preserves frozen inputs, is mature, source-backed, non-duplicative and valid under the existing contract.
 
-- attached to the correct active owner;
-- causally prospective;
-- frozen before the outcome;
-- mature at the declared horizon;
-- source-backed;
-- non-duplicative;
-- valid under the owner-defined schema;
-- eligible for the relevant coverage calculation.
+It does not create tests, schemas, scores, market calls, rule promotions or portfolio actions.
 
-The skill does not create tests, invent schemas, define scoring methods, interpret edge, ratify rules, make market calls or produce portfolio actions.
-
-## Core principle
+## Core contract
 
 ```text
-The test owner defines the question.
-The ledger owner defines the schema.
-The source proves what existed.
-The clock determines maturity.
-The validator determines row validity.
-The scorer determines the score.
-Governance determines promotion.
+Test owner = question
+Ledger owner = schema
+Source = proof of what existed
+Clock = maturity
+Validator = row validity
+Scorer = score
+Governance = promotion
 ```
 
-A valid row is not proof of edge.
+```text
+VALID_ROW != PROVEN_EDGE
+COVERAGE_READY != PROMOTION
+SOURCE_ROW != OUTCOME_ROW
+```
 
-A passed coverage gate is not rule promotion.
-
-A source-backed claim is not an outcome row.
-
-## Required composition
-
-Run in this order:
+## Composition
 
 ```text
 canonical-context-router
 -> prospective-evidence-ledger
--> existing domain validator or scorer
--> archive-governance before any repository write
+-> existing validator or scorer
+-> research-lab-red-team only for interpretation or promotion review
+-> archive-governance before repository writes
 ```
 
-Use `research-lab-red-team` only when the user asks what the collected evidence means, whether a test should survive, or whether promotion should be considered.
+## Required sources
 
-## Mandatory read order
+Read:
 
-Before processing a row:
-
-1. Read `AGENTS.md`.
-2. Run `canonical-context-router`.
-3. Read `00_ARCHIVE_CONTROL/CANONICAL_INDEX.md`.
-4. Read `00_ARCHIVE_CONTROL/INDEX_ADDENDUM_REGISTRY.md`.
-5. Read `00_ARCHIVE_CONTROL/SKILL_REGISTRY.md`.
-6. Read `01_CORE_FRAMEWORK/governance/2026-07-10__rule-and-evidence-registry__canonical.md`.
-7. Read `06_RESEARCH_LAB/forward_tests/2026-07-10__active-test-registry__canonical.md`.
-8. Read the active test owner.
-9. Read the ledger schema or current header.
-10. Read the owner-defined validation and scoring rules.
-11. Read the current ledger state and relevant source material.
+1. `AGENTS.md`
+2. `00_ARCHIVE_CONTROL/CANONICAL_INDEX.md`
+3. `00_ARCHIVE_CONTROL/INDEX_ADDENDUM_REGISTRY.md`
+4. `00_ARCHIVE_CONTROL/SKILL_REGISTRY.md`
+5. `01_CORE_FRAMEWORK/governance/2026-07-10__rule-and-evidence-registry__canonical.md`
+6. `06_RESEARCH_LAB/forward_tests/2026-07-10__active-test-registry__canonical.md`
+7. the active test owner, ledger schema/header, validator, scorer and relevant source.
 
 Do not load unrelated ledgers or the full archive.
 
 ## Trigger scope
 
-Use this skill for requests such as:
+Use for freezing inputs, adding forward rows, attaching actuals, closing horizons, updating M3/FRLP/FNP/Pullback Edge/Transmission Matrix, reconciling lineage, or checking row and coverage eligibility.
+
+Do not use to create a test, ledger, schema, score, indicator, recurring schedule or portfolio action.
+
+## 1. Active-test and contract gate
+
+The target test must exist in the Active Test Registry. Otherwise return:
 
 ```text
-Add this forward row
-Freeze this decision
-Update the M3 ledger
-Attach the verified actual
-Close the 7-day outcome
-Mature the Pullback Edge event
-Update FRLP with the weekly actual
-Add an FNP opportunity-cost row
-Update the Transmission Matrix
-Check whether this row is eligible
-Reconcile the forecast lineage
-Run the coverage validator
-```
-
-Do not use this skill to:
-
-- create a new test;
-- create a new engine or shadow layer;
-- design a new market indicator;
-- define an unfrozen score;
-- ingest an unrelated research package;
-- interpret general market state;
-- ratify a framework rule;
-- schedule automated collection;
-- generate a portfolio action.
-
-## Active-test gate
-
-The target test must exist in:
-
-```text
-06_RESEARCH_LAB/forward_tests/2026-07-10__active-test-registry__canonical.md
+ACTIVE_TEST_NOT_REGISTERED
 ```
 
 Resolve:
@@ -115,36 +74,10 @@ Resolve:
 ```yaml
 test_id:
 test_status:
-question:
-owner:
-required_fields:
-benchmark:
-blocked_by:
-next_review:
-promotion_condition:
-kill_condition:
-```
-
-If the test is absent, stop with:
-
-```text
-ACTIVE_TEST_NOT_REGISTERED
-```
-
-Do not create a registry entry inside this skill. A new or replacement test requires a separate Research Lab and governance decision.
-
-## Ledger-contract discovery
-
-Before preparing or validating any row, construct:
-
-```yaml
-test_id:
 test_owner:
 ledger_owner:
 ledger_path:
-ledger_status:
 row_identity_field:
-row_type:
 schema_fields:
 frozen_input_fields:
 mutable_outcome_fields:
@@ -158,11 +91,12 @@ event_window_rule:
 validator_path:
 scorer_path:
 write_mode:
-promotion_gate:
+benchmark:
+promotion_condition:
 kill_condition:
 ```
 
-Allowed `write_mode` values:
+Allowed write modes:
 
 ```text
 APPEND_INPUT_ROW
@@ -172,19 +106,11 @@ APPEND_CORRECTION_ROW
 READ_ONLY
 ```
 
-The owner file, ledger schema or canonical protocol must explicitly support the selected mode.
+Missing required contract fields produce `LEDGER_CONTRACT_INCOMPLETE`. Never invent contract rules.
 
-If any field required for the requested operation is unresolved, return:
+## 2. Operation and row type
 
-```text
-LEDGER_CONTRACT_INCOMPLETE
-```
-
-Do not invent a schema, scorer, maturity rule or write mode.
-
-## Operation classification
-
-Classify the request as exactly one primary operation:
+Choose one operation:
 
 ```text
 FREEZE_INPUT
@@ -198,21 +124,7 @@ CORRECT_WITH_AUDIT_TRAIL
 READ_ONLY_STATUS
 ```
 
-The following are outside authority:
-
-```text
-CREATE_TEST
-DEFINE_NEW_SCORE
-PROMOTE_RULE
-CHANGE_LIVE_STATE
-CREATE_PORTFOLIO_ACTION
-```
-
-Route those requests to the appropriate owner instead.
-
-## Evidence-row types
-
-Classify the proposed material as one of:
+Choose one row type:
 
 ```text
 FROZEN_INPUT_ROW
@@ -224,22 +136,13 @@ COVERAGE_RECEIPT
 NOT_A_LEDGER_ROW
 ```
 
-Do not collapse these categories.
+Creating tests, defining scores, promoting rules and changing live state are outside authority.
 
-```text
-SOURCE_CLAIM_ROW != OUTCOME_ROW
-FROZEN_INPUT_ROW != VALID_OUTCOME_ROW
-COVERAGE_RECEIPT != PERFORMANCE_EVIDENCE
-```
+## 3. Causal pre-registration
 
-## Causal pre-registration gate
-
-A prospective row is eligible only when the required input existed before the relevant outcome became observable.
-
-Verify:
+A forward-eligible row requires:
 
 ```yaml
-issued_timestamp_present: YES
 issued_timestamp_timezone_aware: YES
 source_existed_before_outcome_window: YES
 effective_horizon_frozen: YES
@@ -251,177 +154,64 @@ commit_receipt_present_when_required: YES
 retrospective_reconstruction: NO
 ```
 
-If the timestamp lacks an exact timezone, the row cannot be prospectively eligible.
+A reconstructed forecast, action, horizon or invalidator is `RETROSPECTIVE_INELIGIBLE`. It may remain historical research but cannot count as a forward row.
 
-If the forecast, action, horizon or invalidator was reconstructed after the event, classify:
+## 4. Frozen-field integrity
 
-```text
-RETROSPECTIVE_INELIGIBLE
-```
+Never change after freeze:
 
-The material may remain historical research but may not count as a forward row.
+- forecast or decision;
+- action label or sequence expectation;
+- horizon, benchmark or invalidator;
+- source excerpt, hash or issued timestamp;
+- original market state or test identity.
 
-## Frozen-field immutability
+Outcome fields may be populated only after maturity, with verified source, owner-permitted write mode, and an empty target field or formal correction path.
 
-Once an input row has been frozen, never change:
+A correction must preserve original row ID/value, corrected value, reason, source, timestamp and receipt.
 
-- forecast values;
-- action labels;
-- sequence expectations;
-- effective horizon;
-- invalidators;
-- benchmark;
-- source excerpt;
-- original source hash;
-- original issued timestamp;
-- original market state;
-- original test identity.
+## 5. Maturity and source lineage
 
-Outcome fields may only be populated when:
-
-1. the horizon is mature;
-2. the canonical owner allows the write mode;
-3. the source is verified;
-4. the existing field is empty or a formal correction process is used.
-
-Never silently replace a non-empty outcome.
-
-Corrections must preserve:
-
-```yaml
-original_row_id:
-original_value:
-corrected_value:
-correction_reason:
-correction_source:
-correction_timestamp:
-correction_receipt:
-```
-
-Use an owner-defined correction row or receipt. Preserve Git history.
-
-## Row lifecycle
-
-Use these lifecycle states in the Skill output:
-
-```text
-DRAFT_NOT_WRITTEN
-FROZEN_PENDING_MATURITY
-MATURED_UNRECONCILED
-OUTCOME_ATTACHED_PENDING_VALIDATION
-VALIDATED_ELIGIBLE
-VALIDATED_INELIGIBLE
-VALIDATION_FAILED
-BLOCKED_DATA_MISSING
-CLOSED
-```
-
-Do not write these labels into a ledger unless its canonical schema supports them.
-
-## Outcome-maturity gate
-
-Before attaching or closing an outcome, verify:
+Verify:
 
 ```yaml
 horizon_start:
 horizon_end:
 evaluation_timezone:
-current_or_source_cutoff_time:
 full_horizon_elapsed: YES | NO
 actual_source_complete: YES | NO
-actual_source_revision_status:
+revision_status:
 partial_window_used: NO
-```
-
-A horizon must contain the full owner-defined period.
-
-Do not treat:
-
-- intraday values as daily closes;
-- preliminary prints as settled actuals;
-- a partially elapsed horizon as mature;
-- a missing endpoint as zero;
-- an inferred value as observed actual.
-
-If the horizon has not closed, return:
-
-```text
-OUTCOME_NOT_MATURE
-```
-
-State the exact next eligible evaluation time when it can be derived from the frozen contract.
-
-## Source-lineage gate
-
-Record, where applicable:
-
-```yaml
 source_provider:
 source_convention:
 source_path_or_url:
-source_file:
-source_run_or_forecast_id:
 source_timestamp:
 verification_timestamp:
-exact_source_excerpt:
 source_content_sha256:
 source_commit_receipt:
-source_status:
 data_quality:
-revision_status:
 ```
 
-Rules:
+Do not treat intraday as daily close, preliminary as settled, partial as mature, missing as zero, inferred as observed, or a model summary as independent actual.
 
-- Use the source convention declared by the owner.
-- Do not silently substitute another provider.
-- Do not relabel CoinMarketCap BTC.D as TradingView `CRYPTOCAP:BTC.D`.
-- Do not use a model summary as an independent actual.
-- Do not use conversation memory when repository or original-source evidence exists.
-- Do not treat a later archive summary as proof of the original issue timestamp unless lineage is explicit.
-- Preserve source conflicts rather than choosing the convenient value.
+If not mature, return `OUTCOME_NOT_MATURE` and the next eligible evaluation time when derivable.
 
-If lineage is incomplete, classify:
+If lineage is incomplete, return `SOURCE_LINEAGE_UNRESOLVED`.
 
-```text
-SOURCE_LINEAGE_UNRESOLVED
-```
+Preserve provider conventions and source conflicts. CoinMarketCap BTC.D is not TradingView `CRYPTOCAP:BTC.D`.
 
-## Missing-data discipline
+## 6. Missing data, duplicates and event windows
 
 ```text
 DATA_MISSING = UNKNOWN
 ```
 
-Never convert missing data into:
+Missing data cannot become negative evidence, zero, inferred outcome, pseudo-row or eligibility PASS. Use `BLOCKED_DATA_MISSING` and list missing fields.
 
-- a negative signal;
-- a failed test;
-- a zero;
-- an inferred outcome;
-- a valid pseudo-row;
-- an eligibility PASS.
-
-If required data is unavailable, use:
+Use the owner duplicate key. If none exists, a detection-only fallback is:
 
 ```text
-BLOCKED_DATA_MISSING
-```
-
-and identify the exact missing fields.
-
-## Duplicate and idempotency gate
-
-Before any proposed write, construct the owner-defined duplicate key.
-
-When no owner-defined key exists, use only for detection, not as a new canonical rule:
-
-```text
-test_id
-+ row_identity
-+ issued_timestamp
-+ effective_horizon
-+ source_content_sha256
+test_id + row_identity + issued_timestamp + horizon + source_hash
 ```
 
 Classify:
@@ -433,43 +223,13 @@ CONFLICTING_DUPLICATE
 DUPLICATE_ID_DIFFERENT_SOURCE
 ```
 
-Rules:
+A new ID cannot bypass a duplicate.
 
-- An exact duplicate creates no new row.
-- The same row ID with different material content is a conflict.
-- Do not generate a new ID merely to bypass a duplicate.
-- Preserve both sources when a genuine source conflict exists.
+For event windows record ID, overlap, related rows and independence basis. A new row ID does not prove independence. Only the owner rule or validator determines coverage counting.
 
-## Event-window independence
+## 7. Procedural eligibility
 
-When a test uses event windows, record:
-
-```yaml
-event_window_id:
-independent_event_window:
-overlap_start:
-overlap_end:
-overlapping_row_ids:
-independence_basis:
-```
-
-Never infer independence from a new row ID.
-
-Overlapping observations may remain valid observations while being non-independent for coverage or sample-diversity purposes.
-
-Use:
-
-```text
-EVENT_WINDOW_INDEPENDENT
-EVENT_WINDOW_DEPENDENT
-EVENT_WINDOW_UNRESOLVED
-```
-
-Only the owner validator or frozen event-window rule may determine how the row counts.
-
-## Eligibility classification
-
-The Skill may assign one procedural classification:
+Use one classification:
 
 ```text
 FORWARD_ELIGIBLE
@@ -487,111 +247,38 @@ VALIDATOR_FAILED
 OWNER_BLOCKED
 ```
 
-These are Skill-output classifications. Do not insert them into a ledger unless the canonical schema contains the relevant field and allows the value.
+These are Skill-output labels. Do not insert them into a ledger unless its schema permits them.
 
-## Validator delegation
+## 8. Validator and scorer delegation
 
-Use the existing owner-defined validator. Do not reproduce validator logic manually when executable control code exists.
+Use the owner-defined validator. Do not manually reproduce executable validation logic.
 
-For current M3 work, the authoritative validator is:
+Current M3 controls:
 
 ```text
 04_MARKET_LEARNING/truth_layer/tools/validate_m3_coverage.py
-```
-
-and the current workflow is:
-
-```text
 .github/workflows/validate_m3_forward_ledger.yml
 ```
 
-Respect its current ledger paths, source requirements, hash checks, timestamp checks, duplicate checks, event-window calculations and coverage gates.
+A validator failure blocks completion. No validator means `VALIDATOR_UNAVAILABLE` and no claim of a validated row.
 
-A validator failure prevents completion.
+This Skill does not invent scoring. A score requires a frozen method, formula owner, benchmark, complete actuals and score category. Otherwise return `SCORE_METHOD_UNFROZEN`.
 
-If no validator exists, report:
+## 9. Transmission Matrix rule
 
-```text
-VALIDATOR_UNAVAILABLE
-```
-
-and limit the result to contract-level review. Do not claim a validated row.
-
-## Scoring delegation
-
-This skill does not invent or modify scoring.
-
-Before calculating a score, verify:
-
-```yaml
-scoring_method_frozen: YES
-scoring_formula_owner:
-benchmark_frozen: YES
-required_actuals_complete: YES
-score_category:
-```
-
-If no frozen scorer exists, return:
-
-```text
-SCORE_METHOD_UNFROZEN
-```
-
-Raw actuals may still be preserved when the ledger contract allows them.
-
-Never combine separately governed categories merely to produce one attractive score.
-
-## Current special protocol rule
-
-When processing Transmission Matrix rows, obey:
+For Transmission Matrix rows obey:
 
 ```text
 04_MARKET_LEARNING/shadow_protocols/2026-07-12__transmission-matrix-forward-falsification-protocol-v0-1__canonical.md
 ```
 
-In particular:
+Freeze inputs, leave outcomes empty until maturity, keep missing alt breadth as `DATA_MISSING`, preserve CMC/DeFiLlama semantics, reference the original `transmission_row_id`, and do not treat descriptive states as trade signals.
 
-- freeze inputs at row creation;
-- leave outcomes empty until maturity;
-- do not infer missing altcoin breadth;
-- preserve the declared CMC and DeFiLlama semantics;
-- attach outcomes through the protocol-defined reference to the original `transmission_row_id`;
-- do not treat the descriptive state label as a trade signal;
-- do not discuss promotion before the protocol gate permits governance review.
+## 10. Coverage separation
 
-## Coverage calculation
+Where supported report before/after values for eligible rows, forward rows, independent windows, source families and largest-window concentration, plus coverage-gate and governance-review readiness.
 
-Report coverage separately from performance.
-
-Required output fields where supported:
-
-```yaml
-eligible_rows_before:
-eligible_rows_after:
-forward_eligible_rows_before:
-forward_eligible_rows_after:
-independent_event_windows_before:
-independent_event_windows_after:
-source_families_before:
-source_families_after:
-largest_window_concentration_before:
-largest_window_concentration_after:
-coverage_gate_pass:
-ready_for_governance_review:
-```
-
-Rules:
-
-- A schema row is not an eligible row.
-- A source row is not an outcome row.
-- An initialization row is not automatically eligible.
-- A validator PASS is not a performance PASS.
-- `ready_for_governance_review` is not rule promotion.
-- Coverage improvement is not evidence that the tested idea works.
-
-## Three-layer result separation
-
-Every run must report:
+Always separate:
 
 ```yaml
 row_validity:
@@ -599,19 +286,11 @@ coverage_readiness:
 edge_or_promotion_status:
 ```
 
-Example:
+Validator PASS is not performance PASS. Coverage readiness is not promotion.
 
-```yaml
-row_validity: PASS
-coverage_readiness: NOT_READY
-edge_or_promotion_status: NO_CHANGE
-```
+## 11. Evidence decision manifest
 
-Never compress these into one general `PASS`.
-
-## Evidence decision manifest
-
-Before any write, prepare:
+Before a write prepare:
 
 ```yaml
 test_id:
@@ -641,13 +320,9 @@ next_due_action:
 authority_boundary:
 ```
 
-This manifest may appear in the PR body or implementation receipt when the change is material.
+## 12. Write boundary
 
-## Repository-write boundary
-
-This skill may prepare a row and validation result.
-
-It must not write to GitHub unless:
+This Skill may prepare a row and validation result. It may write only when:
 
 ```yaml
 user_write_intent: EXPLICIT
@@ -655,260 +330,85 @@ archive_governance_invoked: YES
 target_branch_verified: YES
 ```
 
-All GitHub writes must pass through `archive-governance`.
-
-The repository branch, PR, read-back, addendum registration and backup-scope controls remain owned by that Skill.
+`archive-governance` owns branch, PR, read-back, discoverability and backup-scope controls.
 
 ## Required output
 
-Return:
+Return a concise `PROSPECTIVE EVIDENCE LEDGER VERDICT` containing:
 
-```markdown
-# PROSPECTIVE EVIDENCE LEDGER VERDICT
+- test, owner, ledger and operation;
+- contract, row identity and lifecycle state;
+- causality, maturity and lineage;
+- duplicate, event-window and missing-field status;
+- procedural eligibility and validator result;
+- coverage delta and score status;
+- separate row-validity, coverage-readiness and promotion fields;
+- write plan and next due action.
 
-## Context
-Test ID:
-Test status:
-Test owner:
-Ledger owner:
-Ledger path:
-Operation:
-
-## Contract
-Schema:
-Row identity:
-Frozen fields:
-Outcome fields:
-Horizon:
-Timezone:
-Validator:
-Scorer:
-
-## Proposed or referenced row
-Row ID:
-Row type:
-Original row reference:
-Lifecycle state:
-
-## Causality
-Issued before outcome:
-Timestamp quality:
-Retrospective reconstruction:
-Frozen horizon:
-Frozen benchmark:
-
-## Maturity
-Evaluation due:
-Full horizon elapsed:
-Actual source complete:
-Revision status:
-
-## Source lineage
-Provider:
-Convention:
-Source:
-Source hash:
-Commit receipt:
-Data quality:
-
-## Integrity
-Duplicate status:
-Event-window status:
-Frozen fields preserved:
-Missing fields:
-
-## Eligibility
-Procedural classification:
-Eligible for target ledger:
-Reason:
-
-## Validation
-Validator:
-Validation result:
-Errors:
-
-## Coverage delta
-Rows before / after:
-Independent windows before / after:
-Source families before / after:
-Concentration before / after:
-Coverage gate:
-
-## Scoring
-Scorer:
-Score status:
-Score:
-Benchmark:
-
-## Authority boundary
-Row validity:
-Coverage readiness:
-Edge or promotion status:
-Market call:
-Portfolio action:
-Automatic ratification:
-
-## Write plan
-Write intent:
-Paths:
-Required branch:
-Next skill:
-
-## Next due action
-```
-
-Keep the output concise when the row is straightforward. Expand only when a conflict, failure or correction exists.
+Expand only for conflicts, failures or corrections.
 
 ## Hard rules
 
-- No new test creation.
-- No new scoring method.
-- No schema invention.
+- No new test, schema or score.
 - No retrospective row counted as prospective.
-- No backdating.
-- No silent interpolation.
-- No missing value converted to zero.
-- No source row counted as outcome.
-- No initialization row counted as evidence.
-- No frozen input changed after outcome observation.
-- No non-empty outcome silently overwritten.
-- No duplicate ID bypass.
+- No backdating, interpolation or missing-to-zero conversion.
+- No source or initialization row counted as outcome evidence.
+- No frozen input changed after outcomes.
+- No silent outcome overwrite or duplicate-ID bypass.
 - No overlapping event automatically counted as independent.
-- No score without a frozen canonical method.
-- No validator PASS presented as edge.
-- No coverage PASS presented as promotion.
-- No market call.
-- No portfolio action.
-- No automatic rule ratification.
-- No repository write without explicit user intent and `archive-governance`.
-- No automation or recurring scheduling created by this Skill.
+- No validator or coverage PASS presented as edge.
+- No market call, portfolio action or automatic ratification.
+- No repository write without explicit intent and `archive-governance`.
+- No recurring automation created by this Skill.
 
 ## Validation loop
 
-Before completing:
+1. Verify registered test, owner, ledger and complete contract.
+2. Verify row identity, exact timestamp and causal ordering.
+3. Verify frozen horizon, benchmark and fields.
+4. Verify full maturity and source lineage.
+5. Verify hashes, receipts, duplicates and event windows.
+6. Run the existing validator.
+7. Run the scorer only when frozen.
+8. Recalculate owner-defined coverage.
+9. Separate validity, readiness and promotion.
+10. Verify zero market and portfolio authority.
+11. Invoke `archive-governance` before writing.
+12. Read back the final row and receipt after merge.
 
-1. Verify the test exists in the Active Test Registry.
-2. Verify the current owner and ledger path.
-3. Verify the ledger contract is complete for the requested operation.
-4. Verify the row identity is unique or correctly linked to an original row.
-5. Verify issued timestamp and timezone.
-6. Verify the input predates the outcome.
-7. Verify the horizon and benchmark were frozen.
-8. Verify no frozen field changed.
-9. Verify full outcome maturity.
-10. Verify source provider, convention and lineage.
-11. Verify source hash and commit receipt when required.
-12. Verify duplicate and source-conflict status.
-13. Verify event-window independence classification.
-14. Run the existing validator.
-15. Run the existing scorer only when frozen and applicable.
-16. Recalculate coverage using the owner-defined method.
-17. Separate row validity, coverage readiness and promotion status.
-18. Verify no market or portfolio authority was created.
-19. Invoke `archive-governance` before any write.
-20. Read back the final written row and validator receipt after merge.
-
-A failed check requires correction and a complete re-run.
+A failed check requires correction and full re-validation.
 
 ## Failure modes
 
-- **Test missing from registry** -> `ACTIVE_TEST_NOT_REGISTERED`
-- **Owner unresolved** -> `LEDGER_OWNER_UNRESOLVED`
-- **Contract incomplete** -> `LEDGER_CONTRACT_INCOMPLETE`
-- **Required schema field absent** -> `SCHEMA_INCOMPLETE`
-- **Timestamp not exact** -> `TIMESTAMP_NOT_EXACT`
-- **Input created after outcome began** -> `RETROSPECTIVE_INELIGIBLE`
-- **Horizon not mature** -> `OUTCOME_NOT_MATURE`
-- **Source missing** -> `SOURCE_LINEAGE_UNRESOLVED`
-- **Source hash mismatch** -> `SOURCE_HASH_MISMATCH`
-- **Duplicate row** -> `EXACT_DUPLICATE_NOOP`
-- **Conflicting duplicate** -> `CONFLICTING_DUPLICATE`
-- **Event overlap unresolved** -> `EVENT_WINDOW_UNRESOLVED`
-- **Required data missing** -> `BLOCKED_DATA_MISSING`
-- **Validator absent** -> `VALIDATOR_UNAVAILABLE`
-- **Validator error** -> `VALIDATOR_FAILED`
-- **Scoring method not frozen** -> `SCORE_METHOD_UNFROZEN`
-- **Owner blocks collection** -> `OWNER_BLOCKED`
-- **Write intent not explicit** -> `READ_ONLY_RECOMMENDATION`
-- **Repository branch unsafe** -> defer to `archive-governance` and stop with `WRITE_BRANCH_UNVERIFIED`
-
-## Pilot metrics
-
-For each qualified use, record:
-
-```yaml
-skill_name: prospective-evidence-ledger
-run_date:
-test_id:
-operation:
-trigger_correct: YES | NO | PARTIAL
-correct_test_owner_found: YES | NO | PARTIAL
-correct_ledger_found: YES | NO | PARTIAL
-ledger_contract_complete: YES | NO
-causal_pre_registration_correct: YES | NO | NOT_APPLICABLE
-frozen_fields_preserved: YES | NO | NOT_APPLICABLE
-maturity_classification_correct: YES | NO | NOT_APPLICABLE
-source_lineage_complete: YES | NO | PARTIAL
-duplicate_prevented: YES | NO | NOT_APPLICABLE
-event_window_classification_correct: YES | NO | NOT_APPLICABLE
-validator_executed: YES | NO | NOT_APPLICABLE
-invalid_forward_row_blocked: YES | NO | NOT_APPLICABLE
-unsupported_score_blocked: YES | NO | NOT_APPLICABLE
-unsupported_promotion_blocked: YES | NO
-manual_corrections_required:
-false_eligible_incidents:
-write_governance_result:
-final_repository_state:
-notes:
+```text
+ACTIVE_TEST_NOT_REGISTERED
+LEDGER_OWNER_UNRESOLVED
+LEDGER_CONTRACT_INCOMPLETE
+SCHEMA_INCOMPLETE
+TIMESTAMP_NOT_EXACT
+RETROSPECTIVE_INELIGIBLE
+FROZEN_FIELD_MUTATION_BLOCKED
+OUTCOME_NOT_MATURE
+SOURCE_LINEAGE_UNRESOLVED
+SOURCE_HASH_MISMATCH
+EXACT_DUPLICATE_NOOP
+CONFLICTING_DUPLICATE
+EVENT_WINDOW_UNRESOLVED
+BLOCKED_DATA_MISSING
+VALIDATOR_UNAVAILABLE
+VALIDATOR_FAILED
+SCORE_METHOD_UNFROZEN
+OWNER_BLOCKED
+READ_ONLY_RECOMMENDATION
+WRITE_BRANCH_UNVERIFIED
 ```
 
-## Pilot success criteria
+## Pilot metrics and kill criteria
 
-Keep the Skill only if it:
+Record trigger, test/ledger owner accuracy, contract completeness, causal classification, frozen-field preservation, maturity, lineage, duplicate prevention, event-window classification, validator execution, blocked invalid rows, blocked unsupported scores/promotions, manual corrections and false-eligible incidents.
 
-- increases valid prospective row production;
-- reduces retrospective reconstruction;
-- prevents frozen-field mutation;
-- prevents source rows from being counted as outcomes;
-- catches duplicates and event-window dependence;
-- routes scoring to the correct owner;
-- produces fewer manual corrections than the prior workflow;
-- does not create parallel ledger authority.
+Keep only if the Skill increases valid prospective rows and reduces hindsight, pseudo-rows, duplicates and manual repair.
 
-## Modification or kill criteria
+Immediately modify or suspend if it marks a retrospective row eligible, changes frozen input, creates duplicate evidence, misses material lineage, overstates independence, becomes a parallel scorer, treats coverage as edge, creates tests without authority or produces portfolio language.
 
-Modify, suspend or kill the Skill if:
-
-- it marks any retrospective row as forward eligible;
-- it changes a frozen forecast or decision;
-- it creates duplicate evidence rows;
-- it repeatedly misses source-lineage defects;
-- it overstates event-window independence;
-- it becomes a parallel scorer;
-- it treats coverage readiness as edge;
-- it creates new tests or schemas without authority;
-- it produces portfolio language;
-- it requires repeated ledger-specific exceptions that should remain domain-owned;
-- it increases archive inflation or manual repair.
-
-## Pilot review
-
-Review under `00_ARCHIVE_CONTROL/SKILL_REGISTRY.md` after:
-
-- 10 qualified uses, or
-- the existing Agent Skills pilot review date,
-
-whichever occurs first.
-
-Recommended first pilot cases:
-
-1. one valid M3 prospective decision row;
-2. one M3 retrospective row that must be blocked;
-3. one Transmission Matrix frozen input row;
-4. one Transmission Matrix maturity check;
-5. one duplicate row attempt;
-6. one overlapping event-window case;
-7. one source-hash mismatch;
-8. one FRLP actual with an available frozen scorer;
-9. one ledger with an unfrozen score method;
-10. one coverage gate that passes but cannot self-promote.
+Review after 10 qualified stack uses or the existing pilot review date, whichever comes first. Require at least three real uses before KEEP is justified.
