@@ -1,8 +1,8 @@
-# Index Addendum - Investering Agent Skills v0.1.1
+# Index Addendum - Investering Agent Skills v0.2
 
 **Date:** 2026-07-12  
 **Status:** CANONICAL_INDEX_ADDENDUM  
-**Scope:** repository-wide agent instructions, skill routing, write hardening and pilot governance
+**Scope:** repository-wide agent instructions, skill routing, prospective evidence lifecycle, write hardening and pilot governance
 
 Read these files for repository-aware agent work:
 
@@ -12,6 +12,7 @@ AGENTS.md
 00_ARCHIVE_CONTROL/INDEX_ADDENDUM_REGISTRY.md
 07_PROMPTS_AND_AGENTS/github_agent/2026-07-12__investering-agent-skills-v0-1__canonical.md
 .agents/skills/canonical-context-router/SKILL.md
+.agents/skills/prospective-evidence-ledger/SKILL.md
 .agents/skills/archive-governance/SKILL.md
 .agents/skills/research-lab-red-team/SKILL.md
 ```
@@ -19,13 +20,15 @@ AGENTS.md
 ## Active stack
 
 ```yaml
-stack_version: 0.1.1
+stack_version: 0.2
 stack_status: PILOT_ACTIVE_HARDENED
 skills_active:
   - canonical-context-router
+  - prospective-evidence-ledger
   - archive-governance
   - research-lab-red-team
-qualified_uses_completed: 1
+stack_qualified_uses_completed: 1
+prospective_evidence_ledger_qualified_uses: 0
 review_gate: 10_qualified_uses_OR_2026-08-09
 ```
 
@@ -36,11 +39,15 @@ Skills = procedure
 Canonical files = current truth
 Automations = timing
 Ledgers = evidence and accountability
+Validators = row and coverage integrity
+Governance = promotion and authority
 ```
 
 Skills do not receive market, portfolio, promotion or scoring authority.
 
 ## Default read and execution order
+
+For general work:
 
 ```text
 AGENTS.md
@@ -54,7 +61,50 @@ AGENTS.md
 -> archive-governance before writes
 ```
 
-## v0.1.1 hardening controls
+For active test and ledger work:
+
+```text
+canonical-context-router
+-> prospective-evidence-ledger
+-> existing domain validator or scorer
+-> research-lab-red-team only for interpretation or promotion review
+-> archive-governance before writes
+```
+
+## Prospective Evidence Ledger v0.1
+
+The Skill governs prospective evidence-row lifecycle for already registered tests and owner-defined ledgers.
+
+It may:
+
+- resolve the active test and ledger owner;
+- verify causal pre-registration;
+- protect frozen input fields;
+- determine outcome maturity;
+- verify source lineage;
+- detect duplicates and event-window overlap;
+- delegate to existing validators and scorers;
+- report owner-defined coverage deltas.
+
+It may not:
+
+- create a test, engine, schema, ledger or scoring method;
+- rewrite a frozen forecast after outcomes;
+- count a source row as an outcome row;
+- treat validator or coverage PASS as edge;
+- promote a rule;
+- make a market call or portfolio action;
+- create recurring automation.
+
+Required result separation:
+
+```yaml
+row_validity:
+coverage_readiness:
+edge_or_promotion_status:
+```
+
+## v0.1.1 write hardening controls retained
 
 ```text
 EXPLICIT_BRANCH_ON_EVERY_WRITE: REQUIRED
@@ -70,7 +120,8 @@ PRE_MERGE_BACKUP_EQUALS_POST_MERGE_BACKUP: NO
 
 - no new engine;
 - no new shadow layer;
-- no live market thresholds copied into skills;
+- no new test or ledger from this Skill;
+- no live market thresholds copied into Skills;
 - no automatic portfolio action;
 - no automatic scheduling;
 - no write without explicit user intent;
@@ -79,26 +130,16 @@ PRE_MERGE_BACKUP_EQUALS_POST_MERGE_BACKUP: NO
 - no direct `CANONICAL_INDEX.md` modification without the high-impact safepoint sequence;
 - repository safety and backup governance remain binding.
 
-## First live-run interpretation
-
-```yaml
-archive_content_result: PASS
-write_governance_result: PARTIAL_REMEDIATED
-final_repository_state: PASS
-incident_count: 1
-research_package_backup: PASS_TARGETED_RESEARCH_SNAPSHOT
-current_owner_version_in_snapshot: NO
-post_merge_delta_status: PENDING
-```
-
-The live-run receipt is:
+## Pilot specification
 
 ```text
-07_PROMPTS_AND_AGENTS/skill_runs/2026-07-12__archive-governance-full-sensor-backtest__receipt.md
+07_PROMPTS_AND_AGENTS/github_agent/skill_evals/2026-07-12__prospective-evidence-ledger-v0-1__eval-cases.md
 ```
+
+The new Skill is reviewed after 10 qualified stack uses or 2026-08-09, whichever occurs first, and requires at least three real uses before a KEEP decision is justified.
 
 ## Discoverability note
 
-This addendum remains the safe discovery pointer for the Skill stack. It is also registered in `00_ARCHIVE_CONTROL/INDEX_ADDENDUM_REGISTRY.md`.
+This addendum remains the safe discovery pointer for the Skill stack. It is registered in `00_ARCHIVE_CONTROL/INDEX_ADDENDUM_REGISTRY.md`.
 
-`CANONICAL_INDEX.md` is not modified by this hardening patch because direct index changes remain high-impact operations under the repository safety policy.
+`CANONICAL_INDEX.md` is not modified by this implementation because direct index changes remain high-impact operations under the repository safety policy.
