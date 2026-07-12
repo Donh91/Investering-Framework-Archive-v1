@@ -1,7 +1,7 @@
 # Archive Governance Skill Run — Full Sensor Backtest
 
 **Dato:** 2026-07-12  
-**Status:** RECEIPT  
+**Status:** RECEIPT_CORRECTED_V0_1_1  
 **Område:** agent workflow / archive governance  
 **Primary folder:** `07_PROMPTS_AND_AGENTS/skill_runs/`  
 **Related folders:** `04_MARKET_LEARNING/full_backtests/`, `01_CORE_FRAMEWORK/governance/`, `00_ARCHIVE_CONTROL/`  
@@ -57,24 +57,33 @@ The archive preserves the smallest durable decision unit:
 4. the explicit boundary against fabricating a full portfolio backtest;
 5. the forward-falsification continuation path;
 6. the source-package and simulation-package hashes;
-7. the targeted Vault snapshot receipt already produced for this research package.
+7. the targeted Vault snapshot receipt already produced for the research package.
 
 The conversational explanation itself is not copied verbatim. The canonical owner stores the durable learning, while this file stores the implementation receipt.
 
-## Pilot metrics
+## Corrected pilot metrics under v0.1.1
 
 ```yaml
 skill_name: archive-governance
+qualified_use_number: 1
 run_date: 2026-07-12
 trigger_correct: YES
 correct_owner_files_found: YES
+registered_addenda_found: PARTIAL
 legacy_as_current_error: NO
 unnecessary_new_document_avoided: YES
 unsupported_promotion_blocked: YES
+branch_assertion: PARTIAL
+explicit_branch_on_every_write: NO
 manual_corrections_required: 1
-write_validation: PASS
-notes: Existing canonical owner was updated instead of creating a duplicate. Index discoverability was preserved through the existing addendum, avoiding a high-impact CANONICAL_INDEX edit. One accidental temporary placeholder write to main occurred during tool setup and was immediately removed in the next commit; no durable archive content was affected.
+incident_count: 1
+archive_content_result: PASS
+write_governance_result: PARTIAL_REMEDIATED
+final_repository_state: PASS
+notes: Existing canonical owner was updated instead of creating a duplicate. Index discoverability used the existing addendum, but a general addendum registry did not yet exist. One accidental temporary placeholder write to main occurred during tool setup and was immediately removed; no durable canonical content remained affected.
 ```
+
+The previous `write_validation: PASS` classification is superseded by `write_governance_result: PARTIAL_REMEDIATED`. A clean final state does not erase the control incident.
 
 ## Remediation receipt
 
@@ -84,7 +93,25 @@ creation_commit: 26d21e2a1151bb4663fedf3f61e6a50afd42fcb9
 removal_commit: a19241702752ee380ade7d5f170da106df714471
 final_state: PATH_ABSENT
 impact: NONE_ON_CANONICAL_CONTENT
+incident_retained_for_pilot: YES
 ```
+
+## Backup-scope correction
+
+```yaml
+backup_product: TARGETED_SNAPSHOT
+snapshot_root: snapshots/2026-07-12-full-sensor-backtest/source-tree/
+snapshot_frozen_source_sha: 732a21f41d0292b3156451574f5d7b759ce3a97d
+research_package_backup: PASS_TARGETED_RESEARCH_SNAPSHOT
+paths_verified: 11/11
+owner_update_merge_sha: ba40c6cb70121f6e3291ff882f8bd73a13386f9a
+current_owner_version_in_snapshot: NO
+skill_run_receipt_in_snapshot: NO
+post_merge_delta_status: PENDING
+full_git_mirror_status: NOT_CONFIGURED
+```
+
+The targeted snapshot protects the research package frozen before PR #8. It does not prove that the later owner upgrade, addendum update or this receipt version is already present in the Vault.
 
 ## Authority boundary
 

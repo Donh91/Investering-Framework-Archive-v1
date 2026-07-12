@@ -178,17 +178,25 @@ A present-day reconstruction of those missing inputs would create false precisio
 
 ## Backup and recovery
 
-The canonical research subset is preserved in the independent Vault as a targeted research snapshot:
+The original canonical research subset is preserved in the independent Vault as a targeted research snapshot:
 
-```text
+```yaml
+backup_product: TARGETED_SNAPSHOT
 snapshot_root: snapshots/2026-07-12-full-sensor-backtest/source-tree/
 manifest: manifests/2026-07-12__full-sensor-backtest-targeted-snapshot-manifest.md
 receipt: receipts/2026-07-12__full-sensor-backtest-targeted-snapshot-receipt.json
+snapshot_frozen_source_sha: 732a21f41d0292b3156451574f5d7b759ce3a97d
 result: PASS_TARGETED_RESEARCH_SNAPSHOT
 paths_verified: 11/11
+research_package_backup: PASS
+owner_upgrade_merge_sha: ba40c6cb70121f6e3291ff882f8bd73a13386f9a
+current_owner_version_in_snapshot: NO
+skill_run_receipt_in_snapshot: NO
+post_merge_delta_status: PENDING
+full_git_mirror_status: NOT_CONFIGURED
 ```
 
-This is a selected canonical research snapshot, not a full Git mirror.
+This means the research package is protected, while the later PR #8 owner upgrade, index-addendum update and Skill-run receipt still require a post-merge delta or later canonical snapshot. The targeted snapshot is not a full Git mirror.
 
 ## Implementation receipt
 
