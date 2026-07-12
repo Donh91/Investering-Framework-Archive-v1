@@ -1,9 +1,12 @@
 # Index Addendum — Full Sensor Simulation & Backtest v1
 
-**Date:** 2026-07-12  
-**Status:** ARCHIVE_INDEX_ADDENDUM
+**Dato:** 2026-07-12  
+**Status:** OPERATIONAL  
+**Område:** archive discovery / market-learning routing  
+**Primary folder:** `00_ARCHIVE_CONTROL/`  
+**Depends on:** `04_MARKET_LEARNING/full_backtests/2026-07-12__full-sensor-simulation-backtest-v1__canonical.md`
 
-## Canonical files
+## Canonical owner and supporting files
 
 ```text
 04_MARKET_LEARNING/full_backtests/2026-07-12__full-sensor-simulation-backtest-v1__canonical.md
@@ -13,7 +16,17 @@
 04_MARKET_LEARNING/full_backtests/data/2026-07-12__m4-transmission-walk-forward-year-v1.csv
 04_MARKET_LEARNING/full_backtests/data/2026-07-12__m4-episode-direct-forward-returns-v1.csv
 04_MARKET_LEARNING/truth_layer/DATA_COMPLETION_CONTROL_STATE.json
+04_MARKET_LEARNING/shadow_protocols/2026-07-12__transmission-matrix-forward-falsification-protocol-v0-1__canonical.md
+03_WEEKLY_OPERATIONS/shadow_ledger/TRANSMISSION_MATRIX_FORWARD_LOG_v0_1.csv
 ```
+
+## Implementation receipt
+
+```text
+07_PROMPTS_AND_AGENTS/skill_runs/2026-07-12__archive-governance-full-sensor-backtest__receipt.md
+```
+
+This addendum is the safe discoverability layer. `CANONICAL_INDEX.md` is not modified by this archival correction.
 
 ## Binding research status
 
@@ -35,7 +48,7 @@ The historical BTC.D series is CoinMarketCap under `CMC_DIRECT_SOURCE_CONVENTION
 
 ## Operational consequence
 
-Sunday Closeout and Master Monday must consume this addendum through their existing GitHub-first `CANONICAL_INDEX` load order. Do not add a duplicate engine or blended score.
+Sunday Closeout and Master Monday must consume this addendum through their existing GitHub-first load order. Do not add a duplicate engine, blended score or standalone action authority.
 
 ## Remaining research priority
 
