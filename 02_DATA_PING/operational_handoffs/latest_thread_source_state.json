@@ -1,7 +1,8 @@
 {
   "contract_version": "0.1",
+  "protocol_owner": "02_DATA_PING/protocols/2026-07-12__data-ping-thread-handoff-v0-1__canonical.md",
   "purpose": "Latest source-backed DATA PING thread handoff for automation fallback",
-  "source_status": "PENDING_NEXT_DIRECT_THREAD_CAPTURE",
+  "source_status": "PENDING_NEXT_COMPLETE_DATA_PING",
   "source_mode": null,
   "highest_known_version": 4,
   "selected_version": null,
@@ -13,10 +14,13 @@
   "handoff_written_at": null,
   "max_valid_age_hours": 36,
   "payload_path": null,
+  "last_error": null,
+  "consecutive_write_failures": 0,
   "rules": [
     "Highest version actually used wins.",
     "Within that version, the latest complete user-supplied Custom GPT DATA PING analysis wins.",
     "A casual comment does not replace the latest complete analysis.",
+    "An older version cannot replace the active higher-version pointer.",
     "This file may only point to a thread-derived payload; it may not contain independently fetched market data.",
     "No forecast row may be created while source_status is not READY_THREAD_DERIVED."
   ]
