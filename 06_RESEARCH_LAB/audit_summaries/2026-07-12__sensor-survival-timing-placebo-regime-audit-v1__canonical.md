@@ -1,4 +1,4 @@
-# Sensor Survival, Timing, Placebo & Regime Audit v1
+# Sensor Survival, Timing, Placebo & Regime Audit v1.1
 
 **Dato:** 2026-07-12  
 **Status:** CANONICAL  
@@ -7,6 +7,7 @@
 **Primary folder:** `06_RESEARCH_LAB/audit_summaries/`  
 **Related folders:** `01_CORE_FRAMEWORK/governance/`, `04_MARKET_LEARNING/full_backtests/`, `06_RESEARCH_LAB/forward_tests/`  
 **Depends on:** `04_MARKET_LEARNING/full_backtests/2026-07-12__full-sensor-simulation-backtest-v1__canonical.md`, `01_CORE_FRAMEWORK/governance/2026-07-12__btc-d-and-stablecoin-role-freeze-v1__canonical.md`  
+**Follow-up:** `06_RESEARCH_LAB/audit_summaries/2026-07-12__marginal-decision-value-and-breadth-truth-program-v1__canonical.md`  
 **Package SHA-256:** `2c8f09873c117d9e10ab269e7a147e363475f0e87258052ca0aae8bdb971febb`  
 **Package integrity:** `35 files / ZIP PASS / 34 internal checksums PASS`
 
@@ -26,7 +27,9 @@ CLEANEST ROLE FREEZE: D-family as CONFIRMATION/VETO, not prediction
 BTC.D B1 EARLY WARNING: NOT_SUPPORTED / ZERO WEIGHT
 STABLECOIN STANDALONE PREDICTOR: NOT_SUPPORTED / ZERO WEIGHT
 STABLECOIN AVAILABILITY AND ACTIVITY CONTEXT: RETAIN WITH REDUNDANCY COMPRESSION
-HIGHEST DATA EXPANSION PRIORITY: frozen-universe altcoin breadth
+BREADTH DATA PRIORITY: COMPLETED_BY_MDV_BREADTH_TRUTH_V1
+BREADTH PREDICTIVE GATE: NOT_SUPPORTED
+BREADTH DESCRIPTIVE CONTEXT: RETAIN_ZERO_WEIGHT
 RULE PROMOTION: NONE
 ```
 
@@ -41,6 +44,8 @@ A3 is quarantined. Removing A3 improved the historical trim-edge comparison by 2
 ### C family
 
 C is the strongest surviving warning family. At the 30-day event window, C hit nine events versus random median six; exploratory p approximately 0.006. The timing advantage remained stronger than random at 14, 21, 30 and 45 days. C2 is the principal expansion candidate, but only for forward row collection.
+
+The follow-up latency audit shows that C's usable lead is highly operationally sensitive. With one added day of delay, events retaining non-negative usable lead fell from 88.9% to 44.4%. C2 therefore requires event-driven or daily capture with operational-availability timestamps.
 
 ### D family
 
@@ -85,14 +90,28 @@ one normalized DEX activity measure -> REALIZED ACTIVITY
 chain-positive share -> DISTRIBUTIONAL SHADOW CONFIRMATION
 ```
 
+## Breadth follow-up resolution
+
+The highest-priority missing axis was completed through 184 point-in-time CoinMarketCap weekly snapshots and 18,400 frozen-universe rows.
+
+```text
+HISTORICAL_WEEKLY_FROZEN_BREADTH: AVAILABLE
+DAILY_BREADTH: DATA_MISSING
+HISTORICAL_30DMA_BREADTH: DATA_MISSING
+```
+
+The result falsified the strong gatekeeper hypothesis. Adding breadth to the price baseline worsened forward ETH/BTC MAE by approximately 0.84, 1.08 and 3.74 percentage points at 7, 14 and 28 days, with positive moving-block intervals. Across 36 top-20/top-50/top-100 feature/horizon tests, no robust predictive improvement survived.
+
+Breadth remains valid as contemporaneous participation truth and descriptive confirmation with zero predictive and action weight.
+
 ## Machine consequence
 
 ### Expand evidence production
 
 ```text
-C2 forward warning rows
-frozen-universe altcoin breadth
+C2 forward warning rows with operational-availability timestamps
 TechDev category-specific outcome calibration
+prospective breadth-complete decision rows under existing T3/T6 owners
 ```
 
 ### Retain with narrow roles
@@ -104,6 +123,7 @@ D2/D3 and price structure = confirmation/veto
 BTC.D = rotation survival/reclaim context
 stablecoin supply = liquidity availability
 one normalized activity proxy = realized activity
+frozen altcoin breadth = descriptive participation confirmation, zero predictive weight
 chain activity breadth = shadow confirmation
 ATR = range/volatility infrastructure
 ```
@@ -114,23 +134,24 @@ ATR = range/volatility infrastructure
 A3 = quarantine / zero execution weight
 BTC.D B1 early warning = zero
 stablecoin deployment standalone = zero
+breadth as entry permission or hard predictive gate = zero
 DEX change + DEX/supply ratio = one activity axis
 EMA50 = merge into price structure context
 DAYS_BELOW_GATE = retire as redundant with BASE_DEPTH
 SIG_A = reject
 SIG_B = shadow only
+legacy alt-phase labels = reject as breadth substitute
 ```
 
 ## Evidence and authority boundary
 
-The audit is retrospective research evidence. It modifies evidence classifications, role boundaries, blocker states and forward instrumentation. It creates no market call, portfolio action, live threshold change, new engine, new test, new score or automatic promotion.
+The audit and its follow-up are retrospective research evidence. They modify evidence classifications, role boundaries, blocker states and forward instrumentation. They create no market call, portfolio action, live threshold change, new engine, new test, new score or automatic promotion.
 
 ## Machine-readable archive
 
-Primary data root:
-
 ```text
 06_RESEARCH_LAB/audit_summaries/sensor_survival_v1/
+06_RESEARCH_LAB/audit_summaries/marginal_decision_breadth_v1/
 ```
 
-The complete external package is identified by SHA-256 above. Binary charts are not duplicated through the text-only connector; their identities remain in the package manifest and checksums.
+The complete external packages are identified by SHA-256 in their canonical owners. Binary package products remain external frozen references; durable learning, core tables, manifests and execution lineage are preserved in the repository.
