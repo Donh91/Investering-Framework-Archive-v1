@@ -41,6 +41,7 @@ A registry entry is a navigation pointer only. The referenced file's own status,
 | `00_ARCHIVE_CONTROL/2026-07-12__index-addendum-full-sensor-simulation-backtest-v1.md` | full sensor backtest | REGISTRY_DISCOVERABLE |
 | `00_ARCHIVE_CONTROL/2026-07-12__index-addendum-sensor-survival-timing-placebo-regime-audit-v1.md` | sensor audit / machine improvement | REGISTRY_DISCOVERABLE |
 | `00_ARCHIVE_CONTROL/2026-07-12__index-addendum-agent-control-loop-v0-1.md` | agent workflows / automation integrity | REGISTRY_DISCOVERABLE |
+| `00_ARCHIVE_CONTROL/2026-07-12__index-addendum-marginal-decision-value-and-breadth-truth-v1.md` | Research Lab / frozen breadth / marginal sensor value | REGISTRY_DISCOVERABLE |
 
 ## Registration contract
 
@@ -50,7 +51,7 @@ When an index addendum is created or materially updated, `archive-governance` mu
 2. verify its owner paths exist;
 3. add or update exactly one row in this registry;
 4. classify it as `INDEX_LISTED`, `REGISTRY_DISCOVERABLE`, `SUPERSEDED` or `BROKEN_POINTER`;
-5. avoid modifying `CANONICAL_INDEX.md` unless the high-impact safepoint and vault workflow has been completed;
+5. avoid modifying `CANONICAL_INDEX.md` unless the high-impact safepoint workflow has been completed;
 6. record the registry change in the pull request or skill-run receipt.
 
 ## Failure states
