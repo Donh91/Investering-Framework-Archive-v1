@@ -5,8 +5,8 @@
 **Evidence class:** CANONICAL_RESEARCH_EVIDENCE  
 **Område:** market learning / full sensor backtest / signal-role governance  
 **Primary folder:** `04_MARKET_LEARNING/full_backtests/`  
-**Related folders:** `01_CORE_FRAMEWORK/governance/`, `03_WEEKLY_OPERATIONS/shadow_ledger/`, `04_MARKET_LEARNING/truth_layer/`, `06_RESEARCH_LAB/forward_tests/`  
-**Depends on:** `04_MARKET_LEARNING/truth_layer/DATA_COMPLETION_CONTROL_STATE.json`, `01_CORE_FRAMEWORK/governance/2026-07-12__btc-d-and-stablecoin-role-freeze-v1__canonical.md`, `06_RESEARCH_LAB/forward_tests/2026-07-12__transmission-matrix-forward-falsification-protocol-v0-1__canonical.md`  
+**Related folders:** `01_CORE_FRAMEWORK/governance/`, `03_WEEKLY_OPERATIONS/shadow_ledger/`, `04_MARKET_LEARNING/truth_layer/`, `04_MARKET_LEARNING/shadow_protocols/`  
+**Depends on:** `04_MARKET_LEARNING/truth_layer/DATA_COMPLETION_CONTROL_STATE.json`, `01_CORE_FRAMEWORK/governance/2026-07-12__btc-d-and-stablecoin-role-freeze-v1__canonical.md`, `04_MARKET_LEARNING/shadow_protocols/2026-07-12__transmission-matrix-forward-falsification-protocol-v0-1__canonical.md`  
 **Index route:** `00_ARCHIVE_CONTROL/2026-07-12__index-addendum-full-sensor-simulation-backtest-v1.md`  
 **Source package SHA-256:** `75e4a4635e390b955cb3b1531cfd004cc2eda9180cb8706e318e69765af26198`  
 **Simulation package SHA-256:** `d75eb50829a4d9be51240e8fcf04930a85e85d455e23c6855e45718c67b83c5d`
@@ -159,7 +159,7 @@ This role freeze is owned by:
 Prospective continuation is owned by:
 
 ```text
-06_RESEARCH_LAB/forward_tests/2026-07-12__transmission-matrix-forward-falsification-protocol-v0-1__canonical.md
+04_MARKET_LEARNING/shadow_protocols/2026-07-12__transmission-matrix-forward-falsification-protocol-v0-1__canonical.md
 03_WEEKLY_OPERATIONS/shadow_ledger/TRANSMISSION_MATRIX_FORWARD_LOG_v0_1.csv
 ```
 
