@@ -51,7 +51,7 @@ When an index addendum is created or materially updated, `archive-governance` mu
 2. verify its owner paths exist;
 3. add or update exactly one row in this registry;
 4. classify it as `INDEX_LISTED`, `REGISTRY_DISCOVERABLE`, `SUPERSEDED` or `BROKEN_POINTER`;
-5. avoid modifying `CANONICAL_INDEX.md` unless the high-impact safepoint workflow has been completed;
+5. avoid modifying `CANONICAL_INDEX.md` unless the high-impact safepoint and vault workflow has been completed;
 6. record the registry change in the pull request or skill-run receipt.
 
 ## Failure states
