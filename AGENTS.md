@@ -7,10 +7,11 @@ These instructions apply to all agent work in this repository.
 Before framework, DATA PING, weekly operations, Cycle Navigator, Research Lab, archive, governance or automation work:
 
 1. Read `00_ARCHIVE_CONTROL/CANONICAL_INDEX.md`.
-2. Read `00_ARCHIVE_CONTROL/ARCHIVE_MAP_AND_ROUTING.md`.
-3. Read `00_ARCHIVE_CONTROL/SKILL_REGISTRY.md`.
-4. Load the relevant skill from `.agents/skills/`.
-5. Read only the current canonical and operational files identified by those anchors.
+2. Read `00_ARCHIVE_CONTROL/INDEX_ADDENDUM_REGISTRY.md`.
+3. Read `00_ARCHIVE_CONTROL/ARCHIVE_MAP_AND_ROUTING.md`.
+4. Read `00_ARCHIVE_CONTROL/SKILL_REGISTRY.md`.
+5. Load the relevant skill from `.agents/skills/`.
+6. Read only the current canonical and operational files identified by those anchors.
 
 Do not rely on conversation memory when repository sources are available.
 
@@ -53,6 +54,26 @@ Do not rely on conversation memory when repository sources are available.
 - Follow `01_CORE_FRAMEWORK/governance/2026-07-11__repository-safety-and-backup-policy-v1__canonical.md` before any high-impact operation.
 - Changing `00_ARCHIVE_CONTROL/CANONICAL_INDEX.md`, archive routing, precedence or source governance is high-impact and requires the policy safepoint sequence first.
 
+### Mandatory branch assertion before every write
+
+Before any `create_file`, `update_file` or `delete_file` operation:
+
+```yaml
+target_branch_explicitly_supplied: REQUIRED
+target_branch_verified_to_exist: REQUIRED
+target_branch_is_default_branch: MUST_BE_NO
+target_branch_is_backup_branch: MUST_BE_NO
+write_path_and_operation_declared: REQUIRED
+```
+
+If any field cannot be verified, stop with:
+
+```text
+WRITE_BRANCH_UNVERIFIED
+```
+
+Never omit the branch argument and rely on the tool default. Never create placeholder or test files to probe connector behavior in a production repository.
+
 ## 6. Archive discipline
 
 Classify material before writing:
@@ -69,17 +90,22 @@ Classify material before writing:
 
 Archive the durable learning, not every intermediate conversation or report.
 
+Every valid index addendum must also be discoverable through `00_ARCHIVE_CONTROL/INDEX_ADDENDUM_REGISTRY.md` unless it is already directly listed in `CANONICAL_INDEX.md`.
+
 ## 7. Validation before completion
 
 Before declaring work complete:
 
 - verify every referenced path exists;
-- verify active versions against the canonical index;
+- verify active versions against the canonical index and addendum registry;
 - verify no legacy file was treated as current authority;
 - verify output status and evidence status are explicit;
 - verify no hidden interpolation or unsupported scoring occurred;
 - verify the diff contains only intended files;
+- verify every write used an explicit non-default task branch;
 - report unresolved paths, blocked data and manual interventions honestly.
+
+A remediated write incident cannot receive an unqualified `PASS`. Use `PARTIAL_REMEDIATED` for the write layer and report the final repository state separately.
 
 ## 8. Skill composition
 
