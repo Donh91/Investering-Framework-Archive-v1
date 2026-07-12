@@ -1,6 +1,6 @@
 {
   "as_of": "2026-07-12",
-  "control_state_version": "1.3",
+  "control_state_version": "1.4",
   "recovery_process_complete": true,
   "btc_d": {
     "status": "CMC_DIRECT_SOURCE_READY",
@@ -46,31 +46,66 @@
     "tvl_substitution": false,
     "standalone_prediction_status": "NOT_SUPPORTED_ZERO_WEIGHT",
     "operational_latency_robustness": "FAILED_HISTORICALLY",
-    "allowed_role": "SHADOW_LIQUIDITY_AND_ACTIVITY_CONTEXT",
+    "role_inversion_result": "ACTIVITY_AND_SUPPLY_STATES_NOT_RELIABLE_RISK_ON",
+    "allowed_role": "SHADOW_LIQUIDITY_AVAILABILITY_AND_ONE_ACTIVITY_AXIS",
     "activity_axis_compression": "DEX_CHANGE_AND_DEX_SUPPLY_RATIO_ONE_FAMILY",
     "standalone_action_authority": false
   },
+  "frozen_altcoin_breadth": {
+    "status": "HISTORICAL_WEEKLY_TRUTH_LAYER_READY",
+    "provider": "CoinMarketCap historical snapshots",
+    "source_convention": "CMC_HISTORICAL_WEEKLY_FROZEN_UNIVERSE",
+    "period": "2023-01-01/2026-07-05",
+    "snapshots_expected": 184,
+    "snapshots_passed": 184,
+    "frozen_universe_rows": 18400,
+    "raw_ranked_assets_per_snapshot": 200,
+    "eligible_assets_per_snapshot": 100,
+    "interpolation": false,
+    "current_constituent_backfill_used_for_truth": false,
+    "source_artifact_sha256": "5664e81a38161486d21fa01116a5ee9f88ec60a1f9ce36bc9da003b9a4a2050c",
+    "program_package_sha256": "84d1614e5fdeb2477853fe980f588450e099a9b9ea852bb13a141f1e640481ca",
+    "canonical_report": "06_RESEARCH_LAB/audit_summaries/2026-07-12__marginal-decision-value-and-breadth-truth-program-v1__canonical.md",
+    "predictive_gate_status": "NOT_SUPPORTED_ZERO_WEIGHT",
+    "descriptive_role": "PARTICIPATION_CONFIRMATION_SHADOW_CONTEXT",
+    "standalone_action_authority": false,
+    "daily_historical_breadth": "DATA_MISSING",
+    "historical_30dma_breadth": "DATA_MISSING",
+    "survivorship_bias": {
+      "first_to_latest_universe_overlap_pct": 45.0,
+      "median_overlap_with_latest_pct": 62.0,
+      "median_weekly_jaccard_turnover_pct": 5.83,
+      "max_absolute_positive_7d_backfill_bias_pp": 14.31
+    },
+    "mae_delta_pp_vs_price": {
+      "7d": 0.8366,
+      "14d": 1.0762,
+      "28d": 3.7377
+    }
+  },
   "sensor_audit_v1": {
-    "status": "COMPLETE_CANONICAL_RESEARCH_EVIDENCE",
+    "status": "COMPLETE_CANONICAL_RESEARCH_EVIDENCE_WITH_BREADTH_FOLLOWUP",
     "canonical_report": "06_RESEARCH_LAB/audit_summaries/2026-07-12__sensor-survival-timing-placebo-regime-audit-v1__canonical.md",
+    "breadth_followup_report": "06_RESEARCH_LAB/audit_summaries/2026-07-12__marginal-decision-value-and-breadth-truth-program-v1__canonical.md",
     "package_sha256": "2c8f09873c117d9e10ab269e7a147e363475f0e87258052ca0aae8bdb971febb",
     "strongest_survivor": "C2_FORWARD_ROWS_LEAN_WARNING",
     "strongest_demotion": "A3_QUARANTINE_ZERO_EXEC_WEIGHT",
     "role_freeze": {
       "A1_A2": "URGENCY_ONLY",
       "C1_C2": "LEAN_WARNING",
-      "D": "CONFIRMATION_OR_VETO"
+      "D": "CONFIRMATION_OR_VETO",
+      "BREADTH": "DESCRIPTIVE_CONFIRMATION_ZERO_WEIGHT"
     },
-    "historical_breadth_priority": "HIGHEST_DATA_EXPANSION_PRIORITY",
+    "historical_breadth_priority": "COMPLETED",
     "rule_promotion": "NONE"
   },
   "simulation": {
-    "status": "FULL_SENSOR_LEVEL_BACKTEST_COMPLETE",
+    "status": "FULL_SENSOR_LEVEL_BACKTEST_AND_BREADTH_FOLLOWUP_COMPLETE",
     "canonical_report": "04_MARKET_LEARNING/full_backtests/2026-07-12__full-sensor-simulation-backtest-v1__canonical.md",
+    "breadth_report": "06_RESEARCH_LAB/audit_summaries/2026-07-12__marginal-decision-value-and-breadth-truth-program-v1__canonical.md",
     "package_sha256": "d75eb50829a4d9be51240e8fcf04930a85e85d455e23c6855e45718c67b83c5d",
     "full_portfolio_backtest": "BLOCKED_NOT_IDENTIFIABLE",
     "remaining_blockers": [
-      "historical altcoin breadth and universe membership",
       "point-in-time portfolio holdings and weights",
       "frozen action-to-size mapping",
       "tier-specific liquidity and transaction-cost assumptions",
@@ -81,20 +116,22 @@
   "m4": {
     "btc_d_enrichment": "COMPLETE",
     "deployment_enrichment": "COMPLETE",
+    "weekly_frozen_breadth_enrichment": "COMPLETE",
     "attempt_rows": 18,
     "independent_episodes": 6,
     "resolved_real_episodes": 1,
     "resolved_fake_episodes": 4,
     "unresolved_episodes": 1,
     "joint_signature_generalization": "NOT_SUPPORTED",
-    "full_replay_status": "PARTIAL_HISTORICAL_BREADTH_MISSING",
+    "full_replay_status": "HISTORICAL_WEEKLY_REPLAY_COMPLETE_FORWARD_VALIDATION_REQUIRED",
+    "breadth_gate_generalization": "NOT_SUPPORTED",
     "exploratory_joint_signature": "FORWARD_FALSIFICATION_ONLY",
     "standalone_action_authority": false
   },
   "active_test_repairs": {
-    "GRADUATED_DEPLOYMENT_V1_1": "PARTIALLY_UNBLOCKED_BREADTH_BLOCKED",
-    "ROTATION_SURVIVAL_FORWARD": "QUEUED_BREADTH_BLOCKED",
-    "PULLBACK_EDGE_C2_INSTRUMENTATION": "REQUIRED_FOR_FUTURE_ROWS"
+    "GRADUATED_DEPLOYMENT_V1_1": "FORWARD_ONLY_NOT_PROMOTION_READY",
+    "ROTATION_SURVIVAL_FORWARD": "FORWARD_ONLY_NOT_PROMOTION_READY",
+    "PULLBACK_EDGE_C2_INSTRUMENTATION": "EVENT_DRIVEN_OR_DAILY_REQUIRED_FOR_FUTURE_ROWS"
   },
   "m3": {
     "status": "FORWARD_COLLECTION_ACTIVE_CI_GUARDED",
@@ -127,6 +164,8 @@
   "authority_boundary": {
     "market_call": false,
     "portfolio_action": false,
-    "automatic_rule_ratification": false
+    "automatic_rule_ratification": false,
+    "new_engine": false,
+    "new_score": false
   }
 }
