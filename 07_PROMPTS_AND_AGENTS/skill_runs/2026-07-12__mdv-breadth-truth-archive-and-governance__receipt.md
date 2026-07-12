@@ -98,7 +98,8 @@ archive_pull_request: 17
 archive_merge_sha: 5f49b5ade2f41393b84ea6b821ff3d41c0fbf7c8
 archive_safepoint: backup-safepoint/2026-07-12-mdv-breadth-truth-final
 final_receipt_branch: agent/task-20260712-finalize-mdv-breadth-receipt
-final_receipt_pull_request: PENDING
+final_receipt_pull_request: 18
+final_receipt_merge_sha: PENDING_MERGE
 ```
 
 Durable source products include:
