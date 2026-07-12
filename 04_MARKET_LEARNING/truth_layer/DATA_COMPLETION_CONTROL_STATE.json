@@ -1,6 +1,6 @@
 {
   "as_of": "2026-07-12",
-  "control_state_version": "1.1",
+  "control_state_version": "1.2",
   "recovery_process_complete": true,
   "btc_d": {
     "status": "CMC_DIRECT_SOURCE_READY",
@@ -11,22 +11,41 @@
     "numeric_rows": 1287,
     "source_gap_dates": ["2023-01-05"],
     "coverage_pct": 99.92236,
-    "role": "DIRECTIONAL_AND_RESEARCH",
-    "hard_absolute_threshold_authority": false,
     "m1_b_leg_completion": "COMPLETE",
     "m1_strict_three_leg_hypothesis": "NOT_SUPPORTED_IN_SAMPLE",
+    "m1_b1_early_warning_status": "NOT_SUPPORTED",
+    "m1_b1_mechanical_trim_status": "NOT_SUPPORTED",
+    "allowed_role": "SHADOW_ROTATION_SURVIVAL_AND_RECLAIM_CONTEXT",
+    "standalone_action_authority": false,
     "m1_original_report_exact_reproduction": "PARTIAL_SOURCE_CONFLICT"
   },
   "stablecoin_deployment_proxy": {
-    "status": "HISTORY_READY_SHADOW",
+    "status": "HISTORY_READY_SHADOW_RESEARCH",
     "history_ready": true,
+    "provider": "DeFiLlama",
     "period": "2024-01-01/2026-07-10",
     "entities": ["TOTAL", "Ethereum", "Solana", "BSC", "Base", "Arbitrum"],
     "rows": 5532,
     "proxy_name": "STABLECOIN_DEPLOYMENT_PROXY",
     "velocity_claim_allowed": false,
     "tvl_substitution": false,
-    "role": "SHADOW_RESEARCH_AND_FORWARD_CONTEXT"
+    "standalone_prediction_status": "NOT_SUPPORTED",
+    "allowed_role": "SHADOW_TRANSMISSION_QUALITY_CONTEXT",
+    "standalone_action_authority": false
+  },
+  "simulation": {
+    "status": "FULL_SENSOR_LEVEL_BACKTEST_COMPLETE",
+    "canonical_report": "04_MARKET_LEARNING/full_backtests/2026-07-12__full-sensor-simulation-backtest-v1__canonical.md",
+    "package_sha256": "d75eb50829a4d9be51240e8fcf04930a85e85d455e23c6855e45718c67b83c5d",
+    "full_portfolio_backtest": "BLOCKED_NOT_IDENTIFIABLE",
+    "remaining_blockers": [
+      "historical altcoin breadth and universe membership",
+      "point-in-time portfolio holdings and weights",
+      "frozen action-to-size mapping",
+      "tier-specific liquidity and transaction-cost assumptions",
+      "broader M3 source-backed decision coverage"
+    ],
+    "rule_promotion": "NONE"
   },
   "m4": {
     "btc_d_enrichment": "COMPLETE",
@@ -36,8 +55,10 @@
     "resolved_real_episodes": 1,
     "resolved_fake_episodes": 4,
     "unresolved_episodes": 1,
+    "joint_signature_generalization": "NOT_SUPPORTED",
     "full_replay_status": "PARTIAL_HISTORICAL_BREADTH_MISSING",
-    "exploratory_joint_signature": "SHADOW_ONLY_FORWARD_FALSIFICATION"
+    "exploratory_joint_signature": "FORWARD_FALSIFICATION_ONLY",
+    "standalone_action_authority": false
   },
   "m3": {
     "status": "FORWARD_COLLECTION_ACTIVE_CI_GUARDED",
@@ -70,6 +91,6 @@
   "authority_boundary": {
     "market_call": false,
     "portfolio_action": false,
-    "rule_ratification": false
+    "automatic_rule_ratification": false
   }
 }
