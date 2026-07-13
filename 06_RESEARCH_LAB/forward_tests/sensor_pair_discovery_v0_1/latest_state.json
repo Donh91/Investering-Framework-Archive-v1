@@ -1,16 +1,17 @@
 {
   "test_id": "SENSOR_PAIR_DISCOVERY_LAB_V0_1",
-  "state_version": "0.2",
+  "state_version": "0.3",
   "initialized_at": "2026-07-12T00:00:00+02:00",
-  "run_status": "SOURCE_READY_PENDING_FIRST_LAB_RUN",
+  "updated_at": "2026-07-13T20:16:39Z",
+  "run_status": "PARTIAL_NO_ELIGIBLE_PAIRS",
   "highest_known_data_ping_version": 4,
   "source_resolution_mode": "ACCEPTED_LOG_RECEIPT",
   "selected_thread_title": "DATA PING_V4",
-  "accepted_log_id": "DATA_PING_V4_20260713T052547Z",
-  "latest_source_timestamp": "2026-07-13T05:25:47Z",
-  "latest_source_hash": "339cea222f44581fbc6edff7d4d1527d79b20b0fbef1effbdbf57939b1019f23",
-  "latest_source_receipt": "02_DATA_PING/operational_handoffs/accepted_logs/history/2026-07-13T052547Z__data-ping-v4__accepted-log.json",
-  "latest_run_artifact": null,
+  "accepted_log_id": "DATA_PING_V4_20260713T150608Z",
+  "latest_source_timestamp": "2026-07-13T15:06:08Z",
+  "latest_source_hash": "b044e494e8d227ce490d14046bc3099884fd9b55d42751eda4e8d80073bd855e",
+  "latest_source_receipt": "02_DATA_PING/operational_handoffs/accepted_logs/history/2026-07-13T150608Z__data-ping-v4__accepted-log.json",
+  "latest_run_artifact": "06_RESEARCH_LAB/forward_tests/sensor_pair_discovery_v0_1/runs/2026-07-13__sensor-pair-run.json",
   "prospective_rows_total": 0,
   "mature_rows_total": 0,
   "independent_event_windows_total": 0,
@@ -25,12 +26,16 @@
     "P07": "INSUFFICIENT_SAMPLE",
     "P08": "INSUFFICIENT_SAMPLE"
   },
+  "last_run_rows_frozen": 0,
+  "last_run_rows_matured_24h": 0,
+  "last_run_rows_matured_72h": 0,
+  "last_run_rows_matured_7d": 0,
   "rule_promotion": "NONE",
   "portfolio_authority": "ZERO",
   "notes": [
-    "The first valid source is now available through a verified accepted-log receipt.",
-    "No prospective row has been frozen yet; row creation remains the responsibility of the scheduled lab run.",
-    "Eligibility is field-specific and missing fields remain ineligible rather than negative.",
-    "No retrospective outcome was imported."
+    "Latest accepted-log source validated and was fresh enough for prospective creation.",
+    "No pair had both required sensors present in role-correct form, so no rows were frozen.",
+    "Missing fields remained ineligible rather than negative evidence.",
+    "No retrospective outcome was imported and no duplicate row was created."
   ]
 }
