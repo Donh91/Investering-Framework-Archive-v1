@@ -1,7 +1,7 @@
 # Active Gate and Edge Event Registry
 
 **Initial date:** 2026-07-10  
-**Last framework review:** 2026-07-12T00:39:18Z  
+**Last framework review:** 2026-07-13T05:25:47Z  
 **Status:** CANONICAL_RUNTIME_CONFIGURATION  
 **Område:** DATA PING runtime handover / active gates / edge-event state  
 **Primary folder:** `02_DATA_PING/live_state_handover/`  
@@ -33,14 +33,14 @@ ACTIVE_GATE_REGISTRY:
   gate_registry_timestamp: 2026-07-10T11:59:38Z
   gate_registry_confidence: HIGH
   gate_registry_status: CURRENT
-  last_framework_confirmation_time: 2026-07-12T00:39:18Z
+  last_framework_confirmation_time: 2026-07-13T05:25:47Z
   btc_reclaim_gate: 63300
   btc_survival_gate: 61900
   btc_deterioration_gate: 59400
   ethbtc_repair_gate: 0.0275
   ethbtc_confirmation_gate: 0.0300
   notes:
-    - Values remain active runtime gates for the current W28 context.
+    - Values remain active runtime gates into early W29 unless explicitly superseded.
     - They are not permanent hard-coded levels.
     - DATA PING must not infer replacements.
 ```
@@ -53,26 +53,28 @@ ACTIVE_GATE_REGISTRY:
 ACTIVE_EDGE_EVENT:
   edge_event_id: ROTATION_REPAIR_EDGE_20260712_01
   edge_event_type: ROTATION_REPAIR_TEST
-  event_status: OPEN_WATCH
-  framework_edge_state: WATCH
-  framework_alert_status: WATCH
+  event_status: OPEN_TRIGGERED
+  framework_edge_state: NEAR_PRESENT
+  framework_alert_status: TRIGGERED
   canonical_start_time: 2026-07-12T00:39:18Z
   canonical_start_run_id: DATA_PING_HYBRID_v0_5_1_20260712T003918Z
   canonical_start_btc_price: 63780.65
   canonical_start_ethbtc: 0.027990
-  accepted_sensor_edge_candidate: NEAR_PRESENT
-  accepted_sensor_alert_candidate: WATCH
-  latest_framework_accepted_run_id: DATA_PING_HYBRID_v0_5_1_20260712T003918Z
-  latest_framework_accepted_run_time: 2026-07-12T00:39:18Z
-  event_open_reason:
-    - ETHBTC_WITHIN_REPAIR_PROXIMITY_BAND
-    - BREADTH_1H_24H_7D_SIMULTANEOUSLY_WEAK
-    - LATEST_TAKER_SELL_SKEW
-    - ETH_OI_ELEVATED
-    - FLOW_CONFIRMATION_MISSING
-  state_moderation_reason:
-    - BTC_CURRENT_AND_COMPLETED_CLOSES_STILL_ABOVE_63300
-    - ETHBTC_CURRENT_AND_COMPLETED_CLOSE_STILL_ABOVE_0275
+  canonical_first_framework_near_present_time: 2026-07-13T05:25:47Z
+  canonical_first_framework_near_present_run_id: DATA_PING_V4_20260713T052547Z
+  canonical_first_framework_near_present_btc_price: 62694.59
+  canonical_first_framework_near_present_ethbtc: 0.028410
+  latest_framework_accepted_run_id: DATA_PING_V4_20260713T052547Z
+  latest_framework_accepted_run_time: 2026-07-13T05:25:47Z
+  current_trigger_reason:
+    - BTC_CURRENT_BELOW_63300
+    - TWO_LATEST_SETTLED_BTC_HOURLY_CLOSES_BELOW_63300
+    - BREADTH_24H_AND_7D_REMAIN_WEAK
+    - BTC_AND_ETH_SPOT_TAKER_PROXY_SELL_LEAN_ALL_HORIZONS
+  state_ceiling_reason:
+    - BTC_SURVIVAL_GATE_61900_STILL_HOLDS
+    - ETHBTC_REPAIR_GATE_0275_STILL_HOLDS
+    - BTC_AND_ETH_OI_CONTRACTING
     - NO_ACUTE_FUNDING_STRESS
   new_pullback_alert: NO
   active_trim_signal: NO
@@ -81,7 +83,7 @@ ACTIVE_EDGE_EVENT:
   event_ledger: 02_DATA_PING/live_state_handover/2026-07-12__rotation-repair-edge-20260712-01__event-ledger.md
 ```
 
-This is a new watch event. The closed pullback event is not reopened.
+This is the same active event, upgraded from WATCH to NEAR_PRESENT. The closed pullback event is not reopened.
 
 ---
 
@@ -111,39 +113,40 @@ LAST_CLOSED_EDGE_EVENT:
 ## Accepted Current Framework State
 
 ```text
-FRAMEWORK_EDGE_STATE: WATCH
-ALERT_STATUS: WATCH
-EVENT_STATUS: OPEN_WATCH
+FRAMEWORK_EDGE_STATE: NEAR_PRESENT
+ALERT_STATUS: TRIGGERED
+EVENT_STATUS: OPEN_TRIGGERED
 NEW_PULLBACK_ALERT: NO
 ACTIVE_TRIM_SIGNAL: NO
-SELL_A_BID_EDGE: WATCH_ONLY_NOT_ACTIONABLE
-BTC_RECLAIM_STATUS: CURRENT_AND_CLOSE_HOLD_ABOVE_63300
-ETHBTC_REPAIR_STATUS: HOLDS_BUT_WITHIN_PROXIMITY_BAND
-BREADTH_STATUS: WEAK_1H_24H_7D
+SELL_A_BID_EDGE: NEAR_PRESENT_NOT_ACTIONABLE
+BTC_RECLAIM_STATUS: CURRENT_LOST / LATEST_DAILY_CLOSE_HOLDS / TWO_SETTLED_HOURLY_CLOSES_BELOW
+BTC_SURVIVAL_STATUS: HOLDS_ABOVE_61900
+ETHBTC_REPAIR_STATUS: HOLDS_ABOVE_0275
+BREADTH_STATUS: 1H_SLIGHT_MAJORITY / 24H_7D_WEAK
 BROAD_RECOVERY_STATUS: NOT_CONFIRMED
 REBUY_STATUS: LOCKED
 ROTATION_STATUS: NO_ROTATION
 LARGE_CAP_BUY_WINDOW: WATCH_ONLY / NOT_OPEN
 ```
 
-The event monitors deterioration in rotation repair and breadth. It does not create a trim or deployment instruction.
+The event now records a material reclaim-quality deterioration. It still does not create a trim, rebuy or deployment instruction.
 
 ---
 
 ## Current-run acceptance packet
 
 ```yaml
-framework_acceptance_status_current_run: ACCEPTED_WITH_STATE_MODERATION
-accepted_run_id: DATA_PING_HYBRID_v0_5_1_20260712T003918Z
+framework_acceptance_status_current_run: ACCEPTED_STATE_UPGRADE
+accepted_run_id: DATA_PING_V4_20260713T052547Z
 accepted_sensor_state: NEAR_PRESENT
-accepted_sensor_alert_status: WATCH
-framework_post_review_edge_state: WATCH
-framework_post_review_alert_status: WATCH
+accepted_sensor_alert_status: TRIGGERED
+framework_post_review_edge_state: NEAR_PRESENT
+framework_post_review_alert_status: TRIGGERED
 accepted_gate_registry_id: GATE_REGISTRY_2026W28_V1
 accepted_gate_registry_timestamp: 2026-07-10T11:59:38Z
 accepted_gate_registry_confidence: HIGH
 accepted_event_id: ROTATION_REPAIR_EDGE_20260712_01
-accepted_new_event: YES
+accepted_new_event: NO
 accepted_new_pullback_alert: NO
 accepted_portfolio_action: NO_NEW_ACTION
 ```
