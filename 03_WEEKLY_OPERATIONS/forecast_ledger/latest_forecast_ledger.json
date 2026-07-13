@@ -1,26 +1,31 @@
 {
-  "latest_official_forecast_week": "2026-W28",
-  "latest_official_forecast_date": "2026-07-06",
-  "latest_official_forecast_path": "03_WEEKLY_OPERATIONS/forecast_ledger/2026-07-06__forecast-ledger-2026-w28__official.md",
-  "source_master_monday_path": "03_WEEKLY_OPERATIONS/master_monday/2026-07-06__master-monday-2026-w28__raw.md",
-  "previous_week_for_evaluation": "2026-W27",
-  "previous_forecast_status": "MISSING_OR_NOT_LOCATED_IN_GITHUB_AT_PATCH_TIME",
-  "previous_verified_actual_range_path": "03_WEEKLY_OPERATIONS/range_audits/2026-07-05__weekly-range-2026-w27__verified.md",
+  "latest_official_forecast_week": "2026-W29",
+  "latest_official_forecast_date": "2026-07-13",
+  "latest_official_forecast_path": "03_WEEKLY_OPERATIONS/forecast_ledger/2026-07-13__forecast-ledger-2026-w29__official.md",
+  "source_master_monday_path": "03_WEEKLY_OPERATIONS/master_monday/2026-W29/03_framework_ratified_final.md",
+  "source_master_monday_status": "FRAMEWORK_RATIFIED_FINAL",
+  "source_data_ping": "DATA_PING_V4_20260713T150608Z",
+  "previous_week_for_evaluation": "2026-W28",
+  "previous_forecast_status": "SUSPENDED_PENDING_SOURCE_REPAIR",
+  "previous_scoring_status": "BLOCKED",
+  "previous_verified_actual_range_path": "03_WEEKLY_OPERATIONS/range_audits/2026-07-13__weekly-range-2026-w28__binance-cest-verified.md",
   "range_scoring_enabled_for_latest_forecast": true,
   "latest_forecast_ids": [
-    "MM_2026_W28_BTC_RANGE_60900_65400",
-    "MM_2026_W28_ETH_RANGE_1540_1760",
-    "MM_2026_W28_ALT_PREPARE_55",
-    "MM_2026_W28_RECOVERY_FRAGILE"
+    "MM_2026_W29_BTC_RANGE_60900_65800",
+    "MM_2026_W29_ETH_RANGE_1680_1900",
+    "MM_2026_W29_REPAIR_EDGE_NEAR_PRESENT",
+    "MM_2026_W29_NO_ROTATION",
+    "MM_2026_W29_LARGE_CAP_WINDOW_LOCKED"
   ],
   "btc_weekly_range": {
     "low": 60900,
-    "high": 65400
+    "high": 65800
   },
   "eth_weekly_range": {
-    "low": 1540,
-    "high": 1760
+    "low": 1680,
+    "high": 1900
   },
+  "forecast_lineage_status": "COMPLETE_AT_CREATION",
   "status": "OFFICIAL_FORECAST_LEDGER_POINTER",
-  "next_week_rule": "Evaluate this forecast only against a USER_VERIFIED or VERIFIED weekly actual range ledger."
+  "next_week_rule": "Evaluate only against a complete verified Binance Spot USDT CEST-resampled weekly actual range and preserve the full lineage chain."
 }
