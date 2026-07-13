@@ -1,12 +1,15 @@
 {
   "test_id": "SENSOR_PAIR_DISCOVERY_LAB_V0_1",
-  "state_version": "0.1",
+  "state_version": "0.2",
   "initialized_at": "2026-07-12T00:00:00+02:00",
-  "run_status": "PENDING_NEXT_DIRECT_THREAD_CAPTURE",
+  "run_status": "SOURCE_READY_PENDING_FIRST_LAB_RUN",
   "highest_known_data_ping_version": 4,
-  "selected_thread_title": null,
-  "latest_source_timestamp": null,
-  "latest_source_hash": null,
+  "source_resolution_mode": "ACCEPTED_LOG_RECEIPT",
+  "selected_thread_title": "DATA PING_V4",
+  "accepted_log_id": "DATA_PING_V4_20260713T052547Z",
+  "latest_source_timestamp": "2026-07-13T05:25:47Z",
+  "latest_source_hash": "339cea222f44581fbc6edff7d4d1527d79b20b0fbef1effbdbf57939b1019f23",
+  "latest_source_receipt": "02_DATA_PING/operational_handoffs/accepted_logs/history/2026-07-13T052547Z__data-ping-v4__accepted-log.json",
   "latest_run_artifact": null,
   "prospective_rows_total": 0,
   "mature_rows_total": 0,
@@ -25,7 +28,9 @@
   "rule_promotion": "NONE",
   "portfolio_authority": "ZERO",
   "notes": [
-    "No retrospective conversation summary was converted into a prospective row.",
-    "First row requires a newly resolved complete user-supplied DATA PING analysis."
+    "The first valid source is now available through a verified accepted-log receipt.",
+    "No prospective row has been frozen yet; row creation remains the responsibility of the scheduled lab run.",
+    "Eligibility is field-specific and missing fields remain ineligible rather than negative.",
+    "No retrospective outcome was imported."
   ]
 }
