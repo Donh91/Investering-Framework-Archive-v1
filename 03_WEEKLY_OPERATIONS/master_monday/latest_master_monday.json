@@ -1,15 +1,18 @@
 {
-  "latest_master_monday_week": "2026-W28",
-  "latest_master_monday_date": "2026-07-06",
-  "latest_master_monday_path": "03_WEEKLY_OPERATIONS/master_monday/2026-07-06__master-monday-2026-w28__raw.md",
-  "run_type": "FIRST_MASTER_MONDAY_AFTER_GITHUB_EXTENDED_ARCHIVE_IMPLEMENTATION",
-  "engine": "Master Monday v3.1 LOCKED",
+  "latest_master_monday_week": "2026-W29",
+  "latest_master_monday_date": "2026-07-13",
+  "latest_master_monday_path": "03_WEEKLY_OPERATIONS/master_monday/2026-07-13__master-monday-2026-w29__final.md",
+  "run_type": "FIRST_FULL_GITHUB_FIRST_MASTER_MONDAY_AFTER_RECENT_FRAMEWORK_UPDATES",
+  "engine": "Master Monday vNext v1.2",
   "live_feed": "DATA PING V4",
-  "run_status": "MANUAL_BACKFILL_PASS",
+  "data_ping_source_resolution": "DIRECT_PROJECT_THREAD",
+  "accepted_log_id": "DATA_PING_V4_20260713T150608Z",
+  "run_status": "AUTO_PASS_WITH_LOW_CURRENT_DATA_QUALITY",
   "verified_range_loaded": true,
+  "verified_range_week": "2026-W28",
   "verified_range_pointer": "03_WEEKLY_OPERATIONS/range_audits/latest_verified_weekly_range.json",
   "forecast_ledger_pointer": "03_WEEKLY_OPERATIONS/forecast_ledger/latest_forecast_ledger.json",
-  "shadow_ledger_status": "PARTIAL",
-  "archive_status": "ARCHIVED",
-  "next_week_load_rule": "Load this pointer after CANONICAL_INDEX.md and before generating new Master Monday. Then write the new raw Master Monday and update this pointer."
+  "shadow_ledger_status": "PARTIAL_BUT_DURABLE_DATA_PING_HANDOFF_READY",
+  "archive_status": "FINAL_ARCHIVED",
+  "next_week_load_rule": "Load this pointer after CANONICAL_INDEX.md and current registered addenda; resolve the latest DATA PING through direct thread, accepted-log and thread-derived hierarchy before generating the next Master Monday."
 }
