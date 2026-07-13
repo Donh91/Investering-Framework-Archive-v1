@@ -1,6 +1,6 @@
 # Index Addendum Registry
 
-**Dato:** 2026-07-12  
+**Dato:** 2026-07-13  
 **Status:** CANONICAL_OPERATIONAL_REGISTRY  
 **Område:** archive discoverability / index addenda  
 **Primary folder:** `00_ARCHIVE_CONTROL/`  
@@ -45,6 +45,7 @@ A registry entry is a navigation pointer only. The referenced file's own status,
 | `00_ARCHIVE_CONTROL/2026-07-12__index-addendum-daily-sensor-pair-discovery-lab-v0-1.md` | prospective sensor pairs / DATA PING thread integration | REGISTRY_DISCOVERABLE |
 | `00_ARCHIVE_CONTROL/2026-07-12__index-addendum-data-ping-thread-handoff-v0-1.md` | DATA PING thread source transport / automation fallback | REGISTRY_DISCOVERABLE |
 | `06_RESEARCH_LAB/forward_tests/2026-07-13__daily-sensor-pair-discovery-accepted-log-fallback-v0-1__canonical-addendum.md` | DATA PING accepted-log fallback / sensor-pair source resolution | REGISTRY_DISCOVERABLE |
+| `00_ARCHIVE_CONTROL/2026-07-13__index-addendum-techdev-calibration-b1-and-audit-gate-v1.md` | TechDev outcomes / BTC.D reproducibility / research cadence | REGISTRY_DISCOVERABLE |
 
 ## Registration contract
 
