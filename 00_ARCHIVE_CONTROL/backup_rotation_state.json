@@ -1,11 +1,12 @@
 {
-  "schema_version": "1.2",
+  "schema_version": "1.3",
   "policy_file": "01_CORE_FRAMEWORK/governance/2026-07-11__repository-safety-and-backup-policy-v1__canonical.md",
   "vault_activation_addendum": "01_CORE_FRAMEWORK/governance/2026-07-11__external-vault-activation-and-snapshot-contract-v1-1__canonical.md",
   "backup_registry": "00_ARCHIVE_CONTROL/vault_backup_registry.json",
   "cycle_length_weeks": 4,
-  "last_completed_position": 4,
-  "next_position": 1,
+  "last_completed_position": 1,
+  "next_position": 2,
+  "last_completed_iso_week": "2026-W29",
   "last_rotation_reset_date": "2026-07-11",
   "counter_owner": "GitHub Archive Sync + Backup",
   "counter_rule": "Increment once per successful scheduled weekly archive sync. Do not double-increment retries for the same ISO week.",
@@ -48,7 +49,15 @@
       "result": "PASS_TEST_ONLY"
     },
     "last_verified_canonical_snapshot": null,
-    "last_connectivity_verification": "2026-07-11"
+    "last_connectivity_verification": "2026-07-13"
+  },
+  "last_weekly_validation": {
+    "date": "2026-07-13",
+    "iso_week": "2026-W29",
+    "source_main_sha": "9b9e3339eb09c137a7397f824d9a5d9d0bb1d39c",
+    "task_branch": "agent/task-20260713-archive-sync-backup",
+    "report_path": "00_ARCHIVE_CONTROL/archive_sync_runs/2026-07-13__github-archive-sync-backup-v1-6.md",
+    "result": "PASS_WEEKLY_VALIDATION"
   },
   "next_full_backup_trigger": "BACKUP_TIMER_4_OF_4",
   "next_backup_product": "PASS_CANONICAL_SNAPSHOT_OR_EXACT_PARTIAL_RECEIPT",
@@ -62,5 +71,5 @@
     "canonical_index_or_governance_change": true,
     "workflow_or_security_change": true
   },
-  "last_updated": "2026-07-11"
+  "last_updated": "2026-07-13"
 }
