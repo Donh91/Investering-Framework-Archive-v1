@@ -1,0 +1,99 @@
+{
+  "binding_status": "NON_BINDING_DATA_RECOVERY_ONLY",
+  "contract_version": "0.1",
+  "data_quality_after_recovery": "MEDIUM",
+  "framework_review": {
+    "active_event_id": "ROTATION_REPAIR_EDGE_20260712_01",
+    "active_trim_signal": "NO",
+    "alert_status": "STILL_ACTIVE",
+    "event_status": "OPEN_TRIGGERED",
+    "framework_edge_state": "NEAR_PRESENT",
+    "interpretation": "PRESSURE_CLUSTER_STRENGTHENED_BUT_SURVIVAL_AND_ETHBTC_REPAIR_STILL_HOLD",
+    "large_cap_buy_window": "NOT_OPEN",
+    "new_pullback_alert": "NO",
+    "pressure_layers": [
+      "BTC_INTRADAY_LOW_ENTERED_SURVIVAL_PROXIMITY",
+      "BTC_OI_EXPANDED_5_64_PERCENT_24H",
+      "BTC_TAKER_SELL_LEAN_1H_4H_24H",
+      "BTC_GLOBAL_LONG_SHORT_RATIO_1_6983",
+      "PARENT_PACKET_24H_BREADTH_8_6_PERCENT",
+      "BTC_10_SESSION_ETF_FLOW_NEGATIVE",
+      "STABLECOIN_SELECTED_ASSET_PROXY_CONTRACTING"
+    ],
+    "rebuy_status": "LOCKED",
+    "rotation_status": "NO_ROTATION",
+    "sell_a_bid_edge": "NEAR_PRESENT_NOT_ACTIONABLE",
+    "state_ceiling_reasons": [
+      "BTC_REMAINS_ABOVE_61900",
+      "DIRECT_ETHBTC_REMAINS_ABOVE_0_0275",
+      "NO_COMPLETED_DAILY_CLOSE_BELOW_61900",
+      "CURRENT_ETF_SESSION_PENDING",
+      "MARKET_WIDE_CVD_UNAVAILABLE"
+    ]
+  },
+  "generated_at_utc": "2026-07-13T17:23:41Z",
+  "key_data": {
+    "btc_cest_day_high": 64425,
+    "btc_cest_day_low": 62101,
+    "btc_etf_10_sessions_usd_m": -773.2,
+    "btc_etf_latest_completed_usd_m": 90.4,
+    "btc_funding_pct": 0.01,
+    "btc_global_long_short_ratio": 1.6983,
+    "btc_oi_24h_pct": 5.644609761436608,
+    "btc_oi_3d_pct": 3.0190966965539054,
+    "btc_spot_usdt": 62251.73,
+    "btc_taker_ratio_1h": 0.8755275117543645,
+    "btc_taker_ratio_24h": 0.8997035112626078,
+    "btc_taker_ratio_4h": 0.9548937513205056,
+    "eth_etf_10_sessions_usd_m": 57.8,
+    "eth_etf_latest_completed_usd_m": 18.4,
+    "eth_funding_pct": 0.001927,
+    "eth_global_long_short_ratio": 1.9727,
+    "eth_oi_24h_pct": -3.968642877966533,
+    "eth_spot_usdt": 1773.66,
+    "eth_taker_ratio_1h": 0.9682993742432073,
+    "eth_taker_ratio_24h": 0.949375135795079,
+    "eth_taker_ratio_4h": 0.9864641281183923,
+    "ethbtc_1h_close": 0.02845,
+    "ethbtc_4h_close": 0.02842,
+    "ethbtc_closes_above_0275": 11,
+    "ethbtc_daily_close": 0.02835,
+    "ethbtc_direct": 0.02848,
+    "ism_manufacturing_pmi": 53.3,
+    "ism_new_orders": 56,
+    "real_10y_yield_pct": 2.31,
+    "stablecoin_selected_assets_change_24h_pct": -0.10686532220931454,
+    "us_10y_yield_pct": 4.54,
+    "us_2y_yield_pct": 4.16,
+    "vix": 15.03
+  },
+  "overall_status": "PARTIAL_RECOVERY",
+  "packet_type": "MISSING_DATA_RECOVERY_SUPPLEMENT",
+  "parent_accepted_log_id": "DATA_PING_V4_20260713T150608Z",
+  "partial_families": [
+    "FUTURES_AND_TAKER_FLOW",
+    "STABLECOIN_HISTORY",
+    "ETF_CURRENT_SESSION",
+    "MACRO_CORE"
+  ],
+  "recovered_families": [
+    "DIRECT_ETHBTC",
+    "CEST_DAILY_LEDGER"
+  ],
+  "run_id": "MISSING_DATA_RECOVERY_20260713T172341Z",
+  "spec_version": "DATA_PING_GOVERNANCE_SPEC_v2_6_FREE_ONLY",
+  "still_missing": [
+    "MARKET_WIDE_CVD",
+    "OFFICIAL_STABLECOIN_30D_HISTORY",
+    "STABLECOIN_ACTIVITY",
+    "STABLECOIN_DEPLOYMENT",
+    "FUTURES_LIQUIDATIONS_24H",
+    "CURRENT_COMPLETE_ETF_SESSION",
+    "EXACT_DXY",
+    "ALIGNED_GOLD",
+    "GLOBAL_LIQUIDITY_SERIES"
+  ],
+  "unavailable_families": [
+    "MARKET_WIDE_CVD"
+  ]
+}
