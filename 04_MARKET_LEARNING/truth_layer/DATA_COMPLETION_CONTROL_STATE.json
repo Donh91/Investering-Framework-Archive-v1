@@ -1,6 +1,6 @@
 {
-  "as_of": "2026-07-12",
-  "control_state_version": "1.4",
+  "as_of": "2026-07-13",
+  "control_state_version": "1.5",
   "recovery_process_complete": true,
   "btc_d": {
     "status": "CMC_DIRECT_SOURCE_READY",
@@ -9,9 +9,7 @@
     "tradingview_equivalent": false,
     "period": "2023-01-01/2026-07-11",
     "numeric_rows": 1287,
-    "source_gap_dates": [
-      "2023-01-05"
-    ],
+    "source_gap_dates": ["2023-01-05"],
     "coverage_pct": 99.92236,
     "m1_b_leg_completion": "COMPLETE",
     "m1_strict_three_leg_hypothesis": "NOT_SUPPORTED_IN_SAMPLE",
@@ -19,12 +17,15 @@
     "m1_b1_mechanical_trim_status": "NOT_SUPPORTED_ZERO_WEIGHT",
     "allowed_role": "SHADOW_ROTATION_SURVIVAL_RECLAIM_AND_POST_STRESS_CONTEXT",
     "standalone_action_authority": false,
-    "m1_original_report_exact_reproduction": "PARTIAL_SOURCE_CONFLICT",
+    "m1_original_report_exact_reproduction": "PARTIAL_SOURCE_CONFLICT_ACD_ONLY",
     "b1_fire_reproducibility": {
-      "frozen_rows": 21,
-      "direct_recomputation": 22,
-      "additional_date": "2025-03-04",
-      "status": "OPEN_SOURCE_CONFLICT"
+      "canonical_rows": 22,
+      "warmup_truncated_simulation_rows": 21,
+      "additional_valid_date": "2025-03-04",
+      "root_cause": "EVALUATION_WINDOW_TRUNCATED_BEFORE_FIVE_DAY_WARMUP",
+      "source_conflict": false,
+      "lookahead_leakage": false,
+      "status": "RESOLVED_22_FEATURE_FIRST_IMPLEMENTATION"
     }
   },
   "stablecoin_deployment_proxy": {
@@ -32,14 +33,7 @@
     "history_ready": true,
     "provider": "DeFiLlama",
     "period": "2024-01-01/2026-07-10",
-    "entities": [
-      "TOTAL",
-      "Ethereum",
-      "Solana",
-      "BSC",
-      "Base",
-      "Arbitrum"
-    ],
+    "entities": ["TOTAL", "Ethereum", "Solana", "BSC", "Base", "Arbitrum"],
     "rows": 5532,
     "proxy_name": "STABLECOIN_DEPLOYMENT_PROXY",
     "velocity_claim_allowed": false,
@@ -59,35 +53,35 @@
     "snapshots_expected": 184,
     "snapshots_passed": 184,
     "frozen_universe_rows": 18400,
-    "raw_ranked_assets_per_snapshot": 200,
-    "eligible_assets_per_snapshot": 100,
     "interpolation": false,
     "current_constituent_backfill_used_for_truth": false,
-    "source_artifact_sha256": "5664e81a38161486d21fa01116a5ee9f88ec60a1f9ce36bc9da003b9a4a2050c",
-    "program_package_sha256": "84d1614e5fdeb2477853fe980f588450e099a9b9ea852bb13a141f1e640481ca",
-    "canonical_report": "06_RESEARCH_LAB/audit_summaries/2026-07-12__marginal-decision-value-and-breadth-truth-program-v1__canonical.md",
     "predictive_gate_status": "NOT_SUPPORTED_ZERO_WEIGHT",
     "descriptive_role": "PARTICIPATION_CONFIRMATION_SHADOW_CONTEXT",
     "standalone_action_authority": false,
     "daily_historical_breadth": "DATA_MISSING",
-    "historical_30dma_breadth": "DATA_MISSING",
-    "survivorship_bias": {
-      "first_to_latest_universe_overlap_pct": 45.0,
-      "median_overlap_with_latest_pct": 62.0,
-      "median_weekly_jaccard_turnover_pct": 5.83,
-      "max_absolute_positive_7d_backfill_bias_pp": 14.31
-    },
-    "mae_delta_pp_vs_price": {
-      "7d": 0.8366,
-      "14d": 1.0762,
-      "28d": 3.7377
-    }
+    "historical_30dma_breadth": "DATA_MISSING"
+  },
+  "techdev_calibration": {
+    "status": "PHASE_I_ANCHOR_CALIBRATION_COMPLETE",
+    "canonical_report": "06_RESEARCH_LAB/audit_summaries/2026-07-13__techdev-category-outcome-calibration-and-b1-reconciliation-v1__canonical.md",
+    "research_package_sha256": "f9d747c0b472a18b023ee07bf5dcf47e5a5a1156eb1ab1e6a6fed6f3f8369845",
+    "corpus_unique_documents": 213,
+    "corpus_source_backed_claim_rows": 257,
+    "historical_topping_snapshots": 8,
+    "anchor_rows": 50,
+    "outcome_eligible_anchor_rows": 44,
+    "full_corpus_exhaustive_scoring_claimed": false,
+    "macro_compass_role": "RETAIN_CONTEXT",
+    "exact_timing": "WEAK_AND_REVISION_DEPENDENT",
+    "long_range_price_targets": "NOT_SUPPORTED_IN_ANCHOR_COHORT",
+    "near_term_conditional_gates": "MIXED_TO_USEFUL",
+    "revision_value": "REAL",
+    "revision_cost": "MATERIAL",
+    "standalone_execution_authority": false,
+    "automatic_weight_change": false
   },
   "sensor_audit_v1": {
     "status": "COMPLETE_CANONICAL_RESEARCH_EVIDENCE_WITH_BREADTH_FOLLOWUP",
-    "canonical_report": "06_RESEARCH_LAB/audit_summaries/2026-07-12__sensor-survival-timing-placebo-regime-audit-v1__canonical.md",
-    "breadth_followup_report": "06_RESEARCH_LAB/audit_summaries/2026-07-12__marginal-decision-value-and-breadth-truth-program-v1__canonical.md",
-    "package_sha256": "2c8f09873c117d9e10ab269e7a147e363475f0e87258052ca0aae8bdb971febb",
     "strongest_survivor": "C2_FORWARD_ROWS_LEAN_WARNING",
     "strongest_demotion": "A3_QUARANTINE_ZERO_EXEC_WEIGHT",
     "role_freeze": {
@@ -96,14 +90,10 @@
       "D": "CONFIRMATION_OR_VETO",
       "BREADTH": "DESCRIPTIVE_CONFIRMATION_ZERO_WEIGHT"
     },
-    "historical_breadth_priority": "COMPLETED",
     "rule_promotion": "NONE"
   },
   "simulation": {
     "status": "FULL_SENSOR_LEVEL_BACKTEST_AND_BREADTH_FOLLOWUP_COMPLETE",
-    "canonical_report": "04_MARKET_LEARNING/full_backtests/2026-07-12__full-sensor-simulation-backtest-v1__canonical.md",
-    "breadth_report": "06_RESEARCH_LAB/audit_summaries/2026-07-12__marginal-decision-value-and-breadth-truth-program-v1__canonical.md",
-    "package_sha256": "d75eb50829a4d9be51240e8fcf04930a85e85d455e23c6855e45718c67b83c5d",
     "full_portfolio_backtest": "BLOCKED_NOT_IDENTIFIABLE",
     "remaining_blockers": [
       "point-in-time portfolio holdings and weights",
@@ -113,25 +103,21 @@
     ],
     "rule_promotion": "NONE"
   },
-  "m4": {
-    "btc_d_enrichment": "COMPLETE",
-    "deployment_enrichment": "COMPLETE",
-    "weekly_frozen_breadth_enrichment": "COMPLETE",
-    "attempt_rows": 18,
-    "independent_episodes": 6,
-    "resolved_real_episodes": 1,
-    "resolved_fake_episodes": 4,
-    "unresolved_episodes": 1,
-    "joint_signature_generalization": "NOT_SUPPORTED",
-    "full_replay_status": "HISTORICAL_WEEKLY_REPLAY_COMPLETE_FORWARD_VALIDATION_REQUIRED",
-    "breadth_gate_generalization": "NOT_SUPPORTED",
-    "exploratory_joint_signature": "FORWARD_FALSIFICATION_ONLY",
-    "standalone_action_authority": false
-  },
   "active_test_repairs": {
     "GRADUATED_DEPLOYMENT_V1_1": "FORWARD_ONLY_NOT_PROMOTION_READY",
     "ROTATION_SURVIVAL_FORWARD": "FORWARD_ONLY_NOT_PROMOTION_READY",
     "PULLBACK_EDGE_C2_INSTRUMENTATION": "EVENT_DRIVEN_OR_DAILY_REQUIRED_FOR_FUTURE_ROWS"
+  },
+  "prospective_observation_gate": {
+    "status": "ACTIVE_COOLDOWN_AND_ROW_PRODUCTION",
+    "start_date": "2026-07-13",
+    "earliest_major_audit_review": "2026-08-10",
+    "hard_stop_evidence_review": "2026-09-07",
+    "early_readiness_requires_independent_event_windows": 3,
+    "early_readiness_requires_review_ready_lanes": 2,
+    "new_broad_engine_allowed": false,
+    "large_parameter_sweep_allowed": false,
+    "automatic_promotion": false
   },
   "m3": {
     "status": "FORWARD_COLLECTION_ACTIVE_CI_GUARDED",
@@ -147,19 +133,18 @@
       "independent_event_windows": 3,
       "source_families": 3,
       "largest_window_concentration_pct_max": 50.0
-    },
-    "validator": "04_MARKET_LEARNING/truth_layer/tools/validate_m3_coverage.py",
-    "ci_workflow": ".github/workflows/validate_m3_forward_ledger.yml",
-    "next_owner": "SUNDAY_CLOSEOUT_AND_MASTER_MONDAY"
+    }
   },
   "frlp": {
     "status": "FORWARD_TEST_ACTIVE",
     "b3_revisit": "LOCKED_UNTIL_8_SCORED_FORWARD_ROWS"
   },
-  "w28": {
-    "forecast_values": "FROZEN_UNSCORED",
-    "source_lineage": "UNRESOLVED",
-    "scoring_eligibility": false
+  "health_check": {
+    "status": "READY_WITH_MASTER_MONDAY_ARCHIVE_LAG",
+    "latest_accepted_data_ping_log": "DATA_PING_V4_20260713T052547Z",
+    "latest_verified_week": "2026-W28",
+    "latest_durable_master_monday": "2026-W28_2026-07-06",
+    "master_monday_archive_lag": true
   },
   "authority_boundary": {
     "market_call": false,
