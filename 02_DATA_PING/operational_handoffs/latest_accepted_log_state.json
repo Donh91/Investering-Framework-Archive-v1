@@ -2,44 +2,41 @@
   "contract_version": "0.1",
   "protocol_owner": "02_DATA_PING/protocols/2026-07-13__data-ping-accepted-log-fallback-v0-1__canonical.md",
   "source_status": "READY_ACCEPTED_LOG",
-  "source_mode": "ACCEPTED_LOG_DERIVED",
+  "source_mode": "DIRECT_PROJECT_THREAD_ACCEPTED_LOG",
   "highest_known_version": 4,
   "selected_version": 4,
   "selected_thread_title": "DATA PING_V4",
-  "accepted_log_id": "DATA_PING_V4_20260713T150608Z",
-  "source_timestamp": "2026-07-13T15:06:08Z",
-  "accepted_at": "2026-07-13T15:20:00Z",
-  "accepted_log_receipt_path": "02_DATA_PING/operational_handoffs/accepted_logs/history/2026-07-13T150608Z__data-ping-v4__accepted-log.json",
-  "accepted_payload_path": "02_DATA_PING/operational_handoffs/accepted_logs/payloads/2026-07-13T150608Z__data-ping-v4__accepted-payload.json",
-  "accepted_payload_commit_sha": "71fde5cac652e09d651bc328f3595ca5c80043e1",
-  "accepted_payload_hash_sha256": "b044e494e8d227ce490d14046bc3099884fd9b55d42751eda4e8d80073bd855e",
-  "data_quality": "LOW",
-  "effective_data_quality_with_latest_supplement": "MEDIUM",
-  "latest_supplemental_recovery": {
-    "status": "READY_SUPPLEMENTAL_RECOVERY",
+  "accepted_log_id": "DATA_PING_V4_20260714T051915Z",
+  "source_timestamp": "2026-07-14T05:19:15Z",
+  "accepted_at": "2026-07-14T05:38:54Z",
+  "accepted_log_receipt_path": "02_DATA_PING/operational_handoffs/accepted_logs/history/2026-07-14T051915Z__data-ping-v4__accepted-log.json",
+  "accepted_payload_path": "02_DATA_PING/operational_handoffs/accepted_logs/payloads/2026-07-14T051915Z__data-ping-v4__accepted-payload.json",
+  "accepted_payload_commit_sha": "d9d34a170e99f15962bdae94ceeefd3b20524656",
+  "accepted_payload_hash_sha256": "da04b8916f0de49e86040fa160d0f2842b51e4d12fe84eaf9557c57b344e51af",
+  "data_quality": "MEDIUM",
+  "previous_accepted_log": {
+    "accepted_log_id": "DATA_PING_V4_20260713T184513Z",
+    "path": "02_DATA_PING/operational_handoffs/accepted_logs/history/2026-07-13T184513Z__data-ping-v4__accepted-log.json",
+    "payload_path": "02_DATA_PING/operational_handoffs/accepted_logs/payloads/2026-07-13T184513Z__data-ping-v4__accepted-payload.json",
+    "payload_hash_sha256": "0d50819addc586f0d559c4cb162cf45884a76f81ece059e82a225e37f3990d50"
+  },
+  "prior_supplemental_recovery": {
     "run_id": "MISSING_DATA_RECOVERY_20260713T172341Z",
-    "source_cutoff": "2026-07-13T17:18:41.902Z",
-    "generated_at": "2026-07-13T17:23:41Z",
     "path": "02_DATA_PING/operational_handoffs/recovery_packets/2026-07-13T172341Z__missing-data-recovery__supplement.json",
-    "commit_sha": "c7ed93f9d4023479ea581479619dcc2124abded8",
     "payload_hash_sha256": "e80b0e211211530be44c1b7990f575f844f647ae0845975e272ef086d0b1908e",
-    "readback_status": "PASS",
-    "hash_status": "PASS",
-    "recovered_families": [
-      "DIRECT_ETHBTC",
-      "CEST_DAILY_LEDGER"
-    ],
-    "partial_families": [
-      "FUTURES_AND_TAKER_FLOW",
-      "STABLECOIN_HISTORY",
-      "ETF_CURRENT_SESSION",
-      "MACRO_CORE"
-    ],
-    "unavailable_families": [
-      "MARKET_WIDE_CVD"
-    ],
-    "new_data_ping_packet": false,
-    "accepted_log_pointer_advanced": false
+    "status": "SUPERSEDED_AS_LATEST_INPUT / RETAINED_IN_HISTORY"
+  },
+  "latest_framework_result": {
+    "active_event_id": "ROTATION_REPAIR_EDGE_20260712_01",
+    "framework_edge_state": "NEAR_PRESENT",
+    "alert_status": "STILL_ACTIVE",
+    "event_status": "OPEN_TRIGGERED",
+    "rotation_status": "NO_ROTATION",
+    "rebuy_status": "LOCKED",
+    "large_cap_buy_window": "NOT_OPEN",
+    "active_trim_signal": "NO",
+    "new_pullback_alert": "NO",
+    "portfolio_action": "NONE"
   },
   "max_valid_age_hours_for_new_rows": 36,
   "readback_status": "PASS",
@@ -51,7 +48,7 @@
     "Highest DATA PING version actually used wins.",
     "A bare run ID or commit message is insufficient without a readable accepted receipt and payload.",
     "Pair eligibility is field-specific; missing fields remain ineligible rather than negative.",
-    "Supplemental recovery packets may add verified fields but may not replace or silently rewrite the accepted parent payload.",
+    "Supplemental recovery packets may add verified fields but may not replace or silently rewrite an accepted parent payload.",
     "No web or independent market-data substitution is allowed.",
     "No retrospective forecast may be created after its outcome is known."
   ]
