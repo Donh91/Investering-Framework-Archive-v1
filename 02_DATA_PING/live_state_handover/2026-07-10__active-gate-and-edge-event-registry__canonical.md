@@ -1,7 +1,7 @@
 # Active Gate and Edge Event Registry
 
 **Initial date:** 2026-07-10  
-**Last framework review:** 2026-07-13T17:23:41Z  
+**Last framework review:** 2026-07-14T05:38:54Z  
 **Status:** CANONICAL_RUNTIME_CONFIGURATION  
 **Område:** DATA PING runtime handover / active gates / edge-event state  
 **Primary folder:** `02_DATA_PING/live_state_handover/`  
@@ -33,14 +33,14 @@ ACTIVE_GATE_REGISTRY:
   gate_registry_timestamp: 2026-07-10T11:59:38Z
   gate_registry_confidence: HIGH
   gate_registry_status: CURRENT
-  last_framework_confirmation_time: 2026-07-13T17:23:41Z
+  last_framework_confirmation_time: 2026-07-14T05:38:54Z
   btc_reclaim_gate: 63300
   btc_survival_gate: 61900
   btc_deterioration_gate: 59400
   ethbtc_repair_gate: 0.0275
   ethbtc_confirmation_gate: 0.0300
   notes:
-    - Values remain active runtime gates into early W29 unless explicitly superseded.
+    - Values remain active runtime gates into W29 unless explicitly superseded.
     - They are not permanent hard-coded levels.
     - DATA PING must not infer replacements.
 ```
@@ -64,33 +64,36 @@ ACTIVE_EDGE_EVENT:
   canonical_first_framework_near_present_run_id: DATA_PING_V4_20260713T052547Z
   canonical_first_framework_near_present_btc_price: 62694.59
   canonical_first_framework_near_present_ethbtc: 0.028410
-  latest_framework_accepted_data_ping_id: DATA_PING_V4_20260713T150608Z
-  latest_framework_review_source_id: MISSING_DATA_RECOVERY_20260713T172341Z
-  latest_framework_review_time: 2026-07-13T17:23:41Z
+  latest_framework_accepted_data_ping_id: DATA_PING_V4_20260714T051915Z
+  latest_framework_review_source_id: DATA_PING_V4_20260714T051915Z
+  latest_framework_review_time: 2026-07-14T05:38:54Z
   current_trigger_reason:
     - BTC_CURRENT_BELOW_63300
-    - BTC_INTRADAY_LOW_ENTERED_61900_SURVIVAL_PROXIMITY
-    - BREADTH_24H_EXTREMELY_WEAK_AT_8_6_PERCENT_FROM_PARENT_ACCEPTED_PACKET
-    - BTC_OI_EXPANDED_5_64_PERCENT_24H
-    - BTC_TAKER_SELL_LEAN_1H_4H_24H
+    - BTC_LATEST_COMPLETED_CLOSE_BELOW_63300
+    - BTC_INTRADAY_SURVIVAL_GATE_BREACH_RECOVERED_ON_CLOSE
+    - BREADTH_24H_AND_7D_REMAIN_BELOW_MAJORITY
+    - BTC_OI_EXPANDED_6_97_PERCENT_24H
     - BTC_POSITIONING_LONG_SKEWED
-    - BTC_10_SESSION_ETF_FLOW_NEGATIVE
+    - BTC_LATEST_COMPLETED_ETF_SESSION_NEGATIVE_424_7M
+    - BTC_ETF_3_AND_5_SESSION_WINDOWS_NEGATIVE
+    - BTC_AND_ETH_24H_SPOT_TAKER_PROXIES_NEGATIVE
     - STABLECOIN_SELECTED_ASSET_PROXY_CONTRACTING
   state_ceiling_reason:
-    - BTC_SURVIVAL_GATE_61900_STILL_HOLDS
-    - ETHBTC_DIRECT_REPAIR_GATE_0275_STILL_HOLDS
-    - NO_COMPLETED_DAILY_CLOSE_BELOW_61900
-    - CURRENT_ETF_SESSION_PENDING
+    - BTC_CURRENT_AND_COMPLETED_CLOSE_REMAIN_ABOVE_61900
+    - INTRADAY_SURVIVAL_BREACH_WAS_RECOVERED_ON_CLOSE
+    - ETHBTC_DIRECT_REPAIR_GATE_0275_HOLDS_WITH_12_DAILY_CLOSES
+    - SHORT_HORIZON_PRICE_AND_1H_BREADTH_REBOUND_PRESENT
+    - NO_ACUTE_FUNDING_STRESS
     - MARKET_WIDE_CVD_UNAVAILABLE
   new_pullback_alert: NO
   active_trim_signal: NO
   event_close_time: PENDING
   event_close_authority: MAIN_FRAMEWORK_ONLY
   event_ledger: 02_DATA_PING/live_state_handover/2026-07-12__rotation-repair-edge-20260712-01__event-ledger.md
-  latest_material_update: 02_DATA_PING/live_state_handover/event_updates/2026-07-13T172341Z__rotation-repair-edge__pressure-cluster-update.md
+  latest_material_update: 02_DATA_PING/live_state_handover/event_updates/2026-07-14T051915Z__rotation-repair-edge__etf-negative-reclaim-failure-continuation.md
 ```
 
-This remains the same active event. The recovery supplement strengthens the pressure cluster but does not satisfy the canonical PRESENT threshold while BTC survival and direct ETH/BTC repair still hold.
+This remains the same active event. Reclaim quality and flow confirmation deteriorated materially, but the survival breach was intraday and recovered on the completed close while direct ETH/BTC repair still holds. The canonical PRESENT threshold is therefore not satisfied.
 
 ---
 
@@ -126,28 +129,29 @@ EVENT_STATUS: OPEN_TRIGGERED
 NEW_PULLBACK_ALERT: NO
 ACTIVE_TRIM_SIGNAL: NO
 SELL_A_BID_EDGE: NEAR_PRESENT_NOT_ACTIONABLE
-BTC_RECLAIM_STATUS: CURRENT_LOST / LATEST_DAILY_CLOSE_HOLDS / SURVIVAL_PROXIMITY_ENTERED_INTRADAY
-BTC_SURVIVAL_STATUS: HOLDS_ABOVE_61900 / INTRADAY_LOW_62101
-ETHBTC_REPAIR_STATUS: DIRECT_HOLDS_ABOVE_0275 / BELOW_0285 / BELOW_0300
-BREADTH_STATUS: 1H_BROADLY_POSITIVE / 24H_EXTREMELY_WEAK / 7D_BELOW_MAJORITY
-DERIVATIVES_STATUS: BTC_DOWNSIDE_OI_EXPANSION_WITH_TAKER_SELL_LEAN / ETH_DELEVERAGING
+BTC_RECLAIM_STATUS: CURRENT_LOST / LATEST_DAILY_CLOSE_LOST / 24H_TOUCH_FAILED_TO_HOLD
+BTC_SURVIVAL_STATUS: INTRADAY_BREACH_TO_61824_97 / COMPLETED_CLOSE_RECOVERED_ABOVE_61900 / CURRENT_ABOVE
+ETHBTC_REPAIR_STATUS: DIRECT_HOLDS_ABOVE_0275 / 12_DAILY_CLOSES / NEAR_0285 / BELOW_0300
+BREADTH_STATUS: 1H_BROADLY_POSITIVE / 24H_BELOW_MAJORITY / 7D_BELOW_MAJORITY
+ETF_STATUS: BTC_MATERIAL_NEGATIVE_LATEST_AND_3_5_10_SESSION / ETH_LATEST_NEGATIVE_BUT_5_7_10_SESSION_POSITIVE
+DERIVATIVES_STATUS: BTC_OI_EXPANDED_AND_LONG_SKEWED / NO_ACUTE_FUNDING_STRESS / ETH_OI_CONTRACTED
 BROAD_RECOVERY_STATUS: NOT_CONFIRMED
 REBUY_STATUS: LOCKED
 ROTATION_STATUS: NO_ROTATION
 LARGE_CAP_BUY_WINDOW: WATCH_ONLY / NOT_OPEN
 ```
 
-The pressure cluster has strengthened, but this still does not create a trim, rebuy or deployment instruction.
+The latest run confirms a material reclaim-quality failure and negative flow impulse. The Tuesday rebound is short-horizon only and does not create a trim, rebuy, rotation or deployment instruction.
 
 ---
 
 ## Current-run acceptance packet
 
 ```yaml
-framework_acceptance_status_current_run: ACCEPTED_SUPPLEMENTAL_PRESSURE_UPDATE_NO_EDGE_UPGRADE
-accepted_run_id: MISSING_DATA_RECOVERY_20260713T172341Z
-parent_accepted_log_id: DATA_PING_V4_20260713T150608Z
-accepted_source_type: NON_BINDING_DATA_RECOVERY_SUPPLEMENT
+framework_acceptance_status_current_run: ACCEPTED_ETF_NEGATIVE_RECLAIM_FAILURE_CONTINUATION_NO_EDGE_UPGRADE
+accepted_run_id: DATA_PING_V4_20260714T051915Z
+accepted_predecessor_run_id: DATA_PING_V4_20260713T184513Z
+accepted_source_type: DIRECT_PROJECT_THREAD_DATA_PING
 framework_post_review_edge_state: NEAR_PRESENT
 framework_post_review_alert_status: STILL_ACTIVE
 accepted_gate_registry_id: GATE_REGISTRY_2026W28_V1
@@ -157,7 +161,7 @@ accepted_event_id: ROTATION_REPAIR_EDGE_20260712_01
 accepted_new_event: NO
 accepted_new_pullback_alert: NO
 accepted_portfolio_action: NO_NEW_ACTION
-data_quality_after_recovery: MEDIUM
+data_quality: MEDIUM
 ```
 
 ---
