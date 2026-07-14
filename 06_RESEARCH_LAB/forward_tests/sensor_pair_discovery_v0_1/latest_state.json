@@ -1,19 +1,19 @@
 {
   "test_id": "SENSOR_PAIR_DISCOVERY_LAB_V0_1",
-  "state_version": "0.2",
+  "state_version": "0.3",
   "initialized_at": "2026-07-12T00:00:00+02:00",
-  "run_status": "SOURCE_READY_PENDING_FIRST_LAB_RUN",
+  "run_status": "PASS",
   "highest_known_data_ping_version": 4,
   "source_resolution_mode": "ACCEPTED_LOG_RECEIPT",
   "selected_thread_title": "DATA PING_V4",
-  "accepted_log_id": "DATA_PING_V4_20260713T052547Z",
-  "latest_source_timestamp": "2026-07-13T05:25:47Z",
-  "latest_source_hash": "339cea222f44581fbc6edff7d4d1527d79b20b0fbef1effbdbf57939b1019f23",
-  "latest_source_receipt": "02_DATA_PING/operational_handoffs/accepted_logs/history/2026-07-13T052547Z__data-ping-v4__accepted-log.json",
-  "latest_run_artifact": null,
-  "prospective_rows_total": 0,
+  "accepted_log_id": "DATA_PING_V4_20260714T182008Z",
+  "latest_source_timestamp": "2026-07-14T18:20:08Z",
+  "latest_source_hash": "b4757f1ed7f4b4a8c3152a79b7c1d0b0ae43bf6a7ec21d39a6eb2603f4a37614",
+  "latest_source_receipt": "02_DATA_PING/operational_handoffs/accepted_logs/history/2026-07-14T182008Z__data-ping-v4__accepted-log.json",
+  "latest_run_artifact": "06_RESEARCH_LAB/forward_tests/sensor_pair_discovery_v0_1/runs/2026-07-14__sensor-pair-run.json",
+  "prospective_rows_total": 12,
   "mature_rows_total": 0,
-  "independent_event_windows_total": 0,
+  "independent_event_windows_total": 1,
   "consecutive_source_unavailable_runs": 0,
   "pair_status": {
     "P01": "INSUFFICIENT_SAMPLE",
@@ -25,12 +25,23 @@
     "P07": "INSUFFICIENT_SAMPLE",
     "P08": "INSUFFICIENT_SAMPLE"
   },
+  "last_run_summary": {
+    "rows_frozen": 12,
+    "eligible_pairs": ["P01", "P03", "P05", "P08"],
+    "ineligible_pairs": ["P02", "P04", "P06", "P07"],
+    "rows_matured_24h": 0,
+    "rows_matured_72h": 0,
+    "rows_matured_7d": 0,
+    "placebo_integrity": "PASS",
+    "frozen_field_integrity": "PASS",
+    "notification_gate": "SILENT"
+  },
   "rule_promotion": "NONE",
   "portfolio_authority": "ZERO",
   "notes": [
-    "The first valid source is now available through a verified accepted-log receipt.",
-    "No prospective row has been frozen yet; row creation remains the responsibility of the scheduled lab run.",
-    "Eligibility is field-specific and missing fields remain ineligible rather than negative.",
-    "No retrospective outcome was imported."
+    "First prospective rows were frozen from a verified accepted-log receipt.",
+    "P02 was conservatively excluded because price absorption was not an explicit accepted-payload field.",
+    "Missing fields remained ineligible rather than negative.",
+    "No outcome was mature at freeze time and no retrospective outcome was imported."
   ]
 }
