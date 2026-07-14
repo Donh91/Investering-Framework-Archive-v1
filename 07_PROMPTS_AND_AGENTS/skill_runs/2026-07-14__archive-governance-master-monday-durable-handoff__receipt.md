@@ -51,7 +51,8 @@ archive_decision: EXISTING_PROCESS_SUPPLEMENT_PLUS_POINTER_AND_RECEIPT_REPAIR
 classification: CANONICAL_PROCESS_CONTRACT_AND_OPERATIONAL_RECONCILIATION
 primary_owner: 03_WEEKLY_OPERATIONS/master_monday/process/2026-07-14__master-monday-durable-handoff-contract-v1__canonical.md
 operation: CREATE_UPDATE_REGISTER
-branch: agent/task-20260714-master-monday-durable-handoff
+implementation_branch: agent/task-20260714-master-monday-durable-handoff
+finalization_branch: agent/task-20260714-master-monday-handoff-finalize
 branch_assertion: PASS
 canonical_index_change: NO
 addendum_registry_change: YES
@@ -59,7 +60,7 @@ high_impact_gate: NOT_REQUIRED
 duplicate_check: EXISTING_VERSION_CHAIN_RETAINED_AND_SUPPLEMENTED
 paths_deleted_final_diff: 0
 source_lineage: W29_FILES_AND_CREATION_COMMITS_READ_BACK
-backup_scope: PENDING_POST_MERGE_DECISION
+backup_scope: TARGETED_SNAPSHOT_PLANNED_AFTER_FINALIZATION
 ```
 
 ## Durable changes
@@ -83,18 +84,21 @@ rule_promotion: NONE
 threshold_change: NONE
 ```
 
-## Validation status before PR
+## Implementation and read-back receipts
 
 ```yaml
-W29_final_readback: PASS
-W29_data_ping_raw_readback: PASS
-W29_cycle_navigator_handoff_readback: PASS
-W29_forecast_ledger_readback: PASS
-existing_pointer_readback: PASS
-reconciliation_receipt_created: PASS
-new_pointer_branch_readback: PENDING_FINAL_CHECK
-addendum_registered: YES
-canonical_index_changed: NO
+implementation_pr: 31
+implementation_merge_sha: 30252be5810f5500967e31f6e719a80ebd7e1470
+W29_final_main_readback: PASS
+W29_data_ping_raw_main_readback: PASS
+W29_cycle_navigator_handoff_main_readback: PASS
+W29_forecast_ledger_main_readback: PASS
+W29_reconciliation_receipt_main_readback: PASS
+canonical_contract_main_readback: PASS
+addendum_registry_main_readback: PASS
+pointer_target_blob_match: PASS
+pointer_receipt_readback: PASS_AFTER_FINALIZATION_WRITE
+first_created_during_run_production_proof: PENDING_2026_07_20
 ```
 
 ## Pilot metrics
@@ -112,8 +116,9 @@ explicit_branch_on_every_write: YES
 manual_corrections_required: 1
 incident_count: 1
 write_governance_result: PARTIAL_REMEDIATED
-final_repository_state: PENDING_PR
-backup_product: NONE_PENDING_POST_MERGE
+archive_content_result: PASS
+final_repository_state: PASS_AFTER_FINALIZATION_MERGE
+backup_product: TARGETED_SNAPSHOT_PLANNED
 ```
 
-An unqualified write-governance PASS is not claimed because the unintended branch-only gap receipt required remediation.
+An unqualified write-governance PASS is not claimed because the unintended branch-only gap receipt required remediation. The content and final repository state pass after the finalization pointer is merged and read back.
