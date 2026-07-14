@@ -1,26 +1,28 @@
 {
   "test_id": "SENSOR_PAIR_DISCOVERY_LAB_V0_1",
-  "coverage_version": "0.1",
-  "updated_at": "2026-07-12T00:00:00+02:00",
-  "source_rows_total": 0,
-  "eligible_pair_rows_total": 0,
+  "coverage_version": "0.2",
+  "updated_at": "2026-07-14T19:58:27Z",
+  "source_rows_total": 1,
+  "eligible_pair_rows_total": 12,
   "mature_pair_rows_total": 0,
-  "independent_event_windows_total": 0,
+  "independent_event_windows_total": 1,
   "horizon_coverage": {
-    "24h": {"frozen": 0, "mature": 0},
-    "72h": {"frozen": 0, "mature": 0},
-    "7d": {"frozen": 0, "mature": 0}
+    "24h": {"frozen": 4, "mature": 0},
+    "72h": {"frozen": 4, "mature": 0},
+    "7d": {"frozen": 4, "mature": 0}
   },
   "pairs": {
-    "P01": {"eligible": 0, "mature": 0, "status": "INSUFFICIENT_SAMPLE"},
-    "P02": {"eligible": 0, "mature": 0, "status": "INSUFFICIENT_SAMPLE"},
-    "P03": {"eligible": 0, "mature": 0, "status": "INSUFFICIENT_SAMPLE"},
-    "P04": {"eligible": 0, "mature": 0, "status": "INSUFFICIENT_SAMPLE"},
-    "P05": {"eligible": 0, "mature": 0, "status": "INSUFFICIENT_SAMPLE"},
-    "P06": {"eligible": 0, "mature": 0, "status": "INSUFFICIENT_SAMPLE"},
-    "P07": {"eligible": 0, "mature": 0, "status": "INSUFFICIENT_SAMPLE"},
-    "P08": {"eligible": 0, "mature": 0, "status": "INSUFFICIENT_SAMPLE"}
+    "P01": {"eligible": 3, "mature": 0, "independent_event_windows": 1, "status": "INSUFFICIENT_SAMPLE"},
+    "P02": {"eligible": 0, "mature": 0, "independent_event_windows": 0, "status": "INSUFFICIENT_SAMPLE", "latest_ineligibility": "PRICE_ABSORPTION_STATE_NOT_EXPLICIT"},
+    "P03": {"eligible": 3, "mature": 0, "independent_event_windows": 1, "status": "INSUFFICIENT_SAMPLE"},
+    "P04": {"eligible": 0, "mature": 0, "independent_event_windows": 0, "status": "INSUFFICIENT_SAMPLE", "latest_ineligibility": "STABLECOIN_NOT_COMPARABLE_AND_NORMALIZED_DEX_MISSING"},
+    "P05": {"eligible": 3, "mature": 0, "independent_event_windows": 1, "status": "INSUFFICIENT_SAMPLE"},
+    "P06": {"eligible": 0, "mature": 0, "independent_event_windows": 0, "status": "INSUFFICIENT_SAMPLE", "latest_ineligibility": "A1_A2_AND_C1_C2_FIELDS_MISSING"},
+    "P07": {"eligible": 0, "mature": 0, "independent_event_windows": 0, "status": "INSUFFICIENT_SAMPLE", "latest_ineligibility": "SENTIMENT_EXTREME_STATE_NOT_POINT_IN_TIME_EXPLICIT"},
+    "P08": {"eligible": 3, "mature": 0, "independent_event_windows": 1, "status": "INSUFFICIENT_SAMPLE"}
   },
+  "raw_overlapping_rows_total": 12,
+  "effective_independent_source_windows_total": 1,
   "retrospective_rows_promoted": 0,
   "rule_promotion": "NONE",
   "portfolio_authority": "ZERO"
