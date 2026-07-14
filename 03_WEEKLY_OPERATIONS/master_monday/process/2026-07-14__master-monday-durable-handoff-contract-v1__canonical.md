@@ -107,6 +107,7 @@ Schema owner:
 The receipt must distinguish:
 
 ```text
+receipt_origin
 generation_status
 branch_write_status
 branch_readback_status
@@ -122,6 +123,7 @@ Required final classifications:
 
 ```text
 DURABLE_PASS
+RECONCILED_DURABLE_PASS
 PARTIAL_REPORT_DELIVERED_POINTER_PRESERVED
 FAIL_GENERATION
 FAIL_WRITE
@@ -130,7 +132,29 @@ FAIL_MERGE
 SOURCE_UNAVAILABLE
 ```
 
-## 7. Failure behavior
+## 7. Legacy receipt reconciliation
+
+A historical run may lack a contemporaneous `run_receipt.json` even though its dated Master Monday final, forecast ledger, Cycle Navigator handoff and latest pointers are readable.
+
+A reconciliation receipt is permitted only when:
+
+- every declared artifact exists on `main`;
+- each artifact has an exact creation commit and current blob SHA;
+- the source identifiers agree across the Master Monday final, forecast ledger and handoff;
+- the pointer target exists and matches the declared stage;
+- no missing content is reconstructed from memory;
+- unknown branch, pull-request or delivery metadata remains `UNKNOWN` or `NOT_VERIFIED`.
+
+Such a receipt must use:
+
+```text
+receipt_origin: RECONCILED_AFTER_FACT
+overall_durability_status: RECONCILED_DURABLE_PASS
+```
+
+This validates durable archive lineage. It does not retroactively prove standalone user delivery or original branch-governance compliance.
+
+## 8. Failure behavior
 
 When generation succeeds but archiving fails:
 
@@ -148,7 +172,7 @@ When source resolution fails:
 - create no retrospective forecast row;
 - delivery may report the blocked state, but the pointer remains unchanged.
 
-## 8. Historical gap treatment
+## 9. Historical gap treatment
 
 An observed automation execution without a readable durable report is classified:
 
@@ -158,7 +182,7 @@ RUN_OBSERVED_NOT_DURABLY_AVAILABLE
 
 It may receive a gap receipt, but it may not be reconstructed, ratified or scored from memory.
 
-## 9. Validation and monitoring
+## 10. Validation and monitoring
 
 The active Master Monday automation must enforce this contract on every run.
 
@@ -172,6 +196,6 @@ The Integrity Canary and GitHub Archive Sync must verify:
 - a failed run did not replace the prior pointer;
 - no automation claims durability without main read-back.
 
-## 10. Authority boundary
+## 11. Authority boundary
 
 This contract changes archive durability only. It creates no market call, forecast value, portfolio action, scoring result, rule promotion, threshold change or new framework engine.
