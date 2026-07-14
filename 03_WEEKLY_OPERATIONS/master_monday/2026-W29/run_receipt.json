@@ -1,0 +1,85 @@
+{
+  "schema_version": "1.0",
+  "receipt_origin": "RECONCILED_AFTER_FACT",
+  "reconciled_at_utc": "2026-07-14T00:00:00Z",
+  "run_id": "MASTER_MONDAY_2026_W29_20260713T154000Z",
+  "iso_week": "2026-W29",
+  "generated_at_utc": "2026-07-13T15:40:00Z",
+  "source_resolution": "ACCEPTED_LOG_RECEIPT",
+  "source_timestamp": "2026-07-13T15:06:08Z",
+  "source_hash": null,
+  "source_version": "DATA_PING_V4_20260713T150608Z",
+  "artifact_paths": {
+    "master_monday_pre_data_ping": null,
+    "master_monday_data_ping_derived": "03_WEEKLY_OPERATIONS/master_monday/2026-W29/02_data_ping_derived_raw.md",
+    "master_monday_final": "03_WEEKLY_OPERATIONS/master_monday/2026-W29/03_framework_ratified_final.md",
+    "cycle_navigator_handoff": "03_WEEKLY_OPERATIONS/master_monday/2026-W29/04_cycle_navigator_handoff_notes.md",
+    "forecast_ledger": "03_WEEKLY_OPERATIONS/forecast_ledger/2026-07-13__forecast-ledger-2026-w29__official.md",
+    "run_receipt": "03_WEEKLY_OPERATIONS/master_monday/2026-W29/run_receipt.json"
+  },
+  "artifact_verification": [
+    {
+      "path": "03_WEEKLY_OPERATIONS/master_monday/2026-W29/02_data_ping_derived_raw.md",
+      "creation_commit_sha": "c7dc0d52124f412cbf1b0904f30a4037dee3d8ca",
+      "blob_sha": "36495f4cf3e46ecee58ce4f496691faa75607ec4",
+      "branch_readback_status": "UNKNOWN",
+      "main_readback_status": "PASS"
+    },
+    {
+      "path": "03_WEEKLY_OPERATIONS/master_monday/2026-W29/03_framework_ratified_final.md",
+      "creation_commit_sha": "40873c9101fe50b940c7bd8bba407023ae5cd35c",
+      "blob_sha": "ec2935210c1ab4641d36ffe6305984d790f43d56",
+      "branch_readback_status": "UNKNOWN",
+      "main_readback_status": "PASS"
+    },
+    {
+      "path": "03_WEEKLY_OPERATIONS/master_monday/2026-W29/04_cycle_navigator_handoff_notes.md",
+      "creation_commit_sha": "e8381f065e8008c01e6bb6cb22893eb2ac74ef29",
+      "blob_sha": "e5a6060431999a7ceddda834e890bcde2194f07b",
+      "branch_readback_status": "UNKNOWN",
+      "main_readback_status": "PASS"
+    },
+    {
+      "path": "03_WEEKLY_OPERATIONS/forecast_ledger/2026-07-13__forecast-ledger-2026-w29__official.md",
+      "creation_commit_sha": "5b5d3755bc2762da861f2e67694efc070da31eda",
+      "blob_sha": "b387e095fd37cf659dc71875774e1da86fd325f1",
+      "branch_readback_status": "UNKNOWN",
+      "main_readback_status": "PASS"
+    }
+  ],
+  "write_transaction": {
+    "task_branch": null,
+    "branch_write_status": "UNKNOWN",
+    "branch_readback_status": "UNKNOWN",
+    "pull_request_number": null,
+    "pull_request_status": "UNKNOWN",
+    "merge_commit_sha": null,
+    "merge_status": "UNKNOWN",
+    "main_readback_status": "PASS"
+  },
+  "pointer_transaction": {
+    "pointer_path": "03_WEEKLY_OPERATIONS/master_monday/latest_master_monday.json",
+    "previous_valid_pointer": null,
+    "pointer_update_status": "RECONCILED",
+    "target_verification_status": "PASS"
+  },
+  "delivery": {
+    "standalone_delivery_status": "NOT_VERIFIED",
+    "delivery_title": null
+  },
+  "forecast_lineage_status": "COMPLETE",
+  "scoring_eligibility": false,
+  "overall_durability_status": "RECONCILED_DURABLE_PASS",
+  "notes": [
+    "All four durable W29 artifacts and the current pointer were independently read back from the repository before this receipt was created.",
+    "The original branch, pull-request and standalone-delivery metadata were not durably preserved and are not inferred.",
+    "The source hash for DATA_PING_V4_20260713T150608Z was not available in the inspected files and remains null.",
+    "W29 forecast lineage was complete at creation; scoring remains ineligible until verified settled W29 actuals and a valid score row exist."
+  ],
+  "authority_boundary": {
+    "market_call": false,
+    "portfolio_action": false,
+    "rule_promotion": false,
+    "threshold_change": false
+  }
+}

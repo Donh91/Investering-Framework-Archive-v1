@@ -1,0 +1,126 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Donh91/Investering-Framework-Archive-v1/blob/main/03_WEEKLY_OPERATIONS/master_monday/process/master_monday_run_receipt.schema.json",
+  "title": "Master Monday Durable Run Receipt",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "receipt_origin",
+    "run_id",
+    "iso_week",
+    "generated_at_utc",
+    "source_resolution",
+    "source_timestamp",
+    "source_hash",
+    "artifact_paths",
+    "write_transaction",
+    "pointer_transaction",
+    "delivery",
+    "overall_durability_status",
+    "authority_boundary"
+  ],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "receipt_origin": {"enum": ["CREATED_DURING_RUN", "RECONCILED_AFTER_FACT"]},
+    "reconciled_at_utc": {"type": ["string", "null"], "format": "date-time"},
+    "run_id": {"type": "string", "minLength": 1},
+    "iso_week": {"type": "string", "pattern": "^[0-9]{4}-W[0-9]{2}$"},
+    "generated_at_utc": {"type": "string", "format": "date-time"},
+    "source_resolution": {
+      "enum": ["DIRECT_PROJECT_THREAD", "ACCEPTED_LOG_RECEIPT", "THREAD_DERIVED_HANDOFF", "SOURCE_UNAVAILABLE"]
+    },
+    "source_timestamp": {"type": ["string", "null"], "format": "date-time"},
+    "source_hash": {"type": ["string", "null"]},
+    "source_version": {"type": ["string", "null"]},
+    "artifact_paths": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["master_monday_final", "cycle_navigator_handoff", "forecast_ledger", "run_receipt"],
+      "properties": {
+        "master_monday_pre_data_ping": {"type": ["string", "null"]},
+        "master_monday_data_ping_derived": {"type": ["string", "null"]},
+        "master_monday_final": {"type": ["string", "null"]},
+        "cycle_navigator_handoff": {"type": ["string", "null"]},
+        "forecast_ledger": {"type": ["string", "null"]},
+        "run_receipt": {"type": "string"}
+      }
+    },
+    "artifact_verification": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "main_readback_status"],
+        "properties": {
+          "path": {"type": "string"},
+          "creation_commit_sha": {"type": ["string", "null"]},
+          "blob_sha": {"type": ["string", "null"]},
+          "branch_readback_status": {"enum": ["PASS", "FAIL", "UNKNOWN", "NOT_APPLICABLE"]},
+          "main_readback_status": {"enum": ["PASS", "FAIL", "PENDING", "NOT_APPLICABLE"]}
+        }
+      }
+    },
+    "write_transaction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["task_branch", "branch_write_status", "branch_readback_status", "pull_request_status", "merge_status", "main_readback_status"],
+      "properties": {
+        "task_branch": {"type": ["string", "null"]},
+        "branch_write_status": {"enum": ["PASS", "PARTIAL", "FAIL", "UNKNOWN", "NOT_APPLICABLE"]},
+        "branch_readback_status": {"enum": ["PASS", "PARTIAL", "FAIL", "UNKNOWN", "NOT_APPLICABLE"]},
+        "pull_request_number": {"type": ["integer", "null"]},
+        "pull_request_status": {"enum": ["OPEN", "MERGED", "CLOSED", "NOT_CREATED", "UNKNOWN", "NOT_APPLICABLE"]},
+        "merge_commit_sha": {"type": ["string", "null"]},
+        "merge_status": {"enum": ["PASS", "FAIL", "PENDING", "UNKNOWN", "NOT_APPLICABLE"]},
+        "main_readback_status": {"enum": ["PASS", "PARTIAL", "FAIL", "PENDING", "NOT_APPLICABLE"]}
+      }
+    },
+    "pointer_transaction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pointer_path", "previous_valid_pointer", "pointer_update_status", "target_verification_status"],
+      "properties": {
+        "pointer_path": {"const": "03_WEEKLY_OPERATIONS/master_monday/latest_master_monday.json"},
+        "previous_valid_pointer": {"type": ["object", "null"]},
+        "pointer_update_status": {"enum": ["ADVANCED", "PRESERVED", "RECONCILED", "FAILED", "NOT_APPLICABLE"]},
+        "target_verification_status": {"enum": ["PASS", "FAIL", "PENDING", "NOT_APPLICABLE"]}
+      }
+    },
+    "delivery": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["standalone_delivery_status"],
+      "properties": {
+        "standalone_delivery_status": {"enum": ["PASS", "FAIL", "PARTIAL", "NOT_VERIFIED", "NOT_APPLICABLE"]},
+        "delivery_title": {"type": ["string", "null"]}
+      }
+    },
+    "forecast_lineage_status": {"enum": ["COMPLETE", "INCOMPLETE", "NOT_APPLICABLE"]},
+    "scoring_eligibility": {"type": "boolean"},
+    "overall_durability_status": {
+      "enum": [
+        "DURABLE_PASS",
+        "RECONCILED_DURABLE_PASS",
+        "PARTIAL_REPORT_DELIVERED_POINTER_PRESERVED",
+        "FAIL_GENERATION",
+        "FAIL_WRITE",
+        "FAIL_READBACK",
+        "FAIL_MERGE",
+        "SOURCE_UNAVAILABLE"
+      ]
+    },
+    "notes": {"type": "array", "items": {"type": "string"}},
+    "authority_boundary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["market_call", "portfolio_action", "rule_promotion", "threshold_change"],
+      "properties": {
+        "market_call": {"const": false},
+        "portfolio_action": {"const": false},
+        "rule_promotion": {"const": false},
+        "threshold_change": {"const": false}
+      }
+    }
+  }
+}
