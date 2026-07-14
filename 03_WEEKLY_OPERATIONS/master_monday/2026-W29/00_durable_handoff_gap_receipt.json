@@ -1,0 +1,43 @@
+{
+  "schema_version": "1.0",
+  "iso_week": "2026-W29",
+  "observed_at_utc": "2026-07-14T00:00:00Z",
+  "classification": "RUN_OBSERVED_NOT_DURABLY_AVAILABLE",
+  "observed_automation": {
+    "automation_id": "697fcc899f0481918e3cedbd396a3520",
+    "title": "Master Monday",
+    "enabled_at_observation": false,
+    "last_run_time_utc": "2026-07-13T06:59:54.509798Z"
+  },
+  "expected_paths_checked": [
+    "03_WEEKLY_OPERATIONS/master_monday/2026-W29/01_system_generated_pre_data_ping.md",
+    "03_WEEKLY_OPERATIONS/master_monday/2026-W29/02_data_ping_derived_raw.md",
+    "03_WEEKLY_OPERATIONS/master_monday/2026-W29/03_framework_ratified_final.md",
+    "03_WEEKLY_OPERATIONS/master_monday/2026-W29/04_cycle_navigator_handoff_notes.md",
+    "03_WEEKLY_OPERATIONS/master_monday/2026-W29/run_receipt.json"
+  ],
+  "durable_output_found": false,
+  "reconstruction_permitted": false,
+  "framework_ratification_status": "NOT_AVAILABLE",
+  "forecast_lineage_status": "INCOMPLETE",
+  "scoring_eligibility": false,
+  "pointer_action": "PRESERVE_PRIOR_VALID_POINTER",
+  "replacement_automation": {
+    "automation_id": "6a5515c4a5448191b3f6607fc568927f",
+    "title": "Ugentlig Master Monday + CN",
+    "enabled": true,
+    "next_scheduled_time_local": "2026-07-20T09:00:00+02:00",
+    "last_run_time": null
+  },
+  "notes": [
+    "The observed automation execution is evidence that a run occurred, not evidence that its generated report is durably readable.",
+    "No report content, forecast values, ratification or scoring row is reconstructed from conversation memory.",
+    "The next combined automation run must use the durable handoff contract and advance the pointer only after merge and main read-back."
+  ],
+  "authority_boundary": {
+    "market_call": false,
+    "portfolio_action": false,
+    "rule_promotion": false,
+    "threshold_change": false
+  }
+}
