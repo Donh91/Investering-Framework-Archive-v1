@@ -50,7 +50,7 @@ The false gap receipt was deleted from the task branch before pull request creat
 archive_decision: EXISTING_PROCESS_SUPPLEMENT_PLUS_POINTER_AND_RECEIPT_REPAIR
 classification: CANONICAL_PROCESS_CONTRACT_AND_OPERATIONAL_RECONCILIATION
 primary_owner: 03_WEEKLY_OPERATIONS/master_monday/process/2026-07-14__master-monday-durable-handoff-contract-v1__canonical.md
-operation: CREATE_UPDATE_REGISTER
+operation: CREATE_UPDATE_REGISTER_BACKUP
 implementation_branch: agent/task-20260714-master-monday-durable-handoff
 finalization_branch: agent/task-20260714-master-monday-handoff-finalize
 branch_assertion: PASS
@@ -60,7 +60,7 @@ high_impact_gate: NOT_REQUIRED
 duplicate_check: EXISTING_VERSION_CHAIN_RETAINED_AND_SUPPLEMENTED
 paths_deleted_final_diff: 0
 source_lineage: W29_FILES_AND_CREATION_COMMITS_READ_BACK
-backup_scope: TARGETED_SNAPSHOT_PLANNED_AFTER_FINALIZATION
+backup_scope: TARGETED_OPERATIONAL_SNAPSHOT
 ```
 
 ## Durable changes
@@ -70,7 +70,9 @@ backup_scope: TARGETED_SNAPSHOT_PLANNED_AFTER_FINALIZATION
 - W29 reconciliation receipt with unknown metadata left unknown;
 - enriched `latest_master_monday.json` with exact target commit/blob lineage;
 - operational automation patch and production-verification gate;
-- registered index addendum.
+- registered index addendum;
+- active Master Monday, Integrity Canary and Archive Sync prompts updated with the durable transaction contract;
+- verified targeted Vault snapshot.
 
 ## Evidence boundary
 
@@ -89,6 +91,8 @@ threshold_change: NONE
 ```yaml
 implementation_pr: 31
 implementation_merge_sha: 30252be5810f5500967e31f6e719a80ebd7e1470
+finalization_pr: 32
+finalization_merge_sha: 08cc47b5d670d3fd6d944f4b0b266bf17dfdb8f1
 W29_final_main_readback: PASS
 W29_data_ping_raw_main_readback: PASS
 W29_cycle_navigator_handoff_main_readback: PASS
@@ -97,8 +101,27 @@ W29_reconciliation_receipt_main_readback: PASS
 canonical_contract_main_readback: PASS
 addendum_registry_main_readback: PASS
 pointer_target_blob_match: PASS
-pointer_receipt_readback: PASS_AFTER_FINALIZATION_WRITE
+pointer_receipt_readback: PASS
 first_created_during_run_production_proof: PENDING_2026_07_20
+```
+
+## Vault snapshot receipt
+
+```yaml
+source_safepoint: backup-safepoint/2026-07-14-master-monday-handoff-final
+frozen_source_sha: 08cc47b5d670d3fd6d944f4b0b266bf17dfdb8f1
+vault_pr: 5
+vault_merge_sha: c2ef7b26cbff76ee2a14ddd92af0e4f8378801bd
+snapshot_root: snapshots/2026-07-14-master-monday-handoff/source-tree/
+manifest: manifests/2026-07-14__master-monday-handoff-targeted-snapshot-manifest.md
+receipt: receipts/2026-07-14__master-monday-handoff-targeted-snapshot-receipt.json
+paths_expected: 6
+paths_verified: 6
+blob_sha_matches: 6
+paths_unresolved: 0
+result: PASS_TARGETED_OPERATIONAL_SNAPSHOT
+full_git_mirror_status: NOT_CONFIGURED
+four_week_counter_changed: NO
 ```
 
 ## Pilot metrics
@@ -117,8 +140,9 @@ manual_corrections_required: 1
 incident_count: 1
 write_governance_result: PARTIAL_REMEDIATED
 archive_content_result: PASS
-final_repository_state: PASS_AFTER_FINALIZATION_MERGE
-backup_product: TARGETED_SNAPSHOT_PLANNED
+final_repository_state: PASS
+backup_product: PASS_TARGETED_OPERATIONAL_SNAPSHOT
+user_action_required: NO
 ```
 
-An unqualified write-governance PASS is not claimed because the unintended branch-only gap receipt required remediation. The content and final repository state pass after the finalization pointer is merged and read back.
+An unqualified write-governance PASS is not claimed because the unintended branch-only gap receipt required remediation. The archive content, final repository state and targeted Vault snapshot pass.
