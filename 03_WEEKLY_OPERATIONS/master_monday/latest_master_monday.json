@@ -1,22 +1,56 @@
 {
-  "latest_master_monday_week": "2026-W29",
-  "latest_master_monday_date": "2026-07-13",
-  "latest_master_monday_path": "03_WEEKLY_OPERATIONS/master_monday/2026-W29/03_framework_ratified_final.md",
+  "schema_version": "1.0",
+  "pointer_status": "VALID_RATIFIED_FINAL_RECONCILED",
+  "latest_durable_week": "2026-W29",
+  "latest_durable_date": "2026-07-13",
+  "latest_durable_stage": "FRAMEWORK_RATIFIED_FINAL",
+  "latest_durable_path": "03_WEEKLY_OPERATIONS/master_monday/2026-W29/03_framework_ratified_final.md",
+  "latest_durable_source_commit_sha": "40873c9101fe50b940c7bd8bba407023ae5cd35c",
+  "latest_durable_blob_sha": "ec2935210c1ab4641d36ffe6305984d790f43d56",
   "data_ping_derived_path": "03_WEEKLY_OPERATIONS/master_monday/2026-W29/02_data_ping_derived_raw.md",
   "cycle_navigator_handoff_path": "03_WEEKLY_OPERATIONS/master_monday/2026-W29/04_cycle_navigator_handoff_notes.md",
-  "run_type": "FRAMEWORK_RATIFIED_FINAL",
+  "forecast_ledger_path": "03_WEEKLY_OPERATIONS/forecast_ledger/2026-07-13__forecast-ledger-2026-w29__official.md",
+  "run_receipt_path": "03_WEEKLY_OPERATIONS/master_monday/2026-W29/run_receipt.json",
+  "framework_ratified_final_available": true,
+  "forecast_lineage_status": "COMPLETE_AT_CREATION",
+  "cycle_navigator_handoff_status": "READBACK_PASS",
+  "scoring_eligibility": false,
+  "scoring_blocker": "VERIFIED_SETTLED_W29_ACTUALS_AND_SCORE_ROW_PENDING",
   "engine": "MASTER_MONDAY_vNext_v1_1",
-  "live_feed": "DATA_PING_V4_20260713T150608Z",
-  "run_status": "RATIFIED_ARCHIVED_PASS",
-  "verified_range_loaded": true,
+  "source_resolution": "ACCEPTED_LOG_RECEIPT",
+  "source_version": "DATA_PING_V4_20260713T150608Z",
+  "source_timestamp": "2026-07-13T15:06:08Z",
+  "source_hash": null,
   "verified_range_pointer": "03_WEEKLY_OPERATIONS/range_audits/2026-07-13__weekly-range-2026-w28__binance-cest-verified.md",
-  "forecast_ledger_pointer": "03_WEEKLY_OPERATIONS/forecast_ledger/2026-07-13__forecast-ledger-2026-w29__official.md",
   "w28_scoring_status": "BLOCKED_SOURCE_LINEAGE_UNRESOLVED",
-  "w29_forecast_lineage_status": "COMPLETE_AT_CREATION",
   "active_event": "ROTATION_REPAIR_EDGE_20260712_01",
   "framework_edge_state": "NEAR_PRESENT",
   "rotation_status": "NO_ROTATION",
   "rebuy_status": "LOCKED",
   "large_cap_buy_window": "NOT_OPEN",
-  "archive_status": "ARCHIVED"
+  "previous_valid_pointer": {
+    "latest_master_monday_week": "2026-W29",
+    "latest_master_monday_date": "2026-07-13",
+    "latest_master_monday_path": "03_WEEKLY_OPERATIONS/master_monday/2026-W29/03_framework_ratified_final.md",
+    "pointer_blob_sha": "ca434a47e2425dfd687f8795af3b013c157dafcc",
+    "run_status": "RATIFIED_ARCHIVED_PASS"
+  },
+  "pointer_repair": {
+    "repair_type": "SCHEMA_AND_RECEIPT_RECONCILIATION",
+    "contract_path": "03_WEEKLY_OPERATIONS/master_monday/process/2026-07-14__master-monday-durable-handoff-contract-v1__canonical.md",
+    "target_readback_status": "PASS",
+    "receipt_readback_status": "PENDING_UNTIL_MERGE"
+  },
+  "active_combined_automation": {
+    "automation_id": "6a5515c4a5448191b3f6607fc568927f",
+    "title": "Ugentlig Master Monday + CN",
+    "next_scheduled_time_local": "2026-07-20T09:00:00+02:00",
+    "last_run_time": null
+  },
+  "observed_at_utc": "2026-07-14T07:46:47Z",
+  "notes": [
+    "The W29 final, DATA PING-derived raw, Cycle Navigator handoff and official Forecast Ledger all exist and passed repository read-back.",
+    "The contemporaneous run receipt was missing and has been reconciled without inferring unknown branch, PR or delivery metadata.",
+    "The pointer reports existing authority and does not create a new forecast or scoring result."
+  ]
 }
