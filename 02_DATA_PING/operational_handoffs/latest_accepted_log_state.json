@@ -6,25 +6,25 @@
   "highest_known_version": 4,
   "selected_version": 4,
   "selected_thread_title": "DATA PING_V4",
-  "accepted_log_id": "DATA_PING_V4_20260714T051915Z",
-  "source_timestamp": "2026-07-14T05:19:15Z",
-  "accepted_at": "2026-07-14T05:38:54Z",
-  "accepted_log_receipt_path": "02_DATA_PING/operational_handoffs/accepted_logs/history/2026-07-14T051915Z__data-ping-v4__accepted-log.json",
-  "accepted_payload_path": "02_DATA_PING/operational_handoffs/accepted_logs/payloads/2026-07-14T051915Z__data-ping-v4__accepted-payload.json",
-  "accepted_payload_commit_sha": "d9d34a170e99f15962bdae94ceeefd3b20524656",
-  "accepted_payload_hash_sha256": "da04b8916f0de49e86040fa160d0f2842b51e4d12fe84eaf9557c57b344e51af",
+  "accepted_log_id": "DATA_PING_V4_20260714T071658Z",
+  "source_timestamp": "2026-07-14T07:16:58Z",
+  "accepted_at": "2026-07-14T07:38:55Z",
+  "accepted_log_receipt_path": "02_DATA_PING/operational_handoffs/accepted_logs/history/2026-07-14T071658Z__data-ping-v4__accepted-log.json",
+  "accepted_payload_path": "02_DATA_PING/operational_handoffs/accepted_logs/payloads/2026-07-14T071658Z__data-ping-v4__accepted-payload.json",
+  "accepted_payload_commit_sha": "40b1cd33e1422f8855276f4693f1e98f821f8b9e",
+  "accepted_payload_blob_sha": "d0eb8993e7ccde0ae2ae1f2f1bbe80c5d9aa010b",
+  "accepted_payload_hash_sha256": "11b253b4e1a045b63352ce563bef0a45bcdd97653be9082124d04ee2df5ffef4",
   "data_quality": "MEDIUM",
   "previous_accepted_log": {
-    "accepted_log_id": "DATA_PING_V4_20260713T184513Z",
-    "path": "02_DATA_PING/operational_handoffs/accepted_logs/history/2026-07-13T184513Z__data-ping-v4__accepted-log.json",
-    "payload_path": "02_DATA_PING/operational_handoffs/accepted_logs/payloads/2026-07-13T184513Z__data-ping-v4__accepted-payload.json",
-    "payload_hash_sha256": "0d50819addc586f0d559c4cb162cf45884a76f81ece059e82a225e37f3990d50"
+    "accepted_log_id": "DATA_PING_V4_20260714T051915Z",
+    "path": "02_DATA_PING/operational_handoffs/accepted_logs/history/2026-07-14T051915Z__data-ping-v4__accepted-log.json",
+    "payload_path": "02_DATA_PING/operational_handoffs/accepted_logs/payloads/2026-07-14T051915Z__data-ping-v4__accepted-payload.json",
+    "payload_hash_sha256": "da04b8916f0de49e86040fa160d0f2842b51e4d12fe84eaf9557c57b344e51af"
   },
-  "prior_supplemental_recovery": {
-    "run_id": "MISSING_DATA_RECOVERY_20260713T172341Z",
-    "path": "02_DATA_PING/operational_handoffs/recovery_packets/2026-07-13T172341Z__missing-data-recovery__supplement.json",
-    "payload_hash_sha256": "e80b0e211211530be44c1b7990f575f844f647ae0845975e272ef086d0b1908e",
-    "status": "SUPERSEDED_AS_LATEST_INPUT / RETAINED_IN_HISTORY"
+  "reported_intermediate_predecessor": {
+    "accepted_log_id": "DATA_PING_V4_20260714T062424Z",
+    "status": "NOT_AVAILABLE_IN_CURRENT_ARCHIVE",
+    "lineage_action": "GAP_PRESERVED_NO_RECONSTRUCTION"
   },
   "latest_framework_result": {
     "active_event_id": "ROTATION_REPAIR_EDGE_20260712_01",
@@ -49,6 +49,7 @@
     "A bare run ID or commit message is insufficient without a readable accepted receipt and payload.",
     "Pair eligibility is field-specific; missing fields remain ineligible rather than negative.",
     "Supplemental recovery packets may add verified fields but may not replace or silently rewrite an accepted parent payload.",
+    "Missing predecessor packets are preserved as explicit lineage gaps and are never reconstructed.",
     "No web or independent market-data substitution is allowed.",
     "No retrospective forecast may be created after its outcome is known."
   ]
