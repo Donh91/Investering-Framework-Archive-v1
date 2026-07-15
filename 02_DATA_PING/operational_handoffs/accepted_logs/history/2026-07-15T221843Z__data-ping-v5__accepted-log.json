@@ -1,0 +1,38 @@
+{
+  "contract_version": "0.2",
+  "accepted_log_id": "DATA_PING_V5_20260715T221843Z",
+  "source_snapshot_id": "DATA_PING_V4_20260715T221843Z",
+  "accepted_at": "2026-07-15T22:32:11Z",
+  "source_timestamp": "2026-07-15T22:18:43Z",
+  "selected_version": 5,
+  "selected_thread_title": "DATA PING_V5",
+  "activation_status": "V5_ACTIVE_FIRST_COMPLETE_PACKET_ACCEPTED",
+  "predecessor": "DATA_PING_V4_20260715T202300Z",
+  "accepted_payload_path": "02_DATA_PING/operational_handoffs/accepted_logs/payloads/2026-07-15T221843Z__data-ping-v5__accepted-payload.json",
+  "accepted_payload_hash_sha256": "2e4d6315014af68f91dba8edb2e1264610ed2da103974ced19e20d8125d51258",
+  "active_registry_path": "02_DATA_PING/live_state_handover/registries/2026-07-15T221843Z__active-gate-and-edge-event-registry__canonical.md",
+  "event_update_path": "02_DATA_PING/live_state_handover/event_updates/2026-07-15T221843Z__rotation-repair-edge__canonical-close-restored-repair-present.md",
+  "supplement_path": "02_DATA_PING/operational_handoffs/accepted_logs/supplements/2026-07-15T223211Z__data-ping-v5__cfgi-1d-screenshot.json",
+  "data_quality": "MEDIUM",
+  "flow_confidence": "LOW",
+  "latest_framework_result": {
+    "active_event_id": "ROTATION_REPAIR_EDGE_20260712_01",
+    "framework_edge_state": "PRESENT_REPAIR_NOT_CONFIRMATION",
+    "alert_status": "STILL_ACTIVE",
+    "event_status": "OPEN_TRIGGERED",
+    "rotation_status": "NO_ROTATION",
+    "rebuy_status": "LOCKED",
+    "large_cap_buy_window": "WATCH_ONLY_NOT_OPEN",
+    "new_entry_signal": "NOT_ACTIVE",
+    "active_trim_signal": "NO",
+    "new_pullback_alert": "NO",
+    "portfolio_action": "NONE"
+  },
+  "acceptance_notes": [
+    "The raw source snapshot ID remains V4. The canonical accepted-log ID advances to V5 because the complete packet was submitted in the bootstrapped V5 thread.",
+    "Binance primary spot and canonical CEST close observability are restored.",
+    "The active repair edge is upgraded from NEAR_PRESENT to PRESENT_REPAIR_NOT_CONFIRMATION.",
+    "No rotation, entry window, rebuy or portfolio action is authorized."
+  ],
+  "readback_status": "PENDING_POST_MERGE_VALIDATION"
+}

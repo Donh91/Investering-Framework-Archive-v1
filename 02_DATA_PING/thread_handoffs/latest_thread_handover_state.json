@@ -1,83 +1,51 @@
 {
-  "contract_version": "1.0",
+  "contract_version": "1.1",
   "protocol_path": "02_DATA_PING/protocols/2026-07-15__data-ping-thread-handover-protocol-v1-0__canonical.md",
-  "handover_status": "READY_FOR_SUCCESSOR_THREAD_BOOTSTRAP",
+  "handover_status": "SUCCESSOR_THREAD_ACTIVATED",
   "handover_id": "DATA_PING_THREAD_HANDOVER_V4_TO_V5_20260715T210212Z",
   "created_at_utc": "2026-07-15T21:02:12Z",
-  "created_at_cest": "2026-07-15T23:02:12+02:00",
-  "trigger_phrase": "overlevering til ny tråd!",
+  "activated_at_utc": "2026-07-15T22:32:11Z",
+  "activated_at_cest": "2026-07-16T00:32:11+02:00",
   "outgoing_thread": {
     "title": "DATA PING_V4",
     "version": 4,
-    "status": "ACTIVE_UNTIL_FIRST_COMPLETE_V5_PACKET_IS_ACCEPTED"
+    "status": "RETIRED_CANONICAL_HISTORY"
   },
   "incoming_thread": {
-    "intended_title": "DATA PING_V5",
+    "title": "DATA PING_V5",
     "version": 5,
-    "status": "BOOTSTRAP_READY_NOT_YET_ACTIVE"
+    "status": "ACTIVE"
   },
   "handover_path": "02_DATA_PING/thread_handoffs/history/2026-07-15__data-ping-v4-to-v5__handover.md",
   "bootstrap_path": "02_DATA_PING/thread_handoffs/bootstrap/2026-07-15__data-ping-v5__bootstrap.md",
+  "activation_log_id": "DATA_PING_V5_20260715T221843Z",
+  "raw_source_snapshot_id": "DATA_PING_V4_20260715T221843Z",
   "latest_accepted_log_pointer": "02_DATA_PING/operational_handoffs/latest_accepted_log_state.json",
-  "latest_accepted_log_id": "DATA_PING_V4_20260715T202300Z",
-  "latest_accepted_log_timestamp_utc": "2026-07-15T20:23:00.944Z",
-  "latest_supplement_id": "FARSIDE_ETF_RECOVERY_20260715T204855Z",
-  "latest_active_registry_path": "02_DATA_PING/live_state_handover/registries/2026-07-15T202300Z__active-gate-and-edge-event-registry__canonical.md",
+  "latest_active_registry_path": "02_DATA_PING/live_state_handover/registries/2026-07-15T221843Z__active-gate-and-edge-event-registry__canonical.md",
   "active_event": {
     "event_id": "ROTATION_REPAIR_EDGE_20260712_01",
     "event_status": "OPEN_TRIGGERED",
-    "framework_edge_state": "NEAR_PRESENT",
-    "alert_status": "STILL_ACTIVE",
-    "resolution_candidate": "DERIVATIVES_AND_LATEST_COMPLETED_ETF_OBSERVABILITY_RESTORED_BUT_CANONICAL_CLOSE_AND_MARKET_WIDE_FLOW_VERIFICATION_BLOCKED"
+    "framework_edge_state": "PRESENT_REPAIR_NOT_CONFIRMATION",
+    "alert_status": "STILL_ACTIVE"
   },
   "portfolio_state": {
     "rotation_status": "NO_ROTATION",
     "rebuy_status": "LOCKED",
-    "large_cap_buy_window": "NOT_OPEN",
+    "large_cap_buy_window": "WATCH_ONLY_NOT_OPEN",
     "new_entry_signal": "NOT_ACTIVE",
     "active_trim_signal": "NO",
     "portfolio_action": "NONE",
     "user_action": "HOLD_AND_WAIT"
   },
-  "source_architecture": {
-    "spec_version": "DATA_PING_GOVERNANCE_SPEC_v2_6_FREE_ONLY",
-    "overlay_version": "DATA_PING_VNEXT_STANDARD_OVERLAY_v1",
-    "spot_price": "COINGECKO_FALLBACK",
-    "canonical_spot_closes": "BINANCE_MISSING_RESTRICTED_LOCATION",
-    "spot_ohlc_shadow": "GECKOTERMINAL_PATCH_V1_OBSERVATION_ONLY",
-    "derivatives": "OKX_V1_2_PASS_VENUE_SPECIFIC",
-    "etf": "FARSIDE_LATEST_COMPLETED_PASS_CURRENT_SESSION_PENDING",
-    "market_wide_cvd": "UNAVAILABLE",
-    "official_stablecoin_history": "MISSING",
-    "macro": "MISSING"
-  },
-  "activation_rule": "V5_BECOMES_ACTIVE_ONLY_AFTER_FIRST_COMPLETE_V5_DATA_PING_IS_ACCEPTED",
+  "activation_rule": "SATISFIED_FIRST_COMPLETE_V5_THREAD_PACKET_ACCEPTED",
   "source_resolution_rule": "HIGHEST_VERSION_WITH_AN_ACTUAL_COMPLETE_DATA_PING_WINS",
   "missing_data_rule": "DATA_MISSING_EQUALS_UNKNOWN",
   "handover_market_authority": "ZERO",
   "handover_portfolio_authority": "ZERO",
-  "validation": {
-    "main_merge_pr": 47,
-    "main_merge_commit_sha": "c355c6f5cd0eb912d5184dd5df8e662679b9b1e8",
-    "protocol_blob_sha": "48efe153b760aff862bf53aaee48f98a22e89586",
-    "handover_blob_sha": "8dd580ffc044787d48168d36974e53f8bed08162",
-    "bootstrap_blob_sha": "a52e1a154e79a6e9daef39e953ea14167aae8c2a",
-    "pointer_blob_sha_before_finalization": "a623c7aed511d49375289006c413cd62ec02da5a",
-    "all_five_files_read_back_on_task_branch": true,
-    "protocol_readback_on_main": true,
-    "handover_readback_on_main": true,
-    "pointer_readback_on_main": true,
-    "v5_not_active_verified": true,
-    "latest_v4_and_active_event_match_main": true,
-    "market_or_portfolio_change_detected": false,
-    "changed_file_scope_pr47": "PASS_EXACTLY_FIVE_INTENDED_PATHS"
-  },
-  "readback_status": "PASS",
-  "merge_status": "PR47_MERGED",
   "notes": [
-    "The handover prepares continuity before the V4 thread reaches practical failure.",
-    "It does not activate V5 or change the active event, gates or portfolio state.",
-    "The successor must load the handover, accepted-log pointer and active registry before processing the first V5 packet.",
-    "All future handovers preserve history and advance only this pointer."
-  ]
+    "The raw source packet retained a V4 snapshot identifier. It was accepted as the first complete packet in the bootstrapped V5 canonical thread without rewriting the source identifier.",
+    "V5 activation itself did not change gates or portfolio action.",
+    "The framework state changed only because the new packet restored canonical Binance close and spot-taker observability."
+  ],
+  "readback_status": "PENDING_POST_MERGE_VALIDATION"
 }
