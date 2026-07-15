@@ -55,8 +55,12 @@ remediation_commits:
   - baf637ecc33d947454891362c63c6bf120c24e7e
   - 80632ccc5d42e9b3c39436464c763c7f8038e23a
 write_governance_result: PARTIAL_REMEDIATED
-final_repository_state: PENDING_PR_VALIDATION
+main_merge_pr: 43
+main_merge_commit_sha: 51d3d62a7ebfaa7fe22905fb55d0cc309982a82a
+main_readback_status: PASS
+pointer_target_readback_status: PASS
+final_repository_state: PASS
 backup_product: NONE
 post_merge_delta_status: PENDING
-notes: Both unintended placeholders were removed before PR creation and never reached main. GeckoTerminal OHLC remains observation-only; no canonical close substitution, rotation declaration, entry unlock, score or portfolio action.
+notes: Both unintended placeholders were removed before PR creation and never reached main. The accepted payload, runtime registry and latest pointer were merged and read back successfully. GeckoTerminal OHLC remains observation-only; no canonical close substitution, rotation declaration, entry unlock, score or portfolio action.
 ```
