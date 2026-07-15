@@ -1,4 +1,4 @@
-# OKX Futures Archive v1.0 — Ingestion and QA Note
+# OKX Futures Archive v1.0 - Ingestion and QA Note
 
 **Date:** 2026-07-15  
 **Status:** SOURCE_NOTE / VERIFIED_SEED / APPROVED_WITH_SCOPE_LIMITATIONS  
@@ -27,7 +27,7 @@ It is archived as source infrastructure and verified seed evidence, not as a new
 The uploaded ZIP was unpacked and independently checked before repository ingestion.
 
 ```text
-Package files in source bundle: 15
+Package files in uploaded ZIP: 15
 Checksum verification: 14/14 listed files PASS
 Python syntax compilation: PASS
 Secrets or credentials found: NONE
@@ -35,7 +35,7 @@ BTC-USDT-SWAP seed rows: 100
 ETH-USDT-SWAP seed rows: 100
 Bar: 1H
 Embedded interval: 2026-07-11T18:00:00Z through 2026-07-15T21:00:00Z
-Sorting in embedded source: newest to oldest
+Sorting in uploaded source: newest to oldest
 Duplicate timestamps: 0 per instrument
 Hourly gaps: 0 per instrument
 Partial candles confirm=0: 1 per instrument
@@ -48,7 +48,25 @@ Negative volume rows: 0
 
 The current `confirm=0` row is explicitly partial and must not be treated as a settled close.
 
-## 3. Relevance to the active truth layer
+## 3. GitHub archival form and provenance
+
+The original binary ZIP is not stored as a binary object in this repository.
+
+The repository stores the reviewable extracted components needed for future use, including raw and normalized seed data, scripts, endpoint and field documentation, validation metadata, the original ZIP SHA-256 and the original package-member checksum manifest.
+
+`original_package_checksums.sha256` is provenance evidence for files inside the uploaded ZIP. It is not a checksum manifest for the repository copies. Some JSON representations are reformatted for repository reviewability while preserving the exact source rows, values and field order.
+
+Therefore:
+
+```text
+ORIGINAL_BINARY_ZIP_IN_REPOSITORY: NO
+ORIGINAL_ZIP_HASH_RECORDED: YES
+ORIGINAL_MEMBER_HASHES_RECORDED: YES
+SOURCE_ROWS_AND_VALUES_PRESERVED: YES
+REPOSITORY_REPRESENTATION_BYTE_IDENTICAL_TO_ALL_ZIP_MEMBERS: NO_CLAIM
+```
+
+## 4. Relevance to the active truth layer
 
 The package provides a reproducible collection path for:
 
@@ -74,7 +92,7 @@ DATA_PING_MISSING_DATA_REMEDIATION
 
 It does not provide market-wide CVD or cross-venue positioning.
 
-## 4. Required interpretation labels
+## 5. Required interpretation labels
 
 ### Open interest
 
@@ -105,7 +123,7 @@ RAW_LEG_ORDER_PRESERVED
 
 The exporter correctly avoids assigning buy/sell semantics to the two taker-volume legs without separate authoritative verification.
 
-## 5. Scope limitation
+## 6. Scope limitation
 
 The embedded data are only a 100-hour Action-verified swap-candle seed for BTC and ETH.
 
@@ -130,7 +148,7 @@ FULL_90D_FUNDING_READY: NO
 MARKET_WIDE_CVD_READY: NO
 ```
 
-## 6. Validator scope defect
+## 7. Validator scope defect
 
 The bundled `scripts/validate_archive.py` searches only for:
 
@@ -156,9 +174,9 @@ STANDALONE_VALIDATOR_COVERAGE: PARTIAL
 ROOT_CAUSE: FILENAME_GLOB_SCOPE
 ```
 
-No source file is silently changed. A future source-package revision may widen the glob or add an explicit seed validation mode and then regenerate package checksums and version metadata.
+No source data values, package outcomes or QA claims are silently repaired. A future source-package revision may widen the glob or add an explicit seed validation mode and then regenerate package checksums and version metadata.
 
-## 7. GitHub workflow boundary
+## 8. GitHub workflow boundary
 
 The bundled workflow is preserved as a reference inside the source-material folder. It is not activated under the repository's live `.github/workflows/` path by this ingestion.
 
@@ -170,18 +188,18 @@ Reason:
 
 This archive action therefore preserves the reproducible workflow without changing repository automation.
 
-## 8. Backtest hygiene
+## 9. Backtest hygiene
 
 - Exclude `confirm=0` from close-based tests.
 - Preserve source and retrieval timestamps.
 - Join funding only when it was available at the simulated decision timestamp.
 - Use UTC as canonical storage time.
-- Keep raw pages immutable.
+- Keep future raw pages immutable.
 - Rebuild normalized files from raw data when normalization logic changes.
 - Record package and artifact SHA-256 values in later ingestion notes.
 - Never label OKX taker-volume as market-wide CVD.
 
-## 9. Final disposition
+## 10. Final disposition
 
 ```text
 SOURCE_ARCHIVE: APPROVED
