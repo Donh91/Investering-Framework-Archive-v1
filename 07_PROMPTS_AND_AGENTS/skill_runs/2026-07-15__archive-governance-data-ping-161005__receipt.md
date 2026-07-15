@@ -45,11 +45,16 @@ unnecessary_new_document_avoided: YES
 unsupported_promotion_blocked: YES
 branch_assertion: PASS
 explicit_branch_on_every_write: YES
-manual_corrections_required: 0
-incident_count: 0
-write_governance_result: PASS
+manual_corrections_required: 1
+incident_count: 1
+incident_paths:
+  - 09_ARCHIVE_INBOX/to_classify/.noop
+incident_description: UNINTENDED_EMPTY_PLACEHOLDER_CREATED_ON_TASK_BRANCH_ONLY
+remediation_commits:
+  - baf637ecc33d947454891362c63c6bf120c24e7e
+write_governance_result: PARTIAL_REMEDIATED
 final_repository_state: PENDING_PR_VALIDATION
 backup_product: NONE
 post_merge_delta_status: PENDING
-notes: GeckoTerminal OHLC preserved as observation-only; no canonical close substitution, rotation declaration, entry unlock, score or portfolio action.
+notes: The unintended placeholder was removed before PR creation and never reached main. GeckoTerminal OHLC remains observation-only; no canonical close substitution, rotation declaration, entry unlock, score or portfolio action.
 ```
