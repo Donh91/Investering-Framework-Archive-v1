@@ -1,8 +1,8 @@
 {
   "contract_version": "0.1",
   "protocol_owner": "02_DATA_PING/protocols/2026-07-13__data-ping-accepted-log-fallback-v0-1__canonical.md",
-  "source_status": "READY_ACCEPTED_LOG",
-  "source_mode": "DIRECT_PROJECT_THREAD_ACCEPTED_LOG_NEW_THREAD_CONTINUATION",
+  "source_status": "READY_ACCEPTED_LOG_WITH_SUPPLEMENT",
+  "source_mode": "DIRECT_PROJECT_THREAD_ACCEPTED_LOG_NEW_THREAD_CONTINUATION_PLUS_USER_SUPPLIED_FARSIDE_API_SUPPLEMENT",
   "highest_known_version": 4,
   "selected_version": 4,
   "selected_thread_title": "DATA PING_V4",
@@ -15,6 +15,9 @@
   "accepted_payload_blob_sha": "1cfbc3794147dc56caf1a3b322ff68d2797fd7cc",
   "accepted_payload_hash_sha256": "555fe19c633e2d3ab8263fc24d3ccf8889d9f2f29800f235f7783fe808b71649",
   "accepted_payload_hash_basis": "SOURCE_MACHINE_DUPLICATE_HASH_PRESERVED_NOT_RECOMPUTED_OVER_NORMALIZED_GITHUB_PAYLOAD",
+  "supplement_id": "FARSIDE_ETF_RECOVERY_20260715T204855Z",
+  "supplement_path": "02_DATA_PING/operational_handoffs/accepted_logs/supplements/2026-07-15T204855Z__data-ping-v4__farside-etf-recovery.json",
+  "supplement_received_at": "2026-07-15T20:48:55Z",
   "active_registry_path": "02_DATA_PING/live_state_handover/registries/2026-07-15T202300Z__active-gate-and-edge-event-registry__canonical.md",
   "data_quality": "MEDIUM",
   "historical_lineage_gap": {
@@ -33,7 +36,7 @@
     "framework_edge_state": "NEAR_PRESENT",
     "alert_status": "STILL_ACTIVE",
     "event_status": "OPEN_TRIGGERED",
-    "resolution_candidate": "DERIVATIVES_OBSERVABILITY_RESTORED_BUT_CANONICAL_CLOSE_AND_MARKET_WIDE_FLOW_VERIFICATION_BLOCKED",
+    "resolution_candidate": "DERIVATIVES_AND_LATEST_COMPLETED_ETF_OBSERVABILITY_RESTORED_BUT_CANONICAL_CLOSE_AND_MARKET_WIDE_FLOW_VERIFICATION_BLOCKED",
     "rotation_status": "NO_ROTATION",
     "rebuy_status": "LOCKED",
     "large_cap_buy_window": "NOT_OPEN",
@@ -43,17 +46,26 @@
   },
   "quality_control": {
     "okx_v1_2_integration": "PASS",
+    "farside_etf_recovery": "PASS_LATEST_COMPLETED_AND_ROLLING_WINDOWS",
     "core_quality_upgrade": "SECURED_FROM_LOW_TO_MEDIUM_BY_DERIVATIVES_RECOVERY",
-    "flow_confidence": "LOW",
+    "flow_confidence": "LOW_WITH_VERIFIED_ETF_SUBLAYER",
     "canonical_spot_close_coverage": "MISSING",
     "shadow_spot_structure": "AVAILABLE_OBSERVATION_ONLY",
     "fixed_breadth_prior_comparison": "NOT_AVAILABLE_NEW_COHORT_INITIALIZED",
     "overall_grade": "MEDIUM"
   },
+  "etf_state": {
+    "latest_completed_session": "2026-07-14",
+    "btc_latest_usd_m": 181.1,
+    "eth_latest_usd_m": 58.3,
+    "btc_rolling_3_5_7_10_usd_m": [-153.2, -333.4, -46.2, -341.3],
+    "eth_rolling_3_5_7_10_usd_m": [61.3, 79.6, 127.2, 143.4],
+    "current_2026_07_15_session": "PENDING_NOT_ZERO"
+  },
   "ota_scta_holdout": {
     "holdout_id": "SCTA_20260714",
-    "p1_flow_status": "UNRESOLVED_CURRENT_RUN_ETF_MISSING_PRIOR_POSITIVE_SESSION_HISTORICAL_ONLY",
-    "p2_two_negative_etf_sessions": "NOT_MET_ON_LAST_VERIFIED_CONTEXT_BUT_NOT_CURRENT_RUN_VERIFIED",
+    "p1_flow_status": "IMPROVED_LATEST_COMPLETED_BTC_AND_ETH_ETF_POSITIVE_BUT_BTC_ROLLING_WINDOWS_NEGATIVE_AND_CURRENT_SESSION_PENDING",
+    "p2_two_negative_etf_sessions": "NOT_MET",
     "p3_flow_necessity_falsifier": "WATCH_ONLY",
     "type2_status": "STRONGEST_CANDIDATE_SO_FAR_NOT_CONFIRMED",
     "derivatives_observation": "OKX_INPUTS_MIXED_NO_ACUTE_STRESS_ETH_PRICE_UP_VS_OI_DOWN_24H_VENUE_SPECIFIC",
@@ -61,7 +73,7 @@
   },
   "max_valid_age_hours_for_new_rows": 36,
   "readback_status": "PENDING_PR_VALIDATION",
-  "hash_status": "SOURCE_MACHINE_HASH_PRESERVED_GITHUB_BLOB_READBACK_PENDING",
+  "hash_status": "SOURCE_MACHINE_HASH_PRESERVED_GITHUB_BLOB_AND_SUPPLEMENT_READBACK_PENDING",
   "forecast_row_permission": "ELIGIBLE_BY_FIELD",
   "last_error": "BINANCE_SPOT_AND_FUTURES_LOCATION_ELIGIBILITY_FAILURE_WITH_OKX_FUTURES_FALLBACK_PASS",
   "rules": [
@@ -75,6 +87,7 @@
     "No retrospective forecast may be created after its outcome is known.",
     "GeckoTerminal spot OHLC is shadow observation only and cannot replace canonical Binance close persistence.",
     "OKX derivatives are venue-specific and cannot be promoted to market-wide flow or leverage truth.",
-    "Prior verified ETF sessions may remain historical context but cannot be represented as current-run verification when the current packet lacks ETF data."
+    "Farside zero rows for an incomplete current session are PENDING and must never be treated as zero flow.",
+    "Prior verified ETF sessions may be restored by a readable supplemental source packet without rewriting the accepted parent payload."
   ]
 }
