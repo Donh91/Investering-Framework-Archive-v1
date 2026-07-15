@@ -1,0 +1,114 @@
+{
+  "supplement_id": "FARSIDE_ETF_RECOVERY_20260715T204855Z",
+  "parent_snapshot_id": "DATA_PING_V4_20260715T202300Z",
+  "received_at_utc": "2026-07-15T20:48:55Z",
+  "source": "FARSIDE_API_USER_SUPPLIED_RAW_RESPONSE",
+  "source_status": "PASS",
+  "governance": {
+    "supplement_only": true,
+    "parent_payload_rewrite": false,
+    "current_session_zero_handling": "PENDING_NOT_ZERO",
+    "latest_completed_session": "2026-07-14",
+    "no_inference_from_2026_07_15_zero_row": true
+  },
+  "btc_etf": {
+    "latest_completed_session": {
+      "date": "2026-07-14",
+      "total_usd_m": 181.1,
+      "issuers_usd_m": {
+        "IBIT": 138.9,
+        "FBTC": 21.1,
+        "BITB": 3.5,
+        "ARKB": 3.6,
+        "BTCO": 0.0,
+        "EZBC": 0.0,
+        "BRRR": 0.0,
+        "HODL": 0.0,
+        "BTCW": 0.0,
+        "MSBT": 7.4,
+        "GBTC": 0.0,
+        "BTC": 6.6
+      }
+    },
+    "current_session": {
+      "date": "2026-07-15",
+      "api_row_total_usd_m": 0.0,
+      "status": "PENDING_INCOMPLETE_NOT_ZERO"
+    },
+    "rolling_completed_sessions_usd_m": {
+      "three": -153.2,
+      "five": -333.4,
+      "seven": -46.2,
+      "ten": -341.3,
+      "twenty": null
+    },
+    "raw_completed_rows": [
+      {"date":"2026-06-26","total_usd_m":-444.5},
+      {"date":"2026-06-29","total_usd_m":-231.0},
+      {"date":"2026-06-30","total_usd_m":-222.6},
+      {"date":"2026-07-01","total_usd_m":-296.0},
+      {"date":"2026-07-02","total_usd_m":223.5},
+      {"date":"2026-07-06","total_usd_m":265.7},
+      {"date":"2026-07-07","total_usd_m":21.5},
+      {"date":"2026-07-08","total_usd_m":-84.9},
+      {"date":"2026-07-09","total_usd_m":-95.3},
+      {"date":"2026-07-10","total_usd_m":90.4},
+      {"date":"2026-07-13","total_usd_m":-424.7},
+      {"date":"2026-07-14","total_usd_m":181.1}
+    ]
+  },
+  "eth_etf": {
+    "latest_completed_session": {
+      "date": "2026-07-14",
+      "total_usd_m": 58.3,
+      "issuers_usd_m": {
+        "ETHA": 58.3,
+        "ETHB": 0.0,
+        "FETH": 0.0,
+        "ETHW": 0.0,
+        "TETH": 0.0,
+        "ETHV": 0.0,
+        "QETH": 0.0,
+        "EZET": 0.0,
+        "ETHE": 0.0,
+        "ETH": 0.0
+      }
+    },
+    "current_session": {
+      "date": "2026-07-15",
+      "api_row_total_usd_m": 0.0,
+      "status": "PENDING_INCOMPLETE_NOT_ZERO"
+    },
+    "rolling_completed_sessions_usd_m": {
+      "three": 61.3,
+      "five": 79.6,
+      "seven": 127.2,
+      "ten": 143.4,
+      "twenty": null
+    },
+    "raw_completed_rows": [
+      {"date":"2026-06-26","total_usd_m":-12.8},
+      {"date":"2026-06-29","total_usd_m":-29.9},
+      {"date":"2026-06-30","total_usd_m":-27.6},
+      {"date":"2026-07-01","total_usd_m":14.8},
+      {"date":"2026-07-02","total_usd_m":29.0},
+      {"date":"2026-07-06","total_usd_m":20.7},
+      {"date":"2026-07-07","total_usd_m":26.9},
+      {"date":"2026-07-08","total_usd_m":70.5},
+      {"date":"2026-07-09","total_usd_m":-52.2},
+      {"date":"2026-07-10","total_usd_m":18.4},
+      {"date":"2026-07-13","total_usd_m":-15.4},
+      {"date":"2026-07-14","total_usd_m":58.3}
+    ]
+  },
+  "framework_input": {
+    "latest_completed_btc_etf_positive": true,
+    "latest_completed_eth_etf_positive": true,
+    "btc_rolling_windows_negative": true,
+    "eth_rolling_windows_positive": true,
+    "current_session_pending": true,
+    "flow_confidence_effect": "IMPROVED_WITH_VERIFIED_ETF_BUT_REMAINS_LOW_DUE_TO_NO_CVD_OR_SPOT_TAKER",
+    "automatic_framework_conclusion": false,
+    "portfolio_action": "NONE"
+  }
+}
