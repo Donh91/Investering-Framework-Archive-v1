@@ -1,0 +1,47 @@
+{
+  "package_validation_version": "1.0.0",
+  "validation_timestamp_utc": "2026-07-15T21:15:26.033957Z",
+  "action_schema": "OKX_PUBLIC_FUTURES_ARCHIVE_ACTION_v1_3",
+  "embedded_seed_scope": {
+    "instruments": [
+      "BTC-USDT-SWAP",
+      "ETH-USDT-SWAP"
+    ],
+    "dataset": "swap_history_candles",
+    "bar": "1H",
+    "records_per_instrument": 100
+  },
+  "reports": [
+    {
+      "file": "normalized/btc/swap_history_1h_seed_100.csv",
+      "record_count": 100,
+      "unique_timestamp_count": 100,
+      "duplicate_count": 0,
+      "hourly_gap_count": 0,
+      "confirm_0_count": 1,
+      "confirm_1_count": 99,
+      "oldest_timestamp_ms": 1783792800000,
+      "oldest_timestamp_utc": "2026-07-11T18:00:00Z",
+      "newest_timestamp_ms": 1784149200000,
+      "newest_timestamp_utc": "2026-07-15T21:00:00Z",
+      "pass": true
+    },
+    {
+      "file": "normalized/eth/swap_history_1h_seed_100.csv",
+      "record_count": 100,
+      "unique_timestamp_count": 100,
+      "duplicate_count": 0,
+      "hourly_gap_count": 0,
+      "confirm_0_count": 1,
+      "confirm_1_count": 99,
+      "oldest_timestamp_ms": 1783792800000,
+      "oldest_timestamp_utc": "2026-07-11T18:00:00Z",
+      "newest_timestamp_ms": 1784149200000,
+      "newest_timestamp_utc": "2026-07-15T21:00:00Z",
+      "pass": true
+    }
+  ],
+  "script_compile": "PASS",
+  "overall": "PASS",
+  "important_scope_note": "The embedded history is a 100-hour Action-verified seed. The included exporter fetches the complete 30-day aligned archive and optional 60-day OI / 90-day funding in an internet-enabled runtime."
+}
