@@ -6,15 +6,15 @@
   "highest_known_version": 4,
   "selected_version": 4,
   "selected_thread_title": "DATA PING_V4",
-  "accepted_log_id": "DATA_PING_V4_20260715T100211Z",
-  "source_timestamp": "2026-07-15T10:02:11Z",
-  "accepted_at": "2026-07-15T10:33:39Z",
-  "accepted_log_receipt_path": "02_DATA_PING/operational_handoffs/accepted_logs/history/2026-07-15T100211Z__data-ping-v4__accepted-log.json",
-  "accepted_payload_path": "02_DATA_PING/operational_handoffs/accepted_logs/payloads/2026-07-15T100211Z__data-ping-v4__accepted-payload.json",
-  "accepted_payload_commit_sha": "1b31c060fd4c3a12762801a7e53d55f1889cac65",
-  "accepted_payload_blob_sha": "06bf063d3f9a691ce0c47d066deb2e1cdbb5a67c",
-  "accepted_payload_hash_sha256": "2c7b747d2dfc9596d208016b38bfb91cfbcbfaa1db5f76d0d3ebb1215906ae2f",
-  "active_registry_path": "02_DATA_PING/live_state_handover/registries/2026-07-15T100211Z__active-gate-and-edge-event-registry__canonical.md",
+  "accepted_log_id": "DATA_PING_V4_20260715T105144Z",
+  "source_timestamp": "2026-07-15T10:51:44Z",
+  "accepted_at": "2026-07-15T14:06:09Z",
+  "accepted_log_receipt_path": "02_DATA_PING/operational_handoffs/accepted_logs/history/2026-07-15T105144Z__data-ping-v4__accepted-log.json",
+  "accepted_payload_path": "02_DATA_PING/operational_handoffs/accepted_logs/payloads/2026-07-15T105144Z__data-ping-v4__accepted-payload.json",
+  "accepted_payload_commit_sha": "3714ade9107f7e741ede4ee7de7a555dee07f81d",
+  "accepted_payload_blob_sha": "cafdec085133402d721bec8689e07a9f51e25969",
+  "accepted_payload_hash_sha256": "NOT_COMPUTED",
+  "active_registry_path": "02_DATA_PING/live_state_handover/registries/2026-07-15T105144Z__active-gate-and-edge-event-registry__canonical.md",
   "data_quality": "LOW",
   "historical_lineage_gap": {
     "accepted_log_id": "DATA_PING_V4_20260714T203757Z",
@@ -22,10 +22,10 @@
     "reconstruction": "FORBIDDEN"
   },
   "previous_accepted_log": {
-    "accepted_log_id": "DATA_PING_V4_20260715T095102Z",
-    "path": "02_DATA_PING/operational_handoffs/accepted_logs/history/2026-07-15T095102Z__data-ping-v4__accepted-log.json",
-    "payload_path": "02_DATA_PING/operational_handoffs/accepted_logs/payloads/2026-07-15T095102Z__data-ping-v4__accepted-payload.json",
-    "payload_hash_sha256": "0d4c7ba58910314f4aac85b9151180bdb9552b9f36681506ae37a8b4d2f825a5"
+    "accepted_log_id": "DATA_PING_V4_20260715T100211Z",
+    "path": "02_DATA_PING/operational_handoffs/accepted_logs/history/2026-07-15T100211Z__data-ping-v4__accepted-log.json",
+    "payload_path": "02_DATA_PING/operational_handoffs/accepted_logs/payloads/2026-07-15T100211Z__data-ping-v4__accepted-payload.json",
+    "payload_hash_sha256": "2c7b747d2dfc9596d208016b38bfb91cfbcbfaa1db5f76d0d3ebb1215906ae2f"
   },
   "latest_framework_result": {
     "active_event_id": "ROTATION_REPAIR_EDGE_20260712_01",
@@ -40,6 +40,14 @@
     "new_pullback_alert": "NO",
     "portfolio_action": "NONE"
   },
+  "quality_control": {
+    "core_quality_upgrade": "NOT_SECURED",
+    "supplemental_quality_upgrade": "SECURED",
+    "cross_ping_comparability": "IMPROVED",
+    "dex_history_coverage": "ADDED_FOR_TWO_CORE_POOLS_ONLY",
+    "sentiment_timestamp_quality": "IMPROVED",
+    "overall_grade": "LOW"
+  },
   "ota_scta_holdout": {
     "holdout_id": "SCTA_20260714",
     "p1_flow_status": "IMPROVED_LATEST_SESSION_POSITIVE_BUT_BTC_ROLLING_WINDOWS_NEGATIVE",
@@ -50,7 +58,7 @@
   },
   "max_valid_age_hours_for_new_rows": 36,
   "readback_status": "PASS",
-  "hash_status": "PASS",
+  "hash_status": "GITHUB_BLOB_SHA_PASS_SHA256_NOT_COMPUTED",
   "forecast_row_permission": "ELIGIBLE_BY_FIELD",
   "last_error": "BINANCE_SPOT_AND_FUTURES_LOCATION_ELIGIBILITY_FAILURE",
   "rules": [
