@@ -28,7 +28,7 @@ ACTIVE_EDGE_EVENT:
   framework_edge_state: NEAR_PRESENT
   framework_alert_status: STILL_ACTIVE
   latest_framework_accepted_data_ping_id: DATA_PING_V4_20260715T100211Z
-  latest_framework_review_time: 2026-07-15T10:15:00Z
+  latest_framework_review_time: 2026-07-15T10:33:39Z
   resolution_candidate: STRENGTHENED_BUT_CLOSE_VERIFICATION_BLOCKED
   current_positive_evidence:
     - BTC_CURRENT_COINGECKO_FALLBACK_ABOVE_63300
