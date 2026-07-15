@@ -56,8 +56,19 @@
   "missing_data_rule": "DATA_MISSING_EQUALS_UNKNOWN",
   "handover_market_authority": "ZERO",
   "handover_portfolio_authority": "ZERO",
-  "readback_status": "PENDING_PR_VALIDATION",
-  "merge_status": "PENDING",
+  "validation": {
+    "protocol_blob_sha": "48efe153b760aff862bf53aaee48f98a22e89586",
+    "handover_blob_sha": "8dd580ffc044787d48168d36974e53f8bed08162",
+    "bootstrap_blob_sha": "a52e1a154e79a6e9daef39e953ea14167aae8c2a",
+    "pointer_blob_sha_before_validation_update": "4b85d9c0092098d57511945cdc21e40a0ea8229d",
+    "receipt_blob_sha_before_validation_update": "5990286f96299f5476126da5d3857e5a1ad7a2bd",
+    "all_five_files_read_back": true,
+    "v5_not_active_verified": true,
+    "latest_v4_and_active_event_match_main": true,
+    "market_or_portfolio_change_detected": false
+  },
+  "readback_status": "TASK_BRANCH_PASS",
+  "merge_status": "PENDING_PR",
   "notes": [
     "The handover prepares continuity before the V4 thread reaches practical failure.",
     "It does not activate V5 or change the active event, gates or portfolio state.",
