@@ -1,7 +1,7 @@
 # Archive Governance Receipt — DATA PING V4 to V5 Thread Handover
 
 **Dato:** 2026-07-15 23:02 CEST  
-**Status:** RECEIPT_PENDING_PR_VALIDATION  
+**Status:** READY_TO_MERGE  
 **Område:** DATA PING thread lifecycle / continuity  
 **Trigger:** user requested early preparation for a fresh DATA PING V5 thread
 
@@ -55,21 +55,26 @@ branch_first_lesson: CAPTURED
 paste_ready_v5_bootstrap: CREATED
 ```
 
-## Validation plan
+## Validation completed on task branch
 
 ```yaml
-validation_plan:
-  - read back all five created files on the task branch
-  - verify latest handover pointer resolves to the history and bootstrap files
-  - verify V5 is marked not active
-  - verify latest accepted V4 ID and active event match main runtime
-  - verify no market or portfolio change is present
-  - verify PR changed-file list contains exactly five intended paths
-  - merge only after validation
-  - read back pointer, protocol and handover from main
-  - update receipt and pointer to PASS in a post-merge finalization if required
+validation_completed:
+  - all five created files read back successfully
+  - protocol trigger phrase and version-activation rule verified
+  - handover beginning and ending sections read back; full file blob remained consistent across segmented reads
+  - latest handover pointer resolves to the correct history and bootstrap paths
+  - V5 marked BOOTSTRAP_READY_NOT_YET_ACTIVE
+  - latest accepted V4 ID matches main accepted-log pointer
+  - active event and portfolio state match main runtime registry
+  - no market-state, gate, threshold, event or portfolio change detected
+blob_shas:
+  protocol: 48efe153b760aff862bf53aaee48f98a22e89586
+  handover: 8dd580ffc044787d48168d36974e53f8bed08162
+  bootstrap: a52e1a154e79a6e9daef39e953ea14167aae8c2a
+pointer_readback_status: TASK_BRANCH_PASS
+merge_status: PENDING_PR
 ```
 
 ## Safety decision
 
-The handover is intentionally comprehensive but contains no new market data. It preserves the current action `HOLD_AND_WAIT` and prevents an empty V5 thread from superseding the last complete V4 source.
+The handover is deliberately comprehensive but contains no new market data. It preserves the current action `HOLD_AND_WAIT`, keeps V4 active until the first complete V5 packet is accepted and prevents an empty V5 thread from superseding the last complete V4 source.
