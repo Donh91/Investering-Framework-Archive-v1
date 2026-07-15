@@ -5,9 +5,31 @@ This package is designed for two uses:
 1. attach a verified OKX data bundle to the main analysis thread;
 2. maintain a reproducible GitHub archive for historical analysis and backtests.
 
+## GitHub archival form and provenance
+
+The original uploaded binary ZIP is not stored as a binary file in this repository.
+
+The repository stores reviewable extracted components required for future use:
+
+- raw BTC and ETH seed responses;
+- normalized BTC and ETH seed CSV files;
+- exporter and validator code;
+- endpoint and field documentation;
+- validation and package metadata;
+- the original ZIP SHA-256;
+- the original package-member checksum manifest.
+
+`original_package_checksums.sha256` records the hashes of files inside the uploaded ZIP. It is provenance evidence for the source package, not a checksum manifest for the repository copies. Some JSON files are reformatted for repository reviewability while preserving exact row values and field order.
+
+Original ZIP SHA-256:
+
+```text
+32834607460560ee616f4d9a2e63cf00c842ca4b7bc9048ec91383d7c147ed2f
+```
+
 ## What is embedded now
 
-The ZIP contains a verified Action-runtime seed sample:
+The uploaded ZIP contains a verified Action-runtime seed sample:
 
 - BTC-USDT-SWAP: 100 consecutive 1H swap candles;
 - ETH-USDT-SWAP: 100 consecutive 1H swap candles;
@@ -67,13 +89,13 @@ The exporter intentionally preserves `volume_leg_1` and `volume_leg_2`. It does 
 - Preserve source timestamps and retrieval timestamps.
 - Avoid lookahead when joining funding settlements and hourly candles.
 - Use UTC as the canonical storage timezone.
-- Keep raw API pages immutable.
+- Keep raw API pages immutable in future generated archives.
 - Recompute normalized files from raw data when normalization logic changes.
 - Record the package SHA-256 in the analysis log.
 
 ## Network requirement
 
-The included exporter requires an internet-enabled environment. This ChatGPT artifact runtime cannot make arbitrary outbound HTTP requests, so the ZIP embeds the Action-verified seed and a deterministic exporter for the complete archive. No missing historical rows have been fabricated.
+The included exporter requires an internet-enabled environment. This ChatGPT artifact runtime cannot make arbitrary outbound HTTP requests, so the uploaded ZIP embeds the Action-verified seed and a deterministic exporter for the complete archive. No missing historical rows have been fabricated.
 
 ## Governance
 
