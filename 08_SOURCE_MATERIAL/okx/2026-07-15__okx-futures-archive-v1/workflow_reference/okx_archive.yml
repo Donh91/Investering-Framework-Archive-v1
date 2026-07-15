@@ -1,0 +1,35 @@
+name: OKX archive
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 1 * * *"
+
+permissions:
+  contents: read
+
+jobs:
+  archive:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Fetch OKX public archive
+        run: |
+          stamp=$(date -u +%Y%m%dT%H%M%SZ)
+          python scripts/fetch_okx_archive.py \
+            --out "data/okx_${stamp}" \
+            --days 30 \
+            --extended
+      - name: Validate latest archive
+        run: |
+          latest=$(find data -mindepth 1 -maxdepth 1 -type d | sort | tail -1)
+          python scripts/validate_archive.py "$latest"
+      - name: Upload archive artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: okx-futures-archive
+          path: data/
+          retention-days: 90

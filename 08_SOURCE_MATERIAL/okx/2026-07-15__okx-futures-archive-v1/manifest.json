@@ -1,0 +1,68 @@
+{
+  "package_name": "OKX_FUTURES_ARCHIVE_20260715T212000Z",
+  "package_version": "1.0.0",
+  "created_utc": "2026-07-15T21:15:26.034288Z",
+  "source": "OKX public read-only API via installed OKX v1.3 Action",
+  "action_schema_version": "1.3.0",
+  "embedded_data": {
+    "status": "VERIFIED_SEED",
+    "BTC-USDT-SWAP": {
+      "dataset": "swap_history_1h",
+      "records": 100,
+      "oldest_utc": "2026-07-11T18:00:00Z",
+      "newest_utc": "2026-07-15T21:00:00Z",
+      "duplicates": 0,
+      "hourly_gaps": 0,
+      "partial_candles": 1
+    },
+    "ETH-USDT-SWAP": {
+      "dataset": "swap_history_1h",
+      "records": 100,
+      "oldest_utc": "2026-07-11T18:00:00Z",
+      "newest_utc": "2026-07-15T21:00:00Z",
+      "duplicates": 0,
+      "hourly_gaps": 0,
+      "partial_candles": 1
+    }
+  },
+  "reproducible_exporter": {
+    "file": "scripts/fetch_okx_archive.py",
+    "default_aligned_window_days": 30,
+    "extended_open_interest_days": 60,
+    "extended_funding_days": 90,
+    "datasets": [
+      "swap candles 1H",
+      "mark-price candles 1H",
+      "index candles 1H",
+      "open interest 1H",
+      "funding settlements",
+      "long/short account ratio 1H",
+      "contract taker-volume 1H",
+      "current snapshots"
+    ]
+  },
+  "labels": {
+    "open_interest": [
+      "OKX_ONLY",
+      "VENUE_SPECIFIC",
+      "DO_NOT_SUM_ABSOLUTE_OI_ACROSS_VENUES"
+    ],
+    "long_short_account_ratio": [
+      "ACCOUNT_COUNT_RATIO",
+      "NOT_POSITION_SIZE_RATIO",
+      "NOT_MARKET_WIDE_POSITIONING"
+    ],
+    "contract_taker_volume": [
+      "OKX_ONLY",
+      "VENUE_SPECIFIC",
+      "NOT_MARKET_WIDE_CVD",
+      "RAW_LEG_ORDER_PRESERVED"
+    ]
+  },
+  "limitations": [
+    "Full historical export is not embedded because the artifact runtime has no arbitrary outbound network access.",
+    "No historical row was fabricated.",
+    "The included downloader must be run in an internet-enabled local or GitHub Actions environment.",
+    "Current incomplete candles with confirm=0 must not be treated as closes."
+  ]
+}

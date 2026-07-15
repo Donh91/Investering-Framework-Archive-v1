@@ -1,6 +1,6 @@
 {
-  "as_of": "2026-07-13",
-  "control_state_version": "1.5",
+  "as_of": "2026-07-15",
+  "control_state_version": "1.6",
   "recovery_process_complete": true,
   "btc_d": {
     "status": "CMC_DIRECT_SOURCE_READY",
@@ -43,6 +43,46 @@
     "role_inversion_result": "ACTIVITY_AND_SUPPLY_STATES_NOT_RELIABLE_RISK_ON",
     "allowed_role": "SHADOW_LIQUIDITY_AVAILABILITY_AND_ONE_ACTIVITY_AXIS",
     "activity_axis_compression": "DEX_CHANGE_AND_DEX_SUPPLY_RATIO_ONE_FAMILY",
+    "standalone_action_authority": false
+  },
+  "okx_futures_archive": {
+    "status": "VERIFIED_SEED_AND_REPRODUCIBLE_EXPORTER_READY",
+    "provider": "OKX",
+    "source_convention": "OKX_PUBLIC_VENUE_SPECIFIC",
+    "source_bundle": "08_SOURCE_MATERIAL/okx/2026-07-15__okx-futures-archive-v1/",
+    "qa_note": "04_MARKET_LEARNING/truth_layer/2026-07-15__okx-futures-archive-ingestion-and-qa__source-note.md",
+    "uploaded_zip_sha256": "32834607460560ee616f4d9a2e63cf00c842ca4b7bc9048ec91383d7c147ed2f",
+    "package_version": "1.0.0",
+    "instruments": ["BTC-USDT-SWAP", "ETH-USDT-SWAP"],
+    "bar": "1H",
+    "embedded_dataset": "swap_history_candles",
+    "embedded_records_per_instrument": 100,
+    "embedded_period": "2026-07-11T18:00:00Z/2026-07-15T21:00:00Z",
+    "embedded_duplicates_per_instrument": 0,
+    "embedded_hourly_gaps_per_instrument": 0,
+    "embedded_partial_candles_per_instrument": 1,
+    "package_checksums_pass": true,
+    "python_compile_pass": true,
+    "raw_normalized_agreement": true,
+    "validator_scope_defect": "SEED_FILENAMES_NOT_MATCHED_BY_NORMALIZED_GLOB",
+    "full_historical_export_embedded": false,
+    "reproducible_exporter_ready": true,
+    "designed_datasets": [
+      "swap candles 1H",
+      "mark-price candles 1H",
+      "index candles 1H",
+      "open interest 1H",
+      "funding settlements",
+      "long/short account ratio 1H",
+      "contract taker-volume 1H",
+      "current snapshots"
+    ],
+    "open_interest_role": "OKX_ONLY_VENUE_SPECIFIC_DO_NOT_SUM_ABSOLUTE_OI_ACROSS_VENUES",
+    "long_short_ratio_role": "ACCOUNT_COUNT_RATIO_NOT_POSITION_SIZE_RATIO_NOT_MARKET_WIDE",
+    "taker_volume_role": "OKX_ONLY_VENUE_SPECIFIC_NOT_MARKET_WIDE_CVD_RAW_LEG_ORDER_PRESERVED",
+    "market_wide_cvd_ready": false,
+    "workflow_activation": "NOT_ACTIVATED_REFERENCE_ONLY",
+    "allowed_role": "FUTURES_AND_TAKER_FLOW_SOURCE_QA_AND_FORWARD_COLLECTION",
     "standalone_action_authority": false
   },
   "frozen_altcoin_breadth": {
@@ -140,11 +180,13 @@
     "b3_revisit": "LOCKED_UNTIL_8_SCORED_FORWARD_ROWS"
   },
   "health_check": {
-    "status": "READY_WITH_MASTER_MONDAY_ARCHIVE_LAG",
-    "latest_accepted_data_ping_log": "DATA_PING_V4_20260713T052547Z",
+    "status": "READY_WITH_MASTER_MONDAY_ARCHIVE_LAG_AND_OKX_SEED_ONLY",
+    "latest_accepted_data_ping_log": "DATA_PING_V4_20260715T202300Z",
+    "latest_accepted_data_ping_timestamp_utc": "2026-07-15T20:23:00.944Z",
     "latest_verified_week": "2026-W28",
     "latest_durable_master_monday": "2026-W28_2026-07-06",
-    "master_monday_archive_lag": true
+    "master_monday_archive_lag": true,
+    "okx_futures_full_history_ready": false
   },
   "authority_boundary": {
     "market_call": false,

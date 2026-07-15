@@ -1,0 +1,71 @@
+{
+  "swap_candle": {
+    "field_order": [
+      "timestamp_ms",
+      "open",
+      "high",
+      "low",
+      "close",
+      "volume_contracts",
+      "volume_coin",
+      "volume_quote",
+      "confirm"
+    ],
+    "confirm": {
+      "0": "current incomplete candle",
+      "1": "completed candle"
+    }
+  },
+  "mark_price_candle": {
+    "field_order": [
+      "timestamp_ms",
+      "open",
+      "high",
+      "low",
+      "close",
+      "confirm"
+    ]
+  },
+  "index_candle": {
+    "field_order": [
+      "timestamp_ms",
+      "open",
+      "high",
+      "low",
+      "close",
+      "confirm"
+    ]
+  },
+  "open_interest_history": {
+    "field_order": [
+      "timestamp_ms",
+      "open_interest_contracts",
+      "open_interest_coin",
+      "open_interest_usd"
+    ]
+  },
+  "long_short_account_ratio": {
+    "field_order": [
+      "timestamp_ms",
+      "long_short_account_ratio"
+    ],
+    "labels": [
+      "ACCOUNT_COUNT_RATIO",
+      "NOT_POSITION_SIZE_RATIO",
+      "NOT_MARKET_WIDE_POSITIONING"
+    ]
+  },
+  "contract_taker_volume": {
+    "field_order": [
+      "timestamp_ms",
+      "volume_leg_1",
+      "volume_leg_2"
+    ],
+    "labels": [
+      "OKX_ONLY",
+      "VENUE_SPECIFIC",
+      "NOT_MARKET_WIDE_CVD",
+      "RAW_LEG_ORDER_PRESERVED"
+    ]
+  }
+}
