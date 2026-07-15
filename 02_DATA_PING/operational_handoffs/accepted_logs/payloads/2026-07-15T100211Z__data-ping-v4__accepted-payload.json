@@ -1,0 +1,238 @@
+{
+  "snapshot_id": "DATA_PING_V4_20260715T100211Z",
+  "previous_snapshot_id": "DATA_PING_V4_20260715T095102Z",
+  "spec_version": "DATA_PING_GOVERNANCE_SPEC_v2_6_FREE_ONLY",
+  "overlay_version": "DATA_PING_VNEXT_STANDARD_OVERLAY_v1",
+  "template_compatibility": "ADDITIVE_ONLY",
+  "snapshot_status": "ASYNC_SNAPSHOT",
+  "runtime_status": "PARTIAL_ACTION_FALLBACK",
+  "overall_data_quality": "LOW",
+  "timestamps": {
+    "snapshot_utc": "2026-07-15T10:02:11Z",
+    "snapshot_cest": "2026-07-15T12:02:11+02:00",
+    "timezone_basis": "Europe/Copenhagen"
+  },
+  "source_status": {
+    "binance_spot": {
+      "status": "FAIL",
+      "explicit_error": "Service unavailable from a restricted location according to Binance eligibility terms"
+    },
+    "binance_futures": {
+      "status": "FAIL",
+      "explicit_error": "Service unavailable from a restricted location according to Binance eligibility terms"
+    },
+    "coingecko": "PASS",
+    "breadth": "PASS",
+    "etf": "PASS_LATEST_COMPLETED",
+    "stablecoin_official": "PARTIAL_CHAINS_ONLY",
+    "tvl": "PASS_NO_SOURCE_TIMESTAMP",
+    "dex": "PASS_LOW_CONFIDENCE",
+    "cfgi": "PASS_DATE_ONLY",
+    "fred": "UNAVAILABLE"
+  },
+  "core_market": {
+    "btc_usd": 64627.0,
+    "eth_usd": 1878.63,
+    "ethbtc_direct": null,
+    "ethbtc_derived": 0.02906881025,
+    "btc_dominance_pct": 56.31366205,
+    "eth_dominance_pct": 9.85593064,
+    "total_market_cap_usd": 2301837932525.821,
+    "market_cap_change_24h_pct": 2.83798813,
+    "total_volume_24h_usd": 77014596810.407
+  },
+  "since_last_ping_delta": {
+    "btc_pct": -0.08194187,
+    "eth_pct": -0.09412891,
+    "ethbtc_pct": -0.01219698,
+    "btc_dominance_pp": -0.00082105,
+    "breadth_1h_pp": -22.8571,
+    "breadth_24h_pp": 0.0,
+    "breadth_7d_pp": -2.8571
+  },
+  "ranges_24h": {
+    "btc": {
+      "low": 62554.0,
+      "high": 65104.0,
+      "range_pct": 4.07647792,
+      "position_pct": 81.29411765,
+      "source": "COINGECKO_FALLBACK"
+    },
+    "eth": {
+      "low": 1783.97,
+      "high": 1890.69,
+      "range_pct": 5.98216338,
+      "position_pct": 88.6994003,
+      "source": "COINGECKO_FALLBACK"
+    },
+    "ethbtc": {
+      "status": "MISSING"
+    }
+  },
+  "breadth": {
+    "sample": 35,
+    "one_hour": {
+      "positive": 18,
+      "breadth_pct": 51.4286,
+      "median_pct": 0.0572103,
+      "average_pct": 0.0659062,
+      "q1_pct": -0.1096067,
+      "q3_pct": 0.2411316,
+      "iqr_pp": 0.3507384
+    },
+    "twenty_four_hour": {
+      "positive": 30,
+      "breadth_pct": 85.7143,
+      "median_pct": 2.7050163,
+      "average_pct": 2.1186838,
+      "q1_pct": 1.1243146,
+      "q3_pct": 3.4559745,
+      "iqr_pp": 2.3316599
+    },
+    "seven_day": {
+      "positive": 21,
+      "breadth_pct": 60.0,
+      "median_pct": 1.382788,
+      "average_pct": 2.7744805,
+      "q1_pct": -0.9830721,
+      "q3_pct": 4.4432429,
+      "iqr_pp": 5.426315
+    },
+    "ex_btc_eth": {
+      "one_hour_pct": 51.5152,
+      "twenty_four_hour_pct": 84.8485,
+      "seven_day_pct": 57.5758
+    }
+  },
+  "etf": {
+    "latest_completed_session": "2026-07-14",
+    "btc_flow_usd_m": 181.1,
+    "eth_flow_usd_m": 58.3,
+    "current_session": "PENDING",
+    "rolling_sessions": {
+      "three": {
+        "btc_usd_m": -153.2,
+        "eth_usd_m": 61.3
+      },
+      "five": {
+        "btc_usd_m": -333.4,
+        "eth_usd_m": 79.6
+      },
+      "seven": {
+        "btc_usd_m": -46.2,
+        "eth_usd_m": 127.2
+      },
+      "ten": {
+        "btc_usd_m": -341.3,
+        "eth_usd_m": 143.4
+      }
+    }
+  },
+  "sentiment": {
+    "status": "PASS_DATE_ONLY",
+    "broad": {
+      "d1": 50,
+      "h4": 50,
+      "h1": 52,
+      "m15": 52
+    },
+    "btc": {
+      "d1": 48,
+      "h4": 47,
+      "h1": 48,
+      "m15": 53
+    },
+    "eth": {
+      "d1": 65,
+      "h4": 59,
+      "h1": 67,
+      "m15": 55
+    }
+  },
+  "stablecoin": {
+    "official_overview": "MISSING_RESPONSE_TOO_LARGE",
+    "official_history": "MISSING_RESPONSE_TOO_LARGE",
+    "chains": "PASS_NO_SOURCE_TIMESTAMP",
+    "proxy_name": "COINGECKO_CORE_STABLECOIN_PROXY",
+    "proxy_sample_size": 8,
+    "proxy_mcap_usd": 283394469839.69,
+    "proxy_change_24h_usd": 59431966.45,
+    "proxy_change_24h_pct": 0.02097586,
+    "proxy_dominance_pct": 12.31166043,
+    "confidence": "LOW"
+  },
+  "tvl": {
+    "source_timestamp": null,
+    "persistence_eligible": false,
+    "ethereum_usd": 41283183736.17,
+    "bsc_usd": 4946923924.25,
+    "solana_usd": 4924443822.4,
+    "tron_usd": 4744010544.63,
+    "base_usd": 4549804231.21,
+    "bitcoin_usd": 3710213212.51
+  },
+  "futures": {
+    "status": "MISSING",
+    "funding": null,
+    "open_interest": null,
+    "basis": null,
+    "skew": null,
+    "taker_ratio": null
+  },
+  "vnext_overlay": {
+    "weekly_daily_ranges": {
+      "status": "PARTIAL_CONTINUITY_INTERRUPTED"
+    },
+    "range_compression": {
+      "status": "PREVIOUS_20D_ANCHOR_ONLY"
+    },
+    "breadth_extended": {
+      "status": "PASS"
+    },
+    "fixed_cohort": {
+      "sample": 35,
+      "status": "CONTINUED"
+    },
+    "spot_taker_flow_proxy": {
+      "status": "MISSING"
+    },
+    "etf_extended": {
+      "status": "PASS"
+    },
+    "stablecoin_flow_and_dominance": {
+      "status": "PASS_PROXY_LOW_CONFIDENCE"
+    },
+    "dex_activity_proxy": {
+      "status": "PASS_LOW_CONFIDENCE",
+      "ethereum_top5_volume_usd": 605000274.54,
+      "ethereum_displayed_reserves_usd": 177598238.35,
+      "solana_selected_core_volume_usd": 306339606.79,
+      "solana_noise": "EXTREME"
+    },
+    "divergence_matrix": {
+      "price_breadth_1h": "ALIGNED_DOWN_SHORT_TERM",
+      "price_etf": "ALIGNED_UP_MEDIUM_HORIZON",
+      "price_ethbtc": "ALIGNED_DOWN_SHORT_TERM",
+      "market_cap_stablecoin": "DOMINANCE_LOWER",
+      "price_leverage": "NOT_COMPUTABLE"
+    },
+    "missing_data_impact": {
+      "hourly_ledger": "BLOCKER",
+      "futures": "BLOCKER",
+      "spot_taker": "IMPORTANT",
+      "official_stablecoin_history": "IMPORTANT",
+      "market_wide_cvd": "IMPORTANT",
+      "fred": "SUPPLEMENTAL"
+    }
+  },
+  "missing": {
+    "hourly_ledger": "MISSING",
+    "settled_2026_07_14_cest_close": "MISSING",
+    "market_wide_cvd": "UNAVAILABLE",
+    "futures": "MISSING",
+    "spot_taker_flow": "MISSING",
+    "official_stablecoin_history": "MISSING",
+    "dex_history": "MISSING",
+    "current_etf_session": "PENDING"
+  }
+}
