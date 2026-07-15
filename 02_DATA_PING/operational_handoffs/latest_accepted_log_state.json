@@ -6,15 +6,15 @@
   "highest_known_version": 4,
   "selected_version": 4,
   "selected_thread_title": "DATA PING_V4",
-  "accepted_log_id": "DATA_PING_V4_20260715T140445Z",
-  "source_timestamp": "2026-07-15T14:04:45Z",
-  "accepted_at": "2026-07-15T15:16:36Z",
-  "accepted_log_receipt_path": "02_DATA_PING/operational_handoffs/accepted_logs/history/2026-07-15T140445Z__data-ping-v4__accepted-log.json",
-  "accepted_payload_path": "02_DATA_PING/operational_handoffs/accepted_logs/payloads/2026-07-15T140445Z__data-ping-v4__accepted-payload.json",
-  "accepted_payload_commit_sha": "b442d8037e7994aacca897e7989072370d0dcc2a",
-  "accepted_payload_blob_sha": "b64d8774ece2c964da8d501f6178f8538d60d0ce",
+  "accepted_log_id": "DATA_PING_V4_20260715T161005Z",
+  "source_timestamp": "2026-07-15T16:10:05Z",
+  "accepted_at": "2026-07-15T16:17:56Z",
+  "accepted_log_receipt_path": "02_DATA_PING/operational_handoffs/accepted_logs/history/2026-07-15T161005Z__data-ping-v4__accepted-log.json",
+  "accepted_payload_path": "02_DATA_PING/operational_handoffs/accepted_logs/payloads/2026-07-15T161005Z__data-ping-v4__accepted-payload.json",
+  "accepted_payload_commit_sha": "9bafd073574d836e3c71b5080d3f157e39010b3a",
+  "accepted_payload_blob_sha": "cb1e5236018bc16ef1be72cb55828028c9189224",
   "accepted_payload_hash_sha256": "NOT_COMPUTED",
-  "active_registry_path": "02_DATA_PING/live_state_handover/registries/2026-07-15T140445Z__active-gate-and-edge-event-registry__canonical.md",
+  "active_registry_path": "02_DATA_PING/live_state_handover/registries/2026-07-15T161005Z__active-gate-and-edge-event-registry__canonical.md",
   "data_quality": "LOW",
   "historical_lineage_gap": {
     "accepted_log_id": "DATA_PING_V4_20260714T203757Z",
@@ -22,9 +22,9 @@
     "reconstruction": "FORBIDDEN"
   },
   "previous_accepted_log": {
-    "accepted_log_id": "DATA_PING_V4_20260715T105144Z",
-    "path": "02_DATA_PING/operational_handoffs/accepted_logs/history/2026-07-15T105144Z__data-ping-v4__accepted-log.json",
-    "payload_path": "02_DATA_PING/operational_handoffs/accepted_logs/payloads/2026-07-15T105144Z__data-ping-v4__accepted-payload.json",
+    "accepted_log_id": "DATA_PING_V4_20260715T140445Z",
+    "path": "02_DATA_PING/operational_handoffs/accepted_logs/history/2026-07-15T140445Z__data-ping-v4__accepted-log.json",
+    "payload_path": "02_DATA_PING/operational_handoffs/accepted_logs/payloads/2026-07-15T140445Z__data-ping-v4__accepted-payload.json",
     "payload_hash_sha256": "NOT_COMPUTED"
   },
   "latest_framework_result": {
@@ -32,7 +32,7 @@
     "framework_edge_state": "NEAR_PRESENT",
     "alert_status": "STILL_ACTIVE",
     "event_status": "OPEN_TRIGGERED",
-    "resolution_candidate": "STRONGLY_STRENGTHENED_BUT_CLOSE_AND_FLOW_VERIFICATION_BLOCKED",
+    "resolution_candidate": "SHADOW_PERSISTENCE_STRENGTHENED_BUT_CANONICAL_CLOSE_AND_FLOW_VERIFICATION_BLOCKED",
     "rotation_status": "NO_ROTATION",
     "rebuy_status": "LOCKED",
     "large_cap_buy_window": "NOT_OPEN",
@@ -42,18 +42,20 @@
   },
   "quality_control": {
     "core_quality_upgrade": "NOT_SECURED",
-    "supplemental_quality_upgrade": "MAINTAINED",
-    "cross_ping_comparability": "MAINTAINED",
+    "supplemental_quality_upgrade": "IMPROVED_BY_FIRST_FULL_SHADOW_PATCH_RUN",
+    "core_cross_ping_comparability": "MAINTAINED",
+    "shadow_cross_ping_comparability": "NOT_AVAILABLE_FIRST_FULL_PATCH_RUN",
     "fixed_breadth_cohort": "CONTINUED_35",
     "stablecoin_proxy_sample": "CONTINUED_8_OF_8",
     "overall_grade": "LOW"
   },
   "ota_scta_holdout": {
     "holdout_id": "SCTA_20260714",
-    "p1_flow_status": "IMPROVED_LATEST_COMPLETED_SESSION_POSITIVE_BUT_BTC_ROLLING_WINDOWS_NEGATIVE",
+    "p1_flow_status": "IMPROVED_LATEST_COMPLETED_SESSION_POSITIVE_BUT_BTC_ROLLING_WINDOWS_NEGATIVE_AND_CURRENT_SESSION_PENDING",
     "p2_two_negative_etf_sessions": "NOT_MET",
     "p3_flow_necessity_falsifier": "WATCH_ONLY",
     "type2_status": "STRONGEST_CANDIDATE_SO_FAR_NOT_CONFIRMED",
+    "shadow_persistence_support": "OBSERVATION_ONLY_NOT_CANONICAL_CONFIRMATION",
     "redundancy_counter": "0_OF_5_MATURED_EVENTS"
   },
   "max_valid_age_hours_for_new_rows": 36,
@@ -69,6 +71,7 @@
     "Supplemental recovery packets may add verified fields but may not replace or silently rewrite an accepted parent payload.",
     "Missing predecessor packets are preserved as explicit lineage gaps and are never reconstructed.",
     "No web or independent market-data substitution is allowed.",
-    "No retrospective forecast may be created after its outcome is known."
+    "No retrospective forecast may be created after its outcome is known.",
+    "GeckoTerminal spot OHLC is shadow observation only and cannot replace canonical Binance close persistence."
   ]
 }
