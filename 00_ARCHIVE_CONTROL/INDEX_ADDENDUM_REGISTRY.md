@@ -47,6 +47,25 @@ A registry entry is a navigation pointer only. The referenced file's own status,
 | `06_RESEARCH_LAB/forward_tests/2026-07-13__daily-sensor-pair-discovery-accepted-log-fallback-v0-1__canonical-addendum.md` | DATA PING accepted-log fallback / sensor-pair source resolution | REGISTRY_DISCOVERABLE |
 | `00_ARCHIVE_CONTROL/2026-07-13__index-addendum-techdev-calibration-b1-and-audit-gate-v1.md` | TechDev outcomes / BTC.D reproducibility / research cadence | REGISTRY_DISCOVERABLE |
 | `00_ARCHIVE_CONTROL/2026-07-14__index-addendum-master-monday-durable-handoff-v1.md` | Master Monday / durable handoff / pointer integrity | REGISTRY_DISCOVERABLE |
+| `00_ARCHIVE_CONTROL/2026-07-06__index-addendum-master-monday-pointers.md` | Master Monday / W28 pointer history — superseded by W28 lineage correction | SUPERSEDED |
+| `00_ARCHIVE_CONTROL/2026-07-07__index-addendum-data-ping-alert-router-v0-1.md` | DATA PING alert router history — superseded by Hybrid v0.5.1 | SUPERSEDED |
+| `00_ARCHIVE_CONTROL/2026-07-08__index-addendum-cn-rd-audit-calibration.md` | Cycle Navigator / R&D calibration | REGISTRY_DISCOVERABLE |
+| `00_ARCHIVE_CONTROL/2026-07-08__index-addendum-m1-pullback-weather-degraded-execution.md` | pullback weather / degraded execution | REGISTRY_DISCOVERABLE |
+| `00_ARCHIVE_CONTROL/2026-07-08__index-addendum-m2-sensor-combination-tournament.md` | sensor tournament / degraded execution | REGISTRY_DISCOVERABLE |
+| `00_ARCHIVE_CONTROL/2026-07-08__index-addendum-m4-rotation-survival-degraded-first-pass.md` | rotation survival / degraded first pass | REGISTRY_DISCOVERABLE |
+| `00_ARCHIVE_CONTROL/2026-07-08__index-addendum-m5-range-skill-audit.md` | range skill audit / degraded scoring | REGISTRY_DISCOVERABLE |
+| `00_ARCHIVE_CONTROL/2026-07-08__index-addendum-range-model-review-v0-1.md` | range model review / design only | REGISTRY_DISCOVERABLE |
+| `00_ARCHIVE_CONTROL/2026-07-10__index-addendum-frlp-v0-1-activation.md` | FRLP v0.1 / range ledger protocol | REGISTRY_DISCOVERABLE |
+| `00_ARCHIVE_CONTROL/2026-07-11__index-addendum-repository-safety-and-backup-rotation.md` | repository safety / backup rotation | REGISTRY_DISCOVERABLE |
+| `00_ARCHIVE_CONTROL/2026-07-11__index-addendum-techdev-benchmarks-forward-calibration-v1.md` | TechDev benchmarks / forward calibration | REGISTRY_DISCOVERABLE |
+| `00_ARCHIVE_CONTROL/2026-07-11__index-addendum-techdev-complete-corpus-audit-v1.md` | TechDev complete corpus audit | REGISTRY_DISCOVERABLE |
+| `00_ARCHIVE_CONTROL/2026-07-11__index-addendum-techdev-vault-recovery.md` | TechDev vault / file-library recovery | REGISTRY_DISCOVERABLE |
+| `00_ARCHIVE_CONTROL/2026-07-11__index-addendum-truth-layer-data-pack.md` | truth-layer data pack | REGISTRY_DISCOVERABLE |
+| `00_ARCHIVE_CONTROL/2026-07-11__index-addendum-ultimate-framework-attack-governance-and-s4-hybrid.md` | framework audit / S4 hybrid governance | REGISTRY_DISCOVERABLE |
+| `00_ARCHIVE_CONTROL/2026-07-12__index-addendum-data-completion-control-plane.md` | data completion / truth-layer control plane | REGISTRY_DISCOVERABLE |
+| `00_ARCHIVE_CONTROL/2026-07-12__index-addendum-final-truth-layer-gap-closure-and-m3-forward.md` | truth-layer gap closure / M3 forward collection | REGISTRY_DISCOVERABLE |
+| `00_ARCHIVE_CONTROL/2026-07-12__index-addendum-transmission-matrix-forward-test-v0-1.md` | Transmission Matrix forward test | REGISTRY_DISCOVERABLE |
+| `00_ARCHIVE_CONTROL/2026-07-12__index-addendum-truth-layer-recovery-and-github-lineage-upgrade.md` | truth-layer recovery / GitHub lineage | REGISTRY_DISCOVERABLE |
 
 ## Registration contract
 
