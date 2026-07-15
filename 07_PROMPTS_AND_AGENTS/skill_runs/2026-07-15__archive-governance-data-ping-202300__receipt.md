@@ -28,12 +28,13 @@ high_impact_gate: NOT_REQUIRED
 duplicate_check: EXISTING_ACCEPTED_LOG_OWNER_USED_NO_PARALLEL_PROTOCOL_CREATED
 source_lineage: DIRECT_PROJECT_THREAD_DATA_PING_V4_PREDECESSOR_20260715T161005Z_PLUS_USER_SUPPLIED_FARSIDE_API_RECOVERY
 backup_scope: NONE_CURRENT_VERSION_PENDING_NORMAL_BACKUP_ROTATION
-validation_plan:
-  - read back every created and updated file on task branch
-  - verify payload blob SHA in receipt and pointer
-  - verify supplement linkage and pending-zero ETF handling
-  - verify PR contains only intended paths
-  - merge only after validation
+validation_completed:
+  - task-branch readback passed for all seven intended paths
+  - payload blob SHA matched 1cfbc3794147dc56caf1a3b322ff68d2797fd7cc
+  - supplement blob SHA matched 07972cacc7d97ac5ed02d2e8adfed530ceb2143d
+  - PR changed-file list contained exactly seven intended paths
+  - PR 45 merged successfully
+  - main payload, supplement and pointer readback passed
 ```
 
 ```yaml
@@ -58,10 +59,16 @@ remediation:
   - task branch created from affected main
   - intended normalized payload replaced empty JSON on task branch
   - accepted receipt, event update, registry, pointer and ETF supplement were built on task branch
-  - pull request will merge corrected payload and all intended acceptance files
-write_governance_result: PARTIAL_REMEDIATED_PENDING_PR
-final_repository_state: PENDING_PR_VALIDATION
+  - PR 45 merged corrected payload and all intended acceptance files
+  - main readback verified that the empty placeholder no longer exists
+write_governance_result: PARTIAL_REMEDIATED
+main_merge_pr: 45
+main_merge_commit_sha: b10db8d538ab8e1bddd4e5275fb6105c0a473380
+main_payload_readback_status: PASS
+main_supplement_readback_status: PASS
+main_pointer_readback_status: PASS
+final_repository_state: PASS
 backup_product: NONE
-post_merge_delta_status: PENDING
-notes: The accidental main write contained only an empty JSON object at the intended payload path. It changed no market state, runtime pointer, threshold or portfolio action. The Farside 15 July zero rows are preserved as PENDING_INCOMPLETE_NOT_ZERO. OKX derivatives remain venue-specific; GeckoTerminal OHLC remains observation-only; no canonical close substitution, rotation declaration, entry unlock, score or portfolio action occurred.
+post_merge_delta_status: PENDING_NORMAL_BACKUP_ROTATION
+notes: The accidental main write contained only an empty JSON object at the intended payload path and changed no market state, runtime pointer, threshold or portfolio action. It was fully replaced by the normalized payload in PR 45. The Farside 15 July zero rows are preserved as PENDING_INCOMPLETE_NOT_ZERO. OKX derivatives remain venue-specific; GeckoTerminal OHLC remains observation-only; no canonical close substitution, rotation declaration, entry unlock, score or portfolio action occurred.
 ```
