@@ -6,25 +6,26 @@
   "highest_known_version": 4,
   "selected_version": 4,
   "selected_thread_title": "DATA PING_V4",
-  "accepted_log_id": "DATA_PING_V4_20260715T161005Z",
-  "source_timestamp": "2026-07-15T16:10:05Z",
-  "accepted_at": "2026-07-15T16:17:56Z",
-  "accepted_log_receipt_path": "02_DATA_PING/operational_handoffs/accepted_logs/history/2026-07-15T161005Z__data-ping-v4__accepted-log.json",
-  "accepted_payload_path": "02_DATA_PING/operational_handoffs/accepted_logs/payloads/2026-07-15T161005Z__data-ping-v4__accepted-payload.json",
-  "accepted_payload_commit_sha": "9bafd073574d836e3c71b5080d3f157e39010b3a",
-  "accepted_payload_blob_sha": "cb1e5236018bc16ef1be72cb55828028c9189224",
-  "accepted_payload_hash_sha256": "NOT_COMPUTED",
-  "active_registry_path": "02_DATA_PING/live_state_handover/registries/2026-07-15T161005Z__active-gate-and-edge-event-registry__canonical.md",
-  "data_quality": "LOW",
+  "accepted_log_id": "DATA_PING_V4_20260715T202300Z",
+  "source_timestamp": "2026-07-15T20:23:00.944Z",
+  "accepted_at": "2026-07-15T20:44:13Z",
+  "accepted_log_receipt_path": "02_DATA_PING/operational_handoffs/accepted_logs/history/2026-07-15T202300Z__data-ping-v4__accepted-log.json",
+  "accepted_payload_path": "02_DATA_PING/operational_handoffs/accepted_logs/payloads/2026-07-15T202300Z__data-ping-v4__accepted-payload.json",
+  "accepted_payload_commit_sha": "0393626d09c51bb7b4b20ef98b361327133064cf",
+  "accepted_payload_blob_sha": "1cfbc3794147dc56caf1a3b322ff68d2797fd7cc",
+  "accepted_payload_hash_sha256": "555fe19c633e2d3ab8263fc24d3ccf8889d9f2f29800f235f7783fe808b71649",
+  "accepted_payload_hash_basis": "SOURCE_MACHINE_DUPLICATE_HASH_PRESERVED_NOT_RECOMPUTED_OVER_NORMALIZED_GITHUB_PAYLOAD",
+  "active_registry_path": "02_DATA_PING/live_state_handover/registries/2026-07-15T202300Z__active-gate-and-edge-event-registry__canonical.md",
+  "data_quality": "MEDIUM",
   "historical_lineage_gap": {
     "accepted_log_id": "DATA_PING_V4_20260714T203757Z",
     "status": "NO_READABLE_ACCEPTED_RECEIPT_OR_PAYLOAD_FOUND",
     "reconstruction": "FORBIDDEN"
   },
   "previous_accepted_log": {
-    "accepted_log_id": "DATA_PING_V4_20260715T140445Z",
-    "path": "02_DATA_PING/operational_handoffs/accepted_logs/history/2026-07-15T140445Z__data-ping-v4__accepted-log.json",
-    "payload_path": "02_DATA_PING/operational_handoffs/accepted_logs/payloads/2026-07-15T140445Z__data-ping-v4__accepted-payload.json",
+    "accepted_log_id": "DATA_PING_V4_20260715T161005Z",
+    "path": "02_DATA_PING/operational_handoffs/accepted_logs/history/2026-07-15T161005Z__data-ping-v4__accepted-log.json",
+    "payload_path": "02_DATA_PING/operational_handoffs/accepted_logs/payloads/2026-07-15T161005Z__data-ping-v4__accepted-payload.json",
     "payload_hash_sha256": "NOT_COMPUTED"
   },
   "latest_framework_result": {
@@ -32,7 +33,7 @@
     "framework_edge_state": "NEAR_PRESENT",
     "alert_status": "STILL_ACTIVE",
     "event_status": "OPEN_TRIGGERED",
-    "resolution_candidate": "SHADOW_PERSISTENCE_STRENGTHENED_BUT_CANONICAL_CLOSE_AND_FLOW_VERIFICATION_BLOCKED",
+    "resolution_candidate": "DERIVATIVES_OBSERVABILITY_RESTORED_BUT_CANONICAL_CLOSE_AND_MARKET_WIDE_FLOW_VERIFICATION_BLOCKED",
     "rotation_status": "NO_ROTATION",
     "rebuy_status": "LOCKED",
     "large_cap_buy_window": "NOT_OPEN",
@@ -41,28 +42,28 @@
     "portfolio_action": "NONE"
   },
   "quality_control": {
-    "core_quality_upgrade": "NOT_SECURED",
-    "supplemental_quality_upgrade": "IMPROVED_BY_FIRST_FULL_SHADOW_PATCH_RUN",
-    "core_cross_ping_comparability": "MAINTAINED",
-    "shadow_cross_ping_comparability": "NOT_AVAILABLE_FIRST_FULL_PATCH_RUN",
-    "fixed_breadth_cohort": "CONTINUED_35",
-    "stablecoin_proxy_sample": "CONTINUED_8_OF_8",
-    "overall_grade": "LOW"
+    "okx_v1_2_integration": "PASS",
+    "core_quality_upgrade": "SECURED_FROM_LOW_TO_MEDIUM_BY_DERIVATIVES_RECOVERY",
+    "flow_confidence": "LOW",
+    "canonical_spot_close_coverage": "MISSING",
+    "shadow_spot_structure": "AVAILABLE_OBSERVATION_ONLY",
+    "fixed_breadth_prior_comparison": "NOT_AVAILABLE_NEW_COHORT_INITIALIZED",
+    "overall_grade": "MEDIUM"
   },
   "ota_scta_holdout": {
     "holdout_id": "SCTA_20260714",
-    "p1_flow_status": "IMPROVED_LATEST_COMPLETED_SESSION_POSITIVE_BUT_BTC_ROLLING_WINDOWS_NEGATIVE_AND_CURRENT_SESSION_PENDING",
-    "p2_two_negative_etf_sessions": "NOT_MET",
+    "p1_flow_status": "UNRESOLVED_CURRENT_RUN_ETF_MISSING_PRIOR_POSITIVE_SESSION_HISTORICAL_ONLY",
+    "p2_two_negative_etf_sessions": "NOT_MET_ON_LAST_VERIFIED_CONTEXT_BUT_NOT_CURRENT_RUN_VERIFIED",
     "p3_flow_necessity_falsifier": "WATCH_ONLY",
     "type2_status": "STRONGEST_CANDIDATE_SO_FAR_NOT_CONFIRMED",
-    "shadow_persistence_support": "OBSERVATION_ONLY_NOT_CANONICAL_CONFIRMATION",
+    "derivatives_observation": "OKX_INPUTS_MIXED_NO_ACUTE_STRESS_ETH_PRICE_UP_VS_OI_DOWN_24H_VENUE_SPECIFIC",
     "redundancy_counter": "0_OF_5_MATURED_EVENTS"
   },
   "max_valid_age_hours_for_new_rows": 36,
-  "readback_status": "PASS",
-  "hash_status": "GITHUB_BLOB_SHA_PASS_SHA256_NOT_COMPUTED",
+  "readback_status": "PENDING_PR_VALIDATION",
+  "hash_status": "SOURCE_MACHINE_HASH_PRESERVED_GITHUB_BLOB_READBACK_PENDING",
   "forecast_row_permission": "ELIGIBLE_BY_FIELD",
-  "last_error": "BINANCE_SPOT_AND_FUTURES_LOCATION_ELIGIBILITY_FAILURE",
+  "last_error": "BINANCE_SPOT_AND_FUTURES_LOCATION_ELIGIBILITY_FAILURE_WITH_OKX_FUTURES_FALLBACK_PASS",
   "rules": [
     "Direct project-thread source remains preferred when accessible.",
     "Highest DATA PING version actually used wins.",
@@ -72,6 +73,8 @@
     "Missing predecessor packets are preserved as explicit lineage gaps and are never reconstructed.",
     "No web or independent market-data substitution is allowed.",
     "No retrospective forecast may be created after its outcome is known.",
-    "GeckoTerminal spot OHLC is shadow observation only and cannot replace canonical Binance close persistence."
+    "GeckoTerminal spot OHLC is shadow observation only and cannot replace canonical Binance close persistence.",
+    "OKX derivatives are venue-specific and cannot be promoted to market-wide flow or leverage truth.",
+    "Prior verified ETF sessions may remain historical context but cannot be represented as current-run verification when the current packet lacks ETF data."
   ]
 }
