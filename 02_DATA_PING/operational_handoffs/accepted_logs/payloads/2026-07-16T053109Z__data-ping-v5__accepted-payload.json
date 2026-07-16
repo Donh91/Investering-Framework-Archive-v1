@@ -1,0 +1,215 @@
+{
+  "accepted_log_id": "DATA_PING_V5_20260716T053109Z",
+  "breadth": {
+    "average_pct": {
+      "1h": 0.273501,
+      "24h": 0.56488,
+      "7d": 3.708699
+    },
+    "median_pct": {
+      "1h": 0.29635,
+      "24h": 0.721504,
+      "7d": 2.810338
+    },
+    "positive_pct": {
+      "1h": 74.2857,
+      "24h": 68.5714,
+      "7d": 62.8571
+    },
+    "sample": 35,
+    "sample_changed": false,
+    "source": "CoinGecko fixed top-50 risk-only cohort"
+  },
+  "cfgi_supplement": {
+    "authority": "SENTIMENT_CONTEXT_ONLY",
+    "classification": "GREED_VISIBLE_BUT_TIMEFRAME_LABELS_NOT_USED",
+    "id": "CFGI_SCREENSHOT_SET_20260716_57",
+    "numeric_value": 57,
+    "scope": "USER_SUPPLIED_SCREENSHOTS_DATE_LEVEL_CONTEXT_ONLY"
+  },
+  "continuity": {
+    "comparison_role": "OBSERVATION_ONLY",
+    "deltas": {
+      "breadth_1h_pp": 17.14,
+      "breadth_24h_pp": 2.86,
+      "breadth_7d_pp": -5.71,
+      "btc_dominance_pp": -0.0056,
+      "btc_pct": 0.178,
+      "eth_pct": 0.242,
+      "ethbtc_pct": 0.034
+    },
+    "fixed_cohort_sample_changed": false,
+    "primary_spot_method": "BINANCE_SPOT_TO_BINANCE_SPOT",
+    "spec_compatibility": "PASS",
+    "v5_baseline": "INITIALIZED"
+  },
+  "core_market_data": {
+    "btc_dominance_pct": 56.2211367,
+    "btc_price_usd": 64920.01,
+    "eth_dominance_pct": 10.0360075,
+    "eth_price_usd": 1925.17,
+    "ethbtc_derived": 0.0296544933,
+    "ethbtc_direct": 0.02965,
+    "total_crypto_mcap_usd": 2309550274052.91,
+    "total_crypto_volume_24h_usd": 68740818201.69
+  },
+  "flow": {
+    "binance_spot_taker_flow_proxy": {
+      "BTC_net_quote_usd": {
+        "15m": 2077896.3,
+        "1h": -3789226.96,
+        "24h": -38658052.03,
+        "4h": -8348595.87
+      },
+      "ETH_net_quote_usd": {
+        "15m": 245706.97,
+        "1h": -231426.85,
+        "24h": 22370525.01,
+        "4h": -1036459.46
+      },
+      "labels": [
+        "BINANCE_SPOT_TAKER_FLOW_PROXY",
+        "NOT_MARKET_WIDE_CVD",
+        "BINANCE_ONLY"
+      ]
+    },
+    "etf": {
+      "BTC_usd_m": {
+        "10_sessions": -11.0,
+        "20_sessions": null,
+        "3_sessions": -135.9,
+        "5_sessions": -140.8,
+        "7_sessions": -204.2,
+        "latest": 107.7
+      },
+      "ETH_usd_m": {
+        "10_sessions": 224.9,
+        "20_sessions": null,
+        "3_sessions": 96.8,
+        "5_sessions": 63.0,
+        "7_sessions": 160.4,
+        "latest": 53.9
+      },
+      "btc_positive_session_streak": 2,
+      "eth_positive_session_streak": 2,
+      "latest_completed_session": "2026-07-15",
+      "source": "Farside Investors"
+    },
+    "market_wide_cvd": "UNAVAILABLE"
+  },
+  "framework_acceptance": {
+    "active_event_id": "ROTATION_REPAIR_EDGE_20260712_01",
+    "active_trim_signal": "NO",
+    "alert_status": "STILL_ACTIVE",
+    "broad_recovery_status": "NOT_CONFIRMED",
+    "event_status": "OPEN_TRIGGERED",
+    "framework_edge_state": "REPAIR_PRESENT_STRENGTHENING_NOT_CONFIRMATION",
+    "large_cap_buy_window": "WATCH_ONLY_NOT_OPEN",
+    "new_entry_signal": "NOT_ACTIVE",
+    "new_pullback_alert": "NO",
+    "portfolio_action": "NONE",
+    "rebuy_status": "LOCKED",
+    "rotation_status": "NO_ROTATION",
+    "user_action": "HOLD_AND_WAIT"
+  },
+  "leverage": {
+    "BTC": {
+      "basis_pct": -0.087598,
+      "funding_current_pct": 0.005667,
+      "oi_delta_1h_pct": 0.242194,
+      "oi_delta_24h_pct": 0.7286,
+      "oi_delta_72h_pct": -0.830609
+    },
+    "ETH": {
+      "basis_pct": -0.035307,
+      "funding_current_pct": 0.009344,
+      "oi_delta_1h_pct": 0.651349,
+      "oi_delta_24h_pct": -0.669218,
+      "oi_delta_72h_pct": 11.178638
+    },
+    "source": "OKX_ONLY_VENUE_SPECIFIC"
+  },
+  "missing_data": {
+    "dex_network_history": "MISSING",
+    "etf_20_session": "NOT_COMPUTED",
+    "macro": "UNAVAILABLE",
+    "market_wide_cvd": "UNAVAILABLE",
+    "official_stablecoin_history": "MISSING"
+  },
+  "overlay_version": "DATA_PING_VNEXT_STANDARD_OVERLAY_v1",
+  "predecessor": "DATA_PING_V5_20260715T221843Z",
+  "quality": {
+    "breadth": "PASS_FIXED_COHORT_CONTINUED",
+    "etf": "PASS_LATEST_COMPLETED_2026_07_15",
+    "flow_confidence": "LOW",
+    "futures": "PASS_OKX_V1_3_VENUE_SPECIFIC",
+    "macro": "UNAVAILABLE",
+    "official_stablecoin": "FAIL",
+    "overall": "MEDIUM",
+    "spot_core": "PASS_BINANCE_PRIMARY"
+  },
+  "ranges_24h": {
+    "BTC": {
+      "change_pct": 0.365,
+      "high": 65600.0,
+      "last": 64920.01,
+      "low": 64392.01,
+      "open": 64683.82,
+      "range_position_pct": 43.709
+    },
+    "ETH": {
+      "change_pct": 2.802,
+      "high": 1946.52,
+      "last": 1925.17,
+      "low": 1864.7,
+      "open": 1872.7,
+      "range_position_pct": 73.906
+    },
+    "ETHBTC": {
+      "change_pct": 2.347,
+      "high": 0.02981,
+      "last": 0.02965,
+      "low": 0.0289,
+      "open": 0.02897,
+      "range_position_pct": 82.418
+    }
+  },
+  "schema": "DATA_PING_ACCEPTED_PAYLOAD",
+  "schema_version": "1.0",
+  "settled_cest_closes": {
+    "btc_above_61900": true,
+    "btc_above_63300": true,
+    "btc_latest": 64834.31,
+    "eth_latest": 1922.0
+  },
+  "snapshot_status": "ASYNC_SNAPSHOT",
+  "source_conflicts": {
+    "btc_binance_vs_coingecko_pct": 0.194289,
+    "eth_binance_vs_coingecko_pct": 0.165837,
+    "ethbtc_direct_vs_derived_pct": 0.015153,
+    "status": "NO_THRESHOLD_BREACH"
+  },
+  "source_snapshot_id": "DATA_PING_V5_20260716T053109Z",
+  "source_version_label": 5,
+  "spec_version": "DATA_PING_GOVERNANCE_SPEC_v2_6_FREE_ONLY",
+  "stablecoin": {
+    "labels": [
+      "INCOMPLETE_UNIVERSE",
+      "PEG_SENSITIVE",
+      "NOT_OFFICIAL_TOTAL"
+    ],
+    "official_status": "MISSING",
+    "proxy_change_1d_pct": -0.026176,
+    "proxy_change_1d_usd": -75345576.09,
+    "proxy_dominance_pct": 12.459652,
+    "proxy_name": "COINGECKO_CORE_STABLECOIN_PROXY_9",
+    "proxy_sample_mcap_usd": 287761938332
+  },
+  "template_compatibility": "ADDITIVE_ONLY",
+  "timestamps": {
+    "accepted_cest": "2026-07-16T08:10:32+02:00",
+    "accepted_utc": "2026-07-16T06:10:32Z",
+    "source_cest": "2026-07-16T07:31:09.817+02:00",
+    "source_utc": "2026-07-16T05:31:09.817Z"
+  }
+}
