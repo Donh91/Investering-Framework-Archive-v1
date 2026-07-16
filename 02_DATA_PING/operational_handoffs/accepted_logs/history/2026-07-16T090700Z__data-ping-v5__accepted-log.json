@@ -1,0 +1,38 @@
+{
+  "contract_version": "0.2",
+  "accepted_log_id": "DATA_PING_V5_20260716T090700Z",
+  "source_snapshot_id": "DATA_PING_V5_20260716T090700Z",
+  "accepted_at": "2026-07-16T12:08:11Z",
+  "source_timestamp": "2026-07-16T09:07:00.112Z",
+  "selected_version": 5,
+  "selected_thread_title": "DATA PING_V5",
+  "predecessor": "DATA_PING_V5_20260716T053109Z",
+  "accepted_payload_path": "02_DATA_PING/operational_handoffs/accepted_logs/payloads/2026-07-16T090700Z__data-ping-v5__accepted-payload.json",
+  "accepted_payload_hash_sha256": "cdcf69db2c154a138f05089b6a1661b28af2e50476ade1a95d7e99fc18efc017",
+  "active_registry_path": "02_DATA_PING/live_state_handover/registries/2026-07-16T090700Z__active-gate-and-edge-event-registry__canonical.md",
+  "event_update_path": "02_DATA_PING/live_state_handover/event_updates/2026-07-16T090700Z__rotation-repair-edge__short-term-cooling.md",
+  "data_quality": "MEDIUM",
+  "flow_confidence": "LOW",
+  "latest_framework_result": {
+    "active_event_id": "ROTATION_REPAIR_EDGE_20260712_01",
+    "framework_edge_state": "REPAIR_PRESENT_SHORT_TERM_COOLING_NOT_FAILED",
+    "alert_status": "STILL_ACTIVE",
+    "event_status": "OPEN_TRIGGERED",
+    "broad_recovery_status": "NOT_CONFIRMED",
+    "rotation_status": "NO_ROTATION",
+    "rebuy_status": "LOCKED",
+    "large_cap_buy_window": "WATCH_ONLY_NOT_OPEN",
+    "new_entry_signal": "NOT_ACTIVE",
+    "new_pullback_alert": "NO",
+    "active_trim_signal": "NO",
+    "portfolio_action": "NONE",
+    "user_action": "HOLD_AND_WAIT"
+  },
+  "acceptance_notes": [
+    "The packet is complete and accepted despite Binance Spot failure because CoinGecko price fallback, OKX futures, ETF flow, breadth and FRED macro are available with explicit authority limits.",
+    "The repair remains present because BTC is above 63.3K, derived ETH/BTC remains above 0.0275, the latest BTC and ETH ETF sessions are positive and seven-day breadth remains above half of both dynamic cohorts.",
+    "The previous strengthening state is cooled by sharply negative one-hour and 24-hour breadth, BTC near the bottom of its 24-hour range, low shadow CLV and loss of canonical close and Binance spot-taker observability.",
+    "The event is not failed because BTC remains above 63.3K and ETH/BTC remains above 0.0275. No rotation, entry window, rebuy, trim or portfolio action is authorized."
+  ],
+  "readback_status": "PENDING_POST_MERGE_VALIDATION"
+}
