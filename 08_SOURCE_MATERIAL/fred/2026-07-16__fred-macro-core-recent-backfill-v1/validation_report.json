@@ -1,0 +1,114 @@
+{
+  "validation_version": "CURATED_FRED_MACRO_BACKFILL_1.0",
+  "validated_utc": "2026-07-16",
+  "source_package": "FRED_MACRO_CORE_RECENT_BACKFILL_20260716T070839Z",
+  "source_zip_sha256": "e1184a8c5b34dd7aef8a3db747de9094cc4660e9f5f4a7f8bdf0f2b1a475339d",
+  "source_zip": {
+    "member_count": 106,
+    "listed_member_checksums": 105,
+    "checksums_passed": 105,
+    "checksums_failed": 0,
+    "status": "PASS"
+  },
+  "series": {
+    "required_requested": 27,
+    "required_numeric_pass": 26,
+    "required_partial": [
+      {
+        "series_id": "BAA10Y",
+        "status": "METADATA_ONLY_REDISSEMINATION_RESTRICTION"
+      }
+    ],
+    "required_failed": [],
+    "optional_metadata_only": [
+      {
+        "series_id": "BAMLH0A0HYM2",
+        "status": "OPTIONAL_METADATA_ONLY_INTERNAL_USE_RESTRICTION"
+      }
+    ]
+  },
+  "normalized_data": {
+    "row_count": 227,
+    "partition_count": 4,
+    "duplicate_observation_dates": 0,
+    "ascending_sort": "PASS",
+    "raw_normalized_value_agreement": "PASS",
+    "missing_source_markers_preserved_as_null": true,
+    "interpolation_used": false,
+    "forward_fill_used": false,
+    "fabrication_used": false
+  },
+  "raw_action_evidence": {
+    "extract_count": 58,
+    "partition_count": 6,
+    "metadata_extracts": 28,
+    "latest_observation_extracts": 28,
+    "initial_release_extracts": 10,
+    "revision_extracts": 10,
+    "vintage_date_extracts": 10,
+    "note": "The 58 count is the number of source JSON files in the uploaded package. Category counts overlap by request type and are provided for scope clarity."
+  },
+  "derived_validation": {
+    "yield_curve_crosscheck_rows": 13,
+    "yield_curve_crosscheck_passed": 13,
+    "yield_curve_crosscheck_failed": 0,
+    "liquidity_proxy_exact_same_date_points": 2,
+    "liquidity_proxy_status": "EXPERIMENTAL_CONTEXT_ONLY"
+  },
+  "revision_layer": {
+    "revision_sensitive_series": [
+      "CPIAUCSL",
+      "CPILFESL",
+      "PCEPILFE",
+      "UNRATE",
+      "PAYEMS",
+      "INDPRO",
+      "RSAFS",
+      "M2SL",
+      "CFNAI",
+      "GDPC1"
+    ],
+    "initial_release_status": "PASS_10_OF_10",
+    "recent_revision_status": "PARTIAL_7_PASS_3_EXPLICIT_NO_VINTAGE_ERRORS",
+    "vintage_date_status": "PARTIAL_7_PASS_3_EXPLICIT_INTERNAL_SERVER_ERRORS",
+    "interpretation_caveat": "FRED output_type=3 includes newly published and revised observations. A returned row does not by itself prove a numerical revision."
+  },
+  "code_and_security": {
+    "python_compile": "PASS",
+    "embedded_api_key": false,
+    "embedded_credentials": false,
+    "workflow_activated": false,
+    "reproduction_status": "REFERENCE_FETCHER_NOT_BYTE_IDENTICAL_PACKAGE_REPRODUCTION"
+  },
+  "coverage": {
+    "requested_recent_window": "2026-06-25/2026-07-16",
+    "actual_normalized_observation_coverage": "2025-01-01/2026-07-15",
+    "full_2007_to_present_history_ready": false,
+    "continuous_live_feed_ready": false
+  },
+  "noise_review": {
+    "per_series_csv_files_omitted": 28,
+    "reason_per_series_csv_omitted": "Duplicate of the partitioned long normalized table.",
+    "native_frequency_changes_omitted": true,
+    "reason_native_frequency_changes_omitted": "Mixed semantic units and low direct comparability across rates, indices, money stocks and labor counts.",
+    "workflow_omitted": true,
+    "reason_workflow_omitted": "Secret-dependent workflow proliferation was not justified for a one-off recent backfill.",
+    "duplicate_catalog_formats_omitted": true
+  },
+  "limitations": [
+    "This is a recent backfill, not a complete historical archive from 2007.",
+    "BAA10Y and BAMLH0A0HYM2 numeric data are not redistributed.",
+    "Observation-date freshness labels can overstate staleness for normally lagged monthly and quarterly releases.",
+    "The experimental Fed liquidity proxy has only two exact aligned weekly points.",
+    "The reference fetcher does not exactly rebuild every derived and documentation artifact from the uploaded package."
+  ],
+  "source_package_status": "PARTIAL_PASS",
+  "archive_decision": "APPROVE_CURATED_SOURCE_ARCHIVE",
+  "authority_boundary": {
+    "market_call": false,
+    "portfolio_action": false,
+    "standalone_signal": false,
+    "rule_promotion": false,
+    "new_engine": false
+  }
+}
