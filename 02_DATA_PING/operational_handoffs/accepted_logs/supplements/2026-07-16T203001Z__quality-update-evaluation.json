@@ -1,0 +1,51 @@
+{
+  "supplement_id": "DATA_PING_V5_20260716T203001Z_QUALITY_UPDATE_EVALUATION",
+  "source_snapshot_id": "DATA_PING_V5_20260716T203001Z",
+  "evaluation_owner": "MAIN_FRAMEWORK_CHATGPT",
+  "custom_gpt_self_evaluation": {
+    "quality_before": 6.3,
+    "quality_after": 7.3,
+    "claimed_uplift": 1.0,
+    "authority": "SENSOR_SELF_EVALUATION_NON_CANONICAL"
+  },
+  "main_framework_evaluation": {
+    "uplift_confirmed": true,
+    "uplift_classification": "MATERIAL_BUT_PARTIAL",
+    "decision_quality_upgrade": "PARTIAL_ONLY",
+    "overall_data_quality": "MEDIUM",
+    "flow_confidence": "LOW"
+  },
+  "honored_improvements": [
+    "THREAD_LOCAL_FORWARD_CONTINUITY_ACTIVE",
+    "PRIMARY_SOURCE_DELTA_COMPARABLE",
+    "DIRECT_ETHBTC_CONTINUITY_ACTIVE",
+    "FIXED_RISK35_V1_INITIALIZED_WITH_CONSTITUENTS_AND_IDS",
+    "LOCAL_ETF_LEDGER_ACTIVE_WITH_PARTIAL_SESSION_EXCLUSION",
+    "CFGI_DIRECT_POLLING_ACTIVE_WITH_STALENESS_AND_CONFLICTS_PRESERVED",
+    "OUTPUT_DEDUPLICATION_IMPROVED",
+    "MACHINE_JSON_PARSE_VALIDATION_PASS"
+  ],
+  "remaining_external_limitations": [
+    "OFFICIAL_STABLECOIN_HISTORY_MISSING",
+    "MARKET_WIDE_CVD_UNAVAILABLE",
+    "MULTI_VENUE_SPOT_AGGRESSION_NOT_CONFIGURED",
+    "ETF_20_SESSION_WINDOW_NOT_COMPUTED",
+    "DIRECT_CREDIT_SPREAD_MISSING",
+    "DURABLE_CROSS_CHAT_STATE_REQUIRES_EXTERNAL_STORAGE",
+    "CFGI_READINGS_STALE_OR_CONFLICTING"
+  ],
+  "quality_notes": [
+    "The largest real gain is comparability across pings, not additional signal authority.",
+    "The fixed cohort will create decision value only after the first compatible persistence delta.",
+    "CFGI is useful as degraded context but cannot override price, flow, breadth or gate evidence.",
+    "No quality score can upgrade LOW flow confidence while market-wide CVD and official stablecoin history remain missing.",
+    "No portfolio action or gate firing is permitted from the sensor self-score."
+  ],
+  "next_validation_targets": [
+    "FIRST_FIXED_RISK35_CROSS_PING_DELTA",
+    "FIRST_CROSSCHECK_BRIDGE_AFTER_SOURCE_SWITCH",
+    "COMPLETED_16_JUL_ETF_SETTLEMENT",
+    "DURABLE_CONTINUITY_STATE_READBACK_FROM_GITHUB",
+    "CFGI_FRESHNESS_BELOW_30_MIN_WITHOUT_INTERNAL_CONFLICT"
+  ]
+}
