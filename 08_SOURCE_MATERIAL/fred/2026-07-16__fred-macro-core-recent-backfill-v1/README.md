@@ -30,18 +30,23 @@ It is not a full historical archive. The numeric package contains 227 native-fre
 
 The uploaded ZIP contains many duplicate representations. GitHub stores only the most useful and auditable subset:
 
-- one long normalized table
+- four ordered partitions containing the complete long normalized table
 - one latest-value snapshot
 - one compact operational snapshot
 - series catalog
 - liquidity-component panel
 - yield-curve validation
 - revision summary
-- compact lossless JSONL of all 58 raw Action extracts
-- source validation report and original package checksums
+- six lossless JSONL partitions containing all 58 raw Action extracts
+- curated validation report
+- original package-member checksums and separate curated-content hashes
 - reference fetcher
 
-Per-series CSV files are omitted because they duplicate `normalized/all_series_long.csv`. The mixed-semantic `native_frequency_changes.csv` is not promoted because percentage changes in rates, indices, levels and labor counts are not directly comparable.
+The partitions are concatenation-safe in filename order. Each CSV partition contains its own header, so when combining them the header from parts 2 through 4 must be skipped.
+
+Per-series CSV files are omitted because they duplicate the partitioned long table under `normalized/all_series_long_parts/`. The mixed-semantic `native_frequency_changes.csv` is not promoted because percentage changes in rates, indices, levels and labor counts are not directly comparable.
+
+`checksums.sha256` belongs to the original uploaded ZIP and documents its member hashes. `curated_content_sha256.json` covers the selected source-derived files stored in this GitHub archive.
 
 ## Interpretation boundary
 
