@@ -1,0 +1,31 @@
+{
+  "supplement_id": "FRED_MACRO_CORE_RECENT_BACKFILL_20260716T070839Z",
+  "accepted_log_id": "DATA_PING_V5_20260716T053109Z",
+  "received_after_source_snapshot": true,
+  "source_package": "FRED_MACRO_CORE_RECENT_BACKFILL_20260716T070839Z.zip",
+  "source_zip_sha256": "e1184a8c5b34dd7aef8a3db747de9094cc4660e9f5f4a7f8bdf0f2b1a475339d",
+  "source_bundle_path": "08_SOURCE_MATERIAL/fred/2026-07-16__fred-macro-core-recent-backfill-v1/",
+  "qa_note_path": "04_MARKET_LEARNING/truth_layer/2026-07-16__fred-macro-core-recent-backfill-ingestion-and-qa__source-note.md",
+  "capture_utc": "2026-07-16T07:08:39.499007Z",
+  "status": "RECENT_MACRO_BACKFILL_AVAILABLE_FOR_FUTURE_DATA_PING_USE",
+  "coverage": {
+    "requested_recent_window": "2026-06-25/2026-07-16",
+    "actual_normalized_observation_coverage": "2025-01-01/2026-07-15",
+    "required_series_passed": 26,
+    "required_series_partial": 1,
+    "required_series_failed": 0,
+    "normalized_rows": 227
+  },
+  "authority": "MACRO_CONTEXT_ONLY",
+  "does_not_rewrite_parent_snapshot": true,
+  "does_not_change_framework_state": true,
+  "does_not_change_portfolio_action": true,
+  "use_rules": [
+    "Use source-native observation dates and release metadata.",
+    "Do not infer current values beyond the source package.",
+    "Do not treat observation-date freshness labels as release-quality signals.",
+    "Do not call M2SL global M2.",
+    "Do not treat the experimental Fed liquidity proxy as an official series.",
+    "Future DATA PING packets may cite this backfill by field when the source date is still fit for purpose."
+  ]
+}
