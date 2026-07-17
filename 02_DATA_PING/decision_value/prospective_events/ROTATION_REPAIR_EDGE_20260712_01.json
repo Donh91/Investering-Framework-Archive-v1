@@ -1,15 +1,16 @@
 {
   "schema": "DATA_PING_PROSPECTIVE_EVENT_CONTEXT",
-  "schema_version": "0.3",
+  "schema_version": "0.4",
   "event_id": "ROTATION_REPAIR_EDGE_20260712_01",
   "record_type": "POINTER_AND_FROZEN_CONTEXT_NOT_STANDALONE_LEDGER_SCHEMA",
   "status": "OPEN_TRIGGERED",
   "created_from_existing_event": true,
   "retrospective_row_created": false,
-  "latest_update_utc": "2026-07-17T06:34:00Z",
-  "latest_accepted_data_ping_id": "DATA_PING_V5_20260717T034148Z",
-  "latest_accepted_payload_hash_sha256": "cc5ff296a91d2765d54736e265c491b7dab907c910f466cd5e504bde27870d09",
+  "latest_update_utc": "2026-07-17T06:54:32Z",
+  "latest_accepted_data_ping_id": "DATA_PING_V5_20260717T063523Z",
+  "latest_accepted_payload_hash_sha256": "833d498d78fcfbc800af0aff0e90972742f72043b3089cdac3afdec42b4a8a6f",
   "post_acceptance_source_revision": "FARSIDE_POST_ACCEPTANCE_REVISION_20260717T063400Z",
+  "source_freshness_supplement": "CUSTOM_GPT_SOURCE_FRESHNESS_BREACH_20260717T063523Z",
   "prospective_evidence_skill": ".agents/skills/prospective-evidence-ledger/SKILL.md",
   "current_claim": {
     "claim": "REPAIR_PRESENT_SHORT_TERM_COOLING_NOT_FAILED",
@@ -68,11 +69,12 @@
     }
   ],
   "current_inputs": {
-    "structure": "CANONICAL_LATEST_SETTLED_CLOSE_INTACT_BUT_OTA_INTRADAY_RECLAIM_TEST_UNDER_PRESSURE_ETHBTC_REPAIR_INTACT",
-    "fixed_cohort": "FIRST_VALID_24H_AND_7D_NEGATIVE_PERSISTENCE_DELTA",
+    "structure": "BTC_CURRENT_BELOW_63300_INTRADAY_BUT_LATEST_SETTLED_CEST_CLOSE_ABOVE_63300_BTC_ABOVE_61900_ETHBTC_REPAIR_INTACT",
+    "fixed_cohort": "SECOND_COMPATIBLE_WARNING_OBSERVATION_1H_COLLAPSE_24H_FURTHER_DETERIORATION_7D_WEAK",
     "completed_etf_flow": "BTC_STAGE1_FLOW_LEG_COMPLETE_THREE_POSITIVE_SESSIONS_WITH_IBIT_POSITIVE_BUT_7_SESSION_NEGATIVE_ETH_LATEST_NEGATIVE",
-    "spot_flow": "NEGATIVE_BINANCE_ONLY_IN_LATEST_ACCEPTED_PING",
-    "data_quality": "MEDIUM",
+    "spot_flow": "BTC_AND_ETH_BINANCE_4H_24H_NEGATIVE_BTC_WORSENED",
+    "futures_flow": "BINANCE_TAKER_RATIOS_BELOW_1_ACROSS_1H_4H_24H_CURRENT_CONTEXT_ONLY",
+    "data_quality": "MEDIUM_WITH_CUSTOM_GPT_ETF_SOURCE_FRESHNESS_BREACH_CORRECTED",
     "flow_confidence": "LOW"
   },
   "subsequent_reviews": [
@@ -99,6 +101,21 @@
       "breadth": "LATEST_ACCEPTED_FIXED_RISK35_24H_AND_7D_DETERIORATION_REMAINS_ACTIVE",
       "flow": "DIRECT_FARSIDE_16JUL_BTC_79_1M_WITH_IBIT_33_4M_COMPLETES_STAGE1_ETF_FLOW_LEG_ETH_MINUS_28M_AND_SPOT_FLOW_REMAINS_CONTRADICTORY",
       "verdict": "EARLY_WARNING_CANDIDATE_STRENGTHENED_STAGE1_ETF_FLOW_LEG_COMPLETE_NO_ACTION_CHANGE",
+      "automatic_promotion": false,
+      "automatic_action": false
+    },
+    {
+      "review_time_utc": "2026-07-17T06:54:32Z",
+      "source_snapshot_id": "DATA_PING_V5_20260717T063523Z",
+      "review_type": "MAIN_FRAMEWORK_WARNING_RATIFICATION",
+      "authority": "MAIN_FRAMEWORK",
+      "decision_delta_class": "EARLY_WARNING_CANDIDATE",
+      "structure": "BTC_CURRENT_BELOW_63300_INTRADAY_LATEST_SETTLED_CLOSE_ABOVE_63300_BTC_ABOVE_61900_ETHBTC_ABOVE_0275",
+      "breadth": "SECOND_COMPATIBLE_DETERIORATION_1H_8_57_PERCENT_24H_5_71_PERCENT_7D_34_29_PERCENT",
+      "flow": "BTC_AND_ETH_SPOT_TAKER_4H_24H_NEGATIVE_BINANCE_FUTURES_TAKER_RATIOS_BELOW_1_STAGE1_ETF_FLOW_LEG_COMPLETE",
+      "source_quality": "CUSTOM_GPT_ETF_LANE_STALE_OVERRIDDEN_BY_EXISTING_FARSIDE_REVISION",
+      "verdict": "PULLBACK_WARNING_RATIFIED_REPAIR_NOT_FAILED_NO_ACTION_CHANGE",
+      "ratified_alert": true,
       "automatic_promotion": false,
       "automatic_action": false
     }

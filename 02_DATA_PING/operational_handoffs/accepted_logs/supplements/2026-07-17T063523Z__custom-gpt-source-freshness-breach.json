@@ -1,0 +1,40 @@
+{
+  "supplement_id": "CUSTOM_GPT_SOURCE_FRESHNESS_BREACH_20260717T063523Z",
+  "source_snapshot_id": "DATA_PING_V5_20260717T063523Z",
+  "classification": "SOURCE_REVISION_NOT_LOADED",
+  "affected_lane": "ETF_COMPLETED_SESSION",
+  "packet_fields": {
+    "btc_2026_07_16_total_usd_m": 45.7,
+    "ibit_2026_07_16": "NOT_REPORTED",
+    "btc_3_session_usd_m": 334.5,
+    "btc_5_session_usd_m": 0.2,
+    "btc_7_session_usd_m": -180.0,
+    "btc_10_session_usd_m": 330.7
+  },
+  "canonical_revision_owner": "02_DATA_PING/operational_handoffs/accepted_logs/supplements/2026-07-17T063400Z__farside-post-acceptance-source-revision.json",
+  "canonical_fields": {
+    "btc_2026_07_16_total_usd_m": 79.1,
+    "ibit_2026_07_16_usd_m": 33.4,
+    "eth_2026_07_16_total_usd_m": -28.0,
+    "btc_3_session_usd_m": 367.9,
+    "btc_5_session_usd_m": 33.6,
+    "btc_7_session_usd_m": -146.6,
+    "btc_10_session_usd_m": 364.1,
+    "stage_1_etf_flow_leg": "COMPLETE_RATIFIED"
+  },
+  "acceptance_treatment": {
+    "non_etf_sensor_fields": "ACCEPTED_BY_FIELD",
+    "packet_etf_lane": "SUPERSEDED_FOR_CURRENT_INTERPRETATION",
+    "canonical_etf_lane": "USED",
+    "original_packet_preserved": true,
+    "historical_payload_rewritten": false
+  },
+  "required_custom_gpt_fix": [
+    "Load the latest decision-context pointer before every DATA PING.",
+    "Resolve every referenced post-acceptance source revision before computing completed-session windows.",
+    "Emit SOURCE_REVISION_NOT_LOADED when the owner cannot be read.",
+    "Do not regenerate a provisional ETF ledger after a verified canonical revision exists."
+  ],
+  "decision_impact": "ETF_FLOW_REMAINS_CONSTRUCTIVE_SHORT_TERM_AND_STAGE1_FLOW_LEG_COMPLETE; WARNING_RATIFICATION_COMES_FROM_BREADTH_PRICE_AND_SPOT_FLOW_NOT_FROM_STALE_ETF_FIELDS",
+  "portfolio_action": "NONE"
+}
