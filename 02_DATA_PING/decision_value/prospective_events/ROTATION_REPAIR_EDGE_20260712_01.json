@@ -1,20 +1,21 @@
 {
   "schema": "DATA_PING_PROSPECTIVE_EVENT_CONTEXT",
-  "schema_version": "0.1",
+  "schema_version": "0.2",
   "event_id": "ROTATION_REPAIR_EDGE_20260712_01",
   "record_type": "POINTER_AND_FROZEN_CONTEXT_NOT_STANDALONE_LEDGER_SCHEMA",
   "status": "OPEN_TRIGGERED",
   "created_from_existing_event": true,
   "retrospective_row_created": false,
-  "latest_update_utc": "2026-07-16T21:12:00Z",
-  "latest_accepted_data_ping_id": "DATA_PING_V5_20260716T203001Z",
-  "latest_accepted_payload_hash_sha256": "d068992f0798127b06fad43bb5552e1168ea7b16b247890b20af0a4a54ddce0c",
+  "latest_update_utc": "2026-07-17T05:23:10Z",
+  "latest_accepted_data_ping_id": "DATA_PING_V5_20260717T034148Z",
+  "latest_accepted_payload_hash_sha256": "cc5ff296a91d2765d54736e265c491b7dab907c910f466cd5e504bde27870d09",
   "prospective_evidence_skill": ".agents/skills/prospective-evidence-ledger/SKILL.md",
   "current_claim": {
     "claim": "REPAIR_PRESENT_SHORT_TERM_COOLING_NOT_FAILED",
     "decision_delta_class": "OBSERVABILITY_OR_DATA_QUALITY_DELTA",
     "frozen_at_latest_update": true,
-    "action_at_freeze": "HOLD_AND_WAIT"
+    "action_at_freeze": "HOLD_AND_WAIT",
+    "frozen_from_snapshot": "DATA_PING_V5_20260716T203001Z"
   },
   "expected_survival_path": [
     "BTC_RETAINS_63300_RECLAIM_WITHOUT_FAILED_RECLAIM_SIGNATURE",
@@ -49,7 +50,8 @@
       "label": "OTA_72H_REVIEW",
       "target_date": "2026-07-17",
       "authority": "SHADOW_OUTCOME_REVIEW_ONLY",
-      "status": "PENDING"
+      "status": "COMPLETED",
+      "outcome": "SURVIVAL_HELD_WITHOUT_CONFIRMATION_BREADTH_TRANSLATION_FAILED_FLOW_REMAINS_CONTRADICTORY"
     },
     {
       "label": "OTA_7D_RETENTION_REVIEW",
@@ -72,14 +74,29 @@
     "data_quality": "MEDIUM",
     "flow_confidence": "LOW"
   },
+  "subsequent_reviews": [
+    {
+      "review_time_utc": "2026-07-17T05:23:10Z",
+      "source_snapshot_id": "DATA_PING_V5_20260717T034148Z",
+      "review_type": "OTA_72H_REVIEW",
+      "authority": "SHADOW_OUTCOME_REVIEW_ONLY",
+      "decision_delta_class": "EARLY_WARNING_CANDIDATE",
+      "structure": "SURVIVED_BTC_ABOVE_63300_AND_ETHBTC_ABOVE_0275",
+      "breadth": "FAILED_TRANSLATION_1H_UP_BUT_24H_AND_7D_SHARPLY_WEAKER",
+      "flow": "BTC_ETF_THIRD_POSITIVE_SESSION_BUT_IBIT_UNKNOWN_SPOT_TAKER_NEGATIVE_ETH_ETF_NEGATIVE",
+      "verdict": "SURVIVAL_HELD_WITHOUT_CONFIRMATION_EARLY_WARNING_CANDIDATE_ACTIVE",
+      "automatic_promotion": false,
+      "automatic_action": false
+    }
+  ],
   "outcome_fields": {
     "actual_24h": null,
-    "actual_72h": null,
+    "actual_72h": "SURVIVAL_HELD_WITHOUT_CONFIRMATION_BREADTH_TRANSLATION_FAILED_FLOW_REMAINS_CONTRADICTORY",
     "actual_7d": null,
     "actual_12_sessions": null,
     "false_positive": null,
     "false_negative": null,
-    "decision_value_review": "PENDING_MATURITY"
+    "decision_value_review": "PENDING_7D_AND_12_SESSION_MATURITY"
   },
   "governance": {
     "frozen_fields_may_not_be_rewritten": true,
