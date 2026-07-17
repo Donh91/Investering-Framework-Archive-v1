@@ -1,0 +1,28 @@
+{
+  "supplement_id": "BINANCE_SOURCE_AVAILABILITY_DEGRADATION_20260717T113106Z",
+  "source_snapshot_id": "DATA_PING_V5_20260717T113106Z",
+  "classification": "PRIMARY_SOURCE_AND_FLOW_LANE_UNAVAILABLE",
+  "raw_error_class": "RESTRICTED_LOCATION_SERVICE_UNAVAILABLE",
+  "affected_fields": [
+    "BINANCE_PRIMARY_SPOT",
+    "DIRECT_ETHBTC",
+    "BINANCE_CEST_CANDLES",
+    "BINANCE_SPOT_TAKER_15M_1H_4H_24H"
+  ],
+  "fallbacks": {
+    "price": "COINGECKO_OBSERVATION_ONLY",
+    "range_and_candles": "GECKOTERMINAL_UTC_SHADOW_ONLY",
+    "canonical_close": "LATEST_STORED_BINANCE_CEST_REFERENCE_ONLY",
+    "spot_taker": "NO_SUBSTITUTION",
+    "direct_ethbtc": "NO_SUBSTITUTION_DERIVED_COINGECKO_OBSERVATION_ONLY"
+  },
+  "guardrails": [
+    "CoinGecko prices do not replace Binance CEST settled closes.",
+    "GeckoTerminal UTC shadows do not count as canonical closes.",
+    "Derived ETH/BTC does not fire direct-pair governance gates.",
+    "OKX contract taker raw legs do not replace Binance spot taker flow or market-wide CVD.",
+    "The warning cannot be cleared or escalated from this run alone because canonical close and spot-flow resolution are missing."
+  ],
+  "decision_impact": "OBSERVABILITY_OR_DATA_QUALITY_DELTA_WARNING_MAINTAINED_NOT_ESCALATED_NOT_CLEARED",
+  "portfolio_action": "NONE"
+}
