@@ -1,0 +1,50 @@
+{
+  "supplement_id": "INTRADAY_BREADTH_OSCILLATION_AND_ETH_CONFLICT_20260717T162231Z",
+  "source_snapshot_id": "DATA_PING_V5_20260717T162231Z",
+  "classification": "SECOND_INTRADAY_REBOUND_WITHOUT_MEDIUM_HORIZON_TRANSLATION",
+  "fixed_cohort_sequence": {
+    "snapshot_20260717T142500Z_1h_positive_pct": 88.5714286,
+    "snapshot_20260717T153910Z_1h_positive_pct": 28.5714286,
+    "snapshot_20260717T162231Z_1h_positive_pct": 85.7142857,
+    "interpretation": "HIGH_INTRADAY_OSCILLATION_NOT_DURABLE_STABILIZATION"
+  },
+  "medium_horizon": {
+    "current_24h_positive_pct": 14.2857143,
+    "current_7d_positive_pct": 25.7142857,
+    "current_24h_median_pct": -1.856,
+    "current_7d_median_pct": -1.501,
+    "translation_status": "NOT_CONFIRMED"
+  },
+  "flow_improvement": {
+    "btc_4h_spot_taker_prior_usd_m": -28.218,
+    "btc_4h_spot_taker_current_usd_m": -19.349,
+    "btc_24h_spot_taker_prior_usd_m": -42.842,
+    "btc_24h_spot_taker_current_usd_m": -34.982,
+    "eth_4h_spot_taker_prior_usd_m": -11.835,
+    "eth_4h_spot_taker_current_usd_m": -8.258,
+    "eth_24h_spot_taker_prior_usd_m": -4.026,
+    "eth_24h_spot_taker_current_usd_m": -0.945,
+    "interpretation": "LESS_NEGATIVE_BUT_NOT_REVERSED"
+  },
+  "eth_source_conflict": {
+    "binance_vs_coingecko_pct": 0.459358,
+    "threshold_pct": 0.30,
+    "status": "PERSISTENT_SOURCE_CONFLICT",
+    "direct_vs_derived_ethbtc_pct": 0.0136742,
+    "treatment": "PRESERVE_BOTH_ETH_USD_VALUES_ACCEPT_UNRELATED_FIELDS_BY_FIELD"
+  },
+  "decision_impact": {
+    "warning_clearance": "NOT_PERMITTED",
+    "warning_further_strengthening": "NOT_REQUIRED_FROM_THIS_PACKET",
+    "warning_status": "MAINTAINED_AT_STRENGTHENED_LEVEL",
+    "short_term_stabilization": "SECOND_INTRADAY_REBOUND_ACTIVE_UNCONFIRMED_OSCILLATORY",
+    "portfolio_action": "NONE"
+  },
+  "governance": [
+    "A second strong 1H breadth print is not durable stabilization without survival into the next compatible ping and translation into 24H breadth.",
+    "Less-negative 4H and 24H spot flow is improvement but not positive-flow confirmation.",
+    "The current CEST candle is partial and cannot provide a new settled reclaim confirmation.",
+    "The ETH USD source conflict remains field-scoped and does not invalidate direct Binance ETH/BTC or unrelated fields.",
+    "No portfolio action follows from this supplement."
+  ]
+}
