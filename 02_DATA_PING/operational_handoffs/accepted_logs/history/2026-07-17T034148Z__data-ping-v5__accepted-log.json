@@ -1,0 +1,51 @@
+{
+  "contract_version": "0.6",
+  "accepted_log_id": "DATA_PING_V5_20260717T034148Z",
+  "source_snapshot_id": "DATA_PING_V5_20260717T034148Z",
+  "previous_accepted_log_id": "DATA_PING_V5_20260716T203001Z",
+  "source_timestamp": "2026-07-17T03:41:48Z",
+  "accepted_at": "2026-07-17T05:23:10Z",
+  "source_mode": "DIRECT_PROJECT_THREAD_ACCEPTED_LOG_V5",
+  "acceptance_status": "ACCEPTED_BY_MAIN_FRAMEWORK",
+  "payload_path": "02_DATA_PING/operational_handoffs/accepted_logs/payloads/2026-07-17T034148Z__data-ping-v5__accepted-payload.json",
+  "payload_hash_sha256": "cc5ff296a91d2765d54736e265c491b7dab907c910f466cd5e504bde27870d09",
+  "event_update_path": "02_DATA_PING/live_state_handover/event_updates/2026-07-17T034148Z__rotation-repair-edge__early-warning-candidate.md",
+  "active_registry_path": "02_DATA_PING/live_state_handover/registries/2026-07-17T034148Z__active-gate-and-edge-event-registry__canonical.md",
+  "decision_context_path": "02_DATA_PING/operational_handoffs/latest_decision_context_state.json",
+  "data_quality": "MEDIUM",
+  "flow_confidence": "LOW",
+  "decision_delta_class": "EARLY_WARNING_CANDIDATE",
+  "framework_result": {
+    "active_event_id": "ROTATION_REPAIR_EDGE_20260712_01",
+    "framework_edge_state": "REPAIR_PRESENT_PARTICIPATION_AND_FLOW_DETERIORATING_NOT_FAILED",
+    "material_delta": "FIRST_FIXED_COHORT_PERSISTENCE_SHOWS_24H_AND_7D_DETERIORATION_WHILE_PRICE_FLOW_AND_SENTIMENT_WEAKEN_BUT_CORE_REPAIR_GATES_HOLD",
+    "alert_status": "STILL_ACTIVE",
+    "event_status": "OPEN_TRIGGERED",
+    "early_warning_candidate": "ACTIVE_NOT_RATIFIED_ACTION_SIGNAL",
+    "broad_recovery_status": "NOT_CONFIRMED",
+    "rotation_status": "NO_ROTATION",
+    "large_cap_buy_window": "WATCH_ONLY_NOT_OPEN",
+    "new_entry_signal": "NOT_ACTIVE",
+    "new_pullback_alert": "NO_RATIFIED_ALERT",
+    "active_trim_signal": "NO",
+    "portfolio_action": "NONE",
+    "user_action": "HOLD_AND_WAIT"
+  },
+  "stage_1_status": "NOT_FIRED_IBIT_NOT_REPORTED_ON_THIRD_POSITIVE_COMPLETED_BTC_ETF_SESSION",
+  "ota_72h_review": {
+    "authority": "SHADOW_OUTCOME_REVIEW_ONLY",
+    "status": "COMPLETED",
+    "outcome": "SURVIVAL_HELD_WITHOUT_CONFIRMATION_BREADTH_TRANSLATION_FAILED_FLOW_REMAINS_CONTRADICTORY",
+    "promotion": "NONE",
+    "action": "NONE"
+  },
+  "readback_status": "PENDING_POST_MERGE_VALIDATION",
+  "rules": [
+    "Partial candles and partial ETF sessions never count as completed observations.",
+    "IBIT NOT_REPORTED is unknown, not zero and not positive.",
+    "Three positive completed BTC ETF sessions do not fire Stage 1 unless IBIT positive is verified.",
+    "Fixed-cohort deterioration is an early-warning candidate, not an automatic action signal.",
+    "Custom GPT remains a non-binding sensor.",
+    "No portfolio action from DATA PING alone."
+  ]
+}
