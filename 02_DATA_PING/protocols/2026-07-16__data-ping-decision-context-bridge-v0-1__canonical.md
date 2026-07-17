@@ -47,6 +47,28 @@ LATEST_DECISION_CONTEXT_STATE
 
 A missing or unreadable owner must remain explicit. No value may be reconstructed from memory.
 
+## External model freshness gate
+
+Any Claude, Fable, OTA, Grok or other external-model packet that offers a consolidated market verdict must resolve these owners before its conclusion may influence Main Framework state:
+
+```text
+LATEST_DECISION_CONTEXT_STATE
+-> LATEST_ACCEPTED_LOG_STATE
+-> ALL_REFERENCED_POST_ACCEPTANCE_SOURCE_REVISIONS
+-> ACTIVE_EVENT_REGISTRY
+-> CURRENT_EXTERNAL_PACKET
+```
+
+Rules:
+
+1. A completed primary-source revision published after the packet timestamp supersedes provisional fields for current interpretation, while the original accepted payload remains immutable.
+2. A packet that has not loaded a referenced source revision may contribute timestamped shadow observations, but its affected flow, gate and action conclusions are `STALE_OR_DEFERRED`.
+3. Model-local retirement, promotion, threshold or gate statements have no authority unless a canonical owner is cited and read successfully.
+4. Duplicate external packets that add no independent decision delta are triaged as learning or source-quality cases rather than new active snapshots.
+5. A strong narrative cannot compensate for missing completed-session data, incompatible close conventions or stale source windows.
+
+This gate is a source-freshness control only. It creates no new sensor, score, threshold or portfolio authority.
+
 ## Bounded decision-delta classes
 
 Each accepted DATA PING must receive exactly one descriptive delta class:
