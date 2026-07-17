@@ -1,0 +1,47 @@
+{
+  "supplement_id": "BINANCE_SOURCE_RESTORATION_AND_ETH_CONFLICT_20260717T153910Z",
+  "source_snapshot_id": "DATA_PING_V5_20260717T153910Z",
+  "classification": "PRIMARY_SOURCE_RESTORED_WITH_FIELD_LEVEL_CROSSCHECK_CONFLICT",
+  "restored_fields": [
+    "BINANCE_PRIMARY_SPOT",
+    "DIRECT_ETHBTC",
+    "BINANCE_CEST_CANDLE_LEDGER",
+    "BINANCE_SPOT_TAKER_15M_1H_4H_24H",
+    "BINANCE_FUTURES_CONTEXT"
+  ],
+  "continuity_limits": {
+    "primary_price_delta": "NOT_COMPARABLE_COINGECKO_TO_BINANCE",
+    "direct_ethbtc_delta": "NOT_COMPUTED_PRIOR_DIRECT_VALUE_MISSING",
+    "spot_taker_crossping": "NOT_COMPARABLE_PRIOR_VALUE_MISSING",
+    "futures_crossping": "NOT_COMPARABLE_OKX_TO_BINANCE"
+  },
+  "source_conflict": {
+    "field": "ETH_USD",
+    "binance_value": 1825.82,
+    "coingecko_value": 1818.29,
+    "difference_pct": 0.4124174,
+    "threshold_pct": 0.30,
+    "status": "CONFLICT_PRESERVED_NO_SILENT_RESOLUTION"
+  },
+  "non_conflicting_fields": {
+    "btc_binance_vs_coingecko_pct": 0.1785714,
+    "ethbtc_direct_vs_derived_pct": 0.0105169,
+    "direct_ethbtc_status": "PASS_INTERNAL_BINANCE_CONSISTENCY"
+  },
+  "decision_treatment": {
+    "overall_quality": "LOW",
+    "eth_price_field": "DEGRADED_CONFLICT_MARKED",
+    "direct_ethbtc_gate_input": "AVAILABLE",
+    "canonical_cest_close_input": "AVAILABLE_LATEST_SETTLED_UNCHANGED_CURRENT_PARTIAL",
+    "spot_taker_input": "AVAILABLE_BINANCE_ONLY",
+    "warning_status": "MAY_BE_STRENGTHENED_BY_INDEPENDENT_BREADTH_AND_FLOW_EVIDENCE",
+    "portfolio_action": "NONE"
+  },
+  "governance": [
+    "The ETH crosscheck conflict does not invalidate the entire packet.",
+    "Both ETH prices remain preserved.",
+    "Direct Binance ETH/BTC and Binance-derived ETH/BTC agree within threshold.",
+    "Current partial candles never count as settled closes.",
+    "Source restoration improves observability but does not itself improve market state."
+  ]
+}
