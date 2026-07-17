@@ -1,0 +1,83 @@
+# Active Gate and Edge Event Registry: 2026-07-17T162231Z
+
+**Status:** CANONICAL_RUNTIME_CONFIGURATION  
+**Owner:** MAIN_FRAMEWORK / CHATGPT  
+**Accepted log:** `DATA_PING_V5_20260717T162231Z`
+
+## Active gates
+
+```yaml
+ACTIVE_GATE_REGISTRY:
+  gate_registry_id: GATE_REGISTRY_2026W28_V1
+  gate_registry_status: CURRENT
+  btc_reclaim_gate: 63300
+  btc_survival_gate: 61900
+  btc_deterioration_gate: 59400
+  ethbtc_repair_gate: 0.0275
+  ethbtc_confirmation_gate: 0.0300
+  stage_1_etf_flow_requirement: THREE_CONSECUTIVE_POSITIVE_COMPLETED_BTC_ETF_SESSIONS_WITH_IBIT_POSITIVE
+  stage_1_etf_flow_leg_status: COMPLETE_RATIFIED
+  authority: CURRENT_EVENT_ONLY_NOT_UNIVERSAL
+```
+
+## Active event
+
+```yaml
+ACTIVE_EDGE_EVENT:
+  edge_event_id: ROTATION_REPAIR_EDGE_20260712_01
+  edge_event_type: ROTATION_REPAIR_TEST
+  event_status: OPEN_TRIGGERED
+  framework_edge_state: REPAIR_PRESENT_PULLBACK_WARNING_ACTIVE_SECOND_INTRADAY_REBOUND_CURRENT_ABOVE_63300_PARTIAL_NO_MEDIUM_HORIZON_TRANSLATION_NEGATIVE_4H_24H_FLOW_IMPROVING_NOT_FAILED
+  framework_alert_status: STILL_ACTIVE_STRENGTHENED_MAINTAINED
+  latest_framework_accepted_data_ping_id: DATA_PING_V5_20260717T162231Z
+  latest_framework_review_time: 2026-07-17T16:40:36Z
+  decision_delta_class: OBSERVABILITY_OR_DATA_QUALITY_DELTA
+  material_delta: SECOND_1H_BREADTH_REBOUND_AND_CURRENT_63300_RECLAIM_WITH_SHORT_FLOW_IMPROVEMENT_BUT_24H_7D_AND_4H_24H_FLOW_REMAIN_WEAK
+  pullback_warning: ACTIVE_RATIFIED_STRENGTHENED_MAINTAINED_NOT_ACTION_ESCALATED_NOT_CLEARED
+  short_term_stabilization: SECOND_INTRADAY_REBOUND_ACTIVE_UNCONFIRMED_OSCILLATORY
+  reclaim_status: LATEST_SETTLED_AND_CURRENT_ABOVE_63300_NO_NEW_SETTLED_CONFIRMATION
+  current_positive_evidence:
+    - BINANCE_BTC_CURRENT_63492_01_ABOVE_63300
+    - LATEST_SETTLED_BTC_CEST_CLOSE_64161_99_ABOVE_63300_AND_61900
+    - DIRECT_ETHBTC_028900_ABOVE_0275
+    - FIXED_RISK35_1H_POSITIVE_SHARE_85_71_PERCENT
+    - FIXED_RISK35_1H_MEDIAN_PLUS_0_567_PERCENT
+    - BTC_1H_SPOT_TAKER_PLUS_5_427M
+    - BTC_AND_ETH_15M_SPOT_TAKER_POSITIVE
+    - BTC_AND_ETH_FUTURES_TAKER_1H_ABOVE_1
+    - NEGATIVE_4H_24H_SPOT_TAKER_VALUES_IMPROVED_VS_PRIOR
+    - FARSIDE_16JUL_BTC_79_1M_IBIT_33_4M
+    - STAGE1_ETF_FLOW_LEG_COMPLETE_RATIFIED
+  warning_evidence:
+    - FIXED_RISK35_1H_SEQUENCE_88_57_TO_28_57_TO_85_71_HIGH_OSCILLATION
+    - FIXED_RISK35_24H_POSITIVE_SHARE_ONLY_14_29_PERCENT
+    - FIXED_RISK35_24H_MEDIAN_MINUS_1_856_PERCENT
+    - FIXED_RISK35_7D_POSITIVE_SHARE_ONLY_25_71_PERCENT
+    - FIXED_RISK35_7D_MEDIAN_MINUS_1_501_PERCENT
+    - BTC_AND_ETH_4H_24H_SPOT_TAKER_REMAIN_NEGATIVE
+    - BTC_AND_ETH_FUTURES_TAKER_4H_24H_REMAIN_BELOW_1
+    - BTC_ETH_AND_ETHBTC_REMAIN_NEGATIVE_OVER_24H
+    - ETHBTC_REMAINS_BELOW_0300
+    - ETH_LATEST_COMPLETED_ETF_SESSION_MINUS_28M
+    - BTC_7_SESSION_ETF_AGGREGATE_MINUS_146_6M
+    - ETH_BINANCE_COINGECKO_SOURCE_CONFLICT_0_459_PERCENT
+    - CURRENT_CEST_CANDLE_PARTIAL
+    - MARKET_WIDE_CVD_UNAVAILABLE
+    - OFFICIAL_STABLECOIN_HISTORY_MISSING
+  current_decision:
+    rotation: NO_ROTATION
+    broad_recovery: NOT_CONFIRMED
+    large_cap_window: WATCH_ONLY_NOT_OPEN
+    new_entry_signal: NOT_ACTIVE
+    active_trim_signal: NO
+    new_pullback_alert: NO_EXISTING_ALERT_MAINTAINED
+    portfolio_action: NONE
+    user_action: HOLD_AND_WAIT
+    risk_posture: ELEVATED_VIGILANCE
+```
+
+## Interpretation
+
+The second broad 1H rebound is a valid positive observation, but the alternating sequence of strong, weak and strong 1H breadth demonstrates intraday instability. The warning cannot be cleared until participation translates into compatible 24H persistence and 4H/24H flow turns supportive. Structure remains intact because BTC is above 61.9K, the latest settled close is above 63.3K, the current price is above 63.3K and direct ETH/BTC remains above 0.0275.
+
+No portfolio action follows.
