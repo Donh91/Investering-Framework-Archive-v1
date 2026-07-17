@@ -1,0 +1,169 @@
+{
+  "schema": "DATA_PING_ACCEPTED_PAYLOAD",
+  "schema_version": "0.6",
+  "data_ping_version": "V5",
+  "spec_version": "DATA_PING_GOVERNANCE_SPEC_v2_6_FREE_ONLY",
+  "overlay_version": "DATA_PING_VNEXT_STANDARD_OVERLAY_v1",
+  "snapshot_id": "DATA_PING_V5_20260717T034148Z",
+  "previous_snapshot_id": "DATA_PING_V5_20260716T203001Z",
+  "snapshot_status": "ASYNC_SNAPSHOT",
+  "timestamps": {
+    "snapshot_utc": "2026-07-17T03:41:48Z",
+    "snapshot_cest": "2026-07-17T05:41:48+02:00",
+    "accepted_at_utc": "2026-07-17T05:23:10Z"
+  },
+  "quality": {
+    "overall": "MEDIUM",
+    "flow_confidence": "LOW",
+    "continuity": "PASS_THREAD_LOCAL",
+    "fixed_cohort_persistence": "PASS",
+    "machine_json_validation": "PASS",
+    "reconstruction_used": false,
+    "interpolation_used": false
+  },
+  "market": {
+    "btc_usd": 63668.0,
+    "eth_usd": 1856.65,
+    "ethbtc_direct": 0.02917,
+    "ethbtc_derived": 0.0291614312,
+    "btc_dominance_pct": 56.2061883813,
+    "total_market_cap_usd": 2270778062816.7236,
+    "btc_24h_pct": -1.591,
+    "eth_24h_pct": -3.535,
+    "ethbtc_24h_pct": -1.95,
+    "btc_24h_range_position_pct": 17.7908,
+    "eth_24h_range_position_pct": 15.5888,
+    "ethbtc_24h_range_position_pct": 15.493
+  },
+  "settled_cest": {
+    "btc_2026_07_16": 64161.99,
+    "eth_2026_07_16": 1878.66,
+    "current_day": "PARTIAL",
+    "partial_candles_never_count_as_closes": true
+  },
+  "gates": {
+    "btc_above_63300": true,
+    "btc_above_61900": true,
+    "btc_close_below_59400": false,
+    "ethbtc_above_0275": true,
+    "ethbtc_above_0300": false
+  },
+  "fixed_breadth": {
+    "cohort": "FIXED_RISK35_v1",
+    "sample": 35,
+    "positive_pct": {
+      "1h": 77.1428571429,
+      "24h": 17.1428571429,
+      "7d": 34.2857142857
+    },
+    "delta_pp": {
+      "1h": 17.1428571429,
+      "24h": -11.4285714286,
+      "7d": -25.7142857143
+    },
+    "median_pct": {
+      "1h": 0.4502644116,
+      "24h": -1.8233471087,
+      "7d": -1.0332113255
+    },
+    "assessment": "1H_POSITIVE_24H_AND_7D_WEAK_FIRST_VALID_PERSISTENCE_DETERIORATION"
+  },
+  "etf": {
+    "latest_completed_session": "2026-07-16",
+    "btc_latest_usd_m": 45.7,
+    "btc_3_usd_m": 334.5,
+    "btc_5_usd_m": 0.2,
+    "btc_7_usd_m": -180.0,
+    "btc_10_usd_m": 330.7,
+    "btc_positive_streak": 3,
+    "btc_ibit": "NOT_REPORTED",
+    "eth_latest_usd_m": -28.0,
+    "eth_3_usd_m": 84.2,
+    "eth_7_usd_m": 105.5,
+    "current_2026_07_17": "PENDING_NO_ROW",
+    "partial_counted": false
+  },
+  "spot_taker": {
+    "scope": "BINANCE_ONLY_NOT_MARKET_WIDE_CVD",
+    "btc_4h_usd": -11807746.583,
+    "btc_24h_usd": -31251965.4762,
+    "eth_4h_usd": -7557975.9456,
+    "eth_24h_usd": -44805552.1556
+  },
+  "leverage": {
+    "source": "OKX_ONLY",
+    "btc_basis_pct": -0.0411783936,
+    "btc_funding_pct": 0.0033925187,
+    "btc_oi_delta_prev_pct": -0.7436643016,
+    "btc_oi_delta_24h_pct": -1.0945884729,
+    "eth_basis_pct": -0.0409665961,
+    "eth_funding_pct": 0.0063007402,
+    "eth_oi_delta_prev_pct": -1.5829165254,
+    "eth_oi_delta_24h_pct": -7.6905973818
+  },
+  "cfgi": {
+    "health": "PARTIAL_WITH_STALE_MARKET_AND_PAGE_CONFLICT",
+    "market": {
+      "1d": 45,
+      "4h": 37,
+      "1h": 33,
+      "15m": 38
+    },
+    "btc": {
+      "1d": 50,
+      "4h": 40,
+      "1h": 39,
+      "15m": 54
+    },
+    "eth": {
+      "1d": 61,
+      "4h": 47,
+      "1h": 40,
+      "15m": 55
+    },
+    "use": "DATA_ONLY"
+  },
+  "stablecoin": {
+    "official": "MISSING",
+    "proxy_1d_pct": -0.0321747988,
+    "proxy_dominance_pct": 12.6699563732,
+    "proxy_dominance_delta_pp": 0.0795,
+    "authority": "PROXY_ONLY"
+  },
+  "macro": {
+    "status": "PASS_WITH_CREDIT_SPREAD_MISSING",
+    "fred_component_proxy_weekly_pct": 0.477644255,
+    "authority": "CONTEXT_ONLY"
+  },
+  "missing": {
+    "market_wide_cvd": "UNAVAILABLE",
+    "multi_venue_spot": "NOT_CONFIGURED",
+    "official_stablecoin_history": "MISSING",
+    "etf_20_session": "NOT_COMPUTED",
+    "credit_spread": "MISSING_RESTRICTION"
+  },
+  "main_framework": {
+    "decision_delta_class": "EARLY_WARNING_CANDIDATE",
+    "framework_edge_state": "REPAIR_PRESENT_PARTICIPATION_AND_FLOW_DETERIORATING_NOT_FAILED",
+    "material_delta": "FIRST_FIXED_COHORT_PERSISTENCE_SHOWS_24H_AND_7D_DETERIORATION_WHILE_PRICE_FLOW_AND_SENTIMENT_WEAKEN_BUT_CORE_REPAIR_GATES_HOLD",
+    "event_id": "ROTATION_REPAIR_EDGE_20260712_01",
+    "event_status": "OPEN_TRIGGERED",
+    "alert_status": "STILL_ACTIVE",
+    "early_warning_candidate": "ACTIVE_NOT_RATIFIED_ACTION_SIGNAL",
+    "stage_1_status": "NOT_FIRED_IBIT_NOT_REPORTED_ON_THIRD_POSITIVE_COMPLETED_BTC_ETF_SESSION",
+    "ota_72h_review": "SURVIVAL_HELD_WITHOUT_CONFIRMATION_BREADTH_TRANSLATION_FAILED_FLOW_REMAINS_CONTRADICTORY",
+    "broad_recovery": "NOT_CONFIRMED",
+    "rotation": "NO_ROTATION",
+    "large_cap_window": "WATCH_ONLY_NOT_OPEN",
+    "new_entry_signal": "NOT_ACTIVE",
+    "new_pullback_alert": "NO_RATIFIED_ALERT",
+    "active_trim_signal": "NO",
+    "portfolio_action": "NONE",
+    "user_action": "HOLD_AND_WAIT"
+  },
+  "authority": {
+    "custom_gpt": "NON_BINDING_SENSOR_ONLY",
+    "ota": "SHADOW_NON_BINDING",
+    "main_framework": "SOLE_STATE_GATE_AND_ACTION_AUTHORITY"
+  }
+}
