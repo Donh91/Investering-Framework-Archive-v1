@@ -1,0 +1,46 @@
+{
+  "revision_id": "FARSIDE_POST_ACCEPTANCE_REVISION_20260717T063400Z",
+  "revision_type": "POST_ACCEPTANCE_PRIMARY_SOURCE_COMPLETION",
+  "accepted_snapshot_unchanged": "DATA_PING_V5_20260717T034148Z",
+  "immutable_payload_rewritten": false,
+  "verification_time_utc": "2026-07-17T06:34:00Z",
+  "source": {
+    "provider": "Farside Investors",
+    "btc_url": "https://farside.co.uk/btc/",
+    "eth_url": "https://farside.co.uk/eth/",
+    "source_class": "DIRECT_PRIMARY_TABLE",
+    "status": "VERIFIED_CURRENT_PAGE"
+  },
+  "superseded_provisional_fields": {
+    "btc_2026_07_16_total_usd_m": 45.7,
+    "btc_2026_07_16_ibit": "NOT_REPORTED",
+    "stage_1_flow_leg": "PENDING_IBIT_NOT_REPORTED"
+  },
+  "verified_revision": {
+    "btc_2026_07_16": {
+      "IBIT_usd_m": 33.4,
+      "FBTC_usd_m": 30.7,
+      "BITB_usd_m": 15.0,
+      "total_usd_m": 79.1
+    },
+    "eth_2026_07_16": {
+      "total_usd_m": -28.0
+    },
+    "btc_completed_windows_usd_m": {
+      "3_sessions": 367.9,
+      "5_sessions": 33.6,
+      "7_sessions": -146.6,
+      "10_sessions": 364.1
+    },
+    "btc_positive_completed_streak": 3
+  },
+  "governance_result": {
+    "stage_1_etf_flow_requirement": "COMPLETE_RATIFIED",
+    "requirement": "THREE_CONSECUTIVE_POSITIVE_COMPLETED_BTC_ETF_SESSIONS_WITH_IBIT_POSITIVE",
+    "overall_rotation_stage": "NOT_GRANTED_BY_FLOW_LEG_ALONE",
+    "portfolio_action": "NONE",
+    "data_ping_payload_status": "PRESERVED_AS_ACCEPTED_WITH_REVISION_SUPPLEMENT"
+  },
+  "source_timing_note": "The OTA observation that the 16 July settle was not yet verifiable was time-valid at its 06:07 UTC run, but the direct Farside table was populated later and is now authoritative for the completed session.",
+  "quality_note": "This revision improves ETF-flow certainty but does not repair market-wide CVD, multi-venue spot flow, official stablecoin history or weak breadth persistence."
+}
