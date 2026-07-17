@@ -1,0 +1,36 @@
+{
+  "supplement_id": "BINANCE_SOURCE_AVAILABILITY_DEGRADATION_20260717T142500Z",
+  "source_snapshot_id": "DATA_PING_V5_20260717T142500Z",
+  "classification": "PERSISTENT_SOURCE_UNAVAILABLE_SECOND_CONSECUTIVE_RUN",
+  "raw_error_class": "RESTRICTED_LOCATION_SERVICE_UNAVAILABLE",
+  "affected_fields": [
+    "BINANCE_PRIMARY_SPOT",
+    "DIRECT_ETHBTC",
+    "CANONICAL_BINANCE_CEST_CLOSE_UPDATE",
+    "BINANCE_SPOT_TAKER_15M_1H_4H_24H"
+  ],
+  "fallbacks": {
+    "coingecko_price": "OBSERVATION_ONLY_COMPARABLE_WITH_PRIOR_FALLBACK",
+    "geckoterminal_candles": "UTC_SHADOW_ONLY_NOT_CANONICAL",
+    "derived_ethbtc": "OBSERVATION_ONLY_NO_GATE_AUTHORITY",
+    "okx_contract_taker": "RAW_LEGS_ONLY_NO_SPOT_FLOW_SUBSTITUTION"
+  },
+  "decision_impact": {
+    "warning_clearance": "NOT_PERMITTED_FROM_THIS_RUN_ALONE",
+    "warning_escalation": "NOT_PERMITTED_FROM_THIS_RUN_ALONE_WITHOUT_OTHER_CANONICAL_CONFIRMATION",
+    "failed_reclaim_resolution": "UNRESOLVED",
+    "portfolio_action": "NONE"
+  },
+  "observed_compensation": {
+    "fixed_risk35_1h_positive_pct": 88.5714286,
+    "fixed_risk35_24h_positive_pct": 14.2857143,
+    "interpretation": "STRONG_INTRADAY_REBOUND_WITHOUT_MEDIUM_HORIZON_TRANSLATION"
+  },
+  "governance": [
+    "Missing Binance fields remain MISSING rather than being synthesized.",
+    "CoinGecko and GeckoTerminal do not replace the canonical Binance CEST close ledger.",
+    "Derived ETH/BTC cannot fire direct-pair governance gates.",
+    "OKX raw taker legs cannot replace Binance spot-taker flow or market-wide CVD.",
+    "Repeated source failure is an observability degradation, not a market signal."
+  ]
+}
