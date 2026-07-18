@@ -1,7 +1,7 @@
 # Archive Governance Receipt: Retire Stale V4 Thread-Derived Fallback
 
 **Date:** 2026-07-18  
-**Status:** `PENDING_PR_MERGE_AND_MAIN_READBACK`  
+**Status:** `PASS_MERGED_AND_MAIN_READBACK`  
 **Authority:** source-routing safety only
 
 ## Finding
@@ -34,4 +34,15 @@ changed_paths: 2
 file_deletions: 0
 market_authority_change: NO
 portfolio_action: NONE
+```
+
+## Merge and readback
+
+```yaml
+pull_request: 80
+merge_commit_sha: 4b950a68d20678186f610ddd5ca835cd2aaf78b4
+thread_source_state_blob_sha_after_merge: 695ca2445e8d8429067abd301fa9f2bc8d8cc838
+main_readback: PASS
+source_status: STALE_ARCHIVE_ONLY_SUPERSEDED_BY_V5_ACCEPTED_LOG
+active_V5_owner_preserved: YES
 ```
