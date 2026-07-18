@@ -1,7 +1,7 @@
 # Archive Governance Receipt: DATA PING V5 Recovery Checkpoint
 
 **Date:** 2026-07-18  
-**Status:** `PENDING_PR_MERGE_AND_MAIN_READBACK`  
+**Status:** `PASS_MERGED_AND_MAIN_READBACK`  
 **Owner:** MAIN_FRAMEWORK / CHATGPT  
 **Operation:** additive continuity checkpoint and prepared successor bootstrap
 
@@ -28,14 +28,14 @@ history_rewrite: NO
 task_branch: agent/task-20260718-data-ping-recovery-checkpoint
 base_main_sha: 7655c1eaa4a565c711988adfbbde57d9cee4a881
 direct_main_write: NO
-deletions: 0
+file_deletions: 0
 renames: 0
 moves: 0
 ```
 
 One attempted create call was rejected because the branch did not yet exist. GitHub returned 404 and no file or commit was created. The branch was then created before all successful writes.
 
-## Intended paths
+## Merged paths
 
 ```text
 CREATE 02_DATA_PING/thread_handoffs/checkpoints/2026-07-18__data-ping-v5__recovery-checkpoint.md
@@ -66,24 +66,39 @@ The accepted V5 quality update states that the fixed cohort was initialized with
 
 No cohort was reconstructed. Dynamic Top50/Top100 breadth remains ineligible as a replacement.
 
-## Validation plan
+## Pull request and merge
 
-Before merge:
-
-```text
-read back all four branch paths
-verify exact four-path diff
-verify valid JSON pointer
-verify zero deletions
-verify V6 remains PREPARED_NOT_ACTIVE
-verify canonical state and portfolio action unchanged
+```yaml
+pull_request: 78
+pull_request_title: Add periodic DATA PING recovery checkpoint and V6 bootstrap
+changed_paths: 4
+expected_changed_paths: 4
+changed_path_scope: PASS
+merge_commit_sha: 1806734491e8978123245a62772c1933956b1664
 ```
 
-After merge:
+## Main readback
 
-```text
-read back all four paths from main
-record merge commit SHA
-mark latest pointer readback PASS
-finalize this receipt or add a bounded follow-up receipt
+```yaml
+latest_thread_handover_pointer_blob_sha: 341b6ec469ffdccefa4098cbf5fd1e6698ff20dd
+recovery_checkpoint_blob_sha: 890561eaeaf9d0354492346cc409ca3fc5c2cd9d
+v6_bootstrap_blob_sha: 557d404a900608b0ae0edc48b033d297fbf48bb1
+receipt_blob_sha_before_finalization: b516b3573eee0d7c0af650f72ed09a2a3b4a7fb5
+pointer_readback: PASS
+checkpoint_readback: PASS
+bootstrap_readback: PASS
+receipt_readback: PASS
+v6_activation_status: PREPARED_NOT_ACTIVE
+canonical_state_changed: NO
+portfolio_action: NONE
+```
+
+## Final result
+
+```yaml
+archive_content_result: PASS
+write_governance_result: PASS_WITH_REJECTED_PRE_BRANCH_CALL_DISCLOSED
+final_repository_state: PASS
+thread_recovery_readiness: PASS_WITH_EXPLICIT_FIXED_COHORT_GAP
+weekly_checkpoint_policy: ACTIVE
 ```
