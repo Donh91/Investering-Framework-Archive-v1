@@ -1,7 +1,7 @@
 {
-  "contract_version": "1.1",
+  "contract_version": "1.2",
   "protocol_path": "02_DATA_PING/protocols/2026-07-15__data-ping-thread-handover-protocol-v1-0__canonical.md",
-  "handover_status": "SUCCESSOR_THREAD_ACTIVATED",
+  "handover_status": "SUCCESSOR_THREAD_ACTIVATED_WITH_CURRENT_RECOVERY_CHECKPOINT",
   "handover_id": "DATA_PING_THREAD_HANDOVER_V4_TO_V5_20260715T210212Z",
   "created_at_utc": "2026-07-15T21:02:12Z",
   "activated_at_utc": "2026-07-15T22:32:11Z",
@@ -21,21 +21,58 @@
   "activation_log_id": "DATA_PING_V5_20260715T221843Z",
   "raw_source_snapshot_id": "DATA_PING_V4_20260715T221843Z",
   "latest_accepted_log_pointer": "02_DATA_PING/operational_handoffs/latest_accepted_log_state.json",
-  "latest_active_registry_path": "02_DATA_PING/live_state_handover/registries/2026-07-15T221843Z__active-gate-and-edge-event-registry__canonical.md",
+  "latest_decision_context_pointer": "02_DATA_PING/operational_handoffs/latest_decision_context_state.json",
+  "latest_canonical_accepted_log_id": "DATA_PING_V5_20260717T162231Z",
+  "latest_canonical_payload_sha256": "0e67f519748b6c484fc9041b41a5adbcbbea5f44de813c93db3beb7c0b69f782",
+  "latest_active_registry_path": "02_DATA_PING/live_state_handover/registries/2026-07-17T162231Z__active-gate-and-edge-event-registry__canonical.md",
+  "latest_prospective_event_path": "02_DATA_PING/decision_value/prospective_events/ROTATION_REPAIR_EDGE_20260712_01.json",
   "active_event": {
     "event_id": "ROTATION_REPAIR_EDGE_20260712_01",
     "event_status": "OPEN_TRIGGERED",
-    "framework_edge_state": "PRESENT_REPAIR_NOT_CONFIRMATION",
-    "alert_status": "STILL_ACTIVE"
+    "framework_edge_state": "REPAIR_PRESENT_PULLBACK_WARNING_ACTIVE_SECOND_INTRADAY_REBOUND_CURRENT_ABOVE_63300_PARTIAL_NO_MEDIUM_HORIZON_TRANSLATION_NEGATIVE_4H_24H_FLOW_IMPROVING_NOT_FAILED",
+    "alert_status": "STILL_ACTIVE_STRENGTHENED_MAINTAINED"
   },
-  "portfolio_state": {
+  "public_decision_state": {
     "rotation_status": "NO_ROTATION",
-    "rebuy_status": "LOCKED",
+    "broad_recovery_status": "NOT_CONFIRMED",
     "large_cap_buy_window": "WATCH_ONLY_NOT_OPEN",
     "new_entry_signal": "NOT_ACTIVE",
     "active_trim_signal": "NO",
     "portfolio_action": "NONE",
     "user_action": "HOLD_AND_WAIT"
+  },
+  "latest_recovery_checkpoint": {
+    "checkpoint_id": "DATA_PING_V5_RECOVERY_CHECKPOINT_20260718T120000Z",
+    "checkpoint_path": "02_DATA_PING/thread_handoffs/checkpoints/2026-07-18__data-ping-v5__recovery-checkpoint.md",
+    "created_at_utc": "2026-07-18T12:00:00Z",
+    "status": "PASS_WITH_EXPLICIT_FIXED_COHORT_GAP",
+    "latest_format_test_id": "DATA_PING_V5_AI2AI_TEST_20260718T113029Z",
+    "format_schema": "DATA_PING_MAIN_THREAD_INGEST_v1_1",
+    "format_top_level_fields": 11,
+    "consecutive_window_and_dex_continuity_passes": 2,
+    "counted_post_repair_passes": 0,
+    "post_repair_blocker": "FIXED_RISK35_V1_AUTHORITATIVE_IDENTITY_MISSING",
+    "governance_lock_blockers": [
+      "FIXED_RISK35_V1_AUTHORITATIVE_IDENTITY_MISSING",
+      "INDEPENDENT_ARTIFACT_PARITY_PENDING"
+    ]
+  },
+  "prepared_successor": {
+    "title": "DATA PING_V6",
+    "version": 6,
+    "status": "PREPARED_NOT_ACTIVE",
+    "bootstrap_path": "02_DATA_PING/thread_handoffs/bootstrap/2026-07-18__data-ping-v6__bootstrap.md",
+    "activation_rule": "FIRST_COMPLETE_V6_PACKET_REVIEWED_AND_ACCEPTED_BY_MAIN_FRAMEWORK",
+    "empty_thread_supersedes_v5": false
+  },
+  "periodic_checkpoint_rule": {
+    "enabled": true,
+    "routine_ping_trigger": false,
+    "material_change_threshold": 5,
+    "maximum_age_days_when_material_changes_exist": 7,
+    "context_risk_trigger": true,
+    "thread_transition_trigger": true,
+    "weekly_archive_operator_check": true
   },
   "activation_rule": "SATISFIED_FIRST_COMPLETE_V5_THREAD_PACKET_ACCEPTED",
   "source_resolution_rule": "HIGHEST_VERSION_WITH_AN_ACTUAL_COMPLETE_DATA_PING_WINS",
@@ -43,9 +80,11 @@
   "handover_market_authority": "ZERO",
   "handover_portfolio_authority": "ZERO",
   "notes": [
-    "The raw source packet retained a V4 snapshot identifier. It was accepted as the first complete packet in the bootstrapped V5 canonical thread without rewriting the source identifier.",
-    "V5 activation itself did not change gates or portfolio action.",
-    "The framework state changed only because the new packet restored canonical Binance close and spot-taker observability."
+    "The V4 to V5 history remains immutable and activated.",
+    "Current state must be resolved from the latest accepted-log and decision-context pointers, not copied from the historical handover.",
+    "The recovery checkpoint preserves V5 architecture and unresolved continuity gaps without changing canonical state.",
+    "V6 is prepared only and remains inactive until the first complete V6 packet is reviewed and accepted.",
+    "FIXED_RISK35_v1 must not be regenerated from a current Top50 or Top100 universe."
   ],
-  "readback_status": "PASS_MAIN_PAYLOAD_RECEIPT_POINTER_REGISTRY_HANDOVER_SUPPLEMENT"
+  "readback_status": "PENDING_BRANCH_AND_MAIN_VALIDATION"
 }
