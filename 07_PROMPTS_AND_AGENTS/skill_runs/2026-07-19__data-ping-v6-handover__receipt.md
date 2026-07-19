@@ -97,6 +97,16 @@ receipt_main_blob_sha_before_post_merge_validation: 6c9d3f948152332c3d2cce989f87
 main_readback_status: PASS
 ```
 
+## Post-merge validation
+
+```yaml
+validation_branch: agent/task-20260719-data-ping-v6-handover-validate
+validation_pull_request: 85
+validation_pull_request_url: https://github.com/Donh91/Investering-Framework-Archive-v1/pull/85
+validation_scope: POINTER_AND_RECEIPT_ONLY
+validation_status: READY_TO_MERGE
+```
+
 ## Final classification
 
 ```yaml
@@ -107,6 +117,4 @@ incident_count: 0
 market_state_change: NO
 portfolio_action_change: NO
 v6_activation_status: PREPARED_NOT_ACTIVE
-post_merge_validation_branch: agent/task-20260719-data-ping-v6-handover-validate
-post_merge_validation_pr: PENDING
 ```
