@@ -1,0 +1,66 @@
+{
+  "authority": {
+    "binding": false,
+    "canonical_acceptance": false,
+    "portfolio_action": false,
+    "state_change": false
+  },
+  "conflicts": [],
+  "missing": [
+    {
+      "field": "DGS10",
+      "source_date": "2026-07-15",
+      "status": "UNKNOWN"
+    }
+  ],
+  "observations": {
+    "DGS10": {
+      "authority": {
+        "binding": false,
+        "canonical_acceptance": false,
+        "portfolio_action": false,
+        "state_change": false
+      },
+      "direct_or_derived": "DIRECT",
+      "field": "DGS10",
+      "observation_id": "FRED:DGS10:2026-07-17",
+      "payload_sha256": "4cb47a21799634f89f0f4c38f5578b1d961e4f3a8c2b94bc25fc80b53c06da4f",
+      "retrieval_timestamp": "2026-07-19T12:00:00Z",
+      "revision_policy": "APPEND_ONLY_DO_NOT_OVERWRITE_PRIOR_RECEIPTS",
+      "source_convention": "FRED_REPORTED_DAILY_OBSERVATION",
+      "source_id": "FRED_CSV_MACRO_CORE",
+      "source_timestamp": "2026-07-17T00:00:00Z",
+      "unit": "PERCENT",
+      "value": 4.22,
+      "venue_specific": false
+    }
+  },
+  "run_id": "DT_FRED_20260719T120000Z_4cb47a217996",
+  "snapshot_id": "DT_FRED_20260719T120000Z_4cb47a217996_SNAPSHOT",
+  "source_lineage": {
+    "receipt_sha256": "247994362dbae4146d25d08e21415d2af138ea94b06a2e019fb89f64d7c798b4",
+    "source_health": {
+      "acquisition_mode": "FIXTURE",
+      "authority": {
+        "binding": false,
+        "canonical_acceptance": false,
+        "portfolio_action": false,
+        "state_change": false
+      },
+      "freshness_seconds": 216000,
+      "payload_sha256": "4cb47a21799634f89f0f4c38f5578b1d961e4f3a8c2b94bc25fc80b53c06da4f",
+      "retrieval_timestamp": "2026-07-19T12:00:00Z",
+      "series": "DGS10",
+      "source_id": "FRED_CSV_MACRO_CORE",
+      "source_substitution": {
+        "reason": null,
+        "substitute_source_id": null,
+        "used": false
+      },
+      "source_timestamp": "2026-07-17T00:00:00Z",
+      "stale_after_seconds": 604800,
+      "status": "PASS"
+    }
+  },
+  "status": "PASS"
+}
