@@ -1,0 +1,37 @@
+{
+  "registry_version": "0.1",
+  "status": "SHADOW_PILOT",
+  "primary_source": {
+    "source_id": "FRED_CSV_MACRO_CORE",
+    "provider": "Federal Reserve Bank of St. Louis FRED",
+    "series": ["DGS10"],
+    "transport": "PUBLIC_CSV_HTTPS",
+    "url_template": "https://fred.stlouisfed.org/graph/fredgraph.csv?id={series}",
+    "credential_required": false,
+    "paid_dependency": false,
+    "direct_or_derived": "DIRECT",
+    "source_convention": "FRED_REPORTED_DAILY_OBSERVATION",
+    "stale_after_seconds": 604800,
+    "revision_policy": "APPEND_ONLY_RECEIPTS_PRESERVE_PRIOR_PAYLOAD_HASHES"
+  },
+  "validation_source": {
+    "source_id": "FRED_SERIES_PAGE_METADATA",
+    "purpose": "MANUAL_METADATA_AND_UNIT_CROSS_CHECK_ONLY",
+    "automated_in_phase_1": false,
+    "source_substitution_allowed": false
+  },
+  "failure_policy": {
+    "missing": "UNKNOWN",
+    "empty": "FAIL_EXPLICITLY",
+    "schema_drift": "FAIL_EXPLICITLY",
+    "network": "FAIL_AFTER_BOUNDED_RETRIES",
+    "silent_fallback": false,
+    "source_substitution": "RECORD_EXPLICITLY_OR_DO_NOT_USE"
+  },
+  "authority": {
+    "binding": false,
+    "canonical_acceptance": false,
+    "state_change": false,
+    "portfolio_action": false
+  }
+}
