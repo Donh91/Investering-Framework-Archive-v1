@@ -46,7 +46,7 @@ v6_contract_blob_sha: e6ea0531aac34f896995fc0ee53495213cf2963c
 handover_blob_sha: e9d7eb1a8a6b4230d6896f972bf44c6e72beef8b
 checkpoint_blob_sha: 0714b4c98ff40ce37d27b4ce6a3727dae2d89fd0
 bootstrap_blob_sha: df0d5eb0b4b64986fefccbf95350dabb2afeffab
-pointer_blob_sha: 85598a3afa9ccde097af9d009b21e7d5b8487db1
+pointer_blob_sha_before_post_merge_validation: 85598a3afa9ccde097af9d009b21e7d5b8487db1
 addendum_blob_sha: e74817d3b30727806357541ac752909690075462
 branch_readback_status: PASS
 ```
@@ -77,10 +77,36 @@ portfolio_action_changed: NO
 pull_request: 84
 pull_request_url: https://github.com/Donh91/Investering-Framework-Archive-v1/pull/84
 pr_base_sha: eeb1194fa976b021359560f0b3660dc737e4cc7b
-pr_head_sha_before_receipt_update: 6994bcaa9799c3b277b595147e39be6809fbbf26
-merge_commit_sha: PENDING
-main_readback_status: PENDING
-final_repository_state: PENDING
-write_governance_result: PASS_SO_FAR
+pr_head_sha: 58be87872ecce575f733118431444ad67d586335
+merge_commit_sha: 2c04881ebdaa8b45e91458c889616743e9544cd9
+merge_status: PASS
+changed_file_count: 7
+changed_file_scope: PASS_EXACT_INTENDED_PATHS
+```
+
+## Main readback
+
+```yaml
+v6_contract_main_blob_sha: e6ea0531aac34f896995fc0ee53495213cf2963c
+handover_main_blob_sha: e9d7eb1a8a6b4230d6896f972bf44c6e72beef8b
+checkpoint_main_blob_sha: 0714b4c98ff40ce37d27b4ce6a3727dae2d89fd0
+bootstrap_main_blob_sha: df0d5eb0b4b64986fefccbf95350dabb2afeffab
+pointer_main_blob_sha_before_post_merge_validation: 85598a3afa9ccde097af9d009b21e7d5b8487db1
+addendum_main_blob_sha: e74817d3b30727806357541ac752909690075462
+receipt_main_blob_sha_before_post_merge_validation: 6c9d3f948152332c3d2cce989f87ca697d57be10
+main_readback_status: PASS
+```
+
+## Final classification
+
+```yaml
+archive_content_result: PASS
+write_governance_result: PASS
+final_repository_state: PASS
 incident_count: 0
+market_state_change: NO
+portfolio_action_change: NO
+v6_activation_status: PREPARED_NOT_ACTIVE
+post_merge_validation_branch: agent/task-20260719-data-ping-v6-handover-validate
+post_merge_validation_pr: PENDING
 ```
