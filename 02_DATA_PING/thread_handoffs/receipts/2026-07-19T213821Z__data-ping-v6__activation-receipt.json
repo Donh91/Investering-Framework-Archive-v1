@@ -1,0 +1,27 @@
+{
+  "receipt_type": "DATA_PING_THREAD_ACTIVATION",
+  "activated_version": 6,
+  "activated_thread_title": "DATA PING_V6",
+  "activation_time_utc": "2026-07-19T21:38:21Z",
+  "activation_time_cest": "2026-07-19T23:38:21+02:00",
+  "accepted_log_id": "DATA_PING_V6_20260719T200033Z",
+  "source_snapshot_id": "DATA_PING_V6_RAW_20260719T200033Z",
+  "canonical_predecessor_id": "DATA_PING_V5_20260717T162231Z",
+  "collector_predecessor_id": "DATA_PING_V6_RAW_20260719T181702Z",
+  "packet_contract": "DATA_PING_MAIN_THREAD_INGEST_v2_0_RAW",
+  "activation_rule": "FIRST_COMPLETE_V6_PACKET_REVIEWED_AND_ACCEPTED_BY_MAIN_FRAMEWORK",
+  "activation_status": "PASS_ACTIVE",
+  "acceptance_mode": "ACCEPTED_BY_FIELD_WITH_NON_BLOCKING_READINESS_ALIAS_NORMALIZATION",
+  "market_state_change_caused_by_activation": false,
+  "portfolio_action_caused_by_activation": false,
+  "active_event_id": "ROTATION_REPAIR_EDGE_20260712_01",
+  "portfolio_action": "NONE",
+  "user_action": "HOLD_AND_WAIT",
+  "notes": [
+    "V6 is now the highest accepted DATA PING source version.",
+    "V5 remains immutable predecessor history.",
+    "Readiness aliases were normalized by Main Framework without reconstructing market data.",
+    "Dynamic breadth symbol metadata remains a non-blocking collector hardening item.",
+    "Sunday settled weekly close remains NOT_DUE at the source snapshot time."
+  ]
+}
