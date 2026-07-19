@@ -1,10 +1,11 @@
 # Archive Governance Receipt - Claude Week 29 Research Package
 
 **Dato:** 2026-07-19  
-**Status:** RECEIPT / PENDING_PR_VALIDATION  
+**Status:** PASS  
 **Område:** archive governance / Research Lab ingestion  
 **Primary folder:** `07_PROMPTS_AND_AGENTS/skill_runs/`  
-**Task branch:** `agent/task-20260719-w29-claude-research-audit`
+**Initial task branch:** `agent/task-20260719-w29-claude-research-audit`  
+**Finalization branch:** `agent/task-20260719-finalize-w29-claude-research-audit`
 
 ---
 
@@ -21,13 +22,15 @@ classification:
   new_forward_test: REJECT
 primary_owner: 06_RESEARCH_LAB/audit_summaries/2026-07-19__week29-claude-red-team-ingestion__shadow.md
 operation: CREATE_TWO_DURABLE_SYNTHESIS_FILES_AND_RECEIPT
-target_branch: agent/task-20260719-w29-claude-research-audit
+initial_task_branch: agent/task-20260719-w29-claude-research-audit
+finalization_branch: agent/task-20260719-finalize-w29-claude-research-audit
 branch_assertion: PASS
 paths_created:
   - 08_SOURCE_MATERIAL/claude/2026-07-19__claude-week29-research-package__source-note.md
   - 06_RESEARCH_LAB/audit_summaries/2026-07-19__week29-claude-red-team-ingestion__shadow.md
   - 07_PROMPTS_AND_AGENTS/skill_runs/2026-07-19__archive-governance-claude-week29-research__receipt.md
-paths_updated: []
+paths_updated_after_merge:
+  - 07_PROMPTS_AND_AGENTS/skill_runs/2026-07-19__archive-governance-claude-week29-research__receipt.md
 paths_deleted: []
 canonical_index_change: NO
 addendum_registry_change: NOT_APPLICABLE
@@ -43,21 +46,16 @@ source_lineage:
   zip_files: 14
   executive_pdf_sha256: f0b9e0daa2ce1b755f8dace74da641fc6cbd7ca964175365a9a5de37fde267a8
   red_team_pdf_sha256: 03566aa4deaef494660a5f89bf1c04be4a827a8a8908f7ba9e82de0b99e79c80
+main_merge:
+  pull_request: 86
+  merge_commit_sha: 8ac4ea7014499b1ffc9c0310a6372742da77bfc2
+  merge_method: SQUASH
+  changed_files: 3
+  merged: YES
 backup_scope:
   backup_product: NONE
   current_version_in_snapshot: UNKNOWN
   post_merge_delta_status: NOT_REQUIRED
-validation_plan:
-  - verify ZIP hash and member count
-  - parse all CSV and JSON files
-  - compare source convention with frozen Forecast Ledger
-  - verify week settlement status
-  - verify ETF ledger completed-session count
-  - verify current Farside completion against provisional values
-  - route H10 through current F12 and Transmission Matrix governance
-  - read back all branch writes
-  - inspect exact PR changed-file scope
-  - merge only after diff validation
 ```
 
 ## Key QA results
@@ -78,22 +76,30 @@ SHADOW_RESEARCH_VALUE: PASS
 
 ## Archive inflation avoided
 
-The following package files were not copied individually into GitHub:
-
-```text
-seven CSV ledgers
-six Markdown reports
-one JSON summary
-two PDF renderings
-binary ZIP
-```
+The seven CSV ledgers, six Markdown reports, one JSON summary, two PDF renderings and binary ZIP were not copied individually into GitHub.
 
 Reason:
 
-- multiple files repeat the same conclusions;
+- several files repeat the same conclusions;
 - several numeric claims are provisional or invalid;
 - raw source receipts and reproduction code are absent;
 - archive policy prefers the durable learning rather than every intermediate Claude report.
+
+## Validation completed
+
+```text
+TASK_BRANCH_VERIFIED: PASS
+BRANCH_READBACK_SOURCE_NOTE: PASS
+BRANCH_READBACK_SHADOW_SYNTHESIS: PASS
+BRANCH_READBACK_RECEIPT: PASS
+PR_CHANGED_FILE_SCOPE: PASS_EXACTLY_3_INTENDED_PATHS
+PR_MERGEABLE: PASS
+CI_STATUS: NO_REGISTERED_CHECKS
+MAIN_MERGE: PASS_PR_86
+MAIN_READBACK_SOURCE_NOTE: PASS
+MAIN_READBACK_SHADOW_SYNTHESIS: PASS
+INCIDENTS: 0
+```
 
 ## Authority result
 
@@ -109,9 +115,9 @@ OFFICIAL_W29_SCORE: NO
 ## Final validation fields
 
 ```yaml
-archive_content_result: PENDING_PR_VALIDATION
-write_governance_result: PENDING_PR_VALIDATION
-final_repository_state: PENDING_PR_VALIDATION
+archive_content_result: PASS_PARTIAL_ACCEPT
+write_governance_result: PASS
+final_repository_state: PASS
 incident_count: 0
 incident_paths: []
 remediation_commits: []
