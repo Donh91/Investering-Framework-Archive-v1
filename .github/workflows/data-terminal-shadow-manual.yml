@@ -1,0 +1,55 @@
+name: Data Terminal Shadow Manual
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: Run the deterministic fixture or perform an explicit live FRED fetch
+        required: true
+        default: fixture
+        type: choice
+        options:
+          - fixture
+          - live
+
+permissions:
+  contents: read
+
+concurrency:
+  group: data-terminal-shadow-manual
+  cancel-in-progress: false
+
+jobs:
+  shadow-run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run deterministic Data Terminal tests
+        run: python -m unittest discover -s tests/data_terminal -p 'test_*.py'
+      - name: Compile collector
+        run: python -m py_compile scripts/data_terminal/fred_csv_collector.py tests/data_terminal/test_fred_csv_collector.py
+      - name: Run shadow collector
+        shell: bash
+        run: |
+          if [ "${{ inputs.mode }}" = "live" ]; then
+            python scripts/data_terminal/fred_csv_collector.py \
+              --output-dir .data-terminal-output
+          else
+            python scripts/data_terminal/fred_csv_collector.py \
+              --fixture tests/data_terminal/fixtures/fred_csv_macro_core.csv \
+              --retrieval-timestamp 2026-07-19T12:00:00Z \
+              --output-dir .data-terminal-output
+          fi
+      - name: Upload sanitized shadow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: data-terminal-shadow-${{ github.run_id }}
+          path: .data-terminal-output/
+          retention-days: 14
+          if-no-files-found: error

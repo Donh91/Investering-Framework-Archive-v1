@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Donh91/Investering-Framework-Archive-v1/02_DATA_PING/data_terminal/contracts/data_terminal_contracts.schema.json",
+  "title": "Data Terminal Phase 1 Shadow Contracts",
+  "$defs": {
+    "authority": {
+      "type": "object",
+      "required": ["binding", "canonical_acceptance", "state_change", "portfolio_action"],
+      "properties": {
+        "binding": {"const": false},
+        "canonical_acceptance": {"const": false},
+        "state_change": {"const": false},
+        "portfolio_action": {"const": false}
+      },
+      "additionalProperties": false
+    },
+    "source_substitution": {
+      "type": "object",
+      "required": ["used", "substitute_source_id", "reason"],
+      "properties": {
+        "used": {"type": "boolean"},
+        "substitute_source_id": {"type": ["string", "null"]},
+        "reason": {"type": ["string", "null"]}
+      }
+    },
+    "observation": {
+      "type": "object",
+      "required": ["observation_id", "source_id", "field", "value", "direct_or_derived", "source_convention", "source_timestamp", "retrieval_timestamp", "payload_sha256", "authority"],
+      "properties": {
+        "direct_or_derived": {"enum": ["DIRECT", "DERIVED"]},
+        "venue_specific": {"type": "boolean"},
+        "payload_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "authority": {"$ref": "#/$defs/authority"}
+      },
+      "additionalProperties": true
+    },
+    "source_health": {
+      "type": "object",
+      "required": ["source_id", "status", "source_timestamp", "retrieval_timestamp", "freshness_seconds", "payload_sha256", "source_substitution", "authority"],
+      "properties": {
+        "status": {"enum": ["PASS", "STALE", "EMPTY_RESPONSE", "SCHEMA_DRIFT", "MALFORMED_TIMESTAMP", "NETWORK_ERROR"]},
+        "payload_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "source_substitution": {"$ref": "#/$defs/source_substitution"},
+        "authority": {"$ref": "#/$defs/authority"}
+      },
+      "additionalProperties": true
+    },
+    "receipt": {
+      "type": "object",
+      "required": ["run_id", "source_id", "source_url", "retrieval_timestamp", "payload_sha256", "source_timestamp", "status", "observation_ids", "missing", "conflicts", "source_substitution", "authority", "receipt_sha256"],
+      "properties": {
+        "payload_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "receipt_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "authority": {"$ref": "#/$defs/authority"}
+      },
+      "additionalProperties": true
+    },
+    "snapshot": {
+      "type": "object",
+      "required": ["snapshot_id", "run_id", "status", "source_lineage", "observations", "missing", "conflicts", "authority"],
+      "properties": {"authority": {"$ref": "#/$defs/authority"}},
+      "additionalProperties": true
+    },
+    "data_ping_handoff_candidate": {
+      "type": "object",
+      "required": ["handoff_id", "parent_terminal_run_id", "quality", "source_lineage", "observations", "missing", "conflicts", "artifacts", "authority"],
+      "properties": {"authority": {"$ref": "#/$defs/authority"}},
+      "additionalProperties": true
+    },
+    "latest_pointer": {
+      "type": "object",
+      "required": ["pointer_version", "status", "run_id", "target_path", "target_sha256", "updated_at", "source_health", "missing", "conflicts", "authority"],
+      "properties": {
+        "target_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "authority": {"$ref": "#/$defs/authority"}
+      },
+      "additionalProperties": true
+    }
+  },
+  "oneOf": [
+    {"$ref": "#/$defs/source_health"},
+    {"$ref": "#/$defs/receipt"},
+    {"$ref": "#/$defs/snapshot"},
+    {"$ref": "#/$defs/data_ping_handoff_candidate"},
+    {"$ref": "#/$defs/latest_pointer"}
+  ]
+}

@@ -1,0 +1,57 @@
+{
+  "artifacts": {
+    "receipt": "receipts/fred_csv_macro_core_fixture_receipt.json",
+    "snapshot": "snapshots/fred_csv_macro_core_fixture_snapshot.json",
+    "source_health": "source_health_fixture.json"
+  },
+  "authority": {
+    "binding": false,
+    "canonical_acceptance": false,
+    "portfolio_action": false,
+    "state_change": false
+  },
+  "conflicts": [],
+  "handoff_id": "DT_FRED_20260719T120000Z_4cb47a217996_DATA_PING_CANDIDATE",
+  "missing": [
+    {
+      "field": "DGS10",
+      "source_date": "2026-07-15",
+      "status": "UNKNOWN"
+    }
+  ],
+  "observations": {
+    "macro_core": {
+      "DGS10": {
+        "authority": {
+          "binding": false,
+          "canonical_acceptance": false,
+          "portfolio_action": false,
+          "state_change": false
+        },
+        "direct_or_derived": "DIRECT",
+        "field": "DGS10",
+        "observation_id": "FRED:DGS10:2026-07-17",
+        "payload_sha256": "4cb47a21799634f89f0f4c38f5578b1d961e4f3a8c2b94bc25fc80b53c06da4f",
+        "retrieval_timestamp": "2026-07-19T12:00:00Z",
+        "revision_policy": "APPEND_ONLY_DO_NOT_OVERWRITE_PRIOR_RECEIPTS",
+        "source_convention": "FRED_REPORTED_DAILY_OBSERVATION",
+        "source_id": "FRED_CSV_MACRO_CORE",
+        "source_timestamp": "2026-07-17T00:00:00Z",
+        "unit": "PERCENT",
+        "value": 4.22,
+        "venue_specific": false
+      }
+    }
+  },
+  "parent_terminal_run_id": "DT_FRED_20260719T120000Z_4cb47a217996",
+  "quality": {
+    "freshness_seconds": 216000,
+    "source_count": 1,
+    "status": "PASS"
+  },
+  "source_lineage": {
+    "payload_sha256": "4cb47a21799634f89f0f4c38f5578b1d961e4f3a8c2b94bc25fc80b53c06da4f",
+    "receipt_sha256": "247994362dbae4146d25d08e21415d2af138ea94b06a2e019fb89f64d7c798b4",
+    "source_id": "FRED_CSV_MACRO_CORE"
+  }
+}
