@@ -117,6 +117,26 @@ class FredCsvCollectorTests(unittest.TestCase):
         self.assertEqual(handoff["authority"], collector.AUTHORITY)
         self.assertEqual(terminal["authority"], collector.AUTHORITY)
 
+    def test_static_artifact_references_resolve(self):
+        shadow = ROOT / "02_DATA_PING/data_terminal/runtime/shadow"
+        terminal = json.loads((shadow / "latest_terminal_state.json").read_text())
+        handoff = json.loads((shadow / "latest_data_ping_handoff.json").read_text())
+        self.assertTrue((shadow / terminal["target_path"]).is_file())
+        for relative_path in handoff["artifacts"].values():
+            self.assertTrue((shadow / relative_path).is_file(), relative_path)
+
+    def test_manual_workflow_is_dispatch_only_and_read_only(self):
+        workflow = (ROOT / ".github/workflows/data-terminal-shadow-manual.yml").read_text()
+        self.assertIn("workflow_dispatch:", workflow)
+        self.assertIn("contents: read", workflow)
+        self.assertIn("default: fixture", workflow)
+        self.assertIn("- live", workflow)
+        self.assertIn("upload-artifact@v4", workflow)
+        self.assertNotIn("schedule:", workflow)
+        self.assertNotIn("cron:", workflow)
+        self.assertNotIn("git push", workflow)
+        self.assertNotIn("issues: write", workflow)
+
 
 if __name__ == "__main__":
     unittest.main()
