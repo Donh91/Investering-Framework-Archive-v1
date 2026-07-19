@@ -1,22 +1,20 @@
 {
-  "contract_version": "0.8",
-  "status": "READY_DECISION_CONTEXT",
-  "updated_at_utc": "2026-07-17T16:40:36Z",
+  "contract_version": "0.9",
+  "status": "READY_DECISION_CONTEXT_V6_ACTIVE",
+  "updated_at_utc": "2026-07-19T21:38:21Z",
   "protocol_path": "02_DATA_PING/protocols/2026-07-16__data-ping-decision-context-bridge-v0-1__canonical.md",
   "latest_accepted_log_state_path": "02_DATA_PING/operational_handoffs/latest_accepted_log_state.json",
-  "latest_accepted_data_ping_id": "DATA_PING_V5_20260717T162231Z",
-  "latest_accepted_payload_path": "02_DATA_PING/operational_handoffs/accepted_logs/payloads/2026-07-17T162231Z__data-ping-v5__accepted-payload.json",
-  "latest_accepted_payload_hash_sha256": "0e67f519748b6c484fc9041b41a5adbcbbea5f44de813c93db3beb7c0b69f782",
-  "latest_accepted_payload_blob_sha": "80f6a68a6aa6f00cdade0fa577011a7d3a043e48",
-  "source_supplement_path": "02_DATA_PING/operational_handoffs/accepted_logs/supplements/2026-07-17T162231Z__intraday-breadth-oscillation-and-eth-conflict.json",
-  "canonical_farside_revision_path": "02_DATA_PING/operational_handoffs/accepted_logs/supplements/2026-07-17T063400Z__farside-post-acceptance-source-revision.json",
-  "active_registry_path": "02_DATA_PING/live_state_handover/registries/2026-07-17T162231Z__active-gate-and-edge-event-registry__canonical.md",
-  "prospective_event_path": "02_DATA_PING/decision_value/prospective_events/ROTATION_REPAIR_EDGE_20260712_01.json",
+  "latest_accepted_data_ping_id": "DATA_PING_V6_20260719T200033Z",
+  "latest_accepted_payload_path": "02_DATA_PING/operational_handoffs/accepted_logs/payloads/2026-07-19T200033Z__data-ping-v6__accepted-payload.json",
+  "latest_accepted_payload_hash_sha256": null,
+  "latest_accepted_payload_hash_status": "NOT_GENERATED",
+  "active_registry_path": "02_DATA_PING/live_state_handover/registries/2026-07-19T200033Z__active-gate-and-edge-event-registry__canonical.md",
+  "event_update_path": "02_DATA_PING/live_state_handover/event_updates/2026-07-19T200033Z__rotation-repair-edge__v6-activation-warning-deescalated.md",
   "active_event": {
     "event_id": "ROTATION_REPAIR_EDGE_20260712_01",
     "event_status": "OPEN_TRIGGERED",
-    "framework_edge_state": "REPAIR_PRESENT_PULLBACK_WARNING_ACTIVE_SECOND_INTRADAY_REBOUND_CURRENT_ABOVE_63300_PARTIAL_NO_MEDIUM_HORIZON_TRANSLATION_NEGATIVE_4H_24H_FLOW_IMPROVING_NOT_FAILED",
-    "alert_status": "STILL_ACTIVE_STRENGTHENED_MAINTAINED"
+    "framework_edge_state": "REPAIR_PRESENT_MATURING_MEDIUM_HORIZON_SPOT_AND_ETF_TRANSLATION_WITH_CROSS_SECTIONAL_AND_FUTURES_CONFIRMATION_MISSING",
+    "alert_status": "ACTIVE_DE_ESCALATED_ONE_LEVEL_NOT_CLEARED"
   },
   "event_scoped_runtime_gates": {
     "btc_reclaim": 63300,
@@ -29,72 +27,72 @@
     "authority": "CURRENT_EVENT_ONLY_NOT_UNIVERSAL"
   },
   "latest_decision_delta": {
-    "class": "OBSERVABILITY_OR_DATA_QUALITY_DELTA",
-    "material_delta": "SECOND_1H_BREADTH_REBOUND_AND_CURRENT_63300_RECLAIM_WITH_SHORT_FLOW_IMPROVEMENT_BUT_24H_7D_AND_4H_24H_FLOW_REMAIN_WEAK",
+    "class": "MATERIAL_MARKET_INPUT_DELTA_AND_SOURCE_QUALITY_UPGRADE",
+    "material_delta": "V6_ACTIVATED_FIVE_SETTLED_BTC_CLOSES_ABOVE_63300_ETF_7_SESSION_FLOW_POSITIVE_AND_SPOT_4H_24H_POSITIVE_BUT_24H_7D_BREADTH_WEAK_AND_FUTURES_TAKER_BELOW_1",
     "action_changed": false,
     "ratified_alert": true,
-    "alert_change": "MAINTAINED_AT_STRENGTHENED_LEVEL_NOT_FURTHER_ESCALATED_NOT_CLEARED"
+    "alert_change": "DE_ESCALATED_ONE_LEVEL_NOT_CLEARED"
   },
   "current_decision_state": {
-    "pullback_warning": "ACTIVE_RATIFIED_STRENGTHENED_MAINTAINED_NOT_ACTION_ESCALATED_NOT_CLEARED",
-    "short_term_stabilization": "SECOND_INTRADAY_REBOUND_ACTIVE_UNCONFIRMED_OSCILLATORY",
+    "pullback_warning": "ACTIVE_DE_ESCALATED_ONE_LEVEL_NOT_CLEARED",
+    "short_term_stabilization": "STRUCTURAL_REPAIR_HELD_INTRADAY_FLOW_MIXED",
     "rotation": "NO_ROTATION",
     "broad_recovery": "NOT_CONFIRMED",
     "large_cap_window": "WATCH_ONLY_NOT_OPEN",
     "new_entry_signal": "NOT_ACTIVE",
     "active_trim_signal": "NO",
-    "new_pullback_alert": "NO_EXISTING_ALERT_MAINTAINED",
+    "new_pullback_alert": "NO_EXISTING_ALERT_DE_ESCALATED_NOT_CLEARED",
     "portfolio_action": "NONE",
     "user_action": "HOLD_AND_WAIT",
-    "risk_posture": "ELEVATED_VIGILANCE"
+    "risk_posture": "ELEVATED_VIGILANCE_DE_ESCALATED"
   },
   "current_evidence_summary": {
-    "structure": "BINANCE_BTC_63492_ABOVE_63300_AND_61900_LATEST_SETTLED_CEST_CLOSE_64161_99_ABOVE_63300_CURRENT_DAY_PARTIAL_NO_NEW_SETTLED_CONFIRMATION",
-    "ethbtc": "DIRECT_BINANCE_028900_ABOVE_0275_BELOW_0300_INTERNAL_CONSISTENCY_PASS",
-    "participation": "FIXED_RISK35_1H_SEQUENCE_88_57_TO_28_57_TO_85_71_PERCENT_HIGH_OSCILLATION_24H_14_29_PERCENT_7D_25_71_PERCENT_MEDIUM_TRANSLATION_ABSENT",
-    "completed_etf_flow": "FARSIDE_16JUL_BTC_79_1M_IBIT_33_4M_STAGE1_FLOW_LEG_COMPLETE_NO_NEW_COMPLETED_SESSION_BTC_7_SESSION_MINUS_146_6M_ETH_LATEST_MINUS_28M",
-    "spot_flow": "BTC_1H_POSITIVE_ETH_1H_SLIGHTLY_NEGATIVE_BTC_AND_ETH_4H_24H_REMAIN_NEGATIVE_BUT_IMPROVED",
-    "futures_flow": "BINANCE_1H_TAKER_RATIOS_ABOVE_1_BOTH_4H_24H_BELOW_1_BOTH_LONGER_HORIZON_OI_DELEVERAGING",
-    "source_quality": "LOW_DUE_PERSISTENT_ETH_BINANCE_COINGECKO_CONFLICT_OTHER_FIELDS_ACCEPTED_BY_FIELD",
-    "prospective": "SECOND_INTRADAY_REBOUND_AFTER_PRIOR_FAILURE_WARNING_MAINTAINED_72H_SURVIVAL_HELD_7D_AND_12_SESSION_REVIEWS_PENDING"
+    "structure": "BTC_64392_70_ABOVE_63300_AND_61900_FIVE_CONSECUTIVE_SETTLED_CLOSES_ABOVE_63300_SUNDAY_CANDLE_PARTIAL",
+    "weekly_main_framework": "BTC_CLV_0_689_ETH_CLV_0_558_ETHBTC_CLV_0_406_PARTIAL_NOT_SETTLED",
+    "ethbtc": "DIRECT_BINANCE_0_02888_ABOVE_0_0275_BELOW_0_0300_INTERNAL_CONSISTENCY_PASS",
+    "participation": "DYNAMIC_SHADOW_1H_62_86_PERCENT_POSITIVE_24H_35_71_PERCENT_7D_31_43_PERCENT_FIXED35_UNKNOWN",
+    "completed_etf_flow": "FARSIDE_17JUL_BTC_132_3M_IBIT_136_5M_ETH_36_7M_BTC_FOUR_SESSION_STREAK_7_SESSION_PLUS_70_6M",
+    "spot_flow": "BTC_1H_POSITIVE_ETH_1H_NEGATIVE_BOTH_15M_NEGATIVE_BTC_AND_ETH_4H_24H_POSITIVE",
+    "futures_flow": "BINANCE_TAKER_RATIOS_BELOW_1_BTC_AND_ETH_1H_4H_24H_24H_OI_MODESTLY_POSITIVE_SHORT_HORIZON_COOLING",
+    "source_quality": "MEDIUM_V6_FULL_RAW_RUN_STRICT_JSON_WITH_OFFICIAL_STABLECOIN_MARKET_WIDE_CVD_AND_FRESH_CFGI_MISSING",
+    "prospective": "REPAIR_MATURING_WARNING_DEESCALATED_NOT_CLEARED_SUNDAY_SETTLED_CLOSE_AND_7D_12_SESSION_REVIEWS_PENDING"
   },
   "source_convention_guardrails": {
-    "canonical_price_close_ledger": "BINANCE_CEST_CURRENT_DAY_PARTIAL_LATEST_SETTLED_2026_07_16",
-    "coingecko_price": "CROSSCHECK_AND_BRIDGE_ONLY",
+    "canonical_price_close_ledger": "BINANCE_CEST_DAILY_ROWS_V1",
+    "coingecko_price": "CROSSCHECK_ONLY",
     "direct_ethbtc": "BINANCE_CURRENT_EVENT_INPUT",
-    "spot_taker": "BINANCE_VENUE_SPECIFIC",
-    "futures_method": "BINANCE_SAME_METHOD_COMPARABLE_TO_PRIOR_PING",
-    "eth_price_conflict": "PRESERVED_NO_SILENT_RESOLUTION",
+    "spot_taker": "BINANCE_VENUE_SPECIFIC_NOT_MARKET_WIDE_CVD",
+    "futures_method": "BINANCE_USDM_SOURCE_TRANSFORMS_V1_NOT_MARKET_WIDE",
+    "dynamic_breadth": "SHADOW_ONLY_SAME_MEMBERSHIP_HASH_COMPARABLE",
+    "fixed_risk35": "UNKNOWN_RECONSTRUCTION_FORBIDDEN",
     "accepted_payload": "CURRENT_ACCEPTED_PAYLOAD_BY_FIELD"
   },
   "next_material_tests": [
-    "NEW_SETTLED_BINANCE_CEST_CLOSE_RELATIVE_TO_63300",
-    "NEXT_FIXED_RISK35_CHECK_FOR_SECOND_1H_REBOUND_SURVIVAL_AND_24H_TRANSLATION",
-    "TURN_OR_PERSISTENCE_OF_NEGATIVE_4H_24H_SPOT_TAKER_FLOW",
-    "BTC_HOLD_OR_LOSS_OF_61900_WITH_CONFIRMING_PARTICIPATION_AND_FLOW_WEAKNESS",
+    "SUNDAY_SETTLED_BINANCE_CEST_WEEKLY_CLOSE_AND_MAIN_FRAMEWORK_CLV",
+    "BTC_HOLD_OR_LOSS_OF_63300_AND_61900_AFTER_WEEKLY_SETTLEMENT",
+    "DYNAMIC_BREADTH_24H_AND_7D_TRANSLATION",
+    "BINANCE_FUTURES_TAKER_RATIOS_RECOVER_ABOVE_1_OR_REMAIN_SELLER_DOMINANT",
     "DIRECT_ETHBTC_HOLD_ABOVE_0275_OR_PERSISTENCE_ABOVE_0300",
-    "COMPLETED_17JUL_ETF_SESSION",
+    "NEXT_COMPLETED_FARSIDE_ETF_SESSION",
     "OTA_7D_RETENTION_REVIEW_2026_07_21",
     "OTA_12_SESSION_DURABILITY_REVIEW_AROUND_2026_07_30"
   ],
   "decision_value_blockers": [
-    "CURRENT_CEST_DAY_PARTIAL",
-    "FIXED_RISK35_24H_AND_7D_PARTICIPATION_WEAK",
-    "BINANCE_SPOT_TAKER_4H_24H_NEGATIVE",
-    "BINANCE_FUTURES_TAKER_4H_24H_BELOW_1",
-    "ETH_BINANCE_COINGECKO_PRICE_CONFLICT",
-    "FLOW_CONFIDENCE_LOW",
+    "SUNDAY_CEST_CANDLE_PARTIAL",
+    "DYNAMIC_BREADTH_24H_AND_7D_WEAK",
+    "BINANCE_FUTURES_TAKER_BELOW_1",
+    "DIRECT_ETHBTC_BELOW_0300",
     "MARKET_WIDE_CVD_UNAVAILABLE",
-    "MULTI_VENUE_SPOT_AGGRESSION_NOT_CONFIGURED",
-    "OFFICIAL_STABLECOIN_HISTORY_MISSING",
+    "OFFICIAL_STABLECOIN_TOTAL_AND_HISTORY_UNAVAILABLE",
+    "FIXED_RISK35_CANONICAL_IDENTITY_UNKNOWN",
+    "CFGI_STALE_NOT_PERSISTENCE_ELIGIBLE",
     "ETF_20_SESSION_WINDOW_MISSING"
   ],
   "stage_1_etf_flow_leg_status": "COMPLETE_RATIFIED",
   "authority": {
-    "custom_gpt": "NON_BINDING_SENSOR_ONLY",
+    "custom_gpt": "NON_BINDING_RAW_DATA_COLLECTOR_ONLY",
     "ota": "SHADOW_NON_BINDING",
-    "main_framework": "SOLE_STATE_ALERT_GATE_AND_ACTION_AUTHORITY"
+    "main_framework": "SOLE_STATE_ALERT_GATE_ACTION_AND_CANONICAL_ACCEPTANCE_AUTHORITY"
   },
-  "readback_status": "PASS_MAIN_PAYLOAD_RECEIPT_POINTER_DECISION_CONTEXT_REGISTRY_EVENT_PROSPECTIVE_SOURCE_SUPPLEMENT",
-  "merge_commit_sha": "c1a6dec465e8aa3343c671341cea2e4155b161b4"
+  "readback_status": "PASS_V6_ACCEPTED_PAYLOAD_POINTER_REGISTRY_EVENT_ACTIVATION"
 }
