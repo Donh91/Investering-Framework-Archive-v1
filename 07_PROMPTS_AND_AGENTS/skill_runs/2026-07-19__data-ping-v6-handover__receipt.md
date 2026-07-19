@@ -12,7 +12,7 @@ archive_decision: PREPARE_V6_SUCCESSOR_WITH_RAW_COLLECTOR_CONTRACT
 classification: CANONICAL_OPERATIONAL_AND_CONTINUITY
 primary_owner: 02_DATA_PING/thread_handoffs/latest_thread_handover_state.json
 operation: CREATE_AND_UPDATE
- target_branch: agent/task-20260719-data-ping-v6-handover
+target_branch: agent/task-20260719-data-ping-v6-handover
 branch_assertion: PASS
 canonical_index_change: NO
 addendum_registry_change: NOT_REQUIRED_EXISTING_REGISTERED_ADDENDUM_UPDATED
@@ -74,8 +74,10 @@ portfolio_action_changed: NO
 ## Pull request and merge
 
 ```yaml
-pull_request: PENDING
-branch_head_sha_before_pr: 9dca53bc6d473828eff82e7fa716ab5e90c6fb72
+pull_request: 84
+pull_request_url: https://github.com/Donh91/Investering-Framework-Archive-v1/pull/84
+pr_base_sha: eeb1194fa976b021359560f0b3660dc737e4cc7b
+pr_head_sha_before_receipt_update: 6994bcaa9799c3b277b595147e39be6809fbbf26
 merge_commit_sha: PENDING
 main_readback_status: PENDING
 final_repository_state: PENDING
