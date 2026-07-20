@@ -1,0 +1,39 @@
+{
+  "schema_version": "1.0",
+  "receipt_origin": "RECONCILED_AFTER_RUN",
+  "iso_week": "2026-W30",
+  "selected_source_mode": "ACCEPTED_WEEKLY_CLOSEOUT_PACKET",
+  "source_packet_id": "MASTER_MONDAY_CLOSEOUT_W30_20260720T054959Z",
+  "source_timestamp": "2026-07-20T05:49:59.233Z",
+  "source_hash_or_unknown": null,
+  "source_hash_status": "NOT_GENERATED",
+  "source_blob_sha": "8d94f83b592a60c586639892b2ad697d19c35af6",
+  "source_path": "02_DATA_PING/weekly_closeouts/accepted/2026-07-20T054959Z__master-monday-w30-final-closeout__accepted.json",
+  "active_data_ping_version": 6,
+  "latest_accepted_data_ping_id": "DATA_PING_V6_20260719T200033Z",
+  "blocking_missing_fields": [],
+  "non_blocking_unknown_fields": [
+    "FIXED_RISK35_v1",
+    "MARKET_WIDE_CVD",
+    "OFFICIAL_STABLECOIN_TOTAL_HISTORY",
+    "ETF_20_SESSION_WINDOW"
+  ],
+  "state": "COMPLETED",
+  "source_validation_completed_at": "2026-07-20T06:09:51Z",
+  "weekly_closeout_completed_at": "2026-07-20T08:06:54Z",
+  "completion_timestamp": "2026-07-20T08:06:54Z",
+  "created_at": "2026-07-20T20:12:28Z",
+  "updated_at": "2026-07-20T20:12:28Z",
+  "closeout_commit_or_unknown": "0ad57df98ee643c5950284fe3c1296b6bb0158ec",
+  "master_monday_finalization_commit": "e41600b38b5d843c0beee5eae8a0ea0c49854bf4",
+  "receipt_write_status": "RECONCILED_PENDING_PR_MAIN_READBACK",
+  "duplicate_closeout_prevented": true,
+  "reconciliation_note": "The 2026-W30 source validation and Master Monday closeout completed successfully during the scheduled run, but the dedicated weekly Data Gate receipt was not written contemporaneously. This receipt records the already verified transaction without recreating market calculations, forecasts, scoring or closeout artifacts.",
+  "authority_boundary": {
+    "retrospective_forecast_created": false,
+    "market_state_changed": false,
+    "portfolio_action_changed": false,
+    "rule_promotion": false,
+    "threshold_change": false
+  }
+}
