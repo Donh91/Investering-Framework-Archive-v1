@@ -1,0 +1,102 @@
+{
+  "schema": "DATA_PING_VALIDATION_ONLY_SOURCE_SUPPLEMENT",
+  "schema_version": "1.0",
+  "reviewed_at_utc": "2026-07-20T08:29:00Z",
+  "source_snapshot_id": "DATA_PING_V6_RAW_20260720T081747Z",
+  "source_snapshot_utc": "2026-07-20T08:17:47.244Z",
+  "source_contract": "DATA_PING_MAIN_THREAD_INGEST_v2_0_RAW",
+  "validation_status": "REJECT_CANONICAL_ACCEPTANCE_STALE_LINEAGE_ACCEPT_SOURCE_FIELDS_BY_FIELD",
+  "canonical_acceptance": false,
+  "latest_canonical_data_ping_id": "DATA_PING_V6_20260719T200033Z",
+  "latest_canonical_closeout_id": "MASTER_MONDAY_CLOSEOUT_W30_20260720T054959Z",
+  "declared_canonical_predecessor_id": "DATA_PING_V5_20260717T162231Z",
+  "required_canonical_predecessor_id": "DATA_PING_V6_20260719T200033Z",
+  "declared_collector_predecessor_id": "DATA_PING_V6_RAW_20260719T174853Z",
+  "collector_predecessor_status": "STALE_OR_UNRESOLVED_RELATIVE_TO_LATEST_ACCEPTED_RAW_20260719T200033Z",
+  "wire_normalization": {
+    "smart_quotes_observed": true,
+    "source_values_changed": false,
+    "packet_hash_status": "NOT_GENERATED"
+  },
+  "framework_context_reconciliation": {
+    "collector_declared_p1_reference_available": false,
+    "main_framework_p1_reference_available": true,
+    "main_framework_p1_reference_price": 62065.06,
+    "main_framework_p1_reference_utc": "2026-07-13T21:59:59.999Z",
+    "main_framework_post_reference_peak": 65600.0,
+    "current_spot_btc": 64308.0,
+    "provisional_peak_advance_retention_pct": 63.4505819052,
+    "formal_7d_review_date": "2026-07-21",
+    "formal_7d_review_status": "NOT_DUE"
+  },
+  "accepted_source_fields": {
+    "BTC_spot": 64308.0,
+    "ETH_spot": 1866.44,
+    "ETHBTC_direct": 0.02901,
+    "BTC_distance_above_63300_pct": 1.5924170616,
+    "BTC_distance_above_61900_pct": 3.8901453958,
+    "ETHBTC_distance_above_0275_pct": 5.4909090909,
+    "ETHBTC_distance_below_0300_pct": 3.3,
+    "spot_taker_usd_m": {
+      "BTC_15M": -0.360355036,
+      "BTC_1H": 15.5498111482,
+      "BTC_4H": -2.7151951185,
+      "BTC_24H": 14.626061445,
+      "ETH_15M": 0.5856839047,
+      "ETH_1H": 5.3414968211,
+      "ETH_4H": -0.2377634187,
+      "ETH_24H": 2.4213851386
+    },
+    "dynamic_breadth": {
+      "membership_status": "NOT_COMPARABLE_SAMPLE_CHANGED",
+      "included_n": 70,
+      "positive_share_pct_1h": 82.8571428571,
+      "positive_share_pct_24h": 24.2857142857,
+      "positive_share_pct_7d": 44.2857142857,
+      "median_pct_1h": 0.3785925395,
+      "median_pct_24h": -0.5835681054,
+      "median_pct_7d": -0.3753076047
+    },
+    "futures": {
+      "BTC_oi_delta_1h_pct": 0.2197571087,
+      "BTC_oi_delta_4h_pct": -0.0055826606,
+      "BTC_oi_delta_24h_pct": -0.5722270244,
+      "ETH_oi_delta_1h_pct": 0.5372980285,
+      "ETH_oi_delta_4h_pct": 0.5216308507,
+      "ETH_oi_delta_24h_pct": -0.5828437444,
+      "latest_BTC_taker_buy_sell_ratio": 1.4066,
+      "latest_ETH_taker_buy_sell_ratio": 1.0779,
+      "scope": "BINANCE_USDM_NOT_MARKET_WIDE"
+    },
+    "cfgi": {
+      "market_1d": 46,
+      "btc_1d": 49,
+      "btc_1h": 29,
+      "eth_1d": 56,
+      "eth_1h": 52,
+      "status": "ASYNC_SNAPSHOT"
+    }
+  },
+  "method_breaks_and_caveats": [
+    "CANONICAL_PREDECESSOR_POINTS_TO_V5_INSTEAD_OF_ACTIVE_V6",
+    "COLLECTOR_PREDECESSOR_IS_OLDER_THAN_LATEST_ACCEPTED_V6_RAW_SNAPSHOT",
+    "P1_REFERENCE_MARKED_MISSING_DESPITE_CANONICAL_MAIN_FRAMEWORK_AVAILABILITY",
+    "DYNAMIC_BREADTH_MEMBERSHIP_CHANGED_AND_CROSS_PACKET_DELTA_IS_NOT_COMPARABLE",
+    "DEX_METHOD_CHANGED_FROM_TOP20_RESERVE_FILTER_TO_SELECTED_HIGH_RESERVE_ROWS",
+    "FUTURES_TAKER_ONLY_LATEST_RATIO_PUBLISHED_NOT_1H_4H_24H_AGGREGATE_SET",
+    "OFFICIAL_STABLECOIN_HISTORY_AND_MARKET_WIDE_CVD_REMAIN_UNAVAILABLE"
+  ],
+  "framework_result": {
+    "decision_delta_class": "SHORT_HORIZON_FLOW_REBOUND_WITH_NO_MEDIUM_BREADTH_CONFIRMATION",
+    "framework_edge_state": "REPAIR_PRESENT_MATURING_SETTLED_STRUCTURE_WITH_INTRADAY_REBOUND_AND_MEDIUM_HORIZON_PARTICIPATION_WEAKNESS",
+    "pullback_warning": "ACTIVE_DE_ESCALATED_ONE_LEVEL_MAINTAINED_NOT_CLEARED",
+    "short_term_stabilization": "INTRADAY_FLOW_REBOUND_WITH_4H_AND_24H_MIXED_POSITIVE",
+    "rotation": "NO_ROTATION",
+    "broad_recovery": "NOT_CONFIRMED",
+    "large_cap_window": "WATCH_ONLY_NOT_OPEN",
+    "new_entry_signal": "NOT_ACTIVE",
+    "portfolio_action": "NONE",
+    "user_action": "HOLD_AND_WAIT",
+    "canonical_state_change": false
+  }
+}
