@@ -1,7 +1,7 @@
 # TechDev Issue #98 Prospective Calibration - Implementation Receipt
 
 **Dato:** 2026-07-20  
-**Status:** RECEIPT_PENDING_PR_MERGE_AND_MAIN_READBACK  
+**Status:** PASS_FINALIZED  
 **Område:** prospective evidence / TechDev calibration / archive governance  
 **Primary folder:** `07_PROMPTS_AND_AGENTS/skill_runs/`
 
@@ -17,7 +17,8 @@ classification: FORWARD_TEST_PLUS_INITIALIZATION_ROWS
 primary_owner: TECHDEV_CLAIM_LEDGER
 rotation_cross_owner: ROTATION_SURVIVAL_FORWARD
 operation: CREATE_AND_UPDATE
-branch: agent/task-20260720-techdev98-calibration
+implementation_branch: agent/task-20260720-techdev98-calibration
+finalization_branch: agent/task-20260720-techdev98-finalize
 branch_assertion: PASS
 branch_verified_by_read: YES
 default_branch_write: NO
@@ -27,6 +28,18 @@ canonical_index_change: NO
 addendum_registry_change: YES_EXISTING_ROW_UPDATED
 new_test_created: NO
 new_engine_created: NO
+```
+
+## Merge receipt
+
+```yaml
+implementation_pr: 100
+implementation_pr_url: https://github.com/Donh91/Investering-Framework-Archive-v1/pull/100
+implementation_merge_sha: 0adf5c8720711eb7054405f81033701cd086a0fd
+implementation_merge_result: PASS
+implementation_head_sha: d216294d01aa161f3053b2505cf8119744cc493c
+main_readback: PASS
+finalization_receipt_commit: GITHUB_COMMIT_AND_PR_HISTORY_AUTHORITY
 ```
 
 ## Paths created
@@ -48,6 +61,39 @@ new_engine_created: NO
 00_ARCHIVE_CONTROL/INDEX_ADDENDUM_REGISTRY.md
 ```
 
+## Main readback
+
+```yaml
+source_manifest:
+  path: 08_SOURCE_MATERIAL/techdev/2026-07-20__techdev-market-update-98__source-manifest.md
+  blob_sha: 6e4a9cadea10cb495f8daf41ef099b56907e9f23
+  status: PASS
+operational_contract:
+  blob_sha: 22ccdff2db11ed6f622e455132e9a8a40e8daa87
+  status: PASS
+frozen_claim_rows:
+  blob_sha: e033f9de71e7c617831fac0cf9a55954787ff4df
+  status: PASS
+gem_score_baseline:
+  blob_sha: d8cf787780a2f2fa2f61de3bf366051dab97e3e7
+  status: PASS
+w30_initialization:
+  blob_sha: ec24a4910b89ef17f133cecb36f06c05e856ec7f
+  status: PASS
+latest_state:
+  blob_sha: 8ac033a5ba1a96063cfc2481003ca08417b9b68c
+  status: PASS
+techdev_calibration_addendum:
+  blob_sha: 6a7667349ff0d26e53cbfd5c24123c62b3307828
+  status: PASS
+index_addendum:
+  blob_sha: d710281138fd7b45c793f6cf67ded8a3b9b247ea
+  status: PASS
+index_addendum_registry:
+  blob_sha: 810806ed5fa1b1dff1d64d4a3d290578ad6c9930
+  status: PASS
+```
+
 ## Frozen evidence
 
 ```yaml
@@ -61,7 +107,7 @@ matured_outcome_rows_at_initialization: 0
 source_rows_counted_as_outcomes: NO
 ```
 
-## Prospective Evidence Ledger manifest
+## Prospective Evidence Ledger verdict
 
 ```yaml
 test_id: TECHDEV_CLAIM_LEDGER
@@ -144,10 +190,11 @@ branch_assertion: PASS
 explicit_branch_on_every_write: YES
 manual_corrections_required: 0
 incident_count: 0
-write_governance_result: PASS_PENDING_MERGE_READBACK
-final_repository_state: PENDING
+write_governance_result: PASS
+archive_content_result: PASS
+final_repository_state: PASS
 backup_product: NONE
-post_merge_delta_status: PENDING
+post_merge_delta_status: NOT_REQUIRED_FOR_LOW_IMPACT_CHANGE
 correct_test_owner_found: YES
 correct_ledger_found: YES
 ledger_contract_complete: YES
@@ -163,12 +210,13 @@ unsupported_score_blocked: YES
 false_eligible_incidents: 0
 ```
 
-## Finalization gate
+## Final result
 
-Completion requires:
-
-1. branch diff verification;
-2. pull request creation;
-3. merge to `main`;
-4. readback of every created and updated path;
-5. receipt finalization with merge SHA and main-state result.
+```yaml
+archive_content_result: PASS
+write_governance_result: PASS
+final_repository_state: PASS
+weekly_tracking_initialized: YES
+framework_state_changed: NO
+portfolio_action: NONE
+```
