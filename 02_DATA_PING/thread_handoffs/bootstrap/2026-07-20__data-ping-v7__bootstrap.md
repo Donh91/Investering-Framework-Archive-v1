@@ -18,10 +18,11 @@ Read in this exact order:
 6. 02_DATA_PING/operational_handoffs/latest_accepted_log_state.json
 7. the accepted payload, receipt, supplement and active registry referenced by those pointers
 8. 02_DATA_PING/operational_handoffs/latest_validation_only_observation_state.json
-9. the validation-only supplement referenced by that pointer
-10. 03_WEEKLY_OPERATIONS/master_monday/latest_master_monday.json
-11. the W30 run receipt and all paths declared by the Master Monday pointer
-12. the first complete packet posted in DATA PING_V7
+9. the readable validation-only supplement referenced by that pointer
+10. 02_DATA_PING/operational_handoffs/accepted_logs/supplements/2026-07-20T083500Z__new-thread-lineage-context-reconciliation-correction.json
+11. 03_WEEKLY_OPERATIONS/master_monday/latest_master_monday.json
+12. the W30 run receipt and all paths declared by the Master Monday pointer
+13. the first complete packet posted in DATA PING_V7
 ```
 
 Do not reconstruct missing fields, source hashes, predecessor IDs, cohorts or market values from memory. Do not infer state from this bootstrap.
@@ -39,14 +40,16 @@ active_source_version: V6
 V7_status: PREPARED_NOT_ACTIVE
 latest_canonical_accepted_log_id: DATA_PING_V6_20260719T200033Z
 latest_settled_closeout_id: MASTER_MONDAY_CLOSEOUT_W30_20260720T054959Z
-latest_validation_only_snapshot_id: DATA_PING_V6_RAW_20260720T081747Z
-latest_validation_only_canonical_acceptance: false
+latest_v6_source_snapshot_id: DATA_PING_V6_RAW_20260720T081747Z
+latest_v6_source_field_status: PASS_BY_FIELD_WITH_MAIN_FRAMEWORK_CONTEXT_RECONCILIATION
+latest_v6_source_packet_hash_status: NOT_GENERATED
+latest_v6_source_advances_canonical_accepted_log_pointer: NO
 market_state_change_from_bootstrap: NO
 gate_or_threshold_change_from_bootstrap: NO
 portfolio_action_from_bootstrap: NONE
 ```
 
-An empty V7 thread, greeting, bootstrap receipt, schema-only test, format test or validation-only packet does not supersede V6.
+An empty V7 thread, greeting, bootstrap receipt, schema-only test, format test, source supplement or correction does not supersede V6.
 
 ## Packet interface
 
@@ -100,18 +103,36 @@ canonical acceptance
 
 The collector has zero authority to ratify state, close events, change thresholds, open deployment or recommend portfolio action.
 
-## Source and lineage requirements
+## New-thread bootstrap contract
 
-The first complete V7 packet must identify:
+Before the first full raw run in a newly created DATA PING thread, Main Framework or GitHub must supply this bootstrap context.
+
+When this bootstrap is loaded, the first complete V7 packet must identify:
 
 ```yaml
 canonical_predecessor_id: DATA_PING_V6_20260719T200033Z
 collector_predecessor_id: latest directly verified V6 collector packet or EXPLICIT_UNRESOLVED
 ```
 
-It must not point back to V5 as canonical predecessor. If collector lineage cannot be verified, report the exact gap instead of choosing an older packet.
+When the bootstrap is unavailable, the collector must instead report:
 
-Required rules:
+```yaml
+canonical_predecessor_id: UNKNOWN_CONTEXT_NOT_LOADED
+collector_predecessor_id: NONE_NEW_THREAD
+p1_reference_observation_available: UNKNOWN_CONTEXT_NOT_LOADED
+```
+
+Forbidden behavior:
+
+```text
+DO_NOT_GUESS_PREDECESSOR_IDS
+DO_NOT_LABEL_MAIN_FRAMEWORK_CONTEXT_AS_SOURCE_MISSING
+DO_NOT_REJECT_SOURCE_VALUES_SOLELY_BECAUSE_NEW_THREAD_CONTEXT_WAS_UNAVAILABLE
+```
+
+A source-field packet may be reconciled by the Main Framework when source values are unchanged and the only gap is unavailable thread context. Such reconciliation is not the same as a complete accepted-log transaction.
+
+## Source requirements
 
 ```yaml
 weekly_candle_basis: BINANCE_CEST_DAILY_SOURCE_ROWS
@@ -139,6 +160,18 @@ reconstruction_allowed: false
 The missing V6 receipt fields must remain explicit. Do not create a replacement hash from a later copy and describe it as contemporaneous proof.
 
 A future V7 canonical acceptance transaction should record the source timestamp, exact receipt and payload paths, commit SHA, deterministic SHA-256, data quality, field coverage, missing fields and branch/main read-back status before advancing the accepted-log pointer.
+
+## Correction linkage warning
+
+```yaml
+correction_path: 02_DATA_PING/operational_handoffs/accepted_logs/supplements/2026-07-20T083500Z__new-thread-lineage-context-reconciliation-correction.json
+correction_status: PASS_BY_FIELD_WITH_MAIN_FRAMEWORK_CONTEXT_RECONCILIATION
+declared_superseded_interpretation_path: 02_DATA_PING/operational_handoffs/accepted_logs/supplements/2026-07-20T082900Z__data-ping-v6-081747__validation-only-source-supplement.json
+declared_superseded_path_readback: FAIL_404
+existing_validation_only_pointer_path_differs: true
+```
+
+Use the correction for attribution and the readable pointer supplement for source-field evidence. Preserve the missing declared path as an explicit gap. Do not silently rewrite one path into the other.
 
 ## Fixed breadth gap
 
@@ -169,6 +202,7 @@ active_source_version: V6
 intended_successor_version: V7
 active_event_id: ROTATION_REPAIR_EDGE_20260712_01
 fixed_risk35_identity_status: UNKNOWN_RECONSTRUCTION_FORBIDDEN
+accepted_log_contract_status: PARTIAL_HASH_AND_COMMIT_FIELDS_MISSING
 portfolio_action: NONE
 ready_for_first_complete_v7_ping: YES / NO
 ```
