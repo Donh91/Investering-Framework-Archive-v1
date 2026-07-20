@@ -141,6 +141,19 @@
     "thread_transition_trigger": true,
     "weekly_archive_operator_check": true
   },
+  "checkpoint_transaction_receipt": {
+    "task_branch": "agent/task-20260720-archive-sync-v18",
+    "pull_request_number": 93,
+    "pull_request_status": "MERGED",
+    "merge_commit_sha": "d9b77a2e1b5d28d68586c88d7a8a934c9a281ac8",
+    "checkpoint_blob_sha": "980bd8f957bb2817ac13ab7c80e05e25e64cf326",
+    "prepared_bootstrap_blob_sha": "5ec53b3c7bdb3ec7042c0416671b930fa3cd4771",
+    "pointer_pre_finalization_blob_sha": "2d7de34da5be718813eda2f4396c7ede273dfc70",
+    "branch_readback_status": "PASS",
+    "main_readback_status": "PASS",
+    "exact_path_validation": "PASS_THREE_PATHS_NO_FILE_DELETIONS",
+    "source_main_sha_at_transaction_merge": "0d6451ee8e8aeab04c4c5724a52d0d712093d5c7"
+  },
   "source_resolution_rule": "HIGHEST_VERSION_WITH_AN_ACTUAL_COMPLETE_MAIN_FRAMEWORK_ACCEPTED_DATA_PING_WINS",
   "missing_data_rule": "MISSING_UNKNOWN_UNAVAILABLE_NOT_DUE_NOT_COMPARABLE_AND_NO_SESSION_WEEKEND_ARE_DISTINCT",
   "fixed_risk35_identity_status": "UNKNOWN_RECONSTRUCTION_FORBIDDEN",
@@ -161,5 +174,5 @@
     "Dynamic breadth remains shadow-only and FIXED_RISK35 must not be reconstructed.",
     "No market state, gate, threshold, event close or portfolio action changed from this checkpoint update."
   ],
-  "readback_status": "PENDING_BRANCH_AND_MAIN_READBACK_FOR_V6_CHECKPOINT_V7_BOOTSTRAP_POINTER"
+  "readback_status": "PASS_MAIN_CHECKPOINT_BOOTSTRAP_POINTER_TRANSACTION_RECORDED"
 }
