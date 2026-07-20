@@ -1,7 +1,8 @@
 {
-  "contract_version": "0.9",
+  "contract_version": "0.10",
   "status": "READY_DECISION_CONTEXT_V6_ACTIVE",
   "updated_at_utc": "2026-07-19T21:38:21Z",
+  "source_supplement_updated_at_utc": "2026-07-20T03:55:40Z",
   "protocol_path": "02_DATA_PING/protocols/2026-07-16__data-ping-decision-context-bridge-v0-1__canonical.md",
   "latest_accepted_log_state_path": "02_DATA_PING/operational_handoffs/latest_accepted_log_state.json",
   "latest_accepted_data_ping_id": "DATA_PING_V6_20260719T200033Z",
@@ -10,6 +11,7 @@
   "latest_accepted_payload_hash_status": "NOT_GENERATED",
   "active_registry_path": "02_DATA_PING/live_state_handover/registries/2026-07-19T200033Z__active-gate-and-edge-event-registry__canonical.md",
   "event_update_path": "02_DATA_PING/live_state_handover/event_updates/2026-07-19T200033Z__rotation-repair-edge__v6-activation-warning-deescalated.md",
+  "canonical_farside_revision_path": "02_DATA_PING/operational_handoffs/accepted_logs/supplements/2026-07-20T035540Z__farside-17jul-fund-row-verification.json",
   "active_event": {
     "event_id": "ROTATION_REPAIR_EDGE_20260712_01",
     "event_status": "OPEN_TRIGGERED",
@@ -51,7 +53,7 @@
     "weekly_main_framework": "BTC_CLV_0_689_ETH_CLV_0_558_ETHBTC_CLV_0_406_PARTIAL_NOT_SETTLED",
     "ethbtc": "DIRECT_BINANCE_0_02888_ABOVE_0_0275_BELOW_0_0300_INTERNAL_CONSISTENCY_PASS",
     "participation": "DYNAMIC_SHADOW_1H_62_86_PERCENT_POSITIVE_24H_35_71_PERCENT_7D_31_43_PERCENT_FIXED35_UNKNOWN",
-    "completed_etf_flow": "FARSIDE_17JUL_BTC_132_3M_IBIT_136_5M_ETH_36_7M_BTC_FOUR_SESSION_STREAK_7_SESSION_PLUS_70_6M",
+    "completed_etf_flow": "FARSIDE_17JUL_BTC_132_3M_IBIT_136_5M_ETH_36_7M_BTC_FOUR_SESSION_STREAK_7_SESSION_PLUS_70_6M_FUND_LEVEL_ROWS_ARCHIVED",
     "spot_flow": "BTC_1H_POSITIVE_ETH_1H_NEGATIVE_BOTH_15M_NEGATIVE_BTC_AND_ETH_4H_24H_POSITIVE",
     "futures_flow": "BINANCE_TAKER_RATIOS_BELOW_1_BTC_AND_ETH_1H_4H_24H_24H_OI_MODESTLY_POSITIVE_SHORT_HORIZON_COOLING",
     "source_quality": "MEDIUM_V6_FULL_RAW_RUN_STRICT_JSON_WITH_OFFICIAL_STABLECOIN_MARKET_WIDE_CVD_AND_FRESH_CFGI_MISSING",
@@ -65,7 +67,8 @@
     "futures_method": "BINANCE_USDM_SOURCE_TRANSFORMS_V1_NOT_MARKET_WIDE",
     "dynamic_breadth": "SHADOW_ONLY_SAME_MEMBERSHIP_HASH_COMPARABLE",
     "fixed_risk35": "UNKNOWN_RECONSTRUCTION_FORBIDDEN",
-    "accepted_payload": "CURRENT_ACCEPTED_PAYLOAD_BY_FIELD"
+    "accepted_payload": "CURRENT_ACCEPTED_PAYLOAD_BY_FIELD",
+    "farside_fund_rows": "USER_SUPPLIED_DIRECT_FARSIDE_API_RESPONSE_ARCHIVED_AS_ADDITIVE_SOURCE_SUPPLEMENT"
   },
   "next_material_tests": [
     "SUNDAY_SETTLED_BINANCE_CEST_WEEKLY_CLOSE_AND_MAIN_FRAMEWORK_CLV",
@@ -94,5 +97,5 @@
     "ota": "SHADOW_NON_BINDING",
     "main_framework": "SOLE_STATE_ALERT_GATE_ACTION_AND_CANONICAL_ACCEPTANCE_AUTHORITY"
   },
-  "readback_status": "PASS_V6_ACCEPTED_PAYLOAD_POINTER_REGISTRY_EVENT_ACTIVATION"
+  "readback_status": "PASS_V6_ACCEPTED_PAYLOAD_POINTER_REGISTRY_EVENT_ACTIVATION_WITH_FARSIDE_FUND_ROW_SUPPLEMENT"
 }
