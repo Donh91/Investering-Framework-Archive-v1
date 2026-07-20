@@ -1,12 +1,14 @@
 {
-  "contract_version": "1.4",
+  "contract_version": "1.5",
   "protocol_path": "02_DATA_PING/protocols/2026-07-15__data-ping-thread-handover-protocol-v1-0__canonical.md",
-  "handover_status": "V6_ACTIVE_FIRST_COMPLETE_PACKET_ACCEPTED",
+  "handover_status": "V6_ACTIVE_V7_PREPARED_NOT_ACTIVE_RECOVERY_CHECKPOINT_CURRENT",
   "handover_id": "DATA_PING_THREAD_HANDOVER_V5_TO_V6_20260719T144323Z",
   "created_at_utc": "2026-07-19T14:43:23Z",
   "created_at_cest": "2026-07-19T16:43:23+02:00",
   "activated_at_utc": "2026-07-19T21:38:21Z",
   "activated_at_cest": "2026-07-19T23:38:21+02:00",
+  "checkpoint_updated_at_utc": "2026-07-20T10:45:36Z",
+  "checkpoint_updated_at_cest": "2026-07-20T12:45:36+02:00",
   "outgoing_thread": {
     "title": "DATA PING_V5",
     "version": 5,
@@ -34,7 +36,9 @@
   "latest_canonical_payload_path": "02_DATA_PING/operational_handoffs/accepted_logs/payloads/2026-07-19T200033Z__data-ping-v6__accepted-payload.json",
   "latest_canonical_payload_sha256": null,
   "latest_canonical_payload_hash_status": "NOT_GENERATED",
-  "latest_active_registry_path": "02_DATA_PING/live_state_handover/registries/2026-07-19T200033Z__active-gate-and-edge-event-registry__canonical.md",
+  "latest_canonical_payload_commit_sha": null,
+  "accepted_log_fallback_contract_status": "PARTIAL_REQUIRED_HASH_AND_COMMIT_FIELDS_MISSING_NO_RECONSTRUCTION",
+  "latest_active_registry_path": "02_DATA_PING/live_state_handover/registries/2026-07-20T054959Z__active-gate-and-edge-event-registry__canonical.md",
   "latest_prospective_event_path": "02_DATA_PING/decision_value/prospective_events/ROTATION_REPAIR_EDGE_20260712_01.json",
   "latest_raw_collector_packet": {
     "snapshot_id": "DATA_PING_V6_RAW_20260719T200033Z",
@@ -45,20 +49,54 @@
     "role": "FIRST_COMPLETE_V6_RAW_PACKET_ACCEPTED_BY_FIELD",
     "canonical_acceptance": true
   },
+  "latest_v6_source_observation": {
+    "pointer_path": "02_DATA_PING/operational_handoffs/latest_validation_only_observation_state.json",
+    "readable_supplement_path": "02_DATA_PING/operational_handoffs/validation_only/2026-07-20T081747Z__data-ping-v6__stale-lineage-source-supplement.json",
+    "snapshot_id": "DATA_PING_V6_RAW_20260720T081747Z",
+    "snapshot_utc": "2026-07-20T08:17:47.244Z",
+    "initial_status": "REJECT_CANONICAL_ACCEPTANCE_STALE_LINEAGE_ACCEPT_SOURCE_FIELDS_BY_FIELD",
+    "initial_status_superseded": true,
+    "corrected_status": "PASS_BY_FIELD_WITH_MAIN_FRAMEWORK_CONTEXT_RECONCILIATION",
+    "correction_path": "02_DATA_PING/operational_handoffs/accepted_logs/supplements/2026-07-20T083500Z__new-thread-lineage-context-reconciliation-correction.json",
+    "canonical_acceptance_blocking_reason": null,
+    "canonical_accepted_log_pointer_advanced": false,
+    "source_values_changed": false,
+    "packet_hash_status": "NOT_GENERATED"
+  },
+  "correction_linkage_gap": {
+    "declared_superseded_interpretation_path": "02_DATA_PING/operational_handoffs/accepted_logs/supplements/2026-07-20T082900Z__data-ping-v6-081747__validation-only-source-supplement.json",
+    "declared_path_readback": "FAIL_404",
+    "existing_validation_only_pointer_matches_declared_path": false,
+    "status": "PARTIAL_EXPLICIT_PATH_CONFLICT_NO_SILENT_REDIRECT"
+  },
+  "new_thread_lineage_rule": {
+    "bootstrap_before_first_full_raw_run": "REQUIRED",
+    "canonical_lineage_owner": "MAIN_FRAMEWORK_OR_BOOTSTRAP_LAYER",
+    "missing_context_canonical_predecessor": "UNKNOWN_CONTEXT_NOT_LOADED",
+    "missing_context_collector_predecessor": "NONE_NEW_THREAD",
+    "guess_predecessor_ids": "FORBIDDEN",
+    "reject_source_values_solely_for_missing_thread_context": "FORBIDDEN"
+  },
   "active_event": {
     "event_id": "ROTATION_REPAIR_EDGE_20260712_01",
     "state_owner": "02_DATA_PING/operational_handoffs/latest_decision_context_state.json",
     "handover_state_change": false,
-    "alert_change": "DE_ESCALATED_ONE_LEVEL_NOT_CLEARED",
     "portfolio_action": "NONE"
   },
   "latest_recovery_checkpoint": {
+    "checkpoint_id": "DATA_PING_V6_RECOVERY_CHECKPOINT_20260720T104536Z",
+    "checkpoint_path": "02_DATA_PING/thread_handoffs/checkpoints/2026-07-20__data-ping-v6__recovery-checkpoint.md",
+    "created_at_utc": "2026-07-20T10:45:36Z",
+    "status": "IMMUTABLE_POST_ACTIVATION_RECOVERY_CONTEXT_V7_PREPARED",
+    "fixed_risk35_status": "UNKNOWN_RECONSTRUCTION_FORBIDDEN",
+    "accepted_log_contract_status": "PARTIAL_REQUIRED_HASH_AND_COMMIT_FIELDS_MISSING",
+    "correction_linkage_status": "PARTIAL_DECLARED_SUPERSEDED_PATH_404",
+    "main_framework_calculation_owner": true
+  },
+  "previous_recovery_checkpoint": {
     "checkpoint_id": "DATA_PING_V5_RECOVERY_CHECKPOINT_20260719T144323Z",
     "checkpoint_path": "02_DATA_PING/thread_handoffs/checkpoints/2026-07-19__data-ping-v5__recovery-checkpoint.md",
-    "created_at_utc": "2026-07-19T14:43:23Z",
-    "status": "IMMUTABLE_PRE_ACTIVATION_RECOVERY_CONTEXT",
-    "fixed_risk35_status": "UNKNOWN_RECONSTRUCTION_FORBIDDEN_NON_BLOCKING_FOR_RAW_INPUT",
-    "main_framework_calculation_owner": true
+    "status": "IMMUTABLE_PRE_ACTIVATION_RECOVERY_CONTEXT"
   },
   "active_successor": {
     "title": "DATA PING_V6",
@@ -71,6 +109,17 @@
     "canonical_predecessor_id": "DATA_PING_V5_20260717T162231Z",
     "collector_predecessor_id": "DATA_PING_V6_RAW_20260719T181702Z"
   },
+  "prepared_successor": {
+    "title": "DATA PING_V7",
+    "version": 7,
+    "status": "PREPARED_NOT_ACTIVE",
+    "bootstrap_path": "02_DATA_PING/thread_handoffs/bootstrap/2026-07-20__data-ping-v7__bootstrap.md",
+    "packet_contract_until_explicit_change": "DATA_PING_MAIN_THREAD_INGEST_v2_0_RAW",
+    "activation_rule": "FIRST_COMPLETE_V7_PACKET_REVIEWED_AND_ACCEPTED_BY_MAIN_FRAMEWORK",
+    "active_source_until_activation": "DATA PING_V6",
+    "canonical_predecessor_required_when_bootstrap_loaded": "DATA_PING_V6_20260719T200033Z",
+    "missing_bootstrap_fallback": "UNKNOWN_CONTEXT_NOT_LOADED"
+  },
   "weekly_operations": {
     "master_monday_data_gate_checks_cest": [
       "07:15",
@@ -79,7 +128,9 @@
     ],
     "master_monday_cest": "10:00",
     "github_archive_sync_cest": "12:30",
-    "collector_supplies_raw_data_only": true
+    "collector_supplies_raw_data_only": true,
+    "latest_master_monday_week": "2026-W30",
+    "latest_master_monday_durability": "DURABLE_PASS"
   },
   "periodic_checkpoint_rule": {
     "enabled": true,
@@ -92,15 +143,23 @@
   },
   "source_resolution_rule": "HIGHEST_VERSION_WITH_AN_ACTUAL_COMPLETE_MAIN_FRAMEWORK_ACCEPTED_DATA_PING_WINS",
   "missing_data_rule": "MISSING_UNKNOWN_UNAVAILABLE_NOT_DUE_NOT_COMPARABLE_AND_NO_SESSION_WEEKEND_ARE_DISTINCT",
+  "fixed_risk35_identity_status": "UNKNOWN_RECONSTRUCTION_FORBIDDEN",
+  "dynamic_breadth_authority": "SHADOW_DESCRIPTIVE_ONLY_ZERO_PREDICTIVE_PERMISSION",
   "handover_market_authority": "ZERO",
+  "handover_gate_threshold_authority": "ZERO",
+  "handover_event_close_authority": "ZERO",
   "handover_portfolio_authority": "ZERO",
   "notes": [
-    "V6 is active after acceptance of DATA_PING_V6_RAW_20260719T200033Z.",
-    "V5 remains immutable predecessor history.",
-    "Main Framework owns CLV, retention, gates, falsifiers, Stage-1, recovery, rotation and action.",
-    "The V6 packet was accepted by field with non-blocking readiness alias normalization.",
-    "Dynamic breadth remains shadow-only; FIXED_RISK35 must not be reconstructed.",
-    "No market state or portfolio action changed merely because V6 was activated."
+    "V6 remains active after acceptance of DATA_PING_V6_RAW_20260719T200033Z.",
+    "V7 is prepared but not active.",
+    "The initial stale-lineage interpretation for DATA_PING_V6_RAW_20260720T081747Z was superseded by a newer PASS-by-field context-reconciliation correction.",
+    "The correction does not itself advance the accepted-log pointer or generate the missing packet hash.",
+    "The correction's declared superseded interpretation path is unreadable and differs from the existing validation-only pointer path, so the linkage gap is preserved explicitly.",
+    "The current V6 accepted-log pointer is preserved, while its missing payload SHA-256 and accepted-payload commit SHA remain explicit and are not reconstructed.",
+    "A new DATA PING thread must receive bootstrap context before its first full raw run. Missing context must be reported as UNKNOWN_CONTEXT_NOT_LOADED, never guessed.",
+    "Main Framework owns state, gates, falsifiers, event closure, recovery, rotation, permissions and action.",
+    "Dynamic breadth remains shadow-only and FIXED_RISK35 must not be reconstructed.",
+    "No market state, gate, threshold, event close or portfolio action changed from this checkpoint update."
   ],
-  "readback_status": "PASS_V6_ACTIVE_ACCEPTED_LOG_DECISION_CONTEXT_REGISTRY_EVENT_ACTIVATION_RECEIPT"
+  "readback_status": "PENDING_BRANCH_AND_MAIN_READBACK_FOR_V6_CHECKPOINT_V7_BOOTSTRAP_POINTER"
 }
