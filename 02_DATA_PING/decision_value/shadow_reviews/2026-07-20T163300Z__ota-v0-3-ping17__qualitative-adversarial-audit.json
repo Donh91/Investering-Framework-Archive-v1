@@ -1,0 +1,122 @@
+{
+  "schema": "OTA_QUALITATIVE_ADVERSARIAL_AUDIT",
+  "schema_version": "1.0",
+  "source": "CLAUDE_FABLE",
+  "source_ping": "OTA_V0_3_PING_17",
+  "source_snapshot_utc": "2026-07-20T16:33:00Z",
+  "source_snapshot_cest": "2026-07-20T18:33:00+02:00",
+  "authority": "SHADOW_NON_BINDING",
+  "numeric_ota_series_status": "RETIRED_AT_N14_NON_REPRODUCIBLE",
+  "current_mode": "QUALITATIVE_CLOSURE_TAXONOMY_FALSIFIER_TRACKING_NO_OVERRIDE",
+  "canonical_context": {
+    "latest_accepted_data_ping_id": "DATA_PING_V6_20260719T200033Z",
+    "latest_master_monday_closeout_id": "MASTER_MONDAY_CLOSEOUT_W30_20260720T054959Z",
+    "active_event_id": "ROTATION_REPAIR_EDGE_20260712_01",
+    "stage_1_etf_flow_leg_status": "COMPLETE_RATIFIED",
+    "pullback_warning": "ACTIVE_DE_ESCALATED_ONE_LEVEL_MAINTAINED_NOT_CLEARED",
+    "rotation": "NO_ROTATION",
+    "broad_recovery": "NOT_CONFIRMED",
+    "portfolio_action": "NONE",
+    "user_action": "HOLD_AND_WAIT"
+  },
+  "source_observations": {
+    "BTC_cross_source_usd": {
+      "binance_public_mirror": 65440,
+      "coinbase": 65393,
+      "kraken": 65386,
+      "approx_consensus": 65400,
+      "status": "INTRADAY_CROSSCHECK_NOT_CANONICAL_CLOSE"
+    },
+    "ETH_cross_source_usd": {
+      "coinbase": 1899.05,
+      "kraken": 1898.39,
+      "approx_consensus": 1898.7,
+      "status": "INTRADAY_CROSSCHECK_NOT_CANONICAL_CLOSE"
+    },
+    "ETHBTC_two_source": {
+      "kraken": 0.029034,
+      "crypto_com": 0.029043,
+      "intraday_high": 0.029189,
+      "two_source_difference": 0.000009,
+      "above_repair_gate_0_0275": true,
+      "above_confirmation_gate_0_0300": false
+    },
+    "BTC_intraday": {
+      "open": 64678,
+      "high": 65600,
+      "low": 63692,
+      "last": 65378,
+      "classification": "PRICE_LED_CONTINUATION_TO_RANGE_CEILING_NOT_SETTLED_BREAKOUT"
+    },
+    "volatility": {
+      "BTC_ATR14": 1766,
+      "BTC_ATR14_pct": 2.73,
+      "BTC_ATR7": 1511,
+      "ETH_ATR14": 70.6,
+      "ETH_ATR14_pct": 3.77,
+      "ETH_ATR7": 64.1,
+      "classification": "SHORT_TERM_VOLATILITY_CONTRACTING",
+      "authority": "OTA_COMPUTE_CROSSCHECK_NOT_CANONICAL_SENSOR"
+    },
+    "ETF_latest_completed": {
+      "session_date": "2026-07-17",
+      "BTC_total_usd_m": 132.3,
+      "IBIT_usd_m": 136.5,
+      "positive_streak": 4,
+      "monday_2026_07_20_status": "NOT_SETTLED_AT_SOURCE_SNAPSHOT"
+    }
+  },
+  "ota_verdict": {
+    "closure_event": "NONE",
+    "taxonomy": "TYPE_1_NEAR_PRICE_LED_WITHOUT_TRANSMISSION",
+    "type_2_observed": false,
+    "summary": "CONSTRUCTIVE_INTRADAY_CONTINUATION_INSIDE_INTACT_BASE_RANGE_TRANSMISSION_ABSENT_NO_CLOSURE",
+    "automatic_action": false
+  },
+  "falsifier_review": {
+    "F1_DEATH_ZONE_2026_07_21_TO_2026_07_27": {
+      "status": "NOT_DUE_AT_SNAPSHOT",
+      "canonical_alignment": "ALIGNED_WITH_OTA_7D_REVIEW_DUE_2026_07_21",
+      "floor": 62342,
+      "floor_status": "INTACT_BY_OTA_CROSSCHECK"
+    },
+    "F2_STAGE1_RATIFICATION_AND_FNP": {
+      "ota_claim": "RATIFICATION_DUE_OR_FNP_ACCRUAL_STARTS",
+      "canonical_correction": "STAGE1_ETF_FLOW_LEG_ALREADY_COMPLETE_RATIFIED",
+      "status": "OTA_FLAG_STALE_NO_NEW_FNP_TRIGGER_FROM_MISSING_RATIFICATION",
+      "governance_effect": "NONE"
+    },
+    "F4_ETHBTC_0_0300_WITHIN_10_SESSIONS": {
+      "status": "UNMET_OPEN_SHADOW_TEST",
+      "current_observation": 0.02904,
+      "intraday_high": 0.029189,
+      "gate": 0.03,
+      "interpretation": "BTC_LED_REPAIR_WITHOUT_TRANSMISSION_REMAINS_LIVE_HYPOTHESIS",
+      "retirement_decision": "NOT_YET_MATURE_EXACT_SESSION_COUNT_AND_SETTLED_CLOSE_REQUIRED"
+    },
+    "F5_FLOW_REVERSAL_FALSE": {
+      "status": "PENDING_NEXT_COMPLETED_FARSIDE_SESSION",
+      "latest_completed_positive_streak": 4,
+      "monday_session": "NOT_SETTLED_AT_SOURCE_SNAPSHOT",
+      "premature_interpretation_forbidden": true
+    }
+  },
+  "source_caveats": [
+    "DIRECT_BINANCE_SPOT_HTTP_451_GEO_BLOCKED_IN_CLAUDE_CONTAINER",
+    "BINANCE_PUBLIC_DATA_MIRROR_USED_AS_CROSSCHECK",
+    "FMP_CONNECTOR_NO_RESPONSE_NON_BLOCKING",
+    "KRAKEN_VS_CANONICAL_CLOSE_CONVENTION_DIFFERENCES_PRESERVED",
+    "INTRADAY_HIGH_IS_NOT_SETTLED_CLOSE",
+    "OTA_NUMERIC_SCORING_RETIRED_NO_SCORE_FABRICATION"
+  ],
+  "main_framework_treatment": {
+    "acceptance": "ACCEPTED_AS_ADDITIVE_SHADOW_AUDIT",
+    "canonical_truth_layer_override": false,
+    "decision_delta_class": "SHADOW_HYPOTHESIS_SHARPENING_NO_CANONICAL_STATE_CHANGE",
+    "material_value": "F4_TRANSMISSION_DEADLINE_SHARPENED_AND_F5_NEXT_SESSION_GUARD_PRESERVED",
+    "stage_1_status_change": false,
+    "alert_change": false,
+    "portfolio_action": "NONE",
+    "user_action": "HOLD_AND_WAIT"
+  }
+}
