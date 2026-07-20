@@ -1,0 +1,93 @@
+{
+  "schema_version": "1.0",
+  "week_id": "2026-W30",
+  "row_type": "INITIALIZATION_NOT_OUTCOME",
+  "as_of_utc": "2026-07-20T06:09:51Z",
+  "source_cutoff": "MASTER_MONDAY_CLOSEOUT_W30_20260720T054959Z",
+  "test_id": "TECHDEV_CLAIM_LEDGER",
+  "source_issue": "TECHDEV_98",
+  "previous_week_path": null,
+  "source_lineage": {
+    "source_manifest": "08_SOURCE_MATERIAL/techdev/2026-07-20__techdev-market-update-98__source-manifest.md",
+    "source_pdf_sha256": "693a08409eb66b6a11b3f4948f4ff340c38ca8b41d99c8b34b71d06057a36c5d",
+    "frozen_claim_rows": "06_RESEARCH_LAB/forward_tests/techdev_issue_98/TECHDEV_ISSUE_98_FROZEN_CLAIM_ROWS.csv",
+    "gem_score_baseline": "06_RESEARCH_LAB/forward_tests/techdev_issue_98/TECHDEV_ISSUE_98_GEM_SCORE_BASELINE.csv"
+  },
+  "major_confirmation": {
+    "techdev_source_state": "BOTH_3D_SUPERTRENDS_RED_AT_PUBLICATION",
+    "btc_approx_flip_level_source_usd": 71400,
+    "eth_approx_flip_level_source_usd": 2020,
+    "current_verified_3d_supertrend_state": "DATA_MISSING",
+    "dual_flip_confirmed": "UNKNOWN",
+    "outcome_clock": "NOT_STARTED"
+  },
+  "rotation_confirmation": {
+    "techdev_flag_breakout_source_state": "NOT_CONFIRMED",
+    "techdev_numeric_flag_boundary": "NOT_DISCLOSED_IN_TEXT",
+    "techdev_long_target": 0.08,
+    "framework_ethbtc_repair_context": 0.0275,
+    "framework_ethbtc_confirmation_context": 0.03,
+    "w30_settled_ethbtc_close": 0.02891,
+    "framework_rotation_state": "NO_ROTATION",
+    "broad_recovery_state": "NOT_CONFIRMED",
+    "cross_test": "ROTATION_SURVIVAL_FORWARD"
+  },
+  "roadmap_status": {
+    "rows_frozen": 11,
+    "matured_rows": 0,
+    "revisions": 0,
+    "next_frozen_window_close": "2026-10-31"
+  },
+  "gem_score_board_status": {
+    "published_candidates": 17,
+    "above_noise_line": 3,
+    "baseline_prices_verified": 0,
+    "outcome_rows_started": 0,
+    "status": "SOURCE_SCORE_FROZEN_PRICE_BASELINE_RECOVERY_REQUIRED"
+  },
+  "sector_tailwinds": {
+    "source_claim": {
+      "defi": "LEADING",
+      "rwa": "STRENGTHENING",
+      "ai": "FADING_RELATIVE",
+      "depin": "WEAK",
+      "robinhood_chain": "EMERGING_VENUE_CONTEXT"
+    },
+    "independent_verification": "NOT_PERFORMED_IN_INITIALIZATION"
+  },
+  "robinhood_chain_context": {
+    "status": "SOURCE_OBSERVATION_ONLY",
+    "new_launches": "DATA_MISSING",
+    "tvl": "DATA_MISSING",
+    "stablecoin_liquidity": "DATA_MISSING",
+    "bridge_inflows": "DATA_MISSING",
+    "dex_volume": "DATA_MISSING",
+    "active_addresses": "DATA_MISSING",
+    "token_survival": "DATA_MISSING",
+    "organic_vs_incentivized": "DATA_MISSING"
+  },
+  "current_framework_context": {
+    "active_event": "ROTATION_REPAIR_EDGE_20260712_01",
+    "edge_state": "REPAIR_PRESENT_MATURING_SETTLED_WEEKLY_CONFIRMATION_WITH_BREADTH_AND_SHORT_HORIZON_FLOW_WEAKNESS",
+    "pullback_warning": "ACTIVE_DE_ESCALATED_ONE_LEVEL_MAINTAINED_NOT_CLEARED",
+    "large_cap_window": "WATCH_ONLY_NOT_OPEN",
+    "new_entry_signal": "NOT_ACTIVE",
+    "portfolio_action": "NONE",
+    "user_action": "HOLD_AND_WAIT"
+  },
+  "techdev_revisions": [],
+  "missing_data": [
+    "EXACT_SOURCE_PUBLICATION_TIMESTAMP",
+    "CURRENT_VERIFIED_BTC_AND_ETH_3D_SUPERTREND_VALUES",
+    "NUMERIC_TECHDEV_ETHBTC_FLAG_BOUNDARY",
+    "VERIFIED_POINT_IN_TIME_PRICE_BASELINES_FOR_17_GEM_SCORE_CANDIDATES",
+    "INDEPENDENT_SECTOR_ATTENTION_SERIES",
+    "ROBINHOOD_CHAIN_VENUE_METRICS"
+  ],
+  "row_validity": "PASS_INITIALIZATION_SOURCE_FREEZE",
+  "coverage_readiness": "NOT_READY",
+  "edge_or_promotion_status": "NO_CHANGE",
+  "framework_state_changed_by_test": "NO",
+  "portfolio_action_from_test": "NONE",
+  "next_review": "AFTER_NEXT_SETTLED_MASTER_MONDAY_OR_EARLIER_ONLY_FOR_EXPLICIT_TECHDEV_REVISION"
+}

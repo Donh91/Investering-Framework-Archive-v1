@@ -45,7 +45,7 @@ A registry entry is a navigation pointer only. The referenced file's own status,
 | `00_ARCHIVE_CONTROL/2026-07-12__index-addendum-daily-sensor-pair-discovery-lab-v0-1.md` | prospective sensor pairs / DATA PING thread integration | REGISTRY_DISCOVERABLE |
 | `00_ARCHIVE_CONTROL/2026-07-12__index-addendum-data-ping-thread-handoff-v0-1.md` | DATA PING thread source transport / automation fallback | REGISTRY_DISCOVERABLE |
 | `06_RESEARCH_LAB/forward_tests/2026-07-13__daily-sensor-pair-discovery-accepted-log-fallback-v0-1__canonical-addendum.md` | DATA PING accepted-log fallback / sensor-pair source resolution | REGISTRY_DISCOVERABLE |
-| `00_ARCHIVE_CONTROL/2026-07-13__index-addendum-techdev-calibration-b1-and-audit-gate-v1.md` | TechDev outcomes / BTC.D reproducibility / research cadence | REGISTRY_DISCOVERABLE |
+| `00_ARCHIVE_CONTROL/2026-07-13__index-addendum-techdev-calibration-b1-and-audit-gate-v1.md` | TechDev outcomes / BTC.D reproducibility / Issue #98 prospective calibration / research cadence | REGISTRY_DISCOVERABLE |
 | `00_ARCHIVE_CONTROL/2026-07-14__index-addendum-master-monday-durable-handoff-v1.md` | Master Monday / durable handoff / pointer integrity | REGISTRY_DISCOVERABLE |
 | `00_ARCHIVE_CONTROL/2026-07-20__index-addendum-techdev-market-update-98-source-archive.md` | TechDev source archive / Issue #98 | REGISTRY_DISCOVERABLE |
 | `00_ARCHIVE_CONTROL/2026-07-06__index-addendum-master-monday-pointers.md` | Master Monday / W28 pointer history - superseded by W28 lineage correction | SUPERSEDED |
