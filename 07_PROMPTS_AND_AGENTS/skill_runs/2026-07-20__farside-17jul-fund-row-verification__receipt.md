@@ -77,18 +77,40 @@ market_state_change: NO
 rotation_change: NO
 portfolio_action_change: NO
 source_quality_effect: FUND_LEVEL_REPRODUCIBILITY_IMPROVED
+active_data_ping_version: V6
 ```
 
-## Pull request and main validation
+## Pull request and merge
 
 ```yaml
 pull_request: 88
 pull_request_url: https://github.com/Donh91/Investering-Framework-Archive-v1/pull/88
 pr_base_sha: 2cb44ffa5de1f9729b6b867bfadd4e7f5488743c
-pr_head_sha_before_receipt_update: b816ae17b9e6cdafecac70c4befd829aa4f749c9
-merge_commit_sha: PENDING
-main_readback_status: PENDING
-final_repository_state: PENDING
-write_governance_result: PASS_SO_FAR
+pr_head_sha: 723b85dddbab65fedb22a43af95b8efd0ec28521
+merge_commit_sha: 5b18a25c4fe5f075a37d9060aa9b5d3c91eca720
+merge_status: PASS
+changed_file_count: 4
+changed_file_scope: PASS_EXACT_INTENDED_PATHS
+```
+
+## Main readback
+
+```yaml
+supplement_main_blob_sha: 1665cc409ef4932aaaaba816be09632e56a4f9b2
+latest_accepted_log_pointer_main_blob_sha: 275f46343bcc5abffef1792ed6b84ea4b48f7837
+latest_decision_context_pointer_main_blob_sha: eb8741e62c3299c5d390ebb0662ffc3de4e978f6
+receipt_main_blob_sha_before_finalization: 7499294077400f89a57d2471ebeac7548e975aa0
+main_readback_status: PASS
+pointer_target_verification: PASS
+```
+
+## Final classification
+
+```yaml
+archive_content_result: PASS
+write_governance_result: PASS
+final_repository_state: PASS
 incident_count: 0
+market_state_change: NO
+portfolio_action_change: NO
 ```
