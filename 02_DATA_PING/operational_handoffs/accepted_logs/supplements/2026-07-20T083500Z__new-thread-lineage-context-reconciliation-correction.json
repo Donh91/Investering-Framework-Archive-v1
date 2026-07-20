@@ -1,0 +1,43 @@
+{
+  "schema": "DATA_PING_VALIDATION_CORRECTION",
+  "schema_version": "1.0",
+  "created_at_utc": "2026-07-20T08:35:00Z",
+  "source_snapshot_id": "DATA_PING_V6_RAW_20260720T081747Z",
+  "supersedes_interpretation_path": "02_DATA_PING/operational_handoffs/accepted_logs/supplements/2026-07-20T082900Z__data-ping-v6-081747__validation-only-source-supplement.json",
+  "correction_reason": "SOURCE_PACKET_WAS_GENERATED_IN_A_NEW_DATA_PING_THREAD_WITHOUT_ACCESS_TO_PRIOR_THREAD_STATE",
+  "corrected_attribution": {
+    "collector_fault": false,
+    "root_cause": "NEW_THREAD_BOOTSTRAP_CONTEXT_NOT_SUPPLIED_OR_NOT_RESOLVABLE_BY_COLLECTOR",
+    "canonical_lineage_ownership": "MAIN_FRAMEWORK_OR_BOOTSTRAP_LAYER",
+    "collector_lineage_expectation": "DO_NOT_GUESS_WHEN_PRIOR_THREAD_CONTEXT_IS_UNAVAILABLE"
+  },
+  "corrected_validation_status": "PASS_BY_FIELD_WITH_MAIN_FRAMEWORK_CONTEXT_RECONCILIATION",
+  "canonical_acceptance_blocking_reason": null,
+  "main_framework_reconciliation": {
+    "canonical_predecessor_id": "DATA_PING_V6_20260719T200033Z",
+    "collector_predecessor_status": "NEW_THREAD_NO_PRIOR_COLLECTOR_CONTEXT",
+    "p1_reference_source": "MAIN_FRAMEWORK_CANONICAL_CONTEXT",
+    "p1_reference_price": 62065.06,
+    "p1_reference_utc": "2026-07-13T21:59:59.999Z",
+    "smart_quote_normalization": "NON_BLOCKING_PRESENTATION_LAYER_NORMALIZATION",
+    "source_values_changed": false
+  },
+  "policy_update": {
+    "new_thread_rule": "A NEW DATA PING THREAD MUST RECEIVE A THREAD_BOOTSTRAP_OBJECT_FROM_MAIN_FRAMEWORK_OR_GITHUB_BEFORE THE FIRST FULL_RAW_RUN",
+    "fallback_when_bootstrap_missing": {
+      "canonical_predecessor_id": "UNKNOWN_CONTEXT_NOT_LOADED",
+      "collector_predecessor_id": "NONE_NEW_THREAD",
+      "p1_reference_observation_available": "UNKNOWN_CONTEXT_NOT_LOADED"
+    },
+    "forbidden_behavior": [
+      "DO_NOT_GUESS_PREDECESSOR_IDS",
+      "DO_NOT_LABEL_MAIN_FRAMEWORK_CONTEXT_AS_SOURCE_MISSING",
+      "DO_NOT_REJECT_SOURCE_DATA_SOLELY_BECAUSE_NEW_THREAD_CONTEXT_WAS_UNAVAILABLE"
+    ]
+  },
+  "framework_state_effect": {
+    "canonical_state_change": false,
+    "portfolio_action": "NONE",
+    "user_action": "HOLD_AND_WAIT"
+  }
+}
