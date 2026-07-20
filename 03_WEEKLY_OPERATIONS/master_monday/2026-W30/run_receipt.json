@@ -1,0 +1,48 @@
+{
+  "schema_version": "1.0",
+  "receipt_origin": "CREATED_DURING_RUN",
+  "run_id": "MASTER_MONDAY_W30_20260720T080654Z",
+  "iso_week": "2026-W30",
+  "generated_at_utc": "2026-07-20T08:06:54Z",
+  "source_resolution": "ACCEPTED_LOG_RECEIPT",
+  "source_timestamp": "2026-07-20T05:49:59.233Z",
+  "source_hash": "8d94f83b592a60c586639892b2ad697d19c35af6",
+  "source_version": "DATA_PING_V6_20260719T200033Z",
+  "artifact_paths": {
+    "master_monday_pre_data_ping": "03_WEEKLY_OPERATIONS/master_monday/2026-W30/01_system_generated_pre_data_ping.md",
+    "master_monday_data_ping_derived": "03_WEEKLY_OPERATIONS/master_monday/2026-W30/02_data_ping_derived_raw.md",
+    "master_monday_final": "03_WEEKLY_OPERATIONS/master_monday/2026-W30/03_framework_ratified_final.md",
+    "cycle_navigator_handoff": "03_WEEKLY_OPERATIONS/master_monday/2026-W30/04_cycle_navigator_handoff_notes.md",
+    "forecast_ledger": "03_WEEKLY_OPERATIONS/forecast_ledger/2026-07-20__forecast-ledger-2026-w30__official.md",
+    "run_receipt": "03_WEEKLY_OPERATIONS/master_monday/2026-W30/run_receipt.json"
+  },
+  "artifact_verification": [
+    {"path":"03_WEEKLY_OPERATIONS/master_monday/2026-W30/01_system_generated_pre_data_ping.md","creation_commit_sha":"f50f48dfe69c9895adbc9432e4a52ebb04da574a","blob_sha":"10bb8eb7b51613e0adea842e470966c0c68b7fbc","branch_readback_status":"PASS","main_readback_status":"PENDING"},
+    {"path":"03_WEEKLY_OPERATIONS/master_monday/2026-W30/02_data_ping_derived_raw.md","creation_commit_sha":"0ec4b7ae6ab6f7e7a873dfabd6553931ccf9f148","blob_sha":"7ee3c0b24337ea04d883572f5521c689b65d6ba7","branch_readback_status":"PASS","main_readback_status":"PENDING"},
+    {"path":"03_WEEKLY_OPERATIONS/master_monday/2026-W30/03_framework_ratified_final.md","creation_commit_sha":"9580bcfa97af0f7dfbba46d1291c49e339320cc4","blob_sha":"ab3a26eaf6aca4091036767a223c5c75960fa9c2","branch_readback_status":"PASS","main_readback_status":"PENDING"},
+    {"path":"03_WEEKLY_OPERATIONS/master_monday/2026-W30/04_cycle_navigator_handoff_notes.md","creation_commit_sha":"3ba1efbf8c2b3681b1a51506852c39c77451ba67","blob_sha":"62158428f98be22a1338c2baa3984f50ceb6db45","branch_readback_status":"PASS","main_readback_status":"PENDING"},
+    {"path":"03_WEEKLY_OPERATIONS/forecast_ledger/2026-07-20__forecast-ledger-2026-w30__official.md","creation_commit_sha":"952463b684bdf73899b215a4fccf8f2837838745","blob_sha":"662b17308e69a46a2bfbe24cbc363e05ce6a60f6","branch_readback_status":"PASS","main_readback_status":"PENDING"}
+  ],
+  "write_transaction": {
+    "task_branch": "agent/task-20260720-master-monday-w30",
+    "branch_write_status": "PASS",
+    "branch_readback_status": "PASS",
+    "pull_request_number": null,
+    "pull_request_status": "NOT_CREATED",
+    "merge_commit_sha": null,
+    "merge_status": "PENDING",
+    "main_readback_status": "PENDING"
+  },
+  "pointer_transaction": {
+    "pointer_path": "03_WEEKLY_OPERATIONS/master_monday/latest_master_monday.json",
+    "previous_valid_pointer": {"latest_durable_week":"2026-W29","latest_durable_path":"03_WEEKLY_OPERATIONS/master_monday/2026-W29/03_framework_ratified_final.md","latest_durable_blob_sha":"ec2935210c1ab4641d36ffe6305984d790f43d56"},
+    "pointer_update_status": "PRESERVED",
+    "target_verification_status": "PENDING"
+  },
+  "delivery": {"standalone_delivery_status":"NOT_VERIFIED","delivery_title":"MASTER MONDAY — UGE 30 + CYCLE NAVIGATOR"},
+  "forecast_lineage_status": "COMPLETE",
+  "scoring_eligibility": false,
+  "overall_durability_status": "PARTIAL_REPORT_DELIVERED_POINTER_PRESERVED",
+  "notes": ["Receipt schema checked against master_monday_run_receipt.schema.json before staging.","Final PR, merge, main readback and standalone delivery fields require post-merge finalization."],
+  "authority_boundary": {"market_call":false,"portfolio_action":false,"rule_promotion":false,"threshold_change":false}
+}
