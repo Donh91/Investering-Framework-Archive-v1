@@ -49,15 +49,33 @@
     "role": "FIRST_COMPLETE_V6_RAW_PACKET_ACCEPTED_BY_FIELD",
     "canonical_acceptance": true
   },
-  "latest_validation_only_observation": {
+  "latest_v6_source_observation": {
     "pointer_path": "02_DATA_PING/operational_handoffs/latest_validation_only_observation_state.json",
-    "supplement_path": "02_DATA_PING/operational_handoffs/validation_only/2026-07-20T081747Z__data-ping-v6__stale-lineage-source-supplement.json",
+    "readable_supplement_path": "02_DATA_PING/operational_handoffs/validation_only/2026-07-20T081747Z__data-ping-v6__stale-lineage-source-supplement.json",
     "snapshot_id": "DATA_PING_V6_RAW_20260720T081747Z",
     "snapshot_utc": "2026-07-20T08:17:47.244Z",
-    "status": "REJECT_CANONICAL_ACCEPTANCE_STALE_LINEAGE_ACCEPT_SOURCE_FIELDS_BY_FIELD",
-    "canonical_acceptance": false,
-    "supersedes_latest_canonical_pointer": false,
+    "initial_status": "REJECT_CANONICAL_ACCEPTANCE_STALE_LINEAGE_ACCEPT_SOURCE_FIELDS_BY_FIELD",
+    "initial_status_superseded": true,
+    "corrected_status": "PASS_BY_FIELD_WITH_MAIN_FRAMEWORK_CONTEXT_RECONCILIATION",
+    "correction_path": "02_DATA_PING/operational_handoffs/accepted_logs/supplements/2026-07-20T083500Z__new-thread-lineage-context-reconciliation-correction.json",
+    "canonical_acceptance_blocking_reason": null,
+    "canonical_accepted_log_pointer_advanced": false,
+    "source_values_changed": false,
     "packet_hash_status": "NOT_GENERATED"
+  },
+  "correction_linkage_gap": {
+    "declared_superseded_interpretation_path": "02_DATA_PING/operational_handoffs/accepted_logs/supplements/2026-07-20T082900Z__data-ping-v6-081747__validation-only-source-supplement.json",
+    "declared_path_readback": "FAIL_404",
+    "existing_validation_only_pointer_matches_declared_path": false,
+    "status": "PARTIAL_EXPLICIT_PATH_CONFLICT_NO_SILENT_REDIRECT"
+  },
+  "new_thread_lineage_rule": {
+    "bootstrap_before_first_full_raw_run": "REQUIRED",
+    "canonical_lineage_owner": "MAIN_FRAMEWORK_OR_BOOTSTRAP_LAYER",
+    "missing_context_canonical_predecessor": "UNKNOWN_CONTEXT_NOT_LOADED",
+    "missing_context_collector_predecessor": "NONE_NEW_THREAD",
+    "guess_predecessor_ids": "FORBIDDEN",
+    "reject_source_values_solely_for_missing_thread_context": "FORBIDDEN"
   },
   "active_event": {
     "event_id": "ROTATION_REPAIR_EDGE_20260712_01",
@@ -72,6 +90,7 @@
     "status": "IMMUTABLE_POST_ACTIVATION_RECOVERY_CONTEXT_V7_PREPARED",
     "fixed_risk35_status": "UNKNOWN_RECONSTRUCTION_FORBIDDEN",
     "accepted_log_contract_status": "PARTIAL_REQUIRED_HASH_AND_COMMIT_FIELDS_MISSING",
+    "correction_linkage_status": "PARTIAL_DECLARED_SUPERSEDED_PATH_404",
     "main_framework_calculation_owner": true
   },
   "previous_recovery_checkpoint": {
@@ -98,7 +117,8 @@
     "packet_contract_until_explicit_change": "DATA_PING_MAIN_THREAD_INGEST_v2_0_RAW",
     "activation_rule": "FIRST_COMPLETE_V7_PACKET_REVIEWED_AND_ACCEPTED_BY_MAIN_FRAMEWORK",
     "active_source_until_activation": "DATA PING_V6",
-    "canonical_predecessor_required": "DATA_PING_V6_20260719T200033Z"
+    "canonical_predecessor_required_when_bootstrap_loaded": "DATA_PING_V6_20260719T200033Z",
+    "missing_bootstrap_fallback": "UNKNOWN_CONTEXT_NOT_LOADED"
   },
   "weekly_operations": {
     "master_monday_data_gate_checks_cest": [
@@ -132,8 +152,11 @@
   "notes": [
     "V6 remains active after acceptance of DATA_PING_V6_RAW_20260719T200033Z.",
     "V7 is prepared but not active.",
-    "The 2026-07-20 validation-only V6 packet was rejected for canonical acceptance because predecessor lineage was stale.",
+    "The initial stale-lineage interpretation for DATA_PING_V6_RAW_20260720T081747Z was superseded by a newer PASS-by-field context-reconciliation correction.",
+    "The correction does not itself advance the accepted-log pointer or generate the missing packet hash.",
+    "The correction's declared superseded interpretation path is unreadable and differs from the existing validation-only pointer path, so the linkage gap is preserved explicitly.",
     "The current V6 accepted-log pointer is preserved, while its missing payload SHA-256 and accepted-payload commit SHA remain explicit and are not reconstructed.",
+    "A new DATA PING thread must receive bootstrap context before its first full raw run. Missing context must be reported as UNKNOWN_CONTEXT_NOT_LOADED, never guessed.",
     "Main Framework owns state, gates, falsifiers, event closure, recovery, rotation, permissions and action.",
     "Dynamic breadth remains shadow-only and FIXED_RISK35 must not be reconstructed.",
     "No market state, gate, threshold, event close or portfolio action changed from this checkpoint update."
