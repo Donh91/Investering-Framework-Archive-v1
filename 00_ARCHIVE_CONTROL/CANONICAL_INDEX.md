@@ -1,6 +1,6 @@
 # Canonical Archive Index
 
-**Dato:** 2026-07-11  
+**Dato:** 2026-07-20  
 **Status:** CANONICAL_ARCHIVE_CONTROL  
 **Formål:** Navigation til de nyeste operative og canonical framework-filer.  
 **Previous index history:** Preserved in Git commit history.
@@ -33,6 +33,29 @@ Routing and index addenda:
 
 ---
 
+## DATA PING platform architecture
+
+Architecture authority:
+
+```text
+02_DATA_PING/architecture/2026-07-20__data-ping-platform-adr-001__canonical.md
+```
+
+Ratified identity:
+
+```text
+DATA PING = implementation-independent collector standard.
+Current Custom GPT Collector = reference implementation, not the platform itself.
+External contract = DATA_PING_MAIN_THREAD_INGEST_v2_0_RAW unchanged.
+Builder role = minimal bootstrap only.
+Architecture status = RATIFIED.
+Migration/release completion = requires explicit evidence and is not inferred from ratification.
+```
+
+The architecture decision is separate from active market-feed versioning. It does not change current market state, gates, forecasts, deployment, rebuy or portfolio authority.
+
+---
+
 ## DATA PING operational anchors
 
 ```text
@@ -44,7 +67,7 @@ Older versions: ARCHIVE CONTEXT unless explicitly reactivated.
 Role governance:
 
 ```text
-Custom GPT = verified DATA PING truth-layer.
+Current Custom GPT Collector = verified reference implementation of the DATA PING truth-layer.
 Grok = standalone shadow sensor.
 ChatGPT/main framework = governance, interpretation and ratification.
 ```
@@ -344,6 +367,7 @@ changelog/2026-07-10__gpt-5-6-fresh-eyes-audit-implementation-receipt.md
 changelog/2026-07-11__techdev-historical-paid-archive-batch-1-import.md
 changelog/2026-07-11__techdev-historical-paid-archive-batch-2-import.md
 changelog/2026-07-11__techdev-historical-archive-batch-3-merged-corpus-ingestion.md
+changelog/2026-07-20__data-ping-platform-adr-001-ratification.md
 ```
 
 ---
