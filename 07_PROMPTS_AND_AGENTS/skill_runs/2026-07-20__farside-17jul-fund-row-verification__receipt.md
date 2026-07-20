@@ -82,7 +82,10 @@ source_quality_effect: FUND_LEVEL_REPRODUCIBILITY_IMPROVED
 ## Pull request and main validation
 
 ```yaml
-pull_request: PENDING
+pull_request: 88
+pull_request_url: https://github.com/Donh91/Investering-Framework-Archive-v1/pull/88
+pr_base_sha: 2cb44ffa5de1f9729b6b867bfadd4e7f5488743c
+pr_head_sha_before_receipt_update: b816ae17b9e6cdafecac70c4befd829aa4f749c9
 merge_commit_sha: PENDING
 main_readback_status: PENDING
 final_repository_state: PENDING
