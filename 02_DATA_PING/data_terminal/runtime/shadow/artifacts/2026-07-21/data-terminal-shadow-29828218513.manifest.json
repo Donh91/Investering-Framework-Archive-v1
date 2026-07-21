@@ -1,0 +1,94 @@
+{
+  "archive": {
+    "active_data_ping_pointer_changed": false,
+    "decode_command": "base64 --decode data-terminal-shadow-29828218513.zip.b64 > data-terminal-shadow-29828218513.zip",
+    "encoding": "BASE64_OF_ORIGINAL_GITHUB_ZIP",
+    "immutable": true,
+    "latest_data_terminal_pointer_changed": false
+  },
+  "authority": {
+    "binding": false,
+    "canonical_acceptance": false,
+    "portfolio_action": false,
+    "state_change": false
+  },
+  "files": [
+    {
+      "path": "latest_data_ping_handoff.json",
+      "sha256": "cc15478223cff6237c07549042190e28989ac4b3d5616ecdccf65909ce030d9b",
+      "size_bytes": 72189
+    },
+    {
+      "path": "latest_terminal_state.json",
+      "sha256": "7e50a79eef42f16f842d4a7d756c5e57114e29def75fd14542ff193f8248b772",
+      "size_bytes": 10582
+    },
+    {
+      "path": "receipts/DT_FRED_20260721T115849Z_b080365d0c23__receipt.json",
+      "sha256": "677b5e6b1b9d4d95784f82d3b135ec5da81e074c011769b874172f5e7c227857",
+      "size_bytes": 71264
+    },
+    {
+      "path": "snapshots/DT_FRED_20260721T115849Z_b080365d0c23__snapshot.json",
+      "sha256": "cfb78e1742521fe0660cc0c72544b2ecf7543d78b3b33f682e3178a468ed4abf",
+      "size_bytes": 72380
+    },
+    {
+      "path": "source_health.json",
+      "sha256": "f83b177aff656a1ebd734bd8ba6b36f9222a864080310c74d7b86987803e1659",
+      "size_bytes": 609
+    }
+  ],
+  "github_workflow": {
+    "artifact_expires_at": "2026-08-04T11:58:50Z",
+    "artifact_id": 8494159708,
+    "artifact_name": "data-terminal-shadow-29828218513",
+    "artifact_sha256": "ac3e2ad49f265b1cd9ae8b16d97051b875d90974ad7199cd7105143a9bd7cd89",
+    "artifact_size_bytes": 12188,
+    "branch": "main",
+    "conclusion": "success",
+    "head_sha": "e2b286e0bbd528aae7561f9122fea18363ad637b",
+    "job_id": 88626416386,
+    "mode": "live",
+    "name": "Data Terminal Shadow Manual",
+    "run_id": 29828218513
+  },
+  "repository": "Donh91/Investering-Framework-Archive-v1",
+  "schema": "DATA_TERMINAL_LIVE_ARTIFACT_ARCHIVE_MANIFEST",
+  "schema_version": "0.1",
+  "status": "VERIFIED_SHADOW_LIVE_PILOT_ARCHIVE",
+  "terminal_run": {
+    "acquisition_mode": "NETWORK",
+    "collector": "FRED_CSV_MACRO_CORE",
+    "conflict_count": 0,
+    "direct_or_derived": "DIRECT",
+    "freshness_seconds": 388729,
+    "latest_value": 4.55,
+    "missing_count": 719,
+    "payload_sha256": "b080365d0c23630b131a67f22a302cc7e1c57ebc530efa62f5a3fa045e0c1475",
+    "receipt_sha256": "eec2a605cc7eea2b19d64efeef5583c7d7bf8593f3e4db9eeac8f644c25486dc",
+    "retrieval_timestamp": "2026-07-21T11:58:49.620611Z",
+    "run_id": "DT_FRED_20260721T115849Z_b080365d0c23",
+    "series": "DGS10",
+    "snapshot_id": "DT_FRED_20260721T115849Z_b080365d0c23_SNAPSHOT",
+    "source_substitution_used": false,
+    "source_timestamp": "2026-07-17T00:00:00Z",
+    "status": "PASS",
+    "unit": "PERCENT"
+  },
+  "verification": {
+    "actual_file_count": 5,
+    "all_authority_flags_false": true,
+    "authority_block_count": 9,
+    "expected_file_count": 5,
+    "framework_state_change": false,
+    "handoff_artifact_references_valid": true,
+    "historical_revision_policy": "APPEND_ONLY_DO_NOT_OVERWRITE_PRIOR_RECEIPTS",
+    "missing_values_explicit_unknown": true,
+    "portfolio_action": "NONE",
+    "receipt_hash_valid": true,
+    "snapshot_pointer_hash_valid": true,
+    "source_substitution_false": true,
+    "zip_digest_matches_github_artifact": true
+  }
+}
