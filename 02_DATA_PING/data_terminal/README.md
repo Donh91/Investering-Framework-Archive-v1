@@ -52,3 +52,27 @@ authority: NON_BINDING
 ```
 
 The eight ordered `.zip.b64.part-*` files concatenate and decode to the exact original GitHub Actions artifact. Their remote Git-blob SHAs were verified individually. This archive does not advance any accepted DATA PING pointer or change framework state.
+
+## Second live bounded capture and diagnostic mega pack
+
+A second independent official-source contact was captured without source substitution, but this execution context could not materialize the complete authoritative raw CSV bytes. The durable package therefore preserves a bounded five-row direct capture, full first-run replay evidence, append-only storage proof and the materialization diagnostic without claiming full historical cross-run parity.
+
+```text
+runtime/shadow/artifacts/2026-07-21/second-live-bounded/
+```
+
+```yaml
+run_id: DT_FRED_WEB_BOUNDED_20260721T172619Z_e053de3a2119
+source_response_received: PASS
+source_response_fully_materialized: FAIL
+bounded_direct_rows: 5
+bounded_overlap: PASS_ONE_UNCHANGED_ZERO_REVISED
+append_only_storage: PASS
+full_history_cross_run_parity: BLOCKED
+phase1_completion: NO
+archive_parts: 15
+zip_sha256: 775c82da645244ba983af219f4e126f526eb229243dc4de49d8dd5e38ae591a8
+authority: NON_BINDING
+```
+
+The 15 ordered archive parts reconstruct a deterministic 27-file ZIP. This diagnostic does not modify the accepted DATA PING pointer, the latest Data Terminal pointer, any workflow or schedule, framework state or portfolio action.
