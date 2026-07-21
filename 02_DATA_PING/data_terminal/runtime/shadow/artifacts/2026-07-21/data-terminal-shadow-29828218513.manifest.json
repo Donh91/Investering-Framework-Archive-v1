@@ -1,10 +1,78 @@
 {
   "archive": {
     "active_data_ping_pointer_changed": false,
-    "decode_command": "base64 --decode data-terminal-shadow-29828218513.zip.b64 > data-terminal-shadow-29828218513.zip",
-    "encoding": "BASE64_OF_ORIGINAL_GITHUB_ZIP",
+    "base64_character_count": 16252,
+    "base64_sha256": "861326e89bfb5025846873cf99054cef4992a46fa5bae269fefbac5689c4f946",
+    "concatenate_command": "cat data-terminal-shadow-29828218513.zip.b64.part-* > data-terminal-shadow-29828218513.zip.b64",
+    "decode_command": "cat data-terminal-shadow-29828218513.zip.b64.part-* | base64 --decode > data-terminal-shadow-29828218513.zip",
+    "encoding": "ORDERED_BASE64_CHUNKS_OF_ORIGINAL_GITHUB_ZIP",
     "immutable": true,
-    "latest_data_terminal_pointer_changed": false
+    "latest_data_terminal_pointer_changed": false,
+    "part_count": 8,
+    "parts": [
+      {
+        "character_count": 2048,
+        "git_blob_sha1": "76e78df2abf3a73ee2cba3939414a10a515a9ce8",
+        "order": 1,
+        "path": "data-terminal-shadow-29828218513.zip.b64.part-001",
+        "sha256": "6abc27d7577ba93414c2588f37806033a5e0dc65ea497d242bc79ad08020f55e"
+      },
+      {
+        "character_count": 2048,
+        "git_blob_sha1": "9a661aa673567cc08c7dad245205fa6f2268bf04",
+        "order": 2,
+        "path": "data-terminal-shadow-29828218513.zip.b64.part-002",
+        "sha256": "bb4a3332e86e3b75888c7700ff46eba68fc2cebe0a259eb8e8b7f7567b0dd6d0"
+      },
+      {
+        "character_count": 2048,
+        "git_blob_sha1": "597704eb7f4e93ff949ce94f61429c93bd1911a5",
+        "order": 3,
+        "path": "data-terminal-shadow-29828218513.zip.b64.part-003",
+        "sha256": "176532353a5730a3f3639eb735355170cc38174052cb3301f80de69b7d6e89c4"
+      },
+      {
+        "character_count": 2048,
+        "git_blob_sha1": "97c5a25d371e7bebca89f34f5e27d5e5937ce11e",
+        "order": 4,
+        "path": "data-terminal-shadow-29828218513.zip.b64.part-004",
+        "sha256": "e4448ea7127dc04d1ff8574e381b57f3e64b2519003af48c0461ef0126ce8dd9"
+      },
+      {
+        "character_count": 2048,
+        "git_blob_sha1": "5baf72c01e4813fb7db90f9b7d4516d816c2daa8",
+        "order": 5,
+        "path": "data-terminal-shadow-29828218513.zip.b64.part-005",
+        "sha256": "8f5351ba2728933fc225a28fad0b0da5ff244253bc0211accae2e613e7174c70"
+      },
+      {
+        "character_count": 2048,
+        "git_blob_sha1": "6870f529b273e8960f549574e6701de9ba768858",
+        "order": 6,
+        "path": "data-terminal-shadow-29828218513.zip.b64.part-006",
+        "sha256": "8e7d8c86d6e6d95c2e3841fcda986fde8fbb2146d0d96819953cc431d08b6a14"
+      },
+      {
+        "character_count": 2048,
+        "git_blob_sha1": "77c96de953a2ac6ce033b9d9bb2e4ad523ff700e",
+        "order": 7,
+        "path": "data-terminal-shadow-29828218513.zip.b64.part-007",
+        "sha256": "6a63cdc7a9cd11445f3b92432312d11a64c1fa04c34e1a42d57acc79c26e243b"
+      },
+      {
+        "character_count": 1916,
+        "git_blob_sha1": "9102b6ef6a292a3737a1274f337df4b73acae3c3",
+        "order": 8,
+        "path": "data-terminal-shadow-29828218513.zip.b64.part-008",
+        "sha256": "8d21eb2f8241e217c9124aa6ff8f0ff12c65fdcd0b2bf486748a7ef92965be32"
+      }
+    ],
+    "remediation": {
+      "initial_monolithic_path": "data-terminal-shadow-29828218513.zip.b64",
+      "initial_monolithic_status": "DELETED_AFTER_REMOTE_BLOB_MISMATCH",
+      "replacement_status": "PASS_8_OF_8_PART_BLOBS_MATCH_EXPECTED",
+      "write_governance_result": "PARTIAL_REMEDIATED"
+    }
   },
   "authority": {
     "binding": false,
@@ -55,7 +123,7 @@
   },
   "repository": "Donh91/Investering-Framework-Archive-v1",
   "schema": "DATA_TERMINAL_LIVE_ARTIFACT_ARCHIVE_MANIFEST",
-  "schema_version": "0.1",
+  "schema_version": "0.2",
   "status": "VERIFIED_SHADOW_LIVE_PILOT_ARCHIVE",
   "terminal_run": {
     "acquisition_mode": "NETWORK",
@@ -79,6 +147,8 @@
   "verification": {
     "actual_file_count": 5,
     "all_authority_flags_false": true,
+    "archive_chunk_blob_parity": "PASS_8_OF_8",
+    "archive_reconstruction_sha256_valid": true,
     "authority_block_count": 9,
     "expected_file_count": 5,
     "framework_state_change": false,
