@@ -4,7 +4,6 @@
 **Status:** VERIFIED_SHADOW_LIVE_PILOT_ARCHIVE  
 **Area:** Data Terminal / Phase 1 / live collector pilot  
 **Primary folder:** `02_DATA_PING/data_terminal/runtime/shadow/artifacts/2026-07-21/`  
-**Depends on:** `02_DATA_PING/data_terminal/README.md`, `scripts/data_terminal/fred_csv_collector.py`  
 **Authority:** non-binding source evidence only
 
 ## Run identity
@@ -15,7 +14,6 @@ github_workflow_run_id: 29828218513
 github_job_id: 88626416386
 github_artifact_id: 8494159708
 repository: Donh91/Investering-Framework-Archive-v1
-source_branch: main
 source_head_sha: e2b286e0bbd528aae7561f9122fea18363ad637b
 workflow: Data Terminal Shadow Manual
 workflow_mode: live
@@ -62,13 +60,25 @@ historical_revision_policy: APPEND_ONLY_DO_NOT_OVERWRITE_PRIOR_RECEIPTS
 ## Archive paths
 
 ```text
-02_DATA_PING/data_terminal/runtime/shadow/artifacts/2026-07-21/data-terminal-shadow-29828218513.zip.b64
+02_DATA_PING/data_terminal/runtime/shadow/artifacts/2026-07-21/data-terminal-shadow-29828218513.zip.b64.part-001 through part-008
 02_DATA_PING/data_terminal/runtime/shadow/artifacts/2026-07-21/data-terminal-shadow-29828218513.manifest.json
 02_DATA_PING/data_terminal/runtime/shadow/artifacts/2026-07-21/data-terminal-shadow-29828218513.source-health.json
-07_PROMPTS_AND_AGENTS/data_terminal/implementation_receipts/2026-07-21__data-terminal-fred-live-pilot__verification-receipt.md
 ```
 
-The Base64 file decodes to the exact GitHub Actions ZIP and preserves the original source-health output, immutable receipt, shadow snapshot, terminal pointer and DATA PING handoff candidate.
+The eight ordered Base64 parts concatenate and decode to the exact GitHub Actions ZIP. Each remote Git-blob SHA matches its precomputed value.
+
+## Write verification note
+
+```yaml
+incident_count: 1
+initial_archive_form: MONOLITHIC_BASE64
+initial_readback: BLOB_PARITY_MISMATCH
+final_archive_form: EIGHT_ORDERED_BASE64_PARTS
+part_blob_parity: PASS_8_OF_8
+reconstructed_zip_sha256: ac3e2ad49f265b1cd9ae8b16d97051b875d90974ad7199cd7105143a9bd7cd89
+write_governance_result: PARTIAL_REMEDIATED
+final_repository_state: PASS_PENDING_PR_REVIEW
+```
 
 ## Authority and framework effect
 
