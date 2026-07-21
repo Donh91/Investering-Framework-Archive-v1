@@ -33,7 +33,7 @@ A stale, empty, malformed or unavailable source is an explicit non-PASS result. 
 The first verified network-backed Phase 1 pilot is preserved as immutable shadow evidence:
 
 ```text
-runtime/shadow/artifacts/2026-07-21/data-terminal-shadow-29828218513.zip.b64
+runtime/shadow/artifacts/2026-07-21/data-terminal-shadow-29828218513.zip.b64.part-001 through part-008
 runtime/shadow/artifacts/2026-07-21/data-terminal-shadow-29828218513.manifest.json
 runtime/shadow/artifacts/2026-07-21/data-terminal-shadow-29828218513.source-health.json
 ```
@@ -51,4 +51,4 @@ status: VERIFIED_SHADOW_LIVE_PILOT_ARCHIVE
 authority: NON_BINDING
 ```
 
-The `.zip.b64` file is the exact original GitHub Actions artifact encoded as Base64. Decode it to recover the five original JSON outputs. This archive does not advance any accepted DATA PING pointer or change framework state.
+The eight ordered `.zip.b64.part-*` files concatenate and decode to the exact original GitHub Actions artifact. Their remote Git-blob SHAs were verified individually. This archive does not advance any accepted DATA PING pointer or change framework state.
