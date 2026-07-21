@@ -1,0 +1,71 @@
+{
+  "schema": "FORECAST_EXPERIMENT_MATURED_SCORE_IMPORT",
+  "schema_version": "1.0",
+  "status": "MATURED_SCORED_PROSPECTIVE_VALID",
+  "imported_at_utc": "2026-07-21T10:04:20Z",
+  "experiment_family": "PRICE_RANGE_PATH_CYCLE_AND_ROTATION_ACCURACY",
+  "source_forecast_period": "2026-W29",
+  "source_cycle_navigator_number": 16,
+  "scored_in_cycle_navigator_number": 17,
+  "forecast_frozen_before_outcome": true,
+  "source_forecast_ledger_commit": "5b5d3755bc2762da861f2e67694efc070da31eda",
+  "source_publication_merge_commit": "796a0b8af956306bc6fd7eba84b82ee377462249",
+  "source_score_publication_commit": "434983fff8224475ec1e7f622c69df72d56e442c",
+  "source_settled_closeout_id": "MASTER_MONDAY_CLOSEOUT_W30_20260720T054959Z",
+  "score_model": "CYCLE_NAVIGATOR_SCORE_V2_PROSPECTIVE",
+  "frozen_forecast": {
+    "BTC_weekly_range": [60900, 65800],
+    "ETH_weekly_range": [1680, 1900],
+    "BTC_day_1_2": [61900, 64200],
+    "ETH_day_1_2": [1735, 1845],
+    "BTC_day_3_4": [61900, 64700],
+    "ETH_day_3_4": [1720, 1880],
+    "BTC_day_5_7": [60900, 65800],
+    "ETH_day_5_7": [1680, 1900],
+    "cycle_call": "BTC_LED_REPAIR_TRANSITION_REGIME",
+    "rotation_call": "NO_CONFIRMED_ROTATION"
+  },
+  "verified_actual": {
+    "BTC_weekly_range": [61824.97, 65600.0],
+    "ETH_weekly_range": [1750.2, 1946.52],
+    "BTC_weekly_close": 64415.75,
+    "ETH_weekly_close": 1862.12,
+    "ETHBTC_weekly_close": 0.02891,
+    "ETHBTC_above_0_0275": true,
+    "ETHBTC_above_0_0300": false
+  },
+  "scores": {
+    "BTC_range_score": 93,
+    "ETH_range_score": 70,
+    "price_range_score": 82,
+    "day_1_2_score": 70,
+    "day_3_4_score": 29,
+    "day_5_7_score": 82,
+    "intraday_map_score": 60,
+    "intraday_path": "PARTIAL",
+    "cycle_regime": "HIT_2_OF_2",
+    "rotation": "HIT_2_OF_2"
+  },
+  "error_classification": {
+    "primary_success": "WEEKLY_STRUCTURE_AND_REGIME_CORRECT",
+    "primary_error": "SHORT_HORIZON_VELOCITY_UNDERESTIMATED",
+    "asset_specific_error": "ETH_UPSIDE_EXCEEDED_FORECAST_UPPER_BOUND",
+    "timing_error": "MIDWEEK_EXPANSION_FASTER_AND_LARGER_THAN_FORECAST",
+    "rotation_error": "NONE_BROAD_ROTATION_REMAINED_UNCONFIRMED"
+  },
+  "learning_tags": [
+    "WEEKLY_RANGE_MORE_ROBUST_THAN_INTRADAY_PATH",
+    "CATALYST_REPAIR_PHASE_REQUIRES_WIDER_SHORT_HORIZON_RANGES",
+    "ETH_RELATIVE_STRENGTH_CAN_OVERSHOOT_WITHOUT_BROAD_ROTATION",
+    "NO_ROTATION_CALL_VALID_WHILE_ETHBTC_BELOW_0_0300_AND_BREADTH_WEAK"
+  ],
+  "promotion_counting": {
+    "counts_as_prospective_mature_row": true,
+    "counts_as_independent_event_window": true,
+    "counts_for_governance_review_threshold": true,
+    "automatic_rule_promotion": false
+  },
+  "history_rule": "IMPORT_EXISTING_LOCKED_SCORE_NO_RECALCULATION_NO_RETROACTIVE_ADJUSTMENT",
+  "portfolio_authority": false,
+  "canonical_state_authority": false
+}
