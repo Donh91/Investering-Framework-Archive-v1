@@ -1,0 +1,93 @@
+{
+  "schema": "FORECAST_EXPERIMENT_ACTIVE_REGISTRY",
+  "schema_version": "1.0",
+  "status": "ACTIVE_ENRICHMENT_PROTOCOL_ENABLED",
+  "updated_at_utc": "2026-07-21T09:53:49Z",
+  "updated_at_cest": "2026-07-21T11:53:49+02:00",
+  "protocol_path": "03_WEEKLY_OPERATIONS/forecast_experiments/governance/2026-07-21__experiment-enrichment-protocol-v1__canonical.md",
+  "current_week": "2026-W30",
+  "update_existing_first": true,
+  "online_baseline_supplementation": true,
+  "canonical_state_authority": false,
+  "portfolio_action_authority": false,
+  "active_experiments": [
+    {
+      "experiment_path": "03_WEEKLY_OPERATIONS/forecast_experiments/2026-W30/2026-07-21T060623Z__rotation-and-capital-transmission-watch__shadow.json",
+      "source_snapshot_id": "DATA_PING_V6_RAW_20260721T060623Z",
+      "status": "LIVE",
+      "hypotheses": [
+        {
+          "id": "W30_ROTATION_H1",
+          "family": "ETHBTC_ROTATION_PROXIMITY_AND_PERSISTENCE",
+          "evaluation_window": "1_5_DAYS",
+          "next_required_evidence": [
+            "SETTLED_ETHBTC_CLOSE_AND_PERSISTENCE_AROUND_0_0300",
+            "BTC_STRUCTURE_ABOVE_63300",
+            "CURRENT_24H_AND_7D_BREADTH"
+          ]
+        },
+        {
+          "id": "W30_CAPITAL_H2",
+          "family": "LARGE_CAP_BEFORE_MID_CAP_TRANSMISSION",
+          "evaluation_window": "3_10_DAYS",
+          "next_required_evidence": [
+            "LARGE_CAP_RELATIVE_STRENGTH",
+            "MID_CAP_RELATIVE_STRENGTH",
+            "24H_AND_7D_BREADTH_BY_COHORT"
+          ]
+        },
+        {
+          "id": "W30_FLOW_H3",
+          "family": "ETF_SPOT_FLOW_WITH_MODERATE_OI_REBUILD",
+          "evaluation_window": "1_7_DAYS",
+          "next_required_evidence": [
+            "NEXT_COMPLETED_ETF_SESSION",
+            "SPOT_TAKER_PERSISTENCE",
+            "OI_FUNDING_BASIS_EVOLUTION",
+            "PRICE_HOLD_OR_FAILURE"
+          ]
+        }
+      ]
+    }
+  ],
+  "minimum_online_baseline": [
+    "BTC_PRICE_AND_STRUCTURE",
+    "ETH_PRICE_AND_STRUCTURE",
+    "DIRECT_ETHBTC",
+    "BTC_DOMINANCE_AND_TOTAL_MARKET_CAP_WHEN_AVAILABLE",
+    "LATEST_COMPLETED_BTC_ETH_ETF_SESSION_AND_IBIT",
+    "CFGI_MARKET_BTC_ETH",
+    "FUNDING_OI_BASIS_FUTURES_TAKER",
+    "PRICE_BREADTH_1H_24H_7D",
+    "STABLECOIN_TVL_CVD_MACRO_WHEN_AVAILABLE"
+  ],
+  "trigger_sources": [
+    "DATA_PING",
+    "AUTOMATION_OUTPUT",
+    "MASTER_MONDAY",
+    "CYCLE_NAVIGATOR",
+    "TECHDEV",
+    "RESEARCH_LAB",
+    "MANUAL_MARKET_INPUT",
+    "SCHEDULED_ONLINE_BASELINE"
+  ],
+  "next_maturity_queue": [
+    {
+      "hypothesis_id": "W30_ROTATION_H1",
+      "window": "1_5_DAYS",
+      "status": "LIVE"
+    },
+    {
+      "hypothesis_id": "W30_FLOW_H3",
+      "window": "1_7_DAYS",
+      "status": "LIVE"
+    },
+    {
+      "hypothesis_id": "W30_CAPITAL_H2",
+      "window": "3_10_DAYS",
+      "status": "LIVE"
+    }
+  ],
+  "archive_rule": "APPEND_EVIDENCE_SCORE_AT_MATURITY_DO_NOT_ADVANCE_CANONICAL_MARKET_POINTER",
+  "readback_status": "PENDING"
+}
