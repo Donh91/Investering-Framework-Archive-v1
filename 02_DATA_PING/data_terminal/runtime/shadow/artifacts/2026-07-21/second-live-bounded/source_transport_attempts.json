@@ -1,0 +1,77 @@
+{
+  "attempts": [
+    {
+      "attempt": 1,
+      "materialized": "METADATA_AND_LATEST_FIVE_ROWS",
+      "result": "PASS",
+      "transport": "WEB_OPEN_FRED_SERIES_PAGE",
+      "url": "https://fred.stlouisfed.org/series/DGS10/"
+    },
+    {
+      "attempt": 2,
+      "materialized": "TABLE_METADATA_AND_RENDERED_EXCERPTS_NOT_COMPLETE_RAW_BYTES",
+      "result": "PASS_PARTIAL",
+      "transport": "WEB_OPEN_FRED_TABLE_PAGE",
+      "url": "https://fred.stlouisfed.org/data/DGS10"
+    },
+    {
+      "attempt": 3,
+      "materialized": "NONE",
+      "result": "FAIL_FETCH_ADAPTER_400_OK",
+      "transport": "WEB_OPEN_FRED_CSV_ENDPOINT",
+      "url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS10"
+    },
+    {
+      "attempt": 4,
+      "materialized": "NONE",
+      "result": "FAIL_DNS_RESOLUTION",
+      "transport": "CONTAINER_URLLIB_FRED_TXT",
+      "url": "https://fred.stlouisfed.org/data/DGS10.txt"
+    },
+    {
+      "attempt": 5,
+      "materialized": "NONE",
+      "result": "FAIL_DNS_RESOLUTION",
+      "transport": "CONTAINER_URLLIB_FRED_CSV",
+      "url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DGS10"
+    },
+    {
+      "attempt": 6,
+      "materialized": "SERIES_ID_DATE_RANGE_AND_16839_OBSERVATION_COUNT",
+      "result": "PASS_METADATA",
+      "transport": "WEB_OPEN_FEDERAL_RESERVE_DDP_REVIEW",
+      "url": "https://www.federalreserve.gov/datadownload/Review.aspx?filetype=csv&from=&label=include&lastObs=&layout=seriescolumn&rel=H15&series=bf17364827e38702b42a58cf8eaa3f78&to=&type=package"
+    },
+    {
+      "attempt": 7,
+      "materialized": "NONE",
+      "result": "FAIL_APPLICATION_TEMPORARILY_UNAVAILABLE",
+      "transport": "WEB_OPEN_FEDERAL_RESERVE_DDP_OUTPUT",
+      "url": "https://www.federalreserve.gov/datadownload/Output.aspx?filetype=csv&from=&label=include&lastobs=&layout=seriescolumn&rel=H15&series=bf17364827e38702b42a58cf8eaa3f78&to=&type=package"
+    }
+  ],
+  "authority": {
+    "binding": false,
+    "canonical_acceptance": false,
+    "framework_state_change": false,
+    "portfolio_action": false
+  },
+  "no_api_key": true,
+  "no_free_trial_dependency": true,
+  "no_hidden_premium_fallback": true,
+  "no_paid_api": true,
+  "retrieval_timestamp": "2026-07-21T17:26:19Z",
+  "run_id": "DT_FRED_WEB_BOUNDED_20260721T172619Z_e053de3a2119",
+  "schema": "DATA_TERMINAL_SOURCE_MATERIALIZATION_DIAGNOSTIC",
+  "schema_version": "0.1",
+  "source": "FRED_DGS10",
+  "source_substitution_used": false,
+  "stage_results": {
+    "APPEND_ONLY_STORAGE_PROOF": "PASS",
+    "HISTORICAL_VALUE_PARITY": "BLOCKED",
+    "RETURNED_ROW_COUNT_VERIFIED": "PARTIAL_5_ROWS_PLUS_OFFICIAL_METADATA_COUNT",
+    "ROW_NORMALIZATION": "PASS_BOUNDED",
+    "SOURCE_RESPONSE_FULLY_MATERIALIZED": "FAIL",
+    "SOURCE_RESPONSE_RECEIVED": "PASS"
+  }
+}
