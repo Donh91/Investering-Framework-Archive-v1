@@ -1,0 +1,113 @@
+{
+  "schema": "DATA_PING_INTRADAY_RECONCILIATION_AND_FRAMEWORK_DELTA",
+  "schema_version": "1.0",
+  "created_at_utc": "2026-07-21T06:06:23.860Z",
+  "created_at_cest": "2026-07-21T08:06:23.860+02:00",
+  "source_snapshot_id": "DATA_PING_V6_RAW_20260721T060623Z",
+  "source_layout": "LEGACY_V6_V2_RAW",
+  "authority": "MAIN_FRAMEWORK_NON_CANONICAL_SUPPORTING_INPUT",
+  "canonical_acceptance": false,
+  "portfolio_action": false,
+  "framework_state_change": false,
+  "validation": {
+    "raw_market_rows": "USABLE_BY_FIELD",
+    "strict_json": "FAIL_SMART_QUOTES",
+    "declared_schema_validation": "PASS_CLAIM_NOT_ACCEPTED",
+    "lineage": "FAIL_DECLARED_CANONICAL_PREDECESSOR_STALE",
+    "declared_canonical_predecessor": "DATA_PING_V5_20260717T162231Z",
+    "expected_latest_accepted_predecessor": "DATA_PING_V6_20260719T200033Z",
+    "collector_predecessor": "DATA_PING_V6_RAW_20260720T200647Z",
+    "receipts": "SYMBOLIC_LABELS_NOT_STRUCTURED_RECEIPT_OBJECTS",
+    "packet_hash": "NOT_GENERATED",
+    "disposition": "ACCEPT_BY_FIELD_AS_SUPPORTING_INTRADAY_EVIDENCE_ONLY"
+  },
+  "market_snapshot": {
+    "BTCUSDT": 65758.95,
+    "ETHUSDT": 1931.65,
+    "ETHBTC": 0.02938,
+    "btc_above_recent_weekly_high_65600_intraday": true,
+    "ethbtc_above_repair_0275": true,
+    "ethbtc_above_confirmation_0300": false
+  },
+  "trailing_10h": {
+    "BTC": {
+      "price_change_pct": 0.8955973105,
+      "spot_net_taker_quote_usd_m": 10.0140440221,
+      "spot_buy_share_pct": 51.4976826562,
+      "oi_change_pct": 0.6665816778,
+      "futures_taker_ratio_mean": 1.1196444444
+    },
+    "ETH": {
+      "price_change_pct": 1.6123594914,
+      "spot_net_taker_quote_usd_m": 3.6500999062,
+      "spot_buy_share_pct": 51.207916735,
+      "oi_change_pct": 3.5321004048,
+      "futures_taker_ratio_mean": 1.0271777778
+    },
+    "ETHBTC_change_pct": 0.7206588881,
+    "flow_scope": "BINANCE_ONLY_NOT_MARKET_WIDE"
+  },
+  "leverage_and_positioning": {
+    "BTC_funding_pct": 0.008119,
+    "ETH_funding_pct": 0.005764,
+    "BTC_basis_pct": -0.0401054277,
+    "ETH_basis_pct": -0.0384215042,
+    "BTC_global_account_ratio_start": 1.1925,
+    "BTC_global_account_ratio_latest": 1.1877,
+    "ETH_global_account_ratio_start": 1.9163,
+    "ETH_global_account_ratio_latest": 1.7488,
+    "interpretation": "PRICE_AND_OI_RISE_WITH_POSITIVE_BUT_NON_EXTREME_FUNDING_AND_DECLINING_ACCOUNT_LONG_SHORT_RATIOS"
+  },
+  "etf": {
+    "latest_completed_session": "2026-07-20",
+    "BTC_usd_m": 226.8,
+    "IBIT_usd_m": 116.5,
+    "ETH_usd_m": 38.0,
+    "BTC_last_3_usd_m": 438.2,
+    "BTC_last_5_usd_m": 727.0,
+    "IBIT_last_5_usd_m": 506.1,
+    "ETH_last_5_usd_m": 158.9,
+    "stage_1_etf_flow_leg": "COMPLETE_RATIFIED_ALREADY_NO_NEW_RATIFICATION",
+    "delta": "DURABILITY_STRENGTHENED"
+  },
+  "cfgi": {
+    "market": {"1D": 49, "4H": 53, "1H": 52, "15M": 53},
+    "BTC": {"1D": 51, "4H": 55, "1H": 56, "15M": 64},
+    "ETH": {"1D": 60, "4H": 67, "1H": 65, "15M": 69},
+    "status": "CURRENT_SNAPSHOT_ONLY_ETH_CLASSIFICATION_CONFLICT_PRESERVED",
+    "delta": "SHORT_HORIZON_SENTIMENT_REPAIRED_WITH_ETH_RELATIVE_STRENGTH"
+  },
+  "framework_delta": {
+    "structure": "STRENGTHENED_INTRADAY_BTC_TESTING_ACCEPTANCE_ABOVE_65600",
+    "spot_flow": "IMPROVED_FROM_PRIOR_NEGATIVE_BTC_WINDOW_TO_POSITIVE_10H_BTC_AND_ETH",
+    "futures_flow": "IMPROVED_TO_MEAN_TAKER_RATIOS_ABOVE_1_WITH_OI_REBUILD",
+    "etf": "FIFTH_POSITIVE_COMPLETED_BTC_SESSION_AND_POSITIVE_ETH_SESSION_STRENGTHEN_DURABILITY",
+    "rotation": "EARLY_ROTATION_WATCH_STRENGTHENED_BUT_NO_ROTATION_ETHBTC_BELOW_0300_AND_NO_CURRENT_PRICE_BREADTH",
+    "broad_recovery": "NOT_CONFIRMED",
+    "pullback_warning": "ACTIVE_DE_ESCALATED_ONE_LEVEL_MAINTAINED_NOT_CLEARED",
+    "short_term_cooling": "PARTIALLY_REPAIRED",
+    "large_cap_window": "WATCH_ONLY_NOT_OPEN",
+    "new_entry_signal": "NOT_ACTIVE",
+    "portfolio_action": "NONE",
+    "user_action": "HOLD_AND_WAIT"
+  },
+  "p1_retention": {
+    "reference_price": 62065.06,
+    "current_intraday_peak": 65933.24,
+    "current_price": 65758.95,
+    "indicative_peak_advance_retention_pct": 95.4942634521,
+    "authority": "INTRADAY_INDICATIVE_NOT_SETTLED",
+    "seven_day_review_date": "2026-07-21",
+    "review_status": "DATE_REACHED_SETTLED_REVIEW_PENDING"
+  },
+  "remaining_blockers": [
+    "NO_SETTLED_ACCEPTANCE_ABOVE_65600_TO_65800",
+    "DIRECT_ETHBTC_BELOW_0300",
+    "CURRENT_PRICE_BREADTH_NOT_PROVIDED",
+    "MARKET_WIDE_CVD_UNAVAILABLE",
+    "FIXED_RISK35_UNKNOWN",
+    "OFFICIAL_STABLECOIN_TOTAL_AND_HISTORY_UNAVAILABLE",
+    "P1_7D_REVIEW_NOT_YET_SETTLED"
+  ],
+  "archive_rule": "SUPPORTING_INPUT_ONLY_DO_NOT_ADVANCE_LATEST_ACCEPTED_DATA_PING_POINTER"
+}
