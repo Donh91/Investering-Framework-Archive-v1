@@ -1,0 +1,40 @@
+{
+  "authority": {
+    "binding": false,
+    "canonical_acceptance": false,
+    "framework_state_change": false,
+    "portfolio_action": false
+  },
+  "blocking_gates": {
+    "cross_run_full_historical_value_parity": "BLOCKED",
+    "historical_revision_ledger_complete": "BLOCKED",
+    "second_complete_collector_run": "NOT_EXECUTED",
+    "second_full_raw_source_materialization": "FAIL"
+  },
+  "completed_gates": {
+    "append_only_storage": "PASS",
+    "bounded_overlap_check": "PASS_NO_REVISION_OBSERVED",
+    "first_artifact_immutable_archive": "PASS",
+    "first_live_collection": "PASS",
+    "first_run_replay": "PASS",
+    "second_independent_official_source_response": "PASS_BOUNDED"
+  },
+  "framework_state_change": false,
+  "phase1_completion": "NO",
+  "portfolio_action": "NONE",
+  "required_remediation": [
+    "RUN_EXISTING_LIVE_COLLECTOR_IN_NETWORK_CAPABLE_RUNTIME",
+    "PRESERVE_FULL_AUTHORITATIVE_RAW_VALUE_ROWS_IN_SECOND_RUN",
+    "ADD_RAW_ROW_SPOOL_TO_FUTURE_RECEIPTS_WITHOUT_OVERWRITING_PRIOR_ARTIFACTS",
+    "COMPARE_ONLY_WHEN_BOTH_RUNS_HAVE_AUTHORITATIVE_ROW_MATERIALIZATION"
+  ],
+  "root_causes": [
+    "CURRENT_EXECUTION_CONTEXT_COULD_NOT_MATERIALIZE_OFFICIAL_RAW_CSV_BYTES",
+    "FIRST_LIVE_PILOT_DID_NOT_PRESERVE_FULL_HISTORICAL_VALUE_ROWS"
+  ],
+  "run_id": "DT_FRED_WEB_BOUNDED_20260721T172619Z_e053de3a2119",
+  "schedule_status": "DISABLED",
+  "schema": "DATA_TERMINAL_PHASE1_CLOSEOUT_CANDIDATE",
+  "schema_version": "0.1",
+  "status": "BLOCKED_NOT_COMPLETE"
+}
