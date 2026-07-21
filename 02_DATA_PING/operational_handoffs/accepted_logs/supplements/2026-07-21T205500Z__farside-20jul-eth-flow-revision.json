@@ -1,0 +1,43 @@
+{
+  "schema": "FARSIDE_SOURCE_REVISION_RECEIPT",
+  "schema_version": "1.0",
+  "status": "SOURCE_REVISION_ACCEPTED_FOR_FORWARD_USE",
+  "created_at_utc": "2026-07-21T21:15:00Z",
+  "session_date": "2026-07-20",
+  "source": "FARSIDE_OFFICIAL_WEB",
+  "source_urls": {
+    "btc": "https://farside.co.uk/btc/",
+    "eth": "https://farside.co.uk/eth/"
+  },
+  "btc": {
+    "total_usd_m": 226.8,
+    "IBIT_usd_m": 116.5,
+    "FBTC_usd_m": 24.1,
+    "BITB_usd_m": 8.8,
+    "ARKB_usd_m": 72.7,
+    "HODL_usd_m": 1.8,
+    "MSBT_usd_m": 6.9,
+    "GBTC_usd_m": -45.4,
+    "BTC_mini_usd_m": 41.4,
+    "verification": "CONFIRMED"
+  },
+  "eth": {
+    "prior_logged_total_usd_m": 38.0,
+    "current_official_total_usd_m": 3.7,
+    "delta_usd_m": -34.3,
+    "verification": "OFFICIAL_TABLE_CURRENTLY_SHOWS_3_7",
+    "revision_type": "SOURCE_VALUE_CHANGED_OR_PRIOR_TRANSCRIPTION_ERROR_UNRESOLVED"
+  },
+  "affected_prior_evidence_path": "03_WEEKLY_OPERATIONS/forecast_experiments/2026-W30/evidence/2026-07-21T154756Z__data-ping-v6-raw-enrichment__shadow.json",
+  "forward_rule": "USE_3_7_FOR_2026_07_20_ETH_TOTAL_UNLESS_A_LATER_OFFICIAL_REVISION_RECEIPT_SUPERSEDES_THIS_FILE",
+  "history_rule": "DO_NOT_DELETE_OR_SILENTLY_REWRITE_PRIOR_LOGGED_VALUE",
+  "impact": {
+    "btc_flow_hypothesis": "UNCHANGED_STRONG_POSITIVE_BTC_SESSION",
+    "eth_flow_strength": "DOWNGRADED_FROM_MODERATE_TO_SMALL_POSITIVE",
+    "rotation_interpretation": "WEAKENS_ETH_TRANSMISSION_EVIDENCE",
+    "canonical_market_state_change": false,
+    "portfolio_action_change": false
+  },
+  "authority": "SOURCE_REVISION_ONLY_NON_PORTFOLIO",
+  "readback_status": "PENDING"
+}
