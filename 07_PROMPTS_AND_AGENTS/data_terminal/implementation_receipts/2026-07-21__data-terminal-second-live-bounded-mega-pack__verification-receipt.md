@@ -4,7 +4,6 @@
 **Status:** PARTIAL_SOURCE_MATERIALIZATION_PACKAGE_VERIFIED_PHASE1_BLOCKED  
 **Area:** Data Terminal / Phase 1 / second official-source capture / append-only audit  
 **Primary folder:** `07_PROMPTS_AND_AGENTS/data_terminal/implementation_receipts/`  
-**Depends on:** `02_DATA_PING/data_terminal/runtime/shadow/artifacts/2026-07-21/second-live-bounded/data-terminal-second-live-bounded-mega-pack-20260721.delivery-manifest.json`  
 **Authority:** non-binding implementation verification only
 
 ## Run identity
@@ -22,7 +21,7 @@ package_internal_file_count: 27
 package_uncompressed_bytes: 421795
 ```
 
-## Source and materialization stages
+## Source and verification result
 
 ```yaml
 SOURCE_RESPONSE_RECEIVED: PASS
@@ -30,69 +29,40 @@ SOURCE_RESPONSE_FULLY_MATERIALIZED: FAIL
 RETURNED_ROW_COUNT_VERIFIED: PARTIAL_5_ROWS_PLUS_OFFICIAL_16839_METADATA
 ROW_NORMALIZATION: PASS_BOUNDED
 APPEND_ONLY_STORAGE_PROOF: PASS
+FIRST_ARTIFACT_BYTE_IDENTITY: PASS
+FIRST_RUN_REPLAY: PASS
+FIRST_MISSING_ROWS: PASS_719_EXPLICIT_UNKNOWN
+SECOND_CAPTURE_DIRECT_ROWS: PASS_5
+BOUNDED_OVERLAP: PASS_ONE_UNCHANGED_ZERO_REVISED
+ARCHIVE_PART_BLOB_PARITY: PASS_15_OF_15
 FULL_HISTORY_CROSS_RUN_PARITY: BLOCKED
+PHASE1_COMPLETION: NO
 ```
 
-The official FRED series page and Federal Reserve download-program metadata were reachable. Five current direct DGS10 rows and the official observation-count metadata were preserved. Complete authoritative raw CSV bytes could not be materialized in this execution context. No substitute source, paid API, API key, free trial or hidden premium fallback was used.
-
-## Package verification
-
-```yaml
-first_artifact_byte_identity: PASS
-first_artifact_zip_crc: PASS
-first_artifact_file_count: PASS_5_OF_5
-first_receipt_hash: PASS
-first_snapshot_pointer_hash: PASS
-first_handoff_references: PASS
-first_authority_blocks: PASS_9_OF_9_ALL_FALSE
-first_missing_rows: PASS_719_EXPLICIT_UNKNOWN
-second_capture_direct_rows: PASS_5
-second_capture_latest_value: PASS_4_55
-bounded_overlap: PASS_ONE_UNCHANGED_ZERO_REVISED
-storage_append_only: PASS
-package_manifest: PASS
-package_internal_verifier: PASS
-archive_part_blob_parity: PASS_15_OF_15
-```
-
-The bounded overlap proves only that the shared 2026-07-17 value remained 4.55. It does not prove complete historical source-revision parity because the second full raw response was not materialized and the first live pilot did not preserve every historical non-missing value as an authoritative row spool.
-
-## Phase 1 result separation
-
-```yaml
-row_validity: PASS_BOUNDED
-coverage_readiness: BLOCKED_FULL_HISTORY_MATERIALIZATION
-edge_or_promotion_status: NOT_APPLICABLE
-phase1_completion: NO
-required_next_runtime: NETWORK_CAPABLE_EXISTING_COLLECTOR_RUN_WITH_FULL_RAW_ROW_PRESERVATION
-```
+Complete authoritative raw CSV bytes could not be materialized in this execution context. No substitute source, paid API, API key, free trial or hidden premium fallback was used. The bounded overlap proves only that the shared 2026-07-17 value remained 4.55.
 
 ## Write-layer incidents and remediation
 
 ```yaml
-incident_count: 5
-incidents:
-  - incident_class: REMOTE_TEXT_BLOB_PARITY_DURING_LARGE_BASE64_ARCHIVE_WRITE
-    incident_paths:
-      - data-terminal-second-live-bounded-mega-pack-20260721.zip.b64
-      - data-terminal-second-live-bounded-mega-pack-20260721.zip.b64.part-007
-      - data-terminal-second-live-bounded-mega-pack-20260721.zip.b64.part-008
-      - data-terminal-second-live-bounded-mega-pack-20260721.zip.b64.part-011
-      - data-terminal-second-live-bounded-mega-pack-20260721.zip.b64.part-013
-    initial_monolithic_status: DELETED_AFTER_REMOTE_BLOB_MISMATCH
-    replacement_status: PASS_15_OF_15_PART_BLOBS_MATCH_EXPECTED
-  - incident_class: UNINTENDED_PATH_CREATED_BY_WRONG_TOOL_CALL
-    incident_path: 02_DATA_PING/data_terminal/runtime/shadow/artifacts/2026-07-21/second-live-bounded/RECONSTRUCTION.md
-    status: DELETED_BEFORE_PR
-  - incident_class: UNINTENDED_PATH_CREATED_BY_WRONG_TOOL_CALL
-    incident_path: 02_DATA_PING/data_terminal/runtime/shadow/artifacts/2026-07-21/second-live-bounded/DO_NOT_CREATE.tmp
-    status: DELETED_BEFORE_PR
-  - incident_class: UNINTENDED_PATH_CREATED_BY_WRONG_TOOL_CALL
-    incident_path: 02_DATA_PING/data_terminal/runtime/shadow/artifacts/2026-07-21/second-live-bounded/STOP
-    status: DELETED_BEFORE_PR
-  - incident_class: UNINTENDED_PATH_CREATED_BY_WRONG_TOOL_CALL
-    incident_path: 02_DATA_PING/data_terminal/runtime/shadow/artifacts/2026-07-21/second-live-bounded/NOW
-    status: DELETED_BEFORE_PR
+incident_count: 6
+incident_1:
+  class: REMOTE_TEXT_BLOB_PARITY_DURING_LARGE_BASE64_ARCHIVE_WRITE
+  affected:
+    - data-terminal-second-live-bounded-mega-pack-20260721.zip.b64
+    - data-terminal-second-live-bounded-mega-pack-20260721.zip.b64.part-007
+    - data-terminal-second-live-bounded-mega-pack-20260721.zip.b64.part-008
+    - data-terminal-second-live-bounded-mega-pack-20260721.zip.b64.part-011
+    - data-terminal-second-live-bounded-mega-pack-20260721.zip.b64.part-013
+  remediation: MONOLITH_DELETED_AND_15_PARTS_REMOTE_VERIFIED
+incidents_2_to_6:
+  class: UNINTENDED_PATH_CREATED_BY_WRONG_TOOL_CALL
+  paths:
+    - RECONSTRUCTION.md
+    - DO_NOT_CREATE.tmp
+    - STOP
+    - NOW
+    - WRONG
+  remediation: ALL_DELETED_BEFORE_PR
 remediation_commits:
   - 0791ee8fa3bf0f91bb5e5858f972613b515e1577
   - 6a4ee27bc8ed36cd785becbe73a23767e389de30
@@ -103,11 +73,12 @@ remediation_commits:
   - b840e2126798a92fd28b68a0c96dedaf1c84b3b4
   - 9c9fa4f563279a397b102b3accfc75e516ba978e
   - c24c6ed197277031487dce5ccc95e76b01f0e548
+  - 4d5646270e33f2fba72e88166c2f33aafe0cd0a7
 write_governance_result: PARTIAL_REMEDIATED
 final_repository_state: PASS_PENDING_PR_REVIEW
 ```
 
-The non-parity monolithic file and all four unintended paths are absent from the final branch diff. All 15 ordered archive parts match precomputed Git-blob SHA-1 values after remote readback.
+The non-parity monolith and all five unintended paths are absent from the final branch diff.
 
 ## Authority and effects
 
@@ -125,4 +96,4 @@ portfolio_action: NONE
 vault_access: NONE
 ```
 
-No signal engine, score, market state, gate, permission, framework interpretation or portfolio action was created. Phase 1 remains explicitly blocked pending a complete second network collector run with authoritative raw-row preservation.
+Phase 1 remains explicitly blocked pending a complete second network collector run with authoritative raw-row preservation.
