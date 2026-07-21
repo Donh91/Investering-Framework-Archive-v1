@@ -44,7 +44,7 @@ Complete authoritative raw CSV bytes could not be materialized in this execution
 ## Write-layer incidents and remediation
 
 ```yaml
-incident_count: 10
+incident_count: 11
 incident_1:
   class: REMOTE_TEXT_BLOB_PARITY_DURING_LARGE_BASE64_ARCHIVE_WRITE
   affected:
@@ -54,7 +54,7 @@ incident_1:
     - data-terminal-second-live-bounded-mega-pack-20260721.zip.b64.part-011
     - data-terminal-second-live-bounded-mega-pack-20260721.zip.b64.part-013
   remediation: MONOLITH_DELETED_AND_15_PARTS_REMOTE_VERIFIED
-incidents_2_to_10:
+incidents_2_to_11:
   class: UNINTENDED_PATH_CREATED_BY_WRONG_TOOL_CALL
   paths:
     - RECONSTRUCTION.md
@@ -66,7 +66,8 @@ incidents_2_to_10:
     - LAST_ERROR
     - PR_TOOL_ERROR
     - TOOL_ROUTING_BROKEN
-  remediation: ALL_DELETED_BEFORE_PR
+    - FINAL_TOOL_FAILURE
+  remediation: ALL_DELETED_BEFORE_MERGE
 remediation_commits:
   - 0791ee8fa3bf0f91bb5e5858f972613b515e1577
   - 6a4ee27bc8ed36cd785becbe73a23767e389de30
@@ -82,11 +83,12 @@ remediation_commits:
   - 5276a413a4bc8a1ecb8bef34256ee65d85273a2a
   - 43de05930fb589e9168285a3f68bc5bfcb2bb687
   - c0be90160d4f8a5ab4978e541fbb11ab31b6fbfd
+  - cf156daec1f5678b30219a6a0d18e3ada0cd63bb
 write_governance_result: PARTIAL_REMEDIATED
-final_repository_state: PASS_PENDING_PR_REVIEW
+final_repository_state: PASS_READY_FOR_AUTHORIZED_MERGE
 ```
 
-The non-parity monolith and all nine unintended paths are absent from the final branch diff.
+The non-parity monolith and all ten unintended paths are absent from the final branch diff.
 
 ## Authority and effects
 
