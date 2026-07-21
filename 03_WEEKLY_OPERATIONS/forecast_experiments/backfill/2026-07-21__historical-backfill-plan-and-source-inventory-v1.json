@@ -1,0 +1,190 @@
+{
+  "schema": "HISTORICAL_EXPERIMENT_BACKFILL_PLAN_AND_SOURCE_INVENTORY",
+  "schema_version": "1.0",
+  "status": "ACTIVE_CONTROLLED_BACKFILL",
+  "created_at_utc": "2026-07-21T10:04:20Z",
+  "owner": "MAIN_FRAMEWORK_SHADOW_RESEARCH",
+  "protocol_path": "03_WEEKLY_OPERATIONS/forecast_experiments/governance/2026-07-21__experiment-enrichment-protocol-v1__canonical.md",
+  "automation_id": "6a53ac9029dc8191bba03deb31bb2d24",
+  "automation_title": "Daily Sensor + Swing Lab",
+  "purpose": "Increase trustworthy sample depth without retrospective forecast creation, reconstructed cohorts or mixed-method false comparability.",
+  "classification": {
+    "PROSPECTIVE_VALID": "Forecast or hypothesis was frozen before the outcome and exact source lineage is available.",
+    "HISTORICAL_EVENT_STUDY_ONLY": "Timestamped source observation and later outcome are available, but no prior frozen forecast exists. Excluded from prospective hit-rate and promotion thresholds.",
+    "BLOCKED_LINEAGE_OR_METHOD": "Timestamp, source, freeze, outcome, universe membership or method lineage is unresolved.",
+    "DUPLICATE_EXISTING_ROW": "The same source hash, causal event and horizon are already represented."
+  },
+  "initial_source_inventory": [
+    {
+      "source_family": "OFFICIAL_FORECAST_LEDGER_AND_VERIFIED_ACTUAL",
+      "period": "2026-W30",
+      "status": "PROSPECTIVE_VALID_LIVE_OUTCOME_NOT_MATURE",
+      "evidence": [
+        "Official W30 Forecast Ledger commit 952463b684bdf73899b215a4fccf8f2837838745",
+        "Cycle Navigator #17 PUBLISHED_LOCKED commits 434983fff8224475ec1e7f622c69df72d56e442c and 963a393cb04f72544a9c60ffd6b761165b6a0474"
+      ],
+      "allowed_use": [
+        "PRICE_RANGE_AND_PATH_ACCURACY",
+        "CYCLE_REGIME_CALL",
+        "ROTATION_CALL",
+        "SEGMENT_ACTION_MAP"
+      ],
+      "next_action": "MATURE_ONLY_AFTER_FROZEN_WINDOWS_CLOSE"
+    },
+    {
+      "source_family": "CYCLE_NAVIGATOR_PROSPECTIVE_FORECAST_AND_SCORE",
+      "period": "2026-W29",
+      "status": "PROSPECTIVE_VALID_MATURED",
+      "evidence": [
+        "Official W29 Forecast Ledger commit 5b5d3755bc2762da861f2e67694efc070da31eda",
+        "Cycle Navigator #16 PUBLISHED_LOCKED merge 796a0b8af956306bc6fd7eba84b82ee377462249",
+        "W30 settled actual closeout MASTER_MONDAY_CLOSEOUT_W30_20260720T054959Z"
+      ],
+      "allowed_use": [
+        "PRICE_RANGE_SCORE",
+        "INTRADAY_PATH_ERROR_CLASSIFICATION",
+        "CYCLE_REGIME_HIT",
+        "ROTATION_HIT"
+      ],
+      "next_action": "IMPORT_EXISTING_LOCKED_SCORE_AS_PROSPECTIVE_VALID_NO_RECALCULATION"
+    },
+    {
+      "source_family": "FORECAST_LEDGER",
+      "period": "2026-W28",
+      "status": "BLOCKED_LINEAGE_OR_METHOD",
+      "evidence": [
+        "Lineage correction and scoring suspension commit b91da8b9e6165bce79cad41a8cd67eb8579c7f18"
+      ],
+      "blocked_reason": "RATIFIED_ORIGINAL_FORECAST_SOURCE_LINEAGE_UNRESOLVED",
+      "allowed_use": [
+        "ARCHIVE_CONTEXT_ONLY"
+      ],
+      "next_action": "DO_NOT_SCORE_UNLESS_ORIGINAL_RATIFIED_SOURCE_IS_RECOVERED"
+    },
+    {
+      "source_family": "ACCEPTED_DATA_PING_V4",
+      "period": "2026-07-13_TO_2026-07-16",
+      "status": "HISTORICAL_EVENT_STUDY_ONLY_PENDING_ROW_EXTRACTION",
+      "evidence": [
+        "Accepted-log commits 85999dbe9c186d5fa0975dcb8c373e69f68f2d4b, 4cb51127a230266cfe054c3e7f3ba7548aae7f8d, 452b83d0772c959682bea30d0dc103315ca3440f, e608d34271ed1d8f7d71d671e7db39417ea1a9d6"
+      ],
+      "candidate_families": [
+        "ETHBTC_ROTATION_PROXIMITY_AND_PERSISTENCE",
+        "ETF_DURABILITY_AND_PRICE_TRANSLATION",
+        "SPOT_FLOW_VERSUS_PRICE_DIVERGENCE",
+        "CFGI_HORIZON_DIVERGENCE",
+        "LEVERAGE_QUALITY"
+      ],
+      "restriction": "NO_RETROSPECTIVE_FORECAST_HIT_RATE"
+    },
+    {
+      "source_family": "ACCEPTED_DATA_PING_V5",
+      "period": "2026-07-16_TO_2026-07-19",
+      "status": "HISTORICAL_EVENT_STUDY_ONLY_PENDING_ROW_EXTRACTION",
+      "evidence": [
+        "V5 activation commit 0a10877125f6538a362a569dfc4bd3d284a8f910",
+        "CFGI supplement commit 9254fda6c15785629e7773bba4a33ee49dd1a9aa",
+        "Quality update commits 1e8b6594504efb9c584817c70924c972915cec59, 980a28c2de54d22ee86e80d9541ba926615dc546 and 9563a90087dcda312fb68635ce382bebfd42faf1"
+      ],
+      "candidate_families": [
+        "BREADTH_TRANSMISSION",
+        "ETHBTC_ROTATION_PROXIMITY_AND_PERSISTENCE",
+        "CFGI_HORIZON_DIVERGENCE",
+        "ETF_SPOT_FLOW_WITH_OI_REBUILD",
+        "SOURCE_METHOD_COMPARABILITY"
+      ],
+      "restriction": "PRESERVE_METHOD_VERSION_AND_FIXED_COHORT_GAPS"
+    },
+    {
+      "source_family": "ACCEPTED_DATA_PING_V6",
+      "period": "2026-07-19_ONWARD",
+      "status": "MIXED_PROSPECTIVE_AND_EVENT_STUDY",
+      "evidence": [
+        "V6 accepted log receipt commit e95fb4fde65a53b2029791503f1e9c7cb6313aa6",
+        "Latest accepted DATA PING ID DATA_PING_V6_20260719T200033Z",
+        "Supporting intraday reconciliation DATA_PING_V6_RAW_20260721T060623Z"
+      ],
+      "candidate_families": [
+        "REPAIR_SURVIVAL_AND_RETENTION",
+        "BREAKOUT_ACCEPTANCE_VERSUS_FAKEOUT",
+        "ETF_DURABILITY_AND_PRICE_TRANSLATION",
+        "SPOT_FLOW_VERSUS_PRICE_DIVERGENCE",
+        "OI_FUNDING_BASIS_LEVERAGE_QUALITY",
+        "ETHBTC_ROTATION_PROXIMITY_AND_PERSISTENCE",
+        "LARGE_CAP_BEFORE_MID_CAP_TRANSMISSION"
+      ],
+      "restriction": "ONLY_EXPLICITLY_FROZEN_HYPOTHESES_COUNT_AS_PROSPECTIVE_VALID"
+    },
+    {
+      "source_family": "CYCLE_NAVIGATOR_MEMORY_SEED_ROWS",
+      "period": "PRE_W29_HISTORY",
+      "status": "REVIEW_REQUIRED_MIXED_LINEAGE",
+      "evidence": [
+        "Memory-seed manifest commit 1093c6bf4d5c17a5a705b73a3ece6e76f32153c0",
+        "Draft rows commit 5bab3f20538f43094f2c147f10129de84ece4dee",
+        "Source-backed row revision commit 32c50fc388da41161db15a240727abd13f0f554b"
+      ],
+      "next_action": "VERIFY_EACH_ROW_INDIVIDUALLY_AND_IMPORT_ONLY_SOURCE_BACKED_ROWS",
+      "restriction": "NO_BULK_ACCEPTANCE"
+    },
+    {
+      "source_family": "HISTORICAL_WEEKLY_FROZEN_BREADTH",
+      "period": "ARCHIVE_HISTORY",
+      "status": "ELIGIBLE_DESCRIPTIVE_DATASET_PENDING_PAIRING",
+      "allowed_use": [
+        "DESCRIPTIVE_PARTICIPATION",
+        "EVENT_STUDY_CONTROLS"
+      ],
+      "restriction": "ZERO_PREDICTIVE_ACTION_WEIGHT_AND_NEVER_PRESENT_AS_DAILY_OR_30DMA_BREADTH"
+    },
+    {
+      "source_family": "RESEARCH_LAB_PACKAGES",
+      "period": "AVAILABLE_ARCHIVE",
+      "status": "ROW_LEVEL_REVIEW_REQUIRED",
+      "allowed_use": [
+        "EVENT_DISCOVERY",
+        "SOURCE_CROSSCHECK",
+        "CHALLENGER_HYPOTHESIS"
+      ],
+      "restriction": "ONLY_AS_OF_TIMESTAMPED_ROWS_WITHOUT_OUTCOME_LEAKAGE"
+    }
+  ],
+  "processing_order": [
+    "W29_PROSPECTIVE_VALID_SCORE_IMPORT",
+    "V6_RECENT_TIMESTAMPED_EVENT_ROWS",
+    "V5_TIMESTAMPED_EVENT_ROWS",
+    "V4_TIMESTAMPED_EVENT_ROWS",
+    "SOURCE_BACKED_CN_MEMORY_SEED_ROWS",
+    "WEEKLY_FROZEN_BREADTH_PAIRING",
+    "RESEARCH_LAB_AS_OF_ROWS"
+  ],
+  "batch_policy": {
+    "max_source_artifacts_per_daily_run": 10,
+    "max_new_backfill_rows_per_daily_run": 25,
+    "deduplicate_by": [
+      "SOURCE_HASH",
+      "OBSERVED_AT_UTC",
+      "HYPOTHESIS_FAMILY",
+      "CAUSAL_EVENT_WINDOW",
+      "EVALUATION_HORIZON"
+    ],
+    "prospective_promotion_counting": "PROSPECTIVE_VALID_ONLY",
+    "event_study_counting": "SEPARATE_DESCRIPTIVE_SAMPLE_ONLY"
+  },
+  "cursor": {
+    "status": "NOT_STARTED",
+    "next_item": "W29_PROSPECTIVE_VALID_SCORE_IMPORT",
+    "last_processed_source": null,
+    "prospective_valid_rows_imported": 0,
+    "historical_event_study_rows_imported": 0,
+    "blocked_rows": 1,
+    "duplicate_rows_prevented": 0
+  },
+  "governance": {
+    "canonical_state_authority": false,
+    "portfolio_action_authority": false,
+    "automatic_rule_promotion": false,
+    "history_rewrite": false,
+    "archive_rule": "APPEND_ONLY_EXCEPT_CURSOR_AND_ACTIVE_POINTER"
+  }
+}
