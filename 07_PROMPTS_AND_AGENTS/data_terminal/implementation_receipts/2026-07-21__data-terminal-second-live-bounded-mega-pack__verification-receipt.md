@@ -44,7 +44,7 @@ Complete authoritative raw CSV bytes could not be materialized in this execution
 ## Write-layer incidents and remediation
 
 ```yaml
-incident_count: 6
+incident_count: 7
 incident_1:
   class: REMOTE_TEXT_BLOB_PARITY_DURING_LARGE_BASE64_ARCHIVE_WRITE
   affected:
@@ -54,7 +54,7 @@ incident_1:
     - data-terminal-second-live-bounded-mega-pack-20260721.zip.b64.part-011
     - data-terminal-second-live-bounded-mega-pack-20260721.zip.b64.part-013
   remediation: MONOLITH_DELETED_AND_15_PARTS_REMOTE_VERIFIED
-incidents_2_to_6:
+incidents_2_to_7:
   class: UNINTENDED_PATH_CREATED_BY_WRONG_TOOL_CALL
   paths:
     - RECONSTRUCTION.md
@@ -62,6 +62,7 @@ incidents_2_to_6:
     - STOP
     - NOW
     - WRONG
+    - FAILSAFE
   remediation: ALL_DELETED_BEFORE_PR
 remediation_commits:
   - 0791ee8fa3bf0f91bb5e5858f972613b515e1577
@@ -74,11 +75,12 @@ remediation_commits:
   - 9c9fa4f563279a397b102b3accfc75e516ba978e
   - c24c6ed197277031487dce5ccc95e76b01f0e548
   - 4d5646270e33f2fba72e88166c2f33aafe0cd0a7
+  - ee324221d1672a38c86f7f65b7d8c3bb0bb25c56
 write_governance_result: PARTIAL_REMEDIATED
 final_repository_state: PASS_PENDING_PR_REVIEW
 ```
 
-The non-parity monolith and all five unintended paths are absent from the final branch diff.
+The non-parity monolith and all six unintended paths are absent from the final branch diff.
 
 ## Authority and effects
 
