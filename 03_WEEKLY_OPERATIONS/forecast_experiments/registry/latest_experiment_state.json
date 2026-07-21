@@ -1,9 +1,9 @@
 {
   "schema": "FORECAST_EXPERIMENT_ACTIVE_REGISTRY",
-  "schema_version": "1.1",
+  "schema_version": "1.2",
   "status": "ACTIVE_ENRICHMENT_AND_CONTROLLED_BACKFILL_ENABLED",
-  "updated_at_utc": "2026-07-21T10:04:20Z",
-  "updated_at_cest": "2026-07-21T12:04:20+02:00",
+  "updated_at_utc": "2026-07-21T17:05:43Z",
+  "updated_at_cest": "2026-07-21T19:05:43+02:00",
   "protocol_path": "03_WEEKLY_OPERATIONS/forecast_experiments/governance/2026-07-21__experiment-enrichment-protocol-v1__canonical.md",
   "backfill_plan_path": "03_WEEKLY_OPERATIONS/forecast_experiments/backfill/2026-07-21__historical-backfill-plan-and-source-inventory-v1.json",
   "automation": {
@@ -20,16 +20,27 @@
   "online_baseline_supplementation": true,
   "canonical_state_authority": false,
   "portfolio_action_authority": false,
+  "latest_enrichment": {
+    "source_snapshot_id": "DATA_PING_V6_RAW_20260721T153054Z",
+    "source_observed_at_utc": "2026-07-21T15:47:56.271Z",
+    "evidence_path": "03_WEEKLY_OPERATIONS/forecast_experiments/2026-W30/evidence/2026-07-21T154756Z__data-ping-v6-raw-enrichment__shadow.json",
+    "online_supplement": "FARSIDE_2026_07_20_BTC_226_8_IBIT_116_5_ETH_38_0",
+    "result": "THREE_EXISTING_HYPOTHESES_UPDATED_ONE_DISTINCT_EXPERIMENT_CREATED",
+    "canonical_pointer_advanced": false
+  },
   "active_experiments": [
     {
       "experiment_path": "03_WEEKLY_OPERATIONS/forecast_experiments/2026-W30/2026-07-21T060623Z__rotation-and-capital-transmission-watch__shadow.json",
       "source_snapshot_id": "DATA_PING_V6_RAW_20260721T060623Z",
-      "status": "LIVE",
+      "latest_evidence_path": "03_WEEKLY_OPERATIONS/forecast_experiments/2026-W30/evidence/2026-07-21T154756Z__data-ping-v6-raw-enrichment__shadow.json",
+      "status": "LIVE_MIXED",
       "hypotheses": [
         {
           "id": "W30_ROTATION_H1",
           "family": "ETHBTC_ROTATION_PROXIMITY_AND_PERSISTENCE",
           "evaluation_window": "1_5_DAYS",
+          "status": "LIVE_WEAKENED",
+          "latest_delta": "ETHBTC_0_02893_DISTANCE_TO_0_0300_WIDENED_TO_3_5667_PERCENT",
           "next_required_evidence": [
             "SETTLED_ETHBTC_CLOSE_AND_PERSISTENCE_AROUND_0_0300",
             "BTC_STRUCTURE_ABOVE_63300",
@@ -40,6 +51,8 @@
           "id": "W30_CAPITAL_H2",
           "family": "LARGE_CAP_BEFORE_MID_CAP_TRANSMISSION",
           "evaluation_window": "3_10_DAYS",
+          "status": "LIVE_MIXED",
+          "latest_delta": "DYNAMIC_BREADTH_85_71_PERCENT_ADVANCERS_BUT_NONCOMPARABLE_AND_ETH_RELATIVE_STRENGTH_WEAKENED",
           "next_required_evidence": [
             "LARGE_CAP_RELATIVE_STRENGTH",
             "MID_CAP_RELATIVE_STRENGTH",
@@ -50,11 +63,32 @@
           "id": "W30_FLOW_H3",
           "family": "ETF_SPOT_FLOW_WITH_MODERATE_OI_REBUILD",
           "evaluation_window": "1_7_DAYS",
+          "status": "LIVE_STRENGTHENED",
+          "latest_delta": "BTC_POSITIVE_SPOT_FLOW_ALL_HORIZONS_OI_PLUS_4_31_PERCENT_FUNDING_COOLER_AND_ETF_POSITIVE",
           "next_required_evidence": [
+            "SETTLED_HOLD_ABOVE_65600_TO_65800",
             "NEXT_COMPLETED_ETF_SESSION",
             "SPOT_TAKER_PERSISTENCE",
-            "OI_FUNDING_BASIS_EVOLUTION",
-            "PRICE_HOLD_OR_FAILURE"
+            "OI_FUNDING_BASIS_EVOLUTION"
+          ]
+        }
+      ]
+    },
+    {
+      "experiment_path": "03_WEEKLY_OPERATIONS/forecast_experiments/2026-W30/2026-07-21T154756Z__cfgi-cross-asset-divergence__shadow.json",
+      "source_snapshot_id": "DATA_PING_V6_RAW_20260721T153054Z",
+      "status": "LIVE",
+      "hypotheses": [
+        {
+          "id": "W30_CFGI_DIVERGENCE_H4",
+          "family": "CFGI_HORIZON_DIVERGENCE_AND_CAPITAL_RECONCENTRATION",
+          "evaluation_window": "24H_72H",
+          "status": "LIVE",
+          "next_required_evidence": [
+            "BTC_VS_ETH_RETURN_24H_AND_72H",
+            "ETHBTC_CHANGE_24H_AND_72H",
+            "BTC_DOMINANCE_CHANGE_24H_AND_72H",
+            "LARGE_CAP_VS_MID_CAP_PARTICIPATION"
           ]
         }
       ]
@@ -120,21 +154,33 @@
   ],
   "next_maturity_queue": [
     {
+      "hypothesis_id": "W30_CFGI_DIVERGENCE_H4",
+      "window": "24H",
+      "due_after_utc": "2026-07-22T15:47:56.271Z",
+      "status": "LIVE"
+    },
+    {
       "hypothesis_id": "W30_ROTATION_H1",
       "window": "1_5_DAYS",
-      "status": "LIVE"
+      "status": "LIVE_WEAKENED"
     },
     {
       "hypothesis_id": "W30_FLOW_H3",
       "window": "1_7_DAYS",
+      "status": "LIVE_STRENGTHENED"
+    },
+    {
+      "hypothesis_id": "W30_CFGI_DIVERGENCE_H4",
+      "window": "72H",
+      "due_after_utc": "2026-07-24T15:47:56.271Z",
       "status": "LIVE"
     },
     {
       "hypothesis_id": "W30_CAPITAL_H2",
       "window": "3_10_DAYS",
-      "status": "LIVE"
+      "status": "LIVE_MIXED"
     }
   ],
   "archive_rule": "APPEND_EVIDENCE_SCORE_AT_MATURITY_DO_NOT_ADVANCE_CANONICAL_MARKET_POINTER",
-  "readback_status": "PASS_PROTOCOL_REGISTRY_BACKFILL_PLAN_AND_FIRST_IMPORT_VERIFIED"
+  "readback_status": "PENDING_BRANCH_AND_MAIN_VERIFICATION"
 }

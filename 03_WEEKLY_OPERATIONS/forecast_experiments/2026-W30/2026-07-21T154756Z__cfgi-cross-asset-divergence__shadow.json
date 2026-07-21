@@ -1,0 +1,63 @@
+{
+  "schema": "CFGI_CROSS_ASSET_DIVERGENCE_EXPERIMENT",
+  "schema_version": "1.0",
+  "status": "LIVE_SHADOW_NON_BINDING",
+  "created_at_utc": "2026-07-21T17:05:43Z",
+  "source_observed_at_utc": "2026-07-21T15:47:56.271Z",
+  "source_snapshot_id": "DATA_PING_V6_RAW_20260721T153054Z",
+  "experiment_id": "W30_CFGI_DIVERGENCE_H4",
+  "family": "CFGI_HORIZON_DIVERGENCE_AND_CAPITAL_RECONCENTRATION",
+  "hypothesis": "When BTC short-horizon CFGI is in Greed while ETH 1H and 15M sentiment cools sharply during a BTC breakout, capital temporarily reconcentrates in BTC, ETHBTC underperforms and broad rotation confirmation is delayed over the next 24 to 72 hours.",
+  "evaluation_windows": ["24H", "72H"],
+  "frozen_inputs": {
+    "BTC_price": 66610.01,
+    "ETH_price": 1926.52,
+    "ETHBTC": 0.02893,
+    "BTC_dominance_pct": 56.889296582266304,
+    "BTC_CFGI_1D": 62,
+    "BTC_CFGI_4H": 73,
+    "BTC_CFGI_1H": 73,
+    "BTC_CFGI_15M": 61,
+    "ETH_CFGI_1D": 59,
+    "ETH_CFGI_4H": 61,
+    "ETH_CFGI_1H": 44,
+    "ETH_CFGI_15M": 31,
+    "BTC_spot_net_4h_usd_m": 38.1326581316,
+    "ETH_spot_net_1h_usd_m": -1.2587220543,
+    "dynamic_breadth_advancers_pct": 85.7142857143,
+    "dynamic_breadth_status": "SHADOW_NOT_COMPARABLE"
+  },
+  "confirm": [
+    "ETH_UNDERPERFORMS_BTC_OVER_24H_OR_72H",
+    "ETHBTC_FAILS_TO_RECLAIM_0_0294_OR_MOVES_FURTHER_FROM_0_0300",
+    "BTC_DOMINANCE_STABLE_OR_RISING",
+    "LARGE_CAP_AND_MID_CAP_TRANSMISSION_REMAINS_UNCONFIRMED"
+  ],
+  "falsify": [
+    "ETHBTC_SETTLED_RECLAIM_ABOVE_0_0294_FOLLOWED_BY_MOVE_TO_OR_ABOVE_0_0300",
+    "ETH_OUTPERFORMS_BTC_WITH_STABLE_COHORT_BREADTH_EXPANSION",
+    "BTC_CFGI_COOLS_WITHOUT_BTC_RELATIVE_OUTPERFORMANCE"
+  ],
+  "required_outcomes": [
+    "BTC_RETURN_24H_72H",
+    "ETH_RETURN_24H_72H",
+    "ETHBTC_CHANGE_24H_72H",
+    "BTC_DOMINANCE_CHANGE_24H_72H",
+    "STABLE_COHORT_BREADTH_IF_AVAILABLE",
+    "LARGE_CAP_VS_MID_CAP_RELATIVE_PARTICIPATION"
+  ],
+  "controls": [
+    "ETHBTC_LEVEL_ONLY",
+    "BTC_DOMINANCE_ONLY",
+    "BTC_VS_ETH_24H_MOMENTUM_ONLY",
+    "ALWAYS_NO_ROTATION",
+    "DETERMINISTIC_PLACEBO"
+  ],
+  "interpretation_boundary": "TESTS_DELAYED_ROTATION_NOT_DIRECTIONAL_PORTFOLIO_ACTION",
+  "counts_for_prospective_promotion_threshold": true,
+  "counts_as_independent_event_window": false,
+  "independence_note": "SAME_W30_CAUSAL_EVENT_WINDOW_AS_ACTIVE_ROTATION_AND_FLOW_EXPERIMENTS_UNTIL_PROVEN_DISTINCT",
+  "portfolio_authority": false,
+  "canonical_state_authority": false,
+  "archive_rule": "FREEZE_INPUTS_SCORE_AT_24H_AND_72H_NO_RETROACTIVE_CHANGES"
+}
