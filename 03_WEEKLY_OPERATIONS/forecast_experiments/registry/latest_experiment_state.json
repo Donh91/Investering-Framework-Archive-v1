@@ -1,10 +1,20 @@
 {
   "schema": "FORECAST_EXPERIMENT_ACTIVE_REGISTRY",
-  "schema_version": "1.0",
-  "status": "ACTIVE_ENRICHMENT_PROTOCOL_ENABLED",
-  "updated_at_utc": "2026-07-21T09:53:49Z",
-  "updated_at_cest": "2026-07-21T11:53:49+02:00",
+  "schema_version": "1.1",
+  "status": "ACTIVE_ENRICHMENT_AND_CONTROLLED_BACKFILL_ENABLED",
+  "updated_at_utc": "2026-07-21T10:04:20Z",
+  "updated_at_cest": "2026-07-21T12:04:20+02:00",
   "protocol_path": "03_WEEKLY_OPERATIONS/forecast_experiments/governance/2026-07-21__experiment-enrichment-protocol-v1__canonical.md",
+  "backfill_plan_path": "03_WEEKLY_OPERATIONS/forecast_experiments/backfill/2026-07-21__historical-backfill-plan-and-source-inventory-v1.json",
+  "automation": {
+    "id": "6a53ac9029dc8191bba03deb31bb2d24",
+    "title": "Daily Sensor + Swing Lab",
+    "version": "v1.1",
+    "experiment_enrichment_enabled": true,
+    "independent_online_baseline_enabled": true,
+    "controlled_historical_backfill_enabled": true,
+    "cadence": "DAILY_21_30_EUROPE_COPENHAGEN"
+  },
   "current_week": "2026-W30",
   "update_existing_first": true,
   "online_baseline_supplementation": true,
@@ -50,6 +60,42 @@
       ]
     }
   ],
+  "matured_scored_experiments": [
+    {
+      "experiment_path": "03_WEEKLY_OPERATIONS/forecast_experiments/scored/2026-W29__cycle-navigator-16__prospective-valid-score-import.json",
+      "status": "MATURED_SCORED_PROSPECTIVE_VALID",
+      "source_week": "2026-W29",
+      "experiment_family": "PRICE_RANGE_PATH_CYCLE_AND_ROTATION_ACCURACY",
+      "counts_as_prospective_mature_row": true,
+      "counts_as_independent_event_window": true
+    }
+  ],
+  "historical_backfill": {
+    "status": "ACTIVE",
+    "classification_model": [
+      "PROSPECTIVE_VALID",
+      "HISTORICAL_EVENT_STUDY_ONLY",
+      "BLOCKED_LINEAGE_OR_METHOD",
+      "DUPLICATE_EXISTING_ROW"
+    ],
+    "cursor": {
+      "last_completed_item": "W29_PROSPECTIVE_VALID_SCORE_IMPORT",
+      "next_item": "V6_RECENT_TIMESTAMPED_EVENT_ROWS",
+      "prospective_valid_rows_imported": 1,
+      "historical_event_study_rows_imported": 0,
+      "blocked_rows": 1,
+      "duplicate_rows_prevented": 0
+    },
+    "blocked_items": [
+      {
+        "period": "2026-W28",
+        "reason": "RATIFIED_ORIGINAL_FORECAST_SOURCE_LINEAGE_UNRESOLVED",
+        "rule": "DO_NOT_SCORE"
+      }
+    ],
+    "prospective_promotion_counting": "PROSPECTIVE_VALID_ONLY",
+    "historical_event_study_counting": "SEPARATE_DESCRIPTIVE_SAMPLE_ONLY"
+  },
   "minimum_online_baseline": [
     "BTC_PRICE_AND_STRUCTURE",
     "ETH_PRICE_AND_STRUCTURE",
@@ -59,6 +105,7 @@
     "CFGI_MARKET_BTC_ETH",
     "FUNDING_OI_BASIS_FUTURES_TAKER",
     "PRICE_BREADTH_1H_24H_7D",
+    "LARGE_CAP_AND_MID_CAP_RELATIVE_PARTICIPATION",
     "STABLECOIN_TVL_CVD_MACRO_WHEN_AVAILABLE"
   ],
   "trigger_sources": [
@@ -89,5 +136,5 @@
     }
   ],
   "archive_rule": "APPEND_EVIDENCE_SCORE_AT_MATURITY_DO_NOT_ADVANCE_CANONICAL_MARKET_POINTER",
-  "readback_status": "PASS_PROTOCOL_AND_REGISTRY_VERIFIED"
+  "readback_status": "PASS_PROTOCOL_REGISTRY_BACKFILL_PLAN_AND_FIRST_IMPORT_VERIFIED"
 }
