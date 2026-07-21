@@ -39,17 +39,17 @@ jobs:
         run: |
           if [ "${{ inputs.mode }}" = "live" ]; then
             python scripts/data_terminal/fred_csv_collector.py \
-              --output-dir .data-terminal-output
+              --output-dir data-terminal-output
           else
             python scripts/data_terminal/fred_csv_collector.py \
               --fixture tests/data_terminal/fixtures/fred_csv_macro_core.csv \
               --retrieval-timestamp 2026-07-19T12:00:00Z \
-              --output-dir .data-terminal-output
+              --output-dir data-terminal-output
           fi
       - name: Upload sanitized shadow artifact
         uses: actions/upload-artifact@v4
         with:
           name: data-terminal-shadow-${{ github.run_id }}
-          path: .data-terminal-output/
+          path: data-terminal-output/
           retention-days: 14
           if-no-files-found: error
