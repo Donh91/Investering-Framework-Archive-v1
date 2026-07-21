@@ -70,7 +70,7 @@ required_next_runtime: NETWORK_CAPABLE_EXISTING_COLLECTOR_RUN_WITH_FULL_RAW_ROW_
 ## Write-layer incidents and remediation
 
 ```yaml
-incident_count: 4
+incident_count: 5
 incidents:
   - incident_class: REMOTE_TEXT_BLOB_PARITY_DURING_LARGE_BASE64_ARCHIVE_WRITE
     incident_paths:
@@ -90,6 +90,9 @@ incidents:
   - incident_class: UNINTENDED_PATH_CREATED_BY_WRONG_TOOL_CALL
     incident_path: 02_DATA_PING/data_terminal/runtime/shadow/artifacts/2026-07-21/second-live-bounded/STOP
     status: DELETED_BEFORE_PR
+  - incident_class: UNINTENDED_PATH_CREATED_BY_WRONG_TOOL_CALL
+    incident_path: 02_DATA_PING/data_terminal/runtime/shadow/artifacts/2026-07-21/second-live-bounded/NOW
+    status: DELETED_BEFORE_PR
 remediation_commits:
   - 0791ee8fa3bf0f91bb5e5858f972613b515e1577
   - 6a4ee27bc8ed36cd785becbe73a23767e389de30
@@ -99,11 +102,12 @@ remediation_commits:
   - 65bea14da17f4f5a93345c6a425f67f05e3716df
   - b840e2126798a92fd28b68a0c96dedaf1c84b3b4
   - 9c9fa4f563279a397b102b3accfc75e516ba978e
+  - c24c6ed197277031487dce5ccc95e76b01f0e548
 write_governance_result: PARTIAL_REMEDIATED
 final_repository_state: PASS_PENDING_PR_REVIEW
 ```
 
-The non-parity monolithic file and all three unintended paths are absent from the final branch diff. All 15 ordered archive parts match precomputed Git-blob SHA-1 values after remote readback.
+The non-parity monolithic file and all four unintended paths are absent from the final branch diff. All 15 ordered archive parts match precomputed Git-blob SHA-1 values after remote readback.
 
 ## Authority and effects
 
