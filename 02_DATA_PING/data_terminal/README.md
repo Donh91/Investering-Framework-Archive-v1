@@ -27,3 +27,28 @@ python scripts/data_terminal/fred_csv_collector.py \
 ```
 
 A stale, empty, malformed or unavailable source is an explicit non-PASS result. No silent fallback is permitted.
+
+## Verified live pilot archive
+
+The first verified network-backed Phase 1 pilot is preserved as immutable shadow evidence:
+
+```text
+runtime/shadow/artifacts/2026-07-21/data-terminal-shadow-29828218513.zip.b64
+runtime/shadow/artifacts/2026-07-21/data-terminal-shadow-29828218513.manifest.json
+runtime/shadow/artifacts/2026-07-21/data-terminal-shadow-29828218513.source-health.json
+```
+
+Run identity:
+
+```yaml
+github_run_id: 29828218513
+terminal_run_id: DT_FRED_20260721T115849Z_b080365d0c23
+acquisition_mode: NETWORK
+source: FRED_CSV_MACRO_CORE
+series: DGS10
+artifact_sha256: ac3e2ad49f265b1cd9ae8b16d97051b875d90974ad7199cd7105143a9bd7cd89
+status: VERIFIED_SHADOW_LIVE_PILOT_ARCHIVE
+authority: NON_BINDING
+```
+
+The `.zip.b64` file is the exact original GitHub Actions artifact encoded as Base64. Decode it to recover the five original JSON outputs. This archive does not advance any accepted DATA PING pointer or change framework state.
