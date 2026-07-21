@@ -2,61 +2,49 @@
   "archive": {
     "base64_character_count": 61028,
     "base64_sha256": "07717c20f008f41df8558d8d939557339df0e56ad7056b1d644a0118cc9335d7",
-    "decode_command": "base64 --decode data-terminal-second-live-bounded-mega-pack-20260721.zip.b64 > data-terminal-second-live-bounded-mega-pack-20260721.zip",
-    "decoded_zip_sha256": "775c82da645244ba983af219f4e126f526eb229243dc4de49d8dd5e38ae591a8",
-    "decoded_zip_size_bytes": 45770,
-    "encoding": "BASE64_OF_DETERMINISTIC_ZIP",
-    "git_blob_sha1": "f1dfc26062702361d0873208dc949b49a94a8804",
+    "concatenate_command": "cat data-terminal-second-live-bounded-mega-pack-20260721.zip.b64.part-* > data-terminal-second-live-bounded-mega-pack-20260721.zip.b64",
+    "decode_command": "cat data-terminal-second-live-bounded-mega-pack-20260721.zip.b64.part-* | base64 --decode > data-terminal-second-live-bounded-mega-pack-20260721.zip",
+    "encoding": "ORDERED_BASE64_CHUNKS_OF_DETERMINISTIC_ZIP",
     "immutable": true,
-    "path": "data-terminal-second-live-bounded-mega-pack-20260721.zip.b64"
+    "part_count": 15,
+    "parts": [
+      {"character_count":4096,"git_blob_sha1":"ea32b6291c1724925745e952b49a71db15295079","order":1,"path":"data-terminal-second-live-bounded-mega-pack-20260721.zip.b64.part-001","sha256":"513a51941ad84756f390442a4201a84c8c39c070d04305b4467ebb21d47534a9"},
+      {"character_count":4096,"git_blob_sha1":"31812465ccfc816723a4e1ff37fd709a367773e1","order":2,"path":"data-terminal-second-live-bounded-mega-pack-20260721.zip.b64.part-002","sha256":"83fcde22ed006ca09c051ff6458535d4ac6b949b70d0c006f1ca07c3e3e8e0a5"},
+      {"character_count":4096,"git_blob_sha1":"13e444334adc07848446dc430893d4f3bfd81f85","order":3,"path":"data-terminal-second-live-bounded-mega-pack-20260721.zip.b64.part-003","sha256":"2d8019b549eb22f6e61585bbbac28e4f9a9e047b6d02a29a89d63fcaad16a0ee"},
+      {"character_count":4096,"git_blob_sha1":"ed549c3703102414ec5ced96524bbac802f8fb88","order":4,"path":"data-terminal-second-live-bounded-mega-pack-20260721.zip.b64.part-004","sha256":"016b0abeac3bf5bc27839b6d597272f5e0fcfa7a80359085e3d21030f4664d2e"},
+      {"character_count":4096,"git_blob_sha1":"fceac5d811fe6e2078e2f27e27c8b43e82e01a77","order":5,"path":"data-terminal-second-live-bounded-mega-pack-20260721.zip.b64.part-005","sha256":"c04113890d0fc90ffe4d6ee82dd5299cf4fcc6f812e658e319e889c77e4154c2"},
+      {"character_count":4096,"git_blob_sha1":"f521285d3f91b1886e0a592a8a46dbb42a29b687","order":6,"path":"data-terminal-second-live-bounded-mega-pack-20260721.zip.b64.part-006","sha256":"eb23889e2029ff39ddee0558ee81e8fff62d6bd37fe98de66ee5eba2edbb1075"},
+      {"character_count":4096,"git_blob_sha1":"19bb9a88760e766746e487451ac9f75a8d7d0ef9","order":7,"path":"data-terminal-second-live-bounded-mega-pack-20260721.zip.b64.part-007","sha256":"1e85d140f0423511ee8115636740c4460a82cf9d86fb379f40c92dbaab09ac36"},
+      {"character_count":4096,"git_blob_sha1":"e8d51a4987f3200b2a5a112e610c2b06da8ae9eb","order":8,"path":"data-terminal-second-live-bounded-mega-pack-20260721.zip.b64.part-008","sha256":"d55cc65a70de893aa94a8660453311c831956c677cea69a10208c60d617a8d8f"},
+      {"character_count":4096,"git_blob_sha1":"df3cb39216a6919e45811286f03c169e33b7b169","order":9,"path":"data-terminal-second-live-bounded-mega-pack-20260721.zip.b64.part-009","sha256":"f70b2207c188d56af38a715ed19630d8d50fba475ee61029619b1d7315dcab57"},
+      {"character_count":4096,"git_blob_sha1":"c90cbd331ff0a58d364cb1eaa24cf47c6415eba2","order":10,"path":"data-terminal-second-live-bounded-mega-pack-20260721.zip.b64.part-010","sha256":"0cf9842a2e122037d6eafb1fda7fecc87bea59d6357af098464b8f97211259c8"},
+      {"character_count":4096,"git_blob_sha1":"d8c4fb28d6baea77927055179abc773900fec5d7","order":11,"path":"data-terminal-second-live-bounded-mega-pack-20260721.zip.b64.part-011","sha256":"3f1cd447526e23313c7a5f81be181598cf7839cd93c46cdf3cbad25965a08f64"},
+      {"character_count":4096,"git_blob_sha1":"ffd6ebb5134738b6fd01de42d98f53f768a27a44","order":12,"path":"data-terminal-second-live-bounded-mega-pack-20260721.zip.b64.part-012","sha256":"62a2c26c6803101acfec1fc41fad0bb58d26094cda5a27a78f3bcfe0b799a41d"},
+      {"character_count":4096,"git_blob_sha1":"5a8779dbed82133c945ee3be92e1104b67e7908e","order":13,"path":"data-terminal-second-live-bounded-mega-pack-20260721.zip.b64.part-013","sha256":"b29e4def67959a67310010cbb55a57e554154a1a91aa7b63c2d06efb849d6b16"},
+      {"character_count":4096,"git_blob_sha1":"f727653aa0786fdd29785dee30d39507028359d2","order":14,"path":"data-terminal-second-live-bounded-mega-pack-20260721.zip.b64.part-014","sha256":"c865c30280aff1524cd7749f5374ea0aec396652a3ea7b5d612d834da2cfb781"},
+      {"character_count":3684,"git_blob_sha1":"f878d72d8cdac514a8b229bf04417c73b5828aee","order":15,"path":"data-terminal-second-live-bounded-mega-pack-20260721.zip.b64.part-015","sha256":"06aea51b1ee7ce15856fd461cc901f5b2fa2484c05ac34e23d244fc6aa7356b9"}
+    ],
+    "remediation": {
+      "chunk_write_mismatch_status": "REPLACED_AND_REMOTE_READBACK_VERIFIED",
+      "chunk_write_mismatches": ["part-007","part-008","part-011","part-013"],
+      "initial_monolithic_path": "data-terminal-second-live-bounded-mega-pack-20260721.zip.b64",
+      "initial_monolithic_status": "DELETED_AFTER_REMOTE_BLOB_MISMATCH",
+      "replacement_status": "PASS_15_OF_15_PART_BLOBS_MATCH_EXPECTED",
+      "write_governance_result": "PARTIAL_REMEDIATED"
+    },
+    "zip_filename": "data-terminal-second-live-bounded-mega-pack-20260721.zip",
+    "zip_sha256": "775c82da645244ba983af219f4e126f526eb229243dc4de49d8dd5e38ae591a8",
+    "zip_size_bytes": 45770
   },
-  "authority": {
-    "binding": false,
-    "canonical_acceptance": false,
-    "framework_state_change": false,
-    "portfolio_action": false
-  },
-  "package": {
-    "first_artifact_sha256": "ac3e2ad49f265b1cd9ae8b16d97051b875d90974ad7199cd7105143a9bd7cd89",
-    "first_missing_rows_preserved": 719,
-    "first_terminal_run_id": "DT_FRED_20260721T115849Z_b080365d0c23",
-    "internal_file_count": 27,
-    "manifest_declared_file_count": 26,
-    "second_capture_rows_materialized": 5,
-    "uncompressed_payload_bytes": 421795
-  },
-  "readable_sidecars": [
-    "package_manifest.json",
-    "phase1_closeout_candidate.json",
-    "verification_report.json",
-    "source_transport_attempts.json",
-    "bounded_overlap_summary.json",
-    "append_only_storage_audit.json",
-    "data-terminal-second-live-bounded-mega-pack-20260721.sha256"
-  ],
+  "authority": {"binding":false,"canonical_acceptance":false,"framework_state_change":false,"portfolio_action":false},
+  "created_at": "2026-07-21T17:26:19Z",
+  "package": {"append_only_storage":"PASS","first_artifact_byte_identity":"PASS","first_run_replay":"PASS","full_history_cross_run_parity":"BLOCKED","internal_file_count":27,"phase1_completion":"NO","second_full_raw_materialization":"FAIL","second_source_response":"PASS_BOUNDED","uncompressed_payload_bytes":421795,"verification_status":"PASS"},
+  "readable_sidecars": ["package_manifest.json","phase1_closeout_candidate.json","verification_report.json","source_transport_attempts.json","bounded_overlap_summary.json","append_only_storage_audit.json","data-terminal-second-live-bounded-mega-pack-20260721.sha256"],
   "repository": "Donh91/Investering-Framework-Archive-v1",
-  "repository_effects": {
-    "active_data_ping_pointer_changed": false,
-    "canonical_index_changed": false,
-    "latest_data_terminal_pointer_changed": false,
-    "schedule_changed": false,
-    "vault_access": "NONE",
-    "workflow_changed": false
-  },
+  "repository_effects": {"active_data_ping_pointer_changed":false,"canonical_index_changed":false,"latest_data_terminal_pointer_changed":false,"schedule_changed":false,"vault_access":"NONE","workflow_changed":false},
   "run_id": "DT_FRED_WEB_BOUNDED_20260721T172619Z_e053de3a2119",
   "schema": "DATA_TERMINAL_BOUNDED_MEGA_PACK_DELIVERY_MANIFEST",
   "schema_version": "0.2",
   "source_main_sha": "e55a35662d88382605d435f86840cc7ff62a038d",
-  "stage_results": {
-    "append_only_storage": "PASS",
-    "bounded_overlap": "PASS_ONE_UNCHANGED_ZERO_REVISED",
-    "first_artifact_replay": "PASS",
-    "full_history_cross_run_parity": "BLOCKED",
-    "phase1_completion": "NO",
-    "returned_row_count_verified": "PARTIAL_5_ROWS_PLUS_OFFICIAL_16839_METADATA",
-    "row_normalization": "PASS_BOUNDED",
-    "source_response_fully_materialized": "FAIL",
-    "source_response_received": "PASS"
-  },
   "status": "PARTIAL_SOURCE_MATERIALIZATION_PACKAGE_VERIFIED_PHASE1_BLOCKED"
 }
