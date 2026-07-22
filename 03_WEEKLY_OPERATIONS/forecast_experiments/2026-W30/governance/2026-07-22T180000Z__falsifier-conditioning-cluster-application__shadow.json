@@ -1,0 +1,78 @@
+{
+  "schema": "FALSIFIER_CONDITIONING_CLUSTER_APPLICATION",
+  "schema_version": "1.0",
+  "status": "SHADOW_OPERATIONAL_APPLICATION",
+  "created_at_utc": "2026-07-22T18:00:00Z",
+  "source_run_id": "KØR_20260722_1800Z",
+  "canonical_parent": "01_CORE_FRAMEWORK/governance/2026-07-22__sensor-relationship-and-incremental-value-standard__canonical.md",
+  "purpose": "Prevent correlated falsifiers from creating pseudo-confirmation through raw survivor counts.",
+  "assessment": {
+    "ota_dependency_diagnosis": "SUBSTANTIALLY_VALID",
+    "raw_surviving_falsifier_count": 3,
+    "claimed_effective_independent_count": 1.3,
+    "effective_independent_count": null,
+    "numeric_status": "NOT_COMPUTED_NO_PREDECLARED_FORMULA",
+    "reason": "A_DECIMAL_EFFECTIVE_COUNT_WOULD_CREATE_FALSE_PRECISION_WITHOUT_A_DEFINED_DEPENDENCE_MODEL"
+  },
+  "required_ledger_fields": [
+    "conditioning_state",
+    "primary_latent_driver",
+    "dependency_cluster_id",
+    "independence_status",
+    "evidence_basis",
+    "raw_test_status"
+  ],
+  "current_application": [
+    {
+      "falsifier_id": "F1",
+      "raw_test_status": "NOT_FAILED_EXTERNAL_DAY_2_OF_7",
+      "conditioning_state": "BTC_BID_AND_PRICE_DURABILITY",
+      "primary_latent_driver": "BTC_PRICE_STRUCTURE",
+      "dependency_cluster_id": "CLUSTER_BTC_BID_DURABILITY",
+      "independence_status": "DEPENDENT_WITH_F5",
+      "formal_scoring": "BLOCKED_ORIGINAL_LINEAGE_UNRESOLVED"
+    },
+    {
+      "falsifier_id": "F5",
+      "raw_test_status": "HOLDS_SIX_OF_SIX_EXTERNAL",
+      "conditioning_state": "BTC_BID_AND_FLOW_DURABILITY",
+      "primary_latent_driver": "BTC_ETF_FLOW_AND_DEMAND",
+      "dependency_cluster_id": "CLUSTER_BTC_BID_DURABILITY",
+      "independence_status": "DEPENDENT_WITH_F1_NOT_SEPARATE_CONFIRMATION",
+      "formal_scoring": "CHALLENGER_EVIDENCE_ETF_ROWS_ALREADY_ARCHIVED"
+    },
+    {
+      "falsifier_id": "F4",
+      "raw_test_status": "BINARY_GATE_UNMET_EXTERNAL_DAY_9_OF_10",
+      "conditioning_state": "BTC_LED_STRENGTH_VS_ETH_RELATIVE_TRANSMISSION",
+      "primary_latent_driver": "CROSS_ASSET_CAPITAL_TRANSMISSION",
+      "dependency_cluster_id": "CLUSTER_RELATIVE_TRANSMISSION_PARTIALLY_BTC_CONDITIONED",
+      "independence_status": "PARTIALLY_DEPENDENT_NOT_PROVEN_INDEPENDENT",
+      "formal_scoring": "BLOCKED_PENDING_EXACT_EXPIRY_AND_ORIGINAL_LINEAGE"
+    }
+  ],
+  "reporting_rule": {
+    "raw_test_count": "REPORT",
+    "raw_survivor_count": "REPORT",
+    "dependency_cluster_count": "REPORT_WITH_PARTIAL_CLUSTER_LABELS",
+    "effective_independent_test_count": "DO_NOT_REPORT_UNTIL_METHOD_PREDECLARED_AND_VALIDATED",
+    "today_read": "THREE_RAW_STATUSES_BUT_NOT_THREE_INDEPENDENT_CONFIRMATIONS"
+  },
+  "future_method_requirements": [
+    "DEFINE_DEPENDENCE_MODEL_BEFORE_NUMERIC_EFFECTIVE_COUNT",
+    "TEST_LINEAR_AND_NONLINEAR_DEPENDENCE_WHERE_SAMPLE_SIZE_PERMITS",
+    "CONTROL_FOR_SHARED_REGIME_STATE",
+    "MEASURE_INCREMENTAL_OUT_OF_SAMPLE_VALUE",
+    "PREFER_ONE_PRIMARY_TEST_PLUS_VALIDATION_AND_AUDIT_FIELDS_WHEN_REDUNDANT"
+  ],
+  "implementation_scope": {
+    "new_engine_created": false,
+    "new_market_sensor_created": false,
+    "existing_falsifier_outcome_changed": false,
+    "canonical_governance_changed": false,
+    "ledger_schema_candidate_only": true,
+    "portfolio_action_changed": false
+  },
+  "promotion_rule": "MAY_ENTER_OPERATIONAL_LEDGER_SCHEMA_ONLY_AFTER_FIELD_COMPATIBILITY_REVIEW_NO_WEIGHT_CHANGE_UNTIL_VALIDATED",
+  "archive_rule": "SHADOW_APPLICATION_OF_EXISTING_CANONICAL_STANDARD_NOT_A_NEW_CANONICAL_RULE"
+}
