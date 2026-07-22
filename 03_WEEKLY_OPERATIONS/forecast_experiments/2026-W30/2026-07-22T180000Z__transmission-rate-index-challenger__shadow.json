@@ -1,0 +1,106 @@
+{
+  "schema": "TRANSMISSION_RATE_INDEX_CHALLENGER",
+  "schema_version": "1.0",
+  "status": "PRE_REGISTERED_SHADOW_DIAGNOSTIC",
+  "experiment_id": "W30_TRANSMISSION_RATE_CHALLENGER_H7",
+  "family": "CONTINUOUS_ETHBTC_TRANSMISSION_VS_BINARY_GATE",
+  "created_at_utc": "2026-07-22T18:00:00Z",
+  "source_run_id": "KØR_20260722_1800Z",
+  "purpose": "Test whether settled ETH relative transmission contains useful forward information before the fixed ETHBTC 0.0300 confirmation gate is reached, without weakening the gate or creating portfolio authority.",
+  "governance_boundary": {
+    "binary_gate_0_0300_changed": false,
+    "existing_experiment_rewritten": false,
+    "historical_rows_scored_prospectively": false,
+    "canonical_state_authority": false,
+    "portfolio_authority": false,
+    "counts_as_independent_market_experiment": false,
+    "classification": "METHOD_CHALLENGER_AND_RELATIONSHIP_MONITOR"
+  },
+  "source_basis": {
+    "venue": "BINANCE_SPOT",
+    "session_timezone": "EUROPE_COPENHAGEN",
+    "required_row_status": "SETTLED",
+    "symbols": ["BTCUSDT", "ETHUSDT", "ETHBTC"],
+    "first_eligible_prospective_row": "2026-07-22_CEST_SETTLED_CLOSE_PRODUCED_AFTER_2026-07-22T22:00:00Z",
+    "prior_18_TO_21JUL_rows": "CONTEXT_ONLY_NOT_PROSPECTIVE_SCORE_ROWS"
+  },
+  "row_schema": [
+    "date_cest",
+    "btc_close",
+    "eth_close",
+    "ethbtc_close",
+    "ethbtc_log_slope_5s",
+    "btc_return_1d_pct",
+    "eth_return_1d_pct",
+    "eth_minus_btc_return_pp",
+    "leader",
+    "btc_down_eth_up",
+    "binary_gate_0_0300_status",
+    "row_status",
+    "source_receipt_id"
+  ],
+  "calculation_rules": {
+    "ethbtc_log_slope_5s": "OLS_SLOPE_OF_NATURAL_LOG_ETHBTC_CLOSE_OVER_LATEST_5_SETTLED_CEST_SESSIONS",
+    "leader": "ETH_WHEN_ETH_RETURN_1D_PCT_GREATER_THAN_BTC_RETURN_1D_PCT_ELSE_BTC_OR_TIE",
+    "btc_down_eth_up": "TRUE_WHEN_BTC_RETURN_1D_PCT_LT_0_AND_ETH_RETURN_1D_PCT_GT_0",
+    "binary_gate_status": "CONFIRMED_ONLY_ON_SETTLED_ETHBTC_CLOSE_GTE_0_0300",
+    "missing_rows": "NO_IMPUTATION"
+  },
+  "candidate_signal": {
+    "name": "POSITIVE_CONTINUOUS_TRANSMISSION",
+    "all_required": [
+      "ETHBTC_LOG_SLOPE_5S_POSITIVE_FOR_3_CONSECUTIVE_SETTLED_ROWS",
+      "ETH_LEADS_BTC_IN_AT_LEAST_2_OF_LATEST_3_SETTLED_SESSIONS",
+      "SOURCE_ROWS_COMPLETE_AND_REPRODUCIBLE"
+    ],
+    "binary_gate_may_remain_unmet": true,
+    "interpretation": "EARLY_TRANSMISSION_CANDIDATE_NOT_ROTATION_CONFIRMATION"
+  },
+  "outcomes": {
+    "event_level_primary": "ETH_MINUS_BTC_CUMULATIVE_RETURN_OVER_NEXT_10_SETTLED_CEST_SESSIONS",
+    "event_level_secondary": "ETH_MINUS_BTC_CUMULATIVE_RETURN_OVER_NEXT_5_SETTLED_CEST_SESSIONS",
+    "risk_fields": [
+      "ETHBTC_MAX_ADVERSE_EXCURSION_5D",
+      "ETHBTC_MAX_ADVERSE_EXCURSION_10D",
+      "BTC_BREAKOUT_SURVIVAL_DURING_WINDOW"
+    ]
+  },
+  "controls": [
+    "ETHBTC_LEVEL_ONLY",
+    "ETHBTC_3_SESSION_MOMENTUM_ONLY",
+    "BINARY_0_0300_GATE_ONLY",
+    "BTC_VS_ETH_1D_RELATIVE_RETURN_ONLY",
+    "ALWAYS_NO_ROTATION_BASELINE"
+  ],
+  "event_level_falsification": "A_TRIGGERED_EVENT_IS_FALSIFIED_WHEN_FORWARD_10_SETTLED_SESSION_ETH_MINUS_BTC_RETURN_IS_LTE_0",
+  "method_level_kill_rule": {
+    "minimum_triggered_non_overlapping_events": 3,
+    "retire_when_any": [
+      "NO_POSITIVE_INCREMENTAL_VALUE_VS_STRONGEST_SIMPLE_CONTROL_AFTER_MINIMUM_EVENTS",
+      "REPRODUCIBLE_ROWS_CANNOT_BE_PRODUCED",
+      "VALUE_DISAPPEARS_AFTER_CONTROLLING_FOR_EXISTING_RELATIVE_MOMENTUM_AND_STATE",
+      "SIGNAL_COUNT_INFLATION_CANNOT_BE_REMOVED_BY_DEPENDENCY_CLUSTERING"
+    ],
+    "no_rescue_rule": "DO_NOT_CHANGE_FORMULA_OR_THRESHOLD_INSIDE_AN_ACTIVE_EVENT_WINDOW"
+  },
+  "evaluation_plan": {
+    "initial_collection_window": "NEXT_10_SETTLED_CEST_SESSIONS",
+    "minimum_events_before_method_judgment": 3,
+    "overlapping_trigger_handling": "MERGE_CONTIGUOUS_TRIGGER_ROWS_INTO_ONE_EVENT_WINDOW",
+    "promotion_requirement": "OUT_OF_SAMPLE_INCREMENTAL_VALUE_AND_REGIME_STABILITY",
+    "current_promotion_eligibility": false
+  },
+  "external_context_not_scored": {
+    "ETHBTC_sequence": [0.02872, 0.02892, 0.02919, 0.02899, 0.02937],
+    "ordinary_level_slope_per_session": 0.000137,
+    "ordinary_level_slope_pct_of_mean_per_session": 0.4717955782,
+    "note": "VALIDATED_ARITHMETIC_FROM_USER_SUPPLIED_VALUES_BUT_LAST_ROW_INTRADAY_AND_SEQUENCE_PREDATES_FREEZE"
+  },
+  "relationship_to_existing_tests": {
+    "external_F4": "CHALLENGES_INTERPRETATION_NOT_ORIGINAL_BINARY_OUTCOME",
+    "W30_CFGI_DIVERGENCE_H4": "SEPARATE_SENTIMENT_DIVERGENCE_EXPERIMENT_24H_ALREADY_FALSIFIED_72H_LIVE",
+    "W30_ROTATION_H1": "SUPPORTING_RELATIONSHIP_MONITOR_ONLY",
+    "W30_CAPITAL_H2": "MAY_SUPPLY_EARLY_RELATIVE_TRANSMISSION_ROWS_BUT_NOT_CAP_TIER_CLEARANCE"
+  },
+  "archive_rule": "APPEND_ROWS_PROSPECTIVELY_NO_BACKFILLED_PROMOTION_NO_CANONICAL_OR_PORTFOLIO_AUTHORITY"
+}
