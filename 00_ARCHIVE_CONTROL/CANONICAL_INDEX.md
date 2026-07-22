@@ -59,10 +59,44 @@ The architecture decision is separate from active market-feed versioning. It doe
 
 ## DATA PING operational anchors
 
+Reconciled from the canonical runtime pointers on 2026-07-22:
+
 ```text
-Highest active DATA PING version wins.
-Current active operational feed: DATA PING V4.
-Older versions: ARCHIVE CONTEXT unless explicitly reactivated.
+Highest complete main-framework-accepted DATA PING version wins.
+Current active operational feed: DATA PING V6.
+Latest canonical accepted log: DATA_PING_V6_20260719T200033Z.
+DATA PING V5: IMMUTABLE_PREDECESSOR_HISTORY.
+DATA PING V7: PREPARED_NOT_ACTIVE.
+```
+
+Authoritative operational pointers:
+
+```text
+02_DATA_PING/thread_handoffs/latest_thread_handover_state.json
+02_DATA_PING/operational_handoffs/latest_accepted_log_state.json
+02_DATA_PING/operational_handoffs/latest_decision_context_state.json
+```
+
+Current pointer evidence:
+
+```yaml
+active_version: 6
+active_thread: DATA PING_V6
+activation_result: PASS
+accepted_log_id: DATA_PING_V6_20260719T200033Z
+packet_contract: DATA_PING_MAIN_THREAD_INGEST_v2_0_RAW
+prepared_successor: DATA PING_V7
+prepared_successor_status: PREPARED_NOT_ACTIVE
+```
+
+The index does not freeze copied market state, recovery, rotation, event, gate or portfolio values. Those must be read from the latest authoritative pointers and ratified framework output.
+
+Known integrity caveats remain explicit in the runtime pointer:
+
+```text
+accepted payload SHA-256: NOT_GENERATED
+accepted payload commit SHA: MISSING
+silent reconstruction: FORBIDDEN
 ```
 
 Role governance:
@@ -73,12 +107,15 @@ Grok = standalone shadow sensor.
 ChatGPT/main framework = governance, interpretation and ratification.
 ```
 
-Canonical role and protocol files:
+Canonical role, protocol and active-version files:
 
 ```text
 02_DATA_PING/protocols/2026-07-06__custom-gpt-truth-layer-grok-shadow-v10-26__canonical.md
 02_DATA_PING/protocols/2026-07-10__data-ping-hybrid-v0-5-1-auto-edge-escalator-consolidated__canonical.md
 02_DATA_PING/protocols/2026-07-10__data-ping-hybrid-v0-5-1-gpt-5-6-audit-tightening__canonical.md
+02_DATA_PING/protocols/2026-07-15__data-ping-thread-handover-protocol-v1-0__canonical.md
+02_DATA_PING/version_governance/2026-07-19__data-ping-v6-raw-collector-contract-v1__canonical.md
+02_DATA_PING/thread_handoffs/receipts/2026-07-19T213821Z__data-ping-v6__activation-receipt.json
 ```
 
 Current rules include:
@@ -92,37 +129,13 @@ Current rules include:
 - `DATA_MISSING = UNKNOWN`;
 - separate BTC and alt evidence lanes;
 - multi-ping aggregation as feature-only;
-- pre-registered RAW 1-3D and 5-7D rows.
+- pre-registered RAW 1-3D and 5-7D rows;
+- V7 remains inactive until its first complete packet is reviewed and accepted by the main framework.
 
-Runtime registry:
-
-```text
-02_DATA_PING/live_state_handover/2026-07-10__active-gate-and-edge-event-registry__canonical.md
-```
-
-Active event:
+Runtime-versus-archive reconciliation receipt:
 
 ```text
-EDGE_EVENT_ID: PULLBACK_EDGE_20260708_01
-FRAMEWORK_EDGE_STATE: WATCH
-ALERT_STATUS: RESOLVING
-EVENT_STATUS: OPEN_RESOLVING
-```
-
-Event ledger and calibration:
-
-```text
-02_DATA_PING/live_state_handover/2026-07-08__pullback-edge-20260708-01__event-ledger.md
-04_MARKET_LEARNING/stress_flush/2026-07-08__pullback-edge-20260708-01__calibration-v3.md
-```
-
-Outcome status:
-
-```text
-24H: MATURED
-72H: MATURED_PENDING_RECONCILIATION
-7D: PENDING
-EVENT_CLOSE: PENDING
+changelog/2026-07-22__data-ping-runtime-archive-reconciliation-receipt.md
 ```
 
 ---
@@ -423,6 +436,7 @@ changelog/2026-07-11__techdev-historical-paid-archive-batch-2-import.md
 changelog/2026-07-11__techdev-historical-archive-batch-3-merged-corpus-ingestion.md
 changelog/2026-07-20__data-ping-platform-adr-001-ratification.md
 changelog/2026-07-22__sensor-relationship-learning-integration-receipt.md
+changelog/2026-07-22__data-ping-runtime-archive-reconciliation-receipt.md
 ```
 
 ---
