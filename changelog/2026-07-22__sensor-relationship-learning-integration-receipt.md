@@ -1,7 +1,8 @@
 # Sensor Relationship Learning Integration Receipt
 
 **Dato:** 2026-07-22  
-**Status:** MERGE_RECEIPT_PENDING_PR  
+**Status:** IMPLEMENTATION_RECEIPT  
+**PR:** `#120`  
 **Område:** framework governance / shadow integration / archive control  
 **Primary folder:** `changelog/`
 
@@ -58,7 +59,7 @@ permanent_methodology_integrated: true
 
 ## Separate reconciliation boundary
 
-The archive currently names DATA PING V4 as the active operational feed while project development contains newer V6 work. This integration does not infer or change the active runtime version. A separate runtime-versus-archive reconciliation must identify the latest explicitly ratified operational state before any archive anchor is changed.
+The archive currently names DATA PING V4 as the active operational feed while project development contains newer V6 work. This integration does not infer or change the active runtime version. Issue `#119` owns the separate runtime-versus-archive reconciliation and must identify the latest explicitly ratified operational state before any archive anchor is changed.
 
 ## Core receipt statement
 
