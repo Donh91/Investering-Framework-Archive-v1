@@ -1,0 +1,152 @@
+{
+  "schema": "DATA_PING_COMPACT_SHADOW_FILTERED_DEVELOPMENT_EVIDENCE",
+  "schema_version": "1.0",
+  "status": "NONCANONICAL_DEVELOPMENT_EVIDENCE_ONLY",
+  "source_contract": "DATA_PING_COMPACT_SHADOW_v1",
+  "source_profile": "BOUNDED_COMPACT_AI2AI",
+  "source_run_id": "DPRUN_20260722T171603230Z_386b2c4e",
+  "source_snapshot_id": "DPSNAP_20260722T173140960Z_43c3e17f",
+  "source_collector_log_id": "DPLOG_20260722T173140960Z_482caccd",
+  "source_freeze_utc": "2026-07-22T17:31:40.960Z",
+  "received_as": "USER_PASTED_PACKET",
+  "binding": false,
+  "release_eligible": false,
+  "production_activation_allowed": false,
+  "reported_packet_sha256": "8ca6f957ca012f927cb1769987a24797cd7f22cfc6009161bc6ff01bc9909f94",
+  "reported_exact_byte_validation": "PASS",
+  "local_exact_byte_verification": "NOT_POSSIBLE_FROM_PASTED_CURLY_QUOTE_RENDERING",
+  "canonical_acceptance": false,
+  "main_thread_log_sequence": null,
+  "collection_summary": {
+    "planned_source_actions": 44,
+    "attempted_source_actions": 44,
+    "terminal_source_actions": 44,
+    "successful_source_actions": 43,
+    "failed_source_actions": 1,
+    "collection_status": "PARTIAL",
+    "development_acceptance": "YES_PARTIAL",
+    "production_acceptance": "NO",
+    "serialized_size_bytes": 27357,
+    "size_limit_bytes": 30000,
+    "size_headroom_bytes": 2643,
+    "final_freeze_status": "PASS",
+    "market_calls_after_freeze": 0
+  },
+  "validated_development_strengths": [
+    "ORDERED_ACTION_PLAN_PRESENT",
+    "RECEIPT_MATRIX_PRESENT",
+    "ALL_PLANNED_ACTIONS_REACHED_TERMINAL_STATUS",
+    "FINAL_FREEZE_GUARD_PRESENT",
+    "COMPACT_SIZE_WITHIN_LIMIT",
+    "STRICT_JSON_AND_HASH_SELF_REPORTED_PASS",
+    "SOURCE_DISCREPANCY_CHECK_PRESENT",
+    "FORBIDDEN_INTERPRETATION_SCAN_SELF_REPORTED_PASS"
+  ],
+  "development_blockers": {
+    "official_stablecoin_overview": {
+      "status": "FAIL",
+      "failure_cause": "RESPONSE_TOO_LARGE",
+      "raw_error_text": "ResponseTooLargeError",
+      "receipt_id": "R004",
+      "impact": "OFFICIAL_STABLECOIN_LAYER_REMAINS_UNAVAILABLE"
+    },
+    "exact_byte_external_parity": {
+      "status": "NOT_VERIFIED_IN_THIS_ARCHIVE_WRITE",
+      "reason": "PASTED_RENDERING_USES_TYPOGRAPHIC_QUOTES_AND_NO_ATTACHED_RAW_ARTIFACT"
+    }
+  },
+  "filtered_source_health": {
+    "ETF_BTC": "PASS_SESSION_DATE",
+    "ETF_ETH": "PASS_SESSION_DATE",
+    "ALTERNATIVE_ME": "PASS_NO_SOURCE_TIMESTAMP",
+    "DEFILLAMA_STABLECOINS": "FAIL_RESPONSE_TOO_LARGE",
+    "DEFILLAMA_TVL": "PASS_CURRENT_RUN",
+    "GECKOTERMINAL_ETH": "PASS_CURRENT_RUN_DISPLAYED_PAGE_ONLY",
+    "FRED": "PASS_SOURCE_DATE_NATIVE",
+    "COINGECKO": "PASS_ASYNC_USABLE",
+    "BINANCE_SPOT": "PASS_HISTORICAL_AND_FINAL_LIVE_FREEZE",
+    "BINANCE_FUTURES": "PASS_INTERVAL_NATIVE_AND_FINAL_LIVE_FREEZE"
+  },
+  "filtered_market_baseline": {
+    "BTCUSDT": {
+      "last": 66000.0,
+      "change_24h_pct": -0.678,
+      "high_24h": 66739.89,
+      "low_24h": 65553.67,
+      "source_timestamp": "2026-07-22T17:29:36.001Z",
+      "receipt_id": "R038"
+    },
+    "ETHUSDT": {
+      "last": 1936.76,
+      "change_24h_pct": 0.606,
+      "high_24h": 1956.45,
+      "low_24h": 1910.68,
+      "source_timestamp": "2026-07-22T17:29:56.014Z",
+      "receipt_id": "R039"
+    },
+    "ETHBTC": {
+      "last": 0.02935,
+      "change_24h_pct": 1.277,
+      "distance_below_0_0300_pct": 2.1666666667,
+      "source_timestamp": "2026-07-22T17:30:19.510Z",
+      "receipt_id": "R040"
+    },
+    "BTC_dominance_pct": 56.69020044713913,
+    "ETH_dominance_pct": 10.030096608985595,
+    "total_market_cap_usd": 2340228834212.45,
+    "market_cap_change_24h_pct": 0.15719624614560188
+  },
+  "source_discrepancy_qa": {
+    "BTCUSD": {
+      "difference_pct": 0.0499875,
+      "threshold_pct": 0.3,
+      "status": "WITHIN_THRESHOLD"
+    },
+    "ETHUSD": {
+      "difference_pct": 0.23774345,
+      "threshold_pct": 0.3,
+      "status": "WITHIN_THRESHOLD"
+    },
+    "ETHBTC": {
+      "binance_direct": 0.02935,
+      "coingecko_derived": 0.0294,
+      "difference_pct": 0.17020246,
+      "threshold_pct": 0.15,
+      "status": "ASYNC_SOURCE_CONFLICT",
+      "operational_read": "USE_DIRECT_BINANCE_FOR_CURRENT_ETHBTC_WHILE_RETAINING_ASYNC_CONFLICT_AS_SOURCE_QA"
+    }
+  },
+  "macro_baseline_only": {
+    "DGS10_pct": 4.6,
+    "DGS2_pct": 4.21,
+    "DFII10_pct": 2.35,
+    "T10YIE_pct": 2.26,
+    "BAMLH0A0HYM2_pct": 2.69,
+    "DTWEXBGS_index": 120.5315,
+    "VIXCLS_index": 17.05,
+    "status": "PRESERVED_FOR_LATER_LEAD_LAG_OR_REGIME_ANALYSIS_NO_CURRENT_SIGNAL_CHANGE"
+  },
+  "non_authoritative_layers": {
+    "alternative_me_33": "DUPLICATE_ALREADY_ARCHIVED_DISTINCT_FROM_CFGI",
+    "stablecoin_proxy_usdt_usdc_usd": 257348669354.6815,
+    "stablecoin_proxy_status": "INCOMPLETE_UNIVERSE_NOT_OFFICIAL_TOTAL",
+    "dex_eth_displayed_volume_24h_usd": 668647582.8632438,
+    "dex_status": "DISPLAYED_PAGE_ONLY_NOT_NETWORK_TOTAL",
+    "tvl_status": "CURRENT_TOP_CHAIN_SNAPSHOT_ONLY"
+  },
+  "write_routing_remediation": {
+    "initial_direct_main_commit": "b4de2fcc54ee68894c4ed7a4faff6601a9f380d5",
+    "compensating_main_delete_commit": "5650bafcaa012c624e87245b4f251105c8265cc1",
+    "final_delivery_path": "CLEAN_AGENT_BRANCH_PULL_REQUEST",
+    "final_main_content_authority": "ONLY_AFTER_CLEAN_PR_MERGE",
+    "data_content_changed_by_remediation": false
+  },
+  "archive_decision": {
+    "retain_full_user_pasted_packet": false,
+    "retain_filtered_normalized_evidence": true,
+    "advance_canonical_data_ping_pointer": false,
+    "change_framework_state": false,
+    "change_portfolio_action": false,
+    "reason": "DEVELOPMENT_RUN_CONTAINS_USEFUL_SOURCE_QA_AND_SELECTED_CURRENT_ROWS_BUT_IS_EXPLICITLY_NONBINDING_AND_NOT_PRODUCTION_ELIGIBLE"
+  }
+}
