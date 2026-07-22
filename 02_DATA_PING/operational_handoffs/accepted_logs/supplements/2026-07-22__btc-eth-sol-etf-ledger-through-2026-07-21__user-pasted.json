@@ -1,0 +1,81 @@
+{
+  "schema": "CROSS_ASSET_ETF_SESSION_LEDGER_SUPPLEMENT",
+  "schema_version": "1.0",
+  "status": "USER_PASTED_API_ROWS_NORMALIZED_NON_CANONICAL",
+  "received_date": "2026-07-22",
+  "coverage_start": "2026-07-06",
+  "coverage_end": "2026-07-21",
+  "source_provenance": {
+    "received_as": "USER_PASTED_SUCCESS_API_RESPONSES",
+    "exact_endpoint_or_receipt": null,
+    "independent_source_verification_in_this_write": false,
+    "consistency_note": "BTC and ETH totals are consistent with the latest compact Farside extraction already archived; SOL adds a new cross-asset ETF layer.",
+    "authority": "SUPPLEMENTAL_EVIDENCE_ONLY"
+  },
+  "normalization_rules": [
+    "Only date rows are treated as flows.",
+    "Staking fee rows are metadata and excluded from flow calculations.",
+    "Zero values are preserved as reported and are not interpreted as missing.",
+    "All values are USD millions.",
+    "Provider lifetime summary statistics are not used for short-horizon experiment scoring."
+  ],
+  "btc": {
+    "schema": ["date","IBIT","FBTC","BITB","ARKB","BTCO","EZBC","BRRR","HODL","BTCW","MSBT","GBTC","BTC","total_usd_m"],
+    "rows": [
+      ["2026-07-06",209.4,9.7,4.8,33.0,0.0,0.0,0.0,0.0,0.0,11.0,-44.5,42.3,265.7],
+      ["2026-07-07",54.8,-24.9,0.0,-8.4,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,21.5],
+      ["2026-07-08",-59.1,-14.9,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,-63.7,52.8,-84.9],
+      ["2026-07-09",0.0,-63.3,0.3,-39.9,0.0,0.0,0.0,5.4,0.0,2.2,0.0,0.0,-95.3],
+      ["2026-07-10",86.8,0.0,0.0,0.0,0.0,0.0,0.0,3.6,0.0,0.0,0.0,0.0,90.4],
+      ["2026-07-13",-185.5,-245.6,0.0,0.0,0.0,0.0,0.0,6.1,0.0,0.0,-53.1,53.4,-424.7],
+      ["2026-07-14",138.9,21.1,3.5,3.6,0.0,0.0,0.0,0.0,0.0,7.4,0.0,6.6,181.1],
+      ["2026-07-15",80.8,16.9,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,10.0,107.7],
+      ["2026-07-16",33.4,30.7,15.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,79.1],
+      ["2026-07-17",136.5,-4.2,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,132.3],
+      ["2026-07-20",116.5,24.1,8.8,72.7,0.0,0.0,0.0,1.8,0.0,6.9,-45.4,41.4,226.8],
+      ["2026-07-21",163.9,23.1,0.0,9.7,0.0,0.0,0.0,0.0,0.0,0.0,0.0,6.5,203.2]
+    ]
+  },
+  "eth": {
+    "schema": ["date","ETHA","ETHB","FETH","ETHW","TETH","ETHV","QETH","EZET","ETHE","ETH","total_usd_m"],
+    "rows": [
+      ["2026-07-06",23.3,0.0,0.0,0.0,0.0,-2.6,0.0,0.0,0.0,0.0,20.7],
+      ["2026-07-07",26.9,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,26.9],
+      ["2026-07-08",0.0,0.0,69.2,0.0,0.0,1.3,0.0,0.0,0.0,0.0,70.5],
+      ["2026-07-09",-12.7,-2.7,-34.0,-2.8,0.0,0.0,0.0,0.0,0.0,0.0,-52.2],
+      ["2026-07-10",16.2,0.0,2.2,0.0,0.0,0.0,0.0,0.0,0.0,0.0,18.4],
+      ["2026-07-13",0.0,0.0,-15.4,0.0,0.0,0.0,0.0,0.0,0.0,0.0,-15.4],
+      ["2026-07-14",58.3,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,58.3],
+      ["2026-07-15",45.3,4.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,4.6,53.9],
+      ["2026-07-16",0.0,0.0,-11.2,2.3,0.0,0.0,0.0,0.0,-4.8,-14.3,-28.0],
+      ["2026-07-17",31.7,0.0,5.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,36.7],
+      ["2026-07-20",34.3,0.0,2.8,0.0,0.9,0.0,0.0,0.0,0.0,0.0,38.0],
+      ["2026-07-21",52.8,0.0,-15.3,0.0,0.0,0.0,0.0,0.0,0.0,0.0,37.5]
+    ]
+  },
+  "sol": {
+    "schema": ["date","BSOL","VSOL","FSOL","TSOL","SOEZ","GSOL","total_usd_m"],
+    "rows": [
+      ["2026-07-06",8.4,0.0,0.0,0.0,0.0,0.0,8.4],
+      ["2026-07-07",0.0,0.0,1.7,0.0,0.0,0.0,1.7],
+      ["2026-07-08",-6.6,0.0,0.0,0.0,0.0,-2.0,-8.6],
+      ["2026-07-09",0.0,0.3,0.0,0.1,0.0,0.0,0.4],
+      ["2026-07-10",0.0,0.0,0.0,0.2,0.0,0.0,0.2],
+      ["2026-07-13",0.0,0.0,0.0,0.0,0.0,0.0,0.0],
+      ["2026-07-14",0.0,0.0,0.0,0.0,0.0,0.0,0.0],
+      ["2026-07-15",0.0,0.0,0.5,0.0,0.0,-1.2,-0.7],
+      ["2026-07-16",0.0,0.0,0.0,0.0,0.0,1.7,1.7],
+      ["2026-07-17",0.0,0.0,0.0,0.0,0.0,0.0,0.0],
+      ["2026-07-20",2.6,0.0,0.0,0.0,0.0,0.0,2.6],
+      ["2026-07-21",5.8,0.0,0.0,0.0,0.0,0.0,5.8]
+    ]
+  },
+  "derived_aggregates": {
+    "BTC": {"latest":203.2,"last_2":430.0,"last_3":562.3,"last_5":749.1,"last_6":930.2,"last_7":505.5,"positive_streak":6,"latest_IBIT_share_pct":80.6594,"last_6_IBIT_share_pct":72.0275},
+    "ETH": {"latest":37.5,"last_2":75.5,"last_3":112.2,"last_5":138.1,"last_6":196.4,"last_7":181.0,"positive_streak":3,"latest_ETHA_to_net_pct":140.8,"last_6_ETHA_to_net_pct":113.2383},
+    "SOL": {"latest":5.8,"last_2":8.4,"last_3":8.4,"last_5":9.4,"last_6":9.4,"last_7":9.4,"positive_streak":2,"latest_BSOL_share_pct":100.0,"last_6_BSOL_share_pct":89.3617},
+    "cross_asset_latest": {"combined_usd_m":246.5,"BTC_share_pct":82.4341,"ETH_share_pct":15.2130,"SOL_share_pct":2.3529},
+    "cross_asset_last_6_sessions": {"combined_usd_m":1136.0,"BTC_share_pct":81.8838,"ETH_share_pct":17.2887,"SOL_share_pct":0.8275}
+  },
+  "authority": {"binding":false,"canonical_acceptance":false,"framework_state_change":false,"portfolio_action":false}
+}
