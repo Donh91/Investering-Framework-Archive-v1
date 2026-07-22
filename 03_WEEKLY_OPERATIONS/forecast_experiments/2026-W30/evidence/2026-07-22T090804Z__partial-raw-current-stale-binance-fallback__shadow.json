@@ -1,0 +1,134 @@
+{
+  "schema": "FORECAST_EXPERIMENT_PARTIAL_RAW_EVIDENCE_APPEND",
+  "schema_version": "1.0",
+  "status": "EXPERIMENT_AND_SOURCE_QA_EVIDENCE_APPENDED_NON_BINDING",
+  "source_contract": "DATA_PING_MAIN_THREAD_INGEST_v2_0_RAW",
+  "source_snapshot_id": "DATA_PING_V6_RAW_20260722T090804322Z",
+  "source_freeze_utc": "2026-07-22T09:08:04.322Z",
+  "packet_type": "PARTIAL_CURRENT_PACKET_WITH_STALE_USER_PROVIDED_BINANCE_FALLBACK",
+  "reported_packet_sha256": "9662d7899040750e67f1338c49827f9d0a9dcad0f124ba34807fb3d8c9dd8271",
+  "hash_verification": "SELF_REPORTED_NOT_EXACT_BYTE_VERIFIED_FROM_PASTED_CURLY_QUOTE_RENDERING",
+  "ingest_instruction": "IGNORE_FOR_MAIN_FRAMEWORK_INGEST",
+  "canonical_acceptance": false,
+  "mandatory_raw_completeness": "FAIL",
+  "source_quality": "PARTIAL_CURRENT_WITH_STALE_BINANCE_FALLBACK",
+  "current_market": {
+    "source": "COINGECKO_CURRENT_ASYNC",
+    "BTCUSD": 65933.0,
+    "ETHUSD": 1919.84,
+    "ETHBTC_derived": 0.02911804407504588,
+    "BTC_dominance_pct": 56.77108433759825,
+    "total_market_cap_usd": 2329921939717.3516,
+    "market_cap_change_24h_pct": -0.48575325881090176
+  },
+  "delta_vs_compact_2026_07_22T060335Z": {
+    "elapsed_minutes_approx": 184.48,
+    "BTC_change_pct": -0.1257119677,
+    "ETH_change_pct": -0.0072917426,
+    "ETHBTC_change_pct": 0.0964045206,
+    "total_market_cap_change_pct": -0.0306145330,
+    "read": "NO_MATERIAL_CROSS_ASSET_MARKET_DELTA"
+  },
+  "delta_vs_cfgi_h4_freeze_2026_07_21T154756Z": {
+    "elapsed_hours_approx": 17.3356,
+    "BTC_change_pct": -1.0163787695,
+    "ETH_change_pct": -0.3467391981,
+    "ETHBTC_change_pct": 0.6499968028,
+    "ETH_relative_outperformance_vs_BTC_pct": 0.6765155316,
+    "distance_below_0_0300_pct": 2.9398530832,
+    "read": "H4_COUNTEREVIDENCE_PERSISTS_BUT_EXACT_24H_WINDOW_NOT_MATURE"
+  },
+  "etf": {
+    "latest_completed_session": "2026-07-21",
+    "BTC_total_usd_m": 203.2,
+    "IBIT_usd_m": 163.9,
+    "ETH_total_usd_m": 37.5,
+    "new_session_since_prior_evidence": false,
+    "read": "REVERIFICATION_ONLY_NO_NEW_ETF_EVENT"
+  },
+  "sentiment": {
+    "source": "ALTERNATIVE_ME_DISTINCT_FROM_CFGI",
+    "current": 33,
+    "classification": "Fear",
+    "new_information": false
+  },
+  "binance_source_event": {
+    "spot_current_run": "FAIL_RESTRICTED_LOCATION",
+    "futures_current_run": "FAIL_RESTRICTED_LOCATION",
+    "fallback_snapshot_utc": "2026-07-22T05:22:54.921Z",
+    "fallback_staleness_minutes": 225.1567,
+    "fallback_authority": "STALE_REFERENCE_ONLY",
+    "impact": "NO_CURRENT_BINANCE_SPOT_OR_FUTURES_FREEZE_AND_NO_CURRENT_TAKER_OI_FUNDING_UPDATE"
+  },
+  "dynamic_breadth": {
+    "method": "DYNAMIC_RISK_EXCLUSIONS_v2_CURRENT_MEMBERSHIP",
+    "status": "PARTIAL_MEMBERSHIP_ONLY",
+    "included_n": 71,
+    "current_membership_sha256": "9fd52e3114b30349fb3c5f5e14bd1fd185d23338f61cbfafc8b75168c379ba57",
+    "prior_membership_sha256_sequence": [
+      "ba80dad12b991995083bc4c5199a0b60ab92217ac23bb5c36eb3d57c0f56da7b",
+      "207202634b73f9c5505f8d9e0277382f3ae0ef46a926ed2ea44155aabcfbf0c3"
+    ],
+    "third_distinct_membership_observed": true,
+    "performance_rows": "MISSING",
+    "breadth_delta_status": "NOT_COMPARABLE",
+    "impact": "STRENGTHENS_MEMBERSHIP_INSTABILITY_QA_BUT_CANNOT_SCORE_SIGNAL_STABILITY_ON_THIS_RUN"
+  },
+  "other_layers": {
+    "official_stablecoin": "UNAVAILABLE_RESPONSE_TOO_LARGE",
+    "stablecoin_proxy": "USDT_USDC_PROXY_ONLY_NOT_OFFICIAL_TOTAL",
+    "stablecoin_chain_top10": "CHAIN_DISTRIBUTION_ONLY_DO_NOT_SUM_AS_OFFICIAL_TOTAL",
+    "tvl": "TOP10_ONLY",
+    "dex": "DISPLAYED_PAGE_ONLY_NOT_NETWORK_TOTAL",
+    "market_wide_cvd": "UNAVAILABLE",
+    "fixed_risk35": "UNKNOWN_RECONSTRUCTION_FORBIDDEN"
+  },
+  "hypothesis_updates": [
+    {
+      "id": "W30_ROTATION_H1",
+      "new_status": "LIVE_WEAKENED_NO_NEW_CONFIRMATION",
+      "impact": "NO_ROTATION",
+      "reason": "ETHBTC_IS_APPROX_0_02912_AND_REMAINS_APPROX_2_94_PERCENT_BELOW_0_0300"
+    },
+    {
+      "id": "W30_CAPITAL_H2",
+      "new_status": "LIVE_MIXED_BREADTH_PERFORMANCE_MISSING",
+      "impact": "NO_CLEARANCE",
+      "reason": "CURRENT_DYNAMIC_MEMBERSHIP_EXISTS_BUT_PERFORMANCE_ROWS_ARE_MISSING_AND_MEMBERSHIP_CHANGED_AGAIN"
+    },
+    {
+      "id": "W30_FLOW_H3",
+      "new_status": "LIVE_STRENGTHENED_NO_NEW_LIVE_BINANCE_EVIDENCE",
+      "impact": "PRIOR_FLOW_SUPPORT_PRESERVED_NOT_EXTENDED",
+      "reason": "ETF_SESSION_IS_DUPLICATE_AND_BINANCE_CURRENT_RUN_FAILED_SO_STALE_TAKER_OI_FUNDING_CANNOT_EXTEND_THE_HYPOTHESIS"
+    },
+    {
+      "id": "W30_CFGI_DIVERGENCE_H4",
+      "new_status": "LIVE_COUNTEREVIDENCE_PERSISTS_NOT_MATURE",
+      "impact": "COUNTEREVIDENCE",
+      "reason": "ETH_RELATIVE_OUTPERFORMANCE_AND_ETHBTC_IMPROVEMENT_PERSIST_AT_17_34H_BUT_EXACT_24H_WINDOW_IS_NOT_DUE"
+    },
+    {
+      "id": "W30_BREADTH_QA_H5",
+      "new_status": "LIVE_SOURCE_QA_THIRD_DISTINCT_MEMBERSHIP_PERFORMANCE_MISSING",
+      "impact": "SOURCE_QA_STRENGTHENED_NOT_CONFIRMED",
+      "reason": "THIRD_DISTINCT_MEMBERSHIP_HASH_OBSERVED_BUT_THIS_RUN_HAS_NO_BREADTH_PERFORMANCE_ROWS"
+    }
+  ],
+  "framework_shadow_delta": {
+    "material_market_delta": false,
+    "structural_repair": "UNCHANGED_STRENGTHENED_WITH_SHORT_TERM_FADE",
+    "rotation": "NO_ROTATION",
+    "broad_recovery": "NOT_CONFIRMED",
+    "large_cap_window": "WATCH_ONLY_NOT_OPEN",
+    "mid_cap_window": "WAIT",
+    "new_entry_signal": "NOT_ACTIVE",
+    "portfolio_action": "NONE",
+    "user_action": "HOLD_AND_WAIT"
+  },
+  "new_market_experiment_created": false,
+  "new_source_qa_experiment_created": true,
+  "canonical_state_change": false,
+  "portfolio_authority": false,
+  "archive_rule": "APPEND_BY_FIELD_EVIDENCE_DO_NOT_ADVANCE_CANONICAL_DATA_PING_OR_MARKET_POINTER"
+}
