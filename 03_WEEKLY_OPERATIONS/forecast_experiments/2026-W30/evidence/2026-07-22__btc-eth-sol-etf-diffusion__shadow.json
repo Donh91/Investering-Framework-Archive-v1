@@ -1,0 +1,105 @@
+{
+  "schema": "FORECAST_EXPERIMENT_CROSS_ASSET_ETF_EVIDENCE_APPEND",
+  "schema_version": "1.0",
+  "status": "EXPERIMENT_EVIDENCE_APPENDED_NON_BINDING",
+  "source_path": "02_DATA_PING/operational_handoffs/accepted_logs/supplements/2026-07-22__btc-eth-sol-etf-ledger-through-2026-07-21__user-pasted.json",
+  "source_role": "USER_PASTED_API_LEDGER_SUPPLEMENT",
+  "latest_completed_session": "2026-07-21",
+  "parser_guards": [
+    "STAKING_FEE_ROWS_EXCLUDED_FROM_FLOW",
+    "ZERO_PRESERVED_AS_REPORTED",
+    "LIFETIME_SUMMARY_NOT_USED_FOR_SHORT_HORIZON_SCORING",
+    "SOL_FLOW_SCALE_NOT_EQUATED_WITH_BTC_OR_ETH"
+  ],
+  "observations": {
+    "BTC": {
+      "latest_session_usd_m": 203.2,
+      "positive_streak_sessions": 6,
+      "six_session_sum_usd_m": 930.2,
+      "latest_session_positive_provider_count": 4,
+      "latest_IBIT_share_pct": 80.6594,
+      "read": "STRONG_PERSISTENT_FLOW_WITH_LATEST_SESSION_MORE_CONCENTRATED_THAN_20JUL"
+    },
+    "ETH": {
+      "latest_session_usd_m": 37.5,
+      "positive_streak_sessions": 3,
+      "six_session_sum_usd_m": 196.4,
+      "six_session_positive_sessions": 5,
+      "latest_ETHA_gross_usd_m": 52.8,
+      "latest_FETH_usd_m": -15.3,
+      "latest_ETHA_to_net_pct": 140.8,
+      "read": "POSITIVE_ETF_TRANSMISSION_EXISTS_BUT_IS_ISSUER_CONCENTRATED_AND_PARTLY_OFFSET_BY_FETH_OUTFLOW"
+    },
+    "SOL": {
+      "latest_session_usd_m": 5.8,
+      "positive_streak_sessions": 2,
+      "last_five_sessions_usd_m": 9.4,
+      "latest_BSOL_share_pct": 100.0,
+      "read": "EARLY_POSITIVE_LARGE_CAP_ALT_FLOW_BUT_SMALL_SCALE_AND_SINGLE_PRODUCT_CONCENTRATION"
+    },
+    "cross_asset": {
+      "latest_combined_usd_m": 246.5,
+      "latest_BTC_share_pct": 82.4341,
+      "latest_ETH_share_pct": 15.2130,
+      "latest_SOL_share_pct": 2.3529,
+      "six_session_combined_usd_m": 1136.0,
+      "six_session_BTC_share_pct": 81.8838,
+      "six_session_ETH_share_pct": 17.2887,
+      "six_session_SOL_share_pct": 0.8275,
+      "read": "ETF_LAYER_SHOWS_EARLY_DIFFUSION_BEYOND_BTC_BUT_CAPITAL_REMAINS_OVERWHELMINGLY_BTC_DOMINATED"
+    }
+  },
+  "hypothesis_updates": [
+    {
+      "id": "W30_FLOW_H3",
+      "prior_status": "LIVE_STRENGTHENED_MEDIUM_HORIZON_SHORT_TERM_COOLING",
+      "new_status": "LIVE_STRENGTHENED_SIX_SESSION_BTC_ETF_STREAK",
+      "impact": "STRENGTHENS_MEDIUM_HORIZON_FLOW_PERSISTENCE",
+      "reason": "BTC_ETF_FLOW_IS_POSITIVE_SIX_CONSECUTIVE_SESSIONS_TOTALING_930_2M_SINCE_14JUL"
+    },
+    {
+      "id": "W30_CAPITAL_H2",
+      "prior_status": "LIVE_MIXED_BREADTH_SIGNAL_INVALID_FOR_DELTA",
+      "new_status": "LIVE_MIXED_EARLY_ETF_DIFFUSION_NO_PRICE_OR_STABLE_BREADTH_CONFIRMATION",
+      "impact": "PRELIMINARY_SUPPORT_ONLY",
+      "reason": "ETH_HAS_THREE_POSITIVE_SESSIONS_AND_SOL_TWO_POSITIVE_SESSIONS_BUT_COMBINED_FLOW_REMAINS_82_4_PERCENT_BTC_AND_ALT_FLOWS_ARE_CONCENTRATED"
+    },
+    {
+      "id": "W30_ROTATION_H1",
+      "prior_status": "LIVE_WEAKENED_PARTIAL_REPAIR_STALLED",
+      "new_status": "LIVE_WEAKENED_ETF_DIFFUSION_WITHOUT_PRICE_CONFIRMATION",
+      "impact": "MIXED",
+      "reason": "ETH_AND_SOL_ETF_FLOWS_ARE_POSITIVE_BUT_ETHBTC_REMAINS_BELOW_0_0300_AND_NO_STABLE_COHORT_ROTATION_IS_CONFIRMED"
+    }
+  ],
+  "subtest": {
+    "id": "W30_CAPITAL_H2_ETF_DIFFUSION_SUBTEST",
+    "status": "LIVE_NESTED_SUBTEST_NOT_NEW_MARKET_EXPERIMENT",
+    "hypothesis": "Persistent BTC ETF inflows may diffuse first into ETH and then SOL ETF products before stable price breadth confirms large-cap rotation.",
+    "confirm_when": [
+      "ETH_AND_SOL_ROLLING_FLOWS_REMAIN_POSITIVE_ACROSS_AT_LEAST_FIVE_COMPLETED_SESSIONS",
+      "ETHBTC_OR_STABLE_LARGE_CAP_RELATIVE_STRENGTH_IMPROVES",
+      "FLOW_IS_NOT_DOMINATED_BY_ONE_PRODUCT_ONLY"
+    ],
+    "falsify_when": [
+      "ALT_ETF_FLOWS_REVERSE_WHILE_BTC_FLOW_REMAINS_POSITIVE",
+      "ETHBTC_AND_LARGE_CAP_RELATIVE_STRENGTH_CONTINUE_TO_DETERIORATE",
+      "APPARENT_DIFFUSION_IS_EXPLAINED_ONLY_BY_TINY_SINGLE_PRODUCT_PRINTS"
+    ],
+    "promotion_counting": "DOES_NOT_COUNT_AS_INDEPENDENT_EXPERIMENT_UNTIL_SEPARATELY_PREREGISTERED"
+  },
+  "framework_shadow_delta": {
+    "btc_flow_repair": "STRENGTHENED",
+    "eth_etf_transmission": "POSITIVE_BUT_CONCENTRATED",
+    "sol_etf_transmission": "EARLY_SMALL_SCALE",
+    "rotation": "NO_ROTATION",
+    "large_cap_window": "WATCH_ONLY_NOT_OPEN",
+    "mid_cap_window": "WAIT",
+    "new_entry_signal": "NOT_ACTIVE",
+    "portfolio_action": "NONE",
+    "user_action": "HOLD_AND_WAIT"
+  },
+  "new_market_experiment_created": false,
+  "canonical_state_change": false,
+  "portfolio_authority": false
+}
