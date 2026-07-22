@@ -1,0 +1,13 @@
+test_family,test,result,sample,verdict,guardrail
+DATA_SCOPE,Historical overlap,2886 daily BTC/ETH rows,2016-03-10 to 2024-03-24,LIMITED,BTC source ends before ETF-era
+REDUNDANCY,PCA compression,6 components explain 82.96%; 8 explain 90.47%,20 derived sensor proxies,STRONG_LEARNING,"Use as simplification audit, not live engine"
+NONLINEAR_DEPENDENCE,ETHBTC momentum vs volatility,Spearman 0.101; distance correlation mean 0.412 (sd 0.024),8 subsamples of 700 rows,STRONG_LEARNING,Linear correlation misses U-shaped dependency
+SEQUENCE_SURVIVAL,Relative-strength episodes,124 episodes; >=7d survival 37.9%; >=14d 8.1%,Transparent ETH/BTC proxy state,STRONG_LEARNING,Duration is first-class; thresholds are proxy-defined
+SYNERGY_PROXY,BTC momentum + ETH participation,Time-split AUC 0.724 vs singles 0.675 and 0.656,"123 episode starts, 4 temporal folds",PROMISING,Regime-sensitive; not promotion-ready
+CHANGE_POINT,Offline multivariate segmentation,"Detected major transitions around 2020-03, 2021-04/07/11, 2022-12",Greedy SSE segmentation,STRONG_DIAGNOSTIC,Dates vary by feature family; require consensus
+ONLINE_DRIFT,Page-Hinkley consensus,Major alarms recur across thresholds but alarm count is tuning-sensitive,ETHBTC momentum proxy,DIAGNOSTIC_ONLY,Never state authority
+TRANSFER_ENTROPY,Discrete TE,Small information values and direction/lag instability across eras,Permutation-tested exploratory estimator,LOW_TO_MEDIUM,Research-only until better controls and data
+TAIL_DEPENDENCE,BTC/ETH extremes,5% downside dependence ~0.59 vs 95% upside ~0.35,Empirical tail coefficients,USEFUL_CONFIRMATION,"Supports asymmetric stress logic, no new engine"
+MATRIX_PROFILE,Historical analog forecast,MAE 0.064 vs mean baseline 0.044; sign 44.6% vs 48.2%,56 expanding-window tests,REJECT,Analog matching underperformed baseline
+FREQUENCY_COHERENCE,Horizon dependence,BTC/ETH dependence broadly similar across tested horizons,Non-overlapping returns and spectral coherence,LOW_INCREMENTAL,No permanent addition
+HAWKES,Event cascades,Not testable with daily rows,Requires event-level timestamps,DATA_BLOCKED,Do not simulate evidence
