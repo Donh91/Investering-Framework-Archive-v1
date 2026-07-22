@@ -1,0 +1,74 @@
+{
+  "schema": "DAILY_SENSOR_SWING_LAB_RUN_RECEIPT",
+  "schema_version": "1.1",
+  "run_date": "2026-07-22",
+  "source_resolution": "DIRECT_PROJECT_THREAD_NONCANONICAL_BY_FIELD_ONLY",
+  "selected_data_ping_version": "DATA_PING_COMPACT_SHADOW_v1",
+  "accepted_log_id": "DATA_PING_V6_20260719T200033Z",
+  "source_timestamp": "2026-07-22T17:31:40.960Z",
+  "source_hash_reported": "8ca6f957ca012f927cb1769987a24797cd7f22cfc6009161bc6ff01bc9909f94",
+  "source_freshness": "CURRENT_WITHIN_APPROX_2H_AT_RUN",
+  "source_data_quality": "PARTIAL_NON_BINDING_EXACT_PASTED_BYTES_NOT_VERIFIED",
+  "independent_online_baseline_status": "NOT_REQUIRED_NEWER_DIRECT_THREAD_FIELDS_AVAILABLE_ETF_DUPLICATE",
+  "format_test_packets_excluded": 0,
+  "new_source_detected": true,
+  "experiment_evidence_appended": 7,
+  "experiments_created": 0,
+  "experiments_matured_and_scored": 0,
+  "no_material_experiment_delta": true,
+  "historical_backfill": {
+    "candidates_scanned": 4,
+    "rows_prospective_valid": 0,
+    "rows_event_study_only": 0,
+    "rows_blocked": 1,
+    "duplicates_prevented": 3,
+    "candidate_results": [
+      {"candidate":"2026_07_21_BTC_ETH_ETF_SESSION","classification":"DUPLICATE_EXISTING_ROW"},
+      {"candidate":"2026_07_22_ALTERNATIVE_ME_33","classification":"DUPLICATE_EXISTING_ROW"},
+      {"candidate":"W30_CFGI_DIVERGENCE_H4_24H","classification":"DUPLICATE_EXISTING_ROW_ALREADY_SCORED"},
+      {"candidate":"W30_TRANSMISSION_RATE_CHALLENGER_H7_22JUL","classification":"BLOCKED_LINEAGE_OR_METHOD_SESSION_NOT_SETTLED_AT_FREEZE"}
+    ],
+    "cursor": "V6_RECENT_TIMESTAMPED_EVENT_ROWS_PENDING_NEXT_ELIGIBLE_SETTLED_OBSERVATION"
+  },
+  "sensor_pair_rows": {
+    "frozen": 0,
+    "matured_24h": 0,
+    "matured_72h": 0,
+    "matured_7d": 0,
+    "reason": "NONCANONICAL_SOURCE_CANNOT_CREATE_NEW_PROSPECTIVE_ROWS"
+  },
+  "segment_radar": {
+    "created": false,
+    "positioning_change": false,
+    "reason": "NO_NEW_ELIGIBLE_SOURCE_AND_NO_MATERIAL_SEGMENT_CLEARANCE_CHANGE"
+  },
+  "swing_signal_ledger": {
+    "new_rows": 0,
+    "matured_1d": 0,
+    "matured_3d": 0,
+    "matured_7d": 0,
+    "reason": "SOURCE_NOT_ELIGIBLE_FOR_FROZEN_THEORETICAL_SIGNAL"
+  },
+  "rejected_rows_and_reasons": [
+    "NEW_PROSPECTIVE_SENSOR_ROWS_REJECTED_NON_BINDING_SOURCE",
+    "NEW_SEGMENT_RADAR_REJECTED_NO_ELIGIBLE_SOURCE",
+    "NEW_SWING_ROWS_REJECTED_SOURCE_LINEAGE",
+    "DYNAMIC_BREADTH_DELTA_REJECTED_MEMBERSHIP_CHANGED",
+    "OFFICIAL_STABLECOIN_PAIR_ROWS_REJECTED_SOURCE_UNAVAILABLE",
+    "TRI_PROSPECTIVE_ROW_REJECTED_SESSION_NOT_SETTLED"
+  ],
+  "independent_event_windows_total": 1,
+  "control_comparisons": "UNCHANGED_NO_NEW_MATURE_ROW",
+  "sensor_pair_evidence_label": "INSUFFICIENT_SAMPLE",
+  "swing_evidence_label": "INSUFFICIENT_SAMPLE",
+  "placebo_integrity": "PASS_NO_NEW_ROWS",
+  "frozen_field_integrity": "PASS_NO_RETROSPECTIVE_MUTATION",
+  "files_written": [
+    "03_WEEKLY_OPERATIONS/forecast_experiments/2026-W30/evidence/2026-07-22T173140Z__compact-shadow-by-field-daily-lab-enrichment.json",
+    "03_WEEKLY_OPERATIONS/forecast_experiments/registry/addenda/2026-07-22T193049Z__daily-sensor-swing-lab-v1-1-run.json"
+  ],
+  "notification_gate": "SILENT",
+  "rule_promotion": "NONE",
+  "portfolio_action": "NONE",
+  "run_status": "PASS"
+}
