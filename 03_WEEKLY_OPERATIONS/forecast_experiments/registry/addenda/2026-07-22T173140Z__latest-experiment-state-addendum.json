@@ -1,0 +1,92 @@
+{
+  "schema": "FORECAST_EXPERIMENT_REGISTRY_ADDENDUM",
+  "schema_version": "1.0",
+  "status": "ACTIVE_ADDENDUM",
+  "created_at_utc": "2026-07-22T17:31:40.960Z",
+  "source_contract": "DATA_PING_COMPACT_SHADOW_v1",
+  "source_snapshot_id": "DPSNAP_20260722T173140960Z_43c3e17f",
+  "source_run_id": "DPRUN_20260722T171603230Z_386b2c4e",
+  "source_role": "NONCANONICAL_DEVELOPMENT_SHADOW_BY_FIELD_EVIDENCE",
+  "development_evidence_path": "02_DATA_PING/development_validation/2026-07-22T173140Z__compact-shadow-v1__filtered-development-evidence.json",
+  "experiment_evidence_path": "03_WEEKLY_OPERATIONS/forecast_experiments/2026-W30/evidence/2026-07-22T173140Z__compact-shadow-filtered-market-and-source-qa__shadow.json",
+  "reported_packet_sha256": "8ca6f957ca012f927cb1769987a24797cd7f22cfc6009161bc6ff01bc9909f94",
+  "hash_verification": "SELF_REPORTED_NOT_EXACT_BYTE_VERIFIED_FROM_PASTED_RENDERING",
+  "updates": {
+    "W30_ROTATION_H1": "LIVE_STRENGTHENED_EARLY_TRANSMISSION_UNCONFIRMED",
+    "W30_CAPITAL_H2": "LIVE_STRENGTHENED_LARGE_CAP_TRANSMISSION_NO_STABLE_COHORT_CLEARANCE",
+    "W30_FLOW_H3": "LIVE_STRENGTHENED_CROSS_ASSET_OI_DIVERGENCE_WITH_SHORT_HORIZON_COOLING",
+    "W30_CFGI_DIVERGENCE_H4": "MATURED_24H_FALSIFIED_72H_COUNTEREVIDENCE_STRENGTHENED",
+    "W30_BREADTH_QA_H5": "LIVE_SOURCE_QA_FIFTH_DISTINCT_MEMBERSHIP_NOT_CONFIRMED",
+    "W30_BINANCE_AVAILABILITY_QA_H6": "LIVE_SOURCE_QA_PASS_FAIL_PASS_THEN_STABLE_PASS",
+    "W30_TRANSMISSION_RATE_CHALLENGER_H7": "PRE_REGISTERED_NO_PROSPECTIVE_ROW_FROM_PRE_FREEZE_PACKET"
+  },
+  "material_new_evidence": {
+    "ETH_relative_outperformance_24h_pp": 1.284,
+    "ETHBTC_change_24h_pct": 1.277,
+    "ETHBTC_distance_below_0_0300_pct": 2.1666666667,
+    "BTC_OI_delta_24h_pct": -4.07610377,
+    "ETH_OI_delta_24h_pct": 4.11672403,
+    "cross_asset_OI_delta_spread_pp": 8.1928278,
+    "dynamic_breadth_membership_hash_count": 5,
+    "ETHBTC_async_source_conflict_pct": 0.17020246,
+    "official_stablecoin_status": "FAIL_RESPONSE_TOO_LARGE"
+  },
+  "duplicate_controls": {
+    "BTC_ETF_2026_07_21_NOT_RECOUNTED": true,
+    "ETH_ETF_2026_07_21_NOT_RECOUNTED": true,
+    "ALTERNATIVE_ME_33_NOT_RECOUNTED": true,
+    "SPOT_TAKER_4H_24H_NOT_RECOUNTED": true,
+    "new_independent_market_experiment_created": false,
+    "new_source_qa_experiment_created": false
+  },
+  "source_qa": {
+    "compact_collector": {
+      "planned_actions": 44,
+      "successful_actions": 43,
+      "failed_actions": 1,
+      "serialized_size_bytes": 27357,
+      "size_limit_bytes": 30000,
+      "development_acceptance": "YES_PARTIAL",
+      "production_acceptance": "NO"
+    },
+    "W30_BREADTH_QA_H5": {
+      "distinct_membership_hashes_observed": 5,
+      "latest_delta_1h_pp": 15.4929577425,
+      "per_constituent_performance_rows": "MISSING",
+      "confirmation_status": "STRENGTHENED_NOT_FORMALLY_CONFIRMED"
+    },
+    "W30_BINANCE_AVAILABILITY_QA_H6": {
+      "sequence": "PASS_FAIL_PASS_PASS_PASS",
+      "new_transition": false,
+      "confirmation_status": "NOT_CONFIRMED_STABLE_PASS_EXTENSION"
+    },
+    "ETHBTC_SOURCE_DISCREPANCY": {
+      "direct_binance": 0.02935,
+      "coingecko_derived": 0.0294,
+      "difference_pct": 0.17020246,
+      "threshold_pct": 0.15,
+      "status": "ASYNC_SOURCE_CONFLICT"
+    }
+  },
+  "framework_shadow_state": {
+    "rotation": "NO_ROTATION",
+    "broad_recovery": "NOT_CONFIRMED",
+    "large_cap_window": "WATCH_ONLY_CLOSER_NOT_OPEN",
+    "mid_cap_window": "WAIT",
+    "small_micro_meme_window": "NO_CLEARANCE",
+    "new_entry_signal": "NOT_ACTIVE",
+    "portfolio_action": "NONE",
+    "user_action": "HOLD_AND_WAIT"
+  },
+  "next_required_evidence": {
+    "W30_ROTATION_H1": "SETTLED_ETHBTC_PERSISTENCE_AND_0_0300_OR_FAILURE",
+    "W30_FLOW_H3": "NEXT_CURRENT_SPOT_OI_FUNDING_AND_PRICE_OUTCOME_WITH_ETH_LEVERAGE_RISK_CHECK",
+    "W30_CFGI_DIVERGENCE_H4": "72H_SCORE_AFTER_2026_07_24T154756271Z",
+    "W30_BREADTH_QA_H5": "THIRD_LARGE_HASH_LINKED_DISCONTINUITY_OR_IDENTICAL_HASH_REPRODUCIBILITY_WITH_CONSTITUENT_ROWS",
+    "W30_BINANCE_AVAILABILITY_QA_H6": "NEXT_COMPARABLE_ACCESS_PROBE_AND_CONTEXT_IDENTIFIER",
+    "W30_TRANSMISSION_RATE_CHALLENGER_H7": "FIRST_POST_FREEZE_SETTLED_CEST_ROW"
+  },
+  "canonical_pointer_advanced": false,
+  "portfolio_action_changed": false,
+  "readback_status": "PENDING_CLEAN_BRANCH_PR_MERGE_AND_MAIN_VERIFICATION"
+}
