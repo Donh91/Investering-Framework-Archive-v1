@@ -1,10 +1,11 @@
 # Rule and Evidence Registry
 
 **Dato:** 2026-07-11  
+**Last updated:** 2026-07-22  
 **Status:** CANONICAL  
 **Område:** governance / evidence / rule survival  
 **Primary folder:** `01_CORE_FRAMEWORK/governance/`  
-**Depends on:** GPT-5.6 Fresh Eyes Audit Implementation
+**Depends on:** GPT-5.6 Fresh Eyes Audit Implementation; Sensor Relationship & Incremental Value Standard
 
 ---
 
@@ -59,19 +60,37 @@ LEGACY
 | F12_ETF_DEFAULT_FALSIFICATION | SUSPENDED_OPERATIONAL_EVALUATION | May contest or falsify ETF-era default only after reproducible spec exists | DATA_MISSING | DATA_MISSING | SPEC_INCOMPLETE | Governance / Research Lab | Promote after exact inputs, windows, state transitions and independent reproducibility; otherwise remain NOT_EVALUABLE |
 | F12_5_CONTESTED_STATE | SUSPENDED_OPERATIONAL_EVALUATION | Intermediate state between default and falsified | DATA_MISSING | DATA_MISSING | SPEC_INCOMPLETE / GOVERNANCE_RISK | Governance | Promote only with exact entry and exit rules; kill if it becomes permanent ambiguity |
 | KILL_CRITERIA_AT_BIRTH | ACTIVE_PRINCIPLE | Every new active rule/test needs explicit death conditions | registry initialized | n/a | FUNCTIONING_AS_GOVERNANCE | Governance | Any new rule without kill condition is blocked |
+| SENSOR_RELATIONSHIP_INCREMENTAL_VALUE | ACTIVE_GOVERNANCE | Prevents signal-count inflation and requires unique, synergistic or independently useful value before extra sensor weight | historical proxy audit rows exist / canonical sensor rows pending | existing sensor family, existing state or meta-score | PARTIALLY_SUPPORTED / NEEDS_ROWS | Governance / Research Lab | Promote specific relationships only after stable out-of-sample incremental value; merge, reduce weight or reject when value disappears after existing information and complexity cost are considered |
 | RANGE_FORECAST_EDGE | FORWARD_TEST_ONLY | Range may inform public forecast but cannot be marketed as proven edge | historical audit n=14; forward rows pending | DUMB_1.5 / DUMB_2.0 | NOT_SUPPORTED_HISTORICALLY | Cycle Navigator / Research Lab | FRLP K1-K8 decide survival; suspend human adjustment if baseline loss persists |
 | VERIFIED_ACTUALS_ONLY | ACTIVE | Blocks self-scoring and unverifiable precision | scoring governance exists | external actuals | FUNCTIONING | Cycle Navigator / Governance | No exception without explicit provisional label |
 | SEQUENCE_IMMUTABILITY | ACTIVE | Freezes path expectations before outcome | schema and some rows | latest-state rewrite | FUNCTIONING_GOVERNANCE / NEEDS_MORE_ROWS | Forecast / Sequence Ledger | Kill only if immutability cannot be audited |
-| ROTATION_SURVIVAL | ACTIVE_INTERPRETATION | Requires survival beyond first ETH/BTC signal | degraded replay rows exist | first-cross rule | PARTIALLY_SUPPORTED | Governance / Research Lab | Needs forward multi-axis rows; kill/modify if no incremental value |
+| ROTATION_SURVIVAL | ACTIVE_INTERPRETATION | Requires explicit time in state and multi-axis survival beyond first ETH/BTC signal | degraded replay rows exist; historical proxy survival audit exists; forward rows pending | first-cross rule | PARTIALLY_SUPPORTED / NEEDS_ROWS | Governance / Research Lab | Needs forward multi-axis rows, right-censoring and delay-cost tracking; kill or remove axes with no incremental value |
 | PULLBACK_POLICY_V0_2 | GUIDANCE_ONLY | Describes mild/moderate/large/extreme posture but cannot mechanically classify or trigger action | no reproducible band series found | n/a | SPEC_INCOMPLETE | Governance | Promote after exact measurement and hard-trigger definitions; otherwise keep guidance-only |
 | BTC_PARTIAL_PERMISSION | FORWARD_TEST | Tests asset-tiered BTC permission versus WAIT | 0 valid divergence rows at audit | WAIT | NEEDS_ROWS | Research Lab / Governance | Suspend if no decision divergence in defined review window; promote only on outcome-adjusted benefit |
 | GRADUATED_ALT_DEPLOYMENT | BLOCKED | Tests staged alt permission | 0 valid rows | WAIT | DATA_BLOCKED | Research Lab | Remains blocked until breadth, BTC.D and deployment fields are complete |
 | FNP_OPPORTUNITY_COST | ACTIVE_LEDGER_REQUIREMENT | Measures genuine missed action versus correct restraint | insufficient cumulative live rows | WAIT / frozen horizon | NEEDS_ROWS | Governance / Research Lab | Kill or redesign if horizons are not frozen or no usable divergence is produced |
 | TECHDEV_MACRO_COMPASS | ACTIVE_RESEARCH_INPUT | Supports roadmap and PREPARE context, never standalone DEPLOY or execution | 120 source-backed claim rows plus 7 historical signal snapshots / 0 outcome rows | category-specific time, range, trade and action baselines pending | PARTIALLY_SUPPORTED / NEEDS_OUTCOME_ROWS | Governance / Research Lab | Execution authority remains zero; retain original claims and revisions; reduce weight only after frozen category-specific calibration shows poor performance |
-| MULTI_PING_AGGREGATION | FEATURE_TEST_ONLY | May reduce false state flips | 0 benchmarked rows | latest ping alone | WRITTEN_NOT_PROVEN | DATA PING / Research Lab | Kill as named concept if no false-flip improvement or delay is excessive |
+| MULTI_PING_AGGREGATION | FEATURE_TEST_ONLY | May reduce false state flips but must prove unique value beyond latest ping rather than repeat it with delay | 0 benchmarked rows | latest ping alone | WRITTEN_NOT_PROVEN | DATA PING / Research Lab | Kill as named concept if no false-flip improvement, no unique information gain or delay is excessive |
 | CHIEF_ACTION_COMPRESSION | ACTIVE_CONTRACT | Compresses framework judgment into clear action language | no reproducibility series found | same input repeated | NEEDS_TEST | Governance | Modify if identical inputs yield materially inconsistent classes |
 | CN_PUBLIC_TRACK_RECORD | LOCKED | Prevents unverified historical precision marketing | historical reconciliation incomplete | independent ledger | GOVERNANCE_LOCK | Cycle Navigator | Unlock only after verified actuals, baselines and separate score categories are reconciled |
 | MASTER_MONDAY_RATIFICATION | ACTIVE | Only ratified final normally drives CN and official scoring | version-chain protocol exists; W28 lineage unresolved | raw-only source | FUNCTIONING_RULE / CURRENT_LINEAGE_GAP | Master Monday / Archive | Any forecast lacking ratification path is unscored until corrected |
+
+---
+
+## Sensor relationship evidence boundary
+
+```text
+HISTORICAL_PROXY_AUDIT: AVAILABLE
+CANONICAL_SENSOR_RELATIONSHIP_ROWS: PENDING
+FULL_ETF_ERA_VALIDATION: NOT_COMPLETE
+NUMERIC_THRESHOLD_PROMOTION: NONE
+NEW_ENGINE_CREATED: NO
+LIVE_WEIGHT_CHANGE: NONE
+```
+
+The historical closed-lab audit supports the governance rule that aligned sensors must not be counted as independent confirmation without dependency and incremental-value checks. It does not prove a permanent coefficient, sensor merger or live weighting change.
+
+`TIME_IN_STATE` is now a required explanatory field for eligible rotation, recovery, stress and post-flush sequences. It is not a universal timing threshold.
 
 ---
 
@@ -101,3 +120,7 @@ Do not convert `SPEC_INCOMPLETE` into a market state.
 Do not convert `DATA_BLOCKED` into daily pseudo-rows.
 
 Do not convert source-backed claims into scored outcome rows.
+
+Do not treat low Pearson or Spearman correlation as proof of sensor independence.
+
+Do not award extra decision weight because multiple fields agree unless unique or synergistic value has been demonstrated against the existing family baseline.
