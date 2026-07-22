@@ -1,10 +1,11 @@
 # Active Test Registry
 
 **Dato:** 2026-07-11  
+**Last updated:** 2026-07-22  
 **Status:** CANONICAL  
 **Område:** forward tests / active evidence production  
 **Primary folder:** `06_RESEARCH_LAB/forward_tests/`  
-**Depends on:** GPT-5.6 Fresh Eyes Audit Implementation; Rule and Evidence Registry  
+**Depends on:** GPT-5.6 Fresh Eyes Audit Implementation; Rule and Evidence Registry; Sensor Relationship & Incremental Value Standard  
 **New-engine freeze:** ACTIVE through 2026-08-09
 
 ---
@@ -35,9 +36,11 @@ owner
 
 No new test may be added unless it replaces, merges or directly repairs one listed here.
 
+The 2026-07-22 sensor relationship integration repairs T4, T6 and T8 only. It creates no new test ID and no new engine.
+
 ---
 
-## T1 — FRLP v0.1 Range Forward Ledger
+## T1 - FRLP v0.1 Range Forward Ledger
 
 ```yaml
 test_id: FRLP_V0_1
@@ -56,7 +59,7 @@ kill_condition: apply existing K1_K8; suspend human adjustment if it continues t
 owner: CYCLE_NAVIGATOR_RESEARCH_LAB
 ```
 
-## T2 — BTC Partial versus WAIT
+## T2 - BTC Partial versus WAIT
 
 ```yaml
 test_id: GATE_BTC_PARTIAL_FT_1
@@ -75,7 +78,7 @@ kill_condition: suspend if no decision divergence during the fixed observation w
 owner: GOVERNANCE_RESEARCH_LAB
 ```
 
-## T3 — Graduated Alt Deployment
+## T3 - Graduated Alt Deployment
 
 ```yaml
 test_id: GRADUATED_DEPLOYMENT_V1_1
@@ -93,25 +96,46 @@ kill_condition: no pseudo-rows while blocked; suspend if data cannot become prod
 owner: GOVERNANCE_RESEARCH_LAB
 ```
 
-## T4 — Pullback Edge Event Outcomes
+## T4 - Pullback Edge Event Outcomes
 
 ```yaml
 test_id: PULLBACK_EDGE_20260708_01_OUTCOMES
 status: ACTIVE
-question: Did the edge detector provide market-stress value and/or tactical trim execution value?
-required_fields: [framework_approved_anchor, 24H_outcome, 72H_outcome, 7D_outcome, event_close_outcome, action_counterfactual]
+question: Did the edge detector provide market-stress value and/or tactical trim execution value, and did the state survive long enough to add information beyond the initial alert?
+required_fields:
+  - framework_approved_anchor
+  - event_start_utc
+  - event_age_hours
+  - time_since_last_downgrade
+  - state_survived_to_24H
+  - state_survived_to_72H
+  - state_survived_to_7D
+  - recovery_attempt_count
+  - right_censored
+  - 24H_outcome
+  - 72H_outcome
+  - 7D_outcome
+  - event_close_outcome
+  - action_counterfactual
 rows_total: 1_MATURED_24H_PLUS_EVENT_PATH
 valid_source_rows: 1_MATURED_24H
 valid_outcome_rows: 1_MATURED_24H
 benchmark: NO_TRIM_HOLD_CORE
 blocked_by: [72H_NOT_YET_RECONCILED, 7D_NOT_YET_MATURED_OR_RECONCILED, EVENT_CLOSE_PENDING]
 next_review: AT_EACH_MATURITY
-promotion_condition: main-framework ratification after sufficient maturity
-kill_condition: close event and stop collection after formal event close plus final row
+promotion_condition: main-framework ratification after sufficient maturity and evidence that duration information adds value beyond the initial alert
+kill_condition: close event and stop collection after formal event close plus final row; remove duration fields if they never affect interpretation or calibration
 owner: DATA_PING_GOVERNANCE
 ```
 
-## T5 — Cumulative FNP Ledger
+T4 repair rule:
+
+```text
+TIME_IN_STATE is explanatory and calibration evidence.
+It does not create new pullback bands or mechanical portfolio authority.
+```
+
+## T5 - Cumulative FNP Ledger
 
 ```yaml
 test_id: FNP_CUMULATIVE
@@ -129,25 +153,52 @@ kill_condition: redesign if horizons are not frozen or classifications are retro
 owner: GOVERNANCE_RESEARCH_LAB
 ```
 
-## T6 — Rotation Survival Forward Row
+## T6 - Rotation Survival Forward Row
 
 ```yaml
 test_id: ROTATION_SURVIVAL_FORWARD
 status: QUEUED_DATA_DEPENDENT
-question: Does survival across ETHBTC, breadth, BTC_D, deployment and flow outperform first-cross logic?
-required_fields: [ETHBTC_hold_days, breadth_state, BTC_D_state, deployment_state, flow_congruence, exit_side_outcome]
+question: Does explicit time in state and survival across ETHBTC, breadth, BTC_D, deployment and flow outperform first-cross logic after delay cost and redundancy are considered?
+required_fields:
+  - sequence_id
+  - sequence_start_utc
+  - time_in_state_days
+  - right_censored
+  - ETHBTC_hold_days
+  - breadth_state
+  - breadth_survival_days
+  - BTC_D_state
+  - BTC_D_survival_days
+  - deployment_state
+  - deployment_survival_days
+  - flow_congruence
+  - flow_congruence_days
+  - relationship_classification
+  - incremental_value_vs_first_cross
+  - delay_cost
+  - failure_outcome
+  - exit_side_outcome
 rows_total: 0_FORWARD_CONFIRMED
 valid_source_rows: 0
 valid_outcome_rows: 0
 benchmark: FIRST_ETHBTC_CROSS
 blocked_by: MULTI_AXIS_DATA_COMPLETENESS
 next_review: WHEN_FIELDS_AVAILABLE
-promotion_condition: lower fake rate and acceptable delay
-kill_condition: kill axes with no incremental value; retire test if data remains unavailable
+promotion_condition: lower fake rate, positive incremental value and acceptable delay in forward rows
+kill_condition: kill axes with no incremental value; collapse redundant axes to one primary plus optional validation; retire test if data remains unavailable
 owner: RESEARCH_LAB
 ```
 
-## T7 — TechDev Claim and Revision Ledger
+T6 repair rules:
+
+```text
+FIRST_CROSS remains the explicit baseline.
+The same named state at day 1 and day 10 is not assumed equivalent.
+Right-censored active sequences remain valid source rows but not completed outcome rows.
+No historical proxy percentage becomes a live threshold.
+```
+
+## T7 - TechDev Claim and Revision Ledger
 
 ```yaml
 test_id: TECHDEV_CLAIM_LEDGER
@@ -188,25 +239,42 @@ Author-reported backtests remain unverified until independently reproduced.
 Mechanical signal outcomes and discretionary overrides must be separated.
 ```
 
-## T8 — Multi-Ping Aggregation Value
+## T8 - Multi-Ping Aggregation Value
 
 ```yaml
 test_id: MULTI_PING_AGGREGATION_VALUE
 status: QUEUED
-question: Does 3-4 ping aggregation reduce false flips versus latest ping alone without excessive delay?
-required_fields: [latest_ping_state, aggregation_state, eventual_framework_state, false_flip_count, delay_minutes]
+question: Does 3-4 ping aggregation reduce false flips versus latest ping alone while adding unique information and avoiding excessive delay?
+required_fields:
+  - latest_ping_state
+  - aggregation_state
+  - eventual_framework_state
+  - dependency_to_latest_ping
+  - redundancy_class
+  - unique_information_gain
+  - false_flip_count
+  - false_flip_reduction
+  - delay_minutes
+  - delay_cost
 rows_total: 0
 valid_source_rows: 0
 valid_outcome_rows: 0
 benchmark: LATEST_PING_ONLY
 blocked_by: ROW_INSTRUMENTATION
 next_review: AFTER_10_ELIGIBLE_STATE_CHANGES
-promotion_condition: meaningful false-flip reduction with acceptable delay
-kill_condition: no improvement or unacceptable delay
+promotion_condition: meaningful false-flip reduction, demonstrable incremental value and acceptable delay
+kill_condition: no improvement, no unique information gain, primarily redundant output or unacceptable delay
 owner: DATA_PING_RESEARCH_LAB
 ```
 
-## T9 — Chief Reproducibility
+T8 repair rule:
+
+```text
+Aggregation agreement is not independent confirmation.
+The feature survives only if it improves the latest-ping baseline after delay cost.
+```
+
+## T9 - Chief Reproducibility
 
 ```yaml
 test_id: CHIEF_REPRODUCIBILITY
@@ -224,7 +292,7 @@ kill_condition: merge Chief into deterministic mapping if reproducibility is poo
 owner: GOVERNANCE_RESEARCH_LAB
 ```
 
-## T10 — Archive Lineage Integrity
+## T10 - Archive Lineage Integrity
 
 ```yaml
 test_id: ARCHIVE_LINEAGE_INTEGRITY
@@ -244,6 +312,27 @@ owner: ARCHIVE_MASTER_MONDAY_GOVERNANCE
 
 ---
 
+## Review cadence for relationship learning
+
+```text
+NEW_SENSOR_OR_NEW_WEIGHT:
+  mandatory relationship and incremental-value audit
+
+20_TO_30_NEW_ELIGIBLE_OUTCOME_ROWS:
+  relationship, survival and baseline review
+
+MATERIAL_REGIME_SHIFT:
+  family-specific drift review
+
+QUARTERLY:
+  latent-factor compression and simplification review
+
+WEEKLY_MASTER_MONDAY:
+  status and new flags only, not a mandatory full mathematical rerun
+```
+
+---
+
 ## Freeze enforcement
 
 ```text
@@ -252,4 +341,6 @@ DATA_BLOCKED_PSEUDO_ROW: FORBIDDEN
 SCHEMA_CREATION_COUNTED_AS_VALID_ROW: FORBIDDEN
 RETROSPECTIVE_STORY_COUNTED_AS_FORWARD_TEST: FORBIDDEN
 SOURCE_ROW_COUNTED_AS_OUTCOME_ROW: FORBIDDEN
+LOW_LINEAR_CORRELATION_COUNTED_AS_INDEPENDENCE: FORBIDDEN
+ALIGNED_SENSOR_COUNT_COUNTED_AS_UNIQUE_CONFIRMATION: FORBIDDEN
 ```
