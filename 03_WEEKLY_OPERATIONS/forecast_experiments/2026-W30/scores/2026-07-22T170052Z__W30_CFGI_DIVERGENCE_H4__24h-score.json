@@ -1,0 +1,46 @@
+{
+  "schema": "FORECAST_EXPERIMENT_HORIZON_SCORE",
+  "schema_version": "1.0",
+  "experiment_id": "W30_CFGI_DIVERGENCE_H4",
+  "hypothesis_family": "BTC_ETH_SHORT_HORIZON_SENTIMENT_DIVERGENCE",
+  "horizon": "24H",
+  "status": "MATURED_24H_FALSIFIED_72H_REMAINS_LIVE",
+  "frozen_at_utc": "2026-07-21T15:47:56.271Z",
+  "maturity_due_after_utc": "2026-07-22T15:47:56.271Z",
+  "first_eligible_post_maturity_observation_utc": "2026-07-22T17:00:52.485Z",
+  "elapsed_hours": 25.215615,
+  "source_snapshot_id": "DATA_PING_V6_RAW_20260722T170052485Z",
+  "source_role": "NONCANONICAL_PARTIAL_RAW_BY_FIELD_EVIDENCE",
+  "source_packet_instruction": "IGNORE_FOR_MAIN_FRAMEWORK_INGEST",
+  "reported_packet_sha256": "1cf934c1e0c302aba5bc46a8c3a4011a50d9210e0e62699b0f5ec1ee374e920a",
+  "hash_verification": "SELF_REPORTED_NOT_EXACT_BYTE_VERIFIED_FROM_PASTED_RENDERING",
+  "frozen_observations": {
+    "BTCUSDT": 66610.01,
+    "ETHUSDT": 1926.52,
+    "ETHBTC": 0.02893,
+    "hypothesis_read": "BTC_SHORT_HORIZON_SENTIMENT_LEAD_WOULD_TEMPORARILY_RECONCENTRATE_CAPITAL_IN_BTC_AND_PRESS_ETHBTC"
+  },
+  "outcome_observations": {
+    "BTCUSDT": 66223.24,
+    "ETHUSDT": 1949.71,
+    "ETHBTC": 0.02944,
+    "BTC_change_pct": -0.5806484641,
+    "ETH_change_pct": 1.2037248510,
+    "ETHBTC_change_pct": 1.7628759074,
+    "ETH_relative_outperformance_vs_BTC_pct": 1.7947947634,
+    "distance_below_ETHBTC_0_0300_pct": 1.8666666667
+  },
+  "verdict": "FALSIFIED_AT_24H",
+  "verdict_reason": "The hypothesis expected temporary BTC reconcentration and ETHBTC underperformance. Instead ETH gained while BTC declined, ETH outperformed BTC by about 1.79 percent, and ETHBTC rose about 1.76 percent.",
+  "anti_hindsight_controls": [
+    "START_VALUES_FROZEN_BEFORE_OUTCOME",
+    "FIRST_AVAILABLE_OBSERVATION_AFTER_EXACT_24H_DUE_TIME_USED",
+    "NO_EARLY_SCORE",
+    "NO_THRESHOLD_REWRITE",
+    "72H_WINDOW_REMAINS_SEPARATE"
+  ],
+  "promotion_counting": "ONE_MATURED_PROSPECTIVE_HORIZON_RESULT",
+  "market_state_authority": false,
+  "portfolio_authority": false,
+  "rule_promotion_authority": false
+}
