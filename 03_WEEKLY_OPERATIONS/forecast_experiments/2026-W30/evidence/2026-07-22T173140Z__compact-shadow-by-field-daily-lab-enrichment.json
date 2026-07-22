@@ -1,0 +1,101 @@
+{
+  "schema": "DAILY_SENSOR_SWING_LAB_BY_FIELD_EVIDENCE",
+  "schema_version": "1.0",
+  "run_date": "2026-07-22",
+  "source_run_id": "DPRUN_20260722T171603230Z_386b2c4e",
+  "source_snapshot_id": "DPSNAP_20260722T173140960Z_43c3e17f",
+  "source_collector_log_id": "DPLOG_20260722T173140960Z_482caccd",
+  "source_freeze_utc": "2026-07-22T17:31:40.960Z",
+  "source_contract": "DATA_PING_COMPACT_SHADOW_v1",
+  "source_profile": "BOUNDED_COMPACT_AI2AI",
+  "source_authority": "NON_BINDING_BY_FIELD_ONLY",
+  "exact_pasted_hash_verification": "NOT_INDEPENDENTLY_POSSIBLE_CURLY_QUOTES",
+  "reported_packet_sha256": "8ca6f957ca012f927cb1769987a24797cd7f22cfc6009161bc6ff01bc9909f94",
+  "eligibility": {
+    "canonical_ingest": false,
+    "new_prospective_sensor_pair_row": false,
+    "new_segment_radar": false,
+    "new_theoretical_swing_row": false,
+    "permitted_use": [
+      "SOURCE_QA",
+      "TIMESTAMPED_DESCRIPTIVE_EXPERIMENT_ENRICHMENT",
+      "DUPLICATE_CONFIRMATION_WITHOUT_RECOUNTING"
+    ]
+  },
+  "new_observations": {
+    "BTCUSDT": {
+      "last": 66000.0,
+      "change_24h_pct": -0.678,
+      "spot_taker_15m_usd": -578501.8060352998,
+      "spot_taker_1h_usd": -1970525.221632503,
+      "spot_taker_4h_usd": 2593980.8911631107,
+      "spot_taker_24h_usd": 31231956.872241974,
+      "oi_delta_1h_pct": 0.16353196,
+      "oi_delta_4h_pct": -0.20225416,
+      "oi_delta_24h_pct": -4.07610377,
+      "funding_latest_settled_pct": 0.001443,
+      "read": "MEDIUM_HORIZON_SPOT_SUPPORT_WITH_24H_DELEVERAGING_SHORT_TERM_SELL_PRESSURE"
+    },
+    "ETHUSDT": {
+      "last": 1936.76,
+      "change_24h_pct": 0.606,
+      "spot_taker_15m_usd": -747297.9436750002,
+      "spot_taker_1h_usd": 1850269.939044997,
+      "spot_taker_4h_usd": 6290483.71164301,
+      "spot_taker_24h_usd": 59376589.471570015,
+      "oi_delta_1h_pct": 1.34686803,
+      "oi_delta_4h_pct": 4.70060899,
+      "oi_delta_24h_pct": 4.11672403,
+      "funding_latest_settled_pct": 0.006454,
+      "read": "ETH_RELATIVE_STRENGTH_WITH_RISING_OI_AND_HIGHER_LEVERAGE_DEPENDENCE"
+    },
+    "ETHBTC": {
+      "last": 0.02935,
+      "change_24h_pct": 1.277,
+      "distance_below_0_0300_pct": 2.1666666667,
+      "spot_taker_15m_btc": -0.91482968,
+      "spot_taker_1h_btc": 2.67959956,
+      "spot_taker_4h_btc": 13.02060501,
+      "spot_taker_24h_btc": -7.8286141,
+      "source_conflict": "BINANCE_VS_COINGECKO_DERIVED_0_1702_PERCENT_ABOVE_0_15_THRESHOLD",
+      "read": "EARLY_TRANSMISSION_PERSISTS_BINARY_CONFIRMATION_UNMET"
+    }
+  },
+  "duplicate_filter": {
+    "ETF_2026_07_21": "ALREADY_ARCHIVED_NOT_RECOUNTED",
+    "Alternative_me_33_Fear": "ALREADY_ARCHIVED_METHOD_DISTINCT_FROM_CFGI_NOT_RECOUNTED",
+    "H4_24H_maturity": "ALREADY_SCORED_FALSIFIED_NOT_RECOUNTED",
+    "OTA_TRI_context": "ALREADY_ARCHIVED_FIRST_PROSPECTIVE_SETTLED_ROW_NOT_DUE_AT_THIS_FREEZE"
+  },
+  "source_qa": {
+    "dynamic_breadth_membership_sha256": "71d7129db545db41d72f15b1f153680e1b31a3e58de4062d1f29f1345f4fc171",
+    "dynamic_breadth_windows": {
+      "1H_advancing_pct": 74.64788732,
+      "24H_advancing_pct": 49.29577465,
+      "7D_advancing_pct": 49.29577465
+    },
+    "breadth_delta_status": "NOT_COMPARABLE_MEMBERSHIP_CHANGED_AGAIN",
+    "fixed_risk35": "UNKNOWN_RECONSTRUCTION_FORBIDDEN",
+    "binance_availability": "CURRENT_PASS_AFTER_PRIOR_PASS_FAIL_PASS_SEQUENCE",
+    "official_stablecoin": "UNAVAILABLE_RESPONSE_TOO_LARGE"
+  },
+  "experiment_impacts": {
+    "W30_ROTATION_H1": "EARLY_ETHBTC_TRANSMISSION_PERSISTS_BUT_0_0300_UNMET",
+    "W30_CAPITAL_H2": "ETH_RELATIVE_TRANSMISSION_STRENGTHENED_NO_STABLE_CAP_TIER_COHORT",
+    "W30_FLOW_H3": "BTC_SPOT_SUPPORTED_DELEVERAGING_VS_ETH_SPOT_PLUS_OI_REBUILD_DIVERGENCE_PERSISTS",
+    "W30_CFGI_DIVERGENCE_H4": "24H_ALREADY_FALSIFIED_72H_WINDOW_UNCHANGED",
+    "W30_BREADTH_QA_H5": "ADDITIONAL_DISTINCT_MEMBERSHIP_STRENGTHENS_INSTABILITY_DIAGNOSIS_NO_MARKET_WEIGHT",
+    "W30_BINANCE_AVAILABILITY_QA_H6": "CURRENT_PASS_ADDS_RUN_BUT_NO_NEW_PASS_FAIL_TRANSITION",
+    "W30_TRANSMISSION_RATE_CHALLENGER_H7": "CONTEXT_ONLY_NOT_PROSPECTIVE_ROW_BECAUSE_CEST_SESSION_NOT_SETTLED_AFTER_SPEC_FREEZE"
+  },
+  "framework_shadow_read": {
+    "structural_repair": "STRENGTHENED",
+    "ETH_relative_transmission": "PERSISTENT_EARLY_NOT_CONFIRMED",
+    "rotation": "NO_ROTATION",
+    "large_caps": "WATCH_ONLY_NOT_OPEN",
+    "mid_caps": "WAIT",
+    "new_entry": "NOT_ACTIVE",
+    "portfolio_action": "NONE"
+  },
+  "archive_rule": "APPEND_ONLY_NO_CANONICAL_POINTER_ADVANCE_NO_RETROSPECTIVE_FORECAST"
+}
