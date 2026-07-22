@@ -1,6 +1,6 @@
 # Canonical Archive Index
 
-**Dato:** 2026-07-20  
+**Dato:** 2026-07-22  
 **Status:** CANONICAL_ARCHIVE_CONTROL  
 **Formål:** Navigation til de nyeste operative og canonical framework-filer.  
 **Previous index history:** Preserved in Git commit history.
@@ -28,6 +28,7 @@ Routing and index addenda:
 00_ARCHIVE_CONTROL/2026-07-11__index-addendum-techdev-historical-batch-1.md
 00_ARCHIVE_CONTROL/2026-07-11__index-addendum-techdev-historical-batch-2.md
 00_ARCHIVE_CONTROL/2026-07-11__index-addendum-techdev-historical-batch-3.md
+00_ARCHIVE_CONTROL/2026-07-22__index-addendum-sensor-relationship-standard.md
 00_ARCHIVE_CONTROL/2026-07-10__legacy-namespace-manifest__canonical.md
 ```
 
@@ -91,7 +92,7 @@ Current rules include:
 - `DATA_MISSING = UNKNOWN`;
 - separate BTC and alt evidence lanes;
 - multi-ping aggregation as feature-only;
-- pre-registered RAW 1–3D and 5–7D rows.
+- pre-registered RAW 1-3D and 5-7D rows.
 
 Runtime registry:
 
@@ -168,6 +169,56 @@ Blended precision: FORBIDDEN
 
 ---
 
+## Sensor Relationship, Survival and Simplification Governance
+
+Canonical methodology:
+
+```text
+01_CORE_FRAMEWORK/governance/2026-07-22__sensor-relationship-and-incremental-value-standard__canonical.md
+```
+
+Framework integration:
+
+```text
+01_CORE_FRAMEWORK/architecture/2026-07-10__simplified-active-framework-map-and-crosswalk__canonical.md
+01_CORE_FRAMEWORK/governance/2026-07-10__rule-and-evidence-registry__canonical.md
+06_RESEARCH_LAB/forward_tests/2026-07-10__active-test-registry__canonical.md
+```
+
+Supporting shadow evidence:
+
+```text
+06_RESEARCH_LAB/audit_summaries/2026-07-22__public-repo-methods-closed-lab-audit__shadow.md
+06_RESEARCH_LAB/forward_tests/2026-07-22__relationship-methods-closed-lab-results__historical-test.csv
+00_ARCHIVE_CONTROL/2026-07-22__index-addendum-sensor-relationship-standard.md
+```
+
+Permanent rule:
+
+```text
+Sensor agreement is not automatically independent confirmation.
+Measure what each sensor uniquely adds, what it repeats, what emerges only in combination,
+and whether the relationship survives regime change.
+TIME_IN_STATE is first-class explanatory information for eligible sequences.
+```
+
+Integration status:
+
+```yaml
+new_engine_created: false
+new_test_created: false
+runtime_changed: false
+data_ping_contract_changed: false
+market_state_changed: false
+gates_changed: false
+portfolio_action_changed: false
+existing_tests_repaired: [T4, T6, T8]
+```
+
+The mathematical methods are cross-cutting Shadow / Research Lab audit overlays. They are not a new framework layer and have no standalone state, gate, rebuy, deployment or portfolio authority.
+
+---
+
 ## Canonical Weekly Backbone
 
 Primary engine and mandatory addendum:
@@ -191,7 +242,8 @@ Weekly runs must inspect:
 - legacy namespace drift;
 - valid row production;
 - TechDev continuation handoff and claim-ledger counts;
-- new-engine-freeze compliance.
+- new-engine-freeze compliance;
+- new relationship, survival or drift flags only when valid rows exist.
 
 Archive queue:
 
@@ -262,6 +314,8 @@ Schema/init rows are not valid rows.
 DATA_BLOCKED tests do not create pseudo-evidence.
 Roadmap, timing, range, trade and framework-action impact remain separate.
 Source-backed claims are not scored outcomes.
+Low linear correlation is not proof of independence.
+Aligned sensor count is not proof of unique confirmation.
 ```
 
 ---
@@ -368,6 +422,7 @@ changelog/2026-07-11__techdev-historical-paid-archive-batch-1-import.md
 changelog/2026-07-11__techdev-historical-paid-archive-batch-2-import.md
 changelog/2026-07-11__techdev-historical-archive-batch-3-merged-corpus-ingestion.md
 changelog/2026-07-20__data-ping-platform-adr-001-ratification.md
+changelog/2026-07-22__sensor-relationship-learning-integration-receipt.md
 ```
 
 ---
