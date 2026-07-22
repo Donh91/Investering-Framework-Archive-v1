@@ -1,10 +1,11 @@
 # Archive Governance Receipt - Claude Range and Pullback Audit
 
 **Dato:** 2026-07-22  
-**Status:** RECEIPT / PENDING_PR_VALIDATION  
+**Status:** PASS_CONTENT / PARTIAL_REMEDIATED_WRITE_GOVERNANCE  
 **Område:** archive governance, Claude Research Lab ingestion  
 **Primary folder:** `07_PROMPTS_AND_AGENTS/skill_runs/`  
-**Task branch:** `agent/task-20260722-claude-range-pullback-audit`
+**Initial task branch:** `agent/task-20260722-claude-range-pullback-audit`  
+**Finalization branch:** `agent/task-20260722-finalize-claude-range-pullback-audit`
 
 ---
 
@@ -22,13 +23,15 @@ classification:
   new_forward_test: NO
 primary_owner: 06_RESEARCH_LAB/audit_summaries/2026-07-22__btc-range-headroom-and-pullback-predictability-audit__shadow.md
 operation: CREATE_SOURCE_NOTE_SHADOW_SYNTHESIS_AND_RECEIPT
-target_branch: agent/task-20260722-claude-range-pullback-audit
+initial_task_branch: agent/task-20260722-claude-range-pullback-audit
+finalization_branch: agent/task-20260722-finalize-claude-range-pullback-audit
 branch_assertion_after_remediation: PASS
 paths_created:
   - 08_SOURCE_MATERIAL/claude/2026-07-22__claude-btc-range-pullback-17-experiment-summary__source-note.md
   - 06_RESEARCH_LAB/audit_summaries/2026-07-22__btc-range-headroom-and-pullback-predictability-audit__shadow.md
   - 07_PROMPTS_AND_AGENTS/skill_runs/2026-07-22__archive-governance-claude-range-pullback-audit__receipt.md
-paths_updated: []
+paths_updated_after_merge:
+  - 07_PROMPTS_AND_AGENTS/skill_runs/2026-07-22__archive-governance-claude-range-pullback-audit__receipt.md
 paths_deleted: []
 canonical_index_change: NO
 addendum_registry_change: NOT_APPLICABLE
@@ -45,19 +48,16 @@ source_lineage:
   code: NOT_RECEIVED
   checksums: NOT_RECEIVED
   independent_reproduction: NOT_COMPLETED
+main_merge:
+  pull_request: 117
+  merge_commit_sha: f13c4df152e835d1bebdd8ea126686909797020d
+  merge_method: SQUASH
+  changed_files: 3
+  merged: YES
 backup_scope:
   backup_product: NONE
   current_version_in_snapshot: UNKNOWN
   post_merge_delta_status: NOT_REQUIRED
-validation_plan:
-  - read back every created file from the task branch
-  - compare branch against main
-  - verify exactly three intended paths
-  - verify no active test, index, addendum, workflow or canonical owner changed
-  - verify no numerical method promotion or current alert activation
-  - inspect pull request diff and mergeability
-  - merge only after validation
-  - read back durable files from main
 ```
 
 ## Classification rationale
@@ -91,7 +91,7 @@ Methodology and incremental value:
 Sensor Relationship and Incremental Value Standard remains canonical owner.
 ```
 
-No existing owner is rewritten by this ingestion.
+No existing owner was rewritten by this ingestion.
 
 ## Key governance decisions
 
@@ -121,6 +121,28 @@ Stored as hypothesis context only.
 No alert, state, gate, rebuy or portfolio effect.
 ```
 
+## Validation completed
+
+```text
+TASK_BRANCH_READBACK_SOURCE_NOTE: PASS
+TASK_BRANCH_READBACK_SHADOW_AUDIT: PASS
+TASK_BRANCH_READBACK_RECEIPT: PASS
+MAIN_VS_BRANCH_DIFF: PASS_EXACTLY_3_INTENDED_PATHS
+PR_117_CHANGED_FILE_SCOPE: PASS_EXACTLY_3_INTENDED_PATHS
+PR_117_PATCH_REVIEW: PASS
+PR_117_MERGEABLE: PASS
+CI_STATUS: NO_REGISTERED_CHECKS
+WORKFLOW_RUNS: NONE
+MAIN_MERGE: PASS
+MAIN_READBACK_SOURCE_NOTE: PASS
+MAIN_READBACK_SHADOW_AUDIT: PASS
+CANONICAL_OWNER_FILES_CHANGED: NO
+INDEX_OR_ADDENDUM_CHANGED: NO
+WORKFLOW_CHANGED: NO
+ACTIVE_TEST_CHANGED: NO
+MARKET_OR_PORTFOLIO_AUTHORITY_CREATED: NO
+```
+
 ## Write-routing incident disclosure
 
 Before the task branch was created, two `create_file` calls were mistakenly attempted against the intended but not-yet-existing task branch.
@@ -137,10 +159,11 @@ remediation:
   - stopped failed route
   - loaded branch creation capability
   - created and verified the required isolated task branch
-  - performed all successful writes with explicit task branch
+  - performed every successful content write with an explicit verified non-default branch
+  - validated exact three-file scope before merge
 ```
 
-This prevents an unqualified write-governance `PASS`, even though the final repository content can still pass after transparent remediation.
+The final repository content is clean and correct. The write-governance result remains `PARTIAL_REMEDIATED` because the failed pre-branch attempts are preserved rather than hidden.
 
 ## Authority boundary
 
@@ -158,13 +181,15 @@ DEPLOYMENT_CHANGE: NO
 PORTFOLIO_ACTION: NO
 ```
 
-## Pending validation status
+## Final validation status
 
 ```yaml
-archive_content_result: PENDING_PR_VALIDATION
-write_governance_result: PENDING_PARTIAL_REMEDIATED
-final_repository_state: PENDING_PR_VALIDATION
+archive_content_result: PASS_PARTIAL_ACCEPT
+write_governance_result: PARTIAL_REMEDIATED
+final_repository_state: PASS
 incident_count: 2
 incident_paths: []
+repository_mutation_from_incidents: NONE
 remediation_commits: []
+main_merge_commit_sha: f13c4df152e835d1bebdd8ea126686909797020d
 ```
