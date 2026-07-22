@@ -1,0 +1,51 @@
+{
+  "schema": "FORECAST_EXPERIMENT_SOURCE_QA",
+  "schema_version": "1.0",
+  "experiment_id": "W30_BINANCE_AVAILABILITY_QA_H6",
+  "family": "BINANCE_EXECUTION_CONTEXT_AND_GEO_AVAILABILITY",
+  "status": "LIVE_SOURCE_QA",
+  "opened_at_utc": "2026-07-22T09:08:04.322Z",
+  "market_authority": false,
+  "portfolio_authority": false,
+  "rule_promotion_authority": false,
+  "purpose": "Determine whether Binance spot and futures availability is execution-context dependent and whether current-run routing reliably prevents stale fallback data from being treated as live.",
+  "trigger": {
+    "prior_successful_binance_freeze_utc": "2026-07-22T06:03:35.579Z",
+    "current_failed_attempt_utc": "2026-07-22T09:08:04.322Z",
+    "elapsed_minutes_approx": 184.48,
+    "spot_result": "FAIL_RESTRICTED_LOCATION",
+    "futures_result": "FAIL_RESTRICTED_LOCATION",
+    "fallback_snapshot_utc": "2026-07-22T05:22:54.921Z",
+    "fallback_staleness_minutes": 225.1567,
+    "fallback_correctly_labeled_stale": true
+  },
+  "hypothesis": "Binance availability varies by execution context or session; therefore every run must test current access and route to an independent current baseline while preserving stale Binance observations only as timestamped reference evidence.",
+  "controls": [
+    "CURRENT_RUN_BINANCE_SERVER_TIME_PROBE",
+    "SPOT_AND_FUTURES_TESTED_SEPARATELY",
+    "INDEPENDENT_CURRENT_PRICE_BASELINE",
+    "FALLBACK_STALENESS_CLOCK",
+    "NO_STALE_AS_LIVE_GUARD",
+    "SAME_EXECUTION_CONTEXT_REPEAT_TEST"
+  ],
+  "confirmation_rule": "At least two additional pass/fail availability transitions occur across bounded runs or access outcomes correlate with execution context while stale-fallback guards continue to prevent false-live classification.",
+  "falsification_rule": "The restriction is a one-off event and at least five subsequent comparable runs show stable availability without context-dependent transitions.",
+  "evaluation_windows": ["NEXT_5_RUNS", "24H", "7D"],
+  "required_fields_per_run": [
+    "execution_timestamp_utc",
+    "execution_context_identifier_when_available",
+    "spot_probe_status",
+    "futures_probe_status",
+    "raw_error_text_or_success_receipt",
+    "fallback_snapshot_utc",
+    "fallback_staleness_minutes",
+    "independent_current_baseline_status",
+    "stale_as_live_guard_result"
+  ],
+  "current_read": "ONE_PASS_TO_FAIL_TRANSITION_OBSERVED_SOURCE_QA_OPEN_NOT_CONFIRMED",
+  "use_restriction": "SOURCE_QA_ONLY; DOES_NOT_CHANGE MARKET STATE, ROTATION, ENTRY OR PORTFOLIO ACTION",
+  "evidence_paths": [
+    "03_WEEKLY_OPERATIONS/forecast_experiments/2026-W30/evidence/2026-07-22T060335Z__draft8-compact-enrichment__shadow.json",
+    "03_WEEKLY_OPERATIONS/forecast_experiments/2026-W30/evidence/2026-07-22T090804Z__partial-raw-current-stale-binance-fallback__shadow.json"
+  ]
+}
