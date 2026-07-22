@@ -69,21 +69,29 @@ They may be historical, legacy, source material or superseded.
 
 ## Current active operational anchor
 
-As of 2026-07-05:
+Reconciled from the canonical runtime pointers on 2026-07-22:
 
 ```text
-DATA PING V4 is the active live feed.
-Highest active DATA PING version wins.
-Recovery-attempt is active but fragile.
-No confirmed recovery.
-No confirmed rotation.
-Rebuy locked.
+DATA PING V6 is the active operational feed.
+Latest canonical accepted log: DATA_PING_V6_20260719T200033Z.
+DATA PING V7 is prepared but not active.
+Highest complete main-framework-accepted DATA PING version wins.
 ```
 
-Relevant update:
+Authoritative operational pointers:
 
 ```text
-changelog/2026-07-05_framework_operations_update_data_ping_v4_shadow_macro.md
+02_DATA_PING/thread_handoffs/latest_thread_handover_state.json
+02_DATA_PING/operational_handoffs/latest_accepted_log_state.json
+02_DATA_PING/operational_handoffs/latest_decision_context_state.json
+```
+
+The README does not freeze current market state, recovery, rotation, gates or portfolio action. Those must be read from the latest authoritative pointers and ratified framework output.
+
+Reconciliation receipt:
+
+```text
+changelog/2026-07-22__data-ping-runtime-archive-reconciliation-receipt.md
 ```
 
 Indexed in:
