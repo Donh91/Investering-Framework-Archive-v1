@@ -1,0 +1,39 @@
+{
+  "schema": "FORECAST_EXPERIMENT_SOURCE_QA",
+  "schema_version": "1.0",
+  "experiment_id": "W30_BREADTH_QA_H5",
+  "family": "DYNAMIC_TOP100_MEMBERSHIP_AND_SIGNAL_STABILITY",
+  "status": "LIVE_SOURCE_QA",
+  "opened_at_utc": "2026-07-22T06:03:35.579Z",
+  "market_authority": false,
+  "portfolio_authority": false,
+  "rule_promotion_authority": false,
+  "purpose": "Determine whether dynamic Top100 breadth can provide reproducible descriptive evidence or is dominated by membership and retrieval instability.",
+  "trigger": {
+    "prior_freeze_utc": "2026-07-22T05:22:54.921Z",
+    "current_freeze_utc": "2026-07-22T06:03:35.579Z",
+    "elapsed_minutes_approx": 40.68,
+    "prior_membership_sha256": "ba80dad12b991995083bc4c5199a0b60ab92217ac23bb5c36eb3d57c0f56da7b",
+    "current_membership_sha256": "207202634b73f9c5505f8d9e0277382f3ae0ef46a926ed2ea44155aabcfbf0c3",
+    "membership_changed": true,
+    "prior_breadth_pct": {"1H": 49.30, "24H": 59.15, "7D": 52.11},
+    "current_breadth_pct": {"1H": 8.45070423, "24H": 32.3943662, "7D": 49.29577465},
+    "delta_percentage_points": {"1H": -40.84929577, "24H": -26.7556338, "7D": -2.81422535}
+  },
+  "hypothesis": "When dynamic membership changes, close-timed breadth deltas may reflect cohort/source drift more than genuine market participation and must not be used for persistence or capital-transmission inference.",
+  "controls": [
+    "SAME_HASH_REPEAT_RUN",
+    "CONSTITUENT_DIFF_ATTRIBUTION",
+    "PRICE_CHANGE_ATTRIBUTION",
+    "FIXED_COHORT_CHALLENGER_IF_AVAILABLE",
+    "NO_BREADTH_BASELINE"
+  ],
+  "confirmation_rule": "At least three large breadth discontinuities occur with membership-hash changes or are not reproducible under the same constituent set.",
+  "falsification_rule": "Repeated runs with identical membership hashes reproduce counts and breadth changes are explainable by constituent price moves.",
+  "evaluation_windows": ["NEXT_3_RUNS", "24H", "7D"],
+  "use_restriction": "SOURCE_QA_ONLY; DOES_NOT_CONFIRM_OR_FALSIFY_ROTATION, RECOVERY, ENTRY OR PORTFOLIO_ACTION",
+  "evidence_paths": [
+    "03_WEEKLY_OPERATIONS/forecast_experiments/2026-W30/evidence/2026-07-22T052254Z__draft8-compact-enrichment__shadow.json",
+    "03_WEEKLY_OPERATIONS/forecast_experiments/2026-W30/evidence/2026-07-22T060335Z__draft8-compact-enrichment__shadow.json"
+  ]
+}

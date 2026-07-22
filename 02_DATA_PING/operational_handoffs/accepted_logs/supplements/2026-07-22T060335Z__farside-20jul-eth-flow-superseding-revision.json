@@ -1,0 +1,25 @@
+{
+  "schema": "FARSIDE_SOURCE_REVISION_SUPERSESSION_RECEIPT",
+  "schema_version": "1.0",
+  "status": "PRIOR_REVISION_SUPERSEDED_FOR_FORWARD_USE",
+  "created_at_utc": "2026-07-22T06:03:35.579Z",
+  "source": "FARSIDE_OFFICIAL_WEB_AND_CURRENT_RUN_EXTRACTION",
+  "affected_session_date": "2026-07-20",
+  "field": "ETH_TOTAL_USD_M",
+  "original_logged_value": 38.0,
+  "incorrect_intermediate_revision_value": 3.7,
+  "current_official_value": 38.0,
+  "next_session_2026_07_21_value": 37.5,
+  "superseded_revision_path": "02_DATA_PING/operational_handoffs/accepted_logs/supplements/2026-07-21T205500Z__farside-20jul-eth-flow-revision.json",
+  "supersession_reason": "OFFICIAL_FARSIDE_TABLE_CURRENTLY_SHOWS_20JUL_TOTAL_38_0_AND_21JUL_TOTAL_37_5; PRIOR_3_7_REVISION_WAS_AN_INCORRECT_PARSE_OR_TRANSCRIPTION",
+  "forward_rule": "USE_38_0_FOR_2026_07_20_AND_37_5_FOR_2026_07_21_UNLESS_A_LATER_OFFICIAL_REVISION_SUPERSEDES_THIS_RECEIPT",
+  "history_rule": "DO_NOT_DELETE_PRIOR_RECEIPTS; MARK_THE_3_7_RECEIPT_AS_SUPERSEDED",
+  "impact": {
+    "btc_flow_hypothesis": "UNCHANGED",
+    "eth_flow_strength": "RESTORED_TO_MODERATE_POSITIVE_FOR_20JUL_AND_POSITIVE_FOR_21JUL",
+    "rotation_interpretation": "ETF_TRANSMISSION_EVIDENCE_IMPROVES_BUT_ETHBTC_PRICE_CONFIRMATION_REMAINS_ABSENT",
+    "canonical_market_state_change": false,
+    "portfolio_action_change": false
+  },
+  "authority": "SOURCE_REVISION_ONLY_NON_PORTFOLIO"
+}
