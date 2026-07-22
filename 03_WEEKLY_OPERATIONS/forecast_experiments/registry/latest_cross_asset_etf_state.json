@@ -1,0 +1,28 @@
+{
+  "schema": "LATEST_CROSS_ASSET_ETF_EXPERIMENT_STATE",
+  "schema_version": "1.0",
+  "status": "ACTIVE_SHADOW_TRACKING",
+  "coverage_through": "2026-07-21",
+  "ledger_path": "02_DATA_PING/operational_handoffs/accepted_logs/supplements/2026-07-22__btc-eth-sol-etf-ledger-through-2026-07-21__user-pasted.json",
+  "evidence_path": "03_WEEKLY_OPERATIONS/forecast_experiments/2026-W30/evidence/2026-07-22__btc-eth-sol-etf-diffusion__shadow.json",
+  "linked_hypotheses": ["W30_FLOW_H3","W30_CAPITAL_H2","W30_ROTATION_H1"],
+  "nested_subtest": "W30_CAPITAL_H2_ETF_DIFFUSION_SUBTEST",
+  "latest_state": {
+    "BTC": "SIX_SESSION_POSITIVE_STREAK_STRONG_BUT_LATEST_CONCENTRATED",
+    "ETH": "THREE_SESSION_POSITIVE_STREAK_MODERATE_AND_ISSUER_CONCENTRATED",
+    "SOL": "TWO_SESSION_POSITIVE_STREAK_EARLY_SMALL_SCALE_SINGLE_PRODUCT",
+    "cross_asset": "EARLY_DIFFUSION_PRESENT_BUT_BTC_REMAINS_ABOUT_82_PERCENT_OF_LATEST_COMBINED_FLOW",
+    "rotation": "NO_ROTATION",
+    "large_cap_window": "WATCH_ONLY_NOT_OPEN"
+  },
+  "next_required_evidence": [
+    "NEXT_COMPLETED_BTC_ETH_SOL_ETF_SESSION",
+    "FIVE_SESSION_ETH_AND_SOL_PERSISTENCE",
+    "ETHBTC_PRICE_CONFIRMATION_OR_FAILURE",
+    "STABLE_LARGE_CAP_VS_MID_CAP_RELATIVE_STRENGTH",
+    "PROVIDER_CONCENTRATION_TREND"
+  ],
+  "canonical_pointer_advanced": false,
+  "portfolio_action": "NONE",
+  "readback_status": "PENDING_BRANCH_PR_MERGE_AND_MAIN_VERIFICATION"
+}
