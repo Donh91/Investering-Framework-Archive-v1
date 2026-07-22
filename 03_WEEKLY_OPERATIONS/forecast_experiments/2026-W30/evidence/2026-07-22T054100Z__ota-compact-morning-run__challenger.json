@@ -1,0 +1,148 @@
+{
+  "schema": "FORECAST_EXPERIMENT_EXTERNAL_AUDIT_EVIDENCE_APPEND",
+  "schema_version": "1.0",
+  "status": "CHALLENGER_EVIDENCE_APPENDED_NOT_CANONICAL",
+  "source_run_id": "KOR_20260722_0541Z",
+  "source_role": "CLAUDE_FABLE_COMPUTE_AND_ADVERSARIAL_AUDIT_NO_GOVERNANCE_AUTHORITY",
+  "observed_at_utc": "2026-07-22T05:41:00Z",
+  "observed_at_cest": "2026-07-22T07:41:00+02:00",
+  "received_as": "USER_PASTED_OTA_OUTPUT",
+  "independent_raw_artifacts_available": false,
+  "source_authority": "EXTERNAL_CHALLENGER_ONLY",
+  "canonical_reconciliation": {
+    "canonical_price_close_basis": "BINANCE_CEST_SETTLED_LEDGER",
+    "external_close_basis": "UTC_MULTI_VENUE_CHALLENGER",
+    "stage_1_etf_flow_leg_canonical_status": "COMPLETE_RATIFIED",
+    "current_canonical_action": "HOLD_AND_WAIT",
+    "rotation": "NO_ROTATION",
+    "broad_recovery": "NOT_CONFIRMED",
+    "new_entry_signal": "NOT_ACTIVE"
+  },
+  "settled_utc_challenger": {
+    "BTC_2026_07_21_close": 66511.7,
+    "BTC_open": 65215.7,
+    "BTC_high": 66907.3,
+    "BTC_low": 65115.2,
+    "ETH_2026_07_21_close": 1928.4,
+    "ETHBTC_2026_07_21_close": 0.02899,
+    "BTC_close_above_65600": true,
+    "classification": "FIRST_UTC_SETTLED_CLOSE_ABOVE_RANGE_TOP",
+    "canonical_limit": "DOES_NOT_BY_ITSELF_PROVE_BINANCE_CEST_SETTLED_ACCEPTANCE"
+  },
+  "current_external_observations": {
+    "BTC_reference_usd": 65960.0,
+    "ETH_reference_usd": 1919.0,
+    "ETHBTC_four_source_reference": 0.02910,
+    "BTC_current_fade_from_utc_close_pct": -0.8294365650,
+    "ETHBTC_change_from_utc_close_pct": 0.3794411866,
+    "distance_to_0_0300_pct": 3.0,
+    "range_top_65600_support_candidate": true,
+    "retest_completed": false
+  },
+  "volatility_challenger": {
+    "BTC_ATR14_usd": 1787.6,
+    "BTC_ATR14_pct": 2.69,
+    "BTC_ATR7_usd": 1619.2,
+    "ETH_ATR14_usd": 69.5,
+    "ETH_ATR14_pct": 3.60,
+    "ETH_ATR7_usd": 63.6,
+    "BTC_realized_vol_7d_pct_annualized": 22.0,
+    "ETH_realized_vol_7d_pct_annualized": 32.0,
+    "artifact_guard": "RV7D_DROP_PARTLY_MECHANICAL_AS_13JUL_FLUSH_ROLLED_OUT_ATR7_RISING",
+    "method_lineage": "EXTERNAL_COMPUTE_NOT_REPRODUCED_IN_CURRENT_CONTEXT"
+  },
+  "pre_registered_falsifier_claims": {
+    "F1": {
+      "external_status": "DAY_2_OF_7_NOT_FAILED",
+      "floor": 62342.0,
+      "lineage_status": "ORIGINAL_PREREGISTRATION_ARTIFACT_NOT_RESOLVED",
+      "formal_scoring": "BLOCKED"
+    },
+    "F4": {
+      "external_status": "DAY_9_OF_10_UNMET_EFFECTIVELY_RESOLVED_CLAIM",
+      "current_ETHBTC": 0.02910,
+      "main_framework_status": "NOT_FORMALLY_EXPIRED_NOT_ACTIVATED",
+      "lineage_status": "ORIGINAL_PREREGISTRATION_ARTIFACT_NOT_RESOLVED",
+      "formal_scoring": "BLOCKED_PENDING_EXACT_EXPIRY_AND_LINEAGE"
+    },
+    "F5": {
+      "external_status": "FIVE_OF_FIVE_POSITIVE_AS_OF_20JUL_21JUL_NOT_YET_PUBLISHED_IN_OTA_RUN",
+      "compact_packet_update": "21JUL_LATER_REPORTED_PLUS_203_2M",
+      "formal_status": "FLOW_CONTINUITY_STRENGTHENED"
+    }
+  },
+  "governance_candidates": {
+    "btc_led_repair_without_transmission": {
+      "recommendation": "FREEZE_LABEL",
+      "main_framework_status": "PRE_ACTIVATION_PENDING_FORMAL_F4_EXPIRY_AND_CANONICAL_CEST_SETTLE",
+      "reason": "BTC_STRUCTURE_AND_FLOW_STRONG_WHILE_ETHBTC_REMAINS_BELOW_0_0300_BUT_FORMAL_WINDOW_NOT_EXPIRED"
+    },
+    "ota_leading_claim_retirement": {
+      "recommendation": "RETIRE",
+      "main_framework_status": "NOT_RATIFIED_GOVERNANCE_REVIEW_CANDIDATE",
+      "blocking_reasons": [
+        "ORIGINAL_SERIES_AND_TYPE2_DEFINITION_LINEAGE_NOT_RESOLVED",
+        "N17_CLAIM_NOT_INDEPENDENTLY_REPRODUCED",
+        "F4_NOT_FORMALLY_EXPIRED_AT_OBSERVATION_TIME"
+      ]
+    }
+  },
+  "fnp_claim_review": {
+    "external_foregone_delta_usd": 1949.0,
+    "external_foregone_delta_pct": 3.0,
+    "external_weekly_close": 64563.0,
+    "accepted_canonical_weekly_close": 64415.75,
+    "status": "NOT_SCORABLE",
+    "reasons": [
+      "NO_CANONICAL_STAGE1_TRANCHE_SIZE_OR_EXECUTION_BENCHMARK",
+      "CLOSE_BASIS_CONFLICT",
+      "RATIFIED_ETF_FLOW_LEG_DOES_NOT_EQUAL_REBUY_OR_DEPLOYMENT_CLEARANCE"
+    ]
+  },
+  "hypothesis_updates": [
+    {
+      "id": "W30_ROTATION_H1",
+      "prior_status": "LIVE_WEAKENED_WITH_PARTIAL_RATIO_REPAIR",
+      "new_status": "LIVE_WEAKENED_PARTIAL_REPAIR_UNCONFIRMED",
+      "impact": "NO_ROTATION",
+      "reason": "ETHBTC_RECOVERED_FROM_0_02899_TO_APPROX_0_02910_BUT_REMAINS_AROUND_3_PERCENT_BELOW_0_0300"
+    },
+    {
+      "id": "W30_CAPITAL_H2",
+      "prior_status": "LIVE_MIXED_SHADOW_BREADTH_IMPROVED",
+      "new_status": "LIVE_MIXED_NO_STABLE_COHORT_CONFIRMATION",
+      "impact": "NO_MATERIAL_CHANGE",
+      "reason": "NO_NEW_STABLE_LARGE_CAP_VS_MID_CAP_COHORT_EVIDENCE"
+    },
+    {
+      "id": "W30_FLOW_H3",
+      "prior_status": "LIVE_STRENGTHENED_WITH_SHORT_HORIZON_COOLING",
+      "new_status": "LIVE_STRENGTHENED_SETTLED_UTC_BREAK_CHALLENGER",
+      "impact": "STRENGTHENS_BTC_REPAIR",
+      "reason": "UTC_CLOSE_ABOVE_65600_SUPPORTS_BREAKOUT_WHILE_COMPACT_PACKET_LATER_REPORTS_21JUL_BTC_ETF_PLUS_203_2M"
+    },
+    {
+      "id": "W30_CFGI_DIVERGENCE_H4",
+      "prior_status": "LIVE_EARLY_COUNTEREVIDENCE_NOT_MATURE",
+      "new_status": "LIVE_EARLY_COUNTEREVIDENCE_NOT_MATURE",
+      "impact": "COUNTEREVIDENCE_PERSISTS",
+      "reason": "ETHBTC_PARTIALLY_RECOVERED_AND_ETH_RELATIVE_PERFORMANCE_IMPROVED_BEFORE_24H_MATURITY"
+    }
+  ],
+  "framework_shadow_delta": {
+    "structural_repair": "STRENGTHENED",
+    "btc_breakout_acceptance": "UTC_SETTLED_CHALLENGER_CONFIRMED_CANONICAL_CEST_ACCEPTANCE_PENDING",
+    "breakout_durability": "UNPROVEN_RETEST_NOT_OCCURRED",
+    "rotation": "NO_ROTATION_WITH_PARTIAL_RATIO_REPAIR",
+    "broad_recovery": "NOT_CONFIRMED",
+    "large_cap_window": "WATCH_ONLY_NOT_OPEN",
+    "mid_cap_window": "WAIT",
+    "new_entry_signal": "NOT_ACTIVE",
+    "portfolio_action": "NONE",
+    "user_action": "HOLD_AND_WAIT"
+  },
+  "new_experiment_created": false,
+  "canonical_state_change": false,
+  "portfolio_authority": false,
+  "archive_rule": "APPEND_OTA_CHALLENGER_EVIDENCE_DO_NOT_ADVANCE_CANONICAL_POINTERS"
+}
