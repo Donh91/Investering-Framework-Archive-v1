@@ -1,0 +1,169 @@
+{
+  "schema": "FORECAST_EXPERIMENT_OKX_FALLBACK_FILTERED_EVIDENCE_APPEND",
+  "schema_version": "1.0",
+  "status": "EXISTING_EXPERIMENTS_AND_SOURCE_QA_UPDATED_NON_BINDING",
+  "source_contract": "DATA_PING_COMPACT_SHADOW_v1",
+  "source_run_id": "DPRUN_20260723T132735824Z_fda53841",
+  "source_snapshot_id": "DPSNAP_20260723T134412228Z_458d9c36",
+  "source_freeze_utc": "2026-07-23T13:44:12.228Z",
+  "source_role": "DEVELOPMENT_SHADOW_BY_FIELD_EVIDENCE_WITH_OKX_VENUE_FALLBACK",
+  "binding": false,
+  "canonical_acceptance": false,
+  "market_authority": false,
+  "portfolio_authority": false,
+  "reported_packet_sha256": "5c7dbb9a3dd39a3dd04c35314ffecb1bf42e1d99772c57119f2efc05383277c",
+  "hash_verification": "SELF_REPORTED_NOT_EXACT_BYTE_VERIFIED_FROM_PASTED_RENDERING",
+  "duplicate_controls": {
+    "BTC_ETF_2026_07_22_NOT_RECOUNTED": true,
+    "ETH_ETF_2026_07_22_NOT_RECOUNTED": true,
+    "new_ETF_session_event": false,
+    "new_market_experiment_created": false
+  },
+  "current_same_source_coingecko_freeze": {
+    "BTCUSD": 65006.0,
+    "ETHUSD": 1898.22,
+    "ETHBTC_derived": 0.029200689167153803,
+    "BTC_change_24h_pct": -0.9465963456430873,
+    "ETH_change_24h_pct": -1.3413000496525895,
+    "ETH_relative_performance_vs_BTC_24h_pp": -0.3947037040095022,
+    "ETHBTC_distance_below_0_0300_pct": 2.664369442820653,
+    "total_market_cap_usd": 2303514672540.844,
+    "market_cap_change_24h_pct": -1.2794901577804672,
+    "BTC_dominance_pct": 56.600348854919325,
+    "ETH_dominance_pct": 9.942631823314136,
+    "read": "ABSOLUTE_MARKET_WEAKENED_AND_PRIOR_RELATIVE_ETH_TRANSMISSION_STALLED_OR_PARTIALLY_REVERSED"
+  },
+  "delta_vs_prior_same_source_coingecko_freeze_2026_07_23T082843Z": {
+    "BTC_price_change_pct": -0.7632888590358156,
+    "ETH_price_change_pct": -1.1029545845294586,
+    "ETHBTC_change_pct": -0.34227829796327214,
+    "total_market_cap_change_pct": -0.7229428395766346,
+    "BTC_dominance_change_pp": -0.018286065080673097,
+    "ETH_dominance_change_pp": -0.036276516685864735,
+    "read": "ETH_WEAKENED_MORE_THAN_BTC_AND_ETHBTC_GAVE_BACK_PART_OF_THE_PRIOR_RELATIVE_REPAIR"
+  },
+  "structure_watch": {
+    "reference_support_candidate_usd": 65600,
+    "current_coingecko_price_usd": 65006,
+    "distance_below_support_candidate_pct": -0.9054878048780487,
+    "OKX_12h_low_usd": 64934.4,
+    "status": "INTRADAY_SUPPORT_CANDIDATE_LOST_AT_FREEZE_NO_CANONICAL_SETTLED_BINANCE_CEST_CLOSE_AVAILABLE",
+    "inference_boundary": "DO_NOT_DECLARE_SETTLED_BREAK_FAILURE_WITHOUT_CANONICAL_SETTLED_CLOSE"
+  },
+  "okx_12h_swap_window": {
+    "venue": "OKX",
+    "instrument_type": "USDT_PERPETUAL_SWAP",
+    "window_policy": "LATEST_12_FULLY_SETTLED_HOURLY_INTERVALS",
+    "BTC_change_pct": -1.3622389483727293,
+    "ETH_change_pct": -1.4296810273405236,
+    "ETHBTC_derived_change_pct": -0.06837348926896913,
+    "read": "BOTH_MAJORS_DECLINED_AND_ETH_SLIGHTLY_UNDERPERFORMED_BTC_IN_THE_LATER_OKX_SWAP_WINDOW",
+    "comparability": "NOT_DIRECTLY_COMPARABLE_TO_PRIOR_BINANCE_SPOT_12H_WINDOW_DUE_TO_LATER_ENDPOINT_DIFFERENT_VENUE_AND_DIFFERENT_INSTRUMENT"
+  },
+  "okx_contract_taker_12h": {
+    "BTC_net_buy_minus_sell_usd": 94767544.90380001,
+    "BTC_buy_share": 0.5235939525443649,
+    "ETH_net_buy_minus_sell_usd": 40597181.2190001,
+    "ETH_buy_share": 0.5084096344068365,
+    "read": "POSITIVE_AGGRESSIVE_CONTRACT_BUYING_DID_NOT_TRANSLATE_TO_POSITIVE_12H_PRICE_RETURNS",
+    "possible_inference": "SELLER_ABSORPTION_OR_UNSUCCESSFUL_AGGRESSIVE_BUYING",
+    "inference_confidence": "LOW_TO_MODERATE_SINGLE_VENUE_FUTURES_PROXY",
+    "boundary": "NOT_SPOT_NOT_MARKET_WIDE_CVD"
+  },
+  "okx_futures_update": {
+    "BTC": {
+      "current_basis_pct": -0.07738500112853819,
+      "current_funding_raw": -0.0000029543672093,
+      "latest_settled_funding_raw": -0.0000333148169405,
+      "latest3_average_funding_raw": 0.000002816478490766665,
+      "OI_delta_1h_pct": -0.8329036178928106,
+      "OI_delta_4h_pct": -0.45971376028655087,
+      "OI_delta_12h_pct": 0.8348572383146458,
+      "OI_delta_24h_pct": -0.9972862783688585
+    },
+    "ETH": {
+      "current_basis_pct": -0.06414401909599077,
+      "current_funding_raw": -0.0000522176189403,
+      "latest_settled_funding_raw": 0.0000089193515735,
+      "latest3_average_funding_raw": -0.0000015792689491666666,
+      "OI_delta_1h_pct": -2.632119658989296,
+      "OI_delta_4h_pct": -2.3638368920577024,
+      "OI_delta_12h_pct": -2.8615978615422977,
+      "OI_delta_24h_pct": -1.7108678079068573
+    },
+    "read": "ETH_LEVERAGE_DELEVERAGED_MORE_THAN_BTC_OVER_1H_4H_12H_AND_24H_AND_CURRENT_FUNDING_WAS_NEGATIVE_ON_BOTH",
+    "comparison_boundary": "OKX_VENUE_ONLY_DO_NOT_COMPARE_NUMERIC_OI_DELTAS_DIRECTLY_TO_PRIOR_BINANCE_SERIES"
+  },
+  "sentiment_method_guard": {
+    "current_source": "CFGI_IO",
+    "current_value": 49,
+    "current_classification": "Neutral",
+    "prior_packet_source": "ALTERNATIVE_ME",
+    "prior_packet_value": 31,
+    "status": "SEPARATE_SERIES_NOT_A_PLUS_18_POINT_CONTINUOUS_MOVE",
+    "H4_update_allowed": false,
+    "reason": "NO_ASSET_SPECIFIC_MULTI_HORIZON_CFGI_FIELDS_AND_SOURCE_METHOD_CHANGED"
+  },
+  "dynamic_breadth_source_qa": {
+    "experiment_id": "W30_BREADTH_QA_H5",
+    "current_membership_sha256": "f1ca002ad09f28170aadc525837b390066b23f425f31403a4100cdf72a72bd62",
+    "included_n": 70,
+    "distinct_membership_hash_count": 8,
+    "current_advancing_pct": {
+      "1H": 14.285714285714285,
+      "24H": 30.0,
+      "7D": 52.85714285714286
+    },
+    "membership_changed": true,
+    "status_update": "CONFIRMED_INSTABILITY_EXTENDED_WITH_EIGHTH_DISTINCT_MEMBERSHIP_HASH",
+    "market_signal_status": "CURRENT_RUN_DESCRIPTION_ONLY_INVALID_FOR_CROSS_RUN_DELTA_OR_FIXED_COHORT_INFERENCE",
+    "operational_rule": "DO_NOT_COMPARE_DYNAMIC_BREADTH_LEVELS_ACROSS_CHANGED_MEMBERSHIP_HASHES_AND_DO_NOT_SUBSTITUTE_FOR_FIXED_RISK35"
+  },
+  "binance_availability_source_qa": {
+    "experiment_id": "W30_BINANCE_AVAILABILITY_QA_H6",
+    "prior_comparable_run_status": "PASS",
+    "current_status": "FAIL_RESTRICTED_LOCATION",
+    "fallback_status": "OKX_PASS",
+    "transition": "PASS_TO_FAIL_WITH_EXPLICIT_VENUE_FALLBACK",
+    "market_signal_status": "SOURCE_EXECUTION_CONTEXT_EVENT_NOT_MARKET_EVENT",
+    "next_required_evidence": "NEXT_COMPARABLE_BINANCE_ACCESS_PROBE_AND_FIRST_SAME_FREEZE_BINANCE_OKX_OVERLAP_FOR_PARITY_TEST"
+  },
+  "tri_challenger_boundary": {
+    "experiment_id": "W30_TRANSMISSION_RATE_CHALLENGER_H7",
+    "post_preregistration": true,
+    "required_complete_prospective_row_present": false,
+    "status": "POST_PREREG_BUT_ROW_INCOMPLETE_NOT_SCOREABLE",
+    "backfill_allowed": false
+  },
+  "experiment_updates": {
+    "W30_ROTATION_H1": "LIVE_EARLY_ETH_RELATIVE_TRANSMISSION_STALLED_OR_PARTIALLY_REVERSED_ETHBTC_BACK_TO_APPROX_0_02920_AND_0_0300_UNCONFIRMED",
+    "W30_CAPITAL_H2": "LIVE_LARGE_CAP_TRANSLATION_WEAKENED_NO_MID_CAP_CLEARANCE",
+    "W30_FLOW_H3": "LIVE_MIXED_WEAKENED_ETF_SUPPORT_PERSISTS_BUT_LATER_PRICE_RESPONSE_WEAK_OKX_ETH_OI_DELEVERAGING_AND_SPOT_LAYER_UNAVAILABLE",
+    "W30_BREADTH_QA_H5": "CONFIRMED_INSTABILITY_EXTENDED_EIGHTH_HASH",
+    "W30_BINANCE_AVAILABILITY_QA_H6": "LIVE_PASS_TO_FAIL_TRANSITION_WITH_OKX_FALLBACK",
+    "W30_TRANSMISSION_RATE_CHALLENGER_H7": "POST_PREREG_ROW_INCOMPLETE_NOT_SCOREABLE"
+  },
+  "not_updated": {
+    "W30_CFGI_DIVERGENCE_H4": "CFGI_IO_MARKET_WIDE_SERIES_IS_NOT_METHOD_EQUIVALENT_TO_PRIOR_SOURCE_AND_LACKS_ASSET_SPECIFIC_MULTI_HORIZON_FIELDS"
+  },
+  "framework_shadow_delta": {
+    "structural_repair": "INTACT_BUT_MATERIALLY_WEAKENED_INTRADAY_SUPPORT_CANDIDATE_LOST_UNSETTLED",
+    "ETH_relative_transmission": "STALLED_OR_PARTIALLY_REVERSED",
+    "rotation": "NO_ROTATION",
+    "broad_recovery": "NOT_CONFIRMED",
+    "large_cap_window": "WATCH_ONLY_NOT_OPEN",
+    "mid_cap_window": "WAIT",
+    "small_micro_meme_window": "NO_CLEARANCE",
+    "new_entry_signal": "NOT_ACTIVE",
+    "portfolio_action": "NONE",
+    "user_action": "HOLD_AND_WAIT"
+  },
+  "new_market_experiment_created": false,
+  "fallback_parity_candidate": {
+    "status": "NOT_ACTIVATED_NO_SAME_FREEZE_DUAL_VENUE_OVERLAP",
+    "purpose": "TEST_FIELD_LEVEL_OKX_FALLBACK_PARITY_WITH_BINANCE_WITHOUT_MERGING_VENUE_SERIES"
+  },
+  "canonical_pointer_advanced": false,
+  "canonical_state_change": false,
+  "portfolio_action_change": false
+}
