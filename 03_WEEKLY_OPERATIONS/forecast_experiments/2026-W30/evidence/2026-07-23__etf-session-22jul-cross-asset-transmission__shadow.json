@@ -1,0 +1,102 @@
+{
+  "schema": "FORECAST_EXPERIMENT_ETF_SESSION_EVIDENCE_APPEND",
+  "schema_version": "1.0",
+  "status": "EXISTING_EXPERIMENTS_ENRICHED_NON_BINDING",
+  "received_date": "2026-07-23",
+  "completed_session_date": "2026-07-22",
+  "source_role": "USER_PASTED_ETF_API_ROWS_SUPPLEMENTAL_EVIDENCE",
+  "source_path": "02_DATA_PING/operational_handoffs/accepted_logs/supplements/2026-07-23__btc-eth-etf-session-2026-07-22__user-pasted.json",
+  "independent_source_verification_in_this_write": false,
+  "binding": false,
+  "canonical_acceptance": false,
+  "market_authority": false,
+  "portfolio_authority": false,
+  "session_observations": {
+    "BTC_total_usd_m": 69.1,
+    "BTC_prior_session_usd_m": 203.2,
+    "BTC_session_change_pct": -65.9941,
+    "BTC_positive_streak_sessions": 7,
+    "BTC_last_3_usd_m": 499.1,
+    "BTC_last_5_usd_m": 710.5,
+    "BTC_last_7_usd_m": 999.3,
+    "BTC_latest_IBIT_usd_m": 38.8,
+    "BTC_latest_GBTC_usd_m": -38.3,
+    "ETH_total_usd_m": 72.7,
+    "ETH_prior_session_usd_m": 37.5,
+    "ETH_session_change_pct": 93.8667,
+    "ETH_positive_streak_sessions": 4,
+    "ETH_last_3_usd_m": 148.2,
+    "ETH_last_5_usd_m": 156.9,
+    "ETH_last_7_usd_m": 269.1,
+    "ETH_latest_ETHA_usd_m": 53.5,
+    "ETH_latest_FETH_usd_m": 19.2,
+    "combined_latest_usd_m": 141.8,
+    "ETH_share_latest_pct": 51.2694,
+    "ETH_minus_BTC_latest_usd_m": 3.6
+  },
+  "lineage_controls": {
+    "ETH_20jul_forward_value_usd_m": 38.0,
+    "ETH_20jul_supersession_receipt": "02_DATA_PING/operational_handoffs/accepted_logs/supplements/2026-07-22T060335Z__farside-20jul-eth-flow-superseding-revision.json",
+    "prior_incorrect_3_7_value_used": false,
+    "prior_sessions_recounted_as_new_events": false,
+    "only_new_completed_session": "2026-07-22"
+  },
+  "experiment_updates": [
+    {
+      "id": "W30_FLOW_H3",
+      "family": "ETF_SPOT_FLOW_WITH_MODERATE_OI_REBUILD",
+      "status_update": "LIVE_STRENGTHENED_FLOW_PERSISTENCE_WITH_BTC_DECELERATION_AND_ETH_ACCELERATION",
+      "evidence": [
+        "BTC ETF remains positive for a seventh consecutive completed session.",
+        "BTC net flow decelerated from 203.2M to 69.1M but did not reverse.",
+        "ETH net flow increased from 37.5M to 72.7M and reached a fourth consecutive positive session.",
+        "ETH exceeded BTC in net ETF flow for the latest completed session."
+      ],
+      "interpretation": "FLOW_SUPPORT_PERSISTS_AND_CROSS_ASSET_TRANSLATION_TOWARD_ETH_STRENGTHENS_BUT_ONE_SESSION_DOES_NOT_CONFIRM_ROTATION",
+      "next_required_evidence": [
+        "NEXT_COMPLETED_BTC_AND_ETH_ETF_SESSION",
+        "ETHBTC_SETTLED_PRICE_PERSISTENCE",
+        "ETH_SPOT_TAKER_SUPPORT_VS_OI_BUILD",
+        "BTC_ETF_STREAK_CONTINUATION_OR_REVERSAL"
+      ]
+    },
+    {
+      "id": "W30_ROTATION_H1",
+      "family": "ETHBTC_ROTATION_PROXIMITY_AND_PERSISTENCE",
+      "status_update": "LIVE_STRENGTHENED_CROSS_ASSET_FLOW_TRANSMISSION_PRICE_CONFIRMATION_STILL_REQUIRED",
+      "interpretation": "ETH ETF flow overtaking BTC is supportive transmission evidence, not a substitute for settled ETHBTC confirmation or broad participation."
+    },
+    {
+      "id": "W30_CAPITAL_H2",
+      "family": "LARGE_CAP_BEFORE_MID_CAP_TRANSMISSION",
+      "status_update": "LIVE_STRENGTHENED_BTC_TO_ETH_LARGE_CAP_TRANSLATION_NO_MID_CAP_CLEARANCE",
+      "interpretation": "The latest flow split supports capital translation within large caps; it provides no direct evidence of mid-cap, small-cap or micro-cap deployment."
+    }
+  ],
+  "nested_subtest": {
+    "id": "W30_FLOW_H3_ETF_CROSS_ASSET_TRANSLATION",
+    "status": "LIVE_FIRST_CLEAR_ETH_OVER_BTC_POSITIVE_SESSION_IN_CURRENT_STREAK",
+    "metric": "ETH_SHARE_OF_COMBINED_BTC_ETH_NET_ETF_FLOW",
+    "latest_value_pct": 51.2694,
+    "supportive_condition": "BOTH_ASSETS_POSITIVE_AND_ETH_SHARE_ABOVE_50_PERCENT",
+    "falsifier_watch": "ETH_SHARE_REVERSES_WITH_ETHBTC_WEAKNESS_OR_ETH_FLOW_TURNS_NEGATIVE_WHILE_BTC_REMAINS_POSITIVE",
+    "promotion_eligible": false
+  },
+  "framework_shadow_delta": {
+    "BTC_flow_support": "POSITIVE_STREAK_EXTENDED_BUT_INTENSITY_DECELERATED",
+    "ETH_flow_support": "ACCELERATED_AND_EXCEEDED_BTC_LATEST_SESSION",
+    "cross_asset_transmission": "STRENGTHENED_AT_ETF_FLOW_LAYER",
+    "rotation": "NO_ROTATION",
+    "broad_recovery": "NOT_CONFIRMED",
+    "large_cap_window": "WATCH_ONLY_CLOSER_NOT_OPEN",
+    "mid_cap_window": "WAIT",
+    "small_micro_meme_window": "NO_CLEARANCE",
+    "new_entry_signal": "NOT_ACTIVE",
+    "portfolio_action": "NONE",
+    "user_action": "HOLD_AND_WAIT"
+  },
+  "new_market_experiment_created": false,
+  "canonical_pointer_advanced": false,
+  "canonical_state_change": false,
+  "portfolio_action_change": false
+}
