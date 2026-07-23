@@ -1,9 +1,10 @@
 # Archive Governance Receipt - Claude Replication PATCH1 Final Validation
 
 **Dato:** 2026-07-23  
-**Status:** RECEIPT / PENDING_PR_VALIDATION  
+**Status:** PASS_CONTENT / FULL_REPRODUCIBILITY_VALIDATED  
 **Område:** Claude Research Lab ingestion, independent reproduction, archive governance  
-**Task branch:** `agent/task-20260723-claude-replication-patch1-final-validation`
+**Initial task branch:** `agent/task-20260723-claude-replication-patch1-final-validation`  
+**Finalization branch:** `agent/finalize-claude-replication-patch1-validation-20260723`
 
 ---
 
@@ -39,12 +40,19 @@ paths_created:
   - 08_SOURCE_MATERIAL/claude/2026-07-23__btc-range-pullback-replication-patch1__source-note.md
   - 06_RESEARCH_LAB/audit_summaries/2026-07-23__btc-range-pullback-replication-patch1-final-validation__shadow.md
   - 07_PROMPTS_AND_AGENTS/skill_runs/2026-07-23__archive-governance-claude-replication-patch1-final-validation__receipt.md
-paths_updated: []
+paths_updated_after_merge:
+  - 07_PROMPTS_AND_AGENTS/skill_runs/2026-07-23__archive-governance-claude-replication-patch1-final-validation__receipt.md
 paths_deleted: []
 canonical_index_change: NO
 active_test_registry_change: NO
 workflow_change: NO
 runtime_change: NO
+main_merge:
+  pull_request: 127
+  merge_commit_sha: ce03c07bc47adef7d7afabc5b4ddd22b067197a6
+  merge_method: SQUASH
+  changed_files: 3
+  merged: YES
 ```
 
 ## Independent validation evidence
@@ -111,24 +119,33 @@ Sensor Relationship and Incremental Value Standard remains canonical owner.
 
 No historical result is inserted as a forward row.
 
-## Validation plan before merge
+## Validation completed
 
 ```text
-1. Read back all three files from the task branch.
-2. Compare task branch with main.
-3. Verify exactly three intended paths.
-4. Verify no canonical owner, active registry, workflow, index or runtime file changed.
-5. Open PR and inspect exact filenames and mergeability.
-6. Merge only after bounded-scope validation.
-7. Read back the source note and final audit from main.
-8. Finalize this receipt with PR and merge SHA.
+TASK_BRANCH_READBACK_SOURCE_NOTE: PASS
+TASK_BRANCH_READBACK_FINAL_AUDIT: PASS
+TASK_BRANCH_READBACK_RECEIPT: PASS
+PR_127_CHANGED_FILE_SCOPE: PASS_EXACTLY_3_INTENDED_PATHS
+PR_127_MERGEABLE: PASS
+PR_127_MAIN_MERGE: PASS
+MAIN_MERGE_SHA: ce03c07bc47adef7d7afabc5b4ddd22b067197a6
+CANONICAL_OWNER_FILES_CHANGED: NO
+ACTIVE_TEST_REGISTRY_CHANGED: NO
+INDEX_CHANGED: NO
+WORKFLOW_CHANGED: NO
+RUNTIME_CHANGED: NO
+MARKET_OR_PORTFOLIO_AUTHORITY_CREATED: NO
 ```
 
-## Pending status
+## Final status
 
 ```yaml
-archive_content_result: PENDING_PR_VALIDATION
-write_governance_result: PENDING_PR_VALIDATION
-final_repository_state: PENDING_PR_VALIDATION
-full_reproducibility_promotion: READY_PENDING_PR_VALIDATION
+archive_content_result: PASS_ACCEPT_REPRODUCIBLE_SHADOW
+write_governance_result: PASS
+final_repository_state: PASS
+full_reproducibility_promotion: PASS_FOR_DECLARED_SHADOW_SCOPE
+canonical_promotion: NO
+main_merge_commit_sha: ce03c07bc47adef7d7afabc5b4ddd22b067197a6
 ```
+
+The archive now preserves the corrected package lineage, exact cross-process and cross-version deterministic parity, the unit-matched statistical correction, the source anomaly and the bounded governance consequence. No method, state, gate, rebuy or portfolio authority changed.
