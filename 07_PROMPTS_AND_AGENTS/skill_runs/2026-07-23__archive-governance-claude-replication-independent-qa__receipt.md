@@ -1,9 +1,10 @@
 # Archive Governance Receipt — Claude Replication Independent QA
 
 **Dato:** 2026-07-23  
-**Status:** RECEIPT / PENDING_PR_VALIDATION  
+**Status:** PASS_CONTENT / PATCH_REQUIRED_BEFORE_FULL_REPRODUCIBILITY  
 **Område:** Claude Research Lab ingestion, independent execution QA, reproducibility remediation  
-**Task branch:** `agent/task-20260723-claude-replication-independent-qa`
+**Initial task branch:** `agent/task-20260723-claude-replication-independent-qa`  
+**Finalization branch:** `agent/finalize-claude-replication-independent-qa-20260723`
 
 ---
 
@@ -34,7 +35,8 @@ paths_created:
   - 06_RESEARCH_LAB/audit_summaries/2026-07-23__btc-range-pullback-replication-independent-rerun__shadow.md
   - 07_PROMPTS_AND_AGENTS/research_prompts/2026-07-23__claude-btc-range-pullback-replication-determinism-patch.md
   - 07_PROMPTS_AND_AGENTS/skill_runs/2026-07-23__archive-governance-claude-replication-independent-qa__receipt.md
-paths_updated: []
+paths_updated_after_merge:
+  - 07_PROMPTS_AND_AGENTS/skill_runs/2026-07-23__archive-governance-claude-replication-independent-qa__receipt.md
 paths_deleted: []
 canonical_index_change: NO
 active_test_registry_change: NO
@@ -43,6 +45,12 @@ market_state_change: NO
 gate_change: NO
 rebuy_change: NO
 portfolio_action: NO
+main_merge:
+  pull_request: 123
+  merge_commit_sha: c929e339023c980d86d5d95546d27dd2aa020a4d
+  merge_method: SQUASH
+  changed_files: 4
+  merged: YES
 ```
 
 ## Independent validation evidence
@@ -67,8 +75,6 @@ Independent current hash self-check: PASS
 
 `extended_analysis.py` uses `hash(sp) % 97` in a bootstrap seed.
 
-Effect observed:
-
 ```text
 cross-environment generated CI differences: YES
 same-installed-environment fresh-process CI differences: YES
@@ -79,8 +85,6 @@ headline classifications changed: NO
 ### D2 — Current-manifest hash self-check
 
 The pipeline rewrites `18_HASHES.sha256` and then checks current files against that regenerated manifest.
-
-Effect:
 
 ```text
 self_consistency_proved: YES
@@ -128,25 +132,35 @@ ATR14_X_1_50_METHOD_FREEZE: REJECT
 DUMB_2_0_UNIVERSAL_PROMOTION: REJECT
 ```
 
-## Validation plan before merge
+## Validation completed
 
 ```text
-1. Read back all four files from the task branch.
-2. Compare task branch against current main.
-3. Verify exactly four intended paths.
-4. Verify no canonical owner, active registry, workflow, index or runtime file changed.
-5. Open PR and inspect exact filenames and patch.
-6. Merge only if branch remains clean and bounded.
-7. Read back source note and QA audit from main.
-8. Finalize receipt with PR and merge SHA.
+TASK_BRANCH_READBACK_SOURCE_NOTE: PASS
+TASK_BRANCH_READBACK_SHADOW_AUDIT: PASS
+TASK_BRANCH_READBACK_PATCH_PROMPT: PASS
+TASK_BRANCH_READBACK_RECEIPT: PASS
+PR_123_CHANGED_FILE_SCOPE: PASS_EXACTLY_4_INTENDED_PATHS
+PR_123_MERGEABLE: PASS
+PR_123_MAIN_MERGE: PASS
+MAIN_MERGE_SHA: c929e339023c980d86d5d95546d27dd2aa020a4d
+CANONICAL_OWNER_FILES_CHANGED: NO
+ACTIVE_TEST_REGISTRY_CHANGED: NO
+INDEX_CHANGED: NO
+WORKFLOW_CHANGED: NO
+RUNTIME_POINTER_CHANGED: NO
+MARKET_OR_PORTFOLIO_AUTHORITY_CREATED: NO
 ```
 
-## Pending status
+## Final status
 
 ```yaml
-archive_content_result: PENDING_PR_VALIDATION
-write_governance_result: PENDING_PR_VALIDATION
-final_repository_state: PENDING_PR_VALIDATION
+archive_content_result: PASS_PARTIAL_ACCEPT
+write_governance_result: PASS
+final_repository_state: PASS
 corrected_claude_package_received: NO
 independent_codex_rerun_completed: NO
+full_reproducibility_promotion: DEFERRED_PENDING_PATCH1
+main_merge_commit_sha: c929e339023c980d86d5d95546d27dd2aa020a4d
 ```
+
+The archive now preserves the executable package lineage, the independently reproduced core findings, the exact reproducibility defects and the bounded repair prompt. No method, state or action authority changed.
