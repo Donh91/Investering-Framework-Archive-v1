@@ -1,0 +1,60 @@
+{
+  "schema": "FORECAST_EXPERIMENT_MATURITY_SCORE",
+  "schema_version": "1.0",
+  "experiment_id": "W30_CFGI_DIVERGENCE_H4",
+  "evaluation_window": "24H",
+  "preregistered_source_observed_at_utc": "2026-07-21T15:47:56.271Z",
+  "maturity_at_utc": "2026-07-22T15:47:56.271Z",
+  "first_comparable_post_maturity_observation_at_utc": "2026-07-22T17:00:52.485Z",
+  "status": "MATURED_24H_DIRECTIONAL_MISS_WITH_COUNTEREVIDENCE",
+  "frozen_inputs": {
+    "BTC_price": 66610.01,
+    "ETH_price": 1926.52,
+    "ETHBTC": 0.02893,
+    "BTC_dominance_pct": 56.889296582266304
+  },
+  "outcomes_24h": {
+    "BTC_price": 66223.24,
+    "ETH_price": 1949.71,
+    "ETHBTC": 0.02944,
+    "BTC_dominance_pct": 56.70351853608532,
+    "btc_return": -0.5806484640971998,
+    "eth_return": 1.2037248510267329,
+    "eth_minus_btc_pp": 1.7843733151239327,
+    "ethbtc_change": 1.7628759073625933,
+    "btcd_change_pp": -0.18577804618098526,
+    "distance_to_03_pct": 1.9021739130434812
+  },
+  "score_logic": {
+    "ETH_UNDERPERFORMS_BTC": false,
+    "ETHBTC_FAILS_TO_RECLAIM_0_0294_OR_MOVES_FURTHER_FROM_0_0300": false,
+    "BTC_DOMINANCE_STABLE_OR_RISING": false,
+    "LARGE_CAP_AND_MID_CAP_TRANSMISSION_REMAINS_UNCONFIRMED": true,
+    "stable_cohort_breadth_available": false
+  },
+  "classification": "MISS_NOT_FULL_FORMAL_FALSIFICATION_AT_24H",
+  "reason": "THE_PRIMARY_DIRECTIONAL_CLAIM_FAILED_AT_THE_24H_ENDPOINT: ETH_OUTPERFORMED_BTC_BY_1_78PP, ETHBTC_ROSE_1_76_PERCENT_TO_0_02944, AND_BTC_DOMINANCE_FELL_0_186PP. STABLE_COHORT_BREADTH_AND_SETTLED_0_0300_FALSIFICATION_WERE_UNAVAILABLE.",
+  "later_non_retroactive_observation": {
+    "observed_at_utc": "2026-07-23T19:09:16.450Z",
+    "hours_after_freeze_approx": 51.35,
+    "BTC_price": 64886.0,
+    "ETH_price": 1881.42,
+    "ETHBTC": 0.029,
+    "BTC_dominance_pct": 56.6614519818,
+    "btc_return": -2.588214594172855,
+    "eth_return": -2.341008658098531,
+    "eth_minus_btc_pp": 0.24720593607432395,
+    "ethbtc_change": 0.24196335983408535,
+    "btcd_change_pp": -0.22784460046630528,
+    "distance_to_03_pct": 3.44827586206895,
+    "BTC_CFGI_1H": 30,
+    "BTC_CFGI_15M": 37,
+    "ETH_CFGI_1H": 29,
+    "ETH_CFGI_15M": 28,
+    "interpretation": "BTC_SHORT_HORIZON_CFGI_COOLED_WITHOUT_BTC_RELATIVE_OUTPERFORMANCE; THIS_IS_PRE_MATURITY_FALSIFICATION_EVIDENCE_FOR_72H_BUT_DOES_NOT_REWRITE_24H_SCORE"
+  },
+  "evaluation_72h_status": "OPEN_UNTIL_2026_07_24T15_47_56_271Z",
+  "counts_as_independent_event_window": false,
+  "portfolio_authority": false,
+  "canonical_state_authority": false
+}
