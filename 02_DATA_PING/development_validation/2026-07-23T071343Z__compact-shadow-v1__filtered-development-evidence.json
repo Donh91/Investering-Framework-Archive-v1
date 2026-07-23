@@ -1,0 +1,98 @@
+{
+  "schema": "DATA_PING_COMPACT_SHADOW_FILTERED_DEVELOPMENT_EVIDENCE",
+  "schema_version": "1.0",
+  "status": "NONCANONICAL_DEVELOPMENT_EVIDENCE_ONLY",
+  "source_contract": "DATA_PING_COMPACT_SHADOW_v1",
+  "source_profile": "BOUNDED_COMPACT_AI2AI",
+  "source_run_id": "DPRUN_20260723T065710327Z_fff1f370",
+  "source_snapshot_id": "DPSNAP_20260723T071343494Z_9d609332",
+  "source_collector_log_id": "DPLOG_20260723T071343494Z_4f0c0998",
+  "source_freeze_utc": "2026-07-23T07:13:43.494Z",
+  "received_as": "USER_PASTED_PROVISIONAL_PACKET",
+  "binding": false,
+  "release_eligible": false,
+  "production_activation_allowed": false,
+  "canonical_acceptance": false,
+  "reported_packet_sha256": "5f30904dc09d422de894dad389c08dda18446b50d389ff447938c23bd8fa828a",
+  "reported_hash_scope": "EXACT_ONE_LINE_JSON_UTF8_BYTES",
+  "external_exact_byte_verification": "NOT_POSSIBLE_FROM_PASTED_TYPOGRAPHIC_QUOTE_RENDERING",
+  "collection_summary": {
+    "planned_source_actions": 44,
+    "attempted_source_actions": 44,
+    "terminal_source_actions": 44,
+    "successful_source_actions": 43,
+    "failed_source_actions": 1,
+    "planned_control_checks": 20,
+    "passed_control_checks": 19,
+    "failed_control_checks": 1,
+    "collection_status": "PARTIAL",
+    "development_acceptance": "NO",
+    "production_acceptance": "NO",
+    "packet_generation_gate": "OPEN",
+    "final_freeze_status": "PASS",
+    "market_calls_after_freeze": 0
+  },
+  "compact_budget": {
+    "serialized_size_bytes": 29071,
+    "size_limit_bytes": 30000,
+    "headroom_bytes": 929,
+    "headroom_pct": 3.0967,
+    "assessment": "PASS_SIZE_LIMIT_BUT_INSUFFICIENT_OPERATIONAL_MARGIN"
+  },
+  "validation_results": {
+    "strict_json_validation": "SELF_REPORTED_PASS",
+    "semantic_transform_validation": "SELF_REPORTED_PASS",
+    "exact_byte_validation": "SELF_REPORTED_PASS_NOT_EXTERNALLY_REPRODUCED",
+    "hash_validation": "SELF_REPORTED_PASS_NOT_EXTERNALLY_REPRODUCED",
+    "receipt_evidence_validation": "FAIL",
+    "receipt_validation": "FAIL",
+    "compact_profile_validation": "FAIL",
+    "source_completeness_validation": "PARTIAL",
+    "forbidden_interpretation_scan": "SELF_REPORTED_PASS"
+  },
+  "blocking_defects": {
+    "receipt_timing_audit": {
+      "status": "FAIL",
+      "receipt_ids": ["R005", "R006", "R007"],
+      "reason": "DELAYED_RECEIPT_AFTER_ACTION_GROUP",
+      "impact": "ACTION_RESULT_TO_RECEIPT_TEMPORAL_LINEAGE_IS_NOT_STRICTLY_PROVEN_FOR_THREE_ROWS",
+      "recommended_fix": "CREATE_EACH_RECEIPT_IMMEDIATELY_AFTER_ITS_ACTION_RESULT_OR_EXPORT_A_CONNECTOR_CALL_ID_AND_COMPLETION_TIMESTAMP"
+    },
+    "official_stablecoin_overview": {
+      "status": "FAIL",
+      "receipt_id": "R004",
+      "failure_cause": "RESPONSE_TOO_LARGE",
+      "raw_error_text": "ResponseTooLargeError",
+      "impact": "OFFICIAL_STABLECOIN_TOTAL_AND_HISTORY_REMAIN_UNAVAILABLE",
+      "recommended_fix": "USE_BOUNDED_PAGINATED_OR_PREAGGREGATED_OFFICIAL_ENDPOINT_WITH_EXPLICIT_SCOPE"
+    },
+    "compact_margin": {
+      "status": "RISK",
+      "headroom_bytes": 929,
+      "impact": "SMALL_SCHEMA_OR_ERROR_EXPANSION_CAN_EXCEED_THE_30000_BYTE_PROFILE_LIMIT",
+      "recommended_fix": "REDUCE_REPEATED_DICTIONARIES_OR_MOVE_NONMANDATORY_MEMBERSHIP_DETAIL_TO_SEPARATE_AUDIT_ARTIFACT"
+    }
+  },
+  "usable_by_field_layers": [
+    "BINANCE_FINAL_PRICE_FREEZE",
+    "SETTLED_SPOT_TAKER_WINDOWS",
+    "EXACT_COMPLETED_OI_ANCHORS",
+    "FUNDING_HISTORY",
+    "DYNAMIC_BREADTH_MEMBERSHIP_AND_AGGREGATES_FOR_SOURCE_QA",
+    "SOURCE_DISCREPANCY_CHECKS",
+    "FRED_DATE_NATIVE_MACRO_ROWS"
+  ],
+  "duplicate_not_recounted": [
+    "BTC_ETF_SESSION_2026_07_22_PLUS_69_1M",
+    "ETH_ETF_SESSION_2026_07_22_PLUS_72_7M",
+    "ALTERNATIVE_ME_CURRENT_33"
+  ],
+  "archive_decision": {
+    "retain_full_pasted_packet": false,
+    "retain_filtered_normalized_evidence": true,
+    "advance_canonical_data_ping_pointer": false,
+    "change_framework_state": false,
+    "change_portfolio_action": false,
+    "reason": "THE_PACKET_FAILED_RECEIPT_AND_COMPACT_PROFILE_VALIDATION_BUT_CONTAINS_TIMESTAMPED_FIELD_LEVEL_MARKET_AND_SOURCE_QA_EVIDENCE"
+  }
+}
