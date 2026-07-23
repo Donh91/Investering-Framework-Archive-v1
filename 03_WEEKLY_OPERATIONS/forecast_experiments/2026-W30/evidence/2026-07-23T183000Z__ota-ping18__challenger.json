@@ -1,0 +1,118 @@
+{
+  "schema": "OTA_EXTERNAL_CHALLENGER_EVIDENCE",
+  "schema_version": "1.0",
+  "status": "NON_BINDING_QUALITATIVE_CHALLENGER_WITH_GOVERNANCE_CORRECTIONS",
+  "observed_at_utc": "2026-07-23T18:30:00Z",
+  "observed_at_cest": "2026-07-23T20:30:00+02:00",
+  "source_run": "OTA_PING_18",
+  "source_role": "CLAUDE_FABLE_EXTERNAL_COMPUTE_AND_ADVERSARIAL_AUDIT",
+  "canonical_authority": false,
+  "portfolio_authority": false,
+  "raw_claims_retained": {
+    "multi_venue_BTC_live_range_usd": [64802.0, 64870.03],
+    "multi_venue_BTC_spread_pct": 0.092,
+    "ETHBTC_live_approx": 0.02902,
+    "ETHBTC_multi_venue_divergence_absolute": 0.000042,
+    "reported_2026_07_22_settled_BTC_close_usd": 66114.49,
+    "reported_2026_07_23_live_intraday_change_pct": -1.99,
+    "reported_ATR14_usd": 1789.74,
+    "reported_ATR7_to_ATR14_ratio": 0.911,
+    "reported_drawdown_from_60d_high_pct": -15.32,
+    "F1_floor_usd": 62342.0,
+    "F4_live_ETHBTC": 0.02902,
+    "F5_positive_BTC_ETF_sessions": 7,
+    "BTC_ETF_7_session_sum_usd_m": 999.3,
+    "ETH_ETF_7_session_sum_usd_m": 269.1,
+    "BTC_ETF_2026_07_22_usd_m": 69.1,
+    "ETH_ETF_2026_07_22_usd_m": 72.7,
+    "ETH_to_BTC_ETF_flow_ratio_2026_07_22": 1.0520984081041968
+  },
+  "governance_reconciliation": {
+    "stage_1": {
+      "ota_claim": "UNRESOLVED_ON_OTA_SIDE",
+      "main_framework_status": "ETF_FLOW_LEG_COMPLETE_RATIFIED",
+      "effect": "OTA_UNCERTAINTY_DOES_NOT_REOPEN_OR_REVERSE_MAIN_FRAMEWORK_RATIFICATION",
+      "permission_boundary": "STAGE_1_COMPLETION_DOES_NOT_ACTIVATE_REBUY_DEPLOYMENT_OR_NEW_ENTRY"
+    },
+    "weekly_close_basis": {
+      "ota_basis_usd": 64563.0,
+      "accepted_canonical_CEST_basis_usd": 64415.75,
+      "difference_usd": 147.25,
+      "status": "BASIS_CONFLICT_PRESERVED",
+      "rule": "FNP_AND_CANONICAL_OUTCOME_CALCULATIONS_MUST_USE_ACCEPTED_CANONICAL_CEST_BASIS"
+    },
+    "F4": {
+      "ota_read": "EFFECTIVELY_DECIDED_AND_LEADING_CLAIM_SHOULD_BE_RETIRED",
+      "governance_status": "NOT_FORMALLY_EXPIRED_OR_RATIFIED_AT_OBSERVATION",
+      "formal_rule": "CLOSE_ONLY_AT_PREREGISTERED_WINDOW_EXPIRY_WITH_LINEAGE_AND_METHOD_RESOLVED",
+      "window_evidence": "STRONGLY_NEGATIVE_FOR_ABSOLUTE_0_0300_LEADING_CLAIM_BUT_NOT_AN_INDEPENDENT_18_EVENT_SAMPLE"
+    },
+    "FNP": {
+      "ota_live_value_usd": 64802.0,
+      "canonical_basis_usd": 64415.75,
+      "residual_delta_pct_using_low_live_value": 0.5996103421860358,
+      "ota_peak_close_usd": 66556.0,
+      "peak_delta_pct_using_canonical_basis": 3.322386220764257,
+      "ota_conclusion": "RATIFICATION_LATENCY_COST_NOTHING",
+      "corrected_status": "SMALL_RESIDUAL_FOREGONE_DELTA_AT_OBSERVATION_BUT_FNP_REMAINS_NOT_SCOREABLE",
+      "blocking_reasons": [
+        "NO_RATIFIED_EXECUTION_OR_TRANCHE_BENCHMARK",
+        "NO_PERMISSION_COUNTERFACTUAL",
+        "LIVE_PRICE_NOT_SETTLED_OUTCOME",
+        "STAGE_1_FLOW_RATIFICATION_IS_NOT_REBUY_CLEARANCE"
+      ]
+    }
+  },
+  "market_and_structure_read": {
+    "BTC_65600_support_candidate": "LOST_INTRADAY_AGAIN_AT_OBSERVATION_NO_CANONICAL_SETTLED_CEST_FAILURE_PROVEN",
+    "ETHBTC_absolute_gate": "UNMET_APPROX_3_27_PERCENT_BELOW_0_0300_AT_0_02902",
+    "leading_claim": "WINDOW_EVIDENCE_INVERTED_OR_FAILED_TO_LEAD_BTC_PRICE_IN_THIS_CAUSAL_WINDOW",
+    "transmission": "PRICE_TRANSMISSION_NOT_CONFIRMED_ONE_SESSION_ETF_FLOW_CROSS_ONLY",
+    "classification": "BTC_LED_REPAIR_WITHOUT_CONFIRMED_TRANSMISSION_REMAINS_A_CHALLENGER_LABEL_NOT_NEW_CANONICAL_STATE",
+    "rotation": "NO_ROTATION",
+    "broad_recovery": "NOT_CONFIRMED"
+  },
+  "ETF_cross_asset_observation": {
+    "status": "MATERIAL_BUT_SINGLE_SESSION_AND_ALREADY_ARCHIVED",
+    "BTC_flow_deceleration_pct_from_prior_session": -65.99409448818898,
+    "ETH_flow_growth_pct_from_prior_session": 93.86666666666666,
+    "ETH_exceeded_BTC_flow": true,
+    "interpretation": "FIRST_FLOW_LEVEL_TRANSLATION_HINT_PARTLY_DRIVEN_BY_BTC_DECELERATION_NOT_CONFIRMATION_OF_ROTATION",
+    "duplicate_event_recounted": false
+  },
+  "taxonomy_and_sample_guard": {
+    "ota_claim": "TYPE_2_NEVER_OBSERVED_N18_PINGS",
+    "corrected_sample_status": "N18_PINGS_WITHIN_RELATED_WINDOWS_NOT_18_INDEPENDENT_EVENTS",
+    "leading_claim_retirement_candidate": "STRENGTHENED_GOVERNANCE_REVIEW_CANDIDATE_NOT_RATIFIED",
+    "reason": "REPEATED_PINGS_ARE_HIGHLY_AUTOCORRELATED_AND_CANNOT_BE_COUNTED_AS_INDEPENDENT_CONFIRMATIONS"
+  },
+  "low_vol_pullback_forward_observation": {
+    "source_research_status": "FRAGILE",
+    "observed_configuration": {
+      "ATR7_to_ATR14_ratio": 0.911,
+      "drawdown_from_60d_high_pct": -15.32,
+      "same_day_BTC_move_pct_approx": -2.0
+    },
+    "classification": "FORWARD_OBSERVATION_NO_INTERPRETIVE_WEIGHT",
+    "promotion_effect": "NONE",
+    "reason": "N1_AND_PATCH1_UNIT_MATCHED_CHALLENGER_REVERSED_SIGN_FAILED_BH_AND_WAS_NOT_ROBUST_TO_PERTURBATION"
+  },
+  "experiment_updates": {
+    "W30_ROTATION_H1": "LIVE_WEAKENED_ABSOLUTE_0_0300_GATE_NEAR_EXPIRY_AND_WINDOW_EVIDENCE_AGAINST_LEADING_CLAIM_NO_FORMAL_CLOSURE_YET",
+    "W30_CAPITAL_H2": "LIVE_WEAKENED_SINGLE_SESSION_ETH_ETF_CROSS_WITHOUT_PRICE_OR_COHORT_TRANSMISSION",
+    "W30_FLOW_H3": "LIVE_MIXED_BTC_ETF_STREAK_PERSISTS_BUT_DECELERATES_PRICE_RESPONSE_REVERSED_TOWARD_WEEKLY_BASE",
+    "W30_CFGI_DIVERGENCE_H4": "NOT_UPDATED_FROM_OTA18_NO_METHOD_EQUIVALENT_ASSET_SPECIFIC_CURRENT_MEASUREMENT",
+    "W30_TRANSMISSION_RATE_CHALLENGER_H7": "SUPPORTING_HISTORICAL_WINDOW_DESCRIPTION_NOT_A_NEW_COMPLETE_PROSPECTIVE_ROW"
+  },
+  "next_required_evidence": [
+    "FORMAL_F4_WINDOW_EXPIRY_WITH_EXACT_PREREG_LINEAGE",
+    "CANONICAL_BINANCE_CEST_SETTLED_CLOSE_VS_65600_AND_ETHBTC_CLOSE",
+    "NEXT_COMPLETED_BTC_AND_ETH_ETF_SESSION_TO_TEST_DECELERATION_AND_CROSS_PERSISTENCE",
+    "FIRST_COMPLETE_POST_PREREG_TRI_ROW",
+    "INDEPENDENT_EVENT_WINDOWS_BEFORE_ANY_LEADING_CLAIM_RETIREMENT_PROMOTION"
+  ],
+  "canonical_pointer_advanced": false,
+  "framework_state_changed": false,
+  "portfolio_action_changed": false,
+  "user_action": "HOLD_AND_WAIT"
+}
