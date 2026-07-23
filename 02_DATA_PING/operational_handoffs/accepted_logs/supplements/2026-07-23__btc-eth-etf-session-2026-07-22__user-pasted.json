@@ -1,0 +1,96 @@
+{
+  "schema": "CROSS_ASSET_ETF_SESSION_SUPPLEMENT",
+  "schema_version": "1.0",
+  "status": "USER_PASTED_API_ROWS_NORMALIZED_NON_CANONICAL",
+  "received_date": "2026-07-23",
+  "session_date": "2026-07-22",
+  "source_provenance": {
+    "received_as": "USER_PASTED_SUCCESS_API_RESPONSES",
+    "exact_endpoint_or_receipt": null,
+    "independent_source_verification_in_this_write": false,
+    "authority": "SUPPLEMENTAL_EVIDENCE_ONLY",
+    "prior_ledger_path": "02_DATA_PING/operational_handoffs/accepted_logs/supplements/2026-07-22__btc-eth-sol-etf-ledger-through-2026-07-21__user-pasted.json",
+    "eth_20jul_supersession_path": "02_DATA_PING/operational_handoffs/accepted_logs/supplements/2026-07-22T060335Z__farside-20jul-eth-flow-superseding-revision.json",
+    "eth_20jul_forward_value_usd_m": 38.0
+  },
+  "btc": {
+    "session_row": {
+      "IBIT": 38.8,
+      "FBTC": 21.5,
+      "BITB": 5.4,
+      "ARKB": 0.0,
+      "BTCO": 0.0,
+      "EZBC": 0.0,
+      "BRRR": 0.0,
+      "HODL": 0.0,
+      "BTCW": 0.0,
+      "MSBT": 3.8,
+      "GBTC": -38.3,
+      "BTC": 37.9,
+      "total_usd_m": 69.1
+    },
+    "derived": {
+      "positive_streak_sessions": 7,
+      "latest_vs_prior_session_change_pct": -65.9941,
+      "gross_positive_usd_m": 107.4,
+      "gross_negative_usd_m": -38.3,
+      "IBIT_share_of_net_pct": 56.1505,
+      "last_2_usd_m": 272.3,
+      "last_3_usd_m": 499.1,
+      "last_5_usd_m": 710.5,
+      "last_7_usd_m": 999.3,
+      "last_10_usd_m": 569.7,
+      "recovery_vs_2026_07_13_outflow_pct": 235.2955
+    }
+  },
+  "eth": {
+    "session_row": {
+      "ETHA": 53.5,
+      "ETHB": 0.0,
+      "FETH": 19.2,
+      "ETHW": 0.0,
+      "TETH": 0.0,
+      "ETHV": 0.0,
+      "QETH": 0.0,
+      "EZET": 0.0,
+      "ETHE": 0.0,
+      "ETH": 0.0,
+      "total_usd_m": 72.7
+    },
+    "derived": {
+      "positive_streak_sessions": 4,
+      "latest_vs_prior_session_change_pct": 93.8667,
+      "ETHA_share_of_net_pct": 73.5901,
+      "FETH_share_of_net_pct": 26.4099,
+      "last_2_usd_m": 110.2,
+      "last_3_usd_m": 148.2,
+      "last_5_usd_m": 156.9,
+      "last_7_usd_m": 269.1,
+      "last_10_usd_m": 219.9
+    }
+  },
+  "cross_asset": {
+    "combined_latest_usd_m": 141.8,
+    "BTC_share_pct": 48.7306,
+    "ETH_share_pct": 51.2694,
+    "ETH_minus_BTC_usd_m": 3.6,
+    "latest_read": "ETH_NET_FLOW_EXCEEDS_BTC_WHILE_BOTH_REMAIN_POSITIVE",
+    "last_4_combined_usd_m": 816.3,
+    "last_4_ETH_share_pct": 22.6510,
+    "last_7_combined_usd_m": 1268.4,
+    "last_7_ETH_share_pct": 21.2157
+  },
+  "normalization_rules": [
+    "All values are USD millions.",
+    "Staking fee rows are metadata and excluded from flow calculations.",
+    "Zero values are preserved as reported.",
+    "The 20 Jul ETH value is 38.0 for forward calculations because the prior 3.7 parse was superseded.",
+    "Provider lifetime summary statistics are not used for short-horizon experiment scoring."
+  ],
+  "authority": {
+    "binding": false,
+    "canonical_acceptance": false,
+    "framework_state_change": false,
+    "portfolio_action": false
+  }
+}
