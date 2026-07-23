@@ -1,0 +1,73 @@
+{
+  "schema": "DATA_PING_COMPACT_DEVELOPMENT_QA",
+  "schema_version": "1.0",
+  "source_snapshot_id": "DPSNAP_20260723T190916450Z_dcd4c6a2",
+  "manifest_version": "1.0-DRAFT-9.1-CONSOLIDATED",
+  "status": "PASS_DEVELOPMENT_PARTIAL_CLOSE_TO_OPERATIONAL_SHADOW_ACCEPTANCE",
+  "verified_strengths": {
+    "development_acceptance": "YES_PARTIAL",
+    "production_acceptance": "NO",
+    "actions": {"planned": 60, "attempted": 60, "successful": 58, "failed": 2, "inherited_block": 0},
+    "controls": {"executed": 27, "passed": 27, "failed": 0},
+    "market_mode": "BINANCE_PRIMARY_WITH_OKX_PARITY_QA",
+    "binance_primary": "PASS",
+    "okx_parity": "PASS_QA_ONLY_NOT_CHAINABLE",
+    "official_stablecoin": "UNAVAILABLE_AFTER_PRIMARY_AND_FALLBACK",
+    "serialized_size_bytes": 18014,
+    "size_limit_bytes": 30000,
+    "headroom_bytes": 11986,
+    "headroom_pct": 39.95,
+    "material_improvements": [
+      "SERIES_IDENTITY_AND_CONTINUITY_REGISTRY_PRESENT",
+      "PRIMARY_FALLBACK_AND_CROSSCHECK_LANES_SEPARATED",
+      "LAST_ATTEMPTED_LAST_SUCCESSFUL_PRIMARY_AND_CROSSCHECK_RECEIPTS_SEPARATED",
+      "ACTION_ACCOUNTING_RECONCILES",
+      "CONSTITUENT_LEVEL_BREADTH_ROWS_PRESERVED_FOR_FUTURE_COHORT_RECONSTRUCTION",
+      "COMPRESSED_BLOCKS_HAVE_UNCOMPRESSED_SHA256",
+      "PAYLOAD_HEADROOM_MATERIALLY_RESTORED"
+    ],
+    "remaining_limits": [
+      "OFFICIAL_STABLECOIN_LAYER_UNAVAILABLE",
+      "FIXED_RISK35_REGISTRY_NOT_RATIFIED",
+      "CURRENT_BINANCE_OI_NOTIONAL_NOT_COMPUTABLE_FROM_CURRENT_ENDPOINT",
+      "COMPRESSED_BLOCK_DECODER_CONTRACT_SHOULD_INCLUDE_UNCOMPRESSED_SIZE_AND_MAX_DECOMPRESSION_LIMIT"
+    ]
+  },
+  "decoder_contract_feedback": {
+    "required_additions": [
+      "COMPRESSION_METHOD_VERSION_PER_BLOCK",
+      "COMPRESSED_SIZE_BYTES_PER_BLOCK",
+      "UNCOMPRESSED_SIZE_BYTES_PER_BLOCK",
+      "MAX_ALLOWED_UNCOMPRESSED_BYTES",
+      "EXPECTED_JSON_ROOT_SCHEMA_ID",
+      "DECODER_FAILURE_ENUM",
+      "BLOCK_REQUIRED_OR_OPTIONAL_FLAG"
+    ],
+    "reason": "XZ_BASE64_RESTORES_HEADROOM_BUT_CONSUMER_SAFETY_AND_REPRODUCIBILITY_REQUIRE_EXPLICIT_RESOURCE_AND_SCHEMA_LIMITS"
+  },
+  "continuity_feedback": {
+    "status": "PASS",
+    "key_rule": "FALLBACK_OR_PARITY_REPLACES_AVAILABILITY_NOT_SERIES_IDENTITY",
+    "binance_primary_chainable": true,
+    "okx_crosscheck_chainable_to_binance": false
+  },
+  "breadth_feedback": {
+    "status": "METHODOLOGICALLY_IMPROVED_NOT_YET_CANONICAL",
+    "constituent_rows_preserved": true,
+    "fixed_risk35_registry": "UNAVAILABLE_NO_RATIFIED_REGISTRY",
+    "recommendation": "BEGIN_PROSPECTIVE_MATCHED_COHORT_ROWS_FROM_THIS_RUN_FORWARD; DO_NOT_BACKFILL_OR_COMPARE_DYNAMIC_AGGREGATES_ACROSS_HASHES"
+  },
+  "stablecoin_feedback": {
+    "status": "ONLY_REMAINING_SOURCE_FAILURE",
+    "recommendation": "KEEP_OPTIONAL_FOR_COMPACT_PROFILE_OR_USE_BOUNDED_PAGINATED_ENDPOINT; DO_NOT_REPEAT_UNBOUNDED_OVERSIZED_CALL_AS_A_RELEASE_BLOCKER"
+  },
+  "block_verification": {
+    "source_ledgers_uncompressed_sha256": "423c2a5693fd4b332e86403d0d1bc0d1c0b1f47e08e062b637aa6b28a5de7066",
+    "source_ledgers_independent_decode": "PASS",
+    "deterministic_aggregates_uncompressed_sha256": "0868ea6e6a8af58b5ca77211b182205531c597f829be57ae3283c45b9d292adb",
+    "deterministic_aggregates_independent_decode": "PASS",
+    "overall_packet_exact_byte_from_chat": "NOT_VERIFIABLE_FROM_RENDERED_SMART_QUOTE_TRANSCRIPT"
+  },
+  "production_activation": false,
+  "canonical_state_change": false
+}
