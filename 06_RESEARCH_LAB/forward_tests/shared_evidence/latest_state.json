@@ -1,8 +1,12 @@
 {
-  "schema_version": "1.0",
-  "updated_at_utc": "2026-07-23T00:00:00Z",
+  "schema_version": "1.1",
+  "updated_at_utc": "2026-07-23T07:55:00Z",
   "protocol_path": "06_RESEARCH_LAB/protocols/2026-07-23__continuous-forward-evidence-accumulation-v1__operational.md",
   "ledger_path": "06_RESEARCH_LAB/forward_tests/shared_evidence/decision_distribution_ledger_v1.csv",
+  "runtime_owner": "DAILY_SENSOR_PLUS_SWING_LAB",
+  "runtime_binding_path": "03_WEEKLY_OPERATIONS/forecast_experiments/governance/2026-07-21__experiment-enrichment-protocol-v1__canonical.md",
+  "standalone_scheduler_required": false,
+  "standalone_scheduler_status": "NOT_REQUIRED_EMBEDDED",
   "owner_test_ids": [
     "FRLP_V0_1",
     "GATE_BTC_PARTIAL_FT_1",
@@ -22,8 +26,8 @@
   "duplicate_rows_rejected": 0,
   "latest_evidence_id": null,
   "latest_matured_evidence_id": null,
-  "next_review": "AFTER_NEW_ELIGIBLE_ROW_OR_WEEKLY_MASTER_MONDAY",
-  "status": "READY_FOR_APPEND_ONLY_ACCUMULATION",
+  "next_review": "EACH_DAILY_SENSOR_SWING_RUN_AND_WEEKLY_SETTLEMENT",
+  "status": "READY_EMBEDDED_APPEND_ONLY_ACCUMULATION",
   "authority": {
     "new_test": false,
     "new_engine": false,
