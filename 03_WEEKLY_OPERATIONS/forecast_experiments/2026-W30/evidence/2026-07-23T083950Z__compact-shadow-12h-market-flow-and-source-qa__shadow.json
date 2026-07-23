@@ -1,0 +1,223 @@
+{
+  "schema": "FORECAST_EXPERIMENT_COMPACT_12H_FILTERED_EVIDENCE_APPEND",
+  "schema_version": "1.0",
+  "status": "EXISTING_EXPERIMENTS_AND_SOURCE_QA_UPDATED_NON_BINDING",
+  "source_contract": "DATA_PING_COMPACT_SHADOW_v1",
+  "source_run_id": "DPRUN_20260723T082130386Z_ca6ee35e",
+  "source_snapshot_id": "DPSNAP_20260723T083950914Z_45fe7e3a",
+  "source_freeze_utc": "2026-07-23T08:39:50.914Z",
+  "source_role": "DEVELOPMENT_SHADOW_BY_FIELD_EVIDENCE_WITH_12H_EXTENSION",
+  "binding": false,
+  "canonical_acceptance": false,
+  "market_authority": false,
+  "portfolio_authority": false,
+  "reported_packet_sha256": "e504185de1415c1555d12a1c374846b3e453d93cf3fad0841e7eb35caedc0ac5",
+  "hash_verification": "SELF_REPORTED_NOT_EXACT_BYTE_VERIFIED_FROM_PASTED_RENDERING",
+  "duplicate_controls": {
+    "BTC_ETF_2026_07_22_NOT_RECOUNTED": true,
+    "ETH_ETF_2026_07_22_NOT_RECOUNTED": true,
+    "new_ETF_session_event": false,
+    "new_market_experiment_created": false
+  },
+  "market_freeze": {
+    "BTCUSDT": {
+      "last": 65637.21,
+      "change_24h_pct": -0.506,
+      "high_24h": 66384.0,
+      "low_24h": 65351.02
+    },
+    "ETHUSDT": {
+      "last": 1924.25,
+      "change_24h_pct": 0.201,
+      "high_24h": 1956.45,
+      "low_24h": 1912.6
+    },
+    "ETHBTC": {
+      "last": 0.02932,
+      "change_24h_pct": 0.721,
+      "distance_below_0_0300_pct": 2.26666667
+    },
+    "ETH_relative_outperformance_vs_BTC_24h_pp": 0.707,
+    "BTC_dominance_pct": 56.61863492,
+    "ETH_dominance_pct": 9.97890834,
+    "total_market_cap_usd": 2320289035983.972,
+    "market_cap_change_24h_pct": -0.42578623,
+    "read": "ETH_RELATIVE_STRENGTH_PERSISTS_DURING_A_COOLER_ABSOLUTE_MARKET_BUT_ETHBTC_REMAINS_BELOW_CONFIRMATION"
+  },
+  "delta_vs_immediately_prior_freeze_2026_07_23T071343Z": {
+    "BTC_price_change_pct": 0.05031690,
+    "ETH_price_change_pct": 0.34574107,
+    "ETHBTC_change_pct": 0.10242404,
+    "BTC_current_OI_change_pct": 0.14395898,
+    "ETH_current_OI_change_pct": 0.74875043,
+    "read": "SMALL_RELATIVE_ETH_REBOUND_WITHOUT_A_NEW_BREAKOUT_OR_ROTATION_CONFIRMATION"
+  },
+  "source_native_12h_spot": {
+    "window_policy": "LATEST_12_FULLY_SETTLED_HOURLY_INTERVALS",
+    "BTCUSDT": {
+      "close_change_pct": -0.72972804,
+      "range_pct_of_start_open": 1.45945607,
+      "net_taker_quote_usd": -23150685.06898588,
+      "buy_share": 0.47003222
+    },
+    "ETHUSDT": {
+      "close_change_pct": -0.49295116,
+      "range_pct_of_start_open": 1.50118952,
+      "net_taker_quote_usd": -19792989.01725298,
+      "buy_share": 0.43472078
+    },
+    "ETHBTC": {
+      "close_change_pct": 0.23964396,
+      "range_pct_of_start_open": 0.51352277,
+      "net_taker_quote_btc": 4.74766617,
+      "buy_share": 0.55347344
+    },
+    "read": "BOTH_USD_MAJORS_DECLINED_WITH_NET_SELLING_OVER_12H_WHILE_ETHBTC_GAINED_WITH_POSITIVE_PAIR_FLOW",
+    "inference_boundary": "BINANCE_ONLY_NOT_MARKET_WIDE_CVD"
+  },
+  "latest_settled_flow_update": {
+    "BTCUSDT_net_quote_usd": {
+      "15M": -1278297.8078577,
+      "1H": -4191868.5031498,
+      "4H": -13411880.3590499,
+      "24H": -23934954.96374607
+    },
+    "ETHUSDT_net_quote_usd": {
+      "15M": 279584.011573,
+      "1H": 3665095.22826,
+      "4H": 782337.93175101,
+      "24H": -6061229.96363097
+    },
+    "ETHBTC_net_quote_btc": {
+      "15M": 0.16600892,
+      "1H": 0.37072692,
+      "4H": -0.59952123,
+      "24H": 12.95096437
+    },
+    "change_vs_prior_window_snapshot": {
+      "BTC_1H_usd": -3838379.56952650,
+      "BTC_4H_usd": -8321756.52529190,
+      "ETH_1H_usd": 3182096.30540700,
+      "ETH_4H_usd": 14284862.06546801,
+      "ETHBTC_1H_btc": 0.87093863,
+      "ETHBTC_4H_btc": -9.27568757
+    },
+    "read": "ETH_ABSOLUTE_SHORT_HORIZON_FLOW_IMPROVED_WHILE_BTC_WEAKENED_BUT_ETHBTC_4H_PAIR_FLOW_ROLLED_NEGATIVE",
+    "inference_boundary": "WINDOWS_HAVE_LATER_SETTLED_ENDPOINTS_AND_ARE_NOT_IDENTICAL_EVENT_WINDOWS"
+  },
+  "futures_update": {
+    "BTCUSDT": {
+      "current_funding_pct": 0.000665,
+      "latest_settled_funding_pct": 0.000271,
+      "latest3_average_funding_pct": 0.000457,
+      "OI_delta_1h_pct": -0.74238361,
+      "OI_delta_4h_pct": -0.64481386,
+      "OI_delta_12h_pct": -1.05411329,
+      "OI_delta_24h_pct": -2.09994916
+    },
+    "ETHUSDT": {
+      "current_funding_pct": -0.002558,
+      "latest_settled_funding_pct": -0.003313,
+      "latest3_average_funding_pct": 0.001185,
+      "OI_delta_1h_pct": 0.20313416,
+      "OI_delta_4h_pct": 0.56354011,
+      "OI_delta_12h_pct": -0.55917658,
+      "OI_delta_24h_pct": 1.68637834
+    },
+    "current_cross_asset_24h_OI_spread_ETH_minus_BTC_pp": 3.78632750,
+    "prior_cross_asset_24h_OI_spread_pp": 3.12073481,
+    "spread_change_pp": 0.66559269,
+    "spread_change_pct": 21.32807593,
+    "read": "ETH_OI_REMAINS_POSITIVE_RELATIVE_TO_BTC_AND_THE_24H_SPREAD_REWIDENED_SLIGHTLY_AFTER_PRIOR_COMPRESSION",
+    "risk_update": "CURRENT_ETH_FUNDING_REMAINS_NEGATIVE_SO_OI_GROWTH_IS_NOT_ACCOMPANIED_BY_OBVIOUS_LONG_EUPHORIA"
+  },
+  "range_context": {
+    "BTC_current_partial_range_pct_of_open": 1.45615845,
+    "BTC_current_to_20d_median_ratio": 0.51980380,
+    "ETH_current_partial_range_pct_of_open": 1.49064350,
+    "ETH_current_to_20d_median_ratio": 0.42075606,
+    "read": "CURRENT_DAILY_RANGES_REMAIN_BELOW_PRIOR_20_SETTLED_DAY_MEDIANS_AND_DO_NOT_SIGNAL_RANGE_EXHAUSTION"
+  },
+  "dynamic_breadth_source_qa": {
+    "experiment_id": "W30_BREADTH_QA_H5",
+    "current_membership_sha256": "597ed8eaf4a3d64f046a4fa31f0b9330c9f97df490fc38a875e4e747f5af5535",
+    "included_n": 71,
+    "distinct_membership_hash_count": 7,
+    "current_advancing_pct": {
+      "1H": 19.71830986,
+      "24H": 43.66197183,
+      "7D": 42.25352113
+    },
+    "prior_advancing_pct": {
+      "1H": 61.97183099,
+      "24H": 50.70422535,
+      "7D": 46.47887324
+    },
+    "delta_vs_prior_pp": {
+      "1H": -42.25352113,
+      "24H": -7.04225352,
+      "7D": -4.22535211
+    },
+    "membership_changed": true,
+    "per_constituent_performance_rows_preserved": false,
+    "status_update": "CONFIRMED_INSTABILITY_EXTENDED_WITH_SEVENTH_HASH_AND_ANOTHER_LARGE_HASH_LINKED_DISCONTINUITY",
+    "market_signal_status": "INVALID_FOR_CROSS_RUN_DELTA_OR_FIXED_COHORT_INFERENCE",
+    "operational_rule": "DO_NOT_COMPARE_DYNAMIC_BREADTH_LEVELS_ACROSS_CHANGED_MEMBERSHIP_HASHES_AND_DO_NOT_SUBSTITUTE_FOR_FIXED_RISK35"
+  },
+  "collector_profile_qa": {
+    "receipt_validation": "PASS_AFTER_PRIOR_FAIL",
+    "compact_profile_validation": "PASS_AFTER_PRIOR_FAIL",
+    "development_acceptance": "YES_PARTIAL_AFTER_PRIOR_NO",
+    "serialized_size_bytes": 26844,
+    "size_limit_bytes": 30000,
+    "headroom_bytes": 3156,
+    "headroom_pct": 10.52,
+    "size_reduction_vs_prior_bytes": 2227,
+    "official_stablecoin_status": "UNAVAILABLE_AFTER_PRIMARY_AND_FALLBACK",
+    "production_acceptance": "NO",
+    "read": "MATERIAL_COLLECTOR_RECOVERY_WITH_A_REMAINING_STABLECOIN_GAP_AND_NONBINDING_AUTHORITY"
+  },
+  "tri_challenger_boundary": {
+    "experiment_id": "W30_TRANSMISSION_RATE_CHALLENGER_H7",
+    "post_preregistration": true,
+    "new_12h_source_native_rows_present": true,
+    "required_complete_prospective_row_present": false,
+    "missing_required_fields": [
+      "SETTLED_ETHBTC_DAILY_CLOSE_IN_NORMALIZED_PROSPECTIVE_ROW",
+      "SLOPE_5_SESSION",
+      "BTC_DAILY_RETURN",
+      "ETH_DAILY_RETURN",
+      "LEADER",
+      "BTC_DOWN_ETH_UP_BOOLEAN"
+    ],
+    "status": "POST_PREREG_BUT_ROW_INCOMPLETE_NOT_SCOREABLE",
+    "backfill_allowed": false
+  },
+  "experiment_updates": {
+    "W30_ROTATION_H1": "LIVE_EARLY_ETH_RELATIVE_TRANSMISSION_PERSISTS_ON_12H_PRICE_AND_FLOW_BUT_4H_PAIR_FLOW_ROLLED_OVER_AND_0_0300_REMAINS_UNCONFIRMED",
+    "W30_CAPITAL_H2": "LIVE_LARGE_CAP_TRANSLATION_WATCH_ONLY_NO_MID_CAP_CLEARANCE",
+    "W30_FLOW_H3": "LIVE_MIXED_ETH_VS_BTC_OI_DIVERGENCE_REWIDENED_SLIGHTLY_WITH_NEGATIVE_12H_ABSOLUTE_SPOT_FLOW",
+    "W30_BREADTH_QA_H5": "CONFIRMED_INSTABILITY_EXTENDED_SEVENTH_HASH",
+    "W30_BINANCE_AVAILABILITY_QA_H6": "LIVE_STABLE_PASS_EXTENSION_NO_NEW_TRANSITION",
+    "W30_TRANSMISSION_RATE_CHALLENGER_H7": "POST_PREREG_ROW_INCOMPLETE_NOT_SCOREABLE"
+  },
+  "not_updated": {
+    "W30_CFGI_DIVERGENCE_H4": "NO_ASSET_SPECIFIC_MULTI_HORIZON_CFGI_FIELDS_IN_THIS_PACKET"
+  },
+  "framework_shadow_delta": {
+    "structural_repair": "INTACT_BUT_COOLING",
+    "ETH_relative_transmission": "PERSISTENT_EARLY_BUT_MIXED_AND_UNCONFIRMED",
+    "rotation": "NO_ROTATION",
+    "broad_recovery": "NOT_CONFIRMED",
+    "large_cap_window": "WATCH_ONLY_CLOSER_NOT_OPEN",
+    "mid_cap_window": "WAIT",
+    "small_micro_meme_window": "NO_CLEARANCE",
+    "new_entry_signal": "NOT_ACTIVE",
+    "portfolio_action": "NONE",
+    "user_action": "HOLD_AND_WAIT"
+  },
+  "new_market_experiment_created": false,
+  "canonical_pointer_advanced": false,
+  "canonical_state_change": false,
+  "portfolio_action_change": false
+}
