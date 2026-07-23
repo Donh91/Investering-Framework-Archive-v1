@@ -2,7 +2,9 @@
 
 **Status:** CANONICAL_OPERATIONAL_PROTOCOL  
 **Effective:** 2026-07-21  
+**Last integrated:** 2026-07-23  
 **Owner:** Main Framework / ChatGPT  
+**Runtime owner:** Daily Sensor + Swing Lab  
 **Scope:** DATA PING, automations, Master Monday, Cycle Navigator, TechDev inputs, Research Lab outputs and independent online market baselines.
 
 ## 1. Purpose
@@ -85,6 +87,7 @@ When sources conflict:
 When a DATA PING is absent or incomplete, collect the best available current baseline for:
 
 ### Price and structure
+
 - BTC price;
 - ETH price;
 - direct ETH/BTC;
@@ -92,6 +95,7 @@ When a DATA PING is absent or incomplete, collect the best available current bas
 - BTC dominance and total market cap when available.
 
 ### Flow and positioning
+
 - latest completed BTC and ETH ETF session;
 - IBIT and rolling ETF sums when available;
 - spot taker flow or approved proxy;
@@ -102,11 +106,13 @@ When a DATA PING is absent or incomplete, collect the best available current bas
 - account and top-position ratios.
 
 ### Participation and sentiment
+
 - CFGI Market, BTC and ETH across available horizons;
 - 1H, 24H and 7D price breadth;
 - large-cap and mid-cap relative participation when measurable.
 
 ### Liquidity and macro
+
 - stablecoin supply/history;
 - TVL/history;
 - market-wide CVD;
@@ -218,3 +224,61 @@ Use:
 - `03_WEEKLY_OPERATIONS/forecast_experiments/learning/` for cumulative pattern summaries.
 
 All records are append-only except active registry pointers, which may be updated after successful readback.
+
+## 13. Embedded continuous forward-evidence accumulation
+
+Continuous forward-evidence accumulation is a mandatory subroutine of the existing `Daily Sensor + Swing Lab`. It is not a separate scheduler, test or engine.
+
+Every daily run must read and apply:
+
+- `06_RESEARCH_LAB/protocols/2026-07-23__continuous-forward-evidence-accumulation-v1__operational.md`;
+- `06_RESEARCH_LAB/forward_tests/shared_evidence/decision_distribution_row.schema.json`;
+- `06_RESEARCH_LAB/forward_tests/shared_evidence/decision_distribution_ledger_v1.csv`;
+- `06_RESEARCH_LAB/forward_tests/shared_evidence/latest_state.json`.
+
+The embedded subroutine may write only for the existing owners:
+
+- `FRLP_V0_1`;
+- `GATE_BTC_PARTIAL_FT_1`;
+- `PULLBACK_EDGE_20260708_01_OUTCOMES`;
+- `FNP_CUMULATIVE`.
+
+For every eligible real-time observation it must:
+
+1. freeze the source state before the outcome is known;
+2. preserve source hash, horizon, benchmark, observation unit, independent-event identity, overlap group and right-censoring;
+3. mature only from later verified evidence;
+4. preserve MFE, MAE, drawdown, avoided drawdown, missed upside, opportunity cost and false-permission cost where available;
+5. keep day-level paths and independent-event summaries separate;
+6. use matched observational units for signal and control;
+7. leave missing values as `UNKNOWN`;
+8. prevent duplicates by evidence ID and source hash;
+9. update shared coverage state only after branch, PR, merge and main readback.
+
+A valid source row is not automatically a valid outcome row. A non-divergent observation is not a decision-divergence outcome. Overlapping days from one causal cluster may not count as independent successes.
+
+The normal daily run remains silent when no eligible row or material maturity exists. This embedded function does not consume an additional automation slot.
+
+## 14. Retrospective review cadence
+
+Use the accumulated shared evidence for:
+
+- weekly coverage and maturity reconciliation;
+- relationship and baseline review after 20 to 30 new eligible outcomes;
+- quarterly distribution, regime-stability, overlap and simplification audits.
+
+Historical event studies and prospective rows must remain separated in every later analysis.
+
+## 15. Embedded-runtime authority boundary
+
+```text
+STANDALONE_SCHEDULER: NO
+RUNTIME_OWNER: DAILY_SENSOR_PLUS_SWING_LAB
+NEW_TEST: NO
+NEW_ENGINE: NO
+AUTOMATIC_RULE_PROMOTION: NO
+MARKET_STATE_CHANGE: NO
+GATE_CHANGE: NO
+REBUY_CHANGE: NO
+PORTFOLIO_ACTION: NO
+```
