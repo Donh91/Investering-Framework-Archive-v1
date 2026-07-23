@@ -1,0 +1,112 @@
+{
+  "schema": "DATA_PING_COMPACT_SHADOW_12H_FILTERED_DEVELOPMENT_EVIDENCE",
+  "schema_version": "1.0",
+  "status": "NONCANONICAL_DEVELOPMENT_EVIDENCE_ONLY",
+  "source_contract": "DATA_PING_COMPACT_SHADOW_v1",
+  "source_profile": "BOUNDED_COMPACT_AI2AI",
+  "source_run_id": "DPRUN_20260723T082130386Z_ca6ee35e",
+  "source_snapshot_id": "DPSNAP_20260723T083950914Z_45fe7e3a",
+  "source_collector_log_id": "DPLOG_20260723T083950914Z_4c10244c",
+  "source_freeze_utc": "2026-07-23T08:39:50.914Z",
+  "received_as": "USER_PASTED_PACKET",
+  "binding": false,
+  "release_eligible": false,
+  "production_activation_allowed": false,
+  "canonical_acceptance": false,
+  "reported_packet_sha256": "e504185de1415c1555d12a1c374846b3e453d93cf3fad0841e7eb35caedc0ac5",
+  "reported_hash_scope": "EXACT_ONE_LINE_JSON_UTF8_BYTES",
+  "external_exact_byte_verification": "NOT_POSSIBLE_FROM_PASTED_TYPOGRAPHIC_QUOTE_RENDERING",
+  "collection_summary": {
+    "planned_source_actions": 45,
+    "attempted_source_actions": 45,
+    "terminal_source_actions": 45,
+    "successful_source_actions": 43,
+    "failed_source_actions": 2,
+    "planned_control_checks": 20,
+    "passed_control_checks": 20,
+    "failed_control_checks": 0,
+    "collection_status": "PARTIAL",
+    "development_acceptance": "YES_PARTIAL",
+    "production_acceptance": "NO",
+    "packet_generation_gate": "OPEN",
+    "final_freeze_status": "PASS",
+    "market_calls_after_freeze": 0
+  },
+  "validation_results": {
+    "source_completeness_validation": "SELF_REPORTED_PASS_WITH_EXPLICIT_STABLECOIN_UNAVAILABLE",
+    "receipt_evidence_validation": "SELF_REPORTED_PASS",
+    "receipt_validation": "SELF_REPORTED_PASS",
+    "semantic_transform_validation": "SELF_REPORTED_PASS",
+    "exact_byte_validation": "SELF_REPORTED_PASS_NOT_EXTERNALLY_REPRODUCED",
+    "hash_validation": "SELF_REPORTED_PASS_NOT_EXTERNALLY_REPRODUCED",
+    "compact_profile_validation": "SELF_REPORTED_PASS",
+    "lookback_12h_validation": "SELF_REPORTED_PASS",
+    "strict_json_validation": "SELF_REPORTED_PASS",
+    "forbidden_interpretation_scan": "SELF_REPORTED_PASS"
+  },
+  "improvement_vs_prior_2026_07_23T071343Z": {
+    "receipt_validation": "FAIL_TO_PASS",
+    "compact_profile_validation": "FAIL_TO_PASS",
+    "development_acceptance": "NO_TO_YES_PARTIAL",
+    "failed_control_checks": "1_TO_0",
+    "serialized_size_bytes_prior": 29071,
+    "serialized_size_bytes_current": 26844,
+    "size_reduction_bytes": 2227,
+    "size_reduction_pct": 7.66055519,
+    "headroom_bytes_prior": 929,
+    "headroom_bytes_current": 3156,
+    "headroom_pct_current": 10.52,
+    "assessment": "MATERIAL_PROFILE_AND_RECEIPT_RECOVERY_BUT_NOT_PRODUCTION_ELIGIBLE"
+  },
+  "remaining_defects": {
+    "official_stablecoin_overview": {
+      "status": "UNAVAILABLE_AFTER_PRIMARY_AND_FALLBACK",
+      "primary_receipt_id": "R004",
+      "fallback_receipt_id": "R005",
+      "primary_failure_cause": "RESPONSE_TOO_LARGE",
+      "fallback_failure_cause": "NOT_DETERMINED",
+      "impact": "OFFICIAL_STABLECOIN_TOTAL_AND_HISTORY_REMAIN_UNAVAILABLE",
+      "recommended_fix": "USE_BOUNDED_PREAGGREGATED_OR_PAGINATED_OFFICIAL_ENDPOINT_WITH_EXPLICIT_SCOPE"
+    },
+    "funding_exact_12h": {
+      "status": "NOT_COMPARABLE",
+      "reason": "SOURCE_CADENCE_8H_NO_EXACT_12H_SETTLEMENT_WINDOW",
+      "impact": "DO_NOT_LABEL_THE_16H_COVERING_WINDOW_AS_EXACT_12H"
+    },
+    "production_activation": {
+      "status": "NO",
+      "reason": "CONTRACT_IS_NONBINDING_COMPACT_SHADOW_AND_OFFICIAL_STABLECOIN_LAYER_IS_MISSING"
+    }
+  },
+  "usable_by_field_layers": [
+    "BINANCE_FINAL_PRICE_FREEZE",
+    "LATEST_12_FULLY_SETTLED_HOURLY_SPOT_ROWS",
+    "SETTLED_15M_1H_4H_24H_SPOT_TAKER_WINDOWS",
+    "EXACT_COMPLETED_OI_ANCHORS_1H_4H_12H_24H",
+    "SOURCE_NATIVE_8H_FUNDING_HISTORY",
+    "DYNAMIC_BREADTH_MEMBERSHIP_AND_AGGREGATES_FOR_SOURCE_QA_ONLY",
+    "SOURCE_DISCREPANCY_CHECKS",
+    "FRED_DATE_NATIVE_MACRO_ROWS",
+    "CURRENT_TVL_AND_DISPLAYED_ETH_DEX_PROXY"
+  ],
+  "duplicate_not_recounted": [
+    "BTC_ETF_SESSION_2026_07_22_PLUS_69_1M",
+    "ETH_ETF_SESSION_2026_07_22_PLUS_72_7M"
+  ],
+  "sentiment_handling": {
+    "current_value": 31,
+    "prior_value_in_previous_packet": 33,
+    "source_timestamp": null,
+    "retrieved_timestamp": "2026-07-23T08:21:51.146Z",
+    "status": "NEW_RETRIEVAL_BUT_SOURCE_DATE_UNPROVEN",
+    "use": "SUPPORTING_SENTIMENT_OBSERVATION_ONLY"
+  },
+  "archive_decision": {
+    "retain_full_pasted_packet": false,
+    "retain_filtered_normalized_evidence": true,
+    "advance_canonical_data_ping_pointer": false,
+    "change_framework_state": false,
+    "change_portfolio_action": false,
+    "reason": "THE_RUN MATERIALLY IMPROVES RECEIPT_AND_PROFILE_VALIDATION_AND_ADDS_EXACT_12H_SOURCE_NATIVE_EVIDENCE_BUT_REMAINS_NONBINDING_AND_PARTIAL"
+  }
+}
