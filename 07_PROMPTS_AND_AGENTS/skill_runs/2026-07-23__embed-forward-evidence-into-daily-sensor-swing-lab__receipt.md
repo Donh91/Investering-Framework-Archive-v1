@@ -1,8 +1,9 @@
 # Governance Receipt - Embed Forward Evidence Accumulation into Daily Sensor + Swing Lab
 
 **Date:** 2026-07-23  
-**Status:** PENDING_PR_VALIDATION  
-**Branch:** `agent/task-20260723-embed-forward-evidence-into-daily-lab`
+**Status:** PASS / EMBEDDED_RUNTIME_ACTIVE  
+**Initial branch:** `agent/task-20260723-embed-forward-evidence-into-daily-lab`  
+**Finalization branch:** `agent/finalize-20260723-embed-forward-evidence`
 
 ## Decision
 
@@ -53,13 +54,19 @@ NO_REBUY_CHANGE
 NO_PORTFOLIO_ACTION
 ```
 
-## Pending validation
+## Validation completed
 
 ```yaml
-branch_readback: PENDING
-changed_file_scope: PENDING
-pull_request: PENDING
-main_merge: PENDING
-main_readback: PENDING
-final_repository_state: PENDING
+branch_readback: PASS
+changed_file_scope: PASS_EXACTLY_4_PATHS
+pull_request: 132
+pull_request_mergeable: PASS
+main_merge: PASS
+main_merge_sha: 5f856fc9b12411a3600095c01847b42842d0c7a8
+main_readback: PASS
+runtime_binding: DAILY_SENSOR_PLUS_SWING_LAB
+standalone_scheduler_required: false
+final_repository_state: PASS
 ```
+
+The failed attempt to create a sixth automation is superseded by this embedded-runtime decision. No separate task is required or expected.
