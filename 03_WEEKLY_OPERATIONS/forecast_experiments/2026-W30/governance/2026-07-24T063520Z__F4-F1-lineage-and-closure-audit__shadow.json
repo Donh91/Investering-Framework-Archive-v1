@@ -1,0 +1,55 @@
+{
+  "schema": "FALSIFIER_LINEAGE_AND_CLOSURE_AUDIT",
+  "schema_version": "1.0",
+  "status": "OPEN_LINEAGE_BLOCKS_WITH_NO_PREMATURE_CLOSURE",
+  "created_at_utc": "2026-07-24T06:35:20.197Z",
+  "source_role": "OTA_EXTERNAL_CHALLENGER",
+  "external_F4": {
+    "formal_score": "BLOCKED_LINEAGE_OR_METHOD",
+    "reasons": [
+      "ORIGINAL_VENUE_SYMBOL_TIMEZONE_AND_CLOSE_CONVENTION_NOT_RECOVERED",
+      "FINAL_SESSION_NOT_SETTLED_AT_OBSERVATION",
+      "PRIOR_OTA_ROWS_MIXED_UTC_CEST_AND_LIVE_VALUES"
+    ],
+    "allowed_interim_statement": "NINE_SETTLED_ROWS_ON_BOTH_CANDIDATE_BASES_REMAIN_BELOW_0_0300_AND_DECLINE_FROM_DAY1_TO_DAY9",
+    "prohibited_statement": "F4_FORMALLY_FAILED_OR_CLOSED_BEFORE_SETTLEMENT_AND_LINEAGE_RESOLUTION",
+    "F5_interaction": {
+      "BTC_flow_persistence_antecedent": "BROKEN_BY_PREREGISTERED_F5",
+      "allowed_final_label_if_gate_unmet": "ABSOLUTE_GATE_UNMET_BTC_FLOW_PERSISTENCE_ANTECEDENT_BROKEN_CAUSAL_LABEL_CONFOUNDED",
+      "prohibited_final_label": "PERSISTENT_BTC_FLOW_WITHOUT_TRANSMISSION"
+    },
+    "leading_claim": {
+      "evidence_read": "STRONGLY_NEGATIVE_IN_OBSERVED_WINDOW",
+      "retirement_status": "SEPARATE_GOVERNANCE_CANDIDATE_NOT_AUTOMATIC_F4_RESULT",
+      "strongest_case_for": "ETHBTC_DECLINED_APPROX_2_5_PERCENT_WHILE_BTC_MADE_LOCAL_HIGH_AND_TYPE2_STRUCTURE_LED_CONVERGENCE_WAS_NOT_OBSERVED",
+      "strongest_case_against": "WINDOW_ANTECEDENT_BROKE_BASIS_IS_UNRESOLVED_AND_FINAL_SESSION_WAS_UNSETTLED",
+      "decision": "DEFER_FORMAL_RETIREMENT"
+    }
+  },
+  "F1": {
+    "formal_score": "BLOCKED_THRESHOLD_LINEAGE",
+    "candidate_thresholds_usd": [62200.0,62342.0],
+    "current_status": "NOT_FAILED_UNDER_EITHER_THRESHOLD",
+    "evidence_read": "62342_CLOSELY_MATCHES_USDT_UTC_CLUSTER_BUT_DOES_NOT_PROVE_ORIGINAL_FREEZE",
+    "required_resolution": [
+      "ORIGINAL_PREREGISTRATION_ARTIFACT",
+      "TIMESTAMP_OF_ANY_THRESHOLD_CHANGE",
+      "VENUE_QUOTE_ASSET_TIMEZONE_AND_CLOSE_CONVENTION"
+    ]
+  },
+  "sample_and_dependency_guard": {
+    "n19_pings_as_independent_events": false,
+    "raw_observation_clusters": [
+      "PRICE_STRUCTURE_CLUSTER",
+      "BTC_ETF_FLOW_CLUSTER",
+      "CROSS_ASSET_ETF_CLUSTER"
+    ],
+    "rule": "PINGS_ARE_OBSERVATION_TIMES_NOT_INDEPENDENT_TRIALS_AND_CLUSTER_COUNT_IS_NOT_AUTOMATIC_FORECAST_EVENT_COUNT"
+  },
+  "governance_effect": {
+    "canonical_state_change": false,
+    "portfolio_action_change": false,
+    "rebuy_permission_change": false,
+    "new_entry_permission_change": false
+  }
+}
