@@ -1,0 +1,173 @@
+{
+  "schema": "CONTROLLED_HISTORICAL_EVENT_STUDY_BATCH",
+  "schema_version": "1.0",
+  "run_id": "DAILY_SENSOR_SWING_LAB_20260724T193518Z",
+  "created_at_utc": "2026-07-24T19:35:18Z",
+  "source_family": "ACCEPTED_DATA_PING_V6",
+  "source_artifacts_scanned": 2,
+  "classification_counts": {
+    "PROSPECTIVE_VALID": 0,
+    "HISTORICAL_EVENT_STUDY_ONLY": 4,
+    "BLOCKED_LINEAGE_OR_METHOD": 1,
+    "DUPLICATE_EXISTING_ROW": 0
+  },
+  "rows": [
+    {
+      "row_id": "HES_V6_20260719_ETFBTC_117H",
+      "classification": "HISTORICAL_EVENT_STUDY_ONLY",
+      "hypothesis_family": "ETF_DURABILITY_AND_PRICE_TRANSLATION",
+      "causal_event_window": "V6_REPAIR_20260719_TO_DRAFT11_20260724",
+      "evaluation_horizon": "117_67H_OBSERVATIONAL",
+      "source": {
+        "id": "DATA_PING_V6_20260719T200033Z",
+        "observed_at_utc": "2026-07-19T20:00:33.514Z",
+        "artifact_path": "02_DATA_PING/operational_handoffs/accepted_logs/payloads/2026-07-19T200033Z__data-ping-v6__accepted-payload.json",
+        "artifact_blob_sha": "50fbe3667db55b9b34a7d1f58550fa2a3b2e816c",
+        "method": "ACCEPTED_V6_COMPACT_EXTRACT"
+      },
+      "frozen_observation": {
+        "btc_price": 64392.7,
+        "btc_etf_latest_completed_session": "2026-07-17",
+        "btc_etf_total_usd_m": 132.3,
+        "ibit_usd_m": 136.5,
+        "btc_positive_streak": 4,
+        "btc_etf_7_session_usd_m": 70.6
+      },
+      "outcome": {
+        "source_id": "DATA_PING_COMPACT_20260724T171855Z_5984fc82",
+        "observed_at_utc": "2026-07-24T17:40:35.812182Z",
+        "artifact_path": "03_WEEKLY_OPERATIONS/forecast_experiments/2026-W30/evidence/2026-07-24T174035Z__draft11-market-flow-and-source-qa__shadow.json",
+        "artifact_blob_sha": "292dbd044463994f578ad95d2d83ba443724101b",
+        "btc_price": 64158.0,
+        "btc_return_pct": -0.3644823093300942,
+        "latest_completed_btc_etf_session": "2026-07-23",
+        "latest_btc_etf_usd_m": -225.1,
+        "F5_triggered": true
+      },
+      "descriptive_result": "POSITIVE_IBIT_LED_STREAK_DID_NOT_PRESERVE_PRICE_ADVANCE_AND_LATER_BTC_ETF_FLOW_REVERSED",
+      "prospective_hit_rate_eligible": false,
+      "promotion_threshold_eligible": false
+    },
+    {
+      "row_id": "HES_V6_20260719_SPOTFLOW_117H",
+      "classification": "HISTORICAL_EVENT_STUDY_ONLY",
+      "hypothesis_family": "SPOT_FLOW_VERSUS_PRICE_DIVERGENCE",
+      "causal_event_window": "V6_REPAIR_20260719_TO_DRAFT11_20260724",
+      "evaluation_horizon": "117_67H_OBSERVATIONAL",
+      "source": {
+        "id": "DATA_PING_V6_20260719T200033Z",
+        "observed_at_utc": "2026-07-19T20:00:33.514Z",
+        "artifact_blob_sha": "50fbe3667db55b9b34a7d1f58550fa2a3b2e816c",
+        "method": "BINANCE_VENUE_SPECIFIC_SPOT_TAKER"
+      },
+      "frozen_observation": {
+        "btc_spot_taker_4h_usd_m": 8.560315977006301,
+        "btc_spot_taker_24h_usd_m": 10.870912206587493,
+        "eth_spot_taker_4h_usd_m": 6.929282786072999,
+        "eth_spot_taker_24h_usd_m": 12.540244474328011,
+        "market_wide_cvd": "UNAVAILABLE"
+      },
+      "outcome": {
+        "source_id": "DATA_PING_COMPACT_20260724T171855Z_5984fc82",
+        "observed_at_utc": "2026-07-24T17:40:35.812182Z",
+        "artifact_blob_sha": "292dbd044463994f578ad95d2d83ba443724101b",
+        "btc_12h_net_taker_usd": -34545604.14342964,
+        "eth_12h_net_taker_usd": 8066130.00728601,
+        "btc_return_pct": -0.3644823093300942,
+        "eth_return_pct": 0.23822967922346727
+      },
+      "descriptive_result": "BTC_MEDIUM_HORIZON_POSITIVE_TAKER_REPAIR_DID_NOT_PERSIST_WHILE_ETH_LATER_SHOWED_RELATIVE_12H_BUY_BALANCE",
+      "prospective_hit_rate_eligible": false,
+      "promotion_threshold_eligible": false
+    },
+    {
+      "row_id": "HES_V6_20260719_LEVERAGE_117H",
+      "classification": "HISTORICAL_EVENT_STUDY_ONLY",
+      "hypothesis_family": "OI_FUNDING_BASIS_LEVERAGE_QUALITY",
+      "causal_event_window": "V6_REPAIR_20260719_TO_DRAFT11_20260724",
+      "evaluation_horizon": "117_67H_OBSERVATIONAL",
+      "source": {
+        "id": "DATA_PING_V6_20260719T200033Z",
+        "observed_at_utc": "2026-07-19T20:00:33.514Z",
+        "artifact_blob_sha": "50fbe3667db55b9b34a7d1f58550fa2a3b2e816c",
+        "method": "BINANCE_USDM"
+      },
+      "frozen_observation": {
+        "btc_basis_pct": -0.04507058826865862,
+        "btc_funding_pct": 0.005451,
+        "btc_oi_delta_24h_pct": 1.0836105500435567,
+        "eth_basis_pct": -0.04568375416671433,
+        "eth_funding_pct": 0.006084,
+        "eth_oi_delta_24h_pct": 1.4882157244032967
+      },
+      "outcome": {
+        "source_id": "DATA_PING_COMPACT_20260724T171855Z_5984fc82",
+        "observed_at_utc": "2026-07-24T17:40:35.812182Z",
+        "artifact_blob_sha": "292dbd044463994f578ad95d2d83ba443724101b",
+        "btc_funding_rate": 5.879e-05,
+        "btc_oi_delta_24h_pct": 1.683285,
+        "eth_funding_rate": 1.716e-05,
+        "eth_oi_delta_24h_pct": -1.14583,
+        "btc_return_pct": -0.3644823093300942,
+        "eth_return_pct": 0.23822967922346727
+      },
+      "descriptive_result": "BTC_LEVERAGE_BUILD_PERSISTED_WITHOUT_POSITIVE_PRICE_FOLLOW_THROUGH_WHILE_ETH_DELEVERAGED_AND_RELATIVELY_OUTPERFORMED",
+      "prospective_hit_rate_eligible": false,
+      "promotion_threshold_eligible": false
+    },
+    {
+      "row_id": "HES_V6_20260719_ETHBTC_BTCD_117H",
+      "classification": "HISTORICAL_EVENT_STUDY_ONLY",
+      "hypothesis_family": "ETHBTC_ROTATION_PROXIMITY_AND_BTCD_CONTEXT",
+      "causal_event_window": "V6_REPAIR_20260719_TO_DRAFT11_20260724",
+      "evaluation_horizon": "117_67H_OBSERVATIONAL",
+      "source": {
+        "id": "DATA_PING_V6_20260719T200033Z",
+        "observed_at_utc": "2026-07-19T20:00:33.514Z",
+        "artifact_blob_sha": "50fbe3667db55b9b34a7d1f58550fa2a3b2e816c",
+        "method": "DIRECT_BINANCE_ETHBTC_PLUS_COINGECKO_BTCD"
+      },
+      "frozen_observation": {
+        "ethbtc": 0.02888,
+        "btc_dominance_pct": 56.48275062005579,
+        "distance_below_0_0300_pct": 3.7333333333333316,
+        "rotation_status": "NO_ROTATION"
+      },
+      "outcome": {
+        "source_id": "DATA_PING_COMPACT_20260724T171855Z_5984fc82",
+        "observed_at_utc": "2026-07-24T17:40:35.812182Z",
+        "artifact_blob_sha": "292dbd044463994f578ad95d2d83ba443724101b",
+        "ethbtc": 0.02906,
+        "ethbtc_change_pct": 0.6232686980609303,
+        "btc_dominance_pct": 56.49340461612453,
+        "btc_dominance_change_pp": 0.010653996068739957,
+        "distance_below_0_0300_pct": 3.1333333333333333,
+        "rotation_status": "NO_ROTATION"
+      },
+      "descriptive_result": "ETHBTC_IMPROVED_MODESTLY_WITHOUT_0_0300_CONFIRMATION_AND_BTCD_WAS_NEAR_FLAT",
+      "prospective_hit_rate_eligible": false,
+      "promotion_threshold_eligible": false
+    }
+  ],
+  "blocked_candidates": [
+    {
+      "candidate_id": "HES_V6_20260719_BREADTH_117H",
+      "classification": "BLOCKED_LINEAGE_OR_METHOD",
+      "hypothesis_family": "BREADTH_TRANSMISSION",
+      "reason": "V6_DYNAMIC_MEMBERSHIP_HASH_AVAILABLE_BUT_DRAFT11_OUTCOME_PRESERVED_ONLY_15_ROW_SAMPLE_WITHOUT_MEMBERSHIP_HASH_OR_ADVANCER_DECLINER_AGGREGATES",
+      "source_blob_sha": "50fbe3667db55b9b34a7d1f58550fa2a3b2e816c",
+      "outcome_blob_sha": "292dbd044463994f578ad95d2d83ba443724101b"
+    }
+  ],
+  "anti_hindsight": {
+    "retrospective_forecast_created": false,
+    "outcome_used_in_frozen_fields": false,
+    "current_constituents_used_for_historical_breadth": false,
+    "counts_toward_prospective_promotion": false
+  },
+  "authority": {
+    "market_state": false,
+    "portfolio_action": false,
+    "rule_promotion": false
+  }
+}
