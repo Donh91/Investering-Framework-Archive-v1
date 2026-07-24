@@ -1,30 +1,36 @@
 {
   "schema": "LATEST_CROSS_ASSET_ETF_EXPERIMENT_STATE",
-  "schema_version": "1.0",
+  "schema_version": "1.1",
   "status": "ACTIVE_SHADOW_TRACKING",
-  "coverage_through": "2026-07-21",
-  "ledger_path": "02_DATA_PING/operational_handoffs/accepted_logs/supplements/2026-07-22__btc-eth-sol-etf-ledger-through-2026-07-21__user-pasted.json",
-  "evidence_path": "03_WEEKLY_OPERATIONS/forecast_experiments/2026-W30/evidence/2026-07-22__btc-eth-sol-etf-diffusion__shadow.json",
-  "linked_hypotheses": ["W30_FLOW_H3","W30_CAPITAL_H2","W30_ROTATION_H1"],
+  "coverage_through": {
+    "BTC": "2026-07-23",
+    "ETH": "2026-07-23",
+    "SOL": "2026-07-21"
+  },
+  "ledger_path": "02_DATA_PING/operational_handoffs/accepted_logs/supplements/2026-07-24__btc-eth-etf-ledger-through-2026-07-23__official-farside.json",
+  "evidence_path": "03_WEEKLY_OPERATIONS/forecast_experiments/2026-W30/evidence/2026-07-24T053000Z__ota-ping19__challenger.json",
+  "f5_score_path": "03_WEEKLY_OPERATIONS/forecast_experiments/2026-W30/scores/2026-07-24T053000Z__F5-flow-steady-state__score.json",
+  "linked_hypotheses": ["W30_FLOW_H3", "W30_CAPITAL_H2", "W30_ROTATION_H1"],
   "nested_subtest": "W30_CAPITAL_H2_ETF_DIFFUSION_SUBTEST",
   "latest_state": {
-    "BTC": "SIX_SESSION_POSITIVE_STREAK_STRONG_BUT_LATEST_CONCENTRATED",
-    "ETH": "THREE_SESSION_POSITIVE_STREAK_MODERATE_AND_ISSUER_CONCENTRATED",
-    "SOL": "TWO_SESSION_POSITIVE_STREAK_EARLY_SMALL_SCALE_SINGLE_PRODUCT",
-    "cross_asset": "EARLY_DIFFUSION_PRESENT_BUT_BTC_REMAINS_ABOUT_82_PERCENT_OF_LATEST_COMBINED_FLOW",
+    "BTC": "SEVEN_SESSION_POSITIVE_STREAK_BROKEN_BY_MINUS_225_1M_IBIT_LED_REVERSAL",
+    "ETH": "FIVE_SESSION_POSITIVE_STREAK_CONTINUES_AT_PLUS_26_3M_BUT_FLOW_DECELERATED_63_8_PERCENT",
+    "SOL": "STALE_THROUGH_2026_07_21_EARLY_SMALL_SCALE_SINGLE_PRODUCT",
+    "cross_asset": "BTC_NEGATIVE_ETH_POSITIVE_RELATIVE_FLOW_DIVERGENCE_BUT_COMBINED_BTC_ETH_FLOW_MINUS_198_8M",
+    "F5": "TRIGGERED_SINGLE_DAY_BELOW_MINUS_100M",
+    "stage_1_history": "COMPLETE_RATIFIED_NOT_REVOKED",
+    "current_flow_support": "BROKEN_POST_RATIFICATION",
     "rotation": "NO_ROTATION",
     "large_cap_window": "WATCH_ONLY_NOT_OPEN"
   },
   "next_required_evidence": [
-    "NEXT_COMPLETED_BTC_ETH_SOL_ETF_SESSION",
-    "FIVE_SESSION_ETH_AND_SOL_PERSISTENCE",
-    "ETHBTC_PRICE_CONFIRMATION_OR_FAILURE",
-    "STABLE_LARGE_CAP_VS_MID_CAP_RELATIVE_STRENGTH",
-    "PROVIDER_CONCENTRATION_TREND"
+    "2026_07_24_COMPLETED_BTC_AND_ETH_ETF_SESSION",
+    "ETHBTC_FINAL_F4_SETTLED_CLOSE",
+    "PRICE_CONFIRMATION_OR_FAILURE_OF_RELATIVE_ETH_FLOW_DIVERGENCE",
+    "SOL_ETF_UPDATE_IF_AVAILABLE",
+    "PROVIDER_CONCENTRATION_AND_REVISION_CHECK"
   ],
   "canonical_pointer_advanced": false,
   "portfolio_action": "NONE",
-  "pull_request": 109,
-  "merge_commit_sha": "2632d5db4f74429f7763ef0b6d8ac9bf2c490409",
-  "readback_status": "PASS_BRANCH_PR_MERGE_AND_MAIN_VERIFIED"
+  "readback_status": "PENDING_BRANCH_PR_MERGE_AND_MAIN_VERIFICATION"
 }
