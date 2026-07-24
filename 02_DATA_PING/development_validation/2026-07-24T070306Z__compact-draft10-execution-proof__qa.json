@@ -1,0 +1,100 @@
+{
+  "schema": "DATA_PING_COMPACT_DEVELOPMENT_QA",
+  "schema_version": "1.0",
+  "source_contract": "DATA_PING_COMPACT_SHADOW_v1",
+  "source_version": "1.0-DRAFT-10",
+  "manifest": "1.0-DRAFT-10-EXECUTION-PROOF",
+  "source_run_id": "DPRUN_20260724T064222985328Z_0e4327ee",
+  "source_snapshot_id": "DATA_PING_COMPACT_20260724T064222Z_06a6917b",
+  "observed_at_utc": "2026-07-24T07:03:06.716373Z",
+  "status": "MATERIAL_ARCHITECTURE_IMPROVEMENT_EXECUTION_PROOF_PARTIAL_NOT_INDEPENDENTLY_COMPLETE",
+  "provenance": {
+    "input_mode": "USER_PASTED_PACKET",
+    "framework_visibility_of_original_tool_trace": false,
+    "reported_packet_sha256": "a182ab7fc789ca7df0008e4d3d5d351029d82bbb0f1e0e3b98c6d01665bb111",
+    "exact_packet_sha256_from_chat": "NOT_INDEPENDENTLY_REPRODUCIBLE_SMART_QUOTES_AND_RENDERED_LINE_BREAK",
+    "execution_claim_treatment": "SELF_REPORTED_WITH_RESOLVABLE_WEB_REFERENCES_AND_PARTIAL_CONNECTOR_REFERENCE_GAP"
+  },
+  "action_accounting": {
+    "attempted": 49,
+    "successful": 48,
+    "failed": 1,
+    "inherited_block": 0,
+    "terminal": 49,
+    "receipt_count": 49,
+    "internal_reconciliation": "PASS",
+    "external_trace_reconciliation": "NOT_COMPUTED_TRACE_NOT_VISIBLE_TO_MAIN_FRAMEWORK"
+  },
+  "material_fixes_vs_draft9_1": [
+    "MANDATORY_FARSIDE_AND_CFGI_WEB_ACTIONS_HAVE_CURRENT_RUN_RESULT_REFERENCES",
+    "PAYLOAD_IS_TRANSPARENT_JSON_NOT_XZ_BASE64_BLOBS",
+    "PRIMARY_BINANCE_AND_OKX_CURRENT_CROSSCHECK_MODES_ARE_EXPLICITLY_SEPARATED",
+    "OKX_IS_NOT_CLAIMED_AS_FULL_PARITY_HISTORY",
+    "ONLY_ONE_UNBOUNDED_STABLECOIN_ATTEMPT_IS_MADE",
+    "LAST_ATTEMPTED_LAST_SUCCESSFUL_PRIMARY_AND_CROSSCHECK_RECEIPTS_ARE_SEPARATED",
+    "ACTION_COUNTS_AND_RECEIPT_COUNTS_RECONCILE_INTERNALLY",
+    "BREADTH_CONSTITUENT_ROWS_ARE_VISIBLE_AND_HASHED",
+    "MARKET_CALLS_AFTER_FREEZE_REPORTED_AS_ZERO",
+    "PACKET_HAS_MEANINGFUL_BUT_NOT_LARGE_HEADROOM"
+  ],
+  "verified_from_packet_structure": {
+    "mandatory_web_result_references_present": true,
+    "transparent_json": true,
+    "primary_market_source": "BINANCE_PASS",
+    "okx_mode": "CROSSCHECK_CURRENT_ONLY",
+    "stablecoin_official": "UNAVAILABLE_RESPONSE_TOO_LARGE",
+    "serialized_size_bytes": 26309,
+    "size_limit_bytes": 30000,
+    "headroom_bytes": 3691,
+    "headroom_pct": 12.303333,
+    "production_activation": false,
+    "release_eligible": false
+  },
+  "remaining_execution_proof_gaps": [
+    {
+      "code": "CONNECTOR_RESULT_REFERENCE_NOT_EXTERNALLY_RESOLVABLE",
+      "detail": "Values such as connector:R007 point back to the receipt identifier rather than to an exported connector call or immutable result object.",
+      "required_fix": "Use exported_call_id_or_result_uri when available; otherwise record NO_EXPORTED_CALL_ID with a trace sequence reference and evidence limitation."
+    },
+    {
+      "code": "FINALIZER_RESULT_REFERENCE_MISSING",
+      "detail": "The packet declares CPython finalizer execution, trace SHA and two SHA passes but exposes no finalizer result reference or finalizer receipt.",
+      "required_fix": "Create a separate FINALIZER_RECEIPT containing executable result reference, input-byte SHA, output-byte SHA, byte count, parser result and duplicate-key/NaN checks."
+    },
+    {
+      "code": "SOURCE_TIME_KIND_REMOVED",
+      "detail": "Receipt source_timestamp mixes session date, observation date, server time, ticker time and kline collection clock without an explicit semantic type.",
+      "required_fix": "Restore a compact source_time_kind field or dictionary code and include window_start/window_end for historical rows."
+    },
+    {
+      "code": "RELEASE_STATUS_NAMING_AMBIGUITY",
+      "detail": "overall_release_status=PASS appears beside release_eligible=false and production_activation_allowed=false.",
+      "required_fix": "Rename to technical_contract_validation=PASS and keep release_decision=NO as a separate field."
+    },
+    {
+      "code": "COLLECTION_COMPLETE_NAMING_AMBIGUITY",
+      "detail": "collection_complete=true coexists with official stablecoin failure.",
+      "required_fix": "Use mandatory_collection_complete=true and optional_source_failures=[DEFILLAMA_STABLECOINS]."
+    },
+    {
+      "code": "ROWS_AUTHORITY_SCOPE_AMBIGUITY",
+      "detail": "rows_authority=AUTHORITATIVE can be mistaken for canonical framework authority although the packet is non-binding.",
+      "required_fix": "Rename to within_packet_source_rows_authority=AUTHORITATIVE and state canonical_authority=false beside it."
+    }
+  ],
+  "payload_assessment": {
+    "status": "PASS_BUT_TIGHTER_THAN_WORLD_CLASS_TARGET",
+    "current_headroom_pct": 12.303333,
+    "recommended_minimum_pct": 15,
+    "preferred_operational_target_pct": 20,
+    "reason": "Error text, revisions, additional receipts or one extra source family can consume the remaining 3691 bytes."
+  },
+  "recommended_acceptance": {
+    "technical_structure": "PASS_WITH_CAVEATS",
+    "development_execution_proof": "PARTIAL",
+    "production_acceptance": "NO",
+    "next_gate": "THREE_CLEAN_TRACE_RECONCILED_RUNS_WITH_FINALIZER_RECEIPT_AND_ONE_FORCED_SOURCE_FAILURE"
+  },
+  "canonical_state_change": false,
+  "portfolio_action_change": false
+}
