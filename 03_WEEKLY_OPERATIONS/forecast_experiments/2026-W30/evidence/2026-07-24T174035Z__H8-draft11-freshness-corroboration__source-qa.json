@@ -1,0 +1,45 @@
+{
+  "schema": "SOURCE_CACHE_FRESHNESS_QA_EVIDENCE",
+  "schema_version": "1.0",
+  "experiment_id": "W30_SOURCE_CACHE_FRESHNESS_QA_H8",
+  "status": "SUPPORTING_CORROBORATION_NOT_CONFIRMATION",
+  "observed_at_utc": "2026-07-24T17:40:35.812182Z",
+  "source_snapshot_id": "DATA_PING_COMPACT_20260724T171855Z_5984fc82",
+  "relationship_to_OTA20": {
+    "OTA20_corrected_BTC_approx": 64134.0,
+    "DRAFT11_Binance_BTC": 64158.0,
+    "DRAFT11_OKX_BTC": 64139.9,
+    "DRAFT11_CoinGecko_BTC": 64003.0,
+    "DRAFT11_vs_OTA20_time_gap_minutes_approx": 13.4,
+    "assessment": "DRAFT11_INDEPENDENT_RUNTIME_VALUES_SUPPORT_THE_CORRECTED_64K_REGION_AND_CONTRADICT_THE_STALE_65_4K_REGION"
+  },
+  "freshness_controls_present": {
+    "source_native_timestamps_on_binance_okx": true,
+    "independent_current_crosscheck": true,
+    "retrieved_at_utc": true,
+    "response_payload_sha256_per_receipt": false,
+    "prior_response_hash_comparison": false,
+    "freshness_basis_field": false,
+    "quarantine_status_field": false,
+    "cache_age_or_edge_metadata": false,
+    "standalone_action_trace_resolvable": false
+  },
+  "H8_confirmation_rule_status": {
+    "second_independent_cache_event_observed": false,
+    "original_cache_event_reproduced_with_exported_raw_hashes": false,
+    "freshness_guard_quarantined_stale_payload_before_use": "NOT_DEMONSTRATED_IN_DRAFT11",
+    "overall": "OPEN_NOT_CONFIRMED"
+  },
+  "required_next_change_for_data_ping": [
+    "ADD_RESPONSE_PAYLOAD_SHA256_TO_CURRENT_MARKET_RECEIPTS",
+    "ADD_FRESHNESS_BASIS_ENUM",
+    "ADD_PRIOR_RESPONSE_HASH_MATCH_FLAG",
+    "ADD_SOURCE_NATIVE_TIME_OR_SEQUENCE_VALIDATION",
+    "ADD_QUARANTINE_STATUS_AND_DEPENDENT_FIELD_INVALIDATION",
+    "KEEP_MULTI_VENUE_OR_KLINE_PARITY_AS_REQUIRED_FALLBACK_WHEN_SOURCE_NATIVE_TIME_IS_ABSENT"
+  ],
+  "market_authority": false,
+  "canonical_authority": false,
+  "portfolio_authority": false,
+  "counts_as_market_experiment": false
+}
