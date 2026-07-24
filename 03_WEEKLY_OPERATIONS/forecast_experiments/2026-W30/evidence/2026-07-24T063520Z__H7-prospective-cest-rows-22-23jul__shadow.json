@@ -1,0 +1,45 @@
+{
+  "schema": "H7_PROSPECTIVE_ROW_EVIDENCE",
+  "schema_version": "1.0",
+  "experiment_id": "W30_TRANSMISSION_RATE_CHALLENGER_H7",
+  "status": "TWO_PROSPECTIVE_ROWS_NO_SIGNAL_WITH_EXTERNAL_RECEIPT_GAP",
+  "source_preregistration_path": "03_WEEKLY_OPERATIONS/forecast_experiments/2026-W30/2026-07-22T180000Z__transmission-rate-index-challenger__shadow.json",
+  "source_basis": {
+    "venue": "BINANCE_SPOT",
+    "timezone": "EUROPE_COPENHAGEN",
+    "session_rule": "CEST_DAY_CLOSE_IS_CLOSE_OF_1H_CANDLE_OPENING_21_00_UTC_AND_CLOSING_22_00_UTC",
+    "symbols": ["BTCUSDT","ETHUSDT","ETHBTC"],
+    "no_imputation": true
+  },
+  "provenance": {
+    "source_run": "USER_PASTED_CLAUDE_OTA_TARGETED_AUDIT",
+    "reported_raw_1h_fetch_executed": true,
+    "raw_candle_rows_embedded": false,
+    "unique_source_receipt_ids_embedded": false,
+    "lineage_status": "PARTIAL_EXTERNAL_REPRODUCIBILITY_CLAIM_NOT_FULL_MAIN_THREAD_RECEIPT_PROOF"
+  },
+  "context_rows": [
+    {"date_cest":"2026-07-17","btc_close":64110.00,"eth_close":1841.54,"ethbtc_close":0.02873,"row_status":"CONTEXT_ONLY"},
+    {"date_cest":"2026-07-18","btc_close":64731.72,"eth_close":1860.97,"ethbtc_close":0.02876,"btc_return_1d_pct":0.97,"eth_return_1d_pct":1.06,"eth_minus_btc_return_pp":0.09,"leader":"ETH","btc_down_eth_up":false,"binary_gate_0_0300_status":"UNMET","row_status":"CONTEXT_ONLY"},
+    {"date_cest":"2026-07-19","btc_close":64415.75,"eth_close":1862.12,"ethbtc_close":0.02891,"btc_return_1d_pct":-0.49,"eth_return_1d_pct":0.06,"eth_minus_btc_return_pp":0.55,"leader":"ETH","btc_down_eth_up":true,"binary_gate_0_0300_status":"UNMET","row_status":"CONTEXT_ONLY"},
+    {"date_cest":"2026-07-20","btc_close":65286.02,"eth_close":1902.45,"ethbtc_close":0.02914,"btc_return_1d_pct":1.35,"eth_return_1d_pct":2.17,"eth_minus_btc_return_pp":0.81,"leader":"ETH","btc_down_eth_up":false,"binary_gate_0_0300_status":"UNMET","row_status":"CONTEXT_ONLY"},
+    {"date_cest":"2026-07-21","btc_close":66385.00,"eth_close":1924.32,"ethbtc_close":0.02900,"btc_return_1d_pct":1.68,"eth_return_1d_pct":1.15,"eth_minus_btc_return_pp":-0.53,"leader":"BTC","btc_down_eth_up":false,"binary_gate_0_0300_status":"UNMET","row_status":"CONTEXT_ONLY"}
+  ],
+  "prospective_rows": [
+    {"date_cest":"2026-07-22","btc_close":66072.47,"eth_close":1938.76,"ethbtc_close":0.02933,"btc_return_1d_pct":-0.47,"eth_return_1d_pct":0.75,"eth_minus_btc_return_pp":1.22,"leader":"ETH","btc_down_eth_up":true,"binary_gate_0_0300_status":"UNMET","row_status":"PROSPECTIVE_VALID_EXTERNAL_RECEIPT_GAP","source_receipt_id":null},
+    {"date_cest":"2026-07-23","btc_close":65169.81,"eth_close":1882.72,"ethbtc_close":0.02889,"btc_return_1d_pct":-1.37,"eth_return_1d_pct":-2.89,"eth_minus_btc_return_pp":-1.52,"leader":"BTC","btc_down_eth_up":false,"binary_gate_0_0300_status":"UNMET","row_status":"PROSPECTIVE_VALID_EXTERNAL_RECEIPT_GAP","source_receipt_id":null}
+  ],
+  "evaluation": {
+    "qualified_row_count": 2,
+    "required_rows_for_5_session_log_slope": 5,
+    "ETH_leads_available_rows": 1,
+    "ETHBTC_direction_22_to_23": "NEGATIVE",
+    "candidate_signal_status": "INSUFFICIENT_ROWS_NO_SIGNAL",
+    "early_transmission_candidate": false,
+    "rotation_confirmation": false,
+    "no_rescue_rule_respected": true
+  },
+  "next_required_row": "2026-07-24_CEST_SETTLED_CLOSE_AFTER_2026-07-24T22:00:00Z",
+  "canonical_authority": false,
+  "portfolio_authority": false
+}
