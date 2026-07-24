@@ -1,0 +1,35 @@
+{
+  "schema": "HISTORICAL_BACKFILL_RUNTIME_STATE",
+  "schema_version": "1.0",
+  "updated_at_utc": "2026-07-24T19:35:18Z",
+  "owner": "DAILY_SENSOR_PLUS_SWING_LAB_v1_1",
+  "plan_path": "03_WEEKLY_OPERATIONS/forecast_experiments/backfill/2026-07-21__historical-backfill-plan-and-source-inventory-v1.json",
+  "last_completed_item": "V6_ACCEPTED_20260719_CORE_EVENT_STUDY_BATCH_001",
+  "next_item": "V6_ADDITIONAL_TIMESTAMPED_EVENT_ROWS",
+  "last_batch_path": "03_WEEKLY_OPERATIONS/forecast_experiments/backfill/batches/2026-07-24T193518Z__v6-event-study-batch-001.json",
+  "last_batch_sha256": "c083cdf54bc65707d96736172156bce0a2abf85bb0307b303633a441ae0cd1b3",
+  "source_artifacts_scanned_this_run": 2,
+  "rows_this_run": {
+    "prospective_valid": 0,
+    "historical_event_study_only": 4,
+    "blocked_lineage_or_method": 1,
+    "duplicates_prevented": 0
+  },
+  "cumulative_from_known_registry_baseline": {
+    "prospective_valid_rows_imported": 1,
+    "historical_event_study_rows_imported": 4,
+    "blocked_rows": 2,
+    "duplicate_rows_prevented": 0
+  },
+  "promotion_counting": {
+    "prospective_valid_only": true,
+    "historical_event_study_excluded": true
+  },
+  "write_incident": {
+    "status": "PARTIAL_REMEDIATED",
+    "accidental_path": "dummy",
+    "accidental_main_commit": "54696a582be42966c4ab1088089a47b955c69abd",
+    "removal_main_commit": "512883f830db93a5a344ad2e40ba28f26e0c2048",
+    "final_path_exists": false
+  }
+}
