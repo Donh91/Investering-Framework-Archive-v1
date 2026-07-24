@@ -1,0 +1,48 @@
+{
+  "schema": "PREREGISTERED_FALSIFIER_SCORE",
+  "schema_version": "1.0",
+  "falsifier_id": "F5_FLOW_STEADY_STATE",
+  "status": "TRIGGERED_PROSPECTIVELY",
+  "preregistration_source": "CHECKPOINT_AUDIT_v1_0_FULL_CYCLE_RECEIPTS_2026_07_19",
+  "preregistered_rule_verbatim_normalized": "TWO_CONSECUTIVE_NET_NEGATIVE_DAYS_OR_ANY_SINGLE_DAY_BELOW_MINUS_100M_WITHIN_THE_NEXT_FIVE_SESSIONS_CAUSES_P1_FLOW_CONTINUITY_TO_BE_RETROACTIVELY_FLAGGED_BROKEN",
+  "trigger_session_date": "2026-07-23",
+  "trigger_observation": {
+    "BTC_ETF_total_usd_m": -225.1,
+    "IBIT_usd_m": -202.5,
+    "official_source": "FARSIDE_INVESTORS",
+    "verification_status": "OFFICIAL_CURRENT_PAGE_VERIFIED_REVISION_POSSIBLE"
+  },
+  "rule_evaluation": {
+    "two_consecutive_negative_days": false,
+    "single_day_below_minus_100m": true,
+    "within_preregistered_five_session_window": true,
+    "trigger_result": true,
+    "ambiguity_status": "RESOLVED_BY_ORIGINAL_PREREGISTRATION"
+  },
+  "formal_result": "P1_FLOW_CONTINUITY_RETROACTIVELY_FLAGGED_BROKEN",
+  "what_this_does_not_mean": [
+    "STAGE_1_HISTORICAL_RATIFICATION_IS_REVOKED",
+    "REBUY_OR_DEPLOYMENT_DECISION_IS_AUTOMATICALLY_CHANGED",
+    "ROTATION_IS_CONFIRMED_OR_REJECTED_BY_F5_ALONE",
+    "THE_FIVE_SESSION_CUMULATIVE_SUM_MUST_BE_NEGATIVE"
+  ],
+  "interaction_with_F4": {
+    "F4_preregistered_antecedent": "STAGE_1_FIRES_AND_BTC_FLOW_PERSISTS",
+    "BTC_flow_persistence_after_F5": "BROKEN_BY_PREREGISTERED_RULE",
+    "effect": "F4_CANNOT_BE_CLEANLY_CLOSED_AS_PERSISTENT_BTC_FLOW_WITHOUT_TRANSMISSION_IF_FINAL_GATE_REMAINS_UNMET",
+    "recommended_F4_closure_if_0_0300_remains_unmet": "ABSOLUTE_GATE_UNMET_BUT_CAUSAL_LABEL_CONFOUNDED_BY_FLOW_REVERSAL",
+    "leading_claim_evidence": "STRONGLY_NEGATIVE_IN_WINDOW_BUT_FORMAL_PENSION_REQUIRES_GOVERNANCE_SEPARATE_FROM_F4_CAUSAL_LABEL"
+  },
+  "dependency_guard": {
+    "raw_degradations_reported_by_OTA": 4,
+    "independent_degradation_claim": "NOT_ACCEPTED",
+    "effective_clusters": [
+      "PRICE_AND_STRUCTURE_CLUSTER_THREE_DECLINING_CLOSES_F1_BUFFER_AND_ETHBTC_GATE",
+      "ETF_FLOW_CLUSTER_BTC_AND_IBIT_REVERSAL",
+      "CROSS_ASSET_FLOW_CLUSTER_ETH_REMAINS_POSITIVE_BUT_DECELERATES"
+    ],
+    "reason": "PRICE_CLOSES_F1_BUFFER_AND_F4_RATIO_ARE_NOT_INDEPENDENT_TESTS"
+  },
+  "canonical_authority": false,
+  "portfolio_authority": false
+}
