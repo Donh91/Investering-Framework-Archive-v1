@@ -1,0 +1,90 @@
+{
+  "schema": "H7_PROSPECTIVE_ROW_PROVENANCE_ADDENDUM",
+  "schema_version": "1.0",
+  "experiment_id": "W30_TRANSMISSION_RATE_CHALLENGER_H7",
+  "status": "PROVENANCE_IMPROVED_BUT_NOT_FULLY_VERIFIABLE_FROM_CHAT_TRANSCRIPT",
+  "created_at_utc": "2026-07-24T17:27:11Z",
+  "source_run": "CLAUDE_OTA_PING_20_USER_PASTED",
+  "existing_row_evidence_path": "03_WEEKLY_OPERATIONS/forecast_experiments/2026-W30/evidence/2026-07-24T063520Z__H7-prospective-cest-rows-22-23jul__shadow.json",
+  "method": {
+    "venue": "BINANCE_SPOT_DATA_API_MIRROR_REPORTED",
+    "interval": "1H",
+    "timezone": "EUROPE_COPENHAGEN",
+    "session_close_rule": "CLOSE_OF_1H_CANDLE_OPENING_21_00_UTC_AND_CLOSING_21_59_59_999_UTC",
+    "symbols": ["BTCUSDT","ETHUSDT","ETHBTC"]
+  },
+  "receipt_evidence": [
+    {
+      "date_cest": "2026-07-22",
+      "symbol": "BTCUSDT",
+      "receipt_id": "OTA20-BTCUSDT-20260722-04",
+      "url": "data-api.binance.vision/api/v3/klines",
+      "params": "symbol=BTCUSDT&interval=1h&startTime=1784754000000&limit=1",
+      "retrieved_at_utc": "2026-07-24T17:25:58.299Z",
+      "raw_candle_open_time": "2026-07-22T21:00:00Z",
+      "raw_candle_close_time": "2026-07-22T21:59:59.999Z",
+      "raw_close": "66072.47000000",
+      "raw_row_sha256": "abb7540c1d633b151f17ade7e9a51f7cd768e1030246cfeef5f8e8b59f818e0c",
+      "hash_status_in_transcript": "FULL"
+    },
+    {
+      "date_cest": "2026-07-23",
+      "symbol": "BTCUSDT",
+      "receipt_id": "OTA20-BTCUSDT-20260723-07",
+      "raw_close": "65169.81",
+      "raw_row_sha256_transcript": "893043b711ee5959…24ec53",
+      "hash_status_in_transcript": "TRUNCATED"
+    },
+    {
+      "date_cest": "2026-07-22",
+      "symbol": "ETHUSDT",
+      "receipt_id": "OTA20-ETHUSDT-20260722-05",
+      "raw_close": "1938.76",
+      "raw_row_sha256_transcript": "267e9a4eaeb632e0…fc43e2",
+      "hash_status_in_transcript": "TRUNCATED"
+    },
+    {
+      "date_cest": "2026-07-23",
+      "symbol": "ETHUSDT",
+      "receipt_id": "OTA20-ETHUSDT-20260723-08",
+      "raw_close": "1882.72",
+      "raw_row_sha256_transcript": "f19a2f1a632471f4…340af7",
+      "hash_status_in_transcript": "TRUNCATED"
+    },
+    {
+      "date_cest": "2026-07-22",
+      "symbol": "ETHBTC",
+      "receipt_id": "OTA20-ETHBTC-20260722-06",
+      "raw_close": "0.02933",
+      "raw_row_sha256_transcript": "cf67014d7225f64d…332e08",
+      "hash_status_in_transcript": "TRUNCATED"
+    },
+    {
+      "date_cest": "2026-07-23",
+      "symbol": "ETHBTC",
+      "receipt_id": "OTA20-ETHBTC-20260723-09",
+      "raw_close": "0.02889",
+      "raw_row_sha256_transcript": "36f68e8b2c1c02d4…93069a",
+      "hash_status_in_transcript": "TRUNCATED"
+    }
+  ],
+  "assessment": {
+    "method_reproducibility": "PASS",
+    "one_full_raw_row_hash_available": true,
+    "all_six_full_raw_row_hashes_available": false,
+    "original_raw_rows_embedded": false,
+    "main_framework_lineage_status": "PARTIAL_EXTERNAL_PROOF",
+    "qualified_row_count": 2,
+    "signal_status": "INSUFFICIENT_ROWS_NO_SIGNAL",
+    "row_values_changed": false,
+    "duplicate_rows_created": false
+  },
+  "required_to_close_gap": [
+    "FULL_UNTRUNCATED_SHA256_FOR_ALL_SIX_ROWS",
+    "RAW_SOURCE_ROW_BYTES_OR_IMMUTABLE_RESULT_REFERENCES",
+    "EXPORTED_EXECUTION_TRACE_OR_CONNECTOR_CALL_IDS"
+  ],
+  "next_eligible_row_after_utc": "2026-07-24T22:00:00Z",
+  "canonical_authority": false,
+  "portfolio_authority": false
+}
