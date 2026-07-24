@@ -1,0 +1,49 @@
+{
+  "schema": "FORECAST_EXPERIMENT_REGISTRY_ADDENDUM",
+  "schema_version": "1.0",
+  "created_at_utc": "2026-07-24T19:35:18Z",
+  "source_role": "DAILY_SENSOR_PLUS_SWING_LAB_v1_1",
+  "source_resolution": {
+    "selected": "DIRECT_PROJECT_THREAD_DRAFT11",
+    "eligibility": "NON_BINDING_BY_FIELD_ONLY_ALREADY_PROCESSED",
+    "duplicate_evidence_path": "03_WEEKLY_OPERATIONS/forecast_experiments/2026-W30/evidence/2026-07-24T174035Z__draft11-market-flow-and-source-qa__shadow.json"
+  },
+  "experiment_enrichment": {
+    "new_source_detected": false,
+    "evidence_appended": 0,
+    "experiments_created": 0,
+    "experiments_matured_and_scored": 0,
+    "no_material_experiment_delta": true,
+    "reason": "DRAFT11_ALREADY_ARCHIVED_AND_H4_24H_72H_ALREADY_SCORED_H7_24JUL_NOT_SETTLED"
+  },
+  "historical_backfill": {
+    "batch_path": "03_WEEKLY_OPERATIONS/forecast_experiments/backfill/batches/2026-07-24T193518Z__v6-event-study-batch-001.json",
+    "prospective_valid": 0,
+    "historical_event_study_only": 4,
+    "blocked": 1,
+    "duplicates_prevented": 0,
+    "promotion_effect": "NONE"
+  },
+  "sensor_pair_lab": {
+    "prospective_rows_frozen": 0,
+    "matured_24h": 0,
+    "matured_72h": 0,
+    "matured_7d": 0,
+    "evidence_label": "INSUFFICIENT_SAMPLE",
+    "reason": "NO_FRESH_ELIGIBLE_CANONICAL_SOURCE"
+  },
+  "swing_lab": {
+    "segment_radar_created": false,
+    "new_swing_rows": 0,
+    "matured_1d": 0,
+    "matured_3d": 0,
+    "matured_7d": 0,
+    "evidence_label": "INSUFFICIENT_SAMPLE",
+    "reason": "DRAFT11_NON_BINDING_AND_ACCEPTED_V6_STALE_OVER_36H"
+  },
+  "framework_state_change": false,
+  "portfolio_action": false,
+  "rule_promotion": "NONE",
+  "readback_status": "PENDING_PR_MERGE_AND_MAIN_READBACK",
+  "write_layer_status": "PARTIAL_REMEDIATED"
+}
