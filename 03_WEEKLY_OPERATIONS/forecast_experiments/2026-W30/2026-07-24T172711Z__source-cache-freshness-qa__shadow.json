@@ -1,0 +1,56 @@
+{
+  "schema": "SOURCE_CACHE_FRESHNESS_QA_EXPERIMENT",
+  "schema_version": "1.0",
+  "experiment_id": "W30_SOURCE_CACHE_FRESHNESS_QA_H8",
+  "family": "CURRENT_RUN_PAYLOAD_FRESHNESS_AND_CACHE_CONTAMINATION",
+  "status": "OPEN_EXTERNAL_SINGLE_EVENT_SOURCE_QA_ONLY",
+  "created_at_utc": "2026-07-24T17:27:11Z",
+  "source_role": "OTA_EXTERNAL_CHALLENGER",
+  "source_evidence_path": "03_WEEKLY_OPERATIONS/forecast_experiments/2026-W30/evidence/2026-07-24T172711Z__ota20-maturity-and-live-stress__challenger.json",
+  "hypothesis": "A fresh collector retrieval timestamp does not prove payload freshness. Repeated cached responses can be detected and quarantined through source-native time or sequence fields, response hashes, independent venue parity and kline-consistency checks before current-run use.",
+  "observed_event": {
+    "reported_repeated_endpoint_count": 5,
+    "reported_repeated_payloads": "BYTE_IDENTICAL_TO_MORNING_VALUES",
+    "reported_false_BTC_price_approx": 65400,
+    "reported_corrected_BTC_price_approx": 64134,
+    "reported_price_error_usd_approx": 1350,
+    "reported_false_F1_buffer_pct_approx": 4.9,
+    "reported_corrected_F1_buffer_pct": 2.8744666517,
+    "detection_method": "FRESH_KLINE_AND_MULTI_VENUE_CROSSCHECK",
+    "execution_trace_visible_to_main_framework": false
+  },
+  "confirmation_rule": [
+    "A_SECOND_INDEPENDENT_CACHE_EVENT_IS_OBSERVED_IN_ANOTHER_RUN_OR_SOURCE_FAMILY_WITH_FRESH_RETRIEVAL_TIME_AND_STALE_PAYLOAD",
+    "OR_THE_CURRENT_EVENT_IS_REPRODUCED_WITH_EXPORTED_RAW_RESPONSE_HASHES_AND_SOURCE_NATIVE_TIMESTAMPS_SHOWING_STALENESS",
+    "THE_FRESHNESS_GUARD_QUARANTINES_THE_STALE_PAYLOAD_BEFORE_MARKET_OR_THRESHOLD_USE"
+  ],
+  "falsification_rule": [
+    "REPEATED_PAYLOADS_HAVE_CURRENT_SOURCE_NATIVE_TIMESTAMPS_OR_SEQUENCES_AND_MATCH_INDEPENDENT_VENUES_WITHIN_THRESHOLD",
+    "OR_NO_STALE_RESPONSE_CAN_BE_REPRODUCED_AND_THE_REPORTED_DISCREPANCY_IS_TRACED_TO_SYMBOL_METHOD_OR_TIMEZONE_MISMATCH"
+  ],
+  "required_receipt_fields": [
+    "retrieved_at_utc",
+    "source_timestamp_or_sequence",
+    "response_payload_sha256",
+    "request_url_and_parameters",
+    "cache_control_age_or_edge_metadata_if_available",
+    "freshness_basis",
+    "independent_crosscheck_reference",
+    "quarantine_status"
+  ],
+  "guard_candidate": {
+    "name": "CURRENT_PAYLOAD_FRESHNESS_GUARD_v1",
+    "rules": [
+      "RETRIEVED_AT_UTC_ALONE_CANNOT_SET_FRESHNESS_PASS",
+      "CURRENT_PRICE_WITHOUT_SOURCE_NATIVE_TIME_OR_SEQUENCE_REQUIRES_INDEPENDENT_PARITY",
+      "BYTE_IDENTICAL_RESPONSE_TO_PRIOR_RUN_TRIGGERS_CACHE_REVIEW_WHEN_MARKET_REFERENCE_MOVED_MATERIALLY",
+      "PRICE_DISCREPANCY_ABOVE_THRESHOLD_QUARANTINES_ALL_DEPENDENT_THRESHOLD_AND_BUFFER_CALCULATIONS",
+      "STALE_PAYLOAD_MUST_REMAIN_IN_QA_LEDGER_AND_MUST_NOT_BE_SILENTLY_OVERWRITTEN"
+    ]
+  },
+  "current_assessment": "MATERIALLY_CREDIBLE_EXTERNAL_SOURCE_QA_EVENT_NOT_YET_INDEPENDENTLY_CONFIRMED_BY_MAIN_FRAMEWORK_TRACE",
+  "market_authority": false,
+  "canonical_authority": false,
+  "portfolio_authority": false,
+  "counts_as_market_experiment": false
+}
