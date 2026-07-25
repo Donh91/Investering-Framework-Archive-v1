@@ -1,0 +1,51 @@
+{
+  "artifact_id": "OTA_PING_21_V2_SHADOW_20260725T060323Z",
+  "status": "SHADOW_NON_BINDING",
+  "standard": "v2",
+  "run_anchor_utc": "2026-07-25T06:03:23Z",
+  "canonical_state_change": false,
+  "portfolio_action": false,
+  "new_entry_permission": false,
+  "source_qa": {
+    "price_probes": "CURRENT_RUN_FRESH",
+    "farside_btc_eth": "SUSPECTED_STALE_CACHE_QUARANTINED",
+    "self_caught_code_defect": "H7 hardcoded leader count corrected from 1 to computed 2 of 3 before reporting"
+  },
+  "matured_scores": [
+    {
+      "test": "external_F4",
+      "primary_directional_score": "GATE_UNMET",
+      "robustness": "invariant across SETTLED_UTC, SETTLED_CEST and venues",
+      "causal_note": "gate outcome clean; causal attribution remains confounded"
+    },
+    {
+      "test": "H7",
+      "score": "INSUFFICIENT_ROWS_3_OF_5_AND_PRIMARY_SLOPE_CONDITION_NOT_MET"
+    }
+  ],
+  "new_information": [
+    "F4 10/10 settled on both candidate bases with zero closes >=0.0300",
+    "F1 threshold lineage probably resolves to 62.2K truth-layer from frozen Jul-14 case card; 62,342 remains unresolved",
+    "LEADING claim kill criterion located at 12-session mark around 2026-07-30",
+    "ETH ETF 23 July +26.3M locally verified and exactly compatible with main archive",
+    "H7 row 3 settled with ETH leader by +0.22pp",
+    "ETH ETF logged five consecutive positive sessions through 23 July"
+  ],
+  "blocked_items": [
+    "BTC ETF 24 July",
+    "ETH ETF 24 July",
+    "F5 second negative session",
+    "CFGI.io series",
+    "W30 start-measurement venue",
+    "62,342 provenance",
+    "F4 canonical preregistration text"
+  ],
+  "unchanged_states": {
+    "rotation": "NO_ROTATION",
+    "rebuy": "LOCKED",
+    "new_entry": "NOT_ACTIVE",
+    "large_caps": "WATCH_ONLY",
+    "load_bearing_0_0275": "HOLDS"
+  },
+  "next_exact_event": "2026-07-26T00:00:00Z"
+}
