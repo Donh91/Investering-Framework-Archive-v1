@@ -1,12 +1,13 @@
 # Archive Governance Receipt: GCBLO Reverse Engineering
 
 **Dato:** 2026-07-24  
-**Status:** PENDING_PR_VALIDATION  
+**Status:** PASS_CONTENT / PARTIAL_REMEDIATED_WRITE_GOVERNANCE  
 **Område:** source archive / Research Lab audit / Claude workflow  
 **Primary folder:** `07_PROMPTS_AND_AGENTS/skill_runs/`  
-**Branch:** `agent/task-20260724-gcblo-reverse-engineering`  
+**Initial branch:** `agent/task-20260724-gcblo-reverse-engineering`  
+**Finalization branch:** `agent/task-20260725-finalize-gcblo-receipt`  
 
-## Decision manifest
+## Final decision manifest
 
 ```yaml
 archive_decision: ARCHIVE_DURABLE_SOURCE_AUDIT_AND_REPLICATION_WORKFLOW
@@ -21,14 +22,13 @@ existing_test_routing:
   - PULLBACK_EDGE_20260708_01_OUTCOMES
   - FNP_CUMULATIVE
 operation: CREATE_BOUNDED_FOUR_FILE_PACKAGE
-target_branch: agent/task-20260724-gcblo-reverse-engineering
-branch_assertion: PASS_AFTER_REMEDIATION
+target_branch_initial: agent/task-20260724-gcblo-reverse-engineering
+target_branch_finalization: agent/task-20260725-finalize-gcblo-receipt
 paths_created:
   - 08_SOURCE_MATERIAL/screenshots/2026-07-24__gcblo-x-thread-and-chart-corpus__source-note.md
   - 06_RESEARCH_LAB/audit_summaries/2026-07-24__gcblo-reverse-engineering-and-decision-value-audit__shadow.md
   - 07_PROMPTS_AND_AGENTS/claude/2026-07-24__gcblo-replication-and-sell-rebuy-decision-value-prompt.md
   - 07_PROMPTS_AND_AGENTS/skill_runs/2026-07-24__archive-governance-gcblo-reverse-engineering__receipt.md
-paths_updated: []
 paths_deleted: []
 canonical_index_change: NO
 addendum_registry_change: NOT_APPLICABLE
@@ -38,7 +38,7 @@ source_lineage: USER_SUPPLIED_SCREENSHOTS_PLUS_X_URL_PLUS_PUBLIC_PRIMARY_REFEREN
 backup_scope: NONE_CLAIMED
 ```
 
-## Durable archive decision
+## Durable archive result
 
 The archive preserves only four durable units:
 
@@ -47,7 +47,7 @@ The archive preserves only four durable units:
 3. a reproducible Claude/Fable research prompt;
 4. this implementation receipt.
 
-The archive does not preserve the entire intermediate conversation and does not convert the source claim into framework doctrine.
+The source material was not converted into framework doctrine. The exact formula, threshold calibration, historical vintages and sell/re-entry value remain unresolved pending independent replication.
 
 ## Research classification
 
@@ -69,7 +69,7 @@ portfolio_action: NO
 
 ## Existing-owner routing
 
-The work is routed through the existing Sensor Relationship & Incremental Value Standard. Any later prospective decision-cost rows may enrich only existing owners where eligibility exists:
+Later prospective decision-cost evidence may enrich only existing owners where row eligibility exists:
 
 ```text
 T2 GATE_BTC_PARTIAL_FT_1
@@ -77,7 +77,7 @@ T4 PULLBACK_EDGE_20260708_01_OUTCOMES
 T5 FNP_CUMULATIVE
 ```
 
-No new active test ID, engine, shadow layer, scoring concept or portfolio authority is created.
+No new active test ID, engine, shadow layer, scoring concept or portfolio authority was created.
 
 ## Write-governance incident
 
@@ -93,31 +93,31 @@ content_created: NO
 history_changed: NO
 ```
 
-The attempted write was an improper connector probe before the task branch existed. GitHub rejected it with `404 Branch not found`, so no file, commit or repository path was created.
+The attempted connector probe was improper. GitHub rejected it before any repository mutation. Remediation was completed by creating the isolated task branch, verifying it through exact-ref readback and using explicit verified non-default branches for every successful write.
 
-Remediation:
+Per repository policy, write governance remains `PARTIAL_REMEDIATED`, not an unqualified `PASS`.
 
-1. the isolated task branch was created from `main`;
-2. branch existence was verified by reading `AGENTS.md` from that exact branch;
-3. every successful write used the explicit verified non-default branch;
-4. no placeholder path exists in the repository;
-5. the incident is retained in this receipt.
-
-Per repository policy, this prevents an unqualified write-governance `PASS`.
-
-## Validation plan
+## PR and validation record
 
 ```yaml
-branch_readback_all_created_files: PENDING
-exact_changed_file_scope: PENDING
-pull_request_created: PENDING
-pull_request_mergeable: PENDING
-zero_unintended_deletions: PENDING
-main_merge: PENDING
-main_readback: PENDING
-archive_content_result: PENDING
+branch_readback_all_created_files: PASS
+changed_file_scope: PASS_EXACTLY_4_PATHS
+pull_request: 147
+pull_request_url: https://github.com/Donh91/Investering-Framework-Archive-v1/pull/147
+pull_request_mergeable: PASS
+pull_request_changed_files: 4
+pull_request_additions: 1415
+pull_request_deletions: 0
+workflow_runs: NONE
+main_merge: PASS
+main_merge_sha: 77b3aa27706c2689b6fb5c8080060d758a57503d
+main_readback_source_note: PASS
+main_readback_shadow_audit: PASS
+main_readback_claude_prompt: PASS
+zero_unintended_deletions: PASS
+archive_content_result: PASS
 write_governance_result: PARTIAL_REMEDIATED
-final_repository_state: PENDING
+final_repository_state: PASS
 incident_count: 1
 incident_paths: []
 ```
