@@ -69,6 +69,7 @@ A registry entry is a navigation pointer only. The referenced file's own status,
 | `00_ARCHIVE_CONTROL/2026-07-12__index-addendum-truth-layer-recovery-and-github-lineage-upgrade.md` | truth-layer recovery / GitHub lineage | REGISTRY_DISCOVERABLE |
 | `01_CORE_FRAMEWORK/governance/2026-07-25__external-indicator-admission-gates__canonical-addendum.md` | external indicators / specification dispersion / saturation / FX decomposition | REGISTRY_DISCOVERABLE |
 | `00_ARCHIVE_CONTROL/2026-07-26__index-addendum-etf-flow-history-backtest-pack.md` | ETF flow history / truth-layer backtest input | REGISTRY_DISCOVERABLE |
+| `00_ARCHIVE_CONTROL/2026-07-26__index-addendum-hfbe-parts-01-03-proxy-evidence.md` | historical backtest extraction / proxy evidence / continuation state | REGISTRY_DISCOVERABLE |
 
 ## Registration contract
 

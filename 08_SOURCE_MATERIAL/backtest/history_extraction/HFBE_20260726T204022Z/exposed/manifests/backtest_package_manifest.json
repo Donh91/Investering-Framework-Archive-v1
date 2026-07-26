@@ -1,0 +1,123 @@
+{
+  "package_contract": "HISTORICAL_FRAMEWORK_BACKTEST_DATA_EXTRACTION_v1",
+  "run_id": "HFBE_20260726T204022Z",
+  "generated_at_utc": "2026-07-26T20:40:22Z",
+  "parts_attempted": [
+    "PART 01",
+    "PART 02",
+    "PART 03"
+  ],
+  "part_status": {
+    "PART 01": "PARTIAL_WITH_EXPLICIT_GAPS",
+    "PART 02": "PARTIAL_WITH_EXPLICIT_GAPS",
+    "PART 03": "PARTIAL_WITH_EXPLICIT_GAPS"
+  },
+  "requested_window": {
+    "start": "2021-01-01",
+    "end": "2026-07-24"
+  },
+  "actual_materialized_window": {
+    "start": "2026-04-18",
+    "end": "2026-07-24"
+  },
+  "normalized_row_counts": {
+    "PART 01": 98,
+    "PART 02": 98,
+    "PART 03": 98
+  },
+  "raw_row_counts": {
+    "PART 01": 100,
+    "PART 02": 100
+  },
+  "next_part": "PART 01",
+  "validation_overall": "PARTIAL_FAILED_COMPLETENESS",
+  "canonical_backtest_usable": false,
+  "notes": [
+    "Direct Binance spot calls failed with GEO_RESTRICTION.",
+    "OKX index candles are preserved as proxy evidence, not relabeled as spot.",
+    "No values were interpolated, forward-filled or replaced with zero."
+  ],
+  "files": [
+    {
+      "path": "manifests/backtest_continuation_manifest.json",
+      "bytes": 4586,
+      "sha256": "cc036e7d7045db357c4527eef6844139db11e1dcb136a5f376294d7d6943aa2f"
+    },
+    {
+      "path": "manifests/backtest_package_manifest.json",
+      "bytes": 1068,
+      "sha256": "252702bbbc9eb16ce47f6bf7b99661d31300d0a01e2cdb273f2043d43ae58263"
+    },
+    {
+      "path": "manifests/subpart_manifests.json",
+      "bytes": 1152,
+      "sha256": "23cbfb6a899000ff4507772ff818b247807f89650faee141ec881604e3beab38"
+    },
+    {
+      "path": "normalized/part01_btc_daily_index_proxy_2026.csv",
+      "bytes": 19501,
+      "sha256": "a6a0a897d52cda1527ba85b5cea6b848fc37bf0f29e5a4d4db04a3a79a5c5224"
+    },
+    {
+      "path": "normalized/part02_eth_daily_index_proxy_2026.csv",
+      "bytes": 19469,
+      "sha256": "35c7a07017a6aed904e9b9a7473a3acdaf5742b4f9c66ee8e045f42e11144166"
+    },
+    {
+      "path": "normalized/part03_ethbtc_daily_derived_index_proxy_2026.csv",
+      "bytes": 48119,
+      "sha256": "20c677f21e341d36adb6d5e1fcb6f69b3670b8502c67e9971465eaa789b92bd3"
+    },
+    {
+      "path": "raw/part01_okx_btc_usdt_index_1d_page_001.json",
+      "bytes": 11816,
+      "sha256": "6641653ef3114b252c9b78bf9b4b4805d6c3526140ff25bf6bc3f4199b84654f"
+    },
+    {
+      "path": "raw/part02_okx_eth_usdt_index_1d_page_001.json",
+      "bytes": 11854,
+      "sha256": "831c2be427635dd23c3cdc1d4a40fb4ce529f668caa90b801e5ae8c9487f37ad"
+    },
+    {
+      "path": "receipts/source_receipts_parts_01_03.csv",
+      "bytes": 2578,
+      "sha256": "47d2a4218dc70cfa7edb19348181a2e4793e9a1c1866d34f04aa7f2409b95d5a"
+    },
+    {
+      "path": "registries/backtest_method_registry.csv",
+      "bytes": 833,
+      "sha256": "a66b5b339f0fc53dfef67aa5cc3d9f12337f768f0304e77bb9977e3b0ad477d7"
+    },
+    {
+      "path": "registries/backtest_missing_data_ledger.csv",
+      "bytes": 2390,
+      "sha256": "afba02e0b0ee711b3f72a468c79e457d4c9d9f887c692296a626e76682bbe3b6"
+    },
+    {
+      "path": "registries/backtest_source_registry.csv",
+      "bytes": 860,
+      "sha256": "94265cafdbd87a716304d363eafbb45f81b92ceb4e9db79f8668eb0b22f039d0"
+    },
+    {
+      "path": "validation/backtest_coverage_matrix.csv",
+      "bytes": 1431,
+      "sha256": "1412c56f77b362623b68e3f4aa796ccb410f3f72c6466aa42795709d027a618f"
+    },
+    {
+      "path": "validation/backtest_file_checksums.sha256",
+      "bytes": 1647,
+      "sha256": "e280cf18f6cd272b692bf114c46a9030454a5cfe57ca42e4a3937d6660e8ba4c"
+    },
+    {
+      "path": "validation/backtest_validation_report.md",
+      "bytes": 2057,
+      "sha256": "e4d88ec94618d35cbb88acbbcc9609a91ea8f6c750806716501855fe2bffa6fe"
+    },
+    {
+      "path": "validation/parts_01_03_validation.json",
+      "bytes": 2521,
+      "sha256": "0a4f2a03a75f9ab2ad44849abf19675837a7762e61d7e0f0b21ba4164e6cef51"
+    }
+  ],
+  "file_count": 16
+}
