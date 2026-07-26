@@ -1,0 +1,81 @@
+{
+  "registry_id": "FMOS_WP00_PATH_OWNER_REGISTRY_v1",
+  "status": "RATIFIED_SHADOW_CONTROL",
+  "effective_date": "2026-07-26",
+  "repository": "Donh91/Investering-Framework-Archive-v1",
+  "source_main_sha": "42458ed42330eac252d26d2ad4b4d5cd97b26b42",
+  "principles": {
+    "framework_reset_allowed": false,
+    "direct_main_writes_allowed": false,
+    "readback_verified_required": true,
+    "latest_equals_canonical": false,
+    "missing_equals_unknown": true,
+    "portfolio_authority_from_fmos": false
+  },
+  "owner_classes": {
+    "ARCHIVE_CONTROL": "navigation, routing, precedence and discoverability",
+    "FRAMEWORK_GOVERNANCE": "canonical interpretation, permissions and ratification",
+    "DATA_PING_TRUTH_LAYER": "verified collection, contracts, source QA and accepted pointers",
+    "WEEKLY_OPERATIONS": "Master Monday preparation, cadence and operational receipts",
+    "MARKET_LEARNING": "forecast, maturity, calibration and historical learning",
+    "CYCLE_NAVIGATOR": "public-output and accountability owner",
+    "RESEARCH_LAB": "shadow research, experiments and challenge evidence",
+    "AGENT_OPERATIONS": "skills, runbooks, task receipts and bounded implementation work",
+    "SOURCE_MATERIAL": "raw external evidence and immutable source packages",
+    "ARCHIVE_INBOX": "unclassified temporary intake",
+    "FMOS_CONTROL": "machine-memory, lineage, retrieval, replay and automation topology"
+  },
+  "path_rules": [
+    {"path":"AGENTS.md","owner_class":"ARCHIVE_CONTROL","write_policy":"PR_ONLY_HIGH_SAFETY","freshness":"READ_EVERY_AGENT_RUN","supersession":"REPLACE_IN_PLACE_WITH_HISTORY_IN_GIT","authority":"OPERATING_INSTRUCTIONS"},
+    {"path":"00_ARCHIVE_CONTROL/CANONICAL_INDEX.md","owner_class":"ARCHIVE_CONTROL","write_policy":"PR_ONLY_SAFEPOINT_REQUIRED","freshness":"READ_EVERY_FRAMEWORK_RUN","supersession":"NEWER_EXPLICIT_CANONICAL_ENTRY_WINS","authority":"CANONICAL_NAVIGATION"},
+    {"path":"00_ARCHIVE_CONTROL/INDEX_ADDENDUM_REGISTRY.md","owner_class":"ARCHIVE_CONTROL","write_policy":"PR_ONLY_SAFEPOINT_REQUIRED","freshness":"READ_EVERY_ARCHIVE_RUN","supersession":"APPEND_OR_EXPLICIT_RETIREMENT","authority":"DISCOVERABILITY_REGISTRY"},
+    {"path":"00_ARCHIVE_CONTROL/ARCHIVE_MAP_AND_ROUTING.md","owner_class":"ARCHIVE_CONTROL","write_policy":"PR_ONLY_SAFEPOINT_REQUIRED","freshness":"READ_BEFORE_ROUTING","supersession":"REPLACE_IN_PLACE_WITH_MIGRATION_NOTE","authority":"ROUTING"},
+    {"path":"00_ARCHIVE_CONTROL/SKILL_REGISTRY.md","owner_class":"ARCHIVE_CONTROL","write_policy":"PR_ONLY","freshness":"READ_BEFORE_SKILL_USE","supersession":"NEWER_REGISTERED_SKILL_VERSION_WINS","authority":"SKILL_DISCOVERY"},
+    {"path":"00_FMOS/**","owner_class":"FMOS_CONTROL","write_policy":"PR_ONLY","freshness":"READ_FOR_FMOS_AND_AUTOMATION_WORK","supersession":"VERSIONED_DECISION_OR_IN_PLACE_POINTER_UPDATE","authority":"FMOS_SHADOW_CONTROL"},
+    {"path":"01_CORE_FRAMEWORK/governance/**","owner_class":"FRAMEWORK_GOVERNANCE","write_policy":"PR_ONLY_HIGH_SAFETY","freshness":"READ_BEFORE_INTERPRETATION_OR_STATE_CHANGE","supersession":"EXPLICIT_CANONICAL_PRECEDENCE_ONLY","authority":"CANONICAL_GOVERNANCE"},
+    {"path":"01_CORE_FRAMEWORK/architecture/**","owner_class":"FRAMEWORK_GOVERNANCE","write_policy":"PR_ONLY_HIGH_SAFETY","freshness":"READ_BEFORE_ARCHITECTURE_CHANGE","supersession":"EXPLICIT_ARCHITECTURE_DECISION","authority":"CANONICAL_ARCHITECTURE"},
+    {"path":"02_DATA_PING/protocols/**","owner_class":"DATA_PING_TRUTH_LAYER","write_policy":"PR_ONLY_HIGH_SAFETY","freshness":"READ_BEFORE_COLLECTOR_CHANGE","supersession":"HIGHEST_EXPLICITLY_ACTIVE_VERSION","authority":"COLLECTOR_PROTOCOL"},
+    {"path":"02_DATA_PING/version_governance/**","owner_class":"DATA_PING_TRUTH_LAYER","write_policy":"PR_ONLY_HIGH_SAFETY","freshness":"READ_EVERY_DATA_PING_GOVERNANCE_RUN","supersession":"HIGHEST_COMPLETE_MAIN_FRAMEWORK_ACCEPTED_VERSION","authority":"VERSION_GOVERNANCE"},
+    {"path":"02_DATA_PING/operational_handoffs/latest_accepted_log_state.json","owner_class":"DATA_PING_TRUTH_LAYER","write_policy":"TRANSACTIONAL_PR_ONLY","freshness":"READ_EVERY_DATA_PING_CONSUMER_RUN","supersession":"POINTER_ADVANCE_ONLY_AFTER_ACCEPTANCE","authority":"LATEST_ACCEPTED_LOG_POINTER"},
+    {"path":"02_DATA_PING/operational_handoffs/latest_decision_context_state.json","owner_class":"FRAMEWORK_GOVERNANCE","write_policy":"TRANSACTIONAL_PR_ONLY","freshness":"READ_BEFORE_FRAMEWORK_INTERPRETATION","supersession":"MAIN_FRAMEWORK_RATIFIED_POINTER_ADVANCE","authority":"DECISION_CONTEXT_POINTER"},
+    {"path":"02_DATA_PING/thread_handoffs/latest_thread_handover_state.json","owner_class":"DATA_PING_TRUTH_LAYER","write_policy":"TRANSACTIONAL_PR_ONLY","freshness":"READ_AT_THREAD_BOOT_AND_REPLAY","supersession":"NEWER_VERIFIED_HANDOVER_POINTER","authority":"THREAD_CONTINUITY_POINTER"},
+    {"path":"02_DATA_PING/data_terminal/**","owner_class":"DATA_PING_TRUTH_LAYER","write_policy":"BOUNDED_IMPLEMENTATION_PR","freshness":"READ_BEFORE_DATA_TERMINAL_WORK","supersession":"SCHEMA_AND_CONTRACT_VERSIONED","authority":"SHADOW_DATA_INFRASTRUCTURE"},
+    {"path":"03_WEEKLY_OPERATIONS/**","owner_class":"WEEKLY_OPERATIONS","write_policy":"PR_ONLY","freshness":"WEEKLY_OR_EVENT_DRIVEN","supersession":"CURRENT_WEEK_OR_NEWER_RUN_RECEIPT","authority":"OPERATIONAL_CADENCE"},
+    {"path":"04_MARKET_LEARNING/master_monday/**","owner_class":"WEEKLY_OPERATIONS","write_policy":"PR_ONLY_APPEND_PREFERRED","freshness":"WEEKLY","supersession":"RATIFIED_WEEKLY_OUTPUT_WITH_HISTORY_PRESERVED","authority":"MASTER_MONDAY"},
+    {"path":"04_MARKET_LEARNING/data_ping/**","owner_class":"MARKET_LEARNING","write_policy":"PR_ONLY_APPEND_PREFERRED","freshness":"EVENT_DRIVEN","supersession":"NEWER_VERIFIED_HANDOVER_OR_LEARNING_OBJECT","authority":"DATA_PING_DERIVED_LEARNING"},
+    {"path":"04_MARKET_LEARNING/**forecast**","owner_class":"MARKET_LEARNING","write_policy":"IMMUTABLE_INPUTS_APPEND_OUTCOMES","freshness":"MATURITY_DRIVEN","supersession":"NO_REWRITE_AFTER_OUTCOME_OBSERVABLE","authority":"FORECAST_AND_MATURITY"},
+    {"path":"05_CYCLE_NAVIGATOR/**","owner_class":"CYCLE_NAVIGATOR","write_policy":"OWNER_GOVERNED_PR_ONLY","freshness":"PUBLICATION_CADENCE","supersession":"VERSIONED_PUBLIC_OUTPUT","authority":"PUBLIC_ACCOUNTABILITY"},
+    {"path":"06_RESEARCH_LAB/**","owner_class":"RESEARCH_LAB","write_policy":"PR_ONLY_SHADOW","freshness":"EVENT_OR_EXPERIMENT_DRIVEN","supersession":"NO_SELF_PROMOTION_EXPLICIT_RATIFICATION_REQUIRED","authority":"SHADOW_RESEARCH"},
+    {"path":"06_RESEARCH_LAB/forward_tests/**","owner_class":"RESEARCH_LAB","write_policy":"FROZEN_INPUT_APPEND_OUTCOME","freshness":"MATURITY_DRIVEN","supersession":"SCHEMA_OWNER_AND_ACTIVE_TEST_REGISTRY","authority":"PROSPECTIVE_TESTS"},
+    {"path":"07_PROMPTS_AND_AGENTS/**","owner_class":"AGENT_OPERATIONS","write_policy":"PR_ONLY","freshness":"TASK_DRIVEN","supersession":"CURRENT_RUNBOOK_OR_EXPLICITLY_SUPERSEDED_RECEIPT","authority":"AGENT_PROCEDURE"},
+    {"path":"07_PROMPTS_AND_AGENTS/skill_runs/**","owner_class":"AGENT_OPERATIONS","write_policy":"APPEND_ONLY_RECEIPTS","freshness":"EVERY_MATERIAL_RUN","supersession":"NO_REWRITE_EXCEPT_FINALIZATION_LINKED_TO_ORIGINAL","authority":"RUN_LINEAGE"},
+    {"path":"08_SOURCE_MATERIAL/**","owner_class":"SOURCE_MATERIAL","write_policy":"IMMUTABLE_APPEND_OR_HASH_POINTER","freshness":"SOURCE_DRIVEN","supersession":"NEW_SOURCE_VERSION_WITH_OLD_PRESERVED","authority":"RAW_SOURCE_EVIDENCE"},
+    {"path":"09_ARCHIVE_INBOX/**","owner_class":"ARCHIVE_INBOX","write_policy":"TEMPORARY_PR_ONLY","freshness":"REVIEW_WITHIN_7_DAYS","supersession":"ROUTE_OR_QUARANTINE","authority":"NONE_UNTIL_CLASSIFIED"},
+    {"path":".github/workflows/**","owner_class":"AGENT_OPERATIONS","write_policy":"PR_ONLY_SECURITY_REVIEW_REQUIRED","freshness":"READ_BEFORE_AUTOMATION_CHANGE","supersession":"WORKFLOW_VERSION_AND_TEST_EVIDENCE","authority":"DETERMINISTIC_AUTOMATION"},
+    {"path":"scripts/**","owner_class":"AGENT_OPERATIONS","write_policy":"BOUNDED_IMPLEMENTATION_PR","freshness":"READ_BEFORE_CODE_CHANGE","supersession":"TESTED_CODE_VERSION","authority":"DETERMINISTIC_IMPLEMENTATION"},
+    {"path":"tests/**","owner_class":"AGENT_OPERATIONS","write_policy":"BOUNDED_IMPLEMENTATION_PR","freshness":"RUN_BEFORE_MERGE","supersession":"LATEST_TEST_SUITE_WITH_FIXTURE_LINEAGE","authority":"VALIDATION"}
+  ],
+  "cross_repository_owners": [
+    {"repository":"Donh91/Eksperimenter-framework-","role":"NON_CANONICAL_EXPERIMENTS","write_policy":"SEPARATE_OWNER_GOVERNANCE"},
+    {"repository":"Cycle Navigator repository","role":"PUBLIC_OUTPUT_OWNER","write_policy":"POINTER_ONLY_FROM_CANONICAL_ARCHIVE_UNLESS_EXPLICITLY AUTHORIZED"}
+  ],
+  "resolution_order": [
+    "AGENTS.md",
+    "CANONICAL_INDEX",
+    "INDEX_ADDENDUM_REGISTRY",
+    "ARCHIVE_MAP_AND_ROUTING",
+    "SKILL_REGISTRY",
+    "DOMAIN_OWNER_POINTER",
+    "CURRENT_OBJECT",
+    "HISTORICAL_CONTEXT"
+  ],
+  "completion": {
+    "wp00_status": "COMPLETE",
+    "path_level_registry": true,
+    "owner_class": true,
+    "write_permissions": true,
+    "freshness_policy": true,
+    "supersession_rules": true,
+    "next_work_package": "WP01_MACHINE_READABLE_OBJECT_AND_RECEIPT_SCHEMAS"
+  }
+}

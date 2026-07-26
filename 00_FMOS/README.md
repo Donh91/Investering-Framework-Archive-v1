@@ -1,6 +1,6 @@
 # Framework Memory & Operations System (FMOS) v0.2
 
-Status: ARCHITECTURE_RATIFIED_FOR_SHADOW_BUILD  
+Status: ARCHITECTURE_RATIFIED / WP-00_COMPLETE / SHADOW_BUILD_ACTIVE  
 Role: additive machine-memory, lineage, retrieval and automation substrate under the existing investment framework.  
 System of record: `Donh91/Investering-Framework-Archive-v1`.
 
@@ -23,4 +23,16 @@ GitHub is the durable machine memory and governance substrate. ChatGPT is the re
 9. Master Monday and DATA PING continue unchanged as owner systems.
 10. GitHub is optimized for machine use; human readability is secondary but preserved where cheap.
 
-See `ARCHITECTURE.md`, `GRAPH_AND_RETRIEVAL.md`, `AUTOMATION_TOPOLOGY.md`, and `MIGRATION_PLAN.md`.
+## Migration status
+
+- `WP-00`: **COMPLETE** — path-level ownership, permissions, freshness and supersession registry.
+- `WP-01`: **NEXT** — machine-readable object and receipt schemas.
+- Later stages: capture/normalization queues, lineage/root collapse, retrieval index, graph and replay.
+
+## Active WP-00 control objects
+
+- `WP00_PATH_OWNER_REGISTRY_v1.md`
+- `WP00_PATH_OWNER_REGISTRY_v1.json`
+- `OWNER_SYSTEM_MAP_v0_1.md` retained as superseded bootstrap history.
+
+See `ARCHITECTURE.md`, `GRAPH_AND_RETRIEVAL.md`, `AUTOMATION_TOPOLOGY.md`, `MIGRATION_PLAN.md`, and the WP-00 registry.
