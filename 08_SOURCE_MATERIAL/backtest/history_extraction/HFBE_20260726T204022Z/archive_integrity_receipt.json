@@ -1,12 +1,47 @@
 {
-  "archive_receipt_version": "1.0",
+  "archive_receipt_version": "1.1",
   "source_package_id": "HFBE_20260726T204022Z",
   "source_zip": {
     "filename": "FRAMEWORK_BACKTEST_EXTRACTION_PARTS_TO_20260726T204022Z.zip",
     "bytes": 27454,
     "sha256": "fa01757df10b4fd079829220df97e7f86792829aaad9236645ef82c4eac7fa5f",
-    "encoding_in_repository": "base64",
-    "reconstruction_command": "base64 -d FRAMEWORK_BACKTEST_EXTRACTION_PARTS_TO_20260726T204022Z.zip.b64 > FRAMEWORK_BACKTEST_EXTRACTION_PARTS_TO_20260726T204022Z.zip"
+    "encoding_in_repository": "base64_split_5_parts",
+    "base64_total_chars": 36608,
+    "base64_parts": [
+      {
+        "path": "source_zip_parts/FRAMEWORK_BACKTEST_EXTRACTION_PARTS_TO_20260726T204022Z.zip.b64.part01",
+        "base64_chars": 8000,
+        "sha256": "dcd349bda53aeedf7a7df5a756580e05d48925353b465c38f40f501466e3dfef",
+        "git_blob_sha": "9c1aeb992d65710eace4e63c6b2039e6f217bf1f"
+      },
+      {
+        "path": "source_zip_parts/FRAMEWORK_BACKTEST_EXTRACTION_PARTS_TO_20260726T204022Z.zip.b64.part02",
+        "base64_chars": 8000,
+        "sha256": "45b3f67cd008da135831675fb6f5e179782b67a31f1b75fc2ba051699e0a1fe0",
+        "git_blob_sha": "f1c7e5f334c78170c89824881ec37c56f55ed9a9"
+      },
+      {
+        "path": "source_zip_parts/FRAMEWORK_BACKTEST_EXTRACTION_PARTS_TO_20260726T204022Z.zip.b64.part03",
+        "base64_chars": 8000,
+        "sha256": "adf1371908aa137e860770f051b0dfc2d343ff93f8d3e258654aa20508c55f17",
+        "git_blob_sha": "b658fd60fbc913a743e9770686ebbc714334bba4"
+      },
+      {
+        "path": "source_zip_parts/FRAMEWORK_BACKTEST_EXTRACTION_PARTS_TO_20260726T204022Z.zip.b64.part04",
+        "base64_chars": 8000,
+        "sha256": "1220b3ff7206b262e40b51f135a1df302d498589f60e542991e3314437665194",
+        "git_blob_sha": "45f6b4350f8a189bae8b957ae4e140527b6c723d"
+      },
+      {
+        "path": "source_zip_parts/FRAMEWORK_BACKTEST_EXTRACTION_PARTS_TO_20260726T204022Z.zip.b64.part05",
+        "base64_chars": 4608,
+        "sha256": "ac71a7eaeca000c9f47b8f90d874d24618fc987b6d5a635a4aa5f8c9ecfb28cb",
+        "git_blob_sha": "6157c655050a74c22c38db28c98c1ec11e6368cb"
+      }
+    ],
+    "all_git_blob_hashes_verified": true,
+    "reconstructed_zip_sha256": "fa01757df10b4fd079829220df97e7f86792829aaad9236645ef82c4eac7fa5f",
+    "reconstruction_command": "cat source_zip_parts/FRAMEWORK_BACKTEST_EXTRACTION_PARTS_TO_20260726T204022Z.zip.b64.part01 source_zip_parts/FRAMEWORK_BACKTEST_EXTRACTION_PARTS_TO_20260726T204022Z.zip.b64.part02 source_zip_parts/FRAMEWORK_BACKTEST_EXTRACTION_PARTS_TO_20260726T204022Z.zip.b64.part03 source_zip_parts/FRAMEWORK_BACKTEST_EXTRACTION_PARTS_TO_20260726T204022Z.zip.b64.part04 source_zip_parts/FRAMEWORK_BACKTEST_EXTRACTION_PARTS_TO_20260726T204022Z.zip.b64.part05 | base64 -d > FRAMEWORK_BACKTEST_EXTRACTION_PARTS_TO_20260726T204022Z.zip"
   },
   "extracted_file_count": 16,
   "extracted_inventory": [
