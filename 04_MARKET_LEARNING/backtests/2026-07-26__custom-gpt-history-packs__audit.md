@@ -1,12 +1,12 @@
-# Custom GPT historical backtest packs — independent audit
+# Custom GPT historical backtest packs - independent audit
 
 **Audit date:** 2026-07-26  
-**Status:** `SOURCE_ARCHIVED / DATA_MOSTLY_SOUND / REPRODUCIBILITY_REPAIRS_REQUIRED / SYNTHESIS_DEFERRED`  
+**Status:** `HASH_AND_LOGICAL_ARCHIVE_COMPLETE / RAW_ZIP_GITHUB_COPY_PENDING / DATA_MOSTLY_SOUND / REPRODUCIBILITY_REPAIRS_REQUIRED / SYNTHESIS_DEFERRED`  
 **Authority:** Evidence, QA and backtest-design input only. No market call, forecast score, portfolio action or canonical-state change.
 
 ## 1. Executive decision
 
-The two packages should be archived immediately as immutable source evidence. There is no benefit in waiting for Claude before preserving them.
+The two packages should be audited and their identity preserved immediately. There is no benefit in waiting for Claude before preserving hashes, inventory, lineage and findings.
 
 The final combined backtest design, test priority and any canonical admission decision should wait for Claude's forthcoming package so all evidence can be reconciled once rather than ratified piecemeal.
 
@@ -16,6 +16,12 @@ run_economic_backtests_now: NO
 ratify_final_test_matrix_now: NO
 wait_for_claude_for_final_synthesis: YES
 ```
+
+### GitHub materialization boundary
+
+The uploaded ZIP files were read directly and independently hashed. Their exact hashes, sizes, internal inventories and audit results are now preserved in GitHub.
+
+The available GitHub contents route in this execution context does not accept a mounted local ZIP path as a repository binary file. Therefore the raw ZIP byte streams themselves are not claimed to be present in the repository. No base64 surrogate or corrupted pseudo-binary representation was created.
 
 ## 2. Large history pack
 
@@ -53,7 +59,7 @@ The package is therefore valuable as a deterministic integration fixture and par
 
 Artifact:
 
-`FRAMEWORK_BACKTEST_EXTRACTION_PARTS_TO_20260726T204022Z.zip`
+`FRAMEWORK_BACKTEST_EXTRACTION_PARTS_TO_20260726T204022Z(2).zip`
 
 ### Verified structure
 
@@ -73,7 +79,7 @@ Five substantive source/data files are byte-identical to copies in the large his
 
 ## 4. QA findings requiring repair
 
-### Q1 — self-referential manifest inconsistency
+### Q1 - self-referential manifest inconsistency
 
 The large pack's internal `manifest.json` lists itself as:
 
@@ -98,7 +104,7 @@ Required repair pattern:
 - exclude manifest and checksum ledger from self-hashing, or use a detached outer receipt;
 - generate payload checksums first, manifest second and detached package receipt last.
 
-### Q2 — validation script overclaims its scope
+### Q2 - validation script overclaims its scope
 
 `validate_package.py` describes itself as checksum and OHLC validation but only iterates over CSV files and tests OHLC invariants. It does not validate package checksums.
 
@@ -106,7 +112,7 @@ Required repair:
 
 - either rename it to `validate_csv_ohlc.py`, or implement actual checksum, row-count, timestamp and manifest validation.
 
-### Q3 — rebuild script is not replay-safe
+### Q3 - rebuild script is not replay-safe
 
 `rebuild_features.py` rewrites the derived hourly ETH/BTC file with a reduced six-column schema. The archived target contains eighteen columns including venue, settlement, timestamps, method identity and high/low semantics.
 
@@ -119,7 +125,7 @@ Required repair:
 - compare row count, column order and hash against the expected fixture;
 - promote only after parity passes.
 
-### Q4 — duplicate report uses incomplete keys
+### Q4 - duplicate report uses incomplete keys
 
 `duplicates.csv` flags repeated timestamps in multi-entity tables, including:
 
@@ -138,7 +144,7 @@ Required repair:
 
 - replace timestamp-only duplicate tests with dataset-specific primary keys.
 
-### Q5 — readiness language is too generous for economic inference
+### Q5 - readiness language is too generous for economic inference
 
 BT01, BT02 and BT09 are labelled `READY_WITH_RESTRICTIONS`, but this package contains only five ETF sessions and one weekend-to-Monday candidate window.
 
@@ -164,7 +170,7 @@ The full ETF archive already present in GitHub, with 651 BTC sessions and 513 ET
 3. Verify that weekend ETF rows are absent rather than zero-filled.
 4. Verify venue and market-type separation.
 5. Verify that derived ETH/BTC cannot satisfy a direct-pair gate.
-6. Test restart/continuation behavior from the parts 01–03 continuation manifest.
+6. Test restart/continuation behavior from the parts 01-03 continuation manifest.
 
 ### Ready after joining existing GitHub ETF history
 
@@ -207,7 +213,8 @@ After that, create one consolidated backtest work package with:
 ## 7. Framework decision
 
 ```yaml
-source_archive: ACCEPTED
+hash_and_logical_archive: ACCEPTED
+raw_zip_github_copy: PENDING_CONNECTOR_CAPABILITY
 large_pack_payload_integrity: PASS_WITH_MANIFEST_SELF_REFERENCE_DEFECT
 parts_pack_payload_integrity: PASS_WITH_MANIFEST_SELF_REFERENCE_DEFECT
 canonical_backtest_dataset: NOT_YET
