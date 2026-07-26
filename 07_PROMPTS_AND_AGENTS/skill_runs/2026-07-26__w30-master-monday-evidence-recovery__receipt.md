@@ -1,15 +1,16 @@
 # Governance Receipt — W30 Master Monday Evidence Recovery
 
 **Date:** 2026-07-26  
-**Branch:** `agent/task-20260726-w30-master-monday-evidence-recovery`  
+**Initial branch:** `agent/task-20260726-w30-master-monday-evidence-recovery`  
+**Finalization branch:** `agent/task-20260726-finalize-w30-master-monday-evidence-recovery`  
 **Operation:** Archive and route Claude W30 missing-evidence recovery package  
-**Status:** `PR_VALIDATED / MERGE_PENDING`
+**Status:** `PASS_CONTENT / PASS_ROUTING / PARTIAL_BINARY_MATERIALIZATION`
 
 ## User authorization
 
 The user instructed: `Gør som du anbefaler` after approval of the proposed archive split into external evidence, forecast maturity, source QA, receipts and conflict tracking.
 
-## Archive decision
+## Final archive decision
 
 ```yaml
 archive_decision: ACCEPT_EXTERNAL_EVIDENCE_WITH_CONFLICTS
@@ -29,7 +30,7 @@ stage1_ratification: NONE
 
 This routing follows repository review guidance that market interpretation belongs under `04_MARKET_LEARNING/` and raw evidence under `08_SOURCE_MATERIAL/`, avoiding an orphaned top-level archive namespace.
 
-## Written objects
+## Archived objects
 
 1. Evidence index and package integrity.
 2. Executive evidence recovery log.
@@ -71,24 +72,27 @@ Repository-local binary duplication status: `PARTIAL_CONNECTOR_LIMITATION`.
 
 During tool validation, an accidental root file `tmp_should_not_create.txt` was created on the default branch and immediately deleted. Net repository content impact is zero. The cleanup commit is preserved in history for transparency.
 
-## PR validation record
+## Final validation record
 
 ```yaml
 branch_readback: PASS
-branch_ahead_by: 10_before_receipt_update
-branch_behind_by: 0
 changed_file_scope: PASS_EXACTLY_9
 zero_deletions_on_feature_branch: PASS
 pull_request: 158
 pull_request_url: https://github.com/Donh91/Investering-Framework-Archive-v1/pull/158
 pull_request_mergeable: PASS
 pull_request_changed_files: 9
-pull_request_additions_before_receipt_update: 827
+pull_request_additions_before_final_receipt: 827
 pull_request_deletions: 0
 review_comments_at_validation: 0
-merge: PENDING
-main_readback: PENDING
-final_repository_state: PENDING
+merge: PASS
+merge_method: SQUASH
+merge_sha: 00560ba00264167bcd36ca4f4a071b81de228f1b
+main_readback_evidence_index: PASS
+main_readback_conflict_registry: PASS
+main_readback_governance_receipt_pre_finalization: PASS
+final_repository_content_state: PASS
+binary_materialization_state: PARTIAL_CONNECTOR_LIMITATION
 ```
 
 ## Authority boundary
