@@ -24,6 +24,31 @@ pdf_size_bytes: 44453
 zip_integrity_test: PASS
 ```
 
+## Repository artifact bundle
+
+The relevant machine-readable research core is preserved under:
+
+```text
+08_SOURCE_MATERIAL/claude/gcblo/2026-07-25__full-experiment-package/
+```
+
+Directly archived:
+
+```text
+ARCHIVE_SCOPE.md
+REPORT.md
+PACKAGE_FILE_MANIFEST.csv
+code/engine.py
+code/outcomes.py
+code/ablate.py
+data/receipts.json
+data/kraken_time.json
+results/grid_pass.csv
+results/sharpe_dist.json
+```
+
+`PACKAGE_FILE_MANIFEST.csv` preserves exact size and SHA-256 for all 22 original ZIP members. Large public-source extracts and the disputed packaged `grid_all.csv` are hash-anchored rather than copied as canonical rows before the environment-parity patch resolves which release is authoritative.
+
 ## Package contents
 
 ```text
