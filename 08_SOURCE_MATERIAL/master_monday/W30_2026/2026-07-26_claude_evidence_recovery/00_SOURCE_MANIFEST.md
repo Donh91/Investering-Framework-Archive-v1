@@ -10,7 +10,7 @@
 | Artifact | Bytes | SHA-256 |
 |---|---:|---|
 | `CN W30 MASTER MONDAY EVIDENCE RECOVERY 2026-07-26.zip` | 1,676,211 | `9353f2fcefb9aaf38d8102dd3a4ec538fba302352178e883e1bcf0cdc6472ad8` |
-| `W30 MASTER MONDAY EVIDENCE RECOVERY.pdf` | 157,? package attachment | `23b0f7f9b8aa7dc0612b2f757744f934f1246dd16ea81670e0f54c06ed5cdae3` |
+| `W30 MASTER MONDAY EVIDENCE RECOVERY.pdf` | 156,817 | `23b0f7f9b8aa7dc0612b2f757744f934f1246dd16ea81670e0f54c06ed5cdae3` |
 
 The ZIP contains `109` files and approximately `8.69 MB` uncompressed source material.
 
