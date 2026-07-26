@@ -1,0 +1,66 @@
+{
+  "package_id": "US_SPOT_CRYPTO_ETF_FLOW_HISTORY_20260726",
+  "archive_date": "2026-07-26",
+  "snapshot_end_date": "2026-07-24",
+  "authority_class": "A2_EVIDENCE_CANDIDATE",
+  "verification_state": "STRUCTURE_VALIDATED",
+  "lifecycle_state": "ACTIVE",
+  "units": "USD millions",
+  "source": {
+    "type": "USER_SUPPLIED_EXPORT",
+    "origin_embedded_in_artifact": false,
+    "original_btc_filename": "Etf btc.md",
+    "original_btc_bytes": 114272,
+    "original_btc_sha256": "73ffcff5660b34a55605121c809205b2ba341a9b822bc4047efc61a995cb91fb",
+    "original_eth_filename": "ETF eth.md",
+    "original_eth_bytes": 77110,
+    "original_eth_sha256": "ac623c0bdd72213851dae67798aa461a4e3ea7e4fdea13abd4b54545edb7ed72"
+  },
+  "coverage": {
+    "btc": {
+      "row_count": 651,
+      "start_date": "2024-01-11",
+      "end_date": "2026-07-24",
+      "fund_columns": ["IBIT", "FBTC", "BITB", "ARKB", "BTCO", "EZBC", "BRRR", "HODL", "BTCW", "MSBT", "GBTC", "BTC"],
+      "duplicate_dates": 0,
+      "null_cells": 0,
+      "row_total_reconciliation_failures": 0,
+      "max_row_total_abs_diff_usd_m": 0.0,
+      "sum_daily_total_usd_m": 51438.7,
+      "source_summary_total_usd_m": 51439.0,
+      "source_summary_difference_usd_m": -0.3,
+      "zero_total_sessions": 16
+    },
+    "eth": {
+      "row_count": 513,
+      "start_date": "2024-07-23",
+      "end_date": "2026-07-24",
+      "fund_columns": ["ETHA", "ETHB", "FETH", "ETHW", "TETH", "ETHV", "QETH", "EZET", "ETHE", "ETH"],
+      "duplicate_dates": 0,
+      "null_cells": 0,
+      "row_total_reconciliation_failures": 0,
+      "max_row_total_abs_diff_usd_m": 0.0,
+      "sum_daily_total_usd_m": 11210.9,
+      "source_summary_total_usd_m": 11210.9,
+      "source_summary_difference_usd_m": -0.0,
+      "zero_total_sessions": 22
+    }
+  },
+  "partitions": {
+    "us_spot_btc_etf_flows_daily_2024.csv": {"rows": 254, "bytes": 18302, "sha256": "31b6f45128a54440f6431d3c816800ca24a3a2e888d8133b68868c27a0818a7e"},
+    "us_spot_btc_etf_flows_daily_2025.csv": {"rows": 257, "bytes": 18668, "sha256": "67c9596f135e4225995a016ba4386840ee79bb9c79528fb4ee764f9e63025eff"},
+    "us_spot_btc_etf_flows_daily_2026.csv": {"rows": 140, "bytes": 10199, "sha256": "7a375da54548efdad9285b34a84837162a2729b5ab704f0633faca1a538d8c3a"},
+    "us_spot_eth_etf_flows_daily_2024.csv": {"rows": 116, "bytes": 6933, "sha256": "cd971e8b9d027ecd170680822477206b839c6b4d961fce7103647f153eb456f4"},
+    "us_spot_eth_etf_flows_daily_2025.csv": {"rows": 257, "bytes": 15618, "sha256": "ad385c7d65dc4d036b54bab89051fe09bc163042e0227d4c04bd5c65d15310fc"},
+    "us_spot_eth_etf_flows_daily_2026.csv": {"rows": 140, "bytes": 8556, "sha256": "e65d67c54e80d2e589d1d80a547a2227e293259420ca646e2c91d0c802747240"}
+  },
+  "knowledge_time_rule": {
+    "default": "AVAILABLE_AFTER_US_SESSION_CLOSE",
+    "same_session_trade_use": "PROHIBITED_WITHOUT_PUBLICATION_TIMESTAMP",
+    "recommended_forward_label": "next available trading session return"
+  },
+  "backtest_scope": {
+    "unlocks": "fund-level and aggregate ETF-flow historical analysis for BTC and ETH",
+    "does_not_by_itself_unlock": "full multi-sensor framework replay without aligned point-in-time histories"
+  }
+}
