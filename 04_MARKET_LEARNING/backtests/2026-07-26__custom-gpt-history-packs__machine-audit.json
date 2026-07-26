@@ -1,0 +1,85 @@
+{
+  "audit_id": "CUSTOM_GPT_BACKTEST_PACKS_AUDIT_20260726",
+  "status": "HASH_AND_LOGICAL_ARCHIVE_COMPLETE_DATA_MOSTLY_SOUND_REPRODUCIBILITY_REPAIRS_REQUIRED",
+  "final_synthesis": "DEFERRED_PENDING_CLAUDE",
+  "github_materialization": {
+    "outer_zip_hashes_archived": true,
+    "logical_audit_archived": true,
+    "raw_zip_repository_copies": false,
+    "raw_zip_repository_copy_reason": "CURRENT_GITHUB_CONTENTS_ROUTE_DOES_NOT_ACCEPT_MOUNTED_LOCAL_BINARY_PATH",
+    "base64_surrogate_created": false
+  },
+  "source_files": [
+    {
+      "uploaded_name": "DATA_PING_BACKTEST_HISTORY_PACK_20260726T205621Z.zip",
+      "bytes": 159355,
+      "sha256": "b70bd0c86aa76c968a06003ad3e83c63214675777d94a5af4dfb3859f6c67dcd"
+    },
+    {
+      "uploaded_name": "FRAMEWORK_BACKTEST_EXTRACTION_PARTS_TO_20260726T204022Z(2).zip",
+      "bytes": 27454,
+      "sha256": "fa01757df10b4fd079829220df97e7f86792829aaad9236645ef82c4eac7fa5f"
+    }
+  ],
+  "large_history_pack": {
+    "file_count": 70,
+    "uncompressed_bytes": 549093,
+    "reported_rows": 2013,
+    "non_manifest_checksum_entries": 69,
+    "non_manifest_checksum_mismatches": 0,
+    "manifest_self_entry_valid": false,
+    "manifest_self_claimed_bytes": 1419,
+    "manifest_self_actual_bytes": 13948,
+    "manifest_self_claimed_sha256": "0b2378a2a487dfeff9831558d26cc0926b3827aa2f4d0502a857068733ec526d",
+    "manifest_self_actual_sha256": "a5c79625bb684be2dbd66d98708ced235d3bc0b1e5633d967723f820f689fd82",
+    "economic_backtest_ready": false,
+    "golden_fixture_ready": true
+  },
+  "extraction_parts_pack": {
+    "file_count": 16,
+    "uncompressed_bytes": 134765,
+    "actual_start": "2026-04-18",
+    "actual_end": "2026-07-24",
+    "rows_part_01": 98,
+    "rows_part_02": 98,
+    "rows_part_03": 98,
+    "canonical_backtest_usable": false,
+    "exact_data_files_duplicated_in_large_pack": 5,
+    "manifest_self_entry_valid": false,
+    "checksum_file_manifest_entry_valid": false
+  },
+  "qa_findings": [
+    "SELF_REFERENTIAL_MANIFEST_HASH_DEFECT",
+    "VALIDATION_SCRIPT_SCOPE_OVERCLAIM",
+    "REBUILD_SCRIPT_SCHEMA_DESTRUCTIVE",
+    "DUPLICATE_CHECK_REQUIRES_COMPOSITE_KEYS",
+    "READY_WITH_RESTRICTIONS_MEANS_FIXTURE_ONLY_FOR_FIVE_SESSION_TESTS"
+  ],
+  "ready_now": [
+    "W30_GOLDEN_FIXTURE_REPLAY",
+    "LOOKAHEAD_GUARD_TEST",
+    "NO_WEEKEND_ETF_ZERO_TEST",
+    "VENUE_AND_MARKET_TYPE_SEPARATION_TEST",
+    "DERIVED_ETHBTC_AUTHORITY_GUARD_TEST",
+    "CONTINUATION_RESUME_TEST"
+  ],
+  "ready_after_join_to_existing_github_etf_archive": [
+    "BT01_ETF_FLOW_PERSISTENCE",
+    "BT02_ETF_FLOW_REVERSAL",
+    "BT09_WEEKEND_TO_MONDAY_ETF",
+    "ETF_ISSUER_CONCENTRATION",
+    "BTC_ETH_ETF_DIVERGENCE"
+  ],
+  "blocked": [
+    "BT03_ETHBTC_EARLY_TRANSMISSION",
+    "BT04_ETHBTC_0_0300_GATE",
+    "BT05_LAST_FLUSH_REBUY_DELAY",
+    "BT06_FUNDING_OI_CONFIRMATION",
+    "BT07_BREADTH_CONFIRMATION_PRE_ARCHIVE",
+    "BT08_BUSINESS_CYCLE_TURN",
+    "BT10_MULTI_SENSOR_STATE_MACHINE_REPLAY"
+  ],
+  "framework_state_change": "NONE",
+  "portfolio_action": "NONE",
+  "next_gate": "INGEST_AND_COMPARE_CLAUDE_PACKAGE"
+}
