@@ -67,6 +67,7 @@ A registry entry is a navigation pointer only. The referenced file's own status,
 | `00_ARCHIVE_CONTROL/2026-07-12__index-addendum-final-truth-layer-gap-closure-and-m3-forward.md` | truth-layer gap closure / M3 forward collection | REGISTRY_DISCOVERABLE |
 | `00_ARCHIVE_CONTROL/2026-07-12__index-addendum-transmission-matrix-forward-test-v0-1.md` | Transmission Matrix forward test | REGISTRY_DISCOVERABLE |
 | `00_ARCHIVE_CONTROL/2026-07-12__index-addendum-truth-layer-recovery-and-github-lineage-upgrade.md` | truth-layer recovery / GitHub lineage | REGISTRY_DISCOVERABLE |
+| `01_CORE_FRAMEWORK/governance/2026-07-25__external-indicator-admission-gates__canonical-addendum.md` | external indicators / specification dispersion / saturation / FX decomposition | REGISTRY_DISCOVERABLE |
 
 ## Registration contract
 
