@@ -1,11 +1,12 @@
 # Governance Receipt: Tom Hougaard Research Ingest
 
 **Dato:** 2026-07-26  
-**Status:** PENDING_PR_VALIDATION / PARTIAL_REMEDIATED_WRITE_GOVERNANCE  
+**Status:** PASS_CONTENT / PARTIAL_REMEDIATED_WRITE_GOVERNANCE  
 **Område:** external trader method / payoff asymmetry / confirmation scaling  
-**Branch:** `agent/task-20260726-tom-hougaard-research`
+**Initial branch:** `agent/task-20260726-tom-hougaard-research`  
+**Finalization branch:** `agent/task-20260726-finalize-tom-hougaard-research`
 
-## Decision manifest
+## Final decision manifest
 
 ```yaml
 archive_decision: SELECTIVE_ACCEPT_SHADOW_RESEARCH
@@ -80,19 +81,30 @@ Remediation:
 
 Write governance therefore remains `PARTIAL_REMEDIATED` rather than an unqualified `PASS`.
 
-## Validation plan
+## Final validation record
 
 ```yaml
-branch_readback: PENDING
-changed_file_scope: PENDING_EXPECT_3
-zero_deletions: PENDING
-pull_request: PENDING
-mergeable: PENDING
-main_merge: PENDING
-main_readback: PENDING
-archive_content_result: PENDING
+branch_readback_source_note: PASS
+branch_readback_shadow_audit: PASS
+branch_readback_receipt: PASS
+changed_file_scope: PASS_EXACTLY_3
+zero_deletions: PASS
+pull_request: 156
+pull_request_url: https://github.com/Donh91/Investering-Framework-Archive-v1/pull/156
+pull_request_mergeable: PASS
+pull_request_changed_files: 3
+pull_request_additions: 571
+pull_request_deletions: 0
+workflow_runs: NONE
+main_merge: PASS
+main_merge_sha: 1769b159a5455e20b70bfc07dc3f895d2445c352
+main_readback_source_note: PASS
+main_readback_shadow_audit: PASS
+archive_content_result: PASS
 write_governance_result: PARTIAL_REMEDIATED
-final_repository_state: PENDING
+final_repository_state: PASS
+incident_count: 1
+incident_paths: []
 ```
 
 ## Authority boundary
