@@ -1,0 +1,88 @@
+{
+  "handover_id": "DATA_PING_V7_MAIN_THREAD_HANDOVER_20260726",
+  "handover_date": "2026-07-26",
+  "continuation_required": true,
+  "framework_reset_allowed": false,
+  "repository_baseline_before_handover": "2d4d1df8c4540b427539ae8959f2c07c729439a2",
+  "framework_state": {
+    "rotation": "NO_ROTATION",
+    "rebuy": "LOCKED",
+    "new_entry": "NOT_ACTIVE",
+    "large_caps": "WATCH_ONLY",
+    "portfolio_action": "NONE",
+    "canonical_state_change": "NONE",
+    "stage1": "GOVERNANCE_PENDING",
+    "recovery_upgrade": "NONE",
+    "altseason_confirmation": "NONE"
+  },
+  "collector": {
+    "contract": "DATA_PING_RUN_FIRST_STATELESS_v1",
+    "version": "15.0",
+    "runtime": "DATA_PING_LONGITUDINAL_COLLECTOR_v1",
+    "trigger": "Data ping",
+    "mandatory_assets": ["BTCUSDT", "ETHUSDT", "ETHBTC"],
+    "latest_run_id": "dprun_20260726T095746Z_001",
+    "latest_snapshot_id": "dpsnap_20260726T101847086Z_001",
+    "latest_snapshot_utc": "2026-07-26T10:18:47.086Z",
+    "latest_snapshot_use": "PREDECESSOR_EVIDENCE_ONLY",
+    "framework_interpretation": "DEFERRED_TO_MAIN_FRAMEWORK"
+  },
+  "forecast_state": {
+    "F1": {
+      "status": "PENDING_FINAL_ROWS",
+      "threshold_authority": 62200,
+      "alternative_threshold": 62342,
+      "alternative_threshold_lineage": "UNRESOLVED",
+      "maturity_utc": "2026-07-28T00:00:00Z",
+      "interim_score_allowed": false
+    },
+    "F4": {
+      "status": "MATURED",
+      "directional_score": "GATE_UNMET",
+      "causal_attribution": "CONFOUNDED",
+      "reopen_allowed": false
+    },
+    "F5": {
+      "status": "CLOSED_TRIGGERED",
+      "retrigger_allowed": false
+    },
+    "H7": {
+      "status": "PENDING_ROW5_AND_SLOPE_ADJUDICATION",
+      "row5_maturity_utc": "2026-07-26T22:00:00Z"
+    },
+    "low_vol": {
+      "status": "BLOCKED_BY_INTERNAL_ARITHMETIC_CONFLICT",
+      "maturity_5d_utc": "2026-07-28T00:00:00Z"
+    },
+    "leading_claim": {
+      "status": "PENDING_WITH_FOMC_CONFOUND",
+      "approx_maturity": "2026-07-30"
+    },
+    "EXT_GCBLO_2026_07_24": {
+      "status": "PENDING",
+      "maturity": "2026-10-23"
+    }
+  },
+  "w30_external_evidence": {
+    "status": "ARCHIVED_PASS_WITH_CONFLICTS",
+    "classification": ["RESEARCH_EVIDENCE_ONLY", "NON_CANONICAL", "NON_BINDING"],
+    "zip_sha256": "9353f2fcefb9aaf38d8102dd3a4ec538fba302352178e883e1bcf0cdc6472ad8",
+    "pdf_sha256": "23b0f7f9b8aa7dc0612b2f757744f934f1246dd16ea81670e0f54c06ed5cdae3"
+  },
+  "open_conflict_count": 12,
+  "conflict_registry_path": "04_MARKET_LEARNING/master_monday/W30_2026/2026-07-26_claude_evidence_recovery/04_CONFLICT_REGISTRY.md",
+  "new_thread_rules": {
+    "old_values_are_current": false,
+    "fresh_data_ping_required_for_current_market_state": true,
+    "predecessor_history_may_be_invented": false,
+    "forecast_ledgers_may_be_reset": false,
+    "collector_may_change_portfolio_state": false,
+    "collector_may_unlock_rebuy": false,
+    "collector_may_confirm_rotation": false
+  },
+  "fmos": {
+    "continuation_thread": "SEPARATE_NEW_THREAD",
+    "relationship_to_framework": "ADDITIVE",
+    "relationship_to_data_ping": "KNOWLEDGE_OBJECT_CONSUMER_NOT_REPLACEMENT"
+  }
+}
