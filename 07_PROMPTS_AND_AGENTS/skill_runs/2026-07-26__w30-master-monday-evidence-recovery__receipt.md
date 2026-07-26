@@ -3,7 +3,7 @@
 **Date:** 2026-07-26  
 **Branch:** `agent/task-20260726-w30-master-monday-evidence-recovery`  
 **Operation:** Archive and route Claude W30 missing-evidence recovery package  
-**Status before PR:** `CONTENT_WRITTEN / VALIDATION_PENDING`
+**Status:** `PR_VALIDATED / MERGE_PENDING`
 
 ## User authorization
 
@@ -27,7 +27,7 @@ stage1_ratification: NONE
 - Raw source identity, QA and provenance: `08_SOURCE_MATERIAL/`.
 - Write-governance receipt: `07_PROMPTS_AND_AGENTS/skill_runs/`.
 
-This routing follows the repository review guidance that market interpretation belongs under `04_MARKET_LEARNING/` and raw evidence under `08_SOURCE_MATERIAL/`, avoiding an orphaned top-level archive namespace.
+This routing follows repository review guidance that market interpretation belongs under `04_MARKET_LEARNING/` and raw evidence under `08_SOURCE_MATERIAL/`, avoiding an orphaned top-level archive namespace.
 
 ## Written objects
 
@@ -71,13 +71,21 @@ Repository-local binary duplication status: `PARTIAL_CONNECTOR_LIMITATION`.
 
 During tool validation, an accidental root file `tmp_should_not_create.txt` was created on the default branch and immediately deleted. Net repository content impact is zero. The cleanup commit is preserved in history for transparency.
 
-## Validation plan
+## PR validation record
 
 ```yaml
-branch_readback: PENDING
-changed_file_scope: PENDING_EXPECT_9
-zero_deletions_on_feature_branch: PENDING
-pull_request: PENDING
+branch_readback: PASS
+branch_ahead_by: 10_before_receipt_update
+branch_behind_by: 0
+changed_file_scope: PASS_EXACTLY_9
+zero_deletions_on_feature_branch: PASS
+pull_request: 158
+pull_request_url: https://github.com/Donh91/Investering-Framework-Archive-v1/pull/158
+pull_request_mergeable: PASS
+pull_request_changed_files: 9
+pull_request_additions_before_receipt_update: 827
+pull_request_deletions: 0
+review_comments_at_validation: 0
 merge: PENDING
 main_readback: PENDING
 final_repository_state: PENDING
