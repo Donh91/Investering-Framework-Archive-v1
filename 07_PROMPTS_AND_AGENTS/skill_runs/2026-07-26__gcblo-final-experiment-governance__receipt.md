@@ -1,12 +1,13 @@
 # Governance Receipt: GCBLO Full Experiment and External Indicator Gates
 
 **Dato:** 2026-07-26  
-**Status:** PENDING_PR_VALIDATION  
+**Status:** PASS_CONTENT / PARTIAL_REMEDIATED_WRITE_GOVERNANCE  
 **Område:** Research Lab / external indicator governance / prospective evidence  
 **Primary folder:** `07_PROMPTS_AND_AGENTS/skill_runs/`  
-**Branch:** `agent/task-20260725-gcblo-final-experiment-governance`
+**Initial branch:** `agent/task-20260725-gcblo-final-experiment-governance`  
+**Finalization branch:** `agent/task-20260726-finalize-gcblo-experiment-governance`
 
-## Decision manifest
+## Final decision manifest
 
 ```yaml
 archive_decision: PARTIAL_ACCEPT_STRONG_NEGATIVE_LEARNING_AND_FREEZE_ONE_PROSPECTIVE_ROW
@@ -19,7 +20,6 @@ classification:
 primary_owner: SENSOR_RELATIONSHIP_AND_INCREMENTAL_VALUE_STANDARD
 prospective_owner: FNP_CUMULATIVE
 operation: CREATE_5_UPDATE_3
-branch_assertion: PASS_AFTER_REMEDIATION
 canonical_index_change: NO
 addendum_registry_change: YES
 high_impact_gate: NOT_REQUIRED
@@ -50,7 +50,7 @@ backup_scope: NONE_CLAIMED
 06_RESEARCH_LAB/forward_tests/shared_evidence/latest_state.json
 ```
 
-## Content decisions
+## Final content decisions
 
 ```yaml
 original_gcblo_recovered: NO
@@ -100,7 +100,7 @@ outcome_matured: false
 execution_authority: ZERO
 ```
 
-The source post date is visible as 2026-07-24, but the exact source-post timestamp is unavailable. The row uses the exact first framework observation time `2026-07-25T13:03:46Z` and preserves the uncertainty in its notes.
+The source post date is visible as 2026-07-24, but its exact posting timestamp is unavailable. The row uses the exact first framework observation time `2026-07-25T13:03:46Z`. Its primary source-date horizon ends 2026-10-23 and may be evaluated only after 2026-10-24T00:00:00Z.
 
 ## Write-governance incidents
 
@@ -127,28 +127,42 @@ Remediation:
 
 1. the isolated task branch was created from `main`;
 2. its existence was verified through exact-ref readback of `AGENTS.md`;
-3. every successful write used the explicit verified non-default branch;
+3. every successful write used an explicit verified non-default branch;
 4. no probe path exists in repository history;
 5. both incidents remain disclosed here.
 
-Per repository policy, the write-governance layer cannot receive an unqualified `PASS`.
+Per repository policy, the write-governance layer remains `PARTIAL_REMEDIATED`, not an unqualified `PASS`.
 
-## Validation plan
+## PR and validation record
 
 ```yaml
-branch_readback_all_paths: PENDING
+branch_readback_all_paths: PASS
 csv_field_count: PASS_36
 ledger_duplicate_check: PASS_NO_PRIOR_EXT_GCBLO_ROW_FOUND
-registry_entry_count: PENDING
-exact_changed_file_scope: PENDING
-pull_request_created: PENDING
-pull_request_mergeable: PENDING
-zero_unintended_deletions: PENDING
-main_merge: PENDING
-main_readback: PENDING
-archive_content_result: PENDING
+registry_entry_count: PASS_EXACTLY_ONE
+changed_file_scope: PASS_EXACTLY_8_PATHS
+pull_request: 151
+pull_request_url: https://github.com/Donh91/Investering-Framework-Archive-v1/pull/151
+pull_request_mergeable: PASS
+pull_request_changed_files: 8
+pull_request_additions: 1341
+pull_request_deletions: 10
+workflow_runs: NONE
+main_merge: PASS
+main_merge_sha: 580414c42b403195846c9b171005b6b01c2ab0c9
+main_readback_source_note: PASS
+main_readback_research_ruling: PASS
+main_readback_canonical_addendum: PASS
+main_readback_registry: PASS
+main_readback_frozen_row: PASS
+main_readback_latest_state: PASS
+main_readback_patch_prompt: PASS
+zero_unintended_deletions: PASS
+archive_content_result: PASS
 write_governance_result: PARTIAL_REMEDIATED
-final_repository_state: PENDING
+final_repository_state: PASS
+incident_count: 2
+incident_paths: []
 ```
 
 ## Authority boundary
