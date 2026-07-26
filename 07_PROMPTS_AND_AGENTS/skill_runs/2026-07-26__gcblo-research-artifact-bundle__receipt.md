@@ -1,11 +1,12 @@
 # Governance Receipt: GCBLO Research Artifact Bundle
 
 **Dato:** 2026-07-26  
-**Status:** PENDING_PR_VALIDATION  
-**Branch:** `agent/task-20260726-gcblo-research-artifacts`  
+**Status:** PASS  
+**Initial branch:** `agent/task-20260726-gcblo-research-artifacts`  
+**Finalization branch:** `agent/task-20260726-finalize-gcblo-research-artifacts`  
 **Scope:** source preservation / reproducibility core / no live authority
 
-## Decision manifest
+## Final decision manifest
 
 ```yaml
 archive_decision: ACCEPT_RELEVANT_MACHINE_READABLE_RESEARCH_CORE
@@ -54,20 +55,31 @@ The large raw FRED/Kraken extracts and packaged `grid_all.csv` are not duplicate
 
 This does not discard evidence. It prevents a disputed generated result file from being silently promoted to canonical truth.
 
-## Validation plan
+## Final validation record
 
 ```yaml
-branch_readback: PENDING
-manifest_member_count: PENDING_EXPECT_22
-source_note_pointer: PENDING
-changed_file_scope: PENDING_EXPECT_12_INCLUDING_RECEIPT
-zero_deletions: PENDING
-pull_request: PENDING
-merge: PENDING
-main_readback: PENDING
-archive_content_result: PENDING
-write_governance_result: PENDING
-final_repository_state: PENDING
+branch_readback: PASS
+manifest_member_count: PASS_22
+source_note_pointer: PASS
+changed_file_scope: PASS_EXACTLY_12
+zero_deletions: PASS
+pull_request: 153
+pull_request_url: https://github.com/Donh91/Investering-Framework-Archive-v1/pull/153
+pull_request_changed_files: 12
+pull_request_additions: 660
+pull_request_deletions: 0
+workflow_runs: NONE
+merge: PASS
+merge_sha: 6aaad57bcc1a8a32bdb01de639de4c875e921d70
+main_readback_manifest: PASS
+main_readback_source_note: PASS
+main_readback_report: PASS
+main_readback_code: PASS
+main_readback_receipts: PASS
+main_readback_small_results: PASS
+archive_content_result: PASS
+write_governance_result: PASS
+final_repository_state: PASS
 ```
 
 ## Authority boundary
