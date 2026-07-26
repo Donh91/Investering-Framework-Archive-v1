@@ -1,0 +1,183 @@
+{
+  "contract": "HISTORICAL_FRAMEWORK_BACKTEST_DATA_EXTRACTION_v1",
+  "manifest_version": "1.0",
+  "updated_at_utc": "2026-07-26T20:40:22Z",
+  "run_id": "HFBE_20260726T204022Z",
+  "total_planned_parts": 18,
+  "max_parts_per_run": 3,
+  "requested_primary_window": {
+    "start": "2021-01-01",
+    "end": "2026-07-24"
+  },
+  "parts_processed_this_run": [
+    "PART 01",
+    "PART 02",
+    "PART 03"
+  ],
+  "completed_parts": [],
+  "partial_parts": [
+    "PART 01",
+    "PART 02",
+    "PART 03"
+  ],
+  "blocked_parts": [],
+  "next_part": "PART 01",
+  "next_parts_to_continue": [
+    "PART 01",
+    "PART 02",
+    "PART 03"
+  ],
+  "resume_state": {
+    "PART 01": {
+      "source": "OKX_INDEX_HISTORY",
+      "operation_id": "getOKXIndexHistoryCandles",
+      "request_parameters_next": {
+        "instId": "BTC-USDT",
+        "bar": "1Dutc",
+        "limit": "100",
+        "after": "1776470400000"
+      },
+      "oldest_materialized_source_timestamp_ms": 1776470400000,
+      "actual_start": "2026-04-18",
+      "actual_end": "2026-07-24"
+    },
+    "PART 02": {
+      "source": "OKX_INDEX_HISTORY",
+      "operation_id": "getOKXIndexHistoryCandles",
+      "request_parameters_next": {
+        "instId": "ETH-USDT",
+        "bar": "1Dutc",
+        "limit": "100",
+        "after": "1776470400000"
+      },
+      "oldest_materialized_source_timestamp_ms": 1776470400000,
+      "actual_start": "2026-04-18",
+      "actual_end": "2026-07-24"
+    },
+    "PART 03": {
+      "dependency": [
+        "PART 01",
+        "PART 02"
+      ],
+      "next_step": "Recompute derived proxy after both older index pages are materialized; continue seeking direct ETHBTC spot source.",
+      "actual_start": "2026-04-18",
+      "actual_end": "2026-07-24"
+    }
+  },
+  "parts": [
+    {
+      "part_number": "PART 01",
+      "status": "PARTIAL_WITH_EXPLICIT_GAPS",
+      "last_run_id": "HFBE_20260726T204022Z",
+      "detail": "BTC daily: 98 normalized OKX index-proxy rows; direct spot blocked; older pages not yet paginated."
+    },
+    {
+      "part_number": "PART 02",
+      "status": "PARTIAL_WITH_EXPLICIT_GAPS",
+      "last_run_id": "HFBE_20260726T204022Z",
+      "detail": "ETH daily: 98 normalized OKX index-proxy rows; direct spot blocked; older pages not yet paginated."
+    },
+    {
+      "part_number": "PART 03",
+      "status": "PARTIAL_WITH_EXPLICIT_GAPS",
+      "last_run_id": "HFBE_20260726T204022Z",
+      "detail": "ETH/BTC daily: 98 derived index-ratio rows; direct pair blocked; not direct OHLCV."
+    },
+    {
+      "part_number": "PART 04",
+      "status": "NOT_STARTED",
+      "last_run_id": null,
+      "detail": null
+    },
+    {
+      "part_number": "PART 05",
+      "status": "NOT_STARTED",
+      "last_run_id": null,
+      "detail": null
+    },
+    {
+      "part_number": "PART 06",
+      "status": "NOT_STARTED",
+      "last_run_id": null,
+      "detail": null
+    },
+    {
+      "part_number": "PART 07",
+      "status": "NOT_STARTED",
+      "last_run_id": null,
+      "detail": null
+    },
+    {
+      "part_number": "PART 08",
+      "status": "NOT_STARTED",
+      "last_run_id": null,
+      "detail": null
+    },
+    {
+      "part_number": "PART 09",
+      "status": "NOT_STARTED",
+      "last_run_id": null,
+      "detail": null
+    },
+    {
+      "part_number": "PART 10",
+      "status": "NOT_STARTED",
+      "last_run_id": null,
+      "detail": null
+    },
+    {
+      "part_number": "PART 11",
+      "status": "NOT_STARTED",
+      "last_run_id": null,
+      "detail": null
+    },
+    {
+      "part_number": "PART 12",
+      "status": "NOT_STARTED",
+      "last_run_id": null,
+      "detail": null
+    },
+    {
+      "part_number": "PART 13",
+      "status": "NOT_STARTED",
+      "last_run_id": null,
+      "detail": null
+    },
+    {
+      "part_number": "PART 14",
+      "status": "NOT_STARTED",
+      "last_run_id": null,
+      "detail": null
+    },
+    {
+      "part_number": "PART 15",
+      "status": "NOT_STARTED",
+      "last_run_id": null,
+      "detail": null
+    },
+    {
+      "part_number": "PART 16",
+      "status": "NOT_STARTED",
+      "last_run_id": null,
+      "detail": null
+    },
+    {
+      "part_number": "PART 17",
+      "status": "NOT_STARTED",
+      "last_run_id": null,
+      "detail": null
+    },
+    {
+      "part_number": "PART 18",
+      "status": "NOT_STARTED",
+      "last_run_id": null,
+      "detail": null
+    }
+  ],
+  "lineage_rules": {
+    "do_not_merge_direct_and_proxy_silently": true,
+    "do_not_mark_proxy_as_spot": true,
+    "do_not_mark_derived_ethbtc_as_direct": true,
+    "no_missing_values_replaced_with_zero": true
+  }
+}
