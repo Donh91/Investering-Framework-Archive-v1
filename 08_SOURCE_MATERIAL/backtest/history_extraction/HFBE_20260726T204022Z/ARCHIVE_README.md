@@ -8,16 +8,35 @@
 
 ## Preservation
 
-The complete uploaded ZIP is preserved byte-for-byte as Base64:
+The complete uploaded ZIP is preserved byte-for-byte as five ordered Base64 parts under:
 
 ```text
-FRAMEWORK_BACKTEST_EXTRACTION_PARTS_TO_20260726T204022Z.zip.b64
+source_zip_parts/FRAMEWORK_BACKTEST_EXTRACTION_PARTS_TO_20260726T204022Z.zip.b64.part01
+source_zip_parts/FRAMEWORK_BACKTEST_EXTRACTION_PARTS_TO_20260726T204022Z.zip.b64.part02
+source_zip_parts/FRAMEWORK_BACKTEST_EXTRACTION_PARTS_TO_20260726T204022Z.zip.b64.part03
+source_zip_parts/FRAMEWORK_BACKTEST_EXTRACTION_PARTS_TO_20260726T204022Z.zip.b64.part04
+source_zip_parts/FRAMEWORK_BACKTEST_EXTRACTION_PARTS_TO_20260726T204022Z.zip.b64.part05
 ```
 
-Reconstruction:
+Reconstruction from this archive directory:
 
 ```bash
-base64 -d FRAMEWORK_BACKTEST_EXTRACTION_PARTS_TO_20260726T204022Z.zip.b64 > FRAMEWORK_BACKTEST_EXTRACTION_PARTS_TO_20260726T204022Z.zip
+cat source_zip_parts/FRAMEWORK_BACKTEST_EXTRACTION_PARTS_TO_20260726T204022Z.zip.b64.part01 \
+    source_zip_parts/FRAMEWORK_BACKTEST_EXTRACTION_PARTS_TO_20260726T204022Z.zip.b64.part02 \
+    source_zip_parts/FRAMEWORK_BACKTEST_EXTRACTION_PARTS_TO_20260726T204022Z.zip.b64.part03 \
+    source_zip_parts/FRAMEWORK_BACKTEST_EXTRACTION_PARTS_TO_20260726T204022Z.zip.b64.part04 \
+    source_zip_parts/FRAMEWORK_BACKTEST_EXTRACTION_PARTS_TO_20260726T204022Z.zip.b64.part05 \
+  | base64 -d > FRAMEWORK_BACKTEST_EXTRACTION_PARTS_TO_20260726T204022Z.zip
+```
+
+Transport validation:
+
+```yaml
+base64_part_count: 5
+base64_part_lengths: [8000, 8000, 8000, 8000, 4608]
+base64_total_characters: 36608
+all_git_blob_hashes_verified: true
+reconstructed_zip_sha256: fa01757df10b4fd079829220df97e7f86792829aaad9236645ef82c4eac7fa5f
 ```
 
 The package and continuation manifests are also exposed as plain JSON under `exposed/manifests/`.
