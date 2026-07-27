@@ -1,0 +1,55 @@
+name: Backtest Readiness Contracts
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - '04_MARKET_LEARNING/backtests/framework_backtest_readiness_build_v1/architecture/**'
+      - 'tools/backtest_readiness/**'
+      - 'tests/backtest_readiness/**'
+      - '.github/workflows/backtest-readiness-contracts.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  contract-validation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Run unit tests
+        run: python -m unittest discover -s tests/backtest_readiness -p 'test_*.py' -v
+
+      - name: Validate frozen contracts
+        run: |
+          mkdir -p artifacts/backtest-readiness
+          python tools/backtest_readiness/validate_contracts.py \
+            --output artifacts/backtest-readiness/contract-validation.json
+
+      - name: Upload validation artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: backtest-readiness-contract-validation
+          path: artifacts/backtest-readiness/contract-validation.json
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Assert economic lock
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          result = json.loads(Path('artifacts/backtest-readiness/contract-validation.json').read_text())
+          assert result['status'] == 'PASS'
+          assert result['economic_backtest_executed'] is False
+          assert result['readiness_gate_G20'] == 'NO'
+          print('Engineering contracts PASS; economic execution remains LOCKED.')
+          PY
