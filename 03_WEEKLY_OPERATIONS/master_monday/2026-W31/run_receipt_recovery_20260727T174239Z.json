@@ -1,0 +1,121 @@
+{
+  "schema_version": "1.0",
+  "receipt_origin": "CREATED_DURING_RUN",
+  "run_id": "MASTER_MONDAY_W31_20260727T174239Z",
+  "iso_week": "2026-W31",
+  "evaluated_week": "2026-W30",
+  "generated_at_utc": "2026-07-27T17:42:39Z",
+  "run_mode": "RECOVERY_AFTER_SOURCE_UNAVAILABLE",
+  "source_resolution": "ACCEPTED_MULTI_RUN_EVIDENCE_CHAIN",
+  "source_version": "DATA_PING_RUN_FIRST_STATELESS_v15_1_1_CHAIN",
+  "source_timestamp": "2026-07-27T17:28:59Z",
+  "source_quality": "MEDIUM",
+  "artifact_paths": {
+    "recovery_notice": "03_WEEKLY_OPERATIONS/master_monday/2026-W31/00_recovery_supersession_notice.md",
+    "master_monday_pre_data_ping": "03_WEEKLY_OPERATIONS/master_monday/2026-W31/01_system_generated_pre_data_ping.md",
+    "master_monday_data_ping_derived": "03_WEEKLY_OPERATIONS/master_monday/2026-W31/02_data_ping_derived_raw.md",
+    "master_monday_final": "03_WEEKLY_OPERATIONS/master_monday/2026-W31/03_framework_ratified_final.md",
+    "cycle_navigator_handoff": "03_WEEKLY_OPERATIONS/master_monday/2026-W31/04_cycle_navigator_handoff_notes.md",
+    "forecast_ledger": "03_WEEKLY_OPERATIONS/forecast_ledger/2026-07-27__forecast-ledger-2026-w31__official.md",
+    "previous_week_score": "03_WEEKLY_OPERATIONS/forecast_ledger/scoring/2026-07-27__forecast-score-2026-w30__transparent-audit.md",
+    "data_gate_receipt": "03_WEEKLY_OPERATIONS/sunday_closeout/2026-W31/master_monday_data_gate_receipt.json",
+    "techdev_calibration": "06_RESEARCH_LAB/forward_tests/techdev_issue_98/weekly/2026-W31__calibration.json",
+    "latest_pointer": "03_WEEKLY_OPERATIONS/master_monday/latest_master_monday.json",
+    "output_index": "06_WEEKLY/2026-W31/2026-07-27__master-monday-output-index.md",
+    "run_receipt": "03_WEEKLY_OPERATIONS/master_monday/2026-W31/run_receipt_recovery_20260727T174239Z.json"
+  },
+  "artifact_verification": [
+    {
+      "path": "03_WEEKLY_OPERATIONS/master_monday/2026-W31/02_data_ping_derived_raw.md",
+      "creation_commit_sha": "19739ffec8765b8e1c6d63e513a1d6ed33a9eaa5",
+      "blob_sha": "7cd432f2843444026766abd92f11ac55d82edaf4",
+      "branch_readback_status": "PASS",
+      "main_readback_status": "PENDING"
+    },
+    {
+      "path": "03_WEEKLY_OPERATIONS/master_monday/2026-W31/03_framework_ratified_final.md",
+      "creation_commit_sha": "727a6f05c35325f9183126ccba6a0110b289d503",
+      "blob_sha": "669cbdea83d9718a2d9072ad87ce9c75407ca298",
+      "branch_readback_status": "PASS",
+      "main_readback_status": "PENDING"
+    },
+    {
+      "path": "03_WEEKLY_OPERATIONS/master_monday/2026-W31/04_cycle_navigator_handoff_notes.md",
+      "creation_commit_sha": "e0ad7eac9db1f8cdb839c214aad6265c512bbf3b",
+      "blob_sha": "0714ec8a64e4edfd8bbfe82e7aa8394364302e23",
+      "branch_readback_status": "PASS",
+      "main_readback_status": "PENDING"
+    },
+    {
+      "path": "03_WEEKLY_OPERATIONS/forecast_ledger/2026-07-27__forecast-ledger-2026-w31__official.md",
+      "creation_commit_sha": "bf22a0978d9aaf345896cfeff76862be0b16903e",
+      "blob_sha": "96876d3946df1a4a45dd94d2f7eab3c1d4f116c5",
+      "branch_readback_status": "PASS",
+      "main_readback_status": "PENDING"
+    },
+    {
+      "path": "03_WEEKLY_OPERATIONS/forecast_ledger/scoring/2026-07-27__forecast-score-2026-w30__transparent-audit.md",
+      "creation_commit_sha": "3db5a3d756d9360c0456beb40ae341773be0e0b6",
+      "blob_sha": "78511e57e9966e9de567c2e4db01e2fbbe316856",
+      "branch_readback_status": "PASS",
+      "main_readback_status": "PENDING"
+    },
+    {
+      "path": "03_WEEKLY_OPERATIONS/sunday_closeout/2026-W31/master_monday_data_gate_receipt.json",
+      "creation_commit_sha": "3baebd83b517400b5a9b02ce314cf1fbb4e43a87",
+      "blob_sha": "970bd8e80adf573b32ca78101904f2edeb16bf4e",
+      "branch_readback_status": "PASS",
+      "main_readback_status": "PENDING"
+    },
+    {
+      "path": "06_RESEARCH_LAB/forward_tests/techdev_issue_98/weekly/2026-W31__calibration.json",
+      "creation_commit_sha": "26ecb6237c09ed541469fcfad472abdea15cce24",
+      "blob_sha": "a3d91c0c51f942a958d9bc4fd9179caeecf7106f",
+      "branch_readback_status": "PASS",
+      "main_readback_status": "PENDING"
+    },
+    {
+      "path": "03_WEEKLY_OPERATIONS/master_monday/latest_master_monday.json",
+      "creation_commit_sha": "691dade5e6221716c99e245e30348205a605b27b",
+      "blob_sha": "8684519c7041e27a4933c529f08536d5931c80e6",
+      "branch_readback_status": "PASS",
+      "main_readback_status": "PENDING"
+    }
+  ],
+  "write_transaction": {
+    "task_branch": "agent/master-monday-w31-recovery-20260727",
+    "branch_write_status": "PASS",
+    "branch_readback_status": "PASS_CORE_ARTIFACTS",
+    "pull_request_number": null,
+    "pull_request_status": "NOT_CREATED",
+    "merge_commit_sha": null,
+    "merge_status": "PENDING",
+    "main_readback_status": "PENDING"
+  },
+  "pointer_transaction": {
+    "pointer_path": "03_WEEKLY_OPERATIONS/master_monday/latest_master_monday.json",
+    "previous_valid_pointer": {
+      "latest_durable_week": "2026-W30",
+      "latest_durable_path": "03_WEEKLY_OPERATIONS/master_monday/2026-W30/03_framework_ratified_final.md",
+      "latest_durable_blob_sha": "ab3a26eaf6aca4091036767a223c5c75960fa9c2"
+    },
+    "pointer_update_status": "BRANCH_PASS_MAIN_PENDING",
+    "target_verification_status": "BRANCH_PASS_MAIN_PENDING"
+  },
+  "forecast_lineage_status": "COMPLETE",
+  "previous_week_scoring_status": "MATURED_TRANSPARENT_AUDIT_COMPLETE",
+  "current_week_scoring_eligibility": false,
+  "current_week_scoring_blocker": "W31_OUTCOMES_NOT_YET_MATURE",
+  "backtest_execution": "LOCKED",
+  "overall_durability_status": "BRANCH_PASS_PR_PENDING",
+  "authority_boundary": {
+    "market_call": true,
+    "portfolio_action": false,
+    "rule_promotion": false,
+    "threshold_change": false,
+    "rotation_permission": false,
+    "rebuy_permission": false,
+    "new_entry_permission": false,
+    "backtest_execution": false
+  }
+}
