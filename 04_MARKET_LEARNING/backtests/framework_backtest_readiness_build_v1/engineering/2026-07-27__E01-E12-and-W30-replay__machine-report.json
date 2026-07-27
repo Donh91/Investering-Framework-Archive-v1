@@ -1,0 +1,63 @@
+{
+  "schema_version": "1.0",
+  "run_id": "BACKTEST_ENGINEERING_E01_E12_20260727",
+  "run_type": "ENGINEERING_GATES_E01_E12",
+  "executed_in_active_runtime": true,
+  "economic_backtest_executed": false,
+  "engineering_status": "PASS",
+  "readiness_gate_G20": "NO",
+  "final_master_byte_gate": "BLOCKED",
+  "final_master_evidence": "DATA_PING_BACKTEST_HISTORY_PACK_FINAL_20260727T183529Z.zip was not present in the active /mnt/data runtime",
+  "unit_tests": {
+    "count": 17,
+    "status": "PASS",
+    "runtime_seconds": 0.269
+  },
+  "gates": [
+    {"gate": "E01_PACKAGE_IDENTITY", "status": "PASS", "evidence": "W30 ZIP SHA-256 b70bd0c86aa76c968a06003ad3e83c63214675777d94a5af4dfb3859f6c67dcd, 159355 bytes"},
+    {"gate": "E02_CHECKSUM_AND_MANIFEST", "status": "PASS", "evidence": "69 detached entries pass; isolated manifest self-reference defect retained"},
+    {"gate": "E03_OWNER_UNIQUENESS", "status": "PASS", "evidence": "frozen owner-registry contract CI"},
+    {"gate": "E04_COMPOSITE_PRIMARY_KEYS", "status": "PASS", "evidence": "W30 hourly and ETF composite keys unique; timestamp-only false-positive test passes"},
+    {"gate": "E05_DIRECT_DERIVED_AUTHORITY", "status": "PASS", "evidence": "derived ETH/BTC rejected from direct gate"},
+    {"gate": "E06_VENUE_MARKET_TYPE_SEPARATION", "status": "PASS", "evidence": "silent spot/swap/index substitution rejected"},
+    {"gate": "E07_POINT_IN_TIME_GUARD", "status": "PASS", "evidence": "knowledge_at <= decision_at <= execution_at < label_end red-team suite"},
+    {"gate": "E08_NO_WEEKEND_ETF_ZERO", "status": "PASS", "evidence": "W30 ETF sessions are weekdays; no synthetic weekend zero rows"},
+    {"gate": "E09_W30_GOLDEN_REPLAY", "status": "PASS", "evidence": "10 full semantic parity checks"},
+    {"gate": "E10_CONTINUATION_RESUME", "status": "PASS", "evidence": "parts archive integrity plus positive and negative cursor/overlap fixtures"},
+    {"gate": "E11_TIMEZONE_SETTLEMENT", "status": "PASS", "evidence": "settled UTC daily aggregation excludes unsettled tail; CEST and US-session contracts remain separate"},
+    {"gate": "E12_DETERMINISTIC_RERUN", "status": "PASS", "evidence": "generated canonical hashes identical across repeated replay"}
+  ],
+  "w30_package_audit": {
+    "bytes": 159355,
+    "sha256": "b70bd0c86aa76c968a06003ad3e83c63214675777d94a5af4dfb3859f6c67dcd",
+    "zip_members": 70,
+    "zip_crc_status": "PASS",
+    "checksum_entries": 69,
+    "checksum_mismatches": 0,
+    "missing_checksum_targets": 0,
+    "manifest_self_reference_defect": true,
+    "status": "PASS_WITH_MANIFEST_SELF_REFERENCE_DEFECT"
+  },
+  "w30_replay": {
+    "status": "PASS",
+    "checks": [
+      {"check_id": "W30_BTC_VOLATILITY", "rows": 166, "max_abs_error": 3.0531133177191805e-16, "status": "PASS"},
+      {"check_id": "W30_ETH_VOLATILITY", "rows": 166, "max_abs_error": 3.608224830031759e-16, "status": "PASS"},
+      {"check_id": "W30_BTC_DRAWDOWN", "rows": 166, "max_abs_error": 0.0, "status": "PASS"},
+      {"check_id": "W30_ETH_DRAWDOWN", "rows": 166, "max_abs_error": 0.0, "status": "PASS"},
+      {"check_id": "W30_BTC_DAILY_UTC", "rows": 8, "max_abs_error": 1.862645149230957e-09, "status": "PASS"},
+      {"check_id": "W30_ETH_DAILY_UTC", "rows": 8, "max_abs_error": 9.5367431640625e-07, "status": "PASS"},
+      {"check_id": "W30_ETHBTC_DERIVED", "rows": 166, "max_abs_error": 0.0, "status": "PASS"},
+      {"check_id": "W30_BTC_ETF_TRAILING", "rows": 5, "max_abs_error": 1.1102230246251565e-16, "status": "PASS"},
+      {"check_id": "W30_ETH_ETF_TRAILING", "rows": 5, "max_abs_error": 3.552713678800501e-15, "status": "PASS"},
+      {"check_id": "W30_ETF_DIVERGENCE", "rows": 5, "max_abs_error": 0.0, "status": "PASS"}
+    ]
+  },
+  "explicit_non_actions": [
+    "NO_ECONOMIC_BACKTEST",
+    "NO_PARAMETER_SEARCH",
+    "NO_HOLDOUT_EXECUTION",
+    "NO_FRAMEWORK_STATE_CHANGE",
+    "NO_PORTFOLIO_ACTION"
+  ]
+}
