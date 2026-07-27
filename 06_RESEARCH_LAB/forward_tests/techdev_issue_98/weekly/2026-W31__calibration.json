@@ -1,0 +1,86 @@
+{
+  "schema_version": "1.0",
+  "week_id": "2026-W31",
+  "row_type": "WEEKLY_CALIBRATION_NOT_FINAL_OUTCOME",
+  "as_of_utc": "2026-07-27T17:42:39Z",
+  "source_cutoff": "MASTER_MONDAY_W31_20260727T174239Z",
+  "test_id": "TECHDEV_CLAIM_LEDGER",
+  "source_issue": "TECHDEV_98",
+  "previous_week_path": "06_RESEARCH_LAB/forward_tests/techdev_issue_98/weekly/2026-W30__initialization.json",
+  "source_lineage": {
+    "master_monday": "03_WEEKLY_OPERATIONS/master_monday/2026-W31/03_framework_ratified_final.md",
+    "forecast_score": "03_WEEKLY_OPERATIONS/forecast_ledger/scoring/2026-07-27__forecast-score-2026-w30__transparent-audit.md",
+    "tdbc_research_status": "HIGH_CONFIDENCE_SPEC_CANDIDATE_NOT_CANONICAL",
+    "business_cycle_current_bar": "IN_PROGRESS_UNTIL_2026_08_31"
+  },
+  "major_confirmation": {
+    "btc_approx_flip_level_source_usd": 71400,
+    "eth_approx_flip_level_source_usd": 2020,
+    "current_verified_3d_supertrend_state": "DATA_MISSING",
+    "dual_flip_confirmed": "UNKNOWN",
+    "price_context": "BTC_AND_ETH_BELOW_SOURCE_APPROX_FLIP_LEVELS_AT_CURRENT_SNAPSHOTS",
+    "outcome_clock": "ACTIVE_NOT_MATURE"
+  },
+  "rotation_confirmation": {
+    "framework_ethbtc_repair_context": 0.0275,
+    "framework_ethbtc_confirmation_context": 0.03,
+    "w30_settled_ethbtc_close_cest": 0.02969,
+    "monday_direct_intraday_touch_above_0_0300": true,
+    "settled_close_above_0_0300": false,
+    "framework_rotation_state": "NO_ROTATION",
+    "broad_recovery_state": "NOT_CONFIRMED",
+    "cross_test": "ROTATION_SURVIVAL_FORWARD"
+  },
+  "business_cycle_reconstruction": {
+    "candidate_signal_1": "MACD_12_26_9_OF_COPPER_GOLD_ON_2M_YEAR_ANCHORED_BARS",
+    "candidate_signal_2": "RSI_14_OF_COPPER_GOLD_ON_2M_YEAR_ANCHORED_BARS",
+    "spec_status": "HIGH_CONFIDENCE_CANDIDATE",
+    "series_status": "RECONSTRUCTION_NOT_VENDOR_SERIES",
+    "current_bar_status": "IN_PROGRESS",
+    "earliest_settlement": "2026-08-31",
+    "framework_authority": "ZERO_UNTIL_SETTLED_AND_RATIFIED"
+  },
+  "roadmap_status": {
+    "rows_frozen": 11,
+    "matured_rows": 0,
+    "revisions": 0,
+    "next_frozen_window_close": "2026-10-31"
+  },
+  "gem_score_board_status": {
+    "published_candidates": 17,
+    "above_noise_line": 3,
+    "baseline_prices_verified": 0,
+    "outcome_rows_started": 0,
+    "status": "SOURCE_SCORE_FROZEN_PRICE_BASELINE_RECOVERY_REQUIRED"
+  },
+  "current_framework_context": {
+    "active_event": "ROTATION_REPAIR_EDGE_20260712_01",
+    "edge_state": "REPAIR_PRESENT_TRANSLATION_FRAGILE",
+    "pullback_warning": "ACTIVE_MODERATE",
+    "rotation": "NO_ROTATION",
+    "large_cap_window": "WATCH_ONLY_NOT_OPEN",
+    "new_entry_signal": "NOT_ACTIVE",
+    "rebuy": "LOCKED",
+    "portfolio_action": "NONE"
+  },
+  "weekly_observation": {
+    "repair_survived": true,
+    "eth_relative_transmission_candidate": true,
+    "breadth_confirmation": false,
+    "flow_confirmation": false,
+    "techdev_claim_validation": "NOT_MATURE"
+  },
+  "missing_data": [
+    "CURRENT_VERIFIED_BTC_AND_ETH_3D_SUPERTREND_VALUES",
+    "NUMERIC_TECHDEV_ETHBTC_FLAG_BOUNDARY",
+    "VERIFIED_POINT_IN_TIME_PRICE_BASELINES_FOR_17_GEM_SCORE_CANDIDATES",
+    "SETTLED_JUL_AUG_BUSINESS_CYCLE_BAR",
+    "VENDOR_SERIES_PARITY"
+  ],
+  "row_validity": "PASS_WEEKLY_CALIBRATION_WITH_EXPLICIT_MISSING",
+  "coverage_readiness": "NOT_READY",
+  "edge_or_promotion_status": "NO_CHANGE",
+  "framework_state_changed_by_test": false,
+  "portfolio_action_from_test": "NONE",
+  "next_review": "AFTER_NEXT_SETTLED_MASTER_MONDAY_OR_EARLIER_ONLY_FOR_EXPLICIT_TECHDEV_REVISION"
+}
