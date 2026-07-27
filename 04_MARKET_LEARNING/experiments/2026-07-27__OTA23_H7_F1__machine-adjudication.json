@@ -1,0 +1,59 @@
+{
+  "source_run": "OTA_PING_23_v2",
+  "observed_at_utc": "2026-07-27T05:39:20Z",
+  "source_qa": {
+    "run_length_bug": "CONFIRMED_FALSE_BLOCK_CLASS",
+    "caught_before_final_reporting": true,
+    "canonical_harm": false,
+    "future_automated_H7_scoring": "BLOCKED_UNTIL_PATCH_AND_REGRESSION_TESTS",
+    "current_H7_manual_adjudication": "ALLOWED_BY_EXPLICIT_PAIRWISE_COMPARISON"
+  },
+  "H7": {
+    "status": "MATURED_SCORED",
+    "basis": "DIRECT_BINANCE_ETHBTC_SETTLED_CEST",
+    "rows": 5,
+    "condition_1": {
+      "rule": "C3>C2_AND_C4>C3_AND_C5>C4",
+      "result": "MET",
+      "comparisons": [
+        {"left": 0.02896, "right": 0.02889, "pass": true},
+        {"left": 0.02910, "right": 0.02896, "pass": true},
+        {"left": 0.02969, "right": 0.02910, "pass": true}
+      ]
+    },
+    "condition_2": {
+      "rule": "ETH_LEADS_AT_LEAST_2_OF_FINAL_3",
+      "ETH_lead_count": 3,
+      "result": "MET"
+    },
+    "condition_3": {
+      "prospective_valid_rows": "5_OF_5",
+      "result": "MET",
+      "full_hash_receipt_completion": "FOLLOW_UP_NON_BLOCKING"
+    },
+    "score": "EARLY_TRANSMISSION_CANDIDATE_NOT_ROTATION_CONFIRMATION",
+    "rotation_effect": "NONE",
+    "rebuy_effect": "NONE",
+    "entry_effect": "NONE",
+    "portfolio_effect": "NONE"
+  },
+  "F1": {
+    "status": "NOT_MATURED",
+    "window_end_utc": "2026-07-28T00:00:00Z",
+    "lowest_settled_close_to_date": 64139.99,
+    "lowest_intraday_low_to_date": 63739.75,
+    "current_status": "NO_FAILURE_OBSERVED_TO_DATE",
+    "final_score": "WITHHELD",
+    "threshold_attribution": "OPEN_62200_VS_62342"
+  },
+  "unchanged": {
+    "F4": "GATE_UNMET_CLOSED_NOT_REOPENED",
+    "F5": "TRIGGERED_NOT_RETRIGGERED",
+    "rotation": "NO_ROTATION",
+    "rebuy": "LOCKED",
+    "new_entry": "NOT_ACTIVE",
+    "large_caps": "WATCH_ONLY"
+  },
+  "canonical_state_change": "NONE",
+  "portfolio_action": "NONE"
+}
