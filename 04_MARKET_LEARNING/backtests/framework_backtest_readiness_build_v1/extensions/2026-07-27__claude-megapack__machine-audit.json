@@ -1,0 +1,67 @@
+{
+  "program": "FRAMEWORK_BACKTEST_READINESS_BUILD_v1",
+  "program_phase": "HISTORICAL_DATA_ACCUMULATION",
+  "test_execution": "LOCKED",
+  "package": {
+    "name": "DATA PING BACKTEST HISTORY PACK 20260727T052808Z.zip",
+    "bytes": 190546648,
+    "sha256": "303d63946fd7696237b8d1a7208fa5aadd877e55aba57d5b51ea17aa46d18c9f",
+    "zip_members": 214,
+    "regular_files": 183,
+    "directory_entries": 31,
+    "manifest_payload_files": 180,
+    "checksum_entries": 180,
+    "checksum_mismatches": 0,
+    "checksum_scope_note": "README.md and manifest.json are outside detached ledger; CHECKSUMS.sha256 cannot self-hash"
+  },
+  "verified_row_counts": {
+    "coinmetrics_asset_metrics": 1405137,
+    "coinmetrics_assets": 838,
+    "binance_usdt_universe": 777567,
+    "binance_symbols": 623,
+    "yahoo_macro_daily": 330427,
+    "yahoo_instruments": 60,
+    "master_daily_panel": 5852,
+    "breadth_daily": 3266,
+    "cross_venue_asset_days": 13041,
+    "btc_daily": 3266,
+    "eth_daily": 3266,
+    "direct_ethbtc_daily": 3300,
+    "business_cycle_anchor1_bars": 151,
+    "btc_etf_sessions": 651,
+    "eth_etf_sessions": 513
+  },
+  "coverage": {
+    "earliest": "2009-01-03",
+    "latest": "2026-07-26",
+    "direct_ethbtc_start": "2017-07-14",
+    "breadth_start": "2017-08-17",
+    "fred_status": "BLOCKED_MISSING_HISTORY"
+  },
+  "techdev": {
+    "formula_candidate": "MACD_12_26_9_OF_COPPER_GOLD_ON_2M_BARS",
+    "second_signal_candidate": "RSI_14_OF_COPPER_GOLD_ON_2M_BARS",
+    "primary_anchor_candidate": "JAN_FEB_YEAR_ANCHORED",
+    "series_status": "RECONSTRUCTION_NOT_VENDOR_SERIES",
+    "exact_spec_status": "HIGH_CONFIDENCE_CANDIDATE_NOT_RATIFIED",
+    "current_bar": "IN_PROGRESS_NOT_SETTLED"
+  },
+  "test_audit": {
+    "BT01": "QUARANTINED_CALENDAR_FFILL_AND_SAMPLE_INFLATION",
+    "BT02": "NOT_IMPLEMENTED_DESPITE_READY_LABEL",
+    "BT03": "QUARANTINED_DECLARED_CONDITIONS_OMITTED",
+    "BT04": "PROTOTYPE_ONLY_FULL_CONTRACT_NOT_ESTABLISHED",
+    "BT05": "PROTOTYPE_ONLY_FRAMEWORK_CONFIRMATION_RULES_OMITTED",
+    "BT06": "QUARANTINED_OI_CONDITION_OMITTED",
+    "BT07": "QUARANTINED_SIGNAL_CONDITION_OMITTED",
+    "BT08": "QUARANTINED_2M_BAR_START_LOOKAHEAD",
+    "BT09": "INVALID_WRONG_TARGET_SUNDAY_TO_SUNDAY",
+    "BT10": "BLOCKED_MISSING_DECISION_LEDGER"
+  },
+  "data_collection_readiness": "HIGH",
+  "backtest_code_readiness": "FAIL_REPAIR_REQUIRED",
+  "preliminary_results_authority": "NONE",
+  "canonical_backtest_dataset": "NOT_YET",
+  "framework_state_change": "NONE",
+  "portfolio_action": "NONE"
+}
