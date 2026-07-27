@@ -1,6 +1,7 @@
 {
   "schema_version": "1.0",
   "receipt_origin": "CREATED_DURING_RUN",
+  "reconciled_at_utc": "2026-07-27T17:55:24Z",
   "run_id": "MASTER_MONDAY_W31_20260727T174239Z",
   "iso_week": "2026-W31",
   "evaluated_week": "2026-W30",
@@ -30,67 +31,67 @@
       "creation_commit_sha": "19739ffec8765b8e1c6d63e513a1d6ed33a9eaa5",
       "blob_sha": "7cd432f2843444026766abd92f11ac55d82edaf4",
       "branch_readback_status": "PASS",
-      "main_readback_status": "PENDING"
+      "main_readback_status": "PASS"
     },
     {
       "path": "03_WEEKLY_OPERATIONS/master_monday/2026-W31/03_framework_ratified_final.md",
       "creation_commit_sha": "727a6f05c35325f9183126ccba6a0110b289d503",
       "blob_sha": "669cbdea83d9718a2d9072ad87ce9c75407ca298",
       "branch_readback_status": "PASS",
-      "main_readback_status": "PENDING"
+      "main_readback_status": "PASS"
     },
     {
       "path": "03_WEEKLY_OPERATIONS/master_monday/2026-W31/04_cycle_navigator_handoff_notes.md",
       "creation_commit_sha": "e0ad7eac9db1f8cdb839c214aad6265c512bbf3b",
       "blob_sha": "0714ec8a64e4edfd8bbfe82e7aa8394364302e23",
       "branch_readback_status": "PASS",
-      "main_readback_status": "PENDING"
+      "main_readback_status": "PASS"
     },
     {
       "path": "03_WEEKLY_OPERATIONS/forecast_ledger/2026-07-27__forecast-ledger-2026-w31__official.md",
       "creation_commit_sha": "bf22a0978d9aaf345896cfeff76862be0b16903e",
       "blob_sha": "96876d3946df1a4a45dd94d2f7eab3c1d4f116c5",
       "branch_readback_status": "PASS",
-      "main_readback_status": "PENDING"
+      "main_readback_status": "PASS"
     },
     {
       "path": "03_WEEKLY_OPERATIONS/forecast_ledger/scoring/2026-07-27__forecast-score-2026-w30__transparent-audit.md",
       "creation_commit_sha": "3db5a3d756d9360c0456beb40ae341773be0e0b6",
       "blob_sha": "78511e57e9966e9de567c2e4db01e2fbbe316856",
       "branch_readback_status": "PASS",
-      "main_readback_status": "PENDING"
+      "main_readback_status": "PASS"
     },
     {
       "path": "03_WEEKLY_OPERATIONS/sunday_closeout/2026-W31/master_monday_data_gate_receipt.json",
       "creation_commit_sha": "3baebd83b517400b5a9b02ce314cf1fbb4e43a87",
       "blob_sha": "970bd8e80adf573b32ca78101904f2edeb16bf4e",
       "branch_readback_status": "PASS",
-      "main_readback_status": "PENDING"
+      "main_readback_status": "PASS"
     },
     {
       "path": "06_RESEARCH_LAB/forward_tests/techdev_issue_98/weekly/2026-W31__calibration.json",
       "creation_commit_sha": "26ecb6237c09ed541469fcfad472abdea15cce24",
       "blob_sha": "a3d91c0c51f942a958d9bc4fd9179caeecf7106f",
       "branch_readback_status": "PASS",
-      "main_readback_status": "PENDING"
+      "main_readback_status": "PASS"
     },
     {
       "path": "03_WEEKLY_OPERATIONS/master_monday/latest_master_monday.json",
-      "creation_commit_sha": "691dade5e6221716c99e245e30348205a605b27b",
-      "blob_sha": "8684519c7041e27a4933c529f08536d5931c80e6",
+      "creation_commit_sha": "ec85899e9161320b3109b8af5825b17dcb726da4",
+      "blob_sha": "4dec507201197986670f8f69ed458533b377d00f",
       "branch_readback_status": "PASS",
-      "main_readback_status": "PENDING"
+      "main_readback_status": "PENDING_FINALIZATION_MERGE"
     }
   ],
   "write_transaction": {
     "task_branch": "agent/master-monday-w31-recovery-20260727",
     "branch_write_status": "PASS",
-    "branch_readback_status": "PASS_CORE_ARTIFACTS",
-    "pull_request_number": null,
-    "pull_request_status": "NOT_CREATED",
-    "merge_commit_sha": null,
-    "merge_status": "PENDING",
-    "main_readback_status": "PENDING"
+    "branch_readback_status": "PASS",
+    "pull_request_number": 181,
+    "pull_request_status": "MERGED",
+    "merge_commit_sha": "694d8c12fd33c06802251fb27493c1ae9cb4ef4c",
+    "merge_status": "PASS",
+    "main_readback_status": "PASS"
   },
   "pointer_transaction": {
     "pointer_path": "03_WEEKLY_OPERATIONS/master_monday/latest_master_monday.json",
@@ -99,15 +100,15 @@
       "latest_durable_path": "03_WEEKLY_OPERATIONS/master_monday/2026-W30/03_framework_ratified_final.md",
       "latest_durable_blob_sha": "ab3a26eaf6aca4091036767a223c5c75960fa9c2"
     },
-    "pointer_update_status": "BRANCH_PASS_MAIN_PENDING",
-    "target_verification_status": "BRANCH_PASS_MAIN_PENDING"
+    "pointer_update_status": "FINALIZATION_BRANCH_PASS",
+    "target_verification_status": "MAIN_READBACK_PASS"
   },
   "forecast_lineage_status": "COMPLETE",
   "previous_week_scoring_status": "MATURED_TRANSPARENT_AUDIT_COMPLETE",
   "current_week_scoring_eligibility": false,
   "current_week_scoring_blocker": "W31_OUTCOMES_NOT_YET_MATURE",
   "backtest_execution": "LOCKED",
-  "overall_durability_status": "BRANCH_PASS_PR_PENDING",
+  "overall_durability_status": "DURABLE_PASS_POINTER_FINALIZATION_PENDING_MERGE",
   "authority_boundary": {
     "market_call": true,
     "portfolio_action": false,
