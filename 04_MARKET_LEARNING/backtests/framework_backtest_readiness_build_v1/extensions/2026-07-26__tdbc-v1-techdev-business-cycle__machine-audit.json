@@ -1,0 +1,94 @@
+{
+  "program": "FRAMEWORK_BACKTEST_READINESS_BUILD_v1",
+  "extension_id": "TDBC_v1_TECHDEV_BUSINESS_CYCLE_20260726",
+  "phase": "HISTORICAL_DATA_ACCUMULATION",
+  "test_execution": "LOCKED",
+  "status": "PACKAGE_INTEGRITY_PASS_METHOD_IDENTIFICATION_HIGH_VALUE_FULL_REPRODUCIBILITY_INCOMPLETE",
+  "source_artifacts": {
+    "zip": {
+      "name": "TDBC v1 TechDev Business Cycle 2026-07-26.zip",
+      "bytes": 237291,
+      "sha256": "e83d3b95e94fba331767feae92bd052ed7f752a1a5305d63621030b293bc5d4c",
+      "members": 18,
+      "uncompressed_bytes": 786311,
+      "checksum_entries": 17,
+      "checksum_mismatches": 0
+    },
+    "chart": {
+      "bytes": 152750,
+      "sha256": "5b9691af6456ae1148eac7c42897a757c67fa326ca83a0b0875d17850a31af51"
+    }
+  },
+  "tables": {
+    "histogram_rows": 157,
+    "event_forward_return_rows": 25,
+    "falsifier_rows": 5,
+    "cross_discriminator_rows": 6,
+    "prior_indicator_rows": 157,
+    "prior_event_rows": 25,
+    "prior_phase_rows": 96,
+    "sensitivity_rows": 36
+  },
+  "source_rows": {
+    "copper_daily": 6503,
+    "gold_daily": 6498,
+    "btc_daily": 5852,
+    "eth_daily": 4005,
+    "fred_copper_monthly": 414,
+    "lbma_gold_monthly": 2322,
+    "duplicate_date_keys": 0
+  },
+  "replication_parity": {
+    "aligned_rows": 157,
+    "missing_rows": 0,
+    "max_abs_histogram_difference_raw_units": 4.9502e-9,
+    "max_abs_macd_difference_raw_units": 4.9953e-9,
+    "max_abs_copper_gold_difference": 5.0e-8,
+    "classification": "ROUNDING_LEVEL_PARITY"
+  },
+  "candidate_specification": {
+    "series": "COPPER_DIVIDED_BY_GOLD",
+    "interval": "2_MONTH",
+    "anchor": "JAN_FEB_SEQUENCE",
+    "indicator": "MACD_12_26_9",
+    "plot": "HISTOGRAM",
+    "broad_techdev_identity": "CORROBORATED",
+    "exact_parameterization": "HIGH_CONFIDENCE_CANDIDATE_NOT_RATIFIED",
+    "exact_ticker_pair": "UNRESOLVED"
+  },
+  "settlement": {
+    "last_settled_bar_end": "2026-06-30",
+    "last_settled_histogram_e5": -1.61246429,
+    "current_bar_end": "2026-08-31",
+    "current_bar_histogram_e5": 0.49053007,
+    "current_bar_status": "IN_PROGRESS_2M",
+    "canonical_admissibility": false
+  },
+  "code_audit": {
+    "python_syntax": "PASS",
+    "indicator_formula_present": true,
+    "offline_mode_implemented": false,
+    "dependency_versions_pinned": false,
+    "full_report_builder_present": false,
+    "source_b_builder_present": false,
+    "bootstrap_builder_present": false,
+    "event_table_builder_present": false,
+    "full_report_reproducibility": "INCOMPLETE"
+  },
+  "research_proposals": {
+    "TD_F1_to_TD_F5": "UNRATIFIED",
+    "gold_confound_test": "CANDIDATE_DESIGN_RECEIVED",
+    "ethbtc_transmission_tempo": "CANDIDATE_DESIGN_RECEIVED",
+    "business_cycle_turn_test": "CANDIDATE_SPEC_RECEIVED_REPRODUCTION_REQUIRED"
+  },
+  "package_reported_inference_limits": {
+    "independent_forecast_events": 4,
+    "best_block_bootstrap_p": 0.17,
+    "classification": "DESCRIPTIVE_NOT_INFERENTIAL"
+  },
+  "sensor_promotion": "NO",
+  "forecast_creation": "NO",
+  "framework_state_change": "NONE",
+  "portfolio_action": "NONE",
+  "next_gate": "RECEIVE_REMAINING_PACKAGES_AND_BUILD_FRAMEWORK_OWNED_REPRODUCTION_SPEC"
+}
