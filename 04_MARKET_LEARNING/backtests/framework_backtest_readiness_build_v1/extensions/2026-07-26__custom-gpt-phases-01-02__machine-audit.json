@@ -1,0 +1,40 @@
+{
+  "program": "FRAMEWORK_BACKTEST_READINESS_BUILD_v1",
+  "phase": "HISTORICAL_DATA_ACCUMULATION",
+  "test_execution": "LOCKED",
+  "status": "PAYLOAD_INTEGRITY_PASS_COVERAGE_EXTENSION_PASS_METADATA_DRIFT_FOUND",
+  "latest_cumulative_package": {
+    "name": "DATA_PING_BACKTEST_HISTORY_PACK_20260726T220615Z.zip",
+    "bytes": 1143790,
+    "sha256": "82bd9761d31125e73404109a0f1af5f443c1e219f513da724d3787e84bc2e2a6",
+    "zip_file_count": 95,
+    "checksum_entries": 94,
+    "checksum_mismatches": 0,
+    "embeds_predecessor_214318_exactly": true
+  },
+  "coverage": {
+    "venue": "OKX",
+    "market_type": "PERPETUAL_SWAP",
+    "interval": "1Dutc",
+    "continuous_start_utc": "2024-08-26T00:00:00Z",
+    "continuous_end_utc": "2026-04-17T00:00:00Z",
+    "btc_direct_rows": 600,
+    "eth_direct_rows": 600,
+    "ethbtc_derived_rows": 600,
+    "ethbtc_authority": "DERIVED_NOT_DIRECT",
+    "daily_gaps": 0,
+    "duplicate_timestamps": 0,
+    "direct_ohlc_failures": 0
+  },
+  "metadata_defects": [
+    "TOP_LEVEL_FILE_COUNT_STALE_70_VS_95",
+    "TOTAL_ROW_COUNT_STALE_2013_AFTER_1800_ADDED_ROWS",
+    "EARLIEST_TIMESTAMP_STALE_2026-04-18_VS_2024-08-26",
+    "MANIFEST_SELF_ENTRY_ONE_GENERATION_BEHIND"
+  ],
+  "canonical_backtest_dataset": "NOT_YET",
+  "raw_binary_repository_materialization": "DEFER_UNTIL_COLLECTION_BATCH_CLOSE",
+  "framework_state_change": "NONE",
+  "portfolio_action": "NONE",
+  "next_gate": "RECEIVE_ADDITIONAL_CUSTOM_GPT_AND_CLAUDE_PACKAGES"
+}
