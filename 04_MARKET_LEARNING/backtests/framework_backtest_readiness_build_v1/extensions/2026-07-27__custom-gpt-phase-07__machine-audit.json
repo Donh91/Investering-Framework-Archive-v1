@@ -1,0 +1,70 @@
+{
+  "program": "FRAMEWORK_BACKTEST_READINESS_BUILD_v1",
+  "phase": "HISTORICAL_DATA_ACCUMULATION",
+  "test_execution": "LOCKED",
+  "source_package": {
+    "name": "DATA_PING_BACKTEST_HISTORY_PACK_20260727T065351Z.zip",
+    "bytes": 38318523,
+    "sha256": "27e81b820aa6a7b86071a7c4a5adf09ffbac864b9d720664f3f510dc0bef5db9",
+    "zip_members": 177,
+    "uncompressed_bytes": 41161787,
+    "checksum_entries": 176,
+    "checksum_mismatches": 0,
+    "missing_checksum_targets": 0
+  },
+  "predecessor": {
+    "name": "DATA_PING_BACKTEST_HISTORY_PACK_20260727T062839Z.zip",
+    "bytes": 19137076,
+    "sha256": "7686e30631aba300a4c1fb09ca4e79b22e753eb3880fb7b3a81a07ccb4d83f9d",
+    "embedded_exactly": true
+  },
+  "phase_07": {
+    "venue": "OKX",
+    "market_type": "PERPETUAL_SWAP",
+    "interval": "1Dutc",
+    "start_utc": "2020-07-18T00:00:00Z",
+    "end_utc": "2021-05-13T00:00:00Z",
+    "btc_direct_rows": 300,
+    "eth_direct_rows": 300,
+    "ethbtc_derived_rows": 300,
+    "raw_chunks_per_direct_asset": 3,
+    "raw_rows_per_direct_asset": 300,
+    "raw_to_normalized_field_mismatches": 0,
+    "duplicate_timestamps": 0,
+    "unexpected_daily_gaps": 0,
+    "direct_ohlc_failures": 0,
+    "negative_volume_rows": 0,
+    "unsettled_direct_rows": 0,
+    "ethbtc_authority": "DERIVED_NOT_DIRECT",
+    "ratio_identity_mismatches": 0
+  },
+  "cumulative_phases_01_to_07": {
+    "continuous_start_utc": "2020-07-18T00:00:00Z",
+    "continuous_end_utc": "2026-04-17T00:00:00Z",
+    "btc_direct_rows": 2100,
+    "eth_direct_rows": 2100,
+    "ethbtc_derived_rows": 2100,
+    "phase_extension_rows_total": 6300,
+    "boundary_gaps": 0,
+    "duplicate_dates_per_series": 0
+  },
+  "metadata_defects": {
+    "actual_zip_members": 177,
+    "manifest_top_level_file_count": 70,
+    "manifest_file_entries": 176,
+    "manifest_total_rows": 2013,
+    "actual_phase_extension_rows": 6300,
+    "manifest_earliest_timestamp": "2026-04-18T00:00:00Z",
+    "actual_earliest_swap_timestamp": "2020-07-18T00:00:00Z",
+    "manifest_self_entry_stale": true,
+    "detached_manifest_checksum_valid": true
+  },
+  "canonical_backtest_dataset": "NOT_YET",
+  "raw_binary_repository_materialization": "DEFER_UNTIL_COLLECTION_BATCH_CLOSE",
+  "next_cursor_ms": "1595030400000",
+  "next_collection_task": "PHASE_08_DAILY_OKX_SWAP_OLDER_PAGE",
+  "backtest_executed": false,
+  "replay_executed": false,
+  "framework_state_change": "NONE",
+  "portfolio_action": "NONE"
+}
