@@ -1,17 +1,15 @@
 from __future__ import annotations
 
 import copy
-import importlib.util
-import json
+import sys
 import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-MODULE_PATH = ROOT / "tools/backtest_readiness/validate_contracts.py"
-spec = importlib.util.spec_from_file_location("validate_contracts", MODULE_PATH)
-assert spec and spec.loader
-validator = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(validator)
+MODULE_DIR = ROOT / "tools/backtest_readiness"
+sys.path.insert(0, str(MODULE_DIR))
+
+import validate_contracts as validator  # noqa: E402
 
 
 class BacktestContractTests(unittest.TestCase):
