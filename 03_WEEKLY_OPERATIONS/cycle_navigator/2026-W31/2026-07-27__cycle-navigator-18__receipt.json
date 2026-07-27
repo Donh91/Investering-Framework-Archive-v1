@@ -4,6 +4,7 @@
   "cycle_navigator_id": "CYCLE_NAVIGATOR_18_20260727T190010Z",
   "cycle_navigator_number": 18,
   "generated_at_utc": "2026-07-27T19:00:10Z",
+  "reconciled_at_utc": "2026-07-27T19:05:00Z",
   "source_resolution": "ACCEPTED_MULTI_RUN_EVIDENCE_CHAIN",
   "source_master_monday": "MASTER_MONDAY_W31_20260727T174239Z",
   "artifact_paths": {
@@ -18,21 +19,21 @@
       "creation_commit_sha": "6ffa4680e24c7fefed420b07a4a2094b5d5e11bf",
       "blob_sha": "ef8eba61e82d1784c3a9577e5e56a33605228148",
       "branch_readback_status": "PASS",
-      "main_readback_status": "PENDING"
+      "main_readback_status": "PASS"
     },
     {
       "path": "03_WEEKLY_OPERATIONS/cycle_navigator/2026-W31/2026-07-27__cycle-navigator-18__freeze.json",
       "creation_commit_sha": "89ea156f69649e2d71ac91ffa7ee3769df148c6f",
       "blob_sha": "13b3f3d31328502492d954b4a6aab6131fd6140c",
       "branch_readback_status": "PASS",
-      "main_readback_status": "PENDING"
+      "main_readback_status": "PASS"
     },
     {
       "path": "03_WEEKLY_OPERATIONS/cycle_navigator/latest_cycle_navigator.json",
-      "creation_commit_sha": "0f79bec5b8c748aa2653d643930a81a4a6b286e4",
-      "blob_sha": "67e9fcf76a454f32f434337a8e0ca4ae4ca0a0fa",
+      "creation_commit_sha": "8b7a9e6649b7adfb2b1c77156a519b357860079e",
+      "blob_sha": "a3ac7bd0f823f2372fea8dff6387a3f1cc8153d1",
       "branch_readback_status": "PASS",
-      "main_readback_status": "PENDING"
+      "main_readback_status": "PENDING_FINALIZATION_PR"
     }
   ],
   "publication": {
@@ -45,12 +46,18 @@
     "task_branch": "agent/cycle-navigator-18-20260727",
     "branch_write_status": "PASS",
     "branch_readback_status": "PASS",
-    "pull_request_number": null,
-    "pull_request_status": "NOT_CREATED",
-    "merge_commit_sha": null,
-    "merge_status": "PENDING",
-    "main_readback_status": "PENDING"
+    "pull_request_number": 183,
+    "pull_request_status": "MERGED",
+    "merge_commit_sha": "6cbd783f2a8e881c483e0ff112495bf207eaece9",
+    "merge_status": "PASS",
+    "main_readback_status": "PASS_CORE_ARTIFACTS"
   },
+  "finalization_transaction": {
+    "task_branch": "agent/cycle-navigator-18-finalize-20260727",
+    "status": "PENDING_PR",
+    "purpose": "Reconcile pointer and receipt after main readback"
+  },
+  "overall_durability_status": "CORE_DURABLE_PASS_FINALIZATION_METADATA_PENDING",
   "authority_boundary": {
     "portfolio_action": false,
     "rule_promotion": false,
