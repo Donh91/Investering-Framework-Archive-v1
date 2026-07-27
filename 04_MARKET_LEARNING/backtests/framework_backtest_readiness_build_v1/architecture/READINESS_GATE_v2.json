@@ -1,0 +1,126 @@
+{
+  "schema_version": "2.0",
+  "gate_id": "BACKTEST_READINESS_GATE_v2",
+  "program": "FRAMEWORK_BACKTEST_READINESS_BUILD_v1",
+  "status": "NOT_PASSED",
+  "execution_policy": {
+    "engineering_validation_allowed": true,
+    "economic_backtest_allowed": false,
+    "parameter_search_allowed": false,
+    "framework_promotion_allowed": false,
+    "portfolio_authority": "NONE"
+  },
+  "mandatory_gates": [
+    {
+      "gate": "G01_UPLOAD_SET_RECONCILED",
+      "status": "PARTIAL",
+      "pass_condition": "All expected packages and summary artifacts are identified by filename, byte count and SHA-256; duplicate checkpoints are mapped.",
+      "blocker": "Corrected final master binary is referenced by summary but not exposed for direct byte audit."
+    },
+    {
+      "gate": "G02_FINAL_MASTER_BYTE_INTEGRITY",
+      "status": "BLOCKED",
+      "pass_condition": "DATA_PING_BACKTEST_HISTORY_PACK_FINAL_20260727T183529Z.zip CRC, member count and all detached checksums independently pass.",
+      "blocker": "Binary not visible in current runtime."
+    },
+    {
+      "gate": "G03_OWNER_DATASET_REGISTRY_FROZEN",
+      "status": "PARTIAL",
+      "pass_condition": "Exactly one owner per metric per test, with challengers, fixtures and blocked sources explicitly separated.",
+      "blocker": "FRED final-master and selected custom datasets await byte audit."
+    },
+    {
+      "gate": "G04_SOURCE_TO_NORMALIZED_PARITY",
+      "status": "PARTIAL",
+      "pass_condition": "Owner raw data can deterministically rebuild normalized tables with declared schemas and tolerances.",
+      "blocker": "Claude package builders require independent replacement or repair; preliminary scripts are quarantined."
+    },
+    {
+      "gate": "G05_COMPOSITE_PRIMARY_KEYS",
+      "status": "DESIGN_READY_NOT_EXECUTED",
+      "pass_condition": "Dataset-specific composite uniqueness keys pass and timestamp-only false duplicates are eliminated."
+    },
+    {
+      "gate": "G06_POINT_IN_TIME_CONTRACT",
+      "status": "DESIGN_READY_NOT_EXECUTED",
+      "pass_condition": "Every test input satisfies knowledge_at <= decision_at <= execution_at < label_end."
+    },
+    {
+      "gate": "G07_LOOKAHEAD_RED_TEAM",
+      "status": "DESIGN_READY_NOT_EXECUTED",
+      "pass_condition": "Known leakage traps fail closed: ETF T0, business-cycle bar start, monthly/annual macro completion, in-progress candles and forward-filled session values."
+    },
+    {
+      "gate": "G08_SURVIVORSHIP_AND_LISTING_BIAS",
+      "status": "PARTIAL",
+      "pass_condition": "PIT membership is reconstructed where possible; residual listing bias is quantified and cannot be hidden."
+    },
+    {
+      "gate": "G09_VENUE_MARKET_TYPE_SEPARATION",
+      "status": "DESIGN_READY_NOT_EXECUTED",
+      "pass_condition": "Spot, swap, index and derived rows cannot enter the same owner series without an explicit admissible transformation."
+    },
+    {
+      "gate": "G10_DIRECT_DERIVED_AUTHORITY",
+      "status": "DESIGN_READY_NOT_EXECUTED",
+      "pass_condition": "Derived ETH/BTC is rejected by direct-gate tests and cross-divided bounds are never treated as traded extrema."
+    },
+    {
+      "gate": "G11_TIMEZONE_SETTLEMENT_PARITY",
+      "status": "DESIGN_READY_NOT_EXECUTED",
+      "pass_condition": "UTC, CEST and US-session datasets reproduce their frozen fixtures and cannot be mixed silently."
+    },
+    {
+      "gate": "G12_W30_GOLDEN_FIXTURE_REPLAY",
+      "status": "READY_NOT_EXECUTED",
+      "pass_condition": "W30 normalized rows, features, receipts and expected hashes reproduce exactly or within declared numeric tolerance."
+    },
+    {
+      "gate": "G13_CONTINUATION_RESUME",
+      "status": "READY_NOT_EXECUTED",
+      "pass_condition": "Interrupted pagination resumes without overlap, omission, duplicate rows or cursor drift."
+    },
+    {
+      "gate": "G14_TEST_MATRIX_PREREGISTERED",
+      "status": "DESIGN_READY",
+      "pass_condition": "Each test has frozen signal, comparator, primary endpoint, horizon, sample rule, split rule, robustness plan and promotion boundary."
+    },
+    {
+      "gate": "G15_STATISTICAL_ENGINE_VALIDATED",
+      "status": "NOT_STARTED",
+      "pass_condition": "Block bootstrap, purged walk-forward, embargo, multiple-testing and negative-control implementations pass synthetic fixtures."
+    },
+    {
+      "gate": "G16_GRAPH_ENGINE_VALIDATED",
+      "status": "NOT_STARTED",
+      "pass_condition": "Provenance and temporal DAGs are deterministic; lead-lag and co-occurrence outputs include sample and stability metadata."
+    },
+    {
+      "gate": "G17_INDEPENDENT_IMPLEMENTATION_PROTOCOL",
+      "status": "DESIGN_READY",
+      "pass_condition": "ChatGPT and Claude use the same immutable inputs and contracts without seeing each other's results before submission."
+    },
+    {
+      "gate": "G18_DECISION_LEDGER_COVERAGE",
+      "status": "BLOCKED_FOR_BT10",
+      "pass_condition": "Framework decision rows contain complete knowledge_at, decision_at, rule version and action authority for the tested period.",
+      "blocker": "Two of three current historical framework events lack complete knowledge_at lineage."
+    },
+    {
+      "gate": "G19_FINAL_TEST_MATRIX_APPROVED",
+      "status": "NOT_RATIFIED",
+      "pass_condition": "Engineering, economic, graph and holdout execution order is explicitly approved after gates G01-G18 are resolved."
+    },
+    {
+      "gate": "G20_READY_FOR_CONTROLLED_BACKTEST_EXECUTION",
+      "status": "NO",
+      "pass_condition": "All mandatory preceding gates PASS, immutable input hashes are frozen and an execution receipt is created."
+    }
+  ],
+  "current_summary": {
+    "pass": 0,
+    "partial_or_ready": 11,
+    "blocked_or_not_started": 9,
+    "controlled_backtest_execution": "LOCKED"
+  }
+}

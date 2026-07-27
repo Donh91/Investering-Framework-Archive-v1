@@ -1,0 +1,53 @@
+{
+  "schema_version": "1.0",
+  "cases": [
+    {
+      "case_id": "VALID_SETTLED_CEST_SIGNAL",
+      "knowledge_at_utc": "2026-07-27T22:00:00Z",
+      "decision_at_utc": "2026-07-27T22:01:00Z",
+      "execution_at_utc": "2026-07-27T22:05:00Z",
+      "label_end_utc": "2026-08-03T22:00:00Z",
+      "expected_valid": true
+    },
+    {
+      "case_id": "INVALID_ETF_USED_BEFORE_PUBLICATION",
+      "knowledge_at_utc": "2026-07-24T21:00:00Z",
+      "decision_at_utc": "2026-07-24T16:00:00Z",
+      "execution_at_utc": "2026-07-24T16:05:00Z",
+      "label_end_utc": "2026-07-31T21:00:00Z",
+      "expected_valid": false
+    },
+    {
+      "case_id": "INVALID_MONTHLY_MACRO_BEFORE_PERIOD_COMPLETE",
+      "knowledge_at_utc": "2026-08-03T14:00:00Z",
+      "decision_at_utc": "2026-07-20T08:00:00Z",
+      "execution_at_utc": "2026-07-20T08:05:00Z",
+      "label_end_utc": "2026-08-20T08:00:00Z",
+      "expected_valid": false
+    },
+    {
+      "case_id": "INVALID_2M_BAR_AT_START",
+      "knowledge_at_utc": "2026-08-31T23:59:59Z",
+      "decision_at_utc": "2026-07-01T00:01:00Z",
+      "execution_at_utc": "2026-07-01T00:05:00Z",
+      "label_end_utc": "2026-10-31T23:59:59Z",
+      "expected_valid": false
+    },
+    {
+      "case_id": "INVALID_LABEL_END_BEFORE_EXECUTION",
+      "knowledge_at_utc": "2026-07-27T10:00:00Z",
+      "decision_at_utc": "2026-07-27T10:01:00Z",
+      "execution_at_utc": "2026-07-27T10:05:00Z",
+      "label_end_utc": "2026-07-27T10:04:00Z",
+      "expected_valid": false
+    },
+    {
+      "case_id": "VALID_ALFRED_INITIAL_RELEASE_AFTER_PUBLICATION",
+      "knowledge_at_utc": "2026-07-15T12:30:00Z",
+      "decision_at_utc": "2026-07-15T13:00:00Z",
+      "execution_at_utc": "2026-07-15T13:05:00Z",
+      "label_end_utc": "2026-08-15T13:00:00Z",
+      "expected_valid": true
+    }
+  ]
+}

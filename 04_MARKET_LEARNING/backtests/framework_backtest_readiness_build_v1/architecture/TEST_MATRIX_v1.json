@@ -1,0 +1,257 @@
+{
+  "schema_version": "1.0",
+  "matrix_id": "FRAMEWORK_BACKTEST_TEST_MATRIX_v1",
+  "status": "PREREGISTERED_DESIGN_EXECUTION_LOCKED",
+  "families": {
+    "ENGINEERING": [
+      {
+        "test_id": "E01_PACKAGE_IDENTITY",
+        "primary_endpoint": "all expected package hashes and byte counts reconcile",
+        "status": "READY",
+        "economic_output": false
+      },
+      {
+        "test_id": "E02_CHECKSUM_AND_MANIFEST",
+        "primary_endpoint": "all detached payload checksums pass and self-reference defects are isolated",
+        "status": "BLOCKED_FINAL_MASTER_BINARY",
+        "economic_output": false
+      },
+      {
+        "test_id": "E03_OWNER_UNIQUENESS",
+        "primary_endpoint": "one owner per metric per test",
+        "status": "READY",
+        "economic_output": false
+      },
+      {
+        "test_id": "E04_COMPOSITE_PRIMARY_KEYS",
+        "primary_endpoint": "zero duplicates under dataset-specific keys",
+        "status": "READY",
+        "economic_output": false
+      },
+      {
+        "test_id": "E05_DIRECT_DERIVED_AUTHORITY",
+        "primary_endpoint": "derived ETHBTC is rejected by direct gate contracts",
+        "status": "READY",
+        "economic_output": false
+      },
+      {
+        "test_id": "E06_VENUE_MARKET_TYPE_SEPARATION",
+        "primary_endpoint": "forbidden spot/swap/index joins fail closed",
+        "status": "READY",
+        "economic_output": false
+      },
+      {
+        "test_id": "E07_POINT_IN_TIME_GUARD",
+        "primary_endpoint": "zero accepted rows with knowledge_at after decision_at",
+        "status": "READY",
+        "economic_output": false
+      },
+      {
+        "test_id": "E08_NO_WEEKEND_ETF_ZERO",
+        "primary_endpoint": "weekend and holiday absence remains missing rather than zero",
+        "status": "READY",
+        "economic_output": false
+      },
+      {
+        "test_id": "E09_W30_GOLDEN_REPLAY",
+        "primary_endpoint": "frozen W30 rows, features and receipts reproduce",
+        "status": "READY",
+        "economic_output": false
+      },
+      {
+        "test_id": "E10_CONTINUATION_RESUME",
+        "primary_endpoint": "pagination restart produces no gaps, overlap or cursor drift",
+        "status": "READY",
+        "economic_output": false
+      },
+      {
+        "test_id": "E11_TIMEZONE_SETTLEMENT",
+        "primary_endpoint": "UTC, CEST and US-session settlement contracts reproduce independently",
+        "status": "READY",
+        "economic_output": false
+      },
+      {
+        "test_id": "E12_DETERMINISTIC_RERUN",
+        "primary_endpoint": "same inputs and code produce identical artifact hashes",
+        "status": "NOT_STARTED",
+        "economic_output": false
+      }
+    ],
+    "CANONICAL_HYPOTHESES": [
+      {
+        "test_id": "BT01_ETF_FLOW_PERSISTENCE",
+        "signal": "trailing settled ETF net flow",
+        "comparator": "same dates without flow conditioning and matched regime baseline",
+        "primary_endpoint": "20-session forward asset return spread between preregistered flow states",
+        "secondary_endpoints": ["1d", "3d", "5d", "10d", "MFE", "MAE"],
+        "owner_data": ["ETF_BTC_FARSIDE_FULL_HISTORY", "ETF_ETH_FARSIDE_FULL_HISTORY", "BTC_SPOT_DAILY_CEST_BINANCE", "ETH_SPOT_DAILY_CEST_BINANCE"],
+        "split": "purged expanding walk-forward with 20-session embargo",
+        "status": "READY_AFTER_ENGINEERING"
+      },
+      {
+        "test_id": "BT02_ETF_FLOW_REVERSAL",
+        "signal": "reversal after preregistered in/outflow streak",
+        "comparator": "continued streak and neutral flow",
+        "primary_endpoint": "10-session forward return and reversal failure rate",
+        "secondary_endpoints": ["5d", "20d", "MFE", "MAE"],
+        "owner_data": ["ETF_BTC_FARSIDE_FULL_HISTORY", "ETF_ETH_FARSIDE_FULL_HISTORY"],
+        "split": "purged expanding walk-forward with 20-session embargo",
+        "status": "READY_AFTER_ENGINEERING"
+      },
+      {
+        "test_id": "BT03_ETHBTC_EARLY_TRANSMISSION",
+        "signal": "three consecutive positive settled direct ETHBTC log increments plus preregistered leadership rule",
+        "comparator": "matched non-signal periods and partial-condition ablations",
+        "primary_endpoint": "probability of 10-session ETH outperformance versus BTC",
+        "secondary_endpoints": ["5d", "20d", "60d", "signal survival", "fallback below 0.0275"],
+        "owner_data": ["ETHBTC_SPOT_DAILY_CEST_BINANCE_DIRECT", "BREADTH_BINANCE_TOP100_PIT"],
+        "split": "event-cluster walk-forward with 60-session embargo",
+        "status": "BLOCKED_UNTIL_EXACT_RULE_FREEZE"
+      },
+      {
+        "test_id": "BT04_ETHBTC_0_0300_GATE",
+        "signal": "settled direct ETHBTC confirmation above 0.0300",
+        "comparator": "intraday touch without close, near-threshold failure and matched non-event dates",
+        "primary_endpoint": "20-session probability of remaining above 0.0300 without settled fallback below 0.0275",
+        "secondary_endpoints": ["10d ETHBTC return", "60d ETHBTC return", "time to failure", "MFE", "MAE"],
+        "owner_data": ["ETHBTC_SPOT_DAILY_CEST_BINANCE_DIRECT"],
+        "split": "event-cluster walk-forward with 60-session embargo",
+        "status": "READY_AFTER_ENGINEERING"
+      },
+      {
+        "test_id": "BT05_LAST_FLUSH_REBUY_DELAY",
+        "signal": "preregistered flush event",
+        "comparator": "entry delays 0, 1, 2, 3 and 5 settled sessions plus confirmation-conditioned policy",
+        "primary_endpoint": "30-session maximum adverse excursion",
+        "secondary_endpoints": ["30d return", "60d return", "drawdown avoided", "opportunity cost", "time to recovery"],
+        "owner_data": ["BTC_SPOT_DAILY_CEST_BINANCE"],
+        "split": "independent flush episodes; leave-one-cycle-out",
+        "status": "BLOCKED_UNTIL_FLUSH_DEFINITION_AND_EVENT_DEDUP_FREEZE"
+      },
+      {
+        "test_id": "BT06_FUNDING_OI_CONFIRMATION",
+        "signal": "price repair event conditioned jointly on funding and open interest",
+        "comparator": "price repair alone and single-variable ablations",
+        "primary_endpoint": "20-session repair survival probability",
+        "secondary_endpoints": ["20d return", "MFE", "MAE", "failure hazard"],
+        "owner_data": ["DERIVATIVES_BINANCE_UM_BTC_ETH_DAILY"],
+        "challenger_data": ["DERIVATIVES_OKX_BTC_ETH"],
+        "split": "purged walk-forward with venue-specific replication",
+        "status": "READY_AFTER_ENGINEERING_AND_MISSINGNESS_AUDIT"
+      },
+      {
+        "test_id": "BT07_BREADTH_CONFIRMATION",
+        "signal": "preregistered ETHBTC transmission signal",
+        "gate": "point-in-time breadth state",
+        "comparator": "signal without breadth gate and breadth-only ablations",
+        "primary_endpoint": "20-session ETHBTC return conditional treatment effect",
+        "secondary_endpoints": ["signal survival", "rotation false-positive rate", "MFE", "MAE"],
+        "owner_data": ["ETHBTC_SPOT_DAILY_CEST_BINANCE_DIRECT", "BREADTH_BINANCE_TOP100_PIT"],
+        "split": "purged event-cluster walk-forward",
+        "status": "READY_AFTER_ENGINEERING"
+      },
+      {
+        "test_id": "BT08_BUSINESS_CYCLE_TURN",
+        "signal": "settled 2M Copper/Gold MACD phase transition at bar end",
+        "comparator": "anchor alternative, phase continuation and matched macro state",
+        "primary_endpoint": "60-session BTC return after settled transition",
+        "secondary_endpoints": ["120d", "240d", "drawdown", "ETH relative return", "phase survival"],
+        "owner_data": ["TECHDEV_COPPER_GOLD_2M_RECONSTRUCTION", "BTC_SPOT_DAILY_CEST_BINANCE"],
+        "challenger_data": ["YAHOO_OECD_MARKET_PRICED_MACRO", "FRED_OFFICIAL_SERIES_FINAL_MASTER"],
+        "split": "leave-one-cycle-out event analysis",
+        "status": "BLOCKED_UNTIL_BAR_END_REBUILD_AND_FINAL_FRED_AUDIT"
+      },
+      {
+        "test_id": "BT09_WEEKEND_TO_MONDAY_ETF",
+        "signal": "weekend crypto return",
+        "comparator": "next completed US ETF session flow state",
+        "primary_endpoint": "association between weekend return and next published ETF net flow without synthetic weekend rows",
+        "secondary_endpoints": ["Monday crypto return", "flow sign", "flow magnitude quantile"],
+        "owner_data": ["ETF_BTC_FARSIDE_FULL_HISTORY", "ETF_ETH_FARSIDE_FULL_HISTORY", "BTC_SPOT_DAILY_CEST_BINANCE"],
+        "split": "chronological walk-forward",
+        "status": "READY_AFTER_ENGINEERING"
+      },
+      {
+        "test_id": "BT10_MULTI_SENSOR_STATE_MACHINE_REPLAY",
+        "signal": "frozen framework state machine",
+        "comparator": "actual point-in-time outcomes and ablated state machines",
+        "primary_endpoint": "state transition accuracy and false-transition density",
+        "secondary_endpoints": ["duration calibration", "action permission accuracy", "drawdown avoided", "opportunity cost"],
+        "owner_data": ["FRAMEWORK_DECISION_LEDGER"],
+        "split": "chronological replay with no retrospective state repair",
+        "status": "BLOCKED_DECISION_LEDGER_INCOMPLETE"
+      }
+    ],
+    "META_AND_LEARNING": [
+      {
+        "test_id": "BT11_SENSOR_ABLATION_AND_REDUNDANCY",
+        "primary_endpoint": "incremental out-of-sample information after removing each sensor family",
+        "status": "LOCKED_UNTIL_BASE_TESTS"
+      },
+      {
+        "test_id": "BT12_FALSE_TRANSITION_PENALTY",
+        "primary_endpoint": "false-positive transition density and duration before invalidation",
+        "status": "LOCKED_UNTIL_EVENT_LEDGER"
+      },
+      {
+        "test_id": "BT13_TRANSITION_SURVIVAL_HAZARD",
+        "primary_endpoint": "hazard of signal failure by confirmation sequence",
+        "status": "LOCKED_UNTIL_EVENT_LEDGER"
+      },
+      {
+        "test_id": "BT14_FORECAST_RANGE_CALIBRATION",
+        "primary_endpoint": "coverage, width efficiency and directional calibration of frozen 1-3d and 5-7d forecasts",
+        "status": "BLOCKED_FORECAST_LEDGER_DEPTH"
+      },
+      {
+        "test_id": "BT15_DEFENSE_VS_OPPORTUNITY_COST",
+        "primary_endpoint": "drawdown avoided per unit of foregone upside under framework locks",
+        "status": "BLOCKED_DECISION_LEDGER_INCOMPLETE"
+      }
+    ],
+    "GRAPH": [
+      {
+        "test_id": "GRA01_PROVENANCE_DAG",
+        "primary_endpoint": "complete source-to-conclusion lineage with no cycles",
+        "status": "READY_METADATA_ONLY"
+      },
+      {
+        "test_id": "GRA02_TEMPORAL_DEPENDENCY_DAG",
+        "primary_endpoint": "no feature path reaches a decision before its latest knowledge time",
+        "status": "READY_METADATA_ONLY"
+      },
+      {
+        "test_id": "GRA03_SENSOR_REDUNDANCY_GRAPH",
+        "primary_endpoint": "stable redundancy clusters across walk-forward eras",
+        "status": "LOCKED_UNTIL_POINT_IN_TIME_FEATURE_STORE"
+      },
+      {
+        "test_id": "GRA04_LEAD_LAG_NETWORK",
+        "primary_endpoint": "lagged edge stability after multiple-testing correction",
+        "status": "LOCKED_UNTIL_POINT_IN_TIME_FEATURE_STORE"
+      },
+      {
+        "test_id": "GRA05_EVENT_COOCCURRENCE_GRAPH",
+        "primary_endpoint": "event cluster structure and conditional failure paths",
+        "status": "LOCKED_UNTIL_EVENT_LEDGER"
+      },
+      {
+        "test_id": "GRA06_STATE_TRANSITION_GRAPH",
+        "primary_endpoint": "transition frequency, survival and forbidden-transition detection",
+        "status": "BLOCKED_DECISION_LEDGER_INCOMPLETE"
+      },
+      {
+        "test_id": "GRA07_CONTRADICTION_GRAPH",
+        "primary_endpoint": "sensor disagreements associated with success, failure and missingness",
+        "status": "LOCKED_UNTIL_BASE_TESTS"
+      }
+    ]
+  },
+  "global_rules": {
+    "preliminary_results_are_evidence": false,
+    "primary_endpoint_can_change_after_execution": false,
+    "holdout_can_be_rerun_after_failure": false,
+    "failed_tests_are_archived": true,
+    "economic_execution_authorized": false
+  }
+}
