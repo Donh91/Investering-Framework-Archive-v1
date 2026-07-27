@@ -1,0 +1,70 @@
+{
+  "schema_version": "1.0",
+  "receipt_origin": "CREATED_DURING_RUN",
+  "reconciled_at_utc": null,
+  "run_id": "MASTER_MONDAY_W31_20260727T080853Z_SOURCE_UNAVAILABLE",
+  "iso_week": "2026-W31",
+  "generated_at_utc": "2026-07-27T08:08:53Z",
+  "source_resolution": "SOURCE_UNAVAILABLE",
+  "source_timestamp": null,
+  "source_hash": null,
+  "source_version": null,
+  "artifact_paths": {
+    "master_monday_pre_data_ping": null,
+    "master_monday_data_ping_derived": null,
+    "master_monday_final": null,
+    "cycle_navigator_handoff": null,
+    "forecast_ledger": null,
+    "run_receipt": "03_WEEKLY_OPERATIONS/master_monday/2026-W31/run_receipt.json"
+  },
+  "artifact_verification": [
+    {
+      "path": "03_WEEKLY_OPERATIONS/master_monday/2026-W31/2026-07-27__source-unavailable.md",
+      "creation_commit_sha": "2fb8709b30e14b0ebf892ce0812490de592d06b5",
+      "blob_sha": "13bb9d9da0866d4f9b045c67b0bb89c91e806d07",
+      "branch_readback_status": "PASS",
+      "main_readback_status": "PASS"
+    }
+  ],
+  "write_transaction": {
+    "task_branch": "agent/task-20260727-master-monday-w31-v2",
+    "branch_write_status": "PASS",
+    "branch_readback_status": "PASS",
+    "pull_request_number": 177,
+    "pull_request_status": "MERGED",
+    "merge_commit_sha": "8020c18953c5ffebc66c6b4a5436ce885ad7d796",
+    "merge_status": "PASS",
+    "main_readback_status": "PASS"
+  },
+  "pointer_transaction": {
+    "pointer_path": "03_WEEKLY_OPERATIONS/master_monday/latest_master_monday.json",
+    "previous_valid_pointer": {
+      "latest_durable_week": "2026-W30",
+      "latest_durable_path": "03_WEEKLY_OPERATIONS/master_monday/2026-W30/03_framework_ratified_final.md",
+      "latest_durable_blob_sha": "ab3a26eaf6aca4091036767a223c5c75960fa9c2"
+    },
+    "pointer_update_status": "PRESERVED",
+    "target_verification_status": "PASS"
+  },
+  "delivery": {
+    "standalone_delivery_status": "PASS",
+    "delivery_title": "MASTER MONDAY - UGE 30 + CYCLE NAVIGATOR"
+  },
+  "forecast_lineage_status": "NOT_APPLICABLE",
+  "scoring_eligibility": false,
+  "overall_durability_status": "SOURCE_UNAVAILABLE",
+  "notes": [
+    "No complete current main-framework-accepted DATA PING was available.",
+    "The latest canonical accepted V6 source was outside the freshness window for new forecasts.",
+    "The current V7 handover requires a fresh DATA PING and has zero market authority.",
+    "No retrospective forecast, Cycle Navigator handoff, scoring or TechDev Issue #98 weekly outcome file was created.",
+    "The previous valid Master Monday and TechDev Issue #98 pointers were preserved.",
+    "The abandoned branch agent/task-20260727-master-monday-w31 was created from an outdated SHA and received no writes. All run writes used the current-main branch agent/task-20260727-master-monday-w31-v2."
+  ],
+  "authority_boundary": {
+    "market_call": false,
+    "portfolio_action": false,
+    "rule_promotion": false,
+    "threshold_change": false
+  }
+}
