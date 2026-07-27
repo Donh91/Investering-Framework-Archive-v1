@@ -1,0 +1,80 @@
+{
+  "program": "FRAMEWORK_BACKTEST_READINESS_BUILD_v1",
+  "phase": "HISTORICAL_DATA_ACCUMULATION",
+  "test_execution": "LOCKED",
+  "status": "PAYLOAD_INTEGRITY_PASS_COVERAGE_EXTENSION_PASS_METADATA_DRIFT_PERSISTS",
+  "packages": [
+    {
+      "name": "DATA_PING_BACKTEST_HISTORY_PACK_20260727T050435Z.zip",
+      "bytes": 2347642,
+      "sha256": "f1348699c9dca52eb3ab51696ffced66e6cb2840e157384320162ad8bc4916b0",
+      "zip_member_count": 111,
+      "checksum_entries": 110,
+      "checksum_mismatches": 0,
+      "role": "PHASE_03_CUMULATIVE_PREDECESSOR"
+    },
+    {
+      "name": "DATA_PING_BACKTEST_HISTORY_PACK_20260727T054034Z.zip",
+      "bytes": 4747666,
+      "sha256": "28bf9d3fa71342731b01081fe1b1ee15be87c3244e9003e8470e1b49739989a3",
+      "zip_member_count": 127,
+      "checksum_entries": 126,
+      "checksum_mismatches": 0,
+      "embeds_predecessor_050435_exactly": true,
+      "role": "LATEST_CUMULATIVE_CANDIDATE"
+    }
+  ],
+  "phase_03": {
+    "start_utc": "2023-10-31T00:00:00Z",
+    "end_utc": "2024-08-25T00:00:00Z",
+    "btc_direct_rows": 300,
+    "eth_direct_rows": 300,
+    "ethbtc_derived_rows": 300,
+    "raw_to_normalized_mismatches": 0,
+    "daily_gaps": 0,
+    "duplicate_timestamps": 0,
+    "direct_ohlc_failures": 0
+  },
+  "phase_04": {
+    "start_utc": "2023-01-04T00:00:00Z",
+    "end_utc": "2023-10-30T00:00:00Z",
+    "btc_direct_rows": 300,
+    "eth_direct_rows": 300,
+    "ethbtc_derived_rows": 300,
+    "raw_to_normalized_mismatches": 0,
+    "daily_gaps": 0,
+    "duplicate_timestamps": 0,
+    "direct_ohlc_failures": 0
+  },
+  "combined_phases_01_to_04": {
+    "venue": "OKX",
+    "market_type": "PERPETUAL_SWAP",
+    "interval": "1Dutc",
+    "continuous_start_utc": "2023-01-04T00:00:00Z",
+    "continuous_end_utc": "2026-04-17T00:00:00Z",
+    "btc_direct_rows": 1200,
+    "eth_direct_rows": 1200,
+    "ethbtc_derived_rows": 1200,
+    "ethbtc_authority": "DERIVED_NOT_DIRECT",
+    "phase_boundary_gaps": 0,
+    "duplicate_timestamps_per_series": 0,
+    "max_ratio_reconstruction_error": 9.8e-17
+  },
+  "metadata_defects": [
+    "TOP_LEVEL_FILE_COUNT_STALE_70_VS_127",
+    "TOTAL_ROW_COUNT_STALE_2013_AFTER_3600_PHASE_ROWS",
+    "EARLIEST_TIMESTAMP_STALE_2026-04-18_VS_2023-01-04",
+    "SELF_REFERENTIAL_MANIFEST_DESIGN_INHERITED",
+    "PACKAGE_READINESS_LABELS_NON_GOVERNING_WHILE_PROGRAM_LOCK_ACTIVE"
+  ],
+  "remaining_method_breaks": [
+    "RECENT_2026_04_18_TO_2026_07_24_SERIES_IS_INDEX_PROXY_NOT_SAME_METHOD_SWAP",
+    "DIRECT_ETHBTC_HISTORY_UNAVAILABLE"
+  ],
+  "canonical_backtest_dataset": "NOT_YET",
+  "owner_datasets": "NOT_FINALIZED",
+  "raw_binary_repository_materialization": "DEFER_UNTIL_COLLECTION_BATCH_CLOSE",
+  "framework_state_change": "NONE",
+  "portfolio_action": "NONE",
+  "next_source_task": "PHASE_05_DAILY_OKX_SWAP_OLDER_PAGE"
+}
