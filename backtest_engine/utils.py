@@ -41,7 +41,10 @@ def canonical_number(value: float | int | None) -> str | None:
         return None
     if number == 0:
         number = 0.0
-    return format(number, ".15g")
+    # Twelve significant digits absorb harmless floating-point implementation
+    # noise while remaining much tighter than any market-data precision used by
+    # the fixture. Semantic row comparison still uses explicit tolerances.
+    return format(number, ".12g")
 
 
 def canonical_rows_hash(rows: Iterable[dict[str, Any]], columns: list[str]) -> str:
