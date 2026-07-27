@@ -1,0 +1,101 @@
+{
+  "schema_version": "1.0",
+  "suite_id": "BACKTEST_RESEARCH_CHALLENGE_SUITE_v1",
+  "source": "CLAUDE_OPUS_5_MAX_TOP5_PROPOSALS",
+  "status": "ACCEPTED_DESIGN_EXECUTION_LOCKED",
+  "created_at_utc": "2026-07-27T21:30:00Z",
+  "challenges": [
+    {
+      "challenge_id": "CH01_COUNTERFACTUAL_DEPLOYMENT_LEDGER",
+      "priority": "P1",
+      "maps_to": ["BT05_LAST_FLUSH_REBUY_DELAY", "BT15_DEFENSE_VS_OPPORTUNITY_COST"],
+      "status": "ACCEPTED_BLOCKED",
+      "primary_endpoint": "drawdown avoided and foregone upside by frozen deployment policy",
+      "blockers": [
+        "FLUSH_EVENT_DEFINITION_NOT_FROZEN",
+        "EVENT_EPISODE_DEDUP_NOT_FROZEN",
+        "FRAMEWORK_DECISION_LEDGER_INCOMPLETE"
+      ]
+    },
+    {
+      "challenge_id": "CH02_POINT_IN_TIME_REPLAY",
+      "priority": "P0",
+      "maps_to": ["BT10_MULTI_SENSOR_STATE_MACHINE_REPLAY", "GRA02_TEMPORAL_DEPENDENCY_DAG", "GRA06_STATE_TRANSITION_GRAPH"],
+      "status": "ACCEPTED_BLOCKED_LOAD_BEARING",
+      "primary_endpoint": "state and decision divergence between point-in-time and latest-vintage inputs",
+      "blockers": [
+        "TWO_OF_THREE_EVENTS_MISSING_FULL_KNOWLEDGE_AT",
+        "DECISION_LEDGER_COVERAGE_INCOMPLETE",
+        "FINAL_MASTER_BYTE_AUDIT_PENDING"
+      ]
+    },
+    {
+      "challenge_id": "CH03_SENSOR_INDEPENDENCE_EFFECTIVE_N",
+      "priority": "P1",
+      "maps_to": ["BT11_SENSOR_ABLATION_AND_REDUNDANCY", "GRA03_SENSOR_REDUNDANCY_GRAPH"],
+      "status": "ACCEPTED_ENGINEERING_READY_ECONOMIC_LOCKED",
+      "primary_endpoint": "incremental out-of-sample information after conditioning on price and volatility",
+      "reported_metrics": [
+        "participation_ratio",
+        "entropy_effective_rank",
+        "frozen_cluster_count",
+        "conditional_incremental_information",
+        "walk_forward_stability"
+      ]
+    },
+    {
+      "challenge_id": "CH04_RANGE_SKILL_AND_CONFORMAL",
+      "priority": "P2",
+      "maps_to": ["BT14_FORECAST_RANGE_CALIBRATION"],
+      "status": "ACCEPTED_SCORING_ENGINE_READY_LEDGER_BLOCKED",
+      "primary_endpoint": "interval score and width-adjusted empirical coverage",
+      "comparators": [
+        "NAIVE_PREVIOUS_RANGE",
+        "ATR_TRAINING_ONLY_GRID",
+        "EWMA_VOLATILITY_BAND",
+        "REALIZED_VOL_RANDOM_WALK",
+        "GARCH_1_1_CHALLENGER",
+        "SPLIT_CONFORMAL",
+        "ROLLING_CONFORMAL",
+        "CYCLE_NAVIGATOR"
+      ],
+      "blockers": ["FORECAST_LEDGER_DEPTH_INSUFFICIENT_FOR_STRONG_CLAIM"]
+    },
+    {
+      "challenge_id": "CH05_SPECIFICATION_CURVE_AND_BOOTSTRAP",
+      "priority": "P1",
+      "maps_to": ["BT08_BUSINESS_CYCLE_TURN", "BT11_SENSOR_ABLATION_AND_REDUNDANCY"],
+      "status": "ACCEPTED_ENGINEERING_READY_CLAIM_BLOCKED",
+      "primary_endpoint": "share of frozen specification surface with stable validation effect",
+      "required_robustness": [
+        "EVENT_OR_BLOCK_BOOTSTRAP",
+        "LEAVE_ONE_EVENT_OUT",
+        "LEAVE_ONE_CYCLE_OUT",
+        "EXTERNAL_ASSET_MECHANISM_CHECK",
+        "MULTIPLE_TESTING_CONTROL"
+      ],
+      "blockers": [
+        "TDBC_BAR_END_REBUILD_REQUIRED",
+        "FINAL_FRED_OWNER_AUDIT_PENDING",
+        "SMALL_INDEPENDENT_EVENT_COUNT"
+      ]
+    }
+  ],
+  "execution_order": [
+    "DECISION_LINEAGE_REPAIR",
+    "STATISTICAL_ENGINE_SYNTHETIC_VALIDATION",
+    "PROVENANCE_AND_TEMPORAL_GRAPH_FOUNDATION",
+    "POINT_IN_TIME_FEATURE_STORE",
+    "FINAL_MASTER_BYTE_AUDIT",
+    "FINAL_PREREGISTRATION_FREEZE",
+    "CONTROLLED_ECONOMIC_EXECUTION",
+    "BLIND_CLAUDE_REPLICATION",
+    "ADJUDICATION_AND_HOLDOUT"
+  ],
+  "authority": {
+    "economic_execution": "LOCKED",
+    "framework_state_change": "NONE",
+    "portfolio_action": "NONE",
+    "readiness_gate_G20": "NO"
+  }
+}
