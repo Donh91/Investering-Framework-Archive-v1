@@ -1,7 +1,7 @@
 # 2026-W31 Master Monday Output Index
 
 run_id: MASTER_MONDAY_W31_20260727T174239Z
-status: RECOVERY_RUN_COMPLETE_PENDING_PR
+status: RECOVERY_RUN_COMPLETE_DURABLE_PASS
 
 ## Core artifacts
 
@@ -19,6 +19,15 @@ The earlier `run_receipt.json` remains attached to the preserved source-unavaila
 - `03_WEEKLY_OPERATIONS/forecast_ledger/2026-07-27__forecast-ledger-2026-w31__official.md`
 - `03_WEEKLY_OPERATIONS/forecast_ledger/scoring/2026-07-27__forecast-score-2026-w30__transparent-audit.md`
 
+## Cycle Navigator
+
+- `03_WEEKLY_OPERATIONS/cycle_navigator/2026-W31/2026-07-27__cycle-navigator-18__official.md`
+- `03_WEEKLY_OPERATIONS/cycle_navigator/2026-W31/2026-07-27__cycle-navigator-18__freeze.json`
+- `03_WEEKLY_OPERATIONS/cycle_navigator/2026-W31/2026-07-27__cycle-navigator-18__receipt.json`
+- `03_WEEKLY_OPERATIONS/cycle_navigator/latest_cycle_navigator.json`
+
+Cycle Navigator #18 is frozen as an official framework artifact. It has not been posted to X and therefore has no publication URL yet.
+
 ## Data gate
 
 - `03_WEEKLY_OPERATIONS/sunday_closeout/2026-W31/master_monday_data_gate_receipt.json`
@@ -31,6 +40,7 @@ The earlier `run_receipt.json` remains attached to the preserved source-unavaila
 ## Pointer
 
 - `03_WEEKLY_OPERATIONS/master_monday/latest_master_monday.json`
+- `03_WEEKLY_OPERATIONS/cycle_navigator/latest_cycle_navigator.json`
 
 ## Authority
 
