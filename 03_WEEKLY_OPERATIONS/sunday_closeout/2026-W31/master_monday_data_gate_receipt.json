@@ -1,0 +1,76 @@
+{
+  "schema_version": "1.0",
+  "receipt_origin": "CREATED_DURING_RECOVERY_RUN",
+  "run_id": "MASTER_MONDAY_W31_20260727T174239Z",
+  "execution_week": "2026-W31",
+  "evaluated_week": "2026-W30",
+  "generated_at_utc": "2026-07-27T17:42:39Z",
+  "run_mode": "RECOVERY_AFTER_SOURCE_UNAVAILABLE",
+  "previous_source_unavailable_artifact": "03_WEEKLY_OPERATIONS/master_monday/2026-W31/2026-07-27__source-unavailable.md",
+  "source_resolution": "ACCEPTED_MULTI_RUN_EVIDENCE_CHAIN",
+  "source_chain": [
+    {
+      "type": "SETTLED_WEEK_RANGE_REPORT",
+      "id": "DP-W30-2026-BTCETH-20260727T054421819Z",
+      "status": "PASS"
+    },
+    {
+      "type": "PRIMARY_CURRENT_DATA_PING",
+      "id": "run_586b93af2ad54a49b13f7453e7ea40e2",
+      "snapshot_utc": "2026-07-27T07:02:46.401Z",
+      "status": "PASS_WITH_EXPLICIT_MISSING"
+    },
+    {
+      "type": "LONGITUDINAL_UPDATE",
+      "id": "run_72b3eaf3c8984befa318702e0c4e4f63",
+      "snapshot_utc": "2026-07-27T14:39:04.061Z",
+      "status": "DEGRADED_USABLE"
+    },
+    {
+      "type": "LONGITUDINAL_UPDATE",
+      "id": "run_b43a7f8d213c4e63a5e60ca9cb19d764",
+      "snapshot_utc": "2026-07-27T17:10:00Z",
+      "status": "DEGRADED_USABLE"
+    },
+    {
+      "type": "OTA_SUPPLEMENT",
+      "id": "OTA24_VELOCITY_FLAG",
+      "snapshot_utc": "2026-07-27T17:28:59Z",
+      "status": "PASS_WITH_LINEAGE_LIMITATIONS"
+    }
+  ],
+  "gate_results": {
+    "settled_week_actuals_available": true,
+    "eligible_primary_current_ping_available": true,
+    "current_longitudinal_comparison_available": true,
+    "forecast_lineage_available": true,
+    "w30_outcome_scoring_allowed": true,
+    "w31_prospective_forecast_allowed": true,
+    "provider_authority_separation_enforced": true,
+    "retrospective_forecast_created": false
+  },
+  "data_quality": {
+    "settled_week": "MEDIUM_HIGH",
+    "current_state": "MEDIUM_LOW",
+    "overall": "MEDIUM"
+  },
+  "known_missing": [
+    "LATEST_MONDAY_ETF_SESSION",
+    "FRESH_CFGI_ALL_ASSETS",
+    "GLOBAL_STABLECOIN_TOTAL",
+    "DIRECT_ETHBTC_AFTER_MORNING_SNAPSHOT",
+    "BINANCE_DERIVED_FEATURES_AFTER_MORNING_SNAPSHOT",
+    "REALIZED_VOLATILITY_WINDOWS",
+    "H7_ROW6_SETTLEMENT",
+    "F1_FINAL_MATURITY",
+    "LOW_VOL_5D_MATURITY"
+  ],
+  "authority_boundary": {
+    "portfolio_action": false,
+    "automatic_rebuy": false,
+    "automatic_entry": false,
+    "rotation_permission": false,
+    "backtest_execution": false
+  },
+  "result": "PASS_RECOVERY_RUN_ALLOWED"
+}
