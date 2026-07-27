@@ -1,0 +1,57 @@
+name: Backtest Engine Foundation
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'backtest_engine/**'
+      - 'tests/backtest_engine/**'
+      - '04_MARKET_LEARNING/backtests/framework_backtest_readiness_build_v1/engineering/**'
+      - '.github/workflows/backtest-engine-foundation.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  engineering-foundation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Run engine tests
+        env:
+          PYTHONPATH: .
+        run: python -m unittest discover -s tests/backtest_engine -p 'test_*.py' -v
+
+      - name: Revalidate architecture contracts
+        run: |
+          mkdir -p artifacts/backtest-engine
+          python tools/backtest_readiness/validate_contracts.py \
+            --output artifacts/backtest-engine/architecture-contracts.json
+
+      - name: Assert execution lock
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          result = json.loads(Path('artifacts/backtest-engine/architecture-contracts.json').read_text())
+          assert result['status'] == 'PASS'
+          assert result['economic_backtest_executed'] is False
+          assert result['readiness_gate_G20'] == 'NO'
+          print('Engine foundation PASS. Economic execution remains LOCKED.')
+          PY
+
+      - name: Upload engineering artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: backtest-engine-foundation
+          path: artifacts/backtest-engine/architecture-contracts.json
+          if-no-files-found: error
+          retention-days: 30

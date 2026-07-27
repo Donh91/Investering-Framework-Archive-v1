@@ -1,0 +1,1 @@
+This package is an engineering and research tool. It has no authority to change current market state, framework state or portfolio action. Economic execution remains locked until readiness gate G20 is explicitly passed by artifact-backed governance.
