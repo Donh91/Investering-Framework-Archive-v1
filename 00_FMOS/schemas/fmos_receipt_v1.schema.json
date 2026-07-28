@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Donh91/Investering-Framework-Archive-v1/00_FMOS/schemas/fmos_receipt_v1.schema.json",
+  "title": "FMOS Receipt v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "receipt_id",
+    "run_id",
+    "operation",
+    "owner_path",
+    "source_main_sha",
+    "branch",
+    "started_at_utc",
+    "completed_at_utc",
+    "status",
+    "artifacts",
+    "validation",
+    "readback"
+  ],
+  "properties": {
+    "schema_version": {"const": "FMOS_RECEIPT_v1"},
+    "receipt_id": {"type": "string", "minLength": 1},
+    "run_id": {"type": "string", "minLength": 1},
+    "operation": {"type": "string", "minLength": 1},
+    "owner_path": {"type": "string", "minLength": 1},
+    "source_main_sha": {"type": "string", "pattern": "^[a-f0-9]{40}$"},
+    "branch": {"type": "string", "pattern": "^agent/task-"},
+    "pull_request": {"type": ["integer", "null"], "minimum": 1},
+    "merge_commit_sha": {"type": ["string", "null"], "pattern": "^[a-f0-9]{40}$"},
+    "started_at_utc": {"type": "string", "format": "date-time"},
+    "completed_at_utc": {"type": "string", "format": "date-time"},
+    "status": {"enum": ["PASS", "PARTIAL", "BLOCKED_SAFETY", "FAILED", "READBACK_VERIFIED"]},
+    "artifacts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "operation"],
+        "properties": {
+          "path": {"type": "string", "minLength": 1},
+          "operation": {"enum": ["CREATE", "UPDATE", "DELETE", "READ_ONLY"]},
+          "content_sha256": {"type": ["string", "null"], "pattern": "^[a-f0-9]{64}$"}
+        }
+      }
+    },
+    "validation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["exact_scope", "unexpected_deletions", "schema_validation", "secret_scan", "tests"],
+      "properties": {
+        "exact_scope": {"enum": ["PASS", "FAIL", "NOT_APPLICABLE"]},
+        "unexpected_deletions": {"type": "integer", "minimum": 0},
+        "schema_validation": {"enum": ["PASS", "FAIL", "NOT_RUN"]},
+        "secret_scan": {"enum": ["PASS", "FAIL", "NOT_RUN"]},
+        "tests": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "readback": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["branch", "main"],
+      "properties": {
+        "branch": {"enum": ["PASS", "FAIL", "NOT_ATTEMPTED"]},
+        "main": {"enum": ["PASS", "FAIL", "NOT_ATTEMPTED"]}
+      }
+    },
+    "blockers": {"type": "array", "items": {"type": "string"}},
+    "framework_state_change": {"const": "NONE"},
+    "portfolio_action": {"const": "NONE"}
+  }
+}

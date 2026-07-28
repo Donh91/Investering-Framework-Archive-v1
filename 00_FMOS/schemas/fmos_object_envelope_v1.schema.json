@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Donh91/Investering-Framework-Archive-v1/00_FMOS/schemas/fmos_object_envelope_v1.schema.json",
+  "title": "FMOS Object Envelope v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "object_id",
+    "object_type",
+    "authority_class",
+    "owner_path",
+    "status",
+    "observed_at_utc",
+    "knowledge_at_utc",
+    "root_lineage",
+    "content_sha256",
+    "created_by",
+    "readback_state"
+  ],
+  "properties": {
+    "schema_version": {"const": "FMOS_OBJECT_ENVELOPE_v1"},
+    "object_id": {"type": "string", "minLength": 1},
+    "object_type": {
+      "enum": [
+        "RAW_CAPTURE",
+        "EVIDENCE_ATOM",
+        "RELATION_EDGE",
+        "CONFLICT",
+        "RETRIEVAL_BUNDLE",
+        "REPLAY_MANIFEST",
+        "PROMOTION_PROPOSAL",
+        "TOMBSTONE",
+        "RECEIPT",
+        "DEAD_LETTER"
+      ]
+    },
+    "authority_class": {
+      "enum": ["L0_ROOT", "A0_SOURCE", "A1_EXTRACTED", "A2_DERIVED", "GOVERNANCE_PROPOSAL", "NON_AUTHORITY"]
+    },
+    "owner_path": {"type": "string", "minLength": 1},
+    "status": {
+      "enum": ["QUEUED", "IN_PR", "MERGED", "READBACK_VERIFIED", "QUARANTINED", "DEAD_LETTER", "TOMBSTONED", "CANCELLED_BY_GOVERNANCE"]
+    },
+    "observed_at_utc": {"type": "string", "format": "date-time"},
+    "knowledge_at_utc": {"type": "string", "format": "date-time"},
+    "effective_at_utc": {"type": ["string", "null"], "format": "date-time"},
+    "root_lineage": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["root_id", "path", "sha256"],
+        "properties": {
+          "root_id": {"type": "string", "minLength": 1},
+          "path": {"type": "string", "minLength": 1},
+          "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+          "commit_sha": {"type": ["string", "null"], "pattern": "^[a-f0-9]{40}$"}
+        }
+      }
+    },
+    "supersedes": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "conflicts_with": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "content_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "created_by": {"enum": ["CHATGPT", "CODEX", "GITHUB_ACTIONS", "CLAUDE", "HUMAN", "OTHER"]},
+    "readback_state": {"enum": ["NOT_ATTEMPTED", "BRANCH_VERIFIED", "MAIN_VERIFIED", "FAILED"]},
+    "payload": {"type": "object"},
+    "notes": {"type": "array", "items": {"type": "string"}}
+  }
+}

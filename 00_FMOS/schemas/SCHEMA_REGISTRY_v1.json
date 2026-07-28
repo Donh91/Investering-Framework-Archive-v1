@@ -1,0 +1,31 @@
+{
+  "registry_id": "FMOS_SCHEMA_REGISTRY_v1",
+  "status": "RATIFIED_SHADOW_CONTROL",
+  "effective_date": "2026-07-28",
+  "source_main_sha": "a616dcbf0254a097fdcd75beb4b028e9ae152e69",
+  "schemas": [
+    {
+      "schema_id": "FMOS_OBJECT_ENVELOPE_v1",
+      "path": "00_FMOS/schemas/fmos_object_envelope_v1.schema.json",
+      "owner": "FMOS_CONTROL",
+      "applies_to": ["RAW_CAPTURE", "EVIDENCE_ATOM", "RELATION_EDGE", "CONFLICT", "RETRIEVAL_BUNDLE", "REPLAY_MANIFEST", "PROMOTION_PROPOSAL", "TOMBSTONE", "RECEIPT", "DEAD_LETTER"],
+      "authority": "SHADOW_CONTROL"
+    },
+    {
+      "schema_id": "FMOS_RECEIPT_v1",
+      "path": "00_FMOS/schemas/fmos_receipt_v1.schema.json",
+      "owner": "FMOS_CONTROL",
+      "applies_to": ["CHATGPT_RUN", "CODEX_DELIVERY", "GITHUB_ACTION", "MERGE", "READBACK"],
+      "authority": "SHADOW_CONTROL"
+    }
+  ],
+  "rules": {
+    "unknown_fields_rejected": true,
+    "knowledge_time_required": true,
+    "root_lineage_required": true,
+    "direct_main_write_forbidden": true,
+    "main_readback_required_for_success": true,
+    "portfolio_authority": false
+  },
+  "next_stage": "WP01_VALIDATORS_AND_FIXTURES"
+}
