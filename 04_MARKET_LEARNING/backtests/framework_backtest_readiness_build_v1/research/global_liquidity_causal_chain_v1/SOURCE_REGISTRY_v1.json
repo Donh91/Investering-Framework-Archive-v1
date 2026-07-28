@@ -1,0 +1,38 @@
+{
+  "schema_version": "1.0",
+  "registry_id": "GLOBAL_LIQUIDITY_SOURCE_REGISTRY_v1",
+  "status": "DRAFT_FROZEN_BEFORE_OUTCOME_INSPECTION",
+  "rules": {
+    "official_primary_preferred": true,
+    "one_owner_per_metric_per_test": true,
+    "latest_vintage_not_historical_realtime": true,
+    "native_and_usd_models_separate": true,
+    "missing_is_unknown": true,
+    "no_silent_forward_fill": true,
+    "knowledge_at_required": true
+  },
+  "datasets": [
+    {"dataset_id":"BTC_SPOT_DAILY_CEST_BINANCE","family":"asset_price","role":"OWNER_CANDIDATE_EXISTING","frequency":"daily","status":"BLOCKED_SOURCE_TO_NORMALIZED_PARITY","source":"existing Backtest Owner Registry"},
+    {"dataset_id":"NASDAQCOM_OFFICIAL_OR_FRED","family":"asset_price","role":"OWNER_CANDIDATE","frequency":"daily","status":"DATA_ACQUISITION_REQUIRED","source":"Nasdaq official history or FRED NASDAQCOM","challenger":"QQQ adjusted close"},
+    {"dataset_id":"US_INTEREST_PAYMENTS_ACTUAL","family":"fiscal_pressure","role":"OWNER_CANDIDATE","frequency":"quarterly","status":"DATA_ACQUISITION_REQUIRED","source":"BEA/FRED A091RC1Q027SBEA","knowledge_rule":"source publication timestamp"},
+    {"dataset_id":"CBO_INTEREST_AND_DEBT_PROJECTION_VINTAGES","family":"fiscal_pressure","role":"OWNER_CANDIDATE","frequency":"annual_projection_vintage","status":"VINTAGE_ARCHIVE_REQUIRED","source":"CBO Budget and Economic Outlook vintages","knowledge_rule":"forecast release date"},
+    {"dataset_id":"TREASURY_DEBT_MATURITY_AND_ISSUANCE","family":"fiscal_transmission","role":"OWNER_CANDIDATE","frequency":"monthly_quarterly","status":"DATA_ACQUISITION_REQUIRED","source":"US Treasury FiscalData, MSPD, quarterly refunding"},
+    {"dataset_id":"US_NET_LIQUIDITY_COMPONENTS","family":"realised_liquidity","role":"OWNER_CANDIDATE","frequency":"weekly_daily_mixed","status":"PARTIAL_LOCAL_FIXTURE_AVAILABLE","source":"WALCL, WTREGEN, RRPONTSYD, reserve balances","method_rule":"units and knowledge timestamps aligned before arithmetic"},
+    {"dataset_id":"GLOBAL_CENTRAL_BANK_BALANCES_NATIVE","family":"realised_liquidity","role":"OWNER_CANDIDATE","frequency":"weekly_monthly_mixed","status":"PARTIAL_DATA_REQUIRED","source":"Fed, ECB, BoJ, official PBoC/NBS Central Bank Survey","method_rule":"native-currency model"},
+    {"dataset_id":"GLOBAL_CENTRAL_BANK_BALANCES_USD","family":"realised_liquidity","role":"CHALLENGER","frequency":"weekly_monthly_mixed","status":"PARTIAL_DATA_REQUIRED","source":"same balance sheets plus point-in-time FX","method_rule":"FX translation decomposed"},
+    {"dataset_id":"GLOBAL_BROAD_MONEY_NATIVE","family":"global_money","role":"OWNER_CANDIDATE","frequency":"monthly","status":"DATA_ACQUISITION_REQUIRED","source":"official US, euro area, Japan and China broad-money releases"},
+    {"dataset_id":"GLOBAL_BROAD_MONEY_USD","family":"global_money","role":"CHALLENGER","frequency":"monthly","status":"DATA_ACQUISITION_REQUIRED","source":"same money series plus point-in-time FX"},
+    {"dataset_id":"BIS_GLOBAL_LIQUIDITY_INDICATORS","family":"global_credit","role":"OWNER_CANDIDATE","frequency":"quarterly","status":"DATA_ACQUISITION_REQUIRED","source":"BIS GLI foreign-currency credit to non-bank borrowers"},
+    {"dataset_id":"FINANCIAL_CONDITIONS_TRANSMISSION","family":"transmission","role":"OWNER_CANDIDATE","frequency":"daily_weekly","status":"PARTIAL_LOCAL_FIXTURE_AVAILABLE","source":"DTWEXBGS, DFII10, BAMLH0A0HYM2, VIXCLS, NFCI"},
+    {"dataset_id":"CRYPTO_NATIVE_LIQUIDITY","family":"transmission","role":"OWNER_CANDIDATE_EXISTING","frequency":"daily_session","status":"PARTIAL_EXISTING_OWNER_DATA","source":"stablecoin history, BTC/ETH ETF flows, derivatives and spot participation"},
+    {"dataset_id":"REAL_TIME_MACRO_VINTAGES","family":"vintage_control","role":"REQUIRED_CONTROL","frequency":"mixed","status":"DATA_BLOCKED_UNTIL_ALFRED_OR_ARCHIVED_RELEASES","source":"ALFRED and official release archives"}
+  ],
+  "local_inputs": [
+    {"file":"FRED_MACRO_CORE_RECENT_BACKFILL_20260716T070839Z.zip","role":"ENGINEERING_FIXTURE_ONLY","reason":"recent backfill, not sufficient multi-cycle owner"},
+    {"file":"Bitcoin Historical Data - Investing.com 2.pdf","role":"SHADOW_PRICE_CHALLENGER_ONLY","reason":"long history but non-owner and publication lineage limitations"}
+  ],
+  "authority": {
+    "economic_execution_allowed": false,
+    "framework_promotion_allowed": false
+  }
+}
