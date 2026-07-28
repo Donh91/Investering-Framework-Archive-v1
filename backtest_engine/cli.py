@@ -6,6 +6,7 @@ from pathlib import Path
 
 from .package_audit import audit_zip
 from .readiness import run_engineering_gates
+from .repository_audit import audit_prospective_repository
 from .w30_replay import replay_w30
 
 
@@ -26,17 +27,33 @@ def main() -> int:
     gates_parser.add_argument("--final-master", type=Path)
     gates_parser.add_argument("--output", type=Path)
 
+    prospective_parser = subparsers.add_parser("audit-prospective")
+    prospective_parser.add_argument("--receipt-dir", type=Path, required=True)
+    prospective_parser.add_argument("--policy-registry", type=Path, required=True)
+    prospective_parser.add_argument("--source-ledger", type=Path, required=True)
+    prospective_parser.add_argument("--source-contract", type=Path, required=True)
+    prospective_parser.add_argument("--shadow-ledger", type=Path, required=True)
+    prospective_parser.add_argument("--output", type=Path)
+
     args = parser.parse_args()
     if args.command == "audit-package":
         payload = audit_zip(args.path).to_dict()
     elif args.command == "replay-w30":
         payload = replay_w30(args.fixture_root)
-    else:
+    elif args.command == "run-engineering-gates":
         payload = run_engineering_gates(
             fixture_root=args.fixture_root,
             w30_package=args.w30_package,
             continuation_package=args.continuation_package,
             final_master=args.final_master,
+        )
+    else:
+        payload = audit_prospective_repository(
+            receipt_dir=args.receipt_dir,
+            policy_registry_path=args.policy_registry,
+            source_ledger_path=args.source_ledger,
+            source_contract_path=args.source_contract,
+            shadow_ledger_path=args.shadow_ledger,
         )
 
     rendered = json.dumps(payload, indent=2, sort_keys=True)
