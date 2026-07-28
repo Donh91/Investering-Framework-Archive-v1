@@ -1,0 +1,93 @@
+{
+  "breadth": {
+    "advance_ratio": 0.1235955056,
+    "advancers": 11,
+    "decliners": 62,
+    "delta_percentage_points": -7.86516854,
+    "included": 89,
+    "median_return_24h_pct": -1.9,
+    "membership_hash_available": false,
+    "previous_advance_ratio": 0.202247191,
+    "unchanged": 16
+  },
+  "classification": "ETH_RELATIVE_STRENGTH_INTRADAY_PERSISTENCE_WITH_BREADTH_RELAPSE_AND_NO_SETTLED_DAILY_CONFIRMATION",
+  "collector_predecessor_id": "snap_dd787b28a480498cb8e6de387c59ac7d",
+  "flow_and_positioning": {
+    "binance_oi_change_pct": {
+      "BTCUSDT": {"1h": -0.125477, "4h": -0.164295, "24h": -0.50416},
+      "ETHUSDT": {"1h": 0.098259, "4h": -0.75462, "24h": -2.08285}
+    },
+    "funding_latest_three_settled_mean": {"BTCUSDT": 0.00003674, "ETHUSDT": 0.00000205},
+    "okx_oi_usd_delta_pct": {"BTC": -0.95076, "ETH": -1.11927},
+    "spot_taker_buy_share": {
+      "BTCUSDT": {"1h": 0.492794, "4h": 0.543203, "12h": 0.511963},
+      "ETHBTC": {"1h": 0.718938, "4h": 0.67468, "12h": 0.603524},
+      "ETHUSDT": {"1h": 0.588007, "4h": 0.52845, "12h": 0.503699}
+    }
+  },
+  "framework": {
+    "ETH_relative_strength": "INTRADAY_PERSISTENCE_NARROW",
+    "broad_alt_rotation": "NOT_CONFIRMED",
+    "canonical_state_change": "NONE",
+    "large_caps": "WATCH_ONLY",
+    "new_entry": "NOT_ACTIVE",
+    "portfolio_action": "NONE",
+    "rebuy": "LOCKED",
+    "rotation": "NO_ROTATION",
+    "selective_large_cap_rotation": "NOT_CONFIRMED"
+  },
+  "market": {
+    "binance_direct": {
+      "BTCUSDT": 63776,
+      "ETHBTC": 0.03009,
+      "ETHBTC_24h_high": 0.0301,
+      "ETHBTC_delta_vs_predecessor_pct": 0.233178,
+      "ETHUSDT": 1918.3,
+      "daily_0_0300_confirmation": false,
+      "latest_settled_CEST_daily_close": 0.02995,
+      "latest_settled_CEST_daily_close_source": "accepted predecessor; current daily source timestamp unchanged at 2026-07-27T21:59:59.999Z"
+    },
+    "coingecko": {
+      "btc_delta_vs_predecessor_pct": -0.493696,
+      "btc_dominance_delta_pp": 0.0197967812,
+      "btc_dominance_pct": 56.3791666539,
+      "btc_price_usd": 63691,
+      "eth_delta_vs_predecessor_pct": -0.666407,
+      "eth_dominance_delta_pp": -0.0170920973,
+      "eth_dominance_pct": 10.1777869619,
+      "eth_price_usd": 1912.42,
+      "ethbtc_derived_delta_pct": -0.173564,
+      "ethbtc_derived_ratio": 0.030026534,
+      "total_market_cap_delta_pct": -0.31627,
+      "total_market_cap_usd": 2265988616204.9873,
+      "total_volume_delta_pct": 0.4735,
+      "total_volume_usd": 65813171163.92836
+    }
+  },
+  "packet_status": "PARTIAL",
+  "prospective_evidence": {
+    "A_rows_total_after_run": 1,
+    "new_A_class_row": false,
+    "overlap_cluster_key": "ROTATION-2026-W31-ETHBTC-0030-ATTEMPT",
+    "parent_receipt_id": "PDR-20260728-0874091766e8",
+    "reason": "Same intraday 0.0300 attempt cluster, no new settled CEST daily confirmation, state and action permission unchanged."
+  },
+  "quality": {
+    "core": {"FAIL": 0, "PARTIAL": 1, "PASS": 54, "UNAVAILABLE": 5, "attempted": 60, "planned": 60},
+    "counts_reconciled": true,
+    "optional": {"FAIL": 1, "attempted": 1, "planned": 1}
+  },
+  "run_id": "run_4fd139e79f5b4a1ba4d7d5c4c2d6aa10",
+  "schema_version": "DATA_PING_MACHINE_SUMMARY_v1",
+  "snapshot_id": "snap_1c77e4a6b3f24e3ca66f0a92c36f955d",
+  "snapshot_utc": "2026-07-28T19:43:35.031Z",
+  "source_boundaries": {
+    "breadth_membership_hash": "UNAVAILABLE",
+    "cfgi_current": "UNAVAILABLE_NO_NEW_UPDATE",
+    "defi_total_tvl": "OPTIONAL_FAIL_RESPONSE_TOO_LARGE",
+    "etf_current": "UNAVAILABLE_NO_NEW_UPDATE",
+    "public_web": "UNAVAILABLE",
+    "realized_volatility": "UNAVAILABLE_INSUFFICIENT_SETTLED_WINDOW",
+    "stablecoin_global_total": "UNAVAILABLE"
+  }
+}
