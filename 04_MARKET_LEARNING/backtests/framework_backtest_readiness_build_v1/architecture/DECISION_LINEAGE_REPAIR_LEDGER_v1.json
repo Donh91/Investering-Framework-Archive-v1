@@ -1,0 +1,119 @@
+{
+  "schema_version": "DECISION_LINEAGE_REPAIR_LEDGER_v1",
+  "created_at": "2026-07-28",
+  "class_definitions": {
+    "A_FULLY_REPLAYABLE": "complete point-in-time state, decision, execution, costs and label contract",
+    "B_PARTIALLY_RECONSTRUCTABLE": "some original evidence exists, but one or more replay-critical fields are missing",
+    "C_QUARANTINED": "cannot be used for actual-policy replay"
+  },
+  "policy_replay_gate": "AT_LEAST_ONE_A_ROW_AND_EVENT_SET_SUFFICIENT_FOR_PREDEFINED_TEST",
+  "validation": {
+    "status": "PASS",
+    "rows": 3,
+    "A_FULLY_REPLAYABLE": 0,
+    "B_PARTIALLY_RECONSTRUCTABLE": 3,
+    "C_QUARANTINED": 0,
+    "actual_policy_replay_unlocked": false
+  },
+  "rows": [
+    {
+      "record_id": "FNP-001",
+      "record_type": "FNP_RECORD",
+      "repair_class": "B_PARTIALLY_RECONSTRUCTABLE",
+      "event_at_utc": "2026-05-04T00:00:00Z",
+      "event_window_end_utc": "2026-05-07T23:59:59Z",
+      "event_time_precision": "RANGE",
+      "knowledge_at_utc": null,
+      "knowledge_time_precision": "UNKNOWN",
+      "decision_at_utc": null,
+      "execution_at_utc": null,
+      "label_end_utc": null,
+      "policy_version": null,
+      "state_after": "CANONICAL_WITH_ESTIMATED_FIELDS",
+      "action_permission": "NONE_RECONSTRUCTED",
+      "source_artifact_ids": ["DATA_PING_V3.txt"],
+      "source_hashes": ["08525cf41b5bf5da25fec93bf497516f7fc616f2d5702ac0317bbe651a359e0c"],
+      "missing_required_fields": [
+        "knowledge_at_utc",
+        "decision_at_utc",
+        "execution_at_utc",
+        "label_end_utc",
+        "policy_version",
+        "transaction_cost_contract"
+      ],
+      "policy_replay_eligible": false,
+      "repair_actions": [
+        "locate original frozen forecast and horizon artifact",
+        "locate decision timestamp and rule version",
+        "locate execution or explicit no-action receipt",
+        "freeze cost contract before policy replay"
+      ]
+    },
+    {
+      "record_id": "FT-1",
+      "record_type": "GATE_BTC_PARTIAL_FORWARD_TEST",
+      "repair_class": "B_PARTIALLY_RECONSTRUCTABLE",
+      "event_at_utc": "2026-06-10T00:00:00Z",
+      "event_time_precision": "DATE_ONLY",
+      "knowledge_at_utc": "2026-06-10T00:00:00Z",
+      "knowledge_time_precision": "DATE_ONLY",
+      "decision_at_utc": null,
+      "execution_at_utc": null,
+      "label_end_utc": "2026-07-10T23:59:59Z",
+      "policy_version": "GATE-BTC-PARTIAL-v0.1.1",
+      "state_before": "BTC_DEPLOYMENT_CAUTION",
+      "state_after": "FORWARD_TEST_FROZEN",
+      "action_permission": "NO_RULE_CHANGE_BEFORE_OUTCOME",
+      "transaction_cost_contract": "EXPECTED_FNP_COST_5_TO_7_PERCENT_NOT_EXECUTION_COST",
+      "source_artifact_ids": ["Research_Claude_10-6-2026.txt", "RESEARCH_LAB_Claude.txt"],
+      "source_hashes": [
+        "414d82dd79b2c2f46e13ac6116191f29b83d1cfaeb9b8c0452655f08b17cc433",
+        "a021364fe4b8676fe117e2bdef2de0e0dff4044cc20585e3f59159348e715da8"
+      ],
+      "missing_required_fields": [
+        "exact_knowledge_at_utc",
+        "decision_at_utc",
+        "execution_at_utc",
+        "actual_transaction_cost_contract",
+        "settled_outcome_receipt"
+      ],
+      "policy_replay_eligible": false,
+      "repair_actions": [
+        "locate original pre-registration message timestamp",
+        "locate final closeout and exact evaluation timestamp",
+        "separate expected confirmation cost from transaction cost",
+        "record explicit action or no-action receipt"
+      ]
+    },
+    {
+      "record_id": "TD-97",
+      "record_type": "TECHDEV_MACRO_TIMING_ROADMAP",
+      "repair_class": "B_PARTIALLY_RECONSTRUCTABLE",
+      "event_at_utc": "2026-06-29T00:00:00Z",
+      "event_time_precision": "DATE_ONLY",
+      "knowledge_at_utc": "2026-06-29T00:00:00Z",
+      "knowledge_time_precision": "DATE_ONLY",
+      "decision_at_utc": null,
+      "execution_at_utc": null,
+      "label_end_utc": "2026-09-30T23:59:59Z",
+      "policy_version": "TD-97_SHADOW_FORWARD_TEST_v1",
+      "state_before": "NO_ROTATION",
+      "state_after": "OPEN_PENDING_SHADOW",
+      "action_permission": "NONE",
+      "source_artifact_ids": ["TechDev_Analyse_og_Vurdering.txt"],
+      "source_hashes": ["86e40c4c3f7ae7d331109ab8d7656dbd18063f5fae254c68005baa4546bd0dc3"],
+      "missing_required_fields": [
+        "exact_knowledge_at_utc",
+        "decision_at_utc",
+        "execution_at_utc",
+        "transaction_cost_contract"
+      ],
+      "policy_replay_eligible": false,
+      "repair_actions": [
+        "retain as claim ledger rather than deployment event",
+        "link scheduled evaluation receipts",
+        "do not admit to policy replay without action permission"
+      ]
+    }
+  ]
+}
