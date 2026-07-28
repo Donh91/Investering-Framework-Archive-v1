@@ -35,6 +35,16 @@ Do not rely on conversation memory when repository sources are available.
 - Cycle Navigator is public output and pre-registered accountability.
 - GitHub is versioned memory and the governance control plane.
 
+### 3.1 DATA PING supplemental capture
+
+- Read `02_DATA_PING/protocols/2026-07-28__data-ping-deep-capture-escalation-protocol-v1__canonical.md` for DATA PING analysis, weekly reconciliation, experiment maturity and event-driven evidence gaps.
+- The standard DATA PING remains bounded. Do not enlarge it by default.
+- When the weekly record is incomplete or a material event needs higher-resolution evidence, prepare one targeted copy-ready Custom GPT prompt under the protocol.
+- Check `02_DATA_PING/operational_handoffs/deep_capture_request_ledger_v1.json` before preparing a prompt.
+- Weekly and event-driven requests must be deduplicated by ISO week, method scope and event cluster.
+- A prepared prompt is not evidence, and a returned package is not accepted until source, time, method, settlement and duplication checks pass.
+- Every DATA PING thread handover must preserve pending deep-capture requests and active event windows.
+
 ## 4. Current architecture constraints
 
 - Tighten and simplify before expanding.
