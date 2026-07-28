@@ -1,0 +1,25 @@
+name: Backtest Wave 1.3 Authority Lineage
+
+on:
+  pull_request:
+    paths:
+      - "backtest_engine/authority.py"
+      - "backtest_engine/lineage_recovery.py"
+      - "tests/backtest_engine/test_wave1_3_authority_lineage.py"
+      - ".github/workflows/backtest-wave1-3-authority-lineage.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  wave1-3-authority-lineage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run authority and lineage tests
+        run: |
+          PYTHONPATH=. python -m unittest tests.backtest_engine.test_wave1_3_authority_lineage -v
