@@ -1,0 +1,28 @@
+{
+  "schema_version": "PROSPECTIVE_DECISION_RECEIPT_v1",
+  "required_fields": [
+    "event_id",
+    "policy_family",
+    "rule_version",
+    "knowledge_at_utc",
+    "decision_at_utc",
+    "execution_at_utc",
+    "label_end_utc",
+    "state_before",
+    "state_after",
+    "action_permission",
+    "source_artifact_ids",
+    "source_hashes",
+    "transaction_cost_contract",
+    "overlap_cluster_key"
+  ],
+  "temporal_rule": "knowledge_at_utc <= decision_at_utc <= execution_at_utc < label_end_utc",
+  "no_action_rule": "If no trade occurs, execution_at_utc is the exact no-action decision receipt timestamp and action_permission must be NONE.",
+  "future_use": "Every policy-relevant DATA PING, Master Monday or Cycle Navigator decision must emit this sidecar when a rule is frozen, triggered, denied, superseded or closed.",
+  "promotion_gate": {
+    "minimum_A_rows": 1,
+    "preferred_A_rows_per_policy_family": 5,
+    "connected_interval_clusters_required": true,
+    "cost_contract_frozen_before_scoring": true
+  }
+}
