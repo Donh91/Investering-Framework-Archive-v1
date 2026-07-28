@@ -1,0 +1,78 @@
+{
+  "schema_version": "1.0",
+  "source_run": "OTA_PING_24_v2",
+  "observed_at_utc": "2026-07-28T04:30:08Z",
+  "source_qa": {
+    "kraken_first_attempt": "EXECUTED_FAIL_HTTP_503",
+    "kraken_retry": "PASS",
+    "price_probes": "CURRENT_RUN_FRESH_4_OF_4",
+    "farside_btc_2026_07_27": "QUARANTINED_SUSPECTED_STALE_CACHE",
+    "farside_dash_semantics": "MISSING_NOT_ZERO"
+  },
+  "F1": {
+    "status": "MATURED_CLOSED",
+    "window_start": "2026-07-21",
+    "window_end_utc": "2026-07-28T00:00:00Z",
+    "primary_directional_score": "NOT_FAILED",
+    "closes_below_62200": 0,
+    "closes_below_62342": 0,
+    "lowest_settled_close": 63755.86,
+    "lowest_intraday_low": 63605.56,
+    "result_invariant_across_threshold_candidates": true,
+    "threshold_attribution": "OPEN_62200_VS_62342",
+    "post_window_price_lower_than_all_window_lows": true,
+    "canonical_state_change": "NONE"
+  },
+  "LOW_VOL_FORWARD": {
+    "status": "MATURED_COMPLETE",
+    "returns_pct": {
+      "1D": -1.54,
+      "3D": -2.63,
+      "5D": -3.57
+    },
+    "MAE_pct": -3.79,
+    "MFE_pct": 0.30,
+    "payoff": 0.08,
+    "sample_size": 1,
+    "evidence_class": "FRAGILE_NO_INTERPRETIVE_WEIGHT",
+    "promotion": "NONE"
+  },
+  "H7": {
+    "status": "ROW_6_ACCEPTED_PREREGISTERED_CEST_BASIS",
+    "rows": "6_OF_6_PROSPECTIVE",
+    "row_6_direct_ETHBTC_close": 0.02995,
+    "longest_positive_increment_run": 4,
+    "ETH_lead_count_final_3": 3,
+    "five_session_OLS_log_slope_per_session": 0.00970,
+    "approx_slope_pct_per_session": 0.974,
+    "score": "EARLY_TRANSMISSION_CANDIDATE_NOT_ROTATION_CONFIRMATION",
+    "label_change": "NONE",
+    "basis_sensitivity": {
+      "CEST_ETHBTC": 0.02995,
+      "UTC_ETHBTC": 0.02967,
+      "late_move_BTC_pct": -1.64,
+      "late_move_ETHBTC_pct": -0.94,
+      "severity": "MATERIAL_ROBUSTNESS_WARNING"
+    },
+    "rotation_effect": "NONE"
+  },
+  "market_observation": {
+    "BTC_2026_07_28_intraday_low": 63059.39,
+    "repair_area_63100_intraday_tested": true,
+    "settled_break_below_63100": false,
+    "ETHBTC_in_progress": 0.02970,
+    "ETHBTC_0_0275_holds": true,
+    "ETHBTC_0_0300_settled_confirmation": false
+  },
+  "unchanged": {
+    "F4": "GATE_UNMET_SCORED_CLOSED",
+    "F5": "TRIGGERED_NOT_RETRIGGERED",
+    "rotation": "NO_ROTATION",
+    "rebuy": "LOCKED",
+    "new_entry": "NOT_ACTIVE",
+    "large_caps": "WATCH_ONLY"
+  },
+  "canonical_state_change": "NONE",
+  "portfolio_action": "NONE",
+  "next_exact_event": "2026-07-28T22:00:00Z_H7_ROW_7_CEST_SETTLEMENT"
+}
