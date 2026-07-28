@@ -1,0 +1,71 @@
+{
+  "schema_version": "1.0",
+  "program_id": "GLOBAL_LIQUIDITY_CAUSAL_CHAIN_RESEARCH_v1",
+  "frozen_at_utc": "2026-07-28T20:30:00Z",
+  "status": "FROZEN_BEFORE_ECONOMIC_EXECUTION",
+  "source_event": {
+    "source": "Raoul Pal X post supplied as screenshots",
+    "screenshot_sha256": [
+      "61701232e277cd08a7c2f9f9469fe497eb2cb0c72deff15c3d565d1a10ab3a32",
+      "a52b4e3331d73f594fbef9cb2206020a014a58a03332a030e69b35aca4e257c5"
+    ],
+    "exact_post_url": "NOT_SUPPLIED",
+    "method_disclosed": false
+  },
+  "claims": [
+    {
+      "claim_id": "GLC-C01",
+      "claim": "Bitcoin is 87% correlated to global liquidity",
+      "classification": "UNVERIFIED_NUMERIC_CLAIM",
+      "required_replication": ["exact liquidity series", "price or return transformation", "frequency", "sample period", "lead_lag", "smoothing", "vintage policy"],
+      "success_condition": "frozen method reproduces approximately 0.87 and remains materially high out of sample",
+      "failure_condition": "result depends on levels, dual-axis scaling, selected lag, selected window, or fails out of sample"
+    },
+    {
+      "claim_id": "GLC-C02",
+      "claim": "Nasdaq is 97% correlated to global liquidity",
+      "classification": "UNVERIFIED_NUMERIC_CLAIM",
+      "required_replication": ["exact Nasdaq instrument", "exact liquidity series", "price or return transformation", "frequency", "sample period", "lead_lag", "smoothing", "vintage policy"],
+      "success_condition": "frozen method reproduces approximately 0.97 and remains materially high out of sample",
+      "failure_condition": "result depends on levels, dual-axis scaling, selected lag, selected window, or fails out of sample"
+    },
+    {
+      "claim_id": "GLC-C03",
+      "claim": "Bitcoin and Nasdaq mainly track the amount of money in the system rather than earnings, news or weekly narratives",
+      "classification": "OVERBROAD_CAUSAL_CLAIM",
+      "required_replication": ["incremental value after rates, earnings, valuation, credit, dollar and crypto-native controls"],
+      "success_condition": "liquidity adds stable out-of-sample explanatory and predictive value after controls",
+      "failure_condition": "liquidity is redundant, unstable, or loses value after conditioning"
+    },
+    {
+      "claim_id": "GLC-C04",
+      "claim": "Interest payments lead liquidity by around three years",
+      "classification": "UNVERIFIED_LEAD_LAG_CLAIM",
+      "required_replication": ["interest payment vintage", "liquidity definition", "publication lags", "lag grid", "multiple testing", "policy reaction controls"],
+      "success_condition": "a preregistered approximately 36-month lead survives walk-forward, real-time vintages and family-wise correction",
+      "failure_condition": "lead is selected ex post, unstable, or disappears under vintages and controls"
+    },
+    {
+      "claim_id": "GLC-C05",
+      "claim": "Liquidity can be forecast years ahead because future interest payments are already known",
+      "classification": "PLAUSIBLE_PRESSURE_PROXY_NOT_PROVEN_FORECAST",
+      "required_replication": ["debt maturity schedule", "rate path assumptions", "deficit and issuance path", "market absorption", "policy reaction function"],
+      "success_condition": "interest-payment-based model improves real-time forecasts of realised liquidity against simple baselines",
+      "failure_condition": "forecast error is dominated by rates, issuance, policy or transmission changes"
+    },
+    {
+      "claim_id": "GLC-C06",
+      "claim": "Bitcoin is currently running cold relative to liquidity and nothing is broken",
+      "classification": "RESIDUAL_MEAN_REVERSION_HYPOTHESIS",
+      "required_replication": ["frozen fair-value model", "residual definition", "historical residual duration", "future payoff distribution"],
+      "success_condition": "negative residual predicts superior forward payoff after regime and drawdown controls",
+      "failure_condition": "residual is non-stationary, persistent, or fails to predict future returns"
+    }
+  ],
+  "authority": {
+    "market_state_change": false,
+    "gate_change": false,
+    "rebuy_change": false,
+    "portfolio_action": false
+  }
+}
