@@ -1,0 +1,117 @@
+{
+  "schema_version": "1.0",
+  "program": "FRAMEWORK_BACKTEST_READINESS_BUILD_v1",
+  "run_date": "2026-07-28",
+  "status": "COMPLETED_WITH_EXPLICIT_BLOCKERS",
+  "input_integrity": {
+    "visible_packages": 4,
+    "crc_pass": 4,
+    "detached_checksums": ["180/180", "17/17", "257/257"],
+    "corrected_final_master_exact_bytes": "NOT_VISIBLE"
+  },
+  "R1": {
+    "test_id": "POINT_IN_TIME_STATE_AND_DECISION_REPLAY",
+    "status": "POINT_IN_TIME_CONTAMINATED_AND_DECISION_REPLAY_BLOCKED",
+    "framework_events_total": 3,
+    "framework_events_missing_knowledge_at": 2,
+    "visible_fred_vintage_status": "LATEST_VINTAGE_ONLY_NO_ALFRED_INITIAL_RELEASE_BYTES",
+    "tdbc_days_compared": 3205,
+    "tdbc_phase_divergence_days": 1207,
+    "tdbc_phase_divergence_rate": 0.3765990639625585,
+    "tdbc_transition_count": 58,
+    "tdbc_median_premature_lead_days": 60.0,
+    "etf_rows": 651,
+    "etf_known_by_08_cest_rate": 0.0,
+    "etf_known_by_cest_close_rate": 1.0,
+    "rotation_proxy_timing_divergence_days": 15,
+    "canonical_decision_replay_authorized": false
+  },
+  "R2": {
+    "test_id": "COUNTERFACTUAL_DEPLOYMENT_AND_REGRET_LEDGER",
+    "status": "PARTIAL_PROXY_ACTUAL_FRAMEWORK_POLICY_BLOCKED",
+    "event_definition": "BTC settled daily return <= -8% OR 3-day return <= -12%, 60-day cooldown",
+    "independent_events": 27,
+    "horizon_days": 60,
+    "round_trip_cost_pct": 0.2,
+    "always_invested_median_return": -0.01848186029340848,
+    "immediate_rebuy_median_return": 0.055129718392208815,
+    "delay5_median_return": 0.06756623211182466,
+    "delay5_outperform_immediate_rate": 0.6296296296296297,
+    "delay5_median_delta_vs_immediate": 0.03718033368155538,
+    "delay5_delta_bootstrap_95_ci": [-0.02153864276792372, 0.09228483136918753],
+    "framework_proxy_median_delta_vs_immediate": -0.012055277111980844,
+    "promotion_authorized": false
+  },
+  "R3": {
+    "test_id": "ROTATION_SURVIVAL_AND_TRANSITION_REPLAY",
+    "status": "H7_ALONE_NOT_VALIDATED_DIRECT_003_CROSS_PROMISING_SMALL_N",
+    "h7_like_independent_events": 79,
+    "h7_price_only_median_20d": -0.028870751824502328,
+    "h7_price_only_positive_20d_rate": 0.3717948717948718,
+    "h7_price_only_median_95_ci": [-0.04747967479674786, -0.012044653349001178],
+    "direct_003_cross_independent_events": 11,
+    "cross003_price_only_median_20d": 0.059163195759182274,
+    "cross003_price_only_positive_20d_rate": 0.7272727272727273,
+    "cross003_breadth_n": 8,
+    "cross003_breadth_median_20d": 0.07007420545102916,
+    "cross003_breadth_positive_20d_rate": 0.875,
+    "cross003_breadth_median_95_ci": [0.02332555814728443, 0.18920127795527142],
+    "cross003_breadth_and_nonrising_dominance_n": 4,
+    "rotation_state_change": "NONE"
+  },
+  "R4": {
+    "test_id": "CYCLE_NAVIGATOR_RANGE_SKILL_TOURNAMENT",
+    "status": "INSUFFICIENT_EVIDENCE_PILOT_ONLY",
+    "fully_prospective_weeks": 2,
+    "asset_week_observations": 4,
+    "cycle_navigator": {
+      "mean_containment": 0.9306365445185147,
+      "mean_jaccard": 0.613744910832347,
+      "mean_normalized_interval_score": 0.24793127444232443,
+      "mean_width": 0.10746417837976256,
+      "breach_rate": 0.5
+    },
+    "atr_2x": {
+      "mean_containment": 1.0,
+      "mean_jaccard": 0.5428436774468742,
+      "mean_normalized_interval_score": 0.1318601766985734,
+      "mean_width": 0.1318601766985734,
+      "breach_rate": 0.0
+    },
+    "skill_claim_authorized": false
+  },
+  "R5": {
+    "test_id": "SENSOR_INDEPENDENCE_ABLATION_AND_GRAPH",
+    "status": "REDUNDANCY_CONFIRMED_NO_LINEAR_OOS_EDGE_DEMONSTRATED",
+    "common_sample_rows": 427,
+    "sensor_count": 23,
+    "pca_participation_ratio_diagnostic": 8.906783362494904,
+    "first_component_variance_share": 0.24793246102243718,
+    "first_five_components_cumulative_share": 0.6242694728186586,
+    "price_only_oos_r2": -2.655060451500287,
+    "price_only_sign_accuracy": 0.3933333333333333,
+    "best_incremental_family_by_mse": "breadth",
+    "breadth_delta_r2": 0.27090662455304004,
+    "dominance_delta_r2": 0.2111171594719936,
+    "all_tested_linear_models_oos_r2_negative": true,
+    "predictive_edge_demonstrated": false
+  },
+  "result_package": {
+    "filename": "BACKTEST_WAVE1_CHATGPT_RESEARCH_1_5_20260728.zip",
+    "bytes": 346692,
+    "sha256": "006d19f85ba59c61c5dff704161e135432827a68d8f9f20a4153aeb93ce75654",
+    "artifact_count": 35,
+    "script_sha256": "d1ebf2ae660df5209e9b4c4737f794c1db967c8b536cdf2d1d826a13d39d6376",
+    "clean_process_return_code": 0
+  },
+  "governance": {
+    "final_holdout_opened": false,
+    "claude_results_seen": false,
+    "canonical_state_change": "NONE",
+    "rotation": "NO_ROTATION",
+    "rebuy": "LOCKED",
+    "new_entry": "NOT_ACTIVE",
+    "large_caps": "WATCH_ONLY",
+    "portfolio_action": "NONE"
+  }
+}
