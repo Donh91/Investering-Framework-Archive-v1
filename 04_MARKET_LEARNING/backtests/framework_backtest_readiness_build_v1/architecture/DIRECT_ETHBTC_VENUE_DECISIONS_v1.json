@@ -1,0 +1,28 @@
+{
+  "schema_version": "DIRECT_ETHBTC_VENUE_DECISIONS_v1",
+  "owner": "BINANCE_SPOT_ETHBTC_UTC_DAILY",
+  "evaluation_window": "2026-04-28_to_2026-07-26_90_settled_sessions",
+  "coinbase": {
+    "status": "APPROVED_DIRECT_CHALLENGER_OUTAGE_CONFIRMATION",
+    "overlap_rows": 90,
+    "median_abs_close_dev_bps": 1.954168,
+    "p95_abs_close_dev_bps": 8.509676,
+    "max_abs_close_dev_bps": 12.671977,
+    "gate_agreement_0_0275": 1.0,
+    "gate_agreement_0_0300": 1.0,
+    "all_contract_checks": "PASS"
+  },
+  "kraken": {
+    "status": "CONDITIONAL_DIRECT_SHADOW",
+    "overlap_rows": 90,
+    "median_abs_close_dev_bps": 2.592025,
+    "p95_abs_close_dev_bps": 8.301702,
+    "max_abs_close_dev_bps": 11.22807,
+    "gate_agreement_0_0275": 0.988889,
+    "gate_agreement_0_0300": 1.0,
+    "all_contract_checks": "FAIL_ONE_GATE",
+    "failure_reason": "One near-threshold 0.0275 disagreement lowers agreement below the frozen 99% minimum."
+  },
+  "owner_replacement": "NOT_AUTHORIZED",
+  "derived_ratio": "DIAGNOSTIC_ONLY"
+}
