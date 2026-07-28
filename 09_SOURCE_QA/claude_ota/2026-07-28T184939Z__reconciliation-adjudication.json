@@ -1,0 +1,93 @@
+{
+  "schema_version": "CLAUDE_OTA_RECONCILIATION_ADJUDICATION_v1",
+  "claude_run_timestamp_utc": "2026-07-28T18:49:39.660Z",
+  "operating_mode": "STANDALONE_OTA",
+  "reference_data_ping_for_chatgpt_reconciliation": "run_7bd29842dd8b446781ea8a7f25c11d1a",
+  "contract_compliance": "PASS_WITH_MATERIAL_SELF_CORRECTION",
+  "items": [
+    {
+      "item_id": "R-01",
+      "category": "DERIVED_FEATURE_DEFECT",
+      "adjudication": "ACCEPTED_CORRECTION",
+      "finding": "Farside Total values are cumulative historical net-flow totals, not AUM.",
+      "prior_feature_status": "WITHDRAWN",
+      "withdrawn_features": ["BTC_7D_FLOW_AS_FALSE_AUM_PCT_0_301", "ETH_7D_FLOW_AS_FALSE_AUM_PCT_1_356", "ETH_TO_BTC_FALSE_AUM_MULTIPLE_4_5X"],
+      "replacement_status": "TRUE_AUM_REQUIRED",
+      "canonical_effect": "NONE"
+    },
+    {
+      "item_id": "R-02",
+      "category": "ETF_STRUCTURE",
+      "adjudication": "RETAIN_AS_CLAUDE_DERIVED_CHALLENGER",
+      "asset": "BTC",
+      "window": "2026-06-29_to_2026-07-27",
+      "sessions": 20,
+      "value_usd_millions": -230.9,
+      "replayability": "PARTIAL_ROW_LEVEL_INPUTS_NOT_ARCHIVED",
+      "canonical_effect": "NONE"
+    },
+    {
+      "item_id": "R-03",
+      "category": "THRESHOLD_SEQUENCE",
+      "adjudication": "ACCEPTED_DIRECT_UTC_SHADOW_ONLY",
+      "sequence": "TWO_COMPLETED_UTC_TOUCHES_ZERO_CLOSES_ABOVE_0_0300",
+      "framework_settlement_mismatch": true,
+      "framework_method": "BINANCE_DAILY_KLINES_COPENHAGEN_v1",
+      "silent_merge_forbidden": true,
+      "canonical_effect": "NONE"
+    },
+    {
+      "item_id": "R-04",
+      "category": "SOURCE_QA",
+      "adjudication": "ACCEPTED_PERMANENT_RULE",
+      "rule": "DASH_IS_NOT_REPORTED_NOT_NUMERIC_ZERO",
+      "all_dash_total_zero_authority": "NOT_SETTLED_ZERO_FLOW",
+      "canonical_effect": "SOURCE_QA_ONLY"
+    },
+    {
+      "item_id": "R-05",
+      "category": "SOURCE_QA",
+      "adjudication": "EDGE_RULE_FALSIFIED_TIMING_TEST_CONTINUES",
+      "edge_rule": "FALSIFIED",
+      "after_1600z_rule": "PROSPECTIVE_TEST_REQUIRED",
+      "observations_logged": 2,
+      "minimum_observations": 10,
+      "preferred_observations": 20,
+      "canonical_schedule_change": "NONE"
+    },
+    {
+      "item_id": "R-06",
+      "category": "DESIGN_OBSERVATION",
+      "adjudication": "ACCEPTED_LOW_CONFIDENCE_NO_RESCORE",
+      "hypothesis": "H-WIN-01",
+      "sample_size": 2,
+      "closed_scores_changed": false,
+      "canonical_effect": "NONE"
+    },
+    {
+      "item_id": "R-07",
+      "category": "PROCESS_QA",
+      "adjudication": "PASS_SELF_CORRECTION",
+      "framework_state_known_by_claude": false,
+      "canonical_effect": "NONE"
+    }
+  ],
+  "catalyst_verification": {
+    "event": "FOMC_MEETING",
+    "meeting_dates": ["2026-07-28", "2026-07-29"],
+    "decision_time_utc": "2026-07-29T18:00:00Z",
+    "press_conference_time_utc": "2026-07-29T18:30:00Z",
+    "authority": "FEDERAL_RESERVE_PRIMARY_SOURCE",
+    "framework_role": "CONFOUND_ONLY"
+  },
+  "quality_gaps": [
+    "CACHE_GUARD_PER_VENUE_HASHES_NOT_SUPPLIED",
+    "BTC_20_SESSION_ETF_ROW_LEVEL_INPUTS_NOT_SUPPLIED",
+    "UTC_VS_COPENHAGEN_SETTLEMENT_MUST_REMAIN_SEPARATE",
+    "H7_CANDLE_NOT_FORMED_IS_NOT_MARKET_EVIDENCE"
+  ],
+  "new_canonical_market_evidence": false,
+  "new_source_qa_learning": true,
+  "new_design_learning": true,
+  "portfolio_action": "NONE"
+}
