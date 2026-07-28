@@ -1,0 +1,52 @@
+name: Backtest Wave 1.4 Prospective Accumulation
+
+on:
+  pull_request:
+    paths:
+      - "backtest_engine/prospective.py"
+      - "backtest_engine/source_resilience.py"
+      - "backtest_engine/shadow_scoreboard.py"
+      - "backtest_engine/repository_audit.py"
+      - "backtest_engine/cli.py"
+      - "tests/backtest_engine/test_wave1_4_prospective.py"
+      - "04_MARKET_LEARNING/backtests/framework_backtest_readiness_build_v1/prospective_receipts/**"
+      - "04_MARKET_LEARNING/backtests/framework_backtest_readiness_build_v1/live_source_resilience/**"
+      - "04_MARKET_LEARNING/backtests/framework_backtest_readiness_build_v1/shadow_dual_run/**"
+      - ".github/workflows/backtest-wave1-4-prospective.yml"
+  push:
+    branches: [main]
+    paths:
+      - "04_MARKET_LEARNING/backtests/framework_backtest_readiness_build_v1/prospective_receipts/**"
+      - "04_MARKET_LEARNING/backtests/framework_backtest_readiness_build_v1/live_source_resilience/**"
+      - "04_MARKET_LEARNING/backtests/framework_backtest_readiness_build_v1/shadow_dual_run/**"
+  schedule:
+    - cron: "35 17 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-prospective-foundation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run prospective accumulation tests
+        run: |
+          PYTHONPATH=. python -m unittest tests.backtest_engine.test_wave1_4_prospective -v
+      - name: Audit active prospective ledgers
+        run: |
+          PYTHONPATH=. python -m backtest_engine audit-prospective \
+            --receipt-dir 04_MARKET_LEARNING/backtests/framework_backtest_readiness_build_v1/prospective_receipts \
+            --policy-registry 04_MARKET_LEARNING/backtests/framework_backtest_readiness_build_v1/architecture/POLICY_FAMILY_REGISTRY_v1.json \
+            --source-ledger 04_MARKET_LEARNING/backtests/framework_backtest_readiness_build_v1/live_source_resilience/DAILY_LEDGER_v1.json \
+            --source-contract 04_MARKET_LEARNING/backtests/framework_backtest_readiness_build_v1/architecture/LIVE_DUAL_SOURCE_ETHBTC_MONITOR_v1.json \
+            --shadow-ledger 04_MARKET_LEARNING/backtests/framework_backtest_readiness_build_v1/shadow_dual_run/RUN_LEDGER_v1.json \
+            --output prospective_audit.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: prospective-accumulation-audit
+          path: prospective_audit.json
