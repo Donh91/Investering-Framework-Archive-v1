@@ -15,6 +15,7 @@ transport_integrity: UNVERIFIED_CHAT_TRANSPORT
 The full one-line source packet remains in the originating project conversation. This archive stores a bounded machine summary, framework read and QA boundaries rather than duplicating the complete transport payload.
 
 ```yaml
-machine_summary_sha256: 06f0e73aa7c3085fe18c24b8532e5f723b87ab3f3171c24026fa21d56528117e
-qa_boundaries_sha256: 0efef30901a6a95b3a27a599fb5a50236f50641c76d86f1779fe564480a290bb
+machine_summary_github_blob_sha: 0183401f7548c4678e08806422c1b53df6986e20
+qa_boundaries_github_blob_sha: bec9b5626e23326218904c2a1c4e8533dda14f0a
+sha256_status: NOT_RECOMPUTED_AFTER_GITHUB_SERIALIZATION
 ```
