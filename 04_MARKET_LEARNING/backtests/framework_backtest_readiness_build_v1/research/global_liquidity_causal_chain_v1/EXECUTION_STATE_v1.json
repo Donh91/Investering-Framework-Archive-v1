@@ -1,0 +1,33 @@
+{
+  "schema_version": "1.0",
+  "program_id": "GLOBAL_LIQUIDITY_CAUSAL_CHAIN_RESEARCH_v1",
+  "updated_at_utc": "2026-07-28T20:30:00Z",
+  "program_status": "ACTIVE_ENGINEERING_AND_SOURCE_ACQUISITION",
+  "phases": [
+    {"phase":"P0_CLAIM_FREEZE","status":"PASS","deliverables":["CLAIM_FREEZE_v1.json","CAUSAL_DAG_v1.json"]},
+    {"phase":"P1_SOURCE_ARCHITECTURE","status":"PASS_WITH_DATA_GAPS","deliverables":["SOURCE_REGISTRY_v1.json"],"blockers":["Nasdaq owner acquisition","global broad-money history","BIS GLI export","CBO vintage archive","PBoC monthly history"]},
+    {"phase":"P2_DATA_ACQUISITION_AND_NORMALISATION","status":"IN_PROGRESS","allowed":true,"blockers":["final master binary unavailable","official external series not yet materialised"]},
+    {"phase":"P3_STATISTICAL_ENGINE_VALIDATION","status":"QUEUED_UNDER_G15","allowed":"SYNTHETIC_FIXTURES_ONLY"},
+    {"phase":"P4_GRAPH_ENGINE_VALIDATION","status":"QUEUED_UNDER_G16","allowed":"METADATA_AND_SYNTHETIC_ONLY"},
+    {"phase":"P5_ECONOMIC_TEST_EXECUTION","status":"BLOCKED_G20_NO","allowed":false},
+    {"phase":"P6_INDEPENDENT_REPLICATION","status":"BLOCKED_UNTIL_P5_IMMUTABLE_RELEASE","allowed":false},
+    {"phase":"P7_PROSPECTIVE_MONITORING","status":"READY_SOURCE_AND_LINEAGE_ONLY","allowed":true,"live_signal_authority":false}
+  ],
+  "current_readiness_dependency": "04_MARKET_LEARNING/backtests/framework_backtest_readiness_build_v1/architecture/READINESS_GATE_v2.json",
+  "execution_rules": {
+    "economic_results_before_G20": false,
+    "final_holdout_touch_before_preregistration": false,
+    "parameter_search_before_G20": false,
+    "source_acquisition_allowed": true,
+    "synthetic_engine_validation_allowed": true
+  },
+  "next_workpack": "GLC-WP01_SOURCE_RECOVERY_AND_CONTRACTS",
+  "authority": {
+    "new_active_test": false,
+    "new_engine": false,
+    "market_state_change": false,
+    "gate_change": false,
+    "rebuy_change": false,
+    "portfolio_action": false
+  }
+}
