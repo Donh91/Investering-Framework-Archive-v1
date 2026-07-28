@@ -1,5 +1,84 @@
 {
   "schema_version": "SHADOW_DUAL_RUN_LEDGER_v1",
-  "status": "ACTIVE_ZERO_RUNS",
-  "runs": []
+  "status": "ACTIVE_WITH_RUNS",
+  "runs": [
+    [
+      {
+        "available_clusters": 12,
+        "available_sensors": 26,
+        "explanation_tokens": 0,
+        "measurement_status": "RUNTIME_AND_TOKEN_COUNT_NOT_AVAILABLE",
+        "payload_bytes": 739,
+        "profile_id": "FULL_STACK",
+        "run_id": "run_7bd29842dd8b446781ea8a7f25c11d1a",
+        "runtime_seconds": 0,
+        "snapshot_utc": "2026-07-28T17:12:27.297Z",
+        "source_failures": [
+          "STABLECOIN_GLOBAL_UNAVAILABLE",
+          "DEFI_TOTAL_TVL_RESPONSE_TOO_LARGE",
+          "REALIZED_VOLATILITY_INSUFFICIENT",
+          "BREADTH_HASH_UNAVAILABLE"
+        ],
+        "state_output": "NO_ROTATION",
+        "transition_output": "ETH_RELATIVE_STRENGTH_INTRADAY_ATTEMPT",
+        "veto_output": "REBUY_LOCKED",
+        "warnings_emitted": [
+          "UNSETTLED_0_0300_TOUCH",
+          "BREADTH_BELOW_ROTATION_GATE",
+          "BREADTH_MEMBERSHIP_HASH_MISSING",
+          "STABLECOIN_GLOBAL_UNAVAILABLE",
+          "REALIZED_VOLATILITY_WINDOW_INSUFFICIENT"
+        ]
+      },
+      {
+        "available_clusters": 8,
+        "available_sensors": 16,
+        "explanation_tokens": 0,
+        "measurement_status": "RUNTIME_AND_TOKEN_COUNT_NOT_AVAILABLE",
+        "payload_bytes": 683,
+        "profile_id": "REDUCED_EXECUTION_STACK",
+        "run_id": "run_7bd29842dd8b446781ea8a7f25c11d1a",
+        "runtime_seconds": 0,
+        "snapshot_utc": "2026-07-28T17:12:27.297Z",
+        "source_failures": [
+          "REALIZED_VOLATILITY_INSUFFICIENT",
+          "BREADTH_HASH_UNAVAILABLE"
+        ],
+        "state_output": "NO_ROTATION",
+        "transition_output": "ETH_RELATIVE_STRENGTH_INTRADAY_ATTEMPT",
+        "veto_output": "REBUY_LOCKED",
+        "warnings_emitted": [
+          "UNSETTLED_0_0300_TOUCH",
+          "BREADTH_BELOW_ROTATION_GATE",
+          "BREADTH_MEMBERSHIP_HASH_MISSING",
+          "STABLECOIN_GLOBAL_UNAVAILABLE",
+          "REALIZED_VOLATILITY_WINDOW_INSUFFICIENT"
+        ]
+      },
+      {
+        "available_clusters": 7,
+        "available_sensors": 10,
+        "explanation_tokens": 0,
+        "measurement_status": "RUNTIME_AND_TOKEN_COUNT_NOT_AVAILABLE",
+        "payload_bytes": 643,
+        "profile_id": "MINIMAL_CORE_STACK",
+        "run_id": "run_7bd29842dd8b446781ea8a7f25c11d1a",
+        "runtime_seconds": 0,
+        "snapshot_utc": "2026-07-28T17:12:27.297Z",
+        "source_failures": [
+          "BREADTH_HASH_UNAVAILABLE"
+        ],
+        "state_output": "NO_ROTATION",
+        "transition_output": "ETH_RELATIVE_STRENGTH_INTRADAY_ATTEMPT",
+        "veto_output": "REBUY_LOCKED",
+        "warnings_emitted": [
+          "UNSETTLED_0_0300_TOUCH",
+          "BREADTH_BELOW_ROTATION_GATE",
+          "BREADTH_MEMBERSHIP_HASH_MISSING",
+          "STABLECOIN_GLOBAL_UNAVAILABLE",
+          "REALIZED_VOLATILITY_WINDOW_INSUFFICIENT"
+        ]
+      }
+    ]
+  ]
 }
