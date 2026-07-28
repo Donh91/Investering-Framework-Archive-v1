@@ -1,0 +1,49 @@
+{
+  "schema_version": "SOURCE_TIMING_HYPOTHESIS_LEDGER_v1",
+  "source": "FARSIDE_ETF_TABLES",
+  "updated_at_utc": "2026-07-28T18:05:00Z",
+  "hypotheses": [
+    {
+      "hypothesis_id": "FARSIDE_EDGE_NODE_FRESHNESS_DETERMINISTIC_v0",
+      "claim": "Specific Cloudflare edge ranges deterministically identify fresh versus stale Farside payloads.",
+      "status": "FALSIFIED",
+      "falsification_evidence": {
+        "fresh_edge_ip": "172.71.195.106",
+        "previous_stale_edge_ip": "172.71.190.124",
+        "shared_prefix": "172.71/16",
+        "reason": "Fresh and stale payloads were observed from the same edge prefix."
+      },
+      "operational_use_allowed": false,
+      "retired_at_utc": "2026-07-28T17:38:10Z"
+    },
+    {
+      "hypothesis_id": "FARSIDE_QUERY_AFTER_1600Z_FRESHNESS_v1",
+      "claim": "Queries after approximately 16:00 UTC are materially more likely to contain the latest settled Farside session than early European morning queries.",
+      "status": "PROSPECTIVE_TEST_REQUIRED",
+      "current_observation_count": 1,
+      "minimum_observations": 10,
+      "preferred_observations": 20,
+      "promotion_requirements": {
+        "late_window_fresh_rate_min": 0.9,
+        "improvement_over_early_window_min_percentage_points": 30,
+        "revision_rate_measured": true,
+        "edge_ip_logged": true,
+        "payload_hash_logged": true
+      },
+      "required_row_fields": [
+        "request_utc",
+        "asset",
+        "edge_ip",
+        "response_sha256",
+        "footer_date",
+        "latest_session_date",
+        "latest_expected_session_date",
+        "freshness_label",
+        "response_latency_ms",
+        "later_revision_detected"
+      ],
+      "operational_use_allowed": false
+    }
+  ],
+  "canonical_schedule_change": "NONE"
+}
