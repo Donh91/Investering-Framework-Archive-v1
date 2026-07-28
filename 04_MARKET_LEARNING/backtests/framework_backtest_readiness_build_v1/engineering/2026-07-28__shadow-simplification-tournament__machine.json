@@ -1,0 +1,33 @@
+{
+  "schema_version": "SHADOW_SIMPLIFICATION_TOURNAMENT_v1",
+  "run_date": "2026-07-28",
+  "source_sha256": "303d63946fd7696237b8d1a7208fa5aadd877e55aba57d5b51ea17aa46d18c9f",
+  "holdout_start": "2026-04-26",
+  "final_holdout_opened": false,
+  "stacks": {
+    "FULL_STACK": {"features": 34, "clusters": 7},
+    "REDUCED_EXECUTION_STACK": {"features": 19, "clusters": 6},
+    "MINIMAL_CORE_STACK": {"features": 11, "clusters": 6}
+  },
+  "BTC_5D": {
+    "FULL_STACK": {"oos_r2": -2.681211, "sign_accuracy": 0.490798, "mae": 0.077972, "mean_missingness": 0.066990},
+    "REDUCED_EXECUTION_STACK": {"oos_r2": -0.958254, "sign_accuracy": 0.472393, "mae": 0.055411, "mean_missingness": 0.055099},
+    "MINIMAL_CORE_STACK": {"oos_r2": -0.970089, "sign_accuracy": 0.453988, "mae": 0.054130, "mean_missingness": 0.026770}
+  },
+  "ETHBTC_20D": {
+    "FULL_STACK": {"oos_r2": -1.530934, "sign_accuracy": 0.320261, "mae": 0.138650},
+    "REDUCED_EXECUTION_STACK": {"oos_r2": -2.571557, "sign_accuracy": 0.282680, "mae": 0.169068},
+    "MINIMAL_CORE_STACK": {"oos_r2": -1.936752, "sign_accuracy": 0.325163, "mae": 0.155641}
+  },
+  "verdict": {
+    "predictive_edge": "NOT_DEMONSTRATED_FOR_ANY_STACK",
+    "efficiency_finding": "REDUCED_AND_MINIMAL_LOWER_COMPLEXITY_AND_MISSINGNESS",
+    "FULL_STACK": "REFERENCE",
+    "REDUCED_EXECUTION_STACK": "SHADOW_DUAL_RUN_ACTIVE",
+    "MINIMAL_CORE_STACK": "EXPERIMENTAL_CHALLENGER",
+    "sensor_deletions": "NONE",
+    "promotion": "NO"
+  },
+  "canonical_state_change": "NONE",
+  "portfolio_action": "NONE"
+}
