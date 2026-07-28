@@ -1,0 +1,37 @@
+{
+  "schema_version": "1.0",
+  "monitor_id": "GLOBAL_LIQUIDITY_PROSPECTIVE_MONITOR_v1",
+  "status": "SOURCE_AND_LINEAGE_MONITORING_ONLY",
+  "runtime_owner": "FMOS_OPS_PLUS_CODEX_DELIVERY",
+  "evidence_owner_after_candidate_survival": "DAILY_PROSPECTIVE_EVIDENCE_PLUS_A_CLASS",
+  "frequency": "daily_owner_check_weekly_macro_release_check",
+  "monitored_objects": [
+    "source contract completion",
+    "new official release vintages",
+    "CBO projection release",
+    "Treasury refunding and maturity update",
+    "BIS GLI release",
+    "central bank and broad money publication",
+    "Backtest Readiness G15",
+    "Backtest Readiness G16",
+    "Backtest Readiness G20",
+    "agent PR delivery",
+    "independent replication status"
+  ],
+  "prohibited": [
+    "live liquidity trading signal",
+    "retrospective forecast row",
+    "automatic sensor promotion",
+    "automatic gate change",
+    "portfolio action"
+  ],
+  "notification_gate": [
+    "material source integrity failure",
+    "new immutable research package",
+    "readiness gate transition",
+    "agent delivery blocked",
+    "economic test release",
+    "replication disagreement",
+    "final ruling"
+  ]
+}
