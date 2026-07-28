@@ -1,17 +1,37 @@
 {
-  "schema_version": "PROSPECTIVE_ACCUMULATION_STATUS_v1",
-  "status": "ACTIVE_ZERO_EVENTS",
-  "A_rows_total": 0,
-  "policy_families": {
-    "REBUY_LOCK": {"A_rows": 0, "unique_overlap_clusters": 0, "ranking_ready": false},
-    "NEW_ENTRY_PERMISSION": {"A_rows": 0, "unique_overlap_clusters": 0, "ranking_ready": false},
-    "TRIM_NO_TRIM": {"A_rows": 0, "unique_overlap_clusters": 0, "ranking_ready": false},
-    "ROTATION_PERMISSION": {"A_rows": 0, "unique_overlap_clusters": 0, "ranking_ready": false}
-  },
-  "direct_ETHBTC_live_overlap_sessions": 0,
-  "shadow_dual_run_weeks": 0,
+  "A_rows_total": 1,
   "actual_policy_replay_unlocked": false,
-  "final_holdout_opened": false,
   "canonical_state_change": "NONE",
-  "portfolio_action": "NONE"
+  "diagnostic_replay_eligible_families": [
+    "ROTATION_PERMISSION"
+  ],
+  "direct_ETHBTC_live_overlap_sessions": 0,
+  "final_holdout_opened": false,
+  "policy_families": {
+    "NEW_ENTRY_PERMISSION": {
+      "A_rows": 0,
+      "ranking_ready": false,
+      "unique_overlap_clusters": 0
+    },
+    "REBUY_LOCK": {
+      "A_rows": 0,
+      "ranking_ready": false,
+      "unique_overlap_clusters": 0
+    },
+    "ROTATION_PERMISSION": {
+      "A_rows": 1,
+      "ranking_ready": false,
+      "unique_overlap_clusters": 1
+    },
+    "TRIM_NO_TRIM": {
+      "A_rows": 0,
+      "ranking_ready": false,
+      "unique_overlap_clusters": 0
+    }
+  },
+  "portfolio_action": "NONE",
+  "schema_version": "PROSPECTIVE_ACCUMULATION_STATUS_v1",
+  "shadow_dual_run_valid_runs": 1,
+  "shadow_dual_run_weeks": 0,
+  "status": "ACTIVE_WITH_FIRST_A_CLASS_EVENT"
 }

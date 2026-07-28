@@ -1,0 +1,39 @@
+{
+  "action_permission": "NONE",
+  "captured_at_utc": "2026-07-28T17:39:20Z",
+  "decision_at_utc": "2026-07-28T17:38:50Z",
+  "decision_evidence": {
+    "ETHBTC_direct_current": 0.03002,
+    "ETHBTC_latest_settled_CEST_daily_close": 0.02995,
+    "breadth_advance_ratio": 0.202247191,
+    "broad_alt_breadth_gate": 0.55,
+    "selective_large_cap_breadth_gate": 0.5
+  },
+  "event_id": "ROTATION-2026-W31-ETHBTC-0030-INTRADAY-ATTEMPT-001",
+  "execution_at_utc": "2026-07-28T17:38:50Z",
+  "holdout_touched": false,
+  "knowledge_at_utc": "2026-07-28T17:12:27.297Z",
+  "label_end_utc": "2026-08-27T17:38:50Z",
+  "no_action_reason": "Direct Binance ETHBTC traded above 0.0300 intraday, but the latest settled CEST daily close was 0.02995 and breadth was only 20.22%; selective and broad rotation gates were not met.",
+  "overlap_cluster_key": "ROTATION-2026-W31-ETHBTC-0030-ATTEMPT",
+  "owner_registry_version": "SELECTED_OWNER_REGISTRY_v1",
+  "policy_family": "ROTATION_PERMISSION",
+  "receipt_id": "PDR-20260728-0874091766e8",
+  "receipt_kind": "NO_ACTION",
+  "receipt_sha256": "4dbf4b750740acdaeee4612ea73cc5327f07f72e2cbac05290cd9bcc077bdf0d",
+  "rule_frozen_before_outcome": true,
+  "rule_version": "ROTATION_ARCHITECTURE_v2",
+  "schema_version": "PROSPECTIVE_DECISION_RECEIPT_v1",
+  "source_artifact_ids": [
+    "04_MARKET_LEARNING/data_ping/2026-07-28__run_7bd29842__machine-summary.json",
+    "09_SOURCE_QA/data_ping/2026-07-28__run_7bd29842__qa-boundaries.json"
+  ],
+  "source_authority_status": "OWNER",
+  "source_hashes": [
+    "598d5cdc07df6d1f998aa9d0b4af0474625e59dc000c7986f62cbd187e61a4eb",
+    "db01b016f19e27e2606c8569a162c89cc4c4d3a57b1e9122aca53d49bd243482"
+  ],
+  "state_after": "NO_ROTATION",
+  "state_before": "NO_ROTATION",
+  "transaction_cost_contract": "ZERO_NO_TRADE"
+}
