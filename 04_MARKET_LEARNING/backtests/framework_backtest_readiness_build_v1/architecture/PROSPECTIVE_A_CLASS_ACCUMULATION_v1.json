@@ -1,0 +1,22 @@
+{
+  "schema_version": "PROSPECTIVE_A_CLASS_ACCUMULATION_v1",
+  "status": "ACTIVE_ZERO_EVENTS",
+  "effective_rule": "NEXT_POLICY_RELEVANT_DECISION_AFTER_MAIN_MERGE",
+  "retroactive_A_class_creation": "FORBIDDEN",
+  "policy_families": [
+    "REBUY_LOCK",
+    "NEW_ENTRY_PERMISSION",
+    "TRIM_NO_TRIM",
+    "ROTATION_PERMISSION"
+  ],
+  "receipt_kinds": ["FREEZE", "DENIAL", "TRIGGER", "SUPERSESSION", "CLOSEOUT", "NO_ACTION"],
+  "maximum_capture_delay_seconds": 1800,
+  "minimum_A_rows_to_begin_diagnostic_replay": 1,
+  "preferred_A_rows_per_policy_family_for_ranking": 5,
+  "minimum_unique_overlap_clusters_per_family": 5,
+  "cost_contract_frozen_before_scoring": true,
+  "source_hashes_required": true,
+  "explicit_no_action_receipt_required": true,
+  "holdout_touched": false,
+  "actual_policy_replay_unlocked": false
+}

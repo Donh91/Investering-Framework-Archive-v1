@@ -1,0 +1,17 @@
+{
+  "schema_version": "LIVE_DUAL_SOURCE_ETHBTC_MONITOR_v1",
+  "owner": "BINANCE_SPOT_ETHBTC_UTC_DAILY",
+  "challenger": "COINBASE_EXCHANGE_ETH-BTC_UTC_DAILY",
+  "third_source_shadow": "KRAKEN_SPOT_ETHXBT_UTC_DAILY",
+  "thresholds": [0.0275, 0.03],
+  "minimum_live_overlap_sessions": 30,
+  "median_abs_close_dev_bps_max": 5.0,
+  "p95_abs_close_dev_bps_max": 20.0,
+  "max_abs_close_dev_bps_max": 75.0,
+  "gate_agreement_rate_min": 0.99,
+  "owner_outage_use": "CHALLENGER_CONFIRMATION_ONLY",
+  "owner_substitution_before_gate": "FORBIDDEN",
+  "settled_only": true,
+  "missing_is_not_zero": true,
+  "status": "ACTIVE_ZERO_LIVE_SESSIONS"
+}
