@@ -1,0 +1,69 @@
+{
+  "schema_version": "ROTATION_ARCHITECTURE_v2",
+  "ratified_at": "2026-07-28",
+  "canonical_separation": [
+    "ETH_RELATIVE_STRENGTH",
+    "SELECTIVE_LARGE_CAP_ROTATION",
+    "BROAD_ALT_ROTATION"
+  ],
+  "objects": {
+    "ETH_RELATIVE_STRENGTH": {
+      "required": ["approved direct settled ETH/BTC", "positive settled persistence", "ETH leads BTC"],
+      "maximum_label_without_breadth": "ETH_RELATIVE_STRENGTH_CONFIRMED",
+      "portfolio_authority": "NONE_BY_ITSELF"
+    },
+    "SELECTIVE_LARGE_CAP_ROTATION": {
+      "required": ["ETH_RELATIVE_STRENGTH_CONFIRMED", "large-cap breadth >= 50%", "BTC dominance not accelerating", "settled flow confirmation"],
+      "portfolio_authority": "WATCH_OR_BOUNDED_ONLY_AFTER_SEPARATE_GOVERNANCE"
+    },
+    "BROAD_ALT_ROTATION": {
+      "required": ["SELECTIVE_LARGE_CAP_ROTATION_CONFIRMED", "broad alt breadth >= 55%", "positive beta-neutral broad-alt return over 20 days", "survival beyond first touch"],
+      "portfolio_authority": "CANONICAL_ROTATION_PERMISSION_ONLY_AFTER_GOVERNANCE"
+    }
+  },
+  "ethbtc_authority_stack": [
+    {
+      "priority": 1,
+      "venue": "BINANCE",
+      "instrument": "ETHBTC_SPOT",
+      "status": "DIRECT_OWNER",
+      "gate_authority": true
+    },
+    {
+      "priority": 2,
+      "venue": "KRAKEN",
+      "instrument": "ETHXBT_SPOT",
+      "status": "DIRECT_CANDIDATE_UNVALIDATED",
+      "gate_authority": false,
+      "promotion_requirements": ["30 overlapping settled sessions", "close deviation distribution", "candle boundary parity", "outage semantics", "no material gate disagreement"]
+    },
+    {
+      "priority": 3,
+      "venue": "COINBASE",
+      "instrument": "ETH-BTC_SPOT",
+      "status": "DIRECT_CANDIDATE_UNVALIDATED",
+      "gate_authority": false,
+      "promotion_requirements": ["30 overlapping settled sessions", "close deviation distribution", "candle boundary parity", "no material gate disagreement"]
+    },
+    {
+      "priority": 99,
+      "venue": "DERIVED",
+      "instrument": "ETHUSD_DIV_BTCUSD",
+      "status": "DERIVED_DIAGNOSTIC",
+      "gate_authority": false
+    }
+  ],
+  "fail_closed_rules": [
+    "No approved direct ETH/BTC means no 0.0275 or 0.0300 gate score.",
+    "A live touch cannot replace a settled close.",
+    "ETH relative strength cannot be called broad alt rotation.",
+    "Perpetual or index ratios cannot silently replace spot.",
+    "Derived ETH/BTC never receives direct-gate authority."
+  ],
+  "current_state": {
+    "ETH_RELATIVE_STRENGTH": "CANDIDATE_FRAGILE",
+    "SELECTIVE_LARGE_CAP_ROTATION": "NOT_CONFIRMED",
+    "BROAD_ALT_ROTATION": "NOT_CONFIRMED",
+    "canonical_rotation": "NO_ROTATION"
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "schema_version": "SHADOW_SIMPLIFICATION_DUAL_RUN_v1",
+  "effective_from": "NEXT_ACCEPTED_DATA_PING_AFTER_MERGE",
+  "authority": "SHADOW_ONLY",
+  "reference_profile": "FULL_STACK",
+  "challengers": ["REDUCED_EXECUTION_STACK", "MINIMAL_CORE_STACK"],
+  "minimum_weeks": 12,
+  "preferred_weeks": 26,
+  "per_run_fields": [
+    "run_id",
+    "snapshot_utc",
+    "profile_id",
+    "available_sensors",
+    "available_clusters",
+    "source_failures",
+    "state_output",
+    "transition_output",
+    "veto_output",
+    "payload_bytes",
+    "runtime_seconds",
+    "explanation_tokens",
+    "warnings_emitted"
+  ],
+  "weekly_fields": [
+    "state_agreement_rate",
+    "false_transition_count",
+    "missed_warning_count",
+    "source_failure_survival",
+    "forecast_score",
+    "payload_reduction_pct",
+    "runtime_reduction_pct",
+    "explanation_reduction_pct"
+  ],
+  "promotion_gate": {
+    "state_agreement_rate_min": 0.95,
+    "missed_material_warnings_max": 0,
+    "false_transition_increase_max": 0,
+    "source_failure_survival_not_worse": true,
+    "minimum_payload_reduction_pct": 20,
+    "minimum_weeks": 12
+  },
+  "no_automatic_promotion": true,
+  "canonical_state_change": "NONE",
+  "portfolio_action": "NONE"
+}
