@@ -66,6 +66,18 @@ The protocol owner remains:
 02_DATA_PING/protocols/2026-07-15__data-ping-thread-handover-protocol-v1-0__canonical.md
 ```
 
+The supplemental collection owner is:
+
+```text
+02_DATA_PING/protocols/2026-07-28__data-ping-deep-capture-escalation-protocol-v1__canonical.md
+```
+
+Its operational ledger is:
+
+```text
+02_DATA_PING/operational_handoffs/deep_capture_request_ledger_v1.json
+```
+
 ## 6. Required handover package
 
 Every completed thread handover must contain:
@@ -113,7 +125,9 @@ Every completed thread handover must contain:
 - handling of RAW 1–3 and 5–7 day requests;
 - missing-data rules;
 - separation between collector, framework and shadow research;
-- requirements around GitHub invisibility and autonomous archival.
+- requirements around GitHub invisibility and autonomous archival;
+- permission for the main framework to ask the user for a ready-to-copy Custom GPT prompt when weekly reconciliation or a material event requires data beyond the normal DATA PING;
+- requirement that such prompts follow the active deep-capture protocol and request only missing or event-relevant evidence.
 
 ### E. Research and experiment continuity
 
@@ -131,7 +145,12 @@ Every completed thread handover must contain:
 - pending settlements, closes and maturity marks;
 - operational improvements already implemented;
 - next meaningful trigger conditions;
-- tasks that must not be repeated.
+- tasks that must not be repeated;
+- pending, partial or completed deep-capture request IDs;
+- active event-driven capture windows;
+- latest completed weekly deep-capture package;
+- any copy-ready Custom GPT prompt prepared but not yet sent;
+- explicit deep-capture deduplication state by ISO week, method scope and event cluster.
 
 ### G. New-thread bootstrap instructions
 
@@ -140,10 +159,13 @@ The bootstrap file must tell the fresh thread to:
 1. read the latest handover pointer;
 2. read the full historical handover;
 3. read the latest accepted-log pointer and active registry;
-4. confirm the loaded state in a compact receipt;
-5. wait for the first complete DATA PING in the new version;
-6. preserve the older active version until that packet arrives;
-7. make no market, rule or portfolio change merely from the handover.
+4. read the active deep-capture protocol and request ledger;
+5. confirm pending requests, active event windows and completed weekly package status;
+6. confirm the loaded state in a compact receipt;
+7. wait for the first complete DATA PING in the new version;
+8. preserve the older active version until that packet arrives;
+9. make no market, rule or portfolio change merely from the handover;
+10. issue no duplicate weekly or event-driven Custom GPT request.
 
 ## 7. Trigger execution sequence
 
@@ -152,17 +174,18 @@ When the trigger is received, the main framework must perform the following sequ
 ```text
 1. Resolve latest accepted DATA PING pointer on main.
 2. Resolve latest active registry and linked supplements.
-3. Review the outgoing thread for new preferences, patches, source changes, experiments and unresolved tasks.
-4. Create a dedicated task branch before every write.
-5. Write one comprehensive history handover.
-6. Write one paste-ready bootstrap file for the successor thread.
-7. Update latest_thread_handover_state.json.
-8. Create an archive-governance receipt.
-9. Read back every changed file.
-10. Verify changed-file scope.
-11. Merge through a pull request.
-12. Read back main and report PASS/FAIL.
-13. Return a compact user-facing startup instruction.
+3. Resolve the deep-capture protocol and current request ledger.
+4. Review the outgoing thread for new preferences, patches, source changes, experiments, pending prompts and unresolved tasks.
+5. Create a dedicated task branch before every write.
+6. Write one comprehensive history handover.
+7. Write one paste-ready bootstrap file for the successor thread.
+8. Update latest_thread_handover_state.json.
+9. Create an archive-governance receipt.
+10. Read back every changed file.
+11. Verify changed-file scope.
+12. Merge through a pull request.
+13. Read back main and report PASS/FAIL.
+14. Return a compact user-facing startup instruction.
 ```
 
 ## 8. Handover depth standard
@@ -195,6 +218,9 @@ latest_accepted_log_id: <id>
 active_source_version: <version still containing latest complete ping>
 intended_successor_version: <new version>
 active_event_id: <id>
+deep_capture_protocol_loaded: YES / NO
+deep_capture_pending_request_ids: <list or NONE>
+latest_weekly_deep_capture_status: <status or NONE>
 framework_state: <state>
 portfolio_action: NONE
 ready_for_first_complete_new_version_ping: YES / NO
@@ -208,6 +234,8 @@ The handover packet is a starting snapshot, not a replacement for normal accepte
 
 - Each complete new DATA PING continues to receive payload, receipt, registry and pointer updates.
 - New preferences or architecture changes accumulate during the new thread.
+- The deep-capture ledger is checked before any weekly or event-driven Custom GPT request.
+- A new material event may prepare one targeted request under the deep-capture protocol.
 - At the next handover, the new packet supersedes the previous handover pointer but does not delete history.
 - A handover may reference existing canonical files rather than duplicate entire raw payloads, but the operational context and learned preferences must be readable directly from the handover.
 
@@ -224,6 +252,8 @@ Forbidden:
 - silently changing thresholds, gates or portfolio status;
 - rewriting frozen Cycle Navigator outputs or research holdouts;
 - creating retrospective experiment rows;
+- issuing duplicate deep-capture prompts for the same week, method scope or event cluster;
+- treating a prepared prompt or unvalidated Custom GPT package as accepted evidence;
 - writing directly to main before a task branch exists.
 
 ## 12. Current operational status
@@ -232,6 +262,9 @@ Forbidden:
 protocol_version: 1.0
 trigger_phrase: "overlevering til ny tråd!"
 thread_handover_active: YES
+deep_capture_protocol_active: YES
+deep_capture_request_ledger_required: YES
+future_thread_must_preserve_pending_requests: YES
 github_backend_required: YES
 user_github_action_required: NO
 branch_first_required: YES
