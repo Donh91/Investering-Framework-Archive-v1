@@ -1,0 +1,51 @@
+{
+  "schema_version": "SELECTED_OWNER_REGISTRY_v1",
+  "scope": "WAVE_1_3_SELECTED_TESTS_AND_LIVE_OUTAGE_AUTHORITY",
+  "status": "FINAL_FOR_SELECTED_SCOPE",
+  "rules": {
+    "missing_is_not_zero": true,
+    "derived_cannot_score_direct_gate": true,
+    "spot_swap_index_separated": true,
+    "settled_only_for_gate_scoring": true,
+    "point_in_time_macro_requires_initial_release_vintage": true
+  },
+  "families": {
+    "ETHBTC_DIRECT": {
+      "owner": "BINANCE_SPOT_ETHBTC_UTC_DAILY",
+      "approved_challenger": "COINBASE_EXCHANGE_ETH-BTC_UTC_DAILY",
+      "conditional_shadow": "KRAKEN_SPOT_ETHXBT_UTC_DAILY",
+      "diagnostic_only": ["ETHUSD_DIV_BTCUSD", "OKX_SWAP_DERIVED_RATIO", "INDEX_RATIO"],
+      "outage_rule": "Coinbase may confirm direct threshold state during Binance outage, but owner replacement requires a separately ratified live dual-source contract."
+    },
+    "BTC_ETH_SPOT": {
+      "owner": "BINANCE_SPOT",
+      "crosscheck": "COINGECKO_CURRENT",
+      "non_substitutes": ["OKX_SWAP", "MARK", "INDEX"]
+    },
+    "ETF_FLOW": {
+      "owner": "FARSIDE_SETTLED_SESSION",
+      "stale_or_dashes": "QUARANTINE_MISSING_NOT_ZERO"
+    },
+    "BREADTH": {
+      "owner": "COINGECKO_TOP100_FILTERED_PIT",
+      "hard_requirement": "MEMBERSHIP_HASH_FOR_REPRODUCIBLE_SCORING"
+    },
+    "MACRO_PIT": {
+      "owner": "ALFRED_INITIAL_RELEASE_VINTAGE",
+      "FRED_LATEST": "CONTEXT_ONLY_NOT_PIT"
+    },
+    "DERIVATIVES": {
+      "owner": "BINANCE_USDM_WHEN_AVAILABLE",
+      "challenger": "OKX_SWAP",
+      "authority": "RISK_CONTEXT_NOT_SPOT_GATE"
+    },
+    "SENTIMENT": {
+      "owner": "CFGI_DIRECT",
+      "stale": "NO_CURRENT_MARKET_USE"
+    },
+    "STABLECOINS": {
+      "global_owner": "DEFILLAMA_OFFICIAL_GLOBAL_TOTAL",
+      "chain_distribution": "CONTEXT_ONLY_NO_GLOBAL_SUM"
+    }
+  }
+}

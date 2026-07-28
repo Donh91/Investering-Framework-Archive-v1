@@ -1,0 +1,72 @@
+{
+  "schema_version": "DECISION_LINEAGE_RECOVERY_LEDGER_v2",
+  "created_at_utc": "2026-07-28T16:30:00Z",
+  "validation": {
+    "rows": 3,
+    "A_FULLY_REPLAYABLE": 0,
+    "B_RECONSTRUCTED_NOT_POLICY_REPLAYABLE": 1,
+    "B_FORWARD_CLAIM_NO_ACTION_AUTHORITY": 1,
+    "C_RETROSPECTIVE_POLICY_QUARANTINE": 1,
+    "actual_policy_replay_unlocked": false
+  },
+  "rows": [
+    {
+      "record_id": "FT-1",
+      "policy_version": "GATE-BTC-PARTIAL-v0.1.1",
+      "class": "B_RECONSTRUCTED_NOT_POLICY_REPLAYABLE",
+      "rule_freeze_date_claimed": "2026-06-10",
+      "first_exact_rule_evidence_at_utc": "2026-06-11T03:53:21Z",
+      "v0_1_1_confirmation_at_utc": "2026-06-11T04:28:41Z",
+      "evaluation_deadline_utc": "2026-07-10T23:59:59Z",
+      "superseded_at_utc": "2026-07-02T17:13:36Z",
+      "superseded_by": "GATE-BTC-PARTIAL-v0.2",
+      "expected_confirmation_cost_pct": [5, 7],
+      "rules": {
+        "btc_daily_close_above_64000_consecutive": 2,
+        "no_close_below_59400_after_local_low": true,
+        "etf_flow": "STABILIZED",
+        "reclaim_quality_not": "WEAK",
+        "spot_demand_not": "WEAK",
+        "btc_dominance_3d_change_pp_max": 1.0,
+        "funding_oi": "NOT_CROWDED_LONG",
+        "ethbtc_required": false,
+        "breadth_required": false
+      },
+      "missing": [
+        "exact_original_2026_06_10_freeze_timestamp",
+        "execution_or_explicit_no_action_receipt",
+        "actual_transaction_cost_contract",
+        "settled_closeout_row"
+      ],
+      "policy_replay_eligible": false
+    },
+    {
+      "record_id": "FNP-001",
+      "class": "C_RETROSPECTIVE_POLICY_QUARANTINE",
+      "forecast_period": ["2026-03-31", "2026-05-25"],
+      "horizon": "8 weeks",
+      "created_at_utc": "2026-06-13T11:03:08Z",
+      "finalized_at_utc": "2026-06-13T11:13:47Z",
+      "framework_trim": "NONE_WITHIN_HORIZON",
+      "optimal_btc_trim_zone": "80K-82K",
+      "optimal_window": "2026-05-04_to_2026-05-07",
+      "policy_replay_eligible": false,
+      "reason": "Created and frozen after the horizon ended; retrospective learning only."
+    },
+    {
+      "record_id": "TD-97",
+      "class": "B_FORWARD_CLAIM_NO_ACTION_AUTHORITY",
+      "opened_at_utc": "2026-06-29T17:34:05Z",
+      "policy_version": "TD-97_SHADOW_FORWARD_TEST_v1",
+      "deployment_value": "NONE",
+      "rebuy_value": "NONE",
+      "rotation_confirmation": "NONE",
+      "evaluation_dates": ["2026-07-10", "2026-07-13", "2026-08-01", "2026-09-01", "2026-09-30"],
+      "linked_evidence": [
+        {"at_utc": "2026-07-13T15:39:48Z", "result": "NO_ROTATION_REBUY_LOCKED_LARGE_CAP_WINDOW_NOT_OPEN"},
+        {"at_utc": "2026-07-20T20:29:57Z", "result": "BROAD_RECOVERY_NOT_CONFIRMED_NO_PORTFOLIO_ACTION"}
+      ],
+      "policy_replay_eligible": false
+    }
+  ]
+}

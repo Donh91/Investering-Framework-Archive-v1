@@ -1,0 +1,15 @@
+{
+  "schema": "DIRECT_ETHBTC_CHALLENGER_ACCEPTANCE_v1",
+  "minimum_overlap_sessions": 30,
+  "settlement_basis": "UTC_DAILY_OPEN_00_00_CLOSE_23_59_59_999",
+  "evaluation_window": "RECENT_90_SETTLED_SESSIONS",
+  "median_abs_close_dev_bps_max": 5.0,
+  "p95_abs_close_dev_bps_max": 20.0,
+  "max_abs_close_dev_bps_max": 75.0,
+  "gate_agreement_rate_min": 0.99,
+  "thresholds": [0.0275, 0.03],
+  "approval_scope": "DIRECT_CHALLENGER_AND_OUTAGE_CONFIRMATION_ONLY",
+  "automatic_owner_replacement": false,
+  "missing_is_not_zero": true,
+  "derived_cannot_score_direct_gate": true
+}
