@@ -1,7 +1,12 @@
 {
   "schema_version": "SOURCE_TIMING_HYPOTHESIS_LEDGER_v1",
   "source": "FARSIDE_ETF_TABLES",
-  "updated_at_utc": "2026-07-28T18:05:00Z",
+  "updated_at_utc": "2026-07-28T18:49:39.660Z",
+  "official_source_context": {
+    "statement": "Updates typically occur in the evening and night (US time).",
+    "source_identifier": "FARSIDE_HOME_ETF_DATA_DESCRIPTION",
+    "interpretation": "Supports a publication-cadence explanation in general, but does not establish an exact 16:00 UTC cutoff."
+  },
   "hypotheses": [
     {
       "hypothesis_id": "FARSIDE_EDGE_NODE_FRESHNESS_DETERMINISTIC_v0",
@@ -20,7 +25,7 @@
       "hypothesis_id": "FARSIDE_QUERY_AFTER_1600Z_FRESHNESS_v1",
       "claim": "Queries after approximately 16:00 UTC are materially more likely to contain the latest settled Farside session than early European morning queries.",
       "status": "PROSPECTIVE_TEST_REQUIRED",
-      "current_observation_count": 1,
+      "current_observation_count": 2,
       "minimum_observations": 10,
       "preferred_observations": 20,
       "promotion_requirements": {
@@ -42,6 +47,12 @@
         "response_latency_ms",
         "later_revision_detected"
       ],
+      "latest_observation": {
+        "request_utc": "2026-07-28T18:49:39.660Z",
+        "freshness_label": "CURRENT_RUN_FRESH",
+        "edge_rule_used": false,
+        "notes": "Claude reported 4/4 venue parity and no byte-identical payloads, but per-venue hashes were not included in the reconciliation package."
+      },
       "operational_use_allowed": false
     }
   ],
