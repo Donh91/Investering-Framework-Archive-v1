@@ -28,6 +28,8 @@ def main() -> int:
     recovery = load("BACKTEST_MASTER_RECOVERY_MANIFEST_v1.json")
     contracts = load("SOURCE_CONTRACTS_v1.json")
     acquisition = load("ACQUISITION_RECEIPT_v1.json")
+    cbo_manifest = load("official_sources/cbo/CBO_TEN_YEAR_BUDGET_VINTAGE_MANIFEST_v1.json")
+    cbo_receipt = load("official_sources/cbo/ACQUISITION_RECEIPT_CBO_POINTERS_v1.json")
 
     claim_ids = [row["claim_id"] for row in claims["claims"]]
     checks += 1
@@ -125,6 +127,62 @@ def main() -> int:
         fail("execution state must not promote recovered base to exact final")
     if state["execution_rules"]["recovered_base_treated_as_exact_final"] is not False:
         fail("recovered base cannot be treated as exact final")
+
+    checks += 1
+    expected_cbo_commit = "284a95665f9f2f74ed1f482feb629b43fce323da"
+    if cbo_manifest["repository_commit"] != expected_cbo_commit:
+        fail("CBO repository commit changed")
+    if cbo_manifest["catalog"]["github_blob_sha"] != "77efe04577cf723a6241ea2534c02c15705966d8":
+        fail("CBO catalog blob changed")
+    if cbo_manifest["dataset"]["schema_github_blob_sha"] != "8c9b7884ce88394a44d22df3643eef254b89a8d4":
+        fail("CBO schema blob changed")
+
+    checks += 1
+    expected_vintage_blobs = {
+        "2024-06": "c71ef5986e1ccf6bdb4d993b6fcc141bfc3db9bc",
+        "2025-01": "999655e773307bd04b7ea07bd03b81f5d516fa7b",
+        "2026-02": "99f55b63bb8db8c214e2ee08de5ce0c216358fac",
+    }
+    vintage_rows = {row["vintage"]: row for row in cbo_manifest["vintages"]}
+    if set(vintage_rows) != set(expected_vintage_blobs):
+        fail("CBO vintage set changed")
+    for vintage, blob_sha in expected_vintage_blobs.items():
+        row = vintage_rows[vintage]
+        if row["github_blob_sha"] != blob_sha:
+            fail(f"CBO vintage blob changed: {vintage}")
+        if row["sha256"] is not None:
+            fail(f"CBO raw SHA-256 must remain pending until byte materialization: {vintage}")
+
+    checks += 1
+    required_cbo_variables = {
+        "proj_outlays_net_interest",
+        "proj_outlays_net_interest_gdp_share",
+        "proj_debt_held_by_public",
+        "proj_primary_deficit",
+    }
+    if {row["variable"] for row in cbo_manifest["target_variables"]} != required_cbo_variables:
+        fail("CBO target-variable contract changed")
+    if cbo_manifest["authority"]["economic_execution_allowed"] is not False:
+        fail("CBO manifest must not permit economic execution")
+
+    checks += 1
+    if cbo_receipt["source_repository_commit"] != expected_cbo_commit:
+        fail("CBO receipt commit mismatch")
+    result = cbo_receipt["acquisition_result"]
+    if result["vintage_objects_pointer_bound"] != 3:
+        fail("CBO pointer count changed")
+    if result["raw_bytes_materialized"] != 0 or result["sha256_materialized"] != 0:
+        fail("CBO receipt cannot claim byte materialization")
+    if result["economic_execution"] is not False:
+        fail("CBO receipt cannot enable economic execution")
+
+    checks += 1
+    cbo_contract = next(row for row in contracts["contracts"] if row["contract_id"] == "CBO_PROJECTION_VINTAGES")
+    if cbo_contract["status"] != "IMMUTABLE_POINTERS_BOUND_BYTE_MATERIALIZATION_PENDING":
+        fail("CBO source-contract status changed")
+    cbo_registry = next(row for row in sources["datasets"] if row["dataset_id"] == "CBO_INTEREST_AND_DEBT_PROJECTION_VINTAGES")
+    if cbo_registry["status"] != "IMMUTABLE_POINTERS_BOUND_BYTE_MATERIALIZATION_PENDING":
+        fail("CBO registry status changed")
 
     print(json.dumps({"status": "PASS", "checks": checks, "failures": 0}, sort_keys=True))
     return 0
