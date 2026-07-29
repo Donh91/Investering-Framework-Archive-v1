@@ -1,8 +1,9 @@
 # GLC WP01 Backtest Recovery Receipt
 
 **Dato:** 2026-07-29  
-**Status:** PENDING_PR_VALIDATION  
-**Branch:** `agent/task-20260729-glc-wp01-backtest-recovery`  
+**Status:** PASS_RECOVERY / EXACT_FINAL_STILL_BLOCKED  
+**Initial branch:** `agent/task-20260729-glc-wp01-backtest-recovery`  
+**Finalization branch:** `agent/task-20260729-finalize-glc-wp01-recovery`  
 **Issue:** #206
 
 ## Decision manifest
@@ -99,25 +100,52 @@ recovered_base: BYTE_VISIBLE_AND_CHECKSUM_PASS
 master_panel: READABLE
 nasdaq_official_owner: ACQUISITION_REQUIRED
 bea_interest_payments: ACQUISITION_REQUIRED
-cbo_vintages: ACQUISITION_REQUIRED
+cbo_vintages: OWNER_REPOSITORY_IDENTIFIED_MATERIALISATION_IN_PROGRESS
 treasury_issuance_maturity: ACQUISITION_REQUIRED
-bis_gli: ACQUISITION_REQUIRED
+bis_gli: OWNER_ENDPOINT_IDENTIFIED_MATERIALISATION_IN_PROGRESS
 alfred_realtime_vintages: BLOCKED_PENDING_ACQUISITION
 ```
 
-## Validation plan
+## Final validation record
 
 ```yaml
-branch_readback: PENDING
-program_validator: PENDING
-changed_file_scope: PENDING_EXPECT_10
-zero_deletions: PENDING
-CI: PENDING
-PR: PENDING
-merge: PENDING
-main_readback: PENDING
-final_repository_state: PENDING
+branch_readback_manifest: PASS
+branch_readback_validator: PASS
+changed_file_scope: PASS_EXACTLY_10
+zero_unintended_deletions: PASS
+pull_request: 220
+pull_request_url: https://github.com/Donh91/Investering-Framework-Archive-v1/pull/220
+pull_request_mergeable: PASS
+pull_request_changed_files: 10
+pull_request_additions: 782
+pull_request_deletions: 28
+backtest_readiness_contracts_ci: PASS
+main_merge: PASS
+main_merge_sha: 3e291a6b826d8da423a1e2d923b78e3e8c16ae5f
+main_readback_manifest: PASS
+issue_206_milestone_comment: PASS
+archive_content_result: PASS
+write_governance_result: PASS
+final_repository_state: PASS
 ```
+
+The 28 deletions are replacement-line deletions inside five explicitly updated control files. No file path was deleted.
+
+## Next exact work
+
+```text
+GLC-WP01B_OFFICIAL_SOURCE_MATERIALISATION_AND_WP02_PARITY
+```
+
+Priority remains:
+
+1. official Nasdaq owner package;
+2. BEA/FRED actual interest payments;
+3. CBO budget-projection vintages;
+4. Treasury issuance and maturity history;
+5. BIS Global Liquidity Indicators;
+6. ALFRED or official release vintages;
+7. deterministic source-to-normalized parity against the recovered base.
 
 ## Authority boundary
 
