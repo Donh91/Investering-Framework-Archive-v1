@@ -1,7 +1,8 @@
 {
-  "schema_version": "1.0",
+  "schema_version": "1.1",
   "contract_id": "GLC_WP01_SOURCE_CONTRACTS_v1",
   "created_at_utc": "2026-07-29T17:46:00Z",
+  "updated_at_utc": "2026-07-29T18:11:00Z",
   "rules": {
     "missing_is_unknown": true,
     "no_silent_substitution": true,
@@ -85,15 +86,24 @@
       "contract_id": "CBO_PROJECTION_VINTAGES",
       "dataset_id": "CBO_INTEREST_AND_DEBT_PROJECTION_VINTAGES",
       "role": "OWNER_CANDIDATE",
-      "status": "VINTAGE_ACQUISITION_REQUIRED",
+      "status": "IMMUTABLE_POINTERS_BOUND_BYTE_MATERIALIZATION_PENDING",
       "endpoint": "https://www.cbo.gov/data",
       "machine_readable_repository": "https://github.com/US-CBO/cbo-data",
+      "repository_commit": "284a95665f9f2f74ed1f482feb629b43fce323da",
+      "manifest_path": "official_sources/cbo/CBO_TEN_YEAR_BUDGET_VINTAGE_MANIFEST_v1.json",
+      "source_contract_path": "official_sources/cbo/CBO_NET_INTEREST_SOURCE_CONTRACT_v1.md",
+      "acquisition_receipt_path": "official_sources/cbo/ACQUISITION_RECEIPT_CBO_POINTERS_v1.json",
+      "bound_repository_vintages": ["2024-06", "2025-01", "2026-02"],
+      "target_variables": ["proj_outlays_net_interest", "proj_outlays_net_interest_gdp_share", "proj_debt_held_by_public", "proj_primary_deficit"],
       "units": "MIXED_BUDGET_PROJECTION_UNITS",
       "frequency": "REPORT_VINTAGE_AND_ANNUAL_PROJECTION",
       "observation_semantics": "ONLY_VALUES_PUBLISHED_IN_EACH_CBO_VINTAGE",
-      "publication_lag": "REPORT_RELEASE_TIMESTAMP",
+      "publication_lag": "REPORT_RELEASE_TIMESTAMP_PENDING_MATERIALIZATION",
       "revision_policy": "VINTAGES_NEVER_OVERWRITTEN",
-      "redistribution_class": "US_GOVERNMENT_OPEN_DATA"
+      "redistribution_class": "US_GOVERNMENT_OPEN_DATA",
+      "raw_byte_sha256_status": "PENDING",
+      "row_count_status": "PENDING",
+      "substitution_allowed": false
     },
     {
       "priority": 5,
