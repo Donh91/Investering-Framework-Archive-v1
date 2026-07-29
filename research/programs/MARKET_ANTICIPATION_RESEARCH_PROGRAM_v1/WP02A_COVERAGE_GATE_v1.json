@@ -1,0 +1,29 @@
+{
+  "schema_version": "1.0",
+  "gate_id": "MAR_WP02A_COVERAGE_GATE_v1",
+  "status": "BLOCKED_PENDING_OWNER_AND_HISTORY_BINDINGS",
+  "minimum_requirements": {
+    "canonical_owner_path_present": true,
+    "dataset_id_unique": true,
+    "knowledge_timestamp_coverage_pct_min": 95,
+    "publication_timestamp_coverage_pct_min_where_required": 95,
+    "revision_policy_present": true,
+    "source_receipt_or_hash_present": true,
+    "frequency_declared": true,
+    "timezone_declared": true,
+    "missingness_policy_declared": true,
+    "historical_universe_policy_declared_where_relevant": true
+  },
+  "families": [
+    {"family":"macro_liquidity","status":"PARTIAL","blocker":"multi-cycle point-in-time and vintage coverage"},
+    {"family":"financial_conditions","status":"PARTIAL","blocker":"knowledge-time parity across mixed frequencies"},
+    {"family":"etf_flows","status":"BLOCKED","blocker":"canonical owner path and publication timestamps"},
+    {"family":"stablecoin_flows","status":"BLOCKED","blocker":"issuance/redemption owner history"},
+    {"family":"exchange_liquidity","status":"PARTIAL","blocker":"reserve and venue-fragmentation history"},
+    {"family":"derivatives","status":"PARTIAL","blocker":"consistent historical venue, tenor and timestamp rules"},
+    {"family":"defi_bridges","status":"BLOCKED","blocker":"point-in-time TVL, bridge and chain-routing history"},
+    {"family":"breadth_rotation","status":"PARTIAL","blocker":"historical membership and universe hashes"},
+    {"family":"forecast_baseline","status":"BLOCKED","blocker":"canonical Forecast Ledger path and join contract"}
+  ],
+  "gate_result": "NO_GO_FOR_ECONOMIC_EXECUTION"
+}
