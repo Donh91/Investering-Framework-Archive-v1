@@ -1,5 +1,5 @@
 {
-  "A_rows_total": 1,
+  "A_rows_total": 2,
   "actual_policy_replay_unlocked": false,
   "canonical_state_change": "NONE",
   "diagnostic_replay_eligible_families": [
@@ -8,12 +8,13 @@
   "direct_ETHBTC_live_overlap_sessions": 0,
   "final_holdout_opened": false,
   "latest_overlap_observation": {
-    "A_class_increment": 0,
+    "A_class_increment": 1,
     "deep_capture_request_id": "DCR-20260729-EVENT-001",
-    "observation_id": "OBS-20260729-aa5ebdf3-ROTATION-0030",
+    "observation_id": "OBS-20260729-b5988607-ROTATION-0030-FAILED-PERSISTENCE",
     "overlap_cluster_key": "ROTATION-2026-W31-ETHBTC-0030-ATTEMPT",
-    "run_id": "run_aa5ebdf331d34cd8bb27d71a71198cbe",
-    "status": "DUPLICATE_CLUSTER_FOLLOW_UP_PENDING_TARGETED_RECOVERY"
+    "receipt_id": "PDR-20260729-52aa8a0a9bf2",
+    "run_id": "run_b5988607a8f349558a19f78198fdfde2",
+    "status": "DISTINCT_POLICY_DENIAL_WITHIN_EXISTING_CLUSTER"
   },
   "policy_families": {
     "NEW_ENTRY_PERMISSION": {
@@ -27,7 +28,7 @@
       "unique_overlap_clusters": 0
     },
     "ROTATION_PERMISSION": {
-      "A_rows": 1,
+      "A_rows": 2,
       "ranking_ready": false,
       "unique_overlap_clusters": 1
     },
@@ -39,7 +40,7 @@
   },
   "portfolio_action": "NONE",
   "schema_version": "PROSPECTIVE_ACCUMULATION_STATUS_v1",
-  "shadow_dual_run_valid_runs": 3,
+  "shadow_dual_run_valid_runs": 4,
   "shadow_dual_run_weeks": 0,
-  "status": "ACTIVE_WITH_FIRST_A_CLASS_EVENT_CLUSTER_FOLLOW_UPS_AND_TARGETED_RECOVERY"
+  "status": "ACTIVE_WITH_TWO_A_CLASS_ROTATION_EVENTS_ONE_UNIQUE_CLUSTER_AND_VALIDATED_DEEP_CAPTURE"
 }
