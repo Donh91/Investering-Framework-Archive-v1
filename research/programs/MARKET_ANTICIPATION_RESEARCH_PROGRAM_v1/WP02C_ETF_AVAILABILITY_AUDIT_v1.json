@@ -1,0 +1,19 @@
+{
+  "schema_version":"1.0",
+  "audit_id":"MAR_WP02C_ETF_AVAILABILITY_AUDIT_v1",
+  "status":"POLICY_BOUND_ROW_LEVEL_AUDIT_PENDING",
+  "owner_path":"04_MARKET_LEARNING/truth_layer/etf_flows/**",
+  "documented_coverage":{"btc_sessions":651,"eth_sessions":513,"latest_session":"2026-07-24"},
+  "accepted_time_policy":{
+    "session_date_is_not_availability_time":true,
+    "same_session_intraday_use_forbidden":true,
+    "minimum_safe_availability":"after US session close and only when publication or retrieval evidence is preserved",
+    "dash_or_unreported_is_missing_not_zero":true,
+    "latest_revision_substitution_forbidden":true,
+    "weekend_forward_fill_forbidden":true
+  },
+  "row_level_findings":{"publication_timestamp_coverage_pct":null,"retrieval_timestamp_coverage_pct":null,"safe_joinable_rows":null},
+  "gate_result":"BLOCKED_PENDING_ROW_LEVEL_MATERIALIZATION",
+  "economic_use_allowed":false,
+  "feature_engineering_allowed":"ONLY_WITH_CONSERVATIVE_NEXT_ELIGIBLE_DECISION_TIME"
+}
