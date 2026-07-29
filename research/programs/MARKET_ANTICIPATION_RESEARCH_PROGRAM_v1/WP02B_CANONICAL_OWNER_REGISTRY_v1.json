@@ -1,0 +1,112 @@
+{
+  "schema_version": "1.0",
+  "registry_id": "MAR_WP02B_CANONICAL_OWNER_REGISTRY_v1",
+  "status": "DISCOVERED_AND_BOUND_WITH_EXPLICIT_GAPS",
+  "discovery_as_of_utc": "2026-07-29T11:57:00Z",
+  "rules": {
+    "one_owner_per_metric_per_test": true,
+    "owner_data_not_copied_into_mar": true,
+    "latest_pointer_is_navigation_not_historical_truth": true,
+    "forecast_backfill_forbidden": true,
+    "missing_owner_is_unknown": true,
+    "economic_execution_allowed": false
+  },
+  "owners": [
+    {
+      "owner_id": "FORECAST_LEDGER_WEEKLY_OWNER",
+      "family": "forecast_baseline",
+      "canonical_path_pattern": "03_WEEKLY_OPERATIONS/forecast_ledger/*__official.md",
+      "navigation_pointer": "03_WEEKLY_OPERATIONS/forecast_ledger/latest_forecast_ledger.json",
+      "evidence": [
+        "2026-W28 official ledger and pointer",
+        "2026-W29 official ledger",
+        "2026-W30 official ledger"
+      ],
+      "status": "BOUND_PARTIAL_HISTORY",
+      "knowledge_time_field": "frozen_timestamp",
+      "limitations": [
+        "pre-W28 continuity not established",
+        "legacy ledgers are markdown and not row-normalized",
+        "RAW forecasts may live outside weekly official ledger namespace"
+      ]
+    },
+    {
+      "owner_id": "MASTER_MONDAY_OWNER",
+      "family": "weekly_framework_state",
+      "canonical_path_pattern": "03_WEEKLY_OPERATIONS/master_monday/**",
+      "status": "BOUND",
+      "limitations": ["historical schema varies by week"]
+    },
+    {
+      "owner_id": "CYCLE_NAVIGATOR_OWNER",
+      "family": "published_cycle_forecast",
+      "canonical_path_pattern": "03_WEEKLY_OPERATIONS/cycle_navigator/**",
+      "status": "BOUND",
+      "limitations": ["published and pre-publication lineage must remain separate"]
+    },
+    {
+      "owner_id": "ETF_FLOW_TRUTH_LAYER_OWNER",
+      "family": "etf_flows",
+      "canonical_path_pattern": "04_MARKET_LEARNING/truth_layer/etf_flows/**",
+      "status": "BOUND_OWNER_DATA_PRESENT",
+      "coverage": {
+        "btc_sessions": 651,
+        "btc_start": "2024-01-11",
+        "btc_end": "2026-07-24",
+        "eth_sessions": 513,
+        "eth_start": "2024-07-23",
+        "eth_end": "2026-07-24"
+      },
+      "knowledge_rule": "flow dated t is available only after the US session close and preserved publication/retrieval evidence",
+      "limitations": ["exact row-level publication timestamps require materialized audit"]
+    },
+    {
+      "owner_id": "DATA_PING_OWNER",
+      "family": "point_in_time_market_evidence",
+      "canonical_path_pattern": "DATA_PING and accepted-log namespaces referenced by active runtime pointers",
+      "status": "BOUND_BY_EXISTING_RUNTIME_GOVERNANCE",
+      "limitations": ["source availability varies by run", "direct and derived pairs cannot be substituted"]
+    },
+    {
+      "owner_id": "GLOBAL_LIQUIDITY_OWNER",
+      "family": "macro_liquidity",
+      "canonical_path_pattern": "04_MARKET_LEARNING/backtests/framework_backtest_readiness_build_v1/research/global_liquidity_causal_chain_v1/**",
+      "status": "BOUND_PARTIAL_DATA",
+      "limitations": ["multi-cycle point-in-time and vintage coverage incomplete"]
+    },
+    {
+      "owner_id": "BACKTEST_READINESS_BUILD_OWNER",
+      "family": "economic_test_engine",
+      "canonical_path_pattern": "04_MARKET_LEARNING/backtests/framework_backtest_readiness_build_v1/**",
+      "status": "BOUND_ENGINEERING_READY_ECONOMIC_LOCKED",
+      "limitations": ["G20 remains NO", "final owner package byte gate remains unresolved"]
+    },
+    {
+      "owner_id": "STABLECOIN_FLOW_OWNER",
+      "family": "stablecoin_flows",
+      "canonical_path_pattern": null,
+      "status": "UNRESOLVED",
+      "limitations": ["no complete issuance/redemption owner history located"]
+    },
+    {
+      "owner_id": "DEFI_BRIDGE_OWNER",
+      "family": "defi_bridges",
+      "canonical_path_pattern": null,
+      "status": "UNRESOLVED",
+      "limitations": ["no point-in-time bridge-routing owner history located"]
+    },
+    {
+      "owner_id": "VENUE_FRAGMENTATION_OWNER",
+      "family": "exchange_liquidity",
+      "canonical_path_pattern": null,
+      "status": "PARTIAL_DISTRIBUTED_EVIDENCE_NO_SINGLE_OWNER",
+      "limitations": ["venue and reserve histories remain fragmented"]
+    }
+  ],
+  "authority": {
+    "economic_execution_allowed": false,
+    "predictive_weighting_allowed": false,
+    "framework_promotion_allowed": false,
+    "portfolio_effect_allowed": false
+  }
+}
