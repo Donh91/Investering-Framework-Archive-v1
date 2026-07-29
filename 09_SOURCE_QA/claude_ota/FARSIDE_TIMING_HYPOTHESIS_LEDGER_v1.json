@@ -1,7 +1,7 @@
 {
   "schema_version": "SOURCE_TIMING_HYPOTHESIS_LEDGER_v1",
   "source": "FARSIDE_ETF_TABLES",
-  "updated_at_utc": "2026-07-28T18:49:39.660Z",
+  "updated_at_utc": "2026-07-29T20:58:00Z",
   "official_source_context": {
     "statement": "Updates typically occur in the evening and night (US time).",
     "source_identifier": "FARSIDE_HOME_ETF_DATA_DESCRIPTION",
@@ -52,6 +52,19 @@
         "freshness_label": "CURRENT_RUN_FRESH",
         "edge_rule_used": false,
         "notes": "Claude reported 4/4 venue parity and no byte-identical payloads, but per-venue hashes were not included in the reconciliation package."
+      },
+      "latest_reconciliation": {
+        "source_run_timestamp_utc": "2026-07-29T17:00:49.245Z",
+        "timed_Farside_query_performed": false,
+        "new_observation_count": 0,
+        "observation_count_after_run": 2,
+        "ETF_2026_07_28_OTA_queue_status": "NOT_ATTEMPTED_IN_OTA",
+        "ETF_2026_07_28_main_framework_status": {
+          "status": "RESOLVED_BY_ACCEPTED_DATA_PING",
+          "BTC_net_flow_usd_m": -49.7,
+          "ETH_net_flow_usd_m": 9.4
+        },
+        "schedule_change": "NONE"
       },
       "operational_use_allowed": false
     }
