@@ -1,5 +1,5 @@
 {
-  "schema_version": "2.0",
+  "schema_version": "2.1",
   "gate_id": "BACKTEST_READINESS_GATE_v2",
   "program": "FRAMEWORK_BACKTEST_READINESS_BUILD_v1",
   "status": "NOT_PASSED",
@@ -15,25 +15,29 @@
       "gate": "G01_UPLOAD_SET_RECONCILED",
       "status": "PARTIAL",
       "pass_condition": "All expected packages and summary artifacts are identified by filename, byte count and SHA-256; duplicate checkpoints are mapped.",
-      "blocker": "Corrected final master binary is referenced by summary but not exposed for direct byte audit."
+      "progress": "Ten prior-thread packages are byte-visible, CRC-checked and hash-manifested in GLC BACKTEST_MASTER_RECOVERY_MANIFEST_v1. A complete earlier 052808 base and append-only continuation chain are recovered.",
+      "blocker": "The exact corrected final DATA_PING_BACKTEST_HISTORY_PACK_FINAL_20260727T183529Z.zip remains absent and cannot be reconciled byte-for-byte."
     },
     {
       "gate": "G02_FINAL_MASTER_BYTE_INTEGRITY",
       "status": "BLOCKED",
       "pass_condition": "DATA_PING_BACKTEST_HISTORY_PACK_FINAL_20260727T183529Z.zip CRC, member count and all detached checksums independently pass.",
-      "blocker": "Binary not visible in current runtime."
+      "progress": "Recovered predecessor DATA PING BACKTEST HISTORY PACK 20260727T052808Z(1).zip passes CRC and 180/180 internal checksums and contains the master panel, code and tests.",
+      "blocker": "The recovered predecessor and deltas are not a substitute for the exact final 183529Z binary."
     },
     {
       "gate": "G03_OWNER_DATASET_REGISTRY_FROZEN",
       "status": "PARTIAL",
       "pass_condition": "Exactly one owner per metric per test, with challengers, fixtures and blocked sources explicitly separated.",
-      "blocker": "FRED final-master and selected custom datasets await byte audit."
+      "progress": "Recovered base, latest delta and TDBC roles are explicitly separated; Yahoo Nasdaq-100/QQQ are challengers only.",
+      "blocker": "Official Nasdaq, BEA interest-payment, CBO-vintage, Treasury, BIS GLI and real-time-vintage owner payloads remain to be materialized."
     },
     {
       "gate": "G04_SOURCE_TO_NORMALIZED_PARITY",
       "status": "PARTIAL",
       "pass_condition": "Owner raw data can deterministically rebuild normalized tables with declared schemas and tolerances.",
-      "blocker": "Claude package builders require independent replacement or repair; preliminary scripts are quarantined."
+      "progress": "Recovered base includes raw, normalized, feature, code, test and master-panel artifacts under a verified package hash.",
+      "blocker": "Independent rebuild parity has not yet been executed against the recovered base, and exact-final parity is impossible while 183529Z is missing."
     },
     {
       "gate": "G05_COMPOSITE_PRIMARY_KEYS",
