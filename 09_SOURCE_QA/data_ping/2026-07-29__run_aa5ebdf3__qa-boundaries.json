@@ -1,0 +1,36 @@
+{
+  "schema_version": "DATA_PING_QA_BOUNDARIES_v1",
+  "run_id": "run_aa5ebdf331d34cd8bb27d71a71198cbe",
+  "snapshot_utc": "2026-07-29T00:11:40.027Z",
+  "transport_integrity": "UNVERIFIED_CHAT_TRANSPORT",
+  "collector_declared_predecessor": "snap_1c77e4a6b3f24e3ca66f0a92c36f955d",
+  "framework_predecessor_on_main": "run_4fd139e79f5b4a1ba4d7d5c4c2d6aa10",
+  "lineage_status": "PARTIAL_PREDECESSOR_POINTER_UNRESOLVED_NO_RECONSTRUCTION",
+  "accepted_for": [
+    "current_market_read",
+    "source_QA",
+    "same_cluster_follow_up",
+    "shadow_dual_run",
+    "deep_capture_trigger_review",
+    "prospective_RAW_freeze"
+  ],
+  "not_accepted_for": [
+    "settled_ETHBTC_gate_score",
+    "breadth_gate_score",
+    "ETF_update",
+    "CFGI_update",
+    "stablecoin_global_total",
+    "realized_volatility_score",
+    "new_A_class_receipt",
+    "final_holdout",
+    "portfolio_action"
+  ],
+  "boundaries": [
+    "live_ETHBTC_after_settlement_is_not_the_missing_settled_daily_close",
+    "raw_top100_collection_without_final_aggregate_is_not_a_breadth_value",
+    "public_web_unavailable_does_not_reuse_prior_ETF_or_CFGI_as_current",
+    "chain_distribution_is_not_global_stablecoin_total",
+    "missing_is_UNKNOWN_not_zero_or_negative_evidence",
+    "same_overlap_cluster_does_not_create_a_new_A_row_without_new_policy_state"
+  ]
+}
