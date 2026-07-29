@@ -1,0 +1,86 @@
+{
+  "schema_version": "1.0",
+  "report_id": "MAR_WP02B_MATERIALIZED_COVERAGE_REPORT_v1",
+  "as_of_utc": "2026-07-29T11:57:00Z",
+  "scope": "repository-visible owner paths and documented row coverage; no external acquisition",
+  "families": [
+    {
+      "family": "forecast_baseline",
+      "owner_status": "BOUND_PARTIAL_HISTORY",
+      "repository_evidence": ["2026-W28", "2026-W29", "2026-W30"],
+      "coverage_result": "PARTIAL",
+      "knowledge_time": "PRESENT_IN_DISCOVERED_WEEKLY_LEDGER",
+      "publication_time": "PARTIAL",
+      "history_sufficient_for_economic_test": false,
+      "blocker": "short continuity and heterogeneous markdown schema"
+    },
+    {
+      "family": "etf_flows",
+      "owner_status": "BOUND_OWNER_DATA_PRESENT",
+      "repository_evidence": {
+        "btc_sessions": 651,
+        "eth_sessions": 513,
+        "fund_level_rows": true,
+        "duplicate_dates": 0,
+        "null_cells": 0,
+        "daily_sum_validation_failures": 0
+      },
+      "coverage_result": "DATA_PRESENT_POINT_IN_TIME_AUDIT_PENDING",
+      "history_sufficient_for_feature_engineering": true,
+      "history_sufficient_for_unrestricted_economic_test": false,
+      "blocker": "row-level publication and retrieval timestamp audit"
+    },
+    {
+      "family": "macro_liquidity",
+      "owner_status": "BOUND_PARTIAL_DATA",
+      "coverage_result": "PARTIAL",
+      "history_sufficient_for_economic_test": false,
+      "blocker": "vintages, publication lags and multi-cycle coverage"
+    },
+    {
+      "family": "point_in_time_market_evidence",
+      "owner_status": "BOUND_DISTRIBUTED_RUN_ARCHIVE",
+      "coverage_result": "PARTIAL_VARIABLE_BY_RUN",
+      "history_sufficient_for_event_capture": true,
+      "history_sufficient_for_complete_multisensor_panel": false,
+      "blocker": "run-dependent source failures and heterogeneous source availability"
+    },
+    {
+      "family": "stablecoin_flows",
+      "owner_status": "UNRESOLVED",
+      "coverage_result": "BLOCKED",
+      "history_sufficient_for_economic_test": false,
+      "blocker": "issuance/redemption owner history absent"
+    },
+    {
+      "family": "defi_bridges",
+      "owner_status": "UNRESOLVED",
+      "coverage_result": "BLOCKED",
+      "history_sufficient_for_economic_test": false,
+      "blocker": "point-in-time TVL and bridge-routing history absent"
+    },
+    {
+      "family": "exchange_liquidity",
+      "owner_status": "PARTIAL_DISTRIBUTED_EVIDENCE_NO_SINGLE_OWNER",
+      "coverage_result": "PARTIAL",
+      "history_sufficient_for_economic_test": false,
+      "blocker": "reserve and venue-fragmentation history not consolidated"
+    },
+    {
+      "family": "breadth_rotation",
+      "owner_status": "DATA_PING_AND_BACKTEST_DISTRIBUTED",
+      "coverage_result": "PARTIAL",
+      "history_sufficient_for_economic_test": false,
+      "blocker": "historical membership and universe hashes incomplete"
+    }
+  ],
+  "summary": {
+    "families_total": 8,
+    "bound_or_partially_bound": 6,
+    "unresolved": 2,
+    "ready_for_feature_engineering": ["etf_flows", "selected point_in_time event evidence"],
+    "ready_for_unrestricted_economic_execution": [],
+    "gate_b_result": "NO_GO"
+  },
+  "final_holdout_opened": false
+}
