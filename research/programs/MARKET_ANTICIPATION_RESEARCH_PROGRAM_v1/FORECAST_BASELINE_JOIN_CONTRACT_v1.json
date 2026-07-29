@@ -1,0 +1,58 @@
+{
+  "schema_version": "1.0",
+  "contract_id": "FORECAST_BASELINE_JOIN_CONTRACT_v1",
+  "status": "FROZEN_PENDING_CANONICAL_OWNER_PATH",
+  "purpose": "Measure incremental value against forecasts that actually existed at each knowledge timestamp.",
+  "required_forecast_fields": [
+    "forecast_id",
+    "forecast_type",
+    "forecast_created_at_utc",
+    "knowledge_cutoff_at_utc",
+    "publication_state",
+    "asset_or_universe",
+    "horizon",
+    "target_definition_id",
+    "forecast_value_or_probability",
+    "framework_state_id",
+    "source_receipt_id",
+    "immutable_content_hash"
+  ],
+  "required_outcome_fields": [
+    "outcome_id",
+    "target_definition_id",
+    "measurement_start_utc",
+    "measurement_end_utc",
+    "outcome_value",
+    "outcome_source_id",
+    "outcome_content_hash"
+  ],
+  "join_keys": [
+    "target_definition_id",
+    "asset_or_universe",
+    "horizon"
+  ],
+  "time_rules": {
+    "forecast_created_before_measurement_start": true,
+    "knowledge_cutoff_not_after_forecast_created": true,
+    "retrospective_forecast_rows_forbidden": true,
+    "latest_revision_substitution_forbidden": true,
+    "duplicate_forecast_resolution": "use_latest_locked_forecast_before_measurement_start_and_preserve_all_superseded_rows"
+  },
+  "accepted_forecast_types": [
+    "MASTER_MONDAY",
+    "RAW",
+    "CYCLE_NAVIGATOR",
+    "PROSPECTIVE_SHADOW"
+  ],
+  "baseline_states": [
+    "CANONICAL_AT_TIME",
+    "SHADOW_AT_TIME",
+    "PUBLIC_LOCKED",
+    "INTERNAL_LOCKED"
+  ],
+  "authority": {
+    "backfill_allowed": false,
+    "economic_comparison_allowed_before_owner_binding": false,
+    "framework_promotion_allowed": false
+  }
+}
