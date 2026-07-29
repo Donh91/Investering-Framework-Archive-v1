@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "MAR_WP03_EVENT_ROW_SCHEMA_v1",
+  "title": "Market Anticipation Failed Move Event Row",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "event_id", "cluster_id", "family_id", "event_type", "authority_class",
+    "owner_source", "instrument_or_universe", "event_time_utc", "knowledge_at_utc",
+    "event_basis", "source_path_or_id", "source_hash", "label_status",
+    "independent_event", "outcome_accessed"
+  ],
+  "properties": {
+    "event_id": {"type": "string", "minLength": 8},
+    "cluster_id": {"type": "string", "minLength": 8},
+    "family_id": {"enum": ["FM_ETHBTC_THRESHOLD_ATTEMPT", "FM_PRICE_RANGE_BREAK", "FM_BREADTH_DISPLACEMENT", "FM_ETF_FLOW_REVERSAL"]},
+    "event_type": {"type": "string", "minLength": 3},
+    "authority_class": {"enum": ["A_OWNER_REPLAYABLE", "B_OWNER_PARTIAL", "C_SHADOW_ONLY", "BLOCKED"]},
+    "owner_source": {"type": "string", "minLength": 3},
+    "challenger_sources": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "instrument_or_universe": {"type": "string", "minLength": 3},
+    "threshold_or_boundary": {"type": ["number", "string", "null"]},
+    "direction": {"enum": ["UP", "DOWN", "REVERSAL", "DIVERGENCE", "NONE"]},
+    "event_time_utc": {"type": "string", "format": "date-time"},
+    "knowledge_at_utc": {"type": "string", "format": "date-time"},
+    "event_basis": {"type": "string", "minLength": 3},
+    "membership_hash": {"type": ["string", "null"]},
+    "source_path_or_id": {"type": "string", "minLength": 3},
+    "source_hash": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "confounds": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "label_status": {"enum": ["PREREGISTERED_PENDING_ENUMERATION", "ELIGIBLE", "BLOCKED", "RIGHT_CENSORED", "FOLLOWUP_SAME_CLUSTER"]},
+    "block_reason": {"type": ["string", "null"]},
+    "independent_event": {"type": "boolean"},
+    "outcome_accessed": {"const": false},
+    "economic_score": {"type": "null"},
+    "portfolio_effect": {"const": false}
+  }
+}

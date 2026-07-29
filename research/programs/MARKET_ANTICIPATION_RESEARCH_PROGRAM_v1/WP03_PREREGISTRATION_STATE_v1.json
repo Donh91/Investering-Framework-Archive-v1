@@ -1,0 +1,25 @@
+{
+  "schema_version": "1.0",
+  "state_id": "MAR_WP03_PREREGISTRATION_STATE_v1",
+  "status": "LABELS_AND_WINDOWS_FROZEN_EVENT_ENUMERATION_NOT_STARTED",
+  "frozen_at_utc": "2026-07-29T17:40:00Z",
+  "eligible_for_next_enumeration": [
+    "FM_ETHBTC_THRESHOLD_ATTEMPT",
+    "FM_PRICE_RANGE_BREAK",
+    "FM_BREADTH_DISPLACEMENT"
+  ],
+  "blocked_from_hard_enumeration": [
+    {
+      "family_id": "FM_ETF_FLOW_REVERSAL",
+      "reason": "row-level availability timestamps not materialized"
+    }
+  ],
+  "event_rows_created": 0,
+  "outcomes_accessed": false,
+  "economic_tests_run": 0,
+  "parameter_search_run": false,
+  "final_holdout_opened": false,
+  "framework_state_change": false,
+  "portfolio_effect": false,
+  "next_gate": "MAR_WP03A_OWNER_EVENT_ENUMERATION_AND_LINEAGE_AUDIT"
+}

@@ -1,0 +1,110 @@
+{
+  "schema_version": "1.0",
+  "contract_id": "MAR_WP03_FAILED_MOVE_LABEL_CONTRACT_v1",
+  "status": "PREREGISTERED_BEFORE_OUTCOME_INSPECTION",
+  "created_at_utc": "2026-07-29T17:36:00Z",
+  "purpose": "Define deterministic failed-move event labels before any outcome analysis, economic ranking, parameter search or final-holdout access.",
+  "global_rules": {
+    "direct_owner_source_required_for_direct_gate": true,
+    "derived_pair_substitution_forbidden": true,
+    "settled_rows_only": true,
+    "knowledge_at_must_not_exceed_event_time": true,
+    "retrospective_event_creation_forbidden": true,
+    "missing_membership_hash_blocks_breadth_hard_label": true,
+    "same_cluster_followups_do_not_create_independent_events": true,
+    "economic_execution_allowed": false,
+    "final_holdout_opened": false
+  },
+  "label_families": [
+    {
+      "family_id": "FM_ETHBTC_THRESHOLD_ATTEMPT",
+      "owner_family": "DATA_PING_DIRECT_ETHBTC",
+      "instrument": "ETHBTC",
+      "event_basis": "Europe/Copenhagen settled daily close unless explicitly declared intraday shadow",
+      "thresholds": [0.0275, 0.03],
+      "event_types": [
+        "TOUCH_ONLY",
+        "SETTLED_ACCEPTANCE",
+        "FAILED_ACCEPTANCE",
+        "FAILED_PERSISTENCE",
+        "REJECTION_BELOW_THRESHOLD",
+        "ACCEPTANCE_AND_RETEST_HOLD"
+      ],
+      "definitions": {
+        "TOUCH_ONLY": "Direct price trades at or above threshold but no eligible settled close confirms acceptance.",
+        "SETTLED_ACCEPTANCE": "First eligible direct settled close at or above threshold after at least one prior eligible settled close below threshold.",
+        "FAILED_ACCEPTANCE": "A settled acceptance is followed by the first eligible settled close below threshold before two additional eligible closes at or above threshold.",
+        "FAILED_PERSISTENCE": "After settled acceptance, any preregistered persistence checkpoint closes below threshold within the 72-hour persistence window.",
+        "REJECTION_BELOW_THRESHOLD": "Threshold is touched intraday and the same eligible settlement closes below threshold.",
+        "ACCEPTANCE_AND_RETEST_HOLD": "Settled acceptance is followed by a direct retest that remains at or above threshold through the 72-hour persistence checkpoint."
+      },
+      "hard_label_eligible": true
+    },
+    {
+      "family_id": "FM_PRICE_RANGE_BREAK",
+      "owner_family": "SETTLED_DIRECT_SPOT_PRICE",
+      "instruments": ["BTCUSDT", "ETHUSDT"],
+      "event_types": [
+        "UPSIDE_BREAK",
+        "DOWNSIDE_BREAK",
+        "FAILED_UPSIDE_BREAK",
+        "FAILED_DOWNSIDE_BREAK",
+        "FAILED_RECLAIM",
+        "BREAK_AND_HOLD"
+      ],
+      "definitions": {
+        "UPSIDE_BREAK": "First eligible settled close above a preregistered upper boundary after an eligible close at or below it.",
+        "DOWNSIDE_BREAK": "First eligible settled close below a preregistered lower boundary after an eligible close at or above it.",
+        "FAILED_UPSIDE_BREAK": "An upside break is followed by an eligible settled close back at or below the boundary within 72 hours.",
+        "FAILED_DOWNSIDE_BREAK": "A downside break is followed by an eligible settled close back at or above the boundary within 72 hours.",
+        "FAILED_RECLAIM": "After a prior break, price retests the boundary but fails to produce the required settled close beyond it within the declared reclaim window.",
+        "BREAK_AND_HOLD": "The break remains beyond the boundary through the 72-hour persistence checkpoint."
+      },
+      "boundary_source_rule": "Boundary must exist in a frozen Forecast Ledger, experiment contract or canonical gate before the event begins.",
+      "hard_label_eligible": true
+    },
+    {
+      "family_id": "FM_BREADTH_DISPLACEMENT",
+      "owner_family": "DATA_PING_BREADTH",
+      "event_types": [
+        "BREADTH_COLLAPSE",
+        "BREADTH_RECOVERY",
+        "PRICE_BREADTH_DIVERGENCE",
+        "FAILED_BREADTH_RECOVERY"
+      ],
+      "definitions": {
+        "BREADTH_COLLAPSE": "Advance ratio falls by at least 12 percentage points between comparable snapshots with identical membership hash.",
+        "BREADTH_RECOVERY": "Advance ratio rises by at least 12 percentage points between comparable snapshots with identical membership hash.",
+        "PRICE_BREADTH_DIVERGENCE": "Advance ratio changes by at least 12 percentage points while absolute BTC move is below 2.0 percent and absolute ETH move is below 2.5 percent over the same comparable interval.",
+        "FAILED_BREADTH_RECOVERY": "A breadth recovery is followed by a decline of at least 8 percentage points within 48 hours without a membership change."
+      },
+      "membership_hash_required": true,
+      "hard_label_eligible": true
+    },
+    {
+      "family_id": "FM_ETF_FLOW_REVERSAL",
+      "owner_family": "ETF_FLOW_TRUTH_LAYER_OWNER",
+      "event_types": [
+        "POSITIVE_TO_NEGATIVE_REVERSAL",
+        "NEGATIVE_TO_POSITIVE_REVERSAL",
+        "FLOW_SHOCK",
+        "FAILED_FLOW_CONFIRMATION"
+      ],
+      "definitions": {
+        "POSITIVE_TO_NEGATIVE_REVERSAL": "An available settled session below zero follows at least three consecutive available positive sessions.",
+        "NEGATIVE_TO_POSITIVE_REVERSAL": "An available settled session above zero follows at least three consecutive available negative sessions.",
+        "FLOW_SHOCK": "Available absolute daily net flow exceeds the frozen asset-specific 95th percentile estimated only from prior available sessions.",
+        "FAILED_FLOW_CONFIRMATION": "A reversal signal is not followed by a second same-sign available session within the next two eligible sessions."
+      },
+      "availability_time_required": true,
+      "hard_label_eligible": false,
+      "blocker": "Row-level publication and retrieval timestamps are not yet materialized."
+    }
+  ],
+  "authority": {
+    "research_label_definition_only": true,
+    "framework_state_change": false,
+    "portfolio_effect": false,
+    "predictive_weighting": false
+  }
+}
