@@ -1,0 +1,47 @@
+{
+  "schema_version": "1.0",
+  "artifact_id": "MAR_WP02A_LIQUIDITY_ROUTING_OWNER_BINDINGS_v1",
+  "status": "FROZEN_BEFORE_ECONOMIC_EXECUTION",
+  "parent_program": "MARKET_ANTICIPATION_RESEARCH_PROGRAM_v1",
+  "extends": "GLOBAL_LIQUIDITY_SOURCE_REGISTRY_v1",
+  "rules": {
+    "one_canonical_owner_per_metric_per_test": true,
+    "market_anticipation_may_reference_but_not_duplicate_owner_data": true,
+    "knowledge_timestamp_required": true,
+    "publication_timestamp_required_where_distinct": true,
+    "revision_policy_required": true,
+    "missing_is_unknown": true,
+    "silent_forward_fill_forbidden": true,
+    "current_universe_applied_historically_forbidden": true
+  },
+  "routing_nodes": [
+    {"node_id":"MACRO_LIQUIDITY_SUPPLY","owner":"GLOBAL_LIQUIDITY_CAUSAL_CHAIN_v1","status":"BOUND"},
+    {"node_id":"FINANCIAL_CONDITIONS","owner":"GLOBAL_LIQUIDITY_CAUSAL_CHAIN_v1","status":"BOUND"},
+    {"node_id":"CRYPTO_FIAT_GATEWAYS","owner":"DATA_PING_PLUS_ARCHIVED_FLOW_OWNERS","status":"PARTIAL_BINDING_REQUIRED"},
+    {"node_id":"BTC_ETH_ETF_FLOWS","owner":"ETF_HISTORY_OWNER_PENDING_CANONICAL_PATH","status":"BLOCKED_OWNER_PATH"},
+    {"node_id":"STABLECOIN_NET_ISSUANCE","owner":"STABLECOIN_HISTORY_OWNER_PENDING","status":"BLOCKED_OWNER"},
+    {"node_id":"EXCHANGE_LIQUIDITY_AND_RESERVES","owner":"DATA_PING_SOURCE_QA_PLUS_HISTORY_OWNER_PENDING","status":"PARTIAL_BINDING_REQUIRED"},
+    {"node_id":"DERIVATIVES_POSITIONING","owner":"DATA_PING_DERIVATIVES_PLUS_HISTORY_OWNER_PENDING","status":"PARTIAL_BINDING_REQUIRED"},
+    {"node_id":"DEFI_AND_BRIDGE_LIQUIDITY","owner":"DEFI_HISTORY_OWNER_PENDING","status":"BLOCKED_OWNER"},
+    {"node_id":"MARKET_BREADTH_AND_ROTATION","owner":"DATA_PING_BREADTH_PLUS_CYCLE_NAVIGATOR_STATE","status":"BOUND_WITH_HISTORY_GAP"},
+    {"node_id":"FORECAST_BASELINE","owner":"FORECAST_LEDGER_OWNER_PENDING_CANONICAL_PATH","status":"BLOCKED_OWNER_PATH"}
+  ],
+  "routing_edges": [
+    {"from":"MACRO_LIQUIDITY_SUPPLY","to":"FINANCIAL_CONDITIONS","test_role":"UPSTREAM_DRIVER"},
+    {"from":"FINANCIAL_CONDITIONS","to":"CRYPTO_FIAT_GATEWAYS","test_role":"TRANSMISSION"},
+    {"from":"CRYPTO_FIAT_GATEWAYS","to":"BTC_ETH_ETF_FLOWS","test_role":"ALLOCATOR_ROUTING"},
+    {"from":"CRYPTO_FIAT_GATEWAYS","to":"STABLECOIN_NET_ISSUANCE","test_role":"CRYPTO_NATIVE_ROUTING"},
+    {"from":"STABLECOIN_NET_ISSUANCE","to":"EXCHANGE_LIQUIDITY_AND_RESERVES","test_role":"DEPLOYMENT_PATH"},
+    {"from":"EXCHANGE_LIQUIDITY_AND_RESERVES","to":"DERIVATIVES_POSITIONING","test_role":"LEVERAGE_AMPLIFICATION"},
+    {"from":"STABLECOIN_NET_ISSUANCE","to":"DEFI_AND_BRIDGE_LIQUIDITY","test_role":"ONCHAIN_ROUTING"},
+    {"from":"BTC_ETH_ETF_FLOWS","to":"MARKET_BREADTH_AND_ROTATION","test_role":"INSTITUTIONAL_TO_MARKET_TRANSMISSION"},
+    {"from":"DEFI_AND_BRIDGE_LIQUIDITY","to":"MARKET_BREADTH_AND_ROTATION","test_role":"ONCHAIN_TO_MARKET_TRANSMISSION"},
+    {"from":"DERIVATIVES_POSITIONING","to":"MARKET_BREADTH_AND_ROTATION","test_role":"AMPLIFICATION_OR_FAILURE"}
+  ],
+  "authority": {
+    "economic_execution_allowed": false,
+    "predictive_weighting_allowed": false,
+    "framework_promotion_allowed": false,
+    "portfolio_effect_allowed": false
+  }
+}
