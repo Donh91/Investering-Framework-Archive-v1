@@ -1,0 +1,28 @@
+{
+  "schema_version": "DATA_PING_DEEP_CAPTURE_EVALUATION_v1",
+  "run_id": "run_49cf4c174e254c4ebabb6cf2042109ea",
+  "snapshot_utc": "2026-07-29T09:18:00Z",
+  "active_request_ledger_status": "NO_PENDING_REQUESTS",
+  "trigger_classes_evaluated": [
+    "SOURCE_INTEGRITY",
+    "ETHBTC_THRESHOLD",
+    "BREADTH"
+  ],
+  "new_request_required": false,
+  "decision": "DO_NOT_OPEN_DUPLICATE_EVENT_REQUEST",
+  "reasons": [
+    "The prior request resolved the critical settled ETHBTC gate evidence.",
+    "The current CoinGecko-derived ETHBTC diagnostic is below 0.0300 and has no direct-gate authority.",
+    "Current breadth improved but remains below both rotation gates.",
+    "No new Copenhagen settlement boundary requires adjudication in this packet.",
+    "A single transient owner-source outage is recorded in source-resilience rather than escalated immediately."
+  ],
+  "conditional_retrigger": [
+    "Binance owner outage persists through the next Europe/Copenhagen daily settlement.",
+    "Derived or direct-challenger evidence reaches or reclaims 0.0300 while the owner remains unavailable.",
+    "Breadth reaches at least 0.50 while the direct owner gate remains unavailable.",
+    "A source conflict could materially change the existing rotation denial."
+  ],
+  "canonical_effect": "NONE",
+  "portfolio_effect": "NONE"
+}
