@@ -1,0 +1,86 @@
+{
+  "schema_version": "1.0",
+  "manifest_id": "GLC_CBO_TEN_YEAR_BUDGET_VINTAGES_v1",
+  "created_at_utc": "2026-07-29T18:08:00Z",
+  "owner": "CONGRESSIONAL_BUDGET_OFFICE",
+  "repository": "US-CBO/cbo-data",
+  "repository_commit": "284a95665f9f2f74ed1f482feb629b43fce323da",
+  "catalog": {
+    "path": "catalog.json",
+    "github_blob_sha": "77efe04577cf723a6241ea2534c02c15705966d8",
+    "generated_at_utc": "2026-05-14T19:49:19Z"
+  },
+  "dataset": {
+    "identifier": "ten_year_budget",
+    "title": "10-Year Budget Projections",
+    "publication_id": "51118",
+    "schema_path": "data/budget/ten_year_budget/schema.json",
+    "schema_github_blob_sha": "8c9b7884ce88394a44d22df3643eef254b89a8d4",
+    "frequency": "ANNUAL_FISCAL_YEAR",
+    "canonical_columns": ["date", "variable", "value"],
+    "units_rule": "levels in billions of dollars; GDP-share fields in percent of GDP",
+    "knowledge_rule": "each vintage becomes eligible only at its publication timestamp",
+    "revision_rule": "vintages remain separate and are never overwritten by a later file"
+  },
+  "target_variables": [
+    {
+      "variable": "proj_outlays_net_interest",
+      "description": "Projected net interest outlays",
+      "unit": "billions_of_dollars",
+      "role": "PRIMARY_REQUIREMENT_INPUT"
+    },
+    {
+      "variable": "proj_outlays_net_interest_gdp_share",
+      "description": "Projected net interest as percent of GDP",
+      "unit": "percent_of_gdp",
+      "role": "SCALE_NORMALIZED_CHALLENGER"
+    },
+    {
+      "variable": "proj_debt_held_by_public",
+      "description": "Projected debt held by the public",
+      "unit": "billions_of_dollars",
+      "role": "FISCAL_PRESSURE_CONTEXT"
+    },
+    {
+      "variable": "proj_primary_deficit",
+      "description": "Primary deficit or surplus excluding net interest",
+      "unit": "billions_of_dollars",
+      "role": "DECOMPOSITION_CONTROL"
+    }
+  ],
+  "vintages": [
+    {
+      "vintage": "2024-06",
+      "path": "data/budget/ten_year_budget/annual_fy_2024-06.csv",
+      "github_blob_sha": "c71ef5986e1ccf6bdb4d993b6fcc141bfc3db9bc",
+      "sha256": null,
+      "status": "IMMUTABLE_POINTER_BOUND_BYTE_MATERIALIZATION_PENDING"
+    },
+    {
+      "vintage": "2025-01",
+      "path": "data/budget/ten_year_budget/annual_fy_2025-01.csv",
+      "github_blob_sha": "999655e773307bd04b7ea07bd03b81f5d516fa7b",
+      "sha256": null,
+      "status": "IMMUTABLE_POINTER_BOUND_BYTE_MATERIALIZATION_PENDING"
+    },
+    {
+      "vintage": "2026-02",
+      "path": "data/budget/ten_year_budget/annual_fy_2026-02.csv",
+      "github_blob_sha": "99f55b63bb8db8c214e2ee08de5ce0c216358fac",
+      "sha256": null,
+      "status": "IMMUTABLE_POINTER_BOUND_BYTE_MATERIALIZATION_PENDING"
+    }
+  ],
+  "coverage_boundary": {
+    "repository_machine_readable_vintages_bound": 3,
+    "earlier_cbo_vintages_visible_on_cbo_data_page": true,
+    "earlier_machine_readable_vintages_in_this_manifest": false,
+    "reason": "Only repository-visible standardized ten-year budget vintages are bound in v1. Historical website files require a separate extraction and schema-reconciliation phase."
+  },
+  "authority": {
+    "economic_execution_allowed": false,
+    "parameter_search_allowed": false,
+    "final_holdout_access_allowed": false,
+    "framework_promotion_allowed": false
+  }
+}
