@@ -1,0 +1,44 @@
+{
+  "schema_version": "DATA_PING_QA_BOUNDARIES_v1",
+  "run_id": "run_49cf4c174e254c4ebabb6cf2042109ea",
+  "snapshot_utc": "2026-07-29T09:18:00Z",
+  "transport_integrity": "UNVERIFIED_CHAT_TRANSPORT",
+  "lineage_status": "PREDECESSOR_RESOLVED",
+  "predecessor_run_id": "run_b5988607a8f349558a19f78198fdfde2",
+  "source_failure": {
+    "source": "BINANCE",
+    "scope": ["CONTEXT", "FINAL"],
+    "failed_actions": 34,
+    "category": "GEO_RESTRICTION",
+    "policy_effect": "FAIL_CLOSED_DIRECT_ETHBTC_GATE_UNKNOWN"
+  },
+  "accepted_for": [
+    "CoinGecko_current_market_read",
+    "current_breadth_measurement",
+    "OKX_current_crosscheck",
+    "ETF_latest_settled_context",
+    "source_resilience_logging",
+    "same_cluster_follow_up",
+    "bounded_RAW_outcome_observation"
+  ],
+  "not_accepted_for": [
+    "direct_ETHBTC_gate_score",
+    "Binance_spot_taker_update",
+    "Binance_funding_update",
+    "Binance_open_interest_update",
+    "Binance_basis_update",
+    "settled_ETHBTC_persistence_update",
+    "new_A_class_receipt",
+    "new_shadow_dual_run_valid_count",
+    "portfolio_action"
+  ],
+  "boundaries": [
+    "derived_ETHUSD_div_BTCUSD_is_diagnostic_only",
+    "OKX_BTC_and_ETH_USD_pairs_do_not_replace_direct_ETHBTC_spot",
+    "missing_Binance_owner_data_is_UNKNOWN_not_failed_gate_evidence",
+    "stale_CFGI_is_not_current_confirmation",
+    "incomplete_2026_07_28_ETF_session_is_excluded",
+    "source_outage_without_new_policy_decision_does_not_create_A_class_row",
+    "previous_valid_owner_denial_remains_the_last_scoreable_direct_gate_state"
+  ]
+}
