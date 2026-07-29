@@ -1,0 +1,71 @@
+schema_version: '1.0'
+program_id: MARKET_ANTICIPATION_RESEARCH_PROGRAM_v1
+status: FROZEN_BEFORE_ECONOMIC_RESULTS
+research_question: >-
+  Which point-in-time liquidity-routing, signal-failure, stress-propagation and
+  regime-sequence features provide stable incremental early-warning information
+  for Master Monday and RAW forecasts beyond the current framework?
+primary_horizons:
+  short: [6h, 12h, 24h, 48h, 72h, 7d]
+  medium: [2w, 4w, 8w, 13w]
+  long: [26w, 52w]
+primary_targets:
+  - next_horizon_direction
+  - drawdown_probability
+  - breakout_follow_through_probability
+  - failed_move_probability
+  - rotation_probability
+  - regime_transition_probability
+  - time_to_transition
+baseline:
+  description: current canonical and shadow framework inputs available at each historical timestamp
+  comparison_required: true
+anti_leakage:
+  knowledge_timestamp_required: true
+  revised_macro_vintages_required_where_available: true
+  publication_lag_enforced: true
+  final_holdout_sealed: true
+  purging_required: true
+  embargo_required: true
+  no_hindsight_event_labels: true
+validation:
+  discovery: expanding_walk_forward
+  robustness:
+    - leave_one_era_out
+    - alternate_source
+    - alternate_frequency
+    - specification_curve
+    - block_bootstrap
+    - event_cluster_robustness
+  multiplicity_control:
+    - holm
+    - benjamini_hochberg
+    - family_maximum_permutation
+primary_metrics:
+  - brier_score
+  - log_loss
+  - calibration_error
+  - precision
+  - recall
+  - false_alarm_rate
+  - median_lead_time
+  - utility_under_asymmetric_drawdown_preference
+promotion_gates:
+  - incremental_out_of_sample_value
+  - stable_direction_across_major_eras
+  - no_material_lookahead
+  - acceptable_false_alarm_burden
+  - reproducible_by_independent_agent
+  - source_lineage_complete
+  - governance_approval
+failure_conditions:
+  - result_exists_only_in_price_levels
+  - selected_lag_not_pre_registered
+  - effect_disappears_out_of_sample
+  - source_revision_explains_edge
+  - result_is_redundant_with_existing_sensor
+  - excessive_false_alarms
+  - unstable_actor_attribution
+  - economically_trivial_lead_time
+framework_effect_before_promotion: NONE
+portfolio_effect_before_promotion: NONE
