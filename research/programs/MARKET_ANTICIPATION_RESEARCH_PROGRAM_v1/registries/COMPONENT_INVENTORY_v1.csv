@@ -1,0 +1,20 @@
+component_id,component_name,canonical_owner_or_family,confidence,reusable_assets,mar_binding,write_authority
+CI-001,Global Liquidity Causal Chain v1,04_MARKET_LEARNING/backtests/framework_backtest_readiness_build_v1/research/global_liquidity_causal_chain_v1/,CONFIRMED,"source registry; causal DAG; preregistration; monitoring contract; validator; CI",MAR-WP02 primary owner,OWNER_ONLY
+CI-002,Liquidity research implementation,backtest_engine/liquidity_research.py,CONFIRMED,"shared feature/research implementation",MAR-WP02 and WP04 extension point,VERSIONED_EXTENSION_ONLY
+CI-003,Backtest Readiness Build,04_MARKET_LEARNING/backtests/framework_backtest_readiness_build_v1/,CONFIRMED,"experiment execution; receipts; status addenda; controls",MAR-WP04/WP09 primary execution owner,OWNER_ONLY
+CI-004,DATA PING packet archive,DATA PING repository families,CONFIRMED_FAMILY,"point-in-time observations; source pointers; QA; validation",MAR-WP03/WP04/WP08 evidence owner,REFERENCE_ONLY
+CI-005,DATA PING event paths,settled daily/hourly/five-minute event-path families,CONFIRMED_FAMILY,"event windows; settled rows; venue cross-checks",MAR-WP03 primary event evidence,REFERENCE_ONLY
+CI-006,DATA PING breadth state,breadth recovery/membership families,CONFIRMED_FAMILY,"breadth state; membership status",MAR-WP03/WP05 support,REFERENCE_ONLY
+CI-007,DATA PING prospective observations,prospective observation and dual-run shadow families,CONFIRMED_FAMILY,"pre-outcome observations; receipts",MAR-WP03 label candidates,REFERENCE_ONLY
+CI-008,Cycle Navigator published archive,locked publications/latest pointers/handoffs,CONFIRMED_FAMILY,"published cycle state; forecasts; score history",MAR-WP05/WP07 primary label owner,REFERENCE_ONLY
+CI-009,Master Monday scoring history,weekly execution and transparent scoring commit families,CONFIRMED_FAMILY,"frozen baseline forecasts; prior-week outcomes",MAR-WP06/WP09 baseline owner,REFERENCE_ONLY
+CI-010,Shadow Sentinel feature registry,unresolved canonical path,REFERENCED_NOT_LOCATED,"shadow features and sensor state",MAR-WP05/WP07 optional support,NONE_UNTIL_BOUND
+CI-011,Research Lab package index,unresolved canonical path,REFERENCED_NOT_LOCATED,"research packages; null results; evidence",all WPs literature/evidence support,NONE_UNTIL_BOUND
+CI-012,Forecast Ledger schema,unresolved canonical path,REFERENCED_NOT_LOCATED,"forecast IDs; horizons; outcomes; scoring joins",MAR-WP06/WP09 required,NONE_UNTIL_BOUND
+CI-013,ETF historical flow owner,DATA PING and archived ETF material; exact owner unresolved,PARTIAL,"institutional flows",MAR-WP08 required,REFERENCE_ONLY_AFTER_BIND
+CI-014,CME positioning/basis owner,unresolved canonical path,REFERENCED_NOT_LOCATED,"positioning; basis; futures participation",MAR-WP08 candidate,NONE_UNTIL_BOUND
+CI-015,Options history owner,unresolved canonical path,REFERENCED_NOT_LOCATED,"skew; term structure; dealer positioning proxies",MAR-WP08 candidate,NONE_UNTIL_BOUND
+CI-016,Stablecoin history owner,unresolved canonical path,REFERENCED_NOT_LOCATED,"issuance; redemption; supply and venue routing",MAR-WP02/WP04/WP08 candidate,NONE_UNTIL_BOUND
+CI-017,Exchange reserve/fragmentation owner,unresolved canonical path,REFERENCED_NOT_LOCATED,"reserve changes; venue distribution",MAR-WP04/WP08 candidate,NONE_UNTIL_BOUND
+CI-018,DeFi/bridge liquidity owner,unresolved canonical path,REFERENCED_NOT_LOCATED,"TVL; bridge and liquidity routing",MAR-WP02/WP04 candidate,NONE_UNTIL_BOUND
+CI-019,Narrative timestamp owner,unresolved canonical path,REFERENCED_NOT_LOCATED,"publication-time narrative evidence",future research wave,NONE_UNTIL_BOUND
