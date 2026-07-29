@@ -1,0 +1,50 @@
+{
+  "schema_version": "1.0",
+  "contract_id": "MAR_WP03_EVENT_WINDOW_AND_CLUSTERING_CONTRACT_v1",
+  "status": "FROZEN_BEFORE_EVENT_ENUMERATION",
+  "time_basis": {
+    "daily_owner_events": "Europe/Copenhagen settled daily rows",
+    "intraday_shadow_events": "source-native settled interval explicitly tagged SHADOW_ONLY",
+    "etf_sessions": "US session date with separate availability timestamp"
+  },
+  "windows": {
+    "pre_event_context": ["-72h", "-24h", "-4h"],
+    "event_time": "first eligible row satisfying the frozen event definition",
+    "persistence_checkpoints": ["+4h", "+24h", "+48h", "+72h"],
+    "research_outcome_horizons": ["+1d", "+3d", "+5d", "+7d", "+14d", "+20d"],
+    "economic_outcomes_enabled": false
+  },
+  "cluster_rules": {
+    "cluster_id_format": "<FAMILY>-<INSTRUMENT_OR_UNIVERSE>-<THRESHOLD_OR_BOUNDARY>-<FIRST_EVENT_DATE>",
+    "same_threshold_same_direction_cluster_days": 7,
+    "opposite_direction_starts_new_cluster": true,
+    "new_settled_acceptance_after_full_return_below_threshold_starts_new_cluster": true,
+    "intraday_touches_inside_active_cluster_are_followups": true,
+    "multiple_snapshots_of_same_breadth_displacement_are_one_cluster": true,
+    "etf_followup_sessions_inside_two_session_confirmation_window_are_one_cluster": true,
+    "one_independent_event_per_cluster": true
+  },
+  "deduplication_order": [
+    "owner identity",
+    "instrument or fixed universe identity",
+    "threshold or frozen boundary identity",
+    "direction",
+    "first eligible event timestamp",
+    "active cluster window"
+  ],
+  "censoring": {
+    "right_censor_if_horizon_not_mature": true,
+    "right_censor_if_owner_source_unavailable_at_checkpoint": true,
+    "do_not_replace_missing_owner_with_challenger": true,
+    "partial_outcomes_may_not_be_promoted_to_complete": true
+  },
+  "confounds_to_record_not_filter_post_hoc": [
+    "scheduled macro event",
+    "exchange outage",
+    "owner-source outage",
+    "stablecoin depeg",
+    "protocol exploit",
+    "membership change",
+    "material ETF revision"
+  ]
+}
