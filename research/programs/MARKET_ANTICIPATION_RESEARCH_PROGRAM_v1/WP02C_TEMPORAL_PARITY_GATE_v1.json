@@ -1,0 +1,22 @@
+{
+  "schema_version":"1.0",
+  "gate_id":"MAR_WP02C_TEMPORAL_PARITY_GATE_v1",
+  "status":"PARTIAL_PASS_ECONOMIC_COMPARISON_LOCKED",
+  "rules":{
+    "source_ledger_must_be_official":true,
+    "forecast_timestamp_must_precede_measurement_start":true,
+    "source_commit_must_exist":true,
+    "missing_forecast_timestamp_cannot_be_inferred_from_commit":true,
+    "derived_rows_have_no_authority":true,
+    "retrospective_rows_forbidden":true,
+    "latest_pointer_as_historical_source_forbidden":true,
+    "outcome_join_before_actual_source_lock_forbidden":true
+  },
+  "week_results":[
+    {"week":"2026-W28","result":"BLOCKED","reason":"official ledger has forecast date but no explicit frozen timestamp; commit time is provenance only"},
+    {"week":"2026-W29","result":"TEMPORAL_METADATA_PASS","reason":"explicit frozen timestamp and immutable source commit present; outcome join remains separately locked"},
+    {"week":"2026-W30","result":"TEMPORAL_METADATA_PASS","reason":"explicit frozen timestamp predates source commit and immutable source commit is present; outcome join remains separately locked"}
+  ],
+  "summary":{"weeks_total":3,"temporal_metadata_pass":2,"blocked":1,"economic_comparison_allowed":false},
+  "final_holdout_opened":false
+}
