@@ -1,0 +1,38 @@
+{
+  "schema_version": "POST_WINDOW_DESIGN_OBSERVATION_v1",
+  "hypothesis_id": "H-WIN-01",
+  "observed_at_utc": "2026-07-29T17:00:49.245Z",
+  "source": "CLAUDE_STANDALONE_OTA",
+  "status": "UNPROVEN",
+  "supporting_observation_count_source_claim": 3,
+  "prior_confidence": "LOW",
+  "new_confidence": "LOW_MODERATE",
+  "binding_status": "NON_BINDING_DESIGN_HYPOTHESIS",
+  "observation": {
+    "experiment_or_window": "F4",
+    "frozen_window_end_utc": "2026-07-25T00:00:00Z",
+    "inside_window_result": "GATE_UNMET_BY_1_18_PCT",
+    "later_settled_observation_date": "2026-07-28",
+    "later_observation": "LEVEL_SETTLED_CLOSED_ABOVE",
+    "sessions_after_window_close": 4,
+    "score_changed": false
+  },
+  "alternative_explanations": [
+    "SELECTION_BIAS",
+    "RECENCY_BIAS",
+    "WINDOWS_OPENED_DURING_PEAK_UNCERTAINTY",
+    "SAME_MARKET_EPISODE_NOT_INDEPENDENT",
+    "POST_WINDOW_HORIZON_SPECIFICATION_FRAGILITY"
+  ],
+  "falsification_rule": {
+    "minimum_closed_windows": 10,
+    "frozen_post_window_horizon_sessions": [1, 2, 3],
+    "failure_condition": "NO_EXCESS_CLUSTERING_OF_THRESHOLD_APPROACHES_OR_CROSSES_AFTER_WINDOW_CLOSE",
+    "preregistration_required": true
+  },
+  "framework_effect": {
+    "F4_score_change": "NONE",
+    "canonical_state_change": "NONE",
+    "portfolio_action": "NONE"
+  }
+}
