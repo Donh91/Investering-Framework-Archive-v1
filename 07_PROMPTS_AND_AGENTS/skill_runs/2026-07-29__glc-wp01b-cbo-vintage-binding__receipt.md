@@ -1,8 +1,9 @@
 # GLC WP01B CBO Vintage Binding Receipt
 
 **Dato:** 2026-07-29  
-**Status:** PENDING_PR_VALIDATION  
-**Branch:** `agent/task-20260729-glc-wp01b-cbo-vintages`  
+**Status:** PASS_POINTER_BINDING / BYTE_MATERIALIZATION_PENDING  
+**Initial branch:** `agent/task-20260729-glc-wp01b-cbo-vintages`  
+**Finalization branch:** `agent/task-20260729-finalize-glc-wp01b-cbo`  
 **Issue:** #206
 
 ## Decision manifest
@@ -81,19 +82,30 @@ deterministic vintage selector
 G20 readiness
 ```
 
-## Validation plan
+## Final validation record
 
 ```yaml
-branch_readback: PENDING
-program_validator: PENDING
-changed_file_scope: PENDING_EXPECT_8
-zero_file_deletions: PENDING
-CI: PENDING
-PR: PENDING
-merge: PENDING
-main_readback: PENDING
-final_repository_state: PENDING
+branch_readback_manifest: PASS
+branch_readback_contract: PASS
+branch_readback_receipt: PASS
+changed_file_scope: PASS_EXACTLY_8
+zero_file_deletions: PASS
+pull_request: 222
+pull_request_url: https://github.com/Donh91/Investering-Framework-Archive-v1/pull/222
+pull_request_mergeable: PASS
+pull_request_changed_files: 8
+pull_request_additions: 512
+pull_request_deletions: 14
+workflow_runs: NONE_FOR_THIS_SCOPE
+main_merge: PASS
+main_merge_sha: a33cf589d6dd0fd93c0040c0c8c997223af4b07a
+issue_206_milestone_comment: PASS
+archive_content_result: PASS
+write_governance_result: PASS
+final_repository_state: PASS
 ```
+
+The 14 deletions are replacement-line deletions in three explicitly updated JSON control files. No path was deleted.
 
 ## Authority boundary
 
