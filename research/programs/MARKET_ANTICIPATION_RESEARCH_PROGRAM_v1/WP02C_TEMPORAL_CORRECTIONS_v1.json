@@ -1,0 +1,9 @@
+{
+  "schema_version":"1.0",
+  "correction_id":"MAR_WP02C_TEMPORAL_CORRECTIONS_v1",
+  "precedence":"This file overrides evaluation_allowed in WP02C_FORECAST_NORMALIZED_ROWS_v1.json for listed rows.",
+  "corrections":[
+    {"week":"2026-W29","all_rows_evaluation_allowed":false,"status":"BLOCKED_TIMESTAMP_CONFLICT","reason":"ledger frozen_timestamp 2026-07-13T15:40:00Z is later than GitHub commit created_at 2026-07-13T15:38:54Z; no assumption about clock skew is permitted"}
+  ],
+  "economic_comparison_allowed":false
+}
