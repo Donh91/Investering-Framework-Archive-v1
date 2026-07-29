@@ -14,6 +14,23 @@ It is not designed to prove the claim. It is designed to distinguish:
 
 Claim freeze and causal architecture are complete. Source acquisition and point-in-time engineering are active. Economic tests remain locked by the repository-wide Backtest Readiness Gate.
 
+The 2026-07-29 upload recovery found a complete earlier Backtest History base and append-only continuation chain. The exact previously referenced `183529Z` final binary is still missing, so exact G02 byte integrity and G20 remain blocked.
+
+Recovery classification:
+
+```text
+RECOVERED_BASE_BINARY_PLUS_APPEND_ONLY_DELTAS
+```
+
+Recovered base:
+
+```text
+DATA PING BACKTEST HISTORY PACK 20260727T052808Z(1).zip
+sha256 303d63946fd7696237b8d1a7208fa5aadd877e55aba57d5b51ea17aa46d18c9f
+```
+
+It contains the master daily panel, code, tests, raw and normalized data, receipts, source inventories and validation artifacts. It is a source-recovery candidate, not the exact final master.
+
 ## Most important derived hypothesis
 
 `LIQUIDITY_DELIVERY_GAP = LIQUIDITY_REQUIREMENT - LIQUIDITY_DELIVERY`
@@ -24,6 +41,10 @@ A large positive gap may first imply funding stress, higher term premium, strong
 
 - `CLAIM_FREEZE_v1.json`
 - `SOURCE_REGISTRY_v1.json`
+- `SOURCE_CONTRACTS_v1.json`
+- `ACQUISITION_RECEIPT_v1.json`
+- `BACKTEST_MASTER_RECOVERY_MANIFEST_v1.json`
+- `BACKTEST_MASTER_RECOVERY_REPORT_v1.md`
 - `CAUSAL_DAG_v1.json`
 - `PREREGISTERED_ANALYSIS_CONTRACT_v1.md`
 - `EXECUTION_STATE_v1.json`
@@ -40,6 +61,14 @@ A large positive gap may first imply funding stress, higher term premium, strong
 - Sensor Relationship and Incremental Value Standard
 
 No new active test ID, engine or live signal is created.
+
+## Current next work
+
+1. materialize official Nasdaq, BEA interest-payment, CBO-vintage, Treasury and BIS owner packages;
+2. preserve ALFRED or official release vintages;
+3. execute source-to-normalized parity against the recovered base under separate base and delta namespaces;
+4. reconcile the recovered chain against the reported exact final release if that binary is recovered;
+5. keep economic execution and the final holdout closed until G20 passes.
 
 ## Authority boundary
 
