@@ -1,0 +1,143 @@
+{
+  "schema_version": "1.0",
+  "contract_id": "GLC_WP01_SOURCE_CONTRACTS_v1",
+  "created_at_utc": "2026-07-29T17:46:00Z",
+  "rules": {
+    "missing_is_unknown": true,
+    "no_silent_substitution": true,
+    "no_silent_forward_fill": true,
+    "latest_vintage_is_not_historical_realtime": true,
+    "one_owner_per_metric_per_test": true,
+    "economic_execution_allowed": false,
+    "final_holdout_access_allowed": false
+  },
+  "contracts": [
+    {
+      "priority": 1,
+      "contract_id": "BACKTEST_EXACT_FINAL_MASTER",
+      "dataset_id": "DATA_PING_BACKTEST_HISTORY_PACK_FINAL_20260727T183529Z",
+      "role": "REQUIRED_EXACT_BINARY",
+      "status": "BLOCKED_NOT_PRESENT",
+      "expected_filename": "DATA_PING_BACKTEST_HISTORY_PACK_FINAL_20260727T183529Z.zip",
+      "sha256": null,
+      "row_count": null,
+      "publication_lag": "N/A_INTERNAL_ARTIFACT",
+      "revision_policy": "IMMUTABLE_BINARY_REQUIRED",
+      "redistribution_class": "PRIVATE_FRAMEWORK_ARTIFACT",
+      "substitution_allowed": false
+    },
+    {
+      "priority": 1,
+      "contract_id": "BACKTEST_RECOVERED_BASE_BUILD",
+      "dataset_id": "DATA_PING_BACKTEST_HISTORY_PACK_20260727T052808Z",
+      "role": "RECOVERED_BASE_CANDIDATE_NOT_EXACT_FINAL",
+      "status": "BYTE_RECOVERED_CHECKSUM_PASS",
+      "filename": "DATA PING BACKTEST HISTORY PACK 20260727T052808Z(1).zip",
+      "sha256": "303d63946fd7696237b8d1a7208fa5aadd877e55aba57d5b51ea17aa46d18c9f",
+      "bytes": 190546648,
+      "zip_members": 183,
+      "internal_checksums": "180/180_PASS",
+      "master_panel": {
+        "path": "features/master/master_daily_panel.csv.gz",
+        "rows": 5852,
+        "columns": 75,
+        "start_date": "2010-07-18",
+        "end_date": "2026-07-25"
+      },
+      "revision_policy": "IMMUTABLE_UPLOADED_BINARY",
+      "redistribution_class": "PRIVATE_FRAMEWORK_ARTIFACT_WITH_MIXED_UPSTREAM_RIGHTS",
+      "substitution_allowed": false
+    },
+    {
+      "priority": 2,
+      "contract_id": "NASDAQ_OWNER_HISTORY",
+      "dataset_id": "NASDAQCOM_OFFICIAL_OR_FRED",
+      "role": "OWNER_CANDIDATE",
+      "status": "ACQUISITION_REQUIRED",
+      "endpoint": "https://fred.stlouisfed.org/series/NASDAQCOM",
+      "underlying_source": "Nasdaq, Inc.",
+      "units": "INDEX",
+      "frequency": "DAILY_CLOSE",
+      "observation_semantics": "NASDAQ_COMPOSITE_CLOSE",
+      "publication_lag": "SOURCE_RELEASE_DAY_TO_BE_CAPTURED",
+      "revision_policy": "LATEST_AND_POINT_IN_TIME_WHERE_AVAILABLE",
+      "redistribution_class": "COPYRIGHTED_RAW_DATA_RESTRICTED",
+      "challengers": ["YAHOO_NASDAQ100_NDX", "QQQ_ADJUSTED_CLOSE"],
+      "challenger_owner_equivalence": false
+    },
+    {
+      "priority": 3,
+      "contract_id": "US_INTEREST_PAYMENTS_ACTUAL",
+      "dataset_id": "A091RC1Q027SBEA",
+      "role": "OWNER_CANDIDATE",
+      "status": "ACQUISITION_REQUIRED",
+      "endpoint": "https://fred.stlouisfed.org/series/A091RC1Q027SBEA",
+      "underlying_source": "U.S. Bureau of Economic Analysis, NIPA Table 3.2",
+      "units": "BILLIONS_USD_SAAR",
+      "frequency": "QUARTERLY",
+      "observation_semantics": "FEDERAL_GOVERNMENT_CURRENT_EXPENDITURES_INTEREST_PAYMENTS",
+      "publication_lag": "GDP_RELEASE_TIMESTAMP_REQUIRED",
+      "revision_policy": "ALFRED_OR_RELEASE_ARCHIVE_REQUIRED_FOR_REALTIME_TEST",
+      "redistribution_class": "PUBLIC_DOMAIN_CITATION_REQUESTED"
+    },
+    {
+      "priority": 4,
+      "contract_id": "CBO_PROJECTION_VINTAGES",
+      "dataset_id": "CBO_INTEREST_AND_DEBT_PROJECTION_VINTAGES",
+      "role": "OWNER_CANDIDATE",
+      "status": "VINTAGE_ACQUISITION_REQUIRED",
+      "endpoint": "https://www.cbo.gov/data",
+      "machine_readable_repository": "https://github.com/US-CBO/cbo-data",
+      "units": "MIXED_BUDGET_PROJECTION_UNITS",
+      "frequency": "REPORT_VINTAGE_AND_ANNUAL_PROJECTION",
+      "observation_semantics": "ONLY_VALUES_PUBLISHED_IN_EACH_CBO_VINTAGE",
+      "publication_lag": "REPORT_RELEASE_TIMESTAMP",
+      "revision_policy": "VINTAGES_NEVER_OVERWRITTEN",
+      "redistribution_class": "US_GOVERNMENT_OPEN_DATA"
+    },
+    {
+      "priority": 5,
+      "contract_id": "TREASURY_ISSUANCE_MATURITY",
+      "dataset_id": "TREASURY_DEBT_MATURITY_AND_ISSUANCE",
+      "role": "OWNER_CANDIDATE",
+      "status": "ACQUISITION_REQUIRED",
+      "endpoint": "https://fiscaldata.treasury.gov/",
+      "archive": "U.S. Treasury Quarterly Refunding",
+      "units": "USD_AND_MATURITY_BUCKETS",
+      "frequency": "DAILY_MONTHLY_QUARTERLY_MIXED",
+      "observation_semantics": "DEBT_OUTSTANDING_ISSUANCE_MATURITY_AND_FINANCING_ESTIMATES",
+      "publication_lag": "SOURCE_SPECIFIC_RELEASE_TIMESTAMP",
+      "revision_policy": "RAW_RELEASES_PRESERVED_BY_VINTAGE",
+      "redistribution_class": "US_GOVERNMENT_OPEN_DATA"
+    },
+    {
+      "priority": 6,
+      "contract_id": "BIS_GLOBAL_LIQUIDITY",
+      "dataset_id": "BIS_GLOBAL_LIQUIDITY_INDICATORS",
+      "role": "OWNER_CANDIDATE",
+      "status": "ACQUISITION_REQUIRED",
+      "endpoint": "https://data.bis.org/static/bulk/WS_GLI_csv_col.zip",
+      "units": "BIS_SERIES_SPECIFIC",
+      "frequency": "QUARTERLY",
+      "observation_semantics": "FOREIGN_CURRENCY_CREDIT_TO_NON_BANK_BORROWERS",
+      "publication_lag": "BIS_RELEASE_TIMESTAMP_REQUIRED",
+      "revision_policy": "CURRENT_AND_ARCHIVED_RELEASES_SEPARATE",
+      "redistribution_class": "BIS_TERMS_AND_CITATION_APPLY"
+    }
+  ],
+  "recovered_supporting_data": {
+    "latest_delta": {
+      "filename": "DATA_PING_BACKTEST_HISTORY_PACK_20260727T114012Z(1).zip",
+      "sha256": "26df6c5bba68b503ec1744b2ca03b8beecb37ce14abc8f3ced636017b2910521",
+      "status": "CHECKSUM_PASS",
+      "allowed_role": "ENGINEERING_AND_LATEST_VINTAGE_AGGREGATE_SUPPORT",
+      "point_in_time_owner": false
+    },
+    "tdbc": {
+      "filename": "TDBC v1 TechDev Business Cycle 2026-07-26(2).zip",
+      "sha256": "e83d3b95e94fba331767feae92bd052ed7f752a1a5305d63621030b293bc5d4c",
+      "status": "CHECKSUM_PASS_RECONSTRUCTION_ONLY",
+      "vendor_series": false
+    }
+  }
+}
