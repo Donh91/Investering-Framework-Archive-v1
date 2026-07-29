@@ -1,0 +1,88 @@
+{
+  "schema_version": "1.0",
+  "receipt_id": "GLC_WP01_ACQUISITION_20260729_UPLOAD_RECOVERY",
+  "recorded_at_utc": "2026-07-29T17:47:00Z",
+  "acquisition_mode": "USER_UPLOADED_PRIOR_THREAD_ARTIFACTS_PLUS_OFFICIAL_SOURCE_DISCOVERY",
+  "uploaded_packages": 10,
+  "zip_crc_pass": 10,
+  "zip_crc_fail": 0,
+  "data_ping_internal_checksum_entries_checked": 1457,
+  "data_ping_internal_checksum_failures": 0,
+  "tdbc_checksum_entries_checked": 17,
+  "tdbc_checksum_failures": 0,
+  "exact_final": {
+    "filename": "DATA_PING_BACKTEST_HISTORY_PACK_FINAL_20260727T183529Z.zip",
+    "found": false,
+    "status": "BLOCKED_NOT_PRESENT"
+  },
+  "recovered_base": {
+    "filename": "DATA PING BACKTEST HISTORY PACK 20260727T052808Z(1).zip",
+    "sha256": "303d63946fd7696237b8d1a7208fa5aadd877e55aba57d5b51ea17aa46d18c9f",
+    "crc": "PASS",
+    "checksums": "180/180_PASS",
+    "master_panel_readback": {
+      "status": "PASS",
+      "rows": 5852,
+      "columns": 75,
+      "start_date": "2010-07-18",
+      "end_date": "2026-07-25"
+    },
+    "code_and_tests_present": true,
+    "source_inventory_and_receipts_present": true
+  },
+  "latest_delta": {
+    "filename": "DATA_PING_BACKTEST_HISTORY_PACK_20260727T114012Z(1).zip",
+    "sha256": "26df6c5bba68b503ec1744b2ca03b8beecb37ce14abc8f3ced636017b2910521",
+    "crc": "PASS",
+    "checksums": "257/257_PASS",
+    "classification": "CONTINUATION_DELTA_NOT_BASE_REPLACEMENT"
+  },
+  "official_source_discovery": [
+    {
+      "dataset_id": "NASDAQCOM_OFFICIAL_OR_FRED",
+      "source_page": "https://fred.stlouisfed.org/series/NASDAQCOM",
+      "status": "OWNER_ENDPOINT_IDENTIFIED_RAW_NOT_MATERIALIZED",
+      "rights_note": "NASDAQ_COPYRIGHT_APPLIES"
+    },
+    {
+      "dataset_id": "A091RC1Q027SBEA",
+      "source_page": "https://fred.stlouisfed.org/series/A091RC1Q027SBEA",
+      "underlying_owner": "U.S. Bureau of Economic Analysis",
+      "status": "OWNER_ENDPOINT_IDENTIFIED_RAW_NOT_MATERIALIZED"
+    },
+    {
+      "dataset_id": "CBO_INTEREST_AND_DEBT_PROJECTION_VINTAGES",
+      "source_page": "https://www.cbo.gov/data",
+      "machine_readable_repository": "https://github.com/US-CBO/cbo-data",
+      "status": "VINTAGE_OWNER_IDENTIFIED_NOT_MATERIALIZED"
+    },
+    {
+      "dataset_id": "BIS_GLOBAL_LIQUIDITY_INDICATORS",
+      "source_page": "https://data.bis.org/static/bulk/WS_GLI_csv_col.zip",
+      "status": "BULK_OWNER_ENDPOINT_IDENTIFIED_NOT_MATERIALIZED"
+    },
+    {
+      "dataset_id": "TREASURY_DEBT_MATURITY_AND_ISSUANCE",
+      "source_page": "https://fiscaldata.treasury.gov/",
+      "status": "OWNER_FAMILY_IDENTIFIED_EXACT_DATASET_BINDINGS_PENDING"
+    }
+  ],
+  "blocked_or_pending": [
+    "exact final 183529Z binary",
+    "official Nasdaq owner payload",
+    "BEA/FRED interest-payment payload",
+    "CBO vintage files",
+    "Treasury maturity and issuance payloads",
+    "BIS GLI bulk payload",
+    "ALFRED or official archived real-time vintages"
+  ],
+  "prohibited_actions_preserved": {
+    "economic_backtest": true,
+    "parameter_search": true,
+    "final_holdout_access": true,
+    "silent_substitution": true,
+    "silent_forward_fill": true,
+    "framework_promotion": true,
+    "portfolio_action": true
+  }
+}
