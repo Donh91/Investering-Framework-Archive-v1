@@ -25,6 +25,9 @@ def main() -> int:
     dag = load("CAUSAL_DAG_v1.json")
     state = load("EXECUTION_STATE_v1.json")
     monitor = load("PROSPECTIVE_MONITORING_CONTRACT_v1.json")
+    recovery = load("BACKTEST_MASTER_RECOVERY_MANIFEST_v1.json")
+    contracts = load("SOURCE_CONTRACTS_v1.json")
+    acquisition = load("ACQUISITION_RECEIPT_v1.json")
 
     claim_ids = [row["claim_id"] for row in claims["claims"]]
     checks += 1
@@ -79,6 +82,49 @@ def main() -> int:
     checks += 1
     if any(claims["authority"].values()):
         fail("claim package has forbidden authority")
+
+    checks += 1
+    exact_final = recovery["expected_exact_final"]
+    if exact_final["present_in_upload_set"] is not False or exact_final["byte_integrity_status"] != "BLOCKED_NOT_PRESENT":
+        fail("exact final binary must remain explicitly blocked until byte-visible")
+
+    checks += 1
+    base = recovery["base_build"]
+    if base["sha256"] != "303d63946fd7696237b8d1a7208fa5aadd877e55aba57d5b51ea17aa46d18c9f":
+        fail("recovered base hash changed")
+    if base["contains_master_daily_panel"] is not True:
+        fail("recovered base must contain master panel")
+
+    checks += 1
+    if any(row["internal_checksums"].endswith("FAIL") for row in recovery["packages"]):
+        fail("recovery manifest contains a checksum failure")
+    if len(recovery["packages"]) != 10:
+        fail("upload-set package count changed")
+
+    checks += 1
+    if contracts["rules"]["economic_execution_allowed"] is not False:
+        fail("source contracts must not permit economic execution")
+    if contracts["rules"]["final_holdout_access_allowed"] is not False:
+        fail("source contracts must keep final holdout sealed")
+    priorities = {row["priority"] for row in contracts["contracts"]}
+    if not {1, 2, 3, 4, 5, 6}.issubset(priorities):
+        fail("mandatory WP01 source priorities are incomplete")
+
+    checks += 1
+    if acquisition["zip_crc_fail"] != 0:
+        fail("uploaded ZIP CRC failure recorded")
+    if acquisition["data_ping_internal_checksum_failures"] != 0:
+        fail("DATA PING checksum failure recorded")
+    if acquisition["tdbc_checksum_failures"] != 0:
+        fail("TDBC checksum failure recorded")
+    if acquisition["exact_final"]["found"] is not False:
+        fail("acquisition receipt must not claim exact final was found")
+
+    checks += 1
+    if state["recovery"]["exact_final_present"] is not False:
+        fail("execution state must not promote recovered base to exact final")
+    if state["execution_rules"]["recovered_base_treated_as_exact_final"] is not False:
+        fail("recovered base cannot be treated as exact final")
 
     print(json.dumps({"status": "PASS", "checks": checks, "failures": 0}, sort_keys=True))
     return 0
