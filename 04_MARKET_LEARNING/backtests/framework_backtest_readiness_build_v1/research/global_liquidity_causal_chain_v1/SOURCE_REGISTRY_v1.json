@@ -1,7 +1,7 @@
 {
-  "schema_version": "1.1",
+  "schema_version": "1.2",
   "registry_id": "GLOBAL_LIQUIDITY_SOURCE_REGISTRY_v1",
-  "status": "FROZEN_BEFORE_ECONOMIC_OUTCOME_INSPECTION_WITH_RECOVERED_BASE",
+  "status": "FROZEN_BEFORE_ECONOMIC_OUTCOME_INSPECTION_WITH_RECOVERED_BASE_AND_CBO_POINTERS",
   "rules": {
     "official_primary_preferred": true,
     "one_owner_per_metric_per_test": true,
@@ -20,11 +20,23 @@
     "classification": "RECOVERED_BASE_BINARY_PLUS_APPEND_ONLY_DELTAS",
     "exact_final_present": false
   },
+  "official_source_bindings": {
+    "cbo": {
+      "status": "IMMUTABLE_POINTERS_BOUND_BYTE_MATERIALIZATION_PENDING",
+      "repository": "US-CBO/cbo-data",
+      "repository_commit": "284a95665f9f2f74ed1f482feb629b43fce323da",
+      "manifest": "official_sources/cbo/CBO_TEN_YEAR_BUDGET_VINTAGE_MANIFEST_v1.json",
+      "contract": "official_sources/cbo/CBO_NET_INTEREST_SOURCE_CONTRACT_v1.md",
+      "receipt": "official_sources/cbo/ACQUISITION_RECEIPT_CBO_POINTERS_v1.json",
+      "vintages": ["2024-06", "2025-01", "2026-02"],
+      "raw_bytes_materialized": false
+    }
+  },
   "datasets": [
     {"dataset_id":"BTC_SPOT_DAILY_CEST_BINANCE","family":"asset_price","role":"OWNER_CANDIDATE_EXISTING","frequency":"daily","status":"RECOVERED_BASE_RAW_NORMALIZED_AND_MASTER_PANEL_PRESENT_PARITY_PENDING","source":"recovered 052808 Backtest History build and existing Backtest Owner Registry"},
     {"dataset_id":"NASDAQCOM_OFFICIAL_OR_FRED","family":"asset_price","role":"OWNER_CANDIDATE","frequency":"daily","status":"OWNER_ACQUISITION_REQUIRED_CHALLENGERS_RECOVERED","source":"Nasdaq official history or FRED NASDAQCOM","challenger":"recovered Yahoo NDX and QQQ","challenger_is_owner":false},
     {"dataset_id":"US_INTEREST_PAYMENTS_ACTUAL","family":"fiscal_pressure","role":"OWNER_CANDIDATE","frequency":"quarterly","status":"OWNER_ENDPOINT_IDENTIFIED_DATA_ACQUISITION_REQUIRED","source":"BEA/FRED A091RC1Q027SBEA","knowledge_rule":"GDP release timestamp"},
-    {"dataset_id":"CBO_INTEREST_AND_DEBT_PROJECTION_VINTAGES","family":"fiscal_pressure","role":"OWNER_CANDIDATE","frequency":"annual_projection_vintage","status":"VINTAGE_ARCHIVE_IDENTIFIED_ACQUISITION_REQUIRED","source":"CBO data page and US-CBO/cbo-data","knowledge_rule":"forecast release date"},
+    {"dataset_id":"CBO_INTEREST_AND_DEBT_PROJECTION_VINTAGES","family":"fiscal_pressure","role":"OWNER_CANDIDATE","frequency":"annual_projection_vintage","status":"IMMUTABLE_POINTERS_BOUND_BYTE_MATERIALIZATION_PENDING","source":"CBO data page and US-CBO/cbo-data at 284a95665f9f2f74ed1f482feb629b43fce323da","knowledge_rule":"forecast release timestamp","bound_vintages":["2024-06","2025-01","2026-02"],"target_variables":["proj_outlays_net_interest","proj_outlays_net_interest_gdp_share","proj_debt_held_by_public","proj_primary_deficit"]},
     {"dataset_id":"TREASURY_DEBT_MATURITY_AND_ISSUANCE","family":"fiscal_transmission","role":"OWNER_CANDIDATE","frequency":"monthly_quarterly","status":"OWNER_FAMILY_IDENTIFIED_EXACT_BINDINGS_REQUIRED","source":"US Treasury FiscalData and quarterly refunding"},
     {"dataset_id":"US_NET_LIQUIDITY_COMPONENTS","family":"realised_liquidity","role":"OWNER_CANDIDATE","frequency":"weekly_daily_mixed","status":"RECOVERED_LATEST_VINTAGE_AGGREGATES_POINT_IN_TIME_OWNER_PENDING","source":"WALCL, WTREGEN, RRPONTSYD, reserve balances","method_rule":"units and knowledge timestamps aligned before arithmetic"},
     {"dataset_id":"GLOBAL_CENTRAL_BANK_BALANCES_NATIVE","family":"realised_liquidity","role":"OWNER_CANDIDATE","frequency":"weekly_monthly_mixed","status":"PARTIAL_DATA_REQUIRED","source":"Fed, ECB, BoJ, official PBoC/NBS Central Bank Survey","method_rule":"native-currency model"},
