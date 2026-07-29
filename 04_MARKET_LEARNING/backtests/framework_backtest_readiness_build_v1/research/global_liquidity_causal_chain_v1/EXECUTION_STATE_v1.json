@@ -1,12 +1,12 @@
 {
-  "schema_version": "1.1",
+  "schema_version": "1.2",
   "program_id": "GLOBAL_LIQUIDITY_CAUSAL_CHAIN_RESEARCH_v1",
-  "updated_at_utc": "2026-07-29T17:48:00Z",
-  "program_status": "ACTIVE_ENGINEERING_SOURCE_RECOVERY_BASE_AVAILABLE",
+  "updated_at_utc": "2026-07-29T18:12:00Z",
+  "program_status": "ACTIVE_ENGINEERING_SOURCE_RECOVERY_AND_OFFICIAL_POINTER_BINDING",
   "phases": [
     {"phase":"P0_CLAIM_FREEZE","status":"PASS","deliverables":["CLAIM_FREEZE_v1.json","CAUSAL_DAG_v1.json"]},
-    {"phase":"P1_SOURCE_ARCHITECTURE","status":"PASS_WITH_DATA_GAPS_AND_RECOVERED_BASE","deliverables":["SOURCE_REGISTRY_v1.json","SOURCE_CONTRACTS_v1.json","BACKTEST_MASTER_RECOVERY_MANIFEST_v1.json"],"blockers":["exact 183529Z final binary","Nasdaq owner acquisition","global broad-money history","BIS GLI export","CBO vintage archive","PBoC monthly history"]},
-    {"phase":"P2_DATA_ACQUISITION_AND_NORMALISATION","status":"IN_PROGRESS_RECOVERED_BASE_AND_DELTAS_AVAILABLE","allowed":true,"deliverables":["ACQUISITION_RECEIPT_v1.json","BACKTEST_MASTER_RECOVERY_REPORT_v1.md"],"blockers":["exact final-master byte parity","official external series not yet materialised","ALFRED or release-vintage coverage","source-to-normalized parity not complete"]},
+    {"phase":"P1_SOURCE_ARCHITECTURE","status":"PASS_WITH_DATA_GAPS_RECOVERED_BASE_AND_CBO_POINTERS","deliverables":["SOURCE_REGISTRY_v1.json","SOURCE_CONTRACTS_v1.json","BACKTEST_MASTER_RECOVERY_MANIFEST_v1.json","official_sources/cbo/CBO_TEN_YEAR_BUDGET_VINTAGE_MANIFEST_v1.json"],"blockers":["exact 183529Z final binary","Nasdaq owner acquisition","global broad-money history","BIS GLI export","CBO raw byte materialization and earlier vintages","PBoC monthly history"]},
+    {"phase":"P2_DATA_ACQUISITION_AND_NORMALISATION","status":"IN_PROGRESS_RECOVERED_BASE_DELTAS_AND_CBO_POINTERS_AVAILABLE","allowed":true,"deliverables":["ACQUISITION_RECEIPT_v1.json","BACKTEST_MASTER_RECOVERY_REPORT_v1.md","official_sources/cbo/ACQUISITION_RECEIPT_CBO_POINTERS_v1.json"],"blockers":["exact final-master byte parity","official external series not yet fully materialized","CBO raw SHA-256 and publication timestamps","ALFRED or release-vintage coverage","source-to-normalized parity not complete"]},
     {"phase":"P3_STATISTICAL_ENGINE_VALIDATION","status":"SYNTHETIC_PASS_REPOSITORY_GATE_NOT_YET_RATIFIED","allowed":"SYNTHETIC_FIXTURES_ONLY"},
     {"phase":"P4_GRAPH_ENGINE_VALIDATION","status":"SYNTHETIC_PASS_REPOSITORY_GATE_NOT_YET_RATIFIED","allowed":"METADATA_AND_SYNTHETIC_ONLY"},
     {"phase":"P5_ECONOMIC_TEST_EXECUTION","status":"BLOCKED_G20_NO","allowed":false},
@@ -21,6 +21,14 @@
     "exact_final_present": false,
     "portable_bundle_sha256": "a38fc62f2b3a2c933528878a10614d46d61dce609b2c9eebc51763e14255c64f"
   },
+  "official_source_progress": {
+    "cbo": {
+      "repository_commit_frozen": true,
+      "repository_vintages_bound": 3,
+      "raw_bytes_materialized": false,
+      "economic_execution_eligible": false
+    }
+  },
   "execution_rules": {
     "economic_results_before_G20": false,
     "final_holdout_touch_before_preregistration": false,
@@ -28,9 +36,11 @@
     "source_acquisition_allowed": true,
     "synthetic_engine_validation_allowed": true,
     "recovered_base_engineering_allowed": true,
-    "recovered_base_treated_as_exact_final": false
+    "recovered_base_treated_as_exact_final": false,
+    "immutable_source_pointer_binding_allowed": true,
+    "pointer_binding_equals_byte_materialization": false
   },
-  "next_workpack": "GLC-WP01B_OFFICIAL_SOURCE_MATERIALISATION_AND_WP02_PARITY",
+  "next_workpack": "GLC-WP01B_BYTE_MATERIALISATION_NASDAQ_BEA_TREASURY_BIS_AND_WP02_PARITY",
   "authority": {
     "new_active_test": false,
     "new_engine": false,
