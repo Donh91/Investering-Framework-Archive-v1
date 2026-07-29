@@ -1,8 +1,8 @@
 {
   "schema_version": "DATA_PING_DEEP_CAPTURE_REQUEST_LEDGER_v1",
   "protocol_path": "02_DATA_PING/protocols/2026-07-28__data-ping-deep-capture-escalation-protocol-v1__canonical.md",
-  "status": "ACTIVE_WITH_PREPARED_REQUEST",
-  "updated_at_utc": "2026-07-29T05:03:00Z",
+  "status": "ACTIVE_NO_PENDING_REQUESTS",
+  "updated_at_utc": "2026-07-29T06:20:15Z",
   "requests": [
     {
       "request_id": "DCR-20260729-EVENT-001",
@@ -21,7 +21,8 @@
       "reference_data_ping_runs": [
         "run_7bd29842dd8b446781ea8a7f25c11d1a",
         "run_4fd139e79f5b4a1ba4d7d5c4c2d6aa10",
-        "run_aa5ebdf331d34cd8bb27d71a71198cbe"
+        "run_aa5ebdf331d34cd8bb27d71a71198cbe",
+        "run_b5988607a8f349558a19f78198fdfde2"
       ],
       "requested_window": {
         "start_utc": "2026-07-28T15:00:00.000Z",
@@ -41,26 +42,38 @@
         "bounded_direct_venue_crosscheck"
       ],
       "prompt_path": "07_PROMPTS_AND_AGENTS/prompts/requests/2026-07-29__DCR-20260729-EVENT-001__ethbtc-settlement-breadth-recovery.md",
-      "status": "PREPARED",
-      "user_delivery_status": "DELIVERED_TO_USER_IN_CURRENT_CHAT_RESPONSE",
-      "response_artifact_ids": [],
-      "validation_result": null,
-      "resolved_gaps": [],
-      "unresolved_gaps": [
-        "settled_Copenhagen_ETHBTC_daily_close",
-        "breadth_aggregate",
-        "breadth_membership_hash"
+      "status": "PARTIAL",
+      "user_delivery_status": "DELIVERED_AND_RESPONSE_RECEIVED",
+      "response_received_at_utc": "2026-07-29T06:08:18.248Z",
+      "response_artifact_ids": [
+        "08_SOURCE_MATERIAL/data_ping/deep_capture/DCR-20260729-EVENT-001/package-pointer.md",
+        "08_SOURCE_MATERIAL/data_ping/deep_capture/DCR-20260729-EVENT-001/manifest.json",
+        "09_SOURCE_QA/data_ping/deep_capture/2026-07-29__DCR-20260729-EVENT-001__validation.json"
       ],
+      "validation_result": "PARTIAL_VALIDATED_CRITICAL_SETTLEMENT_RESOLVED_SECONDARY_GAPS_UNAVAILABLE_OR_NONRECOVERABLE",
+      "resolved_gaps": [
+        "settled_Copenhagen_ETHBTC_daily_close",
+        "preceding_two_settled_Copenhagen_daily_rows",
+        "ETHBTC_1h_event_path",
+        "ETHBTC_5m_event_path"
+      ],
+      "unresolved_gaps": [
+        "exact_historical_CoinGecko_Top100_snapshot_and_membership_hash",
+        "Coinbase_ETH-BTC_1h_crosscheck",
+        "Kraken_ETHXBT_1h_crosscheck"
+      ],
+      "continuation_required": false,
+      "closure_reason": "Critical settled gate evidence was recovered. Historical breadth snapshots are not recoverable in the current runtime, and the new DATA PING independently supplies current breadth with a membership hash. Challenger venues remain unavailable but are not required for Binance owner adjudication.",
       "canonical_effect": "NONE",
       "portfolio_effect": "NONE"
     }
   ],
   "latest_weekly_request_id": null,
   "latest_event_driven_request_id": "DCR-20260729-EVENT-001",
-  "pending_request_ids": [
+  "pending_request_ids": [],
+  "completed_request_ids": [
     "DCR-20260729-EVENT-001"
   ],
-  "completed_request_ids": [],
   "deduplication": {
     "same_iso_week_same_method_scope": "REUSE_OR_EXTEND_EXISTING_REQUEST",
     "same_event_cluster": "NO_NEW_REQUEST_UNLESS_NEW_SETTLED_STATE_OR_MATERIAL_GAP",

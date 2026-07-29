@@ -1,0 +1,46 @@
+{
+  "accepted_for": [
+    "current_market_read",
+    "exact_Copenhagen_settled_ETHBTC_gate_evidence",
+    "event_path_analysis",
+    "breadth_gate_score_from_current_ping",
+    "source_QA",
+    "prospective_A_class_no_action_receipt",
+    "shadow_dual_run"
+  ],
+  "boundaries": [
+    "one settled close above 0.0300 does not satisfy positive settled persistence",
+    "the in-progress Copenhagen daily row is excluded from settled-close conclusions",
+    "current breadth with a new membership hash cannot reconstruct the unavailable prior Top-100 snapshot",
+    "stale CFGI is context only",
+    "ETF rows are latest settled session context and not a new 2026-07-28 session",
+    "same overlap cluster may contain a distinct policy event but does not create a new unique cluster",
+    "no retrospective A-class receipt is created for the settlement itself; the new receipt freezes the current no-action decision after verified recovery"
+  ],
+  "collector_predecessor_id": "snap_49af34037f844b9595f536ef938122b9",
+  "deep_capture_package": {
+    "manifest_sha256_verified": "d2aaaa25c784bdd6f81dd2fe2d8f926b32e0a9e2529bc37511c9a93793c2651c",
+    "member_hashes_verified": true,
+    "package_bytes": 5861,
+    "package_content_sha256_verified": "2f4e21f7544329ac65c2cb40fdfe9144778f287140d22684835984235f3f7f36",
+    "package_sha256_expected": "c0c614c6f3c42713dc22561e6ab7ba0d687673f3d7947f0471c7cb3dfc6738c7",
+    "package_sha256_verified": "c0c614c6f3c42713dc22561e6ab7ba0d687673f3d7947f0471c7cb3dfc6738c7",
+    "request_id": "DCR-20260729-EVENT-001",
+    "uploaded_filename": "DCR-20260729-EVENT-001_package.zip",
+    "validation_status": "PASS_INTEGRITY_PARTIAL_COVERAGE"
+  },
+  "framework_predecessor_run_id": "run_aa5ebdf331d34cd8bb27d71a71198cbe",
+  "not_accepted_for": [
+    "exact_historical_CoinGecko_snapshot_reconstruction",
+    "Coinbase_or_Kraken_live_overlap_score",
+    "stablecoin_global_total",
+    "realized_volatility_score",
+    "current_CFGI_confirmation",
+    "final_holdout",
+    "portfolio_action"
+  ],
+  "run_id": "run_b5988607a8f349558a19f78198fdfde2",
+  "schema_version": "DATA_PING_QA_BOUNDARIES_v1",
+  "snapshot_utc": "2026-07-29T05:11:52.428Z",
+  "transport_integrity": "UNVERIFIED_CHAT_TRANSPORT"
+}
