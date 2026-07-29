@@ -1,0 +1,71 @@
+{
+  "schema_version": "1.0",
+  "recovery_id": "GLC_BACKTEST_RECOVERY_20260729",
+  "created_at_utc": "2026-07-29T17:45:00Z",
+  "source_class": "USER_UPLOADED_PRIOR_THREAD_BACKTEST_PACKAGES",
+  "expected_exact_final": {
+    "filename": "DATA_PING_BACKTEST_HISTORY_PACK_FINAL_20260727T183529Z.zip",
+    "present_in_upload_set": false,
+    "byte_integrity_status": "BLOCKED_NOT_PRESENT",
+    "reported_prior_thread_counts": {
+      "evidence_class": "RECONCILIATION_TARGET_ONLY_NOT_BYTE_AUDITED_HERE",
+      "files": 514,
+      "rows": 18934,
+      "receipts": 224,
+      "source_inventory_rows": 119,
+      "coverage_rows": 116,
+      "internal_checksums_passed": 513
+    }
+  },
+  "recovery_classification": "RECOVERED_BASE_BINARY_PLUS_APPEND_ONLY_DELTAS",
+  "packages": [
+    {"filename":"DATA_PING_BACKTEST_HISTORY_PACK_20260727T050435Z(2).zip","sha256":"f1348699c9dca52eb3ab51696ffced66e6cb2840e157384320162ad8bc4916b0","bytes":2347642,"members":111,"uncompressed_bytes":3784831,"internal_checksums":"110/110_PASS","role":"PREDECESSOR_STAGE"},
+    {"filename":"DATA PING BACKTEST HISTORY PACK 20260727T052808Z(1).zip","sha256":"303d63946fd7696237b8d1a7208fa5aadd877e55aba57d5b51ea17aa46d18c9f","bytes":190546648,"members":183,"uncompressed_bytes":209385211,"internal_checksums":"180/180_PASS","role":"RECOVERED_COMPLETE_EARLIER_BACKTEST_BUILD"},
+    {"filename":"DATA_PING_BACKTEST_HISTORY_PACK_20260727T054034Z(3).zip","sha256":"28bf9d3fa71342731b01081fe1b1ee15be87c3244e9003e8470e1b49739989a3","bytes":4747666,"members":127,"uncompressed_bytes":6531326,"internal_checksums":"126/126_PASS","role":"APPEND_ONLY_DELTA"},
+    {"filename":"DATA_PING_BACKTEST_HISTORY_PACK_20260727T055608Z(2).zip","sha256":"5114f3c99bfcdf47b08f14edded44386c8ae02c2c9fc2e53d1d3cbe36496a93e","bytes":9544646,"members":143,"uncompressed_bytes":11678053,"internal_checksums":"142/142_PASS","role":"APPEND_ONLY_DELTA"},
+    {"filename":"DATA_PING_BACKTEST_HISTORY_PACK_20260727T062839Z(2).zip","sha256":"7686e30631aba300a4c1fb09ca4e79b22e753eb3880fb7b3a81a07ccb4d83f9d","bytes":19137076,"members":160,"uncompressed_bytes":21624366,"internal_checksums":"159/159_PASS","role":"APPEND_ONLY_DELTA"},
+    {"filename":"DATA_PING_BACKTEST_HISTORY_PACK_20260727T065351Z(2).zip","sha256":"27e81b820aa6a7b86071a7c4a5adf09ffbac864b9d720664f3f510dc0bef5db9","bytes":38318523,"members":177,"uncompressed_bytes":41161787,"internal_checksums":"176/176_PASS","role":"APPEND_ONLY_DELTA"},
+    {"filename":"DATA_PING_BACKTEST_HISTORY_PACK_20260727T071452Z(1).zip","sha256":"e8d601f9d715bd082c817e4f749541ac80da433c56dfa7e65a9baf003b5b305e","bytes":76624824,"members":197,"uncompressed_bytes":79592885,"internal_checksums":"196/196_PASS","role":"APPEND_ONLY_DELTA"},
+    {"filename":"DATA_PING_BACKTEST_HISTORY_PACK_20260727T093706Z(1).zip","sha256":"0b777204eeafd71510d8a51fc75dc3007fa2f3a106ea53adebe0d97638193d0f","bytes":153254475,"members":212,"uncompressed_bytes":156389445,"internal_checksums":"211/211_PASS","role":"APPEND_ONLY_DELTA"},
+    {"filename":"DATA_PING_BACKTEST_HISTORY_PACK_20260727T114012Z(1).zip","sha256":"26df6c5bba68b503ec1744b2ca03b8beecb37ce14abc8f3ced636017b2910521","bytes":930818,"members":258,"uncompressed_bytes":4103852,"internal_checksums":"257/257_PASS","role":"LATEST_COMPACT_FRED_AND_OKX_CONTINUATION_DELTA"},
+    {"filename":"TDBC v1 TechDev Business Cycle 2026-07-26(2).zip","sha256":"e83d3b95e94fba331767feae92bd052ed7f752a1a5305d63621030b293bc5d4c","bytes":237291,"members":18,"uncompressed_bytes":786311,"internal_checksums":"17/17_PASS","role":"SEPARATE_TDBC_RECONSTRUCTION"}
+  ],
+  "base_build": {
+    "filename": "DATA PING BACKTEST HISTORY PACK 20260727T052808Z(1).zip",
+    "contains_master_daily_panel": true,
+    "master_daily_panel_path": "features/master/master_daily_panel.csv.gz",
+    "contains_code": true,
+    "contains_tests": true,
+    "contains_source_inventory": true,
+    "contains_receipts": true,
+    "contains_raw_normalized_and_features": true,
+    "readme_reported_files": 180,
+    "zip_member_count_including_manifests": 183,
+    "reported_source_endpoints_probed": 45
+  },
+  "base_latest_comparison": {
+    "base_members": 183,
+    "latest_delta_members": 258,
+    "common_relative_paths": 17,
+    "common_identical_paths": 0,
+    "common_different_paths": 17,
+    "flat_overlay_allowed": false,
+    "required_policy": "PRESERVE_BASE_AND_DELTA_UNDER_SEPARATE_NAMESPACES"
+  },
+  "bundle": {
+    "filename": "GLC_BACKTEST_RECOVERY_BUNDLE_20260729.zip",
+    "sha256": "a38fc62f2b3a2c933528878a10614d46d61dce609b2c9eebc51763e14255c64f",
+    "bytes": 2962221,
+    "members": 309,
+    "role": "PORTABLE_RECOVERY_AND_QA_BUNDLE_OUTSIDE_REPOSITORY"
+  },
+  "governance": {
+    "g01_upload_set_reconciled": "PARTIAL_RECOVERED_CHAIN_EXACT_FINAL_MISSING",
+    "g02_final_master_byte_integrity": "BLOCKED",
+    "g20_controlled_economic_execution": "NO",
+    "parameter_search": false,
+    "final_holdout_access": false,
+    "framework_promotion": false,
+    "portfolio_authority": "NONE"
+  }
+}
