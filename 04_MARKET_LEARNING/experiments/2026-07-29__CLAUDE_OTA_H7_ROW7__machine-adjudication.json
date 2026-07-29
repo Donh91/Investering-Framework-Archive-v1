@@ -1,0 +1,110 @@
+{
+  "schema_version": "CLAUDE_OTA_EXPERIMENT_RECONCILIATION_v1",
+  "source_run": "CLAUDE_OTA_2026-07-29T17:00:49.245Z",
+  "adjudicated_at_utc": "2026-07-29T20:58:00Z",
+  "operating_mode": "STANDALONE_OTA_NO_REFERENCE_BRIDGE",
+  "H7": {
+    "experiment_id": "H7_TRANSMISSION_RATE_CHALLENGER",
+    "canonical_maturity_status_before_run": "MATURED_SCORED_AT_FIVE_SETTLED_CEST_ROWS",
+    "source_claimed_event": "ROW_7_MATURED",
+    "main_framework_event_classification": "POST_MATURITY_EXTENSION_ROW_7",
+    "row_7": {
+      "CEST_date": "2026-07-28",
+      "settlement_close_utc": "2026-07-28T21:59:59.999Z",
+      "BTCUSDT_close": 63972.44,
+      "ETHUSDT_close": 1923.95,
+      "ETHBTC_close": 0.03007,
+      "BTC_1D_pct": -1.31,
+      "ETH_1D_pct": -0.92,
+      "ETH_minus_BTC_pp": 0.39,
+      "relative_leader": "ETH",
+      "qualitative_state": "BOTH_DOWN_ETH_SMALLER_LOSS",
+      "source_raw_row_hashes": {
+        "BTCUSDT": "81ddaa1832e389d8de813f46d6f08df5753f1347a63f435e64200ae7561c12c2",
+        "ETHUSDT": "ce174c70652961e8a174ccaacc42a02b9c2470c01326a8cd017492d192d8970b",
+        "ETHBTC": "0b09aa87bf09f0a241fabb35de256130b89d4a417f87c1f0117315c408dc335d"
+      },
+      "raw_hash_validation": "NOT_PERFORMED_RAW_ROWS_NOT_UPLOADED"
+    },
+    "canonical_condition_1": {
+      "rule": "C3_GT_C2_AND_C4_GT_C3_AND_C5_GT_C4",
+      "status": "ALREADY_MET_AT_ORIGINAL_MATURITY",
+      "rescore": false
+    },
+    "extended_diagnostics": {
+      "log_diff_signs": "-+++++",
+      "longest_positive_run": 5,
+      "OLS_log_slope_per_session": 0.0104,
+      "OLS_approx_pct_per_session": 1.046,
+      "previous_Claude_OLS_approx_pct_per_session": 0.974,
+      "scoring_authority": "NONE",
+      "qualitative_limitation": "DOES_NOT_DISTINGUISH_POSITIVE_ABSOLUTE_STRENGTH_FROM_SMALLER_RELATIVE_LOSS"
+    },
+    "condition_2_extension": {
+      "ETH_lead_count_final_3": 3,
+      "result": "MET_DIAGNOSTIC_EXTENSION",
+      "caveat": "ROW_7_RELATIVE_LEADERSHIP_WAS_SMALLER_LOSS"
+    },
+    "score": "EARLY_TRANSMISSION_CANDIDATE_NOT_ROTATION_CONFIRMATION",
+    "score_change": "NONE"
+  },
+  "ETHBTC_threshold_sequence": {
+    "first_settled_close_at_or_above_0_0300": 0.03007,
+    "first_acceptance": true,
+    "UTC_CEST_basis_agreement_for_session": true,
+    "source_in_progress_value": 0.02972,
+    "persistence": "FAILED",
+    "main_framework_crosscheck": "ALREADY_VALIDATED_BY_DCR-20260729-EVENT-001_AND_DIRECT_DATA_PING",
+    "new_policy_event": false,
+    "new_A_class_receipt": false
+  },
+  "H_WIN_01": {
+    "status": "UNPROVEN_DESIGN_HYPOTHESIS",
+    "supporting_observation_count": 3,
+    "source_confidence_change": "LOW_TO_LOW_MODERATE",
+    "main_framework_confidence": "LOW_MODERATE_NON_BINDING",
+    "new_observation": "F4_LEVEL_SETTLED_CLOSED_ABOVE_FOUR_SESSIONS_AFTER_WINDOW_CLOSED_UNMET_BY_1_18_PCT",
+    "selection_bias": "ACTIVE",
+    "falsification_rule": "AUDIT_AT_LEAST_10_CLOSED_WINDOWS_FOR_1_TO_3_SESSION_POST_CLOSE_CLUSTERING",
+    "score_change": "NONE"
+  },
+  "provenance_reconciliation": {
+    "ETF_2026_07_28_source_queue_in_OTA": "UNRESOLVED_NOT_ATTEMPTED",
+    "ETF_2026_07_28_main_framework_status": {
+      "status": "RESOLVED_BY_ACCEPTED_DATA_PING_AFTER_OR_OUTSIDE_OTA_REFERENCE_BRIDGE",
+      "BTC_net_flow_usd_m": -49.7,
+      "ETH_net_flow_usd_m": 9.4
+    },
+    "FARSIDE_H_SRC_02_new_observation": false,
+    "FARSIDE_H_SRC_02_observation_count": 2,
+    "schedule_change": "NONE"
+  },
+  "confounds": {
+    "source_supplied_FOMC_time_utc": "2026-07-29T18:00:00Z",
+    "independently_verified_in_OTA": false,
+    "row_7_confounded": false,
+    "rows_8_9_require_confound_annotation": true
+  },
+  "source_QA": {
+    "cache_guard_source_status": "CURRENT_RUN_FRESH",
+    "main_framework_replayability": "PARTIAL_MISSING_EXACT_VENUE_PAYLOADS_AND_HASHES"
+  },
+  "new_information_adjudication": {
+    "R_08": "ACCEPTED_AS_POST_MATURITY_EXTENSION_NOT_NEW_MATURITY",
+    "R_09": "CONFIRMED_DUPLICATE_OF_ALREADY_VALIDATED_THRESHOLD_EVENT",
+    "R_10": "ACCEPTED_AS_LOW_MODERATE_DESIGN_OBSERVATION_NO_RESCORE"
+  },
+  "new_policy_event": false,
+  "new_A_class_receipt": false,
+  "A_class_increment": 0,
+  "A_rows_total": 2,
+  "new_shadow_dual_run": false,
+  "shadow_dual_run_valid_runs": 5,
+  "rotation": "NO_ROTATION",
+  "rebuy": "LOCKED",
+  "new_entry": "NOT_ACTIVE",
+  "large_caps": "WATCH_ONLY",
+  "canonical_state_change": "NONE",
+  "portfolio_action": "NONE",
+  "final_holdout_opened": false
+}
