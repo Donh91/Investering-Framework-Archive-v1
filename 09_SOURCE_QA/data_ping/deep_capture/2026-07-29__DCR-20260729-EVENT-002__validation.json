@@ -1,0 +1,97 @@
+{
+  "schema_version": "DATA_PING_DEEP_CAPTURE_VALIDATION_v1",
+  "request_id": "DCR-20260729-EVENT-002",
+  "validation_timestamp_utc": "2026-07-29T20:48:00Z",
+  "capture_status": "PARTIAL",
+  "validation_result": "PARTIAL_VALIDATED_MANIFEST_ONLY_CRITICAL_EVENT_PATH_RESOLVED_BREADTH_COMPOSITION_IRRECOVERABLE",
+  "manifest": {
+    "uploaded": true,
+    "actual_bytes": 6640,
+    "declared_sha256": "efc0e0068b1d47ef437c259e7b4e11c740ed86560d5356bc9a2ebb886c772157",
+    "actual_sha256": "efc0e0068b1d47ef437c259e7b4e11c740ed86560d5356bc9a2ebb886c772157",
+    "hash_match": "PASS",
+    "json_parse": "PASS",
+    "request_id_match": "PASS"
+  },
+  "package": {
+    "declared_name": "DCR-20260729-EVENT-002_package.zip",
+    "declared_bytes": 15278,
+    "declared_sha256": "b91e6ed296109ecef858a067ceaeb5841f4dd830e6157ef208c32b4a4c1b2af0",
+    "declared_content_sha256": "891258c3b4e2e932c0b07742a14e11f04c1d9fb34f0bcaae197d5d954dcd7542",
+    "uploaded_to_main_framework": false,
+    "zip_hash_validation": "NOT_PERFORMED",
+    "member_hash_validation": "NOT_PERFORMED"
+  },
+  "completed_evidence": {
+    "direct_spot_1h": "PASS_MANIFEST_BACKED",
+    "direct_spot_5m": "PASS_MANIFEST_BACKED",
+    "event_start_support": "PASS_MANIFEST_BACKED",
+    "open_interest_anchors": "PASS_MANIFEST_BACKED",
+    "funding_when_reported": "PASS_MANIFEST_BACKED",
+    "positioning_ratios": "PASS_MANIFEST_BACKED",
+    "event_decomposition": "PASS_RESPONSE_AND_MANIFEST_BACKED",
+    "largest_negative_ETHBTC_1h_move": "PASS_RESPONSE_BACKED"
+  },
+  "unresolved_evidence": {
+    "exact_CoinGecko_predecessor_constituents": "ENDPOINT_UNAVAILABLE",
+    "exact_CoinGecko_current_constituents": "ENDPOINT_UNAVAILABLE",
+    "rank_bucket_breadth": "UNRESOLVED",
+    "breadth_transition_matrix": "UNRESOLVED",
+    "historical_mark_price": "ENDPOINT_UNAVAILABLE",
+    "historical_index_price": "ENDPOINT_UNAVAILABLE",
+    "historical_basis_bps": "NOT_CALCULABLE",
+    "futures_taker_17_00": "UNKNOWN",
+    "largest_breadth_deterioration_timestamp": "UNKNOWN"
+  },
+  "event_decomposition": {
+    "window_start_utc": "2026-07-29T08:30:00.000Z",
+    "window_end_utc": "2026-07-29T17:00:00.000Z",
+    "BTCUSDT": {
+      "return_pct": -0.7677211856,
+      "range_pct": 1.7613752011,
+      "close_location": 0.1643495797,
+      "spot_taker_buy_share": 0.4996070244,
+      "open_interest_change_pct": -1.756683652,
+      "price_oi_relation": "SAME_DIRECTION_DOWN"
+    },
+    "ETHUSDT": {
+      "return_pct": -0.9350385984,
+      "range_pct": 1.982716141,
+      "close_location": 0.2161945484,
+      "spot_taker_buy_share": 0.4511934876,
+      "open_interest_change_pct": 0.0827376362,
+      "price_oi_relation": "PRICE_DOWN_OI_SLIGHTLY_UP_DIRECTIONAL_SIDE_UNKNOWN"
+    },
+    "ETHBTC": {
+      "return_pct": -0.1680672269,
+      "range_pct": 1.0515603799,
+      "close_location": 0.7096774194,
+      "spot_taker_buy_share": 0.6494872429,
+      "open_interest_change_pct": null,
+      "price_oi_relation": "UNKNOWN"
+    },
+    "largest_negative_ETHBTC_1h": {
+      "open_time_utc": "2026-07-29T13:00:00.000Z",
+      "close_time_utc": "2026-07-29T13:59:59.999Z",
+      "return_pct": -0.4047217538
+    }
+  },
+  "adjudication": {
+    "new_policy_event": false,
+    "new_A_class_receipt": false,
+    "A_class_increment": 0,
+    "A_rows_total": 2,
+    "new_shadow_dual_run": false,
+    "shadow_dual_run_valid_runs": 5,
+    "request_status": "PARTIAL_CLOSED",
+    "continuation_required": false,
+    "closure_reason": "The bounded direct spot and derivatives event path was recovered. Exact historical breadth constituents were not retained and cannot be recovered by repeating the request. Remaining historical mark/index fields are non-blocking for current policy and unavailable in the runtime.",
+    "canonical_state_change": "NONE",
+    "portfolio_action": "NONE"
+  },
+  "system_learning": {
+    "finding": "POINT_IN_TIME_BREADTH_CONSTITUENTS_MUST_BE_PERSISTED_PROSPECTIVELY",
+    "implementation_issue": 224,
+    "retrospective_reconstruction_allowed": false
+  }
+}

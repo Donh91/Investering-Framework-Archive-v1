@@ -1,8 +1,11 @@
 {
   "schema_version": "DATA_PING_DEEP_CAPTURE_REQUEST_LEDGER_v1",
   "protocol_path": "02_DATA_PING/protocols/2026-07-28__data-ping-deep-capture-escalation-protocol-v1__canonical.md",
-  "status": "ACTIVE_WITH_PREPARED_REQUEST",
-  "updated_at_utc": "2026-07-29T17:04:00Z",
+  "retention_addendum_paths": [
+    "02_DATA_PING/protocols/2026-07-29__point-in-time-breadth-sidecar-retention-addendum-v1__canonical.md"
+  ],
+  "status": "ACTIVE_NO_PENDING_REQUESTS",
+  "updated_at_utc": "2026-07-29T20:49:00Z",
   "requests": [
     {
       "request_id": "DCR-20260729-EVENT-001",
@@ -15,7 +18,7 @@
       "requested_window": {"start_utc":"2026-07-28T15:00:00.000Z","end_utc":"2026-07-29T02:00:00.000Z","settlement_timezones":["UTC","Europe/Copenhagen"]},
       "requested_fields": ["exact_Copenhagen_settled_ETHBTC_daily_OHLC_and_close","preceding_two_Copenhagen_settled_ETHBTC_daily_rows","ETHBTC_settled_1h_event_path","ETHBTC_5m_event_path","exact_snapshot_CoinGecko_breadth_aggregate","breadth_included_membership_and_SHA256","bounded_direct_venue_crosscheck"],
       "prompt_path": "07_PROMPTS_AND_AGENTS/prompts/requests/2026-07-29__DCR-20260729-EVENT-001__ethbtc-settlement-breadth-recovery.md",
-      "status": "PARTIAL",
+      "status": "PARTIAL_CLOSED",
       "user_delivery_status": "DELIVERED_AND_RESPONSE_RECEIVED",
       "response_received_at_utc": "2026-07-29T06:08:18.248Z",
       "response_artifact_ids": ["08_SOURCE_MATERIAL/data_ping/deep_capture/DCR-20260729-EVENT-001/package-pointer.md","08_SOURCE_MATERIAL/data_ping/deep_capture/DCR-20260729-EVENT-001/manifest.json","09_SOURCE_QA/data_ping/deep_capture/2026-07-29__DCR-20260729-EVENT-001__validation.json"],
@@ -38,21 +41,50 @@
       "requested_window": {"start_utc":"2026-07-29T08:30:00.000Z","end_utc":"2026-07-29T17:00:00.000Z","settlement_timezones":["UTC","Europe/Copenhagen"]},
       "requested_fields": ["exact_predecessor_and_current_CoinGecko_constituent_rows","rank_bucket_breadth_decomposition","advancer_decliner_transition_matrix","BTC_ETH_ETHBTC_1h_and_5m_direct_spot_path","Binance_hourly_derivatives_anchors","deterministic_event_decomposition"],
       "prompt_path": "07_PROMPTS_AND_AGENTS/prompts/requests/2026-07-29__DCR-20260729-EVENT-002__breadth-relapse-composition.md",
-      "status": "PREPARED",
-      "user_delivery_status": "DELIVERED_TO_USER_IN_CURRENT_CHAT_RESPONSE",
-      "response_artifact_ids": [],
-      "validation_result": null,
-      "resolved_gaps": [],
-      "unresolved_gaps": ["constituent_level_breadth_path","intraday_breadth_composition","bounded_spot_and_derivatives_event_path"],
-      "continuation_required": true,
+      "status": "PARTIAL_CLOSED",
+      "user_delivery_status": "DELIVERED_AND_RESPONSE_RECEIVED",
+      "response_received_at_utc": "2026-07-29T17:36:28.961Z",
+      "response_artifact_ids": [
+        "08_SOURCE_MATERIAL/data_ping/deep_capture/DCR-20260729-EVENT-002/package-pointer.md",
+        "08_SOURCE_MATERIAL/data_ping/deep_capture/DCR-20260729-EVENT-002/manifest.json",
+        "09_SOURCE_QA/data_ping/deep_capture/2026-07-29__DCR-20260729-EVENT-002__validation.json",
+        "04_MARKET_LEARNING/data_ping/deep_capture/2026-07-29__DCR-20260729-EVENT-002__framework-read.md"
+      ],
+      "validation_result": "PARTIAL_VALIDATED_MANIFEST_ONLY_CRITICAL_EVENT_PATH_RESOLVED_BREADTH_COMPOSITION_IRRECOVERABLE",
+      "resolved_gaps": [
+        "BTC_ETH_ETHBTC_direct_1h_event_path",
+        "BTC_ETH_ETHBTC_direct_5m_event_path",
+        "exact_08_30_event_start_support",
+        "open_interest_hourly_anchors",
+        "funding_when_reported",
+        "global_top_account_top_position_ratios",
+        "futures_taker_ratios_when_reported",
+        "deterministic_event_decomposition",
+        "largest_negative_ETHBTC_1h_move"
+      ],
+      "unresolved_gaps": [
+        "exact_predecessor_CoinGecko_constituent_snapshot",
+        "exact_current_CoinGecko_constituent_snapshot",
+        "rank_bucket_breadth_statistics",
+        "constituent_return_change_leaders",
+        "breadth_direction_transition_counts",
+        "largest_breadth_deterioration_timestamp",
+        "historical_Binance_mark_price",
+        "historical_Binance_index_price",
+        "historical_Binance_basis_bps",
+        "futures_taker_ratio_17_00_anchor"
+      ],
+      "continuation_required": false,
+      "closure_reason": "The bounded direct spot and derivatives event path was recovered. Exact historical breadth constituents were not retained and cannot be recovered by repeating the request. Historical mark/index/basis fields are unavailable and non-blocking for current policy. Prospective retention is tracked in issue 224.",
+      "implementation_issue": 224,
       "canonical_effect": "NONE",
       "portfolio_effect": "NONE"
     }
   ],
   "latest_weekly_request_id": null,
   "latest_event_driven_request_id": "DCR-20260729-EVENT-002",
-  "pending_request_ids": ["DCR-20260729-EVENT-002"],
-  "completed_request_ids": ["DCR-20260729-EVENT-001"],
+  "pending_request_ids": [],
+  "completed_request_ids": ["DCR-20260729-EVENT-001","DCR-20260729-EVENT-002"],
   "deduplication": {
     "same_iso_week_same_method_scope": "REUSE_OR_EXTEND_EXISTING_REQUEST",
     "same_event_cluster": "NO_NEW_REQUEST_UNLESS_NEW_SETTLED_STATE_OR_MATERIAL_GAP",
