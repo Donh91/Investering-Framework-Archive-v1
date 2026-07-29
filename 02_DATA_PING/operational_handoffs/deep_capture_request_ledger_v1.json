@@ -1,12 +1,65 @@
 {
   "schema_version": "DATA_PING_DEEP_CAPTURE_REQUEST_LEDGER_v1",
   "protocol_path": "02_DATA_PING/protocols/2026-07-28__data-ping-deep-capture-escalation-protocol-v1__canonical.md",
-  "status": "ACTIVE_EMPTY",
-  "updated_at_utc": "2026-07-28T20:35:00Z",
-  "requests": [],
+  "status": "ACTIVE_WITH_PREPARED_REQUEST",
+  "updated_at_utc": "2026-07-29T04:58:35Z",
+  "requests": [
+    {
+      "request_id": "DCR-20260729-EVENT-001",
+      "request_type": "EVENT_DRIVEN_DEEP_CAPTURE",
+      "created_at_utc": "2026-07-29T04:58:35Z",
+      "iso_week": "2026-W31",
+      "trigger_class": [
+        "ETHBTC_THRESHOLD",
+        "BREADTH",
+        "SOURCE_INTEGRITY"
+      ],
+      "trigger_evidence_ids": [
+        "OBS-20260729-aa5ebdf3-ROTATION-0030",
+        "ROTATION-2026-W31-ETHBTC-0030-ATTEMPT"
+      ],
+      "reference_data_ping_runs": [
+        "run_7bd29842dd8b446781ea8a7f25c11d1a",
+        "run_4fd139e79f5b4a1ba4d7d5c4c2d6aa10",
+        "run_aa5ebdf331d34cd8bb27d71a71198cbe"
+      ],
+      "requested_window": {
+        "start_utc": "2026-07-28T15:00:00.000Z",
+        "end_utc": "2026-07-29T02:00:00.000Z",
+        "settlement_timezones": [
+          "UTC",
+          "Europe/Copenhagen"
+        ]
+      },
+      "requested_fields": [
+        "exact_Copenhagen_settled_ETHBTC_daily_OHLC_and_close",
+        "preceding_two_Copenhagen_settled_ETHBTC_daily_rows",
+        "ETHBTC_settled_1h_event_path",
+        "ETHBTC_5m_settlement_window",
+        "exact_snapshot_CoinGecko_breadth_aggregate",
+        "breadth_included_membership_and_SHA256",
+        "bounded_direct_venue_crosscheck"
+      ],
+      "prompt_path": "07_PROMPTS_AND_AGENTS/prompts/requests/2026-07-29__DCR-20260729-EVENT-001__ethbtc-settlement-breadth-recovery.md",
+      "status": "PREPARED",
+      "user_delivery_status": "PENDING_IN_CURRENT_RESPONSE",
+      "response_artifact_ids": [],
+      "validation_result": null,
+      "resolved_gaps": [],
+      "unresolved_gaps": [
+        "settled_Copenhagen_ETHBTC_daily_close",
+        "breadth_aggregate",
+        "breadth_membership_hash"
+      ],
+      "canonical_effect": "NONE",
+      "portfolio_effect": "NONE"
+    }
+  ],
   "latest_weekly_request_id": null,
-  "latest_event_driven_request_id": null,
-  "pending_request_ids": [],
+  "latest_event_driven_request_id": "DCR-20260729-EVENT-001",
+  "pending_request_ids": [
+    "DCR-20260729-EVENT-001"
+  ],
   "completed_request_ids": [],
   "deduplication": {
     "same_iso_week_same_method_scope": "REUSE_OR_EXTEND_EXISTING_REQUEST",
