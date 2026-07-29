@@ -1,0 +1,41 @@
+{
+  "canonical_effect": "NONE",
+  "capture_status": "PARTIAL",
+  "coverage_status": "PARTIAL",
+  "critical_findings": {
+    "first_settled_acceptance_above_0_0300": true,
+    "latest_current_ping_direct_ratio": 0.02982,
+    "latest_event_path_hour_close": "0.02987",
+    "persistence_above_0_0300": false,
+    "post_settlement_first_hour_close": 0.02998,
+    "target_settled_close": 0.03007,
+    "target_settlement_utc": "2026-07-28T21:59:59.999Z",
+    "target_status": "SETTLED"
+  },
+  "integrity_status": "PASS",
+  "package": {
+    "all_member_hashes_match": true,
+    "bytes": 5861,
+    "content_sha256": "2f4e21f7544329ac65c2cb40fdfe9144778f287140d22684835984235f3f7f36",
+    "manifest_sha256": "d2aaaa25c784bdd6f81dd2fe2d8f926b32e0a9e2529bc37511c9a93793c2651c",
+    "name": "DCR-20260729-EVENT-001_package.zip",
+    "sha256": "c0c614c6f3c42713dc22561e6ab7ba0d687673f3d7947f0471c7cb3dfc6738c7"
+  },
+  "portfolio_effect": "NONE",
+  "request_disposition": "PARTIAL_CLOSED_CRITICAL_GATE_RESOLVED_NONRECOVERABLE_OR_UNAVAILABLE_SECONDARY_GAPS",
+  "request_id": "DCR-20260729-EVENT-001",
+  "resolved_gaps": [
+    "exact_Copenhagen_settled_ETHBTC_daily_OHLC_and_close",
+    "preceding_two_Copenhagen_settled_ETHBTC_daily_rows",
+    "ETHBTC_settled_1h_event_path",
+    "ETHBTC_5m_settlement_window"
+  ],
+  "schema_version": "DEEP_CAPTURE_VALIDATION_v1",
+  "unresolved_gaps": [
+    "exact_historical_CoinGecko_Top100_page_payloads",
+    "historical_breadth_membership_hash_for_2026-07-28T23:52:30Z_and_23:53:30Z",
+    "Coinbase_ETH-BTC_1h_crosscheck",
+    "Kraken_ETHXBT_1h_crosscheck"
+  ],
+  "validated_at_utc": "2026-07-29T06:20:15Z"
+}
