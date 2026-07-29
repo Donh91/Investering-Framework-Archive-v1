@@ -1,0 +1,47 @@
+{
+  "action_permission": "NONE",
+  "captured_at_utc": "2026-07-29T06:20:15Z",
+  "decision_at_utc": "2026-07-29T06:19:42Z",
+  "decision_evidence": {
+    "ETHBTC_1h_return_pct": -0.602611,
+    "ETHBTC_4h_return_pct": -1.230872,
+    "ETHBTC_direct_current": 0.02982,
+    "ETHBTC_first_settled_Copenhagen_close_above_0_0300": 0.03007,
+    "ETHBTC_post_settlement_persistence": false,
+    "ETHBTC_taker_buy_share_1h": 0.322525,
+    "breadth_advance_ratio": 0.3707865169,
+    "broad_alt_breadth_gate": 0.55,
+    "selective_large_cap_breadth_gate": 0.5
+  },
+  "event_id": "ROTATION-2026-W31-ETHBTC-0030-FIRST-SETTLED-ACCEPTANCE-FAILED-PERSISTENCE-001",
+  "execution_at_utc": "2026-07-29T06:19:42Z",
+  "holdout_touched": false,
+  "knowledge_at_utc": "2026-07-29T06:08:18.248Z",
+  "label_end_utc": "2026-08-28T06:19:42Z",
+  "no_action_reason": "Binance ETHBTC produced its first Copenhagen-settled close above 0.0300 at 0.03007, but the post-settlement path fell back below 0.0300, live ETHBTC was 0.02982, short-horizon ETHBTC momentum and taker demand weakened, and breadth was 37.08%, below both selective and broad rotation gates. Positive settled persistence was not established.",
+  "overlap_cluster_key": "ROTATION-2026-W31-ETHBTC-0030-ATTEMPT",
+  "owner_registry_version": "SELECTED_OWNER_REGISTRY_v1",
+  "policy_family": "ROTATION_PERMISSION",
+  "receipt_id": "PDR-20260729-52aa8a0a9bf2",
+  "receipt_kind": "DENIAL",
+  "receipt_sha256": "3f5db7953e9432f891efbfb67d999695e94a802bf7fbcea9ea2c45a9a8256b01",
+  "rule_frozen_before_outcome": true,
+  "rule_version": "ROTATION_ARCHITECTURE_v2",
+  "schema_version": "PROSPECTIVE_DECISION_RECEIPT_v1",
+  "source_artifact_ids": [
+    "04_MARKET_LEARNING/data_ping/2026-07-29__run_b5988607__machine-summary.json",
+    "09_SOURCE_QA/data_ping/2026-07-29__run_b5988607__qa-boundaries.json",
+    "08_SOURCE_MATERIAL/data_ping/deep_capture/DCR-20260729-EVENT-001/manifest.json",
+    "08_SOURCE_MATERIAL/data_ping/deep_capture/DCR-20260729-EVENT-001/binance_ethbtc_daily_copenhagen.csv"
+  ],
+  "source_authority_status": "OWNER_WITH_VALIDATED_DEEP_CAPTURE",
+  "source_hashes": [
+    "5ac6403aefa2efe91fdc01a4cfe4091f8a58d363f31648f61ee182fe9a4dbaa3",
+    "cd1bb326954c1e01447fc5d0303800bfc6d52ee1b2778c5960054db09828f71c",
+    "d2aaaa25c784bdd6f81dd2fe2d8f926b32e0a9e2529bc37511c9a93793c2651c",
+    "9fd22618c59ca8593e9df74d5355b47daf33a7e93b99897972aeab3b94b5b7e4"
+  ],
+  "state_after": "NO_ROTATION",
+  "state_before": "NO_ROTATION",
+  "transaction_cost_contract": "ZERO_NO_TRADE"
+}
