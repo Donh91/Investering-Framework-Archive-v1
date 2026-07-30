@@ -1,0 +1,60 @@
+{
+  "schema_version": "DATA_PING_DEEP_CAPTURE_VALIDATION_v1",
+  "request_id": "DCR-20260730-EVENT-003",
+  "validated_at_utc": "2026-07-30T17:40:00Z",
+  "capture_status_claimed": "PARTIAL",
+  "validation_status": "PARTIAL_VALIDATED_INTEGRITY_PASS_CRITICAL_EVIDENCE_UNRESOLVED",
+  "artifact_integrity": {
+    "uploaded_zip_bytes": 6364,
+    "zip_sha256_claimed": "4ad0ab1b32fc1382c5c45e09e39180c112fa3be2dd03f035ca49c3fe0e7192cf",
+    "zip_sha256_recomputed": "4ad0ab1b32fc1382c5c45e09e39180c112fa3be2dd03f035ca49c3fe0e7192cf",
+    "zip_sha256_match": true,
+    "manifest_sha256_claimed": "96747c3cb3f06685ab89cdbb87f9497fa81bf8ca563f461e597fba2cdfe97b5c",
+    "manifest_sha256_recomputed": "96747c3cb3f06685ab89cdbb87f9497fa81bf8ca563f461e597fba2cdfe97b5c",
+    "manifest_sha256_match": true,
+    "package_content_sha256_claimed": "d032147bceef52bc9ab77e22bad6ad9976d6d92be2ac3f96df2271af9d8e3637",
+    "package_content_sha256_recomputed": "d032147bceef52bc9ab77e22bad6ad9976d6d92be2ac3f96df2271af9d8e3637",
+    "package_content_sha256_match": true,
+    "manifest_non_manifest_file_count": 7,
+    "zip_total_file_count": 8,
+    "all_manifest_file_hashes_match": true,
+    "all_manifest_file_byte_sizes_match": true
+  },
+  "integrity_contract": {
+    "post_freeze_source_calls": 0,
+    "no_silent_truncation": true,
+    "no_reconstruction": true,
+    "no_interpolation": true,
+    "no_forward_fill": true,
+    "no_current_universe_substitution": true,
+    "no_derived_usd_owner_substitution": true,
+    "direct_derived_proxy_separation": "PASS"
+  },
+  "evidence_validation": {
+    "direct_ETHBTC_owner_rows": "UNAVAILABLE",
+    "first_settled_follow_up_after_0_03007": "UNKNOWN",
+    "exact_CoinGecko_constituent_sidecars": "UNAVAILABLE",
+    "breadth_replay_parity": "NOT_TESTABLE",
+    "direct_cross_venue_rows": "UNAVAILABLE",
+    "deterministic_direct_ETHBTC_decomposition": "UNAVAILABLE_NO_INPUT_ROWS",
+    "source_attempt_and_failure_ledger": "PASS",
+    "non_substitution_evidence": "PASS"
+  },
+  "failure_classification": {
+    "Binance_connector": "GEO_RESTRICTION",
+    "Binance_public_mirror": "ENDPOINT_UNAVAILABLE",
+    "CoinGecko_point_in_time_sidecars": "ENDPOINT_UNAVAILABLE_NOT_RETAINED",
+    "direct_challenger_venues": "ENDPOINT_UNAVAILABLE"
+  },
+  "framework_acceptance": {
+    "new_market_evidence": false,
+    "new_policy_event": false,
+    "A_class_increment": 0,
+    "shadow_dual_run_increment": 0,
+    "canonical_state_change": "NONE",
+    "portfolio_effect": "NONE",
+    "request_status": "PARTIAL_VALIDATED_BLOCKED_CONTINUATION_REQUIRED",
+    "new_deep_capture_request_required": false,
+    "reuse_request_id": "DCR-20260730-EVENT-003"
+  }
+}
