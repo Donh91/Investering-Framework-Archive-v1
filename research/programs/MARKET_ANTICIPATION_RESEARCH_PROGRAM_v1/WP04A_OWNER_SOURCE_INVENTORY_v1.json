@@ -1,0 +1,13 @@
+{
+  "artifact": "MAR_WP04A_OWNER_SOURCE_INVENTORY_v1",
+  "work_issue": 243,
+  "scope": "OWNER_SOURCE_AND_REPLAYABILITY_AUDIT_ONLY",
+  "source_families": [
+    {"family":"MACRO","sensors":["GLOBAL_M2_LAGGED","DGS2","DGS10","DTWEXBGS","VIXCLS"],"owner_expectation":"FRED_OR_FROZEN_OWNER_EXPORT","candidate_use":"BLOCKED_PENDING_PREEXISTING_TRIGGER_RULE_AND_POINT_IN_TIME_AVAILABILITY"},
+    {"family":"SPOT","sensors":["BTC_SPOT","ETH_SPOT","ETHBTC_SETTLED"],"owner_expectation":"EXCHANGE_SETTLED_CANDLES_OR_FROZEN_OWNER_ROWS","candidate_use":"PARTIAL"},
+    {"family":"DERIVATIVES","sensors":["FUNDING","OPEN_INTEREST","TAKER_FLOW"],"owner_expectation":"EXCHANGE_OWNER_ROWS_WITH_EVENT_AND_RETRIEVAL_TIMESTAMPS","candidate_use":"BLOCKED_PENDING_PREEXISTING_TRIGGER_RULE"},
+    {"family":"BREADTH","sensors":["TOP100_BREADTH"],"owner_expectation":"POINT_IN_TIME_CONSTITUENT_SIDECAR_PLUS_MEMBERSHIP_HASH","candidate_use":"PROSPECTIVE_ONLY_UNTIL_FIRST_REPLAYABLE_SIDECAR"}
+  ],
+  "hard_requirements": ["source_id","event_timestamp_utc","retrieved_at_utc","freeze_timestamp_utc","value_or_rows","method_version","content_or_membership_hash"],
+  "substitution_forbidden": true
+}
