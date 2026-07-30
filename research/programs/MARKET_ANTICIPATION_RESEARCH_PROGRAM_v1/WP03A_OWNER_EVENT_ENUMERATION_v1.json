@@ -1,0 +1,45 @@
+{
+  "contract": "MAR_WP03A_OWNER_EVENT_ENUMERATION_v1",
+  "generated_at_utc": "2026-07-30T06:45:00Z",
+  "parent_issue": 209,
+  "work_issue": 227,
+  "development_window_only": true,
+  "final_holdout_accessed": false,
+  "forward_returns_calculated": false,
+  "economic_ranking_calculated": false,
+  "independent_event_count": 1,
+  "follow_up_row_count": 8,
+  "events": [
+    {
+      "event_id": "MAR_ETHBTC_0300_20260728T150000Z_C01",
+      "event_family": "DIRECT_ETHBTC_THRESHOLD_ATTEMPT",
+      "asset": "ETHBTC",
+      "threshold": 0.03,
+      "event_start_utc": "2026-07-28T15:00:00Z",
+      "first_settled_acceptance_close_utc": "2026-07-28T15:59:59.999Z",
+      "first_settled_acceptance_close": 0.03004,
+      "second_settled_acceptance_close_utc": "2026-07-28T16:59:59.999Z",
+      "second_settled_acceptance_close": 0.03007,
+      "first_settled_failure_close_utc": "2026-07-28T17:59:59.999Z",
+      "first_settled_failure_close": 0.02985,
+      "preregistered_label": "FAILED_PERSISTENCE",
+      "cluster_id": "ETHBTC_0300_CLUSTER_20260728T150000Z",
+      "independent_observation": true,
+      "lineage_class": "OWNER_PARTIAL",
+      "lineage_reason": "Direct settled Binance ETHBTC owner rows exist from event start through failure, but frozen pre-event checkpoints -72h, -24h and -4h are not all present in the enumerated owner artifact.",
+      "source_path": "08_SOURCE_MATERIAL/data_ping/deep_capture/DCR-20260729-EVENT-001/binance_ethbtc_1h_utc.csv",
+      "source_commit": "8984095e6c66a4e6c873686206112ec19079e6b9",
+      "outcome_status": "NOT_CALCULATED"
+    }
+  ],
+  "same_cluster_follow_ups": [
+    {"open_utc":"2026-07-28T18:00:00Z","close":0.02999,"classification":"SAME_CLUSTER_FOLLOW_UP"},
+    {"open_utc":"2026-07-28T19:00:00Z","close":0.03008,"classification":"SAME_CLUSTER_FOLLOW_UP"},
+    {"open_utc":"2026-07-28T20:00:00Z","close":0.03002,"classification":"SAME_CLUSTER_FOLLOW_UP"},
+    {"open_utc":"2026-07-28T21:00:00Z","close":0.03007,"classification":"SAME_CLUSTER_FOLLOW_UP"},
+    {"open_utc":"2026-07-28T22:00:00Z","close":0.02998,"classification":"SAME_CLUSTER_FOLLOW_UP"},
+    {"open_utc":"2026-07-28T23:00:00Z","close":0.03007,"classification":"SAME_CLUSTER_FOLLOW_UP"},
+    {"open_utc":"2026-07-29T00:00:00Z","close":0.02998,"classification":"SAME_CLUSTER_FOLLOW_UP"},
+    {"open_utc":"2026-07-29T01:00:00Z","close":0.02991,"classification":"SAME_CLUSTER_FOLLOW_UP"}
+  ]
+}
