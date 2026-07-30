@@ -1,0 +1,121 @@
+{
+  "schema_version": "DATA_PING_FRAMEWORK_MACHINE_SUMMARY_v1",
+  "run_id": "run_95c5ae6811704350a854fb1d1fff844a",
+  "snapshot_id": "snap_609e377c7de24dfba3e4db211e448e46",
+  "snapshot_utc": "2026-07-30T16:51:14.252Z",
+  "collector_status": "PARTIAL_ALL_CORE_ACTIONS_ATTEMPTED",
+  "main_framework_acceptance": "BOUNDED_MARKET_OBSERVATION_WITH_SOURCE_QA",
+  "market_state_ingest": "BOUNDED_DIAGNOSTIC_ONLY",
+  "longitudinal_market_run_accepted": false,
+  "accepted_as_next_market_predecessor": false,
+  "classification": "BROAD_BREADTH_INTRADAY_PERSISTENCE_WITH_FLAT_MAJORS_ETH_LEVERAGE_COOLING_DIRECT_ETHBTC_OWNER_UNAVAILABLE_AND_INVALID_PREDECESSOR_LINEAGE",
+  "current_market": {
+    "BTC_CoinGecko_usd": 64745,
+    "ETH_CoinGecko_usd": 1915.79,
+    "ETHBTC_derived": 0.029589775272221792,
+    "total_market_cap_usd": 2294384474311.8335,
+    "total_volume_usd": 69321099743.06464,
+    "btc_dominance_pct": 56.619093653292495,
+    "eth_dominance_pct": 10.07954881171261
+  },
+  "main_framework_rebind_vs_last_accepted_market_run": {
+    "comparison_run_id": "run_0bc8a5d0d0464542b29b4d50f2f8e19c",
+    "comparison_snapshot_id": "snap_0e19c112413d471d8270cad1a18148a7",
+    "comparison_is_main_framework_rebind_not_collector_comparison": true,
+    "BTC_price_delta_pct": 1.5130134839,
+    "ETH_price_delta_pct": 1.1868041324,
+    "total_market_cap_delta_pct": 1.1561122842,
+    "total_volume_delta_pct": 16.0179224047,
+    "btc_dominance_delta_pct_points": 0.0366788818,
+    "eth_dominance_delta_pct_points": 0.0024397251,
+    "breadth_delta_percentage_points": 33.7078651685,
+    "ETHBTC_delta_status": "NOT_METHOD_COMPATIBLE_DIRECT_OWNER_VS_DERIVED_RATIO"
+  },
+  "intraday_follow_up_vs_prior_bounded_observation": {
+    "comparison_run_id": "run_4dd78b1e713b4258aedcade193b29b8b",
+    "elapsed_seconds": 11694.471,
+    "BTC_price_delta_pct": -0.0401414213,
+    "ETH_price_delta_pct": -0.3428042323,
+    "ETHBTC_derived_delta_pct": -0.3027843529,
+    "total_market_cap_delta_pct": 0.1087094693,
+    "total_volume_delta_pct": 1.8401767569,
+    "breadth_delta_percentage_points": 5.6179775281,
+    "OKX_BTC_OI_delta_pct": -0.0089253332,
+    "OKX_ETH_OI_delta_pct": -1.4692266753,
+    "interpretation": "BREADTH_BROADENED_WHILE_MAJOR_PRICES_STALLED_AND_ETH_OPEN_INTEREST_COOLED"
+  },
+  "breadth": {
+    "advance_ratio": 0.6067415730337079,
+    "advance_ratio_pct": 60.6741573034,
+    "advancers": 54,
+    "decliners": 20,
+    "unchanged": 15,
+    "median_return_24h_pct": 0.6,
+    "selective_gate_50_pct": "MET_BY_10_6741573034_PERCENTAGE_POINTS",
+    "broad_gate_55_pct": "MET_BY_5_6741573034_PERCENTAGE_POINTS",
+    "second_consecutive_bounded_snapshot_above_55": true,
+    "persistence_scope": "TWO_LIVE_SNAPSHOTS_OVER_3H14M54S_NOT_SETTLED_DAILY_PERSISTENCE",
+    "membership_hash": "db981da7d5002ac7742419b4bcf7d9c022a5b2ab88165ab971228d587aa6a739",
+    "membership_hash_matches_last_accepted_market_run": true,
+    "prior_bounded_membership_hash": "49d41929bf0ebe9b7b16c37bb1e31d6808b0b199e0f051a17b766b41c12a6b81",
+    "intraday_membership_hash_changed": true,
+    "constituent_transition_comparison_permitted": false,
+    "sidecar_status": "NOT_EMITTED",
+    "replayability": "FAIL",
+    "implementation_issue": 224
+  },
+  "derivatives": {
+    "OKX_BTC_last": 64770,
+    "OKX_ETH_last": 1917.41,
+    "OKX_BTC_basis_bps": -5.1381673253,
+    "OKX_ETH_basis_bps": -5.3680222226,
+    "OKX_BTC_funding": 0.000071073378043,
+    "OKX_ETH_funding": 0.0000182625410677,
+    "OKX_BTC_OI_usd": 1999080681.2772079,
+    "OKX_ETH_OI_usd": 1378075642.6459825,
+    "BTC_OI_delta_vs_last_accepted_pct": 2.9672460199,
+    "ETH_OI_delta_vs_last_accepted_pct": 4.1466843494,
+    "interpretation": "POSITIONING_REMAINS_ABOVE_LAST_ACCEPTED_BASELINE_BUT_ETH_OI_COOLING_INTRADAY"
+  },
+  "owner_gate": {
+    "direct_ETHBTC_owner": "UNAVAILABLE_GEO_RESTRICTION",
+    "last_valid_direct_ETHBTC": 0.0297,
+    "last_valid_direct_gate": "BELOW_0_0300",
+    "derived_ETHBTC": 0.029589775272221792,
+    "derived_ratio_distance_below_0_0300_pct": -1.3674157593,
+    "derived_ratio_gate_authority": "NONE"
+  },
+  "lineage": {
+    "declared_predecessor_id": "snap_bed564693b804b8c9c2b7476386abd3d",
+    "declared_predecessor_was_accepted": false,
+    "declared_predecessor_type": "BOUNDED_NON_PREDECESSOR",
+    "required_market_predecessor_id": "snap_0e19c112413d471d8270cad1a18148a7",
+    "packet_comparison_fields_canonical": false,
+    "implementation_issue": 232
+  },
+  "governance": {
+    "rotation": "NO_ROTATION",
+    "rebuy": "LOCKED",
+    "new_entry": "NOT_ACTIVE",
+    "large_caps": "WATCH_ONLY",
+    "portfolio_action": "NONE",
+    "canonical_state_change": "NONE"
+  },
+  "prospective": {
+    "observation_id": "OBS-20260730-95c5ae68-BREADTH-PERSISTENCE-OWNER-OUTAGE",
+    "overlap_cluster_key": "ROTATION-2026-W31-ETHBTC-0030-ATTEMPT",
+    "new_policy_event": false,
+    "new_A_class_receipt": false,
+    "A_class_increment": 0,
+    "A_rows_total": 2,
+    "new_shadow_dual_run": false,
+    "shadow_dual_run_valid_runs": 5,
+    "final_holdout_opened": false
+  },
+  "deep_capture": {
+    "new_request": false,
+    "existing_request_id": "DCR-20260730-EVENT-003",
+    "action": "REUSED_AND_EXTENDED",
+    "extension_reason": "SECOND_SNAPSHOT_ABOVE_55_MEMBERSHIP_HASH_TRANSITION_AND_NEW_OWNER_OUTAGE_FOLLOW_UP"
+  }
+}
