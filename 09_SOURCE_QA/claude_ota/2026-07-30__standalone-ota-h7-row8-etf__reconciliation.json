@@ -1,0 +1,100 @@
+{
+  "schema_version": "CLAUDE_OTA_RECONCILIATION_QA_v1",
+  "source_run_timestamp_utc": "2026-07-30T19:04:13.143Z",
+  "validated_at_utc": "2026-07-30T19:32:22Z",
+  "operating_mode": "STANDALONE_OTA",
+  "reference_bridge_present": false,
+  "source_replayability": {
+    "H7_row_8_values": "ACCEPTED_AS_SOURCE_EVIDENCE",
+    "raw_Binance_rows_transmitted": false,
+    "raw_row_hashes_transmitted": true,
+    "raw_row_hashes_independently_validated": false,
+    "ETHBTC_daily_response_hash_prefix_transmitted": true,
+    "Farside_response_hash_transmitted": false,
+    "ETH_ETF_2026_07_28_29_transmitted": false
+  },
+  "arithmetic_checks": {
+    "ETF_20_session_decomposition": {
+      "previous_value_usd_m": -230.9,
+      "roll_off_component_usd_m": 453.6,
+      "new_sessions_component_usd_m": -17.6,
+      "recomputed_new_value_usd_m": 205.1,
+      "reported_new_value_usd_m": 205.1,
+      "status": "PASS"
+    },
+    "H7_relative_spread": {
+      "BTC_1D_pct": -0.18,
+      "ETH_1D_pct": -1.33,
+      "recomputed_ETH_minus_BTC_pp": -1.15,
+      "reported_ETH_minus_BTC_pp": -1.15,
+      "status": "PASS"
+    }
+  },
+  "governance_checks": {
+    "H7_original_maturity_already_reached": true,
+    "H7_condition_1_canonical_text_available": true,
+    "H7_condition_1_rule": "C3_GT_C2_AND_C4_GT_C3_AND_C5_GT_C4",
+    "row_8_can_rescore_H7": false,
+    "source_COND1_ambiguity": "REJECTED_AS_POST_MATURITY_CATEGORY_ERROR",
+    "F4_reopened": false
+  },
+  "item_adjudication": {
+    "R_11": {
+      "status": "PARTIAL_ACCEPT",
+      "accepted": [
+        "row_8_direct_values_as_source_evidence",
+        "latest_negative_increment",
+        "rolling_slope_weakened",
+        "BTC_relative_leader"
+      ],
+      "rejected": [
+        "new_maturity",
+        "outcome_determining_COND1_ambiguity",
+        "canonical_rescore"
+      ]
+    },
+    "R_12": {
+      "status": "ACCEPT",
+      "classification": "SINGLE_SESSION_ACCEPTANCE_THEN_REJECTION",
+      "new_policy_event": false
+    },
+    "R_13": {
+      "status": "ACCEPT_WITH_CAUTION",
+      "note": "One positive session does not establish persistence; major issuers diverged."
+    },
+    "R_14": {
+      "status": "ACCEPT",
+      "note": "20-session sign flip is roll-off driven and must not be read as new bullish information."
+    },
+    "R_15": {
+      "status": "ACCEPT_AS_DERIVED_SOURCE_CLAIM",
+      "value_usd_m": -222.1
+    },
+    "R_16": {
+      "status": "CANDIDATE_ONLY",
+      "strict_observation_increment": 0,
+      "reason": "Required Farside response_sha256 was not transmitted."
+    }
+  },
+  "DCR_003_relation": {
+    "late_direct_owner_evidence_received": true,
+    "daily_threshold_sequence_partially_resolved": true,
+    "extension_executed": false,
+    "direct_1h_5m_path_resolved": false,
+    "exact_point_in_time_breadth_sidecar_resolved": false,
+    "request_remains_open": true
+  },
+  "source_QA_hypotheses": {
+    "H_SRC_01": "FALSIFIED_RETIRED",
+    "H_SRC_02": "PROSPECTIVE_TEST_REQUIRED_STRICT_COUNT_2_PLUS_1_INCOMPLETE_CANDIDATE",
+    "H_ETF_01": "WEAKENED_LOW_CONFIDENCE",
+    "H_WIN_01": "UNPROVEN_LOW_CONFIDENCE"
+  },
+  "authority_boundaries": {
+    "canonical_market_pointer_advance": false,
+    "new_policy_event": false,
+    "new_A_class_receipt": false,
+    "canonical_state_change": "NONE",
+    "portfolio_action_change": "NONE"
+  }
+}
