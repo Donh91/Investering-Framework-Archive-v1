@@ -1,0 +1,41 @@
+{
+  "contract": "MAR_WP03A_LINEAGE_AUDIT_v1",
+  "generated_at_utc": "2026-07-30T06:46:00Z",
+  "classification_counts": {
+    "FULLY_REPLAYABLE": 0,
+    "OWNER_PARTIAL": 1,
+    "SHADOW_ONLY": 0,
+    "BLOCKED": 3,
+    "RIGHT_CENSORED": 0,
+    "SAME_CLUSTER_FOLLOW_UP": 8
+  },
+  "family_status": [
+    {
+      "family": "DIRECT_ETHBTC_THRESHOLD_ATTEMPT",
+      "status": "ENUMERATED_OWNER_PARTIAL",
+      "reason": "Direct settled owner rows support event start and persistence failure, but complete frozen pre-event checkpoints are absent from the scoped artifact."
+    },
+    {
+      "family": "BTC_ETH_SETTLED_RANGE_BREAK",
+      "status": "BLOCKED",
+      "reason": "No complete owner-boundary plus settled-price join was materialized in WP03A without outcome inspection."
+    },
+    {
+      "family": "BREADTH_DISPLACEMENT_AND_DIVERGENCE",
+      "status": "BLOCKED",
+      "reason": "Candidate evidence exists operationally, but a complete machine join of identical membership hash, owner snapshots and frozen event timestamps was not located in the canonical owner path during this pass."
+    },
+    {
+      "family": "ETF_FLOW_REVERSAL",
+      "status": "BLOCKED",
+      "reason": "WP02C row-level publication and retrieval availability remains unmaterialized."
+    }
+  ],
+  "lineage_rules_applied": [
+    "No owner data substitution by challenger or derived proxy",
+    "No event counted twice inside active overlap cluster",
+    "Missing pre-event checkpoints produce OWNER_PARTIAL rather than inferred history",
+    "Blocked families remain in registry and are not silently omitted",
+    "No forward outcome columns are permitted in WP03A"
+  ]
+}
