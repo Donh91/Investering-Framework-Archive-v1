@@ -4,8 +4,8 @@
   "retention_addendum_paths": [
     "02_DATA_PING/protocols/2026-07-29__point-in-time-breadth-sidecar-retention-addendum-v1__canonical.md"
   ],
-  "status": "ACTIVE_WITH_PREPARED_EXTENDED_REQUEST",
-  "updated_at_utc": "2026-07-30T17:00:00Z",
+  "status": "ACTIVE_WITH_PARTIAL_VALIDATED_BLOCKED_REQUEST",
+  "updated_at_utc": "2026-07-30T17:40:00Z",
   "requests": [
     {
       "request_id": "DCR-20260729-EVENT-001",
@@ -67,13 +67,19 @@
       "prompt_path": "07_PROMPTS_AND_AGENTS/prompts/requests/2026-07-30__DCR-20260730-EVENT-003__breadth-gate-owner-recovery.md",
       "extension_prompt_paths": ["07_PROMPTS_AND_AGENTS/prompts/requests/2026-07-30__DCR-20260730-EVENT-003__extension-run_95c5.md"],
       "extension_ids": ["DCR-20260730-EVENT-003-EXT-95C5"],
-      "status": "PREPARED_EXTENDED",
-      "user_delivery_status": "DELIVERED_AND_EXTENDED_TO_USER_IN_CURRENT_CHAT_RESPONSE",
-      "response_artifact_ids": [],
-      "validation_result": null,
-      "resolved_gaps": [],
-      "unresolved_gaps": ["first_settled_daily_ETHBTC_follow_up_after_0_0300_acceptance","current_direct_ETHBTC_owner_state","exact_13_22_13_26_breadth_constituent_sidecar","exact_16_42_20_breadth_constituent_sidecar","exact_intraday_membership_and_return_transition","current_rank_bucket_breadth_decomposition"],
+      "status": "PARTIAL_VALIDATED_BLOCKED_CONTINUATION_REQUIRED",
+      "user_delivery_status": "DELIVERED_RESPONSE_RECEIVED_AND_PACKAGE_VERIFIED",
+      "response_received_at_utc": "2026-07-30T17:33:00Z",
+      "response_freeze_timestamp_utc": "2026-07-30T17:09:25Z",
+      "response_payload_directory": "08_SOURCE_MATERIAL/data_ping/deep_capture/DCR-20260730-EVENT-003",
+      "response_artifact_ids": ["08_SOURCE_MATERIAL/data_ping/deep_capture/DCR-20260730-EVENT-003/package-pointer.md","08_SOURCE_MATERIAL/data_ping/deep_capture/DCR-20260730-EVENT-003/manifest.json","09_SOURCE_QA/data_ping/deep_capture/2026-07-30__DCR-20260730-EVENT-003__validation.json","04_MARKET_LEARNING/data_ping/deep_capture/2026-07-30__DCR-20260730-EVENT-003__framework-read.md","02_DATA_PING/operational_handoffs/deep_capture_evaluations/2026-07-30__DCR-20260730-EVENT-003__response-evaluation.json"],
+      "validation_result": "PARTIAL_VALIDATED_INTEGRITY_PASS_CRITICAL_EVIDENCE_UNRESOLVED",
+      "resolved_gaps": ["source_attempt_ledger","deduplicated_failure_evidence","direct_owner_non_substitution_status","historical_breadth_non_substitution_status","direct_crosscheck_non_synthesis_status","manifest_and_package_integrity"],
+      "unresolved_gaps": ["first_settled_daily_ETHBTC_follow_up_after_0_0300_acceptance","current_direct_ETHBTC_owner_state","direct_ETHBTC_1h_and_5m_path","exact_13_22_13_26_breadth_constituent_sidecar","exact_16_42_20_breadth_constituent_sidecar","exact_intraday_membership_and_return_transition","current_rank_bucket_breadth_decomposition","direct_OKX_Kraken_Coinbase_ETHBTC_crosschecks"],
       "continuation_required": true,
+      "continuation_reason": "The package validates the source-access failure but does not resolve the direct owner or point-in-time breadth evidence. Reuse the same request only from a different execution context or when a future accepted DATA PING recovers direct owner data.",
+      "immediate_same_runtime_retry": false,
+      "implementation_issues": [224,232],
       "canonical_effect": "NONE",
       "portfolio_effect": "NONE"
     }
@@ -81,6 +87,7 @@
   "latest_weekly_request_id": null,
   "latest_event_driven_request_id": "DCR-20260730-EVENT-003",
   "pending_request_ids": ["DCR-20260730-EVENT-003"],
+  "blocked_request_ids": ["DCR-20260730-EVENT-003"],
   "completed_request_ids": ["DCR-20260729-EVENT-001","DCR-20260729-EVENT-002"],
   "deduplication": {
     "same_iso_week_same_method_scope": "REUSE_OR_EXTEND_EXISTING_REQUEST",
