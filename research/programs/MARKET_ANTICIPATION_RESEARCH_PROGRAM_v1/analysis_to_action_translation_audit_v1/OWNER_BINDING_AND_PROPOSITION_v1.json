@@ -1,0 +1,51 @@
+{
+  "schema_version": "1.0",
+  "program_id": "ANALYSIS_TO_ACTION_TRANSLATION_AUDIT_v1",
+  "status": "PREREGISTERED_RESEARCH_ONLY",
+  "parent_program": "MARKET_ANTICIPATION_RESEARCH_PROGRAM_v1",
+  "parent_issue": 209,
+  "workstream_binding": "MAR_WP06_OPPORTUNITY_COST_PREPARATORY_LAYER",
+  "frozen_proposition": "Separating market analysis, price translation and action policy will reveal material decision errors that are hidden by blended forecast scoring and will improve future Master Monday and RAW operational precision.",
+  "existing_owners": {
+    "analysis_owner": "03_WEEKLY_OPERATIONS/master_monday/<week>/03_framework_ratified_final.md",
+    "forecast_translation_owner": "03_WEEKLY_OPERATIONS/forecast_ledger/*__official.md",
+    "outcome_owner": "03_WEEKLY_OPERATIONS/forecast_ledger/scoring/ and verified DATA PING/range owners",
+    "economic_execution_owner": "04_MARKET_LEARNING/backtests/framework_backtest_readiness_build_v1/",
+    "opportunity_cost_owner": "FNP_CUMULATIVE and MAR-WP06"
+  },
+  "redundancy_ruling": "REFINES_EXISTING_OWNER",
+  "new_active_test": false,
+  "new_engine": false,
+  "new_score": false,
+  "new_scheduler": false,
+  "economic_execution_allowed": false,
+  "final_holdout_opened": false,
+  "may_change": [
+    "research taxonomy",
+    "prospective capture completeness",
+    "future governance review eligibility"
+  ],
+  "may_not_change": [
+    "market state",
+    "rotation state",
+    "rebuy permission",
+    "new-entry permission",
+    "portfolio action",
+    "forecast history",
+    "frozen thresholds",
+    "active test registry"
+  ],
+  "minimum_promotion_evidence": {
+    "temporally_valid_weekly_rows": 12,
+    "distinct_regimes": 2,
+    "material_decision_divergence_rows": 4,
+    "independent_blind_replication": "REQUIRED",
+    "owner_defined_outcome_metrics": "REQUIRED"
+  },
+  "kill_conditions": [
+    "No material analysis-versus-translation or translation-versus-action divergence after 12 valid weekly rows",
+    "More than 25 percent of otherwise eligible rows remain irreducibly ambiguous after lineage repair",
+    "The decomposition cannot be reproduced by an independent auditor from frozen source artifacts",
+    "The audit adds no incremental decision value beyond existing Forecast Ledger and FNP opportunity-cost owners"
+  ]
+}

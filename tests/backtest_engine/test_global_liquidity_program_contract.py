@@ -22,7 +22,7 @@ class GlobalLiquidityProgramContractTests(unittest.TestCase):
         )
         self.assertEqual(result.returncode, 0, result.stderr)
         payload = json.loads(result.stdout)
-        self.assertEqual(payload, {"checks": 8, "failures": 0, "status": "PASS"})
+        self.assertEqual(payload, {"checks": 19, "failures": 0, "status": "PASS"})
 
     def test_economic_execution_remains_locked(self) -> None:
         state = json.loads((PROGRAM / "EXECUTION_STATE_v1.json").read_text(encoding="utf-8"))

@@ -1,0 +1,254 @@
+{
+  "schema_version": "1.0",
+  "dataset_id": "AATA_SOURCE_ROWS_W28_W31_v1",
+  "status": "SOURCE_DERIVED_NON_AUTHORITATIVE",
+  "rules": [
+    "Rows copy only explicit frozen source content or an already published owner audit.",
+    "Blocked temporal rows remain historical context and cannot become economic evidence.",
+    "No missing value is inferred.",
+    "Analysis, price translation and action translation remain separate.",
+    "Existing owner scores are preserved as imported context, not rescored."
+  ],
+  "rows": [
+    {
+      "row_id": "AATA_2026_W28",
+      "week": "2026-W28",
+      "source": {
+        "master_monday_path": null,
+        "forecast_ledger_path": "03_WEEKLY_OPERATIONS/forecast_ledger/2026-07-06__forecast-ledger-2026-w28__official.md",
+        "frozen_timestamp_utc": null,
+        "source_class": "OFFICIAL_FORECAST_LEDGER_DATE_ONLY"
+      },
+      "temporal_status": "BLOCKED_MISSING_EXPLICIT_FREEZE_TIME",
+      "analysis": {
+        "regime_call": "BTC_LED_EARLY_RECOVERY_ATTEMPT",
+        "edge_state": "CONSTRUCTIVE_BUT_NOT_CONFIRMED",
+        "leadership_call": "BTC_LED",
+        "rotation_call": "EARLY_NOT_CONFIRMED",
+        "confidence": null,
+        "falsifiers": [
+          "BTC daily loss of 60900",
+          "ETHBTC below 0.0275",
+          "breadth deterioration from 24H into 7D"
+        ]
+      },
+      "price_translation": {
+        "horizons": [
+          {"asset": "BTC", "horizon": "1_3D", "low": 61900, "high": 64200, "invalidation": "daily loss of 61900; under 60900 repair weakens", "continuation": "4H accept above 63400 followed by daily close above 64200"},
+          {"asset": "BTC", "horizon": "5_7D", "low": 60900, "high": 65400, "invalidation": "daily close below 60900", "continuation": "daily close above 64200 and hold above 63400"},
+          {"asset": "ETH", "horizon": "WEEKLY", "low": 1540, "high": 1760, "invalidation": "daily close below 1500", "continuation": "upper break target 1850"}
+        ],
+        "conditional_paths": {
+          "base": "recovery range with upside test, not clean breakout",
+          "bull": "BTC 65400-66800 after confirmed break",
+          "bear": "BTC 59400 then 57800; ETH 1500 then 1470"
+        }
+      },
+      "action_translation": {
+        "portfolio_bias": "HOLD_CORE_PREPARE_NO_CHASE",
+        "new_entry": "NOT_SPECIFIED_AS_PERMISSION",
+        "rebuy": "NOT_UNLOCKED",
+        "large_cap_window": "HOLD_WATCH_ONLY",
+        "portfolio_action": "NONE",
+        "conditions": ["No chase on green candles", "mid caps WAIT", "small caps WAIT_AVOID", "micro and memes AVOID"]
+      },
+      "outcome": {
+        "status": "HISTORICAL_CONTEXT_ONLY",
+        "analysis_result": null,
+        "price_translation_result": null,
+        "action_policy_result": null,
+        "timing_result": null,
+        "utility_metrics": null,
+        "existing_owner_audit_reference": "03_WEEKLY_OPERATIONS/master_monday/2026-W29/03_framework_ratified_final.md"
+      },
+      "authority": {"market_state_change": false, "portfolio_action_change": false, "promotion_allowed": false}
+    },
+    {
+      "row_id": "AATA_2026_W29",
+      "week": "2026-W29",
+      "source": {
+        "master_monday_path": "03_WEEKLY_OPERATIONS/master_monday/2026-W29/03_framework_ratified_final.md",
+        "forecast_ledger_path": "03_WEEKLY_OPERATIONS/forecast_ledger/2026-07-13__forecast-ledger-2026-w29__official.md",
+        "frozen_timestamp_utc": "2026-07-13T15:40:00Z",
+        "source_class": "FRAMEWORK_RATIFIED_FINAL_PLUS_OFFICIAL_LEDGER"
+      },
+      "temporal_status": "BLOCKED_TIMESTAMP_CONFLICT",
+      "analysis": {
+        "regime_call": "BTC_LED_REPAIR_TRANSITION",
+        "edge_state": "NEAR_PRESENT",
+        "leadership_call": "BTC_LED",
+        "rotation_call": "NO_ROTATION",
+        "confidence": "LOW_CURRENT_STATE_QUALITY",
+        "falsifiers": [
+          "BTC completed close below 61900 with failed reclaim",
+          "ETHBTC below 0.0275",
+          "24H breadth remains below 20 percent",
+          "ETF short-window deterioration"
+        ]
+      },
+      "price_translation": {
+        "horizons": [
+          {"asset": "BTC", "horizon": "1_3D", "low": 61900, "high": 64200, "invalidation": "completed close below 61900", "continuation": "reclaim and hold 63300 then test 64200"},
+          {"asset": "ETH", "horizon": "1_3D", "low": 1735, "high": 1845, "invalidation": null, "continuation": null},
+          {"asset": "BTC", "horizon": "5_7D", "low": 60900, "high": 65800, "invalidation": "completed close below 60900 materially upgrades risk", "continuation": "65800-66800, stretch 68200"},
+          {"asset": "ETH", "horizon": "5_7D", "low": 1680, "high": 1900, "invalidation": "1680 then 1620 then 1540 under stress", "continuation": "1900-1980"}
+        ],
+        "conditional_paths": {"base_probability_pct": 55, "bull_probability_pct": 25, "bear_probability_pct": 20}
+      },
+      "action_translation": {
+        "portfolio_bias": "HOLD_PREPARE_DO_NOT_CHASE",
+        "new_entry": "LOCKED_PENDING_FULL_UNLOCK_MAP",
+        "rebuy": "LOCKED",
+        "large_cap_window": "NOT_OPEN",
+        "portfolio_action": "NONE",
+        "conditions": [
+          "Hold core exposure",
+          "Keep stablecoin capacity available",
+          "Small graduated large-cap tranche only after all unlock gates",
+          "Do not rebuy first dip automatically"
+        ]
+      },
+      "outcome": {
+        "status": "HISTORICAL_CONTEXT_ONLY",
+        "analysis_result": null,
+        "price_translation_result": null,
+        "action_policy_result": null,
+        "timing_result": null,
+        "utility_metrics": null,
+        "existing_owner_audit_reference": "03_WEEKLY_OPERATIONS/master_monday/2026-W30/03_framework_ratified_final.md"
+      },
+      "authority": {"market_state_change": false, "portfolio_action_change": false, "promotion_allowed": false}
+    },
+    {
+      "row_id": "AATA_2026_W30",
+      "week": "2026-W30",
+      "source": {
+        "master_monday_path": "03_WEEKLY_OPERATIONS/master_monday/2026-W30/03_framework_ratified_final.md",
+        "forecast_ledger_path": "03_WEEKLY_OPERATIONS/forecast_ledger/2026-07-20__forecast-ledger-2026-w30__official.md",
+        "frozen_timestamp_utc": "2026-07-20T08:06:54Z",
+        "source_class": "FRAMEWORK_RATIFIED_FINAL_PLUS_OFFICIAL_LEDGER"
+      },
+      "temporal_status": "TEMPORAL_METADATA_PASS_OUTCOME_JOIN_LOCKED",
+      "analysis": {
+        "regime_call": "BTC_LED_STRUCTURAL_REPAIR",
+        "edge_state": "REPAIR_PRESENT_MATURING",
+        "leadership_call": "BTC_LED",
+        "rotation_call": "NO_ROTATION",
+        "confidence": "MEDIUM",
+        "falsifiers": [
+          "BTC settled loss of 61900",
+          "ETHBTC below 0.0275",
+          "ETF flow turns negative with weak breadth and taker ratios below 1"
+        ]
+      },
+      "price_translation": {
+        "horizons": [
+          {"asset": "BTC", "horizon": "1_3D", "low": 62700, "high": 65700, "invalidation": "settled close below 61900", "continuation": "hold above 64400 and acceptance above 65600"},
+          {"asset": "ETH", "horizon": "1_3D", "low": 1780, "high": 1935, "invalidation": "settled close below 1750", "continuation": "acceptance above 1900 with ETHBTC hold"},
+          {"asset": "BTC", "horizon": "5_7D", "low": 61900, "high": 66800, "invalidation": "settled loss of 61900; deterioration at 59400", "continuation": "stretch 68200 only with broader flow confirmation"},
+          {"asset": "ETH", "horizon": "5_7D", "low": 1720, "high": 2010, "invalidation": "settled loss of 1720 with ETHBTC below 0.0275", "continuation": null}
+        ],
+        "conditional_paths": {
+          "base": "consolidation and support retests after confirmed repair",
+          "bull": "65600-68200 with improved flow",
+          "bear": "61900 loss makes 59400 next defense"
+        }
+      },
+      "action_translation": {
+        "portfolio_bias": "WATCH_ONLY",
+        "new_entry": "NOT_ACTIVE",
+        "rebuy": "LOCKED",
+        "large_cap_window": "WATCH_ONLY_NOT_OPEN",
+        "portfolio_action": "NONE",
+        "conditions": ["No automatic deployment", "Monitor support retention and breadth translation", "No active trim trigger"]
+      },
+      "outcome": {
+        "status": "OWNER_AUDIT_IMPORTED_ECONOMIC_RESCORING_LOCKED",
+        "analysis_result": "MIXED_LEADERSHIP_MISS",
+        "price_translation_result": "OWNER_RANGE_PRECISION_86_11",
+        "action_policy_result": null,
+        "timing_result": null,
+        "utility_metrics": null,
+        "existing_owner_audit": {
+          "source_path": "03_WEEKLY_OPERATIONS/master_monday/2026-W31/03_framework_ratified_final.md",
+          "range_precision": 86.11,
+          "state_precision": 75.0,
+          "btc_1_3d": "PARTIAL",
+          "eth_1_3d": "PARTIAL",
+          "btc_5_7d": "NEAR_FULL_PARTIAL",
+          "eth_5_7d": "HIT",
+          "repair_state": "HIT",
+          "rotation_state": "HIT",
+          "large_cap_window": "HIT",
+          "leadership": "MISS"
+        }
+      },
+      "authority": {"market_state_change": false, "portfolio_action_change": false, "promotion_allowed": false}
+    },
+    {
+      "row_id": "AATA_2026_W31",
+      "week": "2026-W31",
+      "source": {
+        "master_monday_path": "03_WEEKLY_OPERATIONS/master_monday/2026-W31/03_framework_ratified_final.md",
+        "forecast_ledger_path": "03_WEEKLY_OPERATIONS/forecast_ledger/2026-07-27__forecast-ledger-2026-w31__official.md",
+        "frozen_timestamp_utc": "2026-07-27T17:42:39Z",
+        "source_class": "FRAMEWORK_RATIFIED_FINAL_PLUS_OFFICIAL_LEDGER"
+      },
+      "temporal_status": "PROSPECTIVE_FROZEN",
+      "analysis": {
+        "regime_call": "SELECTIVE_REPAIR_WITH_FRAGILE_TRANSLATION",
+        "edge_state": "REPAIR_PRESENT_TRANSLATION_FRAGILE",
+        "leadership_call": "ETH_TRANSMISSION_CANDIDATE_NOT_CONFIRMATION",
+        "rotation_call": "NO_ROTATION",
+        "confidence": "MEDIUM_LOW",
+        "falsifiers": [
+          "BTC settled loss of 62200 without reclaim",
+          "ETHBTC failure to hold 0.0300 with weak breadth",
+          "continued ETF outflow and deleveraging with breadth contraction"
+        ]
+      },
+      "price_translation": {
+        "horizons": [
+          {"asset": "BTC", "horizon": "1_3D", "low": 63600, "high": 65900, "invalidation": "settled close below 63100; stronger deterioration below 62200", "continuation": "acceptance above 65900 opens 66950-67200"},
+          {"asset": "ETH", "horizon": "1_3D", "low": 1870, "high": 1995, "invalidation": "settled close below 1843 with continued ETHBTC weakness", "continuation": "acceptance above 1995 requires direct ETHBTC hold"},
+          {"asset": "BTC", "horizon": "5_7D", "low": 62200, "high": 67200, "invalidation": "hard deterioration at settled loss of 59400", "continuation": "stretch 68200 only with improved breadth and flow"},
+          {"asset": "ETH", "horizon": "5_7D", "low": 1800, "high": 2075, "invalidation": "settled loss of 1780 with ETHBTC below 0.0275", "continuation": "stretch 2120 only with settled ETHBTC above 0.0300 and broader participation"}
+        ],
+        "conditional_paths": {
+          "base": "consolidation above repair floor with repeated ETHBTC 0.0300 tests",
+          "bull": "BTC above 67200 plus settled ETHBTC and breadth recovery",
+          "bear": "BTC below 62200 with weak breadth and ETHBTC"
+        }
+      },
+      "action_translation": {
+        "portfolio_bias": "WATCH_ONLY_NO_CHASE",
+        "new_entry": "NOT_ACTIVE",
+        "rebuy": "LOCKED",
+        "large_cap_window": "WATCH_ONLY_NOT_OPEN",
+        "portfolio_action": "NONE",
+        "conditions": [
+          "No upgrade from a single intraday ETHBTC touch",
+          "Prefer missing the first part over acting without breadth",
+          "Selected large caps remain observation only"
+        ]
+      },
+      "outcome": {
+        "status": "PENDING_HORIZON_MATURITY_AND_OWNER_JOIN",
+        "analysis_result": null,
+        "price_translation_result": null,
+        "action_policy_result": null,
+        "timing_result": null,
+        "utility_metrics": null
+      },
+      "authority": {"market_state_change": false, "portfolio_action_change": false, "promotion_allowed": false}
+    }
+  ],
+  "summary": {
+    "rows": 4,
+    "temporally_blocked_rows": 2,
+    "temporally_usable_but_join_locked_rows": 1,
+    "prospective_pending_rows": 1,
+    "new_economic_scores": 0,
+    "owner_scores_imported": 1
+  }
+}

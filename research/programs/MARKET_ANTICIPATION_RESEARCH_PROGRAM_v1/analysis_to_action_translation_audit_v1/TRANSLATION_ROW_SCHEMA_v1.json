@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "ANALYSIS_TO_ACTION_TRANSLATION_ROW_SCHEMA_v1",
+  "title": "Analysis to Action Translation Row",
+  "type": "object",
+  "required": [
+    "row_id",
+    "week",
+    "source",
+    "temporal_status",
+    "analysis",
+    "price_translation",
+    "action_translation",
+    "outcome",
+    "authority"
+  ],
+  "properties": {
+    "row_id": {"type": "string"},
+    "week": {"type": "string", "pattern": "^2026-W[0-9]{2}$"},
+    "source": {
+      "type": "object",
+      "required": ["master_monday_path", "forecast_ledger_path", "frozen_timestamp_utc", "source_class"]
+    },
+    "temporal_status": {
+      "enum": [
+        "BLOCKED_MISSING_EXPLICIT_FREEZE_TIME",
+        "BLOCKED_TIMESTAMP_CONFLICT",
+        "TEMPORAL_METADATA_PASS_OUTCOME_JOIN_LOCKED",
+        "PROSPECTIVE_FROZEN"
+      ]
+    },
+    "analysis": {
+      "type": "object",
+      "required": ["regime_call", "edge_state", "leadership_call", "rotation_call", "confidence", "falsifiers"]
+    },
+    "price_translation": {
+      "type": "object",
+      "required": ["horizons", "conditional_paths"]
+    },
+    "action_translation": {
+      "type": "object",
+      "required": ["portfolio_bias", "new_entry", "rebuy", "large_cap_window", "portfolio_action", "conditions"]
+    },
+    "outcome": {
+      "type": "object",
+      "required": ["status", "analysis_result", "price_translation_result", "action_policy_result", "timing_result", "utility_metrics"]
+    },
+    "authority": {
+      "type": "object",
+      "required": ["market_state_change", "portfolio_action_change", "promotion_allowed"]
+    }
+  },
+  "additionalProperties": false
+}
