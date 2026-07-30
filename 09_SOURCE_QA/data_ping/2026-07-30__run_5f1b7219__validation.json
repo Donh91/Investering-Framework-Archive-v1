@@ -1,0 +1,76 @@
+{
+  "schema_version": "DATA_PING_MAIN_THREAD_QA_v1",
+  "run_id": "run_5f1b7219edb64d48a5e9961ee7ce9849",
+  "snapshot_id": "snap_155aa63ee97245cb8e4d763f113056e4",
+  "validated_at_utc": "2026-07-30T19:45:00Z",
+  "transport_integrity": "UNVERIFIED_CHAT_TRANSPORT",
+  "execution": {
+    "planned_core": 60,
+    "attempted_core": 60,
+    "core_pass": 54,
+    "core_partial": 1,
+    "core_stale": 2,
+    "core_fail": 0,
+    "core_unavailable": 3,
+    "receipt_count": 61,
+    "counts_reconciled": true,
+    "freeze_count": 1,
+    "post_freeze_call_count": 0
+  },
+  "lineage": {
+    "collector_predecessor": "snap_609e377c7de24dfba3e4d763f113056e46",
+    "required_accepted_predecessor": "snap_0e19c112413d471d8270cad1a18148a7",
+    "match": false,
+    "violation": "BOUNDED_NON_PREDECESSOR_REUSED_AS_COLLECTOR_PREDECESSOR",
+    "packet_longitudinal_comparison": "REJECTED",
+    "market_successor_eligibility": "FAIL"
+  },
+  "usable_current_sources": {
+    "CoinGecko": "PASS_LIVE",
+    "CoinGecko_breadth": "PASS_LIVE_AGGREGATE_ONLY",
+    "FRED": "PASS_LATEST_AVAILABLE",
+    "GeoTerminal": "PASS_LIVE",
+    "Binance_context": "PASS_LIVE",
+    "OKX": "PASS_LIVE",
+    "Binance_final": "PASS_LIVE_DIRECT_BTC_ETH_ETHBTC"
+  },
+  "source_exclusions": {
+    "ETF": "STALE_PACKET_VALUES_MUST_NOT_OVERWRITE_NEWER_OTA_VALUES",
+    "CFGI": "UNAVAILABLE",
+    "stablecoin_global_market_cap": "UNAVAILABLE",
+    "DeFi_total_TVL_optional": "FAIL_RESPONSE_TOO_LARGE"
+  },
+  "breadth_QA": {
+    "aggregate_available": true,
+    "membership_hash_available": true,
+    "included_constituent_rows_available": false,
+    "point_in_time_sidecar_available": false,
+    "aggregate_use_allowed": true,
+    "transition_attribution_allowed": false,
+    "replayability": "FAIL",
+    "issue": 224
+  },
+  "direct_owner_QA": {
+    "ETHBTC_current_direct_available": true,
+    "ETHBTC_daily_and_hourly_actions_passed": true,
+    "raw_1h_rows_transmitted": false,
+    "raw_5m_rows_transmitted": false,
+    "current_gate_scoring_allowed": true,
+    "historical_path_reconstruction_allowed": false
+  },
+  "acceptance": {
+    "bounded_current_observation": "PASS",
+    "source_QA_ingest": "PASS",
+    "canonical_longitudinal_successor": "FAIL",
+    "canonical_state_change": "NONE",
+    "portfolio_effect": "NONE"
+  },
+  "required_next_run": {
+    "predecessor_id": "snap_0e19c112413d471d8270cad1a18148a7",
+    "must_not_use": [
+      "snap_bed564693b804b8c9c2b7476386abd3d",
+      "snap_609e377c7de24dfba3e4db211e448e46",
+      "snap_155aa63ee97245cb8e4d763f113056e4"
+    ]
+  }
+}
