@@ -1,0 +1,31 @@
+{
+  "artifact": "MAR_WP04A_CANDIDATE_EVENT_LEDGER_v1",
+  "enumeration_policy": "PREEXISTING_TRIGGER_RULES_ONLY_NO_OUTCOME_INSPECTION",
+  "independent_candidates": [
+    {
+      "event_id": "MAR_LSP_ROTFAIL_ETHBTC_0300_20260728T150000Z_C01",
+      "source_event_id": "MAR_ETHBTC_0300_20260728T150000Z_C01",
+      "chain_id": "LSP_ROTATION_FAILURE",
+      "event_timestamp_utc": "2026-07-28T15:00:00Z",
+      "trigger_evidence": {
+        "event_close": 0.03004,
+        "next_close": 0.03007,
+        "rejection_close": 0.02985,
+        "label": "FAILED_PERSISTENCE"
+      },
+      "lineage_class": "OWNER_PARTIAL",
+      "independent": true,
+      "overlap_cluster": "ETHBTC_0300_20260728_C01",
+      "missing_pre_event_checkpoints": ["-72h","-24h","-4h"],
+      "outcome_fields_materialized": false,
+      "economic_eligibility": false
+    }
+  ],
+  "follow_up_rows": {"count": 8, "classification": "SAME_OVERLAP_CLUSTER_NOT_INDEPENDENT"},
+  "blocked_chain_candidate_counts": {
+    "LSP_MACRO_TO_CRYPTO": null,
+    "LSP_LEVERAGE_TO_SPOT": null
+  },
+  "null_count_meaning": "NOT_ENUMERATED_BECAUSE_TRIGGER_RULE_NOT_FROZEN; NOT_ZERO_EVENTS",
+  "forward_outcomes_read": false
+}
