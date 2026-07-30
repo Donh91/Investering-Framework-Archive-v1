@@ -1,0 +1,53 @@
+{
+  "schema_version": "DATA_PING_RUN_ACCEPTANCE_DECISION_v1",
+  "run_id": "run_4dd78b1e713b4258aedcade193b29b8b",
+  "snapshot_id": "snap_bed564693b804b8c9c2b7476386abd3d",
+  "snapshot_utc": "2026-07-30T13:36:19.781Z",
+  "decision": "ACCEPT_BOUNDED_MARKET_OBSERVATION_REJECT_LONGITUDINAL_PREDECESSOR",
+  "accepted_as_bounded_market_observation": true,
+  "accepted_as_collector_predecessor_for_next_run": false,
+  "accepted_as_market_state_predecessor": false,
+  "accepted_as_source_qa_event": true,
+  "declared_collector_predecessor_id": "snap_610937bd8f6c4be3adf836a2281c9328",
+  "declared_predecessor_acceptance": "REJECTED_QA_ONLY",
+  "required_market_predecessor_id": "snap_0e19c112413d471d8270cad1a18148a7",
+  "required_market_predecessor_run_id": "run_0bc8a5d0d0464542b29b4d50f2f8e19c",
+  "reasons_for_bounded_acceptance": [
+    "ALL_60_CORE_ACTIONS_ATTEMPTED",
+    "CURRENT_COINGECKO_PRICE_AND_DOMINANCE_AVAILABLE",
+    "CURRENT_BREADTH_AGGREGATE_AVAILABLE",
+    "CURRENT_OKX_CROSSCHECK_AND_OI_AVAILABLE",
+    "MACRO_CHAIN_TVL_AND_DEX_AVAILABLE"
+  ],
+  "reasons_for_predecessor_rejection": [
+    "DECLARED_PREDECESSOR_WAS_REJECTED_QA_ONLY",
+    "DIRECT_ETHBTC_OWNER_UNAVAILABLE",
+    "BINANCE_CONTEXT_AND_FINAL_UNAVAILABLE",
+    "ETF_AND_CFGI_UNAVAILABLE",
+    "TOP100_CONSTITUENT_SIDECAR_NOT_EMITTED"
+  ],
+  "allowed_uses": [
+    "current absolute BTC and ETH diagnostics",
+    "current absolute breadth gate level",
+    "current OKX price funding basis and OI diagnostics",
+    "current macro chain TVL and DEX diagnostics",
+    "deep-capture trigger evaluation",
+    "source-resilience and predecessor-lineage QA"
+  ],
+  "forbidden_uses": [
+    "use packet-supplied deltas as canonical longitudinal deltas",
+    "direct ETHBTC 0.0300 gate scoring",
+    "rotation promotion",
+    "rebuy or new-entry permission",
+    "new A-class receipt",
+    "shadow dual-run increment",
+    "portfolio action",
+    "replacement of last accepted market predecessor"
+  ],
+  "required_next_step": "DCR_003_THEN_FRESH_FULL_DATA_PING_USING_LAST_ACCEPTED_MARKET_PREDECESSOR",
+  "new_deep_capture_request": true,
+  "deep_capture_request_id": "DCR-20260730-EVENT-003",
+  "canonical_effect": "NONE",
+  "portfolio_effect": "NONE",
+  "related_issues": [224, 232]
+}

@@ -4,8 +4,8 @@
   "retention_addendum_paths": [
     "02_DATA_PING/protocols/2026-07-29__point-in-time-breadth-sidecar-retention-addendum-v1__canonical.md"
   ],
-  "status": "ACTIVE_NO_PENDING_REQUESTS",
-  "updated_at_utc": "2026-07-29T20:49:00Z",
+  "status": "ACTIVE_WITH_PREPARED_REQUEST",
+  "updated_at_utc": "2026-07-30T14:20:00Z",
   "requests": [
     {
       "request_id": "DCR-20260729-EVENT-001",
@@ -44,46 +44,41 @@
       "status": "PARTIAL_CLOSED",
       "user_delivery_status": "DELIVERED_AND_RESPONSE_RECEIVED",
       "response_received_at_utc": "2026-07-29T17:36:28.961Z",
-      "response_artifact_ids": [
-        "08_SOURCE_MATERIAL/data_ping/deep_capture/DCR-20260729-EVENT-002/package-pointer.md",
-        "08_SOURCE_MATERIAL/data_ping/deep_capture/DCR-20260729-EVENT-002/manifest.json",
-        "09_SOURCE_QA/data_ping/deep_capture/2026-07-29__DCR-20260729-EVENT-002__validation.json",
-        "04_MARKET_LEARNING/data_ping/deep_capture/2026-07-29__DCR-20260729-EVENT-002__framework-read.md"
-      ],
+      "response_artifact_ids": ["08_SOURCE_MATERIAL/data_ping/deep_capture/DCR-20260729-EVENT-002/package-pointer.md","08_SOURCE_MATERIAL/data_ping/deep_capture/DCR-20260729-EVENT-002/manifest.json","09_SOURCE_QA/data_ping/deep_capture/2026-07-29__DCR-20260729-EVENT-002__validation.json","04_MARKET_LEARNING/data_ping/deep_capture/2026-07-29__DCR-20260729-EVENT-002__framework-read.md"],
       "validation_result": "PARTIAL_VALIDATED_MANIFEST_ONLY_CRITICAL_EVENT_PATH_RESOLVED_BREADTH_COMPOSITION_IRRECOVERABLE",
-      "resolved_gaps": [
-        "BTC_ETH_ETHBTC_direct_1h_event_path",
-        "BTC_ETH_ETHBTC_direct_5m_event_path",
-        "exact_08_30_event_start_support",
-        "open_interest_hourly_anchors",
-        "funding_when_reported",
-        "global_top_account_top_position_ratios",
-        "futures_taker_ratios_when_reported",
-        "deterministic_event_decomposition",
-        "largest_negative_ETHBTC_1h_move"
-      ],
-      "unresolved_gaps": [
-        "exact_predecessor_CoinGecko_constituent_snapshot",
-        "exact_current_CoinGecko_constituent_snapshot",
-        "rank_bucket_breadth_statistics",
-        "constituent_return_change_leaders",
-        "breadth_direction_transition_counts",
-        "largest_breadth_deterioration_timestamp",
-        "historical_Binance_mark_price",
-        "historical_Binance_index_price",
-        "historical_Binance_basis_bps",
-        "futures_taker_ratio_17_00_anchor"
-      ],
+      "resolved_gaps": ["BTC_ETH_ETHBTC_direct_1h_event_path","BTC_ETH_ETHBTC_direct_5m_event_path","exact_08_30_event_start_support","open_interest_hourly_anchors","funding_when_reported","global_top_account_top_position_ratios","futures_taker_ratios_when_reported","deterministic_event_decomposition","largest_negative_ETHBTC_1h_move"],
+      "unresolved_gaps": ["exact_predecessor_CoinGecko_constituent_snapshot","exact_current_CoinGecko_constituent_snapshot","rank_bucket_breadth_statistics","constituent_return_change_leaders","breadth_direction_transition_counts","largest_breadth_deterioration_timestamp","historical_Binance_mark_price","historical_Binance_index_price","historical_Binance_basis_bps","futures_taker_ratio_17_00_anchor"],
       "continuation_required": false,
       "closure_reason": "The bounded direct spot and derivatives event path was recovered. Exact historical breadth constituents were not retained and cannot be recovered by repeating the request. Historical mark/index/basis fields are unavailable and non-blocking for current policy. Prospective retention is tracked in issue 224.",
       "implementation_issue": 224,
       "canonical_effect": "NONE",
       "portfolio_effect": "NONE"
+    },
+    {
+      "request_id": "DCR-20260730-EVENT-003",
+      "request_type": "EVENT_DRIVEN_DEEP_CAPTURE",
+      "created_at_utc": "2026-07-30T14:20:00Z",
+      "iso_week": "2026-W31",
+      "trigger_class": ["BREADTH_GATE_CROSS","DIRECT_ETHBTC_OWNER_OUTAGE","NEW_SETTLED_FOLLOW_UP","POINT_IN_TIME_SIDECAR_GAP"],
+      "trigger_evidence_ids": ["OBS-20260730-4dd78b1e-BREADTH-REBOUND-OWNER-OUTAGE","ROTATION-2026-W31-ETHBTC-0030-ATTEMPT"],
+      "reference_data_ping_runs": ["run_0bc8a5d0d0464542b29b4d50f2f8e19c","run_4dd78b1e713b4258aedcade193b29b8b"],
+      "requested_window": {"start_utc":"2026-07-29T20:00:00.000Z","end_utc":"2026-07-30T14:00:00.000Z","settlement_timezones":["UTC","Europe/Copenhagen"]},
+      "requested_fields": ["direct_ETHBTC_UTC_and_Copenhagen_settled_follow_up","ETHBTC_1h_and_5m_owner_path","exact_current_CoinGecko_constituent_sidecar","bounded_direct_venue_crosscheck","deterministic_ETHBTC_decomposition"],
+      "prompt_path": "07_PROMPTS_AND_AGENTS/prompts/requests/2026-07-30__DCR-20260730-EVENT-003__breadth-gate-owner-recovery.md",
+      "status": "PREPARED",
+      "user_delivery_status": "DELIVERED_TO_USER_IN_CURRENT_CHAT_RESPONSE",
+      "response_artifact_ids": [],
+      "validation_result": null,
+      "resolved_gaps": [],
+      "unresolved_gaps": ["first_settled_daily_ETHBTC_follow_up_after_0_0300_acceptance","current_direct_ETHBTC_owner_state","exact_current_breadth_constituent_sidecar","current_rank_bucket_breadth_decomposition"],
+      "continuation_required": true,
+      "canonical_effect": "NONE",
+      "portfolio_effect": "NONE"
     }
   ],
   "latest_weekly_request_id": null,
-  "latest_event_driven_request_id": "DCR-20260729-EVENT-002",
-  "pending_request_ids": [],
+  "latest_event_driven_request_id": "DCR-20260730-EVENT-003",
+  "pending_request_ids": ["DCR-20260730-EVENT-003"],
   "completed_request_ids": ["DCR-20260729-EVENT-001","DCR-20260729-EVENT-002"],
   "deduplication": {
     "same_iso_week_same_method_scope": "REUSE_OR_EXTEND_EXISTING_REQUEST",
