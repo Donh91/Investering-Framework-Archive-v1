@@ -1,0 +1,40 @@
+{
+  "contract": "MAR_WP04C_DATASET_REPLAY_AUDIT_v1",
+  "parent_issue": 209,
+  "work_issue": 249,
+  "frozen_trigger_contract_issue": 247,
+  "repository_state_audited_at_utc": "2026-07-30T22:40:00Z",
+  "result": "NOT_ENUMERABLE_FROM_REPOSITORY_STATE",
+  "sources": [
+    {
+      "family": "FRED_MACRO",
+      "required_series": ["DGS2", "DGS10", "DTWEXBGS", "VIXCLS"],
+      "evidence_present": ["intake audit", "row counts", "chronology validation", "detached checksums"],
+      "row_level_owner_files_materialized_in_repository": false,
+      "final_owner_registry_frozen": false,
+      "status": "BLOCKED_BINARY_OWNER_ABSENT"
+    },
+    {
+      "family": "CRYPTO_SPOT",
+      "required_series": ["BTC_SPOT", "ETH_SPOT", "ETHBTC"],
+      "evidence_present": ["package intake metadata", "historical pack checksums"],
+      "row_level_owner_files_materialized_in_repository": false,
+      "status": "BLOCKED_BINARY_OWNER_ABSENT"
+    },
+    {
+      "family": "DERIVATIVES",
+      "required_series": ["FUNDING", "OPEN_INTEREST", "TAKER_FLOW"],
+      "evidence_present": ["OKX phase package metadata", "package checksums"],
+      "row_level_owner_files_materialized_in_repository": false,
+      "status": "BLOCKED_BINARY_OWNER_ABSENT"
+    },
+    {
+      "family": "TOP100_BREADTH",
+      "required_series": ["POINT_IN_TIME_CONSTITUENTS", "MEMBERSHIP_HASH", "EXCLUSIONS", "METHOD_VERSION"],
+      "evidence_present": [],
+      "row_level_owner_files_materialized_in_repository": false,
+      "status": "RETROACTIVELY_IRRECOVERABLE_PROSPECTIVE_ONLY"
+    }
+  ],
+  "forbidden_substitutions": ["PACKAGE_SUMMARY_AS_ROWS", "CHECKSUM_AS_DATASET", "CURRENT_UNIVERSE_FOR_HISTORICAL_BREADTH", "POST_FREEZE_SOURCE_REDOWNLOAD"]
+}
