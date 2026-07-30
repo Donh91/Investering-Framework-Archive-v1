@@ -92,7 +92,13 @@ def main() -> int:
 
     checks += 1
     base = recovery["base_build"]
-    if base["sha256"] != "303d63946fd7696237b8d1a7208fa5aadd877e55aba57d5b51ea17aa46d18c9f":
+    base_package = next(
+        (row for row in recovery["packages"] if row["filename"] == base["filename"]),
+        None,
+    )
+    if base_package is None:
+        fail("recovered base package is missing from package manifest")
+    if base_package["sha256"] != "303d63946fd7696237b8d1a7208fa5aadd877e55aba57d5b51ea17aa46d18c9f":
         fail("recovered base hash changed")
     if base["contains_master_daily_panel"] is not True:
         fail("recovered base must contain master panel")
