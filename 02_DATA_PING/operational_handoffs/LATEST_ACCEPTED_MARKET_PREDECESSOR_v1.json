@@ -1,14 +1,14 @@
 {
   "schema_version": "DATA_PING_ACCEPTED_MARKET_PREDECESSOR_POINTER_v1",
-  "updated_at_utc": "2026-07-30T17:58:00Z",
+  "updated_at_utc": "2026-07-30T19:45:00Z",
   "latest_accepted_market_run_id": "run_0bc8a5d0d0464542b29b4d50f2f8e19c",
   "latest_accepted_market_snapshot_id": "snap_0e19c112413d471d8270cad1a18148a7",
   "latest_accepted_market_snapshot_utc": "2026-07-29T16:51:00.829Z",
-  "latest_bounded_market_observation_run_id": "run_95c5ae6811704350a854fb1d1fff844a",
-  "latest_bounded_market_observation_snapshot_id": "snap_609e377c7de24dfba3e4db211e448e46",
-  "latest_bounded_market_observation_acceptance": "CURRENT_ABSOLUTE_DIAGNOSTICS_ONLY_NOT_LONGITUDINAL_PREDECESSOR",
-  "latest_source_qa_run_id": "run_95c5ae6811704350a854fb1d1fff844a",
-  "latest_source_qa_snapshot_id": "snap_609e377c7de24dfba3e4db211e448e46",
+  "latest_bounded_market_observation_run_id": "run_5f1b7219edb64d48a5e9961ee7ce9849",
+  "latest_bounded_market_observation_snapshot_id": "snap_155aa63ee97245cb8e4d763f113056e4",
+  "latest_bounded_market_observation_acceptance": "CURRENT_ABSOLUTE_DIAGNOSTICS_WITH_DIRECT_OWNER_ONLY_NOT_LONGITUDINAL_PREDECESSOR",
+  "latest_source_qa_run_id": "run_5f1b7219edb64d48a5e9961ee7ce9849",
+  "latest_source_qa_snapshot_id": "snap_155aa63ee97245cb8e4d763f113056e4",
   "rejected_attempts_since_market_acceptance": [
     {
       "run_id": "run_6ed8dcf0ec6a4d62a429c7f10fcb5f5b",
@@ -31,6 +31,11 @@
       "run_id": "run_95c5ae6811704350a854fb1d1fff844a",
       "snapshot_id": "snap_609e377c7de24dfba3e4db211e448e46",
       "reason": "INVALID_BOUNDED_NON_PREDECESSOR_AND_DIRECT_ETHBTC_OWNER_UNAVAILABLE"
+    },
+    {
+      "run_id": "run_5f1b7219edb64d48a5e9961ee7ce9849",
+      "snapshot_id": "snap_155aa63ee97245cb8e4d763f113056e4",
+      "reason": "INVALID_BOUNDED_NON_PREDECESSOR_DIRECT_ETHBTC_OWNER_RECOVERED_BREADTH_BELOW_50_SIDECAR_UNAVAILABLE"
     }
   ],
   "next_run_required_predecessor_id": "snap_0e19c112413d471d8270cad1a18148a7",
@@ -38,8 +43,8 @@
   "bounded_observations_may_advance_market_pointer": false,
   "pending_deep_capture_request_id": "DCR-20260730-EVENT-003",
   "pending_deep_capture_extension_id": "DCR-20260730-EVENT-003-EXT-95C5",
-  "pending_deep_capture_status": "PARTIAL_VALIDATED_BASE_SCOPE_ONLY_EXTENSION_UNEXECUTED_CONTINUATION_REQUIRED",
-  "latest_deep_capture_validation_result": "INTEGRITY_PASS_BASE_SCOPE_ONLY_EXTENSION_UNEXECUTED_CRITICAL_OWNER_AND_BREADTH_EVIDENCE_UNRESOLVED",
+  "pending_deep_capture_status": "PARTIAL_OWNER_RECOVERY_FROM_NONCANONICAL_DATA_PING_EXTENSION_UNEXECUTED_SIDECARS_UNRESOLVED",
+  "latest_deep_capture_validation_result": "CURRENT_DIRECT_OWNER_AND_SETTLED_FOLLOWUP_RECOVERED_EXACT_INTRADAY_PATH_AND_POINT_IN_TIME_SIDECARS_UNRESOLVED",
   "deep_capture_extension_attempted": false,
   "deep_capture_may_advance_market_pointer": false,
   "canonical_market_state_change": "NONE",
