@@ -1,0 +1,37 @@
+{
+  "contract": "MAR_WP03B_OWNER_HISTORY_COMPLETION_v1",
+  "generated_at_utc": "2026-07-30T07:00:00Z",
+  "development_window_only": true,
+  "final_holdout_accessed": false,
+  "families": {
+    "DIRECT_ETHBTC_THRESHOLD_ATTEMPT": {
+      "status": "PARTIALLY_COMPLETED",
+      "owner_sources": [
+        "08_SOURCE_MATERIAL/data_ping/deep_capture/DCR-20260729-EVENT-001/binance_ethbtc_1h_utc.csv",
+        "08_SOURCE_MATERIAL/data_ping/deep_capture/DCR-20260729-EVENT-001/binance_ethbtc_daily_copenhagen.csv"
+      ],
+      "resolved": ["settled event path", "preceding settled daily context", "same-cluster follow-up path"],
+      "unresolved": ["exact -72h hourly checkpoint", "exact -24h hourly checkpoint", "exact -4h hourly checkpoint"],
+      "lineage_effect": "REMAINS_OWNER_PARTIAL",
+      "reason": "Daily owner rows add context but do not substitute for the preregistered exact hourly checkpoints."
+    },
+    "BTC_ETH_SETTLED_RANGE_BREAK": {
+      "status": "BLOCKED_PENDING_FROZEN_BOUNDARY_PRICE_JOIN",
+      "retrospective_boundary_selection": "FORBIDDEN"
+    },
+    "BREADTH_DISPLACEMENT_AND_DIVERGENCE": {
+      "status": "RETROACTIVE_COMPLETION_IMPOSSIBLE",
+      "reason": "DCR-20260729-EVENT-002 established that exact predecessor/current constituent snapshots were not retained and cannot be reconstructed without current-universe substitution.",
+      "prospective_fix": "Point-in-Time Breadth Sidecar Retention Addendum v1",
+      "implementation_issue": 224
+    },
+    "ETF_FLOW_REVERSAL": {
+      "status": "BLOCKED_PENDING_ROW_LEVEL_PUBLICATION_AND_RETRIEVAL_TIMESTAMPS",
+      "same_session_use": "FORBIDDEN"
+    }
+  },
+  "forward_returns_calculated": false,
+  "economic_tests_run": 0,
+  "framework_promotion": "NONE",
+  "portfolio_effect": "NONE"
+}
