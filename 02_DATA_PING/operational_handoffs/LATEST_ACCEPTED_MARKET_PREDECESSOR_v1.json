@@ -1,0 +1,26 @@
+{
+  "schema_version": "DATA_PING_ACCEPTED_MARKET_PREDECESSOR_POINTER_v1",
+  "updated_at_utc": "2026-07-30T11:55:00Z",
+  "latest_accepted_market_run_id": "run_0bc8a5d0d0464542b29b4d50f2f8e19c",
+  "latest_accepted_market_snapshot_id": "snap_0e19c112413d471d8270cad1a18148a7",
+  "latest_accepted_market_snapshot_utc": "2026-07-29T16:51:00.829Z",
+  "latest_source_qa_run_id": "run_7793a18aa7e94ab7b31edc60f74d928a",
+  "latest_source_qa_snapshot_id": "snap_610937bd8f6c4be3adf836a2281c9328",
+  "rejected_attempts_since_market_acceptance": [
+    {
+      "run_id": "run_6ed8dcf0ec6a4d62a429c7f10fcb5f5b",
+      "snapshot_id": "snap_83dbf24776894d07be9b506858820563",
+      "reason": "RUNTIME_BUDGET_EXHAUSTED"
+    },
+    {
+      "run_id": "run_7793a18aa7e94ab7b31edc60f74d928a",
+      "snapshot_id": "snap_610937bd8f6c4be3adf836a2281c9328",
+      "reason": "RUNTIME_BUDGET_EXHAUSTED_AND_INVALID_PREDECESSOR_LINEAGE"
+    }
+  ],
+  "next_run_required_predecessor_id": "snap_0e19c112413d471d8270cad1a18148a7",
+  "qa_only_runs_may_advance_market_pointer": false,
+  "canonical_market_state_change": "NONE",
+  "portfolio_effect": "NONE",
+  "related_issue": 232
+}
