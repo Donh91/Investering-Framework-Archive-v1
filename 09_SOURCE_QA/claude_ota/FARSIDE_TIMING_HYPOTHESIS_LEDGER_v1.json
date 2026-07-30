@@ -1,7 +1,7 @@
 {
   "schema_version": "SOURCE_TIMING_HYPOTHESIS_LEDGER_v1",
   "source": "FARSIDE_ETF_TABLES",
-  "updated_at_utc": "2026-07-29T20:58:00Z",
+  "updated_at_utc": "2026-07-30T19:32:22Z",
   "official_source_context": {
     "statement": "Updates typically occur in the evening and night (US time).",
     "source_identifier": "FARSIDE_HOME_ETF_DATA_DESCRIPTION",
@@ -26,6 +26,7 @@
       "claim": "Queries after approximately 16:00 UTC are materially more likely to contain the latest settled Farside session than early European morning queries.",
       "status": "PROSPECTIVE_TEST_REQUIRED",
       "current_observation_count": 2,
+      "incomplete_candidate_observation_count": 1,
       "minimum_observations": 10,
       "preferred_observations": 20,
       "promotion_requirements": {
@@ -47,23 +48,32 @@
         "response_latency_ms",
         "later_revision_detected"
       ],
-      "latest_observation": {
+      "latest_valid_observation": {
         "request_utc": "2026-07-28T18:49:39.660Z",
         "freshness_label": "CURRENT_RUN_FRESH",
         "edge_rule_used": false,
         "notes": "Claude reported 4/4 venue parity and no byte-identical payloads, but per-venue hashes were not included in the reconciliation package."
       },
+      "latest_candidate_observation": {
+        "source_run_timestamp_utc": "2026-07-30T19:04:13.143Z",
+        "request_utc": "2026-07-30T19:04:00Z",
+        "asset": "BTC",
+        "edge_ip": "172.68.138.166",
+        "footer_date": "30 July 2026",
+        "latest_session_date": "2026-07-29",
+        "freshness_label": "FRESH",
+        "response_sha256": null,
+        "strict_counted": false,
+        "reason_not_counted": "REQUIRED_RESPONSE_SHA256_NOT_TRANSMITTED"
+      },
       "latest_reconciliation": {
-        "source_run_timestamp_utc": "2026-07-29T17:00:49.245Z",
-        "timed_Farside_query_performed": false,
-        "new_observation_count": 0,
-        "observation_count_after_run": 2,
-        "ETF_2026_07_28_OTA_queue_status": "NOT_ATTEMPTED_IN_OTA",
-        "ETF_2026_07_28_main_framework_status": {
-          "status": "RESOLVED_BY_ACCEPTED_DATA_PING",
-          "BTC_net_flow_usd_m": -49.7,
-          "ETH_net_flow_usd_m": 9.4
-        },
+        "source_run_timestamp_utc": "2026-07-30T19:04:13.143Z",
+        "timed_Farside_query_performed": true,
+        "source_claimed_new_observation_count": 1,
+        "strict_new_observation_count": 0,
+        "candidate_observation_count_added": 1,
+        "strict_observation_count_after_run": 2,
+        "source_claimed_observation_count_after_run": 3,
         "schedule_change": "NONE"
       },
       "operational_use_allowed": false
