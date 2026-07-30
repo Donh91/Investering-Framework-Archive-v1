@@ -1,0 +1,62 @@
+{
+  "schema_version": "DATA_PING_QA_BOUNDARIES_v1",
+  "run_id": "run_95c5ae6811704350a854fb1d1fff844a",
+  "snapshot_utc": "2026-07-30T16:51:14.252Z",
+  "transport_integrity": "UNVERIFIED_CHAT_TRANSPORT",
+  "current_absolute_fields": {
+    "status": "USABLE_BOUNDED",
+    "sources": ["CoinGecko", "FRED", "DefiLlama chain outputs", "GeckoTerminal", "OKX"]
+  },
+  "longitudinal_comparison": {
+    "packet_status": "REJECTED_AS_CANONICAL",
+    "reason": "DECLARED_PREDECESSOR_WAS_BOUNDED_NON_PREDECESSOR",
+    "declared_predecessor": "snap_bed564693b804b8c9c2b7476386abd3d",
+    "required_predecessor": "snap_0e19c112413d471d8270cad1a18148a7",
+    "main_framework_rebind_performed": true
+  },
+  "ETHBTC": {
+    "direct_owner_status": "UNAVAILABLE_GEO_RESTRICTION",
+    "derived_ratio_status": "DIAGNOSTIC_ONLY",
+    "derived_ratio": 0.029589775272221792,
+    "threshold_scoring_permitted": false,
+    "last_valid_direct_owner_value": 0.0297,
+    "last_valid_direct_gate": "BELOW_0_0300"
+  },
+  "breadth": {
+    "aggregate_status": "PASS",
+    "advance_ratio": 0.6067415730337079,
+    "membership_hash": "db981da7d5002ac7742419b4bcf7d9c022a5b2ab88165ab971228d587aa6a739",
+    "aggregate_comparison_to_last_accepted_permitted": true,
+    "reason": "SAME_METHOD_AND_MEMBERSHIP_HASH",
+    "constituent_sidecar_status": "NOT_EMITTED",
+    "constituent_transition_analysis_permitted": false,
+    "membership_transition_attribution_permitted": false,
+    "replayability": "FAIL",
+    "live_breach_count": 4,
+    "implementation_issue": 224
+  },
+  "derivatives": {
+    "OKX_current_status": "PASS",
+    "Binance_context_status": "FAIL_GEO_RESTRICTION",
+    "cross_venue_basis_status": "UNAVAILABLE_WITHOUT_BINANCE",
+    "position_side_attribution": "NOT_CLAIMED"
+  },
+  "public_web": {
+    "ETF": "UNAVAILABLE",
+    "CFGI": "UNAVAILABLE",
+    "missing_values_treated_as_zero": false
+  },
+  "stablecoins": {
+    "global_total": "UNKNOWN",
+    "chain_distribution": "AVAILABLE_PARTIAL",
+    "global_aggregation_from_chain_distribution_permitted": false
+  },
+  "governance": {
+    "market_state_authority": "BOUNDED_DIAGNOSTIC_ONLY",
+    "canonical_state_change": "NONE",
+    "portfolio_authority": "NONE",
+    "new_A_class_receipt": false,
+    "new_shadow_dual_run": false,
+    "final_holdout_opened": false
+  }
+}

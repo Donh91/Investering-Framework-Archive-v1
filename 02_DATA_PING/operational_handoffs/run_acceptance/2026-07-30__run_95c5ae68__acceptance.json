@@ -1,0 +1,53 @@
+{
+  "schema_version": "DATA_PING_RUN_ACCEPTANCE_DECISION_v1",
+  "run_id": "run_95c5ae6811704350a854fb1d1fff844a",
+  "snapshot_id": "snap_609e377c7de24dfba3e4db211e448e46",
+  "snapshot_utc": "2026-07-30T16:51:14.252Z",
+  "decision": "ACCEPT_BOUNDED_MARKET_OBSERVATION_REJECT_LONGITUDINAL_PREDECESSOR",
+  "all_core_actions_attempted": true,
+  "accepted_as_current_absolute_market_observation": true,
+  "accepted_as_source_qa_event": true,
+  "accepted_as_collector_predecessor_for_next_run": false,
+  "accepted_as_market_state_predecessor": false,
+  "declared_collector_predecessor_id": "snap_bed564693b804b8c9c2b7476386abd3d",
+  "declared_predecessor_acceptance": "BOUNDED_NON_PREDECESSOR",
+  "required_market_predecessor_id": "snap_0e19c112413d471d8270cad1a18148a7",
+  "required_market_predecessor_run_id": "run_0bc8a5d0d0464542b29b4d50f2f8e19c",
+  "accepted_current_fields": [
+    "CoinGecko global and BTC ETH current values",
+    "CoinGecko filtered Top100 aggregate breadth",
+    "FRED latest available values",
+    "DefiLlama chain distribution and chain TVL",
+    "GeckoTerminal ETH pool snapshot",
+    "OKX current ticker mark index funding and open interest"
+  ],
+  "rejected_uses": [
+    "packet supplied longitudinal deltas as canonical market deltas",
+    "direct ETHBTC gate scoring from a derived ratio",
+    "constituent transition analysis without sidecars",
+    "new A-class receipt",
+    "shadow dual-run increment",
+    "portfolio action",
+    "replacement of the last accepted market predecessor"
+  ],
+  "breadth_read": {
+    "advance_ratio": 0.6067415730337079,
+    "selective_gate_50": "MET",
+    "broad_gate_55": "MET_BY_5_6741573034_PERCENTAGE_POINTS",
+    "second_consecutive_bounded_snapshot_above_55": true,
+    "elapsed_since_prior_bounded_snapshot_seconds": 11694.471,
+    "membership_hash": "db981da7d5002ac7742419b4bcf7d9c022a5b2ab88165ab971228d587aa6a739",
+    "membership_hash_matches_last_accepted_market_run": true,
+    "sidecar_status": "NOT_EMITTED",
+    "replayability": "FAIL"
+  },
+  "direct_ETHBTC_owner": "UNAVAILABLE_GEO_RESTRICTION",
+  "derived_ETHBTC": 0.029589775272221792,
+  "derived_ratio_distance_below_0_0300_pct": -1.3674157593,
+  "existing_deep_capture_request": "DCR-20260730-EVENT-003",
+  "deep_capture_action": "REUSE_AND_EXTEND_EXISTING_REQUEST",
+  "new_deep_capture_request": false,
+  "canonical_effect": "NONE",
+  "portfolio_effect": "NONE",
+  "related_issues": [224, 232]
+}

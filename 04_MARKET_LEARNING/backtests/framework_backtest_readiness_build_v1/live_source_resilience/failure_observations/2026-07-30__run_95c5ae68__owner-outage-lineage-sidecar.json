@@ -1,0 +1,50 @@
+{
+  "schema_version": "DATA_PING_LIVE_SOURCE_RESILIENCE_OBSERVATION_v1",
+  "observation_id": "SOURCE-QA-20260730-95c5-OWNER-LINEAGE-SIDECAR",
+  "run_id": "run_95c5ae6811704350a854fb1d1fff844a",
+  "snapshot_utc": "2026-07-30T16:51:14.252Z",
+  "failure_classes": [
+    "DIRECT_ETHBTC_OWNER_GEO_RESTRICTION",
+    "INVALID_BOUNDED_NON_PREDECESSOR_LINEAGE",
+    "POINT_IN_TIME_BREADTH_SIDECAR_NOT_EMITTED",
+    "PUBLIC_WEB_ENDPOINT_UNAVAILABLE"
+  ],
+  "execution": {
+    "planned_core": 60,
+    "attempted_core": 60,
+    "reported_pass": 20,
+    "reported_partial": 1,
+    "reported_fail": 34,
+    "reported_unavailable": 5,
+    "runtime_budget_semantics_defect_applies": false
+  },
+  "lineage": {
+    "declared_predecessor": "snap_bed564693b804b8c9c2b7476386abd3d",
+    "declared_predecessor_type": "BOUNDED_NON_PREDECESSOR",
+    "required_market_predecessor": "snap_0e19c112413d471d8270cad1a18148a7",
+    "invalid_predecessor_event_count_observed": 3,
+    "issue": 232
+  },
+  "breadth": {
+    "page_pair_retrieved": true,
+    "page_pair_timestamp": "2026-07-30T16:42:20Z",
+    "aggregate_completed": true,
+    "advance_ratio": 0.6067415730337079,
+    "membership_hash": "db981da7d5002ac7742419b4bcf7d9c022a5b2ab88165ab971228d587aa6a739",
+    "sidecar_emitted": false,
+    "replayability": "FAIL",
+    "consecutive_live_breach_count": 4,
+    "issue": 224
+  },
+  "owner_source": {
+    "direct_ETHBTC": "FAIL_GEO_RESTRICTION",
+    "derived_ETHBTC_available": true,
+    "derived_ratio_has_gate_authority": false,
+    "existing_recovery_request": "DCR-20260730-EVENT-003"
+  },
+  "market_state_effect": "BOUNDED_OBSERVATION_ONLY",
+  "prospective_evidence_effect": "SAME_CLUSTER_NO_INCREMENT",
+  "portfolio_effect": "NONE",
+  "required_action": "EXTEND_DCR_003_AND_KEEP_LAST_ACCEPTED_MARKET_PREDECESSOR_FROZEN",
+  "related_issues": [224, 232]
+}

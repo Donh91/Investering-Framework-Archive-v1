@@ -1,0 +1,42 @@
+{
+  "schema_version": "PROSPECTIVE_OBSERVATION_v1",
+  "observation_id": "OBS-20260730-95c5ae68-BREADTH-PERSISTENCE-OWNER-OUTAGE",
+  "run_id": "run_95c5ae6811704350a854fb1d1fff844a",
+  "snapshot_utc": "2026-07-30T16:51:14.252Z",
+  "policy_family": "ROTATION_PERMISSION",
+  "overlap_cluster_key": "ROTATION-2026-W31-ETHBTC-0030-ATTEMPT",
+  "parent_receipt_id": "PDR-20260729-52aa8a0a9bf2",
+  "observation_class": "SAME_CLUSTER_BOUNDED_FOLLOW_UP",
+  "evidence": {
+    "breadth_advance_ratio": 0.6067415730337079,
+    "breadth_gate_50": "MET",
+    "breadth_gate_55": "MET",
+    "prior_bounded_breadth_advance_ratio": 0.550561797752809,
+    "breadth_delta_percentage_points": 5.6179775281,
+    "two_consecutive_bounded_snapshots_above_55": true,
+    "elapsed_seconds": 11694.471,
+    "current_membership_hash": "db981da7d5002ac7742419b4bcf7d9c022a5b2ab88165ab971228d587aa6a739",
+    "prior_bounded_membership_hash": "49d41929bf0ebe9b7b16c37bb1e31d6808b0b199e0f051a17b766b41c12a6b81",
+    "current_hash_matches_last_accepted_market_run": true,
+    "direct_ETHBTC_owner": "UNAVAILABLE",
+    "derived_ETHBTC": 0.029589775272221792,
+    "last_valid_direct_ETHBTC": 0.0297,
+    "last_valid_direct_gate": "BELOW_0_0300",
+    "ETH_OKX_OI_intraday_delta_pct": -1.4692266753
+  },
+  "interpretation_boundary": {
+    "breadth_aggregate_persistence": "SUPPORTED_BOUNDED_INTRADAY",
+    "settled_daily_persistence": "NOT_CLAIMED",
+    "constituent_transition_attribution": "UNKNOWN_SIDECARS_MISSING",
+    "direct_rotation_gate": "UNSCOREABLE_CURRENT_OWNER_OUTAGE"
+  },
+  "new_policy_event": false,
+  "new_A_class_receipt": false,
+  "A_class_increment": 0,
+  "shadow_dual_run_scoreable": false,
+  "deep_capture_request_id": "DCR-20260730-EVENT-003",
+  "deep_capture_action": "REUSED_AND_EXTENDED",
+  "canonical_effect": "NONE",
+  "portfolio_effect": "NONE",
+  "final_holdout_opened": false
+}
