@@ -1,0 +1,28 @@
+{
+  "artifact": "MAR_WP04A_LINEAGE_AUDIT_v1",
+  "summary": {
+    "chains_total": 3,
+    "chains_enumerable": 1,
+    "chains_blocked_before_enumeration": 2,
+    "independent_candidates": 1,
+    "owner_complete": 0,
+    "owner_partial": 1,
+    "blocked": 2,
+    "fully_replayable": 0
+  },
+  "lineage_classes": {
+    "OWNER_COMPLETE": "All trigger rows, exact frozen checkpoints, source identity, event/retrieval/freeze timestamps and method hashes are present.",
+    "OWNER_PARTIAL": "Owner evidence exists for the trigger but one or more exact frozen checkpoints or availability fields are absent.",
+    "BLOCKED": "Candidate enumeration itself is prohibited because trigger or source-availability rules were not frozen before review.",
+    "RETROACTIVELY_IRRECOVERABLE": "Required point-in-time rows were never retained and cannot be reconstructed without substitution.",
+    "RIGHT_CENSORED": "A valid event lacks only future checkpoints not yet observable at the audit freeze."
+  },
+  "family_findings": [
+    {"family":"MACRO","class":"BLOCKED","detail":"Owner series may exist, but event construction is undefined and publication-vintage availability is not frozen."},
+    {"family":"DERIVATIVES","class":"BLOCKED","detail":"Snapshots exist in the broader archive, but no preregistered stress threshold or propagation lag exists."},
+    {"family":"SPOT_ETHBTC","class":"OWNER_PARTIAL","detail":"Settled trigger and rejection closes exist for one independent cluster; exact pre-event checkpoint history is incomplete."},
+    {"family":"BREADTH","class":"RETROACTIVELY_IRRECOVERABLE_FOR_PRIOR_EVENT_AND_PROSPECTIVE_ONLY","detail":"No retained point-in-time constituent sidecar supports the known event; current-universe substitution is forbidden."}
+  ],
+  "descriptive_audit_eligible": 0,
+  "economic_test_eligible": 0
+}
