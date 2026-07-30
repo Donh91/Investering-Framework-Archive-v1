@@ -1,0 +1,29 @@
+{
+  "schema_version": "DATA_PING_DEEP_CAPTURE_EVALUATION_v1",
+  "run_id": "run_4dd78b1e713b4258aedcade193b29b8b",
+  "snapshot_utc": "2026-07-30T13:36:19.781Z",
+  "evaluation_result": "TRIGGER_NEW_EVENT_DRIVEN_REQUEST",
+  "request_id": "DCR-20260730-EVENT-003",
+  "same_overlap_cluster": "ROTATION-2026-W31-ETHBTC-0030-ATTEMPT",
+  "new_independent_policy_event": false,
+  "material_new_settled_state": true,
+  "material_gap": true,
+  "trigger_evidence": {
+    "breadth_advance_ratio_pct": 55.0561797753,
+    "selective_gate_50_met": true,
+    "broad_gate_55_met": true,
+    "direct_ETHBTC_owner_available": false,
+    "derived_ETHBTC_ratio": 0.02967964057988915,
+    "first_settled_daily_follow_up_after_acceptance_now_available": true,
+    "exact_current_breadth_constituent_sidecar_available": false
+  },
+  "protocol_deduplication_read": "NEW_REQUEST_ALLOWED_BECAUSE_NEW_SETTLED_STATE_AND_MATERIAL_GAP",
+  "requested_scope": [
+    "direct_ETHBTC_UTC_and_Copenhagen_settled_follow_up",
+    "bounded_ETHBTC_1h_and_5m_owner_path",
+    "exact_current_CoinGecko_constituent_sidecar",
+    "bounded_direct_venue_crosscheck"
+  ],
+  "canonical_effect": "NONE",
+  "portfolio_effect": "NONE"
+}
