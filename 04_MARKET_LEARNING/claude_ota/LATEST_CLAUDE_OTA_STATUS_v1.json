@@ -1,45 +1,63 @@
 {
   "schema_version": "LATEST_CLAUDE_OTA_STATUS_v1",
-  "latest_source_run_timestamp_utc": "2026-07-29T17:00:49.245Z",
-  "latest_source_record": "08_SOURCE_MATERIAL/claude_ota/2026-07-29__standalone-ota-h7-row7__source-record.md",
-  "latest_framework_reconciliation": "04_MARKET_LEARNING/claude_ota/2026-07-29__standalone-ota-h7-row7__framework-reconciliation.md",
-  "latest_QA": "09_SOURCE_QA/claude_ota/2026-07-29__standalone-ota-h7-row7__reconciliation.json",
+  "latest_source_run_timestamp_utc": "2026-07-30T19:04:13.143Z",
+  "latest_source_record": "08_SOURCE_MATERIAL/claude_ota/2026-07-30__standalone-ota-h7-row8-etf__source-record.md",
+  "latest_framework_reconciliation": "04_MARKET_LEARNING/claude_ota/2026-07-30__standalone-ota-h7-row8-etf__framework-reconciliation.md",
+  "latest_QA": "09_SOURCE_QA/claude_ota/2026-07-30__standalone-ota-h7-row8-etf__reconciliation.json",
   "operating_mode": "STANDALONE_OTA_NO_REFERENCE_BRIDGE",
   "accepted_incremental_items": [
-    "H7_ROW_7_POST_MATURITY_EXTENSION",
-    "RELATIVE_LEADERSHIP_SMALLER_LOSS_CAVEAT",
-    "H_WIN_01_THIRD_DESIGN_OBSERVATION"
+    "H7_ROW_8_POST_MATURITY_WEAKENING",
+    "ETHBTC_SINGLE_SESSION_ACCEPTANCE_THEN_REJECTION",
+    "BTC_ETF_2026_07_29_POSITIVE_SESSION_WITH_NEGATIVE_SHORT_WINDOWS",
+    "ETF_20_SESSION_ROLL_OFF_DECOMPOSITION",
+    "H_WIN_01_COUNTEREVIDENCE"
   ],
-  "confirmed_duplicate_items": [
-    "FIRST_SETTLED_ETHBTC_ACCEPTANCE_0_03007_ALREADY_VALIDATED",
-    "FAILED_PERSISTENCE_ALREADY_ADJUDICATED"
+  "partially_accepted_items": [
+    "FARSIDE_H_SRC_02_CANDIDATE_OBSERVATION_MISSING_RESPONSE_SHA256",
+    "DCR_003_LATE_DAILY_OWNER_EVIDENCE_EXTENSION_STILL_UNEXECUTED"
   ],
   "corrected_source_wording": [
-    "H7_ROW_7_IS_NOT_NEW_MATURITY"
+    "H7_ROW_8_IS_POST_MATURITY_NOT_NEW_MATURITY",
+    "H7_COND1_AMBIGUITY_IS_NOT_OPEN",
+    "ROLLING_5_SESSION_SLOPE_IS_DIAGNOSTIC_ONLY"
   ],
-  "resolved_outside_OTA": {
-    "ETF_2026_07_28": {
-      "BTC_net_flow_usd_m": -49.7,
-      "ETH_net_flow_usd_m": 9.4,
-      "source_layer": "ACCEPTED_DATA_PING"
-    }
-  },
   "H7": {
-    "status": "MATURED_SCORED_WITH_ROW_7_POST_MATURITY_EXTENSION",
+    "status": "MATURED_SCORED_WITH_ROW_8_POST_MATURITY_WEAKENING",
     "score": "EARLY_TRANSMISSION_CANDIDATE_NOT_ROTATION_CONFIRMATION",
     "score_change": "NONE",
-    "next_rows": "PRESERVE_FOMC_CONFOUND_ANNOTATION_FOR_ROWS_8_9"
+    "follow_through": "WEAKENED",
+    "row_8_confound": "POST_FOMC_ACTIVE_NO_CAUSAL_ATTRIBUTION"
+  },
+  "ETHBTC_threshold_sequence": {
+    "status": "SINGLE_SESSION_ACCEPTANCE_THEN_REJECTION",
+    "latest_settled_close_utc": 0.02986,
+    "persistence": "FAILED"
+  },
+  "BTC_ETF": {
+    "latest_session_date": "2026-07-29",
+    "latest_net_flow_usd_m": 32.1,
+    "seven_session_sum_usd_m": -222.1,
+    "twenty_session_sum_usd_m": 205.1,
+    "twenty_session_interpretation": "ROLL_OFF_DRIVEN_NOT_NEW_BULLISH_INFORMATION"
   },
   "H_WIN_01": {
-    "status": "UNPROVEN_LOW_MODERATE_DESIGN_HYPOTHESIS",
-    "supporting_observation_count": 3,
+    "status": "UNPROVEN_LOW_CONFIDENCE",
+    "new_evidence_direction": "AGAINST",
     "score_effect": "NONE"
   },
   "FARSIDE_H_SRC_02": {
     "status": "PROSPECTIVE_TEST_REQUIRED",
-    "observation_count": 2,
-    "new_observation_this_OTA": false,
+    "strict_valid_observation_count": 2,
+    "incomplete_candidate_observation_count": 1,
+    "new_strict_observation_this_OTA": false,
     "schedule_change": "NONE"
+  },
+  "DCR_003": {
+    "late_daily_owner_evidence_received": true,
+    "extension_executed": false,
+    "intraday_path_resolved": false,
+    "breadth_sidecar_resolved": false,
+    "request_status": "OPEN"
   },
   "new_policy_event": false,
   "new_A_class_receipt": false,
@@ -51,6 +69,7 @@
   "new_entry": "NOT_ACTIVE",
   "large_caps": "WATCH_ONLY",
   "canonical_state_change": "NONE",
-  "portfolio_action": "NONE",
+  "canonical_portfolio_action_change": "NONE",
+  "operational_top_up_action": "AFVENT_2_TO_4_DAYS",
   "final_holdout_opened": false
 }
