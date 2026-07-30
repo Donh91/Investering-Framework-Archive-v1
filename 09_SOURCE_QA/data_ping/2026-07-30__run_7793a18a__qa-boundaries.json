@@ -1,0 +1,53 @@
+{
+  "schema_version": "DATA_PING_SOURCE_QA_BOUNDARIES_v1",
+  "run_id": "run_7793a18aa7e94ab7b31edc60f74d928a",
+  "snapshot_utc": "2026-07-30T10:42:00Z",
+  "transport_integrity": "UNVERIFIED_CHAT_TRANSPORT",
+  "source_qa_acceptance": "ACCEPTED",
+  "market_state_acceptance": "REJECTED",
+  "runtime_budget": {
+    "planned_core": 60,
+    "attempted_core": 8,
+    "reported_fail": 53,
+    "reported_skipped_runtime_limit": 0,
+    "semantic_reconciliation": "FAIL_UNATTEMPTED_ACTIONS_REPORTED_AS_FAIL"
+  },
+  "predecessor_lineage": {
+    "declared_predecessor": "snap_83dbf24776894d07be9b506858820563",
+    "declared_predecessor_acceptance": "REJECTED_QA_ONLY",
+    "required_predecessor": "snap_0e19c112413d471d8270cad1a18148a7",
+    "status": "FAIL_INVALID_MARKET_PREDECESSOR"
+  },
+  "breadth_replayability": {
+    "source_pages_available": true,
+    "aggregate_available": false,
+    "membership_hash_available": false,
+    "sidecar_emitted": false,
+    "status": "FAIL",
+    "historical_reconstruction_allowed": false
+  },
+  "owner_feeds": {
+    "direct_ETHBTC": "UNAVAILABLE",
+    "Binance_context": "UNAVAILABLE",
+    "Binance_final": "UNAVAILABLE",
+    "OKX_crosscheck": "UNAVAILABLE"
+  },
+  "allowed_use": [
+    "source resilience logging",
+    "runtime failure analysis",
+    "lineage defect analysis",
+    "bounded CoinGecko diagnostics",
+    "partial macro diagnostics"
+  ],
+  "forbidden_use": [
+    "market-state replacement",
+    "direct ETHBTC gate scoring",
+    "breadth transition scoring",
+    "prospective A-class creation",
+    "shadow-run increment",
+    "portfolio action"
+  ],
+  "related_issues": [224, 229, 232],
+  "canonical_effect": "NONE",
+  "portfolio_effect": "NONE"
+}
