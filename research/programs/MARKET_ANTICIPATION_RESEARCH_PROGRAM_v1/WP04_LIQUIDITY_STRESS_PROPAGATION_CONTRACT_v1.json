@@ -1,0 +1,30 @@
+{
+  "contract": "MAR_WP04_LIQUIDITY_STRESS_PROPAGATION_v1",
+  "parent_issue": 209,
+  "work_issue": 237,
+  "scope": "PREREGISTRATION_ONLY",
+  "development_window_only": true,
+  "final_holdout_accessed": false,
+  "stress_chains": [
+    {
+      "chain_id": "LSP_MACRO_TO_CRYPTO",
+      "ordered_nodes": ["MACRO_LIQUIDITY_TIGHTENING", "USD_OR_RATES_STRESS", "BTC_PRESSURE", "ETH_RELATIVE_PRESSURE", "BREADTH_CONTRACTION"],
+      "allowed_sensors": ["GLOBAL_M2_LAGGED", "DGS2", "DGS10", "DTWEXBGS", "VIXCLS", "BTC_SPOT", "ETH_SPOT", "ETHBTC", "TOP100_BREADTH"]
+    },
+    {
+      "chain_id": "LSP_LEVERAGE_TO_SPOT",
+      "ordered_nodes": ["FUNDING_OR_POSITIONING_STRESS", "OI_CONTRACTION_OR_EXPANSION", "FORCED_DELEVERAGING_CANDIDATE", "SPOT_RANGE_DISPLACEMENT", "BREADTH_CONFIRMATION_OR_DIVERGENCE"],
+      "allowed_sensors": ["FUNDING", "OPEN_INTEREST", "TAKER_FLOW", "BTC_SPOT", "ETH_SPOT", "ETHBTC", "TOP100_BREADTH"]
+    },
+    {
+      "chain_id": "LSP_ROTATION_FAILURE",
+      "ordered_nodes": ["ETHBTC_ACCEPTANCE_ATTEMPT", "FAILED_PERSISTENCE_OR_REJECTION", "ETH_UNDERPERFORMANCE", "BREADTH_RELAPSE"],
+      "allowed_sensors": ["ETHBTC_SETTLED", "BTC_SPOT", "ETH_SPOT", "TOP100_BREADTH"]
+    }
+  ],
+  "frozen_windows": ["-72h", "-24h", "-4h", "0h", "+4h", "+24h", "+48h", "+72h"],
+  "lineage_requirement": "OWNER_OR_FULLY_REPLAYABLE_POINT_IN_TIME_ONLY",
+  "event_deduplication": "ONE_INDEPENDENT_EVENT_PER_ACTIVE_OVERLAP_CLUSTER",
+  "null_states": ["UNKNOWN", "UNAVAILABLE", "NOT_APPLICABLE", "RIGHT_CENSORED"],
+  "forbidden": ["CURRENT_UNIVERSE_SUBSTITUTION", "POST_FREEZE_SOURCE_CALL", "OUTCOME_DRIVEN_THRESHOLD_TUNING", "FORWARD_RETURN_INSPECTION", "FINAL_HOLDOUT_ACCESS"]
+}
