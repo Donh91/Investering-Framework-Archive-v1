@@ -1,0 +1,21 @@
+{
+  "contract": "MAR_WP03C_SAFE_DESCRIPTIVE_AUDIT_v1",
+  "generated_at_utc": "2026-07-30T16:15:00Z",
+  "eligibility_rule": "Only fully replayable independent events with complete temporal lineage may enter descriptive audit.",
+  "eligible_events": [],
+  "excluded_events": [
+    {
+      "event_id": "MAR_ETHBTC_0300_20260728T150000Z_C01",
+      "lineage_class": "OWNER_PARTIAL",
+      "exclusion_reason": "Missing exact preregistered hourly pre-event checkpoints."
+    }
+  ],
+  "audit_result": "NO_EVENTS_ELIGIBLE_FAIL_CLOSED",
+  "descriptive_statistics_calculated": false,
+  "forward_returns_calculated": false,
+  "hit_rates_calculated": false,
+  "economic_ranking_calculated": false,
+  "model_weighting_changed": false,
+  "framework_promotion": "NONE",
+  "portfolio_effect": "NONE"
+}
