@@ -1,0 +1,56 @@
+{
+  "schema_version": "DATA_PING_SOURCE_QA_BOUNDARIES_v1",
+  "run_id": "run_6ed8dcf0ec6a4d62a429c7f10fcb5f5b",
+  "snapshot_utc": "2026-07-30T05:14:00Z",
+  "qa_classification": "RUNTIME_BUDGET_EXHAUSTED_WITH_UNATTEMPTED_ACTION_STATUS_DEFECT",
+  "accepted_scope": [
+    "CoinGecko global current fields",
+    "CoinGecko BTC and ETH current fields",
+    "proof that both Top-100 pages were retrieved",
+    "collector runtime failure evidence"
+  ],
+  "rejected_scope": [
+    "market-state replacement",
+    "direct ETHBTC gate scoring",
+    "breadth regime or transition scoring",
+    "ETF interpretation",
+    "derivatives interpretation",
+    "macro interpretation",
+    "stablecoin or chain-liquidity interpretation",
+    "prospective policy evidence",
+    "shadow dual-run counting"
+  ],
+  "count_semantics": {
+    "planned_core": 60,
+    "attempted_core": 6,
+    "reported_pass": 4,
+    "reported_fail": 56,
+    "reported_skipped_runtime_limit": 0,
+    "semantic_reconciliation": "FAIL",
+    "reason": "Actions not executed before freeze were serialized as FAIL instead of SKIPPED_RUNTIME_LIMIT",
+    "tracked_issue": 229
+  },
+  "breadth_replayability": {
+    "page1_receipt": "PASS",
+    "page2_receipt": "PASS",
+    "raw_rows": 100,
+    "deduped_rows": 100,
+    "aggregate": "UNAVAILABLE",
+    "membership_hash": null,
+    "constituent_sidecar": "NOT_EMITTED",
+    "replayability": "FAIL",
+    "transition_analysis": "NOT_PERMITTED",
+    "tracked_issue": 224
+  },
+  "readiness_override": {
+    "packet_declared_usable_for_main_thread_ingest": true,
+    "main_framework_market_state_ingest": false,
+    "main_framework_source_qa_ingest": true,
+    "reason": "Mandatory direct market feeds and breadth aggregate unavailable"
+  },
+  "transport_integrity": "UNVERIFIED_CHAT_TRANSPORT",
+  "canonical_effect": "NONE",
+  "portfolio_effect": "NONE",
+  "new_deep_capture_request": false,
+  "required_next_collection": "FRESH_FULL_DATA_PING"
+}
