@@ -1,0 +1,99 @@
+{
+  "schema_version": "DATA_PING_MAIN_FRAMEWORK_SUMMARY_v1",
+  "run_id": "run_5f1b7219edb64d48a5e9961ee7ce9849",
+  "snapshot_id": "snap_155aa63ee97245cb8e4d763f113056e4",
+  "snapshot_utc": "2026-07-30T19:24:39.157Z",
+  "collector_status": "PARTIAL_ALL_CORE_ACTIONS_ATTEMPTED",
+  "ingest": {
+    "duplicate": false,
+    "collector_predecessor": "snap_609e377c7de24dfba3e4d763f113056e46",
+    "required_predecessor": "snap_0e19c112413d471d8270cad1a18148a7",
+    "predecessor_match": false,
+    "bounded_current_observation_accepted": true,
+    "source_QA_accepted": true,
+    "packet_longitudinal_deltas_accepted": false,
+    "accepted_as_market_successor": false
+  },
+  "current": {
+    "BTCUSDT": 64857.65,
+    "ETHUSDT": 1924.95,
+    "ETHBTC_direct": 0.02968,
+    "ETHBTC_distance_to_0_0300": -0.00032,
+    "BTC_dominance_pct": 56.57747438582121,
+    "ETH_dominance_pct": 10.08090589069703,
+    "total_market_cap_usd": 2292616555992.538,
+    "total_volume_usd": 64607711547.64161
+  },
+  "breadth": {
+    "method": "COINGECKO_TOP100_FILTERED_v2",
+    "included_count": 89,
+    "advancers": 39,
+    "decliners": 36,
+    "unchanged": 14,
+    "advance_ratio": 0.43820224719101125,
+    "median_return_24h_pct": 0.0,
+    "selective_gate_50": false,
+    "broad_gate_55": false,
+    "previous_bounded_ratio": 0.6067415730337079,
+    "bounded_delta_percentage_points": -16.853932584269663,
+    "membership_hash": "db981da7d5002ac7742419b4bcf7d9c022a5b2ab88165ab971228d587aa6a739",
+    "constituent_sidecar_available": false,
+    "replayability": "FAIL"
+  },
+  "relative_strength": {
+    "BTC_12h_pct": 1.0949815779,
+    "ETH_12h_pct": 0.7868176487,
+    "ETHBTC_12h_pct": -0.302928307,
+    "ETHBTC_4h_pct": -0.0674763833,
+    "ETHBTC_1h_pct": 0.0,
+    "leader_12h": "BTC"
+  },
+  "positioning": {
+    "BTC_taker_buy_sell_ratio": 0.9628,
+    "ETH_taker_buy_sell_ratio": 0.8962,
+    "BTC_global_long_short_ratio": 1.2482,
+    "ETH_global_long_short_ratio": 2.012,
+    "BTC_OI_change_24h_pct": 3.2310987384,
+    "ETH_OI_change_24h_pct": 1.1720468429,
+    "interpretation": "MIXED_LONG_BIAS_WITH_SELL_SIDE_TAKER_PRESSURE_NOT_CLEAN_RISK_ON"
+  },
+  "source_limits": {
+    "ETF": "STALE_PACKET_VALUES_IGNORED",
+    "CFGI": "UNAVAILABLE",
+    "stablecoin_global_total": "UNAVAILABLE",
+    "breadth_sidecar": "NOT_EMITTED"
+  },
+  "DCR_003": {
+    "current_direct_owner_recovered": true,
+    "settled_followup_corroborated": true,
+    "extension_executed": false,
+    "intraday_path_resolved": false,
+    "breadth_sidecars_resolved": false,
+    "status": "PARTIAL_OWNER_RECOVERY_EXTENSION_STILL_UNEXECUTED"
+  },
+  "prospective": {
+    "observation_id": "OBS-20260730-5f1b7219-BREADTH-RELAPSE-OWNER-RECOVERY",
+    "overlap_cluster": "ROTATION-2026-W31-ETHBTC-0030-ATTEMPT",
+    "new_policy_event": false,
+    "new_A_class_receipt": false,
+    "A_rows_total": 2,
+    "new_shadow_dual_run": false,
+    "shadow_dual_run_valid_runs": 5
+  },
+  "framework": {
+    "classification": "BREADTH_RELAPSE_BELOW_50_WITH_DIRECT_ETHBTC_OWNER_RECOVERED_BELOW_0030_BTC_RELATIVE_LEADERSHIP_MIXED_LEVERAGE_AND_INVALID_PREDECESSOR_LINEAGE",
+    "rotation": "NO_ROTATION",
+    "rebuy": "LOCKED",
+    "new_entry": "NOT_ACTIVE",
+    "large_caps": "WATCH_ONLY",
+    "portfolio_action": "HOLD",
+    "canonical_state_change": "NONE",
+    "accepted_market_predecessor_change": "NONE"
+  },
+  "operational_top_up": {
+    "status": "AFVENT",
+    "time_window": "2_TO_4_DAYS",
+    "action": "KEEP_MAJORITY_OF_CAPITAL_IN_RESERVE",
+    "plain_language": "Afvent cirka 2–4 dage med hovedparten af købene, fordi breadth er faldet tilbage under 50%, og direkte ETH/BTC stadig ligger under 0,0300, hvilket øger sandsynligheden for et bedre købsvindue."
+  }
+}
