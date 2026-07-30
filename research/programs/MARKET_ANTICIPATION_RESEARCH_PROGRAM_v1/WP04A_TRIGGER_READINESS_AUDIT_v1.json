@@ -1,0 +1,19 @@
+{
+  "artifact": "MAR_WP04A_TRIGGER_READINESS_AUDIT_v1",
+  "frozen_parent_contract": "MAR_WP04_LIQUIDITY_STRESS_PROPAGATION_v1",
+  "audit_result": "PARTIAL_ONE_CHAIN_ENUMERABLE",
+  "chains": [
+    {"chain_id":"LSP_MACRO_TO_CRYPTO","trigger_status":"BLOCKED","reason":"WP04 defines ordered nodes and allowed sensors but no pre-data numeric or categorical candidate trigger, persistence rule, release-availability rule, or multi-sensor conjunction."},
+    {"chain_id":"LSP_LEVERAGE_TO_SPOT","trigger_status":"BLOCKED","reason":"WP04 defines the propagation concept but no frozen funding, OI, taker-flow, displacement, persistence, or conjunction threshold. Selecting one after source review would create researcher degrees of freedom."},
+    {"chain_id":"LSP_ROTATION_FAILURE","trigger_status":"ENUMERABLE_PARTIAL","preexisting_rule":"ETHBTC settled acceptance attempt at 0.0300 followed by failed persistence/rejection","provenance":"WP03 preregistration and materialized event family","limitation":"Exact -72h, -24h and -4h hourly owner checkpoints remain absent for the known event."}
+  ],
+  "required_before_unblocking": [
+    "Create a prospective trigger addendum without inspecting chain outcomes",
+    "Specify measurement cadence and settled-row rule",
+    "Specify thresholds or categorical state transitions",
+    "Specify conjunction order and maximum propagation lag",
+    "Specify source publication/retrieval availability",
+    "Hash and freeze the addendum before historical enumeration"
+  ],
+  "outcome_data_inspected": false
+}
