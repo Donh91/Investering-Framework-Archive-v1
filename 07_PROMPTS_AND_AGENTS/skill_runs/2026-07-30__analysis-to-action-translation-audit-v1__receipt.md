@@ -1,7 +1,7 @@
 # Skill Run Receipt: Analysis-to-Action Translation Audit v1
 
 **Dato:** 2026-07-30  
-**Status:** PENDING_PR_VALIDATION  
+**Status:** PENDING_FINAL_CI_AND_MERGE  
 **Område:** Market Anticipation / Master Monday / RAW / Forecast Ledger  
 **Primary folder:** `07_PROMPTS_AND_AGENTS/skill_runs/`  
 **Branch:** `agent/task-20260730-analysis-action-translation-audit`
@@ -12,7 +12,7 @@
 archive_decision: INSTALL_THIN_RESEARCH_DECOMPOSITION_UNDER_EXISTING_MAR_OWNER
 classification: PREREGISTERED_RESEARCH_ONLY
 primary_owner: MAR_WP06_OPPORTUNITY_COST_PLUS_FORECAST_LEDGER
-operation: CREATE_9
+operation: CREATE_10_UPDATE_1
 branch_assertion: PASS
 canonical_index_change: NO
 addendum_registry_change: NOT_APPLICABLE
@@ -46,6 +46,14 @@ tests/backtest_engine/test_analysis_to_action_translation_contract.py
 07_PROMPTS_AND_AGENTS/skill_runs/2026-07-30__analysis-to-action-translation-audit-v1__receipt.md
 ```
 
+## Updated path
+
+```text
+04_MARKET_LEARNING/backtests/framework_backtest_readiness_build_v1/research/global_liquidity_causal_chain_v1/validate_program.py
+```
+
+The update is a bounded CI-base repair. `BACKTEST_MASTER_RECOVERY_MANIFEST_v1.json` stores the recovered base hash in the matching package row, while the validator still attempted to read `base_build.sha256`. The repair resolves the base package by filename and validates the unchanged expected SHA-256. No research data, gate or result is changed.
+
 ## Seed-row state
 
 ```yaml
@@ -56,16 +64,20 @@ W31: PROSPECTIVE_PENDING
 new_economic_scores: 0
 ```
 
-## Validation plan
+## Validation state
 
 ```yaml
-local_json_parse: PENDING
-local_validator: PENDING
-local_unit_test: PENDING
-branch_readback: PENDING
-changed_file_scope: PENDING_EXPECT_10
-pull_request: PENDING
-CI: PENDING
+AATA_contract_test: PASS
+AATA_rows: 4
+AATA_new_economic_scores: 0
+AATA_final_holdout_opened: false
+initial_CI: FAIL_UNRELATED_GLC_SCHEMA_DRIFT
+initial_failure: KeyError_sha256_in_GLC_validator
+bounded_GLC_validator_repair: APPLIED
+branch_readback: PASS
+changed_file_scope: PENDING_EXPECT_11
+pull_request: 245
+CI_after_repair: PENDING
 merge: PENDING
 main_readback: PENDING
 archive_content_result: PENDING
