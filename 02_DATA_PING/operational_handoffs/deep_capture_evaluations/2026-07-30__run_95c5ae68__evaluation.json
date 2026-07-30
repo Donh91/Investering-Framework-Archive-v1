@@ -1,0 +1,35 @@
+{
+  "schema_version": "DATA_PING_DEEP_CAPTURE_EVALUATION_v1",
+  "run_id": "run_95c5ae6811704350a854fb1d1fff844a",
+  "snapshot_utc": "2026-07-30T16:51:14.252Z",
+  "new_request_required": false,
+  "existing_request_id": "DCR-20260730-EVENT-003",
+  "decision": "REUSE_AND_EXTEND_EXISTING_REQUEST",
+  "deduplication_basis": {
+    "same_iso_week": true,
+    "same_overlap_cluster": true,
+    "same_owner_recovery_scope": true,
+    "new_material_follow_up": true,
+    "new_independent_policy_event": false
+  },
+  "new_material_follow_up": {
+    "second_bounded_breadth_snapshot_above_55": true,
+    "breadth_increase_percentage_points": 5.6179775281,
+    "elapsed_seconds": 11694.471,
+    "membership_hash_changed_from_prior_bounded_snapshot": true,
+    "direct_ETHBTC_owner_still_unavailable": true,
+    "later_owner_capture_window_available": true
+  },
+  "extension_id": "DCR-20260730-EVENT-003-EXT-95C5",
+  "extension_path": "07_PROMPTS_AND_AGENTS/prompts/requests/2026-07-30__DCR-20260730-EVENT-003__extension-run_95c5.md",
+  "extended_window_end_utc": "2026-07-30T17:00:00.000Z",
+  "required_capture_additions": [
+    "exact second breadth constituent sidecar at 2026-07-30T16:42:20Z",
+    "exact transition only when both point-in-time sidecars are recovered",
+    "direct ETHBTC owner rows through the extended window"
+  ],
+  "new_A_class_receipt": false,
+  "shadow_dual_run_increment": 0,
+  "canonical_effect": "NONE",
+  "portfolio_effect": "NONE"
+}
