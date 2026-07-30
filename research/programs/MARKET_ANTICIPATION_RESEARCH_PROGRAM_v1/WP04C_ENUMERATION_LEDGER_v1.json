@@ -1,0 +1,33 @@
+{
+  "contract": "MAR_WP04C_ENUMERATION_LEDGER_v1",
+  "trigger_contract": "MAR_WP04B_TRIGGER_ADDENDUM_v1",
+  "parameter_changes_after_count_visibility": false,
+  "historical_event_counts_visible": false,
+  "chains": [
+    {
+      "chain_id": "LSP_MACRO_TO_CRYPTO",
+      "enumeration_status": "NOT_ENUMERABLE_FROM_REPOSITORY_STATE",
+      "candidate_count": null,
+      "independent_cluster_count": null,
+      "reason": "Required row-level macro and crypto owner datasets are not materialized in repository; only intake and checksum evidence is present."
+    },
+    {
+      "chain_id": "LSP_LEVERAGE_TO_SPOT",
+      "enumeration_status": "NOT_ENUMERABLE_FROM_REPOSITORY_STATE",
+      "candidate_count": null,
+      "independent_cluster_count": null,
+      "reason": "Required settled funding, OI, taker-flow and spot rows are not materialized in repository."
+    },
+    {
+      "chain_id": "LSP_ROTATION_FAILURE",
+      "enumeration_status": "INHERITED_SINGLE_OWNER_PARTIAL_CLUSTER_ONLY",
+      "candidate_count": 1,
+      "independent_cluster_count": 1,
+      "event_ids": ["MAR_LSP_ROTFAIL_ETHBTC_0300_20260728T150000Z_C01"],
+      "lineage": "OWNER_PARTIAL",
+      "eligible_for_outcome_testing": false
+    }
+  ],
+  "outcomes_inspected": false,
+  "final_holdout_accessed": false
+}
