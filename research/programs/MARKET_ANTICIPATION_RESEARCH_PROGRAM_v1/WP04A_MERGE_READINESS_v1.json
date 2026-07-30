@@ -1,0 +1,22 @@
+{
+  "artifact": "MAR_WP04A_MERGE_READINESS_v1",
+  "branch_vs_main": {"ahead_by": 8, "behind_by": 0, "changed_files_before_gate": 8},
+  "required_artifacts_present": [
+    "WP04A_OWNER_SOURCE_INVENTORY_v1.json",
+    "WP04A_TRIGGER_READINESS_AUDIT_v1.json",
+    "WP04A_CANDIDATE_EVENT_LEDGER_v1.json",
+    "WP04A_LINEAGE_AUDIT_v1.json",
+    "WP04A_AUDIT_REPORT_v1.md",
+    "WP04A_EXECUTION_STATE_v1.json",
+    "validate_wp04a.py",
+    "skill_run_receipt"
+  ],
+  "semantic_checks": {
+    "blocked_counts_are_null_not_zero": true,
+    "outcome_fields_absent": true,
+    "one_independent_cluster_only": true,
+    "followups_not_counted_independent": true,
+    "holdout_sealed": true
+  },
+  "ready_to_merge": true
+}
