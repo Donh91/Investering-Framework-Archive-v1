@@ -1,0 +1,38 @@
+{
+  "schema_version": "DATA_PING_LIVE_SOURCE_RESILIENCE_OBSERVATION_v1",
+  "observation_id": "SOURCE-QA-20260730-7793-RUNTIME-LINEAGE",
+  "run_id": "run_7793a18aa7e94ab7b31edc60f74d928a",
+  "snapshot_utc": "2026-07-30T10:42:00Z",
+  "failure_classes": [
+    "RUNTIME_BUDGET_EXHAUSTED",
+    "UNATTEMPTED_ACTIONS_MISCLASSIFIED_AS_FAIL",
+    "BREADTH_REPLAYABILITY_FAIL",
+    "INVALID_QA_ONLY_PREDECESSOR"
+  ],
+  "runtime": {
+    "planned_core": 60,
+    "attempted_core": 8,
+    "reported_pass": 6,
+    "reported_partial": 1,
+    "reported_fail": 53,
+    "reported_skipped_runtime_limit": 0,
+    "recurrence_after_run_6ed8": true
+  },
+  "lineage": {
+    "declared_predecessor": "snap_83dbf24776894d07be9b506858820563",
+    "declared_predecessor_was_accepted_for_next_run": false,
+    "required_market_predecessor": "snap_0e19c112413d471d8270cad1a18148a7"
+  },
+  "breadth": {
+    "page_pair_retrieved": true,
+    "aggregate_completed": false,
+    "sidecar_emitted": false,
+    "replayability": "FAIL",
+    "consecutive_live_breach_count": 2
+  },
+  "market_state_effect": "NONE",
+  "prospective_evidence_effect": "NONE",
+  "portfolio_effect": "NONE",
+  "required_action": "FRESH_FULL_RUN_WITH_ACCEPTED_PREDECESSOR_AND_RUNTIME_SEMANTICS_FIX",
+  "related_issues": [224, 229, 232]
+}

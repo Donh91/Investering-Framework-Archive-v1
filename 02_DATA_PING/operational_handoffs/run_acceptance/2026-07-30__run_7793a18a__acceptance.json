@@ -1,0 +1,46 @@
+{
+  "schema_version": "DATA_PING_RUN_ACCEPTANCE_DECISION_v1",
+  "run_id": "run_7793a18aa7e94ab7b31edc60f74d928a",
+  "snapshot_id": "snap_610937bd8f6c4be3adf836a2281c9328",
+  "snapshot_utc": "2026-07-30T10:42:00Z",
+  "decision": "ACCEPT_SOURCE_QA_REJECT_MARKET_STATE",
+  "accepted_as_collector_predecessor_for_next_run": false,
+  "accepted_as_market_state_predecessor": false,
+  "accepted_as_source_qa_event": true,
+  "declared_collector_predecessor_id": "snap_83dbf24776894d07be9b506858820563",
+  "declared_predecessor_acceptance": "REJECTED_QA_ONLY",
+  "required_market_predecessor_id": "snap_0e19c112413d471d8270cad1a18148a7",
+  "required_market_predecessor_run_id": "run_0bc8a5d0d0464542b29b4d50f2f8e19c",
+  "reasons": [
+    "ONLY_8_OF_60_CORE_ACTIONS_ATTEMPTED",
+    "MANDATORY_DIRECT_MARKET_FEEDS_UNAVAILABLE",
+    "DIRECT_ETHBTC_OWNER_UNAVAILABLE",
+    "BREADTH_AGGREGATE_UNAVAILABLE",
+    "TOP100_SIDECAR_NOT_EMITTED",
+    "UNATTEMPTED_ACTIONS_MISCLASSIFIED_AS_FAIL",
+    "DECLARED_PREDECESSOR_WAS_NOT_ACCEPTED_FOR_NEXT_RUN"
+  ],
+  "diagnostic_fields_allowed": [
+    "CoinGecko global current fields",
+    "CoinGecko BTC and ETH current fields",
+    "derived ETHBTC diagnostic ratio",
+    "DGS2 and DGS10 latest values",
+    "stablecoin chain distribution sample",
+    "runtime and lineage failure evidence"
+  ],
+  "forbidden_uses": [
+    "rotation gate scoring",
+    "rebuy or entry permission",
+    "breadth transition scoring",
+    "new A-class receipt",
+    "shadow dual-run increment",
+    "portfolio action",
+    "replacement of last accepted market state",
+    "use as next market predecessor"
+  ],
+  "required_next_step": "FRESH_FULL_DATA_PING_USING_LAST_ACCEPTED_MARKET_PREDECESSOR",
+  "new_deep_capture_request": false,
+  "canonical_effect": "NONE",
+  "portfolio_effect": "NONE",
+  "related_issues": [224, 229, 232]
+}
