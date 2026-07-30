@@ -1,0 +1,59 @@
+{
+  "schema_version": "DATA_PING_QA_BOUNDARIES_v1",
+  "run_id": "run_4dd78b1e713b4258aedcade193b29b8b",
+  "snapshot_utc": "2026-07-30T13:36:19.781Z",
+  "transport_integrity": "UNVERIFIED_CHAT_TRANSPORT",
+  "accepted_current_sources": [
+    "CoinGecko global",
+    "CoinGecko BTC and ETH current",
+    "CoinGecko filtered breadth aggregate",
+    "FRED current rows",
+    "DefiLlama chain distribution and chain TVL",
+    "GeckoTerminal DEX sample",
+    "OKX current crosscheck"
+  ],
+  "unavailable_sources": [
+    "Farside BTC and ETH ETF",
+    "CFGI global BTC and ETH",
+    "Binance context",
+    "Binance final owner feeds",
+    "direct ETHBTC owner",
+    "stablecoin global total",
+    "DeFi total TVL optional payload"
+  ],
+  "lineage_boundaries": {
+    "packet_declared_predecessor": "snap_610937bd8f6c4be3adf836a2281c9328",
+    "packet_declared_predecessor_status": "REJECTED_QA_ONLY",
+    "main_framework_predecessor": "snap_0e19c112413d471d8270cad1a18148a7",
+    "packet_comparison_rows_canonical": false,
+    "main_framework_manual_rebind_diagnostics_only": true
+  },
+  "breadth_boundaries": {
+    "aggregate_available": true,
+    "absolute_gate_scoring_permitted": true,
+    "constituent_sidecar_available": false,
+    "replayability": "FAIL",
+    "constituent_transition_analysis_permitted": false,
+    "membership_matched_transition_claims_permitted": false,
+    "current_universe_substitution_permitted": false
+  },
+  "ETHBTC_boundaries": {
+    "derived_ratio_available": true,
+    "direct_owner_available": false,
+    "derived_ratio_may_score_direct_gate": false,
+    "OKX_USD_legs_may_replace_direct_pair": false
+  },
+  "prospective_boundaries": {
+    "new_independent_policy_event": false,
+    "new_A_class_receipt": false,
+    "shadow_dual_run_increment": false,
+    "final_holdout_access": false
+  },
+  "deep_capture": {
+    "request_id": "DCR-20260730-EVENT-003",
+    "prepared_prompt_is_evidence": false,
+    "response_auto_accepted": false,
+    "canonical_authority": "NONE",
+    "portfolio_authority": "NONE"
+  }
+}
