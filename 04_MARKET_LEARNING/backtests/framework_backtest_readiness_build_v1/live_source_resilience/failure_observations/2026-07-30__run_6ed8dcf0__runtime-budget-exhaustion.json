@@ -1,0 +1,31 @@
+{
+  "schema_version": "LIVE_SOURCE_RESILIENCE_FAILURE_OBSERVATION_v1",
+  "observation_id": "SRCFAIL-20260730-6ed8dcf0-RUNTIME-BUDGET",
+  "run_id": "run_6ed8dcf0ec6a4d62a429c7f10fcb5f5b",
+  "snapshot_utc": "2026-07-30T05:14:00Z",
+  "failure_class": "RUNTIME_BUDGET_EXHAUSTED",
+  "planned_core_actions": 60,
+  "attempted_core_actions": 6,
+  "successful_core_actions": 4,
+  "mandatory_owner_feeds_available": false,
+  "breadth_pages_available": true,
+  "breadth_aggregate_available": false,
+  "breadth_sidecar_available": false,
+  "market_state_scoreable": false,
+  "shadow_run_scoreable": false,
+  "source_qa_usable": true,
+  "semantic_defect": {
+    "unattempted_actions_reported_as_fail": true,
+    "expected_status": "SKIPPED_RUNTIME_LIMIT",
+    "issue": 229
+  },
+  "replayability_defect": {
+    "top100_retrieval_succeeded": true,
+    "point_in_time_sidecar_missing": true,
+    "breadth_replayability": "FAIL",
+    "issue": 224
+  },
+  "recovery_rule": "REQUIRE_FRESH_FULL_DATA_PING; DO_NOT_PROMOTE_THIS_RUN_TO_MARKET_PREDECESSOR",
+  "canonical_effect": "NONE",
+  "portfolio_effect": "NONE"
+}
