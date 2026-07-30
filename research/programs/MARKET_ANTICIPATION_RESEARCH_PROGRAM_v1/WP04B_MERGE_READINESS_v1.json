@@ -1,0 +1,22 @@
+{
+  "work_package": "MAR-WP04B",
+  "merge_ready": true,
+  "checks": {
+    "trigger_rules_frozen_before_historical_enumeration": true,
+    "cadence_defined": true,
+    "owner_row_eligibility_defined": true,
+    "thresholds_or_state_transitions_defined": true,
+    "persistence_defined": true,
+    "conjunction_order_defined": true,
+    "maximum_propagation_lag_defined": true,
+    "source_availability_handling_defined": true,
+    "overlap_and_reset_logic_defined": true,
+    "null_and_censoring_defined": true,
+    "immutable_versioning_defined": true,
+    "historical_counts_not_inspected": true,
+    "outcomes_not_inspected": true,
+    "final_holdout_sealed": true
+  },
+  "authorized_next_action": "WP04C_ENUMERATION_ONLY",
+  "forbidden_next_action": "CHANGE_WP04B_PARAMETERS_AFTER_EVENT_COUNTS_ARE_VISIBLE"
+}

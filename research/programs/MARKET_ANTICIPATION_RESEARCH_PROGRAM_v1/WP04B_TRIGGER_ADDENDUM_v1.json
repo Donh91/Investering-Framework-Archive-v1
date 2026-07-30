@@ -1,0 +1,88 @@
+{
+  "contract": "MAR_WP04B_TRIGGER_ADDENDUM_v1",
+  "parent_issue": 209,
+  "work_issue": 247,
+  "effective_from_utc": "2026-07-30T21:44:38Z",
+  "scope": "PROSPECTIVE_TRIGGER_FREEZE_ONLY",
+  "historical_event_counts_inspected": false,
+  "post_event_outcomes_inspected": false,
+  "final_holdout_accessed": false,
+  "common_rules": {
+    "owner_or_replayable_point_in_time_only": true,
+    "event_time": "FIRST_SETTLED_ROW_WHERE_ALL_REQUIRED_TRIGGER_CONDITIONS_ARE_SIMULTANEOUSLY_TRUE",
+    "no_forward_fill": true,
+    "no_interpolation": true,
+    "no_current_universe_substitution": true,
+    "required_pre_event_windows": ["-72h", "-24h", "-4h", "0h"],
+    "observation_windows_reserved_not_inspected_in_wp04b": ["+4h", "+24h", "+48h", "+72h"],
+    "lineage_classes": ["OWNER_COMPLETE", "OWNER_PARTIAL", "REPLAYABLE_COMPLETE", "UNUSABLE"],
+    "null_states": ["UNKNOWN", "UNAVAILABLE", "NOT_APPLICABLE", "RIGHT_CENSORED"],
+    "event_deduplication": "ONE_INDEPENDENT_EVENT_PER_ACTIVE_OVERLAP_CLUSTER",
+    "forbidden": ["OUTCOME_DRIVEN_THRESHOLD_TUNING", "FORWARD_RETURN_INSPECTION", "FINAL_HOLDOUT_ACCESS", "ECONOMIC_RANKING", "MODEL_WEIGHT_CHANGE", "FRAMEWORK_PROMOTION", "PORTFOLIO_EFFECT"]
+  },
+  "chains": [
+    {
+      "chain_id": "LSP_MACRO_TO_CRYPTO",
+      "cadence": "DAILY_EVALUATION_AFTER_ALL_REQUIRED_PUBLICATIONS_AVAILABLE",
+      "macro_state": {
+        "required": [
+          "DTWEXBGS_20D_CHANGE_Z_GE_1",
+          "DGS2_20D_CHANGE_Z_GE_1_OR_DGS10_20D_CHANGE_Z_GE_1",
+          "VIXCLS_LEVEL_Z_GE_1"
+        ],
+        "standardization": "TRAILING_756_AVAILABLE_OBSERVATIONS_MEDIAN_AND_MAD",
+        "minimum_history": 252,
+        "z_definition": "0.67448975*(x-median)/MAD",
+        "persistence": "AT_LEAST_2_OF_3_REQUIRED_COMPONENTS_TRUE_ON_2_CONSECUTIVE_ELIGIBLE_DAYS"
+      },
+      "crypto_transmission": {
+        "required": [
+          "BTC_SETTLED_DAILY_RETURN_LE_OWN_TRAILING_252D_10TH_PERCENTILE",
+          "ETHBTC_SETTLED_DAILY_RETURN_LT_0"
+        ],
+        "breadth_confirmation": "TOP100_POINT_IN_TIME_BREADTH_BELOW_40_PERCENT_OR_UNAVAILABLE",
+        "breadth_role": "CONFIRMATION_NOT_TRIGGER",
+        "maximum_lag": "3_SETTLED_CRYPTO_DAYS_AFTER_MACRO_STATE_FIRST_QUALIFIES"
+      },
+      "event_rule": "MACRO_STATE_QUALIFIES_AND_CRYPTO_TRANSMISSION_OCCURS_WITHIN_MAXIMUM_LAG",
+      "reset": "ALL_MACRO_COMPONENTS_BELOW_TRIGGER_FOR_5_CONSECUTIVE_ELIGIBLE_DAYS_AND_NO_ACTIVE_CRYPTO_TRANSMISSION",
+      "cluster_expiry": "10_SETTLED_CRYPTO_DAYS_AFTER_EVENT_TIME"
+    },
+    {
+      "chain_id": "LSP_LEVERAGE_TO_SPOT",
+      "cadence": "HOURLY_ON_COMMON_SETTLED_UTC_HOUR",
+      "leverage_state": {
+        "required": [
+          "ABS_FUNDING_Z_GE_2_OR_FUNDING_SIGN_FLIP_AFTER_ABS_Z_GE_2",
+          "ABS_OI_4H_CHANGE_Z_GE_2"
+        ],
+        "optional_confirmation": "TAKER_BUY_RATIO_Z_ABS_GE_1_5",
+        "standardization": "TRAILING_2160_ELIGIBLE_HOURLY_ROWS_MEDIAN_AND_MAD",
+        "minimum_history": 720,
+        "z_definition": "0.67448975*(x-median)/MAD",
+        "persistence": "REQUIRED_CONDITIONS_TRUE_IN_SAME_SETTLED_HOUR_OR_ADJACENT_HOURS_WITHIN_2H"
+      },
+      "spot_transmission": {
+        "required": "BTC_OR_ETH_4H_LOG_RETURN_ABS_Z_GE_2_WITH_DIRECTION_CONSISTENT_WITH_DELEVERAGING",
+        "relative_pressure": "ETHBTC_4H_RETURN_LT_0_FOR_RISK_OFF_CLASSIFICATION_ONLY",
+        "breadth_confirmation": "TOP100_POINT_IN_TIME_BREADTH_BELOW_40_PERCENT_OR_DROP_GE_20_PERCENTAGE_POINTS_OVER_4H_OR_UNAVAILABLE",
+        "breadth_role": "CONFIRMATION_NOT_TRIGGER",
+        "maximum_lag": "4_SETTLED_HOURS_AFTER_LEVERAGE_STATE_FIRST_QUALIFIES"
+      },
+      "event_rule": "LEVERAGE_STATE_QUALIFIES_AND_SPOT_TRANSMISSION_OCCURS_WITHIN_MAXIMUM_LAG",
+      "reset": "ABS_FUNDING_Z_LT_1_AND_ABS_OI_4H_CHANGE_Z_LT_1_FOR_12_CONSECUTIVE_ELIGIBLE_HOURS",
+      "cluster_expiry": "24_SETTLED_HOURS_AFTER_EVENT_TIME"
+    },
+    {
+      "chain_id": "LSP_ROTATION_FAILURE",
+      "status": "INHERITED_UNCHANGED",
+      "rule_reference": "WP03_ETHBTC_0300_ACCEPTANCE_FAILURE",
+      "threshold": 0.03
+    }
+  ],
+  "versioning": {
+    "immutable_after_merge": true,
+    "changes_require_new_major_or_minor_contract": true,
+    "historical_enumeration_allowed_only_after_effective_from_utc_and_hash_receipt": true
+  }
+}
