@@ -1,0 +1,42 @@
+{
+  "schema_version": "DATA_PING_LIVE_SOURCE_RESILIENCE_OBSERVATION_v1",
+  "observation_id": "SOURCE-QA-20260730-4dd78-OWNER-LINEAGE-SIDECAR",
+  "run_id": "run_4dd78b1e713b4258aedcade193b29b8b",
+  "snapshot_utc": "2026-07-30T13:36:19.781Z",
+  "failure_classes": [
+    "BINANCE_GEO_RESTRICTION",
+    "INVALID_QA_ONLY_PREDECESSOR",
+    "BREADTH_SIDECAR_NOT_EMITTED",
+    "PUBLIC_WEB_ENDPOINT_UNAVAILABLE"
+  ],
+  "execution": {
+    "planned_core": 60,
+    "attempted_core": 60,
+    "runtime_budget_exhausted": false,
+    "runtime_failure_semantics_issue_229_applies_to_this_run": false
+  },
+  "lineage": {
+    "declared_predecessor": "snap_610937bd8f6c4be3adf836a2281c9328",
+    "declared_predecessor_was_accepted": false,
+    "required_predecessor": "snap_0e19c112413d471d8270cad1a18148a7",
+    "issue": 232
+  },
+  "breadth": {
+    "aggregate_completed": true,
+    "advance_ratio_pct": 55.0561797753,
+    "sidecar_emitted": false,
+    "replayability": "FAIL",
+    "consecutive_live_sidecar_breach_count": 3,
+    "issue": 224
+  },
+  "owner_source": {
+    "Binance_context": "FAIL_GEO_RESTRICTION",
+    "Binance_final": "FAIL_GEO_RESTRICTION",
+    "OKX_crosscheck": "PASS",
+    "direct_ETHBTC_gate_scoreable": false
+  },
+  "market_state_effect": "NONE",
+  "prospective_evidence_effect": "SAME_CLUSTER_BOUNDED_OBSERVATION_ONLY",
+  "portfolio_effect": "NONE",
+  "required_action": "DCR_003_AND_FRESH_FULL_RUN_WITH_ACCEPTED_PREDECESSOR"
+}
