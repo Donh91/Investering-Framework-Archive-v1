@@ -1,0 +1,61 @@
+{
+  "schema_version": "1.0",
+  "contract_id": "AATA_PROSPECTIVE_CAPTURE_CONTRACT_v1",
+  "status": "RESEARCH_CAPTURE_READY_NOT_CANONICAL_OUTPUT_RULE",
+  "applies_to": ["MASTER_MONDAY", "WEEKLY_RAW"],
+  "required_separation": {
+    "analysis_block": {
+      "required": [
+        "regime_call",
+        "edge_state",
+        "confidence",
+        "leadership_call",
+        "rotation_call",
+        "evidence_summary",
+        "falsifiers"
+      ],
+      "purpose": "Preserve the full analytical interpretation without action compression."
+    },
+    "operational_translation_block": {
+      "required": [
+        "asset",
+        "horizon",
+        "expected_path",
+        "range_low",
+        "range_high",
+        "continuation_trigger",
+        "invalidation",
+        "action_state",
+        "action_conditions"
+      ],
+      "purpose": "Freeze the concrete price and action translation separately from the analysis."
+    }
+  },
+  "freeze_rules": [
+    "Both blocks must be frozen at the same knowledge timestamp or explicitly declare different source timestamps.",
+    "No operational field may be added after outcome observability.",
+    "Missing values remain null and may not be inferred from narrative.",
+    "The source output remains authoritative; derived capture rows are navigation and audit artifacts only.",
+    "BTC permission and alt permission remain separate."
+  ],
+  "outcome_attachment_rules": [
+    "Outcomes are attached only by existing owner scorers and verified owner datasets.",
+    "Analysis accuracy, price translation and action policy are evaluated separately.",
+    "No hidden blended score.",
+    "Opportunity-cost fields use the existing evidence-ledger/FNP definitions.",
+    "Incomplete horizons remain pending."
+  ],
+  "minimum_future_fields": {
+    "analysis_result": ["CORRECT", "MIXED", "WRONG", "BLOCKED"],
+    "price_translation_result": ["OWNER_SCORER_RESULT", "BLOCKED"],
+    "action_policy_result": ["PROTECTIVE_VALUE", "EXCESS_RESTRAINT", "PREMATURE_RISK", "NEUTRAL", "BLOCKED"],
+    "timing_result": ["EARLY", "ON_TIME", "LATE", "NOT_APPLICABLE", "BLOCKED"]
+  },
+  "authority": {
+    "changes_master_monday_template": false,
+    "changes_raw_template": false,
+    "changes_market_state": false,
+    "changes_portfolio_action": false,
+    "creates_active_test": false
+  }
+}
