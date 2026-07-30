@@ -1,0 +1,10 @@
+{
+  "schema": "MAR_WP04_EVENT_SCHEMA_v1",
+  "required_fields": ["event_id", "chain_id", "event_start_utc", "freeze_utc", "cluster_id", "independent_observation", "lineage_class", "source_paths", "sensor_availability", "checkpoint_values", "right_censored", "outcome_status"],
+  "lineage_classes": ["FULLY_REPLAYABLE", "OWNER_PARTIAL", "SHADOW_ONLY", "BLOCKED", "RIGHT_CENSORED"],
+  "sensor_availability_states": ["AVAILABLE", "UNAVAILABLE", "UNKNOWN", "NOT_APPLICABLE"],
+  "required_checkpoints": ["-72h", "-24h", "-4h", "0h", "+4h", "+24h", "+48h", "+72h"],
+  "interpolation_allowed": false,
+  "outcome_status_allowed": ["NOT_CALCULATED"],
+  "duplicate_policy": "SAME_CLUSTER_FOLLOW_UPS_DO_NOT_INCREMENT_INDEPENDENT_COUNT"
+}
