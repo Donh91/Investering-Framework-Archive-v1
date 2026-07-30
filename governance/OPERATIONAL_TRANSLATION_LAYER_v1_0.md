@@ -2,7 +2,8 @@
 
 **Status:** Canonical operational rule  
 **Effective:** 2026-07-29  
-**Scope:** Master Monday, RAW 1–3D, RAW 5–7D, RAW 2–3W and other framework outputs that contain a market forecast or action implication.
+**Expanded scope effective:** 2026-07-30  
+**Scope:** Master Monday, RAW 1–3D, RAW 5–7D, RAW 2–3W, DATA PING and other framework outputs that contain a market forecast or action implication.
 
 ## Purpose
 
@@ -50,7 +51,7 @@ Must be written in simple language and contain:
 9. **Confidence**
 10. **Main failure risk**
 
-## Standard format
+## Standard format for Master Monday and RAW
 
 ```text
 OPERATIONAL TRANSLATION
@@ -86,9 +87,31 @@ Main failure risk:
 [Single most important reason the translation may fail]
 ```
 
+## Compressed terminal format for DATA PING
+
+DATA PING uses a deliberately shorter operational translation because its main purpose is frequent market-state updating rather than a full forecast report.
+
+Every user-facing DATA PING reconciliation must end with exactly one adaptive and unambiguous sentence beginning:
+
+```text
+**Top-up og købsvindue:**
+```
+
+The sentence must state:
+
+1. a definite action now;
+2. a time horizon or measurable trigger for reassessment;
+3. the decisive reason.
+
+The canonical detailed rule is:
+
+`governance/DATA_PING_TOP_UP_BUY_WINDOW_OUTPUT_RULE_v1_0.md`
+
+This compressed line supplements rather than replaces the full DATA PING framework read. It may not override canonical state, portfolio locks, source-QA boundaries or predecessor-lineage restrictions.
+
 ## Scoring and audit
 
-The analysis and operational translation must receive separate IDs.
+The analysis and operational translation must receive separate IDs when the output is a scored forecast.
 
 Recommended identifiers:
 
@@ -103,6 +126,8 @@ or for RAW:
 ANALYSIS_ID: RAW-YYYYMMDD-HORIZON-A
 TRANSLATION_ID: RAW-YYYYMMDD-HORIZON-T
 ```
+
+For DATA PING, the exact published terminal sentence should be archived with the framework read whenever practical and may later be evaluated as an operational timing call.
 
 The translation is evaluated independently on:
 
@@ -127,8 +152,9 @@ The audit must distinguish between:
 - The operational translation may not modify the full analysis retroactively.
 - The original translation must remain frozen after publication.
 - Only outcomes, scores and audit comments may be appended.
-- The translation may not create false certainty. One primary path is mandatory, but confidence and invalidation must remain explicit.
+- The translation may not create false certainty. One primary path is mandatory, but confidence and invalidation must remain explicit where the long format applies.
 - A broad range used only to obtain an easy hit must be penalized.
+- The DATA PING terminal line must be concise without becoming ambiguous.
 - This layer is an execution-compression and accountability layer, not a new market engine.
 
 ## Canonical learning
