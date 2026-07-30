@@ -1,0 +1,43 @@
+{
+  "schema_version": "DATA_PING_USER_FACING_OUTPUT_RULES_POINTER_v1",
+  "updated_at_utc": "2026-07-30T20:05:00Z",
+  "status": "ACTIVE_CANONICAL",
+  "rules": [
+    {
+      "rule_id": "OPERATIONAL_TRANSLATION_LAYER_v1_0",
+      "path": "governance/OPERATIONAL_TRANSLATION_LAYER_v1_0.md",
+      "scope": ["MASTER_MONDAY", "RAW", "DATA_PING"]
+    },
+    {
+      "rule_id": "DATA_PING_TOP_UP_BUY_WINDOW_OUTPUT_RULE_v1_0",
+      "path": "governance/DATA_PING_TOP_UP_BUY_WINDOW_OUTPUT_RULE_v1_0.md",
+      "scope": ["EVERY_USER_FACING_DATA_PING_RECONCILIATION"]
+    }
+  ],
+  "data_ping_terminal_requirement": {
+    "required": true,
+    "prefix_exact": "Top-up og købsvindue:",
+    "sentence_count": 1,
+    "adaptive": true,
+    "unambiguous": true,
+    "required_elements": ["ACTION_NOW", "TIME_HORIZON_OR_TRIGGER", "DECISIVE_REASON"],
+    "valid_action_classes": [
+      "ACTIVE_GRADUAL",
+      "SMALL_TRANCHE_ONLY",
+      "WAIT_FOR_BETTER_WINDOW",
+      "DO_NOT_ADD_RISK",
+      "NO_NEW_ASSESSMENT"
+    ]
+  },
+  "inheritance": {
+    "all_future_data_ping_threads": "REQUIRED",
+    "all_future_thread_handovers": "MUST_REFERENCE_OR_EMBED",
+    "chat_memory_dependency": "FORBIDDEN",
+    "github_rule_is_source_of_truth": true
+  },
+  "authority": {
+    "may_override_canonical_market_state": false,
+    "may_override_portfolio_locks": false,
+    "may_create_automatic_trade": false
+  }
+}
