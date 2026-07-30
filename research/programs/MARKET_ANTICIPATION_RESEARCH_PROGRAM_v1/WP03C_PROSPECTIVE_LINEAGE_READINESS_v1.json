@@ -1,0 +1,38 @@
+{
+  "contract": "MAR_WP03C_PROSPECTIVE_LINEAGE_READINESS_v1",
+  "generated_at_utc": "2026-07-30T16:14:00Z",
+  "parent_issue": 209,
+  "work_issue": 235,
+  "development_window_only": true,
+  "final_holdout_accessed": false,
+  "readiness_checks": [
+    {
+      "family": "BREADTH_DISPLACEMENT_AND_DIVERGENCE",
+      "required_artifact": "post_addendum_point_in_time_constituent_sidecar",
+      "status": "NOT_YET_OBSERVED",
+      "reason": "The canonical retention addendum and issue #224 exist, but no subsequent retained sidecar with deterministic rows, timestamps and replay parity was located during WP03C."
+    },
+    {
+      "family": "BTC_ETH_SETTLED_RANGE_BREAK",
+      "required_artifact": "pre_event_frozen_boundary_plus_settled_owner_price_join",
+      "status": "NOT_YET_OBSERVED",
+      "reason": "No machine-readable artifact proving both boundary freeze precedence and settled owner-price linkage was located."
+    },
+    {
+      "family": "ETF_FLOW_REVERSAL",
+      "required_artifact": "row_level_publication_or_retrieval_availability_timestamp",
+      "status": "NOT_YET_OBSERVED",
+      "reason": "No row-level availability timestamps were located; same-session attribution remains prohibited."
+    },
+    {
+      "family": "DIRECT_ETHBTC_THRESHOLD_ATTEMPT",
+      "required_artifact": "exact_hourly_pre_event_checkpoints",
+      "status": "OWNER_PARTIAL_ONLY",
+      "reason": "The known 0.0300 failed-persistence event remains directly evidenced from event start onward, but exact -72h, -24h and -4h hourly checkpoints remain incomplete."
+    }
+  ],
+  "fully_replayable_event_count": 0,
+  "safe_descriptive_audit_eligible_event_count": 0,
+  "retrospective_reconstruction": "FORBIDDEN",
+  "current_universe_substitution": "FORBIDDEN"
+}
