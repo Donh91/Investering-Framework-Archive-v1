@@ -1,0 +1,24 @@
+{
+  "contract": "MAR_WP04C_BLOCKED_WINDOW_REGISTER_v1",
+  "windows": [
+    {
+      "scope": "ALL_HISTORICAL_MACRO_WINDOWS",
+      "status": "BLOCKED",
+      "blocker": "ROW_LEVEL_OWNER_DATA_NOT_REPOSITORY_RESIDENT",
+      "unblock_requires": ["materialized owner rows", "owner registry", "content hash", "publication/retrieval timestamps", "schema/version receipt"]
+    },
+    {
+      "scope": "ALL_HISTORICAL_LEVERAGE_WINDOWS",
+      "status": "BLOCKED",
+      "blocker": "SETTLED_DERIVATIVES_OWNER_ROWS_NOT_REPOSITORY_RESIDENT",
+      "unblock_requires": ["funding rows", "OI rows", "spot rows", "settled timestamps", "source identity", "content hashes"]
+    },
+    {
+      "scope": "HISTORICAL_TOP100_BREADTH",
+      "status": "BLOCKED_PERMANENTLY_EXCEPT_PROSPECTIVE",
+      "blocker": "POINT_IN_TIME_MEMBERSHIP_SIDECARS_ABSENT",
+      "unblock_requires": ["prospective constituent sidecars only"]
+    }
+  ],
+  "counts_must_remain_null_until_unblocked": true
+}
