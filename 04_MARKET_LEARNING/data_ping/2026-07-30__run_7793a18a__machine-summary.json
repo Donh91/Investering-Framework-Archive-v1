@@ -1,0 +1,77 @@
+{
+  "schema_version": "DATA_PING_FRAMEWORK_MACHINE_SUMMARY_v1",
+  "run_id": "run_7793a18aa7e94ab7b31edc60f74d928a",
+  "snapshot_id": "snap_610937bd8f6c4be3adf836a2281c9328",
+  "snapshot_utc": "2026-07-30T10:42:00Z",
+  "collector_status": "PARTIAL_RUNTIME_BUDGET_EXHAUSTED",
+  "main_framework_acceptance": "SOURCE_QA_ONLY",
+  "market_state_ingest": false,
+  "longitudinal_market_run_accepted": false,
+  "full_rerun_required": true,
+  "available_market_diagnostics": {
+    "BTC_CoinGecko_usd": 64502,
+    "ETH_CoinGecko_usd": 1917.4,
+    "ETHBTC_derived": 0.02972621,
+    "total_market_cap_usd": 2286020160072.0195,
+    "btc_dominance_pct": 56.6072935885,
+    "eth_dominance_pct": 10.1229841542,
+    "DGS2_pct": 4.26,
+    "DGS10_pct": 4.61,
+    "yield_curve_10y_minus_2y_pct_points": 0.35
+  },
+  "coverage": {
+    "planned_core_actions": 60,
+    "attempted_core_actions": 8,
+    "reported_pass": 6,
+    "reported_partial": 1,
+    "reported_fail": 53,
+    "reported_skipped_runtime_limit": 0,
+    "mandatory_direct_market_feeds": false,
+    "breadth_aggregate": false,
+    "breadth_source_pages": true
+  },
+  "lineage": {
+    "declared_predecessor_id": "snap_83dbf24776894d07be9b506858820563",
+    "declared_predecessor_was_accepted": false,
+    "required_market_predecessor_id": "snap_0e19c112413d471d8270cad1a18148a7",
+    "required_market_predecessor_run_id": "run_0bc8a5d0d0464542b29b4d50f2f8e19c",
+    "lineage_status": "INVALID_QA_ONLY_PREDECESSOR",
+    "implementation_issue": 232
+  },
+  "breadth": {
+    "raw_rows": 100,
+    "deduped_rows": 100,
+    "aggregate_status": "UNAVAILABLE_RUNTIME_EXHAUSTED",
+    "sidecar_status": "NOT_EMITTED",
+    "replayability": "FAIL",
+    "constituent_transition_analysis_permitted": false,
+    "implementation_issue": 224
+  },
+  "collector_semantics": {
+    "unattempted_actions_misclassified_as_fail": true,
+    "correct_target_status": "SKIPPED_RUNTIME_LIMIT",
+    "recurrence_count_observed": 2,
+    "implementation_issue": 229
+  },
+  "governance": {
+    "rotation": "NO_ROTATION",
+    "rebuy": "LOCKED",
+    "new_entry": "NOT_ACTIVE",
+    "large_caps": "WATCH_ONLY",
+    "portfolio_action": "NONE",
+    "canonical_state_change": "NONE"
+  },
+  "prospective": {
+    "new_policy_event": false,
+    "new_A_class_receipt": false,
+    "A_class_increment": 0,
+    "A_rows_total": 2,
+    "new_shadow_dual_run": false,
+    "shadow_dual_run_valid_runs": 5,
+    "final_holdout_opened": false
+  },
+  "deep_capture": {
+    "new_request": false,
+    "reason": "COLLECTOR_EXECUTION_AND_LINEAGE_FAILURE_REQUIRES_FRESH_FULL_RERUN"
+  }
+}
