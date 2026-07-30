@@ -1,14 +1,14 @@
 {
   "schema_version": "DATA_PING_ACCEPTED_MARKET_PREDECESSOR_POINTER_v1",
-  "updated_at_utc": "2026-07-30T14:20:00Z",
+  "updated_at_utc": "2026-07-30T17:00:00Z",
   "latest_accepted_market_run_id": "run_0bc8a5d0d0464542b29b4d50f2f8e19c",
   "latest_accepted_market_snapshot_id": "snap_0e19c112413d471d8270cad1a18148a7",
   "latest_accepted_market_snapshot_utc": "2026-07-29T16:51:00.829Z",
-  "latest_bounded_market_observation_run_id": "run_4dd78b1e713b4258aedcade193b29b8b",
-  "latest_bounded_market_observation_snapshot_id": "snap_bed564693b804b8c9c2b7476386abd3d",
+  "latest_bounded_market_observation_run_id": "run_95c5ae6811704350a854fb1d1fff844a",
+  "latest_bounded_market_observation_snapshot_id": "snap_609e377c7de24dfba3e4db211e448e46",
   "latest_bounded_market_observation_acceptance": "CURRENT_ABSOLUTE_DIAGNOSTICS_ONLY_NOT_LONGITUDINAL_PREDECESSOR",
-  "latest_source_qa_run_id": "run_4dd78b1e713b4258aedcade193b29b8b",
-  "latest_source_qa_snapshot_id": "snap_bed564693b804b8c9c2b7476386abd3d",
+  "latest_source_qa_run_id": "run_95c5ae6811704350a854fb1d1fff844a",
+  "latest_source_qa_snapshot_id": "snap_609e377c7de24dfba3e4db211e448e46",
   "rejected_attempts_since_market_acceptance": [
     {
       "run_id": "run_6ed8dcf0ec6a4d62a429c7f10fcb5f5b",
@@ -26,12 +26,18 @@
       "run_id": "run_4dd78b1e713b4258aedcade193b29b8b",
       "snapshot_id": "snap_bed564693b804b8c9c2b7476386abd3d",
       "reason": "INVALID_QA_ONLY_PREDECESSOR_AND_DIRECT_ETHBTC_OWNER_UNAVAILABLE"
+    },
+    {
+      "run_id": "run_95c5ae6811704350a854fb1d1fff844a",
+      "snapshot_id": "snap_609e377c7de24dfba3e4db211e448e46",
+      "reason": "INVALID_BOUNDED_NON_PREDECESSOR_AND_DIRECT_ETHBTC_OWNER_UNAVAILABLE"
     }
   ],
   "next_run_required_predecessor_id": "snap_0e19c112413d471d8270cad1a18148a7",
   "qa_only_runs_may_advance_market_pointer": false,
   "bounded_observations_may_advance_market_pointer": false,
   "pending_deep_capture_request_id": "DCR-20260730-EVENT-003",
+  "pending_deep_capture_extension_id": "DCR-20260730-EVENT-003-EXT-95C5",
   "canonical_market_state_change": "NONE",
   "portfolio_effect": "NONE",
   "related_issues": [224, 232]
