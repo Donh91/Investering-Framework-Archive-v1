@@ -25,6 +25,13 @@ sys.modules[SPEC.name] = collector
 assert SPEC.loader is not None
 SPEC.loader.exec_module(collector)
 
+SERIES_STALE_AFTER_SECONDS = {
+    "DGS2": 7 * 24 * 60 * 60,
+    "DGS10": 7 * 24 * 60 * 60,
+    "VIXCLS": 7 * 24 * 60 * 60,
+    "DTWEXBGS": 10 * 24 * 60 * 60,
+}
+
 
 def deterministic_composite(payloads: dict[str, bytes], series_set: tuple[str, ...]) -> bytes:
     values: dict[str, dict[str, str]] = {}
@@ -42,6 +49,29 @@ def deterministic_composite(payloads: dict[str, bytes], series_set: tuple[str, .
     for source_date in sorted(all_dates):
         writer.writerow([source_date, *(values[series].get(source_date, ".") for series in series_set)])
     return stream.getvalue().encode("utf-8")
+
+
+def apply_series_freshness_policy(artifacts: dict[str, dict]) -> None:
+    health_rows = artifacts["source_health"]["series"]
+    for row in health_rows:
+        threshold = SERIES_STALE_AFTER_SECONDS[row["series"]]
+        row["stale_after_seconds"] = threshold
+        row["status"] = "PASS" if row["freshness_seconds"] <= threshold else "STALE"
+    aggregate = "PASS" if all(row["status"] == "PASS" for row in health_rows) else "STALE"
+    artifacts["source_health"]["status"] = aggregate
+    receipt = artifacts["receipt"]
+    receipt["status"] = aggregate
+    receipt_material = {key: value for key, value in receipt.items() if key != "receipt_sha256"}
+    receipt["receipt_sha256"] = collector.sha256_bytes(collector.canonical_json_bytes(receipt_material))
+    snapshot = artifacts["snapshot"]
+    snapshot["status"] = aggregate
+    snapshot["source_lineage"]["receipt_sha256"] = receipt["receipt_sha256"]
+    handoff = artifacts["handoff"]
+    handoff["quality"]["status"] = aggregate
+    handoff["source_lineage"]["receipt_sha256"] = receipt["receipt_sha256"]
+    terminal = artifacts["terminal_state"]
+    terminal["source_health"] = health_rows
+    terminal["target_sha256"] = collector.sha256_bytes(collector.canonical_json_bytes(snapshot))
 
 
 def extend_manifest(output_dir: Path, run_id: str, source_payloads: dict[str, bytes], composite: bytes) -> None:
@@ -79,7 +109,6 @@ def main() -> int:
     parser.add_argument("--timeout", type=float, default=10.0)
     parser.add_argument("--retries", type=int, default=2)
     parser.add_argument("--backoff", type=float, default=0.25)
-    parser.add_argument("--stale-after-seconds", type=int, default=collector.DEFAULT_STALE_AFTER_SECONDS)
     args = parser.parse_args()
     retrieval = collector.parse_timestamp(args.retrieval_timestamp) if args.retrieval_timestamp else datetime.now(timezone.utc)
     series_set = collector.normalize_series(args.series.split(","))
@@ -90,12 +119,13 @@ def main() -> int:
             payloads[series] = collector.fetch_payload(url, args.timeout, args.retries, args.backoff)
         composite = deterministic_composite(payloads, series_set)
         source_url = "MULTI_SOURCE:" + ",".join(collector.DEFAULT_URL.format(series=item) for item in series_set)
-        artifacts = collector.build_artifacts(payload=composite, retrieval_timestamp=retrieval, series=series_set, source_url=source_url, acquisition_mode="NETWORK_MULTI_SOURCE", stale_after_seconds=args.stale_after_seconds)
+        artifacts = collector.build_artifacts(payload=composite, retrieval_timestamp=retrieval, series=series_set, source_url=source_url, acquisition_mode="NETWORK_MULTI_SOURCE", stale_after_seconds=max(SERIES_STALE_AFTER_SECONDS.values()))
+        apply_series_freshness_policy(artifacts)
         collector.write_artifacts(args.output_dir, artifacts, raw_payload=composite)
         run_id = artifacts["receipt"]["run_id"]
         extend_manifest(args.output_dir, run_id, payloads, composite)
         readback = collector.verify_artifact_readback(args.output_dir)
-        source_health = {row["series"]: {"status": row["status"], "source_timestamp": row["source_timestamp"], "freshness_seconds": row["freshness_seconds"]} for row in artifacts["source_health"]["series"]}
+        source_health = {row["series"]: {"status": row["status"], "source_timestamp": row["source_timestamp"], "freshness_seconds": row["freshness_seconds"], "stale_after_seconds": row["stale_after_seconds"]} for row in artifacts["source_health"]["series"]}
         capture_integrity = "PASS" if readback["status"] == "PASS" and len(payloads) == len(series_set) else "FAIL"
         print(json.dumps({"capture_integrity": capture_integrity, "source_freshness": artifacts["receipt"]["status"], "source_health": source_health, "readback": readback, "run_id": run_id, "source_count": len(payloads)}, sort_keys=True))
         return 0 if capture_integrity == "PASS" else 3
