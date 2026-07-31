@@ -95,8 +95,10 @@ def main() -> int:
         run_id = artifacts["receipt"]["run_id"]
         extend_manifest(args.output_dir, run_id, payloads, composite)
         readback = collector.verify_artifact_readback(args.output_dir)
-        print(json.dumps({"status": artifacts["receipt"]["status"], "readback": readback, "run_id": run_id, "source_count": len(payloads)}, sort_keys=True))
-        return 0 if artifacts["receipt"]["status"] == "PASS" and readback["status"] == "PASS" else 3
+        source_health = {row["series"]: {"status": row["status"], "source_timestamp": row["source_timestamp"], "freshness_seconds": row["freshness_seconds"]} for row in artifacts["source_health"]["series"]}
+        capture_integrity = "PASS" if readback["status"] == "PASS" and len(payloads) == len(series_set) else "FAIL"
+        print(json.dumps({"capture_integrity": capture_integrity, "source_freshness": artifacts["receipt"]["status"], "source_health": source_health, "readback": readback, "run_id": run_id, "source_count": len(payloads)}, sort_keys=True))
+        return 0 if capture_integrity == "PASS" else 3
     except collector.CollectorError as exc:
         print(json.dumps(collector.error_payload(exc.status, str(exc), retrieval), sort_keys=True))
         return 2
