@@ -45,7 +45,7 @@ jobs:
       - name: Run synchronized shadow owner collector
         shell: bash
         run: |
-          if [ "${{ github.event_name }}" = "pull_request" ] || { [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.mode }}" = "live" ]; }; then
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.mode }}" = "live" ]; then
             python scripts/data_terminal/fred_multiseries_live_adapter.py \
               --series DGS2,DGS10,DTWEXBGS,VIXCLS \
               --output-dir data-terminal-output
