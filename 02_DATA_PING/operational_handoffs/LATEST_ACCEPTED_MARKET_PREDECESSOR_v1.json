@@ -1,14 +1,14 @@
 {
   "schema_version": "DATA_PING_ACCEPTED_MARKET_PREDECESSOR_POINTER_v1",
-  "updated_at_utc": "2026-07-31T06:51:00Z",
+  "updated_at_utc": "2026-07-31T13:18:00Z",
   "latest_accepted_market_run_id": "run_0bc8a5d0d0464542b29b4d50f2f8e19c",
   "latest_accepted_market_snapshot_id": "snap_0e19c112413d471d8270cad1a18148a7",
   "latest_accepted_market_snapshot_utc": "2026-07-29T16:51:00.829Z",
-  "latest_bounded_market_observation_run_id": "run_7410592577ce480fbd38e4388f68fb2b",
-  "latest_bounded_market_observation_snapshot_id": "snap_4a3c0f7372b34649bb740d9e30c2cb41",
-  "latest_bounded_market_observation_acceptance": "CURRENT_ABSOLUTE_DIAGNOSTICS_WITH_DIRECT_OWNER_SELECTIVE_BREADTH_ONLY_AND_CHANGED_MEMBERSHIP_NOT_LONGITUDINAL_PREDECESSOR",
-  "latest_source_qa_run_id": "run_7410592577ce480fbd38e4388f68fb2b",
-  "latest_source_qa_snapshot_id": "snap_4a3c0f7372b34649bb740d9e30c2cb41",
+  "latest_bounded_market_observation_run_id": "run_66701412b93c4f6c99582ec373406d61",
+  "latest_bounded_market_observation_snapshot_id": "snap_3540e1d4d3fe4e288a5cdebe40b80135",
+  "latest_bounded_market_observation_acceptance": "CURRENT_ABSOLUTE_DIAGNOSTICS_WITH_WEAK_BREADTH_POSITIVE_SETTLED_ETF_AND_NO_DIRECT_ETHBTC_OWNER_NOT_LONGITUDINAL_PREDECESSOR",
+  "latest_source_qa_run_id": "run_66701412b93c4f6c99582ec373406d61",
+  "latest_source_qa_snapshot_id": "snap_3540e1d4d3fe4e288a5cdebe40b80135",
   "rejected_attempts_since_market_acceptance": [
     {
       "run_id": "run_6ed8dcf0ec6a4d62a429c7f10fcb5f5b",
@@ -46,6 +46,11 @@
       "run_id": "run_7410592577ce480fbd38e4388f68fb2b",
       "snapshot_id": "snap_4a3c0f7372b34649bb740d9e30c2cb41",
       "reason": "INVALID_BOUNDED_NON_PREDECESSOR_DIRECT_ETHBTC_BELOW_0030_SELECTIVE_BREADTH_ONLY_MEMBERSHIP_CHANGED_SIDECAR_UNAVAILABLE"
+    },
+    {
+      "run_id": "run_66701412b93c4f6c99582ec373406d61",
+      "snapshot_id": "snap_3540e1d4d3fe4e288a5cdebe40b80135",
+      "reason": "INVALID_BOUNDED_NON_PREDECESSOR_DIRECT_ETHBTC_OWNER_UNAVAILABLE_BREADTH_28_MEMBERSHIP_CHANGED_SIDECAR_UNAVAILABLE"
     }
   ],
   "next_run_required_predecessor_id": "snap_0e19c112413d471d8270cad1a18148a7",
@@ -53,8 +58,8 @@
   "bounded_observations_may_advance_market_pointer": false,
   "pending_deep_capture_request_id": "DCR-20260730-EVENT-003",
   "pending_deep_capture_extension_id": "DCR-20260730-EVENT-003-EXT-95C5",
-  "pending_deep_capture_status": "PARTIAL_CURRENT_OWNER_AND_BREADTH_SUPPLEMENTS_EXTENSION_UNEXECUTED_SIDECARS_UNRESOLVED",
-  "latest_deep_capture_validation_result": "SETTLED_ETHBTC_FOLLOWUP_BELOW_0030_AND_CURRENT_SELECTIVE_BREADTH_RECOVERED_EXACT_INTRADAY_PATH_AND_POINT_IN_TIME_SIDECARS_UNRESOLVED",
+  "pending_deep_capture_status": "PARTIAL_CURRENT_OWNER_AND_BREADTH_SUPPLEMENTS_WITH_RENEWED_OWNER_OUTAGE_EXTENSION_UNEXECUTED_SIDECARS_UNRESOLVED",
+  "latest_deep_capture_validation_result": "CURRENT_BREADTH_WEAKNESS_AND_RENEWED_DIRECT_OWNER_OUTAGE_RECORDED_EXACT_INTRADAY_PATH_AND_POINT_IN_TIME_SIDECARS_UNRESOLVED",
   "deep_capture_extension_attempted": false,
   "deep_capture_may_advance_market_pointer": false,
   "canonical_market_state_change": "NONE",
