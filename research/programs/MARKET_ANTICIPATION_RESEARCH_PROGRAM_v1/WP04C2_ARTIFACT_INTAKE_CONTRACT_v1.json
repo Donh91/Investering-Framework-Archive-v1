@@ -1,0 +1,11 @@
+{
+  "schema_version":"1.0",
+  "phase":"MAR-WP04C2",
+  "status":"FROZEN_FAIL_CLOSED",
+  "accepted_inputs":["immutable_upload","github_actions_artifact","repository_lfs_pointer_with_verified_object","immutable_external_object_reference"],
+  "required_package_fields":["filename","byte_size","sha256","received_at_utc","source_identity","member_manifest","zip_crc_receipt"],
+  "required_member_fields":["path","byte_size","sha256","media_type","schema_id","coverage_start","coverage_end","timezone","settlement_rule","publication_rule","retrieval_timestamp_rule","duplicate_policy"],
+  "acceptance_gates":["PACKAGE_BYTES_VISIBLE","PACKAGE_SHA256_RECOMPUTED","MEMBER_MANIFEST_COMPLETE","MEMBER_HASHES_RECOMPUTED","NO_UNDECLARED_MEMBERS","SCHEMA_VALID","SOURCE_TO_NORMALIZED_PARITY_PASS"],
+  "failure_semantics":{"missing":"UNKNOWN","hash_mismatch":"REJECT","schema_mismatch":"REJECT","unavailable_binary":"BLOCKED"},
+  "forbidden":["trust_declared_hash_without_bytes","infer_member_hash_from_package_hash","forward_fill","interpolate","inspect_outcomes"]
+}
