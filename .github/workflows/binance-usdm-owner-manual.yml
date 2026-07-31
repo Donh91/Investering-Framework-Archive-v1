@@ -29,13 +29,16 @@ jobs:
         run: python -m unittest tests.data_terminal.test_binance_usdm_owner_collector
       - name: Compile collector
         run: python -m py_compile scripts/data_terminal/binance_usdm_owner_collector.py
-      - name: Run live capture for verification branch
+      - name: Run explicit live capture
+        if: github.event_name == 'workflow_dispatch' && inputs.mode == 'live'
         run: python scripts/data_terminal/binance_usdm_owner_collector.py --output-dir binance-usdm-owner-output
       - name: Verify live artifact
+        if: github.event_name == 'workflow_dispatch' && inputs.mode == 'live'
         run: python -c "import importlib.util,pathlib,sys; p=pathlib.Path('scripts/data_terminal/binance_usdm_owner_collector.py'); s=importlib.util.spec_from_file_location('m',p); m=importlib.util.module_from_spec(s); sys.modules['m']=m; s.loader.exec_module(m); r=m.verify(pathlib.Path('binance-usdm-owner-output')); print(r); raise SystemExit(0 if r['status']=='PASS' else 1)"
       - uses: actions/upload-artifact@v4
+        if: github.event_name == 'workflow_dispatch' && inputs.mode == 'live'
         with:
           name: binance-usdm-owner-${{ github.run_id }}
           path: binance-usdm-owner-output/
-          retention-days: 14
+          retention-days: 30
           if-no-files-found: error
