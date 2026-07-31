@@ -1,0 +1,21 @@
+name: Data Architecture Gate
+on:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m unittest tests.data_storage.test_durable_promotion_controller tests.data_storage.test_storage_telemetry
+      - run: python scripts/data_storage/storage_telemetry.py --root . --output storage-telemetry.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: storage-telemetry-${{ github.run_id }}
+          path: storage-telemetry.json
+          retention-days: 7
