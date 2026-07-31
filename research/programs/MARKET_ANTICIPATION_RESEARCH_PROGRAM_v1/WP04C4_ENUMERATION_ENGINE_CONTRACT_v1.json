@@ -1,0 +1,10 @@
+{
+  "schema_version":"1.0",
+  "phase":"MAR-WP04C4",
+  "status":"FROZEN_SCAFFOLD",
+  "inherits":["WP04B_TRIGGER_ADDENDUM_v1","WP04C1_OWNER_MATERIALIZATION_REGISTRY_v1","WP04C2_ARTIFACT_INTAKE_CONTRACT_v1"],
+  "preconditions":["ALL_REQUIRED_OWNER_DATASETS_REPLAYABLE","ALL_MEMBER_HASHES_VERIFIED","RAW_NORMALIZED_PARITY_PASS","POINT_IN_TIME_LINEAGE_PASS"],
+  "outputs":["candidate_event_ledger","cluster_deduplication_ledger","blocked_window_register","lineage_classification"],
+  "output_rules":{"counts_when_preconditions_fail":null,"missing_required_field":"UNKNOWN","overlap":"DEDUPLICATE_PER_FROZEN_RESET_RULE","outcome_fields":"FORBIDDEN"},
+  "forbidden":["forward_returns","hit_rates","drawdowns","economic_ranking","threshold_search","framework_promotion","portfolio_action","final_holdout_access"]
+}
