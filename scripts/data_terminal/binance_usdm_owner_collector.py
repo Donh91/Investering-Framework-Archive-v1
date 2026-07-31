@@ -12,6 +12,11 @@ ENDPOINTS={
     "open_interest":"/fapi/v1/openInterest",
     "mark_price":"/fapi/v1/premiumIndex"
 }
+REQUIRED_FIELDS={
+    "funding":("fundingRate","fundingTime"),
+    "open_interest":("openInterest","time"),
+    "mark_price":("markPrice","time")
+}
 
 class CollectorError(RuntimeError):
     def __init__(self,status:str,message:str): super().__init__(message); self.status=status
@@ -31,18 +36,29 @@ def fetch(url:str,timeout:float=15.0)->bytes:
     return payload
 
 def parse(metric:str,symbol:str,payload:bytes,retrieval:str):
+    if metric not in REQUIRED_FIELDS: raise CollectorError("UNSUPPORTED_METRIC",metric)
     try: data=json.loads(payload)
     except Exception as exc: raise CollectorError("SCHEMA_DRIFT","invalid JSON") from exc
+    if isinstance(data,dict) and "code" in data and "msg" in data:
+        message=str(data["msg"])
+        status="GEO_RESTRICTED" if "restricted location" in message.lower() else "SOURCE_ERROR"
+        raise CollectorError(status,message)
     rows=data if isinstance(data,list) else [data]
     if not rows or not all(isinstance(row,dict) for row in rows): raise CollectorError("SCHEMA_DRIFT",f"{metric} malformed")
     out=[]
-    for row in rows:
-        if metric=="funding":
-            value=float(row["fundingRate"]); ts=int(row["fundingTime"]); units="decimal_rate"
-        elif metric=="open_interest":
-            value=float(row["openInterest"]); ts=int(row["time"]); units="base_asset"
-        else:
-            value=float(row["markPrice"]); ts=int(row["time"]); units="USDT"
+    for index,row in enumerate(rows):
+        missing=[field for field in REQUIRED_FIELDS[metric] if field not in row]
+        if missing: raise CollectorError("SCHEMA_DRIFT",f"{metric} row {index} missing {','.join(missing)}")
+        try:
+            if metric=="funding":
+                value=float(row["fundingRate"]); ts=int(row["fundingTime"]); units="decimal_rate"
+            elif metric=="open_interest":
+                value=float(row["openInterest"]); ts=int(row["time"]); units="base_asset"
+            else:
+                value=float(row["markPrice"]); ts=int(row["time"]); units="USDT"
+        except (TypeError,ValueError,OverflowError) as exc:
+            raise CollectorError("SCHEMA_DRIFT",f"{metric} row {index} numeric parse") from exc
+        if ts < 0: raise CollectorError("INVALID_TIMESTAMP",f"negative {metric} timestamp")
         if value < 0 and metric != "funding": raise CollectorError("INVALID_VALUE",f"negative {metric}")
         out.append({"venue":"BINANCE_USDM","symbol":symbol,"metric":metric,"source_timestamp":datetime.fromtimestamp(ts/1000,tz=timezone.utc).isoformat().replace("+00:00","Z"),"retrieval_timestamp":retrieval,"value":value,"units":units,"missing":False})
     return out
