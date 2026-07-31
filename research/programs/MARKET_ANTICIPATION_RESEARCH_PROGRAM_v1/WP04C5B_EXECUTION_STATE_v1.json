@@ -1,6 +1,6 @@
 {
   "contract": "WP04C5B_EXECUTION_STATE_v1",
-  "status": "LIVE_RUN_1_VERIFIED_PENDING_INDEPENDENT_RUN_2",
+  "status": "PROSPECTIVE_CAPTURE_VERIFIED",
   "series": ["DGS2", "DGS10", "DTWEXBGS", "VIXCLS"],
   "collector_reused": "scripts/data_terminal/fred_csv_collector.py",
   "live_transport_adapter": "scripts/data_terminal/fred_multiseries_live_adapter.py",
@@ -9,9 +9,14 @@
   "raw_payload_materialized": true,
   "artifact_manifest": true,
   "member_hash_readback": true,
-  "pr_gate_required": true,
+  "series_specific_freshness": {
+    "DGS2": 604800,
+    "DGS10": 604800,
+    "VIXCLS": 604800,
+    "DTWEXBGS": 864000
+  },
   "live_runs_required": 2,
-  "live_runs_verified": 1,
+  "live_runs_verified": 2,
   "verified_runs": [
     {
       "workflow_run_id": 30612409769,
@@ -19,9 +24,19 @@
       "artifact_digest": "sha256:eb6cfd042d17bba67a857109e7431c44f8b2c7820ff6420c64ed86fbe625b19b",
       "capture_integrity": "PASS",
       "artifact_readback": "PASS"
+    },
+    {
+      "workflow_run_id": 30612453640,
+      "artifact_id": 8785996471,
+      "artifact_digest": "sha256:6755736f05d5d6606cc118a311639677f061d43431e73d41e782f779463c712a",
+      "run_id": "DT_FRED_MULTI_20260731T071952Z_181dab4fa466",
+      "manifest_members": 11,
+      "capture_integrity": "PASS",
+      "artifact_readback": "PASS",
+      "source_freshness": "PASS"
     }
   ],
-  "prospective_capture_verified": false,
+  "prospective_capture_verified": true,
   "enumeration_authorized": false,
   "outcome_access": false,
   "framework_state_change": false,
