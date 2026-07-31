@@ -1,0 +1,47 @@
+{
+  "contract": "STORAGE_HEALTH_POLICY_FREE_v1",
+  "plan": "GITHUB_FREE_PRIVATE_REPO",
+  "repo_size_thresholds_mib": {
+    "green_max": 500,
+    "yellow_max": 1024,
+    "orange_max": 3072,
+    "red_above": 3072
+  },
+  "git_file_limits_mib": {
+    "soft_warn": 10,
+    "hard_block": 25
+  },
+  "artifact_storage_budget_mib": 500,
+  "artifact_thresholds_percent": {
+    "warn": 60,
+    "promote": 75,
+    "emergency": 90
+  },
+  "default_retention_days": {
+    "raw_capture": 14,
+    "validated_capture": 30,
+    "failed_capture": 7
+  },
+  "storage_rules": {
+    "metadata_in_git": true,
+    "raw_bulk_in_git": false,
+    "images_as_primary_evidence": false,
+    "preferred_bulk_format": "parquet_zstd",
+    "preferred_sparse_format": "jsonl_zstd",
+    "canonical_text_format": "json_or_csv",
+    "partition_before_promotion": true,
+    "delete_artifact_before_durable_readback": false
+  },
+  "fail_closed": {
+    "artifact_upload_failure_changes_framework_state": false,
+    "expired_unpromoted_artifact_is_replayable_owner": false,
+    "missing_usage_metrics_means_green": false,
+    "bulk_commit_allowed_when_health_unknown": false
+  },
+  "authority": {
+    "framework_state_change": false,
+    "portfolio_action": false,
+    "enumeration_authorized": false,
+    "outcome_access": false
+  }
+}
