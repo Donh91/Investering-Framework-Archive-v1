@@ -1,0 +1,15 @@
+{
+  "contract": "DURABLE_PROMOTION_QUEUE_v1",
+  "status": "ACTIVE_FAIL_CLOSED",
+  "entries": [
+    {"dataset_id":"FRED_MACRO_CORE","partition_id":"2026-07-31-run1","artifact_id":null,"source_run_id":"30612409769","state":"POINTER_METADATA_INCOMPLETE","deletion_authorized":false},
+    {"dataset_id":"FRED_MACRO_CORE","partition_id":"2026-07-31-run2","artifact_id":null,"source_run_id":"30612453640","state":"POINTER_METADATA_INCOMPLETE","deletion_authorized":false},
+    {"dataset_id":"BINANCE_SPOT_OWNER","partition_id":"2026-07-31-run1","artifact_id":8793836403,"artifact_digest":"sha256:c190a856ece978bf5fad83407b79c99545d0cdfdee0003d8f1e34d392c078d30","source_run_id":"30632322830","state":"AWAITING_DURABLE_TARGET","deletion_authorized":false},
+    {"dataset_id":"BINANCE_SPOT_OWNER","partition_id":"2026-07-31-run2","artifact_id":8793885547,"artifact_digest":"sha256:7a587ca25e3caa5fabdd03cca38cd843a93d89d6decb9f9dba110cb1fb0b0596","source_run_id":"30632447116","state":"AWAITING_DURABLE_TARGET","deletion_authorized":false},
+    {"dataset_id":"OKX_SWAP_OWNER","partition_id":"2026-07-31-run1","artifact_id":8806010708,"artifact_digest":"sha256:a423597d4ca425b112ba1101fa680188356939670f9b17ec3114e4e4461c4925","source_run_id":"30663391236","state":"AWAITING_DURABLE_TARGET","deletion_authorized":false},
+    {"dataset_id":"OKX_SWAP_OWNER","partition_id":"2026-07-31-run2","artifact_id":8806056072,"artifact_digest":"sha256:910fa6aa8415831207e02ce11750a8108524003c93c38c1703aa94ebfbd20588","source_run_id":"30663521685","state":"AWAITING_DURABLE_TARGET","deletion_authorized":false}
+  ],
+  "artifact_deletion_policy": "FORBIDDEN_UNTIL_DURABLE_POINTER_HASH_AND_READBACK_PASS",
+  "framework_state_change": false,
+  "portfolio_action": false
+}
