@@ -1,0 +1,76 @@
+{
+  "contract": "DATASET_REGISTRY_v1",
+  "policy_path": "research/programs/MARKET_ANTICIPATION_RESEARCH_PROGRAM_v1/DATASET_STORAGE_POLICY_v1.md",
+  "authority": {
+    "framework_state_change": false,
+    "model_weight_change": false,
+    "portfolio_action": false
+  },
+  "storage_classes": ["T0_GIT_METADATA", "T1_GIT_COMPACT_CANONICAL", "T2_ACTIONS_ARTIFACT", "T3_DURABLE_BULK", "T4_EXTERNAL_LICENSED"],
+  "datasets": [
+    {
+      "dataset_id": "FRED_MACRO_CORE_PROSPECTIVE_v1",
+      "source": "FRED",
+      "series": ["DGS2", "DGS10", "DTWEXBGS", "VIXCLS"],
+      "owner_collector": "scripts/data_terminal/fred_csv_collector.py",
+      "status": "PROSPECTIVE_CAPTURE_VERIFIED",
+      "raw_storage_class": "T2_ACTIONS_ARTIFACT",
+      "normalized_storage_class": "T2_ACTIONS_ARTIFACT",
+      "metadata_storage_class": "T0_GIT_METADATA",
+      "durable_target": "T3_DURABLE_BULK",
+      "partitioning": "source/series/UTC-year",
+      "preferred_format": "parquet-zstd",
+      "retention_days": 30,
+      "license_class": "PUBLIC_SOURCE_REVIEW_REQUIRED",
+      "enumeration_authorized": false
+    },
+    {
+      "dataset_id": "BINANCE_SPOT_OWNER_PROSPECTIVE_v1",
+      "source": "BINANCE_SPOT_MARKET_DATA_ONLY",
+      "series": ["BTCUSDT_1H", "ETHUSDT_1H", "ETHBTC_1H"],
+      "owner_collector": "scripts/data_terminal/binance_spot_owner_collector.py",
+      "status": "PROSPECTIVE_CAPTURE_VERIFIED",
+      "raw_storage_class": "T2_ACTIONS_ARTIFACT",
+      "normalized_storage_class": "T2_ACTIONS_ARTIFACT",
+      "metadata_storage_class": "T0_GIT_METADATA",
+      "durable_target": "T3_DURABLE_BULK",
+      "partitioning": "venue/symbol/interval/UTC-month",
+      "preferred_format": "parquet-zstd",
+      "retention_days": 30,
+      "license_class": "PUBLIC_SOURCE_REVIEW_REQUIRED",
+      "enumeration_authorized": false
+    },
+    {
+      "dataset_id": "BINANCE_USDM_DERIVATIVES_PROSPECTIVE_v1",
+      "source": "BINANCE_USDM_PUBLIC",
+      "series": ["BTCUSDT_FUNDING", "ETHUSDT_FUNDING", "BTCUSDT_OI", "ETHUSDT_OI", "BTCUSDT_MARK", "ETHUSDT_MARK"],
+      "owner_collector": null,
+      "status": "PLANNED_WP04C5D",
+      "raw_storage_class": "T2_ACTIONS_ARTIFACT",
+      "normalized_storage_class": "T2_ACTIONS_ARTIFACT",
+      "metadata_storage_class": "T0_GIT_METADATA",
+      "durable_target": "T3_DURABLE_BULK",
+      "partitioning": "venue/instrument/metric/UTC-month",
+      "preferred_format": "parquet-zstd",
+      "retention_days": 30,
+      "license_class": "PUBLIC_SOURCE_REVIEW_REQUIRED",
+      "enumeration_authorized": false
+    },
+    {
+      "dataset_id": "TOP100_BREADTH_CONSTITUENTS_PROSPECTIVE_v1",
+      "source": "POINT_IN_TIME_UNIVERSE",
+      "series": ["CONSTITUENTS", "EXCLUSIONS", "MEMBERSHIP_HASH", "BREADTH_AGGREGATES"],
+      "owner_collector": null,
+      "status": "PLANNED_WP04C5E",
+      "raw_storage_class": "T2_ACTIONS_ARTIFACT",
+      "normalized_storage_class": "T2_ACTIONS_ARTIFACT",
+      "metadata_storage_class": "T0_GIT_METADATA",
+      "durable_target": "T3_DURABLE_BULK",
+      "partitioning": "method-version/freeze-date",
+      "preferred_format": "parquet-zstd",
+      "retention_days": 30,
+      "license_class": "MIXED_SOURCE_REVIEW_REQUIRED",
+      "enumeration_authorized": false
+    }
+  ]
+}
