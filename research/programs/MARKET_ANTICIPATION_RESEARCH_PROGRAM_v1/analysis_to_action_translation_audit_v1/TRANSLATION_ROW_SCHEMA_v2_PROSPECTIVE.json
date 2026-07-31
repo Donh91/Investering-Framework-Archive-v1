@@ -1,0 +1,238 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "ANALYSIS_TO_ACTION_TRANSLATION_ROW_SCHEMA_v2_PROSPECTIVE",
+  "title": "Analysis to Action Translation Row v2 Prospective",
+  "description": "Applies from 2026-W32. It must not be retroactively imposed on W28-W31.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "row_id",
+    "week",
+    "source",
+    "temporal_status",
+    "analysis",
+    "price_translation",
+    "action_translation",
+    "outcome",
+    "authority"
+  ],
+  "properties": {
+    "row_id": {"type": "string", "minLength": 1},
+    "week": {"type": "string", "pattern": "^\\d{4}-W(0[1-9]|[1-4][0-9]|5[0-3])$"},
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "master_monday_path",
+        "forecast_ledger_path",
+        "analysis_source_spans",
+        "translation_source_spans",
+        "frozen_timestamp_utc",
+        "source_class",
+        "source_hashes"
+      ],
+      "properties": {
+        "master_monday_path": {"type": ["string", "null"]},
+        "forecast_ledger_path": {"type": ["string", "null"]},
+        "analysis_source_spans": {"type": "array", "items": {"type": "string"}},
+        "translation_source_spans": {"type": "array", "items": {"type": "string"}},
+        "frozen_timestamp_utc": {"type": ["string", "null"], "format": "date-time"},
+        "source_class": {"type": "string"},
+        "source_hashes": {
+          "type": "object",
+          "additionalProperties": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+        },
+        "timestamp_conflict_detail": {
+          "type": ["object", "null"],
+          "additionalProperties": false,
+          "required": ["candidate_timestamps", "source_spans"],
+          "properties": {
+            "candidate_timestamps": {"type": "array", "minItems": 2, "items": {"type": "string"}},
+            "source_spans": {"type": "array", "minItems": 2, "items": {"type": "string"}}
+          }
+        }
+      }
+    },
+    "temporal_status": {
+      "enum": [
+        "BLOCKED_MISSING_EXPLICIT_FREEZE_TIME",
+        "BLOCKED_TIMESTAMP_CONFLICT",
+        "PROSPECTIVE_FROZEN",
+        "OUTCOME_JOIN_ELIGIBLE",
+        "OUTCOME_MATURED"
+      ]
+    },
+    "analysis": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "regime_call",
+        "edge_state",
+        "confidence",
+        "leadership",
+        "rotation_call",
+        "evidence_summary",
+        "falsifiers"
+      ],
+      "properties": {
+        "regime_call": {"type": "string"},
+        "edge_state": {"type": "string"},
+        "confidence": {"enum": ["LOW", "MEDIUM_LOW", "MEDIUM", "MEDIUM_HIGH", "HIGH", "BLOCKED"]},
+        "leadership": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "dimension",
+            "leader_candidate",
+            "comparison_assets",
+            "metric_owner",
+            "metric_definition",
+            "window_start_utc",
+            "window_end_rule",
+            "settlement_convention",
+            "threshold",
+            "dead_band",
+            "confirmation_mode",
+            "dependency_cluster_id"
+          ],
+          "properties": {
+            "dimension": {"enum": ["RELATIVE_STRENGTH", "ABSOLUTE_PERFORMANCE", "ROTATION", "BLOCKED"]},
+            "leader_candidate": {"type": ["string", "null"]},
+            "comparison_assets": {"type": "array", "items": {"type": "string"}},
+            "metric_owner": {"type": ["string", "null"]},
+            "metric_definition": {"type": ["string", "null"]},
+            "window_start_utc": {"type": ["string", "null"]},
+            "window_end_rule": {"type": ["string", "null"]},
+            "settlement_convention": {"type": ["string", "null"]},
+            "threshold": {"type": ["number", "null"]},
+            "dead_band": {"type": ["number", "null"], "minimum": 0},
+            "confirmation_mode": {"type": ["string", "null"]},
+            "dependency_cluster_id": {"type": ["string", "null"]}
+          }
+        },
+        "rotation_call": {"enum": ["NO_ROTATION", "ROTATION_CANDIDATE", "ROTATION_CONFIRMED", "BLOCKED"]},
+        "evidence_summary": {"type": ["string", "null"]},
+        "falsifiers": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "price_translation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["horizons", "conditional_paths"],
+      "properties": {
+        "horizons": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "asset",
+              "horizon",
+              "expected_path",
+              "low",
+              "high",
+              "continuation",
+              "invalidation",
+              "first_event_type",
+              "first_event_timestamp_utc",
+              "event_owner",
+              "event_source_hash",
+              "dependency_cluster_id"
+            ],
+            "properties": {
+              "asset": {"type": "string"},
+              "horizon": {"enum": ["1_3D", "5_7D", "WEEKLY", "LONGER"]},
+              "expected_path": {"type": ["string", "null"]},
+              "low": {"type": "number"},
+              "high": {"type": "number"},
+              "continuation": {"type": ["string", "null"]},
+              "invalidation": {"type": ["string", "null"]},
+              "first_event_type": {"enum": ["CONFIRMATION", "INVALIDATION", "NONE_WITHIN_HORIZON", "PENDING"]},
+              "first_event_timestamp_utc": {"type": ["string", "null"]},
+              "event_owner": {"type": ["string", "null"]},
+              "event_source_hash": {"type": ["string", "null"]},
+              "dependency_cluster_id": {"type": ["string", "null"]}
+            }
+          }
+        },
+        "conditional_paths": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["base", "bull", "bear", "probabilities"],
+          "properties": {
+            "base": {"type": ["string", "null"]},
+            "bull": {"type": ["string", "null"]},
+            "bear": {"type": ["string", "null"]},
+            "probabilities": {
+              "type": ["object", "null"],
+              "additionalProperties": false,
+              "required": ["base_pct", "bull_pct", "bear_pct"],
+              "properties": {
+                "base_pct": {"type": "number", "minimum": 0, "maximum": 100},
+                "bull_pct": {"type": "number", "minimum": 0, "maximum": 100},
+                "bear_pct": {"type": "number", "minimum": 0, "maximum": 100}
+              }
+            }
+          }
+        }
+      }
+    },
+    "action_translation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "portfolio_bias",
+        "btc_permission",
+        "alt_permission",
+        "rebuy",
+        "large_cap_window",
+        "portfolio_action",
+        "conditions",
+        "primary_counterfactual",
+        "null_counterfactual"
+      ],
+      "properties": {
+        "portfolio_bias": {"type": "string"},
+        "btc_permission": {"enum": ["ACTIVE", "NOT_ACTIVE", "LOCKED", "BLOCKED"]},
+        "alt_permission": {"enum": ["ACTIVE", "NOT_ACTIVE", "LOCKED", "BLOCKED"]},
+        "rebuy": {"enum": ["ACTIVE", "NOT_ACTIVE", "LOCKED", "BLOCKED"]},
+        "large_cap_window": {"enum": ["OPEN", "WATCH_ONLY_NOT_OPEN", "CLOSED", "BLOCKED"]},
+        "portfolio_action": {"enum": ["NONE", "HOLD", "PREPARE", "DEPLOY", "REDUCE", "EXIT", "BLOCKED"]},
+        "conditions": {"type": "array", "items": {"type": "string"}},
+        "primary_counterfactual": {"const": "FIRST_VALID_PERMISSION"},
+        "null_counterfactual": {"const": "SOURCE_ANALYSIS_WITH_NO_ACTION"}
+      }
+    },
+    "outcome": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "analysis_result",
+        "price_translation_result",
+        "action_policy_result",
+        "timing_result",
+        "utility_metrics"
+      ],
+      "properties": {
+        "status": {"type": "string"},
+        "analysis_result": {"enum": ["CORRECT", "MIXED", "WRONG", "BLOCKED", "PENDING"]},
+        "price_translation_result": {"type": ["object", "null"]},
+        "action_policy_result": {"enum": ["PROTECTIVE_VALUE", "EXCESS_RESTRAINT", "PREMATURE_RISK", "NEUTRAL", "BLOCKED", "PENDING"]},
+        "timing_result": {"enum": ["EARLY", "ON_TIME", "LATE", "NOT_APPLICABLE", "BLOCKED", "PENDING"]},
+        "utility_metrics": {"type": ["object", "null"]},
+        "owner_verbatim": {"type": ["object", "null"]}
+      }
+    },
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["market_state_change", "portfolio_action_change", "promotion_allowed"],
+      "properties": {
+        "market_state_change": {"const": false},
+        "portfolio_action_change": {"const": false},
+        "promotion_allowed": {"const": false}
+      }
+    }
+  }
+}

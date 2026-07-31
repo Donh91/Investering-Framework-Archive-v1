@@ -1,0 +1,112 @@
+{
+  "schema_version": "1.0",
+  "contract_id": "AATA_PROSPECTIVE_DEFINITIONS_v1",
+  "effective_from_week": "2026-W32",
+  "status": "PREREGISTERED_RESEARCH_ONLY",
+  "retroactive_application": false,
+  "purpose": "Freeze leadership, dependency, action-baseline, timing and interim-review rules before future outcome joins.",
+  "leadership": {
+    "rule": "A leadership call is eligible only when its dimension, metric, window, settlement convention, threshold or dead-band and confirmation mode were frozen before outcome observability.",
+    "dimensions": [
+      "RELATIVE_STRENGTH",
+      "ABSOLUTE_PERFORMANCE",
+      "ROTATION"
+    ],
+    "required_fields": [
+      "dimension",
+      "leader_candidate",
+      "comparison_assets",
+      "metric_owner",
+      "metric_definition",
+      "window_start_utc",
+      "window_end_rule",
+      "settlement_convention",
+      "threshold",
+      "dead_band",
+      "confirmation_mode",
+      "dependency_cluster_id"
+    ],
+    "missing_rule": "BLOCKED",
+    "historical_rule": "Do not use this contract to reopen or relabel W28-W31 owner outcomes."
+  },
+  "rotation_separation": {
+    "rule": "Relative strength and positive absolute performance do not constitute rotation unless the existing rotation owner separately confirms breadth and transmission requirements.",
+    "rotation_owner_remains_external": true
+  },
+  "dependency_clusters": {
+    "rule": "Labels whose resolution depends on the same underlying observation count as one material decision divergence.",
+    "known_seed_cluster": {
+      "cluster_id": "ETHBTC_DEPENDENCY_CLUSTER",
+      "applies_to_week": "2026-W31",
+      "members": [
+        "leadership",
+        "rotation",
+        "ETH continuation",
+        "bull path",
+        "ETHBTC falsifier"
+      ],
+      "maximum_divergence_count": 1
+    }
+  },
+  "action_policy": {
+    "primary_counterfactual": "FIRST_VALID_PERMISSION",
+    "primary_counterfactual_owner": "EXISTING_PERMISSION_OWNER",
+    "null_counterfactual": "SOURCE_ANALYSIS_WITH_NO_ACTION",
+    "wait_deduplication_rule": "WAIT is not a separate benchmark when it is identical to FRAMEWORK_FROZEN_ACTION.",
+    "neutral_rule": "NEUTRAL is allowed only when a valid benchmark is instantiated and the measured utility difference is inside a preregistered dead-band.",
+    "missing_benchmark_rule": "BLOCKED",
+    "no_permission_event_rule": "BLOCKED unless the evaluation contract explicitly defines a mature no-event horizon."
+  },
+  "timing": {
+    "required_fields": [
+      "first_event_type",
+      "first_event_timestamp_utc",
+      "event_owner",
+      "event_source_hash"
+    ],
+    "allowed_event_types": [
+      "CONFIRMATION",
+      "INVALIDATION",
+      "NONE_WITHIN_HORIZON"
+    ],
+    "missing_rule": "BLOCKED",
+    "retroactive_fill": false
+  },
+  "regime_distinctness": {
+    "rule": "Two rows count as distinct regimes only when an existing owner changes a controlled regime family, rotation state or leadership dimension. Renaming free-text labels does not create a new regime.",
+    "owner_required": true
+  },
+  "incremental_value": {
+    "minimum_before_promotion_review": 1,
+    "unit": "temporally valid row where AATA changes a material decision interpretation beyond the existing owner audit and the change is independently reproduced",
+    "owner_label_copy_does_not_count": true
+  },
+  "interim_review": {
+    "trigger_valid_rows": 6,
+    "mandatory": true,
+    "allowed_decisions": [
+      "CONTINUE",
+      "CORRECT_AND_CONTINUE",
+      "DESCRIPTIVE_ONLY",
+      "KILL"
+    ],
+    "kill_checks": [
+      "no independently reproducible material decision divergence",
+      "no measurable incremental value beyond existing owners",
+      "irreducible ambiguity above 25 percent",
+      "action lane still has no benchmarked variance"
+    ]
+  },
+  "authority": {
+    "new_active_test": false,
+    "new_engine": false,
+    "new_score": false,
+    "changes_master_monday_template": false,
+    "changes_raw_template": false,
+    "changes_market_state": false,
+    "changes_rotation_state": false,
+    "changes_entry_permission": false,
+    "changes_rebuy_permission": false,
+    "changes_portfolio_action": false
+  }
+}
