@@ -1,0 +1,20 @@
+name: Dataset Registry Gate
+on:
+  pull_request:
+    paths:
+      - 'research/dataset_registry/**'
+      - 'research/programs/MARKET_ANTICIPATION_RESEARCH_PROGRAM_v1/DATASET_STORAGE_POLICY_v1.md'
+      - 'scripts/data_governance/validate_dataset_registry.py'
+      - '.github/workflows/dataset-registry-gate.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python scripts/data_governance/validate_dataset_registry.py
