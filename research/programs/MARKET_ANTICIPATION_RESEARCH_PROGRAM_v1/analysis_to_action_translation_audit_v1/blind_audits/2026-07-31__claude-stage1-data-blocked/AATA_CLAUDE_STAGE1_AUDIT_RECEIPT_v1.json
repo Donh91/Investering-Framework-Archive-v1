@@ -1,0 +1,93 @@
+{
+  "schema_version": "1.0",
+  "audit_id": "AATA_CLAUDE_STAGE1_v1",
+  "auditor": "CLAUDE_OPUS_5",
+  "received_at_utc": "2026-07-31T00:57:00Z",
+  "received_package": {
+    "filename": "AATA_CLAUDE_STAGE1_PACKAGE_v1.zip",
+    "sha256_reported": "a177c9f791667022a40bb2ff7eb04c2903c990e2f99717c7a86b15feab7cdaf7",
+    "sha256_verified": "a177c9f791667022a40bb2ff7eb04c2903c990e2f99717c7a86b15feab7cdaf7",
+    "zip_integrity": "PASS",
+    "member_count": 5,
+    "json_parse_status": "PASS"
+  },
+  "verdict": "DATA_BLOCKED",
+  "sub_verdicts": {
+    "stage_1A_file_and_lineage": "PASS",
+    "stage_1B_independent_decomposition": "DATA_BLOCKED",
+    "stage_1C_source_parity": "DATA_BLOCKED",
+    "stage_1D_adversarial_methodology": "PASS_WITH_CORRECTIONS"
+  },
+  "verification": {
+    "input_files_received": 10,
+    "mandatory_files_received": 7,
+    "support_files_received": 3,
+    "mandatory_sha256_parity": "PASS_7_OF_7",
+    "checks_executed": 55,
+    "checks_passed": 37,
+    "checks_failed": 18,
+    "source_rows_schema_pass": "4_OF_4",
+    "transcription_errors": 0,
+    "authority_boolean_violations": 0
+  },
+  "binding_findings": [
+    {
+      "issue_id": "AATA-01",
+      "severity": "CRITICAL",
+      "finding": "Zero of seven referenced primary source documents were shipped, so independent reconstruction and source parity were not performable."
+    },
+    {
+      "issue_id": "AATA-02",
+      "severity": "CRITICAL",
+      "finding": "The Stage 1 package declared that it contained no valid post-forecast outcomes while the W30 row carried an existing owner-audit outcome block."
+    },
+    {
+      "issue_id": "AATA-03",
+      "severity": "CRITICAL",
+      "finding": "The W30 scoring content and W31 forecast content coexist in the same Master Monday artifact, so a multi-week blind package leaks prior-row outcomes unless target weeks are isolated."
+    },
+    {
+      "issue_id": "AATA-05",
+      "severity": "HIGH",
+      "finding": "Leadership had no frozen operational definition even though a W30 leadership MISS had already been imported."
+    },
+    {
+      "issue_id": "AATA-07",
+      "severity": "HIGH",
+      "finding": "The action lane had no preregistered primary counterfactual benchmark and zero observed action variance."
+    }
+  ],
+  "issue_tally": {
+    "critical": 3,
+    "high": 7,
+    "medium": 6,
+    "low": 5,
+    "total": 21
+  },
+  "governance_ruling": {
+    "claude_verdict_accepted": true,
+    "stage_1_substantive_parity_pass": false,
+    "stage_2_allowed": false,
+    "stage_3_allowed": false,
+    "stage_4_allowed": false,
+    "stage_5_allowed": false,
+    "W31_scored": false,
+    "new_economic_scores": 0,
+    "final_holdout_opened": false,
+    "new_active_test": false,
+    "new_engine": false,
+    "market_state_change": false,
+    "rotation_change": false,
+    "rebuy_change": false,
+    "entry_permission_change": false,
+    "portfolio_action": false
+  },
+  "required_before_reissue": [
+    "Freeze prospective leadership dimensions and scoring requirements without reopening W28-W31.",
+    "Freeze the primary action counterfactual baseline before any outcome join.",
+    "Replace the all-weeks Stage 1 package with target-week-isolated blind units.",
+    "Run Stage 1B from primary source documents without SOURCE_ROWS or outcomes.",
+    "Freeze the independent extraction before revealing the expected source row for Stage 1C parity."
+  ],
+  "archive_status": "PASS_CONTENT_DATA_BLOCKED_RESEARCH"
+}
