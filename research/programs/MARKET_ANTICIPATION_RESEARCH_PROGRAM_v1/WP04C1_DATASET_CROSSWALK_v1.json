@@ -1,0 +1,68 @@
+{
+  "schema_version": "1.0",
+  "work_package": "MAR_WP04C1_OWNER_DATA_MATERIALIZATION_AND_HASH_REGISTRY_v1",
+  "crosswalk_status": "COMPLETE",
+  "entries": [
+    {
+      "wp04b_sensor": "macro_usd_stress",
+      "required_series": "DTWEXBGS",
+      "upstream_dataset": "FRED_OFFICIAL_SERIES_FINAL_MASTER",
+      "owner_role": "OWNER_PENDING_BYTE_AUDIT",
+      "current_lineage": "DECLARED_NOT_MATERIALIZED",
+      "action_required": "materialize final-master member and member hash"
+    },
+    {
+      "wp04b_sensor": "macro_rate_stress",
+      "required_series": ["DGS2", "DGS10"],
+      "upstream_dataset": "FRED_OFFICIAL_SERIES_FINAL_MASTER",
+      "owner_role": "OWNER_PENDING_BYTE_AUDIT",
+      "current_lineage": "DECLARED_NOT_MATERIALIZED",
+      "action_required": "materialize rows with publication or vintage availability"
+    },
+    {
+      "wp04b_sensor": "macro_volatility_stress",
+      "required_series": "VIXCLS",
+      "upstream_dataset": "FRED_OFFICIAL_SERIES_FINAL_MASTER",
+      "owner_role": "OWNER_PENDING_BYTE_AUDIT",
+      "current_lineage": "DECLARED_NOT_MATERIALIZED",
+      "action_required": "materialize final-master member and member hash"
+    },
+    {
+      "wp04b_sensor": "btc_spot_displacement",
+      "upstream_dataset": "BTC_SPOT_DAILY_CEST_BINANCE",
+      "owner_role": "OWNER_CANDIDATE",
+      "current_lineage": "PACKAGE_HASH_ONLY",
+      "action_required": "materialize source and normalized rows plus parity receipt"
+    },
+    {
+      "wp04b_sensor": "eth_relative_transmission",
+      "upstream_dataset": "ETHBTC_SPOT_DAILY_CEST_BINANCE_DIRECT",
+      "owner_role": "OWNER_CANDIDATE",
+      "current_lineage": "PACKAGE_HASH_ONLY",
+      "action_required": "materialize direct rows and settlement replay"
+    },
+    {
+      "wp04b_sensor": "funding_stress",
+      "upstream_dataset": "DERIVATIVES_BINANCE_UM_BTC_ETH_DAILY",
+      "owner_role": "OWNER_CANDIDATE_BINANCE_SPECIFIC",
+      "current_lineage": "PACKAGE_HASH_ONLY_WRONG_OR_UNPROVEN_CADENCE",
+      "action_required": "materialize settled hourly funding rows"
+    },
+    {
+      "wp04b_sensor": "open_interest_transition",
+      "upstream_dataset": "DERIVATIVES_BINANCE_UM_BTC_ETH_DAILY",
+      "owner_role": "OWNER_CANDIDATE_BINANCE_SPECIFIC",
+      "current_lineage": "PACKAGE_HASH_ONLY_WRONG_OR_UNPROVEN_CADENCE",
+      "action_required": "materialize settled hourly OI rows and missingness regimes"
+    },
+    {
+      "wp04b_sensor": "breadth_confirmation",
+      "upstream_dataset": "BREADTH_BINANCE_TOP100_PIT",
+      "owner_role": "OWNER_CANDIDATE",
+      "current_lineage": "DECLARED_ROWS_WITHOUT_POINT_IN_TIME_MEMBER_HASHES",
+      "action_required": "materialize constituents, universe hash and exclusions per date"
+    }
+  ],
+  "outcome_fields_present": false,
+  "event_counts_present": false
+}
