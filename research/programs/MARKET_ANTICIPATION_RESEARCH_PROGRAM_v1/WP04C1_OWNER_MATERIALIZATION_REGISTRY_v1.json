@@ -1,0 +1,137 @@
+{
+  "schema_version": "1.0",
+  "program": "MARKET_ANTICIPATION_RESEARCH_PROGRAM_v1",
+  "work_package": "MAR_WP04C1_OWNER_DATA_MATERIALIZATION_AND_HASH_REGISTRY_v1",
+  "status": "COMPLETE_FAIL_CLOSED_PARTIAL_MATERIALIZATION",
+  "created_at_utc": "2026-07-31T00:57:00Z",
+  "frozen_trigger_contract": "MAR_WP04_LIQUIDITY_STRESS_PROPAGATION_TRIGGER_ADDENDUM_v1",
+  "upstream_owner_registry": {
+    "registry_id": "BACKTEST_OWNER_DATASET_REGISTRY_v1",
+    "commit_sha": "2755175baa4d5cb55f4be990e5265c9486723c78",
+    "status": "DRAFT_FROZEN_PENDING_FINAL_MASTER_BYTE_AUDIT"
+  },
+  "package_roots": [
+    {
+      "package_id": "CLAUDE_MEGAPACK_20260727T052808Z",
+      "filename": "DATA PING BACKTEST HISTORY PACK 20260727T052808Z.zip",
+      "bytes": 190546648,
+      "sha256": "303d63946fd7696237b8d1a7208fa5aadd877e55aba57d5b51ea17aa46d18c9f",
+      "materialization_status": "SECURE_REFERENCE_ONLY_BINARY_NOT_REPOSITORY_RESIDENT",
+      "eligible_for_wp04c_replay": false
+    },
+    {
+      "package_id": "CUSTOM_FINAL_MASTER_20260727T183529Z",
+      "filename": "DATA_PING_BACKTEST_HISTORY_PACK_FINAL_20260727T183529Z.zip",
+      "bytes": null,
+      "sha256": null,
+      "declared_file_count": 514,
+      "declared_csv_ndjson_rows": 18934,
+      "declared_checksum_pass": "513_OF_513",
+      "materialization_status": "DECLARED_COMPLETE_BINARY_NOT_VISIBLE_FOR_BYTE_AUDIT",
+      "eligible_for_wp04c_replay": false
+    },
+    {
+      "package_id": "TDBC_V1_20260726",
+      "filename": "TDBC v1 TechDev Business Cycle 2026-07-26.zip",
+      "bytes": 237291,
+      "sha256": "e83d3b95e94fba331767feae92bd052ed7f752a1a5305d63621030b293bc5d4c",
+      "materialization_status": "HASHED_RECONSTRUCTION_CANDIDATE_NOT_CANONICAL_OWNER",
+      "eligible_for_wp04c_replay": false
+    },
+    {
+      "package_id": "W30_GOLDEN_FIXTURE",
+      "filename": "DATA_PING_BACKTEST_HISTORY_PACK_20260726T205621Z.zip",
+      "bytes": 159355,
+      "sha256": "b70bd0c86aa76c968a06003ad3e83c63214675777d94a5af4dfb3859f6c67dcd",
+      "materialization_status": "HASHED_ENGINEERING_FIXTURE_NOT_HISTORICAL_OWNER",
+      "eligible_for_wp04c_replay": false
+    }
+  ],
+  "wp04c_required_datasets": [
+    {
+      "dataset_id": "BTC_SPOT_DAILY_CEST_BINANCE",
+      "required_for": ["LSP_MACRO_TO_CRYPTO", "LSP_ROTATION_FAILURE"],
+      "source_package": "CLAUDE_MEGAPACK_20260727T052808Z",
+      "declared_rows": 3266,
+      "coverage_start": "2017-08-17",
+      "coverage_end": "2026-07-26",
+      "row_level_materialized": false,
+      "hash_status": "PACKAGE_ROOT_HASH_ONLY",
+      "replay_status": "BLOCKED_SOURCE_TO_NORMALIZED_REBUILD_PARITY_REQUIRED"
+    },
+    {
+      "dataset_id": "ETH_SPOT_DAILY_CEST_BINANCE",
+      "required_for": ["LSP_MACRO_TO_CRYPTO", "LSP_ROTATION_FAILURE"],
+      "source_package": "CLAUDE_MEGAPACK_20260727T052808Z",
+      "declared_rows": 3266,
+      "coverage_start": "2017-08-17",
+      "coverage_end": "2026-07-26",
+      "row_level_materialized": false,
+      "hash_status": "PACKAGE_ROOT_HASH_ONLY",
+      "replay_status": "BLOCKED_SOURCE_TO_NORMALIZED_REBUILD_PARITY_REQUIRED"
+    },
+    {
+      "dataset_id": "ETHBTC_SPOT_DAILY_CEST_BINANCE_DIRECT",
+      "required_for": ["LSP_MACRO_TO_CRYPTO", "LSP_ROTATION_FAILURE"],
+      "source_package": "CLAUDE_MEGAPACK_20260727T052808Z",
+      "declared_rows": 3300,
+      "coverage_start": "2017-07-14",
+      "coverage_end": "2026-07-26",
+      "row_level_materialized": false,
+      "hash_status": "PACKAGE_ROOT_HASH_ONLY",
+      "replay_status": "BLOCKED_DIRECT_ROW_PARITY_AND_SETTLEMENT_REPLAY_REQUIRED"
+    },
+    {
+      "dataset_id": "FRED_OFFICIAL_SERIES_FINAL_MASTER",
+      "required_series": ["DGS2", "DGS10", "VIXCLS", "DTWEXBGS"],
+      "required_for": ["LSP_MACRO_TO_CRYPTO"],
+      "source_package": "CUSTOM_FINAL_MASTER_20260727T183529Z",
+      "row_level_materialized": false,
+      "hash_status": "MISSING_FINAL_MASTER_SHA256",
+      "replay_status": "BLOCKED_FINAL_MASTER_BYTE_AUDIT_AND_VINTAGE_RULES_REQUIRED"
+    },
+    {
+      "dataset_id": "DERIVATIVES_BINANCE_UM_BTC_ETH_DAILY",
+      "required_fields": ["funding", "open_interest", "settled_timestamp", "retrieval_timestamp", "source_identity"],
+      "required_for": ["LSP_LEVERAGE_TO_SPOT"],
+      "source_package": "CLAUDE_MEGAPACK_20260727T052808Z",
+      "row_level_materialized": false,
+      "hash_status": "PACKAGE_ROOT_HASH_ONLY",
+      "replay_status": "BLOCKED_HOURLY_SETTLED_ROWS_AND_MISSINGNESS_REGIMES_REQUIRED"
+    },
+    {
+      "dataset_id": "BREADTH_BINANCE_TOP100_PIT",
+      "required_for": ["CONFIRMATION_ONLY"],
+      "source_package": "CLAUDE_MEGAPACK_20260727T052808Z",
+      "declared_rows": 3266,
+      "row_level_materialized": false,
+      "hash_status": "PACKAGE_ROOT_HASH_ONLY",
+      "replay_status": "BLOCKED_POINT_IN_TIME_MEMBERSHIP_HASH_AND_CONSTITUENTS_REQUIRED"
+    }
+  ],
+  "materialization_gate": {
+    "minimum_required": [
+      "binary_or_immutable_artifact_reference",
+      "sha256",
+      "member_manifest_with_member_hashes",
+      "schema_version",
+      "source_identity",
+      "coverage_start_and_end",
+      "settled_timestamp_rule",
+      "publication_and_retrieval_timestamps_where_applicable",
+      "duplicate_and_overlap_policy",
+      "source_to_normalized_parity_receipt"
+    ],
+    "current_gate_result": "FAIL_CLOSED",
+    "legal_event_enumeration_unlocked": false
+  },
+  "governance": {
+    "package_summary_is_not_row_data": true,
+    "declared_checksum_pass_is_not_independent_byte_audit": true,
+    "package_root_hash_is_not_member_level_lineage": true,
+    "null_is_not_zero": true,
+    "threshold_changes_forbidden": true,
+    "outcome_inspection_forbidden": true,
+    "final_holdout_sealed": true
+  }
+}
