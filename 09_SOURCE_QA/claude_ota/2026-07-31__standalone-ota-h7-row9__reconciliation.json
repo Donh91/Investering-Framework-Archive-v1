@@ -1,0 +1,59 @@
+{
+  "schema_version": "CLAUDE_OTA_RECONCILIATION_v1",
+  "source_run_timestamp_utc": "2026-07-31T16:43:14.869Z",
+  "validated_at_utc": "2026-07-31T18:55:00Z",
+  "operating_mode": "STANDALONE_OTA_NO_REFERENCE_BRIDGE",
+  "accepted_items": [
+    "H7_ROW_9_POST_MATURITY_EXTENSION",
+    "H7_COND2_1_OF_3_NOT_MET",
+    "H7_ROLLING_5_SESSION_SLOPE_NEGATIVE",
+    "ETHBTC_0030_SEQUENCE_TERMINATED",
+    "F1_POST_WINDOW_BOUNDARY_STRESS"
+  ],
+  "corrected_items": [
+    "ROW_9_DOES_NOT_RESCORE_ORIGINAL_H7_MATURITY",
+    "CANONICAL_COND1_WORDING_ALREADY_FROZEN",
+    "NO_RETROSPECTIVE_LAPSE_OR_RETIREMENT_RULE",
+    "H_WIN_01_CONFIDENCE_IS_AUDITOR_INPUT_ONLY",
+    "ETF_GAP_PARTIALLY_RESOLVED_BY_MAIN_DATA_PING_LAYER"
+  ],
+  "H7": {
+    "historical_score": "EARLY_TRANSMISSION_CANDIDATE_NOT_ROTATION_CONFIRMATION",
+    "historical_score_change": "NONE",
+    "post_maturity_follow_through": "INACTIVE",
+    "COND2_last_3": "1_OF_3_NOT_MET",
+    "rolling_5_session_slope_pct_per_session": -0.101,
+    "formal_lapse_rule": "UNDEFINED_NOT_INVENTED",
+    "rows_8_9_confound": "POST_FOMC_ACTIVE_NO_CAUSAL_ATTRIBUTION"
+  },
+  "threshold_sequence": {
+    "level": 0.03,
+    "status": "SEQUENCE_TERMINATED",
+    "latest_settled_UTC_close": 0.02962,
+    "latest_settled_UTC_high": 0.02996,
+    "settled_persistence": "FAILED"
+  },
+  "H_WIN_01": {
+    "status": "UNPROVEN_DESIGN_HYPOTHESIS",
+    "source_confidence": "MODERATE_N2",
+    "framework_authority": "NONE",
+    "F1_score_change": "NONE",
+    "counterevidence_retained": true
+  },
+  "ETF_resolution": {
+    "BTC_2026_07_30_usd_m": 233.1,
+    "ETH_2026_07_30_usd_m": 12.8,
+    "resolved_by": "MAIN_DATA_PING_LAYER",
+    "remaining_missing_sessions": "UNKNOWN_NOT_ZERO"
+  },
+  "framework_effect": {
+    "rotation": "NO_ROTATION",
+    "rebuy": "LOCKED",
+    "new_entry": "NOT_ACTIVE",
+    "large_caps": "WATCH_ONLY",
+    "canonical_state_change": "NONE",
+    "portfolio_action": "NONE",
+    "A_rows_total": 2,
+    "shadow_dual_run_valid_runs": 5
+  }
+}
