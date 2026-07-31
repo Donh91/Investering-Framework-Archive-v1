@@ -3,10 +3,13 @@ on:
   pull_request:
     paths:
       - 'scripts/data_terminal/binance_spot_owner_collector.py'
+      - 'scripts/data_terminal/binance_spot_microstructure_source.py'
       - 'tests/data_terminal/test_binance_spot_owner_collector.py'
+      - 'tests/data_terminal/test_binance_spot_microstructure_source.py'
       - 'tests/data_terminal/fixtures/binance_spot_owner/**'
       - '.github/workflows/binance-spot-owner-manual.yml'
       - 'research/programs/MARKET_ANTICIPATION_RESEARCH_PROGRAM_v1/WP04C5C_EXECUTION_STATE_v1.json'
+      - '06_RESEARCH_LAB/forward_tests/2026-07-31__t4-execution-microstructure-repair-protocol-v0-1__forward-test.md'
   workflow_dispatch:
     inputs:
       mode:
@@ -26,10 +29,14 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Run owner tests
-        run: python -m unittest tests.data_terminal.test_binance_spot_owner_collector
-      - name: Compile collector
-        run: python -m py_compile scripts/data_terminal/binance_spot_owner_collector.py tests/data_terminal/test_binance_spot_owner_collector.py
+      - name: Run owner and microstructure tests
+        run: |
+          python -m unittest tests.data_terminal.test_binance_spot_owner_collector
+          python -m unittest tests.data_terminal.test_binance_spot_microstructure_source
+      - name: Compile collectors
+        run: |
+          python -m py_compile scripts/data_terminal/binance_spot_owner_collector.py tests/data_terminal/test_binance_spot_owner_collector.py
+          python -m py_compile scripts/data_terminal/binance_spot_microstructure_source.py tests/data_terminal/test_binance_spot_microstructure_source.py
       - name: Run owner capture
         shell: bash
         run: |
@@ -38,11 +45,27 @@ jobs:
           else
             python scripts/data_terminal/binance_spot_owner_collector.py --fixture-dir tests/data_terminal/fixtures/binance_spot_owner --retrieval-timestamp 2026-07-31T12:00:00Z --output-dir binance-spot-owner-output
           fi
-      - name: Verify artifact readback
+      - name: Run T4 microstructure source capture
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.mode }}" = "live" ]; then
+            python scripts/data_terminal/binance_spot_microstructure_source.py --output-dir binance-spot-microstructure-output
+          else
+            python scripts/data_terminal/binance_spot_microstructure_source.py --fixture-dir tests/data_terminal/fixtures/binance_spot_owner --retrieval-timestamp 2026-07-31T12:00:00Z --output-dir binance-spot-microstructure-output
+          fi
+      - name: Verify owner artifact readback
         run: python -c "import importlib.util,pathlib,sys; p=pathlib.Path('scripts/data_terminal/binance_spot_owner_collector.py'); s=importlib.util.spec_from_file_location('m',p); m=importlib.util.module_from_spec(s); sys.modules['m']=m; s.loader.exec_module(m); r=m.verify(pathlib.Path('binance-spot-owner-output')); print(r); raise SystemExit(0 if r['status']=='PASS' else 1)"
+      - name: Verify microstructure artifact readback
+        run: python -c "import importlib.util,pathlib,sys; p=pathlib.Path('scripts/data_terminal/binance_spot_microstructure_source.py'); s=importlib.util.spec_from_file_location('m',p); m=importlib.util.module_from_spec(s); sys.modules['m']=m; s.loader.exec_module(m); r=m.verify(pathlib.Path('binance-spot-microstructure-output')); print(r); raise SystemExit(0 if r['status']=='PASS' else 1)"
       - uses: actions/upload-artifact@v4
         with:
           name: binance-spot-owner-${{ github.run_id }}
           path: binance-spot-owner-output/
+          retention-days: 14
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        with:
+          name: binance-spot-microstructure-${{ github.run_id }}
+          path: binance-spot-microstructure-output/
           retention-days: 14
           if-no-files-found: error
