@@ -6,7 +6,7 @@ from pathlib import Path
 
 AUTHORITY={"binding":False,"canonical_acceptance":False,"state_change":False,"portfolio_action":False}
 SYMBOLS=("BTCUSDT","ETHUSDT","ETHBTC")
-BASE_URL="https://api.binance.com/api/v3/klines"
+BASE_URL="https://data-api.binance.vision/api/v3/klines"
 
 class CollectorError(RuntimeError):
     def __init__(self,status:str,message:str): super().__init__(message); self.status=status
@@ -68,7 +68,7 @@ def run(payloads:dict[str,bytes],output:Path,retrieval:str,interval:str):
         lineage.append({"symbol":symbol,"path":f"raw/{symbol}.json","bytes":len(b),"sha256":sha(b)})
     run_id=f"DT_BINANCE_SPOT_{retrieval.replace('-','').replace(':','')[:15]}_{sha(canonical(lineage))[:12]}"
     owner={"contract":"WP04C5C_BINANCE_SPOT_OWNER_v1","run_id":run_id,"retrieval_timestamp":retrieval,"interval":interval,"symbols":list(SYMBOLS),"direct_ethbtc":True,"settled_only":True,"interpolation":False,"forward_fill":False,"candles":normalized,"authority":AUTHORITY}
-    receipt={"run_id":run_id,"source_id":"BINANCE_SPOT_KLINES_OWNER","source_urls":{s:BASE_URL+"?"+urllib.parse.urlencode({"symbol":s,"interval":interval,"limit":1000}) for s in SYMBOLS},"source_payloads":lineage,"owner_sha256":sha(canonical(owner)),"status":"PASS","authority":AUTHORITY}
+    receipt={"run_id":run_id,"source_id":"BINANCE_SPOT_MARKET_DATA_ONLY_KLINES_OWNER","source_urls":{s:BASE_URL+"?"+urllib.parse.urlencode({"symbol":s,"interval":interval,"limit":1000}) for s in SYMBOLS},"source_payloads":lineage,"owner_sha256":sha(canonical(owner)),"status":"PASS","authority":AUTHORITY}
     (output/"owner_snapshot.json").write_text(json.dumps(owner,indent=2,sort_keys=True)+"\n")
     (output/"receipt.json").write_text(json.dumps(receipt,indent=2,sort_keys=True)+"\n")
     members=[]
