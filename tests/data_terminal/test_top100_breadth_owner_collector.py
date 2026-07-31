@@ -18,5 +18,5 @@ class T(unittest.TestCase):
         rows=json.loads(payload()); rows[0]['symbol']='usdt'; rows.append({"id":"extra","symbol":"extra","name":"Extra","market_cap":1,"current_price":1,"price_change_percentage_24h":1}); c,e,a=M.parse(json.dumps(rows).encode()); self.assertTrue(any(x['reason']=='STABLECOIN' for x in e)); self.assertEqual(len(c),100)
     def test_run_and_tamper(self):
         with tempfile.TemporaryDirectory() as d:
-            root=pathlib.Path(d); M.run(payload(),root,'2026-07-31T20:00:00Z'); self.assertEqual(M.verify(root)['status'],'PASS'); (root/'owner_snapshot.json').write_text('tamper'); self.assertEqual(M.verify(root)['status'],'FAIL')
+            root=pathlib.Path(d); M.run(payload(),root,'2026-07-31T20:00:00Z'); self.assertEqual(M.verify(root)['status'],'PASS'); (root/'owner_snapshot.json').write_text('{}'); self.assertEqual(M.verify(root)['status'],'FAIL')
 if __name__=='__main__': unittest.main()
