@@ -1,0 +1,28 @@
+{
+  "contract": "API_SOURCE_EXPANSION_MATRIX_v1",
+  "status": "ACTIVE_PRIORITIZED",
+  "principles": {
+    "public_first": true,
+    "owner_source_preferred": true,
+    "no_silent_fallback": true,
+    "raw_payload_required": true,
+    "artifact_first_for_bulk": true,
+    "durable_promotion_required": true,
+    "enumeration_authorized": false,
+    "outcome_access": false
+  },
+  "sources": [
+    {"priority":1,"source_id":"FRED","families":["rates","dollar","volatility","liquidity"],"status":"PROSPECTIVE_CAPTURE_VERIFIED"},
+    {"priority":1,"source_id":"BINANCE_SPOT","families":["BTCUSDT","ETHUSDT","ETHBTC"],"status":"PROSPECTIVE_CAPTURE_VERIFIED"},
+    {"priority":1,"source_id":"BINANCE_USDM","families":["funding","open_interest","mark_price"],"status":"IMPLEMENTED_PENDING_LIVE_VERIFICATION"},
+    {"priority":1,"source_id":"TOP100_BREADTH","families":["constituents","membership_hash","advancers","decliners"],"status":"NEXT_BUILD"},
+    {"priority":2,"source_id":"OKX","families":["funding","open_interest","basis","taker_flow"],"status":"PLANNED_OWNER_DIVERSIFICATION"},
+    {"priority":2,"source_id":"BYBIT","families":["funding","open_interest","liquidations"],"status":"PLANNED_OWNER_DIVERSIFICATION"},
+    {"priority":2,"source_id":"COINGECKO","families":["universe","market_cap","volume","category"],"status":"PLANNED_CONTEXT_OWNER"},
+    {"priority":2,"source_id":"DEFILLAMA","families":["stablecoins","bridges","tvl","fees"],"status":"PLANNED_LIQUIDITY_ROUTING"},
+    {"priority":2,"source_id":"ETF_FLOW_SOURCES","families":["BTC_ETF","ETH_ETF","publication_time"],"status":"OWNER_EXISTS_TIMESTAMP_AUDIT_PENDING"},
+    {"priority":3,"source_id":"CME","families":["futures","basis","positioning"],"status":"LICENSE_AND_ACCESS_REVIEW"},
+    {"priority":3,"source_id":"OPTIONS_VENUES","families":["iv","skew","term_structure","gamma"],"status":"SCHEMA_AND_LICENSE_REVIEW"}
+  ],
+  "authority": {"framework_state_change":false,"portfolio_action":false}
+}
