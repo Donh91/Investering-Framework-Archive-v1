@@ -1,0 +1,32 @@
+{
+  "contract": "C5E_BREADTH_OWNER_CONTRACT_v1",
+  "status": "PREREGISTERED_PENDING_IMPLEMENTATION",
+  "universe": {
+    "ranking_metric": "market_cap_usd",
+    "rank_count": 100,
+    "stablecoins_excluded": true,
+    "wrapped_duplicates_policy": "EXPLICIT_EXCLUSION_LEDGER",
+    "membership_hash_algorithm": "sha256",
+    "membership_sort": "rank_then_canonical_asset_id"
+  },
+  "required_outputs": [
+    "raw_source_payload",
+    "constituent_rows",
+    "exclusion_ledger",
+    "membership_hash",
+    "aggregate_breadth",
+    "method_version",
+    "freeze_timestamp",
+    "retrieval_timestamp",
+    "artifact_manifest",
+    "readback_receipt"
+  ],
+  "aggregate_replay_tolerance": 0.0,
+  "current_universe_substitution": false,
+  "interpolation": false,
+  "forward_fill": false,
+  "enumeration_authorized": false,
+  "outcome_access": false,
+  "framework_state_change": false,
+  "portfolio_action": false
+}
