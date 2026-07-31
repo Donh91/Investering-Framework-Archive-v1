@@ -1,0 +1,44 @@
+name: Binance USD-M Owner Manual
+on:
+  pull_request:
+    paths:
+      - 'scripts/data_terminal/binance_usdm_owner_collector.py'
+      - 'tests/data_terminal/test_binance_usdm_owner_collector.py'
+      - '.github/workflows/binance-usdm-owner-manual.yml'
+      - 'research/programs/MARKET_ANTICIPATION_RESEARCH_PROGRAM_v1/WP04C5D_EXECUTION_STATE_v1.json'
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: tests or explicit live derivatives capture
+        required: true
+        default: tests
+        type: choice
+        options: [tests, live]
+permissions:
+  contents: read
+jobs:
+  owner-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run deterministic tests
+        run: python -m unittest tests.data_terminal.test_binance_usdm_owner_collector
+      - name: Compile collector
+        run: python -m py_compile scripts/data_terminal/binance_usdm_owner_collector.py
+      - name: Run explicit live capture
+        if: github.event_name == 'workflow_dispatch' && inputs.mode == 'live'
+        run: python scripts/data_terminal/binance_usdm_owner_collector.py --output-dir binance-usdm-owner-output
+      - name: Verify live artifact
+        if: github.event_name == 'workflow_dispatch' && inputs.mode == 'live'
+        run: python -c "import importlib.util,pathlib,sys; p=pathlib.Path('scripts/data_terminal/binance_usdm_owner_collector.py'); s=importlib.util.spec_from_file_location('m',p); m=importlib.util.module_from_spec(s); sys.modules['m']=m; s.loader.exec_module(m); r=m.verify(pathlib.Path('binance-usdm-owner-output')); print(r); raise SystemExit(0 if r['status']=='PASS' else 1)"
+      - uses: actions/upload-artifact@v4
+        if: github.event_name == 'workflow_dispatch' && inputs.mode == 'live'
+        with:
+          name: binance-usdm-owner-${{ github.run_id }}
+          path: binance-usdm-owner-output/
+          retention-days: 30
+          if-no-files-found: error
