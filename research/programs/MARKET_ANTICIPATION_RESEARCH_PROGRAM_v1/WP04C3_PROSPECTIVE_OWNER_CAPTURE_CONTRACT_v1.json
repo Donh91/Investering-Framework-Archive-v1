@@ -1,0 +1,9 @@
+{
+  "schema_version":"1.0",
+  "phase":"MAR-WP04C3",
+  "status":"FROZEN_PROSPECTIVE_ONLY",
+  "capture_domains":{"macro":{"series":["DTWEXBGS","DGS2","DGS10","VIXCLS"],"required_timestamps":["observation_date","publication_timestamp_utc","retrieval_timestamp_utc"],"vintage_rule":"INITIAL_RELEASE_WHERE_AVAILABLE_ELSE_EXPLICIT_LATEST_VINTAGE_FLAG"},"spot":{"instruments":["BTCUSDT","ETHUSDT","ETHBTC"],"venue":"BINANCE","required_timestamps":["open_time_utc","close_time_utc","retrieval_timestamp_utc"],"settlement":"OWNER_EXCHANGE_SETTLED_CANDLE"},"derivatives":{"venue":"BINANCE_USDM","instruments":["BTCUSDT","ETHUSDT"],"fields":["funding_rate","open_interest","mark_price"],"frequency":"1H","required_timestamps":["event_time_utc","settled_hour_utc","retrieval_timestamp_utc"]},"breadth":{"universe":"TOP100_POINT_IN_TIME","required":["constituent_rows","membership_hash","exclusions","ranking_metric","method_version","retrieval_timestamp_utc"]}},
+  "storage":{"raw_immutable":true,"normalized_derived":true,"raw_to_normalized_parity_receipt":true,"sha256_per_object":true},
+  "missingness":{"null_preserved":true,"forward_fill":false,"interpolation":false},
+  "framework_binding":"NONE"
+}
