@@ -1,0 +1,9 @@
+{
+  "schema_version":"1.0",
+  "phase":"MAR-WP04C5A",
+  "decision":"REUSE_APPROVED_WITH_BOUNDED_EXTENSIONS",
+  "evidence_commits":["2cb44ffa5de1f9729b6b867bfadd4e7f5488743c","de932b26aa18a3753d53b21c4643f21383f7f172","110f2a7f454863922ed4fed930bbebf60280b991","86466f142fd59a8e8dd0e26e38c5b5b6846768de"],
+  "reusable":{"fred_csv_collector":{"status":"APPROVED_BASE","current_scope":["DGS10"],"reuse":["network_fetch","fixture_mode","payload_sha256","receipt","source_health","snapshot","artifact_upload","missing_as_unknown"]},"data_terminal_contracts":{"status":"APPROVED_BASE"},"replay_gate":{"status":"APPROVED_BASE"},"manual_artifact_workflow":{"status":"APPROVED_BASE_NO_SCHEDULE"}},
+  "required_extensions":{"macro":["DGS2","DGS10","DTWEXBGS","VIXCLS","publication_timestamp_or_explicit_vintage_flag","per_series_member_hash"],"spot":["NEW_BINANCE_SPOT_OWNER_COLLECTOR"],"derivatives":["NEW_BINANCE_USDM_OWNER_COLLECTOR"],"breadth":["NEW_POINT_IN_TIME_TOP100_COLLECTOR_AND_MEMBERSHIP_HASH"]},
+  "prohibited":["parallel_duplicate_fred_pipeline","silent_source_substitution","schedule_activation_before_artifact_readback","canonical_framework_binding","outcome_access"]
+}
