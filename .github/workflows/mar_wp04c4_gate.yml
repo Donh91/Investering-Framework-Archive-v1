@@ -1,0 +1,39 @@
+name: MAR WP04C4 Gate
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'research/programs/MARKET_ANTICIPATION_RESEARCH_PROGRAM_v1/WP04C2_*'
+      - 'research/programs/MARKET_ANTICIPATION_RESEARCH_PROGRAM_v1/WP04C3_*'
+      - 'research/programs/MARKET_ANTICIPATION_RESEARCH_PROGRAM_v1/WP04C4_*'
+      - 'research/programs/MARKET_ANTICIPATION_RESEARCH_PROGRAM_v1/wp04c4_enumerate.py'
+      - 'research/programs/MARKET_ANTICIPATION_RESEARCH_PROGRAM_v1/test_wp04c4_enumerate.py'
+
+permissions:
+  contents: read
+
+jobs:
+  fail-closed-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install pytest
+      - name: Run fail-closed tests
+        working-directory: research/programs/MARKET_ANTICIPATION_RESEARCH_PROGRAM_v1
+        run: pytest -q test_wp04c4_enumerate.py
+      - name: Verify current registry remains blocked
+        working-directory: research/programs/MARKET_ANTICIPATION_RESEARCH_PROGRAM_v1
+        run: |
+          python wp04c4_enumerate.py WP04C1_OWNER_MATERIALIZATION_REGISTRY_v1.json > wp04c4_gate_output.json
+          python - <<'PY'
+          import json
+          data=json.load(open('wp04c4_gate_output.json'))
+          assert data['status']=='BLOCKED'
+          assert data['enumeration_authorized'] is False
+          assert all(v is None for v in data['candidate_event_counts'].values())
+          assert data['outcome_access'] is False
+          PY
