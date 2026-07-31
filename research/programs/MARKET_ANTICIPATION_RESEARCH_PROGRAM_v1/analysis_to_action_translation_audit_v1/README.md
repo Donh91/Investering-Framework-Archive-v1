@@ -1,7 +1,7 @@
 # Analysis to Action Translation Audit v1
 
-**Dato:** 2026-07-30  
-**Status:** PREREGISTERED_RESEARCH_ONLY  
+**Dato:** 2026-07-31  
+**Status:** STAGE1_DATA_BLOCKED / REMEDIATION_IN_PROGRESS  
 **Område:** Master Monday / RAW / Forecast Ledger / opportunity cost  
 **Primary folder:** `research/programs/MARKET_ANTICIPATION_RESEARCH_PROGRAM_v1/analysis_to_action_translation_audit_v1/`  
 **Parent program:** `MARKET_ANTICIPATION_RESEARCH_PROGRAM_v1`  
@@ -31,7 +31,7 @@ This is not a new forecast engine, active test, score or ledger owner.
 - Existing scoring and verified DATA PING owners attach outcomes.
 - FNP/MAR-WP06 owns opportunity-cost interpretation.
 - Backtest Readiness Build owns any later economic experiment.
-- Claude may perform blind replication only from an immutable package.
+- Claude may perform blind replication only from an immutable stage-appropriate package.
 
 ## Current seed
 
@@ -52,7 +52,49 @@ No new economic score is produced.
 4. `TIMING`: early, on time, late or blocked.
 5. `UTILITY`: existing drawdown, MFE, MAE, missed-upside and opportunity-cost fields only.
 
+## Claude Stage 1 result
+
+The first Claude package returned:
+
+```yaml
+aggregate_verdict: DATA_BLOCKED
+stage_1A_file_and_lineage: PASS
+stage_1B_independent_decomposition: DATA_BLOCKED
+stage_1C_source_parity: DATA_BLOCKED
+stage_1D_method_red_team: PASS_WITH_CORRECTIONS
+transcription_errors: 0
+authority_breaches: 0
+W31_scored: false
+new_economic_scores: 0
+```
+
+The aggregate verdict is accepted.
+
+The initial package shipped the AATA-derived rows but none of the seven referenced primary source documents. It also contained a W30 owner-outcome block while declaring itself outcome-free. Therefore no independent source parity claim exists yet.
+
+## Remediation
+
+Binding remediation files:
+
+- `AATA_STAGE1_REMEDIATION_DECISION_v1.md`
+- `AATA_PROSPECTIVE_DEFINITIONS_v1.json`
+- `AATA_BLIND_REISSUE_PROTOCOL_v1.md`
+- `TRANSLATION_ROW_SCHEMA_v2_PROSPECTIVE.json`
+- `PROSPECTIVE_CAPTURE_CONTRACT_v2.json`
+
+Key changes:
+
+- Stage 1 is rerun as one isolated target week at a time.
+- Stage 1B receives primary sources but no `SOURCE_ROWS` or outcomes.
+- Claude's independent extraction is frozen before Stage 1C reveals the expected row.
+- Leadership dimensions and action baselines are preregistered from W32 forward.
+- W28-W31 are not retroactively reinterpreted.
+- One dependency cluster may count only once toward divergence requirements.
+- A mandatory interim review occurs after six valid prospective rows.
+
 ## Files
+
+Historical v1 files:
 
 - `OWNER_BINDING_AND_PROPOSITION_v1.json`
 - `TRANSLATION_ROW_SCHEMA_v1.json`
@@ -62,12 +104,30 @@ No new economic score is produced.
 - `CLAUDE_OPUS5_BLIND_AUDIT_PROMPT_v1.md`
 - `validate_aata.py`
 
+Prospective remediation files:
+
+- `AATA_STAGE1_REMEDIATION_DECISION_v1.md`
+- `AATA_PROSPECTIVE_DEFINITIONS_v1.json`
+- `AATA_BLIND_REISSUE_PROTOCOL_v1.md`
+- `TRANSLATION_ROW_SCHEMA_v2_PROSPECTIVE.json`
+- `PROSPECTIVE_CAPTURE_CONTRACT_v2.json`
+
+Audit receipt:
+
+- `blind_audits/2026-07-31__claude-stage1-data-blocked/AATA_CLAUDE_STAGE1_AUDIT_RECEIPT_v1.json`
+
 ## Current gate
 
 ```yaml
 source_inventory: PASS_FOR_W28_W31
-taxonomy_frozen: PASS
-prospective_capture_contract: PASS
+original_taxonomy: FROZEN
+claude_stage1A: PASS
+claude_stage1B: DATA_BLOCKED_REISSUE_REQUIRED
+claude_stage1C: DATA_BLOCKED_REISSUE_REQUIRED
+claude_stage1D: PASS_WITH_CORRECTIONS
+prospective_definitions_v1: FROZEN_FROM_W32
+prospective_capture_v2: READY_NOT_CANONICAL
+stage_2: BLOCKED
 economic_scoring: LOCKED
 final_holdout: SEALED
 canonical_output_rule_change: NO
