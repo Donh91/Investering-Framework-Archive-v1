@@ -1,0 +1,101 @@
+{
+  "schema_version": "2.0",
+  "contract_id": "AATA_PROSPECTIVE_CAPTURE_CONTRACT_v2",
+  "effective_from_week": "2026-W32",
+  "status": "RESEARCH_CAPTURE_READY_NOT_CANONICAL_OUTPUT_RULE",
+  "supersedes_for_future_rows": "AATA_PROSPECTIVE_CAPTURE_CONTRACT_v1",
+  "does_not_rewrite": ["2026-W28", "2026-W29", "2026-W30", "2026-W31"],
+  "applies_to": ["MASTER_MONDAY", "WEEKLY_RAW"],
+  "required_separation": {
+    "analysis_block": {
+      "required": [
+        "regime_call",
+        "edge_state",
+        "confidence",
+        "leadership_definition",
+        "rotation_call",
+        "evidence_summary",
+        "falsifiers",
+        "source_spans"
+      ]
+    },
+    "operational_translation_block": {
+      "required": [
+        "asset",
+        "horizon",
+        "expected_path",
+        "range_low",
+        "range_high",
+        "continuation_trigger",
+        "invalidation",
+        "action_state",
+        "action_conditions",
+        "dependency_cluster_id",
+        "source_spans"
+      ]
+    },
+    "action_block": {
+      "required": [
+        "btc_permission",
+        "alt_permission",
+        "rebuy_state",
+        "large_cap_window",
+        "portfolio_action",
+        "primary_counterfactual",
+        "null_counterfactual"
+      ]
+    }
+  },
+  "leadership_rules": {
+    "definition_owner": "AATA_PROSPECTIVE_DEFINITIONS_v1",
+    "missing_definition": "BLOCKED",
+    "relative_strength_absolute_performance_and_rotation_are_separate": true
+  },
+  "timing_capture": {
+    "prospective_fields": [
+      "first_event_type",
+      "first_event_timestamp_utc",
+      "event_owner",
+      "event_source_hash"
+    ],
+    "retroactive_fill": false,
+    "missing_event_data": "BLOCKED"
+  },
+  "freeze_rules": [
+    "All forecast and action fields must be frozen before outcome observability.",
+    "Analysis and operational translation must use the same knowledge timestamp or disclose separate timestamps.",
+    "Missing values remain null.",
+    "No later weekly report may reconstruct an earlier forecast.",
+    "Source spans for prior-week scoring and current-week forecasting must be separately addressable.",
+    "BTC permission and alt permission remain separate.",
+    "One dependency cluster may count at most once toward material decision divergence."
+  ],
+  "outcome_attachment_rules": [
+    "Outcomes are attached only by existing owner scorers and verified owner datasets.",
+    "The Stage 1B extraction must be frozen before expected rows or outcomes are revealed.",
+    "Analysis, price translation, action policy, timing and utility remain separate.",
+    "No hidden blended score.",
+    "Incomplete horizons remain pending.",
+    "No action classification without an instantiated preregistered benchmark.",
+    "NEUTRAL is forbidden when the benchmark is absent."
+  ],
+  "review_rules": {
+    "promotion_review_valid_rows": 12,
+    "interim_review_valid_rows": 6,
+    "independent_blind_replication": "REQUIRED",
+    "minimum_incremental_value_rows": 1,
+    "material_decision_divergence_dependency_adjusted": true
+  },
+  "authority": {
+    "changes_master_monday_template": false,
+    "changes_raw_template": false,
+    "changes_market_state": false,
+    "changes_rotation_state": false,
+    "changes_entry_permission": false,
+    "changes_rebuy_permission": false,
+    "changes_portfolio_action": false,
+    "creates_active_test": false,
+    "creates_engine": false,
+    "creates_score": false
+  }
+}
