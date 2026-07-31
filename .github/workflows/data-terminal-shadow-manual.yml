@@ -7,6 +7,7 @@ on:
       - "tests/data_terminal/**"
       - "02_DATA_PING/data_terminal/source_registry/fred_csv_macro_core.json"
       - ".github/workflows/data-terminal-shadow-manual.yml"
+      - "research/programs/MARKET_ANTICIPATION_RESEARCH_PROGRAM_v1/WP04C5B_*"
   workflow_dispatch:
     inputs:
       mode:
@@ -43,7 +44,7 @@ jobs:
       - name: Run synchronized shadow owner collector
         shell: bash
         run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.mode }}" = "live" ]; then
+          if [ "${{ github.event_name }}" = "pull_request" ] || { [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.mode }}" = "live" ]; }; then
             python scripts/data_terminal/fred_csv_collector.py \
               --series DGS2,DGS10,DTWEXBGS,VIXCLS \
               --output-dir data-terminal-output
