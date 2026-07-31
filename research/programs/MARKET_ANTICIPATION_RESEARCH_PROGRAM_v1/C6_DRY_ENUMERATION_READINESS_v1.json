@@ -1,0 +1,32 @@
+{
+  "contract": "C6_DRY_ENUMERATION_READINESS_v1",
+  "status": "STRUCTURE_PASS_DATA_DEPTH_BLOCKED",
+  "owner_stack": {
+    "macro": ["FRED_MACRO_CORE_PROSPECTIVE_v1", "BINANCE_SPOT_OWNER_PROSPECTIVE_v1"],
+    "leverage": ["BINANCE_SPOT_OWNER_PROSPECTIVE_v1", "OKX_SWAP_DERIVATIVES_PROSPECTIVE_v1"],
+    "breadth": ["TOP100_BREADTH_CONSTITUENTS_PROSPECTIVE_v1"]
+  },
+  "structural_checks": {
+    "owner_collectors_present": true,
+    "raw_payload_retention_defined": true,
+    "artifact_manifests_required": true,
+    "independent_readback_demonstrated": true,
+    "membership_hash_replay_demonstrated": true,
+    "storage_health_gate_active": true,
+    "durable_promotion_queue_active": true
+  },
+  "minimum_history_blockers": {
+    "macro_robust_window_observations": 756,
+    "macro_minimum_observations": 252,
+    "leverage_robust_window_hours": 2160,
+    "leverage_minimum_hours": 720,
+    "breadth_minimum_independent_snapshots": "NOT_YET_PREREGISTERED_FOR_ECONOMIC_TESTING"
+  },
+  "candidate_counts": {"macro":null,"leverage":null,"rotation":null,"breadth":null},
+  "enumeration_authorized": false,
+  "outcome_access": false,
+  "final_holdout_access": false,
+  "framework_state_change": false,
+  "portfolio_action": false,
+  "next_action": "ACCUMULATE_APPEND_ONLY_PROSPECTIVE_PARTITIONS_AND_RUN_STORAGE_SAFE_PERIODIC_CAPTURE"
+}
