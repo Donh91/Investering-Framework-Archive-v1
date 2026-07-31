@@ -1,0 +1,54 @@
+{
+  "schema_version": "1.0",
+  "request_id": "MAR_WP04C1_MATERIALIZATION_REQUEST_v1",
+  "status": "READY_FOR_ARTIFACT_INTAKE",
+  "required_artifacts": [
+    {
+      "priority": 1,
+      "artifact": "DATA_PING_BACKTEST_HISTORY_PACK_FINAL_20260727T183529Z.zip",
+      "required_receipts": ["byte_size", "sha256", "zip_crc", "member_manifest", "member_sha256"],
+      "reason": "declared final master is not independently byte-auditable"
+    },
+    {
+      "priority": 2,
+      "artifact": "CLAUDE_MEGAPACK_20260727T052808Z selected members",
+      "required_members": [
+        "BTC spot source and normalized rows",
+        "ETH spot source and normalized rows",
+        "direct ETHBTC source and normalized rows",
+        "Binance funding rows",
+        "Binance open-interest rows",
+        "point-in-time breadth constituents and universe ledgers"
+      ],
+      "required_receipts": ["member paths", "member sha256", "schema", "coverage", "parity checks"],
+      "reason": "package-root hash does not prove member-level replay lineage"
+    }
+  ],
+  "normalization_requirements": {
+    "immutable_raw_copy": true,
+    "normalized_copy": true,
+    "source_to_normalized_parity": true,
+    "no_forward_fill": true,
+    "no_interpolation": true,
+    "null_preserved": true,
+    "duplicate_policy_explicit": true,
+    "timezone_and_settlement_rule_explicit": true,
+    "publication_and_retrieval_availability_preserved": true
+  },
+  "acceptance_gate": {
+    "independent_hash_match": true,
+    "schema_validation": true,
+    "chronology_validation": true,
+    "duplicate_validation": true,
+    "coverage_validation": true,
+    "settlement_replay": true,
+    "point_in_time_lineage_where_applicable": true
+  },
+  "forbidden": [
+    "event enumeration before acceptance",
+    "threshold changes",
+    "outcome inspection",
+    "forward return calculation",
+    "final holdout access"
+  ]
+}
