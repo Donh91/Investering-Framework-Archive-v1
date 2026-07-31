@@ -20,8 +20,26 @@ class TestBinanceUsdmOwnerCollector(unittest.TestCase):
         payload=json.dumps({"symbol":"ETHUSDT","markPrice":"3210.5","time":1753968000000}).encode()
         rows=module.parse("mark_price","ETHUSDT",payload,"2026-07-31T18:00:00Z")
         self.assertEqual(rows[0]["value"],3210.5)
-    def test_schema_drift(self):
-        with self.assertRaises(module.CollectorError): module.parse("funding","BTCUSDT",b"{}","2026-07-31T18:00:00Z")
+    def test_schema_drift_fails_closed_for_each_metric(self):
+        for metric in ("funding","open_interest","mark_price"):
+            with self.subTest(metric=metric):
+                with self.assertRaises(module.CollectorError) as caught:
+                    module.parse(metric,"BTCUSDT",b"{}","2026-07-31T18:00:00Z")
+                self.assertEqual(caught.exception.status,"SCHEMA_DRIFT")
+    def test_non_numeric_field_fails_closed(self):
+        payload=json.dumps({"symbol":"BTCUSDT","openInterest":"not-a-number","time":1753968000000}).encode()
+        with self.assertRaises(module.CollectorError) as caught:
+            module.parse("open_interest","BTCUSDT",payload,"2026-07-31T18:00:00Z")
+        self.assertEqual(caught.exception.status,"SCHEMA_DRIFT")
+    def test_source_error_explicit(self):
+        payload=json.dumps({"code":-1,"msg":"bad request"}).encode()
+        with self.assertRaises(module.CollectorError) as caught:
+            module.parse("funding","BTCUSDT",payload,"2026-07-31T18:00:00Z")
+        self.assertEqual(caught.exception.status,"SOURCE_ERROR")
+    def test_unsupported_metric_rejected(self):
+        with self.assertRaises(module.CollectorError) as caught:
+            module.parse("unknown","BTCUSDT",b"{}","2026-07-31T18:00:00Z")
+        self.assertEqual(caught.exception.status,"UNSUPPORTED_METRIC")
     def test_negative_non_funding_rejected(self):
         payload=json.dumps({"symbol":"BTCUSDT","openInterest":"-1","time":1753968000000}).encode()
         with self.assertRaises(module.CollectorError): module.parse("open_interest","BTCUSDT",payload,"2026-07-31T18:00:00Z")
