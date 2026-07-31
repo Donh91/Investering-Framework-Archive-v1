@@ -31,7 +31,13 @@ jobs:
       - name: Compile collector
         run: python -m py_compile scripts/data_terminal/binance_spot_owner_collector.py tests/data_terminal/test_binance_spot_owner_collector.py
       - name: Run owner capture
-        run: python scripts/data_terminal/binance_spot_owner_collector.py --output-dir binance-spot-owner-output
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.mode }}" = "live" ]; then
+            python scripts/data_terminal/binance_spot_owner_collector.py --output-dir binance-spot-owner-output
+          else
+            python scripts/data_terminal/binance_spot_owner_collector.py --fixture-dir tests/data_terminal/fixtures/binance_spot_owner --retrieval-timestamp 2026-07-31T12:00:00Z --output-dir binance-spot-owner-output
+          fi
       - name: Verify artifact readback
         run: python -c "import importlib.util,pathlib,sys; p=pathlib.Path('scripts/data_terminal/binance_spot_owner_collector.py'); s=importlib.util.spec_from_file_location('m',p); m=importlib.util.module_from_spec(s); sys.modules['m']=m; s.loader.exec_module(m); r=m.verify(pathlib.Path('binance-spot-owner-output')); print(r); raise SystemExit(0 if r['status']=='PASS' else 1)"
       - uses: actions/upload-artifact@v4
