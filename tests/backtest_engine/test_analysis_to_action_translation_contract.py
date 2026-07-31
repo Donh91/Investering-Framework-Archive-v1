@@ -22,6 +22,8 @@ class AnalysisToActionTranslationContractTests(unittest.TestCase):
         payload = json.loads(result.stdout)
         self.assertEqual(payload["status"], "PASS")
         self.assertEqual(payload["rows"], 4)
+        self.assertEqual(payload["claude_stage1_verdict"], "DATA_BLOCKED")
+        self.assertFalse(payload["stage_2_allowed"])
         self.assertEqual(payload["new_economic_scores"], 0)
         self.assertFalse(payload["final_holdout_opened"])
 
