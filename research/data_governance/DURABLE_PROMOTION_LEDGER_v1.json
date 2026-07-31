@@ -1,0 +1,30 @@
+{
+  "contract": "DURABLE_PROMOTION_LEDGER_v1",
+  "storage_policy": "STORAGE_HEALTH_POLICY_FREE_v1",
+  "entries": [],
+  "promotion_requirements": [
+    "artifact_id",
+    "artifact_digest",
+    "source_run_id",
+    "dataset_id",
+    "partition_id",
+    "raw_member_manifest",
+    "normalized_schema_version",
+    "row_count",
+    "durable_object_pointer",
+    "durable_object_sha256",
+    "independent_readback_pass"
+  ],
+  "artifact_deletion_allowed_only_after": "DURABLE_OBJECT_AND_POINTER_READBACK_PASS",
+  "preferred_formats": {
+    "dense_tabular": "parquet_zstd",
+    "sparse_events": "jsonl_zstd",
+    "small_canonical": "json_or_csv"
+  },
+  "authority": {
+    "framework_state_change": false,
+    "portfolio_action": false,
+    "enumeration_authorized": false,
+    "outcome_access": false
+  }
+}
