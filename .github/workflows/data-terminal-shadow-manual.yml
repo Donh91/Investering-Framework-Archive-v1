@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - "scripts/data_terminal/fred_csv_collector.py"
+      - "scripts/data_terminal/fred_multiseries_live_adapter.py"
       - "tests/data_terminal/**"
       - "02_DATA_PING/data_terminal/source_registry/fred_csv_macro_core.json"
       - ".github/workflows/data-terminal-shadow-manual.yml"
@@ -39,13 +40,13 @@ jobs:
           python-version: "3.12"
       - name: Run deterministic Data Terminal tests
         run: python -m unittest discover -s tests/data_terminal -p 'test_*.py'
-      - name: Compile collector
-        run: python -m py_compile scripts/data_terminal/fred_csv_collector.py tests/data_terminal/test_fred_csv_collector.py
+      - name: Compile collectors
+        run: python -m py_compile scripts/data_terminal/fred_csv_collector.py scripts/data_terminal/fred_multiseries_live_adapter.py tests/data_terminal/test_fred_csv_collector.py
       - name: Run synchronized shadow owner collector
         shell: bash
         run: |
           if [ "${{ github.event_name }}" = "pull_request" ] || { [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.mode }}" = "live" ]; }; then
-            python scripts/data_terminal/fred_csv_collector.py \
+            python scripts/data_terminal/fred_multiseries_live_adapter.py \
               --series DGS2,DGS10,DTWEXBGS,VIXCLS \
               --output-dir data-terminal-output
           else
