@@ -5,7 +5,15 @@ on:
       - 'scripts/data_terminal/okx_swap_owner_collector.py'
       - 'tests/data_terminal/test_okx_swap_owner_collector.py'
       - '.github/workflows/okx-swap-owner-manual.yml'
+      - 'research/programs/MARKET_ANTICIPATION_RESEARCH_PROGRAM_v1/WP04C5D1_EXECUTION_STATE_v1.json'
   workflow_dispatch:
+    inputs:
+      mode:
+        description: tests or explicit live OKX owner capture
+        required: true
+        default: tests
+        type: choice
+        options: [tests, live]
 permissions:
   contents: read
 jobs:
@@ -19,9 +27,14 @@ jobs:
           python-version: '3.12'
       - run: python -m unittest tests.data_terminal.test_okx_swap_owner_collector
       - run: python -m py_compile scripts/data_terminal/okx_swap_owner_collector.py
-      - run: python scripts/data_terminal/okx_swap_owner_collector.py --output-dir okx-swap-owner-output
-      - run: python -c "import importlib.util,pathlib; p=pathlib.Path('scripts/data_terminal/okx_swap_owner_collector.py'); s=importlib.util.spec_from_file_location('m',p); m=importlib.util.module_from_spec(s); s.loader.exec_module(m); r=m.verify(pathlib.Path('okx-swap-owner-output')); print(r); raise SystemExit(0 if r['status']=='PASS' else 1)"
+      - name: Run explicit live capture
+        if: github.event_name == 'workflow_dispatch' && inputs.mode == 'live'
+        run: python scripts/data_terminal/okx_swap_owner_collector.py --output-dir okx-swap-owner-output
+      - name: Verify live artifact
+        if: github.event_name == 'workflow_dispatch' && inputs.mode == 'live'
+        run: python -c "import importlib.util,pathlib; p=pathlib.Path('scripts/data_terminal/okx_swap_owner_collector.py'); s=importlib.util.spec_from_file_location('m',p); m=importlib.util.module_from_spec(s); s.loader.exec_module(m); r=m.verify(pathlib.Path('okx-swap-owner-output')); print(r); raise SystemExit(0 if r['status']=='PASS' else 1)"
       - uses: actions/upload-artifact@v4
+        if: github.event_name == 'workflow_dispatch' && inputs.mode == 'live'
         with:
           name: okx-swap-owner-${{ github.run_id }}
           path: okx-swap-owner-output/
