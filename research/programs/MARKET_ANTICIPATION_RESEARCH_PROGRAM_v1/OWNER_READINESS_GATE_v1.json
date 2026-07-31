@@ -1,0 +1,26 @@
+{
+  "contract": "OWNER_READINESS_GATE_v1",
+  "status": "PARTIAL_PROSPECTIVE_READINESS",
+  "owners": {
+    "FRED_MACRO_CORE": "PROSPECTIVE_CAPTURE_VERIFIED",
+    "BINANCE_SPOT": "PROSPECTIVE_CAPTURE_VERIFIED",
+    "BINANCE_USDM": "IMPLEMENTED_PENDING_LIVE_VERIFICATION",
+    "TOP100_BREADTH": "NOT_IMPLEMENTED",
+    "ETF_FLOW": "OWNER_EXISTS_ROW_LEVEL_AVAILABILITY_PENDING"
+  },
+  "minimum_for_macro_enumeration": ["FRED_MACRO_CORE","BINANCE_SPOT"],
+  "minimum_for_leverage_enumeration": ["BINANCE_SPOT","BINANCE_USDM"],
+  "minimum_for_breadth_confirmation": ["TOP100_BREADTH"],
+  "macro_enumeration_authorized": false,
+  "leverage_enumeration_authorized": false,
+  "breadth_confirmation_authorized": false,
+  "reasons": [
+    "prospective history depth not yet sufficient",
+    "Binance USD-M live verification incomplete",
+    "point-in-time breadth owner not implemented",
+    "historical replay datasets remain unavailable"
+  ],
+  "outcome_access": false,
+  "framework_state_change": false,
+  "portfolio_action": false
+}
