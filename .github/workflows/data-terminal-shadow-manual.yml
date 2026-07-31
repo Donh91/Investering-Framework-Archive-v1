@@ -1,10 +1,18 @@
 name: Data Terminal Shadow Manual
 
 on:
+  pull_request:
+    paths:
+      - "scripts/data_terminal/fred_csv_collector.py"
+      - "scripts/data_terminal/fred_multiseries_live_adapter.py"
+      - "tests/data_terminal/**"
+      - "02_DATA_PING/data_terminal/source_registry/fred_csv_macro_core.json"
+      - ".github/workflows/data-terminal-shadow-manual.yml"
+      - "research/programs/MARKET_ANTICIPATION_RESEARCH_PROGRAM_v1/WP04C5B_*"
   workflow_dispatch:
     inputs:
       mode:
-        description: Run the deterministic fixture or perform an explicit live FRED fetch
+        description: Run deterministic fixture or an explicit live synchronized FRED owner fetch
         required: true
         default: fixture
         type: choice
@@ -16,7 +24,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: data-terminal-shadow-manual
+  group: data-terminal-shadow-${{ github.event.pull_request.number || github.run_id }}
   cancel-in-progress: false
 
 jobs:
@@ -32,24 +40,43 @@ jobs:
           python-version: "3.12"
       - name: Run deterministic Data Terminal tests
         run: python -m unittest discover -s tests/data_terminal -p 'test_*.py'
-      - name: Compile collector
-        run: python -m py_compile scripts/data_terminal/fred_csv_collector.py tests/data_terminal/test_fred_csv_collector.py
-      - name: Run shadow collector
+      - name: Compile collectors
+        run: python -m py_compile scripts/data_terminal/fred_csv_collector.py scripts/data_terminal/fred_multiseries_live_adapter.py tests/data_terminal/test_fred_csv_collector.py
+      - name: Run synchronized shadow owner collector
         shell: bash
         run: |
-          if [ "${{ inputs.mode }}" = "live" ]; then
-            python scripts/data_terminal/fred_csv_collector.py \
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.mode }}" = "live" ]; then
+            python scripts/data_terminal/fred_multiseries_live_adapter.py \
+              --series DGS2,DGS10,DTWEXBGS,VIXCLS \
               --output-dir data-terminal-output
           else
             python scripts/data_terminal/fred_csv_collector.py \
+              --series DGS2,DGS10,DTWEXBGS,VIXCLS \
               --fixture tests/data_terminal/fixtures/fred_csv_macro_core.csv \
               --retrieval-timestamp 2026-07-19T12:00:00Z \
               --output-dir data-terminal-output
           fi
-      - name: Upload sanitized shadow artifact
+      - name: Verify artifact readback
+        run: |
+          python - <<'PY'
+          import importlib.util
+          import json
+          import sys
+          from pathlib import Path
+          path = Path('scripts/data_terminal/fred_csv_collector.py')
+          spec = importlib.util.spec_from_file_location('collector', path)
+          module = importlib.util.module_from_spec(spec)
+          sys.modules[spec.name] = module
+          spec.loader.exec_module(module)
+          result = module.verify_artifact_readback(Path('data-terminal-output'))
+          print(json.dumps(result, sort_keys=True))
+          if result['status'] != 'PASS':
+              raise SystemExit(1)
+          PY
+      - name: Upload sanitized owner artifact
         uses: actions/upload-artifact@v4
         with:
-          name: data-terminal-shadow-${{ github.run_id }}
+          name: data-terminal-fred-owner-${{ github.run_id }}
           path: data-terminal-output/
           retention-days: 14
           if-no-files-found: error

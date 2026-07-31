@@ -1,31 +1,50 @@
 {
-  "registry_version": "0.1",
-  "status": "SHADOW_PILOT",
+  "registry_version": "0.2",
+  "status": "PROSPECTIVE_OWNER_CANDIDATE",
   "primary_source": {
     "source_id": "FRED_CSV_MACRO_CORE",
     "provider": "Federal Reserve Bank of St. Louis FRED",
-    "series": ["DGS10"],
+    "series": ["DGS2", "DGS10", "DTWEXBGS", "VIXCLS"],
+    "units": {
+      "DGS2": "PERCENT",
+      "DGS10": "PERCENT",
+      "DTWEXBGS": "INDEX",
+      "VIXCLS": "INDEX"
+    },
     "transport": "PUBLIC_CSV_HTTPS",
     "url_template": "https://fred.stlouisfed.org/graph/fredgraph.csv?id={series}",
     "credential_required": false,
     "paid_dependency": false,
     "direct_or_derived": "DIRECT",
     "source_convention": "FRED_REPORTED_DAILY_OBSERVATION",
+    "capture_mode": "SYNCHRONIZED_MULTI_SERIES_PAYLOAD",
     "stale_after_seconds": 604800,
     "revision_policy": "APPEND_ONLY_RECEIPTS_PRESERVE_PRIOR_PAYLOAD_HASHES"
+  },
+  "materialization": {
+    "raw_payload_required": true,
+    "artifact_manifest_required": true,
+    "member_sha256_required": true,
+    "member_byte_size_required": true,
+    "readback_required": true,
+    "minimum_independent_live_runs_for_verification": 2
   },
   "validation_source": {
     "source_id": "FRED_SERIES_PAGE_METADATA",
     "purpose": "MANUAL_METADATA_AND_UNIT_CROSS_CHECK_ONLY",
-    "automated_in_phase_1": false,
+    "automated": false,
     "source_substitution_allowed": false
   },
   "failure_policy": {
     "missing": "UNKNOWN",
     "empty": "FAIL_EXPLICITLY",
     "schema_drift": "FAIL_EXPLICITLY",
+    "duplicate_timestamp": "FAIL_EXPLICITLY",
     "network": "FAIL_AFTER_BOUNDED_RETRIES",
+    "artifact_tamper": "FAIL_EXPLICITLY",
     "silent_fallback": false,
+    "forward_fill": false,
+    "interpolation": false,
     "source_substitution": "RECORD_EXPLICITLY_OR_DO_NOT_USE"
   },
   "authority": {
