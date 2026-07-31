@@ -1,0 +1,25 @@
+name: Storage Health Gate
+on:
+  pull_request:
+    paths:
+      - '**'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  storage-health:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run storage tests
+        run: python -m unittest tests.data_governance.test_storage_health_gate
+      - name: Scan repository
+        run: python scripts/data_governance/storage_health_gate.py --root . --output storage-health-report.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: storage-health-${{ github.run_id }}
+          path: storage-health-report.json
+          retention-days: 7
