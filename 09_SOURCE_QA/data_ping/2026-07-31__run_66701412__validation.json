@@ -1,0 +1,76 @@
+{
+  "schema_version": "DATA_PING_MAIN_THREAD_VALIDATION_v1",
+  "run_id": "run_66701412b93c4f6c99582ec373406d61",
+  "snapshot_id": "snap_3540e1d4d3fe4e288a5cdebe40b80135",
+  "validated_at_utc": "2026-07-31T13:18:00Z",
+  "collector_status": "PARTIAL_WITH_BINANCE_GEO_FAILURE",
+  "duplicate": false,
+  "required_accepted_predecessor": "snap_0e19c112413d471d8270cad1a18148a7",
+  "declared_collector_predecessor": "snap_4a3c0f7372b34649bb740d9e30c2cb41",
+  "predecessor_match": false,
+  "acceptance": {
+    "current_CoinGecko_market_data": "ACCEPTED_BOUNDED",
+    "OKX_current_data": "ACCEPTED_BOUNDED",
+    "ETF_2026_07_30": "ACCEPTED_SETTLED",
+    "direct_ETHBTC_owner": "UNAVAILABLE_GEO_RESTRICTION",
+    "derived_ETHBTC_ratio": "DIAGNOSTIC_ONLY",
+    "breadth_aggregate": "ACCEPTED_CURRENT",
+    "breadth_membership_hash": "ACCEPTED_CURRENT",
+    "breadth_constituent_sidecar": "MISSING",
+    "packet_longitudinal_deltas": "REJECTED_AS_CANONICAL",
+    "market_successor_eligible": false,
+    "source_QA": "ACCEPTED"
+  },
+  "breadth": {
+    "advance_ratio": 0.2808988764044944,
+    "median_return_24h_pct": -0.1,
+    "selective_gate_50": false,
+    "broad_gate_55": false,
+    "membership_hash": "c6181d3dd25733dac92cac4c28cd55f7b6b71f214a24ffa2864caf55ff2e0e54",
+    "membership_hash_matches_prior_bounded": false,
+    "aggregate_comparability": "PARTIAL_MEMBERSHIP_CHANGED",
+    "constituent_replayability": "FAIL_NO_SIDECAR",
+    "settled_persistence": "NOT_CLAIMED"
+  },
+  "relative_market": {
+    "BTC_change_24h_pct": -1.816176486691878,
+    "ETH_change_24h_pct": -2.2833041507927425,
+    "ETHBTC_derived": 0.029491879824547613,
+    "relative_leadership": "BTC",
+    "direct_threshold_0_0300": "UNKNOWN_NO_OWNER_DATA",
+    "rotation_confirmation": false
+  },
+  "ETF": {
+    "session": "2026-07-30",
+    "BTC_net_flow_usd_m": 233.1,
+    "ETH_net_flow_usd_m": 12.8,
+    "status": "CURRENT_SETTLED_SUPPORTIVE_NOT_OVERRIDING_WEAK_BREADTH"
+  },
+  "source_failures": {
+    "Binance_context": "FAIL_GEO_RESTRICTION",
+    "Binance_final": "FAIL_GEO_RESTRICTION",
+    "CFGI": "UNAVAILABLE",
+    "stablecoin_global_total": "UNAVAILABLE",
+    "defi_total_tvl": "UNAVAILABLE_RESPONSE_TOO_LARGE"
+  },
+  "counters": {
+    "new_policy_event": false,
+    "new_A_class_receipt": false,
+    "A_rows_total": 2,
+    "new_shadow_dual_run": false,
+    "shadow_dual_run_valid_runs": 5
+  },
+  "framework_effect": {
+    "rotation": "NO_ROTATION",
+    "rebuy": "LOCKED",
+    "new_entry": "NOT_ACTIVE",
+    "large_caps": "WATCH_ONLY",
+    "canonical_state_change": "NONE",
+    "portfolio_action": "NONE"
+  },
+  "operational_translation": {
+    "action_class": "DO_NOT_ADD_RISK",
+    "horizon": "1_TO_3_DAYS",
+    "published_sentence": "Top-up og købsvindue: Undlad yderligere top-ups de næste 1–3 dage, fordi breadth er faldet til 28%, ETH underperformer BTC, og den direkte ETH/BTC-bekræftelse samtidig mangler."
+  }
+}
