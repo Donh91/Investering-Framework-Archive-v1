@@ -1,6 +1,7 @@
 # Active Test Registry Addendum - T4 Execution Microstructure Repair
 
 **Dato:** 2026-07-31  
+**Last updated:** 2026-08-01  
 **Status:** CANONICAL_REGISTRY_ADDENDUM  
 **Område:** Active Test Registry / existing T4 repair  
 **Primary folder:** `06_RESEARCH_LAB/forward_tests/`  
@@ -24,6 +25,12 @@ Linked protocol:
 
 ```text
 06_RESEARCH_LAB/forward_tests/2026-07-31__t4-execution-microstructure-repair-protocol-v0-1__forward-test.md
+```
+
+Live-readback receipt:
+
+```text
+06_RESEARCH_LAB/forward_tests/2026-08-01__t4-microstructure-two-live-readback-receipt.md
 ```
 
 Source owner:
@@ -58,16 +65,25 @@ incremental_value_vs_price_only
 
 ```yaml
 t4_microstructure_source_extension:
-  status: IMPLEMENTED_PENDING_LIVE_READBACK
+  status: PROSPECTIVE_SOURCE_CAPTURE_VERIFIED
+  required_live_readbacks: 2
+  verified_live_readbacks: 2
+  source_readback_verified: true
+  eligible_event_rows: 0
   valid_source_rows: 0
   valid_outcome_rows: 0
   benchmark: EXISTING_T4_PRICE_ONLY_AND_SETTLED_CANDLE_RECLAIM
   blocked_by:
-    - TWO_LIVE_READBACKS_NOT_YET_VERIFIED
     - NO_ELIGIBLE_FORWARD_EVENT_ROW
+    - NO_MATURED_MICROSTRUCTURE_OUTCOME_ROW
+  next_review: NEXT_ELIGIBLE_PRE_REGISTERED_T4_EVENT
   promotion_condition: protocol-defined benchmark outperformance with matured rows
   kill_condition: no incremental value, excess delay, redundancy or persistent source failure
   owner: DATA_PING_GOVERNANCE_RESEARCH_LAB
 ```
+
+The source-operability gate is passed.
+
+The execution-edge gate remains open and unproven.
 
 This addendum changes no current T4 conclusion and no framework action.
