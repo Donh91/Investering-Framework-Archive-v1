@@ -1,0 +1,111 @@
+name: Daily Raw Owner Capture
+
+on:
+  schedule:
+    - cron: '13 6 * * *'
+      timezone: 'Europe/Copenhagen'
+    - cron: '47 10 * * *'
+      timezone: 'Europe/Copenhagen'
+    - cron: '22 15 * * *'
+      timezone: 'Europe/Copenhagen'
+    - cron: '38 19 * * *'
+      timezone: 'Europe/Copenhagen'
+    - cron: '11 23 * * *'
+      timezone: 'Europe/Copenhagen'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: daily-raw-owner-capture
+  cancel-in-progress: false
+
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Initialize source status
+        run: echo '{}' > collector-status.json
+
+      - name: Run owner collectors fail-closed but independently
+        shell: bash
+        run: |
+          set +e
+          run_owner() {
+            key="$1"; shift
+            "$@"
+            code=$?
+            python - "$key" "$code" <<'PY'
+          import json, sys
+          from pathlib import Path
+          p=Path('collector-status.json')
+          data=json.loads(p.read_text())
+          data[sys.argv[1]]=int(sys.argv[2])
+          p.write_text(json.dumps(data, sort_keys=True)+'\n')
+          PY
+          }
+
+          run_owner fred_macro python scripts/data_terminal/fred_multiseries_live_adapter.py \
+            --series DGS2,DGS10,DTWEXBGS,VIXCLS \
+            --output-dir fred-owner-output
+
+          run_owner binance_spot python scripts/data_terminal/binance_spot_owner_collector.py \
+            --output-dir binance-spot-owner-output
+
+          run_owner binance_microstructure python scripts/data_terminal/binance_spot_microstructure_source.py \
+            --output-dir binance-spot-microstructure-output
+
+          run_owner okx_swap python scripts/data_terminal/okx_swap_owner_collector.py \
+            --output-dir okx-swap-owner-output
+
+          run_owner top100_breadth python scripts/data_terminal/top100_breadth_owner_collector.py \
+            --output-dir top100-breadth-owner-output
+
+      - name: Build compact permanent capture index
+        run: |
+          python scripts/daily_capture/build_capture_index.py \
+            --status-file collector-status.json \
+            --output-root 03_DAILY_CAPTURE_LOGS/captures \
+            --run-id "gh-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" \
+            --trigger "${GITHUB_EVENT_NAME}"
+
+      - name: Upload raw capture bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: daily-raw-owner-capture-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            fred-owner-output/
+            binance-spot-owner-output/
+            binance-spot-microstructure-output/
+            okx-swap-owner-output/
+            top100-breadth-owner-output/
+            collector-status.json
+          retention-days: 7
+          if-no-files-found: warn
+
+      - name: Commit compact index only
+        shell: bash
+        run: |
+          git config user.name 'framework-data-bot'
+          git config user.email 'framework-data-bot@users.noreply.github.com'
+          git add 03_DAILY_CAPTURE_LOGS/captures
+          if git diff --cached --quiet; then
+            echo 'No compact capture index to commit'
+            exit 0
+          fi
+          git commit -m "data: log daily raw capture ${GITHUB_RUN_ID}"
+          for attempt in 1 2 3; do
+            git pull --rebase origin main && git push origin HEAD:main && exit 0
+            sleep $((attempt * 5))
+          done
+          echo 'Failed to publish compact capture index after retries'
+          exit 1
