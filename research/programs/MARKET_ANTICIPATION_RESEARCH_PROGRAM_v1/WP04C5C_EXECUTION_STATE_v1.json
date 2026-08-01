@@ -38,7 +38,7 @@
   "prospective_capture_verified": true,
   "t4_execution_microstructure_source_extension": {
     "contract": "T4_EXECUTION_MICROSTRUCTURE_SOURCE_v0_1",
-    "status": "IMPLEMENTED_PENDING_LIVE_READBACK",
+    "status": "PROSPECTIVE_SOURCE_CAPTURE_VERIFIED",
     "test_id": "PULLBACK_EDGE_20260708_01_OUTCOMES",
     "new_test_created": false,
     "new_engine_created": false,
@@ -61,8 +61,37 @@
     "cancellation_rate_available": false,
     "historical_order_book_reconstruction": false,
     "live_runs_required": 2,
-    "live_runs_verified": 0,
+    "live_runs_verified": 2,
+    "source_readback_verified": true,
+    "live_evidence": [
+      {
+        "workflow_run_id": 30714802392,
+        "workflow_job_id": 91408474991,
+        "artifact_id": 8822996310,
+        "artifact_digest": "sha256:64f51154b163ca7fb9d14cb709e5f56e690b5662da8f5f3af749a5186daf9c8a",
+        "run_id": "T4_MICRO_20260801T192750_59fa27c55eb4",
+        "retrieval_timestamp": "2026-08-01T19:27:50.761013Z",
+        "manifest_members": 6,
+        "owner_sha256": "7e28927c59b241a370af0609814d54a7f30e7e022d6a68ef2f04caac6686d818",
+        "independent_readback": "PASS"
+      },
+      {
+        "workflow_run_id": 30714836332,
+        "workflow_job_id": 91408568893,
+        "artifact_id": 8823005774,
+        "artifact_digest": "sha256:b12a60d4f81bf30c67fcae9dfc9a7935ea0b56dd4b7b1c58ca246fe6a6d46527",
+        "run_id": "T4_MICRO_20260801T192842_52157ea301ef",
+        "retrieval_timestamp": "2026-08-01T19:28:42.616583Z",
+        "manifest_members": 6,
+        "owner_sha256": "a7f1d51f2e3343e2d4b7096d89a26fb3bbfd6fbb8cf10ae01de81497acf61341",
+        "independent_readback": "PASS"
+      }
+    ],
+    "eligible_event_rows": 0,
+    "valid_source_rows": 0,
     "valid_outcome_rows": 0,
+    "event_attachment_status": "AWAITING_ELIGIBLE_T4_EVENT",
+    "receipt": "06_RESEARCH_LAB/forward_tests/2026-08-01__t4-microstructure-two-live-readback-receipt.md",
     "authority": {
       "binding": false,
       "canonical_acceptance": false,
