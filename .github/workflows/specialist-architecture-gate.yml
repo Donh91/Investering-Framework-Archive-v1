@@ -1,0 +1,42 @@
+name: Specialist Architecture Gate
+on:
+  pull_request:
+    paths:
+      - 'research/specialists/**'
+      - 'scripts/specialists/**'
+      - 'tests/specialists/**'
+      - '.github/workflows/specialist-architecture-gate.yml'
+permissions:
+  contents: read
+jobs:
+  specialist-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m unittest tests.specialists.test_specialist_director
+      - run: python -m py_compile scripts/specialists/specialist_director.py
+      - name: Validate registry authority
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('research/specialists/SPECIALIST_REGISTRY_v1.json')
+          data=json.loads(p.read_text())
+          assert data['status']=='ACTIVE_SHADOW_ONLY'
+          assert data['authority']=={
+            'creates_truth': False,
+            'framework_state_change': False,
+            'model_weight_change': False,
+            'portfolio_action': False,
+            'outcome_access': False,
+          }
+          assert len(data['specialists'])==5
+          assert len({x['causal_family'] for x in data['specialists']})==5
+          assert data['director']['unknown_is_neutral'] is False
+          assert data['director']['specialist_votes_create_truth'] is False
+          print('SPECIALIST_REGISTRY_PASS')
+          PY

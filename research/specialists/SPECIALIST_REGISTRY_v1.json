@@ -1,0 +1,51 @@
+{
+  "contract": "SPECIALIST_REGISTRY_v1",
+  "status": "ACTIVE_SHADOW_ONLY",
+  "authority": {
+    "creates_truth": false,
+    "framework_state_change": false,
+    "model_weight_change": false,
+    "portfolio_action": false,
+    "outcome_access": false
+  },
+  "specialists": [
+    {
+      "specialist_id": "MACRO_SPECIALIST_v1",
+      "causal_family": "macro_liquidity",
+      "required_owners": ["FRED_MACRO_CORE_PROSPECTIVE_v1"],
+      "allowed_states": ["TAILWIND", "NEUTRAL", "HEADWIND", "UNKNOWN"]
+    },
+    {
+      "specialist_id": "SPOT_STRUCTURE_SPECIALIST_v1",
+      "causal_family": "spot_structure",
+      "required_owners": ["BINANCE_SPOT_OWNER_PROSPECTIVE_v1"],
+      "allowed_states": ["EXPANSION", "RANGE", "DETERIORATION", "UNKNOWN"]
+    },
+    {
+      "specialist_id": "DERIVATIVES_SPECIALIST_v1",
+      "causal_family": "leverage",
+      "required_owners": ["OKX_SWAP_DERIVATIVES_PROSPECTIVE_v1"],
+      "allowed_states": ["LOW", "NEUTRAL", "ELEVATED", "EXTREME", "UNKNOWN"]
+    },
+    {
+      "specialist_id": "BREADTH_SPECIALIST_v1",
+      "causal_family": "breadth",
+      "required_owners": ["TOP100_BREADTH_CONSTITUENTS_PROSPECTIVE_v1"],
+      "allowed_states": ["EXPANDING", "MIXED", "CONTRACTING", "UNKNOWN"]
+    },
+    {
+      "specialist_id": "CYCLE_SPECIALIST_v1",
+      "causal_family": "cycle_context",
+      "required_owners": ["FORECAST_LEDGER_CANONICAL"],
+      "allowed_states": ["EARLY", "TRANSITION", "EXPANSION", "LATE", "UNKNOWN"]
+    }
+  ],
+  "director": {
+    "director_id": "FRAMEWORK_SPECIALIST_DIRECTOR_v1",
+    "minimum_distinct_causal_families": 3,
+    "preserve_disagreement": true,
+    "unknown_is_neutral": false,
+    "specialist_votes_create_truth": false,
+    "output_statuses": ["READY", "DEGRADED", "BLOCKED"]
+  }
+}
