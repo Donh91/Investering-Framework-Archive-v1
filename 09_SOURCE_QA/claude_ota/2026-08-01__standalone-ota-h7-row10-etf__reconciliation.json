@@ -1,0 +1,78 @@
+{
+  "schema_version": "CLAUDE_OTA_RECONCILIATION_QA_v1",
+  "source_run_timestamp_utc": "2026-08-01T05:48:32.902Z",
+  "operating_mode": "STANDALONE_OTA_NO_REFERENCE_BRIDGE",
+  "accepted_items": [
+    "H7_ROW_10_POST_MATURITY_EXTENSION",
+    "H7_COND2_0_OF_3",
+    "H7_ROLLING_SLOPE_NEGATIVE_0_395_PCT_PER_SESSION",
+    "ETH_ETF_ROWS_2026_07_28_TO_2026_07_30",
+    "ETH_ETF_2026_07_27_REVALIDATION",
+    "ETH_ISSUER_CONCENTRATION_SELF_CORRECTION",
+    "H_SRC_02_STRONG_FORM_FALSIFICATION",
+    "H_WIN_01_SOURCE_CONFIDENCE_DOWNGRADE",
+    "ETHBTC_SEQUENCE_TERMINATION_CONFIRMATION"
+  ],
+  "framework_corrections": [
+    {
+      "source_phrase": "MATURED_H7_ROW_10",
+      "framework_phrase": "POST_MATURITY_EXTENSION_ROW_10",
+      "reason": "Canonical maturity already occurred after five settled CEST rows"
+    },
+    {
+      "source_phrase": "FOUR_SESSION_GAP_RECOVERED",
+      "framework_phrase": "THREE_NEW_SESSIONS_RECOVERED_AND_ONE_PREVIOUSLY_KNOWN_SESSION_REVALIDATED",
+      "reason": "27 July was already known; new rows are 28, 29 and 30 July"
+    },
+    {
+      "source_phrase": "H7_SIGNAL_FELL",
+      "framework_phrase": "POST_MATURITY_FOLLOW_THROUGH_INACTIVE_CONFIRMED",
+      "reason": "Frozen historical H7 score cannot be retroactively rescored"
+    }
+  ],
+  "crosschecks": {
+    "H7_row10_CEST_values_match_latest_data_ping": true,
+    "ETH_2026_07_30_flow_matches_main_data_ping_usd_m": 12.8,
+    "latest_settled_Copenhagen_ETHBTC_close": 0.02957,
+    "source_supplied_UTC_ETHBTC_close": 0.02962,
+    "settlement_conventions_kept_separate": true
+  },
+  "source_self_corrections": {
+    "ETH_issuer_concentration_2026_07_23": {
+      "prior_claim": "ETHA_100_PERCENT",
+      "corrected_leader": "FETH_APPROX_57_PERCENT",
+      "accepted_as_source_QA": true
+    },
+    "H_SRC_02": {
+      "strong_only_after_1600_UTC_form": "FALSIFIED",
+      "weaker_publication_window_form": "UNPROVEN_PROSPECTIVE"
+    },
+    "H_WIN_01": {
+      "source_confidence_prior": "MODERATE",
+      "source_confidence_new": "LOW_MODERATE",
+      "framework_authority": "NONE",
+      "F1_score_change": "NONE"
+    }
+  },
+  "state_effect": {
+    "new_policy_event": false,
+    "new_A_class_receipt": false,
+    "A_rows_total": 2,
+    "new_shadow_dual_run": false,
+    "shadow_dual_run_valid_runs": 5,
+    "rotation": "NO_ROTATION",
+    "rebuy": "LOCKED",
+    "new_entry": "NOT_ACTIVE",
+    "large_caps": "WATCH_ONLY",
+    "canonical_state_change": "NONE",
+    "portfolio_action_change": "NONE"
+  },
+  "open_items": [
+    "BTC_ETF_2026_07_30_AND_2026_07_31_SOURCE_RETRIEVAL",
+    "ETH_ETF_2026_07_31_PUBLICATION",
+    "H7_LAPSE_RETIRE_RETRIGGER_PROSPECTIVE_RULE",
+    "H7_COND1_SOURCE_WORDING_NON_OUTCOME_DETERMINING",
+    "ETF_AUM_DENOMINATORS",
+    "ETHB_ISSUER_METADATA_INDEPENDENT_VERIFICATION"
+  ]
+}
