@@ -1,7 +1,16 @@
 {
   "contract": "SPECIALIST_LAYER_EXECUTION_STATE_v1",
-  "status": "IMPLEMENTED_PENDING_CI",
+  "status": "CI_PASS_READY_FOR_SHADOW_ROWS",
   "issue": 266,
+  "pull_request": 267,
+  "ci": {
+    "specialist_architecture_run_id": 30685975251,
+    "specialist_architecture_conclusion": "success",
+    "data_architecture_run_id": 30685975215,
+    "data_architecture_conclusion": "success",
+    "storage_health_run_id": 30685975216,
+    "storage_health_conclusion": "success"
+  },
   "specialists": [
     "MACRO_SPECIALIST_v1",
     "SPOT_STRUCTURE_SPECIALIST_v1",
@@ -18,5 +27,5 @@
   "model_weight_change": false,
   "portfolio_action": false,
   "outcome_access": false,
-  "next_gate": "CI_THEN_SHADOW_FIXTURE_RUNS"
+  "next_gate": "MATERIALIZE_FIRST_OWNER_BOUND_SHADOW_ROWS"
 }
