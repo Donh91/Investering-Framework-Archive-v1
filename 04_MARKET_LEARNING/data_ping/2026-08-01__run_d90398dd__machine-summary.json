@@ -1,0 +1,53 @@
+{
+  "schema_version": "DATA_PING_MACHINE_SUMMARY_v1",
+  "run_id": "run_d90398dd4a78451a84a942a77d3ce9d6",
+  "snapshot_id": "snap_d088d3d626ce4aed9b3543016ffa5474",
+  "snapshot_utc": "2026-08-01T04:38:46.132Z",
+  "acceptance": "BOUNDED_MARKET_OBSERVATION",
+  "canonical_predecessor_advanced": false,
+  "required_predecessor_id": "snap_0e19c112413d471d8270cad1a18148a7",
+  "collector_predecessor_id": "snap_b4ec0a26ced94e2496fb685ee6ab9be6",
+  "market": {
+    "BTC": 63046.01,
+    "ETH": 1869.58,
+    "ETHBTC_direct": 0.02966,
+    "ETHBTC_settled_Copenhagen": 0.02957
+  },
+  "breadth": {
+    "advance_ratio": 0.3146067415730337,
+    "prior_decision_bearing_bounded_advance_ratio": 0.1348314606741573,
+    "change_percentage_points": 17.97752808988764,
+    "membership_hash_stable": true,
+    "gate_35": false,
+    "gate_50": false,
+    "gate_55": false
+  },
+  "derivatives": {
+    "BTC_global_long_short": 2.2321,
+    "ETH_global_long_short": 2.6832,
+    "BTC_taker_ratio": 0.6433,
+    "ETH_taker_ratio": 1.3866,
+    "BTC_OI_24h_pct": 3.9252613005659187,
+    "ETH_OI_24h_pct": 0.8388956504287393
+  },
+  "framework": {
+    "classification": "PARTIAL_STABILIZATION_FROM_EXTREME_BREADTH_WEAKNESS_WITH_ETHBTC_BELOW_0030",
+    "rotation": "NO_ROTATION",
+    "rebuy": "LOCKED",
+    "new_entry": "NOT_ACTIVE",
+    "large_caps": "WATCH_ONLY",
+    "portfolio_action": "NONE",
+    "canonical_state_change": "NONE",
+    "A_rows_total": 2,
+    "shadow_dual_run_valid_runs": 5
+  },
+  "operational": {
+    "decision_class": "DO_NOT_ADD_RISK",
+    "reassessment_horizon": "12_TO_24_HOURS",
+    "earlier_reassessment_triggers": [
+      "BREADTH_ABOVE_35_THEN_50",
+      "SETTLED_ETHBTC_ABOVE_0_0300"
+    ],
+    "terminal_sentence": "Top-up og købsvindue: Undlad nye top-ups de næste 12–24 timer, fordi breadth-rebounden til 31,5% er konstruktiv men stadig under stabiliseringszonen, mens settled ETH/BTC fortsat er 0,02957 og long-tung positionering gør rebounden skrøbelig."
+  }
+}
