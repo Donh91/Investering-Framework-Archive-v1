@@ -9,6 +9,7 @@ on:
       - 'tests/data_terminal/fixtures/binance_spot_owner/**'
       - '.github/workflows/binance-spot-owner-manual.yml'
       - 'research/programs/MARKET_ANTICIPATION_RESEARCH_PROGRAM_v1/WP04C5C_EXECUTION_STATE_v1.json'
+      - 'research/programs/MARKET_ANTICIPATION_RESEARCH_PROGRAM_v1/T4_MICROSTRUCTURE_LIVE_READBACK_TRIGGER.txt'
       - '06_RESEARCH_LAB/forward_tests/2026-07-31__t4-execution-microstructure-repair-protocol-v0-1__forward-test.md'
   workflow_dispatch:
     inputs:
@@ -47,8 +48,10 @@ jobs:
           fi
       - name: Run T4 microstructure source capture
         shell: bash
+        env:
+          LIVE_MICROSTRUCTURE: ${{ (github.event_name == 'workflow_dispatch' && inputs.mode == 'live') || (github.event_name == 'pull_request' && github.head_ref == 'agent/t4-microstructure-live-readback') }}
         run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.mode }}" = "live" ]; then
+          if [ "$LIVE_MICROSTRUCTURE" = "true" ]; then
             python scripts/data_terminal/binance_spot_microstructure_source.py --output-dir binance-spot-microstructure-output
           else
             python scripts/data_terminal/binance_spot_microstructure_source.py --fixture-dir tests/data_terminal/fixtures/binance_spot_owner --retrieval-timestamp 2026-07-31T12:00:00Z --output-dir binance-spot-microstructure-output
@@ -67,5 +70,5 @@ jobs:
         with:
           name: binance-spot-microstructure-${{ github.run_id }}
           path: binance-spot-microstructure-output/
-          retention-days: 14
+          retention-days: 30
           if-no-files-found: error
