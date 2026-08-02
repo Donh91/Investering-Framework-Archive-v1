@@ -25,6 +25,8 @@ jobs:
   capture:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    env:
+      CFGI_API_KEY: ${{ secrets.CFGI_API_KEY }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -70,6 +72,13 @@ jobs:
           run_owner top100_breadth python scripts/data_terminal/top100_breadth_owner_collector.py \
             --output-dir top100-breadth-owner-output
 
+          run_owner cfgi_sentiment python scripts/data_terminal/cfgi_owner_collector.py \
+            --output-dir cfgi-owner-output \
+            --symbols MARKET,BTC,ETH \
+            --timeframe 4h \
+            --fields score,price,whales \
+            --limit 1
+
       - name: Build compact permanent capture index
         run: |
           python scripts/daily_capture/build_capture_index.py \
@@ -88,6 +97,7 @@ jobs:
             binance-spot-microstructure-output/
             okx-swap-owner-output/
             top100-breadth-owner-output/
+            cfgi-owner-output/
             collector-status.json
           retention-days: 7
           if-no-files-found: warn
