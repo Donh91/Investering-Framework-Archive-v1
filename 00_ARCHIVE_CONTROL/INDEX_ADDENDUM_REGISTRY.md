@@ -1,6 +1,6 @@
 # Index Addendum Registry
 
-**Dato:** 2026-07-20  
+**Dato:** 2026-08-02  
 **Status:** CANONICAL_OPERATIONAL_REGISTRY  
 **Område:** archive discoverability / index addenda  
 **Primary folder:** `00_ARCHIVE_CONTROL/`  
@@ -48,6 +48,7 @@ A registry entry is a navigation pointer only. The referenced file's own status,
 | `00_ARCHIVE_CONTROL/2026-07-13__index-addendum-techdev-calibration-b1-and-audit-gate-v1.md` | TechDev outcomes / BTC.D reproducibility / Issue #98 prospective calibration / research cadence | REGISTRY_DISCOVERABLE |
 | `00_ARCHIVE_CONTROL/2026-07-14__index-addendum-master-monday-durable-handoff-v1.md` | Master Monday / durable handoff / pointer integrity | REGISTRY_DISCOVERABLE |
 | `00_ARCHIVE_CONTROL/2026-07-20__index-addendum-techdev-market-update-98-source-archive.md` | TechDev source archive / Issue #98 | REGISTRY_DISCOVERABLE |
+| `00_ARCHIVE_CONTROL/2026-08-02__index-addendum-techdev-market-update-99-source-and-calibration.md` | TechDev source archive / Issue #99 revisions / Gem Score rerun / PDF ingestion validation | REGISTRY_DISCOVERABLE |
 | `00_ARCHIVE_CONTROL/2026-07-06__index-addendum-master-monday-pointers.md` | Master Monday / W28 pointer history - superseded by W28 lineage correction | SUPERSEDED |
 | `00_ARCHIVE_CONTROL/2026-07-07__index-addendum-data-ping-alert-router-v0-1.md` | DATA PING alert router history - superseded by Hybrid v0.5.1 | SUPERSEDED |
 | `00_ARCHIVE_CONTROL/2026-07-08__index-addendum-cn-rd-audit-calibration.md` | Cycle Navigator / R&D calibration | REGISTRY_DISCOVERABLE |

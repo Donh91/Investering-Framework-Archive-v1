@@ -1,0 +1,68 @@
+{
+  "contract": "TECHDEV_ISSUE_99_INGESTION_TEST_v1",
+  "status": "PASS_WITH_EXPLICIT_BINARY_TRANSPORT_BOUNDARY",
+  "date": "2026-08-02",
+  "source_pdf": {
+    "title": "TechDev Newsletter - Market Update #99 - Full Issue.pdf",
+    "file_id": "file_00000000822482469090f42b9c71da5a",
+    "bytes": 2189095,
+    "pages": 1,
+    "page_geometry_points": "402x14400",
+    "sha256": "1e3c1f97c71ff8c5a05508076a852d94f3eb1079606f980bf73590aa6ee78a3a"
+  },
+  "source_preflight": {
+    "runtime": "CHATGPT_ATTACHMENT_SANDBOX",
+    "pdf_magic_valid": true,
+    "encrypted": false,
+    "javascript": false,
+    "render_pass": true,
+    "native_text_extract_pass": true,
+    "native_text_bytes": 17607,
+    "native_text_sha256": "e91b33252f43152e0ca63c237f3c627799b74b2dc8cbcd8934e23842c15d0d43",
+    "capture_boundary_detected": "TRUNCATED_DURING_UAI_CARD"
+  },
+  "github_test_scope": {
+    "pull_request": 276,
+    "workflow": ".github/workflows/pdf-inspector-ingestion.yml",
+    "workflow_run_id": 30760579662,
+    "workflow_run_number": 5,
+    "pinned_upstream_commit": "a15ec2d68d51dbe6a39d1da688ec7a3f642d846c",
+    "real_upstream_parser_build_passed": true,
+    "wrapper_tests_required": 4,
+    "wrapper_tests_passed": 4,
+    "source_binary_transport_to_github": "UNAVAILABLE_FROM_CHATGPT_ATTACHMENT_STORE",
+    "regression_fixture": "DETERMINISTIC_NATIVE_TEXT_PDF",
+    "same_uploaded_binary_processed_in_github": false
+  },
+  "artifact_readback": {
+    "artifact_id": 8837333986,
+    "artifact_digest": "sha256:93887d806c9a7481e4cc0b00bb2557efa1d5733963e0608e182490b995449d49",
+    "independent_download_and_readback_pass": true,
+    "manifest_contract": "PDF_INSPECTOR_INGESTION_RECEIPT_v1",
+    "manifest_status": "READY",
+    "pdf_type": "text_based",
+    "page_count": 1,
+    "markdown_materialized": true,
+    "requires_ocr_or_vision": false,
+    "detector_exit_code": 0,
+    "extractor_exit_code": 0,
+    "fixture_source_sha256": "328b875866f82b1b94674b322dffbe3d190119b77981e75f0d0fb9d025589d8a",
+    "fixture_markdown_sha256": "62c1de9b4c4ad54be4666f41b904889b063e82b013adf36e0fc8339f1e2cc3b8"
+  },
+  "acceptance": {
+    "exact_uploaded_pdf_preflight": "PASS",
+    "github_real_parser_regression": "PASS",
+    "data_architecture_gate": "PASS",
+    "storage_health_gate": "PASS",
+    "artifact_readback": "PASS",
+    "same_binary_end_to_end_test": "NOT_PERFORMABLE_WITH_AVAILABLE_CONNECTOR"
+  },
+  "interpretation": "The parser infrastructure and output contract pass a real pinned-upstream GitHub regression. The exact TechDev Issue 99 PDF separately passes local preflight and native-text extraction. This is not represented as same-binary GitHub validation.",
+  "authority": {
+    "creates_truth": false,
+    "framework_state_change": false,
+    "model_weight_change": false,
+    "portfolio_action": false,
+    "canonical_promotion": false
+  }
+}
