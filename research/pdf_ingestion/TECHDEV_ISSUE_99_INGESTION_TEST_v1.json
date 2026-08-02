@@ -1,0 +1,45 @@
+{
+  "contract": "TECHDEV_ISSUE_99_INGESTION_TEST_v1",
+  "status": "PENDING_GITHUB_REAL_PARSER_REGRESSION",
+  "date": "2026-08-02",
+  "source_pdf": {
+    "title": "TechDev Newsletter - Market Update #99 - Full Issue.pdf",
+    "file_id": "file_00000000822482469090f42b9c71da5a",
+    "bytes": 2189095,
+    "pages": 1,
+    "page_geometry_points": "402x14400",
+    "sha256": "1e3c1f97c71ff8c5a05508076a852d94f3eb1079606f980bf73590aa6ee78a3a"
+  },
+  "source_preflight": {
+    "pdf_magic_valid": true,
+    "encrypted": false,
+    "javascript": false,
+    "render_pass": true,
+    "native_text_extract_pass": true,
+    "native_text_bytes": 17607,
+    "native_text_sha256": "e91b33252f43152e0ca63c237f3c627799b74b2dc8cbcd8934e23842c15d0d43",
+    "capture_boundary_detected": "TRUNCATED_DURING_UAI_CARD"
+  },
+  "github_test_scope": {
+    "workflow": ".github/workflows/pdf-inspector-ingestion.yml",
+    "pinned_upstream_commit": "a15ec2d68d51dbe6a39d1da688ec7a3f642d846c",
+    "real_upstream_parser_build_required": true,
+    "wrapper_tests_required": 4,
+    "source_binary_transport_to_github": "UNAVAILABLE_FROM_CHATGPT_ATTACHMENT_STORE",
+    "regression_fixture": "DETERMINISTIC_NATIVE_TEXT_PDF",
+    "same_uploaded_binary_processed_in_github": false
+  },
+  "acceptance": {
+    "github_real_parser_regression": "PENDING",
+    "data_architecture_gate": "PENDING",
+    "storage_health_gate": "PENDING",
+    "artifact_readback": "PENDING"
+  },
+  "authority": {
+    "creates_truth": false,
+    "framework_state_change": false,
+    "model_weight_change": false,
+    "portfolio_action": false,
+    "canonical_promotion": false
+  }
+}
