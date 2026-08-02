@@ -14,6 +14,7 @@ OWNER_DIRS = {
     "binance_microstructure": "binance-spot-microstructure-output",
     "okx_swap": "okx-swap-owner-output",
     "top100_breadth": "top100-breadth-owner-output",
+    "cfgi_sentiment": "cfgi-owner-output",
 }
 
 
@@ -36,10 +37,11 @@ def compact_json_summary(path: Path) -> dict[str, Any]:
     data = read_json(path)
     wanted = {
         "status", "run_id", "snapshot_id", "retrieval_timestamp_utc",
-        "retrieval_timestamp", "freeze_timestamp_utc", "as_of_utc",
+        "retrieval_timestamp", "retrieved_at_utc", "freeze_timestamp_utc", "as_of_utc",
         "rows", "row_count", "constituent_count", "membership_hash",
         "capture_integrity", "freshness_status", "source", "venue",
         "advancers", "decliners", "flat", "advancer_percentage",
+        "timeframe", "symbols", "fields",
     }
     if isinstance(data, dict):
         return {k: data[k] for k in wanted if k in data}
@@ -87,8 +89,27 @@ def latest_fred_values(directory: Path) -> dict[str, Any]:
     return values
 
 
+def extract_cfgi(directory: Path) -> dict[str, Any]:
+    snapshot = read_json(directory / "owner_snapshot.json")
+    if not isinstance(snapshot, dict):
+        return {}
+    compact: dict[str, Any] = {
+        "retrieved_at_utc": snapshot.get("retrieved_at_utc"),
+        "timeframe": snapshot.get("timeframe"),
+        "symbols": {},
+    }
+    for row in snapshot.get("rows", []):
+        if not isinstance(row, dict):
+            continue
+        symbol = str(row.get("symbol") or row.get("asset") or row.get("ticker") or "UNKNOWN")
+        compact["symbols"][symbol] = {
+            key: row.get(key) for key in ("score", "price", "whales", "classification", "stale", "owner_status", "timestamp") if key in row
+        }
+    return compact
+
+
 def extract_metrics(root: Path) -> dict[str, Any]:
-    metrics: dict[str, Any] = {"spot": {}, "derivatives": {}, "breadth": {}, "macro": {}}
+    metrics: dict[str, Any] = {"spot": {}, "derivatives": {}, "breadth": {}, "macro": {}, "sentiment": {}}
     for symbol in ("BTCUSDT", "ETHUSDT", "ETHBTC"):
         row = last_kline(root / "binance-spot-owner-output" / "raw" / f"{symbol}.json")
         if row:
@@ -117,6 +138,7 @@ def extract_metrics(root: Path) -> dict[str, Any]:
                     metrics["breadth"][key] = aggregate[key]
 
     metrics["macro"] = latest_fred_values(root / "fred-owner-output")
+    metrics["sentiment"]["cfgi"] = extract_cfgi(root / "cfgi-owner-output")
     return metrics
 
 
