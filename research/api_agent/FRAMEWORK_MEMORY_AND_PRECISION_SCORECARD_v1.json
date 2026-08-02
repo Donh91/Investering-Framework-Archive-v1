@@ -1,0 +1,60 @@
+{
+  "contract": "FRAMEWORK_MEMORY_AND_PRECISION_SCORECARD_v1",
+  "status": "ACTIVE_SHADOW_ONLY",
+  "memory_row_required_fields": [
+    "memory_id",
+    "created_at_utc",
+    "source_run_ids",
+    "forecast_id",
+    "forecast_frozen_at_utc",
+    "horizon",
+    "regime_context",
+    "prediction",
+    "stated_confidence",
+    "outcome_status",
+    "outcome_owner_receipts",
+    "error_classes",
+    "learning_hypotheses",
+    "promotion_stage"
+  ],
+  "outcome_statuses": ["IMMATURE", "MATURED", "RIGHT_CENSORED", "BLOCKED"],
+  "error_classes": [
+    "FALSE_POSITIVE",
+    "FALSE_NEGATIVE",
+    "TIMING_EARLY",
+    "TIMING_LATE",
+    "RANGE_ERROR",
+    "SEQUENCE_ERROR",
+    "CONFIDENCE_OVERSTATED",
+    "CONFIDENCE_UNDERSTATED",
+    "OPPORTUNITY_COST",
+    "DATA_QUALITY_LIMIT"
+  ],
+  "weekly_scorecard": {
+    "required_metrics": [
+      "directional_accuracy",
+      "timing_window_accuracy",
+      "confidence_calibration_error",
+      "false_positive_rate",
+      "false_negative_rate",
+      "sequence_accuracy",
+      "opportunity_cost_score",
+      "source_completeness",
+      "matured_sample_count",
+      "regime_diversity_count"
+    ],
+    "minimum_matured_samples_for_weight_review": 30,
+    "minimum_regime_diversity_for_weight_review": 3,
+    "single_week_promotion_forbidden": true,
+    "missing_outcomes_are_censored": true
+  },
+  "promotion": {
+    "stages": ["DRAFT", "SHADOW", "FORWARD_TEST", "VALIDATED", "CANDIDATE", "CANONICAL"],
+    "requires_versioned_hypothesis": true,
+    "requires_holdout": true,
+    "requires_rollback_condition": true,
+    "automatic_model_weight_change": false,
+    "automatic_framework_state_change": false,
+    "automatic_portfolio_action": false
+  }
+}
