@@ -1,0 +1,53 @@
+{
+  "schema_version": "CLAUDE_OTA_RECONCILIATION_v1",
+  "source_run_timestamp_utc": "2026-08-01T19:20:42.768Z",
+  "run_type": "VELOCITY_FLAG_NOT_FULL_RUN",
+  "reference_bridge_present": false,
+  "matured_experiment_count": 0,
+  "accepted_items": [
+    "F1_POST_WINDOW_INTRADAY_BOUNDARY_STRESS_HIGHER_CANDIDATE_ONLY",
+    "H_WIN_01_CONFIDENCE_UNCHANGED",
+    "ETHBTC_IN_PROGRESS_WEAKNESS_NO_SETTLED_STATUS",
+    "COINBASE_HTTP_503_SOURCE_QA"
+  ],
+  "source_corrections": [
+    {
+      "supplied_claim": "BTC_TRADED_BELOW_BOTH_F1_THRESHOLD_CANDIDATES",
+      "accepted_claim": "BTC_INTRADAY_LOW_BELOW_62342_BUT_ABOVE_62200",
+      "reason": "62275_IS_GREATER_THAN_62200"
+    }
+  ],
+  "F1": {
+    "window_closed": true,
+    "rule_basis": "SETTLED_CLOSES",
+    "intraday_low": 62275.0,
+    "higher_candidate": 62342,
+    "lower_candidate": 62200,
+    "historical_score": "NOT_FAILED",
+    "score_changed": false
+  },
+  "H_WIN_01": {
+    "status": "UNPROVEN",
+    "confidence": "LOW_MODERATE",
+    "confidence_changed": false,
+    "framework_authority": "NONE"
+  },
+  "ETHBTC": {
+    "session_status": "IN_PROGRESS",
+    "running_value_supplied": 0.02938,
+    "low_supplied": 0.02923,
+    "high_supplied": 0.02974,
+    "settled_threshold_status_available": false,
+    "H7_row_11_formed": false
+  },
+  "source_qa": {
+    "cache_guard": "PASS_AS_SUPPLIED",
+    "coinbase_http_503": "EXECUTED_FAIL_OBSERVATION_ONLY",
+    "venue_reliability_hypothesis_created": false
+  },
+  "canonical_state_change": "NONE",
+  "portfolio_effect": "NONE",
+  "new_policy_event": false,
+  "new_A_class_receipt": false,
+  "new_shadow_dual_run": false
+}
