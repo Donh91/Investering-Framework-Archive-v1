@@ -67,15 +67,19 @@ jobs:
           run_owner top100_breadth python scripts/data_terminal/top100_breadth_owner_collector.py --output-dir top100-breadth-owner-output
 
           if [ "${CFGI_ENABLED}" = "true" ]; then
-            # Four lightweight intraday readings preserve the sentiment path.
-            # Only the final daily reading buys richer components for calibration.
-            CFGI_FIELDS="score"
-            if [ "${SCHEDULE_ID}" = "11 23 * * *" ]; then
-              CFGI_FIELDS="score,whales,orders,technical,volatility"
-            fi
+            # Ten non-duplicative CFGI signals, price is excluded because Binance is the price owner.
+            CFGI_FIELDS="score,volatility,volume,impulse,technical,social,dominance,trends,whales,orders"
+            case "${SCHEDULE_ID}" in
+              "13 6 * * *")  CFGI_TIMEFRAME="1d" ;;
+              "47 10 * * *") CFGI_TIMEFRAME="4h" ;;
+              "22 15 * * *") CFGI_TIMEFRAME="1h" ;;
+              "38 19 * * *") CFGI_TIMEFRAME="15m" ;;
+              "11 23 * * *") CFGI_TIMEFRAME="4h" ;;
+              *)              CFGI_TIMEFRAME="4h" ;;
+            esac
             run_owner cfgi_sentiment python scripts/data_terminal/cfgi_owner_collector.py \
               --output-dir cfgi-owner-output --symbols MARKET,BTC,ETH \
-              --timeframe 4h --fields "${CFGI_FIELDS}" --limit 1
+              --timeframe "${CFGI_TIMEFRAME}" --fields "${CFGI_FIELDS}" --limit 1
           else
             record_code cfgi_sentiment 78
           fi
