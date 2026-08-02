@@ -1,34 +1,53 @@
 {
   "schema_version": "LATEST_CLAUDE_OTA_STATUS_v1",
-  "latest_source_run_timestamp_utc": "2026-08-01T19:20:42.768Z",
-  "latest_source_record": "08_SOURCE_MATERIAL/claude_ota/2026-08-01__velocity-flag-f1-boundary-stress-ethbtc-inprogress__source-record.md",
-  "latest_framework_reconciliation": "04_MARKET_LEARNING/claude_ota/2026-08-01__velocity-flag-f1-ethbtc__framework-reconciliation.md",
-  "latest_QA": "09_SOURCE_QA/claude_ota/2026-08-01__velocity-flag-f1-ethbtc__reconciliation.json",
-  "latest_audit_receipt": "07_PROMPTS_AND_AGENTS/skill_runs/2026-08-01__claude-ota-velocity-f1-ethbtc__audit-receipt.md",
+  "latest_source_run_timestamp_utc": "2026-08-02T06:14:13.076Z",
+  "latest_source_record": "08_SOURCE_MATERIAL/claude_ota/2026-08-02__standalone-ota-h7-row11-f1-settled__source-record.md",
+  "latest_framework_reconciliation": "04_MARKET_LEARNING/claude_ota/2026-08-02__standalone-ota-h7-row11-f1-settled__framework-reconciliation.md",
+  "latest_QA": "09_SOURCE_QA/claude_ota/2026-08-02__standalone-ota-h7-row11-f1-settled__reconciliation.json",
+  "latest_audit_receipt": "07_PROMPTS_AND_AGENTS/skill_runs/2026-08-02__claude-ota-h7-row11-f1-settled__audit-receipt.md",
   "operating_mode": "STANDALONE_OTA_NO_REFERENCE_BRIDGE",
-  "latest_run_type": "VELOCITY_FLAG_NOT_FULL_RUN",
+  "latest_run_type": "FULL_STANDALONE_OTA",
   "accepted_incremental_items": [
-    "F1_POST_WINDOW_INTRADAY_BOUNDARY_STRESS_HIGHER_CANDIDATE_ONLY",
-    "H_WIN_01_CONFIDENCE_DELIBERATELY_UNCHANGED",
-    "ETHBTC_IN_PROGRESS_WEAKNESS_NO_SETTLED_THRESHOLD_STATUS",
-    "COINBASE_HTTP_503_SOURCE_QA_OBSERVATION"
+    "H7_ROW_11_POST_MATURITY_EXTENSION",
+    "H7_POST_MATURITY_COND2_0_OF_3_CONTINUING",
+    "H7_POST_MATURITY_ROLLING_SLOPE_NEGATIVE_0_517_PCT_PER_SESSION",
+    "H7_ELEVEN_ROW_ENDPOINT_CHANGE_APPROX_PLUS_0_17_PERCENT",
+    "F1_POST_WINDOW_BOUNDARY_STRESS_SETTLED_CLOSE_HELD",
+    "ETHBTC_0030_SEQUENCE_TERMINATED_SUSTAINED_FOUR_SETTLED_PLUS_ONE_IN_PROGRESS",
+    "OKX_HTTP_503_SOURCE_QA_OBSERVATION"
   ],
   "framework_corrections": [
-    "BTC_LOW_62275_WAS_BELOW_62342_BUT_ABOVE_62200_NOT_BELOW_BOTH",
-    "F1_WINDOW_CLOSED_AND_HISTORICAL_SCORE_NOT_RESCORED",
-    "F1_RULE_USED_SETTLED_CLOSES_NOT_INTRADAY_LOWS",
-    "H7_ROW_11_NOT_FORMED_AND_NOT_SCORED",
-    "IN_PROGRESS_ETHBTC_DOES_NOT_UPDATE_SETTLED_THRESHOLD_SEQUENCE"
+    "ROW_11_IS_POST_MATURITY_EXTENSION_NOT_THIRD_NEW_MATURITY",
+    "H7_HISTORICAL_SCORE_REMAINS_FROZEN",
+    "LAPSED_WORDING_NOT_ADOPTED_WITHOUT_FORMAL_LAPSE_RULE",
+    "FOUR_SETTLED_PLUS_ONE_IN_PROGRESS_SESSION_WITHOUT_0030_TOUCH",
+    "ARC_MIN_AND_MAX_RETAINED_AS_SOURCE_SUPPLIED_DERIVED_METADATA",
+    "F1_SETTLED_CLOSE_ABOVE_BOTH_CANDIDATES_NO_SCORE_CHANGE"
   ],
+  "H7": {
+    "status": "MATURED_SCORED_WITH_ROW_11_POST_MATURITY_FOLLOW_THROUGH_INACTIVE_CONFIRMED_CONTINUING",
+    "historical_score": "EARLY_TRANSMISSION_CANDIDATE_NOT_ROTATION_CONFIRMATION",
+    "historical_score_change": "NONE",
+    "post_maturity_follow_through": "INACTIVE_CONFIRMED_CONTINUING",
+    "latest_formed_extension_row": 11,
+    "COND2_last_3": "0_OF_3_NOT_MET",
+    "rolling_5_session_slope_pct_per_session": -0.517,
+    "consecutive_settled_BTC_lead_sessions": 4,
+    "first_close_supplied": 0.02933,
+    "latest_close": 0.02938,
+    "endpoint_change_pct_checked": 0.1705,
+    "formal_lapse_rule": "UNDEFINED_NOT_INVENTED"
+  },
   "F1": {
     "historical_score": "NOT_FAILED",
     "historical_score_change": "NONE",
     "window_closed": true,
     "rule_basis": "SETTLED_CLOSES",
-    "latest_post_window_intraday_low": 62275.0,
+    "2026_08_01_settled_close": 62823.64,
+    "2026_08_01_intraday_low": 62275.0,
     "higher_candidate": 62342,
     "lower_candidate": 62200,
-    "accepted_relation": "BELOW_HIGHER_CANDIDATE_ABOVE_LOWER_CANDIDATE"
+    "accepted_relation": "INTRADAY_BELOW_HIGHER_ONLY_SETTLED_CLOSE_ABOVE_BOTH"
   },
   "H_WIN_01": {
     "status": "UNPROVEN_DESIGN_HYPOTHESIS",
@@ -37,28 +56,21 @@
     "framework_authority": "NONE",
     "F1_score_effect": "NONE"
   },
-  "H7": {
-    "status": "MATURED_SCORED_WITH_ROW_10_POST_MATURITY_FOLLOW_THROUGH_INACTIVE_CONFIRMED",
-    "historical_score": "EARLY_TRANSMISSION_CANDIDATE_NOT_ROTATION_CONFIRMATION",
-    "historical_score_change": "NONE",
-    "post_maturity_follow_through": "INACTIVE_CONFIRMED",
-    "latest_formed_extension_row": 10,
-    "row_11_status_at_velocity_retrieval": "NOT_FORMED",
-    "formal_lapse_rule": "UNDEFINED_NOT_INVENTED"
-  },
   "ETHBTC_threshold_sequence": {
-    "settled_status": "SEQUENCE_TERMINATED_CONFIRMED",
-    "latest_settled_Copenhagen_close": 0.02957,
-    "velocity_in_progress_running_value": 0.02938,
-    "velocity_in_progress_low": 0.02923,
-    "velocity_in_progress_high": 0.02974,
-    "velocity_in_progress_touched_0_0300": false,
+    "settled_status": "SEQUENCE_TERMINATED_SUSTAINED",
+    "latest_settled_Copenhagen_close": 0.02938,
+    "latest_settled_UTC_close_supplied": 0.02937,
+    "settled_sessions_without_0_0300_touch_since_last_touch": 4,
+    "additional_in_progress_session_without_0_0300_touch": 1,
+    "2026_08_02_in_progress_running_value_supplied": 0.02957,
+    "0_0275_touched": false,
     "in_progress_threshold_effect": "NONE"
   },
   "source_QA": {
     "cache_guard": "PASS_AS_SUPPLIED",
-    "coinbase_http_503": "EXECUTED_FAIL_OBSERVATION_ONLY",
-    "venue_reliability_hypothesis_created": false
+    "okx_http_503": "EXECUTED_FAIL_OBSERVATION_ONLY",
+    "503_distribution": "FOUR_EVENTS_ACROSS_SIX_RUNS_AND_THREE_VENUES",
+    "venue_or_egress_hypothesis_created": false
   },
   "ETH_ETF": {
     "latest_settled_session": "2026-07-30",
@@ -70,10 +82,12 @@
     "run_id": "run_fe496808649a7d5e3db0c033587afbc1",
     "breadth_advance_ratio": 0.4772727272727273,
     "direct_ETHBTC": 0.02965,
-    "settled_Copenhagen_ETHBTC_close": 0.02957,
-    "operational_top_up_action": "WAIT_FOR_BETTER_WINDOW_6_TO_12_HOURS"
+    "settled_Copenhagen_ETHBTC_close_at_data_ping": 0.02957,
+    "operational_top_up_action_at_data_ping": "WAIT_FOR_BETTER_WINDOW_6_TO_12_HOURS",
+    "reassessment_horizon_status": "ELAPSED_NEW_FULL_DATA_PING_REQUIRED"
   },
-  "velocity_flag_effect_on_latest_data_ping": "NONE",
+  "OTA_effect_on_latest_data_ping_state": "NONE",
+  "current_operational_requirement": "WAIT_FOR_NEXT_FULL_DATA_PING",
   "new_policy_event": false,
   "new_A_class_receipt": false,
   "A_rows_total": 2,
@@ -89,7 +103,7 @@
   "open_items": [
     "BTC_ETF_2026_07_30_AND_2026_07_31",
     "ETH_ETF_2026_07_31",
-    "H7_ROW_11_SETTLED_EXTENSION",
+    "H7_ROW_12_SETTLED_EXTENSION",
     "H7_LAPSE_RETIRE_RETRIGGER_PROSPECTIVE_RULE",
     "ETF_AUM_DENOMINATORS",
     "ETHB_ISSUER_METADATA_INDEPENDENT_VERIFICATION"
