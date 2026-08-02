@@ -28,6 +28,7 @@ jobs:
     env:
       CFGI_API_KEY: ${{ secrets.CFGI_API_KEY }}
       CFGI_ENABLED: ${{ vars.CFGI_ENABLED }}
+      SCHEDULE_ID: ${{ github.event.schedule }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -66,9 +67,15 @@ jobs:
           run_owner top100_breadth python scripts/data_terminal/top100_breadth_owner_collector.py --output-dir top100-breadth-owner-output
 
           if [ "${CFGI_ENABLED}" = "true" ]; then
+            # Four lightweight intraday readings preserve the sentiment path.
+            # Only the final daily reading buys richer components for calibration.
+            CFGI_FIELDS="score"
+            if [ "${SCHEDULE_ID}" = "11 23 * * *" ]; then
+              CFGI_FIELDS="score,whales,orders,technical,volatility"
+            fi
             run_owner cfgi_sentiment python scripts/data_terminal/cfgi_owner_collector.py \
               --output-dir cfgi-owner-output --symbols MARKET,BTC,ETH \
-              --timeframe 4h --fields score,price,whales --limit 1
+              --timeframe 4h --fields "${CFGI_FIELDS}" --limit 1
           else
             record_code cfgi_sentiment 78
           fi
