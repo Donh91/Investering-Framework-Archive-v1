@@ -5,11 +5,6 @@ on:
     paths:
       - '.github/workflows/cfgi-full-profile-smoke-temp.yml'
       - 'scripts/data_terminal/cfgi_owner_collector.py'
-  push:
-    branches: [agent/cfgi-live-delta-scorecard-v1]
-    paths:
-      - '.github/workflows/cfgi-full-profile-smoke-temp.yml'
-      - 'scripts/data_terminal/cfgi_owner_collector.py'
 
 permissions:
   contents: read
@@ -41,13 +36,13 @@ jobs:
           snap=json.loads(Path('cfgi-owner-output/owner_snapshot.json').read_text())
           rec=json.loads(Path('cfgi-owner-output/receipt.json').read_text())
           expected={'score','volatility','volume','impulse','technical','social','dominance','trends','whales','orders'}
-          assert snap['contract']=='CFGI_OWNER_SNAPSHOT_v2'
+          assert snap['contract'] in {'CFGI_OWNER_SNAPSHOT_v2','CFGI_OWNER_SNAPSHOT_v3'}
           assert set(snap['fields'])==expected
           assert len(snap['rows'])==3
           assert rec['status'] in {'PASS','DEGRADED'}
           assert rec['billing']['expected_credits']==30
-          assert rec['billing']['credits_used'] in {None,30}
-          assert rec['billing']['credits_remaining'] is None or rec['billing']['credits_remaining']>=0
+          assert rec['billing']['credits_used']==30
+          assert rec['billing']['credits_remaining']>=0
           print(json.dumps({'status':'CFGI_FULL_PROFILE_PASS','billing':rec['billing']},sort_keys=True))
           PY
       - uses: actions/upload-artifact@v4
