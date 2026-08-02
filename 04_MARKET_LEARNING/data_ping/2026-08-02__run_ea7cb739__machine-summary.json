@@ -1,0 +1,53 @@
+{
+  "schema_version": "DATA_PING_MACHINE_SUMMARY_v1",
+  "run_id": "run_ea7cb739da3846e0bf5657b2cf757b32",
+  "snapshot_id": "snap_25c72fb925fd427cb44886fb7f1932f9",
+  "snapshot_utc": "2026-08-02T06:32:59.303Z",
+  "transport_duplicate_count": 2,
+  "ingested_observation_count": 1,
+  "acceptance": "BOUNDED_MARKET_OBSERVATION_NOT_PREDECESSOR",
+  "required_predecessor": "snap_0e19c112413d471d8270cad1a18148a7",
+  "declared_predecessor": "snap_03949c287c10bc8a52c16476ea34bc03",
+  "canonical_longitudinal_deltas_accepted": false,
+  "current": {
+    "BTC": 63485.64,
+    "ETH": 1877.64,
+    "direct_ETHBTC": 0.02958,
+    "settled_Copenhagen_ETHBTC_close": 0.02938,
+    "breadth_advance_ratio": 0.4888888888888889,
+    "breadth_membership_hash": "016a925e6eea78a40159dec079a77a24f91d42b4a7bd5ebfe8c98980489320ae",
+    "breadth_membership_hash_changed": true,
+    "market_volume_change_24h_pct": -36.59498213674286,
+    "BTC_Binance_funding": 0.00009818,
+    "ETH_Binance_funding": 0.00008266,
+    "BTC_OI_4h_change_pct": 0.4112674458364163,
+    "ETH_OI_4h_change_pct": 0.9673427735766404
+  },
+  "gates": {
+    "breadth_35": true,
+    "breadth_50": false,
+    "breadth_55": false,
+    "direct_ETHBTC_0_0300": false,
+    "settled_ETHBTC_0_0300": false
+  },
+  "source_treatment": {
+    "ETF": "STALE_REJECTED_FOR_LEDGER_OVERWRITE",
+    "CFGI": "UNAVAILABLE",
+    "stablecoin_global_total": "UNAVAILABLE",
+    "constituent_sidecar": "UNAVAILABLE"
+  },
+  "classification": "BREADTH_JUST_BELOW_50_WITH_MEMBERSHIP_DISCONTINUITY_DIRECT_AND_SETTLED_ETHBTC_BELOW_0030_ELEVATED_BINANCE_FUNDING_RECENT_OI_REBUILD_LOW_VOLUME_STALE_ETF_AND_INVALID_PREDECESSOR_LINEAGE",
+  "rotation": "NO_ROTATION",
+  "rebuy": "LOCKED",
+  "new_entry": "NOT_ACTIVE",
+  "large_caps": "WATCH_ONLY",
+  "operational_action": "WAIT_FOR_BETTER_WINDOW",
+  "reassessment_horizon": "6_TO_12_HOURS",
+  "new_policy_event": false,
+  "A_class_increment": 0,
+  "A_rows_total": 2,
+  "shadow_dual_run_increment": 0,
+  "shadow_dual_run_valid_runs": 5,
+  "canonical_state_change": "NONE",
+  "portfolio_effect": "NONE"
+}
