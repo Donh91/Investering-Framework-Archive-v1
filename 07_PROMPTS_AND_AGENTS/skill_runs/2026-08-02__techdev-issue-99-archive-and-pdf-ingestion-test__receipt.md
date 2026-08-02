@@ -1,7 +1,7 @@
 # TechDev Issue #99 Archive and PDF Ingestion Test Receipt
 
 **Date:** 2026-08-02  
-**Status:** IMPLEMENTED_PENDING_PR_GATES  
+**Status:** PASS_READY_TO_MERGE  
 **Scope:** source archive, supplemented capture, revision tracking, Gem Score rerun, sector chart extraction and PDF ingestion regression
 
 ## Inputs
@@ -33,7 +33,44 @@ research/pdf_ingestion/TECHDEV_ISSUE_99_INGESTION_TEST_v1.json
 
 The uploaded PDF was independently preflighted in the ChatGPT runtime and passed PDF magic, render, encryption and native-text checks. It is a single unusually tall page and ends during the UAI card. The missing article tail and sector chart were supplied separately and are preserved with their own lineage.
 
-The ChatGPT attachment binary cannot be passed directly into the repository workflow by the available GitHub connector. Therefore the GitHub PDF test is a real pinned-parser regression using the workflow's deterministic native-text PDF, while the exact Issue #99 binary has a separate local preflight receipt. This distinction must remain visible.
+The ChatGPT attachment binary cannot be passed directly into the repository workflow by the available GitHub connector. Therefore the GitHub PDF test is a real pinned-parser regression using the workflow's deterministic native-text PDF, while the exact Issue #99 binary has a separate local preflight receipt. This distinction remains explicit.
+
+## Verified GitHub execution
+
+```yaml
+pull_request: 276
+validated_head: d1cc51d81ac3fd7ca2d424496506e5efaa90b366
+pdf_inspector_workflow_run_id: 30760579662
+pdf_inspector_workflow_run_number: 5
+pdf_inspector_conclusion: success
+wrapper_tests_passed: 4
+pinned_upstream_build: pass
+real_parser_integration: pass
+artifact_id: 8837333986
+artifact_digest: sha256:93887d806c9a7481e4cc0b00bb2557efa1d5733963e0608e182490b995449d49
+artifact_readback: pass
+artifact_manifest_status: READY
+artifact_pdf_type: text_based
+artifact_markdown_materialized: true
+data_architecture_gate_run_id: 30760579680
+data_architecture_gate: success
+storage_health_gate_run_id: 30760579651
+storage_health_gate: success
+same_uploaded_binary_processed_in_github: false
+```
+
+The downloaded artifact was opened independently. Its manifest, detector output and Markdown hashes matched the recorded output members.
+
+## Archive interpretation
+
+Issue #99 is stored as a revision layer under Issue #98, not as a new engine or test. In particular:
+
+- BTC's sequence changed from surge-then-consolidate to consolidate-then-surge and is recorded as a revision.
+- ETH and BTC September-October waypoints remain unchanged.
+- both Supertrend confirmation gates remain untriggered.
+- the two-month copper-over-gold MACD is only intramonth until the August 31 close.
+- the monthly ratio flag remains unbroken and the broad basket remains closed.
+- the Gem Score rerun, exits, sector values and RWA tailwind change are preserved as external-source calibration evidence.
 
 ## Governance
 
@@ -47,4 +84,4 @@ portfolio_action: none
 techdev_execution_authority: zero
 ```
 
-Final workflow IDs, artifact digest, readback status, PR number and merge commit are appended before merge or in the final activation receipt.
+Merge commit is recorded by Git history and final main readback after PR completion.
