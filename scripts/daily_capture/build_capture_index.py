@@ -16,6 +16,10 @@ OWNER_DIRS = {
     "top100_breadth": "top100-breadth-owner-output",
     "cfgi_sentiment": "cfgi-owner-output",
 }
+CORE_OWNER_IDS = {
+    "fred_macro", "binance_spot", "binance_microstructure", "okx_swap", "top100_breadth"
+}
+OPTIONAL_OWNER_IDS = {"cfgi_sentiment"}
 
 
 def sha256(path: Path) -> str:
@@ -154,10 +158,19 @@ def owner_record(root: Path, owner_id: str, relative_dir: str, exit_codes: dict[
                     item["summary"] = summary
             files.append(item)
     code = int(exit_codes.get(owner_id, 999))
+    if code == 78:
+        status = "DISABLED"
+    elif code == 0 and files:
+        status = "PASS"
+    elif code == 0:
+        status = "EMPTY"
+    else:
+        status = "FAIL"
     return {
         "owner_id": owner_id,
+        "owner_class": "CORE" if owner_id in CORE_OWNER_IDS else "OPTIONAL",
         "collector_exit_code": code,
-        "status": "PASS" if code == 0 and files else "FAIL" if code != 0 else "EMPTY",
+        "status": status,
         "file_count": len(files),
         "total_bytes": sum(item["bytes"] for item in files),
         "files": files,
@@ -176,8 +189,10 @@ def main() -> None:
     exit_codes = json.loads(args.status_file.read_text())
     captured_at = datetime.now(timezone.utc).replace(microsecond=0)
     owners = [owner_record(args.root, key, value, exit_codes) for key, value in OWNER_DIRS.items()]
-    passed = sum(owner["status"] == "PASS" for owner in owners)
-    overall = "COMPLETE" if passed == len(owners) else "PARTIAL" if passed else "FAILED"
+    core = [owner for owner in owners if owner["owner_id"] in CORE_OWNER_IDS]
+    core_passed = sum(owner["status"] == "PASS" for owner in core)
+    optional_passed = sum(owner["status"] == "PASS" for owner in owners if owner["owner_id"] in OPTIONAL_OWNER_IDS)
+    overall = "COMPLETE" if core_passed == len(core) else "PARTIAL" if core_passed else "FAILED"
 
     packet = {
         "contract": "DAILY_RAW_CAPTURE_INDEX_v2",
@@ -186,15 +201,19 @@ def main() -> None:
         "captured_at_utc": captured_at.isoformat().replace("+00:00", "Z"),
         "trigger": args.trigger,
         "status": overall,
-        "owners_passed": passed,
+        "owners_passed": core_passed + optional_passed,
         "owners_planned": len(owners),
+        "core_owners_passed": core_passed,
+        "core_owners_planned": len(core),
+        "optional_owners_passed": optional_passed,
+        "optional_owners_planned": len(OPTIONAL_OWNER_IDS),
         "owners": owners,
         "market_metrics": extract_metrics(args.root),
         "artifact_retention_days": 7,
         "canonical_data_ping": False,
         "framework_state_change": False,
         "portfolio_action": False,
-        "weekly_calibration_eligible": passed >= 3,
+        "weekly_calibration_eligible": core_passed >= 3,
     }
 
     day_dir = args.output_root / captured_at.strftime("%Y/%m/%d")
