@@ -69,7 +69,7 @@ jobs:
           from pathlib import Path
           c=json.loads(Path('owner-bound-director-input/context.json').read_text())
           r=json.loads(Path('owner-bound-director-output/receipt.json').read_text())
-          assert c['contract']=='OWNER_BOUND_DAILY_DIRECTOR_CONTEXT_v1'
+          assert c['contract'] in {'OWNER_BOUND_DAILY_DIRECTOR_CONTEXT_v1','OWNER_BOUND_DAILY_DIRECTOR_CONTEXT_v2'}
           assert c['latest_capture']['run_id']
           assert r['context_hash']==__import__('hashlib').sha256((json.dumps(c,sort_keys=True,separators=(',',':'))+'\n').encode()).hexdigest()
           assert r['authority']['portfolio_action'] is False
