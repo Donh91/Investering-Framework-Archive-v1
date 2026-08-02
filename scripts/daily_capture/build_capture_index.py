@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import argparse
+import csv
 import hashlib
 import json
-import os
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -25,20 +25,99 @@ def sha256(path: Path) -> str:
     return h.hexdigest()
 
 
-def compact_json_summary(path: Path) -> dict[str, Any]:
+def read_json(path: Path) -> Any:
     try:
-        data = json.loads(path.read_text())
+        return json.loads(path.read_text())
     except Exception:
-        return {}
+        return None
+
+
+def compact_json_summary(path: Path) -> dict[str, Any]:
+    data = read_json(path)
     wanted = {
         "status", "run_id", "snapshot_id", "retrieval_timestamp_utc",
         "retrieval_timestamp", "freeze_timestamp_utc", "as_of_utc",
         "rows", "row_count", "constituent_count", "membership_hash",
         "capture_integrity", "freshness_status", "source", "venue",
+        "advancers", "decliners", "flat", "advancer_percentage",
     }
     if isinstance(data, dict):
         return {k: data[k] for k in wanted if k in data}
     return {}
+
+
+def last_kline(path: Path) -> dict[str, Any] | None:
+    data = read_json(path)
+    if not isinstance(data, list) or not data:
+        return None
+    row = data[-1]
+    if not isinstance(row, list) or len(row) < 6:
+        return None
+    try:
+        return {
+            "open_time_ms": int(row[0]),
+            "open": float(row[1]),
+            "high": float(row[2]),
+            "low": float(row[3]),
+            "close": float(row[4]),
+            "volume": float(row[5]),
+            "range_pct": round((float(row[2]) / float(row[3]) - 1.0) * 100.0, 6) if float(row[3]) else None,
+        }
+    except (TypeError, ValueError, ZeroDivisionError):
+        return None
+
+
+def latest_fred_values(directory: Path) -> dict[str, Any]:
+    values: dict[str, Any] = {}
+    for path in sorted((directory / "raw/source_payloads").glob("*.csv")):
+        series = path.stem.split("__")[-1]
+        try:
+            rows = list(csv.DictReader(path.open()))
+        except Exception:
+            continue
+        for row in reversed(rows):
+            raw = next((v for k, v in row.items() if k.lower() not in {"date", "observation_date"} and v not in {None, "", "."}), None)
+            date = row.get("DATE") or row.get("date") or row.get("observation_date")
+            if raw is not None:
+                try:
+                    values[series] = {"value": float(raw), "date": date}
+                except ValueError:
+                    pass
+                break
+    return values
+
+
+def extract_metrics(root: Path) -> dict[str, Any]:
+    metrics: dict[str, Any] = {"spot": {}, "derivatives": {}, "breadth": {}, "macro": {}}
+    for symbol in ("BTCUSDT", "ETHUSDT", "ETHBTC"):
+        row = last_kline(root / "binance-spot-owner-output" / "raw" / f"{symbol}.json")
+        if row:
+            metrics["spot"][symbol] = row
+
+    okx = read_json(root / "okx-swap-owner-output" / "owner_snapshot.json")
+    if isinstance(okx, dict):
+        for row in okx.get("rows", []):
+            if not isinstance(row, dict):
+                continue
+            inst = str(row.get("instrument", "UNKNOWN"))
+            metric = str(row.get("metric", "unknown"))
+            metrics["derivatives"].setdefault(inst, {})[metric] = {
+                k: v for k, v in row.items() if k not in {"instrument", "metric", "venue"}
+            }
+
+    breadth = read_json(root / "top100-breadth-owner-output" / "owner_snapshot.json")
+    if isinstance(breadth, dict):
+        for key in ("advancers", "decliners", "flat", "advancer_percentage", "constituent_count", "membership_hash", "retrieval_timestamp"):
+            if key in breadth:
+                metrics["breadth"][key] = breadth[key]
+        aggregate = breadth.get("aggregate")
+        if isinstance(aggregate, dict):
+            for key in ("advancers", "decliners", "flat", "advancer_percentage"):
+                if key in aggregate:
+                    metrics["breadth"][key] = aggregate[key]
+
+    metrics["macro"] = latest_fred_values(root / "fred-owner-output")
+    return metrics
 
 
 def owner_record(root: Path, owner_id: str, relative_dir: str, exit_codes: dict[str, int]) -> dict[str, Any]:
@@ -46,11 +125,7 @@ def owner_record(root: Path, owner_id: str, relative_dir: str, exit_codes: dict[
     files: list[dict[str, Any]] = []
     if directory.exists():
         for path in sorted(p for p in directory.rglob("*") if p.is_file()):
-            item: dict[str, Any] = {
-                "path": str(path.relative_to(root)),
-                "bytes": path.stat().st_size,
-                "sha256": sha256(path),
-            }
+            item: dict[str, Any] = {"path": str(path.relative_to(root)), "bytes": path.stat().st_size, "sha256": sha256(path)}
             if path.suffix.lower() == ".json":
                 summary = compact_json_summary(path)
                 if summary:
@@ -83,7 +158,7 @@ def main() -> None:
     overall = "COMPLETE" if passed == len(owners) else "PARTIAL" if passed else "FAILED"
 
     packet = {
-        "contract": "DAILY_RAW_CAPTURE_INDEX_v1",
+        "contract": "DAILY_RAW_CAPTURE_INDEX_v2",
         "authority": "SHADOW_OBSERVATION_ONLY",
         "run_id": args.run_id,
         "captured_at_utc": captured_at.isoformat().replace("+00:00", "Z"),
@@ -92,6 +167,7 @@ def main() -> None:
         "owners_passed": passed,
         "owners_planned": len(owners),
         "owners": owners,
+        "market_metrics": extract_metrics(args.root),
         "artifact_retention_days": 7,
         "canonical_data_ping": False,
         "framework_state_change": False,
@@ -103,9 +179,7 @@ def main() -> None:
     day_dir.mkdir(parents=True, exist_ok=True)
     output = day_dir / f"{captured_at.strftime('%H%M%S')}_{args.run_id}.json"
     output.write_text(json.dumps(packet, indent=2, sort_keys=True) + "\n")
-
-    latest = args.output_root / "LATEST.json"
-    latest.write_text(json.dumps({
+    (args.output_root / "LATEST.json").write_text(json.dumps({
         "contract": "DAILY_RAW_CAPTURE_LATEST_POINTER_v1",
         "path": str(output.relative_to(args.output_root.parent)),
         "run_id": args.run_id,
