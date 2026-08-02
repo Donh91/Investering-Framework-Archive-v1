@@ -42,7 +42,7 @@ jobs:
           {"synthetic":true,"specialists":[{"id":"macro","state":"TAILWIND"},{"id":"breadth","state":"CONTRACTING"},{"id":"spot","state":"RANGE"}]}
           EOF
       - name: Dry-run gateway
-        if: github.event_name == 'pull_request' || inputs.mode == 'dry-run'
+        if: (github.event_name == 'workflow_dispatch' && inputs.mode == 'dry-run') || (github.event_name == 'pull_request' && github.head_ref != 'agent/api-gateway-live-smoke-v1')
         run: |
           python scripts/api_agent/api_gateway.py \
             --task DAILY_DIRECTOR_SHADOW \
@@ -52,7 +52,7 @@ jobs:
             --output-dir api-agent-output \
             --dry-run
       - name: Controlled live smoke call
-        if: github.event_name == 'workflow_dispatch' && inputs.mode == 'live-smoke'
+        if: (github.event_name == 'workflow_dispatch' && inputs.mode == 'live-smoke') || (github.event_name == 'pull_request' && github.head_ref == 'agent/api-gateway-live-smoke-v1')
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
