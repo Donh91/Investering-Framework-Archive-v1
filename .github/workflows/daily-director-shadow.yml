@@ -33,7 +33,7 @@ jobs:
             --capture-root 03_DAILY_CAPTURE_LOGS/captures \
             --output runtime/daily-director/context.json
           cat > runtime/daily-director/prompt.txt <<'EOF'
-          Review the latest real owner-bound capture against the preceding capture. Focus on measurable changes in spot, ETH/BTC, derivatives, breadth and macro. Preserve disagreement and missingness. Identify deterioration, recovery, leverage build-up and plausible pre-pullback sequences only when directly supported. Produce shadow calibration evidence for RAW and Master Monday. Do not provide portfolio action or canonical market truth.
+          Review the latest real owner-bound capture against the preceding capture. Focus on measurable changes in spot, ETH/BTC, derivatives, breadth, macro and CFGI. For CFGI, inspect score and component deltas for MARKET, BTC and ETH across the available timeframe. Distinguish broad confirmation from divergence, and identify component sequencing such as social/impulse rising without volume/orders/whales, or volatility/orders deteriorating before price. Preserve disagreement and missingness. Identify deterioration, recovery, leverage build-up and plausible pre-pullback sequences only when directly supported. Produce shadow calibration evidence for RAW and Master Monday. Do not provide portfolio action or canonical market truth.
           EOF
       - name: Run Luna Daily Director
         env:
