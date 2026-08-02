@@ -7,18 +7,27 @@ on:
     - cron: '5 2 * * 1'
       timezone: 'Europe/Copenhagen'
   workflow_dispatch:
+    inputs:
+      mode:
+        description: Weekly close mode
+        required: true
+        default: preclose
+        type: choice
+        options:
+          - preclose
+          - final
 
 permissions:
   contents: write
 
 concurrency:
-  group: sunday-market-close-and-cfgi
+  group: framework-main-writer
   cancel-in-progress: false
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 18
     steps:
       - uses: actions/checkout@v4
         with:
@@ -26,25 +35,40 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Resolve close mode
+        id: mode
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            MODE="${{ inputs.mode }}"
+          elif [[ "${{ github.event.schedule }}" == "5 2 * * 1" ]]; then
+            MODE="final"
+          else
+            MODE="preclose"
+          fi
+          echo "mode=$MODE" >> "$GITHUB_OUTPUT"
       - name: Build verified weekly price ranges
         run: |
           python scripts/daily_capture/build_weekly_market_close_package.py \
-            --output-root 03_DAILY_CAPTURE_LOGS/weekly_close
+            --output-root 03_DAILY_CAPTURE_LOGS/weekly_close \
+            --mode "${{ steps.mode.outputs.mode }}"
       - name: Build zero-cost weekly CFGI summary from daily owner captures
         run: |
           python scripts/daily_capture/build_weekly_cfgi_summary.py \
             --capture-root 03_DAILY_CAPTURE_LOGS/captures \
             --output-root 03_DAILY_CAPTURE_LOGS/cfgi_weekly
-      - name: Commit compact weekly handoff
+      - name: Commit compact weekly handoff with readback
         shell: bash
         run: |
           git config user.name 'framework-data-bot'
           git config user.email 'framework-data-bot@users.noreply.github.com'
           git add 03_DAILY_CAPTURE_LOGS/weekly_close 03_DAILY_CAPTURE_LOGS/cfgi_weekly
           if git diff --cached --quiet; then exit 0; fi
-          git commit -m "data: add weekly market close and derived CFGI handoff"
+          git commit -m "data: add ${{ steps.mode.outputs.mode }} weekly market close and CFGI handoff"
           for attempt in 1 2 3; do
-            git pull --rebase origin main && git push origin HEAD:main && exit 0
+            git rebase --abort 2>/dev/null || true
+            git pull --rebase origin main && git push origin HEAD:main && break
             sleep $((attempt * 5))
           done
-          exit 1
+          git fetch origin main
+          git merge-base --is-ancestor HEAD origin/main
