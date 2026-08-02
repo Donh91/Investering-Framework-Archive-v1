@@ -1,0 +1,72 @@
+name: Daily Director Shadow
+
+on:
+  schedule:
+    - cron: '25 23 * * *'
+      timezone: 'Europe/Copenhagen'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: daily-director-shadow
+  cancel-in-progress: false
+
+jobs:
+  director:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Enforce monthly API cost guard
+        run: python scripts/api_agent/check_monthly_cost_guard.py --receipt-root research/api_agent/outputs --hard-stop-usd 20 --reserve-usd 0.25
+      - name: Build owner-bound context
+        run: |
+          mkdir -p runtime/daily-director
+          python scripts/api_agent/build_owner_bound_director_context.py \
+            --capture-root 03_DAILY_CAPTURE_LOGS/captures \
+            --output runtime/daily-director/context.json
+          cat > runtime/daily-director/prompt.txt <<'EOF'
+          Review the latest real owner-bound capture against the preceding capture. Focus on measurable changes in spot, ETH/BTC, derivatives, breadth and macro. Preserve disagreement and missingness. Identify deterioration, recovery, leverage build-up and plausible pre-pullback sequences only when directly supported. Produce shadow calibration evidence for RAW and Master Monday. Do not provide portfolio action or canonical market truth.
+          EOF
+      - name: Run Luna Daily Director
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          python scripts/api_agent/api_gateway.py \
+            --task DAILY_DIRECTOR_SHADOW \
+            --registry research/api_agent/API_TASK_REGISTRY_v1.json \
+            --prompt-file runtime/daily-director/prompt.txt \
+            --context-file runtime/daily-director/context.json \
+            --output-dir runtime/daily-director/output
+      - name: Materialize immutable daily output
+        run: |
+          STAMP=$(date -u +%Y/%m/%d/%H%M%S)
+          DEST="research/api_agent/outputs/daily/${STAMP}"
+          mkdir -p "$DEST"
+          cp runtime/daily-director/context.json "$DEST/context.json"
+          cp runtime/daily-director/output/output.json "$DEST/DAILY_DIRECTOR_OUTPUT.json"
+          cp runtime/daily-director/output/receipt.json "$DEST/DAILY_DIRECTOR_RECEIPT.json"
+      - name: Commit compact output and receipt
+        shell: bash
+        run: |
+          git config user.name 'framework-api-agent'
+          git config user.email 'framework-api-agent@users.noreply.github.com'
+          git add research/api_agent/outputs/daily
+          git commit -m "ai: materialize daily Director shadow ${GITHUB_RUN_ID}"
+          for attempt in 1 2 3; do
+            git pull --rebase origin main && git push origin HEAD:main && exit 0
+            sleep $((attempt * 5))
+          done
+          exit 1
+      - uses: actions/upload-artifact@v4
+        with:
+          name: daily-director-shadow-${{ github.run_id }}
+          path: runtime/daily-director/
+          retention-days: 7
