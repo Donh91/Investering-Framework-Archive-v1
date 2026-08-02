@@ -16,14 +16,20 @@ def cfgi_from_capture(packet: dict[str, Any]) -> tuple[list[dict[str, Any]], dic
     owner = next((x for x in packet.get("owners", []) if x.get("owner_id") == "cfgi_sentiment"), {})
     rows: list[dict[str, Any]] = []
     billing: dict[str, Any] = {}
+    fields: list[str] = []
     for file in owner.get("files", []):
         summary = file.get("summary", {})
         if not isinstance(summary, dict):
             continue
         if isinstance(summary.get("rows"), list):
             rows = summary["rows"]
+        if isinstance(summary.get("fields"), list):
+            fields = summary["fields"]
         if isinstance(summary.get("billing"), dict):
             billing = summary["billing"]
+    if rows and fields and not isinstance(billing.get("credits_used"), int):
+        billing["credits_used"] = len(rows) * len(fields)
+        billing["usage_source"] = "DERIVED_FROM_FIELDS_X_ROWS"
     return rows, billing
 
 
