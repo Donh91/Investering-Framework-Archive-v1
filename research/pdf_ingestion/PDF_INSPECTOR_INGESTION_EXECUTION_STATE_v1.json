@@ -1,0 +1,27 @@
+{
+  "contract": "PDF_INSPECTOR_INGESTION_EXECUTION_STATE_v1",
+  "status": "IMPLEMENTED_PENDING_CI_REAL_PARSER_SMOKE",
+  "date": "2026-08-02",
+  "upstream_repository": "https://github.com/firecrawl/pdf-inspector",
+  "upstream_commit": "a15ec2d68d51dbe6a39d1da688ec7a3f642d846c",
+  "integration_mode": "PINNED_SOURCE_BUILD_IN_GITHUB_ACTIONS",
+  "openai_api_required": false,
+  "paid_service_required": false,
+  "user_local_computer_required": false,
+  "input_limit_mib": 25,
+  "artifact_retention_days": 14,
+  "raw_pdf_committed_automatically": false,
+  "markdown_committed_automatically": false,
+  "deterministic_wrapper_tests": 4,
+  "real_upstream_smoke_required": true,
+  "real_upstream_smoke_passed": false,
+  "first_real_framework_pdf_readback": false,
+  "authority": {
+    "creates_truth": false,
+    "framework_state_change": false,
+    "model_weight_change": false,
+    "portfolio_action": false,
+    "canonical_promotion": false
+  },
+  "next_gate": "PR_CI_REAL_PARSER_SMOKE_THEN_MERGE"
+}
