@@ -14,7 +14,12 @@ OWNER_DIRS = {
     "binance_microstructure": "binance-spot-microstructure-output",
     "okx_swap": "okx-swap-owner-output",
     "top100_breadth": "top100-breadth-owner-output",
+    "cfgi_sentiment": "cfgi-owner-output",
 }
+CORE_OWNER_IDS = {
+    "fred_macro", "binance_spot", "binance_microstructure", "okx_swap", "top100_breadth"
+}
+OPTIONAL_OWNER_IDS = {"cfgi_sentiment"}
 
 
 def sha256(path: Path) -> str:
@@ -36,10 +41,11 @@ def compact_json_summary(path: Path) -> dict[str, Any]:
     data = read_json(path)
     wanted = {
         "status", "run_id", "snapshot_id", "retrieval_timestamp_utc",
-        "retrieval_timestamp", "freeze_timestamp_utc", "as_of_utc",
+        "retrieval_timestamp", "retrieved_at_utc", "freeze_timestamp_utc", "as_of_utc",
         "rows", "row_count", "constituent_count", "membership_hash",
         "capture_integrity", "freshness_status", "source", "venue",
         "advancers", "decliners", "flat", "advancer_percentage",
+        "timeframe", "symbols", "fields",
     }
     if isinstance(data, dict):
         return {k: data[k] for k in wanted if k in data}
@@ -87,8 +93,27 @@ def latest_fred_values(directory: Path) -> dict[str, Any]:
     return values
 
 
+def extract_cfgi(directory: Path) -> dict[str, Any]:
+    snapshot = read_json(directory / "owner_snapshot.json")
+    if not isinstance(snapshot, dict):
+        return {}
+    compact: dict[str, Any] = {
+        "retrieved_at_utc": snapshot.get("retrieved_at_utc"),
+        "timeframe": snapshot.get("timeframe"),
+        "symbols": {},
+    }
+    for row in snapshot.get("rows", []):
+        if not isinstance(row, dict):
+            continue
+        symbol = str(row.get("symbol") or row.get("asset") or row.get("ticker") or "UNKNOWN")
+        compact["symbols"][symbol] = {
+            key: row.get(key) for key in ("score", "price", "whales", "classification", "stale", "owner_status", "timestamp") if key in row
+        }
+    return compact
+
+
 def extract_metrics(root: Path) -> dict[str, Any]:
-    metrics: dict[str, Any] = {"spot": {}, "derivatives": {}, "breadth": {}, "macro": {}}
+    metrics: dict[str, Any] = {"spot": {}, "derivatives": {}, "breadth": {}, "macro": {}, "sentiment": {}}
     for symbol in ("BTCUSDT", "ETHUSDT", "ETHBTC"):
         row = last_kline(root / "binance-spot-owner-output" / "raw" / f"{symbol}.json")
         if row:
@@ -117,6 +142,7 @@ def extract_metrics(root: Path) -> dict[str, Any]:
                     metrics["breadth"][key] = aggregate[key]
 
     metrics["macro"] = latest_fred_values(root / "fred-owner-output")
+    metrics["sentiment"]["cfgi"] = extract_cfgi(root / "cfgi-owner-output")
     return metrics
 
 
@@ -132,10 +158,19 @@ def owner_record(root: Path, owner_id: str, relative_dir: str, exit_codes: dict[
                     item["summary"] = summary
             files.append(item)
     code = int(exit_codes.get(owner_id, 999))
+    if code == 78:
+        status = "DISABLED"
+    elif code == 0 and files:
+        status = "PASS"
+    elif code == 0:
+        status = "EMPTY"
+    else:
+        status = "FAIL"
     return {
         "owner_id": owner_id,
+        "owner_class": "CORE" if owner_id in CORE_OWNER_IDS else "OPTIONAL",
         "collector_exit_code": code,
-        "status": "PASS" if code == 0 and files else "FAIL" if code != 0 else "EMPTY",
+        "status": status,
         "file_count": len(files),
         "total_bytes": sum(item["bytes"] for item in files),
         "files": files,
@@ -154,8 +189,10 @@ def main() -> None:
     exit_codes = json.loads(args.status_file.read_text())
     captured_at = datetime.now(timezone.utc).replace(microsecond=0)
     owners = [owner_record(args.root, key, value, exit_codes) for key, value in OWNER_DIRS.items()]
-    passed = sum(owner["status"] == "PASS" for owner in owners)
-    overall = "COMPLETE" if passed == len(owners) else "PARTIAL" if passed else "FAILED"
+    core = [owner for owner in owners if owner["owner_id"] in CORE_OWNER_IDS]
+    core_passed = sum(owner["status"] == "PASS" for owner in core)
+    optional_passed = sum(owner["status"] == "PASS" for owner in owners if owner["owner_id"] in OPTIONAL_OWNER_IDS)
+    overall = "COMPLETE" if core_passed == len(core) else "PARTIAL" if core_passed else "FAILED"
 
     packet = {
         "contract": "DAILY_RAW_CAPTURE_INDEX_v2",
@@ -164,15 +201,19 @@ def main() -> None:
         "captured_at_utc": captured_at.isoformat().replace("+00:00", "Z"),
         "trigger": args.trigger,
         "status": overall,
-        "owners_passed": passed,
+        "owners_passed": core_passed + optional_passed,
         "owners_planned": len(owners),
+        "core_owners_passed": core_passed,
+        "core_owners_planned": len(core),
+        "optional_owners_passed": optional_passed,
+        "optional_owners_planned": len(OPTIONAL_OWNER_IDS),
         "owners": owners,
         "market_metrics": extract_metrics(args.root),
         "artifact_retention_days": 7,
         "canonical_data_ping": False,
         "framework_state_change": False,
         "portfolio_action": False,
-        "weekly_calibration_eligible": passed >= 3,
+        "weekly_calibration_eligible": core_passed >= 3,
     }
 
     day_dir = args.output_root / captured_at.strftime("%Y/%m/%d")

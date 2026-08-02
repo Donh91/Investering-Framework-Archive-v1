@@ -25,6 +25,9 @@ jobs:
   capture:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    env:
+      CFGI_API_KEY: ${{ secrets.CFGI_API_KEY }}
+      CFGI_ENABLED: ${{ vars.CFGI_ENABLED }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -40,11 +43,8 @@ jobs:
         shell: bash
         run: |
           set +e
-          run_owner() {
-            key="$1"; shift
-            "$@"
-            code=$?
-            python - "$key" "$code" <<'PY'
+          record_code() {
+            python - "$1" "$2" <<'PY'
           import json, sys
           from pathlib import Path
           p=Path('collector-status.json')
@@ -53,22 +53,25 @@ jobs:
           p.write_text(json.dumps(data, sort_keys=True)+'\n')
           PY
           }
+          run_owner() {
+            key="$1"; shift
+            "$@"
+            record_code "$key" "$?"
+          }
 
-          run_owner fred_macro python scripts/data_terminal/fred_multiseries_live_adapter.py \
-            --series DGS2,DGS10,DTWEXBGS,VIXCLS \
-            --output-dir fred-owner-output
+          run_owner fred_macro python scripts/data_terminal/fred_multiseries_live_adapter.py --series DGS2,DGS10,DTWEXBGS,VIXCLS --output-dir fred-owner-output
+          run_owner binance_spot python scripts/data_terminal/binance_spot_owner_collector.py --output-dir binance-spot-owner-output
+          run_owner binance_microstructure python scripts/data_terminal/binance_spot_microstructure_source.py --output-dir binance-spot-microstructure-output
+          run_owner okx_swap python scripts/data_terminal/okx_swap_owner_collector.py --output-dir okx-swap-owner-output
+          run_owner top100_breadth python scripts/data_terminal/top100_breadth_owner_collector.py --output-dir top100-breadth-owner-output
 
-          run_owner binance_spot python scripts/data_terminal/binance_spot_owner_collector.py \
-            --output-dir binance-spot-owner-output
-
-          run_owner binance_microstructure python scripts/data_terminal/binance_spot_microstructure_source.py \
-            --output-dir binance-spot-microstructure-output
-
-          run_owner okx_swap python scripts/data_terminal/okx_swap_owner_collector.py \
-            --output-dir okx-swap-owner-output
-
-          run_owner top100_breadth python scripts/data_terminal/top100_breadth_owner_collector.py \
-            --output-dir top100-breadth-owner-output
+          if [ "${CFGI_ENABLED}" = "true" ]; then
+            run_owner cfgi_sentiment python scripts/data_terminal/cfgi_owner_collector.py \
+              --output-dir cfgi-owner-output --symbols MARKET,BTC,ETH \
+              --timeframe 4h --fields score,price,whales --limit 1
+          else
+            record_code cfgi_sentiment 78
+          fi
 
       - name: Build compact permanent capture index
         run: |
@@ -88,6 +91,7 @@ jobs:
             binance-spot-microstructure-output/
             okx-swap-owner-output/
             top100-breadth-owner-output/
+            cfgi-owner-output/
             collector-status.json
           retention-days: 7
           if-no-files-found: warn
@@ -98,14 +102,10 @@ jobs:
           git config user.name 'framework-data-bot'
           git config user.email 'framework-data-bot@users.noreply.github.com'
           git add 03_DAILY_CAPTURE_LOGS/captures
-          if git diff --cached --quiet; then
-            echo 'No compact capture index to commit'
-            exit 0
-          fi
+          if git diff --cached --quiet; then exit 0; fi
           git commit -m "data: log daily raw capture ${GITHUB_RUN_ID}"
           for attempt in 1 2 3; do
             git pull --rebase origin main && git push origin HEAD:main && exit 0
             sleep $((attempt * 5))
           done
-          echo 'Failed to publish compact capture index after retries'
           exit 1
