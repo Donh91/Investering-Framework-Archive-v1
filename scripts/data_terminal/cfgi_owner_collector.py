@@ -4,10 +4,13 @@ import argparse
 import hashlib
 import json
 import os
+import urllib.error
 import urllib.parse
 import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
+
+USER_AGENT = "Investering-Framework-CFGI-Owner/1.0"
 
 
 def canonical(value: object) -> bytes:
@@ -26,15 +29,20 @@ def main() -> None:
     if not key:
         raise SystemExit("CFGI_API_KEY_missing")
     query = urllib.parse.urlencode({
+        "api_key": key,
         "symbols": args.symbols,
         "timeframe": args.timeframe,
         "fields": args.fields,
         "limit": args.limit,
     })
     url = "https://cfgi.io/api/v3/scores?" + query
-    req = urllib.request.Request(url, headers={"Authorization": f"Bearer {key}", "Accept": "application/json"})
-    with urllib.request.urlopen(req, timeout=60) as response:
-        payload = json.loads(response.read())
+    req = urllib.request.Request(url, headers={"Accept": "application/json", "User-Agent": USER_AGENT})
+    try:
+        with urllib.request.urlopen(req, timeout=60) as response:
+            payload = json.loads(response.read())
+    except urllib.error.HTTPError as exc:
+        body = exc.read().decode(errors="replace")
+        raise SystemExit(f"CFGI_HTTP_{exc.code}:{body[:300]}") from exc
     rows = payload.get("data", [])
     if not rows:
         raise SystemExit("cfgi_empty")
