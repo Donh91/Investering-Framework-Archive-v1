@@ -1,6 +1,10 @@
 name: CFGI Full Profile Smoke TEMP
 
 on:
+  pull_request:
+    paths:
+      - '.github/workflows/cfgi-full-profile-smoke-temp.yml'
+      - 'scripts/data_terminal/cfgi_owner_collector.py'
   push:
     branches: [agent/cfgi-live-delta-scorecard-v1]
     paths:
