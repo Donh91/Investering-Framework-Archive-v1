@@ -1,0 +1,82 @@
+name: API Agent Gateway Gate
+
+on:
+  pull_request:
+    paths:
+      - 'research/api_agent/**'
+      - 'scripts/api_agent/**'
+      - 'tests/api_agent/**'
+      - '.github/workflows/api-agent-gateway-gate.yml'
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: dry-run or controlled live smoke call
+        required: true
+        default: dry-run
+        type: choice
+        options: [dry-run, live-smoke]
+
+permissions:
+  contents: read
+
+jobs:
+  gateway-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run deterministic tests
+        run: python -m unittest tests.api_agent.test_api_gateway
+      - name: Compile gateway
+        run: python -m py_compile scripts/api_agent/api_gateway.py
+      - name: Prepare bounded smoke inputs
+        run: |
+          mkdir -p api-agent-input
+          cat > api-agent-input/prompt.txt <<'EOF'
+          Review the supplied synthetic specialist states. Preserve disagreement and return only the required structured shadow output.
+          EOF
+          cat > api-agent-input/context.json <<'EOF'
+          {"synthetic":true,"specialists":[{"id":"macro","state":"TAILWIND"},{"id":"breadth","state":"CONTRACTING"},{"id":"spot","state":"RANGE"}]}
+          EOF
+      - name: Dry-run gateway
+        if: github.event_name == 'pull_request' || inputs.mode == 'dry-run'
+        run: |
+          python scripts/api_agent/api_gateway.py \
+            --task DAILY_DIRECTOR_SHADOW \
+            --registry research/api_agent/API_TASK_REGISTRY_v1.json \
+            --prompt-file api-agent-input/prompt.txt \
+            --context-file api-agent-input/context.json \
+            --output-dir api-agent-output \
+            --dry-run
+      - name: Controlled live smoke call
+        if: github.event_name == 'workflow_dispatch' && inputs.mode == 'live-smoke'
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          python scripts/api_agent/api_gateway.py \
+            --task DAILY_DIRECTOR_SHADOW \
+            --registry research/api_agent/API_TASK_REGISTRY_v1.json \
+            --prompt-file api-agent-input/prompt.txt \
+            --context-file api-agent-input/context.json \
+            --output-dir api-agent-output
+      - name: Verify receipt authority
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          r=json.loads(Path('api-agent-output/receipt.json').read_text())
+          assert r['authority']['portfolio_action'] is False
+          assert r['authority']['framework_state_change'] is False
+          assert r['authority']['model_weight_change'] is False
+          assert r['estimated_cost_usd'] <= 1.5
+          print('API_AGENT_GATEWAY_PASS')
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: api-agent-gateway-${{ github.run_id }}
+          path: api-agent-output/
+          retention-days: 7
+          if-no-files-found: error
