@@ -1,0 +1,50 @@
+{
+  "schema_version": "DATA_PING_VALIDATION_v1",
+  "run_id": "run_3fe6bcb574124cdcbcd763f808c18439",
+  "snapshot_id": "snap_4652543565bd4c05a8e02a803a70f0e6",
+  "processed_at_utc": "2026-08-02T10:00:00Z",
+  "collector_status": "PARTIAL",
+  "all_core_actions_attempted": true,
+  "core_action_counts": {"planned":60,"attempted":60,"PASS":54,"PARTIAL":1,"STALE":2,"FAIL":0,"UNAVAILABLE":3},
+  "collector_predecessor_id": "snap_25c72fb925fd427cb44886fb7f1932f9",
+  "required_predecessor_id": "snap_0e19c112413d471d8270cad1a18148a7",
+  "predecessor_valid": false,
+  "canonical_longitudinal_comparison_accepted": false,
+  "current_absolute_owner_fields_accepted": true,
+  "direct_ETHBTC_available": true,
+  "direct_ETHBTC": 0.02958,
+  "settled_Copenhagen_ETHBTC_close": 0.02938,
+  "breadth": {
+    "status": "PARTIAL_PARSE_FAILURE",
+    "raw_rows_available": true,
+    "advance_ratio": null,
+    "membership_hash": null,
+    "prior_valid_advance_ratio": 0.4888888888888889,
+    "prior_value_forward_filled": false,
+    "gate_50_current_status": "UNKNOWN_NOT_EVALUATED"
+  },
+  "ETF": {
+    "packet_status": "STALE",
+    "BTC_latest_visible_session": "2026-07-28",
+    "ETH_latest_visible_session": "2026-07-27",
+    "overwrite_newer_reconciled_ledger": false
+  },
+  "source_QA": {
+    "breadth_parse_failure": "ACCEPTED_EXECUTED_PARTIAL",
+    "CFGI_unavailable": "ACCEPTED_EXECUTED_UNAVAILABLE",
+    "stablecoin_global_total_unavailable": "ACCEPTED_EXECUTED_PARTIAL",
+    "optional_response_too_large": "ACCEPTED_EXECUTED_FAIL",
+    "GeckoTerminal_low_reserve_anomaly_excluded": true
+  },
+  "framework_effect": {
+    "latest_bounded_owner_observation_update": true,
+    "canonical_market_pointer_advance": false,
+    "new_policy_event": false,
+    "new_A_class_receipt": false,
+    "A_class_increment": 0,
+    "new_shadow_dual_run": false,
+    "canonical_state_change": "NONE",
+    "portfolio_action_change": "NONE"
+  },
+  "validation_result": "BOUNDED_CURRENT_OWNER_AND_DERIVATIVES_ACCEPTED_BREADTH_AGGREGATE_UNAVAILABLE_STALE_ETF_BLOCKED_INVALID_PREDECESSOR_NO_STATE_CHANGE"
+}
