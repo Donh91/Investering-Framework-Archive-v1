@@ -65,9 +65,9 @@ jobs:
             /tmp/pdf-inspector/target
           key: pdf-inspector-${{ runner.os }}-${{ env.PDF_INSPECTOR_COMMIT }}
 
-      - name: Build pdf-inspector CLIs from source
+      - name: Build pdf-inspector CLIs from pinned source
         working-directory: /tmp/pdf-inspector
-        run: cargo build --locked --release --bin pdf2md --bin detect-pdf
+        run: cargo build --release --bin pdf2md --bin detect-pdf
 
       - name: Resolve CLI paths
         shell: bash
