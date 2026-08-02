@@ -1,0 +1,78 @@
+{
+  "schema_version": "DATA_PING_MACHINE_SUMMARY_v1",
+  "run_id": "run_b632d125165c4cf7a882a73f22a40333",
+  "snapshot_id": "snap_3f013c5404c144e0bbeb9d7a976c364d",
+  "snapshot_utc": "2026-08-02T12:29:17.344Z",
+  "acceptance": "BOUNDED_CURRENT_OWNER_BREADTH_DERIVATIVES_AND_SOURCE_QA_OBSERVATION",
+  "accepted_as_next_market_predecessor": false,
+  "required_market_predecessor": "snap_0e19c112413d471d8270cad1a18148a7",
+  "collector_predecessor": "snap_4652543565bd4c05a8e02a803a70f0e6",
+  "collector_predecessor_matches_required": false,
+  "market": {
+    "BTC_usd": 63212.01,
+    "ETH_usd": 1858.99,
+    "direct_ETHBTC": 0.02942,
+    "settled_Copenhagen_ETHBTC_close": 0.02938,
+    "BTC_24h_pct": 0.172,
+    "ETH_24h_pct": -0.484,
+    "ETHBTC_24h_pct": -0.608
+  },
+  "breadth": {
+    "status": "PASS",
+    "advance_ratio": 0.477777777778,
+    "advancers": 43,
+    "decliners": 28,
+    "unchanged": 19,
+    "membership_hash": "016a925e6eea78a40159dec079a77a24f91d42b4a7bd5ebfe8c98980489320ae",
+    "last_valid_same_membership_advance_ratio": 0.4888888888888889,
+    "change_percentage_points": -1.11111111108889,
+    "gate_35": true,
+    "gate_50": false,
+    "gate_55": false
+  },
+  "flow": {
+    "BTC_current_taker_ratio": 0.7586,
+    "ETH_current_taker_ratio": 0.5607,
+    "BTC_1h_return_pct": -0.273775678929,
+    "ETH_1h_return_pct": -0.865814764871,
+    "ETHBTC_1h_return_pct": -0.642543118025,
+    "BTC_4h_return_pct": -0.746761380734,
+    "ETH_4h_return_pct": -1.2536645168,
+    "ETHBTC_4h_return_pct": -0.575296108291
+  },
+  "derivatives": {
+    "BTC_Binance_funding": 0.00009197,
+    "ETH_Binance_funding": 0.00004594,
+    "BTC_OKX_funding": -0.0000181222562211,
+    "ETH_OKX_funding": 0.0000161459405207,
+    "BTC_OI_4h_change_pct": -0.000776871414,
+    "ETH_OI_4h_change_pct": -0.983726175274,
+    "BTC_OI_24h_change_pct": 0.052717862007,
+    "ETH_OI_24h_change_pct": -1.4307672328
+  },
+  "source_boundaries": {
+    "ETF_current_evidence_accepted": false,
+    "ETF_rejection_reason": "STALE_OLDER_THAN_RECONCILED_LEDGER",
+    "CFGI_available": false,
+    "stablecoin_global_total_available": false,
+    "realized_volatility_available": false
+  },
+  "framework": {
+    "classification": "SAME_MEMBERSHIP_BREADTH_RESLIP_BELOW_50_WITH_DIRECT_ETHBTC_NEAR_SETTLED_LOW_ETH_UNDERPERFORMANCE_SELL_SIDE_TAKER_FLOW_ELEVATED_BTC_BINANCE_FUNDING_VENUE_DIVERGENCE_PARTIAL_ETH_LEVERAGE_REDUCTION_STALE_ETF_AND_INVALID_PREDECESSOR_LINEAGE",
+    "rotation": "NO_ROTATION",
+    "rebuy": "LOCKED",
+    "new_entry": "NOT_ACTIVE",
+    "large_caps": "WATCH_ONLY",
+    "portfolio_action": "NONE",
+    "operational_risk_class": "DO_NOT_ADD_RISK",
+    "risk_class_change": "DOWNGRADE_FROM_WAIT_FOR_BETTER_WINDOW",
+    "canonical_state_change": "NONE",
+    "new_policy_event": false,
+    "new_A_class_receipt": false,
+    "A_rows_total": 2,
+    "new_shadow_dual_run": false,
+    "shadow_dual_run_valid_runs": 5,
+    "final_holdout_opened": false
+  },
+  "reassessment_horizon": "6_TO_12_HOURS"
+}
