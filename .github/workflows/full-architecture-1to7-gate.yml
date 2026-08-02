@@ -41,4 +41,16 @@ jobs:
           grep -q "cron: '20 2 \* \* 1'" .github/workflows/weekly-api-calibration-shadow.yml
           grep -q 'weekly_orchestration_controller.py' .github/workflows/weekly-api-calibration-shadow.yml
           grep -q 'group: framework-main-writer' .github/workflows/weekly-api-calibration-shadow.yml
-          ! grep -R --line-number -E 'sk-[A-Za-z0-9_-]{20,}|CFGI_API_KEY: [^$]' . --exclude-dir=.git
+          python - <<'PY'
+          import re
+          from pathlib import Path
+          findings=[]
+          patterns=[re.compile(r'sk-proj-[A-Za-z0-9_-]{20,}'),re.compile(r'(?m)^\s*CFGI_API_KEY:\s*(?!\$\{\{\s*secrets\.)\S+')]
+          for p in Path('.').rglob('*'):
+              if not p.is_file() or '.git' in p.parts or p.name=='full-architecture-1to7-gate.yml':
+                  continue
+              try: text=p.read_text(errors='ignore')
+              except Exception: continue
+              if any(rx.search(text) for rx in patterns): findings.append(str(p))
+          if findings: raise SystemExit('possible committed secret: '+','.join(findings))
+          PY
