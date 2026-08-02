@@ -1,0 +1,32 @@
+{
+  "contract": "FULL_ARCHITECTURE_1TO7_EXECUTION_STATE_v1",
+  "issue": 288,
+  "status": "IMPLEMENTED_PENDING_CI_AND_MAIN_READBACK",
+  "phases": {
+    "1_full_audit": "IMPLEMENTED",
+    "2_critical_timing_and_security": "IMPLEMENTED",
+    "3_weekly_orchestration_controller": "IMPLEMENTED",
+    "4_health_dashboard": "IMPLEMENTED",
+    "5_accepted_data_ping_bridge": "IMPLEMENTED",
+    "6_farside_etf_owner": "IMPLEMENTED",
+    "7_outcome_maturation_engine": "IMPLEMENTED"
+  },
+  "critical_schedule_fix": {
+    "previous": "Monday 00:10 Europe/Copenhagen",
+    "new": "Monday 02:20 Europe/Copenhagen",
+    "final_exchange_close": "Monday 02:05 Europe/Copenhagen"
+  },
+  "authority": {
+    "canonical_promotion": false,
+    "model_weight_change": false,
+    "portfolio_action": false
+  },
+  "remaining_gates": [
+    "INTEGRATED_CI",
+    "DATA_ARCHITECTURE_GATE",
+    "STORAGE_HEALTH_GATE",
+    "MERGE",
+    "MAIN_READBACK",
+    "FIRST_OPERATIONS_RECEIPT"
+  ]
+}
