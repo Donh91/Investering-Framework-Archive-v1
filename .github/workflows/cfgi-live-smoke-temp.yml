@@ -1,0 +1,53 @@
+name: CFGI Live Smoke TEMP
+
+on:
+  push:
+    branches: [agent/cfgi-daily-owner-v1]
+    paths:
+      - 'scripts/data_terminal/cfgi_owner_collector.py'
+      - '.github/workflows/cfgi-live-smoke-temp.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      CFGI_API_KEY: ${{ secrets.CFGI_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run live CFGI owner
+        run: |
+          python scripts/data_terminal/cfgi_owner_collector.py \
+            --output-dir cfgi-owner-output \
+            --symbols MARKET,BTC,ETH \
+            --timeframe 4h \
+            --fields score,price,whales \
+            --limit 1
+      - name: Verify output
+        run: |
+          python - <<'PY'
+          import hashlib, json
+          from pathlib import Path
+          snapshot=Path('cfgi-owner-output/owner_snapshot.json')
+          receipt=json.loads(Path('cfgi-owner-output/receipt.json').read_text())
+          data=json.loads(snapshot.read_text())
+          assert data['contract']=='CFGI_OWNER_SNAPSHOT_v2'
+          assert data['timeframe']=='4h'
+          assert set(data['symbols'])=={'MARKET','BTC','ETH'}
+          assert receipt['sha256']==hashlib.sha256(snapshot.read_bytes()).hexdigest()
+          assert receipt['row_count']>0
+          assert receipt['status'] in {'PASS','DEGRADED'}
+          assert data['portfolio_action'] is False
+          print('CFGI_LIVE_SMOKE_PASS')
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cfgi-live-smoke-${{ github.run_id }}
+          path: cfgi-owner-output/
+          retention-days: 7
