@@ -1,0 +1,31 @@
+{
+  "contract": "COMPOUNDING_LEARNING_EXECUTION_STATE_v1",
+  "issue": 279,
+  "status": "IMPLEMENTED_PENDING_CI_FIRST_ENRICHED_CAPTURE_AND_FIRST_SCHEDULED_API_RUNS",
+  "daily_capture_contract": "DAILY_RAW_CAPTURE_INDEX_v2",
+  "daily_capture_frequency": 5,
+  "daily_director_schedule_local": "23:25 Europe/Copenhagen",
+  "daily_director_model": "gpt-5.6-luna",
+  "weekly_bridge_schedule_local": "Sunday 23:45 Europe/Copenhagen",
+  "weekly_calibration_schedule_local": "Monday 00:10 Europe/Copenhagen",
+  "weekly_calibration_model": "gpt-5.6-terra",
+  "monthly_internal_hard_stop_usd": 20.0,
+  "daily_outputs_permanently_indexed": true,
+  "weekly_handoff_targets": [
+    "RAW_WEEKLY_CALIBRATION",
+    "FORECAST_LEDGER",
+    "MASTER_MONDAY_PREP",
+    "SPECIALIST_REVIEW"
+  ],
+  "canonical_data_ping_replacement": false,
+  "framework_state_change": false,
+  "model_weight_change": false,
+  "portfolio_action": false,
+  "next_gates": [
+    "CI",
+    "FIRST_ENRICHED_CAPTURE_READBACK",
+    "FIRST_SCHEDULED_LUNA_READBACK",
+    "FIRST_WEEKLY_TERRA_READBACK",
+    "FOUR_WEEK_PARALLEL_CALIBRATION_AUDIT"
+  ]
+}
