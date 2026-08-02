@@ -1,0 +1,51 @@
+{
+  "schema_version": "CLAUDE_OTA_RECONCILIATION_v1",
+  "source_run_timestamp_utc": "2026-08-02T06:14:13.076Z",
+  "reconciled_at_utc": "2026-08-02T06:18:00Z",
+  "operating_mode": "STANDALONE_OTA_NO_REFERENCE_BRIDGE",
+  "main_framework_acceptance": "NONCANONICAL_SETTLED_EXPERIMENT_EXTENSION_DESIGN_AND_SOURCE_QA_EVIDENCE",
+  "checks": {
+    "h7_row_11_direct_settled_receipts_supplied": true,
+    "h7_original_maturity_already_reached": true,
+    "h7_row_11_treated_as_new_canonical_maturity": false,
+    "h7_row_11_accepted_as_post_maturity_extension": true,
+    "h7_historical_score_changed": false,
+    "formal_lapse_rule_invented": false,
+    "endpoint_change_arithmetic_checked": true,
+    "endpoint_change_pct": 0.1705,
+    "complete_eleven_row_series_independently_reconstructed": false,
+    "f1_session_now_settled": true,
+    "f1_intraday_breached_higher_candidate": true,
+    "f1_intraday_breached_lower_candidate": false,
+    "f1_close_breached_either_candidate": false,
+    "f1_score_changed": false,
+    "h_win_01_confidence_changed": false,
+    "ethbtc_four_settled_sessions_without_0030_touch": true,
+    "ethbtc_additional_in_progress_session_without_0030_touch": true,
+    "five_settled_sessions_without_touch_claim_accepted": false,
+    "okx_503_recorded_as_observation": true,
+    "venue_or_egress_hypothesis_created": false,
+    "latest_data_ping_superseded": false
+  },
+  "framework_corrections": [
+    "THIRD_MATURITY_CORRECTED_TO_THIRD_CONSECUTIVE_POST_MATURITY_EXTENSION_WITH_INACTIVE_SIGNAL",
+    "LAPSED_WORDING_NOT_ADOPTED_WITHOUT_FORMAL_LAPSE_RULE",
+    "FIVE_SESSIONS_WITHOUT_TOUCH_SPLIT_INTO_FOUR_SETTLED_PLUS_ONE_IN_PROGRESS",
+    "ARC_MIN_AND_MAX_RETAINED_AS_SOURCE_SUPPLIED_DERIVED_METADATA"
+  ],
+  "state_effect": {
+    "rotation": "NO_ROTATION",
+    "rebuy": "LOCKED",
+    "new_entry": "NOT_ACTIVE",
+    "large_caps": "WATCH_ONLY",
+    "portfolio_action": "NONE",
+    "canonical_state_change": "NONE",
+    "new_policy_event": false,
+    "new_A_class_receipt": false,
+    "A_rows_total": 2,
+    "new_shadow_dual_run": false,
+    "shadow_dual_run_valid_runs": 5,
+    "final_holdout_opened": false
+  },
+  "operational_action": "WAIT_FOR_NEXT_FULL_DATA_PING"
+}
