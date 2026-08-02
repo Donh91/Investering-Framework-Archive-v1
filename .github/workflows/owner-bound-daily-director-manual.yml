@@ -42,7 +42,7 @@ jobs:
           Review the latest real owner-bound daily capture against the preceding capture. Preserve source-health limitations and disagreement. Distinguish evidence from missingness. Produce a compact shadow synthesis for later RAW and Master Monday calibration. Do not provide portfolio action or canonical market truth.
           EOF
       - name: Run gateway dry
-        if: (github.event_name == 'workflow_dispatch' && inputs.mode == 'dry-run') || (github.event_name == 'pull_request' && github.head_ref != 'agent/owner-bound-daily-director-v1')
+        if: github.event_name == 'pull_request' || inputs.mode == 'dry-run'
         run: |
           python scripts/api_agent/api_gateway.py \
             --task DAILY_DIRECTOR_SHADOW \
@@ -51,8 +51,8 @@ jobs:
             --context-file owner-bound-director-input/context.json \
             --output-dir owner-bound-director-output \
             --dry-run
-      - name: Run one-time owner-bound live call
-        if: (github.event_name == 'workflow_dispatch' && inputs.mode == 'live') || (github.event_name == 'pull_request' && github.head_ref == 'agent/owner-bound-daily-director-v1')
+      - name: Run explicit owner-bound live call
+        if: github.event_name == 'workflow_dispatch' && inputs.mode == 'live'
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
