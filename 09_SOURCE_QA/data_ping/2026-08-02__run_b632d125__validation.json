@@ -1,0 +1,86 @@
+{
+  "schema_version": "DATA_PING_VALIDATION_v1",
+  "processed_at_utc": "2026-08-02T12:59:00Z",
+  "run_id": "run_b632d125165c4cf7a882a73f22a40333",
+  "snapshot_id": "snap_3f013c5404c144e0bbeb9d7a976c364d",
+  "dedupe_status": "UNIQUE_RUN",
+  "transport_integrity": "UNVERIFIED_CHAT_TRANSPORT",
+  "counts_reconciled": true,
+  "all_core_actions_attempted": true,
+  "core_action_counts": {
+    "planned": 60,
+    "attempted": 60,
+    "PASS": 54,
+    "PARTIAL": 1,
+    "STALE": 2,
+    "FAIL": 0,
+    "UNAVAILABLE": 3,
+    "SKIPPED_RUNTIME_LIMIT": 0
+  },
+  "lineage": {
+    "required_predecessor_snapshot": "snap_0e19c112413d471d8270cad1a18148a7",
+    "collector_predecessor_snapshot": "snap_4652543565bd4c05a8e02a803a70f0e6",
+    "match": false,
+    "canonical_longitudinal_deltas_accepted": false,
+    "absolute_current_fields_accepted": true
+  },
+  "breadth_validation": {
+    "status": "PASS",
+    "method_id": "COINGECKO_TOP100_FILTERED_v2",
+    "membership_hash": "016a925e6eea78a40159dec079a77a24f91d42b4a7bd5ebfe8c98980489320ae",
+    "membership_matches_last_valid_run": true,
+    "last_valid_run_id": "run_ea7cb739da3846e0bf5657b2cf757b32",
+    "last_valid_advance_ratio": 0.4888888888888889,
+    "current_advance_ratio": 0.477777777778,
+    "same_membership_comparison_accepted": true,
+    "change_percentage_points": -1.11111111108889,
+    "constituent_sidecar_available": false,
+    "gate_50_crossed": false
+  },
+  "owner_validation": {
+    "BTC_direct_available": true,
+    "ETH_direct_available": true,
+    "ETHBTC_direct_available": true,
+    "ETHBTC_direct": 0.02942,
+    "ETHBTC_derived": 0.029386476801,
+    "direct_used_for_scoring": true,
+    "derived_used_for_scoring": false,
+    "settled_Copenhagen_ETHBTC_close": 0.02938
+  },
+  "source_rejections": [
+    {
+      "source": "ETF_BTC",
+      "reason": "STALE_OLDER_THAN_RECONCILED_LEDGER",
+      "latest_visible_session": "2026-07-28"
+    },
+    {
+      "source": "ETF_ETH",
+      "reason": "STALE_OLDER_THAN_RECONCILED_LEDGER",
+      "latest_visible_session": "2026-07-27"
+    },
+    {
+      "source": "GECKOTERMINAL_WRAP_WETH",
+      "reason": "LOW_RESERVE_ANOMALY_EXCLUDED_FROM_MARKET_INTERPRETATION"
+    }
+  ],
+  "missing_or_unavailable": [
+    "CFGI_GLOBAL",
+    "CFGI_BTC",
+    "CFGI_ETH",
+    "STABLECOIN_GLOBAL_MARKET_CAP",
+    "DEFI_TOTAL_TVL",
+    "REALIZED_VOLATILITY_24H_72H_168H"
+  ],
+  "framework_mutation": {
+    "canonical_market_pointer_advanced": false,
+    "new_policy_event": false,
+    "new_A_class_receipt": false,
+    "A_class_increment": 0,
+    "new_shadow_dual_run": false,
+    "portfolio_state_changed": false,
+    "operational_risk_class_changed": true,
+    "operational_risk_class_from": "WAIT_FOR_BETTER_WINDOW",
+    "operational_risk_class_to": "DO_NOT_ADD_RISK"
+  },
+  "validation_result": "PASS_WITH_EXPLICIT_BOUNDARIES"
+}
