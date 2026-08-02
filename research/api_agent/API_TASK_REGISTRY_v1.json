@@ -1,0 +1,56 @@
+{
+  "contract": "API_TASK_REGISTRY_v1",
+  "status": "ACTIVE_SHADOW_ONLY",
+  "monthly_hard_stop_usd": 20.0,
+  "single_run_hard_stop_usd": 1.5,
+  "default_store": false,
+  "tasks": {
+    "DAILY_DIRECTOR_SHADOW": {
+      "model": "gpt-5.6-luna",
+      "reasoning_effort": "low",
+      "max_output_tokens": 1200,
+      "manual_only": false,
+      "outcome_access": false,
+      "allowed_write_prefix": "research/api_agent/outputs/daily/"
+    },
+    "DAILY_CONFLICT_REVIEW": {
+      "model": "gpt-5.6-terra",
+      "reasoning_effort": "medium",
+      "max_output_tokens": 1600,
+      "manual_only": false,
+      "outcome_access": false,
+      "allowed_write_prefix": "research/api_agent/outputs/conflicts/"
+    },
+    "WEEKLY_CALIBRATION_SHADOW": {
+      "model": "gpt-5.6-terra",
+      "reasoning_effort": "medium",
+      "max_output_tokens": 3000,
+      "manual_only": false,
+      "outcome_access": true,
+      "allowed_write_prefix": "research/api_agent/outputs/weekly/"
+    },
+    "MASTER_MONDAY_PREP_SHADOW": {
+      "model": "gpt-5.6-sol",
+      "reasoning_effort": "high",
+      "max_output_tokens": 4500,
+      "manual_only": true,
+      "outcome_access": true,
+      "allowed_write_prefix": "research/api_agent/outputs/master_monday/"
+    },
+    "DEEP_RESEARCH_MANUAL": {
+      "model": "gpt-5.6-sol",
+      "reasoning_effort": "high",
+      "max_output_tokens": 6000,
+      "manual_only": true,
+      "outcome_access": false,
+      "allowed_write_prefix": "research/api_agent/outputs/research/"
+    }
+  },
+  "authority": {
+    "creates_truth": false,
+    "framework_state_change": false,
+    "model_weight_change": false,
+    "portfolio_action": false,
+    "self_merge": false
+  }
+}
