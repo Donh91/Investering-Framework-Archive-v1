@@ -6,6 +6,10 @@ on:
     paths:
       - 'scripts/data_terminal/cfgi_owner_collector.py'
       - '.github/workflows/cfgi-live-smoke-temp.yml'
+  pull_request:
+    paths:
+      - 'scripts/data_terminal/cfgi_owner_collector.py'
+      - '.github/workflows/cfgi-live-smoke-temp.yml'
 
 permissions:
   contents: read
