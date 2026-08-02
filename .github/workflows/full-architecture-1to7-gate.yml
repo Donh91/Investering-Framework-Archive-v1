@@ -1,0 +1,56 @@
+name: Full Architecture 1-7 Gate
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/orchestration/**'
+      - 'scripts/data_ping/**'
+      - 'scripts/health/**'
+      - 'scripts/learning/**'
+      - 'scripts/data_terminal/farside_etf_owner.py'
+      - 'tests/architecture/test_full_architecture_1to7.py'
+      - '.github/workflows/framework-learning-operations.yml'
+      - '.github/workflows/weekly-api-calibration-shadow.yml'
+      - 'research/audits/FULL_ARCHITECTURE_AUDIT_2026-08-02.md'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compile new architecture modules
+        run: |
+          python -m py_compile \
+            scripts/orchestration/weekly_orchestration_controller.py \
+            scripts/data_ping/accepted_data_ping_bridge.py \
+            scripts/health/build_architecture_health.py \
+            scripts/data_terminal/farside_etf_owner.py \
+            scripts/learning/outcome_maturation_engine.py
+      - name: Run integrated phase tests
+        run: python -m unittest tests.architecture.test_full_architecture_1to7 -v
+      - name: Verify weekly ordering and security boundaries
+        run: |
+          grep -q "cron: '20 2 \* \* 1'" .github/workflows/weekly-api-calibration-shadow.yml
+          grep -q 'weekly_orchestration_controller.py' .github/workflows/weekly-api-calibration-shadow.yml
+          grep -q 'group: framework-main-writer' .github/workflows/weekly-api-calibration-shadow.yml
+          python - <<'PY'
+          import re
+          from pathlib import Path
+          findings=[]
+          patterns=[re.compile(r'sk-proj-[A-Za-z0-9_-]{20,}'),re.compile(r'(?m)^\s*CFGI_API_KEY:\s*(?!\$\{\{\s*secrets\.)\S+')]
+          for p in Path('.').rglob('*'):
+              if not p.is_file() or '.git' in p.parts or p.name=='full-architecture-1to7-gate.yml':
+                  continue
+              try: text=p.read_text(errors='ignore')
+              except Exception: continue
+              if any(rx.search(text) for rx in patterns): findings.append(str(p))
+          if findings: raise SystemExit('possible committed secret: '+','.join(findings))
+          PY

@@ -2,7 +2,7 @@ name: Weekly API Calibration Shadow
 
 on:
   schedule:
-    - cron: '10 0 * * 1'
+    - cron: '20 2 * * 1'
       timezone: 'Europe/Copenhagen'
   workflow_dispatch:
 
@@ -10,13 +10,13 @@ permissions:
   contents: write
 
 concurrency:
-  group: weekly-api-calibration-shadow
+  group: framework-main-writer
   cancel-in-progress: false
 
 jobs:
   calibrate:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 18
     steps:
       - uses: actions/checkout@v4
         with:
@@ -24,17 +24,31 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Verify final weekly evidence freeze
+        run: |
+          mkdir -p runtime/weekly-calibration
+          python scripts/orchestration/weekly_orchestration_controller.py \
+            --capture-root 03_DAILY_CAPTURE_LOGS \
+            --accepted-data-ping-root research/data_ping_bridge/accepted \
+            --output runtime/weekly-calibration/WEEKLY_EVIDENCE_FREEZE.json
       - name: Enforce monthly API cost guard
         run: python scripts/api_agent/check_monthly_cost_guard.py --receipt-root research/api_agent/outputs --hard-stop-usd 20 --reserve-usd 0.50
       - name: Build weekly context
         run: |
-          mkdir -p runtime/weekly-calibration
           python scripts/api_agent/build_weekly_calibration_context.py \
             --weekly-pointer 03_DAILY_CAPTURE_LOGS/weekly/LATEST_WEEKLY_CALIBRATION.json \
             --daily-output-root research/api_agent/outputs/daily \
             --output runtime/weekly-calibration/context.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('runtime/weekly-calibration/context.json')
+          c=json.loads(p.read_text())
+          c['weekly_evidence_freeze']=json.loads(Path('runtime/weekly-calibration/WEEKLY_EVIDENCE_FREEZE.json').read_text())
+          p.write_text(json.dumps(c,sort_keys=True,separators=(',',':'))+'\n')
+          PY
           cat > runtime/weekly-calibration/prompt.txt <<'EOF'
-          Audit the supplied weekly capture pack and Daily Director rows. Identify repeated sequences, early deterioration, failed confirmations, specialist disagreement and data-quality limits. Separate directional accuracy, timing, confidence calibration, false positives, false negatives and opportunity cost. Produce a shadow calibration handoff for RAW and Master Monday. Do not alter frozen forecasts, thresholds, model weights, framework state or portfolio action.
+          Audit the final frozen weekly evidence after the verified UTC exchange close. Use owner captures, accepted DATA PING packets, ETF evidence and Daily Director rows. Identify repeated sequences, early deterioration, failed confirmations, specialist disagreement and data-quality limits. Separate directional accuracy, timing, confidence calibration, false positives, false negatives and opportunity cost. Produce a shadow calibration handoff for RAW, Cycle Navigator and Master Monday. Do not alter frozen forecasts, thresholds, model weights, framework state or portfolio action.
           EOF
       - name: Run Terra weekly calibration
         env:
@@ -48,25 +62,27 @@ jobs:
             --output-dir runtime/weekly-calibration/output
       - name: Materialize weekly handoff
         run: |
-          WEEK=$(date -u +%G/W%V)
+          WEEK=$(date -u -d '1 day ago' +%G/W%V)
           DEST="research/api_agent/outputs/weekly/${WEEK}"
           mkdir -p "$DEST"
+          cp runtime/weekly-calibration/WEEKLY_EVIDENCE_FREEZE.json "$DEST/WEEKLY_EVIDENCE_FREEZE.json"
           cp runtime/weekly-calibration/context.json "$DEST/WEEKLY_CONTEXT.json"
           cp runtime/weekly-calibration/output/output.json "$DEST/WEEKLY_CALIBRATION_OUTPUT.json"
           cp runtime/weekly-calibration/output/receipt.json "$DEST/WEEKLY_CALIBRATION_RECEIPT.json"
           cp runtime/weekly-calibration/output/output.json research/api_agent/outputs/weekly/LATEST_WEEKLY_API_CALIBRATION.json
-      - name: Commit weekly evidence
+      - name: Commit weekly evidence with verified readback
         shell: bash
         run: |
           git config user.name 'framework-api-agent'
           git config user.email 'framework-api-agent@users.noreply.github.com'
           git add research/api_agent/outputs/weekly
-          git commit -m "ai: materialize weekly calibration shadow ${GITHUB_RUN_ID}"
+          git commit -m "ai: materialize final weekly calibration ${GITHUB_RUN_ID}"
           for attempt in 1 2 3; do
-            git pull --rebase origin main && git push origin HEAD:main && exit 0
+            git pull --rebase origin main && git push origin HEAD:main && break
             sleep $((attempt * 5))
           done
-          exit 1
+          git fetch origin main
+          git merge-base --is-ancestor HEAD origin/main
       - uses: actions/upload-artifact@v4
         with:
           name: weekly-api-calibration-${{ github.run_id }}

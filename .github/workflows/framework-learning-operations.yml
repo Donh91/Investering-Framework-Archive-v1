@@ -1,0 +1,79 @@
+name: Framework Learning Operations
+
+on:
+  schedule:
+    - cron: '5 3 * * 1-5'
+      timezone: 'Europe/Copenhagen'
+    - cron: '20 3 * * *'
+      timezone: 'Europe/Copenhagen'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: framework-main-writer
+  cancel-in-progress: false
+
+jobs:
+  operate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Ingest accepted DATA PING packets
+        run: |
+          mkdir -p research/data_ping_bridge/{inbox,accepted,rejected}
+          python scripts/data_ping/accepted_data_ping_bridge.py \
+            --inbox research/data_ping_bridge/inbox \
+            --accepted-root research/data_ping_bridge/accepted \
+            --rejected-root research/data_ping_bridge/rejected
+      - name: Capture Farside ETF owner
+        continue-on-error: true
+        run: |
+          mkdir -p runtime/farside-etf
+          python scripts/data_terminal/farside_etf_owner.py --output-dir runtime/farside-etf
+          STAMP=$(date -u +%Y/%m/%d/%H%M%S)
+          DEST="research/etf_owner/${STAMP}"
+          mkdir -p "$DEST"
+          cp runtime/farside-etf/*.json "$DEST/"
+          cp runtime/farside-etf/owner_snapshot.json research/etf_owner/LATEST_FARSIDE_ETF_OWNER.json
+      - name: Mature due outcomes
+        run: |
+          mkdir -p research/framework_memory/{forecast_memory,outcome_memory}
+          python scripts/learning/outcome_maturation_engine.py \
+            --forecast-root research/framework_memory/forecast_memory \
+            --evidence-root 03_DAILY_CAPTURE_LOGS/captures \
+            --output-root research/framework_memory/outcome_memory
+      - name: Build architecture health dashboard
+        run: |
+          python scripts/health/build_architecture_health.py \
+            --repo-root . \
+            --json-output research/architecture_health/LATEST_ARCHITECTURE_HEALTH.json \
+            --md-output research/architecture_health/LATEST_ARCHITECTURE_HEALTH.md
+      - name: Commit compact outputs and verify main readback
+        shell: bash
+        run: |
+          git config user.name 'framework-operations-bot'
+          git config user.email 'framework-operations-bot@users.noreply.github.com'
+          git add research/data_ping_bridge research/etf_owner research/framework_memory research/architecture_health
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "ops: update learning operations ${GITHUB_RUN_ID}"
+          for attempt in 1 2 3; do
+            git pull --rebase origin main && git push origin HEAD:main && break
+            sleep $((attempt * 5))
+          done
+          git fetch origin main
+          git merge-base --is-ancestor HEAD origin/main
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: framework-learning-operations-${{ github.run_id }}
+          path: runtime/
+          retention-days: 7
+          if-no-files-found: ignore
