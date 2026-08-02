@@ -32,18 +32,18 @@ sector_chart_sha256: 2746f9c583e53aa3301d864e8b8b73b1aeb3ad6e9fd611fde1669d9d276
 source_status: NEW_UNIQUE_SOURCE_WITH_EXPLICIT_SUPPLEMENT
 ```
 
-## Owner paths
+The native-text and complete-reconstruction hashes are inspection receipts. Those two temporary working files are not separate GitHub owners. The durable reading route is the original PDF pointer plus the archived supplementary tail.
+
+## Materialized owner paths
 
 ```text
 08_SOURCE_MATERIAL/techdev/issue_99/FILE_LIBRARY_SOURCE_POINTER.md
-08_SOURCE_MATERIAL/techdev/issue_99/TECHDEV_ISSUE_99_PDF_NATIVE_TEXT.txt
 08_SOURCE_MATERIAL/techdev/issue_99/TECHDEV_ISSUE_99_SUPPLEMENTARY_TAIL.txt
-08_SOURCE_MATERIAL/techdev/issue_99/TECHDEV_ISSUE_99_COMPLETE_RECONSTRUCTION.txt
 08_SOURCE_MATERIAL/techdev/issue_99/TECHDEV_ISSUE_99_SECTOR_CHART_POINTER.md
 08_SOURCE_MATERIAL/techdev/issue_99/TECHDEV_ISSUE_99_SECTOR_LEADERSHIP.csv
 ```
 
-The original PDF and chart remain the primary visual source artifacts in the user's ChatGPT project attachment store. GitHub preserves text, source identity, hashes, explicit capture boundaries, chart values and recovery instructions.
+The original PDF and chart remain the primary visual source artifacts in the user's ChatGPT project attachment store. GitHub preserves the missing tail text, source identity, hashes, explicit capture boundaries, chart values and recovery instructions.
 
 ## Content map
 
@@ -65,7 +65,7 @@ major_sections:
 
 ## Capture boundary
 
-The Safari PDF is a single 402 x 14,400 point page and ends during the UAI card. The user supplied the missing final article text and the sector-leadership image separately. The complete reconstruction is therefore a composite source object with explicit lineage, not a claim that the PDF binary itself contained the missing tail.
+The Safari PDF is a single 402 x 14,400 point page and ends during the UAI card. The user supplied the missing final article text and the sector-leadership image separately. A complete reading is therefore the PDF followed by `TECHDEV_ISSUE_99_SUPPLEMENTARY_TAIL.txt`, with explicit lineage rather than a claim that the PDF binary itself contained the missing tail.
 
 ## Governance boundary
 
