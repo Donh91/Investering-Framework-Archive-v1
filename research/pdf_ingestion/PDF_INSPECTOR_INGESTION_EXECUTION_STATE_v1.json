@@ -1,6 +1,6 @@
 {
   "contract": "PDF_INSPECTOR_INGESTION_EXECUTION_STATE_v1",
-  "status": "CI_REAL_PARSER_SMOKE_VERIFIED_READY_TO_MERGE",
+  "status": "ACTIVE_MERGED_SHADOW_INFRASTRUCTURE",
   "date": "2026-08-02",
   "upstream_repository": "https://github.com/firecrawl/pdf-inspector",
   "upstream_commit": "a15ec2d68d51dbe6a39d1da688ec7a3f642d846c",
@@ -16,9 +16,10 @@
   "deterministic_wrapper_tests_passed": 4,
   "real_upstream_smoke_required": true,
   "real_upstream_smoke_passed": true,
-  "real_upstream_smoke_workflow_run_id": 30759305427,
-  "real_upstream_smoke_artifact_id": 8836959214,
-  "real_upstream_smoke_artifact_digest": "sha256:67999303c4f558790e211067cdf68a65a77d32fdbe5fa06dc8e1c48d3c37dab6",
+  "final_premerge_workflow_run_id": 30759445567,
+  "final_premerge_workflow_conclusion": "success",
+  "final_premerge_artifact_id": 8836987866,
+  "final_premerge_artifact_digest": "sha256:9d7e03bdaab370dfb4442a78de640c283e20124fc646e4c71ef82aaab1eb3337",
   "artifact_readback_verified": true,
   "artifact_readback_status": "READY",
   "artifact_readback_pdf_type": "text_based",
@@ -29,6 +30,8 @@
   "artifact_readback_markdown_sha256": "62c1de9b4c4ad54be4666f41b904889b063e82b013adf36e0fc8339f1e2cc3b8",
   "data_architecture_gate_passed": true,
   "storage_health_gate_passed": true,
+  "merged_pr": 274,
+  "merged_commit": "450b2b29e50481263b5dd4ded72db3fdf10d60cd",
   "first_real_framework_pdf_readback": false,
   "authority": {
     "creates_truth": false,
@@ -37,5 +40,5 @@
     "portfolio_action": false,
     "canonical_promotion": false
   },
-  "next_gate": "MERGE_PR_274_THEN_PROCESS_FIRST_REAL_FRAMEWORK_PDF"
+  "next_gate": "PROCESS_FIRST_REAL_FRAMEWORK_PDF_WHEN_AVAILABLE"
 }
