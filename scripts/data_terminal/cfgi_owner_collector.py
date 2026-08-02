@@ -10,11 +10,19 @@ import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
 
-USER_AGENT = "Investering-Framework-CFGI-Owner/1.0"
+USER_AGENT = "Investering-Framework-CFGI-Owner/1.1"
 
 
 def canonical(value: object) -> bytes:
     return (json.dumps(value, sort_keys=True, separators=(",", ":")) + "\n").encode()
+
+
+def parse_int_header(headers: object, name: str) -> int | None:
+    try:
+        value = headers.get(name)  # type: ignore[attr-defined]
+        return int(value) if value is not None else None
+    except (TypeError, ValueError, AttributeError):
+        return None
 
 
 def main() -> None:
@@ -22,7 +30,7 @@ def main() -> None:
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--symbols", default="MARKET,BTC,ETH")
     parser.add_argument("--timeframe", default="4h")
-    parser.add_argument("--fields", default="score,price,whales")
+    parser.add_argument("--fields", default="score")
     parser.add_argument("--limit", type=int, default=1)
     args = parser.parse_args()
     key = os.environ.get("CFGI_API_KEY")
@@ -40,6 +48,8 @@ def main() -> None:
     try:
         with urllib.request.urlopen(req, timeout=60) as response:
             payload = json.loads(response.read())
+            credits_used = parse_int_header(response.headers, "X-Credits-Used")
+            credits_remaining = parse_int_header(response.headers, "X-Credits-Remaining")
     except urllib.error.HTTPError as exc:
         body = exc.read().decode(errors="replace")
         raise SystemExit(f"CFGI_HTTP_{exc.code}:{body[:300]}") from exc
@@ -49,14 +59,20 @@ def main() -> None:
     for row in rows:
         row["owner_status"] = "STALE" if row.get("stale") is True else "PASS"
     now = datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    billing = {
+        "credits_used": credits_used,
+        "credits_remaining": credits_remaining,
+        "expected_credits": len(args.symbols.split(",")) * len(args.fields.split(",")) * args.limit,
+    }
     packet = {
-        "contract": "CFGI_OWNER_SNAPSHOT_v2",
+        "contract": "CFGI_OWNER_SNAPSHOT_v3",
         "source": "CFGI_V3",
         "retrieved_at_utc": now,
         "symbols": args.symbols.split(","),
         "timeframe": args.timeframe,
         "fields": args.fields.split(","),
         "limit": args.limit,
+        "billing": billing,
         "rows": rows,
         "authority": "SHADOW_OBSERVATION_ONLY",
         "canonical_data_ping": False,
@@ -67,11 +83,13 @@ def main() -> None:
     body = canonical(packet)
     (args.output_dir / "owner_snapshot.json").write_bytes(body)
     receipt = {
-        "contract": "CFGI_OWNER_RECEIPT_v2",
+        "contract": "CFGI_OWNER_RECEIPT_v3",
         "retrieved_at_utc": now,
         "sha256": hashlib.sha256(body).hexdigest(),
         "row_count": len(rows),
         "timeframe": args.timeframe,
+        "fields": args.fields.split(","),
+        "billing": billing,
         "status": "PASS" if all(r.get("owner_status") == "PASS" for r in rows) else "DEGRADED",
     }
     (args.output_dir / "receipt.json").write_bytes(canonical(receipt))
