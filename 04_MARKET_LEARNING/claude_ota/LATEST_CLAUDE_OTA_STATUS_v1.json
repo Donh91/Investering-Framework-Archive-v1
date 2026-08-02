@@ -1,89 +1,79 @@
 {
   "schema_version": "LATEST_CLAUDE_OTA_STATUS_v1",
-  "latest_source_run_timestamp_utc": "2026-08-01T05:48:32.902Z",
-  "latest_source_record": "08_SOURCE_MATERIAL/claude_ota/2026-08-01__standalone-ota-h7-row10-eth-etf-gap__source-record.md",
-  "latest_framework_reconciliation": "04_MARKET_LEARNING/claude_ota/2026-08-01__standalone-ota-h7-row10-etf__framework-reconciliation.md",
-  "latest_QA": "09_SOURCE_QA/claude_ota/2026-08-01__standalone-ota-h7-row10-etf__reconciliation.json",
-  "latest_audit_receipt": "07_PROMPTS_AND_AGENTS/skill_runs/2026-08-01__claude-ota-h7-row10-etf__audit-receipt.md",
+  "latest_source_run_timestamp_utc": "2026-08-01T19:20:42.768Z",
+  "latest_source_record": "08_SOURCE_MATERIAL/claude_ota/2026-08-01__velocity-flag-f1-boundary-stress-ethbtc-inprogress__source-record.md",
+  "latest_framework_reconciliation": "04_MARKET_LEARNING/claude_ota/2026-08-01__velocity-flag-f1-ethbtc__framework-reconciliation.md",
+  "latest_QA": "09_SOURCE_QA/claude_ota/2026-08-01__velocity-flag-f1-ethbtc__reconciliation.json",
+  "latest_audit_receipt": "07_PROMPTS_AND_AGENTS/skill_runs/2026-08-01__claude-ota-velocity-f1-ethbtc__audit-receipt.md",
   "operating_mode": "STANDALONE_OTA_NO_REFERENCE_BRIDGE",
+  "latest_run_type": "VELOCITY_FLAG_NOT_FULL_RUN",
   "accepted_incremental_items": [
-    "H7_ROW_10_POST_MATURITY_EXTENSION",
-    "H7_POST_MATURITY_COND2_0_OF_3",
-    "H7_POST_MATURITY_ROLLING_SLOPE_NEGATIVE_0_395_PCT_PER_SESSION",
-    "ETH_ETF_2026_07_28_TO_2026_07_30_RECOVERY",
-    "ETH_ETF_2026_07_27_REVALIDATION",
-    "ETH_ISSUER_CONCENTRATION_SELF_CORRECTION",
-    "H_SRC_02_STRONG_FORM_FALSIFICATION",
-    "H_WIN_01_SOURCE_CONFIDENCE_DOWNGRADE",
-    "ETHBTC_0030_SEQUENCE_TERMINATION_CONFIRMED"
+    "F1_POST_WINDOW_INTRADAY_BOUNDARY_STRESS_HIGHER_CANDIDATE_ONLY",
+    "H_WIN_01_CONFIDENCE_DELIBERATELY_UNCHANGED",
+    "ETHBTC_IN_PROGRESS_WEAKNESS_NO_SETTLED_THRESHOLD_STATUS",
+    "COINBASE_HTTP_503_SOURCE_QA_OBSERVATION"
   ],
   "framework_corrections": [
-    "ROW_10_IS_POST_MATURITY_EXTENSION_NOT_NEW_CANONICAL_MATURITY",
-    "H7_HISTORICAL_SCORE_REMAINS_FROZEN",
-    "POST_MATURITY_FOLLOW_THROUGH_INACTIVE_CONFIRMED_NOT_RETROACTIVELY_FAILED",
-    "THREE_NEW_ETH_ETF_SESSIONS_RECOVERED_AND_27_JULY_REVALIDATED",
-    "UTC_AND_COPENHAGEN_ETHBTC_SETTLEMENTS_KEPT_SEPARATE",
-    "NO_LAPSE_RETIREMENT_OR_RETRIGGER_RULE_INVENTED"
+    "BTC_LOW_62275_WAS_BELOW_62342_BUT_ABOVE_62200_NOT_BELOW_BOTH",
+    "F1_WINDOW_CLOSED_AND_HISTORICAL_SCORE_NOT_RESCORED",
+    "F1_RULE_USED_SETTLED_CLOSES_NOT_INTRADAY_LOWS",
+    "H7_ROW_11_NOT_FORMED_AND_NOT_SCORED",
+    "IN_PROGRESS_ETHBTC_DOES_NOT_UPDATE_SETTLED_THRESHOLD_SEQUENCE"
   ],
+  "F1": {
+    "historical_score": "NOT_FAILED",
+    "historical_score_change": "NONE",
+    "window_closed": true,
+    "rule_basis": "SETTLED_CLOSES",
+    "latest_post_window_intraday_low": 62275.0,
+    "higher_candidate": 62342,
+    "lower_candidate": 62200,
+    "accepted_relation": "BELOW_HIGHER_CANDIDATE_ABOVE_LOWER_CANDIDATE"
+  },
+  "H_WIN_01": {
+    "status": "UNPROVEN_DESIGN_HYPOTHESIS",
+    "source_confidence": "LOW_MODERATE",
+    "confidence_change": "NONE",
+    "framework_authority": "NONE",
+    "F1_score_effect": "NONE"
+  },
   "H7": {
     "status": "MATURED_SCORED_WITH_ROW_10_POST_MATURITY_FOLLOW_THROUGH_INACTIVE_CONFIRMED",
     "historical_score": "EARLY_TRANSMISSION_CANDIDATE_NOT_ROTATION_CONFIRMATION",
     "historical_score_change": "NONE",
     "post_maturity_follow_through": "INACTIVE_CONFIRMED",
-    "COND2_last_3": "0_OF_3_NOT_MET",
-    "rolling_5_session_slope_pct_per_session": -0.395,
-    "formal_lapse_rule": "UNDEFINED_NOT_INVENTED",
-    "rows_8_9_10_confound": "POST_FOMC_ACTIVE_NO_CAUSAL_ATTRIBUTION"
+    "latest_formed_extension_row": 10,
+    "row_11_status_at_velocity_retrieval": "NOT_FORMED",
+    "formal_lapse_rule": "UNDEFINED_NOT_INVENTED"
   },
   "ETHBTC_threshold_sequence": {
-    "status": "SEQUENCE_TERMINATED_CONFIRMED",
+    "settled_status": "SEQUENCE_TERMINATED_CONFIRMED",
     "latest_settled_Copenhagen_close": 0.02957,
-    "latest_settled_UTC_close_supplied": 0.02962,
-    "reported_sessions_without_touch": 3,
-    "persistence": "FAILED",
-    "total_settled_closes_above_0_0300_in_arc": 1
+    "velocity_in_progress_running_value": 0.02938,
+    "velocity_in_progress_low": 0.02923,
+    "velocity_in_progress_high": 0.02974,
+    "velocity_in_progress_touched_0_0300": false,
+    "in_progress_threshold_effect": "NONE"
+  },
+  "source_QA": {
+    "cache_guard": "PASS_AS_SUPPLIED",
+    "coinbase_http_503": "EXECUTED_FAIL_OBSERVATION_ONLY",
+    "venue_reliability_hypothesis_created": false
   },
   "ETH_ETF": {
-    "2026_07_27_usd_m": 11.7,
-    "2026_07_27_status": "REVALIDATED_PREVIOUSLY_KNOWN",
-    "2026_07_28_usd_m": 9.4,
-    "2026_07_29_usd_m": -32.9,
-    "2026_07_30_usd_m": 12.8,
-    "2026_07_31_status": "UNPUBLISHED_UNKNOWN_NOT_ZERO",
-    "three_session_sum_usd_m": -9.7,
-    "five_session_sum_usd_m": 1.0,
+    "latest_settled_session": "2026-07-30",
     "seven_session_sum_usd_m": -0.7,
     "structure": "OSCILLATING_AROUND_ZERO_NO_DIRECTIONAL_INTENSITY",
-    "new_sessions_recovered": 3,
-    "revalidated_sessions": 1
-  },
-  "ETH_issuer_correction": {
-    "prior_claim": "ETHA_100_PERCENT_OF_GROSS_POSITIVE_FLOW_ON_2026_07_23",
-    "corrected_ETHA_usd_m": 8.5,
-    "corrected_ETHB_usd_m": 2.9,
-    "corrected_FETH_usd_m": 14.9,
-    "corrected_leader": "FETH_APPROX_57_PERCENT",
-    "cause": "INCOMPLETE_COLUMN_READ_BY_SOURCE"
-  },
-  "H_SRC_02": {
-    "strong_only_after_1600_UTC_form": "FALSIFIED",
-    "falsifying_observation_retrieval_utc": "2026-08-01T05:48:00Z",
-    "weaker_form": "UNPROVEN_PROSPECTIVE",
-    "observations_retained": 4
-  },
-  "H_WIN_01": {
-    "status": "UNPROVEN_DESIGN_HYPOTHESIS",
-    "source_confidence": "LOW_MODERATE_N2",
-    "framework_authority": "NONE",
-    "F1_score_effect": "NONE"
+    "2026_07_31_status": "UNPUBLISHED_UNKNOWN_NOT_ZERO"
   },
   "latest_data_ping_context": {
-    "run_id": "run_d90398dd4a78451a84a942a77d3ce9d6",
-    "breadth_advance_ratio": 0.3146067415730337,
-    "direct_ETHBTC": 0.02966,
+    "run_id": "run_fe496808649a7d5e3db0c033587afbc1",
+    "breadth_advance_ratio": 0.4772727272727273,
+    "direct_ETHBTC": 0.02965,
     "settled_Copenhagen_ETHBTC_close": 0.02957,
-    "operational_top_up_action": "DO_NOT_ADD_RISK_12_TO_24_HOURS"
+    "operational_top_up_action": "WAIT_FOR_BETTER_WINDOW_6_TO_12_HOURS"
   },
+  "velocity_flag_effect_on_latest_data_ping": "NONE",
   "new_policy_event": false,
   "new_A_class_receipt": false,
   "A_rows_total": 2,
@@ -99,6 +89,7 @@
   "open_items": [
     "BTC_ETF_2026_07_30_AND_2026_07_31",
     "ETH_ETF_2026_07_31",
+    "H7_ROW_11_SETTLED_EXTENSION",
     "H7_LAPSE_RETIRE_RETRIGGER_PROSPECTIVE_RULE",
     "ETF_AUM_DENOMINATORS",
     "ETHB_ISSUER_METADATA_INDEPENDENT_VERIFICATION"
