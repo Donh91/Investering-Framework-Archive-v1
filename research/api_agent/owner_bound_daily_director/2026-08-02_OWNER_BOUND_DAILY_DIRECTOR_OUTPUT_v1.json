@@ -1,0 +1,25 @@
+{
+  "status": "DEGRADED",
+  "summary": "The latest owner-bound capture is operationally complete and stable at the status level: 5/5 owners PASS with no reported transitions. However, the supplied preceding capture contains only capture metadata, not comparable owner values, and the compact latest context does not expose the full raw payloads. Therefore, no evidence-based change analysis, cross-source reconciliation, breadth assessment, or macro comparison can be completed. No canonical market conclusion or framework-state implication is established.",
+  "evidence_for": [
+    "Latest capture completed with all 5 owners PASS and collector exit code 0; pass ratio is 1.0.",
+    "Owner statuses are unchanged from the prior recorded status: all five remain PASS.",
+    "Latest owner artifacts include successful receipts/snapshots for FRED macro, Binance spot, Binance microstructure, OKX swaps, and top-100 breadth.",
+    "The OKX snapshot reports negative next funding rates for BTC-USDT-SWAP (-6.853677764e-07) and ETH-USDT-SWAP (-9.534586479e-06), plus the captured mark prices and open-interest fields.",
+    "The capture preserves lineage through run IDs, artifact hashes, retrieval timestamps, and the top-100 membership hash."
+  ],
+  "evidence_against": [],
+  "uncertainties": [
+    "The preceding capture's owner-level measurements are not supplied, so changes in prices, funding, open interest, macro series, microstructure, or breadth cannot be determined.",
+    "The compact indexes explicitly omit many raw market values; missing values must not be inferred from status, file count, bytes, or neighboring captures.",
+    "FRED calibration eligibility and capture status are null; the FRED terminal artifact is labeled SHADOW_CANDIDATE_ONLY.",
+    "No cross-venue comparison is available because Binance spot and microstructure measurements are not included in the supplied summaries.",
+    "Top-100 breadth statistics are not supplied; only constituent count and membership lineage are available.",
+    "Canonical data ping is false, so this synthesis cannot establish canonical truth or alter framework state."
+  ],
+  "hypotheses": [
+    "Operational source coverage appears stable between the preceding and latest captures, based on unchanged PASS statuses.",
+    "The available OKX derivatives snapshot is consistent with slightly negative quoted funding at the latest retrieval; no direction or persistence beyond that snapshot is established.",
+    "The latest capture may be usable as an input candidate for later calibration, but eligibility is explicitly null and the FRED terminal state is SHADOW_CANDIDATE_ONLY."
+  ]
+}
