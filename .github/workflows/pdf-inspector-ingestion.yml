@@ -1,0 +1,162 @@
+name: PDF Inspector Ingestion
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/pdf_ingestion/**'
+      - 'tests/pdf_ingestion/**'
+      - 'research/pdf_ingestion/**'
+      - '00_ARCHIVE_CONTROL/*pdf-inspector*'
+      - '.github/workflows/pdf-inspector-ingestion.yml'
+  workflow_dispatch:
+    inputs:
+      repo_path:
+        description: Optional PDF path already present in this repository
+        required: false
+        type: string
+      source_url:
+        description: Optional public HTTPS PDF URL, used only when repo_path is empty
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pdf-inspector-ingestion-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: false
+
+env:
+  PDF_INSPECTOR_REPOSITORY: https://github.com/firecrawl/pdf-inspector.git
+  PDF_INSPECTOR_COMMIT: a15ec2d68d51dbe6a39d1da688ec7a3f642d846c
+
+jobs:
+  integration-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Run deterministic wrapper tests
+        run: python -m unittest tests.pdf_ingestion.test_pdf_ingest
+
+      - name: Fetch pinned upstream source
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/pdf-inspector
+          git init /tmp/pdf-inspector
+          git -C /tmp/pdf-inspector remote add origin "$PDF_INSPECTOR_REPOSITORY"
+          git -C /tmp/pdf-inspector fetch --depth=1 origin "$PDF_INSPECTOR_COMMIT"
+          git -C /tmp/pdf-inspector checkout --detach FETCH_HEAD
+          test "$(git -C /tmp/pdf-inspector rev-parse HEAD)" = "$PDF_INSPECTOR_COMMIT"
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            /tmp/pdf-inspector/target
+          key: pdf-inspector-${{ runner.os }}-${{ env.PDF_INSPECTOR_COMMIT }}
+
+      - name: Build pdf-inspector CLIs from pinned source
+        working-directory: /tmp/pdf-inspector
+        run: cargo build --release --bin pdf2md --bin detect-pdf
+
+      - name: Resolve CLI paths
+        shell: bash
+        run: |
+          set -euo pipefail
+          PDF2MD_BIN=/tmp/pdf-inspector/target/release/pdf2md
+          DETECT_BIN=/tmp/pdf-inspector/target/release/detect-pdf
+          test -x "$PDF2MD_BIN"
+          test -x "$DETECT_BIN"
+          echo "PDF2MD_BIN=$PDF2MD_BIN" >> "$GITHUB_ENV"
+          echo "DETECT_BIN=$DETECT_BIN" >> "$GITHUB_ENV"
+
+      - name: Select bounded input
+        shell: bash
+        env:
+          REPO_PATH: ${{ inputs.repo_path }}
+          SOURCE_URL: ${{ inputs.source_url }}
+        run: |
+          set -euo pipefail
+          INPUT=/tmp/pdf-ingestion-input.pdf
+          if [ -n "${REPO_PATH:-}" ]; then
+            case "$REPO_PATH" in
+              /*|*..*) echo 'Unsafe repo_path' >&2; exit 2 ;;
+            esac
+            test -f "$REPO_PATH"
+            cp "$REPO_PATH" "$INPUT"
+          elif [ -n "${SOURCE_URL:-}" ]; then
+            python - "$SOURCE_URL" "$INPUT" <<'PY'
+          import sys
+          import urllib.request
+          from pathlib import Path
+
+          url, target = sys.argv[1], Path(sys.argv[2])
+          if not url.startswith('https://'):
+              raise SystemExit('Only HTTPS URLs are allowed')
+          request = urllib.request.Request(url, headers={'User-Agent': 'Investering-PDF-Ingestion/1.0'})
+          with urllib.request.urlopen(request, timeout=60) as response:
+              payload = response.read(25 * 1024 * 1024 + 1)
+          if len(payload) > 25 * 1024 * 1024:
+              raise SystemExit('PDF exceeds 25 MiB limit')
+          target.write_bytes(payload)
+          PY
+          else
+            python tests/pdf_ingestion/build_minimal_pdf.py "$INPUT"
+          fi
+          python - "$INPUT" <<'PY'
+          import sys
+          from pathlib import Path
+          p = Path(sys.argv[1])
+          assert p.is_file() and 0 < p.stat().st_size <= 25 * 1024 * 1024
+          assert p.read_bytes()[:5] == b'%PDF-'
+          print({'input_bytes': p.stat().st_size})
+          PY
+          echo "PDF_INPUT=$INPUT" >> "$GITHUB_ENV"
+
+      - name: Run real pinned parser integration
+        run: |
+          rm -rf pdf-ingestion-output
+          python scripts/pdf_ingestion/pdf_ingest.py \
+            --input "$PDF_INPUT" \
+            --output-dir pdf-ingestion-output \
+            --detect-bin "$DETECT_BIN" \
+            --pdf2md-bin "$PDF2MD_BIN" \
+            --upstream-commit "$PDF_INSPECTOR_COMMIT"
+
+      - name: Verify receipt and authority boundaries
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          manifest = json.loads(Path('pdf-ingestion-output/manifest.json').read_text())
+          assert manifest['status'] in {'READY', 'DEGRADED'}
+          assert manifest['parser']['commit'] == 'a15ec2d68d51dbe6a39d1da688ec7a3f642d846c'
+          assert manifest['authority'] == {
+              'creates_truth': False,
+              'framework_state_change': False,
+              'model_weight_change': False,
+              'portfolio_action': False,
+              'canonical_promotion': False,
+          }
+          assert Path('pdf-ingestion-output/detection.json').is_file()
+          if manifest['status'] == 'READY':
+              assert Path('pdf-ingestion-output/document.md').is_file()
+          print('PDF_INSPECTOR_INTEGRATION_PASS')
+          PY
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pdf-inspector-ingestion-${{ github.run_id }}
+          path: pdf-ingestion-output/
+          retention-days: 14
+          if-no-files-found: error
