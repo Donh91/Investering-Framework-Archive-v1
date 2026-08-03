@@ -1,0 +1,51 @@
+{
+  "schema_version": "DATA_PING_VALIDATION_v1",
+  "run_id": "run_20260803_w31_intraday_001",
+  "snapshot_id": "snap_20260803_w31_intraday_001",
+  "snapshot_utc": "2026-08-03T04:49:59.958Z",
+  "collector_status": "PARTIAL",
+  "acceptance_class": "SUPPLEMENTAL_WEEK31_RANGE_AND_CURRENT_SPOT_OBSERVATION_ONLY",
+  "planned_core_actions": 60,
+  "attempted_core_actions": 10,
+  "passed_core_actions": 10,
+  "skipped_runtime_limit_core_actions": 50,
+  "all_core_actions_attempted": false,
+  "full_sensor_coverage": false,
+  "collector_predecessor_id": "snap_9c2e7b4a1f6d43b8a05e9172c64fd3ab",
+  "required_canonical_predecessor_id": "snap_0e19c112413d471d8270cad1a18148a7",
+  "collector_predecessor_matches_required": false,
+  "may_advance_canonical_market_pointer": false,
+  "may_replace_latest_decision_bearing_bounded_observation": false,
+  "current_spot_available": true,
+  "direct_ethbtc_available": true,
+  "breadth_source_rows_available": true,
+  "breadth_aggregate_available": false,
+  "derivatives_available": false,
+  "okx_crosscheck_available": false,
+  "week31_intraday": {
+    "status": "PASS",
+    "method_id": "BINANCE_SPOT_1H_COPENHAGEN_ISO_WEEK_v1",
+    "window_complete": true,
+    "BTCUSDT_settled_rows": 168,
+    "ETHUSDT_settled_rows": 168,
+    "total_settled_rows": 336,
+    "gaps": 0,
+    "duplicates": 0,
+    "outside_window_rows_excluded": 2
+  },
+  "state_effect": {
+    "canonical_state_change": "NONE",
+    "portfolio_effect": "NONE",
+    "new_A_class_receipt": false,
+    "new_shadow_dual_run": false,
+    "operational_risk_class_reassessed": false,
+    "operational_risk_class_carried": "WAIT_FOR_BETTER_WINDOW"
+  },
+  "qa_findings": [
+    "Runtime budget exhausted after ten core actions",
+    "Complete and gap-free W31 hourly BTC and ETH capture obtained",
+    "Breadth raw rows retrieved but aggregate not completed",
+    "No derivatives, funding, OI, taker-flow or OKX evidence collected",
+    "Run retained as supplemental source and weekly calibration evidence only"
+  ]
+}
