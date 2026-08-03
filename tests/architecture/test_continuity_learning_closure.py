@@ -20,7 +20,13 @@ class ContinuityLearningTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as d:
             r=Path(d);owner=r/'owner';owner.mkdir();(owner/'payload.json').write_text('{"x":1}\n')
             out=r/'raw';p=subprocess.run(['python',str(ROOT/'scripts/daily_capture/persist_raw_payloads.py'),'--run-id','test','--output-root',str(out),str(owner)],text=True,capture_output=True)
-            self.assertEqual(p.returncode,0,p.stderr);man=list(out.rglob('RAW_MANIFEST_test.json'));self.assertEqual(len(man),1);v=json.loads(man[0].read_text());self.assertEqual(v['contract'],'RAW_OWNER_PAYLOAD_MANIFEST_v1');self.assertTrue(Path(v['archives'][0]['archive_path']).exists())
+            self.assertEqual(p.returncode,0,p.stderr);man=list(out.rglob('RAW_MANIFEST_test.json'));self.assertEqual(len(man),1);v=json.loads(man[0].read_text());self.assertEqual(v['contract'],'RAW_OWNER_PAYLOAD_MANIFEST_v2');self.assertTrue(Path(v['archives'][0]['archive_path']).exists());self.assertGreater(v['monthly_limit_bytes'],0)
+
+    def test_raw_monthly_guard_fails_closed(self):
+        with tempfile.TemporaryDirectory() as d:
+            r=Path(d);owner=r/'owner';owner.mkdir();(owner/'payload.json').write_text('{"x":1}\n')
+            out=r/'raw';p=subprocess.run(['python',str(ROOT/'scripts/daily_capture/persist_raw_payloads.py'),'--run-id','blocked','--output-root',str(out),'--max-monthly-compressed-bytes','1',str(owner)],text=True,capture_output=True)
+            self.assertNotEqual(p.returncode,0);incidents=list((out/'incidents').glob('RAW_STORAGE_blocked.json'));self.assertEqual(len(incidents),1);v=json.loads(incidents[0].read_text());self.assertEqual(v['status'],'BLOCKED');self.assertEqual(v['required_action'],'MIGRATE_RAW_LANE_TO_DEDICATED_DATA_REPOSITORY')
 
     def test_gateway_schema_contains_unratified_candidates(self):
         m=load_module('gateway',Path('scripts/api_agent/api_gateway.py'));schema=m.output_schema();self.assertIn('forecast_candidates',schema['properties']);self.assertIn('forecast_candidates',schema['required'])
