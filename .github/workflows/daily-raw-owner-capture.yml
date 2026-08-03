@@ -1,6 +1,9 @@
 name: Daily Raw Owner Capture
 
 on:
+  push:
+    paths:
+      - '.github/workflows/daily-raw-owner-capture.yml'
   schedule:
     - cron: '13 6 * * *'
       timezone: 'Europe/Copenhagen'
