@@ -69,6 +69,7 @@ jobs:
           python scripts/daily_capture/persist_raw_payloads.py \
             --run-id "gh-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" \
             --output-root 03_DAILY_CAPTURE_LOGS/raw \
+            --max-owner-bytes 12000000 \
             --max-monthly-compressed-bytes 20000000 \
             fred-owner-output binance-spot-owner-output binance-spot-microstructure-output okx-swap-owner-output top100-breadth-owner-output cfgi-owner-output cfgi-1d-owner-output
       - name: Build compact permanent capture index
