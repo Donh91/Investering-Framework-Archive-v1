@@ -16,6 +16,7 @@ on:
 
 permissions:
   contents: write
+  issues: write
 
 concurrency:
   group: framework-main-writer
@@ -68,10 +69,12 @@ jobs:
           python scripts/daily_capture/persist_raw_payloads.py \
             --run-id "gh-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" \
             --output-root 03_DAILY_CAPTURE_LOGS/raw \
+            --max-monthly-compressed-bytes 20000000 \
             fred-owner-output binance-spot-owner-output binance-spot-microstructure-output okx-swap-owner-output top100-breadth-owner-output cfgi-owner-output cfgi-1d-owner-output
       - name: Build compact permanent capture index
         run: python scripts/daily_capture/build_capture_index.py --status-file collector-status.json --output-root 03_DAILY_CAPTURE_LOGS/captures --run-id "gh-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" --trigger "${GITHUB_EVENT_NAME}"
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: daily-raw-owner-capture-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
@@ -83,6 +86,7 @@ jobs:
             cfgi-owner-output/
             cfgi-1d-owner-output/
             collector-status.json
+            03_DAILY_CAPTURE_LOGS/raw/incidents/
           retention-days: 14
           if-no-files-found: warn
       - name: Commit compact index and cold evidence with verified readback
@@ -102,3 +106,22 @@ jobs:
           [ "$pushed" = true ]
           git fetch origin main
           git merge-base --is-ancestor HEAD origin/main
+
+  notify:
+    needs: capture
+    if: failure()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0}
+      - name: Publish sanitized incident
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p 09_SOURCE_QA/incidents
+          FILE="09_SOURCE_QA/incidents/INCIDENT_daily-raw-owner-capture-${GITHUB_RUN_ID}.md"
+          printf '# AUTOMATION INCIDENT\n\nWorkflow: Daily Raw Owner Capture\nRun: %s\nTimestamp UTC: %s\nStatus: FAILED\nInspect Actions logs. No secrets are included.\n' "$GITHUB_RUN_ID" "$(date -u +%FT%TZ)" > "$FILE"
+          git config user.name framework-incident-bot
+          git config user.email framework-incident-bot@users.noreply.github.com
+          git add "$FILE" && git commit -m "incident: daily capture ${GITHUB_RUN_ID}" && git pull --rebase origin main && git push origin HEAD:main
+          gh issue create --title "AUTOMATION FAILURE: Daily Raw Owner Capture ${GITHUB_RUN_ID}" --body-file "$FILE" || true
