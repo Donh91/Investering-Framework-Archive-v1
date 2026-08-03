@@ -18,7 +18,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: daily-raw-owner-capture
+  group: framework-main-writer
   cancel-in-progress: false
 
 jobs:
@@ -36,10 +36,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-
       - name: Initialize source status
         run: echo '{}' > collector-status.json
-
       - name: Run owner collectors fail-closed but independently
         shell: bash
         run: |
@@ -54,46 +52,28 @@ jobs:
           p.write_text(json.dumps(data, sort_keys=True)+'\n')
           PY
           }
-          run_owner() {
-            key="$1"; shift
-            "$@"
-            record_code "$key" "$?"
-          }
-
+          run_owner() { key="$1"; shift; "$@"; record_code "$key" "$?"; }
           run_owner fred_macro python scripts/data_terminal/fred_multiseries_live_adapter.py --series DGS2,DGS10,DTWEXBGS,VIXCLS --output-dir fred-owner-output
           run_owner binance_spot python scripts/data_terminal/binance_spot_owner_collector.py --output-dir binance-spot-owner-output
           run_owner binance_microstructure python scripts/data_terminal/binance_spot_microstructure_source.py --output-dir binance-spot-microstructure-output
           run_owner okx_swap python scripts/data_terminal/okx_swap_owner_collector.py --output-dir okx-swap-owner-output
           run_owner top100_breadth python scripts/data_terminal/top100_breadth_owner_collector.py --output-dir top100-breadth-owner-output
-
           if [ "${CFGI_ENABLED}" = "true" ]; then
-            # Ten non-duplicative CFGI signals, price is excluded because Binance is the price owner.
             CFGI_FIELDS="score,volatility,volume,impulse,technical,social,dominance,trends,whales,orders"
             case "${SCHEDULE_ID}" in
-              "13 6 * * *")  CFGI_TIMEFRAME="1d" ;;
+              "13 6 * * *") CFGI_TIMEFRAME="1d" ;;
               "47 10 * * *") CFGI_TIMEFRAME="4h" ;;
               "22 15 * * *") CFGI_TIMEFRAME="1h" ;;
               "38 19 * * *") CFGI_TIMEFRAME="15m" ;;
-              "11 23 * * *") CFGI_TIMEFRAME="4h" ;;
-              *)              CFGI_TIMEFRAME="4h" ;;
+              *) CFGI_TIMEFRAME="4h" ;;
             esac
-            run_owner cfgi_sentiment python scripts/data_terminal/cfgi_owner_collector.py \
-              --output-dir cfgi-owner-output --symbols MARKET,BTC,ETH \
-              --timeframe "${CFGI_TIMEFRAME}" --fields "${CFGI_FIELDS}" --limit 1
+            run_owner cfgi_sentiment python scripts/data_terminal/cfgi_owner_collector.py --output-dir cfgi-owner-output --symbols MARKET,BTC,ETH --timeframe "${CFGI_TIMEFRAME}" --fields "${CFGI_FIELDS}" --limit 1
           else
             record_code cfgi_sentiment 78
           fi
-
       - name: Build compact permanent capture index
-        run: |
-          python scripts/daily_capture/build_capture_index.py \
-            --status-file collector-status.json \
-            --output-root 03_DAILY_CAPTURE_LOGS/captures \
-            --run-id "gh-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" \
-            --trigger "${GITHUB_EVENT_NAME}"
-
-      - name: Upload raw capture bundle
-        uses: actions/upload-artifact@v4
+        run: python scripts/daily_capture/build_capture_index.py --status-file collector-status.json --output-root 03_DAILY_CAPTURE_LOGS/captures --run-id "gh-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" --trigger "${GITHUB_EVENT_NAME}"
+      - uses: actions/upload-artifact@v4
         with:
           name: daily-raw-owner-capture-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
@@ -106,8 +86,7 @@ jobs:
             collector-status.json
           retention-days: 7
           if-no-files-found: warn
-
-      - name: Commit compact index only
+      - name: Commit compact index with verified readback
         shell: bash
         run: |
           git config user.name 'framework-data-bot'
@@ -115,8 +94,12 @@ jobs:
           git add 03_DAILY_CAPTURE_LOGS/captures
           if git diff --cached --quiet; then exit 0; fi
           git commit -m "data: log daily raw capture ${GITHUB_RUN_ID}"
+          pushed=false
           for attempt in 1 2 3; do
-            git pull --rebase origin main && git push origin HEAD:main && exit 0
+            git rebase --abort 2>/dev/null || true
+            if git pull --rebase origin main && git push origin HEAD:main; then pushed=true; break; fi
             sleep $((attempt * 5))
           done
-          exit 1
+          [ "$pushed" = true ]
+          git fetch origin main
+          git merge-base --is-ancestor HEAD origin/main
