@@ -10,7 +10,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: weekly-raw-calibration-bridge
+  group: framework-main-writer
   cancel-in-progress: false
 
 jobs:
@@ -25,23 +25,21 @@ jobs:
         with:
           python-version: '3.12'
       - name: Build weekly calibration pack
-        run: |
-          python scripts/daily_capture/build_weekly_calibration.py \
-            --input-root 03_DAILY_CAPTURE_LOGS/captures \
-            --output-root 03_DAILY_CAPTURE_LOGS/weekly
-      - name: Commit weekly handoff
+        run: python scripts/daily_capture/build_weekly_calibration.py --input-root 03_DAILY_CAPTURE_LOGS/captures --output-root 03_DAILY_CAPTURE_LOGS/weekly
+      - name: Commit weekly handoff with verified readback
         shell: bash
         run: |
           git config user.name 'framework-data-bot'
           git config user.email 'framework-data-bot@users.noreply.github.com'
           git add 03_DAILY_CAPTURE_LOGS/weekly
-          if git diff --cached --quiet; then
-            echo 'No weekly pack to commit'
-            exit 0
-          fi
+          if git diff --cached --quiet; then exit 0; fi
           git commit -m "data: build weekly raw calibration pack"
+          pushed=false
           for attempt in 1 2 3; do
-            git pull --rebase origin main && git push origin HEAD:main && exit 0
+            git rebase --abort 2>/dev/null || true
+            if git pull --rebase origin main && git push origin HEAD:main; then pushed=true; break; fi
             sleep $((attempt * 5))
           done
-          exit 1
+          [ "$pushed" = true ]
+          git fetch origin main
+          git merge-base --is-ancestor HEAD origin/main
