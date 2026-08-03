@@ -1,0 +1,72 @@
+{
+  "schema_version": "LATEST_MASTER_MONDAY_PREFLIGHT_STATUS_v1",
+  "updated_at_local": "2026-08-03T11:24:00+02:00",
+  "target_week": "2026-W31",
+  "request_id": "MM-GAPFILL-2026-W31-20260803-001",
+  "run_id": "run_20260803_mm_gapfill_001",
+  "snapshot_id": "snap_20260803_mm_gapfill_001",
+  "snapshot_utc": "2026-08-03T09:15:16.328Z",
+  "source_status": "PARTIAL_WITH_EXPLICIT_GAPS",
+  "main_framework_acceptance": "PARTIAL_MASTER_MONDAY_PREFLIGHT_AND_CURRENT_OWNER_DERIVATIVES_SUPPLEMENT",
+  "planned_core_actions": 60,
+  "attempted_core_actions": 43,
+  "skipped_runtime_limit": 17,
+  "canonical_predecessor": {
+    "identity_reanchor": "PASS",
+    "snapshot_id": "snap_0e19c112413d471d8270cad1a18148a7",
+    "market_field_values_available": false,
+    "longitudinal_comparison_authorized": false
+  },
+  "current_market": {
+    "BTCUSDT": 62563.89,
+    "ETHUSDT": 1840.61,
+    "ETHBTC_direct": 0.02942,
+    "settled_Copenhagen_ETHBTC_close": 0.02973
+  },
+  "derivatives": {
+    "BTC_OI_change_4h_pct": 1.7804,
+    "ETH_OI_change_4h_pct": 2.1929,
+    "BTC_OI_change_24h_pct": 1.8926,
+    "ETH_OI_change_24h_pct": 2.6576,
+    "BTC_taker_ratio": 0.8258,
+    "ETH_taker_ratio": 0.8228,
+    "BTC_global_long_short_ratio": 2.1377,
+    "ETH_global_long_short_ratio": 2.6258
+  },
+  "breadth": {
+    "aggregate_available": false,
+    "membership_hash_available": false,
+    "constituent_sidecar_available": false,
+    "exclusion_sidecar_available": false,
+    "scored_gate_permission": "NOT_AUTHORIZED"
+  },
+  "external_reconciliation": {
+    "ETF_through_2026_07_31": "CLOSED_RECONCILED",
+    "BTC_W31_ETF_total_usd_m": -61.5,
+    "ETH_W31_ETF_total_usd_m": 10.0,
+    "W31_total_price_range": "CLOSED_RECONCILED"
+  },
+  "remaining_blocking_gaps": [
+    "BREADTH_AGGREGATE",
+    "BREADTH_MEMBERSHIP_HASH",
+    "BREADTH_CONSTITUENT_SIDECAR",
+    "BREADTH_EXCLUSION_SIDECAR",
+    "CANONICAL_PREDECESSOR_MARKET_FIELD_VALUES_OR_EXPLICIT_NO_COMPARISON",
+    "FINAL_FREEZE_BINDING_OF_EXTERNAL_ETF_LEDGER"
+  ],
+  "operational_state": {
+    "rotation": "NO_ROTATION",
+    "rebuy": "LOCKED",
+    "new_entry": "NOT_ACTIVE",
+    "large_caps": "WATCH_ONLY",
+    "operational_risk_class": "DO_NOT_ADD_RISK",
+    "risk_class_change": "NONE_REINFORCED",
+    "portfolio_action": "NONE",
+    "canonical_state_change": "NONE"
+  },
+  "latest_decision_bearing_bounded_pointer_replaced": false,
+  "source_record": "08_SOURCE_MATERIAL/master_monday_preflight/2026-08-03__run_20260803_mm_gapfill_001__source-record.md",
+  "framework_reconciliation": "04_MARKET_LEARNING/master_monday/2026-08-03__run_20260803_mm_gapfill_001__framework-reconciliation.md",
+  "source_QA": "09_SOURCE_QA/master_monday/2026-08-03__run_20260803_mm_gapfill_001__validation.json",
+  "audit_receipt": "07_PROMPTS_AND_AGENTS/skill_runs/2026-08-03__master-monday-gapfill-run-20260803-mm-gapfill-001__audit-receipt.md"
+}
