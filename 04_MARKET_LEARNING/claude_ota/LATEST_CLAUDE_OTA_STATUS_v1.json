@@ -5,8 +5,10 @@
   "latest_framework_reconciliation": "04_MARKET_LEARNING/claude_ota/2026-08-03__standalone-ota-h7-row12-btc-etf__framework-reconciliation.md",
   "latest_QA": "09_SOURCE_QA/claude_ota/2026-08-03__standalone-ota-h7-row12-btc-etf__reconciliation.json",
   "latest_audit_receipt": "07_PROMPTS_AND_AGENTS/skill_runs/2026-08-03__claude-ota-h7-row12-btc-etf__audit-receipt.md",
+  "latest_post_OTA_ETF_source": "08_SOURCE_MATERIAL/etf/2026-08-03__btc-eth-etf-direct-payload-through-2026-07-31.json",
+  "latest_post_OTA_ETF_reconciliation": "04_MARKET_LEARNING/etf/2026-08-03__btc-eth-etf-through-2026-07-31__reconciliation.md",
   "operating_mode": "STANDALONE_OTA_NO_REFERENCE_BRIDGE",
-  "latest_run_type": "FULL_STANDALONE_OTA",
+  "latest_run_type": "FULL_STANDALONE_OTA_WITH_POST_RUN_DIRECT_ETF_RECONCILIATION",
   "accepted_incremental_items": [
     "H7_ROW_12_FOURTH_POST_MATURITY_EXTENSION",
     "H7_ROW_12_ETH_LEADERSHIP_ONE_SESSION",
@@ -16,7 +18,9 @@
     "F1_NO_NEW_BOUNDARY_STRESS",
     "ETHBTC_0030_SEQUENCE_TERMINATED_SUSTAINED_FIVE_SETTLED_PLUS_ONE_IN_PROGRESS",
     "H_SRC_02_TIME_OF_DAY_NOT_SUPPORTED_AS_OPERATIONAL_FRESHNESS_GATE",
-    "BTC_ETF_2026_07_30_AND_2026_07_31_PROVISIONAL_STALE_GENERATION_RESEARCH"
+    "BTC_ETF_2026_07_30_AND_2026_07_31_DIRECT_PAYLOAD_CONFIRMED",
+    "ETH_ETF_2026_07_31_DIRECT_PAYLOAD_CONFIRMED",
+    "BTC_ETF_ROLLING_SUMS_CORRECTED"
   ],
   "framework_corrections": [
     "ROW_12_IS_FOURTH_POST_MATURITY_EXTENSION_NOT_FOURTH_NEW_MATURITY",
@@ -25,7 +29,11 @@
     "LAPSED_WORDING_NOT_ADOPTED_WITHOUT_FORMAL_LAPSE_RULE",
     "FIVE_SETTLED_PLUS_ONE_IN_PROGRESS_SESSION_WITHOUT_0030_TOUCH",
     "UTC_AND_COPENHAGEN_ETHBTC_SETTLEMENTS_KEPT_SEPARATE",
-    "BTC_ETF_STALE_GENERATION_ROWS_CANNOT_OVERWRITE_RECONCILED_LEDGER",
+    "BTC_ETF_STALE_GENERATION_QUARANTINE_RESOLVED_BY_DIRECT_JSON_PAYLOAD",
+    "BTC_3_SESSION_CORRECTED_FROM_PLUS_0_4_TO_MINUS_0_2",
+    "BTC_5_SESSION_CORRECTED_FROM_MINUS_261_5_TO_MINUS_61_5",
+    "BTC_7_SESSION_CORRECTED_FROM_MINUS_526_5_TO_MINUS_526_7",
+    "BTC_20_SESSION_REMAINS_UNVERIFIED_FROM_CURRENT_13_SESSION_PAYLOAD",
     "TIME_OF_DAY_FRESHNESS_HYPOTHESIS_NARROWED_TO_NOT_OPERATIONALLY_SUPPORTED_NOT_STATISTICALLY_PROVEN_FALSE"
   ],
   "H7": {
@@ -52,7 +60,7 @@
     "historical_score_change": "NONE",
     "window_closed": true,
     "rule_basis": "SETTLED_CLOSES",
-    "2026_08_02_settled_UTC_close_supplied": 63570.00,
+    "2026_08_02_settled_UTC_close_supplied": 63570.0,
     "higher_candidate": 62342,
     "lower_candidate": 62200,
     "accepted_relation": "NO_NEW_THRESHOLD_PROXIMITY"
@@ -79,24 +87,42 @@
     "price_cache_guard": "PASS_AS_SUPPLIED",
     "H_SRC_02_status": "TIME_OF_DAY_NOT_SUPPORTED_FOR_OPERATIONAL_USE",
     "freshness_gate": "FOOTER_DATE_AND_LATEST_SESSION_VALIDATION_EACH_RUN",
-    "BTC_ETF_payload_generation": "ONE_GENERATION_STALE",
-    "BTC_ETF_fresh_reverification_required": true
+    "BTC_ETF_direct_payload_received": true,
+    "ETH_ETF_direct_payload_received": true,
+    "latest_eligible_settled_US_session": "2026-07-31"
   },
-  "BTC_ETF_provisional": {
-    "ledger_status": "QUARANTINED_PENDING_FRESH_REVERIFICATION",
+  "BTC_ETF": {
+    "ledger_status": "RECONCILED_THROUGH_2026_07_31",
     "2026_07_30_total_usd_m": 233.1,
     "2026_07_31_total_usd_m": -265.4,
-    "three_session_sum_usd_m": 0.4,
-    "five_session_sum_usd_m": -261.5,
-    "seven_session_sum_usd_m": -526.5,
-    "twenty_session_sum_usd_m": -240.7,
+    "two_session_swing_usd_m": 498.5,
+    "two_session_net_usd_m": -32.3,
+    "three_session_sum_usd_m": -0.2,
+    "five_session_sum_usd_m": -61.5,
+    "seven_session_sum_usd_m": -526.7,
+    "ten_session_sum_usd_m": -27.6,
+    "thirteen_session_sum_usd_m": 291.5,
+    "twenty_session_sum_status": "UNVERIFIED_FROM_CURRENT_PAYLOAD",
     "2026_07_31_GBTC_usd_m": -52.6,
-    "framework_ledger_overwrite_allowed": false
+    "framework_ledger_overwrite_allowed": true
   },
   "ETH_ETF": {
-    "latest_reconciled_session": "2026-07-30",
-    "2026_07_31_status": "UNPUBLISHED_UNKNOWN_NOT_ZERO",
+    "ledger_status": "RECONCILED_THROUGH_2026_07_31",
+    "2026_07_31_total_usd_m": 9.0,
+    "two_session_net_usd_m": 21.8,
+    "three_session_sum_usd_m": -11.1,
+    "five_session_sum_usd_m": 10.0,
+    "seven_session_sum_usd_m": -34.4,
+    "ten_session_sum_usd_m": 113.8,
+    "thirteen_session_sum_usd_m": 176.4,
+    "2026_07_31_ETHB_usd_m": 15.4,
     "next_session_status": "PENDING_WHEN_PUBLISHED"
+  },
+  "ETF_week_31": {
+    "BTC_total_usd_m": -61.5,
+    "ETH_total_usd_m": 10.0,
+    "ETH_minus_BTC_flow_spread_usd_m": 71.5,
+    "framework_effect": "RELATIVE_ETH_SUPPORT_NOT_ROTATION_CONFIRMATION"
   },
   "latest_data_ping_context": {
     "run_id": "run_8a4f73c1d9e64bbba275efa260803621",
@@ -108,7 +134,8 @@
     "operational_risk_class": "DO_NOT_ADD_RISK"
   },
   "OTA_effect_on_latest_data_ping_state": "NONE",
-  "current_operational_requirement": "FOLLOW_DATA_PING_DO_NOT_ADD_RISK_AND_COMPLETE_MASTER_MONDAY_GAP_FILL",
+  "ETF_gap_fill_effect_on_latest_data_ping_state": "NONE",
+  "current_operational_requirement": "FOLLOW_DATA_PING_DO_NOT_ADD_RISK_AND_COMPLETE_REMAINING_MASTER_MONDAY_GAP_FILL",
   "new_policy_event": false,
   "new_A_class_receipt": false,
   "A_rows_total": 2,
@@ -122,8 +149,8 @@
   "canonical_portfolio_action_change": "NONE",
   "final_holdout_opened": false,
   "open_items": [
-    "BTC_ETF_2026_07_31_FRESH_REVERIFICATION",
-    "ETH_ETF_2026_07_31_AND_NEXT_PUBLISHED_SESSION",
+    "NEXT_PUBLISHED_BTC_AND_ETH_ETF_SESSION",
+    "BTC_ETF_20_SESSION_SUM_FULL_LINEAGE",
     "H7_LAPSE_RETIRE_RETRIGGER_PROSPECTIVE_RULE",
     "H7_COND1_CANONICAL_WORDING",
     "BREADTH_MEMBERSHIP_HASH_AND_POINT_IN_TIME_CONSTITUENT_SIDECAR",
