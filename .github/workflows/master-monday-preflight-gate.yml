@@ -26,15 +26,20 @@ jobs:
         with: {python-version: '3.12'}
       - name: Compile hardening modules
         run: python -m py_compile scripts/master_monday/build_preflight_package_v2.py scripts/master_monday/publish_master_monday_outputs.py scripts/orchestration/verify_durable_readback.py scripts/orchestration/weekly_orchestration_controller.py scripts/api_agent/build_weekly_calibration_context.py
-      - name: Run v1 and v2 contract tests
-        run: python -m unittest tests.master_monday.test_preflight_package tests.master_monday.test_preflight_package_v2 -v
+      - name: Run contract and durability tests
+        run: python -m unittest tests.master_monday.test_preflight_package tests.master_monday.test_preflight_package_v2 tests.master_monday.test_durable_repairs -v
       - name: Verify production integration
         run: |
           grep -q 'build_preflight_package_v2.py' .github/workflows/weekly-api-calibration-shadow.yml
           grep -q '^  freeze:' .github/workflows/weekly-api-calibration-shadow.yml
           grep -q '^  calibration:' .github/workflows/weekly-api-calibration-shadow.yml
           grep -q '^  publish:' .github/workflows/weekly-api-calibration-shadow.yml
-          grep -q 'verify_durable_readback.py' .github/workflows/weekly-api-calibration-shadow.yml
+          grep -q 'freeze_sha256.*None' .github/workflows/weekly-api-calibration-shadow.yml
+          grep -q 'File-level remote durable readback' .github/workflows/weekly-api-calibration-shadow.yml
+          grep -q 'File-level publication readback' .github/workflows/weekly-api-calibration-shadow.yml
+          grep -q "git','show'" scripts/orchestration/verify_durable_readback.py
+          grep -q "ZoneInfo('Europe/Copenhagen')" scripts/orchestration/weekly_orchestration_controller.py
+          grep -q 'Europe/Copenhagen local date' scripts/api_agent/build_weekly_calibration_context.py
           grep -q 'continue-on-error: true' .github/workflows/weekly-api-calibration-shadow.yml
           python - <<'PY'
           import json

@@ -39,18 +39,21 @@ jobs:
           python - <<'PY'
           import hashlib,json
           from pathlib import Path
+          def canonical(v): return (json.dumps(v,sort_keys=True,separators=(',',':'))+'\n').encode()
           f=Path('runtime/weekly-freeze/WEEKLY_EVIDENCE_FREEZE.json');p=Path('runtime/weekly-freeze/MASTER_MONDAY_GAP_FILL_PACKAGE.json')
           freeze=json.loads(f.read_text());pre=json.loads(p.read_text())
+          freeze['freeze_sha256']=None
           freeze['master_monday_preflight']={'sha256':hashlib.sha256(p.read_bytes()).hexdigest(),'package_sha256':pre['package_sha256'],'status':pre['packet']['status'],'counts_reconciled':pre['meta']['counts_reconciled']}
-          f.write_text(json.dumps(freeze,sort_keys=True,separators=(',',':'))+'\n')
+          freeze['freeze_sha256']=hashlib.sha256(canonical(freeze)).hexdigest()
+          f.write_bytes(canonical(freeze))
           week=f"{freeze['iso_year']}/W{int(freeze['iso_week']):02d}";dest=Path('research/master_monday_preflight/frozen')/week;dest.mkdir(parents=True,exist_ok=True)
           for src,name in [(f,'WEEKLY_EVIDENCE_FREEZE.json'),(p,'MASTER_MONDAY_GAP_FILL_PACKAGE.json')]: (dest/name).write_bytes(src.read_bytes())
           blocking=[m for m in pre.get('missing',[]) if m.get('blocking_level')=='BLOCKING']
           lines=['MASTER MONDAY REMAINING GAP-FILL','Return only the listed owner fields. No GitHub writes and no framework interpretation.']+[f"- {m['action_id']} {m['field']}: {m['required_evidence']} via {m['suggested_collector']}" for m in blocking]
           (dest/'CUSTOM_GPT_REMAINING_GAPS_PROMPT.md').write_text('\n'.join(lines)+'\n')
-          latest=Path('research/master_monday_preflight/LATEST_MASTER_MONDAY_GAP_FILL_PACKAGE.json');latest.write_bytes(p.read_bytes())
-          ptr={'contract':'MASTER_MONDAY_FREEZE_POINTER_v1','iso_year':freeze['iso_year'],'iso_week':freeze['iso_week'],'week_dir':str(dest),'preflight_status':pre['packet']['status'],'freeze_sha256':freeze['freeze_sha256']}
-          Path('research/master_monday_preflight/LATEST_MASTER_MONDAY_FREEZE_POINTER.json').write_text(json.dumps(ptr,sort_keys=True,separators=(',',':'))+'\n')
+          Path('research/master_monday_preflight/LATEST_MASTER_MONDAY_GAP_FILL_PACKAGE.json').write_bytes(p.read_bytes())
+          ptr={'contract':'MASTER_MONDAY_FREEZE_POINTER_v2','iso_year':freeze['iso_year'],'iso_week':freeze['iso_week'],'week_dir':str(dest),'preflight_status':pre['packet']['status'],'freeze_sha256':freeze['freeze_sha256'],'evidence_timezone':freeze['evidence_timezone'],'window_start_utc':freeze['window_start_utc'],'window_end_utc':freeze['window_end_utc']}
+          Path('research/master_monday_preflight/LATEST_MASTER_MONDAY_FREEZE_POINTER.json').write_bytes(canonical(ptr))
           Path('runtime/week_dir.txt').write_text(str(dest))
           PY
           echo "week_dir=$(cat runtime/week_dir.txt)" >> "$GITHUB_OUTPUT"
@@ -67,16 +70,19 @@ jobs:
           git fetch origin main
           git merge-base --is-ancestor HEAD origin/main
           echo "freeze_commit=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
-      - name: File-level durable readback
+      - name: File-level remote durable readback
         run: |
-          WEEK_DIR=$(cat runtime/week_dir.txt)
           python - <<'PY'
-          import hashlib,json,os
+          import hashlib,json,subprocess
           from pathlib import Path
           d=Path(Path('runtime/week_dir.txt').read_text().strip())
           paths=[d/'WEEKLY_EVIDENCE_FREEZE.json',d/'MASTER_MONDAY_GAP_FILL_PACKAGE.json',d/'CUSTOM_GPT_REMAINING_GAPS_PROMPT.md',Path('research/master_monday_preflight/LATEST_MASTER_MONDAY_FREEZE_POINTER.json')]
-          m={'artifacts':[{'path':str(p),'sha256':hashlib.sha256(p.read_bytes()).hexdigest()} for p in paths]}
-          Path('runtime/readback_manifest.json').write_text(json.dumps(m))
+          rows=[]
+          for p in paths:
+              path=str(p)
+              blob=subprocess.run(['git','rev-parse',f'HEAD:{path}'],capture_output=True,text=True,check=True).stdout.strip()
+              rows.append({'path':path,'sha256':hashlib.sha256(p.read_bytes()).hexdigest(),'blob_sha':blob})
+          Path('runtime/readback_manifest.json').write_text(json.dumps({'artifacts':rows},sort_keys=True,separators=(',',':'))+'\n')
           PY
           python scripts/orchestration/verify_durable_readback.py --manifest runtime/readback_manifest.json --ref origin/main --output runtime/DURABLE_READBACK_RECEIPT.json
       - uses: actions/upload-artifact@v4
@@ -132,7 +138,9 @@ jobs:
           OUT="research/api_agent/outputs/weekly/${WEEK_DIR#research/master_monday_preflight/frozen/}"
           python scripts/master_monday/publish_master_monday_outputs.py --freeze "$WEEK_DIR/WEEKLY_EVIDENCE_FREEZE.json" --preflight "$WEEK_DIR/MASTER_MONDAY_GAP_FILL_PACKAGE.json" --context runtime/weekly-calibration/context.json --api-output runtime/weekly-calibration/output/output.json --api-receipt runtime/weekly-calibration/output/receipt.json --api-status "$STATUS" --output-dir "$OUT"
           cp "$OUT/MASTER_MONDAY_DELIVERY_POINTER.json" research/api_agent/outputs/weekly/LATEST_MASTER_MONDAY_DELIVERY_POINTER.json
-      - name: Commit publication with readback
+          mkdir -p runtime
+          echo "$OUT" > runtime/publish_output_dir.txt
+      - name: Commit publication
         run: |
           git config user.name framework-api-agent
           git config user.email framework-api-agent@users.noreply.github.com
@@ -141,3 +149,21 @@ jobs:
           pushed=false
           for attempt in 1 2 3; do git rebase --abort 2>/dev/null || true; if git pull --rebase origin main && git push origin HEAD:main; then pushed=true; break; fi; sleep $((attempt*5)); done
           [ "$pushed" = true ]; git fetch origin main; git merge-base --is-ancestor HEAD origin/main
+      - name: File-level publication readback
+        run: |
+          python - <<'PY'
+          import hashlib,json,subprocess
+          from pathlib import Path
+          out=Path(Path('runtime/publish_output_dir.txt').read_text().strip())
+          paths=[out/'MASTER_MONDAY_MACHINE_PACKAGE.json',out/'MASTER_MONDAY_REPORT.md',out/'MASTER_MONDAY_CALIBRATION_SCORECARD.json',out/'MASTER_MONDAY_OPERATIONAL_TRANSLATION.json',out/'MASTER_MONDAY_DELIVERY_POINTER.json',Path('research/api_agent/outputs/weekly/LATEST_MASTER_MONDAY_DELIVERY_POINTER.json')]
+          rows=[]
+          for p in paths:
+              path=str(p)
+              blob=subprocess.run(['git','rev-parse',f'HEAD:{path}'],capture_output=True,text=True,check=True).stdout.strip()
+              rows.append({'path':path,'sha256':hashlib.sha256(p.read_bytes()).hexdigest(),'blob_sha':blob})
+          Path('runtime/publish_readback_manifest.json').write_text(json.dumps({'artifacts':rows},sort_keys=True,separators=(',',':'))+'\n')
+          PY
+          python scripts/orchestration/verify_durable_readback.py --manifest runtime/publish_readback_manifest.json --ref origin/main --output runtime/PUBLISH_DURABLE_READBACK_RECEIPT.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: {name: weekly-publish-readback-${{ github.run_id }}, path: runtime/*READBACK*, retention-days: 14}
