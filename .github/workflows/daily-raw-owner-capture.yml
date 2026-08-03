@@ -24,18 +24,16 @@ concurrency:
 jobs:
   capture:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     env:
       CFGI_API_KEY: ${{ secrets.CFGI_API_KEY }}
       CFGI_ENABLED: ${{ vars.CFGI_ENABLED }}
       SCHEDULE_ID: ${{ github.event.schedule }}
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+        with: {fetch-depth: 0}
       - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
+        with: {python-version: '3.12'}
       - name: Initialize source status
         run: echo '{}' > collector-status.json
       - name: Run owner collectors fail-closed but independently
@@ -46,10 +44,7 @@ jobs:
             python - "$1" "$2" <<'PY'
           import json, sys
           from pathlib import Path
-          p=Path('collector-status.json')
-          data=json.loads(p.read_text())
-          data[sys.argv[1]]=int(sys.argv[2])
-          p.write_text(json.dumps(data, sort_keys=True)+'\n')
+          p=Path('collector-status.json');data=json.loads(p.read_text());data[sys.argv[1]]=int(sys.argv[2]);p.write_text(json.dumps(data,sort_keys=True)+'\n')
           PY
           }
           run_owner() { key="$1"; shift; "$@"; record_code "$key" "$?"; }
@@ -60,17 +55,20 @@ jobs:
           run_owner top100_breadth python scripts/data_terminal/top100_breadth_owner_collector.py --output-dir top100-breadth-owner-output
           if [ "${CFGI_ENABLED}" = "true" ]; then
             CFGI_FIELDS="score,volatility,volume,impulse,technical,social,dominance,trends,whales,orders"
-            case "${SCHEDULE_ID}" in
-              "13 6 * * *") CFGI_TIMEFRAME="1d" ;;
-              "47 10 * * *") CFGI_TIMEFRAME="4h" ;;
-              "22 15 * * *") CFGI_TIMEFRAME="1h" ;;
-              "38 19 * * *") CFGI_TIMEFRAME="15m" ;;
-              *) CFGI_TIMEFRAME="4h" ;;
-            esac
-            run_owner cfgi_sentiment python scripts/data_terminal/cfgi_owner_collector.py --output-dir cfgi-owner-output --symbols MARKET,BTC,ETH --timeframe "${CFGI_TIMEFRAME}" --fields "${CFGI_FIELDS}" --limit 1
+            run_owner cfgi_sentiment python scripts/data_terminal/cfgi_owner_collector.py --output-dir cfgi-owner-output --symbols MARKET,BTC,ETH --timeframe 4h --fields "${CFGI_FIELDS}" --limit 1
+            if [ "${SCHEDULE_ID}" = "13 6 * * *" ]; then
+              python scripts/data_terminal/cfgi_owner_collector.py --output-dir cfgi-1d-owner-output --symbols MARKET,BTC,ETH --timeframe 1d --fields score --limit 1
+              record_code cfgi_sentiment_1d "$?"
+            fi
           else
             record_code cfgi_sentiment 78
           fi
+      - name: Persist compressed raw payloads permanently
+        run: |
+          python scripts/daily_capture/persist_raw_payloads.py \
+            --run-id "gh-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" \
+            --output-root 03_DAILY_CAPTURE_LOGS/raw \
+            fred-owner-output binance-spot-owner-output binance-spot-microstructure-output okx-swap-owner-output top100-breadth-owner-output cfgi-owner-output cfgi-1d-owner-output
       - name: Build compact permanent capture index
         run: python scripts/daily_capture/build_capture_index.py --status-file collector-status.json --output-root 03_DAILY_CAPTURE_LOGS/captures --run-id "gh-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" --trigger "${GITHUB_EVENT_NAME}"
       - uses: actions/upload-artifact@v4
@@ -83,15 +81,16 @@ jobs:
             okx-swap-owner-output/
             top100-breadth-owner-output/
             cfgi-owner-output/
+            cfgi-1d-owner-output/
             collector-status.json
-          retention-days: 7
+          retention-days: 14
           if-no-files-found: warn
-      - name: Commit compact index with verified readback
+      - name: Commit compact index and cold evidence with verified readback
         shell: bash
         run: |
           git config user.name 'framework-data-bot'
           git config user.email 'framework-data-bot@users.noreply.github.com'
-          git add 03_DAILY_CAPTURE_LOGS/captures
+          git add 03_DAILY_CAPTURE_LOGS/captures 03_DAILY_CAPTURE_LOGS/raw
           if git diff --cached --quiet; then exit 0; fi
           git commit -m "data: log daily raw capture ${GITHUB_RUN_ID}"
           pushed=false

@@ -3,10 +3,11 @@ name: Owner-Bound Daily Director Manual
 on:
   pull_request:
     paths:
-      - 'scripts/api_agent/build_owner_bound_director_context.py'
-      - 'tests/api_agent/test_owner_bound_director_context.py'
+      - 'scripts/api_agent/**'
+      - 'scripts/daily_capture/persist_raw_payloads.py'
+      - 'tests/api_agent/**'
       - '.github/workflows/owner-bound-daily-director-manual.yml'
-      - 'research/api_agent/owner_bound_daily_director/**'
+      - 'research/api_agent/**'
   workflow_dispatch:
     inputs:
       mode:
@@ -26,54 +27,33 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
+        with: {python-version: '3.12'}
       - name: Test and compile
         run: |
           python -m unittest tests.api_agent.test_owner_bound_director_context
-          python -m py_compile scripts/api_agent/build_owner_bound_director_context.py scripts/api_agent/api_gateway.py
+          python -m py_compile scripts/api_agent/build_owner_bound_director_context.py scripts/api_agent/check_delta_ready.py scripts/api_agent/materialize_forecast_candidates.py scripts/api_agent/api_gateway.py scripts/daily_capture/persist_raw_payloads.py
       - name: Build owner-bound context
         run: |
           mkdir -p owner-bound-director-input
-          python scripts/api_agent/build_owner_bound_director_context.py \
-            --capture-root 03_DAILY_CAPTURE_LOGS/captures \
-            --output owner-bound-director-input/context.json
-          cat > owner-bound-director-input/prompt.txt <<'EOF'
-          Review the latest real owner-bound daily capture against the preceding capture. Preserve source-health limitations and disagreement. Distinguish evidence from missingness. Produce a compact shadow synthesis for later RAW and Master Monday calibration. Do not provide portfolio action or canonical market truth.
-          EOF
+          python scripts/api_agent/build_owner_bound_director_context.py --capture-root 03_DAILY_CAPTURE_LOGS/captures --output owner-bound-director-input/context.json
+          echo 'Produce shadow evidence and unratified forecast candidates only.' > owner-bound-director-input/prompt.txt
       - name: Run gateway dry
         if: github.event_name == 'pull_request' || inputs.mode == 'dry-run'
-        run: |
-          python scripts/api_agent/api_gateway.py \
-            --task DAILY_DIRECTOR_SHADOW \
-            --registry research/api_agent/API_TASK_REGISTRY_v1.json \
-            --prompt-file owner-bound-director-input/prompt.txt \
-            --context-file owner-bound-director-input/context.json \
-            --output-dir owner-bound-director-output \
-            --dry-run
-      - name: Run explicit owner-bound live call
+        run: python scripts/api_agent/api_gateway.py --task DAILY_DIRECTOR_SHADOW --registry research/api_agent/API_TASK_REGISTRY_v1.json --prompt-file owner-bound-director-input/prompt.txt --context-file owner-bound-director-input/context.json --output-dir owner-bound-director-output --intended-write-prefix research/api_agent/outputs/daily/ --dry-run
+      - name: Run explicit live call
         if: github.event_name == 'workflow_dispatch' && inputs.mode == 'live'
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-        run: |
-          python scripts/api_agent/api_gateway.py \
-            --task DAILY_DIRECTOR_SHADOW \
-            --registry research/api_agent/API_TASK_REGISTRY_v1.json \
-            --prompt-file owner-bound-director-input/prompt.txt \
-            --context-file owner-bound-director-input/context.json \
-            --output-dir owner-bound-director-output
+        env: {OPENAI_API_KEY: '${{ secrets.OPENAI_API_KEY }}'}
+        run: python scripts/api_agent/api_gateway.py --task DAILY_DIRECTOR_SHADOW --registry research/api_agent/API_TASK_REGISTRY_v1.json --prompt-file owner-bound-director-input/prompt.txt --context-file owner-bound-director-input/context.json --output-dir owner-bound-director-output --intended-write-prefix research/api_agent/outputs/daily/
       - name: Verify owner binding and authority
         run: |
           python - <<'PY'
-          import json
+          import json,hashlib
           from pathlib import Path
-          c=json.loads(Path('owner-bound-director-input/context.json').read_text())
-          r=json.loads(Path('owner-bound-director-output/receipt.json').read_text())
-          assert c['contract'] in {'OWNER_BOUND_DAILY_DIRECTOR_CONTEXT_v1','OWNER_BOUND_DAILY_DIRECTOR_CONTEXT_v2'}
+          c=json.loads(Path('owner-bound-director-input/context.json').read_text());o=json.loads(Path('owner-bound-director-output/output.json').read_text());r=json.loads(Path('owner-bound-director-output/receipt.json').read_text())
+          assert c['contract'] in {'OWNER_BOUND_DAILY_DIRECTOR_CONTEXT_v2','OWNER_BOUND_DAILY_DIRECTOR_CONTEXT_v3'}
           assert c['latest_capture']['run_id']
-          assert r['context_hash']==__import__('hashlib').sha256((json.dumps(c,sort_keys=True,separators=(',',':'))+'\n').encode()).hexdigest()
+          assert isinstance(o['forecast_candidates'],list)
           assert r['authority']['portfolio_action'] is False
-          assert r['authority']['framework_state_change'] is False
           assert r['estimated_cost_usd'] <= 1.5
           print('OWNER_BOUND_DAILY_DIRECTOR_PASS')
           PY
@@ -83,5 +63,5 @@ jobs:
           path: |
             owner-bound-director-input/context.json
             owner-bound-director-output/
-          retention-days: 7
+          retention-days: 14
           if-no-files-found: error

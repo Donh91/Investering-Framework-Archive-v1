@@ -1,0 +1,48 @@
+name: Continuity Learning Gate
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/api_agent/**'
+      - 'scripts/daily_capture/**'
+      - 'scripts/learning/**'
+      - 'scripts/architecture/**'
+      - '.github/workflows/daily-raw-owner-capture.yml'
+      - '.github/workflows/daily-director-shadow.yml'
+      - '.github/workflows/continuity-learning-*.yml'
+      - 'research/api_agent/**'
+      - 'research/data_architecture/**'
+      - '00_FMOS/CONTINUITY_LEARNING_ARCHITECTURE_v1.md'
+      - 'tests/architecture/test_continuity_learning_closure.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - name: Compile continuity modules
+        run: python -m py_compile scripts/api_agent/api_gateway.py scripts/api_agent/build_owner_bound_director_context.py scripts/api_agent/check_delta_ready.py scripts/api_agent/materialize_forecast_candidates.py scripts/daily_capture/persist_raw_payloads.py scripts/learning/ratify_forecast_candidate.py scripts/learning/build_model_calibration_ledger.py scripts/architecture/build_latest_handoff.py
+      - name: Run closure tests
+        run: python -m unittest tests.architecture.test_continuity_learning_closure tests.api_agent.test_owner_bound_director_context -v
+      - name: Verify policy wiring
+        run: |
+          grep -q 'persist_raw_payloads.py' .github/workflows/daily-raw-owner-capture.yml
+          grep -q -- '--timeframe 4h' .github/workflows/daily-raw-owner-capture.yml
+          grep -q 'check_delta_ready.py' .github/workflows/daily-director-shadow.yml
+          grep -q 'SKIPPED_NO_DELTA' .github/workflows/daily-director-shadow.yml
+          grep -q 'LATEST_HANDOFF.json' .github/workflows/continuity-learning-maintenance.yml
+          grep -q 'forecast_candidates' scripts/api_agent/api_gateway.py
+          python - <<'PY'
+          import json
+          c=json.load(open('research/data_architecture/COMPACT_CAPTURE_SCHEMA_v1.json'))
+          f=json.load(open('research/api_agent/FORECAST_CANDIDATE_CONTRACT_v1.json'))
+          assert c['cold_lane']['payload_bytes_required'] is True
+          assert f['self_promotion_allowed'] is False
+          PY
