@@ -7,11 +7,11 @@ on:
       - 'scripts/data_ping/**'
       - 'scripts/health/**'
       - 'scripts/learning/**'
+      - 'scripts/api_agent/**'
       - 'scripts/data_terminal/farside_etf_owner.py'
       - 'tests/architecture/test_full_architecture_1to7.py'
-      - '.github/workflows/framework-learning-operations.yml'
-      - '.github/workflows/weekly-api-calibration-shadow.yml'
-      - 'research/audits/FULL_ARCHITECTURE_AUDIT_2026-08-02.md'
+      - '.github/workflows/**'
+      - 'research/audits/**'
   workflow_dispatch:
 
 permissions:
@@ -26,21 +26,42 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Compile new architecture modules
+      - name: Compile architecture modules
         run: |
           python -m py_compile \
             scripts/orchestration/weekly_orchestration_controller.py \
+            scripts/orchestration/build_framework_handoff_manifest.py \
             scripts/data_ping/accepted_data_ping_bridge.py \
             scripts/health/build_architecture_health.py \
+            scripts/health/build_automation_health.py \
             scripts/data_terminal/farside_etf_owner.py \
-            scripts/learning/outcome_maturation_engine.py
-      - name: Run integrated phase tests
+            scripts/learning/outcome_maturation_engine.py \
+            scripts/api_agent/api_gateway.py \
+            scripts/api_agent/check_monthly_cost_guard.py
+      - name: Run integrated architecture tests
         run: python -m unittest tests.architecture.test_full_architecture_1to7 -v
-      - name: Verify weekly ordering and security boundaries
+      - name: Verify writer safety and API boundaries
         run: |
-          grep -q "cron: '20 2 \* \* 1'" .github/workflows/weekly-api-calibration-shadow.yml
-          grep -q 'weekly_orchestration_controller.py' .github/workflows/weekly-api-calibration-shadow.yml
-          grep -q 'group: framework-main-writer' .github/workflows/weekly-api-calibration-shadow.yml
+          python scripts/health/build_automation_health.py \
+            --workflow-root .github/workflows \
+            --json-output /tmp/automation-health.json \
+            --md-output /tmp/automation-health.md
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          health=json.loads(Path('/tmp/automation-health.json').read_text())
+          writer_risks=[b for b in health['blockers'] if any(x in b for x in ('NON_GLOBAL_WRITER_LOCK','NO_REBASE_ABORT','NO_MAIN_READBACK','NO_EMPTY_COMMIT_GUARD'))]
+          if writer_risks:
+              raise SystemExit('writer safety findings: '+','.join(writer_risks))
+          daily=Path('.github/workflows/daily-director-shadow.yml').read_text()
+          weekly=Path('.github/workflows/weekly-api-calibration-shadow.yml').read_text()
+          if '--intended-write-prefix research/api_agent/outputs/daily/' not in daily:
+              raise SystemExit('daily allowed_write_prefix not enforced')
+          if '--intended-write-prefix research/api_agent/outputs/weekly/' not in weekly:
+              raise SystemExit('weekly allowed_write_prefix not enforced')
+          PY
+      - name: Verify security boundaries
+        run: |
           python - <<'PY'
           import re
           from pathlib import Path
