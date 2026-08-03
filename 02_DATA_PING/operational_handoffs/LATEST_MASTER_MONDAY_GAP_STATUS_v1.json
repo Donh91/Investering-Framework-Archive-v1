@@ -1,6 +1,6 @@
 {
   "schema_version": "LATEST_MASTER_MONDAY_GAP_STATUS_v1",
-  "updated_at_local": "2026-08-03T12:28:00+02:00",
+  "updated_at_local": "2026-08-03T12:52:00+02:00",
   "target_week": "2026-W31",
   "latest_preflight": {
     "request_id": "MM-GAPFILL-2026-W31-20260803-001",
@@ -10,17 +10,8 @@
     "source_status": "PARTIAL_WITH_EXPLICIT_GAPS",
     "planned_core_actions": 60,
     "attempted_core_actions": 43,
-    "skipped_runtime_limit": 17,
     "canonical_predecessor_identity_reanchor": "PASS",
     "canonical_predecessor_field_values_available": false
-  },
-  "latest_targeted_gap_fill": {
-    "request_id": "MM-FINAL-GAPFILL-2026-W31-20260803-002",
-    "run_id": "run_20260803_mm_final_gapfill_002",
-    "snapshot_id": "snap_20260803_mm_final_gapfill_002",
-    "snapshot_utc": "2026-08-03T10:08:33.085Z",
-    "source_status": "PARTIAL",
-    "main_framework_acceptance": "PARTIAL_TARGETED_GAP_FILL_WITH_MECHANICAL_BREADTH_PASS_AND_UNIVERSE_QA_FAILURE"
   },
   "canonical_predecessor": {
     "identity_status": "PASS",
@@ -31,91 +22,92 @@
     "final_report_treatment": "EXPLICIT_NO_COMPARISON_NOT_A_SUBSTITUTION"
   },
   "ETF": {
-    "BTC_through_2026_07_31": "CLOSED_RECONCILED",
-    "ETH_through_2026_07_31": "CLOSED_RECONCILED",
+    "status": "CLOSED_RECONCILED_AND_BOUND",
     "latest_eligible_settled_US_session": "2026-07-31",
     "BTC_week31_total_usd_m": -61.5,
     "ETH_week31_total_usd_m": 10.0,
-    "remaining_ETF_gap_before_Master_Monday": "NONE",
     "artifact_path": "04_MARKET_LEARNING/etf/LATEST_ETF_FLOW_STATUS_v1.json",
     "artifact_blob_sha": "05481b829434ce9ba88ea562d848391c832f274c",
-    "freeze_binding_status": "PATH_AND_BLOB_CONFIRMED_FINAL_WORKFLOW_CONTENT_HASH_PENDING"
+    "remaining_ETF_gap_before_Master_Monday": "NONE"
   },
-  "breadth": {
-    "mechanical_filter_status": "PASS",
-    "framework_universe_status": "PARTIAL_UNIVERSE_CONTAMINATION",
+  "breadth_repair": {
+    "request_id": "MM-BREADTH-REPAIR-2026-W31-20260803-003",
+    "run_id": "run_20260803_mm_breadth_repair_003",
+    "snapshot_id": "snap_20260803_mm_breadth_repair_003",
+    "source_mode": "SAME_FROZEN_ROWS_RECLASSIFICATION",
+    "status": "PASS",
+    "filter_id": "BREADTH_FILTER_TOP100_EXCLUSIONS_v1_1",
     "raw_rows": 100,
     "deduped_count": 100,
-    "supplied_included_count": 90,
-    "supplied_excluded_count": 10,
-    "supplied_advancers": 26,
-    "supplied_decliners": 45,
-    "supplied_unchanged": 19,
-    "supplied_advance_ratio": 0.2888888889,
-    "supplied_membership_hash": "5952611e4c22a62d3e75280cff77b1b69db71f350212c230321f416153beb2dc",
+    "included_count": 70,
+    "excluded_count": 30,
+    "advancers": 25,
+    "decliners": 42,
+    "unchanged": 3,
+    "advance_ratio": 0.35714285714285715,
+    "median_return_24h_pct": -0.5,
+    "equal_weight_mean_return_24h_pct": -0.6228571428571428,
+    "gate_35": true,
+    "gate_50": false,
+    "gate_55": false,
+    "membership_hash": "6063fff1ceceb0ac5a039089684d29369e4e7f75a580297de5af1d6ff84c5548",
     "membership_hash_match": true,
-    "absolute_gate_35_authority": "SUSPENDED_PENDING_CLEAN_RERUN",
-    "longitudinal_transition_permission": "NOT_AUTHORIZED",
-    "diagnostic_only": true,
-    "candidate_nonrisk_rows_detected": 20,
-    "illustrative_cleaned_advance_ratio": 0.3571428571,
-    "gate_materiality": "POTENTIAL_35_PERCENT_GATE_FLIP"
+    "absolute_gate_permission": "AUTHORIZED_ABSOLUTE_ONLY",
+    "longitudinal_transition_permission": "NOT_AUTHORIZED_PREDECESSOR_MEMBERSHIP_HASH_UNAVAILABLE",
+    "package_path": "08_SOURCE_MATERIAL/breadth/2026-08-03__run_20260803_mm_breadth_repair_003__package.json",
+    "package_blob_sha": "01bb6557501a579eed573242fa974576fb800281",
+    "constituent_sidecar_blob_sha": "f8432b00b19f3fe04c1bd654b11b226d4be9c443",
+    "exclusion_sidecar_blob_sha": "5c107bf8bffcdc88408a78b6ff65e220b75ff0e1"
   },
   "deep_capture": {
     "request_id": "DCR-20260730-EVENT-003",
     "extension_id": "DCR-20260730-EVENT-003-EXT-95C5",
-    "source_claim": "PASS",
-    "main_framework_acceptance": "PARTIAL_UNIVERSE_FILTER_REPAIR_REQUIRED",
+    "status": "PASS",
+    "DCR_004_created": false,
     "canonical_pointer_effect": "NONE",
     "portfolio_effect": "NONE"
   },
   "closed_items": [
-    "CANONICAL_PREDECESSOR_IDENTITY_REANCHOR_TO_snap_0e19c112413d471d8270cad1a18148a7",
-    "CANONICAL_PREDECESSOR_NO_COMPARISON_TREATMENT_DEFINED",
-    "BTC_ETF_2026_07_30",
-    "BTC_ETF_2026_07_31",
-    "ETH_ETF_2026_07_31",
-    "BTC_ETF_STALE_GENERATION_REVERIFICATION",
-    "ETF_ARTIFACT_PATH_AND_BLOB_READBACK",
+    "CANONICAL_PREDECESSOR_IDENTITY_REANCHOR",
+    "CANONICAL_PREDECESSOR_EXPLICIT_NO_COMPARISON_TREATMENT",
+    "BTC_AND_ETH_ETF_THROUGH_2026_07_31",
     "W31_BTC_ETH_TOTAL_PRICE_RANGE",
     "SETTLED_COPENHAGEN_BTC_ETH_ETHBTC_SESSION_2026_08_02",
     "BINANCE_DERIVATIVES_CURRENT",
     "OKX_CROSSCHECK_CURRENT",
-    "BREADTH_RAW_ROWS_AND_HASH_MECHANICAL_MATERIALIZATION"
-  ],
-  "remaining_critical_items": [
     "VERSIONED_BREADTH_EXCLUSION_REGISTRY_REPAIR",
-    "CLEAN_BREADTH_RERUN_WITH_STABLECOIN_AND_TOKENIZED_PROXY_REMOVAL",
-    "RECOMPUTED_BREADTH_CONSTITUENT_AND_EXCLUSION_SIDECARS",
-    "RECOMPUTED_MEMBERSHIP_HASH_AND_35_50_55_GATES",
-    "FINAL_WEEKLY_FREEZE_BINDING_OF_ALL_ACCEPTED_ARTIFACTS"
+    "CLEAN_BREADTH_RERUN",
+    "BREADTH_CONSTITUENT_AND_EXCLUSION_SIDECARS",
+    "BREADTH_MEMBERSHIP_HASH_AND_ABSOLUTE_GATES",
+    "DCR_20260730_EVENT_003_EXT_95C5"
   ],
+  "remaining_critical_items": [],
   "confidence_reducing_nonfatal_items": [
     "W31_DAILY_TIMESTAMP_AND_RAW_HASH_SIDECAR",
-    "CFGI_CURRENT_IF_ENDPOINT_AVAILABLE",
-    "FRED_NOT_BOUND_TO_CURRENT_PREFLIGHT_FREEZE",
-    "CHAIN_TVL_NOT_BOUND_TO_CURRENT_PREFLIGHT_FREEZE",
-    "DEX_QA_NOT_BOUND_TO_CURRENT_PREFLIGHT_FREEZE",
-    "STABLECOIN_GLOBAL_TOTAL_UNAVAILABLE"
-  ],
-  "non_blocking_open_items": [
-    "ETF_AUM_DENOMINATORS",
-    "BTC_ETF_20_SESSION_SUM_FULL_LINEAGE",
-    "H7_LAPSE_RETIRE_RETRIGGER_PROSPECTIVE_RULE",
-    "H7_COND1_CANONICAL_WORDING",
-    "ETHB_ISSUER_METADATA_INDEPENDENT_VERIFICATION"
+    "CFGI_CURRENT_SNAPSHOT",
+    "FRED_TVL_DEX_AND_STABLECOIN_GLOBAL_TOTAL_NOT_BOUND_TO_FINAL_FREEZE",
+    "PRIOR_CYCLE_NAVIGATOR_18_FORECAST_ARTIFACT_FOR_NUMERIC_PRECISION_SCORING"
   ],
   "latest_operational_state": {
     "source_run_id": "run_20260803_mm_gapfill_001",
-    "source_role": "PARTIAL_MASTER_MONDAY_PREFLIGHT_AND_CURRENT_OWNER_DERIVATIVES_SUPPLEMENT",
     "BTCUSDT": 62563.89,
     "ETHUSDT": 1840.61,
     "ETHBTC_direct": 0.02942,
+    "breadth_advance_ratio": 0.35714285714285715,
     "operational_risk_class": "DO_NOT_ADD_RISK",
-    "risk_class_change": "NONE_REINFORCED",
     "rotation": "NO_ROTATION",
     "rebuy": "LOCKED",
+    "new_entry": "NOT_ACTIVE",
     "canonical_state_change": "NONE"
   },
-  "final_delivery_readiness": "ONE_CLEAN_BREADTH_RERUN_REMAINING_OR_EXPLICIT_PARTIAL_DELIVERY"
+  "final_delivery": {
+    "delivery_id": "MM-FINAL-2026-W31-20260803-001",
+    "master_monday_pointer": "04_MARKET_LEARNING/master_monday/2026-W31/MASTER_MONDAY_DELIVERY_POINTER.json",
+    "master_monday_report": "04_MARKET_LEARNING/master_monday/2026-W31/MASTER_MONDAY_FINAL_REPORT.md",
+    "cycle_navigator_number": 19,
+    "cycle_navigator_pointer": "04_MARKET_LEARNING/cycle_navigator/2026-W32/CYCLE_NAVIGATOR_DELIVERY_POINTER.json",
+    "cycle_navigator_report": "04_MARKET_LEARNING/cycle_navigator/2026-W32/CYCLE_NAVIGATOR_19.md",
+    "status": "READY_FINAL"
+  },
+  "final_delivery_readiness": "READY_FINAL"
 }
