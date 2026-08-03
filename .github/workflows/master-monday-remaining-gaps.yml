@@ -1,0 +1,50 @@
+name: Master Monday Remaining Gaps
+
+on:
+  schedule:
+    - cron: '0 7,8,9 * * 1'
+      timezone: 'Europe/Copenhagen'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: framework-main-writer
+  cancel-in-progress: false
+
+jobs:
+  gap-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - name: Rebuild non-authoritative readiness snapshot
+        run: |
+          mkdir -p runtime/master-monday-gate
+          python scripts/master_monday/build_preflight_package_v2.py --repo-root . --registry research/master_monday_preflight/MASTER_MONDAY_ACTION_REGISTRY_v1.json --predecessor-registry research/master_monday_preflight/CANONICAL_PREDECESSOR_REGISTRY_v1.json --output runtime/master-monday-gate/PREFLIGHT_READINESS_SNAPSHOT.json
+          python - <<'PY'
+          import json
+          from datetime import datetime,timezone
+          from pathlib import Path
+          p=Path('runtime/master-monday-gate/PREFLIGHT_READINESS_SNAPSHOT.json');v=json.loads(p.read_text())
+          blocking=[m for m in v.get('missing',[]) if m.get('blocking_level')=='BLOCKING']
+          lines=['# CUSTOM GPT REMAINING GAPS','This is a late readiness check only. It does not mutate the frozen weekly evidence. Return owner data only, with timestamps and receipts. No GitHub writes and no framework interpretation.']
+          lines += [f"- {m['action_id']} `{m['field']}`: require {m['required_evidence']} via {m['suggested_collector']}" for m in blocking]
+          Path('research/master_monday_preflight/CUSTOM_GPT_REMAINING_GAPS_PROMPT.md').write_text('\n'.join(lines)+'\n')
+          gate={'contract':'MASTER_MONDAY_DATA_GATE_STATUS_v1','generated_at_utc':datetime.now(timezone.utc).isoformat().replace('+00:00','Z'),'preflight_status':v['packet']['status'],'blocking_gap_count':len(blocking),'preflight_sha256':v['package_sha256'],'authority':'READINESS_ONLY_NOT_FROZEN_EVIDENCE'}
+          Path('research/master_monday_preflight/LATEST_MASTER_MONDAY_DATA_GATE.json').write_text(json.dumps(gate,sort_keys=True,separators=(',',':'))+'\n')
+          PY
+      - name: Commit readiness status
+        run: |
+          git config user.name framework-gap-agent
+          git config user.email framework-gap-agent@users.noreply.github.com
+          git add research/master_monday_preflight/CUSTOM_GPT_REMAINING_GAPS_PROMPT.md research/master_monday_preflight/LATEST_MASTER_MONDAY_DATA_GATE.json
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "gate: refresh Master Monday gaps ${GITHUB_RUN_ID}"
+          pushed=false
+          for attempt in 1 2 3; do git rebase --abort 2>/dev/null || true; if git pull --rebase origin main && git push origin HEAD:main; then pushed=true; break; fi; sleep $((attempt*5)); done
+          [ "$pushed" = true ]; git fetch origin main; git merge-base --is-ancestor HEAD origin/main
