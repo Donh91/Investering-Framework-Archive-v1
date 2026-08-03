@@ -50,6 +50,7 @@ jobs:
             --prompt-file api-agent-input/prompt.txt \
             --context-file api-agent-input/context.json \
             --output-dir api-agent-output \
+            --intended-write-prefix research/api_agent/outputs/daily/ \
             --dry-run
       - name: Controlled live smoke call
         if: github.event_name == 'workflow_dispatch' && inputs.mode == 'live-smoke'
@@ -61,8 +62,9 @@ jobs:
             --registry research/api_agent/API_TASK_REGISTRY_v1.json \
             --prompt-file api-agent-input/prompt.txt \
             --context-file api-agent-input/context.json \
-            --output-dir api-agent-output
-      - name: Verify receipt authority
+            --output-dir api-agent-output \
+            --intended-write-prefix research/api_agent/outputs/daily/
+      - name: Verify receipt authority and enforced prefix
         run: |
           python - <<'PY'
           import json
@@ -72,6 +74,9 @@ jobs:
           assert r['authority']['framework_state_change'] is False
           assert r['authority']['model_weight_change'] is False
           assert r['estimated_cost_usd'] <= 1.5
+          assert r['allowed_write_prefix']=='research/api_agent/outputs/daily/'
+          assert r['intended_write_prefix']==r['allowed_write_prefix']
+          assert r['untrusted_input_envelope'] is True
           print('API_AGENT_GATEWAY_PASS')
           PY
       - uses: actions/upload-artifact@v4
