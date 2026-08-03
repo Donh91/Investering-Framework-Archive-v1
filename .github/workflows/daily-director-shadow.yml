@@ -36,7 +36,7 @@ jobs:
       - name: Run Luna Daily Director
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-        run: python scripts/api_agent/api_gateway.py --task DAILY_DIRECTOR_SHADOW --registry research/api_agent/API_TASK_REGISTRY_v1.json --prompt-file runtime/daily-director/prompt.txt --context-file runtime/daily-director/context.json --output-dir runtime/daily-director/output
+        run: python scripts/api_agent/api_gateway.py --task DAILY_DIRECTOR_SHADOW --registry research/api_agent/API_TASK_REGISTRY_v1.json --prompt-file runtime/daily-director/prompt.txt --context-file runtime/daily-director/context.json --output-dir runtime/daily-director/output --intended-write-prefix research/api_agent/outputs/daily/
       - name: Materialize immutable daily output
         run: |
           STAMP=$(date -u +%Y/%m/%d/%H%M%S)
