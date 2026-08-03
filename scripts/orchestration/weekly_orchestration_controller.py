@@ -11,6 +11,7 @@ COPENHAGEN = ZoneInfo('Europe/Copenhagen')
 
 def load(path: Path) -> dict[str, Any]: return json.loads(path.read_text())
 def digest(value: Any) -> str: return hashlib.sha256((json.dumps(value,sort_keys=True,separators=(',',':'))+'\n').encode()).hexdigest()
+def file_digest(path: Path) -> str: return hashlib.sha256(path.read_bytes()).hexdigest()
 def parse_ts(raw: Any) -> datetime: return datetime.fromisoformat(str(raw).replace('Z','+00:00')).astimezone(timezone.utc)
 
 def expected_completed_week(now: datetime):
@@ -34,7 +35,7 @@ def main():
     ap=argparse.ArgumentParser();ap.add_argument('--capture-root',type=Path,required=True);ap.add_argument('--accepted-data-ping-root',type=Path,required=True);ap.add_argument('--output',type=Path,required=True);ap.add_argument('--now-utc');a=ap.parse_args()
     now=parse_ts(a.now_utc) if a.now_utc else datetime.now(timezone.utc)
     year,week,local_start,local_end,start,end,exchange_end=expected_completed_week(now)
-    close_pointer=a.capture_root/'weekly_close/LATEST_WEEKLY_MARKET_CLOSE.json';weekly_pointer=a.capture_root/'weekly/LATEST_WEEKLY_CALIBRATION.json'
+    close_pointer=a.capture_root/'weekly_close/LATEST_WEEKLY_MARKET_CLOSE.json';weekly_pointer=a.capture_root/'weekly/LATEST_WEEKLY_CALIBRATION.json';reliability_path=a.capture_root/'weekly/RELIABILITY_LEDGER.csv'
     if not close_pointer.exists():raise SystemExit('FINAL_WEEK_CLOSE_MISSING')
     if not weekly_pointer.exists():raise SystemExit('WEEKLY_CAPTURE_BRIDGE_MISSING')
     pointer=load(close_pointer)
@@ -67,7 +68,9 @@ def main():
             seen.add(key);bucket=lane(row)
             lanes[bucket].append({'path':str(p),'run_id':row.get('run_id'),'snapshot_id':row.get('snapshot_id'),'freeze_utc':row.get('freeze_utc'),'sha256':digest(row),'authority_class':bucket})
 
-    freeze={'contract':'WEEKLY_ORCHESTRATION_FREEZE_v4','created_at_utc':now.isoformat().replace('+00:00','Z'),'status':'READY','iso_year':year,'iso_week':week,'evidence_timezone':'Europe/Copenhagen','window_start_local':local_start.isoformat(),'window_end_local':local_end.isoformat(),'window_start_utc':start.isoformat().replace('+00:00','Z'),'window_end_utc':end.isoformat().replace('+00:00','Z'),'exchange_week_close_end_utc':expected_exchange_end,'final_week_close':{'pointer_path':str(close_pointer),'pointer_sha256':digest(pointer),'package_path':str(package_path),'package_sha256':package_hash},'weekly_capture_bridge':{'path':str(weekly_pointer),'sha256':digest(weekly)},'data_ping_lanes':lanes,'data_ping_parse_errors':errors,'late_evidence_policy':'Evidence at or after window_end_utc is excluded and belongs in LATE_EVIDENCE_LEDGER.','handoff_targets':['RAW_WEEKLY_CALIBRATION','CYCLE_NAVIGATOR','MASTER_MONDAY_PREP','FORECAST_LEDGER'],'authority':{'canonical_promotion':False,'model_weight_change':False,'portfolio_action':False}}
+    reliability={'status':'UNAVAILABLE'}
+    if reliability_path.exists():reliability={'status':'AVAILABLE','path':str(reliability_path),'sha256':file_digest(reliability_path)}
+    freeze={'contract':'WEEKLY_ORCHESTRATION_FREEZE_v5','created_at_utc':now.isoformat().replace('+00:00','Z'),'status':'READY','iso_year':year,'iso_week':week,'evidence_timezone':'Europe/Copenhagen','window_start_local':local_start.isoformat(),'window_end_local':local_end.isoformat(),'window_start_utc':start.isoformat().replace('+00:00','Z'),'window_end_utc':end.isoformat().replace('+00:00','Z'),'exchange_week_close_end_utc':expected_exchange_end,'final_week_close':{'pointer_path':str(close_pointer),'pointer_sha256':digest(pointer),'package_path':str(package_path),'package_sha256':package_hash},'weekly_capture_bridge':{'path':str(weekly_pointer),'sha256':digest(weekly)},'reliability_ledger':reliability,'data_ping_lanes':lanes,'data_ping_parse_errors':errors,'late_evidence_policy':'Evidence at or after window_end_utc is excluded and belongs in LATE_EVIDENCE_LEDGER.','handoff_targets':['RAW_WEEKLY_CALIBRATION','CYCLE_NAVIGATOR','MASTER_MONDAY_PREP','FORECAST_LEDGER'],'authority':{'canonical_promotion':False,'model_weight_change':False,'portfolio_action':False}}
     freeze['freeze_sha256']=digest(freeze);a.output.parent.mkdir(parents=True,exist_ok=True);a.output.write_text(json.dumps(freeze,sort_keys=True,separators=(',',':'))+'\n')
-    print(json.dumps({'status':'READY','iso_year':year,'iso_week':week,'lane_counts':{k:len(v) for k,v in lanes.items()},'freeze_sha256':freeze['freeze_sha256']},sort_keys=True))
+    print(json.dumps({'status':'READY','iso_year':year,'iso_week':week,'lane_counts':{k:len(v) for k,v in lanes.items()},'reliability':reliability['status'],'freeze_sha256':freeze['freeze_sha256']},sort_keys=True))
 if __name__=='__main__':main()
