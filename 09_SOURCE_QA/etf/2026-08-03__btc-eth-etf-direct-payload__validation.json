@@ -1,0 +1,46 @@
+{
+  "schema_version": "ETF_PAYLOAD_VALIDATION_v1",
+  "received_at_local": "2026-08-03T09:51:00+02:00",
+  "source_record": "08_SOURCE_MATERIAL/etf/2026-08-03__btc-eth-etf-direct-payload-through-2026-07-31.json",
+  "latest_eligible_settled_US_session": "2026-07-31",
+  "BTC": {
+    "latest_session_present": true,
+    "2026_07_30_total_tieout": "PASS",
+    "2026_07_31_total_tieout": "PASS",
+    "two_session_swing_usd_m": 498.5,
+    "two_session_net_usd_m": -32.3,
+    "three_session_sum_usd_m": -0.2,
+    "five_session_sum_usd_m": -61.5,
+    "seven_session_sum_usd_m": -526.7,
+    "ten_session_sum_usd_m": -27.6,
+    "thirteen_session_sum_usd_m": 291.5,
+    "OTA_three_session_claim": "FAIL_ARITHMETIC",
+    "OTA_five_session_claim": "FAIL_ARITHMETIC",
+    "OTA_seven_session_claim": "FAIL_ARITHMETIC_BY_0_2",
+    "OTA_twenty_session_claim": "NOT_TESTABLE_FROM_13_SESSION_PAYLOAD",
+    "issuer_tieout_2026_07_31": "PASS"
+  },
+  "ETH": {
+    "latest_session_present": true,
+    "2026_07_31_total_tieout": "PASS",
+    "two_session_net_usd_m": 21.8,
+    "three_session_sum_usd_m": -11.1,
+    "five_session_sum_usd_m": 10.0,
+    "seven_session_sum_usd_m": -34.4,
+    "ten_session_sum_usd_m": 113.8,
+    "thirteen_session_sum_usd_m": 176.4,
+    "issuer_tieout_2026_07_31": "PASS"
+  },
+  "week_31": {
+    "BTC_total_usd_m": -61.5,
+    "ETH_total_usd_m": 10.0,
+    "ETH_minus_BTC_spread_usd_m": 71.5
+  },
+  "ledger_effect": {
+    "BTC_31_July_reverification": "PASS",
+    "ETH_31_July_gap": "CLOSED",
+    "stale_generation_quarantine_released": true,
+    "canonical_state_change": "NONE",
+    "operational_risk_class_change": "NONE"
+  }
+}
