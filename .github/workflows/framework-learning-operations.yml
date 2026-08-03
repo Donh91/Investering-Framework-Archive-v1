@@ -26,13 +26,15 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Ingest accepted DATA PING packets
+      - name: Ingest accepted DATA PING packets immutably
         run: |
-          mkdir -p research/data_ping_bridge/{inbox,accepted,rejected}
+          mkdir -p research/data_ping_bridge/{inbox,accepted,rejected,processed}
           python scripts/data_ping/accepted_data_ping_bridge.py \
             --inbox research/data_ping_bridge/inbox \
             --accepted-root research/data_ping_bridge/accepted \
-            --rejected-root research/data_ping_bridge/rejected
+            --rejected-root research/data_ping_bridge/rejected \
+            --processed-root research/data_ping_bridge/processed \
+            --run-id "${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
       - name: Capture Farside ETF owner
         continue-on-error: true
         run: |
@@ -43,31 +45,44 @@ jobs:
           mkdir -p "$DEST"
           cp runtime/farside-etf/*.json "$DEST/"
           cp runtime/farside-etf/owner_snapshot.json research/etf_owner/LATEST_FARSIDE_ETF_OWNER.json
-      - name: Mature due outcomes
+      - name: Mature due outcomes under strict contract
         run: |
           mkdir -p research/framework_memory/{forecast_memory,outcome_memory}
           python scripts/learning/outcome_maturation_engine.py \
             --forecast-root research/framework_memory/forecast_memory \
             --evidence-root 03_DAILY_CAPTURE_LOGS/captures \
-            --output-root research/framework_memory/outcome_memory
-      - name: Build architecture health dashboard
+            --output-root research/framework_memory/outcome_memory \
+            --max-evidence-lag-hours 24
+      - name: Build architecture and automation health
         run: |
           python scripts/health/build_architecture_health.py \
             --repo-root . \
             --json-output research/architecture_health/LATEST_ARCHITECTURE_HEALTH.json \
             --md-output research/architecture_health/LATEST_ARCHITECTURE_HEALTH.md
+          python scripts/health/build_automation_health.py \
+            --workflow-root .github/workflows \
+            --json-output research/architecture_health/LATEST_AUTOMATION_HEALTH.json \
+            --md-output research/architecture_health/LATEST_AUTOMATION_HEALTH.md
+      - name: Build downstream integration manifest
+        run: |
+          python scripts/orchestration/build_framework_handoff_manifest.py \
+            --repo-root . \
+            --output research/framework_handoffs/LATEST_FRAMEWORK_HANDOFF_MANIFEST.json
       - name: Commit compact outputs and verify main readback
         shell: bash
         run: |
           git config user.name 'framework-operations-bot'
           git config user.email 'framework-operations-bot@users.noreply.github.com'
-          git add research/data_ping_bridge research/etf_owner research/framework_memory research/architecture_health
+          git add research/data_ping_bridge research/etf_owner research/framework_memory research/architecture_health research/framework_handoffs
           if git diff --cached --quiet; then exit 0; fi
-          git commit -m "ops: update learning operations ${GITHUB_RUN_ID}"
+          git commit -m "ops: update integrated learning operations ${GITHUB_RUN_ID}"
+          pushed=false
           for attempt in 1 2 3; do
-            git pull --rebase origin main && git push origin HEAD:main && break
+            git rebase --abort 2>/dev/null || true
+            if git pull --rebase origin main && git push origin HEAD:main; then pushed=true; break; fi
             sleep $((attempt * 5))
           done
+          [ "$pushed" = true ]
           git fetch origin main
           git merge-base --is-ancestor HEAD origin/main
       - uses: actions/upload-artifact@v4
