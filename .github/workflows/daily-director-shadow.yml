@@ -1,6 +1,9 @@
 name: Daily Director Shadow
 
 on:
+  push:
+    paths:
+      - '.github/workflows/daily-director-shadow.yml'
   schedule:
     - cron: '25 23 * * *'
       timezone: 'Europe/Copenhagen'
