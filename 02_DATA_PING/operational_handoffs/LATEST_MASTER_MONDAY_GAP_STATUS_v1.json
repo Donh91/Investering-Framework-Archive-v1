@@ -1,7 +1,19 @@
 {
   "schema_version": "LATEST_MASTER_MONDAY_GAP_STATUS_v1",
-  "updated_at_local": "2026-08-03T09:51:00+02:00",
+  "updated_at_local": "2026-08-03T11:24:00+02:00",
   "target_week": "2026-W31",
+  "latest_preflight": {
+    "request_id": "MM-GAPFILL-2026-W31-20260803-001",
+    "run_id": "run_20260803_mm_gapfill_001",
+    "snapshot_id": "snap_20260803_mm_gapfill_001",
+    "snapshot_utc": "2026-08-03T09:15:16.328Z",
+    "source_status": "PARTIAL_WITH_EXPLICIT_GAPS",
+    "planned_core_actions": 60,
+    "attempted_core_actions": 43,
+    "skipped_runtime_limit": 17,
+    "canonical_predecessor_identity_reanchor": "PASS",
+    "canonical_predecessor_field_values_available": false
+  },
   "ETF": {
     "BTC_through_2026_07_31": "CLOSED_RECONCILED",
     "ETH_through_2026_07_31": "CLOSED_RECONCILED",
@@ -9,24 +21,38 @@
     "BTC_week31_total_usd_m": -61.5,
     "ETH_week31_total_usd_m": 10.0,
     "remaining_ETF_gap_before_Master_Monday": "NONE",
+    "packet_internal_ETF_status": "SKIPPED_RUNTIME_LIMIT_OVERRIDDEN_BY_EXTERNAL_RECONCILED_LEDGER",
+    "freeze_binding_status": "PENDING_PATH_AND_HASH_BINDING",
     "next_session": "PENDING_AFTER_NEXT_US_SETTLEMENT"
   },
   "closed_items": [
+    "CANONICAL_PREDECESSOR_IDENTITY_REANCHOR_TO_snap_0e19c112413d471d8270cad1a18148a7",
     "BTC_ETF_2026_07_30",
     "BTC_ETF_2026_07_31",
     "ETH_ETF_2026_07_31",
     "BTC_ETF_STALE_GENERATION_REVERIFICATION",
-    "W31_BTC_ETH_TOTAL_PRICE_RANGE"
+    "W31_BTC_ETH_TOTAL_PRICE_RANGE",
+    "SETTLED_COPENHAGEN_BTC_ETH_ETHBTC_SESSION_2026_08_02",
+    "BINANCE_DERIVATIVES_CURRENT",
+    "OKX_CROSSCHECK_CURRENT"
   ],
   "remaining_critical_items": [
-    "CANONICAL_PREDECESSOR_REANCHOR_TO_snap_0e19c112413d471d8270cad1a18148a7",
+    "CANONICAL_PREDECESSOR_MARKET_FIELD_VALUES_OR_EXPLICIT_NO_COMPARISON",
+    "BREADTH_AGGREGATE",
     "BREADTH_MEMBERSHIP_HASH",
     "BREADTH_POINT_IN_TIME_CONSTITUENT_SIDECAR",
     "BREADTH_EXCLUSION_SIDECAR",
-    "FULL_60_CORE_ACTION_RUN_WITHOUT_BOUNDED_PREDECESSOR_CHAIN",
-    "CFGI_CURRENT_IF_ENDPOINT_AVAILABLE",
-    "STABLECOIN_GLOBAL_TOTAL_IF_AVAILABLE",
+    "FINAL_WEEKLY_FREEZE_BINDING_OF_EXTERNAL_ETF_LEDGER",
+    "FULL_60_CORE_ACTION_RUN_OR_EXPLICIT_PARTIAL_MASTER_MONDAY_ACCEPTANCE",
     "DCR_20260730_EVENT_003_EXT_95C5_EXECUTION"
+  ],
+  "confidence_reducing_nonfatal_items": [
+    "W31_DAILY_TIMESTAMP_AND_RAW_HASH_SIDECAR",
+    "CFGI_CURRENT_IF_ENDPOINT_AVAILABLE",
+    "FRED_NOT_BOUND_TO_CURRENT_PREFLIGHT_FREEZE",
+    "CHAIN_TVL_NOT_BOUND_TO_CURRENT_PREFLIGHT_FREEZE",
+    "DEX_QA_NOT_BOUND_TO_CURRENT_PREFLIGHT_FREEZE",
+    "STABLECOIN_GLOBAL_TOTAL_UNAVAILABLE"
   ],
   "non_blocking_open_items": [
     "ETF_AUM_DENOMINATORS",
@@ -36,8 +62,13 @@
     "ETHB_ISSUER_METADATA_INDEPENDENT_VERIFICATION"
   ],
   "latest_operational_state": {
-    "source_run_id": "run_8a4f73c1d9e64bbba275efa260803621",
+    "source_run_id": "run_20260803_mm_gapfill_001",
+    "source_role": "PARTIAL_MASTER_MONDAY_PREFLIGHT_AND_CURRENT_OWNER_DERIVATIVES_SUPPLEMENT",
+    "BTCUSDT": 62563.89,
+    "ETHUSDT": 1840.61,
+    "ETHBTC_direct": 0.02942,
     "operational_risk_class": "DO_NOT_ADD_RISK",
+    "risk_class_change": "NONE_REINFORCED",
     "rotation": "NO_ROTATION",
     "rebuy": "LOCKED",
     "canonical_state_change": "NONE"
