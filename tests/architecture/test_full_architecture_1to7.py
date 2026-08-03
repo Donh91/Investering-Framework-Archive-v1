@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import hashlib
+import importlib.util
 import json
 import subprocess
 import tempfile
@@ -9,9 +11,21 @@ from pathlib import Path
 
 ROOT=Path(__file__).resolve().parents[2]
 
+
+def canonical(value):
+    return (json.dumps(value,sort_keys=True,separators=(',',':'))+'\n').encode()
+
+
 class FullArchitectureTests(unittest.TestCase):
     def run_py(self,rel,*args,cwd=None):
         return subprocess.run(['python',str(ROOT/rel),*map(str,args)],cwd=cwd or ROOT,text=True,capture_output=True)
+
+    def load_module(self, rel, name):
+        spec=importlib.util.spec_from_file_location(name,ROOT/rel)
+        module=importlib.util.module_from_spec(spec)
+        assert spec and spec.loader
+        spec.loader.exec_module(module)
+        return module
 
     def test_data_ping_bridge_accepts_and_rejects_authority(self):
         with tempfile.TemporaryDirectory() as d:
@@ -34,13 +48,70 @@ class FullArchitectureTests(unittest.TestCase):
             out=json.loads((r/'o/f1.json').read_text()); self.assertEqual(out['result'],'HIT')
             before=(r/'o/f1.json').read_bytes(); self.run_py('scripts/learning/outcome_maturation_engine.py','--forecast-root',r/'f','--evidence-root',r/'e','--output-root',r/'o'); self.assertEqual(before,(r/'o/f1.json').read_bytes())
 
-    def test_orchestrator_requires_final_close(self):
+    def make_final_close(self, root: Path, *, iso_year=2026, iso_week=31, corrupt_hash=False, final=True):
+        package={
+            'contract':'WEEKLY_MARKET_CLOSE_PACKAGE_v2',
+            'iso_year':iso_year,
+            'iso_week':iso_week,
+            'window_start_utc':'2026-07-27T00:00:00Z',
+            'window_end_utc':'2026-08-03T00:00:00Z',
+            'generated_at_utc':'2026-08-03T00:05:00Z',
+            'final':final,
+            'close_mode':'FINAL_COMPLETED_ISO_WEEK' if final else 'PRE_CLOSE_CURRENT_ISO_WEEK',
+            'completeness':'COMPLETE' if final else 'PARTIAL',
+            'symbols':{},
+        }
+        pkg=root/'weekly_close/2026/W31/WEEKLY_MARKET_CLOSE_PACKAGE.json'
+        pkg.parent.mkdir(parents=True)
+        pkg.write_bytes(canonical(package))
+        digest=hashlib.sha256(pkg.read_bytes()).hexdigest()
+        pointer={
+            'contract':'WEEKLY_MARKET_CLOSE_POINTER_v2',
+            'path':'weekly_close/2026/W31/WEEKLY_MARKET_CLOSE_PACKAGE.json',
+            'sha256':'0'*64 if corrupt_hash else digest,
+            'status':'PASS','iso_year':iso_year,'iso_week':iso_week,
+            'window_end_utc':'2026-08-03T00:00:00Z','final':final,
+            'close_mode':package['close_mode'],'completeness':package['completeness'],
+        }
+        (root/'weekly_close/LATEST_WEEKLY_MARKET_CLOSE.json').write_bytes(canonical(pointer))
+        (root/'weekly').mkdir()
+        (root/'weekly/LATEST_WEEKLY_CALIBRATION.json').write_text('{}')
+
+    def test_orchestrator_accepts_production_pointer_and_package(self):
         with tempfile.TemporaryDirectory() as d:
-            r=Path(d); (r/'weekly_close').mkdir(); (r/'weekly').mkdir()
-            (r/'weekly_close/LATEST_WEEKLY_MARKET_CLOSE.json').write_text(json.dumps({'final':False}))
-            (r/'weekly/LATEST_WEEKLY_CALIBRATION.json').write_text('{}')
-            p=self.run_py('scripts/orchestration/weekly_orchestration_controller.py','--capture-root',r,'--accepted-data-ping-root',r/'accepted','--output',r/'freeze.json')
+            r=Path(d); self.make_final_close(r)
+            p=self.run_py('scripts/orchestration/weekly_orchestration_controller.py','--capture-root',r,'--accepted-data-ping-root',r/'accepted','--output',r/'freeze.json','--now-utc','2026-08-03T00:20:00Z')
+            self.assertEqual(p.returncode,0,p.stderr)
+            freeze=json.loads((r/'freeze.json').read_text())
+            self.assertEqual(freeze['status'],'READY')
+            self.assertEqual(freeze['iso_week'],31)
+            self.assertEqual(freeze['final_week_close']['package_sha256'],hashlib.sha256((r/'weekly_close/2026/W31/WEEKLY_MARKET_CLOSE_PACKAGE.json').read_bytes()).hexdigest())
+
+    def test_orchestrator_rejects_hash_mismatch(self):
+        with tempfile.TemporaryDirectory() as d:
+            r=Path(d); self.make_final_close(r,corrupt_hash=True)
+            p=self.run_py('scripts/orchestration/weekly_orchestration_controller.py','--capture-root',r,'--accepted-data-ping-root',r/'accepted','--output',r/'freeze.json','--now-utc','2026-08-03T00:20:00Z')
             self.assertNotEqual(p.returncode,0)
+            self.assertIn('WEEK_CLOSE_HASH_MISMATCH',p.stderr+p.stdout)
+
+    def test_orchestrator_rejects_nonfinal_and_wrong_week(self):
+        with tempfile.TemporaryDirectory() as d:
+            r=Path(d); self.make_final_close(r,final=False)
+            p=self.run_py('scripts/orchestration/weekly_orchestration_controller.py','--capture-root',r,'--accepted-data-ping-root',r/'accepted','--output',r/'freeze.json','--now-utc','2026-08-03T00:20:00Z')
+            self.assertNotEqual(p.returncode,0)
+        with tempfile.TemporaryDirectory() as d:
+            r=Path(d); self.make_final_close(r,iso_week=32)
+            p=self.run_py('scripts/orchestration/weekly_orchestration_controller.py','--capture-root',r,'--accepted-data-ping-root',r/'accepted','--output',r/'freeze.json','--now-utc','2026-08-03T00:20:00Z')
+            self.assertNotEqual(p.returncode,0)
+            self.assertIn('WEEK_CLOSE_WRONG_ISO_WEEK',p.stderr+p.stdout)
+
+    def test_final_window_on_monday_targets_previous_iso_week(self):
+        module=self.load_module('scripts/daily_capture/build_weekly_market_close_package.py','weekly_close_builder')
+        start,end,final,mode=module.resolve_window(datetime(2026,8,3,0,5,tzinfo=timezone.utc),'final')
+        self.assertEqual(start.isoformat(),'2026-07-27T00:00:00+00:00')
+        self.assertEqual(end.isoformat(),'2026-08-03T00:00:00+00:00')
+        self.assertTrue(final)
+        self.assertEqual(mode,'FINAL_COMPLETED_ISO_WEEK')
 
     def test_farside_fixture_parser(self):
         with tempfile.TemporaryDirectory() as d:
