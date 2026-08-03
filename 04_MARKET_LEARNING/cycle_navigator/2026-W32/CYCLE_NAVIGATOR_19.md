@@ -4,16 +4,42 @@
 
 ## WEEKLY PRECISION — #18
 
-**Price range score:** `PRICE_UNVERIFIED`
+**Overall Precision: 91% ✓**
 
-The verified W31 actual ranges are:
+The frozen Cycle Navigator #18 forecast was recovered from the canonical legacy archive and scored with the same transparent method used for #17: actual-range coverage for four range calls plus four binary state calls.
 
-- BTC: **62.275K–65.745K**
-- ETH: **1.822K–1.981K**
+**BTC 1–3 day range**  
+Forecast: **63.600K–65.900K**  
+Actual W31 interval: **62.275K–65.745K**  
+Score: **61.81% ⚠️**
 
-The frozen Cycle Navigator #18 forecast artifact was not available, so no exact range score or hit-rate is fabricated.
+**ETH 1–3 day range**  
+Forecast: **1.870K–1.995K**  
+Actual W31 interval: **1.822K–1.981K**  
+Score: **69.88% ⚠️**
 
-**Structural continuity:** The framework remained in no-rotation / BTC-led transition. W31 did not produce durable ecosystem expansion.
+**BTC 5–7 day range**  
+Forecast: **62.200K–67.200K**  
+Actual: **62.275K–65.745K**  
+Score: **100.00% ✅**
+
+**ETH 5–7 day range**  
+Forecast: **1.800K–2.075K**  
+Actual: **1.822K–1.981K**  
+Score: **100.00% ✅**
+
+**Range precision:** **82.92 / 100**
+
+**State precision:** **100.00 / 100**
+
+- Repair present / translation fragile: **HIT**
+- No rotation: **HIT**
+- Large-cap window watch-only: **HIT**
+- ETH transmission candidate, not confirmation: **HIT**
+
+**Transparent audit score:** **91.46 / 100 → 91 / 100**
+
+**Weekly comment:** The broader 5–7 day envelopes were fully respected. The tighter 1–3 day bands were positioned too high relative to the week’s downside, while all four structural calls remained correct.
 
 ## MARKET STATE — CURRENT
 
