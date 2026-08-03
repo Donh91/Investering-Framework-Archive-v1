@@ -1,0 +1,26 @@
+{
+  "contract": "MASTER_MONDAY_ACTION_REGISTRY_v1",
+  "planned_core_actions": 60,
+  "statuses": ["PASS","PARTIAL","STALE","FAIL","UNAVAILABLE","SKIPPED_RUNTIME_LIMIT"],
+  "groups": {
+    "identity_predecessor": 4,
+    "current_spot": 6,
+    "settled_sessions": 5,
+    "weekly_daily_structure": 4,
+    "breadth": 7,
+    "binance_derivatives": 10,
+    "okx_crosscheck": 5,
+    "etf": 4,
+    "cfgi": 3,
+    "macro": 4,
+    "stablecoins_tvl_dex": 6,
+    "receipts_acceptance": 2
+  },
+  "required_acceptance_capabilities": [
+    "direct_BTC_available","direct_ETH_available","direct_ETHBTC_available",
+    "settled_Copenhagen_BTC_ETH_ETHBTC_available","breadth_aggregate_available",
+    "breadth_membership_hash_available","breadth_constituent_sidecar_available",
+    "Binance_derivatives_available","OKX_crosscheck_available"
+  ],
+  "authority": {"framework_interpretation":false,"portfolio_action":false,"model_weight_change":false,"canonical_promotion":false}
+}
