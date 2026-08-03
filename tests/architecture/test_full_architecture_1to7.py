@@ -84,7 +84,8 @@ class FullArchitectureTests(unittest.TestCase):
             self.assertEqual(p.returncode,0,p.stderr)
             freeze=json.loads((r/'freeze.json').read_text())
             self.assertEqual(freeze['status'],'READY')
-            self.assertEqual(freeze['final_week_close']['iso_week'],31)
+            self.assertEqual(freeze['iso_week'],31)
+            self.assertEqual(freeze['final_week_close']['package_sha256'],hashlib.sha256((r/'weekly_close/2026/W31/WEEKLY_MARKET_CLOSE_PACKAGE.json').read_bytes()).hexdigest())
 
     def test_orchestrator_rejects_hash_mismatch(self):
         with tempfile.TemporaryDirectory() as d:
@@ -102,7 +103,7 @@ class FullArchitectureTests(unittest.TestCase):
             r=Path(d); self.make_final_close(r,iso_week=32)
             p=self.run_py('scripts/orchestration/weekly_orchestration_controller.py','--capture-root',r,'--accepted-data-ping-root',r/'accepted','--output',r/'freeze.json','--now-utc','2026-08-03T00:20:00Z')
             self.assertNotEqual(p.returncode,0)
-            self.assertIn('WEEK_CLOSE_WRONG_WEEK',p.stderr+p.stdout)
+            self.assertIn('WEEK_CLOSE_WRONG_ISO_WEEK',p.stderr+p.stdout)
 
     def test_final_window_on_monday_targets_previous_iso_week(self):
         module=self.load_module('scripts/daily_capture/build_weekly_market_close_package.py','weekly_close_builder')
