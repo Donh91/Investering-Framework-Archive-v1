@@ -1,0 +1,108 @@
+name: Automation Production Health
+
+on:
+  schedule:
+    - cron: '30 5 * * *'
+      timezone: 'Europe/Copenhagen'
+    - cron: '30 17 * * *'
+      timezone: 'Europe/Copenhagen'
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: write
+  issues: write
+
+concurrency:
+  group: framework-main-writer
+  cancel-in-progress: false
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Build complete production health report
+        id: health
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set +e
+          python scripts/health/build_automation_health.py \
+            --workflow-root .github/workflows \
+            --repo "${GITHUB_REPOSITORY}" \
+            --token "${GITHUB_TOKEN}" \
+            --json-output research/architecture_health/LATEST_AUTOMATION_HEALTH.json \
+            --md-output research/architecture_health/LATEST_AUTOMATION_HEALTH.md
+          code=$?
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+          exit 0
+      - name: Build architecture health after automation audit
+        run: |
+          python scripts/health/build_architecture_health.py \
+            --repo-root . \
+            --json-output research/architecture_health/LATEST_ARCHITECTURE_HEALTH.json \
+            --md-output research/architecture_health/LATEST_ARCHITECTURE_HEALTH.md
+      - name: Materialize incident when production health is RED
+        if: steps.health.outputs.exit_code != '0'
+        run: |
+          mkdir -p 09_SOURCE_QA/incidents
+          cp research/architecture_health/LATEST_AUTOMATION_HEALTH.md \
+            "09_SOURCE_QA/incidents/INCIDENT_automation-production-health-${GITHUB_RUN_ID}.md"
+      - name: Commit health, incidents and verify main readback
+        shell: bash
+        run: |
+          git config user.name 'framework-health-bot'
+          git config user.email 'framework-health-bot@users.noreply.github.com'
+          git add research/architecture_health 09_SOURCE_QA/incidents
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "health: audit automation production state ${GITHUB_RUN_ID}"
+          pushed=false
+          for attempt in 1 2 3; do
+            git rebase --abort 2>/dev/null || true
+            if git pull --rebase origin main && git push origin HEAD:main; then pushed=true; break; fi
+            sleep $((attempt * 5))
+          done
+          [ "$pushed" = true ]
+          git fetch origin main
+          git merge-base --is-ancestor HEAD origin/main
+          for path in \
+            research/architecture_health/LATEST_AUTOMATION_HEALTH.json \
+            research/architecture_health/LATEST_AUTOMATION_HEALTH.md; do
+            local_sha=$(sha256sum "$path" | awk '{print $1}')
+            remote_sha=$(git show "origin/main:$path" | sha256sum | awk '{print $1}')
+            [ "$local_sha" = "$remote_sha" ]
+          done
+      - name: Open one sanitized incident issue for RED health
+        if: steps.health.outputs.exit_code != '0'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          title="AUTOMATION HEALTH RED"
+          existing=$(gh issue list --state open --search "$title in:title" --json number --jq '.[0].number // empty')
+          if [ -z "$existing" ]; then
+            gh issue create \
+              --title "$title" \
+              --body-file research/architecture_health/LATEST_AUTOMATION_HEALTH.md
+          else
+            gh issue comment "$existing" --body "Health remains RED at run ${GITHUB_RUN_ID}. See latest committed health report."
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: automation-production-health-${{ github.run_id }}
+          path: |
+            research/architecture_health/LATEST_AUTOMATION_HEALTH.json
+            research/architecture_health/LATEST_AUTOMATION_HEALTH.md
+          retention-days: 14
+          if-no-files-found: error
+      - name: Enforce production health result after durable publication
+        if: steps.health.outputs.exit_code != '0'
+        run: exit 2
