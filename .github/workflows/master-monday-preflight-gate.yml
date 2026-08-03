@@ -1,0 +1,40 @@
+name: Master Monday Preflight Gate
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/master_monday/**'
+      - 'research/master_monday_preflight/**'
+      - 'tests/master_monday/**'
+      - '.github/workflows/weekly-api-calibration-shadow.yml'
+      - '.github/workflows/master-monday-preflight-gate.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  preflight-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compile collector
+        run: python -m py_compile scripts/master_monday/build_preflight_package.py
+      - name: Run contract tests
+        run: python -m unittest tests.master_monday.test_preflight_package -v
+      - name: Verify weekly integration
+        run: |
+          grep -q 'build_preflight_package.py' .github/workflows/weekly-api-calibration-shadow.yml
+          grep -q 'MASTER_MONDAY_GAP_FILL_PACKAGE.json' .github/workflows/weekly-api-calibration-shadow.yml
+          grep -q 'PREFLIGHT_ACTION_RECONCILIATION_FAILED' .github/workflows/weekly-api-calibration-shadow.yml
+          python - <<'PY'
+          import json
+          r=json.load(open('research/master_monday_preflight/MASTER_MONDAY_ACTION_REGISTRY_v1.json'))
+          assert r['planned_core_actions']==60
+          assert sum(r['groups'].values())==60
+          assert r['authority']['portfolio_action'] is False
+          PY
