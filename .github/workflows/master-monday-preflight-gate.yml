@@ -4,9 +4,12 @@ on:
   pull_request:
     paths:
       - 'scripts/master_monday/**'
+      - 'scripts/orchestration/**'
+      - 'scripts/api_agent/build_weekly_calibration_context.py'
       - 'research/master_monday_preflight/**'
       - 'tests/master_monday/**'
       - '.github/workflows/weekly-api-calibration-shadow.yml'
+      - '.github/workflows/master-monday-remaining-gaps.yml'
       - '.github/workflows/master-monday-preflight-gate.yml'
   workflow_dispatch:
 
@@ -16,21 +19,23 @@ permissions:
 jobs:
   preflight-gate:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 12
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-      - name: Compile collector
-        run: python -m py_compile scripts/master_monday/build_preflight_package.py
-      - name: Run contract tests
-        run: python -m unittest tests.master_monday.test_preflight_package -v
-      - name: Verify weekly integration
+        with: {python-version: '3.12'}
+      - name: Compile hardening modules
+        run: python -m py_compile scripts/master_monday/build_preflight_package_v2.py scripts/master_monday/publish_master_monday_outputs.py scripts/orchestration/verify_durable_readback.py scripts/orchestration/weekly_orchestration_controller.py scripts/api_agent/build_weekly_calibration_context.py
+      - name: Run v1 and v2 contract tests
+        run: python -m unittest tests.master_monday.test_preflight_package tests.master_monday.test_preflight_package_v2 -v
+      - name: Verify production integration
         run: |
-          grep -q 'build_preflight_package.py' .github/workflows/weekly-api-calibration-shadow.yml
-          grep -q 'MASTER_MONDAY_GAP_FILL_PACKAGE.json' .github/workflows/weekly-api-calibration-shadow.yml
-          grep -q 'PREFLIGHT_ACTION_RECONCILIATION_FAILED' .github/workflows/weekly-api-calibration-shadow.yml
+          grep -q 'build_preflight_package_v2.py' .github/workflows/weekly-api-calibration-shadow.yml
+          grep -q '^  freeze:' .github/workflows/weekly-api-calibration-shadow.yml
+          grep -q '^  calibration:' .github/workflows/weekly-api-calibration-shadow.yml
+          grep -q '^  publish:' .github/workflows/weekly-api-calibration-shadow.yml
+          grep -q 'verify_durable_readback.py' .github/workflows/weekly-api-calibration-shadow.yml
+          grep -q 'continue-on-error: true' .github/workflows/weekly-api-calibration-shadow.yml
           python - <<'PY'
           import json
           r=json.load(open('research/master_monday_preflight/MASTER_MONDAY_ACTION_REGISTRY_v1.json'))
