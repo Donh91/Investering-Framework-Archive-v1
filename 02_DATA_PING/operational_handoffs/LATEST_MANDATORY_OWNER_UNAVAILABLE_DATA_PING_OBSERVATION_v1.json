@@ -1,0 +1,49 @@
+{
+  "schema_version": "LATEST_MANDATORY_OWNER_UNAVAILABLE_DATA_PING_OBSERVATION_v1",
+  "updated_at_utc": "2026-08-04T13:52:00Z",
+  "run_id": "dprun_20260804_134800_01",
+  "snapshot_id": "dpsnap_20260804_134800_01",
+  "snapshot_utc": "2026-08-04T13:48:00Z",
+  "collector_status": "PARTIAL",
+  "classification": "MANDATORY_DIRECT_OWNER_UNAVAILABLE_NON_DECISION_OBSERVATION",
+  "packet_usable_for_main_thread_ingest": false,
+  "execution_order_status": "PASS",
+  "receipt_reconciliation_status": "PASS",
+  "planned_core_actions": 60,
+  "attempted_core_actions": 60,
+  "passed_core_actions": 23,
+  "partial_core_actions": 3,
+  "unavailable_core_actions": 34,
+  "mandatory_owner_failure": {
+    "owner": "BINANCE_CONTEXT_AND_BINANCE_FINAL",
+    "reason": "GEO_RESTRICTION",
+    "affected_core_actions": 34
+  },
+  "diagnostic_market_values": {
+    "coingecko_BTC": 63953,
+    "coingecko_ETH": 1871.27,
+    "coingecko_ETHBTC_derived": 0.029260754,
+    "OKX_BTC": 63867.8,
+    "OKX_ETH": 1867.61,
+    "OKX_BTC_basis_bps": -8.5779,
+    "OKX_ETH_basis_bps": -10.0636
+  },
+  "missing_decision_layers": [
+    "BINANCE_DIRECT_MARKET_FEEDS",
+    "BINANCE_SETTLED_WINDOWS",
+    "BINANCE_DERIVATIVES_HISTORY_AND_POSITIONING",
+    "ETF_LATEST_SETTLED_VALUES",
+    "BREADTH_AGGREGATE_AND_HASH",
+    "ACCEPTED_PREDECESSOR"
+  ],
+  "source_record_path": "08_SOURCE_MATERIAL/data_ping/2026-08-04__dprun_20260804_134800_01__mandatory-owner-unavailable-source-record.md",
+  "qa_path": "09_SOURCE_QA/data_ping/2026-08-04__dprun_20260804_134800_01__mandatory-owner-unavailable-validation.json",
+  "assessment_path": "04_MARKET_LEARNING/data_ping/2026-08-04__dprun_20260804_134800_01__non-decision-assessment.md",
+  "latest_valid_bounded_observation_run_id": "run_18f02b7aa0334c9e",
+  "latest_valid_bounded_observation_snapshot_id": "snap_d23ae2d89bec47a8",
+  "bounded_pointer_replaced": false,
+  "canonical_predecessor_advanced": false,
+  "canonical_state_change": "NONE",
+  "portfolio_effect": "NONE",
+  "operational_risk_class_change": "NONE"
+}
