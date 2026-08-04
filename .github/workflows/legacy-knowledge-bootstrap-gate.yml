@@ -1,0 +1,41 @@
+name: Legacy Knowledge Bootstrap Gate
+
+on:
+  pull_request:
+    paths:
+      - '04_MARKET_LEARNING/legacy_framework_knowledge_bootstrap_v1/**'
+      - 'scripts/learning/validate_legacy_knowledge_bootstrap.py'
+      - 'tests/learning/test_legacy_knowledge_bootstrap.py'
+      - '.github/workflows/legacy-knowledge-bootstrap-gate.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compile validator
+        run: python -m py_compile scripts/learning/validate_legacy_knowledge_bootstrap.py
+      - name: Validate package
+        run: python scripts/learning/validate_legacy_knowledge_bootstrap.py --root 04_MARKET_LEARNING/legacy_framework_knowledge_bootstrap_v1 --output /tmp/legacy-bootstrap-validation.json
+      - name: Run tests
+        run: python -m unittest -v tests.learning.test_legacy_knowledge_bootstrap
+      - name: Enforce research-only boundary
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          for line in Path('04_MARKET_LEARNING/legacy_framework_knowledge_bootstrap_v1/02_HYPOTHESIS_REGISTRY/ACTIVE_LEGACY_HYPOTHESES.jsonl').read_text().splitlines():
+              if not line.strip():
+                  continue
+              row=json.loads(line)
+              assert row['canonical_evidence'] is False
+              assert row['authority']=={'portfolio_action':False,'framework_state_change':False,'model_weight_change':False,'canonical_promotion':False}
+          PY
