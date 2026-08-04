@@ -2,11 +2,21 @@ from __future__ import annotations
 
 import argparse
 import json
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-TIMESTAMP_KEYS = ("captured_at_utc", "retrieved_at_utc", "created_at_utc", "generated_at_utc", "freeze_utc", "snapshot_utc")
+TIMESTAMP_KEYS = (
+    "captured_at_utc",
+    "retrieved_at_utc",
+    "created_at_utc",
+    "generated_at_utc",
+    "completed_at_utc",
+    "published_at_utc",
+    "freeze_utc",
+    "snapshot_utc",
+    "created_unix",
+)
 
 
 def read_json(path: Path) -> dict[str, Any] | None:
@@ -18,6 +28,11 @@ def read_json(path: Path) -> dict[str, Any] | None:
 
 
 def parse_dt(value: object) -> datetime | None:
+    if isinstance(value, (int, float)):
+        try:
+            return datetime.fromtimestamp(value, timezone.utc)
+        except Exception:
+            return None
     if not isinstance(value, str):
         return None
     try:
@@ -60,8 +75,40 @@ def latest_json(root: Path) -> tuple[Path | None, dict[str, Any] | None, datetim
     return path, value, ts
 
 
+def latest_paired_output(root: Path, output_name: str, receipt_name: str) -> tuple[Path | None, dict[str, Any] | None, datetime | None, Path | None]:
+    candidates: list[tuple[datetime, str, Path, dict[str, Any], Path | None]] = []
+    if root.exists():
+        for path in root.rglob(output_name):
+            output = read_json(path)
+            if output is None:
+                continue
+            receipt_path = path.with_name(receipt_name)
+            receipt = read_json(receipt_path) if receipt_path.exists() else None
+            ts = row_timestamp(output) or row_timestamp(receipt or {})
+            if ts is not None:
+                candidates.append((ts, str(path), path, output, receipt_path if receipt else None))
+    if not candidates:
+        return None, None, None, None
+    ts, _, path, output, receipt_path = max(candidates, key=lambda row: (row[0], row[1]))
+    return path, output, ts, receipt_path
+
+
 def age_hours(now: datetime, ts: datetime | None) -> float | None:
     return None if ts is None else max(0.0, (now - ts).total_seconds() / 3600.0)
+
+
+def find_cfgi_remaining(owner: dict[str, Any]) -> int | None:
+    for file_row in owner.get("files", []):
+        summary = file_row.get("summary") if isinstance(file_row, dict) else None
+        if not isinstance(summary, dict):
+            continue
+        direct = summary.get("credits_remaining")
+        if isinstance(direct, int):
+            return direct
+        billing = summary.get("billing")
+        if isinstance(billing, dict) and isinstance(billing.get("credits_remaining"), int):
+            return billing["credits_remaining"]
+    return None
 
 
 def main() -> None:
@@ -76,7 +123,11 @@ def main() -> None:
     assert now is not None
 
     cap_path, cap, cap_ts = latest_json(root / "03_DAILY_CAPTURE_LOGS/captures")
-    daily_path, daily, daily_ts = latest_json(root / "research/api_agent/outputs/daily")
+    daily_path, daily, daily_ts, daily_receipt_path = latest_paired_output(
+        root / "research/api_agent/outputs/daily",
+        "DAILY_DIRECTOR_OUTPUT.json",
+        "DAILY_DIRECTOR_RECEIPT.json",
+    )
     weekly_path, weekly, weekly_ts = latest_json(root / "research/api_agent/outputs/weekly")
     etf_path, etf, etf_ts = latest_json(root / "research/etf_owner")
     ping_files = list((root / "research/data_ping_bridge/accepted").rglob("*.json")) if (root / "research/data_ping_bridge/accepted").exists() else []
@@ -89,10 +140,7 @@ def main() -> None:
                 continue
             owners.append({"owner_id": owner.get("owner_id"), "status": owner.get("status", "UNKNOWN")})
             if owner.get("owner_id") == "cfgi_sentiment":
-                for file_row in owner.get("files", []):
-                    summary = file_row.get("summary") if isinstance(file_row, dict) else None
-                    if isinstance(summary, dict) and summary.get("credits_remaining") is not None:
-                        cfgi_remaining = summary["credits_remaining"]
+                cfgi_remaining = find_cfgi_remaining(owner)
 
     pass_count = sum(row["status"] == "PASS" for row in owners)
     blockers: list[str] = []
@@ -120,7 +168,7 @@ def main() -> None:
     elif daily_age is None or daily_age > 36:
         add("DAILY_DIRECTOR_STALE", 1)
 
-    monday_or_later = now.weekday() == 0 and now.hour >= 4 or now.weekday() > 0
+    monday_or_later = (now.weekday() == 0 and now.hour >= 4) or now.weekday() > 0
     if weekly is None:
         add("NO_WEEKLY_API_OUTPUT_YET", 2 if monday_or_later else 1)
     elif weekly_age is None or weekly_age > 9 * 24:
@@ -139,13 +187,14 @@ def main() -> None:
 
     status = "RED" if severity >= 2 else ("AMBER" if severity == 1 else "GREEN")
     health = {
-        "contract": "ARCHITECTURE_HEALTH_DASHBOARD_v2",
+        "contract": "ARCHITECTURE_HEALTH_DASHBOARD_v2_1",
         "generated_at_utc": now.isoformat().replace("+00:00", "Z"),
         "status": status,
         "freshness_hours": {"capture": cap_age, "daily_director": daily_age, "weekly_calibration": weekly_age, "etf_owner": etf_age},
         "owners": {"count": len(owners), "pass_count": pass_count, "rows": owners},
         "latest_capture_path": str(cap_path) if cap_path else None,
         "latest_daily_director_path": str(daily_path) if daily_path else None,
+        "latest_daily_director_receipt_path": str(daily_receipt_path) if daily_receipt_path else None,
         "latest_weekly_calibration_path": str(weekly_path) if weekly_path else None,
         "latest_etf_owner_path": str(etf_path) if etf_path else None,
         "accepted_data_ping_count": len(ping_files),
