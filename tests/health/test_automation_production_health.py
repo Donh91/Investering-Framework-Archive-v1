@@ -17,6 +17,14 @@ def write_workflow(tmp_path: Path, body: str) -> Path:
     return path
 
 
+def healthy_writer(tmp_path: Path) -> dict:
+    path = write_workflow(
+        tmp_path,
+        """name: Test\non:\n  schedule:\n    - cron: '0 1 * * *'\n      timezone: 'Europe/Copenhagen'\npermissions:\n  contents: write\nconcurrency:\n  group: framework-main-writer\njobs:\n  x:\n    steps:\n      - run: |\n          git add out\n          if git diff --cached --quiet; then exit 0; fi\n          git rebase --abort || true\n          git push origin HEAD:main\n          git merge-base --is-ancestor HEAD origin/main\n""",
+    )
+    return module.workflow_static(path)
+
+
 def test_writer_without_global_lock_is_red(tmp_path: Path) -> None:
     path = write_workflow(
         tmp_path,
@@ -25,12 +33,10 @@ def test_writer_without_global_lock_is_red(tmp_path: Path) -> None:
     row = module.workflow_static(path)
     row["live"] = {
         "state": "active",
-        "latest_run": {
-            "status": "completed",
-            "conclusion": "success",
-            "created_at": "2026-08-03T00:00:00Z",
-        },
+        "latest_run": {"status": "completed", "conclusion": "success", "created_at": "2026-08-03T00:00:00Z"},
         "recent_failure_count": 0,
+        "success_streak": 1,
+        "failure_streak": 0,
     }
     status, findings = module.classify(row, datetime(2026, 8, 3, 12, tzinfo=timezone.utc))
     assert status == "RED"
@@ -39,60 +45,64 @@ def test_writer_without_global_lock_is_red(tmp_path: Path) -> None:
 
 
 def test_healthy_writer_is_green(tmp_path: Path) -> None:
-    path = write_workflow(
-        tmp_path,
-        """name: Test\non:\n  schedule:\n    - cron: '0 1 * * *'\n      timezone: 'Europe/Copenhagen'\npermissions:\n  contents: write\nconcurrency:\n  group: framework-main-writer\njobs:\n  x:\n    steps:\n      - run: |\n          git add out\n          if git diff --cached --quiet; then exit 0; fi\n          git rebase --abort || true\n          git push origin HEAD:main\n          git merge-base --is-ancestor HEAD origin/main\n""",
-    )
-    row = module.workflow_static(path)
+    row = healthy_writer(tmp_path)
     row["live"] = {
         "state": "active",
-        "latest_run": {
-            "status": "completed",
-            "conclusion": "success",
-            "created_at": "2026-08-03T06:00:00Z",
-        },
+        "latest_run": {"status": "completed", "conclusion": "success", "created_at": "2026-08-03T06:00:00Z"},
         "recent_failure_count": 0,
+        "success_streak": 3,
+        "failure_streak": 0,
     }
     status, findings = module.classify(row, datetime(2026, 8, 3, 12, tzinfo=timezone.utc))
     assert status == "GREEN"
     assert findings == []
 
 
-def test_repeated_failures_are_red(tmp_path: Path) -> None:
-    path = write_workflow(
-        tmp_path,
-        """name: Test\non:\n  workflow_dispatch:\njobs:\n  x:\n    steps:\n      - run: echo ok\n""",
-    )
+def test_consecutive_failures_are_red(tmp_path: Path) -> None:
+    path = write_workflow(tmp_path, "name: Test\non:\n  workflow_dispatch:\njobs:\n  x:\n    steps:\n      - run: echo ok\n")
     row = module.workflow_static(path)
     row["live"] = {
         "state": "active",
-        "latest_run": {
-            "status": "completed",
-            "conclusion": "failure",
-            "created_at": "2026-08-03T06:00:00Z",
-        },
+        "latest_run": {"status": "completed", "conclusion": "failure", "created_at": "2026-08-03T06:00:00Z"},
         "recent_failure_count": 2,
+        "success_streak": 0,
+        "failure_streak": 2,
     }
     status, findings = module.classify(row, datetime(2026, 8, 3, 12, tzinfo=timezone.utc))
     assert status == "RED"
-    assert "REPEATED_RECENT_FAILURES" in findings
+    assert "REPEATED_CONSECUTIVE_FAILURES" in findings
+    assert "LATEST_RUN_FAILED" not in findings  # non-scheduled workflows are judged by streak here
+
+
+def test_success_after_failures_is_amber_recovering(tmp_path: Path) -> None:
+    row = healthy_writer(tmp_path)
+    row["live"] = {
+        "state": "active",
+        "latest_run": {"status": "completed", "conclusion": "success", "created_at": "2026-08-03T06:00:00Z"},
+        "recent_failure_count": 3,
+        "success_streak": 1,
+        "failure_streak": 0,
+    }
+    status, findings = module.classify(row, datetime(2026, 8, 3, 12, tzinfo=timezone.utc))
+    assert status == "AMBER"
+    assert "RECOVERING_AFTER_RECENT_FAILURES" in findings
 
 
 def test_scheduled_workflow_without_timezone_is_amber(tmp_path: Path) -> None:
-    path = write_workflow(
-        tmp_path,
-        """name: Test\non:\n  schedule:\n    - cron: '0 1 * * *'\njobs:\n  x:\n    steps:\n      - run: echo ok\n""",
-    )
+    path = write_workflow(tmp_path, "name: Test\non:\n  schedule:\n    - cron: '0 1 * * *'\njobs:\n  x:\n    steps:\n      - run: echo ok\n")
     row = module.workflow_static(path)
     row["live"] = {
         "state": "active",
-        "latest_run": {
-            "status": "completed",
-            "conclusion": "success",
-            "created_at": "2026-08-03T06:00:00Z",
-        },
+        "latest_run": {"status": "completed", "conclusion": "success", "created_at": "2026-08-03T06:00:00Z"},
         "recent_failure_count": 0,
+        "success_streak": 1,
+        "failure_streak": 0,
     }
     status, findings = module.classify(row, datetime(2026, 8, 3, 12, tzinfo=timezone.utc))
     assert status == "AMBER"
     assert "SCHEDULE_WITHOUT_EXPLICIT_TIMEZONE" in findings
+
+
+def test_leading_streaks() -> None:
+    assert module.leading_streak(["success", "success", "failure"], True) == 2
+    assert module.leading_streak(["failure", "failure", "success"], False) == 2
