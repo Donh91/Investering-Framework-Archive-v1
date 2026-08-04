@@ -1,0 +1,43 @@
+name: Operations Dashboard Gate
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/health/build_operations_dashboard.py'
+      - 'tests/health/test_operations_dashboard.py'
+      - '.github/workflows/operations-dashboard.yml'
+      - '.github/workflows/operations-dashboard-gate.yml'
+      - '00_FMOS/OPERATIONS_DASHBOARD_ARCHITECTURE_v1.md'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compile dashboard builder
+        run: python -m py_compile scripts/health/build_operations_dashboard.py
+      - name: Run simulations
+        run: python -m unittest -v tests.health.test_operations_dashboard
+      - name: Build dashboard from repository state
+        run: |
+          python scripts/health/build_operations_dashboard.py \
+            --repo-root . \
+            --json-output /tmp/operations-dashboard.json \
+            --md-output /tmp/operations-dashboard.md
+          python - <<'PY'
+          import json
+          data=json.load(open('/tmp/operations-dashboard.json'))
+          assert data['contract']=='OPERATIONS_DASHBOARD_v1'
+          assert data['authority']=='OPERATIONAL_OBSERVABILITY_ONLY'
+          assert data['overall_status'] in {'GREEN','AMBER','RED'}
+          assert 'systems' in data and 'agent_activity' in data
+          assert data['agent_activity']['codex']['status']=='UNKNOWN'
+          PY
