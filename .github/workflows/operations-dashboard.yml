@@ -1,0 +1,71 @@
+name: Operations Dashboard
+
+on:
+  schedule:
+    - cron: '0 6 * * *'
+      timezone: 'Europe/Copenhagen'
+    - cron: '0 18 * * *'
+      timezone: 'Europe/Copenhagen'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: framework-main-writer
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Build operations dashboard
+        run: |
+          python scripts/health/build_operations_dashboard.py \
+            --repo-root . \
+            --json-output research/operations_dashboard/LATEST_OPERATIONS_DASHBOARD.json \
+            --md-output research/operations_dashboard/LATEST_OPERATIONS_DASHBOARD.md
+          cp research/operations_dashboard/LATEST_OPERATIONS_DASHBOARD.json LATEST_OPERATIONS_DASHBOARD.json
+          cp research/operations_dashboard/LATEST_OPERATIONS_DASHBOARD.md LATEST_OPERATIONS_DASHBOARD.md
+      - name: Commit dashboard and verify remote bytes
+        shell: bash
+        run: |
+          git config user.name 'framework-operations-bot'
+          git config user.email 'framework-operations-bot@users.noreply.github.com'
+          git add research/operations_dashboard LATEST_OPERATIONS_DASHBOARD.json LATEST_OPERATIONS_DASHBOARD.md
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "ops: refresh operations dashboard ${GITHUB_RUN_ID}"
+          pushed=false
+          for attempt in 1 2 3; do
+            git rebase --abort 2>/dev/null || true
+            if git pull --rebase origin main && git push origin HEAD:main; then pushed=true; break; fi
+            sleep $((attempt * 5))
+          done
+          [ "$pushed" = true ]
+          git fetch origin main
+          git merge-base --is-ancestor HEAD origin/main
+          for path in \
+            research/operations_dashboard/LATEST_OPERATIONS_DASHBOARD.json \
+            research/operations_dashboard/LATEST_OPERATIONS_DASHBOARD.md \
+            LATEST_OPERATIONS_DASHBOARD.json \
+            LATEST_OPERATIONS_DASHBOARD.md; do
+            local_sha=$(sha256sum "$path" | awk '{print $1}')
+            remote_sha=$(git show "origin/main:$path" | sha256sum | awk '{print $1}')
+            [ "$local_sha" = "$remote_sha" ]
+          done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: operations-dashboard-${{ github.run_id }}
+          path: |
+            research/operations_dashboard/LATEST_OPERATIONS_DASHBOARD.json
+            research/operations_dashboard/LATEST_OPERATIONS_DASHBOARD.md
+          retention-days: 14
+          if-no-files-found: error
