@@ -37,6 +37,69 @@ def load_capture_indexes(root: Path) -> list[tuple[Path, dict[str, Any]]]:
     return rows
 
 
+def load_legacy_research_context(root: Path | None) -> dict[str, Any]:
+    empty = {
+        "status": "UNAVAILABLE",
+        "authority": "RESEARCH_CONTEXT_ONLY",
+        "canonical_evidence": False,
+        "hypotheses": [],
+        "validation_queue": [],
+        "rules": ["Legacy material cannot satisfy current evidence requirements or freeze forecasts."],
+    }
+    if root is None or not root.exists():
+        return empty
+    hypotheses_path = root / "02_HYPOTHESIS_REGISTRY/ACTIVE_LEGACY_HYPOTHESES.jsonl"
+    queue_path = root / "05_NEW_SYSTEM_CROSSWALK/PROSPECTIVE_VALIDATION_QUEUE.json"
+    hypotheses: list[dict[str, Any]] = []
+    try:
+        for raw in hypotheses_path.read_text(encoding="utf-8").splitlines():
+            if not raw.strip():
+                continue
+            row = json.loads(raw)
+            hypotheses.append({
+                "hypothesis_id": row.get("legacy_observation_id"),
+                "topic": row.get("topic"),
+                "claim": row.get("claim"),
+                "sensors": row.get("sensors", []),
+                "horizon_claimed": row.get("horizon_claimed"),
+                "legacy_ruling": row.get("legacy_ruling"),
+                "evidence_level": row.get("evidence_level"),
+                "canonical_evidence": False,
+            })
+    except Exception:
+        return {**empty, "status": "INVALID_HYPOTHESIS_REGISTRY"}
+    try:
+        queue_value = json.loads(queue_path.read_text(encoding="utf-8"))
+        queue = [
+            {
+                "hypothesis_id": item.get("hypothesis_id"),
+                "priority": item.get("priority"),
+                "target_event": item.get("target_event"),
+                "required_live_sensors": item.get("required_live_sensors", []),
+                "current_status": item.get("current_status"),
+                "candidate_creation_allowed": item.get("candidate_creation_allowed") is True,
+                "candidate_freeze_allowed": False,
+                "automatic_promotion": False,
+            }
+            for item in queue_value.get("queue", [])
+            if isinstance(item, dict)
+        ]
+    except Exception:
+        return {**empty, "status": "INVALID_VALIDATION_QUEUE", "hypotheses": hypotheses}
+    return {
+        "status": "AVAILABLE_RESEARCH_ONLY",
+        "authority": "RESEARCH_CONTEXT_ONLY",
+        "canonical_evidence": False,
+        "hypotheses": hypotheses,
+        "validation_queue": queue,
+        "rules": [
+            "Match and contradiction assessment must remain separate from current owner evidence.",
+            "A legacy match may create only an unratified forecast candidate.",
+            "Legacy material cannot satisfy current evidence requirements, change weights or freeze forecasts.",
+        ],
+    }
+
+
 def metric_bearing_v2(value: dict[str, Any]) -> bool:
     return value.get("contract") == "DAILY_RAW_CAPTURE_INDEX_v2" and bool(value.get("market_metrics"))
 
@@ -70,7 +133,7 @@ def numeric_deltas(latest: Any, previous: Any, prefix: str = "") -> list[dict[st
     return out
 
 
-def build_context(rows: list[tuple[Path, dict[str, Any]]]) -> dict[str, Any]:
+def build_context(rows: list[tuple[Path, dict[str, Any]]], legacy_root: Path | None = None) -> dict[str, Any]:
     if not rows:
         raise ValueError("no_daily_capture_indexes")
     latest_path, latest = rows[-1]
@@ -95,7 +158,7 @@ def build_context(rows: list[tuple[Path, dict[str, Any]]]) -> dict[str, Any]:
         delta_status = "DELTA_DEGRADED_STALE_PREDECESSOR"
     pass_count = sum(v == "PASS" for v in latest_status.values())
     context = {
-        "contract": "OWNER_BOUND_DAILY_DIRECTOR_CONTEXT_v3",
+        "contract": "OWNER_BOUND_DAILY_DIRECTOR_CONTEXT_v4",
         "authority": "SHADOW_ONLY",
         "canonical_data_ping": False,
         "latest_capture": {"path": str(latest_path), "captured_at_utc": latest.get("captured_at_utc"), "run_id": latest.get("run_id"), "status": latest.get("status"), "owners": [compact_owner(o) for o in latest.get("owners", [])], "market_metrics": latest_metrics},
@@ -108,7 +171,8 @@ def build_context(rows: list[tuple[Path, dict[str, Any]]]) -> dict[str, Any]:
         "owner_status_transitions": transitions,
         "metric_deltas": deltas,
         "coverage": {"owner_count": len(latest_status), "pass_count": pass_count, "pass_ratio": round(pass_count / len(latest_status), 4) if latest_status else 0.0, "latest_numeric_metrics": len(deltas), "comparable_numeric_metrics": comparable},
-        "limitations": ["Only explicitly materialized compact metrics may be compared.", "Missing metrics remain unknown and may not be inferred.", "This context cannot create canonical truth, framework state, model weights, or portfolio action."],
+        "legacy_research_context": load_legacy_research_context(legacy_root),
+        "limitations": ["Only explicitly materialized compact metrics may be compared.", "Missing metrics remain unknown and may not be inferred.", "Legacy hypotheses are research priors, not evidence or forecast outcomes.", "This context cannot create canonical truth, framework state, model weights, or portfolio action."],
     }
     context["context_hash"] = sha256(context)
     return context
@@ -117,12 +181,13 @@ def build_context(rows: list[tuple[Path, dict[str, Any]]]) -> dict[str, Any]:
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--capture-root", type=Path, required=True)
+    parser.add_argument("--legacy-root", type=Path)
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
-    context = build_context(load_capture_indexes(args.capture_root))
+    context = build_context(load_capture_indexes(args.capture_root), args.legacy_root)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_bytes(canonical_bytes(context))
-    print(json.dumps({"status": context["delta_status"], "context_hash": context["context_hash"], "comparable_metrics": context["coverage"]["comparable_numeric_metrics"]}, sort_keys=True))
+    print(json.dumps({"status": context["delta_status"], "context_hash": context["context_hash"], "comparable_metrics": context["coverage"]["comparable_numeric_metrics"], "legacy_hypotheses": len(context["legacy_research_context"]["hypotheses"])}, sort_keys=True))
 
 
 if __name__ == "__main__":
