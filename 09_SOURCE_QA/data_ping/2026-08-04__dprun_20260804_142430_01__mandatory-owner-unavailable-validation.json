@@ -1,0 +1,104 @@
+{
+  "schema_version": "DATA_PING_MAIN_THREAD_QA_v1",
+  "run_id": "dprun_20260804_142430_01",
+  "snapshot_id": "dpsnap_20260804_142430_01",
+  "snapshot_utc": "2026-08-04T14:24:30Z",
+  "collector_status": "PARTIAL",
+  "main_thread_acceptance": "MANDATORY_DIRECT_OWNER_UNAVAILABLE_NON_DECISION_OBSERVATION",
+  "packet_usable_for_main_thread_ingest": false,
+  "execution_order_status": "PASS",
+  "receipt_reconciliation_status": "PASS",
+  "core_counts": {
+    "planned": 60,
+    "attempted": 60,
+    "pass": 21,
+    "partial": 3,
+    "unavailable": 36,
+    "skipped_runtime_limit": 0,
+    "receipts": 60
+  },
+  "optional_counts": {
+    "planned": 1,
+    "attempted": 1,
+    "unavailable": 1,
+    "receipts": 1
+  },
+  "freeze_QA": {
+    "snapshot_utc": "2026-08-04T14:24:30Z",
+    "freeze_recorded_at_utc": "2026-08-04T14:24:30Z",
+    "max_final_source_timestamp_utc": null,
+    "freeze_count": 1,
+    "post_freeze_call_count": 0,
+    "status": "PASS_WITH_NO_FINAL_OWNER_TIMESTAMP_BECAUSE_BINANCE_FINAL_UNAVAILABLE"
+  },
+  "available_features": [
+    "COINGECKO_GLOBAL",
+    "COINGECKO_BTC_ETH_CURRENT",
+    "COINGECKO_TOP100_RAW_ROWS",
+    "FRED_LATEST_AVAILABLE",
+    "CHAIN_TVL",
+    "GECKOTERMINAL_SOURCE_QA",
+    "OKX_CURRENT_TICKER_MARK_INDEX_FUNDING_OI"
+  ],
+  "authority_restrictions": [
+    {
+      "item": "BINANCE_MANDATORY_DIRECT_OWNER_PACKAGE",
+      "status": "UNAVAILABLE_GEO_RESTRICTION",
+      "affected_core_actions": 34,
+      "effect": "NO_DIRECT_OWNER_MARKET_OR_DERIVATIVES_AUTHORITY"
+    },
+    {
+      "item": "ETF_LATEST_SETTLED_VALUES",
+      "status": "UNAVAILABLE_ROWS_NOT_EXTRACTED",
+      "effect": "NO_NEW_ETF_SESSION_AUTHORITY"
+    },
+    {
+      "item": "CFGI_CURRENT_VALUES",
+      "status": "UNAVAILABLE_SOURCE_IDENTITY_NOT_RESOLVED",
+      "effect": "NO_CURRENT_SENTIMENT_AUTHORITY"
+    },
+    {
+      "item": "BREADTH",
+      "status": "INCOMPLETE",
+      "raw_rows": 100,
+      "aggregate_available": false,
+      "membership_hash_available": false,
+      "scored_gate_permission": "NOT_AUTHORIZED",
+      "effect": "NO_BREADTH_OR_ROTATION_GATE_AUTHORITY"
+    },
+    {
+      "item": "STABLECOIN_GLOBAL_TOTAL",
+      "status": "UNAVAILABLE",
+      "effect": "NO_GLOBAL_STABLECOIN_COMPARISON"
+    },
+    {
+      "item": "CANONICAL_PREDECESSOR",
+      "status": "NOT_AVAILABLE",
+      "effect": "NO_LONGITUDINAL_OR_CANONICAL_CHAIN_PERMISSION"
+    }
+  ],
+  "same_lane_comparison": {
+    "prior_run_id": "dprun_20260804_134800_01",
+    "coingecko_BTC_change_pct": -0.317421,
+    "coingecko_ETH_change_pct": -0.444083,
+    "coingecko_ETHBTC_derived_change_pct": -0.131688,
+    "OKX_BTC_change_pct": -0.273064,
+    "OKX_ETH_change_pct": -0.361960,
+    "OKX_BTC_OI_change_pct": -1.524185,
+    "OKX_ETH_OI_change_pct": -1.569105,
+    "authority": "DIAGNOSTIC_ONLY"
+  },
+  "market_authority": {
+    "latest_bounded_observation_replacement": false,
+    "canonical_predecessor_advance": false,
+    "framework_state_change": "NONE",
+    "portfolio_effect": "NONE",
+    "A_class_increment": 0,
+    "shadow_dual_run_increment": 0
+  },
+  "latest_valid_bounded_observation": {
+    "run_id": "run_18f02b7aa0334c9e",
+    "snapshot_id": "snap_d23ae2d89bec47a8"
+  },
+  "final_QA_status": "REJECTED_FOR_DECISION_USE_ARCHIVE_ONLY"
+}
