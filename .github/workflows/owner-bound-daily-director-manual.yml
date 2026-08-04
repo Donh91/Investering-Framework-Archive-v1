@@ -6,6 +6,7 @@ on:
       - 'scripts/api_agent/**'
       - 'scripts/daily_capture/persist_raw_payloads.py'
       - 'tests/api_agent/**'
+      - '04_MARKET_LEARNING/legacy_framework_knowledge_bootstrap_v1/**'
       - '.github/workflows/owner-bound-daily-director-manual.yml'
       - 'research/api_agent/**'
   workflow_dispatch:
@@ -27,7 +28,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
-        with: {python-version: '3.12'}
+        with:
+          python-version: '3.12'
       - name: Test and compile
         run: |
           python -m unittest tests.api_agent.test_owner_bound_director_context
@@ -35,23 +37,31 @@ jobs:
       - name: Build owner-bound context
         run: |
           mkdir -p owner-bound-director-input
-          python scripts/api_agent/build_owner_bound_director_context.py --capture-root 03_DAILY_CAPTURE_LOGS/captures --output owner-bound-director-input/context.json
-          echo 'Produce shadow evidence and unratified forecast candidates only.' > owner-bound-director-input/prompt.txt
+          python scripts/api_agent/build_owner_bound_director_context.py \
+            --capture-root 03_DAILY_CAPTURE_LOGS/captures \
+            --legacy-root 04_MARKET_LEARNING/legacy_framework_knowledge_bootstrap_v1 \
+            --output owner-bound-director-input/context.json
+          echo 'Produce shadow evidence and unratified forecast candidates only. Legacy research is non-binding and may only be matched or contradicted by current evidence.' > owner-bound-director-input/prompt.txt
       - name: Run gateway dry
         if: github.event_name == 'pull_request' || inputs.mode == 'dry-run'
         run: python scripts/api_agent/api_gateway.py --task DAILY_DIRECTOR_SHADOW --registry research/api_agent/API_TASK_REGISTRY_v1.json --prompt-file owner-bound-director-input/prompt.txt --context-file owner-bound-director-input/context.json --output-dir owner-bound-director-output --intended-write-prefix research/api_agent/outputs/daily/ --dry-run
       - name: Run explicit live call
         if: github.event_name == 'workflow_dispatch' && inputs.mode == 'live'
-        env: {OPENAI_API_KEY: '${{ secrets.OPENAI_API_KEY }}'}
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: python scripts/api_agent/api_gateway.py --task DAILY_DIRECTOR_SHADOW --registry research/api_agent/API_TASK_REGISTRY_v1.json --prompt-file owner-bound-director-input/prompt.txt --context-file owner-bound-director-input/context.json --output-dir owner-bound-director-output --intended-write-prefix research/api_agent/outputs/daily/
       - name: Verify owner binding and authority
         run: |
           python - <<'PY'
-          import json,hashlib
+          import json
           from pathlib import Path
-          c=json.loads(Path('owner-bound-director-input/context.json').read_text());o=json.loads(Path('owner-bound-director-output/output.json').read_text());r=json.loads(Path('owner-bound-director-output/receipt.json').read_text())
-          assert c['contract'] in {'OWNER_BOUND_DAILY_DIRECTOR_CONTEXT_v2','OWNER_BOUND_DAILY_DIRECTOR_CONTEXT_v3'}
+          c=json.loads(Path('owner-bound-director-input/context.json').read_text())
+          o=json.loads(Path('owner-bound-director-output/output.json').read_text())
+          r=json.loads(Path('owner-bound-director-output/receipt.json').read_text())
+          assert c['contract'] in {'OWNER_BOUND_DAILY_DIRECTOR_CONTEXT_v2','OWNER_BOUND_DAILY_DIRECTOR_CONTEXT_v3','OWNER_BOUND_DAILY_DIRECTOR_CONTEXT_v4'}
           assert c['latest_capture']['run_id']
+          assert c['legacy_research_context']['canonical_evidence'] is False
+          assert c['legacy_research_context']['authority']=='RESEARCH_CONTEXT_ONLY'
           assert isinstance(o['forecast_candidates'],list)
           assert r['authority']['portfolio_action'] is False
           assert r['estimated_cost_usd'] <= 1.5
