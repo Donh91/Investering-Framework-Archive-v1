@@ -35,9 +35,10 @@ jobs:
           python - <<'PY'
           import json
           data=json.load(open('/tmp/operations-dashboard.json'))
-          assert data['contract']=='OPERATIONS_DASHBOARD_v1'
+          assert data['contract'] in {'OPERATIONS_DASHBOARD_v1','OPERATIONS_DASHBOARD_v1_1'}
           assert data['authority']=='OPERATIONAL_OBSERVABILITY_ONLY'
           assert data['overall_status'] in {'GREEN','AMBER','RED'}
           assert 'systems' in data and 'agent_activity' in data
           assert data['agent_activity']['codex']['status']=='UNKNOWN'
+          assert 'receipt_count' in data['agent_activity']['openai_api']
           PY
