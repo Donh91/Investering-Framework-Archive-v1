@@ -1,9 +1,6 @@
 name: Daily Raw Owner Capture
 
 on:
-  push:
-    paths:
-      - '.github/workflows/daily-raw-owner-capture.yml'
   schedule:
     - cron: '13 6 * * *'
       timezone: 'Europe/Copenhagen'
@@ -27,6 +24,7 @@ concurrency:
 
 jobs:
   capture:
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 25
     env:
@@ -35,9 +33,12 @@ jobs:
       SCHEDULE_ID: ${{ github.event.schedule }}
     steps:
       - uses: actions/checkout@v4
-        with: {fetch-depth: 0}
+        with:
+          ref: main
+          fetch-depth: 0
       - uses: actions/setup-python@v5
-        with: {python-version: '3.12'}
+        with:
+          python-version: '3.12'
       - name: Initialize source status
         run: echo '{}' > collector-status.json
       - name: Run owner collectors fail-closed but independently
@@ -113,11 +114,13 @@ jobs:
 
   notify:
     needs: capture
-    if: failure()
+    if: failure() && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with: {fetch-depth: 0}
+        with:
+          ref: main
+          fetch-depth: 0
       - name: Publish sanitized incident
         env:
           GH_TOKEN: ${{ github.token }}
