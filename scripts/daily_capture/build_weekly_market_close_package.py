@@ -9,16 +9,22 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 SYMBOLS = ["BTCUSDT", "ETHUSDT", "ETHBTC"]
+BINANCE_MARKET_DATA_BASE = "https://data-api.binance.vision"
 
 
 def canonical(value: object) -> bytes:
     return (json.dumps(value, sort_keys=True, separators=(",", ":")) + "\n").encode()
 
 
-def fetch_klines(symbol: str, start_ms: int, end_ms: int) -> list[list[object]]:
+def fetch_klines(symbol: str, start_ms: int, end_ms: int, base_url: str = BINANCE_MARKET_DATA_BASE) -> list[list[object]]:
     query = urllib.parse.urlencode({"symbol": symbol, "interval": "1h", "startTime": start_ms, "endTime": end_ms - 1, "limit": 1000})
-    with urllib.request.urlopen("https://api.binance.com/api/v3/klines?" + query, timeout=60) as response:
-        return json.loads(response.read())
+    url = base_url.rstrip("/") + "/api/v3/klines?" + query
+    request = urllib.request.Request(url, headers={"User-Agent": "investering-framework-weekly-close/1.0"})
+    with urllib.request.urlopen(request, timeout=60) as response:
+        payload = json.loads(response.read())
+    if not isinstance(payload, list):
+        raise ValueError(f"invalid_kline_payload:{symbol}")
+    return payload
 
 
 def summarize_day(rows: list[list[object]], date: str) -> dict[str, object]:
@@ -51,6 +57,7 @@ def main() -> None:
     parser.add_argument("--output-root", type=Path, required=True)
     parser.add_argument("--mode", choices=["preclose", "final"], required=True)
     parser.add_argument("--now-utc", help="Test-only ISO timestamp")
+    parser.add_argument("--base-url", default=BINANCE_MARKET_DATA_BASE, help="Test override; production uses Binance market-data-only endpoint")
     args = parser.parse_args()
 
     now = datetime.fromisoformat(args.now_utc.replace("Z", "+00:00")) if args.now_utc else datetime.now(timezone.utc)
@@ -62,7 +69,7 @@ def main() -> None:
         raise SystemExit("FINAL_WINDOW_NOT_YET_CLOSED")
 
     package: dict[str, object] = {
-        "contract": "WEEKLY_MARKET_CLOSE_PACKAGE_v2",
+        "contract": "WEEKLY_MARKET_CLOSE_PACKAGE_v3",
         "iso_year": start.isocalendar().year,
         "iso_week": start.isocalendar().week,
         "window_start_utc": start.isoformat().replace("+00:00", "Z"),
@@ -70,7 +77,8 @@ def main() -> None:
         "generated_at_utc": now.replace(microsecond=0).isoformat().replace("+00:00", "Z"),
         "final": final,
         "close_mode": close_mode,
-        "source": "BINANCE_PUBLIC_1H_KLINES",
+        "source": "BINANCE_MARKET_DATA_ONLY_1H_KLINES",
+        "source_base_url": args.base_url,
         "symbols": {},
         "authority": "SHADOW_CALIBRATION_INPUT",
         "canonical_data_ping": False,
@@ -81,7 +89,7 @@ def main() -> None:
     expected_hours = int((end - start).total_seconds() // 3600)
     all_complete = True
     for symbol in SYMBOLS:
-        rows = fetch_klines(symbol, int(start.timestamp() * 1000), int(end.timestamp() * 1000))
+        rows = fetch_klines(symbol, int(start.timestamp() * 1000), int(end.timestamp() * 1000), args.base_url)
         rows = [r for r in rows if int(r[6]) < int(end.timestamp() * 1000) and int(r[6]) <= int(now.timestamp() * 1000)]
         if not rows:
             raise SystemExit(f"empty_closed_klines:{symbol}")
@@ -116,7 +124,7 @@ def main() -> None:
     package_path = out / "WEEKLY_MARKET_CLOSE_PACKAGE.json"
     package_path.write_bytes(body)
     receipt = {
-        "contract": "WEEKLY_MARKET_CLOSE_RECEIPT_v2",
+        "contract": "WEEKLY_MARKET_CLOSE_RECEIPT_v3",
         "sha256": digest,
         "generated_at_utc": package["generated_at_utc"],
         "iso_year": package["iso_year"],
@@ -124,13 +132,14 @@ def main() -> None:
         "final": final,
         "close_mode": close_mode,
         "completeness": package["completeness"],
+        "source_base_url": args.base_url,
         "symbols": SYMBOLS,
         "status": "PASS",
         "handoff_targets": ["CYCLE_NAVIGATOR", "RAW_WEEKLY_CALIBRATION", "MASTER_MONDAY", "FORECAST_LEDGER", "SPECIALIST_REVIEW"],
     }
     (out / "WEEKLY_MARKET_CLOSE_RECEIPT.json").write_bytes(canonical(receipt))
     pointer = {
-        "contract": "WEEKLY_MARKET_CLOSE_POINTER_v2",
+        "contract": "WEEKLY_MARKET_CLOSE_POINTER_v3",
         "path": str(package_path.relative_to(args.output_root.parent)),
         "sha256": digest,
         "status": "PASS",
@@ -140,6 +149,7 @@ def main() -> None:
         "final": final,
         "close_mode": close_mode,
         "completeness": package["completeness"],
+        "source_base_url": args.base_url,
     }
     (args.output_root / "LATEST_WEEKLY_MARKET_CLOSE.json").write_bytes(canonical(pointer))
     print(json.dumps(receipt, sort_keys=True))
