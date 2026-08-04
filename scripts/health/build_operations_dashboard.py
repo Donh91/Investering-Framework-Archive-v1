@@ -12,6 +12,8 @@ SEVERITY = {"GREEN": 0, "AMBER": 1, "UNKNOWN": 1, "RED": 2}
 
 
 def parse_time(value: Any) -> datetime | None:
+    if isinstance(value, (int, float)):
+        return datetime.fromtimestamp(value, UTC)
     if not isinstance(value, str) or not value:
         return None
     try:
@@ -48,9 +50,9 @@ def normalized_status(value: Any) -> str:
     candidate = str(value or "UNKNOWN").upper()
     if candidate in {"GREEN", "AMBER", "RED"}:
         return candidate
-    if candidate in {"PASS", "READY", "COMPLETE", "DURABLE_PASS", "SUCCESS"}:
+    if candidate in {"PASS", "READY", "COMPLETE", "DURABLE_PASS", "SUCCESS", "SKIPPED_NO_DELTA", "SKIPPED_NO_ELIGIBLE_INPUT"}:
         return "GREEN"
-    if candidate in {"PARTIAL", "DEGRADED", "PENDING", "SKIPPED_NO_DELTA", "UNKNOWN"}:
+    if candidate in {"PARTIAL", "DEGRADED", "PENDING", "UNKNOWN", "RECOVERING"}:
         return "AMBER"
     if candidate in {"FAIL", "FAILED", "BLOCKED", "SOURCE_UNAVAILABLE"}:
         return "RED"
@@ -102,36 +104,65 @@ def hash_status(pointer: dict[str, Any]) -> str:
     return "AMBER"
 
 
+def paired_director_receipt(repo_root: Path, pointer: dict[str, Any]) -> tuple[dict[str, Any] | None, str | None]:
+    rel = pointer.get("path")
+    if not isinstance(rel, str):
+        return None, None
+    output_path = repo_root / rel
+    candidates = [
+        output_path.with_name("DAILY_DIRECTOR_RECEIPT.json"),
+        output_path.with_name("receipt.json"),
+    ]
+    for path in candidates:
+        value, error = read_json(path)
+        if value is not None:
+            return value, str(path.relative_to(repo_root))
+        if error not in {None, "MISSING"}:
+            return None, str(path.relative_to(repo_root))
+    return None, None
+
+
+def receipt_time(data: dict[str, Any] | None) -> datetime | None:
+    return first_time(data, ("completed_at_utc", "created_at_utc", "generated_at_utc", "timestamp_utc", "created_unix"))
+
+
+def is_api_receipt(path: Path, data: dict[str, Any]) -> bool:
+    contract = str(data.get("contract") or "")
+    return "API_AGENT_RECEIPT" in contract or path.name.endswith("RECEIPT.json") or path.name == "receipt.json"
+
+
 def collect_api_usage(repo_root: Path, reference: datetime) -> dict[str, Any]:
-    root = repo_root / "research/api_agent/receipts"
+    roots = [repo_root / "research/api_agent/outputs", repo_root / "research/api_agent/receipts"]
     month = reference.strftime("%Y-%m")
     count = input_tokens = output_tokens = 0
     cost = 0.0
     latest: tuple[datetime, Path, dict[str, Any]] | None = None
-    for path in root.rglob("*.json") if root.exists() else []:
-        data, error = read_json(path)
-        if error or data is None:
-            continue
-        stamp = first_time(data, ("completed_at_utc", "created_at_utc", "generated_at_utc", "timestamp_utc"))
-        if stamp and (latest is None or stamp > latest[0]):
-            latest = (stamp, path, data)
-        if not stamp or stamp.strftime("%Y-%m") != month:
-            continue
-        count += 1
-        try:
-            cost += float(data.get("cost_usd", data.get("estimated_cost_usd", 0)) or 0)
-        except (TypeError, ValueError):
-            pass
-        usage = data.get("usage") if isinstance(data.get("usage"), dict) else {}
-        for key, target in (("input_tokens", "input"), ("output_tokens", "output")):
+    seen: set[str] = set()
+    for root in roots:
+        for path in root.rglob("*.json") if root.exists() else []:
+            data, error = read_json(path)
+            if error or data is None or not is_api_receipt(path, data):
+                continue
+            identity = str(data.get("response_id") or data.get("request_hash") or data.get("output_hash") or path)
+            if identity in seen:
+                continue
+            seen.add(identity)
+            stamp = receipt_time(data)
+            if stamp and (latest is None or stamp > latest[0]):
+                latest = (stamp, path, data)
+            if not stamp or stamp.strftime("%Y-%m") != month:
+                continue
+            count += 1
             try:
-                value = int(usage.get(key, data.get(key, 0)) or 0)
+                cost += float(data.get("cost_usd", data.get("estimated_cost_usd", 0)) or 0)
             except (TypeError, ValueError):
-                value = 0
-            if target == "input":
-                input_tokens += value
-            else:
-                output_tokens += value
+                pass
+            usage = data.get("usage") if isinstance(data.get("usage"), dict) else {}
+            try:
+                input_tokens += int(usage.get("input_tokens", data.get("input_tokens", 0)) or 0)
+                output_tokens += int(usage.get("output_tokens", data.get("output_tokens", 0)) or 0)
+            except (TypeError, ValueError):
+                pass
     latest_row = None
     if latest:
         latest_row = {
@@ -139,7 +170,7 @@ def collect_api_usage(repo_root: Path, reference: datetime) -> dict[str, Any]:
             "completed_at_utc": latest[0].isoformat().replace("+00:00", "Z"),
             "status": latest[2].get("status"),
             "model": latest[2].get("model"),
-            "task_id": latest[2].get("task_id"),
+            "task": latest[2].get("task", latest[2].get("task_id")),
             "cost_usd": latest[2].get("cost_usd", latest[2].get("estimated_cost_usd")),
         }
     return {"month": month, "receipt_count": count, "cost_usd": round(cost, 6), "input_tokens": input_tokens, "output_tokens": output_tokens, "latest": latest_row}
@@ -158,22 +189,27 @@ def build_dashboard(repo_root: Path, reference: datetime | None = None) -> dict[
     capture = pointer_object(repo_root, capture_pointer)
     director = pointer_object(repo_root, director_pointer)
     weekly = pointer_object(repo_root, weekly_pointer)
+    director_receipt, director_receipt_path = paired_director_receipt(repo_root, director_pointer)
 
     capture_time = first_time(capture, ("captured_at_utc", "snapshot_utc", "generated_at_utc", "created_at_utc"))
-    director_time = first_time(director, ("completed_at_utc", "generated_at_utc", "created_at_utc", "captured_at_utc"))
-    weekly_time = first_time(weekly, ("completed_at_utc", "generated_at_utc", "created_at_utc", "freeze_recorded_at_utc"))
+    director_time = first_time(director, ("completed_at_utc", "generated_at_utc", "created_at_utc", "captured_at_utc")) or receipt_time(director_receipt)
+    weekly_time = first_time(weekly, ("completed_at_utc", "generated_at_utc", "created_at_utc", "freeze_recorded_at_utc", "published_at_utc"))
     capture_fresh, capture_reason, capture_age = freshness(capture_time, reference, 8, 16)
     director_fresh, director_reason, director_age = freshness(director_time, reference, 12, 30)
     weekly_fresh, weekly_reason, weekly_age = freshness(weekly_time, reference, 24 * 8, 24 * 15)
 
-    director_semantic = normalized_status(director.get("status") if director else None)
-    if director and str(director.get("status", "")).upper() == "SKIPPED_NO_DELTA":
+    semantic_source = (director_receipt or {}).get("status") or (director or {}).get("status")
+    director_semantic = normalized_status(semantic_source)
+    if str(semantic_source or "").upper() == "SKIPPED_NO_DELTA":
         director_semantic = "GREEN"
         director_reason = "EXPECTED_SKIP_NO_COMPARABLE_DELTA"
+    elif str(semantic_source or "").upper() == "SKIPPED_NO_ELIGIBLE_INPUT":
+        director_semantic = "GREEN"
+        director_reason = "EXPECTED_SKIP_NO_ELIGIBLE_INPUT"
 
     systems = {
         "daily_capture": {"status": combine_status(capture_fresh, hash_status(capture_pointer)), "reason": capture_reason, "age_hours": capture_age, "timestamp_utc": capture_time.isoformat().replace("+00:00", "Z") if capture_time else None, "pointer": capture_pointer},
-        "openai_daily_director": {"status": combine_status(director_fresh, hash_status(director_pointer), director_semantic), "reason": director_reason, "age_hours": director_age, "timestamp_utc": director_time.isoformat().replace("+00:00", "Z") if director_time else None, "semantic_status": director.get("status") if director else None, "pointer": director_pointer},
+        "openai_daily_director": {"status": combine_status(director_fresh, hash_status(director_pointer), director_semantic), "reason": director_reason, "age_hours": director_age, "timestamp_utc": director_time.isoformat().replace("+00:00", "Z") if director_time else None, "semantic_status": semantic_source, "pointer": director_pointer, "receipt_path": director_receipt_path},
         "weekly_output": {"status": combine_status(weekly_fresh, hash_status(weekly_pointer)), "reason": weekly_reason, "age_hours": weekly_age, "timestamp_utc": weekly_time.isoformat().replace("+00:00", "Z") if weekly_time else None, "pointer": weekly_pointer},
         "automation_health": {"status": normalized_status(automation.get("status") if automation else None), "generated_at_utc": automation.get("generated_at_utc") if automation else None, "red_count": automation.get("red_count") if automation else None, "amber_count": automation.get("amber_count") if automation else None, "blockers": automation.get("blockers", []) if automation else [], "input_error": automation_error},
         "architecture_health": {"status": normalized_status(architecture.get("status") if architecture else None), "generated_at_utc": architecture.get("generated_at_utc") if architecture else None, "blockers": architecture.get("blockers", []) if architecture else [], "input_error": architecture_error},
@@ -194,7 +230,7 @@ def build_dashboard(repo_root: Path, reference: datetime | None = None) -> dict[
         overall = combine_status(overall, system["status"])
 
     dashboard = {
-        "contract": "OPERATIONS_DASHBOARD_v1",
+        "contract": "OPERATIONS_DASHBOARD_v1_1",
         "authority": "OPERATIONAL_OBSERVABILITY_ONLY",
         "generated_at_utc": reference.isoformat().replace("+00:00", "Z"),
         "overall_status": overall,
