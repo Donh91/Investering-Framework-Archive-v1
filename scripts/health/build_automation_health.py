@@ -5,7 +5,6 @@ import json
 import os
 import re
 import urllib.error
-import urllib.parse
 import urllib.request
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -13,6 +12,7 @@ from typing import Any
 
 UTC = timezone.utc
 WRITER_GROUP = "framework-main-writer"
+GOOD_CONCLUSIONS = {"success", "neutral", "skipped"}
 
 
 def utc_now() -> datetime:
@@ -85,6 +85,16 @@ def workflow_static(path: Path) -> dict[str, Any]:
     }
 
 
+def leading_streak(conclusions: list[str | None], good: bool) -> int:
+    count = 0
+    for conclusion in conclusions:
+        is_good = conclusion in GOOD_CONCLUSIONS
+        if is_good != good:
+            break
+        count += 1
+    return count
+
+
 def live_workflows(repo: str, token: str) -> dict[str, dict[str, Any]]:
     owner, name = repo.split("/", 1)
     base = f"https://api.github.com/repos/{owner}/{name}"
@@ -95,7 +105,8 @@ def live_workflows(repo: str, token: str) -> dict[str, dict[str, Any]]:
         runs = api_json(f"{base}/actions/workflows/{wid}/runs?per_page=10", token).get("workflow_runs", [])
         latest = runs[0] if runs else None
         recent_completed = [r for r in runs if r.get("status") == "completed"]
-        recent_failures = [r for r in recent_completed if r.get("conclusion") not in {"success", "neutral", "skipped"}]
+        conclusions = [r.get("conclusion") for r in recent_completed]
+        recent_failures = [r for r in recent_completed if r.get("conclusion") not in GOOD_CONCLUSIONS]
         result[Path(workflow["path"]).name] = {
             "workflow_id": wid,
             "name": workflow.get("name"),
@@ -114,7 +125,9 @@ def live_workflows(repo: str, token: str) -> dict[str, dict[str, Any]]:
             },
             "recent_completed_count": len(recent_completed),
             "recent_failure_count": len(recent_failures),
-            "recent_conclusions": [r.get("conclusion") for r in recent_completed[:5]],
+            "recent_conclusions": conclusions[:5],
+            "success_streak": leading_streak(conclusions, True),
+            "failure_streak": leading_streak(conclusions, False),
         }
     return result
 
@@ -137,18 +150,21 @@ def classify(row: dict[str, Any], now: datetime) -> tuple[str, list[str]]:
                 threshold = timedelta(hours=36 if row["cron_count"] else 192)
                 if age > threshold:
                     findings.append("SCHEDULE_STALE")
-            if latest.get("status") == "completed" and latest.get("conclusion") not in {"success", "neutral", "skipped"}:
+            if latest.get("status") == "completed" and latest.get("conclusion") not in GOOD_CONCLUSIONS:
                 findings.append("LATEST_RUN_FAILED")
             elif latest.get("status") in {"queued", "in_progress", "waiting", "requested", "pending"}:
                 updated = parse_ts(latest.get("updated_at"))
                 if updated and now - updated > timedelta(hours=2):
                     findings.append("RUN_STUCK_OR_DELAYED")
-    if live.get("recent_failure_count", 0) >= 2:
-        findings.append("REPEATED_RECENT_FAILURES")
+    if live.get("failure_streak", 0) >= 2:
+        findings.append("REPEATED_CONSECUTIVE_FAILURES")
+    elif latest and latest.get("conclusion") in GOOD_CONCLUSIONS and live.get("recent_failure_count", 0) >= 2:
+        findings.append("RECOVERING_AFTER_RECENT_FAILURES")
+
     critical = {
         "PR_TARGET_WITH_WRITE_OR_SECRET",
         "LATEST_RUN_FAILED",
-        "REPEATED_RECENT_FAILURES",
+        "REPEATED_CONSECUTIVE_FAILURES",
         "NON_GLOBAL_WRITER_LOCK",
         "NO_MAIN_READBACK",
     }
@@ -195,7 +211,7 @@ def main() -> None:
         overall = "GREEN"
 
     result = {
-        "contract": "AUTOMATION_PRODUCTION_HEALTH_v2",
+        "contract": "AUTOMATION_PRODUCTION_HEALTH_v2_1",
         "generated_at_utc": now.isoformat().replace("+00:00", "Z"),
         "repository": args.repo,
         "status": overall,
