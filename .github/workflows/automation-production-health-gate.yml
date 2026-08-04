@@ -23,7 +23,9 @@ jobs:
       - name: Install test dependency
         run: python -m pip install --disable-pip-version-check pytest
       - name: Compile health code
-        run: python -m py_compile scripts/health/build_automation_health.py scripts/health/build_architecture_health.py scripts/health/build_operations_dashboard.py
+        run: python -m py_compile scripts/health/build_automation_health.py scripts/health/build_architecture_health.py scripts/health/build_operations_dashboard.py scripts/health/check_writer_trigger_safety.py
+      - name: Reject branch-triggered main writers
+        run: python scripts/health/check_writer_trigger_safety.py --workflow-root .github/workflows --output /tmp/writer-trigger-safety.json
       - name: Run health unit tests
         run: python -m pytest -q tests/health/test_automation_production_health.py tests/health/test_architecture_health_v2_1.py tests/health/test_operations_dashboard.py
       - name: Run static repository inventory without API
