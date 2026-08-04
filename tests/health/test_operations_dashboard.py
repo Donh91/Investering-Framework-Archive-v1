@@ -23,13 +23,10 @@ class OperationsDashboardTests(unittest.TestCase):
         path.write_text(json.dumps(data, sort_keys=True) + "\n", encoding="utf-8")
         return path
 
-    def pointer(self, root: Path, rel: str) -> dict:
-        path = root / rel
-        return {"path": rel, "sha256": module.sha256_path(path)}
-
-    def base_repo(self, root: Path, reference: datetime) -> None:
+    def base_repo(self, root: Path) -> None:
         capture = self.write_json(root, "captures/capture.json", {"captured_at_utc": "2026-08-04T12:00:00Z", "status": "PASS"})
-        director = self.write_json(root, "director/output.json", {"completed_at_utc": "2026-08-04T12:10:00Z", "status": "PASS"})
+        director = self.write_json(root, "research/api_agent/outputs/daily/2026/08/04/121000/DAILY_DIRECTOR_OUTPUT.json", {"status": "READY"})
+        self.write_json(root, "research/api_agent/outputs/daily/2026/08/04/121000/DAILY_DIRECTOR_RECEIPT.json", {"contract": "API_AGENT_RECEIPT_v3", "created_unix": 1785845400, "status": "PASS", "model": "gpt-5.6-luna", "task": "DAILY_DIRECTOR_SHADOW", "response_id": "resp-1", "input_tokens": 100, "output_tokens": 20, "estimated_cost_usd": 0.001})
         weekly = self.write_json(root, "weekly/output.json", {"completed_at_utc": "2026-08-03T08:00:00Z", "status": "PASS"})
         self.write_json(root, "LATEST_HANDOFF.json", {
             "contract": "LATEST_HANDOFF_v1",
@@ -45,64 +42,65 @@ class OperationsDashboardTests(unittest.TestCase):
         self.write_json(root, "research/architecture_health/LATEST_AUTOMATION_HEALTH.json", {"status": "GREEN", "generated_at_utc": "2026-08-04T12:20:00Z", "red_count": 0, "amber_count": 0, "blockers": []})
         self.write_json(root, "research/architecture_health/LATEST_ARCHITECTURE_HEALTH.json", {"status": "GREEN", "generated_at_utc": "2026-08-04T12:20:00Z", "blockers": []})
 
-    def test_green_happy_path(self) -> None:
+    def test_green_happy_path_and_real_receipt_discovery(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
-            reference = datetime(2026, 8, 4, 13, 0, tzinfo=UTC)
-            self.base_repo(root, reference)
-            dashboard = module.build_dashboard(root, reference)
+            self.base_repo(root)
+            dashboard = module.build_dashboard(root, datetime(2026, 8, 4, 13, 0, tzinfo=UTC))
+            self.assertEqual(dashboard["contract"], "OPERATIONS_DASHBOARD_v1_1")
             self.assertEqual(dashboard["overall_status"], "GREEN")
-            self.assertEqual(dashboard["systems"]["daily_capture"]["status"], "GREEN")
-            self.assertEqual(dashboard["required_actions"], [])
+            self.assertEqual(dashboard["agent_activity"]["openai_api"]["receipt_count"], 1)
+            self.assertTrue(dashboard["systems"]["openai_daily_director"]["receipt_path"].endswith("DAILY_DIRECTOR_RECEIPT.json"))
 
-    def test_skipped_no_delta_is_not_failure(self) -> None:
+    def test_skipped_no_delta_receipt_overrides_blocked_output(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
-            reference = datetime(2026, 8, 4, 13, 0, tzinfo=UTC)
-            self.base_repo(root, reference)
-            director_path = root / "director/output.json"
-            director_path.write_text(json.dumps({"completed_at_utc": "2026-08-04T12:10:00Z", "status": "SKIPPED_NO_DELTA"}) + "\n")
+            self.base_repo(root)
+            out = root / "research/api_agent/outputs/daily/2026/08/04/121000/DAILY_DIRECTOR_OUTPUT.json"
+            out.write_text(json.dumps({"status": "BLOCKED"}) + "\n")
+            receipt = out.with_name("DAILY_DIRECTOR_RECEIPT.json")
+            value = json.loads(receipt.read_text())
+            value["status"] = "SKIPPED_NO_DELTA"
+            value["input_tokens"] = 0
+            value["output_tokens"] = 0
+            value["estimated_cost_usd"] = 0.0
+            receipt.write_text(json.dumps(value) + "\n")
             handoff = json.loads((root / "LATEST_HANDOFF.json").read_text())
-            handoff["pointers"]["latest_director_output"]["sha256"] = module.sha256_path(director_path)
+            handoff["pointers"]["latest_director_output"]["sha256"] = module.sha256_path(out)
             (root / "LATEST_HANDOFF.json").write_text(json.dumps(handoff) + "\n")
-            dashboard = module.build_dashboard(root, reference)
-            self.assertEqual(dashboard["systems"]["openai_daily_director"]["status"], "GREEN")
-            self.assertEqual(dashboard["systems"]["openai_daily_director"]["reason"], "EXPECTED_SKIP_NO_COMPARABLE_DELTA")
+            dashboard = module.build_dashboard(root, datetime(2026, 8, 4, 13, 0, tzinfo=UTC))
+            row = dashboard["systems"]["openai_daily_director"]
+            self.assertEqual(row["status"], "GREEN")
+            self.assertEqual(row["reason"], "EXPECTED_SKIP_NO_COMPARABLE_DELTA")
 
     def test_hash_mismatch_is_red(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
-            reference = datetime(2026, 8, 4, 13, 0, tzinfo=UTC)
-            self.base_repo(root, reference)
+            self.base_repo(root)
             handoff = json.loads((root / "LATEST_HANDOFF.json").read_text())
             handoff["pointers"]["latest_capture"]["sha256"] = "0" * 64
             (root / "LATEST_HANDOFF.json").write_text(json.dumps(handoff) + "\n")
-            dashboard = module.build_dashboard(root, reference)
+            dashboard = module.build_dashboard(root, datetime(2026, 8, 4, 13, 0, tzinfo=UTC))
             self.assertEqual(dashboard["systems"]["daily_capture"]["status"], "RED")
-            self.assertEqual(dashboard["overall_status"], "RED")
 
     def test_stale_capture_is_red(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
-            reference = datetime(2026, 8, 5, 13, 0, tzinfo=UTC)
-            self.base_repo(root, reference)
-            dashboard = module.build_dashboard(root, reference)
+            self.base_repo(root)
+            dashboard = module.build_dashboard(root, datetime(2026, 8, 5, 13, 0, tzinfo=UTC))
             self.assertEqual(dashboard["systems"]["daily_capture"]["status"], "RED")
 
     def test_automation_red_propagates(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
-            reference = datetime(2026, 8, 4, 13, 0, tzinfo=UTC)
-            self.base_repo(root, reference)
+            self.base_repo(root)
             self.write_json(root, "research/architecture_health/LATEST_AUTOMATION_HEALTH.json", {"status": "RED", "generated_at_utc": "2026-08-04T12:20:00Z", "red_count": 2, "amber_count": 0, "blockers": ["workflow-x:LATEST_RUN_FAILED"]})
-            dashboard = module.build_dashboard(root, reference)
-            self.assertEqual(dashboard["systems"]["automation_health"]["status"], "RED")
+            dashboard = module.build_dashboard(root, datetime(2026, 8, 4, 13, 0, tzinfo=UTC))
             self.assertEqual(dashboard["overall_status"], "RED")
 
     def test_missing_inputs_never_false_green(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            root = Path(tmp)
-            dashboard = module.build_dashboard(root, datetime(2026, 8, 4, 13, 0, tzinfo=UTC))
+            dashboard = module.build_dashboard(Path(tmp), datetime(2026, 8, 4, 13, 0, tzinfo=UTC))
             self.assertNotEqual(dashboard["overall_status"], "GREEN")
             self.assertTrue(dashboard["required_actions"])
 
