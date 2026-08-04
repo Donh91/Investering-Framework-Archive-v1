@@ -6,6 +6,7 @@ on:
       - 'scripts/daily_capture/**'
       - 'tests/daily_capture/**'
       - '.github/workflows/daily-raw-owner-capture.yml'
+      - '.github/workflows/sunday-market-close-and-cfgi.yml'
       - '.github/workflows/weekly-raw-calibration-bridge.yml'
       - '.github/workflows/daily-capture-architecture-gate.yml'
       - '03_DAILY_CAPTURE_LOGS/**'
@@ -20,14 +21,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
-        with: {python-version: '3.12'}
-      - run: python -m unittest tests.daily_capture.test_daily_capture_pipeline
-      - run: python -m py_compile scripts/daily_capture/build_capture_index.py scripts/daily_capture/build_weekly_calibration.py scripts/daily_capture/persist_raw_payloads.py
-      - name: Validate schedule and authority boundaries
+        with:
+          python-version: '3.12'
+      - name: Run daily capture tests
+        run: python -m unittest tests.daily_capture.test_daily_capture_pipeline tests.daily_capture.test_weekly_market_close_endpoint -v
+      - name: Compile capture modules
+        run: python -m py_compile scripts/daily_capture/build_capture_index.py scripts/daily_capture/build_weekly_calibration.py scripts/daily_capture/persist_raw_payloads.py scripts/daily_capture/build_weekly_market_close_package.py
+      - name: Validate schedule, source and authority boundaries
         run: |
           python - <<'PY'
           from pathlib import Path
-          daily=Path('.github/workflows/daily-raw-owner-capture.yml').read_text();weekly=Path('.github/workflows/weekly-raw-calibration-bridge.yml').read_text()
+          daily=Path('.github/workflows/daily-raw-owner-capture.yml').read_text()
+          weekly=Path('.github/workflows/weekly-raw-calibration-bridge.yml').read_text()
+          close=Path('scripts/daily_capture/build_weekly_market_close_package.py').read_text()
           assert daily.count("timezone: 'Europe/Copenhagen'")==5
           assert 'retention-days: 14' in daily
           assert 'persist_raw_payloads.py' in daily
@@ -35,5 +41,7 @@ jobs:
           assert '03_DAILY_CAPTURE_LOGS/captures' in daily
           assert '03_DAILY_CAPTURE_LOGS/weekly' in weekly
           assert 'OPENAI_API_KEY' not in daily+weekly
+          assert 'https://data-api.binance.vision' in close
+          assert 'https://api.binance.com' not in close
           print('DAILY_CAPTURE_ARCHITECTURE_PASS')
           PY
