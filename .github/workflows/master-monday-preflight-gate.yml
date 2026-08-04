@@ -6,8 +6,10 @@ on:
       - 'scripts/master_monday/**'
       - 'scripts/orchestration/**'
       - 'scripts/api_agent/build_weekly_calibration_context.py'
+      - '04_MARKET_LEARNING/legacy_framework_knowledge_bootstrap_v1/**'
       - 'research/master_monday_preflight/**'
       - 'tests/master_monday/**'
+      - 'tests/api_agent/test_weekly_calibration_context_v4.py'
       - '.github/workflows/weekly-api-calibration-shadow.yml'
       - '.github/workflows/master-monday-remaining-gaps.yml'
       - '.github/workflows/master-monday-preflight-gate.yml'
@@ -23,11 +25,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
-        with: {python-version: '3.12'}
+        with:
+          python-version: '3.12'
       - name: Compile hardening modules
         run: python -m py_compile scripts/master_monday/build_preflight_package_v2.py scripts/master_monday/publish_master_monday_outputs.py scripts/orchestration/verify_durable_readback.py scripts/orchestration/weekly_orchestration_controller.py scripts/api_agent/build_weekly_calibration_context.py
       - name: Run contract and durability tests
-        run: python -m unittest tests.master_monday.test_preflight_package tests.master_monday.test_preflight_package_v2 tests.master_monday.test_durable_repairs -v
+        run: python -m unittest tests.master_monday.test_preflight_package tests.master_monday.test_preflight_package_v2 tests.master_monday.test_durable_repairs tests.api_agent.test_weekly_calibration_context_v4 -v
       - name: Verify production integration
         run: |
           grep -q 'build_preflight_package_v2.py' .github/workflows/weekly-api-calibration-shadow.yml
@@ -37,6 +40,8 @@ jobs:
           grep -q 'freeze_sha256.*None' .github/workflows/weekly-api-calibration-shadow.yml
           grep -q 'File-level remote durable readback' .github/workflows/weekly-api-calibration-shadow.yml
           grep -q 'File-level publication readback' .github/workflows/weekly-api-calibration-shadow.yml
+          grep -q -- '--legacy-root 04_MARKET_LEARNING/legacy_framework_knowledge_bootstrap_v1' .github/workflows/weekly-api-calibration-shadow.yml
+          grep -q 'SKIPPED_NO_ELIGIBLE_INPUT' .github/workflows/weekly-api-calibration-shadow.yml
           grep -q "git','show'" scripts/orchestration/verify_durable_readback.py
           grep -q "ZoneInfo('Europe/Copenhagen')" scripts/orchestration/weekly_orchestration_controller.py
           grep -q 'Europe/Copenhagen local date' scripts/api_agent/build_weekly_calibration_context.py
