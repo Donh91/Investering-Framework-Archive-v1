@@ -1,0 +1,97 @@
+{
+  "schema_version": "DATA_PING_MAIN_THREAD_QA_v1",
+  "run_id": "run_18f02b7aa0334c9e",
+  "snapshot_id": "snap_d23ae2d89bec47a8",
+  "snapshot_utc": "2026-08-04T09:01:37.097Z",
+  "transport_integrity": "UNVERIFIED_CHAT_TRANSPORT",
+  "source_reported_counts": {
+    "core_planned": 60,
+    "core_attempted": 60,
+    "core_receipts": 60,
+    "pass": 58,
+    "partial": 1,
+    "stale": 1,
+    "fail": 0,
+    "unavailable": 0,
+    "optional_planned": 1,
+    "optional_attempted": 1,
+    "optional_fail": 1
+  },
+  "count_reconciliation": "PASS",
+  "freeze_QA": {
+    "freeze_count": 1,
+    "post_freeze_call_count": 0,
+    "binance_final_executed_last": true,
+    "max_final_source_timestamp_utc": "2026-08-04T09:01:19.273Z",
+    "freeze_recorded_at_utc": "2026-08-04T09:01:37.097Z",
+    "status": "PASS"
+  },
+  "accepted_current_owner_features": [
+    "BINANCE_FINAL_SPOT",
+    "BINANCE_FINAL_BOOK",
+    "BINANCE_FINAL_PREMIUM",
+    "BINANCE_FINAL_OPEN_INTEREST",
+    "BINANCE_SETTLED_COPENHAGEN_SESSION",
+    "BINANCE_SETTLED_RETURN_WINDOWS_1H_4H_12H",
+    "BINANCE_SETTLED_SPOT_TAKER_WINDOWS_1H_4H_12H",
+    "BINANCE_POSITIONING_AND_FUTURES_TAKER",
+    "OKX_NUMERICAL_CROSSCHECK",
+    "FARSIDE_BTC_AND_ETH_2026_08_03_SETTLED_FLOWS",
+    "COINGECKO_GLOBAL_AND_CURRENT_ASSETS",
+    "CFGI_GLOBAL_AND_ETH_CURRENT",
+    "FRED_LATEST_AVAILABLE",
+    "CHAIN_TVL",
+    "GECKOTERMINAL_SOURCE_QA"
+  ],
+  "authority_restrictions": [
+    {
+      "item": "CANONICAL_PREDECESSOR",
+      "status": "NOT_AVAILABLE",
+      "effect": "RUN_CANNOT_ADVANCE_CANONICAL_LONGITUDINAL_CHAIN"
+    },
+    {
+      "item": "BREADTH",
+      "status": "REPRODUCIBLE_BUT_SUPERSEDED_FILTER",
+      "supplied_filter": "BREADTH_FILTER_TOP100_EXCLUSIONS_v1",
+      "scoring_owner": "BREADTH_FILTER_TOP100_EXCLUSIONS_v1_1",
+      "membership_hash": "49d41929bf0ebe9b7b16c37bb1e31d6808b0b199e0f051a17b766b41c12a6b81",
+      "scored_gate_permission": "NOT_AUTHORIZED",
+      "effect": "DIRECTIONAL_DIAGNOSTIC_ONLY"
+    },
+    {
+      "item": "CFGI_BTC",
+      "status": "STALE",
+      "source_timestamp": "2026-08-02T06:33:00Z",
+      "effect": "EXCLUDED_FROM_CURRENT_STATE"
+    },
+    {
+      "item": "STABLECOIN_GLOBAL_TOTAL",
+      "status": "NULL",
+      "effect": "NO_GLOBAL_STABLECOIN_COMPARISON"
+    },
+    {
+      "item": "LONG_WINDOW_FEATURES",
+      "status": "UNAVAILABLE",
+      "effect": "NO_24H_48H_RETURN_OR_24H_72H_168H_REALIZED_VOLATILITY_AUTHORITY"
+    },
+    {
+      "item": "OKX_BINANCE_COMPARABILITY",
+      "status": "NON_SIMULTANEOUS_CURRENT_SNAPSHOTS",
+      "effect": "NUMERICAL_DESCRIPTION_ONLY"
+    },
+    {
+      "item": "NONFINAL_GROUP_ORDER",
+      "status": "DEVIATION_LOGGED",
+      "effect": "NO_FINAL_FREEZE_INVALIDATION_BINANCE_FINAL_REMAINED_LAST"
+    }
+  ],
+  "source_QA_events": [
+    "TWO_GECKOTERMINAL_LOW_RESERVE_ANOMALIES_EXCLUDED",
+    "OPTIONAL_DEFI_TOTAL_TVL_RESPONSE_TOO_LARGE",
+    "STABLECOIN_PRIMARY_AND_SECONDARY_TRANSPORT_FAILURE_TERTIARY_CHAIN_DISTRIBUTION_ONLY"
+  ],
+  "main_thread_acceptance": "BOUNDED_CURRENT_OWNER_OBSERVATION_WITH_NO_CANONICAL_OR_SCORED_BREADTH_AUTHORITY",
+  "canonical_state_change": "NONE",
+  "portfolio_effect": "NONE",
+  "operational_risk_class": "DO_NOT_ADD_RISK"
+}
