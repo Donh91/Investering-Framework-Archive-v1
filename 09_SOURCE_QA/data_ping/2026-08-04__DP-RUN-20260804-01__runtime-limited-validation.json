@@ -1,0 +1,82 @@
+{
+  "schema_version": "DATA_PING_MAIN_THREAD_QA_v1",
+  "run_id": "DP-RUN-20260804-01",
+  "snapshot_id": "DP-SNAPSHOT-20260804-01",
+  "collector_status": "PARTIAL",
+  "main_thread_acceptance": "RUNTIME_LIMITED_NON_DECISION_OBSERVATION",
+  "packet_usable_for_main_thread_ingest": false,
+  "execution_order_status": "FAIL",
+  "execution_order_reason_codes": [
+    "COINGECKO_PAGE2_NOT_EXECUTED",
+    "SOURCE_GROUPS_SKIPPED_BEFORE_BINANCE_FINAL"
+  ],
+  "receipt_reconciliation_status": "PASS",
+  "core_counts": {
+    "planned": 60,
+    "pass": 14,
+    "partial": 5,
+    "skipped_runtime_limit": 41,
+    "receipts": 60
+  },
+  "optional_counts": {
+    "planned": 1,
+    "skipped_runtime_limit": 1,
+    "receipts": 1
+  },
+  "metadata_QA": {
+    "snapshot_utc": null,
+    "freeze_recorded_at_utc": null,
+    "max_final_source_timestamp_utc": "2026-08-04T10:10:12.893Z",
+    "freeze_count": 1,
+    "post_freeze_call_count": 0,
+    "status": "FAIL_REQUIRED_TIMESTAMPS_NULL"
+  },
+  "available_features": [
+    "COINGECKO_GLOBAL",
+    "COINGECKO_BTC_ETH_CURRENT",
+    "COINGECKO_TOP100_PAGE1_ONLY",
+    "BINANCE_FINAL_SPOT",
+    "BINANCE_FINAL_BOOK",
+    "BINANCE_FINAL_PREMIUM",
+    "BINANCE_FINAL_OPEN_INTEREST"
+  ],
+  "missing_required_families": [
+    "COINGECKO_BREADTH_COMPLETE",
+    "FRED",
+    "STABLECOINS",
+    "CHAIN_TVL",
+    "DEX",
+    "BINANCE_CONTEXT",
+    "OKX_CROSSCHECK",
+    "ETF_VALUES",
+    "CFGI_USABLE_VALUES",
+    "RETURN_RANGE_FEATURES",
+    "SPOT_TAKER_FEATURES",
+    "FUNDING_HISTORY_FEATURES",
+    "OPEN_INTEREST_ANCHOR_FEATURES",
+    "POSITIONING_FEATURES"
+  ],
+  "breadth_QA": {
+    "raw_rows": 50,
+    "page_2_executed": false,
+    "membership_hash": null,
+    "advance_ratio": null,
+    "scored_gate_permission": "NOT_AUTHORIZED",
+    "status": "INCOMPLETE"
+  },
+  "predecessor_QA": {
+    "accepted_same_thread_predecessor_available": false,
+    "comparison_status": "NOT_AVAILABLE",
+    "canonical_chain_permission": "CLOSED"
+  },
+  "market_authority": {
+    "snapshot_only_diagnostic": true,
+    "latest_bounded_observation_replacement": false,
+    "canonical_predecessor_advance": false,
+    "framework_state_change": "NONE",
+    "portfolio_effect": "NONE",
+    "A_class_increment": 0,
+    "shadow_dual_run_increment": 0
+  },
+  "final_QA_status": "REJECTED_FOR_DECISION_USE_ARCHIVE_ONLY"
+}
