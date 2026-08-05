@@ -8,10 +8,12 @@ classification: BOUNDED_CURRENT_OWNER_WITH_CONTIGUOUS_METHOD_COMPATIBLE_PREDECES
 source_record_written: true
 qa_record_written: true
 framework_read_written: true
-latest_bounded_pointer_pending_update: true
-ETF_owner_pending_OTA_reconciliation: true
+latest_bounded_pointer_updated: true
+ETF_owner_reconciled_with_OTA: true
+latest_OTA_status_updated: true
+prospective_accumulation_updated: true
+remote_readback_verified: true
 canonical_predecessor_changed: false
-prospective_accumulation_pending_update: true
 master_monday_changed: false
 internal_cycle_navigator_changed: false
 public_cycle_navigator_template_changed: false
@@ -39,9 +41,12 @@ portfolio_effect: NONE
 - `09_SOURCE_QA/data_ping/2026-08-05__run-aebc326ae71e48109b9b__validation.json`
 - `04_MARKET_LEARNING/data_ping/2026-08-05__run-aebc326ae71e48109b9b__framework-read.md`
 - `02_DATA_PING/operational_handoffs/LATEST_BOUNDED_DATA_PING_OBSERVATION_v1.json`
+- `04_MARKET_LEARNING/etf/LATEST_ETF_FLOW_STATUS_v1.json`
+- `04_MARKET_LEARNING/claude_ota/LATEST_CLAUDE_OTA_STATUS_v1.json`
+- `04_MARKET_LEARNING/backtests/framework_backtest_readiness_build_v1/architecture/PROSPECTIVE_ACCUMULATION_STATUS_v1.json`
 
 ## Preserved owners
 
 The accepted canonical predecessor remains `run_0bc8a5d0d0464542b29b4d50f2f8e19c / snap_0e19c112413d471d8270cad1a18148a7`.
 
-The separate ETF owner remains the direct 2026-08-04 session with BTC +211.5M and ETH +53.1M, subject to the attached OTA reconciliation for issuer detail and rolling-window claims.
+The separate ETF owner remains the direct 2026-08-04 session with BTC +211.5M and ETH +53.1M, with OTA issuer detail retained and incompatible rolling-window claims quarantined.
