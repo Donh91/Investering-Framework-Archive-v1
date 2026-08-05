@@ -16,13 +16,17 @@ concurrency:
 
 jobs:
   maintain:
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
-        with: {fetch-depth: 0}
+        with:
+          ref: main
+          fetch-depth: 0
       - uses: actions/setup-python@v5
-        with: {python-version: '3.12'}
+        with:
+          python-version: '3.12'
       - name: Materialize new forecast candidates
         run: |
           python - <<'PY'
@@ -58,11 +62,13 @@ jobs:
 
   notify:
     needs: maintain
-    if: failure()
+    if: failure() && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with: {fetch-depth: 0}
+        with:
+          ref: main
+          fetch-depth: 0
       - name: Create incident record
         env:
           GH_TOKEN: ${{ github.token }}
@@ -72,5 +78,8 @@ jobs:
           printf '# AUTOMATION INCIDENT\n\nWorkflow: Continuity and Learning Maintenance\nRun: %s\nTimestamp UTC: %s\nStatus: FAILED\nNo secrets are included.\n' "$GITHUB_RUN_ID" "$(date -u +%FT%TZ)" > "$FILE"
           git config user.name framework-incident-bot
           git config user.email framework-incident-bot@users.noreply.github.com
-          git add "$FILE" && git commit -m "incident: continuity learning ${GITHUB_RUN_ID}" && git pull --rebase origin main && git push origin HEAD:main
+          git add "$FILE"
+          git commit -m "incident: continuity learning ${GITHUB_RUN_ID}"
+          git pull --rebase origin main
+          git push origin HEAD:main
           gh issue create --title "AUTOMATION FAILURE: Continuity and Learning Maintenance ${GITHUB_RUN_ID}" --body-file "$FILE" || true
