@@ -21,6 +21,7 @@ on:
       - "04_MARKET_LEARNING/backtests/framework_backtest_readiness_build_v1/shadow_dual_run/**"
   schedule:
     - cron: "35 17 * * *"
+      timezone: 'Europe/Copenhagen'
   workflow_dispatch:
 
 permissions:
@@ -50,3 +51,5 @@ jobs:
         with:
           name: prospective-accumulation-audit
           path: prospective_audit.json
+          retention-days: 14
+          if-no-files-found: error
