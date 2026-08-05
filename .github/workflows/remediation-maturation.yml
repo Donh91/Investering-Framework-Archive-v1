@@ -10,6 +10,7 @@ on:
 
 permissions:
   contents: write
+  issues: write
 
 concurrency:
   group: framework-main-writer
@@ -58,6 +59,36 @@ jobs:
             remote_sha=$(git show "origin/main:$path" | sha256sum | awk '{print $1}')
             [ "$local_sha" = "$remote_sha" ]
           done
+      - name: Publish one deduplicated Codex-ready work queue
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          task_count=$(python - <<'PY'
+          import json
+          print(len(json.load(open('LATEST_CODEX_READY_TASKS.json')).get('tasks', [])))
+          PY
+          )
+          title="CODEX READY REMEDIATION QUEUE"
+          existing=$(gh issue list --state open --search "$title in:title" --json number --jq '.[0].number // empty')
+          if [ "$task_count" -gt 0 ]; then
+            python - <<'PY' > /tmp/codex-ready.md
+          import json
+          d=json.load(open('LATEST_CODEX_READY_TASKS.json'))
+          print('# Codex-ready remediation queue\n')
+          print(f"Generated: `{d.get('generated_at_utc')}`\n")
+          print('Use `LATEST_CODEX_READY_TASKS.json` as the machine authority. Do not broaden change scope, modify market rules, self-merge or bypass tests.\n')
+          for t in d.get('tasks', []):
+              print(f"- `{t.get('signature')}` - **{t.get('workflow')}** / `{t.get('finding')}` - run `{t.get('latest_run_id')}` - gate `{t.get('post_fix_gate')}`")
+          PY
+            if [ -z "$existing" ]; then
+              gh issue create --title "$title" --body-file /tmp/codex-ready.md
+            else
+              gh issue comment "$existing" --body-file /tmp/codex-ready.md
+            fi
+          elif [ -n "$existing" ]; then
+            gh issue comment "$existing" --body "No CODEX_READY tasks remain at run ${GITHUB_RUN_ID}. Close only after post-fix observation confirms resolution."
+          fi
       - uses: actions/upload-artifact@v4
         if: always()
         with:
