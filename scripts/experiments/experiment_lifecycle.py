@@ -47,6 +47,14 @@ def normalize(raw:dict[str,Any])->dict[str,Any]:
     return {"kind":kind,"title":title,"hypothesis":hyp,"falsifier":fals,"horizon_days":h,"components":[component(x) for x in raw.get("components",[]) if isinstance(x,dict)],"target_metric_path":target,"target_direction":direction,"target_threshold_pct":float(thr) if isinstance(thr,(int,float)) else None,"target_range_lower_pct":float(lo) if isinstance(lo,(int,float)) else None,"target_range_upper_pct":float(hi) if isinstance(hi,(int,float)) else None,"regime_dependency":str(raw.get("regime_dependency") or "REGIME_AGNOSTIC"),"novelty_reason":str(raw.get("novelty_reason") or "UNSPECIFIED"),"revisit_conditions":[str(x) for x in raw.get("revisit_conditions",[])],"evidence_basis":[str(x) for x in raw.get("evidence_basis",[])]}
 
 
+def identity_spec(spec:dict[str,Any])->dict[str,Any]:
+    return {k:spec[k] for k in ("kind","title","hypothesis","falsifier","horizon_days","components","target_metric_path","target_direction","target_threshold_pct","target_range_lower_pct","target_range_upper_pct","regime_dependency")}
+
+
+def placebo(event_window_id:str)->str:
+    return ("UP","DOWN","RANGE")[int(event_window_id[0],16)%3]
+
+
 def from_forecast(x:dict[str,Any],latest:dict[str,Any])->dict[str,Any]|None:
     direction=str(x.get("direction") or "").upper();path=str(x.get("metric_path") or "");h=x.get("horizon_days");start=at(latest,path)
     if direction not in {"UP","DOWN","RANGE"} or not path or not isinstance(h,int):return None
@@ -153,16 +161,18 @@ def main()->None:
     new_ids=set();rejected=[]
     for x in raw:
         try:
-            spec=normalize(x);cid="EC-"+sha(spec)[:20];value={"contract":"EXPERIMENT_CANDIDATE_v1","candidate_id":cid,"created_at_utc":captured,"registered_at_utc":now,"spec":spec,"source":{**source,"daily_output_path":rel(root,a.daily_output),"daily_context_path":rel(root,a.daily_context),"daily_receipt_path":rel(root,a.daily_receipt)},"dormancy_policy":{"automatic_age_expiry":False,"retain_until":"FALSIFIED_OR_GOVERNANCE_CLOSED"},"authority":{"canonical_promotion":False,"framework_state_change":False,"model_weight_change":False,"portfolio_action":False}}
+            spec=normalize(x);cid="EC-"+sha(identity_spec(spec))[:20];value={"contract":"EXPERIMENT_CANDIDATE_v1","candidate_id":cid,"created_at_utc":captured,"registered_at_utc":now,"spec":spec,"source":{**source,"daily_output_path":rel(root,a.daily_output),"daily_context_path":rel(root,a.daily_context),"daily_receipt_path":rel(root,a.daily_receipt)},"dormancy_policy":{"automatic_age_expiry":False,"retain_until":"FALSIFIED_OR_GOVERNANCE_CLOSED"},"authority":{"canonical_promotion":False,"framework_state_change":False,"model_weight_change":False,"portfolio_action":False}}
             if write_new(a.candidate_root/when.strftime("%Y/%m")/f"{cid}.json",value):new_ids.add(cid)
         except Exception as e:rejected.append({"title":str(x.get("title") or "UNKNOWN"),"error":str(e)})
     new_forecasts=dispatch=0
-    for spec_path,c in jsons(a.candidate_root,"EXPERIMENT_CANDIDATE_v1"):
+    candidate_rows=jsons(a.candidate_root,"EXPERIMENT_CANDIDATE_v1")
+    candidate_rows.sort(key=lambda item:(0 if item[1].get("spec",{}).get("kind")=="FORECAST_TEST" else 1,str(item[1].get("candidate_id") or "")))
+    for spec_path,c in candidate_rows:
         spec=c["spec"];results=[evaluate(x,latest,previous) for x in spec["components"]];mapping=not spec["components"] and spec["kind"]!="FORECAST_TEST";missing=any(x["matched"] is None for x in results);fired=(not mapping and ((not spec["components"] and spec["kind"]=="FORECAST_TEST") or (results and not missing and all(x["matched"] for x in results))))
         status="WAITING_FOR_MAPPING" if mapping else "WAITING_FOR_DATA" if missing else "FIRED_NO_TARGET" if fired and spec["target_direction"]=="NONE" else "FIRED" if fired else "OBSERVED_NOT_FIRED";oid="EO-"+sha({"candidate_id":c["candidate_id"],"captured":captured,"source":source})[:20];ob={"contract":"EXPERIMENT_OBSERVATION_v1","observation_id":oid,"candidate_id":c["candidate_id"],"observed_at_utc":captured,"evaluation_status":status,"component_results":results,"source":source,"authority":"SHADOW_ONLY"};op=a.observation_root/c["candidate_id"]/f"{oid}.json";is_new=False if mapping and c["candidate_id"] not in new_ids else write_new(op,ob)
         fid=None;start=at(latest,spec.get("target_metric_path") or "") if spec.get("target_metric_path") else None
         if fired and spec["target_direction"]!="NONE" and isinstance(start,(int,float)) and new_forecasts<a.max_new_forecasts:
-            eid=sha({"candidate_id":c["candidate_id"],"run":source["source_run_id"],"captured":captured})[:20];fid="EXP-FC-"+eid;fc={"contract":"FROZEN_FORECAST_v1","forecast_id":fid,"source_candidate_id":c["candidate_id"],"source_observation_id":oid,"frozen_at_utc":captured,"outcome_due_utc":iso(when+timedelta(days=spec["horizon_days"])),"metric_path":spec["target_metric_path"],"direction":spec["target_direction"],"start_value":float(start),"threshold_pct":spec["target_threshold_pct"],"range_lower_pct":spec["target_range_lower_pct"],"range_upper_pct":spec["target_range_upper_pct"],"causal_event_window_id":eid,"experimental_only":True,"authority":{"portfolio_action":False,"framework_state_change":False,"model_weight_change":False,"canonical_promotion":False}}
+            window=sha({"run":source["source_run_id"],"captured":captured})[:20];fid="EXP-FC-"+sha({"candidate_id":c["candidate_id"],"window":window})[:20];fc={"contract":"FROZEN_FORECAST_v1","forecast_id":fid,"source_candidate_id":c["candidate_id"],"source_observation_id":oid,"frozen_at_utc":captured,"outcome_due_utc":iso(when+timedelta(days=spec["horizon_days"])),"metric_path":spec["target_metric_path"],"direction":spec["target_direction"],"start_value":float(start),"threshold_pct":spec["target_threshold_pct"],"range_lower_pct":spec["target_range_lower_pct"],"range_upper_pct":spec["target_range_upper_pct"],"causal_event_window_id":window,"experimental_only":True,"controls":{"always_wait":"ALWAYS_WAIT","single_component_specs":spec["components"],"deterministic_placebo_direction":placebo(window),"control_freeze_time_utc":captured},"authority":{"portfolio_action":False,"framework_state_change":False,"model_weight_change":False,"canonical_promotion":False}}
             if write_new(a.forecast_root/when.strftime("%Y/%m")/f"{fid}.json",fc):new_forecasts+=1
         if is_new and (c["candidate_id"] in new_ids or fired):
             rid="ER-"+sha({"candidate_id":c["candidate_id"],"observation_id":oid})[:20];req={"contract":"EXPERIMENT_REQUEST_v1","request_id":rid,"candidate_id":c["candidate_id"],"created_at_utc":now,"request_type":"SENSOR_FIRE_REPLICATION" if fired else "SPEC_REGISTRATION","spec":spec,"embedded_observation":ob,"local_frozen_forecast_id":fid,"source_spec_path":rel(root,spec_path),"source_spec_sha256":sha(c),"authority":{"automatic_trade":False,"canonical_promotion":False,"portfolio_action":False}}

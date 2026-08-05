@@ -82,12 +82,86 @@ def load_legacy_context(root: Path | None) -> dict[str, Any]:
     }
 
 
+def load_experiment_learning(registry_path: Path, outcome_root: Path, start: datetime, end: datetime) -> dict[str, Any]:
+    unavailable = {
+        "status": "UNAVAILABLE",
+        "authority": "SHADOW_ONLY_NO_AUTOMATIC_PROMOTION",
+        "candidate_count": 0,
+        "state_counts": {},
+        "active_candidates": [],
+        "latent_candidate_count": 0,
+        "new_matured_outcomes": [],
+    }
+    if not registry_path.exists():
+        return unavailable
+    try:
+        registry = load_json(registry_path)
+    except Exception:
+        return {**unavailable, "status": "INVALID_REGISTRY"}
+    active_states = {
+        "WAITING_FOR_MATURITY",
+        "FIRED_NO_TARGET",
+        "MATURED_SUPPORTED",
+        "MATURED_NOT_SUPPORTED",
+        "MATURED_INCONCLUSIVE",
+        "GOVERNANCE_REVIEW_PERMITTED",
+    }
+    candidates = [row for row in registry.get("candidates", []) if isinstance(row, dict)]
+    active = [row for row in candidates if row.get("state") in active_states]
+    active.sort(key=lambda row: (str(row.get("state")), str(row.get("created_at_utc"))), reverse=True)
+    outcomes = []
+    for path in outcome_root.rglob("*.json") if outcome_root.exists() else []:
+        try:
+            value = load_json(path)
+        except Exception:
+            continue
+        if value.get("contract") != "MATURED_OUTCOME_v2":
+            continue
+        created = value.get("created_at_utc")
+        if created is None:
+            continue
+        try:
+            when = ts(created)
+        except Exception:
+            continue
+        if not (start <= when < end):
+            continue
+        outcomes.append({
+            "forecast_id": value.get("forecast_id"),
+            "status": value.get("status"),
+            "result": value.get("result"),
+            "reason": value.get("reason"),
+            "return_pct": value.get("return_pct"),
+            "evidence_lag_hours": value.get("evidence_lag_hours"),
+            "created_at_utc": created,
+            "path": str(path),
+            "outcome_sha256": hashlib.sha256(canonical(value)).hexdigest(),
+        })
+    outcomes.sort(key=lambda row: str(row.get("created_at_utc")))
+    latent = sum(row.get("state") in {"PROPOSED", "WAITING_FOR_DATA", "WAITING_FOR_MAPPING", "INCUBATING"} for row in candidates)
+    return {
+        "status": "AVAILABLE",
+        "authority": "SHADOW_ONLY_NO_AUTOMATIC_PROMOTION",
+        "registry_generated_at_utc": registry.get("generated_at_utc"),
+        "registry_sha256": hashlib.sha256(canonical(registry)).hexdigest(),
+        "candidate_count": registry.get("candidate_count", len(candidates)),
+        "state_counts": registry.get("state_counts", {}),
+        "active_candidates": active[:50],
+        "active_candidates_truncated": len(active) > 50,
+        "latent_candidate_count": latent,
+        "new_matured_outcomes": outcomes,
+        "weekly_review_rule": "Review new prospective outcomes, severe failures, censored evidence and control comparisons. Strange or dormant hypotheses remain retained but receive no authority without mature evidence.",
+    }
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--weekly-pointer", type=Path, required=True)
     ap.add_argument("--daily-output-root", type=Path, required=True)
     ap.add_argument("--freeze-file", type=Path, required=True)
     ap.add_argument("--legacy-root", type=Path)
+    ap.add_argument("--experiment-registry", type=Path, default=Path("research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json"))
+    ap.add_argument("--experiment-outcome-root", type=Path, default=Path("research/framework_memory/outcome_memory"))
     ap.add_argument("--output", type=Path, required=True)
     args = ap.parse_args()
 
@@ -133,7 +207,7 @@ def main() -> None:
             "receipt": receipt,
         })
     context = {
-        "contract": "WEEKLY_API_CALIBRATION_CONTEXT_v4",
+        "contract": "WEEKLY_API_CALIBRATION_CONTEXT_v5",
         "authority": "SHADOW_ONLY",
         "iso_year": freeze["iso_year"],
         "iso_week": freeze["iso_week"],
@@ -145,21 +219,31 @@ def main() -> None:
         "daily_director_rows": outputs,
         "daily_director_count": len(outputs),
         "legacy_research_context": load_legacy_context(args.legacy_root),
+        "experiment_learning": load_experiment_learning(args.experiment_registry, args.experiment_outcome_root, start, end),
         "selection_rule": "latest eligible row per Europe/Copenhagen local date within frozen local week, deduplicated by timestamp and output hash",
-        "handoff_targets": ["RAW_WEEKLY_CALIBRATION", "FORECAST_LEDGER", "MASTER_MONDAY_PREP", "SPECIALIST_REVIEW"],
+        "handoff_targets": ["RAW_WEEKLY_CALIBRATION", "FORECAST_LEDGER", "MASTER_MONDAY_PREP", "SPECIALIST_REVIEW", "EXPERIMENT_GOVERNANCE_REVIEW"],
         "rules": [
             "Do not rewrite frozen forecasts.",
             "Separate data quality from market evidence.",
             "Preserve disagreement, missingness and censored outcomes.",
             "Evaluate analysis and operational translation separately.",
             "Legacy research is a hypothesis prior only and cannot count as prospective evidence.",
+            "Experiment learning may report evidence and review candidates but cannot promote rules automatically.",
+            "Latent or strange hypotheses remain retained without affecting weekly conclusions unless new mature evidence exists.",
             "No framework-state, model-weight or portfolio authority.",
         ],
     }
     context["context_hash"] = hashlib.sha256(canonical(context)).hexdigest()
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_bytes(canonical(context))
-    print(json.dumps({"status": "PASS", "daily_rows": len(outputs), "legacy_hypotheses": len(context["legacy_research_context"]["hypotheses"]), "context_hash": context["context_hash"]}, sort_keys=True))
+    print(json.dumps({
+        "status": "PASS",
+        "daily_rows": len(outputs),
+        "legacy_hypotheses": len(context["legacy_research_context"]["hypotheses"]),
+        "experiment_candidates": context["experiment_learning"]["candidate_count"],
+        "new_matured_experiment_outcomes": len(context["experiment_learning"]["new_matured_outcomes"]),
+        "context_hash": context["context_hash"],
+    }, sort_keys=True))
 
 
 if __name__ == "__main__":
