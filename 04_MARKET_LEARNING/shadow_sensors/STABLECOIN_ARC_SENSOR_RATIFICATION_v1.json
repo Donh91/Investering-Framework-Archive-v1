@@ -1,0 +1,154 @@
+{
+  "schema_version": "STABLECOIN_ARC_SENSOR_RATIFICATION_v1",
+  "ratified_at_utc": "2026-08-05T20:32:00Z",
+  "trigger_research_request": "TRR-CIRCLE-ARC-20260805-01",
+  "principle": "SENSOR_DESIGN_MAY_BE_ACCEPTED_WITHOUT_ACCEPTING_AN_UNREPLICATED_VALUE",
+  "sensors": [
+    {
+      "rank": 1,
+      "sensor_id": "USDC_NET_ISSUANCE_7D",
+      "status": "ACCEPTED_SHADOW_CANDIDATE_PENDING_DETERMINISTIC_REPLICATION",
+      "information_value": "HIGH",
+      "maintenance_cost": "LOW",
+      "proposed_source": "DEFILLAMA_STABLECOIN_HISTORY_PLUS_CIRCLE_CROSSCHECK",
+      "formula": "current_USDC_supply_minus_USDC_supply_7d_prior",
+      "gate_permission": "NO",
+      "required_before_activation": [
+        "document stablecoin identifier",
+        "verify historical endpoint semantics",
+        "same-timestamp comparison",
+        "define bridged representation treatment",
+        "crosscheck current value against public page and issuer disclosure"
+      ]
+    },
+    {
+      "rank": 2,
+      "sensor_id": "GLOBAL_STABLECOIN_SUPPLY_TOTAL",
+      "status": "ACCEPTED_SENSOR_DESIGN_VALUE_QUARANTINED",
+      "information_value": "HIGH",
+      "maintenance_cost": "LOW",
+      "proposed_source": "DEFILLAMA_STABLECOINCHARTS_ALL",
+      "gate_permission": "NO_UNTIL_METHOD_STABILITY_PROVEN",
+      "current_value": null,
+      "quarantine_reason": "RESEARCH_REPORT_305_9B_VS_PUBLIC_PAGE_300_384B_SAME_DAY_DEFINITION_OR_ENDPOINT_DISCREPANCY",
+      "required_definition_fields": [
+        "peg types included",
+        "asset universe",
+        "chain and bridged representation treatment",
+        "timestamp",
+        "price basis",
+        "sum formula"
+      ]
+    },
+    {
+      "rank": 3,
+      "sensor_id": "ARC_ACTIVITY_TRIAD",
+      "status": "PREREGISTERED_DORMANT",
+      "activation_condition": "VERIFIED_PUBLIC_ARC_MAINNET",
+      "earliest_planned_activation_date": "2026-09-16",
+      "components": [
+        "ARC_TVL",
+        "ARC_DAILY_TRANSACTIONS",
+        "ARC_DAILY_FEES"
+      ],
+      "gate_permission": "SHADOW_ONLY",
+      "anti_fabrication_rule": "NO_PRELAUNCH_ZEROES_OR_INTERPOLATION"
+    },
+    {
+      "rank": 4,
+      "sensor_id": "STABLECHAIN_COHORT_INDEX",
+      "status": "ACCEPTED_SHADOW_PRIOR",
+      "components_initial": [
+        "PLASMA",
+        "TEMPO",
+        "STABLE",
+        "ARC_AFTER_LAUNCH"
+      ],
+      "metrics": [
+        "TVL",
+        "TVL_RETENTION_FROM_PEAK",
+        "DAILY_FEES_IF_AVAILABLE",
+        "DAILY_TRANSACTIONS_IF_AVAILABLE"
+      ],
+      "warning": "TVL_IS_NOT_PAYMENT_VOLUME",
+      "gate_permission": "NO"
+    },
+    {
+      "rank": 5,
+      "sensor_id": "USDC_SUPPLY_SHARE",
+      "status": "ACCEPTED_DERIVED_SHADOW_CANDIDATE",
+      "formula": "USDC_supply_divided_by_global_stablecoin_supply_same_universe_same_timestamp",
+      "dependency": "GLOBAL_STABLECOIN_SUPPLY_TOTAL_VALIDATED",
+      "gate_permission": "NO"
+    },
+    {
+      "rank": 6,
+      "sensor_id": "ARC_VALIDATOR_ATTRITION_LEDGER",
+      "status": "ACCEPTED_EVENT_LEDGER",
+      "mode": "EVENT_DRIVEN_NOT_TIME_SERIES",
+      "initial_entities": [
+        "BlackRock",
+        "DTCC",
+        "Galaxy",
+        "Global Payments",
+        "ICE",
+        "Mastercard",
+        "MoneyGram",
+        "SBI Group",
+        "Standard Chartered",
+        "Sumitomo",
+        "Visa"
+      ],
+      "allowed_states": [
+        "ANNOUNCED",
+        "BLOCK_PRODUCING",
+        "INACTIVE",
+        "WITHDRAWN",
+        "UNVERIFIED"
+      ],
+      "gate_permission": "NO"
+    },
+    {
+      "rank": 7,
+      "sensor_id": "VISA_ADJUSTED_USDC_SHARE",
+      "status": "SHADOW_ONLY_PERMANENT_GATE_BAN",
+      "information_value": "MEDIUM",
+      "source_stability": "LOW",
+      "required_metadata": [
+        "window",
+        "method version",
+        "adjusted versus unadjusted",
+        "value versus count",
+        "chain scope",
+        "denominator",
+        "retrieval timestamp"
+      ],
+      "known_bias": "HIGH_FREQUENCY_AND_HIGH_VOLUME_ADDRESS_FILTER_CAN_CHANGE_RELATIVE_ASSET_SHARE",
+      "gate_permission": "NEVER"
+    },
+    {
+      "rank": 8,
+      "sensor_id": "CPN_ANNUALIZED_VOLUME",
+      "status": "CONTEXT_ONLY_QUARTERLY",
+      "source": "CIRCLE_ISSUER_DISCLOSURE",
+      "self_reported": true,
+      "gate_permission": "NO"
+    }
+  ],
+  "explicit_rejections": [
+    {
+      "sensor": "ANNOUNCED_PARTNER_COUNT",
+      "reason": "BASE_RATE_AND_RELATIONSHIP_TYPE_CONFUSION"
+    },
+    {
+      "sensor": "ANNOUNCED_VALIDATOR_PRESTIGE_SCORE",
+      "reason": "NON_EXCLUSIVE_PARTICIPATION_AND_NO_REALIZED_VOLUME"
+    },
+    {
+      "sensor": "BUILDER_COUNT",
+      "reason": "NO_REPRODUCIBLE_ECONOMIC_TRANSMISSION"
+    }
+  ],
+  "canonical_effect": "NONE",
+  "portfolio_effect": "NONE"
+}
