@@ -1,19 +1,21 @@
 {
   "schema_version": "LATEST_ETF_FLOW_STATUS_v1",
-  "updated_at_local": "2026-08-05T07:17:00+02:00",
+  "updated_at_local": "2026-08-05T09:33:00+02:00",
   "base_row_source": "08_SOURCE_MATERIAL/etf/2026-08-03__btc-eth-etf-direct-payload-through-2026-07-31.json",
-  "latest_session_source": "08_SOURCE_MATERIAL/etf/2026-08-05__btc-eth-etf-2026-08-03-issuer-structure__source-record.md",
-  "reconciliation": "04_MARKET_LEARNING/etf/2026-08-05__btc-eth-etf-through-2026-08-03__reconciliation.md",
-  "authority_status": "DIRECT_SESSION_TOTALS_WITH_REPRODUCIBLE_OWNER_WINDOWS_AND_USER_SUPPLIED_ISSUER_DETAIL",
-  "latest_eligible_settled_US_session": "2026-08-03",
+  "latest_session_source": "08_SOURCE_MATERIAL/data_ping/2026-08-05__run_876595b84c284b3eb719f8139f56882a__source-record.md",
+  "preceding_issuer_source": "08_SOURCE_MATERIAL/etf/2026-08-05__btc-eth-etf-2026-08-03-issuer-structure__source-record.md",
+  "reconciliation": "04_MARKET_LEARNING/data_ping/2026-08-05__run_876595b84c284b3eb719f8139f56882a__framework-read.md",
+  "authority_status": "PARTIAL_LATEST_SESSION_ETH_DIRECT_OWNER_AVAILABLE_BTC_NUMERIC_UNRESOLVED",
+  "latest_observed_US_session": "2026-08-04",
   "BTC": {
-    "latest_session": "2026-08-03",
-    "latest_session_total_usd_m": 170.1,
-    "latest_session_total_authority": "DATA_PING_DIRECT_OWNER",
-    "three_session_sum_usd_m": 137.8,
-    "five_session_sum_usd_m": 120.2,
-    "seven_session_sum_usd_m": -131.5,
-    "ten_session_sum_usd_m": -84.3,
+    "latest_confirmed_session": "2026-08-03",
+    "latest_confirmed_session_total_usd_m": 170.1,
+    "2026_08_04_status": "PARTIAL_NUMERIC_VALUE_UNRESOLVED",
+    "2026_08_04_total_usd_m": null,
+    "three_session_sum_through_2026_08_03_usd_m": 137.8,
+    "five_session_sum_through_2026_08_03_usd_m": 120.2,
+    "seven_session_sum_through_2026_08_03_usd_m": -131.5,
+    "ten_session_sum_through_2026_08_03_usd_m": -84.3,
     "twenty_session_sum_status": "UNAVAILABLE_ONLY_14_OWNER_ROWS",
     "2026_08_03_issuer_structure": {
       "authority": "USER_SUPPLIED_CLAUDE_OTA_FRESH_PAYLOAD_NOT_INDEPENDENTLY_RETRIEVED",
@@ -31,14 +33,16 @@
     "2026_07_31_fresh_reverification_status": "PASS_AS_USER_SUPPLIED_FRESH_GENERATION_NO_REVISION"
   },
   "ETH": {
-    "latest_session": "2026-08-03",
-    "latest_session_total_usd_m": -11.9,
+    "latest_confirmed_session": "2026-08-04",
+    "latest_confirmed_session_total_usd_m": 53.1,
     "latest_session_total_authority": "DATA_PING_DIRECT_OWNER",
-    "three_session_sum_usd_m": 9.9,
-    "five_session_sum_usd_m": -13.6,
-    "seven_session_sum_usd_m": -72.6,
-    "ten_session_sum_usd_m": 63.9,
-    "twenty_session_sum_status": "UNAVAILABLE_ONLY_14_OWNER_ROWS",
+    "three_session_sum_usd_m": 50.2,
+    "five_session_sum_usd_m": 30.1,
+    "seven_session_sum_usd_m": 51.2,
+    "ten_session_sum_usd_m": 79.5,
+    "fifteen_session_sum_usd_m": 217.6,
+    "twenty_session_sum_status": "UNAVAILABLE_ONLY_15_OWNER_ROWS",
+    "2026_08_03_total_usd_m": -11.9,
     "2026_08_03_issuer_structure": {
       "authority": "USER_SUPPLIED_CLAUDE_OTA_FRESH_PAYLOAD_NOT_INDEPENDENTLY_RETRIEVED",
       "positive_funds": 1,
@@ -49,14 +53,20 @@
     },
     "2026_07_31_total_usd_m": 9.0,
     "2026_07_31_ETHB_usd_m": 15.4,
-    "ETHB_sole_positive_contributor_consecutive_sessions": 2,
+    "ETHB_sole_positive_contributor_consecutive_sessions_through_2026_08_03": 2,
     "phantom_session_2026_08_01_status": "CANCELLED_NO_US_TRADING_SESSION"
   },
   "cross_asset": {
+    "latest_fully_resolved_same_session": "2026-08-03",
     "2026_08_03_BTC_minus_ETH_flow_spread_usd_m": 182.0,
-    "BTC_short_window_status": "THREE_AND_FIVE_SESSION_POSITIVE_SEVEN_AND_TEN_SESSION_NEGATIVE",
-    "ETH_short_window_status": "THREE_SESSION_MARGINAL_POSITIVE_FIVE_AND_SEVEN_SESSION_NEGATIVE",
-    "interpretation": "BTC_LED_ABSORPTION_WITHOUT_ETH_TRANSMISSION"
+    "2026_08_04_status": "CROSS_ASSET_COMPARISON_BLOCKED_BTC_VALUE_UNRESOLVED",
+    "interpretation": "ETH_SHORT_WINDOW_FLOW_IMPROVED_BUT_CURRENT_CROSS_ASSET_TRANSMISSION_NOT_ESTABLISHED"
+  },
+  "breadth_and_price_context": {
+    "ETHBTC_current": 0.02909,
+    "ETHBTC_latest_settled_Copenhagen": 0.02917,
+    "current_breadth_transform": "COINGECKO_TOP100_FILTERED_v3",
+    "current_breadth_gate_permission": "NOT_AUTHORIZED_INCOMPATIBLE_WITH_LOCKED_V1_1_OWNER"
   },
   "quarantined_OTA_window_claims": {
     "BTC_five_session_claim_usd_m": 108.3,
@@ -73,8 +83,7 @@
     "historical_status": "FROZEN_COMPLETED_WEEK"
   },
   "pending": [
-    "BTC_ETF_2026_08_04",
-    "ETH_ETF_2026_08_04",
+    "BTC_ETF_2026_08_04_NUMERIC_VALUE",
     "ETF_AUM_DENOMINATORS"
   ],
   "framework_effect": {
