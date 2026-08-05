@@ -1,0 +1,31 @@
+name: Experiment Lifecycle Gate
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/experiments/**'
+      - '.github/workflows/daily-director-shadow.yml'
+      - '.github/workflows/framework-learning-operations.yml'
+      - 'tests/experiments/**'
+      - '00_FMOS/EXPERIMENT_LIFECYCLE_AND_EXECUTION_PLANE_v1.md'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compile experiment contracts
+        run: |
+          python -m py_compile \
+            scripts/experiments/experiment_lifecycle.py \
+            scripts/experiments/sync_experiment_receipts.py
+      - name: Run experiment lifecycle tests
+        run: python -m unittest discover -s tests/experiments -v
