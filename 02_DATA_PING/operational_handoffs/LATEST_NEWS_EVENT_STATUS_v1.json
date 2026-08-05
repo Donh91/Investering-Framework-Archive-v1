@@ -1,6 +1,6 @@
 {
   "schema_version": "LATEST_NEWS_EVENT_STATUS_v1",
-  "updated_at_utc": "2026-08-05T19:58:00Z",
+  "updated_at_utc": "2026-08-05T20:37:00Z",
   "latest_batch_id": "GROK-X-CANDIDATES-2026-08-05T19-45Z",
   "source_record_path": "08_SOURCE_MATERIAL/news/2026-08-05__grok-x-source-candidates__source-record.md",
   "source_QA_path": "09_SOURCE_QA/news/2026-08-05__grok-x-source-candidates__validation.json",
@@ -10,13 +10,18 @@
     {
       "event_id": "COLDCARD_ENTROPY_INCIDENT",
       "relevance": "HIGH_USER_PROTECTION_LOW_IMMEDIATE_MARKET_STATE",
-      "market_attribution_permission": "NO"
+      "market_attribution_permission": "NO",
+      "status": "ARCHIVED_ONE_INCIDENT_CLUSTER"
     },
     {
       "event_id": "CIRCLE_ARC_TRUST_BANK",
       "relevance": "HIGH_STRUCTURAL_STABLECOIN_AND_INSTITUTIONAL_SETTLEMENT",
       "market_attribution_permission": "NO",
-      "research_request_id": "TRR-CIRCLE-ARC-20260805-01"
+      "research_request_id": "TRR-CIRCLE-ARC-20260805-01",
+      "research_status": "COMPLETED",
+      "research_verdict": "ANNOUNCED_INFRASTRUCTURE_DOMINANT",
+      "main_thread_adjudication": "NO_CURRENT_LIQUIDITY_TRANSMISSION_AND_NO_CANONICAL_EFFECT",
+      "reconciliation_path": "04_MARKET_LEARNING/research_reconciliation/2026-08-05__TRR-CIRCLE-ARC-20260805-01__framework-reconciliation.md"
     }
   ],
   "low_relevance_events": [
@@ -25,11 +30,34 @@
       "relevance": "WATCHLIST_ONLY"
     }
   ],
-  "quarantines": [
-    "CHAINALYSIS_COLDCARD_LOSS_SCALE_UNVERIFIED",
-    "CIRCLE_ARC_DATE_AND_VALIDATOR_LIST_PENDING_DIRECT_DOCUMENT",
-    "USDC_NEARLY_70_PERCENT_METRIC_PENDING_DENOMINATOR_AND_METHOD"
+  "resolved_or_refined_items": [
+    {
+      "item": "CIRCLE_OCC_FINAL_APPROVAL",
+      "status": "VERIFIED_STRUCTURAL_CONTEXT",
+      "market_effect": "NONE"
+    },
+    {
+      "item": "ARC_2026_09_16_LAUNCH_DATE",
+      "status": "PREREGISTERED_STATED_PLAN_NOT_ACHIEVED_MILESTONE"
+    },
+    {
+      "item": "FOUNDING_VALIDATOR_LIST",
+      "status": "ONE_ANNOUNCEMENT_CLUSTER_NOT_ELEVEN_EVIDENCE_DIMENSIONS"
+    },
+    {
+      "item": "USDC_NEARLY_70_PERCENT_METRIC",
+      "status": "PARTIALLY_FALSIFIED_WINDOW_MISMATCH_SHADOW_ONLY_GATE_BANNED"
+    }
   ],
+  "open_quarantines": [
+    "CHAINALYSIS_COLDCARD_LOSS_SCALE_UNVERIFIED",
+    "ARC_RAW_PRIMARY_RELEASE_AND_BINDING_VALIDATOR_COMMITMENTS_UNRESOLVED",
+    "VISA_DIRECT_NUMERIC_DASHBOARD_EXPORT_UNRESOLVED",
+    "GLOBAL_STABLECOIN_TOTAL_DEFINITION_DISCREPANCY_PENDING_DATA_PING_VALIDATION",
+    "CIRCLE_NATIONAL_TRUST_OPERATING_COMMENCEMENT_UNRESOLVED"
+  ],
+  "falsification_registry_path": "04_MARKET_LEARNING/experiments/circle_arc/ARC_LAUNCH_FALSIFICATION_REGISTRY_v1.json",
+  "sensor_ratification_path": "04_MARKET_LEARNING/shadow_sensors/STABLECOIN_ARC_SENSOR_RATIFICATION_v1.json",
   "canonical_state_effect": "NONE",
   "portfolio_effect": "NONE"
 }
