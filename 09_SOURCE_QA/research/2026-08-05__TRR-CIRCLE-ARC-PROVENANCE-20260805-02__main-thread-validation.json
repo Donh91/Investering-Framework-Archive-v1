@@ -1,0 +1,78 @@
+{
+  "schema_version": "TARGETED_RESEARCH_MAIN_THREAD_VALIDATION_v1",
+  "request_id": "TRR-CIRCLE-ARC-PROVENANCE-20260805-02",
+  "parent_request": "TRR-CIRCLE-ARC-20260805-01",
+  "validated_at_utc": "2026-08-05T22:45:00Z",
+  "source_verdict": "METHOD_AND_FIELD_PATH_RECOVERED_AND_PROVEN_ORIGINAL_RAW_LINEAGE_LOST_FAIL_CLOSED",
+  "main_thread_verdict": "ACCEPT_METHOD_RECOVERY_ACCEPT_CORRECTIONS_RETRACT_ORIGINAL_AS_SETTLED_RETAIN_SENSOR_IN_QUARANTINE",
+  "accepted_findings": {
+    "endpoint": "https://stablecoins.llama.fi/stablecoincharts/all",
+    "arguments": null,
+    "field_path": "record[date==1785888000].totalCirculatingUSD.peggedUSD",
+    "field_semantics": "PRICE_ADJUSTED_USD_MARKET_VALUE",
+    "peg_universe": "peggedUSD_ONLY",
+    "local_aggregation_used_for_original_305_9B": false,
+    "original_day_row_status": "IN_PROGRESS_NOT_SETTLED",
+    "reproduction_raw_payload_sha256": "b215b5b4ab7b7ee15f301a53480476ca695f9b0f7b723e088dd0eba47c974910",
+    "reproductions_byte_identical": true,
+    "original_raw_payload_sha256": null,
+    "original_retrieval_timestamp": null
+  },
+  "corrections": [
+    {
+      "item": "ORIGINAL_305_9B",
+      "action": "RETRACT_AS_SETTLED_OBSERVATION",
+      "reason": "IN_PROGRESS_DAILY_ROW_REVISED_AFTER_RETRIEVAL"
+    },
+    {
+      "item": "NOMINAL_VERSUS_PRICE_ADJUSTED_EXPLAINS_FULL_5_5B_GAP",
+      "action": "REJECT_AS_DISCREPANCY_EXPLANATION",
+      "reason": "OBSERVED_FIELD_SPREAD_ONLY_APPROX_0_17B_NOT_5_52B"
+    },
+    {
+      "item": "TRR_06_USDT_USDC_SHARES",
+      "action": "RETRACT",
+      "reason": "NUMERATOR_AND_DENOMINATOR_MIXED_ACROSS_CHART_PRICE_ADJUSTED_AND_ASSET_SUM_NOMINAL_ENDPOINTS"
+    }
+  ],
+  "new_QA_observation": {
+    "date_utc": "2026-08-04T00:00:00Z",
+    "field_path": "totalCirculatingUSD.peggedUSD",
+    "reported_value_usd_approx": 305860800000,
+    "payload_sha256": "b215b5b4ab7b7ee15f301a53480476ca695f9b0f7b723e088dd0eba47c974910",
+    "status": "QA_CANDIDATE_ONLY_NOT_CANONICAL_NOT_SENSOR_AUTHORIZED"
+  },
+  "remaining_discrepancies": [
+    {
+      "comparison": "CHART_API_PRICE_ADJUSTED_VS_RENDERED_PUBLIC_PAGE",
+      "api_usd_approx": 305903600000,
+      "rendered_page_usd": 300384000000,
+      "gap_usd_approx": 5519600000,
+      "status": "UNRESOLVED"
+    },
+    {
+      "comparison": "ASSET_SUM_NOMINAL_VS_CHART_NOMINAL",
+      "asset_sum_usd_approx": 307180000000,
+      "chart_nominal_usd_approx": 305733700000,
+      "gap_usd_approx": 1446300000,
+      "status": "UNRESOLVED"
+    }
+  ],
+  "source_limitations": [
+    "ORIGINAL_RAW_PAYLOAD_HASH_LOST",
+    "ORIGINAL_EXACT_RETRIEVAL_TIMESTAMP_LOST",
+    "CHART_ASSET_MEMBERSHIP_NOT_EXPOSED",
+    "SUPPLIER_DUPLICATE_RULE_UNDOCUMENTED",
+    "BRIDGED_REPRESENTATION_TREATMENT_NOT_INDEPENDENTLY_VERIFIED"
+  ],
+  "method_nomination_authorized": false,
+  "canonical_sensor_activation": "NOT_AUTHORIZED",
+  "canonical_state_effect": "NONE",
+  "portfolio_effect": "NONE",
+  "research_escalation": {
+    "broad_deep_research_required_now": false,
+    "additional_claude_research_required_now": false,
+    "collector_engineering_required": true,
+    "reason": "PROVENANCE_QUESTION_CLOSED_REMAINING_BLOCKERS_REQUIRE_DETERMINISTIC_ENDPOINT_CAPTURE_AND_RECONCILIATION"
+  }
+}
