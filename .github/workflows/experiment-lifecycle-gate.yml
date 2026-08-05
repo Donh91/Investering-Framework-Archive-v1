@@ -4,8 +4,10 @@ on:
   pull_request:
     paths:
       - 'scripts/experiments/**'
+      - 'scripts/api_agent/build_weekly_calibration_context.py'
       - '.github/workflows/daily-director-shadow.yml'
       - '.github/workflows/framework-learning-operations.yml'
+      - '.github/workflows/weekly-api-calibration-shadow.yml'
       - 'tests/experiments/**'
       - '00_FMOS/EXPERIMENT_LIFECYCLE_AND_EXECUTION_PLANE_v1.md'
   workflow_dispatch:
@@ -26,6 +28,8 @@ jobs:
         run: |
           python -m py_compile \
             scripts/experiments/experiment_lifecycle.py \
-            scripts/experiments/sync_experiment_receipts.py
+            scripts/experiments/rebuild_experiment_registry.py \
+            scripts/experiments/sync_experiment_receipts.py \
+            scripts/api_agent/build_weekly_calibration_context.py
       - name: Run experiment lifecycle tests
         run: python -m unittest discover -s tests/experiments -v
