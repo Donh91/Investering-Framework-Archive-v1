@@ -1,0 +1,69 @@
+{
+  "schema_version": "DATA_PING_MAIN_THREAD_VALIDATION_v1",
+  "run_id": "run-e841c63ea8e04a028918",
+  "snapshot_id": "snap-421afc0073c04599ab62",
+  "snapshot_utc": "2026-08-05T20:38:19.857Z",
+  "packet_sha256": "0793ee763b08e1649cea1f9a50df59fffa6ecb60bc137ad5a0fac9498d4bbd5c",
+  "validation_status": "PASS_BOUNDED_WITH_EXPLICIT_NONBLOCKING_GAPS",
+  "lineage": {
+    "packet_predecessor_snapshot_id": "snap-554c617f944e41ad91bf",
+    "immediate_prior_bounded_snapshot_id": "snap-554c617f944e41ad91bf",
+    "matches_immediate_prior_bounded": true,
+    "canonical_predecessor_advanced": false
+  },
+  "execution": {
+    "planned_core_actions": 60,
+    "attempted_core_actions": 60,
+    "receipt_count": 61,
+    "core_pass": 57,
+    "core_partial": 2,
+    "core_stale": 1,
+    "core_fail": 0,
+    "core_unavailable": 0,
+    "freeze_count": 1,
+    "post_freeze_call_count": 0,
+    "validator_pass": true,
+    "failed_check_count": 0
+  },
+  "mandatory_owners": {
+    "BTC_direct": "PASS",
+    "ETH_direct": "PASS",
+    "ETHBTC_direct": "PASS",
+    "derivatives": "PASS",
+    "settled_candles": "PASS",
+    "ETF": "PASS_RECONFIRMED_NO_NEW_SESSION",
+    "breadth": "PASS_DIRECTIONAL_ONLY_NOT_SCORING_OWNER",
+    "macro": "PASS",
+    "sentiment": "PASS_WITH_BTC_CFGI_STALE"
+  },
+  "breadth_QA": {
+    "method": "COINGECKO_TOP100_FILTERED_v3",
+    "filter": "BREADTH_FILTER_TOP100_EXCLUSIONS_v1",
+    "included_count": 89,
+    "membership_hash": "db981da7d5002ac7742419b4bcf7d9c022a5b2ab88165ab971228d587aa6a739",
+    "same_universe_as_predecessor": false,
+    "longitudinal_delta_permission": "NO",
+    "scoring_owner": "BREADTH_FILTER_TOP100_EXCLUSIONS_v1_1",
+    "scored_gate_permission": "NO"
+  },
+  "stablecoin_QA": {
+    "normal_packet_status": "NO_USABLE_GLOBAL_TOTAL_AFTER_REGISTERED_FALLBACKS",
+    "market_use_permission": "NO",
+    "separate_validation_request": "DP-STABLECOIN-VALIDATION-20260805-01",
+    "separate_validation_verdict": "DEFINITION_UNRESOLVED"
+  },
+  "material_limitations": [
+    "Global stablecoin total unavailable",
+    "Optional total DeFi TVL unavailable",
+    "Realized volatility windows unavailable",
+    "BTC CFGI stale",
+    "Breadth transform not compatible with active v1.1 scoring owner",
+    "Breadth membership changed versus predecessor"
+  ],
+  "market_use": {
+    "bounded_observation_usable": true,
+    "canonical_predecessor_advance_authorized": false,
+    "canonical_state_change": "NONE",
+    "portfolio_effect": "NONE"
+  }
+}
