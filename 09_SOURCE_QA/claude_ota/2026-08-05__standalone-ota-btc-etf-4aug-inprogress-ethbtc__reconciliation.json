@@ -1,0 +1,94 @@
+{
+  "schema_version": "CLAUDE_OTA_MAIN_THREAD_RECONCILIATION_QA_v1",
+  "ota_run_timestamp_utc": "2026-08-05T19:16:53.370Z",
+  "reference_data_ping_run_id": "run-aebc326ae71e48109b9b",
+  "reference_data_ping_snapshot_id": "snap-554c617f944e41ad91bf",
+  "operating_mode": "STANDALONE_OTA_NO_REFERENCE_BRIDGE",
+  "run_type": "DELTA_ONLY_NO_MATURITY",
+  "source_authority": {
+    "BTC_ETF_total_2026_08_04": "MATCHES_DATA_PING_DIRECT_OWNER",
+    "BTC_ETF_issuer_breakdown_2026_08_04": "USER_SUPPLIED_CLAUDE_FRESH_PAYLOAD_NOT_INDEPENDENTLY_RETRIEVED",
+    "ETHBTC_live_value": "CORROBORATED_BY_CONTEMPORANEOUS_DATA_PING_DIRECT_OWNER",
+    "H7_row_15": "NOT_FORMED",
+    "rolling_window_claims": "REQUIRES_DIRECT_ROW_RECONCILIATION"
+  },
+  "accepted_items": [
+    "BTC_ETF_2026_08_04_TOTAL_211_5_MATCHES_DIRECT_OWNER",
+    "BTC_ETF_2026_08_04_ISSUER_STRUCTURE_USER_SUPPLIED",
+    "FARSIDE_FOOTER_05_AUGUST_FRESHNESS_AS_SUPPLIED",
+    "FRESH_PAYLOAD_FROM_104_22_93_101_FURTHER_FALSIFIES_IP_STALE_NODE_RULE",
+    "ETHBTC_IN_PROGRESS_REBOUND_CORROBORATED_AT_APPROX_0_02959",
+    "NO_0030_TOUCH_AND_NO_SETTLED_CONFIRMATION",
+    "NO_H7_MATURITY"
+  ],
+  "corrected_or_rejected_items": [
+    {
+      "claim": "ETH_ETF_2026_08_04_PENDING",
+      "main_thread_result": "REJECTED_STALE_COVERAGE_DIRECT_DATA_PING_OWNER_HAS_PLUS_53_1M"
+    },
+    {
+      "claim": "BTC_5_SESSION_PLUS_118_4M",
+      "main_thread_result": "QUARANTINED_REPOSITORY_DIRECT_OWNER_REPRODUCES_PLUS_381_4M"
+    },
+    {
+      "claim": "BTC_7_SESSION_PLUS_80_3M",
+      "main_thread_result": "QUARANTINED_REPOSITORY_DIRECT_OWNER_REPRODUCES_PLUS_320_1M"
+    },
+    {
+      "claim": "BTC_20_SESSION_PLUS_153_0M",
+      "main_thread_result": "REJECTED_UNAVAILABLE_ONLY_15_DIRECT_OWNER_ROWS"
+    },
+    {
+      "claim": "ALL_FOUR_BTC_FLOW_WINDOWS_POSITIVE",
+      "main_thread_result": "NOT_ACCEPTED_WINDOW_SET_NOT_REPRODUCIBLE"
+    },
+    {
+      "claim": "LATEST_FLOW_SIDE_IS_ANTI_TRANSMISSION",
+      "main_thread_result": "SUPERSEDED_LATEST_DIRECT_OWNER_HAS_DUAL_POSITIVE_BTC_AND_ETH_4_AUGUST_FLOW"
+    },
+    {
+      "claim": "F1_TEN_SETTLED_POST_WINDOW_SESSIONS",
+      "main_thread_result": "CORRECTED_TO_NINE_SETTLED_PLUS_ONE_IN_PROGRESS"
+    }
+  ],
+  "H7_QA": {
+    "latest_formed_extension_row": 14,
+    "row_15_status": "NOT_FORMED",
+    "historical_score_change": "NONE",
+    "rotation_effect": "NONE"
+  },
+  "ETHBTC_QA": {
+    "ota_running_value": 0.02957,
+    "ota_high": 0.02975,
+    "data_ping_direct_value": 0.02959,
+    "distance_to_0_0300_pct_at_data_ping": -1.3666666667,
+    "0_0300_touched": false,
+    "settled_confirmation": false,
+    "result": "MATERIAL_IN_PROGRESS_REPAIR_ATTEMPT_WITHOUT_MATURITY"
+  },
+  "ETF_QA": {
+    "BTC_2026_08_04_total_usd_m": 211.5,
+    "ETH_2026_08_04_total_usd_m": 53.1,
+    "BTC_minus_ETH_usd_m": 158.4,
+    "latest_same_session_sign": "BOTH_POSITIVE",
+    "BTC_3_session_owner_usd_m": 116.2,
+    "BTC_5_session_owner_usd_m": 381.4,
+    "BTC_7_session_owner_usd_m": 320.1,
+    "BTC_20_session_owner_status": "UNAVAILABLE_ONLY_15_OWNER_ROWS",
+    "result": "DIRECT_TOTAL_AND_ISSUER_DETAIL_RETAINED_OTA_WINDOW_SUMS_QUARANTINED"
+  },
+  "framework_result": {
+    "market_phase": "SELECTIVE_REPAIR_FRAGILE_TRANSLATION",
+    "risk_substate": "BTC_LED_REPAIR_WITH_EMERGING_ETH_RELATIVE_REBOUND_AND_DUAL_POSITIVE_ETF_FLOW_BUT_NO_SETTLED_0030_OR_MULTI_WINDOW_ETHBTC_PERSISTENCE",
+    "rotation": "NO_ROTATION",
+    "capital_lifecycle": "WAIT",
+    "rebuy": "LOCKED",
+    "new_entry": "NOT_ACTIVE",
+    "operational_risk_class": "DO_NOT_ADD_RISK",
+    "canonical_state_change": "NONE",
+    "portfolio_action": "NONE",
+    "A_class_increment": 0,
+    "shadow_dual_run_increment": 0
+  },
+  "final_QA_status": "PASS_WITH_MAIN_THREAD_CORRECTIONS_AND_WINDOW_QUARANTINE"
+}
