@@ -1,0 +1,98 @@
+{
+  "schema_version": "DATA_PING_MAIN_THREAD_QA_v1",
+  "run_id": "run_876595b84c284b3eb719f8139f56882a",
+  "snapshot_id": "snap_c435c1f43cb3476591d2df309db1112a",
+  "snapshot_utc": "2026-08-05T07:25:37.444Z",
+  "collector_status": "PARTIAL",
+  "main_thread_acceptance": "BOUNDED_CURRENT_OWNER_OBSERVATION",
+  "packet_usable_for_main_thread_ingest": true,
+  "canonical_predecessor_advance": false,
+  "execution_QA": {
+    "execution_order_status": "PASS",
+    "invocation_receipt_bijection_status": "PASS",
+    "freeze_invariants_status": "PASS",
+    "settled_candle_filter_status": "PASS",
+    "breadth_transform_status": "PASS",
+    "freeze_count": 1,
+    "post_freeze_call_count": 0,
+    "planned_core_actions": 60,
+    "attempted_core_actions": 60,
+    "core_pass": 57,
+    "core_partial": 3,
+    "core_fail": 0,
+    "core_unavailable": 0
+  },
+  "direct_owner_QA": {
+    "BTC": "PASS",
+    "ETH": "PASS",
+    "ETHBTC": "PASS",
+    "Binance_context": "PASS_23_OF_23",
+    "OKX_crosscheck": "PASS_10_OF_10",
+    "Binance_final": "PASS_11_OF_11"
+  },
+  "breadth_QA": {
+    "supplied_transform": "COINGECKO_TOP100_FILTERED_v3",
+    "raw_count": 100,
+    "deduplicated_count": 100,
+    "included_count": 89,
+    "excluded_count": 11,
+    "advancers": 30,
+    "decliners": 43,
+    "unchanged": 16,
+    "nonzero_advance_ratio": 0.410958904109589,
+    "positive_share_of_full_included_universe": 0.33707865168539325,
+    "median_return_24h_pct": -0.2224719101123595,
+    "membership_hash": "db981da7d5002ac7742419b4bcf7d9c022a5b2ab88165ab971228d587aa6a739",
+    "locked_scoring_owner": "BREADTH_FILTER_TOP100_EXCLUSIONS_v1_1",
+    "last_locked_owner_included_count": 70,
+    "method_compatible_with_locked_owner": false,
+    "scored_gate_permission": "NOT_AUTHORIZED",
+    "reason": "UNIVERSE_AND_DENOMINATOR_DIFFER_FROM_LOCKED_V1_1_OWNER"
+  },
+  "ETF_QA": {
+    "session": "2026-08-04",
+    "BTC_status": "PARTIAL_NUMERIC_VALUE_UNRESOLVED",
+    "BTC_value_usd_m": null,
+    "ETH_status": "PASS",
+    "ETH_value_usd_m": 53.1,
+    "ETH_reproduced_windows_usd_m": {
+      "three_session": 50.2,
+      "five_session": 30.1,
+      "seven_session": 51.2,
+      "ten_session": 79.5
+    },
+    "cross_asset_same_session_interpretation_permission": "NOT_AUTHORIZED_UNTIL_BTC_VALUE_RESOLVED"
+  },
+  "longitudinal_QA": {
+    "same_thread_predecessor_available": false,
+    "comparison_status": "NOT_AVAILABLE",
+    "reference_for_diagnostic_delta_only": "run_18f02b7aa0334c9e",
+    "diagnostic_deltas_pct": {
+      "BTC": 0.922791,
+      "ETH": 0.548507,
+      "ETHBTC": -0.444901,
+      "BTC_OI": -0.797695,
+      "ETH_OI": -1.402462
+    },
+    "authority": "BOUNDED_DIAGNOSTIC_NOT_CANONICAL_TRANSITION"
+  },
+  "missing_or_partial": [
+    "BTC_ETF_2026_08_04_NUMERIC_VALUE",
+    "STABLECOIN_GLOBAL_TOTAL",
+    "OPTIONAL_DEFI_TOTAL",
+    "LONG_WINDOW_REALIZED_VOLATILITY",
+    "ACCEPTED_SAME_THREAD_PREDECESSOR"
+  ],
+  "framework_result": {
+    "rotation": "NO_ROTATION",
+    "rebuy": "LOCKED",
+    "new_entry": "NOT_ACTIVE",
+    "large_caps": "WATCH_ONLY",
+    "operational_risk_class": "DO_NOT_ADD_RISK",
+    "canonical_state_change": "NONE",
+    "portfolio_action": "NONE",
+    "A_class_increment": 0,
+    "shadow_dual_run_increment": 0
+  },
+  "final_QA_status": "PASS_FOR_BOUNDED_CURRENT_OWNER_OBSERVATION_WITH_BREADTH_GATE_QUARANTINE_AND_PARTIAL_ETF"
+}
