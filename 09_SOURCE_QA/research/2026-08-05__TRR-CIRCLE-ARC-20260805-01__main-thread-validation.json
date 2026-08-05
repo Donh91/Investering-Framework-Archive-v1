@@ -1,0 +1,96 @@
+{
+  "schema_version": "TARGETED_RESEARCH_MAIN_THREAD_VALIDATION_v1",
+  "research_request_id": "TRR-CIRCLE-ARC-20260805-01",
+  "validated_at_utc": "2026-08-05T20:24:00Z",
+  "source_file": {
+    "filename": "TRR CIRCLE ARC 20260805 01.md",
+    "size_bytes": 39019,
+    "reported_sha256": "defc541153795a0a95b4c4883ec6496bc152511e541d88159790f2d25b0687f6",
+    "recomputed_sha256": "defc541153795a0a95b4c4883ec6496bc152511e541d88159790f2d25b0687f6",
+    "hash_status": "PASS_EXACT_MATCH"
+  },
+  "overall_status": "PASS_WITH_VALUE_QUARANTINE_AND_SENSOR_DESIGN_RATIFICATION",
+  "scope_compliance": {
+    "no_market_direction": true,
+    "no_portfolio_action": true,
+    "no_canonical_state_claim": true,
+    "counterevidence_included": true,
+    "unresolved_provenance_explicit": true,
+    "falsification_plan_present": true
+  },
+  "primary_source_crosschecks": [
+    {
+      "claim": "Circle received final OCC approval to establish Circle National Trust",
+      "status": "PASS",
+      "source": "Circle official press release dated 2026-07-10",
+      "crosscheck_detail": "First National Digital Currency Bank, N.A.; initial fiduciary custody for Circle and affiliates; reserve management explicitly described as a future capability."
+    },
+    {
+      "claim": "Visa adjusted stablecoin methodology uses a single-direction filter and excludes unlabeled addresses exceeding 1000 transactions or USD 10M in a rolling 30-day period",
+      "status": "PASS",
+      "source": "Visa Onchain Analytics methodology page",
+      "crosscheck_detail": "Methodology and threshold wording materially match the report."
+    },
+    {
+      "claim": "Validator or design-partner participation is non-exclusive and should not be treated as realized economic activity",
+      "status": "PASS_AS_GOVERNANCE_INFERENCE",
+      "source": "Official Visa disclosures document participation across multiple blockchain networks",
+      "crosscheck_detail": "This supports de-weighting a named validator as an independent adoption dimension."
+    },
+    {
+      "claim": "Arc public mainnet is planned for 2026-09-16 with the stated founding-validator list",
+      "status": "REPORT_DIRECT_PENDING_RAW_PRIMARY_RELEASE_READBACK",
+      "source": "Research report cites BusinessWire identifier 20260805327212",
+      "crosscheck_detail": "Accepted as a stated-plan research input, not as an achieved milestone or canonical fact owner."
+    }
+  ],
+  "material_discrepancies": [
+    {
+      "item": "GLOBAL_STABLECOIN_SUPPLY_TOTAL",
+      "research_report_value_usd_billion": 305.9,
+      "main_thread_public_defillama_overview_value_usd_billion": 300.384,
+      "same_general_retrieval_day": true,
+      "status": "QUARANTINED_DEFINITION_OR_ENDPOINT_DISCREPANCY",
+      "possible_causes": [
+        "different endpoint aggregation universe",
+        "different peg-type inclusion rules",
+        "bridged or double-counted representations",
+        "timestamp mismatch",
+        "research extraction or transformation error"
+      ],
+      "decision": "DO_NOT_ACCEPT_PRECISE_GLOBAL_TOTAL_UNTIL_DETERMINISTIC_COLLECTOR_REPLICATION"
+    },
+    {
+      "item": "USDC_CIRCULATION",
+      "research_report_value_usd_billion_range": [72.0, 72.2],
+      "main_thread_public_defillama_overview_value_usd_billion": 72.244,
+      "status": "DIRECTIONALLY_CONSISTENT_NOT_CANONICAL",
+      "decision": "SENSOR_DESIGN_MAY_PROCEED_BUT_BASELINE_MUST_BE_RECOLLECTED"
+    },
+    {
+      "item": "VISA_USDC_ADJUSTED_SHARE",
+      "research_report_june_pct_approx": 67,
+      "research_report_h1_pct_approx": 70,
+      "status": "METHOD_VERIFIED_NUMERIC_VALUES_SECONDARY_ONLY",
+      "decision": "SHADOW_ONLY_DO_NOT_USE_AS_GATE"
+    }
+  ],
+  "claim_adjudication": {
+    "TRR-01_CIRCLE_Q2": "CONTEXT_ACCEPTED_PENDING_10Q",
+    "TRR-02_ARC_LAUNCH_DATE": "PREREGISTER_EVENT_DATE_ONLY",
+    "TRR-03_VALIDATOR_COHORT": "WATCH_CLUSTER_NOT_EVIDENCE_COUNT",
+    "TRR-04_OCC_CHARTER": "STRUCTURAL_CONTEXT_ACCEPTED_NO_SHORT_TERM_LIQUIDITY_EFFECT",
+    "TRR-05_VISA_METRIC": "PARTIALLY_FALSIFIED_AND_SHADOW_ONLY",
+    "TRR-06_STABLECOIN_SENSOR": "DESIGN_ACCEPTED_VALUES_QUARANTINED",
+    "TRR-07_BASE_RATE": "PRIOR_ACCEPTED_WITH_SMALL_N_AND_TVL_LIMITATIONS",
+    "TRR-08_TRANSMISSION_VERDICT": "ACCEPTED_AS_RESEARCH_VERDICT_NO_CANONICAL_EFFECT"
+  },
+  "framework_effect": {
+    "canonical_state_change": "NONE",
+    "market_state_change": "NONE",
+    "rotation_change": "NONE",
+    "rebuy_change": "NONE",
+    "entry_change": "NONE",
+    "portfolio_effect": "NONE"
+  }
+}
