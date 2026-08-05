@@ -18,7 +18,7 @@ concurrency:
 jobs:
   operate:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 22
     steps:
       - uses: actions/checkout@v4
         with:
@@ -45,6 +45,15 @@ jobs:
           mkdir -p "$DEST"
           cp runtime/farside-etf/*.json "$DEST/"
           cp runtime/farside-etf/owner_snapshot.json research/etf_owner/LATEST_FARSIDE_ETF_OWNER.json
+      - name: Sync independent experiment execution receipts
+        continue-on-error: true
+        run: |
+          mkdir -p research/experiment_lifecycle/receipts
+          python scripts/experiments/sync_experiment_receipts.py \
+            --manifest-url https://raw.githubusercontent.com/Donh91/Eksperimenter-framework-/main/experiment_bridge/LATEST_EXECUTION_RECEIPT_MANIFEST.json \
+            --receipt-root research/experiment_lifecycle/receipts \
+            --sync-output research/experiment_lifecycle/LATEST_EXPERIMENT_RECEIPT_SYNC.json \
+            --allow-unavailable
       - name: Mature due outcomes under strict contract
         run: |
           mkdir -p research/framework_memory/{forecast_memory,outcome_memory}
@@ -73,9 +82,9 @@ jobs:
         run: |
           git config user.name 'framework-operations-bot'
           git config user.email 'framework-operations-bot@users.noreply.github.com'
-          git add research/data_ping_bridge research/etf_owner research/framework_memory research/architecture_health research/framework_handoffs
+          git add research/data_ping_bridge research/etf_owner research/framework_memory research/experiment_lifecycle research/architecture_health research/framework_handoffs
           if git diff --cached --quiet; then exit 0; fi
-          git commit -m "ops: update integrated learning operations ${GITHUB_RUN_ID}"
+          git commit -m "ops: update integrated learning and experiment receipts ${GITHUB_RUN_ID}"
           pushed=false
           for attempt in 1 2 3; do
             git rebase --abort 2>/dev/null || true
