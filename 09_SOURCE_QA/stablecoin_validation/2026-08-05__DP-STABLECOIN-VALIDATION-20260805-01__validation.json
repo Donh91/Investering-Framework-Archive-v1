@@ -1,0 +1,115 @@
+{
+  "schema_version": "TARGETED_STABLECOIN_DEFINITION_VALIDATION_v1",
+  "request_id": "DP-STABLECOIN-VALIDATION-20260805-01",
+  "validated_at_utc": "2026-08-05T21:21:16Z",
+  "qa_verdict": "DEFINITION_UNRESOLVED",
+  "method_nomination_authorized": false,
+  "canonical_sensor_activation": "NOT_AUTHORIZED",
+  "reported_research_value": {
+    "field": "GLOBAL_STABLECOIN_SUPPLY",
+    "value_usd": 305900000000,
+    "source_timestamp": null,
+    "field_path": null,
+    "payload_sha256": null,
+    "status": "UNVERIFIED_REPORTED_INPUT"
+  },
+  "direct_rendered_observations": [
+    {
+      "field": "GLOBAL_STABLECOIN_MARKET_CAP_PUBLIC_PAGE",
+      "value_usd": 300384000000,
+      "source": "DefiLlama public stablecoins page",
+      "source_timestamp": null,
+      "retrieval_time_upper_bound_utc": "2026-08-05T21:21:16Z",
+      "payload_sha256": null,
+      "status": "DIRECT_RENDERED_QA_ONLY"
+    },
+    {
+      "field": "USDC_MARKET_CAP_PUBLIC_PAGE",
+      "value_usd": 72244000000,
+      "source": "DefiLlama public stablecoins page",
+      "source_timestamp": null,
+      "retrieval_time_upper_bound_utc": "2026-08-05T21:21:16Z",
+      "payload_sha256": null,
+      "status": "DIRECT_RENDERED_QA_ONLY"
+    },
+    {
+      "field": "USDC_CIRCULATION_ISSUER_DISCLOSURE",
+      "value_usd": 72000000000,
+      "source": "Circle public USDC page",
+      "value_date": "2026-08-03",
+      "status": "DIRECT_ISSUER_CROSSCHECK_NOT_SAME_TIMESTAMP"
+    }
+  ],
+  "discrepancy": {
+    "difference_usd": 5516000000,
+    "difference_percent_of_public_page": 1.836316181954,
+    "exact_reason_status": "UNRESOLVED",
+    "leading_explanation": "TOTAL_CIRCULATING_NOMINAL_VERSUS_TOTAL_CIRCULATING_USD_PRICE_ADJUSTED",
+    "higher_value_candidate_field": "totalCirculating.peggedUSD",
+    "lower_value_documented_field": "totalCirculatingUSD.peggedUSD"
+  },
+  "support_for_leading_explanation": [
+    "DefiLlama schema exposes both totalCirculating and totalCirculatingUSD by peg type",
+    "DefiLlama SDK uses totalCirculatingUSD.peggedUSD for total stablecoin market cap",
+    "DefiLlama USDC page separately labels Market Cap and Total Circulating"
+  ],
+  "missing_proof": [
+    "RAW_305_9B_PAYLOAD",
+    "305_9B_ENDPOINT_AND_ARGUMENTS",
+    "305_9B_FIELD_PATH",
+    "305_9B_SOURCE_TIMESTAMP",
+    "305_9B_PEG_UNIVERSE",
+    "305_9B_ASSET_MEMBERSHIP",
+    "305_9B_DUPLICATE_RULE",
+    "305_9B_PAYLOAD_SHA256",
+    "RAW_SETTLED_DAILY_HISTORY"
+  ],
+  "endpoint_results": [
+    {
+      "endpoint": "stablecoins.llama.fi/stablecoins?includePrices=false",
+      "status": "UNAVAILABLE_RESPONSE_TOO_LARGE"
+    },
+    {
+      "endpoint": "stablecoins.llama.fi/stablecoincharts/all",
+      "status": "UNAVAILABLE_TOOL_FAILURE_OR_RESPONSE_TOO_LARGE"
+    },
+    {
+      "endpoint": "stablecoins.llama.fi/stablecoin/2",
+      "status": "PARTIAL_BODY_EXCEEDED_LIMIT"
+    },
+    {
+      "endpoint": "defillama.com/stablecoins",
+      "status": "PASS_RENDERED_QA_ONLY"
+    },
+    {
+      "endpoint": "circle.com/usdc",
+      "status": "PASS_ISSUER_CROSSCHECK"
+    }
+  ],
+  "accepted_calculations": {
+    "USDC_public_page_market_cap_share_pct": 24.050548631086,
+    "USDC_NET_ISSUANCE_1D": null,
+    "USDC_NET_ISSUANCE_7D": null,
+    "USDC_NET_ISSUANCE_30D": null,
+    "GLOBAL_STABLECOIN_NET_CHANGE_1D": null,
+    "GLOBAL_STABLECOIN_NET_CHANGE_7D": null,
+    "GLOBAL_STABLECOIN_NET_CHANGE_30D": null
+  },
+  "method_decisions": {
+    "GLOBAL_STABLECOIN_SUPPLY_TOTAL_v1": "WITHHELD",
+    "USDC_NET_ISSUANCE_v1": "WITHHELD",
+    "USDC_SUPPLY_SHARE_v1": "WITHHELD"
+  },
+  "fail_closed_rules_applied": [
+    "Conflicting totals were not averaged",
+    "No value was selected because it matched expectation",
+    "Nominal supply and price-adjusted market cap were not merged",
+    "Missing daily values were not forward-filled",
+    "Rendered text was not misrepresented as raw-payload hash evidence"
+  ],
+  "framework_effect": {
+    "market_state_change": "NONE",
+    "canonical_state_change": "NONE",
+    "portfolio_effect": "NONE"
+  }
+}
