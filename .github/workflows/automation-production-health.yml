@@ -94,6 +94,15 @@ jobs:
           else
             gh issue comment "$existing" --body "Health remains RED at run ${GITHUB_RUN_ID}. See latest committed health report."
           fi
+      - name: Record observed fleet status without failing the observer
+        shell: bash
+        run: |
+          if [ "${{ steps.health.outputs.exit_code }}" = "0" ]; then
+            echo "### Fleet status: GREEN or AMBER" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "### Fleet status: RED" >> "$GITHUB_STEP_SUMMARY"
+            echo "The health observer completed successfully, durably published the RED report and notified the incident channel." >> "$GITHUB_STEP_SUMMARY"
+          fi
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -103,6 +112,3 @@ jobs:
             research/architecture_health/LATEST_AUTOMATION_HEALTH.md
           retention-days: 14
           if-no-files-found: error
-      - name: Enforce production health result after durable publication
-        if: steps.health.outputs.exit_code != '0'
-        run: exit 2

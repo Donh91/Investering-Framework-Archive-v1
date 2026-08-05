@@ -118,6 +118,8 @@ def call_api(api_key: str, payload: dict[str, Any]) -> dict[str, Any]:
 
 
 def extract_output(response: dict[str, Any]) -> dict[str, Any]:
+    if response.get("status") == "incomplete":
+        raise ValueError("response_incomplete:" + json.dumps(response.get("incomplete_details", {}), sort_keys=True))
     text = response.get("output_text")
     if not text:
         parts: list[str] = []
@@ -133,6 +135,23 @@ def extract_output(response: dict[str, Any]) -> dict[str, Any]:
     return value
 
 
+def usage_of(response: dict[str, Any]) -> tuple[int, int]:
+    usage = response.get("usage") if isinstance(response.get("usage"), dict) else {}
+    return int(usage.get("input_tokens", 0) or 0), int(usage.get("output_tokens", 0) or 0)
+
+
+def blocked_output(reason: str) -> dict[str, Any]:
+    return {
+        "status": "BLOCKED",
+        "summary": "API analysis was not accepted because the structured response was incomplete or invalid.",
+        "evidence_for": [],
+        "evidence_against": [],
+        "uncertainties": [reason],
+        "hypotheses": [],
+        "forecast_candidates": [],
+    }
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--task", required=True);parser.add_argument("--registry", type=Path, required=True);parser.add_argument("--prompt-file", type=Path, required=True)
@@ -143,16 +162,36 @@ def main() -> None:
     allowed_prefix = str(task_cfg.get("allowed_write_prefix") or "")
     if not allowed_prefix or args.intended_write_prefix != allowed_prefix: raise SystemExit("allowed_write_prefix_mismatch")
     prompt = args.prompt_file.read_text();context = json.loads(args.context_file.read_text());request_payload = build_request(args.task, task_cfg, prompt, context);request_hash = sha256_bytes(canonical_bytes(request_payload));args.output_dir.mkdir(parents=True, exist_ok=True)
+    responses: list[dict[str, Any]] = []
+    errors: list[str] = []
+    output: dict[str, Any] | None = None
     if args.dry_run:
-        response = {"id": "dry-run", "usage": {"input_tokens": 0, "output_tokens": 0}, "output_text": json.dumps({"status": "BLOCKED", "summary": "Dry run only", "evidence_for": [], "evidence_against": [], "uncertainties": ["no_api_call"], "hypotheses": [], "forecast_candidates": []})}
+        responses = [{"id": "dry-run", "usage": {"input_tokens": 0, "output_tokens": 0}, "output_text": json.dumps(blocked_output("no_api_call"))}]
+        output = extract_output(responses[0])
     else:
         api_key = os.environ.get("OPENAI_API_KEY")
         if not api_key: raise SystemExit("OPENAI_API_KEY_missing")
-        response = call_api(api_key, request_payload)
-    output = extract_output(response);usage = response.get("usage", {});input_tokens = int(usage.get("input_tokens", 0));output_tokens = int(usage.get("output_tokens", 0));cost = estimate_cost(task_cfg["model"], input_tokens, output_tokens)
+        for attempt in range(2):
+            payload = dict(request_payload)
+            if attempt == 1:
+                payload["max_output_tokens"] = min(max(int(task_cfg["max_output_tokens"]) * 2, 2400), 5000)
+            response = call_api(api_key, payload)
+            responses.append(response)
+            try:
+                output = extract_output(response)
+                break
+            except (ValueError, json.JSONDecodeError) as exc:
+                errors.append(f"attempt_{attempt + 1}:{type(exc).__name__}:{str(exc)[:240]}")
+    input_tokens = output_tokens = 0
+    for response in responses:
+        i, o = usage_of(response);input_tokens += i;output_tokens += o
+    cost = estimate_cost(task_cfg["model"], input_tokens, output_tokens)
     if cost > float(registry["single_run_hard_stop_usd"]): raise SystemExit(f"single_run_cost_exceeded:{cost}")
+    accepted = output is not None
+    if output is None:
+        output = blocked_output("API_OUTPUT_INVALID_AFTER_BOUNDED_RETRY")
     output_bytes = canonical_bytes(output)
-    receipt = {"contract": "API_AGENT_RECEIPT_v3", "task": args.task, "model": task_cfg["model"], "reasoning_effort": task_cfg["reasoning_effort"], "request_hash": request_hash, "context_hash": sha256_bytes(canonical_bytes(context)), "prompt_hash": sha256_bytes(prompt.encode()), "output_hash": sha256_bytes(output_bytes), "response_id": response.get("id"), "input_tokens": input_tokens, "output_tokens": output_tokens, "estimated_cost_usd": cost, "created_unix": int(time.time()), "allowed_write_prefix": allowed_prefix, "intended_write_prefix": args.intended_write_prefix, "forecast_candidate_count": len(output.get("forecast_candidates", [])), "untrusted_input_envelope": True, "authority": registry["authority"]}
+    receipt = {"contract": "API_AGENT_RECEIPT_v3", "task": args.task, "model": task_cfg["model"], "reasoning_effort": task_cfg["reasoning_effort"], "request_hash": request_hash, "context_hash": sha256_bytes(canonical_bytes(context)), "prompt_hash": sha256_bytes(prompt.encode()), "output_hash": sha256_bytes(output_bytes), "response_id": responses[-1].get("id") if responses else None, "response_ids": [r.get("id") for r in responses], "attempt_count": len(responses), "input_tokens": input_tokens, "output_tokens": output_tokens, "estimated_cost_usd": cost, "created_unix": int(time.time()), "status": "PASS" if accepted else "API_OUTPUT_INVALID", "parse_errors": errors, "allowed_write_prefix": allowed_prefix, "intended_write_prefix": args.intended_write_prefix, "forecast_candidate_count": len(output.get("forecast_candidates", [])), "untrusted_input_envelope": True, "authority": registry["authority"]}
     (args.output_dir / "output.json").write_bytes(output_bytes);(args.output_dir / "receipt.json").write_bytes(canonical_bytes(receipt));print(json.dumps(receipt, sort_keys=True))
 
 if __name__ == "__main__": main()
