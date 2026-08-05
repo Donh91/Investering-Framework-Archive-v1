@@ -8,8 +8,10 @@ classification: PASS_WITH_MAIN_THREAD_CORRECTIONS_AND_WINDOW_QUARANTINE
 source_record_written: true
 framework_reconciliation_written: true
 qa_record_written: true
-latest_OTA_status_pending_update: true
-ETF_owner_pending_update: true
+latest_OTA_status_updated: true
+ETF_owner_updated: true
+prospective_accumulation_updated: true
+remote_readback_verified: true
 canonical_predecessor_changed: false
 prospective_accumulation_increment: 0
 portfolio_effect: NONE
@@ -36,3 +38,4 @@ portfolio_effect: NONE
 - `09_SOURCE_QA/claude_ota/2026-08-05__standalone-ota-btc-etf-4aug-inprogress-ethbtc__reconciliation.json`
 - `04_MARKET_LEARNING/claude_ota/LATEST_CLAUDE_OTA_STATUS_v1.json`
 - `04_MARKET_LEARNING/etf/LATEST_ETF_FLOW_STATUS_v1.json`
+- `04_MARKET_LEARNING/backtests/framework_backtest_readiness_build_v1/architecture/PROSPECTIVE_ACCUMULATION_STATUS_v1.json`
