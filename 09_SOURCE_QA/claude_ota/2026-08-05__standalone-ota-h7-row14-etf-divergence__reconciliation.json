@@ -1,0 +1,99 @@
+{
+  "schema_version": "CLAUDE_OTA_MAIN_THREAD_RECONCILIATION_v1",
+  "source_runs": [
+    "2026-08-04T22:26:21.108Z",
+    "2026-08-05T05:09:21.113Z"
+  ],
+  "operating_mode": "STANDALONE_OTA_NO_REFERENCE_BRIDGE",
+  "main_thread_reference_bounded_run_id": "run_18f02b7aa0334c9e",
+  "acceptance": "EXPERIMENT_EVIDENCE_ETF_STRUCTURE_PROVENANCE_RESOLUTION_AND_SOURCE_QA_WITH_ROLLING_SUM_CORRECTIONS",
+  "accepted_items": [
+    "H7_ROW_14_SIXTH_POST_MATURITY_EXTENSION",
+    "H7_COND2_1_OF_3_NOT_MET",
+    "H7_SLOPE_NEGATIVE_0_296_PCT_PER_SESSION",
+    "H7_ARC_NET_MINUS_0_55_PERCENT",
+    "UTC_SETTLE_2026_08_04",
+    "F1_NINE_POST_WINDOW_SESSIONS_ZERO_SETTLED_BREACHES",
+    "BTC_ETF_2026_08_03_TOTAL_CORROBORATED",
+    "ETH_ETF_2026_08_03_TOTAL_CORROBORATED",
+    "BTC_ETF_2026_08_03_ISSUER_STRUCTURE_AS_USER_SUPPLIED_FRESH_PAYLOAD",
+    "ETH_ETF_2026_08_03_ISSUER_STRUCTURE_AS_USER_SUPPLIED_FRESH_PAYLOAD",
+    "BTC_ETF_2026_07_31_REVERIFICATION_AS_USER_SUPPLIED_PROVENANCE_RESOLUTION",
+    "ETH_ETF_2026_08_01_PHANTOM_SESSION_CANCELLED",
+    "H_SRC_02_RETIRED_OPERATIONALLY_RESOLVED"
+  ],
+  "rejected_or_quarantined_items": [
+    {
+      "item": "OTA_BTC_5_SESSION_108_3",
+      "reason": "DIRECT_ROW_LEDGER_REPRODUCES_120_2"
+    },
+    {
+      "item": "OTA_BTC_20_SESSION_MINUS_100_8",
+      "reason": "ONLY_14_OWNER_ROWS_AVAILABLE"
+    },
+    {
+      "item": "OTA_ETH_3_SESSION_10_6",
+      "reason": "DIRECT_ROW_LEDGER_REPRODUCES_9_9"
+    },
+    {
+      "item": "OTA_ETH_5_SESSION_MINUS_13_7",
+      "reason": "DIRECT_ROW_LEDGER_REPRODUCES_MINUS_13_6"
+    },
+    {
+      "item": "OTA_ETH_7_SESSION_MINUS_16_9",
+      "reason": "DIRECT_ROW_LEDGER_REPRODUCES_MINUS_72_6"
+    },
+    {
+      "item": "ISSUER_ROWS_AS_INDEPENDENT_MAIN_THREAD_DIRECT_EVIDENCE",
+      "reason": "NOT_INDEPENDENTLY_RETRIEVED_BY_MAIN_THREAD"
+    }
+  ],
+  "H7_QA": {
+    "latest_extension_row": 14,
+    "post_maturity_extension_number": 6,
+    "latest_close": 0.02917,
+    "rolling_slope_pct_per_session": -0.296,
+    "historical_score_change": "NONE",
+    "lapse_rule": "UNDEFINED_NOT_INVENTED",
+    "retire_rule": "UNDEFINED_NOT_INVENTED",
+    "retrigger_rule": "UNDEFINED_NOT_INVENTED"
+  },
+  "F1_QA": {
+    "historical_score": "NOT_FAILED",
+    "window_closed": true,
+    "rule_basis": "SETTLED_CLOSES",
+    "post_window_sessions": 9,
+    "settled_close_breaches": 0,
+    "score_change": "NONE"
+  },
+  "ETF_QA": {
+    "latest_session": "2026-08-03",
+    "BTC_total_usd_m": 170.1,
+    "ETH_total_usd_m": -11.9,
+    "session_total_authority": "DATA_PING_DIRECT_OWNER",
+    "issuer_detail_authority": "USER_SUPPLIED_CLAUDE_OTA_FRESH_PAYLOAD",
+    "reproduced_windows": {
+      "BTC_3": 137.8,
+      "BTC_5": 120.2,
+      "BTC_7": -131.5,
+      "BTC_10": -84.3,
+      "ETH_3": 9.9,
+      "ETH_5": -13.6,
+      "ETH_7": -72.6,
+      "ETH_10": 63.9
+    },
+    "phantom_session_2026_08_01": "CANCELLED"
+  },
+  "framework_result": {
+    "rotation": "NO_ROTATION",
+    "rebuy": "LOCKED",
+    "new_entry": "NOT_ACTIVE",
+    "large_caps": "WATCH_ONLY",
+    "operational_risk_class": "DO_NOT_ADD_RISK",
+    "canonical_state_change": "NONE",
+    "portfolio_action": "NONE",
+    "A_class_increment": 0,
+    "shadow_dual_run_increment": 0
+  },
+  "final_QA_status": "PASS_WITH_EXPLICIT_ETF_ROLLING_SUM_CORRECTIONS_AND_NO_STATE_CHANGE"
+}
