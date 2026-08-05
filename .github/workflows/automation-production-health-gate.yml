@@ -29,7 +29,7 @@ jobs:
       - name: Validate main writer configuration
         run: python scripts/health/check_writer_trigger_safety.py --workflow-root .github/workflows --output /tmp/writer-trigger-safety.json
       - name: Run health unit tests
-        run: python -m pytest -q tests/health/test_automation_production_health.py tests/health/test_architecture_health_v2_1.py tests/health/test_operations_dashboard.py tests/health/test_writer_trigger_safety_v2.py
+        run: python -m pytest -q tests/health/test_automation_production_health.py tests/health/test_architecture_health_v2_1.py tests/health/test_operations_dashboard.py tests/health/test_writer_trigger_safety_v2.py tests/health/test_observer_and_orchestration_semantics.py
       - name: Run static repository inventory without API
         run: |
           python scripts/health/build_automation_health.py --workflow-root .github/workflows --json-output /tmp/automation-health.json --md-output /tmp/automation-health.md || code=$?
