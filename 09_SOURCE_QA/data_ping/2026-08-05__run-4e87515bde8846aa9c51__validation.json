@@ -1,0 +1,126 @@
+{
+  "schema_version": "DATA_PING_MAIN_THREAD_QA_v1",
+  "run_id": "run-4e87515bde8846aa9c51",
+  "snapshot_id": "snap-bafd43eb4ab1fa90c0cb",
+  "snapshot_utc": "2026-08-05T09:10:24.002Z",
+  "collector_version": "15.2.0",
+  "collector_status": "PARTIAL",
+  "main_thread_acceptance": "BOUNDED_CURRENT_OWNER_OBSERVATION",
+  "packet_usable_for_main_thread_ingest": true,
+  "canonical_predecessor_advance": false,
+  "execution_QA": {
+    "execution_order_status": "PASS",
+    "status_reconciliation": "PASS",
+    "receipt_bijection_status": "PASS",
+    "freeze_invariants_status": "PASS",
+    "settled_candle_filter_status": "PASS",
+    "breadth_transform_status": "PASS",
+    "freeze_count": 1,
+    "post_freeze_call_count": 0,
+    "planned_core_actions": 60,
+    "attempted_core_actions": 60,
+    "core_pass": 57,
+    "core_partial": 2,
+    "core_stale": 1,
+    "core_fail": 0,
+    "core_unavailable": 0
+  },
+  "direct_owner_QA": {
+    "BTC": "PASS",
+    "ETH": "PASS",
+    "ETHBTC": "PASS",
+    "Binance_context": "PASS_23_OF_23",
+    "OKX_crosscheck": "PASS_10_OF_10",
+    "Binance_final": "PASS_11_OF_11",
+    "ETF_BTC": "PASS_2026_08_04_211_5M",
+    "ETF_ETH": "PASS_2026_08_04_53_1M"
+  },
+  "ETF_QA": {
+    "session": "2026-08-04",
+    "BTC_value_usd_m": 211.5,
+    "ETH_value_usd_m": 53.1,
+    "BTC_minus_ETH_usd_m": 158.4,
+    "same_session_comparison_permission": "AUTHORIZED",
+    "reproduced_windows_usd_m": {
+      "BTC": {
+        "three_session": 116.2,
+        "five_session": 381.4,
+        "seven_session": 320.1,
+        "ten_session": -76.0,
+        "fifteen_session": 673.1
+      },
+      "ETH": {
+        "three_session": 50.2,
+        "five_session": 30.1,
+        "seven_session": 51.2,
+        "ten_session": 79.5,
+        "fifteen_session": 217.6
+      }
+    },
+    "interpretation_limit": "POSITIVE_DUAL_FLOW_BUT_NO_AUM_NORMALIZATION_AND_NO_ETHBTC_CONFIRMATION"
+  },
+  "breadth_QA": {
+    "supplied_transform": "COINGECKO_TOP100_FILTERED_v3",
+    "supplied_filter": "BREADTH_FILTER_TOP100_EXCLUSIONS_v1",
+    "included_count": 89,
+    "advancers": 36,
+    "decliners": 39,
+    "unchanged": 14,
+    "positive_share_full_universe": 0.4044943820224719,
+    "median_return_24h_pct": 0.0,
+    "equal_weight_mean_return_24h_pct": 0.035955056179775305,
+    "membership_hash": "db981da7d5002ac7742419b4bcf7d9c022a5b2ab88165ab971228d587aa6a739",
+    "prior_same_hash_positive_share": 0.33707865168539325,
+    "directional_change_percentage_points": 6.741573033707865,
+    "locked_scoring_owner": "BREADTH_FILTER_TOP100_EXCLUSIONS_v1_1",
+    "method_compatible_with_locked_owner": false,
+    "scored_gate_permission": "NOT_AUTHORIZED",
+    "reason": "V3_USES_SUPERSEDED_V1_EXCLUSION_SET_AND_DIFFERS_FROM_LOCKED_V1_1_OWNER"
+  },
+  "flow_and_leverage_QA": {
+    "BTC_spot_buy_share_all_1h_4h_12h_above_50": true,
+    "ETH_spot_buy_share_1h_above_50": true,
+    "ETH_spot_buy_share_4h_12h_above_50": false,
+    "ETHBTC_spot_buy_share_1h_4h_above_50": true,
+    "ETHBTC_spot_buy_share_12h_above_50": false,
+    "BTC_OI_change_24h_pct": -1.1951222505931058,
+    "ETH_OI_change_24h_pct": -0.6406277801991656,
+    "BTC_OI_change_vs_prior_bounded_pct": -0.6533230506804655,
+    "ETH_OI_change_vs_prior_bounded_pct": 0.3858365660163843,
+    "ETH_global_long_short": 2.3841,
+    "result": "SHORT_TERM_ETH_AND_ETHBTC_REBOUND_WITH_PERSISTENT_12H_WEAKNESS_AND_LONG_HEAVY_ETH_POSITIONING"
+  },
+  "longitudinal_QA": {
+    "same_thread_predecessor_available": false,
+    "comparison_status": "NOT_AVAILABLE",
+    "reference_for_diagnostic_delta_only": "run_876595b84c284b3eb719f8139f56882a",
+    "diagnostic_deltas_pct": {
+      "BTC": -0.04482645524326312,
+      "ETH": 0.14614873980169918,
+      "ETHBTC": 0.2750085940185665,
+      "BTC_OI": -0.6533230506804655,
+      "ETH_OI": 0.3858365660163843
+    },
+    "authority": "BOUNDED_DIAGNOSTIC_NOT_CANONICAL_TRANSITION"
+  },
+  "missing_or_partial": [
+    "ACCEPTED_SAME_THREAD_PREDECESSOR",
+    "STABLECOIN_GLOBAL_TOTAL",
+    "OPTIONAL_DEFI_TOTAL",
+    "LONG_WINDOW_REALIZED_VOLATILITY",
+    "CFGI_BTC_FRESHNESS"
+  ],
+  "framework_result": {
+    "rotation": "NO_ROTATION",
+    "rebuy": "LOCKED",
+    "new_entry": "NOT_ACTIVE",
+    "large_caps": "WATCH_ONLY",
+    "operational_risk_class": "DO_NOT_ADD_RISK",
+    "risk_substate": "BTC_LED_REPAIR_WITH_DUAL_ETF_INFLOWS_AND_SHORT_TERM_ETHBTC_REBOUND_BUT_NO_CONFIRMED_TRANSMISSION",
+    "canonical_state_change": "NONE",
+    "portfolio_action": "NONE",
+    "A_class_increment": 0,
+    "shadow_dual_run_increment": 0
+  },
+  "final_QA_status": "PASS_FOR_BOUNDED_CURRENT_OWNER_OBSERVATION_WITH_FULL_ETF_SESSION_AND_BREADTH_GATE_QUARANTINE"
+}
