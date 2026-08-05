@@ -19,11 +19,13 @@ concurrency:
 
 jobs:
   audit:
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: main
           fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
@@ -88,9 +90,7 @@ jobs:
           title="AUTOMATION HEALTH RED"
           existing=$(gh issue list --state open --search "$title in:title" --json number --jq '.[0].number // empty')
           if [ -z "$existing" ]; then
-            gh issue create \
-              --title "$title" \
-              --body-file research/architecture_health/LATEST_AUTOMATION_HEALTH.md
+            gh issue create --title "$title" --body-file research/architecture_health/LATEST_AUTOMATION_HEALTH.md
           else
             gh issue comment "$existing" --body "Health remains RED at run ${GITHUB_RUN_ID}. See latest committed health report."
           fi

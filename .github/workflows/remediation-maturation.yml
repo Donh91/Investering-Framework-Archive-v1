@@ -2,9 +2,9 @@ name: Remediation Maturation Controller
 
 on:
   schedule:
-    - cron: '15 6 * * *'
+    - cron: '45 5 * * *'
       timezone: 'Europe/Copenhagen'
-    - cron: '15 18 * * *'
+    - cron: '45 17 * * *'
       timezone: 'Europe/Copenhagen'
   workflow_dispatch:
 
@@ -17,11 +17,13 @@ concurrency:
 
 jobs:
   mature:
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: main
           fetch-depth: 0
       - uses: actions/setup-python@v5
         with:

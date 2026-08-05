@@ -26,11 +26,13 @@ concurrency:
 
 jobs:
   build:
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 18
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: main
           fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
@@ -65,10 +67,12 @@ jobs:
           git add 03_DAILY_CAPTURE_LOGS/weekly_close 03_DAILY_CAPTURE_LOGS/cfgi_weekly
           if git diff --cached --quiet; then exit 0; fi
           git commit -m "data: add ${{ steps.mode.outputs.mode }} weekly market close and CFGI handoff"
+          pushed=false
           for attempt in 1 2 3; do
             git rebase --abort 2>/dev/null || true
-            git pull --rebase origin main && git push origin HEAD:main && break
+            if git pull --rebase origin main && git push origin HEAD:main; then pushed=true; break; fi
             sleep $((attempt * 5))
           done
+          [ "$pushed" = true ]
           git fetch origin main
           git merge-base --is-ancestor HEAD origin/main
