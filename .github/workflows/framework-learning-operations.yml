@@ -62,6 +62,16 @@ jobs:
             --evidence-root 03_DAILY_CAPTURE_LOGS/captures \
             --output-root research/framework_memory/outcome_memory \
             --max-evidence-lag-hours 24
+      - name: Refresh experiment registry after receipt sync and maturation
+        run: |
+          mkdir -p research/experiment_lifecycle/{candidates,observations,receipts}
+          python scripts/experiments/rebuild_experiment_registry.py \
+            --candidate-root research/experiment_lifecycle/candidates \
+            --observation-root research/experiment_lifecycle/observations \
+            --forecast-root research/framework_memory/forecast_memory \
+            --outcome-root research/framework_memory/outcome_memory \
+            --receipt-root research/experiment_lifecycle/receipts \
+            --output research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json
       - name: Build architecture and automation health
         run: |
           python scripts/health/build_architecture_health.py \
