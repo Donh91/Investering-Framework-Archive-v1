@@ -1,7 +1,8 @@
+import json
 import unittest
 from pathlib import Path
 
-from scripts.api_agent.api_gateway import build_request, estimate_cost, load_registry, validate_output
+from scripts.api_agent.api_gateway import blocked_output, build_request, estimate_cost, extract_output, load_registry, validate_output
 
 REGISTRY = Path('research/api_agent/API_TASK_REGISTRY_v1.json')
 
@@ -12,6 +13,8 @@ def valid_output():
 class ApiGatewayTests(unittest.TestCase):
     def test_registry_is_shadow_only(self):
         data=load_registry(REGISTRY);self.assertEqual(data['status'],'ACTIVE_SHADOW_ONLY');self.assertFalse(data['authority']['portfolio_action']);self.assertFalse(data['authority']['framework_state_change'])
+    def test_daily_output_budget_can_hold_strict_schema(self):
+        data=load_registry(REGISTRY);self.assertGreaterEqual(data['tasks']['DAILY_DIRECTOR_SHADOW']['max_output_tokens'],2000)
     def test_cost_estimate(self):
         self.assertEqual(estimate_cost('gpt-5.6-luna',1000000,1000000),7.0);self.assertEqual(estimate_cost('gpt-5.6-terra',1000000,1000000),17.5)
     def test_valid_output(self):validate_output(valid_output())
@@ -22,5 +25,12 @@ class ApiGatewayTests(unittest.TestCase):
         with self.assertRaises(ValueError):validate_output(value)
     def test_request_is_store_false_and_current_turn(self):
         data=load_registry(REGISTRY);cfg=data['tasks']['DAILY_DIRECTOR_SHADOW'];request=build_request('DAILY_DIRECTOR_SHADOW',cfg,'test',{'a':1});self.assertFalse(request['store']);self.assertEqual(request['reasoning']['context'],'current_turn');self.assertEqual(request['model'],'gpt-5.6-luna');self.assertIn('forecast_candidates',request['text']['format']['schema']['properties'])
+    def test_incomplete_response_is_rejected_before_json_parse(self):
+        with self.assertRaisesRegex(ValueError,'response_incomplete'):
+            extract_output({'status':'incomplete','incomplete_details':{'reason':'max_output_tokens'},'output_text':'{"status":'})
+    def test_unterminated_json_is_rejected(self):
+        with self.assertRaises(json.JSONDecodeError):extract_output({'output_text':'{"status":"READY"'})
+    def test_failure_marker_is_valid_but_has_no_forecasts(self):
+        value=blocked_output('API_OUTPUT_INVALID_AFTER_BOUNDED_RETRY');validate_output(value);self.assertEqual(value['status'],'BLOCKED');self.assertEqual(value['forecast_candidates'],[])
 
 if __name__=='__main__':unittest.main()
