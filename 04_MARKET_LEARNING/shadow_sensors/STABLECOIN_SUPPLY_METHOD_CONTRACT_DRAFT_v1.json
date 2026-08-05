@@ -1,0 +1,55 @@
+{
+  "schema_version": "STABLECOIN_SUPPLY_METHOD_CONTRACT_DRAFT_v1",
+  "created_at_utc": "2026-08-05T22:47:00Z",
+  "trigger_request": "TRR-CIRCLE-ARC-PROVENANCE-20260805-02",
+  "status": "DRAFT_FAIL_CLOSED_NOT_ACTIVE",
+  "global_sensor": {
+    "candidate_sensor_id": "GLOBAL_STABLECOIN_SUPPLY_TOTAL_v1",
+    "endpoint": "https://stablecoins.llama.fi/stablecoincharts/all",
+    "arguments": null,
+    "selection_rule": "LATEST_COMPLETED_UTC_DAILY_ROW_ONLY",
+    "completed_row_test": "row_date_utc_less_than_current_utc_calendar_date",
+    "primary_field": "totalCirculatingUSD.peggedUSD",
+    "primary_unit": "USD_PRICE_ADJUSTED_MARKET_VALUE",
+    "mandatory_companion_field": "totalCirculating.peggedUSD",
+    "companion_unit": "NOMINAL_USD_PEGGED_UNITS",
+    "in_progress_row_permission": "FORBIDDEN",
+    "raw_payload_sha256_required": true,
+    "repeat_fetch_count": 2,
+    "repeat_fetch_match_rule": "BYTE_IDENTICAL_OR_DOCUMENTED_SOURCE_UPDATE_WITH_SAME_COMPLETED_ROW",
+    "public_page_role": "QA_CROSSCHECK_ONLY",
+    "activation_status": "WITHHELD"
+  },
+  "usdc_issuance_sensor": {
+    "candidate_sensor_id": "USDC_NET_ISSUANCE_v1",
+    "endpoint": "https://stablecoins.llama.fi/stablecoin/2",
+    "selection_rule": "EXACT_COMPLETED_UTC_DAILY_ROWS",
+    "field": "tokens[].circulating.peggedUSD",
+    "windows_days": [1, 7, 30],
+    "nearest_date_substitution": "FORBIDDEN",
+    "forward_fill": "FORBIDDEN",
+    "activation_status": "WITHHELD"
+  },
+  "share_sensor": {
+    "candidate_sensor_id": "USDC_SUPPLY_SHARE_v1",
+    "rule": "NUMERATOR_AND_DENOMINATOR_MUST_SHARE_TIMESTAMP_UNIVERSE_PRICE_BASIS_AND_SETTLEMENT_STATUS",
+    "cross_endpoint_mixing": "FORBIDDEN_UNLESS_EXPLICITLY_RECONCILED_TO_IDENTICAL_DEFINITION",
+    "activation_status": "WITHHELD"
+  },
+  "known_blockers": [
+    "PUBLIC_PAGE_VS_CHART_API_GAP_UNRESOLVED",
+    "ASSET_SUM_VS_CHART_NOMINAL_GAP_UNRESOLVED",
+    "SOURCE_DUPLICATE_RULE_UNDOCUMENTED",
+    "BRIDGED_REPRESENTATION_TREATMENT_NOT_INDEPENDENTLY_VERIFIED",
+    "CHART_ASSET_MEMBERSHIP_NOT_EXPOSED"
+  ],
+  "anti_error_rules": [
+    "NEVER_TREAT_CURRENT_UTC_DAY_ROW_AS_SETTLED",
+    "NEVER_COMBINE_PRICE_ADJUSTED_TOTAL_WITH_NOMINAL_COMPONENT_SHARES",
+    "NEVER_PROMOTE_ROUNDED_RENDERED_PAGE_VALUE_TO_CANONICAL_SENSOR",
+    "NEVER_AVERAGE_CONFLICTING_ENDPOINT_TOTALS",
+    "MISSING_OR_UNRESOLVED_VALUES_REMAIN_NULL"
+  ],
+  "canonical_effect": "NONE",
+  "portfolio_effect": "NONE"
+}
