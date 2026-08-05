@@ -1,16 +1,16 @@
 # Architecture Health
 Status: **RED**
-Generated: 2026-08-04T17:11:14.134022Z
+Generated: 2026-08-05T04:22:47.136267Z
 
 Owners: 0/0 PASS
 Accepted DATA PINGs: 0
 CFGI credits remaining: UNKNOWN
 
 ## Freshness hours
-- capture: 1.5183705616666667
-- daily_director: 1.070315006111111
+- capture: 6.045871185277778
+- daily_director: 12.262815629722223
 - weekly_calibration: UNKNOWN
-- etf_owner: 36.33254450555556
+- etf_owner: 47.525045129166664
 
 ## Blockers
 - NO_WEEKLY_API_OUTPUT_YET
