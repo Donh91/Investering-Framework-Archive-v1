@@ -1,0 +1,23 @@
+name: Remediation Maturation Gate
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/remediation/**'
+      - 'tests/remediation/**'
+      - '.github/workflows/remediation-maturation*.yml'
+      - '00_FMOS/REMEDIATION_MATURATION_ENGINE_v1.md'
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m unittest tests.remediation.test_remediation_maturation -v
+      - run: python -m py_compile scripts/remediation/build_remediation_maturation.py
