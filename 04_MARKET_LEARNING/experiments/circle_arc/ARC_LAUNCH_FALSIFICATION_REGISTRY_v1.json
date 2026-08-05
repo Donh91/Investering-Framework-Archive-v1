@@ -1,0 +1,144 @@
+{
+  "schema_version": "ARC_LAUNCH_FALSIFICATION_REGISTRY_v1",
+  "experiment_id": "ARC_LAUNCH_TRANSMISSION_2026",
+  "preregistered_at_utc": "2026-08-05T20:30:00Z",
+  "trigger_research_request": "TRR-CIRCLE-ARC-20260805-01",
+  "planned_launch_date": "2026-09-16",
+  "experiment_status": "PREREGISTERED_DORMANT_UNTIL_VERIFIED_PUBLIC_LAUNCH",
+  "research_prior": "ANNOUNCED_INFRASTRUCTURE_DOMINANT",
+  "canonical_effect_before_maturity": "NONE",
+  "portfolio_effect_before_maturity": "NONE",
+  "anti_leakage_rules": [
+    "No pre-launch observation may be scored as Arc production activity.",
+    "Named partners count as one announcement cluster until independent operational evidence exists.",
+    "TVL, transaction count, fees and settlement volume are separate dimensions and may not substitute for each other.",
+    "No baseline supplied by the research agent is canonical until reproduced by an approved collector.",
+    "Missing data is UNKNOWN, never zero.",
+    "Incentive-driven deposits must be separated from non-incentivized capital."
+  ],
+  "promotional_dominant_falsifiers": [
+    {
+      "id": "F-C1",
+      "claim": "Arc public mainnet is live no later than 14 days after the stated 2026-09-16 date.",
+      "deadline_utc": "2026-09-30T23:59:59Z",
+      "ratification": "RATIFIED",
+      "pass_condition": "Verified public RPC, explorer and reproducible finalized blocks are available.",
+      "fail_condition": "No verified public mainnet by deadline.",
+      "source_owner": "OFFICIAL_ARC_PLUS_INDEPENDENT_RPC_REPLICATION"
+    },
+    {
+      "id": "F-C2",
+      "claim": "At least 8 of 11 announced external founding validators produce blocks within 30 days of verified launch.",
+      "deadline_basis": "VERIFIED_LAUNCH_PLUS_30D",
+      "ratification": "RATIFIED_WITH_SOURCE_DEPENDENCY",
+      "pass_condition": "At least 8 named external validators have reproducible block-production evidence.",
+      "fail_condition": "Fewer than 8 are observed.",
+      "source_owner": "ARC_EXPLORER_VALIDATOR_SET"
+    },
+    {
+      "id": "F-C3",
+      "claim": "No announced founding validator publicly withdraws before 2026-12-31.",
+      "deadline_utc": "2026-12-31T23:59:59Z",
+      "ratification": "RATIFIED",
+      "pass_condition": "No verified withdrawal.",
+      "fail_condition": "At least one verified withdrawal or explicit non-participation statement.",
+      "source_owner": "PARTNER_PRIMARY_STATEMENTS"
+    },
+    {
+      "id": "F-C4",
+      "claim": "Arc TVL reaches at least USD 200M by day 90.",
+      "deadline_basis": "VERIFIED_LAUNCH_PLUS_90D",
+      "ratification": "RATIFIED_WITH_TVL_LIMITATION",
+      "pass_condition": "Reproducible TVL at or above USD 200M with chain definition and duplicate-asset treatment documented.",
+      "fail_condition": "TVL below USD 200M or no reproducible chain index.",
+      "warning": "TVL is not equivalent to payment or settlement volume.",
+      "source_owner": "DEFILLAMA_PLUS_ARC_CHAIN_REPLICATION"
+    },
+    {
+      "id": "F-C5",
+      "claim": "Arc daily fees reach at least USD 5000 by day 60.",
+      "deadline_basis": "VERIFIED_LAUNCH_PLUS_60D",
+      "ratification": "RATIFIED_WITH_FEE_SOURCE_DEPENDENCY",
+      "pass_condition": "Seven-day median daily fees at or above USD 5000 using a documented fee definition.",
+      "fail_condition": "Seven-day median below USD 5000.",
+      "source_owner": "ARC_EXPLORER_OR_REPRODUCIBLE_CHAIN_INDEX"
+    },
+    {
+      "id": "F-C6",
+      "claim": "BUIDL is deployed on Arc by 2026-12-31.",
+      "deadline_utc": "2026-12-31T23:59:59Z",
+      "ratification": "RATIFIED",
+      "pass_condition": "Verified Arc contract and issuer confirmation with nonzero supply.",
+      "fail_condition": "No verified deployment or zero supply.",
+      "source_owner": "BLACKROCK_OR_SECURITIZE_PLUS_ONCHAIN_CONTRACT"
+    },
+    {
+      "id": "F-C7",
+      "claim": "USDC circulation is not below the validated 2026-08-05 baseline at 2026-12-31.",
+      "deadline_utc": "2026-12-31T23:59:59Z",
+      "ratification": "RATIFIED_WITH_BASELINE_QUARANTINED",
+      "baseline_value": null,
+      "baseline_status": "MUST_BE_RECOLLECTED_BY_APPROVED_COLLECTOR",
+      "pass_condition": "Year-end USDC circulation is at or above the validated baseline.",
+      "fail_condition": "Year-end USDC circulation is below the validated baseline.",
+      "source_owner": "APPROVED_STABLECOIN_SUPPLY_SENSOR"
+    },
+    {
+      "id": "F-C8",
+      "claim": "Circle National Trust is operational by 2026-09-30.",
+      "deadline_utc": "2026-09-30T23:59:59Z",
+      "ratification": "RATIFIED",
+      "pass_condition": "OCC or Circle explicitly confirms operating commencement and service scope.",
+      "fail_condition": "No verified operating commencement by deadline.",
+      "source_owner": "OCC_OR_CIRCLE_PRIMARY_DISCLOSURE"
+    },
+    {
+      "id": "F-C9",
+      "claim": "USDC reserve management has moved materially to Circle National Trust by 2027-06-30.",
+      "deadline_utc": "2027-06-30T23:59:59Z",
+      "ratification": "RATIFIED",
+      "pass_condition": "Official attestation identifies Circle National Trust as reserve manager or custodian for a material share.",
+      "fail_condition": "Reserve-management role remains future, immaterial or absent.",
+      "source_owner": "CIRCLE_MONTHLY_ATTESTATION_AND_BANK_DISCLOSURE"
+    }
+  ],
+  "structural_confirmation_conditions": [
+    {
+      "id": "S-C1",
+      "claim": "Arc TVL exceeds USD 1B by day 120 without above-market incentive dependence.",
+      "deadline_basis": "VERIFIED_LAUNCH_PLUS_120D",
+      "ratification": "RATIFIED_WITH_INCENTIVE_CLASSIFICATION_PENDING",
+      "required_evidence": ["TVL", "incentive schedule", "organic retention after incentive adjustment"]
+    },
+    {
+      "id": "S-C2",
+      "claim": "Arc appears as an independently identified chain in Visa Onchain Analytics by 2027-03-31.",
+      "deadline_utc": "2027-03-31T23:59:59Z",
+      "ratification": "RATIFIED",
+      "required_evidence": ["Visa chain label", "method version", "window", "adjusted and unadjusted context"]
+    },
+    {
+      "id": "S-C3",
+      "claim": "USDC circulation exceeds USD 85B while total stablecoin supply is rising by 2026-12-31.",
+      "deadline_utc": "2026-12-31T23:59:59Z",
+      "ratification": "RATIFIED_WITH_BASELINE_RECOMPUTE",
+      "required_evidence": ["USDC supply", "global stablecoin supply", "same source universe and timestamps"]
+    },
+    {
+      "id": "S-C4",
+      "claim": "At least three announced validators publish actual non-pilot settlement volume on Arc by 2027-06-30.",
+      "deadline_utc": "2027-06-30T23:59:59Z",
+      "ratification": "RATIFIED",
+      "required_evidence": ["partner primary disclosure", "non-pilot status", "volume and period"]
+    },
+    {
+      "id": "S-C5",
+      "claim": "Circle National Trust manages at least 50 percent of the USDC reserve by 2027-12-31.",
+      "deadline_utc": "2027-12-31T23:59:59Z",
+      "ratification": "RATIFIED",
+      "required_evidence": ["reserve attestation", "role definition", "percentage or reproducible amount"]
+    }
+  ],
+  "maturity_owner": "OUTCOME_MATURATION_ENGINE",
+  "state_owner": "MAIN_FRAMEWORK_ONLY"
+}
