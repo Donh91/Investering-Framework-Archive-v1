@@ -98,7 +98,6 @@ def legacy(path:Path|None)->list[dict[str,Any]]:
 def delta(latest:Any,previous:Any)->float|None:
     if not isinstance(latest,(int,float)) or not isinstance(previous,(int,float)) or previous==0:return None
     return (float(latest)/float(previous)-1)*100
-
 def evaluate(c:dict[str,Any],latest:dict[str,Any],previous:dict[str,Any])->dict[str,Any]:
     l=at(latest,c["metric_path"]);p=at(previous,c["metric_path"]);d=delta(l,p);op=c["operator"];t=c.get("threshold")
     if l is None or (op.startswith("DELTA_") and d is None):m=None
@@ -166,7 +165,9 @@ def main()->None:
             if write_new(a.candidate_root/when.strftime("%Y/%m")/f"{cid}.json",value):new_ids.add(cid)
         except Exception as e:rejected.append({"title":str(x.get("title") or "UNKNOWN"),"error":str(e)})
     new_forecasts=dispatch=0
-    for spec_path,c in jsons(a.candidate_root,"EXPERIMENT_CANDIDATE_v1"):
+    candidate_rows=jsons(a.candidate_root,"EXPERIMENT_CANDIDATE_v1")
+    candidate_rows.sort(key=lambda item:(0 if item[1].get("spec",{}).get("kind")=="FORECAST_TEST" else 1,str(item[1].get("candidate_id") or "")))
+    for spec_path,c in candidate_rows:
         spec=c["spec"];results=[evaluate(x,latest,previous) for x in spec["components"]];mapping=not spec["components"] and spec["kind"]!="FORECAST_TEST";missing=any(x["matched"] is None for x in results);fired=(not mapping and ((not spec["components"] and spec["kind"]=="FORECAST_TEST") or (results and not missing and all(x["matched"] for x in results))))
         status="WAITING_FOR_MAPPING" if mapping else "WAITING_FOR_DATA" if missing else "FIRED_NO_TARGET" if fired and spec["target_direction"]=="NONE" else "FIRED" if fired else "OBSERVED_NOT_FIRED";oid="EO-"+sha({"candidate_id":c["candidate_id"],"captured":captured,"source":source})[:20];ob={"contract":"EXPERIMENT_OBSERVATION_v1","observation_id":oid,"candidate_id":c["candidate_id"],"observed_at_utc":captured,"evaluation_status":status,"component_results":results,"source":source,"authority":"SHADOW_ONLY"};op=a.observation_root/c["candidate_id"]/f"{oid}.json";is_new=False if mapping and c["candidate_id"] not in new_ids else write_new(op,ob)
         fid=None;start=at(latest,spec.get("target_metric_path") or "") if spec.get("target_metric_path") else None
