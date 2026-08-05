@@ -1,11 +1,13 @@
 {
   "schema_version": "LATEST_ETF_FLOW_STATUS_v1",
-  "updated_at_local": "2026-08-05T17:16:00+02:00",
+  "updated_at_local": "2026-08-05T21:19:00+02:00",
   "base_row_source": "08_SOURCE_MATERIAL/etf/2026-08-03__btc-eth-etf-direct-payload-through-2026-07-31.json",
   "session_2026_08_03_source": "08_SOURCE_MATERIAL/etf/2026-08-05__btc-eth-etf-2026-08-03-issuer-structure__source-record.md",
   "latest_session_source": "08_SOURCE_MATERIAL/etf/2026-08-05__btc-eth-etf-2026-08-04-direct-session.json",
-  "reconciliation": "04_MARKET_LEARNING/data_ping/2026-08-05__run-eec8e2d4c3114f0eac01__framework-read.md",
-  "authority_status": "LATEST_SESSION_BTC_AND_ETH_DIRECT_OWNER_AVAILABLE_AND_RECONFIRMED",
+  "latest_OTA_source": "08_SOURCE_MATERIAL/claude_ota/2026-08-05__standalone-ota-btc-etf-4aug-inprogress-ethbtc__source-record.md",
+  "latest_OTA_reconciliation": "04_MARKET_LEARNING/claude_ota/2026-08-05__standalone-ota-btc-etf-4aug-inprogress-ethbtc__framework-reconciliation.md",
+  "latest_data_ping_reconciliation": "04_MARKET_LEARNING/data_ping/2026-08-05__run-aebc326ae71e48109b9b__framework-read.md",
+  "authority_status": "LATEST_SESSION_BTC_AND_ETH_DIRECT_OWNER_AVAILABLE_OTA_ISSUER_DETAIL_RETAINED_WINDOW_CLAIMS_QUARANTINED",
   "latest_observed_US_session": "2026-08-04",
   "BTC": {
     "latest_confirmed_session": "2026-08-04",
@@ -17,6 +19,17 @@
     "ten_session_sum_usd_m": -76.0,
     "fifteen_session_sum_usd_m": 673.1,
     "twenty_session_sum_status": "UNAVAILABLE_ONLY_15_OWNER_ROWS",
+    "2026_08_04_issuer_structure": {
+      "authority": "USER_SUPPLIED_CLAUDE_OTA_FRESH_PAYLOAD_NOT_INDEPENDENTLY_RETRIEVED",
+      "positive_funds": 5,
+      "negative_funds": 0,
+      "IBIT": 170.3,
+      "FBTC": 19.6,
+      "ARKB": 9.2,
+      "BITB": 8.7,
+      "MSBT": 3.7,
+      "concentration_note": "IBIT_CONTRIBUTED_APPROX_80_5_PERCENT_OF_TOTAL"
+    },
     "2026_08_03_total_usd_m": 170.1,
     "2026_08_03_issuer_structure": {
       "authority": "USER_SUPPLIED_CLAUDE_OTA_FRESH_PAYLOAD_NOT_INDEPENDENTLY_RETRIEVED",
@@ -43,6 +56,7 @@
     "ten_session_sum_usd_m": 79.5,
     "fifteen_session_sum_usd_m": 217.6,
     "twenty_session_sum_status": "UNAVAILABLE_ONLY_15_OWNER_ROWS",
+    "2026_08_04_OTA_status": "NOT_RETRIEVED_BY_OTA_BUT_ALREADY_DIRECTLY_OWNED_BY_DATA_PING",
     "2026_08_03_total_usd_m": -11.9,
     "2026_08_03_issuer_structure": {
       "authority": "USER_SUPPLIED_CLAUDE_OTA_FRESH_PAYLOAD_NOT_INDEPENDENTLY_RETRIEVED",
@@ -62,23 +76,29 @@
     "BTC_minus_ETH_flow_spread_usd_m": 158.4,
     "BTC_to_ETH_absolute_flow_ratio": 3.9830508475,
     "same_session_sign": "BOTH_POSITIVE",
-    "interpretation": "DUAL_POSITIVE_ETF_FLOW_WITH_BTC_DOLLAR_FLOW_DOMINANCE_NO_CONFIRMED_ETH_PRICE_TRANSMISSION"
+    "interpretation": "DUAL_POSITIVE_ETF_FLOW_WITH_BTC_DOLLAR_DOMINANCE_AND_EMERGING_LIVE_ETHBTC_REPAIR_NOT_YET_SETTLED"
   },
   "breadth_and_price_context": {
-    "ETHBTC_current": 0.02913,
-    "distance_to_0_0300_pct": -2.9,
+    "reference_data_ping_run_id": "run-aebc326ae71e48109b9b",
+    "ETHBTC_current": 0.02959,
+    "distance_to_0_0300_pct": -1.3666666667,
     "current_breadth_transform": "COINGECKO_TOP100_FILTERED_v3",
-    "current_v3_positive_share_full_universe": 0.393258426966,
-    "current_breadth_membership_hash": "db981da7d5002ac7742419b4bcf7d9c022a5b2ab88165ab971228d587aa6a739",
+    "current_v3_positive_share_full_universe": 0.466666666667,
+    "current_breadth_membership_hash": "7d2f46aa15ca6246858b18a7da06339c7705db13df1f1014d85303eec80f5dd8",
+    "membership_changed_vs_prior": true,
     "current_breadth_gate_permission": "NOT_AUTHORIZED_INCOMPATIBLE_WITH_LOCKED_V1_1_OWNER"
   },
   "quarantined_OTA_window_claims": {
-    "BTC_five_session_claim_usd_m": 108.3,
-    "BTC_twenty_session_claim_usd_m": -100.8,
-    "ETH_three_session_claim_usd_m": 10.6,
-    "ETH_five_session_claim_usd_m": -13.7,
-    "ETH_seven_session_claim_usd_m": -16.9,
-    "reason": "NOT_REPRODUCIBLE_FROM_REPOSITORY_DIRECT_ROW_LEDGER"
+    "BTC_three_session_claim_usd_m": 116.2,
+    "BTC_three_session_status": "ACCEPTED_MATCHES_OWNER",
+    "BTC_five_session_claim_usd_m": 118.4,
+    "BTC_five_session_owner_usd_m": 381.4,
+    "BTC_seven_session_claim_usd_m": 80.3,
+    "BTC_seven_session_owner_usd_m": 320.1,
+    "BTC_twenty_session_claim_usd_m": 153.0,
+    "BTC_twenty_session_owner_status": "UNAVAILABLE_ONLY_15_OWNER_ROWS",
+    "all_four_windows_positive_claim": "NOT_ACCEPTED",
+    "reason": "FIVE_SEVEN_AND_TWENTY_SESSION_CLAIMS_NOT_REPRODUCIBLE_FROM_REPOSITORY_DIRECT_ROW_LEDGER"
   },
   "week_31": {
     "BTC_total_usd_m": -61.5,
@@ -86,8 +106,14 @@
     "ETH_minus_BTC_flow_spread_usd_m": 71.5,
     "historical_status": "FROZEN_COMPLETED_WEEK"
   },
+  "source_QA": {
+    "H_SRC_01_status": "FALSIFIED_UNCHANGED",
+    "fresh_payload_from_104_22_93_101": "ACCEPTED_AS_USER_SUPPLIED_FURTHER_COUNTEREVIDENCE_TO_IP_NODE_RULE",
+    "operational_freshness_gate": "FOOTER_DATE_AND_LATEST_SESSION_VALIDATION_EACH_RUN"
+  },
   "pending": [
-    "ETF_AUM_DENOMINATORS"
+    "ETF_AUM_DENOMINATORS",
+    "BTC_OTA_WINDOW_ROW_LEVEL_RECONCILIATION"
   ],
   "framework_effect": {
     "rotation": "NO_CHANGE_NO_ROTATION",
@@ -95,7 +121,7 @@
     "new_entry": "NOT_ACTIVE",
     "large_caps": "WATCH_ONLY",
     "operational_risk_class": "DO_NOT_ADD_RISK",
-    "risk_substate": "BTC_LED_REPAIR_WITH_INTRADAY_PULLBACK_24H_DELEVERAGING_AND_TRANSIENT_ETHBTC_BUY_BURST_WITHOUT_PERSISTENT_TRANSMISSION",
+    "risk_substate": "BTC_LED_REPAIR_WITH_EMERGING_ETH_RELATIVE_REBOUND_AND_DUAL_POSITIVE_ETF_FLOW_BUT_NO_SETTLED_0030_OR_MULTI_WINDOW_ETHBTC_PERSISTENCE",
     "canonical_state_change": "NONE",
     "portfolio_action": "NONE"
   }
