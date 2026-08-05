@@ -2,6 +2,21 @@
 
 These instructions apply to all agent work in this repository.
 
+## 0. Operational cockpit before repository work
+
+Before automation, incident, API-agent, Codex, scheduled delivery or remediation work, read in this order:
+
+1. `LATEST_OPERATIONS_DASHBOARD.json`
+2. `LATEST_HANDOFF.json`
+3. `research/architecture_health/LATEST_AUTOMATION_HEALTH.json`
+4. `research/architecture_health/LATEST_ARCHITECTURE_HEALTH.json`
+5. `LATEST_REMEDIATION_QUEUE.json`
+6. `LATEST_CODEX_READY_TASKS.json` when code remediation is relevant
+7. `00_FMOS/AUTOMATION_ORCHESTRATION_ARCHITECTURE_v2.md`
+8. the exact workflow, receipt, pointer, run and job logs
+
+A health report may be RED while its observer workflow correctly succeeds after durable publication. `CODEX_READY` is a bounded task package, not proof that Codex has run, changed code or merged. Do not work from conversation memory or an issue summary when newer hash-bound operational files exist.
+
 ## 1. Read order
 
 Before framework, DATA PING, weekly operations, Cycle Navigator, Research Lab, evidence-ledger, archive, governance or automation work:
