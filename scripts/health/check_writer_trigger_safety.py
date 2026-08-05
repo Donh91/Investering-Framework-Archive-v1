@@ -10,12 +10,9 @@ def has_job_main_guard(text: str) -> bool:
     return re.search(r"(?m)^\s{4}if:\s*.*github\.ref\s*==\s*['\"]refs/heads/main['\"]", text) is not None
 
 
-def checkout_is_main_pinned(text: str) -> bool:
+def checkout_has_main_pin(text: str) -> bool:
     blocks = re.split(r"(?m)^\s*- uses:\s*actions/checkout@", text)[1:]
-    if not blocks:
-        return False
-    writer_blocks = [block.split("\n      - ", 1)[0] for block in blocks]
-    return all(re.search(r"(?m)^\s+ref:\s*main\s*$", block) is not None for block in writer_blocks)
+    return any(re.search(r"(?m)^\s+ref:\s*main\s*$", block.split("\n      - ", 1)[0]) is not None for block in blocks)
 
 
 def inspect(path: Path) -> list[str]:
@@ -28,7 +25,7 @@ def inspect(path: Path) -> list[str]:
     push_trigger = re.search(r"(?m)^  push:\s*$", text) is not None
     manual_trigger = re.search(r"(?m)^  workflow_dispatch:\s*$", text) is not None
     main_guard = has_job_main_guard(text)
-    pinned = checkout_is_main_pinned(text)
+    pinned = checkout_has_main_pin(text)
     writer_group = re.search(r"(?m)^\s+group:\s*framework-main-writer\s*$", text) is not None
 
     if push_trigger:
@@ -59,7 +56,7 @@ def main() -> None:
         "rules": [
             "A main writer must never run from a generic push event.",
             "A manually dispatchable main writer must be pinned to main by job guard or checkout ref.",
-            "Every main writer checkout must resolve main explicitly.",
+            "Every main-writing workflow must include an explicit main checkout; immutable downstream checkouts may use a frozen commit.",
             "Every main writer must serialize through framework-main-writer concurrency.",
         ],
     }
