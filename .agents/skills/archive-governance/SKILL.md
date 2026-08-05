@@ -25,6 +25,12 @@ AGENTS.md
 01_CORE_FRAMEWORK/governance/2026-07-11__external-vault-activation-and-snapshot-contract-v1-1__canonical.md
 ```
 
+When a source is a Word, PowerPoint, Excel, OpenDocument, RTF, EPUB, CSV or otherwise unreadable supported document, also read:
+
+```text
+07_PROMPTS_AND_AGENTS/github_agent/2026-08-05__anydoc-agent-document-normalization-v1__operational.md
+```
+
 ## Write authorization gate
 
 Classify the request:
@@ -81,6 +87,32 @@ Separate:
 - implementation receipt.
 
 Archive the smallest durable unit that preserves decision value.
+
+### 1.5 Normalize unreadable documents before classification
+
+Use document normalization only to expose source contents for inspection. It does not change source authority.
+
+For supported non-PDF documents, use:
+
+```bash
+python scripts/document_ingestion/anydoc_ingest.py \
+  --input <source> \
+  --output-dir <temporary-output-directory>
+```
+
+Rules:
+
+- The wrapper pins `@firecrawl/anydoc@0.1.3` and requires Node 20+ when no explicit binary is supplied.
+- Preserve the original source as primary evidence and retain its SHA-256 in the generated manifest.
+- Treat `document.md` as a convenience representation, not canonical truth.
+- For large documents, read only relevant Markdown sections into context.
+- PDF input defaults to the existing `scripts/pdf_ingestion/pdf_ingest.py` specialist route.
+- Use `--allow-pdf-fallback` only deliberately. A PDF fallback remains `DEGRADED` because it lacks the separate layout, OCR and page-level receipt.
+- Scanned or image-only PDFs require OCR or vision. Never infer missing text.
+- Do not auto-commit the raw source, generated Markdown or receipt.
+- Conversion output is not an evidence outcome row and cannot promote itself.
+
+If conversion fails, is empty or returns `BLOCKED`, preserve the source and report the exact failure. Do not silently substitute model knowledge.
 
 ### 2. Search before writing
 
