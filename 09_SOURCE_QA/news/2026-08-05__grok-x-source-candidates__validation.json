@@ -1,0 +1,68 @@
+{
+  "schema_version": "GROK_X_CANDIDATE_VALIDATION_v1",
+  "batch_id": "GROK-X-CANDIDATES-2026-08-05T19-45Z",
+  "validated_at_utc": "2026-08-05T19:55:00Z",
+  "overall_status": "PASS_WITH_DEDUPLICATION_AND_QUARANTINES",
+  "candidate_groups": [
+    {
+      "group_id": "G1_COLDCARD_ENTROPY_INCIDENT",
+      "classification": "VERIFIED_PRIMARY_SECURITY_INCIDENT",
+      "duplicate_collapse": "SEVEN_CANDIDATES_TO_ONE_INCIDENT_TIMELINE",
+      "verified_claims": [
+        "Affected firmware generated seeds with materially weakened entropy.",
+        "Updating firmware does not repair an existing affected seed.",
+        "Affected users without sufficient independent dice entropy or a strong unique BIP39 passphrase are instructed to generate a new seed on fixed firmware and migrate funds.",
+        "Official affected-version and fixed-version matrices are published by Coinkite.",
+        "Coinkite published a historical security-disclosure chronology through 2026-08-04."
+      ],
+      "quarantined_claims": [
+        {
+          "claim": "More than USD 38M stolen, roughly 500 wallets swept and approximately USD 30M reached in the first ten minutes.",
+          "reason": "USER_SUPPLIED_CHAINALYSIS_X_SUMMARY_WITHOUT_ACCESSIBLE_DIRECT_REPORT_OR_REPRODUCIBLE_ONCHAIN_LEDGER",
+          "status": "UNVERIFIED_SCALE"
+        },
+        {
+          "claim": "Attack remains actively draining wallets at each candidate timestamp.",
+          "reason": "OFFICIAL_URGENT_GUIDANCE_IS_VERIFIED_BUT_CONTEMPORANEOUS_ATTACK_ACTIVITY_WAS_NOT_INDEPENDENTLY_TIMESTAMPED",
+          "status": "NOT_USED_FOR_MARKET_ATTRIBUTION"
+        }
+      ]
+    },
+    {
+      "group_id": "G2_CIRCLE_ARC_TRUST_BANK",
+      "classification": "OFFICIAL_X_STRUCTURAL_EVENT_PARTIALLY_INDEPENDENTLY_VERIFIED",
+      "verified_claims": [
+        "Circle received final OCC approval in July 2026 to establish a national trust bank operating as Circle National Trust.",
+        "Circle publicly identifies Arc as an enterprise-grade blockchain and uses its official X feed as a Regulation FD disclosure channel.",
+        "Visa Onchain Analytics publishes adjusted stablecoin transaction metrics and explicitly filters inorganic activity."
+      ],
+      "pending_direct_confirmation": [
+        {
+          "claim": "Arc mainnet launch date is 2026-09-16.",
+          "status": "OFFICIAL_X_CLAIM_PENDING_DIRECT_PRESS_RELEASE_OR_SEC_EXHIBIT"
+        },
+        {
+          "claim": "Founding validator list includes BlackRock, DTCC, Galaxy, Mastercard, Visa and other named institutions.",
+          "status": "OFFICIAL_X_CLAIM_PENDING_DIRECT_PRESS_RELEASE_OR_SEC_EXHIBIT"
+        },
+        {
+          "claim": "USDC captured nearly 70 percent of stablecoin transaction volume in June.",
+          "status": "PENDING_EXACT_VISA_DASHBOARD_SNAPSHOT_METRIC_DEFINITION_AND_DENOMINATOR"
+        }
+      ],
+      "source_identity_note": "The supplied Circle post is official, but no directly linked primary document was included in the Grok packet."
+    },
+    {
+      "group_id": "G3_COINBASE_OIL_PERPETUALS",
+      "classification": "OFFICIAL_PRODUCT_LAUNCH_LOW_FRAMEWORK_RELEVANCE",
+      "verification_status": "NOT_EXPANDED",
+      "reason": "NO_CURRENT_LOAD_BEARING_LINK_TO_CRYPTO_REGIME_ROTATION_OR_PORTFOLIO_STATE"
+    }
+  ],
+  "governance": {
+    "news_candidate_is_not_market_catalyst": true,
+    "no_price_move_attribution_without_time_aligned_evidence": true,
+    "canonical_state_effect": "NONE",
+    "portfolio_effect": "NONE"
+  }
+}
