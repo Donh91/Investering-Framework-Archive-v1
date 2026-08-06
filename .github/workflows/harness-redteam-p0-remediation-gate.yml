@@ -13,6 +13,7 @@ on:
       - 'tests/harness_redteam/**'
       - '.github/workflows/harness-redteam-p0-remediation-gate.yml'
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
     paths:
       - 'scripts/api_agent/api_gateway.py'
       - 'scripts/api_agent/materialize_forecast_candidates.py'
