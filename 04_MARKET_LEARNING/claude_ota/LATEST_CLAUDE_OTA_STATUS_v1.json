@@ -11,7 +11,7 @@
   "latest_run_type": "MATURED_H7_ROW_15_AND_5AUG_UTC_SETTLEMENT",
   "main_thread_reference_bounded_run_id": "run-e841c63ea8e04a028918",
   "main_thread_reference_bounded_snapshot_id": "snap-421afc0073c04599ab62",
-  "latest_data_ping_status": "NEWER_PACKETS_FAILED_INV_006_NOT_INGESTED",
+  "latest_data_ping_status": "NEWER_FULL_PACKETS_FAILED_INV_006_NOT_INGESTED",
   "accepted_incremental_items": [
     "H7_ROW_15_DIRECT_SETTLED",
     "WITHHELD_IN_PROGRESS_ETH_LEADERSHIP_CONFIRMED_AT_SETTLEMENT",
@@ -20,7 +20,8 @@
     "H7_SEVENTH_CONSECUTIVE_MATURITY_WITH_FALLEN_SIGNAL",
     "ETHBTC_2026_08_05_UTC_SETTLED_AT_0_02951",
     "TWELFTH_SETTLED_SESSION_WITHOUT_0_0300_TOUCH",
-    "F1_ELEVEN_SETTLED_POST_WINDOW_SESSIONS_ZERO_BREACHES"
+    "F1_ELEVEN_SETTLED_POST_WINDOW_SESSIONS_ZERO_BREACHES",
+    "ETF_2026_08_05_BTC_244_4_AND_ETH_60_8_OWNER_VALIDATED_AFTER_OTA"
   ],
   "H7": {
     "status": "MATURED_SCORED_WITH_ROW_15_POST_MATURITY_FOLLOW_THROUGH_INACTIVE_CONFIRMED_CONTINUING",
@@ -65,41 +66,41 @@
     "settled_0_0300_confirmation": false,
     "rotation_permission": "CLOSED"
   },
-  "source_QA": {
-    "price_cache_guard": "PASS_AS_SUPPLIED",
-    "row_15_hash_receipts": "PRESENT",
-    "H_SRC_01_status": "FALSIFIED_UNCHANGED",
-    "H_SRC_02_status": "RETIRED_OPERATIONALLY_RESOLVED"
-  },
   "ETF": {
-    "OTA_retrieval_status": "NOT_RETRIEVED_THIS_RUN",
-    "latest_valid_owner_session": "2026-08-04",
-    "latest_valid_BTC_usd_m": 211.5,
-    "latest_valid_ETH_usd_m": 53.1,
-    "2026_08_05_candidate_from_first_failed_packet": {
+    "owner_validation_request_id": "DP-ETF-DIRECT-OWNER-20260806-01",
+    "owner_validation_status": "PASS",
+    "packet_sha256": "0a6e29f5b302e5e3fbe3c5c49a9e07df78ebcb34d3430ddbf6ec1e44afb030b1",
+    "latest_valid_owner_session": "2026-08-05",
+    "BTC_usd_m": 244.4,
+    "ETH_usd_m": 60.8,
+    "BTC_minus_ETH_usd_m": 183.6,
+    "same_session_sign": "BOTH_POSITIVE",
+    "BTC_three_session_usd_m": 626.0,
+    "BTC_five_session_usd_m": 593.7,
+    "BTC_seven_session_usd_m": 576.1,
+    "ETH_three_session_usd_m": 102.0,
+    "ETH_five_session_usd_m": 123.8,
+    "ETH_seven_session_usd_m": 100.3,
+    "earlier_failed_candidates": {
       "BTC_usd_m": 2.8,
-      "ETH_usd_m": 0.0
+      "ETH_usd_m": 0.0,
+      "status": "PERMANENTLY_REJECTED_NON_OWNER"
     },
-    "2026_08_05_candidate_from_second_failed_packet": {
-      "BTC_usd_m": 244.4,
-      "ETH_usd_m": 60.8
-    },
-    "2026_08_05_owner_status": "QUARANTINED_PENDING_DIRECT_VALIDATION",
-    "targeted_validation_prompt": "07_PROMPTS_AND_AGENTS/prompts/2026-08-06__targeted-etf-5aug-direct-owner-validation.md"
+    "parser_defect": "TENTH_FUND_FIELD_SELECTED_INSTEAD_OF_TOTAL_STRONGLY_SUPPORTED",
+    "parser_issue": 318,
+    "source_path": "08_SOURCE_MATERIAL/etf/2026-08-06__btc-eth-etf-2026-08-05-owner-validation.json"
   },
   "creative_extension": {
     "H8_candidate_status": "EXPLORATORY_NOT_PREREGISTERED_GOVERNANCE_BACKLOG_ONLY",
     "merge_into_H7": "FORBIDDEN",
     "retroactive_H7_rescoring": "FORBIDDEN",
     "execute_now": false,
-    "reason": "POST_HOC_ACTIVE_EXPERIMENT_AND_SMALL_SAMPLE",
     "acceptable_future_use": "PREREGISTERED_NULL_FREQUENCY_DESIGN_FOR_FUTURE_TRANSMISSION_TEST"
   },
   "research_escalation": {
-    "status": "YES",
-    "priority": "P1_SAME_DAY",
-    "subject": "BTC_AND_ETH_ETF_2026_08_05_DIRECT_OWNER_VALIDATION",
-    "reason": "TWO_INV_006_FAILED_PACKETS_REPORT_MATERIALLY_CONFLICTING_VALUES_AND_OTA_DID_NOT_RETRIEVE",
+    "status": "NO",
+    "resolved_subject": "BTC_AND_ETH_ETF_2026_08_05_DIRECT_OWNER_VALIDATION",
+    "remaining_work": "FIX_INV_006_AND_VARIABLE_WIDTH_ETF_PARSER_THEN_RUN_FRESH_FULL_DATA_PING",
     "H8_deep_research_now": "NO"
   },
   "new_policy_event": false,
@@ -116,6 +117,7 @@
   "small_caps": "NO_NEW_RISK",
   "microcaps": "NO_NEW_RISK",
   "operational_risk_class": "DO_NOT_ADD_RISK",
+  "risk_substate": "BTC_LED_REPAIR_WITH_STRONG_DUAL_POSITIVE_ETF_ABSORPTION_AND_SETTLED_ETH_RELATIVE_REBOUND_BUT_NO_0030_OR_H7_RETRIGGER",
   "canonical_state_change": "NONE",
   "canonical_portfolio_action_change": "NONE",
   "final_holdout_opened": false,
@@ -123,8 +125,7 @@
   "latest_cycle_navigator_number": 19,
   "open_items": [
     "FIX_INV_006_ISSUE_317",
-    "VALIDATE_BTC_ETF_2026_08_05",
-    "VALIDATE_ETH_ETF_2026_08_05",
+    "FIX_FARSIDE_VARIABLE_WIDTH_TOTAL_COLUMN_ISSUE_318",
     "H7_ROW_16_SETTLED_EXTENSION",
     "H7_LAPSE_RETIRE_RETRIGGER_PROSPECTIVE_RULE",
     "H7_COND1_CANONICAL_WORDING",
