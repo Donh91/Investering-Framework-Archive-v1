@@ -1,0 +1,118 @@
+{
+  "contract": "FRAMEWORK_HARNESS_CONTRACT_SET_v1",
+  "status": "DRAFT_TESTABLE",
+  "authority": "NON_AUTHORITATIVE_CONTRACTS_ONLY",
+  "contracts": {
+    "FRAMEWORK_TASK_CONTRACT_v1": {
+      "required": [
+        "task_id",
+        "task_type",
+        "objective",
+        "required_inputs",
+        "allowed_sources",
+        "allowed_read_paths",
+        "allowed_write_paths",
+        "allowed_capabilities",
+        "forbidden_actions",
+        "expected_artifacts",
+        "completion_evidence",
+        "validation_commands",
+        "budget",
+        "timeout_seconds",
+        "escalation_route"
+      ],
+      "invariants": [
+        "TASK_IS_IMMUTABLE_AFTER_CLAIM",
+        "EMPTY_WRITE_SCOPE_MEANS_NO_WRITES",
+        "FORBIDDEN_ACTIONS_OVERRIDE_ALLOWED_CAPABILITIES",
+        "MISSING_REQUIRED_INPUT_BLOCKS_EXECUTION"
+      ]
+    },
+    "FRAMEWORK_CONTEXT_BUNDLE_v1": {
+      "required": ["bundle_id", "task_id", "entries", "mandatory_inputs_complete", "bundle_sha256"],
+      "entry_required": ["path_or_uri", "content_sha256", "reason", "freshness_status", "authority_class"],
+      "invariants": [
+        "NO_IMPLICIT_REPOSITORY_WIDE_CONTEXT",
+        "EVERY_ENTRY_HAS_PROVENANCE",
+        "MISSING_MANDATORY_CONTEXT_BLOCKS_EXECUTION",
+        "BUNDLE_HASH_IS_FROZEN_BEFORE_WORKER_START"
+      ]
+    },
+    "FRAMEWORK_WORKER_MANIFEST_v1": {
+      "required": [
+        "worker_id",
+        "accepted_task_types",
+        "allowed_capabilities",
+        "forbidden_capabilities",
+        "maximum_delegation_depth",
+        "required_terminal_receipt"
+      ],
+      "invariants": [
+        "WORKER_CANNOT_EXPAND_AUTHORITY",
+        "DEFAULT_DELEGATION_DEPTH_ZERO",
+        "WORKER_OUTPUT_IS_NOT_SELF_VALIDATING",
+        "WORKER_CANNOT_MERGE_OR_CHANGE_CANONICAL_STATE"
+      ]
+    },
+    "FRAMEWORK_EVIDENCE_ENVELOPE_v1": {
+      "required": ["evidence_id", "task_id", "claims", "sources", "artifacts", "limitations", "evidence_sha256"],
+      "claim_required": ["claim_id", "statement", "supporting_source_ids", "confidence", "claim_type"],
+      "claim_types": ["OBSERVED", "DERIVED", "INFERRED", "UNSUPPORTED"],
+      "invariants": [
+        "UNSUPPORTED_CLAIMS_CANNOT_SATISFY_COMPLETION",
+        "INFERENCE_MUST_BE_EXPLICIT",
+        "SOURCE_AND_ARTIFACT_HASHES_REQUIRED"
+      ]
+    },
+    "FRAMEWORK_EXECUTION_RECEIPT_v1": {
+      "required": [
+        "execution_id",
+        "task_id",
+        "task_contract_sha256",
+        "context_bundle_sha256",
+        "worker_manifest_sha256",
+        "started_at_utc",
+        "ended_at_utc",
+        "validation_results",
+        "artifact_hashes",
+        "budget_used",
+        "terminal_state"
+      ],
+      "terminal_states": ["COMPLETED", "BLOCKED", "FAILED", "CANCELLED", "BUDGET_EXHAUSTED"],
+      "invariants": [
+        "EXACTLY_ONE_TERMINAL_STATE",
+        "COMPLETED_REQUIRES_ALL_MANDATORY_VALIDATIONS",
+        "BLOCKED_REQUIRES_EXPLICIT_BLOCKER",
+        "NO_SILENT_SUCCESS"
+      ]
+    },
+    "FRAMEWORK_TERMINAL_RECEIPT_v1": {
+      "required": ["execution_id", "terminal_state", "completion_evidence", "open_blockers", "ledger_routes", "receipt_sha256"],
+      "invariants": [
+        "TERMINAL_RECEIPT_IS_APPEND_ONLY",
+        "LEARNING_REQUIRES_EXPLICIT_LEDGER_ROUTE",
+        "NO_HIDDEN_MEMORY_OR_UNRECORDED_REFINEMENT"
+      ]
+    },
+    "FRAMEWORK_RUNTIME_ADAPTER_MANIFEST_v1": {
+      "required": [
+        "adapter_id",
+        "runtime_name",
+        "runtime_version",
+        "supported_contract_versions",
+        "sandbox_boundary",
+        "secret_scope",
+        "resumption_semantics",
+        "failure_semantics",
+        "kill_switch",
+        "cost_limit"
+      ],
+      "invariants": [
+        "RUNTIME_IS_REPLACEABLE",
+        "ADAPTER_CANNOT_CHANGE_HARNESS_CONTRACTS",
+        "PINNED_VERSION_REQUIRED",
+        "NO_OPERATIONAL_AUTHORITY_BY_DEFAULT"
+      ]
+    }
+  }
+}
