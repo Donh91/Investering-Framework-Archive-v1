@@ -1,6 +1,6 @@
 # Architecture Health
 Status: **RED**
-Generated: 2026-08-06T04:24:45.202670Z
+Generated: 2026-08-06T04:32:44.034912Z
 
 Owners: 0/0 PASS
 Accepted DATA PINGs: 0
@@ -9,13 +9,13 @@ Experiment candidates: 17
 Codex-ready remediation tasks: 6
 
 ## Freshness hours
-- capture: 6.116167408333333
-- daily_director: 5.888945186111111
+- capture: 6.249176364444444
+- daily_director: 6.021954142222222
 - weekly_calibration: UNKNOWN
-- etf_owner: 71.55784135222223
-- experiment_registry: 5.629722222222222e-05
-- experiment_receipt_sync: 5.629722222222222e-05
-- remediation_queue: 11.270056297222222
+- etf_owner: 71.69085030833334
+- experiment_registry: 0.0002874755555555556
+- experiment_receipt_sync: 0.0002874755555555556
+- remediation_queue: 11.403065253333335
 
 ## Blockers
 - NO_WEEKLY_API_OUTPUT_YET
