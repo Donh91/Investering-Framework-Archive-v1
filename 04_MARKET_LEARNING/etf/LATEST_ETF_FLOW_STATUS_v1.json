@@ -1,13 +1,14 @@
 {
   "schema_version": "LATEST_ETF_FLOW_STATUS_v1",
-  "updated_at_local": "2026-08-06T11:39:00+02:00",
+  "updated_at_local": "2026-08-06T12:32:00+02:00",
   "base_row_source": "08_SOURCE_MATERIAL/etf/2026-08-03__btc-eth-etf-direct-payload-through-2026-07-31.json",
   "session_2026_08_03_source": "08_SOURCE_MATERIAL/etf/2026-08-05__btc-eth-etf-2026-08-03-issuer-structure__source-record.md",
   "session_2026_08_04_source": "08_SOURCE_MATERIAL/etf/2026-08-05__btc-eth-etf-2026-08-04-direct-session.json",
   "latest_session_source": "08_SOURCE_MATERIAL/etf/2026-08-06__btc-eth-etf-2026-08-05-owner-validation.json",
   "latest_framework_reconciliation": "04_MARKET_LEARNING/etf/2026-08-06__btc-eth-etf-2026-08-05-owner-reconciliation.md",
   "latest_QA": "09_SOURCE_QA/etf/2026-08-06__btc-eth-etf-2026-08-05-owner-validation.json",
-  "authority_status": "LATEST_SESSION_BTC_AND_ETH_TARGETED_DIRECT_OWNER_VALIDATED_WITH_TWO_RETRIEVALS_HASHES_AND_TIEOUT",
+  "latest_full_data_ping_reconciliation": "04_MARKET_LEARNING/data_ping/2026-08-06__run-20260806T101439Z-79DYrv6q__framework-read.md",
+  "authority_status": "LATEST_SESSION_BTC_AND_ETH_TARGETED_DIRECT_OWNER_VALIDATED_AND_RECONFIRMED_BY_VALID_FULL_DATA_PING",
   "latest_observed_US_session": "2026-08-05",
   "latest_owner_validation": {
     "request_id": "DP-ETF-DIRECT-OWNER-20260806-01",
@@ -18,10 +19,21 @@
     "retrieval_interval_seconds": 99.012,
     "post_freeze_source_calls": 0
   },
+  "latest_full_data_ping_reconfirmation": {
+    "run_id": "run-20260806T101439Z-79DYrv6q",
+    "snapshot_id": "snap-20260806T101439Z-caM8nhgy",
+    "snapshot_utc": "2026-08-06T10:14:39.743Z",
+    "packet_sha256": "389f745ad49a5c4fa84f4e9df1053186fa5386792aeaa87488cbdfc1296b2176",
+    "validator_pass": true,
+    "BTC_usd_m": 244.4,
+    "ETH_usd_m": 60.8,
+    "matches_targeted_owner": true,
+    "new_session_introduced": false
+  },
   "BTC": {
     "latest_confirmed_session": "2026-08-05",
     "latest_confirmed_session_total_usd_m": 244.4,
-    "latest_session_total_authority": "TARGETED_DIRECT_OWNER_VALIDATION",
+    "latest_session_total_authority": "TARGETED_DIRECT_OWNER_VALIDATION_RECONFIRMED_BY_VALID_FULL_DATA_PING",
     "three_session_sum_usd_m": 626.0,
     "five_session_sum_usd_m": 593.7,
     "seven_session_sum_usd_m": 576.1,
@@ -48,7 +60,7 @@
   "ETH": {
     "latest_confirmed_session": "2026-08-05",
     "latest_confirmed_session_total_usd_m": 60.8,
-    "latest_session_total_authority": "TARGETED_DIRECT_OWNER_VALIDATION",
+    "latest_session_total_authority": "TARGETED_DIRECT_OWNER_VALIDATION_RECONFIRMED_BY_VALID_FULL_DATA_PING",
     "three_session_sum_usd_m": 102.0,
     "five_session_sum_usd_m": 123.8,
     "seven_session_sum_usd_m": 100.3,
@@ -97,11 +109,11 @@
   "source_QA": {
     "H_SRC_01_status": "FALSIFIED_UNCHANGED",
     "operational_freshness_gate": "FOOTER_DATE_LATEST_SESSION_TWO_RETRIEVALS_HEADER_IDENTITY_AND_LOCAL_TIEOUT",
-    "row_hashes_match_across_retrievals": true,
-    "invocation_receipt_bijection": "PASS",
-    "packet_validation": "PASS",
-    "INV_006_full_runtime_issue": 317,
-    "variable_width_parser_issue": 318
+    "row_hashes_match_across_targeted_retrievals": true,
+    "full_data_ping_invocation_receipt_bijection": "PASS",
+    "full_data_ping_packet_validation": "PASS",
+    "INV_006_full_runtime_issue": "317_ACCEPTANCE_CRITERIA_SATISFIED_BY_RUN_20260806T101439Z",
+    "variable_width_parser_issue": "318_PRODUCTION_OUTPUT_CORRECT_CODE_AND_FIXTURE_VERIFICATION_PENDING"
   },
   "week_31": {
     "BTC_total_usd_m": -61.5,
@@ -111,7 +123,7 @@
   },
   "pending": [
     "ETF_AUM_DENOMINATORS",
-    "FRESH_FULL_DATA_PING_AFTER_INV_006_AND_PARSER_REMEDIATION"
+    "ISSUE_318_CODE_AND_FIXTURE_VERIFICATION"
   ],
   "framework_effect": {
     "rotation": "NO_CHANGE_NO_ROTATION",
@@ -119,13 +131,13 @@
     "new_entry": "NOT_ACTIVE",
     "large_caps": "WATCH_ONLY",
     "operational_risk_class": "DO_NOT_ADD_RISK",
-    "risk_substate": "BTC_LED_REPAIR_WITH_STRONG_DUAL_POSITIVE_ETF_ABSORPTION_AND_SETTLED_ETH_RELATIVE_REBOUND_BUT_NO_0030_OR_H7_RETRIGGER",
+    "risk_substate": "BTC_LED_REPAIR_WITH_STRONG_DUAL_POSITIVE_ETF_ABSORPTION_BUT_SAME_UNIVERSE_BREADTH_DETERIORATION_SHORT_WINDOW_SELL_SIDE_AND_ETHBTC_BELOW_0030",
     "canonical_state_change": "NONE",
     "portfolio_action": "NONE"
   },
   "research_escalation": {
     "status": "NO",
     "resolved_request_id": "DP-ETF-DIRECT-OWNER-20260806-01",
-    "remaining_work": "ENGINEERING_AND_FRESH_VALID_FULL_DATA_PING"
+    "remaining_work": "ISSUE_318_ENGINEERING_VERIFICATION"
   }
 }
