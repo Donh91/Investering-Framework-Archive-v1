@@ -1,0 +1,82 @@
+{
+  "contract": "FRAMEWORK_CONTEXT_ROUTER_v1",
+  "status": "DRAFT_TESTABLE",
+  "default_policy": {
+    "repository_wide_read": false,
+    "missing_mandatory_context": "BLOCK",
+    "stale_context": "MARK_AND_REQUIRE_EXPLICIT_ACCEPTANCE",
+    "context_selection": "TASK_TYPE_PLUS_EXPLICIT_POINTERS",
+    "maximum_unjustified_entries": 0
+  },
+  "task_bundles": {
+    "DATA_COLLECTION": {
+      "mandatory": [
+        "active collector contract",
+        "source registry",
+        "canonical accepted predecessor",
+        "current authority boundaries"
+      ],
+      "forbidden": ["portfolio action rules", "unrelated historical research archive"]
+    },
+    "AUTOMATION_REPAIR": {
+      "mandatory": [
+        "operations dashboard",
+        "latest automation health",
+        "exact failing workflow and logs",
+        "related remediation row",
+        "relevant tests",
+        "latest handoff"
+      ],
+      "forbidden": ["market-model mutation", "unrelated workflow edits"]
+    },
+    "EXPERIMENT_REVIEW": {
+      "mandatory": [
+        "experiment candidate",
+        "frozen hypothesis",
+        "controls",
+        "outcomes",
+        "replication receipts",
+        "kill criteria"
+      ],
+      "forbidden": ["self-promotion", "rewriting frozen hypothesis"]
+    },
+    "WEEKLY_CALIBRATION": {
+      "mandatory": [
+        "frozen weekly evidence",
+        "forecast ledger",
+        "matured outcomes",
+        "experiment learning",
+        "reliability ledger",
+        "weekly authority contract"
+      ],
+      "forbidden": ["unfrozen live data as canonical weekly evidence"]
+    },
+    "ARCHIVE_INGESTION": {
+      "mandatory": [
+        "archive placement rules",
+        "source manifest",
+        "precedence map",
+        "deduplication policy",
+        "retention policy"
+      ],
+      "forbidden": ["silent canonical promotion", "lossy deletion without receipt"]
+    },
+    "ARCHITECTURE_REVIEW": {
+      "mandatory": [
+        "current architecture candidate",
+        "existing overlapping components",
+        "operations dashboard",
+        "latest handoff",
+        "governance and kill criteria"
+      ],
+      "forbidden": ["implementation claims without repository evidence"]
+    }
+  },
+  "bundle_receipt_requirements": [
+    "path_or_uri",
+    "content_sha256",
+    "reason",
+    "freshness_status",
+    "authority_class"
+  ]
+}
