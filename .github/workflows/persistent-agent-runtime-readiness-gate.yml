@@ -1,0 +1,47 @@
+name: Persistent Agent Runtime Readiness Gate
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/agent_runtime/**'
+      - 'tests/agent_runtime/**'
+      - 'research/agent_runtime_candidates/**'
+      - '07_PROMPTS_AND_AGENTS/github_agent/2026-08-06__persistent-agent-runtime-candidate-v1__incubating.md'
+      - '.github/workflows/persistent-agent-runtime-readiness*.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compile evaluator
+        run: python -m py_compile scripts/agent_runtime/evaluate_persistent_runtime_readiness.py
+      - name: Run readiness tests
+        run: python -m unittest tests.agent_runtime.test_persistent_runtime_readiness -v
+      - name: Verify authority boundaries
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          candidate=json.loads(Path('research/agent_runtime_candidates/PERSISTENT_AGENT_RUNTIME_CANDIDATE_v1.json').read_text())
+          assert candidate['status']=='INCUBATING'
+          assert candidate['maximum_automatic_stage']=='READY_FOR_ISOLATED_CANARY'
+          assert candidate['automatic_installation'] is False
+          assert candidate['automatic_secret_access'] is False
+          assert candidate['automatic_main_merge'] is False
+          workflow=Path('.github/workflows/persistent-agent-runtime-readiness.yml').read_text()
+          assert "ref: main" in workflow
+          assert "group: framework-main-writer" in workflow
+          assert "timezone: 'Europe/Copenhagen'" in workflow
+          assert 'INSTALL_RUNTIME' not in workflow
+          assert 'OPENAI_API_KEY' not in workflow
+          print('PERSISTENT_AGENT_RUNTIME_READINESS_GATE_PASS')
+          PY
