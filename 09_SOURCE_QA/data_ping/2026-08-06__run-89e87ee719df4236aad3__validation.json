@@ -1,0 +1,67 @@
+{
+  "schema_version": "DATA_PING_SOURCE_QA_v1",
+  "run_id": "run-89e87ee719df4236aad3",
+  "snapshot_id": "snap-0cc3b5c7eb8740269a3b",
+  "snapshot_utc": "2026-08-06T16:00:43.486Z",
+  "collector_version": "15.2.0",
+  "packet_validator_pass": true,
+  "failed_check_ids": [],
+  "execution_order_status": "PASS",
+  "status_reconciliation": "PASS",
+  "receipt_bijection_status": "PASS",
+  "settled_candle_filter_status": "PASS",
+  "freeze_invariants_status": "PASS",
+  "invocation_receipt_integrity": "PASS",
+  "retrieval_time_precision": "EXACT_PER_INVOCATION",
+  "planned_core_actions": 60,
+  "attempted_core_actions": 60,
+  "receipt_count": 61,
+  "freeze_count": 1,
+  "post_freeze_call_count": 0,
+  "packet_sha256": "a02aacc8abc7805bc8195f5dd02ede00545aa254f5dc3279595b18c8376ab566",
+  "collector_packet_usable": true,
+  "main_thread_bounded_owner_eligible": false,
+  "main_thread_classification": "VALIDATED_NON_OWNER_LINEAGE_BLOCKED_OBSERVATION",
+  "lineage": {
+    "packet_predecessor_run_id": "run-20260806T115910Z-04fa4db6",
+    "packet_predecessor_snapshot_id": "snap-20260806T115910Z-140c9d66",
+    "packet_predecessor_accepted_as_bounded_owner": false,
+    "active_bounded_owner_run_id": "run-20260806T101439Z-79DYrv6q",
+    "active_bounded_owner_snapshot_id": "snap-20260806T101439Z-caM8nhgy",
+    "lineage_status": "VALID_PACKET_REFERENCES_NON_OWNER_INTERVENING_PREDECESSOR",
+    "required_resolution": "REANCHOR_TO_ACTIVE_OWNER_OR_SUPPLY_VALIDATE_AND_ACCEPT_MISSING_1159_PACKET_FIRST"
+  },
+  "timestamp_remediation": {
+    "PG_003_null_invocation_timestamps": "RESOLVED_IN_PACKET_ENCODING",
+    "encoding": "BASE_UTC_PLUS_STARTED_OFFSET_MS_PLUS_DURATION_MS",
+    "temporal_validator": "PASS",
+    "issue_320_status": "PARTIAL_REMEDIATION_PREDECESSOR_REANCHORING_STILL_OPEN"
+  },
+  "derived_window_timestamp_QA": {
+    "prior_1970_values_present": false,
+    "row_level_24h_48h_start_end_timestamps_exposed": false,
+    "resolution_proven": false,
+    "issue_321_status": "KEEP_OPEN_PENDING_SOURCE_BACKED_ROW_LEVEL_TIME_EVIDENCE_AND_FIXTURES"
+  },
+  "ETF": {
+    "session": "2026-08-05",
+    "BTC_usd_m": 244.4,
+    "ETH_usd_m": 60.8,
+    "matches_direct_owner": true,
+    "new_session_introduced": false
+  },
+  "breadth": {
+    "method": "COINGECKO_TOP100_FILTERED_v3",
+    "filter": "BREADTH_FILTER_TOP100_EXCLUSIONS_v1",
+    "membership_hash": "db981da7d5002ac7742419b4bcf7d9c022a5b2ab88165ab971228d587aa6a739",
+    "same_universe_as_active_owner": true,
+    "positive_share": 0.3370786517,
+    "equal_weight_mean_pct": -0.4393258427,
+    "scored_gate_permission": "NOT_AUTHORIZED"
+  },
+  "bounded_pointer_advanced": false,
+  "canonical_predecessor_advanced": false,
+  "canonical_state_change": "NONE",
+  "portfolio_effect": "NONE",
+  "research_escalation": "NO_DETERMINISTIC_LINEAGE_AND_ENGINEERING_WORK_ALREADY_LOCALIZED"
+}
