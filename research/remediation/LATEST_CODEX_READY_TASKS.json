@@ -1,13 +1,13 @@
 {
   "contract": "CODEX_READY_TASKS_v1",
-  "generated_at_utc": "2026-08-05T17:08:33Z",
+  "generated_at_utc": "2026-08-06T06:16:39Z",
   "tasks": [
     {
       "allowed_change_scope": [
         ".github/workflows/automation-production-health.yml",
         "directly related scripts and tests"
       ],
-      "failure_streak": 4,
+      "failure_streak": 5,
       "finding": "REPEATED_CONSECUTIVE_FAILURES",
       "first_observed_at_utc": "2026-08-05T17:08:33Z",
       "forbidden_changes": [
@@ -16,10 +16,10 @@
         "canonical authority",
         "portfolio logic"
       ],
-      "last_observed_at_utc": "2026-08-05T17:08:33Z",
-      "latest_run_id": 31027796879,
-      "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/31027796879",
-      "observations": 1,
+      "last_observed_at_utc": "2026-08-06T06:16:39Z",
+      "latest_run_id": 31076282261,
+      "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/31076282261",
+      "observations": 2,
       "post_fix_gate": "3_SUCCESSFUL_EXPECTED_RUNS",
       "required_evidence": [
         "workflow job logs",
@@ -36,6 +36,38 @@
     },
     {
       "allowed_change_scope": [
+        ".github/workflows/master-monday-remaining-gaps.yml",
+        "directly related scripts and tests"
+      ],
+      "failure_streak": 0,
+      "finding": "NO_RUN_HISTORY",
+      "first_observed_at_utc": "2026-08-05T17:08:33Z",
+      "forbidden_changes": [
+        "market gates",
+        "model weights",
+        "canonical authority",
+        "portfolio logic"
+      ],
+      "last_observed_at_utc": "2026-08-06T06:16:39Z",
+      "latest_run_id": null,
+      "latest_run_url": null,
+      "observations": 2,
+      "post_fix_gate": "3_SUCCESSFUL_EXPECTED_RUNS",
+      "required_evidence": [
+        "workflow job logs",
+        "reproduction or repeated identical signature",
+        "positive and negative acceptance tests"
+      ],
+      "required_observations": 2,
+      "risk_class": "B_CODEX_PR",
+      "route": "CODEX_PR",
+      "signature": "f503f5a09c0e034ab12d",
+      "state": "CODEX_READY",
+      "success_streak": 0,
+      "workflow": "master-monday-remaining-gaps.yml"
+    },
+    {
+      "allowed_change_scope": [
         ".github/workflows/sunday-market-close-and-cfgi.yml",
         "directly related scripts and tests"
       ],
@@ -48,10 +80,10 @@
         "canonical authority",
         "portfolio logic"
       ],
-      "last_observed_at_utc": "2026-08-05T17:08:33Z",
+      "last_observed_at_utc": "2026-08-06T06:16:39Z",
       "latest_run_id": 30782418715,
       "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/30782418715",
-      "observations": 1,
+      "observations": 2,
       "post_fix_gate": "3_SUCCESSFUL_EXPECTED_RUNS",
       "required_evidence": [
         "workflow job logs",
@@ -80,10 +112,10 @@
         "canonical authority",
         "portfolio logic"
       ],
-      "last_observed_at_utc": "2026-08-05T17:08:33Z",
+      "last_observed_at_utc": "2026-08-06T06:16:39Z",
       "latest_run_id": 30782418715,
       "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/30782418715",
-      "observations": 1,
+      "observations": 2,
       "post_fix_gate": "3_SUCCESSFUL_EXPECTED_RUNS",
       "required_evidence": [
         "workflow job logs",
@@ -112,10 +144,10 @@
         "canonical authority",
         "portfolio logic"
       ],
-      "last_observed_at_utc": "2026-08-05T17:08:33Z",
+      "last_observed_at_utc": "2026-08-06T06:16:39Z",
       "latest_run_id": 30782418715,
       "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/30782418715",
-      "observations": 1,
+      "observations": 2,
       "post_fix_gate": "3_SUCCESSFUL_EXPECTED_RUNS",
       "required_evidence": [
         "workflow job logs",
@@ -144,10 +176,10 @@
         "canonical authority",
         "portfolio logic"
       ],
-      "last_observed_at_utc": "2026-08-05T17:08:33Z",
+      "last_observed_at_utc": "2026-08-06T06:16:39Z",
       "latest_run_id": 30926906210,
       "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/30926906210",
-      "observations": 1,
+      "observations": 2,
       "post_fix_gate": "3_SUCCESSFUL_EXPECTED_RUNS",
       "required_evidence": [
         "workflow job logs",
@@ -176,10 +208,10 @@
         "canonical authority",
         "portfolio logic"
       ],
-      "last_observed_at_utc": "2026-08-05T17:08:33Z",
+      "last_observed_at_utc": "2026-08-06T06:16:39Z",
       "latest_run_id": 30926906210,
       "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/30926906210",
-      "observations": 1,
+      "observations": 2,
       "post_fix_gate": "3_SUCCESSFUL_EXPECTED_RUNS",
       "required_evidence": [
         "workflow job logs",
@@ -193,6 +225,70 @@
       "state": "CODEX_READY",
       "success_streak": 0,
       "workflow": "weekly-api-calibration-shadow.yml"
+    },
+    {
+      "allowed_change_scope": [
+        ".github/workflows/weekly-api-calibration-shadow.yml",
+        "directly related scripts and tests"
+      ],
+      "failure_streak": 10,
+      "finding": "SCHEDULE_STALE",
+      "first_observed_at_utc": "2026-08-06T06:16:39Z",
+      "forbidden_changes": [
+        "market gates",
+        "model weights",
+        "canonical authority",
+        "portfolio logic"
+      ],
+      "last_observed_at_utc": "2026-08-06T06:16:39Z",
+      "latest_run_id": 30926906210,
+      "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/30926906210",
+      "observations": 1,
+      "post_fix_gate": "3_SUCCESSFUL_EXPECTED_RUNS",
+      "required_evidence": [
+        "workflow job logs",
+        "reproduction or repeated identical signature",
+        "positive and negative acceptance tests"
+      ],
+      "required_observations": 2,
+      "risk_class": "B_CODEX_PR",
+      "route": "CODEX_PR",
+      "signature": "28e03c862cae95f0b826",
+      "state": "CODEX_READY",
+      "success_streak": 0,
+      "workflow": "weekly-api-calibration-shadow.yml"
+    },
+    {
+      "allowed_change_scope": [
+        ".github/workflows/weekly-raw-calibration-bridge.yml",
+        "directly related scripts and tests"
+      ],
+      "failure_streak": 0,
+      "finding": "SCHEDULE_STALE",
+      "first_observed_at_utc": "2026-08-05T17:08:33Z",
+      "forbidden_changes": [
+        "market gates",
+        "model weights",
+        "canonical authority",
+        "portfolio logic"
+      ],
+      "last_observed_at_utc": "2026-08-06T06:16:39Z",
+      "latest_run_id": 30770520500,
+      "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/30770520500",
+      "observations": 2,
+      "post_fix_gate": "3_SUCCESSFUL_EXPECTED_RUNS",
+      "required_evidence": [
+        "workflow job logs",
+        "reproduction or repeated identical signature",
+        "positive and negative acceptance tests"
+      ],
+      "required_observations": 2,
+      "risk_class": "B_CODEX_PR",
+      "route": "CODEX_PR",
+      "signature": "a4edd8fbf86bd8dcc92f",
+      "state": "CODEX_READY",
+      "success_streak": 1,
+      "workflow": "weekly-raw-calibration-bridge.yml"
     }
   ]
 }
