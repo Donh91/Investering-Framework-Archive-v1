@@ -1,0 +1,77 @@
+{
+  "schema_version": "CLAUDE_OTA_MAIN_THREAD_QA_v1",
+  "source_run_timestamp_utc": "2026-08-06T07:49:36.027Z",
+  "operating_mode": "STANDALONE_OTA_NO_REFERENCE_BRIDGE",
+  "main_thread_reference_bounded_run_id": "run-e841c63ea8e04a028918",
+  "source_QA": {
+    "price_cache_guard": "PASS_AS_SUPPLIED",
+    "row_15_raw_hashes_present": true,
+    "settled_CEST_status": "DIRECT_SETTLED",
+    "UTC_daily_settlement_status": "DIRECT_SETTLED",
+    "ETF_retrieval_status": "NOT_RETRIEVED_THIS_OTA"
+  },
+  "H7_QA": {
+    "latest_formed_extension_row": 15,
+    "BTC_close": 64733.13,
+    "ETH_close": 1908.75,
+    "ETHBTC_close": 0.0295,
+    "spread_pp": 1.11,
+    "COND2": "1_OF_3_NOT_MET",
+    "COND3": "MET",
+    "COND1_latest_three": "NOT_MET",
+    "five_session_slope_pct_per_session": -0.109,
+    "arc_rows": 15,
+    "arc_net_change_pct": 0.58,
+    "consecutive_maturities_with_fallen_signal": 7,
+    "historical_score_change": "NONE",
+    "rotation_permission": "CLOSED"
+  },
+  "threshold_QA": {
+    "session": "2026-08-05",
+    "ETHBTC_settled_close": 0.02951,
+    "high": 0.02975,
+    "low": 0.02904,
+    "touched_0_0300": false,
+    "closed_above_0_0300": false,
+    "sessions_without_0_0300_touch": 12,
+    "sequence_status": "SEQUENCE_TERMINATED_SUSTAINED"
+  },
+  "F1_QA": {
+    "settled_post_window_sessions": 11,
+    "settled_breaches": 0,
+    "historical_score_change": "NONE",
+    "H_WIN_01": "UNPROVEN_LOW_MODERATE_UNCHANGED"
+  },
+  "ETF_QA": {
+    "latest_valid_owner_session": "2026-08-04",
+    "latest_valid_BTC_usd_m": 211.5,
+    "latest_valid_ETH_usd_m": 53.1,
+    "current_OTA_5aug_status": "UNKNOWN_NOT_ZERO",
+    "failed_packet_candidate_1": {"BTC_usd_m": 2.8, "ETH_usd_m": 0.0},
+    "failed_packet_candidate_2": {"BTC_usd_m": 244.4, "ETH_usd_m": 60.8},
+    "owner_update_permission": "DENIED_PENDING_DIRECT_VALIDATION"
+  },
+  "creative_extension_QA": {
+    "status": "EXPLORATORY_NOT_PREREGISTERED",
+    "merge_into_H7": "DENIED",
+    "retroactive_rescoring": "DENIED",
+    "future_design_relevance": "POSSIBLE",
+    "current_execution_permission": "DENIED_POST_HOC_SMALL_SAMPLE"
+  },
+  "framework_result": {
+    "canonical_state_change": "NONE",
+    "portfolio_action": "NONE",
+    "rotation": "NO_ROTATION",
+    "capital_lifecycle": "WAIT",
+    "rebuy": "LOCKED",
+    "new_entry": "NOT_ACTIVE",
+    "A_class_increment": 0,
+    "shadow_dual_run_increment": 0
+  },
+  "research_escalation": {
+    "status": "YES",
+    "subject": "BTC_AND_ETH_ETF_2026_08_05_DIRECT_OWNER_VALIDATION",
+    "H8_research_now": "NO"
+  },
+  "final_QA_status": "PASS_FOR_INCREMENTAL_EXPERIMENT_AND_SETTLEMENT_EVIDENCE_NO_CANONICAL_OR_PORTFOLIO_EFFECT"
+}
