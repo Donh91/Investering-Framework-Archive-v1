@@ -1,0 +1,55 @@
+{
+  "schema_version": "LATEST_VALIDATION_FAILED_DATA_PING_OBSERVATION_v1",
+  "updated_at_utc": "2026-08-06T07:20:00Z",
+  "run_id": "run-20260805T232345Z-6f82",
+  "snapshot_id": "snap-20260805T232345Z-a91c",
+  "snapshot_utc": "2026-08-05T23:23:45.183Z",
+  "collector_version": "15.2.0",
+  "collector_status": "FAIL",
+  "source_collection_status": "PARTIAL",
+  "classification": "VALIDATION_FAILED_NON_DECISION_OBSERVATION",
+  "packet_usable_for_main_thread_ingest": false,
+  "failed_check_ids": ["INV-006"],
+  "failure_summary": {
+    "invocation_receipt_integrity": "FAIL",
+    "arguments_sha256": "NOT_CAPTURED",
+    "payload_sha256": "NOT_CAPTURED",
+    "packet_sha256": null,
+    "packet_sha256_reason": "CANONICAL_PACKET_HASH_NOT_COMPUTED_BEFORE_TERMINAL_FREEZE"
+  },
+  "latest_valid_bounded_owner": {
+    "run_id": "run-e841c63ea8e04a028918",
+    "snapshot_id": "snap-421afc0073c04599ab62",
+    "snapshot_utc": "2026-08-05T20:38:19.857Z"
+  },
+  "packet_predecessor_matches_latest_valid_bounded": true,
+  "bounded_pointer_replaced": false,
+  "canonical_predecessor_advanced": false,
+  "canonical_state_change": "NONE",
+  "portfolio_effect": "NONE",
+  "diagnostic_market": {
+    "BTCUSDT": 64669.99,
+    "ETHUSDT": 1910.21,
+    "ETHBTC": 0.02953,
+    "BTC_open_interest": 107318.324,
+    "ETH_open_interest": 2316237.995
+  },
+  "diagnostic_change_vs_latest_valid_bounded_pct": {
+    "BTCUSDT": -0.4648310041,
+    "ETHUSDT": -0.4876092041,
+    "ETHBTC": -0.0676818951,
+    "BTC_open_interest": -0.2759088666,
+    "ETH_open_interest": -1.4559025303
+  },
+  "unaccepted_ETF_candidates": {
+    "session": "2026-08-05",
+    "BTC_usd_m": 2.8,
+    "ETH_usd_m": 0.0,
+    "owner_permission": "NO"
+  },
+  "source_record_path": "08_SOURCE_MATERIAL/data_ping/2026-08-05__run-20260805T232345Z-6f82__validation-failed-source-record.md",
+  "qa_path": "09_SOURCE_QA/data_ping/2026-08-05__run-20260805T232345Z-6f82__validation.json",
+  "assessment_path": "04_MARKET_LEARNING/data_ping/2026-08-05__run-20260805T232345Z-6f82__non-decision-assessment.md",
+  "audit_receipt_path": "07_PROMPTS_AND_AGENTS/skill_runs/2026-08-06__data-ping-run-20260805T232345Z-6f82__validation-failed-audit.md",
+  "required_next_step": "FIX_INV_006_AND_RUN_FRESH_FULL_DATA_PING"
+}
