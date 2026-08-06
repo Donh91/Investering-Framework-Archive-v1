@@ -1,63 +1,19 @@
 {
   "schema_version": "LATEST_VALIDATION_FAILED_DATA_PING_OBSERVATION_v1",
-  "updated_at_utc": "2026-08-06T09:42:00Z",
-  "run_id": "run-20260806T074239Z-81d4",
-  "snapshot_id": "snap-20260806T074239Z-42af",
-  "snapshot_utc": "2026-08-06T07:42:39.000Z",
-  "collector_version": "15.2.0",
-  "collector_status": "FAIL",
-  "source_collection_status": "PARTIAL",
+  "updated_at_utc": "2026-08-06T10:32:00Z",
+  "latest_failed_run_id": "run-20260806T074239Z-81d4",
+  "latest_failed_snapshot_id": "snap-20260806T074239Z-42af",
+  "latest_failed_snapshot_utc": "2026-08-06T07:42:39.000Z",
   "classification": "VALIDATION_FAILED_NON_DECISION_OBSERVATION",
-  "packet_usable_for_main_thread_ingest": false,
   "failed_check_ids": ["INV-006"],
-  "repeat_failure": true,
-  "previous_validation_failed_run": {
-    "run_id": "run-20260805T232345Z-6f82",
-    "snapshot_id": "snap-20260805T232345Z-a91c",
-    "snapshot_utc": "2026-08-05T23:23:45.183Z"
-  },
+  "repeat_failure_count": 2,
   "failure_summary": {
-    "invocation_receipt_integrity": "FAIL",
     "arguments_sha256": "NOT_CAPTURED_0_OF_61",
     "payload_sha256": "NOT_CAPTURED_0_OF_61",
     "packet_sha256": null,
-    "packet_sha256_reason": "CANONICAL_PACKET_HASH_NOT_COMPUTED"
-  },
-  "latest_valid_bounded_owner": {
-    "run_id": "run-e841c63ea8e04a028918",
-    "snapshot_id": "snap-421afc0073c04599ab62",
-    "snapshot_utc": "2026-08-05T20:38:19.857Z"
-  },
-  "packet_predecessor_matches_latest_valid_bounded": true,
-  "bounded_pointer_replaced": false,
-  "canonical_predecessor_advanced": false,
-  "canonical_state_change": "NONE",
-  "portfolio_effect": "NONE",
-  "diagnostic_market": {
-    "BTCUSDT": 64867.68,
-    "ETHUSDT": 1910.53,
-    "ETHBTC": 0.02946,
-    "BTC_open_interest": 106609.234,
-    "ETH_open_interest": 2282083.486
-  },
-  "diagnostic_change_vs_latest_valid_bounded_pct": {
-    "BTCUSDT": -0.1605614726,
-    "ETHUSDT": -0.4709388040,
-    "ETHBTC": -0.3045685279,
-    "BTC_open_interest": -0.9348210928,
-    "ETH_open_interest": -2.9090024584
-  },
-  "failed_packet_ETF_candidates": {
-    "session": "2026-08-05",
-    "current_failed_packet": {
-      "BTC_usd_m": 244.4,
-      "ETH_usd_m": 60.8
-    },
-    "preceding_failed_packet": {
-      "BTC_usd_m": 2.8,
-      "ETH_usd_m": 0.0
-    },
-    "packet_owner_permission": "NO"
+    "bounded_pointer_advanced_by_failed_run": false,
+    "canonical_state_change": "NONE",
+    "portfolio_effect": "NONE"
   },
   "independent_targeted_ETF_resolution": {
     "request_id": "DP-ETF-DIRECT-OWNER-20260806-01",
@@ -67,23 +23,40 @@
     "ETH_owner_usd_m": 60.8,
     "earlier_BTC_2_8_and_ETH_0_0_status": "PERMANENTLY_REJECTED_NON_OWNER",
     "discrepancy_explanation": "EARLIER_VALUES_MATCH_TENTH_FUND_COLUMNS_NOT_TOTAL",
-    "parser_issue": 318,
-    "ETF_owner_pointer_advanced": true,
-    "bounded_pointer_advanced": false
+    "parser_issue": 318
+  },
+  "recovery_run": {
+    "run_id": "run-20260806T101439Z-79DYrv6q",
+    "snapshot_id": "snap-20260806T101439Z-caM8nhgy",
+    "snapshot_utc": "2026-08-06T10:14:39.743Z",
+    "validator_pass": true,
+    "argument_hashes_present": "61_OF_61",
+    "payload_hashes_present": "61_OF_61",
+    "receipt_bijection": "PASS",
+    "packet_sha256": "389f745ad49a5c4fa84f4e9df1053186fa5386792aeaa87488cbdfc1296b2176",
+    "freeze_count": 1,
+    "post_freeze_calls": 0,
+    "packet_usable_for_main_thread_ingest": true,
+    "latest_bounded_pointer_advanced": true,
+    "INV_006_status": "RECOVERED_PRODUCTION_SHAPE",
+    "issue_317": "ACCEPTANCE_CRITERIA_SATISFIED"
+  },
+  "latest_valid_bounded_owner": {
+    "run_id": "run-20260806T101439Z-79DYrv6q",
+    "snapshot_id": "snap-20260806T101439Z-caM8nhgy",
+    "snapshot_utc": "2026-08-06T10:14:39.743Z"
+  },
+  "engineering_status": {
+    "issue_317": "READY_TO_CLOSE_COMPLETED",
+    "issue_318": "KEEP_OPEN_PENDING_CODE_AND_FIXTURE_VERIFICATION",
+    "required_next_step": "VERIFY_VARIABLE_WIDTH_ETF_PARSER_IMPLEMENTATION_AND_FIXTURES"
   },
   "research_escalation": {
-    "status": "RESOLVED_NO_FURTHER_RESEARCH_NOW",
-    "resolved_scope": "TARGETED_ETF_2026_08_05_DIRECT_OWNER_VALIDATION",
-    "remaining_requirements": [
-      "FIX_INV_006_ISSUE_317",
-      "FIX_VARIABLE_WIDTH_ETF_PARSER_ISSUE_318",
-      "RUN_FRESH_FULL_DATA_PING"
-    ]
+    "status": "NO",
+    "reason": "ETF_CONFLICT_RESOLVED_AND_INV_006_RECOVERED"
   },
   "source_record_path": "08_SOURCE_MATERIAL/data_ping/2026-08-06__run-20260806T074239Z-81d4__validation-failed-source-record.md",
   "qa_path": "09_SOURCE_QA/data_ping/2026-08-06__run-20260806T074239Z-81d4__validation.json",
-  "assessment_path": "04_MARKET_LEARNING/data_ping/2026-08-06__run-20260806T074239Z-81d4__non-decision-assessment.md",
-  "audit_receipt_path": "07_PROMPTS_AND_AGENTS/skill_runs/2026-08-06__data-ping-run-20260806T074239Z-81d4__validation-failed-audit.md",
-  "engineering_issues": [317, 318],
-  "required_next_step": "FIX_INV_006_AND_ETF_TOTAL_COLUMN_PARSER_THEN_RUN_FRESH_FULL_DATA_PING"
+  "recovery_source_record_path": "08_SOURCE_MATERIAL/data_ping/2026-08-06__run-20260806T101439Z-79DYrv6q__source-record.md",
+  "recovery_QA_path": "09_SOURCE_QA/data_ping/2026-08-06__run-20260806T101439Z-79DYrv6q__validation.json"
 }
