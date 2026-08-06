@@ -1,0 +1,96 @@
+{
+  "schema_version": "ETF_DIRECT_OWNER_VALIDATION_v1",
+  "request_id": "DP-ETF-DIRECT-OWNER-20260806-01",
+  "target_session": "2026-08-05",
+  "validation_status": "PASS",
+  "framework_interpretation": "DEFERRED_TO_MAIN_FRAMEWORK",
+  "packet_sha256": "0a6e29f5b302e5e3fbe3c5c49a9e07df78ebcb34d3430ddbf6ec1e44afb030b1",
+  "freeze_recorded_at_utc": "2026-08-06T09:10:31.381Z",
+  "post_freeze_source_calls": 0,
+  "parser_version": "FARSIDE_TABLE_FINALIZATION_VALIDATOR_v1",
+  "retrievals": {
+    "retrieval_1_utc": "2026-08-06T09:06:18.776Z",
+    "retrieval_2_utc": "2026-08-06T09:07:57.788Z",
+    "interval_seconds": 99.012,
+    "rows_identical": true,
+    "source_footer_date": "2026-08-06"
+  },
+  "BTC": {
+    "source_url": "https://farside.co.uk/bitcoin-etf-flow-all-data/",
+    "page_identity": "Bitcoin ETF Flow - All Data (US$m)",
+    "row_finality": "FINAL_FOR_OWNER_LEDGER",
+    "revision_status": "NO_REVISION_BETWEEN_RETRIEVALS",
+    "issuer_rows": {
+      "IBIT": 196.8,
+      "FBTC": 11.3,
+      "BITB": 10.6,
+      "ARKB": 37.6,
+      "BTCO": 0.0,
+      "EZBC": 0.0,
+      "BRRR": 0.0,
+      "HODL": -14.7,
+      "BTCW": 0.0,
+      "MSBT": 2.8,
+      "GBTC": 0.0,
+      "BTC": 0.0
+    },
+    "displayed_total_usd_m": 244.4,
+    "local_tieout_usd_m": 244.4,
+    "positive_count": 5,
+    "negative_count": 1,
+    "zero_count": 6,
+    "dash_count": 0,
+    "normalized_row_sha256_1": "0649d4353ecf8cf53ba874f4ef5a921881835d02aa41bb12ea99dbb9e5328a2e",
+    "normalized_row_sha256_2": "0649d4353ecf8cf53ba874f4ef5a921881835d02aa41bb12ea99dbb9e5328a2e",
+    "arguments_sha256": "8f0ff5c0a3a5ba6078f2c210176408bdf2d5318120670dbd19f91eb466f2f543",
+    "payload_sha256": "15704b6087245fb53848be0f16d4d731456c4fe791a638a8fa76a58b3f3ac951",
+    "owner_nomination": "YES"
+  },
+  "ETH": {
+    "source_url": "https://farside.co.uk/ethereum-etf-flow-all-data/",
+    "page_identity": "Ethereum ETF Flow - All Data (US$m)",
+    "row_finality": "FINAL_FOR_OWNER_LEDGER",
+    "revision_status": "NO_REVISION_BETWEEN_RETRIEVALS",
+    "issuer_rows": {
+      "ETHA": 50.3,
+      "ETHB": 4.9,
+      "FETH": 2.9,
+      "ETHW": 1.4,
+      "TETH": 1.3,
+      "ETHV": 0.0,
+      "QETH": 0.0,
+      "EZET": 0.0,
+      "ETHE": 0.0,
+      "ETH": 0.0
+    },
+    "displayed_total_usd_m": 60.8,
+    "local_tieout_usd_m": 60.8,
+    "positive_count": 5,
+    "negative_count": 0,
+    "zero_count": 5,
+    "dash_count": 0,
+    "normalized_row_sha256_1": "0eae40ac42c1402b332f2ba30097ab069c1dc49488bbff6b6cadc538d926b768",
+    "normalized_row_sha256_2": "0eae40ac42c1402b332f2ba30097ab069c1dc49488bbff6b6cadc538d926b768",
+    "arguments_sha256": "6159fd3ca686f4d5e8e70a722911888aad08e6e816844505159fe4c35cb09d92",
+    "payload_sha256": "62689e02bb418eb0a6ae1e526bebcac4748f28f0f869a2c679b222d05a4b7e40",
+    "owner_nomination": "YES"
+  },
+  "superseded_non_owner_candidates": {
+    "BTC_usd_m": 2.8,
+    "ETH_usd_m": 0.0,
+    "source_runs": [
+      "run-20260805T232345Z-6f82",
+      "run-20260806T074239Z-81d4"
+    ],
+    "reason": "PRIOR_PACKETS_FAILED_INV_006_AND_VALUES_MATCH_TENTH_FUND_FIELDS_NOT_TOTAL_COLUMNS"
+  },
+  "parser_defect_assessment": {
+    "classification": "FIXED_POSITION_OR_LEGACY_WIDTH_PARSER_TRUNCATION_STRONGLY_SUPPORTED",
+    "BTC_signature": "2.8_EQUALS_MSBT_TENTH_FUND_FIELD",
+    "ETH_signature": "0.0_EQUALS_ETH_TENTH_FUND_FIELD",
+    "exact_code_trace_available": false,
+    "engineering_issue": 318
+  },
+  "canonical_effect_claimed": "NONE",
+  "portfolio_effect_claimed": "NONE"
+}
