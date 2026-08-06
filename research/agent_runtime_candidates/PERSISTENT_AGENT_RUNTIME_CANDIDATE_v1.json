@@ -1,17 +1,32 @@
 {
   "contract": "PERSISTENT_AGENT_RUNTIME_CANDIDATE_v1",
+  "architecture_identity": "FRAMEWORK_EXECUTION_HARNESS_v1",
   "candidate_id": "ARC-PERSISTENT-AGENT-RUNTIME-001",
   "created_at_utc": "2026-08-06T10:31:00Z",
+  "updated_at_utc": "2026-08-06T17:10:00Z",
   "status": "INCUBATING",
-  "implementation_status": "NOT_ACTIVE",
+  "implementation_status": "CONTRACTS_ONLY",
   "product_binding": "PRODUCT_NEUTRAL",
-  "reference_implementations": ["PRIME_AGENT"],
+  "reference_implementations": ["PRIME_AGENT", "CLAUDE_CODE", "CODEX", "OPENHANDS"],
   "authority": "ARCHITECTURE_RESEARCH_ONLY",
+  "primary_goal": "MODEL_INDEPENDENT_FRAMEWORK_SPECIFIC_EXECUTION_HARNESS",
+  "persistent_runtime_priority": "LATER_OPTIONAL_CAPABILITY",
+  "default_recursion_depth": 0,
+  "maximum_future_bounded_recursion_depth": 1,
   "automatic_installation": false,
   "automatic_secret_access": false,
   "automatic_main_merge": false,
   "automatic_runtime_authority": false,
   "maximum_automatic_stage": "READY_FOR_ISOLATED_CANARY",
+  "execution_chain": [
+    "FRAMEWORK_TASK_CONTRACT_v1",
+    "FRAMEWORK_CONTEXT_BUNDLE_v1",
+    "FRAMEWORK_WORKER_MANIFEST_v1",
+    "FRAMEWORK_EVIDENCE_ENVELOPE_v1",
+    "FRAMEWORK_EXECUTION_RECEIPT_v1",
+    "FRAMEWORK_TERMINAL_RECEIPT_v1",
+    "LEDGER_ROUTING"
+  ],
   "stages": [
     "INCUBATING",
     "READY_FOR_CONTRACT_BUILD",
@@ -21,13 +36,13 @@
     "LIMITED_OPERATIONAL_PROPOSAL"
   ],
   "required_internal_contracts": [
-    "AGENT_OBJECTIVE_CONTRACT_v1",
-    "AGENT_SESSION_STATE_v1",
-    "AGENT_MESSAGE_RECEIPT_v1",
-    "AGENT_TERMINAL_RECEIPT_v1",
-    "AGENT_COMPACTION_CONTINUITY_RECEIPT_v1",
-    "AGENT_RUNTIME_BUDGET_v1",
-    "AGENT_RUNTIME_CAPABILITY_MANIFEST_v1"
+    "FRAMEWORK_TASK_CONTRACT_v1",
+    "FRAMEWORK_CONTEXT_BUNDLE_v1",
+    "FRAMEWORK_WORKER_MANIFEST_v1",
+    "FRAMEWORK_EVIDENCE_ENVELOPE_v1",
+    "FRAMEWORK_EXECUTION_RECEIPT_v1",
+    "FRAMEWORK_TERMINAL_RECEIPT_v1",
+    "FRAMEWORK_RUNTIME_ADAPTER_MANIFEST_v1"
   ],
   "internal_need_thresholds": {
     "cross_run_context_loss_or_manual_handover_events": 3,
@@ -67,6 +82,18 @@
     "CHANGE_CANONICAL_STATE",
     "CHANGE_MODEL_WEIGHT",
     "CHANGE_PORTFOLIO_ACTION",
-    "ASSUME_OWNER_GRADE_AUTHORITY"
+    "ASSUME_OWNER_GRADE_AUTHORITY",
+    "UNBOUNDED_RECURSIVE_DELEGATION",
+    "HIDDEN_LONG_TERM_MEMORY",
+    "AUTOMATIC_HARNESS_MUTATION"
+  ],
+  "kill_criteria": [
+    "NO_DURABLE_NEED_EVIDENCE",
+    "GITHUB_NATIVE_PRIMITIVES_SOLVE_NEED_WITH_LOWER_COMPLEXITY",
+    "CONTEXT_ROUTING_FAILS_TO_REDUCE_COST_OR_ERROR",
+    "WORKER_ISOLATION_CANNOT_BE_ENFORCED",
+    "RECEIPTS_CANNOT_DISTINGUISH_TERMINAL_STATES",
+    "RUNTIME_ADAPTER_RISK_EXCEEDS_MEASURED_VALUE",
+    "ARCHITECTURE_DRIFTS_INTO_GENERIC_AGENT_PLATFORM"
   ]
 }
