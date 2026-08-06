@@ -1,0 +1,62 @@
+{
+  "schema_version": "DATA_PING_SOURCE_QA_v1",
+  "run_id": "run-20260806T101439Z-79DYrv6q",
+  "snapshot_id": "snap-20260806T101439Z-caM8nhgy",
+  "snapshot_utc": "2026-08-06T10:14:39.743Z",
+  "collector_version": "15.2.0",
+  "validator_pass": true,
+  "failed_check_count": 0,
+  "failed_check_ids": [],
+  "execution_order_status": "PASS",
+  "status_reconciliation": "PASS",
+  "receipt_bijection_status": "PASS",
+  "breadth_transform_status": "PASS",
+  "settled_candle_filter_status": "PASS",
+  "freeze_invariants_status": "PASS",
+  "planned_core_actions": 60,
+  "attempted_core_actions": 60,
+  "receipt_count": 61,
+  "argument_hashes_present": 61,
+  "payload_hashes_present": 61,
+  "packet_sha256": "389f745ad49a5c4fa84f4e9df1053186fa5386792aeaa87488cbdfc1296b2176",
+  "packet_sha256_basis": "CANONICAL_ASCII_JSON_WITH_PACKET_SHA256_NULL",
+  "freeze_count": 1,
+  "post_freeze_call_count": 0,
+  "packet_usable_for_main_thread_ingest": true,
+  "predecessor": {
+    "snapshot_id": "snap-421afc0073c04599ab62",
+    "resolved_run_id": "run-e841c63ea8e04a028918",
+    "matches_immediate_prior_bounded": true,
+    "matches_canonical_predecessor": false,
+    "lineage_status": "DIRECT_ONE_STEP_CONTIGUOUS_METHOD_COMPATIBLE_BOUNDED_TRANSITION"
+  },
+  "etf_reconciliation": {
+    "session": "2026-08-05",
+    "BTC_usd_m": 244.4,
+    "ETH_usd_m": 60.8,
+    "matches_targeted_owner_validation": true,
+    "new_owner_session": false,
+    "variable_width_parser_production_evidence": "PASS_CORRECT_TOTALS_IN_FULL_PACKET",
+    "issue_318_code_and_fixture_verification": "STILL_REQUIRED"
+  },
+  "INV_006_remediation_evidence": {
+    "production_shape_full_packet": true,
+    "all_receipt_hashes_present": true,
+    "receipt_bijection_pass": true,
+    "packet_hash_present_before_freeze": true,
+    "fresh_full_run_passed": true,
+    "bounded_pointer_eligible_to_advance": true,
+    "issue_317_acceptance_criteria_satisfied": true
+  },
+  "breadth_authority": {
+    "membership_matches_immediate_prior": true,
+    "diagnostic_longitudinal_comparison": "AUTHORIZED",
+    "scoring_owner": "BREADTH_FILTER_TOP100_EXCLUSIONS_v1_1",
+    "method_compatible_with_scoring_owner": false,
+    "official_gate_permission": "NOT_AUTHORIZED"
+  },
+  "stablecoin_market_use_permission": "NO",
+  "canonical_predecessor_advanced": false,
+  "canonical_state_change": "NONE",
+  "portfolio_effect": "NONE"
+}
