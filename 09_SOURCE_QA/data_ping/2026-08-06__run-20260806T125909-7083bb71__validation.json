@@ -1,0 +1,57 @@
+{
+  "schema_version": "DATA_PING_SOURCE_QA_v1",
+  "run_id": "run-20260806T125909-7083bb71",
+  "snapshot_id": "snap-20260806T125909-f99a7d6f",
+  "snapshot_utc": "2026-08-06T12:59:09.866Z",
+  "collector_version": "15.2.0",
+  "validator_pass": false,
+  "failed_check_count": 1,
+  "failed_check_ids": ["PG-003"],
+  "execution_order_status": "PASS",
+  "status_reconciliation": "PASS",
+  "receipt_bijection_status": "PASS",
+  "breadth_transform_status": "PASS",
+  "settled_candle_filter_status": "PASS",
+  "freeze_invariants_status": "PASS",
+  "planned_core_actions": 60,
+  "attempted_core_actions": 60,
+  "receipt_count": 61,
+  "argument_hashes_present": 61,
+  "payload_hashes_present": 61,
+  "invocation_started_at_present": 0,
+  "invocation_completed_at_present": 0,
+  "packet_sha256": "f6807f5d94685ed8082877190e967e47841c67e31019427219a658277ab6f6f4",
+  "freeze_count": 1,
+  "post_freeze_call_count": 0,
+  "packet_usable_for_main_thread_ingest": false,
+  "failure_classification": "VALIDATION_FAILED_NON_DECISION_OBSERVATION",
+  "active_bounded_owner": {
+    "run_id": "run-20260806T101439Z-79DYrv6q",
+    "snapshot_id": "snap-20260806T101439Z-caM8nhgy",
+    "snapshot_utc": "2026-08-06T10:14:39.743Z"
+  },
+  "packet_predecessor": {
+    "snapshot_id": "snap-20260806T115910Z-140c9d66",
+    "snapshot_utc": "2026-08-06T11:59:10.108Z",
+    "matches_active_bounded_owner": false,
+    "lineage_status": "NON_OWNER_INTERVENING_PREDECESSOR"
+  },
+  "additional_defects": [
+    {
+      "id": "DERIVED_WINDOW_END_TIMESTAMP_1970",
+      "severity": "CRITICAL_FOR_DERIVED_TEMPORAL_PROVENANCE",
+      "affected_rows": ["BTC_24H", "BTC_48H", "ETH_24H", "ETH_48H", "ETHBTC_24H", "ETHBTC_48H"],
+      "issue": 321
+    }
+  ],
+  "engineering_owners": {
+    "PG_003": 320,
+    "derived_window_timestamp_serialization": 321,
+    "Farside_parser_verification": 318
+  },
+  "bounded_pointer_eligible_to_advance": false,
+  "canonical_predecessor_advanced": false,
+  "canonical_state_change": "NONE",
+  "portfolio_effect": "NONE",
+  "research_escalation": "NO_ENGINEERING_DEFECTS_ALREADY_LOCALIZED"
+}
