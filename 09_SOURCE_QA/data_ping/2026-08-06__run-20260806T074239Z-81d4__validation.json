@@ -1,0 +1,86 @@
+{
+  "schema_version": "DATA_PING_MAIN_THREAD_QA_v1",
+  "run_id": "run-20260806T074239Z-81d4",
+  "snapshot_id": "snap-20260806T074239Z-42af",
+  "snapshot_utc": "2026-08-06T07:42:39.000Z",
+  "collector_version": "15.2.0",
+  "collector_status": "FAIL",
+  "source_collection_status": "PARTIAL",
+  "classification": "VALIDATION_FAILED_NON_DECISION_OBSERVATION",
+  "packet_usable_for_main_thread_ingest": false,
+  "failed_check_ids": ["INV-006"],
+  "integrity_QA": {
+    "execution_order_status": "PASS",
+    "status_reconciliation": "PASS",
+    "breadth_transform_status": "PASS",
+    "settled_candle_filter_status": "PASS",
+    "freeze_invariants_status": "PASS",
+    "invocation_receipt_integrity": "FAIL",
+    "argument_hashes_non_null": 0,
+    "payload_hashes_non_null": 0,
+    "receipt_count": 61,
+    "packet_sha256": null,
+    "result": "CRITICAL_AUDIT_FAILURE_FAIL_CLOSED"
+  },
+  "lineage_QA": {
+    "packet_predecessor_snapshot_id": "snap-421afc0073c04599ab62",
+    "latest_valid_bounded_run_id": "run-e841c63ea8e04a028918",
+    "latest_valid_bounded_snapshot_id": "snap-421afc0073c04599ab62",
+    "predecessor_matches_latest_valid_bounded": true,
+    "bounded_pointer_permission": "DENIED_VALIDATION_FAILURE",
+    "canonical_pointer_permission": "DENIED"
+  },
+  "diagnostic_market_QA": {
+    "BTCUSDT": 64867.68,
+    "ETHUSDT": 1910.53,
+    "ETHBTC": 0.02946,
+    "BTC_open_interest": 106609.234,
+    "ETH_open_interest": 2282083.486,
+    "change_vs_latest_valid_bounded_pct": {
+      "BTCUSDT": -0.1605614726,
+      "ETHUSDT": -0.4709388040,
+      "ETHBTC": -0.3045685279,
+      "BTC_open_interest": -0.9348210928,
+      "ETH_open_interest": -2.9090024584
+    },
+    "authority": "DIAGNOSTIC_ONLY"
+  },
+  "ETF_QA": {
+    "session": "2026-08-05",
+    "current_failed_packet_candidates_usd_m": {
+      "BTC": 244.4,
+      "ETH": 60.8
+    },
+    "preceding_failed_packet_candidates_usd_m": {
+      "BTC": 2.8,
+      "ETH": 0.0
+    },
+    "conflict": "MATERIAL_SAME_SESSION_DISCREPANCY",
+    "owner_permission": "DENIED",
+    "required_resolution": "INDEPENDENT_DIRECT_OWNER_VALIDATION_OR_VALID_FULL_RERUN"
+  },
+  "breadth_QA": {
+    "transform": "COINGECKO_TOP100_FILTERED_v3",
+    "filter": "BREADTH_FILTER_TOP100_EXCLUSIONS_v1",
+    "included": 89,
+    "advancers": 45,
+    "decliners": 41,
+    "unchanged": 3,
+    "positive_share": 0.5056179775280899,
+    "equal_weight_mean_return_24h_pct": -0.2844531858104418,
+    "membership_hash": "db981da7d5002ac7742419b4bcf7d9c022a5b2ab88165ab971228d587aa6a739",
+    "locked_scoring_owner": "BREADTH_FILTER_TOP100_EXCLUSIONS_v1_1",
+    "method_compatible_with_locked_owner": false,
+    "gate_permission": "DENIED"
+  },
+  "framework_effect": {
+    "market_state_change": "NONE",
+    "rotation": "UNCHANGED_NO_ROTATION",
+    "rebuy": "UNCHANGED_LOCKED",
+    "new_entry": "UNCHANGED_NOT_ACTIVE",
+    "portfolio_action": "NONE",
+    "A_class_increment": 0,
+    "shadow_dual_run_increment": 0
+  },
+  "final_QA_status": "FAIL_CLOSED_REPEATED_INV_006_NO_INGEST"
+}
