@@ -1,0 +1,72 @@
+{
+  "contract": "PERSISTENT_AGENT_RUNTIME_CANDIDATE_v1",
+  "candidate_id": "ARC-PERSISTENT-AGENT-RUNTIME-001",
+  "created_at_utc": "2026-08-06T10:31:00Z",
+  "status": "INCUBATING",
+  "implementation_status": "NOT_ACTIVE",
+  "product_binding": "PRODUCT_NEUTRAL",
+  "reference_implementations": ["PRIME_AGENT"],
+  "authority": "ARCHITECTURE_RESEARCH_ONLY",
+  "automatic_installation": false,
+  "automatic_secret_access": false,
+  "automatic_main_merge": false,
+  "automatic_runtime_authority": false,
+  "maximum_automatic_stage": "READY_FOR_ISOLATED_CANARY",
+  "stages": [
+    "INCUBATING",
+    "READY_FOR_CONTRACT_BUILD",
+    "READY_FOR_SIMULATION",
+    "READY_FOR_ISOLATED_CANARY",
+    "READY_FOR_SHADOW_RUNTIME",
+    "LIMITED_OPERATIONAL_PROPOSAL"
+  ],
+  "required_internal_contracts": [
+    "AGENT_OBJECTIVE_CONTRACT_v1",
+    "AGENT_SESSION_STATE_v1",
+    "AGENT_MESSAGE_RECEIPT_v1",
+    "AGENT_TERMINAL_RECEIPT_v1",
+    "AGENT_COMPACTION_CONTINUITY_RECEIPT_v1",
+    "AGENT_RUNTIME_BUDGET_v1",
+    "AGENT_RUNTIME_CAPABILITY_MANIFEST_v1"
+  ],
+  "internal_need_thresholds": {
+    "cross_run_context_loss_or_manual_handover_events": 3,
+    "interrupted_long_task_events": 2,
+    "message_delivery_or_continuation_failures": 2,
+    "scheduled_state_loss_events": 1
+  },
+  "stability_requirements": {
+    "automation_red_count": 0,
+    "unresolved_p0_remediation_count": 0,
+    "hash_mismatch_count": 0,
+    "missing_required_handoff_pointer_count": 0,
+    "minimum_successful_observation_runs": 14
+  },
+  "upstream_requirements": {
+    "pinned_version": true,
+    "minimum_observation_days": 30,
+    "no_breaking_change_during_observation": true,
+    "compaction_recovery_regression_tested": true,
+    "silent_success_on_failure_prohibited": true,
+    "refinement_preview_and_rollback": true,
+    "session_persistence_tested": true,
+    "external_sandbox_and_kill_switch": true
+  },
+  "automatic_actions_allowed": [
+    "EVALUATE_REPOSITORY_READINESS",
+    "PUBLISH_READINESS_RECEIPT",
+    "RECOMMEND_NEXT_STAGE",
+    "ROUTE_BOUNDED_CONTRACT_TASK_TO_EXISTING_REMEDIATION_GOVERNANCE"
+  ],
+  "automatic_actions_forbidden": [
+    "INSTALL_RUNTIME",
+    "CREATE_SECRET",
+    "CREATE_SELF_HOSTED_RUNNER",
+    "WRITE_MAIN_DIRECTLY",
+    "MERGE_PULL_REQUEST",
+    "CHANGE_CANONICAL_STATE",
+    "CHANGE_MODEL_WEIGHT",
+    "CHANGE_PORTFOLIO_ACTION",
+    "ASSUME_OWNER_GRADE_AUTHORITY"
+  ]
+}
