@@ -1,0 +1,54 @@
+{
+  "schema_version": "ETF_OWNER_VALIDATION_QA_v1",
+  "request_id": "DP-ETF-DIRECT-OWNER-20260806-01",
+  "target_session": "2026-08-05",
+  "validator_status": "PASS",
+  "failed_checks": [],
+  "packet_sha256": "0a6e29f5b302e5e3fbe3c5c49a9e07df78ebcb34d3430ddbf6ec1e44afb030b1",
+  "freeze_recorded_at_utc": "2026-08-06T09:10:31.381Z",
+  "post_freeze_source_calls": 0,
+  "checks": {
+    "exact_session_identity": "PASS",
+    "two_direct_retrievals": "PASS",
+    "minimum_60_second_interval": "PASS_99_012_SECONDS",
+    "normalized_rows_identical": "PASS",
+    "displayed_totals_present": "PASS",
+    "issuer_row_tieout": "PASS",
+    "dashes_distinguished_from_zero": "PASS",
+    "argument_hashes_present": "PASS",
+    "payload_or_row_hashes_present": "PASS",
+    "invocation_receipt_bijection": "PASS",
+    "packet_hash_before_freeze": "PASS",
+    "owner_nomination": "PASS_BOTH_ASSETS"
+  },
+  "BTC": {
+    "total_usd_m": 244.4,
+    "row_hash": "0649d4353ecf8cf53ba874f4ef5a921881835d02aa41bb12ea99dbb9e5328a2e",
+    "payload_sha256": "15704b6087245fb53848be0f16d4d731456c4fe791a638a8fa76a58b3f3ac951",
+    "arguments_sha256": "8f0ff5c0a3a5ba6078f2c210176408bdf2d5318120670dbd19f91eb466f2f543",
+    "owner_grade": true
+  },
+  "ETH": {
+    "total_usd_m": 60.8,
+    "row_hash": "0eae40ac42c1402b332f2ba30097ab069c1dc49488bbff6b6cadc538d926b768",
+    "payload_sha256": "62689e02bb418eb0a6ae1e526bebcac4748f28f0f869a2c679b222d05a4b7e40",
+    "arguments_sha256": "6159fd3ca686f4d5e8e70a722911888aad08e6e816844505159fe4c35cb09d92",
+    "owner_grade": true
+  },
+  "conflict_resolution": {
+    "earlier_BTC_candidate_usd_m": 2.8,
+    "earlier_ETH_candidate_usd_m": 0.0,
+    "earlier_candidates_accepted": false,
+    "deterministic_signature": "BOTH_EARLIER_VALUES_EQUAL_TENTH_FUND_COLUMN_NOT_TOTAL",
+    "leading_cause": "FIXED_POSITION_OR_LEGACY_WIDTH_PARSER_TRUNCATION",
+    "cause_authority": "STRONGLY_SUPPORTED_INFERENCE_NOT_EXACT_CODE_PROOF",
+    "parser_issue": 318
+  },
+  "remaining_limits": [
+    "PRIOR_FAILED_PACKET_RAW_PAYLOADS_AND_PARSER_TRACES_NOT_PRESERVED",
+    "FARSIDE_CAN_REVISE_HISTORICAL_ROWS_LATER",
+    "OFFICIAL_ISSUER_CROSSCHECK_NOT_DATE_ALIGNED"
+  ],
+  "canonical_effect": "NONE",
+  "portfolio_effect": "NONE"
+}
