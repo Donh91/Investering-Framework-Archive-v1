@@ -1,0 +1,43 @@
+name: Harness Red-Team P0 Remediation Gate
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/api_agent/api_gateway.py'
+      - 'scripts/api_agent/materialize_forecast_candidates.py'
+      - 'scripts/learning/ratify_forecast_candidate.py'
+      - 'scripts/learning/outcome_maturation_engine.py'
+      - 'scripts/architecture/build_latest_handoff.py'
+      - 'tests/harness_redteam/**'
+      - '.github/workflows/harness-redteam-p0-remediation-gate.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compile changed Python
+        run: |
+          python -m py_compile \
+            scripts/api_agent/api_gateway.py \
+            scripts/api_agent/materialize_forecast_candidates.py \
+            scripts/learning/ratify_forecast_candidate.py \
+            scripts/learning/outcome_maturation_engine.py \
+            scripts/architecture/build_latest_handoff.py \
+            tests/harness_redteam/test_p0_remediation.py
+      - name: Run red-team regression tests
+        run: python -m pytest -q tests/harness_redteam/test_p0_remediation.py
+      - name: Static legacy-field ban
+        run: |
+          if grep -R "candidate.get('threshold')\|candidate.get(\"threshold\")" scripts/api_agent scripts/learning; then
+            echo 'Legacy ambiguous threshold mapping remains' >&2
+            exit 1
+          fi
