@@ -1,21 +1,27 @@
 {
   "schema_version": "LATEST_VALIDATION_FAILED_DATA_PING_OBSERVATION_v1",
-  "updated_at_utc": "2026-08-06T07:21:00Z",
-  "run_id": "run-20260805T232345Z-6f82",
-  "snapshot_id": "snap-20260805T232345Z-a91c",
-  "snapshot_utc": "2026-08-05T23:23:45.183Z",
+  "updated_at_utc": "2026-08-06T07:52:00Z",
+  "run_id": "run-20260806T074239Z-81d4",
+  "snapshot_id": "snap-20260806T074239Z-42af",
+  "snapshot_utc": "2026-08-06T07:42:39.000Z",
   "collector_version": "15.2.0",
   "collector_status": "FAIL",
   "source_collection_status": "PARTIAL",
   "classification": "VALIDATION_FAILED_NON_DECISION_OBSERVATION",
   "packet_usable_for_main_thread_ingest": false,
   "failed_check_ids": ["INV-006"],
+  "repeat_failure": true,
+  "previous_validation_failed_run": {
+    "run_id": "run-20260805T232345Z-6f82",
+    "snapshot_id": "snap-20260805T232345Z-a91c",
+    "snapshot_utc": "2026-08-05T23:23:45.183Z"
+  },
   "failure_summary": {
     "invocation_receipt_integrity": "FAIL",
-    "arguments_sha256": "NOT_CAPTURED",
-    "payload_sha256": "NOT_CAPTURED",
+    "arguments_sha256": "NOT_CAPTURED_0_OF_61",
+    "payload_sha256": "NOT_CAPTURED_0_OF_61",
     "packet_sha256": null,
-    "packet_sha256_reason": "CANONICAL_PACKET_HASH_NOT_COMPUTED_BEFORE_TERMINAL_FREEZE"
+    "packet_sha256_reason": "CANONICAL_PACKET_HASH_NOT_COMPUTED"
   },
   "latest_valid_bounded_owner": {
     "run_id": "run-e841c63ea8e04a028918",
@@ -28,29 +34,41 @@
   "canonical_state_change": "NONE",
   "portfolio_effect": "NONE",
   "diagnostic_market": {
-    "BTCUSDT": 64669.99,
-    "ETHUSDT": 1910.21,
-    "ETHBTC": 0.02953,
-    "BTC_open_interest": 107318.324,
-    "ETH_open_interest": 2316237.995
+    "BTCUSDT": 64867.68,
+    "ETHUSDT": 1910.53,
+    "ETHBTC": 0.02946,
+    "BTC_open_interest": 106609.234,
+    "ETH_open_interest": 2282083.486
   },
   "diagnostic_change_vs_latest_valid_bounded_pct": {
-    "BTCUSDT": -0.4648310041,
-    "ETHUSDT": -0.4876092041,
-    "ETHBTC": -0.0676818951,
-    "BTC_open_interest": -0.2759088666,
-    "ETH_open_interest": -1.4559025303
+    "BTCUSDT": -0.1605614726,
+    "ETHUSDT": -0.4709388040,
+    "ETHBTC": -0.3045685279,
+    "BTC_open_interest": -0.9348210928,
+    "ETH_open_interest": -2.9090024584
   },
   "unaccepted_ETF_candidates": {
     "session": "2026-08-05",
-    "BTC_usd_m": 2.8,
-    "ETH_usd_m": 0.0,
+    "current_failed_packet": {
+      "BTC_usd_m": 244.4,
+      "ETH_usd_m": 60.8
+    },
+    "preceding_failed_packet": {
+      "BTC_usd_m": 2.8,
+      "ETH_usd_m": 0.0
+    },
+    "conflict": "MATERIAL_SAME_SESSION_DISCREPANCY",
     "owner_permission": "NO"
   },
-  "source_record_path": "08_SOURCE_MATERIAL/data_ping/2026-08-05__run-20260805T232345Z-6f82__validation-failed-source-record.md",
-  "qa_path": "09_SOURCE_QA/data_ping/2026-08-05__run-20260805T232345Z-6f82__validation.json",
-  "assessment_path": "04_MARKET_LEARNING/data_ping/2026-08-05__run-20260805T232345Z-6f82__non-decision-assessment.md",
-  "audit_receipt_path": "07_PROMPTS_AND_AGENTS/skill_runs/2026-08-06__data-ping-run-20260805T232345Z-6f82__validation-failed-audit.md",
+  "research_escalation": {
+    "status": "YES",
+    "scope": "TARGETED_ETF_2026_08_05_DIRECT_OWNER_VALIDATION",
+    "reason": "TWO_AUDIT_INVALID_PACKETS_REPORT_CONFLICTING_SAME_SESSION_VALUES"
+  },
+  "source_record_path": "08_SOURCE_MATERIAL/data_ping/2026-08-06__run-20260806T074239Z-81d4__validation-failed-source-record.md",
+  "qa_path": "09_SOURCE_QA/data_ping/2026-08-06__run-20260806T074239Z-81d4__validation.json",
+  "assessment_path": "04_MARKET_LEARNING/data_ping/2026-08-06__run-20260806T074239Z-81d4__non-decision-assessment.md",
+  "audit_receipt_path": "07_PROMPTS_AND_AGENTS/skill_runs/2026-08-06__data-ping-run-20260806T074239Z-81d4__validation-failed-audit.md",
   "engineering_issue": 317,
-  "required_next_step": "FIX_INV_006_AND_RUN_FRESH_FULL_DATA_PING"
+  "required_next_step": "FIX_INV_006_VALIDATE_5AUG_ETF_DIRECTLY_AND_RUN_FRESH_FULL_DATA_PING"
 }
