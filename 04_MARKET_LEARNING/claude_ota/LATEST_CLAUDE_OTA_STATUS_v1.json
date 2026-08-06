@@ -9,9 +9,9 @@
   "latest_ETF_status": "04_MARKET_LEARNING/etf/LATEST_ETF_FLOW_STATUS_v1.json",
   "operating_mode": "STANDALONE_OTA_NO_REFERENCE_BRIDGE",
   "latest_run_type": "MATURED_H7_ROW_15_AND_5AUG_UTC_SETTLEMENT",
-  "main_thread_reference_bounded_run_id": "run-e841c63ea8e04a028918",
-  "main_thread_reference_bounded_snapshot_id": "snap-421afc0073c04599ab62",
-  "latest_data_ping_status": "NEWER_FULL_PACKETS_FAILED_INV_006_NOT_INGESTED",
+  "main_thread_reference_bounded_run_id": "run-20260806T101439Z-79DYrv6q",
+  "main_thread_reference_bounded_snapshot_id": "snap-20260806T101439Z-caM8nhgy",
+  "latest_data_ping_status": "VALID_FULL_PACKET_ACCEPTED_AFTER_INV_006_RECOVERY",
   "accepted_incremental_items": [
     "H7_ROW_15_DIRECT_SETTLED",
     "WITHHELD_IN_PROGRESS_ETH_LEADERSHIP_CONFIRMED_AT_SETTLEMENT",
@@ -21,7 +21,9 @@
     "ETHBTC_2026_08_05_UTC_SETTLED_AT_0_02951",
     "TWELFTH_SETTLED_SESSION_WITHOUT_0_0300_TOUCH",
     "F1_ELEVEN_SETTLED_POST_WINDOW_SESSIONS_ZERO_BREACHES",
-    "ETF_2026_08_05_BTC_244_4_AND_ETH_60_8_OWNER_VALIDATED_AFTER_OTA"
+    "ETF_2026_08_05_BTC_244_4_AND_ETH_60_8_OWNER_VALIDATED",
+    "FULL_DATA_PING_VALID_AFTER_INV_006_RECOVERY",
+    "SAME_UNIVERSE_BREADTH_DETERIORATED_TO_30_34_PERCENT_DIAGNOSTIC_ONLY"
   ],
   "H7": {
     "status": "MATURED_SCORED_WITH_ROW_15_POST_MATURITY_FOLLOW_THROUGH_INACTIVE_CONFIRMED_CONTINUING",
@@ -69,7 +71,6 @@
   "ETF": {
     "owner_validation_request_id": "DP-ETF-DIRECT-OWNER-20260806-01",
     "owner_validation_status": "PASS",
-    "packet_sha256": "0a6e29f5b302e5e3fbe3c5c49a9e07df78ebcb34d3430ddbf6ec1e44afb030b1",
     "latest_valid_owner_session": "2026-08-05",
     "BTC_usd_m": 244.4,
     "ETH_usd_m": 60.8,
@@ -81,14 +82,22 @@
     "ETH_three_session_usd_m": 102.0,
     "ETH_five_session_usd_m": 123.8,
     "ETH_seven_session_usd_m": 100.3,
-    "earlier_failed_candidates": {
-      "BTC_usd_m": 2.8,
-      "ETH_usd_m": 0.0,
-      "status": "PERMANENTLY_REJECTED_NON_OWNER"
-    },
-    "parser_defect": "TENTH_FUND_FIELD_SELECTED_INSTEAD_OF_TOTAL_STRONGLY_SUPPORTED",
-    "parser_issue": 318,
-    "source_path": "08_SOURCE_MATERIAL/etf/2026-08-06__btc-eth-etf-2026-08-05-owner-validation.json"
+    "full_data_ping_reconfirmation_run_id": "run-20260806T101439Z-79DYrv6q",
+    "earlier_failed_candidates_status": "PERMANENTLY_REJECTED_NON_OWNER",
+    "parser_issue": 318
+  },
+  "latest_bounded_market_context": {
+    "BTCUSDT": 64602.0,
+    "ETHUSDT": 1903.02,
+    "ETHBTC": 0.02946,
+    "breadth_positive_share": 0.3033707865,
+    "breadth_membership_matches_prior": true,
+    "breadth_gate_permission": "NOT_AUTHORIZED_INCOMPATIBLE_WITH_LOCKED_V1_1_OWNER",
+    "ETH_global_long_short": 2.0157,
+    "ETH_futures_taker_ratio": 0.9489,
+    "ETHBTC_spot_taker_1h": 0.476038258,
+    "ETHBTC_spot_taker_4h": 0.389035248,
+    "ETHBTC_spot_taker_12h": 0.526614146
   },
   "creative_extension": {
     "H8_candidate_status": "EXPLORATORY_NOT_PREREGISTERED_GOVERNANCE_BACKLOG_ONLY",
@@ -99,8 +108,8 @@
   },
   "research_escalation": {
     "status": "NO",
-    "resolved_subject": "BTC_AND_ETH_ETF_2026_08_05_DIRECT_OWNER_VALIDATION",
-    "remaining_work": "FIX_INV_006_AND_VARIABLE_WIDTH_ETF_PARSER_THEN_RUN_FRESH_FULL_DATA_PING",
+    "reason": "VALID_FULL_DATA_PING_AND_NO_NEW_UNRESOLVED_SOURCE_CONFLICT",
+    "remaining_work": "ISSUE_318_CODE_AND_FIXTURE_VERIFICATION",
     "H8_deep_research_now": "NO"
   },
   "new_policy_event": false,
@@ -117,14 +126,13 @@
   "small_caps": "NO_NEW_RISK",
   "microcaps": "NO_NEW_RISK",
   "operational_risk_class": "DO_NOT_ADD_RISK",
-  "risk_substate": "BTC_LED_REPAIR_WITH_STRONG_DUAL_POSITIVE_ETF_ABSORPTION_AND_SETTLED_ETH_RELATIVE_REBOUND_BUT_NO_0030_OR_H7_RETRIGGER",
+  "risk_substate": "BTC_LED_REPAIR_WITH_STRONG_DUAL_POSITIVE_ETF_ABSORPTION_BUT_SAME_UNIVERSE_BREADTH_DETERIORATION_SHORT_WINDOW_SELL_SIDE_AND_ETHBTC_BELOW_0030",
   "canonical_state_change": "NONE",
   "canonical_portfolio_action_change": "NONE",
   "final_holdout_opened": false,
   "latest_master_monday_delivery": "MM-FINAL-2026-W31-20260803-001",
   "latest_cycle_navigator_number": 19,
   "open_items": [
-    "FIX_INV_006_ISSUE_317",
     "FIX_FARSIDE_VARIABLE_WIDTH_TOTAL_COLUMN_ISSUE_318",
     "H7_ROW_16_SETTLED_EXTENSION",
     "H7_LAPSE_RETIRE_RETRIGGER_PROSPECTIVE_RULE",
