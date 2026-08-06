@@ -1,6 +1,6 @@
 {
   "schema_version": "LATEST_VALIDATION_FAILED_DATA_PING_OBSERVATION_v1",
-  "updated_at_utc": "2026-08-06T07:52:00Z",
+  "updated_at_utc": "2026-08-06T09:42:00Z",
   "run_id": "run-20260806T074239Z-81d4",
   "snapshot_id": "snap-20260806T074239Z-42af",
   "snapshot_utc": "2026-08-06T07:42:39.000Z",
@@ -47,7 +47,7 @@
     "BTC_open_interest": -0.9348210928,
     "ETH_open_interest": -2.9090024584
   },
-  "unaccepted_ETF_candidates": {
+  "failed_packet_ETF_candidates": {
     "session": "2026-08-05",
     "current_failed_packet": {
       "BTC_usd_m": 244.4,
@@ -57,18 +57,33 @@
       "BTC_usd_m": 2.8,
       "ETH_usd_m": 0.0
     },
-    "conflict": "MATERIAL_SAME_SESSION_DISCREPANCY",
-    "owner_permission": "NO"
+    "packet_owner_permission": "NO"
+  },
+  "independent_targeted_ETF_resolution": {
+    "request_id": "DP-ETF-DIRECT-OWNER-20260806-01",
+    "validation_status": "PASS",
+    "packet_sha256": "0a6e29f5b302e5e3fbe3c5c49a9e07df78ebcb34d3430ddbf6ec1e44afb030b1",
+    "BTC_owner_usd_m": 244.4,
+    "ETH_owner_usd_m": 60.8,
+    "earlier_BTC_2_8_and_ETH_0_0_status": "PERMANENTLY_REJECTED_NON_OWNER",
+    "discrepancy_explanation": "EARLIER_VALUES_MATCH_TENTH_FUND_COLUMNS_NOT_TOTAL",
+    "parser_issue": 318,
+    "ETF_owner_pointer_advanced": true,
+    "bounded_pointer_advanced": false
   },
   "research_escalation": {
-    "status": "YES",
-    "scope": "TARGETED_ETF_2026_08_05_DIRECT_OWNER_VALIDATION",
-    "reason": "TWO_AUDIT_INVALID_PACKETS_REPORT_CONFLICTING_SAME_SESSION_VALUES"
+    "status": "RESOLVED_NO_FURTHER_RESEARCH_NOW",
+    "resolved_scope": "TARGETED_ETF_2026_08_05_DIRECT_OWNER_VALIDATION",
+    "remaining_requirements": [
+      "FIX_INV_006_ISSUE_317",
+      "FIX_VARIABLE_WIDTH_ETF_PARSER_ISSUE_318",
+      "RUN_FRESH_FULL_DATA_PING"
+    ]
   },
   "source_record_path": "08_SOURCE_MATERIAL/data_ping/2026-08-06__run-20260806T074239Z-81d4__validation-failed-source-record.md",
   "qa_path": "09_SOURCE_QA/data_ping/2026-08-06__run-20260806T074239Z-81d4__validation.json",
   "assessment_path": "04_MARKET_LEARNING/data_ping/2026-08-06__run-20260806T074239Z-81d4__non-decision-assessment.md",
   "audit_receipt_path": "07_PROMPTS_AND_AGENTS/skill_runs/2026-08-06__data-ping-run-20260806T074239Z-81d4__validation-failed-audit.md",
-  "engineering_issue": 317,
-  "required_next_step": "FIX_INV_006_VALIDATE_5AUG_ETF_DIRECTLY_AND_RUN_FRESH_FULL_DATA_PING"
+  "engineering_issues": [317, 318],
+  "required_next_step": "FIX_INV_006_AND_ETF_TOTAL_COLUMN_PARSER_THEN_RUN_FRESH_FULL_DATA_PING"
 }
