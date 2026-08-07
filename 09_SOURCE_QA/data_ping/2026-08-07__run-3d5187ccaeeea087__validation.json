@@ -1,0 +1,33 @@
+{
+  "schema_version": "DATA_PING_SOURCE_QA_v1",
+  "run_id": "run-3d5187ccaeeea087",
+  "snapshot_id": "snap-e4fcc29d6ec597cb",
+  "snapshot_utc": "2026-08-07T08:42:59.283786Z",
+  "collector_version": "15.3.1",
+  "overall_verdict": "VALIDATION_FAILED_NON_DECISION_OBSERVATION",
+  "validator_pass": false,
+  "failed_check_count": 8,
+  "failed_check_ids": ["INV-006","PG-003","PG-004","PG-005","ORC-001","ORC-002","ORC-003","ORC-004"],
+  "execution_order_status": "PASS",
+  "incremental_commit_status": "FAIL",
+  "group_barrier_status": "FAIL",
+  "invocation_receipt_bijection_status": "PASS",
+  "status_reconciliation_status": "PASS",
+  "freeze_status": "PASS",
+  "hash_integrity_status": "FAIL",
+  "packet_usable_for_main_thread_ingest": false,
+  "predecessor_available": false,
+  "source_attachment_sha256": "7ddc3c16911ee08e6a52ef62b3b2acbf3af27c7ea4fbc755cf25ca97f55eda86",
+  "collector_packet_sha256": "a45fd402b2fa4d355645073f4fc00431db7ecb051e607d3fb0afe3aa612cb44c",
+  "core_status_counts": {"PASS":53,"PARTIAL":4,"FAIL":3,"STALE":0,"UNAVAILABLE":0,"SKIPPED_RUNTIME_LIMIT":0},
+  "primary_root_causes": [
+    "INCREMENTAL_PAYLOAD_OR_ERROR_HASH_NOT_COMMITTED_BEFORE_NEXT_SOURCE_CALL",
+    "REQUIRED_INVOCATION_TIMESTAMPS_ABSENT",
+    "PUBLIC_WEB_GROUP_BARRIER_BROKEN_AFTER_CFGI_FAILURES",
+    "FARSIDE_DASH_ZERO_SEMANTICS_NOT_PRESERVED"
+  ],
+  "ETF_2026_08_06_diagnostic": {"BTC_usd_m":137.6,"ETH_usd_m":92.1,"owner_permission":"NO"},
+  "canonical_state_change": "NONE",
+  "portfolio_effect": "NONE",
+  "research_escalation": "NO"
+}
