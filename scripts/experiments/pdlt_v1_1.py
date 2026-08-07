@@ -65,6 +65,30 @@ def epoch_for(ts: str, boundary: str) -> str:
     return "LEGACY_PRE_20260708" if when < edge else "UPGRADED_POST_20260708"
 
 
+def validate_row(row: dict[str, Any], expected: dict[str, Any], boundary: str) -> dict[str, Any]:
+    symbol = row.get("symbol")
+    if symbol not in expected["symbols"]:
+        raise ValueError(f"unexpected_row_symbol:{symbol}")
+    timestamp = row.get("timestamp")
+    if not isinstance(timestamp, str) or not timestamp:
+        raise ValueError("missing_row_timestamp")
+    epoch = epoch_for(timestamp, boundary)
+    if row.get("stale") is True:
+        raise ValueError(f"stale_cfgi_row:{symbol}:{timestamp}")
+    components = row.get("components")
+    if not isinstance(components, dict):
+        components = {}
+    for field in expected["fields"]:
+        if field == "score":
+            if row.get("score") is None:
+                raise ValueError(f"missing_requested_field:{symbol}:{timestamp}:score")
+        elif components.get(field) is None:
+            raise ValueError(f"missing_requested_field:{symbol}:{timestamp}:{field}")
+    copy = dict(row)
+    copy["pdlt_engine_epoch"] = epoch
+    return copy
+
+
 def validate_cfgi_snapshot(packet: dict[str, Any], cfg: dict[str, Any], expected: dict[str, Any]) -> dict[str, Any]:
     if packet.get("contract") != "CFGI_OWNER_SNAPSHOT_v3":
         raise ValueError("unexpected_cfgi_contract")
@@ -77,35 +101,28 @@ def validate_cfgi_snapshot(packet: dict[str, Any], cfg: dict[str, Any], expected
     if int(packet.get("limit", -1)) != int(expected["limit"]):
         raise ValueError("limit_mismatch")
     billing = packet.get("billing", {})
-    exp = int(expected["expected_credits"])
-    if billing.get("expected_credits") != exp:
+    exp_credits = int(expected["expected_credits"])
+    if billing.get("expected_credits") != exp_credits:
         raise ValueError("expected_billing_mismatch")
     used = billing.get("credits_used")
-    if used is not None and int(used) != exp:
+    if used is not None and int(used) != exp_credits:
         raise ValueError("actual_billing_mismatch")
-    boundary = cfg["cfgi"]["engine_epoch_boundary_utc"]
     rows = packet.get("rows", [])
-    if not rows:
-        raise ValueError("empty_rows")
-    tagged = []
-    for row in rows:
-        copy = dict(row)
-        timestamp = copy.get("timestamp") or copy.get("time") or copy.get("datetime") or copy.get("created_at")
-        if timestamp:
-            try:
-                copy["pdlt_engine_epoch"] = epoch_for(str(timestamp), boundary)
-            except Exception:
-                copy["pdlt_engine_epoch"] = "UNKNOWN_TIMESTAMP"
-        else:
-            copy["pdlt_engine_epoch"] = "UNKNOWN_TIMESTAMP"
-        tagged.append(copy)
+    expected_rows = len(expected["symbols"]) * int(expected["limit"])
+    if len(rows) != expected_rows:
+        raise ValueError(f"row_count_mismatch:{len(rows)}:{expected_rows}")
+    boundary = cfg["cfgi"]["engine_epoch_boundary_utc"]
+    tagged = [validate_row(row, expected, boundary) for row in rows]
+    epochs = sorted({row["pdlt_engine_epoch"] for row in tagged})
     return {
         "contract": "PDLT_CFGI_VALIDATED_BLOCK_v1",
         "source_contract": packet.get("contract"),
         "source_sha256": sha(packet),
         "name": expected["name"],
-        "expected_credits": exp,
-        "row_count": len(rows),
+        "expected_credits": exp_credits,
+        "expected_rows": expected_rows,
+        "row_count": len(tagged),
+        "epochs_present": epochs,
         "rows": tagged,
         "authority": "SHADOW_ONLY"
     }
@@ -150,7 +167,7 @@ def main() -> None:
     if args.output:
         args.output.parent.mkdir(parents=True, exist_ok=True)
         args.output.write_bytes(canonical(result))
-    print(json.dumps(result if args.mode != "validate-cfgi" else {k: result[k] for k in ("contract","name","expected_credits","row_count","source_sha256")}, sort_keys=True))
+    print(json.dumps(result if args.mode != "validate-cfgi" else {k: result[k] for k in ("contract","name","expected_credits","expected_rows","row_count","epochs_present","source_sha256")}, sort_keys=True))
 
 
 if __name__ == "__main__":
