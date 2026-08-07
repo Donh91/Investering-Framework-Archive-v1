@@ -55,23 +55,26 @@ jobs:
       - name: Read census state
         id: state
         run: cat runtime/pdlt/census/status.env >> "$GITHUB_OUTPUT"
-      - name: Enforce bounded input and reserve budget for both C and D
-        if: steps.state.outputs.status == 'READY_ABCD'
+      - name: Enforce bounded input and reserve OpenAI budget
+        if: steps.state.outputs.status == 'READY_ABCD' || steps.state.outputs.status == 'READY_AC_ONLY'
         run: |
           test $(wc -c < runtime/pdlt/census/context_c.json) -le 50000
-          test $(wc -c < runtime/pdlt/census/context_d.json) -le 75000
+          if [ "${{ steps.state.outputs.status }}" = "READY_ABCD" ]; then test $(wc -c < runtime/pdlt/census/context_d.json) -le 75000; fi
           python scripts/experiments/pdlt_cost_guard.py \
             --receipt-root research/experiments/pdlt_v1_1/census \
             --hard-cap-usd 10 --reserve-usd 0.25 --pending-reserve-usd 0.50
-      - name: Produce deterministic A and B
-        if: steps.state.outputs.status == 'READY_ABCD'
+      - name: Produce deterministic Arm A and optional Arm B
+        if: steps.state.outputs.status == 'READY_ABCD' || steps.state.outputs.status == 'READY_AC_ONLY'
+        shell: bash
         run: |
+          CTX=runtime/pdlt/census/context_c.json
+          if [ "${{ steps.state.outputs.status }}" = "READY_ABCD" ]; then CTX=runtime/pdlt/census/context_d.json; fi
           python scripts/experiments/pdlt_deterministic_forecast.py \
             --model research/experiments/pdlt_v1_1/discovery/FROZEN_MODEL_v1.json \
-            --context-d runtime/pdlt/census/context_d.json \
+            --context "$CTX" \
             --output runtime/pdlt/census/ab.json
       - name: Produce frozen OpenAI Arm C
-        if: steps.state.outputs.status == 'READY_ABCD'
+        if: steps.state.outputs.status == 'READY_ABCD' || steps.state.outputs.status == 'READY_AC_ONLY'
         run: |
           python scripts/api_agent/pdlt_gateway.py \
             --config research/experiments/pdlt_v1_1/PDLT_CONFIG_v1_1.json \
@@ -91,25 +94,29 @@ jobs:
             --config research/experiments/pdlt_v1_1/PDLT_CONFIG_v1_1.json \
             --context runtime/pdlt/census/context_d.json --arm D \
             --output-dir runtime/pdlt/census/openai
-      - name: Verify hard cap after both current calls
-        if: steps.state.outputs.status == 'READY_ABCD'
+      - name: Verify hard cap after current OpenAI calls
+        if: steps.state.outputs.status == 'READY_ABCD' || steps.state.outputs.status == 'READY_AC_ONLY'
         run: |
           python scripts/experiments/pdlt_cost_guard.py \
             --receipt-root research/experiments/pdlt_v1_1/census \
             --receipt-root runtime/pdlt/census/openai \
             --hard-cap-usd 10 --reserve-usd 0 --pending-reserve-usd 0
-      - name: Freeze A-D census
-        if: steps.state.outputs.status == 'READY_ABCD'
+      - name: Freeze available prospective census arms
+        if: steps.state.outputs.status == 'READY_ABCD' || steps.state.outputs.status == 'READY_AC_ONLY'
+        shell: bash
         run: |
           mkdir -p runtime/pdlt/census/frozen
+          EXTRA=""
+          if [ "${{ steps.state.outputs.status }}" = "READY_ABCD" ]; then
+            EXTRA="--arm-d runtime/pdlt/census/openai/arm_D_forecast.json --receipt-d runtime/pdlt/census/openai/arm_D_receipt.json"
+          fi
           python scripts/experiments/pdlt_freeze_census.py \
             --census runtime/pdlt/census/census.json \
             --model research/experiments/pdlt_v1_1/discovery/FROZEN_MODEL_v1.json \
             --ab runtime/pdlt/census/ab.json \
             --arm-c runtime/pdlt/census/openai/arm_C_forecast.json \
-            --arm-d runtime/pdlt/census/openai/arm_D_forecast.json \
             --receipt-c runtime/pdlt/census/openai/arm_C_receipt.json \
-            --receipt-d runtime/pdlt/census/openai/arm_D_receipt.json \
+            $EXTRA \
             --output runtime/pdlt/census/frozen/forecast.json
       - name: Materialize immutable census row
         shell: bash
@@ -120,7 +127,7 @@ jobs:
           cp runtime/pdlt/census/census.json "$DEST/PDLT_CENSUS_CONTEXT.json"
           cp runtime/pdlt/census/context_c.json "$DEST/context_c.json"
           cp runtime/pdlt/census/context_d.json "$DEST/context_d.json" 2>/dev/null || true
-          if [ "${{ steps.state.outputs.status }}" = "READY_ABCD" ]; then
+          if [ "${{ steps.state.outputs.status }}" = "READY_ABCD" ] || [ "${{ steps.state.outputs.status }}" = "READY_AC_ONLY" ]; then
             cp runtime/pdlt/census/ab.json "$DEST/PDLT_AB.json"
             cp runtime/pdlt/census/openai/*.json "$DEST/"
             mkdir -p research/framework_memory/forecast_memory/pdlt
