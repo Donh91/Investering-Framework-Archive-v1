@@ -1,10 +1,6 @@
 name: PDLT daily prospective census
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'research/experiments/pdlt_v1_1/discovery/FROZEN_MODEL_v1.json'
   schedule:
     - cron: '55 23 * * *'
       timezone: 'Europe/Copenhagen'
