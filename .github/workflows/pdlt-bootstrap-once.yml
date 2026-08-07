@@ -1,0 +1,96 @@
+name: PDLT historical bootstrap once
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/pdlt-bootstrap-once.yml'
+      - 'scripts/experiments/pdlt_v1_1.py'
+      - 'tests/experiments/test_pdlt_v1_1.py'
+
+permissions:
+  contents: read
+
+jobs:
+  historical_bootstrap_once:
+    if: startsWith(github.event.head_commit.message, 'PDLT bootstrap historical discovery once')
+    runs-on: ubuntu-latest
+    env:
+      CFGI_API_KEY: ${{ secrets.CFGI_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Prove fail-closed code before spend
+        run: |
+          python -m py_compile scripts/experiments/pdlt_v1_1.py scripts/api_agent/pdlt_gateway.py
+          python -m unittest tests.experiments.test_pdlt_v1_1 -v
+          python scripts/experiments/pdlt_v1_1.py \
+            --config research/experiments/pdlt_v1_1/PDLT_CONFIG_v1_1.json \
+            --mode validate-config
+      - name: Verify CFGI secret exists
+        run: |
+          test -n "${CFGI_API_KEY}" || { echo 'CFGI_API_KEY_missing'; exit 78; }
+      - name: Freeze preregistration before paid calls
+        run: |
+          mkdir -p pdlt-output
+          python scripts/experiments/pdlt_v1_1.py \
+            --config research/experiments/pdlt_v1_1/PDLT_CONFIG_v1_1.json \
+            --mode preregister --output pdlt-output/preregistration_manifest.json
+      - name: Collect MARKET 4h depth - 7200 credits
+        run: |
+          python scripts/data_terminal/cfgi_owner_collector.py \
+            --output-dir pdlt-output/market_4h_depth \
+            --symbols MARKET --timeframe 4h \
+            --fields score,volatility,volume,impulse,technical,social,dominance,trends,whales,orders \
+            --limit 720
+          python scripts/experiments/pdlt_v1_1.py \
+            --config research/experiments/pdlt_v1_1/PDLT_CONFIG_v1_1.json \
+            --mode validate-cfgi --input pdlt-output/market_4h_depth/owner_snapshot.json \
+            --plan-name market_4h_depth --output pdlt-output/validated_market_4h.json
+      - name: Collect BTC ETH 4h crosscheck - 2400 credits
+        run: |
+          python scripts/data_terminal/cfgi_owner_collector.py \
+            --output-dir pdlt-output/btc_eth_4h_crosscheck \
+            --symbols BTC,ETH --timeframe 4h \
+            --fields score,volatility,volume,impulse,technical,social,dominance,trends,whales,orders \
+            --limit 120
+          python scripts/experiments/pdlt_v1_1.py \
+            --config research/experiments/pdlt_v1_1/PDLT_CONFIG_v1_1.json \
+            --mode validate-cfgi --input pdlt-output/btc_eth_4h_crosscheck/owner_snapshot.json \
+            --plan-name btc_eth_4h_crosscheck --output pdlt-output/validated_btc_eth_4h.json
+      - name: Collect MARKET BTC ETH 1d context - 2700 credits
+        run: |
+          python scripts/data_terminal/cfgi_owner_collector.py \
+            --output-dir pdlt-output/market_btc_eth_1d_context \
+            --symbols MARKET,BTC,ETH --timeframe 1d \
+            --fields score,volatility,volume,impulse,technical,social,dominance,trends,whales,orders \
+            --limit 90
+          python scripts/experiments/pdlt_v1_1.py \
+            --config research/experiments/pdlt_v1_1/PDLT_CONFIG_v1_1.json \
+            --mode validate-cfgi --input pdlt-output/market_btc_eth_1d_context/owner_snapshot.json \
+            --plan-name market_btc_eth_1d_context --output pdlt-output/validated_market_btc_eth_1d.json
+      - name: Write immutable historical receipt
+        run: |
+          python - <<'PY'
+          import datetime, hashlib, json, pathlib
+          root = pathlib.Path('pdlt-output')
+          files = {str(p): hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(root.rglob('*.json'))}
+          value = {
+              'contract': 'PDLT_HISTORICAL_COLLECTION_RECEIPT_v1',
+              'experiment_id': 'PDLT-v1.1-RUN',
+              'authorized_by': 'USER_GO_2026-08-07',
+              'expected_credits': 12300,
+              'created_at_utc': datetime.datetime.now(datetime.timezone.utc).replace(microsecond=0).isoformat().replace('+00:00','Z'),
+              'files': files,
+              'authority': 'SHADOW_ONLY'
+          }
+          (root/'historical_collection_receipt.json').write_text(json.dumps(value, sort_keys=True, separators=(',', ':'))+'\n')
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pdlt-v1-1-historical-bootstrap
+          path: pdlt-output/
+          if-no-files-found: error
+          retention-days: 90

@@ -48,6 +48,41 @@ class PDLTConfigTests(unittest.TestCase):
         self.assertEqual(a["arms"], b["arms"])
         self.assertEqual(a["outcomes"], b["outcomes"])
 
+    def test_cfgi_validation_fails_on_truncated_block(self):
+        expected = self.cfg["cfgi"]["historical_plan"][0]
+        packet = {
+            "contract": "CFGI_OWNER_SNAPSHOT_v3",
+            "symbols": expected["symbols"],
+            "timeframe": expected["timeframe"],
+            "fields": expected["fields"],
+            "limit": expected["limit"],
+            "billing": {"expected_credits": expected["expected_credits"], "credits_used": None},
+            "rows": []
+        }
+        with self.assertRaisesRegex(ValueError, "row_count_mismatch"):
+            pdlt.validate_cfgi_snapshot(packet, self.cfg, expected)
+
+    def test_cfgi_row_requires_every_requested_field(self):
+        expected = {"symbols": ["MARKET"], "fields": pdlt.FIELDS, "timeframe": "4h", "limit": 1, "expected_credits": 10, "name": "test"}
+        row = {
+            "symbol": "MARKET",
+            "timestamp": "2026-08-07T16:00:00Z",
+            "stale": False,
+            "score": 50,
+            "components": {k: 50 for k in pdlt.FIELDS if k not in {"score", "orders"}}
+        }
+        packet = {
+            "contract": "CFGI_OWNER_SNAPSHOT_v3",
+            "symbols": ["MARKET"],
+            "timeframe": "4h",
+            "fields": pdlt.FIELDS,
+            "limit": 1,
+            "billing": {"expected_credits": 10, "credits_used": 10},
+            "rows": [row]
+        }
+        with self.assertRaisesRegex(ValueError, "missing_requested_field"):
+            pdlt.validate_cfgi_snapshot(packet, self.cfg, expected)
+
 
 if __name__ == "__main__":
     unittest.main()
