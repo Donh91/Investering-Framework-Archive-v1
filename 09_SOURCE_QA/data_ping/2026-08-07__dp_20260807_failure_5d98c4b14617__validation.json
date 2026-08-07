@@ -1,0 +1,28 @@
+{
+  "schema_version": "DATA_PING_FAILURE_QA_v1",
+  "snapshot_id": "dp_20260807_failure_5d98c4b14617",
+  "snapshot_utc": "2026-08-07T18:50:30.119182Z",
+  "collector_version": "15.3.1",
+  "validator_pass": false,
+  "blocking_failure_count": 6,
+  "failure_classes": [
+    "INCREMENTAL_COMMIT_PROOF_MISSING",
+    "GROUP_BARRIER_FAILURE",
+    "INVOCATION_TIMESTAMPS_NOT_RETAINED",
+    "COMPLETE_PAYLOAD_HASHES_NOT_RETAINED",
+    "FARSIDE_FINALIZATION_UNRESOLVED",
+    "BREADTH_TRANSFORM_NOT_COMPLETED"
+  ],
+  "execution_order_status": "PASS",
+  "freeze_count": 1,
+  "post_freeze_call_count": 0,
+  "receipt_count": 61,
+  "packet_sha256": "9c7bacc9a3090cb1d9c1ce8763f755a05f233804391d0c6833c72c96ab0720ea",
+  "market_ingest_permission": "NO",
+  "bounded_owner_permission": "NO",
+  "canonical_effect": "NONE",
+  "portfolio_effect": "NONE",
+  "runtime_drift_flag": true,
+  "runtime_drift_reason": "collector_15_3_1_executed_after_15_3_2_recovery_was_already_observed",
+  "required_next_event": "ACTIVE_COLLECTOR_VERSION_GUARD_PLUS_FRESH_OWNER_REANCHORED_FULL_RUN"
+}
