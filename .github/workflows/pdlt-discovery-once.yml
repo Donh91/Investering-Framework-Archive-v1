@@ -1,0 +1,119 @@
+name: PDLT discovery from bootstrap once
+
+on:
+  schedule:
+    - cron: '30 21 * * *'
+      timezone: 'Europe/Copenhagen'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: framework-main-writer
+  cancel-in-progress: false
+
+jobs:
+  discover:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Exit cleanly if frozen discovery already exists
+        id: existing
+        shell: bash
+        run: |
+          if [ -f research/experiments/pdlt_v1_1/discovery/FROZEN_MODEL_v1.json ]; then
+            echo 'skip=true' >> "$GITHUB_OUTPUT"
+            echo 'PDLT_DISCOVERY_ALREADY_FROZEN'
+          else
+            echo 'skip=false' >> "$GITHUB_OUTPUT"
+          fi
+      - name: Locate successful historical bootstrap
+        if: steps.existing.outputs.skip != 'true'
+        id: boot
+        shell: bash
+        run: |
+          for attempt in 1 2 3 4 5 6; do
+            RUN_ID=$(gh run list --workflow pdlt-bootstrap-once.yml --branch main --status success --limit 5 --json databaseId,conclusion,headSha --jq '.[0].databaseId // empty')
+            if [ -n "$RUN_ID" ]; then echo "run_id=$RUN_ID" >> "$GITHUB_OUTPUT"; exit 0; fi
+            sleep 20
+          done
+          echo 'no_successful_pdlt_bootstrap_found'
+          exit 78
+      - name: Download immutable bootstrap artifact
+        if: steps.existing.outputs.skip != 'true'
+        run: |
+          mkdir -p runtime/bootstrap
+          gh run download "${{ steps.boot.outputs.run_id }}" --name pdlt-v1-1-historical-bootstrap --dir runtime/bootstrap
+          test -f runtime/bootstrap/validated_market_4h.json
+          test -f runtime/bootstrap/preregistration_manifest.json
+      - name: Collect free Binance 4h price history
+        if: steps.existing.outputs.skip != 'true'
+        run: |
+          python scripts/data_terminal/binance_spot_owner_collector.py --output-dir runtime/binance-4h --interval 4h --limit 1000
+          test -f runtime/binance-4h/owner_snapshot.json
+      - name: Run deterministic discovery and blind holdout
+        if: steps.existing.outputs.skip != 'true'
+        run: |
+          mkdir -p runtime/discovery
+          python scripts/experiments/pdlt_discovery.py \
+            --validated-market-4h runtime/bootstrap/validated_market_4h.json \
+            --binance-owner runtime/binance-4h/owner_snapshot.json \
+            --model-output runtime/discovery/FROZEN_MODEL_v1.json \
+            --report-output runtime/discovery/PDLT_DISCOVERY_REPORT_v1.json
+      - name: Verify preregistration lineage
+        if: steps.existing.outputs.skip != 'true'
+        run: |
+          python - <<'PY'
+          import json
+          pre=json.load(open('runtime/bootstrap/preregistration_manifest.json'))
+          model=json.load(open('runtime/discovery/FROZEN_MODEL_v1.json'))
+          assert pre['experiment_id']=='PDLT-v1.1-RUN'
+          assert model['experiment_id']=='PDLT-v1.1-RUN'
+          assert model['engine_epoch']=='UPGRADED_POST_20260708'
+          assert len(model['candidates'])<=3
+          print('PDLT_DISCOVERY_LINEAGE_PASS')
+          PY
+      - name: Materialize frozen discovery state
+        if: steps.existing.outputs.skip != 'true'
+        run: |
+          DEST=research/experiments/pdlt_v1_1/discovery
+          mkdir -p "$DEST"
+          cp runtime/discovery/FROZEN_MODEL_v1.json "$DEST/FROZEN_MODEL_v1.json"
+          cp runtime/discovery/PDLT_DISCOVERY_REPORT_v1.json "$DEST/PDLT_DISCOVERY_REPORT_v1.json"
+          cp runtime/bootstrap/preregistration_manifest.json "$DEST/PREREGISTRATION_MANIFEST_v1.json"
+      - name: Commit frozen model with verified readback
+        if: steps.existing.outputs.skip != 'true'
+        shell: bash
+        run: |
+          git config user.name framework-pdlt-bot
+          git config user.email framework-pdlt-bot@users.noreply.github.com
+          git add research/experiments/pdlt_v1_1/discovery
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "pdlt: freeze deterministic discovery model ${GITHUB_RUN_ID}"
+          pushed=false
+          for attempt in 1 2 3; do
+            git rebase --abort 2>/dev/null || true
+            if git pull --rebase origin main && git push origin HEAD:main; then pushed=true; break; fi
+            sleep $((attempt*5))
+          done
+          [ "$pushed" = true ]
+          git fetch origin main
+          git merge-base --is-ancestor HEAD origin/main
+      - uses: actions/upload-artifact@v4
+        if: always() && steps.existing.outputs.skip != 'true'
+        with:
+          name: pdlt-v1-1-discovery-${{ github.run_id }}
+          path: runtime/
+          retention-days: 90
