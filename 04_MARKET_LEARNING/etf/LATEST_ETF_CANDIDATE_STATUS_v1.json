@@ -1,18 +1,18 @@
 {
   "schema_version": "LATEST_ETF_CANDIDATE_STATUS_v1",
-  "updated_at_local": "2026-08-07T13:07:00+02:00",
+  "updated_at_local": "2026-08-07T21:58:00+02:00",
   "candidate_session": "2026-08-06",
-  "candidate_status": "COMPLETE_ROW_CANDIDATE_REPRODUCED_BY_DATA_PING_BUT_TARGETED_OWNER_PROVENANCE_INCOMPLETE",
+  "candidate_status": "COMPLETE_ROW_CANDIDATE_MULTIPLY_CORROBORATED_BUT_TARGETED_OWNER_PROVENANCE_INCOMPLETE",
   "source_path": "08_SOURCE_MATERIAL/etf/2026-08-07__btc-eth-etf-2026-08-06-user-supplied-structured-candidate.json",
   "qa_path": "09_SOURCE_QA/etf/2026-08-07__btc-eth-etf-2026-08-06-user-supplied-candidate-validation.json",
   "reconciliation_path": "04_MARKET_LEARNING/etf/2026-08-07__btc-eth-etf-2026-08-06-candidate-reconciliation.md",
   "latest_data_ping_corroboration_path": "08_SOURCE_MATERIAL/data_ping/2026-08-07__dp-run-7ddda892cbb35d79ad53__validated-non-owner-source-record.md",
+  "latest_claude_corroboration_path": "08_SOURCE_MATERIAL/claude_ota/2026-08-07__standalone-ota-ce02-falsification-btc-etf__source-record.md",
   "targeted_request_id": "DP-ETF-DIRECT-OWNER-20260807-02",
   "BTC_candidate_total_usd_m": 137.6,
   "ETH_candidate_total_usd_m": 92.1,
   "both_rows_complete_numeric": true,
   "both_rows_local_tieout": true,
-  "both_rows_match_prior_conflict_detection_candidates": true,
   "data_ping_reproduction": {
     "run_id": "dp-run-7ddda892cbb35d79ad53",
     "snapshot_utc": "2026-08-07T10:47:45.292410Z",
@@ -21,13 +21,23 @@
     "BTC_dash_count": 0,
     "ETH_dash_count": 0,
     "BTC_local_tieout": "PASS",
-    "ETH_local_tieout": "PASS",
-    "economic_corroboration": "PASS",
-    "owner_finality": "NOT_SATISFIED_BY_SINGLE_LOGICAL_RETRIEVAL_PER_ASSET"
+    "ETH_local_tieout": "PASS"
+  },
+  "claude_direct_BTC_corroboration": {
+    "source_run_timestamp_utc": "2026-08-07T19:22:30.567Z",
+    "BTC_2026_08_06_usd_m": 137.6,
+    "four_consecutive_positive_sessions": true,
+    "four_session_sum_usd_m": 763.6,
+    "IBIT_four_session_usd_m": 606.8,
+    "IBIT_share_pct": 79.46,
+    "HODL_2026_08_05_usd_m": -14.7,
+    "HODL_2026_08_06_usd_m": -32.8,
+    "GBTC_2026_08_06_usd_m": 7.5,
+    "owner_finality_effect": "CORROBORATION_ONLY_NO_TARGETED_TWO_RETRIEVAL_PACKET"
   },
   "owner_nomination": "NO",
   "owner_blockers": [
-    "TWO_INDEPENDENT_RETRIEVALS_AT_LEAST_60_SECONDS_APART_NOT_EVIDENCED",
+    "TARGETED_TWO_INDEPENDENT_RETRIEVALS_AT_LEAST_60_SECONDS_APART_WITH_REQUIRED_TIMESTAMPS_HASHES_NOT_EVIDENCED",
     "TARGETED_OWNER_FREEZE_AND_PACKET_CONTRACT_NOT_COMPLETED"
   ],
   "diagnostic_synchronized_windows_through_candidate_session": {
@@ -39,7 +49,11 @@
     "ETH_7_session_usd_m": 183.0,
     "authority": "DIAGNOSTIC_CANDIDATE_NOT_OWNER_LEDGER"
   },
-  "claude_ota_R57_cross_asset_claim_status": "SUPERSEDED_AFTER_SYNCHRONIZED_WINDOWS_BTC_EXCEEDS_ETH_IN_3_5_7_ABSOLUTE_DOLLAR_FLOW",
+  "claude_rolling_sum_QA": {
+    "BTC_7_session_reported_730_8": "REJECTED_CORRECT_763_4",
+    "BTC_20_session_reported_651_4": "QUARANTINED_NOT_REPRODUCIBLE_FROM_CURRENT_OWNER_LEDGER",
+    "prior_ETH_exceeds_BTC_claim": "WITHDRAWN_AND_SUPERSEDED"
+  },
   "anti_transmission_status": "REMAINS_WITHDRAWN_BOTH_ASSETS_SHOW_POSITIVE_MULTI_SESSION_ABSORPTION",
   "latest_authoritative_owner_session": "2026-08-05",
   "latest_authoritative_owner_path": "04_MARKET_LEARNING/etf/LATEST_ETF_FLOW_STATUS_v1.json",
