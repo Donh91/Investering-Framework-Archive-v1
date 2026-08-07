@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import importlib.util
+import io
 import json
+import tarfile
 import tempfile
 import unittest
 from datetime import datetime, timedelta, timezone
@@ -19,6 +21,7 @@ def load_module(name: str, relative: str):
 
 
 sidecar = load_module("pdlt_capture_sidecar", "scripts/experiments/pdlt_capture_sidecar.py")
+rebuild = load_module("pdlt_rebuild_sidecars", "scripts/experiments/pdlt_rebuild_sidecars.py")
 census = load_module("pdlt_daily_census", "scripts/experiments/pdlt_daily_census.py")
 deterministic = load_module("pdlt_deterministic_forecast", "scripts/experiments/pdlt_deterministic_forecast.py")
 maturation = load_module("pdlt_maturation", "scripts/experiments/pdlt_maturation.py")
@@ -37,6 +40,34 @@ def cfgi_row(symbol: str, timestamp: str, base: float) -> dict:
         "stale": False,
         "owner_status": "PASS",
         "components": {field: base + i for i, field in enumerate(FIELDS) if field != "score"},
+    }
+
+
+def compact_symbols(timestamp: str, base: float) -> dict:
+    out = {}
+    for i, symbol in enumerate(("MARKET", "BTC", "ETH")):
+        out[symbol] = {
+            "timestamp": timestamp,
+            "classification": "TEST",
+            "stale": False,
+            "owner_status": "PASS",
+            "values": {field: base + i + j for j, field in enumerate(FIELDS)},
+        }
+    return out
+
+
+def sidecar_row(created_at: str, source_ts: str, base: float, timeframe: str = "4h") -> dict:
+    return {
+        "contract": "PDLT_OWNER_SIDECAR_v1",
+        "run_id": "r-" + source_ts.replace(":", ""),
+        "created_at_utc": created_at,
+        "status": "PASS",
+        "cfgi": {
+            "timeframe": timeframe,
+            "source_sha256": "sha-" + source_ts,
+            "symbols": compact_symbols(source_ts, base),
+        },
+        "problems": [],
     }
 
 
@@ -59,13 +90,70 @@ class PDLTRuntimeTests(unittest.TestCase):
         self.assertTrue(any("orders" in p for p in problems))
 
     def test_cfgi_complete_accepts_only_full_three_symbol_sidecar(self):
-        symbols = {}
-        for i, s in enumerate(("MARKET", "BTC", "ETH")):
-            symbols[s] = {"values": {field: 40 + i for field in FIELDS}}
+        symbols = compact_symbols("2026-08-07T20:00:00Z", 40)
         row = {"status": "PASS", "cfgi": {"symbols": symbols}}
         self.assertTrue(census.cfgi_complete(row))
         del symbols["ETH"]["values"]["orders"]
         self.assertFalse(census.cfgi_complete(row))
+
+    def test_4h_sequence_accepts_consecutive_matched_source_timestamps(self):
+        cutoff = datetime(2026, 8, 7, 20, 5, tzinfo=timezone.utc)
+        rows = [
+            (Path("a.json"), sidecar_row("2026-08-07T16:02:00Z", "2026-08-07T16:00:00Z", 40)),
+            (Path("b.json"), sidecar_row("2026-08-07T20:02:00Z", "2026-08-07T20:00:00Z", 35)),
+        ]
+        seq = census.build_cfgi_sequence(rows, cutoff)
+        self.assertIsNotNone(seq)
+        assert seq is not None
+        self.assertEqual(seq["delta_interval_hours"], 4.0)
+        self.assertTrue(seq["delta_is_consecutive_4h"])
+        self.assertEqual(seq["latest_deltas"]["MARKET"]["score"], -5.0)
+
+    def test_4h_sequence_rejects_nonconsecutive_delta_for_abcd(self):
+        cutoff = datetime(2026, 8, 7, 20, 5, tzinfo=timezone.utc)
+        rows = [
+            (Path("a.json"), sidecar_row("2026-08-07T12:02:00Z", "2026-08-07T12:00:00Z", 40)),
+            (Path("b.json"), sidecar_row("2026-08-07T20:02:00Z", "2026-08-07T20:00:00Z", 35)),
+        ]
+        seq = census.build_cfgi_sequence(rows, cutoff)
+        self.assertIsNotNone(seq)
+        assert seq is not None
+        self.assertEqual(seq["delta_interval_hours"], 8.0)
+        self.assertFalse(seq["delta_is_consecutive_4h"])
+
+    def test_sequence_ignores_non_4h_sidecars(self):
+        cutoff = datetime(2026, 8, 7, 20, 5, tzinfo=timezone.utc)
+        rows = [
+            (Path("a.json"), sidecar_row("2026-08-07T16:02:00Z", "2026-08-07T16:00:00Z", 40, "1d")),
+            (Path("b.json"), sidecar_row("2026-08-07T20:02:00Z", "2026-08-07T20:00:00Z", 35, "4h")),
+        ]
+        self.assertIsNone(census.build_cfgi_sequence(rows, cutoff))
+
+    def test_rebuild_materializes_compact_sidecar_from_cold_archive(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            archive = root / "cfgi-owner-output-gh-test.tar.gz"
+            snapshot = {
+                "contract": "CFGI_OWNER_SNAPSHOT_v3",
+                "retrieved_at_utc": "2026-08-07T20:02:00Z",
+                "timeframe": "4h",
+                "fields": FIELDS,
+                "billing": {"expected_credits": 30},
+                "rows": [cfgi_row(s, "2026-08-07T20:00:00Z", 40 + i) for i, s in enumerate(("MARKET", "BTC", "ETH"))],
+            }
+            payload = json.dumps(snapshot).encode()
+            with tarfile.open(archive, "w:gz") as tar:
+                info = tarfile.TarInfo(rebuild.MEMBER)
+                info.size = len(payload)
+                tar.addfile(info, io.BytesIO(payload))
+            out_root = root / "pdlt"
+            dest, packet = rebuild.materialize(archive, out_root)
+            self.assertIsNotNone(dest)
+            self.assertIsNotNone(packet)
+            assert packet is not None
+            self.assertEqual(packet["status"], "PASS")
+            self.assertEqual(packet["cfgi"]["timeframe"], "4h")
+            self.assertEqual(set(packet["cfgi"]["symbols"]), {"MARKET", "BTC", "ETH"})
 
     def test_deterministic_b_fires_candidate_without_altering_a(self):
         model = {

@@ -27,6 +27,7 @@ jobs:
           python -m py_compile \
             scripts/experiments/pdlt_v1_1.py \
             scripts/experiments/pdlt_capture_sidecar.py \
+            scripts/experiments/pdlt_rebuild_sidecars.py \
             scripts/experiments/pdlt_daily_census.py \
             scripts/experiments/pdlt_deterministic_forecast.py \
             scripts/experiments/pdlt_discovery.py \
@@ -37,7 +38,7 @@ jobs:
       - name: Run PDLT runtime tests
         run: |
           python -m unittest tests.experiments.test_pdlt_v1_1 tests.experiments.test_pdlt_runtime -v
-      - name: Enforce architecture and spend boundaries
+      - name: Enforce architecture, matched-resolution and spend boundaries
         run: |
           python - <<'PY'
           from pathlib import Path
@@ -46,9 +47,17 @@ jobs:
           maturation=Path('.github/workflows/pdlt-maturation.yml').read_text()
           bootstrap=Path('.github/workflows/pdlt-bootstrap-once.yml').read_text()
           dcode=Path('scripts/experiments/pdlt_discovery.py').read_text()
+          ccode=Path('scripts/experiments/pdlt_daily_census.py').read_text()
+          rcode=Path('scripts/experiments/pdlt_rebuild_sidecars.py').read_text()
           mcode=Path('scripts/experiments/pdlt_maturation.py').read_text()
           assert 'CFGI_API_KEY' not in daily
-          assert 'cfgi-owner-output-${RUN_ID}.tar.gz' in daily
+          assert 'pdlt_rebuild_sidecars.py' in daily
+          assert '--raw-root 03_DAILY_CAPTURE_LOGS/raw' in daily
+          assert 'cfgi-owner-output-*.tar.gz' in rcode
+          assert 'cfgi-owner-output/owner_snapshot.json' in rcode
+          assert 'cfgi.get("timeframe") == "4h"' in ccode
+          assert 'delta_is_consecutive_4h' in ccode
+          assert '3.5 <= interval_hours <= 4.5' in ccode
           assert '--hard-cap-usd 10' in daily
           assert '--receipt-root runtime/pdlt/census/openai' in daily
           assert '--pending-reserve-usd 0.25' in daily
