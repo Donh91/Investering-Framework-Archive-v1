@@ -1,0 +1,41 @@
+{
+  "schema_version": "LATEST_ETF_CANDIDATE_STATUS_v1",
+  "updated_at_local": "2026-08-07T12:10:00+02:00",
+  "candidate_session": "2026-08-06",
+  "candidate_status": "COMPLETE_ROW_CANDIDATE_PROVENANCE_INCOMPLETE_NOT_OWNER_GRADE",
+  "source_path": "08_SOURCE_MATERIAL/etf/2026-08-07__btc-eth-etf-2026-08-06-user-supplied-structured-candidate.json",
+  "qa_path": "09_SOURCE_QA/etf/2026-08-07__btc-eth-etf-2026-08-06-user-supplied-candidate-validation.json",
+  "reconciliation_path": "04_MARKET_LEARNING/etf/2026-08-07__btc-eth-etf-2026-08-06-candidate-reconciliation.md",
+  "targeted_request_id": "DP-ETF-DIRECT-OWNER-20260807-02",
+  "BTC_candidate_total_usd_m": 137.6,
+  "ETH_candidate_total_usd_m": 92.1,
+  "both_rows_complete_numeric": true,
+  "both_rows_local_tieout": true,
+  "both_rows_match_prior_conflict_detection_candidates": true,
+  "owner_nomination": "NO",
+  "owner_blockers": [
+    "TWO_RETRIEVALS_AT_LEAST_60_SECONDS_APART_NOT_EVIDENCED",
+    "EXACT_RETRIEVAL_TIMESTAMPS_MISSING",
+    "PAGE_GENERATION_FRESHNESS_EVIDENCE_MISSING",
+    "ARGUMENT_PAYLOAD_AND_ROW_HASHES_MISSING",
+    "FREEZE_EVIDENCE_MISSING",
+    "PACKET_SHA256_MISSING"
+  ],
+  "diagnostic_synchronized_windows_through_candidate_session": {
+    "BTC_3_session_usd_m": 593.5,
+    "ETH_3_session_usd_m": 206.0,
+    "BTC_5_session_usd_m": 498.2,
+    "ETH_5_session_usd_m": 203.1,
+    "BTC_7_session_usd_m": 763.4,
+    "ETH_7_session_usd_m": 183.0,
+    "authority": "DIAGNOSTIC_CANDIDATE_NOT_OWNER_LEDGER"
+  },
+  "claude_ota_R57_cross_asset_claim_status": "SUPERSEDED_AFTER_SYNCHRONIZED_WINDOWS_BTC_EXCEEDS_ETH_IN_3_5_7_ABSOLUTE_DOLLAR_FLOW",
+  "anti_transmission_status": "REMAINS_WITHDRAWN_BOTH_ASSETS_SHOW_POSITIVE_MULTI_SESSION_ABSORPTION",
+  "latest_authoritative_owner_session": "2026-08-05",
+  "latest_authoritative_owner_path": "04_MARKET_LEARNING/etf/LATEST_ETF_FLOW_STATUS_v1.json",
+  "canonical_effect": "NONE",
+  "portfolio_effect": "NONE",
+  "research_escalation": "NO",
+  "targeted_validation_still_required": true
+}
