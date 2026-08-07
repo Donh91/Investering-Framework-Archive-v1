@@ -1,0 +1,68 @@
+{
+  "schema_version": "DATA_PING_SOURCE_QA_v1",
+  "run_id": "dprun_32c45bcac4df4fa4",
+  "collector_version": "15.3.1",
+  "validator_method_id": "DATA_PING_PACKET_VALIDATOR_v3",
+  "overall_verdict": "FAIL_ORCHESTRATION_INTERRUPTED_NON_INGESTIBLE",
+  "validator_pass": false,
+  "overall_score": 71.15,
+  "checks_total": 79,
+  "checks_passed": 56,
+  "checks_failed": 23,
+  "critical_failure_count": 15,
+  "high_failure_count": 7,
+  "medium_failure_count": 1,
+  "failed_check_ids": [
+    "ORD-002","INV-001","INV-002","REC-002","REC-003","BRD-001","BRD-002","BRD-003","BRD-004","BRD-005","WEB-001","WEB-003","WEB-004","ORD-005","BRD-007","WEB-005","PG-002","PG-003","PG-004","MTH-001","INV-007","ORC-001","ORC-005"
+  ],
+  "root_cause_categories": [
+    "EXECUTION_ORDER_FAILURE",
+    "INVOCATION_EVIDENCE_MISSING",
+    "LOCAL_TRANSFORM_NOT_EXECUTED",
+    "METHOD_ID_MISMATCH",
+    "STATUS_RECONCILIATION_FAILURE"
+  ],
+  "root_cause_adjudication": {
+    "primary": "FIRST_REGISTERED_SOURCE_INVOCATION_NOT_INCREMENTALLY_COMMITTED_BEFORE_NEXT_SOURCE_CALL",
+    "secondary": "SECOND_SOURCE_INVOCATION_WAS_UNREGISTERED_CONTINUATION_WITH_UNREGISTERED_METHOD",
+    "cascade": "RUNTIME_STOPPED_AFTER_1_OF_60_REGISTERED_CORE_ACTIONS_SO_DOWNSTREAM_GROUP_AND_COVERAGE_CHECKS_FAILED_BY_CONSTRUCTION",
+    "engineering_issue": 325
+  },
+  "execution": {
+    "planned_core_actions": 60,
+    "attempted_core_actions": 1,
+    "planned_optional_actions": 1,
+    "attempted_optional_actions": 0,
+    "resolved_source_invocations": 2,
+    "receipt_count": 2,
+    "freeze_count": 0,
+    "post_freeze_call_count": 0,
+    "execution_interrupted": true,
+    "interruption_reason": "INCREMENTAL_COMMIT_AND_UNREGISTERED_SOURCE_CALL_VIOLATION"
+  },
+  "farside_partial_publication_QA": {
+    "session": "2026-08-06",
+    "displayed_total_usd_m": 29.2,
+    "local_tieout_usd_m": 29.2,
+    "tieout": true,
+    "dash_unknown_count": 8,
+    "zero_count": 1,
+    "row_usable": false,
+    "market_use_status": "FAIL",
+    "normalized_row_sha256": "0ddcde02a22c0e9e2c9d2e4652864aa6764260767a7ef94cc9eef5eef9c46fe0",
+    "finality_learning": "LOCAL_TIEOUT_IS_NECESSARY_NOT_SUFFICIENT_WHEN_DASH_UNKNOWN_CELLS_REMAIN",
+    "ETF_owner_effect": "NONE"
+  },
+  "artifact_hashes": {
+    "uploaded_packet_file_sha256": "4d8978d0426d25e6bd7cf5dba3fd315dabe6059127fd6d8f6808e7e25985caa9",
+    "packet_declared_canonical_sha256": "6a822acf3c5c068b88b41c3126bfc479205446f431fee43e72f899cb918b6691",
+    "uploaded_validation_report_file_sha256": "ca466eaff3656f14af2c53c36d3f43dfb8a1e6847511c171b0336c43abb26747",
+    "validator_payload_sha256": "235a468e2fbbd8bf2d23fe5bd5ea33aeb4ab86163a53a3d4e69b9bac66e6d055"
+  },
+  "main_thread_ingest": false,
+  "bounded_owner_eligible": false,
+  "canonical_state_change": "NONE",
+  "portfolio_effect": "NONE",
+  "research_escalation": "NO",
+  "engineering_required": true
+}
