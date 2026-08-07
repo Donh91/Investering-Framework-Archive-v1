@@ -1,0 +1,79 @@
+{
+  "schema_version": "CLAUDE_OTA_SOURCE_QA_v1",
+  "source_run_timestamp_utc": "2026-08-06T23:03:54.029Z",
+  "main_thread_reconciled_at_local": "2026-08-07T09:00:00+02:00",
+  "overall_verdict": "PASS_WITH_H7_RETRIGGER_FAIL_CLOSED_AND_CLAUDE_ETF_DERIVED_WINDOW_REJECTION",
+  "reference_bridge_present": false,
+  "main_thread_reference_bounded_owner_run_id": "run-20260806T101439Z-79DYrv6q",
+  "main_thread_reference_bounded_owner_snapshot_id": "snap-20260806T101439Z-caM8nhgy",
+  "latest_validated_non_owner_context_run_id": "run-89e87ee719df4236aad3",
+  "items": {
+    "R_56_H7_row16": {
+      "status": "ACCEPTED_AS_DIRECT_SETTLED_FOLLOW_THROUGH_EVIDENCE",
+      "joint_conditions_satisfied": true,
+      "COND1_both_readings": "MET",
+      "COND2": "2_OF_3_MET",
+      "COND3": "MET",
+      "BTC_close": 64440.74,
+      "ETH_close": 1906.28,
+      "ETHBTC_close": 0.02959,
+      "spread_pp": 0.32,
+      "five_session_OLS_slope_reported_pct_per_session": -0.030,
+      "five_session_slope_QA": "SOURCE_DERIVED_NOT_LOAD_BEARING_NOT_INDEPENDENTLY_RECOMPUTED",
+      "retrigger_rule": "UNDEFINED_AT_PREREGISTRATION",
+      "main_thread_event_classification": "JOINT_CONDITION_REQUALIFICATION_FOLLOW_THROUGH_NOT_NEW_SIGNAL_EVENT",
+      "historical_score_change": "NONE",
+      "rotation_permission": "CLOSED"
+    },
+    "R_57_ETH_ETF": {
+      "direct_daily_rows": {
+        "2026_08_04": {"ETH_usd_m": 53.1, "status": "ACCEPTED_MATCHES_EXISTING_OWNER_LEDGER"},
+        "2026_08_05": {"ETH_usd_m": 60.8, "status": "ACCEPTED_MATCHES_EXISTING_OWNER_LEDGER"}
+      },
+      "claude_derived_3_session_usd_m": {"value": 102.0, "status": "ACCEPTED_MATCHES_OWNER_LEDGER"},
+      "claude_derived_5_session_usd_m": {"value": 123.9, "status": "REJECTED_NUMERIC_MISMATCH_OWNER_LEDGER_123_8"},
+      "claude_derived_7_session_usd_m": {"value": 91.1, "status": "REJECTED_NUMERIC_MISMATCH_OWNER_LEDGER_100_3"},
+      "claude_claim_ETH_exceeds_BTC_5_7_session_absolute_dollars": "REJECTED_AS_ASYNCHRONOUS_STALE_WINDOW_COMPARISON",
+      "owner_ledger_through_2026_08_05": {
+        "BTC_3_session_usd_m": 626.0,
+        "BTC_5_session_usd_m": 593.7,
+        "BTC_7_session_usd_m": 576.1,
+        "ETH_3_session_usd_m": 102.0,
+        "ETH_5_session_usd_m": 123.8,
+        "ETH_7_session_usd_m": 100.3
+      },
+      "main_thread_read": "ETH_FLOW_REPAIR_CONFIRMED_BUT_NO_ABSOLUTE_DOLLAR_OVERTAKE_OF_BTC"
+    },
+    "R_58_self_correction": {
+      "status": "ACCEPTED_AS_PROCEDURAL_SELF_CORRECTION_NO_NEW_FRAMEWORK_DELTA",
+      "reason": "MAIN_THREAD_ALREADY_HELD_STRONG_DUAL_POSITIVE_ETF_ABSORPTION_AFTER_2026_08_05_OWNER_VALIDATION"
+    },
+    "current_web_crosscheck_2026_08_06": {
+      "BTC_usd_m": 137.6,
+      "ETH_usd_m": 92.1,
+      "same_session_sign": "BOTH_POSITIVE",
+      "status": "CURRENT_DIRECT_WEB_CANDIDATE_NOT_OWNER_VALIDATED",
+      "synchronized_candidate_rolling_sums": {
+        "BTC_3_session_usd_m": 593.5,
+        "BTC_5_session_usd_m": 498.2,
+        "BTC_7_session_usd_m": 763.4,
+        "ETH_3_session_usd_m": 206.0,
+        "ETH_5_session_usd_m": 203.1,
+        "ETH_7_session_usd_m": 183.0
+      },
+      "cross_asset_conclusion": "BTC_REMAINS_LARGER_IN_ABSOLUTE_DOLLAR_FLOWS_ON_ALL_SYNCHRONIZED_3_5_7_SESSION_WINDOWS"
+    },
+    "creative_extension": {
+      "CE_01": "GOVERNANCE_BACKLOG_ONLY_NOT_MERGED",
+      "CE_02": "GOVERNANCE_BACKLOG_ONLY_NOT_MERGED",
+      "reason": "POST_HOC_SMALL_SAMPLE_AND_NOT_PREREGISTERED"
+    }
+  },
+  "canonical_state_change": "NONE",
+  "portfolio_effect": "NONE",
+  "new_A_class_receipt": false,
+  "new_shadow_dual_run": false,
+  "research_escalation": "NO",
+  "targeted_data_validation": "YES_ETF_2026_08_06_OWNER_VALIDATION",
+  "governance_action": "YES_H7_UNDEFINED_RETRIGGER_FAIL_CLOSED"
+}
