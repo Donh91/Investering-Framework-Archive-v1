@@ -1,0 +1,55 @@
+{
+  "schema_version": "DATA_PING_SOURCE_QA_v1",
+  "run_id": "dp-run-7ddda892cbb35d79ad53",
+  "snapshot_id": "dp-snap-50a5f320c97b9c262d36",
+  "snapshot_utc": "2026-08-07T10:47:45.292410Z",
+  "collector_version": "15.3.2",
+  "validator_method_id": "DATA_PING_PACKET_VALIDATOR_v3",
+  "overall_verdict": "VALIDATOR_PASS_NON_OWNER_METHOD_AUTHORITY_PARTIAL_AND_LINEAGE_MISSING",
+  "validator_pass": true,
+  "failed_check_count": 1,
+  "failed_check_ids": ["MTH-001"],
+  "failed_check_severity": "MEDIUM_WARNING",
+  "critical_failure_count": 0,
+  "high_failure_count": 0,
+  "owner_grade": false,
+  "collector_packet_usable": true,
+  "bounded_owner_eligible": false,
+  "root_causes": [
+    "NO_ACCEPTED_SAME_THREAD_PREDECESSOR",
+    "18_SOURCE_ACTION_METHOD_IDS_UNRESOLVED_NULL"
+  ],
+  "issue_326_update": {
+    "original_COINGECKO_SIMPLE_PRICE_v1_registry_omission": "RESOLVED_IN_PACKET_REGISTERED_REQUIRED_CURRENT_PRICE",
+    "MTH_001_remaining": "YES_OTHER_NULL_METHOD_IDS",
+    "issue_should_remain_open_until_full_method_crosswalk_and_owner_grade_rerun": true
+  },
+  "issue_320_update": {
+    "lineage_requirement": "NOT_SATISFIED",
+    "packet_predecessor_available": false,
+    "active_bounded_owner_snapshot_id": "snap-20260806T101439Z-caM8nhgy"
+  },
+  "execution": {
+    "runtime_completion": "COMPLETE",
+    "core_actions_attempted": 60,
+    "optional_actions_attempted": 1,
+    "physical_source_invocations": 65,
+    "receipts": 61,
+    "freeze_count": 1,
+    "post_freeze_calls": 0
+  },
+  "ETF_2026_08_06": {
+    "BTC_usd_m": 137.6,
+    "ETH_usd_m": 92.1,
+    "BTC_dash_count": 0,
+    "ETH_dash_count": 0,
+    "BTC_local_tieout": "PASS",
+    "ETH_local_tieout": "PASS",
+    "owner_permission": "NO_TARGETED_TWO_RETRIEVAL_FINALITY_CONTRACT_NOT_SATISFIED_BY_THIS_RUN"
+  },
+  "packet_sha256": "cec694e692e1a0cadc504e6909e451bfc96feaf94edef640b44f22fac964260c",
+  "uploaded_file_sha256": "e65a6884783f304a4e58fc2fd1834ceb1cc8f77e42c143f1a5d2d569e214ce24",
+  "canonical_state_change": "NONE",
+  "portfolio_effect": "NONE",
+  "research_escalation": "NO"
+}
