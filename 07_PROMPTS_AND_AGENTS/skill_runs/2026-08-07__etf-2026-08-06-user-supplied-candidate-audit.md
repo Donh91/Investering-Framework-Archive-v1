@@ -1,0 +1,29 @@
+# ETF 2026-08-06 user-supplied candidate — audit receipt
+
+- received: 2026-08-07 local project context
+- request context: `DP-ETF-DIRECT-OWNER-20260807-02`
+- source class: user-supplied structured success response
+- BTC candidate: `+137.6M USD`
+- ETH candidate: `+92.1M USD`
+- complete numeric issuer rows: YES / YES
+- dash/unknown issuer cells: 0 / 0
+- local total tie-out: PASS / PASS
+- matches pre-existing conflict-detection candidates: YES / YES
+- two independent retrievals >=60s: NOT EVIDENCED
+- retrieval timestamps: MISSING
+- source generation freshness evidence: MISSING
+- invocation/payload/row hashes: MISSING
+- freeze evidence: MISSING
+- packet SHA-256: MISSING
+- owner nomination: NO
+- authoritative ETF owner advanced: NO
+- candidate pointer created: `04_MARKET_LEARNING/etf/LATEST_ETF_CANDIDATE_STATUS_v1.json`
+- synchronized diagnostic 3-session: BTC `593.5M`, ETH `206.0M`
+- synchronized diagnostic 5-session: BTC `498.2M`, ETH `203.1M`
+- synchronized diagnostic 7-session: BTC `763.4M`, ETH `183.0M`
+- Claude R-57 unsynchronized absolute-dollar cross-asset claim: SUPERSEDED
+- anti-transmission withdrawal: RETAINED
+- canonical state change: NONE
+- portfolio effect: NONE
+- research escalation: NO
+- required next event: owner-grade direct validation satisfying the standing two-retrieval/hash/freeze contract
