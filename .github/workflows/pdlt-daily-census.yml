@@ -1,6 +1,10 @@
 name: PDLT daily prospective census
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - 'research/experiments/pdlt_v1_1/discovery/FROZEN_MODEL_v1.json'
   schedule:
     - cron: '55 23 * * *'
       timezone: 'Europe/Copenhagen'
@@ -67,14 +71,14 @@ jobs:
       - name: Read census state
         id: state
         run: cat runtime/pdlt/census/status.env >> "$GITHUB_OUTPUT"
-      - name: Enforce bounded input and lifetime OpenAI budget
+      - name: Enforce bounded input and reserve budget for both C and D
         if: steps.state.outputs.status == 'READY_ABCD'
         run: |
           test $(wc -c < runtime/pdlt/census/context_c.json) -le 50000
           test $(wc -c < runtime/pdlt/census/context_d.json) -le 75000
           python scripts/experiments/pdlt_cost_guard.py \
             --receipt-root research/experiments/pdlt_v1_1/census \
-            --hard-cap-usd 10 --reserve-usd 0.25
+            --hard-cap-usd 10 --reserve-usd 0.25 --pending-reserve-usd 0.50
       - name: Produce deterministic A and B
         if: steps.state.outputs.status == 'READY_ABCD'
         run: |
@@ -89,14 +93,13 @@ jobs:
             --config research/experiments/pdlt_v1_1/PDLT_CONFIG_v1_1.json \
             --context runtime/pdlt/census/context_c.json --arm C \
             --output-dir runtime/pdlt/census/openai
-      - name: Re-check lifetime OpenAI budget before Arm D
+      - name: Re-check lifetime OpenAI budget including current Arm C before Arm D
         if: steps.state.outputs.status == 'READY_ABCD'
         run: |
-          mkdir -p runtime/pdlt/current-receipts
-          cp runtime/pdlt/census/openai/arm_C_receipt.json runtime/pdlt/current-receipts/ 2>/dev/null || true
           python scripts/experiments/pdlt_cost_guard.py \
             --receipt-root research/experiments/pdlt_v1_1/census \
-            --hard-cap-usd 10 --reserve-usd 0.25
+            --receipt-root runtime/pdlt/census/openai \
+            --hard-cap-usd 10 --reserve-usd 0.25 --pending-reserve-usd 0.25
       - name: Produce frozen OpenAI Arm D
         if: steps.state.outputs.status == 'READY_ABCD'
         run: |
@@ -104,6 +107,13 @@ jobs:
             --config research/experiments/pdlt_v1_1/PDLT_CONFIG_v1_1.json \
             --context runtime/pdlt/census/context_d.json --arm D \
             --output-dir runtime/pdlt/census/openai
+      - name: Verify hard cap after both current calls
+        if: steps.state.outputs.status == 'READY_ABCD'
+        run: |
+          python scripts/experiments/pdlt_cost_guard.py \
+            --receipt-root research/experiments/pdlt_v1_1/census \
+            --receipt-root runtime/pdlt/census/openai \
+            --hard-cap-usd 10 --reserve-usd 0 --pending-reserve-usd 0
       - name: Freeze A-D census
         if: steps.state.outputs.status == 'READY_ABCD'
         run: |
