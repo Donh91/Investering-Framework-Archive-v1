@@ -1,0 +1,162 @@
+name: PDLT daily prospective census
+
+on:
+  schedule:
+    - cron: '55 23 * * *'
+      timezone: 'Europe/Copenhagen'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: framework-main-writer
+  cancel-in-progress: false
+
+jobs:
+  census:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Resolve latest owner capture and extract persisted CFGI without new API spend
+        shell: bash
+        run: |
+          mkdir -p runtime/pdlt/cfgi
+          RUN_ID=$(python - <<'PY'
+          import json
+          print(json.load(open('03_DAILY_CAPTURE_LOGS/captures/LATEST.json'))['run_id'])
+          PY
+          )
+          ARCHIVE=$(find 03_DAILY_CAPTURE_LOGS/raw -type f -name "cfgi-owner-output-${RUN_ID}.tar.gz" | sort | tail -1)
+          if [ -n "$ARCHIVE" ]; then tar -xzf "$ARCHIVE" -C runtime/pdlt/cfgi; fi
+          echo "run_id=$RUN_ID" >> "$GITHUB_ENV"
+      - name: Materialize compact CFGI sidecar
+        run: |
+          python scripts/experiments/pdlt_capture_sidecar.py \
+            --capture-latest 03_DAILY_CAPTURE_LOGS/captures/LATEST.json \
+            --cfgi-snapshot runtime/pdlt/cfgi/cfgi-owner-output/owner_snapshot.json \
+            --output-root 03_DAILY_CAPTURE_LOGS/pdlt \
+            --run-id "$run_id"
+      - name: Build timestamp-safe census contexts
+        run: |
+          MODEL=research/experiments/pdlt_v1_1/discovery/FROZEN_MODEL_v1.json
+          mkdir -p runtime/pdlt/census
+          python scripts/experiments/pdlt_daily_census.py \
+            --capture-root 03_DAILY_CAPTURE_LOGS/captures \
+            --sidecar-root 03_DAILY_CAPTURE_LOGS/pdlt \
+            --frozen-model "$MODEL" \
+            --output runtime/pdlt/census/census.json \
+            --context-c runtime/pdlt/census/context_c.json \
+            --context-d runtime/pdlt/census/context_d.json
+          python - <<'PY'
+          import json
+          c=json.load(open('runtime/pdlt/census/census.json'))
+          print('status='+c['status'])
+          open('runtime/pdlt/census/status.env','w').write('status='+c['status']+'\n')
+          PY
+      - name: Read census state
+        id: state
+        run: cat runtime/pdlt/census/status.env >> "$GITHUB_OUTPUT"
+      - name: Enforce bounded input and lifetime OpenAI budget
+        if: steps.state.outputs.status == 'READY_ABCD'
+        run: |
+          test $(wc -c < runtime/pdlt/census/context_c.json) -le 50000
+          test $(wc -c < runtime/pdlt/census/context_d.json) -le 75000
+          python scripts/experiments/pdlt_cost_guard.py \
+            --receipt-root research/experiments/pdlt_v1_1/census \
+            --hard-cap-usd 10 --reserve-usd 0.25
+      - name: Produce deterministic A and B
+        if: steps.state.outputs.status == 'READY_ABCD'
+        run: |
+          python scripts/experiments/pdlt_deterministic_forecast.py \
+            --model research/experiments/pdlt_v1_1/discovery/FROZEN_MODEL_v1.json \
+            --context-d runtime/pdlt/census/context_d.json \
+            --output runtime/pdlt/census/ab.json
+      - name: Produce frozen OpenAI Arm C
+        if: steps.state.outputs.status == 'READY_ABCD'
+        run: |
+          python scripts/api_agent/pdlt_gateway.py \
+            --config research/experiments/pdlt_v1_1/PDLT_CONFIG_v1_1.json \
+            --context runtime/pdlt/census/context_c.json --arm C \
+            --output-dir runtime/pdlt/census/openai
+      - name: Re-check lifetime OpenAI budget before Arm D
+        if: steps.state.outputs.status == 'READY_ABCD'
+        run: |
+          mkdir -p runtime/pdlt/current-receipts
+          cp runtime/pdlt/census/openai/arm_C_receipt.json runtime/pdlt/current-receipts/ 2>/dev/null || true
+          python scripts/experiments/pdlt_cost_guard.py \
+            --receipt-root research/experiments/pdlt_v1_1/census \
+            --hard-cap-usd 10 --reserve-usd 0.25
+      - name: Produce frozen OpenAI Arm D
+        if: steps.state.outputs.status == 'READY_ABCD'
+        run: |
+          python scripts/api_agent/pdlt_gateway.py \
+            --config research/experiments/pdlt_v1_1/PDLT_CONFIG_v1_1.json \
+            --context runtime/pdlt/census/context_d.json --arm D \
+            --output-dir runtime/pdlt/census/openai
+      - name: Freeze A-D census
+        if: steps.state.outputs.status == 'READY_ABCD'
+        run: |
+          mkdir -p runtime/pdlt/census/frozen
+          python scripts/experiments/pdlt_freeze_census.py \
+            --census runtime/pdlt/census/census.json \
+            --model research/experiments/pdlt_v1_1/discovery/FROZEN_MODEL_v1.json \
+            --ab runtime/pdlt/census/ab.json \
+            --arm-c runtime/pdlt/census/openai/arm_C_forecast.json \
+            --arm-d runtime/pdlt/census/openai/arm_D_forecast.json \
+            --receipt-c runtime/pdlt/census/openai/arm_C_receipt.json \
+            --receipt-d runtime/pdlt/census/openai/arm_D_receipt.json \
+            --output runtime/pdlt/census/frozen/forecast.json
+      - name: Materialize immutable census row
+        shell: bash
+        run: |
+          STAMP=$(date -u +%Y/%m/%d/%H%M%S)
+          DEST="research/experiments/pdlt_v1_1/census/${STAMP}"
+          mkdir -p "$DEST"
+          cp runtime/pdlt/census/census.json "$DEST/PDLT_CENSUS_CONTEXT.json"
+          cp runtime/pdlt/census/context_c.json "$DEST/context_c.json"
+          cp runtime/pdlt/census/context_d.json "$DEST/context_d.json" 2>/dev/null || true
+          if [ "${{ steps.state.outputs.status }}" = "READY_ABCD" ]; then
+            cp runtime/pdlt/census/ab.json "$DEST/PDLT_AB.json"
+            cp runtime/pdlt/census/openai/*.json "$DEST/"
+            mkdir -p research/framework_memory/forecast_memory/pdlt
+            ID=$(python - <<'PY'
+          import json
+          print(json.load(open('runtime/pdlt/census/frozen/forecast.json'))['forecast_id'])
+          PY
+            )
+            cp runtime/pdlt/census/frozen/forecast.json "research/framework_memory/forecast_memory/pdlt/${ID}.json"
+          fi
+      - name: Commit census and frozen forecasts with verified readback
+        shell: bash
+        run: |
+          git config user.name framework-pdlt-bot
+          git config user.email framework-pdlt-bot@users.noreply.github.com
+          git add 03_DAILY_CAPTURE_LOGS/pdlt research/experiments/pdlt_v1_1/census research/framework_memory/forecast_memory/pdlt 2>/dev/null || true
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "pdlt: append prospective census ${GITHUB_RUN_ID}"
+          pushed=false
+          for attempt in 1 2 3; do
+            git rebase --abort 2>/dev/null || true
+            if git pull --rebase origin main && git push origin HEAD:main; then pushed=true; break; fi
+            sleep $((attempt*5))
+          done
+          [ "$pushed" = true ]
+          git fetch origin main
+          git merge-base --is-ancestor HEAD origin/main
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: pdlt-daily-census-${{ github.run_id }}
+          path: runtime/pdlt/
+          retention-days: 30
