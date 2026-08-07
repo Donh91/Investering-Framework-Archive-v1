@@ -1,0 +1,57 @@
+{
+  "contract": "PDLT_CONFIG_v1_1",
+  "status": "READY_SHADOW_ONLY",
+  "experiment_id": "PDLT-v1.1-RUN",
+  "authority": {
+    "canonical_promotion": false,
+    "framework_state_change": false,
+    "model_weight_change": false,
+    "portfolio_action": false
+  },
+  "cfgi": {
+    "hard_cap_credits": 20000,
+    "planned_cap_credits": 18060,
+    "historical_plan": [
+      {"name": "market_4h_depth", "symbols": ["MARKET"], "timeframe": "4h", "limit": 720, "fields": ["score","volatility","volume","impulse","technical","social","dominance","trends","whales","orders"], "expected_credits": 7200},
+      {"name": "btc_eth_4h_crosscheck", "symbols": ["BTC","ETH"], "timeframe": "4h", "limit": 120, "fields": ["score","volatility","volume","impulse","technical","social","dominance","trends","whales","orders"], "expected_credits": 2400},
+      {"name": "market_btc_eth_1d_context", "symbols": ["MARKET","BTC","ETH"], "timeframe": "1d", "limit": 90, "fields": ["score","volatility","volume","impulse","technical","social","dominance","trends","whales","orders"], "expected_credits": 2700}
+    ],
+    "historical_total_credits": 12300,
+    "burst": {"symbols": ["MARKET","BTC","ETH"], "timeframe": "15m", "limit": 16, "expected_credits": 480, "planned_events": 12, "reserve_events": 4, "cooldown_hours": 72},
+    "engine_epoch_boundary_utc": "2026-07-08T00:00:00Z",
+    "epoch_labels": ["LEGACY_PRE_20260708","UPGRADED_POST_20260708"]
+  },
+  "openai": {
+    "planned_cap_usd": 5.0,
+    "soft_stop_usd": 8.0,
+    "hard_cap_usd": 10.0,
+    "discovery_model": "gpt-5.6-sol",
+    "critic_model": "gpt-5.6-sol",
+    "forward_model": "gpt-5.6-terra",
+    "forward_reasoning_effort": "medium",
+    "store": false
+  },
+  "arms": {
+    "A": "FRAMEWORK_BASELINE_DETERMINISTIC_NO_CFGI_NO_OPENAI",
+    "B": "FRAMEWORK_PLUS_CFGI_DETERMINISTIC",
+    "C": "FRAMEWORK_PLUS_OPENAI_NO_CFGI",
+    "D": "FRAMEWORK_PLUS_CFGI_PLUS_OPENAI"
+  },
+  "primary_contrasts": ["B-A","D-C"],
+  "secondary_contrasts": ["C-A","D-B","D-A"],
+  "outcomes": ["PULLBACK_72H","HEAVY_PULLBACK_7D","PRICE_DISTRIBUTION_14D","ECOSYSTEM_DISTRIBUTION_14D"],
+  "evidence_gates": {"provisional_matured_observations": 30, "frequency_change_matured_observations": 90, "minimum_material_regimes": 3},
+  "candidate_caps": {"max_candidates": 3, "max_cfgi_components": 4, "max_sequence_steps": 4, "max_symbols": 2, "max_timeframes": 2},
+  "kill_criteria": [
+    "FUTURE_DATA_LEAKAGE",
+    "TIMESTAMP_ALIGNMENT_FAILURE",
+    "CANDIDATE_MUTATION_AFTER_FREEZE",
+    "OUTCOME_MUTATION_AFTER_FREEZE",
+    "CFGI_EPOCH_CONTAMINATION",
+    "OPENAI_MODEL_OR_PROMPT_DRIFT_WITHOUT_VERSION_BOUNDARY",
+    "CFGI_HARD_CAP_RISK",
+    "OPENAI_HARD_CAP_RISK",
+    "BILLING_RECEIPT_MISMATCH",
+    "INDEPENDENT_EXECUTION_RECEIPT_FAILURE"
+  ]
+}
