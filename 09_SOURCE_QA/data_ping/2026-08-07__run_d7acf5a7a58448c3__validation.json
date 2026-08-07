@@ -1,0 +1,43 @@
+{
+  "schema_version": "DATA_PING_SOURCE_QA_v1",
+  "run_id": "run_d7acf5a7a58448c3",
+  "snapshot_id": "snap_99a76d473529f7db",
+  "snapshot_utc": "2026-08-07T07:43:24.203684Z",
+  "collector_version": "15.3.1",
+  "validator_method_id": "DATA_PING_PACKET_VALIDATOR_v3",
+  "overall_verdict": "FAIL_SINGLE_METHOD_AUTHORITY_REGISTRY_DRIFT_NON_INGESTIBLE",
+  "validator_pass": false,
+  "failed_check_count": 1,
+  "failed_check_ids": ["MTH-001"],
+  "blocking_reason": "METHOD_VERSION_NOT_REGISTERED:COINGECKO_SIMPLE_PRICE_v1",
+  "root_cause": "METHOD_AUTHORITY_REGISTRY_DRIFT",
+  "engineering_issue": 326,
+  "execution_recovery": {
+    "issue_325_original_orchestration_failure_recurred": false,
+    "all_core_actions_attempted": true,
+    "optional_action_attempted": true,
+    "resolved_source_invocations": 61,
+    "receipt_count": 61,
+    "incremental_commit_status": "PASS",
+    "group_transform_barrier_status": "PASS",
+    "binance_final_atomic_suffix_status": "PASS",
+    "freeze_count": 1,
+    "post_freeze_call_count": 0,
+    "execution_interrupted": false
+  },
+  "source_limitations": {
+    "BTC_ETF": "LATEST_SETTLED_ROW_UNRESOLVED",
+    "ETH_ETF": "LATEST_SETTLED_ROW_UNRESOLVED",
+    "CFGI_ETH": "CLASSIFICATION_CONFLICT",
+    "STABLECOIN_GLOBAL_TOTAL": "UNRESOLVED",
+    "GECKOTERMINAL": "LOW_RESERVE_ANOMALY",
+    "REALIZED_VOLATILITY": "INSUFFICIENT_SETTLED_HISTORY"
+  },
+  "packet_sha256": "74f38320772f80a3ea6bfa288e5aaa8fdf4e94d3ccef0b32c427bbe7d22eacf9",
+  "main_thread_ingest": false,
+  "bounded_owner_eligible": false,
+  "canonical_state_change": "NONE",
+  "portfolio_effect": "NONE",
+  "research_escalation": "NO",
+  "engineering_required": true
+}
