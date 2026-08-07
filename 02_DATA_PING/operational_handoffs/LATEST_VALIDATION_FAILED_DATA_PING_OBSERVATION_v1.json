@@ -1,32 +1,32 @@
 {
   "schema_version": "LATEST_VALIDATION_FAILED_DATA_PING_OBSERVATION_v1",
-  "updated_at_utc": "2026-08-07T16:30:00Z",
-  "latest_failed_run_id": "run-3d5187ccaeeea087",
-  "latest_failed_snapshot_id": "snap-e4fcc29d6ec597cb",
-  "latest_failed_snapshot_utc": "2026-08-07T08:42:59.283786Z",
+  "updated_at_utc": "2026-08-07T19:55:00Z",
+  "latest_failed_run_id": null,
+  "latest_failed_snapshot_id": "dp_20260807_failure_5d98c4b14617",
+  "latest_failed_snapshot_utc": "2026-08-07T18:50:30.119182Z",
   "collector_version": "15.3.1",
-  "classification": "VALIDATION_FAILED_HASH_TIMING_AND_ORCHESTRATION_REGRESSION_NON_DECISION",
+  "classification": "VALIDATION_FAILED_STALE_COLLECTOR_RUNTIME_DRIFT_NON_DECISION",
   "validator_pass": false,
-  "failed_check_ids": ["INV-006","PG-003","PG-004","PG-005","ORC-001","ORC-002","ORC-003","ORC-004"],
+  "blocking_failure_count": 6,
   "failure_summary": {
     "incremental_commit_status": "FAIL",
     "group_barrier_status": "FAIL",
-    "hash_integrity_status": "FAIL",
-    "execution_order_status": "PASS",
-    "receipt_bijection_status": "PASS",
-    "status_reconciliation_status": "PASS",
-    "freeze_status": "PASS",
+    "invocation_timing_retained": false,
+    "complete_payload_hashes_retained": false,
+    "farside_latest_settled_finalized": false,
+    "breadth_transform_completed": false,
     "planned_core_actions": 60,
     "attempted_core_actions": 60,
     "receipt_count": 61,
+    "freeze_count": 1,
+    "post_freeze_call_count": 0,
     "packet_usable_for_main_thread_ingest": false,
     "bounded_pointer_advanced_by_failed_run": false,
     "canonical_state_change": "NONE",
     "portfolio_effect": "NONE"
   },
   "artifact_integrity": {
-    "attachment_sha256": "7ddc3c16911ee08e6a52ef62b3b2acbf3af27c7ea4fbc755cf25ca97f55eda86",
-    "collector_packet_sha256": "a45fd402b2fa4d355645073f4fc00431db7ecb051e607d3fb0afe3aa612cb44c"
+    "collector_packet_sha256": "9c7bacc9a3090cb1d9c1ce8763f755a05f233804391d0c6833c72c96ab0720ea"
   },
   "latest_valid_bounded_owner": {
     "run_id": "run-20260806T101439Z-79DYrv6q",
@@ -34,47 +34,39 @@
     "snapshot_utc": "2026-08-06T10:14:39.743Z",
     "packet_sha256": "389f745ad49a5c4fa84f4e9df1053186fa5386792aeaa87488cbdfc1296b2176"
   },
-  "diagnostic_only": {
-    "BTCUSDT": 64484.93,
-    "ETHUSDT": 1906.49,
-    "ETHBTC": 0.02957,
-    "BTC_open_interest": 104909.178,
-    "ETH_open_interest": 2292478.456,
-    "breadth_membership_hash": "db981da7d5002ac7742419b4bcf7d9c022a5b2ab88165ab971228d587aa6a739",
-    "breadth_advancers": 19,
-    "breadth_decliners": 51,
-    "breadth_unchanged": 19,
-    "breadth_advance_ratio": 0.2134831461,
-    "breadth_equal_weight_mean_pct": -0.5101123596,
-    "ETF_candidate_BTC_usd_m": 137.6,
-    "ETF_candidate_ETH_usd_m": 92.1,
-    "ETF_values_authorized": false,
-    "market_authority": "NONE"
+  "runtime_chronology": {
+    "stale_collector_executed": "15.3.1",
+    "later_generation_already_observed_before_this_run": "15.3.2",
+    "reference_15_3_2_run_id": "dp-run-7ddda892cbb35d79ad53",
+    "reference_15_3_2_snapshot_utc": "2026-08-07T10:47:45.292410Z",
+    "classification": "ACTIVE_VERSION_SELECTION_OR_RUNTIME_DRIFT_REQUIRES_GUARD"
   },
-  "chronology": {
-    "previous_failed_run_id": "run_d7acf5a7a58448c3",
-    "previous_failed_snapshot_utc": "2026-08-07T07:43:24.203684Z",
-    "previous_failure": "MTH_001_ONLY_NEAR_VALID",
-    "this_run": "TEMPORARY_REGRESSION_OF_INCREMENTAL_COMMIT_TIMING_GROUP_BARRIER_AND_HASH_INTEGRITY",
-    "later_recovery_run_id": "dp-run-7ddda892cbb35d79ad53",
-    "later_recovery_snapshot_utc": "2026-08-07T10:47:45.292410Z",
-    "later_recovery_status": "VALIDATOR_PASS_WITH_MEDIUM_MTH_001_WARNING_NON_OWNER",
-    "critical_runtime_failures_recovered_later": true
+  "diagnostic_only": {
+    "BTCUSDT": 64740.49,
+    "ETHUSDT": 1908.77,
+    "ETHBTC": 0.02948,
+    "BTC_open_interest": 107182.271,
+    "ETH_open_interest": 2285652.417,
+    "CFGI_global": 51,
+    "CFGI_BTC": 54,
+    "CFGI_ETH": 61,
+    "market_authority": "NONE"
   },
   "engineering_status": {
     "issue_318": "OPEN_ETF_PARSER_AND_FINALITY_FIXTURE_VERIFICATION",
     "issue_320": "OPEN_REANCHORING_AND_OWNER_LINEAGE",
     "issue_321": "OPEN_DERIVED_WINDOW_TIME_EVIDENCE",
-    "issue_325": "RECURRENCE_IN_THIS_15_3_1_RUN_THEN_RECOVERED_IN_15_3_2_KEEP_OPEN_UNTIL_OWNER_GRADE_REANCHORED_PASS",
-    "issue_326": "ORIGINAL_SIMPLE_PRICE_REGISTRY_OMISSION_FIXED_IN_15_3_2_BUT_18_NULL_METHOD_IDS_REMAIN"
+    "issue_325": "15_3_1_FAILURE_CLASS_RECURRED_AGAIN_AFTER_15_3_2_RECOVERY",
+    "issue_326": "15_3_2_METHOD_AUTHORITY_PARTIAL_REMAINS",
+    "new_runtime_version_guard_issue": "TO_BE_OPENED"
   },
   "research_escalation": {
     "status": "NO",
-    "reason": "FAILURE_CLASS_IS_DETERMINISTIC_ENGINEERING_AND_LATER_RUNTIME_RECOVERY_EXISTS",
-    "required_next_event": "OWNER_REANCHORED_FULL_METHOD_AUTHORITY_DATA_PING"
+    "reason": "FAILURE_IS_DETERMINISTIC_RUNTIME_VERSION_AND_AUDIT_CONTRACT_DRIFT_NOT_A_RESEARCH_GAP",
+    "required_next_event": "PIN_ACTIVE_COLLECTOR_VERSION_AND_RUN_FRESH_OWNER_REANCHORED_FULL_DATA_PING"
   },
-  "source_record_path": "08_SOURCE_MATERIAL/data_ping/2026-08-07__run-3d5187ccaeeea087__validation-failed-source-record.md",
-  "qa_path": "09_SOURCE_QA/data_ping/2026-08-07__run-3d5187ccaeeea087__validation.json",
-  "assessment_path": "04_MARKET_LEARNING/data_ping/2026-08-07__run-3d5187ccaeeea087__non-decision-assessment.md",
-  "audit_receipt_path": "07_PROMPTS_AND_AGENTS/skill_runs/2026-08-07__data-ping-run-3d5187ccaeeea087__audit-receipt.md"
+  "source_record_path": "08_SOURCE_MATERIAL/data_ping/2026-08-07__dp_20260807_failure_5d98c4b14617__validation-failed-source-record.md",
+  "qa_path": "09_SOURCE_QA/data_ping/2026-08-07__dp_20260807_failure_5d98c4b14617__validation.json",
+  "assessment_path": "04_MARKET_LEARNING/data_ping/2026-08-07__dp_20260807_failure_5d98c4b14617__non-decision-assessment.md",
+  "audit_receipt_path": "07_PROMPTS_AND_AGENTS/skill_runs/2026-08-07__data-ping-dp_20260807_failure_5d98c4b14617__audit-receipt.md"
 }
