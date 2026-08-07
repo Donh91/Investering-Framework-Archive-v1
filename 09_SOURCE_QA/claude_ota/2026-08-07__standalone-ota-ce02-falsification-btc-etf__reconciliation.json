@@ -1,0 +1,61 @@
+{
+  "schema_version": "CLAUDE_OTA_RECONCILIATION_QA_v1",
+  "source_run_timestamp_utc": "2026-08-07T19:22:30.567Z",
+  "accepted": [
+    "BTC_2026_08_06_SETTLED_64323_61_AS_SOURCE_SUPPLIED_DIRECT_SETTLED",
+    "ETHBTC_2026_08_06_SETTLED_0_02960_NO_0_0300_TOUCH_AS_SOURCE_SUPPLIED_DIRECT_SETTLED",
+    "H7_ROW_17_NOT_FORMED_NO_SCORING",
+    "BTC_ETF_2026_08_03_170_1",
+    "BTC_ETF_2026_08_04_211_5",
+    "BTC_ETF_2026_08_05_244_4",
+    "BTC_ETF_2026_08_06_137_6",
+    "BTC_ETF_FOUR_SESSION_SUM_763_6",
+    "IBIT_FOUR_SESSION_SUM_606_8",
+    "HODL_NEGATIVE_2026_08_05_AND_2026_08_06",
+    "GBTC_POSITIVE_7_5_ON_2026_08_06",
+    "CLAUDE_PRIOR_ASYNCHRONOUS_ETH_EXCEEDS_BTC_CLAIM_WITHDRAWN",
+    "CE_02_SOURCE_REPORTED_FALSIFIED_EXPLORATORY_ONLY",
+    "SHORT_ERROR_HALF_LIFE_PROCESS_LEARNING_AS_NON_MARKET_ARCHITECTURE_NOTE"
+  ],
+  "corrected_or_rejected": [
+    {
+      "item": "BTC_7_SESSION_730_8",
+      "verdict": "REJECTED_ARITHMETIC_ERROR",
+      "correct_value_candidate_through_2026_08_06": 763.4
+    },
+    {
+      "item": "BTC_THROUGH_2026_08_05_5_SESSION_392_7",
+      "verdict": "REJECTED_ARITHMETIC_ERROR",
+      "correct_owner_value": 593.7
+    },
+    {
+      "item": "BTC_THROUGH_2026_08_05_7_SESSION_404_4",
+      "verdict": "REJECTED_ARITHMETIC_ERROR",
+      "correct_owner_value": 576.1
+    },
+    {
+      "item": "ETH_THROUGH_2026_08_05_5_SESSION_123_9",
+      "verdict": "REJECTED_ROUNDING_OR_LEDGER_ERROR",
+      "correct_owner_value": 123.8
+    },
+    {
+      "item": "ETH_THROUGH_2026_08_05_7_SESSION_91_1",
+      "verdict": "REJECTED_LEDGER_ERROR",
+      "correct_owner_value": 100.3
+    },
+    {
+      "item": "BTC_20_SESSION_651_4",
+      "verdict": "QUARANTINED_NOT_REPRODUCIBLE_FROM_CURRENT_OWNER_LEDGER"
+    },
+    {
+      "item": "CE_01_STRENGTHENED_INDIRECTLY",
+      "verdict": "REJECTED_CONFIDENCE_UPGRADE",
+      "reason": "CE_02_null_result_does_not_independently_establish_memoryless_symmetric_process"
+    }
+  ],
+  "h7_effect": "NONE_HISTORICAL_SCORE_UNCHANGED_ROW17_PENDING",
+  "etf_owner_effect": "NONE_2026_08_06_STILL_PENDING_TARGETED_TWO_RETRIEVAL_OWNER_VALIDATION",
+  "canonical_effect": "NONE",
+  "portfolio_effect": "NONE",
+  "research_escalation": "NO"
+}
