@@ -1,41 +1,54 @@
 {
   "schema_version": "LATEST_VALIDATION_FAILED_DATA_PING_OBSERVATION_v1",
-  "updated_at_utc": "2026-08-06T14:35:00Z",
-  "latest_failed_run_id": "run-20260806T125909-7083bb71",
-  "latest_failed_snapshot_id": "snap-20260806T125909-f99a7d6f",
-  "latest_failed_snapshot_utc": "2026-08-06T12:59:09.866Z",
-  "classification": "VALIDATION_FAILED_NON_DECISION_OBSERVATION",
-  "failed_check_ids": ["PG-003"],
+  "updated_at_utc": "2026-08-07T07:20:00Z",
+  "latest_failed_run_id": "dprun_32c45bcac4df4fa4",
+  "latest_failed_snapshot_id": null,
+  "latest_failed_snapshot_utc": null,
+  "collector_version": "15.3.1",
+  "classification": "VALIDATION_FAILED_ORCHESTRATION_INTERRUPTED_NON_DECISION_OBSERVATION",
+  "validator_method_id": "DATA_PING_PACKET_VALIDATOR_v3",
+  "validator_pass": false,
+  "overall_score": 71.15,
+  "failed_check_ids": [
+    "ORD-002","INV-001","INV-002","REC-002","REC-003","BRD-001","BRD-002","BRD-003","BRD-004","BRD-005","WEB-001","WEB-003","WEB-004","ORD-005","BRD-007","WEB-005","PG-002","PG-003","PG-004","MTH-001","INV-007","ORC-001","ORC-005"
+  ],
   "failure_summary": {
-    "argument_hashes_present": "61_OF_61",
-    "payload_hashes_present": "61_OF_61",
-    "receipt_bijection": "PASS",
-    "packet_sha256": "f6807f5d94685ed8082877190e967e47841c67e31019427219a658277ab6f6f4",
-    "invocation_started_at_present": "0_OF_61",
-    "invocation_completed_at_present": "0_OF_61",
+    "planned_core_actions": 60,
+    "attempted_core_actions": 1,
+    "planned_optional_actions": 1,
+    "attempted_optional_actions": 0,
+    "resolved_source_invocations": 2,
+    "receipt_count": 2,
+    "freeze_count": 0,
+    "execution_interrupted": true,
+    "interruption_reason": "INCREMENTAL_COMMIT_AND_UNREGISTERED_SOURCE_CALL_VIOLATION",
+    "primary_root_cause": "ORC_001_FIRST_INVOCATION_NOT_INCREMENTALLY_COMMITTED_BEFORE_SECOND_SOURCE_INVOCATION",
+    "secondary_root_cause": "INV_007_SECOND_INVOCATION_UNREGISTERED_CONTINUATION_WITH_UNREGISTERED_METHOD",
     "packet_usable_for_main_thread_ingest": false,
     "bounded_pointer_advanced_by_failed_run": false,
     "canonical_state_change": "NONE",
-    "portfolio_effect": "NONE"
+    "portfolio_effect": "NONE",
+    "engineering_issue": 325
   },
-  "lineage": {
-    "packet_predecessor_snapshot_id": "snap-20260806T115910Z-140c9d66",
-    "packet_predecessor_snapshot_utc": "2026-08-06T11:59:10.108Z",
-    "packet_predecessor_is_accepted_owner": false,
-    "required_rerun_predecessor_snapshot_id": "snap-20260806T101439Z-caM8nhgy",
-    "status": "NON_OWNER_INTERVENING_PREDECESSOR_MUST_REANCHOR"
+  "artifact_integrity": {
+    "uploaded_packet_file_sha256": "4d8978d0426d25e6bd7cf5dba3fd315dabe6059127fd6d8f6808e7e25985caa9",
+    "collector_canonical_packet_sha256": "6a822acf3c5c068b88b41c3126bfc479205446f431fee43e72f899cb918b6691",
+    "uploaded_validation_report_sha256": "ca466eaff3656f14af2c53c36d3f43dfb8a1e6847511c171b0336c43abb26747",
+    "validator_payload_sha256": "235a468e2fbbd8bf2d23fe5bd5ea33aeb4ab86163a53a3d4e69b9bac66e6d055"
   },
-  "additional_QA_findings": {
-    "derived_window_end_timestamp_status": "FAIL_IMPOSSIBLE_1970_DATES",
-    "affected_rows": [
-      "BTC_24H",
-      "BTC_48H",
-      "ETH_24H",
-      "ETH_48H",
-      "ETHBTC_24H",
-      "ETHBTC_48H"
-    ],
-    "issue": 321
+  "partial_publication_QA": {
+    "asset": "BTC_ETF",
+    "session": "2026-08-06",
+    "displayed_total_usd_m": 29.2,
+    "local_tieout_usd_m": 29.2,
+    "tieout": true,
+    "dash_unknown_fund_cells": 8,
+    "zero_fund_cells": 1,
+    "row_usable": false,
+    "market_use_status": "FAIL",
+    "normalized_row_sha256": "0ddcde02a22c0e9e2c9d2e4652864aa6764260767a7ef94cc9eef5eef9c46fe0",
+    "owner_effect": "NONE",
+    "learning": "DISPLAYED_TOTAL_TIEOUT_ALONE_DOES_NOT_PROVE_FINALITY_WHEN_DASH_UNKNOWN_CELLS_REMAIN"
   },
   "latest_valid_bounded_owner": {
     "run_id": "run-20260806T101439Z-79DYrv6q",
@@ -43,30 +56,29 @@
     "snapshot_utc": "2026-08-06T10:14:39.743Z",
     "packet_sha256": "389f745ad49a5c4fa84f4e9df1053186fa5386792aeaa87488cbdfc1296b2176"
   },
-  "diagnostic_only": {
-    "BTCUSDT": 64500.01,
-    "ETHUSDT": 1903.54,
-    "ETHBTC": 0.02952,
-    "BTC_open_interest": 106836.466,
-    "ETH_open_interest": 2291537.245,
-    "breadth_positive_share": 0.2696629213483146,
-    "breadth_equal_weight_mean_pct": -0.8022471910112359,
-    "same_membership_as_valid_owner": true,
-    "market_authority": "NONE"
-  },
   "engineering_status": {
-    "issue_317": "CLOSED_COMPLETED_INV_006_REMAINS_RECOVERED",
-    "issue_318": "OPEN_PARSER_CODE_AND_FIXTURE_VERIFICATION",
-    "issue_320": "OPEN_PG_003_INVOCATION_TIMESTAMPS_AND_REANCHORING",
-    "issue_321": "OPEN_DERIVED_WINDOW_TIMESTAMP_SERIALIZATION"
+    "issue_318": "OPEN_ETF_PARSER_AND_FINALITY_FIXTURE_VERIFICATION",
+    "issue_320": "OPEN_INVOCATION_TIMESTAMPS_AND_REANCHORING",
+    "issue_321": "OPEN_DERIVED_WINDOW_TIME_EVIDENCE",
+    "issue_325": "OPEN_INCREMENTAL_COMMIT_AND_REGISTERED_CONTINUATION_ORCHESTRATION"
+  },
+  "targeted_ETF_validation": {
+    "request_id": "DP-ETF-DIRECT-OWNER-20260807-02",
+    "status": "STILL_REQUIRED_NOT_SATISFIED_BY_FAILED_FULL_RUN",
+    "partial_29_2_row_status": "QUARANTINED_NOT_OWNER"
   },
   "research_escalation": {
     "status": "NO",
-    "reason": "DETERMINISTIC_ENGINEERING_DEFECTS_ALREADY_LOCALIZED",
-    "required_next_event": "FRESH_FULL_VALID_RERUN_AFTER_ISSUES_320_AND_321"
+    "reason": "DETERMINISTIC_ORCHESTRATION_DEFECT_ALREADY_LOCALIZED_AND_ETF_FINALITY_IS_A_TARGETED_VALIDATION_TASK",
+    "required_next_event": "FIX_ISSUE_325_THEN_FRESH_FULL_REANCHORED_DATA_PING_AND_COMPLETE_ETF_OWNER_VALIDATION"
   },
-  "source_record_path": "08_SOURCE_MATERIAL/data_ping/2026-08-06__run-20260806T125909-7083bb71__validation-failed-source-record.md",
-  "qa_path": "09_SOURCE_QA/data_ping/2026-08-06__run-20260806T125909-7083bb71__validation.json",
-  "assessment_path": "04_MARKET_LEARNING/data_ping/2026-08-06__run-20260806T125909-7083bb71__non-decision-assessment.md",
-  "audit_receipt_path": "07_PROMPTS_AND_AGENTS/skill_runs/2026-08-06__data-ping-run-20260806T125909-7083bb71__audit-receipt.md"
+  "source_record_path": "08_SOURCE_MATERIAL/data_ping/2026-08-07__dprun_32c45bcac4df4fa4__validation-failed-source-record.md",
+  "qa_path": "09_SOURCE_QA/data_ping/2026-08-07__dprun_32c45bcac4df4fa4__validation.json",
+  "assessment_path": "04_MARKET_LEARNING/data_ping/2026-08-07__dprun_32c45bcac4df4fa4__non-decision-assessment.md",
+  "audit_receipt_path": "07_PROMPTS_AND_AGENTS/skill_runs/2026-08-07__data-ping-dprun_32c45bcac4df4fa4__audit-receipt.md",
+  "previous_failed_run": {
+    "run_id": "run-20260806T125909-7083bb71",
+    "snapshot_id": "snap-20260806T125909-f99a7d6f",
+    "primary_failure": "PG-003"
+  }
 }
