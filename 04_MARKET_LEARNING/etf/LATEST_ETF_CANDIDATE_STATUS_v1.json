@@ -1,25 +1,34 @@
 {
   "schema_version": "LATEST_ETF_CANDIDATE_STATUS_v1",
-  "updated_at_local": "2026-08-07T12:10:00+02:00",
+  "updated_at_local": "2026-08-07T13:07:00+02:00",
   "candidate_session": "2026-08-06",
-  "candidate_status": "COMPLETE_ROW_CANDIDATE_PROVENANCE_INCOMPLETE_NOT_OWNER_GRADE",
+  "candidate_status": "COMPLETE_ROW_CANDIDATE_REPRODUCED_BY_DATA_PING_BUT_TARGETED_OWNER_PROVENANCE_INCOMPLETE",
   "source_path": "08_SOURCE_MATERIAL/etf/2026-08-07__btc-eth-etf-2026-08-06-user-supplied-structured-candidate.json",
   "qa_path": "09_SOURCE_QA/etf/2026-08-07__btc-eth-etf-2026-08-06-user-supplied-candidate-validation.json",
   "reconciliation_path": "04_MARKET_LEARNING/etf/2026-08-07__btc-eth-etf-2026-08-06-candidate-reconciliation.md",
+  "latest_data_ping_corroboration_path": "08_SOURCE_MATERIAL/data_ping/2026-08-07__dp-run-7ddda892cbb35d79ad53__validated-non-owner-source-record.md",
   "targeted_request_id": "DP-ETF-DIRECT-OWNER-20260807-02",
   "BTC_candidate_total_usd_m": 137.6,
   "ETH_candidate_total_usd_m": 92.1,
   "both_rows_complete_numeric": true,
   "both_rows_local_tieout": true,
   "both_rows_match_prior_conflict_detection_candidates": true,
+  "data_ping_reproduction": {
+    "run_id": "dp-run-7ddda892cbb35d79ad53",
+    "snapshot_utc": "2026-08-07T10:47:45.292410Z",
+    "BTC_row_sha256": "cb706308261651b9af1d5249f339ebe70a82dd15d102bf965f8b494c2ac5a1cc",
+    "ETH_row_sha256": "38ea6dc3684145caadec59b3c8015f49493747fa7ca7dec41d5bd31bc4239092",
+    "BTC_dash_count": 0,
+    "ETH_dash_count": 0,
+    "BTC_local_tieout": "PASS",
+    "ETH_local_tieout": "PASS",
+    "economic_corroboration": "PASS",
+    "owner_finality": "NOT_SATISFIED_BY_SINGLE_LOGICAL_RETRIEVAL_PER_ASSET"
+  },
   "owner_nomination": "NO",
   "owner_blockers": [
-    "TWO_RETRIEVALS_AT_LEAST_60_SECONDS_APART_NOT_EVIDENCED",
-    "EXACT_RETRIEVAL_TIMESTAMPS_MISSING",
-    "PAGE_GENERATION_FRESHNESS_EVIDENCE_MISSING",
-    "ARGUMENT_PAYLOAD_AND_ROW_HASHES_MISSING",
-    "FREEZE_EVIDENCE_MISSING",
-    "PACKET_SHA256_MISSING"
+    "TWO_INDEPENDENT_RETRIEVALS_AT_LEAST_60_SECONDS_APART_NOT_EVIDENCED",
+    "TARGETED_OWNER_FREEZE_AND_PACKET_CONTRACT_NOT_COMPLETED"
   ],
   "diagnostic_synchronized_windows_through_candidate_session": {
     "BTC_3_session_usd_m": 593.5,
