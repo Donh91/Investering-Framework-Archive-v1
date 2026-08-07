@@ -28,26 +28,13 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Resolve latest owner capture and extract persisted CFGI without new API spend
-        shell: bash
+      - name: Rebuild recent CFGI sidecars from persisted cold raw archives
         run: |
-          mkdir -p runtime/pdlt/cfgi
-          RUN_ID=$(python - <<'PY'
-          import json
-          print(json.load(open('03_DAILY_CAPTURE_LOGS/captures/LATEST.json'))['run_id'])
-          PY
-          )
-          ARCHIVE=$(find 03_DAILY_CAPTURE_LOGS/raw -type f -name "cfgi-owner-output-${RUN_ID}.tar.gz" | sort | tail -1)
-          if [ -n "$ARCHIVE" ]; then tar -xzf "$ARCHIVE" -C runtime/pdlt/cfgi; fi
-          echo "run_id=$RUN_ID" >> "$GITHUB_ENV"
-      - name: Materialize compact CFGI sidecar
-        run: |
-          python scripts/experiments/pdlt_capture_sidecar.py \
-            --capture-latest 03_DAILY_CAPTURE_LOGS/captures/LATEST.json \
-            --cfgi-snapshot runtime/pdlt/cfgi/cfgi-owner-output/owner_snapshot.json \
+          python scripts/experiments/pdlt_rebuild_sidecars.py \
+            --raw-root 03_DAILY_CAPTURE_LOGS/raw \
             --output-root 03_DAILY_CAPTURE_LOGS/pdlt \
-            --run-id "$run_id"
-      - name: Build timestamp-safe census contexts
+            --max-archives 40
+      - name: Build timestamp-safe census contexts from matched 4h CFGI sequence
         run: |
           MODEL=research/experiments/pdlt_v1_1/discovery/FROZEN_MODEL_v1.json
           mkdir -p runtime/pdlt/census
@@ -62,6 +49,7 @@ jobs:
           import json
           c=json.load(open('runtime/pdlt/census/census.json'))
           print('status='+c['status'])
+          print('cfgi_sequence_status='+json.dumps(c.get('cfgi_sequence_status'),sort_keys=True))
           open('runtime/pdlt/census/status.env','w').write('status='+c['status']+'\n')
           PY
       - name: Read census state
