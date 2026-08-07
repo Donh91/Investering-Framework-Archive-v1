@@ -1,0 +1,44 @@
+{
+  "schema_version": "ETF_TARGETED_CANDIDATE_QA_v1",
+  "request_id": "DP-ETF-DIRECT-OWNER-20260807-02",
+  "target_session": "2026-08-06",
+  "overall_verdict": "COMPLETE_ROW_CANDIDATE_MATCHES_EXPECTATION_BUT_PROVENANCE_INCOMPLETE_NOT_OWNER_GRADE",
+  "BTC": {
+    "candidate_total_usd_m": 137.6,
+    "issuer_cell_count": 12,
+    "dash_unknown_count": 0,
+    "local_tieout": "PASS",
+    "matches_prior_conflict_detection_candidate": true,
+    "owner_nomination": "NO"
+  },
+  "ETH": {
+    "candidate_total_usd_m": 92.1,
+    "issuer_cell_count": 10,
+    "dash_unknown_count": 0,
+    "local_tieout": "PASS",
+    "matches_prior_conflict_detection_candidate": true,
+    "owner_nomination": "NO"
+  },
+  "owner_contract_checks": {
+    "exact_target_session_present": "PASS",
+    "all_target_issuer_cells_numeric": "PASS",
+    "zero_dash_unknown_cells": "PASS",
+    "displayed_total_exact_local_tieout": "PASS",
+    "two_retrievals_at_least_60_seconds_apart": "NOT_EVIDENCED",
+    "normalized_rows_identical_across_two_retrievals": "NOT_EVIDENCED",
+    "retrieval_completion_timestamps_utc": "MISSING",
+    "page_footer_or_generation_freshness": "MISSING",
+    "argument_sha256": "MISSING",
+    "payload_sha256_for_each_retrieval": "MISSING",
+    "normalized_target_row_sha256_for_each_retrieval": "MISSING",
+    "freeze_and_zero_post_freeze_calls": "MISSING",
+    "packet_sha256": "MISSING"
+  },
+  "classification": "HIGH_CONFIDENCE_ECONOMIC_CANDIDATE_LOW_PROVENANCE_FINALITY",
+  "market_use_permission": "DIAGNOSTIC_CORROBORATION_ONLY",
+  "latest_owner_session_remains": "2026-08-05",
+  "canonical_state_change": "NONE",
+  "portfolio_effect": "NONE",
+  "research_escalation": "NO",
+  "targeted_validation_still_required": true
+}
