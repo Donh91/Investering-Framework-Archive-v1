@@ -49,34 +49,35 @@ def condition_matches(condition: dict[str, Any], deltas: dict[str, Any]) -> bool
     raise ValueError(f"unsupported_operator:{op}")
 
 
-def run(model: dict[str, Any], context_d: dict[str, Any]) -> dict[str, Any]:
+def run(model: dict[str, Any], context: dict[str, Any]) -> dict[str, Any]:
     if model.get("contract") != "PDLT_FROZEN_MODEL_v1":
         raise ValueError("invalid_frozen_model")
-    cfgi = context_d.get("cfgi")
-    if not isinstance(cfgi, dict):
-        raise ValueError("cfgi_missing_for_arm_b")
-    deltas = cfgi.get("latest_deltas", {})
     baseline = model.get("baseline_probabilities", {})
     arm_a = prediction(baseline, ["UNCONDITIONAL_DISCOVERY_BASE_RATE"])
-    b_probs = {k: float(baseline.get(k, 0.0)) for k in PROB_KEYS}
+    cfgi = context.get("cfgi")
     fired: list[str] = []
-    for candidate in model.get("candidates", []):
-        if candidate.get("forward_eligible") is not True:
-            continue
-        conditions = candidate.get("conditions", [])
-        if conditions and all(condition_matches(c, deltas) for c in conditions):
-            fired.append(str(candidate.get("candidate_id")))
-            probs = candidate.get("probabilities", {})
-            for key in PROB_KEYS:
-                if isinstance(probs.get(key), (int, float)):
-                    b_probs[key] = max(b_probs[key], float(probs[key]))
-    arm_b = prediction(b_probs, fired if fired else ["NO_CFGI_CANDIDATE_FIRED"])
+    arm_b: dict[str, Any] | None = None
+    if isinstance(cfgi, dict):
+        deltas = cfgi.get("latest_deltas", {})
+        b_probs = {k: float(baseline.get(k, 0.0)) for k in PROB_KEYS}
+        for candidate in model.get("candidates", []):
+            if candidate.get("forward_eligible") is not True:
+                continue
+            conditions = candidate.get("conditions", [])
+            if conditions and all(condition_matches(c, deltas) for c in conditions):
+                fired.append(str(candidate.get("candidate_id")))
+                probs = candidate.get("probabilities", {})
+                for key in PROB_KEYS:
+                    if isinstance(probs.get(key), (int, float)):
+                        b_probs[key] = max(b_probs[key], float(probs[key]))
+        arm_b = prediction(b_probs, fired if fired else ["NO_CFGI_CANDIDATE_FIRED"])
     return {
         "contract": "PDLT_DETERMINISTIC_AB_v1",
         "experiment_id": "PDLT-v1.1-RUN",
-        "cutoff_utc": context_d.get("cutoff_utc"),
+        "cutoff_utc": context.get("cutoff_utc"),
         "model_sha256": sha(model),
-        "context_sha256": sha(context_d),
+        "context_sha256": sha(context),
+        "cfgi_available": isinstance(cfgi, dict),
         "fired_candidates": fired,
         "arm_a": arm_a,
         "arm_b": arm_b,
@@ -87,13 +88,17 @@ def run(model: dict[str, Any], context_d: dict[str, Any]) -> dict[str, Any]:
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--model", type=Path, required=True)
-    ap.add_argument("--context-d", type=Path, required=True)
+    ap.add_argument("--context", type=Path)
+    ap.add_argument("--context-d", type=Path)
     ap.add_argument("--output", type=Path, required=True)
     args = ap.parse_args()
-    value = run(read(args.model), read(args.context_d))
+    context_path = args.context or args.context_d
+    if context_path is None:
+        raise SystemExit("context_required")
+    value = run(read(args.model), read(context_path))
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_bytes(canon(value))
-    print(json.dumps({"status":"PASS","fired_candidates":value["fired_candidates"],"model_sha256":value["model_sha256"]}, sort_keys=True))
+    print(json.dumps({"status":"PASS","cfgi_available":value["cfgi_available"],"fired_candidates":value["fired_candidates"],"model_sha256":value["model_sha256"]}, sort_keys=True))
 
 
 if __name__ == "__main__":

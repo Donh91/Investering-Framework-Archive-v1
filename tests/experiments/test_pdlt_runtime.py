@@ -27,6 +27,7 @@ deterministic = load_module("pdlt_deterministic_forecast", "scripts/experiments/
 maturation = load_module("pdlt_maturation", "scripts/experiments/pdlt_maturation.py")
 cost_guard = load_module("pdlt_cost_guard", "scripts/experiments/pdlt_cost_guard.py")
 discovery = load_module("pdlt_discovery", "scripts/experiments/pdlt_discovery.py")
+gateway = load_module("pdlt_gateway", "scripts/api_agent/pdlt_gateway.py")
 
 FIELDS = sidecar.FIELDS
 
@@ -68,6 +69,27 @@ def sidecar_row(created_at: str, source_ts: str, base: float, timeframe: str = "
             "symbols": compact_symbols(source_ts, base),
         },
         "problems": [],
+    }
+
+
+def frozen_model() -> dict:
+    return {
+        "contract": "PDLT_FROZEN_MODEL_v1",
+        "baseline_probabilities": {
+            "p_pullback_72h": 0.25,
+            "p_heavy_pullback_7d": 0.15,
+            "p_persistent_distribution_14d": 0.10,
+        },
+        "candidates": [{
+            "candidate_id": "C1",
+            "forward_eligible": True,
+            "conditions": [{"symbol": "MARKET", "field": "orders", "operator": "<=", "threshold": -5.0}],
+            "probabilities": {
+                "p_pullback_72h": 0.70,
+                "p_heavy_pullback_7d": 0.40,
+                "p_persistent_distribution_14d": 0.30,
+            },
+        }],
     }
 
 
@@ -156,29 +178,28 @@ class PDLTRuntimeTests(unittest.TestCase):
             self.assertEqual(set(packet["cfgi"]["symbols"]), {"MARKET", "BTC", "ETH"})
 
     def test_deterministic_b_fires_candidate_without_altering_a(self):
-        model = {
-            "contract": "PDLT_FROZEN_MODEL_v1",
-            "baseline_probabilities": {
-                "p_pullback_72h": 0.25,
-                "p_heavy_pullback_7d": 0.15,
-                "p_persistent_distribution_14d": 0.10,
-            },
-            "candidates": [{
-                "candidate_id": "C1",
-                "forward_eligible": True,
-                "conditions": [{"symbol": "MARKET", "field": "orders", "operator": "<=", "threshold": -5.0}],
-                "probabilities": {
-                    "p_pullback_72h": 0.70,
-                    "p_heavy_pullback_7d": 0.40,
-                    "p_persistent_distribution_14d": 0.30,
-                },
-            }],
-        }
         ctx = {"cutoff_utc": "2026-08-07T20:00:00Z", "cfgi": {"latest_deltas": {"MARKET": {"orders": -6.0}}}}
-        value = deterministic.run(model, ctx)
+        value = deterministic.run(frozen_model(), ctx)
         self.assertEqual(value["fired_candidates"], ["C1"])
         self.assertEqual(value["arm_a"]["p_pullback_72h"], 0.25)
         self.assertEqual(value["arm_b"]["p_pullback_72h"], 0.70)
+
+    def test_deterministic_a_survives_without_cfgi_for_ac_control(self):
+        ctx = {"cutoff_utc": "2026-08-07T20:00:00Z", "framework": {"status": "TEST"}}
+        value = deterministic.run(frozen_model(), ctx)
+        self.assertFalse(value["cfgi_available"])
+        self.assertEqual(value["arm_a"]["p_pullback_72h"], 0.25)
+        self.assertIsNone(value["arm_b"])
+        self.assertEqual(value["fired_candidates"], [])
+
+    def test_gateway_payload_uses_current_responses_api_contract(self):
+        payload = gateway.build_payload("gpt-5.6-terra", "medium", {"cutoff_utc": "2026-08-07T20:00:00Z"}, "C")
+        self.assertEqual(payload["reasoning"], {"effort": "medium", "context": "current_turn"})
+        self.assertFalse(payload["store"])
+        fmt = payload["text"]["format"]
+        self.assertEqual(fmt["type"], "json_schema")
+        self.assertTrue(fmt["strict"])
+        self.assertEqual(fmt["name"], "pdlt_forward_forecast")
 
     def test_cost_guard_counts_unique_current_and_historical_receipts(self):
         with tempfile.TemporaryDirectory() as td:
