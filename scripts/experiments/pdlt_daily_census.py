@@ -65,39 +65,59 @@ def cfgi_complete(sidecar: dict[str, Any] | None) -> bool:
         values = symbol.get("values") if isinstance(symbol, dict) else None
         if not isinstance(values, dict) or any(values.get(field) is None for field in FIELDS):
             return False
+        if not isinstance(symbol.get("timestamp"), str) or not symbol.get("timestamp"):
+            return False
     return True
 
 
 def build_cfgi_sequence(sidecars: list[tuple[Path, dict[str, Any]]], cutoff: datetime, lookback_hours: int = 30) -> dict[str, Any] | None:
-    eligible = []
+    dedup: dict[str, tuple[Path, dict[str, Any]]] = {}
     for path, row in sidecars:
-        ts = parse_ts(row["created_at_utc"])
-        age = (cutoff - ts).total_seconds() / 3600
-        if 0 <= age <= lookback_hours and cfgi_complete(row):
-            eligible.append((path, row))
-    if not eligible:
+        try:
+            created = parse_ts(row["created_at_utc"])
+        except Exception:
+            continue
+        age = (cutoff - created).total_seconds() / 3600
+        cfgi = row.get("cfgi") if isinstance(row.get("cfgi"), dict) else {}
+        if not (0 <= age <= lookback_hours and cfgi_complete(row) and cfgi.get("timeframe") == "4h"):
+            continue
+        source_ts = cfgi["symbols"]["MARKET"]["timestamp"]
+        try:
+            source_dt = parse_ts(source_ts)
+        except Exception:
+            continue
+        if source_dt > cutoff:
+            continue
+        dedup[source_ts] = (path, row)
+    if len(dedup) < 2:
         return None
-    recent = eligible[-8:]
+    eligible = sorted(dedup.items(), key=lambda item: parse_ts(item[0]))[-8:]
     points = []
-    for path, row in recent:
+    for source_ts, (path, row) in eligible:
         points.append({
             "path": str(path),
             "created_at_utc": row["created_at_utc"],
-            "timeframe": row["cfgi"].get("timeframe"),
+            "source_timestamp_utc": source_ts,
+            "timeframe": "4h",
             "source_sha256": row["cfgi"].get("source_sha256"),
             "symbols": row["cfgi"]["symbols"],
         })
+    prev_point, curr_point = points[-2], points[-1]
+    interval_hours = (parse_ts(curr_point["source_timestamp_utc"]) - parse_ts(prev_point["source_timestamp_utc"])).total_seconds() / 3600
     deltas: dict[str, dict[str, float | None]] = {}
-    if len(points) >= 2:
-        prev = points[-2]["symbols"]
-        curr = points[-1]["symbols"]
-        for symbol in ("MARKET", "BTC", "ETH"):
-            deltas[symbol] = {}
-            for field in FIELDS:
-                a = prev[symbol]["values"].get(field)
-                b = curr[symbol]["values"].get(field)
-                deltas[symbol][field] = float(b) - float(a) if isinstance(a, (int, float)) and isinstance(b, (int, float)) else None
-    return {"points": points, "latest_deltas": deltas, "point_count": len(points)}
+    for symbol in ("MARKET", "BTC", "ETH"):
+        deltas[symbol] = {}
+        for field in FIELDS:
+            a = prev_point["symbols"][symbol]["values"].get(field)
+            b = curr_point["symbols"][symbol]["values"].get(field)
+            deltas[symbol][field] = float(b) - float(a) if isinstance(a, (int, float)) and isinstance(b, (int, float)) else None
+    return {
+        "points": points,
+        "latest_deltas": deltas,
+        "point_count": len(points),
+        "delta_interval_hours": round(interval_hours, 6),
+        "delta_is_consecutive_4h": 3.5 <= interval_hours <= 4.5,
+    }
 
 
 def compact_core(capture: dict[str, Any]) -> dict[str, Any]:
@@ -124,7 +144,7 @@ def build(capture_root: Path, sidecar_root: Path, frozen_model: Path | None) -> 
     freshness_ok = -0.25 <= age_hours <= 12
     sidecars = load_sidecars(sidecar_root)
     sequence = build_cfgi_sequence(sidecars, cutoff)
-    cfgi_ok = sequence is not None and sequence.get("point_count", 0) >= 2
+    cfgi_ok = sequence is not None and sequence.get("point_count", 0) >= 2 and sequence.get("delta_is_consecutive_4h") is True
     model_ready = frozen_model is not None and frozen_model.exists()
 
     common = {
@@ -137,7 +157,8 @@ def build(capture_root: Path, sidecar_root: Path, frozen_model: Path | None) -> 
         "limitations": [
             "Only data timestamped at or before cutoff may be used.",
             "Incubation rows created before model freeze are not prospective scoring rows.",
-            "Missing CFGI does not invalidate core-only Arm C, but B/D remain unavailable.",
+            "Missing or non-consecutive 4h CFGI does not invalidate the core capture, but PDLT B/D remain unavailable.",
+            "PDLT B/D forward deltas must match the 4h-to-4h unit used by deterministic discovery.",
         ],
     }
     context_c = {**common, "arm": "C", "cfgi_included": False}
@@ -151,6 +172,11 @@ def build(capture_root: Path, sidecar_root: Path, frozen_model: Path | None) -> 
         "capture_age_hours": round(age_hours, 4),
         "core_available": core_ok and freshness_ok,
         "cfgi_available": cfgi_ok,
+        "cfgi_sequence_status": None if sequence is None else {
+            "point_count": sequence.get("point_count"),
+            "delta_interval_hours": sequence.get("delta_interval_hours"),
+            "delta_is_consecutive_4h": sequence.get("delta_is_consecutive_4h"),
+        },
         "model_ready": model_ready,
         "context_c": context_c,
         "context_d": context_d,
@@ -179,7 +205,7 @@ def main() -> None:
     if args.context_d and packet["context_d"] is not None:
         args.context_d.parent.mkdir(parents=True, exist_ok=True)
         args.context_d.write_bytes(canon(packet["context_d"]))
-    print(json.dumps({k: packet[k] for k in ("status","cutoff_utc","core_available","cfgi_available","model_ready","context_c_sha256","context_d_sha256")}, sort_keys=True))
+    print(json.dumps({k: packet[k] for k in ("status","cutoff_utc","core_available","cfgi_available","cfgi_sequence_status","model_ready","context_c_sha256","context_d_sha256")}, sort_keys=True))
 
 
 if __name__ == "__main__":
