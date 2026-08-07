@@ -12,12 +12,14 @@ priority: P1_DECISION_RELEVANT_FLOW_VALIDATION
 
 Validate the 2026-08-06 BTC and ETH Farside rows to the same owner-grade standard used by `DP-ETF-DIRECT-OWNER-20260806-01`.
 
-Current external-web candidate values observed by main thread are:
+Earlier main-thread web candidates observed after publication were:
 
 - BTC `+137.6M USD`
 - ETH `+92.1M USD`
 
 These are expectations for conflict detection only. Do not fit to them and do not accept a row merely because it matches.
+
+A separate interrupted DATA PING at approximately 2026-08-06T23:15Z observed a **partial-publication** BTC row with displayed Total `29.2M` while 8 of 12 fund cells were still dashes/unknown. That row is quarantined and is not an owner candidate. It proves that displayed Total tie-out alone is insufficient for finality.
 
 ## Required procedure
 
@@ -26,20 +28,22 @@ These are expectations for conflict detection only. Do not fit to them and do no
 3. Select exactly `06 Aug 2026` by displayed session identity.
 4. Capture every displayed fund/issuer cell and the displayed Total.
 5. Preserve zeros, negatives and dashes distinctly.
-6. Locally sum all numeric fund cells and require exact tie-out to displayed Total.
-7. Repeat both canonical page retrievals at least 60 seconds later.
-8. Require normalized target rows to be identical across the two retrievals, or report any revision explicitly.
-9. Record exact retrieval-completion timestamps UTC.
-10. Record page/footer date or equivalent generation-freshness evidence.
-11. Compute and retain:
+6. **Owner nomination MUST be `NO` if any target fund/issuer cell is dash/unknown, even when the displayed Total equals the sum of currently numeric cells. Zero dashes/unknowns is mandatory for owner finality.**
+7. Locally sum all numeric fund cells and require exact tie-out to displayed Total.
+8. Repeat both canonical page retrievals at least 60 seconds later.
+9. Require normalized target rows to be identical across the two retrievals, or report any revision explicitly.
+10. Record exact retrieval-completion timestamps UTC.
+11. Record page/footer date or equivalent generation-freshness evidence.
+12. Compute and retain:
    - argument SHA-256 for each invocation,
    - payload SHA-256 for each successful page retrieval,
    - normalized target-row SHA-256 for each retrieval,
    - final packet SHA-256.
-12. Freeze only after final source response; record freeze UTC and require zero post-freeze calls.
-13. Preserve one-to-one invocation/receipt bijection.
-14. Do not use an issuer cell as Total; resolve column identity from the current displayed header, not a fixed legacy position.
-15. Do not infer missing cells and do not convert dashes to zero.
+13. Freeze only after final source response; record freeze UTC and require zero post-freeze calls.
+14. Preserve one-to-one invocation/receipt bijection.
+15. Do not use an issuer cell as Total; resolve column identity from the current displayed header, not a fixed legacy position.
+16. Do not infer missing cells and do not convert dashes to zero.
+17. Treat a previously observed incomplete row as publication-lifecycle evidence, not as a revision candidate, unless a complete owner-grade retrieval independently reproduces it.
 
 ## Cross-asset output after owner validation
 
@@ -51,9 +55,11 @@ Do not AUM-normalize unless validated denominators are independently available. 
 
 ## Mandatory conflict handling
 
-If any retrieval disagrees with the current candidate values (`BTC 137.6`, `ETH 92.1`), report the observed rows and revision evidence and stop owner nomination until the conflict is resolved.
+If any complete owner-grade retrieval disagrees with the current candidate values (`BTC 137.6`, `ETH 92.1`), report the observed rows and revision evidence and stop owner nomination until the conflict is resolved.
 
 If the two retrievals disagree, classify the row `REVISING_NOT_FINAL_FOR_OWNER_LEDGER`.
+
+If either target row contains one or more dashes/unknown issuer cells, classify it `PARTIAL_PUBLICATION_NOT_FINAL_FOR_OWNER_LEDGER` regardless of displayed-total tie-out.
 
 ## Required reconciliation package
 
@@ -68,6 +74,7 @@ Return:
     "issuer_rows": [],
     "displayed_total_usd_m": null,
     "local_tieout_usd_m": null,
+    "dash_unknown_count": null,
     "retrieval_1_utc": null,
     "retrieval_2_utc": null,
     "row_sha256_1": null,
@@ -81,6 +88,7 @@ Return:
     "issuer_rows": [],
     "displayed_total_usd_m": null,
     "local_tieout_usd_m": null,
+    "dash_unknown_count": null,
     "retrieval_1_utc": null,
     "retrieval_2_utc": null,
     "row_sha256_1": null,
@@ -110,4 +118,4 @@ Return:
 
 ## Stop condition
 
-Stop when both 2026-08-06 rows are owner-grade validated or when a specific unresolved revision/source conflict prevents owner nomination. Do not broaden into market interpretation or additional research.
+Stop when both 2026-08-06 rows are owner-grade validated or when a specific unresolved revision/source conflict/partial-publication state prevents owner nomination. Do not broaden into market interpretation or additional research.
