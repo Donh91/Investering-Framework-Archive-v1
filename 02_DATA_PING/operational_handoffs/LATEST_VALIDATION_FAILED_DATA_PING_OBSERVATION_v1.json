@@ -1,43 +1,32 @@
 {
   "schema_version": "LATEST_VALIDATION_FAILED_DATA_PING_OBSERVATION_v1",
-  "updated_at_utc": "2026-08-07T08:24:00Z",
-  "latest_failed_run_id": "run_d7acf5a7a58448c3",
-  "latest_failed_snapshot_id": "snap_99a76d473529f7db",
-  "latest_failed_snapshot_utc": "2026-08-07T07:43:24.203684Z",
+  "updated_at_utc": "2026-08-07T16:30:00Z",
+  "latest_failed_run_id": "run-3d5187ccaeeea087",
+  "latest_failed_snapshot_id": "snap-e4fcc29d6ec597cb",
+  "latest_failed_snapshot_utc": "2026-08-07T08:42:59.283786Z",
   "collector_version": "15.3.1",
-  "classification": "VALIDATION_FAILED_SINGLE_METHOD_AUTHORITY_REGISTRY_DRIFT_NEAR_VALID_NON_DECISION",
-  "validator_method_id": "DATA_PING_PACKET_VALIDATOR_v3",
+  "classification": "VALIDATION_FAILED_HASH_TIMING_AND_ORCHESTRATION_REGRESSION_NON_DECISION",
   "validator_pass": false,
-  "failed_check_ids": ["MTH-001"],
+  "failed_check_ids": ["INV-006","PG-003","PG-004","PG-005","ORC-001","ORC-002","ORC-003","ORC-004"],
   "failure_summary": {
-    "blocking_reason": "METHOD_VERSION_NOT_REGISTERED:COINGECKO_SIMPLE_PRICE_v1",
-    "root_cause": "METHOD_AUTHORITY_REGISTRY_DRIFT",
+    "incremental_commit_status": "FAIL",
+    "group_barrier_status": "FAIL",
+    "hash_integrity_status": "FAIL",
+    "execution_order_status": "PASS",
+    "receipt_bijection_status": "PASS",
+    "status_reconciliation_status": "PASS",
+    "freeze_status": "PASS",
     "planned_core_actions": 60,
     "attempted_core_actions": 60,
-    "planned_optional_actions": 1,
-    "attempted_optional_actions": 1,
-    "resolved_source_invocations": 61,
     "receipt_count": 61,
-    "freeze_count": 1,
-    "post_freeze_call_count": 0,
-    "execution_interrupted": false,
     "packet_usable_for_main_thread_ingest": false,
     "bounded_pointer_advanced_by_failed_run": false,
     "canonical_state_change": "NONE",
-    "portfolio_effect": "NONE",
-    "engineering_issue": 326
-  },
-  "orchestration_recovery": {
-    "prior_issue": 325,
-    "incremental_commit_status": "PASS",
-    "group_transform_barrier_status": "PASS",
-    "binance_final_atomic_suffix_status": "PASS",
-    "full_61_call_execution_completed": true,
-    "original_issue_325_failure_recurred": false,
-    "issue_325_closure_status": "KEEP_OPEN_UNTIL_FULL_VALIDATOR_PASS_PER_ACCEPTANCE_CRITERIA"
+    "portfolio_effect": "NONE"
   },
   "artifact_integrity": {
-    "collector_canonical_packet_sha256": "74f38320772f80a3ea6bfa288e5aaa8fdf4e94d3ccef0b32c427bbe7d22eacf9"
+    "attachment_sha256": "7ddc3c16911ee08e6a52ef62b3b2acbf3af27c7ea4fbc755cf25ca97f55eda86",
+    "collector_packet_sha256": "a45fd402b2fa4d355645073f4fc00431db7ecb051e607d3fb0afe3aa612cb44c"
   },
   "latest_valid_bounded_owner": {
     "run_id": "run-20260806T101439Z-79DYrv6q",
@@ -46,45 +35,46 @@
     "packet_sha256": "389f745ad49a5c4fa84f4e9df1053186fa5386792aeaa87488cbdfc1296b2176"
   },
   "diagnostic_only": {
-    "BTCUSDT": 64400.91,
-    "ETHUSDT": 1904.2,
+    "BTCUSDT": 64484.93,
+    "ETHUSDT": 1906.49,
     "ETHBTC": 0.02957,
-    "BTC_open_interest": 105256.847,
-    "ETH_open_interest": 2294281.56,
+    "BTC_open_interest": 104909.178,
+    "ETH_open_interest": 2292478.456,
     "breadth_membership_hash": "db981da7d5002ac7742419b4bcf7d9c022a5b2ab88165ab971228d587aa6a739",
-    "breadth_advancers": 17,
+    "breadth_advancers": 19,
     "breadth_decliners": 51,
-    "breadth_unchanged": 21,
-    "breadth_advance_ratio": 0.19101123595505617,
-    "breadth_equal_weight_mean_pct": -0.6505617977528091,
+    "breadth_unchanged": 19,
+    "breadth_advance_ratio": 0.2134831461,
+    "breadth_equal_weight_mean_pct": -0.5101123596,
+    "ETF_candidate_BTC_usd_m": 137.6,
+    "ETF_candidate_ETH_usd_m": 92.1,
     "ETF_values_authorized": false,
-    "stablecoin_global_total_authorized": false,
     "market_authority": "NONE"
+  },
+  "chronology": {
+    "previous_failed_run_id": "run_d7acf5a7a58448c3",
+    "previous_failed_snapshot_utc": "2026-08-07T07:43:24.203684Z",
+    "previous_failure": "MTH_001_ONLY_NEAR_VALID",
+    "this_run": "TEMPORARY_REGRESSION_OF_INCREMENTAL_COMMIT_TIMING_GROUP_BARRIER_AND_HASH_INTEGRITY",
+    "later_recovery_run_id": "dp-run-7ddda892cbb35d79ad53",
+    "later_recovery_snapshot_utc": "2026-08-07T10:47:45.292410Z",
+    "later_recovery_status": "VALIDATOR_PASS_WITH_MEDIUM_MTH_001_WARNING_NON_OWNER",
+    "critical_runtime_failures_recovered_later": true
   },
   "engineering_status": {
     "issue_318": "OPEN_ETF_PARSER_AND_FINALITY_FIXTURE_VERIFICATION",
-    "issue_320": "OPEN_INVOCATION_TIMESTAMPS_AND_REANCHORING",
+    "issue_320": "OPEN_REANCHORING_AND_OWNER_LINEAGE",
     "issue_321": "OPEN_DERIVED_WINDOW_TIME_EVIDENCE",
-    "issue_325": "ORCHESTRATION_RECOVERY_REPRODUCED_KEEP_OPEN_UNTIL_FULL_VALIDATOR_PASS",
-    "issue_326": "OPEN_METHOD_AUTHORITY_REGISTRY_DRIFT"
-  },
-  "targeted_ETF_validation": {
-    "request_id": "DP-ETF-DIRECT-OWNER-20260807-02",
-    "status": "STILL_REQUIRED",
-    "failed_full_run_ETF_status": "LATEST_ROWS_UNRESOLVED_NOT_OWNER"
+    "issue_325": "RECURRENCE_IN_THIS_15_3_1_RUN_THEN_RECOVERED_IN_15_3_2_KEEP_OPEN_UNTIL_OWNER_GRADE_REANCHORED_PASS",
+    "issue_326": "ORIGINAL_SIMPLE_PRICE_REGISTRY_OMISSION_FIXED_IN_15_3_2_BUT_18_NULL_METHOD_IDS_REMAIN"
   },
   "research_escalation": {
     "status": "NO",
-    "reason": "SOLE_BLOCKER_IS_DETERMINISTIC_METHOD_REGISTRY_DRIFT_AND_ETF_FINALITY_REMAINS_TARGETED_VALIDATION",
-    "required_next_event": "FIX_ISSUE_326_THEN_FRESH_FULL_REANCHORED_DATA_PING"
+    "reason": "FAILURE_CLASS_IS_DETERMINISTIC_ENGINEERING_AND_LATER_RUNTIME_RECOVERY_EXISTS",
+    "required_next_event": "OWNER_REANCHORED_FULL_METHOD_AUTHORITY_DATA_PING"
   },
-  "source_record_path": "08_SOURCE_MATERIAL/data_ping/2026-08-07__run_d7acf5a7a58448c3__validation-failed-source-record.md",
-  "qa_path": "09_SOURCE_QA/data_ping/2026-08-07__run_d7acf5a7a58448c3__validation.json",
-  "assessment_path": "04_MARKET_LEARNING/data_ping/2026-08-07__run_d7acf5a7a58448c3__non-decision-assessment.md",
-  "audit_receipt_path": "07_PROMPTS_AND_AGENTS/skill_runs/2026-08-07__data-ping-run_d7acf5a7a58448c3__audit-receipt.md",
-  "previous_failed_run": {
-    "run_id": "dprun_32c45bcac4df4fa4",
-    "primary_failure": "INCREMENTAL_COMMIT_AND_UNREGISTERED_SOURCE_CALL_VIOLATION",
-    "failed_check_count": 23
-  }
+  "source_record_path": "08_SOURCE_MATERIAL/data_ping/2026-08-07__run-3d5187ccaeeea087__validation-failed-source-record.md",
+  "qa_path": "09_SOURCE_QA/data_ping/2026-08-07__run-3d5187ccaeeea087__validation.json",
+  "assessment_path": "04_MARKET_LEARNING/data_ping/2026-08-07__run-3d5187ccaeeea087__non-decision-assessment.md",
+  "audit_receipt_path": "07_PROMPTS_AND_AGENTS/skill_runs/2026-08-07__data-ping-run-3d5187ccaeeea087__audit-receipt.md"
 }
