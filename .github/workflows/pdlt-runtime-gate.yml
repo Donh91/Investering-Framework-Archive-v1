@@ -1,0 +1,63 @@
+name: PDLT Runtime Gate
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/experiments/pdlt_*.py'
+      - 'scripts/api_agent/pdlt_gateway.py'
+      - '.github/workflows/pdlt-*.yml'
+      - 'tests/experiments/test_pdlt_runtime.py'
+      - 'research/experiments/pdlt_v1_1/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compile PDLT runtime modules
+        run: |
+          python -m py_compile \
+            scripts/experiments/pdlt_v1_1.py \
+            scripts/experiments/pdlt_capture_sidecar.py \
+            scripts/experiments/pdlt_daily_census.py \
+            scripts/experiments/pdlt_deterministic_forecast.py \
+            scripts/experiments/pdlt_discovery.py \
+            scripts/experiments/pdlt_cost_guard.py \
+            scripts/experiments/pdlt_freeze_census.py \
+            scripts/experiments/pdlt_maturation.py \
+            scripts/api_agent/pdlt_gateway.py
+      - name: Run PDLT runtime tests
+        run: |
+          python -m unittest tests.experiments.test_pdlt_v1_1 tests.experiments.test_pdlt_runtime -v
+      - name: Enforce architecture and spend boundaries
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          daily=Path('.github/workflows/pdlt-daily-census.yml').read_text()
+          discovery=Path('.github/workflows/pdlt-discovery-once.yml').read_text()
+          maturation=Path('.github/workflows/pdlt-maturation.yml').read_text()
+          bootstrap=Path('.github/workflows/pdlt-bootstrap-once.yml').read_text()
+          dcode=Path('scripts/experiments/pdlt_discovery.py').read_text()
+          mcode=Path('scripts/experiments/pdlt_maturation.py').read_text()
+          assert 'CFGI_API_KEY' not in daily
+          assert 'cfgi-owner-output-${RUN_ID}.tar.gz' in daily
+          assert '--hard-cap-usd 10' in daily
+          assert '--receipt-root runtime/pdlt/census/openai' in daily
+          assert '--pending-reserve-usd 0.25' in daily
+          assert "engine_epoch': EPOCH" in dcode or '"engine_epoch": EPOCH' in dcode
+          assert 'UPGRADED_POST_20260708' in dcode
+          assert 'pdlt-v1-1-historical-bootstrap' in discovery
+          assert 'expected_credits' in bootstrap and '12300' in bootstrap
+          assert 'MATURED_OUTCOME_v2' in mcode
+          assert '--interval 1h' in maturation
+          assert 'portfolio_action' in mcode
+          print('PDLT_RUNTIME_POLICY_PASS')
+          PY
