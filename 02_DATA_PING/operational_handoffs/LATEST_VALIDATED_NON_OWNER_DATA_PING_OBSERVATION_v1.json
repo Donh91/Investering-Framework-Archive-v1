@@ -1,94 +1,99 @@
 {
   "schema_version": "LATEST_VALIDATED_NON_OWNER_DATA_PING_OBSERVATION_v1",
-  "updated_at_utc": "2026-08-06T16:44:00Z",
-  "run_id": "run-89e87ee719df4236aad3",
-  "snapshot_id": "snap-0cc3b5c7eb8740269a3b",
-  "snapshot_utc": "2026-08-06T16:00:43.486Z",
-  "collector_version": "15.2.0",
-  "packet_sha256": "a02aacc8abc7805bc8195f5dd02ede00545aa254f5dc3279595b18c8376ab566",
-  "classification": "VALIDATED_NON_OWNER_LINEAGE_BLOCKED_OBSERVATION",
-  "packet_validation": "PASS",
+  "updated_at_utc": "2026-08-07T11:07:00Z",
+  "run_id": "dp-run-7ddda892cbb35d79ad53",
+  "snapshot_id": "dp-snap-50a5f320c97b9c262d36",
+  "snapshot_utc": "2026-08-07T10:47:45.292410Z",
+  "collector_version": "15.3.2",
+  "packet_sha256": "cec694e692e1a0cadc504e6909e451bfc96feaf94edef640b44f22fac964260c",
+  "classification": "VALIDATED_NON_OWNER_LINEAGE_AND_METHOD_AUTHORITY_PARTIAL_OBSERVATION",
+  "packet_validation": "PASS_WITH_MTH_001_MEDIUM_WARNING",
   "collector_packet_usable": true,
+  "packet_owner_grade": false,
   "bounded_owner_eligible": false,
   "lineage": {
-    "packet_predecessor_run_id": "run-20260806T115910Z-04fa4db6",
-    "packet_predecessor_snapshot_id": "snap-20260806T115910Z-140c9d66",
-    "packet_predecessor_accepted_owner": false,
+    "packet_predecessor_available": false,
+    "comparison_status": "NOT_AVAILABLE",
+    "comparison_reason": "NO_ACCEPTED_SAME_THREAD_PREDECESSOR",
     "active_bounded_owner_run_id": "run-20260806T101439Z-79DYrv6q",
     "active_bounded_owner_snapshot_id": "snap-20260806T101439Z-caM8nhgy",
     "active_bounded_owner_snapshot_utc": "2026-08-06T10:14:39.743Z",
-    "status": "NON_OWNER_INTERVENING_PREDECESSOR_BLOCKS_OWNER_ADVANCEMENT",
-    "required_next_step": "REANCHOR_FRESH_RUN_TO_ACTIVE_OWNER_OR_VALIDATE_AND_ACCEPT_1159_PACKET_FIRST"
+    "status": "OWNER_ADVANCEMENT_BLOCKED_NO_ACCEPTED_PREDECESSOR",
+    "required_next_step": "FRESH_RUN_REANCHORED_TO_ACTIVE_BOUNDED_OWNER"
   },
-  "validation_recovery": {
-    "INV_006_hash_integrity": "PASS",
-    "PG_003_invocation_timing": "PASS_VIA_BASE_OFFSET_DURATION_ENCODING",
-    "receipt_bijection": "PASS",
-    "packet_hash_before_freeze": "PASS",
-    "post_freeze_calls": 0
+  "method_authority": {
+    "method_compatibility_status": "PARTIAL",
+    "MTH_001": "MEDIUM_WARNING",
+    "original_issue_326_COINGECKO_SIMPLE_PRICE_v1_omission": "RESOLVED_IN_REGISTERED_REQUIRED_CURRENT_PRICE",
+    "remaining_unresolved_source_action_method_ids": 18,
+    "owner_grade_effect": "BLOCKING"
   },
-  "unresolved_QA": {
-    "issue_320": "OPEN_REANCHORING_REMAINS",
-    "issue_321": "OPEN_ROW_LEVEL_24H_48H_TIME_EVIDENCE_AND_FIXTURES_NOT_PROVEN",
-    "issue_318": "OPEN_ETF_PARSER_CODE_AND_FIXTURE_VERIFICATION"
-  },
-  "diagnostic_vs_active_bounded_owner": {
-    "BTCUSDT_pct": 0.0568403455,
-    "ETHUSDT_pct": 0.4466584692,
-    "ETHBTC_pct": 0.3394433130,
-    "BTC_open_interest_pct": -0.4302572685,
-    "ETH_open_interest_pct": 0.2114702106,
-    "breadth_positive_share_percentage_points": 3.37078652,
-    "breadth_equal_weight_mean_percentage_points": 0.0269662921
+  "diagnostic_vs_active_bounded_owner_pct": {
+    "BTCUSDT": 0.4303427138,
+    "ETHUSDT": 0.5365156436,
+    "ETHBTC": 0.1018329939,
+    "BTC_open_interest": -1.3405119413,
+    "ETH_open_interest": -0.0407843090
   },
   "direct_market": {
-    "BTCUSDT": 64638.72,
-    "ETHUSDT": 1911.52,
-    "ETHBTC": 0.02956,
-    "BTC_open_interest": 106549.743,
-    "ETH_open_interest": 2300824.063
+    "BTCUSDT": 64880.01,
+    "ETHUSDT": 1913.23,
+    "ETHBTC": 0.02949,
+    "BTC_open_interest": 105575.678,
+    "ETH_open_interest": 2295032.378
   },
   "flow_diagnostics": {
-    "BTC_spot_taker_buy_share_1h": 0.568476968,
-    "BTC_spot_taker_buy_share_4h": 0.509836703,
-    "BTC_spot_taker_buy_share_12h": 0.481673554,
-    "ETH_spot_taker_buy_share_1h": 0.427615799,
-    "ETH_spot_taker_buy_share_4h": 0.465694175,
-    "ETH_spot_taker_buy_share_12h": 0.457349734,
-    "ETHBTC_spot_taker_buy_share_1h": 0.829498316,
-    "ETHBTC_spot_taker_buy_share_4h": 0.716177803,
-    "ETHBTC_spot_taker_buy_share_12h": 0.637927445,
-    "BTC_futures_taker_ratio": 1.1751,
-    "ETH_futures_taker_ratio": 1.0439,
-    "BTC_global_long_short": 1.1848,
-    "ETH_global_long_short": 2.0395
+    "BTC_spot_taker_buy_share_1h": 0.4751830363,
+    "BTC_spot_taker_buy_share_4h": 0.47290174,
+    "BTC_spot_taker_buy_share_12h": 0.4572965447,
+    "ETH_spot_taker_buy_share_1h": 0.2335330941,
+    "ETH_spot_taker_buy_share_4h": 0.3311488645,
+    "ETH_spot_taker_buy_share_12h": 0.3937403837,
+    "ETHBTC_spot_taker_buy_share_1h": 0.4490160727,
+    "ETHBTC_spot_taker_buy_share_4h": 0.4878373783,
+    "ETHBTC_spot_taker_buy_share_12h": 0.5631654222,
+    "BTC_futures_taker_ratio": 1.2779,
+    "ETH_futures_taker_ratio": 1.121,
+    "BTC_global_long_short": 1.1501,
+    "ETH_global_long_short": 2.0349
   },
   "ETHBTC_threshold": {
-    "direct_value": 0.02956,
-    "distance_to_0_0300_pct": -1.4666666667,
-    "distance_above_0_0275_pct": 7.4909090909,
+    "direct_value": 0.02949,
+    "distance_to_0_0300_pct": -1.7,
+    "distance_above_0_0275_pct": 7.2363636364,
     "touch_or_settled_close_above_0_0300": false,
-    "status": "STRONG_SHORT_WINDOW_RELATIVE_BUYING_WITHOUT_THRESHOLD_OR_BROAD_SPOT_CONFIRMATION"
+    "status": "RELATIVE_REPAIR_BELOW_CONFIRMATION_WITH_WEAK_SHORT_WINDOW_SPOT_FLOW"
   },
   "breadth": {
     "method": "COINGECKO_TOP100_FILTERED_v3",
-    "filter": "BREADTH_FILTER_TOP100_EXCLUSIONS_v1",
     "membership_hash": "db981da7d5002ac7742419b4bcf7d9c022a5b2ab88165ab971228d587aa6a739",
     "included_count": 89,
-    "advancers": 30,
-    "decliners": 45,
-    "unchanged": 14,
-    "positive_share": 0.3370786517,
-    "equal_weight_mean_pct": -0.4393258427,
+    "advancers": 27,
+    "decliners": 46,
+    "unchanged": 16,
+    "positive_share": 0.3033707865,
+    "median_return_pct": -0.1,
+    "equal_weight_mean_pct": -0.0348314607,
     "same_universe_as_active_owner": true,
+    "diagnostic_vs_active_owner": {
+      "positive_share_percentage_points": 0.0,
+      "advancers": 0,
+      "decliners": 4,
+      "unchanged": -4,
+      "equal_weight_mean_percentage_points": 0.4314606741
+    },
     "scored_gate_permission": "NOT_AUTHORIZED"
   },
   "ETF": {
-    "session": "2026-08-05",
-    "BTC_usd_m": 244.4,
-    "ETH_usd_m": 60.8,
-    "new_session_introduced": false,
-    "matches_owner": true
+    "session": "2026-08-06",
+    "BTC_usd_m": 137.6,
+    "ETH_usd_m": 92.1,
+    "rows_complete_numeric": true,
+    "dash_count_both": 0,
+    "local_tieout_both": "PASS",
+    "candidate_corroboration": "STRONG",
+    "owner_advance": "NO",
+    "owner_blocker": "DP_ETF_DIRECT_OWNER_20260807_02_TWO_RETRIEVAL_PROVENANCE_NOT_SATISFIED"
   },
   "framework_effect": {
     "market_phase": "SELECTIVE_REPAIR_FRAGILE_TRANSLATION",
@@ -102,11 +107,11 @@
   },
   "research_escalation": {
     "status": "NO",
-    "reason": "LINEAGE_AND_ENGINEERING_BLOCKERS_ARE_ALREADY_LOCALIZED",
-    "required_next_event": "FRESH_REANCHORED_FULL_DATA_PING_WITH_VERIFIABLE_24H_48H_TIME_EVIDENCE"
+    "reason": "REMAINING_BLOCKERS_ARE_DETERMINISTIC_LINEAGE_METHOD_AUTHORITY_AND_ETF_OWNER_PROVENANCE_TASKS",
+    "required_next_event": "FRESH_OWNER_REANCHORED_FULL_DATA_PING_AND_COMPLETE_ETF_OWNER_PROVENANCE"
   },
-  "source_record_path": "08_SOURCE_MATERIAL/data_ping/2026-08-06__run-89e87ee719df4236aad3__validated-non-owner-source-record.md",
-  "QA_path": "09_SOURCE_QA/data_ping/2026-08-06__run-89e87ee719df4236aad3__validation.json",
-  "framework_read_path": "04_MARKET_LEARNING/data_ping/2026-08-06__run-89e87ee719df4236aad3__non-owner-framework-read.md",
-  "audit_receipt_path": "07_PROMPTS_AND_AGENTS/skill_runs/2026-08-06__data-ping-run-89e87ee719df4236aad3__audit-receipt.md"
+  "source_record_path": "08_SOURCE_MATERIAL/data_ping/2026-08-07__dp-run-7ddda892cbb35d79ad53__validated-non-owner-source-record.md",
+  "QA_path": "09_SOURCE_QA/data_ping/2026-08-07__dp-run-7ddda892cbb35d79ad53__validation.json",
+  "framework_read_path": "04_MARKET_LEARNING/data_ping/2026-08-07__dp-run-7ddda892cbb35d79ad53__non-owner-framework-read.md",
+  "audit_receipt_path": "07_PROMPTS_AND_AGENTS/skill_runs/2026-08-07__data-ping-dp-run-7ddda892cbb35d79ad53__audit-receipt.md"
 }
