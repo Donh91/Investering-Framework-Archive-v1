@@ -1,0 +1,196 @@
+name: PDLT v1.1 shadow experiment
+
+on:
+  pull_request:
+    paths:
+      - 'research/experiments/pdlt_v1_1/**'
+      - 'scripts/experiments/pdlt_v1_1.py'
+      - 'scripts/api_agent/pdlt_gateway.py'
+      - 'tests/experiments/test_pdlt_v1_1.py'
+      - '.github/workflows/pdlt-v1-1.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'research/experiments/pdlt_v1_1/**'
+      - 'scripts/experiments/pdlt_v1_1.py'
+      - 'scripts/api_agent/pdlt_gateway.py'
+      - 'tests/experiments/test_pdlt_v1_1.py'
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'validate | preregister | historical_collect | burst'
+        required: true
+        default: validate
+        type: choice
+        options:
+          - validate
+          - preregister
+          - historical_collect
+          - burst
+      acknowledge_paid_cfgi:
+        description: 'Required true for paid CFGI collection modes'
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compile PDLT code
+        run: |
+          python -m py_compile scripts/experiments/pdlt_v1_1.py scripts/api_agent/pdlt_gateway.py
+      - name: Validate frozen config
+        run: |
+          python scripts/experiments/pdlt_v1_1.py \
+            --config research/experiments/pdlt_v1_1/PDLT_CONFIG_v1_1.json \
+            --mode validate-config
+      - name: Run PDLT tests
+        run: python -m unittest tests.experiments.test_pdlt_v1_1 -v
+      - name: Exercise structured gateway without API spend
+        run: |
+          mkdir -p /tmp/pdlt
+          cat > /tmp/pdlt/context_c.json <<'JSON'
+          {"cutoff_utc":"2026-08-07T18:00:00Z","framework":{"data_quality":"TEST_ONLY"}}
+          JSON
+          python scripts/api_agent/pdlt_gateway.py \
+            --config research/experiments/pdlt_v1_1/PDLT_CONFIG_v1_1.json \
+            --context /tmp/pdlt/context_c.json --arm C --output-dir /tmp/pdlt/out --dry-run
+
+  preregister:
+    if: github.event_name == 'workflow_dispatch' && inputs.mode == 'preregister'
+    needs: validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Create immutable preregistration artifact
+        run: |
+          mkdir -p pdlt-output
+          python scripts/experiments/pdlt_v1_1.py \
+            --config research/experiments/pdlt_v1_1/PDLT_CONFIG_v1_1.json \
+            --mode preregister --output pdlt-output/preregistration_manifest.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pdlt-v1-1-preregistration
+          path: pdlt-output/
+          if-no-files-found: error
+          retention-days: 90
+
+  historical_collect:
+    if: github.event_name == 'workflow_dispatch' && inputs.mode == 'historical_collect'
+    needs: validate
+    runs-on: ubuntu-latest
+    env:
+      CFGI_API_KEY: ${{ secrets.CFGI_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Fail closed unless paid collection is explicitly acknowledged
+        run: |
+          test "${{ inputs.acknowledge_paid_cfgi }}" = "true" || { echo 'paid_cfgi_not_acknowledged'; exit 78; }
+      - name: Validate budget before any paid request
+        run: |
+          python scripts/experiments/pdlt_v1_1.py \
+            --config research/experiments/pdlt_v1_1/PDLT_CONFIG_v1_1.json \
+            --mode validate-config
+      - name: Collect MARKET 4h depth - 7200 credits
+        run: |
+          python scripts/data_terminal/cfgi_owner_collector.py \
+            --output-dir pdlt-output/market_4h_depth \
+            --symbols MARKET --timeframe 4h \
+            --fields score,volatility,volume,impulse,technical,social,dominance,trends,whales,orders \
+            --limit 720
+      - name: Validate MARKET 4h receipt
+        run: |
+          python scripts/experiments/pdlt_v1_1.py \
+            --config research/experiments/pdlt_v1_1/PDLT_CONFIG_v1_1.json \
+            --mode validate-cfgi --input pdlt-output/market_4h_depth/owner_snapshot.json \
+            --plan-name market_4h_depth --output pdlt-output/validated_market_4h.json
+      - name: Collect BTC ETH 4h crosscheck - 2400 credits
+        run: |
+          python scripts/data_terminal/cfgi_owner_collector.py \
+            --output-dir pdlt-output/btc_eth_4h_crosscheck \
+            --symbols BTC,ETH --timeframe 4h \
+            --fields score,volatility,volume,impulse,technical,social,dominance,trends,whales,orders \
+            --limit 120
+      - name: Validate BTC ETH 4h receipt
+        run: |
+          python scripts/experiments/pdlt_v1_1.py \
+            --config research/experiments/pdlt_v1_1/PDLT_CONFIG_v1_1.json \
+            --mode validate-cfgi --input pdlt-output/btc_eth_4h_crosscheck/owner_snapshot.json \
+            --plan-name btc_eth_4h_crosscheck --output pdlt-output/validated_btc_eth_4h.json
+      - name: Collect MARKET BTC ETH 1d context - 2700 credits
+        run: |
+          python scripts/data_terminal/cfgi_owner_collector.py \
+            --output-dir pdlt-output/market_btc_eth_1d_context \
+            --symbols MARKET,BTC,ETH --timeframe 1d \
+            --fields score,volatility,volume,impulse,technical,social,dominance,trends,whales,orders \
+            --limit 90
+      - name: Validate MARKET BTC ETH 1d receipt
+        run: |
+          python scripts/experiments/pdlt_v1_1.py \
+            --config research/experiments/pdlt_v1_1/PDLT_CONFIG_v1_1.json \
+            --mode validate-cfgi --input pdlt-output/market_btc_eth_1d_context/owner_snapshot.json \
+            --plan-name market_btc_eth_1d_context --output pdlt-output/validated_market_btc_eth_1d.json
+      - name: Write historical collection receipt
+        run: |
+          python - <<'PY'
+          import hashlib, json, pathlib, datetime
+          root=pathlib.Path('pdlt-output')
+          files={str(p):hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(root.rglob('*.json'))}
+          value={
+            'contract':'PDLT_HISTORICAL_COLLECTION_RECEIPT_v1',
+            'experiment_id':'PDLT-v1.1-RUN',
+            'expected_credits':12300,
+            'created_at_utc':datetime.datetime.now(datetime.timezone.utc).replace(microsecond=0).isoformat().replace('+00:00','Z'),
+            'files':files,
+            'authority':'SHADOW_ONLY'
+          }
+          (root/'historical_collection_receipt.json').write_text(json.dumps(value,sort_keys=True,separators=(',',':'))+'\n')
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pdlt-v1-1-historical-raw
+          path: pdlt-output/
+          if-no-files-found: error
+          retention-days: 90
+
+  burst:
+    if: github.event_name == 'workflow_dispatch' && inputs.mode == 'burst'
+    needs: validate
+    runs-on: ubuntu-latest
+    env:
+      CFGI_API_KEY: ${{ secrets.CFGI_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Fail closed unless paid collection is explicitly acknowledged
+        run: |
+          test "${{ inputs.acknowledge_paid_cfgi }}" = "true" || { echo 'paid_cfgi_not_acknowledged'; exit 78; }
+      - name: Collect 15m PDLT event burst - 480 credits
+        run: |
+          python scripts/data_terminal/cfgi_owner_collector.py \
+            --output-dir pdlt-burst \
+            --symbols MARKET,BTC,ETH --timeframe 15m \
+            --fields score,volatility,volume,impulse,technical,social,dominance,trends,whales,orders \
+            --limit 16
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pdlt-v1-1-burst-${{ github.run_id }}
+          path: pdlt-burst/
+          if-no-files-found: error
+          retention-days: 90
