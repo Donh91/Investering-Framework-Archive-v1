@@ -33,6 +33,7 @@ def decide(root: Path, queue: dict[str, Any]) -> dict[str, Any]:
 
     action = "WAIT"
     reason = "NO_RUNNABLE_STAGE"
+    max_matured_72h = max([int(x.get("matured_72h_count", 0)) for x in (spar or {}).get("patterns", [])] or [0])
     if spar is None:
         action = "RUN_SPAR_BASE"
         reason = "PDLT_IS_FROZEN_OR_SAFELY_BLOCKED_AND_SPAR_HAS_NOT_RUN"
@@ -47,6 +48,9 @@ def decide(root: Path, queue: dict[str, Any]) -> dict[str, Any]:
         elif spar.get("status") == "READY_FOR_ROBUSTNESS_REVIEW" and frag is None:
             action = "RUN_SPAR_FRAGILITY"
             reason = "SPAR_BASE_REACHED_PREREGISTERED_REVIEW_GATE"
+        elif spar.get("status") == "READY_FOR_ROBUSTNESS_REVIEW" and frag and frag.get("status") == "INSUFFICIENT_EVIDENCE" and max_matured_72h >= 10:
+            action = "RUN_SPAR_FRAGILITY"
+            reason = "SPAR_REACHED_PREREGISTERED_FRAGILITY_EVENT_GATE"
         elif spar.get("status") == "READY_FOR_ROBUSTNESS_REVIEW" and frag and frag.get("status") == "INSUFFICIENT_EVIDENCE" and stale_hours is not None and stale_hours >= 12:
             action = "RUN_SPAR_BASE"
             reason = "REFRESH_BASE_BEFORE_NEXT_FRAGILITY_REVIEW"
