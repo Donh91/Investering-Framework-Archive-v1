@@ -73,17 +73,20 @@ Raw point-in-time payloads are retained as GitHub Actions artifacts for 14 days.
 
 ## Storage policy
 
-The live daily pipeline must not permanently commit repeated full owner payload bundles. This avoids repository growth and prevents the monthly raw-storage ceiling from blocking otherwise valid observations.
+The live daily pipeline must not permanently commit repeated full owner payload bundles five times per day. This avoids repository growth and prevents the monthly raw-storage ceiling from blocking otherwise valid observations.
+
+A bounded permanent cold-lane checkpoint is retained once per day at the morning anchor for the ephemeral owners that cannot be reconstructed later. It excludes the large FRED history and redundant spot-candle history. The cold checkpoint has its own storage ceiling and is allowed to degrade without suppressing the compact market observation. If the cold checkpoint reaches its ceiling, the live anchor still commits and the raw source bundle remains available in the 14-day Actions artifact.
 
 Permanent Git history is intentionally compact:
 
 - hourly CSV rows
 - hourly run manifests
 - live-anchor compact indexes
+- one bounded daily raw checkpoint for ephemeral source replay
 - source health and lineage metadata embedded in the compact records
 - weekly sequence/calibration packs
 
-Bulk source payloads remain available temporarily through Actions artifacts for debugging and readback.
+All five live-anchor raw bundles and both hourly source bundles remain available temporarily through Actions artifacts for debugging and readback.
 
 ## Authority
 
