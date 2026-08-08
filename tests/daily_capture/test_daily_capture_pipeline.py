@@ -81,28 +81,16 @@ class DailyCapturePipelineTests(unittest.TestCase):
                 for i in range(14):
                     stamp = start + timedelta(hours=i)
                     ts = int(stamp.timestamp() * 1000)
-                    oi_rows.append({
-                        "symbol": symbol,
-                        "sumOpenInterest": str(oi0 + i * 100),
-                        "sumOpenInterestValue": str((oi0 + i * 100) * 10),
-                        "CMCCirculatingSupply": "1",
-                        "timestamp": ts,
-                    })
-                    ls_rows.append({
-                        "symbol": symbol,
-                        "longShortRatio": str(1.1 + i * 0.001),
-                        "longAccount": "0.52",
-                        "shortAccount": "0.48",
-                        "timestamp": ts,
-                    })
-                (fixture / f"{symbol}_oi.json").write_text(json.dumps(oi_rows))
-                (fixture / f"{symbol}_long_short.json").write_text(json.dumps(ls_rows))
-                (fixture / f"{symbol}_funding.json").write_text(json.dumps([{
-                    "symbol": symbol,
+                    oi_rows.append({"ts": str(ts), "oiCcy": str(oi0 + i * 100), "oiUsd": str((oi0 + i * 100) * 10)})
+                    ls_rows.append([str(ts), str(1.1 + i * 0.001)])
+                (fixture / f"{symbol}_oi_okx.json").write_text(json.dumps({"code": "0", "msg": "", "data": oi_rows}))
+                (fixture / f"{symbol}_long_short_okx.json").write_text(json.dumps({"code": "0", "msg": "", "data": ls_rows}))
+                (fixture / f"{symbol}_funding_okx.json").write_text(json.dumps({"code": "0", "msg": "", "data": [{
+                    "instId": "BTC-USDT-SWAP" if symbol == "BTCUSDT" else "ETH-USDT-SWAP",
                     "fundingRate": "0.0001",
-                    "fundingTime": int((start + timedelta(hours=8)).timestamp() * 1000),
-                    "markPrice": "1",
-                }]))
+                    "realizedRate": "0.00009",
+                    "fundingTime": str(int((start + timedelta(hours=8)).timestamp() * 1000)),
+                }]}))
 
             output = root / "hourly"
             raw = root / "raw"
@@ -124,6 +112,8 @@ class DailyCapturePipelineTests(unittest.TestCase):
             self.assertTrue(all(row["btc_close"] for row in rows))
             self.assertTrue(all(row["eth_close"] for row in rows))
             self.assertTrue(all(row["ethbtc_close"] for row in rows))
+            self.assertTrue(all(row["btc_open_interest_source"] == "OKX_CONTRACT_OI_HISTORY" for row in rows))
+            self.assertTrue(all(row["btc_long_short_source"] == "OKX_GLOBAL_ACCOUNT_RATIO" for row in rows))
             self.assertEqual(rows[0]["btc_oi_change_1h_pct"], "")
             self.assertEqual(rows[0]["btc_price_oi_state"], "UNAVAILABLE")
             self.assertIn("PRICE_DOWN_OI_UP", {row["btc_price_oi_state"] for row in rows})
@@ -132,6 +122,9 @@ class DailyCapturePipelineTests(unittest.TestCase):
             self.assertFalse(manifest["interpolation"])
             self.assertFalse(manifest["forward_fill"])
             self.assertEqual(manifest["spot_complete_hours"], 14)
+            self.assertEqual(manifest["derivatives_oi_complete_hours"], 14)
+            self.assertEqual(manifest["long_short_complete_hours"], 14)
+            self.assertEqual(manifest["derivatives_venue"], "OKX")
 
     def test_weekly_pack_combines_anchor_and_hourly_sequence(self):
         with tempfile.TemporaryDirectory() as tmp:
