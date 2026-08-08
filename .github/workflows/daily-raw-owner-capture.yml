@@ -79,6 +79,20 @@ jobs:
           else
             record_code cfgi_sentiment 78
           fi
+      - name: Persist one bounded daily cold-lane checkpoint
+        id: cold
+        if: env.SCHEDULE_ID == '13 6 * * *' || github.event_name == 'workflow_dispatch'
+        continue-on-error: true
+        run: |
+          python scripts/daily_capture/persist_raw_payloads.py \
+            --run-id "anchor-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" \
+            --output-root 03_DAILY_CAPTURE_LOGS/raw \
+            --max-owner-bytes 4000000 \
+            --max-monthly-compressed-bytes 30000000 \
+            binance-spot-microstructure-output okx-swap-owner-output top100-breadth-owner-output cfgi-owner-output cfgi-1d-owner-output
+      - name: Report cold-lane degradation without losing market observation
+        if: steps.cold.outcome == 'failure'
+        run: echo '::warning::Bounded permanent cold-lane checkpoint failed. Compact anchor and 14-day Actions evidence will still be preserved.'
       - name: Build compact permanent live-anchor index
         run: python scripts/daily_capture/build_capture_index.py --status-file collector-status.json --output-root 03_DAILY_CAPTURE_LOGS/captures --run-id "gh-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" --trigger "${GITHUB_EVENT_NAME}"
       - uses: actions/upload-artifact@v4
@@ -93,14 +107,15 @@ jobs:
             cfgi-owner-output/
             cfgi-1d-owner-output/
             collector-status.json
+            03_DAILY_CAPTURE_LOGS/raw/incidents/
           retention-days: 14
           if-no-files-found: warn
-      - name: Commit compact anchor index with verified readback
+      - name: Commit compact anchor and bounded cold checkpoint with verified readback
         shell: bash
         run: |
           git config user.name 'framework-data-bot'
           git config user.email 'framework-data-bot@users.noreply.github.com'
-          git add 03_DAILY_CAPTURE_LOGS/captures
+          git add 03_DAILY_CAPTURE_LOGS/captures 03_DAILY_CAPTURE_LOGS/raw
           if git diff --cached --quiet; then exit 0; fi
           git commit -m "data: log live anchor ${GITHUB_RUN_ID}"
           pushed=false
