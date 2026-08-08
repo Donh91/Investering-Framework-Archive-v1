@@ -1,0 +1,39 @@
+{
+  "contract": "ETF_ABSORPTION_TRANSMISSION_EXPERIMENT_SPEC_v1",
+  "status": "QUEUED_NOT_RUNNING",
+  "experiment_id": "ETF-ABSORPTION-TRANSMISSION-v1",
+  "purpose": "Test whether BTC resilience or ETF-supported absorption can coexist with deteriorating ecosystem transmission, and whether that divergence improves pullback, failed-rotation or distribution discrimination.",
+  "authority": {
+    "canonical_promotion": false,
+    "framework_state_change": false,
+    "model_weight_change": false,
+    "portfolio_action": false
+  },
+  "execution_gate": "SPAR_FRAGILITY_REVIEW_COMPLETE_AND_VERIFIED_EXISTING_ETF_OWNER_DATA_ADAPTER_AVAILABLE",
+  "paid_data": {
+    "new_cfgi_credits": 0,
+    "new_openai_usd": 0,
+    "external_paid_calls_allowed": false
+  },
+  "candidate_inputs": [
+    "btc_price_structure",
+    "btc_etf_flow_state",
+    "ethbtc_change",
+    "breadth_change",
+    "btc_dominance_change",
+    "total3_change"
+  ],
+  "target_outcomes": [
+    "BTC_DRAWDOWN_7D",
+    "ETH_DRAWDOWN_7D",
+    "FAILED_ROTATION_14D",
+    "ECOSYSTEM_DISTRIBUTION_14D"
+  ],
+  "requirements_before_execution": [
+    "TIMESTAMP_SAFE_EXISTING_OWNER_JOIN",
+    "NO_DUPLICATE_ETF_API_OR_WEB_CALLS",
+    "FROZEN_EVENT_DEFINITION",
+    "MATCHED_CONTROL_WINDOWS",
+    "FNP_EXIT_OPPORTUNITY_COST_EVALUATION"
+  ]
+}
