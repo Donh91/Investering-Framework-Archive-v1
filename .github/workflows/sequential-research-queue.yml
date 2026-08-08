@@ -1,0 +1,111 @@
+name: Sequential research queue
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/sequential-research-queue.yml'
+      - 'research/experiment_lifecycle/SEQUENTIAL_RESEARCH_QUEUE_v1.json'
+      - 'research/experiments/spar_v1/SPAR_CONFIG_v1.json'
+      - 'research/experiments/etf_absorption_transmission_v1/EXPERIMENT_SPEC_v1.json'
+      - 'scripts/experiments/spar_v1.py'
+      - 'scripts/experiments/sequential_research_queue.py'
+      - 'tests/experiments/test_spar_v1.py'
+  schedule:
+    - cron: '25 8 * * *'
+      timezone: 'Europe/Copenhagen'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: framework-main-writer
+  cancel-in-progress: false
+
+jobs:
+  run-next-free-research-stage:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Prove zero-cost queue code before execution
+        run: |
+          python -m py_compile scripts/experiments/spar_v1.py scripts/experiments/sequential_research_queue.py
+          python -m unittest tests.experiments.test_spar_v1 -v
+      - name: Select exactly one runnable stage
+        id: queue
+        run: |
+          mkdir -p runtime/research_queue
+          python scripts/experiments/sequential_research_queue.py \
+            --queue research/experiment_lifecycle/SEQUENTIAL_RESEARCH_QUEUE_v1.json \
+            --repo-root . \
+            --output runtime/research_queue/state.json
+          python - <<'PY' >> "$GITHUB_OUTPUT"
+          import json
+          s=json.load(open('runtime/research_queue/state.json'))
+          print('action='+s['next_action'])
+          print('reason='+s['reason'])
+          PY
+      - name: Run SPAR deterministic base replay
+        if: steps.queue.outputs.action == 'RUN_SPAR_BASE'
+        run: |
+          python scripts/experiments/spar_v1.py \
+            --mode replay \
+            --capture-root 03_DAILY_CAPTURE_LOGS/captures \
+            --output runtime/research_queue/SPAR_REPLAY_REPORT_v1.json \
+            --min-matured-events 5
+          mkdir -p research/experiments/spar_v1
+          cp runtime/research_queue/SPAR_REPLAY_REPORT_v1.json research/experiments/spar_v1/LATEST_REPORT.json
+          STAMP=$(date -u +%Y/%m/%d/%H%M%S)
+          mkdir -p "research/experiments/spar_v1/runs/${STAMP}"
+          cp runtime/research_queue/SPAR_REPLAY_REPORT_v1.json "research/experiments/spar_v1/runs/${STAMP}/SPAR_REPLAY_REPORT_v1.json"
+      - name: Run SPAR fragility gate
+        if: steps.queue.outputs.action == 'RUN_SPAR_FRAGILITY'
+        run: |
+          python scripts/experiments/spar_v1.py \
+            --mode fragility \
+            --base-report research/experiments/spar_v1/LATEST_REPORT.json \
+            --output runtime/research_queue/SPAR_FRAGILITY_REPORT_v1.json \
+            --min-fragility-events 10
+          cp runtime/research_queue/SPAR_FRAGILITY_REPORT_v1.json research/experiments/spar_v1/LATEST_FRAGILITY_REPORT.json
+          STAMP=$(date -u +%Y/%m/%d/%H%M%S)
+          mkdir -p "research/experiments/spar_v1/fragility/${STAMP}"
+          cp runtime/research_queue/SPAR_FRAGILITY_REPORT_v1.json "research/experiments/spar_v1/fragility/${STAMP}/SPAR_FRAGILITY_REPORT_v1.json"
+      - name: Archive execution receipt only when work ran
+        if: steps.queue.outputs.action != 'WAIT'
+        run: |
+          STAMP=$(date -u +%Y/%m/%d/%H%M%S)
+          mkdir -p "research/experiment_lifecycle/queue_receipts/${STAMP}"
+          cp runtime/research_queue/state.json "research/experiment_lifecycle/queue_receipts/${STAMP}/QUEUE_STATE.json"
+      - name: Commit shadow-only research output
+        if: steps.queue.outputs.action != 'WAIT'
+        shell: bash
+        run: |
+          git config user.name framework-research-queue-bot
+          git config user.email framework-research-queue-bot@users.noreply.github.com
+          git add research/experiments/spar_v1 research/experiment_lifecycle/queue_receipts
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "research: execute next bounded queue stage ${GITHUB_RUN_ID}"
+          pushed=false
+          for attempt in 1 2 3; do
+            git rebase --abort 2>/dev/null || true
+            if git pull --rebase origin main && git push origin HEAD:main; then pushed=true; break; fi
+            sleep $((attempt*5))
+          done
+          [ "$pushed" = true ]
+          git fetch origin main
+          git merge-base --is-ancestor HEAD origin/main
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: sequential-research-queue-${{ github.run_id }}
+          path: runtime/research_queue/
+          retention-days: 30
