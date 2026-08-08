@@ -3,7 +3,6 @@ import argparse,json,statistics
 from dataclasses import dataclass
 from datetime import datetime,timezone,timedelta
 from pathlib import Path
-from typing import Any
 
 CONTRACT='SPAR_REPLAY_REPORT_v1'; FRAGILITY_CONTRACT='SPAR_FRAGILITY_REPORT_v1'
 def ts(x:str)->datetime:return datetime.fromisoformat(x.replace('Z','+00:00')).astimezone(timezone.utc)
@@ -81,7 +80,7 @@ def loo_stable(vals):
  base=med(vals)
  if base==0:return False
  sign=base>0
- return all((med(vals[:i]+vals[i+1:]) or 0)>0==sign for i in range(len(vals)))
+ return all(((med(vals[:i]+vals[i+1:]) or 0)>0)==sign for i in range(len(vals)))
 def build_fragility(base,min_events=10):
  rows=[];ready=False
  for p in base.get('patterns',[]):
