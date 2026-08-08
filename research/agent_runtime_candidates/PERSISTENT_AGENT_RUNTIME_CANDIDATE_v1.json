@@ -1,0 +1,99 @@
+{
+  "contract": "PERSISTENT_AGENT_RUNTIME_CANDIDATE_v1",
+  "architecture_identity": "FRAMEWORK_EXECUTION_HARNESS_v1",
+  "candidate_id": "ARC-PERSISTENT-AGENT-RUNTIME-001",
+  "created_at_utc": "2026-08-06T10:31:00Z",
+  "updated_at_utc": "2026-08-06T17:10:00Z",
+  "status": "INCUBATING",
+  "implementation_status": "CONTRACTS_ONLY",
+  "product_binding": "PRODUCT_NEUTRAL",
+  "reference_implementations": ["PRIME_AGENT", "CLAUDE_CODE", "CODEX", "OPENHANDS"],
+  "authority": "ARCHITECTURE_RESEARCH_ONLY",
+  "primary_goal": "MODEL_INDEPENDENT_FRAMEWORK_SPECIFIC_EXECUTION_HARNESS",
+  "persistent_runtime_priority": "LATER_OPTIONAL_CAPABILITY",
+  "default_recursion_depth": 0,
+  "maximum_future_bounded_recursion_depth": 1,
+  "automatic_installation": false,
+  "automatic_secret_access": false,
+  "automatic_main_merge": false,
+  "automatic_runtime_authority": false,
+  "maximum_automatic_stage": "READY_FOR_ISOLATED_CANARY",
+  "execution_chain": [
+    "FRAMEWORK_TASK_CONTRACT_v1",
+    "FRAMEWORK_CONTEXT_BUNDLE_v1",
+    "FRAMEWORK_WORKER_MANIFEST_v1",
+    "FRAMEWORK_EVIDENCE_ENVELOPE_v1",
+    "FRAMEWORK_EXECUTION_RECEIPT_v1",
+    "FRAMEWORK_TERMINAL_RECEIPT_v1",
+    "LEDGER_ROUTING"
+  ],
+  "stages": [
+    "INCUBATING",
+    "READY_FOR_CONTRACT_BUILD",
+    "READY_FOR_SIMULATION",
+    "READY_FOR_ISOLATED_CANARY",
+    "READY_FOR_SHADOW_RUNTIME",
+    "LIMITED_OPERATIONAL_PROPOSAL"
+  ],
+  "required_internal_contracts": [
+    "FRAMEWORK_TASK_CONTRACT_v1",
+    "FRAMEWORK_CONTEXT_BUNDLE_v1",
+    "FRAMEWORK_WORKER_MANIFEST_v1",
+    "FRAMEWORK_EVIDENCE_ENVELOPE_v1",
+    "FRAMEWORK_EXECUTION_RECEIPT_v1",
+    "FRAMEWORK_TERMINAL_RECEIPT_v1",
+    "FRAMEWORK_RUNTIME_ADAPTER_MANIFEST_v1"
+  ],
+  "internal_need_thresholds": {
+    "cross_run_context_loss_or_manual_handover_events": 3,
+    "interrupted_long_task_events": 2,
+    "message_delivery_or_continuation_failures": 2,
+    "scheduled_state_loss_events": 1
+  },
+  "stability_requirements": {
+    "automation_red_count": 0,
+    "unresolved_p0_remediation_count": 0,
+    "hash_mismatch_count": 0,
+    "missing_required_handoff_pointer_count": 0,
+    "minimum_successful_observation_runs": 14
+  },
+  "upstream_requirements": {
+    "pinned_version": true,
+    "minimum_observation_days": 30,
+    "no_breaking_change_during_observation": true,
+    "compaction_recovery_regression_tested": true,
+    "silent_success_on_failure_prohibited": true,
+    "refinement_preview_and_rollback": true,
+    "session_persistence_tested": true,
+    "external_sandbox_and_kill_switch": true
+  },
+  "automatic_actions_allowed": [
+    "EVALUATE_REPOSITORY_READINESS",
+    "PUBLISH_READINESS_RECEIPT",
+    "RECOMMEND_NEXT_STAGE",
+    "ROUTE_BOUNDED_CONTRACT_TASK_TO_EXISTING_REMEDIATION_GOVERNANCE"
+  ],
+  "automatic_actions_forbidden": [
+    "INSTALL_RUNTIME",
+    "CREATE_SECRET",
+    "CREATE_SELF_HOSTED_RUNNER",
+    "WRITE_MAIN_DIRECTLY",
+    "MERGE_PULL_REQUEST",
+    "CHANGE_CANONICAL_STATE",
+    "CHANGE_MODEL_WEIGHT",
+    "CHANGE_PORTFOLIO_ACTION",
+    "ASSUME_OWNER_GRADE_AUTHORITY",
+    "UNBOUNDED_RECURSIVE_DELEGATION",
+    "HIDDEN_LONG_TERM_MEMORY",
+    "AUTOMATIC_HARNESS_MUTATION"
+  ],
+  "kill_criteria": [
+    "NO_DURABLE_NEED_EVIDENCE",
+    "GITHUB_NATIVE_PRIMITIVES_SOLVE_NEED_WITH_LOWER_COMPLEXITY",
+    "CONTEXT_ROUTING_FAILS_TO_REDUCE_COST_OR_ERROR",
+    "WORKER_ISOLATION_CANNOT_BE_ENFORCED",
+    "RECEIPTS_CANNOT_DISTINGUISH_TERMINAL_STATES",
+    "RUNTIME_ADAPTER_RISK_EXCEEDS_MEASURED_VALUE",
+    "ARCHITECTURE_DRIFTS_INTO_GENERIC_AGENT_PLATFORM"
+  ]
+}

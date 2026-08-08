@@ -1,0 +1,65 @@
+name: Persistent Agent Runtime Readiness
+
+on:
+  schedule:
+    - cron: '20 6 * * *'
+      timezone: 'Europe/Copenhagen'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: framework-main-writer
+  cancel-in-progress: false
+
+jobs:
+  evaluate:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Evaluate product-neutral runtime readiness
+        run: |
+          python scripts/agent_runtime/evaluate_persistent_runtime_readiness.py \
+            --repo-root . \
+            --candidate research/agent_runtime_candidates/PERSISTENT_AGENT_RUNTIME_CANDIDATE_v1.json \
+            --upstream-evidence research/agent_runtime_candidates/PERSISTENT_AGENT_RUNTIME_UPSTREAM_EVIDENCE_v1.json \
+            --output research/agent_runtime_candidates/LATEST_PERSISTENT_AGENT_RUNTIME_READINESS.json
+          cp research/agent_runtime_candidates/LATEST_PERSISTENT_AGENT_RUNTIME_READINESS.json LATEST_PERSISTENT_AGENT_RUNTIME_READINESS.json
+      - name: Commit readiness receipt with remote readback
+        shell: bash
+        run: |
+          git config user.name 'framework-runtime-readiness-bot'
+          git config user.email 'framework-runtime-readiness-bot@users.noreply.github.com'
+          git add research/agent_runtime_candidates/LATEST_PERSISTENT_AGENT_RUNTIME_READINESS.json LATEST_PERSISTENT_AGENT_RUNTIME_READINESS.json
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "architecture: refresh persistent runtime readiness ${GITHUB_RUN_ID}"
+          pushed=false
+          for attempt in 1 2 3; do
+            git rebase --abort 2>/dev/null || true
+            if git pull --rebase origin main && git push origin HEAD:main; then pushed=true; break; fi
+            sleep $((attempt * 5))
+          done
+          [ "$pushed" = true ]
+          git fetch origin main
+          git merge-base --is-ancestor HEAD origin/main
+          for path in research/agent_runtime_candidates/LATEST_PERSISTENT_AGENT_RUNTIME_READINESS.json LATEST_PERSISTENT_AGENT_RUNTIME_READINESS.json; do
+            local_sha=$(sha256sum "$path" | awk '{print $1}')
+            remote_sha=$(git show "origin/main:$path" | sha256sum | awk '{print $1}')
+            [ "$local_sha" = "$remote_sha" ]
+          done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: persistent-runtime-readiness-${{ github.run_id }}
+          path: research/agent_runtime_candidates/LATEST_PERSISTENT_AGENT_RUNTIME_READINESS.json
+          retention-days: 14
+          if-no-files-found: error
