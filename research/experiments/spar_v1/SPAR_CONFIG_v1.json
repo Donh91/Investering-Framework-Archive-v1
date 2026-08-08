@@ -1,0 +1,40 @@
+{
+  "contract": "SPAR_CONFIG_v1",
+  "status": "PREREGISTERED_SHADOW_ONLY",
+  "experiment_id": "SPAR-v1",
+  "purpose": "Test whether ordering and persistence across existing breadth, leverage and ETH-relative-performance sensors contain pullback or distribution lead-time information beyond single-sensor states.",
+  "authority": {
+    "canonical_promotion": false,
+    "framework_state_change": false,
+    "model_weight_change": false,
+    "portfolio_action": false
+  },
+  "data": {
+    "paid_sources": [],
+    "new_cfgi_credits": 0,
+    "new_openai_usd": 0,
+    "source": "03_DAILY_CAPTURE_LOGS/captures",
+    "minimum_data_policy": "NO_INTERPOLATION_NO_RETROSPECTIVE_SIGNAL_CREATION"
+  },
+  "patterns": [
+    {"id": "SPAR-P1", "sequence": ["BREADTH_DETERIORATION", "LEVERAGE_BUILD", "ETH_RELATIVE_WEAKNESS"], "max_transitions": 4},
+    {"id": "SPAR-P2", "sequence": ["LEVERAGE_BUILD", "BREADTH_DETERIORATION", "ETH_RELATIVE_WEAKNESS"], "max_transitions": 4},
+    {"id": "SPAR-P3", "sequence": ["BTC_RESILIENCE_AND_BREADTH_DETERIORATION", "ETH_RELATIVE_WEAKNESS"], "max_transitions": 3}
+  ],
+  "feature_policy": "SIGN_AND_ORDER_ONLY_NO_FITTED_THRESHOLDS",
+  "episode_cooldown_hours": 72,
+  "outcome_horizons_hours": [24, 72, 168],
+  "primary_outputs": ["btc_return_pct", "btc_mae_pct", "btc_mfe_pct", "eth_return_pct", "eth_mae_pct", "eth_mfe_pct", "ethbtc_return_pct"],
+  "evidence_gates": {
+    "base_review_matured_72h_events_per_pattern": 5,
+    "fragility_review_matured_72h_events_per_pattern": 10,
+    "promotion_allowed": false
+  },
+  "kill_criteria": [
+    "FUTURE_DATA_LEAKAGE",
+    "RETROSPECTIVE_PATTERN_MUTATION",
+    "TIMESTAMP_ORDER_FAILURE",
+    "PAID_API_CALL_ATTEMPT",
+    "CANONICAL_OR_PORTFOLIO_AUTHORITY_ATTEMPT"
+  ]
+}
