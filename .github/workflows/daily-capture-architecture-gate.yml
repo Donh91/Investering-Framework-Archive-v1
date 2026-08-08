@@ -53,3 +53,30 @@ jobs:
           assert 'https://api.binance.com' not in close
           print('DAILY_CAPTURE_ARCHITECTURE_PASS')
           PY
+
+  live-hourly-source-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Prove live hourly spot and derivatives coverage without writing repository state
+        run: |
+          RESULT=$(python scripts/daily_capture/build_hourly_sequence.py --output-root /tmp/hourly-sequence --raw-output /tmp/hourly-source --lookback-hours 4)
+          echo "$RESULT"
+          python - "$RESULT" <<'PY'
+          import csv,json,sys
+          from pathlib import Path
+          result=json.loads(sys.argv[1])
+          assert result['spot_complete_hours'] >= 3, result
+          assert result['derivatives_oi_complete_hours'] >= 3, result
+          rows=[]
+          for path in Path('/tmp/hourly-sequence').glob('*/*/*.csv'):
+              with path.open(newline='') as fh: rows.extend(csv.DictReader(fh))
+          assert len(rows) >= 3
+          required=('btc_long_short_ratio','eth_long_short_ratio','btc_open_interest','eth_open_interest')
+          assert all(all(row.get(k) not in (None,'') for k in required) for row in rows), rows
+          print('LIVE_HOURLY_SOURCE_COVERAGE_PASS')
+          PY
