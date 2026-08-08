@@ -6,6 +6,7 @@ on:
       - 'scripts/daily_capture/**'
       - 'tests/daily_capture/**'
       - '.github/workflows/daily-raw-owner-capture.yml'
+      - '.github/workflows/hourly-sequence-capture.yml'
       - '.github/workflows/sunday-market-close-and-cfgi.yml'
       - '.github/workflows/weekly-raw-calibration-bridge.yml'
       - '.github/workflows/daily-capture-architecture-gate.yml'
@@ -26,21 +27,26 @@ jobs:
       - name: Run daily capture tests
         run: python -m unittest tests.daily_capture.test_daily_capture_pipeline tests.daily_capture.test_weekly_market_close_endpoint -v
       - name: Compile capture modules
-        run: python -m py_compile scripts/daily_capture/build_capture_index.py scripts/daily_capture/build_weekly_calibration.py scripts/daily_capture/persist_raw_payloads.py scripts/daily_capture/build_weekly_market_close_package.py
-      - name: Validate schedule, source and authority boundaries
+        run: python -m py_compile scripts/daily_capture/build_capture_index.py scripts/daily_capture/build_hourly_sequence.py scripts/daily_capture/build_weekly_calibration.py scripts/daily_capture/persist_raw_payloads.py scripts/daily_capture/build_weekly_market_close_package.py
+      - name: Validate schedules, storage and authority boundaries
         run: |
           python - <<'PY'
           from pathlib import Path
           daily=Path('.github/workflows/daily-raw-owner-capture.yml').read_text()
+          hourly=Path('.github/workflows/hourly-sequence-capture.yml').read_text()
           weekly=Path('.github/workflows/weekly-raw-calibration-bridge.yml').read_text()
           close=Path('scripts/daily_capture/build_weekly_market_close_package.py').read_text()
           assert daily.count("timezone: 'Europe/Copenhagen'")==5
-          assert 'retention-days: 14' in daily
-          assert 'persist_raw_payloads.py' in daily
-          assert '03_DAILY_CAPTURE_LOGS/raw' in daily
+          assert hourly.count("timezone: 'Europe/Copenhagen'")==2
+          assert 'retention-days: 14' in daily and 'retention-days: 14' in hourly
+          assert 'persist_raw_payloads.py' not in daily
+          assert 'binance_spot_owner_collector.py' not in daily
+          assert 'build_hourly_sequence.py' in hourly
+          assert '--lookback-hours 14' in hourly
+          assert '03_DAILY_CAPTURE_LOGS/hourly' in hourly
+          assert '--hourly-root 03_DAILY_CAPTURE_LOGS/hourly' in weekly
           assert '03_DAILY_CAPTURE_LOGS/captures' in daily
-          assert '03_DAILY_CAPTURE_LOGS/weekly' in weekly
-          assert 'OPENAI_API_KEY' not in daily+weekly
+          assert 'OPENAI_API_KEY' not in daily+hourly+weekly
           assert 'https://data-api.binance.vision' in close
           assert 'https://api.binance.com' not in close
           print('DAILY_CAPTURE_ARCHITECTURE_PASS')
