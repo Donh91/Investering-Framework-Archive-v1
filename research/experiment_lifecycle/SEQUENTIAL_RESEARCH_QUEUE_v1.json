@@ -1,0 +1,53 @@
+{
+  "contract": "SEQUENTIAL_RESEARCH_QUEUE_v1",
+  "status": "ACTIVE_SHADOW_ONLY",
+  "policy": {
+    "one_active_execution_stage_only": true,
+    "passive_maturation_may_overlap": true,
+    "automatic_promotion": false,
+    "portfolio_authority": false,
+    "canonical_authority": false,
+    "new_paid_calls_default": false
+  },
+  "incremental_budget": {
+    "cfgi_credits_hard_cap": 0,
+    "openai_usd_hard_cap": 0.0,
+    "pdlt_existing_budget_is_not_increased": true,
+    "pdlt_paid_bootstrap_rerun_authorized": false
+  },
+  "queue": [
+    {
+      "order": 1,
+      "experiment_id": "PDLT-v1.1-RUN",
+      "state": "EXISTING_EXPERIMENT_SAFE_RESUME_GATE",
+      "execution_rule": "DO_NOT_REPEAT_PAID_BOOTSTRAP_WITHOUT_VERIFIED_RECEIPT_OR_BILLING_CHECKPOINT",
+      "completion_for_queue": "DISCOVERY_FROZEN_OR_BLOCKED_SAFE_PAID_RESUME_REQUIRED"
+    },
+    {
+      "order": 2,
+      "experiment_id": "SPAR-v1",
+      "state": "RUNNABLE_FREE_REPLAY",
+      "execution_rule": "DETERMINISTIC_EXISTING_CAPTURE_DATA_ONLY",
+      "cost": {"cfgi_credits": 0, "openai_usd": 0.0}
+    },
+    {
+      "order": 3,
+      "experiment_id": "SPAR-FRAGILITY-v1",
+      "state": "WAITING_FOR_SPAR_BASE_GATE",
+      "execution_rule": "LEAVE_ONE_OUT_THEN_PLACEBO_AND_REGIME_SPLIT_ONLY_AFTER_SUFFICIENT_EVENTS",
+      "cost": {"cfgi_credits": 0, "openai_usd": 0.0}
+    },
+    {
+      "order": 4,
+      "experiment_id": "ETF-ABSORPTION-TRANSMISSION-v1",
+      "state": "QUEUED_AFTER_FRAGILITY",
+      "execution_rule": "NO_EXECUTION_UNTIL_VERIFIED_EXISTING_OWNER_DATA_ADAPTER_IS_AVAILABLE",
+      "cost": {"cfgi_credits": 0, "openai_usd": 0.0}
+    }
+  ],
+  "shared_evaluator": {
+    "id": "FNP-EXIT-OPPORTUNITY-COST",
+    "role": "EVALUATION_LAYER_NOT_STANDALONE_SIGNAL",
+    "required_metrics": ["damage_avoided", "missed_upside", "false_exit_cost", "rebuy_opportunity"]
+  }
+}
