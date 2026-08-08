@@ -1,4 +1,4 @@
-name: Daily Raw Owner Capture
+name: Daily Live Anchor Capture
 
 on:
   schedule:
@@ -26,7 +26,7 @@ jobs:
   capture:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 20
     env:
       CFGI_API_KEY: ${{ secrets.CFGI_API_KEY }}
       CFGI_ENABLED: ${{ vars.CFGI_ENABLED }}
@@ -41,7 +41,7 @@ jobs:
           python-version: '3.12'
       - name: Initialize source status
         run: echo '{}' > collector-status.json
-      - name: Run owner collectors fail-closed but independently
+      - name: Run point-in-time owners fail-closed but independently
         shell: bash
         run: |
           set +e
@@ -53,38 +53,54 @@ jobs:
           PY
           }
           run_owner() { key="$1"; shift; "$@"; record_code "$key" "$?"; }
-          run_owner fred_macro python scripts/data_terminal/fred_multiseries_live_adapter.py --series DGS2,DGS10,DTWEXBGS,VIXCLS --output-dir fred-owner-output
-          run_owner binance_spot python scripts/data_terminal/binance_spot_owner_collector.py --output-dir binance-spot-owner-output
+
+          # Spot candles and historical derivatives are owned by the separate hourly sequence lane.
+          record_code binance_spot 78
+
+          # Slow daily macro context is collected once per day, or on manual dispatch.
+          if [ "${SCHEDULE_ID}" = "13 6 * * *" ] || [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ]; then
+            run_owner fred_macro python scripts/data_terminal/fred_multiseries_live_adapter.py --series DGS2,DGS10,DTWEXBGS,VIXCLS --output-dir fred-owner-output
+          else
+            record_code fred_macro 78
+          fi
+
+          # Ephemeral observations cannot be reconstructed reliably later and remain five-times-daily anchors.
           run_owner binance_microstructure python scripts/data_terminal/binance_spot_microstructure_source.py --output-dir binance-spot-microstructure-output
           run_owner okx_swap python scripts/data_terminal/okx_swap_owner_collector.py --output-dir okx-swap-owner-output
           run_owner top100_breadth python scripts/data_terminal/top100_breadth_owner_collector.py --output-dir top100-breadth-owner-output
+
           if [ "${CFGI_ENABLED}" = "true" ]; then
             CFGI_FIELDS="score,volatility,volume,impulse,technical,social,dominance,trends,whales,orders"
             run_owner cfgi_sentiment python scripts/data_terminal/cfgi_owner_collector.py --output-dir cfgi-owner-output --symbols MARKET,BTC,ETH --timeframe 4h --fields "${CFGI_FIELDS}" --limit 1
-            if [ "${SCHEDULE_ID}" = "13 6 * * *" ]; then
+            if [ "${SCHEDULE_ID}" = "13 6 * * *" ] || [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ]; then
               python scripts/data_terminal/cfgi_owner_collector.py --output-dir cfgi-1d-owner-output --symbols MARKET,BTC,ETH --timeframe 1d --fields score --limit 1
               record_code cfgi_sentiment_1d "$?"
             fi
           else
             record_code cfgi_sentiment 78
           fi
-      - name: Persist compressed raw payloads permanently
+      - name: Persist one bounded daily cold-lane checkpoint
+        id: cold
+        if: env.SCHEDULE_ID == '13 6 * * *' || github.event_name == 'workflow_dispatch'
+        continue-on-error: true
         run: |
           python scripts/daily_capture/persist_raw_payloads.py \
-            --run-id "gh-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" \
+            --run-id "anchor-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" \
             --output-root 03_DAILY_CAPTURE_LOGS/raw \
-            --max-owner-bytes 12000000 \
-            --max-monthly-compressed-bytes 20000000 \
-            fred-owner-output binance-spot-owner-output binance-spot-microstructure-output okx-swap-owner-output top100-breadth-owner-output cfgi-owner-output cfgi-1d-owner-output
-      - name: Build compact permanent capture index
+            --max-owner-bytes 4000000 \
+            --max-monthly-compressed-bytes 30000000 \
+            binance-spot-microstructure-output okx-swap-owner-output top100-breadth-owner-output cfgi-owner-output cfgi-1d-owner-output
+      - name: Report cold-lane degradation without losing market observation
+        if: steps.cold.outcome == 'failure'
+        run: echo '::warning::Bounded permanent cold-lane checkpoint failed. Compact anchor and 14-day Actions evidence will still be preserved.'
+      - name: Build compact permanent live-anchor index
         run: python scripts/daily_capture/build_capture_index.py --status-file collector-status.json --output-root 03_DAILY_CAPTURE_LOGS/captures --run-id "gh-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" --trigger "${GITHUB_EVENT_NAME}"
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: daily-raw-owner-capture-${{ github.run_id }}-${{ github.run_attempt }}
+          name: daily-live-anchor-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
             fred-owner-output/
-            binance-spot-owner-output/
             binance-spot-microstructure-output/
             okx-swap-owner-output/
             top100-breadth-owner-output/
@@ -94,14 +110,14 @@ jobs:
             03_DAILY_CAPTURE_LOGS/raw/incidents/
           retention-days: 14
           if-no-files-found: warn
-      - name: Commit compact index and cold evidence with verified readback
+      - name: Commit compact anchor and bounded cold checkpoint with verified readback
         shell: bash
         run: |
           git config user.name 'framework-data-bot'
           git config user.email 'framework-data-bot@users.noreply.github.com'
           git add 03_DAILY_CAPTURE_LOGS/captures 03_DAILY_CAPTURE_LOGS/raw
           if git diff --cached --quiet; then exit 0; fi
-          git commit -m "data: log daily raw capture ${GITHUB_RUN_ID}"
+          git commit -m "data: log live anchor ${GITHUB_RUN_ID}"
           pushed=false
           for attempt in 1 2 3; do
             git rebase --abort 2>/dev/null || true
@@ -126,9 +142,9 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           mkdir -p 09_SOURCE_QA/incidents
-          FILE="09_SOURCE_QA/incidents/INCIDENT_daily-raw-owner-capture-${GITHUB_RUN_ID}.md"
-          printf '# AUTOMATION INCIDENT\n\nWorkflow: Daily Raw Owner Capture\nRun: %s\nTimestamp UTC: %s\nStatus: FAILED\nInspect Actions logs. No secrets are included.\n' "$GITHUB_RUN_ID" "$(date -u +%FT%TZ)" > "$FILE"
+          FILE="09_SOURCE_QA/incidents/INCIDENT_daily-live-anchor-${GITHUB_RUN_ID}.md"
+          printf '# AUTOMATION INCIDENT\n\nWorkflow: Daily Live Anchor Capture\nRun: %s\nTimestamp UTC: %s\nStatus: FAILED\nInspect Actions logs. No secrets are included.\n' "$GITHUB_RUN_ID" "$(date -u +%FT%TZ)" > "$FILE"
           git config user.name framework-incident-bot
           git config user.email framework-incident-bot@users.noreply.github.com
-          git add "$FILE" && git commit -m "incident: daily capture ${GITHUB_RUN_ID}" && git pull --rebase origin main && git push origin HEAD:main
-          gh issue create --title "AUTOMATION FAILURE: Daily Raw Owner Capture ${GITHUB_RUN_ID}" --body-file "$FILE" || true
+          git add "$FILE" && git commit -m "incident: live anchor ${GITHUB_RUN_ID}" && git pull --rebase origin main && git push origin HEAD:main
+          gh issue create --title "AUTOMATION FAILURE: Daily Live Anchor ${GITHUB_RUN_ID}" --body-file "$FILE" || true

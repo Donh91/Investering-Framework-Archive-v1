@@ -16,10 +16,9 @@ OWNER_DIRS = {
     "top100_breadth": "top100-breadth-owner-output",
     "cfgi_sentiment": "cfgi-owner-output",
 }
-CORE_OWNER_IDS = {
-    "fred_macro", "binance_spot", "binance_microstructure", "okx_swap", "top100_breadth"
-}
-OPTIONAL_OWNER_IDS = {"cfgi_sentiment"}
+ANCHOR_CORE_OWNER_IDS = {"binance_microstructure", "okx_swap", "top100_breadth"}
+DAILY_CONTEXT_OWNER_IDS = {"fred_macro", "cfgi_sentiment"}
+SEQUENCE_OWNED_OWNER_IDS = {"binance_spot"}
 
 
 def sha256(path: Path) -> str:
@@ -112,12 +111,53 @@ def extract_cfgi(directory: Path) -> dict[str, Any]:
     return compact
 
 
+def extract_microstructure(directory: Path) -> dict[str, Any]:
+    snapshot = read_json(directory / "owner_snapshot.json")
+    if not isinstance(snapshot, dict):
+        return {}
+    out: dict[str, Any] = {
+        "retrieval_timestamp": snapshot.get("retrieval_timestamp"),
+        "source": snapshot.get("source"),
+        "symbols": {},
+    }
+    data = snapshot.get("data", {})
+    if not isinstance(data, dict):
+        return out
+    for symbol, record in data.items():
+        if not isinstance(record, dict):
+            continue
+        depth = record.get("depth", {}) if isinstance(record.get("depth"), dict) else {}
+        trades = record.get("agg_trades", {}) if isinstance(record.get("agg_trades"), dict) else {}
+        depth20 = (depth.get("depth_metrics") or {}).get("20", {}) if isinstance(depth.get("depth_metrics"), dict) else {}
+        out["symbols"][symbol] = {
+            "midpoint": depth.get("midpoint"),
+            "spread_bps": depth.get("spread_bps"),
+            "depth20_quote_notional_imbalance": depth20.get("quote_notional_imbalance"),
+            "trade_count": trades.get("trade_count"),
+            "taker_quote_imbalance": trades.get("taker_quote_imbalance"),
+            "vwap": trades.get("vwap"),
+            "first_trade_time": trades.get("first_trade_time"),
+            "last_trade_time": trades.get("last_trade_time"),
+        }
+    return out
+
+
 def extract_metrics(root: Path) -> dict[str, Any]:
-    metrics: dict[str, Any] = {"spot": {}, "derivatives": {}, "breadth": {}, "macro": {}, "sentiment": {}}
+    metrics: dict[str, Any] = {
+        "spot_legacy": {},
+        "microstructure": {},
+        "derivatives": {},
+        "breadth": {},
+        "macro": {},
+        "sentiment": {},
+    }
+    # Legacy support only. Hourly spot sequence now belongs to 03_DAILY_CAPTURE_LOGS/hourly.
     for symbol in ("BTCUSDT", "ETHUSDT", "ETHBTC"):
         row = last_kline(root / "binance-spot-owner-output" / "raw" / f"{symbol}.json")
         if row:
-            metrics["spot"][symbol] = row
+            metrics["spot_legacy"][symbol] = row
+
+    metrics["microstructure"] = extract_microstructure(root / "binance-spot-microstructure-output")
 
     okx = read_json(root / "okx-swap-owner-output" / "owner_snapshot.json")
     if isinstance(okx, dict):
@@ -137,13 +177,23 @@ def extract_metrics(root: Path) -> dict[str, Any]:
                 metrics["breadth"][key] = breadth[key]
         aggregate = breadth.get("aggregate")
         if isinstance(aggregate, dict):
-            for key in ("advancers", "decliners", "flat", "advancer_percentage"):
+            for key in ("advancers", "decliners", "flat", "advancer_percentage", "constituent_count", "membership_hash"):
                 if key in aggregate:
                     metrics["breadth"][key] = aggregate[key]
 
     metrics["macro"] = latest_fred_values(root / "fred-owner-output")
     metrics["sentiment"]["cfgi"] = extract_cfgi(root / "cfgi-owner-output")
     return metrics
+
+
+def owner_class(owner_id: str) -> str:
+    if owner_id in ANCHOR_CORE_OWNER_IDS:
+        return "ANCHOR_CORE"
+    if owner_id in DAILY_CONTEXT_OWNER_IDS:
+        return "DAILY_CONTEXT"
+    if owner_id in SEQUENCE_OWNED_OWNER_IDS:
+        return "SEQUENCE_OWNED"
+    return "OPTIONAL"
 
 
 def owner_record(root: Path, owner_id: str, relative_dir: str, exit_codes: dict[str, int]) -> dict[str, Any]:
@@ -157,7 +207,7 @@ def owner_record(root: Path, owner_id: str, relative_dir: str, exit_codes: dict[
                 if summary:
                     item["summary"] = summary
             files.append(item)
-    code = int(exit_codes.get(owner_id, 999))
+    code = int(exit_codes.get(owner_id, 78 if owner_id in SEQUENCE_OWNED_OWNER_IDS else 999))
     if code == 78:
         status = "DISABLED"
     elif code == 0 and files:
@@ -168,7 +218,7 @@ def owner_record(root: Path, owner_id: str, relative_dir: str, exit_codes: dict[
         status = "FAIL"
     return {
         "owner_id": owner_id,
-        "owner_class": "CORE" if owner_id in CORE_OWNER_IDS else "OPTIONAL",
+        "owner_class": owner_class(owner_id),
         "collector_exit_code": code,
         "status": status,
         "file_count": len(files),
@@ -189,31 +239,41 @@ def main() -> None:
     exit_codes = json.loads(args.status_file.read_text())
     captured_at = datetime.now(timezone.utc).replace(microsecond=0)
     owners = [owner_record(args.root, key, value, exit_codes) for key, value in OWNER_DIRS.items()]
-    core = [owner for owner in owners if owner["owner_id"] in CORE_OWNER_IDS]
-    core_passed = sum(owner["status"] == "PASS" for owner in core)
-    optional_passed = sum(owner["status"] == "PASS" for owner in owners if owner["owner_id"] in OPTIONAL_OWNER_IDS)
-    overall = "COMPLETE" if core_passed == len(core) else "PARTIAL" if core_passed else "FAILED"
+    anchor_core = [owner for owner in owners if owner["owner_id"] in ANCHOR_CORE_OWNER_IDS]
+    anchor_passed = sum(owner["status"] == "PASS" for owner in anchor_core)
+    context_passed = sum(owner["status"] == "PASS" for owner in owners if owner["owner_id"] in DAILY_CONTEXT_OWNER_IDS)
+    overall = "COMPLETE" if anchor_passed == len(anchor_core) else "PARTIAL" if anchor_passed else "FAILED"
 
     packet = {
-        "contract": "DAILY_RAW_CAPTURE_INDEX_v2",
+        "contract": "DAILY_LIVE_ANCHOR_INDEX_v3",
         "authority": "SHADOW_OBSERVATION_ONLY",
+        "capture_lane": "LIVE_POINT_IN_TIME_ANCHOR",
         "run_id": args.run_id,
         "captured_at_utc": captured_at.isoformat().replace("+00:00", "Z"),
         "trigger": args.trigger,
         "status": overall,
-        "owners_passed": core_passed + optional_passed,
+        "owners_passed": anchor_passed + context_passed,
         "owners_planned": len(owners),
-        "core_owners_passed": core_passed,
-        "core_owners_planned": len(core),
-        "optional_owners_passed": optional_passed,
-        "optional_owners_planned": len(OPTIONAL_OWNER_IDS),
+        "anchor_core_passed": anchor_passed,
+        "anchor_core_planned": len(anchor_core),
+        # Compatibility aliases consumed by older health tooling.
+        "core_owners_passed": anchor_passed,
+        "core_owners_planned": len(anchor_core),
+        "context_owners_passed": context_passed,
         "owners": owners,
         "market_metrics": extract_metrics(args.root),
-        "artifact_retention_days": 7,
+        "hourly_sequence_lane": "03_DAILY_CAPTURE_LOGS/hourly",
+        "hourly_sequence_owned_fields": [
+            "BTCUSDT_1H_OHLCV", "ETHUSDT_1H_OHLCV", "ETHBTC_1H_OHLC",
+            "BTC_OPEN_INTEREST_1H", "ETH_OPEN_INTEREST_1H",
+            "BTC_LONG_SHORT_1H", "ETH_LONG_SHORT_1H", "FUNDING_EVENTS",
+        ],
         "canonical_data_ping": False,
         "framework_state_change": False,
         "portfolio_action": False,
-        "weekly_calibration_eligible": core_passed >= 3,
+        "weekly_calibration_eligible": anchor_passed >= 2,
+        "interpolation": False,
+        "forward_fill": False,
     }
 
     day_dir = args.output_root / captured_at.strftime("%Y/%m/%d")
@@ -221,11 +281,13 @@ def main() -> None:
     output = day_dir / f"{captured_at.strftime('%H%M%S')}_{args.run_id}.json"
     output.write_text(json.dumps(packet, indent=2, sort_keys=True) + "\n")
     (args.output_root / "LATEST.json").write_text(json.dumps({
-        "contract": "DAILY_RAW_CAPTURE_LATEST_POINTER_v1",
+        "contract": "DAILY_LIVE_ANCHOR_LATEST_POINTER_v1",
         "path": str(output.relative_to(args.output_root.parent)),
         "run_id": args.run_id,
         "captured_at_utc": packet["captured_at_utc"],
         "status": overall,
+        "anchor_core_passed": anchor_passed,
+        "anchor_core_planned": len(anchor_core),
     }, indent=2, sort_keys=True) + "\n")
     print(output)
 

@@ -1,16 +1,6 @@
 name: Sequential research queue
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - '.github/workflows/sequential-research-queue.yml'
-      - 'research/experiment_lifecycle/SEQUENTIAL_RESEARCH_QUEUE_v1.json'
-      - 'research/experiments/spar_v1/SPAR_CONFIG_v1.json'
-      - 'research/experiments/etf_absorption_transmission_v1/EXPERIMENT_SPEC_v1.json'
-      - 'scripts/experiments/spar_v1.py'
-      - 'scripts/experiments/sequential_research_queue.py'
-      - 'tests/experiments/test_spar_v1.py'
   schedule:
     - cron: '25 8 * * *'
       timezone: 'Europe/Copenhagen'
