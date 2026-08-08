@@ -39,7 +39,9 @@ jobs:
           assert daily.count("timezone: 'Europe/Copenhagen'")==5
           assert hourly.count("timezone: 'Europe/Copenhagen'")==2
           assert 'retention-days: 14' in daily and 'retention-days: 14' in hourly
-          assert 'persist_raw_payloads.py' not in daily
+          assert daily.count('persist_raw_payloads.py')==1
+          assert '--max-monthly-compressed-bytes 30000000' in daily
+          assert "if: env.SCHEDULE_ID == '13 6 * * *' || github.event_name == 'workflow_dispatch'" in daily
           assert 'binance_spot_owner_collector.py' not in daily
           assert 'build_hourly_sequence.py' in hourly
           assert '--lookback-hours 14' in hourly
