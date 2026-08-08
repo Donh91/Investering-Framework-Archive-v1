@@ -1,0 +1,68 @@
+{
+  "schema_version": "DATA_PING_QA_v1",
+  "run_id": "dp-run-2cdf5d87b6799342dc22",
+  "snapshot_id": "dp-snap-9c852e388d2e604e4d91",
+  "snapshot_utc": "2026-08-07T22:37:36.388Z",
+  "collector_version": "15.3.3",
+  "collector_release_authority": "15.3.3",
+  "packet_sha256": "e789f6edabbcc9510ad67406098cfdfe72b1f072b30fc3e0192621e7ee2f14e5",
+  "validator_method_id": "DATA_PING_PACKET_VALIDATOR_v3",
+  "validator_check_count": 69,
+  "validator_pass": true,
+  "failed_check_count": 0,
+  "all_validator_checks_pass": true,
+  "runtime_completion": "COMPLETE",
+  "execution_order_status": "PASS",
+  "freeze_count": 1,
+  "post_freeze_call_count": 0,
+  "planned_core_actions": 60,
+  "attempted_core_actions": 60,
+  "logical_receipts": 61,
+  "physical_source_invocations": 65,
+  "method_authority": {
+    "MTH_001": "PASS",
+    "logical_action_method_map_version": "DATA_PING_ACTION_REGISTRY_15_3_3_STABILITY_FIRST",
+    "registered_unique_method_id_count": 27,
+    "prior_issue_326_trigger_present": false
+  },
+  "collector_version_guard_evidence": {
+    "executing_collector_version": "15.3.3",
+    "packet_authority_collector_release": "15.3.3",
+    "identity_match": true,
+    "stale_runtime_detected": false,
+    "issue_332_status": "POSITIVE_CURRENT_VERSION_EVIDENCE_ONLY_NOT_FULL_ACCEPTANCE"
+  },
+  "lineage": {
+    "predecessor_available": false,
+    "comparison_status": "NOT_AVAILABLE",
+    "comparison_reason": "NO_SAME_THREAD_PREDECESSOR",
+    "bounded_owner_eligible": false,
+    "required_next_step": "FRESH_RUN_REANCHORED_TO_ACTIVE_BOUNDED_OWNER"
+  },
+  "owner_grade": false,
+  "owner_grade_blockers": [
+    "NO_ACCEPTED_PREDECESSOR_LINEAGE",
+    "AUDIT_RETRIEVAL_TIMES_REMAIN_UPPER_BOUND_OR_SEQUENCE_ONLY_NOT_FULL_WALL_CLOCK_PER_INVOCATION",
+    "FULL_SENSOR_COVERAGE_FALSE"
+  ],
+  "source_gaps": [
+    "STABLECOIN_GLOBAL_TOTAL_UNAVAILABLE",
+    "OPTIONAL_DEFI_TOTAL_TVL_UNAVAILABLE",
+    "REALIZED_VOLATILITY_PARTIAL_INSUFFICIENT_SETTLED_OBSERVATIONS",
+    "GECKOTERMINAL_LOW_RESERVE_ANOMALIES"
+  ],
+  "etf_candidate": {
+    "session": "2026-08-06",
+    "BTC_usd_m": 137.6,
+    "ETH_usd_m": 92.1,
+    "BTC_dash_count": 0,
+    "ETH_dash_count": 0,
+    "BTC_tieout": "PASS",
+    "ETH_tieout": "PASS",
+    "owner_nomination": "NO",
+    "reason": "TARGETED_TWO_RETRIEVAL_OWNER_PROVENANCE_CONTRACT_NOT_SATISFIED"
+  },
+  "classification": "VALIDATED_NON_OWNER_TECHNICALLY_CLEAN_LINEAGE_BLOCKED",
+  "canonical_effect": "NONE",
+  "portfolio_effect": "NONE"
+}
