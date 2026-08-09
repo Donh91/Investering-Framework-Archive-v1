@@ -1,0 +1,31 @@
+{
+  "authority": "RESEARCH_READINESS_ONLY",
+  "b2_analysis_authorized": false,
+  "bands": [
+    {"label": "EARLY_ACCUMULATION", "max_windows": 9, "min_windows": 0},
+    {"label": "MATURING_NOT_READY", "max_windows": 29, "min_windows": 10},
+    {"label": "WINDOW_COUNT_MET_TIME_NOT_MET", "max_elapsed_weeks_exclusive": 12, "max_windows": null, "min_windows": 30},
+    {"label": "COVERAGE_READY", "min_elapsed_weeks": 12, "min_windows": 30}
+  ],
+  "contract": "PROSPECTIVE_B2_COVERAGE_WINDOWS_v1",
+  "gate0e_divergence_clustering_changed": false,
+  "occupied_definition": "At least one Gate0E-admissible same-T paired Full+Reduced row for the lane exists inside the fixed window; policy values need not be compared.",
+  "purpose": "COVERAGE_MATURITY_ONLY_NOT_DIVERGENCE_CLUSTERING",
+  "readiness": {"logical_operator": "AND", "minimum_elapsed_weeks": 12, "minimum_occupied_windows": 30, "preferred_evidence_weeks": 26},
+  "regression_fixtures": {
+    "dense_4h_13_weeks_expected_min_windows": 30,
+    "expected_fixed_window_count": 1,
+    "gate0f_five_timestamps": [
+      "2026-07-28T17:12:27.297Z",
+      "2026-07-28T19:43:35.031Z",
+      "2026-07-29T00:11:40.027Z",
+      "2026-07-29T05:11:52.428Z",
+      "2026-07-29T16:51:00.829Z"
+    ],
+    "single_linkage_transitive_collapse_forbidden": true
+  },
+  "right_edge_partial_window_must_be_marked": true,
+  "window_anchor": "UNIX_EPOCH_UTC",
+  "window_id_formula": "floor(unix_timestamp_seconds / 259200)",
+  "window_seconds": 259200
+}
