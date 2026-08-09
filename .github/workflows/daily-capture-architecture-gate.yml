@@ -4,12 +4,14 @@ on:
   pull_request:
     paths:
       - 'scripts/daily_capture/**'
+      - 'scripts/data_terminal/farside_etf_owner.py'
       - 'tests/daily_capture/**'
       - 'backtest_engine/blind_dual_run.py'
       - 'tests/backtest_engine/test_blind_dual_run_v2.py'
       - '04_MARKET_LEARNING/backtests/framework_backtest_readiness_build_v1/prospective_dual_run_v2/**'
       - '.github/workflows/daily-raw-owner-capture.yml'
       - '.github/workflows/hourly-sequence-capture.yml'
+      - '.github/workflows/daily-settled-etf-calibration.yml'
       - '.github/workflows/sunday-market-close-and-cfgi.yml'
       - '.github/workflows/weekly-raw-calibration-bridge.yml'
       - '.github/workflows/daily-capture-architecture-gate.yml'
@@ -32,37 +34,95 @@ jobs:
           python -m unittest tests.daily_capture.test_daily_capture_pipeline tests.daily_capture.test_weekly_market_close_endpoint tests.backtest_engine.test_blind_dual_run_v2 -v
       - name: Compile capture modules
         run: |
-          python -m py_compile scripts/daily_capture/build_capture_index.py scripts/daily_capture/build_hourly_sequence.py scripts/daily_capture/build_weekly_calibration.py scripts/daily_capture/persist_raw_payloads.py scripts/daily_capture/build_weekly_market_close_package.py scripts/daily_capture/materialize_blind_dual_run.py backtest_engine/blind_dual_run.py
+          python -m py_compile \
+            scripts/daily_capture/build_capture_index.py \
+            scripts/daily_capture/build_hourly_sequence.py \
+            scripts/daily_capture/build_weekly_calibration.py \
+            scripts/daily_capture/persist_raw_payloads.py \
+            scripts/daily_capture/build_weekly_market_close_package.py \
+            scripts/daily_capture/materialize_blind_dual_run.py \
+            scripts/data_terminal/farside_etf_owner.py \
+            backtest_engine/blind_dual_run.py
       - name: Validate schedules, storage, blinding and authority boundaries
         run: |
           python - <<'PY'
           from pathlib import Path
+
           daily=Path('.github/workflows/daily-raw-owner-capture.yml').read_text()
           hourly=Path('.github/workflows/hourly-sequence-capture.yml').read_text()
           weekly=Path('.github/workflows/weekly-raw-calibration-bridge.yml').read_text()
+          etf=Path('.github/workflows/daily-settled-etf-calibration.yml').read_text()
           close=Path('scripts/daily_capture/build_weekly_market_close_package.py').read_text()
+          hourly_builder=Path('scripts/daily_capture/build_hourly_sequence.py').read_text()
+          weekly_builder=Path('scripts/daily_capture/build_weekly_calibration.py').read_text()
           blind=Path('backtest_engine/blind_dual_run.py').read_text()
+
+          # Source-appropriate cadence: 5 ephemeral anchors, 2 regular hourly materializations
+          # plus one final Monday catch-up, 2 weekly builds, one settled ETF owner check.
           assert daily.count("timezone: 'Europe/Copenhagen'")==5
-          assert hourly.count("timezone: 'Europe/Copenhagen'")==2
+          assert hourly.count("timezone: 'Europe/Copenhagen'")==3
+          assert weekly.count("timezone: 'Europe/Copenhagen'")==2
+          assert etf.count("timezone: 'Europe/Copenhagen'")==1
+
+          # Live market evidence must be durable before any downstream research can fail.
+          anchor_commit=daily.index('Commit live anchor before downstream research')
+          dual_run=daily.index('Materialize blinded Full-vs-Reduced prospective evidence')
+          assert anchor_commit < dual_run
+          assert 'id: dual_run' in daily and 'continue-on-error: true' in daily
+          assert 'Market observation remains valid shadow calibration evidence' in daily
           assert daily.count('materialize_blind_dual_run.py')==1
           assert 'prospective_dual_run_v2/evidence' in daily
-          assert 'retention-days: 14' in daily and 'retention-days: 14' in hourly
+
+          # Storage and source boundaries.
+          assert 'retention-days: 14' in daily and 'retention-days: 14' in hourly and 'retention-days: 14' in etf
           assert daily.count('persist_raw_payloads.py')==1
           assert '--max-monthly-compressed-bytes 30000000' in daily
           assert "if: env.SCHEDULE_ID == '13 6 * * *' || github.event_name == 'workflow_dispatch'" in daily
           assert 'binance_spot_owner_collector.py' not in daily
-          assert 'build_hourly_sequence.py' in hourly
-          assert '--lookback-hours 14' in hourly
           assert '03_DAILY_CAPTURE_LOGS/hourly' in hourly
-          assert '--hourly-root 03_DAILY_CAPTURE_LOGS/hourly' in weekly
           assert '03_DAILY_CAPTURE_LOGS/captures' in daily
-          assert 'OPENAI_API_KEY' not in daily+hourly+weekly+blind
+
+          # Hourly lane self-heals one missed regular run and stores already-returned Binance flow fields.
+          assert '--lookback-hours 26' in hourly
+          assert "cron: '10 2 * * 1'" in hourly
+          for field in (
+              'quote_volume', 'trade_count', 'taker_buy_quote_volume',
+              'taker_sell_quote_volume', 'taker_buy_quote_share'
+          ):
+              assert field in hourly_builder, field
+          assert 'forward_fill' in hourly_builder and 'interpolation' in hourly_builder
+
+          # Final weekly build occurs after the Monday catch-up and targets the completed ISO week.
+          assert "cron: '25 2 * * 1'" in weekly
+          assert '--hourly-root 03_DAILY_CAPTURE_LOGS/hourly' in weekly
+          assert '--etf-root 03_DAILY_CAPTURE_LOGS/etf' in weekly
+          assert '--previous-week' in weekly
+          for horizon in ('4', '12', '24', '48', '72'):
+              assert horizon in weekly_builder
+          assert 'WEEKLY_HOURLY_ENRICHED.csv' in weekly_builder
+          assert 'WEEKLY_SEQUENCE_FACTS.json' in weekly_builder
+          assert 'max_contiguous_gap_hours' in weekly_builder
+          assert 'DAY1_2' in weekly_builder and 'DAY3_4' in weekly_builder and 'DAY5_7' in weekly_builder
+
+          # ETF lane is settled-daily, twice retrieved, and refuses partial publication.
+          assert etf.count('farside_etf_owner.py')==2
+          assert 'sleep 65' in etf
+          assert "all(value is not None for value in row['fund_values'])" in etf
+          assert 'first_rows == second_rows' in etf
+          assert 'rows_identical_across_retrievals' in etf
+          assert '03_DAILY_CAPTURE_LOGS/etf' in etf
+
+          # Deliberate cadence boundaries: no AI/API interpretation or fake hourly slow data.
+          assert 'OPENAI_API_KEY' not in daily+hourly+weekly+etf+blind
+          assert 'CFGI_API_KEY' not in hourly
+          assert 'stablecoin' not in hourly.lower()
+          assert 'defillama' not in hourly.lower()
           assert 'requests.' not in blind and 'urllib' not in blind and 'http://' not in blind and 'https://' not in blind
           assert 'score_shadow_period' not in blind
           assert 'LEGACY_MINIMAL' in blind and 'EXCLUDED_UNRECOVERABLE' in blind
           assert 'https://data-api.binance.vision' in close
           assert 'https://api.binance.com' not in close
-          print('DAILY_CAPTURE_AND_BLINDED_DUAL_RUN_ARCHITECTURE_PASS')
+          print('DAILY_CAPTURE_V2_2_AND_BLINDED_DUAL_RUN_ARCHITECTURE_PASS')
           PY
 
   live-hourly-source-smoke:
@@ -73,7 +133,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Prove live hourly spot and derivatives coverage without writing repository state
+      - name: Prove live hourly spot, spot-flow and derivatives coverage without writing repository state
         run: |
           RESULT=$(python scripts/daily_capture/build_hourly_sequence.py --output-root /tmp/hourly-sequence --raw-output /tmp/hourly-source --lookback-hours 4)
           echo "$RESULT"
@@ -82,12 +142,17 @@ jobs:
           from pathlib import Path
           result=json.loads(sys.argv[1])
           assert result['spot_complete_hours'] >= 3, result
+          assert result['spot_flow_complete_hours'] >= 3, result
           assert result['derivatives_oi_complete_hours'] >= 3, result
           rows=[]
           for path in Path('/tmp/hourly-sequence').glob('*/*/*.csv'):
               with path.open(newline='') as fh: rows.extend(csv.DictReader(fh))
           assert len(rows) >= 3
-          required=('btc_long_short_ratio','eth_long_short_ratio','btc_open_interest','eth_open_interest')
+          required=(
+              'btc_long_short_ratio','eth_long_short_ratio','btc_open_interest','eth_open_interest',
+              'btc_quote_volume','eth_quote_volume','btc_trade_count','eth_trade_count',
+              'btc_taker_buy_quote_share','eth_taker_buy_quote_share'
+          )
           assert all(all(row.get(k) not in (None,'') for k in required) for row in rows), rows
-          print('LIVE_HOURLY_SOURCE_COVERAGE_PASS')
+          print('LIVE_HOURLY_V2_2_SOURCE_COVERAGE_PASS')
           PY
