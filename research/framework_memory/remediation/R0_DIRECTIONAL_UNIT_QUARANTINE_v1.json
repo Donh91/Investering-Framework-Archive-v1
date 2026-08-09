@@ -1,0 +1,27 @@
+{
+  "contract": "R0_DIRECTIONAL_UNIT_QUARANTINE_v1",
+  "created_date": "2026-08-09",
+  "authoritative_head": "f649a5b50d1e3c12ffd321778ee2fccb771ccad8",
+  "reason": "FROZEN_FORECAST_v1 directional rows persisted an absolute target in threshold_pct and were therefore not validly scorable as percentage-return thresholds.",
+  "policy": {
+    "legacy_forecasts_immutable": true,
+    "delete_legacy_forecasts": false,
+    "rewrite_legacy_forecasts": false,
+    "silent_rescore": false,
+    "pending_affected_rows_may_mature": false,
+    "existing_outcomes_preserved": true,
+    "replacement_rows_backdated": false
+  },
+  "affected_forecasts": [
+    {"forecast_id":"EXP-FC-25e8e5ec1bdceee05135","metric_path":"spot.BTCUSDT.close","direction":"DOWN","start_value":64699.1,"stored_threshold_pct":64699.1,"forecast_blob_sha":"bf457d4240b422b99d2c4a75e9f22e850677f2c2","outcome_state_at_r0":"EXISTING_CENSORED_PRESERVE_NO_RESCORE","outcome_blob_sha":"45cf75f6ae31e9dd11e77c1ac0ead90d1f71fe6f"},
+    {"forecast_id":"EXP-FC-3e2c6a3d6d7d4f5053d2","metric_path":"spot.BTCUSDT.close","direction":"DOWN","start_value":64376.84,"stored_threshold_pct":64699.1,"forecast_blob_sha":"d7b4e737368bd32f67f9bdd95aef47bb43b1b2cd","outcome_state_at_r0":"PENDING_QUARANTINED_NO_MATURATION","outcome_blob_sha":null},
+    {"forecast_id":"EXP-FC-9d7b32334022f01fd461","metric_path":"spot.BTCUSDT.close","direction":"DOWN","start_value":64969.5,"stored_threshold_pct":64699.1,"forecast_blob_sha":"3a3c3ed5c1f6bc69d64a9d4e2ec07a6b149c5488","outcome_state_at_r0":"PENDING_QUARANTINED_NO_MATURATION","outcome_blob_sha":null},
+    {"forecast_id":"EXP-FC-a6bb8d7e088e0a9ea50e","metric_path":"spot.BTCUSDT.close","direction":"DOWN","start_value":65015.28,"stored_threshold_pct":64699.1,"forecast_blob_sha":"81652a70d2861e11b06e923e5f2d254a19df1f4e","outcome_state_at_r0":"PENDING_QUARANTINED_NO_MATURATION","outcome_blob_sha":null},
+    {"forecast_id":"EXP-FC-012431ce139c476316ff","metric_path":"spot.ETHUSDT.close","direction":"DOWN","start_value":1912.42,"stored_threshold_pct":1912.42,"forecast_blob_sha":"898c09060e5bb29c2792aa22aebb51c4ef32deac","outcome_state_at_r0":"PENDING_QUARANTINED_NO_MATURATION","outcome_blob_sha":null},
+    {"forecast_id":"EXP-FC-f396a894c7f6fcd0d893","metric_path":"breadth.decliners","direction":"DOWN","start_value":58.0,"stored_threshold_pct":58.0,"forecast_blob_sha":"4dc809a0c442469548c0c6cfba6cae9defc14a32","outcome_state_at_r0":"EXISTING_CENSORED_PRESERVE_NO_RESCORE","outcome_blob_sha":"e00f6836cded9d9dd004062f278b1d79bbd228e3"},
+    {"forecast_id":"EXP-FC-faa68167883e76f05145","metric_path":"breadth.decliners","direction":"DOWN","start_value":32.0,"stored_threshold_pct":58.0,"forecast_blob_sha":"d685a9359b1a449edc3e57a8c40e2718dce0f666","outcome_state_at_r0":"EXISTING_CENSORED_PRESERVE_NO_RESCORE","outcome_blob_sha":"24632da69432425b072b5a6da5d1755191acf31b"},
+    {"forecast_id":"EXP-FC-3747ad59c39d07f879bd","metric_path":"breadth.decliners","direction":"DOWN","start_value":38.0,"stored_threshold_pct":58.0,"forecast_blob_sha":"cd614f79e7452d206b86de36a2f119d22654ce48","outcome_state_at_r0":"PENDING_QUARANTINED_NO_MATURATION","outcome_blob_sha":null}
+  ],
+  "counts": {"affected_total":8,"existing_outcomes_preserved":3,"pending_quarantined":5},
+  "authority": {"portfolio_action":false,"framework_state_change":false,"model_weight_change":false,"canonical_promotion":false}
+}
