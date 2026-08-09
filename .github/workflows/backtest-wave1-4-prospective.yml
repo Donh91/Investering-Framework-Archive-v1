@@ -9,9 +9,11 @@ on:
       - "backtest_engine/repository_audit.py"
       - "backtest_engine/blind_dual_run.py"
       - "backtest_engine/cli.py"
+      - "scripts/daily_capture/materialize_blind_dual_run.py"
       - "tests/backtest_engine/test_wave1_4_prospective.py"
       - "tests/backtest_engine/test_blind_dual_run_v2.py"
       - "tests/backtest_engine/test_blind_dual_run_r1_validity.py"
+      - "tests/backtest_engine/test_r2_b2_closure.py"
       - "04_MARKET_LEARNING/backtests/framework_backtest_readiness_build_v1/prospective_receipts/**"
       - "04_MARKET_LEARNING/backtests/framework_backtest_readiness_build_v1/live_source_resilience/**"
       - "04_MARKET_LEARNING/backtests/framework_backtest_readiness_build_v1/shadow_dual_run/**"
@@ -45,7 +47,8 @@ jobs:
           PYTHONPATH=. python -m unittest \
             tests.backtest_engine.test_wave1_4_prospective \
             tests.backtest_engine.test_blind_dual_run_v2 \
-            tests.backtest_engine.test_blind_dual_run_r1_validity -v
+            tests.backtest_engine.test_blind_dual_run_r1_validity \
+            tests.backtest_engine.test_r2_b2_closure -v
       - name: Validate immutable v1 ledger structure without comparison scoring
         run: |
           PYTHONPATH=. python - <<'PY'
@@ -67,13 +70,16 @@ jobs:
           import json
           from pathlib import Path
           from backtest_engine.blind_dual_run import coverage_progress, load_pair_receipts
+          from scripts.daily_capture.materialize_blind_dual_run import apply_r2_closed_identity_overlay
           root=Path('04_MARKET_LEARNING/backtests/framework_backtest_readiness_build_v1/prospective_dual_run_v2/evidence/runs')
           rows=load_pair_receipts(root)
           result=coverage_progress(rows)
           result['engineering_status']='PASS_ACTIVE'
           result['comparison_metrics_calculated']=False
           result['b2_analysis_authorized']=False
-          Path('prospective_audit.json').write_text(json.dumps(result,sort_keys=True)+'\n')
+          path=Path('prospective_audit.json')
+          path.write_text(json.dumps(result,sort_keys=True)+'\n')
+          result=apply_r2_closed_identity_overlay(path)
           print(json.dumps(result,sort_keys=True))
           PY
       - uses: actions/upload-artifact@v4
