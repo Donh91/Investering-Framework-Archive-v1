@@ -1,0 +1,437 @@
+{
+  "authority": "SHADOW_CALIBRATION_INPUT_ONLY",
+  "capture_count": 30,
+  "capture_status_counts": {
+    "COMPLETE": 30
+  },
+  "contract": "WEEKLY_RAW_CALIBRATION_PACK_v3",
+  "day_window_actuals": {
+    "basis": "UTC_ISO_WEEK",
+    "windows": {
+      "DAY1_2": {
+        "btc": {
+          "close": null,
+          "high": null,
+          "low": null,
+          "open": null
+        },
+        "eth": {
+          "close": null,
+          "high": null,
+          "low": null,
+          "open": null
+        },
+        "ethbtc": {
+          "close": null,
+          "high": null,
+          "low": null,
+          "open": null
+        },
+        "observed_hours": 0,
+        "window_end_utc": "2026-08-05T00:00:00Z",
+        "window_start_utc": "2026-08-03T00:00:00Z"
+      },
+      "DAY3_4": {
+        "btc": {
+          "close": null,
+          "high": null,
+          "low": null,
+          "open": null
+        },
+        "eth": {
+          "close": null,
+          "high": null,
+          "low": null,
+          "open": null
+        },
+        "ethbtc": {
+          "close": null,
+          "high": null,
+          "low": null,
+          "open": null
+        },
+        "observed_hours": 0,
+        "window_end_utc": "2026-08-07T00:00:00Z",
+        "window_start_utc": "2026-08-05T00:00:00Z"
+      },
+      "DAY5_7": {
+        "btc": {
+          "close": 64877.85,
+          "high": 65192.54,
+          "low": 64730.08,
+          "open": 64959.99
+        },
+        "eth": {
+          "close": 1921.45,
+          "high": 1926.72,
+          "low": 1912.36,
+          "open": 1915.11
+        },
+        "ethbtc": {
+          "close": 0.02961,
+          "high": 0.02964,
+          "low": 0.02947,
+          "open": 0.02949
+        },
+        "observed_hours": 26,
+        "window_end_utc": "2026-08-10T00:00:00Z",
+        "window_start_utc": "2026-08-07T00:00:00Z"
+      }
+    }
+  },
+  "eligible_capture_count": 30,
+  "enriched_hourly_path": "weekly/2026/W32/WEEKLY_HOURLY_ENRICHED.csv",
+  "forecast_evaluation_performed": false,
+  "framework_state_change": false,
+  "generated_at_utc": "2026-08-09T22:03:20Z",
+  "handoff_targets": [
+    "RAW_WEEKLY_CALIBRATION",
+    "FORECAST_LEDGER_EVALUATION",
+    "MASTER_MONDAY_PREP",
+    "SPECIALIST_WEEKLY_REVIEW",
+    "PULLBACK_SEQUENCE_REPLAY"
+  ],
+  "hourly_gap_diagnostics": {
+    "expected_hours": 168,
+    "max_contiguous_gap_hours": 128,
+    "missing_hour_count": 142,
+    "missing_hours_utc": [
+      "2026-08-03T00:00:00Z",
+      "2026-08-03T01:00:00Z",
+      "2026-08-03T02:00:00Z",
+      "2026-08-03T03:00:00Z",
+      "2026-08-03T04:00:00Z",
+      "2026-08-03T05:00:00Z",
+      "2026-08-03T06:00:00Z",
+      "2026-08-03T07:00:00Z",
+      "2026-08-03T08:00:00Z",
+      "2026-08-03T09:00:00Z",
+      "2026-08-03T10:00:00Z",
+      "2026-08-03T11:00:00Z",
+      "2026-08-03T12:00:00Z",
+      "2026-08-03T13:00:00Z",
+      "2026-08-03T14:00:00Z",
+      "2026-08-03T15:00:00Z",
+      "2026-08-03T16:00:00Z",
+      "2026-08-03T17:00:00Z",
+      "2026-08-03T18:00:00Z",
+      "2026-08-03T19:00:00Z",
+      "2026-08-03T20:00:00Z",
+      "2026-08-03T21:00:00Z",
+      "2026-08-03T22:00:00Z",
+      "2026-08-03T23:00:00Z",
+      "2026-08-04T00:00:00Z",
+      "2026-08-04T01:00:00Z",
+      "2026-08-04T02:00:00Z",
+      "2026-08-04T03:00:00Z",
+      "2026-08-04T04:00:00Z",
+      "2026-08-04T05:00:00Z",
+      "2026-08-04T06:00:00Z",
+      "2026-08-04T07:00:00Z",
+      "2026-08-04T08:00:00Z",
+      "2026-08-04T09:00:00Z",
+      "2026-08-04T10:00:00Z",
+      "2026-08-04T11:00:00Z",
+      "2026-08-04T12:00:00Z",
+      "2026-08-04T13:00:00Z",
+      "2026-08-04T14:00:00Z",
+      "2026-08-04T15:00:00Z",
+      "2026-08-04T16:00:00Z",
+      "2026-08-04T17:00:00Z",
+      "2026-08-04T18:00:00Z",
+      "2026-08-04T19:00:00Z",
+      "2026-08-04T20:00:00Z",
+      "2026-08-04T21:00:00Z",
+      "2026-08-04T22:00:00Z",
+      "2026-08-04T23:00:00Z",
+      "2026-08-05T00:00:00Z",
+      "2026-08-05T01:00:00Z",
+      "2026-08-05T02:00:00Z",
+      "2026-08-05T03:00:00Z",
+      "2026-08-05T04:00:00Z",
+      "2026-08-05T05:00:00Z",
+      "2026-08-05T06:00:00Z",
+      "2026-08-05T07:00:00Z",
+      "2026-08-05T08:00:00Z",
+      "2026-08-05T09:00:00Z",
+      "2026-08-05T10:00:00Z",
+      "2026-08-05T11:00:00Z",
+      "2026-08-05T12:00:00Z",
+      "2026-08-05T13:00:00Z",
+      "2026-08-05T14:00:00Z",
+      "2026-08-05T15:00:00Z",
+      "2026-08-05T16:00:00Z",
+      "2026-08-05T17:00:00Z",
+      "2026-08-05T18:00:00Z",
+      "2026-08-05T19:00:00Z",
+      "2026-08-05T20:00:00Z",
+      "2026-08-05T21:00:00Z",
+      "2026-08-05T22:00:00Z",
+      "2026-08-05T23:00:00Z",
+      "2026-08-06T00:00:00Z",
+      "2026-08-06T01:00:00Z",
+      "2026-08-06T02:00:00Z",
+      "2026-08-06T03:00:00Z",
+      "2026-08-06T04:00:00Z",
+      "2026-08-06T05:00:00Z",
+      "2026-08-06T06:00:00Z",
+      "2026-08-06T07:00:00Z",
+      "2026-08-06T08:00:00Z",
+      "2026-08-06T09:00:00Z",
+      "2026-08-06T10:00:00Z",
+      "2026-08-06T11:00:00Z",
+      "2026-08-06T12:00:00Z",
+      "2026-08-06T13:00:00Z",
+      "2026-08-06T14:00:00Z",
+      "2026-08-06T15:00:00Z",
+      "2026-08-06T16:00:00Z",
+      "2026-08-06T17:00:00Z",
+      "2026-08-06T18:00:00Z",
+      "2026-08-06T19:00:00Z",
+      "2026-08-06T20:00:00Z",
+      "2026-08-06T21:00:00Z",
+      "2026-08-06T22:00:00Z",
+      "2026-08-06T23:00:00Z",
+      "2026-08-07T00:00:00Z",
+      "2026-08-07T01:00:00Z",
+      "2026-08-07T02:00:00Z",
+      "2026-08-07T03:00:00Z",
+      "2026-08-07T04:00:00Z",
+      "2026-08-07T05:00:00Z",
+      "2026-08-07T06:00:00Z",
+      "2026-08-07T07:00:00Z",
+      "2026-08-07T08:00:00Z",
+      "2026-08-07T09:00:00Z",
+      "2026-08-07T10:00:00Z",
+      "2026-08-07T11:00:00Z",
+      "2026-08-07T12:00:00Z",
+      "2026-08-07T13:00:00Z",
+      "2026-08-07T14:00:00Z",
+      "2026-08-07T15:00:00Z",
+      "2026-08-07T16:00:00Z",
+      "2026-08-07T17:00:00Z",
+      "2026-08-07T18:00:00Z",
+      "2026-08-07T19:00:00Z",
+      "2026-08-07T20:00:00Z",
+      "2026-08-07T21:00:00Z",
+      "2026-08-07T22:00:00Z",
+      "2026-08-07T23:00:00Z",
+      "2026-08-08T00:00:00Z",
+      "2026-08-08T01:00:00Z",
+      "2026-08-08T02:00:00Z",
+      "2026-08-08T03:00:00Z",
+      "2026-08-08T04:00:00Z",
+      "2026-08-08T05:00:00Z",
+      "2026-08-08T06:00:00Z",
+      "2026-08-08T07:00:00Z",
+      "2026-08-09T10:00:00Z",
+      "2026-08-09T11:00:00Z",
+      "2026-08-09T12:00:00Z",
+      "2026-08-09T13:00:00Z",
+      "2026-08-09T14:00:00Z",
+      "2026-08-09T15:00:00Z",
+      "2026-08-09T16:00:00Z",
+      "2026-08-09T17:00:00Z",
+      "2026-08-09T18:00:00Z",
+      "2026-08-09T19:00:00Z",
+      "2026-08-09T20:00:00Z",
+      "2026-08-09T21:00:00Z",
+      "2026-08-09T22:00:00Z",
+      "2026-08-09T23:00:00Z"
+    ],
+    "observed_hours": 26,
+    "per_field_completeness": {
+      "btc_close": {
+        "complete_hours": 26,
+        "coverage_pct": 15.476
+      },
+      "btc_long_short_ratio": {
+        "complete_hours": 26,
+        "coverage_pct": 15.476
+      },
+      "btc_open_interest": {
+        "complete_hours": 26,
+        "coverage_pct": 15.476
+      },
+      "btc_quote_volume": {
+        "complete_hours": 0,
+        "coverage_pct": 0.0
+      },
+      "btc_taker_buy_quote_share": {
+        "complete_hours": 0,
+        "coverage_pct": 0.0
+      },
+      "btc_trade_count": {
+        "complete_hours": 0,
+        "coverage_pct": 0.0
+      },
+      "eth_close": {
+        "complete_hours": 26,
+        "coverage_pct": 15.476
+      },
+      "eth_long_short_ratio": {
+        "complete_hours": 26,
+        "coverage_pct": 15.476
+      },
+      "eth_open_interest": {
+        "complete_hours": 26,
+        "coverage_pct": 15.476
+      },
+      "eth_quote_volume": {
+        "complete_hours": 0,
+        "coverage_pct": 0.0
+      },
+      "eth_taker_buy_quote_share": {
+        "complete_hours": 0,
+        "coverage_pct": 0.0
+      },
+      "eth_trade_count": {
+        "complete_hours": 0,
+        "coverage_pct": 0.0
+      },
+      "ethbtc_close": {
+        "complete_hours": 26,
+        "coverage_pct": 15.476
+      }
+    }
+  },
+  "hourly_sequence": {
+    "btc": {
+      "down_hours": 11,
+      "max_abs_return_1h_pct": 0.174958898117,
+      "max_range_1h_pct": 0.272659023026,
+      "price_oi_state_counts": {
+        "PRICE_DOWN_OI_DOWN": 4,
+        "PRICE_DOWN_OI_UP": 7,
+        "PRICE_UP_OI_DOWN": 11,
+        "PRICE_UP_OI_UP": 2,
+        "UNAVAILABLE": 2
+      },
+      "up_hours": 15,
+      "week_range": {
+        "close": 64877.85,
+        "high": 65192.54,
+        "low": 64730.08,
+        "open": 64959.99
+      }
+    },
+    "contract": "WEEKLY_HOURLY_SEQUENCE_EVIDENCE_v2",
+    "derivatives_oi_complete_hours": 26,
+    "eth": {
+      "down_hours": 15,
+      "max_abs_return_1h_pct": 0.287587293965,
+      "max_range_1h_pct": 0.574712643678,
+      "price_oi_state_counts": {
+        "PRICE_DOWN_OI_DOWN": 8,
+        "PRICE_DOWN_OI_UP": 6,
+        "PRICE_UP_OI_DOWN": 10,
+        "UNAVAILABLE": 2
+      },
+      "up_hours": 11,
+      "week_range": {
+        "close": 1921.45,
+        "high": 1926.72,
+        "low": 1912.36,
+        "open": 1915.11
+      }
+    },
+    "ethbtc": {
+      "down_hours": 9,
+      "up_hours": 14,
+      "week_range": {
+        "close": 0.02961,
+        "high": 0.02964,
+        "low": 0.02947,
+        "open": 0.02949
+      }
+    },
+    "expected_hourly_rows": 168,
+    "first_hour_utc": "2026-08-08T08:00:00Z",
+    "hourly_coverage_pct": 15.476,
+    "last_hour_utc": "2026-08-09T09:00:00Z",
+    "long_short_complete_hours": 26,
+    "market_interpretation": false,
+    "observed_hourly_rows": 26,
+    "sequence_evidence_only": true,
+    "spot_complete_hours": 26,
+    "spot_flow_complete_hours": 0
+  },
+  "iso_week": 32,
+  "iso_year": 2026,
+  "owner_health": {
+    "binance_microstructure": {
+      "PASS": 30
+    },
+    "binance_spot": {
+      "DISABLED": 5,
+      "PASS": 25
+    },
+    "cfgi_sentiment": {
+      "DISABLED": 30
+    },
+    "fred_macro": {
+      "DISABLED": 4,
+      "PASS": 26
+    },
+    "okx_swap": {
+      "PASS": 30
+    },
+    "top100_breadth": {
+      "PASS": 30
+    }
+  },
+  "portfolio_action": false,
+  "raw_outcome_analysis": false,
+  "readiness": "DEGRADED",
+  "readiness_components": {
+    "anchor_lane": "READY",
+    "hourly_sequence_lane": "DEGRADED"
+  },
+  "sequence_evidence_built": true,
+  "sequence_facts_path": "weekly/2026/W32/WEEKLY_SEQUENCE_FACTS.json",
+  "settled_etf": {
+    "authority": "SHADOW_CALIBRATION_INPUT_ONLY",
+    "contract": "WEEKLY_SETTLED_ETF_CALIBRATION_v1",
+    "records": [],
+    "session_counts": {
+      "BTC": 0,
+      "ETH": 0
+    },
+    "week_total_reported_units": {
+      "BTC": null,
+      "ETH": null
+    }
+  },
+  "source_capture_paths": [
+    "03_DAILY_CAPTURE_LOGS/captures/2026/08/03/073929_gh-30794420687-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/08/03/120122_gh-30811816864-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/08/03/205409_gh-30852284258-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/08/03/221542_gh-30857929955-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/08/04/063802_gh-30884655692-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/08/04/110851_gh-30903568355-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/08/04/154008_gh-30925274766-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/08/04/191047_gh-30942048575-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/08/04/222002_gh-30955969343-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/08/05/063857_gh-30982054236-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/08/05/110508_gh-31000004547-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/08/05/153243_gh-31020797932-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/08/05/190504_gh-31037741227-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/08/05/221747_gh-31052171284-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/08/06/064201_gh-31078148988-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/08/06/110617_gh-31095888765-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/08/07/010202_gh-31136668604-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/08/07/054829_gh-31151781032-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/08/07/093948_gh-31166815568-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/08/07/142758_gh-31187681568-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/08/07/182716_gh-31206989555-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/08/07/215144_gh-31221649711-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/08/08/050739_gh-31240977734-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/08/08/092104_gh-31250366024-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/08/08/140134_gh-31260935147-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/08/08/214104_gh-31279890529-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/08/09/051524_gh-31296283653-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/08/09/092203_gh-31305725447-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/08/09/180243_gh-31327994326-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/08/09/214405_gh-31337589091-1.json"
+  ]
+}
