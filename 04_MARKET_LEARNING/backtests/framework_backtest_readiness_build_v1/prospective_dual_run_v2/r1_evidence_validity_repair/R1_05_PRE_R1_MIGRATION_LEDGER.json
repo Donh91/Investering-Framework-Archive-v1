@@ -1,0 +1,14 @@
+{
+  "contract": "R1_PRE_R1_MIGRATION_LEDGER_v1",
+  "audited_task_start_head": "8a6e34808aca0e3b0fb70fef12177d1b54b87580",
+  "post_repair_head": "94a7c6744a759e9ad926bfe3b4d19003858d61c2",
+  "committed_pre_r1_v2_pair_receipts_detected": 0,
+  "committed_pre_r1_coverage_latest_detected": false,
+  "reason": "The first scheduled post-G0-B2P run failed before materialization/commit, and no earlier v2 evidence rows existed at the audited head.",
+  "immutability_rule": "Existing BLINDED_PAIRED_EVIDENCE_RECEIPT_v2 rows, if discovered later, are never rewritten in place.",
+  "default_legacy_classification": "PRE_R1_B2_VALIDITY_UNPROVEN",
+  "validation_exception": "A legacy row may count only through a separately versioned validity overlay that proves the full R1 identifying contract.",
+  "new_receipt_schema": "BLINDED_PAIRED_EVIDENCE_RECEIPT_v3",
+  "new_run_id_separation": "VALIDITY_CONTRACT plus DEPENDENCY_MAP_HASH are included in the post-R1 deterministic run-id seed, preventing silent overwrite of an old same-capture row.",
+  "rows_rewritten": 0
+}
