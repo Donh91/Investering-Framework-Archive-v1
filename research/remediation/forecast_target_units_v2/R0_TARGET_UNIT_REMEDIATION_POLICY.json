@@ -1,0 +1,38 @@
+{
+  "contract": "FORECAST_TARGET_UNIT_REMEDIATION_POLICY_v1",
+  "remediation_id": "R0-FORECAST-TARGET-UNITS-20260809",
+  "status": "IMPLEMENTATION_CANDIDATE",
+  "scope": "SHADOW_FORECAST_FREEZE_AND_MATURATION_ONLY",
+  "defect": {
+    "summary": "generic threshold accepted both percent magnitude and absolute target values before freeze",
+    "failure_path": [
+      "api_gateway.forecast_candidates.threshold",
+      "experiment_lifecycle.from_forecast target_threshold_pct",
+      "FROZEN_FORECAST_v1.threshold_pct",
+      "outcome_maturation_engine return-percent comparison"
+    ],
+    "known_examples_non_exhaustive": [
+      "EXP-FC-3e2c6a3d6d7d4f5053d2",
+      "EXP-FC-f396a894c7f6fcd0d893",
+      "EXP-FC-9d7b32334022f01fd461",
+      "EXP-FC-faa68167883e76f05145"
+    ]
+  },
+  "remediation": {
+    "new_unit_contract": "FORECAST_TARGET_UNITS_v2",
+    "legacy_frozen_records_mutated": false,
+    "legacy_directional_scoring": "CENSORED",
+    "legacy_ambiguous_calibration": "EXCLUDED",
+    "future_directional_modes": ["PCT_MOVE", "ABSOLUTE_VALUE"],
+    "future_range_mode": "ABSOLUTE_RANGE",
+    "portfolio_authority": false
+  },
+  "non_actions": [
+    "NO_HISTORICAL_FROZEN_FORECAST_REWRITE",
+    "NO_RETROACTIVE_PROSPECTIVE_FREEZE",
+    "NO_PORTFOLIO_ACTION",
+    "NO_MODEL_WEIGHT_CHANGE",
+    "NO_MARKET_GATE_CHANGE",
+    "NO_GAUNTLET_OUTCOME_SCORING"
+  ]
+}
