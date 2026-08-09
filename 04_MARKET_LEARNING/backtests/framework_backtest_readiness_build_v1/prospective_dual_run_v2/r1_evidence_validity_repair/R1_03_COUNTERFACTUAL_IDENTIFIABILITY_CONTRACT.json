@@ -1,0 +1,32 @@
+{
+  "contract": "PROSPECTIVE_B2_COUNTERFACTUAL_IDENTIFIABILITY_v1",
+  "status": "ACTIVE_AFTER_PR341",
+  "definitions": {
+    "PAIR_EXECUTION_VALID": [
+      "Full and Reduced use the same timestamp and capture hash",
+      "each profile output is produced through an explicit deterministic lineage",
+      "only inputs allowed under the frozen profile are used",
+      "missingness remains explicit",
+      "no future information or outcome is used",
+      "no substitution is introduced outside frozen semantics"
+    ],
+    "IDENTIFYING_OPPORTUNITY": [
+      "PAIR_EXECUTION_VALID is true",
+      "the lane has at least one dependency that can legally differ between Full and Reduced",
+      "the differentiating dependency is point-in-time available to Full or its exclusion is mechanically consequential",
+      "the frozen evaluator is proven to consume that dependency under pre-existing semantics"
+    ]
+  },
+  "readiness_rule": "Only IDENTIFYING_OPPORTUNITY rows/windows may advance B2 readiness.",
+  "fail_closed_rule": "A deterministic profile-independent fallback may remain as technical provenance but is not identifying evidence.",
+  "pre_r1_rule": "A pre-R1 v2 receipt is PRE_R1_B2_VALIDITY_UNPROVEN unless separately validated under this contract.",
+  "forbidden": [
+    "Gate 0-B2 execution",
+    "comparison scoring",
+    "economic outcomes",
+    "new policy evaluators",
+    "new market semantics",
+    "new sensor authority",
+    "rewriting immutable v1/v2 rows"
+  ]
+}
