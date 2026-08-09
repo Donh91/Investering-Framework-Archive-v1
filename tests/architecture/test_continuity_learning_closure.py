@@ -39,6 +39,13 @@ class ContinuityLearningTests(unittest.TestCase):
             p=subprocess.run(['python',str(ROOT/'scripts/learning/ratify_forecast_candidate.py'),'--candidate',str(candidate),'--ratification',str(rat),'--baseline-evidence',str(base),'--output-root',str(out)],text=True,capture_output=True)
             self.assertEqual(p.returncode,0,p.stderr);v=json.loads(next(out.glob('*.json')).read_text());self.assertEqual(v['contract'],'FROZEN_FORECAST_v1');self.assertEqual(v['unit_contract_version'],'FORECAST_TARGET_UNITS_v2');self.assertAlmostEqual(v['threshold_pct'],2.0);self.assertEqual(v['target_value'],98.0);self.assertEqual(v['start_value'],100.0)
 
+    def test_ratification_absolute_breadth_target_is_normalized_before_freeze(self):
+        with tempfile.TemporaryDirectory() as d:
+            r=Path(d);candidate=r/'c.json';rat=r/'r.json';base=r/'b.json';out=r/'frozen'
+            candidate.write_text(json.dumps({'contract':'FORECAST_CANDIDATE_v1','candidate_id':'breadth-c1','ratification_status':'PENDING','model':'luna','task':'DAILY_DIRECTOR_SHADOW','prompt_sha256':'p','context_sha256':'c','source_output_sha256':'o','candidate':{'metric_path':'breadth.decliners','direction':'UP','target_mode':'ABSOLUTE_VALUE','threshold_pct':None,'target_value':58.0,'range_low':None,'range_high':None,'horizon_days':1,'rationale':'breadth absolute target'}}));base.write_text(json.dumps({'breadth':{'decliners':38.0}}));rat.write_text(json.dumps({'contract':'FORECAST_RATIFICATION_PACKET_v1','candidate_id':'breadth-c1','decision':'RATIFY','authority':'CHATGPT_FRAMEWORK_OWNER'}))
+            p=subprocess.run(['python',str(ROOT/'scripts/learning/ratify_forecast_candidate.py'),'--candidate',str(candidate),'--ratification',str(rat),'--baseline-evidence',str(base),'--output-root',str(out)],text=True,capture_output=True)
+            self.assertEqual(p.returncode,0,p.stderr);v=json.loads(next(out.glob('*.json')).read_text());self.assertEqual(v['unit_contract_version'],'FORECAST_TARGET_UNITS_v2');self.assertEqual(v['target_mode'],'ABSOLUTE_VALUE');self.assertEqual(v['target_value'],58.0);self.assertAlmostEqual(v['threshold_pct'],(58.0/38.0-1.0)*100.0)
+
     def test_ratification_rejects_legacy_ambiguous_threshold(self):
         with tempfile.TemporaryDirectory() as d:
             r=Path(d);candidate=r/'c.json';rat=r/'r.json';base=r/'b.json';out=r/'frozen'
