@@ -3,9 +3,17 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
+
+SCRIPTS_ROOT = Path(__file__).resolve().parents[1]
+if str(SCRIPTS_ROOT) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS_ROOT))
+from forecast_unit_contract import UnitContractError, validate_frozen_v2
+
+DEFAULT_QUARANTINE_REL = Path("remediation/R0_DIRECTIONAL_UNIT_QUARANTINE_v1.json")
 
 
 def read(path: Path) -> dict[str, Any]:
@@ -42,6 +50,15 @@ def validate_forecast(forecast: dict[str, Any]) -> None:
     due = parse_dt(forecast["outcome_due_utc"])
     if frozen >= due:
         raise ValueError("invalid_horizon")
+    contract = forecast.get("contract")
+    if contract == "FROZEN_FORECAST_v2":
+        try:
+            validate_frozen_v2(forecast)
+        except UnitContractError as exc:
+            raise ValueError(str(exc)) from exc
+    elif contract != "FROZEN_FORECAST_v1":
+        raise ValueError("unsupported_forecast_contract")
+
     direction = forecast.get("direction")
     if direction not in {"UP", "DOWN", "RANGE"}:
         raise ValueError("invalid_direction")
@@ -72,15 +89,31 @@ def classify(forecast: dict[str, Any], start: float, end: float) -> str:
     return "HIT" if hit else "MISS"
 
 
+def load_quarantine(path: Path | None) -> tuple[set[str], dict[str, Any] | None]:
+    if path is None or not path.exists():
+        return set(), None
+    value = read(path)
+    if value.get("contract") != "R0_DIRECTIONAL_UNIT_QUARANTINE_v1":
+        raise ValueError("invalid_quarantine_contract")
+    ids = {str(row["forecast_id"]) for row in value.get("affected_forecasts", []) if row.get("forecast_id")}
+    return ids, value
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--forecast-root", type=Path, required=True)
     ap.add_argument("--evidence-root", type=Path, required=True)
     ap.add_argument("--output-root", type=Path, required=True)
+    ap.add_argument("--quarantine-ledger", type=Path)
     ap.add_argument("--now-utc")
     ap.add_argument("--max-evidence-lag-hours", type=float, default=24.0)
     args = ap.parse_args()
     now = parse_dt(args.now_utc) if args.now_utc else datetime.now(timezone.utc)
+
+    quarantine_path = args.quarantine_ledger
+    if quarantine_path is None:
+        quarantine_path = args.forecast_root.parent / DEFAULT_QUARANTINE_REL
+    quarantined_ids, _ = load_quarantine(quarantine_path)
 
     evidence: list[tuple[datetime, Path, dict[str, Any]]] = []
     for path in args.evidence_root.rglob("*.json") if args.evidence_root.exists() else []:
@@ -93,21 +126,27 @@ def main() -> None:
             continue
     evidence.sort(key=lambda row: row[0])
 
-    matured = pending = censored = 0
+    matured = pending = censored = quarantined = preserved_existing_outcomes = 0
     errors: list[dict[str, str]] = []
     for path in args.forecast_root.rglob("*.json") if args.forecast_root.exists() else []:
         try:
             forecast = read(path)
-            if forecast.get("contract") != "FROZEN_FORECAST_v1":
+            if forecast.get("contract") not in {"FROZEN_FORECAST_v1", "FROZEN_FORECAST_v2"}:
                 continue
+            forecast_id = forecast.get("forecast_id")
+            destination = args.output_root / f"{forecast_id}.json"
+
+            if forecast.get("contract") == "FROZEN_FORECAST_v1" and forecast_id in quarantined_ids:
+                quarantined += 1
+                if destination.exists():
+                    preserved_existing_outcomes += 1
+                continue
+
             validate_forecast(forecast)
-            forecast_id = forecast["forecast_id"]
-            frozen = parse_dt(forecast["frozen_at_utc"])
             due = parse_dt(forecast["outcome_due_utc"])
             if now < due:
                 pending += 1
                 continue
-            destination = args.output_root / f"{forecast_id}.json"
             if destination.exists():
                 continue
 
@@ -179,7 +218,14 @@ def main() -> None:
         except Exception as exc:
             errors.append({"path": str(path), "error": str(exc)})
 
-    print(json.dumps({"matured": matured, "censored": censored, "pending": pending, "errors": errors}, sort_keys=True))
+    print(json.dumps({
+        "matured": matured,
+        "censored": censored,
+        "pending": pending,
+        "quarantined": quarantined,
+        "preserved_existing_outcomes": preserved_existing_outcomes,
+        "errors": errors,
+    }, sort_keys=True))
     if errors:
         raise SystemExit(2)
 
