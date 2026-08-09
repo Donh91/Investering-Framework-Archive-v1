@@ -1,0 +1,15 @@
+{
+  "applies_to": "SHADOW_SIMPLIFICATION_DUAL_RUN_v2",
+  "automated_stack_value_comparison": false,
+  "b2_analysis_authorized": false,
+  "contract": "BLINDED_DUAL_RUN_COLLECTION_GUARD_v1",
+  "forbidden_comparison_fields": ["agreement_rate","disagreement_rate","divergence_rate","false_transition_comparison","false_transition_count","forecast_score","forecast_score_comparison","missed_warning_comparison","missed_warning_count","stack_rank","stack_ranking","state_agreement_rate","winner"],
+  "outcome_access_required": false,
+  "storage": {
+    "coverage_monitor_input_glob": "**/PAIR_RECEIPT.json",
+    "coverage_monitor_reads_profile_children": false,
+    "paired_receipt_contains_policy_values": false,
+    "profile_outputs_stored_as_separate_children": true
+  },
+  "tests_required": ["mutating_or_destroying_child_policy_outputs_does_not_change_coverage","forbidden_comparison_keys_absent_from_v2_collection_artifacts"]
+}
