@@ -1,0 +1,37 @@
+{
+  "authority": "SHADOW_RESEARCH_ONLY",
+  "contract": "SPAR_INPUT_ADAPTER_v2",
+  "experiment_id": "SPAR-v1",
+  "status": "FROZEN_INPUT_COMPATIBILITY_REPAIR",
+  "reason": "DAILY_RAW_CAPTURE_INDEX_v2 was superseded by DAILY_LIVE_ANCHOR_INDEX_v3 and spot ownership moved to the hourly sequence lane.",
+  "legacy_v2": {
+    "capture_contract": "DAILY_RAW_CAPTURE_INDEX_v2",
+    "spot_source": "market_metrics.spot",
+    "breadth_source": "market_metrics.breadth",
+    "derivatives_source": "market_metrics.derivatives.BTC-USDT-SWAP",
+    "behavior_changed": false
+  },
+  "live_v3": {
+    "anchor_contract": "DAILY_LIVE_ANCHOR_INDEX_v3",
+    "spot_source": "03_DAILY_CAPTURE_LOGS/hourly daily CSV",
+    "breadth_source": "anchor.market_metrics.breadth",
+    "derivatives_source": "anchor.market_metrics.derivatives.BTC-USDT-SWAP",
+    "spot_join_rule": "timestamp_utc == floor(captured_at_utc to UTC hour) - 1 hour",
+    "spot_status_required": "PASS",
+    "current_incomplete_hour_allowed": false,
+    "older_gap_row_allowed": false,
+    "future_hour_allowed": false,
+    "interpolation": false,
+    "forward_fill": false
+  },
+  "scientific_boundary": {
+    "pattern_definitions_changed": false,
+    "feature_policy_changed": false,
+    "episode_cooldown_hours_changed": false,
+    "outcome_horizons_changed": false,
+    "fitted_thresholds_added": false,
+    "paid_api_calls_added": 0,
+    "canonical_promotion": false,
+    "portfolio_action": false
+  }
+}

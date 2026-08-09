@@ -1,10 +1,13 @@
 from __future__ import annotations
-import argparse,json,statistics
+import argparse,csv,json,statistics
 from dataclasses import dataclass
 from datetime import datetime,timezone,timedelta
 from pathlib import Path
 
 CONTRACT='SPAR_REPLAY_REPORT_v1'; FRAGILITY_CONTRACT='SPAR_FRAGILITY_REPORT_v1'
+INPUT_ADAPTER='SPAR_INPUT_ADAPTER_v2'
+V2_CONTRACT='DAILY_RAW_CAPTURE_INDEX_v2'
+V3_CONTRACT='DAILY_LIVE_ANCHOR_INDEX_v3'
 def ts(x:str)->datetime:return datetime.fromisoformat(x.replace('Z','+00:00')).astimezone(timezone.utc)
 def pct(a:float,b:float):return None if b==0 else (a/b-1)*100
 def med(x):return statistics.median(x) if x else None
@@ -14,18 +17,43 @@ class Snapshot:
  @property
  def breadth(self):return self.adv-self.dec
 
-def load_snapshot(p:Path):
+def completed_hour_open(t:datetime)->datetime:
+ return t.replace(minute=0,second=0,microsecond=0)-timedelta(hours=1)
+
+def load_hourly_spot_rows(root:Path):
+ rows={}
+ if not root.exists():return rows
+ for p in sorted(root.rglob('*.csv')):
+  try:
+   with p.open(newline='') as fh:
+    for row in csv.DictReader(fh):
+     if row.get('spot_status')!='PASS':continue
+     try:
+      t=ts(row['timestamp_utc'])
+      rows[t]={'btc':float(row['btc_close']),'eth':float(row['eth_close']),'eb':float(row['ethbtc_close']),'path':str(p)}
+     except Exception:continue
+  except Exception:continue
+ return rows
+
+def load_snapshot(p:Path,hourly_spot=None):
  try:o=json.loads(p.read_text());m=o['market_metrics']
  except Exception:return None
- if o.get('contract')!='DAILY_RAW_CAPTURE_INDEX_v2':return None
- try:return Snapshot(str(p),ts(o['captured_at_utc']),float(m['spot']['BTCUSDT']['close']),float(m['spot']['ETHUSDT']['close']),float(m['spot']['ETHBTC']['close']),float(m['breadth']['advancers']),float(m['breadth']['decliners']),float(m['derivatives']['BTC-USDT-SWAP']['funding']['funding_rate']),float(m['derivatives']['BTC-USDT-SWAP']['open_interest']['open_interest_ccy']))
+ contract=o.get('contract')
+ try:
+  if contract==V2_CONTRACT:
+   return Snapshot(str(p),ts(o['captured_at_utc']),float(m['spot']['BTCUSDT']['close']),float(m['spot']['ETHUSDT']['close']),float(m['spot']['ETHBTC']['close']),float(m['breadth']['advancers']),float(m['breadth']['decliners']),float(m['derivatives']['BTC-USDT-SWAP']['funding']['funding_rate']),float(m['derivatives']['BTC-USDT-SWAP']['open_interest']['open_interest_ccy']))
+  if contract==V3_CONTRACT:
+   t=ts(o['captured_at_utc']);row=(hourly_spot or {}).get(completed_hour_open(t))
+   if not row:return None
+   return Snapshot(str(p),t,float(row['btc']),float(row['eth']),float(row['eb']),float(m['breadth']['advancers']),float(m['breadth']['decliners']),float(m['derivatives']['BTC-USDT-SWAP']['funding']['funding_rate']),float(m['derivatives']['BTC-USDT-SWAP']['open_interest']['open_interest_ccy']))
  except Exception:return None
+ return None
 
 def load_snapshots(root:Path):
- d={}
+ d={};hourly=load_hourly_spot_rows(root.parent/'hourly')
  for p in root.rglob('*.json'):
   if p.name=='LATEST.json':continue
-  s=load_snapshot(p)
+  s=load_snapshot(p,hourly)
   if s:d[s.t]=s
  return [d[k] for k in sorted(d)]
 
@@ -73,7 +101,7 @@ def build_replay(snaps,min_matured_events=5):
   for i in idxs:rows.append({'event_timestamp_utc':snaps[i].t.isoformat().replace('+00:00','Z'),'source_path':snaps[i].p,'outcomes':{str(h):outcome(snaps,i,h) for h in (24,72,168)}})
   vals=[e['outcomes']['72']['btc_return_pct'] for e in rows if e['outcomes']['72']['status']=='MATURED'];ok=len(vals)>=min_matured_events;ready|=ok
   patterns.append({'pattern_id':k,'event_count':len(rows),'matured_72h_count':len(vals),'median_btc_return_72h_pct':med(vals),'status':'BASE_REVIEW_READY' if ok else 'INSUFFICIENT_EVIDENCE','events':rows})
- return {'contract':CONTRACT,'authority':'SHADOW_RESEARCH_ONLY','status':'READY_FOR_ROBUSTNESS_REVIEW' if ready else 'INSUFFICIENT_EVIDENCE','source':{'snapshot_count':len(snaps),'min_timestamp_utc':snaps[0].t.isoformat().replace('+00:00','Z') if snaps else None,'max_timestamp_utc':snaps[-1].t.isoformat().replace('+00:00','Z') if snaps else None},'method':{'future_leakage':False,'fitted_thresholds':False,'episode_cooldown_hours':72,'paid_api_calls':0},'patterns':patterns}
+ return {'contract':CONTRACT,'authority':'SHADOW_RESEARCH_ONLY','status':'READY_FOR_ROBUSTNESS_REVIEW' if ready else 'INSUFFICIENT_EVIDENCE','source':{'snapshot_count':len(snaps),'min_timestamp_utc':snaps[0].t.isoformat().replace('+00:00','Z') if snaps else None,'max_timestamp_utc':snaps[-1].t.isoformat().replace('+00:00','Z') if snaps else None},'method':{'future_leakage':False,'fitted_thresholds':False,'episode_cooldown_hours':72,'paid_api_calls':0,'input_adapter':INPUT_ADAPTER,'v3_spot_join_policy':'EXACT_PREVIOUS_COMPLETED_UTC_HOUR_ONLY','interpolation':False,'forward_fill':False},'patterns':patterns}
 
 def loo_stable(vals):
  if len(vals)<3:return None
