@@ -5,6 +5,9 @@ on:
     paths:
       - 'scripts/daily_capture/**'
       - 'tests/daily_capture/**'
+      - 'backtest_engine/blind_dual_run.py'
+      - 'tests/backtest_engine/test_blind_dual_run_v2.py'
+      - '04_MARKET_LEARNING/backtests/framework_backtest_readiness_build_v1/prospective_dual_run_v2/**'
       - '.github/workflows/daily-raw-owner-capture.yml'
       - '.github/workflows/hourly-sequence-capture.yml'
       - '.github/workflows/sunday-market-close-and-cfgi.yml'
@@ -24,11 +27,13 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Run daily capture tests
-        run: python -m unittest tests.daily_capture.test_daily_capture_pipeline tests.daily_capture.test_weekly_market_close_endpoint -v
+      - name: Run daily capture and blinded dual-run tests
+        run: |
+          python -m unittest tests.daily_capture.test_daily_capture_pipeline tests.daily_capture.test_weekly_market_close_endpoint tests.backtest_engine.test_blind_dual_run_v2 -v
       - name: Compile capture modules
-        run: python -m py_compile scripts/daily_capture/build_capture_index.py scripts/daily_capture/build_hourly_sequence.py scripts/daily_capture/build_weekly_calibration.py scripts/daily_capture/persist_raw_payloads.py scripts/daily_capture/build_weekly_market_close_package.py
-      - name: Validate schedules, storage and authority boundaries
+        run: |
+          python -m py_compile scripts/daily_capture/build_capture_index.py scripts/daily_capture/build_hourly_sequence.py scripts/daily_capture/build_weekly_calibration.py scripts/daily_capture/persist_raw_payloads.py scripts/daily_capture/build_weekly_market_close_package.py scripts/daily_capture/materialize_blind_dual_run.py backtest_engine/blind_dual_run.py
+      - name: Validate schedules, storage, blinding and authority boundaries
         run: |
           python - <<'PY'
           from pathlib import Path
@@ -36,8 +41,11 @@ jobs:
           hourly=Path('.github/workflows/hourly-sequence-capture.yml').read_text()
           weekly=Path('.github/workflows/weekly-raw-calibration-bridge.yml').read_text()
           close=Path('scripts/daily_capture/build_weekly_market_close_package.py').read_text()
+          blind=Path('backtest_engine/blind_dual_run.py').read_text()
           assert daily.count("timezone: 'Europe/Copenhagen'")==5
           assert hourly.count("timezone: 'Europe/Copenhagen'")==2
+          assert daily.count('materialize_blind_dual_run.py')==1
+          assert 'prospective_dual_run_v2/evidence' in daily
           assert 'retention-days: 14' in daily and 'retention-days: 14' in hourly
           assert daily.count('persist_raw_payloads.py')==1
           assert '--max-monthly-compressed-bytes 30000000' in daily
@@ -48,10 +56,13 @@ jobs:
           assert '03_DAILY_CAPTURE_LOGS/hourly' in hourly
           assert '--hourly-root 03_DAILY_CAPTURE_LOGS/hourly' in weekly
           assert '03_DAILY_CAPTURE_LOGS/captures' in daily
-          assert 'OPENAI_API_KEY' not in daily+hourly+weekly
+          assert 'OPENAI_API_KEY' not in daily+hourly+weekly+blind
+          assert 'requests.' not in blind and 'urllib' not in blind and 'http://' not in blind and 'https://' not in blind
+          assert 'score_shadow_period' not in blind
+          assert 'LEGACY_MINIMAL' in blind and 'EXCLUDED_UNRECOVERABLE' in blind
           assert 'https://data-api.binance.vision' in close
           assert 'https://api.binance.com' not in close
-          print('DAILY_CAPTURE_ARCHITECTURE_PASS')
+          print('DAILY_CAPTURE_AND_BLINDED_DUAL_RUN_ARCHITECTURE_PASS')
           PY
 
   live-hourly-source-smoke:

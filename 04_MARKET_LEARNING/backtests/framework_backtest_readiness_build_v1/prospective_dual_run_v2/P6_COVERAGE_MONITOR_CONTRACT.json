@@ -1,0 +1,12 @@
+{
+  "allowed_fields": ["run_id","snapshot_utc","capture_hash","profile_hashes","lane_eligibility","fixed_72h_window_id","missingness_by_profile","source_failure_counts"],
+  "b2_analysis_authorized": false,
+  "comparison_outputs_forbidden": true,
+  "contract": "PROSPECTIVE_B2_COVERAGE_MONITOR_CONTRACT_v1",
+  "coverage_contract": "PROSPECTIVE_B2_COVERAGE_WINDOWS_v1",
+  "input": "BLINDED_PAIRED_EVIDENCE_RECEIPT_v2_ONLY",
+  "outputs": ["paired_receipt_count","eligible_row_count_by_lane","occupied_fixed_72h_windows","elapsed_prospective_weeks","coverage_band","right_edge_partial_window","missingness_counts","source_failure_counts"],
+  "readiness": {"minimum_elapsed_weeks": 12, "minimum_occupied_windows": 30, "preferred_weeks": 26},
+  "reads_policy_child_artifacts": false,
+  "reads_policy_values": false
+}

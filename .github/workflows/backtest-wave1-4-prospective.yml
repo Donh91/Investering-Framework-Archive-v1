@@ -7,11 +7,14 @@ on:
       - "backtest_engine/source_resilience.py"
       - "backtest_engine/shadow_scoreboard.py"
       - "backtest_engine/repository_audit.py"
+      - "backtest_engine/blind_dual_run.py"
       - "backtest_engine/cli.py"
       - "tests/backtest_engine/test_wave1_4_prospective.py"
+      - "tests/backtest_engine/test_blind_dual_run_v2.py"
       - "04_MARKET_LEARNING/backtests/framework_backtest_readiness_build_v1/prospective_receipts/**"
       - "04_MARKET_LEARNING/backtests/framework_backtest_readiness_build_v1/live_source_resilience/**"
       - "04_MARKET_LEARNING/backtests/framework_backtest_readiness_build_v1/shadow_dual_run/**"
+      - "04_MARKET_LEARNING/backtests/framework_backtest_readiness_build_v1/prospective_dual_run_v2/**"
       - ".github/workflows/backtest-wave1-4-prospective.yml"
   push:
     branches: [main]
@@ -19,6 +22,7 @@ on:
       - "04_MARKET_LEARNING/backtests/framework_backtest_readiness_build_v1/prospective_receipts/**"
       - "04_MARKET_LEARNING/backtests/framework_backtest_readiness_build_v1/live_source_resilience/**"
       - "04_MARKET_LEARNING/backtests/framework_backtest_readiness_build_v1/shadow_dual_run/**"
+      - "04_MARKET_LEARNING/backtests/framework_backtest_readiness_build_v1/prospective_dual_run_v2/**"
   schedule:
     - cron: "35 17 * * *"
       timezone: 'Europe/Copenhagen'
@@ -35,18 +39,39 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Run prospective accumulation tests
+      - name: Run prospective accumulation and blinded collection tests
         run: |
-          PYTHONPATH=. python -m unittest tests.backtest_engine.test_wave1_4_prospective -v
-      - name: Audit active prospective ledgers
+          PYTHONPATH=. python -m unittest tests.backtest_engine.test_wave1_4_prospective tests.backtest_engine.test_blind_dual_run_v2 -v
+      - name: Validate immutable v1 ledger structure without comparison scoring
         run: |
-          PYTHONPATH=. python -m backtest_engine audit-prospective \
-            --receipt-dir 04_MARKET_LEARNING/backtests/framework_backtest_readiness_build_v1/prospective_receipts \
-            --policy-registry 04_MARKET_LEARNING/backtests/framework_backtest_readiness_build_v1/architecture/POLICY_FAMILY_REGISTRY_v1.json \
-            --source-ledger 04_MARKET_LEARNING/backtests/framework_backtest_readiness_build_v1/live_source_resilience/DAILY_LEDGER_v1.json \
-            --source-contract 04_MARKET_LEARNING/backtests/framework_backtest_readiness_build_v1/architecture/LIVE_DUAL_SOURCE_ETHBTC_MONITOR_v1.json \
-            --shadow-ledger 04_MARKET_LEARNING/backtests/framework_backtest_readiness_build_v1/shadow_dual_run/RUN_LEDGER_v1.json \
-            --output prospective_audit.json
+          PYTHONPATH=. python - <<'PY'
+          import json
+          from pathlib import Path
+          from backtest_engine.shadow_scoreboard import validate_shadow_run
+          path=Path('04_MARKET_LEARNING/backtests/framework_backtest_readiness_build_v1/shadow_dual_run/RUN_LEDGER_v1.json')
+          ledger=json.loads(path.read_text())
+          runs=ledger.get('runs',[])
+          errors=[]
+          for group in runs:
+              errors.extend(validate_shadow_run(group))
+          assert not errors, errors
+          print(json.dumps({'v1_run_groups':len(runs),'structure':'PASS','comparison_metrics_calculated':False},sort_keys=True))
+          PY
+      - name: Audit blinded v2 coverage metadata only
+        run: |
+          PYTHONPATH=. python - <<'PY'
+          import json
+          from pathlib import Path
+          from backtest_engine.blind_dual_run import coverage_progress, load_pair_receipts
+          root=Path('04_MARKET_LEARNING/backtests/framework_backtest_readiness_build_v1/prospective_dual_run_v2/evidence/runs')
+          rows=load_pair_receipts(root)
+          result=coverage_progress(rows)
+          result['engineering_status']='PASS_ACTIVE'
+          result['comparison_metrics_calculated']=False
+          result['b2_analysis_authorized']=False
+          Path('prospective_audit.json').write_text(json.dumps(result,sort_keys=True)+'\n')
+          print(json.dumps(result,sort_keys=True))
+          PY
       - uses: actions/upload-artifact@v4
         with:
           name: prospective-accumulation-audit
