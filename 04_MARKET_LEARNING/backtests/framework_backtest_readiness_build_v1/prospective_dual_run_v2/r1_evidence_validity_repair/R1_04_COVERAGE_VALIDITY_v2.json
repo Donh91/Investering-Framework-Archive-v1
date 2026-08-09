@@ -1,0 +1,19 @@
+{
+  "schema_version": "PROSPECTIVE_B2_COVERAGE_MONITOR_v2",
+  "coverage_contract": "PROSPECTIVE_B2_COVERAGE_VALIDITY_v2",
+  "validity_contract": "PROSPECTIVE_B2_COUNTERFACTUAL_IDENTIFIABILITY_v1",
+  "dependency_map_hash": "2a56444ba7ae9ab46a23c891379c062a79bb417bc8b4c2c351d4a8c516d63622",
+  "window_seconds": 259200,
+  "window_formula": "floor(unix_timestamp_seconds / 259200)",
+  "readiness_basis": "IDENTIFYING_OPPORTUNITY_ONLY",
+  "minimum_identifying_windows": 30,
+  "minimum_elapsed_identifying_weeks": 12,
+  "preferred_elapsed_identifying_weeks": 26,
+  "current_post_repair_repository_state": {
+    "paired_receipt_count": 0,
+    "ROTATION_PERMISSION": {"pair_execution_valid_rows": 0,"identifying_opportunity_rows": 0,"occupied_pair_execution_windows": 0,"occupied_identifying_windows": 0,"elapsed_identifying_weeks": 0.0,"structural_identifiability": "DEPENDENCY_MAP_UNPROVEN","dependency_provenance_status": "UNPROVEN","b2_coverage_ready": false},
+    "REBUY_STATE": {"pair_execution_valid_rows": 0,"identifying_opportunity_rows": 0,"occupied_pair_execution_windows": 0,"occupied_identifying_windows": 0,"elapsed_identifying_weeks": 0.0,"structural_identifiability": "NATIVE_OUTPUT_UNAVAILABLE_FOR_PROSPECTIVE_COUNTERFACTUAL","dependency_provenance_status": "NATIVE_OUTPUT_UNAVAILABLE","b2_coverage_ready": false},
+    "TRIM_EXIT_STATE": {"pair_execution_valid_rows": 0,"identifying_opportunity_rows": 0,"occupied_pair_execution_windows": 0,"occupied_identifying_windows": 0,"elapsed_identifying_weeks": 0.0,"structural_identifiability": "NATIVE_OUTPUT_UNAVAILABLE_FOR_PROSPECTIVE_COUNTERFACTUAL","dependency_provenance_status": "NATIVE_OUTPUT_UNAVAILABLE","b2_coverage_ready": false}
+  },
+  "note": "Legacy technical aliases remain readable for engineering continuity, but they do not authorize B2 readiness."
+}
