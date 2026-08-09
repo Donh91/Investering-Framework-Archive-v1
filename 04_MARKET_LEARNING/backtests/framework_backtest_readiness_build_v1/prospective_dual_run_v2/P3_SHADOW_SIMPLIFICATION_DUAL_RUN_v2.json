@@ -1,0 +1,31 @@
+{
+  "authority": {"automatic_promotion": false, "canonical_state_change": false, "portfolio_action": false, "shadow_only": true},
+  "b2_analysis_authorized": false,
+  "challenger_profile": {
+    "id": "REDUCED_EXECUTION_STACK",
+    "sensor_count": 18,
+    "sensor_ids": [
+      "BREADTH_ADVANCE_RATIO","BREADTH_OUTPERFORM_BTC","BTC_DOMINANCE","BTC_ETF_FLOW","BTC_FUNDING","BTC_OPEN_INTEREST","BTC_SPOT_STRUCTURE","BTC_VOLATILITY_DRAWDOWN","DIRECT_DERIVED_PARITY","ETF_SESSION_COMPLETENESS","ETHBTC_DIRECT","ETH_ETF_FLOW","ETH_FUNDING","ETH_OPEN_INTEREST","ETH_SPOT_STRUCTURE","ETH_VOLATILITY_DRAWDOWN","SOURCE_FRESHNESS","VENUE_PARITY"
+    ]
+  },
+  "collection_summary_forbidden": ["state_agreement_rate","agreement_rate","disagreement_rate","divergence_rate","false_transition_comparison","missed_warning_comparison","forecast_score_comparison","outcome_conditioned_stack_ranking"],
+  "coverage_contract": "PROSPECTIVE_B2_COVERAGE_WINDOWS_v1",
+  "coverage_health_allowed": ["paired_same_T_row_count","eligible_row_count_by_lane","occupied_fixed_72h_windows_by_lane","elapsed_prospective_weeks","missingness_by_sensor","source_failure_counts","rule_version_availability","cadence_distribution","storage_size_runtime_health","right_edge_partial_window"],
+  "effective_from": "NEXT_EXISTING_DAILY_LIVE_ANCHOR_AFTER_MERGE",
+  "excluded_profiles": {"LEGACY_MINIMAL": "EXCLUDED_UNRECOVERABLE"},
+  "explicitly_not_collected": ["BTC_PERMISSION","ECOSYSTEM_PERMISSION","RISK_STATE"],
+  "external_source_call_increment": 0,
+  "gate0e_divergence_clustering_changed": false,
+  "historical_v1": {"minimal_rows_usable_in_b2": false, "status": "IMMUTABLE"},
+  "mode": "BLINDED_PAIRED_EVIDENCE_COLLECTION",
+  "new_cfgi_credits": 0,
+  "new_paid_openai_calls": 0,
+  "pairing": {"atomic_pair_receipt": true, "future_information_forbidden": true, "immutable_run_id": true, "imputation": false, "missingness_preserved": true, "same_capture_hash": true, "same_evaluator_hashes": true, "same_point_in_time_cutoff": true},
+  "primary_collection": {
+    "REBUY_STATE": {"crosswalk": {"LOCKED": "LOCKED", "PERMITTED": "PERMITTED", "REBUY_LOCKED": "LOCKED", "WATCH_ONLY": "WATCH_ONLY"}, "generation": "NO_SYNTHESIS_EXPLICIT_PROFILE_NATIVE_OUTPUT_ONLY", "native_family": "REBUY_LOCK"},
+    "ROTATION_PERMISSION": {"evaluator": "backtest_engine/rotation.py::classify_rotation", "missing_input_behavior": "NATIVE_FAIL_CLOSED_ONLY", "native_family": "ROTATION_PERMISSION"},
+    "TRIM_EXIT_STATE": {"crosswalk": {"FULL_TRIM": "FULL_TRIM", "NO_TRIM": "NO_TRIM", "PARTIAL_TRIM": "PARTIAL_TRIM"}, "generation": "NO_SYNTHESIS_EXPLICIT_PROFILE_NATIVE_OUTPUT_ONLY", "native_family": "TRIM_NO_TRIM"}
+  },
+  "reference_profile": {"id": "FULL_STACK", "identity_source": "SENSOR_ROLE_DEPENDENCY_REGISTRY_v1", "sensor_count": 32},
+  "schema_version": "SHADOW_SIMPLIFICATION_DUAL_RUN_v2"
+}
