@@ -2,7 +2,14 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from pathlib import Path
+
+# Direct script execution sets sys.path[0] to scripts/daily_capture, not repository root.
+# Bootstrap only the local repo import path; this performs no network/data access.
+REPO_ROOT = Path(__file__).resolve().parents[2]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
 
 from backtest_engine.blind_dual_run import collect_from_latest_capture
 
