@@ -1,0 +1,49 @@
+{
+  "contract": "R1_PRIMARY_LANE_DEPENDENCY_MAP_v1",
+  "authoritative_post_repair_head": "94a7c6744a759e9ad926bfe3b4d19003858d61c2",
+  "dependency_map_hash_runtime": "2a56444ba7ae9ab46a23c891379c062a79bb417bc8b4c2c351d4a8c516d63622",
+  "full_only_candidate_with_primary_authority": {
+    "sensor_id": "BREADTH_ABOVE_MA50",
+    "authority": "VETO_ONLY",
+    "role": "CONFIRMATION_VETO",
+    "in_full": true,
+    "in_reduced": false,
+    "consumed_rotation_field_mapping": "UNPROVEN"
+  },
+  "lanes": {
+    "ROTATION_PERMISSION": {
+      "native_evaluator": "backtest_engine/rotation.py::classify_rotation",
+      "classification": "DEPENDENCY_MAP_UNPROVEN",
+      "current_live_producer_emits_profile_native_evidence": false,
+      "current_fallback_profile_specific": false,
+      "candidate_full_only_dependencies": ["BREADTH_ABOVE_MA50"],
+      "proven_consumed_full_only_dependencies": [],
+      "rotation_evidence_fields": {
+        "direct_ethbtc_available": {"candidate_sensor": "ETHBTC_DIRECT", "profile_membership": "BOTH", "producer_transform_provenance": "UNPROVEN"},
+        "ethbtc_authority_status": {"candidate_sensor": "ETHBTC_DIRECT", "profile_membership": "BOTH", "producer_transform_provenance": "UNPROVEN"},
+        "ethbtc_settled_close": {"candidate_sensor": "ETHBTC_DIRECT", "profile_membership": "BOTH", "producer_transform_provenance": "UNPROVEN"},
+        "ethbtc_positive_settled_run": {"candidate_sensor": "ETHBTC_DIRECT", "profile_membership": "BOTH", "producer_transform_provenance": "UNPROVEN_PERSISTENCE_TRANSFORM"},
+        "eth_leads_btc_sessions": {"candidate_sensors": ["BTC_SPOT_STRUCTURE", "ETH_SPOT_STRUCTURE"], "profile_membership": "BOTH", "producer_transform_provenance": "UNPROVEN"},
+        "large_cap_breadth": {"candidate_sensors": ["BREADTH_ADVANCE_RATIO", "BREADTH_OUTPERFORM_BTC", "BREADTH_ABOVE_MA50"], "profile_membership": "AMBIGUOUS_BOTH_AND_FULL_ONLY", "producer_transform_provenance": "UNPROVEN"},
+        "broad_alt_breadth": {"candidate_sensors": ["BREADTH_ADVANCE_RATIO", "BREADTH_OUTPERFORM_BTC", "BREADTH_ABOVE_MA50"], "profile_membership": "AMBIGUOUS_BOTH_AND_FULL_ONLY", "producer_transform_provenance": "UNPROVEN"},
+        "beta_neutral_alt_return_20d": {"candidate_sensor": null, "profile_membership": "UNPROVEN", "producer_transform_provenance": "UNPROVEN"},
+        "btc_dominance_change_5d": {"candidate_sensor": "BTC_DOMINANCE", "profile_membership": "BOTH", "producer_transform_provenance": "UNPROVEN_5D_TRANSFORM"},
+        "flow_confirmation": {"candidate_sensors": ["BTC_ETF_FLOW", "ETH_ETF_FLOW", "ETF_FLOW_DIVERGENCE"], "profile_membership": "AMBIGUOUS_BOTH_AND_FULL_ONLY_CONTEXT", "producer_transform_provenance": "UNPROVEN"},
+        "source_qa_pass": {"candidate_cluster": "SOURCE_QA", "profile_membership": "BOTH", "current_fallback_source": "profile-independent capture QA"}
+      },
+      "scientific_consequence": "Do not call this lane structurally non-identifying and do not count it as identifying until deterministic producer provenance proves which frozen sensor dependencies are consumed."
+    },
+    "REBUY_STATE": {
+      "native_family": "REBUY_LOCK",
+      "classification": "NATIVE_OUTPUT_UNAVAILABLE_FOR_PROSPECTIVE_COUNTERFACTUAL",
+      "current_live_producer_emits_profile_native_output": false,
+      "new_evaluator_invented": false
+    },
+    "TRIM_EXIT_STATE": {
+      "native_family": "TRIM_NO_TRIM",
+      "classification": "NATIVE_OUTPUT_UNAVAILABLE_FOR_PROSPECTIVE_COUNTERFACTUAL",
+      "current_live_producer_emits_profile_native_output": false,
+      "new_evaluator_invented": false
+    }
+  }
+}
