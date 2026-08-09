@@ -11,6 +11,7 @@ on:
       - "backtest_engine/cli.py"
       - "tests/backtest_engine/test_wave1_4_prospective.py"
       - "tests/backtest_engine/test_blind_dual_run_v2.py"
+      - "tests/backtest_engine/test_blind_dual_run_r1_validity.py"
       - "04_MARKET_LEARNING/backtests/framework_backtest_readiness_build_v1/prospective_receipts/**"
       - "04_MARKET_LEARNING/backtests/framework_backtest_readiness_build_v1/live_source_resilience/**"
       - "04_MARKET_LEARNING/backtests/framework_backtest_readiness_build_v1/shadow_dual_run/**"
@@ -41,7 +42,10 @@ jobs:
           python-version: "3.12"
       - name: Run prospective accumulation and blinded collection tests
         run: |
-          PYTHONPATH=. python -m unittest tests.backtest_engine.test_wave1_4_prospective tests.backtest_engine.test_blind_dual_run_v2 -v
+          PYTHONPATH=. python -m unittest \
+            tests.backtest_engine.test_wave1_4_prospective \
+            tests.backtest_engine.test_blind_dual_run_v2 \
+            tests.backtest_engine.test_blind_dual_run_r1_validity -v
       - name: Validate immutable v1 ledger structure without comparison scoring
         run: |
           PYTHONPATH=. python - <<'PY'
