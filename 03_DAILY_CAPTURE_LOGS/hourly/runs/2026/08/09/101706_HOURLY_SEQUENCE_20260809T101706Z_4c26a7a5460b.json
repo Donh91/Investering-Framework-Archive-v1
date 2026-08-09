@@ -1,0 +1,120 @@
+{
+  "authority": {
+    "binding": false,
+    "canonical_acceptance": false,
+    "portfolio_action": false,
+    "state_change": false
+  },
+  "contract": "HOURLY_SEQUENCE_CAPTURE_v2_1",
+  "derivatives_oi_complete_hours": 14,
+  "derivatives_status": "PASS",
+  "derivatives_venue": "OKX",
+  "forward_fill": false,
+  "interpolation": false,
+  "long_short_complete_hours": 14,
+  "permanent_outputs": [
+    "03_DAILY_CAPTURE_LOGS/hourly/2026/08/2026-08-08.csv",
+    "03_DAILY_CAPTURE_LOGS/hourly/2026/08/2026-08-09.csv"
+  ],
+  "requested_hours": 14,
+  "retrieved_at_utc": "2026-08-09T10:17:06Z",
+  "run_id": "HOURLY_SEQUENCE_20260809T101706Z_4c26a7a5460b",
+  "source_records": [
+    {
+      "bytes": 2474,
+      "error": null,
+      "name": "BTCUSDT_spot",
+      "row_count": 14,
+      "sha256": "17ecfb8ad48db2d9f4767d4b08d920ff270f6b08aa24df5d2140e58fedc2b601",
+      "status": "PASS",
+      "url": "https://data-api.binance.vision/api/v3/klines?symbol=BTCUSDT&interval=1h&startTime=1786219200000&endTime=1786269599999&limit=1000",
+      "venue": "BINANCE_SPOT"
+    },
+    {
+      "bytes": 2427,
+      "error": null,
+      "name": "ETHUSDT_spot",
+      "row_count": 14,
+      "sha256": "86d3728326a985317e4230e1207c755cad32ce8579f263244f7f5811ddbdf9bc",
+      "status": "PASS",
+      "url": "https://data-api.binance.vision/api/v3/klines?symbol=ETHUSDT&interval=1h&startTime=1786219200000&endTime=1786269599999&limit=1000",
+      "venue": "BINANCE_SPOT"
+    },
+    {
+      "bytes": 2014,
+      "error": null,
+      "name": "ETHBTC_spot",
+      "row_count": 14,
+      "sha256": "e90849f0984d3c16174684f95f6f3d64b319d77c2560ed286f9cfbb61b3db7d8",
+      "status": "PASS",
+      "url": "https://data-api.binance.vision/api/v3/klines?symbol=ETHBTC&interval=1h&startTime=1786219200000&endTime=1786269599999&limit=1000",
+      "venue": "BINANCE_SPOT"
+    },
+    {
+      "bytes": 1374,
+      "error": null,
+      "name": "BTCUSDT_oi",
+      "row_count": 14,
+      "sha256": "e185541ca02351e5aa390cd1f8a3f3aa5a091ae0c30c48e42f605b3103753366",
+      "status": "PASS",
+      "url": "https://www.okx.com/api/v5/rubik/stat/contracts/open-interest-history?instId=BTC-USDT-SWAP&period=1H&begin=1786219200000&end=1786269599999&limit=100",
+      "venue": "OKX"
+    },
+    {
+      "bytes": 378,
+      "error": null,
+      "name": "BTCUSDT_long_short",
+      "row_count": 14,
+      "sha256": "8ef14045fd1900118b8e2e3f59222e4f5ef0560cbd0923765feef26c7c49d596",
+      "status": "PASS",
+      "url": "https://www.okx.com/api/v5/rubik/stat/contracts/long-short-account-ratio?ccy=BTC&period=1H&begin=1786219200000&end=1786269599999",
+      "venue": "OKX"
+    },
+    {
+      "bytes": 19678,
+      "error": null,
+      "name": "BTCUSDT_funding",
+      "row_count": 2,
+      "sha256": "7a62cdf067625300f5fb4e56eab37ef1b37b3427922527528e9e1e485e32d254",
+      "status": "PASS",
+      "url": "https://www.okx.com/api/v5/public/funding-rate-history?instId=BTC-USDT-SWAP&limit=100",
+      "venue": "OKX"
+    },
+    {
+      "bytes": 1330,
+      "error": null,
+      "name": "ETHUSDT_oi",
+      "row_count": 14,
+      "sha256": "6c5fabd7e3df8e66e0f1c0a978a7434e0cbbe002b6590356be827a3142ddb162",
+      "status": "PASS",
+      "url": "https://www.okx.com/api/v5/rubik/stat/contracts/open-interest-history?instId=ETH-USDT-SWAP&period=1H&begin=1786219200000&end=1786269599999&limit=100",
+      "venue": "OKX"
+    },
+    {
+      "bytes": 380,
+      "error": null,
+      "name": "ETHUSDT_long_short",
+      "row_count": 14,
+      "sha256": "5448823716401115fff5d4f263aa92009d1d71b13d8fa6aa2d1e21d611957c02",
+      "status": "PASS",
+      "url": "https://www.okx.com/api/v5/rubik/stat/contracts/long-short-account-ratio?ccy=ETH&period=1H&begin=1786219200000&end=1786269599999",
+      "venue": "OKX"
+    },
+    {
+      "bytes": 19774,
+      "error": null,
+      "name": "ETHUSDT_funding",
+      "row_count": 2,
+      "sha256": "603c38d798020e6d24cf9c57be68dd3d8c0534f8a3d48d314be8cb1d79370a54",
+      "status": "PASS",
+      "url": "https://www.okx.com/api/v5/public/funding-rate-history?instId=ETH-USDT-SWAP&limit=100",
+      "venue": "OKX"
+    }
+  ],
+  "spot_complete_hours": 14,
+  "spot_status": "PASS",
+  "spot_venue": "BINANCE",
+  "status": "COMPLETE",
+  "window_end_utc": "2026-08-09T10:00:00Z",
+  "window_start_utc": "2026-08-08T20:00:00Z"
+}
