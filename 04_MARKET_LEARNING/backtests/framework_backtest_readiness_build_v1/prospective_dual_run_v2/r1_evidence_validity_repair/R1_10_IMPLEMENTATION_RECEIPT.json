@@ -1,0 +1,49 @@
+{
+  "contract": "R1_EVIDENCE_VALIDITY_REPAIR_IMPLEMENTATION_RECEIPT_v1",
+  "repo": "Donh91/Investering-Framework-Archive-v1",
+  "task_start_head": "8a6e34808aca0e3b0fb70fef12177d1b54b87580",
+  "implementation_pr": 341,
+  "implementation_pr_head": "48f2d69f8f490402ae7728a5562cb7e5c8deb365",
+  "implementation_merge": "94a7c6744a759e9ad926bfe3b4d19003858d61c2",
+  "implementation_status": "MERGED_AFTER_GREEN_RELEVANT_CI",
+  "relevant_ci_workflows_observed_success": 9,
+  "prospective_test_count": 36,
+  "dedicated_r1_test_count": 18,
+  "runtime_import_defect": {
+    "failing_run": 31317401043,
+    "failure": "ModuleNotFoundError: No module named 'backtest_engine'",
+    "repair": "repository-root import bootstrap in direct materializer script",
+    "ci_regression": "PASS",
+    "manual_market_data_rerun": false,
+    "natural_post_merge_schedule_readback": "PENDING"
+  },
+  "validity_repair": {
+    "pair_execution_separated_from_identifying_opportunity": true,
+    "readiness_basis": "IDENTIFYING_OPPORTUNITY_ONLY",
+    "coverage_contract": "PROSPECTIVE_B2_COVERAGE_VALIDITY_v2",
+    "validity_contract": "PROSPECTIVE_B2_COUNTERFACTUAL_IDENTIFIABILITY_v1",
+    "dependency_map_hash": "2a56444ba7ae9ab46a23c891379c062a79bb417bc8b4c2c351d4a8c516d63622",
+    "pre_r1_rows_rewritten": 0,
+    "legacy_v2_default": "PRE_R1_B2_VALIDITY_UNPROVEN"
+  },
+  "current_lane_status": {
+    "ROTATION_PERMISSION": "DEPENDENCY_MAP_UNPROVEN",
+    "REBUY_STATE": "NATIVE_OUTPUT_UNAVAILABLE_FOR_PROSPECTIVE_COUNTERFACTUAL",
+    "TRIM_EXIT_STATE": "NATIVE_OUTPUT_UNAVAILABLE_FOR_PROSPECTIVE_COUNTERFACTUAL"
+  },
+  "current_identifying_rows": 0,
+  "gate0b2_executed": false,
+  "comparison_metrics_calculated": false,
+  "economic_outcomes_opened": false,
+  "deep_research_used": false,
+  "new_cfgi_credits_used": 0,
+  "new_paid_openai_calls_used": false,
+  "market_rules_changed": false,
+  "thresholds_changed": false,
+  "weights_changed": false,
+  "policy_semantics_changed": false,
+  "new_policy_evaluator_invented": false,
+  "queue_order_changed": false,
+  "terminal_verdict": "BLOCKED_DEPENDENCY_PROVENANCE",
+  "terminal_rationale": "The readiness accounting and runtime import defect are repaired, but Rotation cannot be declared identifying or structurally non-identifying without proving the deterministic provenance of consumed breadth/flow fields. REBUY and TRIM still lack prospective native outputs."
+}
