@@ -10,7 +10,8 @@ from .rotation import RotationEvidence, classify_rotation
 
 CONTRACT = "SHADOW_SIMPLIFICATION_DUAL_RUN_v2"
 MODE = "BLINDED_PAIRED_EVIDENCE_COLLECTION"
-COVERAGE_CONTRACT = "PROSPECTIVE_B2_COVERAGE_WINDOWS_v1"
+COVERAGE_CONTRACT = "PROSPECTIVE_B2_COVERAGE_VALIDITY_v2"
+VALIDITY_CONTRACT = "PROSPECTIVE_B2_COUNTERFACTUAL_IDENTIFIABILITY_v1"
 WINDOW_SECONDS = 259200
 FULL_PROFILE = "FULL_STACK"
 REDUCED_PROFILE = "REDUCED_EXECUTION_STACK"
@@ -39,14 +40,53 @@ ROTATION_MAP = {
     "BROAD_ALT_ROTATION_CONFIRMED":"BROAD_ALT",
 }
 
+# R1 scientific-validity freeze. This is provenance metadata only. It does not
+# grant, remove, or modify any market/policy authority.
+CURRENT_DEPENDENCY_MAP: dict[str, dict[str, Any]] = {
+    "ROTATION_PERMISSION": {
+        "structural_identifiability": "DEPENDENCY_MAP_UNPROVEN",
+        "dependency_provenance_status": "UNPROVEN",
+        "candidate_full_only_dependencies": ["BREADTH_ABOVE_MA50"],
+        "proven_consumed_full_only_dependencies": [],
+        "reason": "DEPENDENCY_MAP_UNPROVEN",
+        "note": (
+            "BREADTH_ABOVE_MA50 is Full-only with VETO_ONLY authority, but current repository provenance "
+            "does not prove a deterministic mapping from that sensor into any consumed RotationEvidence field."
+        ),
+    },
+    "REBUY_STATE": {
+        "structural_identifiability": "NATIVE_OUTPUT_UNAVAILABLE_FOR_PROSPECTIVE_COUNTERFACTUAL",
+        "dependency_provenance_status": "NATIVE_OUTPUT_UNAVAILABLE",
+        "candidate_full_only_dependencies": [],
+        "proven_consumed_full_only_dependencies": [],
+        "reason": "NATIVE_OUTPUT_UNAVAILABLE_FOR_PROSPECTIVE_COUNTERFACTUAL",
+        "note": "No current deterministic prospective REBUY_LOCK output producer is proven by the audited runtime.",
+    },
+    "TRIM_EXIT_STATE": {
+        "structural_identifiability": "NATIVE_OUTPUT_UNAVAILABLE_FOR_PROSPECTIVE_COUNTERFACTUAL",
+        "dependency_provenance_status": "NATIVE_OUTPUT_UNAVAILABLE",
+        "candidate_full_only_dependencies": [],
+        "proven_consumed_full_only_dependencies": [],
+        "reason": "NATIVE_OUTPUT_UNAVAILABLE_FOR_PROSPECTIVE_COUNTERFACTUAL",
+        "note": "No current deterministic prospective TRIM_NO_TRIM output producer is proven by the audited runtime.",
+    },
+}
+
+
 def canonical(value: Any) -> str:
     return json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
+
 
 def file_sha(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
+
 def obj_sha(value: Any) -> str:
     return hashlib.sha256(canonical(value).encode()).hexdigest()
+
+
+DEPENDENCY_MAP_HASH = obj_sha(CURRENT_DEPENDENCY_MAP)
+
 
 def utc(value: str) -> datetime:
     out = datetime.fromisoformat(value.replace("Z", "+00:00"))
@@ -54,8 +94,10 @@ def utc(value: str) -> datetime:
         raise ValueError("timezone-aware UTC required")
     return out.astimezone(timezone.utc)
 
+
 def fixed_window_id(value: str) -> int:
     return int(utc(value).timestamp()) // WINDOW_SECONDS
+
 
 def _no_comparison(value: Any) -> None:
     if isinstance(value, Mapping):
@@ -67,6 +109,7 @@ def _no_comparison(value: Any) -> None:
         for nested in value:
             _no_comparison(nested)
 
+
 def load_profiles(registry: Mapping[str, Any]) -> tuple[tuple[str, ...], tuple[str, ...]]:
     full = tuple(str(row[0]) for row in registry.get("rows", []))
     reduced = tuple(registry.get("stack_profiles", {}).get(REDUCED_PROFILE, ()))
@@ -76,12 +119,14 @@ def load_profiles(registry: Mapping[str, Any]) -> tuple[tuple[str, ...], tuple[s
         raise ValueError("REDUCED_EXECUTION_STACK identity drift")
     return full, reduced
 
+
 def _qa(capture: Mapping[str, Any]) -> bool:
     return (
         capture.get("status") == "COMPLETE"
         and capture.get("anchor_core_passed") == capture.get("anchor_core_planned")
         and int(capture.get("anchor_core_planned", 0)) > 0
     )
+
 
 def rotation_output(capture: Mapping[str, Any], profile_id: str) -> tuple[str | None, dict[str, Any]]:
     by_profile = capture.get("profile_native_rotation_evidence")
@@ -121,6 +166,7 @@ def rotation_output(capture: Mapping[str, Any], profile_id: str) -> tuple[str | 
         "evaluator":"backtest_engine/rotation.py::classify_rotation",
     }
 
+
 def explicit_policy(capture: Mapping[str, Any], profile_id: str, family: str, allowed: Iterable[str]) -> tuple[str | None, str]:
     rows = capture.get("profile_native_policy_outputs")
     profile = rows.get(profile_id) if isinstance(rows, Mapping) else None
@@ -130,6 +176,7 @@ def explicit_policy(capture: Mapping[str, Any], profile_id: str, family: str, al
     if value not in set(allowed):
         return None, "NATIVE_POLICY_VALUE_INVALID"
     return value, "EXPLICIT_PROFILE_NATIVE_OUTPUT"
+
 
 def missingness(capture: Mapping[str, Any], sensors: Iterable[str]) -> dict[str, str]:
     available: set[str] = set()
@@ -144,6 +191,7 @@ def missingness(capture: Mapping[str, Any], sensors: Iterable[str]) -> dict[str,
             if isinstance(row, Mapping) and row.get("mapping_class") in {"EXACT","MECHANICALLY_EQUIVALENT"} and row.get("value") is not None:
                 available.add(str(sensor))
     return {str(s):("AVAILABLE" if str(s) in available else "UNAVAILABLE") for s in sensors}
+
 
 def make_child(
     capture: Mapping[str, Any], capture_path: Path, capture_hash: str, run_id: str,
@@ -173,11 +221,45 @@ def make_child(
     _no_comparison(child)
     return child
 
+
+def _lane_validity(children: Mapping[str, Mapping[str, Any]], lane: str) -> dict[str, Any]:
+    full = children[FULL_PROFILE]["policy_lanes"][lane]
+    reduced = children[REDUCED_PROFILE]["policy_lanes"][lane]
+    pair_valid = bool(full["eligibility"] and reduced["eligibility"])
+    frozen = CURRENT_DEPENDENCY_MAP[lane]
+
+    reason = frozen["reason"]
+    if not pair_valid:
+        reason = (
+            "NATIVE_OUTPUT_UNAVAILABLE_FOR_PROSPECTIVE_COUNTERFACTUAL"
+            if lane in {"REBUY_STATE", "TRIM_EXIT_STATE"}
+            else "PAIR_EXECUTION_INVALID"
+        )
+    elif lane == "ROTATION_PERMISSION":
+        modes = {
+            full.get("native_source", {}).get("adapter_mode"),
+            reduced.get("native_source", {}).get("adapter_mode"),
+        }
+        if "NATIVE_FAIL_CLOSED" in modes:
+            reason = "NO_PROFILE_SPECIFIC_COUNTERFACTUAL_EVIDENCE"
+
+    return {
+        "pair_execution_valid": pair_valid,
+        "identifying_opportunity": False,
+        "identifying_exclusion_reason": reason,
+        "structural_identifiability": frozen["structural_identifiability"],
+        "dependency_provenance_status": frozen["dependency_provenance_status"],
+        "dependency_map_hash": DEPENDENCY_MAP_HASH,
+        "validity_contract": VALIDITY_CONTRACT,
+    }
+
+
 def make_receipt(capture: Mapping[str, Any], capture_path: Path, capture_hash: str, run_id: str, children: Mapping[str, Mapping[str, Any]], child_paths: Mapping[str, str]) -> dict[str, Any]:
     full, reduced = children[FULL_PROFILE], children[REDUCED_PROFILE]
     if full["snapshot_utc"] != reduced["snapshot_utc"] or full["capture_hash"] != reduced["capture_hash"]:
         raise ValueError("asymmetric pair")
     eligibility = {}
+    validity = {}
     for lane in PRIMARY_LANES:
         f, r = full["policy_lanes"][lane], reduced["policy_lanes"][lane]
         eligibility[lane] = {
@@ -185,8 +267,10 @@ def make_receipt(capture: Mapping[str, Any], capture_path: Path, capture_hash: s
             "full_eligible":bool(f["eligibility"]),"reduced_eligible":bool(r["eligibility"]),
             "full_exclusion_reason":f["exclusion_reason"],"reduced_exclusion_reason":r["exclusion_reason"],
         }
+        validity[lane] = _lane_validity(children, lane)
     receipt = {
-        "schema_version":"BLINDED_PAIRED_EVIDENCE_RECEIPT_v2","contract":CONTRACT,"mode":MODE,
+        "schema_version":"BLINDED_PAIRED_EVIDENCE_RECEIPT_v3","contract":CONTRACT,"mode":MODE,
+        "coverage_validity_contract":COVERAGE_CONTRACT,
         "authority":{"passive_collection_only":True,"b2_analysis_authorized":False,"portfolio_action":False,"automatic_promotion":False},
         "run_id":run_id,"snapshot_utc":capture["captured_at_utc"],"capture_path":str(capture_path),"capture_hash":capture_hash,
         "profiles":{
@@ -194,12 +278,15 @@ def make_receipt(capture: Mapping[str, Any], capture_path: Path, capture_hash: s
             REDUCED_PROFILE:{"path":child_paths[REDUCED_PROFILE],"artifact_hash":obj_sha(reduced),"profile_hash":reduced["profile_hash"]},
         },
         "excluded_profiles":{"LEGACY_MINIMAL":"EXCLUDED_UNRECOVERABLE"},
-        "lane_eligibility":eligibility,"fixed_72h_window_id":fixed_window_id(capture["captured_at_utc"]),
+        "lane_eligibility":eligibility,
+        "lane_validity":validity,
+        "fixed_72h_window_id":fixed_window_id(capture["captured_at_utc"]),
         "missingness_by_profile":{FULL_PROFILE:full["missingness_by_sensor"],REDUCED_PROFILE:reduced["missingness_by_sensor"]},
         "source_failure_counts":{FULL_PROFILE:len(full["source_failures"]),REDUCED_PROFILE:len(reduced["source_failures"])},
     }
     _no_comparison(receipt)
     return receipt
+
 
 def load_pair_receipts(root: Path) -> list[dict[str, Any]]:
     if not root.exists():
@@ -207,34 +294,90 @@ def load_pair_receipts(root: Path) -> list[dict[str, Any]]:
     rows = []
     for path in sorted(root.rglob("PAIR_RECEIPT.json")):
         row = json.loads(path.read_text())
-        if row.get("schema_version") == "BLINDED_PAIRED_EVIDENCE_RECEIPT_v2":
+        if row.get("schema_version") in {"BLINDED_PAIRED_EVIDENCE_RECEIPT_v2", "BLINDED_PAIRED_EVIDENCE_RECEIPT_v3"}:
             rows.append(row)
     return rows
+
+
+def _receipt_validity(row: Mapping[str, Any], lane: str) -> dict[str, Any]:
+    current = row.get("lane_validity", {}).get(lane)
+    if isinstance(current, Mapping):
+        return dict(current)
+    legacy_pair = row.get("lane_eligibility", {}).get(lane, {}).get("eligible_for_both") is True
+    return {
+        "pair_execution_valid": legacy_pair,
+        "identifying_opportunity": False,
+        "identifying_exclusion_reason": "PRE_R1_B2_VALIDITY_UNPROVEN",
+        "structural_identifiability": "PRE_R1_B2_VALIDITY_UNPROVEN",
+        "dependency_provenance_status": "PRE_R1_B2_VALIDITY_UNPROVEN",
+        "validity_contract": "PRE_R1_NONE",
+    }
+
+
+def _span_weeks(ts: list[str]) -> float:
+    return (utc(ts[-1])-utc(ts[0])).total_seconds()/(7*86400) if ts else 0.0
+
+
+def _window_partial(windows: list[int], now: datetime) -> bool:
+    return now.timestamp() < (windows[-1]+1)*WINDOW_SECONDS if windows else False
+
 
 def coverage_progress(receipts: Iterable[Mapping[str, Any]], *, now_utc: str | None = None) -> dict[str, Any]:
     rows = list(receipts)
     per_lane = {}
     now = utc(now_utc) if now_utc else datetime.now(timezone.utc)
     for lane in PRIMARY_LANES:
-        eligible = [r for r in rows if r.get("lane_eligibility",{}).get(lane,{}).get("eligible_for_both") is True]
-        ts = sorted(str(r["snapshot_utc"]) for r in eligible)
-        windows = sorted({fixed_window_id(t) for t in ts})
-        weeks = (utc(ts[-1])-utc(ts[0])).total_seconds()/(7*86400) if ts else 0.0
-        count = len(windows)
-        band = "COVERAGE_READY" if count >= 30 and weeks >= 12 else "WINDOW_COUNT_MET_TIME_NOT_MET" if count >= 30 else "MATURING_NOT_READY" if count >= 10 else "EARLY_ACCUMULATION"
-        partial = now.timestamp() < (windows[-1]+1)*WINDOW_SECONDS if windows else False
+        pair_rows = [r for r in rows if _receipt_validity(r, lane).get("pair_execution_valid") is True]
+        identifying_rows = [r for r in rows if _receipt_validity(r, lane).get("identifying_opportunity") is True]
+        pair_ts = sorted(str(r["snapshot_utc"]) for r in pair_rows)
+        identifying_ts = sorted(str(r["snapshot_utc"]) for r in identifying_rows)
+        pair_windows = sorted({fixed_window_id(t) for t in pair_ts})
+        identifying_windows = sorted({fixed_window_id(t) for t in identifying_ts})
+        pair_weeks = _span_weeks(pair_ts)
+        identifying_weeks = _span_weeks(identifying_ts)
+        identifying_count = len(identifying_windows)
+        band = (
+            "COVERAGE_READY" if identifying_count >= 30 and identifying_weeks >= 12
+            else "WINDOW_COUNT_MET_TIME_NOT_MET" if identifying_count >= 30
+            else "MATURING_NOT_READY" if identifying_count >= 10
+            else "EARLY_ACCUMULATION"
+        )
+        current_meta = CURRENT_DEPENDENCY_MAP[lane]
+        observed_meta = [_receipt_validity(r, lane) for r in rows if isinstance(r.get("lane_validity"), Mapping)]
+        structural = observed_meta[-1].get("structural_identifiability") if observed_meta else current_meta["structural_identifiability"]
+        provenance = observed_meta[-1].get("dependency_provenance_status") if observed_meta else current_meta["dependency_provenance_status"]
         per_lane[lane] = {
-            "eligible_row_count":len(eligible),"occupied_fixed_72h_windows":count,"occupied_window_ids":windows,
-            "elapsed_prospective_weeks":weeks,"coverage_band":band,"b2_coverage_ready":count >= 30 and weeks >= 12,
-            "right_edge_partial_window":partial,
+            # Legacy technical aliases retained for compatibility. They are NOT B2-readiness evidence.
+            "eligible_row_count":len(pair_rows),
+            "occupied_fixed_72h_windows":len(pair_windows),
+            "occupied_window_ids":pair_windows,
+            "elapsed_prospective_weeks":pair_weeks,
+            "pair_execution_valid_rows":len(pair_rows),
+            "identifying_opportunity_rows":len(identifying_rows),
+            "occupied_pair_execution_windows":len(pair_windows),
+            "occupied_pair_execution_window_ids":pair_windows,
+            "occupied_identifying_windows":identifying_count,
+            "occupied_identifying_window_ids":identifying_windows,
+            "elapsed_pair_execution_weeks":pair_weeks,
+            "elapsed_identifying_weeks":identifying_weeks,
+            "structural_identifiability":structural,
+            "dependency_provenance_status":provenance,
+            "coverage_band":band,
+            "b2_coverage_ready":identifying_count >= 30 and identifying_weeks >= 12,
+            "right_edge_partial_window":_window_partial(identifying_windows, now),
+            "pair_execution_right_edge_partial_window":_window_partial(pair_windows, now),
         }
     out = {
-        "schema_version":"PROSPECTIVE_B2_COVERAGE_MONITOR_v1","coverage_contract":COVERAGE_CONTRACT,
+        "schema_version":"PROSPECTIVE_B2_COVERAGE_MONITOR_v2","coverage_contract":COVERAGE_CONTRACT,
+        "validity_contract":VALIDITY_CONTRACT,"dependency_map_hash":DEPENDENCY_MAP_HASH,
         "window_seconds":WINDOW_SECONDS,"window_formula":"floor(unix_timestamp_seconds / 259200)",
         "paired_receipt_count":len(rows),"per_lane":per_lane,"b2_analysis_authorized":False,
+        "readiness_basis":"IDENTIFYING_OPPORTUNITY_ONLY",
+        "legacy_pre_r1_rows":"PRE_R1_B2_VALIDITY_UNPROVEN_UNLESS_SEPARATELY_VALIDATED",
     }
     _no_comparison(out)
     return out
+
 
 def collect_from_latest_capture(
     *, capture_root: Path, output_root: Path, sensor_registry_path: Path, policy_registry_path: Path,
@@ -253,7 +396,7 @@ def collect_from_latest_capture(
     full_sensors, reduced_sensors = load_profiles(sensors)
     sensor_hash, policy_hash = file_sha(sensor_registry_path), file_sha(policy_registry_path)
     rotation_hash, crosswalk_hash = file_sha(rotation_evaluator_path), file_sha(crosswalk_contract_path)
-    run_id = "B2P-"+hashlib.sha256((capture_hash+sensor_hash+policy_hash+rotation_hash+crosswalk_hash).encode()).hexdigest()[:20]
+    run_id = "B2P-"+hashlib.sha256((capture_hash+sensor_hash+policy_hash+rotation_hash+crosswalk_hash+VALIDITY_CONTRACT+DEPENDENCY_MAP_HASH).encode()).hexdigest()[:20]
     stamp = utc(capture["captured_at_utc"])
     run_dir = output_root/"runs"/f"{stamp:%Y}"/f"{stamp:%m}"/f"{stamp:%d}"/run_id
     run_dir.mkdir(parents=True, exist_ok=True)
