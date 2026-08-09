@@ -38,7 +38,9 @@ class ExperimentForecastPriorityTest(unittest.TestCase):
                 "forecast_candidates": [{
                     "metric_path": "spot.ETHUSDT.close",
                     "direction": "UP",
-                    "threshold": 2.0,
+                    "target_mode": "PCT_MOVE",
+                    "threshold_pct": 2.0,
+                    "target_value": None,
                     "range_low": None,
                     "range_high": None,
                     "horizon_days": 7,
@@ -85,6 +87,7 @@ class ExperimentForecastPriorityTest(unittest.TestCase):
             forecasts = [json.loads(path.read_text()) for path in (root / "research/framework_memory/forecast_memory").rglob("*.json")]
             self.assertEqual(len(forecasts), 5)
             self.assertIn("spot.ETHUSDT.close", {row["metric_path"] for row in forecasts})
+            self.assertTrue(all(row["unit_contract_version"] == "FORECAST_TARGET_UNITS_v2" for row in forecasts))
 
 
 if __name__ == "__main__":
