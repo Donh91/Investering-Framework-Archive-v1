@@ -6,6 +6,9 @@ on:
       timezone: 'Europe/Copenhagen'
     - cron: '55 23 * * *'
       timezone: 'Europe/Copenhagen'
+    # Final ISO-week catch-up after Sunday 24:00 UTC (02:00 CPH during CEST).
+    - cron: '10 2 * * 1'
+      timezone: 'Europe/Copenhagen'
   workflow_dispatch:
 
 permissions:
@@ -29,12 +32,12 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Materialize last 14 completed hours
+      - name: Materialize last 26 completed hours
         run: |
           python scripts/daily_capture/build_hourly_sequence.py \
             --output-root 03_DAILY_CAPTURE_LOGS/hourly \
             --raw-output hourly-sequence-output \
-            --lookback-hours 14
+            --lookback-hours 26
       - uses: actions/upload-artifact@v4
         if: always()
         with:

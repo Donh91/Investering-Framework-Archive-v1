@@ -95,7 +95,31 @@ jobs:
         run: echo '::warning::Bounded permanent cold-lane checkpoint failed. Compact anchor and 14-day Actions evidence will still be preserved.'
       - name: Build compact permanent live-anchor index
         run: python scripts/daily_capture/build_capture_index.py --status-file collector-status.json --output-root 03_DAILY_CAPTURE_LOGS/captures --run-id "gh-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" --trigger "${GITHUB_EVENT_NAME}"
+
+      - name: Commit live anchor before downstream research
+        shell: bash
+        run: |
+          git config user.name 'framework-data-bot'
+          git config user.email 'framework-data-bot@users.noreply.github.com'
+          git add 03_DAILY_CAPTURE_LOGS/captures 03_DAILY_CAPTURE_LOGS/raw
+          if git diff --cached --quiet; then
+            echo "No new live-anchor state to commit."
+          else
+            git commit -m "data: log live anchor ${GITHUB_RUN_ID}"
+            pushed=false
+            for attempt in 1 2 3; do
+              git rebase --abort 2>/dev/null || true
+              if git pull --rebase origin main && git push origin HEAD:main; then pushed=true; break; fi
+              sleep $((attempt * 5))
+            done
+            [ "$pushed" = true ]
+            git fetch origin main
+            git merge-base --is-ancestor HEAD origin/main
+          fi
+
       - name: Materialize blinded Full-vs-Reduced prospective evidence
+        id: dual_run
+        continue-on-error: true
         run: |
           python scripts/daily_capture/materialize_blind_dual_run.py \
             --capture-root 03_DAILY_CAPTURE_LOGS/captures \
@@ -104,6 +128,28 @@ jobs:
             --policy-registry 04_MARKET_LEARNING/backtests/framework_backtest_readiness_build_v1/architecture/POLICY_FAMILY_REGISTRY_v1.json \
             --rotation-evaluator backtest_engine/rotation.py \
             --crosswalk-contract 04_MARKET_LEARNING/backtests/framework_backtest_readiness_build_v1/prospective_dual_run_v2/P3_SHADOW_SIMPLIFICATION_DUAL_RUN_v2.json
+      - name: Report downstream research degradation without invalidating anchor
+        if: steps.dual_run.outcome == 'failure'
+        run: echo '::warning::Prospective dual-run materialization failed after the live anchor was durably committed. Market observation remains valid shadow calibration evidence.'
+      - name: Commit blinded paired evidence independently
+        if: steps.dual_run.outcome == 'success'
+        shell: bash
+        run: |
+          git config user.name 'framework-data-bot'
+          git config user.email 'framework-data-bot@users.noreply.github.com'
+          git add 04_MARKET_LEARNING/backtests/framework_backtest_readiness_build_v1/prospective_dual_run_v2/evidence
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "research: materialize blinded paired evidence ${GITHUB_RUN_ID}"
+          pushed=false
+          for attempt in 1 2 3; do
+            git rebase --abort 2>/dev/null || true
+            if git pull --rebase origin main && git push origin HEAD:main; then pushed=true; break; fi
+            sleep $((attempt * 5))
+          done
+          [ "$pushed" = true ]
+          git fetch origin main
+          git merge-base --is-ancestor HEAD origin/main
+
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -120,23 +166,6 @@ jobs:
             04_MARKET_LEARNING/backtests/framework_backtest_readiness_build_v1/prospective_dual_run_v2/evidence/COVERAGE_LATEST.json
           retention-days: 14
           if-no-files-found: warn
-      - name: Commit compact anchor, bounded cold checkpoint and blinded paired evidence with verified readback
-        shell: bash
-        run: |
-          git config user.name 'framework-data-bot'
-          git config user.email 'framework-data-bot@users.noreply.github.com'
-          git add 03_DAILY_CAPTURE_LOGS/captures 03_DAILY_CAPTURE_LOGS/raw 04_MARKET_LEARNING/backtests/framework_backtest_readiness_build_v1/prospective_dual_run_v2/evidence
-          if git diff --cached --quiet; then exit 0; fi
-          git commit -m "data: log live anchor and blinded paired evidence ${GITHUB_RUN_ID}"
-          pushed=false
-          for attempt in 1 2 3; do
-            git rebase --abort 2>/dev/null || true
-            if git pull --rebase origin main && git push origin HEAD:main; then pushed=true; break; fi
-            sleep $((attempt * 5))
-          done
-          [ "$pushed" = true ]
-          git fetch origin main
-          git merge-base --is-ancestor HEAD origin/main
 
   notify:
     needs: capture

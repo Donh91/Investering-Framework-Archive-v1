@@ -265,6 +265,7 @@ def main() -> None:
         "hourly_sequence_lane": "03_DAILY_CAPTURE_LOGS/hourly",
         "hourly_sequence_owned_fields": [
             "BTCUSDT_1H_OHLCV", "ETHUSDT_1H_OHLCV", "ETHBTC_1H_OHLC",
+            "BTC_ETH_QUOTE_VOLUME_1H", "BTC_ETH_TRADE_COUNT_1H", "BTC_ETH_TAKER_BUY_SHARE_1H",
             "BTC_OPEN_INTEREST_1H", "ETH_OPEN_INTEREST_1H",
             "BTC_LONG_SHORT_1H", "ETH_LONG_SHORT_1H", "FUNDING_EVENTS",
         ],

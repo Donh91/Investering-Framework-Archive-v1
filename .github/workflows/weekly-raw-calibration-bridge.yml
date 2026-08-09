@@ -2,9 +2,21 @@ name: Weekly Raw Calibration Bridge
 
 on:
   schedule:
+    # Pre-close handoff for Sunday review. Final ISO-week evidence is rebuilt after UTC week close on Monday.
     - cron: '45 23 * * 0'
       timezone: 'Europe/Copenhagen'
+    - cron: '25 2 * * 1'
+      timezone: 'Europe/Copenhagen'
   workflow_dispatch:
+    inputs:
+      mode:
+        description: Weekly calibration mode
+        required: true
+        default: preclose
+        type: choice
+        options:
+          - preclose
+          - final
 
 permissions:
   contents: write
@@ -26,12 +38,31 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Resolve calibration mode
+        id: mode
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            MODE="${{ inputs.mode }}"
+          elif [[ "${{ github.event.schedule }}" == "25 2 * * 1" ]]; then
+            MODE="final"
+          else
+            MODE="preclose"
+          fi
+          echo "mode=$MODE" >> "$GITHUB_OUTPUT"
+          if [[ "$MODE" == "final" ]]; then
+            echo "week_arg=--previous-week" >> "$GITHUB_OUTPUT"
+          else
+            echo "week_arg=" >> "$GITHUB_OUTPUT"
+          fi
       - name: Build sequence-aware weekly calibration pack
         run: |
           python scripts/daily_capture/build_weekly_calibration.py \
             --input-root 03_DAILY_CAPTURE_LOGS/captures \
             --hourly-root 03_DAILY_CAPTURE_LOGS/hourly \
-            --output-root 03_DAILY_CAPTURE_LOGS/weekly
+            --etf-root 03_DAILY_CAPTURE_LOGS/etf \
+            --output-root 03_DAILY_CAPTURE_LOGS/weekly \
+            ${{ steps.mode.outputs.week_arg }}
       - name: Commit weekly handoff with verified readback
         shell: bash
         run: |
@@ -39,7 +70,7 @@ jobs:
           git config user.email 'framework-data-bot@users.noreply.github.com'
           git add 03_DAILY_CAPTURE_LOGS/weekly
           if git diff --cached --quiet; then exit 0; fi
-          git commit -m "data: build weekly sequence calibration pack"
+          git commit -m "data: build ${{ steps.mode.outputs.mode }} weekly sequence calibration pack"
           pushed=false
           for attempt in 1 2 3; do
             git rebase --abort 2>/dev/null || true
