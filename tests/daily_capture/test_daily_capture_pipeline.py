@@ -114,6 +114,7 @@ class DailyCapturePipelineTests(unittest.TestCase):
             for path in output.glob("2026/08/*.csv"):
                 with path.open(newline="") as handle:
                     rows.extend(csv.DictReader(handle))
+            rows.sort(key=lambda row: row["timestamp_utc"])
             self.assertEqual(len(rows), 26)
             self.assertTrue(all(row["btc_quote_volume"] for row in rows))
             self.assertTrue(all(row["eth_quote_volume"] for row in rows))
@@ -200,7 +201,8 @@ class DailyCapturePipelineTests(unittest.TestCase):
             facts_path = root / pack["sequence_facts_path"]
             self.assertTrue(enriched_path.exists())
             self.assertTrue(facts_path.exists())
-            enriched_rows = list(csv.DictReader(enriched_path.open()))
+            with enriched_path.open(newline="") as handle:
+                enriched_rows = list(csv.DictReader(handle))
             self.assertEqual(len(enriched_rows), 26)
             self.assertTrue(enriched_rows[-1]["btc_return_24h_pct"])
             self.assertTrue(enriched_rows[-1]["eth_return_24h_pct"])
