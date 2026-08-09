@@ -12,6 +12,7 @@ on:
       - '.github/workflows/continuity-learning-*.yml'
       - 'research/api_agent/**'
       - 'research/data_architecture/**'
+      - 'research/remediation/forecast_target_units_v2/**'
       - '00_FMOS/CONTINUITY_LEARNING_ARCHITECTURE_v1.md'
       - 'tests/architecture/test_continuity_learning_closure.py'
   workflow_dispatch:
@@ -28,7 +29,17 @@ jobs:
       - uses: actions/setup-python@v5
         with: {python-version: '3.12'}
       - name: Compile continuity modules
-        run: python -m py_compile scripts/api_agent/api_gateway.py scripts/api_agent/build_owner_bound_director_context.py scripts/api_agent/check_delta_ready.py scripts/api_agent/materialize_forecast_candidates.py scripts/daily_capture/persist_raw_payloads.py scripts/learning/ratify_forecast_candidate.py scripts/learning/build_model_calibration_ledger.py scripts/architecture/build_latest_handoff.py
+        run: |
+          python -m py_compile \
+            scripts/api_agent/api_gateway.py \
+            scripts/api_agent/build_owner_bound_director_context.py \
+            scripts/api_agent/check_delta_ready.py \
+            scripts/api_agent/materialize_forecast_candidates.py \
+            scripts/daily_capture/persist_raw_payloads.py \
+            scripts/learning/ratify_forecast_candidate.py \
+            scripts/learning/outcome_maturation_engine.py \
+            scripts/learning/build_model_calibration_ledger.py \
+            scripts/architecture/build_latest_handoff.py
       - name: Run closure tests
         run: python -m unittest tests.architecture.test_continuity_learning_closure tests.api_agent.test_owner_bound_director_context -v
       - name: Verify policy wiring
@@ -39,10 +50,13 @@ jobs:
           grep -q 'SKIPPED_NO_DELTA' .github/workflows/daily-director-shadow.yml
           grep -q 'LATEST_HANDOFF.json' .github/workflows/continuity-learning-maintenance.yml
           grep -q 'forecast_candidates' scripts/api_agent/api_gateway.py
+          grep -q 'FORECAST_TARGET_UNITS_v2' scripts/learning/ratify_forecast_candidate.py
+          grep -q 'LEGACY_V1_TARGET_UNIT_AMBIGUOUS' scripts/learning/outcome_maturation_engine.py
           python - <<'PY'
           import json
           c=json.load(open('research/data_architecture/COMPACT_CAPTURE_SCHEMA_v1.json'))
-          f=json.load(open('research/api_agent/FORECAST_CANDIDATE_CONTRACT_v1.json'))
+          f=json.load(open('research/api_agent/FORECAST_CANDIDATE_CONTRACT_v2.json'))
           assert c['cold_lane']['payload_bytes_required'] is True
           assert f['self_promotion_allowed'] is False
+          assert f['target_unit_contract']=='FORECAST_TARGET_UNITS_v2'
           PY

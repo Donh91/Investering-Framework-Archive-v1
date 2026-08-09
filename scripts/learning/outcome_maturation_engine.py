@@ -7,6 +7,8 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
+UNIT_CONTRACT_VERSION = "FORECAST_TARGET_UNITS_v2"
+
 
 def read(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text())
@@ -37,6 +39,19 @@ def parse_dt(value: str) -> datetime:
     return result.astimezone(timezone.utc)
 
 
+def legacy_unit_ambiguous(forecast: dict[str, Any]) -> bool:
+    if forecast.get("contract") != "FROZEN_FORECAST_v1":
+        return False
+    if forecast.get("unit_contract_version") == UNIT_CONTRACT_VERSION:
+        return False
+    # Automatic experiment RANGE rows converted absolute bounds to percentage bounds before freeze.
+    if forecast.get("source_candidate_id") and forecast.get("direction") == "RANGE":
+        return False
+    # Legacy automatic directional rows and legacy ratified rows lack enough metadata
+    # to distinguish absolute targets from percentages without hindsight/guesswork.
+    return True
+
+
 def validate_forecast(forecast: dict[str, Any]) -> None:
     frozen = parse_dt(forecast["frozen_at_utc"])
     due = parse_dt(forecast["outcome_due_utc"])
@@ -45,6 +60,8 @@ def validate_forecast(forecast: dict[str, Any]) -> None:
     direction = forecast.get("direction")
     if direction not in {"UP", "DOWN", "RANGE"}:
         raise ValueError("invalid_direction")
+    if legacy_unit_ambiguous(forecast):
+        return
     if direction in {"UP", "DOWN"}:
         threshold = forecast.get("threshold_pct")
         if not isinstance(threshold, (int, float)) or float(threshold) <= 0:
@@ -61,6 +78,8 @@ def validate_forecast(forecast: dict[str, Any]) -> None:
 
 
 def classify(forecast: dict[str, Any], start: float, end: float) -> str:
+    if legacy_unit_ambiguous(forecast):
+        raise ValueError("legacy_v1_unit_ambiguous")
     move = (end / start - 1.0) * 100 if start else 0.0
     direction = forecast["direction"]
     if direction == "UP":
@@ -93,7 +112,7 @@ def main() -> None:
             continue
     evidence.sort(key=lambda row: row[0])
 
-    matured = pending = censored = 0
+    matured = pending = censored = quarantined = 0
     errors: list[dict[str, str]] = []
     for path in args.forecast_root.rglob("*.json") if args.forecast_root.exists() else []:
         try:
@@ -102,7 +121,6 @@ def main() -> None:
                 continue
             validate_forecast(forecast)
             forecast_id = forecast["forecast_id"]
-            frozen = parse_dt(forecast["frozen_at_utc"])
             due = parse_dt(forecast["outcome_due_utc"])
             if now < due:
                 pending += 1
@@ -111,16 +129,33 @@ def main() -> None:
             if destination.exists():
                 continue
 
+            if legacy_unit_ambiguous(forecast):
+                outcome = {
+                    "contract": "MATURED_OUTCOME_v3",
+                    "forecast_id": forecast_id,
+                    "status": "CENSORED",
+                    "reason": "LEGACY_V1_TARGET_UNIT_AMBIGUOUS",
+                    "forecast_sha256": sha(forecast),
+                    "created_at_utc": now.isoformat().replace("+00:00", "Z"),
+                    "authority": {"model_weight_change": False, "portfolio_action": False},
+                }
+                destination.parent.mkdir(parents=True, exist_ok=True)
+                destination.write_bytes(canon(outcome))
+                censored += 1
+                quarantined += 1
+                continue
+
             max_ts = due + timedelta(hours=args.max_evidence_lag_hours)
             candidates = [row for row in evidence if due <= row[0] <= max_ts]
             if not candidates:
                 outcome = {
-                    "contract": "MATURED_OUTCOME_v2",
+                    "contract": "MATURED_OUTCOME_v3",
                     "forecast_id": forecast_id,
                     "status": "CENSORED",
                     "reason": "NO_EVIDENCE_WITHIN_MAX_LAG",
                     "forecast_sha256": sha(forecast),
                     "created_at_utc": now.isoformat().replace("+00:00", "Z"),
+                    "authority": {"model_weight_change": False, "portfolio_action": False},
                 }
                 destination.parent.mkdir(parents=True, exist_ok=True)
                 destination.write_bytes(canon(outcome))
@@ -147,7 +182,7 @@ def main() -> None:
 
             if not isinstance(end_value, (int, float)):
                 outcome = {
-                    "contract": "MATURED_OUTCOME_v2",
+                    "contract": "MATURED_OUTCOME_v3",
                     "forecast_id": forecast_id,
                     "status": "CENSORED",
                     "reason": "METRIC_UNAVAILABLE",
@@ -155,11 +190,12 @@ def main() -> None:
                     "evidence_path": str(evidence_path),
                     "evidence_sha256": sha(evidence_value),
                     "created_at_utc": now.isoformat().replace("+00:00", "Z"),
+                    "authority": {"model_weight_change": False, "portfolio_action": False},
                 }
                 censored += 1
             else:
                 outcome = {
-                    "contract": "MATURED_OUTCOME_v2",
+                    "contract": "MATURED_OUTCOME_v3",
                     "forecast_id": forecast_id,
                     "status": "MATURED",
                     "result": classify(forecast, start_value, float(end_value)),
@@ -179,7 +215,7 @@ def main() -> None:
         except Exception as exc:
             errors.append({"path": str(path), "error": str(exc)})
 
-    print(json.dumps({"matured": matured, "censored": censored, "pending": pending, "errors": errors}, sort_keys=True))
+    print(json.dumps({"matured": matured, "censored": censored, "pending": pending, "quarantined": quarantined, "errors": errors}, sort_keys=True))
     if errors:
         raise SystemExit(2)
 

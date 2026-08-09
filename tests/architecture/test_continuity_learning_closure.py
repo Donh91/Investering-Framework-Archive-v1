@@ -28,15 +28,29 @@ class ContinuityLearningTests(unittest.TestCase):
             out=r/'raw';p=subprocess.run(['python',str(ROOT/'scripts/daily_capture/persist_raw_payloads.py'),'--run-id','blocked','--output-root',str(out),'--max-monthly-compressed-bytes','1',str(owner)],text=True,capture_output=True)
             self.assertNotEqual(p.returncode,0);incidents=list((out/'incidents').glob('RAW_STORAGE_blocked.json'));self.assertEqual(len(incidents),1);v=json.loads(incidents[0].read_text());self.assertEqual(v['status'],'BLOCKED');self.assertEqual(v['required_action'],'MIGRATE_RAW_LANE_TO_DEDICATED_DATA_REPOSITORY')
 
-    def test_gateway_schema_contains_unratified_candidates(self):
-        m=load_module('gateway',Path('scripts/api_agent/api_gateway.py'));schema=m.output_schema();self.assertIn('forecast_candidates',schema['properties']);self.assertIn('forecast_candidates',schema['required'])
-        m.validate_output({'status':'READY','summary':'x','evidence_for':[],'evidence_against':[],'uncertainties':[],'hypotheses':[],'forecast_candidates':[{'metric_path':'market_metrics.x','direction':'UP','threshold':1.0,'range_low':None,'range_high':None,'horizon_days':7,'rationale':'test'}]})
+    def test_gateway_schema_contains_explicit_target_units(self):
+        m=load_module('gateway',Path('scripts/api_agent/api_gateway.py'));schema=m.output_schema();item=schema['properties']['forecast_candidates']['items'];self.assertIn('forecast_candidates',schema['required']);self.assertIn('target_mode',item['required']);self.assertIn('threshold_pct',item['properties']);self.assertIn('target_value',item['properties']);self.assertNotIn('threshold',item['properties'])
+        m.validate_output({'status':'READY','summary':'x','evidence_for':[],'evidence_against':[],'uncertainties':[],'hypotheses':[],'forecast_candidates':[{'metric_path':'market_metrics.x','direction':'UP','target_mode':'PCT_MOVE','threshold_pct':1.0,'target_value':None,'range_low':None,'range_high':None,'horizon_days':7,'rationale':'test'}]})
 
-    def test_ratification_is_required_before_freeze(self):
+    def test_ratification_absolute_target_is_normalized_before_freeze(self):
         with tempfile.TemporaryDirectory() as d:
             r=Path(d);candidate=r/'c.json';rat=r/'r.json';base=r/'b.json';out=r/'frozen'
-            candidate.write_text(json.dumps({'contract':'FORECAST_CANDIDATE_v1','candidate_id':'c1','ratification_status':'PENDING','model':'luna','task':'DAILY_DIRECTOR_SHADOW','prompt_sha256':'p','context_sha256':'c','source_output_sha256':'o','candidate':{'metric_path':'market.x','direction':'UP','threshold':1.0,'range_low':None,'range_high':None,'horizon_days':7,'rationale':'r'}}));base.write_text(json.dumps({'market':{'x':100}}));rat.write_text(json.dumps({'contract':'FORECAST_RATIFICATION_PACKET_v1','candidate_id':'c1','decision':'RATIFY','authority':'CHATGPT_FRAMEWORK_OWNER'}))
+            candidate.write_text(json.dumps({'contract':'FORECAST_CANDIDATE_v1','candidate_id':'c1','ratification_status':'PENDING','model':'luna','task':'DAILY_DIRECTOR_SHADOW','prompt_sha256':'p','context_sha256':'c','source_output_sha256':'o','candidate':{'metric_path':'market.x','direction':'DOWN','target_mode':'ABSOLUTE_VALUE','threshold_pct':None,'target_value':98.0,'range_low':None,'range_high':None,'horizon_days':7,'rationale':'r'}}));base.write_text(json.dumps({'market':{'x':100.0}}));rat.write_text(json.dumps({'contract':'FORECAST_RATIFICATION_PACKET_v1','candidate_id':'c1','decision':'RATIFY','authority':'CHATGPT_FRAMEWORK_OWNER'}))
             p=subprocess.run(['python',str(ROOT/'scripts/learning/ratify_forecast_candidate.py'),'--candidate',str(candidate),'--ratification',str(rat),'--baseline-evidence',str(base),'--output-root',str(out)],text=True,capture_output=True)
-            self.assertEqual(p.returncode,0,p.stderr);v=json.loads(next(out.glob('*.json')).read_text());self.assertEqual(v['contract'],'FROZEN_FORECAST_v1');self.assertEqual(v['start_value'],100)
+            self.assertEqual(p.returncode,0,p.stderr);v=json.loads(next(out.glob('*.json')).read_text());self.assertEqual(v['contract'],'FROZEN_FORECAST_v1');self.assertEqual(v['unit_contract_version'],'FORECAST_TARGET_UNITS_v2');self.assertAlmostEqual(v['threshold_pct'],2.0);self.assertEqual(v['target_value'],98.0);self.assertEqual(v['start_value'],100.0)
+
+    def test_ratification_rejects_legacy_ambiguous_threshold(self):
+        with tempfile.TemporaryDirectory() as d:
+            r=Path(d);candidate=r/'c.json';rat=r/'r.json';base=r/'b.json';out=r/'frozen'
+            candidate.write_text(json.dumps({'contract':'FORECAST_CANDIDATE_v1','candidate_id':'c1','ratification_status':'PENDING','candidate':{'metric_path':'market.x','direction':'DOWN','threshold':98.0,'range_low':None,'range_high':None,'horizon_days':7,'rationale':'r'}}));base.write_text(json.dumps({'market':{'x':100.0}}));rat.write_text(json.dumps({'contract':'FORECAST_RATIFICATION_PACKET_v1','candidate_id':'c1','decision':'RATIFY','authority':'CHATGPT_FRAMEWORK_OWNER'}))
+            p=subprocess.run(['python',str(ROOT/'scripts/learning/ratify_forecast_candidate.py'),'--candidate',str(candidate),'--ratification',str(rat),'--baseline-evidence',str(base),'--output-root',str(out)],text=True,capture_output=True)
+            self.assertNotEqual(p.returncode,0);self.assertIn('EXPLICIT_DIRECTIONAL_TARGET_MODE_REQUIRED',p.stderr+p.stdout)
+
+    def test_maturation_quarantines_legacy_directional_units(self):
+        m=load_module('maturation',Path('scripts/learning/outcome_maturation_engine.py'))
+        old={'contract':'FROZEN_FORECAST_v1','direction':'DOWN','source_candidate_id':'EC-old','threshold_pct':64699.1}
+        safe_new={'contract':'FROZEN_FORECAST_v1','direction':'DOWN','unit_contract_version':'FORECAST_TARGET_UNITS_v2','threshold_pct':1.0}
+        old_auto_range={'contract':'FROZEN_FORECAST_v1','direction':'RANGE','source_candidate_id':'EC-old','range_lower_pct':-1.0,'range_upper_pct':1.0}
+        self.assertTrue(m.legacy_unit_ambiguous(old));self.assertFalse(m.legacy_unit_ambiguous(safe_new));self.assertFalse(m.legacy_unit_ambiguous(old_auto_range))
 
 if __name__=='__main__':unittest.main()
