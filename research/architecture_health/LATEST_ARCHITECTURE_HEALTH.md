@@ -1,21 +1,21 @@
 # Architecture Health
 Status: **RED**
-Generated: 2026-08-09T04:42:28.680135Z
+Generated: 2026-08-09T15:55:47.064613Z
 
 Owners: 0/0 PASS
 Accepted DATA PINGs: 0
 CFGI credits remaining: UNKNOWN
 Experiment candidates: 40
-Codex-ready remediation tasks: 8
+Codex-ready remediation tasks: 10
 
 ## Freshness hours
-- capture: 7.023522259722222
-- daily_director: 6.863244481944444
+- capture: 6.562240170277778
+- daily_director: 18.085017948055555
 - weekly_calibration: UNKNOWN
-- etf_owner: 143.85325175916665
-- experiment_registry: 1.5465778152777776
-- experiment_receipt_sync: 1.5465778152777776
-- remediation_queue: 12.686022259722224
+- etf_owner: 155.07502522527778
+- experiment_registry: 12.76835128138889
+- experiment_receipt_sync: 12.76835128138889
+- remediation_queue: 11.080017948055556
 
 ## Blockers
 - NO_WEEKLY_API_OUTPUT_YET
