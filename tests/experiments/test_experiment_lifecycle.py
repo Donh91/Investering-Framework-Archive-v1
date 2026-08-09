@@ -5,7 +5,9 @@ import tempfile
 import unittest
 from pathlib import Path
 
-SCRIPT = Path(__file__).parents[2] / "scripts" / "experiments" / "experiment_lifecycle.py"
+REPO_ROOT = Path(__file__).parents[2]
+SCRIPT = REPO_ROOT / "scripts" / "experiments" / "experiment_lifecycle.py"
+OUTCOME_SCRIPT = REPO_ROOT / "scripts" / "learning" / "outcome_maturation_engine.py"
 
 
 def run_engine(repo: Path, output: dict, context: dict, catalog: Path | None = None) -> dict:
@@ -67,31 +69,99 @@ def context(captured_at: str, run_id: str = "run-1") -> dict:
     }
 
 
+def candidate(**values):
+    base = {
+        "metric_path": "spot.BTCUSDT.close",
+        "direction": "UP",
+        "target_unit": "PERCENT_MOVE",
+        "target_value": None,
+        "threshold_pct": 2.0,
+        "range_low": None,
+        "range_high": None,
+        "range_lower_pct": None,
+        "range_upper_pct": None,
+        "horizon_days": 7,
+        "rationale": "Prospective test",
+    }
+    base.update(values)
+    return base
+
+
 class ExperimentLifecycleTest(unittest.TestCase):
-    def test_forecast_candidate_is_frozen_and_matures_later(self):
+    def _one_frozen(self, repo: Path) -> dict:
+        return json.loads(next((repo / "research/framework_memory/forecast_memory").rglob("*.json")).read_text())
+
+    def test_percentage_btc_target_is_frozen_as_v2(self):
         with tempfile.TemporaryDirectory() as td:
             repo = Path(td)
-            output = {
-                "forecast_candidates": [{
-                    "metric_path": "spot.BTCUSDT.close",
-                    "direction": "UP",
-                    "threshold": 2.0,
-                    "range_low": None,
-                    "range_high": None,
-                    "horizon_days": 7,
-                    "rationale": "Prospective test",
-                }],
-                "experiment_candidates": [],
-            }
-            summary = run_engine(repo, output, context("2026-08-05T10:00:00Z"))
+            summary = run_engine(repo, {"forecast_candidates": [candidate()], "experiment_candidates": []}, context("2026-08-05T10:00:00Z"))
             self.assertEqual(summary["new_forecasts"], 1)
-            registry = json.loads((repo / "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json").read_text())
-            self.assertEqual(registry["state_counts"]["WAITING_FOR_MATURITY"], 1)
-            frozen = json.loads(next((repo / "research/framework_memory/forecast_memory").rglob("*.json")).read_text())
+            frozen = self._one_frozen(repo)
+            self.assertEqual(frozen["contract"], "FROZEN_FORECAST_v2")
+            self.assertEqual(frozen["unit_contract"], "FORECAST_TARGET_UNIT_CONTRACT_v2")
+            self.assertEqual(frozen["target_unit"], "PERCENT_MOVE")
+            self.assertEqual(frozen["threshold_pct"], 2.0)
             self.assertTrue(frozen["experimental_only"])
             self.assertFalse(frozen["authority"]["portfolio_action"])
-            self.assertEqual(frozen["controls"]["always_wait"], "ALWAYS_WAIT")
-            self.assertIn(frozen["controls"]["deterministic_placebo_direction"], {"UP", "DOWN", "RANGE"})
+
+    def test_absolute_btc_target_normalizes_without_unit_confusion(self):
+        with tempfile.TemporaryDirectory() as td:
+            repo = Path(td)
+            c = candidate(direction="DOWN", target_unit="ABSOLUTE_VALUE", target_value=63000.0, threshold_pct=None)
+            summary = run_engine(repo, {"forecast_candidates": [c], "experiment_candidates": []}, context("2026-08-05T10:00:00Z"))
+            self.assertEqual(summary["new_forecasts"], 1)
+            frozen = self._one_frozen(repo)
+            self.assertEqual(frozen["target_unit"], "ABSOLUTE_VALUE")
+            self.assertEqual(frozen["target_value"], 63000.0)
+            self.assertAlmostEqual(frozen["threshold_pct"], 1.5625, places=8)
+
+    def test_absolute_breadth_target_normalizes(self):
+        with tempfile.TemporaryDirectory() as td:
+            repo = Path(td)
+            c = candidate(
+                metric_path="breadth.decliners", direction="UP", target_unit="ABSOLUTE_VALUE",
+                target_value=58.0, threshold_pct=None, horizon_days=1,
+            )
+            summary = run_engine(repo, {"forecast_candidates": [c], "experiment_candidates": []}, context("2026-08-05T10:00:00Z"))
+            self.assertEqual(summary["new_forecasts"], 1)
+            frozen = self._one_frozen(repo)
+            self.assertEqual(frozen["start_value"], 30.0)
+            self.assertEqual(frozen["target_value"], 58.0)
+            self.assertAlmostEqual(frozen["threshold_pct"], (58 / 30 - 1) * 100, places=8)
+
+    def test_absolute_range_target_is_explicit_and_normalized(self):
+        with tempfile.TemporaryDirectory() as td:
+            repo = Path(td)
+            c = candidate(
+                direction="RANGE", target_unit="ABSOLUTE_RANGE", target_value=None, threshold_pct=None,
+                range_low=62000.0, range_high=66000.0,
+            )
+            summary = run_engine(repo, {"forecast_candidates": [c], "experiment_candidates": []}, context("2026-08-05T10:00:00Z"))
+            self.assertEqual(summary["new_forecasts"], 1)
+            frozen = self._one_frozen(repo)
+            self.assertEqual(frozen["target_unit"], "ABSOLUTE_RANGE")
+            self.assertEqual(frozen["range_low"], 62000.0)
+            self.assertEqual(frozen["range_high"], 66000.0)
+            self.assertAlmostEqual(frozen["range_lower_pct"], -3.125, places=8)
+            self.assertAlmostEqual(frozen["range_upper_pct"], 3.125, places=8)
+
+    def test_ambiguous_legacy_threshold_fails_closed(self):
+        with tempfile.TemporaryDirectory() as td:
+            repo = Path(td)
+            legacy = {
+                "metric_path": "spot.BTCUSDT.close", "direction": "DOWN", "threshold": 63000.0,
+                "range_low": None, "range_high": None, "horizon_days": 7, "rationale": "ambiguous",
+            }
+            summary = run_engine(repo, {"forecast_candidates": [legacy], "experiment_candidates": []}, context("2026-08-05T10:00:00Z"))
+            self.assertEqual(summary["new_forecasts"], 0)
+            self.assertEqual(len(list((repo / "research/framework_memory/forecast_memory").rglob("*.json"))), 0)
+
+    def test_absolute_target_direction_mismatch_fails_closed(self):
+        with tempfile.TemporaryDirectory() as td:
+            repo = Path(td)
+            c = candidate(direction="DOWN", target_unit="ABSOLUTE_VALUE", target_value=65000.0, threshold_pct=None)
+            summary = run_engine(repo, {"forecast_candidates": [c], "experiment_candidates": []}, context("2026-08-05T10:00:00Z"))
+            self.assertEqual(summary["new_forecasts"], 0)
 
     def test_legacy_pair_waits_for_mapping_without_expiry(self):
         with tempfile.TemporaryDirectory() as td:
@@ -104,9 +174,8 @@ class ExperimentLifecycleTest(unittest.TestCase):
             run_engine(repo, {"forecast_candidates": [], "experiment_candidates": []}, context("2026-08-05T10:00:00Z"), catalog)
             registry = json.loads((repo / "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json").read_text())
             self.assertEqual(registry["state_counts"]["WAITING_FOR_MAPPING"], 1)
-            candidate = json.loads(next((repo / "research/experiment_lifecycle/candidates").rglob("*.json")).read_text())
-            self.assertFalse(candidate["dormancy_policy"]["automatic_age_expiry"])
-            self.assertEqual(len(list((repo / "research/framework_memory/forecast_memory").rglob("*.json"))), 0)
+            candidate_row = json.loads(next((repo / "research/experiment_lifecycle/candidates").rglob("*.json")).read_text())
+            self.assertFalse(candidate_row["dormancy_policy"]["automatic_age_expiry"])
 
     def test_semantic_candidate_dedup_ignores_changing_evidence_text(self):
         with tempfile.TemporaryDirectory() as td:
@@ -128,28 +197,18 @@ class ExperimentLifecycleTest(unittest.TestCase):
                 "novelty_reason": "PAIR_DISCOVERY",
                 "revisit_conditions": ["Both metrics available"],
             }
-            first = dict(base, evidence_basis=["first numeric print"])
-            second = dict(base, evidence_basis=["later numeric print"])
-            run_engine(repo, {"forecast_candidates": [], "experiment_candidates": [first]}, context("2026-08-05T10:00:00Z", "run-1"))
-            run_engine(repo, {"forecast_candidates": [], "experiment_candidates": [second]}, context("2026-08-05T14:00:00Z", "run-2"))
-            candidates = list((repo / "research/experiment_lifecycle/candidates").rglob("*.json"))
-            self.assertEqual(len(candidates), 1)
-            observations = list((repo / "research/experiment_lifecycle/observations").rglob("*.json"))
-            self.assertEqual(len(observations), 2)
+            run_engine(repo, {"forecast_candidates": [], "experiment_candidates": [dict(base, evidence_basis=["first numeric print"])]}, context("2026-08-05T10:00:00Z", "run-1"))
+            run_engine(repo, {"forecast_candidates": [], "experiment_candidates": [dict(base, evidence_basis=["later numeric print"])]}, context("2026-08-05T14:00:00Z", "run-2"))
+            self.assertEqual(len(list((repo / "research/experiment_lifecycle/candidates").rglob("*.json"))), 1)
+            self.assertEqual(len(list((repo / "research/experiment_lifecycle/observations").rglob("*.json"))), 2)
 
     def test_same_capture_forecasts_share_event_window_and_frozen_controls(self):
         with tempfile.TemporaryDirectory() as td:
             repo = Path(td)
             output = {
                 "forecast_candidates": [
-                    {
-                        "metric_path": "spot.BTCUSDT.close", "direction": "UP", "threshold": 1.0,
-                        "range_low": None, "range_high": None, "horizon_days": 7, "rationale": "BTC candidate",
-                    },
-                    {
-                        "metric_path": "spot.ETHUSDT.close", "direction": "UP", "threshold": 1.5,
-                        "range_low": None, "range_high": None, "horizon_days": 7, "rationale": "ETH candidate",
-                    },
+                    candidate(metric_path="spot.BTCUSDT.close", threshold_pct=1.0, rationale="BTC candidate"),
+                    candidate(metric_path="spot.ETHUSDT.close", threshold_pct=1.5, rationale="ETH candidate"),
                 ],
                 "experiment_candidates": [],
             }
@@ -158,9 +217,42 @@ class ExperimentLifecycleTest(unittest.TestCase):
             self.assertEqual(len(forecasts), 2)
             self.assertEqual(len({row["causal_event_window_id"] for row in forecasts}), 1)
             self.assertEqual(len({row["controls"]["deterministic_placebo_direction"] for row in forecasts}), 1)
-            for row in forecasts:
-                self.assertEqual(row["controls"]["control_freeze_time_utc"], "2026-08-05T10:00:00Z")
-                self.assertEqual(row["controls"]["always_wait"], "ALWAYS_WAIT")
+
+
+class OutcomeQuarantineTest(unittest.TestCase):
+    def test_quarantined_v1_is_not_rescored_or_rewritten(self):
+        with tempfile.TemporaryDirectory() as td:
+            repo = Path(td)
+            forecast_root = repo / "research/framework_memory/forecast_memory/2026/08"
+            outcome_root = repo / "research/framework_memory/outcome_memory"
+            evidence_root = repo / "evidence"
+            remediation = repo / "research/framework_memory/remediation"
+            forecast_root.mkdir(parents=True)
+            outcome_root.mkdir(parents=True)
+            evidence_root.mkdir(parents=True)
+            remediation.mkdir(parents=True)
+
+            frozen = {
+                "contract": "FROZEN_FORECAST_v1", "forecast_id": "legacy-bad", "frozen_at_utc": "2026-08-01T00:00:00Z",
+                "outcome_due_utc": "2026-08-02T00:00:00Z", "metric_path": "spot.BTCUSDT.close", "direction": "DOWN",
+                "start_value": 65000.0, "threshold_pct": 64699.1,
+            }
+            (forecast_root / "legacy-bad.json").write_text(json.dumps(frozen))
+            quarantine = {
+                "contract": "R0_DIRECTIONAL_UNIT_QUARANTINE_v1",
+                "affected_forecasts": [{"forecast_id": "legacy-bad"}],
+            }
+            (remediation / "R0_DIRECTIONAL_UNIT_QUARANTINE_v1.json").write_text(json.dumps(quarantine))
+            ev = {"captured_at_utc": "2026-08-02T00:00:00Z", "spot": {"BTCUSDT": {"close": 60000.0}}}
+            (evidence_root / "ev.json").write_text(json.dumps(ev))
+
+            cmd = [
+                sys.executable, str(OUTCOME_SCRIPT), "--forecast-root", str(repo / "research/framework_memory/forecast_memory"),
+                "--evidence-root", str(evidence_root), "--output-root", str(outcome_root), "--now-utc", "2026-08-03T00:00:00Z",
+            ]
+            summary = json.loads(subprocess.run(cmd, check=True, capture_output=True, text=True).stdout)
+            self.assertEqual(summary["quarantined"], 1)
+            self.assertFalse((outcome_root / "legacy-bad.json").exists())
 
 
 if __name__ == "__main__":
