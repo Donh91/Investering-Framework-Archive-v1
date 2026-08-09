@@ -1,0 +1,49 @@
+{
+  "contract": "ETF_ADAPTER_READINESS_PREFLIGHT_v1",
+  "experiment_id": "ETF-ABSORPTION-TRANSMISSION-v1",
+  "audited_head_before_branch": "b40de52d026fc4907f01aac2d2401b4322f1a22d",
+  "preflight_status": "ADAPTER_IMPLEMENTED_PENDING_CI_AND_FIRST_LIVE_OWNER_ROW",
+  "current_experiment_status": "QUEUED_NOT_RUNNING",
+  "owner_lane": {
+    "workflow": ".github/workflows/daily-settled-etf-calibration.yml",
+    "source_contract": "DAILY_SETTLED_ETF_CALIBRATION_v1",
+    "current_latest_pointer_present_at_preflight": false,
+    "reason": "The settled ETF lane was merged after the day's scheduled 08:05 Europe/Copenhagen run; no live owner row existed yet at the audit cutoff.",
+    "next_normal_collection_requires_no_manual_research_call": true
+  },
+  "adapter": {
+    "contract": "ETF_OWNER_INPUT_ADAPTER_v1",
+    "script": "scripts/experiments/etf_absorption_transmission_v1.py",
+    "timestamp_safe_join": true,
+    "availability_clock": "retrieved_at_utc",
+    "future_record_rejected": true,
+    "late_publication_not_backdated": true,
+    "weekend_holiday_rows_synthesized": false,
+    "revisions_asof_cutoff": true,
+    "interpolation": false,
+    "forward_fill": false,
+    "flow_state_derived": false,
+    "event_definition_applied": false,
+    "external_calls_performed": 0
+  },
+  "execution_gate_after_preflight": {
+    "TIMESTAMP_SAFE_EXISTING_OWNER_JOIN": "IMPLEMENTED_PENDING_CI",
+    "NO_DUPLICATE_ETF_API_OR_WEB_CALLS": "PASS_BY_DESIGN",
+    "SPAR_FRAGILITY_REVIEW_COMPLETE": false,
+    "FROZEN_EVENT_DEFINITION": false,
+    "MATCHED_CONTROL_WINDOWS": false,
+    "FNP_EXIT_OPPORTUNITY_COST_EVALUATION": false,
+    "experiment_authorized_to_run": false
+  },
+  "scientific_non_actions": {
+    "etf_experiment_run": false,
+    "outcomes_opened": false,
+    "flow_thresholds_defined": false,
+    "absorption_thresholds_defined": false,
+    "market_rules_changed": false,
+    "weights_changed": false,
+    "portfolio_authority_changed": false,
+    "new_cfgi_credits": 0,
+    "new_openai_usd": 0
+  }
+}
