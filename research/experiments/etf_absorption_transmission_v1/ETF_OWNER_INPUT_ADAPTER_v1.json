@@ -1,0 +1,57 @@
+{
+  "contract": "ETF_OWNER_INPUT_ADAPTER_v1",
+  "experiment_id": "ETF-ABSORPTION-TRANSMISSION-v1",
+  "status": "FROZEN_PREEXECUTION_DATA_ADAPTER",
+  "authority": "SHADOW_RESEARCH_INPUT_ONLY",
+  "source_contract": "DAILY_SETTLED_ETF_CALIBRATION_v1",
+  "source_root": "03_DAILY_CAPTURE_LOGS/etf",
+  "selection": {
+    "rule": "MAX(retrieved_at_utc) WHERE retrieved_at_utc <= cutoff_utc",
+    "availability_clock": "retrieved_at_utc",
+    "session_date_is_availability_time": false,
+    "revisions": "ASOF_LATEST_KNOWN_REVISION_ONLY",
+    "weekend_holiday_behavior": "NO_SYNTHETIC_SESSION; retain only last owner record actually known by cutoff",
+    "interpolation": false,
+    "forward_fill": false
+  },
+  "required_owner_verification": {
+    "retrieval_count": 2,
+    "minimum_separation_seconds": 60,
+    "rows_identical_across_retrievals": true,
+    "all_fund_cells_known": true,
+    "total_parity_required": true,
+    "source": "FARSIDE_CANONICAL_TABLES",
+    "row_signature_recomputed": true,
+    "btc_and_eth_same_session_required": true
+  },
+  "outputs": [
+    "session_date",
+    "known_at_utc",
+    "source_path",
+    "row_signature_sha256",
+    "BTC_raw_reported_total",
+    "ETH_raw_reported_total",
+    "session_age_calendar_days_at_cutoff"
+  ],
+  "explicit_non_outputs": [
+    "btc_etf_flow_state",
+    "eth_etf_flow_state",
+    "absorption_state",
+    "event_label",
+    "signal_strength",
+    "market_interpretation"
+  ],
+  "scientific_boundary": {
+    "experiment_executed": false,
+    "event_definition_frozen_by_this_adapter": false,
+    "matched_control_windows_built": false,
+    "outcomes_opened": false,
+    "new_external_calls": 0,
+    "new_cfgi_credits": 0,
+    "new_openai_usd": 0,
+    "market_rules_changed": false,
+    "thresholds_changed": false,
+    "weights_changed": false,
+    "portfolio_authority_changed": false
+  }
+}
