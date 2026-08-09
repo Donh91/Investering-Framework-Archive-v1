@@ -1,0 +1,38 @@
+{
+  "contract": "FORECAST_TARGET_UNIT_CONTRACT_v2",
+  "status": "ACTIVE_SHADOW_ONLY",
+  "directional_units": {
+    "ABSOLUTE_VALUE": {
+      "required": ["target_value", "start_value"],
+      "forbidden": ["threshold_pct", "range_low", "range_high", "range_lower_pct", "range_upper_pct"],
+      "normalization": "abs((target_value/start_value)-1)*100",
+      "direction_consistency_required": true
+    },
+    "PERCENT_MOVE": {
+      "required": ["threshold_pct"],
+      "forbidden": ["target_value", "range_low", "range_high", "range_lower_pct", "range_upper_pct"],
+      "threshold_pct_positive": true
+    }
+  },
+  "range_units": {
+    "ABSOLUTE_RANGE": {
+      "required": ["range_low", "range_high", "start_value"],
+      "forbidden": ["target_value", "threshold_pct", "range_lower_pct", "range_upper_pct"],
+      "normalization": ["(range_low/start_value-1)*100", "(range_high/start_value-1)*100"]
+    },
+    "PERCENT_RANGE": {
+      "required": ["range_lower_pct", "range_upper_pct"],
+      "forbidden": ["target_value", "threshold_pct", "range_low", "range_high"]
+    }
+  },
+  "legacy_ambiguous_field": "threshold",
+  "legacy_ambiguous_field_policy": "FAIL_CLOSED_NO_INFERENCE",
+  "new_frozen_contract": "FROZEN_FORECAST_v2",
+  "legacy_frozen_contract": "FROZEN_FORECAST_v1_IMMUTABLE",
+  "authority": {
+    "portfolio_action": false,
+    "framework_state_change": false,
+    "model_weight_change": false,
+    "canonical_promotion": false
+  }
+}
