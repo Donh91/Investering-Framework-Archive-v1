@@ -67,7 +67,7 @@ def decide(root: Path, queue: dict[str, Any]) -> dict[str, Any]:
     elif frag and frag.get("status") == "ROBUSTNESS_REVIEW_READY":
         # Legacy pre-Phase-II fragility output must never open ETF execution.
         action = "WAIT"
-        reason = "LEGACY_SPAP_FRAGILITY_READY_INVALID_AFTER_PHASE2_METHODS_REVIEW"
+        reason = "LEGACY_SPAR_FRAGILITY_READY_INVALID_AFTER_PHASE2_METHODS_REVIEW"
     elif frag and frag.get("status") == "METHODS_BLOCKED_PLACEBO_REGIME_NOT_FROZEN":
         if stale_hours is not None and stale_hours >= 12:
             action = "RUN_SPAR_BASE"
