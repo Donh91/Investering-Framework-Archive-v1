@@ -77,9 +77,17 @@ jobs:
           d=json.load(open('LATEST_CODEX_READY_TASKS.json'))
           print('# Codex-ready remediation queue\n')
           print(f"Generated: `{d.get('generated_at_utc')}`\n")
-          print('Use `LATEST_CODEX_READY_TASKS.json` as the machine authority. Do not broaden change scope, modify market rules, self-merge or bypass tests.\n')
+          print('Use `LATEST_CODEX_READY_TASKS.json` as the machine authority. Re-read fresh health before changing code, bind the task with its transition receipt command, and stop as a clean no-op if the precondition no longer holds. Do not broaden change scope, modify market rules, self-merge or bypass tests.\n')
           for t in d.get('tasks', []):
-              print(f"- `{t.get('signature')}` - **{t.get('workflow')}** / `{t.get('finding')}` - run `{t.get('latest_run_id')}` - gate `{t.get('post_fix_gate')}`")
+              print(f"## {t.get('workflow')} / {t.get('finding')}")
+              print(f"- Signature: `{t.get('signature')}`")
+              print(f"- Run: `{t.get('latest_run_id')}`")
+              print(f"- Objective: {t.get('objective')}")
+              print(f"- Precondition: {t.get('precondition')}")
+              print(f"- Clean no-op: {t.get('clean_noop_condition')}")
+              print(f"- Stop: {t.get('stop_condition')}")
+              print(f"- Post-fix gate: `{t.get('post_fix_gate')}`")
+              print(f"- Fresh-state binding: `{t.get('fresh_state_preflight_command')}`\n")
           PY
             if [ -z "$existing" ]; then
               gh issue create --title "$title" --body-file /tmp/codex-ready.md
@@ -87,7 +95,7 @@ jobs:
               gh issue comment "$existing" --body-file /tmp/codex-ready.md
             fi
           elif [ -n "$existing" ]; then
-            gh issue comment "$existing" --body "No CODEX_READY tasks remain at run ${GITHUB_RUN_ID}. Close only after post-fix observation confirms resolution."
+            gh issue comment "$existing" --body "No CODEX_READY tasks remain at run ${GITHUB_RUN_ID}. Close only after post-fix observation confirms resolution or a task is explicitly cleared as no-change."
           fi
       - uses: actions/upload-artifact@v4
         if: always()

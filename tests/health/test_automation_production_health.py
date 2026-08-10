@@ -25,6 +25,19 @@ def healthy_writer(tmp_path: Path) -> dict:
     return module.workflow_static(path)
 
 
+def expected_block(tmp_path: Path, scheduled: bool = False) -> dict:
+    trigger = "  schedule:\n    - cron: '0 1 * * *'\n      timezone: 'Europe/Copenhagen'\n" if scheduled else "  workflow_dispatch:\n"
+    path = write_workflow(
+        tmp_path,
+        "# framework-lifecycle: EXPECTED_BLOCK\n"
+        "# framework-lifecycle-reason: TEST_FREEZE\n"
+        "# framework-lifecycle-since: 2026-08-03T05:00:00Z\n"
+        "# framework-expected-exit: 78\n"
+        f"name: Test\non:\n{trigger}jobs:\n  x:\n    steps:\n      - run: |\n          echo TEST_FREEZE\n          exit 78\n",
+    )
+    return module.workflow_static(path)
+
+
 def test_writer_without_global_lock_is_red(tmp_path: Path) -> None:
     path = write_workflow(
         tmp_path,
@@ -71,7 +84,78 @@ def test_consecutive_failures_are_red(tmp_path: Path) -> None:
     status, findings = module.classify(row, datetime(2026, 8, 3, 12, tzinfo=timezone.utc))
     assert status == "RED"
     assert "REPEATED_CONSECUTIVE_FAILURES" in findings
-    assert "LATEST_RUN_FAILED" not in findings  # non-scheduled workflows are judged by streak here
+    assert "LATEST_RUN_FAILED" not in findings
+
+
+def test_expected_block_does_not_turn_historical_failures_into_codex_failure(tmp_path: Path) -> None:
+    row = expected_block(tmp_path)
+    row["live"] = {
+        "state": "active",
+        "latest_run": {"status": "completed", "conclusion": "failure", "created_at": "2026-08-03T06:00:00Z"},
+        "recent_failure_count": 5,
+        "success_streak": 0,
+        "failure_streak": 5,
+    }
+    status, findings = module.classify(row, datetime(2026, 8, 3, 12, tzinfo=timezone.utc))
+    assert status == "AMBER"
+    assert "EXPECTED_BLOCK" in findings
+    assert "REPEATED_CONSECUTIVE_FAILURES" not in findings
+    assert "LATEST_RUN_FAILED" not in findings
+
+
+def test_expected_block_with_schedule_is_red(tmp_path: Path) -> None:
+    row = expected_block(tmp_path, scheduled=True)
+    row["live"] = {"state": "active", "latest_run": None, "failure_streak": 0, "recent_failure_count": 0}
+    status, findings = module.classify(row, datetime(2026, 8, 3, 12, tzinfo=timezone.utc))
+    assert status == "RED"
+    assert "EXPECTED_BLOCK_HAS_SCHEDULE" in findings
+
+
+def test_expected_block_historical_success_before_declaration_is_not_red(tmp_path: Path) -> None:
+    row = expected_block(tmp_path)
+    row["live"] = {
+        "state": "active",
+        "latest_run": {"status": "completed", "conclusion": "success", "created_at": "2026-08-03T04:00:00Z"},
+        "recent_failure_count": 0,
+        "success_streak": 1,
+        "failure_streak": 0,
+    }
+    status, findings = module.classify(row, datetime(2026, 8, 3, 12, tzinfo=timezone.utc))
+    assert status == "AMBER"
+    assert "EXPECTED_BLOCK_UNEXPECTED_SUCCESS" not in findings
+
+
+def test_expected_block_unexpected_success_is_red(tmp_path: Path) -> None:
+    row = expected_block(tmp_path)
+    row["live"] = {
+        "state": "active",
+        "latest_run": {"status": "completed", "conclusion": "success", "created_at": "2026-08-03T06:00:00Z"},
+        "recent_failure_count": 0,
+        "success_streak": 1,
+        "failure_streak": 0,
+    }
+    status, findings = module.classify(row, datetime(2026, 8, 3, 12, tzinfo=timezone.utc))
+    assert status == "RED"
+    assert "EXPECTED_BLOCK_UNEXPECTED_SUCCESS" in findings
+
+
+def test_pending_first_run_suppresses_no_history_but_remains_visible(tmp_path: Path) -> None:
+    path = write_workflow(tmp_path, "# framework-lifecycle: PENDING_FIRST_EXPECTED_RUN\nname: Test\non:\n  schedule:\n    - cron: '0 1 * * *'\n      timezone: 'Europe/Copenhagen'\njobs:\n  x:\n    steps:\n      - run: echo ok\n")
+    row = module.workflow_static(path)
+    row["live"] = {"state": "active", "latest_run": None, "failure_streak": 0, "recent_failure_count": 0}
+    status, findings = module.classify(row, datetime(2026, 8, 3, 12, tzinfo=timezone.utc))
+    assert status == "AMBER"
+    assert "PENDING_FIRST_EXPECTED_RUN" in findings
+    assert "NO_RUN_HISTORY" not in findings
+
+
+def test_invalid_lifecycle_is_red(tmp_path: Path) -> None:
+    path = write_workflow(tmp_path, "# framework-lifecycle: MAYBE\nname: Test\non:\n  workflow_dispatch:\njobs:\n  x:\n    steps:\n      - run: echo ok\n")
+    row = module.workflow_static(path)
+    row["live"] = {"state": "active", "latest_run": None, "failure_streak": 0, "recent_failure_count": 0}
+    status, findings = module.classify(row, datetime(2026, 8, 3, 12, tzinfo=timezone.utc))
+    assert status == "RED"
+    assert "INVALID_LIFECYCLE_STATE" in findings
 
 
 def test_success_after_failures_is_amber_recovering(tmp_path: Path) -> None:

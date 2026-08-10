@@ -13,6 +13,7 @@ from typing import Any
 UTC = timezone.utc
 WRITER_GROUP = "framework-main-writer"
 GOOD_CONCLUSIONS = {"success", "neutral", "skipped"}
+LIFECYCLE_STATES = {"ACTIVE", "EXPECTED_BLOCK", "PENDING_FIRST_EXPECTED_RUN", "RETIRED"}
 
 
 def utc_now() -> datetime:
@@ -42,6 +43,11 @@ def api_json(url: str, token: str) -> dict[str, Any]:
         return json.load(response)
 
 
+def _directive(text: str, key: str) -> str | None:
+    match = re.search(rf"(?mi)^\s*#\s*{re.escape(key)}:\s*([^\n#]+?)\s*$", text)
+    return match.group(1).strip() if match else None
+
+
 def workflow_static(path: Path) -> dict[str, Any]:
     text = path.read_text(errors="ignore")
     writes = "contents: write" in text and "git push" in text
@@ -55,7 +61,22 @@ def workflow_static(path: Path) -> dict[str, Any]:
         writer_group = match.group(1).strip().strip("'\"")
     cron_count = len(re.findall(r"(?m)^\s*-\s*cron:\s*", text))
     permissions = sorted(set(re.findall(r"(?m)^\s{2}([a-z-]+):\s*(read|write|none)\s*$", text)))
+
+    lifecycle_raw = (_directive(text, "framework-lifecycle") or "ACTIVE").upper()
+    lifecycle_state = lifecycle_raw if lifecycle_raw in LIFECYCLE_STATES else "INVALID"
+    lifecycle_reason = _directive(text, "framework-lifecycle-reason")
+    expected_exit_raw = _directive(text, "framework-expected-exit")
+    lifecycle_since = _directive(text, "framework-lifecycle-since")
+    expected_exit = None
+    if expected_exit_raw is not None:
+        try:
+            expected_exit = int(expected_exit_raw)
+        except ValueError:
+            expected_exit = None
+
     risks: list[str] = []
+    if lifecycle_state == "INVALID":
+        risks.append("INVALID_LIFECYCLE_STATE")
     if writes and writer_group != WRITER_GROUP:
         risks.append("NON_GLOBAL_WRITER_LOCK")
     if writes and "git rebase --abort" not in text:
@@ -70,6 +91,23 @@ def workflow_static(path: Path) -> dict[str, Any]:
         risks.append("SCHEDULE_WITHOUT_EXPLICIT_TIMEZONE")
     if "actions/upload-artifact@" in text and "retention-days:" not in text:
         risks.append("ARTIFACT_RETENTION_UNBOUNDED")
+
+    if lifecycle_state == "EXPECTED_BLOCK":
+        if not lifecycle_since or parse_ts(lifecycle_since) is None:
+            risks.append("EXPECTED_BLOCK_SINCE_INVALID")
+        if scheduled:
+            risks.append("EXPECTED_BLOCK_HAS_SCHEDULE")
+        if not lifecycle_reason:
+            risks.append("EXPECTED_BLOCK_REASON_MISSING")
+        if expected_exit != 78:
+            risks.append("EXPECTED_BLOCK_EXIT_CODE_INVALID")
+        if "exit 78" not in text:
+            risks.append("EXPECTED_BLOCK_EXIT_CONTRACT_MISSING")
+    elif lifecycle_state == "PENDING_FIRST_EXPECTED_RUN" and not scheduled:
+        risks.append("PENDING_FIRST_RUN_NOT_SCHEDULED")
+    elif lifecycle_state == "RETIRED" and scheduled:
+        risks.append("RETIRED_WORKFLOW_STILL_SCHEDULED")
+
     return {
         "workflow": path.name,
         "path": str(path),
@@ -81,6 +119,10 @@ def workflow_static(path: Path) -> dict[str, Any]:
         "openai_enabled": uses_openai,
         "cfgi_enabled": uses_cfgi,
         "permissions": [{"scope": scope, "level": level} for scope, level in permissions],
+        "lifecycle_state": lifecycle_state,
+        "lifecycle_reason": lifecycle_reason,
+        "expected_exit_code": expected_exit,
+        "lifecycle_since": lifecycle_since,
         "static_risks": risks,
     }
 
@@ -136,30 +178,51 @@ def classify(row: dict[str, Any], now: datetime) -> tuple[str, list[str]]:
     findings = list(row.get("static_risks", []))
     live = row.get("live") or {}
     latest = live.get("latest_run")
+    lifecycle = row.get("lifecycle_state") or "ACTIVE"
+
     if not live:
         findings.append("WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE")
     elif live.get("state") != "active":
         findings.append("WORKFLOW_NOT_ACTIVE")
-    if row["scheduled"]:
-        if not latest:
-            findings.append("NO_RUN_HISTORY")
-        else:
-            created = parse_ts(latest.get("created_at"))
-            if created:
-                age = now - created
-                threshold = timedelta(hours=36 if row["cron_count"] else 192)
-                if age > threshold:
-                    findings.append("SCHEDULE_STALE")
-            if latest.get("status") == "completed" and latest.get("conclusion") not in GOOD_CONCLUSIONS:
-                findings.append("LATEST_RUN_FAILED")
-            elif latest.get("status") in {"queued", "in_progress", "waiting", "requested", "pending"}:
-                updated = parse_ts(latest.get("updated_at"))
-                if updated and now - updated > timedelta(hours=2):
-                    findings.append("RUN_STUCK_OR_DELAYED")
-    if live.get("failure_streak", 0) >= 2:
-        findings.append("REPEATED_CONSECUTIVE_FAILURES")
-    elif latest and latest.get("conclusion") in GOOD_CONCLUSIONS and live.get("recent_failure_count", 0) >= 2:
-        findings.append("RECOVERING_AFTER_RECENT_FAILURES")
+
+    if lifecycle == "EXPECTED_BLOCK":
+        findings.append("EXPECTED_BLOCK")
+        since = parse_ts(row.get("lifecycle_since"))
+        created = parse_ts(latest.get("created_at")) if latest else None
+        if latest and since and created and created >= since and latest.get("status") == "completed" and latest.get("conclusion") in GOOD_CONCLUSIONS:
+            findings.append("EXPECTED_BLOCK_UNEXPECTED_SUCCESS")
+        elif latest and latest.get("status") in {"queued", "in_progress", "waiting", "requested", "pending"}:
+            updated = parse_ts(latest.get("updated_at"))
+            if updated and now - updated > timedelta(hours=2):
+                findings.append("RUN_STUCK_OR_DELAYED")
+    elif lifecycle == "RETIRED":
+        findings.append("RETIRED_WORKFLOW_LOCAL_FILE_PRESENT")
+    else:
+        if row["scheduled"]:
+            if not latest:
+                if lifecycle == "PENDING_FIRST_EXPECTED_RUN":
+                    findings.append("PENDING_FIRST_EXPECTED_RUN")
+                else:
+                    findings.append("NO_RUN_HISTORY")
+            else:
+                if lifecycle == "PENDING_FIRST_EXPECTED_RUN":
+                    findings.append("PENDING_FIRST_RUN_ALREADY_RAN")
+                created = parse_ts(latest.get("created_at"))
+                if created:
+                    age = now - created
+                    threshold = timedelta(hours=36 if row["cron_count"] else 192)
+                    if age > threshold:
+                        findings.append("SCHEDULE_STALE")
+                if latest.get("status") == "completed" and latest.get("conclusion") not in GOOD_CONCLUSIONS:
+                    findings.append("LATEST_RUN_FAILED")
+                elif latest.get("status") in {"queued", "in_progress", "waiting", "requested", "pending"}:
+                    updated = parse_ts(latest.get("updated_at"))
+                    if updated and now - updated > timedelta(hours=2):
+                        findings.append("RUN_STUCK_OR_DELAYED")
+        if live.get("failure_streak", 0) >= 2:
+            findings.append("REPEATED_CONSECUTIVE_FAILURES")
+        elif latest and latest.get("conclusion") in GOOD_CONCLUSIONS and live.get("recent_failure_count", 0) >= 2:
+            findings.append("RECOVERING_AFTER_RECENT_FAILURES")
 
     critical = {
         "PR_TARGET_WITH_WRITE_OR_SECRET",
@@ -167,6 +230,14 @@ def classify(row: dict[str, Any], now: datetime) -> tuple[str, list[str]]:
         "REPEATED_CONSECUTIVE_FAILURES",
         "NON_GLOBAL_WRITER_LOCK",
         "NO_MAIN_READBACK",
+        "INVALID_LIFECYCLE_STATE",
+        "EXPECTED_BLOCK_HAS_SCHEDULE",
+        "EXPECTED_BLOCK_SINCE_INVALID",
+        "EXPECTED_BLOCK_REASON_MISSING",
+        "EXPECTED_BLOCK_EXIT_CODE_INVALID",
+        "EXPECTED_BLOCK_EXIT_CONTRACT_MISSING",
+        "EXPECTED_BLOCK_UNEXPECTED_SUCCESS",
+        "RETIRED_WORKFLOW_STILL_SCHEDULED",
     }
     status = "RED" if critical.intersection(findings) else ("AMBER" if findings else "GREEN")
     return status, sorted(set(findings))
@@ -212,6 +283,7 @@ def main() -> None:
 
     result = {
         "contract": "AUTOMATION_PRODUCTION_HEALTH_v2_1",
+        "lifecycle_semantics": "AUTOMATION_LIFECYCLE_v1",
         "generated_at_utc": now.isoformat().replace("+00:00", "Z"),
         "repository": args.repo,
         "status": overall,
@@ -243,13 +315,13 @@ def main() -> None:
         f"GREEN / AMBER / RED: {result['green_count']} / {result['amber_count']} / {result['red_count']}",
         "",
         "## Workflow matrix",
-        "| Workflow | Schedule | Writer | Last conclusion | Last run | Status | Findings |",
-        "|---|---:|---:|---|---|---|---|",
+        "| Workflow | Lifecycle | Schedule | Writer | Last conclusion | Last run | Status | Findings |",
+        "|---|---|---:|---:|---|---|---|---|",
     ]
     for row in rows:
         latest = (row.get("live") or {}).get("latest_run") or {}
         lines.append(
-            f"| `{row['workflow']}` | {'yes' if row['scheduled'] else 'no'} | {'yes' if row['writes_main'] else 'no'} | "
+            f"| `{row['workflow']}` | `{row.get('lifecycle_state')}` | {'yes' if row['scheduled'] else 'no'} | {'yes' if row['writes_main'] else 'no'} | "
             f"{latest.get('conclusion') or latest.get('status') or 'none'} | {latest.get('created_at') or 'none'} | "
             f"**{row['status']}** | {', '.join(row['findings']) or 'None'} |"
         )
