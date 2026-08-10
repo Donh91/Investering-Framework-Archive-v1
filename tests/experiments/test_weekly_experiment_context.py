@@ -72,7 +72,7 @@ class WeeklyExperimentContextTest(unittest.TestCase):
                 "--output", str(output),
             ], check=True)
             value = json.loads(output.read_text())
-            self.assertEqual(value["contract"], "WEEKLY_API_CALIBRATION_CONTEXT_v5")
+            self.assertEqual(value["contract"], "WEEKLY_API_CALIBRATION_CONTEXT_v6")
             learning = value["experiment_learning"]
             self.assertEqual(learning["candidate_count"], 2)
             self.assertEqual(learning["latent_candidate_count"], 1)
