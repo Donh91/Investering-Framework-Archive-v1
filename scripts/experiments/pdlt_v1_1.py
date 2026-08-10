@@ -8,6 +8,22 @@ from pathlib import Path
 from typing import Any
 
 FIELDS = ["score","volatility","volume","impulse","technical","social","dominance","trends","whales","orders"]
+DISCOVERY_METHODS = {
+    "methods_amendment": "PDLT_METHODS_HARDENING_P2_2026-08-10",
+    "selection_target": "PULLBACK_72H",
+    "train_end_utc_exclusive": "2026-07-22T00:00:00Z",
+    "holdout_start_utc_inclusive": "2026-08-05T00:00:00Z",
+    "purge_hours": 336,
+    "enumerated_rule_count": 120,
+    "single_rules": 30,
+    "pair_rules": 90,
+    "minimum_train_fires": 8,
+    "minimum_holdout_fires": 8,
+    "maximum_frozen_candidates": 3,
+    "holdout_probability_source": "TRAIN_DERIVED_ONLY",
+    "holdout_brier_requirement": "STRICTLY_POSITIVE_IMPROVEMENT_OVER_TRAIN_BASELINE",
+    "historical_holdout_role": "PRE_PROSPECTIVE_SCREEN_ONLY_NOT_EVIDENCE",
+}
 
 
 def canonical(value: Any) -> bytes:
@@ -132,13 +148,18 @@ def make_manifest(cfg: dict[str, Any]) -> dict[str, Any]:
     budget = validate_config(cfg)
     return {
         "contract": "PDLT_PREREGISTRATION_MANIFEST_v1",
+        "manifest_schema_revision": 2,
         "experiment_id": cfg["experiment_id"],
         "config_sha256": sha(cfg),
         "created_at_utc": datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
         "budget": budget,
         "arms": cfg["arms"],
         "primary_contrasts": cfg["primary_contrasts"],
+        "secondary_contrasts": cfg["secondary_contrasts"],
         "outcomes": cfg["outcomes"],
+        "evidence_gates": cfg["evidence_gates"],
+        "candidate_caps": cfg["candidate_caps"],
+        "discovery_methods": DISCOVERY_METHODS,
         "kill_criteria": cfg["kill_criteria"],
         "authority": cfg["authority"]
     }

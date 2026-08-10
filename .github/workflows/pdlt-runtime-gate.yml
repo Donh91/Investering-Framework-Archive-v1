@@ -6,7 +6,7 @@ on:
       - 'scripts/experiments/pdlt_*.py'
       - 'scripts/api_agent/pdlt_gateway.py'
       - '.github/workflows/pdlt-*.yml'
-      - 'tests/experiments/test_pdlt_runtime.py'
+      - 'tests/experiments/test_pdlt_*.py'
       - 'research/experiments/pdlt_v1_1/**'
   workflow_dispatch:
 
@@ -35,10 +35,13 @@ jobs:
             scripts/experiments/pdlt_freeze_census.py \
             scripts/experiments/pdlt_maturation.py \
             scripts/api_agent/pdlt_gateway.py
-      - name: Run PDLT runtime tests
+      - name: Run PDLT runtime and methods tests
         run: |
-          python -m unittest tests.experiments.test_pdlt_v1_1 tests.experiments.test_pdlt_runtime -v
-      - name: Enforce architecture, matched-resolution, control and spend boundaries
+          python -m unittest \
+            tests.experiments.test_pdlt_v1_1 \
+            tests.experiments.test_pdlt_runtime \
+            tests.experiments.test_pdlt_methods_hardening -v
+      - name: Enforce architecture, methods, control and spend boundaries
         run: |
           python - <<'PY'
           from pathlib import Path
@@ -47,11 +50,13 @@ jobs:
           maturation=Path('.github/workflows/pdlt-maturation.yml').read_text()
           bootstrap=Path('.github/workflows/pdlt-bootstrap-once.yml').read_text()
           dcode=Path('scripts/experiments/pdlt_discovery.py').read_text()
+          pcode=Path('scripts/experiments/pdlt_v1_1.py').read_text()
           ccode=Path('scripts/experiments/pdlt_daily_census.py').read_text()
           rcode=Path('scripts/experiments/pdlt_rebuild_sidecars.py').read_text()
           acode=Path('scripts/experiments/pdlt_deterministic_forecast.py').read_text()
           gcode=Path('scripts/api_agent/pdlt_gateway.py').read_text()
           mcode=Path('scripts/experiments/pdlt_maturation.py').read_text()
+          amendment=Path('research/experiments/pdlt_v1_1/PDLT_METHODS_HARDENING_P2_2026-08-10.json').read_text()
           assert 'CFGI_API_KEY' not in daily
           assert 'pdlt_rebuild_sidecars.py' in daily
           assert '--raw-root 03_DAILY_CAPTURE_LOGS/raw' in daily
@@ -68,8 +73,21 @@ jobs:
           assert '"context": "current_turn"' in gcode
           assert '"type": "json_schema"' in gcode
           assert '"strict": True' in gcode
-          assert "engine_epoch': EPOCH" in dcode or '"engine_epoch": EPOCH' in dcode
-          assert 'UPGRADED_POST_20260708' in dcode
+          assert 'TRAIN_END_UTC = "2026-07-22T00:00:00Z"' in dcode
+          assert 'HOLDOUT_START_UTC = "2026-08-05T00:00:00Z"' in dcode
+          assert 'PURGE_HOURS = 14 * 24' in dcode
+          assert 'DISCOVERY_FAMILY_SIZE' in dcode and 'MAX_FORWARD_CANDIDATES = 3' in dcode
+          assert 'MIN_HOLDOUT_FIRES = 8' in dcode
+          assert 'fixed_probabilities=train_metrics["probabilities"]' in dcode
+          assert 'hold["brier_improvement72"] > 0.0' in dcode
+          assert 'HISTORICAL_SCREEN_ONLY_NOT_EVIDENCE' in dcode
+          assert 'validated_market_4h_canonical_sha256' in dcode
+          assert 'binance_owner_canonical_sha256' in dcode
+          assert 'manifest_schema_revision' in pcode
+          assert 'secondary_contrasts' in pcode and 'candidate_caps' in pcode and 'evidence_gates' in pcode
+          assert 'BLOCKED_CONTRACT_CODE_MISMATCH_NOT_INFERENTIAL' in dcode
+          assert 'D_MINUS_C' in amendment and 'DESCRIPTIVE_ONLY' in amendment
+          assert 'FNP_DAMAGE_AVOIDED_MISSED_UPSIDE' in amendment
           discovery_live = 'pdlt-v1-1-historical-bootstrap' in discovery
           discovery_frozen = (
               'PDLT_DISCOVERY_FROZEN_METHODS_REPAIR_REQUIRED' in discovery
@@ -78,9 +96,10 @@ jobs:
               and 'contents: read' in discovery
           )
           assert discovery_live or discovery_frozen
+          assert discovery_frozen, 'PDLT discovery must remain frozen after methods hardening until remaining blockers are cleared'
           assert 'expected_credits' in bootstrap and '12300' in bootstrap
           assert 'MATURED_OUTCOME_v2' in mcode
           assert '--interval 1h' in maturation
           assert 'portfolio_action' in mcode
-          print('PDLT_RUNTIME_POLICY_PASS')
+          print('PDLT_RUNTIME_METHODS_POLICY_PASS')
           PY
