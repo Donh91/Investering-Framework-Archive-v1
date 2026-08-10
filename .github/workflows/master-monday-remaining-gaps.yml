@@ -25,20 +25,27 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-python@v5
         with: {python-version: '3.12'}
-      - name: Rebuild non-authoritative readiness snapshot
+      - name: Rebuild non-authoritative v2.2-aware readiness snapshot
         run: |
           mkdir -p runtime/master-monday-gate
-          python scripts/master_monday/build_preflight_package_v2.py --repo-root . --registry research/master_monday_preflight/MASTER_MONDAY_ACTION_REGISTRY_v1.json --predecessor-registry research/master_monday_preflight/CANONICAL_PREDECESSOR_REGISTRY_v1.json --output runtime/master-monday-gate/PREFLIGHT_READINESS_SNAPSHOT.json
+          python scripts/master_monday/build_preflight_package_v3.py \
+            --repo-root . \
+            --registry research/master_monday_preflight/MASTER_MONDAY_ACTION_REGISTRY_v2.json \
+            --predecessor-registry research/master_monday_preflight/CANONICAL_PREDECESSOR_REGISTRY_v1.json \
+            --output runtime/master-monday-gate/PREFLIGHT_READINESS_SNAPSHOT.json
           python - <<'PY'
           import json
           from datetime import datetime,timezone
           from pathlib import Path
           p=Path('runtime/master-monday-gate/PREFLIGHT_READINESS_SNAPSHOT.json');v=json.loads(p.read_text())
           blocking=[m for m in v.get('missing',[]) if m.get('blocking_level')=='BLOCKING']
-          lines=['# CUSTOM GPT REMAINING GAPS','This is a late readiness check only. It does not mutate the frozen weekly evidence. Return owner data only, with timestamps and receipts. No GitHub writes and no framework interpretation.']
+          nonblocking=[m for m in v.get('missing',[]) if m.get('blocking_level')!='BLOCKING']
+          lines=['# CUSTOM GPT REMAINING GAPS','This is a late readiness check only. It does not mutate the frozen weekly evidence. Return owner data only for BLOCKING fields, with timestamps and receipts. Do not reconstruct fields already owned by Daily Capture v2.2. No GitHub writes and no framework interpretation.']
           lines += [f"- {m['action_id']} `{m['field']}`: require {m['required_evidence']} via {m['suggested_collector']}" for m in blocking]
+          if not blocking: lines.append('- NONE')
+          lines.append(f"\nNon-blocking explicit unknowns retained: {len(nonblocking)}")
           Path('research/master_monday_preflight/CUSTOM_GPT_REMAINING_GAPS_PROMPT.md').write_text('\n'.join(lines)+'\n')
-          gate={'contract':'MASTER_MONDAY_DATA_GATE_STATUS_v1','generated_at_utc':datetime.now(timezone.utc).isoformat().replace('+00:00','Z'),'preflight_status':v['packet']['status'],'blocking_gap_count':len(blocking),'preflight_sha256':v['package_sha256'],'authority':'READINESS_ONLY_NOT_FROZEN_EVIDENCE'}
+          gate={'contract':'MASTER_MONDAY_DATA_GATE_STATUS_v2','generated_at_utc':datetime.now(timezone.utc).isoformat().replace('+00:00','Z'),'preflight_status':v['packet']['status'],'blocking_gap_count':len(blocking),'confidence_reducing_gap_count':len(nonblocking),'preflight_sha256':v['package_sha256'],'authority':'READINESS_ONLY_NOT_FROZEN_EVIDENCE'}
           Path('research/master_monday_preflight/LATEST_MASTER_MONDAY_DATA_GATE.json').write_text(json.dumps(gate,sort_keys=True,separators=(',',':'))+'\n')
           PY
       - name: Commit readiness status
