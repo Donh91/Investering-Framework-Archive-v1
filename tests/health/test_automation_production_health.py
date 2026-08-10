@@ -31,6 +31,7 @@ def expected_block(tmp_path: Path, scheduled: bool = False) -> dict:
         tmp_path,
         "# framework-lifecycle: EXPECTED_BLOCK\n"
         "# framework-lifecycle-reason: TEST_FREEZE\n"
+        "# framework-lifecycle-since: 2026-08-03T05:00:00Z\n"
         "# framework-expected-exit: 78\n"
         f"name: Test\non:\n{trigger}jobs:\n  x:\n    steps:\n      - run: |\n          echo TEST_FREEZE\n          exit 78\n",
     )
@@ -108,6 +109,20 @@ def test_expected_block_with_schedule_is_red(tmp_path: Path) -> None:
     status, findings = module.classify(row, datetime(2026, 8, 3, 12, tzinfo=timezone.utc))
     assert status == "RED"
     assert "EXPECTED_BLOCK_HAS_SCHEDULE" in findings
+
+
+def test_expected_block_historical_success_before_declaration_is_not_red(tmp_path: Path) -> None:
+    row = expected_block(tmp_path)
+    row["live"] = {
+        "state": "active",
+        "latest_run": {"status": "completed", "conclusion": "success", "created_at": "2026-08-03T04:00:00Z"},
+        "recent_failure_count": 0,
+        "success_streak": 1,
+        "failure_streak": 0,
+    }
+    status, findings = module.classify(row, datetime(2026, 8, 3, 12, tzinfo=timezone.utc))
+    assert status == "AMBER"
+    assert "EXPECTED_BLOCK_UNEXPECTED_SUCCESS" not in findings
 
 
 def test_expected_block_unexpected_success_is_red(tmp_path: Path) -> None:
