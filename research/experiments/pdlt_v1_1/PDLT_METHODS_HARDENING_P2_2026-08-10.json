@@ -1,0 +1,65 @@
+{
+  "contract": "PDLT_METHODS_HARDENING_P2_2026-08-10",
+  "experiment_id": "PDLT-v1.1-RUN",
+  "status": "PREEXECUTION_REPAIR_CODED_DISCOVERY_REMAINS_FROZEN",
+  "authority": "SHADOW_RESEARCH_METHODS_ONLY",
+  "trigger": {
+    "gpt_phase2_terminal": "METHODS_REQUIRES_PROSPECTIVE_HARDENING",
+    "claude_replication_terminal": "METHODS_REQUIRES_PROSPECTIVE_HARDENING",
+    "pdlt_verdict": "BLOCKED_STATISTICAL_IDENTIFIABILITY",
+    "critical_methods_defect": "SAME_SAMPLE_FIRED_RATE_REUSED_FOR_BRIER_AND_HOLDOUT_SCORING"
+  },
+  "preexecution_state": {
+    "frozen_model_present_before_repair": false,
+    "prospective_pdlt_outcomes_opened": false,
+    "discovery_workflow_state": "FAIL_CLOSED_NO_SCHEDULE",
+    "historical_bootstrap_is_immutable_prior_evidence": true,
+    "new_cfgi_credits_authorized": 0,
+    "new_openai_usd_authorized": 0.0
+  },
+  "discovery_repair": {
+    "selection_target": "PULLBACK_72H",
+    "train_end_utc_exclusive": "2026-07-22T00:00:00Z",
+    "holdout_start_utc_inclusive": "2026-08-05T00:00:00Z",
+    "purge_hours": 336,
+    "enumerated_rule_count": 120,
+    "single_rules": 30,
+    "pair_rules": 90,
+    "minimum_train_fires": 8,
+    "minimum_holdout_fires": 8,
+    "maximum_frozen_candidates": 3,
+    "holdout_probability_source": "TRAIN_DERIVED_ONLY",
+    "holdout_gate": "STRICT_POSITIVE_BRIER_IMPROVEMENT_AND_MINIMUM_FIRES",
+    "historical_holdout_role": "PRE_PROSPECTIVE_SCREEN_ONLY_NOT_EVIDENCE",
+    "source_provenance_required": [
+      "validated_market_4h_canonical_sha256",
+      "binance_owner_canonical_sha256",
+      "source_row_counts",
+      "source_timestamp_ranges"
+    ]
+  },
+  "claim_restrictions": {
+    "PULLBACK_72H": "PRIMARY_DISCOVERY_TARGET_ONLY_PROSPECTIVE_EPISODES_CAN_SUPPORT_CLAIMS",
+    "HEAVY_PULLBACK_7D": "SECONDARY_DESCRIPTIVE_ONLY_PENDING_HORIZON_SPECIFIC_EVIDENCE_GATE",
+    "PRICE_DISTRIBUTION_14D": "BLOCKED_CONTRACT_CODE_MISMATCH_DO_NOT_USE_INFERENTIALLY",
+    "ECOSYSTEM_DISTRIBUTION_14D": "NOT_MODELED_BY_DISCOVERY",
+    "D_MINUS_C": "DESCRIPTIVE_ONLY_UNTIL_LLM_SAMPLING_NOISE_POLICY_IS_FROZEN",
+    "FNP_DAMAGE_AVOIDED_MISSED_UPSIDE": "BLOCKED_UNTIL_AUTHORITATIVE_FNP_EVALUATOR_EXISTS"
+  },
+  "non_changes": {
+    "market_rules": true,
+    "market_thresholds": true,
+    "model_weights": true,
+    "policy_semantics": true,
+    "portfolio_authority": true,
+    "queue_order": true,
+    "paid_budget": true
+  },
+  "reopen_requirements": [
+    "GREEN_PDLT_RUNTIME_AND_ARCHITECTURE_CI",
+    "INDEPENDENT_REVIEW_OF_DISCOVERY_REPAIR",
+    "EXPLICIT_DECISION_ON_14D_DISTRIBUTION_SEMANTICS",
+    "LLM_SAMPLING_POLICY_OR_D_MINUS_C_DESCRIPTIVE_ONLY_FREEZE",
+    "FNP_METRICS_EXCLUDED_FROM_AUTOMATED_KILL_PROMOTION_UNTIL_EVALUATOR_EXISTS"
+  ]
+}
