@@ -73,8 +73,9 @@ jobs:
           discovery_live = 'pdlt-v1-1-historical-bootstrap' in discovery
           discovery_frozen = (
               'PDLT_DISCOVERY_FROZEN_METHODS_REPAIR_REQUIRED' in discovery
-              and 'if: ${{ false }}' in discovery
               and 'schedule:' not in discovery
+              and 'exit 78' in discovery
+              and 'contents: read' in discovery
           )
           assert discovery_live or discovery_frozen
           assert 'expected_credits' in bootstrap and '12300' in bootstrap
