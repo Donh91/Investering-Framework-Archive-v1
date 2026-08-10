@@ -66,6 +66,7 @@ def workflow_static(path: Path) -> dict[str, Any]:
     lifecycle_state = lifecycle_raw if lifecycle_raw in LIFECYCLE_STATES else "INVALID"
     lifecycle_reason = _directive(text, "framework-lifecycle-reason")
     expected_exit_raw = _directive(text, "framework-expected-exit")
+    lifecycle_since = _directive(text, "framework-lifecycle-since")
     expected_exit = None
     if expected_exit_raw is not None:
         try:
@@ -92,6 +93,8 @@ def workflow_static(path: Path) -> dict[str, Any]:
         risks.append("ARTIFACT_RETENTION_UNBOUNDED")
 
     if lifecycle_state == "EXPECTED_BLOCK":
+        if not lifecycle_since or parse_ts(lifecycle_since) is None:
+            risks.append("EXPECTED_BLOCK_SINCE_INVALID")
         if scheduled:
             risks.append("EXPECTED_BLOCK_HAS_SCHEDULE")
         if not lifecycle_reason:
@@ -119,6 +122,7 @@ def workflow_static(path: Path) -> dict[str, Any]:
         "lifecycle_state": lifecycle_state,
         "lifecycle_reason": lifecycle_reason,
         "expected_exit_code": expected_exit,
+        "lifecycle_since": lifecycle_since,
         "static_risks": risks,
     }
 
@@ -183,7 +187,9 @@ def classify(row: dict[str, Any], now: datetime) -> tuple[str, list[str]]:
 
     if lifecycle == "EXPECTED_BLOCK":
         findings.append("EXPECTED_BLOCK")
-        if latest and latest.get("status") == "completed" and latest.get("conclusion") in GOOD_CONCLUSIONS:
+        since = parse_ts(row.get("lifecycle_since"))
+        created = parse_ts(latest.get("created_at")) if latest else None
+        if latest and since and created and created >= since and latest.get("status") == "completed" and latest.get("conclusion") in GOOD_CONCLUSIONS:
             findings.append("EXPECTED_BLOCK_UNEXPECTED_SUCCESS")
         elif latest and latest.get("status") in {"queued", "in_progress", "waiting", "requested", "pending"}:
             updated = parse_ts(latest.get("updated_at"))
@@ -226,6 +232,7 @@ def classify(row: dict[str, Any], now: datetime) -> tuple[str, list[str]]:
         "NO_MAIN_READBACK",
         "INVALID_LIFECYCLE_STATE",
         "EXPECTED_BLOCK_HAS_SCHEDULE",
+        "EXPECTED_BLOCK_SINCE_INVALID",
         "EXPECTED_BLOCK_REASON_MISSING",
         "EXPECTED_BLOCK_EXIT_CODE_INVALID",
         "EXPECTED_BLOCK_EXIT_CONTRACT_MISSING",
