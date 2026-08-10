@@ -7,7 +7,7 @@ API calibration: **SUCCESS**
 ## Analysis layer
 
 ```json
-"W32 shadow calibration is degraded and non-ratifying. Available snapshots show intermittent breadth deterioration and occasional leverage-linked pullback conditions, but the record is internally mixed and materially incomplete. Final authoritative 168-hour close evidence needed for price-path scoring is not supplied, while the enriched hourly series has a 128-hour gap. Consequently, neither the full analysis layer nor the separate operational translation layer can be validated for W32; no forecast candidates are issued."
+"Shadow-only W32 calibration is degraded, not blocked. The final 168-hour market-close package is complete and is authoritative for price-path facts: BTC +2.10%, ETH +1.34%, and ETHBTC -0.71% for the week. Late available hourly evidence points to modest BTC/ETH weakness, BTC open-interest expansion, and ETH-relative underperformance, while positive weekly ETF flows and positive completed-week spot returns oppose a confirmed pullback narrative. Analysis-layer hypotheses are therefore only partial or not evaluable, and the separate operational-translation layer has no supplied evidence. Forecast candidates remain unratified research objects only."
 ```
 
 ## Operational translation
