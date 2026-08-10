@@ -204,8 +204,8 @@ def load_weekly_owned_context(weekly_pointer_path: Path, capture_root: Path, pre
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--weekly-pointer", type=Path, required=True)
-    ap.add_argument("--capture-root", type=Path, required=True)
-    ap.add_argument("--preflight-file", type=Path, required=True)
+    ap.add_argument("--capture-root", type=Path, default=Path("03_DAILY_CAPTURE_LOGS"))
+    ap.add_argument("--preflight-file", type=Path)
     ap.add_argument("--daily-output-root", type=Path, required=True)
     ap.add_argument("--freeze-file", type=Path, required=True)
     ap.add_argument("--legacy-root", type=Path)
@@ -215,7 +215,8 @@ def main() -> None:
     args = ap.parse_args()
 
     freeze = load_json(args.freeze_file)
-    weekly_owned = load_weekly_owned_context(args.weekly_pointer, args.capture_root, args.preflight_file)
+    preflight_file = args.preflight_file or args.freeze_file.with_name("MASTER_MONDAY_GAP_FILL_PACKAGE.json")
+    weekly_owned = load_weekly_owned_context(args.weekly_pointer, args.capture_root, preflight_file)
     start = ts(freeze["window_start_utc"])
     end = ts(freeze["window_end_utc"])
     candidates = []
