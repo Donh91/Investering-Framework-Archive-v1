@@ -9,6 +9,7 @@ on:
       - '04_MARKET_LEARNING/legacy_framework_knowledge_bootstrap_v1/**'
       - 'research/master_monday_preflight/**'
       - 'tests/master_monday/**'
+      - 'tests/daily_capture/test_master_monday_final_correction.py'
       - 'tests/api_agent/test_weekly_calibration_context_v4.py'
       - '.github/workflows/weekly-api-calibration-shadow.yml'
       - '.github/workflows/master-monday-remaining-gaps.yml'
@@ -28,12 +29,13 @@ jobs:
         with:
           python-version: '3.12'
       - name: Compile hardening modules
-        run: python -m py_compile scripts/master_monday/build_preflight_package_v2.py scripts/master_monday/publish_master_monday_outputs.py scripts/orchestration/verify_durable_readback.py scripts/orchestration/weekly_orchestration_controller.py scripts/api_agent/build_weekly_calibration_context.py
+        run: python -m py_compile scripts/master_monday/build_preflight_package_v2.py scripts/master_monday/build_preflight_package_v3.py scripts/master_monday/publish_master_monday_outputs.py scripts/orchestration/verify_durable_readback.py scripts/orchestration/weekly_orchestration_controller.py scripts/api_agent/build_weekly_calibration_context.py
       - name: Run contract and durability tests
-        run: python -m unittest tests.master_monday.test_preflight_package tests.master_monday.test_preflight_package_v2 tests.master_monday.test_durable_repairs tests.api_agent.test_weekly_calibration_context_v4 -v
+        run: python -m unittest tests.master_monday.test_preflight_package tests.master_monday.test_preflight_package_v2 tests.master_monday.test_durable_repairs tests.daily_capture.test_master_monday_final_correction tests.api_agent.test_weekly_calibration_context_v4 -v
       - name: Verify production integration
         run: |
-          grep -q 'build_preflight_package_v2.py' .github/workflows/weekly-api-calibration-shadow.yml
+          grep -q 'build_preflight_package_v3.py' .github/workflows/weekly-api-calibration-shadow.yml
+          grep -q 'MASTER_MONDAY_ACTION_REGISTRY_v2.json' .github/workflows/weekly-api-calibration-shadow.yml
           grep -q '^  freeze:' .github/workflows/weekly-api-calibration-shadow.yml
           grep -q '^  calibration:' .github/workflows/weekly-api-calibration-shadow.yml
           grep -q '^  publish:' .github/workflows/weekly-api-calibration-shadow.yml
@@ -44,12 +46,15 @@ jobs:
           grep -q 'SKIPPED_NO_ELIGIBLE_INPUT' .github/workflows/weekly-api-calibration-shadow.yml
           grep -q "git','show'" scripts/orchestration/verify_durable_readback.py
           grep -q "ZoneInfo('Europe/Copenhagen')" scripts/orchestration/weekly_orchestration_controller.py
+          grep -q 'WEEKLY_MARKET_CLOSE_POINTER_v3' scripts/orchestration/weekly_orchestration_controller.py
           grep -q 'Europe/Copenhagen local date' scripts/api_agent/build_weekly_calibration_context.py
           grep -q 'continue-on-error: true' .github/workflows/weekly-api-calibration-shadow.yml
+          grep -q 'PRE_ACTIVATION_HISTORICAL_GAP' scripts/master_monday/build_preflight_package_v3.py
           python - <<'PY'
           import json
-          r=json.load(open('research/master_monday_preflight/MASTER_MONDAY_ACTION_REGISTRY_v1.json'))
+          r=json.load(open('research/master_monday_preflight/MASTER_MONDAY_ACTION_REGISTRY_v2.json'))
           assert r['planned_core_actions']==60
           assert sum(r['groups'].values())==60
           assert r['authority']['portfolio_action'] is False
+          assert 'settled_ETF_week_available' in r['required_acceptance_capabilities']
           PY
