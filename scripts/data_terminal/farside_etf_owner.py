@@ -59,9 +59,13 @@ def parse_table(html: str, asset: str, today_utc: date) -> tuple[list[dict[str, 
     for tr in table_rows:
         th = [clean(cell) for cell in re.findall(r"<th\b[^>]*>(.*?)</th>", tr, re.I | re.S)]
         cells = [clean(cell) for cell in re.findall(r"<t[dh]\b[^>]*>(.*?)</t[dh]>", tr, re.I | re.S)]
-        candidate = th or cells
-        if looks_like_header(candidate):
-            headers = candidate
+        # Farside uses asset-specific mixed <th>/<td> markup. The full ordered t[dh]
+        # sequence is the authoritative row shape; the th-only subset may be incomplete.
+        if looks_like_header(cells):
+            headers = cells
+            continue
+        if looks_like_header(th):
+            headers = th
             continue
         if len(cells) < 3:
             continue
