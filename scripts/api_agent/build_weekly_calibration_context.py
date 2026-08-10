@@ -154,9 +154,58 @@ def load_experiment_learning(registry_path: Path, outcome_root: Path, start: dat
     }
 
 
+def resolve_capture_path(capture_root: Path, value: Any) -> Path | None:
+    if not value:
+        return None
+    path = Path(str(value))
+    if path.is_absolute():
+        return path
+    if path.parts[:1] == (capture_root.name,):
+        return capture_root.parent / path
+    return capture_root / path
+
+
+def load_weekly_owned_context(weekly_pointer_path: Path, capture_root: Path, preflight_path: Path) -> dict[str, Any]:
+    pointer = load_json(weekly_pointer_path)
+    preflight = load_json(preflight_path)
+    pack_path = resolve_capture_path(capture_root, pointer.get("path"))
+    facts_path = resolve_capture_path(capture_root, pointer.get("sequence_facts_path"))
+    pack = load_json(pack_path) if pack_path and pack_path.exists() else None
+    facts = load_json(facts_path) if facts_path and facts_path.exists() else None
+    settled_week = preflight.get("settled_week")
+    final_168h = bool(
+        isinstance(settled_week, dict)
+        and settled_week.get("final") is True
+        and settled_week.get("close_mode") == "FINAL_COMPLETED_ISO_WEEK"
+        and settled_week.get("completeness") == "COMPLETE"
+        and all(((settled_week.get("symbols") or {}).get(asset) or {}).get("hour_count") == 168 for asset in ("BTCUSDT", "ETHUSDT", "ETHBTC"))
+    )
+    return {
+        "weekly_capture_pointer": pointer,
+        "weekly_capture_pack": pack,
+        "weekly_sequence_facts": facts,
+        "master_monday_preflight": {
+            "packet": preflight.get("packet"),
+            "meta": preflight.get("meta"),
+            "required_capabilities": (preflight.get("quality") or {}).get("required_capabilities"),
+            "settled_week": settled_week,
+            "final_168h_market_close_available": final_168h,
+            "breadth": preflight.get("breadth"),
+            "derivatives": preflight.get("derivatives"),
+            "etf": preflight.get("etf"),
+            "cfgi": preflight.get("cfgi"),
+            "macro": preflight.get("macro"),
+            "missing": preflight.get("missing", []),
+            "package_sha256": preflight.get("package_sha256"),
+        },
+    }
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--weekly-pointer", type=Path, required=True)
+    ap.add_argument("--capture-root", type=Path, required=True)
+    ap.add_argument("--preflight-file", type=Path, required=True)
     ap.add_argument("--daily-output-root", type=Path, required=True)
     ap.add_argument("--freeze-file", type=Path, required=True)
     ap.add_argument("--legacy-root", type=Path)
@@ -165,8 +214,8 @@ def main() -> None:
     ap.add_argument("--output", type=Path, required=True)
     args = ap.parse_args()
 
-    weekly = load_json(args.weekly_pointer)
     freeze = load_json(args.freeze_file)
+    weekly_owned = load_weekly_owned_context(args.weekly_pointer, args.capture_root, args.preflight_file)
     start = ts(freeze["window_start_utc"])
     end = ts(freeze["window_end_utc"])
     candidates = []
@@ -207,7 +256,7 @@ def main() -> None:
             "receipt": receipt,
         })
     context = {
-        "contract": "WEEKLY_API_CALIBRATION_CONTEXT_v5",
+        "contract": "WEEKLY_API_CALIBRATION_CONTEXT_v6",
         "authority": "SHADOW_ONLY",
         "iso_year": freeze["iso_year"],
         "iso_week": freeze["iso_week"],
@@ -215,7 +264,7 @@ def main() -> None:
         "window_start_utc": freeze["window_start_utc"],
         "window_end_utc": freeze["window_end_utc"],
         "freeze_sha256": freeze["freeze_sha256"],
-        "weekly_capture_pack": weekly,
+        **weekly_owned,
         "daily_director_rows": outputs,
         "daily_director_count": len(outputs),
         "legacy_research_context": load_legacy_context(args.legacy_root),
@@ -225,6 +274,9 @@ def main() -> None:
         "rules": [
             "Do not rewrite frozen forecasts.",
             "Separate data quality from market evidence.",
+            "The preflight settled_week object is the authoritative completed-week price-path source when final_168h_market_close_available=true.",
+            "A pre-v2.2 enriched-hourly gap must not be misreported as missing final price-path evidence when the final 168h market close is complete.",
+            "Preserve the enriched sequence gap itself; do not fabricate retrospective OI, taker-flow or other non-price rows.",
             "Preserve disagreement, missingness and censored outcomes.",
             "Evaluate analysis and operational translation separately.",
             "Legacy research is a hypothesis prior only and cannot count as prospective evidence.",
@@ -239,6 +291,8 @@ def main() -> None:
     print(json.dumps({
         "status": "PASS",
         "daily_rows": len(outputs),
+        "final_168h_market_close_available": weekly_owned["master_monday_preflight"]["final_168h_market_close_available"],
+        "weekly_sequence_readiness": weekly_owned["weekly_capture_pointer"].get("readiness"),
         "legacy_hypotheses": len(context["legacy_research_context"]["hypotheses"]),
         "experiment_candidates": context["experiment_learning"]["candidate_count"],
         "new_matured_experiment_outcomes": len(context["experiment_learning"]["new_matured_outcomes"]),
