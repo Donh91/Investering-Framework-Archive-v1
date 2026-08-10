@@ -1,6 +1,6 @@
 {
   "contract": "NEEDS_MORE_EVIDENCE_v1",
-  "generated_at_utc": "2026-08-09T16:02:37Z",
+  "generated_at_utc": "2026-08-10T05:10:30Z",
   "items": [
     {
       "allowed_change_scope": [
@@ -16,10 +16,10 @@
         "canonical authority",
         "portfolio logic"
       ],
-      "last_observed_at_utc": "2026-08-09T16:02:37Z",
-      "latest_run_id": 31322268618,
-      "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/31322268618",
-      "observations": 8,
+      "last_observed_at_utc": "2026-08-10T05:10:30Z",
+      "latest_run_id": 31326337769,
+      "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/31326337769",
+      "observations": 9,
       "post_fix_gate": "CI_PLUS_ONE_PRODUCTION_SHAPE_RUN",
       "required_evidence": [
         "workflow job logs",
@@ -31,7 +31,7 @@
       "route": "SELF_HEAL_ALLOWLIST_OR_OBSERVE",
       "signature": "ec73f5253e66b0ba75da",
       "state": "PERSISTING",
-      "success_streak": 6,
+      "success_streak": 7,
       "workflow": "backtest-engine-foundation.yml"
     },
     {
@@ -48,10 +48,10 @@
         "canonical authority",
         "portfolio logic"
       ],
-      "last_observed_at_utc": "2026-08-09T16:02:37Z",
-      "latest_run_id": 31322268612,
-      "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/31322268612",
-      "observations": 8,
+      "last_observed_at_utc": "2026-08-10T05:10:30Z",
+      "latest_run_id": 31326337743,
+      "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/31326337743",
+      "observations": 9,
       "post_fix_gate": "CI_PLUS_ONE_PRODUCTION_SHAPE_RUN",
       "required_evidence": [
         "workflow job logs",
@@ -63,7 +63,7 @@
       "route": "SELF_HEAL_ALLOWLIST_OR_OBSERVE",
       "signature": "cb1be6a31f91d0f81bc0",
       "state": "PERSISTING",
-      "success_streak": 6,
+      "success_streak": 7,
       "workflow": "backtest-wave1-2-foundation.yml"
     },
     {
@@ -80,10 +80,10 @@
         "canonical authority",
         "portfolio logic"
       ],
-      "last_observed_at_utc": "2026-08-09T16:02:37Z",
-      "latest_run_id": 31322268655,
-      "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/31322268655",
-      "observations": 2,
+      "last_observed_at_utc": "2026-08-10T05:10:30Z",
+      "latest_run_id": 31327593147,
+      "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/31327593147",
+      "observations": 3,
       "post_fix_gate": "CI_PLUS_ONE_PRODUCTION_SHAPE_RUN",
       "required_evidence": [
         "workflow job logs",
@@ -95,7 +95,7 @@
       "route": "SELF_HEAL_ALLOWLIST_OR_OBSERVE",
       "signature": "e724a171b910b2327dac",
       "state": "PERSISTING",
-      "success_streak": 4,
+      "success_streak": 1,
       "workflow": "daily-capture-architecture-gate.yml"
     },
     {
@@ -103,18 +103,18 @@
         ".github/workflows/daily-raw-owner-capture.yml",
         "directly related scripts and tests"
       ],
-      "failure_streak": 1,
-      "finding": "LATEST_RUN_FAILED",
-      "first_observed_at_utc": "2026-08-09T16:02:37Z",
+      "failure_streak": 0,
+      "finding": "RECOVERING_AFTER_RECENT_FAILURES",
+      "first_observed_at_utc": "2026-08-10T05:10:30Z",
       "forbidden_changes": [
         "market gates",
         "model weights",
         "canonical authority",
         "portfolio logic"
       ],
-      "last_observed_at_utc": "2026-08-09T16:02:37Z",
-      "latest_run_id": 31317401043,
-      "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/31317401043",
+      "last_observed_at_utc": "2026-08-10T05:10:30Z",
+      "latest_run_id": 31337589091,
+      "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/31337589091",
       "observations": 1,
       "post_fix_gate": "3_SUCCESSFUL_EXPECTED_RUNS",
       "required_evidence": [
@@ -123,12 +123,44 @@
         "positive and negative acceptance tests"
       ],
       "required_observations": 3,
+      "risk_class": "A_SELF_HEAL_OR_OBSERVE",
+      "route": "OBSERVE",
+      "signature": "6bd2691d3bed04d04507",
+      "state": "OBSERVED",
+      "success_streak": 2,
+      "workflow": "daily-raw-owner-capture.yml"
+    },
+    {
+      "allowed_change_scope": [
+        ".github/workflows/daily-settled-etf-calibration.yml",
+        "directly related scripts and tests"
+      ],
+      "failure_streak": 0,
+      "finding": "NO_RUN_HISTORY",
+      "first_observed_at_utc": "2026-08-10T05:10:30Z",
+      "forbidden_changes": [
+        "market gates",
+        "model weights",
+        "canonical authority",
+        "portfolio logic"
+      ],
+      "last_observed_at_utc": "2026-08-10T05:10:30Z",
+      "latest_run_id": null,
+      "latest_run_url": null,
+      "observations": 1,
+      "post_fix_gate": "3_SUCCESSFUL_EXPECTED_RUNS",
+      "required_evidence": [
+        "workflow job logs",
+        "reproduction or repeated identical signature",
+        "positive and negative acceptance tests"
+      ],
+      "required_observations": 2,
       "risk_class": "B_CODEX_PR",
       "route": "OBSERVE",
-      "signature": "39c9de41b6de31ea367a",
+      "signature": "7a9c6105941bd25c58f1",
       "state": "OBSERVED",
       "success_streak": 0,
-      "workflow": "daily-raw-owner-capture.yml"
+      "workflow": "daily-settled-etf-calibration.yml"
     },
     {
       "allowed_change_scope": [
@@ -144,10 +176,10 @@
         "canonical authority",
         "portfolio logic"
       ],
-      "last_observed_at_utc": "2026-08-09T16:02:37Z",
-      "latest_run_id": 31322268623,
-      "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/31322268623",
-      "observations": 1,
+      "last_observed_at_utc": "2026-08-10T05:10:30Z",
+      "latest_run_id": 31327593126,
+      "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/31327593126",
+      "observations": 2,
       "post_fix_gate": "CI_PLUS_ONE_PRODUCTION_SHAPE_RUN",
       "required_evidence": [
         "workflow job logs",
@@ -156,10 +188,10 @@
       ],
       "required_observations": 2,
       "risk_class": "A_SELF_HEAL_OR_OBSERVE",
-      "route": "OBSERVE",
+      "route": "SELF_HEAL_ALLOWLIST_OR_OBSERVE",
       "signature": "f272d9a62ce1b257b174",
-      "state": "OBSERVED",
-      "success_streak": 3,
+      "state": "PERSISTING",
+      "success_streak": 6,
       "workflow": "full-architecture-1to7-gate.yml"
     },
     {
@@ -176,10 +208,10 @@
         "canonical authority",
         "portfolio logic"
       ],
-      "last_observed_at_utc": "2026-08-09T16:02:37Z",
+      "last_observed_at_utc": "2026-08-10T05:10:30Z",
       "latest_run_id": 31021105457,
       "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/31021105457",
-      "observations": 8,
+      "observations": 9,
       "post_fix_gate": "CI_PLUS_ONE_PRODUCTION_SHAPE_RUN",
       "required_evidence": [
         "workflow job logs",
@@ -193,6 +225,38 @@
       "state": "PERSISTING",
       "success_streak": 1,
       "workflow": "operations-dashboard-gate.yml"
+    },
+    {
+      "allowed_change_scope": [
+        ".github/workflows/sunday-market-close-and-cfgi.yml",
+        "directly related scripts and tests"
+      ],
+      "failure_streak": 0,
+      "finding": "RECOVERING_AFTER_RECENT_FAILURES",
+      "first_observed_at_utc": "2026-08-10T05:10:30Z",
+      "forbidden_changes": [
+        "market gates",
+        "model weights",
+        "canonical authority",
+        "portfolio logic"
+      ],
+      "last_observed_at_utc": "2026-08-10T05:10:30Z",
+      "latest_run_id": 31349683072,
+      "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/31349683072",
+      "observations": 1,
+      "post_fix_gate": "3_SUCCESSFUL_EXPECTED_RUNS",
+      "required_evidence": [
+        "workflow job logs",
+        "reproduction or repeated identical signature",
+        "positive and negative acceptance tests"
+      ],
+      "required_observations": 2,
+      "risk_class": "A_SELF_HEAL_OR_OBSERVE",
+      "route": "OBSERVE",
+      "signature": "567527d9b72e9975ed4e",
+      "state": "OBSERVED",
+      "success_streak": 2,
+      "workflow": "sunday-market-close-and-cfgi.yml"
     }
   ]
 }
