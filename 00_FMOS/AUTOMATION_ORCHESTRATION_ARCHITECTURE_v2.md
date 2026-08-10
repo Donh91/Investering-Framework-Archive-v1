@@ -62,6 +62,27 @@ The observer workflow is successful when it:
 
 The report and dashboard remain RED. The observer run remains successful. Failures in the observer itself are reserved for inability to audit, publish, read back or notify.
 
+## Workflow lifecycle semantics
+
+Technical execution health and intended workflow lifecycle are separate dimensions.
+
+Supported lifecycle states are:
+
+- `ACTIVE`: normal production or verification behavior; failures are evaluated normally.
+- `EXPECTED_BLOCK`: an intentionally fail-closed workflow. It must be unscheduled, carry a durable reason, declare expected exit code 78 and contain the matching exit contract. Historical expected failures remain visible but are not treated as code defects.
+- `PENDING_FIRST_EXPECTED_RUN`: a newly scheduled workflow that has not yet had an expected schedule opportunity. It remains visible without being mislabeled `NO_RUN_HISTORY`.
+- `RETIRED`: historical registration state only; a still-scheduled retired local workflow is a configuration defect.
+
+Lifecycle directives live with the workflow instead of in a parallel registry:
+
+```text
+# framework-lifecycle: EXPECTED_BLOCK
+# framework-lifecycle-reason: <durable reason>
+# framework-expected-exit: 78
+```
+
+Lifecycle state never converts a genuine active failure into success. Invalid lifecycle declarations, an `EXPECTED_BLOCK` workflow with a schedule, a missing reason/exit contract, or an unexpectedly successful expected-block run remain actionable health defects.
+
 ## Remediation and Codex
 
 `CODEX_READY` means the problem has sufficient evidence for a bounded code task. It does not mean that code has been changed or merged.
@@ -76,10 +97,14 @@ The controller publishes:
 Each task must preserve:
 
 - exact signature and run identity,
+- a concrete objective and fresh-state precondition,
+- explicit clean-no-op, stop and escalation conditions,
 - allowed change paths,
 - forbidden authority changes,
 - required positive and negative tests,
 - post-fix production observation.
+
+Before code remediation begins, the task must be revalidated against fresh Automation Production Health and bound to a non-default task branch through `scripts/remediation/write_transition_receipt.py`. A stale task is `CLEARED_NO_CHANGE`; it must not be repaired speculatively. A valid receipt moves the finding into `IN_REMEDIATION`. Disappearance after a bound remediation enters `POST_FIX_OBSERVATION`; it is not `RESOLVED` until the post-fix gate is satisfied. A returning signature becomes `REOPENED`.
 
 No automation may self-merge a Codex change. Model weights, market gates, canonical predecessor rules, authority boundaries, portfolio logic and API budget remain framework-owner proposal-only.
 
@@ -132,9 +157,10 @@ Automation architecture is current only when:
 
 - all main writers use `framework-main-writer`, explicit `main` checkout, retry, abort and readback,
 - scheduled workflows use explicit `Europe/Copenhagen` where local timing matters,
+- lifecycle declarations are validated and cannot mask active production failures,
 - artifacts have bounded retention and durable evidence is committed separately,
 - health does not self-poison,
-- remediation has a visible Codex queue and an evidence lane,
+- remediation has a visible Codex queue, fresh-state preflight and post-fix evidence lane,
 - strict API failures produce durable receipts,
 - the full CI suite passes,
 - real production runs enter post-fix observation before incidents are resolved.
