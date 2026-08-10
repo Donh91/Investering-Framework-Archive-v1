@@ -6,7 +6,10 @@ import json
 import sys
 from pathlib import Path
 
-CONTROL_PATH = ".github/workflows/daily-capture-architecture-gate.yml"
+CONTROL_PATHS = {
+    ".github/workflows/daily-capture-architecture-gate.yml",
+    "scripts/daily_capture/classify_verification_scope.py",
+}
 HOURLY_SOURCE_PATHS = {
     "scripts/daily_capture/build_hourly_sequence.py",
     ".github/workflows/hourly-sequence-capture.yml",
@@ -24,7 +27,7 @@ def normalize(path: str) -> str:
 
 def classify(paths: list[str]) -> dict[str, bool]:
     normalized = {normalize(path) for path in paths if path.strip()}
-    control_changed = CONTROL_PATH in normalized
+    control_changed = bool(normalized & CONTROL_PATHS)
     return {
         "hourly_source": control_changed or bool(normalized & HOURLY_SOURCE_PATHS),
         "farside_source": control_changed or bool(normalized & FARSIDE_SOURCE_PATHS),
