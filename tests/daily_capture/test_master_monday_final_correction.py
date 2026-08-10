@@ -18,20 +18,25 @@ class MasterMondayFinalCorrectionTests(unittest.TestCase):
     def run_script(self, relative_path: str, *args: str) -> None:
         subprocess.run([sys.executable, str(REPO_ROOT / relative_path), *args], check=True)
 
-    def test_farside_parser_accepts_td_header_and_preserves_accounted_dash(self):
+    def test_farside_parser_accepts_btc_header_and_eth_two_row_header_without_imputation(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             fixture = root / "fixture"
             fixture.mkdir()
             btc = """
-            <table><tr><td>Date</td><td>IBIT</td><td>EZBC</td><td>Total</td></tr>
-            <tr><td>06 Aug 2026</td><td>137.6</td><td>0.0</td><td>137.6</td></tr>
-            <tr><td>07 Aug 2026</td><td>101.7</td><td>-</td><td>101.7</td></tr></table>
+            <table>
+              <tr><td>Date</td><td>IBIT</td><td>FBTC</td><td>BITB</td><td>ARKB</td><td>BTCO</td><td>EZBC</td><td>BRRR</td><td>HODL</td><td>BTCW</td><td>MSBT</td><td>GBTC</td><td>BTC</td><td>Total</td></tr>
+              <tr><td>06 Aug 2026</td><td>128.3</td><td>11.2</td><td>1.7</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td><td>(32.8)</td><td>0.0</td><td>14.9</td><td>7.5</td><td>6.8</td><td>137.6</td></tr>
+              <tr><td>07 Aug 2026</td><td>86.7</td><td>41.0</td><td>2.1</td><td>1.9</td><td>(19.4)</td><td>-</td><td>0.0</td><td>(10.6)</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td><td>101.7</td></tr>
+            </table>
             """
             eth = """
-            <table><tr><td>Date</td><td>ETHA</td><td>FETH</td><td>Total</td></tr>
-            <tr><td>06 Aug 2026</td><td>80.0</td><td>12.1</td><td>92.1</td></tr>
-            <tr><td>07 Aug 2026</td><td>38.1</td><td>11.5</td><td>49.6</td></tr></table>
+            <table>
+              <tr><th></th><th>Blackrock</th><th>Blackrock</th><th>Fidelity</th><th>Bitwise</th><th>21 Shares</th><th>VanEck</th><th>Invesco</th><th>Franklin</th><th>Grayscale</th><th>Grayscale</th><th>Total</th></tr>
+              <tr><td></td><td>ETHA</td><td>ETHB</td><td>FETH</td><td>ETHW</td><td>TETH</td><td>ETHV</td><td>QETH</td><td>EZET</td><td>ETHE</td><td>ETH</td><td></td></tr>
+              <tr><td>06 Aug 2026</td><td>81.1</td><td>0.0</td><td>11.0</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td><td>92.1</td></tr>
+              <tr><td>07 Aug 2026</td><td>38.1</td><td>0.0</td><td>11.5</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td><td>49.6</td></tr>
+            </table>
             """
             (fixture / "btc.html").write_text(btc)
             (fixture / "eth.html").write_text(eth)
@@ -47,11 +52,15 @@ class MasterMondayFinalCorrectionTests(unittest.TestCase):
             self.assertEqual(snapshot["status"], "PASS")
             self.assertTrue(snapshot["unknown_cells_are_not_imputed"])
             btc_latest = next(row for row in snapshot["rows"] if row["asset"] == "BTC")
+            eth_latest = next(row for row in snapshot["rows"] if row["asset"] == "ETH")
             self.assertEqual(btc_latest["date"], "2026-08-07")
             self.assertEqual(btc_latest["unknown_fund_cell_count"], 1)
-            self.assertIsNone(btc_latest["fund_values"][1])
+            self.assertIsNone(btc_latest["fund_values"][5])
             self.assertTrue(btc_latest["unknown_cells_fully_accounted_by_reported_total"])
             self.assertTrue(btc_latest["total_parity"])
+            self.assertEqual(eth_latest["header_mode"], "SOURCE_TWO_ROW_TICKER_HEADER")
+            self.assertEqual(eth_latest["fund_headers"], ["ETHA", "ETHB", "FETH", "ETHW", "TETH", "ETHV", "QETH", "EZET", "ETHE", "ETH"])
+            self.assertTrue(eth_latest["total_parity"])
             self.assertEqual(len(snapshot["history_rows"]["BTC"]), 2)
             self.assertEqual(len(snapshot["history_rows"]["ETH"]), 2)
 

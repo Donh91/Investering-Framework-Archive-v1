@@ -15,6 +15,11 @@ URLS = {
     "ETH": "https://farside.co.uk/ethereum-etf-flow-all-data/",
 }
 
+CANONICAL_FUND_HEADERS = {
+    "BTC": ["IBIT", "FBTC", "BITB", "ARKB", "BTCO", "EZBC", "BRRR", "HODL", "BTCW", "MSBT", "GBTC", "BTC"],
+    "ETH": ["ETHA", "ETHB", "FETH", "ETHW", "TETH", "ETHV", "QETH", "EZET", "ETHE", "ETH"],
+}
+
 
 def clean(value: str) -> str:
     value = re.sub(r"<[^>]+>", " ", value)
@@ -49,18 +54,37 @@ def looks_like_header(cells: list[str]) -> bool:
     if len(cells) < 3:
         return False
     normalized = normalized_header(cells)
-    return normalized[0] == "date" and "total" in normalized[-1]
+    return normalized[0] == "date" and normalized[-1] == "total"
 
 
-def parse_table(html: str, asset: str, today_utc: date) -> tuple[list[dict[str, Any]], list[str]]:
+def two_row_header_candidate(rows: list[list[str]], asset: str) -> list[str] | None:
+    expected = CANONICAL_FUND_HEADERS[asset]
+    expected_norm = [value.lower() for value in expected]
+    # Ethereum's current Farside table uses one issuer-name row ending in Total
+    # followed by a ticker row with blank edge cells. Reconstruct only the schema,
+    # never values, and only when the ticker sequence exactly matches the frozen
+    # source schema.
+    for index, cells in enumerate(rows[:-1]):
+        normalized = normalized_header(cells)
+        if not normalized or normalized[-1] != "total":
+            continue
+        next_cells = rows[index + 1]
+        next_norm = normalized_header(next_cells)
+        tickers = [value for value in next_norm if value]
+        if tickers == expected_norm:
+            return ["Date", *expected, "Total"]
+    return None
+
+
+def parse_table(html: str, asset: str, today_utc: date) -> tuple[list[dict[str, Any]], list[str], str]:
     table_rows = re.findall(r"<tr\b[^>]*>(.*?)</tr>", html, re.I | re.S)
     headers: list[str] | None = None
+    header_mode = "DIRECT_DATE_TOTAL"
     parsed: list[dict[str, Any]] = []
+    non_date_rows: list[list[str]] = []
     for tr in table_rows:
         th = [clean(cell) for cell in re.findall(r"<th\b[^>]*>(.*?)</th>", tr, re.I | re.S)]
         cells = [clean(cell) for cell in re.findall(r"<t[dh]\b[^>]*>(.*?)</t[dh]>", tr, re.I | re.S)]
-        # Farside uses asset-specific mixed <th>/<td> markup. The full ordered t[dh]
-        # sequence is the authoritative row shape; the th-only subset may be incomplete.
         if looks_like_header(cells):
             headers = cells
             continue
@@ -71,6 +95,7 @@ def parse_table(html: str, asset: str, today_utc: date) -> tuple[list[dict[str, 
             continue
         parsed_date = parse_date_label(cells[0])
         if parsed_date is None:
+            non_date_rows.append(cells)
             continue
         values = [parse_number(cell) for cell in cells[1:]]
         if not any(value is not None for value in values):
@@ -82,21 +107,41 @@ def parse_table(html: str, asset: str, today_utc: date) -> tuple[list[dict[str, 
             "values": values,
             "raw_cells": cells,
         })
+
+    if not headers:
+        headers = two_row_header_candidate(non_date_rows, asset)
+        if headers:
+            header_mode = "SOURCE_TWO_ROW_TICKER_HEADER"
+
+    if not headers and parsed:
+        expected = ["Date", *CANONICAL_FUND_HEADERS[asset], "Total"]
+        expected_values = len(expected) - 1
+        if all(len(row["values"]) == expected_values for row in parsed):
+            # Last-resort schema binding only: the asset-specific column order is
+            # frozen above and accepted solely when every parsed source row has the
+            # exact expected width. No numeric value is filled or transformed.
+            headers = expected
+            header_mode = "CANONICAL_ASSET_SCHEMA_EXACT_WIDTH_FALLBACK"
+
     if not headers or len(headers) < 3:
         raise ValueError("HEADER_NOT_FOUND")
     if not looks_like_header(headers):
         raise ValueError("HEADER_CONTRACT_DRIFT")
+    expected_headers = ["Date", *CANONICAL_FUND_HEADERS[asset], "Total"]
+    if normalized_header(headers) != normalized_header(expected_headers):
+        raise ValueError("HEADER_SCHEMA_MISMATCH")
     final_rows = [row for row in parsed if date.fromisoformat(row["date"]) < today_utc]
-    return final_rows, headers
+    return final_rows, headers, header_mode
 
 
-def decorate(row: dict[str, Any], headers: list[str]) -> dict[str, Any]:
+def decorate(row: dict[str, Any], headers: list[str], header_mode: str) -> dict[str, Any]:
     item = dict(row)
     values = item.pop("values")
     expected_columns = len(headers) - 1
     if len(values) != expected_columns:
         raise ValueError("COLUMN_COUNT_DRIFT")
     item["headers"] = headers
+    item["header_mode"] = header_mode
     item["fund_headers"] = headers[1:-1]
     item["fund_values"] = values[:-1]
     item["reported_total"] = values[-1]
@@ -142,14 +187,14 @@ def main() -> None:
             if args.fixture_dir:
                 raw = (args.fixture_dir / f"{asset.lower()}.html").read_bytes()
             else:
-                request = urllib.request.Request(url, headers={"User-Agent": "InvesteringFramework/2.1 (+verified ETF owner capture)"})
+                request = urllib.request.Request(url, headers={"User-Agent": "InvesteringFramework/2.2 (+verified ETF owner capture)"})
                 with urllib.request.urlopen(request, timeout=30) as response:
                     raw = response.read()
             source_hashes[asset] = hashlib.sha256(raw).hexdigest()
-            rows, headers = parse_table(raw.decode("utf-8", "replace"), asset, now.date())
+            rows, headers, header_mode = parse_table(raw.decode("utf-8", "replace"), asset, now.date())
             if not rows:
                 raise ValueError("NO_FINALIZED_ROWS")
-            decorated = [decorate(row, headers) for row in rows]
+            decorated = [decorate(row, headers, header_mode) for row in rows]
             decorated.sort(key=lambda row: row["date"])
             recent = decorated[-max(1, args.history_limit):]
             history_rows[asset] = recent
@@ -168,7 +213,7 @@ def main() -> None:
         status = "PASS"
 
     snapshot = {
-        "contract": "FARSIDE_ETF_OWNER_SNAPSHOT_v3",
+        "contract": "FARSIDE_ETF_OWNER_SNAPSHOT_v4",
         "retrieved_at_utc": now.isoformat().replace("+00:00", "Z"),
         "status": status,
         "rows": output_rows,
@@ -183,7 +228,7 @@ def main() -> None:
     snapshot_sha = hashlib.sha256(raw_snapshot).hexdigest()
     (args.output_dir / "owner_snapshot.json").write_bytes(raw_snapshot)
     receipt = {
-        "contract": "FARSIDE_ETF_OWNER_RECEIPT_v3",
+        "contract": "FARSIDE_ETF_OWNER_RECEIPT_v4",
         "status": status,
         "snapshot_sha256": snapshot_sha,
         "row_count": len(output_rows),
