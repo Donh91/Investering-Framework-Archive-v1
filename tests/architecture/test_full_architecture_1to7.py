@@ -116,10 +116,14 @@ class FullArchitectureTests(unittest.TestCase):
     def test_farside_fixture_parser(self):
         with tempfile.TemporaryDirectory() as d:
             r=Path(d); fx=r/'fx'; fx.mkdir()
-            html='<table><tr><th>Date</th><th>A</th><th>Total</th></tr><tr><td>01 Aug 2026</td><td>10.0</td><td>10.0</td></tr></table>'
-            (fx/'btc.html').write_text(html); (fx/'eth.html').write_text(html)
-            p=self.run_py('scripts/data_terminal/farside_etf_owner.py','--output-dir',r/'out','--fixture-dir',fx)
-            self.assertEqual(p.returncode,0,p.stderr)
-            self.assertEqual(json.loads((r/'out/owner_snapshot.json').read_text())['status'],'PASS')
+            btc='''<table><tr><td>Date</td><td>IBIT</td><td>FBTC</td><td>BITB</td><td>ARKB</td><td>BTCO</td><td>EZBC</td><td>BRRR</td><td>HODL</td><td>BTCW</td><td>MSBT</td><td>GBTC</td><td>BTC</td><td>Total</td></tr><tr><td>01 Aug 2026</td><td>10.0</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td><td>10.0</td></tr></table>'''
+            eth='''<table><tr><th></th><th>Blackrock</th><th>Blackrock</th><th>Fidelity</th><th>Bitwise</th><th>21 Shares</th><th>VanEck</th><th>Invesco</th><th>Franklin</th><th>Grayscale</th><th>Grayscale</th><th>Total</th></tr><tr><td></td><td>ETHA</td><td>ETHB</td><td>FETH</td><td>ETHW</td><td>TETH</td><td>ETHV</td><td>QETH</td><td>EZET</td><td>ETHE</td><td>ETH</td><td></td></tr><tr><td>01 Aug 2026</td><td>10.0</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td><td>10.0</td></tr></table>'''
+            (fx/'btc.html').write_text(btc); (fx/'eth.html').write_text(eth)
+            p=self.run_py('scripts/data_terminal/farside_etf_owner.py','--output-dir',r/'out','--fixture-dir',fx,'--now-utc','2026-08-03T00:00:00Z')
+            self.assertEqual(p.returncode,0,p.stderr+p.stdout)
+            snapshot=json.loads((r/'out/owner_snapshot.json').read_text())
+            self.assertEqual(snapshot['status'],'PASS')
+            eth_row=next(row for row in snapshot['rows'] if row['asset']=='ETH')
+            self.assertEqual(eth_row['header_mode'],'SOURCE_TWO_ROW_TICKER_HEADER')
 
 if __name__=='__main__': unittest.main()
