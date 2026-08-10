@@ -10,7 +10,10 @@ from html import unescape
 from pathlib import Path
 from typing import Any
 
-URLS = {"BTC": "https://farside.co.uk/btc/", "ETH": "https://farside.co.uk/eth/"}
+URLS = {
+    "BTC": "https://farside.co.uk/bitcoin-etf-flow-all-data/",
+    "ETH": "https://farside.co.uk/ethereum-etf-flow-all-data/",
+}
 
 
 def clean(value: str) -> str:
@@ -38,16 +41,28 @@ def parse_date_label(value: str) -> date | None:
     return None
 
 
+def normalized_header(cells: list[str]) -> list[str]:
+    return [re.sub(r"[^a-z0-9]+", "", cell.lower()) for cell in cells]
+
+
+def looks_like_header(cells: list[str]) -> bool:
+    if len(cells) < 3:
+        return False
+    normalized = normalized_header(cells)
+    return normalized[0] == "date" and "total" in normalized[-1]
+
+
 def parse_table(html: str, asset: str, today_utc: date) -> tuple[list[dict[str, Any]], list[str]]:
     table_rows = re.findall(r"<tr\b[^>]*>(.*?)</tr>", html, re.I | re.S)
     headers: list[str] | None = None
     parsed: list[dict[str, Any]] = []
     for tr in table_rows:
         th = [clean(cell) for cell in re.findall(r"<th\b[^>]*>(.*?)</th>", tr, re.I | re.S)]
-        if th and any("date" in cell.lower() for cell in th):
-            headers = th
-            continue
         cells = [clean(cell) for cell in re.findall(r"<t[dh]\b[^>]*>(.*?)</t[dh]>", tr, re.I | re.S)]
+        candidate = th or cells
+        if looks_like_header(candidate):
+            headers = candidate
+            continue
         if len(cells) < 3:
             continue
         parsed_date = parse_date_label(cells[0])
@@ -56,14 +71,47 @@ def parse_table(html: str, asset: str, today_utc: date) -> tuple[list[dict[str, 
         values = [parse_number(cell) for cell in cells[1:]]
         if not any(value is not None for value in values):
             continue
-        parsed.append({"asset": asset, "date": parsed_date.isoformat(), "date_label": cells[0], "values": values, "raw_cells": cells})
+        parsed.append({
+            "asset": asset,
+            "date": parsed_date.isoformat(),
+            "date_label": cells[0],
+            "values": values,
+            "raw_cells": cells,
+        })
     if not headers or len(headers) < 3:
         raise ValueError("HEADER_NOT_FOUND")
-    normalized = [re.sub(r"[^a-z0-9]+", "", header.lower()) for header in headers]
-    if normalized[0] != "date" or "total" not in normalized[-1]:
+    if not looks_like_header(headers):
         raise ValueError("HEADER_CONTRACT_DRIFT")
     final_rows = [row for row in parsed if date.fromisoformat(row["date"]) < today_utc]
     return final_rows, headers
+
+
+def decorate(row: dict[str, Any], headers: list[str]) -> dict[str, Any]:
+    item = dict(row)
+    values = item.pop("values")
+    expected_columns = len(headers) - 1
+    if len(values) != expected_columns:
+        raise ValueError("COLUMN_COUNT_DRIFT")
+    item["headers"] = headers
+    item["fund_headers"] = headers[1:-1]
+    item["fund_values"] = values[:-1]
+    item["reported_total"] = values[-1]
+    item["session_final"] = True
+    calculated = sum(value for value in item["fund_values"] if value is not None)
+    tolerance = None if item["reported_total"] is None else max(0.2, abs(item["reported_total"]) * 0.01)
+    parity = None if item["reported_total"] is None else abs(calculated - item["reported_total"]) <= tolerance
+    raw_fund_cells = item["raw_cells"][1:-1]
+    unknown_cells = [
+        {"fund": item["fund_headers"][index], "raw": raw_fund_cells[index]}
+        for index, value in enumerate(item["fund_values"])
+        if value is None
+    ]
+    item["calculated_total"] = calculated
+    item["total_parity"] = parity
+    item["unknown_fund_cells"] = unknown_cells
+    item["unknown_fund_cell_count"] = len(unknown_cells)
+    item["unknown_cells_fully_accounted_by_reported_total"] = bool(parity is True)
+    return item
 
 
 def main() -> None:
@@ -71,6 +119,7 @@ def main() -> None:
     ap.add_argument("--output-dir", type=Path, required=True)
     ap.add_argument("--fixture-dir", type=Path)
     ap.add_argument("--now-utc")
+    ap.add_argument("--history-limit", type=int, default=10)
     args = ap.parse_args()
     args.output_dir.mkdir(parents=True, exist_ok=True)
     now = datetime.fromisoformat(args.now_utc.replace("Z", "+00:00")) if args.now_utc else datetime.now(timezone.utc)
@@ -79,6 +128,7 @@ def main() -> None:
     now = now.astimezone(timezone.utc)
 
     output_rows: list[dict[str, Any]] = []
+    history_rows: dict[str, list[dict[str, Any]]] = {}
     source_hashes: dict[str, str] = {}
     errors: list[dict[str, str]] = []
     parity_failed = False
@@ -88,28 +138,19 @@ def main() -> None:
             if args.fixture_dir:
                 raw = (args.fixture_dir / f"{asset.lower()}.html").read_bytes()
             else:
-                request = urllib.request.Request(url, headers={"User-Agent": "InvesteringFramework/2.0 (+verified ETF owner capture)"})
+                request = urllib.request.Request(url, headers={"User-Agent": "InvesteringFramework/2.1 (+verified ETF owner capture)"})
                 with urllib.request.urlopen(request, timeout=30) as response:
                     raw = response.read()
             source_hashes[asset] = hashlib.sha256(raw).hexdigest()
             rows, headers = parse_table(raw.decode("utf-8", "replace"), asset, now.date())
             if not rows:
                 raise ValueError("NO_FINALIZED_ROWS")
-            latest = max(rows, key=lambda row: row["date"])
-            values = latest.pop("values")
-            expected_columns = len(headers) - 1
-            if len(values) != expected_columns:
-                raise ValueError("COLUMN_COUNT_DRIFT")
-            latest["headers"] = headers
-            latest["fund_headers"] = headers[1:-1]
-            latest["fund_values"] = values[:-1]
-            latest["reported_total"] = values[-1]
-            latest["session_final"] = True
-            calculated = sum(value for value in latest["fund_values"] if value is not None)
-            parity = None if latest["reported_total"] is None else abs(calculated - latest["reported_total"]) <= max(0.2, abs(latest["reported_total"]) * 0.01)
-            latest["calculated_total"] = calculated
-            latest["total_parity"] = parity
-            if parity is False:
+            decorated = [decorate(row, headers) for row in rows]
+            decorated.sort(key=lambda row: row["date"])
+            recent = decorated[-max(1, args.history_limit):]
+            history_rows[asset] = recent
+            latest = recent[-1]
+            if latest["total_parity"] is False:
                 parity_failed = True
             output_rows.append(latest)
         except Exception as exc:
@@ -123,22 +164,26 @@ def main() -> None:
         status = "PASS"
 
     snapshot = {
-        "contract": "FARSIDE_ETF_OWNER_SNAPSHOT_v2",
+        "contract": "FARSIDE_ETF_OWNER_SNAPSHOT_v3",
         "retrieved_at_utc": now.isoformat().replace("+00:00", "Z"),
         "status": status,
         "rows": output_rows,
+        "history_rows": history_rows,
+        "history_limit": args.history_limit,
         "errors": errors,
         "source_hashes": source_hashes,
         "authority": "SHADOW_ONLY",
+        "unknown_cells_are_not_imputed": True,
     }
     raw_snapshot = (json.dumps(snapshot, sort_keys=True, separators=(",", ":")) + "\n").encode()
     snapshot_sha = hashlib.sha256(raw_snapshot).hexdigest()
     (args.output_dir / "owner_snapshot.json").write_bytes(raw_snapshot)
     receipt = {
-        "contract": "FARSIDE_ETF_OWNER_RECEIPT_v2",
+        "contract": "FARSIDE_ETF_OWNER_RECEIPT_v3",
         "status": status,
         "snapshot_sha256": snapshot_sha,
         "row_count": len(output_rows),
+        "history_row_count": sum(len(rows) for rows in history_rows.values()),
         "parity_failed": parity_failed,
         "source_type": "WEB_TABLE",
         "portfolio_action": False,
