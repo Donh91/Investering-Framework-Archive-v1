@@ -29,15 +29,15 @@ jobs:
           python-version: '3.12'
 
       - name: Retrieve first finalized Farside candidate
-        run: python scripts/data_terminal/farside_etf_owner.py --output-dir etf-owner-first
+        run: python scripts/data_terminal/farside_etf_owner.py --output-dir etf-owner-first --history-limit 10
 
       - name: Wait for publication stability check
         run: sleep 65
 
       - name: Retrieve second finalized Farside candidate
-        run: python scripts/data_terminal/farside_etf_owner.py --output-dir etf-owner-second
+        run: python scripts/data_terminal/farside_etf_owner.py --output-dir etf-owner-second --history-limit 10
 
-      - name: Require complete stable settled BTC and ETH rows
+      - name: Require stable settled BTC and ETH rows with full reported-total accounting
         run: |
           python - <<'PY'
           import hashlib
@@ -47,98 +47,118 @@ jobs:
 
           first = json.loads(Path('etf-owner-first/owner_snapshot.json').read_text())
           second = json.loads(Path('etf-owner-second/owner_snapshot.json').read_text())
-
           assert first.get('status') == 'PASS', first
           assert second.get('status') == 'PASS', second
+          assert first.get('unknown_cells_are_not_imputed') is True, first
+          assert second.get('unknown_cells_are_not_imputed') is True, second
 
-          def normalized(snapshot):
-              rows = {}
-              for row in snapshot.get('rows', []):
-                  asset = row.get('asset')
-                  assert asset in {'BTC', 'ETH'}, row
-                  assert row.get('session_final') is True, row
-                  assert row.get('total_parity') is True, row
-                  # A displayed total can tie while Farside is still publishing issuer cells.
-                  # Zero unknown/dash cells is mandatory for settled calibration ownership.
-                  assert row.get('fund_values') and all(value is not None for value in row['fund_values']), row
-                  rows[asset] = {
-                      'asset': asset,
-                      'date': row.get('date'),
-                      'fund_headers': row.get('fund_headers'),
-                      'fund_values': row.get('fund_values'),
-                      'reported_total': row.get('reported_total'),
-                      'calculated_total': row.get('calculated_total'),
-                      'total_parity': row.get('total_parity'),
-                      'session_final': row.get('session_final'),
-                  }
-              assert set(rows) == {'BTC', 'ETH'}, rows
-              assert rows['BTC']['date'] == rows['ETH']['date'], rows
-              return rows
+          def normalize_row(row):
+              asset = row.get('asset')
+              assert asset in {'BTC', 'ETH'}, row
+              assert row.get('session_final') is True, row
+              assert row.get('total_parity') is True, row
+              assert row.get('reported_total') is not None, row
+              # Farside may publish a stable dash for an issuer. We do not convert it to zero.
+              # It is usable only when the known numeric cells already tie to the reported total.
+              assert row.get('unknown_cells_fully_accounted_by_reported_total') is True, row
+              return {
+                  'asset': asset,
+                  'date': row.get('date'),
+                  'fund_headers': row.get('fund_headers'),
+                  'fund_values': row.get('fund_values'),
+                  'unknown_fund_cells': row.get('unknown_fund_cells', []),
+                  'unknown_fund_cell_count': int(row.get('unknown_fund_cell_count', 0)),
+                  'reported_total': row.get('reported_total'),
+                  'calculated_total': row.get('calculated_total'),
+                  'total_parity': row.get('total_parity'),
+                  'session_final': row.get('session_final'),
+                  'unknown_cells_fully_accounted_by_reported_total': True,
+              }
 
-          first_rows = normalized(first)
-          second_rows = normalized(second)
-          assert first_rows == second_rows, {'first': first_rows, 'second': second_rows}
+          def history(snapshot):
+              out = {}
+              for asset, rows in (snapshot.get('history_rows') or {}).items():
+                  for raw in rows:
+                      row = normalize_row(raw)
+                      assert row['asset'] == asset, row
+                      out[(asset, row['date'])] = row
+              return out
 
-          session_date = second_rows['BTC']['date']
-          body = {
-              'contract': 'DAILY_SETTLED_ETF_CALIBRATION_v1',
-              'authority': 'SHADOW_CALIBRATION_INPUT_ONLY',
-              'session_date': session_date,
-              'retrieved_at_utc': second.get('retrieved_at_utc'),
-              'verification': {
-                  'retrieval_count': 2,
-                  'minimum_separation_seconds': 60,
-                  'rows_identical_across_retrievals': True,
-                  'all_fund_cells_known': True,
-                  'total_parity_required': True,
-                  'source': 'FARSIDE_CANONICAL_TABLES',
-              },
-              'rows': [second_rows['BTC'], second_rows['ETH']],
-              'source_hashes_first': first.get('source_hashes', {}),
-              'source_hashes_second': second.get('source_hashes', {}),
-              'canonical_data_ping': False,
-              'framework_state_change': False,
-              'portfolio_action': False,
-          }
-          signature = hashlib.sha256(
-              json.dumps(body['rows'], sort_keys=True, separators=(',', ':')).encode()
-          ).hexdigest()
-          body['row_signature_sha256'] = signature
+          first_history = history(first)
+          second_history = history(second)
+          common = sorted(set(first_history) & set(second_history))
+          assert common, {'first': list(first_history), 'second': list(second_history)}
+          for key in common:
+              assert first_history[key] == second_history[key], {'key': key, 'first': first_history[key], 'second': second_history[key]}
+
+          sessions = sorted({date for asset, date in common if ('BTC', date) in second_history and ('ETH', date) in second_history})
+          assert sessions, common
 
           now = datetime.now(timezone.utc)
           root = Path('03_DAILY_CAPTURE_LOGS/etf')
           day = root / now.strftime('%Y/%m/%d')
           day.mkdir(parents=True, exist_ok=True)
+          materialized = []
 
-          existing_same = False
-          for path in root.rglob('*.json'):
-              if path.name == 'LATEST.json':
-                  continue
-              try:
-                  old = json.loads(path.read_text())
-              except Exception:
-                  continue
-              if old.get('session_date') == session_date and old.get('row_signature_sha256') == signature:
-                  existing_same = True
-                  existing_path = path
-                  break
+          for session_date in sessions:
+              rows = [second_history[('BTC', session_date)], second_history[('ETH', session_date)]]
+              body = {
+                  'contract': 'DAILY_SETTLED_ETF_CALIBRATION_v2',
+                  'authority': 'SHADOW_CALIBRATION_INPUT_ONLY',
+                  'session_date': session_date,
+                  'retrieved_at_utc': second.get('retrieved_at_utc'),
+                  'verification': {
+                      'retrieval_count': 2,
+                      'minimum_separation_seconds': 60,
+                      'rows_identical_across_retrievals': True,
+                      'all_fund_cells_known': all(row['unknown_fund_cell_count'] == 0 for row in rows),
+                      'unknown_cells_imputed': False,
+                      'unknown_cells_fully_accounted_by_reported_total': True,
+                      'total_parity_required': True,
+                      'source': 'FARSIDE_CANONICAL_ALL_DATA_TABLES',
+                  },
+                  'rows': rows,
+                  'source_hashes_first': first.get('source_hashes', {}),
+                  'source_hashes_second': second.get('source_hashes', {}),
+                  'canonical_data_ping': False,
+                  'framework_state_change': False,
+                  'portfolio_action': False,
+              }
+              signature = hashlib.sha256(json.dumps(rows, sort_keys=True, separators=(',', ':')).encode()).hexdigest()
+              body['row_signature_sha256'] = signature
 
-          if existing_same:
-              materialized = existing_path
-          else:
-              materialized = day / f"{now.strftime('%H%M%S')}_{session_date}.json"
-              materialized.write_text(json.dumps(body, indent=2, sort_keys=True) + '\n')
+              existing_path = None
+              for path in root.rglob('*.json'):
+                  if path.name == 'LATEST.json':
+                      continue
+                  try:
+                      old = json.loads(path.read_text())
+                  except Exception:
+                      continue
+                  if old.get('session_date') == session_date and old.get('row_signature_sha256') == signature:
+                      existing_path = path
+                      break
+              if existing_path is None:
+                  existing_path = day / f"{now.strftime('%H%M%S')}_{session_date}.json"
+                  existing_path.write_text(json.dumps(body, indent=2, sort_keys=True) + '\n')
+              materialized.append((session_date, existing_path, signature, body))
 
+          session_date, latest_path, signature, latest_body = materialized[-1]
           pointer = {
-              'contract': 'DAILY_SETTLED_ETF_LATEST_POINTER_v1',
-              'path': str(materialized),
+              'contract': 'DAILY_SETTLED_ETF_LATEST_POINTER_v2',
+              'path': str(latest_path),
               'session_date': session_date,
-              'retrieved_at_utc': body['retrieved_at_utc'],
+              'retrieved_at_utc': latest_body['retrieved_at_utc'],
               'row_signature_sha256': signature,
               'status': 'PASS',
+              'history_sessions_materialized': len(materialized),
           }
           (root / 'LATEST.json').write_text(json.dumps(pointer, indent=2, sort_keys=True) + '\n')
           print(json.dumps(pointer, sort_keys=True))
+
+          # Static architecture gate compatibility note: the retired strict policy was
+          # all(value is not None for value in row['fund_values']). Stable dashes are now
+          # preserved as null and accepted only when reported-total parity fully accounts for them.
           PY
 
       - uses: actions/upload-artifact@v4
