@@ -65,9 +65,18 @@ def decide(root: Path, queue: dict[str, Any]) -> dict[str, Any]:
         action = "RUN_SPAR_BASE"
         reason = "PDLT_IS_FROZEN_OR_SAFELY_BLOCKED_AND_SPAR_HAS_NOT_RUN"
     elif frag and frag.get("status") == "ROBUSTNESS_REVIEW_READY":
-        # Legacy pre-Phase-II fragility output must never open ETF execution.
-        action = "WAIT"
-        reason = "LEGACY_SPAR_FRAGILITY_READY_INVALID_AFTER_PHASE2_METHODS_REVIEW"
+        # Legacy pre-Phase-II fragility output is invalid as an ETF progression
+        # gate. Recompute only after all patterns reach the 10-event gate;
+        # otherwise continue normal passive base maturation.
+        if all_fragility_ready:
+            action = "RUN_SPAR_FRAGILITY"
+            reason = "REPLACE_LEGACY_FRAGILITY_RECEIPT_AFTER_PHASE2_METHODS_REVIEW"
+        elif stale_hours is not None and stale_hours >= 12:
+            action = "RUN_SPAR_BASE"
+            reason = "REFRESH_BASE_LEGACY_FRAGILITY_RECEIPT_INVALID_AFTER_PHASE2"
+        else:
+            action = "WAIT"
+            reason = "LEGACY_SPAR_FRAGILITY_READY_INVALID_AFTER_PHASE2_METHODS_REVIEW"
     elif frag and frag.get("status") == "METHODS_BLOCKED_PLACEBO_REGIME_NOT_FROZEN":
         if stale_hours is not None and stale_hours >= 12:
             action = "RUN_SPAR_BASE"
