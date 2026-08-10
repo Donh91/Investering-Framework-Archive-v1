@@ -56,24 +56,24 @@
       },
       "DAY5_7": {
         "btc": {
-          "close": 64877.85,
-          "high": 65192.54,
+          "close": 64901.59,
+          "high": 65474.46,
           "low": 64730.08,
           "open": 64959.99
         },
         "eth": {
-          "close": 1921.45,
-          "high": 1926.72,
-          "low": 1912.36,
+          "close": 1910.65,
+          "high": 1938.22,
+          "low": 1907.56,
           "open": 1915.11
         },
         "ethbtc": {
-          "close": 0.02961,
+          "close": 0.02944,
           "high": 0.02964,
-          "low": 0.02947,
+          "low": 0.02942,
           "open": 0.02949
         },
-        "observed_hours": 26,
+        "observed_hours": 40,
         "window_end_utc": "2026-08-10T00:00:00Z",
         "window_start_utc": "2026-08-07T00:00:00Z"
       }
@@ -83,7 +83,7 @@
   "enriched_hourly_path": "weekly/2026/W32/WEEKLY_HOURLY_ENRICHED.csv",
   "forecast_evaluation_performed": false,
   "framework_state_change": false,
-  "generated_at_utc": "2026-08-09T22:03:20Z",
+  "generated_at_utc": "2026-08-10T02:39:40Z",
   "handoff_targets": [
     "RAW_WEEKLY_CALIBRATION",
     "FORECAST_LEDGER_EVALUATION",
@@ -94,7 +94,7 @@
   "hourly_gap_diagnostics": {
     "expected_hours": 168,
     "max_contiguous_gap_hours": 128,
-    "missing_hour_count": 142,
+    "missing_hour_count": 128,
     "missing_hours_utc": [
       "2026-08-03T00:00:00Z",
       "2026-08-03T01:00:00Z",
@@ -223,138 +223,125 @@
       "2026-08-08T04:00:00Z",
       "2026-08-08T05:00:00Z",
       "2026-08-08T06:00:00Z",
-      "2026-08-08T07:00:00Z",
-      "2026-08-09T10:00:00Z",
-      "2026-08-09T11:00:00Z",
-      "2026-08-09T12:00:00Z",
-      "2026-08-09T13:00:00Z",
-      "2026-08-09T14:00:00Z",
-      "2026-08-09T15:00:00Z",
-      "2026-08-09T16:00:00Z",
-      "2026-08-09T17:00:00Z",
-      "2026-08-09T18:00:00Z",
-      "2026-08-09T19:00:00Z",
-      "2026-08-09T20:00:00Z",
-      "2026-08-09T21:00:00Z",
-      "2026-08-09T22:00:00Z",
-      "2026-08-09T23:00:00Z"
+      "2026-08-08T07:00:00Z"
     ],
-    "observed_hours": 26,
+    "observed_hours": 40,
     "per_field_completeness": {
       "btc_close": {
-        "complete_hours": 26,
-        "coverage_pct": 15.476
+        "complete_hours": 40,
+        "coverage_pct": 23.81
       },
       "btc_long_short_ratio": {
-        "complete_hours": 26,
-        "coverage_pct": 15.476
+        "complete_hours": 40,
+        "coverage_pct": 23.81
       },
       "btc_open_interest": {
-        "complete_hours": 26,
-        "coverage_pct": 15.476
+        "complete_hours": 40,
+        "coverage_pct": 23.81
       },
       "btc_quote_volume": {
-        "complete_hours": 0,
-        "coverage_pct": 0.0
+        "complete_hours": 28,
+        "coverage_pct": 16.667
       },
       "btc_taker_buy_quote_share": {
-        "complete_hours": 0,
-        "coverage_pct": 0.0
+        "complete_hours": 28,
+        "coverage_pct": 16.667
       },
       "btc_trade_count": {
-        "complete_hours": 0,
-        "coverage_pct": 0.0
+        "complete_hours": 28,
+        "coverage_pct": 16.667
       },
       "eth_close": {
-        "complete_hours": 26,
-        "coverage_pct": 15.476
+        "complete_hours": 40,
+        "coverage_pct": 23.81
       },
       "eth_long_short_ratio": {
-        "complete_hours": 26,
-        "coverage_pct": 15.476
+        "complete_hours": 40,
+        "coverage_pct": 23.81
       },
       "eth_open_interest": {
-        "complete_hours": 26,
-        "coverage_pct": 15.476
+        "complete_hours": 40,
+        "coverage_pct": 23.81
       },
       "eth_quote_volume": {
-        "complete_hours": 0,
-        "coverage_pct": 0.0
+        "complete_hours": 28,
+        "coverage_pct": 16.667
       },
       "eth_taker_buy_quote_share": {
-        "complete_hours": 0,
-        "coverage_pct": 0.0
+        "complete_hours": 28,
+        "coverage_pct": 16.667
       },
       "eth_trade_count": {
-        "complete_hours": 0,
-        "coverage_pct": 0.0
+        "complete_hours": 28,
+        "coverage_pct": 16.667
       },
       "ethbtc_close": {
-        "complete_hours": 26,
-        "coverage_pct": 15.476
+        "complete_hours": 40,
+        "coverage_pct": 23.81
       }
     }
   },
   "hourly_sequence": {
     "btc": {
-      "down_hours": 11,
-      "max_abs_return_1h_pct": 0.174958898117,
-      "max_range_1h_pct": 0.272659023026,
+      "down_hours": 18,
+      "max_abs_return_1h_pct": 0.399737623597,
+      "max_range_1h_pct": 0.774263633804,
       "price_oi_state_counts": {
-        "PRICE_DOWN_OI_DOWN": 4,
-        "PRICE_DOWN_OI_UP": 7,
-        "PRICE_UP_OI_DOWN": 11,
-        "PRICE_UP_OI_UP": 2,
-        "UNAVAILABLE": 2
+        "PRICE_DOWN_OI_DOWN": 7,
+        "PRICE_DOWN_OI_UP": 11,
+        "PRICE_UP_OI_DOWN": 12,
+        "PRICE_UP_OI_UP": 7,
+        "UNAVAILABLE": 3
       },
-      "up_hours": 15,
+      "up_hours": 22,
       "week_range": {
-        "close": 64877.85,
-        "high": 65192.54,
+        "close": 64901.59,
+        "high": 65474.46,
         "low": 64730.08,
         "open": 64959.99
       }
     },
     "contract": "WEEKLY_HOURLY_SEQUENCE_EVIDENCE_v2",
-    "derivatives_oi_complete_hours": 26,
+    "derivatives_oi_complete_hours": 40,
     "eth": {
-      "down_hours": 15,
-      "max_abs_return_1h_pct": 0.287587293965,
-      "max_range_1h_pct": 0.574712643678,
+      "down_hours": 24,
+      "max_abs_return_1h_pct": 0.463650334714,
+      "max_range_1h_pct": 1.21253263708,
       "price_oi_state_counts": {
-        "PRICE_DOWN_OI_DOWN": 8,
-        "PRICE_DOWN_OI_UP": 6,
-        "PRICE_UP_OI_DOWN": 10,
-        "UNAVAILABLE": 2
+        "PRICE_DOWN_OI_DOWN": 12,
+        "PRICE_DOWN_OI_UP": 11,
+        "PRICE_UP_OI_DOWN": 12,
+        "PRICE_UP_OI_UP": 2,
+        "UNAVAILABLE": 3
       },
-      "up_hours": 11,
+      "up_hours": 16,
       "week_range": {
-        "close": 1921.45,
-        "high": 1926.72,
-        "low": 1912.36,
+        "close": 1910.65,
+        "high": 1938.22,
+        "low": 1907.56,
         "open": 1915.11
       }
     },
     "ethbtc": {
-      "down_hours": 9,
-      "up_hours": 14,
+      "down_hours": 18,
+      "up_hours": 17,
       "week_range": {
-        "close": 0.02961,
+        "close": 0.02944,
         "high": 0.02964,
-        "low": 0.02947,
+        "low": 0.02942,
         "open": 0.02949
       }
     },
     "expected_hourly_rows": 168,
     "first_hour_utc": "2026-08-08T08:00:00Z",
-    "hourly_coverage_pct": 15.476,
-    "last_hour_utc": "2026-08-09T09:00:00Z",
-    "long_short_complete_hours": 26,
+    "hourly_coverage_pct": 23.81,
+    "last_hour_utc": "2026-08-09T23:00:00Z",
+    "long_short_complete_hours": 40,
     "market_interpretation": false,
-    "observed_hourly_rows": 26,
+    "observed_hourly_rows": 40,
     "sequence_evidence_only": true,
-    "spot_complete_hours": 26,
-    "spot_flow_complete_hours": 0
+    "spot_complete_hours": 40,
+    "spot_flow_complete_hours": 28
   },
   "iso_week": 32,
   "iso_year": 2026,
