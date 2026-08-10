@@ -12,11 +12,12 @@ UTC = timezone.utc
 STATES = {
     "OBSERVED", "SUSPECTED_TRANSIENT", "PERSISTING", "CONFIRMED",
     "NEEDS_MORE_EVIDENCE", "CODEX_READY", "IN_REMEDIATION",
-    "POST_FIX_OBSERVATION", "RESOLVED", "REOPENED",
+    "POST_FIX_OBSERVATION", "RESOLVED", "REOPENED", "CLEARED_NO_CHANGE",
 }
 IMMEDIATE = {"HASH_MISMATCH", "FALSE_PASS", "SECURITY", "DATA_LOSS", "CANONICAL_CORRUPTION"}
 TRANSIENT = {"RATE_LIMIT", "TIMEOUT", "SCHEDULE_DELAY", "SOURCE_UNAVAILABLE", "PUSH_CONFLICT"}
 CLASS_C_MARKERS = {"MODEL_WEIGHT", "CANONICAL_PREDECESSOR", "PORTFOLIO", "AUTHORITY_BOUNDARY", "API_BUDGET"}
+NON_ACTIONABLE_FINDINGS = {"EXPECTED_BLOCK", "PENDING_FIRST_EXPECTED_RUN", "RETIRED_WORKFLOW_LOCAL_FILE_PRESENT"}
 
 
 def now_iso() -> str:
@@ -28,6 +29,11 @@ def read_json(path: Path, default: Any) -> Any:
         return json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError):
         return default
+
+
+def canonical_hash(value: Any) -> str:
+    raw = json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
+    return hashlib.sha256(raw).hexdigest()
 
 
 def signature(workflow: str, finding: str) -> str:
@@ -58,10 +64,57 @@ def evidence_threshold(workflow: dict[str, Any], finding: str) -> int:
     return 2
 
 
+def post_fix_gate(workflow: dict[str, Any]) -> str:
+    return "3_SUCCESSFUL_EXPECTED_RUNS" if workflow.get("scheduled") else "CI_PLUS_ONE_PRODUCTION_SHAPE_RUN"
+
+
+def task_contract(name: str, finding: str, sig: str, workflow: dict[str, Any]) -> dict[str, Any]:
+    allowed = [f".github/workflows/{name}", "directly related scripts and tests"]
+    forbidden = ["market gates", "model weights", "canonical authority", "portfolio logic"]
+    gate = post_fix_gate(workflow)
+    required = ["workflow job logs", "reproduction or repeated identical signature", "positive and negative acceptance tests"]
+    return {
+        "objective": f"Resolve {finding} for {name} with the smallest bounded code change that satisfies the existing acceptance gates.",
+        "precondition": f"Fresh Automation Production Health still contains signature {sig} for {name}/{finding}, and verified lifecycle state does not make the finding non-actionable.",
+        "success_evidence": required + [gate],
+        "clean_noop_condition": "The finding is absent from fresh health, is non-actionable under verified lifecycle semantics, or the target workflow has been superseded or retired.",
+        "stop_condition": "Stop without code changes if the precondition fails, the finding cannot be reproduced from scoped evidence, or the required fix exceeds allowed change scope.",
+        "escalation_condition": "Escalate to the framework owner if resolution requires market gates, model weights, canonical authority, portfolio logic, API budget, or new policy semantics.",
+        "allowed_change_scope": allowed,
+        "forbidden_changes": forbidden,
+        "required_evidence": required,
+        "post_fix_gate": gate,
+        "transition_receipt_required": True,
+        "transition_receipt_path": f"research/remediation/transitions/{sig}.json",
+        "fresh_state_preflight_command": f"python scripts/remediation/write_transition_receipt.py --signature {sig} --branch <TASK_BRANCH>",
+    }
+
+
+def load_transition_receipts(repo: Path) -> dict[str, dict[str, Any]]:
+    root = repo / "research/remediation/transitions"
+    receipts: dict[str, dict[str, Any]] = {}
+    if not root.exists():
+        return receipts
+    for path in sorted(root.glob("*.json")):
+        data = read_json(path, {})
+        if not isinstance(data, dict):
+            continue
+        sig = str(data.get("signature") or "")
+        if (
+            data.get("contract") == "REMEDIATION_TRANSITION_RECEIPT_v1"
+            and data.get("state") == "IN_REMEDIATION"
+            and sig
+            and path.stem == sig
+        ):
+            receipts[sig] = data
+    return receipts
+
+
 def build(repo: Path) -> dict[str, Any]:
     health = read_json(repo / "research/architecture_health/LATEST_AUTOMATION_HEALTH.json", {})
     prior = read_json(repo / "research/remediation/LATEST_REMEDIATION_QUEUE.json", {})
     prior_by_sig = {x.get("signature"): x for x in prior.get("items", []) if isinstance(x, dict)}
+    transition_by_sig = load_transition_receipts(repo)
     current_signatures: set[str] = set()
     items: list[dict[str, Any]] = []
 
@@ -75,15 +128,25 @@ def build(repo: Path) -> dict[str, Any]:
         latest = live.get("latest_run") if isinstance(live.get("latest_run"), dict) else {}
         for finding in workflow.get("findings", []):
             finding = str(finding)
+            if finding in NON_ACTIONABLE_FINDINGS:
+                continue
             sig = signature(name, finding)
             current_signatures.add(sig)
             old = prior_by_sig.get(sig, {})
+            transition = transition_by_sig.get(sig)
             observations = int(old.get("observations") or 0) + 1
             threshold = evidence_threshold(workflow, finding)
             rclass = risk_class(finding)
             upper = finding.upper()
+            contract = task_contract(name, finding, sig, workflow)
 
-            if any(marker in upper for marker in CLASS_C_MARKERS):
+            if old.get("state") in {"POST_FIX_OBSERVATION", "RESOLVED"}:
+                state = "REOPENED"
+                route = "CODEX_PR" if rclass.startswith("B_") else "OBSERVE"
+            elif transition is not None:
+                state = "IN_REMEDIATION"
+                route = "CODEX_PR_IN_PROGRESS"
+            elif any(marker in upper for marker in CLASS_C_MARKERS):
                 state = "NEEDS_MORE_EVIDENCE"
                 route = "FRAMEWORK_OWNER_PROPOSAL_ONLY"
             elif any(marker in upper for marker in IMMEDIATE):
@@ -102,7 +165,7 @@ def build(repo: Path) -> dict[str, Any]:
                 state = "PERSISTING" if observations > 1 else "OBSERVED"
                 route = "OBSERVE"
 
-            items.append({
+            row = {
                 "signature": sig,
                 "workflow": name,
                 "finding": finding,
@@ -117,34 +180,66 @@ def build(repo: Path) -> dict[str, Any]:
                 "success_streak": success_streak,
                 "latest_run_id": latest.get("id"),
                 "latest_run_url": latest.get("html_url"),
-                "required_evidence": ["workflow job logs", "reproduction or repeated identical signature", "positive and negative acceptance tests"],
-                "allowed_change_scope": [f".github/workflows/{name}", "directly related scripts and tests"],
-                "forbidden_changes": ["market gates", "model weights", "canonical authority", "portfolio logic"],
-                "post_fix_gate": "3_SUCCESSFUL_EXPECTED_RUNS" if workflow.get("scheduled") else "CI_PLUS_ONE_PRODUCTION_SHAPE_RUN",
-            })
+                "lifecycle_state": workflow.get("lifecycle_state", "ACTIVE"),
+                **contract,
+            }
+            if transition is not None:
+                row["transition_receipt"] = transition
+            row["task_contract_sha256"] = canonical_hash({k: row[k] for k in (
+                "signature", "workflow", "finding", "objective", "precondition", "success_evidence",
+                "clean_noop_condition", "stop_condition", "escalation_condition", "allowed_change_scope",
+                "forbidden_changes", "required_evidence", "post_fix_gate"
+            )})
+            items.append(row)
 
     for sig, old in prior_by_sig.items():
         if sig in current_signatures:
             continue
         state = old.get("state")
-        if state in {"IN_REMEDIATION", "POST_FIX_OBSERVATION"}:
+        transition = transition_by_sig.get(sig)
+        if state in {"IN_REMEDIATION", "POST_FIX_OBSERVATION"} or transition is not None:
             successes = int(old.get("post_fix_successes") or 0) + 1
             resolved = successes >= 3
             row = dict(old)
-            row.update({"state": "RESOLVED" if resolved else "POST_FIX_OBSERVATION", "post_fix_successes": successes, "last_evaluated_at_utc": now_iso()})
+            row.update({
+                "state": "RESOLVED" if resolved else "POST_FIX_OBSERVATION",
+                "route": "OBSERVE_POST_FIX" if not resolved else "NONE",
+                "post_fix_successes": successes,
+                "last_evaluated_at_utc": now_iso(),
+                "terminal_reason": "POST_FIX_GATE_SATISFIED" if resolved else None,
+            })
+            if transition is not None:
+                row["transition_receipt"] = transition
+            items.append(row)
+        elif state == "CODEX_READY":
+            row = dict(old)
+            row.update({
+                "state": "CLEARED_NO_CHANGE",
+                "route": "NONE",
+                "last_evaluated_at_utc": now_iso(),
+                "terminal_reason": "FINDING_ABSENT_BEFORE_REMEDIATION_BINDING",
+            })
             items.append(row)
 
     codex = [x for x in items if x.get("state") == "CODEX_READY"]
     needs = [x for x in items if x.get("state") in {"OBSERVED", "SUSPECTED_TRANSIENT", "PERSISTING", "NEEDS_MORE_EVIDENCE"}]
+    active_remediation = [x for x in items if x.get("state") in {"IN_REMEDIATION", "POST_FIX_OBSERVATION", "REOPENED"}]
     return {
         "contract": "REMEDIATION_MATURATION_ENGINE_v1",
+        "contract_revision": "1.1",
         "authority": "OPERATIONAL_REMEDIATION_ROUTING_ONLY",
         "generated_at_utc": now_iso(),
         "source_health_generated_at_utc": health.get("generated_at_utc"),
         "items": sorted(items, key=lambda x: (x.get("state", ""), x.get("workflow", ""), x.get("finding", ""))),
-        "summary": {"total": len(items), "codex_ready": len(codex), "needs_more_evidence": len(needs)},
+        "summary": {
+            "total": len(items),
+            "codex_ready": len(codex),
+            "needs_more_evidence": len(needs),
+            "active_remediation": len(active_remediation),
+        },
         "codex_ready_tasks": codex,
         "needs_more_evidence": needs,
+        "active_remediation": active_remediation,
         "self_heal_allowlist": ["rerun_failed_job", "regenerate_dashboard", "rebuild_pointer_from_hash_verified_output", "publish_failure_receipt"],
         "automatic_code_write": False,
         "automatic_merge": False,
@@ -156,7 +251,7 @@ def build(repo: Path) -> dict[str, Any]:
 def write_outputs(data: dict[str, Any], out: Path) -> None:
     out.mkdir(parents=True, exist_ok=True)
     (out / "LATEST_REMEDIATION_QUEUE.json").write_text(json.dumps(data, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    (out / "LATEST_CODEX_READY_TASKS.json").write_text(json.dumps({"contract":"CODEX_READY_TASKS_v1","generated_at_utc":data["generated_at_utc"],"tasks":data["codex_ready_tasks"]}, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    (out / "LATEST_CODEX_READY_TASKS.json").write_text(json.dumps({"contract":"CODEX_READY_TASKS_v1","contract_revision":"1.1","generated_at_utc":data["generated_at_utc"],"tasks":data["codex_ready_tasks"]}, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     (out / "LATEST_NEEDS_MORE_EVIDENCE.json").write_text(json.dumps({"contract":"NEEDS_MORE_EVIDENCE_v1","generated_at_utc":data["generated_at_utc"],"items":data["needs_more_evidence"]}, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     with (out / "REMEDIATION_HISTORY.jsonl").open("a", encoding="utf-8") as fh:
         fh.write(json.dumps({"generated_at_utc":data["generated_at_utc"],"summary":data["summary"]}, sort_keys=True) + "\n")
