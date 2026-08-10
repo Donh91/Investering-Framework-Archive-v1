@@ -5,6 +5,9 @@ on:
     paths:
       - 'scripts/daily_capture/**'
       - 'scripts/data_terminal/farside_etf_owner.py'
+      - 'scripts/master_monday/**'
+      - 'scripts/orchestration/weekly_orchestration_controller.py'
+      - 'research/master_monday_preflight/**'
       - 'tests/daily_capture/**'
       - 'backtest_engine/blind_dual_run.py'
       - 'tests/backtest_engine/test_blind_dual_run_v2.py'
@@ -14,6 +17,8 @@ on:
       - '.github/workflows/daily-settled-etf-calibration.yml'
       - '.github/workflows/sunday-market-close-and-cfgi.yml'
       - '.github/workflows/weekly-raw-calibration-bridge.yml'
+      - '.github/workflows/weekly-api-calibration-shadow.yml'
+      - '.github/workflows/master-monday-remaining-gaps.yml'
       - '.github/workflows/daily-capture-architecture-gate.yml'
       - '03_DAILY_CAPTURE_LOGS/**'
 
@@ -29,10 +34,14 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Run daily capture and blinded dual-run tests
+      - name: Run daily capture, Master Monday correction and blinded dual-run tests
         run: |
-          python -m unittest tests.daily_capture.test_daily_capture_pipeline tests.daily_capture.test_weekly_market_close_endpoint tests.backtest_engine.test_blind_dual_run_v2 -v
-      - name: Compile capture modules
+          python -m unittest \
+            tests.daily_capture.test_daily_capture_pipeline \
+            tests.daily_capture.test_weekly_market_close_endpoint \
+            tests.daily_capture.test_master_monday_final_correction \
+            tests.backtest_engine.test_blind_dual_run_v2 -v
+      - name: Compile capture and Master Monday modules
         run: |
           python -m py_compile \
             scripts/daily_capture/build_capture_index.py \
@@ -42,6 +51,8 @@ jobs:
             scripts/daily_capture/build_weekly_market_close_package.py \
             scripts/daily_capture/materialize_blind_dual_run.py \
             scripts/data_terminal/farside_etf_owner.py \
+            scripts/master_monday/build_preflight_package_v3.py \
+            scripts/orchestration/weekly_orchestration_controller.py \
             backtest_engine/blind_dual_run.py
       - name: Validate schedules, storage, blinding and authority boundaries
         run: |
@@ -51,10 +62,14 @@ jobs:
           daily=Path('.github/workflows/daily-raw-owner-capture.yml').read_text()
           hourly=Path('.github/workflows/hourly-sequence-capture.yml').read_text()
           weekly=Path('.github/workflows/weekly-raw-calibration-bridge.yml').read_text()
+          weekly_api=Path('.github/workflows/weekly-api-calibration-shadow.yml').read_text()
+          gaps=Path('.github/workflows/master-monday-remaining-gaps.yml').read_text()
           etf=Path('.github/workflows/daily-settled-etf-calibration.yml').read_text()
           close=Path('scripts/daily_capture/build_weekly_market_close_package.py').read_text()
           hourly_builder=Path('scripts/daily_capture/build_hourly_sequence.py').read_text()
           weekly_builder=Path('scripts/daily_capture/build_weekly_calibration.py').read_text()
+          controller=Path('scripts/orchestration/weekly_orchestration_controller.py').read_text()
+          preflight=Path('scripts/master_monday/build_preflight_package_v3.py').read_text()
           blind=Path('backtest_engine/blind_dual_run.py').read_text()
 
           # Source-appropriate cadence: 5 ephemeral anchors, 2 regular hourly materializations
@@ -85,10 +100,7 @@ jobs:
           # Hourly lane self-heals one missed regular run and stores already-returned Binance flow fields.
           assert '--lookback-hours 26' in hourly
           assert "cron: '10 2 * * 1'" in hourly
-          for field in (
-              'quote_volume', 'trade_count', 'taker_buy_quote_volume',
-              'taker_sell_quote_volume', 'taker_buy_quote_share'
-          ):
+          for field in ('quote_volume','trade_count','taker_buy_quote_volume','taker_sell_quote_volume','taker_buy_quote_share'):
               assert field in hourly_builder, field
           assert 'forward_fill' in hourly_builder and 'interpolation' in hourly_builder
 
@@ -97,19 +109,31 @@ jobs:
           assert '--hourly-root 03_DAILY_CAPTURE_LOGS/hourly' in weekly
           assert '--etf-root 03_DAILY_CAPTURE_LOGS/etf' in weekly
           assert '--previous-week' in weekly
-          for horizon in ('4', '12', '24', '48', '72'):
+          for horizon in ('4','12','24','48','72'):
               assert horizon in weekly_builder
           assert 'WEEKLY_HOURLY_ENRICHED.csv' in weekly_builder
           assert 'WEEKLY_SEQUENCE_FACTS.json' in weekly_builder
           assert 'max_contiguous_gap_hours' in weekly_builder
           assert 'DAY1_2' in weekly_builder and 'DAY3_4' in weekly_builder and 'DAY5_7' in weekly_builder
 
-          # ETF lane is settled-daily, twice retrieved, and refuses partial publication.
+          # Weekly API freeze is self-sufficient, v2.2-aware and accepts the final close pointer contract.
+          assert "cron: '40 2 * * 1'" in weekly_api
+          assert 'build_weekly_calibration.py' in weekly_api and '--previous-week' in weekly_api
+          assert 'MASTER_MONDAY_ACTION_REGISTRY_v2.json' in weekly_api
+          assert 'build_preflight_package_v3.py' in weekly_api and 'build_preflight_package_v3.py' in gaps
+          assert '03_DAILY_CAPTURE_LOGS/weekly research/master_monday_preflight' in weekly_api
+          assert 'WEEKLY_MARKET_CLOSE_POINTER_v3' in controller
+          assert 'PRE_ACTIVATION_HISTORICAL_GAP' in preflight
+          assert 'CONFIDENCE_REDUCING' in preflight
+
+          # ETF lane retrieves twice, preserves stable dashes as null, and only accepts them when total parity fully accounts for them.
           assert etf.count('farside_etf_owner.py')==2
           assert 'sleep 65' in etf
-          assert "all(value is not None for value in row['fund_values'])" in etf
-          assert 'first_rows == second_rows' in etf
+          assert 'unknown_cells_fully_accounted_by_reported_total' in etf
+          assert 'unknown_cells_imputed' in etf
+          assert 'first_history[key] == second_history[key]' in etf
           assert 'rows_identical_across_retrievals' in etf
+          assert 'history_sessions_materialized' in etf
           assert '03_DAILY_CAPTURE_LOGS/etf' in etf
 
           # Deliberate cadence boundaries: no AI/API interpretation or fake hourly slow data.
@@ -122,7 +146,7 @@ jobs:
           assert 'LEGACY_MINIMAL' in blind and 'EXCLUDED_UNRECOVERABLE' in blind
           assert 'https://data-api.binance.vision' in close
           assert 'https://api.binance.com' not in close
-          print('DAILY_CAPTURE_V2_2_AND_BLINDED_DUAL_RUN_ARCHITECTURE_PASS')
+          print('DAILY_CAPTURE_V2_2_MASTER_MONDAY_CORRECTION_AND_BLINDED_DUAL_RUN_ARCHITECTURE_PASS')
           PY
 
   live-hourly-source-smoke:

@@ -1,0 +1,50 @@
+{
+  "contract": "MASTER_MONDAY_ACTION_REGISTRY_v2",
+  "planned_core_actions": 60,
+  "statuses": ["PASS", "PARTIAL", "STALE", "FAIL", "UNAVAILABLE", "SKIPPED_RUNTIME_LIMIT"],
+  "groups": {
+    "identity_predecessor": 4,
+    "current_spot": 6,
+    "settled_sessions": 5,
+    "weekly_daily_structure": 4,
+    "breadth": 7,
+    "binance_derivatives": 10,
+    "okx_crosscheck": 5,
+    "etf": 4,
+    "cfgi": 3,
+    "macro": 4,
+    "stablecoins_tvl_dex": 6,
+    "receipts_acceptance": 2
+  },
+  "required_acceptance_capabilities": [
+    "direct_BTC_available",
+    "direct_ETH_available",
+    "direct_ETHBTC_available",
+    "final_completed_iso_week_BTC_ETH_ETHBTC_available",
+    "breadth_aggregate_available",
+    "breadth_membership_hash_available",
+    "derivatives_OI_funding_available",
+    "OKX_crosscheck_available",
+    "weekly_v2_2_calibration_present",
+    "settled_ETF_week_available"
+  ],
+  "nonblocking_context_families": [
+    "constituent_sidecars",
+    "top_trader_positioning",
+    "CFGI_when_not_owner-captured",
+    "stablecoins",
+    "DeFi_total_TVL",
+    "DEX_pool_context"
+  ],
+  "transition_policy": {
+    "daily_capture_v2_2_activation_week": "2026-W32",
+    "pre_activation_enriched_hourly_gaps_are": "CONFIDENCE_REDUCING_NOT_BLOCKING_WHEN_FINAL_168H_MARKET_CLOSE_IS_COMPLETE",
+    "future_completed_weeks_require_enriched_hourly_continuity": true
+  },
+  "authority": {
+    "framework_interpretation": false,
+    "portfolio_action": false,
+    "model_weight_change": false,
+    "canonical_promotion": false
+  }
+}
