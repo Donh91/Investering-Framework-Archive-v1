@@ -1,0 +1,58 @@
+name: One-Shot Master Monday W32 Final
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/one-shot-master-monday-w32-final.yml'
+
+permissions:
+  actions: write
+  contents: read
+
+jobs:
+  dispatch-final-chain:
+    runs-on: ubuntu-latest
+    timeout-minutes: 70
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 1
+
+      - name: Dispatch and await corrected settled ETF owner
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh workflow run daily-settled-etf-calibration.yml --ref main
+          sleep 5
+          RUN_ID=$(gh run list --workflow daily-settled-etf-calibration.yml --branch main --event workflow_dispatch --limit 1 --json databaseId --jq '.[0].databaseId')
+          test -n "$RUN_ID"
+          echo "ETF_RUN_ID=$RUN_ID" >> "$GITHUB_ENV"
+          gh run watch "$RUN_ID" --exit-status --interval 10
+
+      - name: Dispatch and await corrected weekly calibration and publication
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh workflow run weekly-api-calibration-shadow.yml --ref main
+          sleep 5
+          RUN_ID=$(gh run list --workflow weekly-api-calibration-shadow.yml --branch main --event workflow_dispatch --limit 1 --json databaseId --jq '.[0].databaseId')
+          test -n "$RUN_ID"
+          echo "WEEKLY_RUN_ID=$RUN_ID" >> "$GITHUB_ENV"
+          gh run watch "$RUN_ID" --exit-status --interval 10
+
+      - name: Refresh final Master Monday readiness gate
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh workflow run master-monday-remaining-gaps.yml --ref main
+          sleep 5
+          RUN_ID=$(gh run list --workflow master-monday-remaining-gaps.yml --branch main --event workflow_dispatch --limit 1 --json databaseId --jq '.[0].databaseId')
+          test -n "$RUN_ID"
+          echo "GATE_RUN_ID=$RUN_ID" >> "$GITHUB_ENV"
+          gh run watch "$RUN_ID" --exit-status --interval 10
+
+      - name: Record dispatched run IDs
+        run: |
+          printf 'ETF=%s\nWEEKLY=%s\nGATE=%s\n' "$ETF_RUN_ID" "$WEEKLY_RUN_ID" "$GATE_RUN_ID"
