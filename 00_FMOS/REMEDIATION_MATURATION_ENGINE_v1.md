@@ -55,7 +55,7 @@ Only reversible actions may be automated: rerun a failed job, regenerate a dashb
 - allowed paths and forbidden authority changes;
 - required positive and negative tests;
 - post-fix gate;
-- task-contract hash and required transition-receipt path.
+- source-health generation, task-contract hash and required transition-receipt path.
 
 It does not invoke or merge Codex automatically.
 
@@ -65,7 +65,7 @@ Before changing code, the worker must revalidate the task and create the branch-
 python scripts/remediation/write_transition_receipt.py --signature <signature> --branch <non-default-task-branch>
 ```
 
-The helper reads current `LATEST_CODEX_READY_TASKS.json` and fresh Automation Production Health. It refuses a missing/non-unique task, refuses a task whose finding is no longer present with `STALE_TASK_NO_CHANGE`, and refuses `main`, `master` or `backup/*` as remediation branches.
+The helper reads current `LATEST_CODEX_READY_TASKS.json` and fresh Automation Production Health. It refuses a missing/non-unique task, refuses a task built from an older health generation, verifies the task-contract hash, refuses a task whose finding is no longer present, and refuses `main`, `master` or `backup/*` as remediation branches.
 
 A valid receipt is stored under:
 
@@ -73,7 +73,7 @@ A valid receipt is stored under:
 research/remediation/transitions/<signature>.json
 ```
 
-and binds the current task contract, source-health timestamp, latest run, branch, authority limits and acceptance conditions to `IN_REMEDIATION`.
+and binds the current task contract, source-health timestamp, latest run, branch, authority limits and acceptance conditions to `IN_REMEDIATION`. The receipt carries its own SHA-256 and is revalidated by the maturation engine. A receipt with a bad contract, state, signature/path relationship, unsafe branch, workflow/finding mismatch, missing task-contract hash or SHA mismatch is ignored and surfaced through `transition_receipt_errors`.
 
 ### Framework-owner proposal
 
@@ -81,17 +81,19 @@ Model weights, market gates, canonical predecessor rules, authority boundaries, 
 
 ## Clean no-op semantics
 
-If a prior `CODEX_READY` signature disappears before a remediation receipt binds it, the task becomes `CLEARED_NO_CHANGE` with terminal reason `FINDING_ABSENT_BEFORE_REMEDIATION_BINDING`.
+If a prior `CODEX_READY` or `REOPENED` signature disappears before a newly valid remediation receipt binds it, the task becomes `CLEARED_NO_CHANGE` with terminal reason `FINDING_ABSENT_BEFORE_REMEDIATION_BINDING`.
 
 This is not proof that a code fix occurred. It means the current evidence no longer justifies changing code. The task may re-enter normal maturation if the finding appears again later.
+
+## Reopen semantics
+
+A returning signature during or after post-fix observation becomes `REOPENED`. The prior transition receipt is historical evidence only and cannot silently reactivate remediation. A new hash-distinct transition receipt, created from current health and the current task contract, is required to return the finding to `IN_REMEDIATION`.
 
 ## Post-fix acceptance
 
 A merge does not resolve an incident.
 
 A bound remediation whose finding disappears enters `POST_FIX_OBSERVATION`. Scheduled workflows require three successful expected observations by default. Non-scheduled changes retain their declared `CI_PLUS_ONE_PRODUCTION_SHAPE_RUN` acceptance requirement for the code task; the remediation observer remains conservative and records successive healthy observations before terminal resolution.
-
-A returning signature during or after post-fix observation becomes `REOPENED`.
 
 `RESOLVED` requires the post-fix evidence gate and records terminal reason `POST_FIX_GATE_SATISFIED`.
 
