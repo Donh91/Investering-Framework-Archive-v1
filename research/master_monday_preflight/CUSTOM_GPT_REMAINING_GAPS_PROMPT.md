@@ -1,0 +1,56 @@
+# CUSTOM GPT REMAINING GAPS
+This is a late readiness check only. It does not mutate the frozen weekly evidence. Return owner data only, with timestamps and receipts. No GitHub writes and no framework interpretation.
+- A05 `current_market.BTCUSDT`: require data.BTCUSDT via binance spot owner
+- A06 `current_market.ETHUSDT`: require data.ETHUSDT via binance spot owner
+- A07 `current_market.ETHBTC`: require data.ETHBTC via binance spot owner
+- A08 `current_market.order_book`: require data.order_book via binance spot owner
+- A09 `current_market.24h_ticker`: require data.ticker_24h via binance spot owner
+- A10 `current_market.server_time`: require data.server_time via binance spot owner
+- A11 `settled_sessions.BTCUSDT`: require BTCUSDT via Copenhagen settled-session owner
+- A12 `settled_sessions.ETHUSDT`: require ETHUSDT via Copenhagen settled-session owner
+- A13 `settled_sessions.ETHBTC`: require ETHBTC via Copenhagen settled-session owner
+- A14 `settled_sessions.threshold_tests`: require threshold_tests via Copenhagen settled-session owner
+- A15 `settled_sessions.session_type`: require session_type via Copenhagen settled-session owner
+- A16 `week_daily_intraday.BTCUSDT`: require 7 local-day rows via weekly close builder
+- A17 `week_daily_intraday.ETHUSDT`: require 7 local-day rows via weekly close builder
+- A18 `week_daily_intraday.weekly_daily_tieout`: require PASS per BTC/ETH via weekly close builder
+- A19 `week_daily_intraday.gap_duplicate_qa`: require gaps/duplicates summary via weekly close builder
+- A20 `breadth.aggregate`: require data.advance_ratio via top100 breadth owner
+- A21 `breadth.membership_hash`: require data.membership_hash via top100 breadth owner
+- A22 `breadth.constituent_sidecar`: require data.constituent_sidecar via top100 breadth owner
+- A23 `breadth.exclusion_sidecar`: require data.exclusion_sidecar via top100 breadth owner
+- A24 `breadth.median_mean`: require data.median_return_24h_pct via top100 breadth owner
+- A25 `breadth.gates`: require data.gates via top100 breadth owner
+- A26 `breadth.longitudinal_permission`: require data.scored_gate_permission via top100 breadth owner
+- A27 `derivatives.BTC_funding`: require data.BTC.funding via Binance derivatives owner
+- A28 `derivatives.ETH_funding`: require data.ETH.funding via Binance derivatives owner
+- A29 `derivatives.funding_history`: require data.funding_history via Binance derivatives owner
+- A30 `derivatives.OI_anchors`: require data.oi_anchors via Binance derivatives owner
+- A31 `derivatives.long_short`: require data.global_long_short via Binance derivatives owner
+- A32 `derivatives.top_accounts`: require data.top_account_long_short via Binance derivatives owner
+- A33 `derivatives.top_positions`: require data.top_position_long_short via Binance derivatives owner
+- A34 `derivatives.taker_flow`: require data.taker_flow via Binance derivatives owner
+- A35 `derivatives.multiwindow_price`: require data.multiwindow_price via Binance derivatives owner
+- A36 `derivatives.close_location`: require data.close_location via Binance derivatives owner
+- A37 `okx.BTC_ticker`: require data.BTC.ticker via OKX owner
+- A38 `okx.ETH_ticker`: require data.ETH.ticker via OKX owner
+- A39 `okx.funding`: require data.funding via OKX owner
+- A40 `okx.OI`: require data.open_interest via OKX owner
+- A41 `okx.basis_divergence`: require data.basis_divergence via OKX owner
+- A42 `etf.BTC_sessions`: require assets.BTC.sessions via Farside ETF owner
+- A43 `etf.ETH_sessions`: require assets.ETH.sessions via Farside ETF owner
+- A44 `etf.rolling_sums`: require rolling_sums via Farside ETF owner
+- A45 `etf.stale_no_zero`: require stale_no_zero_protection via Farside ETF owner
+- A46 `cfgi.MARKET`: require current and prior score via CFGI owner
+- A47 `cfgi.BTC`: require current and prior score via CFGI owner
+- A48 `cfgi.ETH`: require current and prior score via CFGI owner
+- A49 `macro.DGS2`: require latest plus five points via FRED owner
+- A50 `macro.DGS10`: require latest plus five points via FRED owner
+- A51 `macro.VIXCLS`: require latest plus five points via FRED owner
+- A52 `macro.DTWEXBGS`: require latest plus five points via FRED owner
+- A53 `stablecoins.global`: require stablecoins.global via stablecoin owner
+- A54 `stablecoins.chains`: require stablecoins.chains via stablecoin owner
+- A55 `chain_tvl`: require chain_tvl via TVL owner
+- A56 `dex_qa.pools`: require dex_qa.pools via DEX owner
+- A57 `dex_qa.anomalies`: require dex_qa.anomalies via DEX QA
+- A58 `stablecoins.method_compatible_delta`: require stablecoins.method_compatible_delta via stablecoin owner
