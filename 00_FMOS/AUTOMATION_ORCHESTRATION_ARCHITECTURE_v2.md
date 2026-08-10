@@ -69,7 +69,7 @@ Technical execution health and intended workflow lifecycle are separate dimensio
 Supported lifecycle states are:
 
 - `ACTIVE`: normal production or verification behavior; failures are evaluated normally.
-- `EXPECTED_BLOCK`: an intentionally fail-closed workflow. It must be unscheduled, carry a durable reason, declare expected exit code 78 and contain the matching exit contract. Historical expected failures remain visible but are not treated as code defects.
+- `EXPECTED_BLOCK`: an intentionally fail-closed workflow. It must be unscheduled, carry a durable reason, declare the UTC timestamp from which the lifecycle state became authoritative, declare expected exit code 78 and contain the matching exit contract. Historical runs before the lifecycle timestamp remain history and cannot be used to claim a post-declaration lifecycle violation.
 - `PENDING_FIRST_EXPECTED_RUN`: a newly scheduled workflow that has not yet had an expected schedule opportunity. It remains visible without being mislabeled `NO_RUN_HISTORY`.
 - `RETIRED`: historical registration state only; a still-scheduled retired local workflow is a configuration defect.
 
@@ -78,10 +78,11 @@ Lifecycle directives live with the workflow instead of in a parallel registry:
 ```text
 # framework-lifecycle: EXPECTED_BLOCK
 # framework-lifecycle-reason: <durable reason>
+# framework-lifecycle-since: <UTC timestamp>
 # framework-expected-exit: 78
 ```
 
-Lifecycle state never converts a genuine active failure into success. Invalid lifecycle declarations, an `EXPECTED_BLOCK` workflow with a schedule, a missing reason/exit contract, or an unexpectedly successful expected-block run remain actionable health defects.
+Lifecycle state never converts a genuine active failure into success. Invalid lifecycle declarations, an `EXPECTED_BLOCK` workflow with a schedule, an invalid/missing lifecycle timestamp, a missing reason/exit contract, or a successful run after the expected-block lifecycle became authoritative remain actionable health defects.
 
 ## Remediation and Codex
 
@@ -104,7 +105,7 @@ Each task must preserve:
 - required positive and negative tests,
 - post-fix production observation.
 
-Before code remediation begins, the task must be revalidated against fresh Automation Production Health and bound to a non-default task branch through `scripts/remediation/write_transition_receipt.py`. A stale task is `CLEARED_NO_CHANGE`; it must not be repaired speculatively. A valid receipt moves the finding into `IN_REMEDIATION`. Disappearance after a bound remediation enters `POST_FIX_OBSERVATION`; it is not `RESOLVED` until the post-fix gate is satisfied. A returning signature becomes `REOPENED`.
+Before code remediation begins, the task must be revalidated against fresh Automation Production Health and bound to a non-default task branch through `scripts/remediation/write_transition_receipt.py`. A stale task is `CLEARED_NO_CHANGE`; it must not be repaired speculatively. A valid hash-bound receipt moves the finding into `IN_REMEDIATION`. Receipts are validated on readback against their filename/signature, workflow/finding identity, task-contract hash, safe branch and receipt SHA-256. Invalid receipts are reported and ignored. Disappearance after a bound remediation enters `POST_FIX_OBSERVATION`; it is not `RESOLVED` until the post-fix gate is satisfied. A returning signature becomes `REOPENED` and requires a newly generated transition receipt before remediation can resume.
 
 No automation may self-merge a Codex change. Model weights, market gates, canonical predecessor rules, authority boundaries, portfolio logic and API budget remain framework-owner proposal-only.
 
@@ -157,10 +158,10 @@ Automation architecture is current only when:
 
 - all main writers use `framework-main-writer`, explicit `main` checkout, retry, abort and readback,
 - scheduled workflows use explicit `Europe/Copenhagen` where local timing matters,
-- lifecycle declarations are validated and cannot mask active production failures,
+- lifecycle declarations are timestamped, validated and cannot mask active production failures,
 - artifacts have bounded retention and durable evidence is committed separately,
 - health does not self-poison,
-- remediation has a visible Codex queue, fresh-state preflight and post-fix evidence lane,
+- remediation has a visible Codex queue, fresh-state preflight, hash-bound transition receipts and post-fix evidence lane,
 - strict API failures produce durable receipts,
 - the full CI suite passes,
 - real production runs enter post-fix observation before incidents are resolved.
