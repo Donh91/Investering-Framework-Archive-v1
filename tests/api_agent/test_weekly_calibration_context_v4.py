@@ -43,6 +43,50 @@ class WeeklyCalibrationContextV4Tests(unittest.TestCase):
             self.assertFalse(context['validation_queue'][0]['candidate_freeze_allowed'])
             self.assertFalse(context['validation_queue'][0]['automatic_promotion'])
 
+    def test_weekly_context_binds_final_168h_close_separately_from_enriched_gap(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            capture = root / '03_DAILY_CAPTURE_LOGS'
+            weekly = capture / 'weekly'
+            (weekly / '2026/W32').mkdir(parents=True)
+            pointer = {
+                'contract': 'LATEST_WEEKLY_CALIBRATION_POINTER_v3',
+                'iso_year': 2026,
+                'iso_week': 32,
+                'path': 'weekly/2026/W32.json',
+                'sequence_facts_path': 'weekly/2026/W32/WEEKLY_SEQUENCE_FACTS.json',
+                'readiness': 'DEGRADED',
+                'hourly_rows': 40,
+                'missing_hour_count': 128,
+            }
+            (weekly / 'LATEST_WEEKLY_CALIBRATION.json').write_text(json.dumps(pointer))
+            (weekly / '2026/W32.json').write_text(json.dumps({'contract': 'WEEKLY_CAPTURE_PACK_v2', 'hourly_rows': 40}))
+            (weekly / '2026/W32/WEEKLY_SEQUENCE_FACTS.json').write_text(json.dumps({'gap_diagnostics': {'observed_hours': 40, 'missing_hour_count': 128}}))
+            symbols = {
+                asset: {'hour_count': 168, 'weekly_open': 1.0, 'weekly_high': 2.0, 'weekly_low': 0.5, 'weekly_close': 1.5}
+                for asset in ('BTCUSDT', 'ETHUSDT', 'ETHBTC')
+            }
+            preflight = {
+                'packet': {'status': 'FULL_MASTER_MONDAY_INPUT'},
+                'quality': {'required_capabilities': {'final_completed_iso_week_BTC_ETH_ETHBTC_available': True}},
+                'settled_week': {
+                    'contract': 'WEEKLY_MARKET_CLOSE_PACKAGE_v3',
+                    'final': True,
+                    'close_mode': 'FINAL_COMPLETED_ISO_WEEK',
+                    'completeness': 'COMPLETE',
+                    'symbols': symbols,
+                },
+                'missing': [{'field': 'weekly_v2_2_enriched_sequence', 'blocking_level': 'CONFIDENCE_REDUCING'}],
+                'package_sha256': 'abc',
+            }
+            preflight_path = root / 'MASTER_MONDAY_GAP_FILL_PACKAGE.json'
+            preflight_path.write_text(json.dumps(preflight))
+            value = module.load_weekly_owned_context(weekly / 'LATEST_WEEKLY_CALIBRATION.json', capture, preflight_path)
+            self.assertTrue(value['master_monday_preflight']['final_168h_market_close_available'])
+            self.assertEqual(value['weekly_sequence_facts']['gap_diagnostics']['missing_hour_count'], 128)
+            self.assertEqual(value['master_monday_preflight']['settled_week']['symbols']['BTCUSDT']['hour_count'], 168)
+            self.assertEqual(value['weekly_capture_pointer']['readiness'], 'DEGRADED')
+
 
 if __name__ == '__main__':
     unittest.main()
