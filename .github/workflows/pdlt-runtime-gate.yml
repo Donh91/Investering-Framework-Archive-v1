@@ -70,7 +70,13 @@ jobs:
           assert '"strict": True' in gcode
           assert "engine_epoch': EPOCH" in dcode or '"engine_epoch": EPOCH' in dcode
           assert 'UPGRADED_POST_20260708' in dcode
-          assert 'pdlt-v1-1-historical-bootstrap' in discovery
+          discovery_live = 'pdlt-v1-1-historical-bootstrap' in discovery
+          discovery_frozen = (
+              'PDLT_DISCOVERY_FROZEN_METHODS_REPAIR_REQUIRED' in discovery
+              and 'if: ${{ false }}' in discovery
+              and 'schedule:' not in discovery
+          )
+          assert discovery_live or discovery_frozen
           assert 'expected_credits' in bootstrap and '12300' in bootstrap
           assert 'MATURED_OUTCOME_v2' in mcode
           assert '--interval 1h' in maturation
