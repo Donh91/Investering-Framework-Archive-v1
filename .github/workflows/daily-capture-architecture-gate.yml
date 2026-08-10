@@ -21,11 +21,47 @@ on:
       - '.github/workflows/master-monday-remaining-gaps.yml'
       - '.github/workflows/daily-capture-architecture-gate.yml'
       - '03_DAILY_CAPTURE_LOGS/**'
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
+  scope:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    outputs:
+      hourly_source: ${{ steps.classify.outputs.hourly_source }}
+      farside_source: ${{ steps.classify.outputs.farside_source }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Classify component-specific live verification scope
+        id: classify
+        shell: bash
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          if [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ]; then
+            python scripts/daily_capture/classify_verification_scope.py \
+              --all \
+              --github-output "${GITHUB_OUTPUT}"
+          else
+            test -n "${BASE_SHA}"
+            test -n "${HEAD_SHA}"
+            git cat-file -e "${BASE_SHA}^{commit}"
+            git cat-file -e "${HEAD_SHA}^{commit}"
+            git diff --name-only "${BASE_SHA}" "${HEAD_SHA}" | tee /tmp/daily-capture-changed-files.txt
+            python scripts/daily_capture/classify_verification_scope.py \
+              --github-output "${GITHUB_OUTPUT}" < /tmp/daily-capture-changed-files.txt
+          fi
+
   gate:
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -34,16 +70,18 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Run daily capture, Master Monday correction and blinded dual-run tests
+      - name: Run deterministic daily capture, verification-scope, Master Monday correction and blinded dual-run tests
         run: |
           python -m unittest \
+            tests.daily_capture.test_verification_scope \
             tests.daily_capture.test_daily_capture_pipeline \
             tests.daily_capture.test_weekly_market_close_endpoint \
             tests.daily_capture.test_master_monday_final_correction \
             tests.backtest_engine.test_blind_dual_run_v2 -v
-      - name: Compile capture and Master Monday modules
+      - name: Compile capture, verification-scope and Master Monday modules
         run: |
           python -m py_compile \
+            scripts/daily_capture/classify_verification_scope.py \
             scripts/daily_capture/build_capture_index.py \
             scripts/daily_capture/build_hourly_sequence.py \
             scripts/daily_capture/build_weekly_calibration.py \
@@ -54,7 +92,7 @@ jobs:
             scripts/master_monday/build_preflight_package_v3.py \
             scripts/orchestration/weekly_orchestration_controller.py \
             backtest_engine/blind_dual_run.py
-      - name: Validate schedules, storage, blinding and authority boundaries
+      - name: Validate schedules, storage, verification routing, blinding and authority boundaries
         run: |
           python - <<'PY'
           from pathlib import Path
@@ -65,6 +103,8 @@ jobs:
           weekly_api=Path('.github/workflows/weekly-api-calibration-shadow.yml').read_text()
           gaps=Path('.github/workflows/master-monday-remaining-gaps.yml').read_text()
           etf=Path('.github/workflows/daily-settled-etf-calibration.yml').read_text()
+          gate=Path('.github/workflows/daily-capture-architecture-gate.yml').read_text()
+          router=Path('scripts/daily_capture/classify_verification_scope.py').read_text()
           close=Path('scripts/daily_capture/build_weekly_market_close_package.py').read_text()
           hourly_builder=Path('scripts/daily_capture/build_hourly_sequence.py').read_text()
           weekly_builder=Path('scripts/daily_capture/build_weekly_calibration.py').read_text()
@@ -96,6 +136,16 @@ jobs:
           assert 'binance_spot_owner_collector.py' not in daily
           assert '03_DAILY_CAPTURE_LOGS/hourly' in hourly
           assert '03_DAILY_CAPTURE_LOGS/captures' in daily
+
+          # Verification layering: deterministic tests always run for this broad gate,
+          # while external source calls are separate jobs selected by exact owning paths.
+          assert 'Classify component-specific live verification scope' in gate
+          assert "needs.scope.outputs.hourly_source == 'true'" in gate
+          assert "needs.scope.outputs.farside_source == 'true'" in gate
+          assert 'scripts/master_monday' not in router
+          assert '03_DAILY_CAPTURE_LOGS' not in router
+          assert '.github/workflows/hourly-sequence-capture.yml' in router
+          assert '.github/workflows/daily-settled-etf-calibration.yml' in router
 
           # Hourly lane self-heals one missed regular run and stores already-returned Binance flow fields.
           assert '--lookback-hours 26' in hourly
@@ -146,10 +196,12 @@ jobs:
           assert 'LEGACY_MINIMAL' in blind and 'EXCLUDED_UNRECOVERABLE' in blind
           assert 'https://data-api.binance.vision' in close
           assert 'https://api.binance.com' not in close
-          print('DAILY_CAPTURE_V2_2_MASTER_MONDAY_CORRECTION_AND_BLINDED_DUAL_RUN_ARCHITECTURE_PASS')
+          print('DAILY_CAPTURE_V2_2_COMPONENT_SCOPED_VERIFICATION_PASS')
           PY
 
   live-hourly-source-smoke:
+    needs: scope
+    if: needs.scope.outputs.hourly_source == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -179,4 +231,48 @@ jobs:
           )
           assert all(all(row.get(k) not in (None,'') for k in required) for row in rows), rows
           print('LIVE_HOURLY_V2_2_SOURCE_COVERAGE_PASS')
+          PY
+
+  live-farside-source-smoke:
+    needs: scope
+    if: needs.scope.outputs.farside_source == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Prove live Farside BTC and ETH schema without writing repository state
+        run: |
+          python scripts/data_terminal/farside_etf_owner.py --output-dir /tmp/farside-live --history-limit 3
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          snapshot=json.loads(Path('/tmp/farside-live/owner_snapshot.json').read_text())
+          assert snapshot.get('status') == 'PASS', snapshot
+          assert snapshot.get('unknown_cells_are_not_imputed') is True, snapshot
+          expected={
+              'BTC': ['IBIT','FBTC','BITB','ARKB','BTCO','EZBC','BRRR','HODL','BTCW','MSBT','GBTC','BTC'],
+              'ETH': ['ETHA','ETHB','FETH','ETHW','TETH','ETHV','QETH','EZET','ETHE','ETH'],
+          }
+          rows={row.get('asset'): row for row in snapshot.get('rows', [])}
+          assert set(rows) == {'BTC','ETH'}, rows
+          for asset, funds in expected.items():
+              row=rows[asset]
+              assert row.get('fund_headers') == funds, row
+              assert row.get('headers') == ['Date', *funds, 'Total'], row
+              assert row.get('session_final') is True, row
+              assert row.get('total_parity') is True, row
+              assert row.get('unknown_cells_fully_accounted_by_reported_total') is True, row
+              assert row.get('reported_total') is not None, row
+              assert row.get('header_mode') in {
+                  'DIRECT_DATE_TOTAL',
+                  'SOURCE_TWO_ROW_TICKER_HEADER',
+                  'CANONICAL_ASSET_SCHEMA_EXACT_WIDTH_FALLBACK',
+              }, row
+              source_hash=(snapshot.get('source_hashes') or {}).get(asset, '')
+              assert len(source_hash) == 64, snapshot
+          print('LIVE_FARSIDE_BTC_ETH_SCHEMA_PASS')
           PY
