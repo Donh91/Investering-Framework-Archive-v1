@@ -20,4 +20,4 @@ jobs:
         with:
           python-version: '3.12'
       - run: python -m unittest tests.remediation.test_remediation_maturation -v
-      - run: python -m py_compile scripts/remediation/build_remediation_maturation.py
+      - run: python -m py_compile scripts/remediation/build_remediation_maturation.py scripts/remediation/write_transition_receipt.py
