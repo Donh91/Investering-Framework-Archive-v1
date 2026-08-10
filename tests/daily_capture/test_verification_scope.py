@@ -19,6 +19,9 @@ class VerificationScopeTests(unittest.TestCase):
     def test_gate_change_runs_both_live_smokes(self):
         self.assertEqual(classify([".github/workflows/daily-capture-architecture-gate.yml"]), {"hourly_source": True, "farside_source": True})
 
+    def test_router_change_runs_both_live_smokes(self):
+        self.assertEqual(classify(["scripts/daily_capture/classify_verification_scope.py"]), {"hourly_source": True, "farside_source": True})
+
     def test_master_monday_change_runs_no_market_source_smoke(self):
         self.assertEqual(classify(["scripts/master_monday/build_preflight_package_v3.py"]), {"hourly_source": False, "farside_source": False})
 
