@@ -31,6 +31,16 @@ def build_receipt(repo: Path, signature: str, branch: str, pr_number: int | None
     if len(tasks) != 1:
         raise ValueError("CODEX_READY_TASK_NOT_UNIQUE_OR_MISSING")
     task = tasks[0]
+    if task.get("source_health_generated_at_utc") and task.get("source_health_generated_at_utc") != health.get("generated_at_utc"):
+        raise ValueError("STALE_TASK_HEALTH_GENERATION_MISMATCH")
+
+    contract_fields = {k: task.get(k) for k in (
+        "signature", "workflow", "finding", "objective", "precondition", "success_evidence",
+        "clean_noop_condition", "stop_condition", "escalation_condition", "allowed_change_scope",
+        "forbidden_changes", "required_evidence", "post_fix_gate"
+    )}
+    if task.get("task_contract_sha256") != canonical_hash(contract_fields):
+        raise ValueError("TASK_CONTRACT_HASH_MISMATCH")
 
     fresh_findings = set()
     for workflow in health.get("workflows", []):
