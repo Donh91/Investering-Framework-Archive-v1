@@ -1,0 +1,77 @@
+{
+  "contract": "SPAR_METHODS_HARDENING_P2_2026-08-10",
+  "experiment_id": "SPAR-v1",
+  "status": "METHODS_HARDENED_CURRENT_IDENTITY_DESCRIPTIVE_ONLY",
+  "authority": "SHADOW_RESEARCH_METHODS_ONLY",
+  "trigger": {
+    "gpt_phase2": "METHODS_READY_DESCRIPTIVE_ONLY",
+    "claude_replication": "METHODS_REQUIRES_PROSPECTIVE_HARDENING",
+    "ratified_terminal": "METHODS_REQUIRES_PROSPECTIVE_HARDENING"
+  },
+  "identity_preservation": {
+    "pattern_definitions_changed": false,
+    "transition_semantics_changed": false,
+    "episode_cooldown_changed": false,
+    "outcome_horizons_changed": false,
+    "market_thresholds_changed": false,
+    "historical_events_rescored": false
+  },
+  "claim_boundary": {
+    "allowed": "DESCRIPTIVE_SEQUENCE_OUTCOME_ASSOCIATION_ONLY",
+    "incremental_value_beyond_single_sensor_states_established": false,
+    "single_sensor_control_baseline_frozen_in_v1": false,
+    "unconditional_context_added": "DESCRIPTIVE_CONTEXT_ONLY_NOT_COMPARATOR",
+    "inferential_comparator_requires_new_prospective_identity": true
+  },
+  "evidence_provenance": {
+    "preregistration_timestamp_utc": "2026-08-08T07:16:55Z",
+    "adapter_v2_cutover_utc": "2026-08-09T19:58:03Z",
+    "pre_preregistration_rows": "RETROSPECTIVE_ARCHIVE_REPLAY_NOT_PROSPECTIVE_EVIDENCE",
+    "post_preregistration_rows": "PROSPECTIVE_POST_PREREGISTRATION",
+    "adapter_segments_reported_separately": true,
+    "dropped_input_rows_reported_by_reason": true,
+    "silent_drop_policy": false
+  },
+  "independence": {
+    "episode_cooldown_hours": 72,
+    "72h_cooldown_proves_168h_independence": false,
+    "report_non_overlapping_168h_event_count": true,
+    "report_max_168h_window_overlap": true,
+    "formal_effective_n_formula_frozen": false
+  },
+  "base_review": {
+    "matured_72h_events_per_pattern": 5,
+    "top_level_ready_requires_all_patterns": true,
+    "interpretation": "REVIEW_CHECKPOINT_NOT_INFERENTIAL_EVIDENCE"
+  },
+  "fragility": {
+    "minimum_matured_72h_events_per_pattern": 10,
+    "loo_emitted_below_gate": false,
+    "loo_role": "SINGLE_POINT_DELETION_DIAGNOSTIC_NOT_EFFECT_EVIDENCE_NOT_NULL_TEST",
+    "placebo_timestamp_mechanics_frozen": false,
+    "regime_split_mechanics_frozen": false,
+    "robustness_review_ready_allowed_before_methods_freeze": false,
+    "blocked_status": "METHODS_BLOCKED_PLACEBO_REGIME_NOT_FROZEN",
+    "etf_progression_allowed": false
+  },
+  "p3_v1_limitation": {
+    "same_transition_clause_satisfaction_possible": true,
+    "current_v1_behavior_changed": false,
+    "strict_temporal_sequence_claim_allowed": false,
+    "strict_temporal_sequence_requires": "NEW_PROSPECTIVE_EXPERIMENT_IDENTITY"
+  },
+  "queue_hardening": {
+    "fragility_requires_all_three_patterns_at_10": true,
+    "legacy_robustness_ready_may_open_etf": false,
+    "methods_blocked_fragility_may_open_etf": false,
+    "queue_order_changed": false,
+    "paid_budget_changed": false
+  },
+  "future_research_requirements": [
+    "FREEZE_PLACEBO_TIMESTAMP_SAMPLING_UNIVERSE_AND_EXCLUSIONS",
+    "FREEZE_REGIME_DEFINITIONS_AND_MINIMUM_SUPPORT",
+    "FREEZE_MULTIPLICITY_OR_PRIMARY_CLAIM_HIERARCHY",
+    "USE_NEW_PROSPECTIVE_IDENTITY_FOR_INCREMENTAL_SINGLE_SENSOR_BASELINE_CLAIM",
+    "USE_NEW_PROSPECTIVE_IDENTITY_FOR_STRICT_P3_TEMPORAL_SEQUENCE"
+  ]
+}
