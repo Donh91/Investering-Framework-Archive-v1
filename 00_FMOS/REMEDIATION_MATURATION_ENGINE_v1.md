@@ -1,25 +1,30 @@
 # Remediation Maturation Engine v1
 
 Status: operational governance layer
+Revision: 1.1 lifecycle and fresh-state hardening
 
 ## Purpose
 
-This engine sits between Operations/Automation Health and code delivery. It prevents a single transient failure from becoming an immediate code change, while allowing critical reproducible faults to escalate without artificial delay.
+This engine sits between Operations/Automation Health and code delivery. It prevents a single transient failure from becoming an immediate code change, prevents stale or intentionally blocked work from becoming speculative remediation, and requires post-fix evidence before resolution.
 
 ## Flow
 
 ```text
 Operations Dashboard and Automation Health
--> stable failure signature
+-> stable actionable failure signature
 -> evidence and persistence evaluation
 -> OBSERVE / SELF-HEAL ALLOWLIST / CODEX PR / FRAMEWORK OWNER PROPOSAL
+-> fresh-state remediation preflight
+-> IN_REMEDIATION or CLEARED_NO_CHANGE
 -> post-fix observation
 -> RESOLVED or REOPENED
 ```
 
 ## States
 
-`OBSERVED`, `SUSPECTED_TRANSIENT`, `PERSISTING`, `CONFIRMED`, `NEEDS_MORE_EVIDENCE`, `CODEX_READY`, `IN_REMEDIATION`, `POST_FIX_OBSERVATION`, `RESOLVED`, `REOPENED`.
+`OBSERVED`, `SUSPECTED_TRANSIENT`, `PERSISTING`, `CONFIRMED`, `NEEDS_MORE_EVIDENCE`, `CODEX_READY`, `IN_REMEDIATION`, `POST_FIX_OBSERVATION`, `RESOLVED`, `REOPENED`, `CLEARED_NO_CHANGE`.
+
+Lifecycle-only health findings such as `EXPECTED_BLOCK`, `PENDING_FIRST_EXPECTED_RUN` and retired-local visibility are not remediation work by themselves. Invalid lifecycle configuration remains actionable through its specific health finding.
 
 ## Timing principle
 
@@ -39,15 +44,56 @@ Only reversible actions may be automated: rerun a failed job, regenerate a dashb
 
 ### Codex PR
 
-`CODEX_READY` produces a bounded task package containing workflow, finding, run identity, evidence threshold, allowed paths, forbidden changes, acceptance evidence and post-fix gate. It does not invoke or merge Codex automatically.
+`CODEX_READY` produces a bounded task package containing:
+
+- workflow, finding, signature and latest run identity;
+- concrete objective;
+- fresh-state precondition;
+- success evidence;
+- clean-no-op condition;
+- stop and escalation conditions;
+- allowed paths and forbidden authority changes;
+- required positive and negative tests;
+- post-fix gate;
+- task-contract hash and required transition-receipt path.
+
+It does not invoke or merge Codex automatically.
+
+Before changing code, the worker must revalidate the task and create the branch-bound transition receipt with:
+
+```text
+python scripts/remediation/write_transition_receipt.py --signature <signature> --branch <non-default-task-branch>
+```
+
+The helper reads current `LATEST_CODEX_READY_TASKS.json` and fresh Automation Production Health. It refuses a missing/non-unique task, refuses a task whose finding is no longer present with `STALE_TASK_NO_CHANGE`, and refuses `main`, `master` or `backup/*` as remediation branches.
+
+A valid receipt is stored under:
+
+```text
+research/remediation/transitions/<signature>.json
+```
+
+and binds the current task contract, source-health timestamp, latest run, branch, authority limits and acceptance conditions to `IN_REMEDIATION`.
 
 ### Framework-owner proposal
 
 Model weights, market gates, canonical predecessor rules, authority boundaries, portfolio logic and API budget remain proposal-only.
 
+## Clean no-op semantics
+
+If a prior `CODEX_READY` signature disappears before a remediation receipt binds it, the task becomes `CLEARED_NO_CHANGE` with terminal reason `FINDING_ABSENT_BEFORE_REMEDIATION_BINDING`.
+
+This is not proof that a code fix occurred. It means the current evidence no longer justifies changing code. The task may re-enter normal maturation if the finding appears again later.
+
 ## Post-fix acceptance
 
-A merge does not resolve an incident. Scheduled workflows require three successful expected runs by default. Non-scheduled changes require CI plus one production-shape run. A returning signature becomes `REOPENED`.
+A merge does not resolve an incident.
+
+A bound remediation whose finding disappears enters `POST_FIX_OBSERVATION`. Scheduled workflows require three successful expected observations by default. Non-scheduled changes retain their declared `CI_PLUS_ONE_PRODUCTION_SHAPE_RUN` acceptance requirement for the code task; the remediation observer remains conservative and records successive healthy observations before terminal resolution.
+
+A returning signature during or after post-fix observation becomes `REOPENED`.
+
+`RESOLVED` requires the post-fix evidence gate and records terminal reason `POST_FIX_GATE_SATISFIED`.
 
 ## Outputs
 
@@ -55,6 +101,7 @@ A merge does not resolve an incident. Scheduled workflows require three successf
 - `LATEST_CODEX_READY_TASKS.json`
 - `LATEST_NEEDS_MORE_EVIDENCE.json`
 - `research/remediation/REMEDIATION_HISTORY.jsonl`
+- branch-bound transition receipts under `research/remediation/transitions/`
 
 ## Authority
 
