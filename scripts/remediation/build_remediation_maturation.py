@@ -90,31 +90,54 @@ def task_contract(name: str, finding: str, sig: str, workflow: dict[str, Any]) -
     }
 
 
-def load_transition_receipts(repo: Path) -> dict[str, dict[str, Any]]:
+def _valid_transition_receipt(data: dict[str, Any], path: Path) -> tuple[bool, str | None]:
+    sig = str(data.get("signature") or "")
+    if data.get("contract") != "REMEDIATION_TRANSITION_RECEIPT_v1":
+        return False, "CONTRACT"
+    if data.get("state") != "IN_REMEDIATION":
+        return False, "STATE"
+    if not sig or path.stem != sig:
+        return False, "SIGNATURE_PATH"
+    branch = str(data.get("branch") or "")
+    if not branch or branch in {"main", "master"} or branch.startswith("backup/"):
+        return False, "BRANCH"
+    workflow = str(data.get("workflow") or "")
+    finding = str(data.get("finding") or "")
+    if not workflow or not finding or signature(workflow, finding) != sig:
+        return False, "SIGNATURE_CONTENT"
+    declared_hash = str(data.get("receipt_sha256") or "")
+    actual_hash = canonical_hash({k: v for k, v in data.items() if k != "receipt_sha256"})
+    if not declared_hash or declared_hash != actual_hash:
+        return False, "HASH"
+    if not data.get("task_contract_sha256"):
+        return False, "TASK_CONTRACT_HASH"
+    return True, None
+
+
+def load_transition_receipts(repo: Path) -> tuple[dict[str, dict[str, Any]], list[dict[str, str]]]:
     root = repo / "research/remediation/transitions"
     receipts: dict[str, dict[str, Any]] = {}
+    errors: list[dict[str, str]] = []
     if not root.exists():
-        return receipts
+        return receipts, errors
     for path in sorted(root.glob("*.json")):
         data = read_json(path, {})
         if not isinstance(data, dict):
+            errors.append({"path": str(path.relative_to(repo)), "reason": "NOT_OBJECT"})
             continue
-        sig = str(data.get("signature") or "")
-        if (
-            data.get("contract") == "REMEDIATION_TRANSITION_RECEIPT_v1"
-            and data.get("state") == "IN_REMEDIATION"
-            and sig
-            and path.stem == sig
-        ):
-            receipts[sig] = data
-    return receipts
+        valid, reason = _valid_transition_receipt(data, path)
+        if valid:
+            receipts[str(data["signature"])] = data
+        else:
+            errors.append({"path": str(path.relative_to(repo)), "reason": str(reason)})
+    return receipts, errors
 
 
 def build(repo: Path) -> dict[str, Any]:
     health = read_json(repo / "research/architecture_health/LATEST_AUTOMATION_HEALTH.json", {})
     prior = read_json(repo / "research/remediation/LATEST_REMEDIATION_QUEUE.json", {})
     prior_by_sig = {x.get("signature"): x for x in prior.get("items", []) if isinstance(x, dict)}
-    transition_by_sig = load_transition_receipts(repo)
+    transition_by_sig, transition_errors = load_transition_receipts(repo)
     current_signatures: set[str] = set()
     items: list[dict[str, Any]] = []
 
@@ -134,6 +157,8 @@ def build(repo: Path) -> dict[str, Any]:
             current_signatures.add(sig)
             old = prior_by_sig.get(sig, {})
             transition = transition_by_sig.get(sig)
+            old_transition = old.get("transition_receipt") if isinstance(old.get("transition_receipt"), dict) else {}
+            transition_is_new = bool(transition) and transition.get("receipt_sha256") != old_transition.get("receipt_sha256")
             observations = int(old.get("observations") or 0) + 1
             threshold = evidence_threshold(workflow, finding)
             rclass = risk_class(finding)
@@ -143,7 +168,10 @@ def build(repo: Path) -> dict[str, Any]:
             if old.get("state") in {"POST_FIX_OBSERVATION", "RESOLVED"}:
                 state = "REOPENED"
                 route = "CODEX_PR" if rclass.startswith("B_") else "OBSERVE"
-            elif transition is not None:
+            elif old.get("state") == "REOPENED" and not transition_is_new:
+                state = "REOPENED"
+                route = "CODEX_PR" if rclass.startswith("B_") else "OBSERVE"
+            elif transition is not None and (transition_is_new or old.get("state") == "IN_REMEDIATION"):
                 state = "IN_REMEDIATION"
                 route = "CODEX_PR_IN_PROGRESS"
             elif any(marker in upper for marker in CLASS_C_MARKERS):
@@ -181,6 +209,7 @@ def build(repo: Path) -> dict[str, Any]:
                 "latest_run_id": latest.get("id"),
                 "latest_run_url": latest.get("html_url"),
                 "lifecycle_state": workflow.get("lifecycle_state", "ACTIVE"),
+                "source_health_generated_at_utc": health.get("generated_at_utc"),
                 **contract,
             }
             if transition is not None:
@@ -197,7 +226,9 @@ def build(repo: Path) -> dict[str, Any]:
             continue
         state = old.get("state")
         transition = transition_by_sig.get(sig)
-        if state in {"IN_REMEDIATION", "POST_FIX_OBSERVATION"} or transition is not None:
+        old_transition = old.get("transition_receipt") if isinstance(old.get("transition_receipt"), dict) else {}
+        transition_is_new = bool(transition) and transition.get("receipt_sha256") != old_transition.get("receipt_sha256")
+        if state in {"IN_REMEDIATION", "POST_FIX_OBSERVATION"} or transition_is_new:
             successes = int(old.get("post_fix_successes") or 0) + 1
             resolved = successes >= 3
             row = dict(old)
@@ -211,7 +242,7 @@ def build(repo: Path) -> dict[str, Any]:
             if transition is not None:
                 row["transition_receipt"] = transition
             items.append(row)
-        elif state == "CODEX_READY":
+        elif state in {"CODEX_READY", "REOPENED"}:
             row = dict(old)
             row.update({
                 "state": "CLEARED_NO_CHANGE",
@@ -240,6 +271,7 @@ def build(repo: Path) -> dict[str, Any]:
         "codex_ready_tasks": codex,
         "needs_more_evidence": needs,
         "active_remediation": active_remediation,
+        "transition_receipt_errors": transition_errors,
         "self_heal_allowlist": ["rerun_failed_job", "regenerate_dashboard", "rebuild_pointer_from_hash_verified_output", "publish_failure_receipt"],
         "automatic_code_write": False,
         "automatic_merge": False,
