@@ -165,8 +165,35 @@ def resolve_capture_path(capture_root: Path, value: Any) -> Path | None:
     return capture_root / path
 
 
-def load_weekly_owned_context(weekly_pointer_path: Path, capture_root: Path, preflight_path: Path) -> dict[str, Any]:
+def unavailable_weekly_owned(pointer: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "weekly_capture_pointer": pointer,
+        "weekly_capture_pack": None,
+        "weekly_sequence_facts": None,
+        "master_monday_preflight": {
+            "status": "UNAVAILABLE_NOT_SUPPLIED",
+            "packet": None,
+            "meta": None,
+            "required_capabilities": None,
+            "settled_week": None,
+            "final_168h_market_close_available": False,
+            "breadth": None,
+            "derivatives": None,
+            "etf": None,
+            "cfgi": None,
+            "macro": None,
+            "missing": [{"field": "master_monday_preflight", "blocking_level": "UNAVAILABLE_IN_CALLER_CONTEXT"}],
+            "package_sha256": None,
+        },
+    }
+
+
+def load_weekly_owned_context(weekly_pointer_path: Path, capture_root: Path, preflight_path: Path, *, require_preflight: bool = False) -> dict[str, Any]:
     pointer = load_json(weekly_pointer_path)
+    if not preflight_path.exists():
+        if require_preflight:
+            raise FileNotFoundError(f"REQUIRED_MASTER_MONDAY_PREFLIGHT_MISSING:{preflight_path}")
+        return unavailable_weekly_owned(pointer)
     preflight = load_json(preflight_path)
     pack_path = resolve_capture_path(capture_root, pointer.get("path"))
     facts_path = resolve_capture_path(capture_root, pointer.get("sequence_facts_path"))
@@ -185,6 +212,7 @@ def load_weekly_owned_context(weekly_pointer_path: Path, capture_root: Path, pre
         "weekly_capture_pack": pack,
         "weekly_sequence_facts": facts,
         "master_monday_preflight": {
+            "status": "AVAILABLE",
             "packet": preflight.get("packet"),
             "meta": preflight.get("meta"),
             "required_capabilities": (preflight.get("quality") or {}).get("required_capabilities"),
@@ -206,6 +234,7 @@ def main() -> None:
     ap.add_argument("--weekly-pointer", type=Path, required=True)
     ap.add_argument("--capture-root", type=Path, default=Path("03_DAILY_CAPTURE_LOGS"))
     ap.add_argument("--preflight-file", type=Path)
+    ap.add_argument("--require-preflight", action="store_true")
     ap.add_argument("--daily-output-root", type=Path, required=True)
     ap.add_argument("--freeze-file", type=Path, required=True)
     ap.add_argument("--legacy-root", type=Path)
@@ -216,7 +245,7 @@ def main() -> None:
 
     freeze = load_json(args.freeze_file)
     preflight_file = args.preflight_file or args.freeze_file.with_name("MASTER_MONDAY_GAP_FILL_PACKAGE.json")
-    weekly_owned = load_weekly_owned_context(args.weekly_pointer, args.capture_root, preflight_file)
+    weekly_owned = load_weekly_owned_context(args.weekly_pointer, args.capture_root, preflight_file, require_preflight=args.require_preflight)
     start = ts(freeze["window_start_utc"])
     end = ts(freeze["window_end_utc"])
     candidates = []
@@ -292,6 +321,7 @@ def main() -> None:
     print(json.dumps({
         "status": "PASS",
         "daily_rows": len(outputs),
+        "preflight_context_status": weekly_owned["master_monday_preflight"].get("status"),
         "final_168h_market_close_available": weekly_owned["master_monday_preflight"]["final_168h_market_close_available"],
         "weekly_sequence_readiness": weekly_owned["weekly_capture_pointer"].get("readiness"),
         "legacy_hypotheses": len(context["legacy_research_context"]["hypotheses"]),
