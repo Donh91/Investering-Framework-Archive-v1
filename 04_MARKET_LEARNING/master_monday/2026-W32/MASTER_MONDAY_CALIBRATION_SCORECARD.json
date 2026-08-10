@@ -1,0 +1,122 @@
+{
+  "contract": "MASTER_MONDAY_W32_CALIBRATION_SCORECARD_v1",
+  "iso_year": 2026,
+  "iso_week": 32,
+  "status": "FINAL_CALIBRATED_WITH_EXPLICIT_PRE_V2_2_SEQUENCE_GAP",
+  "authority": "MAIN_THREAD_SYNTHESIS_NO_CANONICAL_STATE_CHANGE",
+  "inputs": {
+    "cycle_navigator_forecast": "04_MARKET_LEARNING/cycle_navigator/public/2026-W32/CYCLE_NAVIGATOR_19_PUBLIC_X_PUBLISHED.md",
+    "final_market_close": "03_DAILY_CAPTURE_LOGS/weekly_close/2026/W32/WEEKLY_MARKET_CLOSE_PACKAGE.json",
+    "weekly_sequence_pointer": "03_DAILY_CAPTURE_LOGS/weekly/LATEST_WEEKLY_CALIBRATION.json",
+    "master_monday_gate": "research/master_monday_preflight/LATEST_MASTER_MONDAY_DATA_GATE.json",
+    "weekly_api_delivery": "research/api_agent/outputs/weekly/2026/W32/MASTER_MONDAY_MACHINE_PACKAGE.json",
+    "current_live_anchor": "03_DAILY_CAPTURE_LOGS/captures/2026/08/10/100122_gh-31377261497-1.json"
+  },
+  "data_quality": {
+    "final_price_path": {
+      "status": "COMPLETE",
+      "expected_hours": 168,
+      "btc_hours": 168,
+      "eth_hours": 168,
+      "ethbtc_hours": 168
+    },
+    "enriched_hourly_v2_2": {
+      "status": "DEGRADED_PRE_ACTIVATION_GAP",
+      "observed_hours": 40,
+      "missing_hours": 128,
+      "blocking": false,
+      "reason": "Daily Capture v2.2 was activated during W32; missing historical non-price sequence rows are not fabricated."
+    },
+    "master_monday_gate": {
+      "status": "FULL_MASTER_MONDAY_INPUT",
+      "blocking_gap_count": 0,
+      "confidence_reducing_gap_count": 28
+    },
+    "weekly_api_calibration": {
+      "run_id": 31381405758,
+      "status": "SUCCESS",
+      "model": "gpt-5.6-terra",
+      "authority": "SHADOW_ONLY"
+    }
+  },
+  "completed_week": {
+    "BTCUSDT": {
+      "open": 63570.01,
+      "high": 65474.46,
+      "low": 62300.0,
+      "close": 64901.59,
+      "return_pct": 2.094533
+    },
+    "ETHUSDT": {
+      "open": 1885.36,
+      "high": 1943.02,
+      "low": 1828.62,
+      "close": 1910.65,
+      "return_pct": 1.341378
+    },
+    "ETHBTC": {
+      "open": 0.02965,
+      "high": 0.02975,
+      "low": 0.02904,
+      "close": 0.02944,
+      "return_pct": -0.708263
+    }
+  },
+  "weekly_range_scoring": {
+    "frozen_method": "70pct_actual_range_containment_plus_30pct_intersection_over_union",
+    "BTC": {
+      "forecast_low": 60800.0,
+      "forecast_high": 65600.0,
+      "actual_low": 62300.0,
+      "actual_high": 65474.46,
+      "score": 89.840375
+    },
+    "ETH": {
+      "forecast_low": 1750.0,
+      "forecast_high": 1960.0,
+      "actual_low": 1828.62,
+      "actual_high": 1943.02,
+      "score": 86.342857
+    },
+    "combined_score": 88.091616
+  },
+  "intraday_scoring": {
+    "status": "NOT_RETROACTIVELY_CANONICALIZED",
+    "reason": "The legacy Cycle Navigator Day1-2/Day3-4/Day5-7 calendar-window timezone basis is not machine-bound in the v2.2 W32 score artifact. Final UTC daily ranges are preserved descriptively, but no new canonical intraday score is invented after the fact.",
+    "descriptive_utc_actuals": {
+      "DAY1_2": {
+        "BTC": {"low": 62300.0, "high": 64549.16},
+        "ETH": {"low": 1828.62, "high": 1885.95}
+      },
+      "DAY3_4": {
+        "BTC": {"low": 63880.0, "high": 65025.22},
+        "ETH": {"low": 1855.5, "high": 1928.0}
+      },
+      "DAY5_7": {
+        "BTC": {"low": 64166.0, "high": 65474.46},
+        "ETH": {"low": 1894.35, "high": 1943.02}
+      }
+    }
+  },
+  "structural_calibration": {
+    "scoreable_calls": 4,
+    "hits": 4,
+    "calls": [
+      {"call": "support_test_then_stabilization_if_BTC_62_2K_and_ETH_1_82K_survive", "result": "HIT"},
+      {"call": "rotation_remains_closed_without_ETHBTC_above_0_0300_and_breadth_above_50", "result": "HIT"},
+      {"call": "large_caps_watch_only_no_topup", "result": "HIT"},
+      {"call": "ETH_is_transmission_candidate_not_confirmation", "result": "HIT"}
+    ],
+    "numeric_overall_score": null,
+    "reason_no_overall_score": "No separately frozen top-level weighting between weekly range, intraday map and structural calls was located for W32; an overall number is therefore not retrofitted."
+  },
+  "weekly_etf": {
+    "BTC_reported_units": 865.3,
+    "ETH_reported_units": 243.7,
+    "sessions_each": 5,
+    "interpretation_authority": "ABSORPTION_INPUT_NOT_ROTATION_TRIGGER"
+  },
+  "calibration_conclusion": "The W32 framework call was materially stronger on regime/sequence than on narrow intraday range precision. BTC repair survived the planned support test, but ETHBTC ended the week lower and breadth failed to sustain confirmation. Preserve the no-rotation discipline; do not reinterpret strong ETF absorption as ecosystem deployment.",
+  "canonical_state_change": "NONE",
+  "portfolio_action_authority": false
+}
