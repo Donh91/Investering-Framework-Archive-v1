@@ -3,7 +3,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from scripts.remediation.build_remediation_maturation import build, signature
+from scripts.remediation.build_remediation_maturation import build, canonical_hash, signature
 from scripts.remediation.write_transition_receipt import build_receipt
 
 
@@ -23,12 +23,22 @@ class RemediationMaturationTests(unittest.TestCase):
     def save_tasks(self, root, tasks):
         (root / 'LATEST_CODEX_READY_TASKS.json').write_text(json.dumps({'tasks': tasks}))
 
-    def save_transition(self, root, sig, **extra):
+    def save_transition(self, root, sig, workflow='daily.yml', finding='REPEATED_CONSECUTIVE_FAILURES', **extra):
         path = root / 'research/remediation/transitions'
         path.mkdir(parents=True, exist_ok=True)
-        data = {'contract':'REMEDIATION_TRANSITION_RECEIPT_v1','signature':sig,'state':'IN_REMEDIATION','branch':'agent/fix'}
+        data = {
+            'contract':'REMEDIATION_TRANSITION_RECEIPT_v1',
+            'signature':sig,
+            'state':'IN_REMEDIATION',
+            'branch':'agent/fix',
+            'workflow':workflow,
+            'finding':finding,
+            'task_contract_sha256':'test-contract-hash',
+        }
         data.update(extra)
+        data['receipt_sha256'] = canonical_hash({k:v for k,v in data.items() if k != 'receipt_sha256'})
         (path / f'{sig}.json').write_text(json.dumps(data))
+        return data
 
     def test_first_daily_failure_is_observed(self):
         root = self.make_repo({'workflow':'daily.yml','scheduled':True,'cron_count':5,'findings':['LATEST_RUN_FAILED'],'live':{'failure_streak':1,'success_streak':0,'latest_run':{'id':1}}})
@@ -121,8 +131,38 @@ class RemediationMaturationTests(unittest.TestCase):
 
         health_path = root / 'research/architecture_health/LATEST_AUTOMATION_HEALTH.json'
         health_path.write_text(json.dumps({'generated_at_utc':'2026-08-05T11:00:00Z','workflows':[{'workflow':'daily.yml','findings':[]}]}))
+        with self.assertRaisesRegex(ValueError, 'STALE_TASK_HEALTH_GENERATION_MISMATCH'):
+            build_receipt(root, task['signature'], 'agent/fix-daily')
+        task['source_health_generated_at_utc'] = '2026-08-05T11:00:00Z'
+        self.save_tasks(root, [task])
         with self.assertRaisesRegex(ValueError, 'STALE_TASK_NO_CHANGE'):
             build_receipt(root, task['signature'], 'agent/fix-daily')
+
+    def test_invalid_transition_receipt_hash_is_ignored_and_reported(self):
+        finding = 'REPEATED_CONSECUTIVE_FAILURES'
+        root = self.make_repo({'workflow':'daily.yml','scheduled':True,'cron_count':5,'findings':[finding],'live':{'failure_streak':3,'latest_run':{'id':2}}})
+        sig = signature('daily.yml', finding)
+        data = self.save_transition(root, sig)
+        path = root / 'research/remediation/transitions' / f'{sig}.json'
+        data['branch'] = 'agent/tampered-after-hash'
+        path.write_text(json.dumps(data))
+        out = build(root)
+        self.assertEqual(out['items'][0]['state'], 'CODEX_READY')
+        self.assertEqual(out['transition_receipt_errors'][0]['reason'], 'HASH')
+
+    def test_reopened_requires_new_transition_receipt(self):
+        finding = 'REPEATED_CONSECUTIVE_FAILURES'
+        root = self.make_repo({'workflow':'daily.yml','scheduled':True,'cron_count':5,'findings':[finding],'live':{'failure_streak':2,'latest_run':{'id':4}}})
+        sig = signature('daily.yml', finding)
+        old_receipt = self.save_transition(root, sig, recorded_at_utc='2026-08-05T09:00:00Z')
+        self.save_prior(root, [{'signature':sig,'workflow':'daily.yml','finding':finding,'state':'REOPENED','transition_receipt':old_receipt}])
+        row = build(root)['items'][0]
+        self.assertEqual(row['state'], 'REOPENED')
+
+        new_receipt = self.save_transition(root, sig, recorded_at_utc='2026-08-05T12:00:00Z')
+        self.assertNotEqual(new_receipt['receipt_sha256'], old_receipt['receipt_sha256'])
+        row2 = build(root)['items'][0]
+        self.assertEqual(row2['state'], 'IN_REMEDIATION')
 
     def test_no_automatic_code_or_merge(self):
         root = self.make_repo({'workflow':'daily.yml','scheduled':True,'cron_count':5,'findings':['LATEST_RUN_FAILED'],'live':{'failure_streak':1}})
