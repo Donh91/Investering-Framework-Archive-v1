@@ -3,8 +3,8 @@ name: PDLT discovery from bootstrap once
 # METHODS FAIL-CLOSE — 2026-08-10
 # Discovery is intentionally non-runnable until the Phase II / Claude P2
 # selection-and-holdout defects are repaired prospectively and validated.
-# Keeping workflow_dispatch preserves audit visibility while the job itself
-# fails closed. No schedule is present, so no automatic discovery can run.
+# There is no schedule. A manual dispatch emits an explicit blocked state and
+# fails with exit 78 so automation health cannot misread the freeze as recovery.
 on:
   workflow_dispatch:
 
@@ -17,8 +17,7 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  discover:
-    if: ${{ false }}
+  discovery_frozen:
     runs-on: ubuntu-latest
     steps:
       - name: PDLT discovery frozen pending methods repair
