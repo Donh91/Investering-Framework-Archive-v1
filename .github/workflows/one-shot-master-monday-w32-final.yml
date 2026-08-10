@@ -1,5 +1,5 @@
 name: One-Shot Master Monday W32 Final
-# retry 3 after verified Farside ETH two-row-header repair
+# retry 4: ETF is now durable; rerun only corrected weekly context/calibration + readiness gate
 
 on:
   push:
@@ -14,23 +14,12 @@ permissions:
 jobs:
   dispatch-final-chain:
     runs-on: ubuntu-latest
-    timeout-minutes: 70
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
         with:
           ref: main
           fetch-depth: 1
-
-      - name: Dispatch and await corrected settled ETF owner
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          gh workflow run daily-settled-etf-calibration.yml --ref main
-          sleep 5
-          RUN_ID=$(gh run list --workflow daily-settled-etf-calibration.yml --branch main --event workflow_dispatch --limit 1 --json databaseId --jq '.[0].databaseId')
-          test -n "$RUN_ID"
-          echo "ETF_RUN_ID=$RUN_ID" >> "$GITHUB_ENV"
-          gh run watch "$RUN_ID" --exit-status --interval 10
 
       - name: Dispatch and await corrected weekly calibration and publication
         env:
@@ -56,4 +45,4 @@ jobs:
 
       - name: Record dispatched run IDs
         run: |
-          printf 'ETF=%s\nWEEKLY=%s\nGATE=%s\n' "$ETF_RUN_ID" "$WEEKLY_RUN_ID" "$GATE_RUN_ID"
+          printf 'WEEKLY=%s\nGATE=%s\n' "$WEEKLY_RUN_ID" "$GATE_RUN_ID"
