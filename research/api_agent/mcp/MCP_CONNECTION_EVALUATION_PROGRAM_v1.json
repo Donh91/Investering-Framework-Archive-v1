@@ -1,0 +1,79 @@
+{
+  "contract": "MCP_CONNECTION_EVALUATION_PROGRAM_v1",
+  "contract_revision": "1.0",
+  "status": "OPERATIONAL_SEQUENTIAL_PILOT",
+  "purpose": "Evaluate agent-data connections one at a time for bounded research value, redundancy, reliability, provenance and safety before any broader integration.",
+  "execution": {
+    "sequential": true,
+    "max_active_provider_trials": 1,
+    "blocked_external_dependency_advances_queue": true,
+    "automatic_provider_skip_on_hard_blocker": true,
+    "automatic_market_semantics_change": false,
+    "automatic_canonical_owner_replacement": false,
+    "automatic_portfolio_action": false
+  },
+  "baseline": {
+    "provider": "CoinGecko",
+    "contract_path": "research/api_agent/mcp/COINGECKO_MCP_RESEARCH_RECOVERY_v1.json",
+    "state": "RESEARCH_ACTIVE_BASELINE",
+    "reason": "Already implemented as bounded research/recovery sidecar."
+  },
+  "queue": [
+    {"rank": 1, "provider": "Dune", "contract_path": "research/api_agent/mcp/DUNE_MCP_RESEARCH_RECOVERY_v1.json", "role": "ONCHAIN_RESEARCH_RECOVERY", "promotion_ceiling": "RESEARCH_ACTIVE", "initial_state": "DOCS_VERIFIED_READY_FOR_TOOL_DISCOVERY"},
+    {"rank": 2, "provider": "LunarCrush", "contract_path": "research/api_agent/mcp/LUNARCRUSH_MCP_SOCIAL_INTELLIGENCE_v1.json", "role": "SOCIAL_ATTENTION_RESEARCH", "promotion_ceiling": "SHADOW_OBSERVATION", "initial_state": "DOCS_VERIFIED_QUEUED"},
+    {"rank": 3, "provider": "CoinMarketCap", "contract_path": "research/api_agent/mcp/COINMARKETCAP_MCP_CROSSCHECK_v1.json", "role": "MARKET_CROSSCHECK_RECOVERY", "promotion_ceiling": "CROSSCHECK_ACTIVE", "initial_state": "DOCS_VERIFIED_QUEUED"},
+    {"rank": 4, "provider": "TheGraph", "contract_path": "research/api_agent/mcp/THEGRAPH_MCP_PROTOCOL_RESEARCH_v1.json", "role": "PROTOCOL_ONCHAIN_RESEARCH", "promotion_ceiling": "RESEARCH_ACTIVE", "initial_state": "DOCS_VERIFIED_QUEUED"},
+    {"rank": 5, "provider": "altFINS", "contract_path": "research/api_agent/mcp/ALTFINS_MCP_CANDIDATE_DISCOVERY_v1.json", "role": "TECHNICAL_CANDIDATE_DISCOVERY", "promotion_ceiling": "CANDIDATE_DISCOVERY_ACTIVE", "initial_state": "DOCS_VERIFIED_QUEUED"},
+    {"rank": 6, "provider": "Binance", "contract_path": "research/api_agent/mcp/BINANCE_AGENT_NATIVE_RESEARCH_v1.json", "role": "PUBLIC_MARKET_DIAGNOSTICS_RESEARCH", "promotion_ceiling": "DIAGNOSTICS_ACTIVE", "initial_state": "OFFICIAL_AGENT_NATIVE_VERIFIED_MCP_SURFACE_UNVERIFIED"}
+  ],
+  "stages": ["OFFICIAL_DOCS_VERIFICATION", "AUTHORITY_AND_SECRET_BOUNDARY", "MCP_TOOL_DISCOVERY_NO_EXECUTION", "READ_ONLY_ALLOWLIST_VERIFICATION", "BOUNDED_LIVE_SMOKE", "BOUNDED_RESEARCH_CHALLENGE", "REDUNDANCY_AND_INCREMENTAL_VALUE_REVIEW", "RESEARCH_LAB_RED_TEAM_REVIEW", "SHADOW_OBSERVATION_IF_JUSTIFIED", "KEEP_HOLD_KILL_CLASSIFICATION"],
+  "hard_blockers": ["UNOFFICIAL_OR_UNVERIFIED_SERVER", "SECRET_VALUE_PERSISTED_OR_ECHOED", "TRADING_OR_ORDER_EXECUTION_REQUIRED", "FUND_MOVEMENT_REQUIRED", "PORTFOLIO_OR_ACCOUNT_ACCESS_REQUIRED_FOR_PILOT", "MUTATING_TOOL_CALLED", "READ_ONLY_ALLOWLIST_NOT_ENFORCEABLE", "CANONICAL_OWNER_REPLACEMENT_REQUIRED", "PRODUCTION_DEPENDENCY_REQUIRED", "PROVENANCE_NOT_PRESERVABLE", "UNBOUNDED_PROVIDER_COST_OR_PAYMENT"],
+  "score": {
+    "scale": 100,
+    "dimensions": {"connection_reliability": 20, "research_question_coverage": 20, "incremental_information_value": 20, "provenance_and_reproducibility": 15, "crosscheck_quality": 10, "operational_friction": 5, "cost_fit": 5, "failure_isolation": 5},
+    "classification": {"KEEP_RESEARCH_ACTIVE_MIN": 80, "KEEP_BOUNDED_OR_SHADOW_MIN": 65, "HOLD_MIN": 50, "KILL_BELOW": 50},
+    "hard_blocker_overrides_score": true
+  },
+  "ai_review": {
+    "required": true,
+    "skill": ".agents/skills/research-lab-red-team/SKILL.md",
+    "cannot_override_hard_blocker": true,
+    "allowed_verdicts": ["KEEP_RESEARCH_ACTIVE", "KEEP_CROSSCHECK_ONLY", "SHADOW_OBSERVATION", "CANDIDATE_DISCOVERY_ONLY", "DIAGNOSTICS_ONLY", "HOLD", "KILL", "DATA_BLOCKED"]
+  },
+  "integration_classes": {
+    "RESEARCH_ACTIVE": "May be used by research-capable agents as source context with provenance; no market or portfolio authority.",
+    "CROSSCHECK_ACTIVE": "May challenge or recover existing data but cannot replace the canonical owner.",
+    "SHADOW_OBSERVATION": "May accumulate prospective shadow evidence only; no automatic sensor or rule promotion.",
+    "CANDIDATE_DISCOVERY_ACTIVE": "May nominate assets or questions for research; provider signals are not execution evidence.",
+    "DIAGNOSTICS_ACTIVE": "May inspect public/read-only provider data and documentation for diagnostics; canonical owner remains unchanged."
+  },
+  "authority": {
+    "creates_truth": false,
+    "canonical_data_owner": false,
+    "framework_state_change": false,
+    "portfolio_action": false,
+    "market_rule_change": false,
+    "threshold_change": false,
+    "weight_change": false,
+    "policy_semantics_change": false,
+    "master_monday_authority": false,
+    "data_ping_authority": false,
+    "weekly_backbone_authority": false,
+    "cycle_navigator_authority": false,
+    "new_engine": false,
+    "automatic_new_sensor": false
+  },
+  "failure_semantics": {
+    "auth_missing": "BLOCK_PROVIDER_AND_ADVANCE_QUEUE",
+    "rate_limited": "BOUNDED_RETRY_THEN_DEGRADE_PROVIDER_ONLY",
+    "provider_unavailable": "DEGRADE_PROVIDER_ONLY",
+    "tool_surface_changed": "REQUIRE_REDISCOVERY_BEFORE_EXECUTION",
+    "conflict": "PRESERVE_CONFLICT_CANONICAL_OWNER_WINS",
+    "missing_provenance": "REJECT_AS_DECISION_EVIDENCE"
+  },
+  "pilot_receipt_schema": "research/api_agent/mcp/MCP_CONNECTION_PILOT_RECEIPT_SCHEMA_v1.json",
+  "scorecard": "research/api_agent/mcp/evaluations/LATEST_MCP_CONNECTION_SCORECARD.json",
+  "validator": "scripts/api_agent/validate_mcp_connection_program.py",
+  "evaluator": "scripts/api_agent/evaluate_mcp_connection_receipt.py",
+  "research_gateway": "scripts/api_agent/mcp_research_gateway.py"
+}
