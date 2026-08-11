@@ -1,0 +1,26 @@
+{
+  "contract": "LUNARCRUSH_MCP_SOCIAL_INTELLIGENCE_v1",
+  "status": "PILOT_CANDIDATE",
+  "provider": "LunarCrush",
+  "official_docs": "https://lunarcrush.com/en/developers/mcp",
+  "transport": {
+    "server_url": "https://lunarcrush.ai/mcp",
+    "transport_class": "STREAMABLE_HTTP",
+    "auth": {"modes": ["BEARER_HEADER_ENV"], "header_name": "Authorization", "header_prefix": "Bearer ", "env_var": "LUNARCRUSH_API_KEY", "secret_must_not_be_persisted": true}
+  },
+  "purpose": ["SOCIAL_SENTIMENT_RESEARCH", "ATTENTION_ACCELERATION_RESEARCH", "TRENDING_TOPIC_RESEARCH", "SOCIAL_CROSSCHECK"],
+  "allowed_use_classes": ["AD_HOC_RESEARCH", "SOURCE_CONTEXT_ONLY", "SHADOW_OBSERVATION_CANDIDATE", "RESEARCH_LAB_EVIDENCE_GATHERING"],
+  "forbidden_tool_name_fragments": ["trade", "order", "execute", "transfer", "wallet", "portfolio", "write", "delete", "update"],
+  "require_read_only_hint_for_execution": true,
+  "pilot_research_challenges": [
+    "Retrieve current BTC and ETH social sentiment, social volume and freshness metadata when available.",
+    "Identify current social-attention leaders and compare them with market-price leaders without turning attention into a trading signal.",
+    "Test whether the provider supplies incremental social context beyond CFGI and price/breadth context."
+  ],
+  "promotion_ceiling": "SHADOW_OBSERVATION",
+  "authority": {"canonical_data_owner": false, "framework_state_change": false, "portfolio_action": false, "market_rule_change": false, "threshold_change": false, "weight_change": false, "policy_semantics_change": false, "master_monday_authority": false, "data_ping_authority": false, "weekly_backbone_authority": false, "cycle_navigator_authority": false, "new_engine": false, "new_sensor": false},
+  "canonical_owner_replacement": false,
+  "production_dependency": false,
+  "provider_payment_or_write_actions_allowed": false,
+  "source_context_until_promoted": true
+}
