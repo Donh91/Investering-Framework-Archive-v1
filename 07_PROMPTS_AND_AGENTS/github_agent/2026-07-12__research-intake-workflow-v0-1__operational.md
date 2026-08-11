@@ -45,6 +45,22 @@ This sidecar is a research access path only. It does not change this workflow's 
 
 When the sidecar is used, preserve the method/query provenance required by its contract and classify the result as source context until the existing owner and governance path accept it.
 
+### Sequential MCP connection evaluation program
+
+The user-approved provider set Dune, LunarCrush, CoinMarketCap, The Graph, altFINS and Binance Agent Native is governed by:
+
+```text
+07_PROMPTS_AND_AGENTS/github_agent/2026-08-11__mcp-connection-evaluation-program-v1__operational.md
+research/api_agent/mcp/MCP_CONNECTION_EVALUATION_PROGRAM_v1.json
+research/api_agent/mcp/MCP_CONNECTION_EVALUATION_METHOD_v1.md
+```
+
+CoinGecko is the bounded baseline. The remaining providers are tested one at a time. A provider may be retained only inside its predeclared research/crosscheck/shadow/candidate-discovery/diagnostics ceiling after deterministic boundary checks, live read-only evidence when available, redundancy review and Research Lab Red Team review.
+
+No MCP connection may become a new engine, canonical owner, DATA PING owner, Master Monday owner, Cycle Navigator authority, market-rule source or portfolio-action source through this workflow.
+
+External dependency blocks such as missing provider credentials or an unverified official endpoint remain explicit and advance the queue rather than causing unofficial workarounds or blocking unrelated framework operation.
+
 ## Classification
 
 Use exactly one primary class:
