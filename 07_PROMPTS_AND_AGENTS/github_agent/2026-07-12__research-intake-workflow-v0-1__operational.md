@@ -32,6 +32,19 @@ write_intent:
 7. Propose the smallest test or operational change.
 8. Use `archive-governance` only when the user explicitly requests a write.
 
+## Optional research-data sidecars
+
+For CoinGecko or GeckoTerminal research, an agent may opt in to the bounded CoinGecko MCP Research / Recovery Sidecar defined at:
+
+```text
+07_PROMPTS_AND_AGENTS/github_agent/2026-08-11__coingecko-mcp-research-recovery-sidecar-v1__operational.md
+research/api_agent/mcp/COINGECKO_MCP_RESEARCH_RECOVERY_v1.json
+```
+
+This sidecar is a research access path only. It does not change this workflow's governance order and cannot become a canonical collector, DATA PING owner, weekly input owner, market-state authority or portfolio-action source. MCP failure or rate limiting degrades the research lane only.
+
+When the sidecar is used, preserve the method/query provenance required by its contract and classify the result as source context until the existing owner and governance path accept it.
+
 ## Classification
 
 Use exactly one primary class:
