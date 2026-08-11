@@ -61,6 +61,25 @@ No MCP connection may become a new engine, canonical owner, DATA PING owner, Mas
 
 External dependency blocks such as missing provider credentials or an unverified official endpoint remain explicit and advance the queue rather than causing unofficial workarounds or blocking unrelated framework operation.
 
+### Deep Research Horizon Queue
+
+Retained provider connections are consumed by the bounded operational queue at:
+
+```text
+research/api_agent/deep_research/DEEP_RESEARCH_QUEUE_v1.json
+research/api_agent/deep_research/LATEST_DEEP_RESEARCH_STATE.json
+research/api_agent/deep_research/NEXT_DEEP_RESEARCH_TASK.json
+research/api_agent/deep_research/DEEP_RESEARCH_METHOD_v1.md
+```
+
+The queue studies market direction and cycle transitions separately at `1_3D`, `5_7D`, `2_3W` and `CROSS_HORIZON`, with priority on pre-altseason accumulation context, real-versus-fake rotation, distribution precursors and provider incremental value.
+
+Only providers already retained by the MCP connection scorecard may be used. A provider still in discovery, queued, held, killed, blocked or data-blocked cannot enter a deep-research task. Provider ceilings remain binding.
+
+This queue is explicitly `RESEARCH_QUESTION_NOT_FORWARD_TEST`. It does not replace the canonical Open Questions Register or Active Test Registry, cannot create valid outcome rows and cannot add a new active test. When a research item relates to an existing question or test, it routes evidence to that existing owner. Any finding that would require a new test or a change to market rules, thresholds, weights, policy semantics, sensors or portfolio behavior remains a separate governance proposal.
+
+At most one deep-research item is active. Provider dependency blocks may be skipped temporarily so unrelated research can continue. Every item requires a baseline, hypothesis, decision divergence, falsifier, kill condition, provider provenance and Research Lab Red Team review before any integration proposal.
+
 ## Classification
 
 Use exactly one primary class:
