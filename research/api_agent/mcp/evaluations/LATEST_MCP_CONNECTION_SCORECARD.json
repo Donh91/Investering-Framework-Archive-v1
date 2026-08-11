@@ -1,0 +1,65 @@
+{
+  "contract": "MCP_CONNECTION_SCORECARD_v1",
+  "status": "INITIALIZED",
+  "generated_at_utc": "2026-08-11T18:16:00Z",
+  "authority": "RESEARCH_INFRASTRUCTURE_ONLY",
+  "active_provider": "Dune",
+  "providers": [
+    {
+      "provider": "CoinGecko",
+      "queue_rank": 0,
+      "state": "RESEARCH_ACTIVE_BASELINE",
+      "deterministic_score": null,
+      "ai_verdict": "KEEP_RESEARCH_ACTIVE",
+      "next_action": "Use as baseline and crosscheck reference; no authority expansion."
+    },
+    {
+      "provider": "Dune",
+      "queue_rank": 1,
+      "state": "READY_FOR_TOOL_DISCOVERY",
+      "deterministic_score": null,
+      "ai_verdict": null,
+      "next_action": "Discover official MCP tools without execution; only read-only allowlisted tools may proceed."
+    },
+    {
+      "provider": "LunarCrush",
+      "queue_rank": 2,
+      "state": "QUEUED",
+      "deterministic_score": null,
+      "ai_verdict": null,
+      "next_action": "Await Dune terminal pilot classification or external dependency block."
+    },
+    {
+      "provider": "CoinMarketCap",
+      "queue_rank": 3,
+      "state": "QUEUED",
+      "deterministic_score": null,
+      "ai_verdict": null,
+      "next_action": "Await prior provider classification; x402 remains disabled."
+    },
+    {
+      "provider": "TheGraph",
+      "queue_rank": 4,
+      "state": "QUEUED",
+      "deterministic_score": null,
+      "ai_verdict": null,
+      "next_action": "Pilot only if incremental value beyond Dune remains plausible."
+    },
+    {
+      "provider": "altFINS",
+      "queue_rank": 5,
+      "state": "QUEUED",
+      "deterministic_score": null,
+      "ai_verdict": null,
+      "next_action": "Candidate-discovery only; portfolio tool and execution semantics forbidden."
+    },
+    {
+      "provider": "Binance",
+      "queue_rank": 6,
+      "state": "BLOCKED_OFFICIAL_MCP_SURFACE_UNVERIFIED",
+      "deterministic_score": null,
+      "ai_verdict": "DATA_BLOCKED",
+      "next_action": "Re-verify official Binance Agent Native MCP endpoint/tool surface before any execution."
+    }
+  ]
+}
