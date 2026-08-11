@@ -1,0 +1,46 @@
+{
+  "contract": "BINANCE_AGENT_NATIVE_RESEARCH_v1",
+  "status": "BLOCKED_OFFICIAL_MCP_SURFACE_UNVERIFIED",
+  "provider": "Binance",
+  "official_docs": "https://developers.binance.com/en/docs/introduction",
+  "official_agent_docs": "https://developers.binance.com/en/docs/agent-native/llms-txt",
+  "transport": {
+    "server_url": null,
+    "transport_class": "UNVERIFIED",
+    "auth": {
+      "modes": ["PUBLIC_MARKET_DATA_ONLY"],
+      "api_key_allowed_for_pilot": false,
+      "account_auth_allowed": false,
+      "trade_permission_allowed": false
+    }
+  },
+  "purpose": ["PUBLIC_MARKET_DIAGNOSTICS", "API_DOCUMENTATION_DISCOVERY", "SOURCE_RECOVERY"],
+  "allowed_use_classes": ["DIAGNOSTICS_ONLY", "SOURCE_CONTEXT_ONLY", "CROSSCHECK"],
+  "forbidden_tool_name_fragments": ["account", "balance", "portfolio", "trade", "order", "execute", "transfer", "withdraw", "deposit", "wallet", "margin", "borrow", "repay"],
+  "require_read_only_hint_for_execution": true,
+  "pilot_research_challenges": [
+    "Do not execute any MCP call until an official endpoint and tool surface are documented and verified.",
+    "If an official surface becomes verifiable, test only public market-data and documentation tools.",
+    "Compare any successful public-data result with the existing deterministic Binance owner to determine whether MCP adds diagnostic convenience rather than duplicate truth."
+  ],
+  "promotion_ceiling": "DIAGNOSTICS_ACTIVE",
+  "authority": {
+    "canonical_data_owner": false,
+    "framework_state_change": false,
+    "portfolio_action": false,
+    "market_rule_change": false,
+    "threshold_change": false,
+    "weight_change": false,
+    "policy_semantics_change": false,
+    "master_monday_authority": false,
+    "data_ping_authority": false,
+    "weekly_backbone_authority": false,
+    "cycle_navigator_authority": false,
+    "new_engine": false,
+    "new_sensor": false
+  },
+  "canonical_owner_replacement": false,
+  "production_dependency": false,
+  "provider_payment_or_write_actions_allowed": false,
+  "source_context_until_promoted": true
+}

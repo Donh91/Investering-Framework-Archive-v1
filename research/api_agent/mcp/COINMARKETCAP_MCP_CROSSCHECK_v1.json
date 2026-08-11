@@ -1,0 +1,27 @@
+{
+  "contract": "COINMARKETCAP_MCP_CROSSCHECK_v1",
+  "status": "PILOT_CANDIDATE",
+  "provider": "CoinMarketCap",
+  "official_docs": "https://coinmarketcap.com/api/documentation/ai-agent-hub/mcp",
+  "transport": {
+    "server_url": "https://mcp.coinmarketcap.com/mcp",
+    "transport_class": "STREAMABLE_HTTP",
+    "auth": {"modes": ["HEADER_ENV"], "header_name": "X-CMC-MCP-API-KEY", "env_var": "CMC_MCP_API_KEY", "secret_must_not_be_persisted": true},
+    "x402_endpoint_allowed": false
+  },
+  "purpose": ["MARKET_CROSSCHECK", "SOURCE_RECOVERY", "ALTCOIN_SEASON_CONTEXT_CROSSCHECK", "DERIVATIVES_CONTEXT_CROSSCHECK", "ETF_CONTEXT_CROSSCHECK"],
+  "allowed_use_classes": ["CROSSCHECK", "SOURCE_CONTEXT_ONLY", "DEGRADED_SOURCE_RECOVERY", "RESEARCH_LAB_EVIDENCE_GATHERING"],
+  "forbidden_tool_name_fragments": ["trade", "order", "execute", "payment", "x402", "wallet", "portfolio", "transfer", "write", "delete", "update"],
+  "require_read_only_hint_for_execution": true,
+  "pilot_research_challenges": [
+    "Crosscheck BTC and ETH market data against an existing owner with timestamps and provenance.",
+    "Retrieve one broader market metric such as Altcoin Season Index if exposed on the active plan and compare it with the framework's existing rotation evidence without granting authority.",
+    "Retrieve one derivatives or ETF context item if exposed and record agreement, disagreement or semantic mismatch with the existing owner."
+  ],
+  "promotion_ceiling": "CROSSCHECK_ACTIVE",
+  "authority": {"canonical_data_owner": false, "framework_state_change": false, "portfolio_action": false, "market_rule_change": false, "threshold_change": false, "weight_change": false, "policy_semantics_change": false, "master_monday_authority": false, "data_ping_authority": false, "weekly_backbone_authority": false, "cycle_navigator_authority": false, "new_engine": false, "new_sensor": false},
+  "canonical_owner_replacement": false,
+  "production_dependency": false,
+  "provider_payment_or_write_actions_allowed": false,
+  "source_context_until_promoted": true
+}
