@@ -3,6 +3,7 @@ import unittest
 from pathlib import Path
 
 from scripts.api_agent.api_gateway import blocked_output, build_request, estimate_cost, extract_output, load_registry, validate_output
+from scripts.api_agent.validate_coingecko_mcp_boundary import validate_boundary
 
 REGISTRY = Path('research/api_agent/API_TASK_REGISTRY_v1.json')
 
@@ -46,6 +47,8 @@ class ApiGatewayTests(unittest.TestCase):
         with self.assertRaises(json.JSONDecodeError):extract_output({'output_text':'{"status":"READY"'})
     def test_failure_marker_is_valid_but_has_no_forecasts(self):
         value=blocked_output('API_OUTPUT_INVALID_AFTER_BOUNDED_RETRY');validate_output(value);self.assertEqual(value['status'],'BLOCKED');self.assertEqual(value['forecast_candidates'],[])
+    def test_coingecko_mcp_research_boundary(self):
+        self.assertEqual(validate_boundary(Path('.')), [])
 
 
 if __name__=='__main__':unittest.main()
