@@ -1,0 +1,46 @@
+{
+  "contract": "ALTFINS_MCP_CANDIDATE_DISCOVERY_v1",
+  "status": "PILOT_CANDIDATE",
+  "provider": "altFINS",
+  "official_docs": "https://altfins.com/crypto-market-and-analytical-data-api/documentation/mcp-server/",
+  "transport": {
+    "server_url": "https://mcp.altfins.com/mcp",
+    "transport_class": "STREAMABLE_HTTP",
+    "auth": {
+      "modes": ["HEADER_ENV"],
+      "header_name": "X-Api-Key",
+      "env_var": "ALTFINS_API_KEY",
+      "secret_must_not_be_persisted": true
+    }
+  },
+  "purpose": ["TECHNICAL_SCREENING_RESEARCH", "CANDIDATE_DISCOVERY", "INDICATOR_CROSSCHECK", "EVENT_CONTEXT_RESEARCH"],
+  "allowed_use_classes": ["CANDIDATE_DISCOVERY_ONLY", "SOURCE_CONTEXT_ONLY", "CROSSCHECK", "RESEARCH_LAB_EVIDENCE_GATHERING"],
+  "forbidden_tool_name_fragments": ["portfolio", "trade", "order", "execute", "transfer", "wallet", "write", "delete", "update"],
+  "require_read_only_hint_for_execution": true,
+  "provider_derived_signals_are_decision_evidence": false,
+  "pilot_research_challenges": [
+    "Run one bounded screener query to nominate research candidates without converting provider signals into framework permission.",
+    "Crosscheck one RSI or other technical indicator against the framework's own raw OHLCV-derived value where comparable.",
+    "Measure whether candidate discovery adds coverage beyond current research without duplicating canonical timing logic."
+  ],
+  "promotion_ceiling": "CANDIDATE_DISCOVERY_ACTIVE",
+  "authority": {
+    "canonical_data_owner": false,
+    "framework_state_change": false,
+    "portfolio_action": false,
+    "market_rule_change": false,
+    "threshold_change": false,
+    "weight_change": false,
+    "policy_semantics_change": false,
+    "master_monday_authority": false,
+    "data_ping_authority": false,
+    "weekly_backbone_authority": false,
+    "cycle_navigator_authority": false,
+    "new_engine": false,
+    "new_sensor": false
+  },
+  "canonical_owner_replacement": false,
+  "production_dependency": false,
+  "provider_payment_or_write_actions_allowed": false,
+  "source_context_until_promoted": true
+}
