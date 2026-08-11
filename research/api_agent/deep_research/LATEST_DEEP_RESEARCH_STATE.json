@@ -1,0 +1,44 @@
+{
+  "contract": "DEEP_RESEARCH_QUEUE_STATE_v1",
+  "status": "INITIALIZED",
+  "generated_at_utc": "2026-08-11T18:48:00Z",
+  "source_provider_scorecard": "research/api_agent/mcp/evaluations/LATEST_MCP_CONNECTION_SCORECARD.json",
+  "available_retained_providers": ["CoinGecko"],
+  "active_research_id": "DRQ-001",
+  "max_active_research_items": 1,
+  "item_states": {
+    "DRQ-001": {"state": "ACTIVE_READY_FOR_RESEARCH", "missing_required_providers": []},
+    "DRQ-002": {"state": "WAIT_PROVIDER", "missing_required_providers": ["Dune"]},
+    "DRQ-003": {"state": "WAIT_PROVIDER", "missing_required_providers": ["Dune"]},
+    "DRQ-004": {"state": "WAIT_PROVIDER", "missing_required_providers": ["Dune"]},
+    "DRQ-005": {"state": "WAIT_PROVIDER", "missing_required_providers": ["Dune"]},
+    "DRQ-006": {"state": "READY", "missing_required_providers": []},
+    "DRQ-007": {"state": "WAIT_PROVIDER", "missing_required_providers": ["LunarCrush"]},
+    "DRQ-008": {"state": "WAIT_PROVIDER", "missing_required_providers": ["Dune"]},
+    "DRQ-009": {"state": "WAIT_PROVIDER", "missing_required_providers": ["Dune"]},
+    "DRQ-010": {"state": "WAIT_PROVIDER", "missing_required_providers": ["Dune"]},
+    "DRQ-011": {"state": "WAIT_PROVIDER", "missing_required_providers": ["Dune"]},
+    "DRQ-012": {"state": "WAIT_PROVIDER", "missing_required_providers": ["LunarCrush"]},
+    "DRQ-013": {"state": "WAIT_PROVIDER", "missing_required_providers": ["Dune"]},
+    "DRQ-014": {"state": "WAIT_PROVIDER", "missing_required_providers": ["LunarCrush"]},
+    "DRQ-015": {"state": "WAIT_PROVIDER", "missing_required_providers": ["Dune", "LunarCrush"]},
+    "DRQ-016": {"state": "READY", "missing_required_providers": []},
+    "DRQ-017": {"state": "WAIT_PROVIDER", "missing_required_providers": ["Dune"]},
+    "DRQ-018": {"state": "READY", "missing_required_providers": []},
+    "DRQ-019": {"state": "WAIT_PROVIDER", "missing_required_providers": ["CoinMarketCap"]},
+    "DRQ-020": {"state": "READY", "missing_required_providers": []}
+  },
+  "completed_research_ids": [],
+  "killed_research_ids": [],
+  "held_research_ids": [],
+  "authority": {
+    "framework_state_change": false,
+    "portfolio_action": false,
+    "market_rule_change": false,
+    "canonical_promotion": false
+  },
+  "notes": [
+    "Only terminal retained provider states are usable. Dune is still in provider evaluation and is not yet available to the deep-research queue.",
+    "Blocked provider dependencies do not stall unrelated executable research items."
+  ]
+}
