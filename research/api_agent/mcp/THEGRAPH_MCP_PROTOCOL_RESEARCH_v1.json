@@ -1,0 +1,26 @@
+{
+  "contract": "THEGRAPH_MCP_PROTOCOL_RESEARCH_v1",
+  "status": "PILOT_CANDIDATE",
+  "provider": "TheGraph",
+  "official_docs": "https://thegraph.com/docs/en/subgraphs/tooling/subgraph-mcp/introduction/",
+  "transport": {
+    "server_url": "https://subgraphs.mcp.thegraph.com/sse",
+    "transport_class": "SSE_REMOTE_MCP",
+    "auth": {"modes": ["BEARER_HEADER_ENV"], "header_name": "Authorization", "header_prefix": "Bearer ", "env_var": "THEGRAPH_GATEWAY_API_KEY", "secret_must_not_be_persisted": true}
+  },
+  "purpose": ["SUBGRAPH_DISCOVERY", "PROTOCOL_ONCHAIN_RESEARCH", "CONTRACT_LEVEL_RESEARCH", "DUNE_GAP_RECOVERY"],
+  "allowed_use_classes": ["AD_HOC_RESEARCH", "SOURCE_CONTEXT_ONLY", "RESEARCH_LAB_EVIDENCE_GATHERING", "CROSSCHECK"],
+  "forbidden_tool_name_fragments": ["deploy", "publish", "create", "update", "delete", "write", "transfer", "trade", "order"],
+  "require_read_only_hint_for_execution": true,
+  "pilot_research_challenges": [
+    "Discover a relevant subgraph by keyword or contract and preserve the deployment identifier.",
+    "Run one bounded GraphQL query against an existing deployment and preserve schema/query provenance.",
+    "Compare one protocol-level answer with Dune or another source to measure incremental value rather than duplicate capability."
+  ],
+  "promotion_ceiling": "RESEARCH_ACTIVE",
+  "authority": {"canonical_data_owner": false, "framework_state_change": false, "portfolio_action": false, "market_rule_change": false, "threshold_change": false, "weight_change": false, "policy_semantics_change": false, "master_monday_authority": false, "data_ping_authority": false, "weekly_backbone_authority": false, "cycle_navigator_authority": false, "new_engine": false, "new_sensor": false},
+  "canonical_owner_replacement": false,
+  "production_dependency": false,
+  "provider_payment_or_write_actions_allowed": false,
+  "source_context_until_promoted": true
+}
