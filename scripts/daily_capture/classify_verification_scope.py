@@ -20,6 +20,7 @@ FARSIDE_SOURCE_PATHS = {
 }
 PULLBACK_FORENSICS_SOURCE_PATHS = {
     "scripts/daily_capture/pullback_forensics_collector.py",
+    "scripts/daily_capture/pullback_forensics_collector_v1_1.py",
     ".github/workflows/daily-raw-owner-capture.yml",
     "research/pullback_forensics/PULLBACK_FORENSICS_PASSIVE_PILOT_v1.md",
 }
