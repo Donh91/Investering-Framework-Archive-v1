@@ -13,7 +13,15 @@ All other v1 authority and storage semantics remain unchanged.
 from __future__ import annotations
 
 from collections import Counter
+from pathlib import Path
+import sys
 from typing import Any
+
+# ``python scripts/daily_capture/<file>.py`` puts only this directory on sys.path.
+# Add the repository root so the same module works both as a script and package import.
+REPO_ROOT = Path(__file__).resolve().parents[2]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
 
 from scripts.daily_capture import pullback_forensics_collector as base
 
