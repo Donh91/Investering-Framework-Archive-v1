@@ -121,7 +121,7 @@ jobs:
         id: pullback_forensics
         continue-on-error: true
         run: |
-          python scripts/daily_capture/pullback_forensics_collector.py \
+          python scripts/daily_capture/pullback_forensics_collector_v1_1.py \
             --output-root 03_DAILY_CAPTURE_LOGS/pullback_forensics \
             --run-id "pfr-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
       - name: Report Pullback Forensics degradation without invalidating anchor
