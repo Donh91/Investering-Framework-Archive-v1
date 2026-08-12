@@ -1,0 +1,69 @@
+{
+  "contract": "RESEARCH_EXECUTION_TOPOLOGY_v1",
+  "contract_revision": "1.0",
+  "explicit_non_interference": {
+    "deep_research_queue_item_order_changed": false,
+    "market_rules_changed": false,
+    "pdlt_queue_order_changed": false,
+    "portfolio_logic_changed": false,
+    "sequential_research_queue_changed": false,
+    "thresholds_changed": false,
+    "weights_changed": false
+  },
+  "global_policy": {
+    "automatic_promotion": false,
+    "canonical_authority": false,
+    "experiment_execution_owner": "research/experiment_lifecycle/SEQUENTIAL_RESEARCH_QUEUE_v1.json",
+    "global_experiment_execution_slots": 1,
+    "one_active_execution_stage_only_remains_binding": true,
+    "passive_maturation_may_overlap": true,
+    "portfolio_authority": false
+  },
+  "lanes": {
+    "ENGINEERING_REMEDIATION": {
+      "counts_against_global_experiment_slot": false,
+      "may_change_market_rules": false,
+      "may_change_portfolio_logic": false,
+      "may_change_thresholds": false,
+      "may_change_weights": false,
+      "separate_from_research_slots": true
+    },
+    "EXPERIMENT_EXECUTION": {
+      "counts_against_global_experiment_slot": true,
+      "max_active": 1,
+      "may_create_forward_test_execution": true,
+      "owner": "research/experiment_lifecycle/SEQUENTIAL_RESEARCH_QUEUE_v1.json"
+    },
+    "PASSIVE_EVIDENCE_CAPTURE": {
+      "allowlist": [
+        {
+          "cadence_owner": "EXISTING_FIVE_TIMES_DAILY_LIVE_ANCHOR",
+          "cfgi_credits_hard_cap": 0,
+          "collector": "scripts/daily_capture/pullback_forensics_collector_v1_1.py",
+          "id": "PULLBACK_FORENSICS_PASSIVE_CAPTURE_v1",
+          "may_analyze_or_score": false,
+          "may_change_state": false,
+          "may_create_outcome_rows": false,
+          "new_paid_calls": false,
+          "new_workflow": false,
+          "openai_usd_hard_cap": 0.0,
+          "workflow": ".github/workflows/daily-raw-owner-capture.yml"
+        }
+      ],
+      "counts_against_global_experiment_slot": false,
+      "overlap_allowed": true
+    },
+    "RESEARCH_CONTEXT": {
+      "counts_against_global_experiment_slot": false,
+      "integration_ceiling": "RESEARCH_EVIDENCE_ONLY",
+      "max_active": 1,
+      "may_change_market_semantics": false,
+      "may_create_forward_test_execution": false,
+      "may_create_outcome_rows": false,
+      "owner": "research/api_agent/deep_research/DEEP_RESEARCH_QUEUE_v1.json"
+    }
+  },
+  "purpose": "Reconcile the global experimental execution slot with bounded research-context and passive evidence-capture lanes without creating parallel market authority.",
+  "ratified_at_utc": "2026-08-12T03:22:00Z",
+  "status": "RATIFIED"
+}

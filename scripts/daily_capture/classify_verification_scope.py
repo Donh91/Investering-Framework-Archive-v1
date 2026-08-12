@@ -18,6 +18,12 @@ FARSIDE_SOURCE_PATHS = {
     "scripts/data_terminal/farside_etf_owner.py",
     ".github/workflows/daily-settled-etf-calibration.yml",
 }
+PULLBACK_FORENSICS_SOURCE_PATHS = {
+    "scripts/daily_capture/pullback_forensics_collector.py",
+    "scripts/daily_capture/pullback_forensics_collector_v1_1.py",
+    ".github/workflows/daily-raw-owner-capture.yml",
+    "research/pullback_forensics/PULLBACK_FORENSICS_PASSIVE_PILOT_v1.md",
+}
 
 
 def normalize(path: str) -> str:
@@ -31,6 +37,7 @@ def classify(paths: list[str]) -> dict[str, bool]:
     return {
         "hourly_source": control_changed or bool(normalized & HOURLY_SOURCE_PATHS),
         "farside_source": control_changed or bool(normalized & FARSIDE_SOURCE_PATHS),
+        "pullback_forensics_source": control_changed or bool(normalized & PULLBACK_FORENSICS_SOURCE_PATHS),
     }
 
 
@@ -41,7 +48,11 @@ def main() -> None:
     args = parser.parse_args()
 
     paths = [] if args.all else [line.rstrip("\n") for line in sys.stdin]
-    result = {"hourly_source": True, "farside_source": True} if args.all else classify(paths)
+    result = (
+        {"hourly_source": True, "farside_source": True, "pullback_forensics_source": True}
+        if args.all
+        else classify(paths)
+    )
     if args.github_output:
         with args.github_output.open("a", encoding="utf-8") as handle:
             for key, value in result.items():

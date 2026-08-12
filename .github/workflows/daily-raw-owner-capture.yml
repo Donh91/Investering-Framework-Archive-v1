@@ -117,6 +117,35 @@ jobs:
             git merge-base --is-ancestor HEAD origin/main
           fi
 
+      - name: Capture passive Pullback Forensics evidence
+        id: pullback_forensics
+        continue-on-error: true
+        run: |
+          python scripts/daily_capture/pullback_forensics_collector_v1_1.py \
+            --output-root 03_DAILY_CAPTURE_LOGS/pullback_forensics \
+            --run-id "pfr-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+      - name: Report Pullback Forensics degradation without invalidating anchor
+        if: steps.pullback_forensics.outcome == 'failure'
+        run: echo '::warning::Passive Pullback Forensics capture failed after the live anchor was durably committed. Missing forensic evidence remains UNKNOWN.'
+      - name: Commit passive Pullback Forensics evidence independently
+        if: steps.pullback_forensics.outcome == 'success'
+        shell: bash
+        run: |
+          git config user.name 'framework-data-bot'
+          git config user.email 'framework-data-bot@users.noreply.github.com'
+          git add 03_DAILY_CAPTURE_LOGS/pullback_forensics
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "research: capture passive pullback forensics ${GITHUB_RUN_ID}"
+          pushed=false
+          for attempt in 1 2 3; do
+            git rebase --abort 2>/dev/null || true
+            if git pull --rebase origin main && git push origin HEAD:main; then pushed=true; break; fi
+            sleep $((attempt * 5))
+          done
+          [ "$pushed" = true ]
+          git fetch origin main
+          git merge-base --is-ancestor HEAD origin/main
+
       - name: Materialize blinded Full-vs-Reduced prospective evidence
         id: dual_run
         continue-on-error: true
@@ -163,6 +192,7 @@ jobs:
             cfgi-1d-owner-output/
             collector-status.json
             03_DAILY_CAPTURE_LOGS/raw/incidents/
+            03_DAILY_CAPTURE_LOGS/pullback_forensics/LATEST.json
             04_MARKET_LEARNING/backtests/framework_backtest_readiness_build_v1/prospective_dual_run_v2/evidence/COVERAGE_LATEST.json
           retention-days: 14
           if-no-files-found: warn
