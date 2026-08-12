@@ -87,6 +87,7 @@ jobs:
           python -m py_compile \
             scripts/daily_capture/classify_verification_scope.py \
             scripts/daily_capture/pullback_forensics_collector.py \
+            scripts/daily_capture/pullback_forensics_collector_v1_1.py \
             scripts/daily_capture/build_capture_index.py \
             scripts/daily_capture/build_hourly_sequence.py \
             scripts/daily_capture/build_weekly_calibration.py \
@@ -112,7 +113,9 @@ jobs:
           gate=Path('.github/workflows/daily-capture-architecture-gate.yml').read_text()
           router=Path('scripts/daily_capture/classify_verification_scope.py').read_text()
           close=Path('scripts/daily_capture/build_weekly_market_close_package.py').read_text()
-          pfr=Path('scripts/daily_capture/pullback_forensics_collector.py').read_text()
+          pfr_base=Path('scripts/daily_capture/pullback_forensics_collector.py').read_text()
+          pfr=Path('scripts/daily_capture/pullback_forensics_collector_v1_1.py').read_text()
+          pfr_all=pfr_base+pfr
           hourly_builder=Path('scripts/daily_capture/build_hourly_sequence.py').read_text()
           weekly_builder=Path('scripts/daily_capture/build_weekly_calibration.py').read_text()
           controller=Path('scripts/orchestration/weekly_orchestration_controller.py').read_text()
@@ -135,7 +138,7 @@ jobs:
           pfr_commit=daily.index('Commit passive Pullback Forensics evidence independently')
           dual_run=daily.index('Materialize blinded Full-vs-Reduced prospective evidence')
           assert anchor_commit < pfr_capture < pfr_commit < dual_run
-          assert daily.count('pullback_forensics_collector.py')==1
+          assert daily.count('pullback_forensics_collector_v1_1.py')==1
           assert daily.count('id: pullback_forensics')==1
           assert 'Missing forensic evidence remains UNKNOWN' in daily
           assert '03_DAILY_CAPTURE_LOGS/pullback_forensics' in daily
@@ -153,6 +156,7 @@ jobs:
           assert topology['lanes']['RESEARCH_CONTEXT']['counts_against_global_experiment_slot'] is False
           assert topology['lanes']['PASSIVE_EVIDENCE_CAPTURE']['allowlist'][0]['new_workflow'] is False
           assert topology['lanes']['PASSIVE_EVIDENCE_CAPTURE']['allowlist'][0]['new_paid_calls'] is False
+          assert topology['lanes']['PASSIVE_EVIDENCE_CAPTURE']['allowlist'][0]['collector'].endswith('pullback_forensics_collector_v1_1.py')
           assert sequential['policy']['one_active_execution_stage_only'] is True
           assert sequential['policy']['passive_maturation_may_overlap'] is True
           assert deep['research_kind']=='RESEARCH_QUESTION_NOT_FORWARD_TEST'
@@ -160,14 +164,16 @@ jobs:
           assert deep['canonical_boundaries']['does_not_create_outcome_rows'] is True
 
           # Pullback Forensics is raw/passive research evidence, not a signal engine.
-          assert 'SHADOW_RESEARCH_ONLY' in pfr
-          assert 'PASSIVE_EVIDENCE_CAPTURE' in pfr
-          assert 'counts_against_experiment_execution_slot' in pfr
-          assert 'MONEYNESS_BUCKET_SKEW_NOT_25_DELTA' in pfr
-          assert 'LEGACY_REST_STILL_LIVE_SOURCE_FRAGILE' in pfr
-          assert 'DEFERRED_FULLY_BACKFILLABLE' in pfr
-          assert 'DEFERRED_ARCHITECTURE_CADENCE_MISMATCH' in pfr
-          assert 'OPENAI_API_KEY' not in pfr and 'CFGI_API_KEY' not in pfr
+          assert 'SHADOW_RESEARCH_ONLY' in pfr_all
+          assert 'PASSIVE_EVIDENCE_CAPTURE' in pfr_all
+          assert 'counts_against_experiment_execution_slot' in pfr_all
+          assert 'MONEYNESS_BUCKET_SKEW_NOT_25_DELTA' in pfr_all
+          assert 'LEGACY_REST_STILL_LIVE_SOURCE_FRAGILE' in pfr_all
+          assert 'DEFERRED_FULLY_BACKFILLABLE' in pfr_all
+          assert 'DEFERRED_ARCHITECTURE_CADENCE_MISMATCH' in pfr_all
+          assert 'QUERY_FAMILY_PLUS_EXACT_SWAP_METADATA' in pfr
+          assert 'OKX_LEGACY_DETAIL_IDENTITY_RESOLUTION_v1_1' in pfr
+          assert 'OPENAI_API_KEY' not in pfr_all and 'CFGI_API_KEY' not in pfr_all
 
           # Storage and source boundaries.
           assert 'retention-days: 14' in daily and 'retention-days: 14' in hourly and 'retention-days: 14' in etf
@@ -188,7 +194,7 @@ jobs:
           assert '03_DAILY_CAPTURE_LOGS' not in router
           assert '.github/workflows/hourly-sequence-capture.yml' in router
           assert '.github/workflows/daily-settled-etf-calibration.yml' in router
-          assert 'pullback_forensics_collector.py' in router
+          assert 'pullback_forensics_collector_v1_1.py' in router
 
           # Hourly lane self-heals one missed regular run and stores already-returned Binance flow fields.
           assert '--lookback-hours 26' in hourly
@@ -230,8 +236,8 @@ jobs:
           assert '03_DAILY_CAPTURE_LOGS/etf' in etf
 
           # Deliberate cadence boundaries: no AI/API interpretation or fake hourly slow data.
-          assert 'OPENAI_API_KEY' not in daily+hourly+weekly+etf+blind+pfr
-          assert 'CFGI_API_KEY' not in hourly+pfr
+          assert 'OPENAI_API_KEY' not in daily+hourly+weekly+etf+blind+pfr_all
+          assert 'CFGI_API_KEY' not in hourly+pfr_all
           assert 'stablecoin' not in hourly.lower()
           assert 'defillama' not in hourly.lower()
           assert 'requests.' not in blind and 'urllib' not in blind and 'http://' not in blind and 'https://' not in blind
@@ -330,11 +336,12 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Prove live OKX contract units and Deribit moneyness-skew source semantics without writing repository state
+      - name: Prove live OKX contract units, legacy detail identity and Deribit skew semantics without writing repository state
         run: |
-          python scripts/daily_capture/pullback_forensics_collector.py --output-root /tmp/pullback-forensics --run-id pr-source-smoke
+          RESULT=$(python scripts/daily_capture/pullback_forensics_collector_v1_1.py --output-root /tmp/pullback-forensics --run-id pr-source-smoke)
+          echo "$RESULT"
           python - <<'PY'
-          import json
+          import gzip,json,math
           from pathlib import Path
 
           snapshot=json.loads(Path('/tmp/pullback-forensics/LATEST.json').read_text())
@@ -343,9 +350,14 @@ jobs:
           assert snapshot.get('topology_class') == 'PASSIVE_EVIDENCE_CAPTURE', snapshot
           assert snapshot.get('counts_against_experiment_execution_slot') is False, snapshot
           assert snapshot.get('errors') == [], snapshot
+          raw_total=0
+          normalized_total=0
+          diagnostics={}
           for asset in ('BTC','ETH'):
               liq=snapshot['lane1_liquidations'][asset]
               meta=liq['instrument_metadata']
+              assert liq['status'] == 'PASS', liq
+              assert liq['identity_contract'] == 'OKX_LEGACY_DETAIL_IDENTITY_RESOLUTION_v1_1', liq
               assert meta['instId'] == f'{asset}-USDT-SWAP', meta
               assert str(meta['ctType']).lower() == 'linear', meta
               assert str(meta['ctMult']) == '1', meta
@@ -355,6 +367,22 @@ jobs:
               assert liq['current_response_aggregates']['page_truncated'] == 'UNKNOWN', liq
               assert liq['source_receipts']['instrument']['http_status'] == 200, liq
               assert liq['source_receipts']['liquidations']['http_status'] == 200, liq
+              raw=int(liq['raw_detail_count'])
+              normalized=int(liq['normalized_exact_instrument_count'])
+              assert raw == normalized, liq
+              assert sum(liq['identity_resolution_modes'].values()) == normalized, liq
+              assert set(liq['identity_resolution_modes']).issubset({
+                  'DETAIL_EXACT_INST_ID','GROUP_EXACT_INST_ID','QUERY_FAMILY_PLUS_EXACT_SWAP_METADATA'
+              }), liq
+              raw_total += raw
+              normalized_total += normalized
+              diagnostics[asset]={
+                  'raw': raw,
+                  'normalized': normalized,
+                  'identity_modes': liq['identity_resolution_modes'],
+                  'long_24h_lower_bound_usd': liq['current_response_aggregates']['long_liq_usd_24h'],
+                  'short_24h_lower_bound_usd': liq['current_response_aggregates']['short_liq_usd_24h'],
+              }
 
               skew=snapshot['lane2b_moneyness_skew'][asset]
               assert skew['status'] == 'PASS', skew
@@ -363,5 +391,22 @@ jobs:
               assert all(1 <= row['days_to_expiry'] <= 60 for row in skew['expiries_1_to_60d']), skew
               assert skew['source_receipts']['summary']['http_status'] == 200, skew
               assert skew['source_receipts']['instruments']['http_status'] == 200, skew
-          print('LIVE_PULLBACK_FORENSICS_SOURCE_SEMANTICS_PASS')
+
+          # This live gate exists specifically to prove that source detail rows are
+          # actually normalized rather than silently discarded as in the first v1 smoke.
+          assert raw_total > 0, snapshot
+          assert normalized_total == raw_total and normalized_total > 0, snapshot
+          persistence=snapshot['liquidation_event_persistence']
+          assert persistence['observed_events'] == normalized_total, persistence
+          assert persistence['new_unique_events'] > 0, persistence
+
+          event_rows=[]
+          for path in Path('/tmp/pullback-forensics/liquidations').glob('*/*/*.jsonl.gz'):
+              with gzip.open(path,'rt',encoding='utf-8') as fh:
+                  event_rows.extend(json.loads(line) for line in fh if line.strip())
+          assert len(event_rows) == persistence['new_unique_events'], (len(event_rows),persistence)
+          assert all(row['inst_id'] in ('BTC-USDT-SWAP','ETH-USDT-SWAP') for row in event_rows), event_rows[:3]
+          assert all(math.isfinite(float(row['notional_usd'])) and float(row['notional_usd']) > 0 for row in event_rows), event_rows[:3]
+          print(json.dumps({'live_liquidation_identity_diagnostics': diagnostics},sort_keys=True))
+          print('LIVE_PULLBACK_FORENSICS_SOURCE_SEMANTICS_V1_1_PASS')
           PY
