@@ -1,0 +1,89 @@
+{
+  "contract": "DEEP_RESEARCH_EXECUTION_ADDENDUM_v1",
+  "contract_revision": "1.0",
+  "status": "OPERATIONAL_EXECUTION_POLICY",
+  "purpose": "Make the existing Deep Research Horizon Queue executable while preserving its ownership, sequential semantics and research-only authority.",
+  "base_queue": "research/api_agent/deep_research/DEEP_RESEARCH_QUEUE_v1.json",
+  "base_state": "research/api_agent/deep_research/LATEST_DEEP_RESEARCH_STATE.json",
+  "base_advance_script": "scripts/api_agent/advance_deep_research_queue.py",
+  "coordinator": "research/api_agent/coordination/RESEARCH_EXECUTION_COORDINATOR_v1.json",
+  "entry_point": "scripts/api_agent/run_deep_research_task.py",
+  "internal_executor": "scripts/api_agent/deep_research_executor.py",
+  "execution": {
+    "max_active_research_items": 1,
+    "shared_external_or_ai_heavy_slot_required": true,
+    "max_openai_attempts_per_stage": 2,
+    "single_executor_cost_ceiling_usd": 0.75,
+    "repository_single_run_hard_stop_usd_unchanged": 1.5,
+    "repository_monthly_hard_stop_usd_unchanged": 20.0,
+    "store": false,
+    "automatic_subscription_or_payment": false,
+    "automatic_framework_integration": false,
+    "direct_internal_executor_is_not_operational_entry_point": true
+  },
+  "provider_contracts": {
+    "CoinGecko": "research/api_agent/mcp/COINGECKO_MCP_RESEARCH_RECOVERY_v1.json",
+    "Dune": "research/api_agent/mcp/DUNE_MCP_RESEARCH_RECOVERY_v1.json",
+    "LunarCrush": "research/api_agent/mcp/LUNARCRUSH_MCP_SOCIAL_INTELLIGENCE_v1.json",
+    "CoinMarketCap": "research/api_agent/mcp/COINMARKETCAP_MCP_CROSSCHECK_v1.json",
+    "TheGraph": "research/api_agent/mcp/THEGRAPH_MCP_PROTOCOL_RESEARCH_v1.json",
+    "altFINS": "research/api_agent/mcp/ALTFINS_MCP_CANDIDATE_DISCOVERY_v1.json",
+    "Binance": "research/api_agent/mcp/BINANCE_AGENT_NATIVE_RESEARCH_v1.json"
+  },
+  "transport_normalization": {
+    "accepted_fields": ["server_url", "endpoint"],
+    "if_both_present": "MUST_MATCH_EXACTLY",
+    "scheme_required": "https",
+    "runtime_normalization_only": true,
+    "root_mcp_activation": false
+  },
+  "event_priority": {
+    "source_research_id": "DRQ-001",
+    "condition_field": "horizon_conflict",
+    "condition_value": true,
+    "priority_target": "DRQ-016",
+    "effect": "RUN_NEXT_IF_PROVIDER_READY_BEFORE_NORMAL_PRIORITY_RESUMES",
+    "creates_new_indicator": false,
+    "changes_market_state": false
+  },
+  "coverage_gate": {
+    "target_research_id": "DRQ-018",
+    "supporting_forward_test": "GATE_BTC_PARTIAL_FT_1",
+    "downstream_existing_test": "FNP_CUMULATIVE",
+    "required_coverage_contract": "BTC_PARTIAL_WAIT_COVERAGE_HEALTH_v1",
+    "required_coverage_status": "COMPLETE_FOR_EXPECTED_CHECK_SET",
+    "minimum_checks_total": 1,
+    "missing_or_failed_gate_state": "WAIT_PROSPECTIVE_COVERAGE",
+    "reason": "Do not build a false-positive/false-negative library while zero-row versus zero-observation remains ambiguous."
+  },
+  "supplemental_research": {
+    "task_path": "research/api_agent/deep_research/tasks/DRQ-CUAU-001__copper-gold-decomposition.json",
+    "run_after": "DRQ-001",
+    "run_before_normal_non_event_P1_continuation": true,
+    "event_priority_DRQ_016_wins_first": true,
+    "research_kind": "RESEARCH_QUESTION_NOT_FORWARD_TEST",
+    "independent_evidence_bundle_required_before_execution": true,
+    "missing_bundle_state": "DATA_BLOCKED",
+    "may_create_sensor": false,
+    "may_change_techdev_rule": false
+  },
+  "completion": {
+    "research_result_required": true,
+    "provider_provenance_required": true,
+    "research_lab_red_team_required": true,
+    "completion_receipt_required": true,
+    "queue_advance_only_after_valid_receipts": true,
+    "data_blocked_does_not_create_completion_evidence": true
+  },
+  "authority": {
+    "framework_state_change": false,
+    "portfolio_action": false,
+    "market_rule_change": false,
+    "threshold_change": false,
+    "weight_change": false,
+    "policy_semantics_change": false,
+    "canonical_promotion": false,
+    "new_sensor": false,
+    "new_active_test": false
+  }
+}
