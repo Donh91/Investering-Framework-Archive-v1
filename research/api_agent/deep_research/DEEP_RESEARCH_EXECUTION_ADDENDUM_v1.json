@@ -7,6 +7,8 @@
   "base_state": "research/api_agent/deep_research/LATEST_DEEP_RESEARCH_STATE.json",
   "base_advance_script": "scripts/api_agent/advance_deep_research_queue.py",
   "coordinator": "research/api_agent/coordination/RESEARCH_EXECUTION_COORDINATOR_v1.json",
+  "entry_point": "scripts/api_agent/run_deep_research_task.py",
+  "internal_executor": "scripts/api_agent/deep_research_executor.py",
   "execution": {
     "max_active_research_items": 1,
     "shared_external_or_ai_heavy_slot_required": true,
@@ -16,7 +18,8 @@
     "repository_monthly_hard_stop_usd_unchanged": 20.0,
     "store": false,
     "automatic_subscription_or_payment": false,
-    "automatic_framework_integration": false
+    "automatic_framework_integration": false,
+    "direct_internal_executor_is_not_operational_entry_point": true
   },
   "provider_contracts": {
     "CoinGecko": "research/api_agent/mcp/COINGECKO_MCP_RESEARCH_RECOVERY_v1.json",
@@ -59,6 +62,8 @@
     "run_before_normal_non_event_P1_continuation": true,
     "event_priority_DRQ_016_wins_first": true,
     "research_kind": "RESEARCH_QUESTION_NOT_FORWARD_TEST",
+    "independent_evidence_bundle_required_before_execution": true,
+    "missing_bundle_state": "DATA_BLOCKED",
     "may_create_sensor": false,
     "may_change_techdev_rule": false
   },
