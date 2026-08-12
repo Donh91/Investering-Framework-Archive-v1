@@ -1,0 +1,58 @@
+{
+  "contract": "DEEP_RESEARCH_TASK_PACKET_v1",
+  "status": "PREREGISTERED_SUPPLEMENTAL_RESEARCH",
+  "research_id": "DRQ-CUAU-001",
+  "priority": "P1_HIGH",
+  "title": "Copper/Gold Driver Decomposition by Horizon",
+  "research_kind": "RESEARCH_QUESTION_NOT_FORWARD_TEST",
+  "horizons": ["SHORT_ROLLING", "WEEKLY", "2M_SIGNAL", "CROSS_HORIZON"],
+  "question": "How much of Copper/Gold movement and slow-signal drift is attributable to copper versus gold across fixed, reproducible horizons, and does attribution materially change with horizon?",
+  "primary_goal": "Independently test whether Copper/Gold interpretation changes when movement, variance and slow MACD-style drift are decomposed by numerator and denominator rather than described from endpoint moves.",
+  "hypothesis": "Copper may dominate higher-frequency variance while gold may dominate slow drift; the claim must be independently reproduced and may fail.",
+  "source_claim_status": "UNVERIFIED_USER_SUPPLIED_HYPOTHESIS",
+  "required_evidence": [
+    "independently sourced copper series with exact instrument identity and timestamps",
+    "independently sourced gold series with exact instrument identity and timestamps",
+    "fixed anchor dates declared before calculation",
+    "source hashes or reproducible source receipts",
+    "log-ratio decomposition",
+    "variance and covariance decomposition",
+    "rolling contribution analysis",
+    "short versus weekly versus slow 2M signal attribution",
+    "sensitivity to anchor choice"
+  ],
+  "forbidden_method": [
+    "endpoint_share_of_move_when_denominator_is_near_zero",
+    "anchor_free_percentage_claims",
+    "simultaneous_halving_clock_ablation",
+    "retrospective_anchor_selection_for_best_result",
+    "automatic_sensor_or_rule_integration"
+  ],
+  "baseline": "Existing TechDev Copper/Gold use remains unchanged; this task is decomposition research only.",
+  "decision_divergence": "Useful only if decomposition changes confidence in, scope of, or horizon interpretation of the existing Copper/Gold evidence; explanatory arithmetic alone is insufficient.",
+  "falsifier": "Independent data fail to reproduce the claimed horizon-dependent attribution, attribution is unstable across reasonable anchors, or decomposition adds no decision-relevant distinction.",
+  "kill_condition": "Close as explanatory-only if stable incremental value cannot be demonstrated; do not modify the existing TechDev signal on that basis.",
+  "integration_ceiling": "RESEARCH_CONTEXT_ONLY",
+  "required_providers": [],
+  "optional_retained_providers": [],
+  "canonical_links": {
+    "active_tests": [],
+    "techdev_role": "EXISTING_OWNER_UNCHANGED"
+  },
+  "instructions": [
+    "Treat all numeric claims supplied by Claude or prior models as unverified until independently reproduced.",
+    "Use exact instrument identities, frequencies, anchor dates and source provenance.",
+    "Separate drift attribution from variance attribution.",
+    "Do not run a halving-clock ablation in the same experiment.",
+    "Do not create a threshold, sensor, weight, market state or portfolio action."
+  ],
+  "authority": {
+    "framework_state_change": false,
+    "portfolio_action": false,
+    "market_rule_change": false,
+    "threshold_change": false,
+    "weight_change": false,
+    "canonical_promotion": false,
+    "new_sensor": false
+  }
+}
