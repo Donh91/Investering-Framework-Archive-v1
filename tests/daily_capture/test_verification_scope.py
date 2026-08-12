@@ -34,6 +34,12 @@ class VerificationScopeTests(unittest.TestCase):
             {"hourly_source": False, "farside_source": False, "pullback_forensics_source": True},
         )
 
+    def test_pullback_collector_v1_1_routes_only_pullback_live_smoke(self):
+        self.assertEqual(
+            classify(["scripts/daily_capture/pullback_forensics_collector_v1_1.py"]),
+            {"hourly_source": False, "farside_source": False, "pullback_forensics_source": True},
+        )
+
     def test_live_anchor_workflow_routes_pullback_live_smoke(self):
         self.assertEqual(
             classify([".github/workflows/daily-raw-owner-capture.yml"]),
