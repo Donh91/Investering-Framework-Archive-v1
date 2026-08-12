@@ -1,0 +1,235 @@
+name: Research Execution Coordinator
+
+on:
+  schedule:
+    - cron: '10 9 * * *'
+      timezone: 'Europe/Copenhagen'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: framework-main-writer
+  cancel-in-progress: false
+
+jobs:
+  operate-one-heavy-lane:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Validate bounded research machinery before execution
+        run: |
+          python -m py_compile \
+            scripts/api_agent/research_execution_coordinator.py \
+            scripts/api_agent/forward_evidence_observer.py \
+            scripts/api_agent/mcp_provider_automation.py \
+            scripts/api_agent/mcp_transport_normalizer.py \
+            scripts/api_agent/deep_research_executor.py \
+            scripts/api_agent/run_deep_research_task.py
+          python -m pytest -q \
+            tests/api_agent/test_forward_evidence_coordination.py \
+            tests/api_agent/test_deep_research_execution.py \
+            tests/api_agent/test_research_automation_wiring.py
+
+      - name: Enforce monthly API hard stop before any heavy call
+        run: |
+          python scripts/api_agent/check_monthly_cost_guard.py \
+            --receipt-root research/api_agent/outputs \
+            --hard-stop-usd 20 \
+            --reserve-usd 0.75
+
+      - name: Select one heavy lane deterministically
+        id: plan
+        run: |
+          mkdir -p runtime/research-automation
+          python - <<'PY'
+          import json,subprocess
+          from pathlib import Path
+          state=json.loads(Path('research/api_agent/coordination/LATEST_RESEARCH_AUTOMATION_STATE.json').read_text())
+          cmd=['python','scripts/api_agent/research_execution_coordinator.py',
+               '--provider-scorecard','research/api_agent/mcp/evaluations/LATEST_MCP_CONNECTION_SCORECARD.json',
+               '--deep-research-state','research/api_agent/deep_research/LATEST_DEEP_RESEARCH_STATE.json',
+               '--output','runtime/research-automation/plan.json']
+          lane=state.get('last_heavy_lane')
+          if lane in {'provider_evaluation','deep_research'}:
+              cmd += ['--last-heavy-lane',lane]
+          subprocess.run(cmd,check=True)
+          plan=json.loads(Path('runtime/research-automation/plan.json').read_text())
+          Path('runtime/research-automation/lane.txt').write_text(str(plan['heavy_execution'].get('selected_next_lane') or 'NONE'))
+          PY
+          echo "lane=$(cat runtime/research-automation/lane.txt)" >> "$GITHUB_OUTPUT"
+
+      - name: Build settled owner-bound context for Deep Research
+        id: owner_context
+        if: steps.plan.outputs.lane == 'deep_research'
+        continue-on-error: true
+        run: |
+          mkdir -p runtime/research-automation/deep
+          python scripts/api_agent/build_owner_bound_director_context.py \
+            --capture-root 03_DAILY_CAPTURE_LOGS/captures \
+            --legacy-root 04_MARKET_LEARNING/legacy_framework_knowledge_bootstrap_v1 \
+            --output runtime/research-automation/deep/owner_context.json
+
+      - name: Record missing owner context without model execution
+        if: steps.plan.outputs.lane == 'deep_research' && steps.owner_context.outcome != 'success'
+        run: |
+          mkdir -p runtime/research-automation/deep
+          python - <<'PY'
+          import json,time
+          from pathlib import Path
+          value={
+            'contract':'DEEP_RESEARCH_COMPLETION_RECEIPT_v1',
+            'research_id':json.loads(Path('research/api_agent/deep_research/NEXT_DEEP_RESEARCH_TASK.json').read_text()).get('research_id'),
+            'status':'BLOCKED','reason':'OWNER_CONTEXT_UNAVAILABLE','automatic_integration_performed':False,
+            'openai_estimated_cost_usd':0.0,'created_at_utc':time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime()),
+            'authority':{'framework_state_change':False,'portfolio_action':False,'market_rule_change':False,'canonical_promotion':False}
+          }
+          Path('runtime/research-automation/deep/completion_receipt.json').write_text(json.dumps(value,sort_keys=True,separators=(',',':'))+'\n')
+          PY
+
+      - name: Run exactly one Deep Research item
+        if: steps.plan.outputs.lane == 'deep_research' && steps.owner_context.outcome == 'success'
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        shell: bash
+        run: |
+          args=(
+            --task research/api_agent/deep_research/NEXT_DEEP_RESEARCH_TASK.json
+            --queue research/api_agent/deep_research/DEEP_RESEARCH_QUEUE_v1.json
+            --state research/api_agent/deep_research/LATEST_DEEP_RESEARCH_STATE.json
+            --provider-scorecard research/api_agent/mcp/evaluations/LATEST_MCP_CONNECTION_SCORECARD.json
+            --policy research/api_agent/deep_research/DEEP_RESEARCH_EXECUTION_ADDENDUM_v1.json
+            --supplemental-task research/api_agent/deep_research/tasks/DRQ-CUAU-001__copper-gold-decomposition.json
+            --owner-context runtime/research-automation/deep/owner_context.json
+            --output-dir runtime/research-automation/deep
+          )
+          if [[ -f research/api_agent/coordination/LATEST_BTC_PARTIAL_WAIT_COVERAGE_HEALTH.json ]]; then
+            args+=(--coverage-health research/api_agent/coordination/LATEST_BTC_PARTIAL_WAIT_COVERAGE_HEALTH.json)
+          fi
+          set +e
+          python scripts/api_agent/run_deep_research_task.py "${args[@]}"
+          code=$?
+          set -e
+          if [[ "$code" != 0 && "$code" != 78 ]]; then exit "$code"; fi
+
+      - name: Run one staged provider evaluation unit
+        if: steps.plan.outputs.lane == 'provider_evaluation'
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          DUNE_API_KEY: ${{ secrets.DUNE_API_KEY }}
+          LUNARCRUSH_API_KEY: ${{ secrets.LUNARCRUSH_API_KEY }}
+          CMC_MCP_API_KEY: ${{ secrets.CMC_MCP_API_KEY }}
+          THEGRAPH_GATEWAY_API_KEY: ${{ secrets.THEGRAPH_GATEWAY_API_KEY }}
+          ALTFINS_API_KEY: ${{ secrets.ALTFINS_API_KEY }}
+        run: |
+          mkdir -p runtime/research-automation/provider
+          python scripts/api_agent/mcp_provider_automation.py \
+            --program research/api_agent/mcp/MCP_CONNECTION_EVALUATION_PROGRAM_v1.json \
+            --scorecard research/api_agent/mcp/evaluations/LATEST_MCP_CONNECTION_SCORECARD.json \
+            --automation-state research/api_agent/coordination/LATEST_RESEARCH_AUTOMATION_STATE.json \
+            --output-dir runtime/research-automation/provider
+
+      - name: Archive research receipts and advance only validated research state
+        if: steps.plan.outputs.lane != 'NONE'
+        run: |
+          STAMP=$(date -u +%Y/%m/%d/%H%M%S)
+          if [[ "${{ steps.plan.outputs.lane }}" == "deep_research" ]]; then
+            DEST="research/api_agent/deep_research/runs/${STAMP}"
+            mkdir -p "$DEST"
+            cp -R runtime/research-automation/deep/. "$DEST/"
+            if [[ -f runtime/research-automation/deep/next_state.json ]]; then
+              cp runtime/research-automation/deep/next_state.json research/api_agent/deep_research/LATEST_DEEP_RESEARCH_STATE.json
+            fi
+            if [[ -f runtime/research-automation/deep/next_task.json ]]; then
+              cp runtime/research-automation/deep/next_task.json research/api_agent/deep_research/NEXT_DEEP_RESEARCH_TASK.json
+            fi
+          else
+            DEST="research/api_agent/mcp/automation_runs/${STAMP}"
+            mkdir -p "$DEST"
+            cp -R runtime/research-automation/provider/. "$DEST/"
+            if [[ -f runtime/research-automation/provider/next_scorecard.json ]]; then
+              cp runtime/research-automation/provider/next_scorecard.json research/api_agent/mcp/evaluations/LATEST_MCP_CONNECTION_SCORECARD.json
+            fi
+          fi
+          echo "$STAMP" > runtime/research-automation/stamp.txt
+
+      - name: Persist fairness state and exact run cost
+        if: steps.plan.outputs.lane != 'NONE'
+        run: |
+          python - <<'PY'
+          import hashlib,json,time
+          from pathlib import Path
+          lane=Path('runtime/research-automation/lane.txt').read_text().strip()
+          provider_next=Path('runtime/research-automation/provider/next_automation_state.json')
+          base=provider_next if provider_next.exists() else Path('research/api_agent/coordination/LATEST_RESEARCH_AUTOMATION_STATE.json')
+          state=json.loads(base.read_text())
+          now=time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime())
+          state['status']='ACTIVE'
+          state['last_heavy_lane']=lane
+          state['last_run_utc']=now
+          state['authority']={'framework_state_change':False,'portfolio_action':False,'market_rule_change':False,'canonical_promotion':False}
+          Path('research/api_agent/coordination/LATEST_RESEARCH_AUTOMATION_STATE.json').write_text(json.dumps(state,sort_keys=True,indent=2)+'\n')
+
+          cost=0.0
+          if lane=='deep_research':
+              p=Path('runtime/research-automation/deep/completion_receipt.json')
+              if p.exists(): cost=float(json.loads(p.read_text()).get('openai_estimated_cost_usd',0.0) or 0.0)
+          elif lane=='provider_evaluation':
+              for p in Path('runtime/research-automation/provider').glob('challenge_*/receipt.json'):
+                  cost += float(json.loads(p.read_text()).get('openai_estimated_cost_usd',0.0) or 0.0)
+              p=Path('runtime/research-automation/provider/red_team_receipt.json')
+              if p.exists(): cost += float(json.loads(p.read_text()).get('openai_estimated_cost_usd',0.0) or 0.0)
+          stamp=Path('runtime/research-automation/stamp.txt').read_text().strip()
+          out=Path('research/api_agent/outputs/research_automation')/stamp/'cost_receipt.json'
+          out.parent.mkdir(parents=True,exist_ok=True)
+          rid='${{ github.run_id }}-${{ github.run_attempt }}'
+          receipt={
+            'contract':'RESEARCH_AUTOMATION_COST_RECEIPT_v1','response_id':rid,
+            'request_sha256':hashlib.sha256((rid+lane).encode()).hexdigest(),
+            'lane':lane,'estimated_cost_usd':round(cost,8),'created_at_utc':now,
+            'monthly_hard_stop_usd':20.0,'automatic_budget_increase':False,
+            'authority':{'framework_state_change':False,'portfolio_action':False,'market_rule_change':False,'canonical_promotion':False}
+          }
+          out.write_text(json.dumps(receipt,sort_keys=True,separators=(',',':'))+'\n')
+          PY
+
+      - name: Commit research-only outputs and verify main readback
+        if: steps.plan.outputs.lane != 'NONE'
+        shell: bash
+        run: |
+          git config user.name framework-research-coordinator
+          git config user.email framework-research-coordinator@users.noreply.github.com
+          git add \
+            research/api_agent/coordination/LATEST_RESEARCH_AUTOMATION_STATE.json \
+            research/api_agent/deep_research \
+            research/api_agent/mcp \
+            research/api_agent/outputs/research_automation
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "research: execute one bounded coordinated lane ${GITHUB_RUN_ID}"
+          pushed=false
+          for attempt in 1 2 3; do
+            git rebase --abort 2>/dev/null || true
+            if git pull --rebase origin main && git push origin HEAD:main; then pushed=true; break; fi
+            sleep $((attempt*5))
+          done
+          [ "$pushed" = true ]
+          git fetch origin main
+          git merge-base --is-ancestor HEAD origin/main
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: research-execution-coordinator-${{ github.run_id }}
+          path: runtime/research-automation/
+          retention-days: 14
+          if-no-files-found: ignore
