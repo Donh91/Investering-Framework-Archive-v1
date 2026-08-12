@@ -1,0 +1,71 @@
+{
+  "contract": "RESEARCH_EXECUTION_COORDINATOR_v1",
+  "contract_revision": "1.0",
+  "status": "OPERATIONAL_COORDINATION_ONLY",
+  "purpose": "Coordinate existing passive prospective evidence, MCP provider evaluation and Deep Research execution without creating a third research queue or a competing source of truth.",
+  "owners": {
+    "provider_queue": "research/api_agent/mcp/MCP_CONNECTION_EVALUATION_PROGRAM_v1.json",
+    "provider_state": "research/api_agent/mcp/evaluations/LATEST_MCP_CONNECTION_SCORECARD.json",
+    "deep_research_queue": "research/api_agent/deep_research/DEEP_RESEARCH_QUEUE_v1.json",
+    "deep_research_state": "research/api_agent/deep_research/LATEST_DEEP_RESEARCH_STATE.json",
+    "btc_partial_wait_test": "06_RESEARCH_LAB/forward_tests/2026-07-10__active-test-registry__canonical.md",
+    "divergence_ledger": "06_RESEARCH_LAB/forward_tests/2026-07-10__offensive-divergence-and-fnp-ledger__operational.md"
+  },
+  "lanes": {
+    "forward_evidence": {
+      "passive": true,
+      "heavy_slot_required": false,
+      "may_run_while_other_lane_active": true,
+      "creates_outcome_row_only_on_owner_validated_divergence_and_maturity": true
+    },
+    "provider_evaluation": {
+      "max_active_provider_trials": 1,
+      "heavy_slot_required_for_external_or_ai_execution": true
+    },
+    "deep_research": {
+      "max_active_research_items": 1,
+      "heavy_slot_required_for_external_or_ai_execution": true
+    }
+  },
+  "global_heavy_execution": {
+    "max_active_external_or_ai_jobs": 1,
+    "lanes": ["provider_evaluation", "deep_research"],
+    "fairness": "ALTERNATE_WHEN_BOTH_READY_USING_LAST_HEAVY_LANE",
+    "default_when_both_ready_and_no_history": "deep_research",
+    "blocked_lane_does_not_block_other": true,
+    "passive_forward_evidence_does_not_consume_slot": true
+  },
+  "forward_evidence_contract": {
+    "registered_test_id": "GATE_BTC_PARTIAL_FT_1",
+    "coverage_statuses": ["CHECKED_NO_DIVERGENCE", "DIVERGENCE_CAPTURED", "NOT_EVALUABLE_DATA_BLOCKED"],
+    "missing_expected_check_status": "COVERAGE_GAP",
+    "coverage_receipt_counts_as_outcome_row": false,
+    "divergence_must_be_explicitly_asserted_by_owner_input": true,
+    "threshold_proximity_or_trigger_candidate_is_not_divergence": true,
+    "frozen_horizons": ["24H", "72H", "7D"],
+    "retrospective_action_rewrite": false,
+    "retrospective_horizon_selection": false,
+    "t3_graduated_deployment_remains_data_blocked_until_owner_required_fields_exist": true
+  },
+  "budget": {
+    "api_budget_increase": false,
+    "new_subscription_or_payment_authority": false
+  },
+  "authority": {
+    "framework_state_change": false,
+    "portfolio_action": false,
+    "market_rule_change": false,
+    "threshold_change": false,
+    "weight_change": false,
+    "canonical_promotion": false,
+    "new_test_creation": false,
+    "new_ledger_schema_creation": false
+  },
+  "failure_semantics": {
+    "missing_data": "UNKNOWN_NOT_NEGATIVE",
+    "missing_expected_forward_receipt": "COVERAGE_GAP_NOT_NO_DIVERGENCE",
+    "provider_block": "DO_NOT_STARVE_DEEP_RESEARCH",
+    "deep_research_block": "DO_NOT_STARVE_PROVIDER_EVALUATION",
+    "conflict": "PRESERVE_CONFLICT_OWNER_WINS"
+  }
+}
