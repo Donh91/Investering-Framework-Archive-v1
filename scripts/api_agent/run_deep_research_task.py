@@ -6,9 +6,9 @@ from pathlib import Path
 from typing import Any
 
 try:
-    from scripts.api_agent.deep_research_executor import execute, load_json, write_json, zero_authority
+    from scripts.api_agent.deep_research_executor import execute, load_json, select_followup, write_json, zero_authority
 except ModuleNotFoundError:
-    from deep_research_executor import execute, load_json, write_json, zero_authority
+    from deep_research_executor import execute, load_json, select_followup, write_json, zero_authority
 
 
 SUPPLEMENTAL_INDEPENDENT_EVIDENCE_TASKS = {"DRQ-CUAU-001"}
@@ -66,24 +66,43 @@ def main() -> int:
     args = parser.parse_args()
 
     task = load_json(args.task)
+    queue = load_json(args.queue)
+    state = load_json(args.state)
+    scorecard = load_json(args.provider_scorecard)
+    policy = load_json(args.policy)
+    supplemental_task = load_json(args.supplemental_task)
     owner_context = load_json(args.owner_context) if args.owner_context else None
+    coverage = load_json(args.coverage_health) if args.coverage_health else None
     valid, reasons = evidence_bundle_valid(task, owner_context)
     if not valid:
         completion = blocked_preflight(task, reasons)
+        next_state, next_task = select_followup(
+            queue,
+            state,
+            scorecard,
+            policy,
+            task,
+            None,
+            supplemental_task,
+            coverage,
+            "HOLD",
+        )
         write_json(args.output_dir / "completion_receipt.json", completion)
+        write_json(args.output_dir / "next_state.json", next_state)
+        write_json(args.output_dir / "next_task.json", next_task)
         print(json.dumps(completion, sort_keys=True))
         return 78
 
     completion = execute(
         task,
-        load_json(args.queue),
-        load_json(args.state),
-        load_json(args.provider_scorecard),
-        load_json(args.policy),
-        load_json(args.supplemental_task),
+        queue,
+        state,
+        scorecard,
+        policy,
+        supplemental_task,
         args.output_dir,
         owner_context,
-        load_json(args.coverage_health) if args.coverage_health else None,
+        coverage,
     )
     print(json.dumps(completion, sort_keys=True))
     return 0 if completion.get("status") == "COMPLETE" else 78
