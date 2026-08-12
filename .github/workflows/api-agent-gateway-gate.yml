@@ -5,6 +5,7 @@ on:
     paths:
       - 'research/api_agent/**'
       - 'scripts/api_agent/**'
+      - 'scripts/architecture/build_latest_handoff.py'
       - 'tests/api_agent/**'
       - '.github/workflows/api-agent-gateway-gate.yml'
   workflow_dispatch:
@@ -29,9 +30,17 @@ jobs:
         with:
           python-version: '3.12'
       - name: Run deterministic tests
-        run: python -m unittest tests.api_agent.test_api_gateway
-      - name: Compile gateway
-        run: python -m py_compile scripts/api_agent/api_gateway.py
+        run: |
+          python -m unittest \
+            tests.api_agent.test_api_gateway \
+            tests.api_agent.test_forecast_candidate_backlog -v
+      - name: Compile gateway and forecast backlog machinery
+        run: |
+          python -m py_compile \
+            scripts/api_agent/api_gateway.py \
+            scripts/api_agent/materialize_forecast_candidates.py \
+            scripts/architecture/build_latest_handoff.py \
+            tests/api_agent/test_forecast_candidate_backlog.py
       - name: Prepare bounded smoke inputs
         run: |
           mkdir -p api-agent-input
