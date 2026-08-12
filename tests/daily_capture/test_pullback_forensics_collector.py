@@ -3,7 +3,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from scripts.daily_capture import pullback_forensics_collector as pfr
+from scripts.daily_capture import pullback_forensics_collector_v1_1 as pfr
 
 
 class PullbackForensicsTests(unittest.TestCase):
@@ -36,6 +36,53 @@ class PullbackForensicsTests(unittest.TestCase):
         meta2 = dict(meta)
         meta2["ctVal"] = "0.1"
         self.assertNotEqual(pfr.event_id(detail, meta), pfr.event_id(detail, meta2))
+
+    def test_legacy_detail_without_instid_resolves_from_family_and_exact_metadata(self):
+        doc = {
+            "code": "0",
+            "data": [
+                {
+                    "uly": "BTC-USDT",
+                    "details": [
+                        {"sz": "10", "bkPx": "60000", "bkLoss": "1", "posSide": "long", "ts": "1000"}
+                    ],
+                }
+            ],
+        }
+        rows = pfr.flatten_okx_liquidations(doc, "BTC-USDT", "BTC-USDT-SWAP")
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]["_resolved_inst_id"], "BTC-USDT-SWAP")
+        self.assertEqual(rows[0]["_identity_resolution_mode"], "QUERY_FAMILY_PLUS_EXACT_SWAP_METADATA")
+        self.assertNotIn("instId", rows[0])
+
+        meta = {
+            "instId": "BTC-USDT-SWAP",
+            "ctType": "linear",
+            "ctVal": "0.01",
+            "ctMult": "1",
+            "ctValCcy": "BTC",
+            "settleCcy": "USDT",
+        }
+        normalized = pfr.normalized_liquidation_event(rows[0], meta, "a" * 64)
+        self.assertEqual(normalized["inst_id"], "BTC-USDT-SWAP")
+        self.assertEqual(normalized["identity_resolution_mode"], "QUERY_FAMILY_PLUS_EXACT_SWAP_METADATA")
+        self.assertNotIn("_resolved_inst_id", normalized["raw_detail"])
+        self.assertEqual(normalized["notional_usd"], 6000.0)
+
+    def test_explicit_conflicting_detail_identity_fails_closed(self):
+        doc = {
+            "code": "0",
+            "data": [
+                {
+                    "uly": "BTC-USDT",
+                    "details": [
+                        {"instId": "ETH-USDT-SWAP", "sz": "1", "bkPx": "1", "posSide": "long", "ts": "1000"}
+                    ],
+                }
+            ],
+        }
+        with self.assertRaisesRegex(ValueError, "detail_instrument_mismatch"):
+            pfr.flatten_okx_liquidations(doc, "BTC-USDT", "BTC-USDT-SWAP")
 
     def test_gzip_merge_deduplicates_event_ids(self):
         with tempfile.TemporaryDirectory() as td:
