@@ -65,6 +65,65 @@ class ForecastCandidateBacklogTests(unittest.TestCase):
             self.assertTrue(second_result['idempotent_across_pending_tree'])
             self.assertEqual(len(list(pending.rglob('*.json'))), 1)
 
+    def test_materializer_censors_frozen_legacy_target_unit_shape_without_rewrite(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            pending = root / 'PENDING'
+            output = root / 'output.json'
+            receipt = root / 'receipt.json'
+            output.write_text(json.dumps({'forecast_candidates': [{
+                'metric_path': 'spot.BTCUSDT.close',
+                'direction': 'DOWN',
+                'threshold': 64699.1,
+                'range_low': None,
+                'range_high': None,
+                'horizon_days': 3,
+                'rationale': 'legacy fixture',
+            }]}))
+            receipt.write_text(json.dumps({
+                'output_hash': 'd' * 64,
+                'model': 'gpt-5.6-luna',
+                'task': 'DAILY_DIRECTOR_SHADOW',
+                'prompt_hash': 'e' * 64,
+                'context_hash': 'f' * 64,
+            }))
+
+            run = subprocess.run([
+                sys.executable, str(MATERIALIZER), '--output', str(output), '--receipt', str(receipt), '--pending-root', str(pending)
+            ], cwd=REPO_ROOT, check=True, capture_output=True, text=True)
+            result = json.loads(run.stdout)
+            self.assertEqual(result['created_count'], 0)
+            self.assertEqual(result['legacy_censored_count'], 1)
+            self.assertFalse(result['legacy_rewrite_performed'])
+            self.assertFalse(result['legacy_rescore_performed'])
+            self.assertEqual(result['legacy_censored'][0]['reason'], 'LEGACY_V1_TARGET_UNIT_AMBIGUOUS')
+            self.assertEqual(list(pending.rglob('*.json')), [])
+
+    def test_materializer_still_fails_closed_for_new_malformed_candidate(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            pending = root / 'PENDING'
+            output = root / 'output.json'
+            receipt = root / 'receipt.json'
+            output.write_text(json.dumps({'forecast_candidates': [{
+                'metric_path': 'spot.BTCUSDT.close',
+                'direction': 'DOWN',
+                'threshold_pct': 2.0,
+                'target_value': None,
+                'range_low': None,
+                'range_high': None,
+                'horizon_days': 3,
+                'rationale': 'malformed v2 fixture',
+            }]}))
+            receipt.write_text(json.dumps({'output_hash': '1' * 64}))
+
+            run = subprocess.run([
+                sys.executable, str(MATERIALIZER), '--output', str(output), '--receipt', str(receipt), '--pending-root', str(pending)
+            ], cwd=REPO_ROOT, check=False, capture_output=True, text=True)
+            self.assertNotEqual(run.returncode, 0)
+            self.assertIn('FORECAST_CANDIDATE_TARGET_MODE_REQUIRED', run.stderr + run.stdout)
+            self.assertEqual(list(pending.rglob('*.json')), [])
+
     def test_handoff_deduplicates_and_quarantines_legacy_target_units(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
