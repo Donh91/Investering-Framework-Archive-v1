@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 TARGET_MODES = {'PCT_MOVE', 'ABSOLUTE_VALUE', 'ABSOLUTE_RANGE'}
+LEGACY_TARGET_UNIT_REASON = 'LEGACY_V1_TARGET_UNIT_AMBIGUOUS'
 
 
 def canon(v): return (json.dumps(v, sort_keys=True, separators=(',', ':')) + '\n').encode()
@@ -30,6 +31,16 @@ def existing_candidate_ids(pending_root: Path) -> dict[str, list[str]]:
     return found
 
 
+def is_legacy_target_unit_ambiguous(candidate: dict) -> bool:
+    """Recognize only the frozen pre-v2 candidate shape that used `threshold`.
+
+    These rows are intentionally censored by FORECAST_CANDIDATE_CONTRACT_v2 and
+    must never be silently rewritten, rescored, or backdated. New malformed
+    candidate shapes still fail closed.
+    """
+    return candidate.get('target_mode') is None and 'threshold' in candidate
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--output', type=Path, required=True)
@@ -43,9 +54,18 @@ def main():
     existing = existing_candidate_ids(a.pending_root)
     created: list[str] = []
     already_present: list[str] = []
+    legacy_censored: list[dict] = []
 
     for i, candidate in enumerate(out.get('forecast_candidates', []), 1):
         if candidate.get('target_mode') not in TARGET_MODES:
+            if is_legacy_target_unit_ambiguous(candidate):
+                legacy_censored.append({
+                    'index': i,
+                    'metric_path': candidate.get('metric_path'),
+                    'direction': candidate.get('direction'),
+                    'reason': LEGACY_TARGET_UNIT_REASON,
+                })
+                continue
             raise SystemExit('FORECAST_CANDIDATE_TARGET_MODE_REQUIRED')
         candidate_id = hashlib.sha256(canon({'receipt': receipt.get('output_hash'), 'index': i, 'candidate': candidate})).hexdigest()[:24]
         if candidate_id in existing:
@@ -81,6 +101,10 @@ def main():
         'created_count': len(created),
         'existing_candidate_count': len(already_present),
         'existing_candidate_ids': sorted(already_present),
+        'legacy_censored_count': len(legacy_censored),
+        'legacy_censored': legacy_censored,
+        'legacy_rewrite_performed': False,
+        'legacy_rescore_performed': False,
         'paths': created,
         'idempotent_across_pending_tree': True,
     }, sort_keys=True))
