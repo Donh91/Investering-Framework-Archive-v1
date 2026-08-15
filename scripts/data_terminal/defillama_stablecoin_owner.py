@@ -1,0 +1,57 @@
+#!/usr/bin/env python3
+from __future__ import annotations
+import argparse, hashlib, json, urllib.request
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any
+
+BASE="https://stablecoins.llama.fi"
+UA={"User-Agent":"Investering-Stablecoin-Owner/1.0","Accept":"application/json"}
+AUTHORITY={"binding":False,"canonical_acceptance":False,"state_change":False,"portfolio_action":False}
+
+def canonical(v:Any)->bytes: return json.dumps(v,sort_keys=True,separators=(",",":"),ensure_ascii=False).encode()
+def sha(b:bytes)->str: return hashlib.sha256(b).hexdigest()
+def fetch(path:str)->tuple[Any,dict[str,Any]]:
+    url=BASE+path; req=urllib.request.Request(url,headers=UA)
+    with urllib.request.urlopen(req,timeout=30) as r: raw=r.read(); status=r.status
+    return json.loads(raw),{"url":url,"http_status":status,"payload_sha256":sha(raw),"payload_bytes":len(raw)}
+def usd(v:Any)->float|None:
+    if isinstance(v,(int,float)): return float(v)
+    if isinstance(v,dict):
+        for k in ("peggedUSD","usd","USD"):
+            if isinstance(v.get(k),(int,float)): return float(v[k])
+    return None
+def chart_rows(doc:Any)->list[dict[str,Any]]:
+    if not isinstance(doc,list): return []
+    out=[]
+    for r in doc:
+        if not isinstance(r,dict): continue
+        raw_date=r.get("date") or r.get("timestamp"); total=usd(r.get("totalCirculatingUSD"))
+        if total is None: total=usd(r.get("totalCirculating"))
+        try: ts=int(raw_date)
+        except Exception: continue
+        if total is not None: out.append({"timestamp":ts,"total_usd":total})
+    return sorted(out,key=lambda x:x["timestamp"])
+def nearest_back(rows:list[dict[str,Any]],seconds:int)->dict[str,Any]|None:
+    if not rows:return None
+    target=rows[-1]["timestamp"]-seconds; eligible=[r for r in rows if r["timestamp"]<=target]
+    return eligible[-1] if eligible else None
+def pct(latest:float,old:dict[str,Any]|None)->float|None:
+    if not old or not old.get("total_usd"):return None
+    return round((latest/float(old["total_usd"])-1)*100,6)
+def chains(doc:Any)->list[dict[str,Any]]:
+    if not isinstance(doc,list): return []
+    out=[]
+    for r in doc:
+        if not isinstance(r,dict): continue
+        total=usd(r.get("totalCirculatingUSD")); name=r.get("name") or r.get("chain")
+        if name and total is not None: out.append({"chain":str(name),"total_usd":total})
+    return sorted(out,key=lambda x:x["total_usd"],reverse=True)
+def main()->int:
+    ap=argparse.ArgumentParser(); ap.add_argument("--output-root",type=Path,default=Path("03_DAILY_CAPTURE_LOGS/stablecoin_liquidity")); a=ap.parse_args()
+    now=datetime.now(timezone.utc).replace(microsecond=0); chart,cr=fetch("/stablecoincharts/all"); chain_doc,ccr=fetch("/stablecoinchains"); rows=chart_rows(chart)
+    if not rows: raise SystemExit("stablecoin_global_chart_unparseable")
+    latest=rows[-1]; chain_rows=chains(chain_doc)
+    payload={"contract":"DEFILLAMA_STABLECOIN_LIQUIDITY_OWNER_v1","retrieved_at_utc":now.isoformat().replace("+00:00","Z"),"source":"DEFILLAMA_STABLECOINS","global":{"timestamp":latest["timestamp"],"total_usd":latest["total_usd"],"change_1d_pct":pct(latest["total_usd"],nearest_back(rows,86400)),"change_7d_pct":pct(latest["total_usd"],nearest_back(rows,7*86400)),"change_30d_pct":pct(latest["total_usd"],nearest_back(rows,30*86400))},"chains":chain_rows,"source_receipts":{"global_chart":cr,"chains":ccr},"interpolation":False,"forward_fill":False,"authority":AUTHORITY}
+    payload["payload_sha256"]=sha(canonical(payload)); day=a.output_root/now.strftime("%Y/%m/%d"); day.mkdir(parents=True,exist_ok=True); path=day/f"{now.strftime('%H%M%S')}.json"; path.write_bytes(canonical(payload)+b"\n"); (a.output_root/"LATEST.json").write_bytes(canonical(payload)+b"\n"); print(json.dumps({"status":"PASS","global_total_usd":latest["total_usd"],"chain_count":len(chain_rows),"payload_sha256":payload["payload_sha256"]},sort_keys=True)); return 0
+if __name__=="__main__": raise SystemExit(main())
