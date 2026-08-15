@@ -1,0 +1,128 @@
+name: Adaptive Decision Miss and Gap Validation
+
+on:
+  schedule:
+    - cron: '35 0 * * *'
+      timezone: 'Europe/Copenhagen'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: framework-main-writer
+  cancel-in-progress: false
+
+jobs:
+  learn-and-validate:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Enforce bounded miss and validation API budgets
+        run: |
+          python scripts/api_agent/check_api_lane_budget.py --receipt-root research/api_agent/outputs --task DECISION_MISS_AUDIT --cap-usd 1.5 --reserve-usd 0.05
+          python scripts/api_agent/check_api_lane_budget.py --receipt-root research/api_agent/outputs --task EVIDENCE_GAP_VALIDATION --cap-usd 1.5 --reserve-usd 0.05
+          python scripts/api_agent/check_monthly_cost_guard.py --receipt-root research/api_agent/outputs --hard-stop-usd 20 --reserve-usd 2.0
+
+      - name: Audit matured evidence for decision and timing misses
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          rm -rf runtime/adaptive-miss
+          mkdir -p runtime/adaptive-miss
+          python scripts/api_agent/adaptive_decision_miss_auditor.py \
+            --analysis-root research/api_agent/outputs/daily \
+            --analysis-root research/api_agent/outputs/conflicts \
+            --analysis-root research/api_agent/outputs/weekly \
+            --analysis-root research/api_agent/outputs/weekly_red_team \
+            --analysis-root research/api_agent/outputs/research \
+            --analysis-root research/framework_memory \
+            --analysis-root research/experiment_lifecycle \
+            --analysis-root 03_WEEKLY_OPERATIONS \
+            --gap-registry research/evidence_gap/ADAPTIVE_EVIDENCE_GAP_REGISTRY_v1.json \
+            --output-dir runtime/adaptive-miss \
+            --max-documents 28
+
+      - name: Persist decision miss memory
+        run: |
+          python scripts/api_agent/decision_miss_registry.py \
+            --audit runtime/adaptive-miss/MISS_AUDIT.json \
+            --registry research/evidence_gap/ADAPTIVE_DECISION_MISS_REGISTRY_v1.json
+
+      - name: Route miss-derived evidence gaps through existing closure engine
+        run: |
+          python scripts/api_agent/evidence_gap_registry.py \
+            --audit runtime/adaptive-miss/GAP_AUDIT_FROM_MISSES.json \
+            --registry research/evidence_gap/ADAPTIVE_EVIDENCE_GAP_REGISTRY_v1.json \
+            --capabilities research/evidence_gap/EVIDENCE_SOURCE_CAPABILITY_REGISTRY_v1.json \
+            --queue research/evidence_gap/ADAPTIVE_EVIDENCE_GAP_QUEUE_v1.json
+
+      - name: Validate gap value on non-discovery evidence
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          rm -rf runtime/gap-validation
+          mkdir -p runtime/gap-validation
+          python scripts/api_agent/evidence_gap_validation_auditor.py \
+            --gap-registry research/evidence_gap/ADAPTIVE_EVIDENCE_GAP_REGISTRY_v1.json \
+            --evidence-root research/api_agent/outputs/daily \
+            --evidence-root research/api_agent/outputs/conflicts \
+            --evidence-root research/api_agent/outputs/research \
+            --evidence-root research/api_agent/outputs/weekly \
+            --evidence-root research/framework_memory \
+            --evidence-root research/experiment_lifecycle \
+            --evidence-root 03_DAILY_CAPTURE_LOGS/breadth_rich \
+            --evidence-root 03_DAILY_CAPTURE_LOGS/stablecoin_liquidity \
+            --evidence-root 03_DAILY_CAPTURE_LOGS/pullback_forensics \
+            --output-dir runtime/gap-validation \
+            --max-documents 70
+          python scripts/api_agent/apply_evidence_gap_validation.py \
+            --registry research/evidence_gap/ADAPTIVE_EVIDENCE_GAP_REGISTRY_v1.json \
+            --audit runtime/gap-validation/VALIDATION_AUDIT.json \
+            --min-episodes 3 \
+            --min-days 14
+
+      - name: Materialize immutable audit receipts
+        run: |
+          STAMP=$(date -u +%Y/%m/%d/%H%M%S)
+          MDEST="research/api_agent/outputs/decision_miss/${STAMP}"
+          VDEST="research/api_agent/outputs/evidence_gap_validation/${STAMP}"
+          mkdir -p "$MDEST" "$VDEST"
+          cp runtime/adaptive-miss/MISS_AUDIT.json "$MDEST/MISS_AUDIT.json"
+          cp runtime/adaptive-miss/MISS_AUDIT_RECEIPT.json "$MDEST/MISS_AUDIT_RECEIPT.json"
+          cp runtime/gap-validation/VALIDATION_AUDIT.json "$VDEST/VALIDATION_AUDIT.json"
+          cp runtime/gap-validation/VALIDATION_RECEIPT.json "$VDEST/VALIDATION_RECEIPT.json"
+
+      - name: Commit miss and validation memory with verified readback
+        shell: bash
+        run: |
+          git config user.name 'framework-adaptive-learning-bot'
+          git config user.email 'framework-adaptive-learning-bot@users.noreply.github.com'
+          git add research/evidence_gap research/api_agent/outputs/decision_miss research/api_agent/outputs/evidence_gap_validation
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "learning: update decision miss and gap validation ${GITHUB_RUN_ID}"
+          pushed=false
+          for attempt in 1 2 3; do
+            git rebase --abort 2>/dev/null || true
+            if git pull --rebase origin main && git push origin HEAD:main; then pushed=true; break; fi
+            sleep $((attempt * 5))
+          done
+          [ "$pushed" = true ]
+          git fetch origin main
+          git merge-base --is-ancestor HEAD origin/main
+
+  notify:
+    needs: learn-and-validate
+    if: failure() && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo 'Adaptive decision-miss / gap-validation workflow failed. No canonical state or portfolio action was changed.'
