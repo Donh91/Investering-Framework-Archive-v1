@@ -1,0 +1,43 @@
+name: Research Execution Evening Dispatch
+
+on:
+  schedule:
+    - cron: '10 21 * * *'
+      timezone: 'Europe/Copenhagen'
+  workflow_dispatch:
+
+permissions:
+  actions: write
+  contents: read
+
+jobs:
+  dispatch:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Enforce research lane and global budget before second daily turn
+        run: |
+          python scripts/api_agent/check_api_lane_budget.py \
+            --receipt-root research/api_agent/outputs \
+            --task RESEARCH_AUTOMATION \
+            --cap-usd 6.0 \
+            --reserve-usd 0.25
+          python scripts/api_agent/check_monthly_cost_guard.py \
+            --receipt-root research/api_agent/outputs \
+            --hard-stop-usd 20 \
+            --reserve-usd 2.0
+      - name: Dispatch existing bounded Research Execution Coordinator
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api \
+            --method POST \
+            "repos/${GITHUB_REPOSITORY}/actions/workflows/research-execution-coordinator.yml/dispatches" \
+            -f ref=main
