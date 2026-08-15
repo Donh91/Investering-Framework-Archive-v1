@@ -8,26 +8,23 @@
       "prospective_capture": true,
       "cadence_minutes": 60,
       "known_fields": [
-        "BTCUSDT_1H_OHLCV",
-        "ETHUSDT_1H_OHLCV",
-        "ETHBTC_1H_OHLC",
-        "BTC_ETH_QUOTE_VOLUME_1H",
-        "BTC_ETH_TRADE_COUNT_1H",
-        "BTC_ETH_TAKER_BUY_SHARE_1H",
-        "BTC_OPEN_INTEREST_1H",
-        "ETH_OPEN_INTEREST_1H",
-        "BTC_LONG_SHORT_1H",
-        "ETH_LONG_SHORT_1H",
-        "FUNDING_EVENTS"
+        "BTCUSDT_1H_OHLCV", "ETHUSDT_1H_OHLCV", "ETHBTC_1H_OHLC",
+        "BTC_ETH_QUOTE_VOLUME_1H", "BTC_ETH_TRADE_COUNT_1H", "BTC_ETH_TAKER_BUY_SHARE_1H",
+        "BTC_ETH_NET_AGGRESSIVE_QUOTE_FLOW_DERIVED", "BTC_OPEN_INTEREST_1H", "ETH_OPEN_INTEREST_1H",
+        "BTC_LONG_SHORT_1H", "ETH_LONG_SHORT_1H", "FUNDING_EVENTS", "ETHBTC_0_0300_PERSISTENCE_DERIVED"
       ],
       "closure_mode": "BACKFILL_OR_EXISTING_ARCHIVE"
     },
     "LIVE_BREADTH": {
-      "evidence_root": "03_DAILY_CAPTURE_LOGS/captures",
+      "evidence_root": "03_DAILY_CAPTURE_LOGS/breadth_rich",
       "historical_backfill": false,
       "prospective_capture": true,
       "cadence_minutes": 288,
-      "known_fields": ["TOP100_ADVANCERS", "TOP100_DECLINERS", "TOP100_FLAT", "TOP100_MEMBERSHIP_HASH"],
+      "known_fields": [
+        "TOP100_ADVANCERS", "TOP100_DECLINERS", "TOP100_FLAT", "TOP100_ADVANCE_RATIO",
+        "TOP100_MEDIAN_RETURN_24H", "TOP100_EQUAL_WEIGHT_MEAN_RETURN_24H",
+        "TOP100_OUTPERFORMING_BTC_COUNT", "TOP100_OUTPERFORMING_ETH_COUNT", "TOP100_MEMBERSHIP_HASH"
+      ],
       "closure_mode": "PROSPECTIVE_CAPTURE_ONLY_FOR_NEW_POINT_IN_TIME_FIELDS"
     },
     "PULLBACK_FORENSICS": {
@@ -59,8 +56,11 @@
       "historical_backfill": true,
       "prospective_capture": true,
       "cadence_minutes": 1440,
-      "known_fields": ["GLOBAL_STABLECOIN_MARKET_CAP", "CHAIN_STABLECOIN_MARKET_CAP"],
-      "closure_mode": "SOURCE_OWNER_REQUIRED"
+      "known_fields": [
+        "GLOBAL_STABLECOIN_MARKET_CAP", "GLOBAL_STABLECOIN_CHANGE_1D",
+        "GLOBAL_STABLECOIN_CHANGE_7D", "GLOBAL_STABLECOIN_CHANGE_30D", "CHAIN_STABLECOIN_MARKET_CAP"
+      ],
+      "closure_mode": "BACKFILL_OR_EXISTING_ARCHIVE"
     },
     "EXISTING_REPO_DERIVATION": {
       "evidence_root": ".",
