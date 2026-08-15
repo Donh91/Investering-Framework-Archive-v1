@@ -26,7 +26,7 @@ def chart_rows(doc:Any)->list[dict[str,Any]]:
     out=[]
     for r in doc:
         if not isinstance(r,dict): continue
-        raw_date=r.get("date") or r.get("timestamp\"); total=usd(r.get("totalCirculatingUSD"))
+        raw_date=r.get("date") or r.get("timestamp"); total=usd(r.get("totalCirculatingUSD"))
         if total is None: total=usd(r.get("totalCirculating"))
         try: ts=int(raw_date)
         except Exception: continue
