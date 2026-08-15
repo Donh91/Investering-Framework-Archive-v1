@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from __future__ import annotations
-import argparse, hashlib, json, urllib.error, urllib.parse, urllib.request
+import argparse, hashlib, json, statistics, urllib.error, urllib.parse, urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
 AUTHORITY={"binding":False,"canonical_acceptance":False,"state_change":False,"portfolio_action":False}
@@ -11,7 +11,7 @@ class E(RuntimeError):
 def sha(b): return hashlib.sha256(b).hexdigest()
 def canonical(v): return json.dumps(v,sort_keys=True,separators=(",",":"),ensure_ascii=False).encode()
 def fetch(url,timeout=20):
-    req=urllib.request.Request(url,headers={"User-Agent":"Investering-Breadth-Owner/1.1","Accept":"application/json"})
+    req=urllib.request.Request(url,headers={"User-Agent":"Investering-Breadth-Owner/1.2","Accept":"application/json"})
     try:
         with urllib.request.urlopen(req,timeout=timeout) as r: b=r.read()
     except urllib.error.HTTPError as e: raise E("HTTP_ERROR",f"HTTP {e.code}: {e.read()[:240]!r}") from e
@@ -41,8 +41,20 @@ def parse(payload):
     for i,row in enumerate(constituents,1): row["filtered_rank"]=i
     membership=[{"filtered_rank":r["filtered_rank"],"asset_id":r["asset_id"]} for r in constituents]
     membership_hash=sha(canonical(membership))
-    adv=sum(r["change_24h_pct"]>0 for r in constituents); dec=sum(r["change_24h_pct"]<0 for r in constituents); flat=100-adv-dec
-    aggregate={"constituent_count":100,"advancers":adv,"decliners":dec,"flat":flat,"advancer_pct":adv,"membership_hash":membership_hash}
+    changes=[r["change_24h_pct"] for r in constituents]
+    adv=sum(v>0 for v in changes); dec=sum(v<0 for v in changes); flat=100-adv-dec
+    btc=next((r["change_24h_pct"] for r in constituents if r["asset_id"]=="bitcoin"),None)
+    eth=next((r["change_24h_pct"] for r in constituents if r["asset_id"]=="ethereum"),None)
+    aggregate={
+        "constituent_count":100,"advancers":adv,"decliners":dec,"flat":flat,
+        "advancer_pct":adv,"advance_ratio":round(adv/100,6),
+        "median_return_24h_pct":round(float(statistics.median(changes)),6),
+        "equal_weight_mean_return_24h_pct":round(sum(changes)/len(changes),6),
+        "btc_return_24h_pct":btc,"eth_return_24h_pct":eth,
+        "outperforming_btc_count":sum(v>btc for v in changes) if btc is not None else None,
+        "outperforming_eth_count":sum(v>eth for v in changes) if eth is not None else None,
+        "membership_hash":membership_hash
+    }
     return constituents,exclusions,aggregate
 def verify(root):
     try:
@@ -62,7 +74,7 @@ def verify(root):
 def run(payload,output,retrieval):
     output.mkdir(parents=True,exist_ok=True); (output/"raw_source_payload.json").write_bytes(payload)
     constituents,exclusions,aggregate=parse(payload); run_id="DT_TOP100_"+retrieval.replace('-','').replace(':','')[:15]+"_"+aggregate["membership_hash"][:12]
-    owner={"contract":"C5E_TOP100_BREADTH_OWNER_v1_1","run_id":run_id,"retrieval_timestamp":retrieval,"freeze_timestamp":retrieval,"source":"COINGECKO_MARKET_CAP","raw_rank_depth":150,"ranking_metric":"market_cap_usd","method_version":"TOP100_FILTERED_STABLE_EXCLUSION_v1_1","constituents":constituents,"exclusions":exclusions,"aggregate":aggregate,"interpolation":False,"forward_fill":False,"authority":AUTHORITY}
+    owner={"contract":"C5E_TOP100_BREADTH_OWNER_v1_2","run_id":run_id,"retrieval_timestamp":retrieval,"freeze_timestamp":retrieval,"source":"COINGECKO_MARKET_CAP","raw_rank_depth":150,"ranking_metric":"market_cap_usd","method_version":"TOP100_FILTERED_STABLE_EXCLUSION_RICH_BREADTH_v1_2","constituents":constituents,"exclusions":exclusions,"aggregate":aggregate,"interpolation":False,"forward_fill":False,"authority":AUTHORITY}
     receipt={"run_id":run_id,"raw_sha256":sha(payload),"membership_hash":aggregate["membership_hash"],"constituent_count":100,"aggregate_replay":"PASS","status":"PASS","authority":AUTHORITY}
     (output/"owner_snapshot.json").write_text(json.dumps(owner,indent=2,sort_keys=True)+"\n"); (output/"receipt.json").write_text(json.dumps(receipt,indent=2,sort_keys=True)+"\n")
     members=[]

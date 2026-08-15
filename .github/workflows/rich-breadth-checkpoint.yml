@@ -1,0 +1,55 @@
+name: Rich Breadth Checkpoint
+
+on:
+  schedule:
+    - cron: '18 6 * * *'
+      timezone: 'Europe/Copenhagen'
+    - cron: '52 10 * * *'
+      timezone: 'Europe/Copenhagen'
+    - cron: '27 15 * * *'
+      timezone: 'Europe/Copenhagen'
+    - cron: '43 19 * * *'
+      timezone: 'Europe/Copenhagen'
+    - cron: '16 23 * * *'
+      timezone: 'Europe/Copenhagen'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: framework-main-writer
+  cancel-in-progress: false
+
+jobs:
+  capture:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Capture rich point-in-time breadth
+        run: python scripts/daily_capture/rich_breadth_checkpoint.py --output-root 03_DAILY_CAPTURE_LOGS/breadth_rich
+      - name: Commit rich breadth evidence
+        shell: bash
+        run: |
+          git config user.name 'framework-data-bot'
+          git config user.email 'framework-data-bot@users.noreply.github.com'
+          git add 03_DAILY_CAPTURE_LOGS/breadth_rich
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "data: capture rich breadth ${GITHUB_RUN_ID}"
+          pushed=false
+          for attempt in 1 2 3; do
+            git rebase --abort 2>/dev/null || true
+            if git pull --rebase origin main && git push origin HEAD:main; then pushed=true; break; fi
+            sleep $((attempt * 5))
+          done
+          [ "$pushed" = true ]
+          git fetch origin main
+          git merge-base --is-ancestor HEAD origin/main
