@@ -1,0 +1,82 @@
+{
+  "contract": "EVIDENCE_SOURCE_CAPABILITY_REGISTRY_v1",
+  "status": "ACTIVE",
+  "capabilities": {
+    "HOURLY_SEQUENCE": {
+      "evidence_root": "03_DAILY_CAPTURE_LOGS/hourly",
+      "historical_backfill": true,
+      "prospective_capture": true,
+      "cadence_minutes": 60,
+      "known_fields": [
+        "BTCUSDT_1H_OHLCV",
+        "ETHUSDT_1H_OHLCV",
+        "ETHBTC_1H_OHLC",
+        "BTC_ETH_QUOTE_VOLUME_1H",
+        "BTC_ETH_TRADE_COUNT_1H",
+        "BTC_ETH_TAKER_BUY_SHARE_1H",
+        "BTC_OPEN_INTEREST_1H",
+        "ETH_OPEN_INTEREST_1H",
+        "BTC_LONG_SHORT_1H",
+        "ETH_LONG_SHORT_1H",
+        "FUNDING_EVENTS"
+      ],
+      "closure_mode": "BACKFILL_OR_EXISTING_ARCHIVE"
+    },
+    "LIVE_BREADTH": {
+      "evidence_root": "03_DAILY_CAPTURE_LOGS/captures",
+      "historical_backfill": false,
+      "prospective_capture": true,
+      "cadence_minutes": 288,
+      "known_fields": ["TOP100_ADVANCERS", "TOP100_DECLINERS", "TOP100_FLAT", "TOP100_MEMBERSHIP_HASH"],
+      "closure_mode": "PROSPECTIVE_CAPTURE_ONLY_FOR_NEW_POINT_IN_TIME_FIELDS"
+    },
+    "PULLBACK_FORENSICS": {
+      "evidence_root": "03_DAILY_CAPTURE_LOGS/pullback_forensics",
+      "historical_backfill": false,
+      "prospective_capture": true,
+      "cadence_minutes": 288,
+      "known_fields": ["OKX_EXECUTED_LIQUIDATIONS", "DERIBIT_MONEYNESS_SKEW"],
+      "closure_mode": "PROSPECTIVE_CAPTURE_ONLY_FOR_PERISHABLE_FIELDS"
+    },
+    "SETTLED_ETF": {
+      "evidence_root": "03_DAILY_CAPTURE_LOGS/etf",
+      "historical_backfill": true,
+      "prospective_capture": true,
+      "cadence_minutes": 1440,
+      "known_fields": ["BTC_ETF_DAILY_TOTAL", "ETH_ETF_DAILY_TOTAL", "SESSION_FINAL", "TOTAL_PARITY"],
+      "closure_mode": "BACKFILL_OR_EXISTING_ARCHIVE"
+    },
+    "FRED_MACRO": {
+      "evidence_root": "03_DAILY_CAPTURE_LOGS/captures",
+      "historical_backfill": true,
+      "prospective_capture": true,
+      "cadence_minutes": 1440,
+      "known_fields": ["DGS2", "DGS10", "DTWEXBGS", "VIXCLS"],
+      "closure_mode": "BACKFILL_OR_EXISTING_ARCHIVE"
+    },
+    "STABLECOIN_LIQUIDITY": {
+      "evidence_root": "03_DAILY_CAPTURE_LOGS/stablecoin_liquidity",
+      "historical_backfill": true,
+      "prospective_capture": true,
+      "cadence_minutes": 1440,
+      "known_fields": ["GLOBAL_STABLECOIN_MARKET_CAP", "CHAIN_STABLECOIN_MARKET_CAP"],
+      "closure_mode": "SOURCE_OWNER_REQUIRED"
+    },
+    "EXISTING_REPO_DERIVATION": {
+      "evidence_root": ".",
+      "historical_backfill": true,
+      "prospective_capture": false,
+      "cadence_minutes": null,
+      "known_fields": [],
+      "closure_mode": "DERIVE_ONLY_FROM_RETAINED_EVIDENCE"
+    },
+    "UNKNOWN_SOURCE": {
+      "evidence_root": null,
+      "historical_backfill": false,
+      "prospective_capture": false,
+      "cadence_minutes": null,
+      "known_fields": [],
+      "closure_mode": "SOURCE_DISCOVERY_REQUIRED"
+    }
+  }
+}

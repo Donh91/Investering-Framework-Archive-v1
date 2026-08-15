@@ -1,0 +1,61 @@
+{
+  "contract": "ADAPTIVE_EVIDENCE_GAP_POLICY_v1",
+  "status": "ACTIVE_SHADOW_RESEARCH_ONLY",
+  "purpose": "Detect evidence that would have materially improved a current analysis if it had been tracked historically, then close the evidence gap safely without changing market semantics.",
+  "authority": {
+    "can_change_market_rules": false,
+    "can_change_thresholds": false,
+    "can_change_weights": false,
+    "can_change_canonical_state": false,
+    "can_create_portfolio_action": false,
+    "can_self_merge_code": false,
+    "can_register_evidence_need": true,
+    "can_queue_allowlisted_backfill": true,
+    "can_queue_prospective_capture": true,
+    "can_queue_source_discovery": true
+  },
+  "trigger_question": "Would this analysis be materially stronger now if a specific observable metric had already been tracked over prior days or weeks?",
+  "required_gap_fields": [
+    "metric_name",
+    "decision_relevance",
+    "missing_history_problem",
+    "desired_history_days",
+    "desired_cadence_minutes",
+    "data_shape",
+    "capability_hint",
+    "evidence_reference"
+  ],
+  "capability_hints": [
+    "HOURLY_SEQUENCE",
+    "LIVE_BREADTH",
+    "PULLBACK_FORENSICS",
+    "SETTLED_ETF",
+    "FRED_MACRO",
+    "STABLECOIN_LIQUIDITY",
+    "EXISTING_REPO_DERIVATION",
+    "UNKNOWN_SOURCE"
+  ],
+  "closure_states": [
+    "DETECTED",
+    "ALREADY_COVERED",
+    "DERIVABLE_FROM_EXISTING_ARCHIVE",
+    "BACKFILL_QUEUED",
+    "BACKFILL_PARTIAL",
+    "PROSPECTIVE_CAPTURE_REQUIRED",
+    "PROSPECTIVE_CAPTURE_ACTIVE",
+    "SOURCE_DISCOVERY_REQUIRED",
+    "SOURCE_DISCOVERY_ACTIVE",
+    "BLOCKED_NO_RELIABLE_SOURCE",
+    "CLOSED"
+  ],
+  "rules": [
+    "Never infer or fabricate historical values.",
+    "Backfill is permitted only from an allowlisted capability whose contract explicitly supports historical retrieval.",
+    "Perishable point-in-time evidence that cannot be reconstructed must start prospective capture and preserve the historical hole as UNKNOWN.",
+    "A newly useful metric is evidence only. It cannot become a sensor, rule, threshold, weight, BUY condition, EXIT condition or canonical state transition without the existing governance path.",
+    "Existing retained GitHub evidence must be checked before any new collector or paid research call is proposed.",
+    "Repeated semantically equivalent gaps must deduplicate into one registry item with incremented observation_count and updated last_seen_utc.",
+    "Source discovery may recommend an implementation path but cannot invent source authority or silently promote a source to canonical ownership.",
+    "Automatic code self-merge is forbidden. New collector code must pass normal branch, PR and CI gates before merge."
+  ]
+}
