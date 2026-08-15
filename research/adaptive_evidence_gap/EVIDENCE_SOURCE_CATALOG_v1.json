@@ -1,0 +1,86 @@
+{
+  "contract": "EVIDENCE_SOURCE_CATALOG_v1",
+  "rules": {
+    "unknown_sources_default": "RESEARCH_ONLY",
+    "automatic_new_market_rule": false,
+    "automatic_sensor_promotion": false,
+    "automatic_backfill_requires_source_time_provenance": true
+  },
+  "lanes": {
+    "BREADTH_CROSS_SECTION": {
+      "match_terms": ["breadth", "advancer", "decliner", "equal-weight", "outperforming btc", "outperforming eth"],
+      "source": "CoinGecko Top100 owner snapshot",
+      "mode": "DERIVE_FROM_EXISTING_OWNER",
+      "backfill": "BOUNDED_WHERE_RAW_OWNER_PAYLOAD_RETAINED",
+      "prospective": true,
+      "auto_provision": true
+    },
+    "ETHBTC_PERSISTENCE": {
+      "match_terms": ["eth/btc", "ethbtc", "0.0300", "relative performance", "relative survival"],
+      "source": "direct Binance ETHBTC hourly lane plus BTCUSDT/ETHUSDT",
+      "mode": "DERIVE_FROM_EXISTING_HOURLY",
+      "backfill": "YES_FROM_RETAINED_HOURLY",
+      "prospective": true,
+      "auto_provision": true
+    },
+    "PULLBACK_FORENSICS": {
+      "match_terms": ["liquidation", "dvol", "options", "skew", "forensics", "leverage cleansing", "absorption"],
+      "source": "existing Pullback Forensics passive capture",
+      "mode": "WIRE_EXISTING_ARTIFACT",
+      "backfill": "PARTIAL_EXISTING_PERSISTED_ONLY",
+      "prospective": true,
+      "auto_provision": true
+    },
+    "MICROSTRUCTURE_AGGRESSIVE_FLOW": {
+      "match_terms": ["spot flow", "taker flow", "aggressive flow", "cumulative volume delta", "cvd", "depth imbalance", "order book"],
+      "source": "Binance spot microstructure plus retained hourly taker-buy quote share",
+      "mode": "DERIVE_FROM_EXISTING_OWNER",
+      "backfill": "HOURLY_FIELDS_ONLY_NO_HISTORICAL_DEPTH_RECONSTRUCTION",
+      "prospective": true,
+      "auto_provision": true,
+      "semantic_guard": "Never label derived aggressive quote-flow as classical tick-CVD unless the underlying contract supports it."
+    },
+    "ETF_MONOTONIC_SESSION_QA": {
+      "match_terms": ["etf", "latest session", "session regression", "farside"],
+      "source": "verified settled ETF calibration owner",
+      "mode": "WIRE_EXISTING_ARTIFACT_PLUS_QA",
+      "backfill": "YES_FROM_RETAINED_SETTLED_ROWS",
+      "prospective": true,
+      "auto_provision": true
+    },
+    "STABLECOIN_DEPLOYMENT": {
+      "match_terms": ["stablecoin", "liquidity deployment", "stablecoin deployment", "dry powder"],
+      "source": "DefiLlama public stablecoin endpoints",
+      "mode": "PUBLIC_API_OWNER",
+      "backfill": "YES_FROM_HISTORICAL_AGGREGATE_AND_CHAIN_CHARTS",
+      "prospective": true,
+      "auto_provision": true,
+      "endpoints": ["https://stablecoins.llama.fi/stablecoincharts/all", "https://stablecoins.llama.fi/stablecoinchains"]
+    },
+    "FROZEN_REFERENCE_CONTEXT": {
+      "match_terms": ["frozen candidate", "existing threshold", "support candidate", "reference level", "candidate level"],
+      "source": "repository frozen/canonical contracts only",
+      "mode": "PROVENANCE_EXTRACTION_ONLY",
+      "backfill": "N/A",
+      "prospective": true,
+      "auto_provision": true,
+      "semantic_guard": "May serialize existing references only. Must never invent or recompute a new threshold."
+    },
+    "CATALYST_ATTRIBUTION": {
+      "match_terms": ["catalyst", "news attribution", "event attribution"],
+      "source": "research lane",
+      "mode": "RESEARCH_ONLY",
+      "backfill": "SOURCE_DEPENDENT",
+      "prospective": true,
+      "auto_provision": false
+    },
+    "HIGH_FREQUENCY_DEPTH": {
+      "match_terms": ["minute depth", "historical orderbook", "refill dynamics", "orderbook persistence"],
+      "source": "future high-frequency capture if justified",
+      "mode": "PROSPECTIVE_ONLY_RESEARCH",
+      "backfill": "NO_HISTORICAL_RECONSTRUCTION",
+      "prospective": false,
+      "auto_provision": false
+    }
+  }
+}
