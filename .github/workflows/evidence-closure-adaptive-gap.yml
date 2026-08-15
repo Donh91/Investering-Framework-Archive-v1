@@ -1,0 +1,106 @@
+name: Evidence Closure and Adaptive Gap Learning
+
+on:
+  schedule:
+    - cron: '25 6 * * *'
+      timezone: 'Europe/Copenhagen'
+    - cron: '59 10 * * *'
+      timezone: 'Europe/Copenhagen'
+    - cron: '34 15 * * *'
+      timezone: 'Europe/Copenhagen'
+    - cron: '50 19 * * *'
+      timezone: 'Europe/Copenhagen'
+    - cron: '23 23 * * *'
+      timezone: 'Europe/Copenhagen'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: framework-main-writer
+  cancel-in-progress: false
+
+jobs:
+  evidence-closure:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Collect sourceable evidence lanes independently
+        shell: bash
+        run: |
+          set +e
+          mkdir -p runtime/evidence-closure/breadth runtime/evidence-closure/stablecoin
+          python scripts/data_terminal/top100_breadth_enriched_owner.py --output-dir runtime/evidence-closure/breadth
+          echo "breadth_exit=$?" >> "$GITHUB_ENV"
+          python scripts/data_terminal/stablecoin_deployment_owner.py --output-dir runtime/evidence-closure/stablecoin
+          echo "stablecoin_exit=$?" >> "$GITHUB_ENV"
+          exit 0
+
+      - name: Materialize evidence closure context
+        run: |
+          mkdir -p runtime/evidence-closure
+          if [ ! -f runtime/evidence-closure/breadth/owner_snapshot.json ]; then echo '{"status":"UNAVAILABLE"}' > runtime/evidence-closure/breadth/owner_snapshot.json; fi
+          if [ ! -f runtime/evidence-closure/stablecoin/owner_snapshot.json ]; then echo '{"status":"UNAVAILABLE"}' > runtime/evidence-closure/stablecoin/owner_snapshot.json; fi
+          if [ ! -f 03_DAILY_CAPTURE_LOGS/pullback_forensics/LATEST.json ]; then mkdir -p 03_DAILY_CAPTURE_LOGS/pullback_forensics; echo '{"status":"UNAVAILABLE"}' > 03_DAILY_CAPTURE_LOGS/pullback_forensics/LATEST.json; fi
+          if [ ! -f 03_DAILY_CAPTURE_LOGS/etf/LATEST.json ]; then mkdir -p 03_DAILY_CAPTURE_LOGS/etf; echo '{"status":"UNAVAILABLE"}' > 03_DAILY_CAPTURE_LOGS/etf/LATEST.json; fi
+          python scripts/adaptive_learning/build_evidence_closure_context.py \
+            --hourly-root 03_DAILY_CAPTURE_LOGS/hourly \
+            --pfr 03_DAILY_CAPTURE_LOGS/pullback_forensics/LATEST.json \
+            --breadth runtime/evidence-closure/breadth/owner_snapshot.json \
+            --stablecoin runtime/evidence-closure/stablecoin/owner_snapshot.json \
+            --etf 03_DAILY_CAPTURE_LOGS/etf/LATEST.json \
+            --output runtime/evidence-closure/EVIDENCE_CLOSURE_CONTEXT.json
+
+      - name: Discover and classify adaptive evidence gaps
+        run: |
+          mkdir -p research/adaptive_evidence_gap
+          python scripts/adaptive_learning/adaptive_evidence_gap_manager.py \
+            --catalog research/adaptive_evidence_gap/EVIDENCE_SOURCE_CATALOG_v1.json \
+            --registry research/adaptive_evidence_gap/EVIDENCE_GAP_REGISTRY.json \
+            --roots research/api_agent/outputs research/framework_memory 03_WEEKLY_OPERATIONS \
+            --requests-output research/adaptive_evidence_gap/LATEST_ACQUISITION_REQUESTS.json
+
+      - name: Persist evidence closure without granting authority
+        shell: bash
+        run: |
+          STAMP=$(date -u +%Y/%m/%d/%H%M%S)
+          DEST="03_DAILY_CAPTURE_LOGS/evidence_closure/${STAMP}"
+          mkdir -p "$DEST"
+          cp runtime/evidence-closure/EVIDENCE_CLOSURE_CONTEXT.json "$DEST/EVIDENCE_CLOSURE_CONTEXT.json"
+          cp runtime/evidence-closure/breadth/owner_snapshot.json "$DEST/BREADTH_ENRICHED.json"
+          cp runtime/evidence-closure/stablecoin/owner_snapshot.json "$DEST/STABLECOIN_DEPLOYMENT.json"
+          cp runtime/evidence-closure/EVIDENCE_CLOSURE_CONTEXT.json 03_DAILY_CAPTURE_LOGS/evidence_closure/LATEST.json
+          git config user.name 'framework-learning-bot'
+          git config user.email 'framework-learning-bot@users.noreply.github.com'
+          git add 03_DAILY_CAPTURE_LOGS/evidence_closure research/adaptive_evidence_gap
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "learning: materialize evidence closure ${GITHUB_RUN_ID}"
+          pushed=false
+          for attempt in 1 2 3; do
+            git rebase --abort 2>/dev/null || true
+            if git pull --rebase origin main && git push origin HEAD:main; then pushed=true; break; fi
+            sleep $((attempt * 5))
+          done
+          [ "$pushed" = true ]
+          git fetch origin main
+          git merge-base --is-ancestor HEAD origin/main
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: evidence-closure-${{ github.run_id }}
+          path: |
+            runtime/evidence-closure/
+            research/adaptive_evidence_gap/LATEST_ACQUISITION_REQUESTS.json
+          retention-days: 14
+          if-no-files-found: warn
