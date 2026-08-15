@@ -1,0 +1,91 @@
+{
+  "contract": "ADAPTIVE_EVIDENCE_GAP_VALIDATION_POLICY_v1_1",
+  "extends": "ADAPTIVE_EVIDENCE_GAP_POLICY_v1",
+  "status": "ACTIVE_SHADOW_RESEARCH_ONLY",
+  "purpose": "Extend adaptive gap closure across all decision phases by learning from decision/timing misses and independently testing whether newly collected evidence adds repeatable information beyond the discovery episode.",
+  "authority": {
+    "can_change_market_rules": false,
+    "can_change_thresholds": false,
+    "can_change_weights": false,
+    "can_change_canonical_state": false,
+    "can_create_portfolio_action": false,
+    "can_self_promote_sensor": false,
+    "can_self_merge_code": false,
+    "can_register_miss_event": true,
+    "can_validate_research_evidence": true,
+    "can_reject_non_incremental_gap": true,
+    "can_mark_promotion_review_eligible": true
+  },
+  "phases": [
+    "PRE_BUY",
+    "BUY_TRANSITION",
+    "ALTSEASON_ROTATION",
+    "PULLBACK_DE_RISK",
+    "PULLBACK_REENTRY",
+    "DISTRIBUTION",
+    "EXIT",
+    "POST_CYCLE_LEARNING",
+    "UNKNOWN_PHASE"
+  ],
+  "miss_types": [
+    "FALSE_BUY",
+    "MISSED_BUY",
+    "LATE_BUY",
+    "FALSE_DE_RISK",
+    "MISSED_DE_RISK_BEFORE_PULLBACK",
+    "LATE_DE_RISK_BEFORE_PULLBACK",
+    "MISSED_PULLBACK_REENTRY",
+    "LATE_PULLBACK_REENTRY",
+    "FALSE_REENTRY",
+    "MISSED_DISTRIBUTION_WARNING",
+    "LATE_EXIT",
+    "FALSE_EXIT",
+    "RANGE_MISS",
+    "PATH_MISS",
+    "TIMING_MISS",
+    "REGIME_MISS",
+    "DATA_GAP_ONLY",
+    "UNKNOWN_MISS"
+  ],
+  "anti_hindsight": {
+    "discovery_episode_counts_as_validation": false,
+    "post_outcome_metric_design_counts_as_validation": false,
+    "historical_validation_allowed_only_if_source_time_provenance_predates_discovery": true,
+    "historical_point_in_time_reconstruction_without_archive_forbidden": true,
+    "unknown_history_remains_unknown": true
+  },
+  "parallel_validation": {
+    "historical_out_of_sample_backfill": true,
+    "prospective_observation": true,
+    "compare_against_information_set_available_at_decision_time": true,
+    "require_incremental_value_over_existing_evidence": true,
+    "track_false_positive_and_false_negative_delta": true,
+    "track_decision_timing_delta": true,
+    "track_cross_episode_recurrence": true
+  },
+  "validation_states": [
+    "UNTESTED",
+    "COLLECTING",
+    "HISTORICAL_OOS_AVAILABLE",
+    "PROSPECTIVE_EVIDENCE_ACCUMULATING",
+    "INCONCLUSIVE_KEEP_COLLECTING",
+    "USEFUL_RESEARCH_EVIDENCE",
+    "REJECTED_NO_INCREMENTAL_VALUE",
+    "REJECTED_UNRELIABLE_SOURCE",
+    "PROMOTION_REVIEW_ELIGIBLE"
+  ],
+  "promotion_review_minimums": {
+    "minimum_non_discovery_independent_episodes": 3,
+    "minimum_prospective_days": 14,
+    "requires_incremental_value": true,
+    "requires_source_reliability": true,
+    "requires_no_authority_violation": true,
+    "automatic_promotion": false
+  },
+  "rejection_guidance": {
+    "repeated_no_incremental_value_episodes": 3,
+    "may_continue_capture_after_rejection": false,
+    "exception": "Retain only when collection cost is negligible and the evidence is required for another active validated lane."
+  },
+  "core_rule": "A metric may be discovered because it looks useful during one event, but it earns durable status only by adding information in other evidence windows."
+}
