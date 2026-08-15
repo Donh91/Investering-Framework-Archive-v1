@@ -8,6 +8,9 @@ on:
       - 'scripts/architecture/build_latest_handoff.py'
       - 'tests/api_agent/**'
       - '.github/workflows/api-agent-gateway-gate.yml'
+      - '.github/workflows/daily-director-shadow.yml'
+      - '.github/workflows/weekly-sol-adversarial-review.yml'
+      - '.github/workflows/research-execution-coordinator.yml'
   workflow_dispatch:
     inputs:
       mode:
@@ -33,13 +36,21 @@ jobs:
         run: |
           python -m unittest \
             tests.api_agent.test_api_gateway \
-            tests.api_agent.test_forecast_candidate_backlog -v
-      - name: Compile gateway and forecast backlog machinery
+            tests.api_agent.test_forecast_candidate_backlog \
+            tests.api_agent.test_api_intelligence_v2 -v
+      - name: Compile gateway, intelligence and forecast backlog machinery
         run: |
           python -m py_compile \
             scripts/api_agent/api_gateway.py \
+            scripts/api_agent/augment_director_context_v2.py \
+            scripts/api_agent/check_director_freshness.py \
+            scripts/api_agent/detect_api_conflict.py \
+            scripts/api_agent/check_api_lane_budget.py \
+            scripts/api_agent/deep_research_retry_v2.py \
+            scripts/api_agent/run_deep_research_task.py \
             scripts/api_agent/materialize_forecast_candidates.py \
             scripts/architecture/build_latest_handoff.py \
+            tests/api_agent/test_api_intelligence_v2.py \
             tests/api_agent/test_forecast_candidate_backlog.py
       - name: Prepare bounded smoke inputs
         run: |
@@ -86,6 +97,10 @@ jobs:
           assert r['allowed_write_prefix']=='research/api_agent/outputs/daily/'
           assert r['intended_write_prefix']==r['allowed_write_prefix']
           assert r['untrusted_input_envelope'] is True
+          p=json.loads(Path('research/api_agent/API_INTELLIGENCE_POLICY_v2.json').read_text())
+          assert p['monthly_hard_stop_usd']==20.0
+          assert p['director_schedule']['maximum_runs_per_day']==4
+          assert all(v is False for v in p['authority'].values())
           print('API_AGENT_GATEWAY_PASS')
           PY
       - uses: actions/upload-artifact@v4
