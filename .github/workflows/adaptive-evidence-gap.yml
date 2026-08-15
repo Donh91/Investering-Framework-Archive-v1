@@ -1,0 +1,137 @@
+name: Adaptive Evidence Gap Learning
+
+on:
+  schedule:
+    - cron: '50 23 * * *'
+      timezone: 'Europe/Copenhagen'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: framework-main-writer
+  cancel-in-progress: false
+
+jobs:
+  evidence-gap:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Enforce bounded evidence-gap and global API budgets
+        run: |
+          python scripts/api_agent/check_api_lane_budget.py \
+            --receipt-root research/api_agent/outputs \
+            --task EVIDENCE_GAP_AUDIT \
+            --cap-usd 1.0 \
+            --reserve-usd 0.05
+          python scripts/api_agent/check_monthly_cost_guard.py \
+            --receipt-root research/api_agent/outputs \
+            --hard-stop-usd 20 \
+            --reserve-usd 2.0
+
+      - name: Audit recent analysis for counterfactual evidence gaps
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          rm -rf runtime/evidence-gap
+          mkdir -p runtime/evidence-gap
+          python scripts/api_agent/adaptive_evidence_gap_auditor.py \
+            --analysis-root research/api_agent/outputs/daily \
+            --analysis-root research/api_agent/outputs/conflicts \
+            --analysis-root research/api_agent/outputs/weekly \
+            --analysis-root research/api_agent/outputs/weekly_red_team \
+            --analysis-root research/api_agent/outputs/research \
+            --output-dir runtime/evidence-gap \
+            --max-documents 20
+
+      - name: Deduplicate, classify and route evidence gaps
+        run: |
+          python scripts/api_agent/evidence_gap_registry.py \
+            --audit runtime/evidence-gap/GAP_AUDIT.json \
+            --registry research/evidence_gap/ADAPTIVE_EVIDENCE_GAP_REGISTRY_v1.json \
+            --capabilities research/evidence_gap/EVIDENCE_SOURCE_CAPABILITY_REGISTRY_v1.json \
+            --queue research/evidence_gap/ADAPTIVE_EVIDENCE_GAP_QUEUE_v1.json
+
+      - name: Materialize immutable gap-audit receipt
+        run: |
+          STAMP=$(date -u +%Y/%m/%d/%H%M%S)
+          DEST="research/api_agent/outputs/evidence_gap/${STAMP}"
+          mkdir -p "$DEST"
+          cp runtime/evidence-gap/GAP_AUDIT.json "$DEST/GAP_AUDIT.json"
+          cp runtime/evidence-gap/GAP_AUDIT_RECEIPT.json "$DEST/GAP_AUDIT_RECEIPT.json"
+
+      - name: Open bounded implementation or source-discovery issues for newly touched gaps
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python - <<'PY'
+          import json, os, subprocess
+          from pathlib import Path
+          q=json.loads(Path('research/evidence_gap/ADAPTIVE_EVIDENCE_GAP_QUEUE_v1.json').read_text())
+          touched=set(q.get('touched_gap_ids',[]))
+          for item in q.get('items',[]):
+              gid=str(item.get('gap_id',''))
+              if not gid or gid not in touched:
+                  continue
+              state=str(item.get('closure_state',''))
+              if state not in {'SOURCE_DISCOVERY_REQUIRED','PROSPECTIVE_CAPTURE_REQUIRED','BACKFILL_QUEUED'}:
+                  continue
+              title=f"ADAPTIVE EVIDENCE GAP: {gid}"
+              existing=subprocess.run(['gh','issue','list','--state','all','--search',f'"{title}" in:title','--json','title','--limit','5'],capture_output=True,text=True,check=False)
+              try:
+                  rows=json.loads(existing.stdout or '[]')
+              except Exception:
+                  rows=[]
+              if any(r.get('title')==title for r in rows):
+                  continue
+              body=(
+                  'Automatically registered by ADAPTIVE_EVIDENCE_GAP_POLICY_v1.\n\n'
+                  f"Closure state: `{state}`\n\n"
+                  f"Metric: `{item.get('metric_name')}`\n\n"
+                  f"Why it mattered now: {item.get('decision_relevance')}\n\n"
+                  f"Missing-history problem: {item.get('missing_history_problem')}\n\n"
+                  f"Desired history: {item.get('desired_history_days')} days\n\n"
+                  f"Desired cadence: {item.get('desired_cadence_minutes')} minutes\n\n"
+                  f"Capability hint: `{item.get('capability_hint')}`\n\n"
+                  f"Evidence reference: `{item.get('evidence_reference')}`\n\n"
+                  'Execution boundary: evidence collection/backfill only. No market rules, thresholds, weights, canonical state, portfolio action or automatic self-merge. '
+                  'Use existing retained evidence first. Historical values must never be fabricated; non-backfillable history remains UNKNOWN. New code must use branch/PR and normal CI gates.'
+              )
+              subprocess.run(['gh','issue','create','--title',title,'--body',body],check=False)
+          PY
+
+      - name: Commit adaptive evidence-gap state with verified readback
+        shell: bash
+        run: |
+          git config user.name 'framework-evidence-gap-bot'
+          git config user.email 'framework-evidence-gap-bot@users.noreply.github.com'
+          git add research/evidence_gap research/api_agent/outputs/evidence_gap
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "research: update adaptive evidence gap registry ${GITHUB_RUN_ID}"
+          pushed=false
+          for attempt in 1 2 3; do
+            git rebase --abort 2>/dev/null || true
+            if git pull --rebase origin main && git push origin HEAD:main; then pushed=true; break; fi
+            sleep $((attempt * 5))
+          done
+          [ "$pushed" = true ]
+          git fetch origin main
+          git merge-base --is-ancestor HEAD origin/main
+
+  notify:
+    needs: evidence-gap
+    if: failure() && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo 'Adaptive Evidence Gap Learning failed. Inspect workflow logs; no market state was changed.'
