@@ -1,0 +1,43 @@
+name: Adaptive Evidence Gap Gate
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/adaptive-evidence-gap*.yml'
+      - 'research/evidence_gap/**'
+      - 'scripts/api_agent/adaptive_evidence_gap_auditor.py'
+      - 'scripts/api_agent/evidence_gap_registry.py'
+      - 'tests/api_agent/test_adaptive_evidence_gap.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compile and test adaptive evidence-gap layer
+        run: |
+          python -m py_compile scripts/api_agent/adaptive_evidence_gap_auditor.py scripts/api_agent/evidence_gap_registry.py
+          python -m pytest -q tests/api_agent/test_adaptive_evidence_gap.py
+      - name: Validate policy and source capability contracts
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=json.loads(Path('research/evidence_gap/ADAPTIVE_EVIDENCE_GAP_POLICY_v1.json').read_text())
+          c=json.loads(Path('research/evidence_gap/EVIDENCE_SOURCE_CAPABILITY_REGISTRY_v1.json').read_text())
+          assert p['authority']['can_change_market_rules'] is False
+          assert p['authority']['can_change_thresholds'] is False
+          assert p['authority']['can_change_weights'] is False
+          assert p['authority']['can_create_portfolio_action'] is False
+          assert p['authority']['can_self_merge_code'] is False
+          assert c['capabilities']['UNKNOWN_SOURCE']['historical_backfill'] is False
+          print('PASS')
+          PY
