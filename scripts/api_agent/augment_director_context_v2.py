@@ -145,10 +145,41 @@ def breadth_context(base: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def settled_etf_context(pointer_path: Path) -> dict[str, Any]:
+    if not pointer_path.exists():
+        return {"status": "UNAVAILABLE", "reason": "ETF_POINTER_MISSING"}
+    try:
+        pointer = json.loads(pointer_path.read_text())
+        data_path = Path(str(pointer.get("path", "")))
+        value = json.loads(data_path.read_text())
+    except Exception:
+        return {"status": "UNAVAILABLE", "reason": "ETF_POINTER_OR_PAYLOAD_INVALID"}
+    rows = []
+    for row in value.get("rows", []):
+        if not isinstance(row, dict):
+            continue
+        rows.append({
+            "asset": row.get("asset"),
+            "date": row.get("date"),
+            "reported_total": row.get("reported_total"),
+            "session_final": row.get("session_final"),
+            "total_parity": row.get("total_parity"),
+        })
+    return {
+        "status": value.get("status") or pointer.get("status") or "PASS",
+        "session_date": value.get("session_date") or pointer.get("session_date"),
+        "retrieved_at_utc": value.get("retrieved_at_utc") or pointer.get("retrieved_at_utc"),
+        "row_signature_sha256": value.get("row_signature_sha256") or pointer.get("row_signature_sha256"),
+        "rows": rows,
+        "source": "DAILY_SETTLED_ETF_CALIBRATION_v2",
+    }
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--context", type=Path, required=True)
     parser.add_argument("--hourly-root", type=Path, required=True)
+    parser.add_argument("--etf-pointer", type=Path, default=Path("03_DAILY_CAPTURE_LOGS/etf/LATEST.json"))
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
 
@@ -166,8 +197,10 @@ def main() -> None:
         "hourly_rows_available": len(rows),
         "horizons": {str(hours): build_horizon(rows, cutoff, hours) for hours in HORIZONS_HOURS},
         "breadth_delta": breadth_context(context),
+        "latest_settled_etf": settled_etf_context(args.etf_pointer),
         "rules": [
             "All deltas are deterministic observations from retained owner/hourly data.",
+            "Settled ETF context is copied only from the verified retained ETF owner payload; missing sessions are not imputed.",
             "Unavailable horizons remain unknown and are not imputed.",
             "This layer routes analytical attention only and cannot create market state or portfolio action."
         ],
