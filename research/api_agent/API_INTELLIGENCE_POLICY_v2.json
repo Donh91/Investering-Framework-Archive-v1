@@ -1,0 +1,44 @@
+{
+  "contract": "API_INTELLIGENCE_POLICY_v2",
+  "status": "ACTIVE_SHADOW_ONLY",
+  "monthly_hard_stop_usd": 20.0,
+  "global_reserve_usd": 2.0,
+  "lane_caps_usd": {
+    "DAILY_DIRECTOR_SHADOW": 4.0,
+    "DAILY_CONFLICT_REVIEW": 3.0,
+    "WEEKLY_CALIBRATION_SHADOW": 2.5,
+    "WEEKLY_ADVERSARIAL_REVIEW": 2.5,
+    "RESEARCH_AUTOMATION": 6.0
+  },
+  "director_schedule": {
+    "maximum_runs_per_day": 4,
+    "fresh_owner_run_required": true,
+    "delta_ready_required": true
+  },
+  "transition_burst": {
+    "enabled": true,
+    "mechanism": "EVENT_DRIVEN_CONFLICT_ESCALATION",
+    "extra_periodic_director_calls": false,
+    "conflict_model_task": "DAILY_CONFLICT_REVIEW",
+    "canonical_market_state": false
+  },
+  "weekly_red_team": {
+    "enabled": true,
+    "task": "WEEKLY_ADVERSARIAL_REVIEW",
+    "requires_frozen_weekly_delivery": true
+  },
+  "research_automation": {
+    "scheduled_turns_per_day": 2,
+    "one_heavy_lane_per_turn": true,
+    "provider_and_deep_research_fairness_preserved": true
+  },
+  "authority": {
+    "creates_truth": false,
+    "framework_state_change": false,
+    "market_rule_change": false,
+    "threshold_change": false,
+    "weight_change": false,
+    "portfolio_action": false,
+    "canonical_promotion": false
+  }
+}

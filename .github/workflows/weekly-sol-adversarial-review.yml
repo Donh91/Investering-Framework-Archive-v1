@@ -1,0 +1,141 @@
+name: Weekly Sol Adversarial Review
+
+on:
+  schedule:
+    - cron: '10 5 * * 1'
+      timezone: 'Europe/Copenhagen'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: framework-main-writer
+  cancel-in-progress: false
+
+jobs:
+  adversarial-review:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Build frozen weekly adversarial context
+        id: context
+        run: |
+          mkdir -p runtime/weekly-sol-red-team
+          python - <<'PY' | tee runtime/weekly-sol-red-team/eligibility.txt
+          import json
+          from pathlib import Path
+          ptr_path=Path('research/api_agent/outputs/weekly/LATEST_MASTER_MONDAY_DELIVERY_POINTER.json')
+          if not ptr_path.exists():
+              print('run_review=false'); print('reason=NO_WEEKLY_DELIVERY_POINTER'); raise SystemExit(0)
+          ptr=json.loads(ptr_path.read_text())
+          machine_path=Path(ptr['machine_package_path'])
+          if not machine_path.exists():
+              print('run_review=false'); print('reason=MACHINE_PACKAGE_MISSING'); raise SystemExit(0)
+          machine=json.loads(machine_path.read_text())
+          week_dir=machine_path.parent
+          context={
+              'contract':'WEEKLY_ADVERSARIAL_CONTEXT_v1',
+              'delivery_pointer':ptr,
+              'machine_package':machine,
+              'calibration_scorecard':json.loads((week_dir/'MASTER_MONDAY_CALIBRATION_SCORECARD.json').read_text()) if (week_dir/'MASTER_MONDAY_CALIBRATION_SCORECARD.json').exists() else {'status':'UNAVAILABLE'},
+              'operational_translation':json.loads((week_dir/'MASTER_MONDAY_OPERATIONAL_TRANSLATION.json').read_text()) if (week_dir/'MASTER_MONDAY_OPERATIONAL_TRANSLATION.json').exists() else {'status':'UNAVAILABLE'},
+              'authority':{'framework_state_change':False,'portfolio_action':False,'market_rule_change':False,'threshold_change':False,'weight_change':False,'canonical_promotion':False},
+          }
+          freeze=str(ptr.get('freeze_sha256') or machine.get('freeze_sha256') or '')
+          prior=False
+          root=Path('research/api_agent/outputs/weekly_red_team')
+          if freeze and root.exists():
+              for p in root.rglob('context.json'):
+                  try:
+                      old=json.loads(p.read_text())
+                  except Exception:
+                      continue
+                  old_ptr=old.get('delivery_pointer') if isinstance(old.get('delivery_pointer'),dict) else {}
+                  if old_ptr.get('freeze_sha256')==freeze:
+                      prior=True; break
+          Path('runtime/weekly-sol-red-team/context.json').write_text(json.dumps(context,sort_keys=True,separators=(',',':'))+'\n')
+          Path('runtime/weekly-sol-red-team/prompt.txt').write_text(
+              'Act as an adversarial weekly calibration reviewer. The weekly evidence and prior API calibration are frozen inputs. Try to falsify the analysis rather than restate it. Identify hindsight leakage risk, broad-range containment masquerading as precision, sequence errors, confidence overstatement/understatement, false positives, false negatives, opportunity cost, missingness and the strongest evidence the prior calibration may have overlooked. Preserve matured-versus-immature outcome boundaries. forecast_candidates must be empty. Do not change market rules, thresholds, weights, framework state, canonical truth or portfolio action.\n'
+          )
+          print(f"run_review={'false' if prior else 'true'}")
+          print(f"reason={'FREEZE_ALREADY_REVIEWED' if prior else 'NEW_FROZEN_WEEKLY_DELIVERY'}")
+          print(f"iso_year={int(ptr.get('iso_year',0))}")
+          print(f"iso_week={int(ptr.get('iso_week',0))}")
+          PY
+          grep '^run_review=' runtime/weekly-sol-red-team/eligibility.txt >> "$GITHUB_OUTPUT"
+          grep '^iso_year=' runtime/weekly-sol-red-team/eligibility.txt >> "$GITHUB_OUTPUT"
+          grep '^iso_week=' runtime/weekly-sol-red-team/eligibility.txt >> "$GITHUB_OUTPUT"
+
+      - name: Enforce weekly adversarial lane and global budgets
+        if: steps.context.outputs.run_review == 'true'
+        run: |
+          python scripts/api_agent/check_api_lane_budget.py \
+            --receipt-root research/api_agent/outputs \
+            --task WEEKLY_ADVERSARIAL_REVIEW \
+            --cap-usd 2.5 \
+            --reserve-usd 0.20
+          python scripts/api_agent/check_monthly_cost_guard.py \
+            --receipt-root research/api_agent/outputs \
+            --hard-stop-usd 20 \
+            --reserve-usd 2.0
+
+      - name: Run Sol adversarial review
+        if: steps.context.outputs.run_review == 'true'
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          python scripts/api_agent/api_gateway.py \
+            --task WEEKLY_ADVERSARIAL_REVIEW \
+            --registry research/api_agent/API_TASK_REGISTRY_v1.json \
+            --prompt-file runtime/weekly-sol-red-team/prompt.txt \
+            --context-file runtime/weekly-sol-red-team/context.json \
+            --output-dir runtime/weekly-sol-red-team/output \
+            --intended-write-prefix research/api_agent/outputs/weekly_red_team/
+
+      - name: Materialize immutable weekly red-team output
+        if: steps.context.outputs.run_review == 'true'
+        run: |
+          STAMP=$(date -u +%H%M%S)
+          YEAR='${{ steps.context.outputs.iso_year }}'
+          WEEK=$(printf '%02d' '${{ steps.context.outputs.iso_week }}')
+          DEST="research/api_agent/outputs/weekly_red_team/${YEAR}/W${WEEK}/${STAMP}"
+          mkdir -p "$DEST"
+          cp runtime/weekly-sol-red-team/context.json "$DEST/context.json"
+          cp runtime/weekly-sol-red-team/output/output.json "$DEST/WEEKLY_ADVERSARIAL_REVIEW.json"
+          cp runtime/weekly-sol-red-team/output/receipt.json "$DEST/WEEKLY_ADVERSARIAL_RECEIPT.json"
+
+      - name: Commit review with readback ancestry check
+        if: steps.context.outputs.run_review == 'true'
+        run: |
+          git config user.name framework-api-agent
+          git config user.email framework-api-agent@users.noreply.github.com
+          git add research/api_agent/outputs/weekly_red_team
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "ai: weekly Sol adversarial review ${GITHUB_RUN_ID}"
+          pushed=false
+          for attempt in 1 2 3; do
+            git rebase --abort 2>/dev/null || true
+            if git pull --rebase origin main && git push origin HEAD:main; then pushed=true; break; fi
+            sleep $((attempt*5))
+          done
+          [ "$pushed" = true ]
+          git fetch origin main
+          git merge-base --is-ancestor HEAD origin/main
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: weekly-sol-adversarial-${{ github.run_id }}
+          path: runtime/weekly-sol-red-team/
+          retention-days: 14
+          if-no-files-found: ignore

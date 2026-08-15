@@ -4,6 +4,8 @@ on:
   schedule:
     - cron: '10 9 * * *'
       timezone: 'Europe/Copenhagen'
+    - cron: '10 21 * * *'
+      timezone: 'Europe/Copenhagen'
   workflow_dispatch:
 
 permissions:
@@ -38,18 +40,27 @@ jobs:
             scripts/api_agent/mcp_provider_automation.py \
             scripts/api_agent/mcp_transport_normalizer.py \
             scripts/api_agent/deep_research_executor.py \
-            scripts/api_agent/run_deep_research_task.py
+            scripts/api_agent/deep_research_retry_v2.py \
+            scripts/api_agent/run_deep_research_task.py \
+            scripts/api_agent/augment_director_context_v2.py \
+            scripts/api_agent/check_api_lane_budget.py
           python -m pytest -q \
             tests/api_agent/test_forward_evidence_coordination.py \
             tests/api_agent/test_deep_research_execution.py \
-            tests/api_agent/test_research_automation_wiring.py
+            tests/api_agent/test_research_automation_wiring.py \
+            tests/api_agent/test_api_intelligence_v2.py
 
-      - name: Enforce monthly API hard stop before any heavy call
+      - name: Enforce research lane and monthly API hard stops
         run: |
+          python scripts/api_agent/check_api_lane_budget.py \
+            --receipt-root research/api_agent/outputs \
+            --task RESEARCH_AUTOMATION \
+            --cap-usd 6.0 \
+            --reserve-usd 0.25
           python scripts/api_agent/check_monthly_cost_guard.py \
             --receipt-root research/api_agent/outputs \
             --hard-stop-usd 20 \
-            --reserve-usd 0.75
+            --reserve-usd 2.0
 
       - name: Select one heavy lane deterministically
         id: plan
@@ -72,7 +83,7 @@ jobs:
           PY
           echo "lane=$(cat runtime/research-automation/lane.txt)" >> "$GITHUB_OUTPUT"
 
-      - name: Build settled owner-bound context for Deep Research
+      - name: Build settled multi-horizon owner context for Deep Research
         id: owner_context
         if: steps.plan.outputs.lane == 'deep_research'
         continue-on-error: true
@@ -81,6 +92,10 @@ jobs:
           python scripts/api_agent/build_owner_bound_director_context.py \
             --capture-root 03_DAILY_CAPTURE_LOGS/captures \
             --legacy-root 04_MARKET_LEARNING/legacy_framework_knowledge_bootstrap_v1 \
+            --output runtime/research-automation/deep/base_owner_context.json
+          python scripts/api_agent/augment_director_context_v2.py \
+            --context runtime/research-automation/deep/base_owner_context.json \
+            --hourly-root 03_DAILY_CAPTURE_LOGS/hourly \
             --output runtime/research-automation/deep/owner_context.json
 
       - name: Record missing owner context without model execution
@@ -197,10 +212,10 @@ jobs:
           out.parent.mkdir(parents=True,exist_ok=True)
           rid='${{ github.run_id }}-${{ github.run_attempt }}'
           receipt={
-            'contract':'RESEARCH_AUTOMATION_COST_RECEIPT_v1','response_id':rid,
+            'contract':'RESEARCH_AUTOMATION_COST_RECEIPT_v1','task':'RESEARCH_AUTOMATION','response_id':rid,
             'request_sha256':hashlib.sha256((rid+lane).encode()).hexdigest(),
             'lane':lane,'estimated_cost_usd':round(cost,8),'created_at_utc':now,
-            'monthly_hard_stop_usd':20.0,'automatic_budget_increase':False,
+            'monthly_hard_stop_usd':20.0,'lane_cap_usd':6.0,'automatic_budget_increase':False,
             'authority':{'framework_state_change':False,'portfolio_action':False,'market_rule_change':False,'canonical_promotion':False}
           }
           out.write_text(json.dumps(receipt,sort_keys=True,separators=(',',':'))+'\n')

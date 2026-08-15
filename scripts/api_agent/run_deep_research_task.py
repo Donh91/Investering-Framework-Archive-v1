@@ -6,9 +6,18 @@ from pathlib import Path
 from typing import Any
 
 try:
-    from scripts.api_agent.deep_research_executor import execute, load_json, select_followup, write_json, zero_authority
+    from scripts.api_agent import deep_research_executor as executor
+    from scripts.api_agent.deep_research_retry_v2 import install as install_retry_v2
 except ModuleNotFoundError:
-    from deep_research_executor import execute, load_json, select_followup, write_json, zero_authority
+    import deep_research_executor as executor
+    from deep_research_retry_v2 import install as install_retry_v2
+
+install_retry_v2(executor)
+execute = executor.execute
+load_json = executor.load_json
+select_followup = executor.select_followup
+write_json = executor.write_json
+zero_authority = executor.zero_authority
 
 
 SUPPLEMENTAL_INDEPENDENT_EVIDENCE_TASKS = {"DRQ-CUAU-001"}
