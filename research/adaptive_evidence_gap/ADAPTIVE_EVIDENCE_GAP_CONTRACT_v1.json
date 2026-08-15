@@ -1,0 +1,75 @@
+{
+  "contract": "ADAPTIVE_EVIDENCE_GAP_CONTRACT_v1",
+  "purpose": "Detect information that would have improved a past decision or analysis, preserve the discovery episode as hypothesis-generation only, acquire/backfill evidence where safely sourceable, and validate incremental value prospectively before any possible promotion.",
+  "authority": {
+    "can_change_market_rules": false,
+    "can_change_thresholds": false,
+    "can_change_weights": false,
+    "can_affect_canonical_state": false,
+    "can_affect_portfolio_action": false,
+    "can_self_promote_sensor": false,
+    "can_self_merge_code": false
+  },
+  "gap_origins": [
+    "API_UNCERTAINTY",
+    "CONFLICT_REVIEW_MISSING_EVIDENCE",
+    "DEEP_RESEARCH_GAP",
+    "FORECAST_MISS",
+    "TIMING_MISS",
+    "FALSE_POSITIVE",
+    "FALSE_NEGATIVE",
+    "PULLBACK_EXIT_MISS",
+    "PULLBACK_REENTRY_MISS",
+    "DISTRIBUTION_EXIT_MISS",
+    "ROTATION_ENTRY_MISS",
+    "WEEKLY_RED_TEAM"
+  ],
+  "lifecycle": [
+    "DISCOVERED",
+    "SOURCE_CLASSIFIED",
+    "BACKFILL_ATTEMPTED",
+    "PROSPECTIVE_CAPTURE_ACTIVE",
+    "VALIDATING",
+    "RETAIN_RESEARCH_ONLY",
+    "PROMOTION_REVIEW_ELIGIBLE",
+    "REJECTED_NO_INCREMENTAL_VALUE",
+    "REJECTED_UNSOURCEABLE"
+  ],
+  "anti_hindsight_rules": [
+    "The episode that generated the gap may establish relevance and source requirements but can never count as validation evidence.",
+    "Backfilled observations must have source-time provenance and must not use reconstructed point-in-time order-book state that was never archived.",
+    "If reliable backfill is impossible, the lane starts prospectively with UNKNOWN history.",
+    "A candidate may not alter a market rule, threshold, weight, canonical state or portfolio action during validation.",
+    "Incremental value must be measured against the information set that was actually available at the decision time.",
+    "Correlated duplicate sensors should be rejected or retained research-only even when individually predictive.",
+    "Single-episode success is insufficient for promotion review."
+  ],
+  "validation_dimensions": [
+    "coverage",
+    "freshness",
+    "source_reliability",
+    "incremental_information",
+    "decision_timing_delta",
+    "false_positive_delta",
+    "false_negative_delta",
+    "cross_episode_recurrence",
+    "cost_and_operational_burden"
+  ],
+  "promotion_review_minimums": {
+    "independent_non_discovery_episodes": 3,
+    "prospective_days": 14,
+    "requires_incremental_value": true,
+    "requires_no_authority_violation": true,
+    "automatic_promotion": false
+  },
+  "phase_scope": [
+    "PRE_BUY",
+    "BUY_TRANSITION",
+    "ALTSEASON_ROTATION",
+    "PULLBACK_DE_RISK",
+    "PULLBACK_REENTRY",
+    "DISTRIBUTION",
+    "EXIT",
+    "POST_CYCLE_LEARNING"
+  ]
+}
