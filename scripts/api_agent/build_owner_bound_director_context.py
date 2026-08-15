@@ -8,6 +8,18 @@ from pathlib import Path
 from typing import Any
 
 
+SUPPORTED_CAPTURE_CONTRACTS = {
+    "DAILY_RAW_CAPTURE_INDEX_v1",
+    "DAILY_RAW_CAPTURE_INDEX_v2",
+    "DAILY_LIVE_ANCHOR_INDEX_v3",
+}
+
+METRIC_BEARING_CAPTURE_CONTRACTS = {
+    "DAILY_RAW_CAPTURE_INDEX_v2",
+    "DAILY_LIVE_ANCHOR_INDEX_v3",
+}
+
+
 def canonical_bytes(value: Any) -> bytes:
     return (json.dumps(value, sort_keys=True, separators=(",", ":")) + "\n").encode()
 
@@ -31,7 +43,7 @@ def load_capture_indexes(root: Path) -> list[tuple[Path, dict[str, Any]]]:
             value = json.loads(path.read_text())
         except Exception:
             continue
-        if value.get("contract") in {"DAILY_RAW_CAPTURE_INDEX_v1", "DAILY_RAW_CAPTURE_INDEX_v2"}:
+        if value.get("contract") in SUPPORTED_CAPTURE_CONTRACTS:
             rows.append((path, value))
     rows.sort(key=lambda item: item[1].get("captured_at_utc", ""))
     return rows
@@ -100,8 +112,8 @@ def load_legacy_research_context(root: Path | None) -> dict[str, Any]:
     }
 
 
-def metric_bearing_v2(value: dict[str, Any]) -> bool:
-    return value.get("contract") == "DAILY_RAW_CAPTURE_INDEX_v2" and bool(value.get("market_metrics"))
+def metric_bearing_supported(value: dict[str, Any]) -> bool:
+    return value.get("contract") in METRIC_BEARING_CAPTURE_CONTRACTS and bool(value.get("market_metrics"))
 
 
 def compact_owner(owner: dict[str, Any]) -> dict[str, Any]:
@@ -136,12 +148,15 @@ def numeric_deltas(latest: Any, previous: Any, prefix: str = "") -> list[dict[st
 def build_context(rows: list[tuple[Path, dict[str, Any]]], legacy_root: Path | None = None) -> dict[str, Any]:
     if not rows:
         raise ValueError("no_daily_capture_indexes")
-    latest_path, latest = rows[-1]
-    predecessor: tuple[Path, dict[str, Any]] | None = None
-    for candidate in reversed(rows[:-1]):
-        if metric_bearing_v2(candidate[1]):
-            predecessor = candidate
-            break
+
+    metric_rows = [item for item in rows if metric_bearing_supported(item[1])]
+    if metric_rows:
+        latest_path, latest = metric_rows[-1]
+        predecessor = metric_rows[-2] if len(metric_rows) > 1 else None
+    else:
+        latest_path, latest = rows[-1]
+        predecessor = None
+
     previous_path, previous = predecessor if predecessor else (None, None)
     latest_status = owner_status_map(latest)
     previous_status = owner_status_map(previous)
@@ -161,18 +176,52 @@ def build_context(rows: list[tuple[Path, dict[str, Any]]], legacy_root: Path | N
         "contract": "OWNER_BOUND_DAILY_DIRECTOR_CONTEXT_v4",
         "authority": "SHADOW_ONLY",
         "canonical_data_ping": False,
-        "latest_capture": {"path": str(latest_path), "captured_at_utc": latest.get("captured_at_utc"), "run_id": latest.get("run_id"), "status": latest.get("status"), "owners": [compact_owner(o) for o in latest.get("owners", [])], "market_metrics": latest_metrics},
-        "previous_capture": None if previous is None else {"path": str(previous_path), "captured_at_utc": previous.get("captured_at_utc"), "run_id": previous.get("run_id"), "status": previous.get("status"), "market_metrics": previous_metrics},
+        "latest_capture": {
+            "path": str(latest_path),
+            "captured_at_utc": latest.get("captured_at_utc"),
+            "run_id": latest.get("run_id"),
+            "status": latest.get("status") or latest.get("capture_status"),
+            "capture_contract": latest.get("contract"),
+            "capture_lane": latest.get("capture_lane"),
+            "anchor_core_passed": latest.get("anchor_core_passed"),
+            "anchor_core_planned": latest.get("anchor_core_planned"),
+            "owners": [compact_owner(o) for o in latest.get("owners", [])],
+            "market_metrics": latest_metrics,
+        },
+        "previous_capture": None if previous is None else {
+            "path": str(previous_path),
+            "captured_at_utc": previous.get("captured_at_utc"),
+            "run_id": previous.get("run_id"),
+            "status": previous.get("status") or previous.get("capture_status"),
+            "capture_contract": previous.get("contract"),
+            "capture_lane": previous.get("capture_lane"),
+            "market_metrics": previous_metrics,
+        },
         "predecessor_path": str(previous_path) if previous_path else None,
         "predecessor_sha256": sha256(previous) if previous else None,
-        "predecessor_selection_rule": "latest_metric_bearing_v2",
+        "predecessor_selection_rule": "latest_supported_metric_bearing_capture",
         "predecessor_age_hours": age_hours,
         "delta_status": delta_status,
         "owner_status_transitions": transitions,
         "metric_deltas": deltas,
-        "coverage": {"owner_count": len(latest_status), "pass_count": pass_count, "pass_ratio": round(pass_count / len(latest_status), 4) if latest_status else 0.0, "latest_numeric_metrics": len(deltas), "comparable_numeric_metrics": comparable},
+        "coverage": {
+            "owner_count": len(latest_status),
+            "pass_count": pass_count,
+            "pass_ratio": round(pass_count / len(latest_status), 4) if latest_status else 0.0,
+            "latest_numeric_metrics": len(deltas),
+            "comparable_numeric_metrics": comparable,
+            "capture_contract": latest.get("contract"),
+            "anchor_core_passed": latest.get("anchor_core_passed"),
+            "anchor_core_planned": latest.get("anchor_core_planned"),
+        },
         "legacy_research_context": load_legacy_research_context(legacy_root),
-        "limitations": ["Only explicitly materialized compact metrics may be compared.", "Missing metrics remain unknown and may not be inferred.", "Legacy hypotheses are research priors, not evidence or forecast outcomes.", "This context cannot create canonical truth, framework state, model weights, or portfolio action."],
+        "limitations": [
+            "Only explicitly materialized compact metrics may be compared.",
+            "Missing metrics remain unknown and may not be inferred.",
+            "Live-anchor v3 captures may not expose the legacy per-owner file manifest; anchor core coverage is preserved separately when present.",
+            "Legacy hypotheses are research priors, not evidence or forecast outcomes.",
+            "This context cannot create canonical truth, framework state, model weights, or portfolio action.",
+        ],
     }
     context["context_hash"] = sha256(context)
     return context
