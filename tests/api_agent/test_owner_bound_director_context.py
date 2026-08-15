@@ -36,6 +36,19 @@ class OwnerBoundDirectorContextTests(unittest.TestCase):
         }
         (root / f'{name}.json').write_text(json.dumps(value))
 
+    def make_live_anchor(self, root: Path, name: str, ts: str, metrics: dict) -> None:
+        value = {
+            'contract': 'DAILY_LIVE_ANCHOR_INDEX_v3',
+            'captured_at_utc': ts,
+            'run_id': name,
+            'status': 'COMPLETE',
+            'capture_lane': 'LIVE_POINT_IN_TIME_ANCHOR',
+            'anchor_core_passed': 3,
+            'anchor_core_planned': 3,
+            'market_metrics': metrics,
+        }
+        (root / f'{name}.json').write_text(json.dumps(value))
+
     def make_legacy(self, root: Path) -> Path:
         legacy = root / 'legacy'
         hypotheses = legacy / '02_HYPOTHESIS_REGISTRY'
@@ -71,6 +84,33 @@ class OwnerBoundDirectorContextTests(unittest.TestCase):
             self.assertFalse(context['canonical_data_ping'])
             self.assertEqual(context['authority'], 'SHADOW_ONLY')
             self.assertIn('context_hash', context)
+
+    def test_live_anchor_v3_becomes_latest_metric_context(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self.make_capture(root, 'raw', '2026-08-08T14:00:00Z', {'spot': 'PASS'}, {'spot': {'btc': 65015.0}, 'breadth': {'advancers': 44}})
+            self.make_live_anchor(root, 'live', '2026-08-15T09:01:46Z', {'spot': {'btc': 62900.0}, 'breadth': {'advancers': 48}})
+            context = module.build_context(module.load_capture_indexes(root))
+            self.assertEqual(context['latest_capture']['run_id'], 'live')
+            self.assertEqual(context['latest_capture']['capture_contract'], 'DAILY_LIVE_ANCHOR_INDEX_v3')
+            self.assertEqual(context['latest_capture']['capture_lane'], 'LIVE_POINT_IN_TIME_ANCHOR')
+            self.assertEqual(context['latest_capture']['anchor_core_passed'], 3)
+            self.assertEqual(context['previous_capture']['run_id'], 'raw')
+            self.assertEqual(context['coverage']['capture_contract'], 'DAILY_LIVE_ANCHOR_INDEX_v3')
+            self.assertEqual(context['coverage']['anchor_core_passed'], 3)
+            self.assertEqual(context['coverage']['comparable_numeric_metrics'], 2)
+            self.assertEqual(context['predecessor_selection_rule'], 'latest_supported_metric_bearing_capture')
+
+    def test_newer_non_metric_raw_v1_does_not_hide_live_anchor(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self.make_capture(root, 'raw', '2026-08-08T14:00:00Z', {'spot': 'PASS'}, {'x': 1})
+            self.make_live_anchor(root, 'live', '2026-08-15T09:01:46Z', {'x': 2})
+            self.make_capture(root, 'newer_v1', '2026-08-15T10:00:00Z', {'spot': 'PASS'}, None)
+            context = module.build_context(module.load_capture_indexes(root))
+            self.assertEqual(context['latest_capture']['run_id'], 'live')
+            self.assertEqual(context['previous_capture']['run_id'], 'raw')
+            self.assertEqual(context['coverage']['comparable_numeric_metrics'], 1)
 
     def test_legacy_lane_is_available_but_non_binding(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
