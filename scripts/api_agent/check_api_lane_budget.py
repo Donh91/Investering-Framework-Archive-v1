@@ -20,6 +20,15 @@ def parse_created(value: dict) -> datetime | None:
     return None
 
 
+def task_of(value: dict) -> str | None:
+    task = value.get("task")
+    if task:
+        return str(task)
+    if value.get("contract") == "RESEARCH_AUTOMATION_COST_RECEIPT_v1":
+        return "RESEARCH_AUTOMATION"
+    return None
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--receipt-root", type=Path, required=True)
@@ -38,12 +47,12 @@ def main() -> None:
                 value = json.loads(path.read_text())
             except Exception:
                 continue
-            if value.get("task") != args.task or "estimated_cost_usd" not in value:
+            if task_of(value) != args.task or "estimated_cost_usd" not in value:
                 continue
             created = parse_created(value)
             if created is None or (created.year, created.month) != (now.year, now.month):
                 continue
-            identity = str(value.get("response_id") or value.get("request_hash") or path)
+            identity = str(value.get("response_id") or value.get("request_hash") or value.get("request_sha256") or path)
             if identity in seen:
                 continue
             seen.add(identity)
