@@ -75,7 +75,13 @@ def main() -> None:
                 stored = dict(packet)
                 stored["bridge_receipt"] = {
                     "contract": "DATA_PING_BRIDGE_RECEIPT_v2",
+                    # Legacy storage-time field retained for compatibility. It is
+                    # not promoted to framework_ingest_time without a separate
+                    # receipt proving that earlier lifecycle transition.
                     "ingested_at_utc": acceptance_time,
+                    "ingested_at_semantics": "IMMUTABLE_ACCEPTED_STORAGE_EVENT_NOT_FRAMEWORK_INGEST_LIFECYCLE_TIME",
+                    "framework_ingest_time": None,
+                    "framework_ingest_status": "UNAVAILABLE",
                     "framework_acceptance_time": acceptance_time,
                     "framework_acceptance_status": "KNOWN",
                     "acceptance_event": "ACCEPTED_DATA_PING_PACKET_v1 validated and immutably stored",
@@ -87,7 +93,11 @@ def main() -> None:
                     "policy_evaluable_status": "UNAVAILABLE",
                     "decision_evaluation_time": None,
                     "decision_evaluation_status": "UNAVAILABLE",
+                    "action_divergence_time": None,
+                    "action_divergence_status": "UNAVAILABLE",
+                    "framework_ingest_not_inferred": True,
                     "no_policy_evaluability_inferred": True,
+                    "no_decision_evaluation_inferred": True,
                 }
                 destination.write_bytes(canonical(stored))
                 accepted += 1
