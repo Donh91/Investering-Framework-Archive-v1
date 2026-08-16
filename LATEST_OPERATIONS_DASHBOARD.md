@@ -1,30 +1,30 @@
 # Operations Dashboard
 
 Overall: **RED**
-Generated: `2026-08-15T16:22:46.458333Z`
+Generated: `2026-08-16T04:40:01.390634Z`
 
 ## Systems
 
 | System | Status | Detail | Age hours |
 |---|---:|---|---:|
-| `daily_capture` | **RED** | STALE | 18.784 |
-| `openai_daily_director` | **AMBER** | DELAYED | 18.624 |
+| `daily_capture` | **GREEN** | FRESH | 7.145 |
+| `openai_daily_director` | **AMBER** | DELAYED | 14.739 |
 | `weekly_output` | **UNKNOWN** | TIMESTAMP_UNAVAILABLE | - |
-| `automation_health` | **AMBER** | - | - |
+| `automation_health` | **RED** | - | - |
 | `architecture_health` | **GREEN** | - | - |
-| `experiment_lifecycle` | **GREEN** | FRESH | 2.448 |
-| `experiment_receipt_sync` | **GREEN** | FRESH | 13.911 |
-| `remediation_maturation` | **GREEN** | FRESH | 0.472 |
+| `experiment_lifecycle` | **GREEN** | FRESH | 2.061 |
+| `experiment_receipt_sync` | **GREEN** | FRESH | 2.061 |
+| `remediation_maturation` | **GREEN** | FRESH | 0.305 |
 
 ## AI and learning activity
 
-- OpenAI receipts this month: **16**
-- OpenAI cost this month: **$0.328497**
-- Pending forecast candidates: **12**
-- Experiment candidates: **70**
-- Experiment dispatch requests: **240**
-- Codex-ready remediation tasks: **4**
-- Needs-more-evidence items: **18**
+- OpenAI receipts this month: **21**
+- OpenAI cost this month: **$0.479611**
+- Pending forecast candidates: **19**
+- Experiment candidates: **72**
+- Experiment dispatch requests: **258**
+- Codex-ready remediation tasks: **6**
+- Needs-more-evidence items: **13**
 
 ## Incidents
 
@@ -32,9 +32,8 @@ Open incident references: **20**
 
 ## Required actions
 
-- **P0** `daily_capture` - STALE
-- **P1** `automation_health` - REQUIRED_INPUT_UNAVAILABLE
+- **P0** `automation_health` - ['research-execution-coordinator.yml:LATEST_RUN_FAILED']
 - **P1** `openai_daily_director` - DELAYED
 - **P1** `weekly_output` - TIMESTAMP_UNAVAILABLE
 
-Dashboard SHA-256: `84204319256ea6d1cad77b537f9981870dfd3ad1dd5893daa91b5ca0f8e6513e`
+Dashboard SHA-256: `5d09b7211d23f25c65961ac3a7115329ee3724b29802490f89c47a022fbc3b69`
