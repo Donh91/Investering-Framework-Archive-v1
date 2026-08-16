@@ -1,0 +1,85 @@
+name: ETHBTC Persistence Lifecycle
+
+on:
+  workflow_run:
+    workflows: ['Daily Director Shadow']
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: framework-main-writer
+  cancel-in-progress: false
+
+jobs:
+  materialize:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Find latest retained Director context
+        id: context
+        shell: bash
+        run: |
+          CONTEXT=$(find research/api_agent/outputs/daily -type f -name context.json 2>/dev/null | sort | tail -n 1 || true)
+          if [[ -z "$CONTEXT" ]]; then
+            echo 'ready=false' >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "ready=true" >> "$GITHUB_OUTPUT"
+          echo "path=$CONTEXT" >> "$GITHUB_OUTPUT"
+
+      - name: Emit direct-ETHBTC persistence lifecycle receipt
+        if: steps.context.outputs.ready == 'true'
+        shell: bash
+        run: |
+          STAMP=$(date -u +%Y/%m/%d)
+          mkdir -p "03_DAILY_CAPTURE_LOGS/evidence_lifecycle/ethbtc_persistence/${STAMP}"
+          if [[ '${{ github.event_name }}' == 'workflow_run' ]]; then
+            SOURCE_RUN="gh-${{ github.event.workflow_run.id }}-${{ github.event.workflow_run.run_attempt }}:ethbtc-persistence"
+          else
+            SOURCE_RUN="gh-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}:ethbtc-persistence-manual"
+          fi
+          OUTPUT="03_DAILY_CAPTURE_LOGS/evidence_lifecycle/ethbtc_persistence/${STAMP}/${SOURCE_RUN//:/_}.json"
+          python scripts/evidence_lifecycle/write_ethbtc_persistence_receipt.py \
+            --context '${{ steps.context.outputs.path }}' \
+            --hourly-root 03_DAILY_CAPTURE_LOGS/hourly \
+            --output "$OUTPUT" \
+            --source-run-id "$SOURCE_RUN" \
+            --repo-head-sha "$GITHUB_SHA"
+          python scripts/evidence_lifecycle/validate_lifecycle_receipt.py "$OUTPUT"
+
+      - name: Audit lifecycle store
+        if: steps.context.outputs.ready == 'true'
+        run: python scripts/evidence_lifecycle/audit_lifecycle_store.py
+
+      - name: Commit derived lifecycle receipt with verified readback
+        if: steps.context.outputs.ready == 'true'
+        shell: bash
+        run: |
+          git config user.name 'framework-evidence-bot'
+          git config user.email 'framework-evidence-bot@users.noreply.github.com'
+          git add 03_DAILY_CAPTURE_LOGS/evidence_lifecycle/ethbtc_persistence
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "evidence: log ETHBTC persistence lifecycle ${GITHUB_RUN_ID}"
+          pushed=false
+          for attempt in 1 2 3; do
+            git rebase --abort 2>/dev/null || true
+            if git pull --rebase origin main && git push origin HEAD:main; then pushed=true; break; fi
+            sleep $((attempt * 5))
+          done
+          [ "$pushed" = true ]
+          git fetch origin main
+          git merge-base --is-ancestor HEAD origin/main
