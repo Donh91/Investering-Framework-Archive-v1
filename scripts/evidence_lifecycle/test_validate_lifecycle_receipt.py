@@ -45,18 +45,21 @@ def main():
     valid.update({
         "retrieval_start_time": "2026-08-16T09:00:00Z",
         "retrieval_complete_time": "2026-08-16T09:01:00Z",
-        "framework_ingest_time": "2026-08-16T09:02:00Z",
         "framework_acceptance_time": "2026-08-16T09:03:00Z",
-        "policy_evaluable_time": None,
+        "acceptance_attestation": {
+            "acceptance_contract": "TEST_ACCEPTANCE_v1",
+            "acceptance_run_id": "test-acceptance",
+            "accepted_artifact": "fixture.json",
+        },
     })
     valid["timestamp_status"].update({
         "retrieval_start_time": "KNOWN",
         "retrieval_complete_time": "KNOWN",
-        "framework_ingest_time": "KNOWN",
+        "framework_ingest_time": "UNAVAILABLE",
         "framework_acceptance_time": "KNOWN",
         "policy_evaluable_time": "CONTRACT_BLOCKED",
     })
-    assert run(valid).returncode == 0, "valid receipt should pass"
+    assert run(valid).returncode == 0, "acceptance may be known while ingest remains unavailable"
 
     bad_order = json.loads(json.dumps(valid))
     bad_order["retrieval_complete_time"] = "2026-08-16T08:59:00Z"
@@ -65,6 +68,47 @@ def main():
     false_precision = json.loads(json.dumps(valid))
     false_precision["policy_evaluable_time"] = "2026-08-16T09:04:00Z"
     assert run(false_precision).returncode != 0, "blocked timestamp must remain null"
+
+    missing_acceptance_attestation = json.loads(json.dumps(valid))
+    missing_acceptance_attestation.pop("acceptance_attestation")
+    assert run(missing_acceptance_attestation).returncode != 0, "acceptance requires explicit attestation"
+
+    policy_without_evaluator = json.loads(json.dumps(valid))
+    policy_without_evaluator["policy_evaluable_time"] = "2026-08-16T09:04:00Z"
+    policy_without_evaluator["timestamp_status"]["policy_evaluable_time"] = "KNOWN"
+    assert run(policy_without_evaluator).returncode != 0, "policy evaluability requires frozen contract and evaluator receipt"
+
+    policy_valid = json.loads(json.dumps(valid))
+    policy_valid["policy_evaluable_time"] = "2026-08-16T09:04:00Z"
+    policy_valid["timestamp_status"]["policy_evaluable_time"] = "KNOWN"
+    policy_valid["policy_contract_id"] = "TEST_POLICY_v1"
+    policy_valid["policy_evaluator_receipt"] = "test-policy-evaluator.json"
+    assert run(policy_valid).returncode == 0, "fully attested policy evaluability should pass"
+
+    decision_without_policy = json.loads(json.dumps(valid))
+    decision_without_policy["decision_evaluation_time"] = "2026-08-16T09:05:00Z"
+    decision_without_policy["timestamp_status"]["decision_evaluation_time"] = "KNOWN"
+    decision_without_policy["decision_evaluator_id"] = "TEST_DECISION_EVALUATOR"
+    decision_without_policy["decision_evaluator_receipt"] = "test-decision.json"
+    assert run(decision_without_policy).returncode != 0, "decision evaluation requires prior policy evaluability"
+
+    decision_valid = json.loads(json.dumps(policy_valid))
+    decision_valid["decision_evaluation_time"] = "2026-08-16T09:05:00Z"
+    decision_valid["timestamp_status"]["decision_evaluation_time"] = "KNOWN"
+    decision_valid["decision_evaluator_id"] = "TEST_DECISION_EVALUATOR"
+    decision_valid["decision_evaluator_receipt"] = "test-decision.json"
+    assert run(decision_valid).returncode == 0, "fully attested decision evaluation should pass"
+
+    divergence_without_row = json.loads(json.dumps(decision_valid))
+    divergence_without_row["action_divergence_time"] = "2026-08-16T09:06:00Z"
+    divergence_without_row["timestamp_status"]["action_divergence_time"] = "KNOWN"
+    assert run(divergence_without_row).returncode != 0, "action divergence requires decision row id"
+
+    divergence_valid = json.loads(json.dumps(decision_valid))
+    divergence_valid["action_divergence_time"] = "2026-08-16T09:06:00Z"
+    divergence_valid["timestamp_status"]["action_divergence_time"] = "KNOWN"
+    divergence_valid["decision_row_id"] = "TEST_ROW_001"
+    assert run(divergence_valid).returncode == 0, "fully attested action divergence should pass"
 
     derived_without_receipt = json.loads(json.dumps(valid))
     derived_without_receipt["framework_acceptance_time"] = "2026-08-16T09:03:00Z"
