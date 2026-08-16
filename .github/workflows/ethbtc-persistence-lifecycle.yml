@@ -46,6 +46,7 @@ jobs:
         shell: bash
         run: |
           STAMP=$(date -u +%Y/%m/%d)
+          REPO_HEAD=$(git rev-parse HEAD)
           mkdir -p "03_DAILY_CAPTURE_LOGS/evidence_lifecycle/ethbtc_persistence/${STAMP}"
           if [[ '${{ github.event_name }}' == 'workflow_run' ]]; then
             SOURCE_RUN="gh-${{ github.event.workflow_run.id }}-${{ github.event.workflow_run.run_attempt }}:ethbtc-persistence"
@@ -58,7 +59,7 @@ jobs:
             --hourly-root 03_DAILY_CAPTURE_LOGS/hourly \
             --output "$OUTPUT" \
             --source-run-id "$SOURCE_RUN" \
-            --repo-head-sha "$GITHUB_SHA"
+            --repo-head-sha "$REPO_HEAD"
           python scripts/evidence_lifecycle/validate_lifecycle_receipt.py "$OUTPUT"
 
       - name: Audit lifecycle store
