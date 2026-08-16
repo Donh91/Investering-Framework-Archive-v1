@@ -9,6 +9,7 @@ from pathlib import Path
 
 CONTRACT = "EVIDENCE_LIFECYCLE_RECEIPT_v0_1"
 STATUSES = {"KNOWN", "DERIVED_WITH_RECEIPT", "UNAVAILABLE", "CONTRACT_BLOCKED", "NOT_APPLICABLE"}
+OBSERVED = {"KNOWN", "DERIVED_WITH_RECEIPT"}
 TIME_FIELDS = [
     "observation_time", "source_available_time", "retrieval_start_time",
     "retrieval_complete_time", "normalization_time", "provenance_validation_time",
@@ -22,6 +23,7 @@ ORDER_PAIRS = [
     ("framework_ingest_time", "framework_acceptance_time"),
     ("framework_acceptance_time", "policy_evaluable_time"),
     ("policy_evaluable_time", "decision_evaluation_time"),
+    ("decision_evaluation_time", "action_divergence_time"),
 ]
 
 
@@ -60,7 +62,7 @@ def main():
             continue
         if status in {"UNAVAILABLE", "CONTRACT_BLOCKED", "NOT_APPLICABLE"} and value is not None:
             errors.append(f"{field}: {status} requires null timestamp")
-        if status in {"KNOWN", "DERIVED_WITH_RECEIPT"} and value is None:
+        if status in OBSERVED and value is None:
             errors.append(f"{field}: {status} requires timestamp")
         try:
             parsed[field] = parse_time(value)
@@ -74,6 +76,49 @@ def main():
         a, b = parsed.get(earlier), parsed.get(later)
         if a is not None and b is not None and a > b:
             errors.append(f"invalid ordering: {earlier} > {later}")
+
+    def observed(field):
+        return status_map.get(field) in OBSERVED and parsed.get(field) is not None
+
+    # Acceptance is an explicit framework event, not an inferred consequence of
+    # retrieval, storage or report generation.
+    if observed("framework_acceptance_time") and not isinstance(data.get("acceptance_attestation"), dict):
+        errors.append("framework_acceptance_time requires acceptance_attestation")
+
+    # Policy evaluability may exist only after an observed framework acceptance
+    # and must identify the already-existing frozen contract and evaluator receipt.
+    if observed("policy_evaluable_time"):
+        if not observed("framework_acceptance_time"):
+            errors.append("policy_evaluable_time requires observed framework_acceptance_time")
+        if not data.get("policy_contract_id"):
+            errors.append("policy_evaluable_time requires policy_contract_id")
+        if not data.get("policy_evaluator_receipt"):
+            errors.append("policy_evaluable_time requires policy_evaluator_receipt")
+
+    # A decision timestamp is not the same as context generation or research
+    # analysis. It requires a prior policy-evaluable event plus an explicit
+    # decision-evaluator attestation.
+    if observed("decision_evaluation_time"):
+        if not observed("policy_evaluable_time"):
+            errors.append("decision_evaluation_time requires observed policy_evaluable_time")
+        if not data.get("decision_evaluator_id"):
+            errors.append("decision_evaluation_time requires decision_evaluator_id")
+        if not data.get("decision_evaluator_receipt"):
+            errors.append("decision_evaluation_time requires decision_evaluator_receipt")
+
+    if observed("action_divergence_time"):
+        if not observed("decision_evaluation_time"):
+            errors.append("action_divergence_time requires observed decision_evaluation_time")
+        if not data.get("decision_row_id"):
+            errors.append("action_divergence_time requires decision_row_id")
+
+    # Contract blocking is not latency. A blocked stage cannot have a later
+    # observed decision/action timestamp in the same lifecycle receipt.
+    if status_map.get("policy_evaluable_time") == "CONTRACT_BLOCKED":
+        if observed("decision_evaluation_time") or observed("action_divergence_time"):
+            errors.append("CONTRACT_BLOCKED policy_evaluable_time forbids later observed stages")
+    if status_map.get("decision_evaluation_time") == "CONTRACT_BLOCKED" and observed("action_divergence_time"):
+        errors.append("CONTRACT_BLOCKED decision_evaluation_time forbids action_divergence_time")
 
     result = {
         "contract": CONTRACT,
