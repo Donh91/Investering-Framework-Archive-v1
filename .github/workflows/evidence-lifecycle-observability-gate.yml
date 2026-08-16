@@ -1,0 +1,23 @@
+name: Evidence Lifecycle Observability Gate
+
+on:
+  pull_request:
+    paths:
+      - '06_RESEARCH_LAB/forward_tests/2026-08-16__evidence-lifecycle-observability-contract-v0-1__forward-test.md'
+      - 'scripts/evidence_lifecycle/**'
+      - '.github/workflows/evidence-lifecycle-observability-gate.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-lifecycle-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run bounded lifecycle acceptance tests
+        run: python scripts/evidence_lifecycle/test_validate_lifecycle_receipt.py
