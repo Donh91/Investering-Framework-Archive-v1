@@ -37,10 +37,15 @@ def test_rejection_closes_gap_without_market_authority(tmp_path):
     assert item['validation']['promotion_review_eligible'] is False
 
 
-def test_decision_miss_registry_marks_discovery_only(tmp_path):
+def test_decision_miss_registry_marks_discovery_only_and_bounds_attribution(tmp_path):
     audit=tmp_path/'miss.json'; reg=tmp_path/'miss-reg.json'
-    audit.write_text(json.dumps({'misses':[{'phase':'PULLBACK_REENTRY','miss_type':'MISSED_PULLBACK_REENTRY','decision_reference':'before','outcome_reference':'after','miss_description':'missed rebound','proposed_metric_name':'x','counterfactual_theory':'might help','confidence':'MODERATE'}]}))
+    audit.write_text(json.dumps({'misses':[{'phase':'PULLBACK_REENTRY','miss_type':'MISSED_PULLBACK_REENTRY','decision_reference':'before','outcome_reference':'after','miss_description':'missed rebound','proposed_metric_name':'x','counterfactual_theory':'might help','confidence':'MODERATE','signal_attribution':[{'signal_name':'ETHBTC','evidence_reference':'before#ethbtc','observed_role':'CONTRADICTED_DECISION','incremental_value_status':'NOT_ESTABLISHED','confidence':'MODERATE','notes':'observed conflict only'}]}]}))
     subprocess.run([sys.executable,str(ROOT/'scripts/api_agent/decision_miss_registry.py'),'--audit',str(audit),'--registry',str(reg)],check=True)
-    item=next(iter(json.loads(reg.read_text())['items'].values()))
+    payload=json.loads(reg.read_text()); item=next(iter(payload['items'].values()))
     assert item['validation_semantics']=='DISCOVERY_ONLY_DOES_NOT_VALIDATE_PROPOSED_METRIC'
+    assert item['attribution_semantics']=='DESCRIPTIVE_UNLESS_DIRECT_UNIQUE_CONTRIBUTION_EVIDENCE'
+    assert item['signal_attribution'][0]['incremental_value_status']=='NOT_ESTABLISHED'
     assert item['authority']['portfolio_action'] is False
+    assert item['authority']['sensor_weight_change'] is False
+    assert payload['attribution_semantics']['aligned_sensor_count_proves_independence'] is False
+    assert payload['authority']['automatic_sensor_promotion'] is False
