@@ -29,13 +29,22 @@ jobs:
           python-version: '3.12'
 
       - name: Retrieve first finalized Farside candidate
-        run: python scripts/data_terminal/farside_etf_owner.py --output-dir etf-owner-first --history-limit 10
+        shell: bash
+        run: |
+          mkdir -p etf-lifecycle
+          date -u +%FT%TZ > etf-lifecycle/first_start.txt
+          python scripts/data_terminal/farside_etf_owner.py --output-dir etf-owner-first --history-limit 10
+          date -u +%FT%TZ > etf-lifecycle/first_complete.txt
 
       - name: Wait for publication stability check
         run: sleep 65
 
       - name: Retrieve second finalized Farside candidate
-        run: python scripts/data_terminal/farside_etf_owner.py --output-dir etf-owner-second --history-limit 10
+        shell: bash
+        run: |
+          date -u +%FT%TZ > etf-lifecycle/second_start.txt
+          python scripts/data_terminal/farside_etf_owner.py --output-dir etf-owner-second --history-limit 10
+          date -u +%FT%TZ > etf-lifecycle/second_complete.txt
 
       - name: Require stable settled BTC and ETH rows with full reported-total accounting
         run: |
@@ -58,8 +67,6 @@ jobs:
               assert row.get('session_final') is True, row
               assert row.get('total_parity') is True, row
               assert row.get('reported_total') is not None, row
-              # Farside may publish a stable dash for an issuer. We do not convert it to zero.
-              # It is usable only when the known numeric cells already tie to the reported total.
               assert row.get('unknown_cells_fully_accounted_by_reported_total') is True, row
               return {
                   'asset': asset,
@@ -143,22 +150,51 @@ jobs:
                   existing_path.write_text(json.dumps(body, indent=2, sort_keys=True) + '\n')
               materialized.append((session_date, existing_path, signature, body))
 
+          verification_completed_at_utc = datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace('+00:00','Z')
+          Path('etf-lifecycle/verification_completed.txt').write_text(verification_completed_at_utc + '\n')
           session_date, latest_path, signature, latest_body = materialized[-1]
           pointer = {
               'contract': 'DAILY_SETTLED_ETF_LATEST_POINTER_v2',
               'path': str(latest_path),
               'session_date': session_date,
               'retrieved_at_utc': latest_body['retrieved_at_utc'],
+              'verification_completed_at_utc': verification_completed_at_utc,
               'row_signature_sha256': signature,
               'status': 'PASS',
               'history_sessions_materialized': len(materialized),
           }
           (root / 'LATEST.json').write_text(json.dumps(pointer, indent=2, sort_keys=True) + '\n')
           print(json.dumps(pointer, sort_keys=True))
+          PY
 
-          # Static architecture gate compatibility note: the retired strict policy was
-          # all(value is not None for value in row['fund_values']). Stable dashes are now
-          # preserved as null and accepted only when reported-total parity fully accounts for them.
+      - name: Emit and validate lifecycle receipt
+        run: |
+          python - <<'PY'
+          import json, os, subprocess, sys
+          from datetime import datetime, timezone
+          from pathlib import Path
+
+          pointer = json.loads(Path('03_DAILY_CAPTURE_LOGS/etf/LATEST.json').read_text())
+          now = datetime.now(timezone.utc)
+          out = Path('03_DAILY_CAPTURE_LOGS/evidence_lifecycle/settled_etf') / now.strftime('%Y/%m/%d') / f"gh-{os.environ['GITHUB_RUN_ID']}-{os.environ['GITHUB_RUN_ATTEMPT']}.json"
+          second_start = Path('etf-lifecycle/second_start.txt').read_text().strip()
+          second_complete = Path('etf-lifecycle/second_complete.txt').read_text().strip()
+          validated = Path('etf-lifecycle/verification_completed.txt').read_text().strip()
+          args = [
+              sys.executable, 'scripts/evidence_lifecycle/write_lifecycle_receipt.py',
+              '--output', str(out),
+              '--source-run-id', f"gh-{os.environ['GITHUB_RUN_ID']}-{os.environ['GITHUB_RUN_ATTEMPT']}",
+              '--evidence-lane', 'SETTLED_ETF',
+              '--repo-head-sha', os.environ['GITHUB_SHA'],
+              '--source-lineage', 'FARSIDE_CANONICAL_ALL_DATA_TABLES double-read',
+              '--artifact-hash', pointer.get('row_signature_sha256',''),
+              '--validator-run-id', f"gh-{os.environ['GITHUB_RUN_ID']}-{os.environ['GITHUB_RUN_ATTEMPT']}:settled-etf-parity",
+              '--timestamp', f'retrieval_start_time={second_start}',
+              '--timestamp', f'retrieval_complete_time={second_complete}',
+              '--timestamp', f'provenance_validation_time={validated}',
+          ]
+          subprocess.run(args, check=True)
+          subprocess.run([sys.executable, 'scripts/evidence_lifecycle/validate_lifecycle_receipt.py', str(out)], check=True)
           PY
 
       - uses: actions/upload-artifact@v4
@@ -168,6 +204,7 @@ jobs:
           path: |
             etf-owner-first/
             etf-owner-second/
+            etf-lifecycle/
           retention-days: 14
           if-no-files-found: warn
 
@@ -176,7 +213,7 @@ jobs:
         run: |
           git config user.name 'framework-data-bot'
           git config user.email 'framework-data-bot@users.noreply.github.com'
-          git add 03_DAILY_CAPTURE_LOGS/etf
+          git add 03_DAILY_CAPTURE_LOGS/etf 03_DAILY_CAPTURE_LOGS/evidence_lifecycle/settled_etf
           if git diff --cached --quiet; then exit 0; fi
           git commit -m "data: log settled ETF calibration ${GITHUB_RUN_ID}"
           pushed=false
