@@ -30,8 +30,50 @@ def docs(roots:list[Path],limit:int)->list[dict[str,Any]]:
     return out
 
 def schema()->dict[str,Any]:
-    attribution={"type":"array","maxItems":10,"items":{"type":"object","additionalProperties":False,"required":["signal_name","evidence_reference","observed_role","incremental_value_status","confidence","notes"],"properties":{"signal_name":{"type":"string","minLength":1,"maxLength":160},"evidence_reference":{"type":"string","minLength":1,"maxLength":300},"observed_role":{"type":"string","enum":ATTR_ROLES},"incremental_value_status":{"type":"string","enum":INCREMENTAL},"confidence":{"type":"string","enum":["LOW","MODERATE","HIGH"]},"notes":{"type":"string","minLength":1,"maxLength":400}}}}
-    return {"type":"object","additionalProperties":False,"required":["status","misses"],"properties":{"status":{"type":"string","enum":["READY","NO_SUPPORTED_MISSES"]},"misses":{"type":"array","maxItems":8,"items":{"type":"object","additionalProperties":False,"required":["phase","miss_type","decision_reference","outcome_reference","miss_description","proposed_metric_name","decision_relevance","missing_history_problem","desired_history_days","desired_cadence_minutes","data_shape","capability_hint","counterfactual_theory","confidence","signal_attribution"],"properties":{"phase":{"type":"string","enum":PHASES},"miss_type":{"type":"string","enum":MISSES},"decision_reference":{"type":"string","minLength":1,"maxLength":300},"outcome_reference":{"type":"string","minLength":1,"maxLength":300},"miss_description":{"type":"string","minLength":3,"maxLength":500},"proposed_metric_name":{"type":"string","minLength":3,"maxLength":160},"decision_relevance":{"type":"string","minLength":3,"maxLength":500},"missing_history_problem":{"type":"string","minLength":3,"maxLength":500},"desired_history_days":{"type":"integer","minimum":1,"maximum":730},"desired_cadence_minutes":{"type":"integer","minimum":1,"maximum":10080},"data_shape":{"type":"string","enum":["TIME_SERIES","POINT_IN_TIME","EVENT_STREAM","DERIVED_SERIES","CROSS_SECTION"]},"capability_hint":{"type":"string","enum":HINTS},"counterfactual_theory":{"type":"string","minLength":3,"maxLength":500},"confidence":{"type":"string","enum":["LOW","MODERATE","HIGH"]},"signal_attribution":attribution}}}}}}
+    attribution={
+        "type":"array","maxItems":10,
+        "items":{
+            "type":"object","additionalProperties":False,
+            "required":["signal_name","evidence_reference","observed_role","incremental_value_status","confidence","notes"],
+            "properties":{
+                "signal_name":{"type":"string","minLength":1,"maxLength":160},
+                "evidence_reference":{"type":"string","minLength":1,"maxLength":300},
+                "observed_role":{"type":"string","enum":ATTR_ROLES},
+                "incremental_value_status":{"type":"string","enum":INCREMENTAL},
+                "confidence":{"type":"string","enum":["LOW","MODERATE","HIGH"]},
+                "notes":{"type":"string","minLength":1,"maxLength":400},
+            },
+        },
+    }
+    miss_properties={
+        "phase":{"type":"string","enum":PHASES},
+        "miss_type":{"type":"string","enum":MISSES},
+        "decision_reference":{"type":"string","minLength":1,"maxLength":300},
+        "outcome_reference":{"type":"string","minLength":1,"maxLength":300},
+        "miss_description":{"type":"string","minLength":3,"maxLength":500},
+        "proposed_metric_name":{"type":"string","minLength":3,"maxLength":160},
+        "decision_relevance":{"type":"string","minLength":3,"maxLength":500},
+        "missing_history_problem":{"type":"string","minLength":3,"maxLength":500},
+        "desired_history_days":{"type":"integer","minimum":1,"maximum":730},
+        "desired_cadence_minutes":{"type":"integer","minimum":1,"maximum":10080},
+        "data_shape":{"type":"string","enum":["TIME_SERIES","POINT_IN_TIME","EVENT_STREAM","DERIVED_SERIES","CROSS_SECTION"]},
+        "capability_hint":{"type":"string","enum":HINTS},
+        "counterfactual_theory":{"type":"string","minLength":3,"maxLength":500},
+        "confidence":{"type":"string","enum":["LOW","MODERATE","HIGH"]},
+        "signal_attribution":attribution,
+    }
+    required=list(miss_properties.keys())
+    return {
+        "type":"object","additionalProperties":False,
+        "required":["status","misses"],
+        "properties":{
+            "status":{"type":"string","enum":["READY","NO_SUPPORTED_MISSES"]},
+            "misses":{
+                "type":"array","maxItems":8,
+                "items":{"type":"object","additionalProperties":False,"required":required,"properties":miss_properties},
+            },
+        },
+    }
 
 def call(key:str,ctx:dict[str,Any])->dict[str,Any]:
     inst=("You are a conservative decision-miss auditor for a shadow investment research system. Identify a miss only when supplied repository evidence contains a decision/forecast available before an outcome and a later outcome that supports the miss. Do not invent trades or claim the user should have acted. DATA_GAP_ONLY is preferred when evidence supports only missing information, not a demonstrated decision failure. For each supported miss, propose one observable evidence metric that might have reduced uncertainty. The miss episode is discovery-only and MUST NOT count as validation of that metric. Also record bounded signal attribution only for signals explicitly present in the supplied decision/outcome evidence. SUPPORTED_DECISION or CONTRADICTED_DECISION describe observed alignment only, not causal edge. Mark DIRECTLY_SUPPORTED incremental value only when the supplied evidence explicitly contains an ablation, paired counterfactual, or other direct unique-contribution test. Otherwise use OVERLAP_SUSPECTED or NOT_ESTABLISHED. Never infer sensor weights, change market semantics, or treat aligned sensor count as independent confirmation. No market rules, thresholds, weights, state or portfolio actions.")
