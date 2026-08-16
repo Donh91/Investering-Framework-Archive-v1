@@ -36,12 +36,37 @@ jobs:
           python-version: '3.12'
       - name: Capture rich point-in-time breadth
         run: python scripts/daily_capture/rich_breadth_checkpoint.py --output-root 03_DAILY_CAPTURE_LOGS/breadth_rich
+      - name: Emit and validate lifecycle receipt
+        run: |
+          python - <<'PY'
+          import json, os, subprocess, sys
+          from datetime import datetime, timezone
+          from pathlib import Path
+
+          payload = json.loads(Path('03_DAILY_CAPTURE_LOGS/breadth_rich/LATEST.json').read_text())
+          lc = payload.get('lifecycle') or {}
+          now = datetime.now(timezone.utc)
+          out = Path('03_DAILY_CAPTURE_LOGS/evidence_lifecycle/breadth_rich') / now.strftime('%Y/%m/%d') / f"gh-{os.environ['GITHUB_RUN_ID']}-{os.environ['GITHUB_RUN_ATTEMPT']}.json"
+          args = [
+              sys.executable, 'scripts/evidence_lifecycle/write_lifecycle_receipt.py',
+              '--output', str(out),
+              '--source-run-id', f"gh-{os.environ['GITHUB_RUN_ID']}-{os.environ['GITHUB_RUN_ATTEMPT']}",
+              '--evidence-lane', 'BREADTH_RICH',
+              '--repo-head-sha', os.environ['GITHUB_SHA'],
+              '--source-lineage', 'COINGECKO_MARKET_CAP top100 breadth owner',
+          ]
+          for field in ('retrieval_start_time','retrieval_complete_time','normalization_time'):
+              if lc.get(field):
+                  args += ['--timestamp', f"{field}={lc[field]}"]
+          subprocess.run(args, check=True)
+          subprocess.run([sys.executable, 'scripts/evidence_lifecycle/validate_lifecycle_receipt.py', str(out)], check=True)
+          PY
       - name: Commit rich breadth evidence
         shell: bash
         run: |
           git config user.name 'framework-data-bot'
           git config user.email 'framework-data-bot@users.noreply.github.com'
-          git add 03_DAILY_CAPTURE_LOGS/breadth_rich
+          git add 03_DAILY_CAPTURE_LOGS/breadth_rich 03_DAILY_CAPTURE_LOGS/evidence_lifecycle/breadth_rich
           if git diff --cached --quiet; then exit 0; fi
           git commit -m "data: capture rich breadth ${GITHUB_RUN_ID}"
           pushed=false
