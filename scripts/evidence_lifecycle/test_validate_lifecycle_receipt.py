@@ -6,7 +6,10 @@ import subprocess
 import tempfile
 from pathlib import Path
 
+ROOT = Path(__file__).resolve().parents[2]
 VALIDATOR = Path(__file__).with_name("validate_lifecycle_receipt.py")
+STAMPER = Path(__file__).with_name("stamp_acceptance_receipt.py")
+BRIDGE = ROOT / "scripts/data_ping/accepted_data_ping_bridge.py"
 TIME_FIELDS = [
     "observation_time", "source_available_time", "retrieval_start_time",
     "retrieval_complete_time", "normalization_time", "provenance_validation_time",
@@ -40,7 +43,7 @@ def run(receipt):
         return subprocess.run(["python", str(VALIDATOR), str(path)], capture_output=True, text=True)
 
 
-def main():
+def test_validator_guards():
     valid = base_receipt()
     valid.update({
         "retrieval_start_time": "2026-08-16T09:00:00Z",
@@ -115,6 +118,70 @@ def main():
     derived_without_receipt["timestamp_status"]["framework_acceptance_time"] = "DERIVED_WITH_RECEIPT"
     assert run(derived_without_receipt).returncode != 0, "derived timestamps require receipt"
 
+
+def test_acceptance_stamper_does_not_infer_ingest():
+    with tempfile.TemporaryDirectory() as td:
+        root = Path(td)
+        receipt_path = root / "receipt.json"
+        artifact_path = root / "accepted.json"
+        receipt_path.write_text(json.dumps(base_receipt()))
+        artifact_path.write_text("{}\n")
+        subprocess.run([
+            "python", str(STAMPER),
+            "--receipt", str(receipt_path),
+            "--accepted-artifact", str(artifact_path),
+            "--acceptance-contract", "TEST_ACCEPTANCE_v1",
+            "--acceptance-run-id", "test-run",
+        ], check=True, capture_output=True, text=True)
+        stamped = json.loads(receipt_path.read_text())
+        assert stamped["framework_ingest_time"] is None
+        assert stamped["timestamp_status"]["framework_ingest_time"] == "UNAVAILABLE"
+        assert stamped["framework_acceptance_time"] is not None
+        assert stamped["timestamp_status"]["framework_acceptance_time"] == "KNOWN"
+        assert stamped["acceptance_attestation"]["framework_ingest_not_inferred"] is True
+        assert subprocess.run(["python", str(VALIDATOR), str(receipt_path)], capture_output=True).returncode == 0
+
+
+def test_data_ping_bridge_acceptance_semantics():
+    with tempfile.TemporaryDirectory() as td:
+        root = Path(td)
+        inbox = root / "inbox"; accepted = root / "accepted"; rejected = root / "rejected"
+        inbox.mkdir()
+        packet = {
+            "contract": "ACCEPTED_DATA_PING_PACKET_v1",
+            "snapshot_id": "TEST_SNAPSHOT_001",
+            "freeze_utc": "2026-08-16T10:00:00Z",
+            "source_health": {},
+            "market_metrics": {},
+            "framework_interpretation": "TEST_ONLY",
+            "acceptance_status": "ACCEPTED",
+            "authority": {"portfolio_action": False, "model_weight_change": False, "canonical_promotion": False},
+        }
+        (inbox / "packet.json").write_text(json.dumps(packet))
+        subprocess.run([
+            "python", str(BRIDGE),
+            "--inbox", str(inbox),
+            "--accepted-root", str(accepted),
+            "--rejected-root", str(rejected),
+            "--run-id", "test-bridge",
+        ], check=True, capture_output=True, text=True)
+        stored_paths = list(accepted.rglob("TEST_SNAPSHOT_001.json"))
+        assert len(stored_paths) == 1
+        bridge = json.loads(stored_paths[0].read_text())["bridge_receipt"]
+        assert bridge["framework_acceptance_time"] is not None
+        assert bridge["framework_acceptance_status"] == "KNOWN"
+        assert bridge["framework_ingest_time"] is None
+        assert bridge["framework_ingest_status"] == "UNAVAILABLE"
+        assert bridge["policy_evaluable_time"] is None
+        assert bridge["decision_evaluation_time"] is None
+        assert bridge["action_divergence_time"] is None
+        assert bridge["framework_ingest_not_inferred"] is True
+
+
+def main():
+    test_validator_guards()
+    test_acceptance_stamper_does_not_infer_ingest()
+    test_data_ping_bridge_acceptance_semantics()
     print("lifecycle receipt acceptance tests: PASS")
 
 
