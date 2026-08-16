@@ -53,12 +53,15 @@ def main() -> int:
         "--source-run-id", args.source_run_id,
         "--evidence-lane", "ETHBTC_PERSISTENCE_DERIVED",
         "--repo-head-sha", args.repo_head_sha,
-        "--source-lineage", f"DIRECT_ETHBTC_HOURLY_CLOSES_NO_RATIO_SYNTHESIS:{source_path}",
+        "--source-lineage", (
+            f"DIRECT_ETHBTC_HOURLY_CLOSES_NO_RATIO_SYNTHESIS:{source_path}"
+            if latest else "DIRECT_ETHBTC_HOURLY_CLOSES_NO_RATIO_SYNTHESIS:UNAVAILABLE"
+        ),
     ]
     if observation_time:
         cmd += ["--timestamp", f"observation_time={observation_time}"]
-    # The derivation/check itself executed now, even if its input is unavailable.
-    cmd += ["--timestamp", f"normalization_time={derivation_completed}"]
+        # A retained direct row was actually loaded and normalized in this run.
+        cmd += ["--timestamp", f"normalization_time={derivation_completed}"]
     subprocess.run(cmd, check=True)
 
     body = json.loads(args.output.read_text())
@@ -70,6 +73,7 @@ def main() -> int:
         body["derivation_reason"] = "DIRECT_ETHBTC_HOURLY_ROW_UNAVAILABLE"
     elif persistence.get("status") != "READY":
         body["derivation_reason"] = str(persistence.get("reason") or "ETHBTC_PERSISTENCE_NOT_READY")
+    body["derivation_checked_at_utc"] = derivation_completed
     body["derivation_contract"] = "API_INTELLIGENCE_SEQUENCE_CONTEXT_v2_2.ethbtc_0_0300_persistence"
     body["synthetic_ratio_used"] = False
     body["policy_evaluable_from_this_receipt"] = False
@@ -81,7 +85,7 @@ def main() -> int:
         "status": "PASS",
         "derivation_status": body["derivation_status"],
         "observation_time": observation_time,
-        "derivation_completed_at_utc": derivation_completed,
+        "derivation_checked_at_utc": derivation_completed,
         "source_path": source_path,
         "output": str(args.output),
     }, sort_keys=True))

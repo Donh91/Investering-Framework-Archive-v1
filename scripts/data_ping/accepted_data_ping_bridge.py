@@ -43,6 +43,15 @@ def immutable_packet(value: dict[str, Any]) -> dict[str, Any]:
     return {key: item for key, item in value.items() if key != "bridge_receipt"}
 
 
+def upstream_lifecycle_refs(packet: dict[str, Any]) -> list[Any]:
+    """Preserve explicit upstream receipt references only when the packet supplied them.
+
+    No temporal matching or nearest-receipt inference is permitted here.
+    """
+    refs = packet.get("lifecycle_receipts")
+    return list(refs) if isinstance(refs, list) else []
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--inbox", type=Path, required=True)
@@ -72,6 +81,7 @@ def main() -> None:
                 replayed += 1
             else:
                 acceptance_time = utc_now()
+                refs = upstream_lifecycle_refs(packet)
                 stored = dict(packet)
                 stored["bridge_receipt"] = {
                     "contract": "DATA_PING_BRIDGE_RECEIPT_v2",
@@ -89,6 +99,9 @@ def main() -> None:
                     "source_filename": path.name,
                     "packet_sha256": packet_hash,
                     "immutable": True,
+                    "upstream_lifecycle_refs": refs,
+                    "upstream_lifecycle_link_status": "EXPLICIT" if refs else "UNAVAILABLE",
+                    "upstream_lifecycle_link_method": "PACKET_SUPPLIED_ONLY_NO_TEMPORAL_INFERENCE",
                     "policy_evaluable_time": None,
                     "policy_evaluable_status": "UNAVAILABLE",
                     "decision_evaluation_time": None,

@@ -142,32 +142,40 @@ def test_acceptance_stamper_does_not_infer_ingest():
         assert subprocess.run(["python", str(VALIDATOR), str(receipt_path)], capture_output=True).returncode == 0
 
 
+def run_bridge(packet: dict, root: Path, snapshot_id: str) -> dict:
+    inbox = root / f"inbox-{snapshot_id}"; accepted = root / f"accepted-{snapshot_id}"; rejected = root / f"rejected-{snapshot_id}"
+    inbox.mkdir()
+    (inbox / "packet.json").write_text(json.dumps(packet))
+    subprocess.run([
+        "python", str(BRIDGE),
+        "--inbox", str(inbox),
+        "--accepted-root", str(accepted),
+        "--rejected-root", str(rejected),
+        "--run-id", "test-bridge",
+    ], check=True, capture_output=True, text=True)
+    stored_paths = list(accepted.rglob(f"{snapshot_id}.json"))
+    assert len(stored_paths) == 1
+    return json.loads(stored_paths[0].read_text())["bridge_receipt"]
+
+
+def packet(snapshot_id: str) -> dict:
+    return {
+        "contract": "ACCEPTED_DATA_PING_PACKET_v1",
+        "snapshot_id": snapshot_id,
+        "freeze_utc": "2026-08-16T10:00:00Z",
+        "source_health": {},
+        "market_metrics": {},
+        "framework_interpretation": "TEST_ONLY",
+        "acceptance_status": "ACCEPTED",
+        "authority": {"portfolio_action": False, "model_weight_change": False, "canonical_promotion": False},
+    }
+
+
 def test_data_ping_bridge_acceptance_semantics():
     with tempfile.TemporaryDirectory() as td:
         root = Path(td)
-        inbox = root / "inbox"; accepted = root / "accepted"; rejected = root / "rejected"
-        inbox.mkdir()
-        packet = {
-            "contract": "ACCEPTED_DATA_PING_PACKET_v1",
-            "snapshot_id": "TEST_SNAPSHOT_001",
-            "freeze_utc": "2026-08-16T10:00:00Z",
-            "source_health": {},
-            "market_metrics": {},
-            "framework_interpretation": "TEST_ONLY",
-            "acceptance_status": "ACCEPTED",
-            "authority": {"portfolio_action": False, "model_weight_change": False, "canonical_promotion": False},
-        }
-        (inbox / "packet.json").write_text(json.dumps(packet))
-        subprocess.run([
-            "python", str(BRIDGE),
-            "--inbox", str(inbox),
-            "--accepted-root", str(accepted),
-            "--rejected-root", str(rejected),
-            "--run-id", "test-bridge",
-        ], check=True, capture_output=True, text=True)
-        stored_paths = list(accepted.rglob("TEST_SNAPSHOT_001.json"))
-        assert len(stored_paths) == 1
-        bridge = json.loads(stored_paths[0].read_text())["bridge_receipt"]
+        body = packet("TEST_SNAPSHOT_001")
+        bridge = run_bridge(body, root, body["snapshot_id"])
         assert bridge["framework_acceptance_time"] is not None
         assert bridge["framework_acceptance_status"] == "KNOWN"
         assert bridge["framework_ingest_time"] is None
@@ -176,6 +184,17 @@ def test_data_ping_bridge_acceptance_semantics():
         assert bridge["decision_evaluation_time"] is None
         assert bridge["action_divergence_time"] is None
         assert bridge["framework_ingest_not_inferred"] is True
+        assert bridge["upstream_lifecycle_refs"] == []
+        assert bridge["upstream_lifecycle_link_status"] == "UNAVAILABLE"
+        assert bridge["upstream_lifecycle_link_method"] == "PACKET_SUPPLIED_ONLY_NO_TEMPORAL_INFERENCE"
+
+        linked = packet("TEST_SNAPSHOT_002")
+        linked["lifecycle_receipts"] = [
+            {"source_run_id": "gh-123-1", "path": "03_DAILY_CAPTURE_LOGS/evidence_lifecycle/example.json"}
+        ]
+        bridge = run_bridge(linked, root, linked["snapshot_id"])
+        assert bridge["upstream_lifecycle_link_status"] == "EXPLICIT"
+        assert bridge["upstream_lifecycle_refs"] == linked["lifecycle_receipts"]
 
 
 def main():

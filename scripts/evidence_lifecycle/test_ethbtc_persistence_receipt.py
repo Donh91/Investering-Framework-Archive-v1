@@ -71,6 +71,7 @@ def main() -> None:
         receipt = run_adapter(unavailable, hourly, root / "unavailable.json")
         assert receipt["derivation_status"] == "UNAVAILABLE"
         assert receipt["derivation_reason"] == "TEST_GAP"
+        assert receipt["normalization_time"] is not None
         assert receipt["framework_acceptance_time"] is None
         assert receipt["policy_evaluable_time"] is None
 
@@ -80,6 +81,8 @@ def main() -> None:
         assert receipt["derivation_status"] == "UNAVAILABLE"
         assert receipt["derivation_reason"] == "DIRECT_ETHBTC_HOURLY_ROW_UNAVAILABLE"
         assert receipt["observation_time"] is None
+        assert receipt["normalization_time"] is None
+        assert receipt["timestamp_status"]["normalization_time"] == "UNAVAILABLE"
 
     print("ETHBTC persistence lifecycle tests: PASS")
 
