@@ -19,6 +19,10 @@ def sha(value: Any) -> str:
     return hashlib.sha256(canonical(value)).hexdigest()
 
 
+def utc_now() -> str:
+    return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+
+
 def validate(value: dict[str, Any]) -> None:
     if value.get("contract") != "ACCEPTED_DATA_PING_PACKET_v1":
         raise ValueError("wrong_contract")
@@ -67,13 +71,23 @@ def main() -> None:
                     raise ValueError("snapshot_id_collision")
                 replayed += 1
             else:
+                acceptance_time = utc_now()
                 stored = dict(packet)
                 stored["bridge_receipt"] = {
                     "contract": "DATA_PING_BRIDGE_RECEIPT_v2",
-                    "ingested_at_utc": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+                    "ingested_at_utc": acceptance_time,
+                    "framework_acceptance_time": acceptance_time,
+                    "framework_acceptance_status": "KNOWN",
+                    "acceptance_event": "ACCEPTED_DATA_PING_PACKET_v1 validated and immutably stored",
+                    "acceptance_run_id": args.run_id,
                     "source_filename": path.name,
                     "packet_sha256": packet_hash,
                     "immutable": True,
+                    "policy_evaluable_time": None,
+                    "policy_evaluable_status": "UNAVAILABLE",
+                    "decision_evaluation_time": None,
+                    "decision_evaluation_status": "UNAVAILABLE",
+                    "no_policy_evaluability_inferred": True,
                 }
                 destination.write_bytes(canonical(stored))
                 accepted += 1
