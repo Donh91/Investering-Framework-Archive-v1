@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Stamp an existing lifecycle receipt at a real framework acceptance event.
 
-This utility is intentionally narrow. It may record framework_ingest_time and
-framework_acceptance_time only when an authoritative caller has actually
-accepted the referenced evidence. It never infers policy_evaluable_time or
+This utility records framework_acceptance_time only when an authoritative
+caller has actually accepted the referenced evidence. It does not reconstruct
+an earlier framework_ingest_time and never infers policy_evaluable_time or
 later decision stages.
 """
 from __future__ import annotations
@@ -37,14 +37,13 @@ def main() -> int:
         raise SystemExit("framework_acceptance_time already stamped")
 
     now = utc_now()
-    # The acceptance caller has the artifact in hand at this point. If no
-    # earlier ingest event was recorded, acceptance itself is the first
-    # receipt-backed framework-ingest event, not a reconstructed earlier time.
-    if body.get("framework_ingest_time") is None:
-        body["framework_ingest_time"] = now
-        statuses["framework_ingest_time"] = "KNOWN"
     body["framework_acceptance_time"] = now
     statuses["framework_acceptance_time"] = "KNOWN"
+
+    # Acceptance does not prove an earlier ingest transition. Preserve it as
+    # unavailable unless another explicit receipt already observed it.
+    if body.get("framework_ingest_time") is None:
+        statuses["framework_ingest_time"] = "UNAVAILABLE"
 
     # Do not infer later lifecycle stages from acceptance.
     if body.get("policy_evaluable_time") is None and statuses.get("policy_evaluable_time") not in {"CONTRACT_BLOCKED", "NOT_APPLICABLE"}:
@@ -59,6 +58,7 @@ def main() -> int:
         "acceptance_run_id": a.acceptance_run_id,
         "accepted_artifact": str(a.accepted_artifact),
         "stamped_at_utc": now,
+        "framework_ingest_not_inferred": True,
         "no_policy_evaluability_inferred": True,
     }
     a.receipt.write_text(json.dumps(body, indent=2, sort_keys=True) + "\n")
