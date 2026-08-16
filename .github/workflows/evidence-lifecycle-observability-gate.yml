@@ -23,5 +23,7 @@ jobs:
           python-version: '3.12'
       - name: Run bounded lifecycle acceptance tests
         run: python scripts/evidence_lifecycle/test_validate_lifecycle_receipt.py
+      - name: Run ETHBTC derived-evidence lifecycle tests
+        run: python scripts/evidence_lifecycle/test_ethbtc_persistence_receipt.py
       - name: Audit committed lifecycle receipt store
         run: python scripts/evidence_lifecycle/audit_lifecycle_store.py
