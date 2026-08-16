@@ -1,0 +1,26 @@
+name: Evidence Lifecycle Store Health
+
+on:
+  schedule:
+    - cron: '15 5 * * *'
+      timezone: 'Europe/Copenhagen'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit-store:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate lifecycle receipts and false-precision guards
+        run: python scripts/evidence_lifecycle/audit_lifecycle_store.py
