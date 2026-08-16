@@ -28,12 +28,39 @@ jobs:
           python-version: '3.12'
       - name: Capture DefiLlama stablecoin liquidity owner evidence
         run: python scripts/data_terminal/defillama_stablecoin_owner.py --output-root 03_DAILY_CAPTURE_LOGS/stablecoin_liquidity
+      - name: Emit and validate lifecycle receipt
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json, os, subprocess, sys
+          from datetime import datetime, timezone
+          from pathlib import Path
+
+          payload = json.loads(Path('03_DAILY_CAPTURE_LOGS/stablecoin_liquidity/LATEST.json').read_text())
+          lc = payload.get('lifecycle') or {}
+          now = datetime.now(timezone.utc)
+          out = Path('03_DAILY_CAPTURE_LOGS/evidence_lifecycle/stablecoin_liquidity') / now.strftime('%Y/%m/%d') / f"gh-{os.environ['GITHUB_RUN_ID']}-{os.environ['GITHUB_RUN_ATTEMPT']}.json"
+          args = [
+              sys.executable, 'scripts/evidence_lifecycle/write_lifecycle_receipt.py',
+              '--output', str(out),
+              '--source-run-id', f"gh-{os.environ['GITHUB_RUN_ID']}-{os.environ['GITHUB_RUN_ATTEMPT']}",
+              '--evidence-lane', 'STABLECOIN_LIQUIDITY',
+              '--repo-head-sha', os.environ['GITHUB_SHA'],
+              '--source-lineage', 'DEFILLAMA_STABLECOINS:/stablecoincharts/all+/stablecoinchains',
+              '--artifact-hash', payload.get('payload_sha256',''),
+          ]
+          for field in ('retrieval_start_time','retrieval_complete_time','normalization_time'):
+              if lc.get(field):
+                  args += ['--timestamp', f"{field}={lc[field]}"]
+          subprocess.run(args, check=True)
+          subprocess.run([sys.executable, 'scripts/evidence_lifecycle/validate_lifecycle_receipt.py', str(out)], check=True)
+          PY
       - name: Commit stablecoin owner evidence with verified readback
         shell: bash
         run: |
           git config user.name 'framework-data-bot'
           git config user.email 'framework-data-bot@users.noreply.github.com'
-          git add 03_DAILY_CAPTURE_LOGS/stablecoin_liquidity
+          git add 03_DAILY_CAPTURE_LOGS/stablecoin_liquidity 03_DAILY_CAPTURE_LOGS/evidence_lifecycle/stablecoin_liquidity
           if git diff --cached --quiet; then exit 0; fi
           git commit -m "data: capture stablecoin liquidity ${GITHUB_RUN_ID}"
           pushed=false
