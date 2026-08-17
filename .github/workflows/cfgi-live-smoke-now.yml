@@ -1,0 +1,51 @@
+name: CFGI Live Smoke Now
+
+on:
+  push:
+    paths:
+      - '.github/workflows/cfgi-live-smoke-now.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  cfgi-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      CFGI_API_KEY: ${{ secrets.CFGI_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run CFGI live smoke
+        run: |
+          python scripts/data_terminal/cfgi_owner_collector.py \
+            --output-dir cfgi-smoke-output \
+            --symbols MARKET,BTC,ETH \
+            --timeframe 4h \
+            --fields score,volatility,volume,impulse,technical,social,dominance,trends,whales,orders \
+            --limit 1
+      - name: Verify live capture
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          receipt = json.loads(Path('cfgi-smoke-output/receipt.json').read_text())
+          snap = json.loads(Path('cfgi-smoke-output/owner_snapshot.json').read_text())
+          assert receipt.get('status') == 'PASS', receipt
+          rows = snap.get('rows') or snap.get('symbols') or snap
+          text = json.dumps(rows)
+          for symbol in ('MARKET','BTC','ETH'):
+              assert symbol in text, f'missing {symbol}'
+          print('CFGI_LIVE_SMOKE_PASS')
+          print(json.dumps({'receipt_status': receipt.get('status'), 'snapshot_keys': list(snap)[:12]}, sort_keys=True))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cfgi-live-smoke-${{ github.run_id }}
+          path: cfgi-smoke-output/
+          retention-days: 1
+          if-no-files-found: warn
