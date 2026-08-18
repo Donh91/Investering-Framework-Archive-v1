@@ -1,7 +1,7 @@
 {
   "contract": "CODEX_READY_TASKS_v1",
   "contract_revision": "1.1",
-  "generated_at_utc": "2026-08-17T15:57:13Z",
+  "generated_at_utc": "2026-08-18T04:20:36Z",
   "tasks": [
     {
       "allowed_change_scope": [
@@ -10,7 +10,7 @@
       ],
       "clean_noop_condition": "The finding is absent from fresh health, is non-actionable under verified lifecycle semantics, or the target workflow has been superseded or retired.",
       "escalation_condition": "Escalate to the framework owner if resolution requires market gates, model weights, canonical authority, portfolio logic, API budget, or new policy semantics.",
-      "failure_streak": 4,
+      "failure_streak": 5,
       "finding": "LATEST_RUN_FAILED",
       "first_observed_at_utc": "2026-08-12T16:33:22Z",
       "forbidden_changes": [
@@ -20,12 +20,12 @@
         "portfolio logic"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_transition_receipt.py --signature a07acf4e07afa4138fb2 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-08-17T15:57:13Z",
-      "latest_run_id": 32008134307,
-      "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/32008134307",
+      "last_observed_at_utc": "2026-08-18T04:20:36Z",
+      "latest_run_id": 32061272133,
+      "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/32061272133",
       "lifecycle_state": "ACTIVE",
       "objective": "Resolve LATEST_RUN_FAILED for research-execution-coordinator.yml with the smallest bounded code change that satisfies the existing acceptance gates.",
-      "observations": 10,
+      "observations": 11,
       "post_fix_gate": "3_SUCCESSFUL_EXPECTED_RUNS",
       "precondition": "Fresh Automation Production Health still contains signature a07acf4e07afa4138fb2 for research-execution-coordinator.yml/LATEST_RUN_FAILED, and verified lifecycle state does not make the finding non-actionable.",
       "required_evidence": [
@@ -37,7 +37,7 @@
       "risk_class": "B_CODEX_PR",
       "route": "CODEX_PR",
       "signature": "a07acf4e07afa4138fb2",
-      "source_health_generated_at_utc": "2026-08-17T15:47:24.944369Z",
+      "source_health_generated_at_utc": "2026-08-18T04:03:24.635746Z",
       "state": "CODEX_READY",
       "stop_condition": "Stop without code changes if the precondition fails, the finding cannot be reproduced from scoped evidence, or the required fix exceeds allowed change scope.",
       "success_evidence": [
@@ -59,7 +59,7 @@
       ],
       "clean_noop_condition": "The finding is absent from fresh health, is non-actionable under verified lifecycle semantics, or the target workflow has been superseded or retired.",
       "escalation_condition": "Escalate to the framework owner if resolution requires market gates, model weights, canonical authority, portfolio logic, API budget, or new policy semantics.",
-      "failure_streak": 4,
+      "failure_streak": 5,
       "finding": "REPEATED_CONSECUTIVE_FAILURES",
       "first_observed_at_utc": "2026-08-16T15:55:27Z",
       "forbidden_changes": [
@@ -69,12 +69,12 @@
         "portfolio logic"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_transition_receipt.py --signature 0e7231042813ac834d36 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-08-17T15:57:13Z",
-      "latest_run_id": 32008134307,
-      "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/32008134307",
+      "last_observed_at_utc": "2026-08-18T04:20:36Z",
+      "latest_run_id": 32061272133,
+      "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/32061272133",
       "lifecycle_state": "ACTIVE",
       "objective": "Resolve REPEATED_CONSECUTIVE_FAILURES for research-execution-coordinator.yml with the smallest bounded code change that satisfies the existing acceptance gates.",
-      "observations": 3,
+      "observations": 4,
       "post_fix_gate": "3_SUCCESSFUL_EXPECTED_RUNS",
       "precondition": "Fresh Automation Production Health still contains signature 0e7231042813ac834d36 for research-execution-coordinator.yml/REPEATED_CONSECUTIVE_FAILURES, and verified lifecycle state does not make the finding non-actionable.",
       "required_evidence": [
@@ -86,7 +86,7 @@
       "risk_class": "B_CODEX_PR",
       "route": "CODEX_PR",
       "signature": "0e7231042813ac834d36",
-      "source_health_generated_at_utc": "2026-08-17T15:47:24.944369Z",
+      "source_health_generated_at_utc": "2026-08-18T04:03:24.635746Z",
       "state": "CODEX_READY",
       "stop_condition": "Stop without code changes if the precondition fails, the finding cannot be reproduced from scoped evidence, or the required fix exceeds allowed change scope.",
       "success_evidence": [
