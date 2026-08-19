@@ -1,0 +1,123 @@
+name: Adaptive Rotation Cadence
+
+on:
+  schedule:
+    # Off-cycle checks between the normal 4H breadth/live-anchor checkpoints.
+    - cron: '16 0,4,8,12,16,20 * * *'
+      timezone: 'Europe/Copenhagen'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: framework-main-writer
+  cancel-in-progress: false
+
+jobs:
+  cadence:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Evaluate operational boost gate
+        id: gate
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json, os, urllib.request
+          from datetime import datetime, timezone
+          from pathlib import Path
+
+          latest = Path('03_DAILY_CAPTURE_LOGS/breadth_rich/LATEST.json')
+          breadth = None
+          if latest.exists():
+              try:
+                  p = json.loads(latest.read_text())
+                  a = p.get('aggregate') or p
+                  breadth = a.get('advance_ratio')
+                  if breadth is None and a.get('advancer_pct') is not None:
+                      breadth = float(a['advancer_pct']) / 100.0
+                  if breadth is not None:
+                      breadth = float(breadth)
+              except Exception:
+                  breadth = None
+
+          ethbtc = None
+          try:
+              req = urllib.request.Request(
+                  'https://api.binance.com/api/v3/ticker/price?symbol=ETHBTC',
+                  headers={'User-Agent':'framework-cadence/1.0'},
+              )
+              with urllib.request.urlopen(req, timeout=10) as r:
+                  ethbtc = float(json.loads(r.read())['price'])
+          except Exception:
+              ethbtc = None
+
+          registered_level = 0.03
+          distance_pct = None if ethbtc is None else abs(ethbtc - registered_level) / registered_level
+
+          # Operational sampling trigger only. This does NOT create or modify a market rule.
+          # Boost when the registered ETHBTC decision level is within 1%, or breadth is already
+          # in a broad-participation neighborhood. The output is explicitly non-binding.
+          reasons = []
+          if distance_pct is not None and distance_pct <= 0.01:
+              reasons.append('ETHBTC_WITHIN_1PCT_OF_REGISTERED_0_0300')
+          if breadth is not None and breadth >= 0.45:
+              reasons.append('TOP100_PROXY_BREADTH_GE_45PCT')
+          active = bool(reasons)
+
+          out = {
+              'generated_at_utc': datetime.now(timezone.utc).isoformat(),
+              'cadence_contract': 'ADAPTIVE_ROTATION_CADENCE_v1',
+              'authority': 'OPERATIONAL_SAMPLING_ONLY_NON_BINDING',
+              'normal_cadence_hours': 4,
+              'boost_cadence_hours': 2,
+              'registered_ethbtc_level_read_only': registered_level,
+              'ethbtc_live': ethbtc,
+              'distance_to_registered_level_pct': None if distance_pct is None else distance_pct * 100.0,
+              'latest_top100_proxy_advance_ratio': breadth,
+              'boost_active': active,
+              'boost_reasons': reasons,
+              'market_semantics_changed': False,
+              'thresholds_changed': False,
+          }
+          path = Path('03_DAILY_CAPTURE_LOGS/cadence') / datetime.now(timezone.utc).strftime('%Y/%m/%d')
+          path.mkdir(parents=True, exist_ok=True)
+          f = path / f"cadence-{os.environ['GITHUB_RUN_ID']}-{os.environ['GITHUB_RUN_ATTEMPT']}.json"
+          f.write_text(json.dumps(out, indent=2, sort_keys=True) + '\n')
+          Path('03_DAILY_CAPTURE_LOGS/cadence/LATEST.json').write_text(json.dumps(out, indent=2, sort_keys=True) + '\n')
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as gh:
+              gh.write(f"boost_active={'true' if active else 'false'}\n")
+          print(json.dumps(out, sort_keys=True))
+          PY
+
+      - name: Capture boost rich breadth checkpoint
+        if: steps.gate.outputs.boost_active == 'true'
+        run: python scripts/daily_capture/rich_breadth_checkpoint.py --output-root 03_DAILY_CAPTURE_LOGS/breadth_rich
+
+      - name: Commit cadence observation and optional boost breadth
+        shell: bash
+        run: |
+          git config user.name 'framework-data-bot'
+          git config user.email 'framework-data-bot@users.noreply.github.com'
+          git add 03_DAILY_CAPTURE_LOGS/cadence 03_DAILY_CAPTURE_LOGS/breadth_rich
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "ops: adaptive cadence observation ${GITHUB_RUN_ID}"
+          pushed=false
+          for attempt in 1 2 3; do
+            git rebase --abort 2>/dev/null || true
+            if git pull --rebase origin main && git push origin HEAD:main; then pushed=true; break; fi
+            sleep $((attempt * 5))
+          done
+          [ "$pushed" = true ]
+          git fetch origin main
+          git merge-base --is-ancestor HEAD origin/main
