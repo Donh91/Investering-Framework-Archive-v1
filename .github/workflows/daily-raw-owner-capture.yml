@@ -3,7 +3,18 @@ name: Daily Live Anchor Capture
 on:
   schedule:
     # Normal tactical cadence: every 4 hours, Europe/Copenhagen.
-    - cron: '13 2,6,10,14,18,22 * * *'
+    # Kept as distinct schedule entries so the 06:13 daily macro/cold-lane identity remains explicit.
+    - cron: '13 2 * * *'
+      timezone: 'Europe/Copenhagen'
+    - cron: '13 6 * * *'
+      timezone: 'Europe/Copenhagen'
+    - cron: '13 10 * * *'
+      timezone: 'Europe/Copenhagen'
+    - cron: '13 14 * * *'
+      timezone: 'Europe/Copenhagen'
+    - cron: '13 18 * * *'
+      timezone: 'Europe/Copenhagen'
+    - cron: '13 22 * * *'
       timezone: 'Europe/Copenhagen'
   workflow_dispatch:
 
