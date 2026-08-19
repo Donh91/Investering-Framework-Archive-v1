@@ -2,15 +2,8 @@ name: Daily Live Anchor Capture
 
 on:
   schedule:
-    - cron: '13 6 * * *'
-      timezone: 'Europe/Copenhagen'
-    - cron: '47 10 * * *'
-      timezone: 'Europe/Copenhagen'
-    - cron: '22 15 * * *'
-      timezone: 'Europe/Copenhagen'
-    - cron: '38 19 * * *'
-      timezone: 'Europe/Copenhagen'
-    - cron: '11 23 * * *'
+    # Normal tactical cadence: every 4 hours, Europe/Copenhagen.
+    - cron: '13 2,6,10,14,18,22 * * *'
       timezone: 'Europe/Copenhagen'
   workflow_dispatch:
 
@@ -63,12 +56,12 @@ jobs:
             record_code fred_macro 78
           fi
 
-          # Ephemeral observations cannot be reconstructed reliably later and remain five-times-daily anchors.
+          # Ephemeral observations cannot be reconstructed reliably later and remain tactical anchors.
           run_owner binance_microstructure python scripts/data_terminal/binance_spot_microstructure_source.py --output-dir binance-spot-microstructure-output
           run_owner okx_swap python scripts/data_terminal/okx_swap_owner_collector.py --output-dir okx-swap-owner-output
           run_owner top100_breadth python scripts/data_terminal/top100_breadth_owner_collector.py --output-dir top100-breadth-owner-output
 
-          # CFGI is a permanent shadow sentiment owner. It is always collected when the API secret is valid.
+          # CFGI is a permanent shadow sentiment owner. It is collected on the 4H tactical cadence when the API secret is valid.
           CFGI_FIELDS="score,volatility,volume,impulse,technical,social,dominance,trends,whales,orders"
           run_owner cfgi_sentiment python scripts/data_terminal/cfgi_owner_collector.py --output-dir cfgi-owner-output --symbols MARKET,BTC,ETH --timeframe 4h --fields "${CFGI_FIELDS}" --limit 1
           if [ "${SCHEDULE_ID}" = "13 6 * * *" ] || [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ]; then
