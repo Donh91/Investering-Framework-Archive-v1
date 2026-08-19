@@ -2,9 +2,8 @@ name: Hourly Sequence Capture
 
 on:
   schedule:
-    - cron: '55 11 * * *'
-      timezone: 'Europe/Copenhagen'
-    - cron: '55 23 * * *'
+    # Compact sequence materialization every 6 hours. Underlying market evidence remains 1H-granular.
+    - cron: '55 5,11,17,23 * * *'
       timezone: 'Europe/Copenhagen'
     # Final ISO-week catch-up after Sunday 24:00 UTC (02:00 CPH during CEST).
     - cron: '10 2 * * 1'
