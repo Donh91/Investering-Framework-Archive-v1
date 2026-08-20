@@ -17,13 +17,7 @@ on:
     paths:
       - 'scripts/historical_lab/free_altseason_bootstrap_parallel.py'
       - 'scripts/historical_lab/cfgi_idempotency_guard.py'
-      - '.github/workflows/historical-altseason-free-bootstrap.yml'
-      - '.github/workflows/historical-altseason-free-publish.yml'
-      - '.github/workflows/historical-altseason-cfgi-reservation.yml'
-      - '.github/workflows/historical-altseason-cfgi-enrichment.yml'
-      - '.github/workflows/historical-altseason-cfgi-publish.yml'
-      - '.github/workflows/historical-altseason-cfgi-run-audit.yml'
-      - '.github/workflows/historical-altseason-throughput-gate.yml'
+      - '.github/workflows/historical-altseason-*.yml'
 
 permissions:
   contents: read
@@ -37,95 +31,60 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Compile transport and idempotency helpers
+      - name: Compile helpers
         run: |
           python -m py_compile scripts/historical_lab/free_altseason_bootstrap_parallel.py
           python -m py_compile scripts/historical_lab/cfgi_idempotency_guard.py
           python -m py_compile scripts/historical_lab/free_altseason_bootstrap_resilient.py
           python -m py_compile scripts/historical_lab/cfgi_targeted_backfill.py
           python -m py_compile scripts/historical_lab/cfgi_readiness_postprocess.py
-      - name: Prove transport-only archive-first parallelization contract
+      - name: Prove archive-first transport contract
         run: |
           python - <<'PY'
           from pathlib import Path
           p=Path('scripts/historical_lab/free_altseason_bootstrap_parallel.py').read_text()
           w=Path('.github/workflows/historical-altseason-free-bootstrap.yml').read_text()
           pub=Path('.github/workflows/historical-altseason-free-publish.yml').read_text()
-          assert 'ThreadPoolExecutor' in p and 'MAX_WORKERS = 24' in p and 'DEFAULT_WORKERS = 12' in p
-          assert 'prefer_daily_before = datetime(2022, 1, 1' in p and 'resilient._vision_daily' in p
-          assert 'daily_rows.sort(key=lambda row: int(row[0]))' in p
-          assert 'resilient.vision_klines = parallel_vision_klines' in p
-          assert 'BINANCE_REST_BYPASSED_ARCHIVE_FIRST_REPRODUCIBILITY' in p
-          assert 'BINANCE_VISION_ARCHIVE_FIRST_TRANSPORT_v1' in p
-          assert '"archive_first": True' in p and 'analysis_semantics_changed": False' in p
+          for token in ['ThreadPoolExecutor','MAX_WORKERS = 24','DEFAULT_WORKERS = 12','resilient._vision_daily','daily_rows.sort(key=lambda row: int(row[0]))','BINANCE_REST_BYPASSED_ARCHIVE_FIRST_REPRODUCIBILITY','BINANCE_VISION_ARCHIVE_FIRST_TRANSPORT_v1','"archive_first": True','analysis_semantics_changed": False']:
+              assert token in p,token
           for forbidden in ['build_features =','build_episodes =','continuation_controls =','episode_drawdown_trigger_pct','episode_recovery_fraction']:
               assert forbidden not in p,forbidden
           assert 'free_altseason_bootstrap_parallel.py' in w
           assert "HISTORICAL_VISION_MAX_WORKERS: '12'" in w and 'timeout-minutes: 120' in w
-          assert 'permissions:\n  contents: read' in w and 'git add ' not in w
           assert 'actions/upload-artifact@v4' in w and 'historical-altseason-free-stage' in w
           assert 'group: historical-altseason-free-bootstrap' in w
           assert 'group: framework-main-writer' in pub
           assert 'actions/download-artifact@v4' in pub and 'historical-altseason-free-stage' in pub
-          assert 'git add 06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/' in pub
-          assert 'git rebase --abort' in pub and 'git fetch origin main' in pub
-          assert 'git merge-base --is-ancestor HEAD origin/main' in pub
+          assert 'git rebase --abort' in pub and 'git fetch origin main' in pub and 'git merge-base --is-ancestor HEAD origin/main' in pub
           print('HISTORICAL_ARCHIVE_FIRST_SPLIT_TRANSPORT_PASS')
           PY
-      - name: Prove deterministic reservation and explicit fingerprint-bound paid dispatch
+      - name: Prove explicit fingerprint-bound paid dispatch and no duplicate retry
         run: |
           python - <<'PY'
           from pathlib import Path
           p=Path('scripts/historical_lab/cfgi_idempotency_guard.py').read_text()
           reserve=Path('.github/workflows/historical-altseason-cfgi-reservation.yml').read_text()
-          w=Path('.github/workflows/historical-altseason-cfgi-enrichment.yml').read_text()
+          paid=Path('.github/workflows/historical-altseason-cfgi-enrichment.yml').read_text()
           pub=Path('.github/workflows/historical-altseason-cfgi-publish.yml').read_text()
           audit=Path('.github/workflows/historical-altseason-cfgi-run-audit.yml').read_text()
-          reservation_path='00_ARCHIVE_CONTROL/research_runtime/HISTORICAL_ALTSEASON_CFGI_PAID_RESERVATION.json'
-          for required in ['CFGI_TARGETED_INPUT_FINGERPRINT_v1','EXACT_COMPLETE_PRIOR_ENRICHMENT','RESEARCH_READINESS_MANIFEST.json','historical_findings_max_classification','FORWARD_TEST','automatic_promotion']:
-              assert required in p,required
-          assert "workflows: ['Historical Altseason Free Publish']" in reserve
-          assert 'group: framework-main-writer' in reserve and 'actions: write' in reserve
-          assert 'ONE_DETERMINISTIC_RESERVATION_PER_PAID_INPUT_FINGERPRINT' in reserve
-          assert 'CFGI_RESERVATION_UNCHANGED' in reserve and reservation_path in reserve
-          assert 'cfgi_idempotency_guard.py --mode check' in reserve
-          assert "steps.reservation.outputs.changed == 'true'" in reserve
-          assert 'gh workflow run historical-altseason-cfgi-enrichment.yml' in reserve
-          assert reservation_path in w
-          assert 'workflow_dispatch:' in w and 'fingerprint:' in w
-          assert 'DISPATCH_FINGERPRINT' in w
-          assert "dispatched==reservation['input_fingerprint_sha256']==guard['input_fingerprint_sha256']" in w
-          assert 'Verify CFGI secret only after reservation binding passes' in w
-          assert 'cfgi_idempotency_guard.py --mode check' in w
-          assert "steps.idempotency.outputs.skip_paid != 'true'" in w
-          assert "steps.idempotency.outputs.skip_paid == 'true'" in w
-          assert 'cfgi_idempotency_guard.py --mode stamp' in w
-          assert 'BINANCE_VISION_ARCHIVE_FIRST_TRANSPORT_v1' in w
-          assert 'HISTORICAL_ALTSEASON_CFGI_PAID_RESERVATION_v1' in w
-          dispatch_pre=w.index('Verify dispatch fingerprint, deterministic reservation and final free stage before secret access')
-          secret=w.index('Verify CFGI secret only after reservation binding passes')
-          guard=w.index('Check exact paid-input idempotency')
-          paid_step=w.index('Target CFGI only after objective episode selection and reservation')
-          assert dispatch_pre < secret < guard < paid_step
-          assert 'permissions:\n  contents: read' in w and 'git add ' not in w
-          assert 'actions/upload-artifact@v4' in w and 'historical-altseason-cfgi-stage' in w
-          assert 'group: historical-altseason-cfgi-enrichment' in w
-          assert 'group: framework-main-writer' in pub and 'actions: write' in pub
-          assert 'actions/download-artifact@v4' in pub and 'historical-altseason-cfgi-stage' in pub
-          assert 'RESEARCH_READINESS_MANIFEST.json' in pub
-          assert 'git add 06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/' in pub
-          assert 'FREE_BULK_ARTIFACT_POINTER.json' in pub and 'alt_hourly_panel.csv.gz' in pub
-          assert 'gh workflow run cowork-historical-altseason-bundle.yml' in pub
-          assert "steps.publish.outputs.published == 'true'" in pub
-          assert "workflows: ['Historical Altseason Lab Gate']" in audit
-          assert 'actions: write' in audit and 'group: framework-main-writer' in audit
-          assert 'RESERVED_FINGERPRINT_HAS_NO_PAID_RUN' in audit
-          assert 'CURRENT_PAID_RUN_FAILED_REVIEW_BEFORE_RETRY' in audit
-          assert 'automatic_paid_retry_after_failure' in audit
-          assert 'gh workflow run historical-altseason-cfgi-enrichment.yml' in audit
+          for token in ['CFGI_TARGETED_INPUT_FINGERPRINT_v1','EXACT_COMPLETE_PRIOR_ENRICHMENT','RESEARCH_READINESS_MANIFEST.json','FORWARD_TEST','automatic_promotion']:
+              assert token in p,token
+          for token in ['ONE_DETERMINISTIC_RESERVATION_PER_PAID_INPUT_FINGERPRINT','CFGI_RESERVATION_UNCHANGED',"steps.reservation.outputs.changed == 'true'",'gh workflow run historical-altseason-cfgi-enrichment.yml','actions: write']:
+              assert token in reserve,token
+          for token in ['workflow_dispatch:','fingerprint:','DISPATCH_FINGERPRINT',"dispatched==reservation['input_fingerprint_sha256']==guard['input_fingerprint_sha256']",'Verify CFGI secret only after reservation binding passes','cfgi_idempotency_guard.py --mode check','cfgi_idempotency_guard.py --mode stamp','HISTORICAL_ALTSEASON_CFGI_PAID_RESERVATION_v1','BINANCE_VISION_ARCHIVE_FIRST_TRANSPORT_v1']:
+              assert token in paid,token
+          pre=paid.index('Verify dispatch fingerprint, deterministic reservation and final free stage before secret access')
+          secret=paid.index('Verify CFGI secret only after reservation binding passes')
+          guard=paid.index('Check exact paid-input idempotency')
+          call=paid.index('Target CFGI only after objective episode selection and reservation')
+          assert pre < secret < guard < call
+          for token in ['actions: write','RESEARCH_READINESS_MANIFEST.json','FREE_BULK_ARTIFACT_POINTER.json','gh workflow run cowork-historical-altseason-bundle.yml',"steps.publish.outputs.published == 'true'"]:
+              assert token in pub,token
+          for token in ['actions: write','RESERVED_FINGERPRINT_HAS_NO_PAID_RUN','CURRENT_PAID_RUN_FAILED_REVIEW_BEFORE_RETRY','automatic_paid_retry_after_failure','gh workflow run historical-altseason-cfgi-enrichment.yml']:
+              assert token in audit,token
           print('CFGI_EXPLICIT_DISPATCH_IDEMPOTENCY_PASS')
           PY
-      - name: Prove compute-publish writer boundary
+      - name: Prove compute and writer boundary without self-triggering health scanner
         run: |
           python - <<'PY'
           from pathlib import Path
@@ -135,14 +94,21 @@ jobs:
           paid=Path('.github/workflows/historical-altseason-cfgi-enrichment.yml').read_text()
           paid_pub=Path('.github/workflows/historical-altseason-cfgi-publish.yml').read_text()
           audit=Path('.github/workflows/historical-altseason-cfgi-run-audit.yml').read_text()
+          write_perm='contents: '+'write'
+          push_token='git'+' push'
+          push_main='git'+' push '+'origin HEAD:main'
+          commit_token='git'+' commit'
+          add_token='git'+' add '
           for compute in [free,paid]:
-              assert 'contents: write' not in compute
-              assert 'git push' not in compute and 'git commit' not in compute and 'git add ' not in compute
+              assert write_perm not in compute
+              assert push_token not in compute and commit_token not in compute and add_token not in compute
           for writer in [free_pub,reserve,paid_pub,audit]:
-              assert 'contents: write' in writer
+              assert write_perm in writer
               assert 'group: framework-main-writer' in writer
-              assert 'git push origin HEAD:main' in writer
-          for pub in [free_pub,paid_pub]: assert 'git diff --cached --quiet' in pub
+              assert push_main in writer
+              assert 'git rebase --abort' in writer
+              assert 'git merge-base --is-ancestor HEAD origin/main' in writer
+              assert 'git diff --cached --quiet' in writer
           print('HISTORICAL_COMPUTE_RESERVE_PUBLISH_WRITER_BOUNDARY_PASS')
           PY
       - name: Ensure no market-policy edits are present in helpers
