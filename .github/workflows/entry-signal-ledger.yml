@@ -1,16 +1,8 @@
 name: Entry Signal Ledger
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - '03_DAILY_CAPTURE_LOGS/hourly/**'
-      - '03_DAILY_CAPTURE_LOGS/breadth_rich/**'
-      - 'scripts/entry_signal/**'
-      - '.github/workflows/entry-signal-ledger.yml'
   schedule:
-    - cron: '37 * * * *'
+    - cron: '50 * * * *'
       timezone: 'Europe/Copenhagen'
   workflow_dispatch:
 
