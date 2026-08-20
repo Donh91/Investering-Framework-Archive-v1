@@ -40,12 +40,16 @@ class FullArchitectureTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as d:
             r=Path(d); (r/'f').mkdir(); (r/'e').mkdir()
             now=datetime.now(timezone.utc)
-            f={'contract':'FROZEN_FORECAST_v1','unit_contract_version':'FORECAST_TARGET_UNITS_v2','forecast_id':'f1','frozen_at_utc':(now-timedelta(days=2)).isoformat(),'outcome_due_utc':(now-timedelta(days=1)).isoformat(),'metric_path':'market_metrics.btc.close','start_value':100.0,'direction':'UP','threshold_pct':1.0}
+            # metric_path_root is declared explicitly: this fixture uses the canonical
+            # document-rooted convention that the patched producer now emits (TASK3 R3-04).
+            f={'contract':'FROZEN_FORECAST_v1','unit_contract_version':'FORECAST_TARGET_UNITS_v2','forecast_id':'f1','frozen_at_utc':(now-timedelta(days=2)).isoformat(),'outcome_due_utc':(now-timedelta(days=1)).isoformat(),'metric_path':'market_metrics.btc.close','metric_path_root':'CAPTURE_DOCUMENT_ROOT','start_value':100.0,'direction':'UP','threshold_pct':1.0}
             e={'captured_at_utc':now.isoformat(),'market_metrics':{'btc':{'close':102.0}}}
             (r/'f/f1.json').write_text(json.dumps(f)); (r/'e/e1.json').write_text(json.dumps(e))
             p=self.run_py('scripts/learning/outcome_maturation_engine.py','--forecast-root',r/'f','--evidence-root',r/'e','--output-root',r/'o')
             self.assertEqual(p.returncode,0,p.stderr)
             out=json.loads((r/'o/f1.json').read_text()); self.assertEqual(out['result'],'HIT')
+            self.assertEqual(out['metric_path_root_applied'],'CAPTURE_DOCUMENT_ROOT')
+            self.assertEqual(out['resolver_version'],'METRIC_PATH_RESOLVER_v1')
             before=(r/'o/f1.json').read_bytes(); self.run_py('scripts/learning/outcome_maturation_engine.py','--forecast-root',r/'f','--evidence-root',r/'e','--output-root',r/'o'); self.assertEqual(before,(r/'o/f1.json').read_bytes())
 
     def make_final_close(self, root: Path, *, iso_year=2026, iso_week=31, corrupt_hash=False, final=True):

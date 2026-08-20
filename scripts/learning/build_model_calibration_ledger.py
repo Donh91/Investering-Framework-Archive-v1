@@ -33,5 +33,10 @@ def main():
     fields=['scored_at_utc','model','task','prompt_sha256','forecast_id','metric_path','horizon_days','outcome','result','hit','return_pct','forecast_sha256','evidence_sha256']
     with a.output.open('w',newline='') as f:
         w=csv.DictWriter(f,fieldnames=fields);w.writeheader();w.writerows(rows)
-    print(json.dumps({'status':'PASS','scored_count':len(rows),'quarantined_legacy_unit_outcome_count':len(quarantined),'candidate_count':sum(1 for _ in (a.forecast_root.parent/'PENDING').rglob('*.json')) if (a.forecast_root.parent/'PENDING').exists() else 0,'frozen_count':len(forecasts)},sort_keys=True))
+    # A censored outcome is a recorded outcome, not a scored one. Counting it as
+    # scored made an empty ledger indistinguishable from a healthy one and let a
+    # 100% censoring rate report status PASS (TASK3 R3-07, R3-17 item 7).
+    scored_count=sum(1 for r in rows if r['outcome']=='MATURED')
+    censored_count=sum(1 for r in rows if r['outcome']=='CENSORED')
+    print(json.dumps({'status':'PASS','scored_count':scored_count,'censored_count':censored_count,'ledger_row_count':len(rows),'quarantined_legacy_unit_outcome_count':len(quarantined),'candidate_count':sum(1 for _ in (a.forecast_root.parent/'PENDING').rglob('*.json')) if (a.forecast_root.parent/'PENDING').exists() else 0,'frozen_count':len(forecasts)},sort_keys=True))
 if __name__=='__main__':main()

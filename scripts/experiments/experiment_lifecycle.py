@@ -5,9 +5,17 @@ import argparse
 import hashlib
 import itertools
 import json
+import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
+
+from metric_resolver import (  # noqa: E402  (path is prepared immediately above)
+    CAPTURE_DOCUMENT_ROOT,
+    canonical_path,
+)
 
 UTC = timezone.utc
 KINDS = {"SENSOR_COMBINATION", "FORECAST_TEST", "SEQUENCE_TEST", "DATA_QUALITY_TEST"}
@@ -271,7 +279,7 @@ def main() -> None:
         observation_id = "EO-" + sha({"candidate_id": candidate["candidate_id"], "captured": captured, "source": source})[:20]; observation = {"contract": "EXPERIMENT_OBSERVATION_v1", "observation_id": observation_id, "candidate_id": candidate["candidate_id"], "observed_at_utc": captured, "evaluation_status": status, "component_results": results, "source": source, "authority": "SHADOW_ONLY"}; observation_path = args.observation_root / candidate["candidate_id"] / f"{observation_id}.json"; is_new = False if mapping and candidate["candidate_id"] not in new_ids else write_new(observation_path, observation)
         forecast_id = None; start = at(latest, spec.get("target_metric_path") or "") if spec.get("target_metric_path") else None
         if fired and spec["target_direction"] != "NONE" and isinstance(start, (int, float)) and new_forecasts < args.max_new_forecasts:
-            window = sha({"run": source["source_run_id"], "captured": captured})[:20]; forecast_id = "EXP-FC-" + sha({"candidate_id": candidate["candidate_id"], "window": window})[:20]; frozen = {"contract": "FROZEN_FORECAST_v1", "unit_contract_version": UNIT_CONTRACT_VERSION, "forecast_id": forecast_id, "source_candidate_id": candidate["candidate_id"], "source_observation_id": observation_id, "frozen_at_utc": captured, "outcome_due_utc": iso(when + timedelta(days=spec["horizon_days"])), "metric_path": spec["target_metric_path"], "direction": spec["target_direction"], "start_value": float(start), "target_mode": "PCT_MOVE" if spec["target_direction"] in {"UP", "DOWN"} else "PCT_RANGE", "threshold_pct": spec["target_threshold_pct"], "range_lower_pct": spec["target_range_lower_pct"], "range_upper_pct": spec["target_range_upper_pct"], "causal_event_window_id": window, "experimental_only": True, "controls": {"always_wait": "ALWAYS_WAIT", "single_component_specs": spec["components"], "deterministic_placebo_direction": placebo(window), "control_freeze_time_utc": captured}, "authority": {"portfolio_action": False, "framework_state_change": False, "model_weight_change": False, "canonical_promotion": False}}
+            window = sha({"run": source["source_run_id"], "captured": captured})[:20]; forecast_id = "EXP-FC-" + sha({"candidate_id": candidate["candidate_id"], "window": window})[:20]; frozen = {"contract": "FROZEN_FORECAST_v1", "unit_contract_version": UNIT_CONTRACT_VERSION, "forecast_id": forecast_id, "source_candidate_id": candidate["candidate_id"], "source_observation_id": observation_id, "frozen_at_utc": captured, "outcome_due_utc": iso(when + timedelta(days=spec["horizon_days"])), "metric_path": canonical_path(spec["target_metric_path"]), "metric_path_root": CAPTURE_DOCUMENT_ROOT, "direction": spec["target_direction"], "start_value": float(start), "target_mode": "PCT_MOVE" if spec["target_direction"] in {"UP", "DOWN"} else "PCT_RANGE", "threshold_pct": spec["target_threshold_pct"], "range_lower_pct": spec["target_range_lower_pct"], "range_upper_pct": spec["target_range_upper_pct"], "causal_event_window_id": window, "experimental_only": True, "controls": {"always_wait": "ALWAYS_WAIT", "single_component_specs": spec["components"], "deterministic_placebo_direction": placebo(window), "control_freeze_time_utc": captured}, "authority": {"portfolio_action": False, "framework_state_change": False, "model_weight_change": False, "canonical_promotion": False}}
             if write_new(args.forecast_root / when.strftime("%Y/%m") / f"{forecast_id}.json", frozen): new_forecasts += 1
         if is_new and (candidate["candidate_id"] in new_ids or fired):
             request_id = "ER-" + sha({"candidate_id": candidate["candidate_id"], "observation_id": observation_id})[:20]; request = {"contract": "EXPERIMENT_REQUEST_v1", "request_id": request_id, "candidate_id": candidate["candidate_id"], "created_at_utc": now, "request_type": "SENSOR_FIRE_REPLICATION" if fired else "SPEC_REGISTRATION", "spec": spec, "embedded_observation": observation, "local_frozen_forecast_id": forecast_id, "source_spec_path": rel(root, spec_path), "source_spec_sha256": sha(candidate), "authority": {"automatic_trade": False, "canonical_promotion": False, "portfolio_action": False}}
