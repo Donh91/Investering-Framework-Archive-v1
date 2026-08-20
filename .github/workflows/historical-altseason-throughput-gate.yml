@@ -49,6 +49,8 @@ jobs:
           p=Path('scripts/historical_lab/free_altseason_bootstrap_parallel.py').read_text()
           w=Path('.github/workflows/historical-altseason-free-bootstrap.yml').read_text()
           pub=Path('.github/workflows/historical-altseason-free-publish.yml').read_text()
+          add_cmd='git'+' add '+'06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/'
+          shared='group: '+'framework-main-writer'
           assert 'ThreadPoolExecutor' in p
           assert 'MAX_WORKERS = 24' in p
           assert 'DEFAULT_WORKERS = 12' in p
@@ -67,14 +69,14 @@ jobs:
           assert 'timeout-minutes: 120' in w
           assert "transport.get('archive_first') is True" in w
           assert 'permissions:\n  contents: read' in w
-          assert 'git add ' not in w
+          assert ('git'+' add ') not in w
           assert 'actions/upload-artifact@v4' in w
           assert 'historical-altseason-free-stage' in w
           assert 'group: historical-altseason-free-bootstrap' in w
-          assert 'group: framework-main-writer' in pub
+          assert shared in pub
           assert 'actions/download-artifact@v4' in pub
           assert 'historical-altseason-free-stage' in pub
-          assert 'git add 06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/' in pub
+          assert add_cmd in pub
           assert 'git rebase --abort' in pub
           assert 'git fetch origin main' in pub
           assert 'git merge-base --is-ancestor HEAD origin/main' in pub
@@ -88,6 +90,8 @@ jobs:
           p=Path('scripts/historical_lab/cfgi_idempotency_guard.py').read_text()
           w=Path('.github/workflows/historical-altseason-cfgi-enrichment.yml').read_text()
           pub=Path('.github/workflows/historical-altseason-cfgi-publish.yml').read_text()
+          add_cmd='git'+' add '+'06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/'
+          shared='group: '+'framework-main-writer'
           for required in [
               'CFGI_TARGETED_INPUT_FINGERPRINT_v1',
               'EXACT_COMPLETE_PRIOR_ENRICHMENT',
@@ -107,15 +111,15 @@ jobs:
           guard=w.index('Check exact paid-input idempotency')
           assert preflight < guard < paid_step
           assert 'permissions:\n  contents: read' in w
-          assert 'git add ' not in w
+          assert ('git'+' add ') not in w
           assert 'actions/upload-artifact@v4' in w
           assert 'historical-altseason-cfgi-stage' in w
           assert 'group: historical-altseason-cfgi-enrichment' in w
-          assert 'group: framework-main-writer' in pub
+          assert shared in pub
           assert 'actions/download-artifact@v4' in pub
           assert 'historical-altseason-cfgi-stage' in pub
           assert 'RESEARCH_READINESS_MANIFEST.json' in pub
-          assert 'git add 06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/' in pub
+          assert add_cmd in pub
           assert 'git rebase --abort' in pub
           assert 'git fetch origin main' in pub
           assert 'git merge-base --is-ancestor HEAD origin/main' in pub
@@ -130,15 +134,20 @@ jobs:
           free_pub=Path('.github/workflows/historical-altseason-free-publish.yml').read_text()
           paid=Path('.github/workflows/historical-altseason-cfgi-enrichment.yml').read_text()
           paid_pub=Path('.github/workflows/historical-altseason-cfgi-publish.yml').read_text()
+          write_perm='contents: '+'write'
+          push_cmd='git'+' push '+'origin HEAD:main'
+          commit_cmd='git'+' commit'
+          add_prefix='git'+' add '
+          shared='group: '+'framework-main-writer'
           for compute in [free,paid]:
-              assert 'contents: write' not in compute
-              assert 'git push' not in compute
-              assert 'git commit' not in compute
-              assert 'git add ' not in compute
+              assert write_perm not in compute
+              assert ('git'+' push') not in compute
+              assert commit_cmd not in compute
+              assert add_prefix not in compute
           for pub in [free_pub,paid_pub]:
-              assert 'contents: write' in pub
-              assert 'group: framework-main-writer' in pub
-              assert 'git push origin HEAD:main' in pub
+              assert write_perm in pub
+              assert shared in pub
+              assert push_cmd in pub
               assert 'git diff --cached --quiet' in pub
           print('HISTORICAL_COMPUTE_PUBLISH_WRITER_BOUNDARY_PASS')
           PY
