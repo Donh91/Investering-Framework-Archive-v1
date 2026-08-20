@@ -1,0 +1,120 @@
+name: Historical Altseason CFGI Publish
+
+on:
+  workflow_run:
+    workflows: ['Historical Altseason CFGI Enrichment']
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: framework-main-writer
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: >-
+      ${{ github.event_name == 'workflow_dispatch' ||
+          (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main') }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Download validated CFGI stage from triggering run
+        if: github.event_name == 'workflow_run'
+        uses: actions/download-artifact@v4
+        with:
+          name: historical-altseason-cfgi-stage
+          path: /tmp/historical-altseason-cfgi-stage
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          run-id: ${{ github.event.workflow_run.id }}
+
+      - name: Refuse unbound manual publish
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          echo 'Manual publish is intentionally blocked because no immutable upstream CFGI artifact run is bound.' >&2
+          exit 1
+
+      - name: Install and revalidate CFGI readiness artifacts
+        run: |
+          set -euo pipefail
+          root=06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts
+          test -d /tmp/historical-altseason-cfgi-stage
+          rm -rf "$root"
+          mkdir -p "$root"
+          cp -a /tmp/historical-altseason-cfgi-stage/. "$root/"
+          python - <<'PY'
+          import gzip,json
+          from pathlib import Path
+          root=Path('06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts')
+          cfg=json.loads(Path('06_RESEARCH_LAB/historical_altseason_pullback_v1/config.json').read_text())
+          g=cfg['cfgi']; a=cfg['authority']
+          req=['FREE_SOURCE_AUDIT.json','TIME_INTEGRITY_AUDIT.json','EPISODE_CATALOG.json','FREE_EVENT_PATHS.jsonl.gz','CFGI_BILLING.json','CFGI_COVERAGE.json','CFGI_FIELD_COVERAGE.json','cfgi_targeted.jsonl.gz','CFGI_EVENT_SIGNATURES.json','CFGI_EVENT_PATHS.jsonl.gz','RESEARCH_READINESS_MANIFEST.json']
+          for name in req:
+              p=root/name
+              assert p.exists() and p.is_file() and not p.is_symlink() and p.stat().st_size>0, name
+          b=json.loads((root/'CFGI_BILLING.json').read_text())
+          assert b['status']=='PASS'
+          assert b['expected_worst_case_credits'] <= g['expected_credit_hard_cap']
+          actual=b.get('actual_credits_used_from_headers')
+          if actual is not None:
+              assert actual <= g['expected_credit_hard_cap'] + 1
+          assert b.get('final_credits_remaining') is not None
+          assert b['final_credits_remaining'] >= g['minimum_credits_reserve']
+          assert b.get('input_fingerprint_sha256')
+          fc=json.loads((root/'CFGI_FIELD_COVERAGE.json').read_text())
+          assert fc['exact_relative_hour_semantics'] is True
+          assert fc['diagnostics']['no_silent_fallback'] is True
+          with gzip.open(root/'CFGI_EVENT_PATHS.jsonl.gz','rt',encoding='utf-8') as fh:
+              first=json.loads(next(fh))
+          for key in ['event_id','relative_hour','expected_timestamp_utc','observed_exact_hour','fields']:
+              assert key in first, key
+          m=json.loads((root/'RESEARCH_READINESS_MANIFEST.json').read_text())
+          assert m['readiness_verdict']=='PASS', m.get('blockers')
+          assert not m.get('blockers')
+          assert m['automatic_promotion'] is False
+          assert m['historical_findings_max_classification']=='FORWARD_TEST'
+          assert a['research_only'] is True
+          assert a['portfolio_execution'] is False
+          assert a['canonical_market_state'] is False
+          assert a['automatic_rule_changes'] is False
+          print('CFGI_PUBLISH_REVALIDATION_PASS', actual, b['final_credits_remaining'])
+          PY
+
+      - name: Commit CFGI research artifacts under shared writer lock
+        run: |
+          set -euo pipefail
+          git config user.name framework-research-bot
+          git config user.email framework-research-bot@users.noreply.github.com
+          git add 06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/
+          if git diff --cached --quiet; then
+            echo 'No CFGI artifact changes'
+            exit 0
+          fi
+          bad="$(git diff --cached --name-only | grep -v '^06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/' || true)"
+          if [ -n "$bad" ]; then
+            echo "Unexpected staged paths:" >&2
+            echo "$bad" >&2
+            exit 1
+          fi
+          git commit -m "research: targeted CFGI altseason enrichment ${GITHUB_RUN_ID}"
+          pushed=false
+          for attempt in 1 2 3 4 5; do
+            git rebase --abort 2>/dev/null || true
+            git fetch origin main
+            if git rebase origin/main && git push origin HEAD:main; then pushed=true; break; fi
+            git rebase --abort 2>/dev/null || true
+            sleep $((attempt * 5))
+          done
+          [ "$pushed" = true ]
+          git fetch origin main
+          git merge-base --is-ancestor HEAD origin/main
+          echo 'HISTORICAL_CFGI_PUBLISH_REMOTE_READBACK_PASS'
