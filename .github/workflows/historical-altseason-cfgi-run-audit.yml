@@ -1,0 +1,70 @@
+name: Historical Altseason CFGI Run Audit
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/historical-altseason-cfgi-run-audit.yml'
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: framework-main-writer
+  cancel-in-progress: false
+
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Capture latest CFGI workflow run without rerunning it
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p 00_ARCHIVE_CONTROL/research_runtime
+          gh run list --repo "$GITHUB_REPOSITORY" --workflow historical-altseason-cfgi-enrichment.yml --limit 5 --json databaseId,status,conclusion,createdAt,updatedAt,headSha,url,event > /tmp/runs.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          runs=json.loads(Path('/tmp/runs.json').read_text())
+          if not runs:
+              raise SystemExit('CFGI_RUN_AUDIT_BLOCKED no_runs_found')
+          latest=runs[0]
+          out={
+            'contract':'HISTORICAL_ALTSEASON_CFGI_RUN_AUDIT_v1',
+            'workflow':'historical-altseason-cfgi-enrichment.yml',
+            'read_only_audit':True,
+            'rerun_requested':False,
+            'latest':latest,
+            'recent_runs':runs,
+          }
+          Path('00_ARCHIVE_CONTROL/research_runtime/HISTORICAL_ALTSEASON_CFGI_RUN_AUDIT.json').write_text(json.dumps(out,indent=2,sort_keys=True)+'\n')
+          print(json.dumps(latest,sort_keys=True))
+          PY
+      - name: Commit bounded run audit under shared writer lock
+        run: |
+          set -euo pipefail
+          git config user.name framework-research-bot
+          git config user.email framework-research-bot@users.noreply.github.com
+          path=00_ARCHIVE_CONTROL/research_runtime/HISTORICAL_ALTSEASON_CFGI_RUN_AUDIT.json
+          git add "$path"
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "research: audit historical altseason CFGI run"
+          pushed=false
+          for attempt in 1 2 3 4 5; do
+            git rebase --abort 2>/dev/null || true
+            git fetch origin main
+            if git rebase origin/main && git push origin HEAD:main; then pushed=true; break; fi
+            git rebase --abort 2>/dev/null || true
+            sleep $((attempt * 5))
+          done
+          [ "$pushed" = true ]
+          git fetch origin main
+          git merge-base --is-ancestor HEAD origin/main
