@@ -1,0 +1,39 @@
+name: Entry Signal Ledger Gate
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/entry_signal/**'
+      - '04_MARKET_LEARNING/entry_signals/**'
+      - '.github/workflows/entry-signal-ledger*.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compile
+        run: python -m py_compile scripts/entry_signal/entry_signal_ledger.py
+      - name: Execute in isolated working tree
+        run: |
+          python scripts/entry_signal/entry_signal_ledger.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          latest=json.loads(Path('04_MARKET_LEARNING/entry_signals/LATEST.json').read_text())
+          state=json.loads(Path('04_MARKET_LEARNING/entry_signals/STATE.json').read_text())
+          assert latest['contract']=='ENTRY_SIGNAL_LATEST_v1'
+          assert state['contract']=='ENTRY_SIGNAL_STATE_v1'
+          assert latest['state'] in {'WAIT','GRADUATED_ALTCOIN_TOPUP_ACTIVE'}
+          assert set(latest['criteria']) == {'ethbtc_above_registered_0_0300','top100_proxy_breadth_ge_50pct','eth_outperforms_btc_24h'}
+          assert latest['authority']['portfolio_execution'] is False
+          assert latest['authority']['market_rule_change'] is False
+          print(latest['data_ping_bridge']['display_line'])
+          PY
