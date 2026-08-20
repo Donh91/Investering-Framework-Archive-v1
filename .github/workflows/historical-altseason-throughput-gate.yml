@@ -61,6 +61,7 @@ jobs:
           assert 'free_altseason_bootstrap_parallel.py' in w
           assert "HISTORICAL_VISION_MAX_WORKERS: '12'" in w
           assert 'timeout-minutes: 120' in w
+          assert "transport.get('archive_first') is True" in w
           print('HISTORICAL_ARCHIVE_FIRST_TRANSPORT_ONLY_PASS')
           PY
 
@@ -83,8 +84,9 @@ jobs:
           assert "steps.idempotency.outputs.skip_paid != 'true'" in w
           assert "steps.idempotency.outputs.skip_paid == 'true'" in w
           assert 'cfgi_idempotency_guard.py --mode stamp' in w
+          assert 'BINANCE_VISION_ARCHIVE_FIRST_TRANSPORT_v1' in w
           paid_step=w.index('Target CFGI only after objective episode selection')
-          preflight=w.index('Verify free stage, authority and CFGI secret before paid calls')
+          preflight=w.index('Verify final archive-first free stage, authority and CFGI secret before paid calls')
           guard=w.index('Check exact paid-input idempotency')
           assert preflight < guard < paid_step
           print('CFGI_IDEMPOTENCY_STATIC_GUARD_PASS')
