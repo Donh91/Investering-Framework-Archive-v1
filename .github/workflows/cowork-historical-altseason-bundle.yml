@@ -1,9 +1,10 @@
 name: Cowork Historical Altseason Research Bundle
 
 on:
-  workflow_run:
-    workflows: ['Historical Altseason CFGI Enrichment']
-    types: [completed]
+  push:
+    branches: [main]
+    paths:
+      - '06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/RESEARCH_READINESS_MANIFEST.json'
   workflow_dispatch:
 
 permissions:
@@ -16,8 +17,7 @@ concurrency:
 jobs:
   build:
     if: >-
-      ${{ github.event_name == 'workflow_dispatch' ||
-          (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main') }}
+      ${{ github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
@@ -46,7 +46,7 @@ jobs:
           test -s "$root/COWORK_INPUT_MANIFEST.json"
           test -s "$root/COWORK_INPUT_BUNDLE_SHA256.txt"
           python - <<'PY'
-          import json, zipfile
+          import hashlib,json,zipfile
           from pathlib import Path
           root=Path('dist/cowork_historical_altseason')
           manifest=json.loads((root/'COWORK_INPUT_MANIFEST.json').read_text())
@@ -54,7 +54,11 @@ jobs:
           assert manifest['automatic_promotion'] is False
           assert manifest['historical_findings_max_classification']=='FORWARD_TEST'
           assert manifest['included_file_count'] > 0
-          with zipfile.ZipFile(root/'HISTORICAL_ALTSEASON_COWORK_INPUT_BUNDLE.zip') as zf:
+          zip_path=root/'HISTORICAL_ALTSEASON_COWORK_INPUT_BUNDLE.zip'
+          expected=(root/'COWORK_INPUT_BUNDLE_SHA256.txt').read_text().split()[0]
+          actual=hashlib.sha256(zip_path.read_bytes()).hexdigest()
+          assert actual==expected
+          with zipfile.ZipFile(zip_path) as zf:
               assert zf.testzip() is None
               names=set(zf.namelist())
               required={
@@ -68,7 +72,7 @@ jobs:
               addendum=zf.read('COWORK_RESEARCH_INPUT/CORE/REPO/06_RESEARCH_LAB/historical_altseason_pullback_v1/COWORK_OPUS5_RESEARCH_PROTOCOL_ADDENDUM.md').decode()
               for token in ['PRE_SPECIFIED','POST_HOC_DISCOVERY','TOP_CANDIDATE_DESTRUCTION_TOURNAMENT','FINAL_EVIDENCE_LADDER','EFFECTIVE_SAMPLE_SIZE_AND_POWER']:
                   assert token in addendum, token
-          print('COWORK_RESEARCH_BUNDLE_VALIDATION_PASS', manifest['included_file_count'])
+          print('COWORK_RESEARCH_BUNDLE_VALIDATION_PASS', manifest['included_file_count'], actual)
           PY
 
       - name: Upload one-click Cowork research handoff

@@ -7,10 +7,10 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
-  group: framework-main-writer
+  group: historical-altseason-free-bootstrap
   cancel-in-progress: false
 
 jobs:
@@ -78,27 +78,11 @@ jobs:
             assert 'return_24h_pct' in first
           print('FREE_BOOTSTRAP_VALIDATION_PASS', s['free_hourly_feature_rows'], s['episode_count'])
           PY
-      - name: Commit immutable research artifacts safely
-        run: |
-          set -euo pipefail
-          git config user.name framework-research-bot
-          git config user.email framework-research-bot@users.noreply.github.com
-          git add 06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/
-          if git diff --cached --quiet; then
-            echo 'No artifact changes'
-            exit 0
-          fi
-          bad="$(git diff --cached --name-only | grep -v '^06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/' || true)"
-          if [ -n "$bad" ]; then
-            echo "Unexpected staged paths:" >&2
-            echo "$bad" >&2
-            exit 1
-          fi
-          git commit -m "research: historical altseason free bootstrap ${GITHUB_RUN_ID}"
-          git fetch origin main
-          if ! git rebase origin/main; then
-            git rebase --abort || true
-            exit 1
-          fi
-          git merge-base --is-ancestor origin/main HEAD
-          git push origin HEAD:main
+      - name: Upload validated free-stage artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: historical-altseason-free-stage
+          path: 06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 6
