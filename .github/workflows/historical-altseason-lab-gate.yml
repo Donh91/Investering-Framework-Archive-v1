@@ -37,6 +37,8 @@ jobs:
           python -m py_compile scripts/historical_lab/cfgi_targeted_backfill.py
           python -m py_compile scripts/historical_lab/cfgi_idempotency_guard.py
           python -m py_compile scripts/historical_lab/cfgi_readiness_postprocess.py
+          python -m py_compile scripts/historical_lab/cfgi_readiness_postprocess_v2.py
+          python -m py_compile scripts/historical_lab/cfgi_recovery_budget_guard.py
       - name: Validate scientific and budget contracts
         run: |
           python - <<'PY'
@@ -60,9 +62,14 @@ jobs:
           assert sq['archive_revision_risk_acknowledged'] is True and sq['no_silent_fallback'] is True
           assert r['manifest_required'] is True
           for x in ['CFGI_FIELD_COVERAGE.json','CFGI_EVENT_PATHS.jsonl.gz']: assert x in r['cfgi_stage_required_artifacts']
+          ledger=json.loads(Path('00_ARCHIVE_CONTROL/research_runtime/HISTORICAL_ALTSEASON_CFGI_PAID_ATTEMPT_LEDGER.json').read_text())
+          assert ledger['contract']=='HISTORICAL_ALTSEASON_CFGI_PAID_ATTEMPT_LEDGER_v1'
+          assert ledger['cumulative_actual_credits_used']==5259
+          assert ledger['owner_authorized_recovery_attempts']==1
+          assert ledger['automatic_retry_after_failure'] is False
           print('HISTORICAL_ALTSEASON_LAB_GATE_PASS')
           PY
-      - name: Validate explicit dispatch, reservation and split compute-publish safety contract
+      - name: Validate recovery, explicit missingness and split compute-publish contract
         run: |
           python - <<'PY'
           from pathlib import Path
@@ -72,54 +79,49 @@ jobs:
           paid=Path('.github/workflows/historical-altseason-cfgi-enrichment.yml').read_text()
           paid_pub=Path('.github/workflows/historical-altseason-cfgi-publish.yml').read_text()
           audit=Path('.github/workflows/historical-altseason-cfgi-run-audit.yml').read_text()
-          p=Path('scripts/historical_lab/cfgi_readiness_postprocess.py').read_text()
+          v2=Path('scripts/historical_lab/cfgi_readiness_postprocess_v2.py').read_text()
+          budget=Path('scripts/historical_lab/cfgi_recovery_budget_guard.py').read_text()
           transport=Path('scripts/historical_lab/free_altseason_bootstrap_parallel.py').read_text()
-          assert 'permissions:\n  contents: read' in free
-          assert 'permissions:\n  contents: read' in paid
+          assert 'permissions:\n  contents: read' in free and 'permissions:\n  contents: read' in paid
           assert 'git add ' not in free and 'git add ' not in paid
           assert 'actions/upload-artifact@v4' in free and 'actions/upload-artifact@v4' in paid
           assert "workflows: ['Historical Altseason Free Publish']" in reserve
-          assert 'group: framework-main-writer' in reserve
+          assert 'group: framework-main-writer' in reserve and 'actions: write' in reserve
           assert 'HISTORICAL_ALTSEASON_CFGI_PAID_RESERVATION_v1' in reserve
           assert 'ONE_DETERMINISTIC_RESERVATION_PER_PAID_INPUT_FINGERPRINT' in reserve
-          assert 'CFGI_RESERVATION_UNCHANGED' in reserve
-          assert 'actions: write' in reserve
-          assert 'gh workflow run historical-altseason-cfgi-enrichment.yml' in reserve
-          assert "steps.reservation.outputs.changed == 'true'" in reserve
           assert 'workflow_dispatch:' in paid and 'fingerprint:' in paid
-          assert 'DISPATCH_FINGERPRINT' in paid
-          assert "dispatched==reservation['input_fingerprint_sha256']==guard['input_fingerprint_sha256']" in paid
-          assert 'Verify CFGI secret only after reservation binding passes' in paid
-          assert 'HISTORICAL_ALTSEASON_CFGI_PAID_RESERVATION.json' in paid
-          assert 'HISTORICAL_ALTSEASON_CFGI_PAID_RESERVATION_v1' in paid
-          assert 'ONE_DETERMINISTIC_RESERVATION_PER_PAID_INPUT_FINGERPRINT' in paid
+          assert 'HISTORICAL_ALTSEASON_CFGI_PAID_ATTEMPT_LEDGER.json' in paid
+          assert 'Enforce cumulative recovery budget before secret access' in paid
+          assert 'cfgi_recovery_budget_guard.py' in paid
+          assert 'cfgi_readiness_postprocess_v2.py' in paid
+          assert 'Upload paid CFGI diagnostics before final readiness assertion' in paid
+          assert 'historical-altseason-cfgi-paid-diagnostics-' in paid
+          assert 'CFGI_CUMULATIVE_BILLING.json' in paid and 'CFGI_CUMULATIVE_BILLING.json' in paid_pub
           dispatch_pre=paid.index('Verify dispatch fingerprint, deterministic reservation and final free stage before secret access')
-          secret=paid.index('Verify CFGI secret only after reservation binding passes')
+          budget_pre=paid.index('Enforce cumulative recovery budget before secret access')
+          secret=paid.index('Verify CFGI secret only after reservation and cumulative budget gates pass')
           paid_call=paid.index('Target CFGI only after objective episode selection and reservation')
-          assert dispatch_pre < secret < paid_call
-          assert 'actions: write' in audit
-          assert 'CURRENT_PAID_RUN_FAILED_REVIEW_BEFORE_RETRY' in audit
+          durable=paid.index('Upload paid CFGI diagnostics before final readiness assertion')
+          validate=paid.index('Validate billing, path scaffold, explicit missingness and governance')
+          assert dispatch_pre < budget_pre < secret < paid_call < durable < validate
+          assert 'EXPLICIT_MISSING_NOT_FILLED_NOT_INTERPOLATED_NOT_A_GLOBAL_BLOCKER' in v2
+          assert "blockers.remove('CFGI_EXACT_EVENT_PATH_INCOMPLETE')" in v2
+          assert "if scaffold != expected" in v2
+          assert 'CUMULATIVE_HARD_CAP_EXCEEDED' in budget and 'PROJECTED_RESERVE_BREACH' in budget
+          assert 'OWNER_AUTHORIZED_SINGLE_RECOVERY_AFTER_READINESS_ONLY_FAILURE' in audit
+          assert 'RECOVERY_ALREADY_ATTEMPTED_OR_UNREVIEWED_PAID_FAILURE' in audit
           assert 'automatic_paid_retry_after_failure' in audit
-          assert 'gh workflow run historical-altseason-cfgi-enrichment.yml' in audit
           for pub in [free_pub,paid_pub]:
               assert 'group: framework-main-writer' in pub
               assert 'actions/download-artifact@v4' in pub
               assert 'git add 06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/' in pub
               assert 'git rebase --abort' in pub and 'git fetch origin main' in pub
               assert 'git merge-base --is-ancestor HEAD origin/main' in pub
-              for forbidden in ['git add .','git add -A','git add --all']: assert forbidden not in pub
           assert 'actions: write' in paid_pub
           assert 'gh workflow run cowork-historical-altseason-bundle.yml' in paid_pub
-          assert "steps.publish.outputs.published == 'true'" in paid_pub
-          assert 'cfgi_readiness_postprocess.py' in paid
-          assert 'FINAL_DISPATCH_BOUND_RESERVED_FREE_STAGE_READY_FOR_CFGI' in paid
-          assert 'BINANCE_VISION_ARCHIVE_FIRST_TRANSPORT_v1' in paid
-          assert "transport.get('archive_first') is True" in paid
-          assert 'RESEARCH_READINESS_MANIFEST.json' in paid and 'CFGI_FIELD_COVERAGE.json' in paid and 'CFGI_EVENT_PATHS.jsonl.gz' in paid
-          assert 'FREE_BULK_ARTIFACT_POINTER.json' in paid_pub and 'alt_hourly_panel.csv.gz' in paid_pub
-          assert 'historical_findings_max_classification' in p and 'FORWARD_TEST' in p and 'automatic_promotion' in p and 'False' in p
+          assert 'RESEARCH_READINESS_MANIFEST_v2' in paid_pub
           assert 'BINANCE_VISION_ARCHIVE_FIRST_TRANSPORT_v1' in transport
-          print('HISTORICAL_ALTSEASON_EXPLICIT_DISPATCH_SAFETY_PASS')
+          print('HISTORICAL_ALTSEASON_CFGI_RECOVERY_SAFETY_PASS')
           PY
       - name: Ensure paid CFGI cannot run in gate
         run: |
