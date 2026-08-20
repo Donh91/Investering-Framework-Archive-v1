@@ -42,39 +42,27 @@ jobs:
           python - <<'PY'
           import json
           from pathlib import Path
-          p=Path('06_RESEARCH_LAB/historical_altseason_pullback_v1/config.json')
-          c=json.loads(p.read_text())
+          c=json.loads(Path('06_RESEARCH_LAB/historical_altseason_pullback_v1/config.json').read_text())
           a=c['authority']; g=c['cfgi']; ti=c['time_integrity']; cm=c['control_matching']; cp=c['cohort_proxy']; sq=c['source_qa']; r=c['readiness']
-          assert a['research_only'] is True
-          assert a['portfolio_execution'] is False
-          assert a['canonical_market_state'] is False
-          assert a['automatic_rule_changes'] is False
+          assert a['research_only'] is True and a['portfolio_execution'] is False
+          assert a['canonical_market_state'] is False and a['automatic_rule_changes'] is False
           assert a['promotion_requires_separate_review'] is True
-          assert g['expected_credit_hard_cap'] <= 25000
-          assert g['minimum_credits_reserve'] >= 50000
-          assert g['static'] is True
-          assert g['timeframe'] == '1h'
-          required={'score','price','volatility','volume','impulse','technical','social','dominance','trends','whales','orders'}
-          assert set(g['fields']) == required
-          assert set(g['symbols']) == {'MARKET','BTC','ETH'}
-          assert g['field_level_coverage_audit_required'] is True
-          assert g['exact_relative_hour_paths_required'] is True
-          assert c['hypothetical_trim_fraction'] == 0.10
-          assert c['roundtrip_friction_pct_on_traded_slice'] > 0
-          assert ti['strict_timestamp_lags'] is True
-          assert ti['cross_window_lags_forbidden'] is True
-          assert ti['row_positions_must_not_be_interpreted_as_hours'] is True
-          assert ti['reset_equal_weight_index_on_gap'] is True
+          assert g['expected_credit_hard_cap'] <= 25000 and g['minimum_credits_reserve'] >= 50000
+          assert g['static'] is True and g['timeframe']=='1h'
+          assert set(g['fields'])=={'score','price','volatility','volume','impulse','technical','social','dominance','trends','whales','orders'}
+          assert set(g['symbols'])=={'MARKET','BTC','ETH'}
+          assert g['field_level_coverage_audit_required'] is True and g['exact_relative_hour_paths_required'] is True
+          assert c['hypothetical_trim_fraction']==0.10 and c['roundtrip_friction_pct_on_traded_slice']>0
+          assert ti['strict_timestamp_lags'] is True and ti['cross_window_lags_forbidden'] is True
+          assert ti['row_positions_must_not_be_interpreted_as_hours'] is True and ti['reset_equal_weight_index_on_gap'] is True
           assert cm['future_outcome_may_label_controls_but_may_not_enter_predictors'] is True
           assert cp['must_not_be_presented_as_historical_market_cap_cohort'] is True
-          assert sq['archive_revision_risk_acknowledged'] is True
-          assert sq['no_silent_fallback'] is True
+          assert sq['archive_revision_risk_acknowledged'] is True and sq['no_silent_fallback'] is True
           assert r['manifest_required'] is True
-          for x in ['CFGI_FIELD_COVERAGE.json','CFGI_EVENT_PATHS.jsonl.gz']:
-              assert x in r['cfgi_stage_required_artifacts']
+          for x in ['CFGI_FIELD_COVERAGE.json','CFGI_EVENT_PATHS.jsonl.gz']: assert x in r['cfgi_stage_required_artifacts']
           print('HISTORICAL_ALTSEASON_LAB_GATE_PASS')
           PY
-      - name: Validate split compute-reserve-publish safety contract
+      - name: Validate explicit dispatch, reservation and split compute-publish safety contract
         run: |
           python - <<'PY'
           from pathlib import Path
@@ -83,47 +71,55 @@ jobs:
           reserve=Path('.github/workflows/historical-altseason-cfgi-reservation.yml').read_text()
           paid=Path('.github/workflows/historical-altseason-cfgi-enrichment.yml').read_text()
           paid_pub=Path('.github/workflows/historical-altseason-cfgi-publish.yml').read_text()
+          audit=Path('.github/workflows/historical-altseason-cfgi-run-audit.yml').read_text()
           p=Path('scripts/historical_lab/cfgi_readiness_postprocess.py').read_text()
           transport=Path('scripts/historical_lab/free_altseason_bootstrap_parallel.py').read_text()
           assert 'permissions:\n  contents: read' in free
           assert 'permissions:\n  contents: read' in paid
-          assert 'git add ' not in free
-          assert 'git add ' not in paid
-          assert 'actions/upload-artifact@v4' in free
-          assert 'actions/upload-artifact@v4' in paid
+          assert 'git add ' not in free and 'git add ' not in paid
+          assert 'actions/upload-artifact@v4' in free and 'actions/upload-artifact@v4' in paid
           assert "workflows: ['Historical Altseason Free Publish']" in reserve
           assert 'group: framework-main-writer' in reserve
           assert 'HISTORICAL_ALTSEASON_CFGI_PAID_RESERVATION_v1' in reserve
           assert 'ONE_DETERMINISTIC_RESERVATION_PER_PAID_INPUT_FINGERPRINT' in reserve
           assert 'CFGI_RESERVATION_UNCHANGED' in reserve
-          assert 'workflow_dispatch' not in paid
+          assert 'actions: write' in reserve
+          assert 'gh workflow run historical-altseason-cfgi-enrichment.yml' in reserve
+          assert "steps.reservation.outputs.changed == 'true'" in reserve
+          assert 'workflow_dispatch:' in paid and 'fingerprint:' in paid
+          assert 'DISPATCH_FINGERPRINT' in paid
+          assert "dispatched==reservation['input_fingerprint_sha256']==guard['input_fingerprint_sha256']" in paid
+          assert 'Verify CFGI secret only after reservation binding passes' in paid
           assert 'HISTORICAL_ALTSEASON_CFGI_PAID_RESERVATION.json' in paid
           assert 'HISTORICAL_ALTSEASON_CFGI_PAID_RESERVATION_v1' in paid
           assert 'ONE_DETERMINISTIC_RESERVATION_PER_PAID_INPUT_FINGERPRINT' in paid
+          dispatch_pre=paid.index('Verify dispatch fingerprint, deterministic reservation and final free stage before secret access')
+          secret=paid.index('Verify CFGI secret only after reservation binding passes')
+          paid_call=paid.index('Target CFGI only after objective episode selection and reservation')
+          assert dispatch_pre < secret < paid_call
+          assert 'actions: write' in audit
+          assert 'CURRENT_PAID_RUN_FAILED_REVIEW_BEFORE_RETRY' in audit
+          assert 'automatic_paid_retry_after_failure' in audit
+          assert 'gh workflow run historical-altseason-cfgi-enrichment.yml' in audit
           for pub in [free_pub,paid_pub]:
               assert 'group: framework-main-writer' in pub
               assert 'actions/download-artifact@v4' in pub
               assert 'git add 06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/' in pub
-              assert 'git rebase --abort' in pub
-              assert 'git fetch origin main' in pub
+              assert 'git rebase --abort' in pub and 'git fetch origin main' in pub
               assert 'git merge-base --is-ancestor HEAD origin/main' in pub
-              for forbidden in ['git add .','git add -A','git add --all']:
-                  assert forbidden not in pub
+              for forbidden in ['git add .','git add -A','git add --all']: assert forbidden not in pub
+          assert 'actions: write' in paid_pub
+          assert 'gh workflow run cowork-historical-altseason-bundle.yml' in paid_pub
+          assert "steps.publish.outputs.published == 'true'" in paid_pub
           assert 'cfgi_readiness_postprocess.py' in paid
-          assert 'FINAL_RESERVED_ARCHIVE_FIRST_FREE_STAGE_READY_FOR_CFGI' in paid
+          assert 'FINAL_DISPATCH_BOUND_RESERVED_FREE_STAGE_READY_FOR_CFGI' in paid
           assert 'BINANCE_VISION_ARCHIVE_FIRST_TRANSPORT_v1' in paid
           assert "transport.get('archive_first') is True" in paid
-          assert 'RESEARCH_READINESS_MANIFEST.json' in paid
-          assert 'CFGI_FIELD_COVERAGE.json' in paid
-          assert 'CFGI_EVENT_PATHS.jsonl.gz' in paid
-          assert 'FREE_BULK_ARTIFACT_POINTER.json' in paid_pub
-          assert 'alt_hourly_panel.csv.gz' in paid_pub
-          assert 'historical_findings_max_classification' in p
-          assert 'FORWARD_TEST' in p
-          assert 'automatic_promotion' in p
-          assert 'False' in p
+          assert 'RESEARCH_READINESS_MANIFEST.json' in paid and 'CFGI_FIELD_COVERAGE.json' in paid and 'CFGI_EVENT_PATHS.jsonl.gz' in paid
+          assert 'FREE_BULK_ARTIFACT_POINTER.json' in paid_pub and 'alt_hourly_panel.csv.gz' in paid_pub
+          assert 'historical_findings_max_classification' in p and 'FORWARD_TEST' in p and 'automatic_promotion' in p and 'False' in p
           assert 'BINANCE_VISION_ARCHIVE_FIRST_TRANSPORT_v1' in transport
-          print('HISTORICAL_ALTSEASON_RESERVATION_PUBLISH_SAFETY_PASS')
+          print('HISTORICAL_ALTSEASON_EXPLICIT_DISPATCH_SAFETY_PASS')
           PY
       - name: Ensure paid CFGI cannot run in gate
         run: |

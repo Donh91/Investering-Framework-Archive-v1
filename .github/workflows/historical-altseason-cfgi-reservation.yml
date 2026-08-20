@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: write
+  actions: write
 
 concurrency:
   group: framework-main-writer
@@ -25,7 +26,6 @@ jobs:
         with:
           ref: main
           fetch-depth: 0
-
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
@@ -40,13 +40,7 @@ jobs:
         run: |
           set -euo pipefail
           root=06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts
-          for f in \
-            FREE_BULK_ARTIFACT_POINTER.json \
-            FREE_SOURCE_AUDIT.json \
-            TIME_INTEGRITY_AUDIT.json \
-            EPISODE_CATALOG.json \
-            FREE_EVENT_PATHS.jsonl.gz \
-            FREE_EVENT_PATHS_COVERAGE.json; do
+          for f in FREE_BULK_ARTIFACT_POINTER.json FREE_SOURCE_AUDIT.json TIME_INTEGRITY_AUDIT.json EPISODE_CATALOG.json FREE_EVENT_PATHS.jsonl.gz FREE_EVENT_PATHS_COVERAGE.json; do
             test -s "$root/$f"
           done
           test ! -e "$root/alt_hourly_panel.csv.gz"
@@ -77,12 +71,7 @@ jobs:
               'input_fingerprint_sha256':fp,
               'candidate_event_count':candidate_count,
               'cfgi_config_sha256':hashlib.sha256(json.dumps(cfg['cfgi'],sort_keys=True,separators=(',',':')).encode()).hexdigest(),
-              'authority':{
-                  'research_only':True,
-                  'portfolio_execution':False,
-                  'automatic_promotion':False,
-                  'historical_findings_max_classification':'FORWARD_TEST',
-              },
+              'authority':{'research_only':True,'portfolio_execution':False,'automatic_promotion':False,'historical_findings_max_classification':'FORWARD_TEST'},
               'semantics':'ONE_DETERMINISTIC_RESERVATION_PER_PAID_INPUT_FINGERPRINT',
           }
           out=Path('00_ARCHIVE_CONTROL/research_runtime/HISTORICAL_ALTSEASON_CFGI_PAID_RESERVATION.json')
@@ -92,14 +81,18 @@ jobs:
           PY
 
       - name: Commit reservation only when paid-input fingerprint changes
+        id: reservation
         run: |
           set -euo pipefail
           path=00_ARCHIVE_CONTROL/research_runtime/HISTORICAL_ALTSEASON_CFGI_PAID_RESERVATION.json
+          fp="$(python -c "import json; print(json.load(open('$path'))['input_fingerprint_sha256'])")"
+          echo "fingerprint=$fp" >> "$GITHUB_OUTPUT"
           git config user.name framework-research-bot
           git config user.email framework-research-bot@users.noreply.github.com
           git add "$path"
           if git diff --cached --quiet; then
             echo 'CFGI_RESERVATION_UNCHANGED - identical paid fingerprint already reserved'
+            echo 'changed=false' >> "$GITHUB_OUTPUT"
             exit 0
           fi
           git commit -m "research: reserve historical altseason CFGI fingerprint"
@@ -114,4 +107,16 @@ jobs:
           [ "$pushed" = true ]
           git fetch origin main
           git merge-base --is-ancestor HEAD origin/main
+          echo 'changed=true' >> "$GITHUB_OUTPUT"
           echo 'HISTORICAL_CFGI_RESERVATION_REMOTE_READBACK_PASS'
+
+      - name: Explicitly dispatch paid CFGI for the new reserved fingerprint
+        if: steps.reservation.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RESERVED_FINGERPRINT: ${{ steps.reservation.outputs.fingerprint }}
+        run: |
+          set -euo pipefail
+          test -n "$RESERVED_FINGERPRINT"
+          gh workflow run historical-altseason-cfgi-enrichment.yml --repo "$GITHUB_REPOSITORY" --ref main -f fingerprint="$RESERVED_FINGERPRINT"
+          echo "HISTORICAL_CFGI_EXPLICIT_DISPATCH_PASS $RESERVED_FINGERPRINT"
