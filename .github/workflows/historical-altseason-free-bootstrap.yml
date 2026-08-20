@@ -30,7 +30,7 @@ jobs:
           python-version: '3.12'
       - name: Build free historical dataset and outcome catalogue
         run: |
-          python scripts/historical_lab/free_altseason_bootstrap.py
+          python scripts/historical_lab/free_altseason_bootstrap_resilient.py
       - name: Validate artifacts and research-only authority
         run: |
           python - <<'PY'
