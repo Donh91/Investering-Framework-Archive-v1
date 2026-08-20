@@ -32,6 +32,8 @@ jobs:
         id: decision
         env:
           GH_TOKEN: ${{ github.token }}
+          TRIGGERING_WORKFLOW_NAME: ${{ github.event.workflow_run.name }}
+          TRIGGERING_WORKFLOW_CONCLUSION: ${{ github.event.workflow_run.conclusion }}
         run: |
           set -euo pipefail
           reservation=00_ARCHIVE_CONTROL/research_runtime/HISTORICAL_ALTSEASON_CFGI_PAID_RESERVATION.json
@@ -93,10 +95,6 @@ jobs:
           Path('/tmp/fingerprint.txt').write_text(fp+'\n')
           print(json.dumps({'action':action,'reason':reason,'fingerprint':fp,'recent_run_count':len(recent)},sort_keys=True))
           PY
-        env:
-          GH_TOKEN: ${{ github.token }}
-          TRIGGERING_WORKFLOW_NAME: ${{ github.event.workflow_run.name }}
-          TRIGGERING_WORKFLOW_CONCLUSION: ${{ github.event.workflow_run.conclusion }}
       - name: Export decision outputs
         id: exported
         run: |
