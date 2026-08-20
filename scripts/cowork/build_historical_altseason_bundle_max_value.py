@@ -19,6 +19,7 @@ ZIP_PATH = base.ZIP_PATH
 MANIFEST_PATH = base.MANIFEST_PATH
 SHA_PATH = base.SHA_PATH
 STAGE = DIST / "COWORK_RESEARCH_HANDOFF"
+LEDGER = REPO / "00_ARCHIVE_CONTROL" / "research_runtime" / "HISTORICAL_ALTSEASON_CFGI_PAID_ATTEMPT_LEDGER.json"
 
 HANDOFF_FILES = [
     base.PROMPT,
@@ -32,12 +33,14 @@ HANDOFF_FILES = [
     LAB / "config.json",
     ART / "RESEARCH_READINESS_MANIFEST.json",
     ART / "CFGI_BILLING.json",
+    ART / "CFGI_CUMULATIVE_BILLING.json",
     ART / "CFGI_FIELD_COVERAGE.json",
     ART / "CFGI_COVERAGE.json",
     ART / "FREE_BULK_ARTIFACT_POINTER.json",
     ART / "FREE_SOURCE_AUDIT.json",
     ART / "TIME_INTEGRITY_AUDIT.json",
     REPO / "00_ARCHIVE_CONTROL" / "research_runtime" / "HISTORICAL_ALTSEASON_CFGI_PAID_RESERVATION.json",
+    LEDGER,
 ]
 
 
@@ -49,8 +52,24 @@ def sha256(path: Path) -> str:
     return h.hexdigest()
 
 
+def validate_cumulative_billing() -> dict:
+    cfg=json.loads((LAB/'config.json').read_text())
+    cumulative=json.loads((ART/'CFGI_CUMULATIVE_BILLING.json').read_text())
+    ledger=json.loads(LEDGER.read_text())
+    reservation=json.loads((REPO/'00_ARCHIVE_CONTROL/research_runtime/HISTORICAL_ALTSEASON_CFGI_PAID_RESERVATION.json').read_text())
+    assert cumulative['contract']=='HISTORICAL_ALTSEASON_CFGI_CUMULATIVE_BILLING_v1'
+    assert cumulative['status']=='PASS'
+    assert ledger['contract']=='HISTORICAL_ALTSEASON_CFGI_PAID_ATTEMPT_LEDGER_v1'
+    assert cumulative['input_fingerprint_sha256']==ledger['input_fingerprint_sha256']==reservation['input_fingerprint_sha256']
+    assert cumulative['prior_actual_credits_used']==ledger['cumulative_actual_credits_used']
+    assert cumulative['cumulative_actual_credits_used']<=cfg['cfgi']['expected_credit_hard_cap']
+    assert cumulative['final_credits_remaining']>=cfg['cfgi']['minimum_credits_reserve']
+    return cumulative
+
+
 def main() -> int:
     readiness = base.validate_readiness()
+    cumulative = validate_cumulative_billing()
     for path in HANDOFF_FILES:
         if not path.exists() or not path.is_file() or path.stat().st_size == 0:
             raise SystemExit(f"COWORK_COMPACT_HANDOFF_BLOCKED missing={path.relative_to(REPO)}")
@@ -72,7 +91,7 @@ def main() -> int:
         })
 
     manifest = {
-        "contract": "COWORK_GITHUB_NATIVE_HANDOFF_MANIFEST_v1",
+        "contract": "COWORK_GITHUB_NATIVE_HANDOFF_MANIFEST_v2",
         "generated_at_utc": datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
         "repo": "Donh91/Investering-Framework-Archive-v1",
         "authoritative_ref": "main",
@@ -84,6 +103,14 @@ def main() -> int:
         "cowork_entrypoint": "07_PROMPTS_AND_AGENTS/historical_altseason_pullback/COWORK_OPUS5_LAUNCH_INSTRUCTION.md",
         "research_map": "07_PROMPTS_AND_AGENTS/historical_altseason_pullback/COWORK_GITHUB_RESEARCH_MAP.md",
         "expected_output_zip": "HISTORICAL_ALTSEASON_COWORK_OPUS5_RESEARCH_PACKAGE.zip",
+        "cfgi_cumulative_billing": {
+            "prior_actual_credits_used": cumulative['prior_actual_credits_used'],
+            "current_actual_credits_used": cumulative['current_actual_credits_used'],
+            "cumulative_actual_credits_used": cumulative['cumulative_actual_credits_used'],
+            "hard_cap_credits": cumulative['hard_cap_credits'],
+            "final_credits_remaining": cumulative['final_credits_remaining'],
+            "minimum_reserve_credits": cumulative['minimum_reserve_credits'],
+        },
         "files": files,
     }
     manifest_dest = STAGE / "COWORK_HANDOFF_MANIFEST.json"
@@ -104,6 +131,8 @@ def main() -> int:
             "COWORK_RESEARCH_HANDOFF/07_PROMPTS_AND_AGENTS/historical_altseason_pullback/COWORK_OPUS5_MASTER_RESEARCH_PROMPT.md",
             "COWORK_RESEARCH_HANDOFF/07_PROMPTS_AND_AGENTS/historical_altseason_pullback/COWORK_OPUS5_LAUNCH_INSTRUCTION.md",
             "COWORK_RESEARCH_HANDOFF/07_PROMPTS_AND_AGENTS/historical_altseason_pullback/COWORK_GITHUB_RESEARCH_MAP.md",
+            "COWORK_RESEARCH_HANDOFF/06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/CFGI_CUMULATIVE_BILLING.json",
+            "COWORK_RESEARCH_HANDOFF/00_ARCHIVE_CONTROL/research_runtime/HISTORICAL_ALTSEASON_CFGI_PAID_ATTEMPT_LEDGER.json",
             "COWORK_RESEARCH_HANDOFF/06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/FREE_BULK_ARTIFACT_POINTER.json",
         ]:
             if required not in names:
@@ -118,6 +147,7 @@ def main() -> int:
         "handoff_file_count": len(files),
         "zip": str(ZIP_PATH.relative_to(REPO)),
         "zip_sha256": zip_hash,
+        "cfgi_cumulative_actual_credits_used": cumulative['cumulative_actual_credits_used'],
     }, sort_keys=True))
     return 0
 
