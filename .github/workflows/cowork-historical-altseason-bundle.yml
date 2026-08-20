@@ -38,7 +38,7 @@ jobs:
         run: |
           python scripts/cowork/build_historical_altseason_bundle.py
 
-      - name: Validate bundle outputs
+      - name: Validate bundle outputs and mandatory research protocols
         run: |
           set -euo pipefail
           root=dist/cowork_historical_altseason
@@ -57,8 +57,17 @@ jobs:
           with zipfile.ZipFile(root/'HISTORICAL_ALTSEASON_COWORK_INPUT_BUNDLE.zip') as zf:
               assert zf.testzip() is None
               names=set(zf.namelist())
-              assert 'COWORK_RESEARCH_INPUT/PROMPT/COWORK_OPUS5_MASTER_RESEARCH_PROMPT.md' in names
-              assert 'COWORK_RESEARCH_INPUT/COWORK_INPUT_MANIFEST.json' in names
+              required={
+                'COWORK_RESEARCH_INPUT/PROMPT/COWORK_OPUS5_MASTER_RESEARCH_PROMPT.md',
+                'COWORK_RESEARCH_INPUT/COWORK_INPUT_MANIFEST.json',
+                'COWORK_RESEARCH_INPUT/CORE/REPO/06_RESEARCH_LAB/historical_altseason_pullback_v1/COWORK_READINESS_PROTOCOL.md',
+                'COWORK_RESEARCH_INPUT/CORE/REPO/06_RESEARCH_LAB/historical_altseason_pullback_v1/COWORK_OPUS5_RESEARCH_PROTOCOL_ADDENDUM.md',
+              }
+              missing=sorted(required-names)
+              assert not missing, missing
+              addendum=zf.read('COWORK_RESEARCH_INPUT/CORE/REPO/06_RESEARCH_LAB/historical_altseason_pullback_v1/COWORK_OPUS5_RESEARCH_PROTOCOL_ADDENDUM.md').decode()
+              for token in ['PRE_SPECIFIED','POST_HOC_DISCOVERY','TOP_CANDIDATE_DESTRUCTION_TOURNAMENT','FINAL_EVIDENCE_LADDER','EFFECTIVE_SAMPLE_SIZE_AND_POWER']:
+                  assert token in addendum, token
           print('COWORK_RESEARCH_BUNDLE_VALIDATION_PASS', manifest['included_file_count'])
           PY
 
