@@ -1,0 +1,23 @@
+{
+  "contract": "HISTORICAL_ALTSEASON_CFGI_PAID_ATTEMPT_LEDGER_v1",
+  "input_fingerprint_sha256": "6106f96285a66f03e324595b68c1777627f4d83e5e70dc6c64d9b1022e544a8f",
+  "hard_cap_credits": 25000,
+  "minimum_reserve_credits": 50000,
+  "owner_authorized_recovery_attempts": 1,
+  "automatic_retry_after_failure": false,
+  "attempts": [
+    {
+      "run_id": 32419588422,
+      "started_at_utc": "2026-08-20T21:28:38Z",
+      "status": "PAID_FETCH_PASS_READINESS_FAIL",
+      "selected_event_count": 2,
+      "rows_retrieved": 478,
+      "actual_credits_used_from_headers": 5259,
+      "final_credits_remaining": 81832,
+      "readiness_blocker": "CFGI_EXACT_EVENT_PATH_INCOMPLETE",
+      "artifact_preserved": false,
+      "notes": "Paid API fetch completed successfully, but downstream readiness validation failed before artifact upload. Recovery authorized once after contract repair."
+    }
+  ],
+  "cumulative_actual_credits_used": 5259
+}
