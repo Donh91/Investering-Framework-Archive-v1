@@ -1,0 +1,48 @@
+name: Pullback Learning Gate
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/pullback_learning/**'
+      - '.github/workflows/pullback-learning-ledger.yml'
+      - '.github/workflows/pullback-learning-gate.yml'
+      - '04_MARKET_LEARNING/pullback_learning/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run pullback learning ledger in validation mode
+        run: python scripts/pullback_learning/pullback_learning_ledger.py
+      - name: Assert research-only governance and contracts
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          latest=json.loads(Path('04_MARKET_LEARNING/pullback_learning/LATEST.json').read_text())
+          summary=json.loads(Path('04_MARKET_LEARNING/pullback_learning/PERFORMANCE_SUMMARY.json').read_text())
+          assert latest['contract']=='PULLBACK_LEARNING_LATEST_v1'
+          assert latest['authority']=={
+            'portfolio_execution': False,
+            'canonical_market_state': False,
+            'automatic_rule_changes': False,
+            'research_only': True,
+          }
+          assert summary['governance']['automatic_rule_changes'] is False
+          assert summary['governance']['portfolio_execution'] is False
+          assert summary['governance']['promotion_requires_separate_review'] is True
+          assert latest['research_state'] in {
+            'LEARNING_WARMUP','REGIME_NOT_ACTIVE','NORMAL',
+            'PULLBACK_RISK_RESEARCH','PULLBACK_ACTIVE_RESEARCH','RELOAD_WATCH_RESEARCH'
+          }
+          print(latest['data_ping_bridge']['display_line'])
+          PY
