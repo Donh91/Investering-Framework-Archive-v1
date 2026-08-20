@@ -2,7 +2,7 @@
   "adaptive_evidence": {
     "adaptive_percentiles_ready": false,
     "minimum_required": 24,
-    "observation_count": 0
+    "observation_count": 1
   },
   "authority": {
     "automatic_rule_changes": false,
@@ -12,42 +12,41 @@
   },
   "contract": "PULLBACK_LEARNING_LATEST_v1",
   "data_ping_bridge": {
-    "display_line": "PULLBACK LEARNING: LEARNING_WARMUP | dd=0.00% | breadth=79% | sample=1"
+    "display_line": "PULLBACK LEARNING: LEARNING_WARMUP | dd=0.00% | breadth=66% | sample=2"
   },
-  "duplicate_price_observation_skipped": true,
-  "generated_at_utc": "2026-08-20T21:14:24.509061+00:00",
+  "generated_at_utc": "2026-08-20T23:12:06.691188+00:00",
   "market_snapshot": {
     "adaptive_evidence": {
       "adaptive_percentiles_ready": false,
       "minimum_required": 24,
-      "observation_count": 0
+      "observation_count": 1
     },
-    "advancer_pct": 79,
-    "breadth": 0.79,
-    "btc_usdt": 71789.97,
-    "captured_at_utc": "2026-08-20T15:20:02.059113+00:00",
+    "advancer_pct": 66,
+    "breadth": 0.66,
+    "btc_usdt": 72741.81,
+    "captured_at_utc": "2026-08-20T23:12:06.692304+00:00",
     "contract": "PULLBACK_LEARNING_OBSERVATION_v1",
     "drawdown_from_running_peak_pct": 0.0,
-    "entry_heat": "HOT",
-    "entry_state": "GRADUATED_ALTCOIN_TOPUP_ACTIVE",
-    "eth_usdt": 2278.56,
-    "ethbtc": 0.03175,
-    "ew_return_24h_pct": 6.061,
-    "hourly_sequence_run_id": "HOURLY_SEQUENCE_20260820T102136Z_c92eb9d13b5d",
-    "matched_constituent_count": 0,
-    "matched_top100_step_return_pct": null,
-    "median_return_24h_pct": 6.3,
-    "membership_hash": "186b422202afbb6994929677c15e8eb421ccdaab16fc1d630248ccaf772e7517",
-    "price_observation_utc": "2026-08-20T09:00:00+00:00",
+    "entry_heat": "NORMAL",
+    "entry_state": "WAIT",
+    "eth_usdt": 2318.81,
+    "ethbtc": 0.03187,
+    "ew_return_24h_pct": 3.597,
+    "hourly_sequence_run_id": "HOURLY_SEQUENCE_20260820T221847Z_68082874b074",
+    "matched_constituent_count": 100,
+    "matched_top100_step_return_pct": 1.334013446083398,
+    "median_return_24h_pct": 2.6,
+    "membership_hash": "c498a98f2e5d1871d5fde1a692c817ca5becfc007e965035420f05a73ceadfc7",
+    "price_observation_utc": "2026-08-20T21:00:00+00:00",
     "price_source": "GITHUB_HOURLY_SEQUENCE_DIRECT_CLOSES",
     "research_state": "LEARNING_WARMUP",
-    "running_peak_index": 100.0,
-    "synthetic_top100_index": 100.0
+    "running_peak_index": 101.33401344608339,
+    "synthetic_top100_index": 101.33401344608339
   },
   "performance_summary": {
     "closed_episode_count": 0,
     "contract": "PULLBACK_LEARNING_PERFORMANCE_SUMMARY_v1",
-    "generated_at_utc": "2026-08-20T21:14:24.509061+00:00",
+    "generated_at_utc": "2026-08-20T23:12:06.691188+00:00",
     "governance": {
       "automatic_rule_changes": false,
       "portfolio_execution": false,
@@ -63,6 +62,6 @@
     "minimum_episodes_emerging": 10,
     "minimum_episodes_usable_descriptive": 30
   },
-  "previous_research_state": null,
+  "previous_research_state": "LEARNING_WARMUP",
   "research_state": "LEARNING_WARMUP"
 }
