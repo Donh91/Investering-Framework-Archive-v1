@@ -1,23 +1,25 @@
 name: Historical Altseason CFGI Enrichment
 
 on:
-  workflow_run:
-    workflows: ['Historical Altseason Free Bootstrap']
-    types: [completed]
+  push:
+    branches: [main]
+    paths:
+      - '06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/EPISODE_CATALOG.json'
+      - '06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/FREE_SOURCE_AUDIT.json'
+      - '06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/FREE_EVENT_PATHS.jsonl.gz'
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
-  group: framework-main-writer
+  group: historical-altseason-cfgi-enrichment
   cancel-in-progress: false
 
 jobs:
   enrich:
     if: >-
-      ${{ github.event_name == 'workflow_dispatch' ||
-          (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main') }}
+      ${{ github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     steps:
@@ -122,7 +124,6 @@ jobs:
           cfg=json.loads(Path('06_RESEARCH_LAB/historical_altseason_pullback_v1/config.json').read_text())
           g=cfg['cfgi']; a=cfg['authority']
           b=json.loads((root/'CFGI_BILLING.json').read_text())
-
           assert b['expected_worst_case_credits'] <= g['expected_credit_hard_cap']
           actual=b.get('actual_credits_used_from_headers')
           if actual is not None:
@@ -132,23 +133,17 @@ jobs:
               assert remaining is not None
               assert remaining >= g['minimum_credits_reserve']
               assert b.get('input_fingerprint_sha256'), 'missing idempotency fingerprint'
-
           assert a['research_only'] is True
           assert a['portfolio_execution'] is False
           assert a['canonical_market_state'] is False
           assert a['automatic_rule_changes'] is False
           assert a['promotion_requires_separate_review'] is True
           assert (root/'CFGI_COVERAGE.json').exists()
-
           if b['status']=='PASS':
-              req=[
-                'cfgi_targeted.jsonl.gz','CFGI_EVENT_SIGNATURES.json','CFGI_FIELD_COVERAGE.json',
-                'CFGI_EVENT_PATHS.jsonl.gz','RESEARCH_READINESS_MANIFEST.json'
-              ]
+              req=['cfgi_targeted.jsonl.gz','CFGI_EVENT_SIGNATURES.json','CFGI_FIELD_COVERAGE.json','CFGI_EVENT_PATHS.jsonl.gz','RESEARCH_READINESS_MANIFEST.json']
               for name in req:
                   p=root/name
                   assert p.exists() and p.stat().st_size>0, name
-
               fc=json.loads((root/'CFGI_FIELD_COVERAGE.json').read_text())
               assert fc['exact_relative_hour_semantics'] is True
               assert fc['diagnostics']['no_silent_fallback'] is True
@@ -156,38 +151,20 @@ jobs:
                   first=json.loads(next(fh))
               for k in ['event_id','relative_hour','expected_timestamp_utc','observed_exact_hour','fields']:
                   assert k in first, k
-
               m=json.loads((root/'RESEARCH_READINESS_MANIFEST.json').read_text())
               assert m['readiness_verdict']=='PASS', m['blockers']
               assert m['authority']['research_only'] is True
               assert m['authority']['portfolio_execution'] is False
               assert m['automatic_promotion'] is False
               assert m['historical_findings_max_classification']=='FORWARD_TEST'
-
           print('CFGI_RESEARCH_READINESS_VALIDATION_PASS', b['status'], actual, b.get('final_credits_remaining'))
           PY
 
-      - name: Commit research artifacts only
-        run: |
-          set -euo pipefail
-          git config user.name framework-research-bot
-          git config user.email framework-research-bot@users.noreply.github.com
-          git add 06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/
-          if git diff --cached --quiet; then
-            echo 'No CFGI artifact changes'
-            exit 0
-          fi
-          bad="$(git diff --cached --name-only | grep -v '^06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/' || true)"
-          if [ -n "$bad" ]; then
-            echo "Unexpected staged paths:" >&2
-            echo "$bad" >&2
-            exit 1
-          fi
-          git commit -m "research: targeted CFGI altseason enrichment ${GITHUB_RUN_ID}"
-          git fetch origin main
-          if ! git rebase origin/main; then
-            git rebase --abort || true
-            exit 1
-          fi
-          git merge-base --is-ancestor origin/main HEAD
-          git push origin HEAD:main
+      - name: Upload validated CFGI research stage
+        uses: actions/upload-artifact@v4
+        with:
+          name: historical-altseason-cfgi-stage
+          path: 06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 6
