@@ -2,7 +2,7 @@ name: Historical Altseason CFGI Run Audit
 
 on:
   workflow_run:
-    workflows: ['Historical Altseason Lab Gate']
+    workflows: ['Historical Altseason Lab Gate', 'Historical Altseason CFGI Enrichment']
     types: [completed]
 
 permissions:
@@ -15,7 +15,9 @@ concurrency:
 
 jobs:
   audit:
-    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' }}
+    if: >-
+      ${{ github.event.workflow_run.head_branch == 'main' &&
+          (github.event.workflow_run.name == 'Historical Altseason CFGI Enrichment' || github.event.workflow_run.conclusion == 'success') }}
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
@@ -26,7 +28,6 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-
       - name: Audit current reservation and decide whether one recovery dispatch is needed
         id: decision
         env:
@@ -58,8 +59,7 @@ jobs:
                   recent.append(r)
           billing=Path('06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/CFGI_BILLING.json')
           readiness=Path('06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/RESEARCH_READINESS_MANIFEST.json')
-          action='DISPATCH'
-          reason='RESERVED_FINGERPRINT_HAS_NO_PAID_RUN'
+          action='DISPATCH'; reason='RESERVED_FINGERPRINT_HAS_NO_PAID_RUN'
           if guard.get('skip_paid') is True:
               action='NO_DISPATCH'; reason='EXACT_COMPLETE_PRIOR_ENRICHMENT'
           elif billing.exists() or readiness.exists():
@@ -77,6 +77,8 @@ jobs:
           out={
               'contract':'HISTORICAL_ALTSEASON_CFGI_RUN_ORCHESTRATION_AUDIT_v2',
               'workflow':'historical-altseason-cfgi-enrichment.yml',
+              'triggering_workflow_name':os.environ.get('TRIGGERING_WORKFLOW_NAME'),
+              'triggering_workflow_conclusion':os.environ.get('TRIGGERING_WORKFLOW_CONCLUSION'),
               'reservation_fingerprint':fp,
               'reservation_created_at':os.environ['RESERVATION_CREATED_AT'],
               'idempotency_skip_paid':guard.get('skip_paid'),
@@ -86,32 +88,35 @@ jobs:
               'all_recent_runs':runs,
               'automatic_paid_retry_after_failure':False,
           }
-          path=Path('00_ARCHIVE_CONTROL/research_runtime/HISTORICAL_ALTSEASON_CFGI_RUN_AUDIT.json')
-          path.write_text(json.dumps(out,indent=2,sort_keys=True)+'\n')
+          Path('00_ARCHIVE_CONTROL/research_runtime/HISTORICAL_ALTSEASON_CFGI_RUN_AUDIT.json').write_text(json.dumps(out,indent=2,sort_keys=True)+'\n')
           Path('/tmp/decision.txt').write_text(action+'\n')
           Path('/tmp/fingerprint.txt').write_text(fp+'\n')
           print(json.dumps({'action':action,'reason':reason,'fingerprint':fp,'recent_run_count':len(recent)},sort_keys=True))
           PY
-          echo "action=$(cat /tmp/decision.txt)" >> "$GITHUB_OUTPUT"
-          echo "fingerprint=$(cat /tmp/fingerprint.txt)" >> "$GITHUB_OUTPUT"
-
-      - name: Dispatch the already-reserved fingerprint exactly once when no paid run exists
-        if: steps.decision.outputs.action == 'DISPATCH'
         env:
           GH_TOKEN: ${{ github.token }}
-          RESERVED_FINGERPRINT: ${{ steps.decision.outputs.fingerprint }}
+          TRIGGERING_WORKFLOW_NAME: ${{ github.event.workflow_run.name }}
+          TRIGGERING_WORKFLOW_CONCLUSION: ${{ github.event.workflow_run.conclusion }}
+      - name: Export decision outputs
+        id: exported
+        run: |
+          echo "action=$(cat /tmp/decision.txt)" >> "$GITHUB_OUTPUT"
+          echo "fingerprint=$(cat /tmp/fingerprint.txt)" >> "$GITHUB_OUTPUT"
+      - name: Dispatch the already-reserved fingerprint exactly once when no paid run exists
+        if: steps.exported.outputs.action == 'DISPATCH'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RESERVED_FINGERPRINT: ${{ steps.exported.outputs.fingerprint }}
         run: |
           set -euo pipefail
           test -n "$RESERVED_FINGERPRINT"
           gh workflow run historical-altseason-cfgi-enrichment.yml --repo "$GITHUB_REPOSITORY" --ref main -f fingerprint="$RESERVED_FINGERPRINT"
           echo "HISTORICAL_CFGI_RECOVERY_DISPATCH_PASS $RESERVED_FINGERPRINT"
-
       - name: Refuse automatic retry after any paid-run failure
-        if: steps.decision.outputs.action == 'BLOCKED'
+        if: steps.exported.outputs.action == 'BLOCKED'
         run: |
           echo 'A paid CFGI run failed after reservation. Automatic retry is forbidden until billing/run logs are reviewed.' >&2
           exit 1
-
       - name: Commit bounded orchestration audit under shared writer lock
         if: always() && steps.decision.outcome == 'success'
         run: |
