@@ -1,0 +1,141 @@
+name: Historical Altseason CFGI Recovery Trigger
+
+on:
+  workflow_run:
+    workflows: ['Full Architecture 1-7 Gate']
+    types: [completed]
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: framework-main-writer
+  cancel-in-progress: false
+
+jobs:
+  trigger:
+    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Exit if recovery is already bound
+        id: receipt
+        run: |
+          path=00_ARCHIVE_CONTROL/research_runtime/HISTORICAL_ALTSEASON_CFGI_RECOVERY_LAUNCH_RECEIPT.json
+          if [ -s "$path" ]; then
+            python - <<'PY'
+          import json
+          from pathlib import Path
+          x=json.loads(Path('00_ARCHIVE_CONTROL/research_runtime/HISTORICAL_ALTSEASON_CFGI_RECOVERY_LAUNCH_RECEIPT.json').read_text())
+          assert x['contract']=='HISTORICAL_ALTSEASON_CFGI_RECOVERY_LAUNCH_RECEIPT_v1'
+          assert int(x['recovery_run']['databaseId']) != 32419588422
+          print('RECOVERY_ALREADY_BOUND',x['recovery_run']['databaseId'])
+          PY
+            echo 'exists=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'exists=false' >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Verify cumulative recovery authorization
+        if: steps.receipt.outputs.exists != 'true'
+        run: |
+          set -euo pipefail
+          python scripts/historical_lab/cfgi_recovery_budget_guard.py | tee /tmp/budget.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          fp='6106f96285a66f03e324595b68c1777627f4d83e5e70dc6c64d9b1022e544a8f'
+          ledger=json.loads(Path('00_ARCHIVE_CONTROL/research_runtime/HISTORICAL_ALTSEASON_CFGI_PAID_ATTEMPT_LEDGER.json').read_text())
+          reservation=json.loads(Path('00_ARCHIVE_CONTROL/research_runtime/HISTORICAL_ALTSEASON_CFGI_PAID_RESERVATION.json').read_text())
+          budget=json.loads(Path('/tmp/budget.json').read_text())
+          assert fp==ledger['input_fingerprint_sha256']==reservation['input_fingerprint_sha256']==budget['input_fingerprint_sha256']
+          assert ledger['cumulative_actual_credits_used']==5259
+          assert ledger['owner_authorized_recovery_attempts']==1
+          assert ledger['automatic_retry_after_failure'] is False
+          assert budget['status']=='PASS' and not budget['blockers']
+          print('RECOVERY_AUTHORIZATION_PASS',budget['projected_cumulative_credits'],budget['projected_credits_remaining'])
+          PY
+
+      - name: Find or dispatch the single recovery and create receipt
+        if: steps.receipt.outputs.exists != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          FP: 6106f96285a66f03e324595b68c1777627f4d83e5e70dc6c64d9b1022e544a8f
+        run: |
+          set -euo pipefail
+          gh run list --repo "$GITHUB_REPOSITORY" --workflow historical-altseason-cfgi-enrichment.yml --limit 20 --json databaseId,event,createdAt,status,conclusion,url,headSha > /tmp/before.json
+          candidate="$(python - <<'PY'
+          import json
+          from datetime import datetime
+          from pathlib import Path
+          cutoff=datetime.fromisoformat('2026-08-20T21:28:58+00:00')
+          rows=json.loads(Path('/tmp/before.json').read_text())
+          c=[r for r in rows if r.get('event')=='workflow_dispatch' and datetime.fromisoformat(r['createdAt'].replace('Z','+00:00'))>cutoff]
+          c.sort(key=lambda r:r['createdAt'],reverse=True)
+          print('' if not c else c[0]['databaseId'])
+          PY
+          )"
+          if [ -z "$candidate" ]; then
+            gh workflow run historical-altseason-cfgi-enrichment.yml --repo "$GITHUB_REPOSITORY" --ref main -f fingerprint="$FP"
+            sleep 4
+            gh run list --repo "$GITHUB_REPOSITORY" --workflow historical-altseason-cfgi-enrichment.yml --limit 10 --json databaseId,event,createdAt,status,conclusion,url,headSha > /tmp/after.json
+            action=DISPATCHED_NOW
+          else
+            cp /tmp/before.json /tmp/after.json
+            action=EXISTING_RECOVERY_FOUND
+          fi
+          ACTION="$action" FP="$FP" python - <<'PY'
+          import json,os
+          from datetime import datetime
+          from pathlib import Path
+          cutoff=datetime.fromisoformat('2026-08-20T21:28:58+00:00')
+          rows=json.loads(Path('/tmp/after.json').read_text())
+          c=[r for r in rows if r.get('event')=='workflow_dispatch' and datetime.fromisoformat(r['createdAt'].replace('Z','+00:00'))>cutoff]
+          c.sort(key=lambda r:r['createdAt'],reverse=True)
+          assert c,'no recovery run visible after bounded launch decision'
+          receipt={
+            'contract':'HISTORICAL_ALTSEASON_CFGI_RECOVERY_LAUNCH_RECEIPT_v1',
+            'input_fingerprint_sha256':os.environ['FP'],
+            'first_failed_paid_run_id':32419588422,
+            'owner_authorized_recovery_attempts':1,
+            'automatic_retry_after_failure':False,
+            'launch_action':os.environ['ACTION'],
+            'recovery_run':c[0],
+          }
+          Path('00_ARCHIVE_CONTROL/research_runtime/HISTORICAL_ALTSEASON_CFGI_RECOVERY_LAUNCH_RECEIPT.json').write_text(json.dumps(receipt,indent=2,sort_keys=True)+'\n')
+          print('RECOVERY_RUN_BOUND',c[0]['databaseId'],c[0]['status'],c[0].get('conclusion'))
+          PY
+
+      - name: Commit recovery launch receipt under shared writer lock
+        if: steps.receipt.outputs.exists != 'true'
+        run: |
+          set -euo pipefail
+          path=00_ARCHIVE_CONTROL/research_runtime/HISTORICAL_ALTSEASON_CFGI_RECOVERY_LAUNCH_RECEIPT.json
+          git config user.name framework-research-bot
+          git config user.email framework-research-bot@users.noreply.github.com
+          git add "$path"
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "research: bind authorized CFGI recovery run"
+          pushed=false
+          for attempt in 1 2 3 4 5; do
+            git rebase --abort 2>/dev/null || true
+            git fetch origin main
+            if git rebase origin/main && git push origin HEAD:main; then pushed=true; break; fi
+            git rebase --abort 2>/dev/null || true
+            sleep $((attempt * 5))
+          done
+          [ "$pushed" = true ]
+          git fetch origin main
+          git merge-base --is-ancestor HEAD origin/main
+          git show origin/main:"$path" >/tmp/readback.json
+          test -s /tmp/readback.json
+          echo 'RECOVERY_TRIGGER_RECEIPT_READBACK_PASS'
