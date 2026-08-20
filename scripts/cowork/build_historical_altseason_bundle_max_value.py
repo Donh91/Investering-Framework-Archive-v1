@@ -1,70 +1,126 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import hashlib
 import json
+import shutil
 import zipfile
+from datetime import datetime, timezone
 from pathlib import Path
 
 import build_historical_altseason_bundle as base
 
 REPO = base.REPO
-SIDECAR = REPO / "07_PROMPTS_AND_AGENTS" / "historical_altseason_pullback" / "COWORK_OPUS5_MAX_VALUE_SIDECARS.md"
-LAUNCH = REPO / "07_PROMPTS_AND_AGENTS" / "historical_altseason_pullback" / "COWORK_OPUS5_LAUNCH_INSTRUCTION.md"
-INTRADAY = REPO / "04_MARKET_LEARNING" / "intraday_execution"
-INTRADAY_SCRIPTS = REPO / "scripts" / "intraday_execution"
+LAB = REPO / "06_RESEARCH_LAB" / "historical_altseason_pullback_v1"
+ART = LAB / "artifacts"
+PROMPT_DIR = REPO / "07_PROMPTS_AND_AGENTS" / "historical_altseason_pullback"
+DIST = base.DIST
+ZIP_PATH = base.ZIP_PATH
+MANIFEST_PATH = base.MANIFEST_PATH
+SHA_PATH = base.SHA_PATH
+STAGE = DIST / "COWORK_RESEARCH_HANDOFF"
 
-for required in [SIDECAR, LAUNCH, INTRADAY, INTRADAY_SCRIPTS]:
-    if not required.exists():
-        raise SystemExit(f"COWORK_MAX_VALUE_BLOCKED missing={required.relative_to(REPO)}")
+HANDOFF_FILES = [
+    base.PROMPT,
+    PROMPT_DIR / "COWORK_OPUS5_LAUNCH_INSTRUCTION.md",
+    PROMPT_DIR / "COWORK_OPUS5_MAX_VALUE_SIDECARS.md",
+    PROMPT_DIR / "COWORK_GITHUB_RESEARCH_MAP.md",
+    LAB / "COWORK_READINESS_PROTOCOL.md",
+    LAB / "COWORK_OPUS5_RESEARCH_PROTOCOL_ADDENDUM.md",
+    LAB / "INTRADAY_EXECUTION_COWORK_ADDENDUM.md",
+    LAB / "CLAUDE_COWORK_DEEP_RESEARCH_BRIEF.md",
+    LAB / "config.json",
+    ART / "RESEARCH_READINESS_MANIFEST.json",
+    ART / "CFGI_BILLING.json",
+    ART / "CFGI_FIELD_COVERAGE.json",
+    ART / "CFGI_COVERAGE.json",
+    ART / "FREE_BULK_ARTIFACT_POINTER.json",
+    ART / "FREE_SOURCE_AUDIT.json",
+    ART / "TIME_INTEGRITY_AUDIT.json",
+    REPO / "00_ARCHIVE_CONTROL" / "research_runtime" / "HISTORICAL_ALTSEASON_CFGI_PAID_RESERVATION.json",
+]
 
-# Extend the frozen base bundler without changing readiness, billing or authority semantics.
-for path in [SIDECAR, LAUNCH]:
-    if path not in base.REQUIRED_BASE:
-        base.REQUIRED_BASE.append(path)
-    if path not in base.CORE_SELECTED_PATHS:
-        base.CORE_SELECTED_PATHS.append(path)
 
-for path in [INTRADAY, INTRADAY_SCRIPTS]:
-    if path not in base.PROSPECTIVE_SELECTED_PATHS:
-        base.PROSPECTIVE_SELECTED_PATHS.append(path)
+def sha256(path: Path) -> str:
+    h = hashlib.sha256()
+    with path.open("rb") as fh:
+        for chunk in iter(lambda: fh.read(1024 * 1024), b""):
+            h.update(chunk)
+    return h.hexdigest()
 
-base.build_bundle()
 
-manifest = json.loads(base.MANIFEST_PATH.read_text(encoding="utf-8"))
-source_paths = {x["source_path"] for x in manifest["files"]}
-required_sources = {
-    str(SIDECAR.relative_to(REPO)),
-    str(LAUNCH.relative_to(REPO)),
-}
-missing_sources = sorted(required_sources - source_paths)
-if missing_sources:
-    raise SystemExit(f"COWORK_MAX_VALUE_BLOCKED missing_manifest_sources={missing_sources}")
+def main() -> int:
+    readiness = base.validate_readiness()
+    for path in HANDOFF_FILES:
+        if not path.exists() or not path.is_file() or path.stat().st_size == 0:
+            raise SystemExit(f"COWORK_COMPACT_HANDOFF_BLOCKED missing={path.relative_to(REPO)}")
 
-# Both prospective intraday directories must contribute at least one concrete file.
-for prefix in [str(INTRADAY.relative_to(REPO)), str(INTRADAY_SCRIPTS.relative_to(REPO))]:
-    if not any(p == prefix or p.startswith(prefix + "/") for p in source_paths):
-        raise SystemExit(f"COWORK_MAX_VALUE_BLOCKED intraday_not_bundled={prefix}")
+    if DIST.exists():
+        shutil.rmtree(DIST)
+    STAGE.mkdir(parents=True, exist_ok=True)
 
-with zipfile.ZipFile(base.ZIP_PATH, "r") as zf:
-    if zf.testzip() is not None:
-        raise SystemExit("COWORK_MAX_VALUE_BLOCKED corrupt_zip")
-    names = set(zf.namelist())
-    required_members = {
-        "COWORK_RESEARCH_INPUT/CORE/REPO/07_PROMPTS_AND_AGENTS/historical_altseason_pullback/COWORK_OPUS5_MAX_VALUE_SIDECARS.md",
-        "COWORK_RESEARCH_INPUT/CORE/REPO/07_PROMPTS_AND_AGENTS/historical_altseason_pullback/COWORK_OPUS5_LAUNCH_INSTRUCTION.md",
-        "COWORK_RESEARCH_INPUT/CORE/REPO/06_RESEARCH_LAB/historical_altseason_pullback_v1/INTRADAY_EXECUTION_COWORK_ADDENDUM.md",
+    files = []
+    for src in HANDOFF_FILES:
+        rel = src.relative_to(REPO)
+        dest = STAGE / rel
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(src, dest)
+        files.append({
+            "source_path": rel.as_posix(),
+            "size_bytes": src.stat().st_size,
+            "sha256": sha256(src),
+        })
+
+    manifest = {
+        "contract": "COWORK_GITHUB_NATIVE_HANDOFF_MANIFEST_v1",
+        "generated_at_utc": datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
+        "repo": "Donh91/Investering-Framework-Archive-v1",
+        "authoritative_ref": "main",
+        "delivery_model": "COMPACT_INSTRUCTIONS_PLUS_DIRECT_GITHUB_READ",
+        "readiness_verdict": readiness["readiness_manifest"]["readiness_verdict"],
+        "automatic_promotion": False,
+        "historical_findings_max_classification": "FORWARD_TEST",
+        "heavy_bulk_delivery": "BOUND_GITHUB_ACTIONS_ARTIFACT_VIA_FREE_BULK_ARTIFACT_POINTER",
+        "cowork_entrypoint": "07_PROMPTS_AND_AGENTS/historical_altseason_pullback/COWORK_OPUS5_LAUNCH_INSTRUCTION.md",
+        "research_map": "07_PROMPTS_AND_AGENTS/historical_altseason_pullback/COWORK_GITHUB_RESEARCH_MAP.md",
+        "expected_output_zip": "HISTORICAL_ALTSEASON_COWORK_OPUS5_RESEARCH_PACKAGE.zip",
+        "files": files,
     }
-    missing_members = sorted(required_members - names)
-    if missing_members:
-        raise SystemExit(f"COWORK_MAX_VALUE_BLOCKED missing_zip_members={missing_members}")
+    manifest_dest = STAGE / "COWORK_HANDOFF_MANIFEST.json"
+    manifest_dest.write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
-print(json.dumps({
-    "status": "PASS",
-    "contract": "COWORK_MAX_VALUE_BUNDLE_EXTENSION_v1",
-    "sidecars": True,
-    "intraday_execution_data": True,
-    "intraday_execution_code": True,
-    "launch_instruction": True,
-    "readiness": manifest["readiness_verdict"],
-    "zip": str(base.ZIP_PATH.relative_to(REPO)),
-}, sort_keys=True))
+    MANIFEST_PATH.parent.mkdir(parents=True, exist_ok=True)
+    MANIFEST_PATH.write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    with zipfile.ZipFile(ZIP_PATH, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=9) as zf:
+        for path in sorted(STAGE.rglob("*")):
+            if path.is_file():
+                zf.write(path, arcname=str(Path("COWORK_RESEARCH_HANDOFF") / path.relative_to(STAGE)))
+    with zipfile.ZipFile(ZIP_PATH, "r") as zf:
+        if zf.testzip() is not None:
+            raise SystemExit("COWORK_COMPACT_HANDOFF_BLOCKED corrupt_zip")
+        names = set(zf.namelist())
+        for required in [
+            "COWORK_RESEARCH_HANDOFF/COWORK_HANDOFF_MANIFEST.json",
+            "COWORK_RESEARCH_HANDOFF/07_PROMPTS_AND_AGENTS/historical_altseason_pullback/COWORK_OPUS5_MASTER_RESEARCH_PROMPT.md",
+            "COWORK_RESEARCH_HANDOFF/07_PROMPTS_AND_AGENTS/historical_altseason_pullback/COWORK_OPUS5_LAUNCH_INSTRUCTION.md",
+            "COWORK_RESEARCH_HANDOFF/07_PROMPTS_AND_AGENTS/historical_altseason_pullback/COWORK_GITHUB_RESEARCH_MAP.md",
+            "COWORK_RESEARCH_HANDOFF/06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/FREE_BULK_ARTIFACT_POINTER.json",
+        ]:
+            if required not in names:
+                raise SystemExit(f"COWORK_COMPACT_HANDOFF_BLOCKED zip_missing={required}")
+
+    zip_hash = sha256(ZIP_PATH)
+    SHA_PATH.write_text(f"{zip_hash}  {ZIP_PATH.name}\n", encoding="utf-8")
+    print(json.dumps({
+        "status": "PASS",
+        "contract": manifest["contract"],
+        "readiness": manifest["readiness_verdict"],
+        "handoff_file_count": len(files),
+        "zip": str(ZIP_PATH.relative_to(REPO)),
+        "zip_sha256": zip_hash,
+    }, sort_keys=True))
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
