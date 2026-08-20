@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import json, statistics, urllib.request
+import csv, json, statistics
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -9,6 +9,7 @@ OUTCOMES = ROOT / "outcomes"
 STATE = ROOT / "STATE.json"
 LATEST = ROOT / "LATEST.json"
 SUMMARY = ROOT / "PERFORMANCE_SUMMARY.json"
+HOURLY_POINTER = Path("03_DAILY_CAPTURE_LOGS/hourly/LATEST.json")
 HORIZONS_H = {"24h": 24, "72h": 72, "7d": 168, "14d": 336, "30d": 720}
 
 
@@ -29,10 +30,33 @@ def write_json(path, obj):
     p.write_text(json.dumps(obj, indent=2, sort_keys=True) + "\n")
 
 
-def http_json(url):
-    req = urllib.request.Request(url, headers={"User-Agent": "framework-entry-ledger/1.1"})
-    with urllib.request.urlopen(req, timeout=15) as r:
-        return json.loads(r.read())
+def parse_utc(value):
+    return datetime.fromisoformat(value.replace("Z", "+00:00"))
+
+
+def hourly_latest_row():
+    pointer = read_json(HOURLY_POINTER)
+    if not pointer or pointer.get("status") != "COMPLETE":
+        raise RuntimeError("hourly sequence pointer missing/incomplete")
+    end = parse_utc(pointer["window_end_utc"])
+    csv_path = Path(f"03_DAILY_CAPTURE_LOGS/hourly/{end:%Y/%m/%Y-%m-%d}.csv")
+    if not csv_path.exists():
+        raise RuntimeError(f"hourly permanent CSV missing: {csv_path}")
+    rows = []
+    with csv_path.open(newline="") as fh:
+        for row in csv.DictReader(fh):
+            if row.get("spot_status") != "PASS":
+                continue
+            ts = parse_utc(row["timestamp_utc"])
+            if ts <= end:
+                rows.append((ts, row))
+    if not rows:
+        raise RuntimeError("no complete hourly row available")
+    ts, row = max(rows, key=lambda x: x[0])
+    required = ("btc_close", "eth_close", "ethbtc_close")
+    if any(not row.get(k) for k in required):
+        raise RuntimeError("latest hourly row missing direct spot close")
+    return pointer, ts, row
 
 
 def latest_market():
@@ -45,14 +69,15 @@ def latest_market():
         breadth = float(agg["advancer_pct"]) / 100.0
     if breadth is None:
         raise RuntimeError("breadth ratio unavailable")
-    ethbtc = float(http_json("https://api.binance.com/api/v3/ticker/price?symbol=ETHBTC")["price"])
-    btc = float(http_json("https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT")["price"])
-    eth = float(http_json("https://api.binance.com/api/v3/ticker/price?symbol=ETHUSDT")["price"])
+    pointer, hourly_ts, row = hourly_latest_row()
     return {
         "captured_at_utc": now_utc().isoformat(),
-        "btc_usdt": btc,
-        "eth_usdt": eth,
-        "ethbtc": ethbtc,
+        "price_observation_utc": hourly_ts.isoformat(),
+        "hourly_sequence_run_id": pointer.get("run_id"),
+        "price_source": "GITHUB_HOURLY_SEQUENCE_DIRECT_CLOSES",
+        "btc_usdt": float(row["btc_close"]),
+        "eth_usdt": float(row["eth_close"]),
+        "ethbtc": float(row["ethbtc_close"]),
         "top100_advance_ratio": float(breadth),
         "top100_advancer_pct": agg.get("advancer_pct"),
         "btc_return_24h_pct": agg.get("btc_return_24h_pct"),
@@ -69,16 +94,14 @@ def latest_market():
 
 
 def classify(m):
-    b = m["top100_advance_ratio"]
     br = m.get("btc_return_24h_pct")
     er = m.get("eth_return_24h_pct")
     checks = {
         "ethbtc_above_registered_0_0300": m["ethbtc"] > 0.03,
-        "top100_proxy_breadth_ge_50pct": b >= 0.50,
+        "top100_proxy_breadth_ge_50pct": m["top100_advance_ratio"] >= 0.50,
         "eth_outperforms_btc_24h": er is not None and br is not None and er > br,
     }
     active = all(checks.values())
-    # Descriptive execution heat only. It cannot activate/deactivate the signal.
     heat = "HOT" if ((er or 0) >= 12 or (br or 0) >= 8 or (m.get("median_return_24h_pct") or 0) >= 4) else "NORMAL"
     return ("GRADUATED_ALTCOIN_TOPUP_ACTIVE" if active else "WAIT"), checks, heat
 
@@ -124,7 +147,7 @@ def update_outcomes(current, now):
         if not ev or ev.get("event_type") != "ACTIVATION":
             continue
         base = ev["market_snapshot"]
-        t = datetime.fromisoformat(ev["event_time_utc"].replace("Z", "+00:00"))
+        t = parse_utc(ev["event_time_utc"])
         age = (now - t).total_seconds() / 3600.0
         op = OUTCOMES / (ev["event_id"] + ".json")
         out = read_json(op) or {
@@ -143,12 +166,14 @@ def update_outcomes(current, now):
         ps["last_age_hours"] = round(age, 3)
         ps["latest_returns"] = rb
         ps["latest_top100_advance_ratio"] = current.get("top100_advance_ratio")
+        ps["price_observation_utc"] = current.get("price_observation_utc")
         for label, h in HORIZONS_H.items():
             if age < h or label in out["horizons"]:
                 continue
             out["horizons"][label] = {
                 "matured_at_utc": now_iso,
                 "age_hours": round(age, 3),
+                "price_observation_utc": current.get("price_observation_utc"),
                 "btc_return_since_signal_pct": rb["btc_pct"],
                 "eth_return_since_signal_pct": rb["eth_pct"],
                 "ethbtc_return_since_signal_pct": rb["ethbtc_pct"],
@@ -165,14 +190,11 @@ def build_summary(now):
     if EVENTS.exists():
         activation_events = sum(1 for f in EVENTS.glob("*.json") if (read_json(f) or {}).get("event_type") == "ACTIVATION")
     for label in HORIZONS_H:
-        vals = []
-        btc_vals = []
-        eth_vals = []
+        vals, btc_vals, eth_vals = [], [], []
         matured = 0
         if OUTCOMES.exists():
             for f in OUTCOMES.glob("*.json"):
-                out = read_json(f) or {}
-                h = (out.get("horizons") or {}).get(label)
+                h = ((read_json(f) or {}).get("horizons") or {}).get(label)
                 if not h:
                     continue
                 matured += 1
