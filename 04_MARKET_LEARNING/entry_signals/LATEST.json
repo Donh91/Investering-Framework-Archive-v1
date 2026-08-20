@@ -1,35 +1,37 @@
 {
-  "contract": "ENTRY_SIGNAL_LATEST_v1",
-  "generated_at_utc": "2026-08-20T05:22:15Z",
-  "state": "GRADUATED_ALTCOIN_TOPUP_ACTIVE",
-  "previous_state": "WAIT",
-  "execution_temperature": "HOT",
-  "criteria": {
-    "ethbtc_above_registered_0_0300": true,
-    "top100_proxy_breadth_ge_50pct": true,
-    "eth_outperforms_btc_24h": true
-  },
-  "market_snapshot": {
-    "captured_at_utc": "2026-08-20T05:22:15Z",
-    "btc_usdt": 69432.0,
-    "eth_usdt": 2248.64,
-    "ethbtc": 0.03241,
-    "top100_advance_ratio": 0.76,
-    "top100_advancer_pct": 76,
-    "btc_return_24h_pct": 7.911182628006828,
-    "eth_return_24h_pct": 17.63722833163113,
-    "equal_weight_mean_return_24h_pct": 4.967,
-    "median_return_24h_pct": 5.0,
-    "breadth_membership_hash": "008677c71fc71d34ace079822801b8a57c1836e7f3a2fcc423a6b779e80aeaa8"
-  },
   "authority": {
     "canonical_market_state": false,
-    "portfolio_execution": false,
     "market_rule_change": false,
+    "portfolio_execution": false,
     "purpose": "timestamped decision-observation and forward outcome learning"
   },
-  "data_ping_bridge": {
-    "display_line": "ENTRY/TOP-UP: GRADUATED_ALTCOIN_TOPUP_ACTIVE | heat=HOT | ETHBTC=0.03241 | breadth=76%"
+  "contract": "ENTRY_SIGNAL_LATEST_v1",
+  "criteria": {
+    "eth_outperforms_btc_24h": true,
+    "ethbtc_above_registered_0_0300": true,
+    "top100_proxy_breadth_ge_50pct": true
   },
-  "seed_note": "Will be replaced automatically by Entry Signal Ledger workflow after merge."
+  "data_ping_bridge": {
+    "display_line": "ENTRY/TOP-UP: GRADUATED_ALTCOIN_TOPUP_ACTIVE | heat=HOT | ETHBTC=0.03175 | breadth=79%"
+  },
+  "execution_temperature": "HOT",
+  "generated_at_utc": "2026-08-20T14:22:30.378268+00:00",
+  "market_snapshot": {
+    "breadth_membership_hash": "186b422202afbb6994929677c15e8eb421ccdaab16fc1d630248ccaf772e7517",
+    "btc_return_24h_pct": 11.5,
+    "btc_usdt": 71789.97,
+    "captured_at_utc": "2026-08-20T14:22:30.379408+00:00",
+    "equal_weight_mean_return_24h_pct": 6.061,
+    "eth_return_24h_pct": 19.0,
+    "eth_usdt": 2278.56,
+    "ethbtc": 0.03175,
+    "hourly_sequence_run_id": "HOURLY_SEQUENCE_20260820T102136Z_c92eb9d13b5d",
+    "median_return_24h_pct": 6.3,
+    "price_observation_utc": "2026-08-20T09:00:00+00:00",
+    "price_source": "GITHUB_HOURLY_SEQUENCE_DIRECT_CLOSES",
+    "top100_advance_ratio": 0.79,
+    "top100_advancer_pct": 79
+  },
+  "previous_state": "GRADUATED_ALTCOIN_TOPUP_ACTIVE",
+  "state": "GRADUATED_ALTCOIN_TOPUP_ACTIVE"
 }
