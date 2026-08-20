@@ -20,74 +20,25 @@ jobs:
     if: >-
       ${{ github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
         with:
           ref: main
           fetch-depth: 1
-
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
 
-      - name: Restore immutable historical bulk from bound free-stage artifact
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
-          root=06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts
-          pointer="$root/FREE_BULK_ARTIFACT_POINTER.json"
-          test -s "$pointer"
-          run_id="$(python - <<'PY'
-          import json
-          p=json.load(open('06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/FREE_BULK_ARTIFACT_POINTER.json'))
-          assert p['contract']=='HISTORICAL_ALTSEASON_FREE_BULK_POINTER_v1'
-          assert p['storage_class']=='GITHUB_ACTIONS_ARTIFACT_BULK_NOT_GIT'
-          assert p['required_for_cowork_bundle'] is True
-          print(p['source_run_id'])
-          PY
-          )"
-          artifact_name="$(python - <<'PY'
-          import json
-          p=json.load(open('06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/FREE_BULK_ARTIFACT_POINTER.json'))
-          print(p['artifact_name'])
-          PY
-          )"
-          rm -rf /tmp/historical-altseason-free-bulk
-          mkdir -p /tmp/historical-altseason-free-bulk
-          gh run download "$run_id" --repo "$GITHUB_REPOSITORY" --name "$artifact_name" --dir /tmp/historical-altseason-free-bulk
-          src="$(find /tmp/historical-altseason-free-bulk -type f -name 'alt_hourly_panel.csv.gz' -print -quit)"
-          test -n "$src" && test -s "$src"
-          BULK_SRC="$src" python - <<'PY'
-          import hashlib,json,os,shutil
-          from pathlib import Path
-          root=Path('06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts')
-          pointer=json.loads((root/'FREE_BULK_ARTIFACT_POINTER.json').read_text())
-          spec=next(x for x in pointer['files'] if x['name']=='alt_hourly_panel.csv.gz')
-          src=Path(os.environ['BULK_SRC'])
-          h=hashlib.sha256()
-          with src.open('rb') as fh:
-              for chunk in iter(lambda: fh.read(1024*1024), b''):
-                  h.update(chunk)
-          assert src.stat().st_size==spec['size_bytes'], (src.stat().st_size,spec['size_bytes'])
-          assert h.hexdigest()==spec['sha256'], (h.hexdigest(),spec['sha256'])
-          dest=root/'alt_hourly_panel.csv.gz'
-          shutil.copyfile(src,dest)
-          assert dest.stat().st_size==spec['size_bytes']
-          print('COWORK_FREE_BULK_RESTORE_PASS', pointer['source_run_id'], spec['size_bytes'], spec['sha256'])
-          PY
-
-      - name: Compile bundle builders
+      - name: Compile compact handoff builder
         run: |
           python -m py_compile scripts/cowork/build_historical_altseason_bundle.py
           python -m py_compile scripts/cowork/build_historical_altseason_bundle_max_value.py
 
-      - name: Build research-ready max-value Cowork input ZIP
-        run: |
-          python scripts/cowork/build_historical_altseason_bundle_max_value.py
+      - name: Build GitHub-native research handoff ZIP
+        run: python scripts/cowork/build_historical_altseason_bundle_max_value.py
 
-      - name: Validate bundle outputs and mandatory research protocols
+      - name: Validate compact handoff, readiness and pointers
         run: |
           set -euo pipefail
           root=dist/cowork_historical_altseason
@@ -98,21 +49,28 @@ jobs:
           import hashlib,json,zipfile
           from pathlib import Path
           root=Path('dist/cowork_historical_altseason')
-          manifest=json.loads((root/'COWORK_INPUT_MANIFEST.json').read_text())
-          assert manifest['readiness_verdict']=='PASS'
-          assert manifest['automatic_promotion'] is False
-          assert manifest['historical_findings_max_classification']=='FORWARD_TEST'
-          assert manifest['included_file_count'] > 0
-          sources={x['source_path'] for x in manifest['files']}
-          mandatory_sources={
-            '07_PROMPTS_AND_AGENTS/historical_altseason_pullback/COWORK_OPUS5_MAX_VALUE_SIDECARS.md',
+          m=json.loads((root/'COWORK_INPUT_MANIFEST.json').read_text())
+          assert m['contract']=='COWORK_GITHUB_NATIVE_HANDOFF_MANIFEST_v1'
+          assert m['delivery_model']=='COMPACT_INSTRUCTIONS_PLUS_DIRECT_GITHUB_READ'
+          assert m['repo']=='Donh91/Investering-Framework-Archive-v1'
+          assert m['authoritative_ref']=='main'
+          assert m['readiness_verdict']=='PASS'
+          assert m['automatic_promotion'] is False
+          assert m['historical_findings_max_classification']=='FORWARD_TEST'
+          assert m['heavy_bulk_delivery']=='BOUND_GITHUB_ACTIONS_ARTIFACT_VIA_FREE_BULK_ARTIFACT_POINTER'
+          sources={x['source_path'] for x in m['files']}
+          required_sources={
+            '07_PROMPTS_AND_AGENTS/historical_altseason_pullback/COWORK_OPUS5_MASTER_RESEARCH_PROMPT.md',
             '07_PROMPTS_AND_AGENTS/historical_altseason_pullback/COWORK_OPUS5_LAUNCH_INSTRUCTION.md',
+            '07_PROMPTS_AND_AGENTS/historical_altseason_pullback/COWORK_OPUS5_MAX_VALUE_SIDECARS.md',
+            '07_PROMPTS_AND_AGENTS/historical_altseason_pullback/COWORK_GITHUB_RESEARCH_MAP.md',
+            '06_RESEARCH_LAB/historical_altseason_pullback_v1/INTRADAY_EXECUTION_COWORK_ADDENDUM.md',
+            '06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/RESEARCH_READINESS_MANIFEST.json',
+            '06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/CFGI_BILLING.json',
             '06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/FREE_BULK_ARTIFACT_POINTER.json',
-            '06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/alt_hourly_panel.csv.gz',
           }
-          assert mandatory_sources <= sources
-          for prefix in ['04_MARKET_LEARNING/intraday_execution','scripts/intraday_execution']:
-              assert any(p == prefix or p.startswith(prefix + '/') for p in sources), prefix
+          assert required_sources <= sources
+          assert not any(x.endswith('alt_hourly_panel.csv.gz') for x in sources)
           zip_path=root/'HISTORICAL_ALTSEASON_COWORK_INPUT_BUNDLE.zip'
           expected=(root/'COWORK_INPUT_BUNDLE_SHA256.txt').read_text().split()[0]
           actual=hashlib.sha256(zip_path.read_bytes()).hexdigest()
@@ -120,33 +78,12 @@ jobs:
           with zipfile.ZipFile(zip_path) as zf:
               assert zf.testzip() is None
               names=set(zf.namelist())
-              panel_member='COWORK_RESEARCH_INPUT/CORE/REPO/06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/alt_hourly_panel.csv.gz'
-              pointer_member='COWORK_RESEARCH_INPUT/CORE/REPO/06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/FREE_BULK_ARTIFACT_POINTER.json'
-              required={
-                'COWORK_RESEARCH_INPUT/PROMPT/COWORK_OPUS5_MASTER_RESEARCH_PROMPT.md',
-                'COWORK_RESEARCH_INPUT/COWORK_INPUT_MANIFEST.json',
-                'COWORK_RESEARCH_INPUT/CORE/REPO/06_RESEARCH_LAB/historical_altseason_pullback_v1/COWORK_READINESS_PROTOCOL.md',
-                'COWORK_RESEARCH_INPUT/CORE/REPO/06_RESEARCH_LAB/historical_altseason_pullback_v1/COWORK_OPUS5_RESEARCH_PROTOCOL_ADDENDUM.md',
-                'COWORK_RESEARCH_INPUT/CORE/REPO/06_RESEARCH_LAB/historical_altseason_pullback_v1/INTRADAY_EXECUTION_COWORK_ADDENDUM.md',
-                'COWORK_RESEARCH_INPUT/CORE/REPO/07_PROMPTS_AND_AGENTS/historical_altseason_pullback/COWORK_OPUS5_MAX_VALUE_SIDECARS.md',
-                'COWORK_RESEARCH_INPUT/CORE/REPO/07_PROMPTS_AND_AGENTS/historical_altseason_pullback/COWORK_OPUS5_LAUNCH_INSTRUCTION.md',
-                pointer_member,
-                panel_member,
-              }
-              missing=sorted(required-names)
-              assert not missing, missing
-              pointer=json.loads(zf.read(pointer_member))
-              panel_bytes=zf.read(panel_member)
-              spec=next(x for x in pointer['files'] if x['name']=='alt_hourly_panel.csv.gz')
-              assert len(panel_bytes)==spec['size_bytes']
-              assert hashlib.sha256(panel_bytes).hexdigest()==spec['sha256']
-              addendum=zf.read('COWORK_RESEARCH_INPUT/CORE/REPO/06_RESEARCH_LAB/historical_altseason_pullback_v1/COWORK_OPUS5_RESEARCH_PROTOCOL_ADDENDUM.md').decode()
-              for token in ['PRE_SPECIFIED','POST_HOC_DISCOVERY','TOP_CANDIDATE_DESTRUCTION_TOURNAMENT','FINAL_EVIDENCE_LADDER','EFFECTIVE_SAMPLE_SIZE_AND_POWER']:
-                  assert token in addendum, token
-              sidecars=zf.read('COWORK_RESEARCH_INPUT/CORE/REPO/07_PROMPTS_AND_AGENTS/historical_altseason_pullback/COWORK_OPUS5_MAX_VALUE_SIDECARS.md').decode()
-              for token in ['Signal Interaction Atlas','Lead/Lag and Information Timing Atlas','Failure and Opportunity-Cost Laboratory','Minimal Sufficient Signal Stack','Research Opportunity Register']:
-                  assert token in sidecars, token
-          print('COWORK_MAX_VALUE_BUNDLE_VALIDATION_PASS', manifest['included_file_count'], actual)
+              assert not any(n.endswith('/alt_hourly_panel.csv.gz') for n in names)
+              map_name='COWORK_RESEARCH_HANDOFF/07_PROMPTS_AND_AGENTS/historical_altseason_pullback/COWORK_GITHUB_RESEARCH_MAP.md'
+              text=zf.read(map_name).decode()
+              for token in ['GitHub is the authoritative research universe','FREE_BULK_ARTIFACT_POINTER.json','04_MARKET_LEARNING/intraday_execution/','scripts/intraday_execution/']:
+                  assert token in text, token
+          print('COWORK_GITHUB_NATIVE_HANDOFF_VALIDATION_PASS', len(sources), actual)
           PY
 
       - name: Upload one-click Cowork research handoff
