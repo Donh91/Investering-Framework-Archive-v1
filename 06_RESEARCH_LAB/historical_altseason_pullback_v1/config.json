@@ -1,0 +1,41 @@
+{
+  "contract": "HISTORICAL_ALTSEASON_PULLBACK_LAB_CONFIG_v1",
+  "research_windows": [
+    {"id": "ALTSEASON_2020_2021", "start_utc": "2020-09-01T00:00:00Z", "end_utc": "2021-12-31T23:00:00Z"},
+    {"id": "MODERN_ANALOGUE_2025_2026", "start_utc": "2025-01-01T00:00:00Z", "end_utc": "2026-07-31T23:00:00Z"}
+  ],
+  "core_symbols": ["BTCUSDT", "ETHUSDT", "ETHBTC"],
+  "alt_symbols": [
+    "BNBUSDT", "ADAUSDT", "XRPUSDT", "DOTUSDT", "LTCUSDT", "BCHUSDT", "LINKUSDT", "XLMUSDT", "DOGEUSDT", "UNIUSDT",
+    "AAVEUSDT", "SNXUSDT", "SUSHIUSDT", "YFIUSDT", "COMPUSDT", "MKRUSDT", "SOLUSDT", "AVAXUSDT", "MATICUSDT", "VETUSDT",
+    "THETAUSDT", "FILUSDT", "ETCUSDT", "ATOMUSDT", "ALGOUSDT", "ZECUSDT", "DASHUSDT", "NEOUSDT", "IOTAUSDT", "EGLDUSDT",
+    "RUNEUSDT", "FTMUSDT", "GRTUSDT", "LUNAUSDT", "FTTUSDT"
+  ],
+  "research_universe_label": "SURVIVORSHIP_LIMITED_RESEARCH_UNIVERSE",
+  "minimum_active_alts_per_hour": 12,
+  "episode_drawdown_trigger_pct": 5.0,
+  "episode_severity_levels_pct": [5.0, 8.0, 12.0, 20.0],
+  "episode_recovery_fraction": 0.75,
+  "episode_min_separation_hours": 24,
+  "hypothetical_trim_fraction": 0.10,
+  "roundtrip_friction_pct_on_traded_slice": 0.20,
+  "cfgi": {
+    "symbols": ["MARKET", "BTC", "ETH"],
+    "timeframe": "1h",
+    "fields": ["score", "price", "volatility", "volume", "impulse", "technical", "social", "dominance", "trends", "whales", "orders"],
+    "pre_event_hours": 72,
+    "post_event_hours": 48,
+    "max_pullback_windows": 3,
+    "max_control_windows": 3,
+    "expected_credit_hard_cap": 25000,
+    "minimum_credits_reserve": 50000,
+    "static": true
+  },
+  "authority": {
+    "research_only": true,
+    "portfolio_execution": false,
+    "canonical_market_state": false,
+    "automatic_rule_changes": false,
+    "promotion_requires_separate_review": true
+  }
+}
