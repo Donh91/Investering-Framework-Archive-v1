@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: cowork-historical-altseason-bundle
@@ -73,3 +73,42 @@ jobs:
           if-no-files-found: error
           retention-days: 30
           compression-level: 0
+
+      - name: Publish self-discovering handoff pointer
+        run: |
+          set -euo pipefail
+          mkdir -p 07_PROMPTS_AND_AGENTS/historical_altseason_pullback
+          python - <<'PY'
+          import json, os
+          from datetime import datetime, timezone
+          from pathlib import Path
+          root=Path('dist/cowork_historical_altseason')
+          manifest=json.loads((root/'COWORK_INPUT_MANIFEST.json').read_text())
+          sha_line=(root/'COWORK_INPUT_BUNDLE_SHA256.txt').read_text().strip().split()[0]
+          pointer={
+            'contract':'COWORK_HISTORICAL_ALTSEASON_HANDOFF_POINTER_v1',
+            'generated_at_utc':datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace('+00:00','Z'),
+            'workflow_run_id':int(os.environ['GITHUB_RUN_ID']),
+            'workflow_run_attempt':int(os.environ['GITHUB_RUN_ATTEMPT']),
+            'artifact_name':'historical-altseason-cowork-research-input',
+            'zip_filename':'HISTORICAL_ALTSEASON_COWORK_INPUT_BUNDLE.zip',
+            'zip_sha256':sha_line,
+            'bundle_repo_head':manifest['repo_head'],
+            'readiness_verdict':manifest['readiness_verdict'],
+            'historical_findings_max_classification':manifest['historical_findings_max_classification'],
+            'automatic_promotion':False,
+          }
+          Path('07_PROMPTS_AND_AGENTS/historical_altseason_pullback/LATEST_COWORK_INPUT_BUNDLE.json').write_text(json.dumps(pointer,indent=2,sort_keys=True)+'\n')
+          print(json.dumps(pointer,sort_keys=True))
+          PY
+          git config user.name framework-research-bot
+          git config user.email framework-research-bot@users.noreply.github.com
+          git add 07_PROMPTS_AND_AGENTS/historical_altseason_pullback/LATEST_COWORK_INPUT_BUNDLE.json
+          git commit -m "research: publish Cowork historical handoff pointer ${GITHUB_RUN_ID}"
+          git fetch origin main
+          if ! git rebase origin/main; then
+            git rebase --abort || true
+            exit 1
+          fi
+          git merge-base --is-ancestor origin/main HEAD
+          git push origin HEAD:main
