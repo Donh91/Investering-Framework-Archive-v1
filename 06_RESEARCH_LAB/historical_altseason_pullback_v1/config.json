@@ -1,5 +1,5 @@
 {
-  "contract": "HISTORICAL_ALTSEASON_PULLBACK_LAB_CONFIG_v1",
+  "contract": "HISTORICAL_ALTSEASON_PULLBACK_LAB_CONFIG_v1_1",
   "research_windows": [
     {"id": "ALTSEASON_2020_2021", "start_utc": "2020-09-01T00:00:00Z", "end_utc": "2021-12-31T23:00:00Z"},
     {"id": "MODERN_ANALOGUE_2025_2026", "start_utc": "2025-01-01T00:00:00Z", "end_utc": "2026-07-31T23:00:00Z"}
@@ -19,6 +19,31 @@
   "episode_min_separation_hours": 24,
   "hypothetical_trim_fraction": 0.10,
   "roundtrip_friction_pct_on_traded_slice": 0.20,
+  "time_integrity": {
+    "strict_timestamp_lags": true,
+    "cross_window_lags_forbidden": true,
+    "row_positions_must_not_be_interpreted_as_hours": true,
+    "reset_equal_weight_index_on_gap": true,
+    "max_continuity_gap_hours": 1
+  },
+  "control_matching": {
+    "future_outcome_horizon_hours": 48,
+    "episode_exclusion_days": 7,
+    "features": ["mean_return_24h_pct", "breadth_24h", "dispersion_1h_pct", "eth_minus_btc_24h_pp", "active_alt_count"],
+    "future_outcome_may_label_controls_but_may_not_enter_predictors": true
+  },
+  "cohort_proxy": {
+    "type": "hourly_cross_sectional_quote_volume_rank",
+    "labels": ["LOW", "MID", "HIGH"],
+    "semantic_label": "LIQUIDITY_COHORT_PROXY_NOT_MARKET_CAP",
+    "must_not_be_presented_as_historical_market_cap_cohort": true
+  },
+  "source_qa": {
+    "binance_vision_daily_preferred_before_utc": "2022-01-01T00:00:00Z",
+    "archive_revision_risk_acknowledged": true,
+    "source_resolution_must_be_recorded": true,
+    "no_silent_fallback": true
+  },
   "cfgi": {
     "symbols": ["MARKET", "BTC", "ETH"],
     "timeframe": "1h",
@@ -29,7 +54,31 @@
     "max_control_windows": 3,
     "expected_credit_hard_cap": 25000,
     "minimum_credits_reserve": 50000,
-    "static": true
+    "static": true,
+    "field_level_coverage_audit_required": true,
+    "exact_relative_hour_paths_required": true
+  },
+  "readiness": {
+    "free_stage_required_artifacts": [
+      "FREE_SOURCE_AUDIT.json",
+      "TIME_INTEGRITY_AUDIT.json",
+      "hourly_features.csv.gz",
+      "alt_hourly_panel.csv.gz",
+      "EPISODE_CATALOG.json",
+      "EPISODE_FEATURE_MATRIX.jsonl.gz",
+      "EPISODE_MATRIX_COVERAGE.json",
+      "FREE_EVENT_PATHS.jsonl.gz",
+      "BACKTEST_SUMMARY.json"
+    ],
+    "cfgi_stage_required_artifacts": [
+      "CFGI_BILLING.json",
+      "CFGI_COVERAGE.json",
+      "CFGI_FIELD_COVERAGE.json",
+      "cfgi_targeted.jsonl.gz",
+      "CFGI_EVENT_SIGNATURES.json",
+      "CFGI_EVENT_PATHS.jsonl.gz"
+    ],
+    "manifest_required": true
   },
   "authority": {
     "research_only": true,
