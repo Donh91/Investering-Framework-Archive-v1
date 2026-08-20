@@ -38,7 +38,7 @@ jobs:
           python -m py_compile scripts/historical_lab/cfgi_targeted_backfill.py
           python -m py_compile scripts/historical_lab/cfgi_readiness_postprocess.py
 
-      - name: Prove transport-only parallelization contract
+      - name: Prove transport-only archive-first parallelization contract
         run: |
           python - <<'PY'
           from pathlib import Path
@@ -51,12 +51,17 @@ jobs:
           assert 'resilient._vision_daily' in p
           assert 'daily_rows.sort(key=lambda row: int(row[0]))' in p
           assert 'resilient.vision_klines = parallel_vision_klines' in p
+          assert 'BINANCE_REST_BYPASSED_ARCHIVE_FIRST_REPRODUCIBILITY' in p
+          assert 'BINANCE_VISION_ARCHIVE_FIRST_TRANSPORT_v1' in p
+          assert 'archive_first = True' not in p
+          assert '"archive_first": True' in p
+          assert 'analysis_semantics_changed": False' in p
           for forbidden in ['build_features =', 'build_episodes =', 'continuation_controls =', 'episode_drawdown_trigger_pct', 'episode_recovery_fraction']:
               assert forbidden not in p, forbidden
           assert 'free_altseason_bootstrap_parallel.py' in w
           assert "HISTORICAL_VISION_MAX_WORKERS: '12'" in w
           assert 'timeout-minutes: 120' in w
-          print('HISTORICAL_TRANSPORT_ONLY_PARALLELIZATION_PASS')
+          print('HISTORICAL_ARCHIVE_FIRST_TRANSPORT_ONLY_PASS')
           PY
 
       - name: Prove CFGI idempotency and no-free-pass guard
