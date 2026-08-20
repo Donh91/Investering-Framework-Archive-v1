@@ -68,11 +68,31 @@ jobs:
           print('FREE_STAGE_OBJECTIVE_READINESS_PASS', len(pc['events']))
           PY
 
+      - name: Check exact paid-input idempotency
+        id: idempotency
+        run: |
+          set -euo pipefail
+          python scripts/historical_lab/cfgi_idempotency_guard.py --mode check | tee /tmp/cfgi_idempotency.json
+          skip_paid="$(python - <<'PY'
+          import json
+          print(str(json.loads(open('/tmp/cfgi_idempotency.json').read())['skip_paid']).lower())
+          PY
+          )"
+          echo "skip_paid=$skip_paid" >> "$GITHUB_OUTPUT"
+          echo "CFGI_SKIP_PAID=$skip_paid"
+
       - name: Target CFGI only after objective episode selection
+        if: steps.idempotency.outputs.skip_paid != 'true'
         env:
           CFGI_API_KEY: ${{ secrets.CFGI_API_KEY }}
         run: |
           python scripts/historical_lab/cfgi_targeted_backfill.py
+          python scripts/historical_lab/cfgi_idempotency_guard.py --mode stamp
+
+      - name: Reuse prior exact CFGI enrichment without new paid calls
+        if: steps.idempotency.outputs.skip_paid == 'true'
+        run: |
+          echo 'CFGI_IDEMPOTENT_REUSE_PASS - no paid CFGI request executed'
 
       - name: Materialize exact CFGI event paths and readiness contracts
         run: |
@@ -105,6 +125,7 @@ jobs:
               remaining=b.get('final_credits_remaining')
               assert remaining is not None
               assert remaining >= g['minimum_credits_reserve']
+              assert b.get('input_fingerprint_sha256'), 'missing idempotency fingerprint'
 
           assert a['research_only'] is True
           assert a['portfolio_execution'] is False

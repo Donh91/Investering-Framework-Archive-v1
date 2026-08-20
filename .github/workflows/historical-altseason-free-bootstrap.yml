@@ -19,7 +19,9 @@ jobs:
       ${{ github.event_name == 'workflow_dispatch' ||
           (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main') }}
     runs-on: ubuntu-24.04
-    timeout-minutes: 90
+    timeout-minutes: 120
+    env:
+      HISTORICAL_VISION_MAX_WORKERS: '12'
     steps:
       - uses: actions/checkout@v4
         with:
@@ -30,7 +32,7 @@ jobs:
           python-version: '3.12'
       - name: Build free historical dataset and outcome catalogue
         run: |
-          python scripts/historical_lab/free_altseason_bootstrap_resilient.py
+          python scripts/historical_lab/free_altseason_bootstrap_parallel.py
           python scripts/historical_lab/free_event_postprocess.py
       - name: Validate artifacts and research-only authority
         run: |
@@ -72,12 +74,19 @@ jobs:
           PY
       - name: Commit immutable research artifacts safely
         run: |
+          set -euo pipefail
           git config user.name framework-research-bot
           git config user.email framework-research-bot@users.noreply.github.com
           git add 06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/
           if git diff --cached --quiet; then
             echo 'No artifact changes'
             exit 0
+          fi
+          bad="$(git diff --cached --name-only | grep -v '^06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/' || true)"
+          if [ -n "$bad" ]; then
+            echo "Unexpected staged paths:" >&2
+            echo "$bad" >&2
+            exit 1
           fi
           git commit -m "research: historical altseason free bootstrap ${GITHUB_RUN_ID}"
           git fetch origin main

@@ -1,0 +1,103 @@
+name: Historical Altseason Throughput Safety Gate
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/historical_lab/free_altseason_bootstrap_parallel.py'
+      - 'scripts/historical_lab/cfgi_idempotency_guard.py'
+      - '.github/workflows/historical-altseason-free-bootstrap.yml'
+      - '.github/workflows/historical-altseason-cfgi-enrichment.yml'
+      - '.github/workflows/historical-altseason-throughput-gate.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/historical_lab/free_altseason_bootstrap_parallel.py'
+      - 'scripts/historical_lab/cfgi_idempotency_guard.py'
+      - '.github/workflows/historical-altseason-free-bootstrap.yml'
+      - '.github/workflows/historical-altseason-cfgi-enrichment.yml'
+      - '.github/workflows/historical-altseason-throughput-gate.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  gate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Compile transport and idempotency helpers
+        run: |
+          python -m py_compile scripts/historical_lab/free_altseason_bootstrap_parallel.py
+          python -m py_compile scripts/historical_lab/cfgi_idempotency_guard.py
+          python -m py_compile scripts/historical_lab/free_altseason_bootstrap_resilient.py
+          python -m py_compile scripts/historical_lab/cfgi_targeted_backfill.py
+          python -m py_compile scripts/historical_lab/cfgi_readiness_postprocess.py
+
+      - name: Prove transport-only parallelization contract
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('scripts/historical_lab/free_altseason_bootstrap_parallel.py').read_text()
+          w=Path('.github/workflows/historical-altseason-free-bootstrap.yml').read_text()
+          assert 'ThreadPoolExecutor' in p
+          assert 'MAX_WORKERS = 24' in p
+          assert 'DEFAULT_WORKERS = 12' in p
+          assert 'prefer_daily_before = datetime(2022, 1, 1' in p
+          assert 'resilient._vision_daily' in p
+          assert 'daily_rows.sort(key=lambda row: int(row[0]))' in p
+          assert 'resilient.vision_klines = parallel_vision_klines' in p
+          for forbidden in ['build_features =', 'build_episodes =', 'continuation_controls =', 'episode_drawdown_trigger_pct', 'episode_recovery_fraction']:
+              assert forbidden not in p, forbidden
+          assert 'free_altseason_bootstrap_parallel.py' in w
+          assert "HISTORICAL_VISION_MAX_WORKERS: '12'" in w
+          assert 'timeout-minutes: 120' in w
+          print('HISTORICAL_TRANSPORT_ONLY_PARALLELIZATION_PASS')
+          PY
+
+      - name: Prove CFGI idempotency and no-free-pass guard
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('scripts/historical_lab/cfgi_idempotency_guard.py').read_text()
+          w=Path('.github/workflows/historical-altseason-cfgi-enrichment.yml').read_text()
+          for required in [
+              'CFGI_TARGETED_INPUT_FINGERPRINT_v1',
+              'EXACT_COMPLETE_PRIOR_ENRICHMENT',
+              'RESEARCH_READINESS_MANIFEST.json',
+              'historical_findings_max_classification',
+              'FORWARD_TEST',
+              'automatic_promotion',
+          ]:
+              assert required in p, required
+          assert 'cfgi_idempotency_guard.py --mode check' in w
+          assert "steps.idempotency.outputs.skip_paid != 'true'" in w
+          assert "steps.idempotency.outputs.skip_paid == 'true'" in w
+          assert 'cfgi_idempotency_guard.py --mode stamp' in w
+          paid_step=w.index('Target CFGI only after objective episode selection')
+          preflight=w.index('Verify free stage, authority and CFGI secret before paid calls')
+          guard=w.index('Check exact paid-input idempotency')
+          assert preflight < guard < paid_step
+          print('CFGI_IDEMPOTENCY_STATIC_GUARD_PASS')
+          PY
+
+      - name: Ensure no market-policy edits are present in helpers
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          combined='\n'.join([
+              Path('scripts/historical_lab/free_altseason_bootstrap_parallel.py').read_text(),
+              Path('scripts/historical_lab/cfgi_idempotency_guard.py').read_text(),
+          ])
+          forbidden=[
+              'portfolio_action', 'DEPLOY', 'REDUCE', 'BUY', 'SELL',
+              'canonical_market_state =', 'automatic_rule_changes = True'
+          ]
+          for token in forbidden:
+              assert token not in combined, token
+          print('NO_MARKET_POLICY_SEMANTICS_PASS')
+          PY
