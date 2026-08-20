@@ -4,11 +4,6 @@ on:
   schedule:
     - cron: '58 * * * *'
   workflow_dispatch:
-  pull_request:
-    paths:
-      - '04_MARKET_LEARNING/intraday_execution/**'
-      - 'scripts/intraday_execution/**'
-      - '.github/workflows/intraday-execution-research.yml'
 
 permissions:
   contents: write
@@ -18,12 +13,14 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  validate:
+  research:
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: main
           fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
@@ -50,10 +47,8 @@ jobs:
           print('INTRADAY_EXECUTION_STATIC_GUARD_PASS')
           PY
       - name: Run prospective research observation
-        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
         run: python scripts/intraday_execution/intraday_execution_research.py
       - name: Validate generated research contract
-        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
         run: |
           python - <<'PY'
           import json
@@ -69,7 +64,6 @@ jobs:
           print(d['data_ping_bridge']['display_line'])
           PY
       - name: Commit prospective observations
-        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
         shell: bash
         run: |
           git config user.name 'framework-data-bot'
