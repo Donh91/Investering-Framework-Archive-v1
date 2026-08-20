@@ -7,14 +7,8 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
-# IMPORTANT: this long historical data-build must not share the short-lived
-# framework-main-writer queue. GitHub concurrency keeps only one running and
-# one pending run per group, so unrelated scheduled writers can displace a
-# pending long research run. The workflow therefore gets an isolated group.
-# Safe publication is enforced at the final commit step via fetch/rebase/push
-# retries against current main, and only the research artifacts path is staged.
 concurrency:
   group: historical-altseason-free-bootstrap
   cancel-in-progress: false
@@ -84,39 +78,11 @@ jobs:
             assert 'return_24h_pct' in first
           print('FREE_BOOTSTRAP_VALIDATION_PASS', s['free_hourly_feature_rows'], s['episode_count'])
           PY
-      - name: Commit immutable research artifacts safely
-        run: |
-          set -euo pipefail
-          git config user.name framework-research-bot
-          git config user.email framework-research-bot@users.noreply.github.com
-          git add 06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/
-          if git diff --cached --quiet; then
-            echo 'No artifact changes'
-            exit 0
-          fi
-          bad="$(git diff --cached --name-only | grep -v '^06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/' || true)"
-          if [ -n "$bad" ]; then
-            echo "Unexpected staged paths:" >&2
-            echo "$bad" >&2
-            exit 1
-          fi
-          git commit -m "research: historical altseason free bootstrap ${GITHUB_RUN_ID}"
-
-          pushed=false
-          for attempt in 1 2 3 4 5; do
-            git rebase --abort 2>/dev/null || true
-            git fetch origin main
-            if git rebase origin/main && git push origin HEAD:main; then
-              pushed=true
-              break
-            fi
-            git rebase --abort 2>/dev/null || true
-            sleep $((attempt * 5))
-          done
-          if [ "$pushed" != true ]; then
-            echo 'Failed to publish validated research artifacts after bounded rebase/push retries' >&2
-            exit 1
-          fi
-          git fetch origin main
-          git merge-base --is-ancestor HEAD origin/main
-          echo 'HISTORICAL_FREE_BOOTSTRAP_REMOTE_READBACK_PASS'
+      - name: Upload validated free-stage artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: historical-altseason-free-stage
+          path: 06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 6
