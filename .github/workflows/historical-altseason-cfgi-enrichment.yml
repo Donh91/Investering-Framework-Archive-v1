@@ -1,0 +1,78 @@
+name: Historical Altseason CFGI Enrichment
+
+on:
+  workflow_run:
+    workflows: ['Historical Altseason Free Bootstrap']
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: framework-main-writer
+  cancel-in-progress: false
+
+jobs:
+  enrich:
+    if: >-
+      ${{ github.event_name == 'workflow_dispatch' ||
+          (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main') }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify free bootstrap and CFGI secret
+        env:
+          CFGI_API_KEY: ${{ secrets.CFGI_API_KEY }}
+        run: |
+          test -f 06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/EPISODE_CATALOG.json
+          test -n "$CFGI_API_KEY"
+      - name: Target CFGI only after objective episode selection
+        env:
+          CFGI_API_KEY: ${{ secrets.CFGI_API_KEY }}
+        run: |
+          python scripts/historical_lab/cfgi_targeted_backfill.py
+      - name: Validate actual billing and governance
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path('06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts')
+          b=json.loads((root/'CFGI_BILLING.json').read_text())
+          c=json.loads(Path('06_RESEARCH_LAB/historical_altseason_pullback_v1/config.json').read_text())
+          g=c['cfgi']
+          assert b['expected_worst_case_credits'] <= g['expected_credit_hard_cap']
+          actual=b.get('actual_credits_used_from_headers')
+          if actual is not None:
+            assert actual <= g['expected_credit_hard_cap'] + 1
+          remaining=b.get('final_credits_remaining')
+          if remaining is not None:
+            assert remaining >= g['minimum_credits_reserve']
+          assert c['authority']['research_only'] is True
+          assert c['authority']['portfolio_execution'] is False
+          assert c['authority']['automatic_rule_changes'] is False
+          assert (root/'CFGI_COVERAGE.json').exists()
+          if b['status']=='PASS':
+            assert (root/'cfgi_targeted.jsonl.gz').exists()
+            assert (root/'CFGI_EVENT_SIGNATURES.json').exists()
+          print('CFGI_TARGETED_ENRICHMENT_VALIDATION_PASS', b['status'], actual, remaining)
+          PY
+      - name: Commit CFGI research artifacts
+        run: |
+          git config user.name framework-research-bot
+          git config user.email framework-research-bot@users.noreply.github.com
+          git add 06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/
+          if git diff --cached --quiet; then
+            echo 'No CFGI artifact changes'
+            exit 0
+          fi
+          git commit -m "research: targeted CFGI altseason enrichment ${GITHUB_RUN_ID}"
+          git pull --rebase origin main
+          git push origin HEAD:main
