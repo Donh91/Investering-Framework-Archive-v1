@@ -1,0 +1,1364 @@
+{
+  "authority": {
+    "automatic_rule_changes": false,
+    "canonical_market_state": false,
+    "portfolio_execution": false,
+    "promotion_requires_separate_review": true,
+    "research_only": true
+  },
+  "contract": "HISTORICAL_ALTSEASON_FREE_SOURCE_AUDIT_v1",
+  "generated_at_utc": "2026-08-20T19:49:38.094283+00:00",
+  "historical_transport_policy": {
+    "analysis_semantics_changed": false,
+    "archive_first": true,
+    "bounded_worker_cap": 24,
+    "contract": "BINANCE_VISION_ARCHIVE_FIRST_TRANSPORT_v1",
+    "daily_download_workers": 12,
+    "deterministic_timestamp_reordering": true,
+    "post_2022_resolution": "COMPLETED_MONTHLY_WITH_DAILY_FALLBACK",
+    "pre_2022_resolution": "DAILY_ARCHIVES_PREFERRED",
+    "reason": "Historical reproducibility and archive revision control; avoid geography-sensitive live REST retries."
+  },
+  "limitations": [
+    "Research alt universe is survivorship-limited and is not claimed to be exact historical Top100 membership.",
+    "CFGI begins after the 2021 study window and is not fabricated into 2021.",
+    "Historical Binance archives can be revised; Vision fallback prefers daily archives before 2022 to reduce stale-monthly revision risk.",
+    "Historical kline transport is archive-first for reproducibility. Live Binance REST is intentionally bypassed in this laboratory run and this bypass is recorded explicitly."
+  ],
+  "liquidity_cohort_semantics": "CROSS_SECTIONAL_QUOTE_VOLUME_PROXY_NOT_HISTORICAL_MARKET_CAP",
+  "source_resolution_events": [
+    {
+      "end": "2021-12-31T23:00:00Z",
+      "error": null,
+      "source": "BINANCE_REST_BYPASSED_ARCHIVE_FIRST",
+      "start": "2020-09-01T00:00:00Z",
+      "symbol": "BTCUSDT"
+    },
+    {
+      "end": "2021-12-31T23:00:00Z",
+      "rows": 11669,
+      "source": "BINANCE_VISION_DAILY_PREFERRED_PRE_2022",
+      "start": "2020-09-01T00:00:00Z",
+      "symbol": "BTCUSDT"
+    },
+    {
+      "end": "2026-07-31T23:00:00Z",
+      "error": null,
+      "source": "BINANCE_REST_BYPASSED_ARCHIVE_FIRST",
+      "start": "2025-01-01T00:00:00Z",
+      "symbol": "BTCUSDT"
+    },
+    {
+      "end": "2026-07-31T23:00:00Z",
+      "rows": 13848,
+      "source": "BINANCE_VISION_DAILY_PREFERRED_PRE_2022",
+      "start": "2025-01-01T00:00:00Z",
+      "symbol": "BTCUSDT"
+    },
+    {
+      "end": "2021-12-31T23:00:00Z",
+      "error": null,
+      "source": "BINANCE_REST_BYPASSED_ARCHIVE_FIRST",
+      "start": "2020-09-01T00:00:00Z",
+      "symbol": "ETHUSDT"
+    },
+    {
+      "end": "2021-12-31T23:00:00Z",
+      "rows": 11669,
+      "source": "BINANCE_VISION_DAILY_PREFERRED_PRE_2022",
+      "start": "2020-09-01T00:00:00Z",
+      "symbol": "ETHUSDT"
+    },
+    {
+      "end": "2026-07-31T23:00:00Z",
+      "error": null,
+      "source": "BINANCE_REST_BYPASSED_ARCHIVE_FIRST",
+      "start": "2025-01-01T00:00:00Z",
+      "symbol": "ETHUSDT"
+    },
+    {
+      "end": "2026-07-31T23:00:00Z",
+      "rows": 13848,
+      "source": "BINANCE_VISION_DAILY_PREFERRED_PRE_2022",
+      "start": "2025-01-01T00:00:00Z",
+      "symbol": "ETHUSDT"
+    },
+    {
+      "end": "2021-12-31T23:00:00Z",
+      "error": null,
+      "source": "BINANCE_REST_BYPASSED_ARCHIVE_FIRST",
+      "start": "2020-09-01T00:00:00Z",
+      "symbol": "ETHBTC"
+    },
+    {
+      "end": "2021-12-31T23:00:00Z",
+      "rows": 11669,
+      "source": "BINANCE_VISION_DAILY_PREFERRED_PRE_2022",
+      "start": "2020-09-01T00:00:00Z",
+      "symbol": "ETHBTC"
+    },
+    {
+      "end": "2026-07-31T23:00:00Z",
+      "error": null,
+      "source": "BINANCE_REST_BYPASSED_ARCHIVE_FIRST",
+      "start": "2025-01-01T00:00:00Z",
+      "symbol": "ETHBTC"
+    },
+    {
+      "end": "2026-07-31T23:00:00Z",
+      "rows": 13848,
+      "source": "BINANCE_VISION_DAILY_PREFERRED_PRE_2022",
+      "start": "2025-01-01T00:00:00Z",
+      "symbol": "ETHBTC"
+    },
+    {
+      "end": "2021-12-31T23:00:00Z",
+      "error": null,
+      "source": "BINANCE_REST_BYPASSED_ARCHIVE_FIRST",
+      "start": "2020-09-01T00:00:00Z",
+      "symbol": "BNBUSDT"
+    },
+    {
+      "end": "2021-12-31T23:00:00Z",
+      "rows": 11669,
+      "source": "BINANCE_VISION_DAILY_PREFERRED_PRE_2022",
+      "start": "2020-09-01T00:00:00Z",
+      "symbol": "BNBUSDT"
+    },
+    {
+      "end": "2026-07-31T23:00:00Z",
+      "error": null,
+      "source": "BINANCE_REST_BYPASSED_ARCHIVE_FIRST",
+      "start": "2025-01-01T00:00:00Z",
+      "symbol": "BNBUSDT"
+    },
+    {
+      "end": "2026-07-31T23:00:00Z",
+      "rows": 13848,
+      "source": "BINANCE_VISION_DAILY_PREFERRED_PRE_2022",
+      "start": "2025-01-01T00:00:00Z",
+      "symbol": "BNBUSDT"
+    },
+    {
+      "end": "2021-12-31T23:00:00Z",
+      "error": null,
+      "source": "BINANCE_REST_BYPASSED_ARCHIVE_FIRST",
+      "start": "2020-09-01T00:00:00Z",
+      "symbol": "ADAUSDT"
+    },
+    {
+      "end": "2021-12-31T23:00:00Z",
+      "rows": 11669,
+      "source": "BINANCE_VISION_DAILY_PREFERRED_PRE_2022",
+      "start": "2020-09-01T00:00:00Z",
+      "symbol": "ADAUSDT"
+    },
+    {
+      "end": "2026-07-31T23:00:00Z",
+      "error": null,
+      "source": "BINANCE_REST_BYPASSED_ARCHIVE_FIRST",
+      "start": "2025-01-01T00:00:00Z",
+      "symbol": "ADAUSDT"
+    },
+    {
+      "end": "2026-07-31T23:00:00Z",
+      "rows": 13848,
+      "source": "BINANCE_VISION_DAILY_PREFERRED_PRE_2022",
+      "start": "2025-01-01T00:00:00Z",
+      "symbol": "ADAUSDT"
+    },
+    {
+      "end": "2021-12-31T23:00:00Z",
+      "error": null,
+      "source": "BINANCE_REST_BYPASSED_ARCHIVE_FIRST",
+      "start": "2020-09-01T00:00:00Z",
+      "symbol": "XRPUSDT"
+    },
+    {
+      "end": "2021-12-31T23:00:00Z",
+      "rows": 11669,
+      "source": "BINANCE_VISION_DAILY_PREFERRED_PRE_2022",
+      "start": "2020-09-01T00:00:00Z",
+      "symbol": "XRPUSDT"
+    },
+    {
+      "end": "2026-07-31T23:00:00Z",
+      "error": null,
+      "source": "BINANCE_REST_BYPASSED_ARCHIVE_FIRST",
+      "start": "2025-01-01T00:00:00Z",
+      "symbol": "XRPUSDT"
+    },
+    {
+      "end": "2026-07-31T23:00:00Z",
+      "rows": 13848,
+      "source": "BINANCE_VISION_DAILY_PREFERRED_PRE_2022",
+      "start": "2025-01-01T00:00:00Z",
+      "symbol": "XRPUSDT"
+    },
+    {
+      "end": "2021-12-31T23:00:00Z",
+      "error": null,
+      "source": "BINANCE_REST_BYPASSED_ARCHIVE_FIRST",
+      "start": "2020-09-01T00:00:00Z",
+      "symbol": "DOTUSDT"
+    },
+    {
+      "end": "2021-12-31T23:00:00Z",
+      "rows": 11669,
+      "source": "BINANCE_VISION_DAILY_PREFERRED_PRE_2022",
+      "start": "2020-09-01T00:00:00Z",
+      "symbol": "DOTUSDT"
+    },
+    {
+      "end": "2026-07-31T23:00:00Z",
+      "error": null,
+      "source": "BINANCE_REST_BYPASSED_ARCHIVE_FIRST",
+      "start": "2025-01-01T00:00:00Z",
+      "symbol": "DOTUSDT"
+    },
+    {
+      "end": "2026-07-31T23:00:00Z",
+      "rows": 13848,
+      "source": "BINANCE_VISION_DAILY_PREFERRED_PRE_2022",
+      "start": "2025-01-01T00:00:00Z",
+      "symbol": "DOTUSDT"
+    },
+    {
+      "end": "2021-12-31T23:00:00Z",
+      "error": null,
+      "source": "BINANCE_REST_BYPASSED_ARCHIVE_FIRST",
+      "start": "2020-09-01T00:00:00Z",
+      "symbol": "LTCUSDT"
+    },
+    {
+      "end": "2021-12-31T23:00:00Z",
+      "rows": 11669,
+      "source": "BINANCE_VISION_DAILY_PREFERRED_PRE_2022",
+      "start": "2020-09-01T00:00:00Z",
+      "symbol": "LTCUSDT"
+    },
+    {
+      "end": "2026-07-31T23:00:00Z",
+      "error": null,
+      "source": "BINANCE_REST_BYPASSED_ARCHIVE_FIRST",
+      "start": "2025-01-01T00:00:00Z",
+      "symbol": "LTCUSDT"
+    },
+    {
+      "end": "2026-07-31T23:00:00Z",
+      "rows": 13848,
+      "source": "BINANCE_VISION_DAILY_PREFERRED_PRE_2022",
+      "start": "2025-01-01T00:00:00Z",
+      "symbol": "LTCUSDT"
+    },
+    {
+      "end": "2021-12-31T23:00:00Z",
+      "error": null,
+      "source": "BINANCE_REST_BYPASSED_ARCHIVE_FIRST",
+      "start": "2020-09-01T00:00:00Z",
+      "symbol": "BCHUSDT"
+    },
+    {
+      "end": "2021-12-31T23:00:00Z",
+      "rows": 11669,
+      "source": "BINANCE_VISION_DAILY_PREFERRED_PRE_2022",
+      "start": "2020-09-01T00:00:00Z",
+      "symbol": "BCHUSDT"
+    },
+    {
+      "end": "2026-07-31T23:00:00Z",
+      "error": null,
+      "source": "BINANCE_REST_BYPASSED_ARCHIVE_FIRST",
+      "start": "2025-01-01T00:00:00Z",
+      "symbol": "BCHUSDT"
+    },
+    {
+      "end": "2026-07-31T23:00:00Z",
+      "rows": 13848,
+      "source": "BINANCE_VISION_DAILY_PREFERRED_PRE_2022",
+      "start": "2025-01-01T00:00:00Z",
+      "symbol": "BCHUSDT"
+    },
+    {
+      "end": "2021-12-31T23:00:00Z",
+      "error": null,
+      "source": "BINANCE_REST_BYPASSED_ARCHIVE_FIRST",
+      "start": "2020-09-01T00:00:00Z",
+      "symbol": "LINKUSDT"
+    },
+    {
+      "end": "2021-12-31T23:00:00Z",
+      "rows": 11669,
+      "source": "BINANCE_VISION_DAILY_PREFERRED_PRE_2022",
+      "start": "2020-09-01T00:00:00Z",
+      "symbol": "LINKUSDT"
+    },
+    {
+      "end": "2026-07-31T23:00:00Z",
+      "error": null,
+      "source": "BINANCE_REST_BYPASSED_ARCHIVE_FIRST",
+      "start": "2025-01-01T00:00:00Z",
+      "symbol": "LINKUSDT"
+    },
+    {
+      "end": "2026-07-31T23:00:00Z",
+      "rows": 13848,
+      "source": "BINANCE_VISION_DAILY_PREFERRED_PRE_2022",
+      "start": "2025-01-01T00:00:00Z",
+      "symbol": "LINKUSDT"
+    },
+    {
+      "end": "2021-12-31T23:00:00Z",
+      "error": null,
+      "source": "BINANCE_REST_BYPASSED_ARCHIVE_FIRST",
+      "start": "2020-09-01T00:00:00Z",
+      "symbol": "XLMUSDT"
+    },
+    {
+      "end": "2021-12-31T23:00:00Z",
+      "rows": 11669,
+      "source": "BINANCE_VISION_DAILY_PREFERRED_PRE_2022",
+      "start": "2020-09-01T00:00:00Z",
+      "symbol": "XLMUSDT"
+    },
+    {
+      "end": "2026-07-31T23:00:00Z",
+      "error": null,
+      "source": "BINANCE_REST_BYPASSED_ARCHIVE_FIRST",
+      "start": "2025-01-01T00:00:00Z",
+      "symbol": "XLMUSDT"
+    },
+    {
+      "end": "2026-07-31T23:00:00Z",
+      "rows": 13848,
+      "source": "BINANCE_VISION_DAILY_PREFERRED_PRE_2022",
+      "start": "2025-01-01T00:00:00Z",
+      "symbol": "XLMUSDT"
+    },
+    {
+      "end": "2021-12-31T23:00:00Z",
+      "error": null,
+      "source": "BINANCE_REST_BYPASSED_ARCHIVE_FIRST",
+      "start": "2020-09-01T00:00:00Z",
+      "symbol": "DOGEUSDT"
+    },
+    {
+      "end": "2021-12-31T23:00:00Z",
+      "rows": 11669,
+      "source": "BINANCE_VISION_DAILY_PREFERRED_PRE_2022",
+      "start": "2020-09-01T00:00:00Z",
+      "symbol": "DOGEUSDT"
+    },
+    {
+      "end": "2026-07-31T23:00:00Z",
+      "error": null,
+      "source": "BINANCE_REST_BYPASSED_ARCHIVE_FIRST",
+      "start": "2025-01-01T00:00:00Z",
+      "symbol": "DOGEUSDT"
+    },
+    {
+      "end": "2026-07-31T23:00:00Z",
+      "rows": 13848,
+      "source": "BINANCE_VISION_DAILY_PREFERRED_PRE_2022",
+      "start": "2025-01-01T00:00:00Z",
+      "symbol": "DOGEUSDT"
+    },
+    {
+      "end": "2021-12-31T23:00:00Z",
+      "error": null,
+      "source": "BINANCE_REST_BYPASSED_ARCHIVE_FIRST",
+      "start": "2020-09-01T00:00:00Z",
+      "symbol": "UNIUSDT"
+    },
+    {
+      "end": "2021-12-31T23:00:00Z",
+      "rows": 11282,
+      "source": "BINANCE_VISION_DAILY_PREFERRED_PRE_2022",
+      "start": "2020-09-01T00:00:00Z",
+      "symbol": "UNIUSDT"
+    },
+    {
+      "end": "2026-07-31T23:00:00Z",
+      "error": null,
+      "source": "BINANCE_REST_BYPASSED_ARCHIVE_FIRST",
+      "start": "2025-01-01T00:00:00Z",
+      "symbol": "UNIUSDT"
+    },
+    {
+      "end": "2026-07-31T23:00:00Z",
+      "rows": 13848,
+      "source": "BINANCE_VISION_DAILY_PREFERRED_PRE_2022",
+      "start": "2025-01-01T00:00:00Z",
+      "symbol": "UNIUSDT"
+    },
+    {
+      "end": "2021-12-31T23:00:00Z",
+      "error": null,
+      "source": "BINANCE_REST_BYPASSED_ARCHIVE_FIRST",
+      "start": "2020-09-01T00:00:00Z",
+      "symbol": "AAVEUSDT"
+    },
+    {
+      "end": "2021-12-31T23:00:00Z",
+      "rows": 10610,
+      "source": "BINANCE_VISION_DAILY_PREFERRED_PRE_2022",
+      "start": "2020-09-01T00:00:00Z",
+      "symbol": "AAVEUSDT"
+    },
+    {
+      "end": "2026-07-31T23:00:00Z",
+      "error": null,
+      "source": "BINANCE_REST_BYPASSED_ARCHIVE_FIRST",
+      "start": "2025-01-01T00:00:00Z",
+      "symbol": "AAVEUSDT"
+    },
+    {
+      "end": "2026-07-31T23:00:00Z",
+      "rows": 13848,
+      "source": "BINANCE_VISION_DAILY_PREFERRED_PRE_2022",
+      "start": "2025-01-01T00:00:00Z",
+      "symbol": "AAVEUSDT"
+    },
+    {
+      "end": "2021-12-31T23:00:00Z",
+      "error": null,
+      "source": "BINANCE_REST_BYPASSED_ARCHIVE_FIRST",
+      "start": "2020-09-01T00:00:00Z",
+      "symbol": "SNXUSDT"
+    },
+    {
+      "end": "2021-12-31T23:00:00Z",
+      "rows": 11669,
+      "source": "BINANCE_VISION_DAILY_PREFERRED_PRE_2022",
+      "start": "2020-09-01T00:00:00Z",
+      "symbol": "SNXUSDT"
+    },
+    {
+      "end": "2026-07-31T23:00:00Z",
+      "error": null,
+      "source": "BINANCE_REST_BYPASSED_ARCHIVE_FIRST",
+      "start": "2025-01-01T00:00:00Z",
+      "symbol": "SNXUSDT"
+    },
+    {
+      "end": "2026-07-31T23:00:00Z",
+      "rows": 13848,
+      "source": "BINANCE_VISION_DAILY_PREFERRED_PRE_2022",
+      "start": "2025-01-01T00:00:00Z",
+      "symbol": "SNXUSDT"
+    },
+    {
+      "end": "2021-12-31T23:00:00Z",
+      "error": null,
+      "source": "BINANCE_REST_BYPASSED_ARCHIVE_FIRST",
+      "start": "2020-09-01T00:00:00Z",
+      "symbol": "SUSHIUSDT"
+    },
+    {
+      "end": "2021-12-31T23:00:00Z",
+      "rows": 11658,
+      "source": "BINANCE_VISION_DAILY_PREFERRED_PRE_2022",
+      "start": "2020-09-01T00:00:00Z",
+      "symbol": "SUSHIUSDT"
+    },
+    {
+      "end": "2026-07-31T23:00:00Z",
+      "error": null,
+      "source": "BINANCE_REST_BYPASSED_ARCHIVE_FIRST",
+      "start": "2025-01-01T00:00:00Z",
+      "symbol": "SUSHIUSDT"
+    },
+    {
+      "end": "2026-07-31T23:00:00Z",
+      "rows": 13848,
+      "source": "BINANCE_VISION_DAILY_PREFERRED_PRE_2022",
+      "start": "2025-01-01T00:00:00Z",
+      "symbol": "SUSHIUSDT"
+    },
+    {
+      "end": "2021-12-31T23:00:00Z",
+      "error": null,
+      "source": "BINANCE_REST_BYPASSED_ARCHIVE_FIRST",
+      "start": "2020-09-01T00:00:00Z",
+      "symbol": "YFIUSDT"
+    },
+    {
+      "end": "2021-12-31T23:00:00Z",
+      "rows": 11669,
+      "source": "BINANCE_VISION_DAILY_PREFERRED_PRE_2022",
+      "start": "2020-09-01T00:00:00Z",
+      "symbol": "YFIUSDT"
+    },
+    {
+      "end": "2026-07-31T23:00:00Z",
+      "error": null,
+      "source": "BINANCE_REST_BYPASSED_ARCHIVE_FIRST",
+      "start": "2025-01-01T00:00:00Z",
+      "symbol": "YFIUSDT"
+    },
+    {
+      "end": "2026-07-31T23:00:00Z",
+      "rows": 13848,
+      "source": "BINANCE_VISION_DAILY_PREFERRED_PRE_2022",
+      "start": "2025-01-01T00:00:00Z",
+      "symbol": "YFIUSDT"
+    },
+    {
+      "end": "2021-12-31T23:00:00Z",
+      "error": null,
+      "source": "BINANCE_REST_BYPASSED_ARCHIVE_FIRST",
+      "start": "2020-09-01T00:00:00Z",
+      "symbol": "COMPUSDT"
+    },
+    {
+      "end": "2021-12-31T23:00:00Z",
+      "rows": 11669,
+      "source": "BINANCE_VISION_DAILY_PREFERRED_PRE_2022",
+      "start": "2020-09-01T00:00:00Z",
+      "symbol": "COMPUSDT"
+    },
+    {
+      "end": "2026-07-31T23:00:00Z",
+      "error": null,
+      "source": "BINANCE_REST_BYPASSED_ARCHIVE_FIRST",
+      "start": "2025-01-01T00:00:00Z",
+      "symbol": "COMPUSDT"
+    },
+    {
+      "end": "2026-07-31T23:00:00Z",
+      "rows": 13848,
+      "source": "BINANCE_VISION_DAILY_PREFERRED_PRE_2022",
+      "start": "2025-01-01T00:00:00Z",
+      "symbol": "COMPUSDT"
+    },
+    {
+      "end": "2021-12-31T23:00:00Z",
+      "error": null,
+      "source": "BINANCE_REST_BYPASSED_ARCHIVE_FIRST",
+      "start": "2020-09-01T00:00:00Z",
+      "symbol": "MKRUSDT"
+    },
+    {
+      "end": "2021-12-31T23:00:00Z",
+      "rows": 11669,
+      "source": "BINANCE_VISION_DAILY_PREFERRED_PRE_2022",
+      "start": "2020-09-01T00:00:00Z",
+      "symbol": "MKRUSDT"
+    },
+    {
+      "end": "2026-07-31T23:00:00Z",
+      "error": null,
+      "source": "BINANCE_REST_BYPASSED_ARCHIVE_FIRST",
+      "start": "2025-01-01T00:00:00Z",
+      "symbol": "MKRUSDT"
+    },
+    {
+      "end": "2026-07-31T23:00:00Z",
+      "rows": 6171,
+      "source": "BINANCE_VISION_DAILY_PREFERRED_PRE_2022",
+      "start": "2025-01-01T00:00:00Z",
+      "symbol": "MKRUSDT"
+    },
+    {
+      "end": "2021-12-31T23:00:00Z",
+      "error": null,
+      "source": "BINANCE_REST_BYPASSED_ARCHIVE_FIRST",
+      "start": "2020-09-01T00:00:00Z",
+      "symbol": "SOLUSDT"
+    },
+    {
+      "end": "2021-12-31T23:00:00Z",
+      "rows": 11669,
+      "source": "BINANCE_VISION_DAILY_PREFERRED_PRE_2022",
+      "start": "2020-09-01T00:00:00Z",
+      "symbol": "SOLUSDT"
+    },
+    {
+      "end": "2026-07-31T23:00:00Z",
+      "error": null,
+      "source": "BINANCE_REST_BYPASSED_ARCHIVE_FIRST",
+      "start": "2025-01-01T00:00:00Z",
+      "symbol": "SOLUSDT"
+    },
+    {
+      "end": "2026-07-31T23:00:00Z",
+      "rows": 13848,
+      "source": "BINANCE_VISION_DAILY_PREFERRED_PRE_2022",
+      "start": "2025-01-01T00:00:00Z",
+      "symbol": "SOLUSDT"
+    },
+    {
+      "end": "2021-12-31T23:00:00Z",
+      "error": null,
+      "source": "BINANCE_REST_BYPASSED_ARCHIVE_FIRST",
+      "start": "2020-09-01T00:00:00Z",
+      "symbol": "AVAXUSDT"
+    },
+    {
+      "end": "2021-12-31T23:00:00Z",
+      "rows": 11159,
+      "source": "BINANCE_VISION_DAILY_PREFERRED_PRE_2022",
+      "start": "2020-09-01T00:00:00Z",
+      "symbol": "AVAXUSDT"
+    },
+    {
+      "end": "2026-07-31T23:00:00Z",
+      "error": null,
+      "source": "BINANCE_REST_BYPASSED_ARCHIVE_FIRST",
+      "start": "2025-01-01T00:00:00Z",
+      "symbol": "AVAXUSDT"
+    },
+    {
+      "end": "2026-07-31T23:00:00Z",
+      "rows": 13848,
+      "source": "BINANCE_VISION_DAILY_PREFERRED_PRE_2022",
+      "start": "2025-01-01T00:00:00Z",
+      "symbol": "AVAXUSDT"
+    },
+    {
+      "end": "2021-12-31T23:00:00Z",
+      "error": null,
+      "source": "BINANCE_REST_BYPASSED_ARCHIVE_FIRST",
+      "start": "2020-09-01T00:00:00Z",
+      "symbol": "MATICUSDT"
+    },
+    {
+      "end": "2021-12-31T23:00:00Z",
+      "rows": 11669,
+      "source": "BINANCE_VISION_DAILY_PREFERRED_PRE_2022",
+      "start": "2020-09-01T00:00:00Z",
+      "symbol": "MATICUSDT"
+    },
+    {
+      "end": "2026-07-31T23:00:00Z",
+      "error": null,
+      "source": "BINANCE_REST_BYPASSED_ARCHIVE_FIRST",
+      "start": "2025-01-01T00:00:00Z",
+      "symbol": "MATICUSDT"
+    },
+    {
+      "end": "2026-07-31T23:00:00Z",
+      "rows": 0,
+      "source": "BINANCE_VISION_DAILY_PREFERRED_PRE_2022",
+      "start": "2025-01-01T00:00:00Z",
+      "symbol": "MATICUSDT"
+    },
+    {
+      "end": "2021-12-31T23:00:00Z",
+      "error": null,
+      "source": "BINANCE_REST_BYPASSED_ARCHIVE_FIRST",
+      "start": "2020-09-01T00:00:00Z",
+      "symbol": "VETUSDT"
+    },
+    {
+      "end": "2021-12-31T23:00:00Z",
+      "rows": 11669,
+      "source": "BINANCE_VISION_DAILY_PREFERRED_PRE_2022",
+      "start": "2020-09-01T00:00:00Z",
+      "symbol": "VETUSDT"
+    },
+    {
+      "end": "2026-07-31T23:00:00Z",
+      "error": null,
+      "source": "BINANCE_REST_BYPASSED_ARCHIVE_FIRST",
+      "start": "2025-01-01T00:00:00Z",
+      "symbol": "VETUSDT"
+    },
+    {
+      "end": "2026-07-31T23:00:00Z",
+      "rows": 13848,
+      "source": "BINANCE_VISION_DAILY_PREFERRED_PRE_2022",
+      "start": "2025-01-01T00:00:00Z",
+      "symbol": "VETUSDT"
+    },
+    {
+      "end": "2021-12-31T23:00:00Z",
+      "error": null,
+      "source": "BINANCE_REST_BYPASSED_ARCHIVE_FIRST",
+      "start": "2020-09-01T00:00:00Z",
+      "symbol": "THETAUSDT"
+    },
+    {
+      "end": "2021-12-31T23:00:00Z",
+      "rows": 11669,
+      "source": "BINANCE_VISION_DAILY_PREFERRED_PRE_2022",
+      "start": "2020-09-01T00:00:00Z",
+      "symbol": "THETAUSDT"
+    },
+    {
+      "end": "2026-07-31T23:00:00Z",
+      "error": null,
+      "source": "BINANCE_REST_BYPASSED_ARCHIVE_FIRST",
+      "start": "2025-01-01T00:00:00Z",
+      "symbol": "THETAUSDT"
+    },
+    {
+      "end": "2026-07-31T23:00:00Z",
+      "rows": 13848,
+      "source": "BINANCE_VISION_DAILY_PREFERRED_PRE_2022",
+      "start": "2025-01-01T00:00:00Z",
+      "symbol": "THETAUSDT"
+    },
+    {
+      "end": "2021-12-31T23:00:00Z",
+      "error": null,
+      "source": "BINANCE_REST_BYPASSED_ARCHIVE_FIRST",
+      "start": "2020-09-01T00:00:00Z",
+      "symbol": "FILUSDT"
+    },
+    {
+      "end": "2021-12-31T23:00:00Z",
+      "rows": 10596,
+      "source": "BINANCE_VISION_DAILY_PREFERRED_PRE_2022",
+      "start": "2020-09-01T00:00:00Z",
+      "symbol": "FILUSDT"
+    },
+    {
+      "end": "2026-07-31T23:00:00Z",
+      "error": null,
+      "source": "BINANCE_REST_BYPASSED_ARCHIVE_FIRST",
+      "start": "2025-01-01T00:00:00Z",
+      "symbol": "FILUSDT"
+    },
+    {
+      "end": "2026-07-31T23:00:00Z",
+      "rows": 13848,
+      "source": "BINANCE_VISION_DAILY_PREFERRED_PRE_2022",
+      "start": "2025-01-01T00:00:00Z",
+      "symbol": "FILUSDT"
+    },
+    {
+      "end": "2021-12-31T23:00:00Z",
+      "error": null,
+      "source": "BINANCE_REST_BYPASSED_ARCHIVE_FIRST",
+      "start": "2020-09-01T00:00:00Z",
+      "symbol": "ETCUSDT"
+    },
+    {
+      "end": "2021-12-31T23:00:00Z",
+      "rows": 11669,
+      "source": "BINANCE_VISION_DAILY_PREFERRED_PRE_2022",
+      "start": "2020-09-01T00:00:00Z",
+      "symbol": "ETCUSDT"
+    },
+    {
+      "end": "2026-07-31T23:00:00Z",
+      "error": null,
+      "source": "BINANCE_REST_BYPASSED_ARCHIVE_FIRST",
+      "start": "2025-01-01T00:00:00Z",
+      "symbol": "ETCUSDT"
+    },
+    {
+      "end": "2026-07-31T23:00:00Z",
+      "rows": 13848,
+      "source": "BINANCE_VISION_DAILY_PREFERRED_PRE_2022",
+      "start": "2025-01-01T00:00:00Z",
+      "symbol": "ETCUSDT"
+    },
+    {
+      "end": "2021-12-31T23:00:00Z",
+      "error": null,
+      "source": "BINANCE_REST_BYPASSED_ARCHIVE_FIRST",
+      "start": "2020-09-01T00:00:00Z",
+      "symbol": "ATOMUSDT"
+    },
+    {
+      "end": "2021-12-31T23:00:00Z",
+      "rows": 11669,
+      "source": "BINANCE_VISION_DAILY_PREFERRED_PRE_2022",
+      "start": "2020-09-01T00:00:00Z",
+      "symbol": "ATOMUSDT"
+    },
+    {
+      "end": "2026-07-31T23:00:00Z",
+      "error": null,
+      "source": "BINANCE_REST_BYPASSED_ARCHIVE_FIRST",
+      "start": "2025-01-01T00:00:00Z",
+      "symbol": "ATOMUSDT"
+    },
+    {
+      "end": "2026-07-31T23:00:00Z",
+      "rows": 13848,
+      "source": "BINANCE_VISION_DAILY_PREFERRED_PRE_2022",
+      "start": "2025-01-01T00:00:00Z",
+      "symbol": "ATOMUSDT"
+    },
+    {
+      "end": "2021-12-31T23:00:00Z",
+      "error": null,
+      "source": "BINANCE_REST_BYPASSED_ARCHIVE_FIRST",
+      "start": "2020-09-01T00:00:00Z",
+      "symbol": "ALGOUSDT"
+    },
+    {
+      "end": "2021-12-31T23:00:00Z",
+      "rows": 11669,
+      "source": "BINANCE_VISION_DAILY_PREFERRED_PRE_2022",
+      "start": "2020-09-01T00:00:00Z",
+      "symbol": "ALGOUSDT"
+    },
+    {
+      "end": "2026-07-31T23:00:00Z",
+      "error": null,
+      "source": "BINANCE_REST_BYPASSED_ARCHIVE_FIRST",
+      "start": "2025-01-01T00:00:00Z",
+      "symbol": "ALGOUSDT"
+    },
+    {
+      "end": "2026-07-31T23:00:00Z",
+      "rows": 13848,
+      "source": "BINANCE_VISION_DAILY_PREFERRED_PRE_2022",
+      "start": "2025-01-01T00:00:00Z",
+      "symbol": "ALGOUSDT"
+    },
+    {
+      "end": "2021-12-31T23:00:00Z",
+      "error": null,
+      "source": "BINANCE_REST_BYPASSED_ARCHIVE_FIRST",
+      "start": "2020-09-01T00:00:00Z",
+      "symbol": "ZECUSDT"
+    },
+    {
+      "end": "2021-12-31T23:00:00Z",
+      "rows": 11669,
+      "source": "BINANCE_VISION_DAILY_PREFERRED_PRE_2022",
+      "start": "2020-09-01T00:00:00Z",
+      "symbol": "ZECUSDT"
+    },
+    {
+      "end": "2026-07-31T23:00:00Z",
+      "error": null,
+      "source": "BINANCE_REST_BYPASSED_ARCHIVE_FIRST",
+      "start": "2025-01-01T00:00:00Z",
+      "symbol": "ZECUSDT"
+    },
+    {
+      "end": "2026-07-31T23:00:00Z",
+      "rows": 13848,
+      "source": "BINANCE_VISION_DAILY_PREFERRED_PRE_2022",
+      "start": "2025-01-01T00:00:00Z",
+      "symbol": "ZECUSDT"
+    },
+    {
+      "end": "2021-12-31T23:00:00Z",
+      "error": null,
+      "source": "BINANCE_REST_BYPASSED_ARCHIVE_FIRST",
+      "start": "2020-09-01T00:00:00Z",
+      "symbol": "DASHUSDT"
+    },
+    {
+      "end": "2021-12-31T23:00:00Z",
+      "rows": 11669,
+      "source": "BINANCE_VISION_DAILY_PREFERRED_PRE_2022",
+      "start": "2020-09-01T00:00:00Z",
+      "symbol": "DASHUSDT"
+    },
+    {
+      "end": "2026-07-31T23:00:00Z",
+      "error": null,
+      "source": "BINANCE_REST_BYPASSED_ARCHIVE_FIRST",
+      "start": "2025-01-01T00:00:00Z",
+      "symbol": "DASHUSDT"
+    },
+    {
+      "end": "2026-07-31T23:00:00Z",
+      "rows": 13848,
+      "source": "BINANCE_VISION_DAILY_PREFERRED_PRE_2022",
+      "start": "2025-01-01T00:00:00Z",
+      "symbol": "DASHUSDT"
+    },
+    {
+      "end": "2021-12-31T23:00:00Z",
+      "error": null,
+      "source": "BINANCE_REST_BYPASSED_ARCHIVE_FIRST",
+      "start": "2020-09-01T00:00:00Z",
+      "symbol": "NEOUSDT"
+    },
+    {
+      "end": "2021-12-31T23:00:00Z",
+      "rows": 11669,
+      "source": "BINANCE_VISION_DAILY_PREFERRED_PRE_2022",
+      "start": "2020-09-01T00:00:00Z",
+      "symbol": "NEOUSDT"
+    },
+    {
+      "end": "2026-07-31T23:00:00Z",
+      "error": null,
+      "source": "BINANCE_REST_BYPASSED_ARCHIVE_FIRST",
+      "start": "2025-01-01T00:00:00Z",
+      "symbol": "NEOUSDT"
+    },
+    {
+      "end": "2026-07-31T23:00:00Z",
+      "rows": 13848,
+      "source": "BINANCE_VISION_DAILY_PREFERRED_PRE_2022",
+      "start": "2025-01-01T00:00:00Z",
+      "symbol": "NEOUSDT"
+    },
+    {
+      "end": "2021-12-31T23:00:00Z",
+      "error": null,
+      "source": "BINANCE_REST_BYPASSED_ARCHIVE_FIRST",
+      "start": "2020-09-01T00:00:00Z",
+      "symbol": "IOTAUSDT"
+    },
+    {
+      "end": "2021-12-31T23:00:00Z",
+      "rows": 11669,
+      "source": "BINANCE_VISION_DAILY_PREFERRED_PRE_2022",
+      "start": "2020-09-01T00:00:00Z",
+      "symbol": "IOTAUSDT"
+    },
+    {
+      "end": "2026-07-31T23:00:00Z",
+      "error": null,
+      "source": "BINANCE_REST_BYPASSED_ARCHIVE_FIRST",
+      "start": "2025-01-01T00:00:00Z",
+      "symbol": "IOTAUSDT"
+    },
+    {
+      "end": "2026-07-31T23:00:00Z",
+      "rows": 13848,
+      "source": "BINANCE_VISION_DAILY_PREFERRED_PRE_2022",
+      "start": "2025-01-01T00:00:00Z",
+      "symbol": "IOTAUSDT"
+    },
+    {
+      "end": "2021-12-31T23:00:00Z",
+      "error": null,
+      "source": "BINANCE_REST_BYPASSED_ARCHIVE_FIRST",
+      "start": "2020-09-01T00:00:00Z",
+      "symbol": "EGLDUSDT"
+    },
+    {
+      "end": "2021-12-31T23:00:00Z",
+      "rows": 11618,
+      "source": "BINANCE_VISION_DAILY_PREFERRED_PRE_2022",
+      "start": "2020-09-01T00:00:00Z",
+      "symbol": "EGLDUSDT"
+    },
+    {
+      "end": "2026-07-31T23:00:00Z",
+      "error": null,
+      "source": "BINANCE_REST_BYPASSED_ARCHIVE_FIRST",
+      "start": "2025-01-01T00:00:00Z",
+      "symbol": "EGLDUSDT"
+    },
+    {
+      "end": "2026-07-31T23:00:00Z",
+      "rows": 13848,
+      "source": "BINANCE_VISION_DAILY_PREFERRED_PRE_2022",
+      "start": "2025-01-01T00:00:00Z",
+      "symbol": "EGLDUSDT"
+    },
+    {
+      "end": "2021-12-31T23:00:00Z",
+      "error": null,
+      "source": "BINANCE_REST_BYPASSED_ARCHIVE_FIRST",
+      "start": "2020-09-01T00:00:00Z",
+      "symbol": "RUNEUSDT"
+    },
+    {
+      "end": "2021-12-31T23:00:00Z",
+      "rows": 11591,
+      "source": "BINANCE_VISION_DAILY_PREFERRED_PRE_2022",
+      "start": "2020-09-01T00:00:00Z",
+      "symbol": "RUNEUSDT"
+    },
+    {
+      "end": "2026-07-31T23:00:00Z",
+      "error": null,
+      "source": "BINANCE_REST_BYPASSED_ARCHIVE_FIRST",
+      "start": "2025-01-01T00:00:00Z",
+      "symbol": "RUNEUSDT"
+    },
+    {
+      "end": "2026-07-31T23:00:00Z",
+      "rows": 13848,
+      "source": "BINANCE_VISION_DAILY_PREFERRED_PRE_2022",
+      "start": "2025-01-01T00:00:00Z",
+      "symbol": "RUNEUSDT"
+    },
+    {
+      "end": "2021-12-31T23:00:00Z",
+      "error": null,
+      "source": "BINANCE_REST_BYPASSED_ARCHIVE_FIRST",
+      "start": "2020-09-01T00:00:00Z",
+      "symbol": "FTMUSDT"
+    },
+    {
+      "end": "2021-12-31T23:00:00Z",
+      "rows": 11669,
+      "source": "BINANCE_VISION_DAILY_PREFERRED_PRE_2022",
+      "start": "2020-09-01T00:00:00Z",
+      "symbol": "FTMUSDT"
+    },
+    {
+      "end": "2026-07-31T23:00:00Z",
+      "error": null,
+      "source": "BINANCE_REST_BYPASSED_ARCHIVE_FIRST",
+      "start": "2025-01-01T00:00:00Z",
+      "symbol": "FTMUSDT"
+    },
+    {
+      "end": "2026-07-31T23:00:00Z",
+      "rows": 291,
+      "source": "BINANCE_VISION_DAILY_PREFERRED_PRE_2022",
+      "start": "2025-01-01T00:00:00Z",
+      "symbol": "FTMUSDT"
+    },
+    {
+      "end": "2021-12-31T23:00:00Z",
+      "error": null,
+      "source": "BINANCE_REST_BYPASSED_ARCHIVE_FIRST",
+      "start": "2020-09-01T00:00:00Z",
+      "symbol": "GRTUSDT"
+    },
+    {
+      "end": "2021-12-31T23:00:00Z",
+      "rows": 9082,
+      "source": "BINANCE_VISION_DAILY_PREFERRED_PRE_2022",
+      "start": "2020-09-01T00:00:00Z",
+      "symbol": "GRTUSDT"
+    },
+    {
+      "end": "2026-07-31T23:00:00Z",
+      "error": null,
+      "source": "BINANCE_REST_BYPASSED_ARCHIVE_FIRST",
+      "start": "2025-01-01T00:00:00Z",
+      "symbol": "GRTUSDT"
+    },
+    {
+      "end": "2026-07-31T23:00:00Z",
+      "rows": 13848,
+      "source": "BINANCE_VISION_DAILY_PREFERRED_PRE_2022",
+      "start": "2025-01-01T00:00:00Z",
+      "symbol": "GRTUSDT"
+    },
+    {
+      "end": "2021-12-31T23:00:00Z",
+      "error": null,
+      "source": "BINANCE_REST_BYPASSED_ARCHIVE_FIRST",
+      "start": "2020-09-01T00:00:00Z",
+      "symbol": "LUNAUSDT"
+    },
+    {
+      "end": "2021-12-31T23:00:00Z",
+      "rows": 11669,
+      "source": "BINANCE_VISION_DAILY_PREFERRED_PRE_2022",
+      "start": "2020-09-01T00:00:00Z",
+      "symbol": "LUNAUSDT"
+    },
+    {
+      "end": "2026-07-31T23:00:00Z",
+      "error": null,
+      "source": "BINANCE_REST_BYPASSED_ARCHIVE_FIRST",
+      "start": "2025-01-01T00:00:00Z",
+      "symbol": "LUNAUSDT"
+    },
+    {
+      "end": "2026-07-31T23:00:00Z",
+      "rows": 13848,
+      "source": "BINANCE_VISION_DAILY_PREFERRED_PRE_2022",
+      "start": "2025-01-01T00:00:00Z",
+      "symbol": "LUNAUSDT"
+    },
+    {
+      "end": "2021-12-31T23:00:00Z",
+      "error": null,
+      "source": "BINANCE_REST_BYPASSED_ARCHIVE_FIRST",
+      "start": "2020-09-01T00:00:00Z",
+      "symbol": "FTTUSDT"
+    },
+    {
+      "end": "2021-12-31T23:00:00Z",
+      "rows": 11669,
+      "source": "BINANCE_VISION_DAILY_PREFERRED_PRE_2022",
+      "start": "2020-09-01T00:00:00Z",
+      "symbol": "FTTUSDT"
+    },
+    {
+      "end": "2026-07-31T23:00:00Z",
+      "error": null,
+      "source": "BINANCE_REST_BYPASSED_ARCHIVE_FIRST",
+      "start": "2025-01-01T00:00:00Z",
+      "symbol": "FTTUSDT"
+    },
+    {
+      "end": "2026-07-31T23:00:00Z",
+      "rows": 13848,
+      "source": "BINANCE_VISION_DAILY_PREFERRED_PRE_2022",
+      "start": "2025-01-01T00:00:00Z",
+      "symbol": "FTTUSDT"
+    }
+  ],
+  "symbols": [
+    {
+      "errors": [],
+      "first_utc": "2020-09-01T00:00:00Z",
+      "last_utc": "2026-07-31T23:00:00Z",
+      "row_count": 25517,
+      "symbol": "BTCUSDT"
+    },
+    {
+      "errors": [],
+      "first_utc": "2020-09-01T00:00:00Z",
+      "last_utc": "2026-07-31T23:00:00Z",
+      "row_count": 25517,
+      "symbol": "ETHUSDT"
+    },
+    {
+      "errors": [],
+      "first_utc": "2020-09-01T00:00:00Z",
+      "last_utc": "2026-07-31T23:00:00Z",
+      "row_count": 25517,
+      "symbol": "ETHBTC"
+    },
+    {
+      "errors": [],
+      "first_utc": "2020-09-01T00:00:00Z",
+      "last_utc": "2026-07-31T23:00:00Z",
+      "row_count": 25517,
+      "symbol": "BNBUSDT"
+    },
+    {
+      "errors": [],
+      "first_utc": "2020-09-01T00:00:00Z",
+      "last_utc": "2026-07-31T23:00:00Z",
+      "row_count": 25517,
+      "symbol": "ADAUSDT"
+    },
+    {
+      "errors": [],
+      "first_utc": "2020-09-01T00:00:00Z",
+      "last_utc": "2026-07-31T23:00:00Z",
+      "row_count": 25517,
+      "symbol": "XRPUSDT"
+    },
+    {
+      "errors": [],
+      "first_utc": "2020-09-01T00:00:00Z",
+      "last_utc": "2026-07-31T23:00:00Z",
+      "row_count": 25517,
+      "symbol": "DOTUSDT"
+    },
+    {
+      "errors": [],
+      "first_utc": "2020-09-01T00:00:00Z",
+      "last_utc": "2026-07-31T23:00:00Z",
+      "row_count": 25517,
+      "symbol": "LTCUSDT"
+    },
+    {
+      "errors": [],
+      "first_utc": "2020-09-01T00:00:00Z",
+      "last_utc": "2026-07-31T23:00:00Z",
+      "row_count": 25517,
+      "symbol": "BCHUSDT"
+    },
+    {
+      "errors": [],
+      "first_utc": "2020-09-01T00:00:00Z",
+      "last_utc": "2026-07-31T23:00:00Z",
+      "row_count": 25517,
+      "symbol": "LINKUSDT"
+    },
+    {
+      "errors": [],
+      "first_utc": "2020-09-01T00:00:00Z",
+      "last_utc": "2026-07-31T23:00:00Z",
+      "row_count": 25517,
+      "symbol": "XLMUSDT"
+    },
+    {
+      "errors": [],
+      "first_utc": "2020-09-01T00:00:00Z",
+      "last_utc": "2026-07-31T23:00:00Z",
+      "row_count": 25517,
+      "symbol": "DOGEUSDT"
+    },
+    {
+      "errors": [],
+      "first_utc": "2020-09-17T03:00:00Z",
+      "last_utc": "2026-07-31T23:00:00Z",
+      "row_count": 25130,
+      "symbol": "UNIUSDT"
+    },
+    {
+      "errors": [],
+      "first_utc": "2020-10-15T03:00:00Z",
+      "last_utc": "2026-07-31T23:00:00Z",
+      "row_count": 24458,
+      "symbol": "AAVEUSDT"
+    },
+    {
+      "errors": [],
+      "first_utc": "2020-09-01T00:00:00Z",
+      "last_utc": "2026-07-31T23:00:00Z",
+      "row_count": 25517,
+      "symbol": "SNXUSDT"
+    },
+    {
+      "errors": [],
+      "first_utc": "2020-09-01T11:00:00Z",
+      "last_utc": "2026-07-31T23:00:00Z",
+      "row_count": 25506,
+      "symbol": "SUSHIUSDT"
+    },
+    {
+      "errors": [],
+      "first_utc": "2020-09-01T00:00:00Z",
+      "last_utc": "2026-07-31T23:00:00Z",
+      "row_count": 25517,
+      "symbol": "YFIUSDT"
+    },
+    {
+      "errors": [],
+      "first_utc": "2020-09-01T00:00:00Z",
+      "last_utc": "2026-07-31T23:00:00Z",
+      "row_count": 25517,
+      "symbol": "COMPUSDT"
+    },
+    {
+      "errors": [],
+      "first_utc": "2020-09-01T00:00:00Z",
+      "last_utc": "2025-09-15T02:00:00Z",
+      "row_count": 17840,
+      "symbol": "MKRUSDT"
+    },
+    {
+      "errors": [],
+      "first_utc": "2020-09-01T00:00:00Z",
+      "last_utc": "2026-07-31T23:00:00Z",
+      "row_count": 25517,
+      "symbol": "SOLUSDT"
+    },
+    {
+      "errors": [],
+      "first_utc": "2020-09-22T06:00:00Z",
+      "last_utc": "2026-07-31T23:00:00Z",
+      "row_count": 25007,
+      "symbol": "AVAXUSDT"
+    },
+    {
+      "errors": [],
+      "first_utc": "2020-09-01T00:00:00Z",
+      "last_utc": "2021-12-31T23:00:00Z",
+      "row_count": 11669,
+      "symbol": "MATICUSDT"
+    },
+    {
+      "errors": [],
+      "first_utc": "2020-09-01T00:00:00Z",
+      "last_utc": "2026-07-31T23:00:00Z",
+      "row_count": 25517,
+      "symbol": "VETUSDT"
+    },
+    {
+      "errors": [],
+      "first_utc": "2020-09-01T00:00:00Z",
+      "last_utc": "2026-07-31T23:00:00Z",
+      "row_count": 25517,
+      "symbol": "THETAUSDT"
+    },
+    {
+      "errors": [],
+      "first_utc": "2020-10-15T17:00:00Z",
+      "last_utc": "2026-07-31T23:00:00Z",
+      "row_count": 24444,
+      "symbol": "FILUSDT"
+    },
+    {
+      "errors": [],
+      "first_utc": "2020-09-01T00:00:00Z",
+      "last_utc": "2026-07-31T23:00:00Z",
+      "row_count": 25517,
+      "symbol": "ETCUSDT"
+    },
+    {
+      "errors": [],
+      "first_utc": "2020-09-01T00:00:00Z",
+      "last_utc": "2026-07-31T23:00:00Z",
+      "row_count": 25517,
+      "symbol": "ATOMUSDT"
+    },
+    {
+      "errors": [],
+      "first_utc": "2020-09-01T00:00:00Z",
+      "last_utc": "2026-07-31T23:00:00Z",
+      "row_count": 25517,
+      "symbol": "ALGOUSDT"
+    },
+    {
+      "errors": [],
+      "first_utc": "2020-09-01T00:00:00Z",
+      "last_utc": "2026-07-31T23:00:00Z",
+      "row_count": 25517,
+      "symbol": "ZECUSDT"
+    },
+    {
+      "errors": [],
+      "first_utc": "2020-09-01T00:00:00Z",
+      "last_utc": "2026-07-31T23:00:00Z",
+      "row_count": 25517,
+      "symbol": "DASHUSDT"
+    },
+    {
+      "errors": [],
+      "first_utc": "2020-09-01T00:00:00Z",
+      "last_utc": "2026-07-31T23:00:00Z",
+      "row_count": 25517,
+      "symbol": "NEOUSDT"
+    },
+    {
+      "errors": [],
+      "first_utc": "2020-09-01T00:00:00Z",
+      "last_utc": "2026-07-31T23:00:00Z",
+      "row_count": 25517,
+      "symbol": "IOTAUSDT"
+    },
+    {
+      "errors": [],
+      "first_utc": "2020-09-03T03:00:00Z",
+      "last_utc": "2026-07-31T23:00:00Z",
+      "row_count": 25466,
+      "symbol": "EGLDUSDT"
+    },
+    {
+      "errors": [],
+      "first_utc": "2020-09-04T06:00:00Z",
+      "last_utc": "2026-07-31T23:00:00Z",
+      "row_count": 25439,
+      "symbol": "RUNEUSDT"
+    },
+    {
+      "errors": [],
+      "first_utc": "2020-09-01T00:00:00Z",
+      "last_utc": "2025-01-13T02:00:00Z",
+      "row_count": 11960,
+      "symbol": "FTMUSDT"
+    },
+    {
+      "errors": [],
+      "first_utc": "2020-12-17T20:00:00Z",
+      "last_utc": "2026-07-31T23:00:00Z",
+      "row_count": 22930,
+      "symbol": "GRTUSDT"
+    },
+    {
+      "errors": [],
+      "first_utc": "2020-09-01T00:00:00Z",
+      "last_utc": "2026-07-31T23:00:00Z",
+      "row_count": 25517,
+      "symbol": "LUNAUSDT"
+    },
+    {
+      "errors": [],
+      "first_utc": "2020-09-01T00:00:00Z",
+      "last_utc": "2026-07-31T23:00:00Z",
+      "row_count": 25517,
+      "symbol": "FTTUSDT"
+    }
+  ],
+  "time_semantics": "STRICT_TIMESTAMP_BASED_NO_POSITIONAL_HOUR_ASSUMPTIONS"
+}

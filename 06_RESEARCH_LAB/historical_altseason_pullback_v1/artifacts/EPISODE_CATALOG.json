@@ -1,0 +1,1007 @@
+{
+  "authority": {
+    "automatic_rule_changes": false,
+    "canonical_market_state": false,
+    "portfolio_execution": false,
+    "promotion_requires_separate_review": true,
+    "research_only": true
+  },
+  "cfgi_candidate_windows": {
+    "controls": [
+      {
+        "basis": "MATCHED_STRONG_24H_CONTINUATION_WITHOUT_NEXT48H_5PCT_DRAWDOWN",
+        "control_id": "CTRL_01",
+        "event_utc": "2025-02-07T18:00:00Z",
+        "future_outcome_used_for_control_label_only": true,
+        "matched_episode_id": "PB_2025-01-06_046",
+        "matching_distance": 0.07015452540595637,
+        "matching_features": [
+          "mean_return_24h_pct",
+          "breadth_24h",
+          "dispersion_1h_pct",
+          "eth_minus_btc_24h_pp",
+          "active_alt_count"
+        ]
+      }
+    ],
+    "pullbacks": [
+      {
+        "episode_id": "PB_2025-01-06_046",
+        "event_utc": "2025-01-06T16:00:00Z",
+        "max_drawdown_pct": -22.615975719595482
+      }
+    ],
+    "selection_precedes_cfgi_query": true
+  },
+  "contract": "HISTORICAL_ALTSEASON_EPISODE_CATALOG_v1",
+  "episode_count": 46,
+  "episodes": [
+    {
+      "active_alt_count_at_top": 27,
+      "authority": "OUTCOME_LABEL_RESEARCH_ONLY",
+      "continuity_segment_id": 0,
+      "episode_id": "PB_2020-09-01_001",
+      "hours_top_to_trigger": 27.0,
+      "hours_top_to_trough": 1544.0,
+      "hours_trough_to_recovery": 416.0,
+      "max_drawdown_pct": -44.54917230518733,
+      "recovery_utc": "2020-11-21T23:00:00Z",
+      "research_window_id": "ALTSEASON_2020_2021",
+      "severity_flags": {
+        "ge_12pct": true,
+        "ge_20pct": true,
+        "ge_5pct": true,
+        "ge_8pct": true
+      },
+      "top_utc": "2020-09-01T07:00:00Z",
+      "trigger_utc": "2020-09-02T10:00:00Z",
+      "trough_utc": "2020-11-04T15:00:00Z"
+    },
+    {
+      "active_alt_count_at_top": 34,
+      "authority": "OUTCOME_LABEL_RESEARCH_ONLY",
+      "continuity_segment_id": 0,
+      "episode_id": "PB_2020-11-24_002",
+      "hours_top_to_trigger": 2.0,
+      "hours_top_to_trough": 4.0,
+      "hours_trough_to_recovery": 12.0,
+      "max_drawdown_pct": -8.157561127047774,
+      "recovery_utc": "2020-11-25T00:00:00Z",
+      "research_window_id": "ALTSEASON_2020_2021",
+      "severity_flags": {
+        "ge_12pct": false,
+        "ge_20pct": false,
+        "ge_5pct": true,
+        "ge_8pct": true
+      },
+      "top_utc": "2020-11-24T08:00:00Z",
+      "trigger_utc": "2020-11-24T10:00:00Z",
+      "trough_utc": "2020-11-24T12:00:00Z"
+    },
+    {
+      "active_alt_count_at_top": 34,
+      "authority": "OUTCOME_LABEL_RESEARCH_ONLY",
+      "continuity_segment_id": 1,
+      "episode_id": "PB_2020-12-01_003",
+      "hours_top_to_trigger": 2.0,
+      "hours_top_to_trough": 2.0,
+      "hours_trough_to_recovery": 29.0,
+      "max_drawdown_pct": -8.56446402482305,
+      "recovery_utc": "2020-12-02T17:00:00Z",
+      "research_window_id": "ALTSEASON_2020_2021",
+      "severity_flags": {
+        "ge_12pct": false,
+        "ge_20pct": false,
+        "ge_5pct": true,
+        "ge_8pct": true
+      },
+      "top_utc": "2020-12-01T10:00:00Z",
+      "trigger_utc": "2020-12-01T12:00:00Z",
+      "trough_utc": "2020-12-01T12:00:00Z"
+    },
+    {
+      "active_alt_count_at_top": 34,
+      "authority": "OUTCOME_LABEL_RESEARCH_ONLY",
+      "continuity_segment_id": 1,
+      "episode_id": "PB_2020-12-04_004",
+      "hours_top_to_trigger": 11.0,
+      "hours_top_to_trough": 22.0,
+      "hours_trough_to_recovery": 25.0,
+      "max_drawdown_pct": -8.859546577407295,
+      "recovery_utc": "2020-12-05T23:00:00Z",
+      "research_window_id": "ALTSEASON_2020_2021",
+      "severity_flags": {
+        "ge_12pct": false,
+        "ge_20pct": false,
+        "ge_5pct": true,
+        "ge_8pct": true
+      },
+      "top_utc": "2020-12-04T00:00:00Z",
+      "trigger_utc": "2020-12-04T11:00:00Z",
+      "trough_utc": "2020-12-04T22:00:00Z"
+    },
+    {
+      "active_alt_count_at_top": 34,
+      "authority": "OUTCOME_LABEL_RESEARCH_ONLY",
+      "continuity_segment_id": 1,
+      "episode_id": "PB_2020-12-06_005",
+      "hours_top_to_trigger": 57.0,
+      "hours_top_to_trough": 131.0,
+      "hours_trough_to_recovery": 83.0,
+      "max_drawdown_pct": -14.061665668650802,
+      "recovery_utc": "2020-12-14T22:00:00Z",
+      "research_window_id": "ALTSEASON_2020_2021",
+      "severity_flags": {
+        "ge_12pct": true,
+        "ge_20pct": false,
+        "ge_5pct": true,
+        "ge_8pct": true
+      },
+      "top_utc": "2020-12-06T00:00:00Z",
+      "trigger_utc": "2020-12-08T09:00:00Z",
+      "trough_utc": "2020-12-11T11:00:00Z"
+    },
+    {
+      "active_alt_count_at_top": 35,
+      "authority": "OUTCOME_LABEL_RESEARCH_ONLY",
+      "continuity_segment_id": 3,
+      "episode_id": "PB_2020-12-27_006",
+      "hours_top_to_trigger": 5.0,
+      "hours_top_to_trough": 5.0,
+      "hours_trough_to_recovery": 11.0,
+      "max_drawdown_pct": -5.404653046278818,
+      "recovery_utc": "2020-12-28T07:00:00Z",
+      "research_window_id": "ALTSEASON_2020_2021",
+      "severity_flags": {
+        "ge_12pct": false,
+        "ge_20pct": false,
+        "ge_5pct": true,
+        "ge_8pct": false
+      },
+      "top_utc": "2020-12-27T15:00:00Z",
+      "trigger_utc": "2020-12-27T20:00:00Z",
+      "trough_utc": "2020-12-27T20:00:00Z"
+    },
+    {
+      "active_alt_count_at_top": 35,
+      "authority": "OUTCOME_LABEL_RESEARCH_ONLY",
+      "continuity_segment_id": 3,
+      "episode_id": "PB_2020-12-28_007",
+      "hours_top_to_trigger": 22.0,
+      "hours_top_to_trough": 23.0,
+      "hours_trough_to_recovery": 7.0,
+      "max_drawdown_pct": -6.54557346425666,
+      "recovery_utc": "2020-12-29T23:00:00Z",
+      "research_window_id": "ALTSEASON_2020_2021",
+      "severity_flags": {
+        "ge_12pct": false,
+        "ge_20pct": false,
+        "ge_5pct": true,
+        "ge_8pct": false
+      },
+      "top_utc": "2020-12-28T17:00:00Z",
+      "trigger_utc": "2020-12-29T15:00:00Z",
+      "trough_utc": "2020-12-29T16:00:00Z"
+    },
+    {
+      "active_alt_count_at_top": 35,
+      "authority": "OUTCOME_LABEL_RESEARCH_ONLY",
+      "continuity_segment_id": 3,
+      "episode_id": "PB_2021-01-04_008",
+      "hours_top_to_trigger": 3.0,
+      "hours_top_to_trough": 5.0,
+      "hours_trough_to_recovery": 13.0,
+      "max_drawdown_pct": -8.989152137164147,
+      "recovery_utc": "2021-01-04T23:00:00Z",
+      "research_window_id": "ALTSEASON_2020_2021",
+      "severity_flags": {
+        "ge_12pct": false,
+        "ge_20pct": false,
+        "ge_5pct": true,
+        "ge_8pct": true
+      },
+      "top_utc": "2021-01-04T05:00:00Z",
+      "trigger_utc": "2021-01-04T08:00:00Z",
+      "trough_utc": "2021-01-04T10:00:00Z"
+    },
+    {
+      "active_alt_count_at_top": 35,
+      "authority": "OUTCOME_LABEL_RESEARCH_ONLY",
+      "continuity_segment_id": 3,
+      "episode_id": "PB_2021-01-07_009",
+      "hours_top_to_trigger": 3.0,
+      "hours_top_to_trough": 11.0,
+      "hours_trough_to_recovery": 8.0,
+      "max_drawdown_pct": -13.036532410408197,
+      "recovery_utc": "2021-01-08T10:00:00Z",
+      "research_window_id": "ALTSEASON_2020_2021",
+      "severity_flags": {
+        "ge_12pct": true,
+        "ge_20pct": false,
+        "ge_5pct": true,
+        "ge_8pct": true
+      },
+      "top_utc": "2021-01-07T15:00:00Z",
+      "trigger_utc": "2021-01-07T18:00:00Z",
+      "trough_utc": "2021-01-08T02:00:00Z"
+    },
+    {
+      "active_alt_count_at_top": 35,
+      "authority": "OUTCOME_LABEL_RESEARCH_ONLY",
+      "continuity_segment_id": 3,
+      "episode_id": "PB_2021-01-10_010",
+      "hours_top_to_trigger": 4.0,
+      "hours_top_to_trough": 33.0,
+      "hours_trough_to_recovery": 53.0,
+      "max_drawdown_pct": -24.684710166233938,
+      "recovery_utc": "2021-01-13T21:00:00Z",
+      "research_window_id": "ALTSEASON_2020_2021",
+      "severity_flags": {
+        "ge_12pct": true,
+        "ge_20pct": true,
+        "ge_5pct": true,
+        "ge_8pct": true
+      },
+      "top_utc": "2021-01-10T07:00:00Z",
+      "trigger_utc": "2021-01-10T11:00:00Z",
+      "trough_utc": "2021-01-11T16:00:00Z"
+    },
+    {
+      "active_alt_count_at_top": 35,
+      "authority": "OUTCOME_LABEL_RESEARCH_ONLY",
+      "continuity_segment_id": 3,
+      "episode_id": "PB_2021-01-15_011",
+      "hours_top_to_trigger": 5.0,
+      "hours_top_to_trough": 5.0,
+      "hours_trough_to_recovery": 9.0,
+      "max_drawdown_pct": -7.471888339953092,
+      "recovery_utc": "2021-01-16T00:00:00Z",
+      "research_window_id": "ALTSEASON_2020_2021",
+      "severity_flags": {
+        "ge_12pct": false,
+        "ge_20pct": false,
+        "ge_5pct": true,
+        "ge_8pct": false
+      },
+      "top_utc": "2021-01-15T10:00:00Z",
+      "trigger_utc": "2021-01-15T15:00:00Z",
+      "trough_utc": "2021-01-15T15:00:00Z"
+    },
+    {
+      "active_alt_count_at_top": 35,
+      "authority": "OUTCOME_LABEL_RESEARCH_ONLY",
+      "continuity_segment_id": 3,
+      "episode_id": "PB_2021-01-16_012",
+      "hours_top_to_trigger": 16.0,
+      "hours_top_to_trough": 18.0,
+      "hours_trough_to_recovery": 7.0,
+      "max_drawdown_pct": -6.380059039543539,
+      "recovery_utc": "2021-01-17T16:00:00Z",
+      "research_window_id": "ALTSEASON_2020_2021",
+      "severity_flags": {
+        "ge_12pct": false,
+        "ge_20pct": false,
+        "ge_5pct": true,
+        "ge_8pct": false
+      },
+      "top_utc": "2021-01-16T15:00:00Z",
+      "trigger_utc": "2021-01-17T07:00:00Z",
+      "trough_utc": "2021-01-17T09:00:00Z"
+    },
+    {
+      "active_alt_count_at_top": 35,
+      "authority": "OUTCOME_LABEL_RESEARCH_ONLY",
+      "continuity_segment_id": 3,
+      "episode_id": "PB_2021-01-19_013",
+      "hours_top_to_trigger": 6.0,
+      "hours_top_to_trough": 59.0,
+      "hours_trough_to_recovery": 32.0,
+      "max_drawdown_pct": -21.491937191134546,
+      "recovery_utc": "2021-01-23T08:00:00Z",
+      "research_window_id": "ALTSEASON_2020_2021",
+      "severity_flags": {
+        "ge_12pct": true,
+        "ge_20pct": true,
+        "ge_5pct": true,
+        "ge_8pct": true
+      },
+      "top_utc": "2021-01-19T13:00:00Z",
+      "trigger_utc": "2021-01-19T19:00:00Z",
+      "trough_utc": "2021-01-22T00:00:00Z"
+    },
+    {
+      "active_alt_count_at_top": 35,
+      "authority": "OUTCOME_LABEL_RESEARCH_ONLY",
+      "continuity_segment_id": 3,
+      "episode_id": "PB_2021-01-25_014",
+      "hours_top_to_trigger": 19.0,
+      "hours_top_to_trough": 33.0,
+      "hours_trough_to_recovery": 7.0,
+      "max_drawdown_pct": -7.5037249134819355,
+      "recovery_utc": "2021-01-26T19:00:00Z",
+      "research_window_id": "ALTSEASON_2020_2021",
+      "severity_flags": {
+        "ge_12pct": false,
+        "ge_20pct": false,
+        "ge_5pct": true,
+        "ge_8pct": false
+      },
+      "top_utc": "2021-01-25T03:00:00Z",
+      "trigger_utc": "2021-01-25T22:00:00Z",
+      "trough_utc": "2021-01-26T12:00:00Z"
+    },
+    {
+      "active_alt_count_at_top": 35,
+      "authority": "OUTCOME_LABEL_RESEARCH_ONLY",
+      "continuity_segment_id": 3,
+      "episode_id": "PB_2021-01-26_015",
+      "hours_top_to_trigger": 20.0,
+      "hours_top_to_trough": 24.0,
+      "hours_trough_to_recovery": 6.0,
+      "max_drawdown_pct": -6.700589874125629,
+      "recovery_utc": "2021-01-28T05:00:00Z",
+      "research_window_id": "ALTSEASON_2020_2021",
+      "severity_flags": {
+        "ge_12pct": false,
+        "ge_20pct": false,
+        "ge_5pct": true,
+        "ge_8pct": false
+      },
+      "top_utc": "2021-01-26T23:00:00Z",
+      "trigger_utc": "2021-01-27T19:00:00Z",
+      "trough_utc": "2021-01-27T23:00:00Z"
+    },
+    {
+      "active_alt_count_at_top": 35,
+      "authority": "OUTCOME_LABEL_RESEARCH_ONLY",
+      "continuity_segment_id": 3,
+      "episode_id": "PB_2021-02-06_016",
+      "hours_top_to_trigger": 1.0,
+      "hours_top_to_trough": 1.0,
+      "hours_trough_to_recovery": 18.0,
+      "max_drawdown_pct": -5.406277647798497,
+      "recovery_utc": "2021-02-06T19:00:00Z",
+      "research_window_id": "ALTSEASON_2020_2021",
+      "severity_flags": {
+        "ge_12pct": false,
+        "ge_20pct": false,
+        "ge_5pct": true,
+        "ge_8pct": false
+      },
+      "top_utc": "2021-02-06T00:00:00Z",
+      "trigger_utc": "2021-02-06T01:00:00Z",
+      "trough_utc": "2021-02-06T01:00:00Z"
+    },
+    {
+      "active_alt_count_at_top": 35,
+      "authority": "OUTCOME_LABEL_RESEARCH_ONLY",
+      "continuity_segment_id": 3,
+      "episode_id": "PB_2021-02-10_017",
+      "hours_top_to_trigger": 1.0,
+      "hours_top_to_trough": 4.0,
+      "hours_trough_to_recovery": 7.0,
+      "max_drawdown_pct": -7.799627271231568,
+      "recovery_utc": "2021-02-10T22:00:00Z",
+      "research_window_id": "ALTSEASON_2020_2021",
+      "severity_flags": {
+        "ge_12pct": false,
+        "ge_20pct": false,
+        "ge_5pct": true,
+        "ge_8pct": false
+      },
+      "top_utc": "2021-02-10T11:00:00Z",
+      "trigger_utc": "2021-02-10T12:00:00Z",
+      "trough_utc": "2021-02-10T15:00:00Z"
+    },
+    {
+      "active_alt_count_at_top": 35,
+      "authority": "OUTCOME_LABEL_RESEARCH_ONLY",
+      "continuity_segment_id": 4,
+      "episode_id": "PB_2021-02-13_018",
+      "hours_top_to_trigger": 6.0,
+      "hours_top_to_trough": 6.0,
+      "hours_trough_to_recovery": 9.0,
+      "max_drawdown_pct": -6.064728085441584,
+      "recovery_utc": "2021-02-13T19:00:00Z",
+      "research_window_id": "ALTSEASON_2020_2021",
+      "severity_flags": {
+        "ge_12pct": false,
+        "ge_20pct": false,
+        "ge_5pct": true,
+        "ge_8pct": false
+      },
+      "top_utc": "2021-02-13T04:00:00Z",
+      "trigger_utc": "2021-02-13T10:00:00Z",
+      "trough_utc": "2021-02-13T10:00:00Z"
+    },
+    {
+      "active_alt_count_at_top": 35,
+      "authority": "OUTCOME_LABEL_RESEARCH_ONLY",
+      "continuity_segment_id": 4,
+      "episode_id": "PB_2021-02-14_019",
+      "hours_top_to_trigger": 24.0,
+      "hours_top_to_trough": 25.0,
+      "hours_trough_to_recovery": 11.0,
+      "max_drawdown_pct": -14.076416207166375,
+      "recovery_utc": "2021-02-15T13:00:00Z",
+      "research_window_id": "ALTSEASON_2020_2021",
+      "severity_flags": {
+        "ge_12pct": true,
+        "ge_20pct": false,
+        "ge_5pct": true,
+        "ge_8pct": true
+      },
+      "top_utc": "2021-02-14T01:00:00Z",
+      "trigger_utc": "2021-02-15T01:00:00Z",
+      "trough_utc": "2021-02-15T02:00:00Z"
+    },
+    {
+      "active_alt_count_at_top": 35,
+      "authority": "OUTCOME_LABEL_RESEARCH_ONLY",
+      "continuity_segment_id": 4,
+      "episode_id": "PB_2021-02-15_020",
+      "hours_top_to_trigger": 18.0,
+      "hours_top_to_trough": 33.0,
+      "hours_trough_to_recovery": 14.0,
+      "max_drawdown_pct": -11.152473756664582,
+      "recovery_utc": "2021-02-17T18:00:00Z",
+      "research_window_id": "ALTSEASON_2020_2021",
+      "severity_flags": {
+        "ge_12pct": false,
+        "ge_20pct": false,
+        "ge_5pct": true,
+        "ge_8pct": true
+      },
+      "top_utc": "2021-02-15T19:00:00Z",
+      "trigger_utc": "2021-02-16T13:00:00Z",
+      "trough_utc": "2021-02-17T04:00:00Z"
+    },
+    {
+      "active_alt_count_at_top": 35,
+      "authority": "OUTCOME_LABEL_RESEARCH_ONLY",
+      "continuity_segment_id": 4,
+      "episode_id": "PB_2021-02-20_021",
+      "hours_top_to_trigger": 9.0,
+      "hours_top_to_trough": 67.0,
+      "hours_trough_to_recovery": 192.0,
+      "max_drawdown_pct": -30.00263356986914,
+      "recovery_utc": "2021-03-03T08:00:00Z",
+      "research_window_id": "ALTSEASON_2020_2021",
+      "severity_flags": {
+        "ge_12pct": true,
+        "ge_20pct": true,
+        "ge_5pct": true,
+        "ge_8pct": true
+      },
+      "top_utc": "2021-02-20T13:00:00Z",
+      "trigger_utc": "2021-02-20T22:00:00Z",
+      "trough_utc": "2021-02-23T08:00:00Z"
+    },
+    {
+      "active_alt_count_at_top": 35,
+      "authority": "OUTCOME_LABEL_RESEARCH_ONLY",
+      "continuity_segment_id": 5,
+      "episode_id": "PB_2021-03-10_022",
+      "hours_top_to_trigger": 3.0,
+      "hours_top_to_trough": 33.0,
+      "hours_trough_to_recovery": 9.0,
+      "max_drawdown_pct": -6.621113941267264,
+      "recovery_utc": "2021-03-11T18:00:00Z",
+      "research_window_id": "ALTSEASON_2020_2021",
+      "severity_flags": {
+        "ge_12pct": false,
+        "ge_20pct": false,
+        "ge_5pct": true,
+        "ge_8pct": false
+      },
+      "top_utc": "2021-03-10T00:00:00Z",
+      "trigger_utc": "2021-03-10T03:00:00Z",
+      "trough_utc": "2021-03-11T09:00:00Z"
+    },
+    {
+      "active_alt_count_at_top": 35,
+      "authority": "OUTCOME_LABEL_RESEARCH_ONLY",
+      "continuity_segment_id": 5,
+      "episode_id": "PB_2021-03-12_023",
+      "hours_top_to_trigger": 16.0,
+      "hours_top_to_trough": 22.0,
+      "hours_trough_to_recovery": 9.0,
+      "max_drawdown_pct": -5.987740243715656,
+      "recovery_utc": "2021-03-13T10:00:00Z",
+      "research_window_id": "ALTSEASON_2020_2021",
+      "severity_flags": {
+        "ge_12pct": false,
+        "ge_20pct": false,
+        "ge_5pct": true,
+        "ge_8pct": false
+      },
+      "top_utc": "2021-03-12T03:00:00Z",
+      "trigger_utc": "2021-03-12T19:00:00Z",
+      "trough_utc": "2021-03-13T01:00:00Z"
+    },
+    {
+      "active_alt_count_at_top": 35,
+      "authority": "OUTCOME_LABEL_RESEARCH_ONLY",
+      "continuity_segment_id": 5,
+      "episode_id": "PB_2021-03-13_024",
+      "hours_top_to_trigger": 34.0,
+      "hours_top_to_trough": 52.0,
+      "hours_trough_to_recovery": 41.0,
+      "max_drawdown_pct": -8.746277711207329,
+      "recovery_utc": "2021-03-17T17:00:00Z",
+      "research_window_id": "ALTSEASON_2020_2021",
+      "severity_flags": {
+        "ge_12pct": false,
+        "ge_20pct": false,
+        "ge_5pct": true,
+        "ge_8pct": true
+      },
+      "top_utc": "2021-03-13T20:00:00Z",
+      "trigger_utc": "2021-03-15T06:00:00Z",
+      "trough_utc": "2021-03-16T00:00:00Z"
+    },
+    {
+      "active_alt_count_at_top": 35,
+      "authority": "OUTCOME_LABEL_RESEARCH_ONLY",
+      "continuity_segment_id": 5,
+      "episode_id": "PB_2021-03-20_025",
+      "hours_top_to_trigger": 19.0,
+      "hours_top_to_trough": 104.0,
+      "hours_trough_to_recovery": 79.0,
+      "max_drawdown_pct": -17.656555899149172,
+      "recovery_utc": "2021-03-28T08:00:00Z",
+      "research_window_id": "ALTSEASON_2020_2021",
+      "severity_flags": {
+        "ge_12pct": true,
+        "ge_20pct": false,
+        "ge_5pct": true,
+        "ge_8pct": true
+      },
+      "top_utc": "2021-03-20T17:00:00Z",
+      "trigger_utc": "2021-03-21T12:00:00Z",
+      "trough_utc": "2021-03-25T01:00:00Z"
+    },
+    {
+      "active_alt_count_at_top": 35,
+      "authority": "OUTCOME_LABEL_RESEARCH_ONLY",
+      "continuity_segment_id": 5,
+      "episode_id": "PB_2021-04-03_026",
+      "hours_top_to_trigger": 11.0,
+      "hours_top_to_trough": 17.0,
+      "hours_trough_to_recovery": 15.0,
+      "max_drawdown_pct": -7.010001310854664,
+      "recovery_utc": "2021-04-04T14:00:00Z",
+      "research_window_id": "ALTSEASON_2020_2021",
+      "severity_flags": {
+        "ge_12pct": false,
+        "ge_20pct": false,
+        "ge_5pct": true,
+        "ge_8pct": false
+      },
+      "top_utc": "2021-04-03T06:00:00Z",
+      "trigger_utc": "2021-04-03T17:00:00Z",
+      "trough_utc": "2021-04-03T23:00:00Z"
+    },
+    {
+      "active_alt_count_at_top": 35,
+      "authority": "OUTCOME_LABEL_RESEARCH_ONLY",
+      "continuity_segment_id": 5,
+      "episode_id": "PB_2021-04-07_027",
+      "hours_top_to_trigger": 8.0,
+      "hours_top_to_trough": 16.0,
+      "hours_trough_to_recovery": 22.0,
+      "max_drawdown_pct": -8.791120798733,
+      "recovery_utc": "2021-04-08T16:00:00Z",
+      "research_window_id": "ALTSEASON_2020_2021",
+      "severity_flags": {
+        "ge_12pct": false,
+        "ge_20pct": false,
+        "ge_5pct": true,
+        "ge_8pct": true
+      },
+      "top_utc": "2021-04-07T02:00:00Z",
+      "trigger_utc": "2021-04-07T10:00:00Z",
+      "trough_utc": "2021-04-07T18:00:00Z"
+    },
+    {
+      "active_alt_count_at_top": 35,
+      "authority": "OUTCOME_LABEL_RESEARCH_ONLY",
+      "continuity_segment_id": 5,
+      "episode_id": "PB_2021-04-16_028",
+      "hours_top_to_trigger": 10.0,
+      "hours_top_to_trough": 10.0,
+      "hours_trough_to_recovery": 2.0,
+      "max_drawdown_pct": -5.443076211850018,
+      "recovery_utc": "2021-04-16T15:00:00Z",
+      "research_window_id": "ALTSEASON_2020_2021",
+      "severity_flags": {
+        "ge_12pct": false,
+        "ge_20pct": false,
+        "ge_5pct": true,
+        "ge_8pct": false
+      },
+      "top_utc": "2021-04-16T03:00:00Z",
+      "trigger_utc": "2021-04-16T13:00:00Z",
+      "trough_utc": "2021-04-16T13:00:00Z"
+    },
+    {
+      "active_alt_count_at_top": 35,
+      "authority": "OUTCOME_LABEL_RESEARCH_ONLY",
+      "continuity_segment_id": 6,
+      "episode_id": "PB_2021-04-20_029",
+      "hours_top_to_trigger": 16.0,
+      "hours_top_to_trough": 16.0,
+      "hours_trough_to_recovery": 3.0,
+      "max_drawdown_pct": -5.713903307197454,
+      "recovery_utc": "2021-04-21T14:00:00Z",
+      "research_window_id": "ALTSEASON_2020_2021",
+      "severity_flags": {
+        "ge_12pct": false,
+        "ge_20pct": false,
+        "ge_5pct": true,
+        "ge_8pct": false
+      },
+      "top_utc": "2021-04-20T19:00:00Z",
+      "trigger_utc": "2021-04-21T11:00:00Z",
+      "trough_utc": "2021-04-21T11:00:00Z"
+    },
+    {
+      "active_alt_count_at_top": 35,
+      "authority": "OUTCOME_LABEL_RESEARCH_ONLY",
+      "continuity_segment_id": 7,
+      "episode_id": "PB_2021-04-25_030",
+      "hours_top_to_trigger": 4.0,
+      "hours_top_to_trough": 5.0,
+      "hours_trough_to_recovery": 3.0,
+      "max_drawdown_pct": -8.995385936236012,
+      "recovery_utc": "2021-04-26T00:00:00Z",
+      "research_window_id": "ALTSEASON_2020_2021",
+      "severity_flags": {
+        "ge_12pct": false,
+        "ge_20pct": false,
+        "ge_5pct": true,
+        "ge_8pct": true
+      },
+      "top_utc": "2021-04-25T16:00:00Z",
+      "trigger_utc": "2021-04-25T20:00:00Z",
+      "trough_utc": "2021-04-25T21:00:00Z"
+    },
+    {
+      "active_alt_count_at_top": 35,
+      "authority": "OUTCOME_LABEL_RESEARCH_ONLY",
+      "continuity_segment_id": 7,
+      "episode_id": "PB_2021-04-28_031",
+      "hours_top_to_trigger": 5.0,
+      "hours_top_to_trough": 5.0,
+      "hours_trough_to_recovery": 12.0,
+      "max_drawdown_pct": -5.882416660486145,
+      "recovery_utc": "2021-04-28T18:00:00Z",
+      "research_window_id": "ALTSEASON_2020_2021",
+      "severity_flags": {
+        "ge_12pct": false,
+        "ge_20pct": false,
+        "ge_5pct": true,
+        "ge_8pct": false
+      },
+      "top_utc": "2021-04-28T01:00:00Z",
+      "trigger_utc": "2021-04-28T06:00:00Z",
+      "trough_utc": "2021-04-28T06:00:00Z"
+    },
+    {
+      "active_alt_count_at_top": 35,
+      "authority": "OUTCOME_LABEL_RESEARCH_ONLY",
+      "continuity_segment_id": 7,
+      "episode_id": "PB_2021-05-03_032",
+      "hours_top_to_trigger": 2.0,
+      "hours_top_to_trough": 4.0,
+      "hours_trough_to_recovery": 8.0,
+      "max_drawdown_pct": -6.097158510584744,
+      "recovery_utc": "2021-05-04T10:00:00Z",
+      "research_window_id": "ALTSEASON_2020_2021",
+      "severity_flags": {
+        "ge_12pct": false,
+        "ge_20pct": false,
+        "ge_5pct": true,
+        "ge_8pct": false
+      },
+      "top_utc": "2021-05-03T22:00:00Z",
+      "trigger_utc": "2021-05-04T00:00:00Z",
+      "trough_utc": "2021-05-04T02:00:00Z"
+    },
+    {
+      "active_alt_count_at_top": 35,
+      "authority": "OUTCOME_LABEL_RESEARCH_ONLY",
+      "continuity_segment_id": 7,
+      "episode_id": "PB_2021-05-07_033",
+      "hours_top_to_trigger": 45.0,
+      "hours_top_to_trough": 45.0,
+      "hours_trough_to_recovery": 8.0,
+      "max_drawdown_pct": -6.261862801002039,
+      "recovery_utc": "2021-05-09T20:00:00Z",
+      "research_window_id": "ALTSEASON_2020_2021",
+      "severity_flags": {
+        "ge_12pct": false,
+        "ge_20pct": false,
+        "ge_5pct": true,
+        "ge_8pct": false
+      },
+      "top_utc": "2021-05-07T15:00:00Z",
+      "trigger_utc": "2021-05-09T12:00:00Z",
+      "trough_utc": "2021-05-09T12:00:00Z"
+    },
+    {
+      "active_alt_count_at_top": 35,
+      "authority": "OUTCOME_LABEL_RESEARCH_ONLY",
+      "continuity_segment_id": 7,
+      "episode_id": "PB_2021-05-10_034",
+      "hours_top_to_trigger": 14.0,
+      "hours_top_to_trough": 20.0,
+      "hours_trough_to_recovery": 21.0,
+      "max_drawdown_pct": -12.287082979334762,
+      "recovery_utc": "2021-05-11T23:00:00Z",
+      "research_window_id": "ALTSEASON_2020_2021",
+      "severity_flags": {
+        "ge_12pct": true,
+        "ge_20pct": false,
+        "ge_5pct": true,
+        "ge_8pct": true
+      },
+      "top_utc": "2021-05-10T06:00:00Z",
+      "trigger_utc": "2021-05-10T20:00:00Z",
+      "trough_utc": "2021-05-11T02:00:00Z"
+    },
+    {
+      "active_alt_count_at_top": 35,
+      "authority": "OUTCOME_LABEL_RESEARCH_ONLY",
+      "continuity_segment_id": 7,
+      "episode_id": "PB_2021-05-12_035",
+      "hours_top_to_trigger": 20.0,
+      "hours_top_to_trough": 39.0,
+      "hours_trough_to_recovery": 20.0,
+      "max_drawdown_pct": -16.830764174635004,
+      "recovery_utc": "2021-05-14T14:00:00Z",
+      "research_window_id": "ALTSEASON_2020_2021",
+      "severity_flags": {
+        "ge_12pct": true,
+        "ge_20pct": false,
+        "ge_5pct": true,
+        "ge_8pct": true
+      },
+      "top_utc": "2021-05-12T03:00:00Z",
+      "trigger_utc": "2021-05-12T23:00:00Z",
+      "trough_utc": "2021-05-13T18:00:00Z"
+    },
+    {
+      "active_alt_count_at_top": 35,
+      "authority": "OUTCOME_LABEL_RESEARCH_ONLY",
+      "continuity_segment_id": 7,
+      "episode_id": "PB_2021-05-15_036",
+      "hours_top_to_trigger": 15.0,
+      "hours_top_to_trough": 21.0,
+      "hours_trough_to_recovery": 7.0,
+      "max_drawdown_pct": -7.605290920557306,
+      "recovery_utc": "2021-05-16T06:00:00Z",
+      "research_window_id": "ALTSEASON_2020_2021",
+      "severity_flags": {
+        "ge_12pct": false,
+        "ge_20pct": false,
+        "ge_5pct": true,
+        "ge_8pct": false
+      },
+      "top_utc": "2021-05-15T02:00:00Z",
+      "trigger_utc": "2021-05-15T17:00:00Z",
+      "trough_utc": "2021-05-15T23:00:00Z"
+    },
+    {
+      "active_alt_count_at_top": 35,
+      "authority": "OUTCOME_LABEL_RESEARCH_ONLY",
+      "continuity_segment_id": 8,
+      "episode_id": "PB_2021-08-16_037",
+      "hours_top_to_trigger": 12.0,
+      "hours_top_to_trough": 13.0,
+      "hours_trough_to_recovery": 3.0,
+      "max_drawdown_pct": -6.934203477510048,
+      "recovery_utc": "2021-08-17T03:00:00Z",
+      "research_window_id": "ALTSEASON_2020_2021",
+      "severity_flags": {
+        "ge_12pct": false,
+        "ge_20pct": false,
+        "ge_5pct": true,
+        "ge_8pct": false
+      },
+      "top_utc": "2021-08-16T11:00:00Z",
+      "trigger_utc": "2021-08-16T23:00:00Z",
+      "trough_utc": "2021-08-17T00:00:00Z"
+    },
+    {
+      "active_alt_count_at_top": 35,
+      "authority": "OUTCOME_LABEL_RESEARCH_ONLY",
+      "continuity_segment_id": 8,
+      "episode_id": "PB_2021-08-17_038",
+      "hours_top_to_trigger": 16.0,
+      "hours_top_to_trough": 24.0,
+      "hours_trough_to_recovery": 31.0,
+      "max_drawdown_pct": -11.04412392860895,
+      "recovery_utc": "2021-08-19T18:00:00Z",
+      "research_window_id": "ALTSEASON_2020_2021",
+      "severity_flags": {
+        "ge_12pct": false,
+        "ge_20pct": false,
+        "ge_5pct": true,
+        "ge_8pct": true
+      },
+      "top_utc": "2021-08-17T11:00:00Z",
+      "trigger_utc": "2021-08-18T03:00:00Z",
+      "trough_utc": "2021-08-18T11:00:00Z"
+    },
+    {
+      "active_alt_count_at_top": 35,
+      "authority": "OUTCOME_LABEL_RESEARCH_ONLY",
+      "continuity_segment_id": 8,
+      "episode_id": "PB_2021-08-23_039",
+      "hours_top_to_trigger": 29.0,
+      "hours_top_to_trough": 91.0,
+      "hours_trough_to_recovery": 124.0,
+      "max_drawdown_pct": -13.746731040568172,
+      "recovery_utc": "2021-09-01T08:00:00Z",
+      "research_window_id": "ALTSEASON_2020_2021",
+      "severity_flags": {
+        "ge_12pct": true,
+        "ge_20pct": false,
+        "ge_5pct": true,
+        "ge_8pct": true
+      },
+      "top_utc": "2021-08-23T09:00:00Z",
+      "trigger_utc": "2021-08-24T14:00:00Z",
+      "trough_utc": "2021-08-27T04:00:00Z"
+    },
+    {
+      "active_alt_count_at_top": 35,
+      "authority": "OUTCOME_LABEL_RESEARCH_ONLY",
+      "continuity_segment_id": 8,
+      "episode_id": "PB_2021-09-07_040",
+      "hours_top_to_trigger": 3.0,
+      "hours_top_to_trough": 26.0,
+      "hours_trough_to_recovery": 190.0,
+      "max_drawdown_pct": -23.027794796223578,
+      "recovery_utc": "2021-09-16T05:00:00Z",
+      "research_window_id": "ALTSEASON_2020_2021",
+      "severity_flags": {
+        "ge_12pct": true,
+        "ge_20pct": true,
+        "ge_5pct": true,
+        "ge_8pct": true
+      },
+      "top_utc": "2021-09-07T05:00:00Z",
+      "trigger_utc": "2021-09-07T08:00:00Z",
+      "trough_utc": "2021-09-08T07:00:00Z"
+    },
+    {
+      "active_alt_count_at_top": 35,
+      "authority": "OUTCOME_LABEL_RESEARCH_ONLY",
+      "continuity_segment_id": 9,
+      "episode_id": "PB_2021-10-02_041",
+      "hours_top_to_trigger": 32.0,
+      "hours_top_to_trough": 32.0,
+      "hours_trough_to_recovery": 41.0,
+      "max_drawdown_pct": -5.389677539666815,
+      "recovery_utc": "2021-10-05T20:00:00Z",
+      "research_window_id": "ALTSEASON_2020_2021",
+      "severity_flags": {
+        "ge_12pct": false,
+        "ge_20pct": false,
+        "ge_5pct": true,
+        "ge_8pct": false
+      },
+      "top_utc": "2021-10-02T19:00:00Z",
+      "trigger_utc": "2021-10-04T03:00:00Z",
+      "trough_utc": "2021-10-04T03:00:00Z"
+    },
+    {
+      "active_alt_count_at_top": 35,
+      "authority": "OUTCOME_LABEL_RESEARCH_ONLY",
+      "continuity_segment_id": 9,
+      "episode_id": "PB_2021-10-08_042",
+      "hours_top_to_trigger": 61.0,
+      "hours_top_to_trough": 100.0,
+      "hours_trough_to_recovery": 47.0,
+      "max_drawdown_pct": -11.700036904764355,
+      "recovery_utc": "2021-10-14T11:00:00Z",
+      "research_window_id": "ALTSEASON_2020_2021",
+      "severity_flags": {
+        "ge_12pct": false,
+        "ge_20pct": false,
+        "ge_5pct": true,
+        "ge_8pct": true
+      },
+      "top_utc": "2021-10-08T08:00:00Z",
+      "trigger_utc": "2021-10-10T21:00:00Z",
+      "trough_utc": "2021-10-12T12:00:00Z"
+    },
+    {
+      "active_alt_count_at_top": 35,
+      "authority": "OUTCOME_LABEL_RESEARCH_ONLY",
+      "continuity_segment_id": 9,
+      "episode_id": "PB_2021-10-16_043",
+      "hours_top_to_trigger": 33.0,
+      "hours_top_to_trough": 33.0,
+      "hours_trough_to_recovery": 65.0,
+      "max_drawdown_pct": -6.3091871494196035,
+      "recovery_utc": "2021-10-20T13:00:00Z",
+      "research_window_id": "ALTSEASON_2020_2021",
+      "severity_flags": {
+        "ge_12pct": false,
+        "ge_20pct": false,
+        "ge_5pct": true,
+        "ge_8pct": false
+      },
+      "top_utc": "2021-10-16T11:00:00Z",
+      "trigger_utc": "2021-10-17T20:00:00Z",
+      "trough_utc": "2021-10-17T20:00:00Z"
+    },
+    {
+      "active_alt_count_at_top": 35,
+      "authority": "OUTCOME_LABEL_RESEARCH_ONLY",
+      "continuity_segment_id": 9,
+      "episode_id": "PB_2021-10-26_044",
+      "hours_top_to_trigger": 11.0,
+      "hours_top_to_trough": 28.0,
+      "hours_trough_to_recovery": 96.0,
+      "max_drawdown_pct": -11.953475450660978,
+      "recovery_utc": "2021-11-01T00:00:00Z",
+      "research_window_id": "ALTSEASON_2020_2021",
+      "severity_flags": {
+        "ge_12pct": false,
+        "ge_20pct": false,
+        "ge_5pct": true,
+        "ge_8pct": true
+      },
+      "top_utc": "2021-10-26T20:00:00Z",
+      "trigger_utc": "2021-10-27T07:00:00Z",
+      "trough_utc": "2021-10-28T00:00:00Z"
+    },
+    {
+      "active_alt_count_at_top": 35,
+      "authority": "OUTCOME_LABEL_RESEARCH_ONLY",
+      "continuity_segment_id": 9,
+      "episode_id": "PB_2021-11-03_045",
+      "hours_top_to_trigger": 65.0,
+      "hours_top_to_trough": 66.0,
+      "hours_trough_to_recovery": 21.0,
+      "max_drawdown_pct": -5.771389092317869,
+      "recovery_utc": "2021-11-07T09:00:00Z",
+      "research_window_id": "ALTSEASON_2020_2021",
+      "severity_flags": {
+        "ge_12pct": false,
+        "ge_20pct": false,
+        "ge_5pct": true,
+        "ge_8pct": false
+      },
+      "top_utc": "2021-11-03T18:00:00Z",
+      "trigger_utc": "2021-11-06T11:00:00Z",
+      "trough_utc": "2021-11-06T12:00:00Z"
+    },
+    {
+      "active_alt_count_at_top": 34,
+      "authority": "OUTCOME_LABEL_RESEARCH_ONLY",
+      "continuity_segment_id": 10,
+      "episode_id": "PB_2025-01-06_046",
+      "hours_top_to_trigger": 23.0,
+      "hours_top_to_trough": 163.0,
+      "hours_trough_to_recovery": 73.0,
+      "max_drawdown_pct": -22.615975719595482,
+      "recovery_utc": "2025-01-16T12:00:00Z",
+      "research_window_id": "MODERN_ANALOGUE_2025_2026",
+      "severity_flags": {
+        "ge_12pct": true,
+        "ge_20pct": true,
+        "ge_5pct": true,
+        "ge_8pct": true
+      },
+      "top_utc": "2025-01-06T16:00:00Z",
+      "trigger_utc": "2025-01-07T15:00:00Z",
+      "trough_utc": "2025-01-13T11:00:00Z"
+    }
+  ],
+  "generated_at_utc": "2026-08-20T20:05:23.653770+00:00"
+}
