@@ -6,7 +6,9 @@ on:
       - 'scripts/historical_lab/free_altseason_bootstrap_parallel.py'
       - 'scripts/historical_lab/cfgi_idempotency_guard.py'
       - '.github/workflows/historical-altseason-free-bootstrap.yml'
+      - '.github/workflows/historical-altseason-free-publish.yml'
       - '.github/workflows/historical-altseason-cfgi-enrichment.yml'
+      - '.github/workflows/historical-altseason-cfgi-publish.yml'
       - '.github/workflows/historical-altseason-throughput-gate.yml'
   push:
     branches: [main]
@@ -14,7 +16,9 @@ on:
       - 'scripts/historical_lab/free_altseason_bootstrap_parallel.py'
       - 'scripts/historical_lab/cfgi_idempotency_guard.py'
       - '.github/workflows/historical-altseason-free-bootstrap.yml'
+      - '.github/workflows/historical-altseason-free-publish.yml'
       - '.github/workflows/historical-altseason-cfgi-enrichment.yml'
+      - '.github/workflows/historical-altseason-cfgi-publish.yml'
       - '.github/workflows/historical-altseason-throughput-gate.yml'
 
 permissions:
@@ -44,6 +48,7 @@ jobs:
           from pathlib import Path
           p=Path('scripts/historical_lab/free_altseason_bootstrap_parallel.py').read_text()
           w=Path('.github/workflows/historical-altseason-free-bootstrap.yml').read_text()
+          pub=Path('.github/workflows/historical-altseason-free-publish.yml').read_text()
           assert 'ThreadPoolExecutor' in p
           assert 'MAX_WORKERS = 24' in p
           assert 'DEFAULT_WORKERS = 12' in p
@@ -53,7 +58,6 @@ jobs:
           assert 'resilient.vision_klines = parallel_vision_klines' in p
           assert 'BINANCE_REST_BYPASSED_ARCHIVE_FIRST_REPRODUCIBILITY' in p
           assert 'BINANCE_VISION_ARCHIVE_FIRST_TRANSPORT_v1' in p
-          assert 'archive_first = True' not in p
           assert '"archive_first": True' in p
           assert 'analysis_semantics_changed": False' in p
           for forbidden in ['build_features =', 'build_episodes =', 'continuation_controls =', 'episode_drawdown_trigger_pct', 'episode_recovery_fraction']:
@@ -62,15 +66,28 @@ jobs:
           assert "HISTORICAL_VISION_MAX_WORKERS: '12'" in w
           assert 'timeout-minutes: 120' in w
           assert "transport.get('archive_first') is True" in w
-          print('HISTORICAL_ARCHIVE_FIRST_TRANSPORT_ONLY_PASS')
+          assert 'permissions:\n  contents: read' in w
+          assert 'git add ' not in w
+          assert 'actions/upload-artifact@v4' in w
+          assert 'historical-altseason-free-stage' in w
+          assert 'group: historical-altseason-free-bootstrap' in w
+          assert 'group: framework-main-writer' in pub
+          assert 'actions/download-artifact@v4' in pub
+          assert 'historical-altseason-free-stage' in pub
+          assert 'git add 06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/' in pub
+          assert 'git rebase --abort' in pub
+          assert 'git fetch origin main' in pub
+          assert 'git merge-base --is-ancestor HEAD origin/main' in pub
+          print('HISTORICAL_ARCHIVE_FIRST_SPLIT_TRANSPORT_PASS')
           PY
 
-      - name: Prove CFGI idempotency and no-free-pass guard
+      - name: Prove CFGI idempotency and split paid-stage contract
         run: |
           python - <<'PY'
           from pathlib import Path
           p=Path('scripts/historical_lab/cfgi_idempotency_guard.py').read_text()
           w=Path('.github/workflows/historical-altseason-cfgi-enrichment.yml').read_text()
+          pub=Path('.github/workflows/historical-altseason-cfgi-publish.yml').read_text()
           for required in [
               'CFGI_TARGETED_INPUT_FINGERPRINT_v1',
               'EXACT_COMPLETE_PRIOR_ENRICHMENT',
@@ -89,7 +106,41 @@ jobs:
           preflight=w.index('Verify final archive-first free stage, authority and CFGI secret before paid calls')
           guard=w.index('Check exact paid-input idempotency')
           assert preflight < guard < paid_step
-          print('CFGI_IDEMPOTENCY_STATIC_GUARD_PASS')
+          assert 'permissions:\n  contents: read' in w
+          assert 'git add ' not in w
+          assert 'actions/upload-artifact@v4' in w
+          assert 'historical-altseason-cfgi-stage' in w
+          assert 'group: historical-altseason-cfgi-enrichment' in w
+          assert 'group: framework-main-writer' in pub
+          assert 'actions/download-artifact@v4' in pub
+          assert 'historical-altseason-cfgi-stage' in pub
+          assert 'RESEARCH_READINESS_MANIFEST.json' in pub
+          assert 'git add 06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/' in pub
+          assert 'git rebase --abort' in pub
+          assert 'git fetch origin main' in pub
+          assert 'git merge-base --is-ancestor HEAD origin/main' in pub
+          print('CFGI_IDEMPOTENCY_SPLIT_PUBLISH_PASS')
+          PY
+
+      - name: Prove compute-publish writer boundary
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          free=Path('.github/workflows/historical-altseason-free-bootstrap.yml').read_text()
+          free_pub=Path('.github/workflows/historical-altseason-free-publish.yml').read_text()
+          paid=Path('.github/workflows/historical-altseason-cfgi-enrichment.yml').read_text()
+          paid_pub=Path('.github/workflows/historical-altseason-cfgi-publish.yml').read_text()
+          for compute in [free,paid]:
+              assert 'contents: write' not in compute
+              assert 'git push' not in compute
+              assert 'git commit' not in compute
+              assert 'git add ' not in compute
+          for pub in [free_pub,paid_pub]:
+              assert 'contents: write' in pub
+              assert 'group: framework-main-writer' in pub
+              assert 'git push origin HEAD:main' in pub
+              assert 'git diff --cached --quiet' in pub
+          print('HISTORICAL_COMPUTE_PUBLISH_WRITER_BOUNDARY_PASS')
           PY
 
       - name: Ensure no market-policy edits are present in helpers
