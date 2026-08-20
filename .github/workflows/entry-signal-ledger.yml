@@ -2,7 +2,7 @@ name: Entry Signal Ledger
 
 on:
   schedule:
-    - cron: '37 * * * *'
+    - cron: '50 * * * *'
       timezone: 'Europe/Copenhagen'
   workflow_dispatch:
 
@@ -37,6 +37,7 @@ jobs:
           d=json.loads(p.read_text())
           assert d['contract']=='ENTRY_SIGNAL_LATEST_v1'
           assert d['state'] in {'WAIT','GRADUATED_ALTCOIN_TOPUP_ACTIVE'}
+          assert d['market_snapshot']['price_source']=='GITHUB_HOURLY_SEQUENCE_DIRECT_CLOSES'
           assert d['market_snapshot']['ethbtc'] > 0
           assert 0 <= d['market_snapshot']['top100_advance_ratio'] <= 1
           print(d['data_ping_bridge']['display_line'])
