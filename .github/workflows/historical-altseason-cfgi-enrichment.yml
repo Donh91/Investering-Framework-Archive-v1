@@ -29,7 +29,7 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Verify free stage, authority and CFGI secret before paid calls
+      - name: Verify final archive-first free stage, authority and CFGI secret before paid calls
         env:
           CFGI_API_KEY: ${{ secrets.CFGI_API_KEY }}
         run: |
@@ -58,6 +58,12 @@ jobs:
           assert ti['row_offsets_treated_as_hours'] is False
           assert src['authority']['research_only'] is True
           assert src['authority']['portfolio_execution'] is False
+          transport=src.get('historical_transport_policy') or {}
+          assert transport.get('contract')=='BINANCE_VISION_ARCHIVE_FIRST_TRANSPORT_v1'
+          assert transport.get('archive_first') is True
+          assert transport.get('pre_2022_resolution')=='DAILY_ARCHIVES_PREFERRED'
+          assert transport.get('deterministic_timestamp_reordering') is True
+          assert transport.get('analysis_semantics_changed') is False
           assert pc['events']
           a=cfg['authority']
           assert a['research_only'] is True
@@ -65,7 +71,7 @@ jobs:
           assert a['canonical_market_state'] is False
           assert a['automatic_rule_changes'] is False
           assert a['promotion_requires_separate_review'] is True
-          print('FREE_STAGE_OBJECTIVE_READINESS_PASS', len(pc['events']))
+          print('FINAL_ARCHIVE_FIRST_FREE_STAGE_READY_FOR_CFGI', len(pc['events']))
           PY
 
       - name: Check exact paid-input idempotency

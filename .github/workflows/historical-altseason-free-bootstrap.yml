@@ -54,6 +54,12 @@ jobs:
           pc=json.loads((root/'FREE_EVENT_PATHS_COVERAGE.json').read_text())
           assert a['authority']['research_only'] is True
           assert a['authority']['portfolio_execution'] is False
+          transport=a.get('historical_transport_policy') or {}
+          assert transport.get('contract')=='BINANCE_VISION_ARCHIVE_FIRST_TRANSPORT_v1'
+          assert transport.get('archive_first') is True
+          assert transport.get('pre_2022_resolution')=='DAILY_ARCHIVES_PREFERRED'
+          assert transport.get('deterministic_timestamp_reordering') is True
+          assert transport.get('analysis_semantics_changed') is False
           assert c['authority']['automatic_rule_changes'] is False
           assert t['status']=='PASS'
           assert t['strict_timestamp_lags'] is True

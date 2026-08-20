@@ -1,15 +1,19 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import json
 import os
 import urllib.error
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 
 import free_altseason_bootstrap_resilient as resilient
 
 DEFAULT_WORKERS = 12
 MAX_WORKERS = 24
+ARCHIVE_FIRST_REASON = "BINANCE_REST_BYPASSED_ARCHIVE_FIRST_REPRODUCIBILITY"
+AUDIT_PATH = Path("06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/FREE_SOURCE_AUDIT.json")
 
 
 def worker_count() -> int:
@@ -52,10 +56,11 @@ def parallel_daily_month(symbol: str, first_day: datetime, last_day: datetime):
 
 
 def parallel_vision_klines(symbol: str, start_ms: int, end_ms: int):
-    """Scientifically equivalent Vision transport with bounded concurrent daily retrieval before 2022.
+    """Archive-first deterministic Vision transport for the historical laboratory.
 
-    Daily archives remain preferred before 2022. Concurrency changes only retrieval order. Rows are
-    re-sorted by calendar day and timestamp before emission, preserving deterministic input semantics.
+    Before 2022, corrected daily archives remain preferred. From 2022 onward, completed monthly
+    archives are used when available, with daily fallback when they are not. Bounded concurrency
+    changes retrieval order only. Rows are sorted back into timestamp order before emission.
     """
     start = datetime.fromtimestamp(start_ms / 1000, tz=timezone.utc)
     end = datetime.fromtimestamp(end_ms / 1000, tz=timezone.utc)
@@ -98,9 +103,53 @@ def parallel_vision_klines(symbol: str, start_ms: int, end_ms: int):
         month = resilient._next_month(month)
 
 
+def archive_first_load_target():
+    """Load the unchanged analytical engine but bypass live REST for this historical archive study."""
+    mod = ORIGINAL_LOAD_TARGET()
+
+    def archive_first_marker(symbol: str, start_ms: int, end_ms: int):
+        raise RuntimeError(ARCHIVE_FIRST_REASON)
+        yield  # pragma: no cover - keeps generator semantics explicit
+
+    mod.fetch_klines = archive_first_marker
+    return mod
+
+
+def annotate_source_audit():
+    if not AUDIT_PATH.exists():
+        return
+    audit = json.loads(AUDIT_PATH.read_text(encoding="utf-8"))
+    events = audit.get("source_resolution_events") or []
+    for event in events:
+        if event.get("source") == "BINANCE_REST_FAILED" and ARCHIVE_FIRST_REASON in str(event.get("error", "")):
+            event["source"] = "BINANCE_REST_BYPASSED_ARCHIVE_FIRST"
+            event["error"] = None
+    audit["historical_transport_policy"] = {
+        "contract": "BINANCE_VISION_ARCHIVE_FIRST_TRANSPORT_v1",
+        "archive_first": True,
+        "pre_2022_resolution": "DAILY_ARCHIVES_PREFERRED",
+        "post_2022_resolution": "COMPLETED_MONTHLY_WITH_DAILY_FALLBACK",
+        "daily_download_workers": worker_count(),
+        "bounded_worker_cap": MAX_WORKERS,
+        "deterministic_timestamp_reordering": True,
+        "analysis_semantics_changed": False,
+        "reason": "Historical reproducibility and archive revision control; avoid geography-sensitive live REST retries.",
+    }
+    audit.setdefault("limitations", []).append(
+        "Historical kline transport is archive-first for reproducibility. Live Binance REST is intentionally bypassed in this laboratory run and this bypass is recorded explicitly."
+    )
+    AUDIT_PATH.write_text(json.dumps(audit, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+
+ORIGINAL_LOAD_TARGET = resilient.load_target
+
+
 def main():
     resilient.vision_klines = parallel_vision_klines
-    return resilient.main()
+    resilient.load_target = archive_first_load_target
+    rc = resilient.main()
+    annotate_source_audit()
+    return rc
 
 
 if __name__ == "__main__":

@@ -30,8 +30,10 @@ jobs:
         run: |
           python -m py_compile scripts/historical_lab/free_altseason_bootstrap.py
           python -m py_compile scripts/historical_lab/free_altseason_bootstrap_resilient.py
+          python -m py_compile scripts/historical_lab/free_altseason_bootstrap_parallel.py
           python -m py_compile scripts/historical_lab/free_event_postprocess.py
           python -m py_compile scripts/historical_lab/cfgi_targeted_backfill.py
+          python -m py_compile scripts/historical_lab/cfgi_idempotency_guard.py
           python -m py_compile scripts/historical_lab/cfgi_readiness_postprocess.py
       - name: Validate scientific and budget contracts
         run: |
@@ -76,8 +78,11 @@ jobs:
           from pathlib import Path
           w=Path('.github/workflows/historical-altseason-cfgi-enrichment.yml').read_text()
           p=Path('scripts/historical_lab/cfgi_readiness_postprocess.py').read_text()
+          transport=Path('scripts/historical_lab/free_altseason_bootstrap_parallel.py').read_text()
           assert 'cfgi_readiness_postprocess.py' in w
-          assert 'FREE_STAGE_OBJECTIVE_READINESS_PASS' in w
+          assert 'FINAL_ARCHIVE_FIRST_FREE_STAGE_READY_FOR_CFGI' in w
+          assert 'BINANCE_VISION_ARCHIVE_FIRST_TRANSPORT_v1' in w
+          assert "transport.get('archive_first') is True" in w
           assert 'RESEARCH_READINESS_MANIFEST.json' in w
           assert 'CFGI_FIELD_COVERAGE.json' in w
           assert 'CFGI_EVENT_PATHS.jsonl.gz' in w
@@ -88,6 +93,7 @@ jobs:
           assert 'FORWARD_TEST' in p
           assert 'automatic_promotion' in p
           assert 'False' in p
+          assert 'BINANCE_VISION_ARCHIVE_FIRST_TRANSPORT_v1' in transport
           print('HISTORICAL_ALTSEASON_PAID_STAGE_STATIC_SAFETY_PASS')
           PY
       - name: Ensure paid CFGI cannot run in gate
