@@ -52,7 +52,7 @@ jobs:
             assert len(fh.readline()) > 20
           print('FREE_BOOTSTRAP_VALIDATION_PASS', s['free_hourly_feature_rows'], s['episode_count'])
           PY
-      - name: Commit immutable research artifacts
+      - name: Commit immutable research artifacts safely
         run: |
           git config user.name framework-research-bot
           git config user.email framework-research-bot@users.noreply.github.com
@@ -62,5 +62,10 @@ jobs:
             exit 0
           fi
           git commit -m "research: historical altseason free bootstrap ${GITHUB_RUN_ID}"
-          git pull --rebase origin main
+          git fetch origin main
+          if ! git rebase origin/main; then
+            git rebase --abort || true
+            exit 1
+          fi
+          git merge-base --is-ancestor origin/main HEAD
           git push origin HEAD:main
