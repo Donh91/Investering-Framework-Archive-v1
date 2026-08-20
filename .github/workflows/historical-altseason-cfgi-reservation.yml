@@ -1,0 +1,117 @@
+name: Historical Altseason CFGI Reservation
+
+on:
+  workflow_run:
+    workflows: ['Historical Altseason Free Publish']
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: framework-main-writer
+  cancel-in-progress: false
+
+jobs:
+  reserve:
+    if: >-
+      ${{ github.event_name == 'workflow_dispatch' ||
+          (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main') }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Refuse unbound manual reservation
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          echo 'Manual reservation is intentionally blocked because it is not bound to a successful free publisher.' >&2
+          exit 1
+
+      - name: Validate current free-stage metadata and build deterministic reservation
+        run: |
+          set -euo pipefail
+          root=06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts
+          for f in \
+            FREE_BULK_ARTIFACT_POINTER.json \
+            FREE_SOURCE_AUDIT.json \
+            TIME_INTEGRITY_AUDIT.json \
+            EPISODE_CATALOG.json \
+            FREE_EVENT_PATHS.jsonl.gz \
+            FREE_EVENT_PATHS_COVERAGE.json; do
+            test -s "$root/$f"
+          done
+          test ! -e "$root/alt_hourly_panel.csv.gz"
+          python scripts/historical_lab/cfgi_idempotency_guard.py --mode check > /tmp/cfgi_guard.json
+          python - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          root=Path('06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts')
+          cfg=json.loads(Path('06_RESEARCH_LAB/historical_altseason_pullback_v1/config.json').read_text())
+          pointer=json.loads((root/'FREE_BULK_ARTIFACT_POINTER.json').read_text())
+          source=json.loads((root/'FREE_SOURCE_AUDIT.json').read_text())
+          ti=json.loads((root/'TIME_INTEGRITY_AUDIT.json').read_text())
+          catalog=json.loads((root/'EPISODE_CATALOG.json').read_text())
+          guard=json.loads(Path('/tmp/cfgi_guard.json').read_text())
+          assert pointer['contract']=='HISTORICAL_ALTSEASON_FREE_BULK_POINTER_v1'
+          assert pointer['storage_class']=='GITHUB_ACTIONS_ARTIFACT_BULK_NOT_GIT'
+          assert pointer['required_for_cowork_bundle'] is True
+          assert source['authority']['research_only'] is True
+          assert source['authority']['portfolio_execution'] is False
+          assert ti['status']=='PASS'
+          assert guard['contract']=='CFGI_IDEMPOTENCY_GUARD_v1'
+          fp=guard['input_fingerprint_sha256']
+          assert fp and len(fp)==64
+          c=catalog.get('cfgi_candidate_windows') or {}
+          candidate_count=len(c.get('pullbacks') or [])+len(c.get('controls') or [])
+          payload={
+              'contract':'HISTORICAL_ALTSEASON_CFGI_PAID_RESERVATION_v1',
+              'input_fingerprint_sha256':fp,
+              'candidate_event_count':candidate_count,
+              'cfgi_config_sha256':hashlib.sha256(json.dumps(cfg['cfgi'],sort_keys=True,separators=(',',':')).encode()).hexdigest(),
+              'authority':{
+                  'research_only':True,
+                  'portfolio_execution':False,
+                  'automatic_promotion':False,
+                  'historical_findings_max_classification':'FORWARD_TEST',
+              },
+              'semantics':'ONE_DETERMINISTIC_RESERVATION_PER_PAID_INPUT_FINGERPRINT',
+          }
+          out=Path('00_ARCHIVE_CONTROL/research_runtime/HISTORICAL_ALTSEASON_CFGI_PAID_RESERVATION.json')
+          out.parent.mkdir(parents=True,exist_ok=True)
+          out.write_text(json.dumps(payload,indent=2,sort_keys=True)+'\n')
+          print('CFGI_DETERMINISTIC_RESERVATION_READY',fp,candidate_count,guard['skip_paid'])
+          PY
+
+      - name: Commit reservation only when paid-input fingerprint changes
+        run: |
+          set -euo pipefail
+          path=00_ARCHIVE_CONTROL/research_runtime/HISTORICAL_ALTSEASON_CFGI_PAID_RESERVATION.json
+          git config user.name framework-research-bot
+          git config user.email framework-research-bot@users.noreply.github.com
+          git add "$path"
+          if git diff --cached --quiet; then
+            echo 'CFGI_RESERVATION_UNCHANGED - identical paid fingerprint already reserved'
+            exit 0
+          fi
+          git commit -m "research: reserve historical altseason CFGI fingerprint"
+          pushed=false
+          for attempt in 1 2 3 4 5; do
+            git rebase --abort 2>/dev/null || true
+            git fetch origin main
+            if git rebase origin/main && git push origin HEAD:main; then pushed=true; break; fi
+            git rebase --abort 2>/dev/null || true
+            sleep $((attempt * 5))
+          done
+          [ "$pushed" = true ]
+          git fetch origin main
+          git merge-base --is-ancestor HEAD origin/main
+          echo 'HISTORICAL_CFGI_RESERVATION_REMOTE_READBACK_PASS'
