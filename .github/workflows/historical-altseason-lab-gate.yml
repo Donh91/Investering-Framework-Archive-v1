@@ -29,6 +29,8 @@ jobs:
       - name: Compile research scripts
         run: |
           python -m py_compile scripts/historical_lab/free_altseason_bootstrap.py
+          python -m py_compile scripts/historical_lab/free_altseason_bootstrap_resilient.py
+          python -m py_compile scripts/historical_lab/free_event_postprocess.py
           python -m py_compile scripts/historical_lab/cfgi_targeted_backfill.py
       - name: Validate scientific and budget contracts
         run: |
@@ -37,7 +39,7 @@ jobs:
           from pathlib import Path
           p=Path('06_RESEARCH_LAB/historical_altseason_pullback_v1/config.json')
           c=json.loads(p.read_text())
-          a=c['authority']; g=c['cfgi']
+          a=c['authority']; g=c['cfgi']; ti=c['time_integrity']; cm=c['control_matching']; cp=c['cohort_proxy']; sq=c['source_qa']
           assert a['research_only'] is True
           assert a['portfolio_execution'] is False
           assert a['canonical_market_state'] is False
@@ -49,9 +51,20 @@ jobs:
           assert g['timeframe'] == '1h'
           required={'score','price','volatility','volume','impulse','technical','social','dominance','trends','whales','orders'}
           assert set(g['fields']) == required
-          assert len(g['symbols']) == 3 and set(g['symbols']) == {'MARKET','BTC','ETH'}
+          assert set(g['symbols']) == {'MARKET','BTC','ETH'}
+          assert g['field_level_coverage_audit_required'] is True
+          assert g['exact_relative_hour_paths_required'] is True
           assert c['hypothetical_trim_fraction'] == 0.10
           assert c['roundtrip_friction_pct_on_traded_slice'] > 0
+          assert ti['strict_timestamp_lags'] is True
+          assert ti['cross_window_lags_forbidden'] is True
+          assert ti['row_positions_must_not_be_interpreted_as_hours'] is True
+          assert ti['reset_equal_weight_index_on_gap'] is True
+          assert cm['future_outcome_may_label_controls_but_may_not_enter_predictors'] is True
+          assert cp['must_not_be_presented_as_historical_market_cap_cohort'] is True
+          assert sq['archive_revision_risk_acknowledged'] is True
+          assert sq['no_silent_fallback'] is True
+          assert c['readiness']['manifest_required'] is True
           print('HISTORICAL_ALTSEASON_LAB_GATE_PASS')
           PY
       - name: Ensure paid CFGI cannot run in gate
