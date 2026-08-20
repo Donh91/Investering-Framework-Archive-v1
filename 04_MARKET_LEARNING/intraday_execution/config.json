@@ -1,0 +1,48 @@
+{
+  "contract": "INTRADAY_EXECUTION_RESEARCH_CONFIG_v1",
+  "purpose": "Research-only timing layer for trim, pullback and reload learning inside an already established regime.",
+  "cadence": "hourly via existing pullback-learning writer",
+  "warmup_observations": 48,
+  "trailing_observations": 336,
+  "event_maturity_hours": 24,
+  "opening_range_hours": 2,
+  "feature_families": [
+    "session_vwap_deviation",
+    "rolling_relative_quote_volume",
+    "previous_day_high_low",
+    "opening_range",
+    "distance_from_24h_high_low",
+    "momentum_1h_4h_acceleration",
+    "taker_buy_share_and_change",
+    "open_interest_change",
+    "funding",
+    "ethbtc_momentum",
+    "top100_breadth_context",
+    "cross_sectional_return_context"
+  ],
+  "research_states": [
+    "LEARNING_WARMUP",
+    "REGIME_NOT_ACTIVE",
+    "NORMAL",
+    "MOMENTUM_EXPANSION_RESEARCH",
+    "OVERHEAT_WATCH_RESEARCH",
+    "LOCAL_TRIM_WATCH_RESEARCH",
+    "PULLBACK_ACTIVE_RESEARCH",
+    "RELOAD_WATCH_RESEARCH",
+    "CONTINUATION_RESEARCH"
+  ],
+  "explicit_limitations": {
+    "top100_intraday_vwap": "UNAVAILABLE_FROM_CURRENT_CANONICAL_ARCHIVE",
+    "top100_opening_range": "UNAVAILABLE_FROM_CURRENT_CANONICAL_ARCHIVE",
+    "breadth_is_snapshot_context": true,
+    "btc_eth_execution_features_use_hourly_archive": true
+  },
+  "authority": {
+    "research_only": true,
+    "portfolio_execution": false,
+    "canonical_market_state": false,
+    "automatic_rule_changes": false,
+    "promotion_requires_separate_review": true,
+    "historical_findings_max_classification": "FORWARD_TEST"
+  }
+}

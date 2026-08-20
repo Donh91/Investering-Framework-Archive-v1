@@ -1,0 +1,82 @@
+name: Intraday Execution Research
+
+on:
+  schedule:
+    - cron: '58 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: framework-main-writer
+  cancel-in-progress: false
+
+jobs:
+  research:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compile research engine
+        run: python -m py_compile scripts/intraday_execution/intraday_execution_research.py
+      - name: Validate config authority boundary
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('04_MARKET_LEARNING/intraday_execution/config.json')
+          d=json.loads(p.read_text())
+          assert d['contract']=='INTRADAY_EXECUTION_RESEARCH_CONFIG_v1'
+          a=d['authority']
+          assert a['research_only'] is True
+          assert a['portfolio_execution'] is False
+          assert a['canonical_market_state'] is False
+          assert a['automatic_rule_changes'] is False
+          assert a['promotion_requires_separate_review'] is True
+          assert a['historical_findings_max_classification']=='FORWARD_TEST'
+          assert d['explicit_limitations']['top100_intraday_vwap']=='UNAVAILABLE_FROM_CURRENT_CANONICAL_ARCHIVE'
+          assert d['explicit_limitations']['top100_opening_range']=='UNAVAILABLE_FROM_CURRENT_CANONICAL_ARCHIVE'
+          print('INTRADAY_EXECUTION_STATIC_GUARD_PASS')
+          PY
+      - name: Run prospective research observation
+        run: python scripts/intraday_execution/intraday_execution_research.py
+      - name: Validate generated research contract
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path('04_MARKET_LEARNING/intraday_execution/LATEST.json').read_text())
+          assert d['contract']=='INTRADAY_EXECUTION_LATEST_v1'
+          a=d['authority']
+          assert a['research_only'] is True
+          assert a['portfolio_execution'] is False
+          assert a['canonical_market_state'] is False
+          assert a['automatic_rule_changes'] is False
+          assert 'display_line' in d['data_ping_bridge']
+          print(d['data_ping_bridge']['display_line'])
+          PY
+      - name: Commit prospective observations
+        shell: bash
+        run: |
+          git config user.name 'framework-data-bot'
+          git config user.email 'framework-data-bot@users.noreply.github.com'
+          git add 04_MARKET_LEARNING/intraday_execution
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "learning: intraday execution ${GITHUB_RUN_ID}"
+          pushed=false
+          for attempt in 1 2 3; do
+            git rebase --abort 2>/dev/null || true
+            if git pull --rebase origin main && git push origin HEAD:main; then pushed=true; break; fi
+            sleep $((attempt * 5))
+          done
+          [ "$pushed" = true ]
+          git fetch origin main
+          git merge-base --is-ancestor HEAD origin/main
