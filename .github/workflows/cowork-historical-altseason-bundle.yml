@@ -38,7 +38,7 @@ jobs:
       - name: Build GitHub-native research handoff ZIP
         run: python scripts/cowork/build_historical_altseason_bundle_max_value.py
 
-      - name: Validate compact handoff, readiness and pointers
+      - name: Validate compact handoff, readiness and cumulative provenance
         run: |
           set -euo pipefail
           root=dist/cowork_historical_altseason
@@ -50,7 +50,7 @@ jobs:
           from pathlib import Path
           root=Path('dist/cowork_historical_altseason')
           m=json.loads((root/'COWORK_INPUT_MANIFEST.json').read_text())
-          assert m['contract']=='COWORK_GITHUB_NATIVE_HANDOFF_MANIFEST_v1'
+          assert m['contract']=='COWORK_GITHUB_NATIVE_HANDOFF_MANIFEST_v2'
           assert m['delivery_model']=='COMPACT_INSTRUCTIONS_PLUS_DIRECT_GITHUB_READ'
           assert m['repo']=='Donh91/Investering-Framework-Archive-v1'
           assert m['authoritative_ref']=='main'
@@ -58,6 +58,9 @@ jobs:
           assert m['automatic_promotion'] is False
           assert m['historical_findings_max_classification']=='FORWARD_TEST'
           assert m['heavy_bulk_delivery']=='BOUND_GITHUB_ACTIONS_ARTIFACT_VIA_FREE_BULK_ARTIFACT_POINTER'
+          cb=m['cfgi_cumulative_billing']
+          assert cb['cumulative_actual_credits_used']<=cb['hard_cap_credits']
+          assert cb['final_credits_remaining']>=cb['minimum_reserve_credits']
           sources={x['source_path'] for x in m['files']}
           required_sources={
             '07_PROMPTS_AND_AGENTS/historical_altseason_pullback/COWORK_OPUS5_MASTER_RESEARCH_PROMPT.md',
@@ -67,7 +70,9 @@ jobs:
             '06_RESEARCH_LAB/historical_altseason_pullback_v1/INTRADAY_EXECUTION_COWORK_ADDENDUM.md',
             '06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/RESEARCH_READINESS_MANIFEST.json',
             '06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/CFGI_BILLING.json',
+            '06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/CFGI_CUMULATIVE_BILLING.json',
             '06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/FREE_BULK_ARTIFACT_POINTER.json',
+            '00_ARCHIVE_CONTROL/research_runtime/HISTORICAL_ALTSEASON_CFGI_PAID_ATTEMPT_LEDGER.json',
           }
           assert required_sources <= sources
           assert not any(x.endswith('alt_hourly_panel.csv.gz') for x in sources)
@@ -83,7 +88,7 @@ jobs:
               text=zf.read(map_name).decode()
               for token in ['GitHub is the authoritative research universe','FREE_BULK_ARTIFACT_POINTER.json','04_MARKET_LEARNING/intraday_execution/','scripts/intraday_execution/']:
                   assert token in text, token
-          print('COWORK_GITHUB_NATIVE_HANDOFF_VALIDATION_PASS', len(sources), actual)
+          print('COWORK_GITHUB_NATIVE_HANDOFF_V2_PASS',len(sources),actual,cb['cumulative_actual_credits_used'])
           PY
 
       - name: Upload one-click Cowork research handoff
