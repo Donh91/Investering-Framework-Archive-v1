@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import json, statistics
+import csv, json, statistics
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -11,6 +11,7 @@ STATE = ROOT / "STATE.json"
 SUMMARY = ROOT / "PERFORMANCE_SUMMARY.json"
 ENTRY_LATEST = Path("04_MARKET_LEARNING/entry_signals/LATEST.json")
 BREADTH_LATEST = Path("03_DAILY_CAPTURE_LOGS/breadth_rich/LATEST.json")
+HOURLY_POINTER = Path("03_DAILY_CAPTURE_LOGS/hourly/LATEST.json")
 TRAILING_OBS = 180
 MIN_OBS_FOR_ADAPTIVE = 24
 MIN_EPISODES_EMERGING = 10
@@ -47,33 +48,62 @@ def percentile_rank(values, x):
     return 100.0 * sum(v <= x for v in vals) / len(vals)
 
 
+def hourly_latest_row():
+    pointer = read_json(HOURLY_POINTER)
+    if not pointer or pointer.get("status") != "COMPLETE":
+        raise RuntimeError("hourly sequence pointer missing/incomplete")
+    end = parse_utc(pointer["window_end_utc"])
+    csv_path = Path(f"03_DAILY_CAPTURE_LOGS/hourly/{end:%Y/%m/%Y-%m-%d}.csv")
+    if not csv_path.exists():
+        raise RuntimeError(f"hourly permanent CSV missing: {csv_path}")
+    rows = []
+    with csv_path.open(newline="") as fh:
+        for row in csv.DictReader(fh):
+            if row.get("spot_status") != "PASS":
+                continue
+            ts = parse_utc(row["timestamp_utc"])
+            if ts <= end:
+                rows.append((ts, row))
+    if not rows:
+        raise RuntimeError("no complete hourly row available")
+    ts, row = max(rows, key=lambda x: x[0])
+    required = ("btc_close", "eth_close", "ethbtc_close")
+    if any(not row.get(k) for k in required):
+        raise RuntimeError("latest hourly row missing direct spot close")
+    return pointer, ts, row
+
+
 def current_snapshot():
     entry = read_json(ENTRY_LATEST)
     breadth = read_json(BREADTH_LATEST)
     if not entry or not breadth:
         raise RuntimeError("entry signal or breadth latest missing")
-    market = entry.get("market_snapshot") or {}
     agg = breadth.get("aggregate", breadth)
     constituents = {
         str(x.get("asset_id")): float(x["price_usd"])
         for x in breadth.get("constituents", [])
         if x.get("asset_id") and x.get("price_usd") not in (None, 0)
     }
-    required = ("price_observation_utc", "btc_usdt", "eth_usdt", "ethbtc", "top100_advance_ratio")
-    if any(market.get(k) is None for k in required):
-        raise RuntimeError("entry latest missing required market snapshot fields")
     if not constituents:
         raise RuntimeError("breadth latest has no constituent prices")
+    pointer, hourly_ts, row = hourly_latest_row()
+    breadth_ratio = agg.get("advance_ratio")
+    if breadth_ratio is None and agg.get("advancer_pct") is not None:
+        breadth_ratio = float(agg["advancer_pct"]) / 100.0
+    if breadth_ratio is None:
+        raise RuntimeError("breadth ratio unavailable")
     return {
         "captured_at_utc": now_utc().isoformat(),
-        "price_observation_utc": market["price_observation_utc"],
+        "price_observation_utc": hourly_ts.isoformat(),
+        "hourly_sequence_run_id": pointer.get("run_id"),
+        "price_source": "GITHUB_HOURLY_SEQUENCE_DIRECT_CLOSES",
         "entry_state": entry.get("state"),
         "entry_heat": entry.get("execution_temperature"),
-        "btc_usdt": float(market["btc_usdt"]),
-        "eth_usdt": float(market["eth_usdt"]),
-        "ethbtc": float(market["ethbtc"]),
-        "breadth": float(market["top100_advance_ratio"]),
-        "advancer_pct": market.get("top100_advancer_pct"),
+        "btc_usdt": float(row["btc_close"]),
+        "eth_usdt": float(row["eth_close"]),
+        "ethbtc": float(row["ethbtc_close"]),
+        "breadth": float(breadth_ratio),
+        "advancer_pct": agg.get("advancer_pct"),
         "ew_return_24h_pct": agg.get("equal_weight_mean_return_24h_pct"),
         "median_return_24h_pct": agg.get("median_return_24h_pct"),
         "membership_hash": agg.get("membership_hash"),
@@ -141,7 +171,6 @@ def classify(recent, current_obs, previous_state):
     entry_active = current_obs.get("entry_state") == "GRADUATED_ALTCOIN_TOPUP_ACTIVE"
     if not entry_active:
         return "REGIME_NOT_ACTIVE", evidence
-    # Research labels only. These do not alter canonical market rules or portfolio execution.
     active = dd_rank is not None and br_rank is not None and step_rank is not None
     if active and dd_rank <= 10 and br_rank <= 20 and step_rank <= 20:
         return "PULLBACK_ACTIVE_RESEARCH", evidence
@@ -271,7 +300,6 @@ def main():
     recent = load_recent_observations()
     prev = recent[-1] if recent else None
     if prev and prev.get("price_observation_utc") == cur["price_observation_utc"]:
-        # Do not duplicate the same market hour. Refresh summary/latest only.
         summary = build_summary(now)
         latest = read_json(LATEST) or {}
         latest["generated_at_utc"] = now.isoformat()
