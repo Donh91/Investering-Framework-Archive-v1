@@ -86,7 +86,12 @@ class ExperimentForecastPriorityTest(unittest.TestCase):
             ], check=True)
             forecasts = [json.loads(path.read_text()) for path in (root / "research/framework_memory/forecast_memory").rglob("*.json")]
             self.assertEqual(len(forecasts), 5)
-            self.assertIn("spot.ETHUSDT.close", {row["metric_path"] for row in forecasts})
+            # Frozen forecasts store the canonical document-rooted metric path so that
+            # the maturation resolver dereferences the same metric that was read at
+            # freeze time (TASK3 R3-04). The Director candidate is still supplied in
+            # market-metrics-relative form; only the stored path is canonicalised.
+            self.assertIn("market_metrics.spot.ETHUSDT.close", {row["metric_path"] for row in forecasts})
+            self.assertEqual({row["metric_path_root"] for row in forecasts}, {"CAPTURE_DOCUMENT_ROOT"})
             self.assertTrue(all(row["unit_contract_version"] == "FORECAST_TARGET_UNITS_v2" for row in forecasts))
 
 
