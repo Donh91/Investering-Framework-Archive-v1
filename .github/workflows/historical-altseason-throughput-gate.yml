@@ -7,6 +7,7 @@ on:
       - 'scripts/historical_lab/cfgi_idempotency_guard.py'
       - '.github/workflows/historical-altseason-free-bootstrap.yml'
       - '.github/workflows/historical-altseason-free-publish.yml'
+      - '.github/workflows/historical-altseason-cfgi-reservation.yml'
       - '.github/workflows/historical-altseason-cfgi-enrichment.yml'
       - '.github/workflows/historical-altseason-cfgi-publish.yml'
       - '.github/workflows/historical-altseason-throughput-gate.yml'
@@ -17,6 +18,7 @@ on:
       - 'scripts/historical_lab/cfgi_idempotency_guard.py'
       - '.github/workflows/historical-altseason-free-bootstrap.yml'
       - '.github/workflows/historical-altseason-free-publish.yml'
+      - '.github/workflows/historical-altseason-cfgi-reservation.yml'
       - '.github/workflows/historical-altseason-cfgi-enrichment.yml'
       - '.github/workflows/historical-altseason-cfgi-publish.yml'
       - '.github/workflows/historical-altseason-throughput-gate.yml'
@@ -83,15 +85,17 @@ jobs:
           print('HISTORICAL_ARCHIVE_FIRST_SPLIT_TRANSPORT_PASS')
           PY
 
-      - name: Prove CFGI idempotency and split paid-stage contract
+      - name: Prove deterministic reservation, CFGI idempotency and split paid-stage contract
         run: |
           python - <<'PY'
           from pathlib import Path
           p=Path('scripts/historical_lab/cfgi_idempotency_guard.py').read_text()
+          reserve=Path('.github/workflows/historical-altseason-cfgi-reservation.yml').read_text()
           w=Path('.github/workflows/historical-altseason-cfgi-enrichment.yml').read_text()
           pub=Path('.github/workflows/historical-altseason-cfgi-publish.yml').read_text()
           add_cmd='git'+' add '+'06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/'
           shared='group: '+'framework-main-writer'
+          reservation_path='00_ARCHIVE_CONTROL/research_runtime/HISTORICAL_ALTSEASON_CFGI_PAID_RESERVATION.json'
           for required in [
               'CFGI_TARGETED_INPUT_FINGERPRINT_v1',
               'EXACT_COMPLETE_PRIOR_ENRICHMENT',
@@ -101,13 +105,23 @@ jobs:
               'automatic_promotion',
           ]:
               assert required in p, required
+          assert "workflows: ['Historical Altseason Free Publish']" in reserve
+          assert shared in reserve
+          assert 'ONE_DETERMINISTIC_RESERVATION_PER_PAID_INPUT_FINGERPRINT' in reserve
+          assert 'CFGI_RESERVATION_UNCHANGED' in reserve
+          assert reservation_path in reserve
+          assert 'cfgi_idempotency_guard.py --mode check' in reserve
+          assert reservation_path in w
+          assert 'workflow_dispatch' not in w
           assert 'cfgi_idempotency_guard.py --mode check' in w
           assert "steps.idempotency.outputs.skip_paid != 'true'" in w
           assert "steps.idempotency.outputs.skip_paid == 'true'" in w
           assert 'cfgi_idempotency_guard.py --mode stamp' in w
           assert 'BINANCE_VISION_ARCHIVE_FIRST_TRANSPORT_v1' in w
-          paid_step=w.index('Target CFGI only after objective episode selection')
-          preflight=w.index('Verify final archive-first free stage, authority and CFGI secret before paid calls')
+          assert 'HISTORICAL_ALTSEASON_CFGI_PAID_RESERVATION_v1' in w
+          assert 'ONE_DETERMINISTIC_RESERVATION_PER_PAID_INPUT_FINGERPRINT' in w
+          paid_step=w.index('Target CFGI only after objective episode selection and reservation')
+          preflight=w.index('Verify deterministic reservation, final free stage, authority and CFGI secret')
           guard=w.index('Check exact paid-input idempotency')
           assert preflight < guard < paid_step
           assert 'permissions:\n  contents: read' in w
@@ -120,10 +134,12 @@ jobs:
           assert 'historical-altseason-cfgi-stage' in pub
           assert 'RESEARCH_READINESS_MANIFEST.json' in pub
           assert add_cmd in pub
+          assert 'FREE_BULK_ARTIFACT_POINTER.json' in pub
+          assert 'alt_hourly_panel.csv.gz' in pub
           assert 'git rebase --abort' in pub
           assert 'git fetch origin main' in pub
           assert 'git merge-base --is-ancestor HEAD origin/main' in pub
-          print('CFGI_IDEMPOTENCY_SPLIT_PUBLISH_PASS')
+          print('CFGI_DETERMINISTIC_RESERVATION_IDEMPOTENCY_PASS')
           PY
 
       - name: Prove compute-publish writer boundary
@@ -132,6 +148,7 @@ jobs:
           from pathlib import Path
           free=Path('.github/workflows/historical-altseason-free-bootstrap.yml').read_text()
           free_pub=Path('.github/workflows/historical-altseason-free-publish.yml').read_text()
+          reserve=Path('.github/workflows/historical-altseason-cfgi-reservation.yml').read_text()
           paid=Path('.github/workflows/historical-altseason-cfgi-enrichment.yml').read_text()
           paid_pub=Path('.github/workflows/historical-altseason-cfgi-publish.yml').read_text()
           write_perm='contents: '+'write'
@@ -144,12 +161,13 @@ jobs:
               assert ('git'+' push') not in compute
               assert commit_cmd not in compute
               assert add_prefix not in compute
+          for writer in [free_pub,reserve,paid_pub]:
+              assert write_perm in writer
+              assert shared in writer
+              assert push_cmd in writer
           for pub in [free_pub,paid_pub]:
-              assert write_perm in pub
-              assert shared in pub
-              assert push_cmd in pub
               assert 'git diff --cached --quiet' in pub
-          print('HISTORICAL_COMPUTE_PUBLISH_WRITER_BOUNDARY_PASS')
+          print('HISTORICAL_COMPUTE_RESERVE_PUBLISH_WRITER_BOUNDARY_PASS')
           PY
 
       - name: Ensure no market-policy edits are present in helpers

@@ -74,12 +74,13 @@ jobs:
               assert x in r['cfgi_stage_required_artifacts']
           print('HISTORICAL_ALTSEASON_LAB_GATE_PASS')
           PY
-      - name: Validate split compute-publish safety contract
+      - name: Validate split compute-reserve-publish safety contract
         run: |
           python - <<'PY'
           from pathlib import Path
           free=Path('.github/workflows/historical-altseason-free-bootstrap.yml').read_text()
           free_pub=Path('.github/workflows/historical-altseason-free-publish.yml').read_text()
+          reserve=Path('.github/workflows/historical-altseason-cfgi-reservation.yml').read_text()
           paid=Path('.github/workflows/historical-altseason-cfgi-enrichment.yml').read_text()
           paid_pub=Path('.github/workflows/historical-altseason-cfgi-publish.yml').read_text()
           p=Path('scripts/historical_lab/cfgi_readiness_postprocess.py').read_text()
@@ -90,6 +91,15 @@ jobs:
           assert 'git add ' not in paid
           assert 'actions/upload-artifact@v4' in free
           assert 'actions/upload-artifact@v4' in paid
+          assert "workflows: ['Historical Altseason Free Publish']" in reserve
+          assert 'group: framework-main-writer' in reserve
+          assert 'HISTORICAL_ALTSEASON_CFGI_PAID_RESERVATION_v1' in reserve
+          assert 'ONE_DETERMINISTIC_RESERVATION_PER_PAID_INPUT_FINGERPRINT' in reserve
+          assert 'CFGI_RESERVATION_UNCHANGED' in reserve
+          assert 'workflow_dispatch' not in paid
+          assert 'HISTORICAL_ALTSEASON_CFGI_PAID_RESERVATION.json' in paid
+          assert 'HISTORICAL_ALTSEASON_CFGI_PAID_RESERVATION_v1' in paid
+          assert 'ONE_DETERMINISTIC_RESERVATION_PER_PAID_INPUT_FINGERPRINT' in paid
           for pub in [free_pub,paid_pub]:
               assert 'group: framework-main-writer' in pub
               assert 'actions/download-artifact@v4' in pub
@@ -100,18 +110,20 @@ jobs:
               for forbidden in ['git add .','git add -A','git add --all']:
                   assert forbidden not in pub
           assert 'cfgi_readiness_postprocess.py' in paid
-          assert 'FINAL_ARCHIVE_FIRST_FREE_STAGE_READY_FOR_CFGI' in paid
+          assert 'FINAL_RESERVED_ARCHIVE_FIRST_FREE_STAGE_READY_FOR_CFGI' in paid
           assert 'BINANCE_VISION_ARCHIVE_FIRST_TRANSPORT_v1' in paid
           assert "transport.get('archive_first') is True" in paid
           assert 'RESEARCH_READINESS_MANIFEST.json' in paid
           assert 'CFGI_FIELD_COVERAGE.json' in paid
           assert 'CFGI_EVENT_PATHS.jsonl.gz' in paid
+          assert 'FREE_BULK_ARTIFACT_POINTER.json' in paid_pub
+          assert 'alt_hourly_panel.csv.gz' in paid_pub
           assert 'historical_findings_max_classification' in p
           assert 'FORWARD_TEST' in p
           assert 'automatic_promotion' in p
           assert 'False' in p
           assert 'BINANCE_VISION_ARCHIVE_FIRST_TRANSPORT_v1' in transport
-          print('HISTORICAL_ALTSEASON_SPLIT_PUBLISH_SAFETY_PASS')
+          print('HISTORICAL_ALTSEASON_RESERVATION_PUBLISH_SAFETY_PASS')
           PY
       - name: Ensure paid CFGI cannot run in gate
         run: |

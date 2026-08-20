@@ -4,10 +4,7 @@ on:
   push:
     branches: [main]
     paths:
-      - '06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/EPISODE_CATALOG.json'
-      - '06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/FREE_SOURCE_AUDIT.json'
-      - '06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/FREE_EVENT_PATHS.jsonl.gz'
-  workflow_dispatch:
+      - '00_ARCHIVE_CONTROL/research_runtime/HISTORICAL_ALTSEASON_CFGI_PAID_RESERVATION.json'
 
 permissions:
   contents: read
@@ -18,8 +15,7 @@ concurrency:
 
 jobs:
   enrich:
-    if: >-
-      ${{ github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main' }}
+    if: ${{ github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     steps:
@@ -31,13 +27,15 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Verify final archive-first free stage, authority and CFGI secret before paid calls
+      - name: Verify deterministic reservation, final free stage, authority and CFGI secret
         env:
           CFGI_API_KEY: ${{ secrets.CFGI_API_KEY }}
         run: |
           set -euo pipefail
           root=06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts
+          reservation=00_ARCHIVE_CONTROL/research_runtime/HISTORICAL_ALTSEASON_CFGI_PAID_RESERVATION.json
           for f in \
+            FREE_BULK_ARTIFACT_POINTER.json \
             EPISODE_CATALOG.json \
             FREE_SOURCE_AUDIT.json \
             TIME_INTEGRITY_AUDIT.json \
@@ -45,7 +43,10 @@ jobs:
             FREE_EVENT_PATHS_COVERAGE.json; do
             test -s "$root/$f"
           done
+          test -s "$reservation"
+          test ! -e "$root/alt_hourly_panel.csv.gz"
           test -n "$CFGI_API_KEY"
+          python scripts/historical_lab/cfgi_idempotency_guard.py --mode check > /tmp/cfgi_reservation_guard.json
           python - <<'PY'
           import json
           from pathlib import Path
@@ -54,6 +55,19 @@ jobs:
           ti=json.loads((root/'TIME_INTEGRITY_AUDIT.json').read_text())
           src=json.loads((root/'FREE_SOURCE_AUDIT.json').read_text())
           pc=json.loads((root/'FREE_EVENT_PATHS_COVERAGE.json').read_text())
+          pointer=json.loads((root/'FREE_BULK_ARTIFACT_POINTER.json').read_text())
+          reservation=json.loads(Path('00_ARCHIVE_CONTROL/research_runtime/HISTORICAL_ALTSEASON_CFGI_PAID_RESERVATION.json').read_text())
+          guard=json.loads(Path('/tmp/cfgi_reservation_guard.json').read_text())
+          assert reservation['contract']=='HISTORICAL_ALTSEASON_CFGI_PAID_RESERVATION_v1'
+          assert reservation['semantics']=='ONE_DETERMINISTIC_RESERVATION_PER_PAID_INPUT_FINGERPRINT'
+          assert reservation['input_fingerprint_sha256']==guard['input_fingerprint_sha256']
+          assert reservation['authority']['research_only'] is True
+          assert reservation['authority']['portfolio_execution'] is False
+          assert reservation['authority']['automatic_promotion'] is False
+          assert reservation['authority']['historical_findings_max_classification']=='FORWARD_TEST'
+          assert pointer['contract']=='HISTORICAL_ALTSEASON_FREE_BULK_POINTER_v1'
+          assert pointer['storage_class']=='GITHUB_ACTIONS_ARTIFACT_BULK_NOT_GIT'
+          assert pointer['required_for_cowork_bundle'] is True
           assert ti['status']=='PASS'
           assert ti['strict_timestamp_lags'] is True
           assert ti['cross_window_lags_forbidden'] is True
@@ -73,7 +87,7 @@ jobs:
           assert a['canonical_market_state'] is False
           assert a['automatic_rule_changes'] is False
           assert a['promotion_requires_separate_review'] is True
-          print('FINAL_ARCHIVE_FIRST_FREE_STAGE_READY_FOR_CFGI', len(pc['events']))
+          print('FINAL_RESERVED_ARCHIVE_FIRST_FREE_STAGE_READY_FOR_CFGI', reservation['input_fingerprint_sha256'], len(pc['events']))
           PY
 
       - name: Check exact paid-input idempotency
@@ -89,7 +103,7 @@ jobs:
           echo "skip_paid=$skip_paid" >> "$GITHUB_OUTPUT"
           echo "CFGI_SKIP_PAID=$skip_paid"
 
-      - name: Target CFGI only after objective episode selection
+      - name: Target CFGI only after objective episode selection and reservation
         if: steps.idempotency.outputs.skip_paid != 'true'
         env:
           CFGI_API_KEY: ${{ secrets.CFGI_API_KEY }}
@@ -166,5 +180,5 @@ jobs:
           name: historical-altseason-cfgi-stage
           path: 06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/
           if-no-files-found: error
-          retention-days: 7
+          retention-days: 30
           compression-level: 6
