@@ -1,10 +1,9 @@
 name: Historical Altseason CFGI Recovery Launch Once
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - '.github/workflows/cfgi-recovery-launch-once.yml'
+  workflow_run:
+    workflows: ['Automation Production Health Gate']
+    types: [completed]
 
 permissions:
   contents: write
@@ -16,6 +15,7 @@ concurrency:
 
 jobs:
   launch:
+    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
@@ -27,7 +27,28 @@ jobs:
         with:
           python-version: '3.12'
 
+      - name: Detect completed launch receipt
+        id: receipt
+        run: |
+          path=00_ARCHIVE_CONTROL/research_runtime/HISTORICAL_ALTSEASON_CFGI_RECOVERY_LAUNCH_RECEIPT.json
+          if [ -s "$path" ]; then
+            python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('00_ARCHIVE_CONTROL/research_runtime/HISTORICAL_ALTSEASON_CFGI_RECOVERY_LAUNCH_RECEIPT.json')
+          x=json.loads(p.read_text())
+          assert x['contract']=='HISTORICAL_ALTSEASON_CFGI_RECOVERY_LAUNCH_RECEIPT_v1'
+          assert x['input_fingerprint_sha256']=='6106f96285a66f03e324595b68c1777627f4d83e5e70dc6c64d9b1022e544a8f'
+          assert int(x['recovery_run']['databaseId']) != 32419588422
+          print('RECOVERY_LAUNCH_ALREADY_BOUND',x['recovery_run']['databaseId'])
+          PY
+            echo 'exists=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'exists=false' >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Verify owner-authorized recovery contract and cumulative budget
+        if: steps.receipt.outputs.exists != 'true'
         env:
           EXPECTED_FINGERPRINT: 6106f96285a66f03e324595b68c1777627f4d83e5e70dc6c64d9b1022e544a8f
         run: |
@@ -52,7 +73,7 @@ jobs:
           PY
 
       - name: Find existing recovery or dispatch exactly once
-        id: launch
+        if: steps.receipt.outputs.exists != 'true'
         env:
           GH_TOKEN: ${{ github.token }}
           FP: 6106f96285a66f03e324595b68c1777627f4d83e5e70dc6c64d9b1022e544a8f
@@ -65,13 +86,12 @@ jobs:
           from pathlib import Path
           rows=json.loads(Path('/tmp/runs_before.json').read_text())
           cutoff=datetime.fromisoformat('2026-08-20T21:28:58+00:00')
-          candidates=[]
+          c=[]
           for r in rows:
               if r.get('event')!='workflow_dispatch': continue
-              created=datetime.fromisoformat(r['createdAt'].replace('Z','+00:00'))
-              if created>cutoff: candidates.append(r)
-          candidates.sort(key=lambda r:r['createdAt'],reverse=True)
-          print('' if not candidates else candidates[0]['databaseId'])
+              if datetime.fromisoformat(r['createdAt'].replace('Z','+00:00'))>cutoff: c.append(r)
+          c.sort(key=lambda r:r['createdAt'],reverse=True)
+          print('' if not c else c[0]['databaseId'])
           PY
           )"
           if [ -z "$existing" ]; then
@@ -89,14 +109,13 @@ jobs:
           from pathlib import Path
           rows=json.loads(Path('/tmp/runs_after.json').read_text())
           cutoff=datetime.fromisoformat('2026-08-20T21:28:58+00:00')
-          candidates=[]
+          c=[]
           for r in rows:
               if r.get('event')!='workflow_dispatch': continue
-              created=datetime.fromisoformat(r['createdAt'].replace('Z','+00:00'))
-              if created>cutoff: candidates.append(r)
-          candidates.sort(key=lambda r:r['createdAt'],reverse=True)
-          assert candidates,'no post-failure recovery workflow_dispatch run visible'
-          chosen=candidates[0]
+              if datetime.fromisoformat(r['createdAt'].replace('Z','+00:00'))>cutoff: c.append(r)
+          c.sort(key=lambda r:r['createdAt'],reverse=True)
+          assert c,'no post-failure recovery workflow_dispatch run visible'
+          chosen=c[0]
           receipt={
             'contract':'HISTORICAL_ALTSEASON_CFGI_RECOVERY_LAUNCH_RECEIPT_v1',
             'input_fingerprint_sha256':os.environ['FP'],
@@ -106,22 +125,19 @@ jobs:
             'launch_action':os.environ['ACTION'],
             'recovery_run':chosen,
           }
-          out=Path('00_ARCHIVE_CONTROL/research_runtime/HISTORICAL_ALTSEASON_CFGI_RECOVERY_LAUNCH_RECEIPT.json')
-          out.write_text(json.dumps(receipt,indent=2,sort_keys=True)+'\n')
+          Path('00_ARCHIVE_CONTROL/research_runtime/HISTORICAL_ALTSEASON_CFGI_RECOVERY_LAUNCH_RECEIPT.json').write_text(json.dumps(receipt,indent=2,sort_keys=True)+'\n')
           print('RECOVERY_RUN_BOUND',chosen['databaseId'],chosen['status'],chosen.get('conclusion'),chosen['url'])
           PY
 
       - name: Commit bounded recovery launch receipt
+        if: steps.receipt.outputs.exists != 'true'
         run: |
           set -euo pipefail
           path=00_ARCHIVE_CONTROL/research_runtime/HISTORICAL_ALTSEASON_CFGI_RECOVERY_LAUNCH_RECEIPT.json
           git config user.name framework-research-bot
           git config user.email framework-research-bot@users.noreply.github.com
           git add "$path"
-          if git diff --cached --quiet; then
-            echo 'RECOVERY_LAUNCH_RECEIPT_UNCHANGED'
-            exit 0
-          fi
+          if git diff --cached --quiet; then echo 'RECOVERY_LAUNCH_RECEIPT_UNCHANGED'; exit 0; fi
           git commit -m "research: bind authorized CFGI recovery run"
           pushed=false
           for attempt in 1 2 3 4 5; do
