@@ -43,24 +43,55 @@ jobs:
           echo 'Manual publish is intentionally blocked because no immutable upstream CFGI artifact run is bound.' >&2
           exit 1
 
-      - name: Install and revalidate CFGI readiness artifacts
+      - name: Install CFGI outputs without replacing current free-stage storage metadata
         run: |
           set -euo pipefail
           root=06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts
-          test -d /tmp/historical-altseason-cfgi-stage
-          rm -rf "$root"
-          mkdir -p "$root"
-          cp -a /tmp/historical-altseason-cfgi-stage/. "$root/"
+          src=/tmp/historical-altseason-cfgi-stage
+          test -d "$src"
+          test -s "$root/FREE_BULK_ARTIFACT_POINTER.json"
+          test ! -e "$root/alt_hourly_panel.csv.gz"
+
+          # A legacy in-flight CFGI artifact may still contain the pre-storage-migration
+          # 49 MB panel. Never copy it back into Git. Only copy the bounded CFGI outputs.
+          for name in \
+            CFGI_BILLING.json \
+            CFGI_COVERAGE.json \
+            CFGI_FIELD_COVERAGE.json \
+            cfgi_targeted.jsonl.gz \
+            CFGI_EVENT_SIGNATURES.json \
+            CFGI_EVENT_PATHS.jsonl.gz \
+            RESEARCH_READINESS_MANIFEST.json; do
+            test -s "$src/$name"
+            cp "$src/$name" "$root/$name"
+          done
+
+          # Rebuild readiness against CURRENT main storage/config semantics rather than
+          # trusting a manifest produced before the bulk-pointer migration.
+          python scripts/historical_lab/cfgi_readiness_postprocess.py
+          rm -f "$root/alt_hourly_panel.csv.gz"
+          test ! -e "$root/alt_hourly_panel.csv.gz"
+
+      - name: Revalidate current-storage CFGI readiness artifacts
+        run: |
+          set -euo pipefail
           python - <<'PY'
           import gzip,json
           from pathlib import Path
           root=Path('06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts')
           cfg=json.loads(Path('06_RESEARCH_LAB/historical_altseason_pullback_v1/config.json').read_text())
-          g=cfg['cfgi']; a=cfg['authority']
-          req=['FREE_SOURCE_AUDIT.json','TIME_INTEGRITY_AUDIT.json','EPISODE_CATALOG.json','FREE_EVENT_PATHS.jsonl.gz','CFGI_BILLING.json','CFGI_COVERAGE.json','CFGI_FIELD_COVERAGE.json','cfgi_targeted.jsonl.gz','CFGI_EVENT_SIGNATURES.json','CFGI_EVENT_PATHS.jsonl.gz','RESEARCH_READINESS_MANIFEST.json']
-          for name in req:
+          g=cfg['cfgi']; a=cfg['authority']; r=cfg['readiness']
+          req=list(r['free_stage_required_artifacts'])+list(r['cfgi_stage_required_artifacts'])+['RESEARCH_READINESS_MANIFEST.json']
+          for name in sorted(set(req)):
               p=root/name
               assert p.exists() and p.is_file() and not p.is_symlink() and p.stat().st_size>0, name
+          assert not (root/'alt_hourly_panel.csv.gz').exists()
+          pointer=json.loads((root/'FREE_BULK_ARTIFACT_POINTER.json').read_text())
+          assert pointer['contract']=='HISTORICAL_ALTSEASON_FREE_BULK_POINTER_v1'
+          assert pointer['storage_class']=='GITHUB_ACTIONS_ARTIFACT_BULK_NOT_GIT'
+          assert pointer['required_for_cowork_bundle'] is True
+          assert pointer['files'] and pointer['files'][0]['name']=='alt_hourly_panel.csv.gz'
+          assert pointer['files'][0]['sha256']
           b=json.loads((root/'CFGI_BILLING.json').read_text())
           assert b['status']=='PASS'
           assert b['expected_worst_case_credits'] <= g['expected_credit_hard_cap']
@@ -86,10 +117,10 @@ jobs:
           assert a['portfolio_execution'] is False
           assert a['canonical_market_state'] is False
           assert a['automatic_rule_changes'] is False
-          print('CFGI_PUBLISH_REVALIDATION_PASS', actual, b['final_credits_remaining'])
+          print('CFGI_STORAGE_SAFE_PUBLISH_REVALIDATION_PASS', actual, b['final_credits_remaining'], pointer['source_run_id'])
           PY
 
-      - name: Commit CFGI research artifacts under shared writer lock
+      - name: Commit CFGI research metadata under shared writer lock
         run: |
           set -euo pipefail
           git config user.name framework-research-bot
@@ -103,6 +134,10 @@ jobs:
           if [ -n "$bad" ]; then
             echo "Unexpected staged paths:" >&2
             echo "$bad" >&2
+            exit 1
+          fi
+          if git diff --cached --name-only | grep -qx '06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/alt_hourly_panel.csv.gz'; then
+            echo 'Bulk panel must never be staged into Git' >&2
             exit 1
           fi
           git commit -m "research: targeted CFGI altseason enrichment ${GITHUB_RUN_ID}"
