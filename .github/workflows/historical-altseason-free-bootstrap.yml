@@ -31,25 +31,43 @@ jobs:
       - name: Build free historical dataset and outcome catalogue
         run: |
           python scripts/historical_lab/free_altseason_bootstrap_resilient.py
+          python scripts/historical_lab/free_event_postprocess.py
       - name: Validate artifacts and research-only authority
         run: |
           python - <<'PY'
-          import gzip,json
+          import csv,gzip,json
           from pathlib import Path
           root=Path('06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts')
-          req=['FREE_SOURCE_AUDIT.json','hourly_features.csv.gz','EPISODE_CATALOG.json','EPISODE_FEATURE_MATRIX.jsonl.gz','BACKTEST_SUMMARY.json']
+          req=[
+            'FREE_SOURCE_AUDIT.json','TIME_INTEGRITY_AUDIT.json','hourly_features.csv.gz','alt_hourly_panel.csv.gz',
+            'EPISODE_CATALOG.json','EPISODE_FEATURE_MATRIX.jsonl.gz','EPISODE_MATRIX_COVERAGE.json',
+            'FREE_EVENT_PATHS.jsonl.gz','FREE_EVENT_PATHS_COVERAGE.json','BACKTEST_SUMMARY.json'
+          ]
           for x in req:
             p=root/x; assert p.exists() and p.stat().st_size>0, x
           a=json.loads((root/'FREE_SOURCE_AUDIT.json').read_text())
+          t=json.loads((root/'TIME_INTEGRITY_AUDIT.json').read_text())
           c=json.loads((root/'EPISODE_CATALOG.json').read_text())
           s=json.loads((root/'BACKTEST_SUMMARY.json').read_text())
+          pc=json.loads((root/'FREE_EVENT_PATHS_COVERAGE.json').read_text())
           assert a['authority']['research_only'] is True
           assert a['authority']['portfolio_execution'] is False
           assert c['authority']['automatic_rule_changes'] is False
+          assert t['status']=='PASS'
+          assert t['strict_timestamp_lags'] is True
+          assert t['cross_window_lags_forbidden'] is True
+          assert t['row_offsets_treated_as_hours'] is False
           assert s['free_hourly_feature_rows'] > 1000
           assert s['episode_count'] > 0
+          assert pc['events']
           with gzip.open(root/'hourly_features.csv.gz','rt') as fh:
-            assert len(fh.readline()) > 20
+            r=csv.DictReader(fh); first=next(r)
+            for k in ['research_window_id','continuity_segment_id','gap_from_previous_feature_hours','segment_reset','breadth_24h_delta_6h','breadth_24h_accel_6h']:
+              assert k in first, k
+          with gzip.open(root/'alt_hourly_panel.csv.gz','rt') as fh:
+            r=csv.DictReader(fh); first=next(r)
+            assert first['liquidity_cohort_proxy'] in {'LOW','MID','HIGH'}
+            assert 'return_24h_pct' in first
           print('FREE_BOOTSTRAP_VALIDATION_PASS', s['free_hourly_feature_rows'], s['episode_count'])
           PY
       - name: Commit immutable research artifacts safely
