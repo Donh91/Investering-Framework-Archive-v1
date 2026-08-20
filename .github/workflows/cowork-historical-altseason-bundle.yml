@@ -1,0 +1,75 @@
+name: Cowork Historical Altseason Research Bundle
+
+on:
+  workflow_run:
+    workflows: ['Historical Altseason CFGI Enrichment']
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cowork-historical-altseason-bundle
+  cancel-in-progress: false
+
+jobs:
+  build:
+    if: >-
+      ${{ github.event_name == 'workflow_dispatch' ||
+          (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main') }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 1
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Compile bundle builder
+        run: |
+          python -m py_compile scripts/cowork/build_historical_altseason_bundle.py
+
+      - name: Build research-ready Cowork input ZIP
+        run: |
+          python scripts/cowork/build_historical_altseason_bundle.py
+
+      - name: Validate bundle outputs
+        run: |
+          set -euo pipefail
+          root=dist/cowork_historical_altseason
+          test -s "$root/HISTORICAL_ALTSEASON_COWORK_INPUT_BUNDLE.zip"
+          test -s "$root/COWORK_INPUT_MANIFEST.json"
+          test -s "$root/COWORK_INPUT_BUNDLE_SHA256.txt"
+          python - <<'PY'
+          import json, zipfile
+          from pathlib import Path
+          root=Path('dist/cowork_historical_altseason')
+          manifest=json.loads((root/'COWORK_INPUT_MANIFEST.json').read_text())
+          assert manifest['readiness_verdict']=='PASS'
+          assert manifest['automatic_promotion'] is False
+          assert manifest['historical_findings_max_classification']=='FORWARD_TEST'
+          assert manifest['included_file_count'] > 0
+          with zipfile.ZipFile(root/'HISTORICAL_ALTSEASON_COWORK_INPUT_BUNDLE.zip') as zf:
+              assert zf.testzip() is None
+              names=set(zf.namelist())
+              assert 'COWORK_RESEARCH_INPUT/PROMPT/COWORK_OPUS5_MASTER_RESEARCH_PROMPT.md' in names
+              assert 'COWORK_RESEARCH_INPUT/COWORK_INPUT_MANIFEST.json' in names
+          print('COWORK_RESEARCH_BUNDLE_VALIDATION_PASS', manifest['included_file_count'])
+          PY
+
+      - name: Upload one-click Cowork research handoff
+        uses: actions/upload-artifact@v4
+        with:
+          name: historical-altseason-cowork-research-input
+          path: |
+            dist/cowork_historical_altseason/HISTORICAL_ALTSEASON_COWORK_INPUT_BUNDLE.zip
+            dist/cowork_historical_altseason/COWORK_INPUT_MANIFEST.json
+            dist/cowork_historical_altseason/COWORK_INPUT_BUNDLE_SHA256.txt
+          if-no-files-found: error
+          retention-days: 30
+          compression-level: 0
