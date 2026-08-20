@@ -30,13 +30,14 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Compile bundle builder
+      - name: Compile bundle builders
         run: |
           python -m py_compile scripts/cowork/build_historical_altseason_bundle.py
+          python -m py_compile scripts/cowork/build_historical_altseason_bundle_max_value.py
 
-      - name: Build research-ready Cowork input ZIP
+      - name: Build research-ready max-value Cowork input ZIP
         run: |
-          python scripts/cowork/build_historical_altseason_bundle.py
+          python scripts/cowork/build_historical_altseason_bundle_max_value.py
 
       - name: Validate bundle outputs and mandatory research protocols
         run: |
@@ -54,6 +55,14 @@ jobs:
           assert manifest['automatic_promotion'] is False
           assert manifest['historical_findings_max_classification']=='FORWARD_TEST'
           assert manifest['included_file_count'] > 0
+          sources={x['source_path'] for x in manifest['files']}
+          mandatory_sources={
+            '07_PROMPTS_AND_AGENTS/historical_altseason_pullback/COWORK_OPUS5_MAX_VALUE_SIDECARS.md',
+            '07_PROMPTS_AND_AGENTS/historical_altseason_pullback/COWORK_OPUS5_LAUNCH_INSTRUCTION.md',
+          }
+          assert mandatory_sources <= sources
+          for prefix in ['04_MARKET_LEARNING/intraday_execution','scripts/intraday_execution']:
+              assert any(p == prefix or p.startswith(prefix + '/') for p in sources), prefix
           zip_path=root/'HISTORICAL_ALTSEASON_COWORK_INPUT_BUNDLE.zip'
           expected=(root/'COWORK_INPUT_BUNDLE_SHA256.txt').read_text().split()[0]
           actual=hashlib.sha256(zip_path.read_bytes()).hexdigest()
@@ -66,13 +75,19 @@ jobs:
                 'COWORK_RESEARCH_INPUT/COWORK_INPUT_MANIFEST.json',
                 'COWORK_RESEARCH_INPUT/CORE/REPO/06_RESEARCH_LAB/historical_altseason_pullback_v1/COWORK_READINESS_PROTOCOL.md',
                 'COWORK_RESEARCH_INPUT/CORE/REPO/06_RESEARCH_LAB/historical_altseason_pullback_v1/COWORK_OPUS5_RESEARCH_PROTOCOL_ADDENDUM.md',
+                'COWORK_RESEARCH_INPUT/CORE/REPO/06_RESEARCH_LAB/historical_altseason_pullback_v1/INTRADAY_EXECUTION_COWORK_ADDENDUM.md',
+                'COWORK_RESEARCH_INPUT/CORE/REPO/07_PROMPTS_AND_AGENTS/historical_altseason_pullback/COWORK_OPUS5_MAX_VALUE_SIDECARS.md',
+                'COWORK_RESEARCH_INPUT/CORE/REPO/07_PROMPTS_AND_AGENTS/historical_altseason_pullback/COWORK_OPUS5_LAUNCH_INSTRUCTION.md',
               }
               missing=sorted(required-names)
               assert not missing, missing
               addendum=zf.read('COWORK_RESEARCH_INPUT/CORE/REPO/06_RESEARCH_LAB/historical_altseason_pullback_v1/COWORK_OPUS5_RESEARCH_PROTOCOL_ADDENDUM.md').decode()
               for token in ['PRE_SPECIFIED','POST_HOC_DISCOVERY','TOP_CANDIDATE_DESTRUCTION_TOURNAMENT','FINAL_EVIDENCE_LADDER','EFFECTIVE_SAMPLE_SIZE_AND_POWER']:
                   assert token in addendum, token
-          print('COWORK_RESEARCH_BUNDLE_VALIDATION_PASS', manifest['included_file_count'], actual)
+              sidecars=zf.read('COWORK_RESEARCH_INPUT/CORE/REPO/07_PROMPTS_AND_AGENTS/historical_altseason_pullback/COWORK_OPUS5_MAX_VALUE_SIDECARS.md').decode()
+              for token in ['Signal Interaction Atlas','Lead/Lag and Information Timing Atlas','Failure and Opportunity-Cost Laboratory','Minimal Sufficient Signal Stack','Research Opportunity Register']:
+                  assert token in sidecars, token
+          print('COWORK_MAX_VALUE_BUNDLE_VALIDATION_PASS', manifest['included_file_count'], actual)
           PY
 
       - name: Upload one-click Cowork research handoff
