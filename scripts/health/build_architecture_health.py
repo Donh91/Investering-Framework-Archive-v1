@@ -2,11 +2,18 @@ from __future__ import annotations
 
 import argparse
 import json
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
 TIMESTAMP_KEYS = ("captured_at_utc","retrieved_at_utc","created_at_utc","generated_at_utc","completed_at_utc","published_at_utc","freeze_utc","snapshot_utc","created_unix")
+
+# Evidence-quality observation window and censor-rate threshold (TASK3 R3-08).
+# These signals exist to separate PLUMBING HEALTH from EVIDENCE HEALTH: a job
+# that exits zero can still be operationally RED if its evidence is unusable.
+EVIDENCE_WINDOW_DAYS = 14
+EVIDENCE_CENSOR_RATE_AMBER = 0.60
+OUTCOME_CONTRACTS = {"MATURED_OUTCOME_v2","MATURED_OUTCOME_v3"}
 
 
 def read_json(path: Path) -> dict[str, Any] | None:
@@ -14,7 +21,6 @@ def read_json(path: Path) -> dict[str, Any] | None:
         value=json.loads(path.read_text())
         return value if isinstance(value,dict) else None
     except Exception:return None
-
 def parse_dt(value: object) -> datetime | None:
     if isinstance(value,(int,float)):
         try:return datetime.fromtimestamp(value,timezone.utc)
@@ -24,7 +30,6 @@ def parse_dt(value: object) -> datetime | None:
         dt=datetime.fromisoformat(value.replace('Z','+00:00'))
         return (dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)).astimezone(timezone.utc)
     except Exception:return None
-
 def row_timestamp(value: dict[str,Any]) -> datetime | None:
     for key in TIMESTAMP_KEYS:
         dt=parse_dt(value.get(key))
@@ -36,7 +41,6 @@ def row_timestamp(value: dict[str,Any]) -> datetime | None:
                 dt=parse_dt(nested.get(key))
                 if dt:return dt
     return None
-
 def latest_json(root: Path):
     rows=[]
     if root.exists():
@@ -47,7 +51,6 @@ def latest_json(root: Path):
             if ts is not None:rows.append((ts,str(path),path,value))
     if not rows:return None,None,None
     ts,_,path,value=max(rows,key=lambda row:(row[0],row[1]));return path,value,ts
-
 def latest_paired_output(root:Path,output_name:str,receipt_name:str):
     rows=[]
     if root.exists():
@@ -58,7 +61,6 @@ def latest_paired_output(root:Path,output_name:str,receipt_name:str):
             if ts is not None:rows.append((ts,str(path),path,output,rp if receipt else None))
     if not rows:return None,None,None,None
     ts,_,path,output,rp=max(rows,key=lambda row:(row[0],row[1]));return path,output,ts,rp
-
 def age_hours(now,ts):return None if ts is None else max(0.0,(now-ts).total_seconds()/3600.0)
 def find_cfgi_remaining(owner):
     for row in owner.get('files',[]):
@@ -68,6 +70,35 @@ def find_cfgi_remaining(owner):
         billing=summary.get('billing')
         if isinstance(billing,dict) and isinstance(billing.get('credits_remaining'),int):return billing['credits_remaining']
     return None
+
+def evidence_health(root: Path, now: datetime) -> dict[str, Any]:
+    """Observe whether the accountability loop is producing usable evidence.
+
+    Counts only outcomes adjudicated inside the observation window and only
+    forecasts whose declared maturity fell inside the same window, so the signal
+    reflects the loop's current behaviour rather than its whole history.
+    """
+    window_start=now-timedelta(days=EVIDENCE_WINDOW_DAYS)
+    matured=censored=0
+    outcome_root=root/'research/framework_memory/outcome_memory'
+    if outcome_root.exists():
+        for path in outcome_root.rglob('*.json'):
+            value=read_json(path)
+            if not value or value.get('contract') not in OUTCOME_CONTRACTS:continue
+            ts=parse_dt(value.get('created_at_utc'))
+            if ts is None or ts<window_start or ts>now:continue
+            if value.get('status')=='MATURED':matured+=1
+            elif value.get('status')=='CENSORED':censored+=1
+    due=0
+    forecast_root=root/'research/framework_memory/forecast_memory'
+    if forecast_root.exists():
+        for path in forecast_root.rglob('*.json'):
+            value=read_json(path)
+            if not value or value.get('contract')!='FROZEN_FORECAST_v1':continue
+            ts=parse_dt(value.get('outcome_due_utc'))
+            if ts is not None and window_start<=ts<=now:due+=1
+    adjudicated=matured+censored
+    return {'window_days':EVIDENCE_WINDOW_DAYS,'matured_outcome_count':matured,'censored_outcome_count':censored,'adjudicated_outcome_count':adjudicated,'censor_rate':round(censored/adjudicated,6) if adjudicated else None,'forecasts_due_in_window':due}
 
 def main():
     ap=argparse.ArgumentParser();ap.add_argument('--repo-root',type=Path,default=Path('.'));ap.add_argument('--json-output',type=Path,required=True);ap.add_argument('--md-output',type=Path,required=True);ap.add_argument('--now-utc');args=ap.parse_args();root=args.repo_root;now=parse_dt(args.now_utc) if args.now_utc else datetime.now(timezone.utc);assert now
@@ -110,9 +141,18 @@ def main():
     if remediation is None:add('NO_REMEDIATION_QUEUE_YET',1)
     elif remediation.get('contract')!='REMEDIATION_MATURATION_ENGINE_v1':add('REMEDIATION_QUEUE_INVALID',2)
     elif ages['remediation_queue'] is None or ages['remediation_queue']>36:add('REMEDIATION_QUEUE_STALE',1)
+    evidence=evidence_health(root,now)
+    # E1 - the accountability loop has stopped producing usable evidence even
+    # though forecasts reached maturity in the window. This is the signal that
+    # would have caught the 2026-08 censoring incident on its first day.
+    if evidence['forecasts_due_in_window']>0 and evidence['matured_outcome_count']==0:add('NO_MATURED_OUTCOMES_14D',2)
+    # E2 - outcomes are being adjudicated but overwhelmingly censored.
+    if evidence['censor_rate'] is not None:
+        if evidence['censor_rate']>=1.0:add('OUTCOME_CENSOR_RATE_HIGH',2)
+        elif evidence['censor_rate']>EVIDENCE_CENSOR_RATE_AMBER:add('OUTCOME_CENSOR_RATE_HIGH',1)
     status='RED' if severity>=2 else 'AMBER' if severity==1 else 'GREEN'
-    health={'contract':'ARCHITECTURE_HEALTH_DASHBOARD_v2_2','generated_at_utc':now.isoformat().replace('+00:00','Z'),'status':status,'freshness_hours':ages,'owners':{'count':len(owners),'pass_count':pass_count,'rows':owners},'latest_capture_path':str(cap_path) if cap_path else None,'latest_daily_director_path':str(daily_path) if daily_path else None,'latest_daily_director_receipt_path':str(daily_receipt_path) if daily_receipt_path else None,'latest_weekly_calibration_path':str(weekly_path) if weekly_path else None,'latest_etf_owner_path':str(etf_path) if etf_path else None,'experiment_lifecycle':{'path':str(experiment_path) if experiment else None,'candidate_count':(experiment or {}).get('candidate_count'),'state_counts':(experiment or {}).get('state_counts',{})},'experiment_receipt_sync':{'path':str(sync_path) if sync else None,'status':(sync or {}).get('status'),'imported':(sync or {}).get('imported'),'hash_mismatches':(sync or {}).get('hash_mismatches')},'remediation':{'path':str(remediation_path) if remediation else None,'summary':(remediation or {}).get('summary',{}),'automatic_code_write':(remediation or {}).get('automatic_code_write',False),'automatic_merge':(remediation or {}).get('automatic_merge',False)},'accepted_data_ping_count':len(ping_files),'cfgi_credits_remaining':cfgi_remaining,'blockers':blockers,'authority':{'framework_state_change':False,'portfolio_action':False}}
+    health={'contract':'ARCHITECTURE_HEALTH_DASHBOARD_v2_3','evidence_health':evidence,'generated_at_utc':now.isoformat().replace('+00:00','Z'),'status':status,'freshness_hours':ages,'owners':{'count':len(owners),'pass_count':pass_count,'rows':owners},'latest_capture_path':str(cap_path) if cap_path else None,'latest_daily_director_path':str(daily_path) if daily_path else None,'latest_daily_director_receipt_path':str(daily_receipt_path) if daily_receipt_path else None,'latest_weekly_calibration_path':str(weekly_path) if weekly_path else None,'latest_etf_owner_path':str(etf_path) if etf_path else None,'experiment_lifecycle':{'path':str(experiment_path) if experiment else None,'candidate_count':(experiment or {}).get('candidate_count'),'state_counts':(experiment or {}).get('state_counts',{})},'experiment_receipt_sync':{'path':str(sync_path) if sync else None,'status':(sync or {}).get('status'),'imported':(sync or {}).get('imported'),'hash_mismatches':(sync or {}).get('hash_mismatches')},'remediation':{'path':str(remediation_path) if remediation else None,'summary':(remediation or {}).get('summary',{}),'automatic_code_write':(remediation or {}).get('automatic_code_write',False),'automatic_merge':(remediation or {}).get('automatic_merge',False)},'accepted_data_ping_count':len(ping_files),'cfgi_credits_remaining':cfgi_remaining,'blockers':blockers,'authority':{'framework_state_change':False,'portfolio_action':False}}
     args.json_output.parent.mkdir(parents=True,exist_ok=True);args.json_output.write_text(json.dumps(health,sort_keys=True,separators=(',',':'))+'\n')
-    lines=['# Architecture Health',f'Status: **{status}**',f"Generated: {health['generated_at_utc']}",'',f'Owners: {pass_count}/{len(owners)} PASS',f'Accepted DATA PINGs: {len(ping_files)}',f"CFGI credits remaining: {cfgi_remaining if cfgi_remaining is not None else 'UNKNOWN'}",f"Experiment candidates: {(experiment or {}).get('candidate_count','UNKNOWN')}",f"Codex-ready remediation tasks: {((remediation or {}).get('summary') or {}).get('codex_ready','UNKNOWN')}",'','## Freshness hours']+[f"- {k}: {v if v is not None else 'UNKNOWN'}" for k,v in ages.items()]+['','## Blockers']+([f'- {x}' for x in blockers] or ['- None'])
+    lines=['# Architecture Health',f'Status: **{status}**',f"Generated: {health['generated_at_utc']}",'',f'Owners: {pass_count}/{len(owners)} PASS',f'Accepted DATA PINGs: {len(ping_files)}',f"CFGI credits remaining: {cfgi_remaining if cfgi_remaining is not None else 'UNKNOWN'}",f"Experiment candidates: {(experiment or {}).get('candidate_count','UNKNOWN')}",f"Codex-ready remediation tasks: {((remediation or {}).get('summary') or {}).get('codex_ready','UNKNOWN')}",'','## Freshness hours']+[f"- {k}: {v if v is not None else 'UNKNOWN'}" for k,v in ages.items()]+['',f"## Evidence health (last {evidence['window_days']}d)",f"- Forecasts due in window: {evidence['forecasts_due_in_window']}",f"- Matured outcomes: {evidence['matured_outcome_count']}",f"- Censored outcomes: {evidence['censored_outcome_count']}",f"- Censor rate: {evidence['censor_rate'] if evidence['censor_rate'] is not None else 'UNKNOWN'}",'','## Blockers']+([f'- {x}' for x in blockers] or ['- None'])
     args.md_output.write_text('\n'.join(lines)+'\n');print(json.dumps({'status':status,'blockers':blockers},sort_keys=True))
 if __name__=='__main__':main()

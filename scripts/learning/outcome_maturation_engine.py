@@ -3,11 +3,24 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
+
+from metric_resolver import (  # noqa: E402  (path is prepared immediately above)
+    RESOLVER_VERSION,
+    resolve,
+    resolve_for_forecast,
+)
+
 UNIT_CONTRACT_VERSION = "FORECAST_TARGET_UNITS_v2"
+
+# Mutable pointer files are not immutable scientific evidence and must never be
+# selected as the evidence anchor for a matured outcome (TASK3 R3-17 item 5).
+EXCLUDED_EVIDENCE_FILENAMES = frozenset({"LATEST.json"})
 
 
 def read(path: Path) -> dict[str, Any]:
@@ -20,16 +33,6 @@ def canon(value: Any) -> bytes:
 
 def sha(value: Any) -> str:
     return hashlib.sha256(canon(value)).hexdigest()
-
-
-def at_path(value: Any, path: str) -> Any:
-    current = value
-    for part in path.split("."):
-        if isinstance(current, dict):
-            current = current.get(part)
-        else:
-            return None
-    return current
 
 
 def parse_dt(value: str) -> datetime:
@@ -103,6 +106,8 @@ def main() -> None:
 
     evidence: list[tuple[datetime, Path, dict[str, Any]]] = []
     for path in args.evidence_root.rglob("*.json") if args.evidence_root.exists() else []:
+        if path.name in EXCLUDED_EVIDENCE_FILENAMES:
+            continue
         try:
             value = read(path)
             timestamp = value.get("captured_at_utc") or value.get("freeze_utc") or value.get("created_at_utc") or value.get("snapshot_utc")
@@ -137,6 +142,8 @@ def main() -> None:
                     "reason": "LEGACY_V1_TARGET_UNIT_AMBIGUOUS",
                     "forecast_sha256": sha(forecast),
                     "created_at_utc": now.isoformat().replace("+00:00", "Z"),
+                    "resolver_version": RESOLVER_VERSION,
+                    "metric_path_root_applied": None,
                     "authority": {"model_weight_change": False, "portfolio_action": False},
                 }
                 destination.parent.mkdir(parents=True, exist_ok=True)
@@ -148,6 +155,14 @@ def main() -> None:
             max_ts = due + timedelta(hours=args.max_evidence_lag_hours)
             candidates = [row for row in evidence if due <= row[0] <= max_ts]
             if not candidates:
+                if now <= max_ts:
+                    # The evidence window this forecast declared at freeze time is
+                    # still open. Absence of evidence now is a scheduling artefact,
+                    # not a scientific fact, and the outcome file is permanent once
+                    # written. Stay pending until the original window has elapsed.
+                    # The window itself is never enlarged (TASK3 R3-06).
+                    pending += 1
+                    continue
                 outcome = {
                     "contract": "MATURED_OUTCOME_v3",
                     "forecast_id": forecast_id,
@@ -155,6 +170,8 @@ def main() -> None:
                     "reason": "NO_EVIDENCE_WITHIN_MAX_LAG",
                     "forecast_sha256": sha(forecast),
                     "created_at_utc": now.isoformat().replace("+00:00", "Z"),
+                    "resolver_version": RESOLVER_VERSION,
+                    "metric_path_root_applied": None,
                     "authority": {"model_weight_change": False, "portfolio_action": False},
                 }
                 destination.parent.mkdir(parents=True, exist_ok=True)
@@ -164,7 +181,7 @@ def main() -> None:
 
             _, evidence_path, evidence_value = candidates[0]
             metric_path = forecast["metric_path"]
-            end_value = at_path(evidence_value, metric_path)
+            resolution = resolve_for_forecast(evidence_value, forecast, metric_path)
             start_value = float(forecast["start_value"])
 
             baseline_path = forecast.get("baseline_evidence_path")
@@ -176,24 +193,31 @@ def main() -> None:
                 baseline_value = read(baseline_file)
                 if sha(baseline_value) != baseline_hash:
                     raise ValueError("baseline_evidence_hash_mismatch")
-                baseline_metric = at_path(baseline_value, metric_path)
-                if not isinstance(baseline_metric, (int, float)) or abs(float(baseline_metric) - start_value) > max(1e-9, abs(start_value) * 1e-8):
+                baseline_resolution = (
+                    resolve(baseline_value, metric_path, resolution.root_contract)
+                    if resolution.root_contract
+                    else resolve_for_forecast(baseline_value, forecast, metric_path)
+                )
+                if not baseline_resolution.ok or abs(float(baseline_resolution.value) - start_value) > max(1e-9, abs(start_value) * 1e-8):
                     raise ValueError("start_value_baseline_mismatch")
 
-            if not isinstance(end_value, (int, float)):
+            if not resolution.ok:
                 outcome = {
                     "contract": "MATURED_OUTCOME_v3",
                     "forecast_id": forecast_id,
                     "status": "CENSORED",
-                    "reason": "METRIC_UNAVAILABLE",
+                    "reason": resolution.status,
                     "forecast_sha256": sha(forecast),
                     "evidence_path": str(evidence_path),
                     "evidence_sha256": sha(evidence_value),
                     "created_at_utc": now.isoformat().replace("+00:00", "Z"),
+                    "resolver_version": RESOLVER_VERSION,
+                    "metric_path_root_applied": resolution.root_contract,
                     "authority": {"model_weight_change": False, "portfolio_action": False},
                 }
                 censored += 1
             else:
+                end_value = resolution.value
                 outcome = {
                     "contract": "MATURED_OUTCOME_v3",
                     "forecast_id": forecast_id,
@@ -207,6 +231,8 @@ def main() -> None:
                     "evidence_sha256": sha(evidence_value),
                     "evidence_lag_hours": round((candidates[0][0] - due).total_seconds() / 3600, 6),
                     "created_at_utc": now.isoformat().replace("+00:00", "Z"),
+                    "resolver_version": RESOLVER_VERSION,
+                    "metric_path_root_applied": resolution.root_contract,
                     "authority": {"model_weight_change": False, "portfolio_action": False},
                 }
                 matured += 1
