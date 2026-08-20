@@ -1,5 +1,5 @@
 {
-  "action": "BLOCKED",
+  "action": "DISPATCH",
   "all_recent_runs": [
     {
       "conclusion": "failure",
@@ -203,9 +203,11 @@
     }
   ],
   "automatic_paid_retry_after_failure": false,
-  "contract": "HISTORICAL_ALTSEASON_CFGI_RUN_ORCHESTRATION_AUDIT_v2",
+  "contract": "HISTORICAL_ALTSEASON_CFGI_RUN_ORCHESTRATION_AUDIT_v3",
   "idempotency_skip_paid": false,
-  "reason": "CURRENT_PAID_RUN_FAILED_REVIEW_BEFORE_RETRY",
+  "owner_authorized_recovery_attempts": 1,
+  "paid_attempt_ledger": "00_ARCHIVE_CONTROL/research_runtime/HISTORICAL_ALTSEASON_CFGI_PAID_ATTEMPT_LEDGER.json",
+  "reason": "OWNER_AUTHORIZED_SINGLE_RECOVERY_AFTER_READINESS_ONLY_FAILURE",
   "recent_runs_since_reservation": [
     {
       "conclusion": "failure",
