@@ -3,21 +3,15 @@ name: Historical Altseason Throughput Safety Gate
 on:
   pull_request:
     paths:
-      - 'scripts/historical_lab/free_altseason_bootstrap_parallel.py'
-      - 'scripts/historical_lab/cfgi_idempotency_guard.py'
-      - '.github/workflows/historical-altseason-free-bootstrap.yml'
-      - '.github/workflows/historical-altseason-free-publish.yml'
-      - '.github/workflows/historical-altseason-cfgi-reservation.yml'
-      - '.github/workflows/historical-altseason-cfgi-enrichment.yml'
-      - '.github/workflows/historical-altseason-cfgi-publish.yml'
-      - '.github/workflows/historical-altseason-cfgi-run-audit.yml'
-      - '.github/workflows/historical-altseason-throughput-gate.yml'
+      - 'scripts/historical_lab/**'
+      - '.github/workflows/historical-altseason-*.yml'
+      - '00_ARCHIVE_CONTROL/research_runtime/HISTORICAL_ALTSEASON_CFGI_PAID_ATTEMPT_LEDGER.json'
   push:
     branches: [main]
     paths:
-      - 'scripts/historical_lab/free_altseason_bootstrap_parallel.py'
-      - 'scripts/historical_lab/cfgi_idempotency_guard.py'
+      - 'scripts/historical_lab/**'
       - '.github/workflows/historical-altseason-*.yml'
+      - '00_ARCHIVE_CONTROL/research_runtime/HISTORICAL_ALTSEASON_CFGI_PAID_ATTEMPT_LEDGER.json'
 
 permissions:
   contents: read
@@ -38,6 +32,8 @@ jobs:
           python -m py_compile scripts/historical_lab/free_altseason_bootstrap_resilient.py
           python -m py_compile scripts/historical_lab/cfgi_targeted_backfill.py
           python -m py_compile scripts/historical_lab/cfgi_readiness_postprocess.py
+          python -m py_compile scripts/historical_lab/cfgi_readiness_postprocess_v2.py
+          python -m py_compile scripts/historical_lab/cfgi_recovery_budget_guard.py
       - name: Prove archive-first transport contract
         run: |
           python - <<'PY'
@@ -58,31 +54,41 @@ jobs:
           assert 'git rebase --abort' in pub and 'git fetch origin main' in pub and 'git merge-base --is-ancestor HEAD origin/main' in pub
           print('HISTORICAL_ARCHIVE_FIRST_SPLIT_TRANSPORT_PASS')
           PY
-      - name: Prove explicit fingerprint-bound paid dispatch and no duplicate retry
+      - name: Prove cumulative budget, missingness and single recovery contract
         run: |
           python - <<'PY'
+          import json
           from pathlib import Path
           p=Path('scripts/historical_lab/cfgi_idempotency_guard.py').read_text()
-          reserve=Path('.github/workflows/historical-altseason-cfgi-reservation.yml').read_text()
           paid=Path('.github/workflows/historical-altseason-cfgi-enrichment.yml').read_text()
           pub=Path('.github/workflows/historical-altseason-cfgi-publish.yml').read_text()
           audit=Path('.github/workflows/historical-altseason-cfgi-run-audit.yml').read_text()
+          v2=Path('scripts/historical_lab/cfgi_readiness_postprocess_v2.py').read_text()
+          budget=Path('scripts/historical_lab/cfgi_recovery_budget_guard.py').read_text()
+          ledger=json.loads(Path('00_ARCHIVE_CONTROL/research_runtime/HISTORICAL_ALTSEASON_CFGI_PAID_ATTEMPT_LEDGER.json').read_text())
+          assert ledger['cumulative_actual_credits_used']==5259
+          assert ledger['owner_authorized_recovery_attempts']==1
+          assert ledger['automatic_retry_after_failure'] is False
           for token in ['CFGI_TARGETED_INPUT_FINGERPRINT_v1','EXACT_COMPLETE_PRIOR_ENRICHMENT','RESEARCH_READINESS_MANIFEST.json','FORWARD_TEST','automatic_promotion']:
               assert token in p,token
-          for token in ['ONE_DETERMINISTIC_RESERVATION_PER_PAID_INPUT_FINGERPRINT','CFGI_RESERVATION_UNCHANGED',"steps.reservation.outputs.changed == 'true'",'gh workflow run historical-altseason-cfgi-enrichment.yml','actions: write']:
-              assert token in reserve,token
-          for token in ['workflow_dispatch:','fingerprint:','DISPATCH_FINGERPRINT',"dispatched==reservation['input_fingerprint_sha256']==guard['input_fingerprint_sha256']",'Verify CFGI secret only after reservation binding passes','cfgi_idempotency_guard.py --mode check','cfgi_idempotency_guard.py --mode stamp','HISTORICAL_ALTSEASON_CFGI_PAID_RESERVATION_v1','BINANCE_VISION_ARCHIVE_FIRST_TRANSPORT_v1']:
+          for token in ['workflow_dispatch:','fingerprint:','DISPATCH_FINGERPRINT','HISTORICAL_ALTSEASON_CFGI_PAID_ATTEMPT_LEDGER.json','cfgi_recovery_budget_guard.py','cfgi_readiness_postprocess_v2.py','historical-altseason-cfgi-paid-diagnostics-','CFGI_CUMULATIVE_BILLING.json']:
               assert token in paid,token
           pre=paid.index('Verify dispatch fingerprint, deterministic reservation and final free stage before secret access')
-          secret=paid.index('Verify CFGI secret only after reservation binding passes')
-          guard=paid.index('Check exact paid-input idempotency')
+          budget_pre=paid.index('Enforce cumulative recovery budget before secret access')
+          secret=paid.index('Verify CFGI secret only after reservation and cumulative budget gates pass')
           call=paid.index('Target CFGI only after objective episode selection and reservation')
-          assert pre < secret < guard < call
-          for token in ['actions: write','RESEARCH_READINESS_MANIFEST.json','FREE_BULK_ARTIFACT_POINTER.json','gh workflow run cowork-historical-altseason-bundle.yml',"steps.publish.outputs.published == 'true'"]:
+          durable=paid.index('Upload paid CFGI diagnostics before final readiness assertion')
+          validate=paid.index('Validate billing, path scaffold, explicit missingness and governance')
+          assert pre < budget_pre < secret < call < durable < validate
+          assert 'CUMULATIVE_HARD_CAP_EXCEEDED' in budget and 'PROJECTED_RESERVE_BREACH' in budget
+          assert 'EXPLICIT_MISSING_NOT_FILLED_NOT_INTERPOLATED_NOT_A_GLOBAL_BLOCKER' in v2
+          assert "blockers.remove('CFGI_EXACT_EVENT_PATH_INCOMPLETE')" in v2
+          assert 'CFGI_EVENT_PATH_SCAFFOLD_INCOMPLETE' in v2
+          for token in ['CFGI_CUMULATIVE_BILLING.json','RESEARCH_READINESS_MANIFEST_v2','gh workflow run cowork-historical-altseason-bundle.yml']:
               assert token in pub,token
-          for token in ['actions: write','RESERVED_FINGERPRINT_HAS_NO_PAID_RUN','CURRENT_PAID_RUN_FAILED_REVIEW_BEFORE_RETRY','automatic_paid_retry_after_failure','gh workflow run historical-altseason-cfgi-enrichment.yml']:
+          for token in ['OWNER_AUTHORIZED_SINGLE_RECOVERY_AFTER_READINESS_ONLY_FAILURE','RECOVERY_ALREADY_ATTEMPTED_OR_UNREVIEWED_PAID_FAILURE','owner_authorized_recovery_attempts','automatic_paid_retry_after_failure']:
               assert token in audit,token
-          print('CFGI_EXPLICIT_DISPATCH_IDEMPOTENCY_PASS')
+          print('CFGI_RECOVERY_BUDGET_MISSINGNESS_PASS')
           PY
       - name: Prove compute and writer boundary without self-triggering health scanner
         run: |
@@ -115,7 +121,12 @@ jobs:
         run: |
           python - <<'PY'
           from pathlib import Path
-          combined='\n'.join([Path('scripts/historical_lab/free_altseason_bootstrap_parallel.py').read_text(),Path('scripts/historical_lab/cfgi_idempotency_guard.py').read_text()])
+          combined='\n'.join([
+              Path('scripts/historical_lab/free_altseason_bootstrap_parallel.py').read_text(),
+              Path('scripts/historical_lab/cfgi_idempotency_guard.py').read_text(),
+              Path('scripts/historical_lab/cfgi_readiness_postprocess_v2.py').read_text(),
+              Path('scripts/historical_lab/cfgi_recovery_budget_guard.py').read_text(),
+          ])
           for token in ['portfolio_action','DEPLOY','REDUCE','BUY','SELL','canonical_market_state =','automatic_rule_changes = True']:
               assert token not in combined,token
           print('NO_MARKET_POLICY_SEMANTICS_PASS')
