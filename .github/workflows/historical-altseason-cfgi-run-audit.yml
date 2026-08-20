@@ -28,7 +28,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Audit current reservation and decide whether one recovery dispatch is needed
+      - name: Audit reservation and decide initial or one authorized recovery dispatch
         id: decision
         env:
           GH_TOKEN: ${{ github.token }}
@@ -37,7 +37,9 @@ jobs:
         run: |
           set -euo pipefail
           reservation=00_ARCHIVE_CONTROL/research_runtime/HISTORICAL_ALTSEASON_CFGI_PAID_RESERVATION.json
+          ledger=00_ARCHIVE_CONTROL/research_runtime/HISTORICAL_ALTSEASON_CFGI_PAID_ATTEMPT_LEDGER.json
           test -s "$reservation"
+          test -s "$ledger"
           python scripts/historical_lab/cfgi_idempotency_guard.py --mode check > /tmp/guard.json
           gh run list --repo "$GITHUB_REPOSITORY" --workflow historical-altseason-cfgi-enrichment.yml --limit 20 --json databaseId,status,conclusion,createdAt,updatedAt,headSha,url,event > /tmp/runs.json
           reserved_at="$(git log -1 --format=%cI -- "$reservation")"
@@ -47,12 +49,17 @@ jobs:
           from datetime import datetime
           from pathlib import Path
           reservation=json.loads(Path('00_ARCHIVE_CONTROL/research_runtime/HISTORICAL_ALTSEASON_CFGI_PAID_RESERVATION.json').read_text())
+          ledger=json.loads(Path('00_ARCHIVE_CONTROL/research_runtime/HISTORICAL_ALTSEASON_CFGI_PAID_ATTEMPT_LEDGER.json').read_text())
           guard=json.loads(Path('/tmp/guard.json').read_text())
           runs=json.loads(Path('/tmp/runs.json').read_text())
           fp=reservation['input_fingerprint_sha256']
           assert reservation['contract']=='HISTORICAL_ALTSEASON_CFGI_PAID_RESERVATION_v1'
           assert reservation['semantics']=='ONE_DETERMINISTIC_RESERVATION_PER_PAID_INPUT_FINGERPRINT'
-          assert fp==guard['input_fingerprint_sha256']
+          assert fp==guard['input_fingerprint_sha256']==ledger['input_fingerprint_sha256']
+          assert ledger['contract']=='HISTORICAL_ALTSEASON_CFGI_PAID_ATTEMPT_LEDGER_v1'
+          assert ledger['automatic_retry_after_failure'] is False
+          assert ledger['owner_authorized_recovery_attempts']==1
+          assert ledger['cumulative_actual_credits_used']==5259
           reserved_at=datetime.fromisoformat(os.environ['RESERVATION_CREATED_AT'].replace('Z','+00:00'))
           recent=[]
           for r in runs:
@@ -74,10 +81,12 @@ jobs:
                   action='NO_DISPATCH'; reason='CURRENT_PAID_RUN_ACTIVE'
               elif success:
                   action='NO_DISPATCH'; reason='CURRENT_PAID_RUN_SUCCEEDED_AWAIT_PUBLISH'
+              elif len(failed)==1 and int(failed[0]['databaseId'])==32419588422:
+                  action='DISPATCH'; reason='OWNER_AUTHORIZED_SINGLE_RECOVERY_AFTER_READINESS_ONLY_FAILURE'
               elif failed:
-                  action='BLOCKED'; reason='CURRENT_PAID_RUN_FAILED_REVIEW_BEFORE_RETRY'
+                  action='BLOCKED'; reason='RECOVERY_ALREADY_ATTEMPTED_OR_UNREVIEWED_PAID_FAILURE'
           out={
-              'contract':'HISTORICAL_ALTSEASON_CFGI_RUN_ORCHESTRATION_AUDIT_v2',
+              'contract':'HISTORICAL_ALTSEASON_CFGI_RUN_ORCHESTRATION_AUDIT_v3',
               'workflow':'historical-altseason-cfgi-enrichment.yml',
               'triggering_workflow_name':os.environ.get('TRIGGERING_WORKFLOW_NAME'),
               'triggering_workflow_conclusion':os.environ.get('TRIGGERING_WORKFLOW_CONCLUSION'),
@@ -89,6 +98,8 @@ jobs:
               'recent_runs_since_reservation':recent,
               'all_recent_runs':runs,
               'automatic_paid_retry_after_failure':False,
+              'owner_authorized_recovery_attempts':1,
+              'paid_attempt_ledger':'00_ARCHIVE_CONTROL/research_runtime/HISTORICAL_ALTSEASON_CFGI_PAID_ATTEMPT_LEDGER.json',
           }
           Path('00_ARCHIVE_CONTROL/research_runtime/HISTORICAL_ALTSEASON_CFGI_RUN_AUDIT.json').write_text(json.dumps(out,indent=2,sort_keys=True)+'\n')
           Path('/tmp/decision.txt').write_text(action+'\n')
@@ -100,7 +111,7 @@ jobs:
         run: |
           echo "action=$(cat /tmp/decision.txt)" >> "$GITHUB_OUTPUT"
           echo "fingerprint=$(cat /tmp/fingerprint.txt)" >> "$GITHUB_OUTPUT"
-      - name: Dispatch the already-reserved fingerprint exactly once when no paid run exists
+      - name: Dispatch initial or single authorized recovery fingerprint
         if: steps.exported.outputs.action == 'DISPATCH'
         env:
           GH_TOKEN: ${{ github.token }}
@@ -109,11 +120,11 @@ jobs:
           set -euo pipefail
           test -n "$RESERVED_FINGERPRINT"
           gh workflow run historical-altseason-cfgi-enrichment.yml --repo "$GITHUB_REPOSITORY" --ref main -f fingerprint="$RESERVED_FINGERPRINT"
-          echo "HISTORICAL_CFGI_RECOVERY_DISPATCH_PASS $RESERVED_FINGERPRINT"
-      - name: Refuse automatic retry after any paid-run failure
+          echo "HISTORICAL_CFGI_BOUND_DISPATCH_PASS $RESERVED_FINGERPRINT"
+      - name: Refuse any further automatic paid retry
         if: steps.exported.outputs.action == 'BLOCKED'
         run: |
-          echo 'A paid CFGI run failed after reservation. Automatic retry is forbidden until billing/run logs are reviewed.' >&2
+          echo 'CFGI recovery is exhausted or a new paid failure requires explicit review. No automatic retry.' >&2
           exit 1
       - name: Commit bounded orchestration audit under shared writer lock
         if: always() && steps.decision.outcome == 'success'

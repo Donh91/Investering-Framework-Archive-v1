@@ -51,11 +51,11 @@ jobs:
           test -d "$src"
           test -s "$root/FREE_BULK_ARTIFACT_POINTER.json"
           test ! -e "$root/alt_hourly_panel.csv.gz"
-          for name in CFGI_BILLING.json CFGI_COVERAGE.json CFGI_FIELD_COVERAGE.json cfgi_targeted.jsonl.gz CFGI_EVENT_SIGNATURES.json CFGI_EVENT_PATHS.jsonl.gz RESEARCH_READINESS_MANIFEST.json; do
+          for name in CFGI_BILLING.json CFGI_CUMULATIVE_BILLING.json CFGI_COVERAGE.json CFGI_FIELD_COVERAGE.json cfgi_targeted.jsonl.gz CFGI_EVENT_SIGNATURES.json CFGI_EVENT_PATHS.jsonl.gz RESEARCH_READINESS_MANIFEST.json; do
             test -s "$src/$name"
             cp "$src/$name" "$root/$name"
           done
-          python scripts/historical_lab/cfgi_readiness_postprocess.py
+          python scripts/historical_lab/cfgi_readiness_postprocess_v2.py
           rm -f "$root/alt_hourly_panel.csv.gz"
           test ! -e "$root/alt_hourly_panel.csv.gz"
 
@@ -68,7 +68,7 @@ jobs:
           root=Path('06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts')
           cfg=json.loads(Path('06_RESEARCH_LAB/historical_altseason_pullback_v1/config.json').read_text())
           g=cfg['cfgi']; a=cfg['authority']; r=cfg['readiness']
-          req=list(r['free_stage_required_artifacts'])+list(r['cfgi_stage_required_artifacts'])+['RESEARCH_READINESS_MANIFEST.json']
+          req=list(r['free_stage_required_artifacts'])+list(r['cfgi_stage_required_artifacts'])+['RESEARCH_READINESS_MANIFEST.json','CFGI_CUMULATIVE_BILLING.json']
           for name in sorted(set(req)):
               p=root/name; assert p.exists() and p.is_file() and not p.is_symlink() and p.stat().st_size>0,name
           assert not (root/'alt_hourly_panel.csv.gz').exists()
@@ -79,26 +79,30 @@ jobs:
           assert pointer['files'] and pointer['files'][0]['name']=='alt_hourly_panel.csv.gz'
           assert pointer['files'][0]['sha256']
           b=json.loads((root/'CFGI_BILLING.json').read_text())
+          cb=json.loads((root/'CFGI_CUMULATIVE_BILLING.json').read_text())
           assert b['status']=='PASS'
-          assert b['expected_worst_case_credits'] <= g['expected_credit_hard_cap']
-          actual=b.get('actual_credits_used_from_headers')
-          if actual is not None: assert actual <= g['expected_credit_hard_cap'] + 1
-          assert b.get('final_credits_remaining') is not None
-          assert b['final_credits_remaining'] >= g['minimum_credits_reserve']
+          assert cb['status']=='PASS'
+          assert cb['cumulative_actual_credits_used'] <= g['expected_credit_hard_cap']
+          assert cb['final_credits_remaining'] >= g['minimum_credits_reserve']
           assert b.get('input_fingerprint_sha256')
           fc=json.loads((root/'CFGI_FIELD_COVERAGE.json').read_text())
           assert fc['exact_relative_hour_semantics'] is True
           assert fc['diagnostics']['no_silent_fallback'] is True
-          with gzip.open(root/'CFGI_EVENT_PATHS.jsonl.gz','rt',encoding='utf-8') as fh: first=json.loads(next(fh))
-          for key in ['event_id','relative_hour','expected_timestamp_utc','observed_exact_hour','fields']: assert key in first,key
+          with gzip.open(root/'CFGI_EVENT_PATHS.jsonl.gz','rt',encoding='utf-8') as fh:
+              rows=[json.loads(x) for x in fh if x.strip()]
           m=json.loads((root/'RESEARCH_READINESS_MANIFEST.json').read_text())
+          assert m['contract']=='RESEARCH_READINESS_MANIFEST_v2'
           assert m['readiness_verdict']=='PASS',m.get('blockers')
           assert not m.get('blockers')
+          assert m['cfgi']['scaffold_symbol_hours']==m['cfgi']['expected_symbol_hours']==len(rows)
+          missing=[x for x in rows if not x['observed_exact_hour']]
+          assert m['cfgi']['missing_exact_symbol_hours']==len(missing)
+          assert m['cfgi']['missingness_policy']=='EXPLICIT_MISSING_NOT_FILLED_NOT_INTERPOLATED_NOT_A_GLOBAL_BLOCKER'
           assert m['automatic_promotion'] is False
           assert m['historical_findings_max_classification']=='FORWARD_TEST'
           assert a['research_only'] is True and a['portfolio_execution'] is False
           assert a['canonical_market_state'] is False and a['automatic_rule_changes'] is False
-          print('CFGI_STORAGE_SAFE_PUBLISH_REVALIDATION_PASS',actual,b['final_credits_remaining'],pointer['source_run_id'])
+          print('CFGI_STORAGE_SAFE_PUBLISH_V2_PASS',len(rows),len(missing),cb['cumulative_actual_credits_used'],cb['final_credits_remaining'],pointer['source_run_id'])
           PY
 
       - name: Commit CFGI research metadata under shared writer lock

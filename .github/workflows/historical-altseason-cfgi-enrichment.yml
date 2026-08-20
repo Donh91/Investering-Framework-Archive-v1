@@ -35,10 +35,12 @@ jobs:
           set -euo pipefail
           root=06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts
           reservation=00_ARCHIVE_CONTROL/research_runtime/HISTORICAL_ALTSEASON_CFGI_PAID_RESERVATION.json
+          ledger=00_ARCHIVE_CONTROL/research_runtime/HISTORICAL_ALTSEASON_CFGI_PAID_ATTEMPT_LEDGER.json
           for f in FREE_BULK_ARTIFACT_POINTER.json EPISODE_CATALOG.json FREE_SOURCE_AUDIT.json TIME_INTEGRITY_AUDIT.json FREE_EVENT_PATHS.jsonl.gz FREE_EVENT_PATHS_COVERAGE.json; do
             test -s "$root/$f"
           done
           test -s "$reservation"
+          test -s "$ledger"
           test ! -e "$root/alt_hourly_panel.csv.gz"
           test -n "$DISPATCH_FINGERPRINT"
           python scripts/historical_lab/cfgi_idempotency_guard.py --mode check > /tmp/cfgi_reservation_guard.json
@@ -52,12 +54,16 @@ jobs:
           pc=json.loads((root/'FREE_EVENT_PATHS_COVERAGE.json').read_text())
           pointer=json.loads((root/'FREE_BULK_ARTIFACT_POINTER.json').read_text())
           reservation=json.loads(Path('00_ARCHIVE_CONTROL/research_runtime/HISTORICAL_ALTSEASON_CFGI_PAID_RESERVATION.json').read_text())
+          ledger=json.loads(Path('00_ARCHIVE_CONTROL/research_runtime/HISTORICAL_ALTSEASON_CFGI_PAID_ATTEMPT_LEDGER.json').read_text())
           guard=json.loads(Path('/tmp/cfgi_reservation_guard.json').read_text())
           dispatched=os.environ['DISPATCH_FINGERPRINT']
           assert reservation['contract']=='HISTORICAL_ALTSEASON_CFGI_PAID_RESERVATION_v1'
           assert reservation['semantics']=='ONE_DETERMINISTIC_RESERVATION_PER_PAID_INPUT_FINGERPRINT'
-          assert reservation['input_fingerprint_sha256']==guard['input_fingerprint_sha256']
-          assert dispatched==reservation['input_fingerprint_sha256']==guard['input_fingerprint_sha256']
+          assert dispatched==reservation['input_fingerprint_sha256']==guard['input_fingerprint_sha256']==ledger['input_fingerprint_sha256']
+          assert ledger['contract']=='HISTORICAL_ALTSEASON_CFGI_PAID_ATTEMPT_LEDGER_v1'
+          assert ledger['automatic_retry_after_failure'] is False
+          assert ledger['owner_authorized_recovery_attempts']==1
+          assert sum(int(x.get('actual_credits_used_from_headers') or 0) for x in ledger['attempts'])==ledger['cumulative_actual_credits_used']==5259
           assert reservation['authority']['research_only'] is True
           assert reservation['authority']['portfolio_execution'] is False
           assert reservation['authority']['automatic_promotion'] is False
@@ -65,12 +71,9 @@ jobs:
           assert pointer['contract']=='HISTORICAL_ALTSEASON_FREE_BULK_POINTER_v1'
           assert pointer['storage_class']=='GITHUB_ACTIONS_ARTIFACT_BULK_NOT_GIT'
           assert pointer['required_for_cowork_bundle'] is True
-          assert ti['status']=='PASS'
-          assert ti['strict_timestamp_lags'] is True
-          assert ti['cross_window_lags_forbidden'] is True
+          assert ti['status']=='PASS' and ti['strict_timestamp_lags'] is True and ti['cross_window_lags_forbidden'] is True
           assert ti['row_offsets_treated_as_hours'] is False
-          assert src['authority']['research_only'] is True
-          assert src['authority']['portfolio_execution'] is False
+          assert src['authority']['research_only'] is True and src['authority']['portfolio_execution'] is False
           transport=src.get('historical_transport_policy') or {}
           assert transport.get('contract')=='BINANCE_VISION_ARCHIVE_FIRST_TRANSPORT_v1'
           assert transport.get('archive_first') is True
@@ -79,15 +82,16 @@ jobs:
           assert transport.get('analysis_semantics_changed') is False
           assert pc['events']
           a=cfg['authority']
-          assert a['research_only'] is True
-          assert a['portfolio_execution'] is False
-          assert a['canonical_market_state'] is False
-          assert a['automatic_rule_changes'] is False
+          assert a['research_only'] is True and a['portfolio_execution'] is False
+          assert a['canonical_market_state'] is False and a['automatic_rule_changes'] is False
           assert a['promotion_requires_separate_review'] is True
-          print('FINAL_DISPATCH_BOUND_RESERVED_FREE_STAGE_READY_FOR_CFGI', dispatched, len(pc['events']))
+          print('FINAL_DISPATCH_BOUND_RESERVED_FREE_STAGE_READY_FOR_CFGI',dispatched,len(pc['events']))
           PY
 
-      - name: Verify CFGI secret only after reservation binding passes
+      - name: Enforce cumulative recovery budget before secret access
+        run: python scripts/historical_lab/cfgi_recovery_budget_guard.py | tee /tmp/cfgi_recovery_budget_guard.json
+
+      - name: Verify CFGI secret only after reservation and cumulative budget gates pass
         env:
           CFGI_API_KEY: ${{ secrets.CFGI_API_KEY }}
         run: test -n "$CFGI_API_KEY"
@@ -106,6 +110,7 @@ jobs:
           echo "CFGI_SKIP_PAID=$skip_paid"
 
       - name: Target CFGI only after objective episode selection and reservation
+        id: paid
         if: steps.idempotency.outputs.skip_paid != 'true'
         env:
           CFGI_API_KEY: ${{ secrets.CFGI_API_KEY }}
@@ -117,7 +122,8 @@ jobs:
         if: steps.idempotency.outputs.skip_paid == 'true'
         run: echo 'CFGI_IDEMPOTENT_REUSE_PASS - no paid CFGI request executed'
 
-      - name: Materialize exact CFGI event paths and readiness contracts
+      - name: Materialize exact CFGI event paths with explicit missingness semantics
+        if: steps.paid.outcome == 'success' || steps.idempotency.outputs.skip_paid == 'true'
         run: |
           python - <<'PY'
           import json,subprocess
@@ -125,12 +131,53 @@ jobs:
           p=Path('06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/CFGI_BILLING.json')
           b=json.loads(p.read_text())
           if b.get('status')=='PASS':
-              subprocess.check_call(['python','scripts/historical_lab/cfgi_readiness_postprocess.py'])
+              subprocess.check_call(['python','scripts/historical_lab/cfgi_readiness_postprocess_v2.py'])
           else:
               print('CFGI_POSTPROCESS_SKIPPED',b.get('status'))
           PY
 
-      - name: Validate billing, exact paths, field coverage and governance
+      - name: Build cumulative billing receipt
+        if: steps.paid.outcome == 'success' || steps.idempotency.outputs.skip_paid == 'true'
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path('06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts')
+          ledger=json.loads(Path('00_ARCHIVE_CONTROL/research_runtime/HISTORICAL_ALTSEASON_CFGI_PAID_ATTEMPT_LEDGER.json').read_text())
+          billing=json.loads((root/'CFGI_BILLING.json').read_text())
+          prior=int(ledger['cumulative_actual_credits_used'])
+          current=int(billing.get('actual_credits_used_from_headers') or 0)
+          cumulative=prior+current
+          out={
+            'contract':'HISTORICAL_ALTSEASON_CFGI_CUMULATIVE_BILLING_v1',
+            'input_fingerprint_sha256':ledger['input_fingerprint_sha256'],
+            'prior_actual_credits_used':prior,
+            'current_actual_credits_used':current,
+            'cumulative_actual_credits_used':cumulative,
+            'hard_cap_credits':ledger['hard_cap_credits'],
+            'final_credits_remaining':billing.get('final_credits_remaining'),
+            'minimum_reserve_credits':ledger['minimum_reserve_credits'],
+            'prior_attempt_count':len(ledger['attempts']),
+            'current_run_id':'${{ github.run_id }}',
+            'status':'PASS' if cumulative<=ledger['hard_cap_credits'] and int(billing.get('final_credits_remaining') or -1)>=ledger['minimum_reserve_credits'] else 'FAIL',
+          }
+          assert out['status']=='PASS',out
+          (root/'CFGI_CUMULATIVE_BILLING.json').write_text(json.dumps(out,indent=2,sort_keys=True)+'\n')
+          print(json.dumps(out,sort_keys=True))
+          PY
+
+      - name: Upload paid CFGI diagnostics before final readiness assertion
+        if: steps.paid.outcome == 'success' || steps.idempotency.outputs.skip_paid == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: historical-altseason-cfgi-paid-diagnostics-${{ github.run_id }}
+          path: 06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/
+          if-no-files-found: error
+          retention-days: 30
+          compression-level: 6
+
+      - name: Validate billing, path scaffold, explicit missingness and governance
+        if: steps.paid.outcome == 'success' || steps.idempotency.outputs.skip_paid == 'true'
         run: |
           python - <<'PY'
           import gzip,json
@@ -139,34 +186,37 @@ jobs:
           cfg=json.loads(Path('06_RESEARCH_LAB/historical_altseason_pullback_v1/config.json').read_text())
           g=cfg['cfgi']; a=cfg['authority']
           b=json.loads((root/'CFGI_BILLING.json').read_text())
+          cb=json.loads((root/'CFGI_CUMULATIVE_BILLING.json').read_text())
           assert b['expected_worst_case_credits'] <= g['expected_credit_hard_cap']
-          actual=b.get('actual_credits_used_from_headers')
-          if actual is not None: assert actual <= g['expected_credit_hard_cap'] + 1
-          if b['status']=='PASS':
-              remaining=b.get('final_credits_remaining')
-              assert remaining is not None and remaining >= g['minimum_credits_reserve']
-              assert b.get('input_fingerprint_sha256')
-          assert a['research_only'] is True and a['portfolio_execution'] is False
+          assert cb['status']=='PASS' and cb['cumulative_actual_credits_used']<=g['expected_credit_hard_cap']
+          assert cb['final_credits_remaining']>=g['minimum_credits_reserve']
+          assert b['status']=='PASS' and b.get('input_fingerprint_sha256')
+          for name in ['CFGI_COVERAGE.json','cfgi_targeted.jsonl.gz','CFGI_EVENT_SIGNATURES.json','CFGI_FIELD_COVERAGE.json','CFGI_EVENT_PATHS.jsonl.gz','RESEARCH_READINESS_MANIFEST.json']:
+              p=root/name; assert p.exists() and p.stat().st_size>0,name
+          fc=json.loads((root/'CFGI_FIELD_COVERAGE.json').read_text())
+          assert fc['exact_relative_hour_semantics'] is True
+          assert fc['diagnostics']['no_silent_fallback'] is True
+          with gzip.open(root/'CFGI_EVENT_PATHS.jsonl.gz','rt',encoding='utf-8') as fh:
+              rows=[json.loads(x) for x in fh if x.strip()]
+          expected=fc['expected_symbol_hours']
+          assert len(rows)==expected
+          assert all(set(['event_id','relative_hour','expected_timestamp_utc','observed_exact_hour','fields']).issubset(r) for r in rows)
+          missing=[r for r in rows if not r['observed_exact_hour']]
+          assert all(r['observed_timestamp_utc'] is None for r in missing)
+          m=json.loads((root/'RESEARCH_READINESS_MANIFEST.json').read_text())
+          assert m['contract']=='RESEARCH_READINESS_MANIFEST_v2'
+          assert m['readiness_verdict']=='PASS',m['blockers']
+          assert m['cfgi']['scaffold_symbol_hours']==m['cfgi']['expected_symbol_hours']==len(rows)
+          assert m['cfgi']['missing_exact_symbol_hours']==len(missing)
+          assert m['cfgi']['missingness_policy']=='EXPLICIT_MISSING_NOT_FILLED_NOT_INTERPOLATED_NOT_A_GLOBAL_BLOCKER'
+          assert m['authority']['research_only'] is True and m['authority']['portfolio_execution'] is False
+          assert m['automatic_promotion'] is False and m['historical_findings_max_classification']=='FORWARD_TEST'
           assert a['canonical_market_state'] is False and a['automatic_rule_changes'] is False
-          assert a['promotion_requires_separate_review'] is True
-          assert (root/'CFGI_COVERAGE.json').exists()
-          if b['status']=='PASS':
-              for name in ['cfgi_targeted.jsonl.gz','CFGI_EVENT_SIGNATURES.json','CFGI_FIELD_COVERAGE.json','CFGI_EVENT_PATHS.jsonl.gz','RESEARCH_READINESS_MANIFEST.json']:
-                  p=root/name; assert p.exists() and p.stat().st_size>0,name
-              fc=json.loads((root/'CFGI_FIELD_COVERAGE.json').read_text())
-              assert fc['exact_relative_hour_semantics'] is True
-              assert fc['diagnostics']['no_silent_fallback'] is True
-              with gzip.open(root/'CFGI_EVENT_PATHS.jsonl.gz','rt',encoding='utf-8') as fh: first=json.loads(next(fh))
-              for k in ['event_id','relative_hour','expected_timestamp_utc','observed_exact_hour','fields']: assert k in first,k
-              m=json.loads((root/'RESEARCH_READINESS_MANIFEST.json').read_text())
-              assert m['readiness_verdict']=='PASS',m['blockers']
-              assert m['authority']['research_only'] is True and m['authority']['portfolio_execution'] is False
-              assert m['automatic_promotion'] is False
-              assert m['historical_findings_max_classification']=='FORWARD_TEST'
-          print('CFGI_RESEARCH_READINESS_VALIDATION_PASS',b['status'],actual,b.get('final_credits_remaining'))
+          print('CFGI_RESEARCH_READINESS_V2_PASS',len(rows),len(missing),cb['cumulative_actual_credits_used'],cb['final_credits_remaining'])
           PY
 
       - name: Upload validated CFGI research stage
+        if: steps.paid.outcome == 'success' || steps.idempotency.outputs.skip_paid == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: historical-altseason-cfgi-stage
