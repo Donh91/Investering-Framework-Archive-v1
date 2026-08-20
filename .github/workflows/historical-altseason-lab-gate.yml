@@ -1,0 +1,54 @@
+name: Historical Altseason Lab Gate
+
+on:
+  pull_request:
+    paths:
+      - '06_RESEARCH_LAB/historical_altseason_pullback_v1/**'
+      - 'scripts/historical_lab/**'
+      - '.github/workflows/historical-altseason-*.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  gate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compile research scripts
+        run: |
+          python -m py_compile scripts/historical_lab/free_altseason_bootstrap.py
+          python -m py_compile scripts/historical_lab/cfgi_targeted_backfill.py
+      - name: Validate scientific and budget contracts
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('06_RESEARCH_LAB/historical_altseason_pullback_v1/config.json')
+          c=json.loads(p.read_text())
+          a=c['authority']; g=c['cfgi']
+          assert a['research_only'] is True
+          assert a['portfolio_execution'] is False
+          assert a['canonical_market_state'] is False
+          assert a['automatic_rule_changes'] is False
+          assert a['promotion_requires_separate_review'] is True
+          assert g['expected_credit_hard_cap'] <= 25000
+          assert g['minimum_credits_reserve'] >= 50000
+          assert g['static'] is True
+          assert g['timeframe'] == '1h'
+          required={'score','price','volatility','volume','impulse','technical','social','dominance','trends','whales','orders'}
+          assert set(g['fields']) == required
+          assert len(g['symbols']) == 3 and set(g['symbols']) == {'MARKET','BTC','ETH'}
+          assert c['hypothetical_trim_fraction'] == 0.10
+          assert c['roundtrip_friction_pct_on_traded_slice'] > 0
+          print('HISTORICAL_ALTSEASON_LAB_GATE_PASS')
+          PY
+      - name: Ensure paid CFGI cannot run in PR gate
+        run: |
+          test -z "${CFGI_API_KEY:-}"
+          echo "NETWORK_PAID_STAGE_NOT_EXECUTED_IN_PR_GATE"
