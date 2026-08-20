@@ -1,0 +1,49 @@
+name: Intraday Execution Gate
+
+on:
+  pull_request:
+    paths:
+      - '04_MARKET_LEARNING/intraday_execution/**'
+      - 'scripts/intraday_execution/**'
+      - '.github/workflows/intraday-execution-research.yml'
+      - '.github/workflows/intraday-execution-gate.yml'
+      - '06_RESEARCH_LAB/historical_altseason_pullback_v1/INTRADAY_EXECUTION_COWORK_ADDENDUM.md'
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compile engine
+        run: python -m py_compile scripts/intraday_execution/intraday_execution_research.py
+      - name: Validate research-only contracts
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          cfg=json.loads(Path('04_MARKET_LEARNING/intraday_execution/config.json').read_text())
+          assert cfg['contract']=='INTRADAY_EXECUTION_RESEARCH_CONFIG_v1'
+          a=cfg['authority']
+          assert a == {
+              'research_only': True,
+              'portfolio_execution': False,
+              'canonical_market_state': False,
+              'automatic_rule_changes': False,
+              'promotion_requires_separate_review': True,
+              'historical_findings_max_classification': 'FORWARD_TEST',
+          }
+          text=Path('04_MARKET_LEARNING/intraday_execution/README.md').read_text()
+          assert 'research_only: true' in text
+          assert 'portfolio_execution: false' in text
+          addendum=Path('06_RESEARCH_LAB/historical_altseason_pullback_v1/INTRADAY_EXECUTION_COWORK_ADDENDUM.md').read_text()
+          for token in ['HOLD','false-trim','FORWARD_TEST','Top100']:
+              assert token in addendum, token
+          print('INTRADAY_EXECUTION_GATE_PASS')
+          PY
