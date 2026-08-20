@@ -6,6 +6,12 @@ on:
       - '06_RESEARCH_LAB/historical_altseason_pullback_v1/**'
       - 'scripts/historical_lab/**'
       - '.github/workflows/historical-altseason-*.yml'
+  push:
+    branches: [main]
+    paths:
+      - '06_RESEARCH_LAB/historical_altseason_pullback_v1/**'
+      - 'scripts/historical_lab/**'
+      - '.github/workflows/historical-altseason-*.yml'
   workflow_dispatch:
 
 permissions:
@@ -48,7 +54,7 @@ jobs:
           assert c['roundtrip_friction_pct_on_traded_slice'] > 0
           print('HISTORICAL_ALTSEASON_LAB_GATE_PASS')
           PY
-      - name: Ensure paid CFGI cannot run in PR gate
+      - name: Ensure paid CFGI cannot run in gate
         run: |
           test -z "${CFGI_API_KEY:-}"
-          echo "NETWORK_PAID_STAGE_NOT_EXECUTED_IN_PR_GATE"
+          echo "NETWORK_PAID_STAGE_NOT_EXECUTED_IN_GATE"
