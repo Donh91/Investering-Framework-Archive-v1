@@ -1,0 +1,71 @@
+name: Historical Altseason Free Bootstrap
+
+on:
+  workflow_run:
+    workflows: ['Historical Altseason Lab Gate']
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: framework-main-writer
+  cancel-in-progress: false
+
+jobs:
+  bootstrap:
+    if: >-
+      ${{ github.event_name == 'workflow_dispatch' ||
+          (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main') }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Build free historical dataset and outcome catalogue
+        run: |
+          python scripts/historical_lab/free_altseason_bootstrap.py
+      - name: Validate artifacts and research-only authority
+        run: |
+          python - <<'PY'
+          import gzip,json
+          from pathlib import Path
+          root=Path('06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts')
+          req=['FREE_SOURCE_AUDIT.json','hourly_features.csv.gz','EPISODE_CATALOG.json','EPISODE_FEATURE_MATRIX.jsonl.gz','BACKTEST_SUMMARY.json']
+          for x in req:
+            p=root/x; assert p.exists() and p.stat().st_size>0, x
+          a=json.loads((root/'FREE_SOURCE_AUDIT.json').read_text())
+          c=json.loads((root/'EPISODE_CATALOG.json').read_text())
+          s=json.loads((root/'BACKTEST_SUMMARY.json').read_text())
+          assert a['authority']['research_only'] is True
+          assert a['authority']['portfolio_execution'] is False
+          assert c['authority']['automatic_rule_changes'] is False
+          assert s['free_hourly_feature_rows'] > 1000
+          assert s['episode_count'] > 0
+          with gzip.open(root/'hourly_features.csv.gz','rt') as fh:
+            assert len(fh.readline()) > 20
+          print('FREE_BOOTSTRAP_VALIDATION_PASS', s['free_hourly_feature_rows'], s['episode_count'])
+          PY
+      - name: Commit immutable research artifacts safely
+        run: |
+          git config user.name framework-research-bot
+          git config user.email framework-research-bot@users.noreply.github.com
+          git add 06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/
+          if git diff --cached --quiet; then
+            echo 'No artifact changes'
+            exit 0
+          fi
+          git commit -m "research: historical altseason free bootstrap ${GITHUB_RUN_ID}"
+          git fetch origin main
+          if ! git rebase origin/main; then
+            git rebase --abort || true
+            exit 1
+          fi
+          git merge-base --is-ancestor origin/main HEAD
+          git push origin HEAD:main
