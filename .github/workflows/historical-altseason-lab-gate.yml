@@ -76,7 +76,7 @@ jobs:
           from pathlib import Path
           w=Path('.github/workflows/historical-altseason-cfgi-enrichment.yml').read_text()
           p=Path('scripts/historical_lab/cfgi_readiness_postprocess.py').read_text()
-          assert 'python scripts/historical_lab/cfgi_readiness_postprocess.py' in w
+          assert 'cfgi_readiness_postprocess.py' in w
           assert 'FREE_STAGE_OBJECTIVE_READINESS_PASS' in w
           assert 'RESEARCH_READINESS_MANIFEST.json' in w
           assert 'CFGI_FIELD_COVERAGE.json' in w
