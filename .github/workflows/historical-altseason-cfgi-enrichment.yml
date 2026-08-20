@@ -28,50 +28,133 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Verify free bootstrap and CFGI secret
+
+      - name: Verify free stage, authority and CFGI secret before paid calls
         env:
           CFGI_API_KEY: ${{ secrets.CFGI_API_KEY }}
         run: |
-          test -f 06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/EPISODE_CATALOG.json
+          set -euo pipefail
+          root=06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts
+          for f in \
+            EPISODE_CATALOG.json \
+            FREE_SOURCE_AUDIT.json \
+            TIME_INTEGRITY_AUDIT.json \
+            FREE_EVENT_PATHS.jsonl.gz \
+            FREE_EVENT_PATHS_COVERAGE.json; do
+            test -s "$root/$f"
+          done
           test -n "$CFGI_API_KEY"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path('06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts')
+          cfg=json.loads(Path('06_RESEARCH_LAB/historical_altseason_pullback_v1/config.json').read_text())
+          ti=json.loads((root/'TIME_INTEGRITY_AUDIT.json').read_text())
+          src=json.loads((root/'FREE_SOURCE_AUDIT.json').read_text())
+          pc=json.loads((root/'FREE_EVENT_PATHS_COVERAGE.json').read_text())
+          assert ti['status']=='PASS'
+          assert ti['strict_timestamp_lags'] is True
+          assert ti['cross_window_lags_forbidden'] is True
+          assert ti['row_offsets_treated_as_hours'] is False
+          assert src['authority']['research_only'] is True
+          assert src['authority']['portfolio_execution'] is False
+          assert pc['events']
+          a=cfg['authority']
+          assert a['research_only'] is True
+          assert a['portfolio_execution'] is False
+          assert a['canonical_market_state'] is False
+          assert a['automatic_rule_changes'] is False
+          assert a['promotion_requires_separate_review'] is True
+          print('FREE_STAGE_OBJECTIVE_READINESS_PASS', len(pc['events']))
+          PY
+
       - name: Target CFGI only after objective episode selection
         env:
           CFGI_API_KEY: ${{ secrets.CFGI_API_KEY }}
         run: |
           python scripts/historical_lab/cfgi_targeted_backfill.py
-      - name: Validate actual billing and governance
+
+      - name: Materialize exact CFGI event paths and readiness contracts
         run: |
           python - <<'PY'
-          import json
+          import json, subprocess
+          from pathlib import Path
+          p=Path('06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/CFGI_BILLING.json')
+          b=json.loads(p.read_text())
+          if b.get('status') == 'PASS':
+              subprocess.check_call(['python','scripts/historical_lab/cfgi_readiness_postprocess.py'])
+          else:
+              print('CFGI_POSTPROCESS_SKIPPED', b.get('status'))
+          PY
+
+      - name: Validate billing, exact paths, field coverage and governance
+        run: |
+          python - <<'PY'
+          import gzip, json
           from pathlib import Path
           root=Path('06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts')
+          cfg=json.loads(Path('06_RESEARCH_LAB/historical_altseason_pullback_v1/config.json').read_text())
+          g=cfg['cfgi']; a=cfg['authority']
           b=json.loads((root/'CFGI_BILLING.json').read_text())
-          c=json.loads(Path('06_RESEARCH_LAB/historical_altseason_pullback_v1/config.json').read_text())
-          g=c['cfgi']
+
           assert b['expected_worst_case_credits'] <= g['expected_credit_hard_cap']
           actual=b.get('actual_credits_used_from_headers')
           if actual is not None:
-            assert actual <= g['expected_credit_hard_cap'] + 1
-          remaining=b.get('final_credits_remaining')
-          if remaining is not None:
-            assert remaining >= g['minimum_credits_reserve']
-          assert c['authority']['research_only'] is True
-          assert c['authority']['portfolio_execution'] is False
-          assert c['authority']['automatic_rule_changes'] is False
-          assert (root/'CFGI_COVERAGE.json').exists()
+              assert actual <= g['expected_credit_hard_cap'] + 1
           if b['status']=='PASS':
-            assert (root/'cfgi_targeted.jsonl.gz').exists()
-            assert (root/'CFGI_EVENT_SIGNATURES.json').exists()
-          print('CFGI_TARGETED_ENRICHMENT_VALIDATION_PASS', b['status'], actual, remaining)
+              remaining=b.get('final_credits_remaining')
+              assert remaining is not None
+              assert remaining >= g['minimum_credits_reserve']
+
+          assert a['research_only'] is True
+          assert a['portfolio_execution'] is False
+          assert a['canonical_market_state'] is False
+          assert a['automatic_rule_changes'] is False
+          assert a['promotion_requires_separate_review'] is True
+          assert (root/'CFGI_COVERAGE.json').exists()
+
+          if b['status']=='PASS':
+              req=[
+                'cfgi_targeted.jsonl.gz','CFGI_EVENT_SIGNATURES.json','CFGI_FIELD_COVERAGE.json',
+                'CFGI_EVENT_PATHS.jsonl.gz','RESEARCH_READINESS_MANIFEST.json'
+              ]
+              for name in req:
+                  p=root/name
+                  assert p.exists() and p.stat().st_size>0, name
+
+              fc=json.loads((root/'CFGI_FIELD_COVERAGE.json').read_text())
+              assert fc['exact_relative_hour_semantics'] is True
+              assert fc['diagnostics']['no_silent_fallback'] is True
+              with gzip.open(root/'CFGI_EVENT_PATHS.jsonl.gz','rt',encoding='utf-8') as fh:
+                  first=json.loads(next(fh))
+              for k in ['event_id','relative_hour','expected_timestamp_utc','observed_exact_hour','fields']:
+                  assert k in first, k
+
+              m=json.loads((root/'RESEARCH_READINESS_MANIFEST.json').read_text())
+              assert m['readiness_verdict']=='PASS', m['blockers']
+              assert m['authority']['research_only'] is True
+              assert m['authority']['portfolio_execution'] is False
+              assert m['automatic_promotion'] is False
+              assert m['historical_findings_max_classification']=='FORWARD_TEST'
+
+          print('CFGI_RESEARCH_READINESS_VALIDATION_PASS', b['status'], actual, b.get('final_credits_remaining'))
           PY
-      - name: Commit CFGI research artifacts safely
+
+      - name: Commit research artifacts only
         run: |
+          set -euo pipefail
           git config user.name framework-research-bot
           git config user.email framework-research-bot@users.noreply.github.com
           git add 06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/
           if git diff --cached --quiet; then
             echo 'No CFGI artifact changes'
             exit 0
+          fi
+          bad="$(git diff --cached --name-only | grep -v '^06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/' || true)"
+          if [ -n "$bad" ]; then
+            echo "Unexpected staged paths:" >&2
+            echo "$bad" >&2
+            exit 1
           fi
           git commit -m "research: targeted CFGI altseason enrichment ${GITHUB_RUN_ID}"
           git fetch origin main
