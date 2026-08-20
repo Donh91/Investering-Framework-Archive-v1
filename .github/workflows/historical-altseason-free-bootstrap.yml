@@ -9,8 +9,14 @@ on:
 permissions:
   contents: write
 
+# IMPORTANT: this long historical data-build must not share the short-lived
+# framework-main-writer queue. GitHub concurrency keeps only one running and
+# one pending run per group, so unrelated scheduled writers can displace a
+# pending long research run. The workflow therefore gets an isolated group.
+# Safe publication is enforced at the final commit step via fetch/rebase/push
+# retries against current main, and only the research artifacts path is staged.
 concurrency:
-  group: framework-main-writer
+  group: historical-altseason-free-bootstrap
   cancel-in-progress: false
 
 jobs:
@@ -95,10 +101,22 @@ jobs:
             exit 1
           fi
           git commit -m "research: historical altseason free bootstrap ${GITHUB_RUN_ID}"
-          git fetch origin main
-          if ! git rebase origin/main; then
-            git rebase --abort || true
+
+          pushed=false
+          for attempt in 1 2 3 4 5; do
+            git rebase --abort 2>/dev/null || true
+            git fetch origin main
+            if git rebase origin/main && git push origin HEAD:main; then
+              pushed=true
+              break
+            fi
+            git rebase --abort 2>/dev/null || true
+            sleep $((attempt * 5))
+          done
+          if [ "$pushed" != true ]; then
+            echo 'Failed to publish validated research artifacts after bounded rebase/push retries' >&2
             exit 1
           fi
-          git merge-base --is-ancestor origin/main HEAD
-          git push origin HEAD:main
+          git fetch origin main
+          git merge-base --is-ancestor HEAD origin/main
+          echo 'HISTORICAL_FREE_BOOTSTRAP_REMOTE_READBACK_PASS'
