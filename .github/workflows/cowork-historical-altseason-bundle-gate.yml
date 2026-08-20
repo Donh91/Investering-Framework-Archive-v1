@@ -6,6 +6,9 @@ on:
       - 'scripts/cowork/build_historical_altseason_bundle.py'
       - 'scripts/cowork/build_historical_altseason_bundle_max_value.py'
       - '07_PROMPTS_AND_AGENTS/historical_altseason_pullback/**'
+      - '06_RESEARCH_LAB/historical_altseason_pullback_v1/config.json'
+      - '.github/workflows/historical-altseason-free-bootstrap.yml'
+      - '.github/workflows/historical-altseason-free-publish.yml'
       - '.github/workflows/cowork-historical-altseason-bundle.yml'
       - '.github/workflows/cowork-historical-altseason-bundle-gate.yml'
 
@@ -27,14 +30,18 @@ jobs:
           python -m py_compile scripts/cowork/build_historical_altseason_bundle.py
           python -m py_compile scripts/cowork/build_historical_altseason_bundle_max_value.py
 
-      - name: Validate max-value handoff contract statically
+      - name: Validate max-value and bulk-storage handoff contracts statically
         run: |
           python - <<'PY'
+          import json
           from pathlib import Path
           wrapper=Path('scripts/cowork/build_historical_altseason_bundle_max_value.py').read_text()
           workflow=Path('.github/workflows/cowork-historical-altseason-bundle.yml').read_text()
+          bootstrap=Path('.github/workflows/historical-altseason-free-bootstrap.yml').read_text()
+          publisher=Path('.github/workflows/historical-altseason-free-publish.yml').read_text()
           sidecar=Path('07_PROMPTS_AND_AGENTS/historical_altseason_pullback/COWORK_OPUS5_MAX_VALUE_SIDECARS.md').read_text()
           launch=Path('07_PROMPTS_AND_AGENTS/historical_altseason_pullback/COWORK_OPUS5_LAUNCH_INSTRUCTION.md').read_text()
+          cfg=json.loads(Path('06_RESEARCH_LAB/historical_altseason_pullback_v1/config.json').read_text())
           intraday=Path('04_MARKET_LEARNING/intraday_execution')
           intraday_scripts=Path('scripts/intraday_execution')
           assert intraday.exists() and any(p.is_file() for p in intraday.rglob('*'))
@@ -49,6 +56,14 @@ jobs:
           assert 'COWORK_MAX_VALUE_BUNDLE_VALIDATION_PASS' in workflow
           assert '04_MARKET_LEARNING/intraday_execution' in workflow
           assert 'scripts/intraday_execution' in workflow
+          for token in ['FREE_BULK_ARTIFACT_POINTER.json','gh run download','COWORK_FREE_BULK_RESTORE_PASS','alt_hourly_panel.csv.gz']:
+              assert token in workflow, token
+          assert "retention-days: 30" in bootstrap
+          for token in ['HISTORICAL_ALTSEASON_FREE_BULK_POINTER_v1','GITHUB_ACTIONS_ARTIFACT_BULK_NOT_GIT','FREE_STAGE_RUN_ID','rm \"$root/alt_hourly_panel.csv.gz\"']:
+              assert token in publisher, token
+          required=cfg['readiness']['free_stage_required_artifacts']
+          assert 'FREE_BULK_ARTIFACT_POINTER.json' in required
+          assert 'alt_hourly_panel.csv.gz' not in required
           # Max-value extension must retain the base builder's fail-closed readiness contract.
           base=Path('scripts/cowork/build_historical_altseason_bundle.py').read_text()
           for token in ['RESEARCH_READINESS_MANIFEST.json','CFGI_BILLING.json','readiness_verdict','FORWARD_TEST','minimum_credits_reserve','expected_credit_hard_cap']:
