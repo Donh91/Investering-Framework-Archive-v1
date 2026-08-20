@@ -1,0 +1,60 @@
+name: Entry Signal Ledger
+
+on:
+  schedule:
+    - cron: '37 * * * *'
+      timezone: 'Europe/Copenhagen'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: framework-main-writer
+  cancel-in-progress: false
+
+jobs:
+  ledger:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run entry signal ledger
+        run: python scripts/entry_signal/entry_signal_ledger.py
+      - name: Validate latest contract
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('04_MARKET_LEARNING/entry_signals/LATEST.json')
+          d=json.loads(p.read_text())
+          assert d['contract']=='ENTRY_SIGNAL_LATEST_v1'
+          assert d['state'] in {'WAIT','GRADUATED_ALTCOIN_TOPUP_ACTIVE'}
+          assert d['market_snapshot']['ethbtc'] > 0
+          assert 0 <= d['market_snapshot']['top100_advance_ratio'] <= 1
+          print(d['data_ping_bridge']['display_line'])
+          PY
+      - name: Commit ledger state, transitions and matured outcomes
+        shell: bash
+        run: |
+          git config user.name 'framework-data-bot'
+          git config user.email 'framework-data-bot@users.noreply.github.com'
+          git add 04_MARKET_LEARNING/entry_signals
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "learning: entry signal ledger ${GITHUB_RUN_ID}"
+          pushed=false
+          for attempt in 1 2 3; do
+            git rebase --abort 2>/dev/null || true
+            if git pull --rebase origin main && git push origin HEAD:main; then pushed=true; break; fi
+            sleep $((attempt * 5))
+          done
+          [ "$pushed" = true ]
+          git fetch origin main
+          git merge-base --is-ancestor HEAD origin/main

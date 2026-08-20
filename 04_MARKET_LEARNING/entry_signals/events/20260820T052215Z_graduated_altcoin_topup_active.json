@@ -1,0 +1,39 @@
+{
+  "contract": "ENTRY_SIGNAL_EVENT_v1",
+  "event_id": "20260820T052215Z_graduated_altcoin_topup_active",
+  "event_type": "ACTIVATION",
+  "event_time_utc": "2026-08-20T05:22:15Z",
+  "state": "GRADUATED_ALTCOIN_TOPUP_ACTIVE",
+  "previous_state": "WAIT",
+  "execution_temperature": "HOT",
+  "criteria": {
+    "ethbtc_above_registered_0_0300": true,
+    "top100_proxy_breadth_ge_50pct": true,
+    "eth_outperforms_btc_24h": true
+  },
+  "market_snapshot": {
+    "captured_at_utc": "2026-08-20T05:22:15Z",
+    "btc_usdt": 69432.0,
+    "eth_usdt": 2248.64,
+    "ethbtc": 0.03241,
+    "top100_advance_ratio": 0.76,
+    "top100_advancer_pct": 76,
+    "btc_return_24h_pct": 7.911182628006828,
+    "eth_return_24h_pct": 17.63722833163113,
+    "equal_weight_mean_return_24h_pct": 4.967,
+    "median_return_24h_pct": 5.0,
+    "breadth_membership_hash": "008677c71fc71d34ace079822801b8a57c1836e7f3a2fcc423a6b779e80aeaa8",
+    "constituents": {}
+  },
+  "provenance": {
+    "basis": "FIRST_ACCEPTED_DATA_PING_ON_WHICH_MAIN_THREAD_EXPLICITLY_MARKED_FIRST_GRADUATED_TOPUP_WINDOW_ACTIVE",
+    "packet_snapshot_utc": "2026-08-20T05:22:15Z",
+    "human_chat_timestamp_exact": "NOT_AVAILABLE_NOT_FABRICATED",
+    "retrospective_data_selection": false
+  },
+  "authority": {
+    "canonical_market_state": false,
+    "portfolio_execution": false,
+    "retrospective_rule_change": false
+  }
+}
