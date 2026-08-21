@@ -1,0 +1,109 @@
+name: Cowork Historical Altseason Bundle Receipt
+
+on:
+  workflow_run:
+    workflows: ['Cowork Historical Altseason Research Bundle']
+    types: [completed]
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: framework-main-writer
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 20
+      - name: Download and verify exact Cowork artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ github.event.workflow_run.id }}
+          WORKFLOW_HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/cowork-bundle
+          mkdir -p /tmp/cowork-bundle
+          gh run download "$RUN_ID" --repo "$GITHUB_REPOSITORY" --name historical-altseason-cowork-research-input --dir /tmp/cowork-bundle
+          test -s /tmp/cowork-bundle/HISTORICAL_ALTSEASON_COWORK_INPUT_BUNDLE.zip
+          test -s /tmp/cowork-bundle/COWORK_INPUT_MANIFEST.json
+          test -s /tmp/cowork-bundle/COWORK_INPUT_BUNDLE_SHA256.txt
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$RUN_ID/artifacts?per_page=100" > /tmp/artifacts.json
+          python - <<'PY'
+          import hashlib,json,os,zipfile
+          from pathlib import Path
+          root=Path('/tmp/cowork-bundle')
+          run_id=int(os.environ['RUN_ID'])
+          manifest=json.loads((root/'COWORK_INPUT_MANIFEST.json').read_text())
+          assert manifest['contract']=='COWORK_GITHUB_NATIVE_HANDOFF_MANIFEST_v3_1_PROVIDER_BOUNDED'
+          assert manifest['readiness_verdict']=='PASS'
+          assert manifest['mandatory_provider_limitation']=='MARKET_CFGI_HISTORICAL_NOT_TESTABLE_PROVIDER_UNAVAILABLE'
+          assert manifest['cfgi_observed_symbols']==['BTC','ETH'] and manifest['cfgi_provider_unavailable_symbols']==['MARKET']
+          zip_path=root/'HISTORICAL_ALTSEASON_COWORK_INPUT_BUNDLE.zip'
+          expected=(root/'COWORK_INPUT_BUNDLE_SHA256.txt').read_text().split()[0]
+          actual=hashlib.sha256(zip_path.read_bytes()).hexdigest()
+          assert actual==expected
+          with zipfile.ZipFile(zip_path) as zf:
+              assert zf.testzip() is None
+              names=set(zf.namelist())
+              assert 'COWORK_RESEARCH_HANDOFF/COWORK_HANDOFF_MANIFEST.json' in names
+              assert 'COWORK_RESEARCH_HANDOFF/07_PROMPTS_AND_AGENTS/historical_altseason_pullback/COWORK_CFGI_PROVIDER_LIMITATION.md' in names
+              assert 'COWORK_RESEARCH_HANDOFF/00_ARCHIVE_CONTROL/research_runtime/CFGI_MARKET_PROVIDER_TERMINAL_RECEIPT.json' in names
+          artifacts=json.load(open('/tmp/artifacts.json'))['artifacts']
+          matches=[a for a in artifacts if a['name']=='historical-altseason-cowork-research-input' and not a.get('expired')]
+          assert len(matches)==1,matches
+          a=matches[0]
+          receipt={
+            'contract':'COWORK_HISTORICAL_ALTSEASON_BUNDLE_RECEIPT_v1',
+            'workflow_run_id':run_id,
+            'workflow_run_url':f'https://github.com/{os.environ["GITHUB_REPOSITORY"]}/actions/runs/{run_id}',
+            'workflow_head_sha':os.environ['WORKFLOW_HEAD_SHA'],
+            'artifact_id':a['id'],
+            'artifact_name':a['name'],
+            'artifact_size_in_bytes':a['size_in_bytes'],
+            'artifact_expired':a.get('expired',False),
+            'inner_bundle_filename':zip_path.name,
+            'inner_bundle_sha256':actual,
+            'inner_bundle_zip_test':'PASS',
+            'handoff_contract':manifest['contract'],
+            'readiness_contract':manifest['readiness_contract'],
+            'readiness_verdict':manifest['readiness_verdict'],
+            'market_historical_availability':'NOT_TESTABLE_PROVIDER_UNAVAILABLE',
+            'automatic_promotion':False,
+            'historical_findings_max_classification':'FORWARD_TEST',
+          }
+          out=Path('00_ARCHIVE_CONTROL/research_runtime/COWORK_HISTORICAL_ALTSEASON_BUNDLE_RECEIPT.json')
+          out.write_text(json.dumps(receipt,indent=2,sort_keys=True)+'\n')
+          print('COWORK_BUNDLE_RECEIPT_VERIFIED',run_id,a['id'],actual)
+          PY
+      - name: Publish durable Cowork bundle receipt
+        run: |
+          set -euo pipefail
+          path=00_ARCHIVE_CONTROL/research_runtime/COWORK_HISTORICAL_ALTSEASON_BUNDLE_RECEIPT.json
+          test -s "$path"
+          git config user.name framework-research-bot
+          git config user.email framework-research-bot@users.noreply.github.com
+          git add "$path"
+          if git diff --cached --quiet; then echo 'Cowork receipt already current'; exit 0; fi
+          git commit -m "research: bind Cowork handoff ${{ github.event.workflow_run.id }}"
+          pushed=false
+          for attempt in 1 2 3 4 5; do
+            git rebase --abort 2>/dev/null || true
+            git fetch origin main
+            if git rebase origin/main && git push origin HEAD:main; then pushed=true; break; fi
+            git rebase --abort 2>/dev/null || true
+            sleep $((attempt * 5))
+          done
+          [ "$pushed" = true ]
+          git fetch origin main
+          git merge-base --is-ancestor HEAD origin/main
+          git diff --cached --quiet
+          echo 'COWORK_HISTORICAL_ALTSEASON_BUNDLE_RECEIPT_PUBLISHED'
