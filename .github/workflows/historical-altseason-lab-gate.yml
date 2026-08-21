@@ -81,7 +81,7 @@ jobs:
           assert 'cfgi_readiness_postprocess_v3.py' in paid and 'Upload paid diagnostics before final assertion' in paid and 'RESEARCH_READINESS_MANIFEST_v3' in paid and 'CFGI_ASOF_1H_NO_LOOKAHEAD_v1' in paid
           assert 'LAST_KNOWN_WITHIN_DECLARED_1H_CADENCE_NO_LOOKAHEAD' in v3 and 'bisect_right' in v3 and 'lookahead_seconds' in v3 and 'CFGI_REQUIRED_SYMBOL_ZERO_ASOF_COVERAGE' in v3 and 'no_interpolation' in v3 and 'no_forward_fill_beyond_declared_1h_cadence' in v3
           assert 'group: framework-main-writer' in paid_pub and 'actions/download-artifact@v4' in paid_pub
-          assert "cron: '*/5 * * * *'" in launch and 'V3_MARKET_GAPFILL_RUN_ALREADY_EXISTS' in launch and 'allowed_symbols' in launch
+          assert "cron: '*/5 * * * *'" in launch and 'V3_MARKET_GAPFILL_RUN_BOUND' in launch and 'allowed_symbols' in launch
           for token in ['RESEARCH_READINESS_MANIFEST_v3_1_PROVIDER_BOUNDED','NOT_TESTABLE_PROVIDER_UNAVAILABLE','no_additional_paid_retry_authorized','CFGI_MARKET_GAPFILL_BILLING_v2_TERMINAL']:
               assert token in terminal,token
           assert 'permissions:\n  contents: read' in terminal_compute and 'actions/upload-artifact@v4' in terminal_compute and 'CFGI_TERMINAL_PROVIDER_BOUNDED_V3_1_PASS' in terminal_compute
