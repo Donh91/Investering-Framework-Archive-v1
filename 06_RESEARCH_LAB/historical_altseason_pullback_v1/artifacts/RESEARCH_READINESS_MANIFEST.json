@@ -3,7 +3,7 @@
     "BACKTEST_SUMMARY.json": {
       "bytes": 630,
       "exists": true,
-      "sha256": "5a57dd9bb35c73dd5e17df12e843e8a0abe7e7c02672d4a0b4681ba6d75bbea7"
+      "sha256": "4fe98a005837a1dc439ec2ce482b0aef036ef20c9ceaf99933b234d59723f9e0"
     },
     "CFGI_BILLING.json": {
       "bytes": 3479,
@@ -16,9 +16,9 @@
       "sha256": "4dc912386968de1f8c4cb55470008ab8ab683964fb3ad0a1918d3768ff921040"
     },
     "CFGI_EVENT_PATHS.jsonl.gz": {
-      "bytes": 4866,
+      "bytes": 24982,
       "exists": true,
-      "sha256": "ca765ff0192f2b2f3d3ad25dc390f75e1d020de540502801261971c991ddf957"
+      "sha256": "5d86d18deec1a5080b34a12f81b40cb2190a14922230af6100e671e0989e632b"
     },
     "CFGI_EVENT_SIGNATURES.json": {
       "bytes": 25943,
@@ -26,19 +26,24 @@
       "sha256": "de7e9603d86b97a97e029e2d7340136d052c5711c750baaa399a1d67057e276f"
     },
     "CFGI_FIELD_COVERAGE.json": {
-      "bytes": 13045,
+      "bytes": 17674,
       "exists": true,
-      "sha256": "53449c722e12fc59f4c8d2b19e9070e68d483c1e948b9ab05d697ed3c9157306"
+      "sha256": "f4cf96f32170388e071dc5760d20204819761486d92b0748cfe344479b539c5b"
+    },
+    "CFGI_MARKET_GAPFILL_BILLING.json": {
+      "bytes": 1009,
+      "exists": true,
+      "sha256": "55f4708dfdf031a927de5ce197e6bbf3efd4745a66f26efb7745a4348f1abe1f"
     },
     "EPISODE_CATALOG.json": {
       "bytes": 33176,
       "exists": true,
-      "sha256": "3760210cf72c402c97aa0fb5888a6bda7dd0a979d04ff55218123305615d4050"
+      "sha256": "ab2749f92fd99e300e00bf75fa0b1fa3e21fca21feb94d9ca04c1ff613754102"
     },
     "EPISODE_FEATURE_MATRIX.jsonl.gz": {
       "bytes": 292642,
       "exists": true,
-      "sha256": "8cf11a0a8e1aa825a0d983fbb5974e8b1d55a1ab23939ea40e2072fef6fb0187"
+      "sha256": "d9b5d0814e4d5885bc99f23829eba9160dcd300451c0d08d73a235da52cbc63f"
     },
     "EPISODE_MATRIX_COVERAGE.json": {
       "bytes": 18537,
@@ -48,22 +53,17 @@
     "FREE_BULK_ARTIFACT_POINTER.json": {
       "bytes": 535,
       "exists": true,
-      "sha256": "72ce8f242f9cbbeac6fd02f9c9b236d6dbbf30aa940703428aadf85e178ba0ef"
+      "sha256": "c812df3c6fac3b6f5302cf2d94ed818794d56b781d0769e8014484d4a724fba1"
     },
     "FREE_EVENT_PATHS.jsonl.gz": {
       "bytes": 126108,
       "exists": true,
-      "sha256": "7f136facdb4672cdf8e59cc46d8c845f16715c81a9b7353cc5734568f925f0df"
-    },
-    "FREE_EVENT_PATHS_COVERAGE.json": {
-      "bytes": 386,
-      "exists": true,
-      "sha256": "d8b0d44fa32d59027f5106cbb280fe1f023d63a5c9d77b02f9ca9713da718b7c"
+      "sha256": "cc353dda1d7b1b2ee571e2111b6ecc8f3aa793c753aaf1fdbf53f774491de848"
     },
     "FREE_SOURCE_AUDIT.json": {
       "bytes": 37485,
       "exists": true,
-      "sha256": "9eb733adbbb5e83d16caa6699648133eb41ca55fbfc1304c5106c97ac207c00b"
+      "sha256": "c379b5f6fe615d616bc820a41f99c03689748c13d50b756ac792610fa4410883"
     },
     "TIME_INTEGRITY_AUDIT.json": {
       "bytes": 2301,
@@ -78,7 +78,7 @@
     "hourly_features.csv.gz": {
       "bytes": 10230489,
       "exists": true,
-      "sha256": "6fd4159cf4d0bfbaa54eed4fdb6d1a26a5cf549fe820603db6e44a549e2059e7"
+      "sha256": "c4a1a2dd9dca66d2d478b9d2ed5bace092cf5b7ed045044a66cf8ccc1542d5a3"
     }
   },
   "authority": {
@@ -91,57 +91,98 @@
   "automatic_promotion": false,
   "blockers": [],
   "cfgi": {
-    "actual_credits_used_from_headers": 5259,
-    "analysis_eligibility_policy": "DOWNSTREAM_ANALYSIS_MUST_MARK_UNSUPPORTED_SLICES_NOT_TESTABLE",
+    "alignment_policy": "LAST_KNOWN_WITHIN_DECLARED_1H_CADENCE_NO_LOOKAHEAD",
+    "analysis_eligibility_policy": "BTC_ETH_CFGI_SLICES_ELIGIBLE_WHERE_SUPPORTED_MARKET_CFGI_SLICES_NOT_TESTABLE",
+    "asof_available_symbol_hours": 478,
+    "asof_coverage_ratio": 0.6584022038567493,
+    "billing_accounting": {
+      "conservative_credits_remaining_lower_bound": 68588,
+      "conservative_cumulative_credit_upper_bound": 13181,
+      "failed_gapfill_actual_credits_used_from_headers": null,
+      "verified_cumulative_actual_credits_used": 10518
+    },
     "billing_status": "PASS",
+    "current_actual_credits_used_from_headers": 5259,
     "event_count": 2,
     "event_paths_artifact": "CFGI_EVENT_PATHS.jsonl.gz",
     "exact_timestamp_coverage_ratio": 0.0,
+    "exact_timestamp_symbol_hours": 0,
     "expected_symbol_hours": 726,
-    "expected_worst_case_credits": 7986,
     "field_coverage_artifact": "CFGI_FIELD_COVERAGE.json",
     "final_credits_remaining": 71251,
     "hard_cap": 25000,
+    "market_historical_availability": "NOT_TESTABLE_PROVIDER_UNAVAILABLE",
+    "market_terminal_receipt": "00_ARCHIVE_CONTROL/research_runtime/CFGI_MARKET_PROVIDER_TERMINAL_RECEIPT.json",
+    "max_observation_age_seconds_exclusive": 3600,
     "minimum_reserve": 50000,
-    "missing_exact_symbol_hours": 726,
-    "missingness_policy": "EXPLICIT_MISSING_NOT_FILLED_NOT_INTERPOLATED_NOT_A_GLOBAL_BLOCKER",
-    "observed_exact_symbol_hours": 0,
-    "scaffold_symbol_hours": 726
+    "missing_asof_symbol_hours": 248,
+    "missingness_policy": "EXPLICIT_MISSING_NOT_FILLED_NOT_INTERPOLATED_PROVIDER_UNAVAILABLE_SLICES_NOT_TESTABLE",
+    "no_lookahead": true,
+    "provider_unavailable_symbols": [
+      "MARKET"
+    ],
+    "required_observed_symbols": [
+      "BTC",
+      "ETH"
+    ],
+    "symbol_coverage": {
+      "BTC": {
+        "asof_available_slots": 239,
+        "asof_coverage_ratio": 0.987603305785124,
+        "exact_timestamp_slots": 0,
+        "expected_slots": 242
+      },
+      "ETH": {
+        "asof_available_slots": 239,
+        "asof_coverage_ratio": 0.987603305785124,
+        "exact_timestamp_slots": 0,
+        "expected_slots": 242
+      },
+      "MARKET": {
+        "asof_available_slots": 0,
+        "asof_coverage_ratio": 0.0,
+        "exact_timestamp_slots": 0,
+        "expected_slots": 242
+      }
+    },
+    "time_alignment_contract": "CFGI_ASOF_1H_NO_LOOKAHEAD_v1"
   },
   "config_contract_version": "HISTORICAL_ALTSEASON_PULLBACK_LAB_CONFIG_v1_1",
-  "contract": "RESEARCH_READINESS_MANIFEST_v2",
+  "contract": "RESEARCH_READINESS_MANIFEST_v3_1_PROVIDER_BOUNDED",
   "historical_findings_max_classification": "FORWARD_TEST",
   "readiness_verdict": "PASS",
-  "repo_commit_identity": "1ca58f033a64691f175238396f8b973a5bc7bd33",
+  "repo_commit_identity": "489a36dad7e2999c0f26be5f161a951897826b08",
   "time_integrity_required": {
     "cross_window_lags_forbidden": true,
     "max_continuity_gap_hours": 1,
     "strict_timestamp_lags": true
   },
   "warnings": [
-    "CFGI_EXACT_OBSERVATION_MISSINGNESS:726/726",
-    "CFGI_ZERO_FIELD_COVERAGE:BTC.dominance",
-    "CFGI_ZERO_FIELD_COVERAGE:BTC.impulse",
-    "CFGI_ZERO_FIELD_COVERAGE:BTC.orders",
-    "CFGI_ZERO_FIELD_COVERAGE:BTC.price",
-    "CFGI_ZERO_FIELD_COVERAGE:BTC.score",
-    "CFGI_ZERO_FIELD_COVERAGE:BTC.social",
-    "CFGI_ZERO_FIELD_COVERAGE:BTC.technical",
-    "CFGI_ZERO_FIELD_COVERAGE:BTC.trends",
-    "CFGI_ZERO_FIELD_COVERAGE:BTC.volatility",
-    "CFGI_ZERO_FIELD_COVERAGE:BTC.volume",
-    "CFGI_ZERO_FIELD_COVERAGE:BTC.whales",
-    "CFGI_ZERO_FIELD_COVERAGE:ETH.dominance",
-    "CFGI_ZERO_FIELD_COVERAGE:ETH.impulse",
-    "CFGI_ZERO_FIELD_COVERAGE:ETH.orders",
-    "CFGI_ZERO_FIELD_COVERAGE:ETH.price",
-    "CFGI_ZERO_FIELD_COVERAGE:ETH.score",
-    "CFGI_ZERO_FIELD_COVERAGE:ETH.social",
-    "CFGI_ZERO_FIELD_COVERAGE:ETH.technical",
-    "CFGI_ZERO_FIELD_COVERAGE:ETH.trends",
-    "CFGI_ZERO_FIELD_COVERAGE:ETH.volatility",
-    "CFGI_ZERO_FIELD_COVERAGE:ETH.volume",
-    "CFGI_ZERO_FIELD_COVERAGE:ETH.whales",
+    "CFGI_ASOF_MISSINGNESS:BTC:3/242",
+    "CFGI_ASOF_MISSINGNESS:ETH:3/242",
+    "CFGI_FIELD_MISSINGNESS:BTC.dominance:0.012397",
+    "CFGI_FIELD_MISSINGNESS:BTC.impulse:0.012397",
+    "CFGI_FIELD_MISSINGNESS:BTC.orders:0.012397",
+    "CFGI_FIELD_MISSINGNESS:BTC.price:0.012397",
+    "CFGI_FIELD_MISSINGNESS:BTC.score:0.012397",
+    "CFGI_FIELD_MISSINGNESS:BTC.social:0.012397",
+    "CFGI_FIELD_MISSINGNESS:BTC.technical:0.012397",
+    "CFGI_FIELD_MISSINGNESS:BTC.trends:0.012397",
+    "CFGI_FIELD_MISSINGNESS:BTC.volatility:0.012397",
+    "CFGI_FIELD_MISSINGNESS:BTC.volume:0.012397",
+    "CFGI_FIELD_MISSINGNESS:BTC.whales:0.012397",
+    "CFGI_FIELD_MISSINGNESS:ETH.dominance:0.012397",
+    "CFGI_FIELD_MISSINGNESS:ETH.impulse:0.012397",
+    "CFGI_FIELD_MISSINGNESS:ETH.orders:0.012397",
+    "CFGI_FIELD_MISSINGNESS:ETH.price:0.012397",
+    "CFGI_FIELD_MISSINGNESS:ETH.score:0.012397",
+    "CFGI_FIELD_MISSINGNESS:ETH.social:0.012397",
+    "CFGI_FIELD_MISSINGNESS:ETH.technical:0.012397",
+    "CFGI_FIELD_MISSINGNESS:ETH.trends:0.012397",
+    "CFGI_FIELD_MISSINGNESS:ETH.volatility:0.012397",
+    "CFGI_FIELD_MISSINGNESS:ETH.volume:0.012397",
+    "CFGI_FIELD_MISSINGNESS:ETH.whales:0.012397",
+    "CFGI_MARKET_HISTORICAL_PROVIDER_UNAVAILABLE:MARKET:NOT_TESTABLE",
     "CFGI_ZERO_FIELD_COVERAGE:MARKET.dominance",
     "CFGI_ZERO_FIELD_COVERAGE:MARKET.impulse",
     "CFGI_ZERO_FIELD_COVERAGE:MARKET.orders",
