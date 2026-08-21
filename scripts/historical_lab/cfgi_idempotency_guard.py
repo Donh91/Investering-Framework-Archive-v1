@@ -59,13 +59,22 @@ def stamp(fp:str):
     print(json.dumps({"status":"STAMPED","input_fingerprint_sha256":fp,"cumulative_actual_credits_used":cumulative.get("cumulative_actual_credits_used")},sort_keys=True))
 
 
+def verify_budget()->dict:
+    proc=subprocess.run(["python","scripts/historical_lab/cfgi_recovery_budget_guard.py"],check=True,capture_output=True,text=True)
+    lines=[x.strip() for x in proc.stdout.splitlines() if x.strip()]
+    if not lines:raise SystemExit("CFGI_BUDGET_GUARD_EMPTY_OUTPUT")
+    guard=json.loads(lines[-1])
+    if guard.get("status")!="PASS" or guard.get("blockers"):raise SystemExit("CFGI_BUDGET_GUARD_NOT_PASS")
+    return guard
+
+
 def main():
     ap=argparse.ArgumentParser();ap.add_argument("--mode",choices=["check","stamp"],required=True);args=ap.parse_args();fp=fingerprint()
     if args.mode=="stamp":stamp(fp);return 0
-    skip=existing_is_complete(fp)
+    skip=existing_is_complete(fp);guard=None
     if skip:restore_summary_from_billing()
-    else:subprocess.check_call(["python","scripts/historical_lab/cfgi_recovery_budget_guard.py"])
-    print(json.dumps({"contract":"CFGI_IDEMPOTENCY_GUARD_v2","input_fingerprint_sha256":fp,"skip_paid":skip,"reason":"EXACT_COMPLETE_PRIOR_ENRICHMENT_V3" if skip else "PAID_GAPFILL_OR_RECOVERY_REQUIRED_BUDGET_PASS"},sort_keys=True));return 0
+    else:guard=verify_budget()
+    print(json.dumps({"contract":"CFGI_IDEMPOTENCY_GUARD_v2","input_fingerprint_sha256":fp,"skip_paid":skip,"reason":"EXACT_COMPLETE_PRIOR_ENRICHMENT_V3" if skip else "PAID_GAPFILL_OR_RECOVERY_REQUIRED_BUDGET_PASS","budget_plan":None if guard is None else guard.get("plan")},sort_keys=True));return 0
 
 
 if __name__=="__main__":raise SystemExit(main())
