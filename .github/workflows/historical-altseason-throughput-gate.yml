@@ -33,6 +33,7 @@ jobs:
           python -m py_compile scripts/historical_lab/cfgi_targeted_backfill.py
           python -m py_compile scripts/historical_lab/cfgi_readiness_postprocess.py
           python -m py_compile scripts/historical_lab/cfgi_readiness_postprocess_v2.py
+          python -m py_compile scripts/historical_lab/cfgi_readiness_postprocess_v3.py
           python -m py_compile scripts/historical_lab/cfgi_recovery_budget_guard.py
       - name: Prove archive-first transport contract
         run: |
@@ -63,6 +64,7 @@ jobs:
           paid=Path('.github/workflows/historical-altseason-cfgi-enrichment.yml').read_text()
           pub=Path('.github/workflows/historical-altseason-cfgi-publish.yml').read_text()
           budget=Path('scripts/historical_lab/cfgi_recovery_budget_guard.py').read_text()
+          v3=Path('scripts/historical_lab/cfgi_readiness_postprocess_v3.py').read_text()
           ledger=json.loads(Path('00_ARCHIVE_CONTROL/research_runtime/HISTORICAL_ALTSEASON_CFGI_PAID_ATTEMPT_LEDGER.json').read_text())
           gap=json.loads(Path('00_ARCHIVE_CONTROL/research_runtime/HISTORICAL_ALTSEASON_CFGI_MARKET_GAPFILL_AUTHORIZATION.json').read_text())
           assert ledger['contract']=='HISTORICAL_ALTSEASON_CFGI_PAID_ATTEMPT_LEDGER_v2'
@@ -74,20 +76,21 @@ jobs:
           assert gap['owner_authorized'] is True
           assert gap['allowed_symbols']==['MARKET']
           assert sorted(gap['forbidden_repurchase_symbols'])==['BTC','ETH']
-          assert gap['max_attempts']==1
-          assert gap['max_worst_case_credits']<=3000
+          assert gap['max_attempts']==1 and gap['max_worst_case_credits']<=3000
           for token in ['CFGI_TARGETED_INPUT_FINGERPRINT_v1','EXACT_COMPLETE_PRIOR_ENRICHMENT_V3','RESEARCH_READINESS_MANIFEST_v3','FORWARD_TEST','automatic_promotion','CFGI_ASOF_1H_NO_LOOKAHEAD_v1']:
               assert token in p,token
-          for token in ['workflow_dispatch:','fingerprint:','DISPATCH_FINGERPRINT','HISTORICAL_ALTSEASON_CFGI_PAID_ATTEMPT_LEDGER.json','HISTORICAL_ALTSEASON_CFGI_MARKET_GAPFILL_AUTHORIZATION.json','cfgi_recovery_budget_guard.py','cfgi_readiness_postprocess_v2.py','CFGI_MARKET_GAPFILL_BILLING.json','CFGI_CUMULATIVE_BILLING.json']:
+          for token in ['workflow_dispatch:','fingerprint:','DISPATCH_FINGERPRINT','HISTORICAL_ALTSEASON_CFGI_PAID_ATTEMPT_LEDGER.json','cfgi_recovery_budget_guard.py','cfgi_readiness_postprocess_v3.py','CFGI_CUMULATIVE_BILLING.json']:
               assert token in paid,token
-          pre=paid.index('Verify dispatch fingerprint, deterministic reservation and final free stage before secret access')
-          budget_pre=paid.index('Enforce cumulative recovery budget before secret access')
-          secret=paid.index('Verify CFGI secret only after reservation and cumulative budget gates pass')
-          call=paid.index('Target CFGI only after objective episode selection and reservation')
-          validate=paid.index('Validate billing, no-lookahead alignment and governance')
+          assert 'HISTORICAL_ALTSEASON_CFGI_MARKET_GAPFILL_AUTHORIZATION.json' in budget
+          assert 'CFGI_MARKET_GAPFILL_AUTHORIZATION_v1' in budget
+          assert 'CFGI_ASOF_1H_NO_LOOKAHEAD_v1' in v3 and 'RESEARCH_READINESS_MANIFEST_v3' in v3
+          pre=paid.index('Verify fingerprint, frozen free stage and paid provenance before secret access')
+          budget_pre=paid.index('Enforce cumulative gap-fill budget before secret access')
+          secret=paid.index('Verify CFGI secret only after provenance and budget gates pass')
+          call=paid.index('Run only the authorized missing-symbol paid work')
+          validate=paid.index('Validate v3 no-lookahead readiness and governance')
           assert pre < budget_pre < secret < call < validate
           assert 'CUMULATIVE_HARD_CAP_EXCEEDED' in budget and 'PROJECTED_RESERVE_BREACH' in budget
-          assert 'MARKET' in budget and 'BTC' in budget and 'ETH' in budget
           for token in ['CFGI_CUMULATIVE_BILLING.json','CFGI_MARKET_GAPFILL_BILLING.json','RESEARCH_READINESS_MANIFEST_v3','gh workflow run cowork-historical-altseason-bundle.yml']:
               assert token in pub,token
           print('CFGI_V3_BUDGET_ASOF_MARKET_GAPFILL_PASS')
@@ -115,7 +118,7 @@ jobs:
               assert 'group: framework-main-writer' in writer
               assert push_main in writer
               assert 'git rebase --abort' in writer
-              assert 'git merge-base --is-ancestor HEAD origin/main'
+              assert 'git merge-base --is-ancestor HEAD origin/main' in writer
               assert 'git diff --cached --quiet' in writer
           print('HISTORICAL_COMPUTE_RESERVE_PUBLISH_WRITER_BOUNDARY_PASS')
           PY
@@ -126,7 +129,7 @@ jobs:
           combined='\n'.join([
               Path('scripts/historical_lab/free_altseason_bootstrap_parallel.py').read_text(),
               Path('scripts/historical_lab/cfgi_idempotency_guard.py').read_text(),
-              Path('scripts/historical_lab/cfgi_readiness_postprocess_v2.py').read_text(),
+              Path('scripts/historical_lab/cfgi_readiness_postprocess_v3.py').read_text(),
               Path('scripts/historical_lab/cfgi_recovery_budget_guard.py').read_text(),
           ])
           for token in ['portfolio_action','DEPLOY','REDUCE','BUY','SELL','canonical_market_state =','automatic_rule_changes = True']:
