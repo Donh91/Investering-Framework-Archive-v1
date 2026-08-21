@@ -1,0 +1,62 @@
+{
+  "schema_version": "SHADOW_SENSOR_REGISTRY_v1",
+  "authority": {
+    "canonical_market_state": false,
+    "portfolio_execution": false,
+    "automatic_rule_changes": false,
+    "promotion_requires_separate_review": true
+  },
+  "required_sensor_fields": [
+    "sensor_id",
+    "family",
+    "status",
+    "source_definition_paths",
+    "definition_timestamp_or_version",
+    "input_sources",
+    "intended_horizon",
+    "output_semantics",
+    "historical_recoverability",
+    "forward_observation_enabled",
+    "outcome_horizons",
+    "known_overlap_with_canonical",
+    "data_quality_limitations",
+    "relevance_state"
+  ],
+  "allowed_status": [
+    "ACTIVE_CANONICAL",
+    "ACTIVE_SHADOW",
+    "DORMANT_RECOVERABLE",
+    "RESEARCH_ONLY",
+    "SUPERSEDED",
+    "UNTESTABLE"
+  ],
+  "allowed_relevance_state": [
+    "KEEP",
+    "WATCH",
+    "REDUNDANT",
+    "NOISE",
+    "REGIME_SPECIFIC",
+    "UNTESTABLE",
+    "PROMOTION_CANDIDATE"
+  ],
+  "weekly_scoring_dimensions": {
+    "lead_time_vs_canonical": "Does the shadow observation arrive before materially equivalent canonical evidence?",
+    "incremental_information": "Does it add information not already contained in the canonical stack?",
+    "false_positive_rate": "How often does it flag without a useful subsequent outcome?",
+    "miss_rate": "How often does the relevant outcome occur without the sensor firing?",
+    "stability": "Does behavior persist across weeks/regimes or collapse after one episode?",
+    "source_quality": "Freshness, provenance, continuity and reproducibility.",
+    "economic_relevance": "Does the signal improve decision timing after realistic friction, without granting execution authority?"
+  },
+  "mandatory_comparators": [
+    "CANONICAL_STACK_STATE",
+    "ENTRY_SIGNAL_LEDGER",
+    "ETHBTC",
+    "BREADTH",
+    "BTC_ETH_RELATIVE_STRENGTH",
+    "DERIVATIVES_FLOW",
+    "LIQUIDITY_RISK"
+  ],
+  "outcome_horizons_default": ["+6h", "+12h", "+24h", "+48h", "+72h", "+7d", "+14d", "+30d"],
+  "promotion_rule": "Historical or weekly shadow performance can only create a PROMOTION_CANDIDATE. Promotion requires a separate prospective forward-test contract and explicit review."
+}
