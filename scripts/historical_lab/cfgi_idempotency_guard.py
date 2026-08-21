@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import subprocess
 from pathlib import Path
 
 LAB = Path("06_RESEARCH_LAB/historical_altseason_pullback_v1")
@@ -120,11 +121,13 @@ def main():
     skip = existing_is_complete(fp)
     if skip:
         restore_summary_from_billing()
+    else:
+        subprocess.check_call(["python", "scripts/historical_lab/cfgi_recovery_budget_guard.py"])
     print(json.dumps({
         "contract": "CFGI_IDEMPOTENCY_GUARD_v1",
         "input_fingerprint_sha256": fp,
         "skip_paid": skip,
-        "reason": "EXACT_COMPLETE_PRIOR_ENRICHMENT" if skip else "PAID_ENRICHMENT_REQUIRED",
+        "reason": "EXACT_COMPLETE_PRIOR_ENRICHMENT" if skip else "PAID_ENRICHMENT_REQUIRED_CUMULATIVE_BUDGET_PASS",
     }, sort_keys=True))
     return 0
 
