@@ -1,5 +1,5 @@
 {
-  "contract": "SHADOW_SENSOR_REGISTRY_RUNTIME_v1",
+  "contract": "SHADOW_SENSOR_REGISTRY_RUNTIME_v1_1",
   "authority": "RESEARCH_ONLY_NON_CANONICAL",
   "automatic_rule_changes": false,
   "portfolio_execution": false,
@@ -70,6 +70,20 @@
       "evidence_paths": ["06_RESEARCH_LAB/historical_altseason_pullback_v1"],
       "relevance_state": "WATCH",
       "evaluator": "RESEARCH_ARTIFACT_ONLY"
+    },
+    {
+      "sensor_id": "RECOVERED_LEGACY_SENSOR_FAMILY_2026_08_21",
+      "family": "legacy_sensor_recovery",
+      "status": "DORMANT_RECOVERABLE",
+      "evidence_paths": [
+        "06_RESEARCH_LAB/historical_sensor_recovery_v1/RECOVERED_LEGACY_SENSOR_DEFINITIONS_2026-08-21.json",
+        "04_MARKET_LEARNING/shadow_registry/LEGACY_RECOVERY_QUEUE.json"
+      ],
+      "relevance_state": "WATCH",
+      "evaluator": "NONE_RECOVERY_REQUIRED",
+      "tracking_policy": "WEEKLY_REVIEW_REQUIRED",
+      "anti_double_counting_required": true,
+      "notes": "Contains Early Rotation Pre-Trigger, fake-rotation filter, ETF-era divergence classifiers and SRE/FAE/CCE/ODM/RWE meta-learning concepts. Individual promotion requires exact data mapping and separate prospective validation."
     }
   ]
 }

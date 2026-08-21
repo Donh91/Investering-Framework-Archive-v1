@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - '04_MARKET_LEARNING/shadow_registry/**'
+      - '06_RESEARCH_LAB/historical_sensor_recovery_v1/**'
       - 'scripts/research/shadow_registry_weekly.py'
       - '.github/workflows/shadow-registry-*.yml'
   workflow_dispatch:
@@ -22,6 +23,24 @@ jobs:
           python-version: '3.12'
       - name: Validate registry schema and authority firewall
         run: python scripts/research/shadow_registry_weekly.py --validate-only
+      - name: Validate recovered legacy queue firewall
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          q=json.loads(Path('04_MARKET_LEARNING/shadow_registry/LEGACY_RECOVERY_QUEUE.json').read_text())
+          assert q['authority']=='RESEARCH_ONLY_NON_CANONICAL'
+          assert q['automatic_rule_changes'] is False
+          assert q['portfolio_execution'] is False
+          assert q['promotion_requires_separate_review'] is True
+          assert q['weekly_review_required'] is True
+          assert q['anti_double_counting_required'] is True
+          assert len(q['candidates']) >= 14
+          assert any(x['sensor_id']=='CCE_V1_CONFIDENCE_COMPRESSION_ENGINE' for x in q['candidates'])
+          assert any(x['sensor_id']=='ODM_V1_OUTCOME_DELAY_MAPPER' for x in q['candidates'])
+          print('LEGACY_RECOVERY_QUEUE_GATE_PASS')
+          PY
       - name: Dry generate snapshot and verify non-canonical authority
         shell: bash
         run: |
@@ -35,5 +54,7 @@ jobs:
           assert p['portfolio_execution'] is False
           assert p['promotion_requires_separate_review'] is True
           assert p['summary']['sensor_count'] > 0
+          ids={s['sensor_id'] for s in p['sensors']}
+          assert 'RECOVERED_LEGACY_SENSOR_FAMILY_2026_08_21' in ids
           print('SHADOW_REGISTRY_GATE_PASS')
           PY
