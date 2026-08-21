@@ -1,0 +1,35 @@
+name: Historical Altseason Free Publish Regression Gate
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/historical-altseason-free-publish.yml'
+      - '.github/workflows/historical-altseason-free-publish-regression-gate.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  gate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Prove free stage cannot clobber paid terminal state
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('.github/workflows/historical-altseason-free-publish.yml').read_text()
+          assert 'RESEARCH_READINESS_MANIFEST_v3_1_PROVIDER_BOUNDED' in p
+          assert 'TERMINAL_V3_1_LOCK_ACTIVE' in p
+          assert 'FREE_STAGE_ATTEMPTED_NON_ALLOWLIST_WRITE' in p
+          assert "steps.terminal.outputs.locked != 'true'" in p
+          assert 'rm -rf "$root"' not in p
+          assert 'cp -a /tmp/historical-altseason-free-stage/. "$root/"' not in p
+          paid=['CFGI_EVENT_PATHS.jsonl.gz','CFGI_FIELD_COVERAGE.json','CFGI_MARKET_GAPFILL_BILLING.json','RESEARCH_READINESS_MANIFEST.json','cfgi_targeted.jsonl.gz']
+          allow_section=p.split("allow='",1)[1].split("'",1)[0]
+          for name in paid:
+              assert name not in allow_section,name
+          print('HISTORICAL_FREE_PUBLISH_PAID_STATE_PROTECTION_PASS')
+          PY

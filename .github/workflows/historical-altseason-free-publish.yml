@@ -43,84 +43,79 @@ jobs:
           echo 'Manual publish is intentionally blocked because no immutable upstream artifact run is bound.' >&2
           exit 1
 
-      - name: Install and revalidate free-stage artifacts
+      - name: Detect immutable paid terminal state
+        id: terminal
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/RESEARCH_READINESS_MANIFEST.json')
+          locked=False
+          if p.exists():
+              try:
+                  m=json.loads(p.read_text())
+                  locked=(m.get('contract')=='RESEARCH_READINESS_MANIFEST_v3_1_PROVIDER_BOUNDED' and m.get('readiness_verdict')=='PASS' and not m.get('blockers'))
+              except Exception:
+                  locked=False
+          with open('/tmp/terminal_lock','w') as fh: fh.write('true' if locked else 'false')
+          print('HISTORICAL_ALTSEASON_TERMINAL_LOCK',locked)
+          PY
+          echo "locked=$(cat /tmp/terminal_lock)" >> "$GITHUB_OUTPUT"
+
+      - name: Revalidate free-stage artifact without touching paid outputs
+        if: steps.terminal.outputs.locked != 'true'
         env:
           FREE_STAGE_RUN_ID: ${{ github.event.workflow_run.id }}
         run: |
           set -euo pipefail
+          src=/tmp/historical-altseason-free-stage
           root=06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts
-          test -d /tmp/historical-altseason-free-stage
-          rm -rf "$root"
-          mkdir -p "$root"
-          cp -a /tmp/historical-altseason-free-stage/. "$root/"
+          test -d "$src"
           python - <<'PY'
           import csv,gzip,hashlib,json,os
           from pathlib import Path
-          root=Path('06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts')
+          src=Path('/tmp/historical-altseason-free-stage')
           req=['FREE_SOURCE_AUDIT.json','TIME_INTEGRITY_AUDIT.json','hourly_features.csv.gz','alt_hourly_panel.csv.gz','EPISODE_CATALOG.json','EPISODE_FEATURE_MATRIX.jsonl.gz','EPISODE_MATRIX_COVERAGE.json','FREE_EVENT_PATHS.jsonl.gz','FREE_EVENT_PATHS_COVERAGE.json','BACKTEST_SUMMARY.json']
           for name in req:
-              p=root/name
+              p=src/name
               assert p.exists() and p.is_file() and not p.is_symlink() and p.stat().st_size>0, name
-          src=json.loads((root/'FREE_SOURCE_AUDIT.json').read_text())
-          ti=json.loads((root/'TIME_INTEGRITY_AUDIT.json').read_text())
-          cat=json.loads((root/'EPISODE_CATALOG.json').read_text())
-          cov=json.loads((root/'FREE_EVENT_PATHS_COVERAGE.json').read_text())
-          summary=json.loads((root/'BACKTEST_SUMMARY.json').read_text())
-          tr=src.get('historical_transport_policy') or {}
-          assert tr.get('contract')=='BINANCE_VISION_ARCHIVE_FIRST_TRANSPORT_v1'
-          assert tr.get('archive_first') is True
-          assert tr.get('deterministic_timestamp_reordering') is True
-          assert tr.get('analysis_semantics_changed') is False
-          assert ti['status']=='PASS'
-          assert ti['strict_timestamp_lags'] is True
-          assert ti['cross_window_lags_forbidden'] is True
-          assert ti['row_offsets_treated_as_hours'] is False
-          assert cat['authority']['automatic_rule_changes'] is False
-          assert summary['free_hourly_feature_rows']>1000
-          assert summary['episode_count']>0
-          assert cov['events']
-          panel=root/'alt_hourly_panel.csv.gz'
+          s=json.loads((src/'FREE_SOURCE_AUDIT.json').read_text()); ti=json.loads((src/'TIME_INTEGRITY_AUDIT.json').read_text()); cat=json.loads((src/'EPISODE_CATALOG.json').read_text()); cov=json.loads((src/'FREE_EVENT_PATHS_COVERAGE.json').read_text()); summary=json.loads((src/'BACKTEST_SUMMARY.json').read_text())
+          tr=s.get('historical_transport_policy') or {}
+          assert tr.get('contract')=='BINANCE_VISION_ARCHIVE_FIRST_TRANSPORT_v1' and tr.get('archive_first') is True and tr.get('deterministic_timestamp_reordering') is True and tr.get('analysis_semantics_changed') is False
+          assert ti['status']=='PASS' and ti['strict_timestamp_lags'] is True and ti['cross_window_lags_forbidden'] is True and ti['row_offsets_treated_as_hours'] is False
+          assert cat['authority']['automatic_rule_changes'] is False and summary['free_hourly_feature_rows']>1000 and summary['episode_count']>0 and cov['events']
+          panel=src/'alt_hourly_panel.csv.gz'
           with gzip.open(panel,'rt') as fh:
-              r=csv.DictReader(fh); first=next(r)
-              assert first['liquidity_cohort_proxy'] in {'LOW','MID','HIGH'}
-              assert 'return_24h_pct' in first
-          h=hashlib.sha256()
-          with panel.open('rb') as fh:
-              for chunk in iter(lambda: fh.read(1024*1024), b''):
-                  h.update(chunk)
-          pointer={
-              'contract':'HISTORICAL_ALTSEASON_FREE_BULK_POINTER_v1',
-              'storage_class':'GITHUB_ACTIONS_ARTIFACT_BULK_NOT_GIT',
-              'artifact_name':'historical-altseason-free-stage',
-              'source_run_id':int(os.environ['FREE_STAGE_RUN_ID']),
-              'retention_days':30,
-              'required_for_cowork_bundle':True,
-              'files':[{ 'name':'alt_hourly_panel.csv.gz', 'size_bytes':panel.stat().st_size, 'sha256':h.hexdigest() }],
-              'authority':{'research_only':True,'portfolio_execution':False},
-          }
-          (root/'FREE_BULK_ARTIFACT_POINTER.json').write_text(json.dumps(pointer,indent=2,sort_keys=True)+'\n')
-          print('FREE_STAGE_PUBLISH_REVALIDATION_PASS', summary['free_hourly_feature_rows'], summary['episode_count'], pointer['source_run_id'], pointer['files'][0]['sha256'])
+              first=next(csv.DictReader(fh)); assert first['liquidity_cohort_proxy'] in {'LOW','MID','HIGH'} and 'return_24h_pct' in first
+          h=hashlib.sha256(panel.read_bytes()).hexdigest()
+          pointer={'contract':'HISTORICAL_ALTSEASON_FREE_BULK_POINTER_v1','storage_class':'GITHUB_ACTIONS_ARTIFACT_BULK_NOT_GIT','artifact_name':'historical-altseason-free-stage','source_run_id':int(os.environ['FREE_STAGE_RUN_ID']),'retention_days':30,'required_for_cowork_bundle':True,'files':[{'name':'alt_hourly_panel.csv.gz','size_bytes':panel.stat().st_size,'sha256':h}],'authority':{'research_only':True,'portfolio_execution':False}}
+          Path('/tmp/FREE_BULK_ARTIFACT_POINTER.json').write_text(json.dumps(pointer,indent=2,sort_keys=True)+'\n')
+          print('FREE_STAGE_REVALIDATION_PASS',summary['free_hourly_feature_rows'],summary['episode_count'],pointer['source_run_id'],h)
           PY
-          rm "$root/alt_hourly_panel.csv.gz"
-          test -s "$root/FREE_BULK_ARTIFACT_POINTER.json"
+          mkdir -p "$root"
+          for name in FREE_SOURCE_AUDIT.json TIME_INTEGRITY_AUDIT.json hourly_features.csv.gz EPISODE_CATALOG.json EPISODE_FEATURE_MATRIX.jsonl.gz EPISODE_MATRIX_COVERAGE.json FREE_EVENT_PATHS.jsonl.gz FREE_EVENT_PATHS_COVERAGE.json BACKTEST_SUMMARY.json; do
+            cp "$src/$name" "$root/$name"
+          done
+          cp /tmp/FREE_BULK_ARTIFACT_POINTER.json "$root/FREE_BULK_ARTIFACT_POINTER.json"
+          rm -f "$root/alt_hourly_panel.csv.gz"
           test ! -e "$root/alt_hourly_panel.csv.gz"
 
-      - name: Commit metadata and research artifacts under shared writer lock
+      - name: Preserve immutable paid state
+        if: steps.terminal.outputs.locked == 'true'
+        run: |
+          echo 'TERMINAL_V3_1_LOCK_ACTIVE - free artifact retained in Actions only; no research artifact paths modified.'
+
+      - name: Commit allowlisted free metadata under shared writer lock
+        if: steps.terminal.outputs.locked != 'true'
         run: |
           set -euo pipefail
           git config user.name framework-research-bot
           git config user.email framework-research-bot@users.noreply.github.com
+          allow='^(06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/(FREE_SOURCE_AUDIT.json|TIME_INTEGRITY_AUDIT.json|hourly_features.csv.gz|EPISODE_CATALOG.json|EPISODE_FEATURE_MATRIX.jsonl.gz|EPISODE_MATRIX_COVERAGE.json|FREE_EVENT_PATHS.jsonl.gz|FREE_EVENT_PATHS_COVERAGE.json|BACKTEST_SUMMARY.json|FREE_BULK_ARTIFACT_POINTER.json))$'
           git add 06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/
-          if git diff --cached --quiet; then
-            echo 'No free-stage artifact changes'
-            exit 0
-          fi
-          bad="$(git diff --cached --name-only | grep -v '^06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/' || true)"
-          if [ -n "$bad" ]; then
-            echo "Unexpected staged paths:" >&2
-            echo "$bad" >&2
-            exit 1
-          fi
+          if git diff --cached --quiet; then echo 'No free-stage artifact changes'; exit 0; fi
+          bad="$(git diff --cached --name-only | grep -Ev "$allow" || true)"
+          if [ -n "$bad" ]; then echo 'FREE_STAGE_ATTEMPTED_NON_ALLOWLIST_WRITE' >&2; echo "$bad" >&2; exit 1; fi
           git commit -m "research: historical altseason free metadata ${GITHUB_RUN_ID}"
           pushed=false
           for attempt in 1 2 3 4 5; do
