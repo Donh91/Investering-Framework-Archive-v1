@@ -29,29 +29,62 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Compile compact handoff builder
+      - name: Compile compact handoff builders
         run: |
           python -m py_compile scripts/cowork/build_historical_altseason_bundle.py
           python -m py_compile scripts/cowork/build_historical_altseason_bundle_max_value.py
-      - name: Build GitHub-native research handoff ZIP
+      - name: Build provider-bounded Cowork research handoff ZIP
         run: python scripts/cowork/build_historical_altseason_bundle_max_value.py
-      - name: Validate v3 compact handoff and cumulative provenance
+      - name: Validate v3.1 provider-bounded handoff
         run: |
           set -euo pipefail
           root=dist/cowork_historical_altseason
-          test -s "$root/HISTORICAL_ALTSEASON_COWORK_INPUT_BUNDLE.zip"; test -s "$root/COWORK_INPUT_MANIFEST.json"; test -s "$root/COWORK_INPUT_BUNDLE_SHA256.txt"
+          test -s "$root/HISTORICAL_ALTSEASON_COWORK_INPUT_BUNDLE.zip"
+          test -s "$root/COWORK_INPUT_MANIFEST.json"
+          test -s "$root/COWORK_INPUT_BUNDLE_SHA256.txt"
           python - <<'PY'
           import hashlib,json,zipfile
           from pathlib import Path
-          root=Path('dist/cowork_historical_altseason');m=json.loads((root/'COWORK_INPUT_MANIFEST.json').read_text())
-          assert m['contract']=='COWORK_GITHUB_NATIVE_HANDOFF_MANIFEST_v3'; assert m['delivery_model']=='COMPACT_INSTRUCTIONS_PLUS_DIRECT_GITHUB_READ'; assert m['repo']=='Donh91/Investering-Framework-Archive-v1' and m['authoritative_ref']=='main'; assert m['readiness_verdict']=='PASS' and m['readiness_contract']=='RESEARCH_READINESS_MANIFEST_v3'; assert m['cfgi_time_alignment_contract']=='CFGI_ASOF_1H_NO_LOOKAHEAD_v1'; assert m['automatic_promotion'] is False and m['historical_findings_max_classification']=='FORWARD_TEST'; assert m['heavy_bulk_delivery']=='BOUND_GITHUB_ACTIONS_ARTIFACT_VIA_FREE_BULK_ARTIFACT_POINTER'
-          cb=m['cfgi_cumulative_billing']; assert cb['cumulative_actual_credits_used']<=cb['hard_cap_credits'] and cb['final_credits_remaining']>=cb['minimum_reserve_credits']
-          sources={x['source_path'] for x in m['files']}; required={'07_PROMPTS_AND_AGENTS/historical_altseason_pullback/COWORK_OPUS5_MASTER_RESEARCH_PROMPT.md','07_PROMPTS_AND_AGENTS/historical_altseason_pullback/COWORK_OPUS5_LAUNCH_INSTRUCTION.md','07_PROMPTS_AND_AGENTS/historical_altseason_pullback/COWORK_OPUS5_MAX_VALUE_SIDECARS.md','07_PROMPTS_AND_AGENTS/historical_altseason_pullback/COWORK_GITHUB_RESEARCH_MAP.md','06_RESEARCH_LAB/historical_altseason_pullback_v1/INTRADAY_EXECUTION_COWORK_ADDENDUM.md','06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/RESEARCH_READINESS_MANIFEST.json','06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/CFGI_BILLING.json','06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/CFGI_CUMULATIVE_BILLING.json','06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/CFGI_MARKET_GAPFILL_BILLING.json','06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/FREE_BULK_ARTIFACT_POINTER.json','00_ARCHIVE_CONTROL/research_runtime/HISTORICAL_ALTSEASON_CFGI_PAID_ATTEMPT_LEDGER.json','00_ARCHIVE_CONTROL/research_runtime/HISTORICAL_ALTSEASON_CFGI_MARKET_GAPFILL_AUTHORIZATION.json'}; assert required<=sources; assert not any(x.endswith('alt_hourly_panel.csv.gz') for x in sources)
-          zip_path=root/'HISTORICAL_ALTSEASON_COWORK_INPUT_BUNDLE.zip'; expected=(root/'COWORK_INPUT_BUNDLE_SHA256.txt').read_text().split()[0]; actual=hashlib.sha256(zip_path.read_bytes()).hexdigest(); assert actual==expected
+          root=Path('dist/cowork_historical_altseason')
+          m=json.loads((root/'COWORK_INPUT_MANIFEST.json').read_text())
+          assert m['contract']=='COWORK_GITHUB_NATIVE_HANDOFF_MANIFEST_v3_1_PROVIDER_BOUNDED'
+          assert m['delivery_model']=='COMPACT_INSTRUCTIONS_PLUS_DIRECT_GITHUB_READ'
+          assert m['repo']=='Donh91/Investering-Framework-Archive-v1' and m['authoritative_ref']=='main'
+          assert m['readiness_verdict']=='PASS' and m['readiness_contract']=='RESEARCH_READINESS_MANIFEST_v3_1_PROVIDER_BOUNDED'
+          assert m['cfgi_time_alignment_contract']=='CFGI_ASOF_1H_NO_LOOKAHEAD_v1'
+          assert m['mandatory_provider_limitation']=='MARKET_CFGI_HISTORICAL_NOT_TESTABLE_PROVIDER_UNAVAILABLE'
+          assert m['cfgi_observed_symbols']==['BTC','ETH'] and m['cfgi_provider_unavailable_symbols']==['MARKET']
+          assert m['automatic_promotion'] is False and m['historical_findings_max_classification']=='FORWARD_TEST'
+          b=m['cfgi_billing']
+          assert b['verified_cumulative_actual_credits_used']==10518
+          assert b['failed_gapfill_actual_credits_used_from_headers'] is None
+          assert b['conservative_cumulative_credit_upper_bound']<=b['hard_cap_credits']
+          assert b['conservative_credits_remaining_lower_bound']>=b['minimum_reserve_credits']
+          sources={x['source_path'] for x in m['files']}
+          required={
+            '07_PROMPTS_AND_AGENTS/historical_altseason_pullback/COWORK_OPUS5_MASTER_RESEARCH_PROMPT.md',
+            '07_PROMPTS_AND_AGENTS/historical_altseason_pullback/COWORK_OPUS5_LAUNCH_INSTRUCTION.md',
+            '07_PROMPTS_AND_AGENTS/historical_altseason_pullback/COWORK_GITHUB_RESEARCH_MAP.md',
+            '07_PROMPTS_AND_AGENTS/historical_altseason_pullback/COWORK_CFGI_PROVIDER_LIMITATION.md',
+            '06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/RESEARCH_READINESS_MANIFEST.json',
+            '06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/CFGI_MARKET_GAPFILL_BILLING.json',
+            '00_ARCHIVE_CONTROL/research_runtime/CFGI_MARKET_PROVIDER_TERMINAL_RECEIPT.json',
+            '06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/FREE_BULK_ARTIFACT_POINTER.json',
+          }
+          assert required<=sources
+          assert not any(x.endswith('alt_hourly_panel.csv.gz') for x in sources)
+          zip_path=root/'HISTORICAL_ALTSEASON_COWORK_INPUT_BUNDLE.zip'
+          expected=(root/'COWORK_INPUT_BUNDLE_SHA256.txt').read_text().split()[0]
+          actual=hashlib.sha256(zip_path.read_bytes()).hexdigest()
+          assert actual==expected
           with zipfile.ZipFile(zip_path) as zf:
-              assert zf.testzip() is None; names=set(zf.namelist()); assert not any(n.endswith('/alt_hourly_panel.csv.gz') for n in names); text=zf.read('COWORK_RESEARCH_HANDOFF/07_PROMPTS_AND_AGENTS/historical_altseason_pullback/COWORK_GITHUB_RESEARCH_MAP.md').decode();
-              for token in ['GitHub is the authoritative research universe','FREE_BULK_ARTIFACT_POINTER.json','04_MARKET_LEARNING/intraday_execution/','scripts/intraday_execution/']: assert token in text,token
-          print('COWORK_GITHUB_NATIVE_HANDOFF_V3_PASS',len(sources),actual,cb['cumulative_actual_credits_used'])
+              assert zf.testzip() is None
+              names=set(zf.namelist())
+              assert not any(n.endswith('/alt_hourly_panel.csv.gz') for n in names)
+              limitation=zf.read('COWORK_RESEARCH_HANDOFF/07_PROMPTS_AND_AGENTS/historical_altseason_pullback/COWORK_CFGI_PROVIDER_LIMITATION.md').decode()
+              for token in ['NOT_TESTABLE_PROVIDER_UNAVAILABLE','Do not fill','Do not request or recommend another paid CFGI retry','13,181','FORWARD_TEST']:
+                  assert token in limitation,token
+          print('COWORK_GITHUB_NATIVE_HANDOFF_V3_1_PROVIDER_BOUNDED_PASS',len(sources),actual,b['conservative_cumulative_credit_upper_bound'])
           PY
       - name: Upload one-click Cowork research handoff
         uses: actions/upload-artifact@v4
