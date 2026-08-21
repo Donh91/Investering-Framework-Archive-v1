@@ -34,21 +34,23 @@ jobs:
           launch=Path('07_PROMPTS_AND_AGENTS/historical_altseason_pullback/COWORK_OPUS5_LAUNCH_INSTRUCTION.md').read_text()
           research_map=Path('07_PROMPTS_AND_AGENTS/historical_altseason_pullback/COWORK_GITHUB_RESEARCH_MAP.md').read_text()
           sidecar=Path('07_PROMPTS_AND_AGENTS/historical_altseason_pullback/COWORK_OPUS5_MAX_VALUE_SIDECARS.md').read_text()
-          for token in ['COWORK_GITHUB_NATIVE_HANDOFF_MANIFEST_v2','COMPACT_INSTRUCTIONS_PLUS_DIRECT_GITHUB_READ','FREE_BULK_ARTIFACT_POINTER.json','base.validate_readiness','HISTORICAL_ALTSEASON_COWORK_OPUS5_RESEARCH_PACKAGE.zip','CFGI_CUMULATIVE_BILLING.json','HISTORICAL_ALTSEASON_CFGI_PAID_ATTEMPT_LEDGER.json','validate_cumulative_billing']:
+          for token in ['COWORK_GITHUB_NATIVE_HANDOFF_MANIFEST_v3','COMPACT_INSTRUCTIONS_PLUS_DIRECT_GITHUB_READ','FREE_BULK_ARTIFACT_POINTER.json','base.validate_readiness','HISTORICAL_ALTSEASON_COWORK_OPUS5_RESEARCH_PACKAGE.zip','CFGI_CUMULATIVE_BILLING.json','CFGI_MARKET_GAPFILL_BILLING.json','HISTORICAL_ALTSEASON_CFGI_PAID_ATTEMPT_LEDGER.json','HISTORICAL_ALTSEASON_CFGI_MARKET_GAPFILL_AUTHORIZATION.json','validate_cumulative_billing','CFGI_ASOF_1H_NO_LOOKAHEAD_v1']:
               assert token in wrapper, token
-          for token in ['GitHub is the authoritative research universe','FREE_BULK_ARTIFACT_POINTER.json','04_MARKET_LEARNING/intraday_execution/','scripts/intraday_execution/']:
+          for token in ['GitHub is the authoritative research universe','FREE_BULK_ARTIFACT_POINTER.json','04_MARKET_LEARNING/intraday_execution/','scripts/intraday_execution/','CFGI_ASOF_1H_NO_LOOKAHEAD_v1']:
               assert token in research_map, token
           for token in ['Signal Interaction Atlas','Lead/Lag and Information Timing Atlas','Failure and Opportunity-Cost Laboratory','Minimal Sufficient Signal Stack','Research Opportunity Register','PRE_SPECIFIED','POST_HOC_DISCOVERY']:
               assert token in sidecar, token
           for token in ['COWORK_GITHUB_RESEARCH_MAP.md','COWORK_OPUS5_MASTER_RESEARCH_PROMPT.md','COWORK_OPUS5_MAX_VALUE_SIDECARS.md','INTRADAY_EXECUTION_COWORK_ADDENDUM.md','HISTORICAL_ALTSEASON_COWORK_OPUS5_RESEARCH_PACKAGE.zip','FORWARD_TEST']:
               assert token in launch, token
-          assert 'COWORK_GITHUB_NATIVE_HANDOFF_V2_PASS' in workflow
+          assert 'COWORK_GITHUB_NATIVE_HANDOFF_V3_PASS' in workflow
           assert 'CFGI_CUMULATIVE_BILLING.json' in workflow
+          assert 'CFGI_MARKET_GAPFILL_BILLING.json' in workflow
           assert 'HISTORICAL_ALTSEASON_CFGI_PAID_ATTEMPT_LEDGER.json' in workflow
+          assert 'HISTORICAL_ALTSEASON_CFGI_MARKET_GAPFILL_AUTHORIZATION.json' in workflow
           assert 'gh run download' not in workflow
           assert "endswith('alt_hourly_panel.csv.gz')" in workflow
           base=Path('scripts/cowork/build_historical_altseason_bundle.py').read_text()
           for token in ['RESEARCH_READINESS_MANIFEST.json','CFGI_BILLING.json','readiness_verdict','FORWARD_TEST','minimum_credits_reserve','expected_credit_hard_cap']:
               assert token in base, token
-          print('COWORK_GITHUB_NATIVE_STATIC_GATE_V2_PASS')
+          print('COWORK_GITHUB_NATIVE_STATIC_GATE_V3_PASS')
           PY
