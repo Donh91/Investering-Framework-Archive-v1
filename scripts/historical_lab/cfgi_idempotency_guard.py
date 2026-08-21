@@ -142,6 +142,21 @@ def stamp(fp: str):
     print(json.dumps({"status": "STAMPED", "input_fingerprint_sha256": fp, "cumulative_actual_credits_used": cumulative["cumulative_actual_credits_used"]}, sort_keys=True))
 
 
+def verify_recovery_budget() -> None:
+    proc = subprocess.run(
+        ["python", "scripts/historical_lab/cfgi_recovery_budget_guard.py"],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    lines = [line.strip() for line in proc.stdout.splitlines() if line.strip()]
+    if not lines:
+        raise SystemExit("CFGI_RECOVERY_BUDGET_GUARD_EMPTY_OUTPUT")
+    guard = json.loads(lines[-1])
+    if guard.get("status") != "PASS" or guard.get("blockers"):
+        raise SystemExit("CFGI_RECOVERY_BUDGET_GUARD_NOT_PASS")
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--mode", choices=["check", "stamp"], required=True)
@@ -154,7 +169,7 @@ def main():
     if skip:
         restore_summary_from_billing()
     else:
-        subprocess.check_call(["python", "scripts/historical_lab/cfgi_recovery_budget_guard.py"])
+        verify_recovery_budget()
     print(json.dumps({
         "contract": "CFGI_IDEMPOTENCY_GUARD_v1",
         "input_fingerprint_sha256": fp,
