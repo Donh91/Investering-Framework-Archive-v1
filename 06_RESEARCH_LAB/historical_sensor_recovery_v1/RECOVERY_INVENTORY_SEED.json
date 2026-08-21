@@ -1,0 +1,116 @@
+{
+  "schema_version": "HSRA_v1",
+  "authority": "RESEARCH_ONLY_NON_CANONICAL",
+  "generated_from": {
+    "main_head_at_audit_start": "98db5dd6f28178e4360a3ddf23f2bb54f628f669",
+    "repository_surfaces_observed": [
+      "04_MARKET_LEARNING/entry_signals",
+      "04_MARKET_LEARNING/breadth/forward",
+      "04_MARKET_LEARNING/forward_tests",
+      "04_MARKET_LEARNING/cycle_navigator",
+      "04_MARKET_LEARNING/data_ping",
+      "04_MARKET_LEARNING/forecasts",
+      "04_MARKET_LEARNING/experiments",
+      "04_MARKET_LEARNING/external_research",
+      "06_RESEARCH_LAB/forward_tests",
+      "06_RESEARCH_LAB/historical_altseason_pullback_v1",
+      "06_RESEARCH_LAB/audit_summaries"
+    ],
+    "historical_branch_families_observed": [
+      "agent/data-terminal-phase1-shadow-20260719",
+      "agent/fable-ota-shadow-13-20260714",
+      "agent/task-20260722-compact-shadow-filtered-enrichment",
+      "agent/task-20260722-compact-shadow-12h-enrichment",
+      "agent/task-20260725-ota21-v2-shadow",
+      "agent/backtest-wave1-chatgpt-research-1-5-20260728",
+      "agent/research-market-anticipation-program-v1",
+      "agent/task-20260811-deep-research-horizon-queue",
+      "agent/task-20260812-autonomous-deep-research",
+      "research/pullback-forensics-passive-capture-v1",
+      "research/structural-market-bands-v0-1",
+      "research/intraday-execution-layer-v1"
+    ]
+  },
+  "candidate_families": [
+    {
+      "id": "ENTRY_SIGNAL_LEDGER",
+      "status": "ACTIVE_SHADOW",
+      "priority": "P0_REUSE",
+      "reason": "Existing immutable events/outcomes/performance pattern should be the architectural reference for recovered sensors.",
+      "action": "EXTEND_NOT_REPLACE"
+    },
+    {
+      "id": "EARLY_ROTATION_AND_ROTATION_ENGINE_FAMILY",
+      "status": "DORMANT_RECOVERABLE",
+      "priority": "P0",
+      "action": "RECOVER_DEFINITIONS_PROVENANCE_AND_HORIZONS"
+    },
+    {
+      "id": "SHADOW_SENTINEL_FAMILY",
+      "status": "DORMANT_RECOVERABLE",
+      "priority": "P0",
+      "action": "RECOVER_AND_DEDUPLICATE_AGAINST_CURRENT_STACK"
+    },
+    {
+      "id": "PULLBACK_FORENSICS_AND_FLUSH_FAMILY",
+      "status": "ACTIVE_SHADOW_OR_RECOVERABLE",
+      "priority": "P0",
+      "action": "CONNECT_TO_SEQUENCE_AND_OUTCOME_MATURATION"
+    },
+    {
+      "id": "BREADTH_VARIANTS",
+      "status": "ACTIVE_SHADOW",
+      "priority": "P0",
+      "action": "MEASURE_INCREMENTAL_VALUE_AND_STALENESS"
+    },
+    {
+      "id": "DERIVATIVES_FUNDING_OI_TAKER_FLOW",
+      "status": "ACTIVE_SHADOW",
+      "priority": "P0",
+      "action": "CALIBRATE_LEAD_LAG_AROUND_PULLBACKS_AND_RELOADS"
+    },
+    {
+      "id": "ETHBTC_PERSISTENCE_AND_ROTATION_STRUCTURE",
+      "status": "ACTIVE_CANONICAL_OR_SHADOW_COMPONENT",
+      "priority": "P0",
+      "action": "PRESERVE_CANONICAL_SEMANTICS_AND_TEST_AUXILIARY_SEQUENCE_FEATURES_ONLY"
+    },
+    {
+      "id": "BTC_DOMINANCE_USDTD_TOTAL2_TOTAL3",
+      "status": "ACTIVE_OR_RECOVERABLE",
+      "priority": "P1",
+      "action": "RECOVER_OLD_VARIANTS_AND_TEST_REDUNDANCY"
+    },
+    {
+      "id": "STABLECOIN_LIQUIDITY",
+      "status": "ACTIVE_SHADOW",
+      "priority": "P1",
+      "action": "TEST_MULTI_HORIZON_CHANGE_AND_REGIME_SPECIFICITY"
+    },
+    {
+      "id": "BUSINESS_CYCLE_MACRO_GLOBAL_M2",
+      "status": "ACTIVE_OR_RESEARCH_ONLY",
+      "priority": "P1",
+      "action": "SEPARATE_SLOW_REGIME_INFORMATION_FROM_TACTICAL_TIMING"
+    },
+    {
+      "id": "CYCLE_NAVIGATOR_LEGACY_HYPOTHESES",
+      "status": "RESEARCH_ONLY",
+      "priority": "P1",
+      "action": "RECOVER_HISTORICAL_HYPOTHESES_WITH_OUTCOME_BLINDNESS_LABELS"
+    },
+    {
+      "id": "FABLE_OTA_AND_EXTERNAL_RESEARCH_SHADOWS",
+      "status": "RESEARCH_ONLY",
+      "priority": "P2",
+      "action": "EVALUATE_AS_HYPOTHESIS_GENERATORS_NOT_AUTHORITIES"
+    },
+    {
+      "id": "STRUCTURAL_MARKET_BANDS",
+      "status": "RESEARCH_ONLY",
+      "priority": "P2",
+      "action": "AUDIT_FOR_INCREMENTAL_VALUE_VS_PRICE_STRUCTURE"
+    }
+  ],
+  "next_required_step": "FULL_FILE_LEVEL_RECOVERY_AND_DEDUPLICATION_AUDIT"
+}
