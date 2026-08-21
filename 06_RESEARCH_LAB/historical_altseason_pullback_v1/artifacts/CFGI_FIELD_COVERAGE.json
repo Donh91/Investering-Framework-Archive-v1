@@ -1,33 +1,49 @@
 {
-  "contract": "CFGI_FIELD_COVERAGE_v1",
+  "alignment_policy": "LAST_KNOWN_WITHIN_DECLARED_1H_CADENCE_NO_LOOKAHEAD",
+  "asof_available_symbol_hours": 478,
+  "asof_coverage_ratio": 0.6584022038567493,
+  "contract": "CFGI_FIELD_COVERAGE_v3",
   "diagnostics": {
+    "age_window_violations": [],
     "duplicate_symbol_timestamp_keys": [],
+    "future_read_violations": [],
+    "malformed_or_unrequested_rows": [],
+    "no_forward_fill_beyond_declared_1h_cadence": true,
+    "no_interpolation": true,
+    "no_lookahead": true,
     "no_silent_fallback": true,
     "non_hour_aligned_events": [],
+    "raw_rows_reused_across_multiple_slots": [],
     "staleness_is_measured_not_thresholded": true
   },
   "event_count": 2,
   "event_coverage": {
     "CTRL_01": {
+      "asof_available_symbol_hours": 238,
+      "asof_coverage_ratio": 0.6556473829201102,
       "event_utc": "2025-02-07T18:00:00Z",
-      "exact_timestamp_coverage_ratio": 0.0,
+      "exact_timestamp_symbol_hours": 0,
       "expected_symbol_hours": 363,
-      "kind": "CONTROL",
-      "observed_exact_symbol_hours": 0
+      "kind": "CONTROL"
     },
     "PB_2025-01-06_046": {
+      "asof_available_symbol_hours": 240,
+      "asof_coverage_ratio": 0.6611570247933884,
       "event_utc": "2025-01-06T16:00:00Z",
-      "exact_timestamp_coverage_ratio": 0.0,
+      "exact_timestamp_symbol_hours": 0,
       "expected_symbol_hours": 363,
-      "kind": "PULLBACK",
-      "observed_exact_symbol_hours": 0
+      "kind": "PULLBACK"
     }
   },
-  "exact_relative_hour_semantics": true,
+  "exact_relative_hour_scaffold": true,
   "exact_timestamp_coverage_ratio": 0.0,
+  "exact_timestamp_symbol_hours": 0,
   "expected_symbol_hours": 726,
   "field_coverage": [
     {
+      "asof_available_slots": 0,
+      "asof_coverage_ratio": 0.0,
+      "exact_timestamp_coverage_ratio": 0.0,
       "exact_timestamp_slots": 0,
       "expected_slots": 242,
       "field": "score",
@@ -36,10 +52,12 @@
       "missing_ratio": 1.0,
       "non_null_slots": 0,
       "staleness_interpretation": "DIAGNOSTIC_ONLY_NO_HARD_THRESHOLD",
-      "symbol": "MARKET",
-      "timestamp_coverage_ratio": 0.0
+      "symbol": "MARKET"
     },
     {
+      "asof_available_slots": 0,
+      "asof_coverage_ratio": 0.0,
+      "exact_timestamp_coverage_ratio": 0.0,
       "exact_timestamp_slots": 0,
       "expected_slots": 242,
       "field": "price",
@@ -48,10 +66,12 @@
       "missing_ratio": 1.0,
       "non_null_slots": 0,
       "staleness_interpretation": "DIAGNOSTIC_ONLY_NO_HARD_THRESHOLD",
-      "symbol": "MARKET",
-      "timestamp_coverage_ratio": 0.0
+      "symbol": "MARKET"
     },
     {
+      "asof_available_slots": 0,
+      "asof_coverage_ratio": 0.0,
+      "exact_timestamp_coverage_ratio": 0.0,
       "exact_timestamp_slots": 0,
       "expected_slots": 242,
       "field": "volatility",
@@ -60,10 +80,12 @@
       "missing_ratio": 1.0,
       "non_null_slots": 0,
       "staleness_interpretation": "DIAGNOSTIC_ONLY_NO_HARD_THRESHOLD",
-      "symbol": "MARKET",
-      "timestamp_coverage_ratio": 0.0
+      "symbol": "MARKET"
     },
     {
+      "asof_available_slots": 0,
+      "asof_coverage_ratio": 0.0,
+      "exact_timestamp_coverage_ratio": 0.0,
       "exact_timestamp_slots": 0,
       "expected_slots": 242,
       "field": "volume",
@@ -72,10 +94,12 @@
       "missing_ratio": 1.0,
       "non_null_slots": 0,
       "staleness_interpretation": "DIAGNOSTIC_ONLY_NO_HARD_THRESHOLD",
-      "symbol": "MARKET",
-      "timestamp_coverage_ratio": 0.0
+      "symbol": "MARKET"
     },
     {
+      "asof_available_slots": 0,
+      "asof_coverage_ratio": 0.0,
+      "exact_timestamp_coverage_ratio": 0.0,
       "exact_timestamp_slots": 0,
       "expected_slots": 242,
       "field": "impulse",
@@ -84,10 +108,12 @@
       "missing_ratio": 1.0,
       "non_null_slots": 0,
       "staleness_interpretation": "DIAGNOSTIC_ONLY_NO_HARD_THRESHOLD",
-      "symbol": "MARKET",
-      "timestamp_coverage_ratio": 0.0
+      "symbol": "MARKET"
     },
     {
+      "asof_available_slots": 0,
+      "asof_coverage_ratio": 0.0,
+      "exact_timestamp_coverage_ratio": 0.0,
       "exact_timestamp_slots": 0,
       "expected_slots": 242,
       "field": "technical",
@@ -96,10 +122,12 @@
       "missing_ratio": 1.0,
       "non_null_slots": 0,
       "staleness_interpretation": "DIAGNOSTIC_ONLY_NO_HARD_THRESHOLD",
-      "symbol": "MARKET",
-      "timestamp_coverage_ratio": 0.0
+      "symbol": "MARKET"
     },
     {
+      "asof_available_slots": 0,
+      "asof_coverage_ratio": 0.0,
+      "exact_timestamp_coverage_ratio": 0.0,
       "exact_timestamp_slots": 0,
       "expected_slots": 242,
       "field": "social",
@@ -108,10 +136,12 @@
       "missing_ratio": 1.0,
       "non_null_slots": 0,
       "staleness_interpretation": "DIAGNOSTIC_ONLY_NO_HARD_THRESHOLD",
-      "symbol": "MARKET",
-      "timestamp_coverage_ratio": 0.0
+      "symbol": "MARKET"
     },
     {
+      "asof_available_slots": 0,
+      "asof_coverage_ratio": 0.0,
+      "exact_timestamp_coverage_ratio": 0.0,
       "exact_timestamp_slots": 0,
       "expected_slots": 242,
       "field": "dominance",
@@ -120,10 +150,12 @@
       "missing_ratio": 1.0,
       "non_null_slots": 0,
       "staleness_interpretation": "DIAGNOSTIC_ONLY_NO_HARD_THRESHOLD",
-      "symbol": "MARKET",
-      "timestamp_coverage_ratio": 0.0
+      "symbol": "MARKET"
     },
     {
+      "asof_available_slots": 0,
+      "asof_coverage_ratio": 0.0,
+      "exact_timestamp_coverage_ratio": 0.0,
       "exact_timestamp_slots": 0,
       "expected_slots": 242,
       "field": "trends",
@@ -132,10 +164,12 @@
       "missing_ratio": 1.0,
       "non_null_slots": 0,
       "staleness_interpretation": "DIAGNOSTIC_ONLY_NO_HARD_THRESHOLD",
-      "symbol": "MARKET",
-      "timestamp_coverage_ratio": 0.0
+      "symbol": "MARKET"
     },
     {
+      "asof_available_slots": 0,
+      "asof_coverage_ratio": 0.0,
+      "exact_timestamp_coverage_ratio": 0.0,
       "exact_timestamp_slots": 0,
       "expected_slots": 242,
       "field": "whales",
@@ -144,10 +178,12 @@
       "missing_ratio": 1.0,
       "non_null_slots": 0,
       "staleness_interpretation": "DIAGNOSTIC_ONLY_NO_HARD_THRESHOLD",
-      "symbol": "MARKET",
-      "timestamp_coverage_ratio": 0.0
+      "symbol": "MARKET"
     },
     {
+      "asof_available_slots": 0,
+      "asof_coverage_ratio": 0.0,
+      "exact_timestamp_coverage_ratio": 0.0,
       "exact_timestamp_slots": 0,
       "expected_slots": 242,
       "field": "orders",
@@ -156,272 +192,315 @@
       "missing_ratio": 1.0,
       "non_null_slots": 0,
       "staleness_interpretation": "DIAGNOSTIC_ONLY_NO_HARD_THRESHOLD",
-      "symbol": "MARKET",
-      "timestamp_coverage_ratio": 0.0
+      "symbol": "MARKET"
     },
     {
+      "asof_available_slots": 239,
+      "asof_coverage_ratio": 0.987603305785124,
+      "exact_timestamp_coverage_ratio": 0.0,
       "exact_timestamp_slots": 0,
       "expected_slots": 242,
       "field": "score",
-      "field_coverage_ratio": 0.0,
-      "max_constant_run_hours": 0,
-      "missing_ratio": 1.0,
-      "non_null_slots": 0,
+      "field_coverage_ratio": 0.987603305785124,
+      "max_constant_run_hours": 2,
+      "missing_ratio": 0.012396694214875992,
+      "non_null_slots": 239,
       "staleness_interpretation": "DIAGNOSTIC_ONLY_NO_HARD_THRESHOLD",
-      "symbol": "BTC",
-      "timestamp_coverage_ratio": 0.0
+      "symbol": "BTC"
     },
     {
+      "asof_available_slots": 239,
+      "asof_coverage_ratio": 0.987603305785124,
+      "exact_timestamp_coverage_ratio": 0.0,
       "exact_timestamp_slots": 0,
       "expected_slots": 242,
       "field": "price",
-      "field_coverage_ratio": 0.0,
-      "max_constant_run_hours": 0,
-      "missing_ratio": 1.0,
-      "non_null_slots": 0,
+      "field_coverage_ratio": 0.987603305785124,
+      "max_constant_run_hours": 2,
+      "missing_ratio": 0.012396694214875992,
+      "non_null_slots": 239,
       "staleness_interpretation": "DIAGNOSTIC_ONLY_NO_HARD_THRESHOLD",
-      "symbol": "BTC",
-      "timestamp_coverage_ratio": 0.0
+      "symbol": "BTC"
     },
     {
+      "asof_available_slots": 239,
+      "asof_coverage_ratio": 0.987603305785124,
+      "exact_timestamp_coverage_ratio": 0.0,
       "exact_timestamp_slots": 0,
       "expected_slots": 242,
       "field": "volatility",
-      "field_coverage_ratio": 0.0,
-      "max_constant_run_hours": 0,
-      "missing_ratio": 1.0,
-      "non_null_slots": 0,
+      "field_coverage_ratio": 0.987603305785124,
+      "max_constant_run_hours": 2,
+      "missing_ratio": 0.012396694214875992,
+      "non_null_slots": 239,
       "staleness_interpretation": "DIAGNOSTIC_ONLY_NO_HARD_THRESHOLD",
-      "symbol": "BTC",
-      "timestamp_coverage_ratio": 0.0
+      "symbol": "BTC"
     },
     {
+      "asof_available_slots": 239,
+      "asof_coverage_ratio": 0.987603305785124,
+      "exact_timestamp_coverage_ratio": 0.0,
       "exact_timestamp_slots": 0,
       "expected_slots": 242,
       "field": "volume",
-      "field_coverage_ratio": 0.0,
-      "max_constant_run_hours": 0,
-      "missing_ratio": 1.0,
-      "non_null_slots": 0,
+      "field_coverage_ratio": 0.987603305785124,
+      "max_constant_run_hours": 4,
+      "missing_ratio": 0.012396694214875992,
+      "non_null_slots": 239,
       "staleness_interpretation": "DIAGNOSTIC_ONLY_NO_HARD_THRESHOLD",
-      "symbol": "BTC",
-      "timestamp_coverage_ratio": 0.0
+      "symbol": "BTC"
     },
     {
+      "asof_available_slots": 239,
+      "asof_coverage_ratio": 0.987603305785124,
+      "exact_timestamp_coverage_ratio": 0.0,
       "exact_timestamp_slots": 0,
       "expected_slots": 242,
       "field": "impulse",
-      "field_coverage_ratio": 0.0,
-      "max_constant_run_hours": 0,
-      "missing_ratio": 1.0,
-      "non_null_slots": 0,
+      "field_coverage_ratio": 0.987603305785124,
+      "max_constant_run_hours": 2,
+      "missing_ratio": 0.012396694214875992,
+      "non_null_slots": 239,
       "staleness_interpretation": "DIAGNOSTIC_ONLY_NO_HARD_THRESHOLD",
-      "symbol": "BTC",
-      "timestamp_coverage_ratio": 0.0
+      "symbol": "BTC"
     },
     {
+      "asof_available_slots": 239,
+      "asof_coverage_ratio": 0.987603305785124,
+      "exact_timestamp_coverage_ratio": 0.0,
       "exact_timestamp_slots": 0,
       "expected_slots": 242,
       "field": "technical",
-      "field_coverage_ratio": 0.0,
-      "max_constant_run_hours": 0,
-      "missing_ratio": 1.0,
-      "non_null_slots": 0,
+      "field_coverage_ratio": 0.987603305785124,
+      "max_constant_run_hours": 4,
+      "missing_ratio": 0.012396694214875992,
+      "non_null_slots": 239,
       "staleness_interpretation": "DIAGNOSTIC_ONLY_NO_HARD_THRESHOLD",
-      "symbol": "BTC",
-      "timestamp_coverage_ratio": 0.0
+      "symbol": "BTC"
     },
     {
+      "asof_available_slots": 239,
+      "asof_coverage_ratio": 0.987603305785124,
+      "exact_timestamp_coverage_ratio": 0.0,
       "exact_timestamp_slots": 0,
       "expected_slots": 242,
       "field": "social",
-      "field_coverage_ratio": 0.0,
-      "max_constant_run_hours": 0,
-      "missing_ratio": 1.0,
-      "non_null_slots": 0,
+      "field_coverage_ratio": 0.987603305785124,
+      "max_constant_run_hours": 5,
+      "missing_ratio": 0.012396694214875992,
+      "non_null_slots": 239,
       "staleness_interpretation": "DIAGNOSTIC_ONLY_NO_HARD_THRESHOLD",
-      "symbol": "BTC",
-      "timestamp_coverage_ratio": 0.0
+      "symbol": "BTC"
     },
     {
+      "asof_available_slots": 239,
+      "asof_coverage_ratio": 0.987603305785124,
+      "exact_timestamp_coverage_ratio": 0.0,
       "exact_timestamp_slots": 0,
       "expected_slots": 242,
       "field": "dominance",
-      "field_coverage_ratio": 0.0,
-      "max_constant_run_hours": 0,
-      "missing_ratio": 1.0,
-      "non_null_slots": 0,
+      "field_coverage_ratio": 0.987603305785124,
+      "max_constant_run_hours": 8,
+      "missing_ratio": 0.012396694214875992,
+      "non_null_slots": 239,
       "staleness_interpretation": "DIAGNOSTIC_ONLY_NO_HARD_THRESHOLD",
-      "symbol": "BTC",
-      "timestamp_coverage_ratio": 0.0
+      "symbol": "BTC"
     },
     {
+      "asof_available_slots": 239,
+      "asof_coverage_ratio": 0.987603305785124,
+      "exact_timestamp_coverage_ratio": 0.0,
       "exact_timestamp_slots": 0,
       "expected_slots": 242,
       "field": "trends",
-      "field_coverage_ratio": 0.0,
-      "max_constant_run_hours": 0,
-      "missing_ratio": 1.0,
-      "non_null_slots": 0,
+      "field_coverage_ratio": 0.987603305785124,
+      "max_constant_run_hours": 4,
+      "missing_ratio": 0.012396694214875992,
+      "non_null_slots": 239,
       "staleness_interpretation": "DIAGNOSTIC_ONLY_NO_HARD_THRESHOLD",
-      "symbol": "BTC",
-      "timestamp_coverage_ratio": 0.0
+      "symbol": "BTC"
     },
     {
+      "asof_available_slots": 239,
+      "asof_coverage_ratio": 0.987603305785124,
+      "exact_timestamp_coverage_ratio": 0.0,
       "exact_timestamp_slots": 0,
       "expected_slots": 242,
       "field": "whales",
-      "field_coverage_ratio": 0.0,
-      "max_constant_run_hours": 0,
-      "missing_ratio": 1.0,
-      "non_null_slots": 0,
+      "field_coverage_ratio": 0.987603305785124,
+      "max_constant_run_hours": 2,
+      "missing_ratio": 0.012396694214875992,
+      "non_null_slots": 239,
       "staleness_interpretation": "DIAGNOSTIC_ONLY_NO_HARD_THRESHOLD",
-      "symbol": "BTC",
-      "timestamp_coverage_ratio": 0.0
+      "symbol": "BTC"
     },
     {
+      "asof_available_slots": 239,
+      "asof_coverage_ratio": 0.987603305785124,
+      "exact_timestamp_coverage_ratio": 0.0,
       "exact_timestamp_slots": 0,
       "expected_slots": 242,
       "field": "orders",
-      "field_coverage_ratio": 0.0,
-      "max_constant_run_hours": 0,
-      "missing_ratio": 1.0,
-      "non_null_slots": 0,
+      "field_coverage_ratio": 0.987603305785124,
+      "max_constant_run_hours": 3,
+      "missing_ratio": 0.012396694214875992,
+      "non_null_slots": 239,
       "staleness_interpretation": "DIAGNOSTIC_ONLY_NO_HARD_THRESHOLD",
-      "symbol": "BTC",
-      "timestamp_coverage_ratio": 0.0
+      "symbol": "BTC"
     },
     {
+      "asof_available_slots": 239,
+      "asof_coverage_ratio": 0.987603305785124,
+      "exact_timestamp_coverage_ratio": 0.0,
       "exact_timestamp_slots": 0,
       "expected_slots": 242,
       "field": "score",
-      "field_coverage_ratio": 0.0,
-      "max_constant_run_hours": 0,
-      "missing_ratio": 1.0,
-      "non_null_slots": 0,
+      "field_coverage_ratio": 0.987603305785124,
+      "max_constant_run_hours": 2,
+      "missing_ratio": 0.012396694214875992,
+      "non_null_slots": 239,
       "staleness_interpretation": "DIAGNOSTIC_ONLY_NO_HARD_THRESHOLD",
-      "symbol": "ETH",
-      "timestamp_coverage_ratio": 0.0
+      "symbol": "ETH"
     },
     {
+      "asof_available_slots": 239,
+      "asof_coverage_ratio": 0.987603305785124,
+      "exact_timestamp_coverage_ratio": 0.0,
       "exact_timestamp_slots": 0,
       "expected_slots": 242,
       "field": "price",
-      "field_coverage_ratio": 0.0,
-      "max_constant_run_hours": 0,
-      "missing_ratio": 1.0,
-      "non_null_slots": 0,
+      "field_coverage_ratio": 0.987603305785124,
+      "max_constant_run_hours": 3,
+      "missing_ratio": 0.012396694214875992,
+      "non_null_slots": 239,
       "staleness_interpretation": "DIAGNOSTIC_ONLY_NO_HARD_THRESHOLD",
-      "symbol": "ETH",
-      "timestamp_coverage_ratio": 0.0
+      "symbol": "ETH"
     },
     {
+      "asof_available_slots": 239,
+      "asof_coverage_ratio": 0.987603305785124,
+      "exact_timestamp_coverage_ratio": 0.0,
       "exact_timestamp_slots": 0,
       "expected_slots": 242,
       "field": "volatility",
-      "field_coverage_ratio": 0.0,
-      "max_constant_run_hours": 0,
-      "missing_ratio": 1.0,
-      "non_null_slots": 0,
+      "field_coverage_ratio": 0.987603305785124,
+      "max_constant_run_hours": 3,
+      "missing_ratio": 0.012396694214875992,
+      "non_null_slots": 239,
       "staleness_interpretation": "DIAGNOSTIC_ONLY_NO_HARD_THRESHOLD",
-      "symbol": "ETH",
-      "timestamp_coverage_ratio": 0.0
+      "symbol": "ETH"
     },
     {
+      "asof_available_slots": 239,
+      "asof_coverage_ratio": 0.987603305785124,
+      "exact_timestamp_coverage_ratio": 0.0,
       "exact_timestamp_slots": 0,
       "expected_slots": 242,
       "field": "volume",
-      "field_coverage_ratio": 0.0,
-      "max_constant_run_hours": 0,
-      "missing_ratio": 1.0,
-      "non_null_slots": 0,
+      "field_coverage_ratio": 0.987603305785124,
+      "max_constant_run_hours": 3,
+      "missing_ratio": 0.012396694214875992,
+      "non_null_slots": 239,
       "staleness_interpretation": "DIAGNOSTIC_ONLY_NO_HARD_THRESHOLD",
-      "symbol": "ETH",
-      "timestamp_coverage_ratio": 0.0
+      "symbol": "ETH"
     },
     {
+      "asof_available_slots": 239,
+      "asof_coverage_ratio": 0.987603305785124,
+      "exact_timestamp_coverage_ratio": 0.0,
       "exact_timestamp_slots": 0,
       "expected_slots": 242,
       "field": "impulse",
-      "field_coverage_ratio": 0.0,
-      "max_constant_run_hours": 0,
-      "missing_ratio": 1.0,
-      "non_null_slots": 0,
+      "field_coverage_ratio": 0.987603305785124,
+      "max_constant_run_hours": 2,
+      "missing_ratio": 0.012396694214875992,
+      "non_null_slots": 239,
       "staleness_interpretation": "DIAGNOSTIC_ONLY_NO_HARD_THRESHOLD",
-      "symbol": "ETH",
-      "timestamp_coverage_ratio": 0.0
+      "symbol": "ETH"
     },
     {
+      "asof_available_slots": 239,
+      "asof_coverage_ratio": 0.987603305785124,
+      "exact_timestamp_coverage_ratio": 0.0,
       "exact_timestamp_slots": 0,
       "expected_slots": 242,
       "field": "technical",
-      "field_coverage_ratio": 0.0,
-      "max_constant_run_hours": 0,
-      "missing_ratio": 1.0,
-      "non_null_slots": 0,
+      "field_coverage_ratio": 0.987603305785124,
+      "max_constant_run_hours": 3,
+      "missing_ratio": 0.012396694214875992,
+      "non_null_slots": 239,
       "staleness_interpretation": "DIAGNOSTIC_ONLY_NO_HARD_THRESHOLD",
-      "symbol": "ETH",
-      "timestamp_coverage_ratio": 0.0
+      "symbol": "ETH"
     },
     {
+      "asof_available_slots": 239,
+      "asof_coverage_ratio": 0.987603305785124,
+      "exact_timestamp_coverage_ratio": 0.0,
       "exact_timestamp_slots": 0,
       "expected_slots": 242,
       "field": "social",
-      "field_coverage_ratio": 0.0,
-      "max_constant_run_hours": 0,
-      "missing_ratio": 1.0,
-      "non_null_slots": 0,
+      "field_coverage_ratio": 0.987603305785124,
+      "max_constant_run_hours": 5,
+      "missing_ratio": 0.012396694214875992,
+      "non_null_slots": 239,
       "staleness_interpretation": "DIAGNOSTIC_ONLY_NO_HARD_THRESHOLD",
-      "symbol": "ETH",
-      "timestamp_coverage_ratio": 0.0
+      "symbol": "ETH"
     },
     {
+      "asof_available_slots": 239,
+      "asof_coverage_ratio": 0.987603305785124,
+      "exact_timestamp_coverage_ratio": 0.0,
       "exact_timestamp_slots": 0,
       "expected_slots": 242,
       "field": "dominance",
-      "field_coverage_ratio": 0.0,
-      "max_constant_run_hours": 0,
-      "missing_ratio": 1.0,
-      "non_null_slots": 0,
+      "field_coverage_ratio": 0.987603305785124,
+      "max_constant_run_hours": 5,
+      "missing_ratio": 0.012396694214875992,
+      "non_null_slots": 239,
       "staleness_interpretation": "DIAGNOSTIC_ONLY_NO_HARD_THRESHOLD",
-      "symbol": "ETH",
-      "timestamp_coverage_ratio": 0.0
+      "symbol": "ETH"
     },
     {
+      "asof_available_slots": 239,
+      "asof_coverage_ratio": 0.987603305785124,
+      "exact_timestamp_coverage_ratio": 0.0,
       "exact_timestamp_slots": 0,
       "expected_slots": 242,
       "field": "trends",
-      "field_coverage_ratio": 0.0,
-      "max_constant_run_hours": 0,
-      "missing_ratio": 1.0,
-      "non_null_slots": 0,
+      "field_coverage_ratio": 0.987603305785124,
+      "max_constant_run_hours": 4,
+      "missing_ratio": 0.012396694214875992,
+      "non_null_slots": 239,
       "staleness_interpretation": "DIAGNOSTIC_ONLY_NO_HARD_THRESHOLD",
-      "symbol": "ETH",
-      "timestamp_coverage_ratio": 0.0
+      "symbol": "ETH"
     },
     {
+      "asof_available_slots": 239,
+      "asof_coverage_ratio": 0.987603305785124,
+      "exact_timestamp_coverage_ratio": 0.0,
       "exact_timestamp_slots": 0,
       "expected_slots": 242,
       "field": "whales",
-      "field_coverage_ratio": 0.0,
-      "max_constant_run_hours": 0,
-      "missing_ratio": 1.0,
-      "non_null_slots": 0,
+      "field_coverage_ratio": 0.987603305785124,
+      "max_constant_run_hours": 2,
+      "missing_ratio": 0.012396694214875992,
+      "non_null_slots": 239,
       "staleness_interpretation": "DIAGNOSTIC_ONLY_NO_HARD_THRESHOLD",
-      "symbol": "ETH",
-      "timestamp_coverage_ratio": 0.0
+      "symbol": "ETH"
     },
     {
+      "asof_available_slots": 239,
+      "asof_coverage_ratio": 0.987603305785124,
+      "exact_timestamp_coverage_ratio": 0.0,
       "exact_timestamp_slots": 0,
       "expected_slots": 242,
       "field": "orders",
-      "field_coverage_ratio": 0.0,
-      "max_constant_run_hours": 0,
-      "missing_ratio": 1.0,
-      "non_null_slots": 0,
+      "field_coverage_ratio": 0.987603305785124,
+      "max_constant_run_hours": 10,
+      "missing_ratio": 0.012396694214875992,
+      "non_null_slots": 239,
       "staleness_interpretation": "DIAGNOSTIC_ONLY_NO_HARD_THRESHOLD",
-      "symbol": "ETH",
-      "timestamp_coverage_ratio": 0.0
+      "symbol": "ETH"
     }
   ],
   "fields": [
@@ -437,12 +516,33 @@
     "whales",
     "orders"
   ],
-  "observed_exact_symbol_hours": 0,
+  "max_observation_age_seconds_exclusive": 3600,
   "post_event_hours": 48,
   "pre_event_hours": 72,
+  "symbol_coverage": {
+    "BTC": {
+      "asof_available_slots": 239,
+      "asof_coverage_ratio": 0.987603305785124,
+      "exact_timestamp_slots": 0,
+      "expected_slots": 242
+    },
+    "ETH": {
+      "asof_available_slots": 239,
+      "asof_coverage_ratio": 0.987603305785124,
+      "exact_timestamp_slots": 0,
+      "expected_slots": 242
+    },
+    "MARKET": {
+      "asof_available_slots": 0,
+      "asof_coverage_ratio": 0.0,
+      "exact_timestamp_slots": 0,
+      "expected_slots": 242
+    }
+  },
   "symbols": [
     "MARKET",
     "BTC",
     "ETH"
-  ]
+  ],
+  "time_alignment_contract": "CFGI_ASOF_1H_NO_LOOKAHEAD_v1"
 }
