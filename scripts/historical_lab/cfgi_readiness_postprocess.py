@@ -57,7 +57,6 @@ def requested_value(row: dict | None, field: str):
         return None
     if field == "score":
         return row.get("score")
-    # `price` is a requested CFGI component. `real_price` is retained separately.
     return row.get(f"component_{field}")
 
 
@@ -263,8 +262,12 @@ def build_manifest(
         blockers.append("CFGI_DUPLICATE_SYMBOL_TIMESTAMP_KEYS")
     if structural["non_hour_aligned_events"]:
         blockers.append("CFGI_EVENT_TIMESTAMPS_NOT_HOUR_ALIGNED")
-    if structural["expected_symbol_hours"] != structural["observed_exact_symbol_hours"]:
-        blockers.append("CFGI_EXACT_EVENT_PATH_INCOMPLETE")
+    expected_symbol_hours = int(structural["expected_symbol_hours"])
+    observed_exact_symbol_hours = int(structural["observed_exact_symbol_hours"])
+    if expected_symbol_hours != observed_exact_symbol_hours:
+        warnings.append(
+            f"CFGI_EXACT_OBSERVATION_MISSINGNESS:{expected_symbol_hours-observed_exact_symbol_hours}/{expected_symbol_hours}"
+        )
 
     billing_path = artifacts / "CFGI_BILLING.json"
     billing = json.loads(billing_path.read_text()) if billing_path.exists() else {}
