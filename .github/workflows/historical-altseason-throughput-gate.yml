@@ -70,9 +70,12 @@ jobs:
           assert ledger['owner_authorized_recovery_attempts']==1
           assert ledger['owner_authorized_market_gapfill_attempts']==1
           assert ledger['automatic_retry_after_failure'] is False
-          assert gap['requested_symbols']==['MARKET']
-          assert sorted(gap['preserve_existing_symbols'])==['BTC','ETH']
-          assert gap['max_additional_credits']<=3000
+          assert gap['contract']=='HISTORICAL_ALTSEASON_CFGI_MARKET_GAPFILL_AUTHORIZATION_v1'
+          assert gap['owner_authorized'] is True
+          assert gap['allowed_symbols']==['MARKET']
+          assert sorted(gap['forbidden_repurchase_symbols'])==['BTC','ETH']
+          assert gap['max_attempts']==1
+          assert gap['max_worst_case_credits']<=3000
           for token in ['CFGI_TARGETED_INPUT_FINGERPRINT_v1','EXACT_COMPLETE_PRIOR_ENRICHMENT_V3','RESEARCH_READINESS_MANIFEST_v3','FORWARD_TEST','automatic_promotion','CFGI_ASOF_1H_NO_LOOKAHEAD_v1']:
               assert token in p,token
           for token in ['workflow_dispatch:','fingerprint:','DISPATCH_FINGERPRINT','HISTORICAL_ALTSEASON_CFGI_PAID_ATTEMPT_LEDGER.json','HISTORICAL_ALTSEASON_CFGI_MARKET_GAPFILL_AUTHORIZATION.json','cfgi_recovery_budget_guard.py','cfgi_readiness_postprocess_v2.py','CFGI_MARKET_GAPFILL_BILLING.json','CFGI_CUMULATIVE_BILLING.json']:
@@ -112,7 +115,7 @@ jobs:
               assert 'group: framework-main-writer' in writer
               assert push_main in writer
               assert 'git rebase --abort' in writer
-              assert 'git merge-base --is-ancestor HEAD origin/main' in writer
+              assert 'git merge-base --is-ancestor HEAD origin/main'
               assert 'git diff --cached --quiet' in writer
           print('HISTORICAL_COMPUTE_RESERVE_PUBLISH_WRITER_BOUNDARY_PASS')
           PY
