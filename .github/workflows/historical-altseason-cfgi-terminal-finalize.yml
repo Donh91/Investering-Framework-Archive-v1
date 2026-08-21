@@ -1,0 +1,70 @@
+name: Historical Altseason CFGI Terminal Finalize
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/historical_lab/cfgi_terminal_finalize.py'
+      - '00_ARCHIVE_CONTROL/research_runtime/CFGI_MARKET_PROVIDER_TERMINAL_RECEIPT.json'
+      - '.github/workflows/historical-altseason-cfgi-terminal-finalize.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: historical-altseason-cfgi-terminal-finalize
+  cancel-in-progress: false
+
+jobs:
+  finalize:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compile terminal finalizer
+        run: |
+          python -m py_compile scripts/historical_lab/cfgi_readiness_postprocess_v3.py
+          python -m py_compile scripts/historical_lab/cfgi_terminal_finalize.py
+      - name: Finalize provider-bounded v3.1 readiness without paid calls
+        run: python scripts/historical_lab/cfgi_terminal_finalize.py
+      - name: Validate terminal research readiness
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path('06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts')
+          m=json.loads((root/'RESEARCH_READINESS_MANIFEST.json').read_text())
+          g=json.loads((root/'CFGI_MARKET_GAPFILL_BILLING.json').read_text())
+          assert m['contract']=='RESEARCH_READINESS_MANIFEST_v3_1_PROVIDER_BOUNDED'
+          assert m['readiness_verdict']=='PASS' and not m['blockers']
+          assert m['cfgi']['time_alignment_contract']=='CFGI_ASOF_1H_NO_LOOKAHEAD_v1' and m['cfgi']['no_lookahead'] is True
+          assert m['cfgi']['market_historical_availability']=='NOT_TESTABLE_PROVIDER_UNAVAILABLE'
+          assert m['cfgi']['provider_unavailable_symbols']==['MARKET']
+          assert m['cfgi']['required_observed_symbols']==['BTC','ETH']
+          assert m['cfgi']['symbol_coverage']['MARKET']['asof_available_slots']==0
+          assert m['cfgi']['symbol_coverage']['BTC']['asof_available_slots']>0
+          assert m['cfgi']['symbol_coverage']['ETH']['asof_available_slots']>0
+          assert g['contract']=='CFGI_MARKET_GAPFILL_BILLING_v2_TERMINAL'
+          assert g['status']=='TERMINAL_PROVIDER_NO_HISTORICAL_ROWS'
+          assert g['requested_symbols']==['MARKET'] and g['returned_symbols']==[] and g['row_count']==0
+          assert g['no_additional_paid_retry_authorized'] is True
+          assert g['conservative_cumulative_credit_upper_bound']<=g['hard_cap_credits']
+          assert g['conservative_credits_remaining_lower_bound']>=g['minimum_reserve_credits']
+          assert m['automatic_promotion'] is False and m['historical_findings_max_classification']=='FORWARD_TEST'
+          print('CFGI_TERMINAL_PROVIDER_BOUNDED_V3_1_PASS')
+          PY
+      - name: Upload terminal finalized research stage
+        uses: actions/upload-artifact@v4
+        with:
+          name: historical-altseason-cfgi-terminal-stage
+          path: 06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/
+          if-no-files-found: error
+          retention-days: 30
+          compression-level: 6
