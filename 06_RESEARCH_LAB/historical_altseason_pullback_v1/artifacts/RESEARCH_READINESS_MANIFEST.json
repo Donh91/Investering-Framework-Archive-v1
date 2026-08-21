@@ -1,0 +1,157 @@
+{
+  "artifact_state": {
+    "BACKTEST_SUMMARY.json": {
+      "bytes": 630,
+      "exists": true,
+      "sha256": "5a57dd9bb35c73dd5e17df12e843e8a0abe7e7c02672d4a0b4681ba6d75bbea7"
+    },
+    "CFGI_BILLING.json": {
+      "bytes": 3479,
+      "exists": true,
+      "sha256": "d58eae957dd28614db32c3720a72832959e7ba68f633bc0bb46ed8fbb972f194"
+    },
+    "CFGI_COVERAGE.json": {
+      "bytes": 4531,
+      "exists": true,
+      "sha256": "4dc912386968de1f8c4cb55470008ab8ab683964fb3ad0a1918d3768ff921040"
+    },
+    "CFGI_EVENT_PATHS.jsonl.gz": {
+      "bytes": 4866,
+      "exists": true,
+      "sha256": "a7f44421cbce810200640d0dcfebf78287da4e9a07a2a243717404d038a2828c"
+    },
+    "CFGI_EVENT_SIGNATURES.json": {
+      "bytes": 25943,
+      "exists": true,
+      "sha256": "de7e9603d86b97a97e029e2d7340136d052c5711c750baaa399a1d67057e276f"
+    },
+    "CFGI_FIELD_COVERAGE.json": {
+      "bytes": 13045,
+      "exists": true,
+      "sha256": "53449c722e12fc59f4c8d2b19e9070e68d483c1e948b9ab05d697ed3c9157306"
+    },
+    "EPISODE_CATALOG.json": {
+      "bytes": 33176,
+      "exists": true,
+      "sha256": "3760210cf72c402c97aa0fb5888a6bda7dd0a979d04ff55218123305615d4050"
+    },
+    "EPISODE_FEATURE_MATRIX.jsonl.gz": {
+      "bytes": 292642,
+      "exists": true,
+      "sha256": "8cf11a0a8e1aa825a0d983fbb5974e8b1d55a1ab23939ea40e2072fef6fb0187"
+    },
+    "EPISODE_MATRIX_COVERAGE.json": {
+      "bytes": 18537,
+      "exists": true,
+      "sha256": "1116836316514d7dc58be33fbc7ebfd799f285d726e6642a731b74182de29282"
+    },
+    "FREE_BULK_ARTIFACT_POINTER.json": {
+      "bytes": 535,
+      "exists": true,
+      "sha256": "72ce8f242f9cbbeac6fd02f9c9b236d6dbbf30aa940703428aadf85e178ba0ef"
+    },
+    "FREE_EVENT_PATHS.jsonl.gz": {
+      "bytes": 126108,
+      "exists": true,
+      "sha256": "7f136facdb4672cdf8e59cc46d8c845f16715c81a9b7353cc5734568f925f0df"
+    },
+    "FREE_EVENT_PATHS_COVERAGE.json": {
+      "bytes": 386,
+      "exists": true,
+      "sha256": "d8b0d44fa32d59027f5106cbb280fe1f023d63a5c9d77b02f9ca9713da718b7c"
+    },
+    "FREE_SOURCE_AUDIT.json": {
+      "bytes": 37485,
+      "exists": true,
+      "sha256": "9eb733adbbb5e83d16caa6699648133eb41ca55fbfc1304c5106c97ac207c00b"
+    },
+    "TIME_INTEGRITY_AUDIT.json": {
+      "bytes": 2301,
+      "exists": true,
+      "sha256": "7d98fc4bda577b1e57c5b9b60f3b041033eae027e952f578130615310a0a7981"
+    },
+    "cfgi_targeted.jsonl.gz": {
+      "bytes": 16566,
+      "exists": true,
+      "sha256": "66a3c2b7266c7d87b31d9e10dd54e5c93837a421839608d1d9dee726b8822a9a"
+    },
+    "hourly_features.csv.gz": {
+      "bytes": 10230489,
+      "exists": true,
+      "sha256": "6fd4159cf4d0bfbaa54eed4fdb6d1a26a5cf549fe820603db6e44a549e2059e7"
+    }
+  },
+  "authority": {
+    "automatic_rule_changes": false,
+    "canonical_market_state": false,
+    "portfolio_execution": false,
+    "promotion_requires_separate_review": true,
+    "research_only": true
+  },
+  "automatic_promotion": false,
+  "blockers": [],
+  "cfgi": {
+    "actual_credits_used_from_headers": 5259,
+    "analysis_eligibility_policy": "DOWNSTREAM_ANALYSIS_MUST_MARK_UNSUPPORTED_SLICES_NOT_TESTABLE",
+    "billing_status": "PASS",
+    "event_count": 2,
+    "event_paths_artifact": "CFGI_EVENT_PATHS.jsonl.gz",
+    "exact_timestamp_coverage_ratio": 0.0,
+    "expected_symbol_hours": 726,
+    "expected_worst_case_credits": 7986,
+    "field_coverage_artifact": "CFGI_FIELD_COVERAGE.json",
+    "final_credits_remaining": 71251,
+    "hard_cap": 25000,
+    "minimum_reserve": 50000,
+    "missing_exact_symbol_hours": 726,
+    "missingness_policy": "EXPLICIT_MISSING_NOT_FILLED_NOT_INTERPOLATED_NOT_A_GLOBAL_BLOCKER",
+    "observed_exact_symbol_hours": 0,
+    "scaffold_symbol_hours": 726
+  },
+  "config_contract_version": "HISTORICAL_ALTSEASON_PULLBACK_LAB_CONFIG_v1_1",
+  "contract": "RESEARCH_READINESS_MANIFEST_v2",
+  "historical_findings_max_classification": "FORWARD_TEST",
+  "readiness_verdict": "PASS",
+  "repo_commit_identity": "a80666d4cc5ba0b71e0e5a1a1a71e814338af30c",
+  "time_integrity_required": {
+    "cross_window_lags_forbidden": true,
+    "max_continuity_gap_hours": 1,
+    "strict_timestamp_lags": true
+  },
+  "warnings": [
+    "CFGI_EXACT_OBSERVATION_MISSINGNESS:726/726",
+    "CFGI_ZERO_FIELD_COVERAGE:BTC.dominance",
+    "CFGI_ZERO_FIELD_COVERAGE:BTC.impulse",
+    "CFGI_ZERO_FIELD_COVERAGE:BTC.orders",
+    "CFGI_ZERO_FIELD_COVERAGE:BTC.price",
+    "CFGI_ZERO_FIELD_COVERAGE:BTC.score",
+    "CFGI_ZERO_FIELD_COVERAGE:BTC.social",
+    "CFGI_ZERO_FIELD_COVERAGE:BTC.technical",
+    "CFGI_ZERO_FIELD_COVERAGE:BTC.trends",
+    "CFGI_ZERO_FIELD_COVERAGE:BTC.volatility",
+    "CFGI_ZERO_FIELD_COVERAGE:BTC.volume",
+    "CFGI_ZERO_FIELD_COVERAGE:BTC.whales",
+    "CFGI_ZERO_FIELD_COVERAGE:ETH.dominance",
+    "CFGI_ZERO_FIELD_COVERAGE:ETH.impulse",
+    "CFGI_ZERO_FIELD_COVERAGE:ETH.orders",
+    "CFGI_ZERO_FIELD_COVERAGE:ETH.price",
+    "CFGI_ZERO_FIELD_COVERAGE:ETH.score",
+    "CFGI_ZERO_FIELD_COVERAGE:ETH.social",
+    "CFGI_ZERO_FIELD_COVERAGE:ETH.technical",
+    "CFGI_ZERO_FIELD_COVERAGE:ETH.trends",
+    "CFGI_ZERO_FIELD_COVERAGE:ETH.volatility",
+    "CFGI_ZERO_FIELD_COVERAGE:ETH.volume",
+    "CFGI_ZERO_FIELD_COVERAGE:ETH.whales",
+    "CFGI_ZERO_FIELD_COVERAGE:MARKET.dominance",
+    "CFGI_ZERO_FIELD_COVERAGE:MARKET.impulse",
+    "CFGI_ZERO_FIELD_COVERAGE:MARKET.orders",
+    "CFGI_ZERO_FIELD_COVERAGE:MARKET.price",
+    "CFGI_ZERO_FIELD_COVERAGE:MARKET.score",
+    "CFGI_ZERO_FIELD_COVERAGE:MARKET.social",
+    "CFGI_ZERO_FIELD_COVERAGE:MARKET.technical",
+    "CFGI_ZERO_FIELD_COVERAGE:MARKET.trends",
+    "CFGI_ZERO_FIELD_COVERAGE:MARKET.volatility",
+    "CFGI_ZERO_FIELD_COVERAGE:MARKET.volume",
+    "CFGI_ZERO_FIELD_COVERAGE:MARKET.whales"
+  ]
+}

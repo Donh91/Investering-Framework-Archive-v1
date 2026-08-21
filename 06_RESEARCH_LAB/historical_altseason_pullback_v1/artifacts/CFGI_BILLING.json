@@ -1,0 +1,131 @@
+{
+  "actual_credits_used_from_headers": 5259,
+  "contract": "CFGI_TARGETED_BILLING_v1",
+  "expected_worst_case_credits": 7986,
+  "fields": [
+    "score",
+    "price",
+    "volatility",
+    "volume",
+    "impulse",
+    "technical",
+    "social",
+    "dominance",
+    "trends",
+    "whales",
+    "orders"
+  ],
+  "final_credits_remaining": 71251,
+  "generated_at_utc": "2026-08-21T05:25:58Z",
+  "hard_cap": 25000,
+  "input_fingerprint_contract": "CFGI_TARGETED_INPUT_FINGERPRINT_v1",
+  "input_fingerprint_sha256": "6106f96285a66f03e324595b68c1777627f4d83e5e70dc6c64d9b1022e544a8f",
+  "merged_intervals": [
+    {
+      "end": "2025-01-08T16:00:00Z",
+      "start": "2025-01-03T16:00:00Z"
+    },
+    {
+      "end": "2025-02-09T18:00:00Z",
+      "start": "2025-02-04T18:00:00Z"
+    }
+  ],
+  "minimum_reserve": 50000,
+  "probe": {
+    "credits_remaining": 76509,
+    "credits_used": 1,
+    "headers": {
+      "x-allowance-remaining": "0",
+      "x-allowance-used": "0",
+      "x-archive-rate": "none",
+      "x-billing-mode": "credit",
+      "x-content-type-options": "nosniff",
+      "x-credits-remaining": "76509",
+      "x-credits-used": "1",
+      "x-fields-requested": "1",
+      "x-rows-archive": "0",
+      "x-rows-live": "1",
+      "x-rows-returned": "1",
+      "x-tokens-requested": "1"
+    },
+    "row_count": 1
+  },
+  "request_receipts": [
+    {
+      "chunk": 1,
+      "credits_remaining": 73869,
+      "credits_used": 2640,
+      "end": "2025-01-08T16:00:00Z",
+      "row_count": 240,
+      "start": "2025-01-03T16:00:00Z",
+      "x_headers": {
+        "x-allowance-remaining": "0",
+        "x-allowance-used": "0",
+        "x-archive-rate": "none",
+        "x-billing-mode": "credit",
+        "x-content-type-options": "nosniff",
+        "x-credits-remaining": "73869",
+        "x-credits-used": "2640",
+        "x-fields-requested": "11",
+        "x-rows-archive": "0",
+        "x-rows-live": "240",
+        "x-rows-returned": "240",
+        "x-tokens-requested": "3"
+      }
+    },
+    {
+      "chunk": 2,
+      "credits_remaining": 71251,
+      "credits_used": 2618,
+      "end": "2025-02-09T18:00:00Z",
+      "row_count": 238,
+      "start": "2025-02-04T18:00:00Z",
+      "x_headers": {
+        "x-allowance-remaining": "0",
+        "x-allowance-used": "0",
+        "x-archive-rate": "none",
+        "x-billing-mode": "credit",
+        "x-content-type-options": "nosniff",
+        "x-credits-remaining": "71251",
+        "x-credits-used": "2618",
+        "x-fields-requested": "11",
+        "x-rows-archive": "0",
+        "x-rows-live": "238",
+        "x-rows-returned": "238",
+        "x-tokens-requested": "3"
+      }
+    }
+  ],
+  "selected_events": [
+    {
+      "episode_id": "PB_2025-01-06_046",
+      "event_utc": "2025-01-06T16:00:00Z",
+      "kind": "PULLBACK",
+      "max_drawdown_pct": -22.615975719595482
+    },
+    {
+      "basis": "MATCHED_STRONG_24H_CONTINUATION_WITHOUT_NEXT48H_5PCT_DRAWDOWN",
+      "control_id": "CTRL_01",
+      "event_utc": "2025-02-07T18:00:00Z",
+      "future_outcome_used_for_control_label_only": true,
+      "kind": "CONTROL",
+      "matched_episode_id": "PB_2025-01-06_046",
+      "matching_distance": 0.07015452540595637,
+      "matching_features": [
+        "mean_return_24h_pct",
+        "breadth_24h",
+        "dispersion_1h_pct",
+        "eth_minus_btc_24h_pp",
+        "active_alt_count"
+      ]
+    }
+  ],
+  "static": true,
+  "status": "PASS",
+  "symbols": [
+    "MARKET",
+    "BTC",
+    "ETH"
+  ],
+  "timeframe": "1h"
+}
