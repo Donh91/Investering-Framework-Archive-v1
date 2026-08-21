@@ -24,7 +24,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: main
-          fetch-depth: 1
+          fetch-depth: 20
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
@@ -42,7 +42,7 @@ jobs:
           assert fp==ledger['input_fingerprint_sha256']==auth['input_fingerprint_sha256']==budget['input_fingerprint_sha256']; assert budget['status']=='PASS' and not budget['blockers']; assert budget['plan'] in {'MARKET_ONLY_GAPFILL','NO_FURTHER_PAID_CALL_REQUIRED'}
           print('MARKET_GAPFILL_PRELAUNCH_PASS',budget['plan'],budget['projected_cumulative_credits'],budget['projected_credits_remaining'])
           PY
-      - name: Dispatch exactly one post-authorization gap-fill run
+      - name: Dispatch exactly one v3 MARKET gap-fill run
         env:
           GH_TOKEN: ${{ github.token }}
           FP: 6106f96285a66f03e324595b68c1777627f4d83e5e70dc6c64d9b1022e544a8f
@@ -62,19 +62,36 @@ jobs:
             echo 'FINAL_V3_ALREADY_COMPLETE - no dispatch'
             exit 0
           fi
+
+          activation_time="$(git log -1 --format=%cI -- .github/workflows/cfgi-recovery-launch-once.yml)"
+          test -n "$activation_time"
+          echo "V3_LAUNCHER_ACTIVATION_TIME=$activation_time"
           gh run list --repo "$GITHUB_REPOSITORY" --workflow historical-altseason-cfgi-enrichment.yml --limit 30 --json databaseId,event,createdAt,status,conclusion,url > /tmp/runs.json
-          existing="$(python - <<'PY'
-          import json
+          existing="$(ACTIVATION_TIME="$activation_time" python - <<'PY'
+          import json, os
           from datetime import datetime
-          rows=json.load(open('/tmp/runs.json')); cutoff=datetime.fromisoformat('2026-08-21T06:57:00+00:00'); c=[r for r in rows if r.get('event')=='workflow_dispatch' and datetime.fromisoformat(r['createdAt'].replace('Z','+00:00'))>cutoff]; c.sort(key=lambda r:r['createdAt'],reverse=True); print('' if not c else c[0]['databaseId'])
+          rows=json.load(open('/tmp/runs.json'))
+          cutoff=datetime.fromisoformat(os.environ['ACTIVATION_TIME'].replace('Z','+00:00'))
+          c=[r for r in rows if r.get('event')=='workflow_dispatch' and datetime.fromisoformat(r['createdAt'].replace('Z','+00:00'))>=cutoff]
+          c.sort(key=lambda r:r['createdAt'],reverse=True)
+          print('' if not c else c[0]['databaseId'])
           PY
           )"
-          if [ -n "$existing" ]; then echo "POST_AUTH_GAPFILL_RUN_ALREADY_EXISTS run_id=$existing - no dispatch"; exit 0; fi
+          if [ -n "$existing" ]; then
+            echo "V3_MARKET_GAPFILL_RUN_ALREADY_EXISTS run_id=$existing - no dispatch"
+            exit 0
+          fi
+
           gh workflow run historical-altseason-cfgi-enrichment.yml --repo "$GITHUB_REPOSITORY" --ref main -f fingerprint="$FP"
           sleep 4
           gh run list --repo "$GITHUB_REPOSITORY" --workflow historical-altseason-cfgi-enrichment.yml --limit 10 --json databaseId,event,createdAt,status,conclusion,url | tee /tmp/post.json
-          python - <<'PY'
-          import json
+          ACTIVATION_TIME="$activation_time" python - <<'PY'
+          import json, os
           from datetime import datetime
-          rows=json.load(open('/tmp/post.json')); cutoff=datetime.fromisoformat('2026-08-21T06:57:00+00:00'); c=[r for r in rows if r.get('event')=='workflow_dispatch' and datetime.fromisoformat(r['createdAt'].replace('Z','+00:00'))>cutoff]; c.sort(key=lambda r:r['createdAt'],reverse=True); assert c,'MARKET gap-fill dispatch not visible'; print('MARKET_GAPFILL_DISPATCH_CONFIRMED',c[0]['databaseId'],c[0]['status'],c[0]['url'])
+          rows=json.load(open('/tmp/post.json'))
+          cutoff=datetime.fromisoformat(os.environ['ACTIVATION_TIME'].replace('Z','+00:00'))
+          c=[r for r in rows if r.get('event')=='workflow_dispatch' and datetime.fromisoformat(r['createdAt'].replace('Z','+00:00'))>=cutoff]
+          c.sort(key=lambda r:r['createdAt'],reverse=True)
+          assert c,'v3 MARKET gap-fill dispatch not visible'
+          print('V3_MARKET_GAPFILL_DISPATCH_CONFIRMED',c[0]['databaseId'],c[0]['status'],c[0]['url'])
           PY
