@@ -1,0 +1,49 @@
+name: Shadow Registry Weekly
+
+on:
+  schedule:
+    - cron: '41 7 * * 1'
+      timezone: 'Europe/Copenhagen'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: framework-main-writer
+  cancel-in-progress: false
+
+jobs:
+  weekly-shadow-calibration:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate registry contract
+        run: python scripts/research/shadow_registry_weekly.py --validate-only
+      - name: Generate advisory weekly snapshot
+        run: python scripts/research/shadow_registry_weekly.py
+      - name: Commit weekly shadow evidence
+        shell: bash
+        run: |
+          git config user.name 'framework-data-bot'
+          git config user.email 'framework-data-bot@users.noreply.github.com'
+          git add 04_MARKET_LEARNING/shadow_registry/LATEST.json 04_MARKET_LEARNING/shadow_registry/weekly
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "learning: weekly shadow registry ${GITHUB_RUN_ID}"
+          pushed=false
+          for attempt in 1 2 3; do
+            git rebase --abort 2>/dev/null || true
+            if git pull --rebase origin main && git push origin HEAD:main; then pushed=true; break; fi
+            sleep $((attempt * 5))
+          done
+          [ "$pushed" = true ]
+          git fetch origin main
+          git merge-base --is-ancestor HEAD origin/main
