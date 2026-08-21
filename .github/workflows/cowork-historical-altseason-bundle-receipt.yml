@@ -27,6 +27,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           RUN_ID: ${{ github.event.workflow_run.id }}
+          WORKFLOW_HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
         run: |
           set -euo pipefail
           rm -rf /tmp/cowork-bundle
@@ -83,8 +84,6 @@ jobs:
           out.write_text(json.dumps(receipt,indent=2,sort_keys=True)+'\n')
           print('COWORK_BUNDLE_RECEIPT_VERIFIED',run_id,a['id'],actual)
           PY
-        env:
-          WORKFLOW_HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
       - name: Publish durable Cowork bundle receipt
         run: |
           set -euo pipefail
