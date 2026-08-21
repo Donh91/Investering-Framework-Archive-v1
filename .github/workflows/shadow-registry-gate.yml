@@ -1,0 +1,39 @@
+name: Shadow Registry Gate
+
+on:
+  pull_request:
+    paths:
+      - '04_MARKET_LEARNING/shadow_registry/**'
+      - 'scripts/research/shadow_registry_weekly.py'
+      - '.github/workflows/shadow-registry-*.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate registry schema and authority firewall
+        run: python scripts/research/shadow_registry_weekly.py --validate-only
+      - name: Dry generate snapshot and verify non-canonical authority
+        shell: bash
+        run: |
+          python scripts/research/shadow_registry_weekly.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=json.loads(Path('04_MARKET_LEARNING/shadow_registry/LATEST.json').read_text())
+          assert p['authority']=='RESEARCH_ONLY_NON_CANONICAL'
+          assert p['automatic_rule_changes'] is False
+          assert p['portfolio_execution'] is False
+          assert p['promotion_requires_separate_review'] is True
+          assert p['summary']['sensor_count'] > 0
+          print('SHADOW_REGISTRY_GATE_PASS')
+          PY
