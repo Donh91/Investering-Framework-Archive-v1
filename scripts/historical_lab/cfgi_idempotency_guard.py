@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import subprocess
 from pathlib import Path
 
@@ -12,7 +13,9 @@ ART = LAB / "artifacts"
 CONFIG = LAB / "config.json"
 CATALOG = ART / "EPISODE_CATALOG.json"
 BILLING = ART / "CFGI_BILLING.json"
+CUMULATIVE_BILLING = ART / "CFGI_CUMULATIVE_BILLING.json"
 SUMMARY = ART / "BACKTEST_SUMMARY.json"
+LEDGER = Path("00_ARCHIVE_CONTROL/research_runtime/HISTORICAL_ALTSEASON_CFGI_PAID_ATTEMPT_LEDGER.json")
 
 REQUIRED_PRIOR_OUTPUTS = [
     "CFGI_BILLING.json",
@@ -96,6 +99,33 @@ def restore_summary_from_billing():
     SUMMARY.write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 
+def write_cumulative_billing(fp: str, billing: dict) -> dict:
+    ledger = load(LEDGER)
+    assert ledger["contract"] == "HISTORICAL_ALTSEASON_CFGI_PAID_ATTEMPT_LEDGER_v1"
+    assert ledger["input_fingerprint_sha256"] == fp
+    prior = int(ledger["cumulative_actual_credits_used"])
+    current = int(billing.get("actual_credits_used_from_headers") or 0)
+    remaining = billing.get("final_credits_remaining")
+    cumulative = prior + current
+    out = {
+        "contract": "HISTORICAL_ALTSEASON_CFGI_CUMULATIVE_BILLING_v1",
+        "input_fingerprint_sha256": fp,
+        "prior_actual_credits_used": prior,
+        "current_actual_credits_used": current,
+        "cumulative_actual_credits_used": cumulative,
+        "hard_cap_credits": int(ledger["hard_cap_credits"]),
+        "final_credits_remaining": remaining,
+        "minimum_reserve_credits": int(ledger["minimum_reserve_credits"]),
+        "prior_attempt_count": len(ledger.get("attempts") or []),
+        "current_run_id": os.environ.get("GITHUB_RUN_ID"),
+        "status": "PASS" if cumulative <= int(ledger["hard_cap_credits"]) and remaining is not None and int(remaining) >= int(ledger["minimum_reserve_credits"]) else "FAIL",
+    }
+    if out["status"] != "PASS":
+        raise SystemExit("CFGI_CUMULATIVE_BILLING_GUARD_FAIL")
+    CUMULATIVE_BILLING.write_text(json.dumps(out, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    return out
+
+
 def stamp(fp: str):
     billing = load(BILLING)
     if billing.get("status") != "PASS":
@@ -103,11 +133,13 @@ def stamp(fp: str):
     billing["input_fingerprint_contract"] = "CFGI_TARGETED_INPUT_FINGERPRINT_v1"
     billing["input_fingerprint_sha256"] = fp
     BILLING.write_text(json.dumps(billing, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    cumulative = write_cumulative_billing(fp, billing)
     if SUMMARY.exists():
         summary = load(SUMMARY)
         summary["cfgi_input_fingerprint_sha256"] = fp
+        summary["cfgi_cumulative_actual_credits_used"] = cumulative["cumulative_actual_credits_used"]
         SUMMARY.write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    print(json.dumps({"status": "STAMPED", "input_fingerprint_sha256": fp}, sort_keys=True))
+    print(json.dumps({"status": "STAMPED", "input_fingerprint_sha256": fp, "cumulative_actual_credits_used": cumulative["cumulative_actual_credits_used"]}, sort_keys=True))
 
 
 def main():
