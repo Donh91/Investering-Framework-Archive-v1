@@ -1,0 +1,84 @@
+name: CFGI v3 Gap-fill Launch Receipt Publish
+
+on:
+  workflow_run:
+    workflows: ['Historical Altseason CFGI Recovery Launch Once']
+    types: [completed]
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: framework-main-writer
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: >-
+      ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Download immutable launch receipt carrier
+        uses: actions/download-artifact@v4
+        with:
+          name: cfgi-v3-market-gapfill-launch-receipt
+          path: /tmp/cfgi-v3-launch-receipt
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          run-id: ${{ github.event.workflow_run.id }}
+      - name: Validate launch receipt provenance
+        run: |
+          set -euo pipefail
+          src=/tmp/cfgi-v3-launch-receipt/CFGI_V3_MARKET_GAPFILL_LAUNCH_RECEIPT.json
+          test -s "$src"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('/tmp/cfgi-v3-launch-receipt/CFGI_V3_MARKET_GAPFILL_LAUNCH_RECEIPT.json')
+          r=json.loads(p.read_text())
+          assert r['contract']=='CFGI_V3_MARKET_GAPFILL_LAUNCH_RECEIPT_v1'
+          assert r['input_fingerprint_sha256']=='6106f96285a66f03e324595b68c1777627f4d83e5e70dc6c64d9b1022e544a8f'
+          assert r['requested_symbols']==['MARKET']
+          assert r['forbidden_repurchase_symbols']==['BTC','ETH']
+          assert r['budget_plan']=='MARKET_ONLY_GAPFILL'
+          assert int(r['expected_current_worst_case_credits'])<=3000
+          assert int(r['projected_cumulative_credits'])<=25000
+          assert int(r['projected_credits_remaining'])>=50000
+          assert int(r['enrichment_run_id'])>0 and r['enrichment_run_url']
+          assert r['research_only'] is True
+          print('CFGI_V3_LAUNCH_RECEIPT_BOUND_PASS',r['enrichment_run_id'],r['enrichment_run_status_at_receipt'])
+          PY
+      - name: Commit launch receipt under shared writer lock
+        run: |
+          set -euo pipefail
+          src=/tmp/cfgi-v3-launch-receipt/CFGI_V3_MARKET_GAPFILL_LAUNCH_RECEIPT.json
+          dst=00_ARCHIVE_CONTROL/research_runtime/CFGI_V3_MARKET_GAPFILL_LAUNCH_RECEIPT.json
+          cp "$src" "$dst"
+          git config user.name framework-research-bot
+          git config user.email framework-research-bot@users.noreply.github.com
+          git add "$dst"
+          if git diff --cached --quiet; then echo 'Launch receipt already current'; exit 0; fi
+          run_id="$(python - <<'PY'
+          import json
+          print(json.load(open('00_ARCHIVE_CONTROL/research_runtime/CFGI_V3_MARKET_GAPFILL_LAUNCH_RECEIPT.json'))['enrichment_run_id'])
+          PY
+          )"
+          git commit -m "research: bind CFGI v3 MARKET gap-fill run ${run_id}"
+          pushed=false
+          for attempt in 1 2 3 4 5; do
+            git rebase --abort 2>/dev/null || true
+            git fetch origin main
+            if git rebase origin/main && git push origin HEAD:main; then pushed=true; break; fi
+            git rebase --abort 2>/dev/null || true
+            sleep $((attempt * 5))
+          done
+          [ "$pushed" = true ]
+          git fetch origin main
+          git merge-base --is-ancestor HEAD origin/main
+          echo 'CFGI_V3_MARKET_GAPFILL_LAUNCH_RECEIPT_PUBLISHED'
