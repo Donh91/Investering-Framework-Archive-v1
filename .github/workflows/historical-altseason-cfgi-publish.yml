@@ -5,6 +5,8 @@ on:
     workflows: ['Historical Altseason CFGI Enrichment']
     types: [completed]
   workflow_dispatch:
+  schedule:
+    - cron: '*/5 * * * *'
 
 permissions:
   contents: write
@@ -17,7 +19,7 @@ concurrency:
 jobs:
   publish:
     if: >-
-      ${{ github.event_name == 'workflow_dispatch' ||
+      ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' ||
           (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main') }}
     runs-on: ubuntu-24.04
     timeout-minutes: 15
@@ -36,6 +38,39 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           repository: ${{ github.repository }}
           run-id: ${{ github.event.workflow_run.id }}
+
+      - name: Download validated owner-authorized recovery stage
+        if: github.event_name == 'schedule'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RECOVERY_RUN_ID: '32419588422'
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/historical-altseason-cfgi-stage
+          gh run view "$RECOVERY_RUN_ID" --repo "$GITHUB_REPOSITORY" --json status,conclusion,event,headBranch > /tmp/recovery_run.json
+          python - <<'PY'
+          import json
+          x=json.load(open('/tmp/recovery_run.json'))
+          assert x['status']=='completed' and x['conclusion']=='success'
+          assert x['event']=='workflow_dispatch' and x['headBranch']=='main'
+          PY
+          gh run download "$RECOVERY_RUN_ID" --repo "$GITHUB_REPOSITORY" --name historical-altseason-cfgi-stage --dir /tmp/historical-altseason-cfgi-stage
+          test -s /tmp/historical-altseason-cfgi-stage/CFGI_BILLING.json
+          test -s /tmp/historical-altseason-cfgi-stage/CFGI_CUMULATIVE_BILLING.json
+          test -s /tmp/historical-altseason-cfgi-stage/RESEARCH_READINESS_MANIFEST.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          fp='6106f96285a66f03e324595b68c1777627f4d83e5e70dc6c64d9b1022e544a8f'
+          root=Path('/tmp/historical-altseason-cfgi-stage')
+          b=json.loads((root/'CFGI_BILLING.json').read_text())
+          cb=json.loads((root/'CFGI_CUMULATIVE_BILLING.json').read_text())
+          assert b['status']=='PASS' and b['input_fingerprint_sha256']==fp
+          assert cb['status']=='PASS' and cb['input_fingerprint_sha256']==fp
+          assert cb['cumulative_actual_credits_used']<=25000
+          assert cb['final_credits_remaining']>=50000
+          print('BOUNDED_RECOVERY_STAGE_BOUND_PASS',cb['cumulative_actual_credits_used'],cb['final_credits_remaining'])
+          PY
 
       - name: Refuse unbound manual publish
         if: github.event_name == 'workflow_dispatch'
