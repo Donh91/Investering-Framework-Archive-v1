@@ -1,0 +1,75 @@
+{
+  "contract": "SHADOW_SENSOR_REGISTRY_RUNTIME_v1",
+  "authority": "RESEARCH_ONLY_NON_CANONICAL",
+  "automatic_rule_changes": false,
+  "portfolio_execution": false,
+  "promotion_requires_separate_review": true,
+  "sensors": [
+    {
+      "sensor_id": "ENTRY_SIGNAL_LEDGER",
+      "family": "entry_signals",
+      "status": "ACTIVE_SHADOW",
+      "evidence_paths": [
+        "04_MARKET_LEARNING/entry_signals/LATEST.json",
+        "04_MARKET_LEARNING/entry_signals/PERFORMANCE_SUMMARY.json",
+        "04_MARKET_LEARNING/entry_signals/events",
+        "04_MARKET_LEARNING/entry_signals/outcomes"
+      ],
+      "relevance_state": "KEEP",
+      "evaluator": "ENTRY_SIGNAL_PERFORMANCE_SUMMARY_v1"
+    },
+    {
+      "sensor_id": "LEGACY_GATE_BTC_PARTIAL_FT1",
+      "family": "legacy_forward_tests",
+      "status": "RESEARCH_ONLY",
+      "evidence_paths": [
+        "04_MARKET_LEARNING/forward_tests/2026-07-07__forward-test-ledger-gate-btc-partial-graduated-deployment-v1__shadow.md"
+      ],
+      "relevance_state": "WATCH",
+      "evaluator": "NONE_RECOVERY_REQUIRED"
+    },
+    {
+      "sensor_id": "LEGACY_GRADUATED_DEPLOYMENT_V1_1",
+      "family": "legacy_forward_tests",
+      "status": "RESEARCH_ONLY",
+      "evidence_paths": [
+        "04_MARKET_LEARNING/forward_tests/2026-07-07__forward-test-ledger-gate-btc-partial-graduated-deployment-v1__shadow.md",
+        "04_MARKET_LEARNING/forward_tests/2026-07-07__research-lab-evidence-pack-gate-btc-partial-graduated-deployment-v1__shadow.md"
+      ],
+      "relevance_state": "WATCH",
+      "evaluator": "NONE_RECOVERY_REQUIRED"
+    },
+    {
+      "sensor_id": "BREADTH_FORWARD_FAMILY",
+      "family": "breadth",
+      "status": "ACTIVE_SHADOW",
+      "evidence_paths": ["04_MARKET_LEARNING/breadth/forward"],
+      "relevance_state": "KEEP",
+      "evaluator": "SOURCE_PRESENCE_AND_FUTURE_OUTCOME_REVIEW"
+    },
+    {
+      "sensor_id": "FABLE_OTA_SHADOW_FAMILY",
+      "family": "external_shadow_research",
+      "status": "RESEARCH_ONLY",
+      "evidence_paths": ["04_MARKET_LEARNING/fable_ota_shadow"],
+      "relevance_state": "WATCH",
+      "evaluator": "NONE_RECOVERY_REQUIRED"
+    },
+    {
+      "sensor_id": "CYCLE_NAVIGATOR_RESEARCH_FAMILY",
+      "family": "cycle_navigator",
+      "status": "RESEARCH_ONLY",
+      "evidence_paths": ["04_MARKET_LEARNING/cycle_navigator"],
+      "relevance_state": "WATCH",
+      "evaluator": "NONE_RECOVERY_REQUIRED"
+    },
+    {
+      "sensor_id": "HISTORICAL_ALTSEASON_PULLBACK_LAB",
+      "family": "historical_research",
+      "status": "RESEARCH_ONLY",
+      "evidence_paths": ["06_RESEARCH_LAB/historical_altseason_pullback_v1"],
+      "relevance_state": "WATCH",
+      "evaluator": "RESEARCH_ARTIFACT_ONLY"
+    }
+  ]
+}
