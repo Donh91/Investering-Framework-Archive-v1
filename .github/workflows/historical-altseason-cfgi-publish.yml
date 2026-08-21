@@ -5,8 +5,6 @@ on:
     workflows: ['Historical Altseason CFGI Enrichment']
     types: [completed]
   workflow_dispatch:
-  schedule:
-    - cron: '*/5 * * * *'
 
 permissions:
   contents: write
@@ -19,7 +17,7 @@ concurrency:
 jobs:
   publish:
     if: >-
-      ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' ||
+      ${{ github.event_name == 'workflow_dispatch' ||
           (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main') }}
     runs-on: ubuntu-24.04
     timeout-minutes: 15
@@ -29,7 +27,7 @@ jobs:
           ref: main
           fetch-depth: 0
 
-      - name: Download validated CFGI stage from triggering run
+      - name: Download validated CFGI v3 stage from triggering run
         if: github.event_name == 'workflow_run'
         uses: actions/download-artifact@v4
         with:
@@ -39,144 +37,67 @@ jobs:
           repository: ${{ github.repository }}
           run-id: ${{ github.event.workflow_run.id }}
 
-      - name: Download validated owner-authorized recovery stage
-        if: github.event_name == 'schedule'
-        env:
-          GH_TOKEN: ${{ github.token }}
-          RECOVERY_RUN_ID: '32419588422'
-        run: |
-          set -euo pipefail
-          mkdir -p /tmp/historical-altseason-cfgi-stage
-          gh run view "$RECOVERY_RUN_ID" --repo "$GITHUB_REPOSITORY" --json status,conclusion,event,headBranch > /tmp/recovery_run.json
-          python - <<'PY'
-          import json
-          x=json.load(open('/tmp/recovery_run.json'))
-          assert x['status']=='completed' and x['conclusion']=='success'
-          assert x['event']=='workflow_dispatch' and x['headBranch']=='main'
-          PY
-          gh run download "$RECOVERY_RUN_ID" --repo "$GITHUB_REPOSITORY" --name historical-altseason-cfgi-stage --dir /tmp/historical-altseason-cfgi-stage
-          test -s /tmp/historical-altseason-cfgi-stage/CFGI_BILLING.json
-          test -s /tmp/historical-altseason-cfgi-stage/CFGI_CUMULATIVE_BILLING.json
-          test -s /tmp/historical-altseason-cfgi-stage/RESEARCH_READINESS_MANIFEST.json
-          python - <<'PY'
-          import json
-          from pathlib import Path
-          fp='6106f96285a66f03e324595b68c1777627f4d83e5e70dc6c64d9b1022e544a8f'
-          root=Path('/tmp/historical-altseason-cfgi-stage')
-          b=json.loads((root/'CFGI_BILLING.json').read_text())
-          cb=json.loads((root/'CFGI_CUMULATIVE_BILLING.json').read_text())
-          assert b['status']=='PASS' and b['input_fingerprint_sha256']==fp
-          assert cb['status']=='PASS' and cb['input_fingerprint_sha256']==fp
-          assert cb['cumulative_actual_credits_used']<=25000
-          assert cb['final_credits_remaining']>=50000
-          print('BOUNDED_RECOVERY_STAGE_BOUND_PASS',cb['cumulative_actual_credits_used'],cb['final_credits_remaining'])
-          PY
-
       - name: Refuse unbound manual publish
         if: github.event_name == 'workflow_dispatch'
         run: |
           echo 'Manual publish is intentionally blocked because no immutable upstream CFGI artifact run is bound.' >&2
           exit 1
 
-      - name: Install CFGI outputs without replacing current free-stage storage metadata
+      - name: Install bounded CFGI v3 outputs without replacing free bulk metadata
         run: |
           set -euo pipefail
           root=06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts
           src=/tmp/historical-altseason-cfgi-stage
-          test -d "$src"
-          test -s "$root/FREE_BULK_ARTIFACT_POINTER.json"
-          test ! -e "$root/alt_hourly_panel.csv.gz"
-          for name in CFGI_BILLING.json CFGI_CUMULATIVE_BILLING.json CFGI_COVERAGE.json CFGI_FIELD_COVERAGE.json cfgi_targeted.jsonl.gz CFGI_EVENT_SIGNATURES.json CFGI_EVENT_PATHS.jsonl.gz RESEARCH_READINESS_MANIFEST.json; do
-            test -s "$src/$name"
-            cp "$src/$name" "$root/$name"
-          done
-          python scripts/historical_lab/cfgi_readiness_postprocess_v2.py
-          rm -f "$root/alt_hourly_panel.csv.gz"
-          test ! -e "$root/alt_hourly_panel.csv.gz"
+          test -d "$src"; test -s "$root/FREE_BULK_ARTIFACT_POINTER.json"; test ! -e "$root/alt_hourly_panel.csv.gz"
+          for name in CFGI_BILLING.json CFGI_CUMULATIVE_BILLING.json CFGI_COVERAGE.json CFGI_FIELD_COVERAGE.json cfgi_targeted.jsonl.gz CFGI_EVENT_SIGNATURES.json CFGI_EVENT_PATHS.jsonl.gz RESEARCH_READINESS_MANIFEST.json CFGI_MARKET_GAPFILL_BILLING.json; do test -s "$src/$name"; cp "$src/$name" "$root/$name"; done
+          python scripts/historical_lab/cfgi_readiness_postprocess_v3.py
+          rm -f "$root/alt_hourly_panel.csv.gz"; test ! -e "$root/alt_hourly_panel.csv.gz"
 
-      - name: Revalidate current-storage CFGI readiness artifacts
+      - name: Revalidate storage-safe CFGI v3 readiness
         run: |
           set -euo pipefail
           python - <<'PY'
           import gzip,json
+          from datetime import datetime
           from pathlib import Path
-          root=Path('06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts')
-          cfg=json.loads(Path('06_RESEARCH_LAB/historical_altseason_pullback_v1/config.json').read_text())
-          g=cfg['cfgi']; a=cfg['authority']; r=cfg['readiness']
-          req=list(r['free_stage_required_artifacts'])+list(r['cfgi_stage_required_artifacts'])+['RESEARCH_READINESS_MANIFEST.json','CFGI_CUMULATIVE_BILLING.json']
+          root=Path('06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts'); cfg=json.loads(Path('06_RESEARCH_LAB/historical_altseason_pullback_v1/config.json').read_text()); g=cfg['cfgi']; a=cfg['authority']; r=cfg['readiness']
+          req=list(r['free_stage_required_artifacts'])+list(r['cfgi_stage_required_artifacts'])+['RESEARCH_READINESS_MANIFEST.json','CFGI_CUMULATIVE_BILLING.json','CFGI_MARKET_GAPFILL_BILLING.json']
           for name in sorted(set(req)):
               p=root/name; assert p.exists() and p.is_file() and not p.is_symlink() and p.stat().st_size>0,name
           assert not (root/'alt_hourly_panel.csv.gz').exists()
-          pointer=json.loads((root/'FREE_BULK_ARTIFACT_POINTER.json').read_text())
-          assert pointer['contract']=='HISTORICAL_ALTSEASON_FREE_BULK_POINTER_v1'
-          assert pointer['storage_class']=='GITHUB_ACTIONS_ARTIFACT_BULK_NOT_GIT'
-          assert pointer['required_for_cowork_bundle'] is True
-          assert pointer['files'] and pointer['files'][0]['name']=='alt_hourly_panel.csv.gz'
-          assert pointer['files'][0]['sha256']
-          b=json.loads((root/'CFGI_BILLING.json').read_text())
-          cb=json.loads((root/'CFGI_CUMULATIVE_BILLING.json').read_text())
-          assert b['status']=='PASS'
-          assert cb['status']=='PASS'
-          assert cb['cumulative_actual_credits_used'] <= g['expected_credit_hard_cap']
-          assert cb['final_credits_remaining'] >= g['minimum_credits_reserve']
-          assert b.get('input_fingerprint_sha256')
-          fc=json.loads((root/'CFGI_FIELD_COVERAGE.json').read_text())
-          assert fc['exact_relative_hour_semantics'] is True
-          assert fc['diagnostics']['no_silent_fallback'] is True
-          with gzip.open(root/'CFGI_EVENT_PATHS.jsonl.gz','rt',encoding='utf-8') as fh:
-              rows=[json.loads(x) for x in fh if x.strip()]
-          m=json.loads((root/'RESEARCH_READINESS_MANIFEST.json').read_text())
-          assert m['contract']=='RESEARCH_READINESS_MANIFEST_v2'
-          assert m['readiness_verdict']=='PASS',m.get('blockers')
-          assert not m.get('blockers')
-          assert m['cfgi']['scaffold_symbol_hours']==m['cfgi']['expected_symbol_hours']==len(rows)
-          missing=[x for x in rows if not x['observed_exact_hour']]
-          assert m['cfgi']['missing_exact_symbol_hours']==len(missing)
-          assert m['cfgi']['missingness_policy']=='EXPLICIT_MISSING_NOT_FILLED_NOT_INTERPOLATED_NOT_A_GLOBAL_BLOCKER'
-          assert m['automatic_promotion'] is False
-          assert m['historical_findings_max_classification']=='FORWARD_TEST'
-          assert a['research_only'] is True and a['portfolio_execution'] is False
-          assert a['canonical_market_state'] is False and a['automatic_rule_changes'] is False
-          print('CFGI_STORAGE_SAFE_PUBLISH_V2_PASS',len(rows),len(missing),cb['cumulative_actual_credits_used'],cb['final_credits_remaining'],pointer['source_run_id'])
+          pointer=json.loads((root/'FREE_BULK_ARTIFACT_POINTER.json').read_text()); assert pointer['contract']=='HISTORICAL_ALTSEASON_FREE_BULK_POINTER_v1' and pointer['storage_class']=='GITHUB_ACTIONS_ARTIFACT_BULK_NOT_GIT' and pointer['required_for_cowork_bundle'] is True
+          b=json.loads((root/'CFGI_BILLING.json').read_text()); cb=json.loads((root/'CFGI_CUMULATIVE_BILLING.json').read_text()); gb=json.loads((root/'CFGI_MARKET_GAPFILL_BILLING.json').read_text()); assert b['status']=='PASS' and gb['status']=='PASS'; assert gb['requested_symbols']==['MARKET'] and sorted(gb['preserved_existing_symbols'])==['BTC','ETH']; assert cb['status']=='PASS' and cb['cumulative_actual_credits_used']<=g['expected_credit_hard_cap'] and cb['final_credits_remaining']>=g['minimum_credits_reserve']
+          fc=json.loads((root/'CFGI_FIELD_COVERAGE.json').read_text()); assert fc['contract']=='CFGI_FIELD_COVERAGE_v3' and fc['time_alignment_contract']=='CFGI_ASOF_1H_NO_LOOKAHEAD_v1' and fc['diagnostics']['no_lookahead'] is True and fc['diagnostics']['no_interpolation'] is True and fc['diagnostics']['no_silent_fallback'] is True
+          with gzip.open(root/'CFGI_EVENT_PATHS.jsonl.gz','rt',encoding='utf-8') as fh: rows=[json.loads(x) for x in fh if x.strip()]
+          assert len(rows)==726==fc['expected_symbol_hours']
+          for row in rows:
+              if row['observed_asof_available']:
+                  exp=datetime.fromisoformat(row['expected_timestamp_utc'].replace('Z','+00:00')); obs=datetime.fromisoformat(row['observed_timestamp_utc'].replace('Z','+00:00')); assert obs<=exp; assert row['lookahead_seconds']==0; assert 0<=row['availability_age_seconds']<3600
+          m=json.loads((root/'RESEARCH_READINESS_MANIFEST.json').read_text()); assert m['contract']=='RESEARCH_READINESS_MANIFEST_v3' and m['readiness_verdict']=='PASS' and not m['blockers']; assert m['cfgi']['time_alignment_contract']=='CFGI_ASOF_1H_NO_LOOKAHEAD_v1' and m['cfgi']['no_lookahead'] is True
+          for sym in g['symbols']: assert m['cfgi']['symbol_coverage'][sym]['asof_available_slots']>0,sym
+          assert m['automatic_promotion'] is False and m['historical_findings_max_classification']=='FORWARD_TEST'; assert a['research_only'] is True and a['portfolio_execution'] is False and a['canonical_market_state'] is False and a['automatic_rule_changes'] is False
+          print('CFGI_STORAGE_SAFE_PUBLISH_V3_PASS',m['cfgi']['symbol_coverage'],cb['cumulative_actual_credits_used'],cb['final_credits_remaining'],pointer['source_run_id'])
           PY
 
-      - name: Commit CFGI research metadata under shared writer lock
+      - name: Commit CFGI v3 research metadata under shared writer lock
         id: publish
         run: |
           set -euo pipefail
-          git config user.name framework-research-bot
-          git config user.email framework-research-bot@users.noreply.github.com
+          git config user.name framework-research-bot; git config user.email framework-research-bot@users.noreply.github.com
           git add 06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/
-          if git diff --cached --quiet; then
-            echo 'No CFGI artifact changes'
-            echo 'published=false' >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          bad="$(git diff --cached --name-only | grep -v '^06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/' || true)"
-          if [ -n "$bad" ]; then echo "Unexpected staged paths:" >&2; echo "$bad" >&2; exit 1; fi
-          if git diff --cached --name-only | grep -qx '06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/alt_hourly_panel.csv.gz'; then
-            echo 'Bulk panel must never be staged into Git' >&2; exit 1
-          fi
-          git commit -m "research: targeted CFGI altseason enrichment ${GITHUB_RUN_ID}"
+          if git diff --cached --quiet; then echo 'No CFGI artifact changes'; echo 'published=false' >> "$GITHUB_OUTPUT"; exit 0; fi
+          bad="$(git diff --cached --name-only | grep -v '^06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/' || true)"; if [ -n "$bad" ]; then echo "$bad" >&2; exit 1; fi
+          if git diff --cached --name-only | grep -qx '06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/alt_hourly_panel.csv.gz'; then echo 'Bulk panel must never be staged into Git' >&2; exit 1; fi
+          git commit -m "research: targeted CFGI v3 no-lookahead enrichment ${GITHUB_RUN_ID}"
           pushed=false
-          for attempt in 1 2 3 4 5; do
-            git rebase --abort 2>/dev/null || true
-            git fetch origin main
-            if git rebase origin/main && git push origin HEAD:main; then pushed=true; break; fi
-            git rebase --abort 2>/dev/null || true
-            sleep $((attempt * 5))
-          done
-          [ "$pushed" = true ]
-          git fetch origin main
-          git merge-base --is-ancestor HEAD origin/main
-          echo 'published=true' >> "$GITHUB_OUTPUT"
-          echo 'HISTORICAL_CFGI_PUBLISH_REMOTE_READBACK_PASS'
+          for attempt in 1 2 3 4 5; do git rebase --abort 2>/dev/null || true; git fetch origin main; if git rebase origin/main && git push origin HEAD:main; then pushed=true; break; fi; git rebase --abort 2>/dev/null || true; sleep $((attempt * 5)); done
+          [ "$pushed" = true ]; git fetch origin main; git merge-base --is-ancestor HEAD origin/main; echo 'published=true' >> "$GITHUB_OUTPUT"; echo 'HISTORICAL_CFGI_V3_PUBLISH_REMOTE_READBACK_PASS'
 
-      - name: Explicitly dispatch compact Cowork handoff after readiness publication
+      - name: Explicitly dispatch compact Cowork handoff after v3 readiness publication
         if: steps.publish.outputs.published == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           gh workflow run cowork-historical-altseason-bundle.yml --repo "$GITHUB_REPOSITORY" --ref main
-          echo 'COWORK_BUNDLE_EXPLICIT_DISPATCH_PASS'
+          echo 'COWORK_BUNDLE_V3_EXPLICIT_DISPATCH_PASS'

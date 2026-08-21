@@ -7,6 +7,7 @@ on:
       - '!06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/**'
       - 'scripts/historical_lab/**'
       - '.github/workflows/historical-altseason-*.yml'
+      - '00_ARCHIVE_CONTROL/research_runtime/HISTORICAL_ALTSEASON_CFGI_*.json'
   push:
     branches: [main]
     paths:
@@ -14,6 +15,7 @@ on:
       - '!06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/**'
       - 'scripts/historical_lab/**'
       - '.github/workflows/historical-altseason-*.yml'
+      - '00_ARCHIVE_CONTROL/research_runtime/HISTORICAL_ALTSEASON_CFGI_*.json'
   workflow_dispatch:
 
 permissions:
@@ -30,98 +32,35 @@ jobs:
           python-version: '3.12'
       - name: Compile research scripts
         run: |
-          python -m py_compile scripts/historical_lab/free_altseason_bootstrap.py
-          python -m py_compile scripts/historical_lab/free_altseason_bootstrap_resilient.py
-          python -m py_compile scripts/historical_lab/free_altseason_bootstrap_parallel.py
-          python -m py_compile scripts/historical_lab/free_event_postprocess.py
-          python -m py_compile scripts/historical_lab/cfgi_targeted_backfill.py
-          python -m py_compile scripts/historical_lab/cfgi_idempotency_guard.py
-          python -m py_compile scripts/historical_lab/cfgi_readiness_postprocess.py
-          python -m py_compile scripts/historical_lab/cfgi_readiness_postprocess_v2.py
-          python -m py_compile scripts/historical_lab/cfgi_recovery_budget_guard.py
-      - name: Validate scientific and budget contracts
+          python -m py_compile scripts/historical_lab/free_altseason_bootstrap.py scripts/historical_lab/free_altseason_bootstrap_resilient.py scripts/historical_lab/free_altseason_bootstrap_parallel.py scripts/historical_lab/free_event_postprocess.py
+          python -m py_compile scripts/historical_lab/cfgi_targeted_backfill.py scripts/historical_lab/cfgi_idempotency_guard.py scripts/historical_lab/cfgi_readiness_postprocess.py scripts/historical_lab/cfgi_readiness_postprocess_v2.py scripts/historical_lab/cfgi_readiness_postprocess_v3.py scripts/historical_lab/cfgi_recovery_budget_guard.py
+      - name: Validate scientific, authorization and cumulative budget contracts
         run: |
           python - <<'PY'
           import json
           from pathlib import Path
-          c=json.loads(Path('06_RESEARCH_LAB/historical_altseason_pullback_v1/config.json').read_text())
-          a=c['authority']; g=c['cfgi']; ti=c['time_integrity']; cm=c['control_matching']; cp=c['cohort_proxy']; sq=c['source_qa']; r=c['readiness']
-          assert a['research_only'] is True and a['portfolio_execution'] is False
-          assert a['canonical_market_state'] is False and a['automatic_rule_changes'] is False
-          assert a['promotion_requires_separate_review'] is True
-          assert g['expected_credit_hard_cap'] <= 25000 and g['minimum_credits_reserve'] >= 50000
-          assert g['static'] is True and g['timeframe']=='1h'
-          assert set(g['fields'])=={'score','price','volatility','volume','impulse','technical','social','dominance','trends','whales','orders'}
-          assert set(g['symbols'])=={'MARKET','BTC','ETH'}
-          assert g['field_level_coverage_audit_required'] is True and g['exact_relative_hour_paths_required'] is True
-          assert c['hypothetical_trim_fraction']==0.10 and c['roundtrip_friction_pct_on_traded_slice']>0
-          assert ti['strict_timestamp_lags'] is True and ti['cross_window_lags_forbidden'] is True
-          assert ti['row_positions_must_not_be_interpreted_as_hours'] is True and ti['reset_equal_weight_index_on_gap'] is True
-          assert cm['future_outcome_may_label_controls_but_may_not_enter_predictors'] is True
-          assert cp['must_not_be_presented_as_historical_market_cap_cohort'] is True
-          assert sq['archive_revision_risk_acknowledged'] is True and sq['no_silent_fallback'] is True
-          assert r['manifest_required'] is True
-          for x in ['CFGI_FIELD_COVERAGE.json','CFGI_EVENT_PATHS.jsonl.gz']: assert x in r['cfgi_stage_required_artifacts']
-          ledger=json.loads(Path('00_ARCHIVE_CONTROL/research_runtime/HISTORICAL_ALTSEASON_CFGI_PAID_ATTEMPT_LEDGER.json').read_text())
-          assert ledger['contract']=='HISTORICAL_ALTSEASON_CFGI_PAID_ATTEMPT_LEDGER_v1'
-          assert ledger['cumulative_actual_credits_used']==5259
-          assert ledger['owner_authorized_recovery_attempts']==1
-          assert ledger['automatic_retry_after_failure'] is False
-          print('HISTORICAL_ALTSEASON_LAB_GATE_PASS')
+          c=json.loads(Path('06_RESEARCH_LAB/historical_altseason_pullback_v1/config.json').read_text()); a=c['authority']; g=c['cfgi']; ti=c['time_integrity']; cm=c['control_matching']; cp=c['cohort_proxy']; sq=c['source_qa']; r=c['readiness']
+          assert a['research_only'] is True and a['portfolio_execution'] is False and a['canonical_market_state'] is False and a['automatic_rule_changes'] is False and a['promotion_requires_separate_review'] is True
+          assert g['expected_credit_hard_cap']<=25000 and g['minimum_credits_reserve']>=50000 and g['static'] is True and g['timeframe']=='1h'; assert set(g['fields'])=={'score','price','volatility','volume','impulse','technical','social','dominance','trends','whales','orders'}; assert set(g['symbols'])=={'MARKET','BTC','ETH'}
+          assert g['field_level_coverage_audit_required'] is True and g['exact_relative_hour_paths_required'] is True; assert c['hypothetical_trim_fraction']==0.10 and c['roundtrip_friction_pct_on_traded_slice']>0; assert ti['strict_timestamp_lags'] is True and ti['cross_window_lags_forbidden'] is True and ti['row_positions_must_not_be_interpreted_as_hours'] is True and ti['reset_equal_weight_index_on_gap'] is True; assert cm['future_outcome_may_label_controls_but_may_not_enter_predictors'] is True; assert cp['must_not_be_presented_as_historical_market_cap_cohort'] is True; assert sq['archive_revision_risk_acknowledged'] is True and sq['no_silent_fallback'] is True; assert r['manifest_required'] is True
+          ledger=json.loads(Path('00_ARCHIVE_CONTROL/research_runtime/HISTORICAL_ALTSEASON_CFGI_PAID_ATTEMPT_LEDGER.json').read_text()); auth=json.loads(Path('00_ARCHIVE_CONTROL/research_runtime/HISTORICAL_ALTSEASON_CFGI_MARKET_GAPFILL_AUTHORIZATION.json').read_text())
+          assert ledger['contract']=='HISTORICAL_ALTSEASON_CFGI_PAID_ATTEMPT_LEDGER_v2' and ledger['cumulative_actual_credits_used']==10518 and len(ledger['attempts'])==2 and sum(int(x['actual_credits_used_from_headers']) for x in ledger['attempts'])==10518; assert ledger['owner_authorized_recovery_attempts']==1 and ledger['owner_authorized_market_gapfill_attempts']==1 and ledger['automatic_retry_after_failure'] is False
+          assert auth['contract']=='HISTORICAL_ALTSEASON_CFGI_MARKET_GAPFILL_AUTHORIZATION_v1' and auth['owner_authorized'] is True and auth['allowed_symbols']==['MARKET'] and auth['forbidden_repurchase_symbols']==['BTC','ETH'] and auth['max_attempts']==1 and auth['max_worst_case_credits']<=3000 and auth['automatic_retry_after_failure'] is False
+          print('HISTORICAL_ALTSEASON_LAB_GATE_V3_PASS')
           PY
-      - name: Validate recovery, explicit missingness and split compute-publish contract
+      - name: Validate no-lookahead v3 and split compute-publish contract
         run: |
           python - <<'PY'
           from pathlib import Path
-          free=Path('.github/workflows/historical-altseason-free-bootstrap.yml').read_text()
-          free_pub=Path('.github/workflows/historical-altseason-free-publish.yml').read_text()
-          reserve=Path('.github/workflows/historical-altseason-cfgi-reservation.yml').read_text()
-          paid=Path('.github/workflows/historical-altseason-cfgi-enrichment.yml').read_text()
-          paid_pub=Path('.github/workflows/historical-altseason-cfgi-publish.yml').read_text()
-          audit=Path('.github/workflows/historical-altseason-cfgi-run-audit.yml').read_text()
-          v2=Path('scripts/historical_lab/cfgi_readiness_postprocess_v2.py').read_text()
-          budget=Path('scripts/historical_lab/cfgi_recovery_budget_guard.py').read_text()
-          transport=Path('scripts/historical_lab/free_altseason_bootstrap_parallel.py').read_text()
-          assert 'permissions:\n  contents: read' in free and 'permissions:\n  contents: read' in paid
-          assert 'git add ' not in free and 'git add ' not in paid
-          assert 'actions/upload-artifact@v4' in free and 'actions/upload-artifact@v4' in paid
-          assert "workflows: ['Historical Altseason Free Publish']" in reserve
-          assert 'group: framework-main-writer' in reserve and 'actions: write' in reserve
-          assert 'HISTORICAL_ALTSEASON_CFGI_PAID_RESERVATION_v1' in reserve
-          assert 'ONE_DETERMINISTIC_RESERVATION_PER_PAID_INPUT_FINGERPRINT' in reserve
-          assert 'workflow_dispatch:' in paid and 'fingerprint:' in paid
-          assert 'HISTORICAL_ALTSEASON_CFGI_PAID_ATTEMPT_LEDGER.json' in paid
-          assert 'Enforce cumulative recovery budget before secret access' in paid
-          assert 'cfgi_recovery_budget_guard.py' in paid
-          assert 'cfgi_readiness_postprocess_v2.py' in paid
-          assert 'Upload paid CFGI diagnostics before final readiness assertion' in paid
-          assert 'historical-altseason-cfgi-paid-diagnostics-' in paid
-          assert 'CFGI_CUMULATIVE_BILLING.json' in paid and 'CFGI_CUMULATIVE_BILLING.json' in paid_pub
-          dispatch_pre=paid.index('Verify dispatch fingerprint, deterministic reservation and final free stage before secret access')
-          budget_pre=paid.index('Enforce cumulative recovery budget before secret access')
-          secret=paid.index('Verify CFGI secret only after reservation and cumulative budget gates pass')
-          paid_call=paid.index('Target CFGI only after objective episode selection and reservation')
-          durable=paid.index('Upload paid CFGI diagnostics before final readiness assertion')
-          validate=paid.index('Validate billing, path scaffold, explicit missingness and governance')
-          assert dispatch_pre < budget_pre < secret < paid_call < durable < validate
-          assert 'EXPLICIT_MISSING_NOT_FILLED_NOT_INTERPOLATED_NOT_A_GLOBAL_BLOCKER' in v2
-          assert "blockers.remove('CFGI_EXACT_EVENT_PATH_INCOMPLETE')" in v2
-          assert "if scaffold != expected" in v2
-          assert 'CUMULATIVE_HARD_CAP_EXCEEDED' in budget and 'PROJECTED_RESERVE_BREACH' in budget
-          assert 'OWNER_AUTHORIZED_SINGLE_RECOVERY_AFTER_READINESS_ONLY_FAILURE' in audit
-          assert 'RECOVERY_ALREADY_ATTEMPTED_OR_UNREVIEWED_PAID_FAILURE' in audit
-          assert 'automatic_paid_retry_after_failure' in audit
-          for pub in [free_pub,paid_pub]:
-              assert 'group: framework-main-writer' in pub
-              assert 'actions/download-artifact@v4' in pub
-              assert 'git add 06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/' in pub
-              assert 'git rebase --abort' in pub and 'git fetch origin main' in pub
-              assert 'git merge-base --is-ancestor HEAD origin/main' in pub
-          assert 'actions: write' in paid_pub
-          assert 'gh workflow run cowork-historical-altseason-bundle.yml' in paid_pub
-          assert 'RESEARCH_READINESS_MANIFEST_v2' in paid_pub
+          paid=Path('.github/workflows/historical-altseason-cfgi-enrichment.yml').read_text(); paid_pub=Path('.github/workflows/historical-altseason-cfgi-publish.yml').read_text(); launch=Path('.github/workflows/cfgi-recovery-launch-once.yml').read_text(); v3=Path('scripts/historical_lab/cfgi_readiness_postprocess_v3.py').read_text(); budget=Path('scripts/historical_lab/cfgi_recovery_budget_guard.py').read_text(); target=Path('scripts/historical_lab/cfgi_targeted_backfill.py').read_text(); transport=Path('scripts/historical_lab/free_altseason_bootstrap_parallel.py').read_text()
+          assert 'permissions:\n  contents: read' in paid and 'git add ' not in paid and 'actions/upload-artifact@v4' in paid
+          assert 'workflow_dispatch:' in paid and 'fingerprint:' in paid; assert 'CFGI_MARKET_GAPFILL_AUTHORIZATION' in target and 'symbols=["MARKET"]' in target and 'CFGI_GAPFILL_SCOPE_BLOCKED' in target; assert 'MARKET_ONLY_GAPFILL' in budget and 'CUMULATIVE_HARD_CAP_EXCEEDED' in budget and 'PROJECTED_RESERVE_BREACH' in budget
+          assert 'cfgi_readiness_postprocess_v3.py' in paid and 'Upload paid diagnostics before final assertion' in paid; assert 'RESEARCH_READINESS_MANIFEST_v3' in paid and 'CFGI_ASOF_1H_NO_LOOKAHEAD_v1' in paid
+          assert 'LAST_KNOWN_WITHIN_DECLARED_1H_CADENCE_NO_LOOKAHEAD' in v3 and 'bisect_right' in v3 and 'lookahead_seconds' in v3 and 'CFGI_REQUIRED_SYMBOL_ZERO_ASOF_COVERAGE' in v3; assert 'no_interpolation' in v3 and 'no_forward_fill_beyond_declared_1h_cadence' in v3
+          assert 'group: framework-main-writer' in paid_pub and 'actions/download-artifact@v4' in paid_pub and 'cfgi_readiness_postprocess_v3.py' in paid_pub and 'CFGI_MARKET_GAPFILL_BILLING.json' in paid_pub and 'RESEARCH_READINESS_MANIFEST_v3' in paid_pub and 'gh workflow run cowork-historical-altseason-bundle.yml' in paid_pub
+          assert "cron: '*/5 * * * *'" in launch and 'allowed_symbols' in launch and 'POST_AUTH_GAPFILL_RUN_ALREADY_EXISTS' in launch
           assert 'BINANCE_VISION_ARCHIVE_FIRST_TRANSPORT_v1' in transport
-          print('HISTORICAL_ALTSEASON_CFGI_RECOVERY_SAFETY_PASS')
+          print('HISTORICAL_ALTSEASON_CFGI_V3_SAFETY_PASS')
           PY
       - name: Ensure paid CFGI cannot run in gate
         run: |

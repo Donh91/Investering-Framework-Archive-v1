@@ -1,13 +1,17 @@
 {
-  "contract": "HISTORICAL_ALTSEASON_CFGI_PAID_ATTEMPT_LEDGER_v1",
+  "contract": "HISTORICAL_ALTSEASON_CFGI_PAID_ATTEMPT_LEDGER_v2",
   "input_fingerprint_sha256": "6106f96285a66f03e324595b68c1777627f4d83e5e70dc6c64d9b1022e544a8f",
   "hard_cap_credits": 25000,
   "minimum_reserve_credits": 50000,
-  "owner_authorized_recovery_attempts": 1,
   "automatic_retry_after_failure": false,
+  "owner_authorized_recovery_attempts": 1,
+  "owner_authorized_market_gapfill_attempts": 1,
+  "ledger_semantics": "DURABLE_COMPLETED_PAID_ATTEMPTS_BEFORE_CURRENT_AUTHORIZED_GAPFILL",
   "attempts": [
     {
+      "attempt": 1,
       "run_id": 32419588422,
+      "run_attempt": 1,
       "started_at_utc": "2026-08-20T21:28:38Z",
       "status": "PAID_FETCH_PASS_READINESS_FAIL",
       "selected_event_count": 2,
@@ -16,8 +20,23 @@
       "final_credits_remaining": 81832,
       "readiness_blocker": "CFGI_EXACT_EVENT_PATH_INCOMPLETE",
       "artifact_preserved": false,
-      "notes": "Paid API fetch completed successfully, but downstream readiness validation failed before artifact upload. Recovery authorized once after contract repair."
+      "notes": "Paid API fetch completed successfully. Downstream exact-timestamp readiness failed before durable artifact upload."
+    },
+    {
+      "attempt": 2,
+      "run_id": 32419588422,
+      "run_attempt": 2,
+      "started_at_utc": "2026-08-21T05:25:51Z",
+      "status": "PAID_FETCH_PASS_ARTIFACT_PRESERVED_ALIGNMENT_AUDIT_FOUND_PROVIDER_JITTER_AND_MISSING_MARKET",
+      "selected_event_count": 2,
+      "rows_retrieved": 478,
+      "symbols_retrieved": ["BTC", "ETH"],
+      "actual_credits_used_from_headers": 5259,
+      "final_credits_remaining": 71251,
+      "artifact_preserved": true,
+      "artifact_id": 9435503375,
+      "notes": "Owner-authorized recovery. Raw BTC/ETH data preserved. Subsequent audit found provider 1h timestamps occur roughly 10-15 minutes after the nominal hour and MARKET was absent from the multi-symbol response; final v3 uses no-lookahead as-of alignment and authorizes a MARKET-only gap-fill."
     }
   ],
-  "cumulative_actual_credits_used": 5259
+  "cumulative_actual_credits_used": 10518
 }

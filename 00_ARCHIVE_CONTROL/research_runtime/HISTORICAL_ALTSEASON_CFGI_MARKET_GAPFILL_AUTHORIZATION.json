@@ -1,0 +1,19 @@
+{
+  "contract": "HISTORICAL_ALTSEASON_CFGI_MARKET_GAPFILL_AUTHORIZATION_v1",
+  "owner_authorized": true,
+  "authorized_at_utc": "2026-08-21T06:57:00Z",
+  "input_fingerprint_sha256": "6106f96285a66f03e324595b68c1777627f4d83e5e70dc6c64d9b1022e544a8f",
+  "reason": "Provider returned fully populated BTC/ETH rows but zero MARKET rows for the frozen multi-symbol request. A MARKET-only gap-fill maximizes research value without repurchasing BTC/ETH.",
+  "allowed_symbols": ["MARKET"],
+  "forbidden_repurchase_symbols": ["BTC", "ETH"],
+  "max_attempts": 1,
+  "max_worst_case_credits": 3000,
+  "cumulative_hard_cap_credits": 25000,
+  "minimum_reserve_credits": 50000,
+  "automatic_retry_after_failure": false,
+  "event_selection_frozen": true,
+  "time_windows_frozen": true,
+  "market_rules_changed": false,
+  "research_semantics_changed": false,
+  "historical_findings_max_classification": "FORWARD_TEST"
+}

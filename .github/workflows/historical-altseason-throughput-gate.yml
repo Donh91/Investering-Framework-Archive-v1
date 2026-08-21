@@ -33,6 +33,7 @@ jobs:
           python -m py_compile scripts/historical_lab/cfgi_targeted_backfill.py
           python -m py_compile scripts/historical_lab/cfgi_readiness_postprocess.py
           python -m py_compile scripts/historical_lab/cfgi_readiness_postprocess_v2.py
+          python -m py_compile scripts/historical_lab/cfgi_readiness_postprocess_v3.py
           python -m py_compile scripts/historical_lab/cfgi_recovery_budget_guard.py
       - name: Prove archive-first transport contract
         run: |
@@ -54,7 +55,7 @@ jobs:
           assert 'git rebase --abort' in pub and 'git fetch origin main' in pub and 'git merge-base --is-ancestor HEAD origin/main' in pub
           print('HISTORICAL_ARCHIVE_FIRST_SPLIT_TRANSPORT_PASS')
           PY
-      - name: Prove cumulative budget, missingness and single recovery contract
+      - name: Prove cumulative budget, no-lookahead alignment and bounded MARKET gap-fill contract
         run: |
           python - <<'PY'
           import json
@@ -62,33 +63,36 @@ jobs:
           p=Path('scripts/historical_lab/cfgi_idempotency_guard.py').read_text()
           paid=Path('.github/workflows/historical-altseason-cfgi-enrichment.yml').read_text()
           pub=Path('.github/workflows/historical-altseason-cfgi-publish.yml').read_text()
-          audit=Path('.github/workflows/historical-altseason-cfgi-run-audit.yml').read_text()
-          v2=Path('scripts/historical_lab/cfgi_readiness_postprocess_v2.py').read_text()
           budget=Path('scripts/historical_lab/cfgi_recovery_budget_guard.py').read_text()
+          v3=Path('scripts/historical_lab/cfgi_readiness_postprocess_v3.py').read_text()
           ledger=json.loads(Path('00_ARCHIVE_CONTROL/research_runtime/HISTORICAL_ALTSEASON_CFGI_PAID_ATTEMPT_LEDGER.json').read_text())
-          assert ledger['cumulative_actual_credits_used']==5259
+          gap=json.loads(Path('00_ARCHIVE_CONTROL/research_runtime/HISTORICAL_ALTSEASON_CFGI_MARKET_GAPFILL_AUTHORIZATION.json').read_text())
+          assert ledger['contract']=='HISTORICAL_ALTSEASON_CFGI_PAID_ATTEMPT_LEDGER_v2'
+          assert ledger['cumulative_actual_credits_used']==10518
           assert ledger['owner_authorized_recovery_attempts']==1
+          assert ledger['owner_authorized_market_gapfill_attempts']==1
           assert ledger['automatic_retry_after_failure'] is False
-          for token in ['CFGI_TARGETED_INPUT_FINGERPRINT_v1','EXACT_COMPLETE_PRIOR_ENRICHMENT','RESEARCH_READINESS_MANIFEST.json','FORWARD_TEST','automatic_promotion']:
+          assert gap['contract']=='HISTORICAL_ALTSEASON_CFGI_MARKET_GAPFILL_AUTHORIZATION_v1'
+          assert gap['owner_authorized'] is True and gap['allowed_symbols']==['MARKET']
+          assert sorted(gap['forbidden_repurchase_symbols'])==['BTC','ETH']
+          assert gap['max_attempts']==1 and gap['max_worst_case_credits']<=3000
+          for token in ['CFGI_TARGETED_INPUT_FINGERPRINT_v1','EXACT_COMPLETE_PRIOR_ENRICHMENT_V3','RESEARCH_READINESS_MANIFEST_v3','FORWARD_TEST','automatic_promotion','CFGI_ASOF_1H_NO_LOOKAHEAD_v1']:
               assert token in p,token
-          for token in ['workflow_dispatch:','fingerprint:','DISPATCH_FINGERPRINT','HISTORICAL_ALTSEASON_CFGI_PAID_ATTEMPT_LEDGER.json','cfgi_recovery_budget_guard.py','cfgi_readiness_postprocess_v2.py','historical-altseason-cfgi-paid-diagnostics-','CFGI_CUMULATIVE_BILLING.json']:
+          for token in ['workflow_dispatch:','fingerprint:','DISPATCH_FINGERPRINT','HISTORICAL_ALTSEASON_CFGI_PAID_ATTEMPT_LEDGER.json','cfgi_recovery_budget_guard.py','cfgi_readiness_postprocess_v3.py','CFGI_CUMULATIVE_BILLING.json']:
               assert token in paid,token
-          pre=paid.index('Verify dispatch fingerprint, deterministic reservation and final free stage before secret access')
-          budget_pre=paid.index('Enforce cumulative recovery budget before secret access')
-          secret=paid.index('Verify CFGI secret only after reservation and cumulative budget gates pass')
-          call=paid.index('Target CFGI only after objective episode selection and reservation')
-          durable=paid.index('Upload paid CFGI diagnostics before final readiness assertion')
-          validate=paid.index('Validate billing, path scaffold, explicit missingness and governance')
-          assert pre < budget_pre < secret < call < durable < validate
+          for token in ['HISTORICAL_ALTSEASON_CFGI_MARKET_GAPFILL_AUTHORIZATION.json','HISTORICAL_ALTSEASON_CFGI_MARKET_GAPFILL_AUTHORIZATION_v1','MARKET_ONLY_GAPFILL']:
+              assert token in budget,token
+          assert 'CFGI_ASOF_1H_NO_LOOKAHEAD_v1' in v3 and 'RESEARCH_READINESS_MANIFEST_v3' in v3
+          pre=paid.index('Verify fingerprint, frozen free stage and paid provenance before secret access')
+          budget_pre=paid.index('Enforce cumulative gap-fill budget before secret access')
+          secret=paid.index('Verify CFGI secret only after provenance and budget gates pass')
+          call=paid.index('Run only the authorized missing-symbol paid work')
+          validate=paid.index('Validate v3 no-lookahead readiness and governance')
+          assert pre < budget_pre < secret < call < validate
           assert 'CUMULATIVE_HARD_CAP_EXCEEDED' in budget and 'PROJECTED_RESERVE_BREACH' in budget
-          assert 'EXPLICIT_MISSING_NOT_FILLED_NOT_INTERPOLATED_NOT_A_GLOBAL_BLOCKER' in v2
-          assert "blockers.remove('CFGI_EXACT_EVENT_PATH_INCOMPLETE')" in v2
-          assert 'CFGI_EVENT_PATH_SCAFFOLD_INCOMPLETE' in v2
-          for token in ['CFGI_CUMULATIVE_BILLING.json','RESEARCH_READINESS_MANIFEST_v2','gh workflow run cowork-historical-altseason-bundle.yml']:
+          for token in ['CFGI_CUMULATIVE_BILLING.json','CFGI_MARKET_GAPFILL_BILLING.json','RESEARCH_READINESS_MANIFEST_v3','gh workflow run cowork-historical-altseason-bundle.yml']:
               assert token in pub,token
-          for token in ['OWNER_AUTHORIZED_SINGLE_RECOVERY_AFTER_READINESS_ONLY_FAILURE','RECOVERY_ALREADY_ATTEMPTED_OR_UNREVIEWED_PAID_FAILURE','owner_authorized_recovery_attempts','automatic_paid_retry_after_failure']:
-              assert token in audit,token
-          print('CFGI_RECOVERY_BUDGET_MISSINGNESS_PASS')
+          print('CFGI_V3_BUDGET_ASOF_MARKET_GAPFILL_PASS')
           PY
       - name: Prove compute and writer boundary without self-triggering health scanner
         run: |
@@ -124,7 +128,7 @@ jobs:
           combined='\n'.join([
               Path('scripts/historical_lab/free_altseason_bootstrap_parallel.py').read_text(),
               Path('scripts/historical_lab/cfgi_idempotency_guard.py').read_text(),
-              Path('scripts/historical_lab/cfgi_readiness_postprocess_v2.py').read_text(),
+              Path('scripts/historical_lab/cfgi_readiness_postprocess_v3.py').read_text(),
               Path('scripts/historical_lab/cfgi_recovery_budget_guard.py').read_text(),
           ])
           for token in ['portfolio_action','DEPLOY','REDUCE','BUY','SELL','canonical_market_state =','automatic_rule_changes = True']:

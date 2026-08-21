@@ -18,6 +18,13 @@ GitHub is the authoritative research universe. Do not treat the handoff ZIP as a
 9. all remaining files under `06_RESEARCH_LAB/historical_altseason_pullback_v1/`
 10. all code under `scripts/historical_lab/`
 
+## CFGI time-alignment rule - mandatory
+The final research state uses `RESEARCH_READINESS_MANIFEST_v3` and `CFGI_ASOF_1H_NO_LOOKAHEAD_v1`. CFGI's historical `1h` observations are not assumed to be stamped exactly at `HH:00:00`. For each nominal event hour, use only the latest observation whose provider timestamp is **at or before** the nominal analysis timestamp and less than one declared 1h cadence old. Preserve the raw provider timestamp and `availability_age_seconds`.
+
+Never floor a provider row that occurs after the nominal analysis timestamp into that same hour. That would introduce lookahead. Never interpolate or forward-fill beyond the declared one-hour cadence. Use `observed_asof_available`, `observed_timestamp_utc`, `availability_age_seconds`, and `lookahead_seconds` from `CFGI_EVENT_PATHS.jsonl.gz` as the authoritative aligned representation. Unsupported slots remain missing / `NOT_TESTABLE`.
+
+The original multi-symbol API response preserved BTC and ETH but omitted MARKET. MARKET was therefore recovered only through the separately authorized MARKET-only gap-fill. Audit `CFGI_MARKET_GAPFILL_BILLING.json`, `CFGI_CUMULATIVE_BILLING.json`, and `HISTORICAL_ALTSEASON_CFGI_PAID_ATTEMPT_LEDGER.json`; do not interpret the gap-fill as a new event selection or a change of research semantics.
+
 ## Prospective 2026 evidence lanes
 Read these directly from `main`, while keeping them analytically separate from historical discovery:
 - `04_MARKET_LEARNING/entry_signals/`
