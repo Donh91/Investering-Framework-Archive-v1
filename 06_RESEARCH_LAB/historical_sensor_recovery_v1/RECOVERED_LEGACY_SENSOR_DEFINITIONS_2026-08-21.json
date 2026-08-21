@@ -1,0 +1,203 @@
+{
+  "contract": "RECOVERED_LEGACY_SENSOR_DEFINITIONS_v1",
+  "authority": "RESEARCH_ONLY_NON_CANONICAL",
+  "recovery_date": "2026-08-21",
+  "provenance_rule": "Definitions below are recovered from archived project source files supplied in the project context. They are not promoted to current canonical semantics. Exact historical source definitions are preserved where supported; interpretation added during recovery is explicitly separated.",
+  "source_files": [
+    "Early Rotation Pre-Trigger v1.1.txt",
+    "Uddybende info-EARLY ROTATION PRE-TRIGGER (21 april 2026).txt",
+    "ROTATION ENGINE v2.txt",
+    "12 maj - adaptive læringslag.txt",
+    "Framework-relevans og modelanalyse.txt",
+    "EQM-model og markedsanalyse.txt"
+  ],
+  "recovered_definitions": [
+    {
+      "sensor_id": "EARLY_ROTATION_PRE_TRIGGER_V1_1",
+      "historical_role": "SHADOW_ONLY_EARLY_WINDOW_SIGNAL",
+      "historical_date_context": "2026-04-21/22",
+      "conditions": {
+        "stablecoin_alt_inflow_3d_pct_gt": 3.0,
+        "large_cap_alt_volume_share_3d_pct_gt": 4.0,
+        "ethbtc_lt": 0.032,
+        "btc_dominance_gt": 56.0
+      },
+      "states": ["INACTIVE", "BUILDING", "TRIGGERED"],
+      "meaning": "Detect early capital movement before rotation confirmation; opens a rotation window but is never sufficient alone.",
+      "historical_guardrails": [
+        "NOT_A_BUY_SIGNAL",
+        "NO_NEW_ENTRIES_SOLELY_FROM_PRE_TRIGGER",
+        "MUST_BE_COMBINED_WITH_BREADTH_DOMINANCE_AND_ETHBTC_CONFIRMATION"
+      ],
+      "status_for_current_recovery": "DORMANT_RECOVERABLE",
+      "recommended_current_use": "PASSIVE_SHADOW_FORWARD_OBSERVATION_ONLY"
+    },
+    {
+      "sensor_id": "ROTATION_READINESS_SCORE_V2",
+      "historical_role": "ROTATION_TIMING_SCORE",
+      "historical_date_context": "2026-04-22",
+      "components": {
+        "pre_trigger_strength": [0,2],
+        "liquidity_ssr_flows": [0,2],
+        "ethbtc_structure": [0,2],
+        "btc_dominance_trend": [0,2],
+        "breadth": [0,2]
+      },
+      "modifiers": {
+        "btc_dominance_gt_58": -2,
+        "weak_breadth": -1,
+        "risk_off_macro": -1
+      },
+      "historical_interpretation": {
+        "0_3": "IGNORE",
+        "4_5": "WATCH_LAG_WINDOW",
+        "6_7": "PREPARE",
+        "8_10": "EXECUTE_WINDOW"
+      },
+      "status_for_current_recovery": "RESEARCH_ONLY",
+      "recommended_current_use": "RECONSTRUCT_AND_TEST_INCREMENTAL_VALUE_BEFORE_ANY_FORWARD_RUNTIME"
+    },
+    {
+      "sensor_id": "ROTATION_BREADTH_FILTER_V2",
+      "historical_role": "HARD_CONTEXT_FILTER",
+      "states": ["STRONG", "PARTIAL", "WEAK"],
+      "historical_rule": "NO_ROTATION_WITHOUT_BREADTH_IMPROVEMENT",
+      "historical_semantics": {
+        "STRONG": "large+mid+small aligned",
+        "PARTIAL": "large only",
+        "WEAK": "large only with small lagging"
+      },
+      "status_for_current_recovery": "DORMANT_RECOVERABLE",
+      "recommended_current_use": "COMPARE_WITH_CURRENT_TOP100_PROXY_AND_CANONICAL_BREADTH_EVIDENCE"
+    },
+    {
+      "sensor_id": "ROTATION_DOMINANCE_FILTER_V2",
+      "historical_role": "BTC_DOMINANCE_CONTEXT_FILTER",
+      "states": {
+        "rising": "ROTATION_BLOCKED",
+        "flat": "NEUTRAL",
+        "falling": "ROTATION_POSSIBLE"
+      },
+      "historical_levels": {
+        "gt_58": "HEAVY_PENALTY",
+        "55_58": "TRANSITION_ZONE",
+        "lt_55": "ROTATION_FRIENDLY"
+      },
+      "status_for_current_recovery": "DORMANT_RECOVERABLE",
+      "recommended_current_use": "SHADOW_REDUNDANCY_AND_LEAD_LAG_TEST"
+    },
+    {
+      "sensor_id": "MACRO_DELAY_WINDOW_V2",
+      "historical_role": "SLOW_ROTATION_DELAY_CONTEXT",
+      "historical_conditions": ["PMI_GT_50", "COPPER_GOLD_DIVERGENCE_BULLISH"],
+      "historical_delay_window_weeks": [6,12],
+      "states": ["EARLY", "MID", "LATE"],
+      "status_for_current_recovery": "RESEARCH_ONLY",
+      "recommended_current_use": "SEPARATE_SLOW_REGIME_INFORMATION_FROM_TACTICAL_ENTRY_TIMING"
+    },
+    {
+      "sensor_id": "FAKE_ROTATION_TYPE3_V2",
+      "historical_role": "FAKE_ROTATION_TRAP_FILTER",
+      "historical_pattern": [
+        "PRE_TRIGGER_FIRES",
+        "ETHBTC_SPIKES_BRIEFLY",
+        "BTC_DOMINANCE_STAYS_HIGH",
+        "BREADTH_WEAK"
+      ],
+      "historical_action": "HARD_BLOCK",
+      "historical_claimed_failure_rate_pct": [55,75],
+      "claimed_failure_rate_authority": "ARCHIVED_MODEL_CLAIM_NOT_YET_REVALIDATED",
+      "status_for_current_recovery": "RESEARCH_ONLY",
+      "recommended_current_use": "PRIORITY_FORWARD_TEST_FOR_FALSE_ROTATION_DETECTION"
+    },
+    {
+      "sensor_id": "SRE_V1_SIGNAL_RELIABILITY_ENGINE",
+      "historical_role": "SHADOW_META_LEARNING",
+      "historical_date_context": "2026-05-12",
+      "purpose": "Measure which signals actually perform best under different regimes.",
+      "status_for_current_recovery": "DORMANT_RECOVERABLE",
+      "recommended_current_use": "MAP_INTO_SHADOW_REGISTRY_WEEKLY_RELEVANCE_METRICS"
+    },
+    {
+      "sensor_id": "FAE_V1_FORECAST_ATTRIBUTION_ENGINE",
+      "historical_role": "SHADOW_META_LEARNING",
+      "purpose": "Identify why forecasts worked or failed.",
+      "status_for_current_recovery": "DORMANT_RECOVERABLE",
+      "recommended_current_use": "CONNECT_TO_FORECAST_AND_OUTCOME_LEDGERS"
+    },
+    {
+      "sensor_id": "CCE_V1_CONFIDENCE_COMPRESSION_ENGINE",
+      "historical_role": "SHADOW_META_LEARNING",
+      "purpose": "Reduce false confidence when multiple signals overlap or are not independent.",
+      "status_for_current_recovery": "DORMANT_RECOVERABLE",
+      "recommended_current_use": "ANTI_DOUBLE_COUNTING_AND_REDUNDANCY_LAYER"
+    },
+    {
+      "sensor_id": "ODM_V1_OUTCOME_DELAY_MAPPER",
+      "historical_role": "SHADOW_META_LEARNING",
+      "purpose": "Learn the delay from signal to manifested outcome.",
+      "status_for_current_recovery": "DORMANT_RECOVERABLE",
+      "recommended_current_use": "CONNECT_TO_6H_12H_24H_48H_72H_7D_14D_30D_MATURATION"
+    },
+    {
+      "sensor_id": "RWE_V1_REGIME_WEIGHT_ENGINE",
+      "historical_role": "SHADOW_META_LEARNING",
+      "purpose": "Adapt signal weighting by market regime.",
+      "status_for_current_recovery": "RESEARCH_ONLY",
+      "recommended_current_use": "OBSERVE_ONLY_UNTIL_PROSPECTIVE_VALIDATION; NO_AUTOMATIC_LIVE_WEIGHT_CHANGES"
+    },
+    {
+      "sensor_id": "ETF_FLOW_POST_TEST_BEHAVIOR",
+      "historical_role": "ETF_ERA_SHADOW_CALIBRATION",
+      "purpose": "Distinguish BTC trend survival supported by ETF absorption from broader deterioration.",
+      "status_for_current_recovery": "DORMANT_RECOVERABLE",
+      "recommended_current_use": "ACTIVE_SHADOW_CANDIDATE"
+    },
+    {
+      "sensor_id": "FLOW_SUPPORTED_PULLBACK_VS_FLOW_DRIVEN_DETERIORATION",
+      "historical_role": "ETF_ERA_SHADOW_CLASSIFIER",
+      "flow_supported_pullback_features": [
+        "PRICE_TESTS_SUPPORT_OR_LOWER_BAND",
+        "ETF_OUTFLOWS_STOP_OR_REVERSE",
+        "BTC_DOMINANCE_REMAINS_HIGH",
+        "ALTS_MAY_REMAIN_WEAK",
+        "BTC_SURVIVAL_POSSIBLE"
+      ],
+      "flow_driven_deterioration_features": [
+        "LOWER_BAND_TEST",
+        "CONTINUED_ETF_OUTFLOWS",
+        "FAILED_RECLAIM",
+        "BTC_DOMINANCE_RISES_DEFENSIVELY",
+        "ETHBTC_WEAK"
+      ],
+      "status_for_current_recovery": "DORMANT_RECOVERABLE",
+      "recommended_current_use": "HIGH_PRIORITY_SHADOW_FORWARD_TEST_IN_CURRENT_ETF_ERA"
+    },
+    {
+      "sensor_id": "BTC_SURVIVAL_ALT_DETERIORATION_DIVERGENCE",
+      "historical_role": "ETF_ERA_SHADOW_DIVERGENCE",
+      "historical_insight": "BTC health is not equivalent to portfolio health; ETF absorption can support BTC while alt breadth deteriorates.",
+      "status_for_current_recovery": "DORMANT_RECOVERABLE",
+      "recommended_current_use": "SHADOW_ONLY_CALIBRATION_FOR_RAW_5_7_AND_WEEKLY_REVIEW"
+    }
+  ],
+  "recovery_assessment": {
+    "high_priority_forward_shadow_candidates": [
+      "EARLY_ROTATION_PRE_TRIGGER_V1_1",
+      "FAKE_ROTATION_TYPE3_V2",
+      "FLOW_SUPPORTED_PULLBACK_VS_FLOW_DRIVEN_DETERIORATION",
+      "BTC_SURVIVAL_ALT_DETERIORATION_DIVERGENCE",
+      "ODM_V1_OUTCOME_DELAY_MAPPER",
+      "CCE_V1_CONFIDENCE_COMPRESSION_ENGINE"
+    ],
+    "requires_exact_data_mapping_before_runtime": [
+      "ROTATION_READINESS_SCORE_V2",
+      "ROTATION_BREADTH_FILTER_V2",
+      "ROTATION_DOMINANCE_FILTER_V2",
+      "MACRO_DELAY_WINDOW_V2",
+      "SRE_V1_SIGNAL_RELIABILITY_ENGINE",
+      "FAE_V1_FORECAST_ATTRIBUTION_ENGINE",
+      "RWE_V1_REGIME_WEIGHT_ENGINE"
+    ]
+  }
+}
