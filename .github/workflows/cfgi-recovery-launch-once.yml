@@ -9,11 +9,11 @@ on:
     - cron: '*/5 * * * *'
 
 permissions:
-  contents: write
+  contents: read
   actions: write
 
 concurrency:
-  group: framework-main-writer
+  group: historical-altseason-cfgi-recovery-launch-once
   cancel-in-progress: false
 
 jobs:
@@ -49,7 +49,6 @@ jobs:
           FP: 6106f96285a66f03e324595b68c1777627f4d83e5e70dc6c64d9b1022e544a8f
         run: |
           set -euo pipefail
-          receipt=00_ARCHIVE_CONTROL/research_runtime/CFGI_V3_MARKET_GAPFILL_LAUNCH_RECEIPT.json
           if python - <<'PY'
           import json
           from pathlib import Path
@@ -117,30 +116,16 @@ jobs:
             'forbidden_repurchase_symbols':['BTC','ETH'],
             'research_only':True,
           }
-          Path('00_ARCHIVE_CONTROL/research_runtime/CFGI_V3_MARKET_GAPFILL_LAUNCH_RECEIPT.json').write_text(json.dumps(out,indent=2,sort_keys=True)+'\n')
+          Path('/tmp/CFGI_V3_MARKET_GAPFILL_LAUNCH_RECEIPT.json').write_text(json.dumps(out,indent=2,sort_keys=True)+'\n')
           print('V3_MARKET_GAPFILL_RUN_BOUND',r['databaseId'],r['status'],r['url'])
           PY
           echo 'receipt_required=true' >> "$GITHUB_OUTPUT"
-      - name: Commit durable v3 launch receipt
+      - name: Upload durable launch receipt carrier
         if: steps.resolve.outputs.receipt_required == 'true'
-        run: |
-          set -euo pipefail
-          path=00_ARCHIVE_CONTROL/research_runtime/CFGI_V3_MARKET_GAPFILL_LAUNCH_RECEIPT.json
-          test -s "$path"
-          git config user.name framework-research-bot
-          git config user.email framework-research-bot@users.noreply.github.com
-          git add "$path"
-          if git diff --cached --quiet; then echo 'Launch receipt already current'; exit 0; fi
-          git commit -m "research: bind CFGI v3 MARKET gap-fill run ${GITHUB_RUN_ID}"
-          pushed=false
-          for attempt in 1 2 3 4 5; do
-            git rebase --abort 2>/dev/null || true
-            git fetch origin main
-            if git rebase origin/main && git push origin HEAD:main; then pushed=true; break; fi
-            git rebase --abort 2>/dev/null || true
-            sleep $((attempt * 5))
-          done
-          [ "$pushed" = true ]
-          git fetch origin main
-          git merge-base --is-ancestor HEAD origin/main
-          echo 'CFGI_V3_MARKET_GAPFILL_LAUNCH_RECEIPT_PUBLISHED'
+        uses: actions/upload-artifact@v4
+        with:
+          name: cfgi-v3-market-gapfill-launch-receipt
+          path: /tmp/CFGI_V3_MARKET_GAPFILL_LAUNCH_RECEIPT.json
+          if-no-files-found: error
+          retention-days: 30
+          compression-level: 0
