@@ -20,7 +20,7 @@
     "INVESTIGATE_DIVERGENCE": {"execution": "AUTO", "effect": "RESEARCH_DIAGNOSTIC_PACKET_ONLY"},
     "STRESS_TEST": {"execution": "AUTO", "effect": "RESEARCH_STRESS_PACKET_ONLY"},
     "RESEARCH_NEW_HYPOTHESIS": {"execution": "AUTO", "effect": "BOUNDED_RESEARCH_REQUEST_PACKET_ONLY"},
-    "FREEZE_NEW_CHALLENGER": {"execution": "CONDITIONAL", "effect": "RESEARCH_ONLY_PROSPECTIVE_SPEC_REQUIRED"},
+    "FREEZE_NEW_CHALLENGER": {"execution": "CONDITIONAL", "effect": "RESEARCH_ONLY_PROSPECTIVE_FREEZE_REQUEST_ONLY"},
     "DEPRIORITIZE": {"execution": "AUTO", "effect": "RESEARCH_RELEVANCE_METADATA_ONLY"},
     "PROMOTE_FOR_CANONICAL_REVIEW": {"execution": "AUTO", "effect": "RECOMMENDATION_PACKET_ONLY"},
     "NO_ACTION": {"execution": "AUTO", "effect": "NONE"}
@@ -56,6 +56,7 @@
     "INVESTIGATE_DATA_GAP",
     "PROMOTE_FOR_CANONICAL_REVIEW",
     "DEPRIORITIZE",
+    "FREEZE_NEW_CHALLENGER",
     "RESEARCH_NEW_HYPOTHESIS",
     "STRESS_TEST",
     "INVESTIGATE_DIVERGENCE",
@@ -67,7 +68,10 @@
     "required_ready_packet": "research_actions/HYPOTHESIS_CANDIDATE_READY.json",
     "required_fields": ["hypothesis_id", "falsifiable_claim", "input_contract", "decision_contract", "outcome_contract", "prospective_start_utc", "no_backdating"],
     "no_backdating_must_equal": true,
-    "controller_may_not_invent_missing_fields": true
+    "prospective_start_must_be_future_at_selection": true,
+    "controller_may_not_invent_missing_fields": true,
+    "automatic_registry_mutation": false,
+    "freeze_output": "research_actions/CHALLENGER_FREEZE_REQUEST.json"
   },
   "canonical_firewall": {
     "status": "ENFORCED",
