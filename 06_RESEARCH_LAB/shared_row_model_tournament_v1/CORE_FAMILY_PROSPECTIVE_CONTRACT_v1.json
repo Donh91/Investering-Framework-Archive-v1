@@ -8,6 +8,7 @@
     "C05_ETHBTC_BTCD": "C01_ETHBTC AND C03_BTCD",
     "C06_BREADTH_BTCD": "C02_BREADTH AND C03_BTCD",
     "C07_SIMPLE_3": "C01_ETHBTC AND C02_BREADTH AND C03_BTCD",
+    "complete_core_set_required": true,
     "tuning": false,
     "version": "CORE_BOOLEAN_AND_CANDIDATES_v1",
     "weights": null
@@ -16,7 +17,7 @@
     "catalyst_tag": "VERIFIED_EXOGENOUS_SHOCK only if the observation UTC calendar date exactly matches a frozen VERIFIED_EXOGENOUS_SHOCK date in CATALYST_LEDGER.csv; otherwise NO_VERIFIED_EXOGENOUS_CATALYST_MATCH.",
     "new_catalysts_may_not_be_created_by_materializer": true,
     "no_match_catalyst_evidence_id": "NONE_VERIFIED_AT_CUTOFF",
-    "regime_tag": "POST_CAT_STRUCT_ETF_2024 for observation timestamps after the frozen January 2024 structural regime break; otherwise PRE_CAT_STRUCT_ETF_2024.",
+    "regime_tag": "POST_CAT_STRUCT_ETF_2024 for observation timestamps on or after 2024-02-01T00:00:00Z; otherwise PRE_CAT_STRUCT_ETF_2024.",
     "version": "PROSPECTIVE_CONTEXT_TAG_v1"
   },
   "contract": "CORE_FAMILY_PROSPECTIVE_CONTRACT_v1",
@@ -53,7 +54,7 @@
       "definition": {
         "input": "direct Binance ETHBTC settled hourly closes only",
         "level": 0.03,
-        "lookback_hours": 168,
+        "lookback_rows": 168,
         "permission": "true iff state == ABOVE",
         "state": "ABOVE if latest direct settled hourly close > 0.0300; BELOW if < 0.0300; AT if equal",
         "synthetic_ratio_forbidden": true
