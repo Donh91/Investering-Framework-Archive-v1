@@ -1,0 +1,48 @@
+{
+  "contract": "HISTORICAL_SHADOW_PROSPECTIVE_TEST_REGISTRY_v1",
+  "authority": "RESEARCH_ONLY_NON_CANONICAL",
+  "portfolio_execution": false,
+  "automatic_rule_changes": false,
+  "promotion_authority": false,
+  "created_date": "2026-08-22",
+  "stage2_source": "06_RESEARCH_LAB/historical_sensor_recovery_v1/independent_review_v1/09_PROSPECTIVE_TEST_QUEUE.md",
+  "frozen_horizons": ["6h", "12h", "24h", "48h", "72h", "7d", "14d", "30d"],
+  "tests": [
+    {
+      "test_id": "PT-HS-001",
+      "sensor_id": "EARLY_ROTATION_PRE_TRIGGER_V1_1",
+      "status": "PREREGISTERED_DATA_READINESS_PENDING",
+      "definition_version": "v1.1_RECOVERED_2026-04-21",
+      "direct_verdict": "PROSPECTIVE_TEST_JUSTIFIED",
+      "first_eligible_observation_utc": null,
+      "row_count": 0,
+      "eligible_row_count": 0,
+      "promotion_eligible": false,
+      "falsifier_status": "UNTESTED",
+      "dependence_group_ids": ["ROTATION_CAPITAL_FLOW", "RRS_NESTING"],
+      "spec_path": "04_MARKET_LEARNING/forward_tests/historical_shadow_v1/PT_HS_001_EARLY_ROTATION_PRE_TRIGGER_V1_1.md"
+    },
+    {
+      "test_id": "PT-HS-002",
+      "sensor_id": "FAKE_ROTATION_TYPE3_V2",
+      "status": "PREREGISTERED_DATA_READINESS_PENDING",
+      "definition_version": "v2_RECOVERED_PATTERN_2026-04-22",
+      "direct_verdict": "PROSPECTIVE_TEST_JUSTIFIED",
+      "first_eligible_observation_utc": null,
+      "row_count": 0,
+      "eligible_row_count": 0,
+      "promotion_eligible": false,
+      "falsifier_status": "UNTESTED",
+      "dependence_group_ids": ["ROTATION_CAPITAL_FLOW", "PRE_TRIGGER_PREREQUISITE"],
+      "spec_path": "04_MARKET_LEARNING/forward_tests/historical_shadow_v1/PT_HS_002_FAKE_ROTATION_TYPE3_V2.md"
+    }
+  ],
+  "method_controls": {
+    "dependence_control": "REQUIRED",
+    "fixed_horizon_maturation": "REQUIRED",
+    "post_hoc_horizon_selection": "FORBIDDEN",
+    "historical_backfill_into_prospective_rows": "FORBIDDEN",
+    "simple_baselines_required": true,
+    "negative_controls_required": true
+  }
+}
