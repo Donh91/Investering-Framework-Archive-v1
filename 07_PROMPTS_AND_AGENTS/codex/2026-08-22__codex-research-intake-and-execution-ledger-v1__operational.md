@@ -29,7 +29,7 @@ When a research thread concludes that a bounded code defect is reproducible and 
 3. Prepare one `CODEX_RESEARCH_CANDIDATE_v1` JSON document.
 4. Persist it through isolated branch and PR at `research/codex/intake/YYYY/MM/<candidate_id>.json`.
 5. Merge to `main` only after normal repository validation.
-6. The path-restricted push trigger on `remediation-maturation.yml` runs immediately after the intake lands on `main`; there is no weekly wait.
+6. The path-restricted, non-writing `codex-intake-dispatch.yml` workflow receives the durable event and immediately dispatches `remediation-maturation.yml` on `main`. The guarded main writer itself remains free of push triggers.
 7. The controller validates evidence and authority boundaries and routes the candidate as `CODEX_READY`, `NEEDS_MORE_EVIDENCE`, `DEDUPED_TO_HEALTH_TASK` or `REJECTED`.
 8. Codex must perform the task-specific fresh-state binding before changing code.
 9. Code changes use normal task branch, PR, CI and review discipline. No self-merge.
