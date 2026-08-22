@@ -17,6 +17,7 @@ REQUIRED_FORBIDDEN = {
     "API budget",
     "new policy semantics",
 }
+ACTIVE_REMEDIATION_STATES = {"IN_REMEDIATION", "POST_FIX_OBSERVATION", "REOPENED"}
 CONTRACT_FIELDS = (
     "signature", "workflow", "finding", "objective", "precondition", "success_evidence",
     "clean_noop_condition", "stop_condition", "escalation_condition", "allowed_change_scope",
@@ -211,6 +212,8 @@ def append_ledger(repo: Path, current: list[dict[str, Any]]) -> None:
     at = now_iso()
     for task in current:
         sig = str(task.get("signature") or "")
+        if not sig:
+            continue
         previous = prior_by_sig.get(sig, {})
         state = str(task.get("state") or "")
         if previous.get("state") == state and previous.get("task_contract_sha256") == task.get("task_contract_sha256"):
@@ -249,7 +252,7 @@ def append_ledger(repo: Path, current: list[dict[str, Any]]) -> None:
             "in_remediation": sum(1 for x in current if x.get("state") == "IN_REMEDIATION"),
             "post_fix_observation": sum(1 for x in current if x.get("state") == "POST_FIX_OBSERVATION"),
             "resolved": sum(1 for x in current if x.get("state") == "RESOLVED"),
-            "needs_more_evidence": sum(1 for x in current if x.get("state") == "NEEDS_MORE_EVIDENCE"),
+            "needs_more_evidence": sum(1 for x in current if x.get("state") in {"OBSERVED", "SUSPECTED_TRANSIENT", "PERSISTING", "NEEDS_MORE_EVIDENCE"}),
         },
     }
     write_json(state_path, state)
@@ -262,11 +265,12 @@ def merge(repo: Path, output_dir: Path) -> dict[str, Any]:
     needs_path = output_dir / "LATEST_NEEDS_MORE_EVIDENCE.json"
     queue = read_json(queue_path, {})
     ready_doc = read_json(ready_path, {"tasks": []})
-    needs_doc = read_json(needs_path, {"tasks": []})
-    base_tasks = [x for x in queue.get("tasks", []) if isinstance(x, dict)]
+    needs_doc = read_json(needs_path, {"items": []})
+
+    base_items = [x for x in queue.get("items", []) if isinstance(x, dict)]
     base_ready = [x for x in ready_doc.get("tasks", []) if isinstance(x, dict)]
-    base_needs = [x for x in needs_doc.get("tasks", []) if isinstance(x, dict)]
-    by_sig = {str(x.get("signature")): x for x in base_tasks if x.get("signature")}
+    base_needs = [x for x in needs_doc.get("items", []) if isinstance(x, dict)]
+    by_sig = {str(x.get("signature")): x for x in base_items if x.get("signature")}
     ready_by_sig = {str(x.get("signature")): x for x in base_ready if x.get("signature")}
     needs_by_sig = {str(x.get("signature")): x for x in base_needs if x.get("signature")}
     intake_errors: list[dict[str, Any]] = []
@@ -284,26 +288,35 @@ def merge(repo: Path, output_dir: Path) -> dict[str, Any]:
         cid = str(data.get("candidate_id") or path.stem)
         linked = str(data.get("linked_health_signature") or "")
         candidate_sha = canonical_hash(data)
+
         if linked and linked in by_sig:
-            for target in (by_sig[linked], ready_by_sig.get(linked), needs_by_sig.get(linked)):
+            item = {"candidate_id": cid, "candidate_path": rel, "candidate_sha256": candidate_sha}
+            for target in (by_sig.get(linked), ready_by_sig.get(linked), needs_by_sig.get(linked)):
                 if not isinstance(target, dict):
                     continue
                 sources = list(target.get("research_intake_sources") or [])
-                item = {"candidate_id": cid, "candidate_path": rel, "candidate_sha256": candidate_sha}
                 if item not in sources:
                     sources.append(item)
                 target["research_intake_sources"] = sources
             intake_states.append({
-                "candidate_id": cid, "candidate_path": rel, "state": "DEDUPED_TO_HEALTH_TASK",
-                "linked_health_signature": linked, "candidate_sha256": candidate_sha,
+                "candidate_id": cid,
+                "candidate_path": rel,
+                "state": "DEDUPED_TO_HEALTH_TASK",
+                "linked_health_signature": linked,
+                "candidate_sha256": candidate_sha,
             })
             continue
+
         task = build_research_task(repo, path, data, candidate_sha)
+        sig = task["signature"]
+        ready_by_sig.pop(sig, None)
+        needs_by_sig.pop(sig, None)
+
         if status == "NEEDS_MORE_EVIDENCE":
             task["state"] = "NEEDS_MORE_EVIDENCE"
             task["route"] = "EVIDENCE"
             task["missing_evidence"] = reasons
-            needs_by_sig[task["signature"]] = task
+            needs_by_sig[sig] = task
         else:
             completion = valid_completion(repo, task)
             transition = valid_transition(repo, task)
@@ -311,62 +324,87 @@ def merge(repo: Path, output_dir: Path) -> dict[str, Any]:
                 task["state"] = "RESOLVED"
                 task["route"] = "NONE"
                 task["completion_receipt_path"] = f"research/codex/completions/{cid}.json"
+                task["completion_receipt_sha256"] = completion.get("receipt_sha256")
                 task["merge_commit_sha"] = completion.get("merge_commit_sha")
+                task["pr_number"] = completion.get("pr_number")
+                task["verified_at_utc"] = completion.get("verified_at_utc")
             elif transition:
                 task["state"] = "IN_REMEDIATION"
                 task["route"] = "CODEX_PR"
                 task["transition_receipt_sha256"] = transition.get("receipt_sha256")
                 task["remediation_branch"] = transition.get("branch")
                 task["pr_number"] = transition.get("pr_number")
+                task["remediation_started_at_utc"] = transition.get("recorded_at_utc")
             else:
-                ready_by_sig[task["signature"]] = task
-        by_sig[task["signature"]] = task
+                ready_by_sig[sig] = task
+
+        by_sig[sig] = task
         intake_states.append({
             "candidate_id": cid,
             "candidate_path": rel,
             "candidate_sha256": candidate_sha,
-            "signature": task["signature"],
+            "signature": sig,
             "state": task["state"],
             "linked_health_signature": linked or None,
         })
 
-    all_tasks = list(by_sig.values())
+    all_items = list(by_sig.values())
     all_ready = [x for x in ready_by_sig.values() if x.get("state") == "CODEX_READY"]
-    all_needs = [x for x in needs_by_sig.values() if x.get("state") == "NEEDS_MORE_EVIDENCE"]
-    all_tasks.sort(key=lambda x: (0 if x.get("requested_priority") == "EXPEDITED" else 1, str(x.get("signature"))))
-    all_ready.sort(key=lambda x: (0 if x.get("requested_priority") == "EXPEDITED" else 1, str(x.get("signature"))))
-    all_needs.sort(key=lambda x: str(x.get("signature")))
+    all_needs = [x for x in needs_by_sig.values() if x.get("state") in {"OBSERVED", "SUSPECTED_TRANSIENT", "PERSISTING", "NEEDS_MORE_EVIDENCE"}]
+    all_active = [x for x in all_items if x.get("state") in ACTIVE_REMEDIATION_STATES]
 
-    queue["tasks"] = all_tasks
+    sort_key = lambda x: (0 if x.get("requested_priority") == "EXPEDITED" else 1, str(x.get("signature")))
+    all_items.sort(key=lambda x: (str(x.get("state", "")), str(x.get("workflow", "")), str(x.get("finding", ""))))
+    all_ready.sort(key=sort_key)
+    all_needs.sort(key=lambda x: str(x.get("signature")))
+    all_active.sort(key=lambda x: str(x.get("signature")))
+
+    queue["items"] = all_items
     queue["codex_ready_tasks"] = all_ready
     queue["needs_more_evidence"] = all_needs
+    queue["active_remediation"] = all_active
     queue["research_intake"] = intake_states
     queue["research_intake_errors"] = intake_errors
-    queue["codex_ready_count"] = len(all_ready)
     queue["research_intake_count"] = len(intake_states)
     queue["research_intake_error_count"] = len(intake_errors)
+    summary = dict(queue.get("summary") or {})
+    summary.update({
+        "total": len(all_items),
+        "codex_ready": len(all_ready),
+        "needs_more_evidence": len(all_needs),
+        "active_remediation": len(all_active),
+        "research_intake": len(intake_states),
+        "research_intake_errors": len(intake_errors),
+    })
+    queue["summary"] = summary
 
+    generated_at = now_iso()
     ready_doc["contract_revision"] = "1.2"
-    ready_doc["generated_at_utc"] = now_iso()
+    ready_doc["generated_at_utc"] = generated_at
     ready_doc["tasks"] = all_ready
     ready_doc["research_intake_enabled"] = True
     ready_doc["queue_sources"] = ["AUTOMATION_HEALTH", "RESEARCH_INTAKE"]
-    needs_doc["generated_at_utc"] = now_iso()
-    needs_doc["tasks"] = all_needs
+    needs_doc["generated_at_utc"] = generated_at
+    needs_doc["items"] = all_needs
 
     write_json(queue_path, queue)
     write_json(ready_path, ready_doc)
     write_json(needs_path, needs_doc)
     write_json(repo / "research/codex/LATEST_CODEX_INTAKE_STATUS.json", {
         "contract": "CODEX_INTAKE_STATUS_v1",
-        "generated_at_utc": now_iso(),
+        "generated_at_utc": generated_at,
         "candidate_count": len(intake_states),
         "error_count": len(intake_errors),
         "candidates": intake_states,
         "errors": intake_errors,
     })
-    append_ledger(repo, all_tasks)
-    return {"codex_ready": len(all_ready), "research_intake": len(intake_states), "errors": len(intake_errors)}
+    append_ledger(repo, all_items)
+    return {
+        "codex_ready": len(all_ready),
+        "research_intake": len(intake_states),
+        "errors": len(intake_errors),
+        "preserved_health_items": len(base_items),
+    }
 
 
 def main() -> None:
