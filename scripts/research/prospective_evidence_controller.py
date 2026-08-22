@@ -26,13 +26,26 @@ def append(p,row):
     with p.open(newline='',encoding='utf-8-sig') as f: fields=next(csv.reader(f))
     with p.open('a',newline='',encoding='utf-8') as f:
         w=csv.DictWriter(f,fieldnames=fields,extrasaction='ignore'); w.writerow({k:row.get(k,'') for k in fields})
+def ready(fr,family_id):
+    x=fr.get(family_id,{})
+    return x.get('status')=='READY' and x.get('candidate_decision_contract_status')=='READY'
 def eligible_candidates():
-    fr={x['family_id']:x for x in load_json(FREEZE)['families']}
-    out=[]
-    for c in load_json(REG)['candidates']:
-        fam=c['families']
-        if any(x.startswith('DYNAMIC_') or x.startswith('CURRENT_') for x in fam): continue
-        if all(fr.get(x,{}).get('status')=='READY' and fr.get(x,{}).get('candidate_decision_contract_status')=='READY' for x in fam): out.append(c['id'])
+    freeze=load_json(FREEZE); fr={x['family_id']:x for x in freeze['families']}; out=[]
+    registry=load_json(REG)['candidates']
+    core_rule=freeze.get('core_activation_rule',{})
+    core_ids=set(core_rule.get('candidates',[]))
+    core_families=core_rule.get('start_only_when',[])
+    core_ready=bool(core_families) and all(ready(fr,x) for x in core_families)
+    for c in registry:
+        cid=c['id']
+        if cid in core_ids:
+            if core_ready: out.append(cid)
+            continue
+        fam=c.get('families')
+        # Dynamic challengers and Full Stack require a separately frozen dynamic/base decision contract.
+        if fam is None or isinstance(fam,str):
+            continue
+        if all(ready(fr,x) for x in fam): out.append(cid)
     return out
 
 def validate_payload(r):
