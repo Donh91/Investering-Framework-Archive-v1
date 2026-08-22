@@ -1,0 +1,52 @@
+{
+  "contract": "SHADOW_LAYER_HISTORICAL_EFFECTIVENESS_REVIEW_v1",
+  "date": "2026-08-22",
+  "authority": "RESEARCH_ONLY_NON_CANONICAL",
+  "population_anchor": "04_MARKET_LEARNING/shadow_registry/",
+  "global_conclusion": "A smaller set of durable information families appears more defensible than the full count of named shadow sensors. Historical sensor-level edge is often limited by provenance, small n, version drift and correlated inputs.",
+  "information_families": [
+    {"id":"ETHBTC_PERSISTENCE","verdict":"KEEP","role":["EARLY_WARNING","CONFIRMATION"],"evidence_strength":"MEDIUM_HIGH"},
+    {"id":"BREADTH_SURVIVAL","verdict":"KEEP","role":["VETO","REGIME_CLASSIFIER"],"evidence_strength":"MEDIUM_HIGH"},
+    {"id":"BTCD_PATH_RECLAIM","verdict":"KEEP","role":["VETO","REGIME_CLASSIFIER"],"evidence_strength":"MEDIUM","caveat":"SOURCE_DENOMINATOR_VERSION_REQUIRED"},
+    {"id":"ETF_FLOW_QUALITY","verdict":"KEEP","role":["REGIME_CLASSIFIER","RISK_DETERIORATION"],"evidence_strength":"MEDIUM"},
+    {"id":"STABLECOIN_DEPLOYMENT_NOT_SUPPLY","verdict":"KEEP","role":["REGIME_CLASSIFIER"],"evidence_strength":"MEDIUM"},
+    {"id":"LEVERAGE_LIQUIDATION_RECLAIM","verdict":"KEEP","role":["TIMING","RISK_DETERIORATION"],"evidence_strength":"MEDIUM_LOW"},
+    {"id":"SEQUENCE_PERSISTENCE","verdict":"KEEP","role":["META_CONTROL","REGIME_CLASSIFIER"],"evidence_strength":"MEDIUM_HIGH"},
+    {"id":"FALSE_NEGATIVE_OPPORTUNITY_COST","verdict":"KEEP","role":["META_CONTROL"],"evidence_strength":"MEDIUM"}
+  ],
+  "sensor_findings": [
+    {"sensor_id":"EARLY_ROTATION_PRE_TRIGGER_V1_1","verdict":"PROSPECTIVE_TEST_JUSTIFIED","historical_edge":"UNPROVEN","old_claim_status":"UNVERIFIED_ARCHIVE_CLAIM"},
+    {"sensor_id":"FAKE_ROTATION_TYPE3_V2","verdict":"WATCH","historical_edge":"UNPROVEN","old_claim_status":"NOT_REPRODUCED_55_75_FAILURE_RATE"},
+    {"sensor_id":"ROTATION_READINESS_SCORE_V2","verdict":"REDUNDANT","historical_edge":"UNPROVEN","reason":"HIGH_COMPONENT_OVERLAP"},
+    {"sensor_id":"CCE_V1_CONFIDENCE_COMPRESSION_ENGINE","verdict":"KEEP","role":"META_CONTROL"},
+    {"sensor_id":"ODM_V1_OUTCOME_DELAY_MAPPER","verdict":"KEEP","role":"FIXED_HORIZON_METHOD_CONTROL"},
+    {"sensor_id":"SRE_V1_SIGNAL_RELIABILITY_ENGINE","verdict":"WATCH","historical_attribution":"OFTEN_UNTESTABLE"},
+    {"sensor_id":"FAE_V1_FORECAST_ATTRIBUTION_ENGINE","verdict":"WATCH","historical_attribution":"OFTEN_UNTESTABLE"},
+    {"sensor_id":"RWE_V1_REGIME_WEIGHT_ENGINE","verdict":"UNTESTABLE","runtime_status":"BLOCKED_FROM_AUTOMATIC_WEIGHTING"},
+    {"sensor_id":"ENTRY_SIGNAL_LEDGER","verdict":"WATCH","activation_event_count":2,"matured_24h_event_count":1,"note":"INSUFFICIENT_SAMPLE_FOR_EDGE"},
+    {"sensor_id":"STRESS_FLUSH_ADDON","verdict":"KEEP","role":"DIAGNOSTIC_TIMING","note":"CASE_STUDY_SUPPORT_NO_POPULATION_RATE"},
+    {"sensor_id":"HDS_SPTD_FAMILY","verdict":"WATCH","reason":"CONCEPT_STRONG_FORMULA_REDUNDANCY_TEST_REQUIRED"},
+    {"sensor_id":"AQS_EAQ_FAMILY","verdict":"WATCH","reason":"RAW_COMPONENT_INCREMENTAL_VALUE_TEST_REQUIRED"},
+    {"sensor_id":"TPS_DRS_FAMILY","verdict":"WATCH","reason":"SIMPLE_3_REDUNDANCY_HYPOTHESIS_HIGH_PRIORITY"}
+  ],
+  "retired_or_downgraded_claims": [
+    "Fake Rotation Type 3 historical failure rate approximately 55-75%",
+    "Early Rotation Pre-Trigger near-perfect historical reliability",
+    "Microcap 75-85% historical failure rate without event table",
+    "Old fixed BTC.D / ETHBTC thresholds as timeless empirical laws",
+    "Stablecoin growth alone as bullish deployment evidence",
+    "ETF inflows alone as broad ecosystem health",
+    "Multiple correlated confirmations as independent confidence by default"
+  ],
+  "highest_priority_tests": [
+    "SIMPLE_3_ROTATION_VS_FULL_SHADOW_STACK",
+    "ETF_FLOW_QUALITY_VS_FLOW_SIGN",
+    "HIDDEN_DETERIORATION_INCREMENTAL_VALUE",
+    "FAKE_ROTATION_TYPE3_VS_BTCD_PLUS_BREADTH_BASELINE",
+    "STRESS_FLUSH_TIMING_VALUE",
+    "CUMULATIVE_FALSE_NEGATIVE_COST"
+  ],
+  "deep_research_policy": "BOUNDED_GAP_RECOVERY_ONLY_AFTER_REPO_AND_ARCHIVE_EXHAUSTED",
+  "canonical_changes_authorized": false,
+  "portfolio_changes_authorized": false
+}
