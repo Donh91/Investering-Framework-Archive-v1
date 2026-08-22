@@ -1,0 +1,29 @@
+{
+  "authority": "RESEARCH_ONLY_NON_CANONICAL",
+  "contract": "ETHBTC_FORWARD_RELATIVE_RETURN_OUTCOME_v1",
+  "freeze_before_first_eligible_row": true,
+  "immutability": {
+    "candidate_decisions_never_rewritten": true,
+    "each_horizon_written_at_most_once": true,
+    "outcome_detail_ledger_append_only_key": "event_id+horizon",
+    "outcome_fields_blank_until_mature": true
+  },
+  "path_metrics": {
+    "ETHBTC_MAE_MFE": "min/max percentage return from baseline over direct hourly ETHBTC closes from baseline through selected horizon end",
+    "no_imputation": true,
+    "secondary_BTC_ETH": "also retain BTC and ETH forward return plus BTC/ETH MAE/MFE using direct retained Binance spot hourly closes for tail-risk diagnostics"
+  },
+  "primary_classification": {
+    "baseline": "latest direct settled hourly ETHBTC close at or before information_cutoff_utc",
+    "horizons_hours": {
+      "24h": 24,
+      "72h": 72,
+      "7d": 168
+    },
+    "missing": "if no qualifying direct close exists, horizon remains unmatured/unavailable",
+    "negative_outcome": "forward ETHBTC relative return <= 0",
+    "positive_outcome": "forward ETHBTC relative return > 0",
+    "source": "direct retained Binance ETHBTC settled hourly closes",
+    "target_selection": "first direct settled hourly close at or after exact horizon target and no more than 60 minutes after target"
+  }
+}

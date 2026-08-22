@@ -7,7 +7,10 @@ on:
       - '04_MARKET_LEARNING/shadow_registry/REGISTRY.json'
       - '04_MARKET_LEARNING/shadow_registry/SHARED_ROW_TOURNAMENT_POINTER.json'
       - 'scripts/research/prospective_evidence_controller.py'
+      - 'scripts/research/core_shared_row_*.py'
+      - 'scripts/research/shared_row_outcome_owner.py'
       - 'scripts/research/shared_row_tournament_*.py'
+      - 'scripts/research/validate_core_prospective_freeze.py'
       - '.github/workflows/shared-row-*.yml'
       - '.github/workflows/research-owner-*.yml'
 permissions:
@@ -20,8 +23,9 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - run: python -m py_compile scripts/research/prospective_evidence_controller.py scripts/research/shared_row_tournament_maturation.py scripts/research/shared_row_tournament_weekly.py scripts/research/shared_row_tournament_relevance.py scripts/research/shared_row_tournament_monitor.py
+      - run: python -m py_compile scripts/research/prospective_evidence_controller.py scripts/research/core_shared_row_materializer.py scripts/research/shared_row_outcome_owner.py scripts/research/validate_core_prospective_freeze.py scripts/research/shared_row_tournament_maturation.py scripts/research/shared_row_tournament_weekly.py scripts/research/shared_row_tournament_relevance.py scripts/research/shared_row_tournament_monitor.py
       - run: python 06_RESEARCH_LAB/shared_row_model_tournament_v1/pipeline/validate_tournament_contract.py
+      - run: python scripts/research/validate_core_prospective_freeze.py
       - run: python scripts/research/prospective_evidence_controller.py --status-only
       - run: python scripts/research/shared_row_tournament_maturation.py
       - run: python scripts/research/shared_row_tournament_weekly.py
