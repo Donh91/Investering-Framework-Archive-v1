@@ -16,6 +16,7 @@ LEDGER=ROOT/"data/PROSPECTIVE_SHARED_ROW_LEDGER.csv"
 FNP=ROOT/"14_DIVERGENCE_FNP_LEDGER.csv"
 FREEZE=ROOT/"TRANSFORM_FREEZE_REGISTRY.json"
 REG=ROOT/"03_CANDIDATE_REGISTRY.json"
+CORE_IDS=("C01_ETHBTC","C02_BREADTH","C03_BTCD","C04_ETHBTC_BREADTH","C05_ETHBTC_BTCD","C06_BREADTH_BTCD","C07_SIMPLE_3")
 
 def now(): return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00","Z")
 def parse_ts(v): return datetime.fromisoformat(str(v).replace("Z","+00:00")).astimezone(timezone.utc)
@@ -65,6 +66,31 @@ def eligibility_floor_for_candidate(cid):
         if v:starts.append(parse_ts(v))
     return max(starts) if starts else None
 
+def validate_core_decision_contract(r,decisions,eligible):
+    core=set(CORE_IDS)
+    if not core.issubset(eligible):return
+    missing=sorted(core-set(decisions))
+    if missing:raise ValueError("active core candidate set incomplete: "+",".join(missing))
+    for cid in CORE_IDS:
+        if not isinstance(decisions[cid],bool):raise ValueError(f"core candidate {cid} decision must be boolean")
+    es=str(r.get("ethbtc_derived_state","")).strip();bs=str(r.get("breadth_derived_state","")).strip();ds=str(r.get("btcd_derived_state","")).strip()
+    if es not in {"ABOVE","BELOW","AT"}:raise ValueError("invalid or missing ethbtc_derived_state")
+    if bs not in {"BROAD_MAJORITY","NON_BROAD_MAJORITY"}:raise ValueError("invalid or missing breadth_derived_state")
+    if ds not in {"FALLING_PATH","RISING_RECLAIM","MIXED_PATH"}:raise ValueError("invalid or missing btcd_derived_state")
+    expected={
+        "C01_ETHBTC":es=="ABOVE",
+        "C02_BREADTH":bs=="BROAD_MAJORITY",
+        "C03_BTCD":ds=="FALLING_PATH",
+    }
+    expected.update({
+        "C04_ETHBTC_BREADTH":expected["C01_ETHBTC"] and expected["C02_BREADTH"],
+        "C05_ETHBTC_BTCD":expected["C01_ETHBTC"] and expected["C03_BTCD"],
+        "C06_BREADTH_BTCD":expected["C02_BREADTH"] and expected["C03_BTCD"],
+        "C07_SIMPLE_3":expected["C01_ETHBTC"] and expected["C02_BREADTH"] and expected["C03_BTCD"],
+    })
+    wrong=sorted(cid for cid in CORE_IDS if decisions[cid] is not expected[cid])
+    if wrong:raise ValueError("core candidate decision violates frozen boolean contract: "+",".join(wrong))
+
 def validate_payload(r):
     required=["event_id","observation_timestamp_utc","information_cutoff_utc","source_version_commit","regime_tag","catalyst_tag","catalyst_evidence_id","candidate_decisions"]
     missing=[k for k in required if not str(r.get(k,"")).strip()]
@@ -75,6 +101,7 @@ def validate_payload(r):
     eligible=set(eligible_candidates());illegal=sorted(set(decisions)-eligible)
     if illegal: raise ValueError("decision supplied for non-eligible candidate: "+",".join(illegal))
     if not decisions: raise ValueError("no eligible candidate decisions supplied")
+    validate_core_decision_contract(r,decisions,eligible)
     for cid in decisions:
         floor=eligibility_floor_for_candidate(cid)
         if floor is None: raise ValueError(f"candidate {cid} lacks frozen prospective eligibility start")
