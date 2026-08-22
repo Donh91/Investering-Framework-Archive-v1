@@ -4,7 +4,7 @@ import csv
 import hashlib
 import json
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional, Tuple
+from typing import Any, Dict, Iterable, List, Tuple
 
 ROOT = Path(__file__).resolve().parents[2]
 BASE = ROOT / "00_ARCHIVE_CONTROL/source_recovery_controller_v1"
@@ -28,14 +28,6 @@ def _walk(obj: Any) -> Iterable[Tuple[str, Any]]:
     elif isinstance(obj, list):
         for v in obj:
             yield from _walk(v)
-
-
-def _value_text(obj: Any) -> str:
-    values: List[str] = []
-    for _, value in _walk(obj):
-        if isinstance(value, (str, int, float, bool)):
-            values.append(str(value))
-    return " ".join(values).upper()
 
 
 def _key_values(obj: Any, wanted: Iterable[str]) -> List[Any]:
@@ -67,18 +59,27 @@ def _numeric_zero(obj: Any, keys: Iterable[str]) -> bool:
     return False
 
 
+def _is_schema_document(path: Path, data: Dict[str, Any]) -> bool:
+    if path.name.endswith(".schema.json"):
+        return True
+    return "$schema" in data and any(k in data for k in ("$defs", "definitions", "properties", "oneOf", "allOf", "anyOf"))
+
+
 def classify_receipt(policy: Dict[str, Any], receipt_path: str, receipt: Dict[str, Any]) -> Dict[str, Any]:
-    text = _value_text(receipt)
     status_text = " ".join(str(v).upper() for v in _key_values(receipt, [
         "status", "state", "conclusion", "classification", "interpretation",
         "provider_runtime_failure", "error", "reason", "enrichment_run_conclusion_at_receipt",
         "verification_status"
     ]))
+    testability_text = " ".join(str(v).upper() for v in _key_values(receipt, [
+        "status", "state", "classification", "interpretation", "terminal_verdict",
+        "testability", "market_historical_availability", "historical_availability"
+    ]))
     transform_status_text = " ".join(str(v).upper() for v in _key_values(receipt, [
         "transform_status", "transform_result", "transform_conclusion"
     ]))
 
-    explicit_not_testable = "NOT_TESTABLE" in text or "NOT TESTABLE" in text
+    explicit_not_testable = "NOT_TESTABLE" in testability_text or "NOT TESTABLE" in testability_text
     terminal_no_rows = (
         ("TERMINAL" in status_text or _any_true(receipt, ["terminal"]))
         and (_numeric_zero(receipt, ["returned_row_count", "row_count", "rows_returned"]) or _any_true(receipt, ["no_fill"]))
@@ -151,7 +152,7 @@ def _discover_receipts(policy: Dict[str, Any]) -> List[Dict[str, Any]]:
                 data = json.loads(path.read_text(encoding="utf-8"))
             except (json.JSONDecodeError, UnicodeDecodeError):
                 data = {"status": "INVALID_JSON", "error": "JSON_PARSE_FAILURE"}
-            if not isinstance(data, dict):
+            if not isinstance(data, dict) or _is_schema_document(path, data):
                 continue
             content_hash = hashlib.sha256(path.read_bytes()).hexdigest()
             found[rel] = {"path": rel, "data": data, "content_hash": content_hash}
