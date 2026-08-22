@@ -1,0 +1,135 @@
+{
+  "authority": "RESEARCH_ONLY_NON_CANONICAL",
+  "audited_at_utc": "2026-08-22T21:50:00Z",
+  "canonical_firewall": {
+    "canonical_promotion": false,
+    "market_rule_change": false,
+    "portfolio_execution": false,
+    "threshold_change": false,
+    "weight_change": false
+  },
+  "codex_role": {
+    "allowed_examples": [
+      "implement approved code changes",
+      "write tests",
+      "repair workflows",
+      "open or review pull requests",
+      "bounded security/quality review"
+    ],
+    "forbidden_runtime_authority": [
+      "market decision authority",
+      "canonical rule changes without review",
+      "threshold or weight changes",
+      "portfolio execution",
+      "scheduled research verdict engine"
+    ],
+    "reason": "Codex is best used to change and verify the machinery, not to be the machinery's probabilistic market/research control plane.",
+    "recommended_role": "EXTERNAL_ENGINEERING_IMPLEMENTATION_TESTING_AND_REVIEW",
+    "runtime_definition_found_in_repo": false
+  },
+  "contract": "RESEARCH_GOVERNANCE_AI_ROLE_ALLOCATION_v1",
+  "current_openai_api_roles": {
+    "DAILY_CONFLICT_REVIEW": {
+      "authority": "ADVISORY_SHADOW_ONLY",
+      "model": "gpt-5.6-terra",
+      "reasoning_effort": "medium",
+      "role": "bounded disagreement interpretation"
+    },
+    "DAILY_DIRECTOR_SHADOW": {
+      "authority": "ADVISORY_SHADOW_ONLY",
+      "model": "gpt-5.6-luna",
+      "reasoning_effort": "low",
+      "role": "multi-horizon shadow interpretation and bounded forecast candidates"
+    },
+    "DEEP_RESEARCH_MANUAL": {
+      "authority": "ADVISORY_SHADOW_ONLY",
+      "manual_only": true,
+      "model": "gpt-5.6-sol",
+      "reasoning_effort": "high",
+      "role": "manual bounded deep research"
+    },
+    "MASTER_MONDAY_PREP_SHADOW": {
+      "authority": "ADVISORY_SHADOW_ONLY",
+      "manual_only": true,
+      "model": "gpt-5.6-sol",
+      "reasoning_effort": "high",
+      "role": "manual bounded Master Monday preparation"
+    },
+    "WEEKLY_ADVERSARIAL_REVIEW": {
+      "authority": "ADVISORY_SHADOW_ONLY",
+      "model": "gpt-5.6-sol",
+      "reasoning_effort": "high",
+      "role": "falsification/red-team of frozen weekly evidence"
+    },
+    "WEEKLY_CALIBRATION_SHADOW": {
+      "authority": "ADVISORY_SHADOW_ONLY",
+      "model": "gpt-5.6-terra",
+      "reasoning_effort": "medium",
+      "role": "weekly outcome-aware calibration analysis"
+    }
+  },
+  "design_principle": "Deterministic control plane; probabilistic models are bounded advisors and research specialists, never final runtime authority.",
+  "expansion_policy": {
+    "automatic_canonical_write": false,
+    "automatic_deep_research_authorization": false,
+    "automatic_paid_data_authorization": false,
+    "bounded_secondary_model_calls_may_be_added_only_when": [
+      "deterministic governance action is already justified",
+      "semantic synthesis or adversarial reasoning has measurable value beyond deterministic checks",
+      "existing API budget and authority gates pass",
+      "input evidence is frozen and provenance-bound",
+      "model output cannot directly mutate canonical state or portfolio execution"
+    ],
+    "default": "NO_NEW_MODEL_CALLS_FOR_GOVERNANCE_CONTROL_PLANE",
+    "preferred_reuse_order": [
+      "existing WEEKLY_ADVERSARIAL_REVIEW Sol lane",
+      "existing Terra calibration/conflict lanes when semantically appropriate",
+      "existing bounded research execution coordinator",
+      "new API task only after explicit VOI evidence"
+    ]
+  },
+  "new_governance_roles": {
+    "DECISION_IMPACT_VOI_ROUTER": {
+      "automatic_model_call": false,
+      "codex_runtime_required": false,
+      "openai_api_required": false,
+      "optional_model_role": "Explain ambiguous decision-surface mapping only; model cannot authorize spend or reprioritize around deterministic gates.",
+      "preferred_optional_model": "gpt-5.6-terra",
+      "primary_engine": "DETERMINISTIC_PYTHON_GITHUB_ACTIONS"
+    },
+    "INDEPENDENT_ADVERSARIAL_SENTINEL": {
+      "automatic_model_call": false,
+      "codex_runtime_required": false,
+      "openai_api_required": false,
+      "optional_model_role": "Secondary bounded falsification of high-value frozen evidence after deterministic trigger; output is advisory evidence only.",
+      "preferred_optional_model": "gpt-5.6-sol",
+      "primary_engine": "DETERMINISTIC_PYTHON_GITHUB_ACTIONS",
+      "reuse_existing_lane_first": "WEEKLY_ADVERSARIAL_REVIEW"
+    },
+    "META_ORCHESTRATOR": {
+      "automatic_model_call": false,
+      "codex_runtime_required": false,
+      "openai_api_required": false,
+      "optional_model_role": "May draft rationale or alternative research packets after deterministic scheduling; never chooses final queue, authority or canonical action.",
+      "preferred_optional_model": "NONE_BY_DEFAULT",
+      "primary_engine": "DETERMINISTIC_PYTHON_GITHUB_ACTIONS"
+    },
+    "RESEARCH_MEMORY_NOVELTY_GATE": {
+      "automatic_model_call": false,
+      "codex_runtime_required": false,
+      "openai_api_required": false,
+      "optional_model_role": "Semantic related-work suggestion only; exact/near duplicate verdict remains deterministic.",
+      "preferred_optional_model": "gpt-5.6-terra",
+      "primary_engine": "DETERMINISTIC_PYTHON_GITHUB_ACTIONS"
+    }
+  },
+  "openai_api_budget_contract": {
+    "creates_truth": false,
+    "framework_state_change": false,
+    "model_weight_change": false,
+    "monthly_hard_stop_usd": 20.0,
+    "portfolio_action": false,
+    "self_merge": false,
+    "single_run_hard_stop_usd": 1.5
+  }
+}

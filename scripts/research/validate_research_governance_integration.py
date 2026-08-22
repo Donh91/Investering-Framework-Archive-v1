@@ -26,4 +26,17 @@ assert sen["verdict"]=="FIREWALL_BREACH" and meta["primary_action"]=="HALT_ESCAL
 states2=dict(states); states2["SOURCE_RECOVERY"]={"selected_action":"DECLARE_NOT_TESTABLE","target_receipt":"legacy","evidence_fingerprint":"OLD","authority":"RESEARCH_ONLY_NON_CANONICAL"}
 mem=m.evaluate(mp,m.current_proposals(states2),[]); voi=v.route({},states2,mem); sen=s.evaluate({},states2,mem,voi); meta=o.orchestrate(op,states2,mem,voi,sen)
 assert meta["primary_source"]=="SHARED_ROW"; print("PASS terminal_source_non_starvation")
-print("AUTONOMOUS_RESEARCH_GOVERNANCE_INTEGRATION_GATE_v1 PASS")
+
+degraded={
+  "binding_integrity":"DEGRADED_PRIMARY_FALLBACK","complete_primary":False,"resolvable":True,
+  "missing_primary_sources":["SHARED_ROW"],"missing_all_sources":[],
+  "bindings":{"SHARED_ROW":{"mode":"FALLBACK_STATUS_ONLY"}}
+}
+meta=o.orchestrate(op,states,mem,voi,sen,degraded)
+assert meta["primary_action"]=="WAIT_FOR_BINDING_COMPLETENESS" and not meta["active_heavy_workstreams"]; print("PASS degraded_binding_cannot_masquerade_as_healthy")
+
+firewall_sentinel={"verdict":"FIREWALL_BREACH"}
+meta=o.orchestrate(op,bad,mem,voi,firewall_sentinel,degraded)
+assert meta["primary_action"]=="HALT_ESCALATION_AND_AUDIT"; print("PASS firewall_precedes_binding_wait")
+
+print("AUTONOMOUS_RESEARCH_GOVERNANCE_INTEGRATION_GATE_v2 PASS")

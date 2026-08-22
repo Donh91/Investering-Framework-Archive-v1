@@ -14,6 +14,7 @@ on:
       - '.github/workflows/autonomous-research-governance-*.yml'
       - '06_RESEARCH_LAB/shared_row_model_tournament_v1/RESEARCH_NEXT_ACTION_POLICY_v1.json'
       - '06_RESEARCH_LAB/shared_row_model_tournament_v1/NEXT_ACTION_STATE.json'
+      - '06_RESEARCH_LAB/shared_row_model_tournament_v1/RUNTIME_STATUS.json'
       - '05_CYCLE_NAVIGATOR/autonomous_calibration_v1/**'
       - '04_MARKET_LEARNING/shadow_registry/autonomous_portfolio_v1/**'
       - '00_ARCHIVE_CONTROL/source_recovery_controller_v1/**'
@@ -23,6 +24,15 @@ permissions:
   contents: read
 
 jobs:
+  binding-integrity-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: python -m py_compile scripts/research/research_governance_common.py scripts/research/research_meta_orchestrator.py scripts/research/validate_research_governance_bindings.py
+      - run: python scripts/research/validate_research_governance_bindings.py
+
   memory-novelty-gate:
     runs-on: ubuntu-latest
     steps:
@@ -64,7 +74,7 @@ jobs:
       - run: python scripts/research/research_meta_orchestrator.py --dry-run
 
   integration-gate:
-    needs: [memory-novelty-gate, decision-impact-gate, adversarial-sentinel-gate, meta-orchestrator-gate]
+    needs: [binding-integrity-gate, memory-novelty-gate, decision-impact-gate, adversarial-sentinel-gate, meta-orchestrator-gate]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -89,5 +99,10 @@ jobs:
               assert st.get('portfolio_execution') is False
               assert st.get('paid_data_authorized') is False
           assert states[2].get('verdict')!='FIREWALL_BREACH'
-          print('REAL_REPO_GOVERNANCE_CHAIN_v1 PASS')
+          meta=states[3]
+          assert meta.get('binding_integrity') in {'PRIMARY_COMPLETE','DEGRADED_PRIMARY_FALLBACK'}
+          if meta.get('binding_integrity')!='PRIMARY_COMPLETE':
+              assert meta.get('primary_action')=='WAIT_FOR_BINDING_COMPLETENESS'
+              assert meta.get('active_heavy_workstreams')==[]
+          print('REAL_REPO_GOVERNANCE_CHAIN_v2 PASS',meta.get('binding_integrity'),meta.get('primary_action'))
           PY

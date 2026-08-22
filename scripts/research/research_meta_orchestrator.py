@@ -2,7 +2,7 @@
 from __future__ import annotations
 import argparse, json, hashlib
 from typing import Any, Dict, List
-from research_governance_common import GOV, load_json, specialist_states, action_of, target_of, evidence_fp, digest, persist_json, append_csv
+from research_governance_common import GOV, load_json, specialist_states, specialist_binding_report, action_of, target_of, evidence_fp, digest, persist_json, append_csv
 
 BASE=GOV/"meta_orchestrator_v1"
 POLICY=BASE/"POLICY.json"
@@ -23,7 +23,20 @@ def _memory_for(memory,source,action,target):
             return r.get("novelty_verdict")
     return None
 
-def orchestrate(policy:Dict[str,Any], states:Dict[str,Dict[str,Any]], memory:Dict[str,Any], voi:Dict[str,Any], sentinel:Dict[str,Any]) -> Dict[str,Any]:
+def _default_binding_report(states):
+    return {
+        "contract":"RESEARCH_GOVERNANCE_SPECIALIST_BINDING_REPORT_v1_SYNTHETIC",
+        "expected_sources":sorted(states),
+        "bindings":{k:{"mode":"PRIMARY_READY"} for k in states},
+        "missing_primary_sources":[],
+        "missing_all_sources":[],
+        "complete_primary":True,
+        "resolvable":True,
+        "binding_integrity":"PRIMARY_COMPLETE",
+    }
+
+def orchestrate(policy:Dict[str,Any], states:Dict[str,Dict[str,Any]], memory:Dict[str,Any], voi:Dict[str,Any], sentinel:Dict[str,Any], binding_report:Dict[str,Any]|None=None) -> Dict[str,Any]:
+    binding_report = binding_report or _default_binding_report(states)
     sv=sentinel.get("verdict","PASS")
     conflicts=[]
     rawq=voi.get("queue",[])
@@ -36,12 +49,31 @@ def orchestrate(policy:Dict[str,Any], states:Dict[str,Dict[str,Any]], memory:Dic
                     conflicts.append({"target":ta,"source_a":a.get("source"),"action_a":aa,"source_b":b.get("source"),"action_b":ab})
     if conflicts:
         sv="BLOCK_RESEARCH_ESCALATION"
+
     if sv in {"FIREWALL_BREACH","BLOCK_RESEARCH_ESCALATION"}:
         primary={
             "orchestrator_action":"HALT_ESCALATION_AND_AUDIT","source":"ADVERSARIAL_SENTINEL",
             "target":sv,"execution_mode":"AUTO_LOCAL_RESEARCH",
             "reason":"adversarial sentinel blocks escalation until governance finding is resolved",
             "impact_tier":"HIGH",
+        }
+        queue=[primary]
+    elif not binding_report.get("resolvable", True):
+        missing=",".join(binding_report.get("missing_all_sources") or [])
+        primary={
+            "orchestrator_action":"WAIT_FOR_BINDING_COMPLETENESS","source":"GOVERNANCE_BINDING",
+            "target":missing or "UNKNOWN_BINDING","execution_mode":"AUTO_OBSERVE",
+            "reason":"one or more specialist bindings are completely unavailable; do not infer absence of research work",
+            "impact_tier":"BLOCKED",
+        }
+        queue=[primary]
+    elif not binding_report.get("complete_primary", True):
+        missing=",".join(binding_report.get("missing_primary_sources") or [])
+        primary={
+            "orchestrator_action":"WAIT_FOR_BINDING_COMPLETENESS","source":"GOVERNANCE_BINDING",
+            "target":missing or "PRIMARY_STATE_PENDING","execution_mode":"AUTO_OBSERVE",
+            "reason":"one or more primary specialist states are not yet materialized; fallback status may be observed but research escalation remains paused",
+            "impact_tier":"LOW",
         }
         queue=[primary]
     else:
@@ -78,13 +110,15 @@ def orchestrate(policy:Dict[str,Any], states:Dict[str,Dict[str,Any]], memory:Dic
         queue.sort(key=lambda x:(rank.get(x["orchestrator_action"],99), {"HIGH":0,"MEDIUM":1,"LOW":2,"NONE":3,"BLOCKED":4}.get(x.get("impact_tier"),9), str(x.get("source"))))
         primary=queue[0] if queue else {
             "orchestrator_action":"WAIT_FOR_EVIDENCE","source":"NONE","target":"NONE",
-            "execution_mode":"AUTO_OBSERVE","reason":"no actionable specialist research state","impact_tier":"LOW"
+            "execution_mode":"AUTO_OBSERVE","reason":"all configured specialist primary states are present and no actionable research proposal is active","impact_tier":"LOW"
         }
+
     maxheavy=int(policy.get("max_concurrent_heavy_workstreams",1))
     active=[]
-    for q in queue:
-        if q["orchestrator_action"] in {"PREPARE_CANONICAL_REVIEW","PRIORITIZE_DATA_INTEGRITY","QUEUE_BOUNDED_RESEARCH","QUEUE_VOI_REVIEW"}:
-            if len(active)<maxheavy: active.append(q)
+    if binding_report.get("complete_primary", True) and sv not in {"FIREWALL_BREACH","BLOCK_RESEARCH_ESCALATION"}:
+        for q in queue:
+            if q["orchestrator_action"] in {"PREPARE_CANONICAL_REVIEW","PRIORITIZE_DATA_INTEGRITY","QUEUE_BOUNDED_RESEARCH","QUEUE_VOI_REVIEW"}:
+                if len(active)<maxheavy: active.append(q)
     return {
         "contract":"RESEARCH_META_ORCHESTRATOR_STATE_v1",
         "authority":"RESEARCH_ONLY_NON_CANONICAL",
@@ -93,19 +127,22 @@ def orchestrate(policy:Dict[str,Any], states:Dict[str,Dict[str,Any]], memory:Dic
         "reason":primary.get("reason"),"queue":queue,"queue_n":len(queue),
         "active_heavy_workstreams":active,"max_concurrent_heavy_workstreams":maxheavy,
         "sentinel_verdict":sv,"controller_conflicts":conflicts,
-        "evidence_fingerprint":digest({"memory":memory,"voi":voi,"sentinel":sentinel,"states":states}),
+        "binding_integrity":binding_report.get("binding_integrity","UNKNOWN"),
+        "binding_report":binding_report,
+        "evidence_fingerprint":digest({"memory":memory,"voi":voi,"sentinel":sentinel,"states":states,"bindings":binding_report}),
         "canonical_effect":False,"portfolio_execution":False,"paid_data_authorized":False,
         "deep_research_authorized":False,"external_provider_calls_authorized":False,
     }
 
 def persist(state):
     persist_json(STATE,state)
-    persist_json(QUEUE,{"contract":"RESEARCH_META_EXECUTION_QUEUE_v1","authority":"RESEARCH_ONLY_NON_CANONICAL","queue":state["queue"],"active_heavy_workstreams":state["active_heavy_workstreams"],"canonical_effect":False})
+    persist_json(QUEUE,{"contract":"RESEARCH_META_EXECUTION_QUEUE_v1","authority":"RESEARCH_ONLY_NON_CANONICAL","queue":state["queue"],"active_heavy_workstreams":state["active_heavy_workstreams"],"binding_integrity":state["binding_integrity"],"canonical_effect":False})
     aid=hashlib.sha256((state["primary_action"]+"|"+str(state["primary_source"])+"|"+str(state["primary_target"])+"|"+state["evidence_fingerprint"]).encode()).hexdigest()[:20]
-    append_csv(LEDGER,["action_id","primary_action","primary_source","primary_target","execution_mode","sentinel_verdict","evidence_fingerprint","canonical_effect"],{
+    append_csv(LEDGER,["action_id","primary_action","primary_source","primary_target","execution_mode","sentinel_verdict","binding_integrity","evidence_fingerprint","canonical_effect"],{
         "action_id":aid,"primary_action":state["primary_action"],"primary_source":state["primary_source"],
         "primary_target":state["primary_target"],"execution_mode":state["primary_execution_mode"],
-        "sentinel_verdict":state["sentinel_verdict"],"evidence_fingerprint":state["evidence_fingerprint"],"canonical_effect":"false"
+        "sentinel_verdict":state["sentinel_verdict"],"binding_integrity":state["binding_integrity"],
+        "evidence_fingerprint":state["evidence_fingerprint"],"canonical_effect":"false"
     },"action_id",aid)
 
 def main():
@@ -113,7 +150,9 @@ def main():
     policy=load_json(POLICY,{})
     if policy.get("authority")!="RESEARCH_ONLY_NON_CANONICAL" or any(policy.get(k) is not False for k in ("canonical_effect","automatic_canonical_write","automatic_paid_data_authorization","portfolio_execution")):
         raise SystemExit("meta orchestrator firewall invalid")
-    state=orchestrate(policy,specialist_states(),load_json(MEMORY,{}),load_json(VOI,{}),load_json(SENTINEL,{}))
+    states=specialist_states()
+    bindings=specialist_binding_report()
+    state=orchestrate(policy,states,load_json(MEMORY,{}),load_json(VOI,{}),load_json(SENTINEL,{}),bindings)
     if args.dry_run: print(json.dumps(state,indent=2,sort_keys=True)); return
     persist(state); print(json.dumps(state,indent=2,sort_keys=True))
 if __name__=="__main__": main()
