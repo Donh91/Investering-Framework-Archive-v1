@@ -22,11 +22,35 @@ def dump(path: Path, value):
     path.write_text(json.dumps(value, indent=2) + "\n", encoding="utf-8")
 
 
-def base_docs(repo: Path):
+def base_docs(repo: Path, items=None):
     out = repo / "research/remediation"
-    dump(out / "LATEST_REMEDIATION_QUEUE.json", {"tasks": [], "codex_ready_tasks": [], "needs_more_evidence": []})
-    dump(out / "LATEST_CODEX_READY_TASKS.json", {"contract": "CODEX_READY_TASKS_v1", "contract_revision": "1.1", "tasks": []})
-    dump(out / "LATEST_NEEDS_MORE_EVIDENCE.json", {"tasks": []})
+    items = list(items or [])
+    ready = [x for x in items if x.get("state") == "CODEX_READY"]
+    needs = [x for x in items if x.get("state") in {"OBSERVED", "SUSPECTED_TRANSIENT", "PERSISTING", "NEEDS_MORE_EVIDENCE"}]
+    active = [x for x in items if x.get("state") in {"IN_REMEDIATION", "POST_FIX_OBSERVATION", "REOPENED"}]
+    dump(out / "LATEST_REMEDIATION_QUEUE.json", {
+        "contract": "REMEDIATION_MATURATION_ENGINE_v1",
+        "contract_revision": "1.1",
+        "items": items,
+        "codex_ready_tasks": ready,
+        "needs_more_evidence": needs,
+        "active_remediation": active,
+        "summary": {
+            "total": len(items),
+            "codex_ready": len(ready),
+            "needs_more_evidence": len(needs),
+            "active_remediation": len(active),
+        },
+    })
+    dump(out / "LATEST_CODEX_READY_TASKS.json", {
+        "contract": "CODEX_READY_TASKS_v1",
+        "contract_revision": "1.1",
+        "tasks": ready,
+    })
+    dump(out / "LATEST_NEEDS_MORE_EVIDENCE.json", {
+        "contract": "NEEDS_MORE_EVIDENCE_v1",
+        "items": needs,
+    })
     return out
 
 
@@ -59,22 +83,36 @@ def candidate(cid="codex-research-20260822-parser-fix", linked=None, owner=False
     }
 
 
+def health_task(sig="0123456789abcdefabcd", state="CODEX_READY"):
+    return {
+        "signature": sig,
+        "workflow": "example.yml",
+        "finding": "LATEST_RUN_FAILED",
+        "state": state,
+        "route": "CODEX_PR" if state == "CODEX_READY" else "OBSERVE",
+        "objective": "Fix the observed health defect.",
+        "task_contract_sha256": "health-contract-hash",
+    }
+
+
 def test_valid_research_candidate_enters_same_codex_queue_and_ledger(tmp_path):
-    out = base_docs(tmp_path)
+    base = health_task()
+    out = base_docs(tmp_path, [base])
     c = candidate()
     path = tmp_path / "research/codex/intake/2026/08" / f"{c['candidate_id']}.json"
     dump(path, c)
     result = merger.merge(tmp_path, out)
-    assert result["codex_ready"] == 1
+    assert result["codex_ready"] == 2
+    assert result["preserved_health_items"] == 1
     ready = json.loads((out / "LATEST_CODEX_READY_TASKS.json").read_text())
-    task = ready["tasks"][0]
-    assert task["source_type"] == "RESEARCH_INTAKE"
-    assert task["candidate_id"] == c["candidate_id"]
-    assert task["requested_priority"] == "EXPEDITED"
-    assert task["state"] == "CODEX_READY"
+    research = [x for x in ready["tasks"] if x.get("source_type") == "RESEARCH_INTAKE"][0]
+    assert research["candidate_id"] == c["candidate_id"]
+    assert research["requested_priority"] == "EXPEDITED"
+    assert research["state"] == "CODEX_READY"
     state = json.loads((tmp_path / "LATEST_CODEX_EXECUTION_STATE.json").read_text())
     assert state["queue_authority"] == "LATEST_CODEX_READY_TASKS.json"
-    assert state["summary"]["codex_ready"] == 1
+    assert state["summary"]["codex_ready"] == 2
+    assert any(x["signature"] == base["signature"] for x in state["tasks"])
     assert "CODEX_READY" in (tmp_path / "research/codex/CODEX_EXECUTION_LEDGER.jsonl").read_text()
 
 
@@ -91,22 +129,8 @@ def test_framework_owner_candidate_is_rejected_not_queued(tmp_path):
 
 
 def test_research_candidate_deduplicates_to_active_health_signature(tmp_path):
-    out = base_docs(tmp_path)
     sig = "0123456789abcdefabcd"
-    health_task = {
-        "signature": sig,
-        "workflow": "example.yml",
-        "finding": "LATEST_RUN_FAILED",
-        "state": "CODEX_READY",
-        "route": "CODEX_PR",
-        "objective": "fix",
-    }
-    dump(out / "LATEST_REMEDIATION_QUEUE.json", {
-        "tasks": [health_task.copy()],
-        "codex_ready_tasks": [health_task.copy()],
-        "needs_more_evidence": [],
-    })
-    dump(out / "LATEST_CODEX_READY_TASKS.json", {"contract": "CODEX_READY_TASKS_v1", "tasks": [health_task.copy()]})
+    out = base_docs(tmp_path, [health_task(sig)])
     c = candidate(linked=sig)
     path = tmp_path / "research/codex/intake/2026/08" / f"{c['candidate_id']}.json"
     dump(path, c)
@@ -115,6 +139,18 @@ def test_research_candidate_deduplicates_to_active_health_signature(tmp_path):
     assert len(ready["tasks"]) == 1
     assert ready["tasks"][0]["signature"] == sig
     assert ready["tasks"][0]["research_intake_sources"][0]["candidate_id"] == c["candidate_id"]
+    queue = json.loads((out / "LATEST_REMEDIATION_QUEUE.json").read_text())
+    assert queue["items"][0]["research_intake_sources"][0]["candidate_id"] == c["candidate_id"]
+
+
+def test_native_needs_more_evidence_items_are_preserved(tmp_path):
+    existing = health_task(state="OBSERVED")
+    out = base_docs(tmp_path, [existing])
+    merger.merge(tmp_path, out)
+    needs = json.loads((out / "LATEST_NEEDS_MORE_EVIDENCE.json").read_text())
+    assert needs["items"][0]["signature"] == existing["signature"]
+    queue = json.loads((out / "LATEST_REMEDIATION_QUEUE.json").read_text())
+    assert queue["summary"]["needs_more_evidence"] == 1
 
 
 def test_research_fresh_state_binding_rejects_changed_candidate(tmp_path):
