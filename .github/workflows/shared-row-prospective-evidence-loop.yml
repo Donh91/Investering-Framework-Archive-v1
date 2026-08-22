@@ -43,6 +43,8 @@ jobs:
           python scripts/research/shared_row_tournament_maturation.py
       - run: python scripts/research/shared_row_tournament_relevance.py
       - run: python scripts/research/shared_row_tournament_monitor.py
+      - name: Select next justified research action
+        run: python scripts/research/shared_row_next_action_controller.py
       - name: Commit research-only state changes with verified readback
         shell: bash
         run: |
@@ -51,11 +53,14 @@ jobs:
           git config user.email framework-research-bot@users.noreply.github.com
           git add 06_RESEARCH_LAB/shared_row_model_tournament_v1/data/PROSPECTIVE_SHARED_ROW_LEDGER.csv \
                   06_RESEARCH_LAB/shared_row_model_tournament_v1/data/OUTCOME_DETAIL_LEDGER.csv \
+                  06_RESEARCH_LAB/shared_row_model_tournament_v1/data/NEXT_ACTION_LEDGER.csv \
                   06_RESEARCH_LAB/shared_row_model_tournament_v1/14_DIVERGENCE_FNP_LEDGER.csv \
                   06_RESEARCH_LAB/shared_row_model_tournament_v1/RELEVANCE_STATE.json \
+                  06_RESEARCH_LAB/shared_row_model_tournament_v1/NEXT_ACTION_STATE.json \
+                  06_RESEARCH_LAB/shared_row_model_tournament_v1/research_actions \
                   06_RESEARCH_LAB/shared_row_model_tournament_v1/monitor
           if git diff --cached --quiet; then exit 0; fi
-          git commit -m "research: accumulate prospective shared-row evidence"
+          git commit -m "research: accumulate prospective shared-row evidence and next action"
           pushed=false
           for attempt in 1 2 3; do
             git rebase --abort 2>/dev/null || true
