@@ -58,9 +58,11 @@ def _memory_verdict(memory: Dict[str,Any], source:str, action:str, target:str) -
 
 def route(policy:Dict[str,Any], states:Dict[str,Dict[str,Any]], memory:Dict[str,Any]) -> Dict[str,Any]:
     queue=[]
+    actionable_state_n=0
     for source,state in states.items():
         action=action_of(state)
         if not action: continue
+        actionable_state_n += 1
         tier,surface=ACTION_MAP.get(action,("LOW","RESEARCH_OPERATIONS"))
         target=target_of(state)
         novelty=_memory_verdict(memory,source,action,target)
@@ -85,16 +87,26 @@ def route(policy:Dict[str,Any], states:Dict[str,Dict[str,Any]], memory:Dict[str,
             "canonical_effect":False,"portfolio_execution":False,
         })
     queue.sort(key=lambda x:(TIER_ORDER.get(x["impact_tier"],9),x["source"],x["action"],x["target"]))
-    primary=queue[0] if queue else {
-        "source":"NONE","action":"NONE","target":"NONE","decision_surface":"NONE",
-        "impact_tier":"NONE","reason":"no specialist states available","paid_review_only":False
-    }
+    if queue:
+        primary=queue[0]
+    else:
+        primary={
+            "source":"NONE","action":"NONE","target":"NONE","decision_surface":"NONE",
+            "impact_tier":"NONE",
+            "reason":(
+                "specialist states resolved, but no actionable research proposal is active"
+                if states else
+                "no specialist states resolved"
+            ),
+            "paid_review_only":False
+        }
     return {
         "contract":"RESEARCH_DECISION_IMPACT_VOI_STATE_v1",
         "authority":"RESEARCH_ONLY_NON_CANONICAL",
         "selected_source":primary["source"],"selected_action":primary["action"],"selected_target":primary["target"],
         "selected_decision_surface":primary["decision_surface"],"selected_impact_tier":primary["impact_tier"],
         "reason":primary["reason"],"queue":queue,"queue_n":len(queue),
+        "resolved_specialist_state_n":len(states),"actionable_specialist_state_n":actionable_state_n,
         "evidence_fingerprint":digest(queue),
         "paid_data_authorized":False,"deep_research_authorized":False,
         "external_provider_calls_authorized":False,"canonical_effect":False,"portfolio_execution":False,
