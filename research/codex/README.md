@@ -14,7 +14,7 @@ Read order for Codex work:
 
 Research candidates are stored under `research/codex/intake/YYYY/MM/` and must satisfy `CODEX_RESEARCH_CANDIDATE.schema.json`.
 
-A merged candidate triggers the Remediation Maturation Controller immediately through a path-restricted `push` trigger. The normal twice-daily schedule is only reconciliation/recovery cadence, not a waiting requirement for research intake.
+A merged candidate triggers the non-writing `codex-intake-dispatch.yml` path listener, which immediately dispatches the guarded Remediation Maturation Controller on `main`. The main writer itself remains free of push triggers. The normal twice-daily schedule is only reconciliation/recovery cadence, not a waiting requirement for research intake.
 
 Research threads may submit evidence but cannot declare `CODEX_READY`. The controller may classify a candidate as `CODEX_READY`, `NEEDS_MORE_EVIDENCE`, `DEDUPED_TO_HEALTH_TASK` or `REJECTED`.
 
