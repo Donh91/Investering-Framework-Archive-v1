@@ -1,0 +1,26 @@
+name: Shadow Registry Autonomous Portfolio Gate
+
+on:
+  pull_request:
+    paths:
+      - '04_MARKET_LEARNING/shadow_registry/autonomous_portfolio_v1/**'
+      - 'scripts/research/shadow_registry_portfolio_controller.py'
+      - 'scripts/research/validate_shadow_registry_portfolio_controller.py'
+      - '.github/workflows/shadow-registry-autonomous-portfolio-*.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  shadow-portfolio-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m py_compile scripts/research/shadow_registry_portfolio_controller.py scripts/research/validate_shadow_registry_portfolio_controller.py
+      - run: python scripts/research/validate_shadow_registry_portfolio_controller.py
+      - run: python scripts/research/shadow_registry_portfolio_controller.py --dry-run
