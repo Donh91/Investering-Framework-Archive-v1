@@ -39,7 +39,7 @@ A research thread may submit evidence, but it may not self-declare `CODEX_READY`
 4. Create one candidate conforming to `research/codex/CODEX_RESEARCH_CANDIDATE.schema.json` at:
    `research/codex/intake/YYYY/MM/<candidate_id>.json`
 5. Use an isolated `agent/task-*` branch and PR under archive governance.
-6. Once the candidate lands on `main`, the Remediation Maturation Controller is triggered by the intake path and evaluates it immediately, independently of the normal twice-daily cadence.
+6. Once the candidate lands on `main`, the non-writing `codex-intake-dispatch.yml` path listener immediately dispatches the guarded Remediation Maturation Controller. The main writer itself remains free of push triggers.
 7. Only `LATEST_CODEX_READY_TASKS.json` may declare the candidate `CODEX_READY`.
 8. For a standalone research task, Codex must run the task's `fresh_state_preflight_command` on its remediation branch before changing code.
 9. Codex may only touch `allowed_change_scope`, must preserve `forbidden_changes`, must run positive and negative tests, and may never self-merge.
