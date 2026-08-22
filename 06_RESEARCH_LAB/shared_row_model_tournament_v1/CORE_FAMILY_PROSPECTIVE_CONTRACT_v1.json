@@ -1,0 +1,69 @@
+{
+  "authority": "RESEARCH_ONLY_NON_CANONICAL",
+  "candidate_decision_contract": {
+    "C01_ETHBTC": "ETHBTC_PERSISTENCE.permission",
+    "C02_BREADTH": "BREADTH_SURVIVAL.permission",
+    "C03_BTCD": "BTCD_PATH_RECLAIM.permission",
+    "C04_ETHBTC_BREADTH": "C01_ETHBTC AND C02_BREADTH",
+    "C05_ETHBTC_BTCD": "C01_ETHBTC AND C03_BTCD",
+    "C06_BREADTH_BTCD": "C02_BREADTH AND C03_BTCD",
+    "C07_SIMPLE_3": "C01_ETHBTC AND C02_BREADTH AND C03_BTCD",
+    "tuning": false,
+    "version": "CORE_BOOLEAN_AND_CANDIDATES_v1",
+    "weights": null
+  },
+  "context_tag_contract": {
+    "catalyst_tag": "VERIFIED_EXOGENOUS_SHOCK only if the observation UTC calendar date exactly matches a frozen VERIFIED_EXOGENOUS_SHOCK date in CATALYST_LEDGER.csv; otherwise NO_VERIFIED_EXOGENOUS_CATALYST_MATCH.",
+    "new_catalysts_may_not_be_created_by_materializer": true,
+    "no_match_catalyst_evidence_id": "NONE_VERIFIED_AT_CUTOFF",
+    "regime_tag": "POST_CAT_STRUCT_ETF_2024 for observation timestamps after the frozen January 2024 structural regime break; otherwise PRE_CAT_STRUCT_ETF_2024.",
+    "version": "PROSPECTIVE_CONTEXT_TAG_v1"
+  },
+  "contract": "CORE_FAMILY_PROSPECTIVE_CONTRACT_v1",
+  "created_for": "PROSPECTIVE_EVIDENCE_ACCUMULATION_v1",
+  "family_contracts": {
+    "BREADTH_SURVIVAL": {
+      "definition": {
+        "historical_membership_backfill_forbidden": true,
+        "legacy_strong_partial_weak_equivalence": false,
+        "membership": "point-in-time frozen owner membership and membership_hash",
+        "permission": "true iff state == BROAD_MAJORITY",
+        "state": "BROAD_MAJORITY if advancers > decliners; NON_BROAD_MAJORITY otherwise"
+      },
+      "source_contract": "C5E_TOP100_BREADTH_OWNER_v1_2",
+      "transform_version": "BREADTH_MAJORITY_SURVIVAL_PROSPECTIVE_v1"
+    },
+    "BTCD_PATH_RECLAIM": {
+      "definition": {
+        "decision_state_carry_until_next_settled_print": true,
+        "input": "latest three settled complete UTC daily CMC BTC.D closes available at information cutoff",
+        "legacy_tradingview_equivalence": false,
+        "permission": "true iff state == FALLING_PATH",
+        "source_row_interpolation": false,
+        "states": {
+          "FALLING_PATH": "c < b < a for chronological closes a,b,c",
+          "MIXED_PATH": "all other valid three-print paths",
+          "RISING_RECLAIM": "b < a and c > b"
+        }
+      },
+      "source_contract": "CMC_DIRECT_SOURCE_CONVENTION",
+      "transform_version": "BTCD_CMC_THREE_PRINT_PATH_PROSPECTIVE_v1"
+    },
+    "ETHBTC_PERSISTENCE": {
+      "definition": {
+        "input": "direct Binance ETHBTC settled hourly closes only",
+        "level": 0.03,
+        "lookback_hours": 168,
+        "permission": "true iff state == ABOVE",
+        "state": "ABOVE if latest direct settled hourly close > 0.0300; BELOW if < 0.0300; AT if equal",
+        "synthetic_ratio_forbidden": true
+      },
+      "source_contract": "API_INTELLIGENCE_SEQUENCE_CONTEXT_v2_2.ethbtc_0_0300_persistence",
+      "transform_version": "ETHBTC_0_0300_PERSISTENCE_PROSPECTIVE_v1"
+    }
+  },
+  "legacy_equivalence": false,
+  "missing_is_zero": false,
+  "no_backdating": true,
+  "prospective_eligibility_start": "2026-08-23T04:50:00Z"
+}
