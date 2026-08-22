@@ -57,6 +57,11 @@ def row(i, outcome="1", regime="R1"):
     }
 
 
+def fresh_now(rows):
+    latest=max(nac.parse_dt(r["observation_timestamp_utc"]) for r in rows)
+    return latest + timedelta(hours=12)
+
+
 def div(i, target="C04_ETHBTC_BREADTH", target_correct=True, target_decision=1, outcome=1, regime=None, catalyst=None, mae="-0.01"):
     r = regime or ("R1" if i % 2 == 0 else "R2")
     c = catalyst or ("NONE" if i % 2 == 0 else "CAT")
@@ -100,24 +105,26 @@ def main():
 
     td,root=mkroot();
     try:
-        write_csv(root/"data/PROSPECTIVE_SHARED_ROW_LEDGER.csv",ROW_FIELDS,[row(i) for i in range(7)])
+        rows=[row(i) for i in range(7)]
+        write_csv(root/"data/PROSPECTIVE_SHARED_ROW_LEDGER.csv",ROW_FIELDS,rows)
         write_csv(root/"14_DIVERGENCE_FNP_LEDGER.csv",DIV_FIELDS,[div(i) for i in range(2)])
-        a,_=decide(root,datetime(2026,9,15,tzinfo=timezone.utc)); assert_eq(a[0],"EXTEND_OBSERVATION","sparse-divergence"); checks.append("extend_sparse_divergence")
+        a,_=decide(root,fresh_now(rows)); assert_eq(a[0],"EXTEND_OBSERVATION","sparse-divergence"); checks.append("extend_sparse_divergence")
     finally: td.cleanup()
 
     td,root=mkroot();
     try:
-        write_csv(root/"data/PROSPECTIVE_SHARED_ROW_LEDGER.csv",ROW_FIELDS,[row(i) for i in range(7)])
+        rows=[row(i) for i in range(7)]
+        write_csv(root/"data/PROSPECTIVE_SHARED_ROW_LEDGER.csv",ROW_FIELDS,rows)
         write_csv(root/"14_DIVERGENCE_FNP_LEDGER.csv",DIV_FIELDS,[div(i) for i in range(3)])
-        a,_=decide(root,datetime(2026,9,15,tzinfo=timezone.utc)); assert_eq(a[0],"INVESTIGATE_DIVERGENCE","first-review"); checks.append("first_information_review")
+        a,_=decide(root,fresh_now(rows)); assert_eq(a[0],"INVESTIGATE_DIVERGENCE","first-review"); checks.append("first_information_review")
     finally: td.cleanup()
 
     td,root=mkroot();
     try:
         rows=[row(i,regime="R1" if i%2==0 else "R2") for i in range(10)]
-        ds=[div(i,target="C04_ETHBTC_BREADTH",target_correct=False,target_decision=(i%2),regime="R1" if i%2==0 else "R1",catalyst="A" if i%2==0 else "B") for i in range(5)]
+        ds=[div(i,target="C04_ETHBTC_BREADTH",target_correct=False,target_decision=(i%2),regime="R1",catalyst="A" if i%2==0 else "B") for i in range(5)]
         write_csv(root/"data/PROSPECTIVE_SHARED_ROW_LEDGER.csv",ROW_FIELDS,rows); write_csv(root/"14_DIVERGENCE_FNP_LEDGER.csv",DIV_FIELDS,ds)
-        a,_=decide(root,datetime(2026,10,1,tzinfo=timezone.utc)); assert_eq(a[0],"STRESS_TEST","multi-context-errors"); checks.append("stress_test_trigger")
+        a,_=decide(root,fresh_now(rows)); assert_eq(a[0],"STRESS_TEST","multi-context-errors"); checks.append("stress_test_trigger")
     finally: td.cleanup()
 
     td,root=mkroot();
@@ -125,8 +132,8 @@ def main():
         rows=[row(i,regime="R1" if i%2==0 else "R2") for i in range(12)]
         ds=[div(i,target="C04_ETHBTC_BREADTH",target_correct=False,target_decision=(i%2),regime="R1" if i%2==0 else "R2") for i in range(8)]
         write_csv(root/"data/PROSPECTIVE_SHARED_ROW_LEDGER.csv",ROW_FIELDS,rows); write_csv(root/"14_DIVERGENCE_FNP_LEDGER.csv",DIV_FIELDS,ds)
-        write_csv(root/"data/NEXT_ACTION_LEDGER.csv",["decision_fingerprint","generated_at_utc","primary_action","target","reason","eligible_rows_total","divergences_total","matured_24h_rows","matured_72h_rows","matured_7d_rows","matured_7d_divergences","canonical_effect","paid_data_authorized","deep_research_authorized"],[{"decision_fingerprint":"x","generated_at_utc":"2026-09-20T00:00:00Z","primary_action":"STRESS_TEST","target":"C04_ETHBTC_BREADTH","reason":"x","eligible_rows_total":"10","divergences_total":"6","matured_24h_rows":"10","matured_72h_rows":"10","matured_7d_rows":"10","matured_7d_divergences":"6","canonical_effect":"false","paid_data_authorized":"false","deep_research_authorized":"false"}])
-        a,_=decide(root,datetime(2026,10,15,tzinfo=timezone.utc)); assert_eq(a[0],"RESEARCH_NEW_HYPOTHESIS","persistent-errors"); checks.append("new_hypothesis_after_stress")
+        write_csv(root/"data/NEXT_ACTION_LEDGER.csv",["decision_fingerprint","generated_at_utc","primary_action","target","reason","eligible_rows_total","divergences_total","matured_24h_rows","matured_72h_rows","matured_7d_rows","matured_7d_divergences","canonical_effect","paid_data_authorized","deep_research_authorized"],[{"decision_fingerprint":"x","generated_at_utc":"2026-09-01T00:00:00Z","primary_action":"STRESS_TEST","target":"C04_ETHBTC_BREADTH","reason":"x","eligible_rows_total":"10","divergences_total":"6","matured_24h_rows":"10","matured_72h_rows":"10","matured_7d_rows":"10","matured_7d_divergences":"6","canonical_effect":"false","paid_data_authorized":"false","deep_research_authorized":"false"}])
+        a,_=decide(root,fresh_now(rows)); assert_eq(a[0],"RESEARCH_NEW_HYPOTHESIS","persistent-errors"); checks.append("new_hypothesis_after_stress")
     finally: td.cleanup()
 
     td,root=mkroot();
@@ -137,7 +144,7 @@ def main():
             if i < 11: ds.append(div(i,target="C04_ETHBTC_BREADTH",target_correct=True,target_decision=1,outcome=1,mae="-0.005"))
             else: ds.append(div(i,target="C04_ETHBTC_BREADTH",target_correct=False,target_decision=0,outcome=1,mae="-0.002"))
         write_csv(root/"data/PROSPECTIVE_SHARED_ROW_LEDGER.csv",ROW_FIELDS,rows); write_csv(root/"14_DIVERGENCE_FNP_LEDGER.csv",DIV_FIELDS,ds)
-        a,ev=decide(root,datetime(2026,11,15,tzinfo=timezone.utc)); assert_eq(a[0],"PROMOTE_FOR_CANONICAL_REVIEW","strong-pairwise-promotion");
+        a,ev=decide(root,fresh_now(rows)); assert_eq(a[0],"PROMOTE_FOR_CANONICAL_REVIEW","strong-pairwise-promotion")
         assert ev["pairwise_vs_baseline_7d"]["C04_ETHBTC_BREADTH"]["wilson_lower"] > 0.5; checks.append("promotion_requires_strong_pairwise_evidence")
     finally: td.cleanup()
 
@@ -149,7 +156,7 @@ def main():
             if i < 11: ds.append(div(i,target="C04_ETHBTC_BREADTH",target_correct=False,target_decision=1,outcome=0))
             else: ds.append(div(i,target="C04_ETHBTC_BREADTH",target_correct=True,target_decision=1,outcome=1))
         write_csv(root/"data/PROSPECTIVE_SHARED_ROW_LEDGER.csv",ROW_FIELDS,rows); write_csv(root/"14_DIVERGENCE_FNP_LEDGER.csv",DIV_FIELDS,ds)
-        a,_=decide(root,datetime(2026,11,15,tzinfo=timezone.utc)); assert_eq(a[0],"DEPRIORITIZE","strong-pairwise-deprioritize"); checks.append("deprioritize_requires_strong_pairwise_evidence")
+        a,_=decide(root,fresh_now(rows)); assert_eq(a[0],"DEPRIORITIZE","strong-pairwise-deprioritize"); checks.append("deprioritize_requires_strong_pairwise_evidence")
     finally: td.cleanup()
 
     td,root=mkroot();
