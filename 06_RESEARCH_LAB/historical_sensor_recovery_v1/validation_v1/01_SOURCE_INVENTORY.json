@@ -1,0 +1,133 @@
+{
+  "contract": "HISTORICAL_SHADOW_SENSOR_VALIDATION_SOURCE_INVENTORY_v1",
+  "authority": "RESEARCH_ONLY_NON_CANONICAL",
+  "executor": "CHATGPT_GITHUB_RECONSTRUCTION_UNDER_CODEX_HANDOFF_CONTRACT",
+  "generated_utc": "2026-08-22T07:20:00Z",
+  "rules": {
+    "no_hindsight": true,
+    "no_threshold_tuning": true,
+    "no_version_mixing": true,
+    "external_backfill_separate": true,
+    "missing_means_missing": true
+  },
+  "sources": [
+    {
+      "source_id": "RAW_EARLY_ROTATION_V1_1",
+      "kind": "project_archive_raw_text",
+      "logical_name": "Early Rotation Pre-Trigger v1.1.txt",
+      "sha256": "ccb104a845dd3011f29ede1bfb472b581236a08a3cdcf14a794027882d173612",
+      "historical_time_claim": "2026-04-21T22:59:00+02:00 stated in file",
+      "supports": ["EARLY_ROTATION_PRE_TRIGGER_V1_1", "FAKE_ROTATION_TYPE3_V2"],
+      "strength": "PRIMARY_DEFINITION",
+      "limitations": ["Project-context file, not a contemporaneous Git commit identity"]
+    },
+    {
+      "source_id": "RAW_EARLY_ROTATION_COMPLETE_ARCHIVE",
+      "kind": "project_archive_raw_text",
+      "logical_name": "Uddybende info-EARLY ROTATION PRE-TRIGGER (21 april 2026).txt",
+      "sha256": "8186a850290e1412db4b6f886afdcb13e9ca9b2197a3539bca95074390a17b38",
+      "historical_time_claim": "2026-04-21 in filename/content context",
+      "supports": ["EARLY_ROTATION_PRE_TRIGGER_V1_1", "FAKE_ROTATION_TYPE3_V2", "ROTATION_BREADTH_FILTER_V2", "ROTATION_DOMINANCE_FILTER_V2"],
+      "strength": "PRIMARY_DEFINITION_CONTEXT",
+      "limitations": ["Does not itself supply a historical event ledger"]
+    },
+    {
+      "source_id": "RAW_ROTATION_ENGINE_V2",
+      "kind": "project_archive_raw_text",
+      "logical_name": "ROTATION ENGINE v2.txt",
+      "sha256": "c14e4e4091b3bd928b7b9daab2ad7dad5cdb70fb3475bf7df73c0c564f273b29",
+      "historical_time_claim": "2026-04-22 context from recovered definition set",
+      "supports": ["ROTATION_READINESS_SCORE_V2", "ROTATION_BREADTH_FILTER_V2", "ROTATION_DOMINANCE_FILTER_V2", "FAKE_ROTATION_TYPE3_V2"],
+      "strength": "PRIMARY_DEFINITION",
+      "limitations": ["55-75% Type 3 failure-rate is an archived claim, not validated evidence"]
+    },
+    {
+      "source_id": "RAW_ADAPTIVE_META_2026_05_12",
+      "kind": "project_archive_raw_text",
+      "logical_name": "12 maj - adaptive læringslag.txt",
+      "sha256": "cdda715994225cf330aac6102ea1d42288e27c0be3a03028d26b97b73de066a1",
+      "historical_time_claim": "2026-05-12 stated in file",
+      "supports": ["SRE_V1_SIGNAL_RELIABILITY_ENGINE", "FAE_V1_FORECAST_ATTRIBUTION_ENGINE", "CCE_V1_CONFIDENCE_COMPRESSION_ENGINE", "ODM_V1_OUTCOME_DELAY_MAPPER", "RWE_V1_REGIME_WEIGHT_ENGINE"],
+      "strength": "PRIMARY_PURPOSE_DEFINITION",
+      "limitations": ["Defines purpose but contains no clean contemporaneous attribution ledger"]
+    },
+    {
+      "source_id": "RAW_FRAMEWORK_RELEVANCE_MODEL_ANALYSIS",
+      "kind": "project_archive_raw_text",
+      "logical_name": "Framework-relevans og modelanalyse.txt",
+      "sha256": "4cf0935232af7b9c0f7622109dff5686fa6a7c6ef2f3d8b06610e6e4f6a58e5f",
+      "supports": ["SRE_V1_SIGNAL_RELIABILITY_ENGINE", "FAE_V1_FORECAST_ATTRIBUTION_ENGINE", "CCE_V1_CONFIDENCE_COMPRESSION_ENGINE", "ODM_V1_OUTCOME_DELAY_MAPPER", "RWE_V1_REGIME_WEIGHT_ENGINE"],
+      "strength": "SECONDARY_ARCHITECTURE_CONTEXT",
+      "limitations": ["No reliable contemporaneous timestamp established from file content"]
+    },
+    {
+      "source_id": "RAW_EQM_ETF_ERA_ANALYSIS",
+      "kind": "project_archive_raw_text",
+      "logical_name": "EQM-model og markedsanalyse.txt",
+      "sha256": "943b2ea81ec1f0ba8c3b91d2dfe1ce916f4679bd74b885c5e0c1396d8c72a2ce",
+      "supports": ["ETF_FLOW_POST_TEST_BEHAVIOR", "FLOW_SUPPORTED_PULLBACK_VS_FLOW_DRIVEN_DETERIORATION", "BTC_SURVIVAL_ALT_DETERIORATION_DIVERGENCE"],
+      "strength": "HYPOTHESIS_DEFINITION",
+      "limitations": ["No date established from visible file content; cannot be used to infer earlier framework state"]
+    },
+    {
+      "source_id": "GITHUB_RECOVERED_DEFINITIONS",
+      "kind": "repo_current_recovery",
+      "path": "06_RESEARCH_LAB/historical_sensor_recovery_v1/RECOVERED_LEGACY_SENSOR_DEFINITIONS_2026-08-21.json",
+      "blob_sha": "0619aecff69ba96e6df251fc50ca0a715289e934",
+      "supports": "all_14_recovered_sensors",
+      "strength": "CURRENT_RECOVERY_INDEX",
+      "limitations": ["Later recovery synthesis, never evidence of earlier state by itself"]
+    },
+    {
+      "source_id": "GITHUB_LEGACY_QUEUE",
+      "kind": "repo_current_governance",
+      "path": "04_MARKET_LEARNING/shadow_registry/LEGACY_RECOVERY_QUEUE.json",
+      "supports": "all_14_recovered_sensors",
+      "strength": "CURRENT_AUTHORITY_FIREWALL",
+      "limitations": ["Current governance only, not historical sensor evidence"]
+    },
+    {
+      "source_id": "GITHUB_ENTRY_SIGNAL_EVENTS",
+      "kind": "repo_native_point_in_time",
+      "path": "04_MARKET_LEARNING/entry_signals/events/",
+      "observed_files": ["20260820T052215Z_graduated_altcoin_topup_active.json", "20260820T231131Z_wait.json", "20260821T230935Z_graduated_altcoin_topup_active.json"],
+      "strength": "RECENT_POINT_IN_TIME",
+      "supports": ["possible_recent_baselines", "possible_recent_forward_shadow_context"],
+      "limitations": ["Begins 2026-08-20, cannot establish April/May sensor states"]
+    },
+    {
+      "source_id": "GITHUB_ENTRY_SIGNAL_OUTCOMES",
+      "kind": "repo_native_outcomes",
+      "path": "04_MARKET_LEARNING/entry_signals/outcomes/",
+      "observed_files": ["20260820T052215Z_graduated_altcoin_topup_active.json", "20260821T230935Z_graduated_altcoin_topup_active.json"],
+      "strength": "RECENT_OUTCOME_LEDGER",
+      "limitations": ["Too recent for historical April/May sensor validation"]
+    },
+    {
+      "source_id": "GITHUB_ETF_RECONCILIATIONS",
+      "kind": "repo_native_reconciled_market_evidence",
+      "path": "04_MARKET_LEARNING/etf/",
+      "observed_span": "files dated 2026-08-01 through 2026-08-07 plus latest status JSON",
+      "supports": ["ETF_FLOW_POST_TEST_BEHAVIOR", "FLOW_SUPPORTED_PULLBACK_VS_FLOW_DRIVEN_DETERIORATION", "BTC_SURVIVAL_ALT_DETERIORATION_DIVERGENCE"],
+      "strength": "RECENT_RECONCILED_EVIDENCE",
+      "limitations": ["Useful mainly for recent ETF-era episodes, not proof of older hypotheses"]
+    },
+    {
+      "source_id": "GITHUB_BREADTH_FORWARD",
+      "kind": "repo_native_forward_evidence",
+      "path": "04_MARKET_LEARNING/breadth/forward/",
+      "supports": ["ROTATION_BREADTH_FILTER_V2", "FAKE_ROTATION_TYPE3_V2", "ETF_ERA_CLASSIFIERS"],
+      "strength": "FORWARD_ONLY",
+      "limitations": ["Current directory structure is forward-oriented; cannot backfill April breadth semantics silently"]
+    },
+    {
+      "source_id": "GITHUB_FORECAST_ARCHIVE",
+      "kind": "repo_native_forecast",
+      "path": "04_MARKET_LEARNING/forecasts/",
+      "observed_files": ["2026-07-29__run_aa5ebdf3__raw-1-3d-and-5-7d.md"],
+      "supports": ["SRE_V1_SIGNAL_RELIABILITY_ENGINE", "FAE_V1_FORECAST_ATTRIBUTION_ENGINE", "ODM_V1_OUTCOME_DELAY_MAPPER"],
+      "strength": "VERY_LIMITED",
+      "limitations": ["Only one observed raw forecast file in current directory listing; insufficient for broad historical attribution"]
+    }
+  ]
+}
