@@ -11,7 +11,9 @@ states={
  "SOURCE_RECOVERY":{"selected_action":"DECLARE_NOT_TESTABLE","target_receipt":"old.json","evidence_fingerprint":"r"}
 }
 state=v.route({},states,{})
-assert state["selected_source"]=="SHARED_ROW" and state["selected_impact_tier"]=="HIGH",state; print("PASS high_value_beats_watch")
+assert state["selected_source"]=="SHARED_ROW" and state["selected_impact_tier"]=="HIGH",state
+assert state["resolved_specialist_state_n"]==4 and state["actionable_specialist_state_n"]==4,state
+print("PASS high_value_beats_watch")
 memory={"proposal_results":[{"source":"SHARED_ROW","action":"RESEARCH_NEW_HYPOTHESIS","target":"C01","novelty_verdict":"DUPLICATE_EXACT"}]}
 state=v.route({},states,memory)
 item=[x for x in state["queue"] if x["source"]=="SHARED_ROW"][0]
@@ -20,4 +22,12 @@ paid=v.route({}, {"SOURCE_RECOVERY":{"selected_action":"GENERATE_PAID_DATA_VOI_P
 assert paid["queue"][0]["paid_review_only"] is True and paid["paid_data_authorized"] is False; print("PASS paid_is_review_only")
 term=v.route({}, {"SOURCE_RECOVERY":{"selected_action":"DECLARE_NOT_TESTABLE","target_receipt":"x","evidence_fingerprint":"t"}}, {})
 assert term["selected_impact_tier"]=="NONE"; print("PASS terminal_closeout_no_independent_voi")
-print("RESEARCH_DECISION_IMPACT_GATE_v1 PASS")
+resolved_idle=v.route({}, {"A":{"status":"INITIALIZED"},"B":{"status":"INITIALIZED"}}, {})
+assert resolved_idle["queue_n"]==0
+assert resolved_idle["resolved_specialist_state_n"]==2 and resolved_idle["actionable_specialist_state_n"]==0
+assert resolved_idle["reason"]=="specialist states resolved, but no actionable research proposal is active"
+print("PASS resolved_idle_not_mislabeled_missing")
+missing=v.route({}, {}, {})
+assert missing["resolved_specialist_state_n"]==0 and missing["reason"]=="no specialist states resolved"
+print("PASS true_missing_distinguished")
+print("RESEARCH_DECISION_IMPACT_GATE_v2 PASS")
