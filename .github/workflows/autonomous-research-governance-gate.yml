@@ -1,0 +1,93 @@
+name: Autonomous Research Governance Gate
+
+on:
+  pull_request:
+    paths:
+      - '00_ARCHIVE_CONTROL/research_governance_v1/**'
+      - 'scripts/research/research_governance_common.py'
+      - 'scripts/research/research_memory_novelty_gate.py'
+      - 'scripts/research/research_decision_impact_router.py'
+      - 'scripts/research/independent_research_adversarial_sentinel.py'
+      - 'scripts/research/research_meta_orchestrator.py'
+      - 'scripts/research/validate_research_*'
+      - 'scripts/research/validate_independent_research_adversarial_sentinel.py'
+      - '.github/workflows/autonomous-research-governance-*.yml'
+      - '06_RESEARCH_LAB/shared_row_model_tournament_v1/RESEARCH_NEXT_ACTION_POLICY_v1.json'
+      - '06_RESEARCH_LAB/shared_row_model_tournament_v1/NEXT_ACTION_STATE.json'
+      - '05_CYCLE_NAVIGATOR/autonomous_calibration_v1/**'
+      - '04_MARKET_LEARNING/shadow_registry/autonomous_portfolio_v1/**'
+      - '00_ARCHIVE_CONTROL/source_recovery_controller_v1/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  memory-novelty-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: python -m py_compile scripts/research/research_governance_common.py scripts/research/research_memory_novelty_gate.py scripts/research/validate_research_memory_novelty_gate.py
+      - run: python scripts/research/validate_research_memory_novelty_gate.py
+      - run: python scripts/research/research_memory_novelty_gate.py --dry-run
+
+  decision-impact-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: python -m py_compile scripts/research/research_decision_impact_router.py scripts/research/validate_research_decision_impact_router.py
+      - run: python scripts/research/validate_research_decision_impact_router.py
+      - run: python scripts/research/research_decision_impact_router.py --dry-run
+
+  adversarial-sentinel-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: python -m py_compile scripts/research/independent_research_adversarial_sentinel.py scripts/research/validate_independent_research_adversarial_sentinel.py
+      - run: python scripts/research/validate_independent_research_adversarial_sentinel.py
+      - run: python scripts/research/independent_research_adversarial_sentinel.py --dry-run
+
+  meta-orchestrator-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: python -m py_compile scripts/research/research_meta_orchestrator.py scripts/research/validate_research_meta_orchestrator.py
+      - run: python scripts/research/validate_research_meta_orchestrator.py
+      - run: python scripts/research/research_meta_orchestrator.py --dry-run
+
+  integration-gate:
+    needs: [memory-novelty-gate, decision-impact-gate, adversarial-sentinel-gate, meta-orchestrator-gate]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: python scripts/research/validate_research_governance_integration.py
+      - name: Real-repo governance chain dry execution
+        run: |
+          python scripts/research/research_memory_novelty_gate.py
+          python scripts/research/research_decision_impact_router.py
+          python scripts/research/independent_research_adversarial_sentinel.py
+          python scripts/research/research_meta_orchestrator.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          b=Path('00_ARCHIVE_CONTROL/research_governance_v1')
+          files=[b/'memory_novelty_v1/STATE.json',b/'decision_impact_v1/STATE.json',b/'adversarial_sentinel_v1/STATE.json',b/'meta_orchestrator_v1/STATE.json']
+          states=[json.loads(x.read_text()) for x in files]
+          for st in states:
+              assert st.get('authority')=='RESEARCH_ONLY_NON_CANONICAL'
+              assert st.get('canonical_effect') is False
+              assert st.get('portfolio_execution') is False
+              assert st.get('paid_data_authorized') is False
+          assert states[2].get('verdict')!='FIREWALL_BREACH'
+          print('REAL_REPO_GOVERNANCE_CHAIN_v1 PASS')
+          PY

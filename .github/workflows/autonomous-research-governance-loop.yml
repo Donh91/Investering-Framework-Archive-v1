@@ -1,0 +1,61 @@
+name: Autonomous Research Governance Loop
+
+on:
+  schedule:
+    - cron: '30 7 * * *'
+      timezone: 'Europe/Copenhagen'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: framework-main-writer
+  cancel-in-progress: false
+
+jobs:
+  governance-loop:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate governance stack before mutation
+        run: |
+          python scripts/research/validate_research_memory_novelty_gate.py
+          python scripts/research/validate_research_decision_impact_router.py
+          python scripts/research/validate_independent_research_adversarial_sentinel.py
+          python scripts/research/validate_research_meta_orchestrator.py
+          python scripts/research/validate_research_governance_integration.py
+      - name: Memory and novelty gate
+        run: python scripts/research/research_memory_novelty_gate.py
+      - name: Decision-impact and VOI route
+        run: python scripts/research/research_decision_impact_router.py
+      - name: Independent adversarial sentinel
+        run: python scripts/research/independent_research_adversarial_sentinel.py
+      - name: Meta-orchestrate surviving research work
+        run: python scripts/research/research_meta_orchestrator.py
+      - name: Commit research-only governance state with verified readback
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name framework-research-bot
+          git config user.email framework-research-bot@users.noreply.github.com
+          git add 00_ARCHIVE_CONTROL/research_governance_v1
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "research: advance autonomous research governance"
+          pushed=false
+          for attempt in 1 2 3; do
+            git rebase --abort 2>/dev/null || true
+            if git pull --rebase origin main && git push origin HEAD:main; then pushed=true; break; fi
+            sleep $((attempt * 5))
+          done
+          [ "$pushed" = true ]
+          git fetch origin main
+          git merge-base --is-ancestor HEAD origin/main
