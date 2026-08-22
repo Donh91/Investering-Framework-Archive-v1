@@ -1,0 +1,40 @@
+name: Shared Row Prospective Evidence Loop
+
+on:
+  schedule:
+    - cron: '10 */6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: framework-main-writer
+  cancel-in-progress: false
+
+jobs:
+  research-loop:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python 06_RESEARCH_LAB/shared_row_model_tournament_v1/pipeline/validate_tournament_contract.py
+      - run: python scripts/research/prospective_evidence_controller.py --status-only
+      - run: python scripts/research/shared_row_tournament_maturation.py
+      - run: python scripts/research/shared_row_tournament_relevance.py
+      - run: python scripts/research/shared_row_tournament_monitor.py
+      - name: Commit research-only state changes
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name framework-research-bot
+          git config user.email framework-research-bot@users.noreply.github.com
+          git add 06_RESEARCH_LAB/shared_row_model_tournament_v1/14_DIVERGENCE_FNP_LEDGER.csv \
+                  06_RESEARCH_LAB/shared_row_model_tournament_v1/RELEVANCE_STATE.json \
+                  06_RESEARCH_LAB/shared_row_model_tournament_v1/monitor
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "research: update prospective evidence loop"
+          git push

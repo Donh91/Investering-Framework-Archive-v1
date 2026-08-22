@@ -1,0 +1,41 @@
+name: Research Owner - Top100 Breadth Daily
+
+on:
+  schedule:
+    - cron: '15 6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: framework-main-writer
+  cancel-in-progress: false
+
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m unittest tests.data_terminal.test_top100_breadth_owner_collector
+      - name: Capture owner-grade breadth
+        run: python scripts/data_terminal/top100_breadth_owner_collector.py --output-dir breadth-owner-output
+      - name: Persist immutable dated evidence and latest pointer
+        shell: bash
+        run: |
+          set -euo pipefail
+          DAY=$(date -u +%F)
+          DEST="03_DAILY_CAPTURE_LOGS/breadth_rich/${DAY:0:4}/${DAY:5:2}/$DAY"
+          mkdir -p "$DEST" 03_DAILY_CAPTURE_LOGS/breadth_rich
+          cp -a breadth-owner-output/. "$DEST/"
+          cp breadth-owner-output/owner_snapshot.json 03_DAILY_CAPTURE_LOGS/breadth_rich/LATEST.json
+          git config user.name framework-data-bot
+          git config user.email framework-data-bot@users.noreply.github.com
+          git add 03_DAILY_CAPTURE_LOGS/breadth_rich
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "data: persist research breadth owner $DAY"
+          git push
