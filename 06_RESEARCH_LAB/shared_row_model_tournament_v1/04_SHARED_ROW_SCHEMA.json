@@ -1,0 +1,13 @@
+{
+  "contract": "SHARED_ROW_SCHEMA_v1",
+  "authority": "RESEARCH_ONLY_NON_CANONICAL",
+  "primary_key": ["event_id","observation_timestamp_utc"],
+  "required_identity": ["event_id","observation_timestamp_utc","information_cutoff_utc","source_version_commit","regime_tag","catalyst_tag","provenance_hash"],
+  "family_groups": ["ethbtc","breadth","btcd","etf","leverage","stablecoin","cfgi","full_stack"],
+  "candidate_fields": ["candidate_decisions","candidate_first_signal_utc","candidate_stable_confirmation_utc"],
+  "outcomes": ["outcome_24h","outcome_72h","outcome_7d","mae_24h","mfe_24h","mae_72h","mfe_72h","mae_7d","mfe_7d"],
+  "missing_policy": "MISSING_IS_EXCLUDED_NOT_ZERO",
+  "lookahead_policy": "information_cutoff_utc MUST NOT exceed observation_timestamp_utc",
+  "revision_policy": "use only information available by cutoff; later revisions must be separately versioned",
+  "horizons_frozen": true
+}

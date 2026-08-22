@@ -1,0 +1,19 @@
+{
+  "contract": "SHARED_ROW_CANDIDATE_REGISTRY_v1",
+  "authority": "RESEARCH_ONLY_NON_CANONICAL",
+  "promotion_allowed": false,
+  "candidates": [
+    {"id":"C01_ETHBTC","families":["ETHBTC_PERSISTENCE"],"favored":false},
+    {"id":"C02_BREADTH","families":["BREADTH_SURVIVAL"],"favored":false},
+    {"id":"C03_BTCD","families":["BTCD_PATH_RECLAIM"],"favored":false},
+    {"id":"C04_ETHBTC_BREADTH","families":["ETHBTC_PERSISTENCE","BREADTH_SURVIVAL"],"favored":false},
+    {"id":"C05_ETHBTC_BTCD","families":["ETHBTC_PERSISTENCE","BTCD_PATH_RECLAIM"],"favored":false},
+    {"id":"C06_BREADTH_BTCD","families":["BREADTH_SURVIVAL","BTCD_PATH_RECLAIM"],"favored":false},
+    {"id":"C07_SIMPLE_3","families":["ETHBTC_PERSISTENCE","BREADTH_SURVIVAL","BTCD_PATH_RECLAIM"],"favored":false},
+    {"id":"C08_SIMPLE_3_ETF","families":["ETHBTC_PERSISTENCE","BREADTH_SURVIVAL","BTCD_PATH_RECLAIM","ETF_FLOW_QUALITY"],"favored":false},
+    {"id":"C09_SIMPLE_3_ETF_LEVERAGE","families":["ETHBTC_PERSISTENCE","BREADTH_SURVIVAL","BTCD_PATH_RECLAIM","ETF_FLOW_QUALITY","LEVERAGE_LIQUIDATION_RECLAIM"],"favored":false},
+    {"id":"C10_STABLECOIN_CHALLENGER","base":"BEST_SPARSE_AT_EVALUATION_TIME","add":["STABLECOIN_DEPLOYMENT_PARKING"],"favored":false},
+    {"id":"C11_CFGI_CHALLENGER","base":"BEST_SPARSE_AT_EVALUATION_TIME","add":["CFGI_TIMING_CONTEXT"],"favored":false},
+    {"id":"C12_FULL_STACK","families":"FULL_REPRODUCIBLE_AVAILABLE_SHADOW_STACK_AT_ROW_TIMESTAMP","favored":false,"fair_win_lane":true}
+  ]
+}
