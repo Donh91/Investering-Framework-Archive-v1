@@ -1,0 +1,26 @@
+{
+  "contract": "MINIMAL_INFORMATION_NETWORK_GAUNTLET_v1",
+  "authority": "RESEARCH_ONLY_NON_CANONICAL",
+  "date": "2026-08-22",
+  "repo_commit": "dadaa3e212da9b0047b2c63c62658197b938db4f",
+  "package_sha256": "7b488655cd43772f1bce0150d11f7210c8f391852bb858c4df6677e2547f1ae4",
+  "deep_research": {"expected_exact_report_found": false, "handling": "supplementary_prior_only"},
+  "sample": {"pullback_episodes": 46, "hourly_feature_rows": 25506, "entry_signal_activations": 2, "entry_signal_matured_24h": 1, "entry_signal_matured_other_horizons": 0, "valid_fnp_divergence_rows": 0},
+  "time_integrity": {"status": "PASS", "continuity_gaps": 10, "continuity_segment_violations": 0},
+  "models": {
+    "SIMPLE_3": {"status": "PROSPECTIVE_TEST_JUSTIFIED", "scope": "rotation_discrimination", "favored": false},
+    "SIMPLE_3_PLUS_ETF": {"status": "PROSPECTIVE_TEST_JUSTIFIED", "scope": "rotation_plus_etf_regime"},
+    "SIMPLE_3_PLUS_ETF_PLUS_LEVERAGE_RECLAIM": {"status": "PREFERRED_PROSPECTIVE_CANDIDATE", "scope": "full_research_objective"},
+    "FULL_SHADOW_STACK": {"status": "TEST_REQUIRED", "incremental_edge": "UNAVAILABLE", "win_rule": "wins_if_reproducible_incremental_edge_survives_dependence_and_catalyst_controls"}
+  },
+  "pareto_front": ["ETHBTC_PLUS_BREADTH", "SIMPLE_3", "SIMPLE_3_PLUS_ETF", "SIMPLE_3_PLUS_ETF_PLUS_LEVERAGE_RECLAIM"],
+  "non_inferiority": {
+    "strict": "NO_MINIMAL_WINNER",
+    "moderate": "FOUR_TO_FIVE_FAMILY_SPARSE_CANDIDATE_PREFERRED_FOR_TESTING",
+    "relaxed": "SIMPLE_3_ACCEPTABLE_FOR_ROTATION_ONLY"
+  },
+  "catalyst_sensitivity": {"quantitative_comparison": "UNAVAILABLE", "structural_break": "2024_SPOT_BITCOIN_ETP_APPROVAL", "verified_modern_shock_example": "2025-04-02_US_RECIPROCAL_TARIFF_ANNOUNCEMENT"},
+  "final_verdict": "PROSPECTIVE_TEST_JUSTIFIED",
+  "canonical_change": false,
+  "portfolio_change": false
+}
