@@ -1,0 +1,46 @@
+{
+  "contract": "CYCLE_NAVIGATOR_AUTONOMOUS_CALIBRATION_POLICY_v1",
+  "authority": "RESEARCH_ONLY_NON_CANONICAL",
+  "canonical_effect": false,
+  "portfolio_execution": false,
+  "automatic_rule_threshold_weight_changes": false,
+  "paid_data_authorized": false,
+  "deep_research_authorized": false,
+  "source_ledger": "05_CYCLE_NAVIGATOR/forward_range_ledger/FORWARD_RANGE_LEDGER_v0_1.csv",
+  "research_escalation_floors": {
+    "minimum_verified_rows_for_review": 3,
+    "minimum_verified_rows_for_persistent_pattern": 5,
+    "recent_comparison_window_rows": 3
+  },
+  "allowed_actions": [
+    "CONTINUE_CALIBRATION",
+    "REVIEW_CALIBRATION_EVIDENCE",
+    "INVESTIGATE_RANGE_MISS",
+    "STRESS_TEST_REANCHOR",
+    "AUDIT_TRANSITION_FAKEOUT",
+    "INVESTIGATE_SLOW_BLEED_FAKE_ROTATION",
+    "AUDIT_GATE_CROSS_SIGNATURE",
+    "RESEARCH_NEW_PHASE_HYPOTHESIS",
+    "CANONICAL_REVIEW_JUSTIFIED"
+  ],
+  "priority": [
+    "CANONICAL_REVIEW_JUSTIFIED",
+    "INVESTIGATE_SLOW_BLEED_FAKE_ROTATION",
+    "AUDIT_GATE_CROSS_SIGNATURE",
+    "STRESS_TEST_REANCHOR",
+    "INVESTIGATE_RANGE_MISS",
+    "AUDIT_TRANSITION_FAKEOUT",
+    "RESEARCH_NEW_PHASE_HYPOTHESIS",
+    "REVIEW_CALIBRATION_EVIDENCE",
+    "CONTINUE_CALIBRATION"
+  ],
+  "guardrails": [
+    "NO_NEW_MARKET_THRESHOLDS",
+    "NO_RETROACTIVE_SCORE_REWRITE",
+    "NO_PROMOTION_FROM_ELAPSED_TIME",
+    "NO_CANONICAL_WRITE",
+    "NO_PORTFOLIO_ACTION",
+    "MISSING_IS_NOT_ZERO",
+    "PROMOTION_REQUIRES_SEPARATE_PROSPECTIVE_REVIEW_PACKET"
+  ]
+}
