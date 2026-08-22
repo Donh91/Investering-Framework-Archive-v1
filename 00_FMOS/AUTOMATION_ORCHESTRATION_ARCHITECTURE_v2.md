@@ -48,7 +48,7 @@ The ordering is deliberate:
 - Remediation matures the new health findings into observe, evidence, self-heal, Codex or framework-owner lanes.
 - Dashboard reads both health and remediation outputs and exposes one combined cockpit.
 
-The Remediation Maturation Controller additionally has a path-restricted event trigger for durable research-to-Codex intake, research transition receipts and research completion receipts. Those events do not wait for the normal daily cadence.
+Research-to-Codex intake has an additional event path. The non-writing `codex-intake-dispatch.yml` workflow listens only for durable changes under `research/codex/intake/`, `research/codex/transitions/` and `research/codex/completions/`, then dispatches the guarded Remediation Maturation Controller through `workflow_dispatch`. The main-writing remediation workflow itself remains free of push triggers and serialized by `framework-main-writer`.
 
 Cron ordering is not a finality guarantee. Each consumer must validate timestamp, contract and hash of its input and remain explicit when the newest upstream output is unavailable.
 
@@ -115,11 +115,12 @@ research finding
 -> CODEX_RESEARCH_CANDIDATE_v1
 -> isolated branch and PR
 -> research/codex/intake/YYYY/MM/<candidate_id>.json on main
--> path-triggered Remediation Maturation Controller
+-> codex-intake-dispatch.yml (non-writing event listener)
+-> workflow_dispatch of guarded Remediation Maturation Controller
 -> CODEX_READY / NEEDS_MORE_EVIDENCE / DEDUPED_TO_HEALTH_TASK / REJECTED
 ```
 
-The path trigger is event-driven. A candidate does not wait for the normal 05:45/17:45 maturation schedule after it lands on `main`. The normal schedule remains a reconciliation and recovery path.
+The dispatcher is event-driven. A candidate does not wait for the normal 05:45/17:45 maturation schedule after it lands on `main`. The normal schedule remains a reconciliation and recovery path.
 
 Candidate contract authority is defined by `research/codex/CODEX_RESEARCH_CANDIDATE.schema.json` and `.agents/skills/codex-intake/SKILL.md`. A valid standalone research candidate must include bounded change scope, durable evidence, reproduction, positive and negative acceptance tests and explicit code-only authority. `EXPEDITED` changes queue ordering only.
 
@@ -193,6 +194,8 @@ Research in any repository or thread that wants Codex remediation must hand the 
 Automation architecture is current only when:
 
 - all main writers use `framework-main-writer`, explicit `main` checkout, retry, abort and readback,
+- no generic push event directly executes a main-writing workflow,
+- the Codex intake event listener remains non-writing and only dispatches the guarded remediation writer,
 - scheduled workflows use explicit `Europe/Copenhagen` where local timing matters,
 - lifecycle declarations are timestamped, validated and cannot mask active production failures,
 - artifacts have bounded retention and durable evidence is committed separately,
