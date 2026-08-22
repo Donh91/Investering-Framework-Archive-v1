@@ -139,11 +139,18 @@ def test_research_fresh_state_binding_rejects_changed_candidate(tmp_path):
         raise AssertionError("changed candidate must fail fresh-state binding")
 
 
-def test_remediation_workflow_has_fast_path_and_single_writer():
-    text = (ROOT / ".github/workflows/remediation-maturation.yml").read_text(encoding="utf-8")
-    assert "research/codex/intake/**/*.json" in text
-    assert "research/codex/transitions/*.json" in text
-    assert "research/codex/completions/*.json" in text
-    assert "group: framework-main-writer" in text
-    assert "timezone: 'Europe/Copenhagen'" in text
-    assert "merge_codex_research_intake.py" in text
+def test_fast_path_uses_nonwriting_dispatcher_and_preserves_single_writer():
+    dispatcher = (ROOT / ".github/workflows/codex-intake-dispatch.yml").read_text(encoding="utf-8")
+    writer = (ROOT / ".github/workflows/remediation-maturation.yml").read_text(encoding="utf-8")
+    assert "research/codex/intake/**/*.json" in dispatcher
+    assert "research/codex/transitions/*.json" in dispatcher
+    assert "research/codex/completions/*.json" in dispatcher
+    assert "actions: write" in dispatcher
+    assert "contents: read" in dispatcher
+    assert "gh workflow run remediation-maturation.yml" in dispatcher
+    assert "contents: write" not in dispatcher
+    assert "git push" not in dispatcher
+    assert "group: framework-main-writer" in writer
+    assert "timezone: 'Europe/Copenhagen'" in writer
+    assert "merge_codex_research_intake.py" in writer
+    assert "\n  push:\n" not in writer
