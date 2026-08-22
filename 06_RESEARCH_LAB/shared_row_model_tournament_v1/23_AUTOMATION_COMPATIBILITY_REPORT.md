@@ -1,14 +1,31 @@
-# Automation Compatibility
+# Automation Compatibility Report - Prospective Evidence Accumulation
 
-The tournament is designed as a passive research consumer of already-owned timestamped market data. It must not modify Master Monday, Cycle Navigator, DATA PING thresholds or portfolio execution.
+Authority: `RESEARCH_ONLY_NON_CANONICAL`.
 
-Safe automation sequence:
-1. read contemporaneous owner outputs;
-2. materialize one shared row;
-3. compute only preregistered transforms with frozen versions;
-4. serialize candidate decisions;
-5. append divergences;
-6. mature 24h/72h/7d outcomes when due;
-7. rerun comparator after evidence gates are met.
+## Correct topology
 
-If a required owner is unresolved, that family stays missing and no proxy is silently inserted.
+`Existing owners -> owner binding/freeze registry -> shared-row eligibility -> immutable candidate freeze -> divergence/FNP -> outcome maturation -> weekly tournament review -> relevance lifecycle -> Shadow Registry -> optional CANONICAL_CHANGE_JUSTIFIED recommendation`.
+
+The tournament never writes directly to Master Monday, Cycle Navigator, DATA PING market rules, thresholds, portfolio execution or live weights.
+
+## Existing owners reused
+
+- direct ETHBTC + hourly sequence;
+- Top100 breadth owner;
+- Farside ETF owner;
+- stablecoin liquidity owner;
+- CFGI weekly derived lane when exact source captures exist;
+- CoinMarketCap BTC.D owner, with a new research-only persistent daily capture workflow;
+- existing hourly OI/funding/taker context.
+
+No owner is reinterpreted into a stronger semantic family. Supply is not deployment. OI is not liquidation reclaim. CMC BTC.D is not TradingView BTC.D. Alternative.me is not CFGI.
+
+## Zero-touch behavior
+
+The research loop runs on schedule even while core transforms are blocked. It records owner/source availability, unresolved freezes, eligible candidate set, row/divergence/maturation counts, provider/version drift, weekly evidence and research-only relevance states. `NOT_READY` is a valid automated output.
+
+Candidate decisions may only be appended after the relevant merged owner+transform+decision freeze. Historical raw rows may not be backfilled with decisions after outcomes.
+
+## Canonical firewall
+
+Automatic research maintenance is allowed. Automatic canonical promotion is not. A future `CANONICAL_CHANGE_JUSTIFIED` state is recommendation/governance metadata only.

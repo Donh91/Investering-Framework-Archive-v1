@@ -1,0 +1,25 @@
+{
+  "contract": "PROSPECTIVE_TRANSFORM_FREEZE_REGISTRY_v1",
+  "authority": "RESEARCH_ONLY_NON_CANONICAL",
+  "retroactive_candidate_decision_backfill": false,
+  "freeze_rule": "Use an existing legitimate definition first. A new definition may be preregistered prospective-only before outcomes. If semantics require invention, status remains BLOCKED/PARTIAL.",
+  "families": [
+    {"family_id":"ETHBTC_PERSISTENCE","status":"READY","candidate_decision_contract_status":"PARTIAL","transformation_version":"API_INTELLIGENCE_SEQUENCE_CONTEXT_v2_2.ethbtc_0_0300_persistence","prospective_eligibility_start":null,"exact_blocker":"Decision mapping not separately frozen."},
+    {"family_id":"BREADTH_SURVIVAL","status":"PARTIAL","candidate_decision_contract_status":"BLOCKED","transformation_version":null,"prospective_eligibility_start":null,"exact_blocker":"Prospective survival transform and decision mapping missing."},
+    {"family_id":"BTCD_PATH_RECLAIM","status":"PARTIAL","candidate_decision_contract_status":"BLOCKED","transformation_version":null,"prospective_eligibility_start":null,"exact_blocker":"Path/reclaim transform and decision mapping missing; CMC source identity is bound only prospectively."},
+    {"family_id":"ETF_FLOW_QUALITY","status":"PARTIAL","candidate_decision_contract_status":"BLOCKED","transformation_version":null,"prospective_eligibility_start":null,"exact_blocker":"Exact quality transform and decision mapping missing."},
+    {"family_id":"LEVERAGE_LIQUIDATION_RECLAIM","status":"PARTIAL","candidate_decision_contract_status":"BLOCKED","transformation_version":null,"prospective_eligibility_start":null,"exact_blocker":"Liquidation/reclaim owner+transform missing; OI/funding/taker are not substitutes."},
+    {"family_id":"STABLECOIN_DEPLOYMENT_PARKING","status":"PARTIAL","candidate_decision_contract_status":"BLOCKED","transformation_version":null,"prospective_eligibility_start":null,"exact_blocker":"Deployment/parking semantics absent; supply/liquidity is not deployment."},
+    {"family_id":"CFGI_TIMING_CONTEXT","status":"BLOCKED","candidate_decision_contract_status":"BLOCKED","transformation_version":null,"prospective_eligibility_start":null,"exact_blocker":"Latest source lane unavailable; exact engine/version-bound data missing."},
+    {"family_id":"FULL_STACK_REPRODUCIBILITY","status":"PARTIAL","candidate_decision_contract_status":"BLOCKED","transformation_version":"FULL_STACK_ROW_TIME_VERSION_MAP_v1","prospective_eligibility_start":null,"exact_blocker":"Constituent decision contracts not all frozen."}
+  ],
+  "core_activation_rule": {
+    "candidates": ["C01_ETHBTC","C02_BREADTH","C03_BTCD","C04_ETHBTC_BREADTH","C05_ETHBTC_BTCD","C06_BREADTH_BTCD","C07_SIMPLE_3"],
+    "start_only_when": ["ETHBTC_PERSISTENCE","BREADTH_SURVIVAL","BTCD_PATH_RECLAIM"],
+    "all_must_have_status": "READY",
+    "all_must_have_candidate_decision_contract_status": "READY",
+    "no_backdating": true
+  },
+  "incremental_activation_rule": "ETF, leverage, stablecoin, CFGI and Full Stack candidates start only at/after their own merged READY freeze timestamp.",
+  "dynamic_candidate_rule": "C10/C11/C12 remain ineligible until a separately frozen dynamic/base decision contract exists; controller must not infer BEST_SPARSE or FULL_STACK decisions."
+}

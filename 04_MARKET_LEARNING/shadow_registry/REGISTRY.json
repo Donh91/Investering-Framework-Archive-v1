@@ -1,89 +1,111 @@
 {
-  "contract": "SHADOW_SENSOR_REGISTRY_RUNTIME_v1_1",
   "authority": "RESEARCH_ONLY_NON_CANONICAL",
   "automatic_rule_changes": false,
+  "contract": "SHADOW_SENSOR_REGISTRY_RUNTIME_v1_1",
   "portfolio_execution": false,
   "promotion_requires_separate_review": true,
   "sensors": [
     {
-      "sensor_id": "ENTRY_SIGNAL_LEDGER",
-      "family": "entry_signals",
-      "status": "ACTIVE_SHADOW",
+      "evaluator": "ENTRY_SIGNAL_PERFORMANCE_SUMMARY_v1",
       "evidence_paths": [
         "04_MARKET_LEARNING/entry_signals/LATEST.json",
         "04_MARKET_LEARNING/entry_signals/PERFORMANCE_SUMMARY.json",
         "04_MARKET_LEARNING/entry_signals/events",
         "04_MARKET_LEARNING/entry_signals/outcomes"
       ],
+      "family": "entry_signals",
       "relevance_state": "KEEP",
-      "evaluator": "ENTRY_SIGNAL_PERFORMANCE_SUMMARY_v1"
+      "sensor_id": "ENTRY_SIGNAL_LEDGER",
+      "status": "ACTIVE_SHADOW"
     },
     {
-      "sensor_id": "LEGACY_GATE_BTC_PARTIAL_FT1",
-      "family": "legacy_forward_tests",
-      "status": "RESEARCH_ONLY",
+      "evaluator": "NONE_RECOVERY_REQUIRED",
       "evidence_paths": [
         "04_MARKET_LEARNING/forward_tests/2026-07-07__forward-test-ledger-gate-btc-partial-graduated-deployment-v1__shadow.md"
       ],
+      "family": "legacy_forward_tests",
       "relevance_state": "WATCH",
-      "evaluator": "NONE_RECOVERY_REQUIRED"
+      "sensor_id": "LEGACY_GATE_BTC_PARTIAL_FT1",
+      "status": "RESEARCH_ONLY"
     },
     {
-      "sensor_id": "LEGACY_GRADUATED_DEPLOYMENT_V1_1",
-      "family": "legacy_forward_tests",
-      "status": "RESEARCH_ONLY",
+      "evaluator": "NONE_RECOVERY_REQUIRED",
       "evidence_paths": [
         "04_MARKET_LEARNING/forward_tests/2026-07-07__forward-test-ledger-gate-btc-partial-graduated-deployment-v1__shadow.md",
         "04_MARKET_LEARNING/forward_tests/2026-07-07__research-lab-evidence-pack-gate-btc-partial-graduated-deployment-v1__shadow.md"
       ],
+      "family": "legacy_forward_tests",
       "relevance_state": "WATCH",
-      "evaluator": "NONE_RECOVERY_REQUIRED"
+      "sensor_id": "LEGACY_GRADUATED_DEPLOYMENT_V1_1",
+      "status": "RESEARCH_ONLY"
     },
     {
-      "sensor_id": "BREADTH_FORWARD_FAMILY",
-      "family": "breadth",
-      "status": "ACTIVE_SHADOW",
+      "evaluator": "SOURCE_PRESENCE_AND_FUTURE_OUTCOME_REVIEW",
       "evidence_paths": ["04_MARKET_LEARNING/breadth/forward"],
+      "family": "breadth",
       "relevance_state": "KEEP",
-      "evaluator": "SOURCE_PRESENCE_AND_FUTURE_OUTCOME_REVIEW"
+      "sensor_id": "BREADTH_FORWARD_FAMILY",
+      "status": "ACTIVE_SHADOW"
     },
     {
-      "sensor_id": "FABLE_OTA_SHADOW_FAMILY",
-      "family": "external_shadow_research",
-      "status": "RESEARCH_ONLY",
+      "evaluator": "NONE_RECOVERY_REQUIRED",
       "evidence_paths": ["04_MARKET_LEARNING/fable_ota_shadow"],
+      "family": "external_shadow_research",
       "relevance_state": "WATCH",
-      "evaluator": "NONE_RECOVERY_REQUIRED"
+      "sensor_id": "FABLE_OTA_SHADOW_FAMILY",
+      "status": "RESEARCH_ONLY"
     },
     {
-      "sensor_id": "CYCLE_NAVIGATOR_RESEARCH_FAMILY",
-      "family": "cycle_navigator",
-      "status": "RESEARCH_ONLY",
+      "evaluator": "NONE_RECOVERY_REQUIRED",
       "evidence_paths": ["04_MARKET_LEARNING/cycle_navigator"],
+      "family": "cycle_navigator",
       "relevance_state": "WATCH",
-      "evaluator": "NONE_RECOVERY_REQUIRED"
+      "sensor_id": "CYCLE_NAVIGATOR_RESEARCH_FAMILY",
+      "status": "RESEARCH_ONLY"
     },
     {
-      "sensor_id": "HISTORICAL_ALTSEASON_PULLBACK_LAB",
-      "family": "historical_research",
-      "status": "RESEARCH_ONLY",
+      "evaluator": "RESEARCH_ARTIFACT_ONLY",
       "evidence_paths": ["06_RESEARCH_LAB/historical_altseason_pullback_v1"],
+      "family": "historical_research",
       "relevance_state": "WATCH",
-      "evaluator": "RESEARCH_ARTIFACT_ONLY"
+      "sensor_id": "HISTORICAL_ALTSEASON_PULLBACK_LAB",
+      "status": "RESEARCH_ONLY"
     },
     {
-      "sensor_id": "RECOVERED_LEGACY_SENSOR_FAMILY_2026_08_21",
-      "family": "legacy_sensor_recovery",
-      "status": "DORMANT_RECOVERABLE",
+      "anti_double_counting_required": true,
+      "evaluator": "NONE_RECOVERY_REQUIRED",
       "evidence_paths": [
         "06_RESEARCH_LAB/historical_sensor_recovery_v1/RECOVERED_LEGACY_SENSOR_DEFINITIONS_2026-08-21.json",
         "04_MARKET_LEARNING/shadow_registry/LEGACY_RECOVERY_QUEUE.json"
       ],
+      "family": "legacy_sensor_recovery",
+      "notes": "Contains Early Rotation Pre-Trigger, fake-rotation filter, ETF-era divergence classifiers and SRE/FAE/CCE/ODM/RWE meta-learning concepts. Individual promotion requires exact data mapping and separate prospective validation.",
       "relevance_state": "WATCH",
-      "evaluator": "NONE_RECOVERY_REQUIRED",
-      "tracking_policy": "WEEKLY_REVIEW_REQUIRED",
+      "sensor_id": "RECOVERED_LEGACY_SENSOR_FAMILY_2026_08_21",
+      "status": "DORMANT_RECOVERABLE",
+      "tracking_policy": "WEEKLY_REVIEW_REQUIRED"
+    },
+    {
       "anti_double_counting_required": true,
-      "notes": "Contains Early Rotation Pre-Trigger, fake-rotation filter, ETF-era divergence classifiers and SRE/FAE/CCE/ODM/RWE meta-learning concepts. Individual promotion requires exact data mapping and separate prospective validation."
+      "evaluator": "RESEARCH_ARTIFACT_ONLY",
+      "evidence_paths": [
+        "04_MARKET_LEARNING/shadow_registry/SHARED_ROW_TOURNAMENT_POINTER.json",
+        "06_RESEARCH_LAB/shared_row_model_tournament_v1/RUNTIME_STATUS.json",
+        "06_RESEARCH_LAB/shared_row_model_tournament_v1/OWNER_BINDING_MATRIX.json",
+        "06_RESEARCH_LAB/shared_row_model_tournament_v1/TRANSFORM_FREEZE_REGISTRY.json",
+        "06_RESEARCH_LAB/shared_row_model_tournament_v1/data/PROSPECTIVE_SHARED_ROW_LEDGER.csv",
+        "06_RESEARCH_LAB/shared_row_model_tournament_v1/14_DIVERGENCE_FNP_LEDGER.csv",
+        "06_RESEARCH_LAB/shared_row_model_tournament_v1/data/CATALYST_LEDGER.csv",
+        "06_RESEARCH_LAB/shared_row_model_tournament_v1/RELEVANCE_STATE.json",
+        "06_RESEARCH_LAB/shared_row_model_tournament_v1/monitor/LATEST.json",
+        "06_RESEARCH_LAB/shared_row_model_tournament_v1/weekly/LATEST.json"
+      ],
+      "family": "shared_row_model_tournament",
+      "notes": "Prospective evidence accumulation only. No direct Master Monday/Cycle Navigator/portfolio authority. Canonical promotion requires separate governance.",
+      "relevance_state": "WATCH",
+      "sensor_id": "SHARED_ROW_MODEL_TOURNAMENT_V1",
+      "status": "RESEARCH_ONLY",
+      "tracking_policy": "WEEKLY_REVIEW_REQUIRED"
     }
   ]
 }
