@@ -1,11 +1,11 @@
-# Investering Agent Skill Registry v0.2
+# Investering Agent Skill Registry v0.3
 
-**Dato:** 2026-07-12  
+**Dato:** 2026-08-22  
 **Status:** CANONICAL_OPERATIONAL_REGISTRY  
 **Område:** agent routing / reproducible workflows / archive control  
 **Primary folder:** `00_ARCHIVE_CONTROL/`  
 **Depends on:** `AGENTS.md`, `00_ARCHIVE_CONTROL/CANONICAL_INDEX.md`, `00_ARCHIVE_CONTROL/INDEX_ADDENDUM_REGISTRY.md`, `00_ARCHIVE_CONTROL/ARCHIVE_MAP_AND_ROUTING.md`  
-**Implementation reference:** `07_PROMPTS_AND_AGENTS/github_agent/2026-07-12__investering-agent-skills-v0-1__canonical.md`
+**Implementation references:** `07_PROMPTS_AND_AGENTS/github_agent/2026-07-12__investering-agent-skills-v0-1__canonical.md`, `07_PROMPTS_AND_AGENTS/codex/2026-08-22__codex-research-intake-and-execution-ledger-v1__operational.md`
 
 ## 1. Purpose
 
@@ -21,6 +21,7 @@ Skills are process instructions. They do not own market truth, framework doctrin
 | prospective-evidence-ledger | `.agents/skills/prospective-evidence-ledger/SKILL.md` | PILOT_ACTIVE_V0_1 | freeze input, forward row, actual, maturity, M3, FRLP, FNP, Transmission Matrix, lineage, coverage | Govern evidence-row lifecycle; no scoring or promotion authority |
 | archive-governance | `.agents/skills/archive-governance/SKILL.md` | PILOT_ACTIVE_V0_1_1 | archive, save, GitHub update, canonical, index, place this, preserve this | Classify and govern writes, subject to repository policy |
 | research-lab-red-team | `.agents/skills/research-lab-red-team/SKILL.md` | PILOT_ACTIVE | audit, red team, Claude/Grok review, framework proposal, evidence, falsify | Evaluate and classify, no self-promotion |
+| codex-intake | `.agents/skills/codex-intake/SKILL.md` | ACTIVE_OPERATIONAL_V1 | queue for Codex, bounded code defect, research-to-code handoff, CODEX candidate | Prepare/deduplicate bounded research intake only; no CODEX_READY, merge, market or framework authority |
 
 ## 3. Default composition
 
@@ -30,6 +31,7 @@ For general framework work:
 canonical-context-router
 -> task-specific reasoning or extraction
 -> research-lab-red-team when claims or changes are evaluated
+-> codex-intake only when a reproducible bounded code defect should enter remediation
 -> archive-governance before repository writes
 ```
 
@@ -40,10 +42,11 @@ canonical-context-router
 -> prospective-evidence-ledger
 -> existing domain validator or scorer
 -> research-lab-red-team only for interpretation, test survival or promotion review
+-> codex-intake only for bounded implementation defects, never for test promotion
 -> archive-governance before repository writes
 ```
 
-The router resolves current authority. Prospective Evidence Ledger governs causal row lifecycle and evidence integrity. The red-team skill evaluates decision value and test survival. Archive Governance controls placement, duplication, discoverability, write safety and backup-scope truth.
+The router resolves current authority. Prospective Evidence Ledger governs causal row lifecycle and evidence integrity. The red-team skill evaluates decision value and test survival. Codex Intake converts reproducible code-local research findings into governed candidates without granting research code authority. Archive Governance controls placement, duplication, discoverability, write safety and backup-scope truth.
 
 ## 4. Global constraints
 
@@ -112,7 +115,30 @@ coverage_readiness: READY | NOT_READY | BLOCKED | NOT_APPLICABLE
 edge_or_promotion_status: NO_CHANGE | GOVERNANCE_REVIEW_PERMITTED | NOT_APPLICABLE
 ```
 
-## 6. Shared pilot metrics
+## 6. Codex intake contract
+
+`codex-intake` may:
+
+- detect an explicit research-to-Codex handoff request;
+- read and deduplicate against the current Codex/remediation queue;
+- package reproducible evidence into `CODEX_RESEARCH_CANDIDATE_v1`;
+- link a research finding to an existing health signature instead of duplicating authority;
+- request `NORMAL` or `EXPEDITED` queue priority;
+- persist the candidate through normal isolated-branch and PR governance when write authority exists.
+
+It may not:
+
+- set `CODEX_READY` itself;
+- change code as part of research intake;
+- bypass fresh-state binding, CI, PR review or post-fix gates;
+- broaden `allowed_change_scope` beyond the evidence;
+- modify market gates, model weights, canonical authority, portfolio logic, API budget or new policy semantics;
+- create a parallel Codex queue in Experiments or Cycle Navigator;
+- claim a candidate was queued when it was not durably persisted.
+
+The machine queue authority remains `LATEST_CODEX_READY_TASKS.json`. Execution history is observable in `LATEST_CODEX_EXECUTION_STATE.json` and `research/codex/CODEX_EXECUTION_LEDGER.jsonl` but those surfaces have no promotion authority.
+
+## 7. Shared pilot metrics
 
 Each qualified use should be assessed against these fields:
 
@@ -143,7 +169,7 @@ A qualified use is a real framework, archive, Research Lab or active-ledger task
 
 A remediated default-branch or unintended-write incident must be recorded as `PARTIAL_REMEDIATED`, never an unqualified write-governance `PASS`.
 
-## 7. Prospective Evidence Ledger pilot metrics
+## 8. Prospective Evidence Ledger pilot metrics
 
 For each qualified use of the new Skill, additionally record:
 
@@ -165,7 +191,7 @@ unsupported_score_blocked: YES | NO | NOT_APPLICABLE
 false_eligible_incidents: integer
 ```
 
-## 8. First qualified-use correction
+## 9. First qualified-use correction
 
 The first archive-governance live run is recorded at:
 
@@ -192,16 +218,16 @@ current_owner_version_in_snapshot: NO
 post_merge_delta_status: PENDING
 ```
 
-## 9. Review gate
+## 10. Review gate
 
-Review the v0.2 stack after either:
+Review the skill stack after either:
 
-- 10 qualified uses across the stack, or
-- 2026-08-09,
+- 10 additional qualified uses after v0.3 activation, or
+- 2026-09-22,
 
 whichever occurs first.
 
-`prospective-evidence-ledger` must also accumulate at least three real uses before a KEEP decision is justified.
+`prospective-evidence-ledger` must also accumulate at least three real uses before a KEEP decision is justified. `codex-intake` must accumulate at least three real research-origin candidates or deduplicated handoffs before a KEEP decision is justified.
 
 Review classifications:
 
@@ -212,7 +238,7 @@ SUSPEND
 KILL
 ```
 
-## 10. Kill and modification criteria
+## 11. Kill and modification criteria
 
 A skill must be modified, suspended or killed if any of the following occurs:
 
@@ -241,9 +267,17 @@ A skill must be modified, suspended or killed if any of the following occurs:
 - treats coverage readiness as edge or promotion;
 - creates market or portfolio authority.
 
-## 11. Expansion rule
+`codex-intake` must be immediately modified or suspended if it:
 
-No additional skill should be added until another repeated workflow gap is demonstrated.
+- self-promotes a research candidate to CODEX_READY;
+- creates duplicate Codex authority instead of linking a current health task;
+- accepts framework-owner changes into code-remediation authority;
+- weakens fresh-state binding or PR/CI/post-fix requirements;
+- claims fast execution when only queue publication is evidenced.
+
+## 12. Expansion rule and v0.3 exception
+
+No additional skill should be added without a demonstrated repeated workflow gap.
 
 A candidate skill must state:
 
@@ -258,28 +292,32 @@ authority boundary
 kill criterion
 ```
 
-The v0.2 exception is `prospective-evidence-ledger`, justified by repeated active-test row-production, source-lineage, maturity and coverage gaps across M3, FRLP, FNP, Pullback Edge, Transmission Matrix and other registered tests.
+The original v0.2 exception was `prospective-evidence-ledger`, justified by repeated active-test row-production, source-lineage, maturity and coverage gaps.
 
-Potential later candidates such as DATA PING execution, weekly range audit, Master Monday, Cycle Navigator publication, research-package ingest and automated agent loops remain `NOT_AUTHORIZED_FOR_BUILD` in v0.2.
+The v0.3 exception is `codex-intake`, justified by repeated research threads identifying code-remediable defects while the existing Codex queue accepted only health-origin findings and the maturation workflow otherwise depended on fixed cadence. Existing research and archive skills cannot safely create, deduplicate, bind and expose a source-agnostic Codex queue. The new skill adds routing only, not market or code authority.
 
-## 12. Current status
+Potential later candidates such as DATA PING execution, weekly range audit, Master Monday, Cycle Navigator publication and automated agent loops remain `NOT_AUTHORIZED_FOR_BUILD` unless separately governed.
+
+## 13. Current status
 
 ```yaml
-stack_version: 0.2
+stack_version: 0.3
 stack_status: PILOT_ACTIVE_HARDENED
-skills_active: 4
-stack_qualified_uses_completed: 1
+skills_active: 5
+stack_qualified_uses_completed_before_v0_3: 1
 prospective_evidence_ledger_version: 0.1
-prospective_evidence_ledger_qualified_uses: 0
+codex_intake_version: 1
+codex_intake_authority: ROUTING_ONLY
+codex_queue_authority: LATEST_CODEX_READY_TASKS.json
+codex_execution_observability: LATEST_CODEX_EXECUTION_STATE.json
 trading_logic_changed: NO
 framework_authority_changed: NO
 new_engine_created: NO
 new_shadow_layer_created: NO
 new_test_created: NO
-new_ledger_created: NO
 new_score_created: NO
-automatic_scheduling_added: NO
 automatic_portfolio_action_added: NO
+research_codex_event_trigger_added: YES
 write_branch_assertion_active: YES
 addendum_registry_active: YES
 incident_aware_scoring_active: YES
