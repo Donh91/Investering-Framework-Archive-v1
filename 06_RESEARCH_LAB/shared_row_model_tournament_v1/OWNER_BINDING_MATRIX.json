@@ -13,7 +13,7 @@
       "source_provider": "Binance direct ETHBTC spot retained hourly rows",
       "source_version_convention": "API_INTELLIGENCE_SEQUENCE_CONTEXT_v2_2 / direct ETHBTC only",
       "status": "READY",
-      "transformation_definition": "Direct ETHBTC closes, 0.0300 level, 168h window and latest side. Prospective tournament permission is true iff latest side is ABOVE. Persistence metadata remains descriptive; no synthetic ratio.",
+      "transformation_definition": "Direct ETHBTC closes, 0.0300 level, last 168 retained direct settled hourly rows and latest side. Prospective tournament permission is true iff latest side is ABOVE. Persistence metadata remains descriptive; no synthetic ratio.",
       "transformation_version": "ETHBTC_0_0300_PERSISTENCE_PROSPECTIVE_v1"
     },
     {
