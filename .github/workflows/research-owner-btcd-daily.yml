@@ -3,6 +3,7 @@ name: Research Owner - CMC BTC Dominance Daily
 on:
   schedule:
     - cron: '35 6 * * *'
+      timezone: 'Europe/Copenhagen'
   workflow_dispatch:
 
 permissions:
@@ -14,16 +15,20 @@ concurrency:
 
 jobs:
   capture:
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
       - name: Fetch direct CMC BTC.D owner
         run: python scripts/fetch_btc_d_cmc_free.py
-      - name: Persist immutable dated evidence and latest copy
+      - name: Persist immutable dated evidence and latest copy with verified readback
         shell: bash
         run: |
           set -euo pipefail
@@ -37,4 +42,12 @@ jobs:
           git add 03_DAILY_CAPTURE_LOGS/btc_d_cmc
           if git diff --cached --quiet; then exit 0; fi
           git commit -m "data: persist research CMC BTC.D owner $DAY"
-          git push
+          pushed=false
+          for attempt in 1 2 3; do
+            git rebase --abort 2>/dev/null || true
+            if git pull --rebase origin main && git push origin HEAD:main; then pushed=true; break; fi
+            sleep $((attempt * 5))
+          done
+          [ "$pushed" = true ]
+          git fetch origin main
+          git merge-base --is-ancestor HEAD origin/main
