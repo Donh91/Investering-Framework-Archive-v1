@@ -1,0 +1,77 @@
+{
+  "contract": "RESEARCH_NEXT_ACTION_POLICY_v1",
+  "authority": "RESEARCH_ONLY_NON_CANONICAL",
+  "frozen_before_first_prospective_outcome": true,
+  "calendar_only_verdict_forbidden": true,
+  "canonical_effect": false,
+  "paid_data_default": 0,
+  "deep_research_default": false,
+  "principles": [
+    "Evidence content, divergence information and matured outcomes govern escalation; elapsed calendar time alone never declares a winner.",
+    "Missing evidence is never encoded as zero.",
+    "Every escalation is research-only until a separate canonical review packet is justified.",
+    "A promotion recommendation may never mutate Master Monday, Cycle Navigator, market rules, thresholds, weights or portfolio execution.",
+    "New hypotheses must be written prospectively before they can become challengers; no backdated candidate decisions are allowed."
+  ],
+  "actions": {
+    "CONTINUE_OBSERVING": {"execution": "AUTO", "effect": "COLLECT_ONLY"},
+    "EXTEND_OBSERVATION": {"execution": "AUTO", "effect": "COLLECT_ONLY_WITH_REASON"},
+    "INVESTIGATE_DATA_GAP": {"execution": "AUTO", "effect": "RESEARCH_DIAGNOSTIC_PACKET_ONLY"},
+    "INVESTIGATE_DIVERGENCE": {"execution": "AUTO", "effect": "RESEARCH_DIAGNOSTIC_PACKET_ONLY"},
+    "STRESS_TEST": {"execution": "AUTO", "effect": "RESEARCH_STRESS_PACKET_ONLY"},
+    "RESEARCH_NEW_HYPOTHESIS": {"execution": "AUTO", "effect": "BOUNDED_RESEARCH_REQUEST_PACKET_ONLY"},
+    "FREEZE_NEW_CHALLENGER": {"execution": "CONDITIONAL", "effect": "RESEARCH_ONLY_PROSPECTIVE_SPEC_REQUIRED"},
+    "DEPRIORITIZE": {"execution": "AUTO", "effect": "RESEARCH_RELEVANCE_METADATA_ONLY"},
+    "PROMOTE_FOR_CANONICAL_REVIEW": {"execution": "AUTO", "effect": "RECOMMENDATION_PACKET_ONLY"},
+    "NO_ACTION": {"execution": "AUTO", "effect": "NONE"}
+  },
+  "trigger_floors": {
+    "expected_row_gap_hours": 36,
+    "first_information_review": {
+      "matured_7d_rows_min": 7,
+      "matured_7d_divergences_min": 3
+    },
+    "stress_test": {
+      "candidate_7d_errors_min": 5,
+      "distinct_contexts_min": 2
+    },
+    "new_hypothesis_research": {
+      "candidate_7d_errors_min": 8,
+      "distinct_regimes_min": 2,
+      "requires_prior_stress_test_for_same_target": true,
+      "new_matured_7d_rows_since_prior_stress_min": 2
+    },
+    "pairwise_relevance_decision": {
+      "baseline_candidate": "C07_SIMPLE_3",
+      "resolved_7d_divergences_min": 12,
+      "distinct_regimes_min": 2,
+      "net_unique_wins_or_failures_min": 5,
+      "wilson_confidence_z": 1.96,
+      "promotion_requires_unique_win_share_lower_bound_gt": 0.5,
+      "deprioritize_requires_unique_win_share_upper_bound_lt": 0.5,
+      "tail_error_non_deterioration_required_for_promotion": true
+    }
+  },
+  "action_priority": [
+    "INVESTIGATE_DATA_GAP",
+    "PROMOTE_FOR_CANONICAL_REVIEW",
+    "DEPRIORITIZE",
+    "RESEARCH_NEW_HYPOTHESIS",
+    "STRESS_TEST",
+    "INVESTIGATE_DIVERGENCE",
+    "EXTEND_OBSERVATION",
+    "CONTINUE_OBSERVING",
+    "NO_ACTION"
+  ],
+  "challenger_freeze_guard": {
+    "required_ready_packet": "research_actions/HYPOTHESIS_CANDIDATE_READY.json",
+    "required_fields": ["hypothesis_id", "falsifiable_claim", "input_contract", "decision_contract", "outcome_contract", "prospective_start_utc", "no_backdating"],
+    "no_backdating_must_equal": true,
+    "controller_may_not_invent_missing_fields": true
+  },
+  "canonical_firewall": {
+    "status": "ENFORCED",
+    "automatic_canonical_write": false,
+    "promotion_output": "research_actions/CANONICAL_REVIEW_PACKET.json"
+  }
+}
