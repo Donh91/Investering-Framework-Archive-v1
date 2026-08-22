@@ -19,7 +19,9 @@ This queue is deliberately adversarial. A lane becomes `READY` only when owner i
 
 ## P2 - optional challengers
 
-- `STABLECOIN_DEPLOYMENT`: separate deployment/parking from supply/liquidity.
-- `CFGI_CONTEXT_TIMING`: restore exact CFGI source/engine/version coverage. Alternative.me substitution is forbidden.
+- `STABLECOIN_DEPLOYMENT_PARKING`: separate deployment/parking from supply/liquidity.
+- `CFGI_TIMING_CONTEXT`: restore exact CFGI source/engine/version coverage. Alternative.me substitution is forbidden.
+
+Dynamic candidates `C10_STABLECOIN_CHALLENGER`, `C11_CFGI_CHALLENGER` and `C12_FULL_STACK` require their own frozen base/dynamic decision contracts. `BEST_SPARSE_AT_EVALUATION_TIME` and Full Stack decisions must never be inferred by the controller.
 
 Raw evidence captured before a transform freeze may be retained for source QA and forward availability studies. It may not receive retrospective candidate decisions after outcomes are known.
