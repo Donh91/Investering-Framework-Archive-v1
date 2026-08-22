@@ -23,4 +23,7 @@ jobs:
       - run: python -m py_compile scripts/research/prospective_evidence_controller.py scripts/research/shared_row_tournament_maturation.py scripts/research/shared_row_tournament_weekly.py scripts/research/shared_row_tournament_relevance.py scripts/research/shared_row_tournament_monitor.py
       - run: python 06_RESEARCH_LAB/shared_row_model_tournament_v1/pipeline/validate_tournament_contract.py
       - run: python scripts/research/prospective_evidence_controller.py --status-only
+      - run: python scripts/research/shared_row_tournament_maturation.py
+      - run: python scripts/research/shared_row_tournament_weekly.py
+      - run: python scripts/research/shared_row_tournament_relevance.py
       - run: python scripts/research/shared_row_tournament_monitor.py
