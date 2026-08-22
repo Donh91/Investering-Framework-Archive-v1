@@ -1,0 +1,26 @@
+name: Cycle Navigator Autonomous Calibration Gate
+
+on:
+  pull_request:
+    paths:
+      - '05_CYCLE_NAVIGATOR/autonomous_calibration_v1/**'
+      - 'scripts/research/cycle_navigator_calibration_controller.py'
+      - 'scripts/research/validate_cycle_navigator_calibration_controller.py'
+      - '.github/workflows/cycle-navigator-autonomous-calibration-*.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  calibration-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m py_compile scripts/research/cycle_navigator_calibration_controller.py scripts/research/validate_cycle_navigator_calibration_controller.py
+      - run: python scripts/research/validate_cycle_navigator_calibration_controller.py
+      - run: python scripts/research/cycle_navigator_calibration_controller.py --dry-run
