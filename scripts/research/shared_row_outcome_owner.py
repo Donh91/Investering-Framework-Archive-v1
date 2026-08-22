@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from __future__ import annotations
-import csv,hashlib,json
+import argparse,csv,hashlib,json
 from datetime import datetime,timezone,timedelta
 from pathlib import Path
 
@@ -46,11 +46,12 @@ def calc(asset,baseline,end,pathrows):
     b=baseline[asset];e=end[asset];rets=[pct(x[asset],b) for x in pathrows]
     return {"baseline":b,"end":e,"forward":pct(e,b),"mae":min(rets),"mfe":max(rets)}
 
-def main():
+def run(now_override:str|None=None):
     rows=read_csv(ROWS);fields=list(rows[0].keys()) if rows else []
-    if not rows:
-        print(json.dumps({"status":"PASS","rows":0,"horizons_written":0},sort_keys=True));return
-    data=load();existing=detail_keys();now=datetime.now(timezone.utc);changed=0
+    if not rows:return {"status":"PASS","rows":0,"horizons_written":0,"outcome_contract":"ETHBTC_FORWARD_RELATIVE_RETURN_OUTCOME_v1"}
+    data=load();existing=detail_keys();wall=parse(now_override) if now_override else datetime.now(timezone.utc);changed=0
+    frozen_decisions={r["event_id"]:r.get("candidate_decisions","") for r in rows}
+    frozen_identity={r["event_id"]:(r.get("observation_timestamp_utc",""),r.get("information_cutoff_utc",""),r.get("provenance_hash","")) for r in rows}
     for r in rows:
         cutoff=parse(r["information_cutoff_utc"]);baseline=select_baseline(data,cutoff)
         if baseline is None:continue
@@ -58,7 +59,7 @@ def main():
             of=f"outcome_{h}";ma=f"mae_{h}";mf=f"mfe_{h}"
             if str(r.get(of,"")).strip():continue
             target=cutoff+timedelta(hours=hours)
-            if now<target:continue
+            if wall<target:continue
             end=select_end(data,target)
             if end is None:continue
             pr=path(data,baseline["ts"],end["ts"])
@@ -67,9 +68,16 @@ def main():
             r[of]="1" if er["forward"]>0 else "0";r[ma]=f'{er["mae"]:.8f}';r[mf]=f'{er["mfe"]:.8f}'
             key=(r["event_id"],h)
             if key not in existing:
-                d={"event_id":r["event_id"],"horizon":h,"observation_timestamp_utc":r["observation_timestamp_utc"],"information_cutoff_utc":r["information_cutoff_utc"],"target_timestamp_utc":iso(target),"selected_end_timestamp_utc":iso(end["ts"]),"baseline_timestamp_utc":iso(baseline["ts"]),"ethbtc_baseline":er["baseline"],"ethbtc_end":er["end"],"ethbtc_forward_return_pct":er["forward"],"ethbtc_mae_pct":er["mae"],"ethbtc_mfe_pct":er["mfe"],"btc_baseline":br["baseline"],"btc_end":br["end"],"btc_forward_return_pct":br["forward"],"btc_mae_pct":br["mae"],"btc_mfe_pct":br["mfe"],"eth_baseline":xr["baseline"],"eth_end":xr["end"],"eth_forward_return_pct":xr["forward"],"eth_mae_pct":xr["mae"],"eth_mfe_pct":xr["mfe"],"sample_count":len(pr),"source_contract":"HOURLY_SEQUENCE_CAPTURE_v2_2_DIRECT_BINANCE_SPOT","matured_at_utc":iso(now)}
+                d={"event_id":r["event_id"],"horizon":h,"observation_timestamp_utc":r["observation_timestamp_utc"],"information_cutoff_utc":r["information_cutoff_utc"],"target_timestamp_utc":iso(target),"selected_end_timestamp_utc":iso(end["ts"]),"baseline_timestamp_utc":iso(baseline["ts"]),"ethbtc_baseline":er["baseline"],"ethbtc_end":er["end"],"ethbtc_forward_return_pct":er["forward"],"ethbtc_mae_pct":er["mae"],"ethbtc_mfe_pct":er["mfe"],"btc_baseline":br["baseline"],"btc_end":br["end"],"btc_forward_return_pct":br["forward"],"btc_mae_pct":br["mae"],"btc_mfe_pct":br["mfe"],"eth_baseline":xr["baseline"],"eth_end":xr["end"],"eth_forward_return_pct":xr["forward"],"eth_mae_pct":xr["mae"],"eth_mfe_pct":xr["mfe"],"sample_count":len(pr),"source_contract":"HOURLY_SEQUENCE_CAPTURE_v2_2_DIRECT_BINANCE_SPOT","matured_at_utc":iso(wall)}
                 d["provenance_hash"]=hashlib.sha256(canon(d).encode()).hexdigest();append_detail(d);existing.add(key)
             changed+=1
+    for r in rows:
+        eid=r["event_id"]
+        if r.get("candidate_decisions","")!=frozen_decisions[eid]:raise RuntimeError("candidate decisions changed during outcome maturation")
+        if (r.get("observation_timestamp_utc",""),r.get("information_cutoff_utc",""),r.get("provenance_hash",""))!=frozen_identity[eid]:raise RuntimeError("frozen row identity changed during outcome maturation")
     if changed:write_csv(ROWS,rows,fields)
-    print(json.dumps({"status":"PASS","rows":len(rows),"horizons_written":changed,"outcome_contract":"ETHBTC_FORWARD_RELATIVE_RETURN_OUTCOME_v1"},sort_keys=True))
+    return {"status":"PASS","rows":len(rows),"horizons_written":changed,"outcome_contract":"ETHBTC_FORWARD_RELATIVE_RETURN_OUTCOME_v1"}
+
+def main():
+    ap=argparse.ArgumentParser();ap.add_argument("--now-utc");a=ap.parse_args();print(json.dumps(run(a.now_utc),sort_keys=True))
 if __name__=="__main__":main()
