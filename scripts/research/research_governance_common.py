@@ -7,11 +7,23 @@ from typing import Any, Dict, Iterable, List
 ROOT = Path(__file__).resolve().parents[2]
 GOV = ROOT / "00_ARCHIVE_CONTROL" / "research_governance_v1"
 
-SPECIALIST_STATE_PATHS = {
-    "SHARED_ROW": ROOT / "06_RESEARCH_LAB/shared_row_model_tournament_v1/NEXT_ACTION_STATE.json",
-    "CYCLE_NAVIGATOR": ROOT / "05_CYCLE_NAVIGATOR/autonomous_calibration_v1/STATE.json",
-    "SHADOW_REGISTRY": ROOT / "04_MARKET_LEARNING/shadow_registry/autonomous_portfolio_v1/STATE.json",
-    "SOURCE_RECOVERY": ROOT / "00_ARCHIVE_CONTROL/source_recovery_controller_v1/STATE.json",
+SPECIALIST_BINDINGS = {
+    "SHARED_ROW": {
+        "primary": ROOT / "06_RESEARCH_LAB/shared_row_model_tournament_v1/NEXT_ACTION_STATE.json",
+        "fallback": ROOT / "06_RESEARCH_LAB/shared_row_model_tournament_v1/RUNTIME_STATUS.json",
+    },
+    "CYCLE_NAVIGATOR": {
+        "primary": ROOT / "05_CYCLE_NAVIGATOR/autonomous_calibration_v1/STATE.json",
+        "fallback": None,
+    },
+    "SHADOW_REGISTRY": {
+        "primary": ROOT / "04_MARKET_LEARNING/shadow_registry/autonomous_portfolio_v1/STATE.json",
+        "fallback": None,
+    },
+    "SOURCE_RECOVERY": {
+        "primary": ROOT / "00_ARCHIVE_CONTROL/source_recovery_controller_v1/STATE.json",
+        "fallback": None,
+    },
 }
 
 RESEARCH_PROPOSAL_ACTIONS = {
@@ -66,12 +78,63 @@ def jaccard(a: Any, b: Any) -> float:
 def digest(obj: Any) -> str:
     return hashlib.sha256(json.dumps(obj, sort_keys=True, ensure_ascii=False, default=str).encode()).hexdigest()
 
+def specialist_binding_report() -> Dict[str, Any]:
+    bindings = {}
+    missing_primary = []
+    missing_all = []
+    for source, cfg in SPECIALIST_BINDINGS.items():
+        primary = cfg["primary"]
+        fallback = cfg.get("fallback")
+        primary_data = load_json(primary, {})
+        fallback_data = load_json(fallback, {}) if fallback else {}
+        if isinstance(primary_data, dict) and primary_data:
+            mode = "PRIMARY_READY"
+            selected = primary
+        elif fallback and isinstance(fallback_data, dict) and fallback_data:
+            mode = "FALLBACK_STATUS_ONLY"
+            selected = fallback
+            missing_primary.append(source)
+        else:
+            mode = "MISSING"
+            selected = None
+            missing_primary.append(source)
+            missing_all.append(source)
+        bindings[source] = {
+            "mode": mode,
+            "primary_path": str(primary.relative_to(ROOT)),
+            "fallback_path": str(fallback.relative_to(ROOT)) if fallback else None,
+            "selected_path": str(selected.relative_to(ROOT)) if selected else None,
+        }
+    return {
+        "contract": "RESEARCH_GOVERNANCE_SPECIALIST_BINDING_REPORT_v1",
+        "expected_sources": sorted(SPECIALIST_BINDINGS),
+        "bindings": bindings,
+        "missing_primary_sources": sorted(missing_primary),
+        "missing_all_sources": sorted(missing_all),
+        "complete_primary": not missing_primary,
+        "resolvable": not missing_all,
+        "binding_integrity": (
+            "PRIMARY_COMPLETE" if not missing_primary
+            else "DEGRADED_PRIMARY_FALLBACK" if not missing_all
+            else "BROKEN"
+        ),
+    }
+
 def specialist_states() -> Dict[str, Dict[str, Any]]:
+    report = specialist_binding_report()
     out = {}
-    for source, path in SPECIALIST_STATE_PATHS.items():
+    for source, cfg in SPECIALIST_BINDINGS.items():
+        b = report["bindings"][source]
+        selected = b.get("selected_path")
+        if not selected:
+            continue
+        path = ROOT / selected
         data = load_json(path, {})
         if isinstance(data, dict) and data:
-            out[source] = data
+            value = dict(data)
+            value["_governance_binding_mode"] = b["mode"]
+            value["_governance_binding_path"] = selected
+            out[source] = value
     return out
 
 def action_of(state: Dict[str, Any]) -> str:

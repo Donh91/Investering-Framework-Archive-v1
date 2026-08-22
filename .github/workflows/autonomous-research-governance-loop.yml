@@ -28,6 +28,7 @@ jobs:
           python-version: '3.12'
       - name: Validate governance stack before mutation
         run: |
+          python scripts/research/validate_research_governance_bindings.py
           python scripts/research/validate_research_memory_novelty_gate.py
           python scripts/research/validate_research_decision_impact_router.py
           python scripts/research/validate_independent_research_adversarial_sentinel.py
@@ -41,6 +42,22 @@ jobs:
         run: python scripts/research/independent_research_adversarial_sentinel.py
       - name: Meta-orchestrate surviving research work
         run: python scripts/research/research_meta_orchestrator.py
+      - name: Verify binding-aware governance state before commit
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('00_ARCHIVE_CONTROL/research_governance_v1/meta_orchestrator_v1/STATE.json')
+          s=json.loads(p.read_text())
+          assert s['canonical_effect'] is False
+          assert s['portfolio_execution'] is False
+          assert s['paid_data_authorized'] is False
+          assert s['binding_integrity'] in {'PRIMARY_COMPLETE','DEGRADED_PRIMARY_FALLBACK'}
+          if s['binding_integrity']!='PRIMARY_COMPLETE':
+              assert s['primary_action']=='WAIT_FOR_BINDING_COMPLETENESS'
+              assert s['active_heavy_workstreams']==[]
+          print('GOVERNANCE_PRODUCTION_BINDING_READBACK_PASS',s['binding_integrity'],s['primary_action'])
+          PY
       - name: Commit research-only governance state with verified readback
         shell: bash
         run: |
