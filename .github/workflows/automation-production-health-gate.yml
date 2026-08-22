@@ -5,8 +5,11 @@ on:
     paths:
       - '.github/workflows/**'
       - 'scripts/health/**'
+      - 'scripts/remediation/**'
       - 'scripts/architecture/**'
       - 'scripts/orchestration/build_framework_handoff_manifest.py'
+      - 'research/codex/**'
+      - '.agents/skills/codex-intake/**'
       - 'tests/health/**'
   workflow_dispatch:
 
@@ -24,12 +27,29 @@ jobs:
           python-version: '3.12'
       - name: Install test dependency
         run: python -m pip install --disable-pip-version-check pytest
-      - name: Compile health and handoff code
-        run: python -m py_compile scripts/health/build_automation_health.py scripts/health/build_architecture_health.py scripts/health/build_operations_dashboard.py scripts/health/check_writer_trigger_safety.py scripts/architecture/build_latest_handoff.py scripts/orchestration/build_framework_handoff_manifest.py
+      - name: Compile health, remediation and handoff code
+        run: |
+          python -m py_compile \
+            scripts/health/build_automation_health.py \
+            scripts/health/build_architecture_health.py \
+            scripts/health/build_operations_dashboard.py \
+            scripts/health/check_writer_trigger_safety.py \
+            scripts/remediation/merge_codex_research_intake.py \
+            scripts/remediation/write_codex_research_transition_receipt.py \
+            scripts/remediation/write_codex_research_completion_receipt.py \
+            scripts/architecture/build_latest_handoff.py \
+            scripts/orchestration/build_framework_handoff_manifest.py
       - name: Validate main writer configuration
         run: python scripts/health/check_writer_trigger_safety.py --workflow-root .github/workflows --output /tmp/writer-trigger-safety.json
-      - name: Run health unit tests
-        run: python -m pytest -q tests/health/test_automation_production_health.py tests/health/test_architecture_health_v2_1.py tests/health/test_operations_dashboard.py tests/health/test_writer_trigger_safety_v2.py tests/health/test_observer_and_orchestration_semantics.py
+      - name: Run health and Codex intake unit tests
+        run: |
+          python -m pytest -q \
+            tests/health/test_automation_production_health.py \
+            tests/health/test_architecture_health_v2_1.py \
+            tests/health/test_operations_dashboard.py \
+            tests/health/test_writer_trigger_safety_v2.py \
+            tests/health/test_observer_and_orchestration_semantics.py \
+            tests/health/test_codex_research_intake.py
       - name: Run static repository inventory without API
         run: |
           python scripts/health/build_automation_health.py --workflow-root .github/workflows --json-output /tmp/automation-health.json --md-output /tmp/automation-health.md || code=$?
