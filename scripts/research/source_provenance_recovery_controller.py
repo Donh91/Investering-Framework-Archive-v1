@@ -72,7 +72,10 @@ def classify_receipt(policy: Dict[str, Any], receipt_path: str, receipt: Dict[st
     status_text = " ".join(str(v).upper() for v in _key_values(receipt, [
         "status", "state", "conclusion", "classification", "interpretation",
         "provider_runtime_failure", "error", "reason", "enrichment_run_conclusion_at_receipt",
-        "transform_status", "verification_status"
+        "verification_status"
+    ]))
+    transform_status_text = " ".join(str(v).upper() for v in _key_values(receipt, [
+        "transform_status", "transform_result", "transform_conclusion"
     ]))
 
     explicit_not_testable = "NOT_TESTABLE" in text or "NOT TESTABLE" in text
@@ -85,9 +88,8 @@ def classify_receipt(policy: Dict[str, Any], receipt_path: str, receipt: Dict[st
     ]) or "TERMINAL_PROVIDER" in status_text
     stale = _any_true(receipt, ["stale", "source_stale", "is_stale"]) or "STALE" in status_text
     transform_failure = (
-        ("TRANSFORM" in status_text and any(tok in status_text for tok in ("FAIL", "INVALID", "ERROR", "BROKEN")))
-        or _any_true(receipt, ["transform_failed", "transform_invalid"])
-    )
+        bool(transform_status_text) and any(tok in transform_status_text for tok in ("FAIL", "INVALID", "ERROR", "BROKEN"))
+    ) or _any_true(receipt, ["transform_failed", "transform_invalid"])
     approved_free_source = bool(_key_values(receipt, [
         "approved_free_source", "approved_free_alternative_source", "approved_free_alternative_sources"
     ]))
