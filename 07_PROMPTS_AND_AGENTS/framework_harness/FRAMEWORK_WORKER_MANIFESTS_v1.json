@@ -1,0 +1,43 @@
+{
+  "contract": "FRAMEWORK_WORKER_MANIFEST_SET_v1",
+  "status": "DRAFT_TESTABLE",
+  "global_rules": {
+    "default_delegation_depth": 0,
+    "maximum_delegation_depth": 1,
+    "worker_output_is_authoritative": false,
+    "terminal_receipt_required": true,
+    "self_validation_allowed": false,
+    "self_merge_allowed": false,
+    "canonical_state_write_allowed": false
+  },
+  "workers": [
+    {
+      "worker_id": "AUTOMATION_REMEDIATOR",
+      "accepted_task_types": ["WORKFLOW_FAILURE", "POINTER_FAILURE", "RECEIPT_FAILURE"],
+      "allowed_capabilities": ["READ_EXACT_LOGS", "EDIT_RELATED_WORKFLOW", "EDIT_RELATED_TESTS", "OPEN_DRAFT_PR"],
+      "forbidden_capabilities": ["CHANGE_MARKET_RULES", "CHANGE_MODEL_WEIGHTS", "MERGE_PR", "CREATE_SECRET"],
+      "maximum_delegation_depth": 0
+    },
+    {
+      "worker_id": "ARCHIVE_CURATOR",
+      "accepted_task_types": ["ARCHIVE_INGESTION", "DEDUPLICATION", "PRECEDENCE_CHECK"],
+      "allowed_capabilities": ["READ_DECLARED_SOURCES", "WRITE_STAGING_ARCHIVE", "PRODUCE_MANIFEST", "PRODUCE_DELETION_PROPOSAL"],
+      "forbidden_capabilities": ["DELETE_CANONICAL_SOURCE", "PROMOTE_CANONICAL_STATE", "ALTER_MARKET_LOGIC"],
+      "maximum_delegation_depth": 0
+    },
+    {
+      "worker_id": "EXPERIMENT_REVIEWER",
+      "accepted_task_types": ["EXPERIMENT_REVIEW", "OUTCOME_MATURATION", "FALSIFICATION_CHECK"],
+      "allowed_capabilities": ["READ_FROZEN_CANDIDATE", "READ_OUTCOMES", "RUN_DECLARED_TESTS", "PRODUCE_EVIDENCE_ENVELOPE"],
+      "forbidden_capabilities": ["REWRITE_HYPOTHESIS", "SELF_PROMOTE", "CHANGE_CONTROL_GROUP", "MERGE_PR"],
+      "maximum_delegation_depth": 0
+    },
+    {
+      "worker_id": "FRAMEWORK_ARCHITECTURE_REVIEWER",
+      "accepted_task_types": ["ARCHITECTURE_REVIEW", "OVERLAP_AUDIT", "COMPLEXITY_REDUCTION"],
+      "allowed_capabilities": ["READ_DECLARED_ARCHITECTURE", "COMPARE_EXISTING_COMPONENTS", "PRODUCE_RISK_REGISTER", "PROPOSE_SIMPLIFICATION"],
+      "forbidden_capabilities": ["IMPLEMENT_RUNTIME", "CREATE_DAEMON", "CREATE_SECRET", "CHANGE_AUTHORITY"],
+      "maximum_delegation_depth": 0
+    }
+  ]
+}
