@@ -1,0 +1,26 @@
+name: Source Provenance Recovery Gate
+
+on:
+  pull_request:
+    paths:
+      - '00_ARCHIVE_CONTROL/source_recovery_controller_v1/**'
+      - 'scripts/research/source_provenance_recovery_controller.py'
+      - 'scripts/research/validate_source_provenance_recovery_controller.py'
+      - '.github/workflows/source-provenance-recovery-*.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  source-recovery-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m py_compile scripts/research/source_provenance_recovery_controller.py scripts/research/validate_source_provenance_recovery_controller.py
+      - run: python scripts/research/validate_source_provenance_recovery_controller.py
+      - run: python scripts/research/source_provenance_recovery_controller.py --dry-run

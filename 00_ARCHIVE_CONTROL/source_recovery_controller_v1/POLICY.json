@@ -1,0 +1,50 @@
+{
+  "contract": "SOURCE_PROVENANCE_RECOVERY_POLICY_v1",
+  "authority": "RESEARCH_ONLY_NON_CANONICAL",
+  "canonical_effect": false,
+  "portfolio_execution": false,
+  "external_provider_calls_authorized": false,
+  "automatic_paid_data_authorization": false,
+  "automatic_proxy_substitution": false,
+  "automatic_interpolation": false,
+  "receipt_globs": [
+    "00_ARCHIVE_CONTROL/research_runtime/*.json",
+    "02_DATA_PING/source_integrations/**/*.json",
+    "02_DATA_PING/data_terminal/**/*.json"
+  ],
+  "allowed_actions": [
+    "DECLARE_NOT_TESTABLE",
+    "STOP_RETRYING",
+    "QUARANTINE_STALE_SOURCE",
+    "REPAIR_TRANSFORM",
+    "CROSSCHECK_APPROVED_FREE_SOURCE",
+    "RETRY_SAME_OWNER",
+    "REQUEST_BOUNDED_GAPFILL",
+    "GENERATE_PAID_DATA_VOI_PACKET",
+    "VERIFY_PROVENANCE",
+    "CONTINUE_SOURCE_MONITORING"
+  ],
+  "priority": [
+    "DECLARE_NOT_TESTABLE",
+    "STOP_RETRYING",
+    "QUARANTINE_STALE_SOURCE",
+    "REPAIR_TRANSFORM",
+    "CROSSCHECK_APPROVED_FREE_SOURCE",
+    "RETRY_SAME_OWNER",
+    "REQUEST_BOUNDED_GAPFILL",
+    "GENERATE_PAID_DATA_VOI_PACKET",
+    "VERIFY_PROVENANCE",
+    "CONTINUE_SOURCE_MONITORING"
+  ],
+  "guardrails": [
+    "NO_PROVIDER_CALLS_FROM_CONTROLLER",
+    "NO_AUTOMATIC_PAID_SPEND",
+    "NO_PROXY_SUBSTITUTION_UNLESS_SEPARATELY_APPROVED_BY_SOURCE_CONTRACT",
+    "NO_INTERPOLATION_UNLESS_SEPARATELY_APPROVED_BY_SOURCE_CONTRACT",
+    "TERMINAL_RECEIPTS_OVERRIDE_RETRY_REQUESTS",
+    "STALE_SOURCE_CANNOT_UPDATE_CURRENT_TRUTH",
+    "NO_MARKET_RULE_THRESHOLD_WEIGHT_CHANGE",
+    "NO_PORTFOLIO_ACTION",
+    "MISSING_OR_UNRESOLVED_PROVENANCE_IS_NOT_VALID_EVIDENCE"
+  ]
+}
