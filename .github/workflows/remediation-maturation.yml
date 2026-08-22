@@ -7,13 +7,6 @@ on:
     - cron: '45 17 * * *'
       timezone: 'Europe/Copenhagen'
   workflow_dispatch:
-  push:
-    branches:
-      - main
-    paths:
-      - 'research/codex/intake/**/*.json'
-      - 'research/codex/transitions/*.json'
-      - 'research/codex/completions/*.json'
 
 permissions:
   contents: write
