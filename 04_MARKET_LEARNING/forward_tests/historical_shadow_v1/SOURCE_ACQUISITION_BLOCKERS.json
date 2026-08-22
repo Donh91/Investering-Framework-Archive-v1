@@ -1,0 +1,74 @@
+{
+  "contract": "HISTORICAL_SHADOW_PROSPECTIVE_SOURCE_BLOCKERS_v1",
+  "authority": "RESEARCH_ONLY_NON_CANONICAL",
+  "audit_date": "2026-08-22",
+  "activation_allowed": false,
+  "eligible_rows_allowed": false,
+  "proxy_substitution_allowed": false,
+  "active_test_registry_registration_allowed": false,
+  "blocking_fields": [
+    {
+      "field_id": "stablecoin_alt_inflow_3d",
+      "applies_to": ["PT-HS-001", "PT-HS-002"],
+      "status": "SOURCE_OWNER_NOT_FOUND_BLOCKED",
+      "required_resolution": [
+        "provider_or_owner_identity",
+        "alt_universe_definition",
+        "flow_definition",
+        "three_day_window_formula",
+        "timestamp_cutoff_convention",
+        "source_version_identity",
+        "missing_and_stale_policy"
+      ],
+      "forbidden_resolution": "Do not infer from global stablecoin growth, later deployment metrics, exchange balances or narrative proxies unless a new descendant test is separately preregistered."
+    },
+    {
+      "field_id": "large_cap_alt_volume_share_3d",
+      "applies_to": ["PT-HS-001", "PT-HS-002"],
+      "status": "SOURCE_OWNER_NOT_FOUND_BLOCKED",
+      "required_resolution": [
+        "provider_or_owner_identity",
+        "large_cap_universe_definition",
+        "total_volume_denominator",
+        "three_day_window_formula",
+        "timestamp_cutoff_convention",
+        "source_version_identity",
+        "missing_and_stale_policy"
+      ],
+      "forbidden_resolution": "Do not substitute breadth, TOTAL3 returns, spot taker share or individual large-cap returns into the recovered legacy identity."
+    },
+    {
+      "field_id": "btc_dominance",
+      "applies_to": ["PT-HS-001", "PT-HS-002"],
+      "status": "SOURCE_IDENTITY_NOT_VERIFIED_BLOCKED",
+      "required_resolution": [
+        "exact_provider_identity",
+        "market_cap_denominator_definition",
+        "stablecoin_treatment",
+        "timestamp_cutoff_convention",
+        "source_version_identity"
+      ],
+      "reason": "Stage 1 documented a source/version boundary risk. Silent reuse of an unidentified dominance series is scientifically invalid."
+    }
+  ],
+  "available_but_not_frozen": [
+    {
+      "field_id": "eth_btc_direct",
+      "evidence_path": "04_MARKET_LEARNING/data_ping/2026-07-27__run_18debd32__machine-summary.json",
+      "observed_primitive": "ETHBTC_direct",
+      "status": "OWNER_EVIDENCE_FOUND_BINDING_PENDING"
+    },
+    {
+      "field_id": "breadth_context",
+      "evidence_path": "04_MARKET_LEARNING/breadth/forward/2026-07-11__breadth-snapshot-forward-001-compact.csv",
+      "observed_primitives": ["snapshot_timestamp_utc", "asset_id", "market_cap_rank", "universe_included", "return_7d", "return_30d_if_available", "data_quality"],
+      "status": "OWNER_EVIDENCE_FOUND_SEMANTICS_PENDING"
+    },
+    {
+      "field_id": "current_stack_context",
+      "evidence_path": "04_MARKET_LEARNING/data_ping/",
+      "status": "AVAILABLE_REQUIRES_TIMESTAMP_BINDING"
+    }
+  ],
+  "next_scientific_action": "Resolve owner-grade source contracts for the three blocking fields. If the two distinctive recovered inputs cannot be sourced prospectively without semantic substitution, keep PT-HS-001/PT-HS-002 preregistered but inactive and consider only a separately named modern-descendant test under a new definition and test ID."
+}
