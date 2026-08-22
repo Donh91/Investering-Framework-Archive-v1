@@ -25,6 +25,8 @@ def check(name, data, expected):
     print(f"PASS {name}: {expected}")
 
 check("not_testable", {"status":"TERMINAL_PROVIDER_NO_HISTORICAL_ROWS","returned_row_count":0,"interpretation":"must be marked NOT_TESTABLE"}, "DECLARE_NOT_TESTABLE")
+check("explicit_market_unavailable", {"status":"PASS","market_historical_availability":"NOT_TESTABLE_PROVIDER_UNAVAILABLE"}, "DECLARE_NOT_TESTABLE")
+check("note_only_not_testable_ignored", {"status":"PASS","notes":"historical discussion says NOT_TESTABLE but current source is healthy"}, "CONTINUE_SOURCE_MONITORING")
 check("stop_retry", {"status":"TERMINAL_PROVIDER_POLICY","no_additional_retry_authorized":True}, "STOP_RETRYING")
 check("stale", {"status":"STALE_SOURCE","source_stale":True}, "QUARANTINE_STALE_SOURCE")
 check("transform", {"transform_status":"FAIL_INVALID_SCHEMA"}, "REPAIR_TRANSFORM")
@@ -34,6 +36,11 @@ check("bounded_gapfill", {"status":"SOURCE_GAP","bounded_gapfill_authorized":Tru
 check("paid_voi_only", {"status":"SOURCE_GAP","paid_data_required":True}, "GENERATE_PAID_DATA_VOI_PACKET")
 check("verify_provenance", {"status":"PROVIDER_FAILURE","error":"unresolved owner receipt"}, "VERIFY_PROVENANCE")
 check("monitor", {"status":"PASS","verification_status":"VERIFIED"}, "CONTINUE_SOURCE_MONITORING")
+
+schema_doc = {"$schema":"https://json-schema.org/draft/2020-12/schema","$defs":{"source_health":{"properties":{"status":{"enum":["PASS","STALE"]}}}}}
+assert mod._is_schema_document(Path("data_terminal_contracts.schema.json"), schema_doc) is True
+assert mod._is_schema_document(Path("arbitrary.json"), schema_doc) is True
+print("PASS schema_documents_excluded_from_receipt_universe")
 
 entries = [
     {"path":"paid.json","data":{"paid_data_required":True},"content_hash":"1"},
