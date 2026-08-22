@@ -29,20 +29,32 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Build remediation queue
+      - name: Build remediation queue and merge research intake
         run: |
           python scripts/remediation/build_remediation_maturation.py \
+            --repo-root . \
+            --output-dir research/remediation
+          python scripts/remediation/merge_codex_research_intake.py \
             --repo-root . \
             --output-dir research/remediation
           cp research/remediation/LATEST_REMEDIATION_QUEUE.json LATEST_REMEDIATION_QUEUE.json
           cp research/remediation/LATEST_CODEX_READY_TASKS.json LATEST_CODEX_READY_TASKS.json
           cp research/remediation/LATEST_NEEDS_MORE_EVIDENCE.json LATEST_NEEDS_MORE_EVIDENCE.json
+          cp research/codex/LATEST_CODEX_EXECUTION_STATE.json LATEST_CODEX_EXECUTION_STATE.json
       - name: Commit queue and verify remote bytes
         shell: bash
         run: |
           git config user.name 'framework-remediation-bot'
           git config user.email 'framework-remediation-bot@users.noreply.github.com'
-          git add research/remediation LATEST_REMEDIATION_QUEUE.json LATEST_CODEX_READY_TASKS.json LATEST_NEEDS_MORE_EVIDENCE.json
+          git add \
+            research/remediation \
+            research/codex/LATEST_CODEX_EXECUTION_STATE.json \
+            research/codex/LATEST_CODEX_INTAKE_STATUS.json \
+            research/codex/CODEX_EXECUTION_LEDGER.jsonl \
+            LATEST_REMEDIATION_QUEUE.json \
+            LATEST_CODEX_READY_TASKS.json \
+            LATEST_NEEDS_MORE_EVIDENCE.json \
+            LATEST_CODEX_EXECUTION_STATE.json
           if git diff --cached --quiet; then exit 0; fi
           git commit -m "remediation: mature operational findings ${GITHUB_RUN_ID}"
           pushed=false
@@ -54,7 +66,7 @@ jobs:
           [ "$pushed" = true ]
           git fetch origin main
           git merge-base --is-ancestor HEAD origin/main
-          for path in LATEST_REMEDIATION_QUEUE.json LATEST_CODEX_READY_TASKS.json LATEST_NEEDS_MORE_EVIDENCE.json; do
+          for path in LATEST_REMEDIATION_QUEUE.json LATEST_CODEX_READY_TASKS.json LATEST_NEEDS_MORE_EVIDENCE.json LATEST_CODEX_EXECUTION_STATE.json; do
             local_sha=$(sha256sum "$path" | awk '{print $1}')
             remote_sha=$(git show "origin/main:$path" | sha256sum | awk '{print $1}')
             [ "$local_sha" = "$remote_sha" ]
@@ -77,10 +89,15 @@ jobs:
           d=json.load(open('LATEST_CODEX_READY_TASKS.json'))
           print('# Codex-ready remediation queue\n')
           print(f"Generated: `{d.get('generated_at_utc')}`\n")
-          print('Use `LATEST_CODEX_READY_TASKS.json` as the machine authority. Re-read fresh health before changing code, bind the task with its transition receipt command, and stop as a clean no-op if the precondition no longer holds. Do not broaden change scope, modify market rules, self-merge or bypass tests.\n')
+          print('Use `LATEST_CODEX_READY_TASKS.json` as the machine authority. Research candidates can enter this same queue through the governed intake contract. Re-read fresh task evidence, run the task-specific binding command, and stop as a clean no-op if the precondition no longer holds. Do not broaden change scope, modify market rules, self-merge or bypass tests.\n')
           for t in d.get('tasks', []):
               print(f"## {t.get('workflow')} / {t.get('finding')}")
               print(f"- Signature: `{t.get('signature')}`")
+              print(f"- Source: `{t.get('source_type', 'AUTOMATION_HEALTH')}`")
+              if t.get('candidate_id'):
+                  print(f"- Candidate: `{t.get('candidate_id')}`")
+              if t.get('requested_priority'):
+                  print(f"- Priority: `{t.get('requested_priority')}`")
               print(f"- Run: `{t.get('latest_run_id')}`")
               print(f"- Objective: {t.get('objective')}")
               print(f"- Precondition: {t.get('precondition')}")
@@ -101,6 +118,10 @@ jobs:
         if: always()
         with:
           name: remediation-maturation-${{ github.run_id }}
-          path: research/remediation/
+          path: |
+            research/remediation/
+            research/codex/LATEST_CODEX_EXECUTION_STATE.json
+            research/codex/LATEST_CODEX_INTAKE_STATUS.json
+            research/codex/CODEX_EXECUTION_LEDGER.jsonl
           retention-days: 14
           if-no-files-found: error

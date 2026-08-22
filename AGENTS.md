@@ -12,10 +12,36 @@ Before automation, incident, API-agent, Codex, scheduled delivery or remediation
 4. `research/architecture_health/LATEST_ARCHITECTURE_HEALTH.json`
 5. `LATEST_REMEDIATION_QUEUE.json`
 6. `LATEST_CODEX_READY_TASKS.json` when code remediation is relevant
-7. `00_FMOS/AUTOMATION_ORCHESTRATION_ARCHITECTURE_v2.md`
-8. the exact workflow, receipt, pointer, run and job logs
+7. `LATEST_CODEX_EXECUTION_STATE.json` when Codex, remediation or research-to-code handoff is relevant
+8. `00_FMOS/AUTOMATION_ORCHESTRATION_ARCHITECTURE_v2.md`
+9. the exact workflow, receipt, pointer, run and job logs
 
-A health report may be RED while its observer workflow correctly succeeds after durable publication. `CODEX_READY` is a bounded task package, not proof that Codex has run, changed code or merged. Do not work from conversation memory or an issue summary when newer hash-bound operational files exist.
+A health report may be RED while its observer workflow correctly succeeds after durable publication. `CODEX_READY` is a bounded task package, not proof that Codex has run, changed code or merged. `LATEST_CODEX_EXECUTION_STATE.json` is observability only and never overrides `LATEST_CODEX_READY_TASKS.json`. Do not work from conversation memory or an issue summary when newer hash-bound operational files exist.
+
+### 0.1 Research to Codex fast intake
+
+When a research thread, Deep Research review, audit or external review finds a reproducible bounded code defect, or the user says an equivalent of `sæt dette i Codex-køen`, load `.agents/skills/codex-intake/SKILL.md`.
+
+Research may submit evidence but may not self-declare `CODEX_READY`. The governed path is:
+
+```text
+research finding
+-> deduplicate against LATEST_CODEX_READY_TASKS.json
+-> CODEX_RESEARCH_CANDIDATE_v1 on isolated branch/PR
+-> research/codex/intake/YYYY/MM/<candidate_id>.json on main
+-> event-driven Remediation Maturation Controller
+-> CODEX_READY / NEEDS_MORE_EVIDENCE / DEDUPED_TO_HEALTH_TASK / REJECTED
+-> fresh-state binding
+-> bounded Codex PR
+-> CI and review
+-> merge
+-> verification/completion receipt
+-> execution ledger
+```
+
+A candidate merged to the intake path triggers remediation maturation immediately. It does not need to wait for the normal 05:45/17:45 reconciliation schedule. `EXPEDITED` affects queue ordering only and never bypasses evidence, authority, CI, review or post-fix gates.
+
+The operational contract is `07_PROMPTS_AND_AGENTS/codex/2026-08-22__codex-research-intake-and-execution-ledger-v1__operational.md`. If a research thread lacks GitHub write capability, it must return a schema-complete candidate payload and explicitly state that it was not persisted.
 
 ## 1. Read order
 
@@ -162,6 +188,7 @@ Default composition order:
 2. `prospective-evidence-ledger` for active test and ledger row lifecycle work.
 3. The existing domain validator or scorer when applicable.
 4. `research-lab-red-team` when interpreting evidence, testing survival or considering promotion.
-5. `archive-governance` before any repository write.
+5. `codex-intake` when a reproducible bounded research finding should become a code-remediation candidate.
+6. `archive-governance` before any repository write.
 
 Skills define procedure. Canonical repository files define current truth. A skill must never become a parallel source of market rules.

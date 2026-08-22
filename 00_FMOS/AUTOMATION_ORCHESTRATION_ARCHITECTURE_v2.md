@@ -26,8 +26,9 @@ For automation, incident, GitHub Actions, API-agent, Codex or delivery work:
 4. `research/architecture_health/LATEST_ARCHITECTURE_HEALTH.json`
 5. `LATEST_REMEDIATION_QUEUE.json`
 6. `LATEST_CODEX_READY_TASKS.json` when code remediation is relevant
-7. `AGENTS.md`, canonical index, registries and the relevant skill
-8. the exact workflow, receipt, pointer, run and job logs
+7. `LATEST_CODEX_EXECUTION_STATE.json` when Codex or research-to-code handoff is relevant
+8. `AGENTS.md`, canonical index, registries and the relevant skill
+9. the exact workflow, receipt, pointer, run and job logs
 
 Conversation memory and stale issue descriptions are not operational authority when these files exist.
 
@@ -46,6 +47,8 @@ The ordering is deliberate:
 - Health reads actual workflow state and publishes the fleet report.
 - Remediation matures the new health findings into observe, evidence, self-heal, Codex or framework-owner lanes.
 - Dashboard reads both health and remediation outputs and exposes one combined cockpit.
+
+Research-to-Codex intake has an additional event path. The non-writing `codex-intake-dispatch.yml` workflow listens only for durable changes under `research/codex/intake/`, `research/codex/transitions/` and `research/codex/completions/`, then dispatches the guarded Remediation Maturation Controller through `workflow_dispatch`. The main-writing remediation workflow itself remains free of push triggers and serialized by `framework-main-writer`.
 
 Cron ordering is not a finality guarantee. Each consumer must validate timestamp, contract and hash of its input and remain explicit when the newest upstream output is unavailable.
 
@@ -93,11 +96,39 @@ The controller publishes:
 - `LATEST_REMEDIATION_QUEUE.json`
 - `LATEST_CODEX_READY_TASKS.json`
 - `LATEST_NEEDS_MORE_EVIDENCE.json`
+- `LATEST_CODEX_EXECUTION_STATE.json` as observability only
+- `research/codex/LATEST_CODEX_INTAKE_STATUS.json`
+- `research/codex/CODEX_EXECUTION_LEDGER.jsonl`
 - one deduplicated GitHub issue titled `CODEX READY REMEDIATION QUEUE`
+
+`LATEST_CODEX_READY_TASKS.json` remains the only machine authority for work that is currently ready for Codex. The execution state and ledger are read-only observability surfaces and cannot promote a task.
+
+### Research-to-Codex intake
+
+Bounded code-remediation candidates may originate from Automation Production Health or from durable research intake. Research threads do not gain code authority and cannot set `CODEX_READY` directly.
+
+The governed research path is:
+
+```text
+research finding
+-> deduplicate against current Codex/remediation signatures
+-> CODEX_RESEARCH_CANDIDATE_v1
+-> isolated branch and PR
+-> research/codex/intake/YYYY/MM/<candidate_id>.json on main
+-> codex-intake-dispatch.yml (non-writing event listener)
+-> workflow_dispatch of guarded Remediation Maturation Controller
+-> CODEX_READY / NEEDS_MORE_EVIDENCE / DEDUPED_TO_HEALTH_TASK / REJECTED
+```
+
+The dispatcher is event-driven. A candidate does not wait for the normal 05:45/17:45 maturation schedule after it lands on `main`. The normal schedule remains a reconciliation and recovery path.
+
+Candidate contract authority is defined by `research/codex/CODEX_RESEARCH_CANDIDATE.schema.json` and `.agents/skills/codex-intake/SKILL.md`. A valid standalone research candidate must include bounded change scope, durable evidence, reproduction, positive and negative acceptance tests and explicit code-only authority. `EXPEDITED` changes queue ordering only.
+
+If the candidate links to an active health signature, research evidence is attached to the existing task instead of creating duplicate remediation authority.
 
 Each task must preserve:
 
-- exact signature and run identity,
+- exact signature and source identity,
 - a concrete objective and fresh-state precondition,
 - explicit clean-no-op, stop and escalation conditions,
 - allowed change paths,
@@ -105,9 +136,13 @@ Each task must preserve:
 - required positive and negative tests,
 - post-fix production observation.
 
-Before code remediation begins, the task must be revalidated against fresh Automation Production Health and bound to a non-default task branch through `scripts/remediation/write_transition_receipt.py`. A stale task is `CLEARED_NO_CHANGE`; it must not be repaired speculatively. A valid hash-bound receipt moves the finding into `IN_REMEDIATION`. Receipts are validated on readback against their filename/signature, workflow/finding identity, task-contract hash, safe branch and receipt SHA-256. Invalid receipts are reported and ignored. Disappearance after a bound remediation enters `POST_FIX_OBSERVATION`; it is not `RESOLVED` until the post-fix gate is satisfied. A returning signature becomes `REOPENED` and requires a newly generated transition receipt before remediation can resume.
+Health-origin code remediation must be revalidated against fresh Automation Production Health and bound to a non-default task branch through `scripts/remediation/write_transition_receipt.py`. Standalone research-origin tasks use their task-specific `scripts/remediation/write_codex_research_transition_receipt.py` command, which verifies candidate identity, candidate hash, task-contract hash, code-only authority and safe branch before recording `IN_REMEDIATION` under `research/codex/transitions/`.
 
-No automation may self-merge a Codex change. Model weights, market gates, canonical predecessor rules, authority boundaries, portfolio logic and API budget remain framework-owner proposal-only.
+A stale task must not be repaired speculatively. A valid hash-bound receipt moves the finding into `IN_REMEDIATION`. Invalid receipts are reported and ignored. Health-origin disappearance after bound remediation enters `POST_FIX_OBSERVATION`; it is not `RESOLVED` until the post-fix gate is satisfied. A returning health signature becomes `REOPENED` and requires a newly generated transition receipt before remediation can resume. Research-origin tasks require a hash-bound completion receipt after merge and verification before the execution ledger may show `RESOLVED`.
+
+`research/codex/CODEX_EXECUTION_LEDGER.jsonl` records state or contract transitions from activation of Codex Intake v1 forward. Its first production pass imports the currently visible remediation tasks as a baseline without pretending to have observed older activity live. Earlier history remains reconstructable through remediation history, transition receipts, issues, PRs and commits.
+
+No automation may self-merge a Codex change. Model weights, market gates, canonical predecessor rules, authority boundaries, portfolio logic, API budget and new policy semantics remain framework-owner proposal-only.
 
 ## API-agent failure semantics
 
@@ -152,16 +187,22 @@ The main repository is the only current automation control plane. The other two 
 
 Future workflows in the experiment or Cycle Navigator repositories must publish a hash-bound handoff back to the main repository and be registered in Automation Production Health before being considered active framework infrastructure.
 
+Research in any repository or thread that wants Codex remediation must hand the candidate into the canonical control plane. It may not create a parallel Codex queue in Experiments or Cycle Navigator.
+
 ## Acceptance
 
 Automation architecture is current only when:
 
 - all main writers use `framework-main-writer`, explicit `main` checkout, retry, abort and readback,
+- no generic push event directly executes a main-writing workflow,
+- the Codex intake event listener remains non-writing and only dispatches the guarded remediation writer,
 - scheduled workflows use explicit `Europe/Copenhagen` where local timing matters,
 - lifecycle declarations are timestamped, validated and cannot mask active production failures,
 - artifacts have bounded retention and durable evidence is committed separately,
 - health does not self-poison,
-- remediation has a visible Codex queue, fresh-state preflight, hash-bound transition receipts and post-fix evidence lane,
+- remediation has one visible source-agnostic Codex queue, fresh-state preflight, hash-bound transition receipts and post-fix evidence lane,
+- research intake is schema-bound, deduplicated and event-driven without becoming authority,
+- Codex execution state and ledger remain observability-only,
 - strict API failures produce durable receipts,
 - the full CI suite passes,
 - real production runs enter post-fix observation before incidents are resolved.
