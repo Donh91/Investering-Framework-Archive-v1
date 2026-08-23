@@ -1,0 +1,155 @@
+{
+  "contract": "BUILDWITHCLAUDE_SHADOW_ADMISSION_ROUND1_v1",
+  "authority": "RESEARCH_ONLY_NON_CANONICAL",
+  "canonical_effect": false,
+  "portfolio_execution": false,
+  "paid_data_authorized": false,
+  "external_provider_calls_authorized": false,
+  "baseline": "CURRENT_FRAMEWORK_WITHOUT_ROUND1_CANDIDATES",
+  "candidates": [
+    {
+      "id": "BWC-R1-C1-PROPERTY-INVARIANTS",
+      "name": "Property-based invariant testing",
+      "type": "TEST_INSTRUMENT",
+      "origin": "BuildWithClaude public agent-engineering pattern, reimplemented in-house without external dependency",
+      "problem_to_solve": "Example-based validation may miss edge cases in research-governance helper logic.",
+      "existing_capability_overlap": "Existing validators and CI cover known cases but no repository-wide property/fuzz discipline was found.",
+      "classification": "SHADOW_CANDIDATE",
+      "success_criteria": [
+        ">=1000 deterministic generated cases",
+        "zero preregistered invariant violations on baseline",
+        ">=6 independent invariants exercised",
+        "no repository writes",
+        "no external service or package dependency"
+      ],
+      "failure_criteria": [
+        "flaky or non-reproducible result",
+        "material runtime burden",
+        "no coverage beyond existing validators",
+        "requires market data or external calls"
+      ],
+      "rollback_criteria": ["delete isolated probe and workflow reference"],
+      "complexity_tax": {
+        "maintenance": "LOW",
+        "dependencies": "NONE_STDLIB_ONLY",
+        "api_or_token_cost": "NONE",
+        "latency": "MEASURED_IN_SHADOW",
+        "source_fragility": "LOW",
+        "security_privacy": "LOW_NO_EXTERNAL_EGRESS",
+        "governance_burden": "LOW",
+        "correlated_failure_risk": "LOW"
+      },
+      "promotion_gate": "Repeated stable runs plus real defect discovery or mutation protection not already provided by baseline."
+    },
+    {
+      "id": "BWC-R1-C2-MUTATION",
+      "name": "Mutation testing for critical research-governance contracts",
+      "type": "TEST_STRENGTH_INSTRUMENT",
+      "origin": "BuildWithClaude public mutation-testing pattern, reimplemented in-house with temporary files only",
+      "problem_to_solve": "Green tests do not prove they detect small dangerous logic changes.",
+      "existing_capability_overlap": "Existing CI executes validators but does not measure mutation kill rate.",
+      "classification": "SHADOW_CANDIDATE",
+      "success_criteria": [
+        "temporary-copy mutations only",
+        "preregistered governance-critical mutation set",
+        "kill rate >=80% to continue shadow testing",
+        "no source-tree mutation",
+        "no external dependency"
+      ],
+      "failure_criteria": [
+        "real source mutation",
+        "non-reproducible result",
+        "persistent low kill rate without actionable coverage insight",
+        "runtime cost exceeds quality benefit"
+      ],
+      "rollback_criteria": ["delete mutation probe; no production code rollback required"],
+      "complexity_tax": {
+        "maintenance": "LOW_TO_MEDIUM",
+        "dependencies": "NONE_STDLIB_ONLY",
+        "api_or_token_cost": "NONE",
+        "latency": "MEASURED_IN_SHADOW",
+        "source_fragility": "MEDIUM_MUTATIONS_TRACK_SOURCE_PATTERNS",
+        "security_privacy": "LOW",
+        "governance_burden": "LOW_TO_MEDIUM",
+        "correlated_failure_risk": "LOW"
+      },
+      "promotion_gate": "Stable high kill rate and evidence of a meaningful coverage gap or critical-contract protection at acceptable cost."
+    },
+    {
+      "id": "BWC-R1-C3-SESSION-TELEMETRY",
+      "name": "Session telemetry and execution observability",
+      "type": "OPERATIONAL_MEASUREMENT_INSTRUMENT",
+      "origin": "BuildWithClaude public agent-session observability pattern, reduced to local privacy-preserving metrics",
+      "problem_to_solve": "Some complexity-tax costs are qualitative rather than measured.",
+      "existing_capability_overlap": "GitHub Actions exposes job status but not a normalized local research-helper cost/failure schema.",
+      "classification": "SHADOW_CANDIDATE",
+      "success_criteria": [
+        "duration and exit-code capture",
+        "stdout/stderr byte counts and hashes only",
+        "resource usage captured where available",
+        "raw stdout/stderr never persisted",
+        "non-zero exit correctly represented",
+        "stable JSON schema",
+        "no external telemetry backend"
+      ],
+      "failure_criteria": [
+        "secret or raw-output leakage",
+        "unstable schema",
+        "material runtime overhead",
+        "no incremental value over existing CI metadata"
+      ],
+      "rollback_criteria": ["remove wrapper and telemetry artifact generation"],
+      "complexity_tax": {
+        "maintenance": "LOW",
+        "dependencies": "NONE_STDLIB_ONLY",
+        "api_or_token_cost": "NONE",
+        "latency": "SELF_MEASURED",
+        "source_fragility": "LOW",
+        "security_privacy": "MUST_REMAIN_LOCAL_HASHED_METADATA_ONLY",
+        "governance_burden": "LOW",
+        "correlated_failure_risk": "LOW"
+      },
+      "promotion_gate": "Useful cost/failure measurements across multiple research jobs that improve complexity-tax decisions."
+    },
+    {
+      "id": "BWC-R1-C4-GUARDRAILS",
+      "name": "Minimal pre/post-flight shadow guardrails",
+      "type": "SAFETY_INSTRUMENT",
+      "origin": "BuildWithClaude public hook/guardrail pattern, implemented as repository-local fail-closed pre/post checks",
+      "problem_to_solve": "Shadow helpers should prove they stay inside permitted surfaces before and after execution.",
+      "existing_capability_overlap": "CI gates exist, but this adds an explicit candidate-scope firewall and post-run cleanliness proof.",
+      "classification": "SHADOW_CANDIDATE",
+      "success_criteria": [
+        "100% block on synthetic protected-path mutation",
+        "100% pass on allowed shadow paths",
+        "dirty working-tree detection",
+        "candidate runs leave repository clean",
+        "no production workflow or market-state mutation"
+      ],
+      "failure_criteria": [
+        "false blocks on legitimate shadow work",
+        "missed protected-path violation",
+        "brittle path policy without review",
+        "material maintenance burden"
+      ],
+      "rollback_criteria": ["remove dedicated guardrail probe; production gates remain unchanged"],
+      "complexity_tax": {
+        "maintenance": "LOW_TO_MEDIUM",
+        "dependencies": "GIT_AND_STDLIB_ONLY",
+        "api_or_token_cost": "NONE",
+        "latency": "LOW_EXPECTED_MEASURED_IN_SHADOW",
+        "source_fragility": "MEDIUM_PATH_POLICY_REQUIRES_REVIEW",
+        "security_privacy": "LOW",
+        "governance_burden": "MEDIUM_IF_PROMOTED",
+        "correlated_failure_risk": "LOW"
+      },
+      "promotion_gate": "Repeated zero-false-positive operation plus demonstrated ability to block an unsafe synthetic or real change."
+    }
+  ],
+  "decision": {
+    "classification": "SHADOW_TESTING",
+    "measurably_better_after_complexity_tax": null,
+    "review_required_before_any_promotion": true,
+    "market_decision_authority_permitted": false
+  }
+}
