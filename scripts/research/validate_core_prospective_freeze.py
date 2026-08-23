@@ -21,7 +21,15 @@ def main() -> None:
     assert contract["family_contracts"]["ETHBTC_PERSISTENCE"]["definition"]["lookback_rows"] == 168
     assert contract["source_binding_contract"]["contract"] == "SHARED_ROW_SOURCE_BINDING_MANIFEST_v1"
     assert contract["prospective_eligibility_status"] == "CONTAINMENT_SENTINEL_NOT_AN_ACTIVATION_FLOOR"
-    assert contract["prospective_activation"]["post_repair_source_capture_not_before_utc"] is None
+    activation = contract["prospective_activation"]
+    implementation_commit = activation.get("implementation_merge_commit")
+    boundary = activation.get("post_repair_source_capture_not_before_utc")
+    if implementation_commit is None:
+        assert boundary is None
+    else:
+        assert len(implementation_commit) == 40
+        assert boundary == activation.get("implementation_merged_at_utc")
+        assert activation.get("readiness_must_be_reproduced_from_actual_bound_sources") is True
     assert freeze["core_activation_rule"]["containment_floor_sentinel"] is True
     assert freeze["core_activation_rule"]["collection_state"] == "QUARANTINED_PENDING_POST_REPAIR_EVIDENCE"
     assert all(
