@@ -1,0 +1,54 @@
+name: Round 3 Contract Freeze Gate
+
+on:
+  pull_request:
+    paths:
+      - '06_RESEARCH_LAB/round3_new_information_v1/**'
+      - 'scripts/research/validate_round3_contract_freeze.py'
+      - '.github/workflows/round3-contract-freeze-gate.yml'
+  push:
+    branches: [main]
+    paths:
+      - '06_RESEARCH_LAB/round3_new_information_v1/**'
+      - 'scripts/research/validate_round3_contract_freeze.py'
+      - '.github/workflows/round3-contract-freeze-gate.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Parse machine-readable contracts
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path('06_RESEARCH_LAB/round3_new_information_v1')
+          for p in root.glob('*.json'):
+              json.loads(p.read_text())
+              print('JSON_PASS',p)
+          PY
+      - name: Validate frozen Round 3 contract
+        run: python scripts/research/validate_round3_contract_freeze.py
+      - name: Assert collection remains non-active on public repo
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path('06_RESEARCH_LAB/round3_new_information_v1')
+          s=json.loads((root/'COLLECTION_STATUS.json').read_text())
+          z=json.loads((root/'COLLECTION_ZONE_CONTRACT_v1.json').read_text())
+          assert s['collection_active'] is False
+          assert s['hypothesis_testing_active'] is False
+          assert s['outcome_scoring_active'] is False
+          assert z['canonical_framework_repo']['raw_provider_payloads_allowed'] is False
+          assert z['activation_gate']['provider_calls_from_round3_collection_before_pass'] is False
+          print('ROUND3_PUBLIC_REPO_FIREWALL_PASS')
+          PY
