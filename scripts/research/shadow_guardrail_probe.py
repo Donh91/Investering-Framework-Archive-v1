@@ -14,6 +14,12 @@ ALLOWED_EXACT = {
     "06_RESEARCH_LAB/protocols/SHADOW_IDEA_ADMISSION_TEMPLATE_v1.json",
     ".github/workflows/buildwithclaude-shadow-round1.yml",
     ".github/workflows/buildwithclaude-shadow-prospective-observer.yml",
+    ".github/workflows/buildwithclaude-shadow-evidence-ledger.yml",
+    ".github/workflows/shadow-admission-ai-decider.yml",
+    "research/api_agent/SHADOW_ADMISSION_AI_POLICY_v1.json",
+    "scripts/api_agent/shadow_admission_ai_decider.py",
+    "scripts/master_monday/publish_master_monday_outputs.py",
+    "tests/api_agent/test_shadow_admission_ai_decider.py",
     "scripts/research/validate_buildwithclaude_shadow_round1.py",
 }
 
@@ -98,6 +104,12 @@ def self_test() -> Dict[str, Any]:
         "scripts/research/shadow_property_invariant_probe.py",
         ".github/workflows/buildwithclaude-shadow-round1.yml",
         ".github/workflows/buildwithclaude-shadow-prospective-observer.yml",
+        ".github/workflows/buildwithclaude-shadow-evidence-ledger.yml",
+        ".github/workflows/shadow-admission-ai-decider.yml",
+        "research/api_agent/SHADOW_ADMISSION_AI_POLICY_v1.json",
+        "scripts/api_agent/shadow_admission_ai_decider.py",
+        "scripts/master_monday/publish_master_monday_outputs.py",
+        "tests/api_agent/test_shadow_admission_ai_decider.py",
     ]
     blocked = [
         "01_CORE_FRAMEWORK/state.json",

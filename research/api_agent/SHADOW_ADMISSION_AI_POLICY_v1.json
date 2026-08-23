@@ -1,0 +1,35 @@
+{
+  "contract": "SHADOW_ADMISSION_AI_POLICY_v1",
+  "status": "ACTIVE",
+  "decision_authority": "OPENAI_API_AUTONOMOUS",
+  "human_confirmation_required": false,
+  "model": "gpt-5.6-sol",
+  "reasoning_effort": "high",
+  "max_output_tokens": 3200,
+  "single_run_hard_stop_usd": 0.75,
+  "candidate_registry_path": "06_RESEARCH_LAB/buildwithclaude_shadow_round1_v1/ROUND1_CANDIDATES.json",
+  "prospective_policy_path": "06_RESEARCH_LAB/buildwithclaude_shadow_round1_v1/PROSPECTIVE_OBSERVATION_POLICY.md",
+  "evidence_root": "06_RESEARCH_LAB/buildwithclaude_shadow_round1_v1/evidence",
+  "state_path": "research/api_agent/outputs/shadow_admission/LATEST_CANDIDATE_LIFECYCLE_STATE.json",
+  "latest_decision_path": "research/api_agent/outputs/shadow_admission/LATEST_SHADOW_ADMISSION_DECISION.json",
+  "allowed_decisions": [
+    "PROMOTE_OPERATIONAL_HELPER",
+    "KEEP_SHADOW",
+    "ARCHIVE_ONLY",
+    "RETIRED"
+  ],
+  "authority_ceiling": "OPERATIONAL_HELPER",
+  "forbidden_effects": [
+    "MARKET_SEMANTIC_CHANGE",
+    "THRESHOLD_CHANGE",
+    "MODEL_WEIGHT_CHANGE",
+    "PORTFOLIO_ACTION",
+    "EXECUTION_AUTHORITY",
+    "PROSPECTIVE_FLOOR_CHANGE",
+    "OUTCOME_LABEL_CHANGE",
+    "PROTECTED_OBJECTIVE_CHANGE"
+  ],
+  "master_monday_mode": "REPORT_AFTER_DECISION_NO_APPROVAL_PROMPT",
+  "deterministic_validator_role": "SCHEMA_IDENTITY_EVIDENCE_BINDING_AUTHORITY_CEILING_ONLY",
+  "deterministic_validator_may_override_substantive_decision": false
+}

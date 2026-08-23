@@ -25,16 +25,61 @@ Discovery, novelty, popularity, a persuasive benchmark, an external author's cla
 6. **Incremental-value test** - compare against the existing framework or simplest relevant baseline. The candidate must add information, reliability, coverage, resilience or operational efficiency that is not already available.
 7. **Complexity tax** - explicitly account for maintenance, dependencies, tokens/API spend, latency, source fragility, security/privacy, governance burden, correlated failure modes and agent coordination cost.
 8. **Adversarial validation** - test leakage, redundancy, stale data, unavailable dependencies, provider changes, malformed outputs, contradictory signals and fail-closed behavior where relevant.
-9. **Promotion decision** - only evidence-backed candidates may move from shadow to production/canonical use through the appropriate reviewed change path.
-10. **Post-promotion monitoring** - promotion is reversible. If incremental value disappears or complexity exceeds benefit, downgrade, disable or remove the component.
+9. **Autonomous promotion decision** - the designated OpenAI API lifecycle decider decides PASS/FAIL and the evidence-backed lifecycle transition. Human owner confirmation is not required. Deterministic machinery validates the decision contract and applies only transitions permitted by the candidate's frozen authority ceiling.
+10. **Post-promotion monitoring** - promotion is reversible. The same autonomous governance may downgrade, archive or retire a component when incremental value disappears or complexity exceeds benefit.
+
+## Autonomous AI decision authority
+
+The framework owner delegates lifecycle judgment to the designated OpenAI API decision layer.
+
+For a candidate whose frozen ceiling is `OPERATIONAL_HELPER`, the AI may autonomously choose:
+
+- `PROMOTE_OPERATIONAL_HELPER`,
+- `KEEP_SHADOW`,
+- `ARCHIVE_ONLY`,
+- `RETIRED`.
+
+The AI decision is authoritative for candidate lifecycle status when its structured decision receipt passes deterministic contract validation. A deterministic validator may reject a malformed, incomplete, unknown-candidate or out-of-authority response, but it must not substitute its own substantive PASS/FAIL judgment.
+
+If evidence is insufficient, the AI must keep the candidate in shadow. No fixed number of green runs is by itself a promotion rule unless that requirement was preregistered in the candidate contract.
+
+## Separation of judgment and execution
+
+Autonomous judgment does not mean unrestricted write authority.
+
+- The OpenAI API model decides whether the evidence justifies the lifecycle transition.
+- Deterministic code verifies schema integrity, evidence binding, candidate identity, authority ceiling and rollback metadata.
+- Operational-helper transitions may be applied automatically within their predeclared non-market scope.
+- A transition that would change market semantics, thresholds, weights, canonical truth, portfolio/execution authority, prospective floors, outcome labels or another protected objective must be routed through the framework's stronger automated governance and adversarial validation path.
+- Stronger routing is not a request for owner approval. It is an automated safety and scientific-validity boundary.
+
+No general analytical API task gains unrestricted repository authority from this rule. Lifecycle authority is narrow, task-specific and evidence-bound.
+
+## Master Monday reporting
+
+Master Monday is an audit and explanation surface, not a human approval gate.
+
+When autonomous lifecycle decisions exist, Master Monday should report at minimum:
+
+- candidate ID and name,
+- prior lifecycle state,
+- AI decision and resulting state,
+- evidence sufficiency and confidence,
+- incremental-value rationale,
+- complexity-tax assessment,
+- implementation status,
+- rollback path,
+- any stronger automated governance route that was required.
+
+The default presentation is informational. It must not ask the owner to approve an otherwise valid autonomous decision.
 
 ## Required decision question
 
-Before promotion, reviewers and agents must answer:
+Before promotion, the designated AI decider must answer:
 
 `Does this candidate make the framework measurably better after accounting for the complexity it adds?`
 
-If the answer is unknown, the candidate remains shadow. If the answer is no, reject or archive it.
+If the answer is unknown, the candidate remains shadow. If the answer is no, reject, archive or retire it.
 
 ## Anti-overfit rules
 
@@ -66,8 +111,8 @@ A useful external component may be sandboxed or used as a research instrument be
 - `SHADOW_TESTING` - isolated test with preregistered acceptance criteria.
 - `FORWARD_TEST` - prospective validation required before decision influence.
 - `OPERATIONAL_HELPER` - proven workflow benefit but no authority over market/portfolio semantics.
-- `CANONICAL_CANDIDATE` - evidence supports reviewed integration.
-- `CANONICAL` - approved and governed production component.
+- `CANONICAL_CANDIDATE` - evidence supports integration through the stronger automated governance path.
+- `CANONICAL` - governed production component within its approved authority contract.
 - `RETIRED` - previously useful but no longer justifies its complexity.
 
 ## Simplicity preference

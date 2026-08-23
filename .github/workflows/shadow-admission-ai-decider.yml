@@ -1,0 +1,117 @@
+name: Shadow Admission AI Decider
+
+on:
+  pull_request:
+    paths:
+      - '06_RESEARCH_LAB/protocols/SHADOW_IDEA_ADMISSION_RULE_v1.md'
+      - '06_RESEARCH_LAB/buildwithclaude_shadow_round1_v1/**'
+      - 'research/api_agent/SHADOW_ADMISSION_AI_POLICY_v1.json'
+      - 'scripts/api_agent/shadow_admission_ai_decider.py'
+      - 'tests/api_agent/test_shadow_admission_ai_decider.py'
+      - '.github/workflows/shadow-admission-ai-decider.yml'
+      - 'scripts/master_monday/publish_master_monday_outputs.py'
+  schedule:
+    - cron: '50 1 * * 1'
+      timezone: 'Europe/Copenhagen'
+  workflow_dispatch:
+
+concurrency:
+  group: framework-main-writer
+  cancel-in-progress: false
+
+jobs:
+  contract-test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compile autonomous lifecycle decider
+        run: python -m py_compile scripts/api_agent/shadow_admission_ai_decider.py
+      - name: Run lifecycle contract tests
+        run: python -m unittest tests.api_agent.test_shadow_admission_ai_decider -v
+      - name: Dry-run full decision pipeline
+        run: >-
+          python -m scripts.api_agent.shadow_admission_ai_decider
+          --policy research/api_agent/SHADOW_ADMISSION_AI_POLICY_v1.json
+          --candidate-registry 06_RESEARCH_LAB/buildwithclaude_shadow_round1_v1/ROUND1_CANDIDATES.json
+          --prospective-policy 06_RESEARCH_LAB/buildwithclaude_shadow_round1_v1/PROSPECTIVE_OBSERVATION_POLICY.md
+          --evidence-root 06_RESEARCH_LAB/buildwithclaude_shadow_round1_v1/evidence
+          --state-file research/api_agent/outputs/shadow_admission/LATEST_CANDIDATE_LIFECYCLE_STATE.json
+          --output-dir runtime/shadow-admission-dry-run
+          --dry-run
+      - uses: actions/upload-artifact@v4
+        with:
+          name: shadow-admission-contract-${{ github.run_id }}
+          path: runtime/shadow-admission-dry-run
+          retention-days: 14
+
+  autonomous-decision:
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    needs: contract-test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Enforce global API cost guard
+        run: >-
+          python scripts/api_agent/check_monthly_cost_guard.py
+          --receipt-root research/api_agent/outputs
+          --pending-ledger-root runtime/api-cost-ledger
+          --hard-stop-usd 20
+          --reserve-usd 1.0
+      - name: Run authoritative Sol lifecycle decision
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: >-
+          python -m scripts.api_agent.shadow_admission_ai_decider
+          --policy research/api_agent/SHADOW_ADMISSION_AI_POLICY_v1.json
+          --candidate-registry 06_RESEARCH_LAB/buildwithclaude_shadow_round1_v1/ROUND1_CANDIDATES.json
+          --prospective-policy 06_RESEARCH_LAB/buildwithclaude_shadow_round1_v1/PROSPECTIVE_OBSERVATION_POLICY.md
+          --evidence-root 06_RESEARCH_LAB/buildwithclaude_shadow_round1_v1/evidence
+          --state-file research/api_agent/outputs/shadow_admission/LATEST_CANDIDATE_LIFECYCLE_STATE.json
+          --output-dir runtime/shadow-admission-live
+      - name: Materialize auditable lifecycle decision
+        run: |
+          STAMP=$(date -u +%Y%m%dT%H%M%SZ)
+          DEST="research/api_agent/outputs/shadow_admission/history/${STAMP}_${GITHUB_RUN_ID}"
+          mkdir -p "$DEST" research/api_agent/outputs/shadow_admission
+          cp runtime/shadow-admission-live/decision.json "$DEST/decision.json"
+          cp runtime/shadow-admission-live/receipt.json "$DEST/receipt.json"
+          cp runtime/shadow-admission-live/candidate_lifecycle_state.json "$DEST/candidate_lifecycle_state.json"
+          cp runtime/shadow-admission-live/decision.json research/api_agent/outputs/shadow_admission/LATEST_SHADOW_ADMISSION_DECISION.json
+          cp runtime/shadow-admission-live/receipt.json research/api_agent/outputs/shadow_admission/LATEST_SHADOW_ADMISSION_RECEIPT.json
+          cp runtime/shadow-admission-live/candidate_lifecycle_state.json research/api_agent/outputs/shadow_admission/LATEST_CANDIDATE_LIFECYCLE_STATE.json
+      - name: Commit autonomous decision
+        run: |
+          git config user.name framework-ai-lifecycle-agent
+          git config user.email framework-ai-lifecycle-agent@users.noreply.github.com
+          git add research/api_agent/outputs/shadow_admission
+          if ! git diff --cached --quiet; then
+            git commit -m "ai: autonomous shadow lifecycle decision ${GITHUB_RUN_ID}"
+          fi
+          pushed=false
+          for attempt in 1 2 3; do
+            git rebase --abort 2>/dev/null || true
+            if git pull --rebase origin main && git push origin HEAD:main; then pushed=true; break; fi
+            sleep $((attempt*5))
+          done
+          [ "$pushed" = true ]
+          git fetch origin main
+          git merge-base --is-ancestor HEAD origin/main
+      - uses: actions/upload-artifact@v4
+        with:
+          name: shadow-admission-ai-decision-${{ github.run_id }}
+          path: runtime/shadow-admission-live
+          retention-days: 30
