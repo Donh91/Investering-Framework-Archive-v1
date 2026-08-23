@@ -1,0 +1,16 @@
+{
+  "contract": "PHASE4_CANDIDATE_EVIDENCE_MATRIX_v1",
+  "status": "PRE_RESULT_FROZEN_INITIAL_STATE",
+  "rows": [
+    {"candidate_id":"P4-C01-ETF-PERSISTENCE","role":"PRESSURE","current_status":"UNTESTED_IN_PHASE4","historical_data":"BTC_637_ROWS_ETH_499_ROWS","max_authority":"RESEARCH_ONLY"},
+    {"candidate_id":"P4-C02-ETF-STABILIZATION","role":"RESOLUTION","current_status":"UNTESTED_IN_PHASE4","historical_data":"BTC_AND_ETH_ETF_ARCHIVE","max_authority":"RESEARCH_ONLY"},
+    {"candidate_id":"P4-C03-BTC-ETH-ETF-DIVERGENCE","role":"TRANSMISSION","current_status":"UNTESTED_IN_PHASE4","historical_data":"OVERLAPPING_BTC_ETH_ETF_ARCHIVE","max_authority":"RESEARCH_ONLY"},
+    {"candidate_id":"P4-C04-DISPERSION-THEN-BREADTH","role":"EARLY_WATCH","current_status":"OBSERVE_EXISTING_EVIDENCE","historical_data":"ROUND1_ROUND2","max_authority":"OBSERVE"},
+    {"candidate_id":"P4-C05-PRICE-DOWN-OI-UP","role":"PRESSURE","current_status":"PROSPECTIVE_ONLY","historical_data":"INSUFFICIENT_COMPARABLE_HISTORY","max_authority":"SHADOW"},
+    {"candidate_id":"P4-C06-PRICE-OI-SPOT-DIVERGENCE","role":"PRESSURE","current_status":"PROSPECTIVE_ONLY","historical_data":"SHORT_OVERLAP","max_authority":"SHADOW"},
+    {"candidate_id":"P4-C07-POST-FLUSH-RECLAIM-OI","role":"RESOLUTION","current_status":"PROSPECTIVE_ONLY","historical_data":"INSUFFICIENT","max_authority":"SHADOW"},
+    {"candidate_id":"P4-X01-CFGI-ORDERS","role":"EXPLORATORY_PRESSURE","current_status":"EXPLORATORY_ONLY","historical_data":"SPARSE_TARGETED_COVERAGE","max_authority":"EXPLORATORY"}
+  ],
+  "allowed_final_statuses":["KILL","UNTESTABLE","OBSERVE","EXPLORATORY_ONLY","PROSPECTIVE_ONLY","SURVIVES_HISTORICAL","PROMOTION_CANDIDATE"],
+  "automatic_rule_changes": false
+}
