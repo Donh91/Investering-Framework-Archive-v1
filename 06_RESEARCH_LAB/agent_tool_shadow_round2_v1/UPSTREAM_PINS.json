@@ -48,12 +48,13 @@
       },
       "allowed_commands": [
         "codebase-memory-mcp --version",
-        "codebase-memory-mcp cli index_repository",
-        "codebase-memory-mcp cli list_projects",
-        "codebase-memory-mcp cli search_graph",
-        "codebase-memory-mcp cli trace_call_path",
-        "codebase-memory-mcp cli get_architecture"
+        "codebase-memory-mcp cli index_repository '{\"repo_path\":\"<fixture-root>\"}'",
+        "codebase-memory-mcp cli list_projects '{}'",
+        "codebase-memory-mcp cli search_graph '{\"name_pattern\":\".*load_customer.*\",\"label\":\"Function\"}'",
+        "codebase-memory-mcp cli trace_call_path '{\"function_name\":\"load_customer\",\"direction\":\"both\"}'",
+        "codebase-memory-mcp cli get_architecture '{}'"
       ],
+      "runtime_bootstrap_complexity_tax": "npm wrapper downloads, verifies and caches a native runtime set during installation",
       "forbidden_capabilities": [
         "install",
         "update",
