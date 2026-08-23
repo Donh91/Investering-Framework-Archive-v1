@@ -1,6 +1,6 @@
 # Cross-repository agent-context integration receipt
 
-Status: `IMPLEMENTED_ON_CONTROLLED_BRANCH_PENDING_PR_READBACK`  
+Status: `MERGED_CI_GREEN_READBACK_VERIFIED`  
 Date: `2026-08-23`  
 Scope: control/restricted/credential-plane routing and SC06 implementation architecture
 
@@ -51,4 +51,23 @@ paid_infrastructure_deployed: false
 paid_data_acquired: false
 ```
 
-Final PR, CI, merge and main-branch readback references are recorded in the PRs and final Work handoff.
+## Final integration readback
+
+```text
+control_pr: https://github.com/Donh91/Investering-Framework-Archive-v1/pull/526
+control_branch_commit: 8651e165b971b798986b6bd995e8cd8e8493959d
+control_merge_commit: e311fffb956cd330e79944385ea0b1d5d9cee901
+control_pr_checks: 11/11 SUCCESS
+
+restricted_pr: https://github.com/Donh91/secrets/pull/2
+restricted_branch_commit: 271af2ba92de7759ecb50d7de494cb6d7cbd9785
+restricted_merge_commit: ec7a1deb3aad0f83c09e0f2dc4790867bcad50de
+restricted_pr_checks: 2/2 SUCCESS
+
+restricted_main_after_automated_canary: 254ee7e15a3d84b1bc362d46e0276285be632422
+restricted_health_readback: 11/11 raw files valid, 0 failures
+restricted_hypothesis_testing_performed: false
+restricted_outcome_scoring_performed: false
+```
+
+The four primary public boundary/map/SC06/CI files and four private agent/boundary/map/SC06 files were read back by exact merge/current-main ref and blob SHA. Both merge commits were verified reachable from their current `main`; the restricted collector advanced `main` by one valid canary commit after the governance merge.
