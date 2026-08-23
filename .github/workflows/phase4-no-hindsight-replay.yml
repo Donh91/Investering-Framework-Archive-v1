@@ -27,6 +27,15 @@ jobs:
           python-version: '3.12'
       - name: Self-test
         run: python scripts/research/run_phase4_no_hindsight_replay.py --self-test
+      - name: Report frozen hourly source schema
+        run: |
+          python - <<'PY'
+          import csv, gzip
+          p='06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/hourly_features.csv.gz'
+          with gzip.open(p,'rt',encoding='utf-8',newline='') as f:
+              r=csv.DictReader(f)
+              print('PHASE4_HOURLY_FEATURE_COLUMNS=' + ','.join(r.fieldnames or []))
+          PY
       - name: Run frozen replay
         run: |
           python scripts/research/run_phase4_no_hindsight_replay.py \
