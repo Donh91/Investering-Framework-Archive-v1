@@ -17,6 +17,28 @@ Det er et struktureret arkiv til:
 
 ---
 
+## Mandatory cross-repository boundary
+
+This repository is the public control plane. It does not contain restricted provider values.
+
+```text
+CONTROL PLANE: Donh91/Investering-Framework-Archive-v1
+RESTRICTED DATA PLANE: Donh91/secrets
+CREDENTIAL PLANE: GitHub Actions Secrets or an explicitly approved secret manager/workload identity
+```
+
+Before source-data, Round 3, provenance, automation, Codex or agent work, read:
+
+```text
+AGENTS.md
+00_ARCHIVE_CONTROL/CROSS_REPO_DATA_BOUNDARY.md
+00_ARCHIVE_CONTROL/CROSS_REPO_AGENT_CONTEXT_MAP.json
+```
+
+`Donh91/secrets` stores restricted data and receipts, not passwords as repository files. Raw/private values never return to this public repository. Current Cycle Navigator ownership is `05_CYCLE_NAVIGATOR/`; the legacy standalone repository identifier is not a current route.
+
+---
+
 ## Start here
 
 Brug først:

@@ -2,6 +2,25 @@
 
 These instructions apply to all agent work in this repository.
 
+## 0. Cross-repository preflight
+
+The repository estate has three separate planes:
+
+- `Donh91/Investering-Framework-Archive-v1` is the public control plane.
+- `Donh91/secrets` is the restricted data plane for raw/restricted payloads, private normalized market data, immutable capture receipts and restricted source health.
+- GitHub Actions Secrets or an explicitly approved runtime secret manager/workload identity is the credential plane. Credentials never belong in ordinary files in either repository.
+
+Before work that may touch source data, Round 3, provenance, automation, research or cross-repository state, read:
+
+1. `00_ARCHIVE_CONTROL/CROSS_REPO_DATA_BOUNDARY.md`.
+2. `00_ARCHIVE_CONTROL/CROSS_REPO_AGENT_CONTEXT_MAP.json`.
+3. the current control-plane domain contract/status.
+4. if restricted evidence is required and access is authorized, `Donh91/secrets/AGENTS.md`, its two boundary files and the exact immutable binding/health receipt.
+
+Private evidence must be bound by private commit SHA, exact path, bytes, SHA-256, source-contract ID, timestamps, schema and completeness. Never copy raw or normalized private values into this public repository, logs, issues, PRs or prompts. If private authority is required but unavailable, stop with `PRIVATE_DATA_AUTHORITY_UNAVAILABLE` rather than infer, proxy or search the public repository.
+
+Round 3 remains `PROSPECTIVE_COLLECTION_ONLY`; hypothesis testing and outcome scoring remain `OFF`. Round 1 and Round 2 are closed evidence. Historical findings can reach at most `FORWARD_TEST`. The legacy standalone Cycle Navigator repository identifier is historical only and must not be used as a current route.
+
 ## 0. Operational cockpit before repository work
 
 Before automation, incident, API-agent, Codex, scheduled delivery or remediation work, read in this order:
@@ -51,8 +70,10 @@ Before framework, DATA PING, weekly operations, Cycle Navigator, Research Lab, e
 2. Read `00_ARCHIVE_CONTROL/INDEX_ADDENDUM_REGISTRY.md`.
 3. Read `00_ARCHIVE_CONTROL/ARCHIVE_MAP_AND_ROUTING.md`.
 4. Read `00_ARCHIVE_CONTROL/SKILL_REGISTRY.md`.
-5. Load the relevant skill from `.agents/skills/`.
-6. Read only the current canonical and operational files identified by those anchors.
+5. Read `00_ARCHIVE_CONTROL/CROSS_REPO_DATA_BOUNDARY.md`.
+6. Read `00_ARCHIVE_CONTROL/CROSS_REPO_AGENT_CONTEXT_MAP.json`.
+7. Load the relevant skill from `.agents/skills/`.
+8. Read only the current canonical and operational files identified by those anchors, plus the restricted-plane authority when the map requires it.
 
 Do not rely on conversation memory when repository sources are available.
 
@@ -75,6 +96,7 @@ Do not rely on conversation memory when repository sources are available.
 - Master Monday is the weekly official synthesis after ratification.
 - Cycle Navigator is public output and pre-registered accountability.
 - GitHub is versioned memory and the governance control plane.
+- The public repository is the control plane; `Donh91/secrets` is the restricted data plane and has no independent market-rule authority.
 
 ### 3.1 DATA PING supplemental capture
 

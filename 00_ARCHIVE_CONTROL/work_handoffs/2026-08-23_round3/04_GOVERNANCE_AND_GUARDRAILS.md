@@ -1,6 +1,11 @@
 # Governance and guardrails
 
 ## Non-negotiable research boundaries
+- Read `00_ARCHIVE_CONTROL/CROSS_REPO_DATA_BOUNDARY.md` and the machine context map before source-data work.
+- The public control plane owns framework state; `Donh91/secrets` owns raw/restricted provider data and private source health.
+- Credentials remain in GitHub Actions Secrets or an approved secret manager/workload identity, never repo files.
+- Private evidence references require private commit SHA, exact path, bytes, SHA-256, source-contract ID, timestamps, schema and completeness.
+- Raw or normalized private values may never be copied into the public control plane, prompts, issues, PRs or logs.
 - Historical research is RESEARCH_ONLY.
 - No automatic portfolio execution authority.
 - No automatic market-rule, threshold, weight or policy-semantic changes.
@@ -9,6 +14,8 @@
 - Claude/Cowork may READ GitHub but must not WRITE to GitHub.
 - No paid API/CFGI calls unless explicitly authorized in a bounded contract.
 - MARKET CFGI historical unavailable slices must remain NOT_TESTABLE; no proxy, interpolation or synthetic fill.
+- Round 3 remains `PROSPECTIVE_COLLECTION_ONLY`; hypothesis testing and outcome scoring are OFF.
+- Round 1 and Round 2 remain closed evidence.
 
 ## Method constraints inherited from Round 1/2
 1. Independent market episodes, not hourly rows/assets, are the default inferential unit.

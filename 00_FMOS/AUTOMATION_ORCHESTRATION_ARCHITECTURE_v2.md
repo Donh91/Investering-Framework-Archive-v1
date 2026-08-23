@@ -10,9 +10,11 @@ This document defines the current execution, observability, remediation and agen
 
 ## Repository roles
 
-- `Investering-Framework-Archive-v1` is the execution, evidence, governance and health control plane.
+- `Investering-Framework-Archive-v1` is the public execution, governance, provenance and health control plane.
+- `Donh91/secrets` is the restricted data plane for raw/restricted provider payloads, private normalized values, immutable captures and restricted source health. It has no independent framework-rule or portfolio authority.
+- GitHub Actions Secrets or an explicitly approved runtime secret manager/workload identity is the credential plane. Credentials never belong in repository files.
 - `Eksperimenter-framework-` is a bounded experiment workspace and may not promote rules or canonical state into the main framework without explicit ratification and a governed handoff.
-- `Cycle-navigator-` is a public product surface, not an independent market-state owner.
+- Cycle Navigator is owned under `05_CYCLE_NAVIGATOR/` in the control plane. Its legacy standalone repository identifier is historical only and is not a current route.
 
 No repository may silently create a competing canonical pointer, model-weight authority or portfolio action.
 
@@ -28,7 +30,9 @@ For automation, incident, GitHub Actions, API-agent, Codex or delivery work:
 6. `LATEST_CODEX_READY_TASKS.json` when code remediation is relevant
 7. `LATEST_CODEX_EXECUTION_STATE.json` when Codex or research-to-code handoff is relevant
 8. `AGENTS.md`, canonical index, registries and the relevant skill
-9. the exact workflow, receipt, pointer, run and job logs
+9. `00_ARCHIVE_CONTROL/CROSS_REPO_DATA_BOUNDARY.md` and `CROSS_REPO_AGENT_CONTEXT_MAP.json`
+10. when restricted data is required, the private `AGENTS.md`, boundary, exact binding and health receipt
+11. the exact workflow, receipt, pointer, run and job logs
 
 Conversation memory and stale issue descriptions are not operational authority when these files exist.
 
@@ -183,11 +187,13 @@ Freeze and preflight must survive API failure. A weekly output may be partial or
 
 ## Cross-repository automation policy
 
-The main repository is the only current automation control plane. The other two repositories have no independent authority to repair or mutate the main framework.
+The main repository is the only framework automation control plane. Restricted collectors execute in `Donh91/secrets`, but may write only restricted evidence and provider-value-free cross-repository receipts. They have no authority to repair or mutate framework rules, model weights, thresholds, portfolio state or canonical decisions.
 
-Future workflows in the experiment or Cycle Navigator repositories must publish a hash-bound handoff back to the main repository and be registered in Automation Production Health before being considered active framework infrastructure.
+Future workflows outside the control plane must publish a hash-bound handoff back to the main repository and be registered in Automation Production Health before being considered active framework infrastructure. Private dataset bindings require private commit SHA, exact path, bytes, SHA-256, source-contract ID, timestamps, schema and completeness. Raw/private values and credentials may not enter the public handoff.
 
-Research in any repository or thread that wants Codex remediation must hand the candidate into the canonical control plane. It may not create a parallel Codex queue in Experiments or Cycle Navigator.
+Research in any repository or thread that wants Codex remediation must hand the candidate into the canonical control plane. It may not create a parallel Codex queue in Experiments, the restricted data plane or Cycle Navigator.
+
+SC06 Binance depth requires a persistent continuous runtime and private object/blob storage. GitHub Actions may deploy, validate and publish receipts, but must not be treated as the primary long-running websocket runtime or used to weaken the frozen sequence-continuity and snapshot-coverage requirements.
 
 ## Acceptance
 

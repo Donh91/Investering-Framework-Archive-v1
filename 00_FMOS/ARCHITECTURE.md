@@ -57,8 +57,10 @@ FMOS links and retrieves these systems; it does not absorb their authority.
 
 ## 6. Repository strategy
 
-Phase 1 uses the canonical archive repo as the single system of record. Cross-repo copies use routing records and are never independently authoritative. A separate memory-lake repo is deferred until measured Git performance or permissions require it.
+The canonical archive repository is the control-plane system of record for framework authority. `Donh91/secrets` is the restricted data plane for raw/restricted provider payloads, private normalized market data, immutable capture receipts and restricted health evidence. GitHub Actions Secrets or an approved runtime secret manager/workload identity is the credential plane.
+
+Cross-repository evidence uses immutable routing records. Restricted data remains authoritative only at an exact private commit/path/hash binding, while canonical interpretation and decisions remain in the control plane. A moving branch name or a copied payload is not a valid cross-repository binding. See `00_ARCHIVE_CONTROL/CROSS_REPO_DATA_BOUNDARY.md`.
 
 ## 7. Safety boundaries
 
-CI must reject modification of append-only records, unknown authority values or subjects, imperative portfolio fields in memory objects, missing knowledge time or lineage, writes outside workflow path whitelists, authority promotion without promotion receipt, and secrets or privacy-unscreened raw captures.
+CI must reject modification of append-only records, unknown authority values or subjects, imperative portfolio fields in memory objects, missing knowledge time or lineage, writes outside workflow path whitelists, authority promotion without promotion receipt, credentials in repository files, and restricted or privacy-unscreened raw captures in the public control plane.

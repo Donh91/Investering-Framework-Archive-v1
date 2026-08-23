@@ -14,6 +14,10 @@ Use this skill when a research thread, Deep Research review, audit, Claude/Grok 
 
 Do not use this skill for market calls, threshold changes, model weights, canonical authority, portfolio logic, API budget changes or new policy semantics.
 
+## Cross-repository evidence rule
+
+Read `00_ARCHIVE_CONTROL/CROSS_REPO_DATA_BOUNDARY.md` and `CROSS_REPO_AGENT_CONTEXT_MAP.json`. If reproduction requires restricted evidence, use an authorized immutable binding in `Donh91/secrets`. Never paste restricted values into a public candidate, issue, PR, fixture, test log or completion receipt. A public candidate carries commit/path/bytes/SHA-256/source-contract/time/schema/completeness metadata only. Credentials remain outside repository files. Return `PRIVATE_DATA_AUTHORITY_UNAVAILABLE` when the needed private authority cannot be read.
+
 ## Mandatory read order
 
 1. `LATEST_OPERATIONS_DASHBOARD.json`
@@ -24,8 +28,10 @@ Do not use this skill for market calls, threshold changes, model weights, canoni
 6. `LATEST_CODEX_READY_TASKS.json`
 7. `LATEST_CODEX_EXECUTION_STATE.json`
 8. `00_FMOS/AUTOMATION_ORCHESTRATION_ARCHITECTURE_v2.md`
-9. `07_PROMPTS_AND_AGENTS/codex/2026-08-22__codex-research-intake-and-execution-ledger-v1__operational.md`
-10. exact source evidence, target code, workflow runs and tests
+9. `00_ARCHIVE_CONTROL/CROSS_REPO_DATA_BOUNDARY.md`
+10. `00_ARCHIVE_CONTROL/CROSS_REPO_AGENT_CONTEXT_MAP.json`
+11. `07_PROMPTS_AND_AGENTS/codex/2026-08-22__codex-research-intake-and-execution-ledger-v1__operational.md`
+12. exact source evidence, target code, workflow runs and tests
 
 Conversation memory is not queue authority.
 

@@ -11,9 +11,11 @@ Preserve agent usefulness while preventing one mistaken command, cleanup task or
 The policy applies to:
 
 - `Donh91/Investering-Framework-Archive-v1`
-- `Donh91/Cycle-navigator-`
+- `Donh91/secrets`
 - `Donh91/Eksperimenter-framework-`
 - any future independent backup vault
+
+Cycle Navigator is currently owned under `05_CYCLE_NAVIGATOR/` inside the control plane. Its legacy standalone repository identifier is historical and is not a current route. `Donh91/secrets` is the restricted data plane, not a credential repository. Credentials remain in GitHub Actions Secrets or an explicitly approved runtime secret manager/workload identity.
 
 Core principle:
 

@@ -13,6 +13,10 @@ The Skill verifies that a row is attached to the correct owner, existed before t
 
 It does not create tests, schemas, scores, market calls, rule promotions or portfolio actions.
 
+## Cross-repository evidence boundary
+
+Read `00_ARCHIVE_CONTROL/CROSS_REPO_DATA_BOUNDARY.md` and the route map before touching restricted inputs. `Donh91/secrets` owns raw/restricted and private normalized source rows. Public ledger metadata must bind to the private commit, exact path, bytes, SHA-256, source-contract ID, timestamps, schema and completeness without copying values. For Round 3, collection remains `PROSPECTIVE_COLLECTION_ONLY`; hypothesis testing and outcome scoring remain `OFF`; source-health rows are never outcomes.
+
 ## Core contract
 
 ```text
@@ -49,9 +53,11 @@ Read:
 2. `00_ARCHIVE_CONTROL/CANONICAL_INDEX.md`
 3. `00_ARCHIVE_CONTROL/INDEX_ADDENDUM_REGISTRY.md`
 4. `00_ARCHIVE_CONTROL/SKILL_REGISTRY.md`
-5. `01_CORE_FRAMEWORK/governance/2026-07-10__rule-and-evidence-registry__canonical.md`
-6. `06_RESEARCH_LAB/forward_tests/2026-07-10__active-test-registry__canonical.md`
-7. the active test owner, ledger schema/header, validator, scorer and relevant source.
+5. `00_ARCHIVE_CONTROL/CROSS_REPO_DATA_BOUNDARY.md`
+6. `00_ARCHIVE_CONTROL/CROSS_REPO_AGENT_CONTEXT_MAP.json`
+7. `01_CORE_FRAMEWORK/governance/2026-07-10__rule-and-evidence-registry__canonical.md`
+8. `06_RESEARCH_LAB/forward_tests/2026-07-10__active-test-registry__canonical.md`
+9. the active test owner, ledger schema/header, validator, scorer and relevant source.
 
 Do not load unrelated ledgers or the full archive.
 

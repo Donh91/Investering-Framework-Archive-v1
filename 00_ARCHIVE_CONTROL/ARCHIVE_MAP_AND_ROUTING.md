@@ -18,9 +18,20 @@ Fast regel:
 
 ```text
 First classify the note.
+Then classify its data plane.
 Then place it in the right domain folder.
 Then add it to the index if it is canonical or operationally important.
 ```
+
+Cross-repository exception:
+
+```text
+public control/governance/code/value-free receipt -> this repository
+raw or normalized restricted provider data/private source health -> Donh91/secrets
+credentials -> GitHub Actions Secrets or approved secret manager/workload identity, never repo files
+```
+
+Read `00_ARCHIVE_CONTROL/CROSS_REPO_DATA_BOUNDARY.md` and `CROSS_REPO_AGENT_CONTEXT_MAP.json` before routing source data. The restricted-data rule overrides any generic `08_SOURCE_MATERIAL/` suggestion below.
 
 ---
 
@@ -262,6 +273,8 @@ Place here:
 
 Used for source references that are not themselves canonical framework rules.
 
+This path is public. It may contain redistributable source material and provider-value-free provenance only. Raw/restricted provider payloads, private normalized market data and restricted source-health evidence belong in `Donh91/secrets` with immutable cross-repository bindings.
+
 Suggested subfolders:
 
 ```text
@@ -277,7 +290,7 @@ Place here:
 - TechDev issue notes
 - source extracts
 - external reports
-- raw evidence
+- raw evidence that is public, redistributable and privacy-screened
 - screenshots converted to text
 
 Rule:
@@ -285,6 +298,7 @@ Rule:
 ```text
 Source material supports conclusions.
 It does not automatically become framework doctrine.
+Restricted source material remains in the restricted data plane.
 ```
 
 ---

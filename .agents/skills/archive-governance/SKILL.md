@@ -21,9 +21,13 @@ AGENTS.md
 00_ARCHIVE_CONTROL/INDEX_ADDENDUM_REGISTRY.md
 00_ARCHIVE_CONTROL/ARCHIVE_MAP_AND_ROUTING.md
 00_ARCHIVE_CONTROL/SKILL_REGISTRY.md
+00_ARCHIVE_CONTROL/CROSS_REPO_DATA_BOUNDARY.md
+00_ARCHIVE_CONTROL/CROSS_REPO_AGENT_CONTEXT_MAP.json
 01_CORE_FRAMEWORK/governance/2026-07-11__repository-safety-and-backup-policy-v1__canonical.md
 01_CORE_FRAMEWORK/governance/2026-07-11__external-vault-activation-and-snapshot-contract-v1-1__canonical.md
 ```
+
+Classify the data plane before choosing a path. Raw/restricted provider payloads, private normalized values and restricted source-health evidence belong in `Donh91/secrets`. Credentials belong only in GitHub Actions Secrets or an explicitly approved secret manager/workload identity. Public receipts may contain only the immutable private commit/path/bytes/SHA-256/source-contract/time/schema/completeness binding and provider-value-free health. Never archive private values in the control plane.
 
 When a source is a Word, PowerPoint, Excel, OpenDocument, RTF, EPUB, CSV or otherwise unreadable supported document, also read:
 

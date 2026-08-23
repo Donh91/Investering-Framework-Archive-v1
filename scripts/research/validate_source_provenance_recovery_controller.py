@@ -53,5 +53,9 @@ a = mod.evaluate_receipts(policy, entries); b = mod.evaluate_receipts(policy, en
 assert a["evidence_fingerprint"] == b["evidence_fingerprint"] and a["selected_action"] == b["selected_action"]
 print("PASS deterministic_same_receipts")
 assert policy["automatic_paid_data_authorization"] is False and policy["external_provider_calls_authorized"] is False
+assert policy["restricted_data_plane"] == "Donh91/secrets"
+assert policy["restricted_data_ingestion"] == "IMMUTABLE_POINTER_AND_VALUE_FREE_HEALTH_ONLY"
+assert "private_commit_sha_reachable_from_main" in policy["required_private_binding_fields"]
+assert "NO_RAW_OR_NORMALIZED_RESTRICTED_VALUES_IN_CONTROL_PLANE" in policy["guardrails"]
 print("PASS zero_spend_zero_provider_call_policy")
 print("SOURCE_PROVENANCE_RECOVERY_GATE_v1 PASS")

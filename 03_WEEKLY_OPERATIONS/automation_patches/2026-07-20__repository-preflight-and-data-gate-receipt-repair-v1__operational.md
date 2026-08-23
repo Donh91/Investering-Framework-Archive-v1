@@ -10,10 +10,10 @@
 
 The first 2026-07-20 `GITHUB ARCHIVE SYNC + BACKUP v1.8` attempt returned a global deferred status after repository access was treated as unavailable.
 
-The later remediation proved that:
+The later remediation proved at that historical run time that:
 
 - the canonical framework repository was readable and writable;
-- the Cycle Navigator and Experiments repositories were accessible;
+- the then-separate Cycle Navigator route and Experiments repository were accessible;
 - archive/governance work could continue;
 - only the independent Vault was unavailable in that execution context.
 
@@ -44,9 +44,11 @@ Required matrix:
 | Repository | Role | Required result |
 |---|---|---|
 | `Donh91/Investering-Framework-Archive-v1` | canonical archive and governance | independent READ and WRITE-CAPABILITY classification |
-| `Donh91/Cycle-navigator-` | public-product archive | independent READ classification |
+| `Donh91/secrets` | restricted raw/private data plane, never credential files | independent authorized READ classification without value disclosure |
 | `Donh91/Eksperimenter-framework-` | experimental evidence | independent READ classification |
 | `Donh91/Investering-Framework-Vault` | independent backup product | independent READ/WRITE classification only when backup work is due or validation is required |
+
+Cycle Navigator is verified through its current owner paths inside the control plane. The historical standalone repository identifier must not be used as a current route.
 
 Allowed access states per repository:
 

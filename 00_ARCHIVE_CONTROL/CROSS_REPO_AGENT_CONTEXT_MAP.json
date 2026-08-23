@@ -1,0 +1,189 @@
+{
+  "contract": "CROSS_REPO_AGENT_CONTEXT_MAP_v1",
+  "status": "CANONICAL_MACHINE_ROUTING_AUTHORITY",
+  "effective_date": "2026-08-23",
+  "control_plane": "Donh91/Investering-Framework-Archive-v1",
+  "restricted_data_plane": "Donh91/secrets",
+  "credential_plane": "GITHUB_ACTIONS_SECRETS_OR_EXPLICITLY_APPROVED_RUNTIME_SECRET_MANAGER_OR_WORKLOAD_IDENTITY",
+  "canonical_public_boundary": "00_ARCHIVE_CONTROL/CROSS_REPO_DATA_BOUNDARY.md",
+  "default_read_order": [
+    "control:AGENTS.md",
+    "control:00_ARCHIVE_CONTROL/CANONICAL_INDEX.md",
+    "control:00_ARCHIVE_CONTROL/INDEX_ADDENDUM_REGISTRY.md",
+    "control:00_ARCHIVE_CONTROL/ARCHIVE_MAP_AND_ROUTING.md",
+    "control:00_ARCHIVE_CONTROL/CROSS_REPO_DATA_BOUNDARY.md",
+    "control:00_ARCHIVE_CONTROL/CROSS_REPO_AGENT_CONTEXT_MAP.json",
+    "control:domain_current_status_or_contract",
+    "restricted:AGENTS.md when restricted evidence is required and access is authorized",
+    "restricted:GOVERNANCE/CROSS_REPO_DATA_BOUNDARY.md",
+    "restricted:GOVERNANCE/PRIVATE_DATA_BOUNDARY.md",
+    "restricted:exact binding, receipt, manifest and health record"
+  ],
+  "global_private_data_authority": {
+    "repository": "Donh91/secrets",
+    "required_binding_fields": [
+      "private_repository",
+      "private_commit_sha_reachable_from_main",
+      "exact_path",
+      "bytes",
+      "sha256",
+      "source_contract_id",
+      "timestamps",
+      "schema_id_or_version",
+      "schema_sha256",
+      "row_or_object_count",
+      "gap_count",
+      "completeness_status",
+      "validation_status"
+    ]
+  },
+  "global_forbidden_actions": [
+    "COPY_RAW_OR_NORMALIZED_RESTRICTED_PROVIDER_VALUES_TO_CONTROL_PLANE",
+    "COMMIT_CREDENTIALS_TO_EITHER_REPOSITORY",
+    "TREAT_DONH91_SECRETS_AS_A_CREDENTIAL_REPOSITORY",
+    "INFER_PRIVATE_VALUES_WHEN_RESTRICTED_ACCESS_IS_UNAVAILABLE",
+    "USE_MOVING_MAIN_OR_LATEST_POINTER_AS_SOLE_PROVENANCE",
+    "RUN_ROUND3_HYPOTHESIS_TESTING_BEFORE_ANALYSIS_GATE",
+    "RUN_ROUND3_OUTCOME_SCORING",
+    "REOPEN_OR_RESCORE_ROUND1_OR_ROUND2",
+    "PROMOTE_HISTORICAL_FINDING_ABOVE_FORWARD_TEST",
+    "USE_DONH91_CYCLE_NAVIGATOR_DASH_AS_CURRENT_ROUTE",
+    "ASSUME_ALL_DATA_EXISTS_IN_ONE_REPOSITORY"
+  ],
+  "round3_firewall": {
+    "mode": "PROSPECTIVE_COLLECTION_ONLY",
+    "hypothesis_testing": "OFF",
+    "outcome_scoring": "OFF",
+    "round1_round2": "CLOSED_EVIDENCE",
+    "historical_findings_maximum": "FORWARD_TEST",
+    "paid_historical_acquisition": "NOT_AUTHORIZED"
+  },
+  "routes": [
+    {
+      "id": "ROOT_README_AND_ALL_NEW_SESSIONS",
+      "kind": "README_AGENT_ENTRYPOINT",
+      "match": ["README.md", "ChatGPT Work", "Claude", "Cowork", "Codex", "new agent session"],
+      "required_repositories": ["Donh91/Investering-Framework-Archive-v1", "Donh91/secrets when restricted evidence is required"],
+      "required_canonical_files": ["control:AGENTS.md", "control:00_ARCHIVE_CONTROL/CROSS_REPO_DATA_BOUNDARY.md", "control:00_ARCHIVE_CONTROL/CROSS_REPO_AGENT_CONTEXT_MAP.json", "restricted:AGENTS.md", "restricted:GOVERNANCE/CROSS_REPO_DATA_BOUNDARY.md"],
+      "private_data_authority": "Donh91/secrets immutable commit and exact receipt/dataset path",
+      "forbidden_actions": ["ASSUME_SINGLE_REPO", "SEARCH_CONTROL_PLANE_FOR_PRIVATE_VALUES", "COPY_PRIVATE_VALUES_PUBLIC"]
+    },
+    {
+      "id": "CANONICAL_CONTEXT_ROUTER",
+      "kind": "SKILL",
+      "match": [".agents/skills/canonical-context-router/SKILL.md"],
+      "required_repositories": ["Donh91/Investering-Framework-Archive-v1", "Donh91/secrets when data class is restricted"],
+      "required_canonical_files": ["control:00_ARCHIVE_CONTROL/CROSS_REPO_DATA_BOUNDARY.md", "control:00_ARCHIVE_CONTROL/CROSS_REPO_AGENT_CONTEXT_MAP.json", "restricted:GOVERNANCE/PRIVATE_DATA_BOUNDARY.md"],
+      "private_data_authority": "restricted boundary and exact binding",
+      "forbidden_actions": ["ROUTE_FROM_CONVERSATION_MEMORY", "TREAT_ACCESS_FAILURE_AS_NEGATIVE_EVIDENCE"]
+    },
+    {
+      "id": "ARCHIVE_GOVERNANCE",
+      "kind": "SKILL",
+      "match": [".agents/skills/archive-governance/SKILL.md"],
+      "required_repositories": ["Donh91/Investering-Framework-Archive-v1", "Donh91/secrets for restricted artifacts"],
+      "required_canonical_files": ["control:00_ARCHIVE_CONTROL/ARCHIVE_MAP_AND_ROUTING.md", "control:00_ARCHIVE_CONTROL/CROSS_REPO_DATA_BOUNDARY.md", "restricted:GOVERNANCE/CROSS_REPO_DATA_BOUNDARY.md"],
+      "private_data_authority": "restricted plane owns raw and normalized private evidence",
+      "forbidden_actions": ["ARCHIVE_RESTRICTED_VALUES_PUBLIC", "MOVE_CREDENTIALS_INTO_REPO", "CREATE_DUPLICATE_CANONICAL_OWNER"]
+    },
+    {
+      "id": "PROSPECTIVE_EVIDENCE_LEDGER",
+      "kind": "SKILL",
+      "match": [".agents/skills/prospective-evidence-ledger/SKILL.md"],
+      "required_repositories": ["Donh91/Investering-Framework-Archive-v1", "Donh91/secrets for restricted source rows"],
+      "required_canonical_files": ["control:00_ARCHIVE_CONTROL/CROSS_REPO_DATA_BOUNDARY.md", "control:06_RESEARCH_LAB/round3_new_information_v1/COLLECTION_STATUS.json", "restricted:GOVERNANCE/ROUND3_SOURCE_BINDINGS.json", "restricted:GOVERNANCE/COLLECTION_ACTIVATION.json"],
+      "private_data_authority": "private frozen input/capture receipt, not public metadata receipt",
+      "forbidden_actions": ["COUNT_SOURCE_HEALTH_AS_OUTCOME", "ATTACH_OUTCOMES_BEFORE_GATE", "REWRITE_FROZEN_INPUTS", "COPY_PRIVATE_ROWS_PUBLIC"]
+    },
+    {
+      "id": "RESEARCH_LAB_RED_TEAM",
+      "kind": "SKILL",
+      "match": [".agents/skills/research-lab-red-team/SKILL.md"],
+      "required_repositories": ["Donh91/Investering-Framework-Archive-v1", "Donh91/secrets only for authorized source-health audit"],
+      "required_canonical_files": ["control:00_ARCHIVE_CONTROL/CROSS_REPO_DATA_BOUNDARY.md", "control:06_RESEARCH_LAB/round3_new_information_v1/PRIMARY_HYPOTHESIS_REGISTRY_v1.json", "control:06_RESEARCH_LAB/round3_new_information_v1/COLLECTION_STATUS.json"],
+      "private_data_authority": "restricted values remain blinded until analysis gate",
+      "forbidden_actions": ["ROUND3_HYPOTHESIS_TESTING", "OUTCOME_SCORING", "UNBLINDED_FEATURE_DISCOVERY", "HISTORICAL_PROMOTION_ABOVE_FORWARD_TEST"]
+    },
+    {
+      "id": "CODEX_INTAKE_AND_EXECUTION",
+      "kind": "SKILL_SUBSYSTEM",
+      "match": [".agents/skills/codex-intake/SKILL.md", "research/codex/README.md", "07_PROMPTS_AND_AGENTS/codex"],
+      "required_repositories": ["Donh91/Investering-Framework-Archive-v1", "Donh91/secrets when reproduction needs restricted evidence"],
+      "required_canonical_files": ["control:research/codex/README.md", "control:00_ARCHIVE_CONTROL/CROSS_REPO_DATA_BOUNDARY.md", "restricted:AGENTS.md"],
+      "private_data_authority": "private evidence is referenced by binding, never embedded in public candidate or PR",
+      "forbidden_actions": ["PASTE_PRIVATE_REPRODUCTION_DATA_IN_PUBLIC_ISSUE", "LOG_CREDENTIALS", "CROSS_REPO_AUTHORITY_PROMOTION"]
+    },
+    {
+      "id": "AUTOMATION_ORCHESTRATION",
+      "kind": "AUTOMATION_SUBSYSTEM",
+      "match": ["00_FMOS/AUTOMATION_ORCHESTRATION_ARCHITECTURE_v2.md", ".github/workflows/**"],
+      "required_repositories": ["Donh91/Investering-Framework-Archive-v1", "Donh91/secrets for restricted collectors"],
+      "required_canonical_files": ["control:00_FMOS/AUTOMATION_ORCHESTRATION_ARCHITECTURE_v2.md", "control:00_ARCHIVE_CONTROL/CROSS_REPO_DATA_BOUNDARY.md", "restricted:GOVERNANCE/COLLECTION_ACTIVATION.json"],
+      "private_data_authority": "restricted workflows write only restricted data plane; public workflows receive value-free receipts",
+      "forbidden_actions": ["CROSS_PLANE_RAW_LOGGING", "STORE_CREDENTIAL_FILE", "LET_RESTRICTED_WORKFLOW_CHANGE_MARKET_RULES"]
+    },
+    {
+      "id": "ROUND3_RESEARCH_LAB",
+      "kind": "RESEARCH_SUBSYSTEM",
+      "match": ["06_RESEARCH_LAB/round3_new_information_v1/**"],
+      "required_repositories": ["Donh91/Investering-Framework-Archive-v1", "Donh91/secrets"],
+      "required_canonical_files": ["control:06_RESEARCH_LAB/round3_new_information_v1/COLLECTION_STATUS.json", "control:06_RESEARCH_LAB/round3_new_information_v1/COLLECTION_ZONE_CONTRACT_v1.json", "restricted:GOVERNANCE/ROUND3_SOURCE_BINDINGS.json", "restricted:health/LATEST_PRIVATE_DATA_HEALTH.json"],
+      "private_data_authority": "Donh91/secrets",
+      "forbidden_actions": ["ANALYZE_BEFORE_GATE", "OUTCOME_SCORE", "PUBLIC_RAW_VALUE", "WEAKEN_FROZEN_SOURCE_REQUIREMENT"]
+    },
+    {
+      "id": "SC01_SC03_SC14_PRIVATE_COLLECTION",
+      "kind": "PRIVATE_AUTOMATION",
+      "match": ["restricted:.github/workflows/round3-okx-oi.yml", "restricted:.github/workflows/round3-okx-funding.yml", "restricted:.github/workflows/round3-deribit-skew.yml"],
+      "required_repositories": ["Donh91/Investering-Framework-Archive-v1", "Donh91/secrets"],
+      "required_canonical_files": ["control:source contract for SC01/SC03/SC14", "restricted:GOVERNANCE/COLLECTION_ACTIVATION.json", "restricted:GOVERNANCE/ROUND3_SOURCE_BINDINGS.json"],
+      "private_data_authority": "restricted raw capture and private health receipts",
+      "forbidden_actions": ["WRITE_PROVIDER_VALUES_TO_CONTROL", "EMIT_VALUES_TO_PUBLIC_LOG", "RUN_HYPOTHESIS_TEST"]
+    },
+    {
+      "id": "SC06_PERSISTENT_RUNTIME",
+      "kind": "PRIVATE_RUNTIME_SUBSYSTEM",
+      "match": ["SC06", "Binance depth", "persistent runtime", "object storage"],
+      "required_repositories": ["Donh91/Investering-Framework-Archive-v1", "Donh91/secrets"],
+      "required_canonical_files": ["control:06_RESEARCH_LAB/round3_new_information_v1/SC06_PERSISTENT_RUNTIME_AND_STORAGE_ARCHITECTURE.md", "restricted:GOVERNANCE/SC06_PERSISTENT_RUNTIME_REQUIREMENT.md", "restricted:GOVERNANCE/SC06_PERSISTENT_RUNTIME_IMPLEMENTATION_PLAN.md"],
+      "private_data_authority": "private object store plus hash-bound restricted manifests",
+      "forbidden_actions": ["USE_GITHUB_ACTIONS_AS_LONG_RUNNING_PRIMARY_RUNTIME", "WEAKEN_99_9_SEQUENCE_CONTINUITY", "WEAKEN_90_SNAPSHOT_COVERAGE", "INTERPOLATE_GAPS", "DEPLOY_PAID_INFRASTRUCTURE_WITHOUT_AUTHORIZATION"]
+    },
+    {
+      "id": "WORK_HANDOFFS_AND_SPECIALIST_PROMPTS",
+      "kind": "HANDOFF_PROMPT",
+      "match": ["00_ARCHIVE_CONTROL/work_handoffs/**", "07_PROMPTS_AND_AGENTS/**"],
+      "required_repositories": ["Donh91/Investering-Framework-Archive-v1", "Donh91/secrets when private evidence is in scope"],
+      "required_canonical_files": ["control:00_ARCHIVE_CONTROL/CROSS_REPO_DATA_BOUNDARY.md", "control:00_ARCHIVE_CONTROL/CROSS_REPO_AGENT_CONTEXT_MAP.json"],
+      "private_data_authority": "handoff carries bindings and access status, never values",
+      "forbidden_actions": ["EMBED_RESTRICTED_VALUES_IN_PROMPT", "OMIT_REQUIRED_REPOSITORY", "USE_STALE_REPOSITORY_NAME"]
+    },
+    {
+      "id": "CYCLE_NAVIGATOR",
+      "kind": "PUBLIC_SUBSYSTEM",
+      "match": ["05_CYCLE_NAVIGATOR/**", "Cycle Navigator"],
+      "required_repositories": ["Donh91/Investering-Framework-Archive-v1"],
+      "required_canonical_files": ["control:05_CYCLE_NAVIGATOR current owner pointers", "control:00_ARCHIVE_CONTROL/CROSS_REPO_DATA_BOUNDARY.md"],
+      "private_data_authority": "none unless a value-free private receipt is explicitly linked",
+      "forbidden_actions": ["ROUTE_TO_DONH91_CYCLE_NAVIGATOR_DASH", "PUBLISH_RESTRICTED_VALUES", "CREATE_INDEPENDENT_MARKET_STATE_AUTHORITY"]
+    },
+    {
+      "id": "SPECIALIST_AGENTS_AND_DIRECTOR",
+      "kind": "SPECIALIST_AGENT_SUBSYSTEM",
+      "match": ["research/specialists/SPECIALIST_ARCHITECTURE_v1.md", "research/specialists/SPECIALIST_REGISTRY_v1.json", "scripts/specialists/specialist_director.py"],
+      "required_repositories": ["Donh91/Investering-Framework-Archive-v1", "Donh91/secrets when an owner input is restricted"],
+      "required_canonical_files": ["control:research/specialists/SPECIALIST_ARCHITECTURE_v1.md", "control:00_ARCHIVE_CONTROL/CROSS_REPO_DATA_BOUNDARY.md", "restricted:exact owner binding"],
+      "private_data_authority": "restricted owner input is exposed to public synthesis only as immutable value-free binding and status",
+      "forbidden_actions": ["EMIT_RESTRICTED_VALUES", "TREAT_PRIVATE_ACCESS_FAILURE_AS_NEUTRAL", "ROUND3_OUTCOME_ACCESS", "SPECIALIST_VOTE_CREATES_TRUTH"]
+    },
+    {
+      "id": "SOURCE_PROVENANCE_CONTROLLERS",
+      "kind": "PROVENANCE_SUBSYSTEM",
+      "match": ["source controller", "provenance controller", "receipt", "manifest", "health controller"],
+      "required_repositories": ["Donh91/Investering-Framework-Archive-v1", "Donh91/secrets for restricted sources"],
+      "required_canonical_files": ["control:00_ARCHIVE_CONTROL/CROSS_REPO_DATA_BOUNDARY.md", "restricted:GOVERNANCE/PRIVATE_DATA_BOUNDARY.md", "restricted:exact source binding"],
+      "private_data_authority": "immutable private commit, exact path and verified hash",
+      "forbidden_actions": ["TRUST_UNHASHED_POINTER", "DROP_SOURCE_CONTRACT_ID", "CONFUSE_COMPLETENESS_WITH_FINDING", "EXPOSE_OBJECT_CREDENTIALS"]
+    }
+  ]
+}

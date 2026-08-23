@@ -1,0 +1,45 @@
+name: Cross Repo Agent Context Gate
+
+on:
+  pull_request:
+    paths:
+      - 'README.md'
+      - 'AGENTS.md'
+      - '00_ARCHIVE_CONTROL/CROSS_REPO_*'
+      - '00_ARCHIVE_CONTROL/ARCHIVE_MAP_AND_ROUTING.md'
+      - '00_ARCHIVE_CONTROL/INDEX_ADDENDUM_REGISTRY.md'
+      - '00_ARCHIVE_CONTROL/SKILL_REGISTRY.md'
+      - '00_ARCHIVE_CONTROL/work_handoffs/2026-08-23_round3/**'
+      - '00_FMOS/ARCHITECTURE.md'
+      - '00_FMOS/AUTOMATION_ORCHESTRATION_ARCHITECTURE_v2.md'
+      - '00_FMOS/CONTINUITY_LEARNING_ARCHITECTURE_v1.md'
+      - '00_FMOS/WP00_PATH_OWNER_REGISTRY_v1.md'
+      - '.agents/skills/**/SKILL.md'
+      - '07_PROMPTS_AND_AGENTS/codex/2026-08-22__codex-research-intake-and-execution-ledger-v1__operational.md'
+      - 'research/codex/README.md'
+      - 'research/specialists/**'
+      - '00_ARCHIVE_CONTROL/source_recovery_controller_v1/POLICY.json'
+      - 'scripts/research/validate_source_provenance_recovery_controller.py'
+      - '06_RESEARCH_LAB/round3_new_information_v1/**'
+      - 'scripts/governance/validate_cross_repo_agent_context.py'
+      - '.github/workflows/cross-repo-agent-context-gate.yml'
+  push:
+    branches: [main]
+    paths:
+      - '00_ARCHIVE_CONTROL/CROSS_REPO_*'
+      - 'scripts/governance/validate_cross_repo_agent_context.py'
+      - '.github/workflows/cross-repo-agent-context-gate.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile validator
+        run: python -m py_compile scripts/governance/validate_cross_repo_agent_context.py
+      - name: Validate cross-repository context
+        run: python scripts/governance/validate_cross_repo_agent_context.py

@@ -20,6 +20,7 @@ The machine-readable authority is `WP00_PATH_OWNER_REGISTRY_v1.json`.
 6. Frozen prospective inputs cannot be rewritten after outcomes become observable.
 7. FMOS, Codex, GitHub Actions and automations have zero portfolio authority.
 8. A write is successful only after `READBACK_VERIFIED`.
+9. Restricted provider data is owned by `Donh91/secrets`; credentials are owned by the credential plane and never by repository files.
 
 ## Owner classes
 
@@ -83,8 +84,11 @@ Conversation memory and copied automation prompts never outrank repository autho
 ## Cross-repository boundary
 
 - `Donh91/Eksperimenter-framework-` remains the non-canonical experiment owner.
-- Cycle Navigator remains separately owned; the canonical archive stores pointers and evidence unless explicit write authority is given.
+- `Donh91/secrets` is the restricted data plane. It owns raw/restricted provider payloads, private normalized values, immutable capture receipts and restricted source-health evidence, but no canonical framework decisions.
+- Cycle Navigator is currently owned under `05_CYCLE_NAVIGATOR/` in the control plane. Its legacy standalone repository identifier is historical only, not a current route.
+- GitHub Actions Secrets or an explicitly approved runtime secret manager/workload identity is the credential plane. No credential belongs in ordinary repository files.
 - Cross-repository material cannot self-promote into canonical framework state.
+- Every private evidence reference requires an immutable private commit, exact path, bytes, SHA-256, source-contract ID, timestamps, schema and completeness. See `00_ARCHIVE_CONTROL/CROSS_REPO_DATA_BOUNDARY.md`.
 
 ## Completion decision
 
