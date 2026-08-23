@@ -1,0 +1,63 @@
+{
+  "contract": "PHASE4_NO_HINDSIGHT_FALSIFICATION_CONTRACT_v1_FROZEN",
+  "status": "RESEARCH_ONLY_NON_CANONICAL",
+  "frozen_at_utc": "2026-08-23T15:27:00Z",
+  "objective": "Find or kill a minimal set of upstream details that add pre-move decision value without increasing framework complexity.",
+  "authority": {
+    "canonical_market_state": false,
+    "threshold_changes": false,
+    "weight_changes": false,
+    "portfolio_execution": false,
+    "prospective_floor_changes": false,
+    "historical_relabel_after_signal_inspection": false,
+    "automatic_promotion": false,
+    "maximum_historical_status": "SURVIVES_HISTORICAL_REQUIRES_SEPARATE_PROSPECTIVE_REVIEW"
+  },
+  "inferential_principles": [
+    "INDEPENDENT_EVENTS_OR_JUSTIFIED_TEMPORAL_UNIT",
+    "NO_LOOKAHEAD",
+    "TESTABILITY_BEFORE_EDGE",
+    "SIMPLE_BASELINE_FIRST",
+    "FAMILY_WIDTH_DECLARED",
+    "NEGATIVE_RESULTS_RETAINED",
+    "POST_EVENT_DISCRIMINATION_IS_NOT_PRECURSOR_EDGE",
+    "ECONOMIC_VALUE_REQUIRED_FOR_ACTION_CLAIMS"
+  ],
+  "historical_candidates": [
+    {"id":"P4-C01-ETF-PERSISTENCE","family":"ETF_FLOW","features":["3_session_sum","5_session_sum","7_session_sum","negative_session_streak"],"optimization":"FORBIDDEN"},
+    {"id":"P4-C02-ETF-STABILIZATION","family":"ETF_FLOW","definition":"current_total_ge_0_after_prior_3_session_sum_lt_0","optimization":"FORBIDDEN"},
+    {"id":"P4-C03-BTC-ETH-ETF-DIVERGENCE","family":"ETF_FLOW","definition":"sign_disagreement_of_3_session_sums","optimization":"FORBIDDEN"},
+    {"id":"P4-C04-DISPERSION-THEN-BREADTH","family":"LEGACY_SEQUENCE","status":"OBSERVE_EXISTING_ONLY_NO_RETUNE"},
+    {"id":"P4-X01-CFGI-ORDERS","family":"CFGI","status":"EXPLORATORY_ONLY_INSUFFICIENT_INDEPENDENT_EPISODES"}
+  ],
+  "prospective_only_candidates": [
+    {"id":"P4-C05-PRICE-DOWN-OI-UP","binding":"ROUND3_SC01_WHERE_APPLICABLE","backfill":"FORBIDDEN"},
+    {"id":"P4-C06-PRICE-OI-SPOT-DIVERGENCE","binding":"REQUIRES_PROVENANCE_COMPLETE_SPOT_AND_OI_OVERLAP","backfill":"FORBIDDEN"},
+    {"id":"P4-C07-POST-FLUSH-RECLAIM-OI","binding":"ROUND3_SC01_PLUS_FROZEN_RECLAIM_OUTCOME","backfill":"FORBIDDEN"}
+  ],
+  "mandatory_baselines": ["SINGLE_ETF_PRINT","UNCONDITIONAL_OUTCOME","HOLD_FOR_TRIM_RELOAD","WAIT_FOR_ENTRY_FNP"],
+  "historical_report_horizons_days": [1,3,7],
+  "multiplicity": {
+    "etf_family": "SYNCHRONIZED_CIRCULAR_SHIFT_MAX_ABS_SPEARMAN",
+    "permutations": 1000,
+    "seed": 20260823,
+    "note": "Discovery reference only; does not overcome non-independent temporal sampling or substitute for prospective evidence."
+  },
+  "kill_conditions": [
+    "NO_INCREMENTAL_VALUE_VS_SIMPLE_BASELINE",
+    "DIRECTION_UNSTABLE_ACROSS_ERAS",
+    "EDGE_DEPENDS_ON_POST_EVENT_WINDOW",
+    "SOURCE_VERSION_OR_TIMESTAMP_SEMANTICS_UNRESOLVED",
+    "REQUIRES_RETROACTIVE_THRESHOLD_SEARCH",
+    "ECONOMIC_VALUE_INFERIOR_TO_HOLD_OR_WAIT_AFTER_DELAY_AND_FRICTION",
+    "REDUNDANT_WITH_EXISTING_INFORMATION_CHANNEL"
+  ],
+  "promotion_requirements": [
+    "HISTORICAL_TESTABILITY_PASS",
+    "ROBUSTNESS_OR_PROSPECTIVE_EVIDENCE",
+    "INCREMENTAL_VALUE",
+    "DECISION_VALUE",
+    "NO_MATERIAL_COMPLEXITY_TAX",
+    "SEPARATE_RESEARCH_LAB_REVIEW"
+  ]
+}

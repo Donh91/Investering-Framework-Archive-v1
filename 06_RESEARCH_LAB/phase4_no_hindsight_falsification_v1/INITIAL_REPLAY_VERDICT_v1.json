@@ -1,0 +1,120 @@
+{
+  "contract": "PHASE4_INITIAL_REPLAY_VERDICT_v1",
+  "status": "RESEARCH_ONLY_NON_CANONICAL",
+  "evidence_run": {
+    "workflow_run_id": 32649480583,
+    "artifact_id": 9495776570,
+    "artifact_sha256": "7a99ed039dbf47a2e2a512f20055529d1d01948b90f08d6b8b21cec361bc952d",
+    "head_sha": "c236b7d4ec60772e2086754e22dc150afdd0b392",
+    "deterministic_seed": 20260823
+  },
+  "source_findings": {
+    "btc_etf": {
+      "status": "PASS",
+      "raw_rows": 646,
+      "unique_dates": 646,
+      "coverage": ["2024-01-11", "2026-07-06"],
+      "duplicate_date_count": 0,
+      "manifest_row_count_drift": "README_PREVIOUSLY_DECLARED_637_ROWS_CURRENT_FILE_HAS_646_UNIQUE_DATES",
+      "vendor_revision_risk": "RETAINED_AS_POINT_IN_TIME_SOURCE_VERSION"
+    },
+    "eth_etf": {
+      "status": "SOURCE_INTEGRITY_FAIL",
+      "error": "BASE64_EXCESS_DATA_AFTER_PADDING",
+      "partial_recovery_allowed": false
+    },
+    "price_history": {
+      "status": "PASS",
+      "btc_days": 1064,
+      "eth_days": 1064,
+      "verified_columns": ["timestamp_utc", "btc_usdt", "eth_usdt"]
+    },
+    "archived_data_ping": {
+      "source_records": 67,
+      "dated_records": 61,
+      "date_min": "2026-07-27",
+      "date_max": "2026-08-08",
+      "role": "CONTEMPORANEOUS_NO_HINDSIGHT_EVIDENCE"
+    }
+  },
+  "historical_results": {
+    "P4-C01-ETF-PERSISTENCE": {
+      "verdict": "KILL",
+      "scope": "GENERIC_UNCONDITIONAL_BTC_ETF_PERSISTENCE_AS_STANDALONE_1D_3D_7D_PRICE_PRECURSOR",
+      "reason": [
+        "No tested feature survives the frozen family-wise circular-shift reference; adjusted p-values range approximately 0.845 to 1.000.",
+        "3/5/7-session sum direction is not stable across 2025 and 2026 on the longer horizons.",
+        "Incremental partial Spearman versus the single-print baseline is small; maximum absolute value is below 0.114.",
+        "The result does not invalidate ETF flows as context, absorption evidence or defensive confirmation. It kills only standalone generic precursor promotion."
+      ],
+      "best_surviving_detail_not_promoted": {
+        "feature": "negative_session_streak",
+        "direction": "MORE_NEGATIVE_STREAK_ASSOCIATES_WEAKLY_WITH_WEAKER_FORWARD_RETURN",
+        "partial_spearman_vs_single_print": {
+          "1d": -0.092026805731867,
+          "3d": -0.10980976085158828,
+          "7d": -0.11388661163652443
+        },
+        "familywise_p": {
+          "1d": 0.9180819180819181,
+          "3d": 0.8451548451548452,
+          "7d": 0.936063936063936
+        },
+        "status": "WEAK_STABLE_DIRECTION_NOT_EDGE"
+      }
+    },
+    "P4-C02-ETF-STABILIZATION": {
+      "verdict": "UNTESTABLE",
+      "reason": "29 source-defined stabilization events exist, but only 6 are scorable against the frozen price-history overlap. No promotion is defensible.",
+      "descriptive_only": {
+        "1d_median_return": 0.0033092276110416874,
+        "3d_median_return": 0.00977505238692411,
+        "7d_median_return": -0.03571738380219153
+      }
+    },
+    "P4-C03-BTC-ETH-ETF-DIVERGENCE": {
+      "verdict": "UNTESTABLE",
+      "reason": "ETH archived source fails integrity validation; no partial recovery or substitute series is allowed inside this frozen replay."
+    },
+    "P4-C04-DISPERSION-THEN-BREADTH": {
+      "verdict": "OBSERVE",
+      "reason": "Existing Round 1/2 evidence remains the only sequence-order candidate with useful directional asymmetry, but false positives remain too high and Phase IV does not retune it."
+    },
+    "P4-X01-CFGI-ORDERS": {
+      "verdict": "EXPLORATORY_ONLY",
+      "reason": "Independent historical episode count remains insufficient for promotion-grade inference."
+    }
+  },
+  "prospective_results": {
+    "P4-C05-PRICE-DOWN-OI-UP": "PROSPECTIVE_ONLY",
+    "P4-C06-PRICE-OI-SPOT-DIVERGENCE": "PROSPECTIVE_ONLY_SOURCE_COVERAGE_REQUIRED",
+    "P4-C07-POST-FLUSH-RECLAIM-OI": "PROSPECTIVE_ONLY"
+  },
+  "overall_verdict": "NO_NEW_SIGNAL_PROMOTED",
+  "complexity_decision": {
+    "do_not_build": [
+      "NEW_STANDALONE_ETF_PERSISTENCE_TRIGGER",
+      "NEW_ETF_WEIGHT_OR_SCORE",
+      "NEW_ETF_THRESHOLD_SEARCH"
+    ],
+    "retain": [
+      "ETF_AS_CONTEXT_AND_DEFENSIVE_CONFIRMATION_UNCHANGED",
+      "EXISTING_DISPERSION_TO_BREADTH_OBSERVATION_ONLY",
+      "ROUND3_PROSPECTIVE_COLLECTION_FOR_NEW_INFORMATION_DIMENSIONS"
+    ],
+    "next_research_priority": [
+      "PRICE_DOWN_OI_UP_PROSPECTIVE_EVIDENCE",
+      "PRICE_OI_SPOT_DIVERGENCE_WHEN_PROVENANCE_COMPLETE_OVERLAP_EXISTS",
+      "POST_FLUSH_RECLAIM_PLUS_OI_BEHAVIOUR",
+      "SOURCE_RECOVERY_FOR_ETH_ETF_ONLY_IF_ORIGINAL_INTEGRITY_CAN_BE_PROVEN_WITHOUT_REWRITING_HISTORY"
+    ]
+  },
+  "authority": {
+    "canonical_market_state_changed": false,
+    "threshold_changed": false,
+    "weight_changed": false,
+    "portfolio_semantics_changed": false,
+    "automatic_rule_change": false,
+    "production_promotion": false
+  }
+}
