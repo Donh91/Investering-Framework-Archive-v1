@@ -1,0 +1,58 @@
+{
+  "contract": "PHASE_IV_B_PROSPECTIVE_READINESS_SNAPSHOT_v1",
+  "status": "NOT_ANALYSIS_ELIGIBLE_CONTINUE_COLLECTION",
+  "authority": "PROVIDER_VALUE_FREE_METADATA_ONLY_NO_OUTCOME_LINKING",
+  "recorded_at_utc": "2026-08-23T17:48:00Z",
+  "restricted_repository": "Donh91/secrets",
+  "restricted_main_sha_observed": "4da707f88a4eb9d6ebb491309fc9d2a661accad7",
+  "private_health_snapshot": {
+    "raw_file_count": 39,
+    "valid_file_count": 39,
+    "invalid_or_orphan_count": 0,
+    "duplicate_payload_capture_count": 0,
+    "post_floor_provenance_complete_count": 28,
+    "legacy_quarantined_missing_v2_provenance_count": 11,
+    "source_counts": {
+      "SC01_OKX_ETH_OI_HOURLY_V1": 10,
+      "SC03_OKX_ETH_REALIZED_FUNDING_V1": 19,
+      "SC14_DERIBIT_ETH_TRUE_25D_SKEW_V1": 10
+    },
+    "analysis_authorized": false,
+    "hypothesis_testing_performed": false,
+    "outcome_scoring_performed": false
+  },
+  "frozen_power_contract": {
+    "contract": "ROUND3_MULTIPLICITY_POWER_HOLD_CONTRACT_v1",
+    "prospective_blocks_required": 2,
+    "minimum_complete_pairs_each": 30,
+    "minimum_complete_pairs_total_lower_bound": 60,
+    "minimum_complete_pair_coverage": 0.80,
+    "block_boundary_frozen_before_outcome_linking": true,
+    "minimum_familywise_power_at_concordance_0_67": 0.80,
+    "adjacent_hours_independent_replicates": false,
+    "power_gate_before_outcome_linking": true
+  },
+  "readiness_assessment": {
+    "analysis_gate": "FAIL_CLOSED",
+    "reason_1": "Restricted analysis_authorized is false.",
+    "reason_2": "Hypothesis testing and outcome scoring remain false as required.",
+    "reason_3": "The active primary source capture counts are individually below the 60-pair lower bound; a capture is not an independent event-control pair, so current pair eligibility can only be lower, not higher.",
+    "reason_4": "Exact eligible pair count must not be manufactured from adjacent hourly captures and cannot be outcome-linked before the frozen power gate.",
+    "exact_complete_pair_count_reported": null,
+    "why_exact_pair_count_is_null": "No analysis-authorized event/control linkage has been performed; reporting a derived pair count from source values would exceed this metadata-only readiness audit."
+  },
+  "allowed_now": [
+    "Continue existing immutable SC01/SC03/SC14 collection schedules.",
+    "Continue source-only health, provenance, duplicate and orphan validation.",
+    "Monitor provider-value-free capture counts and governance state.",
+    "Preserve frozen feature, direction, window, instrument and Stage-2-only thresholds."
+  ],
+  "forbidden_now": [
+    "Inspect outcome-linked candidate performance.",
+    "Activate hypothesis testing or outcome scoring.",
+    "Treat adjacent hours or captures as independent event-control pairs.",
+    "Retune feature windows, directions, thresholds or source definitions after source-value inspection.",
+    "Add duplicate collectors or wider feature search merely to accelerate readiness."
+  ],
+  "next_gate": "Continue prospective collection until governance authorizes a pre-outcome power/readiness evaluation under the frozen pair construction; if the pair-count, coverage or power gate fails, continue collection with no result interpretation."
+}
