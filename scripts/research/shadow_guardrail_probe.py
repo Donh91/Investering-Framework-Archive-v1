@@ -13,6 +13,7 @@ ALLOWED_EXACT = {
     "06_RESEARCH_LAB/protocols/SHADOW_IDEA_ADMISSION_RULE_v1.md",
     "06_RESEARCH_LAB/protocols/SHADOW_IDEA_ADMISSION_TEMPLATE_v1.json",
     ".github/workflows/buildwithclaude-shadow-round1.yml",
+    ".github/workflows/buildwithclaude-shadow-prospective-observer.yml",
     "scripts/research/validate_buildwithclaude_shadow_round1.py",
 }
 
@@ -96,6 +97,7 @@ def self_test() -> Dict[str, Any]:
         "06_RESEARCH_LAB/buildwithclaude_shadow_round1_v1/ROUND_CONTRACT.md",
         "scripts/research/shadow_property_invariant_probe.py",
         ".github/workflows/buildwithclaude-shadow-round1.yml",
+        ".github/workflows/buildwithclaude-shadow-prospective-observer.yml",
     ]
     blocked = [
         "01_CORE_FRAMEWORK/state.json",
