@@ -1,0 +1,71 @@
+name: Situation Room Owner Live Gate
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/data_terminal/situation_room_daily_owner.py'
+      - 'tests/data_terminal/test_situation_room_daily_owner.py'
+      - '.github/workflows/daily-raw-owner-capture.yml'
+      - '.github/workflows/situation-room-owner-live-gate.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deterministic-and-live-owner:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Run deterministic Situation Room owner tests
+        run: |
+          python -m unittest tests.data_terminal.test_situation_room_daily_owner -v
+          python -m py_compile scripts/data_terminal/situation_room_daily_owner.py
+
+      - name: Run live Situation Room owner without repository writes
+        run: |
+          python scripts/data_terminal/situation_room_daily_owner.py \
+            --output-root /tmp/situation-room-live \
+            --date-utc "$(date -u +%F)" \
+            --timeout 8
+
+      - name: Verify live receipt, authority and failure semantics
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          root=Path('/tmp/situation-room-live')
+          latest=json.loads((root/'LATEST.json').read_text())
+          dated=Path(latest['path'])
+          result=json.loads(dated.read_text())
+
+          assert result['contract']=='SITUATION_ROOM_DAILY_OWNER_v1', result
+          assert result['authority']=='RESEARCH_ONLY_NON_CANONICAL', result
+          assert result['run_status']=='PASS', result
+          assert result['daily_result'] in {'MATERIAL_CATALYSTS_FOUND','NO_NEW_MATERIAL_CATALYST'}, result
+          assert result['source_coverage']['primary_pass'] >= 3, result['source_coverage']
+          assert result['situation_room_role']=='DISCOVERY_ONLY', result
+          assert result['market_reaction_separate_from_event'] is True, result
+          assert result['shared_row_tournament_eligible'] is False, result
+          assert result['retroactive_candidate_eligibility'] is False, result
+          assert result['canonical_effect'] is False, result
+          assert result['market_state_effect'] is False, result
+          assert result['portfolio_effect'] is False, result
+          assert latest['daily_result']==result['daily_result'], (latest,result)
+          assert latest['run_status']=='PASS', latest
+          print('SITUATION_ROOM_LIVE_OWNER_PASS',result['daily_result'],result['source_coverage']['primary_pass'])
+          PY
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: situation-room-live-owner-${{ github.run_id }}
+          path: /tmp/situation-room-live/
+          retention-days: 14
+          if-no-files-found: warn
