@@ -1,0 +1,42 @@
+{
+  "contract": "SITUATION_ROOM_DAILY_OWNER_IMPLEMENTATION_STATUS_v1_1",
+  "authority": "RESEARCH_ONLY_NON_CANONICAL",
+  "status": "IMPLEMENTED_NOT_SCHEDULE_ACTIVATED",
+  "collector_code": "scripts/data_terminal/situation_room_daily_owner.py",
+  "test_path": "tests/data_terminal/test_situation_room_daily_owner.py",
+  "contract_path": "04_MARKET_LEARNING/news/2026-08-23__situation-room-daily-owner-contract-v1__research.md",
+  "production_durable_root": "03_DAILY_CAPTURE_LOGS/catalyst_overlay/situation_room",
+  "bounded_backfill_root": "04_MARKET_LEARNING/news/situation_room_backfill",
+  "bounded_backfill": {
+    "start_date": "2026-08-18",
+    "end_date": "2026-08-23",
+    "status": "MATERIALIZED_RESEARCH_ONLY",
+    "event_ledger_seeded": true,
+    "latest_pointer_created": true,
+    "shared_row_tournament_eligible": false,
+    "retroactive_candidate_eligibility": false,
+    "reason_not_in_production_log_root": "Backfill predates production schedule activation and is intentionally retained in the research/context lane to avoid confusing retrospective context with prospective operational capture."
+  },
+  "failure_semantics": {
+    "successful_zero_event": "NO_NEW_MATERIAL_CATALYST",
+    "partial_primary_source_failure": "UNKNOWN_DUE_TO_SOURCE_FAILURE",
+    "total_primary_source_failure": "COLLECTOR_FAILURE",
+    "unresolved_timestamped_candidate": "REVIEW_REQUIRED_UNRESOLVED_CANDIDATES",
+    "zero_event_equals_failure": false
+  },
+  "situation_room_role": "DISCOVERY_ONLY",
+  "event_reaction_separation": true,
+  "canonical_effect": false,
+  "market_state_effect": false,
+  "cycle_navigator_effect": false,
+  "master_monday_semantic_effect": false,
+  "portfolio_effect": false,
+  "schedule_activation": {
+    "status": "BLOCKED_BY_HIGH_IMPACT_SAFETY_GATE",
+    "workflow_file_created_or_modified": false,
+    "internal_safepoint": "backup-safepoint/2026-08-23-situation-room-workflow-activation",
+    "safepoint_source_sha": "9d553baa08149ee6863b6607de923ce1e8e2a403",
+    "external_vault_verification": "UNAVAILABLE_CURRENT_GITHUB_AUTHORITY_404",
+    "required_next_state": "RESTORE_EXTERNAL_VAULT_ACCESS_THEN_RUN_OUT_OF_CYCLE_SNAPSHOT_AND_SEPARATE_SCHEDULE_ACTIVATION_REVIEW"
+  }
+}

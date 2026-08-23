@@ -1,0 +1,64 @@
+{
+  "contract": "SITUATION_ROOM_DAILY_OWNER_v1",
+  "authority": "RESEARCH_ONLY_NON_CANONICAL",
+  "collection_mode": "BOUNDED_BACKFILL",
+  "observation_date_utc": "2026-08-20",
+  "detection_time_utc": "2026-08-23T20:23:00Z",
+  "run_status": "PASS_BOUNDED_RESEARCH_REVIEW",
+  "daily_result": "MATERIAL_CATALYSTS_FOUND",
+  "review_scope": "Situation Room public surface plus bounded primary/strong-independent source verification",
+  "events": [
+    {
+      "event_id": "EVT_CFTC_IAC_CRYPTO_POLICY_20260820",
+      "event_family_id": "EVF_CFTC_IAC_CRYPTO_POLICY_20260820",
+      "title": "CFTC Innovation Advisory Committee discusses crypto assets and related innovation topics",
+      "event_time_utc": "2026-08-20T00:00:00Z",
+      "event_time_precision": "DATE_ONLY_SOURCE_LOCAL_TIME_ZONE_WORDING_AMBIGUOUS",
+      "detection_time_utc": "2026-08-23T20:23:00Z",
+      "classification": "MARKET_RELEVANT",
+      "catalyst_subtype": "REGULATORY_POLICY_PROCESS",
+      "confidence": "HIGH_PRIMARY_SOURCE",
+      "expected_duration": "DAYS_TO_WEEKS",
+      "affected_framework_lanes": ["CATALYST_NEWS", "CRYPTO_POLICY", "MACRO_RISK"],
+      "verification_status": "PRIMARY_SOURCE_VERIFIED",
+      "source_receipts": [
+        {
+          "publisher": "Commodity Futures Trading Commission",
+          "role": "PRIMARY",
+          "url": "https://www.cftc.gov/PressRoom/Events/opaeventiac082026",
+          "content_sha256": null,
+          "hash_status": "NOT_CAPTURED_IN_BOUNDED_BACKFILL"
+        }
+      ],
+      "notes": "Advisory/policy-process event, not a final rule or independent market-state authority.",
+      "causal_authority": "NONE"
+    }
+  ],
+  "event_family_updates": [
+    {
+      "event_family_id": "EVF_TREASURY_LONG_END_BUYBACK_20260819",
+      "update": "Treasury Secretary Bessent said the upsized long-end buyback program could be increased further.",
+      "source": "https://www.reuters.com/business/treasurys-bessent-says-upsized-bond-buybacks-could-increase-further-2026-08-20/",
+      "role": "STRONG_INDEPENDENT_FOLLOW_UP",
+      "counts_as_new_independent_catalyst": false
+    }
+  ],
+  "market_reaction_observations": [
+    {
+      "reaction_id": "RXN_CRYPTO_POLICY_TREASURY_FOLLOWTHROUGH_20260820",
+      "reaction_type": "MARKET_FOLLOW_THROUGH",
+      "observation": "Independent reporting described further strength in bitcoin and crypto-linked shares after the Treasury and White House policy cluster.",
+      "source": "https://www.reuters.com/legal/government/bitcoin-crypto-shares-climb-after-trump-pushes-clarity-act-2026-08-20/",
+      "attribution": "MULTI_CAUSAL_UNRESOLVED",
+      "does_not_create_catalyst": true
+    }
+  ],
+  "unverified_discoveries": [],
+  "source_limitations": [],
+  "shared_row_tournament_eligible": false,
+  "retroactive_candidate_eligibility": false,
+  "hindsight_market_attribution_forbidden": true,
+  "canonical_effect": false,
+  "market_state_effect": false,
+  "portfolio_effect": false
+}
