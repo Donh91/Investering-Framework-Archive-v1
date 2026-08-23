@@ -1,0 +1,53 @@
+name: Phase IV No-Hindsight Replay
+
+on:
+  pull_request:
+    paths:
+      - '06_RESEARCH_LAB/phase4_no_hindsight_falsification_v1/**'
+      - 'scripts/research/run_phase4_no_hindsight_replay.py'
+      - '.github/workflows/phase4-no-hindsight-replay.yml'
+      - '08_SOURCE_MATERIAL/market_data/etf_flows/**'
+      - '08_SOURCE_MATERIAL/data_ping/**'
+      - '06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/EPISODE_CATALOG.json'
+      - '06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/hourly_features.csv.gz'
+      - '06_RESEARCH_LAB/round3_new_information_v1/PRIMARY_HYPOTHESIS_REGISTRY_v1.json'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  replay:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Self-test
+        run: python scripts/research/run_phase4_no_hindsight_replay.py --self-test
+      - name: Run frozen replay
+        run: |
+          python scripts/research/run_phase4_no_hindsight_replay.py \
+            --repo-root . \
+            --output phase4_replay_report.json
+      - name: Verify authority boundary
+        run: |
+          python - <<'PY'
+          import json
+          r=json.load(open('phase4_replay_report.json'))
+          assert r['status']=='RESEARCH_ONLY_NON_CANONICAL'
+          a=r['authority']
+          assert a['market_state_changes'] is False
+          assert a['threshold_changes'] is False
+          assert a['weight_changes'] is False
+          assert a['portfolio_execution'] is False
+          assert a['auto_promotion'] is False
+          print('PHASE4_AUTHORITY_BOUNDARY_PASS')
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: phase4-no-hindsight-replay
+          path: phase4_replay_report.json
+          retention-days: 30
