@@ -16,15 +16,18 @@ ALLOWED_EXACT = {
     ".github/workflows/buildwithclaude-shadow-prospective-observer.yml",
     ".github/workflows/buildwithclaude-shadow-evidence-ledger.yml",
     ".github/workflows/shadow-admission-ai-decider.yml",
+    ".github/workflows/agent-tool-shadow-round2.yml",
     "research/api_agent/SHADOW_ADMISSION_AI_POLICY_v1.json",
     "scripts/api_agent/shadow_admission_ai_decider.py",
     "scripts/master_monday/publish_master_monday_outputs.py",
     "tests/api_agent/test_shadow_admission_ai_decider.py",
     "scripts/research/validate_buildwithclaude_shadow_round1.py",
+    "scripts/research/validate_agent_tool_shadow_round2.py",
 }
 
 ALLOWED_PREFIXES = (
     "06_RESEARCH_LAB/buildwithclaude_shadow_round1_v1/",
+    "06_RESEARCH_LAB/agent_tool_shadow_round2_v1/",
     "scripts/research/shadow_",
 )
 
@@ -101,15 +104,19 @@ def evaluate_paths(paths: Iterable[str]) -> Dict[str, Any]:
 def self_test() -> Dict[str, Any]:
     allowed = [
         "06_RESEARCH_LAB/buildwithclaude_shadow_round1_v1/ROUND_CONTRACT.md",
+        "06_RESEARCH_LAB/agent_tool_shadow_round2_v1/ROUND_CONTRACT.md",
         "scripts/research/shadow_property_invariant_probe.py",
+        "scripts/research/shadow_round2_fixture.py",
         ".github/workflows/buildwithclaude-shadow-round1.yml",
         ".github/workflows/buildwithclaude-shadow-prospective-observer.yml",
         ".github/workflows/buildwithclaude-shadow-evidence-ledger.yml",
         ".github/workflows/shadow-admission-ai-decider.yml",
+        ".github/workflows/agent-tool-shadow-round2.yml",
         "research/api_agent/SHADOW_ADMISSION_AI_POLICY_v1.json",
         "scripts/api_agent/shadow_admission_ai_decider.py",
         "scripts/master_monday/publish_master_monday_outputs.py",
         "tests/api_agent/test_shadow_admission_ai_decider.py",
+        "scripts/research/validate_agent_tool_shadow_round2.py",
     ]
     blocked = [
         "01_CORE_FRAMEWORK/state.json",
