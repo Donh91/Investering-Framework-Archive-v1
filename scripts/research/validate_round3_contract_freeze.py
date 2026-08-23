@@ -35,7 +35,7 @@ def validate_materialized_v2(status: dict):
 
     receipt = json.loads(receipt_path.read_text())
     commitment = json.loads(commitment_path.read_text())
-    pair_sha = sha256_file(pair_path)
+    pair_git_lf_sha = sha256_file(pair_path)
 
     assert receipt['contract'] == 'V2_EPISODE_CATALOG_MATERIALIZATION_RECEIPT_v1'
     assert commitment['contract'] == 'ROUND3_V2_CATALOG_COMMITMENT_v1'
@@ -62,7 +62,16 @@ def validate_materialized_v2(status: dict):
     assert commitment['matched_control_count_total'] == 129
     assert commitment['unmatched_episode_count'] == 6
 
-    assert pair_sha == receipt['pair_set_sha256'] == commitment['pair_set_sha256'] == status['v2_pair_set_sha256']
+    # The Actions artifact was emitted by csv.DictWriter using RFC-style CRLF,
+    # while Git stores the durable text form as LF. Both hashes are frozen in
+    # the receipt. The logical pair-set commitment remains the original CRLF
+    # artifact hash; the checked-in file must match the independently recorded
+    # Git-LF hash. This is byte-representation normalization only, not a change
+    # to any of the 135 event/control records.
+    assert receipt['pair_set_line_ending_equivalence'] == 'SAME_135_CSV_RECORDS_CRLF_ARTIFACT_VS_LF_GIT_CONTENT'
+    assert receipt['pair_set_sha256'] == receipt['pair_set_artifact_crlf_sha256']
+    assert pair_git_lf_sha == receipt['pair_set_git_lf_sha256']
+    assert receipt['pair_set_sha256'] == commitment['pair_set_sha256'] == status['v2_pair_set_sha256']
     assert receipt['catalog_sha256'] == commitment['catalog_sha256'] == status['v2_catalog_sha256']
     assert receipt['input_panel_sha256'] == commitment['input_panel_sha256']
 
@@ -78,7 +87,7 @@ def validate_materialized_v2(status: dict):
     assert status['v2_episode_count'] == 135
     assert status['v2_matched_control_count'] == 129
     assert 'V2_CATALOG_AND_PAIR_SET_NOT_YET_MATERIALIZED' not in status['blockers']
-    print('ROUND3_V2_COMMITMENT_PASS', receipt['catalog_sha256'], pair_sha)
+    print('ROUND3_V2_COMMITMENT_PASS', receipt['catalog_sha256'], receipt['pair_set_sha256'], pair_git_lf_sha)
 
 
 def main():
