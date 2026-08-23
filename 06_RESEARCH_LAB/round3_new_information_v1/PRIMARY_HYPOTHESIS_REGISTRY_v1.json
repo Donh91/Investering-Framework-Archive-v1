@@ -1,0 +1,91 @@
+{
+  "contract": "ROUND3_PRIMARY_HYPOTHESIS_REGISTRY_v1_FROZEN",
+  "status": "FROZEN_PROSPECTIVE_COLLECTION_ONLY_NOT_TEST_EXECUTABLE",
+  "blueprint_sha256": "340b9dea7a322626727a3059f47899ad2acfafaa7137fb19fd9b64f3163874ea",
+  "primary_count": 4,
+  "global_family": {
+    "family_id": "R3_PRIMARY_GLOBAL_FAMILY_V1_ALPHA_0_05",
+    "familywise_alpha": 0.05,
+    "authority": "SYNCHRONIZED_ERA_OR_PROSPECTIVE_BLOCK_MAX_T_PERMUTATION"
+  },
+  "common_contract": {
+    "actionable_window": "T-24H_THROUGH_T-1H",
+    "inferential_unit": "ONE_INDEPENDENT_V2_EVENT_CONTROL_PAIR",
+    "expected_direction": "HIGHER_RISK_SCORE_IN_V2_EVENT_THAN_MATCHED_CONTROL",
+    "stage1_primary_statistic": "PAIRED_CONCORDANCE_CONTINUOUS_FEATURE",
+    "stage2_policy_test_allowed_only_after_stage1_global_success": true,
+    "policy_threshold_is_not_a_stage1_rejection_gate": true,
+    "negative_control_window": "T-192H_THROUGH_T-169H",
+    "reactive_window": "T+1H_THROUGH_T+24H_REACTIVE_ONLY",
+    "minimum_complete_pair_coverage": 0.80,
+    "minimum_pairs_per_block": 30,
+    "minimum_simulated_familywise_power_at_mepi": 0.80,
+    "mepi_paired_concordance": 0.67,
+    "simultaneous_lower_bound_minimum": 0.55,
+    "block_concordance_minimum": 0.55,
+    "leave_one_pair_out_concordance_minimum": 0.62,
+    "historical_max_classification": "FORWARD_TEST"
+  },
+  "hypotheses": [
+    {
+      "hypothesis_id": "R3-H01-ETH-OI-EXPANSION",
+      "source_contract_id": "SC01_OKX_ETH_OI_HOURLY_V1",
+      "instrument": "OKX ETH-USDT-SWAP",
+      "mechanism": "Leverage accumulation may precede broad damage.",
+      "feature": "ln(oiCcy at last complete observation available by A-1h) - ln(oiCcy at last complete observation available by A-24h)",
+      "raw_fields": ["instId", "oiCcy", "ts", "retrieval_end_utc"],
+      "availability_rule": "availability=max(provider_ts,retrieval_end_utc), both endpoints no later than their cutoff",
+      "missingness_rule": "drop full pair if either endpoint absent, late, nonpositive, unit-inconsistent or mapping-changed; no fill or venue substitution",
+      "stage2_policy_threshold": "OI_INCREASE_GTE_10_PERCENT",
+      "stage2_live_threshold_expression": "risk_score >= ln(1.10)",
+      "threshold_status": "FROZEN_STAGE2_ONLY"
+    },
+    {
+      "hypothesis_id": "R3-H02-ETH-FUNDING-BURDEN",
+      "source_contract_id": "SC03_OKX_ETH_REALIZED_FUNDING_V1",
+      "instrument": "OKX ETH-USDT-SWAP",
+      "mechanism": "Realized positive funding may represent crowding and leverage carrying burden before broad damage.",
+      "feature": "sum realized fundingRate with fundingTime in [A-24h,A-1h] and availability no later than A-1h",
+      "raw_fields": ["instId", "fundingRate", "fundingTime", "retrieval_end_utc"],
+      "availability_rule": "fundingTime is event time; availability=max(provider response time,retrieval_end_utc); predicted or next funding forbidden",
+      "missingness_rule": "require at least two realized events and complete pagination in event and control windows; otherwise drop pair",
+      "stage2_policy_threshold": "REALIZED_23H_FUNDING_SUM_GTE_0.0003",
+      "threshold_status": "FROZEN_STAGE2_ONLY"
+    },
+    {
+      "hypothesis_id": "R3-H03-ETH-BID-DEPTH-WITHDRAWAL",
+      "source_contract_id": "SC06_BINANCE_ETH_BOOK_DEPTH_V1",
+      "instrument": "Binance Spot ETHUSDT",
+      "mechanism": "Executable bid-liquidity withdrawal may precede broad damage.",
+      "feature": "-ln(median 5-minute bid quote depth within 50bps of mid over T-24..T-1 / median same measure over T-72..T-25)",
+      "raw_fields": ["E", "U", "u", "bid_price", "bid_quantity", "receive_time_utc"],
+      "availability_rule": "every snapshot reconstructed from contiguous diff-depth sequence received by snapshot cutoff; availability=receive_time_utc",
+      "missingness_rule": "any sequence gap, stale bootstrap, missing snapshot or <90% scheduled snapshot coverage drops pair; no interpolation",
+      "source_integrity_gates": {"sequence_completeness_minimum": 0.999, "snapshot_coverage_minimum": 0.90},
+      "stage2_policy_threshold": "ACTIONABLE_MEDIAN_BID_DEPTH_LTE_70_PERCENT_OF_REFERENCE",
+      "threshold_status": "FROZEN_STAGE2_ONLY"
+    },
+    {
+      "hypothesis_id": "R3-H04-ETH-25D-PUT-SKEW",
+      "source_contract_id": "SC14_DERIBIT_ETH_TRUE_25D_SKEW_V1",
+      "instrument": "Deribit ETH options",
+      "mechanism": "Short-dated downside protection demand may precede broad damage.",
+      "feature": "hourly: nearest expiry 7<=DTE<14, put abs(delta) nearest .25 and call delta nearest .25 each within .05; skew=put mark_iv-call mark_iv; risk_score=median hourly skew T-24..T-1",
+      "raw_fields": ["instrument_name", "expiration_timestamp", "timestamp", "option_type", "strike", "mark_iv", "greeks.delta", "receive_time_utc"],
+      "availability_rule": "expiry, delta and IV must coexist in same frozen top-of-hour chain snapshot and be received by cutoff",
+      "missingness_rule": "require matched put/call within delta tolerance for at least 20 of 24 hourly snapshots in both event and control; otherwise drop pair",
+      "forbidden_substitute": "CURRENT_MONEYNESS_SKEW_MUST_NOT_BE_RELABELED_AS_TRUE_25_DELTA",
+      "stage2_policy_threshold": "MEDIAN_PUT_CALL_SKEW_GTE_10_IV_PERCENTAGE_POINTS",
+      "threshold_status": "FROZEN_STAGE2_ONLY"
+    }
+  ],
+  "global_rejection_rule": "one-sided synchronized block-preserving max-T adjusted p<=0.05 across all four primaries, correct direction, paired concordance>=0.67, simultaneous lower bound>=0.55, block consistency and influence gates",
+  "common_kill_conditions": [
+    "SOURCE_CONTRACT_OR_TIMESTAMP_SEMANTICS_UNRESOLVED",
+    "COMPLETE_PAIR_COVERAGE_BELOW_80_PERCENT",
+    "FEWER_THAN_30_PAIRS_IN_EITHER_PROSPECTIVE_BLOCK",
+    "FAMILYWISE_POWER_BELOW_80_PERCENT_AT_CONCORDANCE_0.67",
+    "FEATURE_DIRECTION_WINDOW_INSTRUMENT_OR_THRESHOLD_CHANGED_AFTER_SOURCE_VALUE_INSPECTION",
+    "CONTROL_SELECTION_OR_PAIRING_USES_ROUND3_SOURCE_VALUES_OR_MISSINGNESS"
+  ]
+}

@@ -1,0 +1,52 @@
+{
+  "contract": "ROUND3_CHANGE_CONTROL_v1",
+  "status": "FROZEN",
+  "immutable_after_first_round3_source_value_capture": [
+    "V2_EPISODE_TRIGGER_AND_CLOSURE",
+    "CONTROL_DESIGN_AND_MATCHING_FEATURES",
+    "PRIMARY_HYPOTHESIS_SET",
+    "FEATURE_FORMULAS",
+    "EXPECTED_DIRECTIONS",
+    "ACTIONABLE_WINDOWS",
+    "NEGATIVE_CONTROL_WINDOWS",
+    "REACTIVE_WINDOWS",
+    "INSTRUMENTS_AND_VENUES",
+    "STAGE2_POLICY_THRESHOLDS",
+    "GLOBAL_MULTIPLICITY_FAMILY",
+    "FAMILYWISE_ALPHA",
+    "MEPI_AND_EFFECT_GATES",
+    "HOLD_POLICY",
+    "BLOCK_CONSTRUCTION_RULE",
+    "STOP_RULES"
+  ],
+  "allowed_without_new_hypothesis_version": [
+    "BUG_FIX_THAT_RESTORES_ALREADY_FROZEN_SEMANTICS",
+    "PROVIDER_ENDPOINT_HOST_MIGRATION_WITH_IDENTICAL_DOCUMENTED_SEMANTICS_AND_VERSIONED_RECEIPT",
+    "STORAGE_RELIABILITY_IMPROVEMENT_THAT_DOES_NOT_CHANGE_VALUES_OR_AVAILABILITY_TIMES",
+    "ADDITIONAL_DATA_HEALTH_DIAGNOSTIC_WITH_NO_OUTCOME_OR_LABEL_ACCESS"
+  ],
+  "requires_new_version_and_fresh_prospective_evidence": [
+    "FEATURE_FORMULA_CHANGE",
+    "WINDOW_CHANGE",
+    "THRESHOLD_CHANGE",
+    "DIRECTION_CHANGE",
+    "VENUE_OR_INSTRUMENT_SUBSTITUTION",
+    "CONTROL_MATCHING_CHANGE",
+    "MISSINGNESS_RULE_CHANGE",
+    "POWER_OR_MULTIPLICITY_RELAXATION",
+    "V2_LABEL_CHANGE"
+  ],
+  "stage1_stage2_clarification": {
+    "provenance": "ADVERSARIAL_ACCEPTANCE_REVIEW_BEFORE_NEW_ROUND3_SOURCE_COLLECTION",
+    "continuous_feature_is_primary_stage1": true,
+    "frozen_policy_threshold_is_stage2_only": true,
+    "stage2_threshold_not_required_for_stage1_statistical_survival": true,
+    "numerical_thresholds_changed_from_blueprint": false
+  },
+  "closed_evidence_firewall": {
+    "round1_reopened": false,
+    "round2_reopened": false,
+    "v2_may_relabel_round1_or_round2": false,
+    "round1_round2_results_may_be_rescored_under_v2": false
+  }
+}

@@ -1,0 +1,82 @@
+{
+  "contract": "ROUND3_NORMALIZED_ROW_SCHEMA_v1",
+  "storage_class": "PRIVATE_PROVIDER_DERIVED_DATA",
+  "public_repo_rows_forbidden": true,
+  "common_required_fields": {
+    "source_contract_id": "string",
+    "provider": "string",
+    "instrument_id": "string",
+    "provider_event_time_utc": "RFC3339_UTC",
+    "availability_time_utc": "RFC3339_UTC",
+    "retrieval_start_utc": "RFC3339_UTC",
+    "retrieval_end_utc": "RFC3339_UTC",
+    "run_id": "string",
+    "schema_version": "string",
+    "mapping_version": "string",
+    "collector_git_sha": "40_hex_or_full_commit_sha",
+    "raw_payload_sha256": "64_hex",
+    "quality_status": "PASS_OR_EXPLICIT_FAIL_REASON"
+  },
+  "source_payload_fields": {
+    "SC01_OKX_ETH_OI_HOURLY_V1": {
+      "oiCcy": "positive_decimal_ETH",
+      "provider_ts_ms": "integer"
+    },
+    "SC03_OKX_ETH_REALIZED_FUNDING_V1": {
+      "fundingRate": "decimal",
+      "fundingTime_ms": "integer",
+      "provider_response_time_ms": "integer_or_null"
+    },
+    "SC06_BINANCE_ETH_BOOK_DEPTH_V1": {
+      "exchange_event_time_ms": "integer",
+      "first_update_id": "integer",
+      "final_update_id": "integer",
+      "mid_price": "positive_decimal",
+      "bid_quote_depth_50bps": "nonnegative_decimal_USDT",
+      "snapshot_time_utc": "RFC3339_UTC",
+      "sequence_complete_since_bootstrap": "boolean",
+      "bootstrap_lastUpdateId": "integer"
+    },
+    "SC14_DERIBIT_ETH_TRUE_25D_SKEW_V1": {
+      "expiry_timestamp_ms": "integer",
+      "put_instrument": "string",
+      "call_instrument": "string",
+      "put_delta": "decimal",
+      "call_delta": "decimal",
+      "put_mark_iv_pct_points": "decimal",
+      "call_mark_iv_pct_points": "decimal",
+      "hourly_skew_iv_pct_points": "decimal",
+      "snapshot_time_utc": "RFC3339_UTC"
+    }
+  },
+  "missingness": {
+    "missing_is_zero": false,
+    "forward_fill_forbidden": true,
+    "interpolation_forbidden": true,
+    "cross_venue_substitution_forbidden": true,
+    "late_observation_backdating_forbidden": true,
+    "all_failures_explicitly_receipted": true
+  },
+  "public_health_receipt_schema": {
+    "provider_values_included": false,
+    "allowed_fields": [
+      "source_contract_id",
+      "status",
+      "run_id",
+      "collector_git_sha",
+      "schema_version",
+      "mapping_version",
+      "row_count",
+      "duplicate_count",
+      "gap_count",
+      "first_event_time_utc",
+      "last_event_time_utc",
+      "first_availability_time_utc",
+      "last_availability_time_utc",
+      "coverage_ratio",
+      "sequence_completeness_ratio",
+      "raw_partition_sha256",
+      "health_receipt_sha256"
+    ]
+  }
+}
