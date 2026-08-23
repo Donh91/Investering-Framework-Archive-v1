@@ -1,0 +1,46 @@
+{
+  "contract": "BUILDWITHCLAUDE_SHADOW_EVIDENCE_ROW_v1",
+  "evidence_class": "INITIAL_SYNTHETIC_LAB",
+  "authority": "RESEARCH_ONLY_NON_CANONICAL",
+  "canonical_effect": false,
+  "portfolio_execution": false,
+  "source": {
+    "workflow": "BuildWithClaude Shadow Round 1",
+    "workflow_run_id": 32645408229,
+    "artifact_id": 9494724317,
+    "artifact_digest": "sha256:39a3c77a4c57bd1770ea9efe50366b06952b44cd8df986cabb9c36f5bc2f7640",
+    "head_sha": "141f6f5d65471ddc4414275501d2abee61a8bbfe"
+  },
+  "candidates": {
+    "BWC-R1-C1-PROPERTY-INVARIANTS": {
+      "status": "PASS",
+      "generated_cases": 1000,
+      "checks": 9002,
+      "failure_count": 0,
+      "runtime_seconds_approx": 0.37
+    },
+    "BWC-R1-C2-MUTATION": {
+      "status": "PASS",
+      "executed_mutations": 7,
+      "killed_mutations": 7,
+      "kill_rate": 1.0,
+      "runtime_seconds_approx": 0.48
+    },
+    "BWC-R1-C3-SESSION-TELEMETRY": {
+      "status": "PASS",
+      "external_backend": false,
+      "raw_output_persisted": false
+    },
+    "BWC-R1-C4-GUARDRAILS": {
+      "status": "PASS",
+      "preflight": "PASS",
+      "self_test": "PASS",
+      "postflight": "PASS",
+      "observed_practical_value": "Caught bytecode working-tree contamination during the first harness run and forced isolation rather than guardrail relaxation."
+    }
+  },
+  "limitations": [
+    "This row is synthetic/laboratory evidence, not sufficient prospective real-change evidence by itself.",
+    "No candidate is promoted by this row."
+  ]
+}
