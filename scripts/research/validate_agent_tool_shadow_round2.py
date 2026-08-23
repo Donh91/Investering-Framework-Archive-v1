@@ -17,7 +17,7 @@ EXPECTED_CANDIDATES = {
 }
 EXPECTED_PINS = {
     "GRAFT": ("@nanonets/graft", "0.10.1"),
-    "CODEBASE_MEMORY": ("codebase-memory-mcp", "0.8.1"),
+    "CODEBASE_MEMORY": ("codebase-memory-mcp", "0.10.6"),
     "INSPECT_AI": ("inspect-ai", "0.3.258"),
     "PROMPTFOO": ("promptfoo", "0.122.0"),
 }
@@ -99,9 +99,9 @@ def main() -> int:
         "PROMPTFOO_DISABLE_REDTEAM_REMOTE_GENERATION=1",
         "PROMPTFOO_DISABLE_SHARING=1",
         "@nanonets/graft@0.10.1",
+        "codebase-memory-mcp@0.10.6",
         "promptfoo@0.122.0",
         "inspect-ai==0.3.258",
-        "codebase-memory-mcp==0.8.1",
         "shadow_round2_fixture.py",
         "shadow_round2_qualification.py",
         "shadow_guardrail_probe.py",
