@@ -1,26 +1,32 @@
 {
   "authority": "RESEARCH_ONLY_NON_CANONICAL",
   "contract": "ETHBTC_FORWARD_RELATIVE_RETURN_OUTCOME_v1",
+  "contract_revision": "1.1-row-time-binding",
   "freeze_before_first_eligible_row": true,
   "immutability": {
+    "baseline_reconstructed_from_row_source_commit": true,
+    "baseline_timestamp_and_three_values_must_reconcile": true,
     "candidate_decisions_never_rewritten": true,
     "each_horizon_written_at_most_once": true,
     "outcome_detail_ledger_append_only_key": "event_id+horizon",
-    "outcome_fields_blank_until_mature": true
+    "outcome_fields_blank_until_mature": true,
+    "outcome_source_commit_and_path_hashes_appended": true
   },
   "path_metrics": {
     "ETHBTC_MAE_MFE": "min/max percentage return from baseline over direct hourly ETHBTC closes from baseline through selected horizon end",
+    "complete_hourly_path_required": true,
+    "duplicate_timestamp_rejected": true,
     "no_imputation": true,
     "secondary_BTC_ETH": "also retain BTC and ETH forward return plus BTC/ETH MAE/MFE using direct retained Binance spot hourly closes for tail-risk diagnostics"
   },
   "primary_classification": {
-    "baseline": "latest direct settled hourly ETHBTC close at or before information_cutoff_utc",
+    "baseline": "exact direct settled hourly ETHBTC/BTC/ETH row frozen in the shared row source-binding manifest and reproduced from row-time Git bytes",
     "horizons_hours": {
       "24h": 24,
       "72h": 72,
       "7d": 168
     },
-    "missing": "if no qualifying direct close exists, horizon remains unmatured/unavailable",
+    "missing": "if the row-time baseline does not reconcile, the source commit/path/hash is unreachable, or any hourly path point is missing or duplicated, the horizon remains unmatured/unavailable",
     "negative_outcome": "forward ETHBTC relative return <= 0",
     "positive_outcome": "forward ETHBTC relative return > 0",
     "source": "direct retained Binance ETHBTC settled hourly closes",

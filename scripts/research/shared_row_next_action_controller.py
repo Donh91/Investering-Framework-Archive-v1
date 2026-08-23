@@ -77,8 +77,17 @@ def last_action_for(history, action, target):
     return None
 
 
-def context_breakdown(divs, target):
+def prospective_block(timestamp, floor, width_days):
+    ts = parse_dt(timestamp)
+    if ts is None or floor is None or ts < floor:
+        return None
+    index = int((ts - floor).total_seconds() // timedelta(days=width_days).total_seconds())
+    return f"P{width_days}D_{index:04d}"
+
+
+def context_breakdown(divs, target, floor, policy):
     out = {}
+    width = int(policy["p0_context_gate_repair"]["fixed_block_width_days"])
     for d in divs:
         y = b(d.get("outcome_7d"))
         if y is None:
@@ -91,7 +100,8 @@ def context_breakdown(divs, target):
             continue
         if dec is None:
             continue
-        key = f"{d.get('regime_tag') or 'UNKNOWN'}|{d.get('catalyst_tag') or 'UNKNOWN'}"
+        block = prospective_block(d.get("observation_timestamp_utc"), floor, width) or "OUT_OF_ACTIVE_BLOCKS"
+        key = f"{block}|{d.get('regime_tag') or 'UNKNOWN'}|{d.get('catalyst_tag') or 'UNKNOWN'}"
         s = out.setdefault(key, {"n": 0, "correct": 0, "errors": 0, "false_positives": 0, "false_negatives": 0})
         s["n"] += 1
         if dec == y:
@@ -105,7 +115,17 @@ def context_breakdown(divs, target):
     return out
 
 
-def evidence(rows, divs, policy):
+def evidence(rows, divs, policy, floor=None):
+    all_rows = rows
+    rows = [
+        row for row in rows
+        if row.get("row_integrity_contract") == "SHARED_ROW_P0_BINDING_v1"
+        and (floor is None or (parse_dt(row.get("observation_timestamp_utc")) or datetime.min.replace(tzinfo=timezone.utc)) >= floor)
+    ]
+    valid_event_ids = {row.get("event_id") for row in rows}
+    all_divs = divs
+    divs = [row for row in divs if row.get("event_id") in valid_event_ids]
+    block_width = int(policy["p0_context_gate_repair"]["fixed_block_width_days"])
     horizons = ["24h", "72h", "7d"]
     matured_rows = {h: sum(b(r.get(f"outcome_{h}")) is not None for r in rows) for h in horizons}
     matured_divs = {h: sum(b(r.get(f"outcome_{h}")) is not None for r in divs) for h in horizons}
@@ -130,6 +150,7 @@ def evidence(rows, divs, policy):
                 "unique_failures": 0,
                 "error_regimes": set(),
                 "error_contexts": set(),
+                "error_blocks": set(),
                 "false_positive_adverse_mae": [],
             })
             s["resolved_divergences"] += 1
@@ -141,6 +162,9 @@ def evidence(rows, divs, policy):
                 s["errors"] += 1
                 s["error_regimes"].add(regime)
                 s["error_contexts"].add(context)
+                block = prospective_block(d.get("observation_timestamp_utc"), floor, block_width)
+                if block:
+                    s["error_blocks"].add(block)
                 if other_dec == y:
                     s["unique_failures"] += 1
                 if dec == 1 and y == 0:
@@ -151,6 +175,7 @@ def evidence(rows, divs, policy):
     for s in cstats.values():
         s["distinct_error_regimes"] = len(s.pop("error_regimes"))
         s["distinct_error_contexts"] = len(s.pop("error_contexts"))
+        s["distinct_error_prospective_blocks"] = len(s.pop("error_blocks"))
         vals = s.pop("false_positive_adverse_mae")
         s["false_positive_adverse_mae_mean"] = sum(vals) / len(vals) if vals else None
         s["false_positive_adverse_mae_n"] = len(vals)
@@ -173,11 +198,15 @@ def evidence(rows, divs, policy):
             "target_unique_wins": 0,
             "baseline_unique_wins": 0,
             "regimes": set(),
+            "prospective_blocks": set(),
             "target_false_positive_mae": [],
             "baseline_false_positive_mae": [],
         })
         p["resolved"] += 1
         p["regimes"].add(str(d.get("regime_tag") or "UNKNOWN"))
+        block = prospective_block(d.get("observation_timestamp_utc"), floor, block_width)
+        if block:
+            p["prospective_blocks"].add(block)
         if tdec == y and bdec != y:
             p["target_unique_wins"] += 1
         elif bdec == y and tdec != y:
@@ -200,6 +229,7 @@ def evidence(rows, divs, policy):
         p["wilson_upper"] = hi
         p["net_unique_wins"] = p["target_unique_wins"] - p["baseline_unique_wins"]
         p["distinct_regimes"] = len(p.pop("regimes"))
+        p["distinct_prospective_blocks"] = len(p.pop("prospective_blocks"))
         tv = p.pop("target_false_positive_mae")
         bv = p.pop("baseline_false_positive_mae")
         p["target_false_positive_mae_mean"] = sum(tv) / len(tv) if tv else None
@@ -215,7 +245,9 @@ def evidence(rows, divs, policy):
 
     return {
         "eligible_rows_total": len(rows),
+        "excluded_pre_repair_rows": len(all_rows) - len(rows),
         "divergences_total": len(divs),
+        "excluded_unbound_divergences": len(all_divs) - len(divs),
         "matured_rows": matured_rows,
         "matured_divergences": matured_divs,
         "candidate_divergence_stats_7d": cstats,
@@ -225,12 +257,25 @@ def evidence(rows, divs, policy):
 
 def choose_action(root, rows, ev, policy, now, history):
     floor = None
+    collection_state = None
     runtime = root / "RUNTIME_STATUS.json"
     if runtime.exists():
         try:
-            floor = parse_dt(json.loads(runtime.read_text()).get("core_prospective_eligibility_start"))
+            runtime_state = json.loads(runtime.read_text())
+            floor = parse_dt(runtime_state.get("core_prospective_eligibility_start"))
+            collection_state = runtime_state.get("collection_state")
         except Exception:
             floor = None
+            collection_state = None
+
+    if collection_state != "ACTIVE_POST_REPAIR_PROSPECTIVE_COLLECTION":
+        return "NO_ACTION", "P0_REPAIR_QUARANTINE", "Prospective collection is quarantined pending complete post-repair evidence and a separately reviewed future floor."
+
+    rows = [
+        row for row in rows
+        if row.get("row_integrity_contract") == "SHARED_ROW_P0_BINDING_v1"
+        and (floor is None or (parse_dt(row.get("observation_timestamp_utc")) or datetime.min.replace(tzinfo=timezone.utc)) >= floor)
+    ]
 
     gap_hours = float(policy["trigger_floors"]["expected_row_gap_hours"])
     if floor:
@@ -254,7 +299,7 @@ def choose_action(root, rows, ev, policy, now, history):
     pairpol = policy["trigger_floors"]["pairwise_relevance_decision"]
     promotions, deprioritizations = [], []
     for target, p in ev["pairwise_vs_baseline_7d"].items():
-        if p["resolved"] < int(pairpol["resolved_7d_divergences_min"]) or p["distinct_regimes"] < int(pairpol["distinct_regimes_min"]):
+        if p["resolved"] < int(pairpol["resolved_7d_divergences_min"]) or p["distinct_prospective_blocks"] < int(pairpol["distinct_prospective_blocks_min"]):
             continue
         net = int(p["net_unique_wins"])
         minnet = int(pairpol["net_unique_wins_or_failures_min"])
@@ -275,7 +320,7 @@ def choose_action(root, rows, ev, policy, now, history):
         target, top = sorted(cstats.items(), key=lambda x: (x[1]["errors"], x[1]["distinct_error_contexts"]), reverse=True)[0]
         hp = policy["trigger_floors"]["new_hypothesis_research"]
         prior_stress = last_action_for(history, "STRESS_TEST", target)
-        if top["errors"] >= int(hp["candidate_7d_errors_min"]) and top["distinct_error_regimes"] >= int(hp["distinct_regimes_min"]) and prior_stress is not None:
+        if top["errors"] >= int(hp["candidate_7d_errors_min"]) and top["distinct_error_prospective_blocks"] >= int(hp["distinct_prospective_blocks_min"]) and prior_stress is not None:
             before = int(prior_stress.get("matured_7d_rows") or 0)
             if m7 - before >= int(hp["new_matured_7d_rows_since_prior_stress_min"]):
                 return "RESEARCH_NEW_HYPOTHESIS", target, "A previously stress-tested error pattern persists with new matured evidence across multiple regimes."
@@ -286,7 +331,7 @@ def choose_action(root, rows, ev, policy, now, history):
     return "INVESTIGATE_DIVERGENCE", "CORE_C01_C07", "The first information-review floor is met; inspect matured disagreements before changing research scope."
 
 
-def packet_for(action, target, reason, ev, registry, divs, root, now):
+def packet_for(action, target, reason, ev, registry, divs, root, now, floor=None, policy=None):
     packet = {
         "contract": "RESEARCH_NEXT_ACTION_PACKET_v1",
         "authority": "RESEARCH_ONLY_NON_CANONICAL",
@@ -302,7 +347,7 @@ def packet_for(action, target, reason, ev, registry, divs, root, now):
     if target in registry:
         packet["target_candidate_definition"] = registry[target]
     if action in {"STRESS_TEST", "RESEARCH_NEW_HYPOTHESIS"} and target in registry:
-        packet["target_context_breakdown_7d"] = context_breakdown(divs, target)
+        packet["target_context_breakdown_7d"] = context_breakdown(divs, target, floor, policy)
     if action == "INVESTIGATE_DATA_GAP":
         try:
             matrix = json.loads((root / "OWNER_BINDING_MATRIX.json").read_text())
@@ -320,6 +365,8 @@ def packet_for(action, target, reason, ev, registry, divs, root, now):
         packet["research_instruction"] = "Prepare a canonical-review evidence packet only. Do not modify canonical rules, thresholds, weights or execution."
     elif action == "DEPRIORITIZE":
         packet["research_instruction"] = "Mark the target as a research-deprioritization candidate only; preserve historical evidence and do not delete the candidate."
+    elif action == "NO_ACTION" and target == "P0_REPAIR_QUARANTINE":
+        packet["research_instruction"] = "Keep shared-row ingestion, scoring and autonomous follow-on actions disabled until a separate activation review sets the post-repair source boundary and future floor."
     else:
         packet["research_instruction"] = "Continue prospective evidence accumulation under frozen contracts."
     return packet
@@ -379,9 +426,11 @@ def main():
     hist_path = root / "data/NEXT_ACTION_LEDGER.csv"
     history = read_csv(hist_path)
     registry = candidate_registry(root)
-    ev = evidence(rows, divs, policy)
+    runtime = json.loads((root / "RUNTIME_STATUS.json").read_text())
+    floor = parse_dt(runtime.get("core_prospective_eligibility_start"))
+    ev = evidence(rows, divs, policy, floor)
     action, target, reason = choose_action(root, rows, ev, policy, now, history)
-    packet = packet_for(action, target, reason, ev, registry, divs, root, now)
+    packet = packet_for(action, target, reason, ev, registry, divs, root, now, floor, policy)
     core_fp = {"primary_action": action, "target": target, "reason": reason, "evidence_summary": ev, "policy_contract": policy["contract"]}
     state = {
         **packet,

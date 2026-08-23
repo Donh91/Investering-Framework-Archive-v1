@@ -1,13 +1,16 @@
 {
   "contract": "SHARED_ROW_SCHEMA_v1",
+  "contract_revision": "1.2-p0-integrity",
   "authority": "RESEARCH_ONLY_NON_CANONICAL",
   "primary_key": ["event_id","observation_timestamp_utc"],
-  "required_identity": ["event_id","observation_timestamp_utc","information_cutoff_utc","source_version_commit","regime_tag","catalyst_tag","provenance_hash"],
+  "required_identity": ["event_id","observation_timestamp_utc","information_cutoff_utc","source_version_commit","row_integrity_contract","source_binding_manifest","source_binding_manifest_sha256","prospective_context_block","regime_tag","catalyst_tag","provenance_hash"],
   "family_groups": ["ethbtc","breadth","btcd","etf","leverage","stablecoin","cfgi","full_stack"],
   "candidate_fields": ["candidate_decisions","candidate_first_signal_utc","candidate_stable_confirmation_utc"],
   "outcomes": ["outcome_24h","outcome_72h","outcome_7d","mae_24h","mfe_24h","mae_72h","mfe_72h","mae_7d","mfe_7d"],
   "missing_policy": "MISSING_IS_EXCLUDED_NOT_ZERO",
-  "lookahead_policy": "information_cutoff_utc MUST NOT exceed observation_timestamp_utc",
-  "revision_policy": "use only information available by cutoff; later revisions must be separately versioned",
+  "lookahead_policy": "observation_timestamp_utc MUST equal information_cutoff_utc and every bound source capture or verification timestamp MUST be at or before that cutoff",
+  "source_binding_policy": "Every core family MUST bind exact paths, SHA-256 values, owner/provider/transform contracts and a reachable ancestor Git commit under SHARED_ROW_SOURCE_BINDING_MANIFEST_v1.",
+  "row_integrity_contract": "SHARED_ROW_P0_BINDING_v1",
+  "revision_policy": "use only information available by cutoff; later revisions must be separately versioned and may not rewrite a frozen row",
   "horizons_frozen": true
 }

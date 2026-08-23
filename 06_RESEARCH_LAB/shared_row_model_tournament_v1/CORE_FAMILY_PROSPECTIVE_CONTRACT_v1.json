@@ -21,7 +21,7 @@
     "version": "PROSPECTIVE_CONTEXT_TAG_v1"
   },
   "contract": "CORE_FAMILY_PROSPECTIVE_CONTRACT_v1",
-  "contract_revision": "1.1-p0-containment",
+  "contract_revision": "1.2-p0-integrity",
   "created_for": "PROSPECTIVE_EVIDENCE_ACCUMULATION_v1",
   "family_contracts": {
     "BREADTH_SURVIVAL": {
@@ -38,7 +38,7 @@
     "BTCD_PATH_RECLAIM": {
       "definition": {
         "decision_state_carry_until_next_settled_print": true,
-        "input": "latest three settled complete UTC daily CMC BTC.D closes available at information cutoff",
+        "input": "latest three distinct strictly chronological settled complete UTC daily CMC BTC.D closes verified at or before information cutoff",
         "legacy_tradingview_equivalence": false,
         "permission": "true iff state == FALLING_PATH",
         "source_row_interpolation": false,
@@ -53,7 +53,7 @@
     },
     "ETHBTC_PERSISTENCE": {
       "definition": {
-        "input": "direct Binance ETHBTC settled hourly closes only",
+        "input": "exactly 168 unique continuous direct Binance ETHBTC settled hourly closes whose source windows ended by information cutoff",
         "level": 0.03,
         "lookback_rows": 168,
         "permission": "true iff state == ABOVE",
@@ -67,6 +67,20 @@
   "legacy_equivalence": false,
   "missing_is_zero": false,
   "no_backdating": true,
+  "prospective_activation": {
+    "activation_pr": null,
+    "collection_state": "QUARANTINED_PENDING_POST_REPAIR_EVIDENCE",
+    "implementation_merge_commit": null,
+    "post_repair_source_capture_not_before_utc": null,
+    "rule": "A separate activation review must set a future floor only after the implementation merge and a complete 168-hour ETHBTC window, dated breadth bundle and CMC verification all captured after the implementation boundary."
+  },
+  "source_binding_contract": {
+    "contract": "SHARED_ROW_SOURCE_BINDING_MANIFEST_v1",
+    "git_commit_must_be_reachable_ancestor": true,
+    "path_hash_and_contract_required_per_family": true,
+    "row_integrity_contract": "SHARED_ROW_P0_BINDING_v1",
+    "same_cutoff_required": true
+  },
   "p0_containment": {
     "activation_requirements": [
       "P0 implementation merged",
@@ -79,12 +93,12 @@
     "prior_prospective_eligibility_start": "2026-08-23T04:50:00Z",
     "prior_row_count": 0,
     "reason": "INDEPENDENT_WORK_AUDIT_ARCHITECTURAL_RISK",
-    "status": "QUARANTINED_PENDING_P0_REPAIR"
+    "status": "P0_REPAIR_IMPLEMENTED_AWAITING_POST_REPAIR_EVIDENCE_AND_ACTIVATION_REVIEW"
   },
   "prospective_eligibility_start": "2026-09-30T00:00:00Z",
   "prospective_eligibility_status": "CONTAINMENT_SENTINEL_NOT_AN_ACTIVATION_FLOOR",
   "prospective_robustness_design": {
-    "activation": "NOT_ACTIVE_UNTIL_P0_IMPLEMENTATION_PR",
+    "activation": "PREREGISTERED_NOT_ACTIVE_UNTIL_NEW_FLOOR",
     "calendar_only_verdict_forbidden": true,
     "fixed_block_anchor": "FINAL_POST_REPAIR_ELIGIBILITY_FLOOR",
     "fixed_block_width_days": 28,
