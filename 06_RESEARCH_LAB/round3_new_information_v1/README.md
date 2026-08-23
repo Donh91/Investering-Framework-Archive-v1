@@ -1,6 +1,6 @@
 # Round 3 New Information Research v1
 
-Status: `CONTRACT_FROZEN_V2_MATERIALIZED_PRIVATE_COLLECTION_ACTIVE_PARTIAL_SOURCE_SET`
+Status: `CONTRACT_FROZEN_V2_MATERIALIZED_PRIVATE_COLLECTION_HOLD_TERMS_AND_PROVENANCE`
 Authority: `RESEARCH_ONLY_NON_CANONICAL`
 
 This programme follows the terminal Round 1 and Round 2 historical-altseason work. The broad historical price/volume/taker-share mining lane remains closed. Round 3 is restricted to genuinely new information dimensions and remains `PROSPECTIVE_COLLECTION_ONLY`.
@@ -31,14 +31,11 @@ The canonical framework repository is the public control plane. `Donh91/secrets`
 
 Provider-derived raw/normalized Round 3 market values MUST NOT be committed to this public repository. Public files may hold contracts, code, schemas, hashes, row/object counts, timestamp/completeness health, provider-value-free provenance receipts and gated research decisions. Every private dataset reference requires a private commit SHA, exact path, bytes, SHA-256, source-contract ID, timestamps, schema and completeness.
 
-Current source state:
+Current source state is fail-closed. SC01, SC03 and SC14 are on terms-attestation and provenance-v2 hold. SC06 is on the same terms hold and still requires a persistent continuous-stream runtime. No private source is currently collection-active.
 
-- SC01 OKX ETH OI: private prospective collection active;
-- SC03 OKX realized funding: private prospective collection active;
-- SC14 Deribit option chain: private prospective collection active;
-- SC06 Binance depth: `SC06_PERSISTENT_RUNTIME_REQUIRED`, currently frozen canary-only.
+The historical private canary workflow run `32633097190` passed, but that remains collection/source-health evidence only. The current private health readback records 11 raw captures: all 11 are integrity-valid, none are invalid or orphaned, and all 11 are analysis-ineligible legacy captures because they lack the frozen schema-v2 collector provenance. They were preserved without rewrite or deletion. There are zero schema-v2 captures and no analysis authorization.
 
-The private source canary workflow run `32633097190` passed. This is collection/source-health evidence, not effect or outcome evidence. See `COLLECTION_STATUS.json`, `PRIVATE_DATA_PLANE_BINDING_RECEIPT.json`, `PRIVATE_COLLECTION_ACTIVATION_RECEIPT.json` and `00_ARCHIVE_CONTROL/CROSS_REPO_DATA_BOUNDARY.md`.
+See `COLLECTION_STATUS.json`, `PRIVATE_DATA_PLANE_BINDING_RECEIPT.json`, the historical `PRIVATE_COLLECTION_ACTIVATION_RECEIPT.json`, the current `PRIVATE_COLLECTION_HOLD_RECEIPT_2026-08-23.json`, `PROVIDER_TERMS_EVIDENCE_REQUIREMENTS_v1.json` and `00_ARCHIVE_CONTROL/CROSS_REPO_DATA_BOUNDARY.md`.
 
 ## Required gates before analysis
 
@@ -48,6 +45,8 @@ The private source canary workflow run `32633097190` passed. This is collection/
 - At least 30 complete pairs in each of two predeclared chronological prospective blocks.
 - At least 80% simulated family-wise power at paired concordance 0.67.
 - No outcome-linked analysis before all above gates are true.
+- Provider terms applicability and intended-use evidence must be complete, then collection must be reactivated in a separate reviewed pull request.
+- The first post-reactivation capture must use schema v2 and pass health-only validation before any linkage to outcomes.
 - Hypothesis testing and outcome scoring remain `OFF` until the gate is formally opened by a new governed receipt.
 
 See the machine-readable contracts in this directory. Any change to a frozen hypothesis, feature, direction, actionable window, policy threshold, control design or multiplicity family requires a new version and fresh prospective evidence.
