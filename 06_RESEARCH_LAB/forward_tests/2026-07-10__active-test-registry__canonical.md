@@ -310,6 +310,48 @@ kill_condition: none; incomplete rows remain unscored
 owner: ARCHIVE_MASTER_MONDAY_GOVERNANCE
 ```
 
+## T11 - Shared Row Model Tournament
+
+```yaml
+test_id: SHARED_ROW_MODEL_TOURNAMENT_V1
+status: QUARANTINED_P0_REPAIR
+question: Which frozen candidate stack preserves the most incremental decision information on identical prospective rows after dependence, tail-risk, robustness and complexity accounting?
+canonical_exception: EXISTING_RESEARCH_TEST_REGISTRATION_REPAIR_APPROVED_2026_08_23
+start: PENDING_NEW_POST_REPAIR_ELIGIBILITY_FLOOR
+prior_floor: 2026-08-23T04:50:00Z
+prior_floor_status: QUARANTINED_NO_ELIGIBLE_ROWS_CREATED
+required_fields:
+  - identical observation_timestamp_utc and information_cutoff_utc
+  - immutable row-time source bindings and content hashes
+  - exact owner, provider, contract and transform versions
+  - complete 168-hour ETHBTC continuity
+  - point-in-time breadth membership and owner receipt
+  - three distinct chronological settled BTC.D prints
+  - immutable candidate decisions
+  - prospective context block and catalyst tags
+  - row-time baseline and append-only outcome bindings
+  - explicit missingness, event clustering and effective n
+rows_total: 0
+valid_source_rows: 0
+valid_outcome_rows: 0
+divergence_days: 0
+benchmark: C07_SIMPLE_3_ON_MATCHED_POST_ACTIVATION_ROWS
+blocked_by:
+  - P0_BREADTH_OWNER_BOUNDARY
+  - P0_SAME_CUTOFF_ENFORCEMENT
+  - P0_CORE_TRANSFORM_COVERAGE
+  - P0_ROW_TIME_OUTCOME_BINDING
+  - P0_CONTEXT_ROBUSTNESS_REACHABILITY
+next_review: AFTER_P0_IMPLEMENTATION_AND_NEGATIVE_CONTROL_PASS
+promotion_condition: separate governance review after sufficient independent matched prospective evidence, uncertainty, holdouts and tail accounting
+kill_condition: keep quarantined if source bindings, causal timing, matched candidate eligibility or outcome immutability cannot be made reproducible
+owner: RESEARCH_LAB_GOVERNANCE
+research_root: 06_RESEARCH_LAB/shared_row_model_tournament_v1
+authority: RESEARCH_ONLY_NON_CANONICAL
+```
+
+T11 registration repairs the missing Active Test Registry binding for an already implemented research-only test. It does not create a new engine, change market semantics, authorize portfolio action or validate the tournament. The first valid row requires a separately merged P0 implementation, passing negative controls and a new future eligibility floor after post-repair owner evidence exists.
+
 ---
 
 ## Review cadence for relationship learning

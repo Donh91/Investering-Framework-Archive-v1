@@ -21,6 +21,7 @@
     "version": "PROSPECTIVE_CONTEXT_TAG_v1"
   },
   "contract": "CORE_FAMILY_PROSPECTIVE_CONTRACT_v1",
+  "contract_revision": "1.1-p0-containment",
   "created_for": "PROSPECTIVE_EVIDENCE_ACCUMULATION_v1",
   "family_contracts": {
     "BREADTH_SURVIVAL": {
@@ -66,5 +67,29 @@
   "legacy_equivalence": false,
   "missing_is_zero": false,
   "no_backdating": true,
-  "prospective_eligibility_start": "2026-08-23T04:50:00Z"
+  "p0_containment": {
+    "activation_requirements": [
+      "P0 implementation merged",
+      "all prescribed negative controls pass",
+      "first complete post-repair owner evidence exists",
+      "new eligibility floor is later than the implementation merge and every bound owner capture"
+    ],
+    "containment_floor_sentinel": "2026-09-30T00:00:00Z",
+    "pre_repair_row_policy": "PRESERVE_BUT_QUARANTINE_AND_EXCLUDE_FROM_ALL_METRICS",
+    "prior_prospective_eligibility_start": "2026-08-23T04:50:00Z",
+    "prior_row_count": 0,
+    "reason": "INDEPENDENT_WORK_AUDIT_ARCHITECTURAL_RISK",
+    "status": "QUARANTINED_PENDING_P0_REPAIR"
+  },
+  "prospective_eligibility_start": "2026-09-30T00:00:00Z",
+  "prospective_eligibility_status": "CONTAINMENT_SENTINEL_NOT_AN_ACTIVATION_FLOOR",
+  "prospective_robustness_design": {
+    "activation": "NOT_ACTIVE_UNTIL_P0_IMPLEMENTATION_PR",
+    "calendar_only_verdict_forbidden": true,
+    "fixed_block_anchor": "FINAL_POST_REPAIR_ELIGIBILITY_FLOOR",
+    "fixed_block_width_days": 28,
+    "robustness_unit": "NON_OVERLAPPING_PROSPECTIVE_BLOCK",
+    "structural_regime_tag_role": "DESCRIPTIVE_STRATUM_NOT_A_REACHABILITY_GATE",
+    "tuning_after_outcomes": false
+  }
 }
