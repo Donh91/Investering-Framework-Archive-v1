@@ -1,10 +1,9 @@
 name: BuildWithClaude Shadow Evidence Ledger
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'scripts/research/research_governance_common.py'
+  schedule:
+    - cron: '55 1 * * 1'
+      timezone: 'Europe/Copenhagen'
   workflow_dispatch:
 
 permissions:
@@ -55,7 +54,7 @@ jobs:
         run: |
           python scripts/research/shadow_guardrail_probe.py --mode self-test --output "$RUNNER_TEMP/bwc-evidence/guardrail-self-test.json"
           python scripts/research/shadow_guardrail_probe.py --mode post --output "$RUNNER_TEMP/bwc-evidence/guardrail-post.json"
-      - name: Materialize immutable real-change row
+      - name: Materialize immutable prospective row
         env:
           EVIDENCE_DIR: ${{ runner.temp }}/bwc-evidence
           PATH_POINTER: ${{ runner.temp }}/bwc-evidence/repo_evidence_path.txt
@@ -63,30 +62,34 @@ jobs:
           EVENT_NAME: ${{ github.event_name }}
         run: |
           python - <<'PY'
-          import json, os
+          import hashlib, json, os
           from datetime import datetime, timezone
           from pathlib import Path
 
           d=Path(os.environ['EVIDENCE_DIR'])
+          target=Path('scripts/research/research_governance_common.py')
           def read(name): return json.loads((d/name).read_text())
           prop=read('property.json');mut=read('mutation.json');tp=read('telemetry-property.json');tm=read('telemetry-mutation.json');ts=read('telemetry-self-test.json');gs=read('guardrail-self-test.json');gp=read('guardrail-post.json')
+          target_sha256=hashlib.sha256(target.read_bytes()).hexdigest()
           row={
             'contract':'BUILDWITHCLAUDE_SHADOW_EVIDENCE_ROW_v1',
-            'evidence_class':'REAL_MAIN_CHANGE' if os.environ['EVENT_NAME']=='push' else 'MANUAL_DIAGNOSTIC',
+            'evidence_class':'PROSPECTIVE_WEEKLY_CURRENT_MAIN' if os.environ['EVENT_NAME']=='schedule' else 'MANUAL_DIAGNOSTIC',
             'captured_at_utc':datetime.now(timezone.utc).isoformat().replace('+00:00','Z'),
-            'observed_sha':os.environ['OBSERVED_SHA'],
-            'trigger_path':'scripts/research/research_governance_common.py' if os.environ['EVENT_NAME']=='push' else None,
+            'observed_main_sha':os.environ['OBSERVED_SHA'],
+            'target_path':str(target),
+            'target_sha256':target_sha256,
             'authority':'RESEARCH_ONLY_NON_CANONICAL','canonical_effect':False,'portfolio_execution':False,
             'candidates':{
               'BWC-R1-C1-PROPERTY-INVARIANTS':{'status':prop.get('status'),'generated_cases':prop.get('generated_cases'),'checks':prop.get('checks'),'failure_count':prop.get('failure_count'),'duration_ms':tp.get('duration_ms')},
               'BWC-R1-C2-MUTATION':{'status':mut.get('candidate_quality'),'executed_mutations':mut.get('executed_mutations'),'killed_mutations':mut.get('killed_mutations'),'kill_rate':mut.get('kill_rate'),'duration_ms':tm.get('duration_ms')},
               'BWC-R1-C3-SESSION-TELEMETRY':{'status':ts.get('status'),'external_backend':False,'raw_output_persisted':False},
               'BWC-R1-C4-GUARDRAILS':{'self_test':gs.get('status'),'postflight':gp.get('status')}
-            }
+            },
+            'interpretation_note':'Distinct target_sha256 values represent distinct observed code versions. Repeated rows with the same target_sha256 measure stability and runtime variance, not additional real-change count.'
           }
           out=Path('06_RESEARCH_LAB/buildwithclaude_shadow_round1_v1/evidence')
           out.mkdir(parents=True,exist_ok=True)
-          path=out/f"REAL_CHANGE_{os.environ['OBSERVED_SHA'][:12]}_{os.environ['GITHUB_RUN_ID']}.json"
+          path=out/f"PROSPECTIVE_{target_sha256[:12]}_{os.environ['GITHUB_RUN_ID']}.json"
           path.write_text(json.dumps(row,sort_keys=True,separators=(',',':'))+'\n')
           Path(os.environ['PATH_POINTER']).write_text(str(path))
           PY
