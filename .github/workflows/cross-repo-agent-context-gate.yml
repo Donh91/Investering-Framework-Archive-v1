@@ -23,12 +23,15 @@ on:
       - '06_RESEARCH_LAB/round3_new_information_v1/**'
       - 'changelog/2026-08-23__cross-repo-agent-context-integration-receipt.md'
       - 'scripts/governance/validate_cross_repo_agent_context.py'
+      - 'scripts/governance/validate_round3_runtime_reconciliation.py'
       - '.github/workflows/cross-repo-agent-context-gate.yml'
   push:
     branches: [main]
     paths:
       - '00_ARCHIVE_CONTROL/CROSS_REPO_*'
+      - '06_RESEARCH_LAB/round3_new_information_v1/**'
       - 'scripts/governance/validate_cross_repo_agent_context.py'
+      - 'scripts/governance/validate_round3_runtime_reconciliation.py'
       - '.github/workflows/cross-repo-agent-context-gate.yml'
   workflow_dispatch:
 
@@ -40,7 +43,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Compile validator
-        run: python -m py_compile scripts/governance/validate_cross_repo_agent_context.py
+      - name: Compile validators
+        run: python -m py_compile scripts/governance/validate_cross_repo_agent_context.py scripts/governance/validate_round3_runtime_reconciliation.py
       - name: Validate cross-repository context
         run: python scripts/governance/validate_cross_repo_agent_context.py
+      - name: Validate Round 3 runtime reconciliation
+        run: python scripts/governance/validate_round3_runtime_reconciliation.py
