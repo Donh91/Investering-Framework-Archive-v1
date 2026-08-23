@@ -1,11 +1,11 @@
 {
   "contract": "ROUND3_COLLECTION_STATUS_v1",
-  "programme_status": "CONTRACT_FROZEN_V2_MATERIALIZED_PRIVATE_DATA_PLANE_BOUND_CANARY_READY",
+  "programme_status": "CONTRACT_FROZEN_V2_MATERIALIZED_PRIVATE_COLLECTION_ACTIVE_PARTIAL_SOURCE_SET",
   "collection_mode": "PROSPECTIVE_COLLECTION_ONLY",
   "collection_active": false,
-  "blockers": [
-    "PRIVATE_SOURCE_CANARIES_NOT_YET_RECORDED"
-  ],
+  "restricted_private_collection_active": true,
+  "public_framework_collection_active": false,
+  "blockers": [],
   "full_four_source_collection_blockers": [
     "SC06_PERSISTENT_CONTINUOUS_STREAM_RUNTIME_REQUIRED"
   ],
@@ -20,13 +20,17 @@
   "raw_provider_values_public_repo_allowed": false,
   "restricted_data_plane": "Donh91/secrets",
   "restricted_data_plane_seed_commit": "4733e058ce65883caf289899e965e11a55d3bd26",
+  "restricted_collection_activation_commit": "de3fe4b07486eea36af1b43061561a7d7c7f5bad",
+  "restricted_canary_receipt_commit": "e282f54abc828d85a6454a0debb0e435232cc2f7",
+  "restricted_canary_workflow_run_id": 32633097190,
+  "restricted_canary_result": "PASS",
   "source_states": {
-    "SC01_OKX_ETH_OI_HOURLY_V1": "FROZEN_PRIVATE_CANARY_READY",
-    "SC03_OKX_ETH_REALIZED_FUNDING_V1": "FROZEN_PRIVATE_CANARY_READY",
+    "SC01_OKX_ETH_OI_HOURLY_V1": "PRIVATE_PROSPECTIVE_COLLECTION_ACTIVE",
+    "SC03_OKX_ETH_REALIZED_FUNDING_V1": "PRIVATE_PROSPECTIVE_COLLECTION_ACTIVE",
     "SC06_BINANCE_ETH_BOOK_DEPTH_V1": "FROZEN_CANARY_ONLY_PERSISTENT_RUNTIME_REQUIRED",
-    "SC14_DERIBIT_ETH_TRUE_25D_SKEW_V1": "FROZEN_PRIVATE_CANARY_READY"
+    "SC14_DERIBIT_ETH_TRUE_25D_SKEW_V1": "PRIVATE_PROSPECTIVE_COLLECTION_ACTIVE"
   },
-  "next_gate": "RUN_PRIVATE_SOURCE_CANARIES_THEN_ACTIVATE_COLLECTION_ONLY_FOR_PASSING_SOURCES",
+  "next_gate": "ACCUMULATE_PRIVATE_SOURCE_HEALTH_AND_BUILD_PERSISTENT_SC06_RUNTIME_WITHOUT_OUTCOME_SCORING",
   "authority": {
     "research_only": true,
     "canonical_market_state": false,
