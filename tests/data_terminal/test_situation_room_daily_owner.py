@@ -58,6 +58,43 @@ class SituationRoomOwnerTests(unittest.TestCase):
             self.assertEqual(result["events"], [])
             self.assertEqual(len(result["unverified_discoveries"]), 1)
             self.assertEqual(result["unverified_discoveries"][0]["verification_status"], "DISCOVERY_UNVERIFIED")
+            self.assertEqual(result["daily_result"], "REVIEW_REQUIRED_UNVERIFIED_DISCOVERY")
+            self.assertEqual(result["run_status"], "DEGRADED")
+
+    def test_discovery_fetch_failure_does_not_veto_clean_primary_no_event(self):
+        landing = b'<html><a href="/item">Bitcoin liquidity shock</a></html>'
+        def fake_fetch(url, timeout=15):
+            if url == "https://situationroom.test/briefings":
+                return self.result(url, landing)
+            if url == "https://situationroom.test/item":
+                return self.result(url, status="FAIL")
+            return self.result(url)
+        with tempfile.TemporaryDirectory() as tmp, patch.object(owner, "SOURCES", self.base_sources()), patch.object(owner, "fetch", fake_fetch):
+            result = owner.run(Path(tmp), "2026-08-23")
+            self.assertEqual(result["daily_result"], "NO_NEW_MATERIAL_CATALYST")
+            self.assertEqual(result["unresolved_candidates"], [])
+            self.assertEqual(result["unverified_discoveries"][0]["verification_status"], "DISCOVERY_FETCH_FAILED")
+
+    def test_old_primary_release_with_visible_month_date_does_not_block_today(self):
+        landing = b'<html><a href="/crypto">SEC proposes regulation crypto assets</a></html>'
+        article = b'<html><head><title>SEC proposes Regulation Crypto Assets</title></head><body>August 18, 2026</body></html>'
+        def fake_fetch(url, timeout=15):
+            if url == "https://p1.test/news":
+                return self.result(url, landing)
+            if url == "https://p1.test/crypto":
+                return self.result(url, article)
+            return self.result(url)
+        with tempfile.TemporaryDirectory() as tmp, patch.object(owner, "SOURCES", self.base_sources()), patch.object(owner, "fetch", fake_fetch):
+            result = owner.run(Path(tmp), "2026-08-23")
+            self.assertEqual(result["daily_result"], "NO_NEW_MATERIAL_CATALYST")
+            self.assertEqual(result["unresolved_candidates"], [])
+            self.assertEqual(result["events"], [])
+
+    def test_source_specific_candidate_filter_excludes_generic_navigation(self):
+        self.assertFalse(owner.source_candidate_allowed("SEC", "https://www.sec.gov/newsroom/press-releases", "https://www.sec.gov/featured-topics/cybersecurity"))
+        self.assertTrue(owner.source_candidate_allowed("SEC", "https://www.sec.gov/newsroom/press-releases", "https://www.sec.gov/newsroom/press-releases/2026-76-sec-proposes-new-regulation-crypto-assets"))
+        self.assertFalse(owner.source_candidate_allowed("FEDERAL_RESERVE", "https://www.federalreserve.gov/newsevents/pressreleases.htm", "https://www.federalreserve.gov/newsevents/pressreleases/2026-press-fomc.htm"))
+        self.assertTrue(owner.source_candidate_allowed("FEDERAL_RESERVE", "https://www.federalreserve.gov/newsevents/pressreleases.htm", "https://www.federalreserve.gov/newsevents/pressreleases/monetary20260729a.htm"))
 
     def test_primary_source_can_create_timestamped_research_event(self):
         landing = b'<html><a href="/crypto">SEC proposes regulation crypto assets</a></html>'
