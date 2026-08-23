@@ -11,6 +11,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 BOUNDARY = ROOT / "00_ARCHIVE_CONTROL/CROSS_REPO_DATA_BOUNDARY.md"
 CONTEXT_MAP = ROOT / "00_ARCHIVE_CONTROL/CROSS_REPO_AGENT_CONTEXT_MAP.json"
+ROUND3 = ROOT / "06_RESEARCH_LAB/round3_new_information_v1"
 
 REQUIRED_MARKERS = {
     "README.md": ["CROSS_REPO_DATA_BOUNDARY.md", "Donh91/secrets"],
@@ -66,6 +67,14 @@ def fail(message: str, errors: list[str]) -> None:
     errors.append(message)
 
 
+def load_json(path: Path, errors: list[str]) -> dict:
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        fail(f"invalid or missing JSON {path.relative_to(ROOT)}: {exc}", errors)
+        return {}
+
+
 def main() -> int:
     errors: list[str] = []
 
@@ -74,12 +83,7 @@ def main() -> int:
             fail(f"missing canonical cross-repo file: {path.relative_to(ROOT)}", errors)
 
     if CONTEXT_MAP.is_file():
-        try:
-            data = json.loads(CONTEXT_MAP.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError) as exc:
-            fail(f"invalid context map: {exc}", errors)
-            data = {}
-
+        data = load_json(CONTEXT_MAP, errors)
         if data.get("contract") != "CROSS_REPO_AGENT_CONTEXT_MAP_v1":
             fail("unexpected context-map contract", errors)
         if data.get("round3_firewall", {}).get("hypothesis_testing") != "OFF":
@@ -116,11 +120,7 @@ def main() -> int:
         if "Donh91/Cycle-navigator-" in text or "`Cycle-navigator-`" in text:
             fail(f"active route still uses retired repository name: {relative}", errors)
 
-    status = json.loads(
-        (ROOT / "06_RESEARCH_LAB/round3_new_information_v1/COLLECTION_STATUS.json").read_text(
-            encoding="utf-8"
-        )
-    )
+    status = load_json(ROUND3 / "COLLECTION_STATUS.json", errors)
     expected = {
         "collection_mode": "PROSPECTIVE_COLLECTION_ONLY",
         "restricted_private_collection_active": False,
@@ -128,6 +128,9 @@ def main() -> int:
         "outcome_scoring_active": False,
         "raw_provider_values_public_repo_allowed": False,
         "restricted_analysis_authorized": False,
+        "restricted_terms_readiness_status": "PASS_FAIL_CLOSED_HOLD",
+        "restricted_reactivation_review_candidates": [],
+        "first_post_reactivation_capture_requirement": "SCHEMA_V2_HEALTH_ONLY_BEFORE_ANY_ANALYSIS_LINKAGE",
     }
     for key, value in expected.items():
         if status.get(key) != value:
@@ -138,11 +141,7 @@ def main() -> int:
     ):
         fail("Round 3 current programme status is not fail-closed", errors)
 
-    hold = json.loads(
-        (ROOT / "06_RESEARCH_LAB/round3_new_information_v1/PRIVATE_COLLECTION_HOLD_RECEIPT_2026-08-23.json").read_text(
-            encoding="utf-8"
-        )
-    )
+    hold = load_json(ROUND3 / "PRIVATE_COLLECTION_HOLD_RECEIPT_2026-08-23.json", errors)
     if hold.get("current_collection_active") is not False:
         fail("private hold receipt does not close collection", errors)
     if hold.get("analysis_authorized") is not False:
@@ -158,11 +157,7 @@ def main() -> int:
     if hold.get("schema_v2_capture_count") != 0:
         fail("unexpected schema-v2 capture count before reactivation", errors)
 
-    terms_requirements = json.loads(
-        (ROOT / "06_RESEARCH_LAB/round3_new_information_v1/PROVIDER_TERMS_EVIDENCE_REQUIREMENTS_v1.json").read_text(
-            encoding="utf-8"
-        )
-    )
+    terms_requirements = load_json(ROUND3 / "PROVIDER_TERMS_EVIDENCE_REQUIREMENTS_v1.json", errors)
     if terms_requirements.get("collection_activation_authorized") is not False:
         fail("provider terms requirements authorize collection", errors)
     if terms_requirements.get("analysis_authorized") is not False:
@@ -171,6 +166,51 @@ def main() -> int:
         "separate_reviewed_reactivation_pull_request_required"
     ) is not True:
         fail("provider terms reactivation review gate is missing", errors)
+    if terms_requirements.get("activation_gate", {}).get(
+        "health_only_validation_before_any_analysis"
+    ) is not True:
+        fail("provider terms first-capture health-only gate is missing", errors)
+    if terms_requirements.get("activation_gate", {}).get(
+        "sc06_requires_separate_runtime_storage_and_paid_infrastructure_authorization"
+    ) is not True:
+        fail("SC06 separate runtime/storage authorization gate is missing", errors)
+
+    readiness = load_json(ROUND3 / "PRIVATE_PROVIDER_TERMS_READINESS_RECEIPT_2026-08-23.json", errors)
+    readiness_expected = {
+        "restricted_repository": "Donh91/secrets",
+        "restricted_merge_commit": "e5e7a95e70642ac063484375f28fa62ecefbd633",
+        "restricted_attestation_path": "GOVERNANCE/PROVIDER_TERMS_ATTESTATION.json",
+        "restricted_attestation_contract": "ROUND3_PROVIDER_TERMS_ATTESTATION_v1",
+        "restricted_readiness_validator_path": "scripts/validate_provider_terms_readiness.py",
+        "restricted_readiness_contract": "ROUND3_PROVIDER_TERMS_READINESS_GATE_v1",
+        "restricted_readiness_status": "PASS_FAIL_CLOSED_HOLD",
+        "restricted_collection_active": False,
+        "restricted_analysis_authorized": False,
+        "reactivation_review_candidates": [],
+        "sc06_separate_runtime_storage_authorization_required": True,
+        "first_post_reactivation_capture_requirement": "SCHEMA_V2_HEALTH_ONLY_BEFORE_ANY_ANALYSIS_LINKAGE",
+        "separate_reviewed_reactivation_pull_request_required": True,
+        "provider_values_in_public_receipt": False,
+        "credentials_in_public_receipt": False,
+    }
+    for key, value in readiness_expected.items():
+        if readiness.get(key) != value:
+            fail(f"private terms readiness receipt invariant failed: {key}", errors)
+
+    if status.get("restricted_terms_readiness_merge_commit") != readiness.get("restricted_merge_commit"):
+        fail("private terms readiness merge binding drift", errors)
+    if status.get("restricted_terms_attestation_path") != readiness.get("restricted_attestation_path"):
+        fail("private terms attestation path binding drift", errors)
+    if status.get("restricted_terms_readiness_contract") != readiness.get("restricted_readiness_contract"):
+        fail("private readiness contract binding drift", errors)
+    if status.get("restricted_terms_readiness_status") != readiness.get("restricted_readiness_status"):
+        fail("private readiness status binding drift", errors)
+
+    private_binding = terms_requirements.get("private_machine_readiness_binding", {})
+    if private_binding.get("restricted_merge_commit") != readiness.get("restricted_merge_commit"):
+        fail("terms requirements private merge binding drift", errors)
+    if private_binding.get("current_status") != "PASS_FAIL_CLOSED_HOLD":
+        fail("terms requirements do not preserve fail-closed hold", errors)
 
     if errors:
         print("CROSS_REPO_CONTEXT_INVALID")

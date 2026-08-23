@@ -1,6 +1,7 @@
 {
   "contract": "ROUND3_PROVIDER_TERMS_EVIDENCE_REQUIREMENTS_v1",
   "recorded_at_utc": "2026-08-23T11:47:04Z",
+  "last_public_reference_reviewed_at_utc": "2026-08-23T12:30:00Z",
   "status": "HOLD_PENDING_APPLICABLE_TERMS_ATTESTATION",
   "formal_legal_opinion_asserted": false,
   "legal_conclusion_asserted": false,
@@ -8,7 +9,7 @@
   "analysis_authorized": false,
   "required_evidence": {
     "applicable_account_entity_and_region": "MISSING",
-    "current_official_terms_url_document_version_and_review_date": "INCOMPLETE",
+    "current_official_terms_url_document_version_and_review_date": "PUBLIC_REFERENCE_VERSION_BOUND_APPLICABILITY_STILL_UNATTESTED",
     "owner_personal_or_noncommercial_internal_research_use_attestation": "MISSING",
     "raw_retention_and_private_derived_processing_scope": "MISSING",
     "public_provider_value_free_aggregate_health_permission": "MISSING",
@@ -18,28 +19,41 @@
     {
       "provider": "OKX",
       "url": "https://www.okx.com/en-us/help/okx-api-agreement",
+      "public_reference_version": "LAST_UPDATED_2026-07-28",
       "applicability_status": "ENTITY_AND_REGION_NOT_ATTESTED",
       "review_note": "USE_AND_REDISTRIBUTION_RESTRICTIONS_REQUIRE_APPLICABILITY_AND_INTENDED_USE_ATTESTATION"
     },
     {
       "provider": "DERIBIT",
       "url": "https://support.deribit.com/hc/en-us/articles/25944532191645-Deribit-Exchange-Membership-Terms-Deribit-FZE",
+      "public_reference_version": "VERSION_2026-08-13",
       "applicability_status": "ENTITY_AND_REGION_NOT_ATTESTED",
       "review_note": "MARKET_AND_DERIVED_DATA_USE_RESTRICTIONS_REQUIRE_APPLICABILITY_AND_INTENDED_USE_ATTESTATION"
     },
     {
       "provider": "BINANCE",
       "url": "https://developers.binance.com/en/docs/products/spot/PROD-TERMS-OF-USE",
+      "public_reference_version": "DEVELOPER_PAGE_LAST_MODIFIED_2026-08-08_APPLICABLE_PRODUCT_TERMS_UNRESOLVED",
       "applicability_status": "APPLICABLE_REGIONAL_TERMS_NOT_RESOLVED",
       "review_note": "EXACT_APPLICABLE_ENTITY_REGION_TERMS_AND_DATA_USE_RIGHTS_MUST_BE_RECORDED"
     }
   ],
+  "private_machine_readiness_binding": {
+    "restricted_repository": "Donh91/secrets",
+    "restricted_merge_commit": "e5e7a95e70642ac063484375f28fa62ecefbd633",
+    "attestation_path": "GOVERNANCE/PROVIDER_TERMS_ATTESTATION.json",
+    "attestation_contract": "ROUND3_PROVIDER_TERMS_ATTESTATION_v1",
+    "validator_path": "scripts/validate_provider_terms_readiness.py",
+    "validator_contract": "ROUND3_PROVIDER_TERMS_READINESS_GATE_v1",
+    "current_status": "PASS_FAIL_CLOSED_HOLD"
+  },
   "activation_gate": {
     "all_required_evidence_complete": false,
     "separate_reviewed_reactivation_pull_request_required": true,
     "first_post_reactivation_capture_must_use_schema_v2": true,
     "health_only_validation_before_any_analysis": true,
-    "provider_values_public_repo_allowed": false
+    "provider_values_public_repo_allowed": false,
+    "sc06_requires_separate_runtime_storage_and_paid_infrastructure_authorization": true
   },
   "change_trigger": "REVALIDATE_ON_TERMS_URL_VERSION_ENTITY_REGION_ACCOUNT_OR_INTENDED_USE_CHANGE"
 }
