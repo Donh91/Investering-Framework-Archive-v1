@@ -1,0 +1,169 @@
+name: BuildWithClaude Shadow Round 1
+
+on:
+  pull_request:
+    paths:
+      - '06_RESEARCH_LAB/protocols/SHADOW_IDEA_ADMISSION_*'
+      - '06_RESEARCH_LAB/buildwithclaude_shadow_round1_v1/**'
+      - 'scripts/research/shadow_*'
+      - 'scripts/research/validate_buildwithclaude_shadow_round1.py'
+      - '.github/workflows/buildwithclaude-shadow-round1.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  shadow-round1:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Prepare isolated evidence directory
+        run: mkdir -p "$RUNNER_TEMP/bwc-r1"
+
+      - name: Refresh current main reference
+        run: git fetch origin main --no-tags
+
+      - name: Pre-flight shadow scope guardrail
+        run: >-
+          python scripts/research/shadow_guardrail_probe.py
+          --mode pre
+          --base-ref origin/main
+          --output "$RUNNER_TEMP/bwc-r1/guardrail-pre.json"
+
+      - name: Compile isolated round scripts
+        run: |
+          python -m py_compile \
+            scripts/research/shadow_property_invariant_probe.py \
+            scripts/research/shadow_mutation_probe.py \
+            scripts/research/shadow_session_telemetry.py \
+            scripts/research/shadow_guardrail_probe.py \
+            scripts/research/validate_buildwithclaude_shadow_round1.py
+
+      - name: Validate frozen candidate contracts
+        run: >-
+          python scripts/research/validate_buildwithclaude_shadow_round1.py
+          > "$RUNNER_TEMP/bwc-r1/static-validation.json"
+
+      - name: Property invariant candidate with telemetry
+        run: >-
+          python scripts/research/shadow_session_telemetry.py
+          --output "$RUNNER_TEMP/bwc-r1/telemetry-property.json"
+          -- python scripts/research/shadow_property_invariant_probe.py
+          --cases 1000
+          --output "$RUNNER_TEMP/bwc-r1/property.json"
+
+      - name: Mutation candidate with telemetry
+        run: >-
+          python scripts/research/shadow_session_telemetry.py
+          --output "$RUNNER_TEMP/bwc-r1/telemetry-mutation.json"
+          -- python scripts/research/shadow_mutation_probe.py
+          --cases 250
+          --output "$RUNNER_TEMP/bwc-r1/mutation.json"
+
+      - name: Session telemetry self-test
+        run: >-
+          python scripts/research/shadow_session_telemetry.py
+          --self-test
+          --output "$RUNNER_TEMP/bwc-r1/telemetry-self-test.json"
+
+      - name: Guardrail self-test
+        run: >-
+          python scripts/research/shadow_guardrail_probe.py
+          --mode self-test
+          --output "$RUNNER_TEMP/bwc-r1/guardrail-self-test.json"
+
+      - name: Post-flight repository cleanliness guardrail
+        run: >-
+          python scripts/research/shadow_guardrail_probe.py
+          --mode post
+          --output "$RUNNER_TEMP/bwc-r1/guardrail-post.json"
+
+      - name: Summarize non-canonical evidence
+        env:
+          EVIDENCE_DIR: ${{ runner.temp }}/bwc-r1
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          d = Path(os.environ['EVIDENCE_DIR'])
+
+          def read(name):
+              return json.loads((d / name).read_text(encoding='utf-8'))
+
+          prop = read('property.json')
+          mutation = read('mutation.json')
+          tele_self = read('telemetry-self-test.json')
+          tele_prop = read('telemetry-property.json')
+          tele_mut = read('telemetry-mutation.json')
+          guard_pre = read('guardrail-pre.json')
+          guard_self = read('guardrail-self-test.json')
+          guard_post = read('guardrail-post.json')
+          static = read('static-validation.json')
+
+          c1 = 'CONTINUE_SHADOW' if prop.get('status') == 'PASS' else 'BLOCK'
+          c2 = mutation.get('candidate_quality', 'UNASSESSABLE')
+          c3 = 'CONTINUE_SHADOW' if tele_self.get('status') == 'PASS' else 'BLOCK'
+          c4 = 'CONTINUE_SHADOW' if all(
+              x.get('status') == 'PASS' for x in (guard_pre, guard_self, guard_post)
+          ) else 'BLOCK'
+
+          summary = {
+              'contract': 'BUILDWITHCLAUDE_SHADOW_ROUND1_EVIDENCE_v1',
+              'authority': 'RESEARCH_ONLY_NON_CANONICAL',
+              'canonical_effect': False,
+              'portfolio_execution': False,
+              'auto_promotion_permitted': False,
+              'static_validation': static.get('status'),
+              'candidates': {
+                  'BWC-R1-C1-PROPERTY-INVARIANTS': {
+                      'status': c1,
+                      'generated_cases': prop.get('generated_cases'),
+                      'checks': prop.get('checks'),
+                      'failure_count': prop.get('failure_count'),
+                      'duration_ms': tele_prop.get('duration_ms'),
+                  },
+                  'BWC-R1-C2-MUTATION': {
+                      'status': c2,
+                      'executed_mutations': mutation.get('executed_mutations'),
+                      'killed_mutations': mutation.get('killed_mutations'),
+                      'kill_rate': mutation.get('kill_rate'),
+                      'duration_ms': tele_mut.get('duration_ms'),
+                  },
+                  'BWC-R1-C3-SESSION-TELEMETRY': {
+                      'status': c3,
+                      'self_test': tele_self.get('status'),
+                      'raw_output_persisted': False,
+                      'external_backend': False,
+                  },
+                  'BWC-R1-C4-GUARDRAILS': {
+                      'status': c4,
+                      'pre_flight': guard_pre.get('status'),
+                      'self_test': guard_self.get('status'),
+                      'post_flight': guard_post.get('status'),
+                  },
+              },
+              'decision': 'EVIDENCE_ONLY_NO_PROMOTION',
+          }
+          (d / 'summary.json').write_text(
+              json.dumps(summary, indent=2, sort_keys=True) + '\n', encoding='utf-8'
+          )
+          print(json.dumps(summary, indent=2, sort_keys=True))
+          PY
+
+      - name: Upload isolated evidence artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: buildwithclaude-shadow-round1-${{ github.run_id }}
+          path: ${{ runner.temp }}/bwc-r1
+          if-no-files-found: error
+          retention-days: 30
