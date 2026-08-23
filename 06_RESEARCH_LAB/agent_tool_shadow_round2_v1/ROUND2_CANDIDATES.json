@@ -1,0 +1,145 @@
+{
+  "contract": "AGENT_TOOL_SHADOW_ROUND2_v1",
+  "authority": "RESEARCH_ONLY_NON_CANONICAL",
+  "canonical_effect": false,
+  "portfolio_execution": false,
+  "stage_a_auto_promotion_permitted": false,
+  "authority_ceiling": "OPERATIONAL_HELPER",
+  "baseline": "CURRENT_FRAMEWORK_WITHOUT_ROUND2_CANDIDATES",
+  "candidates": [
+    {
+      "id": "ATR2-C1-CODEBASE-CONTEXT-BAKEOFF",
+      "name": "Codebase context bake-off",
+      "type": "COMPETITIVE_TEST_INSTRUMENT",
+      "classification": "SHADOW_TESTING",
+      "problem_to_solve": "Coding agents repeatedly spend tokens, tool calls and latency rediscovering framework architecture and dependency relationships.",
+      "arms": [
+        "BASELINE",
+        "GRAFT",
+        "CODEBASE_MEMORY"
+      ],
+      "external_winner_limit": 1,
+      "stage_a_success_criteria": [
+        "each external arm runs against the same deterministic fixture",
+        "no provider/model credential required",
+        "no checked-out framework repository write",
+        "no global or agent configuration write",
+        "no persistent daemon or watcher",
+        "preregistered fixture symbols and call-chain facts are recoverable",
+        "result is bound to package version, observed source SHA and fixture hash"
+      ],
+      "stage_a_failure_criteria": [
+        "framework checkout becomes dirty",
+        "candidate requires agent wiring or persistent process",
+        "unexpected provider/model call or telemetry requirement",
+        "fixture architecture facts cannot be recovered reproducibly",
+        "package cannot be installed at the frozen version"
+      ],
+      "stage_b_promotion_gate": "At least 20 frozen representative framework engineering tasks. The winning external arm must reduce exploration cost by at least 20 percent without a correctness regression, architecture misunderstanding, protected-path regression or unacceptable complexity/security tax. Only one external arm may win. If neither clearly beats baseline after complexity tax, retire both.",
+      "rollback_criteria": [
+        "remove isolated adapter/harness and external package from the Lab environment; no production rollback required"
+      ],
+      "complexity_tax": {
+        "maintenance": "MEASURE",
+        "dependencies": "EXTERNAL_PINNED",
+        "api_or_token_cost": "ZERO_IN_STAGE_A_MEASURE_IN_STAGE_B",
+        "latency": "MEASURE",
+        "source_fragility": "MEASURE",
+        "security_privacy": "HIGH_SCRUTINY_CODEBASE_ACCESS",
+        "governance_burden": "MEASURE",
+        "correlated_failure_risk": "LOW_TO_MEDIUM"
+      }
+    },
+    {
+      "id": "ATR2-C2-INSPECT-EVAL-HARNESS",
+      "name": "Inspect AI agent and skill evaluation harness",
+      "type": "EVALUATION_INSTRUMENT",
+      "classification": "SHADOW_TESTING",
+      "problem_to_solve": "The framework has strong bespoke tests but lacks a standardized external agent-evaluation harness for reproducible task, scorer and sandbox comparisons.",
+      "stage_a_success_criteria": [
+        "pinned Inspect package imports successfully",
+        "Task, Sample and deterministic scorer contracts can be constructed locally",
+        "no model or provider call is made",
+        "no checked-out framework repository write",
+        "no remote sandbox is required",
+        "result is bound to package version and observed source SHA"
+      ],
+      "stage_a_failure_criteria": [
+        "model/provider credential required",
+        "framework checkout becomes dirty",
+        "basic local task/scorer construction is unstable",
+        "package cannot be installed at the frozen version"
+      ],
+      "stage_b_promotion_gate": "Demonstrate materially better reproducibility, discriminatory power, failure localization or auditability than the existing in-house test stack on frozen candidate tasks, with no reduction of the framework's protected-path and clean-tree guardrails and acceptable complexity tax.",
+      "rollback_criteria": [
+        "delete the isolated Inspect adapter and Lab dependency; preserve native framework tests and guardrails"
+      ],
+      "complexity_tax": {
+        "maintenance": "MEASURE",
+        "dependencies": "EXTERNAL_PINNED_PYTHON",
+        "api_or_token_cost": "ZERO_IN_STAGE_A_MEASURE_IN_STAGE_B",
+        "latency": "MEASURE",
+        "source_fragility": "MEASURE",
+        "security_privacy": "MEDIUM_SANDBOX_AND_TRANSCRIPT_SURFACE",
+        "governance_burden": "MEASURE",
+        "correlated_failure_risk": "MEDIUM_IF_USED_AS_SOLE_SCORER"
+      }
+    },
+    {
+      "id": "ATR2-C3-PROMPTFOO-REDTEAM",
+      "name": "Promptfoo adversarial skill red-team harness",
+      "type": "ADVERSARIAL_TEST_INSTRUMENT",
+      "classification": "SHADOW_TESTING",
+      "problem_to_solve": "Functional success tests may not expose prompt injection, authority escalation, secret-access, evidence-tampering or tool-abuse failure modes in new agent/skill candidates.",
+      "stage_a_success_criteria": [
+        "pinned Promptfoo CLI validates the local frozen configuration",
+        "echo provider only in Stage A",
+        "telemetry, update checks, sharing and remote generation disabled",
+        "no provider/model credential required",
+        "no target or red-team execution performed",
+        "no checked-out framework repository write",
+        "result is bound to package version and observed source SHA"
+      ],
+      "stage_a_failure_criteria": [
+        "telemetry/sharing/remote generation cannot be disabled",
+        "provider/model credential required for config validation",
+        "framework checkout becomes dirty",
+        "package cannot be installed at the frozen version"
+      ],
+      "stage_b_promotion_gate": "On a preregistered adversarial suite, detect meaningful authority-escalation, prompt-injection, secret-access, protected-path mutation, self-promotion, evidence-tampering or provenance-corruption failures not caught by the current baseline, with acceptable false-positive rate and complexity tax.",
+      "rollback_criteria": [
+        "remove Promptfoo adapter/config and Lab dependency; retain native framework security gates"
+      ],
+      "complexity_tax": {
+        "maintenance": "MEASURE",
+        "dependencies": "EXTERNAL_PINNED_NODE",
+        "api_or_token_cost": "ZERO_IN_STAGE_A_BOUNDED_IN_STAGE_B",
+        "latency": "MEASURE",
+        "source_fragility": "MEASURE",
+        "security_privacy": "HIGH_SCRUTINY_ADVERSARIAL_INPUT_AND_PROVIDER_SURFACE",
+        "governance_burden": "MEASURE",
+        "correlated_failure_risk": "MEDIUM_IF_GENERATOR_AND_JUDGE_SHARE_MODEL"
+      }
+    }
+  ],
+  "reference_only": [
+    {
+      "repository": "msitarzewski/agency-agents",
+      "reason": "pattern library only; broad persona count does not establish independent information or justify runtime complexity"
+    },
+    {
+      "repository": "Panniantong/Agent-Reach",
+      "reason": "source-access pattern only; scraping, cookie and platform-fragility surface is not justified for current framework needs"
+    },
+    {
+      "repository": "stablyai/orca",
+      "reason": "parallel worktree and blind-adjudication pattern may inspire a future experiment, but no dependency is justified now"
+    }
+  ],
+  "decision": {
+    "classification": "SHADOW_TESTING",
+    "stage_a_result_only": true,
+    "market_decision_authority_permitted": false,
+    "eventual_lifecycle_authority": "OPENAI_API_AUTONOMOUS"
+  }
+}
