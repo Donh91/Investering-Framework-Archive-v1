@@ -284,7 +284,6 @@ def main():
     status['v2_materialized']=True
     status['v2_catalog_sha256']=receipt['catalog_sha256']
     status['v2_pair_set_sha256']=receipt['pair_set_sha256']
-    status['next_gate']='CONFIGURE_PRIVATE_COLLECTION_ZONE_AND_PROVIDER_TERMS_RECEIPTS'
     STATUS.write_text(json.dumps(status,indent=2,sort_keys=True)+'\n')
     print('ROUND3_V2_MATERIALIZATION_PASS')
     print(json.dumps(receipt,indent=2,sort_keys=True))
