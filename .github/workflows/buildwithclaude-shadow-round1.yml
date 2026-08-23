@@ -25,8 +25,11 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Prepare isolated evidence directory
-        run: mkdir -p "$RUNNER_TEMP/bwc-r1"
+      - name: Prepare isolated evidence and bytecode directories
+        run: |
+          mkdir -p "$RUNNER_TEMP/bwc-r1" "$RUNNER_TEMP/bwc-r1-pycache"
+          echo "PYTHONDONTWRITEBYTECODE=1" >> "$GITHUB_ENV"
+          echo "PYTHONPYCACHEPREFIX=$RUNNER_TEMP/bwc-r1-pycache" >> "$GITHUB_ENV"
 
       - name: Refresh current main reference
         run: git fetch origin main --no-tags
