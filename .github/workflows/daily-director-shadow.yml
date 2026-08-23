@@ -153,11 +153,11 @@ jobs:
           fi
           echo "$DEST" > runtime/daily-director/destination.txt
 
-      - name: Register, observe and dispatch experiment candidates
+      - name: Register, scientifically admit, observe and dispatch experiment candidates
         run: |
           DEST=$(cat runtime/daily-director/destination.txt)
-          mkdir -p research/experiment_lifecycle/{candidates,observations,dispatch,receipts} research/framework_memory/{forecast_memory,outcome_memory}
-          python scripts/experiments/experiment_lifecycle.py \
+          mkdir -p research/experiment_lifecycle/{candidates,observations,dispatch,receipts,admission} research/framework_memory/{forecast_memory,outcome_memory}
+          python scripts/experiments/experiment_lifecycle_scientific_admission.py \
             --repo-root . \
             --daily-output "$DEST/DAILY_DIRECTOR_OUTPUT.json" \
             --daily-context "$DEST/context.json" \
@@ -170,6 +170,8 @@ jobs:
             --receipt-root research/experiment_lifecycle/receipts \
             --registry-output research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json \
             --manifest-output research/experiment_lifecycle/LATEST_EXPERIMENT_DISPATCH_MANIFEST.json \
+            --admission-root research/experiment_lifecycle/admission \
+            --admission-registry-output research/experiment_lifecycle/LATEST_SCIENTIFIC_ADMISSION_REGISTRY.json \
             --legacy-sensor-catalog 06_RESEARCH_LAB/forward_tests/sensor_pair_discovery_v0_1/SENSOR_PAIR_CATALOG.json \
             --max-new-forecasts 5 | tee runtime/daily-director/experiment_lifecycle_summary.json
 

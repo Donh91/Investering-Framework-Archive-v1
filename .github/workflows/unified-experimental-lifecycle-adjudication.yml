@@ -1,0 +1,89 @@
+name: Unified Experimental Lifecycle Adjudication
+
+on:
+  schedule:
+    - cron: '5 9 * * 1'
+      timezone: 'Europe/Copenhagen'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: framework-main-writer
+  cancel-in-progress: false
+
+jobs:
+  adjudicate:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Validate scientific lifecycle machinery
+        run: |
+          python -m py_compile \
+            scripts/experiments/experiment_lifecycle_scientific_admission.py \
+            scripts/experiments/unified_experimental_adjudication.py
+          python -m unittest \
+            tests.experiments.test_scientific_admission_lifecycle \
+            tests.experiments.test_unified_experimental_adjudication -v
+
+      - name: Build unified authority-free adjudication
+        run: |
+          mkdir -p runtime/unified-experiment-adjudication
+          python scripts/experiments/unified_experimental_adjudication.py \
+            --lifecycle-registry research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json \
+            --admission-registry research/experiment_lifecycle/LATEST_SCIENTIFIC_ADMISSION_REGISTRY.json \
+            --shadow-registry 04_MARKET_LEARNING/shadow_registry/LATEST.json \
+            --shared-row-latest 06_RESEARCH_LAB/shared_row_model_tournament_v1/weekly/LATEST.json \
+            --output runtime/unified-experiment-adjudication/UNIFIED_EXPERIMENTAL_LIFECYCLE_ADJUDICATION.json
+
+      - name: Materialize weekly and latest pointers
+        run: |
+          python - <<'PY'
+          import json
+          from datetime import datetime, timezone
+          from pathlib import Path
+          now=datetime.now(timezone.utc); year,week,_=now.isocalendar()
+          src=Path('runtime/unified-experiment-adjudication/UNIFIED_EXPERIMENTAL_LIFECYCLE_ADJUDICATION.json')
+          value=json.loads(src.read_text())
+          root=Path('research/experiment_lifecycle/weekly_adjudication')
+          dest=root/str(year)/f'W{week:02d}.json'
+          dest.parent.mkdir(parents=True,exist_ok=True)
+          dest.write_text(json.dumps(value,indent=2,sort_keys=True)+'\n')
+          (root/'LATEST.json').write_text(json.dumps(value,indent=2,sort_keys=True)+'\n')
+          PY
+
+      - name: Commit research-only adjudication with verified readback
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name framework-research-bot
+          git config user.email framework-research-bot@users.noreply.github.com
+          git add research/experiment_lifecycle/weekly_adjudication
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "research: weekly unified experiment adjudication ${GITHUB_RUN_ID}"
+          pushed=false
+          for attempt in 1 2 3; do
+            git rebase --abort 2>/dev/null || true
+            if git pull --rebase origin main && git push origin HEAD:main; then pushed=true; break; fi
+            sleep $((attempt * 5))
+          done
+          [ "$pushed" = true ]
+          git fetch origin main
+          git merge-base --is-ancestor HEAD origin/main
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: unified-experiment-adjudication-${{ github.run_id }}
+          path: runtime/unified-experiment-adjudication/
+          retention-days: 14
