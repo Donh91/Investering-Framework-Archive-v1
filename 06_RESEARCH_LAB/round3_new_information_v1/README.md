@@ -33,9 +33,11 @@ Provider-derived raw/normalized Round 3 market values MUST NOT be committed to t
 
 Current source state is fail-closed. SC01, SC03 and SC14 are on terms-attestation and provenance-v2 hold. SC06 is on the same terms hold and still requires a persistent continuous-stream runtime. No private source is currently collection-active.
 
+The private data plane now has a machine-readable provider-terms attestation record and fail-closed readiness validator, merged at private commit `e5e7a95e70642ac063484375f28fa62ecefbd633`. Current readiness is `PASS_FAIL_CLOSED_HOLD`: the repository is internally consistent, but no source is a reactivation candidate until the human-owned account entity/region, intended-use, retention and processing facts are explicitly attested. A readiness pass never self-authorizes collection.
+
 The historical private canary workflow run `32633097190` passed, but that remains collection/source-health evidence only. The current private health readback records 11 raw captures: all 11 are integrity-valid, none are invalid or orphaned, and all 11 are analysis-ineligible legacy captures because they lack the frozen schema-v2 collector provenance. They were preserved without rewrite or deletion. There are zero schema-v2 captures and no analysis authorization.
 
-See `COLLECTION_STATUS.json`, `PRIVATE_DATA_PLANE_BINDING_RECEIPT.json`, the historical `PRIVATE_COLLECTION_ACTIVATION_RECEIPT.json`, the current `PRIVATE_COLLECTION_HOLD_RECEIPT_2026-08-23.json`, `PROVIDER_TERMS_EVIDENCE_REQUIREMENTS_v1.json` and `00_ARCHIVE_CONTROL/CROSS_REPO_DATA_BOUNDARY.md`.
+See `COLLECTION_STATUS.json`, `PRIVATE_DATA_PLANE_BINDING_RECEIPT.json`, the historical `PRIVATE_COLLECTION_ACTIVATION_RECEIPT.json`, the current `PRIVATE_COLLECTION_HOLD_RECEIPT_2026-08-23.json`, `PRIVATE_PROVIDER_TERMS_READINESS_RECEIPT_2026-08-23.json`, `PROVIDER_TERMS_EVIDENCE_REQUIREMENTS_v1.json` and `00_ARCHIVE_CONTROL/CROSS_REPO_DATA_BOUNDARY.md`.
 
 ## Required gates before analysis
 
