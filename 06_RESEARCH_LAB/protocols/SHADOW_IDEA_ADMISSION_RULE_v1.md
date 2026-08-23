@@ -3,6 +3,8 @@
 Status: ACTIVE RESEARCH GOVERNANCE
 Scope: all new ideas proposed for the framework, including external agents, skills, repositories, tools, sensors, data sources, indicators, models, automations, controllers and architectural patterns.
 
+Method-selection guide: `06_RESEARCH_LAB/protocols/README.md`. The guide is a falsification-oriented method palette, not a mandatory checklist. Future agents should select tests from the candidate's claim, failure modes and authority rather than mechanically copying a historical experiment or PR.
+
 ## Prime directive
 
 > Observe -> accumulate evidence -> validate -> learn -> adjust only when the evidence warrants it.
