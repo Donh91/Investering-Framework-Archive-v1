@@ -11,6 +11,8 @@ This programme follows the terminal Round 1 and Round 2 historical-altseason wor
 
 `CROSS_REPO_FRESHNESS_POLICY_v1.json` defines the freshness semantics. Public runtime state is always an explicit point-in-time readback, never a claim that the public repository has a live view of private `main`. Append-only private capture commits may advance after a health snapshot without invalidating the bound governance state, but any private governance-state change requires a new public reconciliation. A stale governance binding is classified `PUBLIC_CONTROL_PLANE_STALE` and must not be silently treated as current.
 
+The historical hold transition remains preserved in `PRIVATE_COLLECTION_HOLD_RECEIPT_2026-08-23.json`; it is evidence of the earlier fail-closed state, not the live runtime authority.
+
 ## Frozen programme boundary
 
 - Round 1 and Round 2 remain closed evidence and are never relabelled or rescored by Round 3.
@@ -56,6 +58,6 @@ That health snapshot contains 15 raw captures, all 15 integrity-valid, zero inva
 - Hypothesis testing and outcome scoring remain `OFF` until the gate is formally opened by a new governed receipt.
 - Any private governance change must be reconciled to `PRIVATE_RUNTIME_STATE.json` before the public control plane may describe the new state.
 
-See `PRIVATE_RUNTIME_STATE.json`, `CROSS_REPO_FRESHNESS_POLICY_v1.json`, the frozen `COLLECTION_STATUS.json`, `PRIVATE_DATA_PLANE_BINDING_RECEIPT.json`, historical activation/hold receipts, `PROVIDER_TERMS_EVIDENCE_REQUIREMENTS_v1.json` and `00_ARCHIVE_CONTROL/CROSS_REPO_DATA_BOUNDARY.md`.
+See `PRIVATE_RUNTIME_STATE.json`, `CROSS_REPO_FRESHNESS_POLICY_v1.json`, the frozen `COLLECTION_STATUS.json`, `PRIVATE_DATA_PLANE_BINDING_RECEIPT.json`, `PRIVATE_COLLECTION_HOLD_RECEIPT_2026-08-23.json`, `PROVIDER_TERMS_EVIDENCE_REQUIREMENTS_v1.json` and `00_ARCHIVE_CONTROL/CROSS_REPO_DATA_BOUNDARY.md`.
 
 Any change to a frozen hypothesis, feature, direction, actionable window, policy threshold, control design or multiplicity family requires a new version and fresh prospective evidence.
