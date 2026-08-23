@@ -1,0 +1,169 @@
+name: Agent Tool Shadow Round 2
+
+on:
+  pull_request:
+    paths:
+      - '06_RESEARCH_LAB/agent_tool_shadow_round2_v1/**'
+      - 'scripts/research/shadow_round2_*.py'
+      - 'scripts/research/validate_agent_tool_shadow_round2.py'
+      - 'scripts/research/shadow_guardrail_probe.py'
+      - '.github/workflows/agent-tool-shadow-round2.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  hostile-qualification:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Prepare isolated secret-free runtime
+        run: |
+          ROOT="$RUNNER_TEMP/agent-tool-r2"
+          mkdir -p \
+            "$ROOT/home" \
+            "$ROOT/evidence" \
+            "$ROOT/pycache" \
+            "$ROOT/pip-cache" \
+            "$ROOT/npm-cache" \
+            "$ROOT/npm" \
+            "$ROOT/venv" \
+            "$ROOT/fixture" \
+            "$ROOT/cbm-cache"
+          echo "HOME=$ROOT/home" >> "$GITHUB_ENV"
+          echo "PYTHONDONTWRITEBYTECODE=1" >> "$GITHUB_ENV"
+          echo "PYTHONPYCACHEPREFIX=$ROOT/pycache" >> "$GITHUB_ENV"
+          echo "PIP_CACHE_DIR=$ROOT/pip-cache" >> "$GITHUB_ENV"
+          echo "npm_config_cache=$ROOT/npm-cache" >> "$GITHUB_ENV"
+          echo "DO_NOT_TRACK=1" >> "$GITHUB_ENV"
+          echo "PROMPTFOO_DISABLE_TELEMETRY=1" >> "$GITHUB_ENV"
+          echo "PROMPTFOO_DISABLE_UPDATE=1" >> "$GITHUB_ENV"
+          echo "PROMPTFOO_DISABLE_REMOTE_GENERATION=1" >> "$GITHUB_ENV"
+          echo "PROMPTFOO_DISABLE_REDTEAM_REMOTE_GENERATION=1" >> "$GITHUB_ENV"
+          echo "PROMPTFOO_DISABLE_SHARING=1" >> "$GITHUB_ENV"
+
+      - name: Refresh current main reference
+        run: git fetch origin main --no-tags
+
+      - name: Pre-flight shadow scope guardrail
+        run: >-
+          python scripts/research/shadow_guardrail_probe.py
+          --mode pre
+          --base-ref origin/main
+          --output "$RUNNER_TEMP/agent-tool-r2/evidence/guardrail-pre.json"
+
+      - name: Compile Round 2 control code
+        run: |
+          python -m py_compile \
+            scripts/research/shadow_round2_fixture.py \
+            scripts/research/shadow_round2_qualification.py \
+            scripts/research/validate_agent_tool_shadow_round2.py
+
+      - name: Validate frozen Stage A contract
+        run: >-
+          python scripts/research/validate_agent_tool_shadow_round2.py
+          > "$RUNNER_TEMP/agent-tool-r2/evidence/static-validation.json"
+
+      - name: Install pinned Python candidate into isolated venv
+        run: |
+          python -m venv "$RUNNER_TEMP/agent-tool-r2/venv"
+          env -i \
+            PATH="$PATH" \
+            HOME="$HOME" \
+            PIP_CACHE_DIR="$PIP_CACHE_DIR" \
+            CI=1 \
+            "$RUNNER_TEMP/agent-tool-r2/venv/bin/python" -m pip install \
+              --disable-pip-version-check \
+              inspect-ai==0.3.258
+          echo "$RUNNER_TEMP/agent-tool-r2/venv/bin" >> "$GITHUB_PATH"
+
+      - name: Install pinned Node candidates into isolated prefix
+        run: |
+          env -i \
+            PATH="$PATH" \
+            HOME="$HOME" \
+            npm_config_cache="$npm_config_cache" \
+            CI=1 \
+            DO_NOT_TRACK=1 \
+            PROMPTFOO_DISABLE_TELEMETRY=1 \
+            PROMPTFOO_DISABLE_UPDATE=1 \
+            PROMPTFOO_DISABLE_REMOTE_GENERATION=1 \
+            PROMPTFOO_DISABLE_REDTEAM_REMOTE_GENERATION=1 \
+            PROMPTFOO_DISABLE_SHARING=1 \
+            npm install \
+              --prefix "$RUNNER_TEMP/agent-tool-r2/npm" \
+              --no-audit \
+              --no-fund \
+              @nanonets/graft@0.10.1 \
+              codebase-memory-mcp@0.10.6 \
+              promptfoo@0.122.0
+          echo "$RUNNER_TEMP/agent-tool-r2/npm/node_modules/.bin" >> "$GITHUB_PATH"
+
+      - name: Build deterministic secret-free fixture
+        run: >-
+          python scripts/research/shadow_round2_fixture.py
+          --root "$RUNNER_TEMP/agent-tool-r2/fixture/agent_tool_round2_fixture"
+          --output "$RUNNER_TEMP/agent-tool-r2/evidence/fixture-manifest.json"
+
+      - name: Hostile qualification of all Stage A candidates
+        id: qualification
+        continue-on-error: true
+        run: >-
+          python scripts/research/shadow_round2_qualification.py
+          --fixture-root "$RUNNER_TEMP/agent-tool-r2/fixture/agent_tool_round2_fixture"
+          --fixture-manifest "$RUNNER_TEMP/agent-tool-r2/evidence/fixture-manifest.json"
+          --pins 06_RESEARCH_LAB/agent_tool_shadow_round2_v1/UPSTREAM_PINS.json
+          --cbm-cache "$RUNNER_TEMP/agent-tool-r2/cbm-cache"
+          --output "$RUNNER_TEMP/agent-tool-r2/evidence/stage-a.json"
+
+      - name: Post-flight repository cleanliness guardrail
+        if: always()
+        run: >-
+          python scripts/research/shadow_guardrail_probe.py
+          --mode post
+          --output "$RUNNER_TEMP/agent-tool-r2/evidence/guardrail-post.json"
+
+      - name: Upload isolated Stage A evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: agent-tool-shadow-round2-${{ github.run_id }}
+          path: ${{ runner.temp }}/agent-tool-r2/evidence
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Enforce Stage A qualification verdict
+        if: always()
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          path = Path(os.environ['RUNNER_TEMP']) / 'agent-tool-r2' / 'evidence' / 'stage-a.json'
+          if not path.exists():
+              raise SystemExit('stage_a_evidence_missing')
+          evidence = json.loads(path.read_text(encoding='utf-8'))
+          if evidence.get('status') != 'PASS':
+              raise SystemExit('stage_a_not_qualified')
+          if evidence.get('decision') != 'EVIDENCE_ONLY_NO_PROMOTION':
+              raise SystemExit('stage_a_decision_contract_violation')
+          if evidence.get('stage_a_auto_promotion_permitted') is not False:
+              raise SystemExit('stage_a_auto_promotion_violation')
+          if evidence.get('framework_checkout_clean') is not True:
+              raise SystemExit('framework_checkout_not_clean')
+          print(json.dumps({'status': 'PASS', 'decision': evidence['decision']}, sort_keys=True))
+          PY
