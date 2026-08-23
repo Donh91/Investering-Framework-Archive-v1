@@ -4,12 +4,14 @@
   "calendar_only_verdict_forbidden": true,
   "canonical_effect": false,
   "contract": "RESEARCH_NEXT_ACTION_PACKET_v1",
-  "decision_fingerprint": "b03a375b0170e18df757166c469eea94c450d9ccc0f93a3057cfb621dc0ecc14",
+  "decision_fingerprint": "ad27bc998a0e8f260a7b6aba91f1d94916fd5e2b4b863d41dbe4ee9e699d073e",
   "deep_research_authorized": false,
   "evidence_summary": {
     "candidate_divergence_stats_7d": {},
     "divergences_total": 0,
     "eligible_rows_total": 0,
+    "excluded_pre_repair_rows": 0,
+    "excluded_unbound_divergences": 0,
     "matured_divergences": {
       "24h": 0,
       "72h": 0,
@@ -22,13 +24,13 @@
     },
     "pairwise_vs_baseline_7d": {}
   },
-  "generated_at_utc": "2026-08-23T05:14:02Z",
+  "generated_at_utc": "2026-08-23T11:01:42Z",
   "paid_data_authorized": false,
   "policy_contract": "RESEARCH_NEXT_ACTION_POLICY_v1",
-  "primary_action": "CONTINUE_OBSERVING",
-  "reason": "Too few matured +7d rows for the first information review.",
+  "primary_action": "NO_ACTION",
+  "reason": "Prospective collection is quarantined pending complete post-repair evidence and a separately reviewed future floor.",
   "research_action_gate": "COLLECT_MORE_EVIDENCE",
-  "research_instruction": "Continue prospective evidence accumulation under frozen contracts.",
-  "target": "CORE_C01_C07",
+  "research_instruction": "Keep shared-row ingestion, scoring and autonomous follow-on actions disabled until a separate activation review sets the post-repair source boundary and future floor.",
+  "target": "P0_REPAIR_QUARANTINE",
   "terminal_verdict": "INSUFFICIENT_EVIDENCE"
 }
