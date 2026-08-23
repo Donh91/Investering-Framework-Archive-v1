@@ -1,0 +1,111 @@
+{
+  "acceptance_tests": {
+    "negative": [
+      "A breadth snapshot or BTC.D verification timestamp later than information_cutoff_utc is rejected.",
+      "A production breadth pointer with the wrong contract, missing receipt, wrong membership hash or mutable shared-path semantics is rejected.",
+      "One valid ETHBTC sample out of 168, duplicate timestamps, a one-hour gap or a non-settled source window is rejected.",
+      "Reordered, duplicate-date, stale, post-cutoff or wrong-provider BTC.D rows are rejected.",
+      "A source binding with a missing commit, unreachable commit, changed content hash or mismatched contract is rejected.",
+      "A frozen row baseline of 1.0 cannot mature against a later current-file baseline of 2.0.",
+      "A pre-repair or containment-sentinel row cannot enter tournament, FNP, weekly, relevance or next-action metrics.",
+      "A renamed structural regime cannot bypass the preregistered non-overlapping prospective-block robustness gate."
+    ],
+    "positive": [
+      "The actual C5E_TOP100_BREADTH_OWNER_v1_2 owner schema is discovered from immutable dated evidence and reproduces its receipt and membership hash.",
+      "Exactly 168 unique continuous direct settled ETHBTC hourly rows, all available by cutoff, produce the frozen core decision.",
+      "Three distinct chronological settled CoinMarketCap BTC.D prints, all verified by cutoff, produce the frozen path state.",
+      "Every raw family binding records a reachable source commit, exact path, content hash, owner contract and observation timestamp.",
+      "Outcome maturation reconciles the exact row-time baseline and source binding, stays unavailable on incomplete path coverage and is idempotent.",
+      "All P0 negative controls pass before a new activation floor can be set."
+    ]
+  },
+  "allowed_change_scope": [
+    "scripts/research/core_shared_row_materializer.py",
+    "scripts/research/prospective_evidence_controller.py",
+    "scripts/research/shared_row_outcome_owner.py",
+    "scripts/research/shared_row_next_action_controller.py",
+    "scripts/research/shared_row_tournament_monitor.py",
+    "scripts/research/validate_core_prospective_freeze.py",
+    "scripts/research/validate_next_action_controller.py",
+    "06_RESEARCH_LAB/shared_row_model_tournament_v1/04_SHARED_ROW_SCHEMA.json",
+    "06_RESEARCH_LAB/shared_row_model_tournament_v1/CORE_FAMILY_PROSPECTIVE_CONTRACT_v1.json",
+    "06_RESEARCH_LAB/shared_row_model_tournament_v1/OWNER_BINDING_MATRIX.json",
+    "06_RESEARCH_LAB/shared_row_model_tournament_v1/OUTCOME_CONTRACT_v1.json",
+    "06_RESEARCH_LAB/shared_row_model_tournament_v1/RESEARCH_NEXT_ACTION_POLICY_v1.json",
+    "06_RESEARCH_LAB/shared_row_model_tournament_v1/RUNTIME_STATUS.json",
+    "06_RESEARCH_LAB/shared_row_model_tournament_v1/TRANSFORM_FREEZE_REGISTRY.json",
+    "06_RESEARCH_LAB/shared_row_model_tournament_v1/data/OUTCOME_DETAIL_LEDGER.csv",
+    "06_RESEARCH_LAB/shared_row_model_tournament_v1/data/PROSPECTIVE_SHARED_ROW_LEDGER.csv",
+    "06_RESEARCH_LAB/shared_row_model_tournament_v1/monitor/LATEST.json",
+    "tests/research/test_shared_row_p0_integrity.py"
+  ],
+  "authority_boundary": "CODE_REMEDIATION_ONLY",
+  "candidate_id": "codex-research-prospective-p0-validity-repair-v1",
+  "clean_noop_condition": "Fresh main proves every P0 reproduction is already rejected, the experiment remains quarantined with zero counted rows and the complete negative-control suite passes unchanged.",
+  "contract": "CODEX_RESEARCH_CANDIDATE_v1",
+  "escalation_condition": "Escalate to the framework owner if remediation would require changing market gates, sensor thresholds, model weights, canonical market semantics, portfolio logic, API budget or a new research engine.",
+  "evidence": [
+    {
+      "kind": "REPO_PATH",
+      "ref": "06_RESEARCH_LAB/shared_row_model_tournament_v1/30_PROSPECTIVE_EVIDENCE_LOOP_QA.md",
+      "summary": "Durable P0 containment record and six reproduced architectural defects."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "scripts/research/core_shared_row_materializer.py",
+      "summary": "Accepts post-cutoff breadth and BTC.D evidence, sparse ETHBTC windows, file-order BTC.D and a mutable shared breadth pointer."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "scripts/research/shared_row_outcome_owner.py",
+      "summary": "Reloads the current mutable hourly tree and does not reconcile the baseline to the row-time source binding."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/08/2026-08-23/owner_snapshot.json",
+      "summary": "Production owner stores membership_hash under aggregate and demonstrates the schema mismatch."
+    },
+    {
+      "kind": "COMMIT",
+      "ref": "5f7fd82b9a11118c8b49654e12ec10cc57b329ac",
+      "summary": "Fresh main used for pre-write containment revalidation."
+    },
+    {
+      "kind": "OTHER",
+      "ref": "WORK_AUDIT_ZIP_SHA256:4992a8b43f85c629425f334825fefd060f380a10a6306975b5d04143f898b0b5",
+      "summary": "Independent Work audit package containing 20 reports, 43 failure modes and negative-control results."
+    }
+  ],
+  "finding_key": "SHARED_ROW_P0_CAUSAL_BINDING_AND_OUTCOME_INTEGRITY",
+  "forbidden_changes": [
+    "market gates",
+    "model weights",
+    "canonical authority",
+    "portfolio logic",
+    "API budget",
+    "new policy semantics",
+    "Master Monday semantics",
+    "Cycle Navigator market semantics",
+    "paid data",
+    "automatic component promotion or retirement"
+  ],
+  "objective": "Repair the existing prospective shared-row machine so no row can become eligible without same-cutoff immutable owner evidence, exact frozen core coverage, reproducible source bindings, row-time outcome reconciliation and reachable preregistered robustness gates.",
+  "origin": {
+    "source_paths": [
+      "06_RESEARCH_LAB/shared_row_model_tournament_v1/30_PROSPECTIVE_EVIDENCE_LOOP_QA.md",
+      "06_RESEARCH_LAB/shared_row_model_tournament_v1/CORE_FAMILY_PROSPECTIVE_CONTRACT_v1.json",
+      "06_RESEARCH_LAB/shared_row_model_tournament_v1/TRANSFORM_FREEZE_REGISTRY.json"
+    ],
+    "thread_label": "INDEPENDENT WORK AUDIT - PROSPECTIVE EVIDENCE & AUTONOMOUS RESEARCH GOVERNANCE",
+    "type": "AUDIT"
+  },
+  "post_fix_gate": "FULL_P0_NEGATIVE_CONTROL_PASS_THEN_NEW_FUTURE_FLOOR_AFTER_COMPLETE_POST_REPAIR_OWNERS",
+  "primary_target": "scripts/research/core_shared_row_materializer.py",
+  "reproduction": "From main at 5f7fd82b, import core_shared_row_materializer in an isolated fixture. Supply one valid ETHBTC row among 168 slots, a breadth owner timestamp after the row cutoff, three BTC.D rows in non-chronological order with post-cutoff verification, and a current hourly baseline different from the frozen row baseline. The current gate accepts the first three malformed cases in controlled tests and the outcome owner matures from the later baseline. The production breadth owner additionally fails because membership_hash is nested while the materializer expects it top-level.",
+  "requested_priority": "EXPEDITED",
+  "requires_framework_owner_authority": false,
+  "status": "SUBMITTED",
+  "stop_condition": "Stop without implementation if the research candidate is not CODEX_READY on fresh main, any required fix exceeds allowed_change_scope, or an acceptance test would require changing market rules or thresholds.",
+  "submitted_at_utc": "2026-08-23T07:38:07Z",
+  "title": "Prospective shared-row P0 validity repair"
+}

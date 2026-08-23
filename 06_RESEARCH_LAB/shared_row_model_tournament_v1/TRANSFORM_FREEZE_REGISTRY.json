@@ -1,6 +1,7 @@
 {
   "authority": "RESEARCH_ONLY_NON_CANONICAL",
   "contract": "PROSPECTIVE_TRANSFORM_FREEZE_REGISTRY_v1",
+  "contract_revision": "1.1-p0-containment",
   "core_activation_rule": {
     "all_must_have_candidate_decision_contract_status": "READY",
     "all_must_have_status": "READY",
@@ -14,8 +15,11 @@
       "C06_BREADTH_BTCD",
       "C07_SIMPLE_3"
     ],
+    "collection_state": "QUARANTINED_PENDING_P0_REPAIR",
+    "containment_floor_sentinel": true,
     "no_backdating": true,
-    "prospective_eligibility_start": "2026-08-23T04:50:00Z",
+    "prior_prospective_eligibility_start": "2026-08-23T04:50:00Z",
+    "prospective_eligibility_start": "2026-09-30T00:00:00Z",
     "start_only_when": [
       "ETHBTC_PERSISTENCE",
       "BREADTH_SURVIVAL",
@@ -28,7 +32,8 @@
       "candidate_decision_contract_status": "READY",
       "exact_blocker": null,
       "family_id": "ETHBTC_PERSISTENCE",
-      "prospective_eligibility_start": "2026-08-23T04:50:00Z",
+      "prospective_eligibility_start": "2026-09-30T00:00:00Z",
+      "repair_state": "QUARANTINED_PENDING_EXACT_168_HOUR_CONTINUITY_AND_BINDING_TESTS",
       "research_mapping": "permission=true iff latest direct settled ETHBTC hourly close is ABOVE 0.0300; persistence context uses the last 168 retained direct settled ETHBTC rows, matching the existing API intelligence implementation.",
       "status": "READY",
       "transformation_version": "ETHBTC_0_0300_PERSISTENCE_PROSPECTIVE_v1"
@@ -37,7 +42,8 @@
       "candidate_decision_contract_status": "READY",
       "exact_blocker": null,
       "family_id": "BREADTH_SURVIVAL",
-      "prospective_eligibility_start": "2026-08-23T04:50:00Z",
+      "prospective_eligibility_start": "2026-09-30T00:00:00Z",
+      "repair_state": "QUARANTINED_PENDING_IMMUTABLE_OWNER_AND_SAME_CUTOFF_TESTS",
       "research_mapping": "prospective-only, legacy_equivalence=false; BROAD_MAJORITY iff advancers > decliners in frozen point-in-time owner universe; permission=true iff BROAD_MAJORITY.",
       "status": "READY",
       "transformation_version": "BREADTH_MAJORITY_SURVIVAL_PROSPECTIVE_v1"
@@ -46,7 +52,8 @@
       "candidate_decision_contract_status": "READY",
       "exact_blocker": null,
       "family_id": "BTCD_PATH_RECLAIM",
-      "prospective_eligibility_start": "2026-08-23T04:50:00Z",
+      "prospective_eligibility_start": "2026-09-30T00:00:00Z",
+      "repair_state": "QUARANTINED_PENDING_DISTINCT_CHRONOLOGICAL_PRINT_AND_BINDING_TESTS",
       "research_mapping": "prospective-only CMC convention, legacy_equivalence=false; FALLING_PATH iff latest three settled closes c < b < a chronologically; RISING_RECLAIM iff prior decline then latest uptick; permission=true iff FALLING_PATH.",
       "status": "READY",
       "transformation_version": "BTCD_CMC_THREE_PRINT_PATH_PROSPECTIVE_v1"
@@ -94,5 +101,6 @@
   ],
   "freeze_rule": "Use an existing legitimate definition first. A new definition may be preregistered prospective-only before outcomes. If semantics require invention, status remains BLOCKED/PARTIAL.",
   "incremental_activation_rule": "ETF, leverage, stablecoin, CFGI and Full Stack candidates start only at/after their own merged READY freeze timestamp.",
+  "p0_reactivation_rule": "Replace the containment sentinel only after the P0 implementation and negative-control suite are merged, then choose a new future floor later than the merge and the first complete post-repair owner captures.",
   "retroactive_candidate_decision_backfill": false
 }

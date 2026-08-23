@@ -1,6 +1,7 @@
 {
   "authority": "RESEARCH_ONLY_NON_CANONICAL",
   "contract": "PROSPECTIVE_OWNER_BINDING_MATRIX_v1",
+  "contract_revision": "1.1-p0-containment",
   "created_from_repo_audit_sha": "f44fa8a896ec1cb56393566823819508e13bed6c",
   "families": [
     {
@@ -8,8 +9,9 @@
       "exact_blocker": null,
       "family_id": "ETHBTC_PERSISTENCE",
       "information_cutoff_semantics": "Only direct ETHBTC hourly rows whose timestamp is at or before information_cutoff_utc.",
-      "prospective_eligibility_start": "2026-08-23T04:50:00Z",
+      "prospective_eligibility_start": "2026-09-30T00:00:00Z",
       "raw_owner": "03_DAILY_CAPTURE_LOGS/hourly + scripts/evidence_lifecycle/write_ethbtc_persistence_receipt.py",
+      "repair_state": "QUARANTINED_PENDING_P0_BINDING_AND_CONTINUITY_REPAIR",
       "source_provider": "Binance direct ETHBTC spot retained hourly rows",
       "source_version_convention": "API_INTELLIGENCE_SEQUENCE_CONTEXT_v2_2 / direct ETHBTC only",
       "status": "READY",
@@ -21,8 +23,9 @@
       "exact_blocker": null,
       "family_id": "BREADTH_SURVIVAL",
       "information_cutoff_semantics": "Membership and aggregate frozen by retrieval timestamp before observation; first eligible capture must be at/after prospective freeze start; no hindsight universe membership.",
-      "prospective_eligibility_start": "2026-08-23T04:50:00Z",
+      "prospective_eligibility_start": "2026-09-30T00:00:00Z",
       "raw_owner": "scripts/data_terminal/top100_breadth_owner_collector.py + 03_DAILY_CAPTURE_LOGS/breadth_rich",
+      "repair_state": "QUARANTINED_PENDING_IMMUTABLE_OWNER_DISCOVERY_AND_SAME_CUTOFF_REPAIR",
       "source_provider": "CoinGecko market-cap markets endpoint",
       "source_version_convention": "C5E_TOP100_BREADTH_OWNER_v1_2 with frozen membership_hash",
       "status": "READY",
@@ -34,8 +37,9 @@
       "exact_blocker": null,
       "family_id": "BTCD_PATH_RECLAIM",
       "information_cutoff_semantics": "Only settled complete UTC dates known before observation. Source rows are never interpolated/current-day backfilled. Latest settled state may remain the prospective decision state until the next settled print.",
-      "prospective_eligibility_start": "2026-08-23T04:50:00Z",
+      "prospective_eligibility_start": "2026-09-30T00:00:00Z",
       "raw_owner": "scripts/fetch_btc_d_cmc_free.py + 03_DAILY_CAPTURE_LOGS/btc_d_cmc/latest",
+      "repair_state": "QUARANTINED_PENDING_DISTINCT_CHRONOLOGICAL_PRINT_AND_SOURCE_BINDING_REPAIR",
       "source_provider": "CoinMarketCap public historical global-metrics endpoint",
       "source_version_convention": "CMC_DIRECT_SOURCE_CONVENTION = BTC market cap / total market cap tracked by CoinMarketCap; not TradingView CRYPTOCAP:BTC.D top-125",
       "status": "READY",
@@ -110,5 +114,7 @@
   ],
   "freeze_prerequisite": "No candidate row is eligible before the relevant owner, transform and candidate-decision contract are frozen in merged Git history.",
   "missing_is_zero": false,
-  "paid_spend": 0
+  "p0_reactivation_rule": "The 2026-09-30 timestamp is a containment sentinel, not an activation floor. A new future floor must be set after P0 merge and complete post-repair owner evidence.",
+  "paid_spend": 0,
+  "prior_prospective_eligibility_start": "2026-08-23T04:50:00Z"
 }
