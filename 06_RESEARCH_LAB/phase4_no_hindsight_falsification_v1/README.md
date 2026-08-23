@@ -2,6 +2,8 @@
 
 Status: RESEARCH_ONLY / NON_CANONICAL / NO_AUTO_PROMOTION
 
+**Continuation / new-chat entrypoint:** read `PHASE_IV_CONTINUATION_STATE_v1.json` first, then reconcile it against current `main` in both `Donh91/Investering-Framework-Archive-v1` and `Donh91/secrets` before acting. The continuation file is a point-in-time handoff, not a substitute for current repository state.
+
 This module freezes a small candidate set for falsification. It may not change canonical market state, thresholds, weights, portfolio semantics, prospective floors, or historical labels after signal inspection.
 
 Primary historical lanes: ETF persistence, ETF stabilization, BTC-vs-ETH ETF divergence, and observation-only review of the existing dispersion-to-breadth sequence. Primary prospective lanes: price-down/OI-up, price/OI/spot divergence, and post-flush reclaim/OI behaviour. CFGI Orders remains exploratory only until independent sample size improves.
