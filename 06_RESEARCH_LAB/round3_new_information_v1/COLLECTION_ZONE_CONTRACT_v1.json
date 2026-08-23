@@ -1,0 +1,57 @@
+{
+  "contract": "ROUND3_COLLECTION_ZONE_CONTRACT_v1",
+  "status": "BLOCKED_PRIVATE_STORAGE_REQUIRED",
+  "canonical_framework_repo": {
+    "repository": "Donh91/Investering-Framework-Archive-v1",
+    "visibility_at_freeze": "PUBLIC",
+    "raw_provider_payloads_allowed": false,
+    "normalized_provider_market_values_allowed": false,
+    "permitted_public_outputs": [
+      "contracts",
+      "schemas",
+      "collector_code_without_secrets",
+      "hashes",
+      "row_counts",
+      "first_and_last_timestamps",
+      "gap_and_completeness_counts",
+      "schema_fingerprints",
+      "mapping_versions",
+      "provider_value_free_health_receipts",
+      "research_decisions"
+    ]
+  },
+  "private_zone_requirements": {
+    "visibility": "PRIVATE",
+    "secrets_not_in_git": true,
+    "append_only_or_immutable_raw_capture": true,
+    "raw_payload_sha256_required": true,
+    "collector_git_sha_required": true,
+    "event_and_availability_timestamps_required": true,
+    "schema_and_mapping_version_required": true,
+    "provider_terms_review_required_before_activation": true,
+    "retention_must_not_exceed_verified_provider_rights": true,
+    "public_ci_logs_may_not_emit_provider_values": true
+  },
+  "activation_gate": {
+    "private_destination_identifier_required": true,
+    "destination_access_test_required": true,
+    "provider_terms_receipt_required_for_each_primary": true,
+    "collection_workflow_may_be_scheduled_before_pass": false,
+    "provider_calls_from_round3_collection_before_pass": false
+  },
+  "currently_discovered_github_storage": {
+    "suitable_private_repository_found": false,
+    "accessible_owner_repositories_checked": [
+      "Donh91/Investering-Framework-Archive-v1",
+      "Donh91/Eksperimenter-framework-",
+      "Donh91/Cycle-navigator-"
+    ],
+    "all_checked_repositories_public": true
+  },
+  "authority": {
+    "research_only": true,
+    "paid_historical_data_authorized": false,
+    "hypothesis_testing_authorized": false,
+    "portfolio_execution": false
+  }
+}
