@@ -32,11 +32,12 @@ Stage A is intentionally narrow and secret-free.
 - has `contents: read` only;
 - receives no OpenAI key, provider key, secrets-repository access or market-data credentials;
 - executes external software only inside runner-temporary directories;
+- gives every candidate a byte-identical independent copy of the frozen synthetic fixture so one candidate cannot contaminate another candidate's evidence;
 - may not write to the checked-out framework repository;
 - may not modify agent configuration, user configuration or production workflows;
 - may not start persistent daemons or background watchers;
 - may not call an LLM or external model provider;
-- may use package registries only to install the frozen test versions;
+- may install only exact frozen package artifacts; when an exact package's documented installation requires an authenticated publisher runtime bootstrap, that bootstrap is treated as explicit supply-chain complexity tax and is permitted only in the isolated secret-free runner;
 - records evidence as an ephemeral GitHub Actions artifact only.
 
 Stage A can only produce `QUALIFIED_FOR_STAGE_B`, `KEEP_SHADOW` or `BLOCK` evidence. It cannot promote anything.
@@ -47,11 +48,11 @@ Stage A can only produce `QUALIFIED_FOR_STAGE_B`, `KEEP_SHADOW` or `BLOCK` evide
 
 - `BASELINE`: ordinary repository/file exploration without an external context layer.
 - `GRAFT`: structural tree-sitter mode only. `graft init`, deep/LLM build modes and agent wiring are forbidden.
-- `CODEBASE_MEMORY`: one-shot CLI only with an isolated cache. Installer-driven agent configuration, MCP wiring, daemon, watcher and UI modes are forbidden.
+- `CODEBASE_MEMORY`: documented one-shot JSON CLI only with an isolated cache. Installer-driven agent configuration, MCP wiring, daemon, watcher and UI modes are forbidden. Its npm wrapper's verified native-runtime bootstrap counts against its complexity/supply-chain score.
 
 ### Stage A question
 
-Can each external arm safely build/query a deterministic fixture and recover preregistered architecture facts without touching the framework checkout or requiring secrets?
+Can each external arm safely build/query its own byte-identical copy of a deterministic fixture and recover preregistered architecture facts without touching the framework checkout or requiring secrets?
 
 ### Stage B promotion question
 
@@ -99,6 +100,7 @@ For every candidate measure or record:
 - filesystem writes;
 - background processes;
 - cache footprint where available;
+- native runtime/bootstrap requirements;
 - failure clarity;
 - source/version fragility;
 - security/privacy surface;
