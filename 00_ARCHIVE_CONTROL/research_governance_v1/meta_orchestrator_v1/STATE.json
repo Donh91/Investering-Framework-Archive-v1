@@ -1,0 +1,93 @@
+{
+  "active_heavy_workstreams": [],
+  "authority": "RESEARCH_ONLY_NON_CANONICAL",
+  "binding_integrity": "PRIMARY_COMPLETE",
+  "binding_report": {
+    "binding_integrity": "PRIMARY_COMPLETE",
+    "bindings": {
+      "CYCLE_NAVIGATOR": {
+        "fallback_path": null,
+        "mode": "PRIMARY_READY",
+        "primary_path": "05_CYCLE_NAVIGATOR/autonomous_calibration_v1/STATE.json",
+        "selected_path": "05_CYCLE_NAVIGATOR/autonomous_calibration_v1/STATE.json"
+      },
+      "SHADOW_REGISTRY": {
+        "fallback_path": null,
+        "mode": "PRIMARY_READY",
+        "primary_path": "04_MARKET_LEARNING/shadow_registry/autonomous_portfolio_v1/STATE.json",
+        "selected_path": "04_MARKET_LEARNING/shadow_registry/autonomous_portfolio_v1/STATE.json"
+      },
+      "SHARED_ROW": {
+        "fallback_path": "06_RESEARCH_LAB/shared_row_model_tournament_v1/RUNTIME_STATUS.json",
+        "mode": "PRIMARY_READY",
+        "primary_path": "06_RESEARCH_LAB/shared_row_model_tournament_v1/NEXT_ACTION_STATE.json",
+        "selected_path": "06_RESEARCH_LAB/shared_row_model_tournament_v1/NEXT_ACTION_STATE.json"
+      },
+      "SOURCE_RECOVERY": {
+        "fallback_path": null,
+        "mode": "PRIMARY_READY",
+        "primary_path": "00_ARCHIVE_CONTROL/source_recovery_controller_v1/STATE.json",
+        "selected_path": "00_ARCHIVE_CONTROL/source_recovery_controller_v1/STATE.json"
+      }
+    },
+    "complete_primary": true,
+    "contract": "RESEARCH_GOVERNANCE_SPECIALIST_BINDING_REPORT_v1",
+    "expected_sources": [
+      "CYCLE_NAVIGATOR",
+      "SHADOW_REGISTRY",
+      "SHARED_ROW",
+      "SOURCE_RECOVERY"
+    ],
+    "missing_all_sources": [],
+    "missing_primary_sources": [],
+    "resolvable": true
+  },
+  "canonical_effect": false,
+  "contract": "RESEARCH_META_ORCHESTRATOR_STATE_v1",
+  "controller_conflicts": [],
+  "deep_research_authorized": false,
+  "evidence_fingerprint": "ca12b61d4743d14d7135e2c35f4eb9e3f89c538f9fe05785eb6a6a94a6c93a2b",
+  "external_provider_calls_authorized": false,
+  "max_concurrent_heavy_workstreams": 1,
+  "paid_data_authorized": false,
+  "portfolio_execution": false,
+  "primary_action": "WAIT_FOR_EVIDENCE",
+  "primary_execution_mode": "AUTO_OBSERVE",
+  "primary_source": "SHARED_ROW",
+  "primary_target": "CORE_C01_C07",
+  "queue": [
+    {
+      "canonical_effect": false,
+      "decision_surface": "CALIBRATION_QUALITY",
+      "evidence_fingerprint": "",
+      "execution_mode": "AUTO_OBSERVE",
+      "impact_tier": "LOW",
+      "novelty_verdict": null,
+      "orchestrator_action": "WAIT_FOR_EVIDENCE",
+      "paid_data_authorized": false,
+      "portfolio_execution": false,
+      "reason": "Too few matured +7d rows for the first information review.",
+      "source": "SHARED_ROW",
+      "specialist_action": "CONTINUE_OBSERVING",
+      "target": "CORE_C01_C07"
+    },
+    {
+      "canonical_effect": false,
+      "decision_surface": "DATA_INTEGRITY",
+      "evidence_fingerprint": "4969b9ed14a8d9af32beaaef74adbfe56faa0f265716915c6240bf3be456c7d9",
+      "execution_mode": "AUTO_OBSERVE",
+      "impact_tier": "NONE",
+      "novelty_verdict": null,
+      "orchestrator_action": "CONTINUE_MONITORING",
+      "paid_data_authorized": false,
+      "portfolio_execution": false,
+      "reason": "terminal/closeout source state has no independent decision upside unless linked to a current high-value blocker",
+      "source": "SOURCE_RECOVERY",
+      "specialist_action": "DECLARE_NOT_TESTABLE",
+      "target": "00_ARCHIVE_CONTROL/research_runtime/CFGI_MARKET_PROVIDER_TERMINAL_RECEIPT.json"
+    }
+  ],
+  "queue_n": 2,
+  "reason": "Too few matured +7d rows for the first information review.",
+  "sentinel_verdict": "PASS"
+}

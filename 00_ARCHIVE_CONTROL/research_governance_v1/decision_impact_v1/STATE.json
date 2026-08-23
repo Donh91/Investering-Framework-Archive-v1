@@ -1,0 +1,51 @@
+{
+  "actionable_specialist_state_n": 2,
+  "authority": "RESEARCH_ONLY_NON_CANONICAL",
+  "canonical_effect": false,
+  "contract": "RESEARCH_DECISION_IMPACT_VOI_STATE_v1",
+  "deep_research_authorized": false,
+  "evidence_fingerprint": "03170f1812f1911c6c7e9042e1c72974b622fb3b5e02be67738947dc66c90f95",
+  "external_provider_calls_authorized": false,
+  "paid_data_authorized": false,
+  "portfolio_execution": false,
+  "queue": [
+    {
+      "action": "CONTINUE_OBSERVING",
+      "canonical_effect": false,
+      "decision_surface": "CALIBRATION_QUALITY",
+      "deep_research_authorized": false,
+      "evidence_fingerprint": "",
+      "impact_tier": "LOW",
+      "novelty_verdict": null,
+      "paid_data_authorized": false,
+      "paid_review_only": false,
+      "portfolio_execution": false,
+      "reason": "Too few matured +7d rows for the first information review.",
+      "source": "SHARED_ROW",
+      "target": "CORE_C01_C07"
+    },
+    {
+      "action": "DECLARE_NOT_TESTABLE",
+      "canonical_effect": false,
+      "decision_surface": "DATA_INTEGRITY",
+      "deep_research_authorized": false,
+      "evidence_fingerprint": "4969b9ed14a8d9af32beaaef74adbfe56faa0f265716915c6240bf3be456c7d9",
+      "impact_tier": "NONE",
+      "novelty_verdict": null,
+      "paid_data_authorized": false,
+      "paid_review_only": false,
+      "portfolio_execution": false,
+      "reason": "terminal/closeout source state has no independent decision upside unless linked to a current high-value blocker",
+      "source": "SOURCE_RECOVERY",
+      "target": "00_ARCHIVE_CONTROL/research_runtime/CFGI_MARKET_PROVIDER_TERMINAL_RECEIPT.json"
+    }
+  ],
+  "queue_n": 2,
+  "reason": "Too few matured +7d rows for the first information review.",
+  "resolved_specialist_state_n": 4,
+  "selected_action": "CONTINUE_OBSERVING",
+  "selected_decision_surface": "CALIBRATION_QUALITY",
+  "selected_impact_tier": "LOW",
+  "selected_source": "SHARED_ROW",
+  "selected_target": "CORE_C01_C07"
+}

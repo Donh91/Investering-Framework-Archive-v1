@@ -1,0 +1,39 @@
+{
+  "active_heavy_workstreams": [],
+  "authority": "RESEARCH_ONLY_NON_CANONICAL",
+  "binding_integrity": "PRIMARY_COMPLETE",
+  "canonical_effect": false,
+  "contract": "RESEARCH_META_EXECUTION_QUEUE_v1",
+  "queue": [
+    {
+      "canonical_effect": false,
+      "decision_surface": "CALIBRATION_QUALITY",
+      "evidence_fingerprint": "",
+      "execution_mode": "AUTO_OBSERVE",
+      "impact_tier": "LOW",
+      "novelty_verdict": null,
+      "orchestrator_action": "WAIT_FOR_EVIDENCE",
+      "paid_data_authorized": false,
+      "portfolio_execution": false,
+      "reason": "Too few matured +7d rows for the first information review.",
+      "source": "SHARED_ROW",
+      "specialist_action": "CONTINUE_OBSERVING",
+      "target": "CORE_C01_C07"
+    },
+    {
+      "canonical_effect": false,
+      "decision_surface": "DATA_INTEGRITY",
+      "evidence_fingerprint": "4969b9ed14a8d9af32beaaef74adbfe56faa0f265716915c6240bf3be456c7d9",
+      "execution_mode": "AUTO_OBSERVE",
+      "impact_tier": "NONE",
+      "novelty_verdict": null,
+      "orchestrator_action": "CONTINUE_MONITORING",
+      "paid_data_authorized": false,
+      "portfolio_execution": false,
+      "reason": "terminal/closeout source state has no independent decision upside unless linked to a current high-value blocker",
+      "source": "SOURCE_RECOVERY",
+      "specialist_action": "DECLARE_NOT_TESTABLE",
+      "target": "00_ARCHIVE_CONTROL/research_runtime/CFGI_MARKET_PROVIDER_TERMINAL_RECEIPT.json"
+    }
+  ]
+}
