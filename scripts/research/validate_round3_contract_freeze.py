@@ -62,12 +62,6 @@ def validate_materialized_v2(status: dict):
     assert commitment['matched_control_count_total'] == 129
     assert commitment['unmatched_episode_count'] == 6
 
-    # The Actions artifact was emitted by csv.DictWriter using RFC-style CRLF,
-    # while Git stores the durable text form as LF. Both hashes are frozen in
-    # the receipt. The logical pair-set commitment remains the original CRLF
-    # artifact hash; the checked-in file must match the independently recorded
-    # Git-LF hash. This is byte-representation normalization only, not a change
-    # to any of the 135 event/control records.
     assert receipt['pair_set_line_ending_equivalence'] == 'SAME_135_CSV_RECORDS_CRLF_ARTIFACT_VS_LF_GIT_CONTENT'
     assert receipt['pair_set_sha256'] == receipt['pair_set_artifact_crlf_sha256']
     assert pair_git_lf_sha == receipt['pair_set_git_lf_sha256']
@@ -86,7 +80,6 @@ def validate_materialized_v2(status: dict):
     assert status['v2_materialized'] is True
     assert status['v2_episode_count'] == 135
     assert status['v2_matched_control_count'] == 129
-    assert 'V2_CATALOG_AND_PAIR_SET_NOT_YET_MATERIALIZED' not in status['blockers']
     print('ROUND3_V2_COMMITMENT_PASS', receipt['catalog_sha256'], receipt['pair_set_sha256'], pair_git_lf_sha)
 
 
@@ -100,6 +93,8 @@ def main():
     schema = load('NORMALIZED_ROW_SCHEMA_v1.json')
     change = load('CHANGE_CONTROL_v1.json')
     status = load('COLLECTION_STATUS.json')
+    binding = load('PRIVATE_DATA_PLANE_BINDING_RECEIPT.json')
+    terms = load('PROVIDER_TERMS_AND_RETENTION_BOUNDARY_RECEIPT.json')
     legacy = json.loads(LEGACY.read_text())
 
     assert acceptance['decision'] == 'CONDITIONAL_ACCEPT_FOR_CONTRACT_FREEZE_AND_PROSPECTIVE_COLLECTION_ONLY'
@@ -146,13 +141,34 @@ def main():
     assert inf['stage2_hold']['allowed_only_after_stage1_global_success'] is True
     assert inf['stage2_hold']['threshold_retuning'] is False
 
-    assert zone['status'] == 'BLOCKED_PRIVATE_STORAGE_REQUIRED'
-    assert zone['canonical_framework_repo']['visibility_at_freeze'] == 'PUBLIC'
+    assert zone['status'] == 'PRIVATE_DATA_PLANE_BOUND_COLLECTION_ONLY'
+    assert zone['canonical_framework_repo']['visibility_at_binding'] == 'PUBLIC'
     assert zone['canonical_framework_repo']['raw_provider_payloads_allowed'] is False
     assert zone['canonical_framework_repo']['normalized_provider_market_values_allowed'] is False
-    assert zone['private_zone_requirements']['provider_terms_review_required_before_activation'] is True
-    assert zone['activation_gate']['collection_workflow_may_be_scheduled_before_pass'] is False
-    assert zone['activation_gate']['provider_calls_from_round3_collection_before_pass'] is False
+    assert zone['restricted_data_plane']['repository'] == 'Donh91/secrets'
+    assert zone['restricted_data_plane']['visibility_verified'] == 'PRIVATE'
+    assert zone['restricted_data_plane']['raw_provider_payloads_allowed'] is True
+    assert zone['restricted_data_plane']['credentials_in_git_forbidden'] is True
+    assert zone['github_storage_audit']['suitable_private_repository_found'] is True
+    assert zone['activation_gate']['collection_workflow_may_be_scheduled_after_pass'] is True
+    assert zone['activation_gate']['hypothesis_testing_after_pass'] is False
+    assert zone['activation_gate']['outcome_scoring_after_pass'] is False
+
+    assert binding['restricted_repo'] == 'Donh91/secrets'
+    assert binding['restricted_repo_visibility'] == 'PRIVATE'
+    assert binding['destination_access_verified'] is True
+    assert binding['public_raw_provider_values_allowed'] is False
+    assert binding['private_raw_provider_values_allowed'] is True
+    assert binding['hypothesis_testing_active'] is False
+    assert binding['outcome_scoring_active'] is False
+
+    assert terms['scope'] == 'PROSPECTIVE_PRIVATE_INTERNAL_RESEARCH_COLLECTION_ONLY'
+    assert terms['formal_legal_opinion_asserted'] is False
+    assert terms['public_raw_provider_payload_storage'] is False
+    assert len(terms['sources']) == 4
+    assert all(s['public_redistribution'] is False for s in terms['sources'])
+    assert terms['hypothesis_testing_authorized'] is False
+    assert terms['outcome_scoring_authorized'] is False
 
     assert schema['public_repo_rows_forbidden'] is True
     assert schema['missingness']['missing_is_zero'] is False
@@ -165,7 +181,12 @@ def main():
     assert status['hypothesis_testing_active'] is False
     assert status['outcome_scoring_active'] is False
     assert status['paid_historical_api_calls_authorized'] is False
-    assert 'PRIVATE_STORAGE_REQUIRED' in status['blockers']
+    assert status['restricted_data_plane'] == 'Donh91/secrets'
+    assert 'PRIVATE_STORAGE_REQUIRED' not in status['blockers']
+    assert status['source_states']['SC01_OKX_ETH_OI_HOURLY_V1'] == 'FROZEN_PRIVATE_CANARY_READY'
+    assert status['source_states']['SC03_OKX_ETH_REALIZED_FUNDING_V1'] == 'FROZEN_PRIVATE_CANARY_READY'
+    assert status['source_states']['SC14_DERIBIT_ETH_TRUE_25D_SKEW_V1'] == 'FROZEN_PRIVATE_CANARY_READY'
+    assert status['source_states']['SC06_BINANCE_ETH_BOOK_DEPTH_V1'] == 'FROZEN_CANARY_ONLY_PERSISTENT_RUNTIME_REQUIRED'
 
     validate_materialized_v2(status)
 
@@ -174,6 +195,7 @@ def main():
     print('GLOBAL_FWER_ALPHA', hyps['global_family']['familywise_alpha'])
     print('V2_CAP_HOURS', v2['v2_episode_rule']['closure_cap_hours_after_trigger'])
     print('COLLECTION_ACTIVE', status['collection_active'])
+    print('RESTRICTED_DATA_PLANE', zone['restricted_data_plane']['repository'])
     print('RAW_PUBLIC_STORAGE', zone['canonical_framework_repo']['raw_provider_payloads_allowed'])
 
 
