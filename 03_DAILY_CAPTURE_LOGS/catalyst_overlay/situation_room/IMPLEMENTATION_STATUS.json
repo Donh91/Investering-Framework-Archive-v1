@@ -1,0 +1,38 @@
+{
+  "contract": "SITUATION_ROOM_DAILY_OWNER_IMPLEMENTATION_STATUS_v1",
+  "authority": "RESEARCH_ONLY_NON_CANONICAL",
+  "status": "IMPLEMENTED_NOT_SCHEDULE_ACTIVATED",
+  "collector_code": "scripts/data_terminal/situation_room_daily_owner.py",
+  "test_path": "tests/data_terminal/test_situation_room_daily_owner.py",
+  "contract_path": "04_MARKET_LEARNING/news/2026-08-23__situation-room-daily-owner-contract-v1__research.md",
+  "durable_root": "03_DAILY_CAPTURE_LOGS/catalyst_overlay/situation_room",
+  "bounded_backfill": {
+    "start_date": "2026-08-18",
+    "end_date": "2026-08-23",
+    "status": "MATERIALIZED",
+    "event_ledger_seeded": true,
+    "latest_pointer_created": true,
+    "shared_row_tournament_eligible": false,
+    "retroactive_candidate_eligibility": false
+  },
+  "failure_semantics": {
+    "successful_zero_event": "NO_NEW_MATERIAL_CATALYST",
+    "partial_primary_source_failure": "UNKNOWN_DUE_TO_SOURCE_FAILURE",
+    "total_primary_source_failure": "COLLECTOR_FAILURE",
+    "unresolved_timestamped_candidate": "REVIEW_REQUIRED_UNRESOLVED_CANDIDATES",
+    "zero_event_equals_failure": false
+  },
+  "situation_room_role": "DISCOVERY_ONLY",
+  "event_reaction_separation": true,
+  "canonical_effect": false,
+  "market_state_effect": false,
+  "cycle_navigator_effect": false,
+  "master_monday_semantic_effect": false,
+  "portfolio_effect": false,
+  "schedule_activation": {
+    "status": "BLOCKED_BY_HIGH_IMPACT_SAFETY_GATE",
+    "reason": "Adding or changing a scheduled .github/workflows writer is HIGH-IMPACT and requires the repository-safety safepoint plus verified external-vault snapshot. Donh91/Investering-Framework-Vault was not readable through the connected GitHub authority, so the vault verification requirement could not be satisfied without guessing or bypassing governance.",
+    "workflow_file_created_or_modified": false,
+    "required_next_state": "VERIFY_EXTERNAL_VAULT_THEN_SEPARATE_SCHEDULE_ACTIVATION_REVIEW"
+  }
+}
