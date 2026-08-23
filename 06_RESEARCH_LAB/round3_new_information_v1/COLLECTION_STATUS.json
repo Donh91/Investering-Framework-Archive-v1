@@ -1,14 +1,19 @@
 {
   "contract": "ROUND3_COLLECTION_STATUS_v1",
-  "programme_status": "CONTRACT_FROZEN_V2_MATERIALIZED_PRIVATE_COLLECTION_ACTIVE_PARTIAL_SOURCE_SET",
+  "programme_status": "CONTRACT_FROZEN_V2_MATERIALIZED_PRIVATE_COLLECTION_HOLD_TERMS_AND_PROVENANCE",
   "collection_mode": "PROSPECTIVE_COLLECTION_ONLY",
   "collection_active": false,
   "collection_active_field_scope": "LEGACY_PUBLIC_FRAMEWORK_REPOSITORY_LANE_ONLY",
-  "restricted_private_collection_active": true,
+  "restricted_private_collection_active": false,
   "public_framework_collection_active": false,
   "cross_repo_boundary": "00_ARCHIVE_CONTROL/CROSS_REPO_DATA_BOUNDARY.md",
-  "blockers": [],
+  "blockers": [
+    "PROVIDER_TERMS_ATTESTATION_INCOMPLETE_FOR_APPLICABLE_ENTITY_REGION_AND_USE",
+    "SCHEMA_V2_CAPTURE_PROVENANCE_NOT_YET_OBSERVED"
+  ],
   "full_four_source_collection_blockers": [
+    "PROVIDER_TERMS_ATTESTATION_INCOMPLETE_FOR_APPLICABLE_ENTITY_REGION_AND_USE",
+    "SCHEMA_V2_CAPTURE_PROVENANCE_NOT_YET_OBSERVED",
     "SC06_PERSISTENT_CONTINUOUS_STREAM_RUNTIME_REQUIRED"
   ],
   "v2_materialized": true,
@@ -27,14 +32,25 @@
   "restricted_collection_activation_commit": "de3fe4b07486eea36af1b43061561a7d7c7f5bad",
   "restricted_canary_receipt_commit": "e282f54abc828d85a6454a0debb0e435232cc2f7",
   "restricted_canary_workflow_run_id": 32633097190,
-  "restricted_canary_result": "PASS",
+  "restricted_canary_result": "PASS_HISTORICAL_COLLECTION_HEALTH_ONLY",
+  "restricted_terms_and_provenance_hold_commit": "8bf1b7369db033023b192c25ab0a628cdda129c2",
+  "restricted_health_readback_commit": "57b05be019f1d66460ee861b1abe98c84ccfcde7",
+  "restricted_health_workflow_run_id": 32637379889,
+  "restricted_health_contract": "ROUND3_PRIVATE_DATA_HEALTH_v2",
+  "restricted_raw_file_count": 11,
+  "restricted_integrity_valid_file_count": 11,
+  "restricted_invalid_or_orphan_file_count": 0,
+  "restricted_legacy_provenance_quarantine_count": 11,
+  "restricted_schema_v2_capture_count": 0,
+  "restricted_dataset_manifest_sha256": "5ce190b2399aebaccb918096bee57af135434178953e0f15f2a877b4309eda3d",
+  "restricted_analysis_authorized": false,
   "source_states": {
-    "SC01_OKX_ETH_OI_HOURLY_V1": "PRIVATE_PROSPECTIVE_COLLECTION_ACTIVE",
-    "SC03_OKX_ETH_REALIZED_FUNDING_V1": "PRIVATE_PROSPECTIVE_COLLECTION_ACTIVE",
-    "SC06_BINANCE_ETH_BOOK_DEPTH_V1": "FROZEN_CANARY_ONLY_PERSISTENT_RUNTIME_REQUIRED",
-    "SC14_DERIBIT_ETH_TRUE_25D_SKEW_V1": "PRIVATE_PROSPECTIVE_COLLECTION_ACTIVE"
+    "SC01_OKX_ETH_OI_HOURLY_V1": "PRIVATE_COLLECTION_HOLD_TERMS_ATTESTATION_AND_PROVENANCE_V2",
+    "SC03_OKX_ETH_REALIZED_FUNDING_V1": "PRIVATE_COLLECTION_HOLD_TERMS_ATTESTATION_AND_PROVENANCE_V2",
+    "SC06_BINANCE_ETH_BOOK_DEPTH_V1": "FROZEN_TERMS_HOLD_AND_PERSISTENT_RUNTIME_REQUIRED",
+    "SC14_DERIBIT_ETH_TRUE_25D_SKEW_V1": "PRIVATE_COLLECTION_HOLD_TERMS_ATTESTATION_AND_PROVENANCE_V2"
   },
-  "next_gate": "ACCUMULATE_PRIVATE_SOURCE_HEALTH_AND_BUILD_PERSISTENT_SC06_RUNTIME_WITHOUT_OUTCOME_SCORING",
+  "next_gate": "COMPLETE_PROVIDER_TERMS_ATTESTATION_THEN_SEPARATE_REVIEWED_REACTIVATION_AND_FIRST_SCHEMA_V2_HEALTH_ONLY_CAPTURE",
   "authority": {
     "research_only": true,
     "canonical_market_state": false,

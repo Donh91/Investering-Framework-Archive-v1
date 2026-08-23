@@ -39,7 +39,7 @@ REQUIRED_MARKERS = {
     "06_RESEARCH_LAB/round3_new_information_v1/README.md": [
         "PROSPECTIVE_COLLECTION_ONLY",
         "Donh91/secrets",
-        "SC06_PERSISTENT_RUNTIME_REQUIRED",
+        "PRIVATE_COLLECTION_HOLD_RECEIPT_2026-08-23.json",
     ],
     ".agents/skills/canonical-context-router/SKILL.md": ["CROSS_REPO_DATA_BOUNDARY.md"],
     ".agents/skills/archive-governance/SKILL.md": ["CROSS_REPO_DATA_BOUNDARY.md"],
@@ -123,14 +123,54 @@ def main() -> int:
     )
     expected = {
         "collection_mode": "PROSPECTIVE_COLLECTION_ONLY",
-        "restricted_private_collection_active": True,
+        "restricted_private_collection_active": False,
         "hypothesis_testing_active": False,
         "outcome_scoring_active": False,
         "raw_provider_values_public_repo_allowed": False,
+        "restricted_analysis_authorized": False,
     }
     for key, value in expected.items():
         if status.get(key) != value:
             fail(f"Round 3 status invariant failed: {key}", errors)
+
+    if status.get("programme_status") != (
+        "CONTRACT_FROZEN_V2_MATERIALIZED_PRIVATE_COLLECTION_HOLD_TERMS_AND_PROVENANCE"
+    ):
+        fail("Round 3 current programme status is not fail-closed", errors)
+
+    hold = json.loads(
+        (ROOT / "06_RESEARCH_LAB/round3_new_information_v1/PRIVATE_COLLECTION_HOLD_RECEIPT_2026-08-23.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    if hold.get("current_collection_active") is not False:
+        fail("private hold receipt does not close collection", errors)
+    if hold.get("analysis_authorized") is not False:
+        fail("private hold receipt authorizes analysis", errors)
+    if hold.get("private_health_readback_merge_commit") != status.get(
+        "restricted_health_readback_commit"
+    ):
+        fail("private health readback binding drift", errors)
+    if hold.get("dataset_manifest_sha256") != status.get("restricted_dataset_manifest_sha256"):
+        fail("private dataset-manifest binding drift", errors)
+    if hold.get("legacy_provenance_quarantine_count") != 11:
+        fail("unexpected legacy provenance quarantine count", errors)
+    if hold.get("schema_v2_capture_count") != 0:
+        fail("unexpected schema-v2 capture count before reactivation", errors)
+
+    terms_requirements = json.loads(
+        (ROOT / "06_RESEARCH_LAB/round3_new_information_v1/PROVIDER_TERMS_EVIDENCE_REQUIREMENTS_v1.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    if terms_requirements.get("collection_activation_authorized") is not False:
+        fail("provider terms requirements authorize collection", errors)
+    if terms_requirements.get("analysis_authorized") is not False:
+        fail("provider terms requirements authorize analysis", errors)
+    if terms_requirements.get("activation_gate", {}).get(
+        "separate_reviewed_reactivation_pull_request_required"
+    ) is not True:
+        fail("provider terms reactivation review gate is missing", errors)
 
     if errors:
         print("CROSS_REPO_CONTEXT_INVALID")
