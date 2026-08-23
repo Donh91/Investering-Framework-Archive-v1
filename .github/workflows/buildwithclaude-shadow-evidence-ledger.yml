@@ -58,6 +58,7 @@ jobs:
       - name: Materialize immutable real-change row
         env:
           EVIDENCE_DIR: ${{ runner.temp }}/bwc-evidence
+          PATH_POINTER: ${{ runner.temp }}/bwc-evidence/repo_evidence_path.txt
           OBSERVED_SHA: ${{ github.sha }}
           EVENT_NAME: ${{ github.event_name }}
         run: |
@@ -87,13 +88,13 @@ jobs:
           out.mkdir(parents=True,exist_ok=True)
           path=out/f"REAL_CHANGE_{os.environ['OBSERVED_SHA'][:12]}_{os.environ['GITHUB_RUN_ID']}.json"
           path.write_text(json.dumps(row,sort_keys=True,separators=(',',':'))+'\n')
-          Path('runtime_evidence_path.txt').write_text(str(path))
+          Path(os.environ['PATH_POINTER']).write_text(str(path))
           PY
       - name: Commit evidence only
         run: |
           git config user.name framework-shadow-evidence-agent
           git config user.email framework-shadow-evidence-agent@users.noreply.github.com
-          PATH_TO_ADD=$(cat runtime_evidence_path.txt)
+          PATH_TO_ADD=$(cat "$RUNNER_TEMP/bwc-evidence/repo_evidence_path.txt")
           git add "$PATH_TO_ADD"
           if ! git diff --cached --quiet; then git commit -m "research: prospective shadow evidence ${GITHUB_RUN_ID}"; fi
           pushed=false
