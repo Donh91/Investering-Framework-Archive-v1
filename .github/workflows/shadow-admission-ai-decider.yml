@@ -35,7 +35,7 @@ jobs:
         run: python -m unittest tests.api_agent.test_shadow_admission_ai_decider -v
       - name: Dry-run full decision pipeline
         run: >-
-          python scripts/api_agent/shadow_admission_ai_decider.py
+          python -m scripts.api_agent.shadow_admission_ai_decider
           --policy research/api_agent/SHADOW_ADMISSION_AI_POLICY_v1.json
           --candidate-registry 06_RESEARCH_LAB/buildwithclaude_shadow_round1_v1/ROUND1_CANDIDATES.json
           --prospective-policy 06_RESEARCH_LAB/buildwithclaude_shadow_round1_v1/PROSPECTIVE_OBSERVATION_POLICY.md
@@ -75,7 +75,7 @@ jobs:
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: >-
-          python scripts/api_agent/shadow_admission_ai_decider.py
+          python -m scripts.api_agent.shadow_admission_ai_decider
           --policy research/api_agent/SHADOW_ADMISSION_AI_POLICY_v1.json
           --candidate-registry 06_RESEARCH_LAB/buildwithclaude_shadow_round1_v1/ROUND1_CANDIDATES.json
           --prospective-policy 06_RESEARCH_LAB/buildwithclaude_shadow_round1_v1/PROSPECTIVE_OBSERVATION_POLICY.md
