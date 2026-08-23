@@ -1,0 +1,112 @@
+{
+  "contract": "SITUATION_ROOM_DAILY_OWNER_v1",
+  "authority": "RESEARCH_ONLY_NON_CANONICAL",
+  "collection_mode": "BOUNDED_BACKFILL",
+  "observation_date_utc": "2026-08-19",
+  "detection_time_utc": "2026-08-23T20:23:00Z",
+  "run_status": "PASS_BOUNDED_RESEARCH_REVIEW",
+  "daily_result": "MATERIAL_CATALYSTS_FOUND",
+  "review_scope": "Situation Room public surface plus bounded primary/strong-independent source verification",
+  "events": [
+    {
+      "event_id": "EVT_TREASURY_LONG_END_BUYBACK_20260819",
+      "event_family_id": "EVF_TREASURY_LONG_END_BUYBACK_20260819",
+      "title": "U.S. Treasury expands long-end liquidity-support buybacks",
+      "event_time_utc": "2026-08-19T12:32:00Z",
+      "event_time_precision": "TIMESTAMP_FROM_PRIMARY_BULLETIN",
+      "detection_time_utc": "2026-08-23T20:23:00Z",
+      "classification": "SYSTEMIC",
+      "catalyst_subtype": "MACRO_LIQUIDITY_POLICY",
+      "confidence": "HIGH_PRIMARY_SOURCE",
+      "expected_duration": "WEEKS_TO_MONTHS",
+      "affected_framework_lanes": ["MACRO_RISK", "LIQUIDITY", "BTC", "ETH"],
+      "verification_status": "PRIMARY_SOURCE_VERIFIED",
+      "source_receipts": [
+        {
+          "publisher": "U.S. Department of the Treasury",
+          "role": "PRIMARY",
+          "url": "https://content.govdelivery.com/accounts/USTREAS/bulletins/425aba1?reqfrom=share",
+          "published_at_source": "2026-08-19 08:32 EDT",
+          "content_sha256": null,
+          "hash_status": "NOT_CAPTURED_IN_BOUNDED_BACKFILL"
+        }
+      ],
+      "notes": "Liquidity-support buyback expansion, not classified as quantitative easing. Later Bessent comments are follow-up evidence in the same event family.",
+      "causal_authority": "NONE"
+    },
+    {
+      "event_id": "EVT_FOMC_MINUTES_20260819",
+      "event_family_id": "EVF_FOMC_MINUTES_20260819",
+      "title": "Federal Reserve releases July 28-29 FOMC minutes",
+      "event_time_utc": "2026-08-19T18:00:00Z",
+      "event_time_precision": "TIMESTAMP_FROM_PRIMARY_RELEASE",
+      "detection_time_utc": "2026-08-23T20:23:00Z",
+      "classification": "MARKET_RELEVANT",
+      "catalyst_subtype": "MACRO_POLICY_CONTEXT",
+      "confidence": "HIGH_PRIMARY_SOURCE",
+      "expected_duration": "DAYS_TO_WEEKS",
+      "affected_framework_lanes": ["MACRO_RISK", "LIQUIDITY", "BTC", "ETH"],
+      "verification_status": "PRIMARY_SOURCE_VERIFIED",
+      "source_receipts": [
+        {
+          "publisher": "Board of Governors of the Federal Reserve System",
+          "role": "PRIMARY",
+          "url": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20260819a.htm",
+          "published_at_source": "2026-08-19 14:00 EDT",
+          "content_sha256": null,
+          "hash_status": "NOT_CAPTURED_IN_BOUNDED_BACKFILL"
+        }
+      ],
+      "causal_authority": "NONE"
+    },
+    {
+      "event_id": "EVT_WHITE_HOUSE_CRYPTO_POLICY_CLUSTER_20260819",
+      "event_family_id": "EVF_WHITE_HOUSE_CRYPTO_POLICY_CLUSTER_20260819",
+      "title": "White House crypto-policy event and renewed CLARITY Act push",
+      "event_time_utc": "2026-08-19T00:00:00Z",
+      "event_time_precision": "DATE_ONLY",
+      "detection_time_utc": "2026-08-23T20:23:00Z",
+      "classification": "STRUCTURAL",
+      "catalyst_subtype": "REGULATORY_POLICY_SIGNAL",
+      "confidence": "MEDIUM_HIGH_STRONG_INDEPENDENT_PRIMARY_EVENT_PAGE_NOT_LOCATED",
+      "expected_duration": "WEEKS_TO_MONTHS",
+      "affected_framework_lanes": ["CATALYST_NEWS", "CRYPTO_POLICY", "MACRO_RISK"],
+      "verification_status": "STRONG_INDEPENDENT_VERIFIED_PRIMARY_NOT_LOCATED_IN_BOUNDED_REVIEW",
+      "source_receipts": [
+        {
+          "publisher": "Reuters",
+          "role": "STRONG_INDEPENDENT",
+          "url": "https://www.reuters.com/legal/government/trump-host-crypto-executives-sec-weighs-regulations-2026-08-19/",
+          "content_sha256": null,
+          "hash_status": "NOT_CAPTURED_IN_BOUNDED_BACKFILL"
+        },
+        {
+          "publisher": "The White House",
+          "role": "PRIMARY_CONTEXT",
+          "url": "https://www.whitehouse.gov/issues/technology-and-innovation/",
+          "content_sha256": null,
+          "hash_status": "NOT_CAPTURED_IN_BOUNDED_BACKFILL"
+        }
+      ],
+      "causal_authority": "NONE"
+    }
+  ],
+  "market_reaction_observations": [
+    {
+      "reaction_id": "RXN_CRYPTO_SHORT_LIQUIDATION_AMPLIFICATION_20260819",
+      "reaction_type": "POSITIONING_AMPLIFICATION",
+      "observation": "Independent market reporting described a sharp crypto rally accompanied by more than $1 billion of short liquidations in roughly one hour.",
+      "source": "https://www.marketwatch.com/livecoverage/stock-market-today-dow-s-p-500-nasdaq-bond-market-selloff-wanes-fed-minutes-target-earnings/card/bitcoin-surges-to-near-3-month-high-as-shorts-get-crushed-c3g8h9ETVKu8786zL5lH",
+      "attribution": "MULTI_CAUSAL_UNRESOLVED",
+      "does_not_create_catalyst": true
+    }
+  ],
+  "unverified_discoveries": [],
+  "source_limitations": ["White House event was verified through strong independent reporting; a dedicated primary event page was not located in the bounded review."],
+  "shared_row_tournament_eligible": false,
+  "retroactive_candidate_eligibility": false,
+  "hindsight_market_attribution_forbidden": true,
+  "canonical_effect": false,
+  "market_state_effect": false,
+  "portfolio_effect": false
+}
