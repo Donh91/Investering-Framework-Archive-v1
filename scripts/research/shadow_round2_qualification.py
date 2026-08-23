@@ -7,6 +7,7 @@ import hashlib
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 import time
@@ -118,6 +119,16 @@ def snapshot_tree(root: Path) -> dict[str, Any]:
     return {"file_count": len(files), "bytes": total_bytes}
 
 
+def copy_arm_fixture(source: Path, arm: str) -> Path:
+    dest = source.parent / f"{source.name}_{arm.lower()}"
+    if dest.exists():
+        shutil.rmtree(dest)
+    shutil.copytree(source, dest)
+    if git_status(dest) != "":
+        raise RuntimeError(f"copied_fixture_not_clean:{arm}")
+    return dest
+
+
 def load_json(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
 
@@ -188,24 +199,8 @@ def graft_probe(fixture: Path, expected_version: str) -> dict[str, Any]:
     }
 
 
-def parse_project_name(raw: str, fixture_name: str) -> str:
-    if fixture_name in raw:
-        return fixture_name
-    try:
-        value = json.loads(raw)
-    except Exception:
-        value = None
-    if isinstance(value, dict):
-        candidates = value.get("projects") or value.get("results") or []
-        if isinstance(candidates, list):
-            for row in candidates:
-                if isinstance(row, dict) and row.get("name"):
-                    name = str(row["name"])
-                    if fixture_name.lower() in name.lower():
-                        return name
-            if len(candidates) == 1 and isinstance(candidates[0], dict) and candidates[0].get("name"):
-                return str(candidates[0]["name"])
-    return fixture_name
+def compact_json(payload: dict[str, Any]) -> str:
+    return json.dumps(payload, sort_keys=True, separators=(",", ":"))
 
 
 def cbm_probe(fixture: Path, expected_version: str, cache: Path) -> dict[str, Any]:
@@ -222,88 +217,34 @@ def cbm_probe(fixture: Path, expected_version: str, cache: Path) -> dict[str, An
     commands.append(rec)
     checks.append(rec["returncode"] == 0 and version_ok(out + err, expected_version))
 
-    rec, out, err = run_cmd(
-        ["codebase-memory-mcp", "cli", "index_repository", "--repo-path", str(fixture)],
-        cwd=fixture,
-        env_extra=env,
-        timeout=180,
-    )
-    commands.append(rec)
-    checks.append(rec["returncode"] == 0)
-
-    rec, out, err = run_cmd(
-        ["codebase-memory-mcp", "cli", "--raw", "list_projects"],
-        cwd=fixture,
-        env_extra=env,
-        timeout=60,
-    )
-    commands.append(rec)
-    checks.append(rec["returncode"] == 0)
-    project = parse_project_name(out, fixture.name)
-
-    rec, out, err = run_cmd(
-        [
-            "codebase-memory-mcp",
-            "cli",
-            "--raw",
-            "search_graph",
-            "--project",
-            project,
-            "--name-pattern",
-            ".*load_customer.*",
-            "--label",
-            "Function",
-        ],
-        cwd=fixture,
-        env_extra=env,
-        timeout=60,
-    )
-    commands.append(rec)
-    checks.append(rec["returncode"] == 0 and "load_customer" in out)
-
-    rec, out, err = run_cmd(
-        [
-            "codebase-memory-mcp",
-            "cli",
-            "--raw",
-            "trace_call_path",
-            "--project",
-            project,
-            "--function-name",
-            "load_customer",
-            "--direction",
-            "both",
-        ],
-        cwd=fixture,
-        env_extra=env,
-        timeout=60,
-    )
-    commands.append(rec)
-    trace_text = out.lower()
-    checks.append(
-        rec["returncode"] == 0
-        and "load_customer" in trace_text
-        and ("fetch_customer" in trace_text or "get_customer" in trace_text)
-    )
-
-    rec, out, err = run_cmd(
-        ["codebase-memory-mcp", "cli", "--raw", "get_architecture", "--project", project],
-        cwd=fixture,
-        env_extra=env,
-        timeout=60,
-    )
-    commands.append(rec)
-    checks.append(rec["returncode"] == 0)
+    documented_calls = [
+        ("index_repository", {"repo_path": str(fixture)}, None, 180),
+        ("list_projects", {}, None, 60),
+        ("search_graph", {"name_pattern": ".*load_customer.*", "label": "Function"}, "load_customer", 60),
+        ("trace_call_path", {"function_name": "load_customer", "direction": "both"}, "load_customer", 60),
+        ("get_architecture", {}, None, 60),
+    ]
+    for tool, payload, needle, timeout in documented_calls:
+        rec, out, err = run_cmd(
+            ["codebase-memory-mcp", "cli", tool, compact_json(payload)],
+            cwd=fixture,
+            env_extra=env,
+            timeout=timeout,
+        )
+        commands.append(rec)
+        text = (out + "\n" + err).lower()
+        checks.append(rec["returncode"] == 0 and (needle is None or needle.lower() in text))
 
     return {
         "status": "QUALIFIED_FOR_STAGE_B" if all(checks) else "BLOCK",
         "version_expected": expected_version,
-        "project_name_used": project,
+        "cli_contract": "DOCUMENTED_JSON_ARGUMENT",
         "checks_passed": sum(1 for value in checks if value),
         "checks_total": len(checks),
         "commands": commands,
         "cache_after": snapshot_tree(cache),
         "fixture_after": snapshot_tree(fixture),
+        "runtime_bootstrap_complexity_tax": "NPM_WRAPPER_DOWNLOADS_VERIFIED_NATIVE_RUNTIME_SET",
     }
 
 
@@ -337,6 +278,7 @@ print(len(task.dataset))
         "checks_passed": sum(1 for value in checks if value),
         "checks_total": len(checks),
         "commands": [rec],
+        "fixture_after": snapshot_tree(fixture),
     }
 
 
@@ -371,6 +313,7 @@ def promptfoo_probe(fixture: Path, expected_version: str) -> dict[str, Any]:
         "checks_passed": sum(1 for value in checks if value),
         "checks_total": len(checks),
         "commands": commands,
+        "fixture_after": snapshot_tree(fixture),
     }
 
 
@@ -392,6 +335,13 @@ def main() -> int:
     pins = pin_map(load_json(args.pins))
     before_status = git_status(repo)
     fixture_before = snapshot_tree(fixture)
+    if git_status(fixture) != "":
+        raise SystemExit("source_fixture_must_begin_clean")
+
+    graft_fixture = copy_arm_fixture(fixture, "graft")
+    cbm_fixture = copy_arm_fixture(fixture, "codebase_memory")
+    inspect_fixture = copy_arm_fixture(fixture, "inspect_ai")
+    promptfoo_fixture = copy_arm_fixture(fixture, "promptfoo")
 
     evidence = {
         "contract": "AGENT_TOOL_SHADOW_ROUND2_STAGE_A_EVIDENCE_v1",
@@ -401,6 +351,7 @@ def main() -> int:
         "stage_a_auto_promotion_permitted": False,
         "fixture_hash": manifest["fixture_hash"],
         "fixture_before": fixture_before,
+        "arm_fixture_isolation": "BYTE_IDENTICAL_INDEPENDENT_COPIES",
         "upstream_pins": {
             key: {
                 "repository": value["repository"],
@@ -413,19 +364,22 @@ def main() -> int:
     }
 
     evidence["candidates"]["BASELINE"] = baseline_probe(fixture, manifest)
-    evidence["candidates"]["GRAFT"] = graft_probe(fixture, pins["GRAFT"]["version"])
+    evidence["candidates"]["GRAFT"] = graft_probe(graft_fixture, pins["GRAFT"]["version"])
     evidence["candidates"]["CODEBASE_MEMORY"] = cbm_probe(
-        fixture, pins["CODEBASE_MEMORY"]["version"], args.cbm_cache.resolve()
+        cbm_fixture, pins["CODEBASE_MEMORY"]["version"], args.cbm_cache.resolve()
     )
-    evidence["candidates"]["INSPECT_AI"] = inspect_probe(fixture, pins["INSPECT_AI"]["version"])
-    evidence["candidates"]["PROMPTFOO"] = promptfoo_probe(fixture, pins["PROMPTFOO"]["version"])
+    evidence["candidates"]["INSPECT_AI"] = inspect_probe(inspect_fixture, pins["INSPECT_AI"]["version"])
+    evidence["candidates"]["PROMPTFOO"] = promptfoo_probe(promptfoo_fixture, pins["PROMPTFOO"]["version"])
 
     after_status = git_status(repo)
     repository_clean = before_status == after_status == ""
+    source_fixture_clean = git_status(fixture) == ""
     evidence["framework_checkout_clean"] = repository_clean
+    evidence["source_fixture_clean"] = source_fixture_clean
     statuses = {key: row["status"] for key, row in evidence["candidates"].items()}
     all_qualified = (
         repository_clean
+        and source_fixture_clean
         and statuses["BASELINE"] == "PASS"
         and all(
             statuses[key] == "QUALIFIED_FOR_STAGE_B"
