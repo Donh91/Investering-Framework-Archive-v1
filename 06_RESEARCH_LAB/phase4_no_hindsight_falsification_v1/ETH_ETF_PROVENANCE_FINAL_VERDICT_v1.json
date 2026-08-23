@@ -1,0 +1,42 @@
+{
+  "contract": "PHASE_IV_ETH_ETF_PROVENANCE_FINAL_VERDICT_v1",
+  "status": "FINAL_UNTESTABLE_ORIGIN_LEVEL_SOURCE_INTEGRITY_FAIL",
+  "authority": "RESEARCH_ONLY_NO_SIGNAL_NO_REPAIR_NO_PROMOTION",
+  "decided_at_utc": "2026-08-23T17:48:00Z",
+  "source_path": "08_SOURCE_MATERIAL/market_data/etf_flows/2026-07-06__eth_spot_etf_flows_raw_history.csv.gz.b64",
+  "original_add_commit": "9870dcfa106ac8ea8e39a11811cc88a2bababf67",
+  "original_add_commit_message": "Add ETH spot ETF flow compressed raw history dataset",
+  "git_blob_lineage": {
+    "original_blob_sha1": "c0b1c1b98b40e7378000abda2aed9d01f011ef5a",
+    "current_main_blob_sha1": "c0b1c1b98b40e7378000abda2aed9d01f011ef5a",
+    "verdict": "ORIGINAL_AND_CURRENT_BYTES_ARE_GIT_IDENTICAL"
+  },
+  "archive_manifest_claim": {
+    "status_claim": "BACKTEST_READY_RAW_DATASET_QA_PASS",
+    "eth_rows_claimed": 499,
+    "coverage_claimed": "2024-07-23 to 2026-07-06",
+    "decoded_csv_sha256_claimed": "8bba0ba9cd6de2e1d6cb0c9f27a5e4d2e43f44d3e91d06d0256429aab31c23bb"
+  },
+  "strict_replay_evidence": {
+    "workflow_run_id": 32654098642,
+    "workflow_artifact_id": 9496978415,
+    "workflow_artifact_digest": "sha256:187555894ee6557c6e504b78ee2459b1ed288c88fe44636835e63341c5b72b28",
+    "source_file_sha256": "ebf7e2ea67653463db452d26cb0bd495141796084d62e64b0c3daf1d5e13298f",
+    "base64_characters_after_whitespace_removal": 11317,
+    "strict_decode_status": "FAIL",
+    "error_type": "Error",
+    "error": "Excess data after padding",
+    "partial_data_allowed": false,
+    "decoded_csv_sha256_verified": false,
+    "reason_decoded_sha_not_verified": "Strict base64 decoding fails before gzip decompression and full decoded CSV hashing can occur."
+  },
+  "scientific_conclusion": "The point-in-time ETH ETF archive is unusable for confirmatory or discovery inference because the byte-identical original/current source fails strict decoding. The historical QA PASS claim is not sufficient to override executable provenance failure.",
+  "candidate_disposition": {
+    "candidate": "BTC_VS_ETH_ETF_FLOW_DIVERGENCE",
+    "status": "TERMINAL_UNTESTABLE_FOR_THIS_POINT_IN_TIME_ARCHIVE",
+    "reopen_from_this_blob": false,
+    "reconstruct_or_partial_recovery_allowed": false,
+    "silent_vendor_revision_substitution_allowed": false,
+    "future_new_source_rule": "A separately versioned independently provenance-valid source may support a new research contract, but it must not be represented as recovery of this point-in-time archive or used to hindsight-rescore the frozen lane."
+  }
+}
