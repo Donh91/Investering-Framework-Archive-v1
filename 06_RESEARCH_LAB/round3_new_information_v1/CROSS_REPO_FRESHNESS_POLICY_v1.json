@@ -1,0 +1,31 @@
+{
+  "contract": "ROUND3_CROSS_REPO_FRESHNESS_POLICY_v1",
+  "recorded_at_utc": "2026-08-23T13:12:00Z",
+  "restricted_repository": "Donh91/secrets",
+  "public_runtime_authority": "06_RESEARCH_LAB/round3_new_information_v1/PRIVATE_RUNTIME_STATE.json",
+  "governance_binding": {
+    "must_bind_explicit_private_governance_authority_commit": true,
+    "private_governance_change_requires_public_reconciliation": true,
+    "drift_classification": "PUBLIC_CONTROL_PLANE_STALE",
+    "silent_inference_from_older_public_state_forbidden": true
+  },
+  "data_head_binding": {
+    "append_only_capture_head_may_advance_after_snapshot": true,
+    "health_snapshot_is_point_in_time": true,
+    "public_state_must_not_claim_live_current": true,
+    "provider_values_in_public_snapshot_forbidden": true
+  },
+  "scientific_firewall": {
+    "collection_health_may_update_without_outcome_analysis": true,
+    "hypothesis_testing_must_remain_off": true,
+    "outcome_scoring_must_remain_off": true,
+    "threshold_window_direction_retuning_forbidden": true
+  },
+  "reconciliation_required_on_private_governance_paths": [
+    "GOVERNANCE/COLLECTION_ACTIVATION.json",
+    "GOVERNANCE/PROVIDER_TERMS_ATTESTATION.json",
+    "GOVERNANCE/CROSS_REPO_DATA_BOUNDARY.md",
+    "scripts/validate_provider_terms_readiness.py"
+  ],
+  "validation_rule": "PUBLIC_RUNTIME_STATE_MUST_MATCH_BOUND_PRIVATE_GOVERNANCE_SNAPSHOT_AND_DECLARE_HEALTH_AS_POINT_IN_TIME"
+}

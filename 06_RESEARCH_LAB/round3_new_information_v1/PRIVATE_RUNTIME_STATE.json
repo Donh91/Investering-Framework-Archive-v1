@@ -1,0 +1,53 @@
+{
+  "contract": "ROUND3_PUBLIC_PRIVATE_RUNTIME_STATE_v1",
+  "recorded_at_utc": "2026-08-23T13:12:00Z",
+  "authority": "PROVIDER_VALUE_FREE_PUBLIC_RUNTIME_READBACK",
+  "restricted_repository": "Donh91/secrets",
+  "private_owner_terms_attestation_merge": "b9f28b42e1c71168c3b991868e1fe823bb481e39",
+  "private_reactivation_merge_commit": "65b56778fec8916603675cf18529d6f957432550",
+  "private_governance_authority_commit": "6f5a3e5514c3d1ca88b6b5329d76420a45cffe58",
+  "private_health_snapshot_commit": "cbe6119d7523c0fc45b660f166eef1bf53db5c73",
+  "private_latest_observed_commit": "cbe6119d7523c0fc45b660f166eef1bf53db5c73",
+  "snapshot_semantics": "POINT_IN_TIME_NOT_LIVE_CURRENT",
+  "live_current_claim_forbidden": true,
+  "append_only_private_data_head_may_advance_without_invalidating_governance_binding": true,
+  "private_governance_change_requires_public_reconciliation": true,
+  "collection_mode": "PROSPECTIVE_COLLECTION_ONLY",
+  "restricted_private_collection_active": true,
+  "public_framework_collection_active": false,
+  "hypothesis_testing_active": false,
+  "outcome_scoring_active": false,
+  "restricted_analysis_authorized": false,
+  "active_sources": [
+    "SC01_OKX_ETH_OI_HOURLY_V1",
+    "SC03_OKX_ETH_REALIZED_FUNDING_V1",
+    "SC14_DERIBIT_ETH_TRUE_25D_SKEW_V1"
+  ],
+  "blocked_sources": {
+    "SC06_BINANCE_ETH_BOOK_DEPTH_V1": "PERSISTENT_CONTINUOUS_STREAM_RUNTIME_PRIVATE_OBJECT_STORAGE_AND_PAID_INFRASTRUCTURE_AUTHORIZATION_REQUIRED"
+  },
+  "terms_attestation_status": "PASSED_APPLICABLE_REGION_AND_OWNER_USE_ATTESTATION",
+  "first_post_reactivation_capture_requirement": "SCHEMA_V2_HEALTH_ONLY_BEFORE_ANY_ANALYSIS_LINKAGE",
+  "first_post_reactivation_health_gate_status": "PASS_COLLECTION_HEALTH_ONLY_ANALYSIS_NOT_AUTHORIZED",
+  "health_snapshot": {
+    "contract": "ROUND3_PRIVATE_DATA_HEALTH_v2",
+    "raw_file_count": 15,
+    "valid_file_count": 15,
+    "invalid_or_orphan_count": 0,
+    "duplicate_payload_capture_count": 0,
+    "legacy_provenance_quarantine_count": 11,
+    "post_floor_schema_v2_provenance_complete_count": 4,
+    "dataset_manifest_sha256": "2d8ec56542d4561b68b459480be992aa29db40cd43ea3e50d0ad5d0aa431aca6",
+    "failures_present": false
+  },
+  "scientific_firewall": {
+    "round1_round2_evidence_status": "CLOSED",
+    "historical_findings_maximum_classification": "FORWARD_TEST",
+    "analysis_linkage_allowed": false,
+    "auc_pvalue_effect_policy_pnl_allowed": false,
+    "threshold_window_direction_retuning_allowed": false
+  },
+  "provider_values_in_public_state": false,
+  "credentials_in_public_state": false,
+  "next_operational_phase": "ACCUMULATE_AND_MONITOR_PROSPECTIVE_COLLECTION_QUALITY_WITHOUT_OUTCOME_ANALYSIS"
+}
