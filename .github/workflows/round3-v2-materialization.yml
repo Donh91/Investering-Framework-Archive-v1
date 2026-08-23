@@ -1,0 +1,49 @@
+name: Round 3 V2 Label Materialization Gate
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/research/materialize_round3_v2_labels.py'
+      - '06_RESEARCH_LAB/round3_new_information_v1/V2_EPISODE_AND_CONTROL_CONTRACT_v1.json'
+      - '06_RESEARCH_LAB/round3_new_information_v1/COLLECTION_STATUS.json'
+      - '.github/workflows/round3-v2-materialization.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  materialize:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate Round 3 freeze contract first
+        run: python scripts/research/validate_round3_contract_freeze.py
+      - name: Materialize V2 labels and controls without Round 3 source values
+        run: python scripts/research/materialize_round3_v2_labels.py
+      - name: Validate V2 receipt firewall
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          r=json.loads(Path('06_RESEARCH_LAB/round3_new_information_v1/materialized_v2/V2_MATERIALIZATION_RECEIPT.json').read_text())
+          assert r['catalog_contract']=='V2_EPISODE_CATALOG_v1'
+          assert r['source_values_loaded'] is False
+          assert r['round1_round2_relabelled'] is False
+          assert r['round3_source_files_read']==[]
+          assert r['catalog_sha256'] and r['pair_set_sha256']
+          print('ROUND3_V2_RECEIPT_PASS',r['episode_count_by_era'],r['control_count_by_era'])
+          PY
+      - name: Upload deterministic V2 materialization candidate
+        uses: actions/upload-artifact@v4
+        with:
+          name: round3-v2-materialization-candidate
+          path: |
+            06_RESEARCH_LAB/round3_new_information_v1/materialized_v2/
+            06_RESEARCH_LAB/round3_new_information_v1/COLLECTION_STATUS.json
+          if-no-files-found: error
+          retention-days: 30
