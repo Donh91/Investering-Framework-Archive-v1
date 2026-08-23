@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import csv
+import hashlib
 import json
 from pathlib import Path
 
@@ -10,6 +12,73 @@ LEGACY = Path('06_RESEARCH_LAB/historical_altseason_pullback_v1/config.json')
 
 def load(name: str):
     return json.loads((ROOT / name).read_text())
+
+
+def sha256_file(path: Path) -> str:
+    h = hashlib.sha256()
+    with path.open('rb') as fh:
+        for chunk in iter(lambda: fh.read(1024 * 1024), b''):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def validate_materialized_v2(status: dict):
+    mat = ROOT / 'materialized_v2'
+    receipt_path = mat / 'V2_MATERIALIZATION_RECEIPT.json'
+    pair_path = mat / 'V2_EVENT_CONTROL_PAIRS.csv'
+    commitment_path = mat / 'V2_CATALOG_COMMITMENT.json'
+    present = [p.exists() for p in (receipt_path, pair_path, commitment_path)]
+    if not any(present):
+        assert status.get('v2_materialized') is not True
+        return
+    assert all(present), 'partial V2 materialization commitment is forbidden'
+
+    receipt = json.loads(receipt_path.read_text())
+    commitment = json.loads(commitment_path.read_text())
+    pair_sha = sha256_file(pair_path)
+
+    assert receipt['contract'] == 'V2_EPISODE_CATALOG_MATERIALIZATION_RECEIPT_v1'
+    assert commitment['contract'] == 'ROUND3_V2_CATALOG_COMMITMENT_v1'
+    assert receipt['source_values_loaded'] is False
+    assert receipt['round1_round2_relabelled'] is False
+    assert receipt['round3_source_files_read'] == []
+    assert commitment['source_values_loaded_at_freeze'] is False
+    assert commitment['round3_source_files_read_at_freeze'] == []
+    assert commitment['round1_round2_relabelled'] is False
+
+    assert receipt['episode_count_by_era'] == {
+        'ALTSEASON_2020_2021': 81,
+        'MODERN_ANALOGUE_2025_2026': 54,
+    }
+    assert receipt['control_count_by_era'] == {
+        'ALTSEASON_2020_2021': 79,
+        'MODERN_ANALOGUE_2025_2026': 50,
+    }
+    assert receipt['failed_match_reasons'] == {
+        'ANCHOR_MATCH_FEATURES_MISSING': 1,
+        'NO_ELIGIBLE_CONTROL_IN_CALIPER': 5,
+    }
+    assert commitment['episode_count_total'] == 135
+    assert commitment['matched_control_count_total'] == 129
+    assert commitment['unmatched_episode_count'] == 6
+
+    assert pair_sha == receipt['pair_set_sha256'] == commitment['pair_set_sha256'] == status['v2_pair_set_sha256']
+    assert receipt['catalog_sha256'] == commitment['catalog_sha256'] == status['v2_catalog_sha256']
+    assert receipt['input_panel_sha256'] == commitment['input_panel_sha256']
+
+    with pair_path.open(newline='') as fh:
+        rows = list(csv.DictReader(fh))
+    assert len(rows) == 135
+    assert sum(r['control_status'] == 'OK' for r in rows) == 129
+    assert sum(r['control_status'] != 'OK' for r in rows) == 6
+    assert sum(r['era'] == 'ALTSEASON_2020_2021' for r in rows) == 81
+    assert sum(r['era'] == 'MODERN_ANALOGUE_2025_2026' for r in rows) == 54
+
+    assert status['v2_materialized'] is True
+    assert status['v2_episode_count'] == 135
+    assert status['v2_matched_control_count'] == 129
+    assert 'V2_CATALOG_AND_PAIR_SET_NOT_YET_MATERIALIZED' not in status['blockers']
+    print('ROUND3_V2_COMMITMENT_PASS', receipt['catalog_sha256'], pair_sha)
 
 
 def main():
@@ -88,6 +157,8 @@ def main():
     assert status['outcome_scoring_active'] is False
     assert status['paid_historical_api_calls_authorized'] is False
     assert 'PRIVATE_STORAGE_REQUIRED' in status['blockers']
+
+    validate_materialized_v2(status)
 
     print('ROUND3_CONTRACT_FREEZE_PASS')
     print('PRIMARY_COUNT', hyps['primary_count'])
