@@ -39,11 +39,11 @@ The canonical framework repository is the public control plane. `Donh91/secrets`
 
 Provider-derived raw/normalized Round 3 market values MUST NOT be committed to this public repository. Public files may hold contracts, code, schemas, hashes, row/object counts, timestamp/completeness health, provider-value-free provenance receipts and gated research decisions. Every private dataset reference requires a private commit SHA, exact path, bytes, SHA-256, source-contract ID, timestamps, schema and completeness.
 
-The reconciled private governance state activates SC01, SC03 and SC14 for prospective collection-only. SC06 remains blocked on persistent continuous-stream runtime, private object storage and paid-infrastructure authorization. Hypothesis testing, outcome scoring and restricted analysis remain `OFF`.
+The reconciled private governance state activates SC01, SC03 and SC14 for prospective collection-only. The mandatory first post-reactivation schema-v2 health-only gate has passed and is recorded privately in `receipts/ROUND3_FIRST_SCHEMA_V2_HEALTH_PASS_2026-08-23.json`. SC06 remains blocked on persistent continuous-stream runtime, private object storage and paid-infrastructure authorization. Hypothesis testing, outcome scoring and restricted analysis remain `OFF`.
 
-The current public readback is bound to private owner-attestation merge `b9f28b42e1c71168c3b991868e1fe823bb481e39`, reviewed reactivation merge `65b56778fec8916603675cf18529d6f957432550`, governance-authority commit `6f5a3e5514c3d1ca88b6b5329d76420a45cffe58`, and a point-in-time private health snapshot at commit `cbe6119d7523c0fc45b660f166eef1bf53db5c73`.
+The current public readback is bound to private owner-attestation merge `b9f28b42e1c71168c3b991868e1fe823bb481e39`, reviewed reactivation merge `65b56778fec8916603675cf18529d6f957432550`, post-health governance-authority commit `35c5be506cfbc19ffec01369161c67a72c78834a`, and a point-in-time private health snapshot at commit `1c072864c8886c7701fecd1503191baf1c906f66`.
 
-That health snapshot contains 15 raw captures, all 15 integrity-valid, zero invalid/orphan files, zero duplicate payload captures, 11 preserved legacy schema-v1 captures in provenance quarantine and 4 post-floor schema-v2 captures with complete provenance. Analysis authorization remains false. These counts are collection-health evidence only, not signal-performance evidence.
+That health snapshot contains 22 raw captures, all 22 integrity-valid, zero invalid/orphan files, zero duplicate payload captures, 11 preserved legacy schema-v1 captures in provenance quarantine and 11 post-floor schema-v2 captures with complete provenance. Analysis authorization remains false. These counts are collection-health evidence only, not signal-performance evidence.
 
 ## Required gates before analysis
 
