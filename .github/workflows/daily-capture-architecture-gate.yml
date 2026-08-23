@@ -5,6 +5,7 @@ on:
     paths:
       - 'scripts/daily_capture/**'
       - 'scripts/data_terminal/farside_etf_owner.py'
+      - 'scripts/data_terminal/situation_room_daily_owner.py'
       - 'scripts/master_monday/**'
       - 'scripts/orchestration/weekly_orchestration_controller.py'
       - 'research/master_monday_preflight/**'
@@ -82,7 +83,7 @@ jobs:
             tests.daily_capture.test_weekly_market_close_endpoint \
             tests.daily_capture.test_master_monday_final_correction \
             tests.backtest_engine.test_blind_dual_run_v2 -v
-      - name: Compile capture, Pullback Forensics, verification-scope and Master Monday modules
+      - name: Compile capture, Situation Room, Pullback Forensics, verification-scope and Master Monday modules
         run: |
           python -m py_compile \
             scripts/daily_capture/classify_verification_scope.py \
@@ -95,10 +96,11 @@ jobs:
             scripts/daily_capture/build_weekly_market_close_package.py \
             scripts/daily_capture/materialize_blind_dual_run.py \
             scripts/data_terminal/farside_etf_owner.py \
+            scripts/data_terminal/situation_room_daily_owner.py \
             scripts/master_monday/build_preflight_package_v3.py \
             scripts/orchestration/weekly_orchestration_controller.py \
             backtest_engine/blind_dual_run.py
-      - name: Validate schedules, passive-capture topology, storage, verification routing, blinding and authority boundaries
+      - name: Validate schedules, catalyst context, passive-capture topology, storage, verification routing, blinding and authority boundaries
         run: |
           python - <<'PY'
           import json
@@ -116,6 +118,7 @@ jobs:
           pfr_base=Path('scripts/daily_capture/pullback_forensics_collector.py').read_text()
           pfr=Path('scripts/daily_capture/pullback_forensics_collector_v1_1.py').read_text()
           pfr_all=pfr_base+pfr
+          situation=Path('scripts/data_terminal/situation_room_daily_owner.py').read_text()
           hourly_builder=Path('scripts/daily_capture/build_hourly_sequence.py').read_text()
           weekly_builder=Path('scripts/daily_capture/build_weekly_calibration.py').read_text()
           controller=Path('scripts/orchestration/weekly_orchestration_controller.py').read_text()
@@ -134,10 +137,24 @@ jobs:
 
           # Live market evidence must be durable before any downstream research can fail.
           anchor_commit=daily.index('Commit live anchor before downstream research')
+          situation_capture=daily.index('Capture daily Situation Room catalyst context')
+          situation_commit=daily.index('Commit Situation Room catalyst context independently')
           pfr_capture=daily.index('Capture passive Pullback Forensics evidence')
           pfr_commit=daily.index('Commit passive Pullback Forensics evidence independently')
           dual_run=daily.index('Materialize blinded Full-vs-Reduced prospective evidence')
-          assert anchor_commit < pfr_capture < pfr_commit < dual_run
+          assert anchor_commit < situation_capture < situation_commit < pfr_capture < pfr_commit < dual_run
+          assert daily.count('situation_room_daily_owner.py')==1
+          assert daily.count('id: situation_room')==1
+          assert '03_DAILY_CAPTURE_LOGS/catalyst_overlay/situation_room' in daily
+          assert '--timeout 8' in daily
+          assert "steps.situation_room.outcome == 'failure'" in daily
+          assert 'Missing catalyst context remains UNKNOWN, never NO_NEW_MATERIAL_CATALYST by failure' in daily
+          assert 'RESEARCH_ONLY_NON_CANONICAL' in situation
+          assert 'DISCOVERY_ONLY' in situation
+          assert 'shared_row_tournament_eligible' in situation
+          assert 'COLLECTOR_FAILURE' in situation
+          assert 'NO_NEW_MATERIAL_CATALYST' in situation
+          assert 'OPENAI_API_KEY' not in situation
           assert daily.count('pullback_forensics_collector_v1_1.py')==1
           assert daily.count('id: pullback_forensics')==1
           assert 'Missing forensic evidence remains UNKNOWN' in daily
@@ -236,8 +253,8 @@ jobs:
           assert '03_DAILY_CAPTURE_LOGS/etf' in etf
 
           # Deliberate cadence boundaries: no AI/API interpretation or fake hourly slow data.
-          assert 'OPENAI_API_KEY' not in daily+hourly+weekly+etf+blind+pfr_all
-          assert 'CFGI_API_KEY' not in hourly+pfr_all
+          assert 'OPENAI_API_KEY' not in daily+hourly+weekly+etf+blind+pfr_all+situation
+          assert 'CFGI_API_KEY' not in hourly+pfr_all+situation
           assert 'stablecoin' not in hourly.lower()
           assert 'defillama' not in hourly.lower()
           assert 'requests.' not in blind and 'urllib' not in blind and 'http://' not in blind and 'https://' not in blind
@@ -245,7 +262,7 @@ jobs:
           assert 'LEGACY_MINIMAL' in blind and 'EXCLUDED_UNRECOVERABLE' in blind
           assert 'https://data-api.binance.vision' in close
           assert 'https://api.binance.com' not in close
-          print('DAILY_CAPTURE_V2_2_PULLBACK_FORENSICS_TOPOLOGY_PASS')
+          print('DAILY_CAPTURE_V2_2_SITUATION_ROOM_PULLBACK_FORENSICS_TOPOLOGY_PASS')
           PY
 
   live-hourly-source-smoke:
