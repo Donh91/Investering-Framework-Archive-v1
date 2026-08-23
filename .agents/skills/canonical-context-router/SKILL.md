@@ -9,6 +9,10 @@ description: 'Resolve the current authoritative Investering framework context be
 
 Build a small, verified context packet from the repository's current authority structure. Do not solve the market or framework task inside this skill. Resolve what is current, what is historical, what conflicts, and which files the next step must read.
 
+## Cross-repository preflight
+
+Read `00_ARCHIVE_CONTROL/CROSS_REPO_DATA_BOUNDARY.md` and `00_ARCHIVE_CONTROL/CROSS_REPO_AGENT_CONTEXT_MAP.json`. The public repository is the control plane; `Donh91/secrets` is the restricted data plane; credentials remain outside repo files. When a route requires restricted evidence, resolve the authorized private commit/path/hash binding or return `PRIVATE_DATA_AUTHORITY_UNAVAILABLE`. Never search the control plane for missing private values or use `Donh91/Cycle-navigator-` as a current route.
+
 ## Mandatory read order
 
 1. Read `AGENTS.md`.
@@ -16,9 +20,12 @@ Build a small, verified context packet from the repository's current authority s
 3. Read `00_ARCHIVE_CONTROL/INDEX_ADDENDUM_REGISTRY.md`.
 4. Read `00_ARCHIVE_CONTROL/ARCHIVE_MAP_AND_ROUTING.md`.
 5. Read `00_ARCHIVE_CONTROL/SKILL_REGISTRY.md`.
-6. Identify the task domain.
-7. Read the current owner files named by the index or registered addenda for that domain.
-8. Read only directly relevant addenda, ledgers and runtime registries.
+6. Read `00_ARCHIVE_CONTROL/CROSS_REPO_DATA_BOUNDARY.md`.
+7. Read `00_ARCHIVE_CONTROL/CROSS_REPO_AGENT_CONTEXT_MAP.json`.
+8. Identify the task domain and data classification.
+9. Read the current owner files named by the index or registered addenda for that domain.
+10. Read the exact restricted-plane authority when required and authorized.
+11. Read only directly relevant addenda, ledgers and runtime registries.
 
 Do not load the entire archive by default.
 

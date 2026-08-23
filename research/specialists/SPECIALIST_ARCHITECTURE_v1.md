@@ -8,6 +8,17 @@ Create a set of narrow research specialists that read verified owner-data and pr
 
 The layer does not create a second truth system.
 
+## Cross-repository input boundary
+
+Every specialist and the Director must read `00_ARCHIVE_CONTROL/CROSS_REPO_DATA_BOUNDARY.md` and `CROSS_REPO_AGENT_CONTEXT_MAP.json` before resolving owner inputs.
+
+- Public owner rows and provider-value-free receipts are resolved in the control plane.
+- Raw/restricted provider payloads, private normalized values and restricted source health are authoritative in `Donh91/secrets` only.
+- A restricted input is usable only through an immutable private commit/path/bytes/SHA-256/source-contract/time/schema/completeness binding.
+- Specialist outputs, prompts, logs and public synthesis may not contain restricted values or credentials.
+- Missing private access remains `PRIVATE_DATA_AUTHORITY_UNAVAILABLE`, not `UNKNOWN`, neutral or negative evidence.
+- Round 3 restricted values remain blinded while hypothesis testing and outcome scoring are OFF.
+
 ## Authority hierarchy
 
 1. Owner-source rows and receipts
@@ -61,6 +72,7 @@ Each specialist must emit:
 - conflicts
 - no_action_reason
 - authority flags
+- immutable cross-repository bindings for every restricted owner input, without the values
 
 ## Director rules
 

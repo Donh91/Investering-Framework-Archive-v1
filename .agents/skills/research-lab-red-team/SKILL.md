@@ -11,11 +11,16 @@ Act as the framework's professional opponent. Test whether a claim or proposed c
 
 This skill evaluates and classifies. It does not self-promote findings, change live market state, create portfolio actions or write to GitHub unless the user explicitly requests archiving and `archive-governance` approves the write.
 
+## Cross-repository and Round 3 firewall
+
+Read `00_ARCHIVE_CONTROL/CROSS_REPO_DATA_BOUNDARY.md` and `CROSS_REPO_AGENT_CONTEXT_MAP.json`. Restricted source values are authoritative only in `Donh91/secrets` and stay blinded until the frozen analysis gate opens. Source-health review is limited to immutable binding, timestamps, schema, sequence/gaps and completeness. Do not run informal Round 3 hypothesis tests, outcome scoring, feature discovery or directional interpretation. Round 1/2 are closed evidence and historical findings remain at most `FORWARD_TEST`.
+
 ## Required read order
 
 1. Run `canonical-context-router`.
 2. Read the current domain owner files.
-3. Read:
+3. Read the cross-repository boundary and route map.
+4. Read:
 
 ```text
 01_CORE_FRAMEWORK/governance/2026-07-10__gpt-5-6-fresh-eyes-audit-implementation__canonical.md
@@ -24,8 +29,8 @@ This skill evaluates and classifies. It does not self-promote findings, change l
 06_RESEARCH_LAB/forward_tests/2026-07-10__active-test-registry__canonical.md
 ```
 
-4. Read relevant operational ledgers and source material.
-5. Do not rely on prior model consensus as evidence.
+5. Read relevant operational ledgers and source material.
+6. Do not rely on prior model consensus as evidence.
 
 ## Core stance
 

@@ -1,8 +1,34 @@
 # GitHub + artifact state
 
-Captured: 2026-08-23
+Historical capture date: 2026-08-23
+
+## Current cross-repository override
+
+The original head below is a historical handoff snapshot, not a current pointer. On every new run, verify both moving `main` branches and bind evidence to immutable commits.
+
+```text
+control_plane: Donh91/Investering-Framework-Archive-v1
+restricted_data_plane: Donh91/secrets
+credential_plane: GitHub Actions Secrets or explicitly approved runtime identity/secret manager
+cross_repo_authority: 00_ARCHIVE_CONTROL/CROSS_REPO_DATA_BOUNDARY.md
+audit_control_main: b3ebc5ea194cc7e0a26176b93f2be1baab2919ca
+audit_restricted_main: a9e735f38959ef636427ed77a1e9b6552aa98f62
+audit_verified_at_utc: 2026-08-23T11:08:24Z
+```
+
+Verified Round 3 commitments:
+
+- V2 durable commitment: `3aad2a9da12992949665e0e30ef8986136e1dfca`;
+- private data-plane binding: `be9f6f447ddf9e9370e42718b799ace11c1dcde2`;
+- public activation receipt: `c1be6e87e9462e078065b87448717f8900326380`;
+- private canary run `32633097190`: `PASS`;
+- SC01, SC03 and SC14: private prospective collection active;
+- SC06: persistent runtime required.
+
+## Original historical snapshot
+
 Canonical repo: `Donh91/Investering-Framework-Archive-v1`
-Main HEAD at capture: `c637037ddde1c4e1d63c5c89a5b3fb3dbb2c27fd`
+Main HEAD at original capture: `c637037ddde1c4e1d63c5c89a5b3fb3dbb2c27fd`
 
 ## Major historical-lab milestones
 - PR #433 — historical altseason lab time-integrity hardening. Merge commit `c65a961ebc8d41530660e714e6164aa4d8531a3d`.

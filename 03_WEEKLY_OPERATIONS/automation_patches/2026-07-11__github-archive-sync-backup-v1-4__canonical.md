@@ -15,8 +15,8 @@ Combine weekly material archive triage with repository safety, a four-week backu
 Framework source:
 Donh91/Investering-Framework-Archive-v1
 
-Cycle Navigator:
-Donh91/Cycle-navigator-
+Restricted data plane:
+Donh91/secrets
 
 Research / experiments:
 Donh91/Eksperimenter-framework-
@@ -24,6 +24,8 @@ Donh91/Eksperimenter-framework-
 Independent vault:
 Donh91/Investering-Framework-Vault
 ```
+
+Cycle Navigator is routed inside the framework source under `05_CYCLE_NAVIGATOR/`. Its legacy standalone repository identifier is historical only. The restricted data plane is checked without exposing raw/private values or credentials in public receipts.
 
 ## Weekly counter
 

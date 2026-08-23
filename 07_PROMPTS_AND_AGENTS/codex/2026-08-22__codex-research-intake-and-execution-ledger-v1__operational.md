@@ -20,6 +20,12 @@ The same Codex queue may receive bounded code-remediation tasks from automation 
 
 `LATEST_CODEX_EXECUTION_STATE.json` is not allowed to override the queue or remediation state.
 
+## Cross-repository evidence boundary
+
+Before source-data or provenance remediation, Codex must read `00_ARCHIVE_CONTROL/CROSS_REPO_DATA_BOUNDARY.md` and `CROSS_REPO_AGENT_CONTEXT_MAP.json`. Raw/restricted provider payloads, private normalized values and restricted source health remain in `Donh91/secrets`.
+
+A public candidate or completion receipt may reference private evidence only by immutable private commit, exact path, bytes, SHA-256, source-contract ID, timestamps, schema and completeness. It may not contain restricted values, credentials, signed URLs or sensitive object-store coordinates. When required private authority cannot be read, the candidate remains `PRIVATE_DATA_AUTHORITY_UNAVAILABLE` or `NEEDS_MORE_EVIDENCE`; a public fixture or proxy may not replace it.
+
 ## Research-thread fast path
 
 When a research thread concludes that a bounded code defect is reproducible and the user asks to queue it for Codex:

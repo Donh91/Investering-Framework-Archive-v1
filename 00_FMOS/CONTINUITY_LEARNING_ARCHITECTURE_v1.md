@@ -90,14 +90,17 @@ Direct-to-main changes in this lane are policy violations and must create an inc
 
 ## Storage escalation
 
-Each owner payload has an enforced per-capture ceiling. If compressed cold-evidence growth exceeds 20 MB per month, move the raw lane to a dedicated public or private data repository while retaining immutable manifests and pointers in the canonical repository.
+Each owner payload has an enforced per-capture ceiling. Restricted provider payloads and private normalized values are routed to `Donh91/secrets`, with immutable provider-value-free manifests and pointers retained in the canonical control plane. Credentials remain in GitHub Actions Secrets or an explicitly approved runtime secret manager/workload identity. See `00_ARCHIVE_CONTROL/CROSS_REPO_DATA_BOUNDARY.md`.
 
 ## Read order for new agents
 
 1. `LATEST_OPERATIONS_DASHBOARD.json`
 2. `LATEST_HANDOFF.json`
-3. this document
-4. `AGENTS.md`
-5. latest automation and architecture health
-6. relevant contract or registry
-7. only then the underlying evidence objects
+3. `AGENTS.md`
+4. `00_ARCHIVE_CONTROL/CROSS_REPO_DATA_BOUNDARY.md`
+5. `00_ARCHIVE_CONTROL/CROSS_REPO_AGENT_CONTEXT_MAP.json`
+6. this document
+7. latest automation and architecture health
+8. relevant contract or registry
+9. the restricted-plane authority when required
+10. only then the underlying evidence objects

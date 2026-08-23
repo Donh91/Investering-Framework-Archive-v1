@@ -7,6 +7,20 @@
   "automatic_paid_data_authorization": false,
   "automatic_proxy_substitution": false,
   "automatic_interpolation": false,
+  "cross_repo_boundary": "00_ARCHIVE_CONTROL/CROSS_REPO_DATA_BOUNDARY.md",
+  "restricted_data_plane": "Donh91/secrets",
+  "restricted_data_ingestion": "IMMUTABLE_POINTER_AND_VALUE_FREE_HEALTH_ONLY",
+  "restricted_data_unavailable_state": "PRIVATE_DATA_AUTHORITY_UNAVAILABLE",
+  "required_private_binding_fields": [
+    "private_commit_sha_reachable_from_main",
+    "exact_path",
+    "bytes",
+    "sha256",
+    "source_contract_id",
+    "timestamps",
+    "schema_id_or_version",
+    "completeness_status"
+  ],
   "receipt_globs": [
     "00_ARCHIVE_CONTROL/research_runtime/*.json",
     "02_DATA_PING/source_integrations/**/*.json",
@@ -45,6 +59,10 @@
     "STALE_SOURCE_CANNOT_UPDATE_CURRENT_TRUTH",
     "NO_MARKET_RULE_THRESHOLD_WEIGHT_CHANGE",
     "NO_PORTFOLIO_ACTION",
-    "MISSING_OR_UNRESOLVED_PROVENANCE_IS_NOT_VALID_EVIDENCE"
+    "MISSING_OR_UNRESOLVED_PROVENANCE_IS_NOT_VALID_EVIDENCE",
+    "NO_RAW_OR_NORMALIZED_RESTRICTED_VALUES_IN_CONTROL_PLANE",
+    "NO_CREDENTIALS_IN_REPOSITORY_FILES",
+    "PRIVATE_ACCESS_FAILURE_IS_NOT_NEGATIVE_EVIDENCE",
+    "NO_ASSUMPTION_THAT_ALL_DATA_EXISTS_IN_ONE_REPOSITORY"
   ]
 }

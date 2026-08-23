@@ -4,13 +4,21 @@ This folder is the durable research-to-Codex intake and execution-observability 
 
 Machine authority remains `LATEST_CODEX_READY_TASKS.json` at repository root.
 
+## Cross-repository preflight
+
+Codex must read `00_ARCHIVE_CONTROL/CROSS_REPO_DATA_BOUNDARY.md` and `00_ARCHIVE_CONTROL/CROSS_REPO_AGENT_CONTEXT_MAP.json` before any task involving source data, provenance or Round 3. If reproduction needs restricted evidence, Codex must also read the authorized immutable binding in `Donh91/secrets`.
+
+Restricted payloads and normalized private values must never be pasted into a public candidate, issue, PR, test fixture, log or completion receipt. Public code-remediation evidence uses private commit/path/bytes/SHA-256/source-contract/time/schema/completeness bindings. Credentials remain in the credential plane. If access is unavailable, return `PRIVATE_DATA_AUTHORITY_UNAVAILABLE` instead of fabricating a public fixture.
+
 Read order for Codex work:
 
-1. `LATEST_CODEX_READY_TASKS.json`
-2. `LATEST_CODEX_EXECUTION_STATE.json`
-3. `research/codex/LATEST_CODEX_INTAKE_STATUS.json`
-4. `research/codex/CODEX_EXECUTION_LEDGER.jsonl`
-5. exact candidate, transition/completion receipt, PR, commit, workflow run and tests
+1. `00_ARCHIVE_CONTROL/CROSS_REPO_DATA_BOUNDARY.md`
+2. `00_ARCHIVE_CONTROL/CROSS_REPO_AGENT_CONTEXT_MAP.json`
+3. `LATEST_CODEX_READY_TASKS.json`
+4. `LATEST_CODEX_EXECUTION_STATE.json`
+5. `research/codex/LATEST_CODEX_INTAKE_STATUS.json`
+6. `research/codex/CODEX_EXECUTION_LEDGER.jsonl`
+7. exact candidate, transition/completion receipt, PR, commit, workflow run and tests
 
 Research candidates are stored under `research/codex/intake/YYYY/MM/` and must satisfy `CODEX_RESEARCH_CANDIDATE.schema.json`.
 

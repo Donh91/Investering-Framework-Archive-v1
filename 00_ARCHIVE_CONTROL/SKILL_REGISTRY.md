@@ -4,7 +4,7 @@
 **Status:** CANONICAL_OPERATIONAL_REGISTRY  
 **Område:** agent routing / reproducible workflows / archive control  
 **Primary folder:** `00_ARCHIVE_CONTROL/`  
-**Depends on:** `AGENTS.md`, `00_ARCHIVE_CONTROL/CANONICAL_INDEX.md`, `00_ARCHIVE_CONTROL/INDEX_ADDENDUM_REGISTRY.md`, `00_ARCHIVE_CONTROL/ARCHIVE_MAP_AND_ROUTING.md`  
+**Depends on:** `AGENTS.md`, `00_ARCHIVE_CONTROL/CANONICAL_INDEX.md`, `00_ARCHIVE_CONTROL/INDEX_ADDENDUM_REGISTRY.md`, `00_ARCHIVE_CONTROL/ARCHIVE_MAP_AND_ROUTING.md`, `00_ARCHIVE_CONTROL/CROSS_REPO_DATA_BOUNDARY.md`, `00_ARCHIVE_CONTROL/CROSS_REPO_AGENT_CONTEXT_MAP.json`
 **Implementation references:** `07_PROMPTS_AND_AGENTS/github_agent/2026-07-12__investering-agent-skills-v0-1__canonical.md`, `07_PROMPTS_AND_AGENTS/codex/2026-08-22__codex-research-intake-and-execution-ledger-v1__operational.md`
 
 ## 1. Purpose
@@ -56,6 +56,8 @@ All skills must comply with:
 00_ARCHIVE_CONTROL/CANONICAL_INDEX.md
 00_ARCHIVE_CONTROL/INDEX_ADDENDUM_REGISTRY.md
 00_ARCHIVE_CONTROL/ARCHIVE_MAP_AND_ROUTING.md
+00_ARCHIVE_CONTROL/CROSS_REPO_DATA_BOUNDARY.md
+00_ARCHIVE_CONTROL/CROSS_REPO_AGENT_CONTEXT_MAP.json
 01_CORE_FRAMEWORK/governance/2026-07-10__gpt-5-6-fresh-eyes-audit-implementation__canonical.md
 01_CORE_FRAMEWORK/governance/2026-07-10__rule-and-evidence-registry__canonical.md
 01_CORE_FRAMEWORK/governance/2026-07-11__repository-safety-and-backup-policy-v1__canonical.md
@@ -81,6 +83,10 @@ Binding rules:
 - valid index addenda must be represented in `INDEX_ADDENDUM_REGISTRY.md`;
 - canonical index changes require the high-impact safepoint workflow;
 - backup claims must distinguish frozen source, current merged version and post-merge delta status.
+- restricted provider values and private source health remain in `Donh91/secrets`;
+- public evidence carries immutable private commit/path/bytes/SHA-256/source-contract/time/schema/completeness bindings only;
+- credentials remain in the credential plane and never in repository files;
+- Round 3 hypothesis testing and outcome scoring remain off until the frozen analysis gate is formally opened.
 
 ## 5. Prospective evidence contract
 
