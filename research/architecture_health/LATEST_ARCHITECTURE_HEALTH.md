@@ -1,24 +1,24 @@
 # Architecture Health
 Status: **GREEN**
-Generated: 2026-08-23T04:07:04.962956Z
+Generated: 2026-08-23T15:44:27.209948Z
 
 Owners: 0/0 PASS
 Accepted DATA PINGs: 0
 CFGI credits remaining: UNKNOWN
-Experiment candidates: 125
-Codex-ready remediation tasks: 13
+Experiment candidates: 131
+Codex-ready remediation tasks: 20
 
 ## Freshness hours
-- capture: 2.1119341544444445
-- daily_director: 6.327767487777778
-- weekly_calibration: 146.00030575527776
-- etf_owner: 1.4827497652777777
-- experiment_registry: 1.4149897100000002
-- experiment_receipt_sync: 1.4152674877777778
-- remediation_queue: 12.198600821111112
+- capture: 2.7320027633333335
+- daily_director: 1.777280541111111
+- weekly_calibration: 157.62315214194444
+- etf_owner: 13.105596151944445
+- experiment_registry: 1.7733916522222222
+- experiment_receipt_sync: 13.038113874444445
+- remediation_queue: 7.427558318888889
 
 ## Evidence health (last 14d)
-- Forecasts due in window: 144
+- Forecasts due in window: 151
 - Matured outcomes: 60
 - Censored outcomes: 84
 - Censor rate: 0.583333
