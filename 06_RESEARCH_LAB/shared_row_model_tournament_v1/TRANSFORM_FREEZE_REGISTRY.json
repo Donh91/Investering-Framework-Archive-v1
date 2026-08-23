@@ -1,7 +1,7 @@
 {
   "authority": "RESEARCH_ONLY_NON_CANONICAL",
   "contract": "PROSPECTIVE_TRANSFORM_FREEZE_REGISTRY_v1",
-  "contract_revision": "1.1-p0-containment",
+  "contract_revision": "1.2-p0-integrity",
   "core_activation_rule": {
     "all_must_have_candidate_decision_contract_status": "READY",
     "all_must_have_status": "READY",
@@ -15,7 +15,7 @@
       "C06_BREADTH_BTCD",
       "C07_SIMPLE_3"
     ],
-    "collection_state": "QUARANTINED_PENDING_P0_REPAIR",
+    "collection_state": "QUARANTINED_PENDING_POST_REPAIR_EVIDENCE",
     "containment_floor_sentinel": true,
     "no_backdating": true,
     "prior_prospective_eligibility_start": "2026-08-23T04:50:00Z",
@@ -33,8 +33,8 @@
       "exact_blocker": null,
       "family_id": "ETHBTC_PERSISTENCE",
       "prospective_eligibility_start": "2026-09-30T00:00:00Z",
-      "repair_state": "QUARANTINED_PENDING_EXACT_168_HOUR_CONTINUITY_AND_BINDING_TESTS",
-      "research_mapping": "permission=true iff latest direct settled ETHBTC hourly close is ABOVE 0.0300; persistence context uses the last 168 retained direct settled ETHBTC rows, matching the existing API intelligence implementation.",
+      "repair_state": "P0_REPAIRED_AWAITING_ACTIVATION_OR_ACTIVE",
+      "research_mapping": "permission=true iff latest direct settled ETHBTC hourly close is ABOVE 0.0300; persistence context requires exactly 168 unique continuous direct settled ETHBTC rows with source windows ended by the identical cutoff.",
       "status": "READY",
       "transformation_version": "ETHBTC_0_0300_PERSISTENCE_PROSPECTIVE_v1"
     },
@@ -43,8 +43,8 @@
       "exact_blocker": null,
       "family_id": "BREADTH_SURVIVAL",
       "prospective_eligibility_start": "2026-09-30T00:00:00Z",
-      "repair_state": "QUARANTINED_PENDING_IMMUTABLE_OWNER_AND_SAME_CUTOFF_TESTS",
-      "research_mapping": "prospective-only, legacy_equivalence=false; BROAD_MAJORITY iff advancers > decliners in frozen point-in-time owner universe; permission=true iff BROAD_MAJORITY.",
+      "repair_state": "P0_REPAIRED_AWAITING_ACTIVATION_OR_ACTIVE",
+      "research_mapping": "prospective-only, legacy_equivalence=false; replay one immutable dated C5E owner bundle and receipt; BROAD_MAJORITY iff advancers > decliners in that point-in-time owner universe; permission=true iff BROAD_MAJORITY.",
       "status": "READY",
       "transformation_version": "BREADTH_MAJORITY_SURVIVAL_PROSPECTIVE_v1"
     },
@@ -53,8 +53,8 @@
       "exact_blocker": null,
       "family_id": "BTCD_PATH_RECLAIM",
       "prospective_eligibility_start": "2026-09-30T00:00:00Z",
-      "repair_state": "QUARANTINED_PENDING_DISTINCT_CHRONOLOGICAL_PRINT_AND_BINDING_TESTS",
-      "research_mapping": "prospective-only CMC convention, legacy_equivalence=false; FALLING_PATH iff latest three settled closes c < b < a chronologically; RISING_RECLAIM iff prior decline then latest uptick; permission=true iff FALLING_PATH.",
+      "repair_state": "P0_REPAIRED_AWAITING_ACTIVATION_OR_ACTIVE",
+      "research_mapping": "prospective-only CMC convention, legacy_equivalence=false; require three distinct strictly chronological settled closes verified by cutoff; FALLING_PATH iff c < b < a; RISING_RECLAIM iff prior decline then latest uptick; permission=true iff FALLING_PATH.",
       "status": "READY",
       "transformation_version": "BTCD_CMC_THREE_PRINT_PATH_PROSPECTIVE_v1"
     },

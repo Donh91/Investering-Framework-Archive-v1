@@ -7,7 +7,7 @@
   "paid_data_default": 0,
   "deep_research_default": false,
   "p0_context_gate_repair": {
-    "activation": "NOT_ACTIVE_UNTIL_IMPLEMENTATION_PR_AND_NEW_FLOOR",
+    "activation": "PREREGISTERED_NOT_ACTIVE_UNTIL_NEW_FLOOR",
     "current_structural_regime_gate": "UNREACHABLE_FOR_PROSPECTIVE_ROWS_BECAUSE_ALL_ROWS_ARE_POST_CAT_STRUCT_ETF_2024",
     "fixed_block_anchor": "FINAL_POST_REPAIR_ELIGIBILITY_FLOOR",
     "fixed_block_width_days": 28,
@@ -48,14 +48,16 @@
     },
     "new_hypothesis_research": {
       "candidate_7d_errors_min": 8,
-      "distinct_regimes_min": 2,
+      "distinct_prospective_blocks_min": 2,
       "requires_prior_stress_test_for_same_target": true,
       "new_matured_7d_rows_since_prior_stress_min": 2
     },
     "pairwise_relevance_decision": {
       "baseline_candidate": "C07_SIMPLE_3",
+      "distinct_regimes_min": 1,
+      "distinct_regimes_role": "LEGACY_SENTINEL_COMPATIBILITY_ONLY_NOT_THE_ROBUSTNESS_GATE",
       "resolved_7d_divergences_min": 12,
-      "distinct_regimes_min": 2,
+      "distinct_prospective_blocks_min": 2,
       "net_unique_wins_or_failures_min": 5,
       "wilson_confidence_z": 1.96,
       "promotion_requires_unique_win_share_lower_bound_gt": 0.5,

@@ -19,7 +19,7 @@ REG_SRC = Path("06_RESEARCH_LAB/shared_row_model_tournament_v1/03_CANDIDATE_REGI
 MATRIX_SRC = Path("06_RESEARCH_LAB/shared_row_model_tournament_v1/OWNER_BINDING_MATRIX.json")
 
 ROW_FIELDS = [
-    "event_id","observation_timestamp_utc","information_cutoff_utc","source_version_commit","regime_tag","catalyst_tag","candidate_decisions",
+    "event_id","observation_timestamp_utc","information_cutoff_utc","source_version_commit","row_integrity_contract","prospective_context_block","regime_tag","catalyst_tag","candidate_decisions",
     "outcome_24h","outcome_72h","outcome_7d","mae_24h","mfe_24h","mae_72h","mfe_72h","mae_7d","mfe_7d","provenance_hash"
 ]
 DIV_FIELDS = [
@@ -42,16 +42,16 @@ def mkroot():
     (root / "RESEARCH_NEXT_ACTION_POLICY_v1.json").write_text(POLICY_SRC.read_text())
     (root / "03_CANDIDATE_REGISTRY.json").write_text(REG_SRC.read_text())
     (root / "OWNER_BINDING_MATRIX.json").write_text(MATRIX_SRC.read_text())
-    (root / "RUNTIME_STATUS.json").write_text(json.dumps({"core_prospective_eligibility_start":"2026-08-23T04:50:00Z"}))
+    (root / "RUNTIME_STATUS.json").write_text(json.dumps({"core_prospective_eligibility_start":"2026-08-23T04:50:00Z","collection_state":"ACTIVE_POST_REPAIR_PROSPECTIVE_COLLECTION"}))
     write_csv(root / "data/PROSPECTIVE_SHARED_ROW_LEDGER.csv", ROW_FIELDS, [])
     write_csv(root / "14_DIVERGENCE_FNP_LEDGER.csv", DIV_FIELDS, [])
     return td, root
 
 
 def row(i, outcome="1", regime="R1"):
-    ts = datetime(2026,8,23,12,0,tzinfo=timezone.utc) + timedelta(days=i)
+    ts = datetime(2026,8,23,12,0,tzinfo=timezone.utc) + timedelta(days=i*4)
     return {
-        "event_id":f"E{i}","observation_timestamp_utc":nac.iso(ts),"information_cutoff_utc":nac.iso(ts),"source_version_commit":"x",
+        "event_id":f"E{i}","observation_timestamp_utc":nac.iso(ts),"information_cutoff_utc":nac.iso(ts),"source_version_commit":"x","row_integrity_contract":"SHARED_ROW_P0_BINDING_v1","prospective_context_block":f"P28D_{(i*4)//28:04d}",
         "regime_tag":regime,"catalyst_tag":"NONE","candidate_decisions":json.dumps({"C07_SIMPLE_3": True}),
         "outcome_24h":outcome,"outcome_72h":outcome,"outcome_7d":outcome,"mae_7d":"-0.01","mfe_7d":"0.02","provenance_hash":f"p{i}"
     }
@@ -70,7 +70,7 @@ def div(i, target="C04_ETHBTC_BREADTH", target_correct=True, target_decision=1, 
         outcome = target_decision
     else:
         outcome = base_dec
-    ts = datetime(2026,8,24,12,0,tzinfo=timezone.utc) + timedelta(days=i)
+    ts = datetime(2026,8,24,12,0,tzinfo=timezone.utc) + timedelta(days=i*4)
     return {
         "divergence_id":f"D{i}","event_id":f"E{i}","observation_timestamp_utc":nac.iso(ts),"candidate_a":"C07_SIMPLE_3","candidate_b":target,
         "decision_a":str(base_dec),"decision_b":str(target_decision),"information_cutoff_utc":nac.iso(ts),"catalyst_tag":c,"regime_tag":r,
@@ -82,7 +82,8 @@ def decide(root, now):
     p=json.loads((root/"RESEARCH_NEXT_ACTION_POLICY_v1.json").read_text())
     rows=nac.read_csv(root/"data/PROSPECTIVE_SHARED_ROW_LEDGER.csv")
     ds=nac.read_csv(root/"14_DIVERGENCE_FNP_LEDGER.csv")
-    ev=nac.evidence(rows,ds,p)
+    floor=nac.parse_dt(json.loads((root/"RUNTIME_STATUS.json").read_text())["core_prospective_eligibility_start"])
+    ev=nac.evidence(rows,ds,p,floor)
     return nac.choose_action(root,rows,ev,p,now,nac.read_csv(root/"data/NEXT_ACTION_LEDGER.csv")), ev
 
 
@@ -96,6 +97,12 @@ def main():
     td,root=mkroot();
     try:
         a,_=decide(root,datetime(2026,8,23,5,0,tzinfo=timezone.utc)); assert_eq(a[0],"CONTINUE_OBSERVING","pre-floor-no-gap"); checks.append("pre_floor_observe")
+    finally: td.cleanup()
+
+    td,root=mkroot();
+    try:
+        (root/"RUNTIME_STATUS.json").write_text(json.dumps({"core_prospective_eligibility_start":"2026-09-30T00:00:00Z","collection_state":"QUARANTINED_PENDING_POST_REPAIR_EVIDENCE"}))
+        a,_=decide(root,datetime(2026,10,10,tzinfo=timezone.utc)); assert_eq(a[0],"NO_ACTION","quarantine-no-gap-loop"); checks.append("quarantine_blocks_actions")
     finally: td.cleanup()
 
     td,root=mkroot();
@@ -145,7 +152,8 @@ def main():
             else: ds.append(div(i,target="C04_ETHBTC_BREADTH",target_correct=False,target_decision=0,outcome=1,mae="-0.002"))
         write_csv(root/"data/PROSPECTIVE_SHARED_ROW_LEDGER.csv",ROW_FIELDS,rows); write_csv(root/"14_DIVERGENCE_FNP_LEDGER.csv",DIV_FIELDS,ds)
         a,ev=decide(root,fresh_now(rows)); assert_eq(a[0],"PROMOTE_FOR_CANONICAL_REVIEW","strong-pairwise-promotion")
-        assert ev["pairwise_vs_baseline_7d"]["C04_ETHBTC_BREADTH"]["wilson_lower"] > 0.5; checks.append("promotion_requires_strong_pairwise_evidence")
+        assert ev["pairwise_vs_baseline_7d"]["C04_ETHBTC_BREADTH"]["wilson_lower"] > 0.5
+        assert ev["pairwise_vs_baseline_7d"]["C04_ETHBTC_BREADTH"]["distinct_prospective_blocks"] >= 2; checks.append("promotion_requires_strong_pairwise_evidence")
     finally: td.cleanup()
 
     td,root=mkroot();
@@ -161,7 +169,7 @@ def main():
 
     td,root=mkroot();
     try:
-        p=json.loads((root/"RESEARCH_NEXT_ACTION_POLICY_v1.json").read_text()); ev=nac.evidence([],[],p); packet=nac.packet_for("CONTINUE_OBSERVING","CORE_C01_C07","x",ev,nac.candidate_registry(root),[],root,datetime.now(timezone.utc))
+        p=json.loads((root/"RESEARCH_NEXT_ACTION_POLICY_v1.json").read_text()); floor=nac.parse_dt("2026-08-23T04:50:00Z"); ev=nac.evidence([],[],p,floor); packet=nac.packet_for("CONTINUE_OBSERVING","CORE_C01_C07","x",ev,nac.candidate_registry(root),[],root,datetime.now(timezone.utc),floor,p)
         assert packet["canonical_effect"] is False and packet["paid_data_authorized"] is False and packet["deep_research_authorized"] is False
         state={**packet,"decision_fingerprint":"same"}
         first=nac.write_ledger(root/"data/NEXT_ACTION_LEDGER.csv",state); second=nac.write_ledger(root/"data/NEXT_ACTION_LEDGER.csv",state)
