@@ -1,0 +1,82 @@
+{
+  "contract": "ROUND3_V2_EPISODE_AND_CONTROL_CONTRACT_v1",
+  "status": "FROZEN_FOR_NEW_ROUND3_RESEARCH_ONLY",
+  "legacy_binding": {
+    "config_path": "06_RESEARCH_LAB/historical_altseason_pullback_v1/config.json",
+    "config_git_blob_sha": "4a4ab3bba7522c57191d9ce0aaae692ef13a2068",
+    "config_contract": "HISTORICAL_ALTSEASON_PULLBACK_LAB_CONFIG_v1_1",
+    "episode_drawdown_trigger_pct": 5.0,
+    "episode_recovery_fraction": 0.75,
+    "episode_min_separation_hours": 24,
+    "time_integrity_max_continuity_gap_hours": 1
+  },
+  "v2_episode_rule": {
+    "trigger_semantics": "PRESERVE_LEGACY_TRIGGER_EXACTLY",
+    "closure": "FIRST_OF_0_75_RECOVERY_OR_336_HOURS_AFTER_TRIGGER",
+    "closure_cap_hours_after_trigger": 336,
+    "round1_round2_relabelled": false,
+    "retroactive_promotion_from_v2": false,
+    "fresh_multiplicity_budget_required": true
+  },
+  "control_design": {
+    "design_id": "DESIGN_B_PRIMARY_STRUCTURAL_PLUS_TIME_CALIPER_FROZEN_FOR_V2",
+    "provenance": "ROUND1_OPUS_CORRECTION_REUSED_BEFORE_ROUND3_SOURCE_INSPECTION",
+    "same_era_required": true,
+    "control_anchor_requirement": "ew_drawdown_from_24h_peak_pct == 0, local 24h peak",
+    "control_outcome_requirement": "NO_5PCT_OR_GREATER_EQUAL_WEIGHT_DRAWDOWN_IN_NEXT_48H",
+    "control_exclusion": "NOT_INSIDE_ANY_V2_EPISODE_TOP_THROUGH_V2_CLOSURE_SPAN",
+    "time_caliper_days_absolute": 30,
+    "control_mutual_separation_hours": 24,
+    "matching_features": [
+      "mean_return_24h_pct",
+      "breadth_24h",
+      "dispersion_1h_pct",
+      "eth_minus_btc_24h_pp",
+      "active_alt_count"
+    ],
+    "matching_metric": "RMS_STANDARDISED_Z_DISTANCE_POOLED_SCALING",
+    "allocation": "ONE_TO_ONE_GREEDY_BEST_FIRST_SORTED_BY_MINIMUM_DISTANCE",
+    "future_outcome_used_for_control_label_only": true,
+    "round3_source_values_allowed_in_control_selection": false,
+    "round3_source_missingness_allowed_in_control_selection": false,
+    "provider_coverage_allowed_in_control_selection": false,
+    "alternate_control_search_after_source_missingness": false
+  },
+  "freeze_order": [
+    "BUILD_V2_EPISODES_FROM_CLOSED_PRICE_TAPE",
+    "BUILD_V2_CONTROLS_WITH_THIS_CONTRACT",
+    "HASH_AND_FREEZE_CATALOG_AND_PAIR_SET",
+    "ONLY_THEN_LINK_ROUND3_SOURCE_VALUES"
+  ],
+  "required_materialization_receipt": {
+    "contract": "V2_EPISODE_CATALOG_v1",
+    "required_fields": [
+      "implementation_sha256",
+      "input_panel_sha256",
+      "trigger_contract_sha256",
+      "episode_count_by_era",
+      "control_count_by_era",
+      "failed_match_reasons",
+      "catalog_sha256",
+      "pair_set_sha256",
+      "built_at_utc",
+      "source_values_loaded",
+      "round1_round2_relabelled"
+    ],
+    "source_values_loaded_must_equal": false,
+    "round1_round2_relabelled_must_equal": false
+  },
+  "fail_closed_conditions": [
+    "LEGACY_TRIGGER_CANNOT_BE_REPRODUCED",
+    "V2_CAP_APPLIED_TO_ROUND1_OR_ROUND2_CLOSED_EVIDENCE",
+    "CONTROL_SELECTION_USES_ANY_ROUND3_SOURCE_VALUE_OR_MISSINGNESS",
+    "SOURCE_COVERAGE_INSPECTED_BEFORE_PAIR_SET_FREEZE",
+    "NONDETERMINISTIC_CATALOG_OR_PAIR_HASH",
+    "CONTROL_DESIGN_DIFFERS_FROM_FROZEN_DESIGN_B_WITHOUT_NEW_VERSION"
+  ],
+  "authority": {
+    "research_only": true,
+    "automatic_production_effect": false,
+    "historical_max_classification": "FORWARD_TEST"
+  }
+}
