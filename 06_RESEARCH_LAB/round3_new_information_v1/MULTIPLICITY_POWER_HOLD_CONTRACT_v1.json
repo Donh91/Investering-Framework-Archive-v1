@@ -1,0 +1,70 @@
+{
+  "contract": "ROUND3_MULTIPLICITY_POWER_HOLD_CONTRACT_v1",
+  "status": "FROZEN_BEFORE_NEW_ROUND3_SOURCE_COLLECTION",
+  "inference": {
+    "family_id": "R3_PRIMARY_GLOBAL_FAMILY_V1_ALPHA_0_05",
+    "familywise_alpha": 0.05,
+    "test_direction": "ONE_SIDED_PREDECLARED_DIRECTION",
+    "primary_statistic": "PAIRED_CONCORDANCE_CONTINUOUS_RISK_SCORE",
+    "multiplicity_method": "SYNCHRONIZED_WITHIN_PAIR_LABEL_SWAP_MAX_T_BLOCK_PRESERVING",
+    "exact_permutation_if_swap_space_lte": 200000,
+    "otherwise_minimum_monte_carlo_permutations": 99999,
+    "monte_carlo_seed": "SHA256_FINAL_ANALYSIS_MANIFEST_DERIVED",
+    "adjacent_hours_independent_replicates": false,
+    "assets_books_trades_independent_replicates": false
+  },
+  "effect_gates": {
+    "paired_concordance_point_estimate_minimum": 0.67,
+    "simultaneous_lower_bound_minimum": 0.55,
+    "each_block_concordance_minimum": 0.55,
+    "leave_one_pair_out_concordance_minimum": 0.62,
+    "single_pair_may_change_global_decision": false
+  },
+  "prospective_blocks": {
+    "count": 2,
+    "construction": "TWO_PREDECLARED_NON_OVERLAPPING_CHRONOLOGICAL_BLOCKS_FROM_ELIGIBLE_V2_PAIRS",
+    "minimum_complete_pairs_each": 30,
+    "minimum_complete_pair_coverage": 0.80,
+    "block_boundary_must_be_frozen_before_outcome_linking": true
+  },
+  "power_gate": {
+    "must_run_before_outcome_linking": true,
+    "effect_grid_paired_concordance": [0.55, 0.60, 0.65, 0.67, 0.70, 0.75],
+    "cross_feature_correlation_grid": [0.0, 0.3, 0.6, "EMPIRICAL_SOURCE_ONLY_NO_OUTCOMES"],
+    "coverage_grid": [0.80, 0.90, 1.00],
+    "minimum_simulated_datasets_per_cell": 20000,
+    "minimum_familywise_power_at_0_67": 0.80,
+    "failure_action": "CONTINUE_PROSPECTIVE_COLLECTION_NO_WIDER_SEARCH_NO_RESULT_INTERPRETATION"
+  },
+  "falsification": {
+    "negative_control_window": "T-192H_THROUGH_T-169H",
+    "depth_negative_reference_window": "T-240H_THROUGH_T-193H",
+    "reactive_window": "T+1H_THROUGH_T+24H_DESCRIPTIVE_ONLY",
+    "availability_bias_kill_rule": "IF_SOURCE_EVENT_ONLY_ALIGNMENT_IMPROVES_CONCORDANCE_GT_0.05_OR_CHANGES_GLOBAL_DECISION_KILL_HYPOTHESIS",
+    "revision_kill_rule": "IF_FIRST_SEEN_VS_LATEST_VINTAGE_CHANGES_DIRECTION_OR_GLOBAL_DECISION_KILL_PROMOTION",
+    "missingness_kill_rule": "IF_EVENT_CONTROL_MISSINGNESS_DIFF_GT_10_PERCENTAGE_POINTS_OR_LABEL_ASSOCIATION_PERSISTS_AFTER_PREDECLARED_ADJUSTMENT_KILL_SOURCE_UNLESS_RESOLVED_BEFORE_UNBLINDING"
+  },
+  "stage2_hold": {
+    "allowed_only_after_stage1_global_success": true,
+    "research_sleeve_trim_fraction": 0.25,
+    "execution_delay_hours_primary": 1,
+    "friction_bps_each_leg_primary": 10,
+    "reload": "CONDITIONAL_FIXED_24H_RELOAD_NO_OPTIMIZATION_NO_SECOND_TRIGGER",
+    "benchmark": "HOLD",
+    "economic_metric": "PAIRED_TERMINAL_LOG_WEALTH_DIFFERENCE_VS_HOLD",
+    "success": "SIMULTANEOUS_95_PERCENT_INTERVAL_GT_0_AND_POINT_BENEFIT_GTE_50_BPS_OF_TRIMMED_SLEEVE_PER_TRIGGER",
+    "sensitivity_friction_bps_each_leg": [5, 10, 20],
+    "sensitivity_execution_delay_hours": [1, 2, 4],
+    "both_blocks_must_be_positive": true,
+    "single_pair_may_drive_success": false,
+    "threshold_retuning": false
+  },
+  "stop_rules": [
+    "STOP_ANALYSIS_IF_PAIR_COUNT_OR_COVERAGE_GATE_FAILS",
+    "STOP_ANALYSIS_IF_POWER_GATE_FAILS",
+    "STOP_PROMOTION_IF_GLOBAL_MAX_T_FAILS",
+    "STOP_PRECURSOR_CLAIM_IF_ONLY_REACTIVE_WINDOW_IS_STRONG",
+    "STOP_STAGE2_IF_STAGE1_FAILS",
+    "STOP_HYPOTHESIS_IF_PREDECLARED_KILL_CONDITION_TRIGGERS"
+  ]
+}
