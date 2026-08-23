@@ -39,6 +39,17 @@ STOPWORDS = {
     "proposes", "meeting", "update", "federal", "u", "s", "us",
 }
 
+MONTH_DATE_RE = re.compile(
+    r"\b(Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|"
+    r"Jul(?:y)?|Aug(?:ust)?|Sep(?:t(?:ember)?)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)"
+    r"\.?\s+(\d{1,2}),\s+(20\d{2})\b",
+    re.I,
+)
+MONTHS = {
+    "jan": 1, "feb": 2, "mar": 3, "apr": 4, "may": 5, "jun": 6,
+    "jul": 7, "aug": 8, "sep": 9, "oct": 10, "nov": 11, "dec": 12,
+}
+
 
 class PageParser(HTMLParser):
     def __init__(self) -> None:
@@ -150,6 +161,11 @@ def normalize_published(raw: str | None) -> tuple[str | None, str]:
     if match:
         y, m, d = map(int, match.groups())
         return datetime(y, m, d, tzinfo=timezone.utc).isoformat().replace("+00:00", "Z"), "DATE_ONLY"
+    match = MONTH_DATE_RE.search(value)
+    if match:
+        month_name, day, year = match.groups()
+        month = MONTHS[month_name[:3].lower()]
+        return datetime(int(year), month, int(day), tzinfo=timezone.utc).isoformat().replace("+00:00", "Z"), "DATE_ONLY"
     return None, "UNRESOLVED"
 
 
@@ -173,6 +189,11 @@ def published_from_page(parser: PageParser, body: bytes) -> tuple[str | None, st
             normalized = normalize_published(match.group(1))
             if normalized[0]:
                 return normalized
+    # Several primary public-sector pages expose a visible English publication date
+    # without structured metadata. Parse only a full month/day/year token, never a year alone.
+    normalized = normalize_published(text[:250_000])
+    if normalized[0]:
+        return normalized
     return None, "UNRESOLVED"
 
 
@@ -198,13 +219,45 @@ def classify(title: str, source_id: str) -> tuple[str, str, str, list[str]]:
     return "MARKET_RELEVANT", "GENERAL_MARKET_CATALYST", "HOURS_TO_DAYS", ["CATALYST_NEWS", "MACRO_RISK"]
 
 
-def candidate_links(base_url: str, parser: PageParser) -> Iterable[tuple[str, str]]:
+def source_candidate_allowed(source_id: str, base_url: str, absolute: str) -> bool:
+    parsed = urlparse(absolute)
+    base = urlparse(base_url)
+    path = parsed.path.rstrip("/")
+    base_path = base.path.rstrip("/")
+    if path == base_path:
+        return False
+    low = path.lower()
+    if source_id == "SITUATION_ROOM":
+        return low.startswith("/briefing/")
+    if source_id == "SEC":
+        return low.startswith("/newsroom/press-releases/")
+    if source_id == "TREASURY":
+        return low.startswith("/news/press-releases/")
+    if source_id == "CFTC":
+        return low.startswith("/pressroom/pressreleases/")
+    if source_id == "FEDERAL_RESERVE":
+        if not low.startswith("/newsevents/pressreleases/"):
+            return False
+        name = Path(parsed.path).name.lower()
+        return re.fullmatch(r"20\d{2}-press-[a-z0-9-]+\.htm", name) is None
+    if source_id == "WHITE_HOUSE":
+        return low.startswith((
+            "/articles/", "/fact-sheets/", "/remarks/", "/presidential-actions/",
+            "/briefings-statements/", "/news/",
+        ))
+    # Synthetic/unknown sources used by deterministic tests retain same-host behavior.
+    return True
+
+
+def candidate_links(source_id: str, base_url: str, parser: PageParser) -> Iterable[tuple[str, str]]:
     seen: set[str] = set()
     host = urlparse(base_url).netloc
     for href, text in parser.links:
         absolute = urljoin(base_url, href)
         parsed = urlparse(absolute)
         if parsed.scheme not in {"http", "https"} or parsed.netloc != host:
+            continue
+        if not source_candidate_allowed(source_id, base_url, absolute):
             continue
         label = f"{text} {absolute}"
         if not relevant(label) or absolute in seen:
@@ -234,11 +287,27 @@ def run(output_root: Path, date_utc: str, timeout: int = 15) -> dict:
         if landing.status != "PASS":
             continue
         parser = parse_page(landing.body)
-        for url, anchor in candidate_links(landing_url, parser):
+        for url, anchor in candidate_links(source_id, landing_url, parser):
             page = fetch(url, timeout=timeout)
             page_receipt = page.receipt(source_id, role)
             if page.status != "PASS":
-                unresolved.append({"source_id": source_id, "url": url, "reason": "CANDIDATE_FETCH_FAILED", "receipt": page_receipt})
+                candidate = {
+                    "source_id": source_id,
+                    "source_role": role,
+                    "url": url,
+                    "title": anchor or url,
+                    "event_time_utc": None,
+                    "event_time_precision": "UNRESOLVED",
+                    "detection_time_utc": detection,
+                    "reason": "CANDIDATE_FETCH_FAILED",
+                    "source_receipt": page_receipt,
+                }
+                if role == "DISCOVERY_ONLY":
+                    candidate["verification_status"] = "DISCOVERY_FETCH_FAILED"
+                    discoveries.append(candidate)
+                else:
+                    candidate["verification_status"] = "PRIMARY_CANDIDATE_FETCH_FAILED"
+                    unresolved.append(candidate)
                 continue
             detail = parse_page(page.body)
             title = detail.title or anchor or url
@@ -284,6 +353,12 @@ def run(output_root: Path, date_utc: str, timeout: int = 15) -> dict:
                 "causal_authority": "NONE",
             })
 
+    current_discoveries = [
+        item for item in discoveries
+        if item.get("verification_status") == "DISCOVERY_UNVERIFIED"
+        and observation_date(item.get("event_time_utc")) == date_utc
+    ]
+
     if primary_pass == 0:
         daily_result = "COLLECTOR_FAILURE"
     elif primary_pass < 3:
@@ -292,6 +367,8 @@ def run(output_root: Path, date_utc: str, timeout: int = 15) -> dict:
         daily_result = "MATERIAL_CATALYSTS_FOUND"
     elif unresolved:
         daily_result = "REVIEW_REQUIRED_UNRESOLVED_CANDIDATES"
+    elif current_discoveries:
+        daily_result = "REVIEW_REQUIRED_UNVERIFIED_DISCOVERY"
     else:
         daily_result = "NO_NEW_MATERIAL_CATALYST"
 
@@ -306,6 +383,7 @@ def run(output_root: Path, date_utc: str, timeout: int = 15) -> dict:
         "source_coverage": {"primary_pass": primary_pass, "primary_total": primary_total, "receipts": receipts},
         "events": events,
         "unverified_discoveries": discoveries,
+        "current_unverified_discoveries": current_discoveries,
         "unresolved_candidates": unresolved,
         "market_reaction_observations": [],
         "market_reaction_separate_from_event": True,
@@ -370,7 +448,11 @@ def main() -> None:
     print(json.dumps({"run_id": result["run_id"], "daily_result": result["daily_result"], "run_status": result["run_status"]}, sort_keys=True))
     if result["daily_result"] == "COLLECTOR_FAILURE":
         raise SystemExit(2)
-    if result["daily_result"] in {"UNKNOWN_DUE_TO_SOURCE_FAILURE", "REVIEW_REQUIRED_UNRESOLVED_CANDIDATES"}:
+    if result["daily_result"] in {
+        "UNKNOWN_DUE_TO_SOURCE_FAILURE",
+        "REVIEW_REQUIRED_UNRESOLVED_CANDIDATES",
+        "REVIEW_REQUIRED_UNVERIFIED_DISCOVERY",
+    }:
         raise SystemExit(78)
 
 
