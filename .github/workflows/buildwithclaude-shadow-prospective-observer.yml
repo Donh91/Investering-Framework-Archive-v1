@@ -1,0 +1,188 @@
+name: BuildWithClaude Shadow Prospective Observer
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/research/research_governance_common.py'
+      - '06_RESEARCH_LAB/buildwithclaude_shadow_round1_v1/PROSPECTIVE_OBSERVATION_POLICY.md'
+      - '.github/workflows/buildwithclaude-shadow-prospective-observer.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  observe-shadow-candidates:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Prepare isolated observation directory
+        run: |
+          mkdir -p "$RUNNER_TEMP/bwc-prospective" "$RUNNER_TEMP/bwc-prospective-pycache"
+          echo "PYTHONDONTWRITEBYTECODE=1" >> "$GITHUB_ENV"
+          echo "PYTHONPYCACHEPREFIX=$RUNNER_TEMP/bwc-prospective-pycache" >> "$GITHUB_ENV"
+
+      - name: Observe property candidate
+        continue-on-error: true
+        run: |
+          set +e
+          python scripts/research/shadow_session_telemetry.py \
+            --output "$RUNNER_TEMP/bwc-prospective/telemetry-property.json" \
+            -- python scripts/research/shadow_property_invariant_probe.py \
+            --cases 1000 \
+            --output "$RUNNER_TEMP/bwc-prospective/property.json"
+          code=$?
+          echo "$code" > "$RUNNER_TEMP/bwc-prospective/property.exit"
+          exit 0
+
+      - name: Observe mutation candidate
+        continue-on-error: true
+        run: |
+          set +e
+          python scripts/research/shadow_session_telemetry.py \
+            --output "$RUNNER_TEMP/bwc-prospective/telemetry-mutation.json" \
+            -- python scripts/research/shadow_mutation_probe.py \
+            --cases 250 \
+            --output "$RUNNER_TEMP/bwc-prospective/mutation.json"
+          code=$?
+          echo "$code" > "$RUNNER_TEMP/bwc-prospective/mutation.exit"
+          exit 0
+
+      - name: Observe telemetry self-test
+        continue-on-error: true
+        run: |
+          set +e
+          python scripts/research/shadow_session_telemetry.py \
+            --self-test \
+            --output "$RUNNER_TEMP/bwc-prospective/telemetry-self-test.json"
+          code=$?
+          echo "$code" > "$RUNNER_TEMP/bwc-prospective/telemetry.exit"
+          exit 0
+
+      - name: Observe shadow guardrail self-test
+        continue-on-error: true
+        run: |
+          set +e
+          python scripts/research/shadow_guardrail_probe.py \
+            --mode self-test \
+            --output "$RUNNER_TEMP/bwc-prospective/guardrail-self-test.json"
+          code=$?
+          echo "$code" > "$RUNNER_TEMP/bwc-prospective/guardrail.exit"
+          exit 0
+
+      - name: Check observer leaves repository clean
+        continue-on-error: true
+        run: |
+          set +e
+          python scripts/research/shadow_guardrail_probe.py \
+            --mode post \
+            --output "$RUNNER_TEMP/bwc-prospective/guardrail-post.json"
+          code=$?
+          echo "$code" > "$RUNNER_TEMP/bwc-prospective/postflight.exit"
+          exit 0
+
+      - name: Build evidence-only prospective row
+        if: always()
+        env:
+          EVIDENCE_DIR: ${{ runner.temp }}/bwc-prospective
+          OBSERVED_SHA: ${{ github.sha }}
+          OBSERVED_REF: ${{ github.ref }}
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          from datetime import datetime, timezone
+          from pathlib import Path
+
+          d = Path(os.environ['EVIDENCE_DIR'])
+
+          def load_json(name):
+              p = d / name
+              if not p.exists():
+                  return None
+              try:
+                  return json.loads(p.read_text(encoding='utf-8'))
+              except Exception:
+                  return None
+
+          def load_exit(name):
+              p = d / name
+              if not p.exists():
+                  return None
+              try:
+                  return int(p.read_text(encoding='utf-8').strip())
+              except Exception:
+                  return None
+
+          prop = load_json('property.json')
+          mutation = load_json('mutation.json')
+          telemetry = load_json('telemetry-self-test.json')
+          guard = load_json('guardrail-self-test.json')
+          post = load_json('guardrail-post.json')
+          tele_prop = load_json('telemetry-property.json')
+          tele_mut = load_json('telemetry-mutation.json')
+
+          row = {
+              'contract': 'BUILDWITHCLAUDE_SHADOW_PROSPECTIVE_ROW_v1',
+              'captured_at_utc': datetime.now(timezone.utc).isoformat(),
+              'event_name': os.environ.get('EVENT_NAME'),
+              'observed_sha': os.environ.get('OBSERVED_SHA'),
+              'observed_ref': os.environ.get('OBSERVED_REF'),
+              'authority': 'RESEARCH_ONLY_NON_CANONICAL',
+              'canonical_effect': False,
+              'portfolio_execution': False,
+              'blocking_authority': False,
+              'auto_promotion_permitted': False,
+              'property': {
+                  'exit_code': load_exit('property.exit'),
+                  'status': prop.get('status') if prop else 'NO_RESULT',
+                  'generated_cases': prop.get('generated_cases') if prop else None,
+                  'checks': prop.get('checks') if prop else None,
+                  'failure_count': prop.get('failure_count') if prop else None,
+                  'duration_ms': tele_prop.get('duration_ms') if tele_prop else None,
+              },
+              'mutation': {
+                  'exit_code': load_exit('mutation.exit'),
+                  'status': mutation.get('candidate_quality') if mutation else 'NO_RESULT',
+                  'kill_rate': mutation.get('kill_rate') if mutation else None,
+                  'executed_mutations': mutation.get('executed_mutations') if mutation else None,
+                  'killed_mutations': mutation.get('killed_mutations') if mutation else None,
+                  'duration_ms': tele_mut.get('duration_ms') if tele_mut else None,
+              },
+              'telemetry': {
+                  'exit_code': load_exit('telemetry.exit'),
+                  'status': telemetry.get('status') if telemetry else 'NO_RESULT',
+                  'raw_output_persisted': False,
+                  'external_backend': False,
+              },
+              'guardrail': {
+                  'exit_code': load_exit('guardrail.exit'),
+                  'self_test': guard.get('status') if guard else 'NO_RESULT',
+                  'postflight_exit_code': load_exit('postflight.exit'),
+                  'postflight': post.get('status') if post else 'NO_RESULT',
+              },
+              'decision': 'EVIDENCE_ONLY_NO_PROMOTION',
+          }
+          (d / 'prospective-row.json').write_text(
+              json.dumps(row, indent=2, sort_keys=True) + '\n', encoding='utf-8'
+          )
+          print(json.dumps(row, indent=2, sort_keys=True))
+          PY
+
+      - name: Upload prospective evidence row
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: buildwithclaude-shadow-prospective-${{ github.run_id }}
+          path: ${{ runner.temp }}/bwc-prospective
+          if-no-files-found: warn
+          retention-days: 30
