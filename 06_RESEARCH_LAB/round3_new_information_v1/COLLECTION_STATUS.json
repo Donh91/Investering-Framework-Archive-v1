@@ -1,0 +1,28 @@
+{
+  "contract": "ROUND3_COLLECTION_STATUS_v1",
+  "programme_status": "CONTRACT_FREEZE_PENDING_MERGE",
+  "collection_mode": "PROSPECTIVE_COLLECTION_ONLY",
+  "collection_active": false,
+  "blockers": [
+    "PRIVATE_STORAGE_REQUIRED",
+    "PROVIDER_TERMS_AND_RETENTION_RECEIPTS_REQUIRED",
+    "V2_CATALOG_AND_PAIR_SET_NOT_YET_MATERIALIZED"
+  ],
+  "hypothesis_testing_active": false,
+  "outcome_scoring_active": false,
+  "paid_historical_api_calls_authorized": false,
+  "raw_provider_values_public_repo_allowed": false,
+  "source_states": {
+    "SC01_OKX_ETH_OI_HOURLY_V1": "FROZEN_NOT_ACTIVE",
+    "SC03_OKX_ETH_REALIZED_FUNDING_V1": "FROZEN_NOT_ACTIVE",
+    "SC06_BINANCE_ETH_BOOK_DEPTH_V1": "FROZEN_NOT_ACTIVE",
+    "SC14_DERIBIT_ETH_TRUE_25D_SKEW_V1": "FROZEN_NOT_ACTIVE"
+  },
+  "next_gate": "MERGE_CONTRACT_FREEZE_THEN_MATERIALIZE_V2_LABELS_AND_CONFIGURE_PRIVATE_COLLECTION_ZONE",
+  "authority": {
+    "research_only": true,
+    "canonical_market_state": false,
+    "portfolio_execution": false,
+    "automatic_rule_changes": false
+  }
+}
