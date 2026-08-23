@@ -1,0 +1,54 @@
+{
+  "contract": "SITUATION_ROOM_DAILY_OWNER_v1",
+  "authority": "RESEARCH_ONLY_NON_CANONICAL",
+  "collection_mode": "BOUNDED_BACKFILL",
+  "observation_date_utc": "2026-08-18",
+  "detection_time_utc": "2026-08-23T20:23:00Z",
+  "run_status": "PASS_BOUNDED_RESEARCH_REVIEW",
+  "daily_result": "MATERIAL_CATALYSTS_FOUND",
+  "review_scope": "Situation Room public surface plus bounded primary/strong-independent source verification",
+  "events": [
+    {
+      "event_id": "EVT_SEC_REG_CRYPTO_ASSETS_20260818",
+      "event_family_id": "EVF_SEC_REG_CRYPTO_ASSETS_20260818",
+      "title": "SEC proposes Regulation Crypto Assets",
+      "event_time_utc": "2026-08-18T00:00:00Z",
+      "event_time_precision": "DATE_ONLY",
+      "detection_time_utc": "2026-08-23T20:23:00Z",
+      "classification": "STRUCTURAL",
+      "catalyst_subtype": "REGULATORY_CATALYST",
+      "confidence": "HIGH_PRIMARY_SOURCE",
+      "expected_duration": "WEEKS_TO_MONTHS",
+      "affected_framework_lanes": ["CATALYST_NEWS", "MACRO_RISK", "CRYPTO_POLICY"],
+      "verification_status": "PRIMARY_SOURCE_VERIFIED",
+      "source_receipts": [
+        {
+          "publisher": "U.S. Securities and Exchange Commission",
+          "role": "PRIMARY",
+          "url": "https://www.sec.gov/rules-regulations/2026/08/s7-2026-27",
+          "source_identifier": "Release Nos. 33-11434; 34-106150; File No. S7-2026-27",
+          "content_sha256": null,
+          "hash_status": "NOT_CAPTURED_IN_BOUNDED_BACKFILL"
+        },
+        {
+          "publisher": "U.S. Securities and Exchange Commission",
+          "role": "PRIMARY_RULE_TEXT",
+          "url": "https://www.sec.gov/files/rules/proposed/2026/33-11434.pdf",
+          "content_sha256": null,
+          "hash_status": "NOT_CAPTURED_IN_BOUNDED_BACKFILL"
+        }
+      ],
+      "notes": "Proposed rule, not effective final law. Federal Register publication on 2026-08-21 is a follow-up in the same event family, not a new independent catalyst.",
+      "causal_authority": "NONE"
+    }
+  ],
+  "market_reaction_observations": [],
+  "unverified_discoveries": [],
+  "source_limitations": ["Situation Room public workspace is dynamically rendered and did not expose complete August briefing content to the bounded crawler."],
+  "shared_row_tournament_eligible": false,
+  "retroactive_candidate_eligibility": false,
+  "hindsight_market_attribution_forbidden": true,
+  "canonical_effect": false,
+  "market_state_effect": false,
+  "portfolio_effect": false
+}
