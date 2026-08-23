@@ -1,0 +1,158 @@
+{
+  "contract": "PHASE_IV_CONTINUATION_STATE_v1",
+  "purpose": "Canonical chat-independent handoff for resuming Phase IV falsification research from repository state rather than conversation memory.",
+  "state_semantics": "POINT_IN_TIME_HANDOFF_READ_CURRENT_REPOSITORY_HEADS_BEFORE_RESUMING",
+  "created_from_control_plane_main_sha": "f3c53435bf85088fdf48a3aabadcce4922601aed",
+  "phase4_origin": {
+    "merged_pr": 536,
+    "merge_commit_sha": "30d75648fe421b185ee4d695b830c0fe4c8e9d23",
+    "programme": "06_RESEARCH_LAB/phase4_no_hindsight_falsification_v1",
+    "authoritative_files": [
+      "06_RESEARCH_LAB/phase4_no_hindsight_falsification_v1/RESEARCH_CONTRACT_v1.json",
+      "06_RESEARCH_LAB/phase4_no_hindsight_falsification_v1/CANDIDATE_EVIDENCE_MATRIX_v1.json",
+      "06_RESEARCH_LAB/phase4_no_hindsight_falsification_v1/INITIAL_REPLAY_VERDICT_v1.json",
+      "06_RESEARCH_LAB/phase4_no_hindsight_falsification_v1/README.md"
+    ]
+  },
+  "scientific_principle": "FALSIFICATION_BEFORE_COMPLEXITY_OR_PROMOTION",
+  "candidate_state": [
+    {
+      "candidate": "GENERIC_BTC_ETF_PERSISTENCE_3_5_7_SESSION",
+      "status": "KILL_STANDALONE_PRECURSOR",
+      "scope": "Unconditional standalone 1D/3D/7D BTC precursor use only.",
+      "reason": "No family-wise robust incremental information over the single-session ETF print; multi-session features were weak and directionally unstable across available modern years.",
+      "forbidden_next_action": "Do not retune windows, thresholds or transforms to rescue this candidate."
+    },
+    {
+      "candidate": "BTC_ETF_NEGATIVE_SESSION_STREAK",
+      "status": "OBSERVE_WEAK_STABLE_DIRECTION_NOT_EDGE",
+      "reason": "Direction was more stable than generic persistence but effect was small and did not survive the required evidence standard.",
+      "authority": "NO_SIGNAL_NO_THRESHOLD_NO_PORTFOLIO_AUTHORITY"
+    },
+    {
+      "candidate": "ETF_FLOW_STABILIZATION_AFTER_NEGATIVE_PERSISTENCE",
+      "status": "UNTESTABLE_INSUFFICIENT_SCORABLE_OUTCOMES",
+      "reason": "Too few source-defined events overlapped the frozen price history to support inference.",
+      "authority": "NO_PROMOTION"
+    },
+    {
+      "candidate": "BTC_VS_ETH_ETF_FLOW_DIVERGENCE",
+      "status": "UNTESTABLE_SOURCE_INTEGRITY_BLOCK",
+      "reason": "Current ETH compressed archive fails strict decoding/integrity handling; partial or heuristic recovery is forbidden.",
+      "provenance_recovery_anchor": {
+        "original_add_commit": "9870dcfa106ac8ea8e39a11811cc88a2bababf67",
+        "commit_message": "Add ETH spot ETF flow compressed raw history dataset"
+      },
+      "next_allowed_action": "Verify original Git blob/decoded bytes bit-for-bit against declared archive provenance before reopening the lane."
+    },
+    {
+      "candidate": "DISPERSION_THEN_BREADTH_DECELERATION",
+      "status": "OBSERVE_ONLY",
+      "reason": "Historical temporal ordering showed directionality but multiplicity robustness and false-positive performance were insufficient for action authority."
+    },
+    {
+      "candidate": "CFGI_ORDERS_DIVERGENCE_ACCELERATION",
+      "status": "EXPLORATORY_ONLY",
+      "reason": "Structurally interesting and relatively independent in prior CFGI analysis, but historical inferential sample is inadequate."
+    },
+    {
+      "candidate": "PRICE_DOWN_OI_UP_LEVERAGE_PRESSURE",
+      "status": "PROSPECTIVE_ONLY_TOP_PRIORITY",
+      "reason": "New information dimension with plausible upstream mechanism; no outcome analysis is permitted until prospective governance and power gates authorize it."
+    },
+    {
+      "candidate": "PRICE_OI_SPOT_DIVERGENCE",
+      "status": "PROSPECTIVE_ONLY",
+      "reason": "Potential discriminator between derivatives pressure and real spot absorption/withdrawal; requires valid overlapping spot microstructure evidence."
+    },
+    {
+      "candidate": "POST_FLUSH_RECLAIM_CONDITIONED_ON_OI",
+      "status": "PROSPECTIVE_ONLY",
+      "reason": "Recovery-quality hypothesis; keep separate from pullback-warning target."
+    }
+  ],
+  "private_data_plane_state_at_handoff": {
+    "repository": "Donh91/secrets",
+    "mode": "PROSPECTIVE_COLLECTION_ONLY",
+    "active_sources": [
+      "SC01_OKX_ETH_OI_HOURLY_V1",
+      "SC03_OKX_ETH_REALIZED_FUNDING_V1",
+      "SC14_DERIBIT_ETH_TRUE_25D_SKEW_V1"
+    ],
+    "latest_verified_health_at_handoff": {
+      "raw_file_count": 30,
+      "valid_file_count": 30,
+      "invalid_or_orphan_count": 0,
+      "duplicate_payload_capture_count": 0,
+      "post_floor_provenance_complete_count": 19
+    },
+    "analysis_authorized": false,
+    "hypothesis_testing_performed": false,
+    "outcome_scoring_performed": false,
+    "warning": "These counts are point-in-time only. Read Donh91/secrets current main and health/LATEST_PRIVATE_DATA_HEALTH.json before any continuation claim."
+  },
+  "round3_firewall": {
+    "control_plane_contract": "06_RESEARCH_LAB/round3_new_information_v1/MULTIPLICITY_POWER_HOLD_CONTRACT_v1.json",
+    "required_prospective_blocks": 2,
+    "minimum_complete_pairs_each": 30,
+    "minimum_complete_pair_coverage": 0.80,
+    "block_boundary_frozen_before_outcome_linking": true,
+    "familywise_alpha": 0.05,
+    "adjacent_hours_are_independent_replicates": false,
+    "power_gate_before_outcome_linking": true,
+    "failure_action": "CONTINUE_PROSPECTIVE_COLLECTION_NO_WIDER_SEARCH_NO_RESULT_INTERPRETATION"
+  },
+  "non_negotiable_guardrails": [
+    "Read current control-plane main and restricted-data-plane main before relying on this handoff.",
+    "Do not infer current private health from this point-in-time file.",
+    "Do not activate hypothesis testing or outcome scoring before the frozen Round 3 authorization/power gates permit it.",
+    "Do not change market state, thresholds, weights, execution rules, prospective floor or portfolio authority as part of Phase IV evidence collection.",
+    "Do not auto-promote any candidate.",
+    "Do not rescue killed candidates by post-result threshold/window/transform mining.",
+    "Do not use partial, heuristic or silently repaired source data when strict provenance fails.",
+    "Treat null, KILL and UNTESTABLE outcomes as valid research results.",
+    "Keep pullback-hazard, recovery-quality, BTC permission, ecosystem permission and rotation targets separate unless a future frozen contract explicitly joins them."
+  ],
+  "next_actions_in_priority_order": [
+    {
+      "priority": 1,
+      "action": "ETH_ETF_SOURCE_PROVENANCE_RECOVERY",
+      "instruction": "Compare the original ETH ETF add-commit/blob against current archive and declared checksums. Reopen BTC-vs-ETH divergence only if lineage and decoded integrity are proven bit-for-bit; otherwise keep UNTESTABLE."
+    },
+    {
+      "priority": 2,
+      "action": "CONTINUE_CLEAN_PROSPECTIVE_COLLECTION",
+      "instruction": "Allow existing SC01/SC03/SC14 collectors and health gates to accumulate immutable prospective evidence. Do not add duplicate collectors or analysis machinery without demonstrated information need."
+    },
+    {
+      "priority": 3,
+      "action": "READINESS_AND_POWER_GATE_ONLY",
+      "instruction": "Monitor metadata/provenance, independent pair count, block coverage and frozen power requirements. Do not inspect outcome-linked candidate performance before authorization."
+    },
+    {
+      "priority": 4,
+      "action": "FIRST_AUTHORIZED_PROSPECTIVE_TEST",
+      "instruction": "When and only when the frozen analysis gate becomes eligible, test PRICE_DOWN_OI_UP_LEVERAGE_PRESSURE as a minimal preregistered candidate against its simple baseline with no threshold mining."
+    },
+    {
+      "priority": 5,
+      "action": "INCREMENTAL_SPOT_DISCRIMINATION",
+      "instruction": "Only after a valid overlapping spot lane exists, test whether spot absorption/withdrawal adds incremental information beyond price and OI alone."
+    },
+    {
+      "priority": 6,
+      "action": "RECOVERY_LANE",
+      "instruction": "Test post-flush reclaim/OI behavior as a separate recovery decision problem, including waiting-cost/FNP and HOLD benchmark where economically applicable."
+    }
+  ],
+  "resume_protocol_for_new_agent_or_chat": [
+    "Fetch current main of Donh91/Investering-Framework-Archive-v1 and Donh91/secrets.",
+    "Read this continuation state plus all phase4_origin.authoritative_files.",
+    "Read 06_RESEARCH_LAB/round3_new_information_v1/PRIVATE_RUNTIME_STATE.json and MULTIPLICITY_POWER_HOLD_CONTRACT_v1.json from current control-plane main.",
+    "Read Donh91/secrets health/LATEST_PRIVATE_DATA_HEALTH.json and current governance/collector state.",
+    "Reconcile any repository developments newer than this handoff before acting.",
+    "Continue from next_actions_in_priority_order while preserving candidate_state and non_negotiable_guardrails.",
+    "Use governed branch/PR/CI workflow for durable changes; do not rely on chat memory as authority."
+  ],
+  "suggested_new_chat_instruction": "Continue Phase IV research from current GitHub state. Treat Donh91/Investering-Framework-Archive-v1 and Donh91/secrets as authoritative. Read 06_RESEARCH_LAB/phase4_no_hindsight_falsification_v1/PHASE_IV_CONTINUATION_STATE_v1.json first, then reconcile it against current main on both repositories. Preserve all frozen contracts, prospective floors, scientific firewalls and kill criteria. Execute the highest-priority allowed next action yourself through governed GitHub PR/CI workflow. Do not promote or retune anything unless the evidence contract explicitly permits it."
+}
