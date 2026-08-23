@@ -39,25 +39,37 @@ def ts(x):
         return z.astimezone(dt.timezone.utc)
     except: return None
 
-def etf_csv(p):
-    out=[]
-    with p.open(encoding="utf-8",newline="") as f:
-        for r in csv.DictReader(f):
-            d=date(r.get("ISO_DATE"))
-            try: v=float(r.get("Total",""))
-            except: continue
-            if d: out.append((d,v))
-    return sorted(out)
-
-def etf_b64(p):
-    raw=gzip.decompress(base64.b64decode(p.read_text().strip())).decode()
+def parse_etf_csv_text(raw):
     out=[]
     for r in csv.DictReader(raw.splitlines()):
         d=date(r.get("ISO_DATE"))
         try: v=float(r.get("Total",""))
         except: continue
-        if d: out.append((d,v))
+        if d and math.isfinite(v): out.append((d,v))
     return sorted(out)
+
+def etf_csv(p):
+    try:
+        rows=parse_etf_csv_text(p.read_text(encoding="utf-8"))
+        return rows,{"status":"PASS","rows":len(rows),"file_sha256":sha(p)}
+    except Exception as e:
+        return [],{"status":"SOURCE_INTEGRITY_FAIL","error_type":type(e).__name__,"error":str(e),"file_sha256":sha(p)}
+
+def etf_b64(p):
+    qa={"file_sha256":sha(p),"status":"SOURCE_INTEGRITY_FAIL","partial_data_allowed":False}
+    try:
+        text=p.read_text(encoding="utf-8")
+        compact="".join(text.split())
+        qa["base64_characters"]=len(compact)
+        packed=base64.b64decode(compact,validate=True)
+        qa["decoded_gzip_bytes"]=len(packed)
+        raw=gzip.decompress(packed).decode("utf-8")
+        rows=parse_etf_csv_text(raw)
+        qa.update(status="PASS",rows=len(rows),decoded_csv_sha256=hashlib.sha256(raw.encode()).hexdigest())
+        return rows,qa
+    except Exception as e:
+        qa.update(error_type=type(e).__name__,error=str(e))
+        return [],qa
 
 def detect(header, asset):
     low={h.lower():h for h in header}
@@ -71,30 +83,35 @@ def detect(header, asset):
 
 def prices(p):
     info={"available":p.exists(),"path":str(p)}
-    if not p.exists(): return {},info
-    with gzip.open(p,"rt",encoding="utf-8",newline="") as f:
-        rd=csv.DictReader(f); hd=rd.fieldnames or []
-        tc=next((h for h in hd if h.lower() in ("timestamp_utc","time_utc","timestamp","datetime","utc","open_time")),None)
-        if not tc: tc=next((h for h in hd if "time" in h.lower()),None)
-        bc,ec=detect(hd,"btc"),detect(hd,"eth")
-        info.update(time_column=tc,btc_column=bc,eth_column=ec)
-        if not tc or not bc:
-            info.update(usable=False,reason="NO_CONSERVATIVE_TIME_OR_BTC_PRICE_COLUMN"); return {},info
-        latest={}
-        for r in rd:
-            t=ts(r.get(tc))
-            if not t: continue
-            for a,c in (("BTC",bc),("ETH",ec)):
-                if not c: continue
-                try: px=float(r.get(c,""))
-                except: continue
-                if px<=0 or not math.isfinite(px): continue
-                k=(a,t.date())
-                if k not in latest or t>latest[k][0]: latest[k]=(t,px)
-        out={"BTC":{},"ETH":{}}
-        for (a,d),(_,px) in latest.items(): out[a][d]=px
-        info.update(usable=bool(out["BTC"]),btc_days=len(out["BTC"]),eth_days=len(out["ETH"]))
-        return out,info
+    if not p.exists(): return {"BTC":{},"ETH":{}},dict(info,usable=False,reason="MISSING_FILE")
+    try:
+        with gzip.open(p,"rt",encoding="utf-8",newline="") as f:
+            rd=csv.DictReader(f); hd=rd.fieldnames or []
+            tc=next((h for h in hd if h.lower() in ("timestamp_utc","time_utc","timestamp","datetime","utc","open_time")),None)
+            if not tc: tc=next((h for h in hd if "time" in h.lower()),None)
+            bc,ec=detect(hd,"btc"),detect(hd,"eth")
+            info.update(time_column=tc,btc_column=bc,eth_column=ec)
+            if not tc or not bc:
+                info.update(usable=False,reason="NO_CONSERVATIVE_TIME_OR_BTC_PRICE_COLUMN")
+                return {"BTC":{},"ETH":{}},info
+            latest={}
+            for r in rd:
+                t=ts(r.get(tc))
+                if not t: continue
+                for a,c in (("BTC",bc),("ETH",ec)):
+                    if not c: continue
+                    try: px=float(r.get(c,""))
+                    except: continue
+                    if px<=0 or not math.isfinite(px): continue
+                    k=(a,t.date())
+                    if k not in latest or t>latest[k][0]: latest[k]=(t,px)
+            out={"BTC":{},"ETH":{}}
+            for (a,d),(_,px) in latest.items(): out[a][d]=px
+            info.update(usable=bool(out["BTC"]),btc_days=len(out["BTC"]),eth_days=len(out["ETH"]),file_sha256=sha(p))
+            return out,info
+    except Exception as e:
+        info.update(usable=False,reason="PRICE_SOURCE_READ_FAIL",error_type=type(e).__name__,error=str(e),file_sha256=sha(p))
+        return {"BTC":{},"ETH":{}},info
 
 def roll(rows,n):
     out={}; vals=[]
@@ -162,10 +179,10 @@ def family_test(items,perms=1000):
             s=sh%len(y); yp=y[s:]+y[:s]; q=spear(x,yp)
             if q is not None:ss.append(abs(q))
         null.append(max(ss) if ss else 0.)
-    p={k:(1+sum(m>=abs(obs[k]) for m in null))/(1+len(null)) for k in valid}
-    return obs,p
+    return obs,{k:(1+sum(m>=abs(obs[k]) for m in null))/(1+len(null)) for k in valid}
 
-def lane(rows,px):
+def lane(rows,px,source_status="PASS"):
+    if source_status!="PASS": return {"status":"UNTESTABLE_SOURCE_INTEGRITY_FAIL"}
     if not rows or not px:return {"status":"UNTESTABLE_MISSING_DATA"}
     f={"flow_3session_sum":roll(rows,3),"flow_5session_sum":roll(rows,5),"flow_7session_sum":roll(rows,7),"negative_session_streak":streak(rows)}
     r3=f["flow_3session_sum"]; ds=sorted(r3); f["flow_3session_delta"]={ds[i]:r3[ds[i]]-r3[ds[i-1]] for i in range(1,len(ds))}
@@ -191,36 +208,44 @@ def pings(root):
         if m and date(m.group(1)):ds.append(date(m.group(1)))
     return {"file_count":len(fs),"dated_file_count":len(ds),"date_min":min(ds).isoformat() if ds else None,"date_max":max(ds).isoformat() if ds else None}
 
+def coverage(rows): return [str(rows[0][0]),str(rows[-1][0])] if rows else None
+
+def modern(cat,cov):
+    if not cov:return []
+    lo,hi=(date(cov[0]),date(cov[1]))
+    return [e["episode_id"] for e in cat.get("episodes",[]) if (d:=date(e.get("top_utc"))) and lo<=d<=hi]
+
 def main():
     ap=argparse.ArgumentParser();ap.add_argument("--repo-root",default=".");ap.add_argument("--output",default="phase4_replay_report.json");ap.add_argument("--self-test",action="store_true");a=ap.parse_args()
     if a.self_test:
         assert rank([1,1,3])==[1.5,1.5,3.0];assert abs(spear([1,2,3],[1,2,3])-1)<1e-12;print("PHASE4_SELF_TEST_PASS");return
     root=Path(a.repo_root).resolve(); rp=lambda p:root/p
-    for p in (EP,BTC,ETH):
-        if not rp(p).exists():raise SystemExit(f"missing required input {p}")
-    cat=jload(rp(EP)); br=etf_csv(rp(BTC)); er=etf_b64(rp(ETH)); px,pinfo=prices(rp(HF))
-    bc=(br[0][0],br[-1][0]); ec=(er[0][0],er[-1][0])
-    modern=lambda cov:[e["episode_id"] for e in cat.get("episodes",[]) if (d:=date(e.get("top_utc"))) and cov[0]<=d<=cov[1]]
-    bm,em=modern(bc),modern(ec)
-    b3,e3=roll(br,3),roll(er,3); common=sorted(set(b3)&set(e3)&set(px.get("BTC",{})))
-    div={d:(1.0 if b3[d]<0<=e3[d] else -1.0 if e3[d]<0<=b3[d] else 0.0) for d in common}
-    divres={}
-    for h in (1,3,7):
-        d,x,y=align(div,px.get("BTC",{}),h);divres[str(h)]={"n":len(x),"spearman":spear(x,y),"by_year":yearly(d,x,y)}
+    for p in (EP,BTC):
+        if not rp(p).exists():raise SystemExit(f"missing required independent input {p}")
+    cat=jload(rp(EP)); br,bqa=etf_csv(rp(BTC)); er,eqa=etf_b64(rp(ETH)) if rp(ETH).exists() else ([],{"status":"SOURCE_MISSING","file_sha256":None})
+    px,pinfo=prices(rp(HF)); bc,ec=coverage(br),coverage(er); bm,em=modern(cat,bc),modern(cat,ec)
+    divres={"status":"UNTESTABLE_SOURCE_INTEGRITY_FAIL"}
+    if eqa.get("status")=="PASS" and br and er and px.get("BTC"):
+        b3,e3=roll(br,3),roll(er,3); common=sorted(set(b3)&set(e3)&set(px["BTC"]))
+        div={d:(1.0 if b3[d]<0<=e3[d] else -1.0 if e3[d]<0<=b3[d] else 0.0) for d in common}
+        divres={"status":"DISCOVERY_ONLY_NO_PROMOTION","definition":"sign disagreement of 3-session sums","results":{}}
+        for h in (1,3,7):
+            d,x,y=align(div,px["BTC"],h);divres["results"][str(h)]={"n":len(x),"spearman":spear(x,y),"by_year":yearly(d,x,y)}
     r3=jload(rp(R3)) if rp(R3).exists() else {}
+    min_event_count=min(len(bm),len(em)) if em else 0
     rep={
       "contract":"PHASE4_NO_HINDSIGHT_REPLAY_REPORT_v1","status":"RESEARCH_ONLY_NON_CANONICAL","generated_at_utc":dt.datetime.now(dt.timezone.utc).isoformat(),"deterministic_seed":SEED,
       "authority":{"market_state_changes":False,"threshold_changes":False,"weight_changes":False,"portfolio_execution":False,"auto_promotion":False},
       "input_hashes":{"episode_catalog":sha(rp(EP)),"hourly_features":sha(rp(HF)),"btc_etf":sha(rp(BTC)),"eth_etf_b64":sha(rp(ETH)),"round3_registry":sha(rp(R3))},
-      "source_qa":{"frozen_episode_count":cat.get("episode_count"),"btc_etf_rows":len(br),"btc_etf_coverage":[str(x) for x in bc],"eth_etf_rows":len(er),"eth_etf_coverage":[str(x) for x in ec],"v0_btc_etf_episodes":bm,"v0_eth_etf_episodes":em,"price_source":pinfo,"data_ping_inventory":pings(rp(DP)),"etf_vendor_revision_risk":"KNOWN_POINT_IN_TIME_SOURCE_VERSION_RISK_DO_NOT_SILENTLY_REWRITE"},
+      "source_qa":{"frozen_episode_count":cat.get("episode_count"),"btc_etf":bqa,"btc_etf_coverage":bc,"eth_etf":eqa,"eth_etf_coverage":ec,"v0_btc_etf_episodes":bm,"v0_eth_etf_episodes":em,"price_source":pinfo,"data_ping_inventory":pings(rp(DP)),"etf_vendor_revision_risk":"KNOWN_POINT_IN_TIME_SOURCE_VERSION_RISK_DO_NOT_SILENTLY_REWRITE"},
       "lanes":{
-        "A_provenance_red_team":{"verdict":"PASS_WITH_LIMITATIONS","notes":["no missing historical values imputed","DATA PING treated as contemporaneous evidence only","ETF archive treated as point-in-time source version"]},
-        "B_etf_flow_asymmetry":{"BTC":lane(br,px.get("BTC",{})),"ETH":lane(er,px.get("ETH",{}))},
-        "C_btc_eth_divergence":{"status":"DISCOVERY_ONLY_NO_PROMOTION","definition":"sign disagreement of 3-session sums","results":divres},
-        "D_v0_testability":{"btc_episode_count":len(bm),"eth_episode_count":len(em),"verdict":"INSUFFICIENT_FOR_V0_EVENT_CONTROL_PROMOTION" if min(len(bm),len(em))<10 else "TESTABLE"},
+        "A_provenance_red_team":{"verdict":"SOURCE_INTEGRITY_LIMITATION_RETAINED" if eqa.get("status")!="PASS" else "PASS_WITH_LIMITATIONS","notes":["no missing historical values imputed","no partial ETH gzip recovery accepted","DATA PING treated as contemporaneous evidence only","ETF archive treated as point-in-time source version"]},
+        "B_etf_flow_asymmetry":{"BTC":lane(br,px.get("BTC",{}),bqa.get("status")),"ETH":lane(er,px.get("ETH",{}),eqa.get("status"))},
+        "C_btc_eth_divergence":divres,
+        "D_v0_testability":{"btc_episode_count":len(bm),"eth_episode_count":len(em),"verdict":"INSUFFICIENT_FOR_V0_EVENT_CONTROL_PROMOTION" if min_event_count<10 else "TESTABLE"},
         "E_round3_boundary":{"registry_status":r3.get("status"),"primary_count":r3.get("primary_count"),"verdict":"PROSPECTIVE_ONLY_DO_NOT_BACKFILL_OR_RESCORE"},
-        "F_supervisor":{"P4-C01-ETF-PERSISTENCE":"DISCOVERY_ONLY_PENDING_ROBUSTNESS_AND_DECISION_VALUE","P4-C02-ETF-STABILIZATION":"DISCOVERY_ONLY_PENDING_ROBUSTNESS_AND_DECISION_VALUE","P4-C03-BTC-ETH-ETF-DIVERGENCE":"DISCOVERY_ONLY_PENDING_ROBUSTNESS_AND_DECISION_VALUE","P4-C04-DISPERSION-THEN-BREADTH":"OBSERVE_EXISTING_EVIDENCE_NO_PROMOTION","P4-C05-PRICE-DOWN-OI-UP":"PROSPECTIVE_ONLY","P4-C06-PRICE-OI-SPOT-DIVERGENCE":"PROSPECTIVE_ONLY_SOURCE_COVERAGE_REQUIRED","P4-C07-POST-FLUSH-RECLAIM-OI":"PROSPECTIVE_ONLY","P4-X01-CFGI-ORDERS":"EXPLORATORY_ONLY_INSUFFICIENT_INDEPENDENT_EPISODES"}
+        "F_supervisor":{"P4-C01-ETF-PERSISTENCE":"DISCOVERY_ONLY_PENDING_ROBUSTNESS_AND_DECISION_VALUE" if bqa.get("status")=="PASS" else "UNTESTABLE","P4-C02-ETF-STABILIZATION":"DISCOVERY_ONLY_PENDING_ROBUSTNESS_AND_DECISION_VALUE" if bqa.get("status")=="PASS" else "UNTESTABLE","P4-C03-BTC-ETH-ETF-DIVERGENCE":"UNTESTABLE_SOURCE_INTEGRITY_FAIL" if eqa.get("status")!="PASS" else "DISCOVERY_ONLY_PENDING_ROBUSTNESS_AND_DECISION_VALUE","P4-C04-DISPERSION-THEN-BREADTH":"OBSERVE_EXISTING_EVIDENCE_NO_PROMOTION","P4-C05-PRICE-DOWN-OI-UP":"PROSPECTIVE_ONLY","P4-C06-PRICE-OI-SPOT-DIVERGENCE":"PROSPECTIVE_ONLY_SOURCE_COVERAGE_REQUIRED","P4-C07-POST-FLUSH-RECLAIM-OI":"PROSPECTIVE_ONLY","P4-X01-CFGI-ORDERS":"EXPLORATORY_ONLY_INSUFFICIENT_INDEPENDENT_EPISODES"}
       }}
     out=Path(a.output);out=out if out.is_absolute() else root/out;out.write_text(json.dumps(rep,indent=2,sort_keys=True)+"\n")
-    print(json.dumps({"output":str(out),"btc_rows":len(br),"eth_rows":len(er),"v0_btc_etf_episodes":len(bm),"v0_eth_etf_episodes":len(em),"price_usable":pinfo.get("usable")},sort_keys=True))
+    print(json.dumps({"output":str(out),"btc_rows":len(br),"btc_source":bqa.get("status"),"eth_rows":len(er),"eth_source":eqa.get("status"),"v0_btc_etf_episodes":len(bm),"v0_eth_etf_episodes":len(em),"price_usable":pinfo.get("usable")},sort_keys=True))
 if __name__=="__main__":main()
