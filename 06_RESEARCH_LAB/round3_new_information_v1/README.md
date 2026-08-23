@@ -1,9 +1,15 @@
 # Round 3 New Information Research v1
 
-Status: `CONTRACT_FROZEN_V2_MATERIALIZED_PRIVATE_COLLECTION_HOLD_TERMS_AND_PROVENANCE`
+Status: `CONTRACT_FROZEN_V2_MATERIALIZED_PRIVATE_PROSPECTIVE_COLLECTION_ACTIVE_ANALYSIS_OFF`
 Authority: `RESEARCH_ONLY_NON_CANONICAL`
 
 This programme follows the terminal Round 1 and Round 2 historical-altseason work. The broad historical price/volume/taker-share mining lane remains closed. Round 3 is restricted to genuinely new information dimensions and remains `PROSPECTIVE_COLLECTION_ONLY`.
+
+## Runtime authority
+
+`PRIVATE_RUNTIME_STATE.json` is the provider-value-free public runtime readback for the restricted data plane. `COLLECTION_STATUS.json` is now explicitly retained as the frozen pre-reactivation snapshot because the Round 3 contract-freeze gate binds it historically. Do not infer live private collection state from that frozen file.
+
+`CROSS_REPO_FRESHNESS_POLICY_v1.json` defines the freshness semantics. Public runtime state is always an explicit point-in-time readback, never a claim that the public repository has a live view of private `main`. Append-only private capture commits may advance after a health snapshot without invalidating the bound governance state, but any private governance-state change requires a new public reconciliation. A stale governance binding is classified `PUBLIC_CONTROL_PLANE_STALE` and must not be silently treated as current.
 
 ## Frozen programme boundary
 
@@ -31,13 +37,11 @@ The canonical framework repository is the public control plane. `Donh91/secrets`
 
 Provider-derived raw/normalized Round 3 market values MUST NOT be committed to this public repository. Public files may hold contracts, code, schemas, hashes, row/object counts, timestamp/completeness health, provider-value-free provenance receipts and gated research decisions. Every private dataset reference requires a private commit SHA, exact path, bytes, SHA-256, source-contract ID, timestamps, schema and completeness.
 
-Current source state is fail-closed. SC01, SC03 and SC14 are on terms-attestation and provenance-v2 hold. SC06 is on the same terms hold and still requires a persistent continuous-stream runtime. No private source is currently collection-active.
+The reconciled private governance state activates SC01, SC03 and SC14 for prospective collection-only. SC06 remains blocked on persistent continuous-stream runtime, private object storage and paid-infrastructure authorization. Hypothesis testing, outcome scoring and restricted analysis remain `OFF`.
 
-The private data plane now has a machine-readable provider-terms attestation record and fail-closed readiness validator, merged at private commit `e5e7a95e70642ac063484375f28fa62ecefbd633`. Current readiness is `PASS_FAIL_CLOSED_HOLD`: the repository is internally consistent, but no source is a reactivation candidate until the human-owned account entity/region, intended-use, retention and processing facts are explicitly attested. A readiness pass never self-authorizes collection.
+The current public readback is bound to private owner-attestation merge `b9f28b42e1c71168c3b991868e1fe823bb481e39`, reviewed reactivation merge `65b56778fec8916603675cf18529d6f957432550`, governance-authority commit `6f5a3e5514c3d1ca88b6b5329d76420a45cffe58`, and a point-in-time private health snapshot at commit `cbe6119d7523c0fc45b660f166eef1bf53db5c73`.
 
-The historical private canary workflow run `32633097190` passed, but that remains collection/source-health evidence only. The current private health readback records 11 raw captures: all 11 are integrity-valid, none are invalid or orphaned, and all 11 are analysis-ineligible legacy captures because they lack the frozen schema-v2 collector provenance. They were preserved without rewrite or deletion. There are zero schema-v2 captures and no analysis authorization.
-
-See `COLLECTION_STATUS.json`, `PRIVATE_DATA_PLANE_BINDING_RECEIPT.json`, the historical `PRIVATE_COLLECTION_ACTIVATION_RECEIPT.json`, the current `PRIVATE_COLLECTION_HOLD_RECEIPT_2026-08-23.json`, `PRIVATE_PROVIDER_TERMS_READINESS_RECEIPT_2026-08-23.json`, `PROVIDER_TERMS_EVIDENCE_REQUIREMENTS_v1.json` and `00_ARCHIVE_CONTROL/CROSS_REPO_DATA_BOUNDARY.md`.
+That health snapshot contains 15 raw captures, all 15 integrity-valid, zero invalid/orphan files, zero duplicate payload captures, 11 preserved legacy schema-v1 captures in provenance quarantine and 4 post-floor schema-v2 captures with complete provenance. Analysis authorization remains false. These counts are collection-health evidence only, not signal-performance evidence.
 
 ## Required gates before analysis
 
@@ -47,8 +51,11 @@ See `COLLECTION_STATUS.json`, `PRIVATE_DATA_PLANE_BINDING_RECEIPT.json`, the his
 - At least 30 complete pairs in each of two predeclared chronological prospective blocks.
 - At least 80% simulated family-wise power at paired concordance 0.67.
 - No outcome-linked analysis before all above gates are true.
-- Provider terms applicability and intended-use evidence must be complete, then collection must be reactivated in a separate reviewed pull request.
-- The first post-reactivation capture must use schema v2 and pass health-only validation before any linkage to outcomes.
+- Private prospective collection remains limited to separately reviewed and activated sources.
+- Collection-health readbacks may update without opening analysis.
 - Hypothesis testing and outcome scoring remain `OFF` until the gate is formally opened by a new governed receipt.
+- Any private governance change must be reconciled to `PRIVATE_RUNTIME_STATE.json` before the public control plane may describe the new state.
 
-See the machine-readable contracts in this directory. Any change to a frozen hypothesis, feature, direction, actionable window, policy threshold, control design or multiplicity family requires a new version and fresh prospective evidence.
+See `PRIVATE_RUNTIME_STATE.json`, `CROSS_REPO_FRESHNESS_POLICY_v1.json`, the frozen `COLLECTION_STATUS.json`, `PRIVATE_DATA_PLANE_BINDING_RECEIPT.json`, historical activation/hold receipts, `PROVIDER_TERMS_EVIDENCE_REQUIREMENTS_v1.json` and `00_ARCHIVE_CONTROL/CROSS_REPO_DATA_BOUNDARY.md`.
+
+Any change to a frozen hypothesis, feature, direction, actionable window, policy threshold, control design or multiplicity family requires a new version and fresh prospective evidence.
