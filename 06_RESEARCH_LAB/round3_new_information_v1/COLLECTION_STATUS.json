@@ -1,24 +1,28 @@
 {
   "contract": "ROUND3_COLLECTION_STATUS_v1",
-  "programme_status": "CONTRACT_FREEZE_PENDING_MERGE",
+  "programme_status": "CONTRACT_FROZEN_V2_MATERIALIZED_COLLECTION_BLOCKED_PRIVATE_STORAGE",
   "collection_mode": "PROSPECTIVE_COLLECTION_ONLY",
   "collection_active": false,
   "blockers": [
     "PRIVATE_STORAGE_REQUIRED",
-    "PROVIDER_TERMS_AND_RETENTION_RECEIPTS_REQUIRED",
-    "V2_CATALOG_AND_PAIR_SET_NOT_YET_MATERIALIZED"
+    "PROVIDER_TERMS_AND_RETENTION_RECEIPTS_REQUIRED"
   ],
+  "v2_materialized": true,
+  "v2_catalog_sha256": "94e6d3e530670842f03a2d2cfd8570842aa175235efb969ad4c0c12d07bb6c96",
+  "v2_pair_set_sha256": "cd55ccc11246a88b75093cdf5ae1f412b335b76377105d6b3d243c2d8d8ff9b3",
+  "v2_episode_count": 135,
+  "v2_matched_control_count": 129,
   "hypothesis_testing_active": false,
   "outcome_scoring_active": false,
   "paid_historical_api_calls_authorized": false,
   "raw_provider_values_public_repo_allowed": false,
   "source_states": {
-    "SC01_OKX_ETH_OI_HOURLY_V1": "FROZEN_NOT_ACTIVE",
-    "SC03_OKX_ETH_REALIZED_FUNDING_V1": "FROZEN_NOT_ACTIVE",
-    "SC06_BINANCE_ETH_BOOK_DEPTH_V1": "FROZEN_NOT_ACTIVE",
-    "SC14_DERIBIT_ETH_TRUE_25D_SKEW_V1": "FROZEN_NOT_ACTIVE"
+    "SC01_OKX_ETH_OI_HOURLY_V1": "FROZEN_BLOCKED_PRIVATE_STORAGE_AND_TERMS",
+    "SC03_OKX_ETH_REALIZED_FUNDING_V1": "FROZEN_BLOCKED_PRIVATE_STORAGE_AND_TERMS",
+    "SC06_BINANCE_ETH_BOOK_DEPTH_V1": "FROZEN_BLOCKED_PRIVATE_STORAGE_AND_TERMS",
+    "SC14_DERIBIT_ETH_TRUE_25D_SKEW_V1": "FROZEN_BLOCKED_PRIVATE_STORAGE_AND_TERMS"
   },
-  "next_gate": "MERGE_CONTRACT_FREEZE_THEN_MATERIALIZE_V2_LABELS_AND_CONFIGURE_PRIVATE_COLLECTION_ZONE",
+  "next_gate": "CONFIGURE_PRIVATE_COLLECTION_ZONE_AND_PROVIDER_TERMS_RECEIPTS",
   "authority": {
     "research_only": true,
     "canonical_market_state": false,
