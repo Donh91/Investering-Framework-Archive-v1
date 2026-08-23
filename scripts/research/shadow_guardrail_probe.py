@@ -10,6 +10,7 @@ from typing import Any, Dict, Iterable, List
 ROOT = Path(__file__).resolve().parents[2]
 
 ALLOWED_EXACT = {
+    "06_RESEARCH_LAB/protocols/README.md",
     "06_RESEARCH_LAB/protocols/SHADOW_IDEA_ADMISSION_RULE_v1.md",
     "06_RESEARCH_LAB/protocols/SHADOW_IDEA_ADMISSION_TEMPLATE_v1.json",
     ".github/workflows/buildwithclaude-shadow-round1.yml",
@@ -100,6 +101,7 @@ def evaluate_paths(paths: Iterable[str]) -> Dict[str, Any]:
 
 def self_test() -> Dict[str, Any]:
     allowed = [
+        "06_RESEARCH_LAB/protocols/README.md",
         "06_RESEARCH_LAB/buildwithclaude_shadow_round1_v1/ROUND_CONTRACT.md",
         "scripts/research/shadow_property_invariant_probe.py",
         ".github/workflows/buildwithclaude-shadow-round1.yml",
