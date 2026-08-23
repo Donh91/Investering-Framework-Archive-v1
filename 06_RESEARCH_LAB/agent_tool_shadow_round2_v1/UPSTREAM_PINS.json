@@ -1,0 +1,117 @@
+{
+  "contract": "AGENT_TOOL_SHADOW_ROUND2_UPSTREAM_PINS_v1",
+  "captured_at_utc": "2026-08-23T19:58:00Z",
+  "pins": [
+    {
+      "id": "GRAFT",
+      "repository": "NanoNets/Graft",
+      "source_main_observed_sha": "65a76e5edd4098e0c7f4749d1e87f15ed741d069",
+      "package_manager": "npm",
+      "package": "@nanonets/graft",
+      "version": "0.8.2",
+      "stage_a_mode": "STRUCTURAL_ONLY",
+      "required_environment": {
+        "CI": "1",
+        "DO_NOT_TRACK": "1"
+      },
+      "allowed_commands": [
+        "graft --version",
+        "graft build",
+        "graft map",
+        "graft grep",
+        "graft callers",
+        "graft check"
+      ],
+      "forbidden_capabilities": [
+        "graft init",
+        "deep LLM build",
+        "agent wiring",
+        "provider/model calls",
+        "telemetry opt-in"
+      ]
+    },
+    {
+      "id": "CODEBASE_MEMORY",
+      "repository": "DeusData/codebase-memory-mcp",
+      "source_main_observed_sha": "010569fa6ce1bc5d6430f858129243ea1a2e3fd5",
+      "package_manager": "pip",
+      "package": "codebase-memory-mcp",
+      "version": "0.8.1",
+      "stage_a_mode": "ONE_SHOT_CLI_ONLY",
+      "required_environment": {
+        "CBM_ALLOWED_ROOT": "<fixture-root>",
+        "CBM_CACHE_DIR": "<runner-temp-cache>"
+      },
+      "allowed_commands": [
+        "codebase-memory-mcp --version",
+        "codebase-memory-mcp cli index_repository",
+        "codebase-memory-mcp cli list_projects",
+        "codebase-memory-mcp cli search_graph",
+        "codebase-memory-mcp cli trace_call_path",
+        "codebase-memory-mcp cli get_architecture"
+      ],
+      "forbidden_capabilities": [
+        "install",
+        "update",
+        "uninstall",
+        "MCP server",
+        "daemon",
+        "watcher",
+        "UI",
+        "auto_index",
+        "agent config writes"
+      ]
+    },
+    {
+      "id": "INSPECT_AI",
+      "repository": "UKGovernmentBEIS/inspect_ai",
+      "source_main_observed_sha": "0db4111e733334f88c5dcfa6eb635e0f846e7223",
+      "package_manager": "pip",
+      "package": "inspect-ai",
+      "version": "0.3.258",
+      "stage_a_mode": "LOCAL_CONTRACT_CONSTRUCTION_ONLY",
+      "allowed_capabilities": [
+        "import package",
+        "construct Task",
+        "construct Sample",
+        "construct scorer",
+        "CLI version/help"
+      ],
+      "forbidden_capabilities": [
+        "eval run",
+        "model call",
+        "provider credential",
+        "remote sandbox"
+      ]
+    },
+    {
+      "id": "PROMPTFOO",
+      "repository": "promptfoo/promptfoo",
+      "source_main_observed_sha": "679e7ecb64a2e09042b009b549b81dc0d0b983bb",
+      "package_manager": "npm",
+      "package": "promptfoo",
+      "version": "0.122.0",
+      "stage_a_mode": "LOCAL_CONFIG_VALIDATION_ONLY",
+      "required_environment": {
+        "CI": "1",
+        "PROMPTFOO_DISABLE_TELEMETRY": "1",
+        "PROMPTFOO_DISABLE_UPDATE": "1",
+        "PROMPTFOO_DISABLE_REMOTE_GENERATION": "1",
+        "PROMPTFOO_DISABLE_REDTEAM_REMOTE_GENERATION": "1",
+        "PROMPTFOO_DISABLE_SHARING": "1"
+      },
+      "allowed_commands": [
+        "promptfoo --version",
+        "promptfoo validate -c <config>"
+      ],
+      "forbidden_capabilities": [
+        "promptfoo eval",
+        "promptfoo redteam run",
+        "validate target",
+        "provider/model calls",
+        "sharing",
+        "hosted generation"
+      ]
+    }
+  ]
+}
