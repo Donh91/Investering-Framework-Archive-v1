@@ -95,6 +95,9 @@ def main():
     status = load('COLLECTION_STATUS.json')
     binding = load('PRIVATE_DATA_PLANE_BINDING_RECEIPT.json')
     terms = load('PROVIDER_TERMS_AND_RETENTION_BOUNDARY_RECEIPT.json')
+    activation = load('PRIVATE_COLLECTION_ACTIVATION_RECEIPT.json')
+    hold = load('PRIVATE_COLLECTION_HOLD_RECEIPT_2026-08-23.json')
+    terms_requirements = load('PROVIDER_TERMS_EVIDENCE_REQUIREMENTS_v1.json')
     legacy = json.loads(LEGACY.read_text())
 
     assert acceptance['decision'] == 'CONDITIONAL_ACCEPT_FOR_CONTRACT_FREEZE_AND_PROSPECTIVE_COLLECTION_ONLY'
@@ -171,6 +174,55 @@ def main():
     assert terms['hypothesis_testing_authorized'] is False
     assert terms['outcome_scoring_authorized'] is False
 
+    # The activation and provider-boundary receipts are historical records. The
+    # current hold receipt supersedes their runtime state without rewriting them.
+    assert activation['contract'] == 'ROUND3_PRIVATE_COLLECTION_ACTIVATION_RECEIPT_v1'
+    assert activation['restricted_repository'] == 'Donh91/secrets'
+    assert activation['restricted_private_collection_active'] is True
+    assert activation['hypothesis_testing_active'] is False
+    assert activation['outcome_scoring_active'] is False
+    assert activation['market_values_in_public_receipt'] is False
+    assert status['restricted_collection_activation_commit'] == activation['private_activation_commit']
+    assert status['restricted_canary_receipt_commit'] == activation['private_canary_receipt_commit']
+    assert status['restricted_canary_workflow_run_id'] == activation['private_canary_workflow_run_id']
+
+    assert hold['contract'] == 'ROUND3_PRIVATE_COLLECTION_HOLD_RECEIPT_v1'
+    assert hold['restricted_repository'] == 'Donh91/secrets'
+    assert hold['historical_activation_receipt_preserved'] == 'PRIVATE_COLLECTION_ACTIVATION_RECEIPT.json'
+    assert hold['current_collection_active'] is False
+    assert hold['private_terms_and_provenance_hold_merge_commit'] == status['restricted_terms_and_provenance_hold_commit']
+    assert hold['private_health_readback_merge_commit'] == status['restricted_health_readback_commit']
+    assert hold['private_health_readback_workflow_run_id'] == status['restricted_health_workflow_run_id']
+    assert hold['private_health_contract'] == status['restricted_health_contract']
+    assert hold['raw_file_count'] == status['restricted_raw_file_count'] == 11
+    assert hold['integrity_valid_file_count'] == status['restricted_integrity_valid_file_count'] == 11
+    assert hold['invalid_or_orphan_file_count'] == status['restricted_invalid_or_orphan_file_count'] == 0
+    assert hold['legacy_provenance_quarantine_count'] == status['restricted_legacy_provenance_quarantine_count'] == 11
+    assert hold['schema_v2_capture_count'] == status['restricted_schema_v2_capture_count'] == 0
+    assert hold['dataset_manifest_sha256'] == status['restricted_dataset_manifest_sha256']
+    assert hold['existing_raw_captures_rewritten'] is False
+    assert hold['existing_raw_captures_deleted'] is False
+    assert hold['provider_values_in_public_receipt'] is False
+    assert hold['analysis_authorized'] is False
+    assert hold['hypothesis_testing_active'] is False
+    assert hold['outcome_scoring_active'] is False
+    assert hold['reactivation_requires_separate_reviewed_pull_request'] is True
+
+    assert terms_requirements['contract'] == 'ROUND3_PROVIDER_TERMS_EVIDENCE_REQUIREMENTS_v1'
+    assert terms_requirements['status'] == 'HOLD_PENDING_APPLICABLE_TERMS_ATTESTATION'
+    assert terms_requirements['formal_legal_opinion_asserted'] is False
+    assert terms_requirements['legal_conclusion_asserted'] is False
+    assert terms_requirements['collection_activation_authorized'] is False
+    assert terms_requirements['analysis_authorized'] is False
+    assert len(terms_requirements['official_references_reviewed']) == 3
+    assert all(ref['url'].startswith('https://') for ref in terms_requirements['official_references_reviewed'])
+    assert all(state != 'COMPLETE' for state in terms_requirements['required_evidence'].values())
+    assert terms_requirements['activation_gate']['all_required_evidence_complete'] is False
+    assert terms_requirements['activation_gate']['separate_reviewed_reactivation_pull_request_required'] is True
+    assert terms_requirements['activation_gate']['first_post_reactivation_capture_must_use_schema_v2'] is True
+    assert terms_requirements['activation_gate']['health_only_validation_before_any_analysis'] is True
+    assert terms_requirements['activation_gate']['provider_values_public_repo_allowed'] is False
+
     assert schema['public_repo_rows_forbidden'] is True
     assert schema['missingness']['missing_is_zero'] is False
     assert schema['missingness']['forward_fill_forbidden'] is True
@@ -178,21 +230,29 @@ def main():
     assert change['closed_evidence_firewall']['round1_reopened'] is False
     assert change['closed_evidence_firewall']['round2_reopened'] is False
 
-    # Public control plane remains non-collecting. Restricted private collection
-    # may be active independently, but hypothesis testing/outcome scoring remain OFF.
+    # Both public and private collection lanes are fail-closed in current state.
     assert status['collection_active'] is False
     assert status['public_framework_collection_active'] is False
-    assert status['restricted_private_collection_active'] is True
+    assert status['restricted_private_collection_active'] is False
     assert status['hypothesis_testing_active'] is False
     assert status['outcome_scoring_active'] is False
     assert status['paid_historical_api_calls_authorized'] is False
+    assert status['restricted_analysis_authorized'] is False
     assert status['restricted_data_plane'] == 'Donh91/secrets'
-    assert status['restricted_canary_result'] == 'PASS'
+    assert status['programme_status'] == 'CONTRACT_FROZEN_V2_MATERIALIZED_PRIVATE_COLLECTION_HOLD_TERMS_AND_PROVENANCE'
+    assert status['restricted_canary_result'] == 'PASS_HISTORICAL_COLLECTION_HEALTH_ONLY'
     assert status['restricted_canary_workflow_run_id'] == 32633097190
-    assert status['source_states']['SC01_OKX_ETH_OI_HOURLY_V1'] == 'PRIVATE_PROSPECTIVE_COLLECTION_ACTIVE'
-    assert status['source_states']['SC03_OKX_ETH_REALIZED_FUNDING_V1'] == 'PRIVATE_PROSPECTIVE_COLLECTION_ACTIVE'
-    assert status['source_states']['SC14_DERIBIT_ETH_TRUE_25D_SKEW_V1'] == 'PRIVATE_PROSPECTIVE_COLLECTION_ACTIVE'
-    assert status['source_states']['SC06_BINANCE_ETH_BOOK_DEPTH_V1'] == 'FROZEN_CANARY_ONLY_PERSISTENT_RUNTIME_REQUIRED'
+    assert status['source_states'] == {
+        'SC01_OKX_ETH_OI_HOURLY_V1': 'PRIVATE_COLLECTION_HOLD_TERMS_ATTESTATION_AND_PROVENANCE_V2',
+        'SC03_OKX_ETH_REALIZED_FUNDING_V1': 'PRIVATE_COLLECTION_HOLD_TERMS_ATTESTATION_AND_PROVENANCE_V2',
+        'SC06_BINANCE_ETH_BOOK_DEPTH_V1': 'FROZEN_TERMS_HOLD_AND_PERSISTENT_RUNTIME_REQUIRED',
+        'SC14_DERIBIT_ETH_TRUE_25D_SKEW_V1': 'PRIVATE_COLLECTION_HOLD_TERMS_ATTESTATION_AND_PROVENANCE_V2',
+    }
+    assert status['next_gate'] == 'COMPLETE_PROVIDER_TERMS_ATTESTATION_THEN_SEPARATE_REVIEWED_REACTIVATION_AND_FIRST_SCHEMA_V2_HEALTH_ONLY_CAPTURE'
+
+    materializer = Path('scripts/research/materialize_round3_v2_labels.py').read_text()
+    assert "status['next_gate']" not in materializer
+    assert 'status["next_gate"]' not in materializer
 
     validate_materialized_v2(status)
 
