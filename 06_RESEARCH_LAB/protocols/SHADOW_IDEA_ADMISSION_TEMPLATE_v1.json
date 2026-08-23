@@ -1,0 +1,54 @@
+{
+  "contract_id": "SHADOW_IDEA_ADMISSION_v1",
+  "default_state": "SHADOW_CANDIDATE",
+  "candidate": {
+    "id": null,
+    "name": null,
+    "type": null,
+    "origin": null,
+    "problem_to_solve": null,
+    "existing_capability_overlap": null
+  },
+  "pre_result_plan": {
+    "baseline": null,
+    "incremental_value_claim": null,
+    "success_criteria": [],
+    "failure_criteria": [],
+    "rollback_criteria": [],
+    "prospective_evidence_required": null
+  },
+  "complexity_tax": {
+    "maintenance": null,
+    "dependencies": null,
+    "api_or_token_cost": null,
+    "latency": null,
+    "source_fragility": null,
+    "security_privacy": null,
+    "governance_burden": null,
+    "correlated_failure_risk": null
+  },
+  "adversarial_checks": {
+    "leakage": null,
+    "redundancy": null,
+    "stale_or_missing_data": null,
+    "dependency_failure": null,
+    "malformed_output": null,
+    "fail_closed": null
+  },
+  "decision": {
+    "classification": "SHADOW_CANDIDATE",
+    "measurably_better_after_complexity_tax": null,
+    "evidence_summary": null,
+    "review_required_before_canonical_promotion": true
+  },
+  "allowed_classifications": [
+    "ARCHIVE_ONLY",
+    "SHADOW_CANDIDATE",
+    "SHADOW_TESTING",
+    "FORWARD_TEST",
+    "OPERATIONAL_HELPER",
+    "CANONICAL_CANDIDATE",
+    "CANONICAL",
+    "RETIRED"
+  ]
+}
