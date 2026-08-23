@@ -1,0 +1,65 @@
+name: Historical Altseason CFGI Recovery Terminal Guard
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/cfgi-recovery-launch-once.yml'
+      - '00_ARCHIVE_CONTROL/research_runtime/CFGI_MARKET_PROVIDER_TERMINAL_RECEIPT.json'
+      - '06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/RESEARCH_READINESS_MANIFEST.json'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: historical-altseason-cfgi-terminal-guard
+  cancel-in-progress: false
+
+jobs:
+  verify-terminal-state:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify terminal provider-bounded state and prohibit paid retry
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          terminal = json.loads(Path('00_ARCHIVE_CONTROL/research_runtime/CFGI_MARKET_PROVIDER_TERMINAL_RECEIPT.json').read_text())
+          manifest = json.loads(Path('06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/RESEARCH_READINESS_MANIFEST.json').read_text())
+          ledger = json.loads(Path('00_ARCHIVE_CONTROL/research_runtime/HISTORICAL_ALTSEASON_CFGI_PAID_ATTEMPT_LEDGER.json').read_text())
+          auth = json.loads(Path('00_ARCHIVE_CONTROL/research_runtime/HISTORICAL_ALTSEASON_CFGI_MARKET_GAPFILL_AUTHORIZATION.json').read_text())
+
+          assert terminal['contract'] == 'CFGI_MARKET_PROVIDER_TERMINAL_RECEIPT_v1'
+          assert terminal['status'] == 'TERMINAL_PROVIDER_NO_HISTORICAL_ROWS'
+          assert terminal['requested_symbols'] == ['MARKET']
+          assert terminal['returned_symbols'] == []
+          assert terminal['no_additional_paid_retry_authorized'] is True
+          assert terminal['no_fill'] is True
+          assert terminal['no_interpolation'] is True
+          assert terminal['no_proxy_substitution'] is True
+
+          assert manifest['contract'] == 'RESEARCH_READINESS_MANIFEST_v3_1_PROVIDER_BOUNDED'
+          assert manifest['readiness_verdict'] == 'PASS'
+          assert manifest['blockers'] == []
+          assert manifest['cfgi']['market_historical_availability'] == 'NOT_TESTABLE_PROVIDER_UNAVAILABLE'
+          assert 'MARKET' in manifest['cfgi']['provider_unavailable_symbols']
+          assert manifest['cfgi']['no_lookahead'] is True
+
+          assert ledger['automatic_retry_after_failure'] is False
+          assert auth['automatic_retry_after_failure'] is False
+          assert auth['max_attempts'] == 1
+          assert auth['allowed_symbols'] == ['MARKET']
+
+          print('CFGI_TERMINAL_PROVIDER_STATE_PASS')
+          print('PAID_RETRY_DISPATCH_DISABLED')
+          PY
