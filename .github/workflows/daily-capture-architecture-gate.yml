@@ -125,10 +125,10 @@ jobs:
           sequential=json.loads(Path('research/experiment_lifecycle/SEQUENTIAL_RESEARCH_QUEUE_v1.json').read_text())
           deep=json.loads(Path('research/api_agent/deep_research/DEEP_RESEARCH_QUEUE_v1.json').read_text())
 
-          # Source-appropriate cadence: 6 tactical live anchors, 2 regular hourly materializations
-          # plus one final Monday catch-up, 2 weekly builds, one settled ETF owner check.
+          # Source-appropriate cadence: 6 tactical live-anchor schedule entries,
+          # one compact 4x/day hourly cron entry plus one Monday catch-up, 2 weekly builds and one settled ETF owner check.
           assert daily.count("timezone: 'Europe/Copenhagen'")==6
-          assert hourly.count("timezone: 'Europe/Copenhagen'")==3
+          assert hourly.count("timezone: 'Europe/Copenhagen'")==2
           assert weekly.count("timezone: 'Europe/Copenhagen'")==2
           assert etf.count("timezone: 'Europe/Copenhagen'")==1
 
