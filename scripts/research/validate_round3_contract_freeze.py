@@ -150,6 +150,7 @@ def main():
     assert zone['restricted_data_plane']['raw_provider_payloads_allowed'] is True
     assert zone['restricted_data_plane']['credentials_in_git_forbidden'] is True
     assert zone['github_storage_audit']['suitable_private_repository_found'] is True
+    assert zone['activation_gate']['provider_calls_from_round3_collection_before_pass'] is False
     assert zone['activation_gate']['collection_workflow_may_be_scheduled_after_pass'] is True
     assert zone['activation_gate']['hypothesis_testing_after_pass'] is False
     assert zone['activation_gate']['outcome_scoring_after_pass'] is False
@@ -177,15 +178,20 @@ def main():
     assert change['closed_evidence_firewall']['round1_reopened'] is False
     assert change['closed_evidence_firewall']['round2_reopened'] is False
 
+    # Public control plane remains non-collecting. Restricted private collection
+    # may be active independently, but hypothesis testing/outcome scoring remain OFF.
     assert status['collection_active'] is False
+    assert status['public_framework_collection_active'] is False
+    assert status['restricted_private_collection_active'] is True
     assert status['hypothesis_testing_active'] is False
     assert status['outcome_scoring_active'] is False
     assert status['paid_historical_api_calls_authorized'] is False
     assert status['restricted_data_plane'] == 'Donh91/secrets'
-    assert 'PRIVATE_STORAGE_REQUIRED' not in status['blockers']
-    assert status['source_states']['SC01_OKX_ETH_OI_HOURLY_V1'] == 'FROZEN_PRIVATE_CANARY_READY'
-    assert status['source_states']['SC03_OKX_ETH_REALIZED_FUNDING_V1'] == 'FROZEN_PRIVATE_CANARY_READY'
-    assert status['source_states']['SC14_DERIBIT_ETH_TRUE_25D_SKEW_V1'] == 'FROZEN_PRIVATE_CANARY_READY'
+    assert status['restricted_canary_result'] == 'PASS'
+    assert status['restricted_canary_workflow_run_id'] == 32633097190
+    assert status['source_states']['SC01_OKX_ETH_OI_HOURLY_V1'] == 'PRIVATE_PROSPECTIVE_COLLECTION_ACTIVE'
+    assert status['source_states']['SC03_OKX_ETH_REALIZED_FUNDING_V1'] == 'PRIVATE_PROSPECTIVE_COLLECTION_ACTIVE'
+    assert status['source_states']['SC14_DERIBIT_ETH_TRUE_25D_SKEW_V1'] == 'PRIVATE_PROSPECTIVE_COLLECTION_ACTIVE'
     assert status['source_states']['SC06_BINANCE_ETH_BOOK_DEPTH_V1'] == 'FROZEN_CANARY_ONLY_PERSISTENT_RUNTIME_REQUIRED'
 
     validate_materialized_v2(status)
@@ -194,7 +200,8 @@ def main():
     print('PRIMARY_COUNT', hyps['primary_count'])
     print('GLOBAL_FWER_ALPHA', hyps['global_family']['familywise_alpha'])
     print('V2_CAP_HOURS', v2['v2_episode_rule']['closure_cap_hours_after_trigger'])
-    print('COLLECTION_ACTIVE', status['collection_active'])
+    print('PUBLIC_COLLECTION_ACTIVE', status['collection_active'])
+    print('PRIVATE_COLLECTION_ACTIVE', status['restricted_private_collection_active'])
     print('RESTRICTED_DATA_PLANE', zone['restricted_data_plane']['repository'])
     print('RAW_PUBLIC_STORAGE', zone['canonical_framework_repo']['raw_provider_payloads_allowed'])
 
