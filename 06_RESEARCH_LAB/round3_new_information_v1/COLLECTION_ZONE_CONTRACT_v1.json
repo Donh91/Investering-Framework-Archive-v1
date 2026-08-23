@@ -1,9 +1,9 @@
 {
   "contract": "ROUND3_COLLECTION_ZONE_CONTRACT_v1",
-  "status": "BLOCKED_PRIVATE_STORAGE_REQUIRED",
+  "status": "PRIVATE_DATA_PLANE_BOUND_COLLECTION_ONLY",
   "canonical_framework_repo": {
     "repository": "Donh91/Investering-Framework-Archive-v1",
-    "visibility_at_freeze": "PUBLIC",
+    "visibility_at_binding": "PUBLIC",
     "raw_provider_payloads_allowed": false,
     "normalized_provider_market_values_allowed": false,
     "permitted_public_outputs": [
@@ -17,7 +17,26 @@
       "schema_fingerprints",
       "mapping_versions",
       "provider_value_free_health_receipts",
+      "cross_repo_pointers",
       "research_decisions"
+    ]
+  },
+  "restricted_data_plane": {
+    "repository": "Donh91/secrets",
+    "visibility_verified": "PRIVATE",
+    "binding_seed_commit": "4733e058ce65883caf289899e965e11a55d3bd26",
+    "raw_provider_payloads_allowed": true,
+    "private_normalized_provider_values_allowed": true,
+    "credentials_in_git_forbidden": true,
+    "credentials_location": "GITHUB_ACTIONS_SECRETS_OR_APPROVED_SECRET_MANAGER",
+    "required_paths": [
+      "README.md",
+      "GOVERNANCE/PRIVATE_DATA_BOUNDARY.md",
+      "GOVERNANCE/ROUND3_SOURCE_BINDINGS.json",
+      "GOVERNANCE/COLLECTION_ACTIVATION.json",
+      "schemas/raw_capture_envelope.schema.json",
+      "collectors/collect_round3_source.py",
+      "health/validate_private_collection.py"
     ]
   },
   "private_zone_requirements": {
@@ -28,30 +47,47 @@
     "collector_git_sha_required": true,
     "event_and_availability_timestamps_required": true,
     "schema_and_mapping_version_required": true,
-    "provider_terms_review_required_before_activation": true,
-    "retention_must_not_exceed_verified_provider_rights": true,
+    "provider_terms_boundary_must_be_recorded": true,
+    "retention_must_follow_current_provider_rights": true,
     "public_ci_logs_may_not_emit_provider_values": true
   },
+  "cross_repo_binding_requirements": [
+    "private_repository",
+    "private_commit_sha_reachable_from_main",
+    "exact_path",
+    "bytes",
+    "sha256",
+    "source_contract_id",
+    "provider",
+    "venue",
+    "instrument_id",
+    "schema_version",
+    "retrieval_start_utc",
+    "retrieval_end_utc",
+    "availability_at_utc",
+    "completeness_status"
+  ],
   "activation_gate": {
     "private_destination_identifier_required": true,
     "destination_access_test_required": true,
-    "provider_terms_receipt_required_for_each_primary": true,
-    "collection_workflow_may_be_scheduled_before_pass": false,
-    "provider_calls_from_round3_collection_before_pass": false
+    "provider_terms_boundary_receipt_required_for_each_primary": true,
+    "collection_workflow_may_be_scheduled_after_pass": true,
+    "provider_calls_from_round3_collection_after_pass": true,
+    "hypothesis_testing_after_pass": false,
+    "outcome_scoring_after_pass": false
   },
-  "currently_discovered_github_storage": {
-    "suitable_private_repository_found": false,
-    "accessible_owner_repositories_checked": [
-      "Donh91/Investering-Framework-Archive-v1",
-      "Donh91/Eksperimenter-framework-",
-      "Donh91/Cycle-navigator-"
-    ],
-    "all_checked_repositories_public": true
+  "github_storage_audit": {
+    "suitable_private_repository_found": true,
+    "repository": "Donh91/secrets",
+    "private_visibility_verified_via_github_connector": true,
+    "prior_name": "Donh91/Cycle-navigator-",
+    "canonical_framework_repo_remains_separate": true
   },
   "authority": {
     "research_only": true,
     "paid_historical_data_authorized": false,
     "hypothesis_testing_authorized": false,
+    "outcome_scoring_authorized": false,
     "portfolio_execution": false
   }
 }
