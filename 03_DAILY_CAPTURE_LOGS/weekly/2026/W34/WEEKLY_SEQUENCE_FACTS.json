@@ -1,0 +1,226 @@
+{
+  "authority": "SHADOW_CALIBRATION_INPUT_ONLY",
+  "contract": "WEEKLY_SEQUENCE_FACTS_v1",
+  "day_window_actuals": {
+    "basis": "UTC_ISO_WEEK",
+    "windows": {
+      "DAY1_2": {
+        "btc": {
+          "close": 64725.42,
+          "high": 65058.81,
+          "low": 62751.1,
+          "open": 62900.0
+        },
+        "eth": {
+          "close": 1917.85,
+          "high": 1923.27,
+          "low": 1872.46,
+          "open": 1876.01
+        },
+        "ethbtc": {
+          "close": 0.02963,
+          "high": 0.03005,
+          "low": 0.02945,
+          "open": 0.02983
+        },
+        "observed_hours": 48,
+        "window_end_utc": "2026-08-19T00:00:00Z",
+        "window_start_utc": "2026-08-17T00:00:00Z"
+      },
+      "DAY3_4": {
+        "btc": {
+          "close": 73025.15,
+          "high": 73400.0,
+          "low": 64166.0,
+          "open": 64725.42
+        },
+        "eth": {
+          "close": 2326.82,
+          "high": 2360.0,
+          "low": 1906.0,
+          "open": 1917.85
+        },
+        "ethbtc": {
+          "close": 0.03187,
+          "high": 0.03342,
+          "low": 0.02957,
+          "open": 0.02963
+        },
+        "observed_hours": 48,
+        "window_end_utc": "2026-08-21T00:00:00Z",
+        "window_start_utc": "2026-08-19T00:00:00Z"
+      },
+      "DAY5_7": {
+        "btc": {
+          "close": 77156.13,
+          "high": 79500.0,
+          "low": 73027.02,
+          "open": 73027.02
+        },
+        "eth": {
+          "close": 2438.62,
+          "high": 2546.78,
+          "low": 2324.99,
+          "open": 2326.83
+        },
+        "ethbtc": {
+          "close": 0.03161,
+          "high": 0.03238,
+          "low": 0.0307,
+          "open": 0.03187
+        },
+        "observed_hours": 64,
+        "window_end_utc": "2026-08-24T00:00:00Z",
+        "window_start_utc": "2026-08-21T00:00:00Z"
+      }
+    }
+  },
+  "forecast_evaluation_performed": false,
+  "forward_fill": false,
+  "gap_diagnostics": {
+    "expected_hours": 168,
+    "max_contiguous_gap_hours": 8,
+    "missing_hour_count": 8,
+    "missing_hours_utc": [
+      "2026-08-23T16:00:00Z",
+      "2026-08-23T17:00:00Z",
+      "2026-08-23T18:00:00Z",
+      "2026-08-23T19:00:00Z",
+      "2026-08-23T20:00:00Z",
+      "2026-08-23T21:00:00Z",
+      "2026-08-23T22:00:00Z",
+      "2026-08-23T23:00:00Z"
+    ],
+    "observed_hours": 160,
+    "per_field_completeness": {
+      "btc_close": {
+        "complete_hours": 160,
+        "coverage_pct": 95.238
+      },
+      "btc_long_short_ratio": {
+        "complete_hours": 160,
+        "coverage_pct": 95.238
+      },
+      "btc_open_interest": {
+        "complete_hours": 160,
+        "coverage_pct": 95.238
+      },
+      "btc_quote_volume": {
+        "complete_hours": 160,
+        "coverage_pct": 95.238
+      },
+      "btc_taker_buy_quote_share": {
+        "complete_hours": 160,
+        "coverage_pct": 95.238
+      },
+      "btc_trade_count": {
+        "complete_hours": 160,
+        "coverage_pct": 95.238
+      },
+      "eth_close": {
+        "complete_hours": 160,
+        "coverage_pct": 95.238
+      },
+      "eth_long_short_ratio": {
+        "complete_hours": 160,
+        "coverage_pct": 95.238
+      },
+      "eth_open_interest": {
+        "complete_hours": 160,
+        "coverage_pct": 95.238
+      },
+      "eth_quote_volume": {
+        "complete_hours": 160,
+        "coverage_pct": 95.238
+      },
+      "eth_taker_buy_quote_share": {
+        "complete_hours": 160,
+        "coverage_pct": 95.238
+      },
+      "eth_trade_count": {
+        "complete_hours": 160,
+        "coverage_pct": 95.238
+      },
+      "ethbtc_close": {
+        "complete_hours": 160,
+        "coverage_pct": 95.238
+      }
+    }
+  },
+  "generated_at_utc": "2026-08-23T21:56:50Z",
+  "interpolation": false,
+  "iso_week": 34,
+  "iso_year": 2026,
+  "latest_rolling_features": {
+    "btc_oi_change_12h_pct": "-0.956906799384",
+    "btc_oi_change_24h_pct": "-0.6357739213",
+    "btc_oi_change_48h_pct": "-1.75523937508",
+    "btc_oi_change_4h_pct": "-0.752502290947",
+    "btc_oi_change_72h_pct": "-0.812780612467",
+    "btc_return_12h_pct": "0.296719511407",
+    "btc_return_24h_pct": "0.230323064146",
+    "btc_return_48h_pct": "-0.085273648772",
+    "btc_return_4h_pct": "-0.200346600006",
+    "btc_return_72h_pct": "6.46508395171",
+    "eth_minus_btc_return_12h_pct": "0.724001455626",
+    "eth_minus_btc_return_24h_pct": "0.919455027023",
+    "eth_minus_btc_return_48h_pct": "1.96399443084",
+    "eth_minus_btc_return_4h_pct": "0.403331380257",
+    "eth_minus_btc_return_72h_pct": "-1.64177249758",
+    "eth_oi_change_12h_pct": "-0.53083888898",
+    "eth_oi_change_24h_pct": "0.0891106498158",
+    "eth_oi_change_48h_pct": "0.870665318296",
+    "eth_oi_change_4h_pct": "-3.32560420404",
+    "eth_oi_change_72h_pct": "1.06552444311",
+    "eth_return_12h_pct": "1.02072096703",
+    "eth_return_24h_pct": "1.14977809117",
+    "eth_return_48h_pct": "1.87872078207",
+    "eth_return_4h_pct": "0.20298478025",
+    "eth_return_72h_pct": "4.82331145413",
+    "ethbtc_return_12h_pct": "0.732950924156",
+    "ethbtc_return_24h_pct": "0.925925925926",
+    "ethbtc_return_48h_pct": "1.96774193548",
+    "ethbtc_return_4h_pct": "0.412960609911",
+    "ethbtc_return_72h_pct": "-1.52647975078"
+  },
+  "market_interpretation": false,
+  "settled_etf": {
+    "authority": "SHADOW_CALIBRATION_INPUT_ONLY",
+    "contract": "WEEKLY_SETTLED_ETF_CALIBRATION_v1",
+    "records": [
+      {
+        "BTC": 297.5,
+        "ETH": 30.9,
+        "session_date": "2026-08-17"
+      },
+      {
+        "BTC": 189.3,
+        "ETH": 71.4,
+        "session_date": "2026-08-18"
+      },
+      {
+        "BTC": 517.2,
+        "ETH": 186.8,
+        "session_date": "2026-08-19"
+      },
+      {
+        "BTC": 606.3,
+        "ETH": 219.5,
+        "session_date": "2026-08-20"
+      },
+      {
+        "BTC": 307.5,
+        "ETH": 184.0,
+        "session_date": "2026-08-21"
+      }
+    ],
+    "session_counts": {
+      "BTC": 5,
+      "ETH": 5
+    },
+    "week_total_reported_units": {
+      "BTC": 1917.8,
+      "ETH": 692.6
+    }
+  }
+}

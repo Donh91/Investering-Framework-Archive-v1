@@ -1,0 +1,337 @@
+{
+  "authority": "SHADOW_CALIBRATION_INPUT_ONLY",
+  "capture_count": 37,
+  "capture_status_counts": {
+    "COMPLETE": 37
+  },
+  "contract": "WEEKLY_RAW_CALIBRATION_PACK_v3",
+  "day_window_actuals": {
+    "basis": "UTC_ISO_WEEK",
+    "windows": {
+      "DAY1_2": {
+        "btc": {
+          "close": 64725.42,
+          "high": 65058.81,
+          "low": 62751.1,
+          "open": 62900.0
+        },
+        "eth": {
+          "close": 1917.85,
+          "high": 1923.27,
+          "low": 1872.46,
+          "open": 1876.01
+        },
+        "ethbtc": {
+          "close": 0.02963,
+          "high": 0.03005,
+          "low": 0.02945,
+          "open": 0.02983
+        },
+        "observed_hours": 48,
+        "window_end_utc": "2026-08-19T00:00:00Z",
+        "window_start_utc": "2026-08-17T00:00:00Z"
+      },
+      "DAY3_4": {
+        "btc": {
+          "close": 73025.15,
+          "high": 73400.0,
+          "low": 64166.0,
+          "open": 64725.42
+        },
+        "eth": {
+          "close": 2326.82,
+          "high": 2360.0,
+          "low": 1906.0,
+          "open": 1917.85
+        },
+        "ethbtc": {
+          "close": 0.03187,
+          "high": 0.03342,
+          "low": 0.02957,
+          "open": 0.02963
+        },
+        "observed_hours": 48,
+        "window_end_utc": "2026-08-21T00:00:00Z",
+        "window_start_utc": "2026-08-19T00:00:00Z"
+      },
+      "DAY5_7": {
+        "btc": {
+          "close": 77156.13,
+          "high": 79500.0,
+          "low": 73027.02,
+          "open": 73027.02
+        },
+        "eth": {
+          "close": 2438.62,
+          "high": 2546.78,
+          "low": 2324.99,
+          "open": 2326.83
+        },
+        "ethbtc": {
+          "close": 0.03161,
+          "high": 0.03238,
+          "low": 0.0307,
+          "open": 0.03187
+        },
+        "observed_hours": 64,
+        "window_end_utc": "2026-08-24T00:00:00Z",
+        "window_start_utc": "2026-08-21T00:00:00Z"
+      }
+    }
+  },
+  "eligible_capture_count": 37,
+  "enriched_hourly_path": "weekly/2026/W34/WEEKLY_HOURLY_ENRICHED.csv",
+  "forecast_evaluation_performed": false,
+  "framework_state_change": false,
+  "generated_at_utc": "2026-08-23T21:56:50Z",
+  "handoff_targets": [
+    "RAW_WEEKLY_CALIBRATION",
+    "FORECAST_LEDGER_EVALUATION",
+    "MASTER_MONDAY_PREP",
+    "SPECIALIST_WEEKLY_REVIEW",
+    "PULLBACK_SEQUENCE_REPLAY"
+  ],
+  "hourly_gap_diagnostics": {
+    "expected_hours": 168,
+    "max_contiguous_gap_hours": 8,
+    "missing_hour_count": 8,
+    "missing_hours_utc": [
+      "2026-08-23T16:00:00Z",
+      "2026-08-23T17:00:00Z",
+      "2026-08-23T18:00:00Z",
+      "2026-08-23T19:00:00Z",
+      "2026-08-23T20:00:00Z",
+      "2026-08-23T21:00:00Z",
+      "2026-08-23T22:00:00Z",
+      "2026-08-23T23:00:00Z"
+    ],
+    "observed_hours": 160,
+    "per_field_completeness": {
+      "btc_close": {
+        "complete_hours": 160,
+        "coverage_pct": 95.238
+      },
+      "btc_long_short_ratio": {
+        "complete_hours": 160,
+        "coverage_pct": 95.238
+      },
+      "btc_open_interest": {
+        "complete_hours": 160,
+        "coverage_pct": 95.238
+      },
+      "btc_quote_volume": {
+        "complete_hours": 160,
+        "coverage_pct": 95.238
+      },
+      "btc_taker_buy_quote_share": {
+        "complete_hours": 160,
+        "coverage_pct": 95.238
+      },
+      "btc_trade_count": {
+        "complete_hours": 160,
+        "coverage_pct": 95.238
+      },
+      "eth_close": {
+        "complete_hours": 160,
+        "coverage_pct": 95.238
+      },
+      "eth_long_short_ratio": {
+        "complete_hours": 160,
+        "coverage_pct": 95.238
+      },
+      "eth_open_interest": {
+        "complete_hours": 160,
+        "coverage_pct": 95.238
+      },
+      "eth_quote_volume": {
+        "complete_hours": 160,
+        "coverage_pct": 95.238
+      },
+      "eth_taker_buy_quote_share": {
+        "complete_hours": 160,
+        "coverage_pct": 95.238
+      },
+      "eth_trade_count": {
+        "complete_hours": 160,
+        "coverage_pct": 95.238
+      },
+      "ethbtc_close": {
+        "complete_hours": 160,
+        "coverage_pct": 95.238
+      }
+    }
+  },
+  "hourly_sequence": {
+    "btc": {
+      "down_hours": 75,
+      "max_abs_return_1h_pct": 3.99068856022,
+      "max_range_1h_pct": 5.47562678322,
+      "price_oi_state_counts": {
+        "PRICE_DOWN_OI_DOWN": 31,
+        "PRICE_DOWN_OI_UP": 36,
+        "PRICE_UP_OI_DOWN": 40,
+        "PRICE_UP_OI_UP": 34,
+        "UNAVAILABLE": 19
+      },
+      "up_hours": 85,
+      "week_range": {
+        "close": 77156.13,
+        "high": 79500.0,
+        "low": 62751.1,
+        "open": 62900.0
+      }
+    },
+    "contract": "WEEKLY_HOURLY_SEQUENCE_EVIDENCE_v2",
+    "derivatives_oi_complete_hours": 160,
+    "eth": {
+      "down_hours": 78,
+      "max_abs_return_1h_pct": 5.84745762712,
+      "max_range_1h_pct": 7.50228728271,
+      "price_oi_state_counts": {
+        "PRICE_DOWN_OI_DOWN": 30,
+        "PRICE_DOWN_OI_UP": 39,
+        "PRICE_UP_OI_DOWN": 37,
+        "PRICE_UP_OI_UP": 35,
+        "UNAVAILABLE": 19
+      },
+      "up_hours": 82,
+      "week_range": {
+        "close": 2438.62,
+        "high": 2546.78,
+        "low": 1872.46,
+        "open": 1876.01
+      }
+    },
+    "ethbtc": {
+      "down_hours": 73,
+      "up_hours": 78,
+      "week_range": {
+        "close": 0.03161,
+        "high": 0.03342,
+        "low": 0.02945,
+        "open": 0.02983
+      }
+    },
+    "expected_hourly_rows": 168,
+    "first_hour_utc": "2026-08-17T00:00:00Z",
+    "hourly_coverage_pct": 95.238,
+    "last_hour_utc": "2026-08-23T15:00:00Z",
+    "long_short_complete_hours": 160,
+    "market_interpretation": false,
+    "observed_hourly_rows": 160,
+    "sequence_evidence_only": true,
+    "spot_complete_hours": 160,
+    "spot_flow_complete_hours": 160
+  },
+  "iso_week": 34,
+  "iso_year": 2026,
+  "owner_health": {
+    "binance_microstructure": {
+      "PASS": 37
+    },
+    "binance_spot": {
+      "DISABLED": 37
+    },
+    "cfgi_sentiment": {
+      "DISABLED": 4,
+      "PASS": 33
+    },
+    "fred_macro": {
+      "DISABLED": 30,
+      "PASS": 7
+    },
+    "okx_swap": {
+      "PASS": 37
+    },
+    "top100_breadth": {
+      "PASS": 37
+    }
+  },
+  "portfolio_action": false,
+  "raw_outcome_analysis": false,
+  "readiness": "DEGRADED",
+  "readiness_components": {
+    "anchor_lane": "READY",
+    "hourly_sequence_lane": "DEGRADED"
+  },
+  "sequence_evidence_built": true,
+  "sequence_facts_path": "weekly/2026/W34/WEEKLY_SEQUENCE_FACTS.json",
+  "settled_etf": {
+    "authority": "SHADOW_CALIBRATION_INPUT_ONLY",
+    "contract": "WEEKLY_SETTLED_ETF_CALIBRATION_v1",
+    "records": [
+      {
+        "BTC": 297.5,
+        "ETH": 30.9,
+        "session_date": "2026-08-17"
+      },
+      {
+        "BTC": 189.3,
+        "ETH": 71.4,
+        "session_date": "2026-08-18"
+      },
+      {
+        "BTC": 517.2,
+        "ETH": 186.8,
+        "session_date": "2026-08-19"
+      },
+      {
+        "BTC": 606.3,
+        "ETH": 219.5,
+        "session_date": "2026-08-20"
+      },
+      {
+        "BTC": 307.5,
+        "ETH": 184.0,
+        "session_date": "2026-08-21"
+      }
+    ],
+    "session_counts": {
+      "BTC": 5,
+      "ETH": 5
+    },
+    "week_total_reported_units": {
+      "BTC": 1917.8,
+      "ETH": 692.6
+    }
+  },
+  "source_capture_paths": [
+    "03_DAILY_CAPTURE_LOGS/captures/2026/08/17/045409_gh-31996019604-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/08/17/092310_gh-32014916654-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/08/17/135547_gh-32037190646-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/08/17/180012_gh-32052825767-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/08/17/213523_gh-32071866476-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/08/18/044724_gh-32100404267-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/08/18/090834_gh-32119996119-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/08/18/140015_gh-32145654515-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/08/18/175825_gh-32168430837-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/08/18/213423_gh-32188393672-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/08/19/044806_gh-32217052942-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/08/19/091507_gh-32236623995-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/08/19/164531_gh-32277708542-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/08/19/204648_gh-32300288504-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/08/20/015218_gh-32322562540-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/08/20/044854_gh-32333232708-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/08/20/085707_gh-32351357245-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/08/20/130945_gh-32372685924-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/08/20/204642_gh-32415898638-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/08/21/015822_gh-32438156498-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/08/21/045031_gh-32448343606-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/08/21/085858_gh-32465673864-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/08/21/130934_gh-32485380866-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/08/21/165037_gh-32504998908-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/08/21/204143_gh-32524839812-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/08/22/015029_gh-32544568815-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/08/22/044441_gh-32552490126-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/08/22/084800_gh-32563220228-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/08/22/125935_gh-32574475934-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/08/22/163912_gh-32585340249-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/08/22/204017_gh-32597342039-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/08/23/020022_gh-32611727831-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/08/23/044840_gh-32618768097-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/08/23/084904_gh-32629266443-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/08/23/130032_gh-32641026443-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/08/23/164220_gh-32652486545-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/08/23/203903_gh-32665048095-1.json"
+  ]
+}
