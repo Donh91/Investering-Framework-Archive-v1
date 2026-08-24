@@ -1,0 +1,89 @@
+{
+  "contract": "OPENAI_API_OPERATIONAL_ANALYSIS_TASK_v1",
+  "task_id": "automation-complexity-review-v1",
+  "title": "Automation complexity and overlap review",
+  "status": "QUEUED",
+  "priority": "P1",
+  "route": "OPENAI_API_ANALYSIS_THEN_CODEX",
+  "execution_status": "QUEUED_NOT_AUTOWIRED",
+  "automatic_execution": false,
+  "openai_api_execution_mode": "NOT_AUTOWIRED_CURRENTLY",
+  "consumed_by_current_automation": false,
+  "authority": {
+    "framework_state_change": false,
+    "schedule_change": false,
+    "workflow_delete": false,
+    "market_rule_change": false,
+    "portfolio_action": false,
+    "canonical_promotion": false
+  },
+  "objective": "Reduce operational complexity only after evidence shows which workflows are redundant, superseded or over-scheduled. Build an inventory and consolidation plan without changing schedules or deleting workflows in the analysis phase.",
+  "audit_observation": {
+    "approx_local_workflows": 110,
+    "approx_registered_workflows": 100,
+    "approx_scheduled_workflows": 41,
+    "approx_writer_workflows": 47,
+    "risk": "The system is large enough that stale contracts, duplicate ownership, pointer drift and overlapping writer behavior can become primary failure modes."
+  },
+  "classification": [
+    "KEEP",
+    "MERGE_WITH_EXISTING",
+    "SCHEDULE_REMOVE",
+    "MANUAL_ONLY",
+    "ARCHIVE",
+    "UNKNOWN_NEEDS_EVIDENCE"
+  ],
+  "required_work": [
+    "Inventory every current workflow on fresh main with trigger, schedule, permissions, concurrency group, writer paths, owner, downstream consumers and recent health state.",
+    "Identify duplicate or overlapping owner responsibilities and duplicated scheduled collection/research functions.",
+    "Identify writer workflows that share or bypass the canonical main-writer concurrency boundary.",
+    "Map stale, never-run, terminalized and superseded workflow families without assuming that old age alone means obsolete.",
+    "Identify workflow/action dependency maintenance issues, including Node runtime deprecation exposure, but separate warnings from actual failures.",
+    "Produce consolidation waves ordered by risk reduction and reversibility.",
+    "Recommend Codex changes only for high-confidence, bounded candidates with explicit rollback and post-change observation gates."
+  ],
+  "evidence_roots": [
+    ".github/workflows",
+    "scripts/health/build_automation_health.py",
+    "research/architecture_health/LATEST_AUTOMATION_HEALTH.json",
+    "research/remediation/LATEST_REMEDIATION_QUEUE.json",
+    "research/remediation/LATEST_CODEX_READY_TASKS.json",
+    "09_SOURCE_QA/incidents"
+  ],
+  "required_output": {
+    "contract": "AUTOMATION_COMPLEXITY_REVIEW_v1",
+    "per_workflow_fields": [
+      "workflow",
+      "classification",
+      "confidence",
+      "triggers",
+      "writer_scope",
+      "owner_overlap",
+      "recent_health",
+      "replacement_or_merge_target",
+      "evidence",
+      "recommended_action"
+    ],
+    "portfolio_fields": [
+      "workflow_count",
+      "scheduled_count",
+      "writer_count",
+      "duplicate_owner_clusters",
+      "consolidation_waves",
+      "estimated_risk_reduction",
+      "codex_candidates"
+    ]
+  },
+  "guardrails": [
+    "Analysis phase performs no workflow deletion, schedule removal, permission expansion or branch deletion.",
+    "Do not merge workflows merely because names look similar.",
+    "Do not change market, research, portfolio or canonical semantics.",
+    "A terminalized historical workflow may be classified for lifecycle reconciliation, not silently deleted.",
+    "Every ARCHIVE or SCHEDULE_REMOVE recommendation requires a current replacement/evidence trail and rollback plan.",
+    "Automatic merge remains false."
+  ],
+  "codex_handoff_condition": "A workflow or cluster has high-confidence redundancy/supersession, bounded change scope, no semantic change, explicit tests and a reversible migration/rollback plan.",
+  "clean_noop_condition": "No high-confidence redundancy or unsafe overlap is found and current workflow scale is justified by distinct owners and lifecycle contracts.",
+  "queued_at_utc": "2026-08-24T06:30:00Z",
+  "source_main_sha": "ef92abe9e5fe80a2c66dfdb2cce1ec3e600dadc3"
+}
