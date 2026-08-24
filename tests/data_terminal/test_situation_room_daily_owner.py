@@ -45,12 +45,12 @@ class SituationRoomOwnerTests(unittest.TestCase):
             self.assertEqual(result["run_status"], "DEGRADED")
 
     def test_situation_room_discovery_cannot_self_verify(self):
-        landing = b'<html><a href="/item">Bitcoin liquidity shock</a></html>'
+        landing = b'<html><a href="/briefing/item">Bitcoin liquidity shock</a></html>'
         article = b'<html><head><title>Bitcoin liquidity shock</title><meta property="article:published_time" content="2026-08-23T12:00:00Z"></head></html>'
         def fake_fetch(url, timeout=15):
             if url == "https://situationroom.test/briefings":
                 return self.result(url, landing)
-            if url == "https://situationroom.test/item":
+            if url == "https://situationroom.test/briefing/item":
                 return self.result(url, article)
             return self.result(url)
         with tempfile.TemporaryDirectory() as tmp, patch.object(owner, "SOURCES", self.base_sources()), patch.object(owner, "fetch", fake_fetch):
@@ -62,11 +62,11 @@ class SituationRoomOwnerTests(unittest.TestCase):
             self.assertEqual(result["run_status"], "DEGRADED")
 
     def test_discovery_fetch_failure_does_not_veto_clean_primary_no_event(self):
-        landing = b'<html><a href="/item">Bitcoin liquidity shock</a></html>'
+        landing = b'<html><a href="/briefing/item">Bitcoin liquidity shock</a></html>'
         def fake_fetch(url, timeout=15):
             if url == "https://situationroom.test/briefings":
                 return self.result(url, landing)
-            if url == "https://situationroom.test/item":
+            if url == "https://situationroom.test/briefing/item":
                 return self.result(url, status="FAIL")
             return self.result(url)
         with tempfile.TemporaryDirectory() as tmp, patch.object(owner, "SOURCES", self.base_sources()), patch.object(owner, "fetch", fake_fetch):
@@ -91,6 +91,8 @@ class SituationRoomOwnerTests(unittest.TestCase):
             self.assertEqual(result["events"], [])
 
     def test_source_specific_candidate_filter_excludes_generic_navigation(self):
+        self.assertFalse(owner.source_candidate_allowed("SITUATION_ROOM", "https://situationroom.space/briefings", "https://situationroom.space/about"))
+        self.assertTrue(owner.source_candidate_allowed("SITUATION_ROOM", "https://situationroom.space/briefings", "https://situationroom.space/briefing/crypto-liquidity"))
         self.assertFalse(owner.source_candidate_allowed("SEC", "https://www.sec.gov/newsroom/press-releases", "https://www.sec.gov/featured-topics/cybersecurity"))
         self.assertTrue(owner.source_candidate_allowed("SEC", "https://www.sec.gov/newsroom/press-releases", "https://www.sec.gov/newsroom/press-releases/2026-76-sec-proposes-new-regulation-crypto-assets"))
         self.assertFalse(owner.source_candidate_allowed("FEDERAL_RESERVE", "https://www.federalreserve.gov/newsevents/pressreleases.htm", "https://www.federalreserve.gov/newsevents/pressreleases/2026-press-fomc.htm"))
