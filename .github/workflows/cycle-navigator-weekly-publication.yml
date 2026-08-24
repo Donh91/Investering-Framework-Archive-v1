@@ -1,0 +1,171 @@
+name: Cycle Navigator Weekly Publication
+
+on:
+  workflow_run:
+    workflows: ["Weekly API Calibration Shadow"]
+    types: [completed]
+  schedule:
+    - cron: '5 9 * * 1'
+      timezone: 'Europe/Copenhagen'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: framework-main-writer
+  cancel-in-progress: false
+
+jobs:
+  publish-cycle-navigator:
+    if: >-
+      github.event_name != 'workflow_run' ||
+      github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Verify final Master Monday and detect idempotent completion
+        id: precheck
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY' | tee runtime_cn_precheck.txt
+          import hashlib,json
+          from pathlib import Path
+          mm=Path('research/api_agent/outputs/weekly/LATEST_MASTER_MONDAY_DELIVERY_POINTER.json')
+          if not mm.exists(): raise SystemExit('LATEST_MASTER_MONDAY_DELIVERY_POINTER_missing')
+          value=json.loads(mm.read_text())
+          required={'iso_year','iso_week'}
+          if not required.issubset(value): raise SystemExit('Master_Monday_pointer_missing_week_identity')
+          digest=hashlib.sha256(mm.read_bytes()).hexdigest()
+          latest=Path('05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json')
+          skip=False
+          if latest.exists():
+              prior=json.loads(latest.read_text())
+              skip=prior.get('master_monday_pointer_sha256')==digest
+          print(f"skip={'true' if skip else 'false'}")
+          print(f"mm_sha256={digest}")
+          print(f"completed_week={int(value['iso_week'])}")
+          PY
+          grep '^skip=' runtime_cn_precheck.txt >> "$GITHUB_OUTPUT"
+          grep '^mm_sha256=' runtime_cn_precheck.txt >> "$GITHUB_OUTPUT"
+
+      - name: Enforce monthly API cost guard
+        if: steps.precheck.outputs.skip != 'true'
+        run: |
+          python scripts/api_agent/check_monthly_cost_guard.py \
+            --receipt-root research/api_agent/outputs \
+            --pending-ledger-root runtime/api-cost-ledger \
+            --hard-stop-usd 20 \
+            --reserve-usd 2.0
+
+      - name: Build Cycle Navigator from final Master Monday
+        if: steps.precheck.outputs.skip != 'true'
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          python scripts/cycle_navigator/build_weekly_cycle_navigator.py \
+            --repo-root . \
+            --master-monday-pointer research/api_agent/outputs/weekly/LATEST_MASTER_MONDAY_DELIVERY_POINTER.json \
+            --model gpt-5.6-sol \
+            --max-output-tokens 5000 | tee runtime_cycle_navigator_pointer.json
+
+      - name: Validate publication contract
+        if: steps.precheck.outputs.skip != 'true'
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          ptr=json.loads(Path('05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json').read_text())
+          root=Path(ptr['week_dir'])
+          required=[
+            'CYCLE_NAVIGATOR_MACHINE_PACKAGE.json',
+            'CYCLE_NAVIGATOR_SCORECARD.json',
+            'CYCLE_NAVIGATOR_FORECAST_FREEZE.json',
+            'CYCLE_NAVIGATOR_READABLE.md',
+            'CYCLE_NAVIGATOR_X_READY.md',
+            'CYCLE_NAVIGATOR_SOURCE_MANIFEST.json',
+            'CYCLE_NAVIGATOR_DELIVERY_POINTER.json',
+            'CYCLE_NAVIGATOR_API_RECEIPT.json',
+          ]
+          missing=[name for name in required if not (root/name).exists()]
+          if missing: raise SystemExit('missing_cycle_navigator_artifacts:'+','.join(missing))
+          machine=json.loads((root/'CYCLE_NAVIGATOR_MACHINE_PACKAGE.json').read_text())
+          freeze=json.loads((root/'CYCLE_NAVIGATOR_FORECAST_FREEZE.json').read_text())
+          if machine.get('publication_status')!='X_READY_NOT_CONFIRMED_PUBLISHED': raise SystemExit('publication_status_invalid')
+          if freeze.get('scoring_contract')!='CN_PUBLIC_CONTINUITY_v1': raise SystemExit('forecast_scoring_contract_invalid')
+          if not (root/'CYCLE_NAVIGATOR_READABLE.md').read_text().strip(): raise SystemExit('readable_empty')
+          if not (root/'CYCLE_NAVIGATOR_X_READY.md').read_text().strip(): raise SystemExit('x_ready_empty')
+          PY
+
+      - name: Commit complete weekly Cycle Navigator archive
+        if: steps.precheck.outputs.skip != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name framework-cycle-navigator-bot
+          git config user.email framework-cycle-navigator-bot@users.noreply.github.com
+          git add 05_CYCLE_NAVIGATOR/weekly \
+                  05_CYCLE_NAVIGATOR/track_record \
+                  05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "cycle-navigator: publish weekly package after final Master Monday"
+          pushed=false
+          for attempt in 1 2 3; do
+            git rebase --abort 2>/dev/null || true
+            if git pull --rebase origin main && git push origin HEAD:main; then pushed=true; break; fi
+            sleep $((attempt*5))
+          done
+          [ "$pushed" = true ]
+          git fetch origin main
+          git merge-base --is-ancestor HEAD origin/main
+
+      - name: Durable readback of complete Cycle Navigator package
+        if: steps.precheck.outputs.skip != 'true'
+        run: |
+          python - <<'PY'
+          import hashlib,json,subprocess
+          from pathlib import Path
+          ptr=Path('05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json')
+          value=json.loads(ptr.read_text());root=Path(value['week_dir'])
+          paths=[
+            root/'CYCLE_NAVIGATOR_MACHINE_PACKAGE.json',
+            root/'CYCLE_NAVIGATOR_SCORECARD.json',
+            root/'CYCLE_NAVIGATOR_FORECAST_FREEZE.json',
+            root/'CYCLE_NAVIGATOR_READABLE.md',
+            root/'CYCLE_NAVIGATOR_X_READY.md',
+            root/'CYCLE_NAVIGATOR_SOURCE_MANIFEST.json',
+            root/'CYCLE_NAVIGATOR_DELIVERY_POINTER.json',
+            root/'CYCLE_NAVIGATOR_API_RECEIPT.json',
+            Path('05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json'),
+            Path('05_CYCLE_NAVIGATOR/track_record/CN_TRACK_RECORD_LEDGER.jsonl'),
+          ]
+          rows=[]
+          for p in paths:
+              path=str(p)
+              blob=subprocess.run(['git','rev-parse',f'origin/main:{path}'],capture_output=True,text=True,check=True).stdout.strip()
+              rows.append({'path':path,'sha256':hashlib.sha256(p.read_bytes()).hexdigest(),'blob_sha':blob})
+          Path('runtime_cn_readback_manifest.json').write_text(json.dumps({'artifacts':rows},sort_keys=True,separators=(',',':'))+'\n')
+          PY
+          python scripts/orchestration/verify_durable_readback.py \
+            --manifest runtime_cn_readback_manifest.json \
+            --ref origin/main \
+            --output runtime_cn_readback_receipt.json
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cycle-navigator-weekly-${{ github.run_id }}
+          path: |
+            runtime_cn_*.json
+            runtime_cn_precheck.txt
+          retention-days: 14
