@@ -218,7 +218,9 @@ def test_retired_terminal_workflow_does_not_reopen_historical_failures(tmp_path:
 
 def test_current_cfgi_terminal_contract_blocks_paid_redispatch() -> None:
     repo = Path(__file__).parents[2]
-    enrichment = module.workflow_static(repo / ".github/workflows/historical-altseason-cfgi-enrichment.yml")
+    enrichment_path = repo / ".github/workflows/historical-altseason-cfgi-enrichment.yml"
+    enrichment = module.workflow_static(enrichment_path)
+    enrichment_text = enrichment_path.read_text()
     terminal = json.loads(
         (repo / "00_ARCHIVE_CONTROL/research_runtime/CFGI_MARKET_PROVIDER_TERMINAL_RECEIPT.json").read_text()
     )
@@ -229,3 +231,15 @@ def test_current_cfgi_terminal_contract_blocks_paid_redispatch() -> None:
     assert terminal["no_additional_paid_retry_authorized"] is True
     assert "TERMINAL_PROVIDER_STATE_NO_PAID_RETRY" in audit
     assert "terminal['no_additional_paid_retry_authorized'] is True" in audit
+    assert "Fail closed to the ratified terminal provider state before secret access" in enrichment_text
+    assert "steps.terminal.outputs.retired != 'true'" in enrichment_text
+    assert "CFGI_RETIRED_NO_DISPATCH_PASS" in enrichment_text
+    assert enrichment_text.index("Fail closed to the ratified terminal provider state before secret access") < enrichment_text.index("Verify CFGI secret only after provenance and budget gates pass")
+
+
+def test_current_cfgi_terminal_audit_accepts_v2_paid_ledger() -> None:
+    repo = Path(__file__).parents[2]
+    audit = (repo / ".github/workflows/historical-altseason-cfgi-run-audit.yml").read_text()
+    assert "HISTORICAL_ALTSEASON_CFGI_PAID_ATTEMPT_LEDGER_v2" in audit
+    assert "ledger['cumulative_actual_credits_used']==10518" in audit
+    assert "verified_prior_cumulative_actual_credits_used" in audit

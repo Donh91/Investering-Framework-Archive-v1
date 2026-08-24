@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import importlib.util,json,tempfile,unittest
+import importlib.util,json,subprocess,sys,tempfile,unittest
 from datetime import datetime,timezone
 from pathlib import Path
 MODULE_PATH=Path(__file__).parents[2]/'scripts'/'health'/'build_operations_dashboard.py';spec=importlib.util.spec_from_file_location('operations_dashboard',MODULE_PATH);module=importlib.util.module_from_spec(spec);assert spec and spec.loader;spec.loader.exec_module(module);UTC=timezone.utc
@@ -38,4 +38,32 @@ class OperationsDashboardTests(unittest.TestCase):
     def test_missing_inputs_never_false_green(self):
         with tempfile.TemporaryDirectory() as tmp:
             dashboard=module.build_dashboard(Path(tmp),datetime(2026,8,4,13,0,tzinfo=UTC));self.assertNotEqual(dashboard['overall_status'],'GREEN');self.assertTrue(dashboard['required_actions'])
+
+    def refresh_handoff(self, root):
+        script=Path(__file__).parents[2]/'scripts'/'architecture'/'build_latest_handoff.py'
+        subprocess.run([sys.executable,str(script),'--repo-root','.'],cwd=root,check=True,capture_output=True,text=True)
+
+    def test_refresh_handoff_promotes_newer_valid_producer_before_dashboard(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);self.base_repo(root)
+            newer=self.write_json(root,'research/api_agent/outputs/daily/2026/08/04/124500/DAILY_DIRECTOR_OUTPUT.json',{'completed_at_utc':'2026-08-04T12:45:00Z','status':'READY'})
+            self.write_json(root,'research/api_agent/outputs/daily/2026/08/04/124500/DAILY_DIRECTOR_RECEIPT.json',{'contract':'API_AGENT_RECEIPT_v3','created_unix':1785847500,'status':'PASS','output_hash':module.sha256_path(newer)})
+            self.refresh_handoff(root)
+            handoff=json.loads((root/'LATEST_HANDOFF.json').read_text())
+            pointer=handoff['pointers']['latest_director_output']
+            self.assertEqual(pointer['path'],str(newer.relative_to(root)))
+            self.assertEqual(pointer['sha256'],module.sha256_path(newer))
+            row=module.build_dashboard(root,datetime(2026,8,4,13,0,tzinfo=UTC))['systems']['openai_daily_director']
+            self.assertEqual(row['status'],'GREEN')
+            self.assertEqual(row['pointer']['hash_status'],'MATCH')
+
+    def test_refresh_handoff_rejects_newer_malformed_producer(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);self.base_repo(root)
+            malformed=root/'research/api_agent/outputs/daily/2026/08/04/124500/DAILY_DIRECTOR_OUTPUT.json'
+            malformed.parent.mkdir(parents=True,exist_ok=True);malformed.write_text('{not-json\n')
+            original=json.loads((root/'LATEST_HANDOFF.json').read_text())['pointers']['latest_director_output']
+            self.refresh_handoff(root)
+            refreshed=json.loads((root/'LATEST_HANDOFF.json').read_text())['pointers']['latest_director_output']
+            self.assertEqual(refreshed,original)
 if __name__=='__main__':unittest.main()
