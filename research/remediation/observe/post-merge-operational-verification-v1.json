@@ -4,13 +4,16 @@
   "status": "OBSERVE_ONLY",
   "priority": "P0_OBSERVATION",
   "authority": "NO_CODE_CHANGE_UNLESS_FAILURE_RECURS",
-  "source_main_sha": "ef92abe9e5fe80a2c66dfdb2cce1ec3e600dadc3",
+  "source_main_sha": "d09edc588a2a6e9d6a5dc7d6e34fd3bd1c8ecaba",
   "items": [
     {
       "id": "OBS-557-INTRADAY",
       "source_pr": 557,
       "component": "intraday-execution-research",
-      "reason": "Deterministic tuple/dict crash was fixed and CI passed, but production verification requires expected scheduled runs on main.",
+      "reason": "Deterministic tuple/dict crash was fixed and CI passed. Post-fix production has now produced one successful intraday execution commit on main, but the frozen verification gate remains three expected successful runs.",
+      "observed_success_runs": [32698186286],
+      "observed_success_commits": ["7488c9c92a31d767d65d1de65ac847bc5cfbb1f3"],
+      "progress": "1_OF_3_EXPECTED_SUCCESSFUL_RUNS",
       "success_gate": "3_SUCCESSFUL_EXPECTED_RUNS",
       "failure_action": "If the same or a new deterministic runtime signature recurs, create/update a bounded Codex task with fresh job logs. Do not broaden semantics."
     },
@@ -19,6 +22,7 @@
       "source_pr": 557,
       "component": "research-execution-coordinator",
       "reason": "Stale validation assertions were reconciled with current fairness and budget contracts; production-shaped coordinator execution still needs observation.",
+      "progress": "AWAITING_NEXT_EXPECTED_RUN",
       "success_gate": "3_SUCCESSFUL_EXPECTED_RUNS_OR_EXISTING_REMEDIATION_POST_FIX_GATE",
       "failure_action": "Re-open only the fresh remaining failure signature. Do not revert current fairness-state semantics merely to satisfy an old assertion."
     },
@@ -45,5 +49,6 @@
     "Fresh job evidence outranks stale remediation queue snapshots.",
     "Any recurrence must be bound to current main and exact run logs before code changes."
   ],
-  "queued_at_utc": "2026-08-24T06:30:00Z"
+  "queued_at_utc": "2026-08-24T06:30:00Z",
+  "last_updated_at_utc": "2026-08-24T06:48:00Z"
 }
