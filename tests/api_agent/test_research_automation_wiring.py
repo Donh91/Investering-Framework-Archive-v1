@@ -72,10 +72,10 @@ def test_missing_specific_provider_auth_is_data_blocked_not_kill():
     assert not any(evaluation["authority"].values())
 
 
-def test_automation_state_has_zero_authority():
+def test_automation_state_has_zero_authority_and_bounded_fairness_lane():
     state = json.loads((ROOT / "research/api_agent/coordination/LATEST_RESEARCH_AUTOMATION_STATE.json").read_text())
     assert state["contract"] == "RESEARCH_AUTOMATION_STATE_v1"
-    assert state["last_heavy_lane"] is None
+    assert state.get("last_heavy_lane") in {None, "provider_evaluation", "deep_research"}
     assert not any(state["authority"].values())
 
 
@@ -96,7 +96,8 @@ def test_workflow_uses_single_writer_lock_budget_guard_and_one_lane_selector():
     assert "research_execution_coordinator.py" in text
     assert "check_monthly_cost_guard.py" in text
     assert "--hard-stop-usd 20" in text
-    assert "--reserve-usd 0.75" in text
+    assert "--reserve-usd 0.25" in text
+    assert "--reserve-usd 2.0" in text
     assert "run_deep_research_task.py" in text
     assert "mcp_provider_automation.py" in text
     assert "pull_request:" not in text

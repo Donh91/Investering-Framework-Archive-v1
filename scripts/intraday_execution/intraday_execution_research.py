@@ -80,7 +80,7 @@ def asset_features(asset, pairs):
     bv=[f(r,f"{pref}_volume") for r in today]
     q=sum(x for x in qv if x is not None); b=sum(x for x in bv if x is not None)
     vwap=q/b if b else None
-    prior_vol=[f(r,f"{pref}_quote_volume") for r in pairs[-25:-1]]
+    prior_vol=[f(r,f"{pref}_quote_volume") for _,r in pairs[-25:-1]]
     rel_vol=None
     med=median(prior_vol)
     cur_q=f(latest,f"{pref}_quote_volume")
