@@ -1,0 +1,35 @@
+{
+  "allowed_change_scope": [
+    ".github/workflows/operations-dashboard.yml",
+    ".github/workflows/operations-dashboard-gate.yml",
+    "scripts/health/build_operations_dashboard.py",
+    "scripts/architecture/build_latest_handoff.py",
+    "tests/health/test_operations_dashboard.py",
+    "tests/architecture"
+  ],
+  "branch": "agent/task-20260824-operations-pointer-truth",
+  "candidate_id": "codex-operational-observability-pointer-truth-v1",
+  "candidate_path": "research/codex/intake/2026/08/codex-operational-observability-pointer-truth-v1.json",
+  "candidate_sha256": "c6c3d012c6c1e7404eef4e90d28af3e79c6e70e19b050100b643b8c420a66a05",
+  "contract": "CODEX_RESEARCH_TRANSITION_RECEIPT_v1",
+  "forbidden_changes": [
+    "API budget",
+    "automatic merge or self-promotion",
+    "canonical authority",
+    "market gates",
+    "model weights",
+    "new policy semantics",
+    "portfolio logic",
+    "producer schedules unrelated to dashboard observability",
+    "rewriting or fabricating producer outputs",
+    "weakening pointer hash verification"
+  ],
+  "objective": "Prevent Operations Dashboard from reporting a producer as STALE solely because LATEST_HANDOFF.json is older than a newer valid producer artifact. Preserve independent freshness, execution/semantic state and hash-integrity checks, and keep DEGRADED distinct from STALE.",
+  "post_fix_gate": "2_CONSECUTIVE_OPERATIONS_DASHBOARD_RUNS_WITH_FRESH_POINTER_TRUTH_AND_NO_FALSE_STALE",
+  "pr_number": null,
+  "receipt_sha256": "10f75092206befdc641a5aa8dc9082f78fff0cf7afc3bb34c7d27b759c6e6b50",
+  "recorded_at_utc": "2026-08-24T19:45:16Z",
+  "signature": "dbafb3a6d059c6375c6e",
+  "state": "IN_REMEDIATION",
+  "task_contract_sha256": "2362951a2019af4e2453f18f4e23b25d26bdd58353cf597da7b7304265eea454"
+}
