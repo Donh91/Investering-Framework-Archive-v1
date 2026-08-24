@@ -1,7 +1,7 @@
 {
-  "contract": "SITUATION_ROOM_DAILY_OWNER_IMPLEMENTATION_STATUS_v1_1",
+  "contract": "SITUATION_ROOM_DAILY_OWNER_IMPLEMENTATION_STATUS_v1_2",
   "authority": "RESEARCH_ONLY_NON_CANONICAL",
-  "status": "IMPLEMENTED_NOT_SCHEDULE_ACTIVATED",
+  "status": "SCHEDULE_ACTIVATED_AWAITING_FIRST_DURABLE_POST_ACTIVATION_RUN",
   "collector_code": "scripts/data_terminal/situation_room_daily_owner.py",
   "test_path": "tests/data_terminal/test_situation_room_daily_owner.py",
   "contract_path": "04_MARKET_LEARNING/news/2026-08-23__situation-room-daily-owner-contract-v1__research.md",
@@ -18,10 +18,12 @@
     "reason_not_in_production_log_root": "Backfill predates production schedule activation and is intentionally retained in the research/context lane to avoid confusing retrospective context with prospective operational capture."
   },
   "failure_semantics": {
+    "successful_material_event": "MATERIAL_CATALYSTS_FOUND",
     "successful_zero_event": "NO_NEW_MATERIAL_CATALYST",
     "partial_primary_source_failure": "UNKNOWN_DUE_TO_SOURCE_FAILURE",
     "total_primary_source_failure": "COLLECTOR_FAILURE",
-    "unresolved_timestamped_candidate": "REVIEW_REQUIRED_UNRESOLVED_CANDIDATES",
+    "unresolved_primary_candidate": "REVIEW_REQUIRED_UNRESOLVED_CANDIDATES",
+    "current_unverified_discovery": "REVIEW_REQUIRED_UNVERIFIED_DISCOVERY",
     "zero_event_equals_failure": false
   },
   "situation_room_role": "DISCOVERY_ONLY",
@@ -31,12 +33,37 @@
   "cycle_navigator_effect": false,
   "master_monday_semantic_effect": false,
   "portfolio_effect": false,
+  "shared_row_tournament_eligible": false,
+  "retroactive_candidate_eligibility": false,
   "schedule_activation": {
-    "status": "BLOCKED_BY_HIGH_IMPACT_SAFETY_GATE",
-    "workflow_file_created_or_modified": false,
-    "internal_safepoint": "backup-safepoint/2026-08-23-situation-room-workflow-activation",
-    "safepoint_source_sha": "9d553baa08149ee6863b6607de923ce1e8e2a403",
-    "external_vault_verification": "UNAVAILABLE_CURRENT_GITHUB_AUTHORITY_404",
-    "required_next_state": "RESTORE_EXTERNAL_VAULT_ACCESS_THEN_RUN_OUT_OF_CYCLE_SNAPSHOT_AND_SEPARATE_SCHEDULE_ACTIVATION_REVIEW"
+    "status": "ACTIVE_ON_MAIN",
+    "activation_pr": 544,
+    "activation_merge_sha": "243b77ee6c6c8ca000e8352d53eaf4615bb76887",
+    "workflow": ".github/workflows/daily-raw-owner-capture.yml",
+    "workflow_file_created_or_modified": true,
+    "cadence": "EXISTING_06_13_EUROPE_COPENHAGEN_SLOT_OR_WORKFLOW_DISPATCH",
+    "ordering": "AFTER_DURABLE_LIVE_ANCHOR_BEFORE_PULLBACK_FORENSICS",
+    "failure_invalidates_market_observation": false,
+    "internal_safepoint": "backup-safepoint/2026-08-23-situation-room-post-merge",
+    "safepoint_source_sha": "ee02d6c180ceca140d00db8424f9b8419eb95adb",
+    "safepoint_verification": "PASS_IDENTICAL",
+    "safety_receipt": "research/repository_safety/2026-08-24__situation-room-workflow-activation-safepoint-receipt.json",
+    "external_vault_verification": "UNAVAILABLE_TO_CURRENT_GITHUB_APP_AUTHORITY",
+    "backup_result": "PARTIAL_INTERNAL_ONLY"
+  },
+  "live_validation": {
+    "status": "PASS_READ_ONLY_PRODUCTION_SHAPE",
+    "workflow": ".github/workflows/situation-room-owner-live-gate.yml",
+    "latest_green_run_id": 32692365931,
+    "head_sha": "ec12880f46ba8609bf2e8c16c4cdd53f283fb87c",
+    "artifact_id": 9507672937,
+    "artifact_sha256": "c07c930b24f04794b68757aa3fb325d48ba521553a88c2f2bcfb76055d48a51e",
+    "deterministic_tests": "PASS_8_OF_8",
+    "repository_write": false
+  },
+  "first_durable_post_activation_run": {
+    "status": "AWAITING_FIRST_POST_ACTIVATION_OWNER_EXECUTION",
+    "latest_pointer_observed_on_main": false,
+    "reason": "No production LATEST.json exists yet after activation merge. The scheduled 06:13 Europe/Copenhagen daily owner slot had already passed before activation merged, and the current connector exposes no workflow_dispatch action. No synthetic or backdated production row is created to compensate."
   }
 }
