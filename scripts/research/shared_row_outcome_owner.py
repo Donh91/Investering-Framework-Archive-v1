@@ -211,6 +211,11 @@ def run(now_override: str | None = None) -> dict[str, Any]:
             unavailable["PRE_REPAIR_OR_UNBOUND_ROW"] += len(HORIZONS)
             continue
         try:
+            evidence.verify_frozen_provenance(row)
+        except Exception:
+            unavailable["ROW_FROZEN_PROVENANCE_MISMATCH"] += len(HORIZONS)
+            continue
+        try:
             verified = evidence.verify_source_bindings(row, parse(row["information_cutoff_utc"]))
         except Exception:
             unavailable["ROW_SOURCE_BINDING_RECONSTRUCTION_FAILED"] += len(HORIZONS)

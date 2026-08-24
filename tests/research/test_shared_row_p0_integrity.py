@@ -373,6 +373,17 @@ class SharedRowP0IntegrityTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "violates frozen boolean contract"):
             controller.validate_payload(label_permutation)
 
+        derived_permutation = json.loads(json.dumps(row))
+        derived_permutation["ethbtc_derived_state"] = "BELOW" if row["ethbtc_derived_state"] == "ABOVE" else "ABOVE"
+        eth_signal = derived_permutation["ethbtc_derived_state"] == "ABOVE"
+        decisions = derived_permutation["candidate_decisions"]
+        decisions["C01_ETHBTC"] = eth_signal
+        decisions["C04_ETHBTC_BREADTH"] = eth_signal and decisions["C02_BREADTH"]
+        decisions["C05_ETHBTC_BTCD"] = eth_signal and decisions["C03_BTCD"]
+        decisions["C07_SIMPLE_3"] = eth_signal and decisions["C02_BREADTH"] and decisions["C03_BTCD"]
+        with self.assertRaisesRegex(ValueError, "ETHBTC row fields do not reconcile"):
+            controller.validate_payload(derived_permutation)
+
         mismatched_cutoff = json.loads(json.dumps(row))
         mismatched_cutoff["information_cutoff_utc"] = isoz(fixture.observation - timedelta(seconds=1))
         with self.assertRaisesRegex(ValueError, "must be identical"):
@@ -418,6 +429,21 @@ class SharedRowP0IntegrityTests(unittest.TestCase):
         result = outcome_owner.run(isoz(fixture.observation + timedelta(hours=27)))
         self.assertEqual(result["horizons_written"], 0)
         self.assertEqual(result["unavailable_reasons"].get("ROW_TIME_BASELINE_MISMATCH"), 3)
+        self.assertEqual(len(outcome_owner.read_csv(outcome_owner.DETAIL)), 0)
+
+    def test_outcome_rejects_edited_frozen_row_identity(self):
+        fixture = FixtureRepo(self)
+        row = fixture.build()["row"]
+        row_path = fixture.repo / "row.json"
+        row_path.write_text(json.dumps(row) + "\n")
+        controller.ingest(row_path)
+        rows = outcome_owner.read_csv(outcome_owner.ROWS)
+        rows[0]["regime_tag"] = "EDITED_AFTER_FREEZE"
+        outcome_owner.write_csv(outcome_owner.ROWS, rows, list(rows[0]))
+        fixture.append_future_hours()
+        result = outcome_owner.run(isoz(fixture.observation + timedelta(hours=27)))
+        self.assertEqual(result["horizons_written"], 0)
+        self.assertEqual(result["unavailable_reasons"].get("ROW_FROZEN_PROVENANCE_MISMATCH"), 3)
         self.assertEqual(len(outcome_owner.read_csv(outcome_owner.DETAIL)), 0)
 
     def test_quarantine_and_context_blocks_fail_closed_and_are_outcome_independent(self):
