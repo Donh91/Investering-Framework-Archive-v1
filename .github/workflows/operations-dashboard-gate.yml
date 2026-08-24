@@ -23,7 +23,7 @@ jobs:
         with:
           python-version: '3.12'
       - name: Compile dashboard builder
-        run: python -m py_compile scripts/health/build_operations_dashboard.py
+        run: python -m py_compile scripts/health/build_operations_dashboard.py scripts/architecture/build_latest_handoff.py
       - name: Run simulations
         run: python -m unittest -v tests.health.test_operations_dashboard
       - name: Build dashboard from repository state
