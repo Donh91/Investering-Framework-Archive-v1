@@ -4,15 +4,15 @@
   "canonical_effect": false,
   "contract": "RESEARCH_DECISION_IMPACT_VOI_STATE_v1",
   "deep_research_authorized": false,
-  "evidence_fingerprint": "03170f1812f1911c6c7e9042e1c72974b622fb3b5e02be67738947dc66c90f95",
+  "evidence_fingerprint": "44e3aeb274dcc9ea1efd6208d0c24cba6a136d606d200984c0f72341a10a587a",
   "external_provider_calls_authorized": false,
   "paid_data_authorized": false,
   "portfolio_execution": false,
   "queue": [
     {
-      "action": "CONTINUE_OBSERVING",
+      "action": "NO_ACTION",
       "canonical_effect": false,
-      "decision_surface": "CALIBRATION_QUALITY",
+      "decision_surface": "RESEARCH_OPERATIONS",
       "deep_research_authorized": false,
       "evidence_fingerprint": "",
       "impact_tier": "LOW",
@@ -20,16 +20,16 @@
       "paid_data_authorized": false,
       "paid_review_only": false,
       "portfolio_execution": false,
-      "reason": "Too few matured +7d rows for the first information review.",
+      "reason": "Prospective collection is quarantined pending complete post-repair evidence and a separately reviewed future floor.",
       "source": "SHARED_ROW",
-      "target": "CORE_C01_C07"
+      "target": "P0_REPAIR_QUARANTINE"
     },
     {
       "action": "DECLARE_NOT_TESTABLE",
       "canonical_effect": false,
       "decision_surface": "DATA_INTEGRITY",
       "deep_research_authorized": false,
-      "evidence_fingerprint": "4969b9ed14a8d9af32beaaef74adbfe56faa0f265716915c6240bf3be456c7d9",
+      "evidence_fingerprint": "49ec32b7c8d964582e95ced18bb74b2bd4762de5578c8a2fe1d0841c37ad1f71",
       "impact_tier": "NONE",
       "novelty_verdict": null,
       "paid_data_authorized": false,
@@ -41,11 +41,11 @@
     }
   ],
   "queue_n": 2,
-  "reason": "Too few matured +7d rows for the first information review.",
+  "reason": "Prospective collection is quarantined pending complete post-repair evidence and a separately reviewed future floor.",
   "resolved_specialist_state_n": 4,
-  "selected_action": "CONTINUE_OBSERVING",
-  "selected_decision_surface": "CALIBRATION_QUALITY",
+  "selected_action": "NO_ACTION",
+  "selected_decision_surface": "RESEARCH_OPERATIONS",
   "selected_impact_tier": "LOW",
   "selected_source": "SHARED_ROW",
-  "selected_target": "CORE_C01_C07"
+  "selected_target": "P0_REPAIR_QUARANTINE"
 }

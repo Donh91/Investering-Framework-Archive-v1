@@ -46,7 +46,7 @@
   "contract": "RESEARCH_META_ORCHESTRATOR_STATE_v1",
   "controller_conflicts": [],
   "deep_research_authorized": false,
-  "evidence_fingerprint": "ca12b61d4743d14d7135e2c35f4eb9e3f89c538f9fe05785eb6a6a94a6c93a2b",
+  "evidence_fingerprint": "868efc4ff978bd12bf426afd9a128f5c3be3a4eb208054b30c774a3dd93e6b01",
   "external_provider_calls_authorized": false,
   "max_concurrent_heavy_workstreams": 1,
   "paid_data_authorized": false,
@@ -54,11 +54,11 @@
   "primary_action": "WAIT_FOR_EVIDENCE",
   "primary_execution_mode": "AUTO_OBSERVE",
   "primary_source": "SHARED_ROW",
-  "primary_target": "CORE_C01_C07",
+  "primary_target": "P0_REPAIR_QUARANTINE",
   "queue": [
     {
       "canonical_effect": false,
-      "decision_surface": "CALIBRATION_QUALITY",
+      "decision_surface": "RESEARCH_OPERATIONS",
       "evidence_fingerprint": "",
       "execution_mode": "AUTO_OBSERVE",
       "impact_tier": "LOW",
@@ -66,15 +66,15 @@
       "orchestrator_action": "WAIT_FOR_EVIDENCE",
       "paid_data_authorized": false,
       "portfolio_execution": false,
-      "reason": "Too few matured +7d rows for the first information review.",
+      "reason": "Prospective collection is quarantined pending complete post-repair evidence and a separately reviewed future floor.",
       "source": "SHARED_ROW",
-      "specialist_action": "CONTINUE_OBSERVING",
-      "target": "CORE_C01_C07"
+      "specialist_action": "NO_ACTION",
+      "target": "P0_REPAIR_QUARANTINE"
     },
     {
       "canonical_effect": false,
       "decision_surface": "DATA_INTEGRITY",
-      "evidence_fingerprint": "4969b9ed14a8d9af32beaaef74adbfe56faa0f265716915c6240bf3be456c7d9",
+      "evidence_fingerprint": "49ec32b7c8d964582e95ced18bb74b2bd4762de5578c8a2fe1d0841c37ad1f71",
       "execution_mode": "AUTO_OBSERVE",
       "impact_tier": "NONE",
       "novelty_verdict": null,
@@ -88,6 +88,6 @@
     }
   ],
   "queue_n": 2,
-  "reason": "Too few matured +7d rows for the first information review.",
+  "reason": "Prospective collection is quarantined pending complete post-repair evidence and a separately reviewed future floor.",
   "sentinel_verdict": "PASS"
 }
