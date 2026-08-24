@@ -1,6 +1,6 @@
 # Index Addendum Registry
 
-**Dato:** 2026-08-02  
+**Dato:** 2026-08-24  
 **Status:** CANONICAL_OPERATIONAL_REGISTRY  
 **Område:** archive discoverability / index addenda  
 **Primary folder:** `00_ARCHIVE_CONTROL/`  
@@ -51,6 +51,7 @@ A registry entry is a navigation pointer only. The referenced file's own status,
 | `00_ARCHIVE_CONTROL/2026-07-14__index-addendum-master-monday-durable-handoff-v1.md` | Master Monday / durable handoff / pointer integrity | REGISTRY_DISCOVERABLE |
 | `00_ARCHIVE_CONTROL/2026-07-20__index-addendum-techdev-market-update-98-source-archive.md` | TechDev source archive / Issue #98 | REGISTRY_DISCOVERABLE |
 | `00_ARCHIVE_CONTROL/2026-08-02__index-addendum-techdev-market-update-99-source-and-calibration.md` | TechDev source archive / Issue #99 revisions / Gem Score rerun / PDF ingestion validation | REGISTRY_DISCOVERABLE |
+| `00_ARCHIVE_CONTROL/2026-08-24__index-addendum-techdev-market-update-100-source-and-calibration.md` | TechDev source archive / Issue #100 breakout outcomes / roadmap revision / Gem Score rerun / restricted-source capture | REGISTRY_DISCOVERABLE |
 | `00_ARCHIVE_CONTROL/2026-07-06__index-addendum-master-monday-pointers.md` | Master Monday / W28 pointer history - superseded by W28 lineage correction | SUPERSEDED |
 | `00_ARCHIVE_CONTROL/2026-07-07__index-addendum-data-ping-alert-router-v0-1.md` | DATA PING alert router history - superseded by Hybrid v0.5.1 | SUPERSEDED |
 | `00_ARCHIVE_CONTROL/2026-07-08__index-addendum-cn-rd-audit-calibration.md` | Cycle Navigator / R&D calibration | REGISTRY_DISCOVERABLE |
@@ -82,7 +83,7 @@ When an index addendum is created or materially updated, `archive-governance` mu
 2. verify its owner paths exist;
 3. add or update exactly one row in this registry;
 4. classify it as `INDEX_LISTED`, `REGISTRY_DISCOVERABLE`, `SUPERSEDED` or `BROKEN_POINTER`;
-5. avoid modifying `CANONICAL_INDEX.md` unless the high-impact safepoint and vault workflow has been completed;
+5. avoid modifying `CANONICAL_INDEX.md` unless the high-impact safepoint workflow has been completed;
 6. record the registry change in the pull request or skill-run receipt.
 
 ## Failure states
