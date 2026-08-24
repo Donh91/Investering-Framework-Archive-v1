@@ -1,0 +1,67 @@
+{
+  "contract": "CODEX_RESEARCH_CANDIDATE_v1",
+  "candidate_id": "codex-operational-observability-pointer-truth-v1",
+  "title": "Operations dashboard pointer truth repair",
+  "status": "SUBMITTED",
+  "requested_priority": "P0",
+  "authority_boundary": "CODE_REMEDIATION_ONLY",
+  "requires_framework_owner_authority": false,
+  "finding_key": "OPERATIONS_DASHBOARD_STALE_HANDOFF_POINTER_TRUTH",
+  "objective": "Prevent Operations Dashboard from reporting a producer as STALE solely because LATEST_HANDOFF.json is older than a newer valid producer artifact. Preserve independent freshness, execution/semantic state and hash-integrity checks, and keep DEGRADED distinct from STALE.",
+  "primary_target": ".github/workflows/operations-dashboard.yml",
+  "origin": {
+    "type": "HEALTH_AUDIT",
+    "thread_label": "2026-08-24 complete operational health check",
+    "source_paths": [
+      "scripts/architecture/build_latest_handoff.py",
+      "scripts/health/build_operations_dashboard.py",
+      ".github/workflows/operations-dashboard.yml",
+      ".github/workflows/operations-dashboard-gate.yml",
+      "LATEST_HANDOFF.json"
+    ]
+  },
+  "evidence": [
+    {"kind":"REPO_PATH","ref":"scripts/architecture/build_latest_handoff.py","summary":"Already discovers newest Daily Director and Master Monday delivery artifacts and can materialize fresh pointers."},
+    {"kind":"REPO_PATH","ref":"scripts/health/build_operations_dashboard.py","summary":"Consumes pointers from LATEST_HANDOFF.json and combines pointer hash, freshness and semantic status."},
+    {"kind":"REPO_PATH","ref":".github/workflows/operations-dashboard.yml","summary":"Builds the dashboard directly without first regenerating LATEST_HANDOFF.json, allowing stale routing metadata to create false STALE status."},
+    {"kind":"COMMIT","ref":"ef92abe9e5fe80a2c66dfdb2cce1ec3e600dadc3","summary":"Fresh main used to freeze this intake candidate."}
+  ],
+  "allowed_change_scope": [
+    ".github/workflows/operations-dashboard.yml",
+    ".github/workflows/operations-dashboard-gate.yml",
+    "scripts/health/build_operations_dashboard.py",
+    "scripts/architecture/build_latest_handoff.py",
+    "tests/health/test_operations_dashboard.py",
+    "tests/architecture"
+  ],
+  "forbidden_changes": [
+    "market gates or thresholds",
+    "portfolio logic",
+    "canonical market semantics",
+    "producer schedules unrelated to dashboard observability",
+    "weakening pointer hash verification",
+    "rewriting or fabricating producer outputs",
+    "automatic merge or self-promotion"
+  ],
+  "reproduction": "In an isolated repository fixture, keep LATEST_HANDOFF.json pointing to an old Daily Director artifact and an old W33 weekly pointer while newer valid Daily Director and W34 delivery artifacts exist. Build Operations Dashboard without refreshing handoff. Current orchestration can report the old pointers as RED/STALE despite newer valid producer evidence. Separately run build_latest_handoff.py and verify it resolves the newer artifacts, demonstrating that discovery exists but is not bound into dashboard generation.",
+  "acceptance_tests": {
+    "positive": [
+      "A stale handoff pointer plus a newer valid Daily Director artifact resolves to the newer artifact before final dashboard classification.",
+      "A stale W33 weekly pointer plus a newer valid W34 Master Monday delivery resolves to W34.",
+      "A fresh Daily Director whose semantic status is DEGRADED remains fresh-but-degraded and is not mislabeled STALE.",
+      "Dashboard output remains deterministic and retains OPERATIONS_DASHBOARD observability-only authority."
+    ],
+    "negative": [
+      "A malformed or contract-invalid newer artifact cannot supersede a trusted valid artifact merely because its timestamp is later.",
+      "A pointer hash mismatch remains visible and cannot be converted to GREEN by freshness discovery.",
+      "Missing trustworthy producer evidence remains UNKNOWN/STALE as appropriate and is never fabricated GREEN.",
+      "The repair must not change Daily Director, Master Monday, Daily Capture or portfolio semantics."
+    ]
+  },
+  "post_fix_gate": "2_CONSECUTIVE_OPERATIONS_DASHBOARD_RUNS_WITH_FRESH_POINTER_TRUTH_AND_NO_FALSE_STALE",
+  "clean_noop_condition": "Fresh main already regenerates or independently resolves producer pointers immediately before dashboard classification and the stale-handoff reproduction no longer fails.",
+  "stop_condition": "Stop without implementation if the reproduction no longer holds, the necessary change exceeds allowed_change_scope, or resolving it requires weakening integrity checks or changing producer semantics.",
+  "escalation_condition": "Escalate to FRAMEWORK_OWNER if the fix requires a new canonical authority contract, producer schedule changes outside observability, or any market/portfolio semantic change.",
+  "rollback_plan": "Revert only the bounded observability/orchestration changes. No data migration and no producer artifact rewrite is permitted.",
+  "submitted_at_utc": "2026-08-24T06:30:00Z"
+}
