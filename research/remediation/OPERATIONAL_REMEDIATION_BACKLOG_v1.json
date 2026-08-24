@@ -1,0 +1,119 @@
+{
+  "contract": "OPERATIONAL_REMEDIATION_BACKLOG_v1",
+  "generated_at_utc": "2026-08-24T06:30:00Z",
+  "source_main_sha": "ef92abe9e5fe80a2c66dfdb2cce1ec3e600dadc3",
+  "authority": "OPERATIONAL_ROUTING_ONLY",
+  "automatic_code_write": false,
+  "automatic_merge": false,
+  "purpose": "Durable routing surface for unresolved items from the 2026-08-24 complete health audit after immediate quick fixes. Current GitHub state remains authoritative and every execution lane must revalidate fresh main before acting.",
+  "route_definitions": {
+    "CODEX_INTAKE": "Bounded code remediation candidate. Must enter governed Codex intake, reproduce on fresh main, respect allowed scope, pass positive/negative tests and remain review-only with no automatic merge.",
+    "OPENAI_API_ANALYSIS_THEN_CODEX": "Analysis-first task. Operational API execution is not currently auto-wired; packet is durable and ready for a future authorized API/operator lane. Code work begins only after a reproducible bounded defect is identified.",
+    "OBSERVE_ONLY": "No code change. Gather expected production runs after a merged repair and reopen only fresh reproducing signatures.",
+    "EXTERNAL_DEPENDENCY": "Blocked by access or external boundary. No code workaround may bypass authorization or governance."
+  },
+  "items": [
+    {
+      "id": "OPR-001",
+      "title": "Operations dashboard stale-handoff pointer truth",
+      "priority": "P0",
+      "status": "QUEUED_CODEX_INTAKE",
+      "route": "CODEX_INTAKE",
+      "root_cause_confidence": "HIGH",
+      "problem": "Operations Dashboard can consume stale LATEST_HANDOFF pointers even when newer valid Daily Director or weekly artifacts exist, producing false STALE/RED observability.",
+      "task_packet": "research/codex/intake/2026/08/codex-operational-observability-pointer-truth-v1.json",
+      "post_fix_gate": "2_CONSECUTIVE_OPERATIONS_DASHBOARD_RUNS_WITH_FRESH_POINTER_TRUTH_AND_NO_FALSE_STALE"
+    },
+    {
+      "id": "OPR-002",
+      "title": "Historical CFGI terminal lifecycle reconciliation",
+      "priority": "P0",
+      "status": "QUEUED_CODEX_INTAKE",
+      "route": "CODEX_INTAKE",
+      "root_cause_confidence": "HIGH",
+      "problem": "Legacy MARKET gapfill can still fail as recoverable red even though a terminal provider-bounded contract already records zero historical MARKET rows and prohibits additional paid retries.",
+      "task_packet": "research/codex/intake/2026/08/codex-historical-cfgi-terminal-lifecycle-reconciliation-v1.json",
+      "linked_health_signature": "317201b09ae61bb7336b",
+      "post_fix_gate": "ZERO_AUTOMATIC_PAID_RETRIES_AND_TERMINAL_STATE_NOT_REPORTED_AS_RECOVERABLE_RED"
+    },
+    {
+      "id": "OPR-003",
+      "title": "Forecast censor attribution",
+      "priority": "P1",
+      "status": "QUEUED_ANALYSIS_NOT_AUTOWIRED",
+      "route": "OPENAI_API_ANALYSIS_THEN_CODEX",
+      "root_cause_confidence": "UNDETERMINED",
+      "problem": "Audit observed a high censor share among due/adjudicated forecasts. The rate alone does not distinguish legitimate point-in-time censoring from avoidable operational loss.",
+      "task_packet": "research/remediation/openai_api/forecast-censor-attribution-v1.json",
+      "handoff_rule": "No Codex patch until reason attribution identifies a reproducible prospective instrumentation defect."
+    },
+    {
+      "id": "OPR-004",
+      "title": "Automation complexity and overlap review",
+      "priority": "P1",
+      "status": "QUEUED_ANALYSIS_NOT_AUTOWIRED",
+      "route": "OPENAI_API_ANALYSIS_THEN_CODEX",
+      "root_cause_confidence": "MEDIUM",
+      "problem": "Large workflow count, scheduled owners and writers increase stale-contract, overlap and observability risk. Consolidation must be evidence-led rather than deletion-by-age.",
+      "task_packet": "research/remediation/openai_api/automation-complexity-review-v1.json",
+      "handoff_rule": "Only high-confidence reversible consolidations become Codex candidates."
+    },
+    {
+      "id": "OPR-005",
+      "title": "Stale draft pull request hygiene",
+      "priority": "P2",
+      "status": "QUEUED_ANALYSIS_NOT_AUTOWIRED",
+      "route": "OPENAI_API_ANALYSIS_THEN_CODEX",
+      "root_cause_confidence": "HIGH_FOR_HYGIENE_DEBT_LOW_FOR_INDIVIDUAL_CLOSURE",
+      "problem": "PRs 49, 83, 96, 122 and 319 remain open drafts and must be compared with current main before any close/extract decision.",
+      "task_packet": "research/remediation/openai_api/repository-pr-hygiene-review-v1.json",
+      "handoff_rule": "No automatic PR closure or branch deletion."
+    },
+    {
+      "id": "OPR-006",
+      "title": "Post-merge operational verification",
+      "priority": "P0_OBSERVATION",
+      "status": "OBSERVE_ONLY",
+      "route": "OBSERVE_ONLY",
+      "root_cause_confidence": "N/A",
+      "problem": "Merged repairs PR 557 and merged PRs 542/544 require expected production-run evidence before historical health signatures are considered fully cleared.",
+      "task_packet": "research/remediation/observe/post-merge-operational-verification-v1.json"
+    },
+    {
+      "id": "OPR-007",
+      "title": "External Vault backup boundary verification",
+      "priority": "P1",
+      "status": "BLOCKED_EXTERNAL_ACCESS",
+      "route": "EXTERNAL_DEPENDENCY",
+      "root_cause_confidence": "HIGH",
+      "problem": "External backup boundary cannot be independently claimed complete until the intended Vault repository is reachable and backup/readback receipts are verified.",
+      "task_packet": "research/remediation/external/vault-backup-access-v1.json"
+    }
+  ],
+  "resolved_or_transitioned_since_audit": [
+    {
+      "source_pr": 557,
+      "state": "MERGED_OBSERVATION_PENDING",
+      "summary": "Intraday timestamp-row tuple crash fixed; coordinator stale fairness/budget assertions aligned with existing contracts."
+    },
+    {
+      "source_pr": 542,
+      "state": "MERGED_OBSERVATION_PENDING",
+      "summary": "Daily Capture six-anchor invariant repair is no longer an open code defect."
+    },
+    {
+      "source_pr": 544,
+      "state": "MERGED_OBSERVATION_PENDING",
+      "summary": "Situation Room owner activation/backfill is no longer an open PR; verify research-only runtime behavior."
+    }
+  ],
+  "global_guardrails": [
+    "Fresh main/default-branch state is authoritative over this backlog.",
+    "Generated LATEST remediation files are not manually edited; governed controllers regenerate them from health and Codex intake evidence.",
+    "No task may change market gates, model weights, portfolio logic, canonical market semantics or API budgets unless separately authorized by framework governance.",
+    "No missing market/provider data may be fabricated or retrospectively inferred.",
+    "Restricted data remains in Donh91/secrets and credentials remain in GitHub Secrets; no remediation may copy them into the public control plane.",
+    "Automatic code write and automatic merge remain false.",
+    "A fresh non-reproducing task exits as clean no-op rather than forcing a patch."
+  ]
+}

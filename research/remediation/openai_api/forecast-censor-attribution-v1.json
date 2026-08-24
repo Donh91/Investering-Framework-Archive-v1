@@ -1,0 +1,81 @@
+{
+  "contract": "OPENAI_API_OPERATIONAL_ANALYSIS_TASK_v1",
+  "task_id": "forecast-censor-attribution-v1",
+  "title": "Forecast outcome censor attribution",
+  "status": "QUEUED",
+  "priority": "P1",
+  "route": "OPENAI_API_ANALYSIS_THEN_CODEX",
+  "execution_status": "QUEUED_NOT_AUTOWIRED",
+  "automatic_execution": false,
+  "openai_api_execution_mode": "NOT_AUTOWIRED_CURRENTLY",
+  "consumed_by_current_automation": false,
+  "authority": {
+    "framework_state_change": false,
+    "market_rule_change": false,
+    "portfolio_action": false,
+    "canonical_promotion": false,
+    "historical_rewrite": false
+  },
+  "objective": "Determine why the prospective forecast system is censoring a large share of due outcomes, separate legitimate point-in-time censoring from avoidable operational loss, and produce a source-backed remediation handoff only where a prospective instrumentation defect is demonstrated.",
+  "audit_observation": {
+    "window": "latest health window observed during 2026-08-24 audit",
+    "forecasts_due": 155,
+    "matured": 80,
+    "censored": 79,
+    "adjudicated": 159,
+    "approx_censor_rate": 0.497,
+    "interpretation": "High enough to investigate, but not evidence by itself that censoring is wrong."
+  },
+  "required_taxonomy": [
+    "LEGITIMATE_POINT_IN_TIME_DATA_ABSENCE",
+    "UPSTREAM_DATA_UNAVAILABLE",
+    "TARGET_UNIT_OR_SCHEMA_QUARANTINE",
+    "DEADLINE_OR_FRESHNESS_MISS",
+    "MALFORMED_CANDIDATE",
+    "OWNER_OR_PROVIDER_UNAVAILABLE",
+    "UNKNOWN_UNCLASSIFIABLE"
+  ],
+  "required_work": [
+    "Discover the current forecast outcome/adjudication owner on fresh main instead of assuming an old path.",
+    "Sample and, where deterministic, classify censored rows using immutable candidate, source, owner and outcome evidence.",
+    "Report counts and rates by reason, avoidable versus legitimate, and by owner/provider where supported.",
+    "Identify any missing reason-code or provenance instrumentation that prevents attribution.",
+    "Test whether target-unit quarantine and legacy candidate handling are being counted as operational censoring rather than intentionally excluded evidence.",
+    "Produce a bounded Codex handoff only for reproducible prospective instrumentation defects."
+  ],
+  "evidence_roots": [
+    "research/api_agent/forecast_candidates",
+    "research/remediation/forecast_target_units_v2",
+    "research/prospective_evidence",
+    "research/architecture_health",
+    "LATEST_HANDOFF.json",
+    "current outcome/adjudication owner discovered from fresh main"
+  ],
+  "required_output": {
+    "contract": "FORECAST_CENSOR_ATTRIBUTION_REPORT_v1",
+    "fields": [
+      "population_definition",
+      "reason_counts",
+      "reason_rates",
+      "avoidable_count",
+      "legitimate_count",
+      "unknown_count",
+      "evidence_paths",
+      "instrumentation_gaps",
+      "reproducible_code_findings",
+      "codex_handoff_recommended"
+    ]
+  },
+  "guardrails": [
+    "UNKNOWN remains UNKNOWN when evidence is insufficient.",
+    "Do not infer missing market values or retrospectively fill censored outcomes.",
+    "Do not rewrite historical candidate or outcome rows.",
+    "Do not change forecast thresholds, target units, market rules or model weights.",
+    "Do not equate high censor rate with a bug before attribution.",
+    "Any code proposal must be prospective and independently testable."
+  ],
+  "codex_handoff_condition": "At least one reproducible prospective instrumentation or owner-lifecycle defect is evidenced with exact paths, expected behavior, negative controls and a bounded change scope.",
+  "clean_noop_condition": "The censor population is predominantly legitimate, all rows already have complete reason attribution, and no reproducible prospective instrumentation defect remains.",
+  "queued_at_utc": "2026-08-24T06:30:00Z",
+  "source_main_sha": "ef92abe9e5fe80a2c66dfdb2cce1ec3e600dadc3"
+}

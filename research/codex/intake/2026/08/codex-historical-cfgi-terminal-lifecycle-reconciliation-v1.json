@@ -1,0 +1,70 @@
+{
+  "contract": "CODEX_RESEARCH_CANDIDATE_v1",
+  "candidate_id": "codex-historical-cfgi-terminal-lifecycle-reconciliation-v1",
+  "title": "Historical CFGI terminal lifecycle reconciliation",
+  "status": "SUBMITTED",
+  "requested_priority": "P0",
+  "authority_boundary": "CODE_REMEDIATION_ONLY",
+  "requires_framework_owner_authority": false,
+  "finding_key": "HISTORICAL_CFGI_TERMINALIZED_WORKFLOW_STILL_REPORTED_RED",
+  "linked_health_signature": "317201b09ae61bb7336b",
+  "objective": "Reconcile the historical CFGI enrichment lifecycle with the already-ratified provider-terminal state so an unavailable MARKET historical series is not repeatedly treated as a recoverable active failure. Preserve all paid-data guards and prohibit any additional automatic paid retry.",
+  "primary_target": ".github/workflows/historical-altseason-cfgi-enrichment.yml",
+  "origin": {
+    "type": "AUTOMATION_HEALTH_AUDIT",
+    "thread_label": "2026-08-24 complete operational health check",
+    "source_paths": [
+      ".github/workflows/historical-altseason-cfgi-enrichment.yml",
+      ".github/workflows/historical-altseason-cfgi-terminal-finalize.yml",
+      "scripts/historical_lab/cfgi_targeted_backfill.py",
+      "scripts/historical_lab/cfgi_terminal_finalize.py"
+    ]
+  },
+  "evidence": [
+    {"kind":"HEALTH_SIGNATURE","ref":"317201b09ae61bb7336b","summary":"Historical enrichment latest-run failure was still represented as actionable red in automation health."},
+    {"kind":"REPO_PATH","ref":"scripts/historical_lab/cfgi_targeted_backfill.py","summary":"MARKET-only gapfill explicitly fails when provider returns no MARKET rows and writes FAIL_PROVIDER_DID_NOT_RETURN_MARKET before raising CFGI_MARKET_GAPFILL_PROVIDER_RETURN_INVALID."},
+    {"kind":"REPO_PATH","ref":".github/workflows/historical-altseason-cfgi-terminal-finalize.yml","summary":"Existing terminal finalizer ratifies NOT_TESTABLE_PROVIDER_UNAVAILABLE, TERMINAL_PROVIDER_NO_HISTORICAL_ROWS and no_additional_paid_retry_authorized=true without paid calls."},
+    {"kind":"COMMIT","ref":"ef92abe9e5fe80a2c66dfdb2cce1ec3e600dadc3","summary":"Fresh main used to freeze this intake candidate."}
+  ],
+  "allowed_change_scope": [
+    ".github/workflows/historical-altseason-cfgi-enrichment.yml",
+    ".github/workflows/historical-altseason-cfgi-terminal-finalize.yml",
+    ".github/workflows/historical-altseason-cfgi-terminal-publish.yml",
+    ".github/workflows/historical-altseason-cfgi-run-audit.yml",
+    "scripts/historical_lab/cfgi_targeted_backfill.py",
+    "scripts/historical_lab/cfgi_terminal_finalize.py",
+    "scripts/health/build_automation_health.py",
+    "tests"
+  ],
+  "forbidden_changes": [
+    "any new paid retry or automatic paid retry",
+    "CFGI budget increase or reserve reduction",
+    "secret creation, persistence or exposure",
+    "fabrication, interpolation or substitution of missing MARKET historical rows",
+    "resetting or deleting cumulative credit/attempt ledgers",
+    "weakening the provider-bounded v3.1 no-lookahead contract",
+    "market gates, model weights, portfolio logic or canonical market semantics",
+    "automatic promotion"
+  ],
+  "reproduction": "On fresh main, the legacy enrichment path still calls cfgi_targeted_backfill.py. When the provider returns zero MARKET rows, the script writes a failed MARKET gapfill billing receipt and raises CFGI_MARKET_GAPFILL_PROVIDER_RETURN_INVALID. The repository also contains a terminal finalizer that explicitly accepts the bounded state as TERMINAL_PROVIDER_NO_HISTORICAL_ROWS, records no_additional_paid_retry_authorized=true and produces provider-bounded readiness without paid calls. Reconcile these states so terminal provider unavailability is not routed as a recoverable red workflow failure.",
+  "acceptance_tests": {
+    "positive": [
+      "A durable terminal receipt with TERMINAL_PROVIDER_NO_HISTORICAL_ROWS and no_additional_paid_retry_authorized=true is recognized as terminal/no-op rather than recoverable retry work.",
+      "Automation health or lifecycle output distinguishes terminal provider unavailability from an executable code failure.",
+      "A genuinely complete, already-idempotent enrichment remains valid without new paid calls.",
+      "Provider-bounded v3.1 readiness remains research-only with automatic_promotion=false."
+    ],
+    "negative": [
+      "No code path introduced by this repair may issue a new paid MARKET gapfill after terminalization.",
+      "No missing MARKET rows may be fabricated, interpolated, copied from BTC/ETH or inferred.",
+      "Credit ledgers, hard caps and minimum reserves may not be reset or weakened.",
+      "A non-terminal transport/code failure must not be silently relabeled terminal merely to make health green."
+    ]
+  },
+  "post_fix_gate": "ZERO_AUTOMATIC_PAID_RETRIES_AND_TERMINAL_STATE_NOT_REPORTED_AS_RECOVERABLE_RED",
+  "clean_noop_condition": "Fresh main already prevents all paid retries after terminalization and current Automation Health no longer reports the terminalized workflow as recoverable red.",
+  "stop_condition": "Stop without implementation if current lifecycle already resolves the health signature, or if remediation would require another paid request, changing research semantics, fabricating data or weakening budget/provenance gates.",
+  "escalation_condition": "Escalate to FRAMEWORK_OWNER if resolution would change required observed symbols, no-lookahead semantics, budgets, provider contracts or any market/portfolio authority.",
+  "rollback_plan": "Revert only lifecycle/health reconciliation changes. Preserve terminal receipts and all historical billing/attempt ledgers unchanged.",
+  "submitted_at_utc": "2026-08-24T06:30:00Z"
+}

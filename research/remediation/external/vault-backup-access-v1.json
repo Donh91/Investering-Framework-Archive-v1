@@ -1,0 +1,34 @@
+{
+  "contract": "EXTERNAL_DEPENDENCY_REMEDIATION_TASK_v1",
+  "task_id": "vault-backup-access-v1",
+  "title": "External Vault backup boundary verification",
+  "status": "BLOCKED_EXTERNAL_ACCESS",
+  "priority": "P1",
+  "route": "EXTERNAL_DEPENDENCY",
+  "automatic_code_write": false,
+  "automatic_merge": false,
+  "objective": "Verify the intended external backup boundary for Donh91/Investering-Framework-Vault when repository/app access is available, without weakening the current fail-closed safety model or copying restricted material into the public control plane.",
+  "known_state": [
+    "The control plane is Donh91/Investering-Framework-Archive-v1.",
+    "The restricted data plane is Donh91/secrets.",
+    "An external Vault repository is intended as a backup/safepoint boundary, but current connected GitHub access has not been sufficient to verify it as an independently reachable backup target.",
+    "Recent high-impact work has used internal safepoints and explicit external_vault_claimed_complete=false semantics rather than falsely claiming external backup completion."
+  ],
+  "required_evidence_to_unblock": [
+    "Authenticated repository metadata proving the Vault repository is independently reachable.",
+    "A documented backup/safepoint receipt contract that distinguishes control plane, restricted data plane and external backup.",
+    "Proof that no secrets or restricted provider payloads are copied into the public control plane.",
+    "A restore/readback verification for any backup that is claimed complete."
+  ],
+  "guardrails": [
+    "Do not work around missing access by making repositories public.",
+    "Do not copy secrets, raw restricted provider payloads or private normalized market data into the public repository.",
+    "Do not relabel an internal branch or public repository as an independently verified external backup.",
+    "Do not weaken fail-closed safepoint requirements merely to unblock unrelated PRs.",
+    "No Codex task should attempt to solve an authorization boundary with code unless access and contract evidence first prove a code defect."
+  ],
+  "success_gate": "EXTERNAL_VAULT_REACHABLE_PLUS_BACKUP_RECEIPT_AND_READBACK_VERIFIED",
+  "clean_noop_condition": "A newer canonical architecture explicitly retires the external Vault requirement and replaces it with an independently verified equivalent boundary.",
+  "queued_at_utc": "2026-08-24T06:30:00Z",
+  "source_main_sha": "ef92abe9e5fe80a2c66dfdb2cce1ec3e600dadc3"
+}

@@ -1,0 +1,49 @@
+{
+  "contract": "OPERATIONAL_OBSERVATION_TASK_v1",
+  "task_id": "post-merge-operational-verification-v1",
+  "status": "OBSERVE_ONLY",
+  "priority": "P0_OBSERVATION",
+  "authority": "NO_CODE_CHANGE_UNLESS_FAILURE_RECURS",
+  "source_main_sha": "ef92abe9e5fe80a2c66dfdb2cce1ec3e600dadc3",
+  "items": [
+    {
+      "id": "OBS-557-INTRADAY",
+      "source_pr": 557,
+      "component": "intraday-execution-research",
+      "reason": "Deterministic tuple/dict crash was fixed and CI passed, but production verification requires expected scheduled runs on main.",
+      "success_gate": "3_SUCCESSFUL_EXPECTED_RUNS",
+      "failure_action": "If the same or a new deterministic runtime signature recurs, create/update a bounded Codex task with fresh job logs. Do not broaden semantics."
+    },
+    {
+      "id": "OBS-557-COORDINATOR",
+      "source_pr": 557,
+      "component": "research-execution-coordinator",
+      "reason": "Stale validation assertions were reconciled with current fairness and budget contracts; production-shaped coordinator execution still needs observation.",
+      "success_gate": "3_SUCCESSFUL_EXPECTED_RUNS_OR_EXISTING_REMEDIATION_POST_FIX_GATE",
+      "failure_action": "Re-open only the fresh remaining failure signature. Do not revert current fairness-state semantics merely to satisfy an old assertion."
+    },
+    {
+      "id": "OBS-542-DAILY-CAPTURE",
+      "source_pr": 542,
+      "component": "daily-capture-architecture",
+      "reason": "Six-anchor invariant repair has merged; verify current capture/gate remains stable rather than reopening the pre-merge defect.",
+      "success_gate": "2_CONSECUTIVE_EXPECTED_DAILY_CAPTURE_ARCHITECTURE_PASSES",
+      "failure_action": "Create a new finding only if a fresh six-anchor or successor-contract failure reproduces on main."
+    },
+    {
+      "id": "OBS-544-SITUATION-ROOM",
+      "source_pr": 544,
+      "component": "situation-room-owner",
+      "reason": "Research-only owner activation/backfill has merged; verify runtime stays research-only and does not gain tournament, market or portfolio authority.",
+      "success_gate": "2_CONSECUTIVE_EXPECTED_OWNER_RUNS_WITH_RESEARCH_ONLY_AUTHORITY",
+      "failure_action": "Fail closed and route exact runtime or authority defect to bounded remediation."
+    }
+  ],
+  "guardrails": [
+    "Observation success does not create new market or portfolio authority.",
+    "Do not create duplicate Codex tasks for already-fixed historical signatures.",
+    "Fresh job evidence outranks stale remediation queue snapshots.",
+    "Any recurrence must be bound to current main and exact run logs before code changes."
+  ],
+  "queued_at_utc": "2026-08-24T06:30:00Z"
+}
