@@ -1,0 +1,54 @@
+{
+  "contract": "OPENAI_API_OPERATIONAL_ANALYSIS_QUEUE_v1",
+  "generated_at_utc": "2026-08-24T06:48:00Z",
+  "status": "QUEUED_NOT_AUTOWIRED",
+  "authority": "OPERATIONAL_ANALYSIS_ROUTING_ONLY",
+  "automatic_execution": false,
+  "automatic_code_write": false,
+  "automatic_merge": false,
+  "executor_binding": "NOT_AUTOWIRED_CURRENTLY",
+  "purpose": "Durable ordered queue for operational analyses that should be performed by an authorized OpenAI API analysis lane before any code remediation is handed to Codex. This queue is intentionally separate from the market/cycle Deep Research queue.",
+  "routing_rules": [
+    "Fresh main is authoritative and every task must revalidate evidence before analysis.",
+    "The current market/cycle Deep Research queue must not consume these software/operations tasks unless a separately reviewed executor contract is added.",
+    "Analysis may propose a Codex handoff only when a reproducible bounded defect is supported by exact repository evidence and negative controls.",
+    "UNKNOWN remains UNKNOWN. No historical data or outcomes are rewritten to make a diagnosis complete.",
+    "No task may change market rules, model weights, portfolio logic, canonical authority, API budgets or secrets handling."
+  ],
+  "tasks": [
+    {
+      "order": 1,
+      "task_id": "forecast-censor-attribution-v1",
+      "priority": "P1",
+      "path": "research/remediation/openai_api/forecast-censor-attribution-v1.json",
+      "status": "QUEUED",
+      "next_route": "CODEX_ONLY_IF_REPRODUCIBLE_PROSPECTIVE_DEFECT"
+    },
+    {
+      "order": 2,
+      "task_id": "automation-complexity-review-v1",
+      "priority": "P1",
+      "path": "research/remediation/openai_api/automation-complexity-review-v1.json",
+      "status": "QUEUED",
+      "next_route": "CODEX_ONLY_FOR_HIGH_CONFIDENCE_REVERSIBLE_CONSOLIDATION"
+    },
+    {
+      "order": 3,
+      "task_id": "repository-pr-hygiene-review-v1",
+      "priority": "P2",
+      "path": "research/remediation/openai_api/repository-pr-hygiene-review-v1.json",
+      "status": "QUEUED",
+      "next_route": "OWNER_OR_CODEX_AFTER_SUPERSESSION_EVIDENCE"
+    }
+  ],
+  "executor_requirements_before_activation": [
+    "separate reviewed operational-analysis executor contract",
+    "bounded OpenAI API budget and existing monthly hard stop compliance",
+    "read-only repository input envelope",
+    "write prefix restricted to operational analysis outputs/receipts",
+    "no direct code modification",
+    "no automatic Codex transition without a machine-readable analysis receipt",
+    "no automatic merge"
+  ],
+  "source_main_sha": "d09edc588a2a6e9d6a5dc7d6e34fd3bd1c8ecaba"
+}
