@@ -1,0 +1,72 @@
+{
+  "contract": "CODEX_RESEARCH_CANDIDATE_v1",
+  "candidate_id": "codex-master-monday-registry-unavailable-status-v1",
+  "title": "Master Monday missing-registry status integrity",
+  "status": "SUBMITTED",
+  "requested_priority": "NORMAL",
+  "authority_boundary": "CODE_REMEDIATION_ONLY",
+  "requires_framework_owner_authority": false,
+  "finding_key": "MASTER_MONDAY_MISSING_REGISTRY_CAN_COLLAPSE_TO_PENDING_EMPTY_OUTCOMES",
+  "objective": "Ensure a missing or invalid experiment registry is represented as unavailable evidence and cannot be collapsed into an empty matured-outcome list that produces PENDING_MATURED_OUTCOMES.",
+  "primary_target": "scripts/api_agent/build_weekly_calibration_context.py",
+  "origin": {
+    "type": "POST_MERGE_REVIEW",
+    "thread_label": "PR 560 post-merge review",
+    "source_paths": [
+      "scripts/api_agent/build_weekly_calibration_context.py",
+      "scripts/master_monday/publish_master_monday_outputs.py",
+      "tests"
+    ]
+  },
+  "evidence": [
+    {
+      "kind": "PULL_REQUEST",
+      "ref": "560",
+      "summary": "PR 560 correctly introduced UNAVAILABLE_API_CONTRACT for future operational-translation outputs, but review identified a separate missing-registry fallback that can still look like a valid empty matured-outcome set."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "scripts/master_monday/publish_master_monday_outputs.py",
+      "summary": "Publication status depends on whether the matured-outcome payload is present, so the upstream registry availability state must remain explicit."
+    },
+    {
+      "kind": "COMMIT",
+      "ref": "af49ab0d468644adebded578b976d3ab786aaffd",
+      "summary": "Fresh control-plane main used for routing."
+    }
+  ],
+  "allowed_change_scope": [
+    "scripts/api_agent/build_weekly_calibration_context.py",
+    "scripts/master_monday/publish_master_monday_outputs.py",
+    "tests"
+  ],
+  "forbidden_changes": [
+    "rewriting historical W34 artifacts",
+    "market gates",
+    "model weights",
+    "canonical authority",
+    "portfolio logic",
+    "API budget",
+    "new policy semantics",
+    "fabricating experiment outcomes"
+  ],
+  "reproduction": "Build weekly calibration context with a missing or invalid experiment registry. Verify whether the context emits a structurally valid empty matured-outcome list and the publisher consequently selects PENDING_MATURED_OUTCOMES instead of an explicit unavailable status.",
+  "acceptance_tests": {
+    "positive": [
+      "A valid registry with zero newly matured outcomes remains PENDING_MATURED_OUTCOMES.",
+      "A missing, unreadable or contract-invalid registry produces an explicit unavailable status.",
+      "Future pointer and report surfaces retain the distinction."
+    ],
+    "negative": [
+      "Unavailable registry evidence cannot be represented as a valid empty outcome set.",
+      "Historical W34 persisted artifacts are not rewritten.",
+      "No market or portfolio semantics change."
+    ]
+  },
+  "post_fix_gate": "VALID_EMPTY_REGISTRY_DISTINCT_FROM_UNAVAILABLE_REGISTRY_IN_CONTEXT_POINTER_AND_REPORT",
+  "clean_noop_condition": "Fresh main already preserves registry availability end to end and negative controls pass.",
+  "stop_condition": "Stop if the fix requires rewriting frozen weekly evidence or changing calibration semantics.",
+  "escalation_condition": "Escalate to FRAMEWORK_OWNER if a new publication policy or canonical status contract is required.",
+  "rollback_plan": "Revert only the availability-state plumbing and tests. Preserve all weekly artifacts.",
+  "submitted_at_utc": "2026-08-24T20:23:15Z"
+}

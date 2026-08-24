@@ -1,0 +1,86 @@
+{
+  "contract": "POST_MASTER_MONDAY_W34_PRODUCTION_INTEGRITY_RECEIPT_v1",
+  "recorded_at_utc": "2026-08-24T20:23:15Z",
+  "authority": "OWNER_MANDATED_VALUE_FREE_CONTROL_PLANE_AUDIT",
+  "control_plane_commit": "af49ab0d468644adebded578b976d3ab786aaffd",
+  "restricted_plane_observed_head": "cde851a07bbfb54a5e9110f060b448a4ff947085",
+  "restricted_values_in_receipt": false,
+  "w34": {
+    "status": "READY",
+    "preflight_status": "FULL_MASTER_MONDAY_INPUT",
+    "shadow_admission_status": "EVIDENCE_LIMITED",
+    "calibration_status": "PENDING_MATURED_OUTCOMES",
+    "calibration_status_supported_by_exact_run": true,
+    "persisted_operational_translation_status": "UNAVAILABLE_NOT_PRODUCED",
+    "future_operational_translation_status": "UNAVAILABLE_API_CONTRACT",
+    "historical_rewrite_authorized": false,
+    "automatic_republish_authorized": false
+  },
+  "round3": {
+    "mode": "PROSPECTIVE_COLLECTION_ONLY",
+    "active_sources": [
+      "SC01_OKX_ETH_OI_HOURLY_V1",
+      "SC03_OKX_ETH_REALIZED_FUNDING_V1",
+      "SC14_DERIBIT_ETH_TRUE_25D_SKEW_V1"
+    ],
+    "blocked_sources": {
+      "SC06_BINANCE_ETH_BOOK_DEPTH_V1": "PERSISTENT_RUNTIME_PRIVATE_OBJECT_STORAGE_AND_PAID_INFRASTRUCTURE_AUTHORIZATION_REQUIRED"
+    },
+    "latest_private_health": {
+      "contract": "ROUND3_PRIVATE_DATA_HEALTH_v2",
+      "raw_file_count": 132,
+      "valid_file_count": 132,
+      "invalid_or_orphan_count": 0,
+      "duplicate_payload_capture_count": 0,
+      "legacy_quarantined_count": 11,
+      "post_floor_schema_v2_collection_only_count": 121,
+      "failures_present": false
+    },
+    "latest_capture_readback": {
+      "all_three_complete": true,
+      "all_three_byte_counts_match": true,
+      "all_three_sha256_match": true,
+      "analysis_authorized": false,
+      "hypothesis_testing_performed": false,
+      "outcome_scoring_performed": false
+    },
+    "strict_consumer_binding_complete": false,
+    "analysis_linkage_allowed": false
+  },
+  "repairs": [
+    {
+      "pr": 562,
+      "merge_commit": "1c7613d9511d1a21c34bb99ea36a74891d034f8b",
+      "state": "POST_FIX_OBSERVATION",
+      "remaining_gate": "TWO_CONSECUTIVE_OPERATIONS_DASHBOARD_RUNS_WITH_FRESH_POINTER_TRUTH"
+    },
+    {
+      "pr": 564,
+      "merge_commit": "af49ab0d468644adebded578b976d3ab786aaffd",
+      "state": "MERGED_CI_GREEN_QUARANTINE_PRESERVED"
+    },
+    {
+      "pr": 563,
+      "head_commit": "9395aa495696bade6f4e4322ed4d1b92efed2120",
+      "state": "OPEN_BLOCKED_BY_STALE_LAB_GATE_ASSERTION",
+      "failed_run": 32773096462,
+      "merged": false
+    }
+  ],
+  "routed_candidates": [
+    "codex-historical-cfgi-retired-lab-gate-contract-drift-v1",
+    "codex-master-monday-registry-unavailable-status-v1",
+    "codex-shared-row-consumer-integrity-filter-v1"
+  ],
+  "active_stop_states": [
+    "PRIVATE_BINDING_INCOMPLETE",
+    "ROUND3_ANALYSIS_GATE_CLOSED",
+    "SC06_PERSISTENT_RUNTIME_NOT_AUTHORIZED"
+  ],
+  "credential_exposure_observed": false,
+  "provider_terms_attestation_status": "PASSED_APPLICABLE_REGION_AND_OWNER_USE_ATTESTATION",
+  "market_semantics_changed": false,
+  "portfolio_logic_changed": false,
+  "api_budget_changed": false,
+  "automatic_promotion_changed": false
+}
