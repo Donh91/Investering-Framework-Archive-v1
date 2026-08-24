@@ -1,0 +1,101 @@
+name: Situation Room Owner Live Gate
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/data_terminal/situation_room_daily_owner.py'
+      - 'tests/data_terminal/test_situation_room_daily_owner.py'
+      - '.github/workflows/daily-raw-owner-capture.yml'
+      - '.github/workflows/situation-room-owner-live-gate.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deterministic-and-live-owner:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Run deterministic Situation Room owner tests
+        run: |
+          python -m unittest tests.data_terminal.test_situation_room_daily_owner -v
+          python -m py_compile scripts/data_terminal/situation_room_daily_owner.py
+
+      - name: Run live Situation Room owner without repository writes
+        shell: bash
+        run: |
+          set +e
+          python scripts/data_terminal/situation_room_daily_owner.py \
+            --output-root /tmp/situation-room-live \
+            --date-utc "$(date -u +%F)" \
+            --timeout 8
+          code=$?
+          echo "$code" > /tmp/situation-room-live-exit-code
+          if [ "$code" -ne 0 ] && [ "$code" -ne 78 ]; then
+            exit "$code"
+          fi
+
+      - name: Verify live receipt, authority and failure semantics
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          root=Path('/tmp/situation-room-live')
+          exit_code=int(Path('/tmp/situation-room-live-exit-code').read_text().strip())
+          latest=json.loads((root/'LATEST.json').read_text())
+          dated=Path(latest['path'])
+          result=json.loads(dated.read_text())
+
+          assert result['contract']=='SITUATION_ROOM_DAILY_OWNER_v1', result
+          assert result['authority']=='RESEARCH_ONLY_NON_CANONICAL', result
+          assert result['situation_room_role']=='DISCOVERY_ONLY', result
+          assert result['market_reaction_separate_from_event'] is True, result
+          assert result['shared_row_tournament_eligible'] is False, result
+          assert result['retroactive_candidate_eligibility'] is False, result
+          assert result['canonical_effect'] is False, result
+          assert result['market_state_effect'] is False, result
+          assert result['portfolio_effect'] is False, result
+          assert latest['daily_result']==result['daily_result'], (latest,result)
+          assert latest['run_status']==result['run_status'], (latest,result)
+
+          pass_results={'MATERIAL_CATALYSTS_FOUND','NO_NEW_MATERIAL_CATALYST'}
+          degraded_results={
+              'UNKNOWN_DUE_TO_SOURCE_FAILURE',
+              'REVIEW_REQUIRED_UNRESOLVED_CANDIDATES',
+              'REVIEW_REQUIRED_UNVERIFIED_DISCOVERY',
+          }
+          daily_result=result['daily_result']
+          primary_pass=result['source_coverage']['primary_pass']
+
+          if daily_result in pass_results:
+              assert result['run_status']=='PASS', result
+              assert exit_code==0, (exit_code,result)
+              assert primary_pass >= 3, result['source_coverage']
+          elif daily_result in degraded_results:
+              assert result['run_status']=='DEGRADED', result
+              assert exit_code==78, (exit_code,result)
+              if daily_result == 'UNKNOWN_DUE_TO_SOURCE_FAILURE':
+                  assert 0 < primary_pass < 3, result['source_coverage']
+              else:
+                  assert primary_pass >= 3, result['source_coverage']
+          else:
+              raise AssertionError((exit_code,result))
+
+          assert daily_result != 'COLLECTOR_FAILURE', result
+          print('SITUATION_ROOM_LIVE_OWNER_VALID',daily_result,primary_pass,exit_code)
+          PY
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: situation-room-live-owner-${{ github.run_id }}
+          path: /tmp/situation-room-live/
+          retention-days: 14
+          if-no-files-found: warn

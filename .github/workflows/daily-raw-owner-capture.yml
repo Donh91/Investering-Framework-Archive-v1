@@ -30,7 +30,7 @@ jobs:
   capture:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     env:
       CFGI_API_KEY: ${{ secrets.CFGI_API_KEY }}
       SCHEDULE_ID: ${{ github.event.schedule }}
@@ -117,6 +117,46 @@ jobs:
             git merge-base --is-ancestor HEAD origin/main
           fi
 
+      - name: Capture daily Situation Room catalyst context
+        id: situation_room
+        if: env.SCHEDULE_ID == '13 6 * * *' || github.event_name == 'workflow_dispatch'
+        continue-on-error: true
+        shell: bash
+        run: |
+          set +e
+          python scripts/data_terminal/situation_room_daily_owner.py \
+            --output-root 03_DAILY_CAPTURE_LOGS/catalyst_overlay/situation_room \
+            --timeout 8
+          code=$?
+          echo "exit_code=${code}" >> "$GITHUB_OUTPUT"
+          exit "$code"
+      - name: Report Situation Room degradation without invalidating anchor
+        if: always() && steps.situation_room.outcome == 'failure'
+        run: echo "::warning::Situation Room catalyst context degraded after the live anchor was durably committed. Collector exit=${{ steps.situation_room.outputs.exit_code }}. Missing catalyst context remains UNKNOWN, never NO_NEW_MATERIAL_CATALYST by failure."
+      - name: Commit Situation Room catalyst context independently
+        if: always() && (env.SCHEDULE_ID == '13 6 * * *' || github.event_name == 'workflow_dispatch')
+        shell: bash
+        run: |
+          ROOT=03_DAILY_CAPTURE_LOGS/catalyst_overlay/situation_room
+          if [ ! -d "$ROOT" ]; then
+            echo '::warning::Situation Room owner produced no durable directory. Live anchor remains valid; catalyst context is unavailable.'
+            exit 0
+          fi
+          git config user.name 'framework-data-bot'
+          git config user.email 'framework-data-bot@users.noreply.github.com'
+          git add "$ROOT"
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "research: capture Situation Room catalyst context ${GITHUB_RUN_ID}"
+          pushed=false
+          for attempt in 1 2 3; do
+            git rebase --abort 2>/dev/null || true
+            if git pull --rebase origin main && git push origin HEAD:main; then pushed=true; break; fi
+            sleep $((attempt * 5))
+          done
+          [ "$pushed" = true ]
+          git fetch origin main
+          git merge-base --is-ancestor HEAD origin/main
+
       - name: Capture passive Pullback Forensics evidence
         id: pullback_forensics
         continue-on-error: true
@@ -192,6 +232,7 @@ jobs:
             cfgi-1d-owner-output/
             collector-status.json
             03_DAILY_CAPTURE_LOGS/raw/incidents/
+            03_DAILY_CAPTURE_LOGS/catalyst_overlay/situation_room/LATEST.json
             03_DAILY_CAPTURE_LOGS/pullback_forensics/LATEST.json
             04_MARKET_LEARNING/backtests/framework_backtest_readiness_build_v1/prospective_dual_run_v2/evidence/COVERAGE_LATEST.json
           retention-days: 14
