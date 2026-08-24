@@ -3,7 +3,7 @@
   "candidate_id": "codex-historical-cfgi-terminal-lifecycle-reconciliation-v1",
   "title": "Historical CFGI terminal lifecycle reconciliation",
   "status": "SUBMITTED",
-  "requested_priority": "P0",
+  "requested_priority": "EXPEDITED",
   "authority_boundary": "CODE_REMEDIATION_ONLY",
   "requires_framework_owner_authority": false,
   "finding_key": "HISTORICAL_CFGI_TERMINALIZED_WORKFLOW_STILL_REPORTED_RED",
@@ -24,7 +24,7 @@
     {"kind":"HEALTH_SIGNATURE","ref":"317201b09ae61bb7336b","summary":"Historical enrichment latest-run failure was still represented as actionable red in automation health."},
     {"kind":"REPO_PATH","ref":"scripts/historical_lab/cfgi_targeted_backfill.py","summary":"MARKET-only gapfill explicitly fails when provider returns no MARKET rows and writes FAIL_PROVIDER_DID_NOT_RETURN_MARKET before raising CFGI_MARKET_GAPFILL_PROVIDER_RETURN_INVALID."},
     {"kind":"REPO_PATH","ref":".github/workflows/historical-altseason-cfgi-terminal-finalize.yml","summary":"Existing terminal finalizer ratifies NOT_TESTABLE_PROVIDER_UNAVAILABLE, TERMINAL_PROVIDER_NO_HISTORICAL_ROWS and no_additional_paid_retry_authorized=true without paid calls."},
-    {"kind":"COMMIT","ref":"ef92abe9e5fe80a2c66dfdb2cce1ec3e600dadc3","summary":"Fresh main used to freeze this intake candidate."}
+    {"kind":"COMMIT","ref":"ef92abe9e5fe80a2c66dfdb2cce1ec3e600dadc3","summary":"Main snapshot used for the original audit evidence; execution must revalidate current main."}
   ],
   "allowed_change_scope": [
     ".github/workflows/historical-altseason-cfgi-enrichment.yml",
@@ -37,13 +37,17 @@
     "tests"
   ],
   "forbidden_changes": [
+    "market gates",
+    "model weights",
+    "canonical authority",
+    "portfolio logic",
+    "API budget",
+    "new policy semantics",
     "any new paid retry or automatic paid retry",
-    "CFGI budget increase or reserve reduction",
     "secret creation, persistence or exposure",
     "fabrication, interpolation or substitution of missing MARKET historical rows",
     "resetting or deleting cumulative credit/attempt ledgers",
     "weakening the provider-bounded v3.1 no-lookahead contract",
-    "market gates, model weights, portfolio logic or canonical market semantics",
     "automatic promotion"
   ],
   "reproduction": "On fresh main, the legacy enrichment path still calls cfgi_targeted_backfill.py. When the provider returns zero MARKET rows, the script writes a failed MARKET gapfill billing receipt and raises CFGI_MARKET_GAPFILL_PROVIDER_RETURN_INVALID. The repository also contains a terminal finalizer that explicitly accepts the bounded state as TERMINAL_PROVIDER_NO_HISTORICAL_ROWS, records no_additional_paid_retry_authorized=true and produces provider-bounded readiness without paid calls. Reconcile these states so terminal provider unavailability is not routed as a recoverable red workflow failure.",
