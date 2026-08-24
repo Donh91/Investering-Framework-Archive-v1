@@ -1,0 +1,302 @@
+{
+  "anti_double_counting": "RELATED_SHADOWS_MUST_NOT_BE_TREATED_AS_INDEPENDENT_CONFIRMATIONS",
+  "authority": "RESEARCH_ONLY_NON_CANONICAL",
+  "automatic_rule_changes": false,
+  "contract": "SHADOW_WEEKLY_RELEVANCE_SNAPSHOT_v1",
+  "generated_at_utc": "2026-08-24T06:07:11.100556+00:00",
+  "interpretation_rule": "This runtime records evidence availability and pre-registered evaluator outputs. It does not infer NOISE, REDUNDANT or PROMOTION from file presence alone.",
+  "portfolio_execution": false,
+  "promotion_requires_separate_review": true,
+  "sensors": [
+    {
+      "calibration_readiness": "SCORABLE",
+      "entry_signal_summary": {
+        "activation_event_count": 6,
+        "generated_at_utc": "2026-08-24T05:26:29.021665+00:00",
+        "horizons": {
+          "14d": {
+            "btc_mean_return_pct": null,
+            "eth_mean_return_pct": null,
+            "matched_top100_mean_return_pct": null,
+            "matured_event_count": 0
+          },
+          "24h": {
+            "btc_mean_return_pct": 1.81479506466831,
+            "eth_mean_return_pct": 0.3506861921967695,
+            "matched_top100_mean_return_pct": 0.025521916256720734,
+            "matured_event_count": 3
+          },
+          "30d": {
+            "btc_mean_return_pct": null,
+            "eth_mean_return_pct": null,
+            "matched_top100_mean_return_pct": null,
+            "matured_event_count": 0
+          },
+          "72h": {
+            "btc_mean_return_pct": 10.795987440949407,
+            "eth_mean_return_pct": 7.352888857264839,
+            "matched_top100_mean_return_pct": null,
+            "matured_event_count": 1
+          },
+          "7d": {
+            "btc_mean_return_pct": null,
+            "eth_mean_return_pct": null,
+            "matched_top100_mean_return_pct": null,
+            "matured_event_count": 0
+          }
+        }
+      },
+      "evaluator": "ENTRY_SIGNAL_PERFORMANCE_SUMMARY_v1",
+      "evidence": [
+        {
+          "commit": "9014029fa41aeca47e20ce9e600c6a75ef34b6cb",
+          "committed_at": "2026-08-24T05:26:29Z",
+          "exists": true,
+          "path": "04_MARKET_LEARNING/entry_signals/LATEST.json"
+        },
+        {
+          "commit": "9014029fa41aeca47e20ce9e600c6a75ef34b6cb",
+          "committed_at": "2026-08-24T05:26:29Z",
+          "exists": true,
+          "path": "04_MARKET_LEARNING/entry_signals/PERFORMANCE_SUMMARY.json"
+        },
+        {
+          "commit": "9014029fa41aeca47e20ce9e600c6a75ef34b6cb",
+          "committed_at": "2026-08-24T05:26:29Z",
+          "exists": true,
+          "path": "04_MARKET_LEARNING/entry_signals/events"
+        },
+        {
+          "commit": "9014029fa41aeca47e20ce9e600c6a75ef34b6cb",
+          "committed_at": "2026-08-24T05:26:29Z",
+          "exists": true,
+          "path": "04_MARKET_LEARNING/entry_signals/outcomes"
+        }
+      ],
+      "evidence_path_count": 4,
+      "family": "entry_signals",
+      "missing_path_count": 0,
+      "registry_relevance_state": "KEEP",
+      "sensor_id": "ENTRY_SIGNAL_LEDGER",
+      "status": "ACTIVE_SHADOW"
+    },
+    {
+      "calibration_readiness": "RECOVERY_REQUIRED",
+      "evaluator": "NONE_RECOVERY_REQUIRED",
+      "evidence": [
+        {
+          "commit": "a03cdf6eaeb48a6b97b6d313b30d89c399bb9d3b",
+          "committed_at": "2026-07-07T02:03:18+02:00",
+          "exists": true,
+          "path": "04_MARKET_LEARNING/forward_tests/2026-07-07__forward-test-ledger-gate-btc-partial-graduated-deployment-v1__shadow.md"
+        }
+      ],
+      "evidence_path_count": 1,
+      "family": "legacy_forward_tests",
+      "missing_path_count": 0,
+      "registry_relevance_state": "WATCH",
+      "sensor_id": "LEGACY_GATE_BTC_PARTIAL_FT1",
+      "status": "RESEARCH_ONLY"
+    },
+    {
+      "calibration_readiness": "RECOVERY_REQUIRED",
+      "evaluator": "NONE_RECOVERY_REQUIRED",
+      "evidence": [
+        {
+          "commit": "a03cdf6eaeb48a6b97b6d313b30d89c399bb9d3b",
+          "committed_at": "2026-07-07T02:03:18+02:00",
+          "exists": true,
+          "path": "04_MARKET_LEARNING/forward_tests/2026-07-07__forward-test-ledger-gate-btc-partial-graduated-deployment-v1__shadow.md"
+        },
+        {
+          "commit": "491026fb78b51ecd8fdd56bf5e4272e912ea1642",
+          "committed_at": "2026-07-07T02:02:14+02:00",
+          "exists": true,
+          "path": "04_MARKET_LEARNING/forward_tests/2026-07-07__research-lab-evidence-pack-gate-btc-partial-graduated-deployment-v1__shadow.md"
+        }
+      ],
+      "evidence_path_count": 2,
+      "family": "legacy_forward_tests",
+      "missing_path_count": 0,
+      "registry_relevance_state": "WATCH",
+      "sensor_id": "LEGACY_GRADUATED_DEPLOYMENT_V1_1",
+      "status": "RESEARCH_ONLY"
+    },
+    {
+      "calibration_readiness": "SCORABLE",
+      "evaluator": "SOURCE_PRESENCE_AND_FUTURE_OUTCOME_REVIEW",
+      "evidence": [
+        {
+          "commit": "7af04ed702f418078c85ccdac0034d416760ea7e",
+          "committed_at": "2026-07-11T19:13:45+02:00",
+          "exists": true,
+          "path": "04_MARKET_LEARNING/breadth/forward"
+        }
+      ],
+      "evidence_path_count": 1,
+      "family": "breadth",
+      "missing_path_count": 0,
+      "registry_relevance_state": "KEEP",
+      "sensor_id": "BREADTH_FORWARD_FAMILY",
+      "status": "ACTIVE_SHADOW"
+    },
+    {
+      "calibration_readiness": "RECOVERY_REQUIRED",
+      "evaluator": "NONE_RECOVERY_REQUIRED",
+      "evidence": [
+        {
+          "commit": "900d2f7e3f672030fbfd58a1853a3b18eeaa8165",
+          "committed_at": "2026-07-14T18:51:49+02:00",
+          "exists": true,
+          "path": "04_MARKET_LEARNING/fable_ota_shadow"
+        }
+      ],
+      "evidence_path_count": 1,
+      "family": "external_shadow_research",
+      "missing_path_count": 0,
+      "registry_relevance_state": "WATCH",
+      "sensor_id": "FABLE_OTA_SHADOW_FAMILY",
+      "status": "RESEARCH_ONLY"
+    },
+    {
+      "calibration_readiness": "RECOVERY_REQUIRED",
+      "evaluator": "NONE_RECOVERY_REQUIRED",
+      "evidence": [
+        {
+          "commit": "f7277189dd41bfeb816b6e3df60cead561fbe1c5",
+          "committed_at": "2026-08-04T10:33:00+02:00",
+          "exists": true,
+          "path": "04_MARKET_LEARNING/cycle_navigator"
+        }
+      ],
+      "evidence_path_count": 1,
+      "family": "cycle_navigator",
+      "missing_path_count": 0,
+      "registry_relevance_state": "WATCH",
+      "sensor_id": "CYCLE_NAVIGATOR_RESEARCH_FAMILY",
+      "status": "RESEARCH_ONLY"
+    },
+    {
+      "calibration_readiness": "RECOVERY_REQUIRED",
+      "evaluator": "RESEARCH_ARTIFACT_ONLY",
+      "evidence": [
+        {
+          "commit": "f39c520c3b9d7c68bd4536975f0ed70927678173",
+          "committed_at": "2026-08-22T08:36:27+02:00",
+          "exists": true,
+          "path": "06_RESEARCH_LAB/historical_altseason_pullback_v1"
+        }
+      ],
+      "evidence_path_count": 1,
+      "family": "historical_research",
+      "missing_path_count": 0,
+      "registry_relevance_state": "WATCH",
+      "sensor_id": "HISTORICAL_ALTSEASON_PULLBACK_LAB",
+      "status": "RESEARCH_ONLY"
+    },
+    {
+      "calibration_readiness": "RECOVERY_REQUIRED",
+      "evaluator": "NONE_RECOVERY_REQUIRED",
+      "evidence": [
+        {
+          "commit": "a67c0c4cd880958711b36b1aad02d81bbfe543d1",
+          "committed_at": "2026-08-21T16:51:21+02:00",
+          "exists": true,
+          "path": "06_RESEARCH_LAB/historical_sensor_recovery_v1/RECOVERED_LEGACY_SENSOR_DEFINITIONS_2026-08-21.json"
+        },
+        {
+          "commit": "58d46292b00d7f718417a76c83ff47a7b430eca6",
+          "committed_at": "2026-08-22T14:44:04+02:00",
+          "exists": true,
+          "path": "04_MARKET_LEARNING/shadow_registry/LEGACY_RECOVERY_QUEUE.json"
+        }
+      ],
+      "evidence_path_count": 2,
+      "family": "legacy_sensor_recovery",
+      "missing_path_count": 0,
+      "registry_relevance_state": "WATCH",
+      "sensor_id": "RECOVERED_LEGACY_SENSOR_FAMILY_2026_08_21",
+      "status": "DORMANT_RECOVERABLE"
+    },
+    {
+      "calibration_readiness": "RECOVERY_REQUIRED",
+      "evaluator": "RESEARCH_ARTIFACT_ONLY",
+      "evidence": [
+        {
+          "commit": "c00b70165276a89f42737c0854e17509bd42fcd2",
+          "committed_at": "2026-08-23T09:46:54+02:00",
+          "exists": true,
+          "path": "04_MARKET_LEARNING/shadow_registry/SHARED_ROW_TOURNAMENT_POINTER.json"
+        },
+        {
+          "commit": "4d66c1dc4912db6aa10df91a3b445b25804ec891",
+          "committed_at": "2026-08-23T10:22:59+02:00",
+          "exists": true,
+          "path": "06_RESEARCH_LAB/shared_row_model_tournament_v1/RUNTIME_STATUS.json"
+        },
+        {
+          "commit": "4d66c1dc4912db6aa10df91a3b445b25804ec891",
+          "committed_at": "2026-08-23T10:22:59+02:00",
+          "exists": true,
+          "path": "06_RESEARCH_LAB/shared_row_model_tournament_v1/OWNER_BINDING_MATRIX.json"
+        },
+        {
+          "commit": "4d66c1dc4912db6aa10df91a3b445b25804ec891",
+          "committed_at": "2026-08-23T10:22:59+02:00",
+          "exists": true,
+          "path": "06_RESEARCH_LAB/shared_row_model_tournament_v1/TRANSFORM_FREEZE_REGISTRY.json"
+        },
+        {
+          "commit": "f7de1f0b92278d3d887077d40d61fc453fc9e084",
+          "committed_at": "2026-08-23T10:18:29+02:00",
+          "exists": true,
+          "path": "06_RESEARCH_LAB/shared_row_model_tournament_v1/data/PROSPECTIVE_SHARED_ROW_LEDGER.csv"
+        },
+        {
+          "commit": "0d25a405863609262c937f4638046bfb5ae561ce",
+          "committed_at": "2026-08-22T18:13:45+02:00",
+          "exists": true,
+          "path": "06_RESEARCH_LAB/shared_row_model_tournament_v1/14_DIVERGENCE_FNP_LEDGER.csv"
+        },
+        {
+          "commit": "0d25a405863609262c937f4638046bfb5ae561ce",
+          "committed_at": "2026-08-22T18:13:45+02:00",
+          "exists": true,
+          "path": "06_RESEARCH_LAB/shared_row_model_tournament_v1/data/CATALYST_LEDGER.csv"
+        },
+        {
+          "commit": "245f4e35c57e0380d8a528b5898f3cd0bae4f197",
+          "committed_at": "2026-08-24T05:25:33Z",
+          "exists": true,
+          "path": "06_RESEARCH_LAB/shared_row_model_tournament_v1/RELEVANCE_STATE.json"
+        },
+        {
+          "commit": "245f4e35c57e0380d8a528b5898f3cd0bae4f197",
+          "committed_at": "2026-08-24T05:25:33Z",
+          "exists": true,
+          "path": "06_RESEARCH_LAB/shared_row_model_tournament_v1/monitor/LATEST.json"
+        },
+        {
+          "commit": "f44fa8a896ec1cb56393566823819508e13bed6c",
+          "committed_at": "2026-08-22T19:47:01+02:00",
+          "exists": true,
+          "path": "06_RESEARCH_LAB/shared_row_model_tournament_v1/weekly/LATEST.json"
+        }
+      ],
+      "evidence_path_count": 10,
+      "family": "shared_row_model_tournament",
+      "missing_path_count": 0,
+      "registry_relevance_state": "WATCH",
+      "sensor_id": "SHARED_ROW_MODEL_TOURNAMENT_V1",
+      "status": "RESEARCH_ONLY"
+    }
+  ],
+  "summary": {
+    "promotion_candidates": [],
+    "recovery_required_count": 7,
+    "scorable_count": 2,
+    "sensor_count": 9,
+    "source_missing_count": 0
+  },
+  "week": "2026-W35"
+}
