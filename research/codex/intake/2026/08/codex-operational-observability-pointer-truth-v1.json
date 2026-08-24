@@ -3,7 +3,7 @@
   "candidate_id": "codex-operational-observability-pointer-truth-v1",
   "title": "Operations dashboard pointer truth repair",
   "status": "SUBMITTED",
-  "requested_priority": "P0",
+  "requested_priority": "EXPEDITED",
   "authority_boundary": "CODE_REMEDIATION_ONLY",
   "requires_framework_owner_authority": false,
   "finding_key": "OPERATIONS_DASHBOARD_STALE_HANDOFF_POINTER_TRUTH",
@@ -24,7 +24,7 @@
     {"kind":"REPO_PATH","ref":"scripts/architecture/build_latest_handoff.py","summary":"Already discovers newest Daily Director and Master Monday delivery artifacts and can materialize fresh pointers."},
     {"kind":"REPO_PATH","ref":"scripts/health/build_operations_dashboard.py","summary":"Consumes pointers from LATEST_HANDOFF.json and combines pointer hash, freshness and semantic status."},
     {"kind":"REPO_PATH","ref":".github/workflows/operations-dashboard.yml","summary":"Builds the dashboard directly without first regenerating LATEST_HANDOFF.json, allowing stale routing metadata to create false STALE status."},
-    {"kind":"COMMIT","ref":"ef92abe9e5fe80a2c66dfdb2cce1ec3e600dadc3","summary":"Fresh main used to freeze this intake candidate."}
+    {"kind":"COMMIT","ref":"ef92abe9e5fe80a2c66dfdb2cce1ec3e600dadc3","summary":"Main snapshot used for the original audit evidence; execution must revalidate current main."}
   ],
   "allowed_change_scope": [
     ".github/workflows/operations-dashboard.yml",
@@ -35,9 +35,12 @@
     "tests/architecture"
   ],
   "forbidden_changes": [
-    "market gates or thresholds",
+    "market gates",
+    "model weights",
+    "canonical authority",
     "portfolio logic",
-    "canonical market semantics",
+    "API budget",
+    "new policy semantics",
     "producer schedules unrelated to dashboard observability",
     "weakening pointer hash verification",
     "rewriting or fabricating producer outputs",
