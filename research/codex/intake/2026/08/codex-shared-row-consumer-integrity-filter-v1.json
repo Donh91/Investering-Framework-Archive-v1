@@ -1,0 +1,75 @@
+{
+  "contract": "CODEX_RESEARCH_CANDIDATE_v1",
+  "candidate_id": "codex-shared-row-consumer-integrity-filter-v1",
+  "title": "Shared-row consumer eligibility integrity filter",
+  "status": "SUBMITTED",
+  "requested_priority": "EXPEDITED",
+  "authority_boundary": "CODE_REMEDIATION_ONLY",
+  "requires_framework_owner_authority": false,
+  "finding_key": "SHARED_ROW_WEEKLY_AND_RELEVANCE_COUNT_UNBOUND_ROWS",
+  "objective": "Require weekly and relevance consumers to exclude quarantined, pre-floor, source-unbound or immutable-provenance-invalid rows from eligible, divergence and performance counts.",
+  "primary_target": "scripts/research/shared_row_tournament_weekly.py",
+  "origin": {
+    "type": "POST_MERGE_REVIEW",
+    "thread_label": "Prospective shared-row P0 follow-up",
+    "source_paths": [
+      "scripts/research/shared_row_tournament_weekly.py",
+      "scripts/research/shared_row_tournament_relevance.py",
+      "scripts/research/shared_row_outcome_owner.py",
+      "06_RESEARCH_LAB/shared_row_model_tournament_v1/RUNTIME_STATUS.json"
+    ]
+  },
+  "evidence": [
+    {
+      "kind": "PULL_REQUEST",
+      "ref": "519",
+      "summary": "Post-merge review found weekly and relevance consumers outside the original task scope still count rows without applying the full P0 eligibility and quarantine filter."
+    },
+    {
+      "kind": "PULL_REQUEST",
+      "ref": "564",
+      "summary": "Follow-up repairs exact ETHBTC state and immutable row provenance within approved files, but explicitly routes consumer filtering as a separate task."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "06_RESEARCH_LAB/shared_row_model_tournament_v1/RUNTIME_STATUS.json",
+      "summary": "Runtime remains quarantined with zero eligible rows and no activation floor."
+    }
+  ],
+  "allowed_change_scope": [
+    "scripts/research/shared_row_tournament_weekly.py",
+    "scripts/research/shared_row_tournament_relevance.py",
+    "tests/research"
+  ],
+  "forbidden_changes": [
+    "activation or backdating",
+    "market gates",
+    "model weights",
+    "canonical authority",
+    "portfolio logic",
+    "API budget",
+    "new policy semantics",
+    "automatic promotion",
+    "paid data",
+    "changing candidate decisions or outcomes"
+  ],
+  "reproduction": "Provide a controlled ledger containing one fully bound post-floor row and rows that are quarantined, pre-floor, source-unbound or immutable-provenance-invalid. Run weekly and relevance consumers and verify whether excluded rows enter eligible, divergence, maturity or performance counts.",
+  "acceptance_tests": {
+    "positive": [
+      "Only fully eligible post-floor rows enter weekly and relevance metrics.",
+      "Zero eligible rows remains COLLECTING and INSUFFICIENT_EVIDENCE.",
+      "Filtering is deterministic and shared between both consumers."
+    ],
+    "negative": [
+      "Quarantined, pre-floor, unbound or provenance-invalid rows never affect metrics.",
+      "No existing row is activated or backdated.",
+      "No market, portfolio or automatic-promotion semantics change."
+    ]
+  },
+  "post_fix_gate": "ADVERSARIAL_CONSUMER_FIXTURE_EXCLUDES_ALL_INELIGIBLE_ROWS_AND_COUNTS_ONLY_BOUND_POST_FLOOR_ROWS",
+  "clean_noop_condition": "Fresh main already applies one fail-closed eligibility predicate in both consumers and the adversarial fixture passes.",
+  "stop_condition": "Stop if the repair requires changing research decisions, activation floors or market semantics.",
+  "escalation_condition": "Escalate to FRAMEWORK_OWNER if eligibility policy itself is ambiguous or requires a new canonical contract.",
+  "rollback_plan": "Revert only consumer-side filtering and tests. Preserve ledgers and quarantine state.",
+  "submitted_at_utc": "2026-08-24T20:23:15Z"
+}

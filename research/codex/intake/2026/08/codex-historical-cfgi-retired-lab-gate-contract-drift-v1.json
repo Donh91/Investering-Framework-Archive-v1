@@ -1,0 +1,74 @@
+{
+  "contract": "CODEX_RESEARCH_CANDIDATE_v1",
+  "candidate_id": "codex-historical-cfgi-retired-lab-gate-contract-drift-v1",
+  "title": "Retired CFGI launcher lab-gate contract drift",
+  "status": "SUBMITTED",
+  "requested_priority": "EXPEDITED",
+  "authority_boundary": "CODE_REMEDIATION_ONLY",
+  "requires_framework_owner_authority": false,
+  "finding_key": "HISTORICAL_CFGI_LAB_GATE_REQUIRES_RETIRED_LAUNCHER_CRON",
+  "objective": "Update the historical altseason lab gate so it validates the ratified terminal no-retry lifecycle instead of requiring the retired five-minute recovery launcher schedule, while preserving every paid-data, budget, no-lookahead and provider-terminal safety assertion.",
+  "primary_target": ".github/workflows/historical-altseason-lab-gate.yml",
+  "origin": {
+    "type": "PR_CI_REVIEW",
+    "thread_label": "Post Master Monday W34 production integrity audit",
+    "source_paths": [
+      ".github/workflows/historical-altseason-lab-gate.yml",
+      ".github/workflows/cfgi-recovery-launch-once.yml",
+      ".github/workflows/historical-altseason-cfgi-enrichment.yml"
+    ]
+  },
+  "evidence": [
+    {
+      "kind": "WORKFLOW_RUN",
+      "ref": "32773096462",
+      "summary": "Historical Altseason Lab Gate failed on PR 563 solely because it still asserted the removed five-minute cron and legacy launch token in the retired recovery launcher. All preceding scientific, authorization and terminal budget assertions passed."
+    },
+    {
+      "kind": "PULL_REQUEST",
+      "ref": "563",
+      "summary": "The bounded CFGI terminal-lifecycle repair remains unmerged because this stale gate assertion is red."
+    },
+    {
+      "kind": "COMMIT",
+      "ref": "af49ab0d468644adebded578b976d3ab786aaffd",
+      "summary": "Fresh control-plane main used for routing."
+    }
+  ],
+  "allowed_change_scope": [
+    ".github/workflows/historical-altseason-lab-gate.yml",
+    ".github/workflows/cfgi-recovery-launch-once.yml",
+    "tests"
+  ],
+  "forbidden_changes": [
+    "any paid request or automatic paid retry",
+    "reactivating a retired schedule",
+    "API budget",
+    "new policy semantics",
+    "market gates",
+    "model weights",
+    "canonical authority",
+    "portfolio logic",
+    "fabrication, interpolation or proxy substitution",
+    "weakening no-lookahead or terminal provider assertions"
+  ],
+  "reproduction": "Run Historical Altseason Lab Gate at PR 563 head 9395aa495696bade6f4e4322ed4d1b92efed2120. The provider-bounded v3.1 contract block passes, then the split compute-publish block fails at the assertion that cfgi-recovery-launch-once.yml contains cron */5 and V3_MARKET_GAPFILL_RUN_BOUND even though the launcher was intentionally retired after the terminal provider receipt.",
+  "acceptance_tests": {
+    "positive": [
+      "The gate accepts the ratified RETIRED terminal/no-retry launcher lifecycle.",
+      "The gate still verifies terminal receipt, no additional paid retry, cumulative ledger, no-lookahead and provider-bounded readiness contracts.",
+      "PR 563 gates can complete without restoring a schedule."
+    ],
+    "negative": [
+      "A live or scheduled paid recovery path after terminalization must fail.",
+      "Missing terminal receipt or weakened budget/no-lookahead assertions must fail.",
+      "The repair must not change research or market semantics."
+    ]
+  },
+  "post_fix_gate": "HISTORICAL_ALTSEASON_LAB_GATE_PASS_WITH_RETIRED_LAUNCHER_AND_ZERO_PAID_RETRY",
+  "clean_noop_condition": "Fresh main no longer requires the retired cron or PR 563 is superseded by an equivalent merged repair with all relevant gates green.",
+  "stop_condition": "Stop if the change would reactivate the launcher, issue a paid request, weaken terminal/budget/no-lookahead safety or exceed the bounded gate contract.",
+  "escalation_condition": "Escalate to FRAMEWORK_OWNER if the correction requires new provider, budget, market or portfolio semantics.",
+  "rollback_plan": "Revert only the lab-gate assertion update. Preserve terminal receipts, ledgers and the retired launcher state.",
+  "submitted_at_utc": "2026-08-24T20:23:15Z"
+}
