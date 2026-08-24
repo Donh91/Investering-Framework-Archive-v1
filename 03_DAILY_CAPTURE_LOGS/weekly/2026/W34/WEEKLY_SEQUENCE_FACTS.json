@@ -1,0 +1,217 @@
+{
+  "authority": "SHADOW_CALIBRATION_INPUT_ONLY",
+  "contract": "WEEKLY_SEQUENCE_FACTS_v1",
+  "day_window_actuals": {
+    "basis": "UTC_ISO_WEEK",
+    "windows": {
+      "DAY1_2": {
+        "btc": {
+          "close": 64725.42,
+          "high": 65058.81,
+          "low": 62751.1,
+          "open": 62900.0
+        },
+        "eth": {
+          "close": 1917.85,
+          "high": 1923.27,
+          "low": 1872.46,
+          "open": 1876.01
+        },
+        "ethbtc": {
+          "close": 0.02963,
+          "high": 0.03005,
+          "low": 0.02945,
+          "open": 0.02983
+        },
+        "observed_hours": 48,
+        "window_end_utc": "2026-08-19T00:00:00Z",
+        "window_start_utc": "2026-08-17T00:00:00Z"
+      },
+      "DAY3_4": {
+        "btc": {
+          "close": 73025.15,
+          "high": 73400.0,
+          "low": 64166.0,
+          "open": 64725.42
+        },
+        "eth": {
+          "close": 2326.82,
+          "high": 2360.0,
+          "low": 1906.0,
+          "open": 1917.85
+        },
+        "ethbtc": {
+          "close": 0.03187,
+          "high": 0.03342,
+          "low": 0.02957,
+          "open": 0.02963
+        },
+        "observed_hours": 48,
+        "window_end_utc": "2026-08-21T00:00:00Z",
+        "window_start_utc": "2026-08-19T00:00:00Z"
+      },
+      "DAY5_7": {
+        "btc": {
+          "close": 77734.0,
+          "high": 79500.0,
+          "low": 73027.02,
+          "open": 73027.02
+        },
+        "eth": {
+          "close": 2463.41,
+          "high": 2546.78,
+          "low": 2324.99,
+          "open": 2326.83
+        },
+        "ethbtc": {
+          "close": 0.03169,
+          "high": 0.03238,
+          "low": 0.0307,
+          "open": 0.03187
+        },
+        "observed_hours": 72,
+        "window_end_utc": "2026-08-24T00:00:00Z",
+        "window_start_utc": "2026-08-21T00:00:00Z"
+      }
+    }
+  },
+  "forecast_evaluation_performed": false,
+  "forward_fill": false,
+  "gap_diagnostics": {
+    "expected_hours": 168,
+    "max_contiguous_gap_hours": 0,
+    "missing_hour_count": 0,
+    "missing_hours_utc": [],
+    "observed_hours": 168,
+    "per_field_completeness": {
+      "btc_close": {
+        "complete_hours": 168,
+        "coverage_pct": 100.0
+      },
+      "btc_long_short_ratio": {
+        "complete_hours": 168,
+        "coverage_pct": 100.0
+      },
+      "btc_open_interest": {
+        "complete_hours": 168,
+        "coverage_pct": 100.0
+      },
+      "btc_quote_volume": {
+        "complete_hours": 168,
+        "coverage_pct": 100.0
+      },
+      "btc_taker_buy_quote_share": {
+        "complete_hours": 168,
+        "coverage_pct": 100.0
+      },
+      "btc_trade_count": {
+        "complete_hours": 168,
+        "coverage_pct": 100.0
+      },
+      "eth_close": {
+        "complete_hours": 168,
+        "coverage_pct": 100.0
+      },
+      "eth_long_short_ratio": {
+        "complete_hours": 168,
+        "coverage_pct": 100.0
+      },
+      "eth_open_interest": {
+        "complete_hours": 168,
+        "coverage_pct": 100.0
+      },
+      "eth_quote_volume": {
+        "complete_hours": 168,
+        "coverage_pct": 100.0
+      },
+      "eth_taker_buy_quote_share": {
+        "complete_hours": 168,
+        "coverage_pct": 100.0
+      },
+      "eth_trade_count": {
+        "complete_hours": 168,
+        "coverage_pct": 100.0
+      },
+      "ethbtc_close": {
+        "complete_hours": 168,
+        "coverage_pct": 100.0
+      }
+    }
+  },
+  "generated_at_utc": "2026-08-24T02:09:39Z",
+  "interpolation": false,
+  "iso_week": 34,
+  "iso_year": 2026,
+  "latest_rolling_features": {
+    "btc_oi_change_12h_pct": "-1.94059050876",
+    "btc_oi_change_24h_pct": "-1.21773250839",
+    "btc_oi_change_48h_pct": "-1.29367765894",
+    "btc_oi_change_4h_pct": "-0.725985743038",
+    "btc_oi_change_72h_pct": "-2.25256526349",
+    "btc_return_12h_pct": "0.547114758025",
+    "btc_return_24h_pct": "0.855102949818",
+    "btc_return_48h_pct": "-0.771055897117",
+    "btc_return_4h_pct": "0.501628978664",
+    "btc_return_72h_pct": "6.44825789471",
+    "eth_minus_btc_return_12h_pct": "0.674492026761",
+    "eth_minus_btc_return_24h_pct": "0.829450835372",
+    "eth_minus_btc_return_48h_pct": "-1.33083974331",
+    "eth_minus_btc_return_4h_pct": "0.252984593747",
+    "eth_minus_btc_return_72h_pct": "-0.578014386404",
+    "eth_oi_change_12h_pct": "-7.10339484795",
+    "eth_oi_change_24h_pct": "-2.28010255161",
+    "eth_oi_change_48h_pct": "0.13571551412",
+    "eth_oi_change_4h_pct": "-2.07749269958",
+    "eth_oi_change_72h_pct": "-2.40008984939",
+    "eth_return_12h_pct": "1.22160678479",
+    "eth_return_24h_pct": "1.68455378519",
+    "eth_return_48h_pct": "-2.10189564042",
+    "eth_return_4h_pct": "0.75461357241",
+    "eth_return_72h_pct": "5.87024350831",
+    "ethbtc_return_12h_pct": "0.66709021601",
+    "ethbtc_return_24h_pct": "0.859325270528",
+    "ethbtc_return_48h_pct": "-1.30800373715",
+    "ethbtc_return_4h_pct": "0.22137887413",
+    "ethbtc_return_72h_pct": "-0.564794477565"
+  },
+  "market_interpretation": false,
+  "settled_etf": {
+    "authority": "SHADOW_CALIBRATION_INPUT_ONLY",
+    "contract": "WEEKLY_SETTLED_ETF_CALIBRATION_v1",
+    "records": [
+      {
+        "BTC": 297.5,
+        "ETH": 30.9,
+        "session_date": "2026-08-17"
+      },
+      {
+        "BTC": 189.3,
+        "ETH": 71.4,
+        "session_date": "2026-08-18"
+      },
+      {
+        "BTC": 517.2,
+        "ETH": 186.8,
+        "session_date": "2026-08-19"
+      },
+      {
+        "BTC": 606.3,
+        "ETH": 219.5,
+        "session_date": "2026-08-20"
+      },
+      {
+        "BTC": 307.5,
+        "ETH": 184.0,
+        "session_date": "2026-08-21"
+      }
+    ],
+    "session_counts": {
+      "BTC": 5,
+      "ETH": 5
+    },
+    "week_total_reported_units": {
+      "BTC": 1917.8,
+      "ETH": 692.6
+    }
+  }
+}
