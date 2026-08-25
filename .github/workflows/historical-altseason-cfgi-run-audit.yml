@@ -56,10 +56,11 @@ jobs:
           assert reservation['contract']=='HISTORICAL_ALTSEASON_CFGI_PAID_RESERVATION_v1'
           assert reservation['semantics']=='ONE_DETERMINISTIC_RESERVATION_PER_PAID_INPUT_FINGERPRINT'
           assert fp==guard['input_fingerprint_sha256']==ledger['input_fingerprint_sha256']
-          assert ledger['contract']=='HISTORICAL_ALTSEASON_CFGI_PAID_ATTEMPT_LEDGER_v1'
+          assert ledger['contract']=='HISTORICAL_ALTSEASON_CFGI_PAID_ATTEMPT_LEDGER_v2'
           assert ledger['automatic_retry_after_failure'] is False
           assert ledger['owner_authorized_recovery_attempts']==1
-          assert ledger['cumulative_actual_credits_used']==5259
+          assert ledger['owner_authorized_market_gapfill_attempts']==1
+          assert sum(int(x.get('actual_credits_used_from_headers') or 0) for x in ledger['attempts'])==ledger['cumulative_actual_credits_used']==10518
           reserved_at=datetime.fromisoformat(os.environ['RESERVATION_CREATED_AT'].replace('Z','+00:00'))
           recent=[]
           for r in runs:
@@ -68,8 +69,17 @@ jobs:
                   recent.append(r)
           billing=Path('06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/CFGI_BILLING.json')
           readiness=Path('06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/RESEARCH_READINESS_MANIFEST.json')
+          terminal_path=Path('00_ARCHIVE_CONTROL/research_runtime/CFGI_MARKET_PROVIDER_TERMINAL_RECEIPT.json')
           action='DISPATCH'; reason='RESERVED_FINGERPRINT_HAS_NO_PAID_RUN'
-          if guard.get('skip_paid') is True:
+          if terminal_path.exists():
+              terminal=json.loads(terminal_path.read_text())
+              assert terminal['contract']=='CFGI_MARKET_PROVIDER_TERMINAL_RECEIPT_v1'
+              assert terminal['status']=='TERMINAL_PROVIDER_NO_HISTORICAL_ROWS'
+              assert terminal['input_fingerprint_sha256']==fp
+              assert terminal['no_additional_paid_retry_authorized'] is True
+              assert terminal['verified_prior_cumulative_actual_credits_used']==ledger['cumulative_actual_credits_used']
+              action='NO_DISPATCH'; reason='TERMINAL_PROVIDER_STATE_NO_PAID_RETRY'
+          elif guard.get('skip_paid') is True:
               action='NO_DISPATCH'; reason='EXACT_COMPLETE_PRIOR_ENRICHMENT'
           elif billing.exists() or readiness.exists():
               action='NO_DISPATCH'; reason='PAID_OUTPUT_ALREADY_PRESENT'

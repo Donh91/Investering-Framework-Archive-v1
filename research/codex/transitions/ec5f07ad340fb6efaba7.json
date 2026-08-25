@@ -1,0 +1,39 @@
+{
+  "allowed_change_scope": [
+    ".github/workflows/historical-altseason-cfgi-enrichment.yml",
+    ".github/workflows/historical-altseason-cfgi-terminal-finalize.yml",
+    ".github/workflows/historical-altseason-cfgi-terminal-publish.yml",
+    ".github/workflows/historical-altseason-cfgi-run-audit.yml",
+    "scripts/historical_lab/cfgi_targeted_backfill.py",
+    "scripts/historical_lab/cfgi_terminal_finalize.py",
+    "scripts/health/build_automation_health.py",
+    "tests"
+  ],
+  "branch": "agent/task-20260824-cfgi-terminal-lifecycle",
+  "candidate_id": "codex-historical-cfgi-terminal-lifecycle-reconciliation-v1",
+  "candidate_path": "research/codex/intake/2026/08/codex-historical-cfgi-terminal-lifecycle-reconciliation-v1.json",
+  "candidate_sha256": "ea7ded3944c4b98c88973668fcc474df60d5a916bf4cfc040a93b78122d9b3df",
+  "contract": "CODEX_RESEARCH_TRANSITION_RECEIPT_v1",
+  "forbidden_changes": [
+    "API budget",
+    "any new paid retry or automatic paid retry",
+    "automatic promotion",
+    "canonical authority",
+    "fabrication, interpolation or substitution of missing MARKET historical rows",
+    "market gates",
+    "model weights",
+    "new policy semantics",
+    "portfolio logic",
+    "resetting or deleting cumulative credit/attempt ledgers",
+    "secret creation, persistence or exposure",
+    "weakening the provider-bounded v3.1 no-lookahead contract"
+  ],
+  "objective": "Reconcile the historical CFGI enrichment lifecycle with the already-ratified provider-terminal state so an unavailable MARKET historical series is not repeatedly treated as a recoverable active failure. Preserve all paid-data guards and prohibit any additional automatic paid retry.",
+  "post_fix_gate": "ZERO_AUTOMATIC_PAID_RETRIES_AND_TERMINAL_STATE_NOT_REPORTED_AS_RECOVERABLE_RED",
+  "pr_number": null,
+  "receipt_sha256": "93588a32ebfcc5e411a7e8e0ecce004e5aa5a2cb1ba688ee6256d6d2fb580c02",
+  "recorded_at_utc": "2026-08-24T19:45:16Z",
+  "signature": "ec5f07ad340fb6efaba7",
+  "state": "IN_REMEDIATION",
+  "task_contract_sha256": "8a535d3dbd1068d66d8f10249256503cfaaa3bb0efb22ee4ed8bfafe41888d54"
+}
