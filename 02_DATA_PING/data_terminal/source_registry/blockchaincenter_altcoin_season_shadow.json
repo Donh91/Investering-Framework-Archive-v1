@@ -1,0 +1,81 @@
+{
+  "registry_version": "1.0",
+  "status": "ACTIVE_SHADOW_COMPANION",
+  "admitted_utc": "2026-08-25",
+  "primary_source": {
+    "source_id": "BLOCKCHAINCENTER_ALTCOIN_SEASON_INDEX",
+    "provider": "BlockchainCenter",
+    "url": "https://www.blockchaincenter.net/altcoin-season-index/",
+    "transport": "PUBLIC_HTML_EMBEDDED_NEXTJS_PAYLOAD",
+    "credential_required": false,
+    "paid_dependency": false,
+    "direct_or_derived": "PROVIDER_DERIVED_WITH_REPRODUCIBLE_COMPONENT_RETURNS",
+    "source_convention": "TOP_50_EXCLUDING_STABLECOINS_AND_ASSET_BACKED_TOKENS_VS_BTC",
+    "captured_horizons_days": [30, 90, 365],
+    "published_state_thresholds": {"bitcoin_season_max": 25, "altcoin_season_min": 75},
+    "expected_constituents": {"benchmark": "BTC", "altcoins": 49, "published_universe_label": "Top 50"},
+    "source_refresh_expectation": "DAILY",
+    "capture_timestamp_convention": "FRAMEWORK_FETCH_TIME_UTC",
+    "revision_policy": "APPEND_ONLY_DATED_ARTIFACTS_PRESERVE_PRIOR_PAYLOAD_HASHES"
+  },
+  "owner": {
+    "script": "scripts/data_terminal/top100_breadth_owner_collector.py",
+    "role": "FAILURE_ISOLATED_SHADOW_COMPANION_TO_C5E_TOP100_BREADTH_OWNER",
+    "workflow_full_daily": "Research Owner - Top100 Breadth Daily",
+    "workflow_compact_intraday": "Daily Live Anchor Capture",
+    "workflow_weekly_calibration": "Weekly Raw Calibration Bridge"
+  },
+  "materialization": {
+    "full_daily_root": "03_DAILY_CAPTURE_LOGS/breadth_rich/YYYY/MM/YYYY-MM-DD",
+    "latest_pointer": "03_DAILY_CAPTURE_LOGS/breadth_rich/LATEST.json",
+    "compressed_raw_member": "raw_blockchaincenter_altcoin_season.html.gz",
+    "normalized_member": "rotation_context_snapshot.json",
+    "owner_snapshot_member": "owner_snapshot.json",
+    "compact_capture_root": "03_DAILY_CAPTURE_LOGS/captures",
+    "weekly_calibration_root": "03_DAILY_CAPTURE_LOGS/weekly",
+    "raw_payload_required_when_source_passes": true,
+    "artifact_manifest_required": true,
+    "member_sha256_required": true,
+    "readback_required": true,
+    "published_score_reconciliation_required": true,
+    "constituent_membership_hash_required": true,
+    "historical_series_hash_required": true
+  },
+  "calibration": {
+    "windows_days": [7, 28, 56],
+    "minimum_pass_days_for_ready_by_window": {"7d": 5, "28d": 21, "56d": 42},
+    "target_test_id": "ROTATION_SURVIVAL_FORWARD",
+    "prospective_only": true,
+    "retroactive_rows_allowed": false,
+    "tracked_measures": [
+      "published_score", "recomputed_score", "altcoins_outperforming_btc",
+      "altcoin_outperformance_share", "btc_return_percent",
+      "median_alt_minus_btc_spread_percent", "published_threshold_crossings",
+      "constituent_membership_changes"
+    ]
+  },
+  "failure_policy": {
+    "missing": "UNKNOWN",
+    "empty": "DEGRADE_COMPANION_ONLY",
+    "network": "DEGRADE_COMPANION_ONLY_AFTER_BOUNDED_ATTEMPTS",
+    "schema_drift": "DEGRADE_COMPANION_ONLY_AND_PRESERVE_ERROR_RECEIPT",
+    "score_mismatch": "DEGRADE_COMPANION_ONLY_AND_PRESERVE_ERROR_RECEIPT",
+    "constituent_count_mismatch": "DEGRADE_COMPANION_ONLY_AND_PRESERVE_ERROR_RECEIPT",
+    "artifact_tamper": "FAIL_VERIFICATION_EXPLICITLY",
+    "primary_breadth_owner_may_still_pass": true,
+    "silent_fallback": false,
+    "forward_fill": false,
+    "interpolation": false,
+    "source_substitution": false
+  },
+  "interpretation_firewall": {
+    "role": "ROTATION_STATE_LABEL_AND_CALIBRATION_CONTEXT_ONLY",
+    "requires_comparison_with": ["ETH_BTC", "BTC_DOMINANCE", "INDEPENDENT_TOP100_BREADTH"],
+    "binding": false,
+    "canonical_acceptance": false,
+    "market_state_change": false,
+    "portfolio_action": false,
+    "standalone_rotation_trigger": false,
+    "shared_row_tournament_eligible": false
+  }
+}

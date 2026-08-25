@@ -54,6 +54,59 @@ class DailyCapturePipelineTests(unittest.TestCase):
             self.assertFalse(packet["portfolio_action"])
             self.assertIn("BTCUSDT_1H_OHLCV", packet["hourly_sequence_owned_fields"])
 
+    def test_live_anchor_compacts_blockchaincenter_rotation_context(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            owner_dir = root / "top100-breadth-owner-output"
+            owner_dir.mkdir()
+            (owner_dir / "rotation_context_snapshot.json").write_text(json.dumps({
+                "contract": "BLOCKCHAINCENTER_ALTCOIN_SEASON_SHADOW_CONTEXT_v1",
+                "status": "PASS",
+                "retrieved_at_utc": "2026-08-25T07:15:00Z",
+                "observation_date_utc": "2026-08-25",
+                "source": {"raw_sha256": "raw-hash"},
+                "methodology": {"methodology_fingerprint_sha256": "method-hash"},
+                "horizons": {"90": {
+                    "published_score": 41, "recomputed_score": 41,
+                    "score_reconciliation": "PASS_EXACT", "source_state": "BETWEEN_PUBLISHED_THRESHOLDS",
+                    "benchmark_return_decimal": 0.12, "alt_constituent_count": 49,
+                    "outperforming_btc_count": 20, "outperforming_btc_share": 20 / 49,
+                    "median_alt_return_decimal": 0.08, "median_alt_minus_btc_return_decimal": -0.04,
+                    "membership_hash": "members-hash", "returns_decimal": {"BTC": 0.12, "ETH": 0.18},
+                }},
+                "authority": {"binding": False, "portfolio_action": False},
+            }))
+            (owner_dir / "rotation_method_crosscheck_snapshot.json").write_text(json.dumps({
+                "contract": "COINMARKETCAP_ALTCOIN_SEASON_SHADOW_CROSSCHECK_v1",
+                "status": "PASS", "retrieved_at_utc": "2026-08-25T07:15:00Z",
+                "observation_date_utc": "2026-08-25", "published_score": 35,
+                "source_state": "BETWEEN_PUBLISHED_THRESHOLDS", "horizon_days": 90,
+                "source": {"raw_sha256": "cmc-raw-hash", "source_build_id": "cmc-build"},
+                "methodology": {"methodology_fingerprint_sha256": "cmc-method-hash"},
+                "evidence_grade": "PUBLISHED_LABEL_ONLY",
+                "component_reconciliation": "NOT_AVAILABLE_FROM_CAPTURED_PAGE",
+                "authority": {"binding": False, "portfolio_action": False},
+            }))
+            status = root / "status.json"
+            status.write_text(json.dumps({"top100_breadth": 0}))
+            output = root / "captures"
+            self.run_script(
+                "scripts/daily_capture/build_capture_index.py",
+                "--root", str(root), "--status-file", str(status), "--output-root", str(output),
+                "--run-id", "rotation-context-test", "--trigger", "test",
+            )
+            packet_path = next(path for path in output.rglob("*.json") if path.name != "LATEST.json")
+            packet = json.loads(packet_path.read_text())
+            context = packet["market_metrics"]["rotation_context"]["blockchaincenter_altcoin_season"]
+            self.assertEqual(context["horizons"]["90"]["published_score"], 41)
+            self.assertNotIn("returns_decimal", context["horizons"]["90"])
+            crosscheck = packet["market_metrics"]["rotation_context"]["coinmarketcap_altcoin_season"]
+            self.assertEqual(crosscheck["published_score"], 35)
+            self.assertEqual(crosscheck["evidence_grade"], "PUBLISHED_LABEL_ONLY")
+            dispersion = packet["market_metrics"]["rotation_context"]["method_dispersion"]
+            self.assertEqual(dispersion["value"], -6)
+            self.assertEqual(dispersion["authority"], "LOWER_GRADE_SHADOW_CONTEXT_ONLY")
+
     def _write_hourly_fixtures(self, fixture: Path, retrieval: datetime, hours: int = 26) -> None:
         end = retrieval.replace(minute=0, second=0, microsecond=0) - timedelta(hours=1)
         start = end - timedelta(hours=hours - 1)
@@ -91,6 +144,37 @@ class DailyCapturePipelineTests(unittest.TestCase):
                 "realizedRate": "0.00009",
                 "fundingTime": str(int((start + timedelta(hours=8)).timestamp() * 1000)),
             }]}))
+
+    def _write_rotation_context_fixtures(self, root: Path, start: datetime, days: int = 7) -> None:
+        for offset in range(days):
+            observed = (start + timedelta(days=offset)).date()
+            destination = root / f"{observed:%Y/%m/%Y-%m-%d}"
+            destination.mkdir(parents=True)
+            horizons = {}
+            for horizon, base_score in (("30", 30), ("90", 40), ("365", 35)):
+                score = base_score + offset
+                horizons[horizon] = {
+                    "published_score": score, "source_state": "BETWEEN_PUBLISHED_THRESHOLDS",
+                    "benchmark_return_decimal": 0.10 + offset * 0.01,
+                    "outperforming_btc_share": score / 100,
+                    "median_alt_minus_btc_return_decimal": -0.02 + offset * 0.005,
+                    "membership_hash": f"membership-{offset // 4}",
+                }
+            (destination / "rotation_context_snapshot.json").write_text(json.dumps({
+                "contract": "BLOCKCHAINCENTER_ALTCOIN_SEASON_SHADOW_CONTEXT_v1", "status": "PASS",
+                "retrieved_at_utc": observed.isoformat() + "T07:15:00Z",
+                "observation_date_utc": observed.isoformat(), "source": {"raw_sha256": f"raw-{offset}"},
+                "methodology": {"methodology_fingerprint_sha256": "method-v1"},
+                "horizons": horizons, "authority": {"binding": False},
+            }))
+            (destination / "rotation_method_crosscheck_snapshot.json").write_text(json.dumps({
+                "contract": "COINMARKETCAP_ALTCOIN_SEASON_SHADOW_CROSSCHECK_v1", "status": "PASS",
+                "retrieved_at_utc": observed.isoformat() + "T07:15:00Z",
+                "observation_date_utc": observed.isoformat(), "published_score": 35 + offset,
+                "source_state": "BETWEEN_PUBLISHED_THRESHOLDS", "source": {"raw_sha256": f"cmc-raw-{offset}"},
+                "methodology": {"methodology_fingerprint_sha256": "cmc-method-v1"},
+                "evidence_grade": "PUBLISHED_LABEL_ONLY", "authority": {"binding": False},
+            }))
 
     def test_hourly_sequence_materializes_26h_and_free_spot_flow_fields(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -176,6 +260,8 @@ class DailyCapturePipelineTests(unittest.TestCase):
                 ],
             }))
 
+            self._write_rotation_context_fixtures(root / "breadth_rich", datetime(2026, 8, 3, tzinfo=timezone.utc))
+
             weekly = root / "weekly"
             self.run_script(
                 "scripts/daily_capture/build_weekly_calibration.py",
@@ -197,6 +283,19 @@ class DailyCapturePipelineTests(unittest.TestCase):
             self.assertIn("DAY1_2", pack["day_window_actuals"]["windows"])
             self.assertIn("DAY3_4", pack["day_window_actuals"]["windows"])
             self.assertIn("DAY5_7", pack["day_window_actuals"]["windows"])
+            rotation = pack["rotation_context"]
+            self.assertEqual(rotation["readiness"], "READY")
+            self.assertEqual(rotation["windows"]["7d"]["passing_days"], 7)
+            self.assertEqual(rotation["windows"]["7d"]["horizons"]["90"]["score"]["first"], 40.0)
+            self.assertEqual(rotation["windows"]["7d"]["horizons"]["90"]["score"]["latest"], 46.0)
+            self.assertEqual(rotation["windows"]["28d"]["readiness"], "MATURING")
+            self.assertEqual(rotation["windows"]["56d"]["readiness"], "MATURING")
+            self.assertEqual(rotation["four_to_eight_week_readiness"], "MATURING")
+            crosscheck = rotation["windows"]["7d"]["independent_method_crosscheck"]
+            self.assertEqual(crosscheck["passing_days"], 7)
+            self.assertEqual(crosscheck["score"]["first"], 35.0)
+            self.assertEqual(crosscheck["cmc_top100_minus_blockchaincenter_top50_90d_score"]["first"], -5.0)
+            self.assertFalse(crosscheck["affects_readiness"])
             enriched_path = root / pack["enriched_hourly_path"]
             facts_path = root / pack["sequence_facts_path"]
             self.assertTrue(enriched_path.exists())
@@ -213,6 +312,7 @@ class DailyCapturePipelineTests(unittest.TestCase):
             self.assertFalse(facts["forecast_evaluation_performed"])
             self.assertFalse(facts["interpolation"])
             self.assertFalse(facts["forward_fill"])
+            self.assertEqual(facts["rotation_context"]["windows"]["7d"]["observed_days"], 7)
 
     def test_previous_week_flag_targets_completed_iso_week(self):
         with tempfile.TemporaryDirectory() as tmp:
