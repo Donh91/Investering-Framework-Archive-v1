@@ -30,6 +30,10 @@ CORE_IDS = (
     "C07_SIMPLE_3",
 )
 CORE_FAMILIES = {"ETHBTC_PERSISTENCE", "BREADTH_SURVIVAL", "BTCD_PATH_RECLAIM"}
+PROVENANCE_MUTABLE_FIELDS = {
+    "outcome_24h", "outcome_72h", "outcome_7d",
+    "mae_24h", "mfe_24h", "mae_72h", "mfe_72h", "mae_7d", "mfe_7d",
+}
 EXPECTED_BINDINGS = {
     "ETHBTC_PERSISTENCE": (
         "HOURLY_SEQUENCE_CAPTURE_v2_2_DIRECT_BINANCE_SPOT",
@@ -78,6 +82,24 @@ def append(path: Path, row: dict[str, Any]) -> None:
     with path.open("a", newline="", encoding="utf-8") as handle:
         writer = csv.DictWriter(handle, fieldnames=fields, extrasaction="ignore")
         writer.writerow({key: row.get(key, "") for key in fields})
+
+
+def frozen_provenance_hash(row: dict[str, Any]) -> str:
+    """Hash the exact immutable projection as it is persisted in the CSV ledger."""
+    with LEDGER.open(newline="", encoding="utf-8-sig") as handle:
+        fields = next(csv.reader(handle))
+    projection = {
+        key: "" if row.get(key) is None else str(row.get(key, ""))
+        for key in fields
+        if key != "provenance_hash" and key not in PROVENANCE_MUTABLE_FIELDS
+    }
+    return hashlib.sha256(canon(projection).encode("utf-8")).hexdigest()
+
+
+def verify_frozen_provenance(row: dict[str, Any]) -> None:
+    declared = str(row.get("provenance_hash") or "")
+    if not declared or declared != frozen_provenance_hash(row):
+        raise ValueError("frozen row provenance hash mismatch")
 
 
 def _collection_rule() -> tuple[dict[str, Any], dict[str, Any]]:
@@ -278,6 +300,7 @@ def verify_source_bindings(row: dict[str, Any], cutoff: datetime) -> dict[str, A
         "btc_close": baseline["btc"],
         "eth_close": baseline["eth"],
     }
+    expected_eth_state = "ABOVE" if baseline["ethbtc"] > 0.03 else "BELOW" if baseline["ethbtc"] < 0.03 else "AT"
     if (
         eth_family.get("sample_count") != 168
         or eth_family.get("capture_min_utc") != core.iso(min(item["available"] for item in window))
@@ -294,6 +317,7 @@ def verify_source_bindings(row: dict[str, Any], cutoff: datetime) -> dict[str, A
         or window_inputs.get("continuous_hours") != 168
         or window_inputs.get("window_rows_sha256") != digest
         or float(row.get("ethbtc_raw_value")) != baseline["ethbtc"]
+        or row.get("ethbtc_derived_state") != expected_eth_state
     ):
         raise ValueError("ETHBTC row fields do not reconcile to bound source")
 
@@ -459,9 +483,7 @@ def validate_payload(row: dict[str, Any]) -> tuple[dict[str, Any], dict[str, boo
     ]
     if forbidden:
         raise ValueError("decision row contains premature outcome fields: " + ",".join(forbidden))
-    validated["provenance_hash"] = hashlib.sha256(
-        canon({key: value for key, value in validated.items() if key != "provenance_hash"}).encode("utf-8")
-    ).hexdigest()
+    validated["provenance_hash"] = frozen_provenance_hash(validated)
     return validated, decisions
 
 

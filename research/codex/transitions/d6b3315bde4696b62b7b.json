@@ -1,0 +1,32 @@
+{
+  "allowed_change_scope": [
+    ".github/workflows/historical-altseason-lab-gate.yml",
+    ".github/workflows/cfgi-recovery-launch-once.yml",
+    "tests"
+  ],
+  "branch": "agent/task-20260825-cfgi-lab-gate-drift",
+  "candidate_id": "codex-historical-cfgi-retired-lab-gate-contract-drift-v1",
+  "candidate_path": "research/codex/intake/2026/08/codex-historical-cfgi-retired-lab-gate-contract-drift-v1.json",
+  "candidate_sha256": "3fc9f9de353eb3f09bafdf212538137aca273ab9a37361930ecbbc32aa596b13",
+  "contract": "CODEX_RESEARCH_TRANSITION_RECEIPT_v1",
+  "forbidden_changes": [
+    "API budget",
+    "any paid request or automatic paid retry",
+    "canonical authority",
+    "fabrication, interpolation or proxy substitution",
+    "market gates",
+    "model weights",
+    "new policy semantics",
+    "portfolio logic",
+    "reactivating a retired schedule",
+    "weakening no-lookahead or terminal provider assertions"
+  ],
+  "objective": "Update the historical altseason lab gate so it validates the ratified terminal no-retry lifecycle instead of requiring the retired five-minute recovery launcher schedule, while preserving every paid-data, budget, no-lookahead and provider-terminal safety assertion.",
+  "post_fix_gate": "HISTORICAL_ALTSEASON_LAB_GATE_PASS_WITH_RETIRED_LAUNCHER_AND_ZERO_PAID_RETRY",
+  "pr_number": null,
+  "receipt_sha256": "b4f4ddb251ee85fd5419d55cdf4ad8707063ffca049e8546b88d8065ce6f4691",
+  "recorded_at_utc": "2026-08-25T05:04:12Z",
+  "signature": "d6b3315bde4696b62b7b",
+  "state": "IN_REMEDIATION",
+  "task_contract_sha256": "da84539343abe21dcb6fac35b759754dc78c2d1ca03ce2df91b9a72c76e93264"
+}
