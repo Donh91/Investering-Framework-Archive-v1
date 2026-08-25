@@ -48,15 +48,65 @@ def _directive(text: str, key: str) -> str | None:
     return match.group(1).strip() if match else None
 
 
+def _flow_mapping_has_key(value: str, key: str) -> bool:
+    """Return whether a one-line YAML flow mapping has a top-level key."""
+    value = value.strip()
+    if not (value.startswith("{") and value.endswith("}")):
+        return False
+
+    entries: list[str] = []
+    start = 1
+    depth = 0
+    quote: str | None = None
+    escaped = False
+    for index, character in enumerate(value[1:-1], start=1):
+        if quote:
+            if escaped:
+                escaped = False
+            elif character == "\\" and quote == '"':
+                escaped = True
+            elif character == quote:
+                quote = None
+            continue
+        if character in "'\"":
+            quote = character
+        elif character in "{[(":
+            depth += 1
+        elif character in "}])":
+            depth -= 1
+        elif character == "," and depth == 0:
+            entries.append(value[start:index])
+            start = index + 1
+    entries.append(value[start:-1])
+
+    key_forms = {key, f"'{key}'", f'"{key}"'}
+    for entry in entries:
+        candidate = entry.strip()
+        match = re.match(r"^([^:]+):", candidate)
+        if match and match.group(1).strip() in key_forms:
+            return True
+    return False
+
+
 def _mapping_has_direct_child(text: str, parent: str, child: str) -> bool:
     """Return whether a top-level YAML mapping has the named direct child."""
     lines = text.splitlines()
-    parent_re = re.compile(rf"^(?:{re.escape(parent)}|['\"]{re.escape(parent)}['\"]):\s*(?:#.*)?$")
+    parent_re = re.compile(
+        rf"^(?:{re.escape(parent)}|['\"]{re.escape(parent)}['\"]):\s*(.*)$"
+    )
     child_re = re.compile(
         rf"(?:{re.escape(child)}|['\"]{re.escape(child)}['\"]):\s*.*$"
     )
     for index, line in enumerate(lines):
-        if not parent_re.fullmatch(line):
+        parent_match = parent_re.fullmatch(line)
+        if not parent_match:
+            continue
+        parent_value = parent_match.group(1).strip()
+        if parent_value.startswith("#"):
+            parent_value = ""
+        if parent_value:
+            if _flow_mapping_has_key(parent_value, child):
+                return True
             continue
         block: list[tuple[int, str]] = []
         for candidate in lines[index + 1:]:
