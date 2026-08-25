@@ -48,13 +48,38 @@ def _directive(text: str, key: str) -> str | None:
     return match.group(1).strip() if match else None
 
 
+def _mapping_has_direct_child(text: str, parent: str, child: str) -> bool:
+    """Return whether a top-level YAML mapping has the named direct child."""
+    lines = text.splitlines()
+    parent_re = re.compile(rf"^(?:{re.escape(parent)}|['\"]{re.escape(parent)}['\"]):\\s*(?:#.*)?$")
+    child_re = re.compile(rf"{re.escape(child)}:\\s*(?:#.*)?$")
+    for index, line in enumerate(lines):
+        if not parent_re.fullmatch(line):
+            continue
+        block: list[tuple[int, str]] = []
+        for candidate in lines[index + 1:]:
+            stripped = candidate.strip()
+            if not stripped or stripped.startswith("#"):
+                continue
+            indent = len(candidate) - len(candidate.lstrip(" "))
+            if indent == 0:
+                break
+            block.append((indent, candidate.lstrip(" ")))
+        if not block:
+            continue
+        direct_indent = min(indent for indent, _ in block)
+        if any(indent == direct_indent and child_re.fullmatch(value) for indent, value in block):
+            return True
+    return False
+
+
 def workflow_static(path: Path) -> dict[str, Any]:
     text = path.read_text(errors="ignore")
     writes = "contents: write" in text and "git push" in text
     # Trigger keys are direct children of the top-level `on` mapping.  A plain
     # substring search also matches shell/Python literals in workflow steps,
     # which previously made the manual PDLT runtime gate look scheduled.
-    scheduled = re.search(r"(?m)^  schedule:\s*(?:#.*)?$", text) is not None
+    scheduled = _mapping_has_direct_child(text, "on", "schedule")
     manual = "workflow_dispatch:" in text
     uses_openai = "OPENAI_API_KEY" in text or "api_gateway.py" in text
     uses_cfgi = "CFGI_API_KEY" in text or "cfgi_" in text.lower()
