@@ -108,6 +108,19 @@ Do not rely on conversation memory when repository sources are available.
 - A prepared prompt is not evidence, and a returned package is not accepted until source, time, method, settlement and duplication checks pass.
 - Every DATA PING thread handover must preserve pending deep-capture requests and active event windows.
 
+### 3.2 DATA PING / RAW main-thread action compass
+
+For every Main-Framework response whose primary input is a DATA PING packet or RAW market-data ingest, including duplicate/replay packets, corrected packets, replacement threads and all future DATA PING thread versions:
+
+1. resolve current repository authority first;
+2. read `02_DATA_PING/protocols/2026-08-25__three-horizon-action-compass-output-contract-v1__canonical.md` as a mandatory current owner;
+3. apply the contract after evidence interpretation, never inside the collector wire format;
+4. end the human-facing response with the mandatory three-lane `HANDLEKOMPAS` covering the evidence-supported near-term action, the 5-7 day action window and the adaptive 3-4+ week altcoin market compass;
+5. do not rely on conversation memory, prior-thread prose or inherited summaries as a substitute for the current contract;
+6. do not extend an expired action horizon because a packet was replayed or a new thread inherited old text.
+
+This requirement is cross-thread bootstrap governance. It applies to new chats, replacement threads, handovers and repository-aware agents until a newer canonical contract explicitly supersedes the owner above. It changes decision translation only and does not increase DATA PING collector authority or automatic portfolio-execution authority.
+
 ## 4. Current architecture constraints
 
 - Tighten and simplify before expanding.
