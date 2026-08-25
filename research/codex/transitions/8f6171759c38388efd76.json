@@ -1,0 +1,32 @@
+{
+  "allowed_change_scope": [
+    "scripts/research/shared_row_tournament_weekly.py",
+    "scripts/research/shared_row_tournament_relevance.py",
+    "tests/research"
+  ],
+  "branch": "agent/task-20260825-shared-row-consumer-integrity",
+  "candidate_id": "codex-shared-row-consumer-integrity-filter-v1",
+  "candidate_path": "research/codex/intake/2026/08/codex-shared-row-consumer-integrity-filter-v1.json",
+  "candidate_sha256": "17c911686dcbf9553b2b96bba793e63e103ca35f3f4cd5055743433bfa53f5a8",
+  "contract": "CODEX_RESEARCH_TRANSITION_RECEIPT_v1",
+  "forbidden_changes": [
+    "API budget",
+    "activation or backdating",
+    "automatic promotion",
+    "canonical authority",
+    "changing candidate decisions or outcomes",
+    "market gates",
+    "model weights",
+    "new policy semantics",
+    "paid data",
+    "portfolio logic"
+  ],
+  "objective": "Require weekly and relevance consumers to exclude quarantined, pre-floor, source-unbound or immutable-provenance-invalid rows from eligible, divergence and performance counts.",
+  "post_fix_gate": "ADVERSARIAL_CONSUMER_FIXTURE_EXCLUDES_ALL_INELIGIBLE_ROWS_AND_COUNTS_ONLY_BOUND_POST_FLOOR_ROWS",
+  "pr_number": null,
+  "receipt_sha256": "f429647be3a3cb183a5dbe0379d42cbf470ca0ce4942dc6cfb668fec5db92e3f",
+  "recorded_at_utc": "2026-08-25T05:20:39Z",
+  "signature": "8f6171759c38388efd76",
+  "state": "IN_REMEDIATION",
+  "task_contract_sha256": "b91418a598f80f7560af6f852aeeaf12909cb12639ef39f88475bd7d38ec5e96"
+}
