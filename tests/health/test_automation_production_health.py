@@ -210,6 +210,24 @@ jobs:
     assert "SCHEDULE_WITHOUT_EXPLICIT_TIMEZONE" not in row["static_risks"]
 
 
+def test_job_named_schedule_does_not_make_manual_workflow_scheduled(tmp_path: Path) -> None:
+    path = write_workflow(
+        tmp_path,
+        """name: Manual Workflow
+on:
+  workflow_dispatch:
+jobs:
+  schedule:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo manual
+""",
+    )
+    row = module.workflow_static(path)
+    assert row["scheduled"] is False
+    assert "SCHEDULE_WITHOUT_EXPLICIT_TIMEZONE" not in row["static_risks"]
+
+
 def test_leading_streaks() -> None:
     assert module.leading_streak(["success", "success", "failure"], True) == 2
     assert module.leading_streak(["failure", "failure", "success"], False) == 2
