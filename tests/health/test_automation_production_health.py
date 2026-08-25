@@ -264,6 +264,50 @@ jobs:
     assert "SCHEDULE_WITHOUT_EXPLICIT_TIMEZONE" in row["static_risks"]
 
 
+def test_flow_style_on_schedule_is_scheduled(tmp_path: Path) -> None:
+    path = write_workflow(
+        tmp_path,
+        """name: Flow Schedule
+on: {schedule: [{cron: '0 1 * * *'}]}
+jobs:
+  x:
+    steps:
+      - run: echo scheduled
+""",
+    )
+    row = module.workflow_static(path)
+    assert row["scheduled"] is True
+    assert "SCHEDULE_WITHOUT_EXPLICIT_TIMEZONE" in row["static_risks"]
+
+
+def test_quoted_flow_style_on_schedule_is_scheduled(tmp_path: Path) -> None:
+    path = write_workflow(
+        tmp_path,
+        """name: Quoted Flow Schedule
+"on": {"schedule": [{cron: '0 1 * * *'}]}
+jobs:
+  x:
+    steps:
+      - run: echo scheduled
+""",
+    )
+    row = module.workflow_static(path)
+    assert row["scheduled"] is True
+
+
+def test_flow_style_job_named_schedule_is_not_scheduled(tmp_path: Path) -> None:
+    path = write_workflow(
+        tmp_path,
+        """name: Manual Flow Workflow
+on: {workflow_dispatch: {}}
+jobs: {schedule: {runs-on: ubuntu-latest}}
+""",
+    )
+    row = module.workflow_static(path)
+    assert row["scheduled"] is False
+    assert "SCHEDULE_WITHOUT_EXPLICIT_TIMEZONE" not in row["static_risks"]
+
+
 def test_leading_streaks() -> None:
     assert module.leading_streak(["success", "success", "failure"], True) == 2
     assert module.leading_streak(["failure", "failure", "success"], False) == 2
