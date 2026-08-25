@@ -142,12 +142,72 @@ def extract_microstructure(directory: Path) -> dict[str, Any]:
     return out
 
 
+def extract_rotation_context(directory: Path) -> dict[str, Any]:
+    snapshot = read_json(directory / "rotation_context_snapshot.json")
+    if not isinstance(snapshot, dict):
+        owner = read_json(directory / "owner_snapshot.json")
+        snapshot = owner.get("rotation_context") if isinstance(owner, dict) else None
+    if not isinstance(snapshot, dict):
+        return {}
+    source = snapshot.get("source") if isinstance(snapshot.get("source"), dict) else {}
+    methodology = snapshot.get("methodology") if isinstance(snapshot.get("methodology"), dict) else {}
+    horizons = snapshot.get("horizons") if isinstance(snapshot.get("horizons"), dict) else {}
+    out: dict[str, Any] = {
+        "contract": snapshot.get("contract"),
+        "status": snapshot.get("status"),
+        "retrieved_at_utc": snapshot.get("retrieved_at_utc"),
+        "observation_date_utc": snapshot.get("observation_date_utc"),
+        "failure_state": snapshot.get("failure_state"),
+        "source_raw_sha256": source.get("raw_sha256"),
+        "methodology_fingerprint_sha256": methodology.get("methodology_fingerprint_sha256"),
+        "horizons": {},
+        "authority": snapshot.get("authority"),
+    }
+    for horizon, row in sorted(horizons.items()):
+        if not isinstance(row, dict):
+            continue
+        out["horizons"][horizon] = {
+            key: row.get(key)
+            for key in (
+                "published_score", "recomputed_score", "score_reconciliation", "source_state",
+                "benchmark_return_decimal", "alt_constituent_count", "outperforming_btc_count",
+                "outperforming_btc_share", "median_alt_return_decimal",
+                "median_alt_minus_btc_return_decimal", "membership_hash",
+            )
+        }
+    return out
+
+
+def extract_rotation_crosscheck(directory: Path) -> dict[str, Any]:
+    snapshot = read_json(directory / "rotation_method_crosscheck_snapshot.json")
+    if not isinstance(snapshot, dict):
+        owner = read_json(directory / "owner_snapshot.json")
+        snapshot = owner.get("rotation_method_crosscheck") if isinstance(owner, dict) else None
+    if not isinstance(snapshot, dict):
+        return {}
+    source = snapshot.get("source") if isinstance(snapshot.get("source"), dict) else {}
+    methodology = snapshot.get("methodology") if isinstance(snapshot.get("methodology"), dict) else {}
+    return {
+        key: snapshot.get(key)
+        for key in (
+            "contract", "status", "retrieved_at_utc", "observation_date_utc",
+            "published_score", "source_state", "horizon_days", "evidence_grade",
+            "component_reconciliation", "failure_state", "authority",
+        )
+    } | {
+        "source_raw_sha256": source.get("raw_sha256"),
+        "source_build_id": source.get("source_build_id"),
+        "methodology_fingerprint_sha256": methodology.get("methodology_fingerprint_sha256"),
+    }
+
+
 def extract_metrics(root: Path) -> dict[str, Any]:
     metrics: dict[str, Any] = {
         "spot_legacy": {},
         "microstructure": {},
         "derivatives": {},
         "breadth": {},
+        "rotation_context": {},
         "macro": {},
         "sentiment": {},
     }
@@ -180,6 +240,28 @@ def extract_metrics(root: Path) -> dict[str, Any]:
             for key in ("advancers", "decliners", "flat", "advancer_percentage", "constituent_count", "membership_hash"):
                 if key in aggregate:
                     metrics["breadth"][key] = aggregate[key]
+
+    rotation_owner = root / "top100-breadth-owner-output"
+    blockchaincenter = extract_rotation_context(rotation_owner)
+    coinmarketcap = extract_rotation_crosscheck(rotation_owner)
+    metrics["rotation_context"]["blockchaincenter_altcoin_season"] = blockchaincenter
+    metrics["rotation_context"]["coinmarketcap_altcoin_season"] = coinmarketcap
+    blockchaincenter_90 = blockchaincenter.get("horizons", {}).get("90", {})
+    blockchaincenter_score = (
+        blockchaincenter_90.get("published_score") if isinstance(blockchaincenter_90, dict) else None
+    )
+    coinmarketcap_score = coinmarketcap.get("published_score")
+    if (
+        isinstance(blockchaincenter_score, (int, float))
+        and not isinstance(blockchaincenter_score, bool)
+        and isinstance(coinmarketcap_score, (int, float))
+        and not isinstance(coinmarketcap_score, bool)
+    ):
+        metrics["rotation_context"]["method_dispersion"] = {
+            "measure": "CMC_TOP100_MINUS_BLOCKCHAINCENTER_TOP50_90D_SCORE",
+            "value": coinmarketcap_score - blockchaincenter_score,
+            "authority": "LOWER_GRADE_SHADOW_CONTEXT_ONLY",
+        }
 
     metrics["macro"] = latest_fred_values(root / "fred-owner-output")
     metrics["sentiment"]["cfgi"] = extract_cfgi(root / "cfgi-owner-output")
