@@ -1,5 +1,21 @@
 {
-  "active_heavy_workstreams": [],
+  "active_heavy_workstreams": [
+    {
+      "canonical_effect": false,
+      "decision_surface": "SENSOR_PORTFOLIO_QUALITY",
+      "evidence_fingerprint": "4c1b652a80e791aa2a4efc83aff2bdb347889a8d5359685af78117ae2c0dd36c",
+      "execution_mode": "AUTO_LOCAL_RESEARCH",
+      "impact_tier": "MEDIUM",
+      "novelty_verdict": null,
+      "orchestrator_action": "QUEUE_BOUNDED_RESEARCH",
+      "paid_data_authorized": false,
+      "portfolio_execution": false,
+      "reason": "registered source material exists but exact evaluator recovery is still required",
+      "source": "SHADOW_REGISTRY",
+      "specialist_action": "RECOVER_EVALUATOR",
+      "target": "CYCLE_NAVIGATOR_RESEARCH_FAMILY"
+    }
+  ],
   "authority": "RESEARCH_ONLY_NON_CANONICAL",
   "binding_integrity": "PRIMARY_COMPLETE",
   "binding_report": {
@@ -46,16 +62,46 @@
   "contract": "RESEARCH_META_ORCHESTRATOR_STATE_v1",
   "controller_conflicts": [],
   "deep_research_authorized": false,
-  "evidence_fingerprint": "868efc4ff978bd12bf426afd9a128f5c3be3a4eb208054b30c774a3dd93e6b01",
+  "evidence_fingerprint": "bb2e05108fddb6f16b311a2916d93f2d760e7a1f667715e37f34aa035b844e89",
   "external_provider_calls_authorized": false,
   "max_concurrent_heavy_workstreams": 1,
   "paid_data_authorized": false,
   "portfolio_execution": false,
-  "primary_action": "WAIT_FOR_EVIDENCE",
-  "primary_execution_mode": "AUTO_OBSERVE",
-  "primary_source": "SHARED_ROW",
-  "primary_target": "P0_REPAIR_QUARANTINE",
+  "primary_action": "QUEUE_BOUNDED_RESEARCH",
+  "primary_execution_mode": "AUTO_LOCAL_RESEARCH",
+  "primary_source": "SHADOW_REGISTRY",
+  "primary_target": "CYCLE_NAVIGATOR_RESEARCH_FAMILY",
   "queue": [
+    {
+      "canonical_effect": false,
+      "decision_surface": "SENSOR_PORTFOLIO_QUALITY",
+      "evidence_fingerprint": "4c1b652a80e791aa2a4efc83aff2bdb347889a8d5359685af78117ae2c0dd36c",
+      "execution_mode": "AUTO_LOCAL_RESEARCH",
+      "impact_tier": "MEDIUM",
+      "novelty_verdict": null,
+      "orchestrator_action": "QUEUE_BOUNDED_RESEARCH",
+      "paid_data_authorized": false,
+      "portfolio_execution": false,
+      "reason": "registered source material exists but exact evaluator recovery is still required",
+      "source": "SHADOW_REGISTRY",
+      "specialist_action": "RECOVER_EVALUATOR",
+      "target": "CYCLE_NAVIGATOR_RESEARCH_FAMILY"
+    },
+    {
+      "canonical_effect": false,
+      "decision_surface": "CALIBRATION_QUALITY",
+      "evidence_fingerprint": "d0977a5a8649c2312882b932e9148766000070282d00d725f4e6d65311bc0004",
+      "execution_mode": "AUTO_OBSERVE",
+      "impact_tier": "LOW",
+      "novelty_verdict": null,
+      "orchestrator_action": "WAIT_FOR_EVIDENCE",
+      "paid_data_authorized": false,
+      "portfolio_execution": false,
+      "reason": "insufficient verified forward rows for escalation",
+      "source": "CYCLE_NAVIGATOR",
+      "specialist_action": "CONTINUE_CALIBRATION",
+      "target": ""
+    },
     {
       "canonical_effect": false,
       "decision_surface": "RESEARCH_OPERATIONS",
@@ -74,7 +120,7 @@
     {
       "canonical_effect": false,
       "decision_surface": "DATA_INTEGRITY",
-      "evidence_fingerprint": "49ec32b7c8d964582e95ced18bb74b2bd4762de5578c8a2fe1d0841c37ad1f71",
+      "evidence_fingerprint": "3abc7374e9dad68fce1d1f5b77af1b76b84131901cba9f85d8a522857f7b62b6",
       "execution_mode": "AUTO_OBSERVE",
       "impact_tier": "NONE",
       "novelty_verdict": null,
@@ -87,7 +133,7 @@
       "target": "00_ARCHIVE_CONTROL/research_runtime/CFGI_MARKET_PROVIDER_TERMINAL_RECEIPT.json"
     }
   ],
-  "queue_n": 2,
-  "reason": "Prospective collection is quarantined pending complete post-repair evidence and a separately reviewed future floor.",
+  "queue_n": 4,
+  "reason": "registered source material exists but exact evaluator recovery is still required",
   "sentinel_verdict": "PASS"
 }

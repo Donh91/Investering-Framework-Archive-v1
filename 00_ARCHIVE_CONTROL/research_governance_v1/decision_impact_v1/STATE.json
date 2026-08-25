@@ -1,14 +1,44 @@
 {
-  "actionable_specialist_state_n": 2,
+  "actionable_specialist_state_n": 4,
   "authority": "RESEARCH_ONLY_NON_CANONICAL",
   "canonical_effect": false,
   "contract": "RESEARCH_DECISION_IMPACT_VOI_STATE_v1",
   "deep_research_authorized": false,
-  "evidence_fingerprint": "44e3aeb274dcc9ea1efd6208d0c24cba6a136d606d200984c0f72341a10a587a",
+  "evidence_fingerprint": "5b5530bae57e82b4212922e6f1217e42f49a041336aa6d1230aeb51c8a047501",
   "external_provider_calls_authorized": false,
   "paid_data_authorized": false,
   "portfolio_execution": false,
   "queue": [
+    {
+      "action": "RECOVER_EVALUATOR",
+      "canonical_effect": false,
+      "decision_surface": "SENSOR_PORTFOLIO_QUALITY",
+      "deep_research_authorized": false,
+      "evidence_fingerprint": "4c1b652a80e791aa2a4efc83aff2bdb347889a8d5359685af78117ae2c0dd36c",
+      "impact_tier": "MEDIUM",
+      "novelty_verdict": null,
+      "paid_data_authorized": false,
+      "paid_review_only": false,
+      "portfolio_execution": false,
+      "reason": "registered source material exists but exact evaluator recovery is still required",
+      "source": "SHADOW_REGISTRY",
+      "target": "CYCLE_NAVIGATOR_RESEARCH_FAMILY"
+    },
+    {
+      "action": "CONTINUE_CALIBRATION",
+      "canonical_effect": false,
+      "decision_surface": "CALIBRATION_QUALITY",
+      "deep_research_authorized": false,
+      "evidence_fingerprint": "d0977a5a8649c2312882b932e9148766000070282d00d725f4e6d65311bc0004",
+      "impact_tier": "LOW",
+      "novelty_verdict": null,
+      "paid_data_authorized": false,
+      "paid_review_only": false,
+      "portfolio_execution": false,
+      "reason": "insufficient verified forward rows for escalation",
+      "source": "CYCLE_NAVIGATOR",
+      "target": ""
+    },
     {
       "action": "NO_ACTION",
       "canonical_effect": false,
@@ -29,7 +59,7 @@
       "canonical_effect": false,
       "decision_surface": "DATA_INTEGRITY",
       "deep_research_authorized": false,
-      "evidence_fingerprint": "49ec32b7c8d964582e95ced18bb74b2bd4762de5578c8a2fe1d0841c37ad1f71",
+      "evidence_fingerprint": "3abc7374e9dad68fce1d1f5b77af1b76b84131901cba9f85d8a522857f7b62b6",
       "impact_tier": "NONE",
       "novelty_verdict": null,
       "paid_data_authorized": false,
@@ -40,12 +70,12 @@
       "target": "00_ARCHIVE_CONTROL/research_runtime/CFGI_MARKET_PROVIDER_TERMINAL_RECEIPT.json"
     }
   ],
-  "queue_n": 2,
-  "reason": "Prospective collection is quarantined pending complete post-repair evidence and a separately reviewed future floor.",
+  "queue_n": 4,
+  "reason": "registered source material exists but exact evaluator recovery is still required",
   "resolved_specialist_state_n": 4,
-  "selected_action": "NO_ACTION",
-  "selected_decision_surface": "RESEARCH_OPERATIONS",
-  "selected_impact_tier": "LOW",
-  "selected_source": "SHARED_ROW",
-  "selected_target": "P0_REPAIR_QUARANTINE"
+  "selected_action": "RECOVER_EVALUATOR",
+  "selected_decision_surface": "SENSOR_PORTFOLIO_QUALITY",
+  "selected_impact_tier": "MEDIUM",
+  "selected_source": "SHADOW_REGISTRY",
+  "selected_target": "CYCLE_NAVIGATOR_RESEARCH_FAMILY"
 }
