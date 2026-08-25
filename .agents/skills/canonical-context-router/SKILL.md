@@ -44,6 +44,16 @@ prompts and agent workflows -> 07_PROMPTS_AND_AGENTS
 external evidence -> 08_SOURCE_MATERIAL
 ```
 
+### Mandatory DATA PING / RAW interpretation route
+
+When `task_type` is Main-Framework interpretation of a DATA PING packet or RAW market-data ingest, including a replay, correction, replacement thread or future DATA PING version, the context packet must always include this owner under `Required files`:
+
+`02_DATA_PING/protocols/2026-08-25__three-horizon-action-compass-output-contract-v1__canonical.md`
+
+This route is mandatory even if the same contract was used in a prior thread. Do not satisfy it from conversation memory or inherited prose. Resolve the file from current GitHub state and honor explicit supersession if a newer canonical owner replaces it.
+
+The router itself does not make the portfolio decision. It guarantees that the downstream Main Framework receives the current decision-translation contract and therefore can produce the required three-lane `HANDLEKOMPAS` after analysis.
+
 ## Authority resolution
 
 Apply this order unless a newer canonical file explicitly changes it:
@@ -96,6 +106,8 @@ Find:
 - required source material.
 
 For every registry-discoverable addendum, verify the path and its declared owner before using it.
+
+For DATA PING / RAW Main-Framework interpretation, additionally verify that the Three-Horizon Action Compass owner is present in `Required files`; absence is a routing failure, not an optional omission.
 
 ### 3. Separate state classes
 
@@ -162,6 +174,7 @@ Keep the packet concise. Reference paths rather than copying whole documents.
 - Do not treat a source-backed claim row as an outcome row.
 - Do not use a legacy namespace when the active top-level namespace exists.
 - Do not use a broken or missing addendum pointer.
+- Do not omit the Three-Horizon Action Compass owner from a DATA PING / RAW Main-Framework interpretation context packet.
 
 ## Validation loop
 
@@ -172,7 +185,8 @@ Before completing:
 3. Verify every used registered addendum exists and points to valid owner files.
 4. Verify no legacy or superseded file is presented as current.
 5. Verify all unresolved conflicts are explicit.
-6. Re-read the request and confirm the packet contains only task-relevant context.
+6. For DATA PING / RAW Main-Framework interpretation, verify `02_DATA_PING/protocols/2026-08-25__three-horizon-action-compass-output-contract-v1__canonical.md` or its explicit canonical successor is included in `Required files`.
+7. Re-read the request and confirm the packet contains only task-relevant context.
 
 If any check fails, correct the packet and re-run all checks.
 
@@ -182,6 +196,7 @@ If any check fails, correct the packet and re-run all checks.
 - **Addendum registry missing** -> report `ADDENDUM_REGISTRY_UNAVAILABLE` and use only directly index-listed material.
 - **Registered addendum missing** -> report `ADDENDUM_PATH_MISSING` and do not use it.
 - **Owner file missing** -> report exact missing path and `OWNER_FILE_MISSING`.
+- **Required DATA PING action-compass owner missing or unresolved** -> report `ACTION_COMPASS_OWNER_UNAVAILABLE`; do not silently fall back to prior-thread wording.
 - **Two current canonical files conflict** -> report `UNRESOLVED_CANONICAL_CONFLICT`.
 - **Requested live state has no current registry** -> report `LIVE_STATE_NOT_VERIFIED`.
 - **Search finds only legacy material** -> provide historical context only and state that no current authority was found.
