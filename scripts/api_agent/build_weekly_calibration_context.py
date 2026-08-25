@@ -83,21 +83,31 @@ def load_legacy_context(root: Path | None) -> dict[str, Any]:
 
 
 def load_experiment_learning(registry_path: Path, outcome_root: Path, start: datetime, end: datetime) -> dict[str, Any]:
-    unavailable = {
-        "status": "UNAVAILABLE",
-        "authority": "SHADOW_ONLY_NO_AUTOMATIC_PROMOTION",
-        "candidate_count": 0,
-        "state_counts": {},
-        "active_candidates": [],
-        "latent_candidate_count": 0,
-        "new_matured_outcomes": [],
-    }
+    def unavailable(status: str, reason: str) -> dict[str, Any]:
+        return {
+            "status": status,
+            "unavailable_reason": reason,
+            "authority": "SHADOW_ONLY_NO_AUTOMATIC_PROMOTION",
+            "candidate_count": 0,
+            "state_counts": {},
+            "active_candidates": [],
+            "latent_candidate_count": 0,
+            "new_matured_outcomes": None,
+            "matured_outcome_evidence_available": False,
+        }
+
     if not registry_path.exists():
-        return unavailable
+        return unavailable("UNAVAILABLE_REGISTRY_MISSING", "Experiment lifecycle registry does not exist.")
     try:
         registry = load_json(registry_path)
     except Exception:
-        return {**unavailable, "status": "INVALID_REGISTRY"}
+        return unavailable("UNAVAILABLE_REGISTRY_UNREADABLE", "Experiment lifecycle registry is unreadable JSON.")
+    if (
+        not isinstance(registry, dict)
+        or registry.get("contract") != "EXPERIMENT_LIFECYCLE_REGISTRY_v1"
+        or not isinstance(registry.get("candidates"), list)
+    ):
+        return unavailable("UNAVAILABLE_REGISTRY_CONTRACT_INVALID", "Experiment lifecycle registry contract or candidates payload is invalid.")
     active_states = {
         "WAITING_FOR_MATURITY",
         "FIRED_NO_TARGET",
@@ -150,6 +160,7 @@ def load_experiment_learning(registry_path: Path, outcome_root: Path, start: dat
         "active_candidates_truncated": len(active) > 50,
         "latent_candidate_count": latent,
         "new_matured_outcomes": outcomes,
+        "matured_outcome_evidence_available": True,
         "weekly_review_rule": "Review new prospective outcomes, severe failures, censored evidence and control comparisons. Strange or dormant hypotheses remain retained but receive no authority without mature evidence.",
     }
 
@@ -326,7 +337,7 @@ def main() -> None:
         "weekly_sequence_readiness": weekly_owned["weekly_capture_pointer"].get("readiness"),
         "legacy_hypotheses": len(context["legacy_research_context"]["hypotheses"]),
         "experiment_candidates": context["experiment_learning"]["candidate_count"],
-        "new_matured_experiment_outcomes": len(context["experiment_learning"]["new_matured_outcomes"]),
+        "new_matured_experiment_outcomes": len(context["experiment_learning"]["new_matured_outcomes"]) if isinstance(context["experiment_learning"].get("new_matured_outcomes"), list) else None,
         "context_hash": context["context_hash"],
     }, sort_keys=True))
 

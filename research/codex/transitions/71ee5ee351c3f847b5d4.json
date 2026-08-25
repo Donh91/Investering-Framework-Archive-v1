@@ -1,0 +1,30 @@
+{
+  "allowed_change_scope": [
+    "scripts/api_agent/build_weekly_calibration_context.py",
+    "scripts/master_monday/publish_master_monday_outputs.py",
+    "tests"
+  ],
+  "branch": "agent/task-20260825-master-monday-registry-status",
+  "candidate_id": "codex-master-monday-registry-unavailable-status-v1",
+  "candidate_path": "research/codex/intake/2026/08/codex-master-monday-registry-unavailable-status-v1.json",
+  "candidate_sha256": "95e7e2a1bf54d9bedbfd79bc0a87c3df177dc39ca04cba6e1f7b30aa1f2d8f8d",
+  "contract": "CODEX_RESEARCH_TRANSITION_RECEIPT_v1",
+  "forbidden_changes": [
+    "API budget",
+    "canonical authority",
+    "fabricating experiment outcomes",
+    "market gates",
+    "model weights",
+    "new policy semantics",
+    "portfolio logic",
+    "rewriting historical W34 artifacts"
+  ],
+  "objective": "Ensure a missing or invalid experiment registry is represented as unavailable evidence and cannot be collapsed into an empty matured-outcome list that produces PENDING_MATURED_OUTCOMES.",
+  "post_fix_gate": "VALID_EMPTY_REGISTRY_DISTINCT_FROM_UNAVAILABLE_REGISTRY_IN_CONTEXT_POINTER_AND_REPORT",
+  "pr_number": null,
+  "receipt_sha256": "451ebcd7d8ec3561eceeae47cc7e9e0866dbda1f27108218f249efb844d23c53",
+  "recorded_at_utc": "2026-08-25T05:29:58Z",
+  "signature": "71ee5ee351c3f847b5d4",
+  "state": "IN_REMEDIATION",
+  "task_contract_sha256": "6508a847a65319db573ed8587c4d1cb59325c83f5aee77000f0ddaf544b1bb8e"
+}
