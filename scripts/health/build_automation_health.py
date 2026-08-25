@@ -52,7 +52,9 @@ def _mapping_has_direct_child(text: str, parent: str, child: str) -> bool:
     """Return whether a top-level YAML mapping has the named direct child."""
     lines = text.splitlines()
     parent_re = re.compile(rf"^(?:{re.escape(parent)}|['\"]{re.escape(parent)}['\"]):\s*(?:#.*)?$")
-    child_re = re.compile(rf"{re.escape(child)}:\s*(?:#.*)?$")
+    child_re = re.compile(
+        rf"(?:{re.escape(child)}|['\\"]{re.escape(child)}['\\"]):\\s*.*$"
+    )
     for index, line in enumerate(lines):
         if not parent_re.fullmatch(line):
             continue
