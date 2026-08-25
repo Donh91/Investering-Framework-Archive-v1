@@ -228,6 +228,42 @@ jobs:
     assert "SCHEDULE_WITHOUT_EXPLICIT_TIMEZONE" not in row["static_risks"]
 
 
+def test_quoted_on_and_schedule_keys_are_scheduled(tmp_path: Path) -> None:
+    path = write_workflow(
+        tmp_path,
+        """name: Quoted Schedule
+"on":
+  "schedule":
+    - cron: '0 1 * * *'
+      timezone: 'Europe/Copenhagen'
+jobs:
+  x:
+    steps:
+      - run: echo scheduled
+""",
+    )
+    row = module.workflow_static(path)
+    assert row["scheduled"] is True
+    assert "SCHEDULE_WITHOUT_EXPLICIT_TIMEZONE" not in row["static_risks"]
+
+
+def test_inline_schedule_value_is_scheduled(tmp_path: Path) -> None:
+    path = write_workflow(
+        tmp_path,
+        """name: Inline Schedule
+on:
+  schedule: [{cron: '0 1 * * *'}]
+jobs:
+  x:
+    steps:
+      - run: echo scheduled
+""",
+    )
+    row = module.workflow_static(path)
+    assert row["scheduled"] is True
+    assert "SCHEDULE_WITHOUT_EXPLICIT_TIMEZONE" in row["static_risks"]
+
+
 def test_leading_streaks() -> None:
     assert module.leading_streak(["success", "success", "failure"], True) == 2
     assert module.leading_streak(["failure", "failure", "success"], False) == 2
