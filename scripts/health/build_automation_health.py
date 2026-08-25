@@ -53,7 +53,7 @@ def _mapping_has_direct_child(text: str, parent: str, child: str) -> bool:
     lines = text.splitlines()
     parent_re = re.compile(rf"^(?:{re.escape(parent)}|['\"]{re.escape(parent)}['\"]):\s*(?:#.*)?$")
     child_re = re.compile(
-        rf"(?:{re.escape(child)}|['\\"]{re.escape(child)}['\\"]):\\s*.*$"
+        rf"(?:{re.escape(child)}|['\"]{re.escape(child)}['\"]):\s*.*$"
     )
     for index, line in enumerate(lines):
         if not parent_re.fullmatch(line):
