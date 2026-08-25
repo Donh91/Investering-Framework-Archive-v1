@@ -51,7 +51,10 @@ def _directive(text: str, key: str) -> str | None:
 def workflow_static(path: Path) -> dict[str, Any]:
     text = path.read_text(errors="ignore")
     writes = "contents: write" in text and "git push" in text
-    scheduled = "schedule:" in text
+    # Trigger keys are direct children of the top-level `on` mapping.  A plain
+    # substring search also matches shell/Python literals in workflow steps,
+    # which previously made the manual PDLT runtime gate look scheduled.
+    scheduled = re.search(r"(?m)^  schedule:\s*(?:#.*)?$", text) is not None
     manual = "workflow_dispatch:" in text
     uses_openai = "OPENAI_API_KEY" in text or "api_gateway.py" in text
     uses_cfgi = "CFGI_API_KEY" in text or "cfgi_" in text.lower()
