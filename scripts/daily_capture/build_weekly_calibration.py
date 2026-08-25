@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import statistics
 from collections import Counter
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
@@ -340,6 +341,194 @@ def etf_summary(records: list[dict[str, Any]]) -> dict[str, Any]:
     }
 
 
+def load_rotation_context_records(root: Path, iso_year: int, iso_week: int, lookback_days: int = 56) -> list[dict[str, Any]]:
+    if not root.exists():
+        return []
+    week_start = date.fromisocalendar(iso_year, iso_week, 1)
+    end_exclusive = week_start + timedelta(days=7)
+    start_inclusive = end_exclusive - timedelta(days=lookback_days)
+    latest_by_day: dict[str, dict[str, Any]] = {}
+    for path in sorted(root.rglob("rotation_context_snapshot.json")):
+        try:
+            value = json.loads(path.read_text())
+            raw_day = value.get("observation_date_utc") or str(value["retrieved_at_utc"])[:10]
+            observed_day = date.fromisoformat(str(raw_day))
+        except Exception:
+            continue
+        if not start_inclusive <= observed_day < end_exclusive:
+            continue
+        crosscheck_path = path.parent / "rotation_method_crosscheck_snapshot.json"
+        try:
+            crosscheck = json.loads(crosscheck_path.read_text())
+            if not isinstance(crosscheck, dict):
+                crosscheck = None
+        except Exception:
+            crosscheck = None
+        row = {
+            "observation_date_utc": observed_day.isoformat(),
+            "retrieved_at_utc": value.get("retrieved_at_utc"),
+            "path": str(path),
+            "snapshot": value,
+            "crosscheck_path": str(crosscheck_path) if crosscheck is not None else None,
+            "crosscheck": crosscheck,
+        }
+        previous = latest_by_day.get(observed_day.isoformat())
+        if previous is None or str(row["retrieved_at_utc"] or "") >= str(previous["retrieved_at_utc"] or ""):
+            latest_by_day[observed_day.isoformat()] = row
+    return [latest_by_day[key] for key in sorted(latest_by_day)]
+
+
+def numeric_series_summary(values: list[float]) -> dict[str, float | int | None]:
+    if not values:
+        return {"observation_count": 0, "first": None, "latest": None, "change": None, "minimum": None, "maximum": None, "mean": None}
+    return {
+        "observation_count": len(values),
+        "first": values[0],
+        "latest": values[-1],
+        "change": round(values[-1] - values[0], 12),
+        "minimum": min(values),
+        "maximum": max(values),
+        "mean": round(float(statistics.fmean(values)), 12),
+    }
+
+
+def rotation_window_summary(records: list[dict[str, Any]], start_inclusive: date, end_exclusive: date) -> dict[str, Any]:
+    selected = [row for row in records if start_inclusive <= date.fromisoformat(row["observation_date_utc"]) < end_exclusive]
+    passing = [row for row in selected if row["snapshot"].get("status") == "PASS"]
+    expected_days = (end_exclusive - start_inclusive).days
+    minimum_pass_days = {7: 5, 28: 21, 56: 42}.get(expected_days, max(5, (expected_days * 3 + 3) // 4))
+    readiness = (
+        "READY" if len(passing) >= minimum_pass_days
+        else "MATURING" if passing
+        else "DEGRADED" if selected
+        else "NOT_YET_AVAILABLE"
+    )
+    horizon_summaries: dict[str, Any] = {}
+    for horizon in ("30", "90", "365"):
+        rows = [row["snapshot"].get("horizons", {}).get(horizon) for row in passing]
+        rows = [row for row in rows if isinstance(row, dict)]
+        scores = [float(row["published_score"]) for row in rows if row.get("published_score") is not None]
+        benchmark_returns = [float(row["benchmark_return_decimal"]) for row in rows if row.get("benchmark_return_decimal") is not None]
+        outperformance = [float(row["outperforming_btc_share"]) for row in rows if row.get("outperforming_btc_share") is not None]
+        median_spreads = [float(row["median_alt_minus_btc_return_decimal"]) for row in rows if row.get("median_alt_minus_btc_return_decimal") is not None]
+        states = [str(row.get("source_state")) for row in rows if row.get("source_state")]
+        memberships = [str(row.get("membership_hash")) for row in rows if row.get("membership_hash")]
+        horizon_summaries[horizon] = {
+            "score": numeric_series_summary(scores),
+            "benchmark_return_decimal": numeric_series_summary(benchmark_returns),
+            "outperforming_btc_share": numeric_series_summary(outperformance),
+            "median_alt_minus_btc_return_decimal": numeric_series_summary(median_spreads),
+            "source_state_counts": dict(sorted(Counter(states).items())),
+            "published_threshold_crossings": sum(left != right for left, right in zip(states, states[1:])),
+            "unique_membership_hash_count": len(set(memberships)),
+            "membership_change_events": sum(left != right for left, right in zip(memberships, memberships[1:])),
+        }
+    crosschecks = [row["crosscheck"] for row in selected if isinstance(row.get("crosscheck"), dict)]
+    passing_crosschecks = [row for row in crosschecks if row.get("status") == "PASS"]
+    crosscheck_scores = [float(row["published_score"]) for row in passing_crosschecks if row.get("published_score") is not None]
+    crosscheck_states = [str(row["source_state"]) for row in passing_crosschecks if row.get("source_state")]
+    method_spreads = []
+    for row in selected:
+        primary = row["snapshot"]
+        crosscheck = row.get("crosscheck")
+        primary_90 = primary.get("horizons", {}).get("90") if isinstance(primary.get("horizons"), dict) else None
+        if (
+            primary.get("status") == "PASS" and isinstance(primary_90, dict)
+            and isinstance(crosscheck, dict) and crosscheck.get("status") == "PASS"
+            and primary_90.get("published_score") is not None and crosscheck.get("published_score") is not None
+        ):
+            method_spreads.append(float(crosscheck["published_score"]) - float(primary_90["published_score"]))
+    compact_observations = []
+    for record in selected:
+        snapshot = record["snapshot"]
+        source = snapshot.get("source") if isinstance(snapshot.get("source"), dict) else {}
+        methodology = snapshot.get("methodology") if isinstance(snapshot.get("methodology"), dict) else {}
+        horizons = snapshot.get("horizons") if isinstance(snapshot.get("horizons"), dict) else {}
+        crosscheck = record.get("crosscheck") if isinstance(record.get("crosscheck"), dict) else {}
+        crosscheck_source = crosscheck.get("source") if isinstance(crosscheck.get("source"), dict) else {}
+        compact_observations.append({
+            "observation_date_utc": record["observation_date_utc"],
+            "retrieved_at_utc": record["retrieved_at_utc"],
+            "status": snapshot.get("status"),
+            "failure_state": snapshot.get("failure_state"),
+            "source_raw_sha256": source.get("raw_sha256"),
+            "methodology_fingerprint_sha256": methodology.get("methodology_fingerprint_sha256"),
+            "scores": {horizon: row.get("published_score") for horizon, row in sorted(horizons.items()) if isinstance(row, dict)},
+            "source_states": {horizon: row.get("source_state") for horizon, row in sorted(horizons.items()) if isinstance(row, dict)},
+            "source_path": record["path"],
+            "method_crosscheck": {
+                "status": crosscheck.get("status"),
+                "failure_state": crosscheck.get("failure_state"),
+                "published_score": crosscheck.get("published_score"),
+                "source_state": crosscheck.get("source_state"),
+                "source_raw_sha256": crosscheck_source.get("raw_sha256"),
+                "source_path": record.get("crosscheck_path"),
+            },
+        })
+    return {
+        "window_start_utc": start_inclusive.isoformat() + "T00:00:00Z",
+        "window_end_utc_exclusive": end_exclusive.isoformat() + "T00:00:00Z",
+        "expected_days": expected_days,
+        "observed_days": len(selected),
+        "passing_days": len(passing),
+        "degraded_days": len(selected) - len(passing),
+        "minimum_pass_days_for_ready": minimum_pass_days,
+        "readiness": readiness,
+        "passing_coverage_pct": round((len(passing) / expected_days) * 100.0, 3) if expected_days else 0.0,
+        "status_counts": dict(sorted(Counter(row["snapshot"].get("status", "UNKNOWN") for row in selected).items())),
+        "horizons": horizon_summaries,
+        "independent_method_crosscheck": {
+            "source_contract": "COINMARKETCAP_ALTCOIN_SEASON_SHADOW_CROSSCHECK_v1",
+            "evidence_grade": "PUBLISHED_LABEL_ONLY",
+            "observed_days": len(crosschecks),
+            "passing_days": len(passing_crosschecks),
+            "status_counts": dict(sorted(Counter(row.get("status", "UNKNOWN") for row in crosschecks).items())),
+            "score": numeric_series_summary(crosscheck_scores),
+            "source_state_counts": dict(sorted(Counter(crosscheck_states).items())),
+            "cmc_top100_minus_blockchaincenter_top50_90d_score": numeric_series_summary(method_spreads),
+            "component_reconciliation": "NOT_AVAILABLE_FROM_CAPTURED_PAGE",
+            "affects_readiness": False,
+            "authority": "LOWER_GRADE_SHADOW_METHOD_DISPERSION_ONLY",
+        },
+        "daily_observations": compact_observations,
+        "interpolation": False,
+        "forward_fill": False,
+    }
+
+
+def rotation_context_summary(records: list[dict[str, Any]], iso_year: int, iso_week: int) -> dict[str, Any]:
+    week_start = date.fromisocalendar(iso_year, iso_week, 1)
+    end_exclusive = week_start + timedelta(days=7)
+    windows = {
+        "7d": rotation_window_summary(records, end_exclusive - timedelta(days=7), end_exclusive),
+        "28d": rotation_window_summary(records, end_exclusive - timedelta(days=28), end_exclusive),
+        "56d": rotation_window_summary(records, end_exclusive - timedelta(days=56), end_exclusive),
+    }
+    long_states = [windows["28d"]["readiness"], windows["56d"]["readiness"]]
+    long_readiness = (
+        "READY" if all(state == "READY" for state in long_states)
+        else "MATURING" if any(state in {"READY", "MATURING"} for state in long_states)
+        else "DEGRADED" if any(state == "DEGRADED" for state in long_states)
+        else "NOT_YET_AVAILABLE"
+    )
+    return {
+        "contract": "WEEKLY_ROTATION_CONTEXT_CALIBRATION_v1",
+        "authority": "SHADOW_CALIBRATION_INPUT_ONLY",
+        "source_contract": "BLOCKCHAINCENTER_ALTCOIN_SEASON_SHADOW_CONTEXT_v1",
+        "framework_role": "STATE_LABEL_AND_BREADTH_VALIDATION_NOT_DECISION_ENGINE",
+        "readiness": windows["7d"]["readiness"],
+        "readiness_basis": "7_DAY_NEAR_TERM_WINDOW",
+        "four_to_eight_week_readiness": long_readiness,
+        "first_loaded_observation_date_utc": records[0]["observation_date_utc"] if records else None,
+        "historical_backfill_materialized_as_daily_rows": False,
+        "windows": windows,
+        "market_interpretation": False,
+        "forecast_evaluation_performed": False,
+        "framework_state_change": False,
+        "portfolio_action": False,
+    }
+
+
 def write_enriched_csv(path: Path, rows: list[dict[str, str]]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", newline="", encoding="utf-8") as handle:
@@ -353,6 +542,7 @@ def main() -> None:
     parser.add_argument("--input-root", type=Path, required=True)
     parser.add_argument("--hourly-root", type=Path)
     parser.add_argument("--etf-root", type=Path)
+    parser.add_argument("--rich-breadth-root", type=Path)
     parser.add_argument("--output-root", type=Path, required=True)
     parser.add_argument("--iso-year", type=int)
     parser.add_argument("--iso-week", type=int)
@@ -375,6 +565,8 @@ def main() -> None:
     hourly_rows = load_hourly_rows(args.hourly_root, iso_year, iso_week) if args.hourly_root else []
     enriched = enrich_rows(hourly_rows)
     etf_records = load_etf_records(args.etf_root, iso_year, iso_week)
+    rich_breadth_root = args.rich_breadth_root or args.input_root.parent / "breadth_rich"
+    rotation_records = load_rotation_context_records(rich_breadth_root, iso_year, iso_week)
 
     status_counts = Counter(packet.get("status", "UNKNOWN") for _, packet in packets)
     owner_status: dict[str, Counter[str]] = {}
@@ -390,6 +582,7 @@ def main() -> None:
     gaps = hourly_gap_diagnostics(hourly_rows, iso_year, iso_week)
     windows = day_window_actuals(hourly_rows, iso_year, iso_week)
     etf = etf_summary(etf_records)
+    rotation_context = rotation_context_summary(rotation_records, iso_year, iso_week)
 
     anchor_ready = eligible >= 15
     hourly_ready = hourly["spot_complete_hours"] >= 150 and gaps["max_contiguous_gap_hours"] <= 6
@@ -411,6 +604,7 @@ def main() -> None:
         "gap_diagnostics": gaps,
         "day_window_actuals": windows,
         "settled_etf": etf,
+        "rotation_context": rotation_context,
         "latest_rolling_features": {
             key: latest.get(key, "")
             for key in ENRICHED_DERIVED_FIELDS
@@ -437,6 +631,7 @@ def main() -> None:
         "hourly_gap_diagnostics": gaps,
         "day_window_actuals": windows,
         "settled_etf": etf,
+        "rotation_context": rotation_context,
         "enriched_hourly_path": str(enriched_path.relative_to(args.output_root.parent)),
         "sequence_facts_path": str(facts_path.relative_to(args.output_root.parent)),
         "sequence_evidence_built": bool(hourly_rows),
@@ -450,11 +645,13 @@ def main() -> None:
             "MASTER_MONDAY_PREP",
             "SPECIALIST_WEEKLY_REVIEW",
             "PULLBACK_SEQUENCE_REPLAY",
+            "ROTATION_SURVIVAL_FORWARD",
         ],
         "readiness": readiness,
         "readiness_components": {
             "anchor_lane": "READY" if anchor_ready else "DEGRADED" if eligible else "BLOCKED",
             "hourly_sequence_lane": "READY" if hourly_ready else "DEGRADED" if hourly_rows else "BLOCKED",
+            "rotation_context_lane": rotation_context["readiness"],
         },
     }
 
@@ -475,6 +672,8 @@ def main() -> None:
         "sequence_facts_path": pack["sequence_facts_path"],
         "missing_hour_count": gaps["missing_hour_count"],
         "max_contiguous_gap_hours": gaps["max_contiguous_gap_hours"],
+        "rotation_context_readiness": rotation_context["readiness"],
+        "rotation_context_observed_days": rotation_context["windows"]["7d"]["observed_days"],
     }, indent=2, sort_keys=True) + "\n")
     print(output)
 

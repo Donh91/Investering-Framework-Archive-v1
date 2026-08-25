@@ -1,0 +1,69 @@
+{
+  "registry_version": "1.0",
+  "status": "ACTIVE_LOWER_GRADE_SHADOW_CROSSCHECK",
+  "admitted_utc": "2026-08-25",
+  "primary_source": {
+    "source_id": "COINMARKETCAP_ALTCOIN_SEASON_INDEX",
+    "provider": "CoinMarketCap",
+    "url": "https://coinmarketcap.com/charts/altcoin-season-index/",
+    "transport": "PUBLIC_HTML_EMBEDDED_NEXT_DATA_PAYLOAD",
+    "credential_required": false,
+    "paid_dependency": false,
+    "direct_or_derived": "PROVIDER_DERIVED_PUBLISHED_LABEL_ONLY",
+    "source_convention": "TOP_100_EXCLUDING_STABLECOINS_AND_ASSET_BACKED_OR_WRAPPED_TOKENS_VS_BTC",
+    "captured_horizons_days": [90],
+    "published_state_thresholds": {"bitcoin_season_max": 25, "altcoin_season_min": 75},
+    "source_refresh_expectation": "DAILY",
+    "capture_timestamp_convention": "FRAMEWORK_FETCH_TIME_UTC",
+    "component_returns_available_in_normalized_capture": false,
+    "revision_policy": "APPEND_ONLY_DATED_ARTIFACTS_PRESERVE_PRIOR_PAYLOAD_HASHES"
+  },
+  "owner": {
+    "script": "scripts/data_terminal/top100_breadth_owner_collector.py",
+    "role": "FAILURE_ISOLATED_METHOD_CROSSCHECK_TO_BLOCKCHAINCENTER_AND_FRAMEWORK_BREADTH",
+    "workflow_full_daily": "Research Owner - Top100 Breadth Daily",
+    "workflow_compact_intraday": "Daily Live Anchor Capture",
+    "workflow_weekly_calibration": "Weekly Raw Calibration Bridge"
+  },
+  "materialization": {
+    "full_daily_root": "03_DAILY_CAPTURE_LOGS/breadth_rich/YYYY/MM/YYYY-MM-DD",
+    "compressed_raw_member": "raw_coinmarketcap_altcoin_season.html.gz",
+    "normalized_member": "rotation_method_crosscheck_snapshot.json",
+    "compact_capture_root": "03_DAILY_CAPTURE_LOGS/captures",
+    "weekly_calibration_root": "03_DAILY_CAPTURE_LOGS/weekly",
+    "raw_payload_required_when_source_passes": true,
+    "artifact_manifest_required": true,
+    "member_sha256_required": true,
+    "readback_required": true,
+    "published_score_range_validation_required": true,
+    "component_score_reconciliation_available": false
+  },
+  "calibration": {
+    "windows_days": [7, 28, 56],
+    "comparison_measure": "CMC_TOP100_MINUS_BLOCKCHAINCENTER_TOP50_90D_SCORE",
+    "prospective_only": true,
+    "retroactive_rows_allowed": false,
+    "affects_rotation_context_readiness": false
+  },
+  "failure_policy": {
+    "missing": "UNKNOWN",
+    "empty": "DEGRADE_CROSSCHECK_ONLY",
+    "network": "DEGRADE_CROSSCHECK_ONLY_AFTER_BOUNDED_ATTEMPTS",
+    "schema_drift": "DEGRADE_CROSSCHECK_ONLY_AND_PRESERVE_ERROR_RECEIPT",
+    "artifact_tamper": "FAIL_VERIFICATION_EXPLICITLY",
+    "blockchaincenter_and_primary_breadth_may_still_pass": true,
+    "silent_fallback": false,
+    "forward_fill": false,
+    "interpolation": false,
+    "source_substitution": false
+  },
+  "interpretation_firewall": {
+    "role": "LOWER_GRADE_METHOD_DISPERSION_AND_STATE_LABEL_ONLY",
+    "binding": false,
+    "canonical_acceptance": false,
+    "market_state_change": false,
+    "portfolio_action": false,
+    "standalone_rotation_trigger": false,
+    "shared_row_tournament_eligible": false
+  }
+}
