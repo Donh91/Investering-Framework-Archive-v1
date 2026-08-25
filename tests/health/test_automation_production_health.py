@@ -188,6 +188,28 @@ def test_scheduled_workflow_without_timezone_is_amber(tmp_path: Path) -> None:
     assert "SCHEDULE_WITHOUT_EXPLICIT_TIMEZONE" in findings
 
 
+def test_schedule_literal_inside_step_does_not_make_manual_gate_scheduled(tmp_path: Path) -> None:
+    path = write_workflow(
+        tmp_path,
+        """name: Manual Gate
+on:
+  pull_request:
+  workflow_dispatch:
+jobs:
+  gate:
+    steps:
+      - run: |
+          python - <<'PY'
+          source = "schedule:"
+          assert "schedule:" not in source.replace("schedule:", "")
+          PY
+""",
+    )
+    row = module.workflow_static(path)
+    assert row["scheduled"] is False
+    assert "SCHEDULE_WITHOUT_EXPLICIT_TIMEZONE" not in row["static_risks"]
+
+
 def test_leading_streaks() -> None:
     assert module.leading_streak(["success", "success", "failure"], True) == 2
     assert module.leading_streak(["failure", "failure", "success"], False) == 2
