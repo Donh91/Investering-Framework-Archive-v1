@@ -317,6 +317,38 @@ def test_flow_comment_stripping_preserves_quoted_hash() -> None:
     assert module._flow_mapping_has_key(value, "schedule") is True
 
 
+def test_flow_style_on_schedule_preserves_plain_scalar_hash(tmp_path: Path) -> None:
+    path = write_workflow(
+        tmp_path,
+        """name: Plain Scalar Hash
+"on": {push: {branches: [release#1]}, schedule: [{cron: '0 1 * * *'}]}
+jobs:
+  x:
+    steps:
+      - run: echo scheduled
+""",
+    )
+    row = module.workflow_static(path)
+    assert row["scheduled"] is True
+
+
+def test_separation_before_mapping_colons_is_scheduled(tmp_path: Path) -> None:
+    path = write_workflow(
+        tmp_path,
+        """name: Separated Mapping Colons
+"on" :
+  "schedule" :
+    - cron: '0 1 * * *'
+jobs:
+  x:
+    steps:
+      - run: echo scheduled
+""",
+    )
+    row = module.workflow_static(path)
+    assert row["scheduled"] is True
+
+
 def test_multiline_flow_style_on_schedule_is_scheduled(tmp_path: Path) -> None:
     path = write_workflow(
         tmp_path,
