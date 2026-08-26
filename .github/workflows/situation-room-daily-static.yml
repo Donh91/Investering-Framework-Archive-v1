@@ -1,0 +1,108 @@
+name: Situation Room Daily Static Discovery
+
+on:
+  schedule:
+    # Situation Room daily briefing is normally generated around 06:00 UTC.
+    # 08:20 Europe/Copenhagen is safely after that during both CET and CEST.
+    - cron: '20 8 * * *'
+      timezone: 'Europe/Copenhagen'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: framework-main-writer
+  cancel-in-progress: false
+
+jobs:
+  discovery:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Verify deterministic adapter semantics
+        run: |
+          python -m unittest \
+            tests.data_terminal.test_situation_room_daily_owner \
+            tests.data_terminal.test_situation_room_static_daily_adapter -v
+          python -m py_compile \
+            scripts/data_terminal/situation_room_daily_owner.py \
+            scripts/data_terminal/situation_room_static_daily_adapter.py
+
+      - name: Capture deterministic static Situation Room briefing
+        id: capture
+        shell: bash
+        run: |
+          set +e
+          python scripts/data_terminal/situation_room_static_daily_adapter.py \
+            --output-root 03_DAILY_CAPTURE_LOGS/catalyst_overlay/situation_room \
+            --date-utc "$(date -u +%F)" \
+            --timeout 10
+          code=$?
+          echo "exit_code=${code}" >> "$GITHUB_OUTPUT"
+          if [ "$code" -ne 0 ] && [ "$code" -ne 78 ]; then
+            exit "$code"
+          fi
+
+      - name: Verify durable discovery contract
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          root=Path('03_DAILY_CAPTURE_LOGS/catalyst_overlay/situation_room')
+          latest=json.loads((root/'LATEST.json').read_text())
+          row=json.loads(Path(latest['path']).read_text())
+          assert row['contract']=='SITUATION_ROOM_DAILY_OWNER_v1', row
+          assert row['authority']=='RESEARCH_ONLY_NON_CANONICAL', row
+          assert row['situation_room_role']=='DISCOVERY_ONLY', row
+          assert row['market_reaction_separate_from_event'] is True, row
+          assert row['canonical_effect'] is False, row
+          assert row['market_state_effect'] is False, row
+          assert row['portfolio_effect'] is False, row
+          assert row['retrieval']['strategy']=='DETERMINISTIC_STATIC_DAILY_BRIEFING', row
+          assert row['retrieval']['dynamic_archive_shell_not_required'] is True, row
+          assert '/briefing/' in row['retrieval']['situation_room_daily_url'], row
+          assert latest['daily_result']==row['daily_result'], (latest,row)
+          assert latest['run_status']==row['run_status'], (latest,row)
+          print('SITUATION_ROOM_STATIC_DISCOVERY_VALID', row['daily_result'])
+          PY
+
+      - name: Commit catalyst discovery independently
+        shell: bash
+        run: |
+          git config user.name 'framework-catalyst-bot'
+          git config user.email 'framework-catalyst-bot@users.noreply.github.com'
+          git add 03_DAILY_CAPTURE_LOGS/catalyst_overlay/situation_room
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "research: capture Situation Room static discovery ${GITHUB_RUN_ID}"
+          pushed=false
+          for attempt in 1 2 3; do
+            git rebase --abort 2>/dev/null || true
+            if git pull --rebase origin main && git push origin HEAD:main; then pushed=true; break; fi
+            sleep $((attempt * 5))
+          done
+          [ "$pushed" = true ]
+          git fetch origin main
+          git merge-base --is-ancestor HEAD origin/main
+
+      - name: Report explicit review-required state
+        if: steps.capture.outputs.exit_code == '78'
+        run: echo '::notice::Situation Room discovery was captured durably and requires independent corroboration. This is an explicit shadow state, not source absence.'
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: situation-room-static-${{ github.run_id }}-${{ github.run_attempt }}
+          path: 03_DAILY_CAPTURE_LOGS/catalyst_overlay/situation_room/
+          retention-days: 14
+          if-no-files-found: error

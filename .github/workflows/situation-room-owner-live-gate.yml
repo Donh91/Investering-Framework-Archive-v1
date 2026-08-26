@@ -4,8 +4,11 @@ on:
   pull_request:
     paths:
       - 'scripts/data_terminal/situation_room_daily_owner.py'
+      - 'scripts/data_terminal/situation_room_static_daily_adapter.py'
       - 'tests/data_terminal/test_situation_room_daily_owner.py'
+      - 'tests/data_terminal/test_situation_room_static_daily_adapter.py'
       - '.github/workflows/daily-raw-owner-capture.yml'
+      - '.github/workflows/situation-room-daily-static.yml'
       - '.github/workflows/situation-room-owner-live-gate.yml'
   workflow_dispatch:
 
@@ -24,24 +27,28 @@ jobs:
 
       - name: Run deterministic Situation Room owner tests
         run: |
-          python -m unittest tests.data_terminal.test_situation_room_daily_owner -v
-          python -m py_compile scripts/data_terminal/situation_room_daily_owner.py
+          python -m unittest \
+            tests.data_terminal.test_situation_room_daily_owner \
+            tests.data_terminal.test_situation_room_static_daily_adapter -v
+          python -m py_compile \
+            scripts/data_terminal/situation_room_daily_owner.py \
+            scripts/data_terminal/situation_room_static_daily_adapter.py
 
-      - name: Run live Situation Room owner without repository writes
+      - name: Run live Situation Room static adapter without repository writes
         shell: bash
         run: |
           set +e
-          python scripts/data_terminal/situation_room_daily_owner.py \
+          python scripts/data_terminal/situation_room_static_daily_adapter.py \
             --output-root /tmp/situation-room-live \
             --date-utc "$(date -u +%F)" \
-            --timeout 8
+            --timeout 10
           code=$?
           echo "$code" > /tmp/situation-room-live-exit-code
           if [ "$code" -ne 0 ] && [ "$code" -ne 78 ]; then
             exit "$code"
           fi
 
-      - name: Verify live receipt, authority and failure semantics
+      - name: Verify live receipt, authority, retrieval and failure semantics
         run: |
           python - <<'PY'
           import json
@@ -62,6 +69,9 @@ jobs:
           assert result['canonical_effect'] is False, result
           assert result['market_state_effect'] is False, result
           assert result['portfolio_effect'] is False, result
+          assert result['retrieval']['strategy']=='DETERMINISTIC_STATIC_DAILY_BRIEFING', result
+          assert result['retrieval']['dynamic_archive_shell_not_required'] is True, result
+          assert '/briefing/' in result['retrieval']['situation_room_daily_url'], result
           assert latest['daily_result']==result['daily_result'], (latest,result)
           assert latest['run_status']==result['run_status'], (latest,result)
 
