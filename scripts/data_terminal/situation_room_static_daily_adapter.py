@@ -11,6 +11,7 @@ from scripts.data_terminal import situation_room_daily_owner as owner
 
 SITUATION_ROOM_ARCHIVE = "https://situationroom.space/briefings"
 SITUATION_ROOM_DAILY_PREFIX = "https://situationroom.space/briefing/"
+BASE_CANDIDATE_LINKS = owner.candidate_links
 
 
 def daily_briefing_url(date_utc: str) -> str:
@@ -39,7 +40,7 @@ def direct_daily_candidate_links(source_id: str, base_url: str, parser):
             title = parser.title or f"Situation Room daily briefing {parsed.path.rsplit('/', 1)[-1]}"
             yield base_url, title
             return
-    yield from owner.candidate_links(source_id, base_url, parser)
+    yield from BASE_CANDIDATE_LINKS(source_id, base_url, parser)
 
 
 def run(output_root: Path, date_utc: str, timeout: int = 15) -> dict:
