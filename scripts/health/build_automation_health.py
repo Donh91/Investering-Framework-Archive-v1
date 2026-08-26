@@ -48,9 +48,66 @@ def _directive(text: str, key: str) -> str | None:
     return match.group(1).strip() if match else None
 
 
+def _strip_unquoted_yaml_comments(value: str) -> str:
+    """Remove YAML comments without touching hash characters inside quotes."""
+    result: list[str] = []
+    quote: str | None = None
+    escaped = False
+    index = 0
+    while index < len(value):
+        character = value[index]
+        if quote:
+            result.append(character)
+            if escaped:
+                escaped = False
+            elif character == "\\" and quote == '"':
+                escaped = True
+            elif character == quote:
+                if quote == "'" and index + 1 < len(value) and value[index + 1] == "'":
+                    result.append(value[index + 1])
+                    index += 1
+                else:
+                    quote = None
+        elif character in "'\"":
+            quote = character
+            result.append(character)
+        elif character == "#":
+            while index < len(value) and value[index] != "\n":
+                index += 1
+            if index < len(value):
+                result.append("\n")
+        else:
+            result.append(character)
+        index += 1
+    return "".join(result)
+
+
+def _flow_brace_balance(value: str) -> int:
+    """Count unquoted flow-mapping braces after removing YAML comments."""
+    balance = 0
+    quote: str | None = None
+    escaped = False
+    for character in _strip_unquoted_yaml_comments(value):
+        if quote:
+            if escaped:
+                escaped = False
+            elif character == "\\" and quote == '"':
+                escaped = True
+            elif character == quote:
+                quote = None
+            continue
+        if character in "'\"":
+            quote = character
+        elif character == "{":
+            balance += 1
+        elif character == "}":
+            balance -= 1
+    return balance
+
+
 def _flow_mapping_has_key(value: str, key: str) -> bool:
-    """Return whether a one-line YAML flow mapping has a top-level key."""
-    value = value.strip()
+    """Return whether a YAML flow mapping has a top-level key."""
+    value = _strip_unquoted_yaml_comments(value).strip()
     if not (value.startswith("{") and value.endswith("}")):
         return False
 
@@ -105,7 +162,13 @@ def _mapping_has_direct_child(text: str, parent: str, child: str) -> bool:
         if parent_value.startswith("#"):
             parent_value = ""
         if parent_value:
-            if _flow_mapping_has_key(parent_value, child):
+            flow_value = parent_value
+            if _strip_unquoted_yaml_comments(flow_value).lstrip().startswith("{"):
+                cursor = index + 1
+                while _flow_brace_balance(flow_value) > 0 and cursor < len(lines):
+                    flow_value += "\n" + lines[cursor]
+                    cursor += 1
+            if _flow_brace_balance(flow_value) == 0 and _flow_mapping_has_key(flow_value, child):
                 return True
             continue
         block: list[tuple[int, str]] = []
