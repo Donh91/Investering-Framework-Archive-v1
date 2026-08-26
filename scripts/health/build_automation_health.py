@@ -71,7 +71,7 @@ def _strip_unquoted_yaml_comments(value: str) -> str:
         elif character in "'\"":
             quote = character
             result.append(character)
-        elif character == "#":
+        elif character == "#" and (not result or result[-1] in " \t\n"):
             while index < len(value) and value[index] != "\n":
                 index += 1
             if index < len(value):
@@ -149,10 +149,10 @@ def _mapping_has_direct_child(text: str, parent: str, child: str) -> bool:
     """Return whether a top-level YAML mapping has the named direct child."""
     lines = text.splitlines()
     parent_re = re.compile(
-        rf"^(?:{re.escape(parent)}|['\"]{re.escape(parent)}['\"]):\s*(.*)$"
+        rf"^(?:{re.escape(parent)}|['\"]{re.escape(parent)}['\"])\s*:\s*(.*)$"
     )
     child_re = re.compile(
-        rf"(?:{re.escape(child)}|['\"]{re.escape(child)}['\"]):\s*.*$"
+        rf"(?:{re.escape(child)}|['\"]{re.escape(child)}['\"])\s*:\s*.*$"
     )
     for index, line in enumerate(lines):
         parent_match = parent_re.fullmatch(line)
