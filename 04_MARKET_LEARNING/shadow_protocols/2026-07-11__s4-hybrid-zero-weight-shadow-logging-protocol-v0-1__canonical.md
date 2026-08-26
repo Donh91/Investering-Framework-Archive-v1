@@ -4,7 +4,7 @@
 **Status:** ACTIVE_SHADOW  
 **Authority:** ZERO_WEIGHT / NO_EXECUTION_AUTHORITY
 
-**Operational review:** 2026-08-26 - `OWNER_BLOCKED`, zero valid Exit Ladder rows
+**Operational review:** 2026-08-26 - Exit Ladder `RETIRED_UNIMPLEMENTED`, zero valid rows
 
 ## 1. Percentile Gate Log
 
@@ -29,11 +29,11 @@ Log every eligible fixed-gate cross in parallel with:
 Kill:
 - after at least 10 resolved crosses, if percentile gates do not beat fixed gates on pre-registered fake-rate/retention metrics, reject or redesign.
 
-## 2. Exit Ladder E0–E7 Log
+## 2. Exit Ladder E0-E7 - retired unimplemented
 
-Purpose: instrument the framework's exit-side blind spot.
+Historical design purpose: instrument the framework's exit-side blind spot.
 
-States:
+The following states are retained for provenance only. They are not current framework vocabulary:
 - E0 NEUTRAL
 - E1 PRE_ALT_PREP
 - E2 ALT_ACTIVE_MONITOR
@@ -43,31 +43,34 @@ States:
 - E6 TERMINAL_ALERT
 - E7 POST_TOP_PROTECTION
 
-Rules:
-- all states are walk-forward and zero weight
-- E1–E4 contain no trade-size or sell instruction
-- no state may skip a level
-- every transition needs an explicit falsifier
-- only governance may approve action language
-- minimum eight forward rows per material state before any authority discussion
+Current disposition:
+
+```yaml
+exit_ladder_owner_status: RETIRED_UNIMPLEMENTED
+valid_rows: 0
+row_production: PERMANENTLY_OFF_UNLESS_EXPLICITLY_REACTIVATED
+current_decision_vocabulary: THREE_HORIZON_ACTION_COMPASS_v1_1
+historical_scaffold_preserved: true
+```
+
+No E-state may be emitted, inferred, populated, scored or mapped from current Action Compass state, warning or action fields. Any future reactivation would require a new explicit canonical owner, prospective producer, complete transition and falsifier specification, row lifecycle, validator, Active Test Registry repair and separate governance approval. The retired design receives no grandfathered authority.
 
 ### 2.1 Current operational block
 
 ```yaml
-exit_ladder_owner_status: OWNER_BLOCKED
+exit_ladder_owner_status: RETIRED_UNIMPLEMENTED
 valid_rows: 0
 row_production: OFF
-blockers:
-  - NATIVE_E0_E7_OUTPUT_UNAVAILABLE
-  - TRANSITION_CONDITIONS_AND_FALSIFIERS_UNFROZEN
-  - PRODUCER_AND_EMISSION_BINDING_UNDEFINED
-  - ROW_LIFECYCLE_FOR_MULTIPLE_OUTCOME_HORIZONS_UNFROZEN
+retirement_reasons:
+  - NATIVE_E0_E7_OUTPUT_NEVER_IMPLEMENTED
+  - TRANSITION_CONDITIONS_AND_FALSIFIERS_NEVER_FROZEN
+  - PRODUCER_AND_EMISSION_BINDING_NEVER_DEFINED
+  - ROW_LIFECYCLE_NEVER_FROZEN
   - ACTIVE_TEST_OWNER_ABSENT
+  - THREE_HORIZON_ACTION_COMPASS_NOW_SOLE_CURRENT_DECISION_VOCABULARY
 ```
 
-The existing CSV remains a header-only scaffold. It must not be populated until
-all blockers above are resolved in one prospective, causally timestamped owner
-contract with a producer and validator.
+The existing CSV remains a header-only historical scaffold. It must not be populated.
 
 The Three-Horizon Action Compass is an output and decision-translation
 contract, not an E0-E7 evaluator. Its Lane-3 state and optional warning
@@ -87,11 +90,8 @@ The separate prospective dual-run already records `TRIM_EXIT_STATE` as
 
 `04_MARKET_LEARNING/backtests/framework_backtest_readiness_build_v1/prospective_dual_run_v2/r1_evidence_validity_repair/R1_08_PRIMARY_LANE_VALIDITY_SUMMARY.md`
 
-This section makes the same missing native output explicit at the Exit Ladder
-owner. It creates no state, threshold, warning, test, score or portfolio
-authority. The next valid action is an owner-level governance review that
-either freezes a native E0-E7 producer and complete ledger lifecycle or retires
-the scaffold.
+This section closes the blocked owner review by retirement. It creates no state,
+threshold, warning, test, score or portfolio authority.
 
 ## 3. Challenger Log
 

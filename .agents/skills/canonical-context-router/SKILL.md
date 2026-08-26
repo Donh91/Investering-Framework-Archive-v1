@@ -107,7 +107,7 @@ Find:
 
 For every registry-discoverable addendum, verify the path and its declared owner before using it.
 
-For DATA PING / RAW Main-Framework interpretation, additionally verify that the Three-Horizon Action Compass owner is present in `Required files`; absence is a routing failure, not an optional omission.
+For DATA PING / RAW Main-Framework interpretation, additionally verify that the Three-Horizon Action Compass owner is present in `Required files`; absence is a routing failure, not an optional omission. The owner is the sole current decision vocabulary, separates warning from action and requires one immutable receipt attempt for each fresh ingest. The historical E0-E7 Exit Ladder is `RETIRED_UNIMPLEMENTED` and must not be routed as a current owner.
 
 ### 3. Separate state classes
 
@@ -175,6 +175,8 @@ Keep the packet concise. Reference paths rather than copying whole documents.
 - Do not use a legacy namespace when the active top-level namespace exists.
 - Do not use a broken or missing addendum pointer.
 - Do not omit the Three-Horizon Action Compass owner from a DATA PING / RAW Main-Framework interpretation context packet.
+- Do not route the retired E0-E7 Exit Ladder as current decision vocabulary or map Action Compass warnings into it.
+- Do not treat a replay, duplicate or `NOT_PERSISTED` interpretation as a new prospective receipt row.
 
 ## Validation loop
 
@@ -185,7 +187,7 @@ Before completing:
 3. Verify every used registered addendum exists and points to valid owner files.
 4. Verify no legacy or superseded file is presented as current.
 5. Verify all unresolved conflicts are explicit.
-6. For DATA PING / RAW Main-Framework interpretation, verify `02_DATA_PING/protocols/2026-08-25__three-horizon-action-compass-output-contract-v1__canonical.md` or its explicit canonical successor is included in `Required files`.
+6. For DATA PING / RAW Main-Framework interpretation, verify `02_DATA_PING/protocols/2026-08-25__three-horizon-action-compass-output-contract-v1__canonical.md` or its explicit canonical successor is included in `Required files`, and record whether the input is fresh or replayed for receipt routing.
 7. Re-read the request and confirm the packet contains only task-relevant context.
 
 If any check fails, correct the packet and re-run all checks.
