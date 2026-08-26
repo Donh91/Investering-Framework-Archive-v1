@@ -35,6 +35,63 @@ def good_mcp_receipt(provider='Dune'):
     }
 
 
+def provider_scorecard_fixture():
+    return {
+        'contract':'MCP_CONNECTION_SCORECARD_v1',
+        'status':'PILOT_IN_PROGRESS',
+        'active_provider':'Dune',
+        'providers':[
+            {'provider':'CoinGecko','queue_rank':0,'state':'RESEARCH_ACTIVE_BASELINE'},
+            {'provider':'Dune','queue_rank':1,'state':'BOUNDED_RESEARCH_CHALLENGE'},
+            {'provider':'LunarCrush','queue_rank':2,'state':'QUEUED'},
+            {'provider':'CoinMarketCap','queue_rank':3,'state':'QUEUED'},
+        ],
+    }
+
+
+def research_item(rid, required=None):
+    return {
+        'id':rid,
+        'priority':'P0',
+        'title':f'Test {rid}',
+        'horizons':['CROSS_HORIZON'],
+        'question':'test question',
+        'primary_goal':'test goal',
+        'hypothesis':'test hypothesis',
+        'baseline':'test baseline',
+        'decision_divergence':'test divergence',
+        'falsifier':'test falsifier',
+        'kill_condition':'test kill',
+        'required_providers':required or ['CoinGecko'],
+        'optional_providers':[],
+        'integration_ceiling':'RESEARCH_EVIDENCE_ONLY',
+        'canonical_links':[],
+    }
+
+
+def deep_research_fixture():
+    queue={
+        'priority_order':['P0','P1','P2'],
+        'items':[
+            research_item('DRQ-001'),
+            research_item('DRQ-002',['Dune']),
+            research_item('DRQ-006'),
+        ],
+    }
+    state={
+        'active_research_id':None,
+        'item_states':{},
+        'available_retained_providers':[],
+    }
+    scorecard={
+        'providers':[
+            {'provider':'CoinGecko','state':'RESEARCH_ACTIVE_BASELINE'},
+            {'provider':'Dune','state':'DATA_BLOCKED'},
+        ],
+    }
+    return queue,state,scorecard
+
+
 class ApiGatewayTests(unittest.TestCase):
     def test_registry_is_shadow_only(self):
         data=load_registry(REGISTRY);self.assertEqual(data['status'],'ACTIVE_SHADOW_ONLY');self.assertFalse(data['authority']['portfolio_action']);self.assertFalse(data['authority']['framework_state_change'])
@@ -96,21 +153,20 @@ class ApiGatewayTests(unittest.TestCase):
     def test_mcp_mutating_call_is_killed(self):
         receipt=good_mcp_receipt();receipt['mutating_tool_called']=True;scored=score_receipt(receipt);self.assertIn('MUTATING_TOOL_CALLED',scored['hard_blockers']);self.assertEqual(classify(scored['score'],scored['hard_blockers'],scored['shape_errors'],'RESEARCH_ACTIVE'),'KILL')
     def test_ai_cannot_exceed_lunarcrush_ceiling(self):
-        program=json.loads(Path('research/api_agent/mcp/MCP_CONNECTION_EVALUATION_PROGRAM_v1.json').read_text());scorecard=json.loads(Path('research/api_agent/mcp/evaluations/LATEST_MCP_CONNECTION_SCORECARD.json').read_text());evaluation={'provider':'LunarCrush','deterministic_verdict':'SHADOW_OBSERVATION','deterministic_score':85,'ai_red_team_required':True,'promotion_ceiling':'SHADOW_OBSERVATION'}
+        program=json.loads(Path('research/api_agent/mcp/MCP_CONNECTION_EVALUATION_PROGRAM_v1.json').read_text());scorecard=provider_scorecard_fixture();evaluation={'provider':'LunarCrush','deterministic_verdict':'SHADOW_OBSERVATION','deterministic_score':85,'ai_red_team_required':True,'promotion_ceiling':'SHADOW_OBSERVATION'}
         with self.assertRaisesRegex(ValueError,'ai_verdict_exceeds_promotion_ceiling'):apply_evaluation(program,scorecard,evaluation,'KEEP_RESEARCH_ACTIVE')
     def test_terminal_dune_verdict_advances_lunarcrush(self):
-        program=json.loads(Path('research/api_agent/mcp/MCP_CONNECTION_EVALUATION_PROGRAM_v1.json').read_text());scorecard=json.loads(Path('research/api_agent/mcp/evaluations/LATEST_MCP_CONNECTION_SCORECARD.json').read_text());evaluation={'provider':'Dune','deterministic_verdict':'KEEP_RESEARCH_ACTIVE','deterministic_score':88,'ai_red_team_required':True,'promotion_ceiling':'RESEARCH_ACTIVE'};updated=apply_evaluation(program,scorecard,evaluation,'KEEP_RESEARCH_ACTIVE');self.assertEqual(updated['active_provider'],'LunarCrush');lunar=next(r for r in updated['providers'] if r['provider']=='LunarCrush');self.assertEqual(lunar['state'],'READY_FOR_TOOL_DISCOVERY')
+        program=json.loads(Path('research/api_agent/mcp/MCP_CONNECTION_EVALUATION_PROGRAM_v1.json').read_text());scorecard=provider_scorecard_fixture();evaluation={'provider':'Dune','deterministic_verdict':'KEEP_RESEARCH_ACTIVE','deterministic_score':88,'ai_red_team_required':True,'promotion_ceiling':'RESEARCH_ACTIVE'};updated=apply_evaluation(program,scorecard,evaluation,'KEEP_RESEARCH_ACTIVE');self.assertEqual(updated['active_provider'],'LunarCrush');lunar=next(r for r in updated['providers'] if r['provider']=='LunarCrush');self.assertEqual(lunar['state'],'READY_FOR_TOOL_DISCOVERY')
     def test_binance_runner_refuses_unverified_surface(self):
         with self.assertRaisesRegex(ValueError,'provider_not_executable'):load_contract(Path('research/api_agent/mcp/BINANCE_AGENT_NATIVE_RESEARCH_v1.json'))
     def test_deep_research_queue_boundary(self):
         self.assertEqual(validate_queue(Path('.')), [])
     def test_deep_research_current_provider_gate_is_coingecko_only(self):
-        scorecard=json.loads(Path('research/api_agent/mcp/evaluations/LATEST_MCP_CONNECTION_SCORECARD.json').read_text())
-        self.assertEqual(retained_providers(scorecard), {'CoinGecko'})
+        _,_,scorecard=deep_research_fixture();self.assertEqual(retained_providers(scorecard), {'CoinGecko'})
     def test_deep_research_initial_task_is_cross_horizon_baseline(self):
-        queue=json.loads(Path('research/api_agent/deep_research/DEEP_RESEARCH_QUEUE_v1.json').read_text());state=json.loads(Path('research/api_agent/deep_research/LATEST_DEEP_RESEARCH_STATE.json').read_text());scorecard=json.loads(Path('research/api_agent/mcp/evaluations/LATEST_MCP_CONNECTION_SCORECARD.json').read_text());updated,item=select_next(queue,state,scorecard);self.assertEqual(item['id'],'DRQ-001');packet=build_task_packet(item,updated);self.assertEqual(packet['output_authority'],'RESEARCH_EVIDENCE_ONLY');self.assertIn('CROSS_HORIZON',packet['horizons'])
+        queue,state,scorecard=deep_research_fixture();updated,item=select_next(queue,state,scorecard);self.assertEqual(item['id'],'DRQ-001');packet=build_task_packet(item,updated);self.assertEqual(packet['output_authority'],'RESEARCH_EVIDENCE_ONLY');self.assertIn('CROSS_HORIZON',packet['horizons'])
     def test_deep_research_skips_blocked_provider_dependency(self):
-        queue=json.loads(Path('research/api_agent/deep_research/DEEP_RESEARCH_QUEUE_v1.json').read_text());state=json.loads(Path('research/api_agent/deep_research/LATEST_DEEP_RESEARCH_STATE.json').read_text());scorecard=json.loads(Path('research/api_agent/mcp/evaluations/LATEST_MCP_CONNECTION_SCORECARD.json').read_text());state['active_research_id']=None;state['item_states']['DRQ-001']['state']='COMPLETE';updated,item=select_next(queue,state,scorecard);self.assertEqual(item['id'],'DRQ-006');self.assertEqual(updated['item_states']['DRQ-002']['state'],'WAIT_PROVIDER')
+        queue,state,scorecard=deep_research_fixture();state['item_states']['DRQ-001']={'state':'COMPLETE','missing_required_providers':[]};updated,item=select_next(queue,state,scorecard);self.assertEqual(item['id'],'DRQ-006');self.assertEqual(updated['item_states']['DRQ-002']['state'],'WAIT_PROVIDER')
 
 
 if __name__=='__main__':unittest.main()
