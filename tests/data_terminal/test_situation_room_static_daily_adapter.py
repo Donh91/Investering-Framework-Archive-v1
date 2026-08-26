@@ -48,6 +48,32 @@ class SituationRoomStaticDailyAdapterTests(unittest.TestCase):
         self.assertEqual(len(rows), 1)
         self.assertIn("/newsroom/press-releases/2026-test", rows[0][0])
 
+    def test_dated_discovery_without_timestamp_cannot_be_silently_no_event(self):
+        discovery = {
+            "source_id": "SITUATION_ROOM",
+            "source_role": "DISCOVERY_ONLY",
+            "title": "Bitcoin liquidity briefing",
+            "url": "https://situationroom.space/briefing/2026-08-27",
+            "event_time_utc": None,
+            "event_time_precision": "UNRESOLVED",
+            "verification_status": "DISCOVERY_UNVERIFIED",
+        }
+        result = {
+            "daily_result": "NO_NEW_MATERIAL_CATALYST",
+            "run_status": "PASS",
+            "unverified_discoveries": [discovery],
+            "current_unverified_discoveries": [],
+        }
+        adapter.apply_dated_discovery_fail_closed(result, "2026-08-27")
+        self.assertEqual(result["daily_result"], "REVIEW_REQUIRED_UNVERIFIED_DISCOVERY")
+        self.assertEqual(result["run_status"], "DEGRADED")
+        self.assertEqual(len(result["current_unverified_discoveries"]), 1)
+        self.assertEqual(
+            result["current_unverified_discoveries"][0]["discovery_date_basis"],
+            "DETERMINISTIC_DATED_SOURCE_URL",
+        )
+        self.assertIsNone(result["current_unverified_discoveries"][0]["event_time_utc"])
+
 
 if __name__ == "__main__":
     unittest.main()
