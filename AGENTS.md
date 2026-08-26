@@ -117,9 +117,26 @@ For every Main-Framework response whose primary input is a DATA PING packet or R
 3. apply the contract after evidence interpretation, never inside the collector wire format;
 4. end the human-facing response with the mandatory three-lane `HANDLEKOMPAS` covering the evidence-supported near-term action, the 5-7 day action window and the adaptive 3-4+ week altcoin market compass;
 5. do not rely on conversation memory, prior-thread prose or inherited summaries as a substitute for the current contract;
-6. do not extend an expired action horizon because a packet was replayed or a new thread inherited old text.
+6. keep Lane-3 warning and action separate; never infer `REDUCE` or `EXIT` from a warning alone;
+7. treat Three-Horizon Action Compass v1.1 as the sole current decision vocabulary; the historical E0-E7 Exit Ladder is `RETIRED_UNIMPLEMENTED`;
+8. for each fresh ingest, persist exactly one immutable Action Compass receipt through the owner implementation when repository write capability exists;
+9. for a duplicate or replay, emit no new receipt and do not extend an expired action horizon;
+10. if persistence is unavailable or fails, state `persistence_status: NOT_PERSISTED`; do not count the interpretation as prospective evidence;
+11. never persist full chat text, conversation summaries, holdings, quantities, account data, credentials or restricted provider values in the public receipt.
 
-This requirement is cross-thread bootstrap governance. It applies to new chats, replacement threads, handovers and repository-aware agents until a newer canonical contract explicitly supersedes the owner above. It changes decision translation only and does not increase DATA PING collector authority or automatic portfolio-execution authority.
+This requirement is cross-thread bootstrap governance. It applies to new chats, replacement threads, handovers and repository-aware agents until a newer canonical contract explicitly supersedes the owner above. It changes decision translation and accountability only and does not increase DATA PING collector authority or automatic portfolio-execution authority.
+
+For a fresh ingest with repository write capability, create a private temporary candidate and run:
+
+```bash
+python scripts/learning/action_compass_accountability.py persist \
+  --candidate <private-temporary-candidate-path> \
+  --receipt-root research/framework_memory/action_compass_receipts \
+  --repo-root . \
+  --expected-canonical-commit <exact-main-commit-used-for-interpretation>
+```
+
+The temporary candidate must not be committed. Commit only the generated receipt on an isolated `agent/task-*` branch, validate it with `validate-repository`, use a pull request, pass checks, merge and verify readback. This is automatic agent work, not a request for manual user GitHub work. Replays stop at `DUPLICATE_NOOP`.
 
 ## 4. Current architecture constraints
 

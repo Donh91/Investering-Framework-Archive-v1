@@ -1,6 +1,7 @@
-# Three-Horizon Action Compass Output Contract v1.0
+# Three-Horizon Action Compass Output Contract v1.1
 
 **Date:** 2026-08-25  
+**Last updated:** 2026-08-26
 **Status:** CANONICAL_OPERATIONAL_PROTOCOL  
 **Owner:** MAIN_FRAMEWORK / CHATGPT  
 **Scope:** Main-Framework interpretation outputs after DATA PING or RAW ingest, including all future DATA PING thread versions  
@@ -12,7 +13,9 @@
 
 Translate the Main Framework's current evidence and decision state into one short, explicit, non-ambiguous three-horizon compass that a user can act on without re-interpreting the analytical prose.
 
-This contract standardizes communication only. It does not create a market engine, signal, score, threshold, sensor, forecast result or automatic portfolio authority.
+This contract is the sole current Main-Framework decision vocabulary for these responses. It standardizes communication and its prospective accountability receipt. It does not create a market engine, signal, score, threshold, sensor, forecast result or automatic portfolio authority.
+
+The historical Exit Ladder vocabulary `E0-E7` is `RETIRED_UNIMPLEMENTED`. It is not a parallel decision vocabulary, may not receive rows and may not be inferred from Action Compass states, warnings or actions.
 
 The underlying DATA PING / RAW collector remains evidence-only and may continue to state `framework_interpretation: DEFERRED_TO_MAIN_FRAMEWORK` and `portfolio_execution: FORBIDDEN`. The compass is produced only by the Main Framework after resolving current canonical context.
 
@@ -26,6 +29,8 @@ The human-readable `HANDLEKOMPAS` block is mandatory at the end of every Main-Fr
 - a corrected or superseding DATA PING / RAW packet that changes current interpretation.
 
 It applies across new chats, replacement threads, handovers, agents and future thread versions whenever repository-aware routing is available.
+
+A fresh ingest also requires one persistence attempt under section 10.1. A duplicate or replay still receives the human `HANDLEKOMPAS`, but it is not a fresh observation and must not create a second receipt.
 
 It does **not** modify the collector's machine-to-machine wire format and must not be inserted inside a frozen RAW packet, collector JSON, GitHub Actions log, source receipt or shadow-only research artifact.
 
@@ -109,6 +114,15 @@ EXIT_WARNING
 STRUCTURAL_BREAKDOWN_WARNING
 ```
 
+Warning and action are orthogonal fields:
+
+- a warning records an evidence condition that deserves attention;
+- an action records the Main Framework's current decision translation;
+- `DISTRIBUTION_WARNING` does not imply `REDUCE` or `EXIT`;
+- `EXIT_WARNING` does not by itself authorize `EXIT`;
+- `REDUCE` or `EXIT` requires independent Main-Framework justification under current canonical authority;
+- no warning may be converted to an Exit Ladder state.
+
 `ROTATION` and `BROAD_ALTSEASON` are not synonyms. A valid ETH/BTC or large-cap rotation signal must not be presented as broad altseason unless the current canonical breadth/transmission evidence supports that conclusion.
 
 ## 6. Time and expiry discipline
@@ -189,7 +203,7 @@ When the surrounding Main-Framework output is JSON or explicitly machine-readabl
 ```json
 {
   "action_compass": {
-    "contract": "THREE_HORIZON_ACTION_COMPASS_v1",
+    "contract": "THREE_HORIZON_ACTION_COMPASS_v1_1",
     "as_of_utc": "<timestamp>",
     "near_term": {
       "horizon_hours": 24,
@@ -218,6 +232,108 @@ When the surrounding Main-Framework output is JSON or explicitly machine-readabl
 
 The object is semantic, not a new market schema. Existing surrounding packet schemas remain untouched unless separately governed.
 
+## 10.1 Immutable decision-receipt authorization
+
+This owner authorizes one bounded implementation of its own prospective receipt. It does not authorize a new test or market engine.
+
+Active implementation surfaces after this implementation change is merged:
+
+```text
+schema: 02_DATA_PING/schemas/THREE_HORIZON_ACTION_COMPASS_RECEIPT_v1_1.schema.json
+writer_and_validator: scripts/learning/action_compass_accountability.py
+activation_marker: 02_DATA_PING/runtime/ACTION_COMPASS_ACCOUNTABILITY_ACTIVATION_v1.json
+receipt_root: research/framework_memory/action_compass_receipts/
+outcome_root: research/framework_memory/action_compass_outcomes/
+existing_test_owner: CHIEF_REPRODUCIBILITY / T9
+existing_miss_consumer: ADAPTIVE_DECISION_MISS
+implementation_status: ACTIVE_ON_MERGE
+```
+
+For each fresh eligible ingest, Main Framework must persist exactly one immutable JSON receipt containing:
+
+```text
+contract
+receipt_id
+dedup_id
+input_packet_sha256
+input_binding_status
+input_contract
+source_reference
+source_timestamp_utc
+canonical_repository
+canonical_commit_sha
+owner_contract
+interpreted_at_utc
+producer_model
+action_compass
+data_quality_tags
+rationale_tags
+baseline_observer
+persistence_status: PERSISTED
+portfolio_execution: false
+```
+
+Receipt rules:
+
+1. `input_packet_sha256` is the SHA-256 of the immutable source packet. Use canonical JSON bytes when the source is JSON and exact source bytes otherwise. `input_binding_status` distinguishes a hash verified against a file at the bound canonical commit from an opaque uploaded-source hash asserted by the producer.
+2. `dedup_id` and `receipt_id` are deterministic from the input packet hash under the implementation contract. Replaying the same packet is `DUPLICATE_NOOP`, not a new row.
+3. A corrected packet must have a new immutable content hash and may therefore produce a new receipt. The correction must not overwrite the prior receipt.
+4. `canonical_commit_sha` binds the interpretation to the exact public control-plane commit used at decision time.
+5. `action_compass` freezes all three lane states, actions, warning and validity fields before outcomes.
+6. Warning and action remain separate machine fields. A downstream consumer must not infer one from the other.
+7. `data_quality_tags` and `rationale_tags` are bounded tags, not copied analytical prose.
+8. `baseline_observer` may bind exact pre-outcome public evidence paths and hashes for later measurement. The implementation verifies the baseline against the file at `canonical_commit_sha`, not only against the mutable working tree. It never grants those observations decision authority.
+9. The receipt must exclude full chat text, conversation summaries, holdings, quantities, account data, credentials and restricted provider values.
+10. No historical chat backfill is allowed. Eligibility begins only after the implementation is merged and applies to fresh ingests from that point forward.
+11. If repository write capability is unavailable, the response must report `persistence_status: NOT_PERSISTED`. That interpretation is user-facing only and cannot count as a prospective row.
+12. A failed write is also `NOT_PERSISTED`. It must not be represented as durable evidence.
+
+Repository-aware persistence command:
+
+```bash
+python scripts/learning/action_compass_accountability.py persist \
+  --candidate <private-temporary-candidate-path> \
+  --receipt-root research/framework_memory/action_compass_receipts \
+  --repo-root . \
+  --expected-canonical-commit <exact-main-commit-used-for-interpretation>
+```
+
+The candidate file is temporary and must not be committed. Persist the resulting receipt on an isolated task branch, validate it, open a pull request, pass checks, merge and verify readback. No direct write to `main` is authorized.
+
+The activation marker's first commit on `main` defines the earliest eligible source and interpretation time. The writer also requires the bound canonical commit to descend from that activation commit. These two checks make pre-implementation backfill fail closed.
+
+When `baseline_observer.status` is `BOUND`, v1.1 binds exactly two public observer series, BTC-USDT and ETH-USDT mark price from the existing daily capture owner. They are generic market references, not an altseason proxy and not the user's portfolio.
+
+## 10.2 Outcome-sidecar lifecycle
+
+Each persisted receipt may mature into at most one immutable sidecar for each frozen horizon:
+
+```text
+24H
+7D
+30D
+90D
+180D
+```
+
+Sidecars remain separate files. A single receipt must not be expanded retrospectively into multiple source rows.
+
+The outcome owner may measure only continuous, descriptive quantities from the frozen public observer binding:
+
+- terminal return;
+- subsequent maximum drawdown from the frozen start;
+- subsequent maximum upside from the frozen start;
+- elapsed hours to trough;
+- elapsed hours to first recovery of the frozen start after the trough;
+- observation count and observed span;
+- normalized full-exit capital preserved and upside foregone versus continuous one-unit hold.
+
+These quantities are observational counterfactuals, not portfolio results. They assume no personal holdings, trade size, fees, taxes, slippage or execution. `REDUCE` is not assigned an invented percentage. When a required binding is unavailable, the sidecar records explicit censoring instead of inference.
+
+Only a near-term `EXIT` whose validity starts at the interpretation time may receive the normalized full-exit quantities as an action counterfactual. Future-window and Lane-3 actions do not inherit start-time execution. All other actions remain `NOT_EVALUABLE_WITHOUT_INVENTED_PORTFOLIO_SEMANTICS`. The 24-hour terminal-evidence lag is an operational observation window, not a market threshold.
+
+Outcome sidecars must not contain `HIT`, `MISS`, new market labels, new thresholds, promotion decisions or automatic action. They may be consumed by the existing T9 reproducibility review and Adaptive Decision Miss discovery only. Neither consumer may self-promote a rule, sensor or action.
+
 ## 11. Output validation checklist
 
 A DATA PING / RAW Main-Framework response is output-incomplete if any answer is `NO`:
@@ -232,6 +348,9 @@ ALTCOIN_STATE_DISTINGUISHES_ROTATION_FROM_BROAD_ALTSEASON: YES/NO
 DUPLICATE_REPLAY_DID_NOT_EXTEND_VALIDITY: YES/NO/NOT_APPLICABLE
 NO_COLLECTOR_AUTHORITY_INCREASE: YES/NO
 NO_AUTOMATIC_PORTFOLIO_EXECUTION: YES/NO
+WARNING_AND_ACTION_STORED_SEPARATELY: YES/NO
+FRESH_INGEST_PERSISTENCE_STATUS_EXPLICIT: YES/NO
+DUPLICATE_CREATED_NO_NEW_RECEIPT: YES/NO/NOT_APPLICABLE
 ```
 
 Failure of the formatting contract does not invalidate the underlying market data. It means the Main-Framework response must be corrected before it is treated as a complete user-facing DATA PING / RAW interpretation.
@@ -249,4 +368,10 @@ automatic portfolio execution: NO
 Main Framework interpretation authority: UNCHANGED
 user-facing decision translation: MANDATORY
 cross-thread persistence: CANONICAL_VIA_GITHUB
+sole current decision vocabulary: THREE_HORIZON_ACTION_COMPASS_v1_1
+E0_E7 status: RETIRED_UNIMPLEMENTED
+prospective decision receipt: AUTHORIZED_OWNER_EXTENSION
+receipt implementation: ACTIVE
+historical chat backfill: FORBIDDEN
+receipt outcome sidecars: 24H_7D_30D_90D_180D
 ```

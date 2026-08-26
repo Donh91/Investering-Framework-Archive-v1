@@ -127,9 +127,9 @@ def _flow_mapping_has_key(value: str, key: str) -> bool:
             continue
         if character in "'\"":
             quote = character
-        elif character in "{[(":
+        elif character in "{[":
             depth += 1
-        elif character in "}])":
+        elif character in "}]":
             depth -= 1
         elif character == "," and depth == 0:
             entries.append(value[start:index])

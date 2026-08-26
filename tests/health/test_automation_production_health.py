@@ -332,6 +332,34 @@ jobs:
     assert row["scheduled"] is True
 
 
+def test_flow_style_on_schedule_ignores_parenthesis_in_plain_scalar(tmp_path: Path) -> None:
+    path = write_workflow(
+        tmp_path,
+        """name: Plain Scalar Parenthesis
+on: {push: {branches: [release(]}, schedule: [{cron: '0 1 * * *'}]}
+jobs:
+  x:
+    steps:
+      - run: echo scheduled
+""",
+    )
+    row = module.workflow_static(path)
+    assert row["scheduled"] is True
+
+
+def test_flow_style_manual_trigger_with_parenthesis_is_not_scheduled(tmp_path: Path) -> None:
+    path = write_workflow(
+        tmp_path,
+        """name: Manual Plain Scalar Parenthesis
+on: {push: {branches: [release(]}}
+jobs: {schedule: {runs-on: ubuntu-latest}}
+""",
+    )
+    row = module.workflow_static(path)
+    assert row["scheduled"] is False
+    assert "SCHEDULE_WITHOUT_EXPLICIT_TIMEZONE" not in row["static_risks"]
+
+
 def test_separation_before_mapping_colons_is_scheduled(tmp_path: Path) -> None:
     path = write_workflow(
         tmp_path,

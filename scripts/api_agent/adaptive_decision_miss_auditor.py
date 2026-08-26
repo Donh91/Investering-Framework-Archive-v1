@@ -18,7 +18,9 @@ def docs(roots:list[Path],limit:int)->list[dict[str,Any]]:
     paths=[]
     for r in roots:
         if r.exists():paths.extend(p for p in r.rglob("*.json") if p.is_file())
-    paths.sort(key=lambda p:p.stat().st_mtime,reverse=True);out=[]
+    compass_outcomes=[p for p in paths if "action_compass_outcomes" in p.parts]
+    other_paths=[p for p in paths if "action_compass_outcomes" not in p.parts]
+    paths=sorted(compass_outcomes,key=lambda p:str(p),reverse=True)+sorted(other_paths,key=lambda p:p.stat().st_mtime,reverse=True);out=[]
     for p in paths:
         if len(out)>=limit:break
         try:v=json.loads(p.read_text())
@@ -76,7 +78,7 @@ def schema()->dict[str,Any]:
     }
 
 def call(key:str,ctx:dict[str,Any])->dict[str,Any]:
-    inst=("You are a conservative decision-miss auditor for a shadow investment research system. Identify a miss only when supplied repository evidence contains a decision/forecast available before an outcome and a later outcome that supports the miss. Do not invent trades or claim the user should have acted. DATA_GAP_ONLY is preferred when evidence supports only missing information, not a demonstrated decision failure. For each supported miss, propose one observable evidence metric that might have reduced uncertainty. The miss episode is discovery-only and MUST NOT count as validation of that metric. Also record bounded signal attribution only for signals explicitly present in the supplied decision/outcome evidence. SUPPORTED_DECISION or CONTRADICTED_DECISION describe observed alignment only, not causal edge. Mark DIRECTLY_SUPPORTED incremental value only when the supplied evidence explicitly contains an ablation, paired counterfactual, or other direct unique-contribution test. Otherwise use OVERLAP_SUSPECTED or NOT_ESTABLISHED. Never infer sensor weights, change market semantics, or treat aligned sensor count as independent confirmation. No market rules, thresholds, weights, state or portfolio actions.")
+    inst=("You are a conservative decision-miss auditor for a shadow investment research system. Identify a miss only when supplied repository evidence contains a decision/forecast available before an outcome and a later outcome that supports the miss. Do not invent trades or claim the user should have acted. DATA_GAP_ONLY is preferred when evidence supports only missing information, not a demonstrated decision failure. For each supported miss, propose one observable evidence metric that might have reduced uncertainty. The miss episode is discovery-only and MUST NOT count as validation of that metric. Also record bounded signal attribution only for signals explicitly present in the supplied decision/outcome evidence. SUPPORTED_DECISION or CONTRADICTED_DECISION describe observed alignment only, not causal edge. Mark DIRECTLY_SUPPORTED incremental value only when the supplied evidence explicitly contains an ablation, paired counterfactual, or other direct unique-contribution test. Otherwise use OVERLAP_SUSPECTED or NOT_ESTABLISHED. Action Compass warning and action fields are orthogonal: never infer REDUCE or EXIT from a warning alone. Continuous Action Compass outcome sidecars are observational and are not portfolio results. Never infer sensor weights, change market semantics, or treat aligned sensor count as independent confirmation. No market rules, thresholds, weights, state or portfolio actions.")
     payload={"model":MODEL,"reasoning":{"effort":"low","context":"current_turn"},"store":False,"max_output_tokens":2600,"instructions":inst,"input":[{"role":"user","content":[{"type":"input_text","text":json.dumps(ctx,sort_keys=True)}]}],"text":{"format":{"type":"json_schema","name":"adaptive_decision_miss_v1_1","strict":True,"schema":schema()}}}
     req=urllib.request.Request("https://api.openai.com/v1/responses",data=cb(payload),headers={"Authorization":f"Bearer {key}","Content-Type":"application/json"},method="POST")
     try:
