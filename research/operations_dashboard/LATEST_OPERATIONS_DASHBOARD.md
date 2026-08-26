@@ -1,30 +1,30 @@
 # Operations Dashboard
 
 Overall: **RED**
-Generated: `2026-08-26T04:44:11.890353Z`
+Generated: `2026-08-26T16:47:36.351778Z`
 
 ## Systems
 
 | System | Status | Detail | Age hours |
 |---|---:|---|---:|
-| `daily_capture` | **GREEN** | FRESH | 2.752 |
-| `openai_daily_director` | **AMBER** | DELAYED | 19.118 |
+| `daily_capture` | **GREEN** | FRESH | 3.542 |
+| `openai_daily_director` | **RED** | STALE | 31.175 |
 | `weekly_output` | **UNKNOWN** | TIMESTAMP_UNAVAILABLE | - |
 | `automation_health` | **RED** | - | - |
 | `architecture_health` | **GREEN** | - | - |
-| `experiment_lifecycle` | **GREEN** | FRESH | 1.886 |
-| `experiment_receipt_sync` | **GREEN** | FRESH | 1.886 |
-| `remediation_maturation` | **GREEN** | FRESH | 0.319 |
+| `experiment_lifecycle` | **GREEN** | FRESH | 2.417 |
+| `experiment_receipt_sync` | **GREEN** | FRESH | 13.943 |
+| `remediation_maturation` | **GREEN** | FRESH | 0.163 |
 
 ## AI and learning activity
 
-- OpenAI receipts this month: **129**
-- OpenAI cost this month: **$5.865384**
+- OpenAI receipts this month: **135**
+- OpenAI cost this month: **$6.259839**
 - Pending forecast candidates: **126**
-- Experiment candidates: **145**
-- Experiment dispatch requests: **505**
-- Codex-ready remediation tasks: **15**
-- Needs-more-evidence items: **32**
+- Experiment candidates: **151**
+- Experiment dispatch requests: **681**
+- Codex-ready remediation tasks: **17**
+- Needs-more-evidence items: **29**
 
 ## Incidents
 
@@ -33,7 +33,7 @@ Open incident references: **20**
 ## Required actions
 
 - **P0** `automation_health` - ['api-agent-gateway-gate.yml:REPEATED_CONSECUTIVE_FAILURES', 'historical-altseason-cfgi-reservation.yml:REPEATED_CONSECUTIVE_FAILURES']
-- **P1** `openai_daily_director` - DELAYED
+- **P0** `openai_daily_director` - STALE
 - **P1** `weekly_output` - TIMESTAMP_UNAVAILABLE
 
-Dashboard SHA-256: `18396a18e5acfaa99602627aa5b3dd69fdf1a45d921e7182482bdf93ccb4fcff`
+Dashboard SHA-256: `6b5c18b868450f890f0b4a1f064c33052d8394c0ee85b5acc1d6d902be56e1a9`
