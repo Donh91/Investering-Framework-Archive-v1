@@ -1,0 +1,68 @@
+{
+  "contract": "CODEX_RESEARCH_CANDIDATE_v1",
+  "candidate_id": "codex-automation-health-cadence-aware-staleness-v1",
+  "title": "Automation Health cadence-aware stale detection",
+  "status": "SUBMITTED",
+  "requested_priority": "EXPEDITED",
+  "authority_boundary": "CODE_REMEDIATION_ONLY",
+  "requires_framework_owner_authority": false,
+  "finding_key": "AUTOMATION_HEALTH_FIXED_36H_STALE_THRESHOLD",
+  "objective": "Replace the universal 36-hour stale threshold for scheduled workflows with deterministic cadence-aware expected-run logic, so valid weekly workflows are not guaranteed to become SCHEDULE_STALE between their legitimate runs while genuinely overdue workflows remain visible.",
+  "primary_target": "scripts/health/build_automation_health.py",
+  "origin": {
+    "type": "LIVE_HEALTH_AND_QUEUE_AUDIT",
+    "thread_label": "2026-08-27 autonomous remediation continuation",
+    "source_paths": [
+      "scripts/health/build_automation_health.py",
+      "research/architecture_health/LATEST_AUTOMATION_HEALTH.json",
+      "research/remediation/LATEST_CODEX_READY_TASKS.json",
+      ".github/workflows/cycle-navigator-autonomous-calibration-loop.yml"
+    ]
+  },
+  "evidence": [
+    {"kind":"REPO_PATH","ref":"scripts/health/build_automation_health.py","summary":"Scheduled workflows use a fixed timedelta(hours=36 if cron_count else 192), with no distinction between daily and weekly cron cadence."},
+    {"kind":"REPO_PATH","ref":".github/workflows/cycle-navigator-autonomous-calibration-loop.yml","summary":"The workflow legitimately runs once each Monday at 08:20 Europe/Copenhagen."},
+    {"kind":"HEALTH_ARTIFACT","ref":"research/architecture_health/LATEST_AUTOMATION_HEALTH.json","summary":"The weekly Cycle Navigator calibration loop is marked SCHEDULE_STALE despite a successful scheduled run on Monday 2026-08-24, because the health observation is more than 36 hours later but still before the next legitimate Monday run."},
+    {"kind":"QUEUE_ARTIFACT","ref":"research/remediation/LATEST_CODEX_READY_TASKS.json","summary":"The false weekly stale condition has matured into a CODEX_READY task, proving the observer defect propagates into remediation routing."}
+  ],
+  "allowed_change_scope": [
+    "scripts/health/build_automation_health.py",
+    "tests/health/test_automation_production_health.py",
+    "tests/health/directly related cadence fixtures",
+    ".github/workflows/automation-production-health.yml",
+    ".github/workflows/automation-production-health-gate.yml"
+  ],
+  "forbidden_changes": [
+    "market gates",
+    "model weights",
+    "canonical authority",
+    "portfolio logic",
+    "API budget",
+    "new policy semantics",
+    "changing producer workflow schedules to satisfy health",
+    "automatic merge or self-promotion",
+    "suppressing genuinely missed expected runs",
+    "hardcoding individual workflow names"
+  ],
+  "reproduction": "Use a valid weekly cron such as 20 8 * * 1 with Europe/Copenhagen timezone. Set latest successful scheduled run to Monday 08:20 and evaluate health on Wednesday or Thursday before the next Monday. Current classify logic uses a fixed 36-hour threshold whenever cron_count is nonzero, so it emits SCHEDULE_STALE even though no expected run has been missed.",
+  "acceptance_tests": {
+    "positive": [
+      "A weekly Monday workflow remains non-stale throughout the interval before its next expected Monday run plus a bounded lateness tolerance.",
+      "A daily workflow that misses its expected run beyond the same bounded tolerance is classified SCHEDULE_STALE.",
+      "Multiple cron entries use the nearest valid expected schedule rather than a fixed hourly threshold.",
+      "Timezone-aware schedules remain deterministic across Europe/Copenhagen daylight-saving transitions or are handled with an explicitly documented fail-closed strategy."
+    ],
+    "negative": [
+      "A weekly workflow that actually misses the next expected Monday run beyond tolerance must become SCHEDULE_STALE.",
+      "Malformed or unsupported cron syntax must not fabricate a healthy cadence; it must surface an explicit observer limitation or conservative finding.",
+      "Manual-only workflows must not become scheduled merely because cron-like text appears elsewhere in the YAML.",
+      "The repair must not weaken LATEST_RUN_FAILED, REPEATED_CONSECUTIVE_FAILURES, stuck-run or lifecycle safety findings."
+    ]
+  },
+  "post_fix_gate": "TWO_CONSECUTIVE_AUTOMATION_HEALTH_RUNS_WITH_CADENCE_CORRECT_WEEKLY_AND_DAILY_STALE_CLASSIFICATION",
+  "clean_noop_condition": "Fresh main already computes stale status from actual expected cron cadence and the weekly Cycle Navigator calibration loop no longer becomes stale between legitimate weekly runs.",
+  "stop_condition": "Stop without code changes if the reproduction no longer holds or if solving it would require changing producer schedules instead of observer logic.",
+  "escalation_condition": "Escalate to FRAMEWORK_OWNER only if cadence-aware observation cannot be implemented within the existing health observer without introducing new framework semantics.",
+  "rollback_plan": "Revert only the bounded health cadence logic and tests. Preserve producer workflows and historical health artifacts unchanged.",
+  "submitted_at_utc": "2026-08-26T23:09:00Z"
+}
