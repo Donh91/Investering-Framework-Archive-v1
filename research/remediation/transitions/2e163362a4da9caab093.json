@@ -1,0 +1,36 @@
+{
+  "allowed_change_scope": [
+    ".github/workflows/pdlt-runtime-gate.yml",
+    "directly related scripts and tests"
+  ],
+  "branch": "agent/task-20260825-pdlt-schedule-parser",
+  "clean_noop_condition": "The finding is absent from fresh health, is non-actionable under verified lifecycle semantics, or the target workflow has been superseded or retired.",
+  "contract": "REMEDIATION_TRANSITION_RECEIPT_v1",
+  "escalation_condition": "Escalate to the framework owner if resolution requires market gates, model weights, canonical authority, portfolio logic, API budget, or new policy semantics.",
+  "finding": "SCHEDULE_STALE",
+  "forbidden_changes": [
+    "market gates",
+    "model weights",
+    "canonical authority",
+    "portfolio logic"
+  ],
+  "latest_run_id": 31427338903,
+  "objective": "Resolve SCHEDULE_STALE for pdlt-runtime-gate.yml with the smallest bounded code change that satisfies the existing acceptance gates.",
+  "post_fix_gate": "3_SUCCESSFUL_EXPECTED_RUNS",
+  "pr_number": null,
+  "precondition": "Fresh Automation Production Health still contains signature 2e163362a4da9caab093 for pdlt-runtime-gate.yml/SCHEDULE_STALE, and verified lifecycle state does not make the finding non-actionable.",
+  "receipt_sha256": "153f14814adc74ea20fe7090432764871c9d99fb733a082b4257ccd1bc6e098d",
+  "recorded_at_utc": "2026-08-26T17:12:31Z",
+  "signature": "2e163362a4da9caab093",
+  "source_health_generated_at_utc": "2026-08-26T16:35:29.084304Z",
+  "state": "IN_REMEDIATION",
+  "stop_condition": "Stop without code changes if the precondition fails, the finding cannot be reproduced from scoped evidence, or the required fix exceeds allowed change scope.",
+  "success_evidence": [
+    "workflow job logs",
+    "reproduction or repeated identical signature",
+    "positive and negative acceptance tests",
+    "3_SUCCESSFUL_EXPECTED_RUNS"
+  ],
+  "task_contract_sha256": "824c52418a23839dc49a72f375b8967c6a0853bd7badb8038495d643e0d58837",
+  "workflow": "pdlt-runtime-gate.yml"
+}

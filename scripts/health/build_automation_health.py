@@ -48,10 +48,153 @@ def _directive(text: str, key: str) -> str | None:
     return match.group(1).strip() if match else None
 
 
+def _strip_unquoted_yaml_comments(value: str) -> str:
+    """Remove YAML comments without touching hash characters inside quotes."""
+    result: list[str] = []
+    quote: str | None = None
+    escaped = False
+    index = 0
+    while index < len(value):
+        character = value[index]
+        if quote:
+            result.append(character)
+            if escaped:
+                escaped = False
+            elif character == "\\" and quote == '"':
+                escaped = True
+            elif character == quote:
+                if quote == "'" and index + 1 < len(value) and value[index + 1] == "'":
+                    result.append(value[index + 1])
+                    index += 1
+                else:
+                    quote = None
+        elif character in "'\"":
+            quote = character
+            result.append(character)
+        elif character == "#" and (not result or result[-1] in " \t\n"):
+            while index < len(value) and value[index] != "\n":
+                index += 1
+            if index < len(value):
+                result.append("\n")
+        else:
+            result.append(character)
+        index += 1
+    return "".join(result)
+
+
+def _flow_brace_balance(value: str) -> int:
+    """Count unquoted flow-mapping braces after removing YAML comments."""
+    balance = 0
+    quote: str | None = None
+    escaped = False
+    for character in _strip_unquoted_yaml_comments(value):
+        if quote:
+            if escaped:
+                escaped = False
+            elif character == "\\" and quote == '"':
+                escaped = True
+            elif character == quote:
+                quote = None
+            continue
+        if character in "'\"":
+            quote = character
+        elif character == "{":
+            balance += 1
+        elif character == "}":
+            balance -= 1
+    return balance
+
+
+def _flow_mapping_has_key(value: str, key: str) -> bool:
+    """Return whether a YAML flow mapping has a top-level key."""
+    value = _strip_unquoted_yaml_comments(value).strip()
+    if not (value.startswith("{") and value.endswith("}")):
+        return False
+
+    entries: list[str] = []
+    start = 1
+    depth = 0
+    quote: str | None = None
+    escaped = False
+    for index, character in enumerate(value[1:-1], start=1):
+        if quote:
+            if escaped:
+                escaped = False
+            elif character == "\\" and quote == '"':
+                escaped = True
+            elif character == quote:
+                quote = None
+            continue
+        if character in "'\"":
+            quote = character
+        elif character in "{[":
+            depth += 1
+        elif character in "}]":
+            depth -= 1
+        elif character == "," and depth == 0:
+            entries.append(value[start:index])
+            start = index + 1
+    entries.append(value[start:-1])
+
+    key_forms = {key, f"'{key}'", f'"{key}"'}
+    for entry in entries:
+        candidate = entry.strip()
+        match = re.match(r"^([^:]+):", candidate)
+        if match and match.group(1).strip() in key_forms:
+            return True
+    return False
+
+
+def _mapping_has_direct_child(text: str, parent: str, child: str) -> bool:
+    """Return whether a top-level YAML mapping has the named direct child."""
+    lines = text.splitlines()
+    parent_re = re.compile(
+        rf"^(?:{re.escape(parent)}|['\"]{re.escape(parent)}['\"])\s*:\s*(.*)$"
+    )
+    child_re = re.compile(
+        rf"(?:{re.escape(child)}|['\"]{re.escape(child)}['\"])\s*:\s*.*$"
+    )
+    for index, line in enumerate(lines):
+        parent_match = parent_re.fullmatch(line)
+        if not parent_match:
+            continue
+        parent_value = parent_match.group(1).strip()
+        if parent_value.startswith("#"):
+            parent_value = ""
+        if parent_value:
+            flow_value = parent_value
+            if _strip_unquoted_yaml_comments(flow_value).lstrip().startswith("{"):
+                cursor = index + 1
+                while _flow_brace_balance(flow_value) > 0 and cursor < len(lines):
+                    flow_value += "\n" + lines[cursor]
+                    cursor += 1
+            if _flow_brace_balance(flow_value) == 0 and _flow_mapping_has_key(flow_value, child):
+                return True
+            continue
+        block: list[tuple[int, str]] = []
+        for candidate in lines[index + 1:]:
+            stripped = candidate.strip()
+            if not stripped or stripped.startswith("#"):
+                continue
+            indent = len(candidate) - len(candidate.lstrip(" "))
+            if indent == 0:
+                break
+            block.append((indent, candidate.lstrip(" ")))
+        if not block:
+            continue
+        direct_indent = min(indent for indent, _ in block)
+        if any(indent == direct_indent and child_re.fullmatch(value) for indent, value in block):
+            return True
+    return False
+
+
 def workflow_static(path: Path) -> dict[str, Any]:
     text = path.read_text(errors="ignore")
     writes = "contents: write" in text and "git push" in text
-    scheduled = "schedule:" in text
+    # Trigger keys are direct children of the top-level `on` mapping.  A plain
+    # substring search also matches shell/Python literals in workflow steps,
+    # which previously made the manual PDLT runtime gate look scheduled.
+    scheduled = _mapping_has_direct_child(text, "on", "schedule")
     manual = "workflow_dispatch:" in text
     uses_openai = "OPENAI_API_KEY" in text or "api_gateway.py" in text
     uses_cfgi = "CFGI_API_KEY" in text or "cfgi_" in text.lower()

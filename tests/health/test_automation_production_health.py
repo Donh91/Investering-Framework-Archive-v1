@@ -188,6 +188,226 @@ def test_scheduled_workflow_without_timezone_is_amber(tmp_path: Path) -> None:
     assert "SCHEDULE_WITHOUT_EXPLICIT_TIMEZONE" in findings
 
 
+def test_schedule_literal_inside_step_does_not_make_manual_gate_scheduled(tmp_path: Path) -> None:
+    path = write_workflow(
+        tmp_path,
+        """name: Manual Gate
+on:
+  pull_request:
+  workflow_dispatch:
+jobs:
+  gate:
+    steps:
+      - run: |
+          python - <<'PY'
+          source = "schedule:"
+          assert "schedule:" not in source.replace("schedule:", "")
+          PY
+""",
+    )
+    row = module.workflow_static(path)
+    assert row["scheduled"] is False
+    assert "SCHEDULE_WITHOUT_EXPLICIT_TIMEZONE" not in row["static_risks"]
+
+
+def test_job_named_schedule_does_not_make_manual_workflow_scheduled(tmp_path: Path) -> None:
+    path = write_workflow(
+        tmp_path,
+        """name: Manual Workflow
+on:
+  workflow_dispatch:
+jobs:
+  schedule:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo manual
+""",
+    )
+    row = module.workflow_static(path)
+    assert row["scheduled"] is False
+    assert "SCHEDULE_WITHOUT_EXPLICIT_TIMEZONE" not in row["static_risks"]
+
+
+def test_quoted_on_and_schedule_keys_are_scheduled(tmp_path: Path) -> None:
+    path = write_workflow(
+        tmp_path,
+        """name: Quoted Schedule
+"on":
+  "schedule":
+    - cron: '0 1 * * *'
+      timezone: 'Europe/Copenhagen'
+jobs:
+  x:
+    steps:
+      - run: echo scheduled
+""",
+    )
+    row = module.workflow_static(path)
+    assert row["scheduled"] is True
+    assert "SCHEDULE_WITHOUT_EXPLICIT_TIMEZONE" not in row["static_risks"]
+
+
+def test_inline_schedule_value_is_scheduled(tmp_path: Path) -> None:
+    path = write_workflow(
+        tmp_path,
+        """name: Inline Schedule
+on:
+  schedule: [{cron: '0 1 * * *'}]
+jobs:
+  x:
+    steps:
+      - run: echo scheduled
+""",
+    )
+    row = module.workflow_static(path)
+    assert row["scheduled"] is True
+    assert "SCHEDULE_WITHOUT_EXPLICIT_TIMEZONE" in row["static_risks"]
+
+
+def test_flow_style_on_schedule_is_scheduled(tmp_path: Path) -> None:
+    path = write_workflow(
+        tmp_path,
+        """name: Flow Schedule
+on: {schedule: [{cron: '0 1 * * *'}]}
+jobs:
+  x:
+    steps:
+      - run: echo scheduled
+""",
+    )
+    row = module.workflow_static(path)
+    assert row["scheduled"] is True
+    assert "SCHEDULE_WITHOUT_EXPLICIT_TIMEZONE" in row["static_risks"]
+
+
+def test_quoted_flow_style_on_schedule_is_scheduled(tmp_path: Path) -> None:
+    path = write_workflow(
+        tmp_path,
+        """name: Quoted Flow Schedule
+"on": {"schedule": [{cron: '0 1 * * *'}]}
+jobs:
+  x:
+    steps:
+      - run: echo scheduled
+""",
+    )
+    row = module.workflow_static(path)
+    assert row["scheduled"] is True
+
+
+def test_flow_style_on_schedule_with_trailing_comment_is_scheduled(tmp_path: Path) -> None:
+    path = write_workflow(
+        tmp_path,
+        """name: Commented Flow Schedule
+on: {schedule: [{cron: '0 1 * * *'}]} # nightly
+jobs:
+  x:
+    steps:
+      - run: echo scheduled
+""",
+    )
+    row = module.workflow_static(path)
+    assert row["scheduled"] is True
+
+
+def test_flow_comment_stripping_preserves_quoted_hash() -> None:
+    value = "{schedule: [{cron: '0 1 * * *'}], marker: '# keep'} # nightly"
+    stripped = module._strip_unquoted_yaml_comments(value)
+    assert "'# keep'" in stripped
+    assert module._flow_mapping_has_key(value, "schedule") is True
+
+
+def test_flow_style_on_schedule_preserves_plain_scalar_hash(tmp_path: Path) -> None:
+    path = write_workflow(
+        tmp_path,
+        """name: Plain Scalar Hash
+"on": {push: {branches: [release#1]}, schedule: [{cron: '0 1 * * *'}]}
+jobs:
+  x:
+    steps:
+      - run: echo scheduled
+""",
+    )
+    row = module.workflow_static(path)
+    assert row["scheduled"] is True
+
+
+def test_flow_style_on_schedule_ignores_parenthesis_in_plain_scalar(tmp_path: Path) -> None:
+    path = write_workflow(
+        tmp_path,
+        """name: Plain Scalar Parenthesis
+on: {push: {branches: [release(]}, schedule: [{cron: '0 1 * * *'}]}
+jobs:
+  x:
+    steps:
+      - run: echo scheduled
+""",
+    )
+    row = module.workflow_static(path)
+    assert row["scheduled"] is True
+
+
+def test_flow_style_manual_trigger_with_parenthesis_is_not_scheduled(tmp_path: Path) -> None:
+    path = write_workflow(
+        tmp_path,
+        """name: Manual Plain Scalar Parenthesis
+on: {push: {branches: [release(]}}
+jobs: {schedule: {runs-on: ubuntu-latest}}
+""",
+    )
+    row = module.workflow_static(path)
+    assert row["scheduled"] is False
+    assert "SCHEDULE_WITHOUT_EXPLICIT_TIMEZONE" not in row["static_risks"]
+
+
+def test_separation_before_mapping_colons_is_scheduled(tmp_path: Path) -> None:
+    path = write_workflow(
+        tmp_path,
+        """name: Separated Mapping Colons
+"on" :
+  "schedule" :
+    - cron: '0 1 * * *'
+jobs:
+  x:
+    steps:
+      - run: echo scheduled
+""",
+    )
+    row = module.workflow_static(path)
+    assert row["scheduled"] is True
+
+
+def test_multiline_flow_style_on_schedule_is_scheduled(tmp_path: Path) -> None:
+    path = write_workflow(
+        tmp_path,
+        """name: Multiline Flow Schedule
+on: {
+  workflow_dispatch: {},
+  schedule: [{cron: '0 1 * * *'}]
+}
+jobs:
+  x:
+    steps:
+      - run: echo scheduled
+""",
+    )
+    row = module.workflow_static(path)
+    assert row["scheduled"] is True
+
+
+def test_flow_style_job_named_schedule_is_not_scheduled(tmp_path: Path) -> None:
+    path = write_workflow(
+        tmp_path,
+        """name: Manual Flow Workflow
+on: {workflow_dispatch: {}}
+jobs: {schedule: {runs-on: ubuntu-latest}}
+""",
+    )
+    row = module.workflow_static(path)
+    assert row["scheduled"] is False
+    assert "SCHEDULE_WITHOUT_EXPLICIT_TIMEZONE" not in row["static_risks"]
+
+
 def test_leading_streaks() -> None:
     assert module.leading_streak(["success", "success", "failure"], True) == 2
     assert module.leading_streak(["failure", "failure", "success"], False) == 2
