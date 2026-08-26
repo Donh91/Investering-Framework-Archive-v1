@@ -1,0 +1,68 @@
+{
+  "contract": "CODEX_RESEARCH_CANDIDATE_v1",
+  "candidate_id": "codex-automation-health-workflow-pagination-v1",
+  "title": "Automation Health GitHub workflow pagination repair",
+  "status": "SUBMITTED",
+  "requested_priority": "EXPEDITED",
+  "authority_boundary": "CODE_REMEDIATION_ONLY",
+  "requires_framework_owner_authority": false,
+  "finding_key": "AUTOMATION_HEALTH_WORKFLOW_API_PAGINATION_TRUNCATION",
+  "objective": "Make Automation Production Health enumerate the complete GitHub Actions workflow registry instead of only the first 100 workflows, so workflows beyond page one are not falsely classified as WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE or NO_RUN_HISTORY and do not mature into spurious CODEX_READY tasks.",
+  "primary_target": "scripts/health/build_automation_health.py",
+  "origin": {
+    "type": "LIVE_HEALTH_AND_QUEUE_AUDIT",
+    "thread_label": "2026-08-27 autonomous remediation continuation",
+    "source_paths": [
+      "scripts/health/build_automation_health.py",
+      "research/architecture_health/LATEST_AUTOMATION_HEALTH.json",
+      "research/remediation/LATEST_CODEX_READY_TASKS.json",
+      ".github/workflows/shadow-registry-weekly.yml"
+    ]
+  },
+  "evidence": [
+    {"kind":"REPO_PATH","ref":"scripts/health/build_automation_health.py","summary":"live_workflows calls actions/workflows?per_page=100 once and does not request additional pages."},
+    {"kind":"HEALTH_ARTIFACT","ref":"research/architecture_health/LATEST_AUTOMATION_HEALTH.json","summary":"The latest observed artifact reports 112 local workflows but exactly 100 registered workflows, matching the GitHub API page size ceiling."},
+    {"kind":"QUEUE_ARTIFACT","ref":"research/remediation/LATEST_CODEX_READY_TASKS.json","summary":"shadow-registry-weekly.yml has matured to CODEX_READY for NO_RUN_HISTORY while the same health family also reports multiple newer workflows as WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE."},
+    {"kind":"REPO_PATH","ref":".github/workflows/shadow-registry-weekly.yml","summary":"The workflow is a valid scheduled main writer with explicit Europe/Copenhagen timezone, so registry truncation must be excluded before task-specific code changes are attempted."}
+  ],
+  "allowed_change_scope": [
+    "scripts/health/build_automation_health.py",
+    "tests/health/test_automation_production_health.py",
+    "tests/health/directly related pagination fixtures",
+    ".github/workflows/automation-production-health.yml",
+    ".github/workflows/automation-production-health-gate.yml"
+  ],
+  "forbidden_changes": [
+    "market gates",
+    "model weights",
+    "canonical authority",
+    "portfolio logic",
+    "API budget",
+    "new policy semantics",
+    "workflow schedules unrelated to health observation",
+    "automatic merge or self-promotion",
+    "suppressing genuine NO_RUN_HISTORY",
+    "hardcoding workflow names to avoid pagination"
+  ],
+  "reproduction": "Run Automation Health against a GitHub workflow registry containing more than 100 workflows, with at least one valid local scheduled workflow returned only on API page 2. Current live_workflows fetches only actions/workflows?per_page=100, so that workflow has live=null and is classified as WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE and, if scheduled, NO_RUN_HISTORY. The current production artifact independently shows 112 local workflows but exactly 100 registered workflows.",
+  "acceptance_tests": {
+    "positive": [
+      "A mocked registry with 112 workflows is fully enumerated across GitHub API pages and registered_workflow_count becomes 112.",
+      "A workflow appearing only on page 2 receives its real live metadata and is not assigned WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE solely because of pagination.",
+      "Per-workflow run-history retrieval continues to preserve failure_streak, success_streak, latest run and lifecycle semantics for page-2 workflows.",
+      "Fresh production health no longer shows an artificial 100-workflow registration ceiling."
+    ],
+    "negative": [
+      "A genuinely missing local workflow still receives WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE.",
+      "GitHub API failure on a later page must not silently report a partial registry as complete or fabricate GREEN state.",
+      "Pagination must terminate deterministically on an empty or short page and must not loop indefinitely.",
+      "The repair must not weaken RED classifications for real failed, stale, unsafe or unregistered workflows."
+    ]
+  },
+  "post_fix_gate": "TWO_CONSECUTIVE_AUTOMATION_HEALTH_RUNS_WITH_COMPLETE_REGISTRY_COUNT_AND_NO_PAGE_TRUNCATION_FALSE_POSITIVES",
+  "clean_noop_condition": "Fresh main already paginates the GitHub workflow registry completely and a production health run reports all local registered workflows without a 100-item ceiling.",
+  "stop_condition": "Stop without code changes if the reproduction no longer holds or if the required repair extends beyond health observation and its tests.",
+  "escalation_condition": "Escalate to FRAMEWORK_OWNER only if complete workflow enumeration cannot be achieved with the existing GitHub Actions read permission and API surface.",
+  "rollback_plan": "Revert only the bounded health pagination code/tests. Do not alter workflow schedules or historical health artifacts.",
+  "submitted_at_utc": "2026-08-26T23:07:00Z"
+}
