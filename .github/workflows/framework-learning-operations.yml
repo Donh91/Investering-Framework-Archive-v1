@@ -64,6 +64,18 @@ jobs:
             --evidence-root 03_DAILY_CAPTURE_LOGS/captures \
             --output-root research/framework_memory/outcome_memory \
             --max-evidence-lag-hours 24
+      - name: Validate Action Compass receipts and mature continuous sidecars
+        run: |
+          mkdir -p research/framework_memory/{action_compass_receipts,action_compass_outcomes}
+          python scripts/learning/action_compass_accountability.py validate-repository \
+            --receipt-root research/framework_memory/action_compass_receipts \
+            --repo-root .
+          python scripts/learning/action_compass_accountability.py mature \
+            --receipt-root research/framework_memory/action_compass_receipts \
+            --evidence-root 03_DAILY_CAPTURE_LOGS/captures \
+            --output-root research/framework_memory/action_compass_outcomes \
+            --repo-root . \
+            --max-terminal-lag-hours 24
       - name: Refresh experiment registry after receipt sync and maturation
         run: |
           mkdir -p research/experiment_lifecycle/{candidates,observations,receipts}

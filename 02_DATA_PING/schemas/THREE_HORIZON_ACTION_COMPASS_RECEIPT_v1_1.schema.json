@@ -1,0 +1,184 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "THREE_HORIZON_ACTION_COMPASS_RECEIPT_v1_1.schema.json",
+  "title": "Three-Horizon Action Compass immutable receipt v1.1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract",
+    "receipt_id",
+    "dedup_id",
+    "input_packet_sha256",
+    "input_binding_status",
+    "input_contract",
+    "source_reference",
+    "source_timestamp_utc",
+    "canonical_repository",
+    "canonical_commit_sha",
+    "owner_contract",
+    "interpreted_at_utc",
+    "producer_model",
+    "action_compass",
+    "data_quality_tags",
+    "rationale_tags",
+    "baseline_observer",
+    "implementation_activation",
+    "persistence_status",
+    "portfolio_execution",
+    "authority"
+  ],
+  "properties": {
+    "contract": {"const": "THREE_HORIZON_ACTION_COMPASS_RECEIPT_v1_1"},
+    "receipt_id": {"type": "string", "pattern": "^ACR-[0-9a-f]{24}$"},
+    "dedup_id": {"type": "string", "pattern": "^ACD-[0-9a-f]{24}$"},
+    "input_packet_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "input_binding_status": {"enum": ["VERIFIED_REPO_FILE", "OPAQUE_SOURCE_HASH_ASSERTED"]},
+    "input_contract": {"type": "string", "minLength": 1, "maxLength": 120},
+    "source_reference": {"type": "string", "minLength": 1, "maxLength": 300},
+    "source_timestamp_utc": {"type": "string", "format": "date-time", "pattern": "Z$"},
+    "canonical_repository": {"const": "Donh91/Investering-Framework-Archive-v1"},
+    "canonical_commit_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "owner_contract": {"const": "02_DATA_PING/protocols/2026-08-25__three-horizon-action-compass-output-contract-v1__canonical.md"},
+    "interpreted_at_utc": {"type": "string", "format": "date-time", "pattern": "Z$"},
+    "producer_model": {"type": "string", "minLength": 1, "maxLength": 100},
+    "action_compass": {"$ref": "#/$defs/action_compass"},
+    "data_quality_tags": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 8,
+      "uniqueItems": true,
+      "items": {
+        "enum": ["COMPLETE", "PARTIAL", "DATA_MISSING", "CONFLICTING_EVIDENCE", "STALE_INPUT", "SOURCE_DEGRADED", "UNKNOWN_QUALITY"]
+      }
+    },
+    "rationale_tags": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 12,
+      "uniqueItems": true,
+      "items": {"type": "string", "pattern": "^[A-Z][A-Z0-9_]{1,63}$"}
+    },
+    "baseline_observer": {
+      "oneOf": [
+        {"$ref": "#/$defs/bound_baseline"},
+        {"$ref": "#/$defs/unavailable_baseline"}
+      ]
+    },
+    "implementation_activation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contract", "marker_path", "activation_commit_sha", "activation_utc"],
+      "properties": {
+        "contract": {"const": "ACTION_COMPASS_ACCOUNTABILITY_ACTIVATION_v1"},
+        "marker_path": {"const": "02_DATA_PING/runtime/ACTION_COMPASS_ACCOUNTABILITY_ACTIVATION_v1.json"},
+        "activation_commit_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "activation_utc": {"type": "string", "format": "date-time", "pattern": "Z$"}
+      }
+    },
+    "persistence_status": {"const": "PERSISTED"},
+    "portfolio_execution": {"const": false},
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["market_rule_change", "new_test", "portfolio_execution", "automatic_action", "automatic_promotion"],
+      "properties": {
+        "market_rule_change": {"const": false},
+        "new_test": {"const": false},
+        "portfolio_execution": {"const": false},
+        "automatic_action": {"const": false},
+        "automatic_promotion": {"const": false}
+      }
+    }
+  },
+  "$defs": {
+    "action": {
+      "enum": ["BUY", "TOP_UP", "SCALE_IN", "PREPARE_BUY", "WAIT", "HOLD", "REDUCE", "EXIT", "NO_ACTION"]
+    },
+    "action_compass": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contract", "as_of_utc", "near_term", "next_window", "altcoin_compass"],
+      "properties": {
+        "contract": {"const": "THREE_HORIZON_ACTION_COMPASS_v1_1"},
+        "as_of_utc": {"type": "string", "format": "date-time", "pattern": "Z$"},
+        "near_term": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["horizon_hours", "valid_from_utc", "valid_until_utc", "action"],
+          "properties": {
+            "horizon_hours": {"type": "integer", "minimum": 1, "maximum": 72},
+            "valid_from_utc": {"type": "string", "format": "date-time", "pattern": "Z$"},
+            "valid_until_utc": {"type": "string", "format": "date-time", "pattern": "Z$"},
+            "action": {"$ref": "#/$defs/action"}
+          }
+        },
+        "next_window": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["window_start_date", "window_end_date", "action"],
+          "properties": {
+            "window_start_date": {"type": "string", "format": "date"},
+            "window_end_date": {"type": "string", "format": "date"},
+            "action": {"$ref": "#/$defs/action"}
+          }
+        },
+        "altcoin_compass": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["horizon_days", "through_date", "state", "action", "warning"],
+          "properties": {
+            "horizon_days": {"type": "integer", "minimum": 1, "maximum": 365},
+            "through_date": {"type": "string", "format": "date"},
+            "state": {
+              "enum": ["DEFENSIVE", "CONSOLIDATION", "PRE_ROTATION", "ROTATION", "BROAD_ALTSEASON", "PARABOLIC_ALTSEASON", "DISTRIBUTION", "EXIT_RISK", "UNCLEAR"]
+            },
+            "action": {"$ref": "#/$defs/action"},
+            "warning": {
+              "enum": ["NONE", "PARABOLIC_ALTSEASON_WARNING", "DISTRIBUTION_WARNING", "EXIT_WARNING", "STRUCTURAL_BREAKDOWN_WARNING"]
+            }
+          }
+        }
+      }
+    },
+    "series_binding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["series_id", "metric_path"],
+      "properties": {
+        "series_id": {"enum": ["BTC_USDT_MARK_PRICE", "ETH_USDT_MARK_PRICE"]},
+        "metric_path": {
+          "enum": [
+            "market_metrics.derivatives.BTC-USDT-SWAP.mark_price.mark_price",
+            "market_metrics.derivatives.ETH-USDT-SWAP.mark_price.mark_price"
+          ]
+        }
+      }
+    },
+    "bound_baseline": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "evidence_path", "evidence_sha256", "captured_at_utc", "series"],
+      "properties": {
+        "status": {"const": "BOUND"},
+        "evidence_path": {"type": "string", "pattern": "^03_DAILY_CAPTURE_LOGS/captures/"},
+        "evidence_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "captured_at_utc": {"type": "string", "format": "date-time", "pattern": "Z$"},
+        "series": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {"$ref": "#/$defs/series_binding"}
+        }
+      }
+    },
+    "unavailable_baseline": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "reason"],
+      "properties": {
+        "status": {"const": "UNAVAILABLE"},
+        "reason": {"enum": ["NO_PUBLIC_PRE_OUTCOME_OBSERVER", "BASELINE_DATA_MISSING", "PRIVATE_DATA_AUTHORITY_UNAVAILABLE"]}
+      }
+    }
+  }
+}

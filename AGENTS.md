@@ -126,6 +126,18 @@ For every Main-Framework response whose primary input is a DATA PING packet or R
 
 This requirement is cross-thread bootstrap governance. It applies to new chats, replacement threads, handovers and repository-aware agents until a newer canonical contract explicitly supersedes the owner above. It changes decision translation and accountability only and does not increase DATA PING collector authority or automatic portfolio-execution authority.
 
+For a fresh ingest with repository write capability, create a private temporary candidate and run:
+
+```bash
+python scripts/learning/action_compass_accountability.py persist \
+  --candidate <private-temporary-candidate-path> \
+  --receipt-root research/framework_memory/action_compass_receipts \
+  --repo-root . \
+  --expected-canonical-commit <exact-main-commit-used-for-interpretation>
+```
+
+The temporary candidate must not be committed. Commit only the generated receipt on an isolated `agent/task-*` branch, validate it with `validate-repository`, use a pull request, pass checks, merge and verify readback. This is automatic agent work, not a request for manual user GitHub work. Replays stop at `DUPLICATE_NOOP`.
+
 ## 4. Current architecture constraints
 
 - Tighten and simplify before expanding.
