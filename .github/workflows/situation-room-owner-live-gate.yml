@@ -38,7 +38,7 @@ jobs:
         shell: bash
         run: |
           set +e
-          python scripts/data_terminal/situation_room_static_daily_adapter.py \
+          python -m scripts.data_terminal.situation_room_static_daily_adapter \
             --output-root /tmp/situation-room-live \
             --date-utc "$(date -u +%F)" \
             --timeout 10
