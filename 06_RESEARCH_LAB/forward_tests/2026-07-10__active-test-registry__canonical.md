@@ -278,21 +278,21 @@ The feature survives only if it improves the latest-ping baseline after delay co
 
 ```yaml
 test_id: CHIEF_REPRODUCIBILITY
-status: QUEUED_PENDING_ACTION_COMPASS_RECEIPT_IMPLEMENTATION
+status: QUEUED_RECEIPT_VALIDATOR_AVAILABLE
 question: Does the same ratified framework input produce the same action class across repeated runs/models?
-required_fields: [input_packet_sha256, canonical_commit_sha, receipt_id, three_lane_actions, lane_3_state, lane_3_warning, rationale_tags, data_quality_tags, producer_model, interpreted_at_utc]
+required_fields: [input_packet_sha256, input_binding_status, canonical_commit_sha, receipt_id, three_lane_actions, lane_3_state, lane_3_warning, rationale_tags, data_quality_tags, producer_model, interpreted_at_utc]
 rows_total: 0
 valid_source_rows: 0
 valid_outcome_rows: 0
 benchmark: EXACT_MATCH_AND_ALLOWED_VARIANCE
-blocked_by: ACTION_COMPASS_RECEIPT_IMPLEMENTATION_NOT_YET_MERGED
+blocked_by: CONTROLLED_REPLAY_FIXTURES_NOT_CREATED
 next_review: AFTER_10_PACKETS
 promotion_condition: stable action class with bounded wording variation
 kill_condition: merge Chief into deterministic mapping if reproducibility is poor
 owner: GOVERNANCE_RESEARCH_LAB
 ```
 
-T9 uses the Action Compass owner's prospective receipts. It does not create a second receipt type, new test ID, market score, warning-to-action mapping or portfolio authority. Replays and `NOT_PERSISTED` interpretations are not source rows.
+T9 uses the Action Compass receipt shape and validator, but controlled reproducibility replays remain a separate future fixture procedure. Real-world duplicate packets, `DUPLICATE_NOOP` events and `NOT_PERSISTED` interpretations are not new decision rows. This does not create a second receipt type, new test ID, market score, warning-to-action mapping or portfolio authority.
 
 ## T10 - Archive Lineage Integrity
 

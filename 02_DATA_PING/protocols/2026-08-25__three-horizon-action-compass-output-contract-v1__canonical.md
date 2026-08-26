@@ -236,15 +236,17 @@ The object is semantic, not a new market schema. Existing surrounding packet sch
 
 This owner authorizes one bounded implementation of its own prospective receipt. It does not authorize a new test or market engine.
 
-Authorized follow-on implementation surfaces, which are not current until the implementation pull request merges:
+Active implementation surfaces after this implementation change is merged:
 
 ```text
 schema: 02_DATA_PING/schemas/THREE_HORIZON_ACTION_COMPASS_RECEIPT_v1_1.schema.json
 writer_and_validator: scripts/learning/action_compass_accountability.py
+activation_marker: 02_DATA_PING/runtime/ACTION_COMPASS_ACCOUNTABILITY_ACTIVATION_v1.json
 receipt_root: research/framework_memory/action_compass_receipts/
 outcome_root: research/framework_memory/action_compass_outcomes/
 existing_test_owner: CHIEF_REPRODUCIBILITY / T9
 existing_miss_consumer: ADAPTIVE_DECISION_MISS
+implementation_status: ACTIVE_ON_MERGE
 ```
 
 For each fresh eligible ingest, Main Framework must persist exactly one immutable JSON receipt containing:
@@ -254,6 +256,7 @@ contract
 receipt_id
 dedup_id
 input_packet_sha256
+input_binding_status
 input_contract
 source_reference
 source_timestamp_utc
@@ -272,18 +275,34 @@ portfolio_execution: false
 
 Receipt rules:
 
-1. `input_packet_sha256` is the SHA-256 of the immutable source packet. Use canonical JSON bytes when the source is JSON and exact source bytes otherwise.
+1. `input_packet_sha256` is the SHA-256 of the immutable source packet. Use canonical JSON bytes when the source is JSON and exact source bytes otherwise. `input_binding_status` distinguishes a hash verified against a file at the bound canonical commit from an opaque uploaded-source hash asserted by the producer.
 2. `dedup_id` and `receipt_id` are deterministic from the input packet hash under the implementation contract. Replaying the same packet is `DUPLICATE_NOOP`, not a new row.
 3. A corrected packet must have a new immutable content hash and may therefore produce a new receipt. The correction must not overwrite the prior receipt.
 4. `canonical_commit_sha` binds the interpretation to the exact public control-plane commit used at decision time.
 5. `action_compass` freezes all three lane states, actions, warning and validity fields before outcomes.
 6. Warning and action remain separate machine fields. A downstream consumer must not infer one from the other.
 7. `data_quality_tags` and `rationale_tags` are bounded tags, not copied analytical prose.
-8. `baseline_observer` may bind exact pre-outcome public evidence paths and hashes for later measurement. It never grants those observations decision authority.
+8. `baseline_observer` may bind exact pre-outcome public evidence paths and hashes for later measurement. The implementation verifies the baseline against the file at `canonical_commit_sha`, not only against the mutable working tree. It never grants those observations decision authority.
 9. The receipt must exclude full chat text, conversation summaries, holdings, quantities, account data, credentials and restricted provider values.
 10. No historical chat backfill is allowed. Eligibility begins only after the implementation is merged and applies to fresh ingests from that point forward.
 11. If repository write capability is unavailable, the response must report `persistence_status: NOT_PERSISTED`. That interpretation is user-facing only and cannot count as a prospective row.
 12. A failed write is also `NOT_PERSISTED`. It must not be represented as durable evidence.
+
+Repository-aware persistence command:
+
+```bash
+python scripts/learning/action_compass_accountability.py persist \
+  --candidate <private-temporary-candidate-path> \
+  --receipt-root research/framework_memory/action_compass_receipts \
+  --repo-root . \
+  --expected-canonical-commit <exact-main-commit-used-for-interpretation>
+```
+
+The candidate file is temporary and must not be committed. Persist the resulting receipt on an isolated task branch, validate it, open a pull request, pass checks, merge and verify readback. No direct write to `main` is authorized.
+
+The activation marker's first commit on `main` defines the earliest eligible source and interpretation time. The writer also requires the bound canonical commit to descend from that activation commit. These two checks make pre-implementation backfill fail closed.
+
+When `baseline_observer.status` is `BOUND`, v1.1 binds exactly two public observer series, BTC-USDT and ETH-USDT mark price from the existing daily capture owner. They are generic market references, not an altseason proxy and not the user's portfolio.
 
 ## 10.2 Outcome-sidecar lifecycle
 
@@ -310,6 +329,8 @@ The outcome owner may measure only continuous, descriptive quantities from the f
 - normalized full-exit capital preserved and upside foregone versus continuous one-unit hold.
 
 These quantities are observational counterfactuals, not portfolio results. They assume no personal holdings, trade size, fees, taxes, slippage or execution. `REDUCE` is not assigned an invented percentage. When a required binding is unavailable, the sidecar records explicit censoring instead of inference.
+
+Only a near-term `EXIT` whose validity starts at the interpretation time may receive the normalized full-exit quantities as an action counterfactual. Future-window and Lane-3 actions do not inherit start-time execution. All other actions remain `NOT_EVALUABLE_WITHOUT_INVENTED_PORTFOLIO_SEMANTICS`. The 24-hour terminal-evidence lag is an operational observation window, not a market threshold.
 
 Outcome sidecars must not contain `HIT`, `MISS`, new market labels, new thresholds, promotion decisions or automatic action. They may be consumed by the existing T9 reproducibility review and Adaptive Decision Miss discovery only. Neither consumer may self-promote a rule, sensor or action.
 
@@ -350,6 +371,7 @@ cross-thread persistence: CANONICAL_VIA_GITHUB
 sole current decision vocabulary: THREE_HORIZON_ACTION_COMPASS_v1_1
 E0_E7 status: RETIRED_UNIMPLEMENTED
 prospective decision receipt: AUTHORIZED_OWNER_EXTENSION
+receipt implementation: ACTIVE
 historical chat backfill: FORBIDDEN
 receipt outcome sidecars: 24H_7D_30D_90D_180D
 ```
