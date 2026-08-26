@@ -1,0 +1,72 @@
+{
+  "contract": "CODEX_RESEARCH_CANDIDATE_v1",
+  "candidate_id": "codex-research-completion-reconciliation-v1",
+  "title": "Reconcile merged Codex research remediations",
+  "status": "SUBMITTED",
+  "requested_priority": "EXPEDITED",
+  "authority_boundary": "CODE_REMEDIATION_ONLY",
+  "requires_framework_owner_authority": false,
+  "finding_key": "CODEX_RESEARCH_MERGED_PR_COMPLETION_RECONCILIATION",
+  "objective": "Prevent merged Codex research-remediation pull requests from remaining or reappearing as IN_REMEDIATION solely because a CODEX_RESEARCH_COMPLETION_RECEIPT_v1 was not materialized. Add deterministic post-merge reconciliation that verifies the bound PR and merge commit before producing the existing completion contract, then lets the current maturation engine advance the task through post-fix observation or resolution.",
+  "primary_target": "scripts/remediation/merge_codex_research_intake.py",
+  "origin": {
+    "type": "LIVE_REMEDIATION_QUEUE_AUDIT",
+    "thread_label": "2026-08-27 autonomous remediation continuation",
+    "source_paths": [
+      "scripts/remediation/merge_codex_research_intake.py",
+      "scripts/remediation/write_codex_research_completion_receipt.py",
+      ".github/workflows/remediation-maturation.yml",
+      "research/remediation/LATEST_REMEDIATION_QUEUE.json",
+      "research/codex/LATEST_CODEX_EXECUTION_STATE.json",
+      "research/codex/transitions/5b3f080e7ac85eb04b65.json",
+      "research/codex/transitions/dbafb3a6d059c6375c6e.json"
+    ]
+  },
+  "evidence": [
+    {"kind":"MERGED_PR","ref":"519","summary":"Prospective shared-row P0 remediation is merged at f7de1f0b92278d3d887077d40d61fc453fc9e084, but the latest queue still reports its research-intake task as IN_REMEDIATION."},
+    {"kind":"MERGED_PR","ref":"562","summary":"Operations pointer-truth remediation is merged at 1c7613d9511d1a21c34bb99ea36a74891d034f8b, but the latest queue still reports its research-intake task as IN_REMEDIATION."},
+    {"kind":"REPO_PATH","ref":"scripts/remediation/write_codex_research_completion_receipt.py","summary":"The repository already defines the canonical verified completion receipt, but writing it requires a separate manual invocation after merge."},
+    {"kind":"REPO_PATH","ref":"scripts/remediation/merge_codex_research_intake.py","summary":"A valid completion receipt is already understood by the intake merger, so the missing layer is deterministic post-merge materialization/reconciliation rather than a new lifecycle contract."}
+  ],
+  "allowed_change_scope": [
+    "scripts/remediation/merge_codex_research_intake.py",
+    "scripts/remediation/write_codex_research_completion_receipt.py",
+    "scripts/remediation/directly related completion reconciliation helper",
+    ".github/workflows/remediation-maturation.yml",
+    "tests/remediation",
+    "research/codex/completions"
+  ],
+  "forbidden_changes": [
+    "market gates",
+    "model weights",
+    "canonical authority",
+    "portfolio logic",
+    "API budget",
+    "new policy semantics",
+    "automatic merge or self-promotion",
+    "fabricated merge status",
+    "completion without GitHub merge verification",
+    "rewriting historical research evidence"
+  ],
+  "reproduction": "On fresh main, read research/remediation/LATEST_REMEDIATION_QUEUE.json and observe candidate codex-research-prospective-p0-validity-repair-v1 in IN_REMEDIATION even though PR 519 is merged. Confirm research/codex/completions/codex-research-prospective-p0-validity-repair-v1.json is absent. Repeat for codex-operational-observability-pointer-truth-v1 and merged PR 562. Run the existing maturation plus research-intake merge without a completion receipt and verify the candidates remain active, demonstrating the lifecycle gap.",
+  "acceptance_tests": {
+    "positive": [
+      "A valid CODEX_RESEARCH_TRANSITION_RECEIPT_v1 with a bound PR number whose PR is verified merged produces exactly one hash-valid CODEX_RESEARCH_COMPLETION_RECEIPT_v1 with the actual merge commit SHA.",
+      "A valid transition with pr_number null but a unique exact branch-bound merged PR can be reconciled without guessing and records that exact PR and merge SHA.",
+      "After reconciliation, the existing research-intake merger no longer emits the task as IN_REMEDIATION and follows its existing post-fix/resolution semantics.",
+      "The known merged PR 519 and PR 562 stale tasks are cleared from active remediation after the governed reconciliation path runs."
+    ],
+    "negative": [
+      "An open, closed-unmerged, mismatched-branch, ambiguous, or unverifiable PR must not produce a completion receipt.",
+      "A transition receipt with invalid hash, changed candidate hash, changed task-contract hash, or non-IN_REMEDIATION state must not be reconciled.",
+      "An existing valid completion receipt is idempotent and cannot be overwritten with different bytes.",
+      "GitHub API unavailability must fail closed or preserve the task as active, never fabricate completion or resolution."
+    ]
+  },
+  "post_fix_gate": "TWO_CONSECUTIVE_REMEDIATION_MATURATION_RUNS_WITH_NO_MERGED_RESEARCH_TASK_ZOMBIES",
+  "clean_noop_condition": "Fresh main already deterministically materializes verified completion receipts for merged research-remediation PRs and both PR 519 and PR 562 are absent from active remediation for that reason.",
+  "stop_condition": "Stop without code changes if the reproduction no longer holds or the implementation would require automatic merging, broader GitHub write authority, framework semantics, or guessing PR identity.",
+  "escalation_condition": "Escalate to FRAMEWORK_OWNER only if deterministic merge verification cannot be achieved using existing transition bindings and current GitHub Actions read authority.",
+  "rollback_plan": "Revert only the bounded completion-reconciliation code/workflow changes. Preserve all historical transitions, completion receipts and execution ledgers as audit evidence.",
+  "submitted_at_utc": "2026-08-26T22:58:00Z"
+}
