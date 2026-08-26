@@ -18,9 +18,15 @@ def latest(root, name='*.json'):
         for p in root.rglob(name):
             v = load(p)
             if not v: continue
-            raw = next((v.get(k) for k in ('captured_at_utc', 'created_at_utc', 'generated_at_utc', 'freeze_utc', 'retrieved_at_utc') if v.get(k)), None)
-            rows.append((str(raw or ''), p, v))
-    return sorted(rows, key=lambda x: x[0])[-1] if rows else (None, None, None)
+            raw = next((v.get(k) for k in ('captured_at_utc', 'completed_at_utc', 'created_at_utc', 'generated_at_utc', 'freeze_utc', 'retrieved_at_utc', 'timestamp_utc') if v.get(k)), None)
+            # Repository output paths are timestamp-ordered (YYYY/MM/DD/HHMMSS). Use the
+            # path as a deterministic fallback/tiebreaker so documents without a supported
+            # top-level timestamp can never make an older pointer win by rglob traversal order.
+            rows.append((str(raw or ''), p.as_posix(), p, v))
+    if not rows:
+        return (None, None, None)
+    _, _, path, value = sorted(rows, key=lambda x: (x[0], x[1]))[-1]
+    return (str(next((value.get(k) for k in ('captured_at_utc', 'completed_at_utc', 'created_at_utc', 'generated_at_utc', 'freeze_utc', 'retrieved_at_utc', 'timestamp_utc') if value.get(k)), '') or ''), path, value)
 
 def direct(path):
     v = load(path)
