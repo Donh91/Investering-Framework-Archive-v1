@@ -295,6 +295,46 @@ jobs:
     assert row["scheduled"] is True
 
 
+def test_flow_style_on_schedule_with_trailing_comment_is_scheduled(tmp_path: Path) -> None:
+    path = write_workflow(
+        tmp_path,
+        """name: Commented Flow Schedule
+on: {schedule: [{cron: '0 1 * * *'}]} # nightly
+jobs:
+  x:
+    steps:
+      - run: echo scheduled
+""",
+    )
+    row = module.workflow_static(path)
+    assert row["scheduled"] is True
+
+
+def test_flow_comment_stripping_preserves_quoted_hash() -> None:
+    value = "{schedule: [{cron: '0 1 * * *'}], marker: '# keep'} # nightly"
+    stripped = module._strip_unquoted_yaml_comments(value)
+    assert "'# keep'" in stripped
+    assert module._flow_mapping_has_key(value, "schedule") is True
+
+
+def test_multiline_flow_style_on_schedule_is_scheduled(tmp_path: Path) -> None:
+    path = write_workflow(
+        tmp_path,
+        """name: Multiline Flow Schedule
+on: {
+  workflow_dispatch: {},
+  schedule: [{cron: '0 1 * * *'}]
+}
+jobs:
+  x:
+    steps:
+      - run: echo scheduled
+""",
+    )
+    row = module.workflow_static(path)
+    assert row["scheduled"] is True
+
+
 def test_flow_style_job_named_schedule_is_not_scheduled(tmp_path: Path) -> None:
     path = write_workflow(
         tmp_path,
