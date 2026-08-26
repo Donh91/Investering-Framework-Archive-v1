@@ -27,13 +27,7 @@ def sources_for_date(date_utc: str):
 
 
 def direct_daily_candidate_links(source_id: str, base_url: str, parser):
-    """Yield the deterministic daily briefing itself, then preserve v1 behavior elsewhere.
-
-    Situation Room's archive/dashboard is client-rendered and may expose only a loading
-    shell to non-browser collectors. Daily briefing pages are stable, server-rendered
-    documents. This adapter makes the dated briefing the discovery document without
-    changing its DISCOVERY_ONLY authority or any downstream market semantics.
-    """
+    """Yield the deterministic daily briefing itself, then preserve v1 behavior elsewhere."""
     if source_id == "SITUATION_ROOM":
         parsed = urlparse(base_url)
         if parsed.netloc == "situationroom.space" and parsed.path.startswith("/briefing/"):
@@ -41,6 +35,33 @@ def direct_daily_candidate_links(source_id: str, base_url: str, parser):
             yield base_url, title
             return
     yield from BASE_CANDIDATE_LINKS(source_id, base_url, parser)
+
+
+def apply_dated_discovery_fail_closed(result: dict, date_utc: str) -> None:
+    """A dated Situation Room page is today's discovery even if HTML lacks a timestamp.
+
+    The URL date is used only to establish discovery scope. It is never promoted to a
+    precise event_time_utc and never verifies the event. This prevents a client/metadata
+    limitation from being silently converted into NO_NEW_MATERIAL_CATALYST.
+    """
+    expected_url = daily_briefing_url(date_utc)
+    rows = [
+        item for item in result.get("unverified_discoveries", [])
+        if item.get("verification_status") == "DISCOVERY_UNVERIFIED"
+        and item.get("url") == expected_url
+    ]
+    if not rows:
+        return
+    current = result.setdefault("current_unverified_discoveries", [])
+    known = {item.get("url") for item in current}
+    for item in rows:
+        if item.get("url") not in known:
+            item["discovery_date_basis"] = "DETERMINISTIC_DATED_SOURCE_URL"
+            current.append(item)
+            known.add(item.get("url"))
+    if result.get("daily_result") == "NO_NEW_MATERIAL_CATALYST":
+        result["daily_result"] = "REVIEW_REQUIRED_UNVERIFIED_DISCOVERY"
+        result["run_status"] = "DEGRADED"
 
 
 def run(output_root: Path, date_utc: str, timeout: int = 15) -> dict:
@@ -54,6 +75,7 @@ def run(output_root: Path, date_utc: str, timeout: int = 15) -> dict:
         owner.SOURCES = original_sources
         owner.candidate_links = original_candidate_links
 
+    apply_dated_discovery_fail_closed(result, date_utc)
     result.setdefault("retrieval", {})
     result["retrieval"].update({
         "situation_room_archive_url": SITUATION_ROOM_ARCHIVE,
