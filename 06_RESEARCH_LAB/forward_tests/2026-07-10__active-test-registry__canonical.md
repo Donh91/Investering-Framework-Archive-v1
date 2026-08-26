@@ -1,7 +1,7 @@
 # Active Test Registry
 
 **Dato:** 2026-07-11  
-**Last updated:** 2026-07-22  
+**Last updated:** 2026-08-26
 **Status:** CANONICAL  
 **Område:** forward tests / active evidence production  
 **Primary folder:** `06_RESEARCH_LAB/forward_tests/`  
@@ -278,19 +278,21 @@ The feature survives only if it improves the latest-ping baseline after delay co
 
 ```yaml
 test_id: CHIEF_REPRODUCIBILITY
-status: QUEUED
+status: QUEUED_PENDING_ACTION_COMPASS_RECEIPT_IMPLEMENTATION
 question: Does the same ratified framework input produce the same action class across repeated runs/models?
-required_fields: [frozen_input_packet, action_class, rationale_tags, run_model, run_time]
+required_fields: [input_packet_sha256, canonical_commit_sha, receipt_id, three_lane_actions, lane_3_state, lane_3_warning, rationale_tags, data_quality_tags, producer_model, interpreted_at_utc]
 rows_total: 0
 valid_source_rows: 0
 valid_outcome_rows: 0
 benchmark: EXACT_MATCH_AND_ALLOWED_VARIANCE
-blocked_by: TEST_PACKET_CREATION
+blocked_by: ACTION_COMPASS_RECEIPT_IMPLEMENTATION_NOT_YET_MERGED
 next_review: AFTER_10_PACKETS
 promotion_condition: stable action class with bounded wording variation
 kill_condition: merge Chief into deterministic mapping if reproducibility is poor
 owner: GOVERNANCE_RESEARCH_LAB
 ```
+
+T9 uses the Action Compass owner's prospective receipts. It does not create a second receipt type, new test ID, market score, warning-to-action mapping or portfolio authority. Replays and `NOT_PERSISTED` interpretations are not source rows.
 
 ## T10 - Archive Lineage Integrity
 

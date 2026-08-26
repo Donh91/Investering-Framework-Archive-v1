@@ -127,8 +127,8 @@ owner: DATA_PING_RESEARCH_LAB
 ```yaml
 status: OPEN_TEST
 question: Does the same frozen framework input produce the same action class across repeated runs?
-blocker: no_reproducibility_series
-next_action: repeated frozen input packets
+blocker: prospective_action_compass_receipt_implementation_pending
+next_action: persist fresh Action Compass v1.1 receipts, then evaluate exact action-class agreement under existing T9
 owner: GOVERNANCE_RESEARCH_LAB
 ```
 
