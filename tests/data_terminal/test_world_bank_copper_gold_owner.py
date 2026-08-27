@@ -6,12 +6,11 @@ import io
 import json
 import sys
 import tempfile
+import unittest
 import zipfile
 from datetime import datetime, timezone
 from pathlib import Path
 from unittest import mock
-
-import pytest
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -103,112 +102,104 @@ def build_fixture(source_periods: list[str] | None = None, **kwargs):
     )
 
 
-def test_components_units_ratio_and_features_are_explicit():
-    data = build_fixture()
-    row = data["monthly"][0]
-    expected = (7000.0 / 1000) / (1200.0 / owner.TROY_OUNCE_KILOGRAMS)
-    assert row["ratio"] == pytest.approx(expected)
-    assert row["copper_source_unit"] == "USD_PER_METRIC_TON"
-    assert row["gold_source_unit"] == "USD_PER_TROY_OUNCE"
-    assert row["source_timestamp"] == "2017-01-31T23:59:59Z"
-    assert data["monthly"][-1]["roc_12m_pct"] is not None
-    assert data["monthly"][-1]["zscore_24m_population"] is not None
+class WorldBankCopperGoldOwnerTests(unittest.TestCase):
+    def test_components_units_ratio_and_features_are_explicit(self):
+        data = build_fixture()
+        row = data["monthly"][0]
+        expected = (7000.0 / 1000) / (1200.0 / owner.TROY_OUNCE_KILOGRAMS)
+        self.assertAlmostEqual(row["ratio"], expected, places=12)
+        self.assertEqual(row["copper_source_unit"], "USD_PER_METRIC_TON")
+        self.assertEqual(row["gold_source_unit"], "USD_PER_TROY_OUNCE")
+        self.assertEqual(row["source_timestamp"], "2017-01-31T23:59:59Z")
+        self.assertIsNotNone(data["monthly"][-1]["roc_12m_pct"])
+        self.assertIsNotNone(data["monthly"][-1]["zscore_24m_population"])
 
+    def test_both_settled_anchors_exclude_unfinished_partner_month(self):
+        data = build_fixture()
+        self.assertEqual(set(data["settled_2m"]), {"JAN_FEB", "FEB_MAR"})
+        self.assertTrue(all(int(row["bar_end_period"][-2:]) % 2 == 0 for row in data["settled_2m"]["JAN_FEB"]))
+        self.assertTrue(all(int(row["bar_end_period"][-2:]) % 2 == 1 for row in data["settled_2m"]["FEB_MAR"]))
+        self.assertTrue(all(row["settled"] is True for rows in data["settled_2m"].values() for row in rows))
+        self.assertFalse(data["validation"]["in_progress_2m_bar_used"])
 
-def test_both_settled_anchors_exclude_unfinished_partner_month():
-    data = build_fixture()
-    assert set(data["settled_2m"]) == {"JAN_FEB", "FEB_MAR"}
-    assert all(int(row["bar_end_period"][-2:]) % 2 == 0 for row in data["settled_2m"]["JAN_FEB"])
-    assert all(int(row["bar_end_period"][-2:]) % 2 == 1 for row in data["settled_2m"]["FEB_MAR"])
-    assert all(row["settled"] is True for rows in data["settled_2m"].values() for row in rows)
-    assert data["validation"]["in_progress_2m_bar_used"] is False
+    def test_gap_duplicate_missing_and_unit_drift_fail_closed(self):
+        with self.assertRaisesRegex(owner.OwnerError, "Non-contiguous"):
+            build_fixture([*periods(count=100)[:50], *periods(count=100)[51:]])
+        with self.assertRaisesRegex(owner.OwnerError, "Duplicate"):
+            build_fixture(duplicate=True)
+        with self.assertRaisesRegex(owner.OwnerError, "Missing or non-numeric Gold"):
+            build_fixture(missing_gold=True)
+        with self.assertRaisesRegex(owner.OwnerError, "Unexpected units"):
+            build_fixture(unit_drift=True)
 
+    def test_stale_source_is_not_pass(self):
+        data = owner.build(workbook(periods(start_year=2015, count=100)), "2026-08-27T12:00:00Z")
+        self.assertEqual(data["status"], "STALE")
+        self.assertEqual(data["freshness"]["status"], "STALE")
 
-def test_gap_duplicate_missing_and_unit_drift_fail_closed():
-    with pytest.raises(owner.OwnerError, match="Non-contiguous"):
-        build_fixture([*periods(count=100)[:50], *periods(count=100)[51:]])
-    with pytest.raises(owner.OwnerError, match="Duplicate"):
-        build_fixture(duplicate=True)
-    with pytest.raises(owner.OwnerError, match="Missing or non-numeric Gold"):
-        build_fixture(missing_gold=True)
-    with pytest.raises(owner.OwnerError, match="Unexpected units"):
-        build_fixture(unit_drift=True)
+    def test_future_source_timestamp_is_rejected(self):
+        with self.assertRaisesRegex(owner.OwnerError, "after retrieval"):
+            owner.build(workbook(periods(start_year=2018, count=104)), "2026-08-01T00:00:00Z")
 
+    def test_output_is_idempotent_by_payload_hash_and_zero_authority(self):
+        data = build_fixture()
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            first = owner.write_artifacts(root, data)
+            revision = root / first["revision_path"]
+            revision_bytes = revision.read_bytes()
+            second = owner.write_artifacts(root, data)
+            self.assertEqual(first["payload_sha256"], second["payload_sha256"])
+            self.assertEqual(revision.read_bytes(), revision_bytes)
+            self.assertEqual(len(list((root / "revisions").glob("*.json"))), 1)
+            self.assertFalse(json.loads((root / "ARTIFACT_MANIFEST.json").read_text())["authority"]["execution_authority"])
 
-def test_stale_source_is_not_pass():
-    data = owner.build(workbook(periods(start_year=2015, count=100)), "2026-08-27T12:00:00Z")
-    assert data["status"] == "STALE"
-    assert data["freshness"]["status"] == "STALE"
+    def test_changed_payload_writes_compact_component_delta_not_full_history(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            first = build_fixture()
+            owner.write_artifacts(root, first)
+            changed_periods = periods(count=116)
+            second = owner.build(workbook(changed_periods), "2026-09-30T12:00:00Z")
+            latest = owner.write_artifacts(root, second)
+            receipt = json.loads((root / latest["revision_path"]).read_text())
+            self.assertEqual(receipt["revision_kind"], "SOURCE_PAYLOAD_CHANGE")
+            self.assertEqual(receipt["component_deltas"], [{
+                "change_type": "ADDED",
+                "current_copper_source_value": "8150.0",
+                "current_gold_source_value": "1430.0",
+                "period": "2026-08",
+                "previous_copper_source_value": None,
+                "previous_gold_source_value": None,
+            }])
+            self.assertNotIn("monthly", receipt)
+            self.assertEqual(len(list((root / "revisions").glob("*.json"))), 2)
 
+    def test_no_silent_network_fallback(self):
+        with mock.patch.object(owner.urllib.request, "urlopen", side_effect=OSError("offline")):
+            with self.assertRaises(owner.OwnerError) as caught:
+                owner.fetch_payload("https://example.invalid", timeout=0.1, retries=0, backoff=0)
+        self.assertEqual(caught.exception.status, "NETWORK_ERROR")
 
-def test_future_source_timestamp_is_rejected():
-    with pytest.raises(owner.OwnerError, match="after retrieval"):
-        owner.build(workbook(periods(start_year=2018, count=104)), "2026-08-01T00:00:00Z")
+    def test_registry_matches_current_source_and_has_no_fallback(self):
+        registry = json.loads((ROOT / "02_DATA_PING/data_terminal/source_registry/world_bank_pink_sheet_copper_gold.json").read_text())
+        self.assertEqual(registry["url"], owner.SOURCE_URL)
+        self.assertEqual(registry["source_id"], owner.SOURCE_ID)
+        self.assertEqual(registry["fallback"], "NONE")
+        self.assertFalse(registry["authority"]["portfolio_action"])
 
-
-def test_output_is_idempotent_by_payload_hash_and_zero_authority():
-    data = build_fixture()
-    with tempfile.TemporaryDirectory() as tmp:
-        root = Path(tmp)
-        first = owner.write_artifacts(root, data)
-        revision = root / first["revision_path"]
-        revision_bytes = revision.read_bytes()
-        second = owner.write_artifacts(root, data)
-        assert first["payload_sha256"] == second["payload_sha256"]
-        assert revision.read_bytes() == revision_bytes
-        assert len(list((root / "revisions").glob("*.json"))) == 1
-        assert json.loads((root / "ARTIFACT_MANIFEST.json").read_text())["authority"]["execution_authority"] is False
-
-
-def test_changed_payload_writes_compact_component_delta_not_full_history():
-    with tempfile.TemporaryDirectory() as tmp:
-        root = Path(tmp)
-        first = build_fixture()
-        owner.write_artifacts(root, first)
-        changed_periods = periods(count=116)
-        second = owner.build(workbook(changed_periods), "2026-09-30T12:00:00Z")
-        latest = owner.write_artifacts(root, second)
-        receipt = json.loads((root / latest["revision_path"]).read_text())
-        assert receipt["revision_kind"] == "SOURCE_PAYLOAD_CHANGE"
-        assert receipt["component_deltas"] == [{
-            "change_type": "ADDED",
-            "current_copper_source_value": "8150.0",
-            "current_gold_source_value": "1430.0",
-            "period": "2026-08",
-            "previous_copper_source_value": None,
-            "previous_gold_source_value": None,
-        }]
-        assert "monthly" not in receipt
-        assert len(list((root / "revisions").glob("*.json"))) == 2
-
-
-def test_no_silent_network_fallback():
-    with mock.patch.object(owner.urllib.request, "urlopen", side_effect=OSError("offline")):
-        with pytest.raises(owner.OwnerError) as caught:
-            owner.fetch_payload("https://example.invalid", timeout=0.1, retries=0, backoff=0)
-    assert caught.value.status == "NETWORK_ERROR"
-
-
-def test_registry_matches_current_source_and_has_no_fallback():
-    registry = json.loads((ROOT / "02_DATA_PING/data_terminal/source_registry/world_bank_pink_sheet_copper_gold.json").read_text())
-    assert registry["url"] == owner.SOURCE_URL
-    assert registry["source_id"] == owner.SOURCE_ID
-    assert registry["fallback"] == "NONE"
-    assert registry["authority"]["portfolio_action"] is False
-
-
-def test_committed_baseline_is_current_complete_and_manifest_bound():
-    root = ROOT / "03_DAILY_CAPTURE_LOGS/slow_cycle/copper_gold"
-    latest = json.loads((root / "LATEST.json").read_text())
-    assert latest["status"] == "PASS"
-    assert latest["last_period"] == "2026-07"
-    assert latest["freshness"]["status"] == "PASS"
-    with (root / "normalized/monthly_observations.csv").open(newline="", encoding="utf-8") as handle:
-        rows = list(csv.DictReader(handle))
-    assert len(rows) == 799
-    assert rows[0]["period"] == "1960-01"
-    assert rows[-1]["period"] == "2026-07"
-    manifest = json.loads((root / "ARTIFACT_MANIFEST.json").read_text())
-    for relative_path, expected_hash in manifest["members"].items():
-        assert owner.sha256_bytes((root / relative_path).read_bytes()) == expected_hash
-    assert manifest["authority"]["execution_authority"] is False
+    def test_committed_baseline_is_current_complete_and_manifest_bound(self):
+        root = ROOT / "03_DAILY_CAPTURE_LOGS/slow_cycle/copper_gold"
+        latest = json.loads((root / "LATEST.json").read_text())
+        self.assertEqual(latest["status"], "PASS")
+        self.assertEqual(latest["last_period"], "2026-07")
+        self.assertEqual(latest["freshness"]["status"], "PASS")
+        with (root / "normalized/monthly_observations.csv").open(newline="", encoding="utf-8") as handle:
+            rows = list(csv.DictReader(handle))
+        self.assertEqual(len(rows), 799)
+        self.assertEqual(rows[0]["period"], "1960-01")
+        self.assertEqual(rows[-1]["period"], "2026-07")
+        manifest = json.loads((root / "ARTIFACT_MANIFEST.json").read_text())
+        for relative_path, expected_hash in manifest["members"].items():
+            self.assertEqual(owner.sha256_bytes((root / relative_path).read_bytes()), expected_hash)
+        self.assertFalse(manifest["authority"]["execution_authority"])
