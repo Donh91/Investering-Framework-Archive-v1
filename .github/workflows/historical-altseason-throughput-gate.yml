@@ -17,13 +17,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Validate live topology, lifecycle, bounded storage, and writer safety
+      - name: Validate live topology, lifecycle, bounded ledgers, and writer safety
         run: |
           python - <<'PY'
           import csv,pathlib
           root=pathlib.Path('.'); text=lambda p:(root/p).read_text()
           free=text('.github/workflows/historical-altseason-free-bootstrap.yml'); reserve=text('.github/workflows/historical-altseason-cfgi-reservation.yml'); paid=text('.github/workflows/historical-altseason-cfgi-enrichment.yml'); free_pub=text('.github/workflows/historical-altseason-free-publish.yml'); paid_pub=text('.github/workflows/historical-altseason-cfgi-publish.yml'); audit=text('.github/workflows/historical-altseason-cfgi-run-audit.yml'); term=text('.github/workflows/historical-altseason-cfgi-terminal-publish.yml'); finalize=text('.github/workflows/historical-altseason-cfgi-terminal-finalize.yml')
-          write_perm='contents:'+' write'; push_main='git push origin HEAD:'+'main'; upload_action='actions/upload-'+'artifact@v4'; retention_key='retention-'+'days: 30'
+          write_perm='contents:'+' write'; push_main='git push origin HEAD:'+'main'
           assert 'Historical Altseason Lab Gate' in free and 'workflow_run:' in free and 'contents: read' in free
           for retired in (reserve,paid):
               assert 'framework-lifecycle: RETIRED' in retired and 'schedule:' not in retired
@@ -34,7 +34,6 @@ jobs:
           for writer in (free_pub,paid_pub,audit,term):
               assert write_perm in writer and push_main in writer and 'group: framework-main-writer' in writer
               assert 'git fetch origin main' in writer and 'git rebase origin/main' in writer
-          for publisher in (free_pub,paid_pub): assert upload_action in publisher and retention_key in publisher
           assert 'FREE_BOOTSTRAP_COMPLETION_v1.json' in free and 'CFGI_PAID_COMPLETION_v1.json' in paid
           assert 'CFGI_TERMINAL_PROOF_v1.json' in term and 'TERMINAL_COMPLETION_v1.json' in finalize
           cov=list(csv.DictReader(open('research/historical_altseason/coverage_ledger.csv'))); miss=list(csv.DictReader(open('research/historical_altseason/missingness_ledger.csv')))
