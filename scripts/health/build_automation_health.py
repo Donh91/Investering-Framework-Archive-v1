@@ -283,7 +283,17 @@ def leading_streak(conclusions: list[str | None], good: bool) -> int:
 def live_workflows(repo: str, token: str) -> dict[str, dict[str, Any]]:
     owner, name = repo.split("/", 1)
     base = f"https://api.github.com/repos/{owner}/{name}"
-    workflows = api_json(f"{base}/actions/workflows?per_page=100", token).get("workflows", [])
+    workflows: list[dict[str, Any]] = []
+    page = 1
+    while True:
+        page_workflows = api_json(
+            f"{base}/actions/workflows?per_page=100&page={page}", token
+        ).get("workflows", [])
+        workflows.extend(page_workflows)
+        if len(page_workflows) < 100:
+            break
+        page += 1
+
     result: dict[str, dict[str, Any]] = {}
     for workflow in workflows:
         wid = workflow["id"]
