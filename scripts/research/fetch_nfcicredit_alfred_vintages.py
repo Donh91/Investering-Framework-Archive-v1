@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Fetch the three preregistered NFCICREDIT T-90 vintages from FRED/ALFRED API.
 
-Requires FRED_API_KEY. Writes deterministic CSV plus provenance JSON. Missing
-values remain missing. No summarisation layer is used.
+Requires FRED_API_KEY. Each request pins realtime_start == realtime_end to the
+frozen T-90 date, so later revisions cannot enter the historical snapshot.
 """
 import argparse,csv,hashlib,json,os,urllib.parse,urllib.request
 from datetime import date,timedelta,datetime,timezone
@@ -15,10 +15,8 @@ BASE='https://api.stlouisfed.org/fred/series/observations'
 
 def fetch(api_key,asof):
     start=asof-timedelta(days=365*3+35)
-    q=urllib.parse.urlencode({'series_id':SERIES,'api_key':api_key,'file_type':'json','observation_start':start.isoformat(),'observation_end':asof.isoformat(),'realtime_start':'1776-07-04','realtime_end':asof.isoformat(),'output_type':1})
-    raw=urllib.request.urlopen(BASE+'?'+q,timeout=30).read()
-    payload=json.loads(raw)
-    rows=[]
+    q=urllib.parse.urlencode({'series_id':SERIES,'api_key':api_key,'file_type':'json','observation_start':start.isoformat(),'observation_end':asof.isoformat(),'realtime_start':asof.isoformat(),'realtime_end':asof.isoformat(),'output_type':1})
+    raw=urllib.request.urlopen(BASE+'?'+q,timeout=30).read(); payload=json.loads(raw); rows=[]
     for r in payload.get('observations',[]):
         if r.get('value') in (None,'','.'): continue
         rows.append({'observation_date':r['date'],'vintage_asof':asof.isoformat(),'value':r['value']})
@@ -36,8 +34,7 @@ def main():
     a.output_csv.parent.mkdir(parents=True,exist_ok=True)
     with a.output_csv.open('w',newline='') as f:
         w=csv.DictWriter(f,fieldnames=['observation_date','vintage_asof','value']);w.writeheader();w.writerows(all_rows)
-    prov={'contract':'NFCICREDIT_ALFRED_VINTAGES_v1','series':SERIES,'retrieved_at_utc':datetime.now(timezone.utc).isoformat(),'endpoint':BASE,'requests':receipts,'k17':'DETERMINISTIC_PARSE_NO_LLM','authority':'RESEARCH_ONLY_NO_EXECUTION'}
-    a.provenance.write_text(json.dumps(prov,indent=2,sort_keys=True)+'\n')
-    return 0
+    prov={'contract':'NFCICREDIT_ALFRED_VINTAGES_v1','series':SERIES,'retrieved_at_utc':datetime.now(timezone.utc).isoformat(),'endpoint':BASE,'requests':receipts,'realtime_policy':'EXACT_T_MINUS_90_VINTAGE','k17':'DETERMINISTIC_PARSE_NO_LLM','authority':'RESEARCH_ONLY_NO_EXECUTION'}
+    a.provenance.write_text(json.dumps(prov,indent=2,sort_keys=True)+'\n'); return 0
 
 if __name__=='__main__': raise SystemExit(main())
