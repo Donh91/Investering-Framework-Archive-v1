@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """Preregistered T-1 falsification for NFCICREDIT.
 
-Input is a deterministic ALFRED/FRED-style CSV containing observation_date,
-realtime_start and value. No network or LLM extraction occurs here.
+Input is deterministic vintage CSV: observation_date,vintage_asof,value.
+Each frozen T-90 date must have its own ALFRED vintage snapshot. No network or
+LLM extraction occurs in this evaluator.
 """
-import argparse,csv,json,math
+import argparse,csv,json
 from datetime import date,timedelta
 from pathlib import Path
 
@@ -18,48 +19,36 @@ def load(path):
     with path.open(newline='') as f:
         for r in csv.DictReader(f):
             ds=r.get('observation_date') or r.get('DATE')
-            rs=r.get('realtime_start') or r.get('REALTIME_START')
+            vs=r.get('vintage_asof') or r.get('realtime_end') or r.get('REALTIME_END')
             raw=r.get('value') or r.get('NFCICREDIT')
-            if not ds or not rs or raw in (None,'','.'):
+            if not ds or not vs or raw in (None,'','.'):
                 continue
-            rows.append((date.fromisoformat(ds),date.fromisoformat(rs),float(raw)))
+            rows.append((date.fromisoformat(ds),date.fromisoformat(vs),float(raw)))
     return sorted(rows)
 
 
-def latest_known(rows, asof, target):
-    eligible=[x for x in rows if x[0] <= target and x[1] <= asof]
-    return max(eligible,key=lambda x:(x[0],x[1])) if eligible else None
-
-
 def percentile(history,value):
-    if not history: return None
-    # deterministic empirical CDF, ties count at or below.
-    return 100.0*sum(x <= value for x in history)/len(history)
+    return 100.0*sum(x <= value for x in history)/len(history) if history else None
 
 
 def run(rows):
     episodes=[]
     for top in TOPS:
         asof=top-timedelta(days=LOOKBACK_DAYS)
-        obs=latest_known(rows,asof,asof)
+        vintage=[x for x in rows if x[1] == asof and x[0] <= asof]
         start=asof-timedelta(days=365*PERCENTILE_YEARS)
-        hist=[]
-        for d,rt,v in rows:
-            if start <= d <= asof and rt <= asof:
-                hist.append(v)
+        hist=[v for d,_,v in vintage if start <= d <= asof]
+        obs=max(vintage,key=lambda x:x[0]) if vintage else None
         if obs is None or len(hist) < 100:
-            episodes.append({'top':top.isoformat(),'asof':asof.isoformat(),'status':'NOT_PRESENT'})
+            episodes.append({'top':top.isoformat(),'asof':asof.isoformat(),'status':'NOT_PRESENT','vintage_rows':len(vintage),'history_rows':len(hist)})
             continue
         pct=percentile(hist,obs[2])
-        episodes.append({'top':top.isoformat(),'asof':asof.isoformat(),'status':'OBSERVED','observation_date':obs[0].isoformat(),'realtime_start':obs[1].isoformat(),'value':obs[2],'trailing_3y_percentile':pct,'below_median':pct < 50.0})
+        episodes.append({'top':top.isoformat(),'asof':asof.isoformat(),'status':'OBSERVED','observation_date':obs[0].isoformat(),'value':obs[2],'trailing_3y_percentile':pct,'below_median':pct < 50.0,'history_rows':len(hist)})
     observed=[x for x in episodes if x['status']=='OBSERVED']
-    if len(observed) != len(TOPS):
-        verdict='NOT_TESTABLE_SOURCE_UNAVAILABLE'
-    elif sum(x['below_median'] for x in observed) >= 2:
-        verdict='KILL_DISTRIBUTION_WARNING_LANE'
-    else:
-        verdict='NOT_FALSIFIED_ADMIT_ONLY_TO_INCREMENTAL_SHADOW_TEST'
-    return {'contract':'NFCICREDIT_T1_PRE_TOP_v1','verdict':verdict,'rule':'kill if trailing-3y percentile is below median at T-90 for >=2 of 3 frozen BTC tops','tops':[x.isoformat() for x in TOPS],'episodes':episodes,'authority':'RESEARCH_ONLY_NO_EXECUTION','k17':'DETERMINISTIC_INPUT_REQUIRED'}
+    if len(observed) != len(TOPS): verdict='NOT_TESTABLE_SOURCE_UNAVAILABLE'
+    elif sum(x['below_median'] for x in observed) >= 2: verdict='KILL_DISTRIBUTION_WARNING_LANE'
+    else: verdict='NOT_FALSIFIED_ADMIT_ONLY_TO_INCREMENTAL_SHADOW_TEST'
+    return {'contract':'NFCICREDIT_T1_PRE_TOP_v1','verdict':verdict,'rule':'kill if trailing-3y percentile is below median at T-90 for >=2 of 3 frozen BTC tops','tops':[x.isoformat() for x in TOPS],'episodes':episodes,'authority':'RESEARCH_ONLY_NO_EXECUTION','k17':'DETERMINISTIC_VINTAGE_INPUT_REQUIRED'}
 
 
 def main():
