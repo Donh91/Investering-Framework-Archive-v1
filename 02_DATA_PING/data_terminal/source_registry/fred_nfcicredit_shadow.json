@@ -1,0 +1,17 @@
+{
+  "registry_version": "1.0",
+  "status": "RESEARCH_CANDIDATE_NO_AUTHORITY",
+  "source_id": "FRED_NFCICREDIT_SHADOW",
+  "series": "NFCICREDIT",
+  "provider": "Federal Reserve Bank of Chicago via FRED/ALFRED",
+  "frequency": "WEEKLY",
+  "purpose": "isolated credit-conditions candidate; test incremental value without NFCI risk/leverage containment",
+  "historical_research_source": "ALFRED_VINTAGES_REQUIRED_FOR_REVISED_HISTORY",
+  "live_shadow_source": "FRED_DETERMINISTIC_CSV",
+  "distribution_warning_authority": false,
+  "portfolio_action": false,
+  "k16_containment": "PASS_CANDIDATE_ONLY: credit subindex is narrower than NFCI composite; still requires empirical redundancy testing",
+  "k17_numeric_evidence": "REQUIRED: deterministic parsing, NOT_PRESENT allowed, source coverage validation, sanity anchor, provenance hash; LLM-extracted numeric observations forbidden",
+  "admission_gate": "T1_PRE_TOP_FALSIFICATION_THEN_INCREMENTAL_VALUE",
+  "notes": "Do not substitute NFCI composite. Do not infer historical observations from summaries or charts."
+}
