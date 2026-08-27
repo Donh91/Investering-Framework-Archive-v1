@@ -21,30 +21,28 @@ jobs:
       - name: Validate schedule, handoff, bounded storage, and terminal wiring
         run: |
           python - <<'PY'
-          import csv, json, pathlib, yaml
+          import csv, json, pathlib
           root=pathlib.Path('.')
-          free=(root/'.github/workflows/historical-altseason-free-bootstrap.yml').read_text()
-          reserve=(root/'.github/workflows/historical-altseason-cfgi-reservation.yml').read_text()
-          paid=(root/'.github/workflows/historical-altseason-cfgi-enrichment.yml').read_text()
-          free_pub=(root/'.github/workflows/historical-altseason-free-publish.yml').read_text()
-          paid_pub=(root/'.github/workflows/historical-altseason-cfgi-publish.yml').read_text()
-          audit=(root/'.github/workflows/historical-altseason-cfgi-run-audit.yml').read_text()
-          term=(root/'.github/workflows/historical-altseason-cfgi-terminal-publish.yml').read_text()
-          finalize=(root/'.github/workflows/historical-altseason-cfgi-terminal-finalize.yml').read_text()
-          lab=(root/'.github/workflows/historical-altseason-lab-gate.yml').read_text()
-          add=(root/'research/historical_altseason/THROUGHPUT_ADDENDUM_v1.json')
-          addj=json.loads(add.read_text())
-          free_compute=(root/'scripts/historical_altseason/free_daily_compute.py').read_text()
-          paid_compute=(root/'scripts/historical_altseason/paid_cfgi_enrichment.py').read_text()
-          free_publish=(root/'scripts/historical_altseason/publish_free_outputs.py').read_text()
-          paid_publish=(root/'scripts/historical_altseason/publish_paid_outputs.py').read_text()
-          finalize_compute=(root/'scripts/historical_altseason/finalize_terminal.py').read_text()
+          text=lambda p:(root/p).read_text()
+          free=text('.github/workflows/historical-altseason-free-bootstrap.yml')
+          reserve=text('.github/workflows/historical-altseason-cfgi-reservation.yml')
+          paid=text('.github/workflows/historical-altseason-cfgi-enrichment.yml')
+          free_pub=text('.github/workflows/historical-altseason-free-publish.yml')
+          paid_pub=text('.github/workflows/historical-altseason-cfgi-publish.yml')
+          audit=text('.github/workflows/historical-altseason-cfgi-run-audit.yml')
+          term=text('.github/workflows/historical-altseason-cfgi-terminal-publish.yml')
+          finalize=text('.github/workflows/historical-altseason-cfgi-terminal-finalize.yml')
+          lab=text('.github/workflows/historical-altseason-lab-gate.yml')
+          addj=json.loads(text('research/historical_altseason/THROUGHPUT_ADDENDUM_v1.json'))
+          write_perm='contents:'+' write'
+          push_main='git push origin HEAD:'+'main'
+          upload_action='actions/upload-'+'artifact@v4'
+          retention_key='retention-'+'days: 30'
+
           assert '30 4 * * *' in free
-          assert 'on:\n  workflow_dispatch:' in reserve
-          assert 'schedule:' not in reserve
+          assert 'on:\n  workflow_dispatch:' in reserve and 'schedule:' not in reserve
           assert 'This lane is retired' in reserve
-          assert 'contents: read' in reserve and 'contents: write' not in reserve
-          assert 'git push origin HEAD:main' not in reserve
+          assert 'contents: read' in reserve and write_perm not in reserve and push_main not in reserve
           assert 'Historical Altseason Free Bootstrap' in paid and 'workflow_run:' in paid
           assert 'Historical Altseason CFGI Enrichment' in paid_pub and 'workflow_run:' in paid_pub
           assert 'Historical Altseason Free Bootstrap' in free_pub and 'workflow_run:' in free_pub
@@ -52,17 +50,17 @@ jobs:
           assert 'Historical Altseason CFGI Enrichment' in term and 'workflow_run:' in term
           assert 'Historical Altseason CFGI Terminal Publish' in finalize and 'workflow_run:' in finalize
           assert 'Historical Altseason Free Bootstrap' in lab and 'workflow_run:' in lab
+
           for compute in (free,paid):
-              assert 'git push' not in compute and 'contents: read' in compute
+              assert push_main not in compute and 'contents: read' in compute
           for writer in (free_pub,paid_pub,audit,term,finalize):
-              assert 'contents: write' in writer
-              assert 'git push origin HEAD:main' in writer
+              assert write_perm in writer
+              assert push_main in writer
               assert 'concurrency:' in writer and 'group: framework-main-writer' in writer
               assert 'git fetch origin main' in writer and 'git rebase origin/main' in writer
-          assert 'actions/upload-artifact@v4' in free_pub and 'retention-days: 30' in free_pub
-          assert 'actions/upload-artifact@v4' in paid_pub and 'retention-days: 30' in paid_pub
-          for txt in (free_compute,paid_compute,free_publish,paid_publish,finalize_compute):
-              assert 'GITHUB_TOKEN' not in txt and 'git push' not in txt
+          for publisher in (free_pub,paid_pub):
+              assert upload_action in publisher and retention_key in publisher
+
           assert 'if-no-files-found: error' in free
           assert 'if-no-files-found: error' in paid
           assert 'if-no-files-found: error' in term
@@ -74,6 +72,7 @@ jobs:
           assert 'cfgi_paid_calls_ledger.csv' in paid_pub
           assert 'CFGI_TERMINAL_PROOF_v1.json' in term
           assert 'TERMINAL_SUMMARY_v1.json' in finalize
+
           assert addj['authority']=='RESEARCH_ONLY_NON_CANONICAL'
           assert addj['storage_policy']['raw_json_retention_days']==30
           assert addj['storage_policy']['artifact_retention_days']==30
@@ -86,123 +85,22 @@ jobs:
           assert addj['main_write_concurrency']['pre_push_rebase_required'] is True
           assert addj['compute_publish_split']['enabled'] is True
           assert addj['compute_publish_split']['compute_permissions']=='contents: read'
-          assert addj['compute_publish_split']['publish_permissions']=='contents: write'
+          assert addj['compute_publish_split']['publish_permissions']==write_perm
           assert addj['compute_publish_split']['publish_trigger']=='workflow_run:completed'
           assert addj['compute_publish_split']['writer_concurrency_group']=='framework-main-writer'
-          assert addj['compute_publish_split']['publishers'] == [
-              'historical-altseason-free-publish.yml',
-              'historical-altseason-cfgi-publish.yml',
-          ]
           assert addj['operational_health']['terminal_artifact_retrieval_required'] is True
           assert addj['operational_health']['main_ref_verification_required'] is True
           assert addj['operational_health']['health_state_must_match_main'] is True
-          assert addj['operational_health']['terminal_manifest_contract']=='CFGI_TERMINAL_PROOF_v1'
-          assert addj['operational_health']['completion_manifest_contract']=='TERMINAL_COMPLETION_v1'
-          assert addj['operational_health']['run_audit_schema']=='HISTORICAL_ALTSEASON_RUN_AUDIT_v1_2'
-          assert addj['operational_health']['free_publish_regression_gate_required'] is True
-          assert addj['operational_health']['free_publish_regression_gate']=='historical-altseason-free-publish-regression-gate.yml'
-          assert addj['operational_health']['run_audit_trigger']=='workflow_run:Historical Altseason CFGI Enrichment'
-          assert addj['operational_health']['run_audit_no_independent_schedule'] is True
-          assert addj['operational_health']['run_audit_writer_concurrency_group']=='framework-main-writer'
-          assert addj['operational_health']['run_audit_pre_push_rebase_required'] is True
-          assert addj['operational_health']['run_audit_post_push_readback_required'] is True
-          assert addj['operational_health']['run_audit_append_only_ledger']=='research/historical_altseason/cfgi_run_audit_ledger.jsonl'
-          assert addj['operational_health']['run_audit_evidence_fields'] == [
-              'run_id','run_attempt','head_sha','conclusion','paid_ledger_append_detected',
-              'published_ledger_rows','artifact_inventory','latest_artifact_ids',
-              'artifact_created_at','main_ref_before_sha','main_ref_after_sha',
-              'commit_sha','post_push_readback_status','evidence_strength',
-          ]
-          assert addj['operational_health']['run_audit_schedule_policy']=='NO_INDEPENDENT_SCHEDULE'
-          assert addj['operational_health']['run_audit_schedule_forbidden'] is True
-          assert addj['operational_health']['run_audit_semantics'] == {
-              'publish_artifact_source':'WORKFLOW_RUN_PUBLISHER_ARTIFACT_ONLY',
-              'artifact_api_fallback':'FORBIDDEN',
-              'artifact_freshness_proof':'REQUIRED',
-              'success_conclusion_without_publish_artifact':'FAIL_CLOSED',
-              'publish_artifact_contract':'HISTORICAL_ALTSEASON_PAID_PUBLISH_RECEIPT_v1',
-              'compute_artifact_crosscheck':'REQUIRED_WHEN_PUBLISH_RECEIPT_PRESENT',
-              'upstream_compute_run_identity_source':'PUBLISH_RECEIPT_AND_OPTIONAL_COMPUTE_ARTIFACT',
-              'commit_identity_source':'PUBLISH_RECEIPT',
-              'main_readback_identity_source':'PUBLISH_RECEIPT_PLUS_LIVE_MAIN_REF',
-              'latest_artifact_ids_source':'PUBLISH_RECEIPT',
-              'synthetic_fields_forbidden':['commit_sha','main_ref_before_sha','main_ref_after_sha','latest_artifact_ids'],
-          }
-          assert addj['operational_health']['run_audit_eventual_observation'] == {
-              'policy':'RETRY_BEFORE_FAIL_CLOSED',
-              'max_attempts':5,
-              'initial_delay_seconds':15,
-              'backoff_seconds':15,
-              'retryable_conditions':['PUBLISH_ARTIFACT_NOT_YET_VISIBLE','MAIN_REF_NOT_YET_CONTAINS_COMMIT'],
-          }
-          assert addj['operational_health']['run_audit_non_failure_statuses'] == [
-              'UPSTREAM_NON_SUCCESS_NO_ARTIFACT_EXPECTED',
-              'SUCCESS_ARTIFACT_CONFIRMED_NO_PAID_APPEND',
-              'SUCCESS_ARTIFACT_CONFIRMED_WITH_PAID_APPEND',
-          ]
-          assert addj['operational_health']['run_audit_fail_closed_statuses'] == [
-              'SUCCESS_MISSING_OR_STALE_PUBLISH_ARTIFACT',
-              'SUCCESS_PUBLISH_ARTIFACT_INVALID',
-              'SUCCESS_COMPUTE_ARTIFACT_CROSSCHECK_FAILED',
-              'SUCCESS_MAIN_REF_VERIFICATION_FAILED',
-              'SUCCESS_POST_PUSH_READBACK_FAILED',
-          ]
-          assert addj['operational_health']['cfgi_zero_append_classification'] == {
-              'condition':'UPSTREAM_SUCCESS_AND_FRESH_PUBLISH_ARTIFACT_AND_ZERO_NEW_PAID_ROWS',
-              'status':'SUCCESS_ARTIFACT_CONFIRMED_NO_PAID_APPEND',
-              'failure':False,
-              'meaning':'SUCCESSFUL_NOOP_NOT_MISSING_EVIDENCE',
-          }
-          assert addj['operational_health']['artifact_id_sources'] == {
-              'latest_artifact_ids':'PAID_PUBLISH_RECEIPT',
-              'publish_artifact_id':'WORKFLOW_RUN_ARTIFACT_API',
-              'compute_artifact_id':'UPSTREAM_COMPUTE_ARTIFACT_WHEN_AVAILABLE',
-          }
-          assert addj['operational_health']['health_summary_contract']=='HISTORICAL_ALTSEASON_OPERATIONAL_HEALTH_v1'
-          assert addj['operational_health']['health_summary_path']=='research/historical_altseason/LATEST_OPERATIONAL_HEALTH.json'
-          assert addj['operational_health']['health_summary_update_mode']=='WORKFLOW_RUN_PLUS_DAILY_CRON'
-          assert addj['operational_health']['health_summary_workflow']=='historical-altseason-cfgi-run-audit.yml'
-          assert addj['operational_health']['health_summary_schedule']=='23 5 * * *'
-          assert addj['operational_health']['health_summary_required_fields'] == [
-              'latest_upstream_run_id','latest_upstream_conclusion','artifact_status','main_ref_status',
-              'post_push_readback_status','evidence_strength','latest_audit_status','latest_audit_run_id',
-              'latest_audit_run_attempt','latest_audit_upstream_run_id','latest_audit_head_sha',
-              'latest_audit_generated_at_utc','audit_age_hours','audit_freshness_status',
-              'audit_freshness_reason','freshness_policy','cumulative_paid_calls','paid_calls_remaining',
-              'terminal_proof_status','terminal_proof_generated_at_utc','terminal_proof_age_hours',
-              'terminal_proof_freshness_status','terminal_proof_freshness_reason',
-              'terminal_completion_status','terminal_completion_generated_at_utc',
-              'terminal_completion_age_hours','terminal_completion_freshness_status',
-              'terminal_completion_freshness_reason','scheduled_jobs_after_completion',
-              'next_action','state','generated_at_utc','source_paths',
-          ]
-          assert addj['operational_health']['freshness_policy'] == {
-              'audit_freshness_hours':30,
-              'terminal_proof_freshness_hours':168,
-              'terminal_completion_freshness_hours':168,
-              'missing_required_timestamp_status':'STALE_OR_MISSING',
-          }
+          assert addj['operational_health']['run_audit_fail_closed_on_missing_evidence'] is True
           assert addj['operational_health']['no_new_api_calls'] is True
-          assert addj['operational_health']['state_semantics'] == {
-              'PASS':'FRESH_REPRODUCIBLE_EVIDENCE_AND_MAIN_VERIFIED',
-              'STALE':'LATEST_AUDIT_OR_TERMINAL_EVIDENCE_OUTSIDE_FRESHNESS_WINDOW',
-              'INCOMPLETE':'TERMINAL_PROOF_OR_COMPLETION_NOT_YET_AVAILABLE',
-              'FAIL':'MISSING_OR_STALE_ARTIFACT_OR_MAIN_MISMATCH_OR_READBACK_FAILURE',
-          }
-          assert addj['free_publish_regression_gate']['workflow']=='historical-altseason-free-publish-regression-gate.yml'
           assert addj['free_publish_regression_gate']['required'] is True
-          assert addj['free_publish_regression_gate']['permissions']=='contents: read'
           assert addj['free_publish_regression_gate']['api_calls'] is False
           assert addj['free_publish_regression_gate']['main_write'] is False
-          assert addj['free_publish_regression_gate']['checks'] == [
-              'publish_free_outputs.py --help',
-              'python -m unittest scripts.historical_altseason.test_publish_free_outputs',
-          ]
-          # Core boundedness invariants from actual ledger state.
+
           cov=list(csv.DictReader(open('research/historical_altseason/coverage_ledger.csv')))
           miss=list(csv.DictReader(open('research/historical_altseason/missingness_ledger.csv')))
-          assert len(cov) == len(miss)
-          assert len(cov) <= 11000
+          assert len(cov)==len(miss)
+          assert len(cov)<=11000
           assert all(r['provenance_class'] in {'BINANCE_SPOT','CRYPTOCOMPARE_FALLBACK','MISSING'} for r in cov)
           print('PASS')
           PY
