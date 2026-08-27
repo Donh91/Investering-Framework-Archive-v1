@@ -1,0 +1,24 @@
+{
+  "experiment_id": "COPPER_GOLD_SLOW_CYCLE_SHADOW_v1",
+  "status": "PREREGISTERED_PROSPECTIVE_SHADOW",
+  "authority": "NO_PORTFOLIO_EXECUTION_NO_CANONICAL_STATE_CHANGE",
+  "hypotheses": [
+    "settled Copper/Gold state may add incremental context for distinguishing mid-cycle pullback from terminal distribution",
+    "decision-relevant value must survive Jan-Feb versus Feb-Mar anchor sensitivity",
+    "component decomposition may reveal whether ratio movement is copper-led or gold-led"
+  ],
+  "baseline": ["liquidity", "ETF", "stablecoins", "VIX", "rates/yield curve", "dollar", "breadth", "BTC dominance", "ETH/BTC", "spot flow", "funding/OI", "CFGI", "transition/distribution"],
+  "features": ["raw ratio", "monthly change", "settled 2M MACD 12/26/9", "RSI14", "turning states", "anchor disagreement"],
+  "negative_control": "+91 calendar day placebo for transition events",
+  "kill_criteria": {
+    "K01": "source identity or units become ambiguous",
+    "K02": "lookahead or incomplete-bar use is required to retain apparent edge",
+    "K03": "decision-relevant conclusion depends on one 2M anchor only",
+    "K04": "no incremental divergence from baseline after prospective maturation",
+    "K05": "false positives dominate healthy continuation",
+    "K06": "threshold tuning against known BTC tops becomes necessary",
+    "K07": "small-N prevents useful discrimination after sufficient prospective time",
+    "K16": "containment: candidate is structurally contained by an existing retained composite or information family"
+  },
+  "promotion": "forbidden without separate evidence review"
+}
