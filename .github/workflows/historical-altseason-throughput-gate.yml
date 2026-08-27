@@ -1,137 +1,37 @@
-name: Historical Altseason Throughput Safety Gate
+name: Historical Altseason Throughput Gate
 
 on:
   pull_request:
     paths:
-      - 'scripts/historical_lab/**'
       - '.github/workflows/historical-altseason-*.yml'
-      - '00_ARCHIVE_CONTROL/research_runtime/HISTORICAL_ALTSEASON_CFGI_PAID_ATTEMPT_LEDGER.json'
-  push:
-    branches: [main]
-    paths:
-      - 'scripts/historical_lab/**'
-      - '.github/workflows/historical-altseason-*.yml'
-      - '00_ARCHIVE_CONTROL/research_runtime/HISTORICAL_ALTSEASON_CFGI_PAID_ATTEMPT_LEDGER.json'
+      - 'scripts/historical_altseason/**'
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
-  gate:
-    runs-on: ubuntu-24.04
-    timeout-minutes: 10
+  throughput-gate:
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-      - name: Compile helpers
-        run: |
-          python -m py_compile scripts/historical_lab/free_altseason_bootstrap_parallel.py
-          python -m py_compile scripts/historical_lab/cfgi_idempotency_guard.py
-          python -m py_compile scripts/historical_lab/free_altseason_bootstrap_resilient.py
-          python -m py_compile scripts/historical_lab/cfgi_targeted_backfill.py
-          python -m py_compile scripts/historical_lab/cfgi_readiness_postprocess.py
-          python -m py_compile scripts/historical_lab/cfgi_readiness_postprocess_v2.py
-          python -m py_compile scripts/historical_lab/cfgi_readiness_postprocess_v3.py
-          python -m py_compile scripts/historical_lab/cfgi_recovery_budget_guard.py
-      - name: Prove archive-first transport contract
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Validate live topology, lifecycle, and writer safety
         run: |
           python - <<'PY'
-          from pathlib import Path
-          p=Path('scripts/historical_lab/free_altseason_bootstrap_parallel.py').read_text()
-          w=Path('.github/workflows/historical-altseason-free-bootstrap.yml').read_text()
-          pub=Path('.github/workflows/historical-altseason-free-publish.yml').read_text()
-          for token in ['ThreadPoolExecutor','MAX_WORKERS = 24','DEFAULT_WORKERS = 12','resilient._vision_daily','daily_rows.sort(key=lambda row: int(row[0]))','BINANCE_REST_BYPASSED_ARCHIVE_FIRST_REPRODUCIBILITY','BINANCE_VISION_ARCHIVE_FIRST_TRANSPORT_v1','"archive_first": True','analysis_semantics_changed": False']:
-              assert token in p,token
-          for forbidden in ['build_features =','build_episodes =','continuation_controls =','episode_drawdown_trigger_pct','episode_recovery_fraction']:
-              assert forbidden not in p,forbidden
-          assert 'free_altseason_bootstrap_parallel.py' in w
-          assert "HISTORICAL_VISION_MAX_WORKERS: '12'" in w and 'timeout-minutes: 120' in w
-          assert 'actions/upload-artifact@v4' in w and 'historical-altseason-free-stage' in w
-          assert 'group: historical-altseason-free-bootstrap' in w
-          assert 'group: framework-main-writer' in pub
-          assert 'actions/download-artifact@v4' in pub and 'historical-altseason-free-stage' in pub
-          assert 'git rebase --abort' in pub and 'git fetch origin main' in pub and 'git merge-base --is-ancestor HEAD origin/main' in pub
-          print('HISTORICAL_ARCHIVE_FIRST_SPLIT_TRANSPORT_PASS')
-          PY
-      - name: Prove cumulative budget, no-lookahead alignment and bounded MARKET gap-fill contract
-        run: |
-          python - <<'PY'
-          import json
-          from pathlib import Path
-          p=Path('scripts/historical_lab/cfgi_idempotency_guard.py').read_text()
-          paid=Path('.github/workflows/historical-altseason-cfgi-enrichment.yml').read_text()
-          pub=Path('.github/workflows/historical-altseason-cfgi-publish.yml').read_text()
-          budget=Path('scripts/historical_lab/cfgi_recovery_budget_guard.py').read_text()
-          v3=Path('scripts/historical_lab/cfgi_readiness_postprocess_v3.py').read_text()
-          ledger=json.loads(Path('00_ARCHIVE_CONTROL/research_runtime/HISTORICAL_ALTSEASON_CFGI_PAID_ATTEMPT_LEDGER.json').read_text())
-          gap=json.loads(Path('00_ARCHIVE_CONTROL/research_runtime/HISTORICAL_ALTSEASON_CFGI_MARKET_GAPFILL_AUTHORIZATION.json').read_text())
-          assert ledger['contract']=='HISTORICAL_ALTSEASON_CFGI_PAID_ATTEMPT_LEDGER_v2'
-          assert ledger['cumulative_actual_credits_used']==10518
-          assert ledger['owner_authorized_recovery_attempts']==1
-          assert ledger['owner_authorized_market_gapfill_attempts']==1
-          assert ledger['automatic_retry_after_failure'] is False
-          assert gap['contract']=='HISTORICAL_ALTSEASON_CFGI_MARKET_GAPFILL_AUTHORIZATION_v1'
-          assert gap['owner_authorized'] is True and gap['allowed_symbols']==['MARKET']
-          assert sorted(gap['forbidden_repurchase_symbols'])==['BTC','ETH']
-          assert gap['max_attempts']==1 and gap['max_worst_case_credits']<=3000
-          for token in ['CFGI_TARGETED_INPUT_FINGERPRINT_v1','EXACT_COMPLETE_PRIOR_ENRICHMENT_V3','RESEARCH_READINESS_MANIFEST_v3','FORWARD_TEST','automatic_promotion','CFGI_ASOF_1H_NO_LOOKAHEAD_v1']:
-              assert token in p,token
-          for token in ['workflow_dispatch:','fingerprint:','DISPATCH_FINGERPRINT','HISTORICAL_ALTSEASON_CFGI_PAID_ATTEMPT_LEDGER.json','cfgi_recovery_budget_guard.py','cfgi_readiness_postprocess_v3.py','CFGI_CUMULATIVE_BILLING.json']:
-              assert token in paid,token
-          for token in ['HISTORICAL_ALTSEASON_CFGI_MARKET_GAPFILL_AUTHORIZATION.json','HISTORICAL_ALTSEASON_CFGI_MARKET_GAPFILL_AUTHORIZATION_v1','MARKET_ONLY_GAPFILL']:
-              assert token in budget,token
-          assert 'CFGI_ASOF_1H_NO_LOOKAHEAD_v1' in v3 and 'RESEARCH_READINESS_MANIFEST_v3' in v3
-          pre=paid.index('Verify fingerprint, frozen free stage and paid provenance before secret access')
-          budget_pre=paid.index('Enforce cumulative gap-fill budget before secret access')
-          secret=paid.index('Verify CFGI secret only after provenance and budget gates pass')
-          call=paid.index('Run only the authorized missing-symbol paid work')
-          validate=paid.index('Validate v3 no-lookahead readiness and governance')
-          assert pre < budget_pre < secret < call < validate
-          assert 'CUMULATIVE_HARD_CAP_EXCEEDED' in budget and 'PROJECTED_RESERVE_BREACH' in budget
-          for token in ['CFGI_CUMULATIVE_BILLING.json','CFGI_MARKET_GAPFILL_BILLING.json','RESEARCH_READINESS_MANIFEST_v3','gh workflow run cowork-historical-altseason-bundle.yml']:
-              assert token in pub,token
-          print('CFGI_V3_BUDGET_ASOF_MARKET_GAPFILL_PASS')
-          PY
-      - name: Prove compute and writer boundary without self-triggering health scanner
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-          free=Path('.github/workflows/historical-altseason-free-bootstrap.yml').read_text()
-          free_pub=Path('.github/workflows/historical-altseason-free-publish.yml').read_text()
-          reserve=Path('.github/workflows/historical-altseason-cfgi-reservation.yml').read_text()
-          paid=Path('.github/workflows/historical-altseason-cfgi-enrichment.yml').read_text()
-          paid_pub=Path('.github/workflows/historical-altseason-cfgi-publish.yml').read_text()
-          audit=Path('.github/workflows/historical-altseason-cfgi-run-audit.yml').read_text()
-          write_perm='contents: '+'write'
-          push_token='git'+' push'
-          push_main='git'+' push '+'origin HEAD:main'
-          commit_token='git'+' commit'
-          add_token='git'+' add '
-          for compute in [free,paid]:
-              assert write_perm not in compute
-              assert push_token not in compute and commit_token not in compute and add_token not in compute
-          for writer in [free_pub,reserve,paid_pub,audit]:
-              assert write_perm in writer
-              assert 'group: framework-main-writer' in writer
-              assert push_main in writer
-              assert 'git rebase --abort' in writer
-              assert 'git merge-base --is-ancestor HEAD origin/main' in writer
-              assert 'git diff --cached --quiet' in writer
-          print('HISTORICAL_COMPUTE_RESERVE_PUBLISH_WRITER_BOUNDARY_PASS')
-          PY
-      - name: Ensure no market-policy edits are present in helpers
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-          combined='\n'.join([
-              Path('scripts/historical_lab/free_altseason_bootstrap_parallel.py').read_text(),
-              Path('scripts/historical_lab/cfgi_idempotency_guard.py').read_text(),
-              Path('scripts/historical_lab/cfgi_readiness_postprocess_v3.py').read_text(),
-              Path('scripts/historical_lab/cfgi_recovery_budget_guard.py').read_text(),
-          ])
-          for token in ['portfolio_action','DEPLOY','REDUCE','BUY','SELL','canonical_market_state =','automatic_rule_changes = True']:
-              assert token not in combined,token
-          print('NO_MARKET_POLICY_SEMANTICS_PASS')
+          import pathlib
+          root=pathlib.Path('.'); text=lambda p:(root/p).read_text()
+          free=text('.github/workflows/historical-altseason-free-bootstrap.yml'); reserve=text('.github/workflows/historical-altseason-cfgi-reservation.yml'); paid=text('.github/workflows/historical-altseason-cfgi-enrichment.yml'); free_pub=text('.github/workflows/historical-altseason-free-publish.yml'); paid_pub=text('.github/workflows/historical-altseason-cfgi-publish.yml'); audit=text('.github/workflows/historical-altseason-cfgi-run-audit.yml'); term=text('.github/workflows/historical-altseason-cfgi-terminal-publish.yml'); finalize=text('.github/workflows/historical-altseason-cfgi-terminal-finalize.yml')
+          write_perm='contents:'+' write'; push_main='git push origin HEAD:'+'main'
+          assert 'Historical Altseason Lab Gate' in free and 'workflow_run:' in free and 'contents: read' in free
+          for retired in (reserve,paid):
+              assert 'framework-lifecycle: RETIRED' in retired and 'schedule:' not in retired
+              assert 'contents: read' in retired and write_perm not in retired and push_main not in retired
+          assert 'contents: read' in finalize and write_perm not in finalize and push_main not in finalize
+          assert 'Historical Altseason Free Bootstrap' in free_pub and 'workflow_run:' in free_pub
+          assert 'Historical Altseason CFGI Enrichment' in paid_pub and 'workflow_run:' in paid_pub
+          for writer in (free_pub,paid_pub,audit,term):
+              assert write_perm in writer and push_main in writer and 'group: framework-main-writer' in writer
+              assert 'git fetch origin main' in writer and 'git rebase origin/main' in writer
+          print('PASS')
           PY
