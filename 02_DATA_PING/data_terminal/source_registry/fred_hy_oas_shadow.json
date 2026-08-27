@@ -1,11 +1,13 @@
 {
-  "registry_version": "1.0",
-  "status": "PASSIVE_CREDIT_CONTEXT_ONLY",
+  "registry_version": "1.1",
+  "status": "DEPRECATED_SOURCE_LIMITATION_NO_NEW_COLLECTION",
   "source_id": "FRED_HY_OAS_SHADOW",
   "series": "BAMLH0A0HYM2",
-  "provider": "Federal Reserve Bank of St. Louis FRED",
-  "purpose": "credit context only; universal crypto pre-top warning hypothesis rejected",
+  "provider": "Federal Reserve Bank of St. Louis FRED / ICE BofA",
+  "purpose": "negative learning only; do not use as framework historical credit owner",
   "distribution_warning_authority": false,
   "portfolio_action": false,
-  "kill_note": "T-1 historical sign test falsifies universal pre-top widening claim; retain only as cheap credit context if operationally useful"
+  "historical_backtest_eligible": false,
+  "replacement_candidate": "NFCICREDIT",
+  "kill_note": "FRED public redistribution is now rolling/limited and cannot reproduce 2013, 2017 or 2021 top tests. Earlier universal pre-top-warning recommendation is withdrawn. Existing observations may be retained as provenance-tagged negative learning but no new collection is scheduled."
 }
