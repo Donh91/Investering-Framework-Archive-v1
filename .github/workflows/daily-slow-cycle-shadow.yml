@@ -30,16 +30,34 @@ jobs:
         run: |
           python scripts/data_terminal/world_bank_copper_gold_owner.py \
             --output-root 03_DAILY_CAPTURE_LOGS/slow_cycle/copper_gold
-      - name: Collect passive HY OAS credit context
-        continue-on-error: true
+      - name: Collect NFCICREDIT live shadow context
         run: |
           python scripts/data_terminal/fred_csv_collector.py \
-            --series BAMLH0A0HYM2 \
-            --output-dir /tmp/hy-oas
-          mkdir -p 03_DAILY_CAPTURE_LOGS/slow_cycle/hy_oas
-          cp /tmp/hy-oas/latest_terminal_state.json 03_DAILY_CAPTURE_LOGS/slow_cycle/hy_oas/LATEST.json
+            --series NFCICREDIT \
+            --output-dir /tmp/nfcicredit
+          mkdir -p 03_DAILY_CAPTURE_LOGS/slow_cycle/nfcicredit
+          cp /tmp/nfcicredit/latest_terminal_state.json 03_DAILY_CAPTURE_LOGS/slow_cycle/nfcicredit/LATEST.json
+      - name: Run preregistered NFCICREDIT ALFRED T-1 once when key is available
+        env:
+          FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
+        shell: bash
+        run: |
+          if [ -z "${FRED_API_KEY:-}" ]; then
+            echo 'FRED_API_KEY unavailable; T-1 remains NOT_RUN rather than fabricating history.'
+            exit 0
+          fi
+          if [ -f 03_DAILY_CAPTURE_LOGS/slow_cycle/nfcicredit/T1_PRE_TOP_v1.json ]; then
+            echo 'Frozen T-1 result already exists; not rerunning against moving vintages.'
+            exit 0
+          fi
+          python scripts/research/fetch_nfcicredit_alfred_vintages.py \
+            --output-csv /tmp/nfcicredit_t1_vintages.csv \
+            --provenance 03_DAILY_CAPTURE_LOGS/slow_cycle/nfcicredit/T1_ALFRED_PROVENANCE_v1.json
+          python scripts/research/nfcicredit_t1_pre_top_falsification.py \
+            --csv /tmp/nfcicredit_t1_vintages.csv \
+            --output 03_DAILY_CAPTURE_LOGS/slow_cycle/nfcicredit/T1_PRE_TOP_v1.json
       - name: Run deterministic tests
-        run: python -m pytest -q tests/data_terminal/test_world_bank_copper_gold_owner.py tests/research/test_hy_oas_pre_top_falsification.py tests/research/test_copper_gold_slow_cycle_event_study.py
+        run: python -m pytest -q tests/data_terminal/test_world_bank_copper_gold_owner.py tests/research/test_hy_oas_pre_top_falsification.py tests/research/test_copper_gold_slow_cycle_event_study.py tests/research/test_nfcicredit_t1_pre_top_falsification.py
       - name: Commit only changed slow-cycle evidence
         shell: bash
         run: |
