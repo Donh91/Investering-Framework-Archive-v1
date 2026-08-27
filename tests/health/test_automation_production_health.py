@@ -468,6 +468,40 @@ def test_live_workflows_stops_after_short_registry_page(monkeypatch) -> None:
     assert len([url for url in calls if "/actions/workflows?" in url]) == 1
 
 
+def test_live_workflows_fetches_scheduled_history_separately_from_manual_runs(monkeypatch) -> None:
+    def fake_api_json(url: str, token: str) -> dict:
+        if "/actions/workflows?" in url:
+            return {"workflows": [{"id": 1, "path": ".github/workflows/weekly.yml"}]}
+        if "event=schedule" in url:
+            return {
+                "workflow_runs": [
+                    {
+                        "id": 10,
+                        "event": "schedule",
+                        "status": "completed",
+                        "conclusion": "success",
+                        "created_at": "2026-08-24T06:20:00Z",
+                    }
+                ]
+            }
+        return {
+            "workflow_runs": [
+                {
+                    "id": 11,
+                    "event": "workflow_dispatch",
+                    "status": "completed",
+                    "conclusion": "success",
+                    "created_at": "2026-08-27T12:00:00Z",
+                }
+            ]
+        }
+
+    monkeypatch.setattr(module, "api_json", fake_api_json)
+    live = module.live_workflows("Donh91/test", "token", {"weekly.yml"})
+    assert live["weekly.yml"]["latest_run"]["id"] == 11
+    assert live["weekly.yml"]["latest_scheduled_run"]["id"] == 10
+
+
 def test_live_workflows_does_not_return_partial_registry_after_later_page_failure(monkeypatch) -> None:
     def fake_api_json(url: str, token: str) -> dict:
         if "/actions/workflows?" in url:
@@ -501,6 +535,77 @@ def test_genuinely_unregistered_workflow_remains_visible() -> None:
     status, findings = module.classify(row, datetime(2026, 8, 27, 12, tzinfo=timezone.utc))
     assert status == "AMBER"
     assert "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE" in findings
+
+
+def scheduled_row(tmp_path: Path, crons: list[str], latest_created_at: str, timezone_name: str = "Europe/Copenhagen") -> dict:
+    entries = "\n".join(
+        f"    - cron: '{cron}'\n      timezone: '{timezone_name}'" for cron in crons
+    )
+    path = write_workflow(
+        tmp_path,
+        f"name: Cadence Test\non:\n  schedule:\n{entries}\njobs:\n  x:\n    steps:\n      - run: echo ok\n",
+    )
+    row = module.workflow_static(path)
+    row["live"] = {
+        "state": "active",
+        "latest_run": {
+            "event": "schedule",
+            "status": "completed",
+            "conclusion": "success",
+            "created_at": latest_created_at,
+        },
+        "latest_scheduled_run": {
+            "event": "schedule",
+            "status": "completed",
+            "conclusion": "success",
+            "created_at": latest_created_at,
+        },
+        "failure_streak": 0,
+        "recent_failure_count": 0,
+    }
+    return row
+
+
+def test_weekly_schedule_is_not_stale_before_next_expected_run(tmp_path: Path) -> None:
+    row = scheduled_row(tmp_path, ["20 8 * * 1"], "2026-08-24T06:20:00Z")
+    status, findings = module.classify(row, datetime(2026, 8, 27, 12, tzinfo=timezone.utc))
+    assert status == "GREEN"
+    assert "SCHEDULE_STALE" not in findings
+
+
+def test_weekly_schedule_becomes_stale_after_missed_run_and_tolerance(tmp_path: Path) -> None:
+    row = scheduled_row(tmp_path, ["20 8 * * 1"], "2026-08-24T06:20:00Z")
+    status, findings = module.classify(row, datetime(2026, 8, 31, 13, tzinfo=timezone.utc))
+    assert status == "AMBER"
+    assert "SCHEDULE_STALE" in findings
+
+
+def test_daily_schedule_becomes_stale_after_missed_run(tmp_path: Path) -> None:
+    row = scheduled_row(tmp_path, ["0 1 * * *"], "2026-08-26T23:00:00Z")
+    _, findings = module.classify(row, datetime(2026, 8, 28, 8, tzinfo=timezone.utc))
+    assert "SCHEDULE_STALE" in findings
+
+
+def test_multiple_crons_use_nearest_expected_schedule(tmp_path: Path) -> None:
+    row = scheduled_row(tmp_path, ["20 8 * * 1", "20 8 * * 5"], "2026-08-24T06:20:00Z")
+    _, findings = module.classify(row, datetime(2026, 8, 28, 13, tzinfo=timezone.utc))
+    assert "SCHEDULE_STALE" in findings
+
+
+def test_copenhagen_dst_fallback_is_deterministic() -> None:
+    expected = module._most_recent_expected_run(
+        ["30 2 * * 0"],
+        "Europe/Copenhagen",
+        datetime(2026, 10, 25, 8, tzinfo=timezone.utc),
+    )
+    assert expected == datetime(2026, 10, 25, 1, 30, tzinfo=timezone.utc)
+
+
+def test_unsupported_monthly_cron_is_explicit_and_conservative(tmp_path: Path) -> None:
+    row = scheduled_row(tmp_path, ["0 1 1 * *"], "2026-08-01T23:00:00Z")
+    _, findings = module.classify(row, datetime(2026, 8, 27, 12, tzinfo=timezone.utc))
+    assert "SCHEDULE_CADENCE_UNSUPPORTED" in findings
+    assert "SCHEDULE_STALE" in findings
 
 
 def test_retired_terminal_workflow_does_not_reopen_historical_failures(tmp_path: Path) -> None:
