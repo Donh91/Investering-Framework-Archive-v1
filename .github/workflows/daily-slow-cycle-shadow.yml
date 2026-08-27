@@ -48,9 +48,12 @@ jobs:
           git add 03_DAILY_CAPTURE_LOGS/slow_cycle
           if git diff --cached --quiet; then exit 0; fi
           git commit -m "data: update slow-cycle shadow evidence ${GITHUB_RUN_ID}"
+          pushed=false
           for attempt in 1 2 3; do
             git rebase --abort 2>/dev/null || true
-            if git pull --rebase origin main && git push origin HEAD:main; then exit 0; fi
+            if git pull --rebase origin main && git push origin HEAD:main; then pushed=true; break; fi
             sleep $((attempt * 5))
           done
-          exit 1
+          [ "$pushed" = true ]
+          git fetch origin main
+          git merge-base --is-ancestor HEAD origin/main
