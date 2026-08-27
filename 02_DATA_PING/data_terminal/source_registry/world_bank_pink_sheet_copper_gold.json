@@ -1,0 +1,15 @@
+{
+  "registry_version": "1.0",
+  "status": "PROSPECTIVE_SHADOW_OWNER",
+  "source_id": "WORLD_BANK_PINK_SHEET_COPPER_GOLD_MONTHLY",
+  "provider": "World Bank",
+  "product": "Commodity Markets Pink Sheet - Monthly Prices",
+  "transport": "PUBLIC_XLSX_HTTPS",
+  "credential_required": false,
+  "source_convention": "PERIOD_AVERAGE_MACRO_PROXY_NOT_FUTURES_CONTINUOUS_CONTRACT_CLOSE",
+  "fields": {"Copper": "USD_PER_METRIC_TON", "Gold": "USD_PER_TROY_OUNCE"},
+  "normalization": {"Copper": "USD_PER_KG", "Gold": "USD_PER_KG", "ratio": "DIMENSIONLESS"},
+  "cadence": "DAILY_FETCH_REVISION_DEDUP; MONTHLY_INFORMATION_CLOCK; 2M_SETTLED_FEATURES",
+  "failure_policy": {"interpolation": false, "forward_fill": false, "silent_fallback": false, "schema_drift": "FAIL_EXPLICITLY"},
+  "authority": {"binding": false, "canonical_acceptance": false, "state_change": false, "portfolio_action": false}
+}
