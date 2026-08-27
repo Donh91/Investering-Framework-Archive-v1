@@ -1,15 +1,38 @@
 {
-  "registry_version": "1.0",
+  "registry_version": "2.0",
   "status": "PROSPECTIVE_SHADOW_OWNER",
   "source_id": "WORLD_BANK_PINK_SHEET_COPPER_GOLD_MONTHLY",
-  "provider": "World Bank",
-  "product": "Commodity Markets Pink Sheet - Monthly Prices",
+  "provider": "World Bank Prospects Group",
+  "product": "Commodity Price Data - The Pink Sheet - Monthly Prices",
+  "url": "https://thedocs.worldbank.org/en/doc/74e8be41ceb20fa0da750cda2f6b9e4e-0050012026/related/CMO-Historical-Data-Monthly.xlsx",
   "transport": "PUBLIC_XLSX_HTTPS",
   "credential_required": false,
   "source_convention": "PERIOD_AVERAGE_MACRO_PROXY_NOT_FUTURES_CONTINUOUS_CONTRACT_CLOSE",
   "fields": {"Copper": "USD_PER_METRIC_TON", "Gold": "USD_PER_TROY_OUNCE"},
-  "normalization": {"Copper": "USD_PER_KG", "Gold": "USD_PER_KG", "ratio": "DIMENSIONLESS"},
+  "normalization": {
+    "Copper": "USD_PER_KILOGRAM",
+    "Gold": "USD_PER_KILOGRAM",
+    "ratio": "DIMENSIONLESS",
+    "formula": "(copper_usd_per_metric_ton / 1000) / (gold_usd_per_troy_ounce / 0.0311034768)"
+  },
   "cadence": "DAILY_FETCH_REVISION_DEDUP; MONTHLY_INFORMATION_CLOCK; 2M_SETTLED_FEATURES",
-  "failure_policy": {"interpolation": false, "forward_fill": false, "silent_fallback": false, "schema_drift": "FAIL_EXPLICITLY"},
-  "authority": {"binding": false, "canonical_acceptance": false, "state_change": false, "portfolio_action": false}
+  "freshness": {"stale_after_seconds": 6480000, "stale_is_pass": false},
+  "fallback": "NONE",
+  "failure_policy": {
+    "interpolation": false,
+    "forward_fill": false,
+    "silent_fallback": false,
+    "schema_drift": "FAIL_EXPLICITLY",
+    "unit_drift": "FAIL_EXPLICITLY",
+    "duplicate_timestamp": "FAIL_EXPLICITLY",
+    "historical_gap": "FAIL_EXPLICITLY"
+  },
+  "authority": {
+    "binding": false,
+    "canonical_acceptance": false,
+    "state_change": false,
+    "framework_state_change": false,
+    "portfolio_action": false,
+    "execution_authority": false
+  }
 }
