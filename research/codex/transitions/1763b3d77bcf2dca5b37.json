@@ -1,0 +1,34 @@
+{
+  "allowed_change_scope": [
+    "scripts/health/build_automation_health.py",
+    "tests/health/test_automation_production_health.py",
+    "tests/health/directly related pagination fixtures",
+    ".github/workflows/automation-production-health.yml",
+    ".github/workflows/automation-production-health-gate.yml"
+  ],
+  "branch": "agent/task-20260827-health-pagination",
+  "candidate_id": "codex-automation-health-workflow-pagination-v1",
+  "candidate_path": "research/codex/intake/2026/08/codex-automation-health-workflow-pagination-v1.json",
+  "candidate_sha256": "0af1bf803670f08624c2fd5e833966796937f2fdf5c7d571c83be4246435ea27",
+  "contract": "CODEX_RESEARCH_TRANSITION_RECEIPT_v1",
+  "forbidden_changes": [
+    "API budget",
+    "automatic merge or self-promotion",
+    "canonical authority",
+    "hardcoding workflow names to avoid pagination",
+    "market gates",
+    "model weights",
+    "new policy semantics",
+    "portfolio logic",
+    "suppressing genuine NO_RUN_HISTORY",
+    "workflow schedules unrelated to health observation"
+  ],
+  "objective": "Make Automation Production Health enumerate the complete GitHub Actions workflow registry instead of only the first 100 workflows, so workflows beyond page one are not falsely classified as WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE or NO_RUN_HISTORY and do not mature into spurious CODEX_READY tasks.",
+  "post_fix_gate": "TWO_CONSECUTIVE_AUTOMATION_HEALTH_RUNS_WITH_COMPLETE_REGISTRY_COUNT_AND_NO_PAGE_TRUNCATION_FALSE_POSITIVES",
+  "pr_number": null,
+  "receipt_sha256": "3f8fbb0e2fb7347fe50a918f0b8254d949f71e9f78c29f3e56eb0307afda6898",
+  "recorded_at_utc": "2026-08-27T17:07:24Z",
+  "signature": "1763b3d77bcf2dca5b37",
+  "state": "IN_REMEDIATION",
+  "task_contract_sha256": "5662d4679a741a06025216a29bbaeae3320a82a6554f5930ebafa59a743ab883"
+}
