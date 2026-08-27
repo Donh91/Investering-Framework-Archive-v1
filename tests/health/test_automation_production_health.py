@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import urllib.error
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -411,6 +412,95 @@ jobs: {schedule: {runs-on: ubuntu-latest}}
 def test_leading_streaks() -> None:
     assert module.leading_streak(["success", "success", "failure"], True) == 2
     assert module.leading_streak(["failure", "failure", "success"], False) == 2
+
+
+def test_live_workflows_paginates_registry_and_preserves_page_two_history(monkeypatch) -> None:
+    calls: list[str] = []
+
+    def fake_api_json(url: str, token: str) -> dict:
+        calls.append(url)
+        if "/actions/workflows?" in url:
+            page = 2 if "page=2" in url else 1
+            start = 101 if page == 2 else 1
+            count = 12 if page == 2 else 100
+            return {
+                "workflows": [
+                    {"id": wid, "path": f".github/workflows/w{wid}.yml", "state": "active"}
+                    for wid in range(start, start + count)
+                ]
+            }
+        if "/actions/workflows/112/runs?" in url:
+            return {
+                "workflow_runs": [
+                    {
+                        "id": 1120,
+                        "status": "completed",
+                        "conclusion": "failure",
+                        "created_at": "2026-08-27T12:00:00Z",
+                    }
+                ]
+            }
+        return {"workflow_runs": []}
+
+    monkeypatch.setattr(module, "api_json", fake_api_json)
+    live = module.live_workflows("Donh91/test", "token")
+
+    assert len(live) == 112
+    assert live["w112.yml"]["latest_run"]["id"] == 1120
+    assert live["w112.yml"]["failure_streak"] == 1
+    assert [url for url in calls if "/actions/workflows?" in url] == [
+        "https://api.github.com/repos/Donh91/test/actions/workflows?per_page=100&page=1",
+        "https://api.github.com/repos/Donh91/test/actions/workflows?per_page=100&page=2",
+    ]
+
+
+def test_live_workflows_stops_after_short_registry_page(monkeypatch) -> None:
+    calls: list[str] = []
+
+    def fake_api_json(url: str, token: str) -> dict:
+        calls.append(url)
+        if "/actions/workflows?" in url:
+            return {"workflows": [{"id": 1, "path": ".github/workflows/one.yml"}]}
+        return {"workflow_runs": []}
+
+    monkeypatch.setattr(module, "api_json", fake_api_json)
+    assert list(module.live_workflows("Donh91/test", "token")) == ["one.yml"]
+    assert len([url for url in calls if "/actions/workflows?" in url]) == 1
+
+
+def test_live_workflows_does_not_return_partial_registry_after_later_page_failure(monkeypatch) -> None:
+    def fake_api_json(url: str, token: str) -> dict:
+        if "/actions/workflows?" in url:
+            if "page=2" in url:
+                raise urllib.error.URLError("page two unavailable")
+            return {
+                "workflows": [
+                    {"id": wid, "path": f".github/workflows/w{wid}.yml"}
+                    for wid in range(1, 101)
+                ]
+            }
+        return {"workflow_runs": []}
+
+    monkeypatch.setattr(module, "api_json", fake_api_json)
+    try:
+        module.live_workflows("Donh91/test", "token")
+    except urllib.error.URLError as exc:
+        assert "page two unavailable" in str(exc)
+    else:
+        raise AssertionError("later-page API failure must not return a partial registry")
+
+
+def test_genuinely_unregistered_workflow_remains_visible() -> None:
+    row = {
+        "scheduled": False,
+        "writes_main": False,
+        "static_risks": [],
+        "lifecycle_state": "ACTIVE",
+        "live": None,
+    }
+    status, findings = module.classify(row, datetime(2026, 8, 27, 12, tzinfo=timezone.utc))
+    assert status == "AMBER"
+    assert "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE" in findings
 
 
 def test_retired_terminal_workflow_does_not_reopen_historical_failures(tmp_path: Path) -> None:
