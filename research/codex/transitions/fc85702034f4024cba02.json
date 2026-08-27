@@ -1,0 +1,34 @@
+{
+  "allowed_change_scope": [
+    "scripts/health/build_automation_health.py",
+    "tests/health/test_automation_production_health.py",
+    "tests/health/directly related cadence fixtures",
+    ".github/workflows/automation-production-health.yml",
+    ".github/workflows/automation-production-health-gate.yml"
+  ],
+  "branch": "agent/task-20260828-cadence-aware-health",
+  "candidate_id": "codex-automation-health-cadence-aware-staleness-v1",
+  "candidate_path": "research/codex/intake/2026/08/codex-automation-health-cadence-aware-staleness-v1.json",
+  "candidate_sha256": "89f19ff899e46bd702e5879533a7a771143690dbafe6f7346cb4bad1372c4dcb",
+  "contract": "CODEX_RESEARCH_TRANSITION_RECEIPT_v1",
+  "forbidden_changes": [
+    "API budget",
+    "automatic merge or self-promotion",
+    "canonical authority",
+    "changing producer workflow schedules to satisfy health",
+    "hardcoding individual workflow names",
+    "market gates",
+    "model weights",
+    "new policy semantics",
+    "portfolio logic",
+    "suppressing genuinely missed expected runs"
+  ],
+  "objective": "Replace the universal 36-hour stale threshold for scheduled workflows with deterministic cadence-aware expected-run logic, so valid weekly workflows are not guaranteed to become SCHEDULE_STALE between their legitimate runs while genuinely overdue workflows remain visible.",
+  "post_fix_gate": "TWO_CONSECUTIVE_AUTOMATION_HEALTH_RUNS_WITH_CADENCE_CORRECT_WEEKLY_AND_DAILY_STALE_CLASSIFICATION",
+  "pr_number": null,
+  "receipt_sha256": "795045fe96983247f88e0595fe674004f726150656fbdc98d9e0f167b9d13a15",
+  "recorded_at_utc": "2026-08-27T23:07:27Z",
+  "signature": "fc85702034f4024cba02",
+  "state": "IN_REMEDIATION",
+  "task_contract_sha256": "f89e72039e3145b0a43a01b98e1d393c2a931a835f84e84a3a15b1ee89a13e39"
+}
