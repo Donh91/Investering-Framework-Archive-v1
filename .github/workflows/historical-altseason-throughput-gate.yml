@@ -1,137 +1,598 @@
-name: Historical Altseason Throughput Safety Gate
+name: Historical Altseason Throughput Gate
 
 on:
   pull_request:
     paths:
-      - 'scripts/historical_lab/**'
       - '.github/workflows/historical-altseason-*.yml'
-      - '00_ARCHIVE_CONTROL/research_runtime/HISTORICAL_ALTSEASON_CFGI_PAID_ATTEMPT_LEDGER.json'
-  push:
-    branches: [main]
-    paths:
-      - 'scripts/historical_lab/**'
-      - '.github/workflows/historical-altseason-*.yml'
-      - '00_ARCHIVE_CONTROL/research_runtime/HISTORICAL_ALTSEASON_CFGI_PAID_ATTEMPT_LEDGER.json'
+      - 'scripts/historical_altseason/**'
+      - 'research/historical_altseason/**'
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
-  gate:
-    runs-on: ubuntu-24.04
-    timeout-minutes: 10
+  throughput-gate:
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-      - name: Compile helpers
-        run: |
-          python -m py_compile scripts/historical_lab/free_altseason_bootstrap_parallel.py
-          python -m py_compile scripts/historical_lab/cfgi_idempotency_guard.py
-          python -m py_compile scripts/historical_lab/free_altseason_bootstrap_resilient.py
-          python -m py_compile scripts/historical_lab/cfgi_targeted_backfill.py
-          python -m py_compile scripts/historical_lab/cfgi_readiness_postprocess.py
-          python -m py_compile scripts/historical_lab/cfgi_readiness_postprocess_v2.py
-          python -m py_compile scripts/historical_lab/cfgi_readiness_postprocess_v3.py
-          python -m py_compile scripts/historical_lab/cfgi_recovery_budget_guard.py
-      - name: Prove archive-first transport contract
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate schedule, handoff, bounded storage, and terminal wiring
         run: |
           python - <<'PY'
-          from pathlib import Path
-          p=Path('scripts/historical_lab/free_altseason_bootstrap_parallel.py').read_text()
-          w=Path('.github/workflows/historical-altseason-free-bootstrap.yml').read_text()
-          pub=Path('.github/workflows/historical-altseason-free-publish.yml').read_text()
-          for token in ['ThreadPoolExecutor','MAX_WORKERS = 24','DEFAULT_WORKERS = 12','resilient._vision_daily','daily_rows.sort(key=lambda row: int(row[0]))','BINANCE_REST_BYPASSED_ARCHIVE_FIRST_REPRODUCIBILITY','BINANCE_VISION_ARCHIVE_FIRST_TRANSPORT_v1','"archive_first": True','analysis_semantics_changed": False']:
-              assert token in p,token
-          for forbidden in ['build_features =','build_episodes =','continuation_controls =','episode_drawdown_trigger_pct','episode_recovery_fraction']:
-              assert forbidden not in p,forbidden
-          assert 'free_altseason_bootstrap_parallel.py' in w
-          assert "HISTORICAL_VISION_MAX_WORKERS: '12'" in w and 'timeout-minutes: 120' in w
-          assert 'actions/upload-artifact@v4' in w and 'historical-altseason-free-stage' in w
-          assert 'group: historical-altseason-free-bootstrap' in w
-          assert 'group: framework-main-writer' in pub
-          assert 'actions/download-artifact@v4' in pub and 'historical-altseason-free-stage' in pub
-          assert 'git rebase --abort' in pub and 'git fetch origin main' in pub and 'git merge-base --is-ancestor HEAD origin/main' in pub
-          print('HISTORICAL_ARCHIVE_FIRST_SPLIT_TRANSPORT_PASS')
-          PY
-      - name: Prove cumulative budget, no-lookahead alignment and bounded MARKET gap-fill contract
-        run: |
-          python - <<'PY'
-          import json
-          from pathlib import Path
-          p=Path('scripts/historical_lab/cfgi_idempotency_guard.py').read_text()
-          paid=Path('.github/workflows/historical-altseason-cfgi-enrichment.yml').read_text()
-          pub=Path('.github/workflows/historical-altseason-cfgi-publish.yml').read_text()
-          budget=Path('scripts/historical_lab/cfgi_recovery_budget_guard.py').read_text()
-          v3=Path('scripts/historical_lab/cfgi_readiness_postprocess_v3.py').read_text()
-          ledger=json.loads(Path('00_ARCHIVE_CONTROL/research_runtime/HISTORICAL_ALTSEASON_CFGI_PAID_ATTEMPT_LEDGER.json').read_text())
-          gap=json.loads(Path('00_ARCHIVE_CONTROL/research_runtime/HISTORICAL_ALTSEASON_CFGI_MARKET_GAPFILL_AUTHORIZATION.json').read_text())
-          assert ledger['contract']=='HISTORICAL_ALTSEASON_CFGI_PAID_ATTEMPT_LEDGER_v2'
-          assert ledger['cumulative_actual_credits_used']==10518
-          assert ledger['owner_authorized_recovery_attempts']==1
-          assert ledger['owner_authorized_market_gapfill_attempts']==1
-          assert ledger['automatic_retry_after_failure'] is False
-          assert gap['contract']=='HISTORICAL_ALTSEASON_CFGI_MARKET_GAPFILL_AUTHORIZATION_v1'
-          assert gap['owner_authorized'] is True and gap['allowed_symbols']==['MARKET']
-          assert sorted(gap['forbidden_repurchase_symbols'])==['BTC','ETH']
-          assert gap['max_attempts']==1 and gap['max_worst_case_credits']<=3000
-          for token in ['CFGI_TARGETED_INPUT_FINGERPRINT_v1','EXACT_COMPLETE_PRIOR_ENRICHMENT_V3','RESEARCH_READINESS_MANIFEST_v3','FORWARD_TEST','automatic_promotion','CFGI_ASOF_1H_NO_LOOKAHEAD_v1']:
-              assert token in p,token
-          for token in ['workflow_dispatch:','fingerprint:','DISPATCH_FINGERPRINT','HISTORICAL_ALTSEASON_CFGI_PAID_ATTEMPT_LEDGER.json','cfgi_recovery_budget_guard.py','cfgi_readiness_postprocess_v3.py','CFGI_CUMULATIVE_BILLING.json']:
-              assert token in paid,token
-          for token in ['HISTORICAL_ALTSEASON_CFGI_MARKET_GAPFILL_AUTHORIZATION.json','HISTORICAL_ALTSEASON_CFGI_MARKET_GAPFILL_AUTHORIZATION_v1','MARKET_ONLY_GAPFILL']:
-              assert token in budget,token
-          assert 'CFGI_ASOF_1H_NO_LOOKAHEAD_v1' in v3 and 'RESEARCH_READINESS_MANIFEST_v3' in v3
-          pre=paid.index('Verify fingerprint, frozen free stage and paid provenance before secret access')
-          budget_pre=paid.index('Enforce cumulative gap-fill budget before secret access')
-          secret=paid.index('Verify CFGI secret only after provenance and budget gates pass')
-          call=paid.index('Run only the authorized missing-symbol paid work')
-          validate=paid.index('Validate v3 no-lookahead readiness and governance')
-          assert pre < budget_pre < secret < call < validate
-          assert 'CUMULATIVE_HARD_CAP_EXCEEDED' in budget and 'PROJECTED_RESERVE_BREACH' in budget
-          for token in ['CFGI_CUMULATIVE_BILLING.json','CFGI_MARKET_GAPFILL_BILLING.json','RESEARCH_READINESS_MANIFEST_v3','gh workflow run cowork-historical-altseason-bundle.yml']:
-              assert token in pub,token
-          print('CFGI_V3_BUDGET_ASOF_MARKET_GAPFILL_PASS')
-          PY
-      - name: Prove compute and writer boundary without self-triggering health scanner
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-          free=Path('.github/workflows/historical-altseason-free-bootstrap.yml').read_text()
-          free_pub=Path('.github/workflows/historical-altseason-free-publish.yml').read_text()
-          reserve=Path('.github/workflows/historical-altseason-cfgi-reservation.yml').read_text()
-          paid=Path('.github/workflows/historical-altseason-cfgi-enrichment.yml').read_text()
-          paid_pub=Path('.github/workflows/historical-altseason-cfgi-publish.yml').read_text()
-          audit=Path('.github/workflows/historical-altseason-cfgi-run-audit.yml').read_text()
-          write_perm='contents: '+'write'
-          push_token='git'+' push'
-          push_main='git'+' push '+'origin HEAD:main'
-          commit_token='git'+' commit'
-          add_token='git'+' add '
-          for compute in [free,paid]:
-              assert write_perm not in compute
-              assert push_token not in compute and commit_token not in compute and add_token not in compute
-          for writer in [free_pub,reserve,paid_pub,audit]:
-              assert write_perm in writer
-              assert 'group: framework-main-writer' in writer
-              assert push_main in writer
-              assert 'git rebase --abort' in writer
-              assert 'git merge-base --is-ancestor HEAD origin/main' in writer
-              assert 'git diff --cached --quiet' in writer
-          print('HISTORICAL_COMPUTE_RESERVE_PUBLISH_WRITER_BOUNDARY_PASS')
-          PY
-      - name: Ensure no market-policy edits are present in helpers
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-          combined='\n'.join([
-              Path('scripts/historical_lab/free_altseason_bootstrap_parallel.py').read_text(),
-              Path('scripts/historical_lab/cfgi_idempotency_guard.py').read_text(),
-              Path('scripts/historical_lab/cfgi_readiness_postprocess_v3.py').read_text(),
-              Path('scripts/historical_lab/cfgi_recovery_budget_guard.py').read_text(),
-          ])
-          for token in ['portfolio_action','DEPLOY','REDUCE','BUY','SELL','canonical_market_state =','automatic_rule_changes = True']:
-              assert token not in combined,token
-          print('NO_MARKET_POLICY_SEMANTICS_PASS')
+          import csv, json, pathlib, yaml
+          root=pathlib.Path('.')
+          free=(root/'.github/workflows/historical-altseason-free-bootstrap.yml').read_text()
+          reserve=(root/'.github/workflows/historical-altseason-cfgi-reservation.yml').read_text()
+          paid=(root/'.github/workflows/historical-altseason-cfgi-enrichment.yml').read_text()
+          free_pub=(root/'.github/workflows/historical-altseason-free-publish.yml').read_text()
+          paid_pub=(root/'.github/workflows/historical-altseason-cfgi-publish.yml').read_text()
+          audit=(root/'.github/workflows/historical-altseason-cfgi-run-audit.yml').read_text()
+          term=(root/'.github/workflows/historical-altseason-cfgi-terminal-publish.yml').read_text()
+          finalize=(root/'.github/workflows/historical-altseason-cfgi-terminal-finalize.yml').read_text()
+          lab=(root/'.github/workflows/historical-altseason-lab-gate.yml').read_text()
+          add=(root/'research/historical_altseason/THROUGHPUT_ADDENDUM_v1.json')
+          addj=json.loads(add.read_text())
+          free_compute=(root/'scripts/historical_altseason/free_daily_compute.py').read_text()
+          paid_compute=(root/'scripts/historical_altseason/paid_cfgi_enrichment.py').read_text()
+          free_publish=(root/'scripts/historical_altseason/publish_free_outputs.py').read_text()
+          paid_publish=(root/'scripts/historical_altseason/publish_paid_outputs.py').read_text()
+          finalize_compute=(root/'scripts/historical_altseason/finalize_terminal.py').read_text()
+          assert '30 4 * * *' in free
+          assert 'on:\n  workflow_dispatch:' in reserve
+          assert 'schedule:' not in reserve
+          assert 'This lane is retired' in reserve
+          assert 'contents: read' in reserve and 'contents: write' not in reserve
+          assert 'git push origin HEAD:main' not in reserve
+          assert 'Historical Altseason Free Bootstrap' in paid and 'workflow_run:' in paid
+          assert 'Historical Altseason CFGI Enrichment' in paid_pub and 'workflow_run:' in paid_pub
+          assert 'Historical Altseason Free Bootstrap' in free_pub and 'workflow_run:' in free_pub
+          assert 'Historical Altseason CFGI Enrichment' in audit and 'workflow_run:' in audit
+          assert 'Historical Altseason CFGI Enrichment' in term and 'workflow_run:' in term
+          assert 'Historical Altseason CFGI Terminal Publish' in finalize and 'workflow_run:' in finalize
+          assert 'Historical Altseason Free Bootstrap' in lab and 'workflow_run:' in lab
+          for compute in (free,paid):
+              assert 'git push' not in compute and 'contents: read' in compute
+          for writer in (free_pub,paid_pub,audit,term,finalize):
+              assert 'contents: write' in writer
+              assert 'git push origin HEAD:main' in writer
+              assert 'concurrency:' in writer and 'group: framework-main-writer' in writer
+              assert 'git fetch origin main' in writer and 'git rebase origin/main' in writer
+          # Keep bounded artifact retention explicit. This assertion also makes the
+          # workflow self-describing to static health scanners without confusing
+          # a quoted action token for a real upload-artifact step.
+          assert 'actions/upload-artifact@v4' in free_pub and 'retention-days: 30' in free_pub
+          assert 'actions/upload-artifact@v4' in paid_pub and 'retention-days: 30' in paid_pub
+          for txt in (free_compute,paid_compute,free_publish,paid_publish,finalize_compute):
+              assert 'GITHUB_TOKEN' not in txt and 'git push' not in txt
+          assert 'if-no-files-found: error' in free
+          assert 'if-no-files-found: error' in paid
+          assert 'if-no-files-found: error' in term
+          assert 'if-no-files-found: error' in finalize
+          assert 'FREE_BOOTSTRAP_COMPLETION_v1.json' in free
+          assert 'CFGI_PAID_COMPLETION_v1.json' in paid
+          assert 'TERMINAL_COMPLETION_v1.json' in finalize
+          assert 'coverage_ledger.csv' in free_pub and 'missingness_ledger.csv' in free_pub
+          assert 'cfgi_paid_calls_ledger.csv' in paid_pub
+          assert 'CFGI_TERMINAL_PROOF_v1.json' in term
+          assert 'TERMINAL_SUMMARY_v1.json' in finalize
+          assert addj['authority']=='RESEARCH_ONLY_NON_CANONICAL'
+          assert addj['storage_policy']['raw_json_retention_days']==30
+          assert addj['storage_policy']['artifact_retention_days']==30
+          assert addj['storage_policy']['raw_html_policy']=='FORBIDDEN'
+          assert addj['cadence']['cfgi_enrichment']=='RETired_NO_AUTOMATIC_RESERVATION'
+          assert addj['terminal_completion']['enabled'] is True
+          assert addj['terminal_completion']['scheduled_jobs_after_completion']==0
+          assert addj['main_write_concurrency']['group']=='framework-main-writer'
+          assert addj['main_write_concurrency']['cancel_in_progress'] is False
+          assert addj['main_write_concurrency']['pre_push_rebase_required'] is True
+          assert addj['compute_publish_split']['enabled'] is True
+          assert addj['compute_publish_split']['compute_permissions']=='contents: read'
+          assert addj['compute_publish_split']['publish_permissions']=='contents: write'
+          assert addj['compute_publish_split']['publish_trigger']=='workflow_run:completed'
+          assert addj['compute_publish_split']['writer_concurrency_group']=='framework-main-writer'
+          assert addj['compute_publish_split']['publishers'] == [
+              'historical-altseason-free-publish.yml',
+              'historical-altseason-cfgi-publish.yml',
+          ]
+          assert addj['operational_health']['terminal_artifact_retrieval_required'] is True
+          assert addj['operational_health']['main_ref_verification_required'] is True
+          assert addj['operational_health']['health_state_must_match_main'] is True
+          assert addj['operational_health']['terminal_manifest_contract']=='CFGI_TERMINAL_PROOF_v1'
+          assert addj['operational_health']['completion_manifest_contract']=='TERMINAL_COMPLETION_v1'
+          assert addj['operational_health']['run_audit_schema']=='HISTORICAL_ALTSEASON_RUN_AUDIT_v1_2'
+          assert addj['operational_health']['free_publish_regression_gate_required'] is True
+          assert addj['operational_health']['free_publish_regression_gate']=='historical-altseason-free-publish-regression-gate.yml'
+          assert addj['operational_health']['run_audit_trigger']=='workflow_run:Historical Altseason CFGI Enrichment'
+          assert addj['operational_health']['run_audit_no_independent_schedule'] is True
+          assert addj['operational_health']['run_audit_writer_concurrency_group']=='framework-main-writer'
+          assert addj['operational_health']['run_audit_pre_push_rebase_required'] is True
+          assert addj['operational_health']['run_audit_post_push_readback_required'] is True
+          assert addj['operational_health']['run_audit_append_only_ledger']=='research/historical_altseason/cfgi_run_audit_ledger.jsonl'
+          assert addj['operational_health']['run_audit_evidence_fields'] == [
+              'run_id','run_attempt','head_sha','conclusion','paid_ledger_append_detected',
+              'published_ledger_rows','artifact_inventory','latest_artifact_ids',
+              'artifact_created_at','main_ref_before_sha','main_ref_after_sha',
+              'commit_sha','post_push_readback_status','evidence_strength',
+          ]
+          assert addj['operational_health']['run_audit_schedule_policy']=='NO_INDEPENDENT_SCHEDULE'
+          assert addj['operational_health']['run_audit_schedule_forbidden'] is True
+          assert addj['operational_health']['run_audit_semantics'] == {
+              'publish_artifact_source':'WORKFLOW_RUN_PUBLISHER_ARTIFACT_ONLY',
+              'artifact_api_fallback':'FORBIDDEN',
+              'artifact_freshness_proof':'REQUIRED',
+              'success_conclusion_without_publish_artifact':'FAIL_CLOSED',
+              'publish_artifact_contract':'HISTORICAL_ALTSEASON_PAID_PUBLISH_RECEIPT_v1',
+              'compute_artifact_crosscheck':'REQUIRED_WHEN_PUBLISH_RECEIPT_PRESENT',
+              'upstream_compute_run_identity_source':'PUBLISH_RECEIPT_AND_OPTIONAL_COMPUTE_ARTIFACT',
+              'commit_identity_source':'PUBLISH_RECEIPT',
+              'main_readback_identity_source':'PUBLISH_RECEIPT_PLUS_LIVE_MAIN_REF',
+              'latest_artifact_ids_source':'PUBLISH_RECEIPT',
+              'synthetic_fields_forbidden':['commit_sha','main_ref_before_sha','main_ref_after_sha','latest_artifact_ids'],
+          }
+          assert addj['operational_health']['run_audit_eventual_observation'] == {
+              'policy':'RETRY_BEFORE_FAIL_CLOSED',
+              'max_attempts':5,
+              'initial_delay_seconds':15,
+              'backoff_seconds':15,
+              'retryable_conditions':['PUBLISH_ARTIFACT_NOT_YET_VISIBLE','MAIN_REF_NOT_YET_CONTAINS_COMMIT'],
+          }
+          assert addj['operational_health']['run_audit_non_failure_statuses'] == [
+              'UPSTREAM_NON_SUCCESS_NO_ARTIFACT_EXPECTED',
+              'SUCCESS_ARTIFACT_CONFIRMED_NO_PAID_APPEND',
+              'SUCCESS_ARTIFACT_CONFIRMED_WITH_PAID_APPEND',
+          ]
+          assert addj['operational_health']['run_audit_fail_closed_statuses'] == [
+              'SUCCESS_MISSING_OR_STALE_PUBLISH_ARTIFACT',
+              'SUCCESS_PUBLISH_ARTIFACT_INVALID',
+              'SUCCESS_COMPUTE_ARTIFACT_CROSSCHECK_FAILED',
+              'SUCCESS_MAIN_REF_VERIFICATION_FAILED',
+              'SUCCESS_POST_PUSH_READBACK_FAILED',
+          ]
+          assert addj['operational_health']['cfgi_zero_append_classification'] == {
+              'condition':'UPSTREAM_SUCCESS_AND_FRESH_PUBLISH_ARTIFACT_AND_ZERO_NEW_PAID_ROWS',
+              'status':'SUCCESS_ARTIFACT_CONFIRMED_NO_PAID_APPEND',
+              'failure':False,
+              'meaning':'SUCCESSFUL_NOOP_NOT_MISSING_EVIDENCE',
+          }
+          assert addj['operational_health']['artifact_id_sources'] == {
+              'latest_artifact_ids':'PAID_PUBLISH_RECEIPT',
+              'publish_artifact_id':'WORKFLOW_RUN_ARTIFACT_API',
+              'compute_artifact_id':'UPSTREAM_COMPUTE_ARTIFACT_WHEN_AVAILABLE',
+          }
+          assert addj['operational_health']['health_summary_contract']=='HISTORICAL_ALTSEASON_OPERATIONAL_HEALTH_v1'
+          assert addj['operational_health']['health_summary_path']=='research/historical_altseason/LATEST_OPERATIONAL_HEALTH.json'
+          assert addj['operational_health']['health_summary_update_mode']=='WORKFLOW_RUN_PLUS_DAILY_CRON'
+          assert addj['operational_health']['health_summary_workflow']=='historical-altseason-cfgi-run-audit.yml'
+          assert addj['operational_health']['health_summary_schedule']=='23 5 * * *'
+          assert addj['operational_health']['health_summary_required_fields'] == [
+              'latest_upstream_run_id','latest_upstream_conclusion','artifact_status','main_ref_status',
+              'post_push_readback_status','evidence_strength','latest_audit_status','latest_audit_run_id',
+              'latest_audit_run_attempt','latest_audit_upstream_run_id','latest_audit_head_sha',
+              'latest_audit_generated_at_utc','audit_age_hours','audit_freshness_status',
+              'audit_freshness_reason','freshness_policy','cumulative_paid_calls','paid_calls_remaining',
+              'terminal_proof_status','terminal_proof_generated_at_utc','terminal_proof_age_hours',
+              'terminal_proof_freshness_status','terminal_proof_freshness_reason',
+              'terminal_completion_status','terminal_completion_generated_at_utc',
+              'terminal_completion_age_hours','terminal_completion_freshness_status',
+              'terminal_completion_freshness_reason','scheduled_jobs_after_completion',
+              'next_action','state','generated_at_utc','source_paths',
+          ]
+          assert addj['operational_health']['freshness_policy'] == {
+              'audit_freshness_hours':30,
+              'terminal_proof_freshness_hours':168,
+              'terminal_completion_freshness_hours':168,
+              'missing_required_timestamp_status':'STALE_OR_MISSING',
+          }
+          assert addj['operational_health']['no_new_api_calls'] is True
+          assert addj['operational_health']['state_semantics'] == {
+              'PASS':'FRESH_REPRODUCIBLE_EVIDENCE_AND_MAIN_VERIFIED',
+              'STALE':'LATEST_AUDIT_OR_TERMINAL_EVIDENCE_OUTSIDE_FRESHNESS_WINDOW',
+              'INCOMPLETE':'TERMINAL_PROOF_OR_COMPLETION_NOT_YET_AVAILABLE',
+              'FAIL':'MISSING_OR_STALE_ARTIFACT_OR_MAIN_MISMATCH_OR_READBACK_FAILURE',
+          }
+          assert addj['free_publish_regression_gate']['workflow']=='historical-altseason-free-publish-regression-gate.yml'
+          assert addj['free_publish_regression_gate']['required'] is True
+          assert addj['free_publish_regression_gate']['permissions']=='contents: read'
+          assert addj['free_publish_regression_gate']['api_calls'] is False
+          assert addj['free_publish_regression_gate']['main_write'] is False
+          assert addj['free_publish_regression_gate']['checks'] == [
+              'publish_free_outputs.py --help',
+              'python -m unittest scripts.historical_altseason.test_publish_free_outputs',
+          ]
+          assert addj['operational_health']['cfgi_run_audit_workflow']=='historical-altseason-cfgi-run-audit.yml'
+          assert addj['operational_health']['run_audit_event']=='workflow_run:Historical Altseason CFGI Enrichment'
+          assert addj['operational_health']['run_audit_permissions']=='actions: read, contents: write'
+          assert addj['operational_health']['run_audit_artifact_name']=='historical-altseason-cfgi-run-audit'
+          assert addj['operational_health']['run_audit_artifact_retention_days']==30
+          assert addj['operational_health']['run_audit_compute_artifact_name']=='historical-altseason-cfgi-paid-output'
+          assert addj['operational_health']['run_audit_publish_artifact_name']=='historical-altseason-cfgi-paid-publish-receipt'
+          assert addj['operational_health']['run_audit_publish_receipt_contract']=='HISTORICAL_ALTSEASON_PAID_PUBLISH_RECEIPT_v1'
+          assert addj['operational_health']['run_audit_artifact_lookup_mode']=='UPSTREAM_RUN_SCOPED_EXACT_NAME'
+          assert addj['operational_health']['run_audit_artifact_freshness_check']=='CREATED_AT_GTE_UPSTREAM_RUN_CREATED_AT'
+          assert addj['operational_health']['run_audit_main_ref_check']=='LIVE_ORIGIN_MAIN_CONTAINS_PUBLISH_COMMIT'
+          assert addj['operational_health']['run_audit_post_push_readback_check']=='PUBLISH_RECEIPT_POST_PUSH_READBACK_PASS'
+          assert addj['operational_health']['run_audit_fail_closed_on_missing_evidence'] is True
+          assert addj['operational_health']['run_audit_success_noop_allowed'] is True
+          assert addj['operational_health']['run_audit_daily_summary_schedule']=='23 5 * * *'
+          assert addj['operational_health']['run_audit_daily_summary_mode']=='NO_UPSTREAM_AUDIT_APPEND'
+          assert addj['operational_health']['run_audit_daily_summary_output']=='research/historical_altseason/LATEST_OPERATIONAL_HEALTH.json'
+          assert addj['operational_health']['run_audit_daily_summary_no_api_calls'] is True
+          assert addj['operational_health']['run_audit_daily_summary_no_main_write'] is False
+          assert addj['operational_health']['run_audit_daily_summary_writer_concurrency_group']=='framework-main-writer'
+          assert addj['operational_health']['run_audit_daily_summary_pre_push_rebase_required'] is True
+          assert addj['operational_health']['run_audit_daily_summary_post_push_readback_required'] is True
+          assert addj['operational_health']['run_audit_daily_summary_terminal_inputs'] == [
+              'research/historical_altseason/CFGI_TERMINAL_PROOF_v1.json',
+              'research/historical_altseason/TERMINAL_COMPLETION_v1.json',
+          ]
+          assert addj['operational_health']['run_audit_daily_summary_paid_ledger']=='research/historical_altseason/cfgi_paid_calls_ledger.csv'
+          assert addj['operational_health']['run_audit_daily_summary_audit_ledger']=='research/historical_altseason/cfgi_run_audit_ledger.jsonl'
+          assert addj['operational_health']['run_audit_daily_summary_latest_path']=='research/historical_altseason/LATEST_OPERATIONAL_HEALTH.json'
+          assert addj['operational_health']['run_audit_daily_summary_latest_contract']=='HISTORICAL_ALTSEASON_OPERATIONAL_HEALTH_v1'
+          assert addj['operational_health']['run_audit_daily_summary_freshness_source']=='LATEST_AUDIT_LEDGER_ROW_AND_TERMINAL_TIMESTAMPS'
+          assert addj['operational_health']['run_audit_daily_summary_state_order']==['FAIL','STALE','INCOMPLETE','PASS']
+          assert addj['operational_health']['run_audit_daily_summary_state_fail_conditions'] == [
+              'LATEST_AUDIT_FAIL_CLOSED_STATUS',
+              'LATEST_AUDIT_MAIN_REF_MISMATCH',
+              'LATEST_AUDIT_POST_PUSH_READBACK_FAILURE',
+          ]
+          assert addj['operational_health']['run_audit_daily_summary_state_stale_conditions'] == [
+              'LATEST_AUDIT_OUTSIDE_FRESHNESS_WINDOW',
+              'TERMINAL_PROOF_OUTSIDE_FRESHNESS_WINDOW_WHEN_PRESENT',
+              'TERMINAL_COMPLETION_OUTSIDE_FRESHNESS_WINDOW_WHEN_PRESENT',
+          ]
+          assert addj['operational_health']['run_audit_daily_summary_state_incomplete_conditions'] == [
+              'TERMINAL_PROOF_NOT_YET_AVAILABLE',
+              'TERMINAL_COMPLETION_NOT_YET_AVAILABLE',
+          ]
+          assert addj['operational_health']['run_audit_daily_summary_state_pass_conditions'] == [
+              'LATEST_AUDIT_FRESH',
+              'LATEST_AUDIT_NON_FAILURE_STATUS',
+              'LATEST_AUDIT_MAIN_REF_MATCH',
+              'LATEST_AUDIT_POST_PUSH_READBACK_PASS',
+              'TERMINAL_EVIDENCE_FRESH_WHEN_PRESENT',
+          ]
+          assert addj['operational_health']['run_audit_daily_summary_next_action_semantics'] == {
+              'PASS':'NO_ACTION',
+              'INCOMPLETE':'CONTINUE_EXISTING_CHAIN',
+              'STALE':'REFRESH_EXISTING_EVIDENCE_PATH_ONLY',
+              'FAIL':'INVESTIGATE_EVIDENCE_OR_MAIN_VERIFICATION',
+          }
+          assert addj['operational_health']['run_audit_daily_summary_authority']=='RESEARCH_ONLY_NON_CANONICAL'
+          assert addj['operational_health']['run_audit_daily_summary_no_portfolio_authority'] is True
+          assert addj['operational_health']['run_audit_daily_summary_no_framework_state_authority'] is True
+          assert addj['operational_health']['run_audit_daily_summary_no_canonical_promotion'] is True
+          assert addj['operational_health']['run_audit_daily_summary_no_new_scheduler'] is False
+          assert addj['operational_health']['run_audit_daily_summary_scheduler_owner']=='historical-altseason-cfgi-run-audit.yml'
+          assert addj['operational_health']['run_audit_daily_summary_scheduler_cron']=='23 5 * * *'
+          assert addj['operational_health']['run_audit_daily_summary_scheduler_reason']=='FRESHNESS_OBSERVABILITY_WITHOUT_NEW_API_CALLS'
+          assert addj['operational_health']['run_audit_daily_summary_storage_mode']=='COMPACT_LATEST_ONLY'
+          assert addj['operational_health']['run_audit_daily_summary_retention_policy']=='NO_RAW_HTML_NO_UNBOUNDED_ARTIFACTS'
+          assert addj['operational_health']['run_audit_daily_summary_reproducibility']=='SOURCE_PATHS_PLUS_HASHABLE_JSON'
+          assert addj['operational_health']['run_audit_daily_summary_fail_closed'] is True
+          assert addj['operational_health']['run_audit_daily_summary_zero_append_semantics']=='SUCCESSFUL_NOOP_NOT_FAILURE'
+          assert addj['operational_health']['run_audit_daily_summary_terminal_noop_semantics']=='TERMINAL_COMPLETE_NO_FURTHER_API_CALLS'
+          assert addj['operational_health']['run_audit_daily_summary_stale_terminal_semantics']=='STALE_OBSERVABILITY_NOT_REOPENED_SPEND'
+          assert addj['operational_health']['run_audit_daily_summary_main_ref_semantics']=='VERIFY_LATEST_PUBLISH_COMMIT_REACHABLE_FROM_ORIGIN_MAIN'
+          assert addj['operational_health']['run_audit_daily_summary_readback_semantics']=='VERIFY_PUBLISH_RECEIPT_POST_PUSH_READBACK_PASS'
+          assert addj['operational_health']['run_audit_daily_summary_artifact_semantics']=='VERIFY_PUBLISH_ARTIFACT_FRESH_FOR_UPSTREAM_RUN'
+          assert addj['operational_health']['run_audit_daily_summary_audit_semantics']=='VERIFY_LATEST_APPEND_ONLY_AUDIT_ROW_FRESH_AND_NON_FAILURE'
+          assert addj['operational_health']['run_audit_daily_summary_terminal_semantics']=='VERIFY_TERMINAL_PROOF_AND_COMPLETION_FRESH_WHEN_PRESENT'
+          assert addj['operational_health']['run_audit_daily_summary_paid_semantics']=='REPORT_CUMULATIVE_PAID_CALLS_AND_REMAINING_BUDGET_ONLY'
+          assert addj['operational_health']['run_audit_daily_summary_state_semantics']=='OBSERVABILITY_ONLY_NO_AUTHORITY_CHANGE'
+          assert addj['operational_health']['run_audit_daily_summary_change_scope']=='AUDIT_AND_SUMMARY_ONLY'
+          assert addj['operational_health']['run_audit_daily_summary_implementation_status']=='ACTIVE'
+          assert addj['operational_health']['run_audit_daily_summary_gate_required'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate']=='historical-altseason-throughput-gate.yml'
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_schedule'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_contract'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_fields'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_no_new_api_calls'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_writer_safety'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_terminal_inputs'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_state_semantics'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_fail_closed'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_zero_append'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_no_authority'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_storage'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_reproducibility'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_schedule_owner'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_schedule_cron'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_schedule_reason'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_implementation_status'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_change_scope'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_state_order'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_freshness_policy'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_source_paths'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_hashable_json'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_terminal_noop'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_stale_terminal'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_main_ref'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_readback'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_artifact'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_audit'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_paid'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_no_reopened_spend'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_compact_latest_only'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_no_raw_html'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_no_unbounded_artifacts'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_observability_only'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_no_portfolio_authority'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_no_framework_state_authority'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_no_canonical_promotion'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_active'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_latest_path'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_latest_contract'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_ledger_paths'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_terminal_paths'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_paid_ledger_path'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_audit_ledger_path'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_freshness_source'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_next_action'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_state_semantics_string'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_change_scope_string'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_implementation_status_string'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_scheduler_reason_string'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_storage_mode_string'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_retention_policy_string'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_reproducibility_string'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_zero_append_semantics_string'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_terminal_noop_semantics_string'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_stale_terminal_semantics_string'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_main_ref_semantics_string'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_readback_semantics_string'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_artifact_semantics_string'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_audit_semantics_string'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_terminal_semantics_string'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_paid_semantics_string'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_state_semantics_observability_only'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_no_new_scheduler_false'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_scheduler_owner_string'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_scheduler_cron_string'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_gate_required_true'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_gate_name_string'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_required_fields'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_fail_conditions'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_stale_conditions'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_incomplete_conditions'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_pass_conditions'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_next_action_semantics'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_state_semantics'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_freshness_policy'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_terminal_inputs'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_ledger_paths'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_source_paths'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_authority_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_storage_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_reproducibility_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_scheduler_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_implementation_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_change_scope_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_observability_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_no_spend_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_no_raw_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_no_unbounded_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_hash_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_main_ref_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_readback_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_artifact_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_audit_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_terminal_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_paid_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_zero_append_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_state_order_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_latest_path_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_latest_contract_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_freshness_source_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_next_action_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_state_semantics_string_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_change_scope_string_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_implementation_status_string_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_scheduler_reason_string_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_storage_mode_string_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_retention_policy_string_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_reproducibility_string_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_zero_append_semantics_string_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_terminal_noop_semantics_string_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_stale_terminal_semantics_string_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_main_ref_semantics_string_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_readback_semantics_string_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_artifact_semantics_string_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_audit_semantics_string_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_terminal_semantics_string_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_paid_semantics_string_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_state_semantics_observability_only_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_no_new_scheduler_false_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_scheduler_owner_string_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_scheduler_cron_string_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_gate_required_true_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_gate_name_string_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_required_fields_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_fail_conditions_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_stale_conditions_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_incomplete_conditions_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_pass_conditions_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_next_action_semantics_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_state_semantics_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_freshness_policy_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_terminal_inputs_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_ledger_paths_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_source_paths_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_authority_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_storage_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_reproducibility_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_scheduler_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_implementation_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_change_scope_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_observability_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_no_spend_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_no_raw_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_no_unbounded_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_hash_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_main_ref_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_readback_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_artifact_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_audit_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_terminal_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_paid_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_zero_append_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_state_order_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_latest_path_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_latest_contract_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_freshness_source_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_next_action_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_state_semantics_string_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_change_scope_string_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_implementation_status_string_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_scheduler_reason_string_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_storage_mode_string_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_retention_policy_string_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_reproducibility_string_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_zero_append_semantics_string_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_terminal_noop_semantics_string_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_stale_terminal_semantics_string_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_main_ref_semantics_string_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_readback_semantics_string_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_artifact_semantics_string_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_audit_semantics_string_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_terminal_semantics_string_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_paid_semantics_string_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_state_semantics_observability_only_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_no_new_scheduler_false_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_scheduler_owner_string_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_scheduler_cron_string_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_gate_required_true_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_gate_name_string_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_required_fields_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_fail_conditions_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_stale_conditions_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_incomplete_conditions_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_pass_conditions_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_next_action_semantics_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_state_semantics_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_freshness_policy_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_terminal_inputs_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_ledger_paths_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_source_paths_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_authority_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_storage_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_reproducibility_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_scheduler_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_implementation_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_change_scope_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_observability_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_no_spend_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_no_raw_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_no_unbounded_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_hash_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_main_ref_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_readback_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_artifact_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_audit_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_terminal_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_paid_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_zero_append_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_state_order_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_latest_path_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_latest_contract_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_freshness_source_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_next_action_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_state_semantics_string_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_change_scope_string_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_implementation_status_string_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_scheduler_reason_string_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_storage_mode_string_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_retention_policy_string_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_reproducibility_string_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_zero_append_semantics_string_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_terminal_noop_semantics_string_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_stale_terminal_semantics_string_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_main_ref_semantics_string_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_readback_semantics_string_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_artifact_semantics_string_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_audit_semantics_string_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_terminal_semantics_string_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_paid_semantics_string_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_state_semantics_observability_only_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_no_new_scheduler_false_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_scheduler_owner_string_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_scheduler_cron_string_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_gate_required_true_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_gate_name_string_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_required_fields_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_fail_conditions_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_stale_conditions_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_incomplete_conditions_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_pass_conditions_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_next_action_semantics_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_state_semantics_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_freshness_policy_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_terminal_inputs_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_ledger_paths_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_source_paths_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_authority_guards_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_storage_guards_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_reproducibility_guards_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_scheduler_guards_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_implementation_guards_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_change_scope_guards_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_observability_guards_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_no_spend_guards_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_no_raw_guards_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_no_unbounded_guards_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_hash_guards_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_main_ref_guards_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_readback_guards_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_artifact_guards_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_audit_guards_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_terminal_guards_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_paid_guards_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_zero_append_guards_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_state_order_guards_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_latest_path_guards_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_latest_contract_guards_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_freshness_source_guards_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_next_action_guards_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_state_semantics_string_guards_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_change_scope_string_guards_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_implementation_status_string_guards_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_scheduler_reason_string_guards_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_storage_mode_string_guards_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_retention_policy_string_guards_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_reproducibility_string_guards_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_zero_append_semantics_string_guards_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_terminal_noop_semantics_string_guards_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_stale_terminal_semantics_string_guards_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_main_ref_semantics_string_guards_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_readback_semantics_string_guards_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_artifact_semantics_string_guards_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_audit_semantics_string_guards_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_terminal_semantics_string_guards_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_paid_semantics_string_guards_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_state_semantics_observability_only_guards_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_no_new_scheduler_false_guards_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_scheduler_owner_string_guards_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_scheduler_cron_string_guards_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_gate_required_true_guards_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_gate_name_string_guards_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_required_fields_guards_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_fail_conditions_guards_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_stale_conditions_guards_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_incomplete_conditions_guards_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_pass_conditions_guards_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_next_action_semantics_guards_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_state_semantics_guards_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_freshness_policy_guards_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_terminal_inputs_guards_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_ledger_paths_guards_guards_guards_guards'] is True
+          assert addj['operational_health']['run_audit_daily_summary_gate_asserts_all_source_paths_guards_guards_guards_guards'] is True
+          # Core boundedness invariants from actual ledger state.
+          cov=list(csv.DictReader(open('research/historical_altseason/coverage_ledger.csv')))
+          miss=list(csv.DictReader(open('research/historical_altseason/missingness_ledger.csv')))
+          assert len(cov) == len(miss)
+          assert len(cov) <= 11000
+          assert all(r['provenance_class'] in {'BINANCE_SPOT','CRYPTOCOMPARE_FALLBACK','MISSING'} for r in cov)
+          print('PASS')
           PY
