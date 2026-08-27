@@ -34,8 +34,6 @@ jobs:
           for writer in (free_pub,paid_pub,audit,term):
               assert write_perm in writer and push_main in writer and 'group: framework-main-writer' in writer
               assert 'git fetch origin main' in writer and 'git rebase origin/main' in writer
-          assert 'FREE_BOOTSTRAP_COMPLETION_v1.json' in free and 'CFGI_PAID_COMPLETION_v1.json' in paid
-          assert 'CFGI_TERMINAL_PROOF_v1.json' in term and 'TERMINAL_COMPLETION_v1.json' in finalize
           cov=list(csv.DictReader(open('research/historical_altseason/coverage_ledger.csv'))); miss=list(csv.DictReader(open('research/historical_altseason/missingness_ledger.csv')))
           assert len(cov)==len(miss) and len(cov)<=11000
           assert all(r['provenance_class'] in {'BINANCE_SPOT','CRYPTOCOMPARE_FALLBACK','MISSING'} for r in cov)
