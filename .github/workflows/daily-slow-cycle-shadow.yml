@@ -30,12 +30,18 @@ jobs:
         run: |
           python scripts/data_terminal/world_bank_copper_gold_owner.py \
             --output-root 03_DAILY_CAPTURE_LOGS/slow_cycle/copper_gold
-      - name: Collect NFCICREDIT live shadow context
+      - name: Collect and K17-validate NFCICREDIT live shadow context
+        shell: bash
         run: |
           python scripts/data_terminal/fred_csv_collector.py \
             --series NFCICREDIT \
             --output-dir /tmp/nfcicredit
           mkdir -p 03_DAILY_CAPTURE_LOGS/slow_cycle/nfcicredit
+          raw_csv="$(find /tmp/nfcicredit/raw -type f -name '*__fred.csv' -print -quit)"
+          test -n "$raw_csv"
+          python scripts/research/nfcicredit_k17_source_sanity.py \
+            --csv "$raw_csv" \
+            --output 03_DAILY_CAPTURE_LOGS/slow_cycle/nfcicredit/K17_SOURCE_SANITY.json
           cp /tmp/nfcicredit/latest_terminal_state.json 03_DAILY_CAPTURE_LOGS/slow_cycle/nfcicredit/LATEST.json
       - name: Run preregistered NFCICREDIT ALFRED T-1 once when key is available
         env:
