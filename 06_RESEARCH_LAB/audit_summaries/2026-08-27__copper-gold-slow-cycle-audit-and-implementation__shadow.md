@@ -69,3 +69,36 @@ The prospective experiment includes source ambiguity, lookahead, anchor fragilit
 ## Authority
 
 Everything in this patch is shadow/research only. Copper/Gold or `NFCICREDIT` alone cannot produce REDUCE, EXIT, DEPLOY, rebuy permission, market-state promotion or portfolio action.
+
+## Post-merge owner hardening
+
+A current-main live verification found that the v1 owner URL returned only 780 observations ending in December 2024 while the owner still returned `PASS`. The official World Bank Commodity Markets page identified the current August 2026 workbook, with July 2026 observations and a stated next update date. The stale v1 result is rejected and is not used as baseline evidence.
+
+The v2 owner changes the source binding to the current workbook and adds fail-closed controls:
+
+- 799 contiguous monthly observations from January 1960 through July 2026;
+- source timestamp on every observation plus retrieval timestamp;
+- exact source and normalized units for Copper and Gold;
+- payload SHA-256, workbook update identity and no source substitution;
+- explicit freshness with a 75-day ceiling, where stale is not `PASS`;
+- duplicate, gap, missing-value, unit-drift and future-timestamp rejection;
+- no interpolation, forward fill or in-progress two-month bar;
+- compact current CSV state, Git-history preservation and append-only payload-change receipts rather than a full historical duplicate per month;
+- artifact manifest and zero execution authority on every surface.
+
+The normalized ratio uses USD/kg for both components. Absolute values therefore differ from charts that quote Copper in USD/lb or cents/lb, while direction, percentage change, RSI and sign-based MACD state remain scale-invariant. The World Bank series is still a monthly period-average macro proxy, not a claimed reproduction of TechDev's exact futures continuous contract.
+
+## Hardened historical event study
+
+The v2 study fixed four weaknesses in the first script: it accepts the retained Coin Metrics `time` field, rejects duplicate BTC dates, never maps pre-BTC Copper/Gold events to BTC's first row, and labels both objective peak outcomes and negative controls.
+
+Frozen descriptive result:
+
+- 12 objective BTC drawdown episodes, 7 reclaimed within 365 days and 5 terminal proxies;
+- all 5 terminal proxies were `EXPANSION` or `ACCELERATING` at the BTC peak on both anchor variants;
+- all 4 `DECELERATING` peak states occurred in subsequently reclaimed episodes;
+- only 4 post-BTC-start `TURNING_NEGATIVE` events per anchor had mature 240-day outcomes;
+- median 60-day BTC return after those events was approximately `+29.1%` for the Jan-Feb anchor and `-11.3%` for the Feb-Mar anchor;
+- turning-positive and fixed +91-day controls prevent a stable edge claim.
+
+This is disconfirming evidence against the proposed simple rule `Copper/Gold deterioration -> terminal distribution warning`. It does not prove that the ratio has no macro-context value. Incremental value remains prospective and must beat the unchanged multi-sensor baseline before any separate governance review.

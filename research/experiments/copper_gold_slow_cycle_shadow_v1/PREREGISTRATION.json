@@ -2,14 +2,52 @@
   "experiment_id": "COPPER_GOLD_SLOW_CYCLE_SHADOW_v1",
   "status": "PREREGISTERED_PROSPECTIVE_SHADOW",
   "authority": "NO_PORTFOLIO_EXECUTION_NO_CANONICAL_STATE_CHANGE",
+  "activation": "FIRST_POST_HARDENING_MERGE_CAPTURE",
+  "historical_rows_are_baseline_only": true,
+  "no_retroactive_rescore": true,
   "hypotheses": [
     "settled Copper/Gold state may add incremental context for distinguishing mid-cycle pullback from terminal distribution",
     "decision-relevant value must survive Jan-Feb versus Feb-Mar anchor sensitivity",
     "component decomposition may reveal whether ratio movement is copper-led or gold-led"
   ],
   "baseline": ["liquidity", "ETF", "stablecoins", "VIX", "rates/yield curve", "dollar", "breadth", "BTC dominance", "ETH/BTC", "spot flow", "funding/OI", "CFGI", "transition/distribution"],
-  "features": ["raw ratio", "monthly change", "settled 2M MACD 12/26/9", "RSI14", "turning states", "anchor disagreement"],
-  "negative_control": "+91 calendar day placebo for transition events",
+  "features": [
+    "raw ratio",
+    "1m 2m and 6m change",
+    "3m 6m 12m and 24m moving averages",
+    "12m ROC and distance from 12m average",
+    "monthly RSI14 and 24m population z-score",
+    "settled 2M MACD 12/26/9",
+    "settled 2M RSI14",
+    "turning and persistent regime states",
+    "Jan-Feb versus Feb-Mar anchor disagreement"
+  ],
+  "feature_clock": {
+    "source_revision_check": "DAILY",
+    "new_source_observation": "MONTHLY",
+    "settled_2m": "ONLY_AFTER_SECOND_MONTH_IS_COMPLETE",
+    "in_progress_bar_allowed": false
+  },
+  "prospective_outcomes": {
+    "lead_windows_days": [60, 120, 240],
+    "maturation": "EACH_FROZEN_EVENT_MATURES_AT_EVENT_PLUS_60_120_240_DAYS",
+    "primary_question": "Does the challenger improve recoverable-pullback versus terminal-distribution discrimination over the baseline?",
+    "required_metrics": [
+      "baseline_classification",
+      "challenger_classification",
+      "matured_outcome",
+      "lead_time_delta_days",
+      "false_positive_delta",
+      "false_negative_delta",
+      "anchor_agreement",
+      "copper_and_gold_component_contribution"
+    ]
+  },
+  "negative_controls": [
+    "TURNING_POSITIVE events",
+    "TURNING_NEGATIVE shifted forward 91 calendar days",
+    "best single component Copper or Gold"
+  ],
   "kill_criteria": {
     "K01": "source identity or units become ambiguous",
     "K02": "lookahead or incomplete-bar use is required to retain apparent edge",
@@ -18,7 +56,17 @@
     "K05": "false positives dominate healthy continuation",
     "K06": "threshold tuning against known BTC tops becomes necessary",
     "K07": "small-N prevents useful discrimination after sufficient prospective time",
-    "K16": "containment: candidate is structurally contained by an existing retained composite or information family"
+    "K08": "source freshness, units, schema, duplicate or continuity validation fails",
+    "K09": "source revisions cannot be reproduced through payload hash and immutable revision receipt",
+    "K16": "containment: candidate is structurally contained by an existing retained composite or information family",
+    "K17": "numeric evidence cannot be reproduced through deterministic parsing and exact provenance"
+  },
+  "minimum_evaluation_sample": "at least 12 settled observations per anchor and at least two independent crypto transition episodes",
+  "historical_prior": {
+    "status": "DISCONFIRMING_SMALL_N",
+    "artifact": "HISTORICAL_EVENT_STUDY_v2.json",
+    "finding": "All five objective terminal proxies were EXPANSION or ACCELERATING at the BTC peak; simple deterioration was not an early terminal warning.",
+    "may_change_preregistered_rules": false
   },
   "promotion": "forbidden without separate evidence review"
 }
