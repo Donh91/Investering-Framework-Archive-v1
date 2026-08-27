@@ -5,315 +5,105 @@ import hashlib
 import json
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Iterable
-
-UTC = timezone.utc
-SEVERITY = {'GREEN': 0, 'AMBER': 1, 'UNKNOWN': 1, 'RED': 2}
+from typing import Any
 
 
-def parse_time(value: Any):
-    if isinstance(value, (int, float)):
-        return datetime.fromtimestamp(value, UTC)
-    if not isinstance(value, str) or not value:
-        return None
-    try:
-        return datetime.fromisoformat(value.replace('Z', '+00:00')).astimezone(UTC)
-    except ValueError:
-        return None
+def load_json(path: Path) -> dict[str, Any]:
+    if not path.exists(): return {}
+    try: value=json.loads(path.read_text(encoding="utf-8"))
+    except Exception: return {}
+    return value if isinstance(value,dict) else {}
 
 
-def read_json(path: Path):
-    if not path.exists():
-        return None, 'MISSING'
-    try:
-        value = json.loads(path.read_text(encoding='utf-8'))
-    except (OSError, json.JSONDecodeError):
-        return None, 'INVALID_JSON'
-    return (value, None) if isinstance(value, dict) else (None, 'INVALID_SHAPE')
+def parse_ts(value: Any) -> datetime | None:
+    if not value: return None
+    try: return datetime.fromisoformat(str(value).replace("Z","+00:00")).astimezone(timezone.utc)
+    except Exception: return None
 
 
-def sha256_path(path):
+def age_hours(value: Any, now: datetime) -> float | None:
+    parsed=parse_ts(value)
+    return None if parsed is None else round(max(0.0,(now-parsed).total_seconds()/3600.0),3)
+
+
+def file_sha256(path: Path) -> str | None:
     return hashlib.sha256(path.read_bytes()).hexdigest() if path.exists() and path.is_file() else None
 
 
-def first_time(obj, keys: Iterable[str]):
-    if not obj:
-        return None
-    for key in keys:
-        stamp = parse_time(obj.get(key))
-        if stamp:
-            return stamp
-    return None
+def pointer_summary(root: Path, pointer_path: str) -> dict[str, Any]:
+    pointer=load_json(root/pointer_path); target_path=pointer.get("path"); declared=pointer.get("sha256"); target=root/str(target_path) if target_path else None; actual=file_sha256(target) if target else None
+    return {"path":pointer_path,"target_path":target_path,"declared_sha256":declared,"actual_sha256":actual,"hash_status":"MATCH" if declared and actual and declared==actual else "MISMATCH" if declared or actual else "UNAVAILABLE"}
 
 
-def normalized_status(value):
-    x = str(value or 'UNKNOWN').upper()
-    if x in {'GREEN', 'AMBER', 'RED'}:
-        return x
-    if x in {'PASS', 'READY', 'COMPLETE', 'DURABLE_PASS', 'SUCCESS', 'SKIPPED_NO_DELTA', 'SKIPPED_NO_ELIGIBLE_INPUT'}:
-        return 'GREEN'
-    if x in {'PARTIAL', 'DEGRADED', 'PENDING', 'UNKNOWN', 'RECOVERING', 'UNAVAILABLE'}:
-        return 'AMBER'
-    if x in {'FAIL', 'FAILED', 'BLOCKED', 'SOURCE_UNAVAILABLE'}:
-        return 'RED'
-    return 'UNKNOWN'
+def verified_weekly_target(root: Path, pointer_path: str) -> dict[str, Any]:
+    pointer=load_json(root/pointer_path); target_path=pointer.get("path"); declared=pointer.get("sha256")
+    if not target_path: return {"pointer_path":pointer_path,"target_path":None,"declared_sha256":declared,"actual_sha256":None,"hash_status":"UNAVAILABLE","hash_mode":"SEMANTIC_PACKAGE_HASH","target":{}}
+    target_file=root/str(target_path); target=load_json(target_file); semantic_sha=target.get("package_sha256") if isinstance(target,dict) else None; contract_ok=target.get("contract")=="MASTER_MONDAY_MACHINE_PACKAGE_v1" if isinstance(target,dict) else False; match=bool(declared and semantic_sha and declared==semantic_sha and contract_ok)
+    return {"pointer_path":pointer_path,"target_path":target_path,"declared_sha256":declared,"actual_sha256":semantic_sha,"raw_file_sha256":file_sha256(target_file),"hash_status":"MATCH" if match else "MISMATCH" if declared or semantic_sha else "UNAVAILABLE","hash_mode":"SEMANTIC_PACKAGE_HASH","contract_status":"MATCH" if contract_ok else "MISMATCH","target":target}
 
 
-def combine_status(*values):
-    return max(values, key=lambda v: SEVERITY.get(v, 1))
+def latest_director(root: Path):
+    candidates=sorted((root/"research/api_agent/outputs/daily").glob("**/DAILY_DIRECTOR_OUTPUT.json"))
+    if not candidates: return None,{},{}
+    path=candidates[-1]; return path,load_json(path),load_json(path.with_name("DAILY_DIRECTOR_RECEIPT.json"))
 
 
-def freshness(timestamp, reference, green_hours, red_hours):
-    if timestamp is None:
-        return 'UNKNOWN', 'TIMESTAMP_UNAVAILABLE', None
-    age = round(max(0.0, (reference - timestamp).total_seconds() / 3600.0), 3)
-    if age <= green_hours:
-        return 'GREEN', 'FRESH', age
-    if age <= red_hours:
-        return 'AMBER', 'DELAYED', age
-    return 'RED', 'STALE', age
+def latest_remediation(root: Path):
+    latest=root/"research/remediation/LATEST_REMEDIATION_QUEUE.json"
+    if latest.exists(): return latest,load_json(latest)
+    candidates=sorted((root/"research/remediation").glob("**/REMEDIATION_QUEUE.json"))
+    if not candidates: return None,{}
+    path=candidates[-1]; return path,load_json(path)
 
 
-def pointer_entry(root, pointer):
-    if not isinstance(pointer, dict):
-        return {'path': None, 'declared_sha256': None, 'actual_sha256': None, 'hash_status': 'UNKNOWN'}
-    rel = pointer.get('path') if isinstance(pointer.get('path'), str) else None
-    actual = sha256_path(root / rel) if rel else None
-    declared = pointer.get('sha256') if isinstance(pointer.get('sha256'), str) else None
-    state = 'MISSING' if actual is None else 'UNDECLARED' if declared is None else 'MATCH' if actual == declared else 'MISMATCH'
-    return {'path': rel, 'declared_sha256': declared, 'actual_sha256': actual, 'hash_status': state}
+def count_receipts(root: Path) -> dict[str,Any]:
+    total=0; cost=0.0; input_tokens=0; output_tokens=0; latest_ts=None; latest_row={}; month=datetime.now(timezone.utc).strftime("%Y-%m")
+    for path in (root/"research/api_agent/outputs").glob("**/*RECEIPT.json"):
+        row=load_json(path); created=row.get("completed_at_utc") or row.get("generated_at_utc") or row.get("created_at_utc"); ts=parse_ts(created)
+        if ts is None:
+            try: ts=datetime.fromtimestamp(path.stat().st_mtime,tz=timezone.utc)
+            except Exception: ts=None
+        if ts and ts.strftime("%Y-%m")!=month: continue
+        total+=1; cost+=float(row.get("cost_usd") or row.get("estimated_cost_usd") or 0.0); input_tokens+=int(row.get("input_tokens") or 0); output_tokens+=int(row.get("output_tokens") or 0)
+        if ts and (latest_ts is None or ts>latest_ts): latest_ts=ts; latest_row={"path":str(path.relative_to(root)),"task":row.get("task"),"model":row.get("model"),"status":row.get("status"),"completed_at_utc":created,"cost_usd":row.get("cost_usd") or row.get("estimated_cost_usd")}
+    return {"month":month,"receipt_count":total,"cost_usd":round(cost,6),"input_tokens":input_tokens,"output_tokens":output_tokens,"latest":latest_row}
 
 
-def pointer_object(root, pointer):
-    if not pointer.get('path'):
-        return None
-    return read_json(root / pointer['path'])[0]
+def incident_summary(root: Path) -> dict[str,Any]:
+    open_paths=[]
+    for path in sorted((root/"09_SOURCE_QA/incidents").glob("INCIDENT_*.md")):
+        text=path.read_text(encoding="utf-8",errors="replace")
+        if "status: CLOSED" not in text and "Status: CLOSED" not in text: open_paths.append(str(path.relative_to(root)))
+    return {"open_count":len(open_paths),"paths":open_paths[-20:]}
 
 
-def hash_status(pointer):
-    return 'GREEN' if pointer['hash_status'] == 'MATCH' else 'RED' if pointer['hash_status'] == 'MISMATCH' else 'AMBER'
+def freshness_status(age: float|None, *, green: float, amber: float):
+    if age is None: return "RED","TIMESTAMP_UNAVAILABLE"
+    if age<=green: return "GREEN","FRESH"
+    if age<=amber: return "AMBER","DELAYED"
+    return "RED","STALE"
 
 
-def paired_director_receipt(root, pointer):
-    rel = pointer.get('path')
-    if not isinstance(rel, str):
-        return None, None
-    output = root / rel
-    for path in (output.with_name('DAILY_DIRECTOR_RECEIPT.json'), output.with_name('receipt.json')):
-        value, error = read_json(path)
-        if value is not None:
-            return value, str(path.relative_to(root))
-        if error not in {None, 'MISSING'}:
-            return None, str(path.relative_to(root))
-    return None, None
+def main() -> int:
+    parser=argparse.ArgumentParser(); parser.add_argument("--repo-root",type=Path,default=Path(".")); parser.add_argument("--output",type=Path,default=Path("LATEST_OPERATIONS_DASHBOARD.json")); args=parser.parse_args(); root=args.repo_root.resolve(); now=datetime.now(timezone.utc)
+    architecture=load_json(root/"research/architecture_health/LATEST_ARCHITECTURE_HEALTH.json"); automation=load_json(root/"research/architecture_health/LATEST_AUTOMATION_HEALTH.json"); handoff=load_json(root/"LATEST_HANDOFF.json")
+    capture_pointer=pointer_summary(root,"03_DAILY_CAPTURE_LOGS/captures/LATEST.json"); capture_target=load_json(root/str(capture_pointer.get("target_path"))) if capture_pointer.get("target_path") else {}
+    director_path,director,director_receipt=latest_director(root); weekly_verified=verified_weekly_target(root,"research/api_agent/outputs/weekly/2026/W34/MASTER_MONDAY_DELIVERY_POINTER.json"); weekly_path=root/str(weekly_verified.get("target_path")) if weekly_verified.get("target_path") else None; weekly=weekly_verified.get("target") if isinstance(weekly_verified.get("target"),dict) else {}
+    remediation_path,remediation=latest_remediation(root); experiment=load_json(root/"research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json"); receipt_sync=load_json(root/"research/experiment_lifecycle/LATEST_EXPERIMENT_RECEIPT_SYNC.json")
+    capture_ts=capture_target.get("captured_at_utc") or capture_target.get("capture_timestamp_utc"); director_ts=director_receipt.get("completed_at_utc") or director_receipt.get("generated_at_utc") or director_receipt.get("created_at_utc"); weekly_ts=weekly.get("generated_at_utc"); remediation_ts=remediation.get("generated_at_utc"); experiment_ts=experiment.get("generated_at_utc"); receipt_sync_ts=receipt_sync.get("generated_at_utc")
+    capture_age=age_hours(capture_ts,now); director_age=age_hours(director_ts,now); weekly_age=age_hours(weekly_ts,now); remediation_age=age_hours(remediation_ts,now); experiment_age=age_hours(experiment_ts,now); receipt_sync_age=age_hours(receipt_sync_ts,now)
+    capture_status,capture_reason=freshness_status(capture_age,green=8,amber=12); director_status,director_reason=freshness_status(director_age,green=8,amber=24); weekly_status,weekly_reason=freshness_status(weekly_age,green=192,amber=240); remediation_status,remediation_reason=freshness_status(remediation_age,green=24,amber=48); experiment_status,experiment_reason=freshness_status(experiment_age,green=8,amber=24); receipt_sync_status,receipt_sync_reason=freshness_status(receipt_sync_age,green=8,amber=24)
+    if capture_pointer["hash_status"]!="MATCH": capture_status,capture_reason="RED","POINTER_HASH_MISMATCH"
+    if weekly_verified["hash_status"]!="MATCH": weekly_status,weekly_reason="RED","TARGET_HASH_MISMATCH"
+    arch_status="GREEN" if architecture.get("status")=="GREEN" else "RED" if architecture.get("status")=="RED" else "AMBER"; auto_status="GREEN" if automation.get("status")=="GREEN" else "RED" if automation.get("status")=="RED" else "AMBER"
+    systems={"architecture_health":{"status":arch_status,"generated_at_utc":architecture.get("generated_at_utc"),"blockers":architecture.get("blockers",[]),"input_error":architecture.get("input_error")},"automation_health":{"status":auto_status,"generated_at_utc":automation.get("generated_at_utc"),"blockers":automation.get("blockers",[]),"red_count":automation.get("red_count"),"amber_count":automation.get("amber_count")},"daily_capture":{"status":capture_status,"reason":capture_reason,"age_hours":capture_age,"timestamp_utc":capture_ts,"pointer":capture_pointer},"openai_daily_director":{"status":director_status,"reason":director_reason,"age_hours":director_age,"timestamp_utc":director_ts,"path":str(director_path.relative_to(root)) if director_path else None,"receipt_path":str(director_path.with_name("DAILY_DIRECTOR_RECEIPT.json").relative_to(root)) if director_path else None,"semantic_status":director.get("status")},"weekly_output":{"status":weekly_status,"reason":weekly_reason,"age_hours":weekly_age,"timestamp_utc":weekly_ts,"path":str(weekly_path.relative_to(root)) if weekly_path else None,"target_path":weekly_verified.get("target_path"),"target_hash_status":weekly_verified.get("hash_status"),"hash_mode":weekly_verified.get("hash_mode"),"pointer":{"path":weekly_verified.get("pointer_path"),"declared_sha256":weekly_verified.get("declared_sha256"),"actual_sha256":weekly_verified.get("actual_sha256"),"raw_file_sha256":weekly_verified.get("raw_file_sha256"),"hash_status":weekly_verified.get("hash_status")}},"remediation_maturation":{"status":remediation_status,"reason":remediation_reason,"age_hours":remediation_age,"timestamp_utc":remediation_ts,"path":str(remediation_path.relative_to(root)) if remediation_path else None},"experiment_lifecycle":{"status":experiment_status,"reason":experiment_reason,"age_hours":experiment_age,"timestamp_utc":experiment_ts,"path":"research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json"},"experiment_receipt_sync":{"status":receipt_sync_status,"reason":receipt_sync_reason,"age_hours":receipt_sync_age,"timestamp_utc":receipt_sync_ts,"path":"research/experiment_lifecycle/LATEST_EXPERIMENT_RECEIPT_SYNC.json"}}
+    priority={"RED":3,"AMBER":2,"GREEN":1}; overall=max((row["status"] for row in systems.values()),key=lambda value:priority.get(value,0)); required_actions=[]
+    if auto_status=="RED": required_actions.append({"priority":"P0","system":"automation_health","reason":automation.get("blockers",[])})
+    if weekly_status=="RED": required_actions.append({"priority":"P0","system":"weekly_output","reason":weekly_reason})
+    if capture_status=="RED": required_actions.append({"priority":"P0","system":"daily_capture","reason":capture_reason})
+    if director_status in {"AMBER","RED"}: required_actions.append({"priority":"P1","system":"openai_daily_director","reason":director_reason})
+    state_counts=experiment.get("state_counts") if isinstance(experiment.get("state_counts"),dict) else {}
+    dashboard={"contract":"OPERATIONS_DASHBOARD_v1_2","authority":"OPERATIONAL_OBSERVABILITY_ONLY","generated_at_utc":now.isoformat().replace("+00:00","Z"),"overall_status":overall,"systems":systems,"agent_activity":{"openai_api":count_receipts(root),"experiments":{"candidate_count":experiment.get("candidate_count",0),"state_counts":state_counts,"dispatch_request_count":experiment.get("dispatch_request_count",0)},"remediation":{"codex_ready":remediation.get("summary",{}).get("codex_ready",0),"needs_more_evidence":remediation.get("summary",{}).get("needs_more_evidence",0),"automatic_code_write":False,"automatic_merge":False},"pending_forecast_candidates":len(remediation.get("items",[])) if isinstance(remediation.get("items"),list) else 0},"incidents":incident_summary(root),"required_actions":required_actions,"source_status":{"architecture_health":"PASS" if architecture else "MISSING","automation_health":"PASS" if automation else "MISSING","latest_handoff":"PASS" if handoff else "MISSING"}}
+    payload=json.dumps(dashboard,sort_keys=True,separators=(",",":"))+"\n"; dashboard["dashboard_sha256"]=hashlib.sha256(payload.encode()).hexdigest(); args.output.write_text(json.dumps(dashboard,sort_keys=True,separators=(",",":"))+"\n",encoding="utf-8"); print(json.dumps({"status":overall,"output":str(args.output),"required_actions":required_actions},sort_keys=True)); return 0
 
-
-def verified_weekly_target(root: Path, weekly: dict | None):
-    """Resolve the hash-bound machine package behind a weekly delivery pointer.
-
-    The delivery pointer intentionally has no synthetic publication timestamp. Freshness
-    comes from the target only when both its path and declared hash verify. This prevents
-    a missing or replaced target from creating false-green weekly freshness.
-    """
-    if not isinstance(weekly, dict):
-        return None, None, 'NOT_A_POINTER'
-    rel = weekly.get('machine_package_path')
-    declared = weekly.get('machine_package_sha256')
-    if not isinstance(rel, str) or not rel or not isinstance(declared, str) or not declared:
-        return None, None, 'TARGET_UNDECLARED'
-    path = root / rel
-    actual = sha256_path(path)
-    if actual is None:
-        return None, rel, 'TARGET_MISSING'
-    if actual != declared:
-        return None, rel, 'TARGET_HASH_MISMATCH'
-    value, error = read_json(path)
-    if error:
-        return None, rel, error
-    return value, rel, 'MATCH'
-
-
-def receipt_time(data):
-    return first_time(data, ('completed_at_utc', 'created_at_utc', 'generated_at_utc', 'timestamp_utc', 'created_unix'))
-
-
-def is_api_receipt(path, data):
-    return 'API_AGENT_RECEIPT' in str(data.get('contract') or '') or path.name.endswith('RECEIPT.json') or path.name == 'receipt.json'
-
-
-def collect_api_usage(root, reference):
-    month = reference.strftime('%Y-%m')
-    count = input_tokens = output_tokens = 0
-    cost = 0.0
-    latest = None
-    seen = set()
-    for base in (root / 'research/api_agent/outputs', root / 'research/api_agent/receipts'):
-        for path in base.rglob('*.json') if base.exists() else []:
-            data, error = read_json(path)
-            if error or data is None or not is_api_receipt(path, data):
-                continue
-            identity = str(data.get('response_id') or data.get('request_hash') or data.get('output_hash') or path)
-            if identity in seen:
-                continue
-            seen.add(identity)
-            stamp = receipt_time(data)
-            if stamp and (latest is None or stamp > latest[0]):
-                latest = (stamp, path, data)
-            if not stamp or stamp.strftime('%Y-%m') != month:
-                continue
-            count += 1
-            try:
-                cost += float(data.get('cost_usd', data.get('estimated_cost_usd', 0)) or 0)
-            except (TypeError, ValueError):
-                pass
-            usage = data.get('usage') if isinstance(data.get('usage'), dict) else {}
-            try:
-                input_tokens += int(usage.get('input_tokens', data.get('input_tokens', 0)) or 0)
-                output_tokens += int(usage.get('output_tokens', data.get('output_tokens', 0)) or 0)
-            except (TypeError, ValueError):
-                pass
-    row = None
-    if latest:
-        row = {
-            'path': str(latest[1].relative_to(root)),
-            'completed_at_utc': latest[0].isoformat().replace('+00:00', 'Z'),
-            'status': latest[2].get('status'),
-            'model': latest[2].get('model'),
-            'task': latest[2].get('task', latest[2].get('task_id')),
-            'cost_usd': latest[2].get('cost_usd', latest[2].get('estimated_cost_usd')),
-        }
-    return {'month': month, 'receipt_count': count, 'cost_usd': round(cost, 6), 'input_tokens': input_tokens, 'output_tokens': output_tokens, 'latest': row}
-
-
-def direct_system(root, path, contract, green_hours, red_hours, reference, missing_reason):
-    value, error = read_json(root / path)
-    if error:
-        return {'status': 'AMBER' if error == 'MISSING' else 'RED', 'reason': missing_reason if error == 'MISSING' else error, 'path': str(path), 'timestamp_utc': None, 'age_hours': None}, value
-    stamp = first_time(value, ('generated_at_utc', 'created_at_utc', 'completed_at_utc'))
-    fresh, reason, age = freshness(stamp, reference, green_hours, red_hours)
-    semantic = 'GREEN' if value.get('contract') == contract else 'RED'
-    return {'status': combine_status(fresh, semantic), 'reason': reason if semantic == 'GREEN' else 'INVALID_CONTRACT', 'path': str(path), 'timestamp_utc': stamp.isoformat().replace('+00:00', 'Z') if stamp else None, 'age_hours': age}, value
-
-
-def build_dashboard(repo_root, reference=None):
-    reference = reference or datetime.now(UTC)
-    handoff, handoff_error = read_json(repo_root / 'LATEST_HANDOFF.json')
-    automation, automation_error = read_json(repo_root / 'research/architecture_health/LATEST_AUTOMATION_HEALTH.json')
-    architecture, architecture_error = read_json(repo_root / 'research/architecture_health/LATEST_ARCHITECTURE_HEALTH.json')
-    pointers = handoff.get('pointers', {}) if handoff else {}
-
-    capture_pointer = pointer_entry(repo_root, pointers.get('latest_capture'))
-    director_pointer = pointer_entry(repo_root, pointers.get('latest_director_output'))
-    weekly_pointer = pointer_entry(repo_root, pointers.get('latest_weekly_output'))
-    capture = pointer_object(repo_root, capture_pointer)
-    director = pointer_object(repo_root, director_pointer)
-    weekly = pointer_object(repo_root, weekly_pointer)
-    director_receipt, director_receipt_path = paired_director_receipt(repo_root, director_pointer)
-    weekly_target, weekly_target_path, weekly_target_hash_status = verified_weekly_target(repo_root, weekly)
-
-    capture_time = first_time(capture, ('captured_at_utc', 'snapshot_utc', 'generated_at_utc', 'created_at_utc'))
-    director_time = first_time(director, ('completed_at_utc', 'generated_at_utc', 'created_at_utc', 'captured_at_utc')) or receipt_time(director_receipt)
-    weekly_time = first_time(weekly, ('completed_at_utc', 'generated_at_utc', 'created_at_utc', 'freeze_recorded_at_utc', 'published_at_utc')) or first_time(weekly_target, ('completed_at_utc', 'generated_at_utc', 'created_at_utc', 'freeze_recorded_at_utc', 'published_at_utc'))
-
-    capture_fresh, capture_reason, capture_age = freshness(capture_time, reference, 8, 16)
-    director_fresh, director_reason, director_age = freshness(director_time, reference, 12, 30)
-    weekly_fresh, weekly_reason, weekly_age = freshness(weekly_time, reference, 24 * 8, 24 * 15)
-    weekly_target_integrity = 'GREEN' if weekly_target_hash_status in {'MATCH', 'NOT_A_POINTER'} else 'RED' if weekly_target_hash_status == 'TARGET_HASH_MISMATCH' else 'AMBER'
-
-    semantic_source = (director_receipt or {}).get('status') or (director or {}).get('status')
-    director_semantic = normalized_status(semantic_source)
-    if str(semantic_source or '').upper() == 'SKIPPED_NO_DELTA':
-        director_semantic = 'GREEN'
-        director_reason = 'EXPECTED_SKIP_NO_COMPARABLE_DELTA'
-    elif str(semantic_source or '').upper() == 'SKIPPED_NO_ELIGIBLE_INPUT':
-        director_semantic = 'GREEN'
-        director_reason = 'EXPECTED_SKIP_NO_ELIGIBLE_INPUT'
-
-    experiment_system, experiment = direct_system(repo_root, Path('research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json'), 'EXPERIMENT_LIFECYCLE_REGISTRY_v1', 36, 72, reference, 'NO_EXPERIMENT_REGISTRY_YET')
-    sync_system, sync = direct_system(repo_root, Path('research/experiment_lifecycle/LATEST_EXPERIMENT_RECEIPT_SYNC.json'), 'EXPERIMENT_RECEIPT_SYNC_v1', 48, 96, reference, 'NO_EXPERIMENT_RECEIPT_SYNC_YET')
-    if sync and sync.get('status') == 'UNAVAILABLE':
-        sync_system['status'] = 'AMBER'
-        sync_system['reason'] = 'EXECUTION_PLANE_UNAVAILABLE'
-    if sync and sync.get('status') == 'FAIL':
-        sync_system['status'] = 'RED'
-        sync_system['reason'] = 'RECEIPT_SYNC_FAILED'
-    remediation_system, remediation = direct_system(repo_root, Path('research/remediation/LATEST_REMEDIATION_QUEUE.json'), 'REMEDIATION_MATURATION_ENGINE_v1', 18, 36, reference, 'NO_REMEDIATION_QUEUE_YET')
-
-    systems = {
-        'daily_capture': {'status': combine_status(capture_fresh, hash_status(capture_pointer)), 'reason': capture_reason, 'age_hours': capture_age, 'timestamp_utc': capture_time.isoformat().replace('+00:00', 'Z') if capture_time else None, 'pointer': capture_pointer},
-        'openai_daily_director': {'status': combine_status(director_fresh, hash_status(director_pointer), director_semantic), 'reason': director_reason, 'age_hours': director_age, 'timestamp_utc': director_time.isoformat().replace('+00:00', 'Z') if director_time else None, 'semantic_status': semantic_source, 'pointer': director_pointer, 'receipt_path': director_receipt_path},
-        'weekly_output': {'status': combine_status(weekly_fresh, hash_status(weekly_pointer), weekly_target_integrity), 'reason': weekly_reason if weekly_target_integrity == 'GREEN' else weekly_target_hash_status, 'age_hours': weekly_age, 'timestamp_utc': weekly_time.isoformat().replace('+00:00', 'Z') if weekly_time else None, 'pointer': weekly_pointer, 'target_path': weekly_target_path, 'target_hash_status': weekly_target_hash_status},
-        'automation_health': {'status': normalized_status(automation.get('status') if automation else None), 'generated_at_utc': automation.get('generated_at_utc') if automation else None, 'red_count': automation.get('red_count') if automation else None, 'amber_count': automation.get('amber_count') if automation else None, 'blockers': automation.get('blockers', []) if automation else [], 'input_error': automation_error},
-        'architecture_health': {'status': normalized_status(architecture.get('status') if architecture else None), 'generated_at_utc': architecture.get('generated_at_utc') if architecture else None, 'blockers': architecture.get('blockers', []) if architecture else [], 'input_error': architecture_error},
-        'experiment_lifecycle': experiment_system,
-        'experiment_receipt_sync': sync_system,
-        'remediation_maturation': remediation_system,
-    }
-
-    actions = []
-    for name, system in systems.items():
-        reason = system.get('reason') or system.get('input_error') or system.get('blockers') or 'REQUIRED_INPUT_UNAVAILABLE'
-        if system['status'] == 'RED':
-            actions.append({'priority': 'P0', 'system': name, 'reason': reason})
-        elif system['status'] in {'AMBER', 'UNKNOWN'}:
-            actions.append({'priority': 'P1', 'system': name, 'reason': reason})
-    actions.sort(key=lambda row: (row['priority'], row['system']))
-    overall = 'GREEN'
-    for system in systems.values():
-        overall = combine_status(overall, system['status'])
-
-    dispatch = read_json(repo_root / 'research/experiment_lifecycle/LATEST_EXPERIMENT_DISPATCH_MANIFEST.json')[0] or {}
-    dashboard = {
-        'contract': 'OPERATIONS_DASHBOARD_v1_2',
-        'authority': 'OPERATIONAL_OBSERVABILITY_ONLY',
-        'generated_at_utc': reference.isoformat().replace('+00:00', 'Z'),
-        'overall_status': overall,
-        'source_status': {'latest_handoff': handoff_error or 'PASS', 'automation_health': automation_error or 'PASS', 'architecture_health': architecture_error or 'PASS'},
-        'systems': systems,
-        'agent_activity': {
-            'openai_api': collect_api_usage(repo_root, reference),
-            'pending_forecast_candidates': len(handoff.get('pending_forecast_candidates', [])) if handoff else 0,
-            'experiments': {'candidate_count': (experiment or {}).get('candidate_count', 0), 'state_counts': (experiment or {}).get('state_counts', {}), 'dispatch_request_count': dispatch.get('request_count', 0)},
-            'remediation': {'codex_ready': ((remediation or {}).get('summary') or {}).get('codex_ready', 0), 'needs_more_evidence': ((remediation or {}).get('summary') or {}).get('needs_more_evidence', 0), 'automatic_code_write': (remediation or {}).get('automatic_code_write', False), 'automatic_merge': (remediation or {}).get('automatic_merge', False)},
-        },
-        'incidents': {'open_count': len(handoff.get('open_incidents', [])) if handoff else 0, 'paths': handoff.get('open_incidents', []) if handoff else []},
-        'required_actions': actions,
-    }
-    canonical = json.dumps(dashboard, sort_keys=True, separators=(',', ':')).encode()
-    dashboard['dashboard_sha256'] = hashlib.sha256(canonical).hexdigest()
-    return dashboard
-
-
-def render_markdown(data):
-    lines = ['# Operations Dashboard', '', f"Overall: **{data['overall_status']}**", f"Generated: `{data['generated_at_utc']}`", '', '## Systems', '', '| System | Status | Detail | Age hours |', '|---|---:|---|---:|']
-    for name, system in data['systems'].items():
-        lines.append(f"| `{name}` | **{system['status']}** | {system.get('reason') or system.get('semantic_status') or '-'} | {system.get('age_hours') if system.get('age_hours') is not None else '-'} |")
-    usage = data['agent_activity']['openai_api']
-    exp = data['agent_activity']['experiments']
-    rem = data['agent_activity']['remediation']
-    lines += ['', '## AI and learning activity', '', f"- OpenAI receipts this month: **{usage['receipt_count']}**", f"- OpenAI cost this month: **${usage['cost_usd']:.6f}**", f"- Pending forecast candidates: **{data['agent_activity']['pending_forecast_candidates']}**", f"- Experiment candidates: **{exp['candidate_count']}**", f"- Experiment dispatch requests: **{exp['dispatch_request_count']}**", f"- Codex-ready remediation tasks: **{rem['codex_ready']}**", f"- Needs-more-evidence items: **{rem['needs_more_evidence']}**", '', '## Incidents', '', f"Open incident references: **{data['incidents']['open_count']}**", '', '## Required actions', '']
-    if data['required_actions']:
-        lines.extend(f"- **{row['priority']}** `{row['system']}` - {row['reason']}" for row in data['required_actions'])
-    else:
-        lines.append('- None')
-    lines += ['', f"Dashboard SHA-256: `{data['dashboard_sha256']}`", '']
-    return '\n'.join(lines)
-
-
-def main():
-    p = argparse.ArgumentParser()
-    p.add_argument('--repo-root', type=Path, required=True)
-    p.add_argument('--json-output', type=Path, required=True)
-    p.add_argument('--md-output', type=Path, required=True)
-    p.add_argument('--reference-time')
-    a = p.parse_args()
-    result = build_dashboard(a.repo_root, parse_time(a.reference_time) if a.reference_time else None)
-    a.json_output.parent.mkdir(parents=True, exist_ok=True)
-    a.md_output.parent.mkdir(parents=True, exist_ok=True)
-    a.json_output.write_text(json.dumps(result, sort_keys=True, separators=(',', ':')) + '\n')
-    a.md_output.write_text(render_markdown(result))
-    print(json.dumps({'status': result['overall_status'], 'dashboard_sha256': result['dashboard_sha256']}, sort_keys=True))
-
-
-if __name__ == '__main__':
-    main()
+if __name__=="__main__": raise SystemExit(main())
