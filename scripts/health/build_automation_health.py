@@ -9,11 +9,13 @@ import urllib.request
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 UTC = timezone.utc
 WRITER_GROUP = "framework-main-writer"
 GOOD_CONCLUSIONS = {"success", "neutral", "skipped"}
 LIFECYCLE_STATES = {"ACTIVE", "EXPECTED_BLOCK", "PENDING_FIRST_EXPECTED_RUN", "RETIRED"}
+SCHEDULE_LATENESS_TOLERANCE = timedelta(hours=6)
 
 
 def utc_now() -> datetime:
@@ -188,6 +190,129 @@ def _mapping_has_direct_child(text: str, parent: str, child: str) -> bool:
     return False
 
 
+def _quoted_values(text: str, key: str) -> list[str]:
+    pattern = re.compile(rf"(?:^|[{{,\s-]){re.escape(key)}\s*:\s*(['\"])(.*?)\1", re.MULTILINE)
+    return [match.group(2).strip() for match in pattern.finditer(text)]
+
+
+def _schedule_metadata(text: str) -> tuple[list[str], str]:
+    """Extract cron values and timezone only from the top-level on.schedule subtree."""
+    lines = text.splitlines()
+    parent_re = re.compile(r"^(?:on|['\"]on['\"])\s*:\s*(.*)$")
+    schedule_re = re.compile(r"^(?:schedule|['\"]schedule['\"])\s*:\s*(.*)$")
+    for index, line in enumerate(lines):
+        parent_match = parent_re.fullmatch(line)
+        if not parent_match:
+            continue
+        parent_value = parent_match.group(1).strip()
+        if parent_value:
+            flow_value = parent_value
+            cursor = index + 1
+            while _flow_brace_balance(flow_value) > 0 and cursor < len(lines):
+                flow_value += "\n" + lines[cursor]
+                cursor += 1
+            if _flow_mapping_has_key(flow_value, "schedule"):
+                crons = _quoted_values(flow_value, "cron")
+                timezones = _quoted_values(flow_value, "timezone")
+                return crons, timezones[0] if timezones else "UTC"
+            return [], "UTC"
+
+        block: list[tuple[int, str]] = []
+        for candidate in lines[index + 1:]:
+            stripped = candidate.strip()
+            if not stripped or stripped.startswith("#"):
+                continue
+            indent = len(candidate) - len(candidate.lstrip(" "))
+            if indent == 0:
+                break
+            block.append((indent, candidate.lstrip(" ")))
+        if not block:
+            return [], "UTC"
+        direct_indent = min(indent for indent, _ in block)
+        for child_index, (indent, value) in enumerate(block):
+            if indent != direct_indent or not schedule_re.fullmatch(value):
+                continue
+            subtree = [value]
+            for nested_indent, nested_value in block[child_index + 1:]:
+                if nested_indent <= direct_indent:
+                    break
+                subtree.append(nested_value)
+            schedule_text = "\n".join(subtree)
+            crons = _quoted_values(schedule_text, "cron")
+            timezones = _quoted_values(schedule_text, "timezone")
+            return crons, timezones[0] if timezones else "UTC"
+    return [], "UTC"
+
+
+def _cron_field_values(field: str, minimum: int, maximum: int, *, day_of_week: bool = False) -> set[int] | None:
+    values: set[int] = set()
+    for component in field.split(","):
+        component = component.strip()
+        if not component:
+            return None
+        base, separator, step_text = component.partition("/")
+        try:
+            step = int(step_text) if separator else 1
+        except ValueError:
+            return None
+        if step <= 0:
+            return None
+        if base == "*":
+            start, end = minimum, maximum
+        elif "-" in base:
+            start_text, end_text = base.split("-", 1)
+            try:
+                start, end = int(start_text), int(end_text)
+            except ValueError:
+                return None
+        else:
+            try:
+                start = end = int(base)
+            except ValueError:
+                return None
+        if day_of_week:
+            start = 0 if start == 7 else start
+            end = 0 if end == 7 else end
+        if start < minimum or start > maximum or end < minimum or end > maximum or start > end:
+            return None
+        values.update(range(start, end + 1, step))
+    return values
+
+
+def _supported_cron(expression: str) -> tuple[set[int], set[int], set[int]] | None:
+    fields = expression.split()
+    if len(fields) != 5 or fields[2] != "*" or fields[3] != "*":
+        return None
+    minutes = _cron_field_values(fields[0], 0, 59)
+    hours = _cron_field_values(fields[1], 0, 23)
+    days = _cron_field_values(fields[4], 0, 6, day_of_week=True)
+    if minutes is None or hours is None or days is None:
+        return None
+    return minutes, hours, days
+
+
+def _most_recent_expected_run(expressions: list[str], timezone_name: str, now: datetime) -> datetime | None:
+    schedules = [_supported_cron(expression) for expression in expressions]
+    if not schedules or any(schedule is None for schedule in schedules):
+        return None
+    try:
+        zone = ZoneInfo(timezone_name)
+    except ZoneInfoNotFoundError:
+        return None
+    cursor = now.astimezone(UTC).replace(second=0, microsecond=0)
+    for offset in range(8 * 24 * 60 + 1):
+        candidate = cursor - timedelta(minutes=offset)
+        local = candidate.astimezone(zone)
+        cron_day = (local.weekday() + 1) % 7
+        if any(
+            local.minute in schedule[0] and local.hour in schedule[1] and cron_day in schedule[2]
+            for schedule in schedules
+            if schedule is not None
+        ):
+            return candidate
+    return None
+
+
 def workflow_static(path: Path) -> dict[str, Any]:
     text = path.read_text(errors="ignore")
     writes = "contents: write" in text and "git push" in text
@@ -202,7 +327,8 @@ def workflow_static(path: Path) -> dict[str, Any]:
     match = re.search(r"(?m)^\s*group:\s*([^\n#]+)", text)
     if match:
         writer_group = match.group(1).strip().strip("'\"")
-    cron_count = len(re.findall(r"(?m)^\s*-\s*cron:\s*", text))
+    cron_expressions, schedule_timezone = _schedule_metadata(text)
+    cron_count = len(cron_expressions)
     permissions = sorted(set(re.findall(r"(?m)^\s{2}([a-z-]+):\s*(read|write|none)\s*$", text)))
 
     lifecycle_raw = (_directive(text, "framework-lifecycle") or "ACTIVE").upper()
@@ -257,6 +383,8 @@ def workflow_static(path: Path) -> dict[str, Any]:
         "scheduled": scheduled,
         "manual": manual,
         "cron_count": cron_count,
+        "cron_expressions": cron_expressions,
+        "schedule_timezone": schedule_timezone,
         "writes_main": writes,
         "writer_group": writer_group,
         "openai_enabled": uses_openai,
@@ -280,7 +408,11 @@ def leading_streak(conclusions: list[str | None], good: bool) -> int:
     return count
 
 
-def live_workflows(repo: str, token: str) -> dict[str, dict[str, Any]]:
+def live_workflows(
+    repo: str,
+    token: str,
+    scheduled_workflows: set[str] | None = None,
+) -> dict[str, dict[str, Any]]:
     owner, name = repo.split("/", 1)
     base = f"https://api.github.com/repos/{owner}/{name}"
     workflows: list[dict[str, Any]] = []
@@ -297,12 +429,19 @@ def live_workflows(repo: str, token: str) -> dict[str, dict[str, Any]]:
     result: dict[str, dict[str, Any]] = {}
     for workflow in workflows:
         wid = workflow["id"]
+        workflow_name = Path(workflow["path"]).name
         runs = api_json(f"{base}/actions/workflows/{wid}/runs?per_page=10", token).get("workflow_runs", [])
         latest = runs[0] if runs else None
+        latest_scheduled = next((run for run in runs if run.get("event") == "schedule"), None)
+        if scheduled_workflows is not None and workflow_name in scheduled_workflows:
+            scheduled_runs = api_json(
+                f"{base}/actions/workflows/{wid}/runs?event=schedule&per_page=1", token
+            ).get("workflow_runs", [])
+            latest_scheduled = scheduled_runs[0] if scheduled_runs else None
         recent_completed = [r for r in runs if r.get("status") == "completed"]
         conclusions = [r.get("conclusion") for r in recent_completed]
         recent_failures = [r for r in recent_completed if r.get("conclusion") not in GOOD_CONCLUSIONS]
-        result[Path(workflow["path"]).name] = {
+        result[workflow_name] = {
             "workflow_id": wid,
             "name": workflow.get("name"),
             "state": workflow.get("state"),
@@ -317,6 +456,17 @@ def live_workflows(repo: str, token: str) -> dict[str, dict[str, Any]]:
                 "run_attempt": latest.get("run_attempt"),
                 "html_url": latest.get("html_url"),
                 "head_sha": latest.get("head_sha"),
+            },
+            "latest_scheduled_run": None if not latest_scheduled else {
+                "id": latest_scheduled.get("id"),
+                "event": latest_scheduled.get("event"),
+                "status": latest_scheduled.get("status"),
+                "conclusion": latest_scheduled.get("conclusion"),
+                "created_at": latest_scheduled.get("created_at"),
+                "updated_at": latest_scheduled.get("updated_at"),
+                "run_attempt": latest_scheduled.get("run_attempt"),
+                "html_url": latest_scheduled.get("html_url"),
+                "head_sha": latest_scheduled.get("head_sha"),
             },
             "recent_completed_count": len(recent_completed),
             "recent_failure_count": len(recent_failures),
@@ -352,7 +502,8 @@ def classify(row: dict[str, Any], now: datetime) -> tuple[str, list[str]]:
         findings.append("RETIRED_WORKFLOW_LOCAL_FILE_PRESENT")
     else:
         if row["scheduled"]:
-            if not latest:
+            scheduled_latest = live.get("latest_scheduled_run") if "latest_scheduled_run" in live else latest
+            if not scheduled_latest:
                 if lifecycle == "PENDING_FIRST_EXPECTED_RUN":
                     findings.append("PENDING_FIRST_EXPECTED_RUN")
                 else:
@@ -360,11 +511,22 @@ def classify(row: dict[str, Any], now: datetime) -> tuple[str, list[str]]:
             else:
                 if lifecycle == "PENDING_FIRST_EXPECTED_RUN":
                     findings.append("PENDING_FIRST_RUN_ALREADY_RAN")
-                created = parse_ts(latest.get("created_at"))
+                created = parse_ts(scheduled_latest.get("created_at"))
                 if created:
-                    age = now - created
-                    threshold = timedelta(hours=36 if row["cron_count"] else 192)
-                    if age > threshold:
+                    expected = _most_recent_expected_run(
+                        list(row.get("cron_expressions") or []),
+                        str(row.get("schedule_timezone") or "UTC"),
+                        now,
+                    )
+                    if expected is None:
+                        findings.append("SCHEDULE_CADENCE_UNSUPPORTED")
+                        stale = now - created > timedelta(hours=36)
+                    else:
+                        stale = (
+                            now > expected + SCHEDULE_LATENESS_TOLERANCE
+                            and created < expected - SCHEDULE_LATENESS_TOLERANCE
+                        )
+                    if stale:
                         findings.append("SCHEDULE_STALE")
                 if latest.get("status") == "completed" and latest.get("conclusion") not in GOOD_CONCLUSIONS:
                     findings.append("LATEST_RUN_FAILED")
@@ -411,7 +573,11 @@ def main() -> None:
     api_error = None
     if args.repo and args.token:
         try:
-            live = live_workflows(args.repo, args.token)
+            live = live_workflows(
+                args.repo,
+                args.token,
+                {str(row["workflow"]) for row in rows if row["scheduled"]},
+            )
         except (urllib.error.URLError, urllib.error.HTTPError, TimeoutError, ValueError) as exc:
             api_error = f"{type(exc).__name__}:{exc}"
 
