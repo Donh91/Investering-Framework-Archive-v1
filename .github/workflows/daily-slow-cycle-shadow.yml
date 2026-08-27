@@ -1,0 +1,56 @@
+name: Daily Slow Cycle Shadow
+
+on:
+  schedule:
+    - cron: '37 6 * * *'
+      timezone: 'Europe/Copenhagen'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: framework-main-writer
+  cancel-in-progress: false
+
+jobs:
+  collect:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Collect World Bank Copper/Gold shadow owner
+        run: |
+          python scripts/data_terminal/world_bank_copper_gold_owner.py \
+            --output-root 03_DAILY_CAPTURE_LOGS/slow_cycle/copper_gold
+      - name: Collect passive HY OAS credit context
+        continue-on-error: true
+        run: |
+          python scripts/data_terminal/fred_csv_collector.py \
+            --series BAMLH0A0HYM2 \
+            --output-dir /tmp/hy-oas
+          mkdir -p 03_DAILY_CAPTURE_LOGS/slow_cycle/hy_oas
+          cp /tmp/hy-oas/latest_terminal_state.json 03_DAILY_CAPTURE_LOGS/slow_cycle/hy_oas/LATEST.json
+      - name: Run deterministic tests
+        run: python -m pytest -q tests/data_terminal/test_world_bank_copper_gold_owner.py tests/research/test_hy_oas_pre_top_falsification.py tests/research/test_copper_gold_slow_cycle_event_study.py
+      - name: Commit only changed slow-cycle evidence
+        shell: bash
+        run: |
+          git config user.name 'framework-data-bot'
+          git config user.email 'framework-data-bot@users.noreply.github.com'
+          git add 03_DAILY_CAPTURE_LOGS/slow_cycle
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "data: update slow-cycle shadow evidence ${GITHUB_RUN_ID}"
+          for attempt in 1 2 3; do
+            git rebase --abort 2>/dev/null || true
+            if git pull --rebase origin main && git push origin HEAD:main; then exit 0; fi
+            sleep $((attempt * 5))
+          done
+          exit 1
