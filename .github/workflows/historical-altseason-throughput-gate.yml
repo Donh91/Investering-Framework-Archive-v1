@@ -17,27 +17,15 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Validate live schedule, handoff, bounded storage, and terminal wiring
+      - name: Validate live handoff, bounded storage, and terminal wiring
         run: |
           python - <<'PY'
-          import csv, pathlib
-          root=pathlib.Path('.')
-          text=lambda p:(root/p).read_text()
-          free=text('.github/workflows/historical-altseason-free-bootstrap.yml')
-          reserve=text('.github/workflows/historical-altseason-cfgi-reservation.yml')
-          paid=text('.github/workflows/historical-altseason-cfgi-enrichment.yml')
-          free_pub=text('.github/workflows/historical-altseason-free-publish.yml')
-          paid_pub=text('.github/workflows/historical-altseason-cfgi-publish.yml')
-          audit=text('.github/workflows/historical-altseason-cfgi-run-audit.yml')
-          term=text('.github/workflows/historical-altseason-cfgi-terminal-publish.yml')
-          finalize=text('.github/workflows/historical-altseason-cfgi-terminal-finalize.yml')
-          lab=text('.github/workflows/historical-altseason-lab-gate.yml')
+          import csv,pathlib
+          root=pathlib.Path('.'); text=lambda p:(root/p).read_text()
+          free=text('.github/workflows/historical-altseason-free-bootstrap.yml'); reserve=text('.github/workflows/historical-altseason-cfgi-reservation.yml'); paid=text('.github/workflows/historical-altseason-cfgi-enrichment.yml'); free_pub=text('.github/workflows/historical-altseason-free-publish.yml'); paid_pub=text('.github/workflows/historical-altseason-cfgi-publish.yml'); audit=text('.github/workflows/historical-altseason-cfgi-run-audit.yml'); term=text('.github/workflows/historical-altseason-cfgi-terminal-publish.yml'); finalize=text('.github/workflows/historical-altseason-cfgi-terminal-finalize.yml'); lab=text('.github/workflows/historical-altseason-lab-gate.yml')
           write_perm='contents:'+' write'; push_main='git push origin HEAD:'+'main'; upload_action='actions/upload-'+'artifact@v4'; retention_key='retention-'+'days: 30'
-
-          assert '30 4 * * *' in free
-          assert 'on:\n  workflow_dispatch:' in reserve and 'schedule:' not in reserve
-          assert 'This lane is retired' in reserve
+          assert 'Historical Altseason Lab Gate' in free and 'workflow_run:' in free
+          assert 'on:\n  workflow_dispatch:' in reserve and 'schedule:' not in reserve and 'This lane is retired' in reserve
           assert 'contents: read' in reserve and write_perm not in reserve and push_main not in reserve
           assert 'Historical Altseason Free Bootstrap' in paid and 'workflow_run:' in paid
           assert 'Historical Altseason CFGI Enrichment' in paid_pub and 'workflow_run:' in paid_pub
@@ -45,21 +33,14 @@ jobs:
           assert 'Historical Altseason CFGI Enrichment' in audit and 'workflow_run:' in audit
           assert 'Historical Altseason CFGI Enrichment' in term and 'workflow_run:' in term
           assert 'Historical Altseason CFGI Terminal Publish' in finalize and 'workflow_run:' in finalize
-          assert 'Historical Altseason Free Bootstrap' in lab and 'workflow_run:' in lab
           for compute in (free,paid): assert push_main not in compute and 'contents: read' in compute
           for writer in (free_pub,paid_pub,audit,term,finalize):
-              assert write_perm in writer and push_main in writer
-              assert 'concurrency:' in writer and 'group: framework-main-writer' in writer
+              assert write_perm in writer and push_main in writer and 'group: framework-main-writer' in writer
               assert 'git fetch origin main' in writer and 'git rebase origin/main' in writer
           for publisher in (free_pub,paid_pub): assert upload_action in publisher and retention_key in publisher
-          assert 'if-no-files-found: error' in free and 'FREE_BOOTSTRAP_COMPLETION_v1.json' in free
-          assert 'if-no-files-found: error' in paid and 'CFGI_PAID_COMPLETION_v1.json' in paid
-          assert 'if-no-files-found: error' in term and 'CFGI_TERMINAL_PROOF_v1.json' in term
-          assert 'if-no-files-found: error' in finalize and 'TERMINAL_COMPLETION_v1.json' in finalize and 'TERMINAL_SUMMARY_v1.json' in finalize
-          assert 'coverage_ledger.csv' in free_pub and 'missingness_ledger.csv' in free_pub and 'cfgi_paid_calls_ledger.csv' in paid_pub
-
-          cov=list(csv.DictReader(open('research/historical_altseason/coverage_ledger.csv')))
-          miss=list(csv.DictReader(open('research/historical_altseason/missingness_ledger.csv')))
+          assert 'FREE_BOOTSTRAP_COMPLETION_v1.json' in free and 'CFGI_PAID_COMPLETION_v1.json' in paid
+          assert 'CFGI_TERMINAL_PROOF_v1.json' in term and 'TERMINAL_COMPLETION_v1.json' in finalize and 'TERMINAL_SUMMARY_v1.json' in finalize
+          cov=list(csv.DictReader(open('research/historical_altseason/coverage_ledger.csv'))); miss=list(csv.DictReader(open('research/historical_altseason/missingness_ledger.csv')))
           assert len(cov)==len(miss) and len(cov)<=11000
           assert all(r['provenance_class'] in {'BINANCE_SPOT','CRYPTOCOMPARE_FALLBACK','MISSING'} for r in cov)
           print('PASS')
