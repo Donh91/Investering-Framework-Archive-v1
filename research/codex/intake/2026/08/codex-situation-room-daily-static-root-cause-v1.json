@@ -1,0 +1,68 @@
+{
+  "contract": "CODEX_RESEARCH_CANDIDATE_v1",
+  "candidate_id": "codex-situation-room-daily-static-root-cause-v1",
+  "title": "Situation Room daily static root-cause and durable recovery",
+  "status": "SUBMITTED",
+  "requested_priority": "EXPEDITED",
+  "authority_boundary": "CODE_REMEDIATION_ONLY",
+  "requires_framework_owner_authority": false,
+  "finding_key": "SITUATION_ROOM_DAILY_STATIC_LATEST_RUN_FAILED",
+  "objective": "Reproduce the current Situation Room Daily Static Discovery failure on fresh main, determine why the first natural scheduled production run was cancelled, and implement the smallest deterministic repair that restores a durable discovery artifact without weakening the catalyst firewall, fabricating event timestamps, converting retrieval failure into NO_NEW_MATERIAL_CATALYST, or granting canonical market authority.",
+  "primary_target": ".github/workflows/situation-room-daily-static.yml",
+  "origin": {
+    "type": "HEALTH_AUDIT",
+    "thread_label": "2026-08-28 daily evidence and catalyst health watch",
+    "source_paths": [
+      ".github/workflows/situation-room-daily-static.yml",
+      "scripts/data_terminal/situation_room_static_daily_adapter.py",
+      ".github/workflows/situation-room-owner-live-gate.yml",
+      "research/architecture_health/LATEST_AUTOMATION_HEALTH.json"
+    ]
+  },
+  "evidence": [
+    {"kind":"RUN","ref":"33099422005","summary":"Situation Room Daily Static Discovery scheduled run on 2026-08-27 completed as cancelled and is the current LATEST_RUN_FAILED blocker."},
+    {"kind":"REPO_PATH","ref":"research/architecture_health/LATEST_AUTOMATION_HEALTH.json","summary":"Fresh health generated 2026-08-28T00:28:29.822625Z classifies situation-room-daily-static.yml as RED with LATEST_RUN_FAILED."},
+    {"kind":"REPO_PATH","ref":".github/workflows/situation-room-owner-live-gate.yml","summary":"Owner live gate is recovering after prior failures and must remain an independent contract check rather than being bypassed."},
+    {"kind":"CONTRACT","ref":"CATALYST_FIREWALL","summary":"Situation Room remains discovery-only, shadow/context-only and cannot alter canonical market state, thresholds, scores or portfolio actions."}
+  ],
+  "allowed_change_scope": [
+    ".github/workflows/situation-room-daily-static.yml",
+    ".github/workflows/situation-room-owner-live-gate.yml",
+    "scripts/data_terminal/situation_room_static_daily_adapter.py",
+    "tests/data_terminal",
+    "tests/health/directly related Situation Room tests"
+  ],
+  "forbidden_changes": [
+    "market gates",
+    "model weights",
+    "canonical authority",
+    "portfolio logic",
+    "API budget",
+    "new policy semantics",
+    "fabricating event_time_utc",
+    "treating retrieval failure as NO_NEW_MATERIAL_CATALYST",
+    "removing independent corroboration requirements",
+    "automatic merge or self-promotion"
+  ],
+  "reproduction": "On fresh main, inspect run 33099422005, its jobs and logs, then execute the same production-shaped workflow path using the current static daily adapter. Identify whether cancellation came from concurrency, main-writer contention, workflow orchestration, adapter exit semantics, network/retrieval handling or another bounded cause. Do not assume the prior entrypoint defect is still causal. Stop as clean no-op if a later natural run has already succeeded and the failure cannot be reproduced.",
+  "acceptance_tests": {
+    "positive": [
+      "A production-shaped run completes without cancellation and persists one explicit Situation Room discovery state when the daily briefing is reachable.",
+      "Reachable but metadata-incomplete briefing yields explicit REVIEW_REQUIRED or equivalent bounded discovery state rather than false NO_NEW_MATERIAL_CATALYST.",
+      "Primary-source or high-quality corroboration remains downstream of discovery and is not bypassed.",
+      "The workflow remains discovery-only with canonical_effect=false, market_state_effect=false and portfolio_effect=false."
+    ],
+    "negative": [
+      "Network or source failure cannot be reported as NO_NEW_MATERIAL_CATALYST.",
+      "URL date cannot be promoted to a fabricated precise event_time_utc.",
+      "The repair cannot weaken catalyst firewall semantics or grant execution/portfolio authority.",
+      "A cancellation caused solely by global writer contention must be handled without parallel competing main writers or destructive concurrency changes."
+    ]
+  },
+  "post_fix_gate": "ONE_NATURAL_SCHEDULED_RUN_PLUS_SITUATION_ROOM_OWNER_LIVE_GATE_PASS",
+  "clean_noop_condition": "A fresh natural scheduled Situation Room run already succeeds, writes the expected durable discovery state, and the current health finding clears without further code changes.",
+  "stop_condition": "Stop without implementation if fresh reproduction fails, the issue is only stale health state, or the required repair exceeds allowed_change_scope or would weaken catalyst governance.",
+  "escalation_condition": "Escalate to FRAMEWORK_OWNER if resolution requires canonical market semantics, new external authority, paid provider access, portfolio logic, or a change to the catalyst firewall.",
+  "rollback_plan": "Revert only the bounded Situation Room workflow/adapter/test changes. Do not rewrite previously captured catalyst evidence.",
+  "submitted_at_utc": "2026-08-28T05:58:00Z"
+}
