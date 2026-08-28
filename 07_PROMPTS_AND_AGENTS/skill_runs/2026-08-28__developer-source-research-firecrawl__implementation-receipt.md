@@ -1,7 +1,7 @@
 # Developer Source Research and Firecrawl Developer Index Implementation Receipt
 
 **Date:** 2026-08-28
-**Status:** RECEIPT_PASS_WITH_LIVE_SMOKE_PENDING
+**Status:** RECEIPT_PASS_LIVE_SMOKE_VERIFIED
 **Scope:** repository-local developer-source routing / Firecrawl Developer Index / DevDex evaluation
 **Authority:** research infrastructure only
 **Primary owner:** `00_ARCHIVE_CONTROL/SKILL_REGISTRY.md`
@@ -43,7 +43,7 @@ devdex_public_items: 594
 devdex_full_items_claimed: 1179
 ```
 
-The official documentation states that the index retrieves public issues, merged pull requests, READMEs and curated documentation; matched passages include stable source URLs; most sources are refreshed daily; developer search costs two credits per ten results; and keyless use is rate-limited. The upstream skill uses the Developer Index first for primary developer sources and general web search as fallback.
+The official documentation states that the index retrieves public issues, merged pull requests, READMEs and curated documentation; matched passages include stable source URLs; developer search costs two credits per ten results; and keyless use is available subject to rate limits. The upstream skill uses the Developer Index first for primary developer sources and general web search as fallback.
 
 ## Benchmark interpretation
 
@@ -67,12 +67,55 @@ public_dataset_count_check: PASS
 official_skill_inspected: PASS
 full_devdex_execution: NOT_RUN_EXTERNAL_DEPENDENCIES_AND_COST
 installed_plugin_reported_by_user: YES
-plugin_tool_visible_in_active_work_session: NO
-keyless_rest_smoke: BLOCKED_SUSPICIOUS_SHARED_IP
-live_firecrawl_result_smoke: PENDING_NEXT_CALLABLE_SESSION
+plugin_tool_visible_in_current_session: YES
+keyless_rest_smoke_historical: BLOCKED_SUSPICIOUS_SHARED_IP
+live_firecrawl_result_smoke: PASS
+load_bearing_sources_opened: PASS
+credential_requested_or_persisted: NO
 ```
 
-The installed Firecrawl plugin did not become callable inside the already-active Work session. A direct keyless REST smoke returned Firecrawl's shared-IP rejection and no search result. No credential was requested, copied or persisted. The skill therefore treats Firecrawl availability as optional and falls back to native GitHub and official web sources.
+The original implementation session could not call the installed plugin and a direct keyless REST smoke was blocked by Firecrawl's shared-IP guard. That limitation is now superseded for tool availability: in a later callable session on 2026-08-28, `firecrawl_developer_search` returned ranked Developer Index results successfully.
+
+The live result was verified against current upstream sources rather than accepted from the matched passage alone:
+
+- current Firecrawl Developer Index documentation confirms the dedicated developer-search surface, source classes and result contract;
+- merged `firecrawl/firecrawl-mcp-server#344` confirms the MCP implementation of `firecrawl_developer_search` and the `developer` search category;
+- current `firecrawl/benchmark-devdex` README confirms the benchmark tracks, deterministic scoring, public/held-back split and published cost estimate.
+
+No credential, private repository content, restricted provider value or unredacted private log was sent to Firecrawl.
+
+## Qualified pilot use 1 of 10
+
+```yaml
+run_date: 2026-08-28
+question_class: AGENT_SKILL
+question: Evaluate whether Firecrawl Developer Index / DevDex should be used in the Investering framework and verify the callable MCP behavior before relying on the pilot.
+firecrawl_tool_status: AVAILABLE
+query_sanitized: YES
+primary_source_hit: YES
+load_bearing_source_opened: YES
+current_behavior_verified: YES
+fallback_used: GITHUB
+incremental_over_native_route: YES
+source_identity_mismatch: NO
+restricted_or_credential_incident: NO
+authority_incident: NO
+implementation_effect: LIVE_SMOKE_CLOSED_AND_PILOT_REMAINS_READ_ONLY
+```
+
+Incremental value is credited because the Developer Index surfaced the exact current Firecrawl documentation and merged MCP implementation needed to resolve the tool contract, reducing uncertainty before native GitHub readback verified the sources. This does not count as evidence that Firecrawl should become a production dependency.
+
+Pilot progress after this use:
+
+```yaml
+qualified_uses_completed: 1
+qualified_uses_required: 10
+verified_source_bundles: 1
+incremental_over_native_uses: 1
+availability_failures_counted_in_qualified_uses: 0
+incidents: 0
+keep_decision: NOT_YET_ELIGIBLE
+```
 
 ## Pilot falsifier and kill criteria
 
@@ -120,6 +163,9 @@ round3_runtime_reconciliation: PASS
 path_and_registry_assertions: PASS
 git_diff_check: PASS
 declared_path_count: 4
-pull_request_ci: PENDING_AT_RECEIPT_CREATION
+implementation_pull_request: 631
+implementation_pull_request_ci: PASS
+implementation_merge_sha: 69bc36f5660bbb48c0f6de12368aca41ef3b2a88
+live_smoke_followup: PASS
 merge_policy: PR_AND_PASSING_CHECKS_REQUIRED
 ```
