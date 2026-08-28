@@ -513,27 +513,25 @@ def classify(row: dict[str, Any], now: datetime) -> tuple[str, list[str]]:
                     findings.append("PENDING_FIRST_RUN_ALREADY_RAN")
                 created = parse_ts(scheduled_latest.get("created_at"))
                 if created:
+                    cadence_cutoff = now - SCHEDULE_LATENESS_TOLERANCE
                     expected = _most_recent_expected_run(
                         list(row.get("cron_expressions") or []),
                         str(row.get("schedule_timezone") or "UTC"),
-                        now,
+                        cadence_cutoff,
                     )
                     if expected is None:
                         findings.append("SCHEDULE_CADENCE_UNSUPPORTED")
                         stale = now - created > timedelta(hours=36)
                     else:
-                        stale = (
-                            now > expected + SCHEDULE_LATENESS_TOLERANCE
-                            and created < expected - SCHEDULE_LATENESS_TOLERANCE
-                        )
+                        stale = created < expected
                     if stale:
                         findings.append("SCHEDULE_STALE")
-                if latest.get("status") == "completed" and latest.get("conclusion") not in GOOD_CONCLUSIONS:
-                    findings.append("LATEST_RUN_FAILED")
-                elif latest.get("status") in {"queued", "in_progress", "waiting", "requested", "pending"}:
-                    updated = parse_ts(latest.get("updated_at"))
-                    if updated and now - updated > timedelta(hours=2):
-                        findings.append("RUN_STUCK_OR_DELAYED")
+            if latest and latest.get("status") == "completed" and latest.get("conclusion") not in GOOD_CONCLUSIONS:
+                findings.append("LATEST_RUN_FAILED")
+            elif latest and latest.get("status") in {"queued", "in_progress", "waiting", "requested", "pending"}:
+                updated = parse_ts(latest.get("updated_at"))
+                if updated and now - updated > timedelta(hours=2):
+                    findings.append("RUN_STUCK_OR_DELAYED")
         if live.get("failure_streak", 0) >= 2:
             findings.append("REPEATED_CONSECUTIVE_FAILURES")
         elif latest and latest.get("conclusion") in GOOD_CONCLUSIONS and live.get("recent_failure_count", 0) >= 2:

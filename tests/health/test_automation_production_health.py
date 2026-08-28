@@ -586,10 +586,74 @@ def test_daily_schedule_becomes_stale_after_missed_run(tmp_path: Path) -> None:
     assert "SCHEDULE_STALE" in findings
 
 
+def test_hourly_schedule_becomes_stale_after_missed_run(tmp_path: Path) -> None:
+    row = scheduled_row(tmp_path, ["0 * * * *"], "2026-08-27T00:00:00Z", "UTC")
+    _, findings = module.classify(row, datetime(2026, 8, 28, 12, tzinfo=timezone.utc))
+    assert "SCHEDULE_STALE" in findings
+
+
+def test_hourly_schedule_is_not_stale_within_lateness_tolerance(tmp_path: Path) -> None:
+    row = scheduled_row(tmp_path, ["0 * * * *"], "2026-08-28T05:00:00Z", "UTC")
+    _, findings = module.classify(row, datetime(2026, 8, 28, 10, 59, tzinfo=timezone.utc))
+    assert "SCHEDULE_STALE" not in findings
+
+
+def test_four_hour_schedule_becomes_stale_after_missed_run(tmp_path: Path) -> None:
+    row = scheduled_row(tmp_path, ["0 */4 * * *"], "2026-08-27T00:00:00Z", "UTC")
+    _, findings = module.classify(row, datetime(2026, 8, 28, 12, tzinfo=timezone.utc))
+    assert "SCHEDULE_STALE" in findings
+
+
 def test_multiple_crons_use_nearest_expected_schedule(tmp_path: Path) -> None:
     row = scheduled_row(tmp_path, ["20 8 * * 1", "20 8 * * 5"], "2026-08-24T06:20:00Z")
     _, findings = module.classify(row, datetime(2026, 8, 28, 13, tzinfo=timezone.utc))
     assert "SCHEDULE_STALE" in findings
+
+
+def test_failed_manual_run_remains_visible_without_scheduled_history(tmp_path: Path) -> None:
+    row = scheduled_row(tmp_path, ["0 * * * *"], "2026-08-28T05:00:00Z", "UTC")
+    row["live"]["latest_scheduled_run"] = None
+    row["live"]["latest_run"] = {
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "failure",
+        "created_at": "2026-08-28T09:00:00Z",
+    }
+    status, findings = module.classify(row, datetime(2026, 8, 28, 10, tzinfo=timezone.utc))
+    assert status == "RED"
+    assert "NO_RUN_HISTORY" in findings
+    assert "LATEST_RUN_FAILED" in findings
+
+
+def test_successful_manual_run_does_not_hide_missing_scheduled_history(tmp_path: Path) -> None:
+    row = scheduled_row(tmp_path, ["0 * * * *"], "2026-08-28T05:00:00Z", "UTC")
+    row["live"]["latest_scheduled_run"] = None
+    row["live"]["latest_run"] = {
+        "event": "workflow_dispatch",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-08-28T09:00:00Z",
+    }
+    status, findings = module.classify(row, datetime(2026, 8, 28, 10, tzinfo=timezone.utc))
+    assert status == "AMBER"
+    assert "NO_RUN_HISTORY" in findings
+    assert "LATEST_RUN_FAILED" not in findings
+
+
+def test_stuck_manual_run_remains_visible_without_scheduled_history(tmp_path: Path) -> None:
+    row = scheduled_row(tmp_path, ["0 * * * *"], "2026-08-28T05:00:00Z", "UTC")
+    row["live"]["latest_scheduled_run"] = None
+    row["live"]["latest_run"] = {
+        "event": "workflow_dispatch",
+        "status": "in_progress",
+        "conclusion": None,
+        "created_at": "2026-08-28T06:00:00Z",
+        "updated_at": "2026-08-28T07:00:00Z",
+    }
+    status, findings = module.classify(row, datetime(2026, 8, 28, 10, tzinfo=timezone.utc))
+    assert status == "AMBER"
+    assert "NO_RUN_HISTORY" in findings
+    assert "RUN_STUCK_OR_DELAYED" in findings
 
 
 def test_copenhagen_dst_fallback_is_deterministic() -> None:

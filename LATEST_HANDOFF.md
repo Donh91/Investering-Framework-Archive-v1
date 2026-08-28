@@ -1,10 +1,10 @@
 # LATEST HANDOFF
 
-Generated: 2026-08-27T15:04:30.996314Z
-Hash: `a6636435627e379725f9a3bcea60b54b6524746b50f1fc8256556ddc626a1bb3`
+Generated: 2026-08-28T00:45:15.774372Z
+Hash: `f309803aabbe65b59f8c689bdc7aa969580aba8847d2c4cb4ca3c912895ae513`
 
 - **latest_capture**: `03_DAILY_CAPTURE_LOGS/captures/LATEST.json`
-- **latest_director_output**: `research/api_agent/outputs/daily/2026/08/27/005852/DAILY_DIRECTOR_OUTPUT.json`
+- **latest_director_output**: `research/api_agent/outputs/daily/2026/08/27/152627/DAILY_DIRECTOR_OUTPUT.json`
 - **latest_weekly_output**: `research/api_agent/outputs/weekly/2026/W34/MASTER_MONDAY_DELIVERY_POINTER.json`
 - **health**: `research/architecture_health/LATEST_ARCHITECTURE_HEALTH.json`
 - **latest_accepted_data_ping**: `UNAVAILABLE`
@@ -20,4 +20,4 @@ Pending candidate files scanned: 272
 Legacy candidates quarantined: 21
 Duplicate candidate files excluded: 113
 Experiment candidates: 153
-Codex-ready tasks: 18
+Codex-ready tasks: 10
