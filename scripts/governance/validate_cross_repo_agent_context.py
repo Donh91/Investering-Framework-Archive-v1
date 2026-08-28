@@ -47,6 +47,10 @@ REQUIRED_MARKERS = {
     ".agents/skills/prospective-evidence-ledger/SKILL.md": ["CROSS_REPO_DATA_BOUNDARY.md"],
     ".agents/skills/research-lab-red-team/SKILL.md": ["CROSS_REPO_DATA_BOUNDARY.md"],
     ".agents/skills/codex-intake/SKILL.md": ["CROSS_REPO_DATA_BOUNDARY.md"],
+    ".agents/skills/developer-source-research/SKILL.md": [
+        "CROSS_REPO_DATA_BOUNDARY.md",
+        "Donh91/secrets",
+    ],
 }
 
 ACTIVE_ROUTE_FILES = [
