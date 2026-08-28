@@ -1,7 +1,8 @@
 import unittest
-from datetime import date
+from datetime import date, datetime, timezone
 
 from scripts.health.build_daily_machine_throughput import (
+    _workflow_metrics,
     day_window,
     flatten_runs,
     is_failure,
@@ -30,6 +31,37 @@ class DailyMachineThroughputHelperTests(unittest.TestCase):
         self.assertTrue(is_failure("timed_out"))
         self.assertFalse(is_failure("success"))
         self.assertFalse(is_failure("cancelled"))
+
+    def test_scheduled_success_rate_counts_only_success_conclusions(self):
+        payload = {
+            "workflow_runs": [
+                {
+                    "id": 1,
+                    "event": "schedule",
+                    "conclusion": "success",
+                    "run_started_at": "2026-08-27T10:00:00Z",
+                },
+                {
+                    "id": 2,
+                    "event": "schedule",
+                    "conclusion": "cancelled",
+                    "run_started_at": "2026-08-27T11:00:00Z",
+                },
+                {
+                    "id": 3,
+                    "event": "schedule",
+                    "conclusion": "failure",
+                    "run_started_at": "2026-08-27T12:00:00Z",
+                },
+            ]
+        }
+        start = datetime(2026, 8, 27, tzinfo=timezone.utc)
+        end = datetime(2026, 8, 28, tzinfo=timezone.utc)
+        metrics = _workflow_metrics(payload, start, end)
+        self.assertEqual(metrics["scheduled_runs"], 3)
+        self.assertEqual(metrics["scheduled_failed_runs"], 1)
+        self.assertEqual(metrics["cancelled_runs"], 1)
+        self.assertEqual(metrics["scheduled_success_rate_pct"], 33.333)
 
     def test_copenhagen_window_respects_dst(self):
         summer_start, summer_end = day_window(date(2026, 8, 28), "Europe/Copenhagen")
