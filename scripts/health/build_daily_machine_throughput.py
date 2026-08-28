@@ -84,6 +84,11 @@ def _git_bytes(root: Path, sha: str, path: str) -> bytes:
     return _git(root, "show", f"{sha}:{path}", text=False)  # type: ignore[return-value]
 
 
+def _git_paths(root: Path, sha: str, prefix: str) -> list[str]:
+    raw = str(_git(root, "ls-tree", "-r", "--name-only", sha, "--", prefix))
+    return [line.strip() for line in raw.splitlines() if line.strip()]
+
+
 def _commit_before(root: Path, stamp: datetime) -> str:
     value = str(
         _git(
@@ -195,9 +200,12 @@ def _hourly_metrics(
 ) -> dict[str, Any]:
     unique_hour_keys: set[str] = set()
     nonempty_cells = 0
-    for path in (root / "03_DAILY_CAPTURE_LOGS/hourly").rglob("*.csv"):
+    for path in _git_paths(root, end_sha, "03_DAILY_CAPTURE_LOGS/hourly"):
+        if not path.endswith(".csv"):
+            continue
         try:
-            rows = csv.DictReader(io.StringIO(path.read_text(encoding="utf-8")))
+            text = _git_bytes(root, end_sha, path).decode("utf-8")
+            rows = csv.DictReader(io.StringIO(text))
             for row in rows:
                 stamp = parse_time(row.get("timestamp_copenhagen") or row.get("timestamp_utc"))
                 if _local_day(stamp, zone) != target:
@@ -207,7 +215,7 @@ def _hourly_metrics(
                     continue
                 unique_hour_keys.add(key)
                 nonempty_cells += sum(1 for value in row.values() if value not in {None, ""})
-        except (OSError, UnicodeDecodeError, csv.Error):
+        except (UnicodeDecodeError, csv.Error):
             continue
 
     source_calls = source_bytes = source_rows = run_count = 0
@@ -299,7 +307,6 @@ def _api_metrics(
     receipts = actual_calls = zero_cost_skips = input_tokens = output_tokens = 0
     director_receipts = director_calls = conflict_calls = 0
     cost = 0.0
-    seen: set[str] = set()
     for path in sorted(touched):
         if not path.startswith("research/api_agent/outputs/") or not path.endswith(".json"):
             continue
@@ -315,10 +322,6 @@ def _api_metrics(
             continue
         if _local_day(_receipt_time(data), zone) != target:
             continue
-        identity = str(data.get("response_id") or data.get("request_hash") or data.get("output_hash") or path)
-        if identity in seen:
-            continue
-        seen.add(identity)
         receipts += 1
         task = str(data.get("task") or data.get("task_id") or "")
         usage = data.get("usage") if isinstance(data.get("usage"), dict) else {}
@@ -384,6 +387,7 @@ def _workflow_metrics(runs_payload: Any, start: datetime, end: datetime) -> dict
     scheduled = [row for row in selected if row.get("event") == "schedule"]
     failures = [row for row in selected if is_failure(row.get("conclusion"))]
     scheduled_failures = [row for row in scheduled if is_failure(row.get("conclusion"))]
+    scheduled_successes = [row for row in scheduled if row.get("conclusion") == "success"]
     return {
         "runs_started": len(selected),
         "scheduled_runs": len(scheduled),
@@ -392,7 +396,7 @@ def _workflow_metrics(runs_payload: Any, start: datetime, end: datetime) -> dict
         "failed_runs": len(failures),
         "scheduled_failed_runs": len(scheduled_failures),
         "cancelled_runs": sum(1 for row in selected if row.get("conclusion") == "cancelled"),
-        "scheduled_success_rate_pct": round(100.0 * (len(scheduled) - len(scheduled_failures)) / len(scheduled), 3) if scheduled else None,
+        "scheduled_success_rate_pct": round(100.0 * len(scheduled_successes) / len(scheduled), 3) if scheduled else None,
     }
 
 
@@ -467,7 +471,7 @@ def build_receipt(
         "instrumentation": {
             "exact_metrics": [
                 "workflow run counts within the closed window",
-                "unique hourly rows persisted for the local day",
+                "unique hourly rows persisted at the window-end commit for the local day",
                 "live-anchor capture count",
                 "owner invocation outcomes exposed by immutable capture indexes",
                 "durable repository bytes and scalar JSON leaves at window close",
