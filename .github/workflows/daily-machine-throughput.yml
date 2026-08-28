@@ -1,0 +1,158 @@
+name: Daily Machine Throughput Receipt
+
+on:
+  schedule:
+    # Closed previous local day. Runs before the 05:30 health / 06:00 dashboard chain.
+    - cron: '50 0 * * *'
+      timezone: 'Europe/Copenhagen'
+  workflow_dispatch:
+    inputs:
+      date:
+        description: 'Optional local date YYYY-MM-DD. Empty means previous Europe/Copenhagen day.'
+        required: false
+        type: string
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: framework-main-writer
+  cancel-in-progress: false
+
+jobs:
+  throughput:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Resolve closed local-day window
+        id: window
+        env:
+          REQUESTED_DATE: ${{ inputs.date }}
+        run: |
+          mkdir -p runtime/machine-throughput
+          python - <<'PY' | tee runtime/machine-throughput/window.env
+          import os
+          from datetime import date, datetime, time, timedelta, timezone
+          from zoneinfo import ZoneInfo
+
+          zone = ZoneInfo('Europe/Copenhagen')
+          requested = (os.environ.get('REQUESTED_DATE') or '').strip()
+          target = date.fromisoformat(requested) if requested else datetime.now(zone).date() - timedelta(days=1)
+          start_local = datetime.combine(target, time.min, tzinfo=zone)
+          end_local = start_local + timedelta(days=1)
+          start = start_local.astimezone(timezone.utc).isoformat().replace('+00:00','Z')
+          end = end_local.astimezone(timezone.utc).isoformat().replace('+00:00','Z')
+          print(f'DATE={target.isoformat()}')
+          print(f'START={start}')
+          print(f'END={end}')
+          PY
+          cat runtime/machine-throughput/window.env >> "$GITHUB_OUTPUT"
+
+      - name: Fetch complete GitHub Actions run census for window
+        env:
+          GH_TOKEN: ${{ github.token }}
+          START: ${{ steps.window.outputs.START }}
+          END: ${{ steps.window.outputs.END }}
+        run: |
+          gh api --method GET --paginate --slurp \
+            "/repos/${GITHUB_REPOSITORY}/actions/runs" \
+            -f per_page=100 \
+            -f created="${START}..${END}" \
+            > runtime/machine-throughput/runs.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          pages=json.loads(Path('runtime/machine-throughput/runs.json').read_text())
+          assert isinstance(pages,list) and pages, pages
+          assert all(isinstance(page,dict) and isinstance(page.get('workflow_runs'),list) for page in pages), pages
+          print('RUN_CENSUS_PAGES', len(pages), 'RUNS', sum(len(p['workflow_runs']) for p in pages))
+          PY
+
+      - name: Build deterministic closed-window throughput receipt
+        run: |
+          python scripts/health/build_daily_machine_throughput.py \
+            --repo-root . \
+            --runs-json runtime/machine-throughput/runs.json \
+            --date "${{ steps.window.outputs.DATE }}" \
+            --timezone Europe/Copenhagen \
+            --output-root 03_WEEKLY_OPERATIONS/automation_receipts/machine_throughput \
+            --latest-json LATEST_MACHINE_THROUGHPUT.json
+
+      - name: Validate receipt contract and non-authority semantics
+        run: |
+          python - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+
+          p=Path('LATEST_MACHINE_THROUGHPUT.json')
+          d=json.loads(p.read_text())
+          assert d['contract']=='DAILY_MACHINE_THROUGHPUT_RECEIPT_v1', d
+          assert d['authority']=='OPERATIONAL_OBSERVABILITY_ONLY', d
+          assert d['window']['closed_window'] is True, d
+          assert d['market_rule_change'] is False, d
+          assert d['portfolio_action'] is False, d
+          assert d['model_weight_change'] is False, d
+          claimed=d.pop('receipt_sha256')
+          actual=hashlib.sha256(json.dumps(d,sort_keys=True,separators=(',',':')).encode()).hexdigest()
+          assert claimed==actual,(claimed,actual)
+          assert d['instrumentation']['physical_external_source_calls']['exact_total_physical_http_calls'] is None, d
+          print('MACHINE_THROUGHPUT_RECEIPT_VALID', claimed)
+          PY
+
+      - name: Run focused tests
+        run: |
+          python -m unittest tests.health.test_build_daily_machine_throughput -v
+          python -m py_compile scripts/health/build_daily_machine_throughput.py
+
+      - name: Commit receipt with verified readback
+        shell: bash
+        run: |
+          git config user.name 'framework-operations-bot'
+          git config user.email 'framework-operations-bot@users.noreply.github.com'
+          git add \
+            03_WEEKLY_OPERATIONS/automation_receipts/machine_throughput \
+            LATEST_MACHINE_THROUGHPUT.json
+          if git diff --cached --quiet; then
+            echo 'No throughput receipt change to commit.'
+            exit 0
+          fi
+          git commit -m "ops: daily machine throughput ${{ steps.window.outputs.DATE }} ${GITHUB_RUN_ID}"
+          pushed=false
+          for attempt in 1 2 3; do
+            git rebase --abort 2>/dev/null || true
+            if git pull --rebase origin main && git push origin HEAD:main; then pushed=true; break; fi
+            sleep $((attempt * 5))
+          done
+          [ "$pushed" = true ]
+          git fetch origin main
+          git merge-base --is-ancestor HEAD origin/main
+          for path in \
+            LATEST_MACHINE_THROUGHPUT.json \
+            03_WEEKLY_OPERATIONS/automation_receipts/machine_throughput/LATEST.json; do
+            local_sha=$(sha256sum "$path" | awk '{print $1}')
+            remote_sha=$(git show "origin/main:$path" | sha256sum | awk '{print $1}')
+            [ "$local_sha" = "$remote_sha" ]
+          done
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: daily-machine-throughput-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            runtime/machine-throughput/
+            LATEST_MACHINE_THROUGHPUT.json
+            03_WEEKLY_OPERATIONS/automation_receipts/machine_throughput/LATEST.json
+            03_WEEKLY_OPERATIONS/automation_receipts/machine_throughput/LATEST.md
+          retention-days: 14
+          if-no-files-found: error
