@@ -1,0 +1,69 @@
+{
+  "contract": "CODEX_RESEARCH_CANDIDATE_v1",
+  "candidate_id": "codex-daily-director-directional-threshold-root-cause-v1",
+  "title": "Daily Director directional threshold root-cause and durable repair",
+  "status": "SUBMITTED",
+  "requested_priority": "EXPEDITED",
+  "authority_boundary": "CODE_REMEDIATION_ONLY",
+  "requires_framework_owner_authority": false,
+  "linked_health_signature": "0d688464738b7ea9bbb5",
+  "finding_key": "DAILY_DIRECTOR_DIRECTIONAL_PCT_THRESHOLD_REQUIRED",
+  "objective": "Reproduce and resolve the current Daily Director API_OUTPUT_INVALID failure where both attempts fail with directional_pct_threshold_required. Determine whether the defect is in prompt/schema contract alignment, parser validation, candidate materialization, or model-output shaping, then implement the smallest deterministic repair without relaxing forecast semantics, fabricating thresholds, or allowing invalid API output to pass silently.",
+  "primary_target": ".github/workflows/daily-director-shadow.yml",
+  "origin": {
+    "type": "HEALTH_AUDIT",
+    "thread_label": "2026-08-28 daily evidence and accountability health watch",
+    "source_paths": [
+      ".github/workflows/daily-director-shadow.yml",
+      "research/api_agent/outputs/daily/2026/08/27/152627/DAILY_DIRECTOR_RECEIPT.json",
+      "research/architecture_health/LATEST_AUTOMATION_HEALTH.json",
+      "directly related Daily Director prompt/schema/parser code"
+    ]
+  },
+  "evidence": [
+    {"kind":"RUN","ref":"33125328450","summary":"Latest Daily Director workflow run is failed with failure_streak 10 in fresh Automation Health."},
+    {"kind":"REPO_PATH","ref":"research/api_agent/outputs/daily/2026/08/27/152627/DAILY_DIRECTOR_RECEIPT.json","summary":"API_AGENT_RECEIPT_v3 is deterministic API_OUTPUT_INVALID after two attempts; both parse errors are ValueError:directional_pct_threshold_required."},
+    {"kind":"HASH","ref":"8f50efdc74be4a30367eb94fc1cec795ec51faf5","summary":"Blob SHA of the concrete failure receipt used for fresh reproduction."},
+    {"kind":"HEALTH_SIGNATURE","ref":"0d688464738b7ea9bbb5","summary":"Existing CODEX_READY repeated-failure task to deduplicate against rather than create a competing health remediation."}
+  ],
+  "allowed_change_scope": [
+    ".github/workflows/daily-director-shadow.yml",
+    "research/api_agent/directly related Daily Director prompt, schema and parser code",
+    "scripts/directly related Daily Director forecast candidate validation/materialization code",
+    "tests/api_agent",
+    "tests/directly related Daily Director contract tests"
+  ],
+  "forbidden_changes": [
+    "market gates",
+    "model weights",
+    "canonical authority",
+    "portfolio logic",
+    "API budget",
+    "new policy semantics",
+    "inventing or defaulting a directional percentage threshold without existing contract authority",
+    "weakening required forecast fields merely to make parsing pass",
+    "converting invalid API output into PASS",
+    "automatic merge or self-promotion"
+  ],
+  "reproduction": "On fresh main, inspect run 33125328450 and replay the current Daily Director schema/parser path against the immutable output/receipt pair from 2026-08-27T15:26:27Z. Trace where directional_pct_threshold is required, how the prompt instructs the model to emit it, whether the generated candidate omits it or represents it under a mismatched field/target-mode contract, and whether retries can ever repair the structural mismatch. Stop as clean no-op if a newer natural run succeeds and the exact failure no longer reproduces.",
+  "acceptance_tests": {
+    "positive": [
+      "A valid directional forecast candidate produced under the existing canonical contract includes an explicitly authorized directional percentage threshold and passes parser validation.",
+      "A non-directional candidate is not forced to invent a directional threshold when the existing contract does not require one.",
+      "A natural or production-shaped Daily Director run can complete with a valid API_AGENT_RECEIPT_v3 and no directional_pct_threshold_required parse error.",
+      "Forecast creation remains bound to current Task 4 metric-path and target-unit contracts."
+    ],
+    "negative": [
+      "Missing required directional threshold remains API_OUTPUT_INVALID and cannot silently pass.",
+      "No numeric fallback/default threshold may be synthesized unless already defined by an authoritative existing contract.",
+      "Parser/schema compatibility repair cannot alter market thresholds, scoring semantics or portfolio action.",
+      "Retries cannot hide a deterministic schema mismatch by accepting structurally invalid output."
+    ]
+  },
+  "post_fix_gate": "ONE_PRODUCTION_SHAPE_PASS_PLUS_ONE_NATURAL_DAILY_DIRECTOR_PASS_WITH_NO_DIRECTIONAL_THRESHOLD_PARSE_ERROR",
+  "clean_noop_condition": "A newer natural Daily Director run succeeds under the same contract and fresh reproduction shows the directional threshold mismatch is already fixed or superseded.",
+  "stop_condition": "Stop without implementation if the health precondition clears, the exact failure cannot be reproduced, or resolution requires changing market thresholds or canonical forecast semantics.",
+  "escalation_condition": "Escalate to FRAMEWORK_OWNER if the only resolution requires a new market threshold, changed forecast semantics, model-weight changes, portfolio logic, or API-budget expansion.",
+  "rollback_plan": "Revert only bounded Daily Director prompt/schema/parser/workflow changes. Preserve deterministic API_OUTPUT_INVALID receipts and immutable prior outputs.",
+  "submitted_at_utc": "2026-08-28T05:58:00Z"
+}
