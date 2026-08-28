@@ -1,11 +1,11 @@
-# Investering Agent Skill Registry v0.3
+# Investering Agent Skill Registry v0.4
 
-**Dato:** 2026-08-22  
+**Dato:** 2026-08-28
 **Status:** CANONICAL_OPERATIONAL_REGISTRY  
 **Område:** agent routing / reproducible workflows / archive control  
 **Primary folder:** `00_ARCHIVE_CONTROL/`  
 **Depends on:** `AGENTS.md`, `00_ARCHIVE_CONTROL/CANONICAL_INDEX.md`, `00_ARCHIVE_CONTROL/INDEX_ADDENDUM_REGISTRY.md`, `00_ARCHIVE_CONTROL/ARCHIVE_MAP_AND_ROUTING.md`, `00_ARCHIVE_CONTROL/CROSS_REPO_DATA_BOUNDARY.md`, `00_ARCHIVE_CONTROL/CROSS_REPO_AGENT_CONTEXT_MAP.json`
-**Implementation references:** `07_PROMPTS_AND_AGENTS/github_agent/2026-07-12__investering-agent-skills-v0-1__canonical.md`, `07_PROMPTS_AND_AGENTS/codex/2026-08-22__codex-research-intake-and-execution-ledger-v1__operational.md`
+**Implementation references:** `07_PROMPTS_AND_AGENTS/github_agent/2026-07-12__investering-agent-skills-v0-1__canonical.md`, `07_PROMPTS_AND_AGENTS/codex/2026-08-22__codex-research-intake-and-execution-ledger-v1__operational.md`, `07_PROMPTS_AND_AGENTS/skill_runs/2026-08-28__developer-source-research-firecrawl__implementation-receipt.md`
 
 ## 1. Purpose
 
@@ -22,6 +22,7 @@ Skills are process instructions. They do not own market truth, framework doctrin
 | archive-governance | `.agents/skills/archive-governance/SKILL.md` | PILOT_ACTIVE_V0_1_1 | archive, save, GitHub update, canonical, index, place this, preserve this | Classify and govern writes, subject to repository policy |
 | research-lab-red-team | `.agents/skills/research-lab-red-team/SKILL.md` | PILOT_ACTIVE | audit, red team, Claude/Grok review, framework proposal, evidence, falsify | Evaluate and classify, no self-promotion |
 | codex-intake | `.agents/skills/codex-intake/SKILL.md` | ACTIVE_OPERATIONAL_V1 | queue for Codex, bounded code defect, research-to-code handoff, CODEX candidate | Prepare/deduplicate bounded research intake only; no CODEX_READY, merge, market or framework authority |
+| developer-source-research | `.agents/skills/developer-source-research/SKILL.md` | PILOT_ACTIVE_READ_ONLY_V0_1 | external API/library behavior, errors, upstream issues/PRs, repository or agent-skill discovery | Retrieve and verify public developer sources only; no code, market or portfolio authority |
 
 ## 3. Default composition
 
@@ -30,6 +31,7 @@ For general framework work:
 ```text
 canonical-context-router
 -> task-specific reasoning or extraction
+-> developer-source-research only when an external technical uncertainty affects the task
 -> research-lab-red-team when claims or changes are evaluated
 -> codex-intake only when a reproducible bounded code defect should enter remediation
 -> archive-governance before repository writes
@@ -46,7 +48,7 @@ canonical-context-router
 -> archive-governance before repository writes
 ```
 
-The router resolves current authority. Prospective Evidence Ledger governs causal row lifecycle and evidence integrity. The red-team skill evaluates decision value and test survival. Codex Intake converts reproducible code-local research findings into governed candidates without granting research code authority. Archive Governance controls placement, duplication, discoverability, write safety and backup-scope truth.
+The router resolves current authority. Prospective Evidence Ledger governs causal row lifecycle and evidence integrity. Developer Source Research retrieves and verifies upstream technical evidence without replacing local repository authority. The red-team skill evaluates decision value and test survival. Codex Intake converts reproducible code-local research findings into governed candidates without granting research code authority. Archive Governance controls placement, duplication, discoverability, write safety and backup-scope truth.
 
 ## 4. Global constraints
 
@@ -144,6 +146,27 @@ It may not:
 
 The machine queue authority remains `LATEST_CODEX_READY_TASKS.json`. Execution history is observable in `LATEST_CODEX_EXECUTION_STATE.json` and `research/codex/CODEX_EXECUTION_LEDGER.jsonl` but those surfaces have no promotion authority.
 
+## 6.1 Developer source research contract
+
+`developer-source-research` may:
+
+- use the installed Firecrawl Developer Index for sanitized public technical questions when callable;
+- retrieve official documentation, READMEs, issues and merged pull requests;
+- use native GitHub and official web documentation as a non-blocking fallback;
+- compare a retrieved source with current upstream docs or code;
+- supply a verified source bundle to diagnosis or an already-authorized implementation task.
+
+It may not:
+
+- replace current local code, repository contracts, validators or tests;
+- send credentials, private content, restricted provider values or unredacted logs to an external provider;
+- install or persist an API credential in repository files;
+- set `CODEX_READY`, create a code change or bypass normal task authorization;
+- create a market sensor, evidence row, forecast, framework rule or portfolio action;
+- become a required production dependency or scheduled workflow during the pilot.
+
+The market-provider MCP queue remains owned by `research/api_agent/mcp/MCP_CONNECTION_EVALUATION_PROGRAM_v1.json`. Firecrawl Developer Index is external developer-source retrieval and must not be added to that market-provider queue.
+
 ## 7. Shared pilot metrics
 
 Each qualified use should be assessed against these fields:
@@ -224,6 +247,24 @@ current_owner_version_in_snapshot: NO
 post_merge_delta_status: PENDING
 ```
 
+## 9.1 Developer Source Research pilot metrics
+
+For each qualified external technical research use, additionally record:
+
+```yaml
+question_class: API_CONTRACT | ERROR | BUG_FIX | REPOSITORY_DISCOVERY | AGENT_SKILL | OTHER
+firecrawl_tool_status: AVAILABLE | UNAVAILABLE | RATE_LIMITED | NOT_INDEXED | INCONCLUSIVE | NOT_USED
+query_sanitized: YES | NO
+primary_source_hit: YES | NO | PARTIAL
+load_bearing_source_opened: YES | NO | NOT_APPLICABLE
+current_behavior_verified: YES | NO | PARTIAL | NOT_APPLICABLE
+fallback_used: GITHUB | OFFICIAL_WEB | BOTH | NONE
+incremental_over_native_route: YES | NO | UNRESOLVED
+source_identity_mismatch: YES | NO
+restricted_or_credential_incident: YES | NO
+authority_incident: YES | NO
+```
+
 ## 10. Review gate
 
 Review the skill stack after either:
@@ -233,7 +274,7 @@ Review the skill stack after either:
 
 whichever occurs first.
 
-`prospective-evidence-ledger` must also accumulate at least three real uses before a KEEP decision is justified. `codex-intake` must accumulate at least three real research-origin candidates or deduplicated handoffs before a KEEP decision is justified.
+`prospective-evidence-ledger` must also accumulate at least three real uses before a KEEP decision is justified. `codex-intake` must accumulate at least three real research-origin candidates or deduplicated handoffs before a KEEP decision is justified. `developer-source-research` requires ten qualified external technical uses and the KEEP thresholds declared in its `SKILL.md`.
 
 Review classifications:
 
@@ -281,7 +322,15 @@ A skill must be modified, suspended or killed if any of the following occurs:
 - weakens fresh-state binding or PR/CI/post-fix requirements;
 - claims fast execution when only queue publication is evidenced.
 
-## 12. Expansion rule and v0.3 exception
+`developer-source-research` must be immediately suspended if it:
+
+- sends private, restricted or credential-bearing content to an external provider;
+- presents an unverified matched passage as current code behavior;
+- replaces local repository authority or a current upstream contract with an index result;
+- enters the market-provider queue, market semantics or portfolio logic;
+- creates a required production dependency or scheduled external-search workflow during the pilot.
+
+## 12. Expansion rule and versioned exceptions
 
 No additional skill should be added without a demonstrated repeated workflow gap.
 
@@ -302,20 +351,36 @@ The original v0.2 exception was `prospective-evidence-ledger`, justified by repe
 
 The v0.3 exception is `codex-intake`, justified by repeated research threads identifying code-remediable defects while the existing Codex queue accepted only health-origin findings and the maturation workflow otherwise depended on fixed cadence. Existing research and archive skills cannot safely create, deduplicate, bind and expose a source-agnostic Codex queue. The new skill adds routing only, not market or code authority.
 
+The v0.4 exception is `developer-source-research`:
+
+```yaml
+failure_mode_observed: External integration and remediation work repeatedly needs upstream documentation, issue resolution and merged-fix evidence that internal canonical routing cannot supply.
+repeated_task_frequency: Recurring across AnyDoc, PDF Inspector, MCP/API integrations and Codex defect work.
+why_existing_skills_cannot_cover_it: The canonical router resolves internal authority, the red-team skill evaluates claims and codex-intake packages defects; none owns external developer-source retrieval and verification.
+inputs: Sanitized public technical question and optional public repository/version scope.
+outputs: Verified primary-source bundle or explicit fallback/unresolved result.
+validation_loop: Open load-bearing URLs, compare present-tense claims with current docs/code, and record incremental value against the native GitHub/web route.
+authority_boundary: Read-only developer research; no code, market, evidence-row or portfolio authority.
+kill_criterion: Fewer than two incremental-value uses in ten qualified runs, any uncorrected source-identity mismatch, or any privacy/authority incident.
+```
+
 Potential later candidates such as DATA PING execution, weekly range audit, Master Monday, Cycle Navigator publication and automated agent loops remain `NOT_AUTHORIZED_FOR_BUILD` unless separately governed.
 
 ## 13. Current status
 
 ```yaml
-stack_version: 0.3
+stack_version: 0.4
 stack_status: PILOT_ACTIVE_HARDENED
-skills_active: 5
+skills_active: 6
 stack_qualified_uses_completed_before_v0_3: 1
 prospective_evidence_ledger_version: 0.1
 codex_intake_version: 1
 codex_intake_authority: ROUTING_ONLY
 codex_queue_authority: LATEST_CODEX_READY_TASKS.json
 codex_execution_observability: LATEST_CODEX_EXECUTION_STATE.json
+developer_source_research_version: 0.1
+developer_source_research_status: PILOT_ACTIVE_READ_ONLY
+firecrawl_market_provider_queue_member: NO
 trading_logic_changed: NO
 framework_authority_changed: NO
 new_engine_created: NO
