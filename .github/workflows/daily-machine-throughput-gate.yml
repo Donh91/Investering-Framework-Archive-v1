@@ -1,0 +1,38 @@
+name: Daily Machine Throughput Gate
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/health/build_daily_machine_throughput.py'
+      - 'tests/health/test_build_daily_machine_throughput.py'
+      - '.github/workflows/daily-machine-throughput.yml'
+      - '.github/workflows/daily-machine-throughput-gate.yml'
+      - '03_WEEKLY_OPERATIONS/automation_receipts/machine_throughput/**'
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compile builder
+        run: python -m py_compile scripts/health/build_daily_machine_throughput.py
+      - name: Run focused unit tests
+        run: python -m unittest tests.health.test_build_daily_machine_throughput -v
+      - name: Guard observability-only contract
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          text=Path('scripts/health/build_daily_machine_throughput.py').read_text()
+          assert 'OPERATIONAL_OBSERVABILITY_ONLY' in text
+          assert '"market_rule_change": False' in text
+          assert '"portfolio_action": False' in text
+          assert '"model_weight_change": False' in text
+          assert 'exact_total_physical_http_calls": None' in text
+          PY
