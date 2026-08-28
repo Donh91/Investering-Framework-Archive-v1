@@ -1,0 +1,91 @@
+{
+  "contract": "EVIDENCE_GAP_FAMILY_POLICY_v1",
+  "status": "ACTIVE_SHADOW_RESEARCH_ONLY",
+  "purpose": "Keep repeated evidence observations in a ledger while GitHub issues represent one durable work owner per capability family.",
+  "fallback_family": "EG-UNCLASSIFIED-EVIDENCE",
+  "direct_capability_map": {
+    "HOURLY_SEQUENCE": "EG-HOURLY-SEQUENCE",
+    "PULLBACK_FORENSICS": "EG-DERIVATIVES-FORENSICS",
+    "SETTLED_ETF": "EG-ETF-FLOWS",
+    "FRED_MACRO": "EG-MACRO-HISTORY",
+    "STABLECOIN_LIQUIDITY": "EG-STABLECOIN-LIQUIDITY"
+  },
+  "families": {
+    "EG-HOURLY-SEQUENCE": {
+      "name": "Hourly sequence and exact-anchor history",
+      "metric_name": "Hourly sequence and exact-anchor history",
+      "scope": "BTC, ETH and ETH/BTC timestamped price/return/flow sequences and exact nominal-horizon anchors.",
+      "routing_rationale": "One owner for missing or misaligned hourly market sequences."
+    },
+    "EG-BREADTH-HISTORY": {
+      "name": "Comparable breadth history",
+      "metric_name": "Comparable breadth history",
+      "scope": "Fixed/stable universe constituent continuity, advancers/decliners, return panels and persistence.",
+      "routing_rationale": "One owner for breadth continuity and comparable participation history."
+    },
+    "EG-MARKET-STRUCTURE": {
+      "name": "Market structure and dominance history",
+      "metric_name": "Market structure and dominance history",
+      "scope": "BTC dominance, Total2, Total3, aggregate capitalization and stablecoin-dominance context.",
+      "routing_rationale": "One owner for aggregate market-structure and dominance context."
+    },
+    "EG-ETF-FLOWS": {
+      "name": "Settled ETF flow history",
+      "metric_name": "Settled ETF flow history",
+      "scope": "Comparable settled BTC and ETH ETF net-flow history, persistence and transmission context.",
+      "routing_rationale": "One owner for settled ETF history and persistence."
+    },
+    "EG-MACRO-HISTORY": {
+      "name": "Aligned macro history",
+      "metric_name": "Aligned macro history",
+      "scope": "Rates, broad dollar, volatility and other approved macro observations aligned to crypto cutoffs.",
+      "routing_rationale": "One owner for comparable macro history."
+    },
+    "EG-STABLECOIN-LIQUIDITY": {
+      "name": "Stablecoin liquidity history",
+      "metric_name": "Stablecoin liquidity history",
+      "scope": "Stablecoin supply, liquidity, composition, deployment and exchange-flow history.",
+      "routing_rationale": "One owner for stablecoin liquidity history."
+    },
+    "EG-DERIVATIVES-FORENSICS": {
+      "name": "Derivatives and microstructure forensics history",
+      "metric_name": "Derivatives and microstructure forensics history",
+      "scope": "Funding, open interest, liquidations, taker/depth flow and options/skew history with venue and completeness metadata.",
+      "routing_rationale": "One owner for comparable derivatives and microstructure evidence."
+    },
+    "EG-FORECAST-OUTCOMES": {
+      "name": "Forecast candidate and outcome lineage",
+      "metric_name": "Forecast candidate and outcome lineage",
+      "scope": "Candidate issuance/freeze/cutoff, specifications, maturation, realized outcomes, benchmarks, containment and calibration.",
+      "routing_rationale": "One owner for forecast/outcome auditability and matured scoring evidence."
+    },
+    "EG-SENTIMENT": {
+      "name": "Sentiment and CFGI history",
+      "metric_name": "Sentiment and CFGI history",
+      "scope": "CFGI aggregate/component and other already-governed sentiment history needed for evaluation.",
+      "routing_rationale": "One owner for sentiment-history evidence gaps."
+    },
+    "EG-PROVENANCE": {
+      "name": "Evidence provenance and existing-definition recovery",
+      "metric_name": "Evidence provenance and existing-definition recovery",
+      "scope": "Frozen references, exact source bindings, existing settlement conventions and other authoritative-definition recovery.",
+      "routing_rationale": "One owner for provenance and existing-definition recovery gaps."
+    },
+    "EG-UNCLASSIFIED-EVIDENCE": {
+      "name": "Unclassified evidence capability",
+      "metric_name": "Unclassified evidence capability",
+      "scope": "Fail-closed holding owner for genuinely new evidence capabilities until explicitly classified.",
+      "routing_rationale": "Unknown evidence gaps remain one fail-closed owner instead of creating unbounded issues."
+    }
+  },
+  "issue_policy": {
+    "identity": "family_id",
+    "observations_are_issues": false,
+    "one_open_owner_per_family": true,
+    "history_retention": "legacy_gap_ids_and_observations_preserved",
+    "market_rule_change": false,
+    "canonical_state": false,
+    "portfolio_action": false,
+    "self_merge": false
+  }
+}
