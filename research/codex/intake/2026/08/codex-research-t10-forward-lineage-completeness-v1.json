@@ -1,0 +1,56 @@
+{
+  "contract": "CODEX_RESEARCH_CANDIDATE_v1",
+  "candidate_id": "codex-research-t10-forward-lineage-completeness-v1",
+  "submitted_at_utc": "2026-08-29T18:45:00Z",
+  "status": "SUBMITTED",
+  "origin": {
+    "type": "AUDIT",
+    "thread_label": "Existing System Improvement 12x - T07",
+    "source_paths": [
+      "06_RESEARCH_LAB/existing_system_improvement_12x/T07_LINEAGE_INTEGRITY.md",
+      "06_RESEARCH_LAB/forward_tests/2026-07-10__active-test-registry__canonical.md",
+      "01_CORE_FRAMEWORK/governance/2026-07-10__open-questions-register-v1-2__canonical.md"
+    ]
+  },
+  "title": "Materialize T10 forward forecast lineage completeness report",
+  "objective": "Implement the smallest deterministic read-only T10 lineage completeness report for official eligible forecasts so every scored row can be traced through source, ratification, handoff, verified actual/outcome and score, while preserving historical W28 as unscored unless its genuine source is recovered.",
+  "finding_key": "FORWARD_LINEAGE_COMPLETENESS_OBSERVABILITY_NEEDS_HARDENING",
+  "primary_target": "scripts/learning/directly related forecast lineage completeness helper",
+  "allowed_change_scope": [
+    "scripts/learning/directly related T10 lineage completeness helper",
+    "tests/learning/directly related T10 lineage tests",
+    "03_WEEKLY_OPERATIONS/directly related lineage readout if existing owner routing requires it",
+    "06_RESEARCH_LAB/forward_tests/directly related T10 generated artifact"
+  ],
+  "evidence": [
+    {"kind":"REPO_PATH","ref":"06_RESEARCH_LAB/forward_tests/2026-07-10__active-test-registry__canonical.md","summary":"T10 requires complete source-to-score lineage and records the known W28 gap."},
+    {"kind":"REPO_PATH","ref":"01_CORE_FRAMEWORK/governance/2026-07-10__open-questions-register-v1-2__canonical.md","summary":"OQ-W28-LINEAGE remains open critical and explicitly requires W28 to remain unscored absent genuine source recovery."}
+  ],
+  "reproduction": "On fresh main, confirm T10 remains ACTIVE with W28 lineage gap and no single deterministic current report enumerates all forward official forecast chains and exact missing edges from frozen source through score.",
+  "acceptance_tests": {
+    "positive": [
+      "Every official scored forward row is reported with exact immutable source/ratification/outcome/score references and a complete chain status.",
+      "Incomplete rows expose exact missing edges and remain unscored/pending/censored according to current owner semantics."
+    ],
+    "negative": [
+      "W28 is never repaired through inferred similarity, mutable pointers or later narrative; absent genuine source it stays UNSCORED_LINEAGE_GAP.",
+      "No forecast, outcome, score or historical source file is rewritten by the report."
+    ]
+  },
+  "authority_boundary": "CODE_REMEDIATION_ONLY",
+  "requires_framework_owner_authority": false,
+  "forbidden_changes": [
+    "market gates",
+    "model weights",
+    "canonical authority",
+    "portfolio logic",
+    "API budget",
+    "new policy semantics",
+    "historical lineage fabrication",
+    "retroactive scoring",
+    "mutable pointer substitution for frozen evidence"
+  ],
+  "linked_health_signature": null,
+  "requested_priority": "NORMAL",
+  "post_fix_gate": "FORWARD_LINEAGE_REPORT_RECONCILES_TO_OFFICIAL_ROWS_AND_PRESERVES_W28_UNSCORED"
+}
