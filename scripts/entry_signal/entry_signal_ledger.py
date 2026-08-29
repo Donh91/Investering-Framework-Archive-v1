@@ -1,7 +1,12 @@
 #!/usr/bin/env python3
-import csv, json, statistics
+import json, statistics, sys
 from datetime import datetime, timezone
 from pathlib import Path
+
+SCRIPTS_ROOT = Path(__file__).resolve().parents[1]
+if str(SCRIPTS_ROOT) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS_ROOT))
+from daily_capture.hourly_sequence_consumer import read_latest_complete_spot_row
 
 ROOT = Path("04_MARKET_LEARNING/entry_signals")
 EVENTS = ROOT / "events"
@@ -10,6 +15,7 @@ STATE = ROOT / "STATE.json"
 LATEST = ROOT / "LATEST.json"
 SUMMARY = ROOT / "PERFORMANCE_SUMMARY.json"
 HOURLY_POINTER = Path("03_DAILY_CAPTURE_LOGS/hourly/LATEST.json")
+HOURLY_ROOT = Path("03_DAILY_CAPTURE_LOGS/hourly")
 HORIZONS_H = {"24h": 24, "72h": 72, "7d": 168, "14d": 336, "30d": 720}
 
 
@@ -35,28 +41,7 @@ def parse_utc(value):
 
 
 def hourly_latest_row():
-    pointer = read_json(HOURLY_POINTER)
-    if not pointer or pointer.get("status") != "COMPLETE":
-        raise RuntimeError("hourly sequence pointer missing/incomplete")
-    end = parse_utc(pointer["window_end_utc"])
-    csv_path = Path(f"03_DAILY_CAPTURE_LOGS/hourly/{end:%Y/%m/%Y-%m-%d}.csv")
-    if not csv_path.exists():
-        raise RuntimeError(f"hourly permanent CSV missing: {csv_path}")
-    rows = []
-    with csv_path.open(newline="") as fh:
-        for row in csv.DictReader(fh):
-            if row.get("spot_status") != "PASS":
-                continue
-            ts = parse_utc(row["timestamp_utc"])
-            if ts <= end:
-                rows.append((ts, row))
-    if not rows:
-        raise RuntimeError("no complete hourly row available")
-    ts, row = max(rows, key=lambda x: x[0])
-    required = ("btc_close", "eth_close", "ethbtc_close")
-    if any(not row.get(k) for k in required):
-        raise RuntimeError("latest hourly row missing direct spot close")
-    return pointer, ts, row
+    return read_latest_complete_spot_row(HOURLY_POINTER, HOURLY_ROOT)
 
 
 def latest_market():

@@ -1,7 +1,12 @@
 #!/usr/bin/env python3
-import csv, json, statistics
+import json, statistics, sys
 from datetime import datetime, timezone
 from pathlib import Path
+
+SCRIPTS_ROOT = Path(__file__).resolve().parents[1]
+if str(SCRIPTS_ROOT) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS_ROOT))
+from daily_capture.hourly_sequence_consumer import read_latest_complete_spot_row
 
 ROOT = Path("04_MARKET_LEARNING/pullback_learning")
 OBS = ROOT / "observations"
@@ -12,6 +17,7 @@ SUMMARY = ROOT / "PERFORMANCE_SUMMARY.json"
 ENTRY_LATEST = Path("04_MARKET_LEARNING/entry_signals/LATEST.json")
 BREADTH_LATEST = Path("03_DAILY_CAPTURE_LOGS/breadth_rich/LATEST.json")
 HOURLY_POINTER = Path("03_DAILY_CAPTURE_LOGS/hourly/LATEST.json")
+HOURLY_ROOT = Path("03_DAILY_CAPTURE_LOGS/hourly")
 TRAILING_OBS = 180
 MIN_OBS_FOR_ADAPTIVE = 24
 MIN_EPISODES_EMERGING = 10
@@ -49,28 +55,7 @@ def percentile_rank(values, x):
 
 
 def hourly_latest_row():
-    pointer = read_json(HOURLY_POINTER)
-    if not pointer or pointer.get("status") != "COMPLETE":
-        raise RuntimeError("hourly sequence pointer missing/incomplete")
-    end = parse_utc(pointer["window_end_utc"])
-    csv_path = Path(f"03_DAILY_CAPTURE_LOGS/hourly/{end:%Y/%m/%Y-%m-%d}.csv")
-    if not csv_path.exists():
-        raise RuntimeError(f"hourly permanent CSV missing: {csv_path}")
-    rows = []
-    with csv_path.open(newline="") as fh:
-        for row in csv.DictReader(fh):
-            if row.get("spot_status") != "PASS":
-                continue
-            ts = parse_utc(row["timestamp_utc"])
-            if ts <= end:
-                rows.append((ts, row))
-    if not rows:
-        raise RuntimeError("no complete hourly row available")
-    ts, row = max(rows, key=lambda x: x[0])
-    required = ("btc_close", "eth_close", "ethbtc_close")
-    if any(not row.get(k) for k in required):
-        raise RuntimeError("latest hourly row missing direct spot close")
-    return pointer, ts, row
+    return read_latest_complete_spot_row(HOURLY_POINTER, HOURLY_ROOT)
 
 
 def current_snapshot():
@@ -135,7 +120,6 @@ def matched_return(prev, cur):
     if not vals:
         return None, 0
     return statistics.fmean(vals), len(vals)
-
 
 def synthetic_index(prev, step_return_pct):
     if prev is None:
