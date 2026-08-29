@@ -1,0 +1,70 @@
+{
+  "contract": "CODEX_RESEARCH_CANDIDATE_v1",
+  "candidate_id": "codex-research-t9-action-compass-reproducibility-v1",
+  "submitted_at_utc": "2026-08-29T18:16:00Z",
+  "status": "SUBMITTED",
+  "origin": {
+    "type": "AUDIT",
+    "thread_label": "Existing System Improvement 12x - T01",
+    "source_paths": [
+      "06_RESEARCH_LAB/existing_system_improvement_12x/T01_DECISION_REPRODUCIBILITY.md",
+      "06_RESEARCH_LAB/forward_tests/2026-07-10__active-test-registry__canonical.md",
+      "02_DATA_PING/protocols/2026-08-25__three-horizon-action-compass-output-contract-v1__canonical.md"
+    ]
+  },
+  "title": "Instrument T9 Action Compass controlled reproducibility replay",
+  "objective": "Implement the smallest research-only controlled replay fixture and semantic comparator for the existing CHIEF_REPRODUCIBILITY / T9 test so identical frozen fixtures can be evaluated for exact machine-action/state/warning agreement while allowing bounded non-semantic metadata or wording variance. Do not create market semantics or historical pseudo-rows.",
+  "finding_key": "T9_CONTROLLED_REPLAY_FIXTURE_AND_COMPARATOR_MISSING",
+  "primary_target": "scripts/learning/action_compass_reproducibility.py",
+  "allowed_change_scope": [
+    "scripts/learning/directly related T9 Action Compass reproducibility runner/comparator",
+    "tests/learning/directly related T9 reproducibility tests",
+    "tests/fixtures/directly related synthetic Action Compass replay fixtures",
+    "06_RESEARCH_LAB/forward_tests/directly related machine-readable T9 runtime/readback artifact if existing owner routing requires it"
+  ],
+  "evidence": [
+    {
+      "kind": "REPO_PATH",
+      "ref": "06_RESEARCH_LAB/forward_tests/2026-07-10__active-test-registry__canonical.md",
+      "summary": "T9 is registered with zero rows and CONTROLLED_REPLAY_FIXTURES_NOT_CREATED as blocker."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "02_DATA_PING/protocols/2026-08-25__three-horizon-action-compass-output-contract-v1__canonical.md",
+      "summary": "Existing Action Compass owner authorizes receipt implementation, binds T9 as reproducibility owner and forbids historical backfill."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "scripts/learning/action_compass_accountability.py",
+      "summary": "Existing validator freezes controlled machine semantics but does not implement T9 replay comparison."
+    }
+  ],
+  "reproduction": "On fresh main, confirm T9 remains QUEUED_RECEIPT_VALIDATOR_AVAILABLE with rows_total 0 and blocker CONTROLLED_REPLAY_FIXTURES_NOT_CREATED; confirm Action Compass validator exists but no bounded T9 replay runner/fixture comparator produces semantic-match/disagreement results. Do not use historical chats as fixtures.",
+  "acceptance_tests": {
+    "positive": [
+      "Identical frozen fixture semantics across repeated outputs classify SEMANTIC_MATCH even when allowed producer metadata or wording differs.",
+      "Repeated fixture evaluation creates no additional prospective Action Compass decision receipt and no market action."
+    ],
+    "negative": [
+      "Changed action, Lane-3 state or warning under the same fixture is detected as semantic disagreement.",
+      "Pre-activation, mutable-latest reconstruction and historical-chat fixture attempts fail closed and cannot count as T9 prospective evidence."
+    ]
+  },
+  "authority_boundary": "CODE_REMEDIATION_ONLY",
+  "requires_framework_owner_authority": false,
+  "forbidden_changes": [
+    "market gates",
+    "model weights",
+    "canonical authority",
+    "portfolio logic",
+    "API budget",
+    "new policy semantics",
+    "Action Compass controlled vocabulary",
+    "historical pseudo-row backfill",
+    "automatic promotion",
+    "new market engine"
+  ],
+  "linked_health_signature": null,
+  "requested_priority": "NORMAL",
+  "post_fix_gate": "CONTROLLED_REPLAY_FIXTURE_PASS_PLUS_10_ELIGIBLE_REPLAYS_BEFORE_ANY_REPRODUCIBILITY_CONCLUSION"
+}
