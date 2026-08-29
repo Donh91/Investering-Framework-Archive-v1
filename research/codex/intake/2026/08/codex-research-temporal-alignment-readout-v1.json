@@ -1,0 +1,57 @@
+{
+  "contract": "CODEX_RESEARCH_CANDIDATE_v1",
+  "candidate_id": "codex-research-temporal-alignment-readout-v1",
+  "submitted_at_utc": "2026-08-29T19:10:00Z",
+  "status": "SUBMITTED",
+  "origin": {
+    "type": "AUDIT",
+    "thread_label": "Existing System Improvement 12x - T12",
+    "source_paths": [
+      "06_RESEARCH_LAB/existing_system_improvement_12x/T12_TEMPORAL_ALIGNMENT.md",
+      "scripts/api_agent/build_owner_bound_director_context.py",
+      "scripts/api_agent/augment_director_context_v2.py"
+    ]
+  },
+  "title": "Expose cross-owner as-of temporal coherence in existing Director context",
+  "objective": "Implement the smallest deterministic read-only temporal-coherence block in the existing owner-bound Director context using already available timestamps and existing owner tolerances, exposing age spread and contract violations without inventing new freshness thresholds, interpolation or market semantics.",
+  "finding_key": "TEMPORAL_METADATA_EXISTS_BUT_CROSS_OWNER_ASOF_COHERENCE_IS_NOT_COMPACTLY_EXPOSED",
+  "primary_target": "scripts/api_agent/build_owner_bound_director_context.py and/or augment_director_context_v2.py",
+  "allowed_change_scope": [
+    "scripts/api_agent/build_owner_bound_director_context.py",
+    "scripts/api_agent/augment_director_context_v2.py",
+    "tests/api_agent/directly related temporal alignment tests"
+  ],
+  "evidence": [
+    {"kind":"REPO_PATH","ref":"scripts/api_agent/build_owner_bound_director_context.py","summary":"Existing context freezes capture/predecessor timing and a 48h predecessor degradation rule."},
+    {"kind":"REPO_PATH","ref":"scripts/api_agent/augment_director_context_v2.py","summary":"Existing multi-horizon context preserves anchor timestamps, actual spans and tolerances, while external owner families carry independent timestamps."},
+    {"kind":"REPO_PATH","ref":"06_RESEARCH_LAB/existing_system_improvement_12x/T12_TEMPORAL_ALIGNMENT.md","summary":"Program finding requires compact cross-owner as-of coherence using only existing timing contracts."}
+  ],
+  "reproduction": "On fresh main, build or inspect the current Director context and confirm individual timing fields exist but no single cross-owner block reports decision cutoff, owner ages/age spread, nominal-vs-actual horizon spans and violations of already-existing owner tolerances.",
+  "acceptance_tests": {
+    "positive": [
+      "Fixture with valid timestamps exposes exact ages/spread and WITHIN_EXISTING_CONTRACTS when no existing tolerance is violated.",
+      "Fixture violating an already-defined owner/horizon tolerance reports EXISTING_CONTRACT_VIOLATION with the exact offending family/horizon."
+    ],
+    "negative": [
+      "Unknown timestamps remain UNKNOWN and are not assumed stale.",
+      "No new freshness threshold is invented and no evidence is interpolated, forward-filled, dropped or re-timestamped to force alignment."
+    ]
+  },
+  "authority_boundary": "CODE_REMEDIATION_ONLY",
+  "requires_framework_owner_authority": false,
+  "forbidden_changes": [
+    "market gates",
+    "model weights",
+    "canonical authority",
+    "portfolio logic",
+    "API budget",
+    "new policy semantics",
+    "new freshness threshold",
+    "data interpolation",
+    "forward fill",
+    "timestamp rewriting"
+  ],
+  "linked_health_signature": null,
+  "requested_priority": "NORMAL",
+  "post_fix_gate": "TEMPORAL_ALIGNMENT_FIXTURES_PASS_WITH_ONLY_EXISTING_CONTRACT_THRESHOLDS"
+}
