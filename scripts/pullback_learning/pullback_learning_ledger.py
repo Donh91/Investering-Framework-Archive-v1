@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
-import json, statistics
+import json, statistics, sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-from scripts.daily_capture.hourly_sequence_consumer import read_latest_complete_spot_row
+SCRIPTS_ROOT = Path(__file__).resolve().parents[1]
+if str(SCRIPTS_ROOT) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS_ROOT))
+from daily_capture.hourly_sequence_consumer import read_latest_complete_spot_row
 
 ROOT = Path("04_MARKET_LEARNING/pullback_learning")
 OBS = ROOT / "observations"
@@ -117,7 +120,6 @@ def matched_return(prev, cur):
     if not vals:
         return None, 0
     return statistics.fmean(vals), len(vals)
-
 
 def synthetic_index(prev, step_return_pct):
     if prev is None:
