@@ -1,0 +1,57 @@
+{
+  "contract": "CODEX_RESEARCH_CANDIDATE_v1",
+  "candidate_id": "codex-research-techdev-t7-calibration-reconciliation-v1",
+  "submitted_at_utc": "2026-08-29T18:58:00Z",
+  "status": "SUBMITTED",
+  "origin": {
+    "type": "AUDIT",
+    "thread_label": "Existing System Improvement 12x - T10",
+    "source_paths": [
+      "06_RESEARCH_LAB/existing_system_improvement_12x/T10_TECHDEV_CLAIM_CALIBRATION.md",
+      "06_RESEARCH_LAB/forward_tests/2026-07-10__techdev-claim-ledger__operational.md",
+      "06_RESEARCH_LAB/audit_summaries/2026-07-13__techdev-category-outcome-calibration-and-b1-reconciliation-v1__canonical.md"
+    ]
+  },
+  "title": "Reconcile T7 navigation with existing TechDev category calibration",
+  "objective": "Implement the smallest deterministic navigation/runtime reconciliation so the existing T7 TechDev owner exposes the later canonical category calibration and machine-readable anchor outcomes without rewriting historical source ledgers, claiming exhaustive full-corpus scoring or changing TechDev authority.",
+  "finding_key": "TECHDEV_T7_NAVIGATION_STATE_STALE_RELATIVE_TO_CANONICAL_CALIBRATION",
+  "primary_target": "06_RESEARCH_LAB/forward_tests/directly related T7 current status/readout",
+  "allowed_change_scope": [
+    "scripts/research/directly related TechDev calibration reconciliation helper if existing routing requires code",
+    "tests/research/directly related TechDev reconciliation tests",
+    "06_RESEARCH_LAB/forward_tests/directly related T7 current machine-readable status/readout",
+    "06_RESEARCH_LAB/audit_summaries/techdev_calibration_v1/directly related non-destructive pointer/readback artifact"
+  ],
+  "evidence": [
+    {"kind":"REPO_PATH","ref":"06_RESEARCH_LAB/forward_tests/2026-07-10__techdev-claim-ledger__operational.md","summary":"Older T7 navigation reports 186 source-backed rows and zero scored outcomes."},
+    {"kind":"REPO_PATH","ref":"06_RESEARCH_LAB/audit_summaries/2026-07-13__techdev-category-outcome-calibration-and-b1-reconciliation-v1__canonical.md","summary":"Later canonical calibration reports 257 source-backed claims, 50 anchor rows evaluated, 44 outcome-eligible anchors and category-specific learning with machine-readable owners."}
+  ],
+  "reproduction": "On fresh main, compare the T7 operational ledger/current registry state to the later canonical TechDev category calibration and confirm navigation can still expose the older zero-outcome state without reconciling the newer anchor-cohort calibration.",
+  "acceptance_tests": {
+    "positive": [
+      "Current T7 readout links the 257-row corpus and the separate 50-anchor/44-outcome-eligible calibration cohort with exact machine-readable owner paths and category verdicts.",
+      "First-call and revision information/cost remain separate and blocked/non-evaluable categories remain explicit."
+    ],
+    "negative": [
+      "The implementation never claims 44 anchors equal exhaustive scoring of all 257 claims.",
+      "No old source ledger is deleted or rewritten and no TechDev market weight, execution authority or portfolio action changes."
+    ]
+  },
+  "authority_boundary": "CODE_REMEDIATION_ONLY",
+  "requires_framework_owner_authority": false,
+  "forbidden_changes": [
+    "market gates",
+    "model weights",
+    "canonical authority",
+    "portfolio logic",
+    "API budget",
+    "new policy semantics",
+    "new TechDev scoring model",
+    "historical claim rewrite",
+    "exhaustive-score overclaim",
+    "TechDev execution authority increase"
+  ],
+  "linked_health_signature": null,
+  "requested_priority": "NORMAL",
+  "post_fix_gate": "T7_READOUT_RECONCILES_LATER_CANONICAL_CALIBRATION_WITH_NO_HISTORY_REWRITE"
+}
