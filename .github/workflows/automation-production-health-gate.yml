@@ -31,6 +31,7 @@ jobs:
         run: |
           python -m py_compile \
             scripts/health/build_automation_health.py \
+            scripts/health/build_automation_health_runtime.py \
             scripts/health/build_architecture_health.py \
             scripts/health/build_operations_dashboard.py \
             scripts/health/check_writer_trigger_safety.py \
@@ -45,6 +46,7 @@ jobs:
         run: |
           python -m pytest -q \
             tests/health/test_automation_production_health.py \
+            tests/health/test_automation_health_production_scope.py \
             tests/health/test_architecture_health_v2_1.py \
             tests/health/test_operations_dashboard.py \
             tests/health/test_writer_trigger_safety_v2.py \

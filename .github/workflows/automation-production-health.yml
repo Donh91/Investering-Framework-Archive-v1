@@ -37,7 +37,7 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
           set +e
-          python scripts/health/build_automation_health.py \
+          python scripts/health/build_automation_health_runtime.py \
             --workflow-root .github/workflows \
             --repo "${GITHUB_REPOSITORY}" \
             --token "${GITHUB_TOKEN}" \
