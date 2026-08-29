@@ -5,6 +5,7 @@ on:
     paths:
       - 'scripts/api_agent/**'
       - 'scripts/daily_capture/**'
+      - 'scripts/data_ping/**'
       - 'scripts/learning/**'
       - 'scripts/architecture/**'
       - '.github/workflows/daily-raw-owner-capture.yml'
@@ -15,6 +16,8 @@ on:
       - 'research/remediation/forecast_target_units_v2/**'
       - '00_FMOS/CONTINUITY_LEARNING_ARCHITECTURE_v1.md'
       - 'tests/architecture/test_continuity_learning_closure.py'
+      - 'tests/learning/test_action_compass_accountability.py'
+      - 'tests/learning/test_data_ping_learning_closure.py'
   workflow_dispatch:
 
 permissions:
@@ -36,12 +39,20 @@ jobs:
             scripts/api_agent/check_delta_ready.py \
             scripts/api_agent/materialize_forecast_candidates.py \
             scripts/daily_capture/persist_raw_payloads.py \
+            scripts/data_ping/accepted_data_ping_bridge.py \
+            scripts/learning/action_compass_accountability.py \
             scripts/learning/ratify_forecast_candidate.py \
             scripts/learning/outcome_maturation_engine.py \
             scripts/learning/build_model_calibration_ledger.py \
             scripts/architecture/build_latest_handoff.py
       - name: Run closure tests
-        run: python -m unittest tests.architecture.test_continuity_learning_closure tests.api_agent.test_owner_bound_director_context -v
+        run: >-
+          python -m unittest
+          tests.architecture.test_continuity_learning_closure
+          tests.api_agent.test_owner_bound_director_context
+          tests.learning.test_action_compass_accountability
+          tests.learning.test_data_ping_learning_closure
+          -v
       - name: Verify policy wiring
         run: |
           grep -q 'persist_raw_payloads.py' .github/workflows/daily-raw-owner-capture.yml
@@ -51,6 +62,8 @@ jobs:
           grep -q 'LATEST_HANDOFF.json' .github/workflows/continuity-learning-maintenance.yml
           grep -q 'forecast_candidates' scripts/api_agent/api_gateway.py
           grep -q 'FORECAST_TARGET_UNITS_v2' scripts/learning/ratify_forecast_candidate.py
+          grep -q 'DATA_PING_LEARNING_LINEAGE_v1' scripts/learning/ratify_forecast_candidate.py
+          grep -q 'DATA_PING_BRIDGE_RECEIPT_v2' scripts/data_ping/accepted_data_ping_bridge.py
           grep -q 'LEGACY_V1_TARGET_UNIT_AMBIGUOUS' scripts/learning/outcome_maturation_engine.py
           python - <<'PY'
           import json
