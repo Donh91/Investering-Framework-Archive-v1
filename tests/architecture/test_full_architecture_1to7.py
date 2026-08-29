@@ -136,6 +136,6 @@ class FullArchitectureTests(unittest.TestCase):
             cwd=ROOT,text=True,capture_output=True,
         )
         self.assertEqual(result.returncode,0,result.stdout+result.stderr)
-        self.assertIn('Ran 126 tests',result.stderr)
+        self.assertIn('Ran 130 tests',result.stderr)
 
 if __name__=='__main__': unittest.main()

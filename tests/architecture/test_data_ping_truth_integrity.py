@@ -312,6 +312,59 @@ class IncidentRegressionTests(unittest.TestCase):
         self.assertEqual(result["status"], "DIRECT_FALLBACK_REQUIRED")
         self.assertIn("SOURCE_OBSERVATION_FRESHNESS_NOT_PASS", result["reasons"])
 
+    def test_20260828_generic_top100_remains_proxy_and_canonical_unconfirmed(self):
+        observed = FIXTURE["breadth_context"]["generic_top100_proxy"]
+        membership_hash = "c" * 64
+        result = integrity.validate_breadth_owner_interface({
+            "aggregate": {**observed, "constituent_count": 100, "membership_hash": membership_hash},
+            "universe": {"identifier": "GENERIC_TOP100", "version": "v1", "constituent_count": 100, "membership_hash": membership_hash},
+            "evidence_semantics": {
+                "evidence_role": "PROXY_ONLY", "canonical_compatible": False,
+                "canonical_large_cap_breadth": "UNCONFIRMED", "canonical_broad_alt_breadth": "UNCONFIRMED",
+            },
+        })
+        self.assertEqual(result["evidence_role"], "PROXY_ONLY")
+        self.assertEqual(result["canonical_large_cap_breadth"], "UNCONFIRMED")
+        self.assertEqual(result["canonical_broad_alt_breadth"], "UNCONFIRMED")
+
+    def test_proxy_breadth_cannot_escalate_itself_to_canonical(self):
+        membership_hash = "d" * 64
+        with self.assertRaisesRegex(integrity.IntegrityError, "BREADTH_AUTHORITY_ESCALATION"):
+            integrity.validate_breadth_owner_interface({
+                "aggregate": {"advancers": 10, "decliners": 88, "flat": 2, "constituent_count": 100, "membership_hash": membership_hash},
+                "universe": {"identifier": "GENERIC_TOP100", "version": "v1", "constituent_count": 100, "membership_hash": membership_hash},
+                "evidence_semantics": {
+                    "evidence_role": "PROXY_ONLY", "canonical_compatible": True,
+                    "canonical_large_cap_breadth": "CONFIRMED", "canonical_broad_alt_breadth": "CONFIRMED",
+                },
+            })
+
+    def _directional_target(self):
+        summary = {
+            "contract": "HOURLY_DIRECTIONAL_SUMMARY_v1",
+            "source_hourly_run_id": "hourly-test",
+            "source_rows_normalized_sha256": "e" * 64,
+            "registered_directional_counts": {"trailing_ethbtc_positive_run": {"value": 3}},
+            "evidence_semantics": {
+                "evidence_role": "OWNER_EVIDENCE",
+                "registered_threshold_compatibility": "UNCONFIRMED_HOURLY_NOT_SETTLED_SESSION",
+            },
+            "authority": {"binding": False, "canonical_acceptance": False, "state_change": False, "portfolio_action": False},
+        }
+        summary["summary_sha256"] = integrity.normalized_sha256(summary)
+        return {"run_id": "hourly-test", "directional_summary": summary, "directional_summary_sha256": summary["summary_sha256"]}
+
+    def test_hourly_directional_summary_is_hash_and_run_bound(self):
+        result = integrity.validate_hourly_directional_summary(self._directional_target())
+        self.assertEqual(result["status"], "PASS")
+        self.assertEqual(result["source_hourly_run_id"], "hourly-test")
+
+    def test_hourly_directional_summary_tamper_fails_closed(self):
+        target = self._directional_target()
+        target["directional_summary"]["registered_directional_counts"]["trailing_ethbtc_positive_run"]["value"] = 4
+        with self.assertRaisesRegex(integrity.IntegrityError, "summary_hash_mismatch"):
+            integrity.validate_hourly_directional_summary(target)
+
 
 class DeterministicPropertyChecks(unittest.TestCase):
     """One hundred separately counted deterministic adversarial/property checks."""

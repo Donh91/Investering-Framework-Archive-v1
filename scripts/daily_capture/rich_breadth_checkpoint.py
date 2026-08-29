@@ -18,6 +18,6 @@ def main()->int:
     constituents,exclusions,aggregate=owner.parse(raw)
     normalization_time=now_utc()
     now=datetime.now(timezone.utc).replace(microsecond=0)
-    payload={"contract":"RICH_BREADTH_CHECKPOINT_v1","retrieved_at_utc":retrieval_complete,"source":"COINGECKO_MARKET_CAP","lifecycle":{"retrieval_start_time":retrieval_start,"retrieval_complete_time":retrieval_complete,"normalization_time":normalization_time},"aggregate":aggregate,"constituents":constituents,"exclusion_count":len(exclusions),"interpolation":False,"forward_fill":False,"authority":owner.AUTHORITY}
+    payload={"contract":"RICH_BREADTH_CHECKPOINT_v1","retrieved_at_utc":retrieval_complete,"source":"COINGECKO_MARKET_CAP","lifecycle":{"retrieval_start_time":retrieval_start,"retrieval_complete_time":retrieval_complete,"normalization_time":normalization_time},"aggregate":aggregate,"constituents":constituents,"exclusion_count":len(exclusions),**owner.owner_interface(aggregate,retrieval_complete),"interpolation":False,"forward_fill":False,"authority":owner.AUTHORITY}
     body=json.dumps(payload,sort_keys=True,separators=(',',':'))+'\n'; day=a.output_root/now.strftime('%Y/%m/%d'); day.mkdir(parents=True,exist_ok=True); (day/f"{now.strftime('%H%M%S')}.json").write_text(body); (a.output_root/'LATEST.json').write_text(body); print(json.dumps({"status":"PASS","lifecycle":payload["lifecycle"],**aggregate},sort_keys=True)); return 0
 if __name__=='__main__': raise SystemExit(main())

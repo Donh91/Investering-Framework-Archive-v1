@@ -50,6 +50,10 @@ def sha256_bytes(body: bytes) -> str:
     return hashlib.sha256(body).hexdigest()
 
 
+def normalized_sha256(value) -> str:
+    return sha256_bytes((json.dumps(value, sort_keys=True, separators=(",", ":")) + "\n").encode())
+
+
 def iso_utc(value: datetime) -> str:
     return value.astimezone(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
@@ -293,6 +297,111 @@ def merge_rows(root: Path, rows: list[dict[str, object]]) -> list[str]:
     return touched
 
 
+def permanent_output_receipts(root: Path, outputs: list[str]) -> list[dict[str, object]]:
+    receipts = []
+    for raw_path in outputs:
+        path = Path(raw_path)
+        try:
+            relative = path.relative_to(root).as_posix()
+        except ValueError:
+            relative = path.name
+        body = path.read_bytes()
+        receipts.append({
+            "logical_path": "HOURLY_SEQUENCE_ROOT/" + relative,
+            "bytes": len(body),
+            "raw_payload_sha256": sha256_bytes(body),
+        })
+    return receipts
+
+
+def directional_summary(
+    rows: list[dict[str, object]],
+    *,
+    run_id: str,
+    window_start_utc: str,
+    window_end_utc: str,
+    requested_hours: int,
+    output_receipts: list[dict[str, object]],
+    source_records: list[dict[str, object]],
+    observation_limit: int = 8,
+) -> dict[str, object]:
+    """Build deterministic owner evidence without applying market thresholds."""
+
+    observations = []
+    for row in rows:
+        values = {
+            key: row.get(key) for key in (
+                "btc_close", "eth_close", "ethbtc_close",
+                "btc_return_1h_pct", "eth_return_1h_pct", "ethbtc_return_1h_pct",
+            )
+        }
+        if not all(isinstance(value, (int, float)) and not isinstance(value, bool) for value in values.values()):
+            continue
+        observations.append({
+            "timestamp_utc": row["timestamp_utc"],
+            **values,
+            "eth_minus_btc_return_1h_pp": float(values["eth_return_1h_pct"]) - float(values["btc_return_1h_pct"]),
+        })
+
+    trailing_positive = 0
+    for observation in reversed(observations):
+        if float(observation["ethbtc_return_1h_pct"]) <= 0:
+            break
+        trailing_positive += 1
+    eth_leads_btc = sum(
+        float(observation["eth_return_1h_pct"]) > float(observation["btc_return_1h_pct"])
+        for observation in observations
+    )
+    positive_ethbtc = sum(float(observation["ethbtc_return_1h_pct"]) > 0 for observation in observations)
+    latest = observations[-1] if observations else None
+    summary = {
+        "contract": "HOURLY_DIRECTIONAL_SUMMARY_v1",
+        "source_hourly_run_id": run_id,
+        "source_window": {"start_utc": window_start_utc, "end_utc": window_end_utc},
+        "source_rows_normalized_sha256": normalized_sha256(rows),
+        "source_output_receipts": output_receipts,
+        "source_raw_receipts": [
+            {"name": record.get("name"), "raw_response_sha256": record.get("sha256")}
+            for record in source_records if record.get("sha256")
+        ],
+        "requested_hours": requested_hours,
+        "directional_complete_hours": len(observations),
+        "completeness": "COMPLETE" if len(observations) == requested_hours else "PARTIAL",
+        "registered_directional_counts": {
+            "trailing_ethbtc_positive_run": {
+                "value": trailing_positive,
+                "unit": "CLOSED_1H_OWNER_CANDLE",
+                "definition": "CONSECUTIVE_TRAILING_SOURCE_REPORTED_ETHBTC_RETURN_1H_PCT_GT_ZERO",
+            },
+            "eth_leads_btc": {
+                "value": eth_leads_btc,
+                "unit": "CLOSED_1H_OWNER_CANDLE",
+                "definition": "ETH_RETURN_1H_PCT_GT_BTC_RETURN_1H_PCT_WITHIN_SOURCE_WINDOW",
+            },
+            "ethbtc_positive_hours": {
+                "value": positive_ethbtc,
+                "unit": "CLOSED_1H_OWNER_CANDLE",
+            },
+        },
+        "latest_relative_performance": None if latest is None else {
+            "timestamp_utc": latest["timestamp_utc"],
+            "eth_minus_btc_return_1h_pp": latest["eth_minus_btc_return_1h_pp"],
+            "ethbtc_return_1h_pct": latest["ethbtc_return_1h_pct"],
+        },
+        "latest_observations": observations[-max(1, observation_limit):],
+        "evidence_semantics": {
+            "availability": "AVAILABLE" if observations else "UNAVAILABLE",
+            "evidence_role": "OWNER_EVIDENCE",
+            "confirmation_level": "AVAILABLE_NOT_CONFIRMING",
+            "registered_threshold_compatibility": "UNCONFIRMED_HOURLY_NOT_SETTLED_SESSION",
+            "market_interpretation": "NOT_PERFORMED",
+        },
+        "authority": AUTHORITY,
+    }
+    summary["summary_sha256"] = normalized_sha256(summary)
+    return summary
+
+
 def build_rows(start, end, spot_data, oi_data, ls_data, funding_data, spot_status, derivatives_status):
     output = []
     previous_close = {symbol: None for symbol in SPOT_SYMBOLS}
@@ -453,6 +562,7 @@ def main() -> None:
         start, end, spot_data, oi_data, ls_data, funding_data, spot_status, derivatives_status
     )
     permanent_outputs = merge_rows(args.output_root, rows)
+    output_receipts = permanent_output_receipts(args.output_root, permanent_outputs)
     requested_hours = len(rows)
     spot_complete = sum(
         row.get("btc_close") is not None and row.get("eth_close") is not None and row.get("ethbtc_close") is not None
@@ -476,6 +586,15 @@ def main() -> None:
     run_id = "HOURLY_SEQUENCE_" + now.strftime("%Y%m%dT%H%M%SZ") + "_" + sha256_bytes(
         json.dumps(source_records, sort_keys=True).encode()
     )[:12]
+    summary = directional_summary(
+        rows,
+        run_id=run_id,
+        window_start_utc=iso_utc(start),
+        window_end_utc=iso_utc(end + timedelta(hours=1)),
+        requested_hours=requested_hours,
+        output_receipts=output_receipts,
+        source_records=source_records,
+    )
     manifest = {
         "contract": "HOURLY_SEQUENCE_CAPTURE_v2_2",
         "run_id": run_id,
@@ -495,7 +614,10 @@ def main() -> None:
         "interpolation": False,
         "forward_fill": False,
         "permanent_outputs": permanent_outputs,
+        "permanent_output_receipts": output_receipts,
         "source_records": source_records,
+        "directional_summary": summary,
+        "directional_summary_sha256": summary["summary_sha256"],
         "authority": AUTHORITY,
     }
     run_dir = args.output_root / "runs" / now.strftime("%Y/%m/%d")
@@ -515,6 +637,8 @@ def main() -> None:
         "derivatives_oi_complete_hours": oi_complete,
         "long_short_complete_hours": long_short_complete,
         "requested_hours": requested_hours,
+        "directional_summary_contract": summary["contract"],
+        "directional_summary_sha256": summary["summary_sha256"],
     }
     (args.output_root / "LATEST.json").write_text(json.dumps(pointer, indent=2, sort_keys=True) + "\n")
     print(json.dumps({
@@ -525,6 +649,9 @@ def main() -> None:
         "spot_flow_complete_hours": spot_flow_complete,
         "derivatives_oi_complete_hours": oi_complete,
         "long_short_complete_hours": long_short_complete,
+        "directional_summary_sha256": summary["summary_sha256"],
+        "trailing_ethbtc_positive_run": summary["registered_directional_counts"]["trailing_ethbtc_positive_run"]["value"],
+        "eth_leads_btc_hours": summary["registered_directional_counts"]["eth_leads_btc"]["value"],
     }, sort_keys=True))
     raise SystemExit(2 if spot_complete == 0 else 0)
 

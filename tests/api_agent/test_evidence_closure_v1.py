@@ -36,6 +36,13 @@ def test_rich_breadth_metrics_include_distribution_and_benchmarks():
     assert aggregate["eth_return_24h_pct"] == 1.0
     assert isinstance(aggregate["outperforming_btc_count"], int)
     assert isinstance(aggregate["outperforming_eth_count"], int)
+    interface = mod.owner_interface(aggregate, "2026-08-28T16:34:19Z")
+    assert interface["universe"]["membership_hash"] == aggregate["membership_hash"]
+    assert interface["universe"]["constituent_count"] == 100
+    assert interface["evidence_semantics"]["evidence_role"] == "PROXY_ONLY"
+    assert interface["evidence_semantics"]["canonical_large_cap_breadth"] == "UNCONFIRMED"
+    assert interface["evidence_semantics"]["canonical_broad_alt_breadth"] == "UNCONFIRMED"
+    assert interface["evidence_semantics"]["canonical_compatible"] is False
 
 
 def test_ethbtc_persistence_uses_direct_closes():
@@ -91,6 +98,15 @@ def test_stablecoin_chart_parsing_and_changes():
     rows = mod.chart_rows(doc)
     assert rows[-1]["total_usd"] == 1100.0
     assert mod.pct(1100.0, rows[0]) == 10.0
+
+
+def test_stablecoin_supply_is_never_deployment_confirmation():
+    mod = load("stablecoin_semantics", "scripts/data_terminal/defillama_stablecoin_owner.py")
+    semantics = mod.EVIDENCE_SEMANTICS
+    assert semantics["evidence_role"] == "SUPPLY_LIQUIDITY"
+    assert semantics["deployment_confirmation"] == "NOT_ESTABLISHED"
+    assert semantics["confirmation_level"] == "AVAILABLE_NOT_CONFIRMING"
+    assert semantics["canonical_compatible"] is False
 
 
 def test_evidence_capability_registry_keeps_market_authority_outside_closure():

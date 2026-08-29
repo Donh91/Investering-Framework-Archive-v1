@@ -8,6 +8,7 @@ from typing import Any
 BASE="https://stablecoins.llama.fi"
 UA={"User-Agent":"Investering-Stablecoin-Owner/1.1","Accept":"application/json"}
 AUTHORITY={"binding":False,"canonical_acceptance":False,"state_change":False,"portfolio_action":False}
+EVIDENCE_SEMANTICS={"availability":"AVAILABLE","evidence_role":"SUPPLY_LIQUIDITY","confirmation_level":"AVAILABLE_NOT_CONFIRMING","deployment_confirmation":"NOT_ESTABLISHED","canonical_compatible":False,"substitution_policy":"NO_DEPLOYMENT_INFERENCE_FROM_SUPPLY"}
 
 def now_utc()->str: return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00","Z")
 def canonical(v:Any)->bytes: return json.dumps(v,sort_keys=True,separators=(",",":"),ensure_ascii=False).encode()
@@ -65,6 +66,6 @@ def main()->int:
     latest=rows[-1]; chain_rows=chains(chain_doc)
     history=write_history(a.output_root/"backfill"/"global_history.jsonl.gz",rows)
     normalization_time=now_utc()
-    payload={"contract":"DEFILLAMA_STABLECOIN_LIQUIDITY_OWNER_v1_1","retrieved_at_utc":retrieval_complete,"source":"DEFILLAMA_STABLECOINS","lifecycle":{"retrieval_start_time":retrieval_start,"retrieval_complete_time":retrieval_complete,"normalization_time":normalization_time},"global":{"timestamp":latest["timestamp"],"total_usd":latest["total_usd"],"change_1d_pct":pct(latest["total_usd"],nearest_back(rows,86400)),"change_7d_pct":pct(latest["total_usd"],nearest_back(rows,7*86400)),"change_30d_pct":pct(latest["total_usd"],nearest_back(rows,30*86400))},"historical_backfill":history,"chains":chain_rows,"source_receipts":{"global_chart":cr,"chains":ccr},"interpolation":False,"forward_fill":False,"authority":AUTHORITY}
+    payload={"contract":"DEFILLAMA_STABLECOIN_LIQUIDITY_OWNER_v1_1","retrieved_at_utc":retrieval_complete,"source":"DEFILLAMA_STABLECOINS","lifecycle":{"retrieval_start_time":retrieval_start,"retrieval_complete_time":retrieval_complete,"normalization_time":normalization_time},"global":{"timestamp":latest["timestamp"],"total_usd":latest["total_usd"],"change_1d_pct":pct(latest["total_usd"],nearest_back(rows,86400)),"change_7d_pct":pct(latest["total_usd"],nearest_back(rows,7*86400)),"change_30d_pct":pct(latest["total_usd"],nearest_back(rows,30*86400))},"historical_backfill":history,"chains":chain_rows,"source_receipts":{"global_chart":cr,"chains":ccr},"evidence_semantics":EVIDENCE_SEMANTICS,"interpolation":False,"forward_fill":False,"authority":AUTHORITY}
     payload["payload_sha256"]=sha(canonical(payload)); day=a.output_root/datetime.now(timezone.utc).strftime("%Y/%m/%d"); day.mkdir(parents=True,exist_ok=True); path=day/f"{datetime.now(timezone.utc).strftime('%H%M%S')}.json"; path.write_bytes(canonical(payload)+b"\n"); (a.output_root/"LATEST.json").write_bytes(canonical(payload)+b"\n"); print(json.dumps({"status":"PASS","global_total_usd":latest["total_usd"],"historical_rows":history["row_count"],"chain_count":len(chain_rows),"payload_sha256":payload["payload_sha256"],"lifecycle":payload["lifecycle"]},sort_keys=True)); return 0
 if __name__=="__main__": raise SystemExit(main())

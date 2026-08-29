@@ -1,4 +1,5 @@
 import csv
+import hashlib
 import json
 import subprocess
 import sys
@@ -59,6 +60,16 @@ class DailyCapturePipelineTests(unittest.TestCase):
             root = Path(tmp)
             owner_dir = root / "top100-breadth-owner-output"
             owner_dir.mkdir()
+            (owner_dir / "owner_snapshot.json").write_text(json.dumps({
+                "aggregate": {"advancers": 25, "decliners": 73, "flat": 2, "constituent_count": 100, "membership_hash": "members-hash"},
+                "universe": {"identifier": "GENERIC_TOP100_TEST", "version": "v1", "membership_hash": "members-hash"},
+                "observation": {"cutoff_utc": "2026-08-25T07:15:00Z"},
+                "evidence_semantics": {
+                    "evidence_role": "PROXY_ONLY", "canonical_large_cap_breadth": "UNCONFIRMED",
+                    "canonical_broad_alt_breadth": "UNCONFIRMED", "canonical_compatible": False,
+                },
+                "authority": {"binding": False, "portfolio_action": False},
+            }))
             (owner_dir / "rotation_context_snapshot.json").write_text(json.dumps({
                 "contract": "BLOCKCHAINCENTER_ALTCOIN_SEASON_SHADOW_CONTEXT_v1",
                 "status": "PASS",
@@ -106,6 +117,10 @@ class DailyCapturePipelineTests(unittest.TestCase):
             dispersion = packet["market_metrics"]["rotation_context"]["method_dispersion"]
             self.assertEqual(dispersion["value"], -6)
             self.assertEqual(dispersion["authority"], "LOWER_GRADE_SHADOW_CONTEXT_ONLY")
+            breadth = packet["market_metrics"]["breadth"]
+            self.assertEqual(breadth["universe"]["membership_hash"], "members-hash")
+            self.assertEqual(breadth["evidence_semantics"]["evidence_role"], "PROXY_ONLY")
+            self.assertFalse(breadth["evidence_semantics"]["canonical_compatible"])
 
     def _write_hourly_fixtures(self, fixture: Path, retrieval: datetime, hours: int = 26) -> None:
         end = retrieval.replace(minute=0, second=0, microsecond=0) - timedelta(hours=1)
@@ -221,6 +236,43 @@ class DailyCapturePipelineTests(unittest.TestCase):
             self.assertEqual(manifest["spot_flow_complete_hours"], 26)
             self.assertEqual(manifest["derivatives_oi_complete_hours"], 26)
             self.assertEqual(manifest["long_short_complete_hours"], 26)
+            summary = manifest["directional_summary"]
+            self.assertEqual(summary["contract"], "HOURLY_DIRECTIONAL_SUMMARY_v1")
+            self.assertEqual(summary["source_hourly_run_id"], manifest["run_id"])
+            self.assertEqual(summary["directional_complete_hours"], 26)
+            self.assertEqual(summary["evidence_semantics"]["evidence_role"], "OWNER_EVIDENCE")
+            self.assertEqual(
+                summary["evidence_semantics"]["registered_threshold_compatibility"],
+                "UNCONFIRMED_HOURLY_NOT_SETTLED_SESSION",
+            )
+            self.assertEqual(
+                summary["summary_sha256"],
+                hashlib.sha256((json.dumps(
+                    {key: value for key, value in summary.items() if key != "summary_sha256"},
+                    sort_keys=True, separators=(",", ":"),
+                ) + "\n").encode()).hexdigest(),
+            )
+            pointer = json.loads((output / "LATEST.json").read_text())
+            self.assertEqual(pointer["directional_summary_contract"], "HOURLY_DIRECTIONAL_SUMMARY_v1")
+            self.assertEqual(pointer["directional_summary_sha256"], summary["summary_sha256"])
+            self.assertEqual(
+                {receipt["logical_path"] for receipt in summary["source_output_receipts"]},
+                {"HOURLY_SEQUENCE_ROOT/2026/08/2026-08-08.csv", "HOURLY_SEQUENCE_ROOT/2026/08/2026-08-09.csv"},
+            )
+            first_summary = json.dumps(summary, sort_keys=True, separators=(",", ":"))
+            self.run_script(
+                "scripts/daily_capture/build_hourly_sequence.py",
+                "--output-root", str(output),
+                "--raw-output", str(raw),
+                "--lookback-hours", "26",
+                "--retrieval-timestamp", retrieval.isoformat().replace("+00:00", "Z"),
+                "--fixture-dir", str(fixture),
+            )
+            replay_manifest = json.loads(manifest_paths[0].read_text())
+            self.assertEqual(
+                json.dumps(replay_manifest["directional_summary"], sort_keys=True, separators=(",", ":")),
+                first_summary,
+            )
 
     def test_weekly_pack_materializes_enriched_csv_gaps_windows_and_etf(self):
         with tempfile.TemporaryDirectory() as tmp:

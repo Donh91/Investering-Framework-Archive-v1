@@ -232,6 +232,9 @@ def extract_metrics(root: Path) -> dict[str, Any]:
 
     breadth = read_json(root / "top100-breadth-owner-output" / "owner_snapshot.json")
     if isinstance(breadth, dict):
+        for key in ("universe", "observation", "evidence_semantics", "authority"):
+            if key in breadth:
+                metrics["breadth"][key] = breadth[key]
         for key in ("advancers", "decliners", "flat", "advancer_percentage", "constituent_count", "membership_hash", "retrieval_timestamp"):
             if key in breadth:
                 metrics["breadth"][key] = breadth[key]
