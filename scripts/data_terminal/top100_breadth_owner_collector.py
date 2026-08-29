@@ -32,6 +32,8 @@ STABLE_SYMBOLS = {
     "usdt", "usdc", "dai", "fdusd", "usde", "usds", "tusd", "usdd", "pyusd",
     "frax", "usdp", "gusd", "lusd", "susd", "crvusd",
 }
+BREADTH_UNIVERSE_ID = "COINGECKO_MARKET_CAP_TOP100_FILTERED_EX_STABLECOINS_v1"
+BREADTH_UNIVERSE_VERSION = "TOP100_FILTERED_STABLE_EXCLUSION_RICH_BREADTH_v1_2"
 BLOCKCHAINCENTER_METHOD = {
     "benchmark": "BTC",
     "published_score_definition": "PERCENT_OF_49_NON_BTC_CONSTITUENTS_OUTPERFORMING_BTC_ROUNDED_TO_INTEGER",
@@ -94,6 +96,37 @@ def sha(payload: bytes) -> str:
 
 def canonical(value: Any) -> bytes:
     return json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode()
+
+
+def owner_interface(aggregate: dict[str, Any], retrieval: str) -> dict[str, Any]:
+    return {
+        "universe": {
+            "identifier": BREADTH_UNIVERSE_ID,
+            "version": BREADTH_UNIVERSE_VERSION,
+            "ranking_source": "COINGECKO_MARKET_CAP",
+            "ranking_metric": "market_cap_usd",
+            "raw_rank_depth": 150,
+            "constituent_count": aggregate["constituent_count"],
+            "membership_hash": aggregate["membership_hash"],
+            "membership_semantics": "POINT_IN_TIME_FILTERED_MEMBERSHIP_AT_RETRIEVAL",
+            "explicit_exclusions": ["STABLECOINS", "MISSING_REQUIRED_VALUE"],
+        },
+        "observation": {
+            "cutoff_utc": retrieval,
+            "retrieval_timestamp_utc": retrieval,
+            "window_semantics": "SOURCE_REPORTED_ROLLING_24H_AT_RETRIEVAL",
+        },
+        "evidence_semantics": {
+            "availability": "AVAILABLE",
+            "evidence_role": "PROXY_ONLY",
+            "owner_evidence": "OWNER_EVIDENCE",
+            "canonical_large_cap_breadth": "UNCONFIRMED",
+            "canonical_broad_alt_breadth": "UNCONFIRMED",
+            "canonical_compatible": False,
+            "registered_threshold_compatibility": "UNCONFIRMED",
+            "substitution_policy": "NO_HIDDEN_SUBSTITUTION",
+        },
+    }
 
 
 def fetch(url: str, timeout: int = 20, *, accept: str = "application/json") -> bytes:
@@ -570,18 +603,23 @@ def run(
         build_coinmarketcap_context, degraded_coinmarketcap_context, "CoinMarketCap",
     )
     run_id = "DT_TOP100_" + retrieval.replace("-", "").replace(":", "")[:15] + "_" + aggregate["membership_hash"][:12]
+    interface = owner_interface(aggregate, retrieval)
     owner = {
         "contract": "C5E_TOP100_BREADTH_OWNER_v1_2", "run_id": run_id,
         "retrieval_timestamp": retrieval, "freeze_timestamp": retrieval,
         "source": "COINGECKO_MARKET_CAP", "raw_rank_depth": 150,
         "ranking_metric": "market_cap_usd", "method_version": "TOP100_FILTERED_STABLE_EXCLUSION_RICH_BREADTH_v1_2",
         "constituents": constituents, "exclusions": exclusions, "aggregate": aggregate,
+        **interface,
         "rotation_context": rotation_context, "rotation_method_crosscheck": coinmarketcap_context,
         "interpolation": False, "forward_fill": False, "authority": AUTHORITY,
     }
     receipt = {
         "run_id": run_id, "raw_sha256": sha(payload), "membership_hash": aggregate["membership_hash"],
         "constituent_count": 100, "aggregate_replay": "PASS",
+        "universe_identifier": interface["universe"]["identifier"],
+        "universe_version": interface["universe"]["version"],
+        "evidence_role": interface["evidence_semantics"]["evidence_role"],
         "rotation_context_status": rotation_context["status"],
         "rotation_context_failure_state": rotation_context.get("failure_state"),
         "rotation_crosscheck_status": coinmarketcap_context["status"],

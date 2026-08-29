@@ -552,6 +552,70 @@ def select_macro_evidence(
     }
 
 
+def validate_hourly_directional_summary(target: Mapping[str, Any]) -> dict[str, Any]:
+    summary = target.get("directional_summary")
+    if summary is None:
+        return {"status": "UNAVAILABLE_LEGACY_TARGET", "classification": "DIRECTIONAL_SUMMARY_NOT_EXPOSED"}
+    if not isinstance(summary, dict) or summary.get("contract") != "HOURLY_DIRECTIONAL_SUMMARY_v1":
+        raise IntegrityError("HOURLY_DIRECTIONAL_SUMMARY_FAIL", "contract_mismatch")
+    if summary.get("source_hourly_run_id") != target.get("run_id"):
+        raise IntegrityError("HOURLY_DIRECTIONAL_SUMMARY_FAIL", "source_run_id_mismatch")
+    declared = summary.get("summary_sha256")
+    calculated = normalized_sha256({key: value for key, value in summary.items() if key != "summary_sha256"})
+    if declared != calculated or target.get("directional_summary_sha256") != calculated:
+        raise IntegrityError("HOURLY_DIRECTIONAL_SUMMARY_FAIL", "summary_hash_mismatch")
+    if not SHA256_RE.fullmatch(str(summary.get("source_rows_normalized_sha256", ""))):
+        raise IntegrityError("HOURLY_DIRECTIONAL_SUMMARY_FAIL", "source_rows_hash_invalid")
+    semantics = summary.get("evidence_semantics")
+    if not isinstance(semantics, dict) or semantics.get("evidence_role") != "OWNER_EVIDENCE":
+        raise IntegrityError("HOURLY_DIRECTIONAL_SUMMARY_FAIL", "owner_evidence_role_missing")
+    if semantics.get("registered_threshold_compatibility") != "UNCONFIRMED_HOURLY_NOT_SETTLED_SESSION":
+        raise IntegrityError("HOURLY_DIRECTIONAL_SUMMARY_FAIL", "threshold_compatibility_escalated")
+    authority = summary.get("authority")
+    if not isinstance(authority, dict) or any(authority.get(key) is True for key in ("binding", "canonical_acceptance", "state_change", "portfolio_action")):
+        raise IntegrityError("HOURLY_DIRECTIONAL_SUMMARY_FAIL", "authority_escalation")
+    return {
+        "status": "PASS",
+        "classification": "HOURLY_DIRECTIONAL_SUMMARY_SOURCE_BOUND",
+        "summary_sha256": calculated,
+        "source_hourly_run_id": target.get("run_id"),
+        "registered_directional_counts": summary.get("registered_directional_counts"),
+    }
+
+
+def validate_breadth_owner_interface(value: Mapping[str, Any]) -> dict[str, Any]:
+    universe = value.get("universe")
+    aggregate = value.get("aggregate")
+    semantics = value.get("evidence_semantics")
+    if not all(isinstance(item, dict) for item in (universe, aggregate, semantics)):
+        raise IntegrityError("BREADTH_OWNER_INTERFACE_FAIL", "objects_required")
+    membership_hash = str(universe.get("membership_hash", ""))
+    if not SHA256_RE.fullmatch(membership_hash) or membership_hash != aggregate.get("membership_hash"):
+        raise IntegrityError("BREADTH_OWNER_INTERFACE_FAIL", "membership_hash_mismatch")
+    count = aggregate.get("constituent_count")
+    components = [aggregate.get(key) for key in ("advancers", "decliners", "flat")]
+    if not isinstance(count, int) or any(not isinstance(item, int) for item in components) or sum(components) != count:
+        raise IntegrityError("BREADTH_OWNER_INTERFACE_FAIL", "constituent_reconciliation_fail")
+    if universe.get("constituent_count") != count or not universe.get("identifier") or not universe.get("version"):
+        raise IntegrityError("BREADTH_OWNER_INTERFACE_FAIL", "universe_binding_fail")
+    if semantics.get("evidence_role") == "PROXY_ONLY":
+        if semantics.get("canonical_compatible") is not False:
+            raise IntegrityError("BREADTH_AUTHORITY_ESCALATION", "proxy_marked_canonical_compatible")
+        if semantics.get("canonical_large_cap_breadth") != "UNCONFIRMED" or semantics.get("canonical_broad_alt_breadth") != "UNCONFIRMED":
+            raise IntegrityError("BREADTH_AUTHORITY_ESCALATION", "proxy_claimed_canonical_breadth")
+    return {
+        "status": "PASS",
+        "classification": "BREADTH_OWNER_INTERFACE_VALID",
+        "universe_identifier": universe["identifier"],
+        "universe_version": universe["version"],
+        "membership_hash": membership_hash,
+        "constituent_count": count,
+        "evidence_role": semantics.get("evidence_role"),
+        "canonical_large_cap_breadth": semantics.get("canonical_large_cap_breadth"),
+        "canonical_broad_alt_breadth": semantics.get("canonical_broad_alt_breadth"),
+    }
+
+
 DAILY_POINTER = PointerContract(
     pointer_contracts=frozenset({"DAILY_LIVE_ANCHOR_LATEST_POINTER_v1"}),
     target_contracts=frozenset({"DAILY_LIVE_ANCHOR_INDEX_v3"}),
@@ -571,6 +635,7 @@ HOURLY_POINTER = PointerContract(
         "status", "window_start_utc", "window_end_utc", "requested_hours",
         "spot_complete_hours", "spot_flow_complete_hours", "derivatives_oi_complete_hours",
         "long_short_complete_hours",
+        "directional_summary_sha256",
     ),
     timestamp_fields=("retrieved_at_utc", "window_start_utc", "window_end_utc"),
     retrieval_timestamp_field="retrieved_at_utc",
@@ -589,6 +654,10 @@ def audit_repo(snapshot: PinnedGitHubSnapshot, *, now_utc: datetime) -> dict[str
     ):
         try:
             lanes[lane] = resolve_pointer_chain(snapshot, path, contract, now_utc=now_utc)
+            if lane == "hourly_sequence":
+                lanes[lane]["directional_summary_validation"] = validate_hourly_directional_summary(
+                    lanes[lane]["target"]
+                )
         except IntegrityError as exc:
             lanes[lane] = {"status": "FAIL", "classification": exc.classification, "detail": exc.detail}
             errors.append({"lane": lane, "classification": exc.classification, "detail": exc.detail})
