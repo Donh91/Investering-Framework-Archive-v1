@@ -33,9 +33,16 @@ jobs:
       - name: Collect and K17-validate NFCICREDIT live shadow context
         shell: bash
         run: |
+          set +e
           python scripts/data_terminal/fred_csv_collector.py \
             --series NFCICREDIT \
             --output-dir /tmp/nfcicredit
+          collector_rc=$?
+          set -e
+          if [ "$collector_rc" -ne 0 ] && [ "$collector_rc" -ne 3 ]; then
+            exit "$collector_rc"
+          fi
+          echo "NFCICREDIT collector exit=${collector_rc}; exit 3 means STALE evidence is preserved for downstream K17 validation."
           mkdir -p 03_DAILY_CAPTURE_LOGS/slow_cycle/nfcicredit
           raw_csv="$(find /tmp/nfcicredit/raw -type f -name '*__fred.csv' -print -quit)"
           test -n "$raw_csv"
