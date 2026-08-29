@@ -17,6 +17,7 @@ on:
       - '00_FMOS/CONTINUITY_LEARNING_ARCHITECTURE_v1.md'
       - 'tests/architecture/test_continuity_learning_closure.py'
       - 'tests/learning/test_action_compass_accountability.py'
+      - 'tests/learning/test_data_ping_action_compass_binding.py'
       - 'tests/learning/test_data_ping_learning_closure.py'
   workflow_dispatch:
 
@@ -51,6 +52,7 @@ jobs:
           tests.architecture.test_continuity_learning_closure
           tests.api_agent.test_owner_bound_director_context
           tests.learning.test_action_compass_accountability
+          tests.learning.test_data_ping_action_compass_binding
           tests.learning.test_data_ping_learning_closure
           -v
       - name: Verify policy wiring
