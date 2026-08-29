@@ -106,13 +106,29 @@ jobs:
           PY
 
       - name: Enforce conflict-review lane and global budgets
+        id: conflict_budget
+        continue-on-error: true
         if: steps.conflict.outputs.conflict_review == 'true' && steps.delta.outputs.delta_ready == 'true' && steps.fresh.outputs.fresh_ready == 'true'
         run: |
           python scripts/api_agent/check_api_lane_budget.py --receipt-root research/api_agent/outputs --task DAILY_CONFLICT_REVIEW --cap-usd 3.0 --reserve-usd 0.10
           python scripts/api_agent/check_monthly_cost_guard.py --receipt-root research/api_agent/outputs --pending-ledger-root runtime/api-cost-ledger --hard-stop-usd 20 --reserve-usd 2.0
 
+      - name: Record conflict-review budget hold
+        if: always() && steps.conflict.outputs.conflict_review == 'true' && steps.delta.outputs.delta_ready == 'true' && steps.fresh.outputs.fresh_ready == 'true' && steps.conflict_budget.outcome != 'success'
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          path=Path('runtime/daily-director/conflict_router.json')
+          router=json.loads(path.read_text())
+          router['review_status']='SKIPPED_BUDGET_GUARD'
+          router['review_budget_gate']='BLOCKED'
+          router['review_requested']=True
+          path.write_text(json.dumps(router,sort_keys=True,separators=(',',':'))+'\n')
+          PY
+
       - name: Run Terra conflict review
-        if: steps.conflict.outputs.conflict_review == 'true' && steps.delta.outputs.delta_ready == 'true' && steps.fresh.outputs.fresh_ready == 'true'
+        if: steps.conflict.outputs.conflict_review == 'true' && steps.delta.outputs.delta_ready == 'true' && steps.fresh.outputs.fresh_ready == 'true' && steps.conflict_budget.outcome == 'success'
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: python scripts/api_agent/api_gateway.py --task DAILY_CONFLICT_REVIEW --registry research/api_agent/API_TASK_REGISTRY_v1.json --prompt-file runtime/daily-director/conflict_prompt.txt --context-file runtime/daily-director/conflict_context.json --output-dir runtime/daily-director/conflict_output --intended-write-prefix research/api_agent/outputs/conflicts/
