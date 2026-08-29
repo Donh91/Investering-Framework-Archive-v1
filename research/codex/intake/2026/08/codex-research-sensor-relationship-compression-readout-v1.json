@@ -1,0 +1,57 @@
+{
+  "contract": "CODEX_RESEARCH_CANDIDATE_v1",
+  "candidate_id": "codex-research-sensor-relationship-compression-readout-v1",
+  "submitted_at_utc": "2026-08-29T18:41:00Z",
+  "status": "SUBMITTED",
+  "origin": {
+    "type": "AUDIT",
+    "thread_label": "Existing System Improvement 12x - T06",
+    "source_paths": [
+      "06_RESEARCH_LAB/existing_system_improvement_12x/T06_INCREMENTAL_VALUE_COMPRESSION.md",
+      "01_CORE_FRAMEWORK/governance/2026-07-22__sensor-relationship-and-incremental-value-standard__canonical.md",
+      "06_RESEARCH_LAB/audit_summaries/2026-07-22__public-repo-methods-closed-lab-audit__shadow.md"
+    ]
+  },
+  "title": "Materialize current sensor relationship compression readout",
+  "objective": "Implement the smallest deterministic research-only readout that summarizes existing sensor-family relationship evidence using the canonical relationship vocabulary, distinguishes historical from prospective evidence and exposes presentation roles for double-count prevention without changing weights or market semantics.",
+  "finding_key": "CURRENT_SENSOR_RELATIONSHIP_COMPRESSION_READOUT_MISSING",
+  "primary_target": "scripts/experiments/directly related sensor relationship compression helper",
+  "allowed_change_scope": [
+    "scripts/experiments/directly related read-only sensor relationship/compression helper",
+    "tests/experiments/directly related relationship compression tests",
+    "06_RESEARCH_LAB/directly related generated current relationship/compression artifact"
+  ],
+  "evidence": [
+    {"kind":"REPO_PATH","ref":"01_CORE_FRAMEWORK/governance/2026-07-22__sensor-relationship-and-incremental-value-standard__canonical.md","summary":"Canonical standard requires explicit relationship classes and simplification rather than aligned-signal counting."},
+    {"kind":"REPO_PATH","ref":"06_RESEARCH_LAB/audit_summaries/2026-07-22__public-repo-methods-closed-lab-audit__shadow.md","summary":"Historical relationship audit exists but is not a current prospective operational compression surface."},
+    {"kind":"REPO_PATH","ref":"06_RESEARCH_LAB/existing_system_improvement_12x/T06_INCREMENTAL_VALUE_COMPRESSION.md","summary":"Program finding freezes a read-only current relationship/compression requirement with no authority change."}
+  ],
+  "reproduction": "On fresh main, confirm the canonical relationship standard and historical audit artifacts exist, then confirm no current compact machine-readable readout reconciles registered sensor families/tests into canonical relationship states with sample/eligibility and historical-vs-prospective evidence status for downstream double-count prevention.",
+  "acceptance_tests": {
+    "positive": [
+      "Known related sensor/test families are represented using only canonical relationship classes with exact source/test IDs and evidence class/sample status.",
+      "Presentation roles PRIMARY/VALIDATION/AUDIT_ONLY/DATA_BLOCKED/UNRESOLVED are clearly non-weighting metadata and preserve unresolved states."
+    ],
+    "negative": [
+      "Low Pearson/Spearman correlation alone cannot produce UNIQUE.",
+      "No sensor is removed, promoted, reweighted or counted as independent confirmation by this readout."
+    ]
+  },
+  "authority_boundary": "CODE_REMEDIATION_ONLY",
+  "requires_framework_owner_authority": false,
+  "forbidden_changes": [
+    "market gates",
+    "model weights",
+    "canonical authority",
+    "portfolio logic",
+    "API budget",
+    "new policy semantics",
+    "new sensor family",
+    "automatic sensor retirement",
+    "automatic sensor promotion",
+    "automatic decision weighting"
+  ],
+  "linked_health_signature": null,
+  "requested_priority": "NORMAL",
+  "post_fix_gate": "DETERMINISTIC_RELATIONSHIP_READOUT_FIXTURE_PASS_PLUS_NO_AUTHORITY_CHANGE_READBACK"
+}
