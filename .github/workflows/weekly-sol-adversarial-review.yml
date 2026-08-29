@@ -43,12 +43,20 @@ jobs:
               print('run_review=false'); print('reason=MACHINE_PACKAGE_MISSING'); raise SystemExit(0)
           machine=json.loads(machine_path.read_text())
           week_dir=machine_path.parent
+          calibration_path=Path('research/framework_memory/action_compass_calibration/LATEST_EXIT_WARNING_CALIBRATION.json')
+          exit_calibration={'status':'UNAVAILABLE_NO_MATERIALIZED_REPORT'}
+          if calibration_path.exists():
+              try:
+                  exit_calibration=json.loads(calibration_path.read_text())
+              except Exception:
+                  exit_calibration={'status':'UNAVAILABLE_INVALID'}
           context={
               'contract':'WEEKLY_ADVERSARIAL_CONTEXT_v1',
               'delivery_pointer':ptr,
               'machine_package':machine,
               'calibration_scorecard':json.loads((week_dir/'MASTER_MONDAY_CALIBRATION_SCORECARD.json').read_text()) if (week_dir/'MASTER_MONDAY_CALIBRATION_SCORECARD.json').exists() else {'status':'UNAVAILABLE'},
               'operational_translation':json.loads((week_dir/'MASTER_MONDAY_OPERATIONAL_TRANSLATION.json').read_text()) if (week_dir/'MASTER_MONDAY_OPERATIONAL_TRANSLATION.json').exists() else {'status':'UNAVAILABLE'},
+              'action_compass_exit_calibration':exit_calibration,
               'authority':{'framework_state_change':False,'portfolio_action':False,'market_rule_change':False,'threshold_change':False,'weight_change':False,'canonical_promotion':False},
           }
           freeze=str(ptr.get('freeze_sha256') or machine.get('freeze_sha256') or '')
@@ -65,7 +73,7 @@ jobs:
                       prior=True; break
           Path('runtime/weekly-sol-red-team/context.json').write_text(json.dumps(context,sort_keys=True,separators=(',',':'))+'\n')
           Path('runtime/weekly-sol-red-team/prompt.txt').write_text(
-              'Act as an adversarial weekly calibration reviewer. The weekly evidence and prior API calibration are frozen inputs. Try to falsify the analysis rather than restate it. Identify hindsight leakage risk, broad-range containment masquerading as precision, sequence errors, confidence overstatement/understatement, false positives, false negatives, opportunity cost, missingness and the strongest evidence the prior calibration may have overlooked. Preserve matured-versus-immature outcome boundaries. forecast_candidates must be empty. Do not change market rules, thresholds, weights, framework state, canonical truth or portfolio action.\n'
+              'Act as an adversarial weekly calibration reviewer. The weekly evidence and prior API calibration are frozen inputs. Try to falsify the analysis rather than restate it. Identify hindsight leakage risk, broad-range containment masquerading as precision, sequence errors, confidence overstatement/understatement, false positives, false negatives, opportunity cost, missingness and the strongest evidence the prior calibration may have overlooked. Preserve matured-versus-immature outcome boundaries. Use action_compass_exit_calibration only as descriptive matured learning, never as a threshold or market rule. For late-cycle analysis, explicitly test both symmetric failure modes: PREMATURE_EXIT, where a warning causes large upside to be abandoned while the cycle remains healthy, and LATE_EXIT, where breadth/leadership/liquidity deterioration is recognized only after material drawdown. Distinguish PARABOLIC_ALTSEASON from DISTRIBUTION and warning from confirmed phase change. Challenge whether correlated hot-market indicators are being double-counted as independent exit evidence. Ask what evidence would invalidate a distribution warning and permit re-acceleration. forecast_candidates must be empty. Do not change market rules, thresholds, weights, framework state, canonical truth or portfolio action.\n'
           )
           print(f"run_review={'false' if prior else 'true'}")
           print(f"reason={'FREEZE_ALREADY_REVIEWED' if prior else 'NEW_FROZEN_WEEKLY_DELIVERY'}")
