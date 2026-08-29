@@ -1,6 +1,7 @@
 {
   "adaptive_evidence": {
-    "observation_count": 16
+    "minimum_required": 48,
+    "observation_count": 17
   },
   "authority": {
     "automatic_rule_changes": false,
@@ -12,9 +13,8 @@
   },
   "contract": "INTRADAY_EXECUTION_LATEST_v1",
   "data_ping_bridge": {
-    "display_line": "EXECUTION RESEARCH: REGIME_NOT_ACTIVE | BTC vwap=0.01827852798705898% | ETH vwap=-0.13065453554879092% | breadth=20% | sample=17"
+    "display_line": "EXECUTION RESEARCH: LEARNING_WARMUP | BTC vwap=0.5592150249590144% | ETH vwap=0.4061056217341541% | breadth=67% | sample=18"
   },
-  "duplicate_price_observation_skipped": true,
   "event_summary": {
     "by_state": {
       "LOCAL_TRIM_WATCH_RESEARCH": {
@@ -35,7 +35,7 @@
     },
     "contract": "INTRADAY_EXECUTION_EVENT_SUMMARY_v1",
     "event_count": 0,
-    "generated_at_utc": "2026-08-29T18:03:07.522194+00:00",
+    "generated_at_utc": "2026-08-29T21:25:06.948734+00:00",
     "governance": {
       "automatic_rule_changes": false,
       "promotion_requires_separate_review": true,
@@ -43,86 +43,87 @@
     },
     "matured_24h_count": 0
   },
-  "generated_at_utc": "2026-08-29T18:03:07.522194+00:00",
+  "generated_at_utc": "2026-08-29T21:25:06.948734+00:00",
   "market_snapshot": {
     "adaptive_evidence": {
-      "observation_count": 16
+      "minimum_required": 48,
+      "observation_count": 17
     },
     "breadth": {
-      "advance_ratio": 0.2,
-      "advancer_pct": 20,
-      "equal_weight_mean_return_24h_pct": -1.756935,
-      "median_return_24h_pct": -1.883615,
-      "membership_hash": "aab4e12c7d7cd7104dc73c96bb8ec0b83b8efaa3de4bded3cf4b8f879f80793f",
-      "outperforming_btc_count": 52,
-      "outperforming_eth_count": 67
+      "advance_ratio": 0.67,
+      "advancer_pct": 67,
+      "equal_weight_mean_return_24h_pct": 0.927666,
+      "median_return_24h_pct": 0.222265,
+      "membership_hash": "cd2e8225a99a10d6f8642ceee0945091afeda3f1cb69c65c6cdfc6fedc30e060",
+      "outperforming_btc_count": 33,
+      "outperforming_eth_count": 29
     },
     "btc": {
-      "above_opening_range_high": false,
+      "above_opening_range_high": true,
       "above_previous_day_high": false,
       "below_opening_range_low": false,
       "below_previous_day_low": false,
-      "close": 77650.03,
-      "distance_from_24h_high_pct": -2.7414013223907685,
-      "distance_from_24h_low_pct": 0.9910909374674759,
-      "funding_event_rate_latest": 6.78146415375e-05,
-      "momentum_acceleration_1h_vs_prior3h_pp": 0.019887668209299995,
-      "oi_change_1h_pct": -0.322418459762,
+      "close": 78158.01,
+      "distance_from_24h_high_pct": -0.11755910543131964,
+      "distance_from_24h_low_pct": 1.1679657511310726,
+      "funding_event_rate_latest": 4.38328499472e-05,
+      "momentum_acceleration_1h_vs_prior3h_pp": 0.037562090379999996,
+      "oi_change_1h_pct": -0.556971698196,
       "opening_range_high_2h": 77963.92,
       "opening_range_low_2h": 77631.28,
       "previous_day_high": 81478.87,
       "previous_day_low": 76888.0,
-      "return_1h_pct": 0.020661053232,
-      "return_4h_pct": 0.022542096721567262,
-      "rolling_relative_quote_volume": 0.5223282846859802,
-      "session_vwap": 77635.83931138348,
-      "taker_buy_quote_share": 0.44712828436,
-      "taker_buy_share_delta_vs_prior3h": -0.061578207944333274,
-      "vwap_deviation_pct": 0.01827852798705898
+      "return_1h_pct": 0.0742765685019,
+      "return_4h_pct": 0.18411992559832502,
+      "rolling_relative_quote_volume": 0.8206934434148386,
+      "session_vwap": 77723.36924129828,
+      "taker_buy_quote_share": 0.562159172361,
+      "taker_buy_share_delta_vs_prior3h": 0.05010863198466664,
+      "vwap_deviation_pct": 0.5592150249590144
     },
-    "captured_at_utc": "2026-08-29T14:49:56.916751+00:00",
+    "captured_at_utc": "2026-08-29T21:25:06.950771+00:00",
     "contract": "INTRADAY_EXECUTION_OBSERVATION_v1",
-    "entry_state": "WAIT",
+    "entry_state": "GRADUATED_ALTCOIN_TOPUP_ACTIVE",
     "eth": {
-      "above_opening_range_high": false,
+      "above_opening_range_high": true,
       "above_previous_day_high": false,
-      "below_opening_range_low": true,
+      "below_opening_range_low": false,
       "below_previous_day_low": false,
-      "close": 2435.44,
-      "distance_from_24h_high_pct": -3.60953677611372,
-      "distance_from_24h_low_pct": 1.2248698030316252,
-      "funding_event_rate_latest": 8.88727632534e-05,
-      "momentum_acceleration_1h_vs_prior3h_pp": 0.11409978691799999,
-      "oi_change_1h_pct": 0.170863714792,
+      "close": 2452.45,
+      "distance_from_24h_high_pct": -0.216456381191088,
+      "distance_from_24h_low_pct": 1.242177050479687,
+      "funding_event_rate_latest": 8.31669583314e-05,
+      "momentum_acceleration_1h_vs_prior3h_pp": 0.040234539652510004,
+      "oi_change_1h_pct": 0.0918547866833,
       "opening_range_high_2h": 2448.05,
       "opening_range_low_2h": 2439.18,
       "previous_day_high": 2535.05,
       "previous_day_low": 2405.97,
-      "return_1h_pct": 0.0529959123308,
-      "return_4h_pct": -0.13040162058868265,
-      "rolling_relative_quote_volume": 0.6294474329702617,
-      "session_vwap": 2438.626175703637,
-      "taker_buy_quote_share": 0.510367309297,
-      "taker_buy_share_delta_vs_prior3h": 0.00978406713933333,
-      "vwap_deviation_pct": -0.13065453554879092
+      "return_1h_pct": 0.0697748435166,
+      "return_4h_pct": 0.15805078862034527,
+      "rolling_relative_quote_volume": 2.0016366151744056,
+      "session_vwap": 2442.530745330627,
+      "taker_buy_quote_share": 0.527451744182,
+      "taker_buy_share_delta_vs_prior3h": 0.008133716102666666,
+      "vwap_deviation_pct": 0.4061056217341541
     },
     "ethbtc": {
-      "close": 0.03137,
-      "distance_from_24h_high_pct": -1.0410094637223866,
-      "return_1h_pct": 0.0637958532695,
-      "return_4h_pct": -0.1591343093570785
+      "close": 0.03138,
+      "distance_from_24h_high_pct": -0.1908396946565083,
+      "return_1h_pct": -0.0318572793883,
+      "return_4h_pct": -0.03185727938834759
     },
-    "hourly_sequence_run_id": "HOURLY_SEQUENCE_20260829T103735Z_22acba06a119",
+    "hourly_sequence_run_id": "HOURLY_SEQUENCE_20260829T190308Z_7cf45a4cc299",
     "limitations": {
       "breadth_is_snapshot_context": true,
       "btc_eth_execution_features_use_hourly_archive": true,
       "top100_intraday_vwap": "UNAVAILABLE_FROM_CURRENT_CANONICAL_ARCHIVE",
       "top100_opening_range": "UNAVAILABLE_FROM_CURRENT_CANONICAL_ARCHIVE"
     },
-    "price_observation_utc": "2026-08-29T09:00:00+00:00",
-    "pullback_research_state": "REGIME_NOT_ACTIVE",
-    "research_state": "REGIME_NOT_ACTIVE"
+    "price_observation_utc": "2026-08-29T18:00:00+00:00",
+    "pullback_research_state": "NORMAL",
+    "research_state": "LEARNING_WARMUP"
   },
   "previous_research_state": "REGIME_NOT_ACTIVE",
-  "research_state": "REGIME_NOT_ACTIVE"
+  "research_state": "LEARNING_WARMUP"
 }
