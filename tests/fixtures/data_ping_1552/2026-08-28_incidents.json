@@ -1,0 +1,62 @@
+{
+  "contract": "DATA_PING_1552_INCIDENT_FIXTURES_v1",
+  "observed_at_utc": "2026-08-28T19:53:22.088775Z",
+  "live_anchor": {
+    "stale_cached_pointer": {
+      "contract": "DAILY_LIVE_ANCHOR_LATEST_POINTER_v1",
+      "path": "captures/2026/08/28/112427_gh-stale-1.json",
+      "run_id": "gh-stale-1",
+      "captured_at_utc": "2026-08-28T11:24:27Z",
+      "status": "COMPLETE"
+    },
+    "pinned_pointer": {
+      "contract": "DAILY_LIVE_ANCHOR_LATEST_POINTER_v1",
+      "path": "captures/2026/08/28/163419_gh-33190569765-1.json",
+      "run_id": "gh-33190569765-1",
+      "captured_at_utc": "2026-08-28T16:34:19Z",
+      "status": "COMPLETE"
+    },
+    "pinned_target": {
+      "contract": "DAILY_LIVE_ANCHOR_INDEX_v3",
+      "run_id": "gh-33190569765-1",
+      "captured_at_utc": "2026-08-28T16:34:19Z",
+      "status": "COMPLETE",
+      "canonical_data_ping": false,
+      "portfolio_action": false
+    }
+  },
+  "etf": {
+    "history_rows": {
+      "BTC": [
+        {"asset": "BTC", "date": "2026-08-26", "reported_total": 232.2, "session_final": true, "total_parity": true},
+        {"asset": "BTC", "date": "2026-08-27", "reported_total": 242.3, "session_final": true, "total_parity": true}
+      ],
+      "ETH": [
+        {"asset": "ETH", "date": "2026-08-26", "reported_total": 192.4, "session_final": true, "total_parity": true},
+        {"asset": "ETH", "date": "2026-08-27", "reported_total": 225.8, "session_final": true, "total_parity": true}
+      ]
+    },
+    "stale_selected_rows": [
+      {"asset": "BTC", "date": "2026-08-26", "reported_total": 232.2, "session_final": true, "total_parity": true},
+      {"asset": "ETH", "date": "2026-08-26", "reported_total": 192.4, "session_final": true, "total_parity": true}
+    ],
+    "correct_selected_rows": [
+      {"asset": "BTC", "date": "2026-08-27", "reported_total": 242.3, "session_final": true, "total_parity": true},
+      {"asset": "ETH", "date": "2026-08-27", "reported_total": 225.8, "session_final": true, "total_parity": true}
+    ]
+  },
+  "btc_oi_delta": {
+    "current": 2271645940.183209,
+    "predecessor": 2266509679.264177,
+    "reported_wrong_absolute_delta": 51340000.0,
+    "correct_absolute_delta": 5136260.919032097,
+    "correct_pct_delta": 0.22661544162032587,
+    "unit_context": {"asset": "BTC", "metric": "OPEN_INTEREST_USD", "venue": "SAME_OWNER"}
+  },
+  "breadth_context": {
+    "generic_top100_proxy": {"advancers": 25, "decliners": 73, "flat": 2, "advance_ratio": 0.25, "authority": "PROXY_ONLY"},
+    "newer_live_anchor": {"advancers": 10, "decliners": 88, "flat": 2, "advance_ratio": 0.1, "authority": "SHADOW_ONLY"},
+    "canonical_large_cap_breadth": "UNCONFIRMED",
+    "canonical_broad_alt_breadth": "UNCONFIRMED"
+  }
+}

@@ -130,4 +130,12 @@ class FullArchitectureTests(unittest.TestCase):
             eth_row=next(row for row in snapshot['rows'] if row['asset']=='ETH')
             self.assertEqual(eth_row['header_mode'],'SOURCE_TWO_ROW_TICKER_HEADER')
 
+    def test_data_ping_truth_integrity_adversarial_suite(self):
+        result=subprocess.run(
+            ['python','-m','unittest','tests.architecture.test_data_ping_truth_integrity'],
+            cwd=ROOT,text=True,capture_output=True,
+        )
+        self.assertEqual(result.returncode,0,result.stdout+result.stderr)
+        self.assertIn('Ran 126 tests',result.stderr)
+
 if __name__=='__main__': unittest.main()
