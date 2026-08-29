@@ -76,6 +76,12 @@ jobs:
             --output-root research/framework_memory/action_compass_outcomes \
             --repo-root . \
             --max-terminal-lag-hours 24
+      - name: Build descriptive exit-warning calibration
+        run: |
+          python tests/learning/test_action_compass_exit_calibration.py -q
+          python scripts/learning/action_compass_exit_calibration.py \
+            --outcome-root research/framework_memory/action_compass_outcomes \
+            --output research/framework_memory/action_compass_calibration/LATEST_EXIT_WARNING_CALIBRATION.json
       - name: Refresh experiment registry after receipt sync and maturation
         run: |
           mkdir -p research/experiment_lifecycle/{candidates,observations,receipts}
