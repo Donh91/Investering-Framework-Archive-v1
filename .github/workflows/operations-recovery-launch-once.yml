@@ -1,0 +1,39 @@
+name: Operations Recovery Launch Once
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/operations-recovery-launch-once.yml'
+
+permissions:
+  contents: read
+  actions: write
+
+concurrency:
+  group: operations-recovery-launch-once
+  cancel-in-progress: false
+
+jobs:
+  dispatch-current-definitions:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 1
+      - name: Dispatch current Daily Director and Slow Cycle definitions
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          echo "launcher_sha=${GITHUB_SHA}"
+          gh workflow run daily-director-shadow.yml --repo "$GITHUB_REPOSITORY" --ref main
+          gh workflow run daily-slow-cycle-shadow.yml --repo "$GITHUB_REPOSITORY" --ref main
+          sleep 4
+          echo '--- Daily Director workflow_dispatch runs ---'
+          gh run list --repo "$GITHUB_REPOSITORY" --workflow daily-director-shadow.yml --event workflow_dispatch --limit 3 --json databaseId,createdAt,status,conclusion,headSha,url
+          echo '--- Slow Cycle workflow_dispatch runs ---'
+          gh run list --repo "$GITHUB_REPOSITORY" --workflow daily-slow-cycle-shadow.yml --event workflow_dispatch --limit 3 --json databaseId,createdAt,status,conclusion,headSha,url
