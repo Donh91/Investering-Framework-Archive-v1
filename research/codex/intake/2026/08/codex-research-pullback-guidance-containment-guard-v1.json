@@ -1,0 +1,55 @@
+{
+  "contract": "CODEX_RESEARCH_CANDIDATE_v1",
+  "candidate_id": "codex-research-pullback-guidance-containment-guard-v1",
+  "submitted_at_utc": "2026-08-29T18:51:00Z",
+  "status": "SUBMITTED",
+  "origin": {
+    "type": "AUDIT",
+    "thread_label": "Existing System Improvement 12x - T09",
+    "source_paths": [
+      "06_RESEARCH_LAB/existing_system_improvement_12x/T09_PULLBACK_REPRODUCIBILITY.md",
+      "01_CORE_FRAMEWORK/governance/2026-07-10__pullback-policy-v0-2-reproducibility-correction__canonical.md"
+    ]
+  },
+  "title": "Harden Pullback v0.2 guidance-only containment",
+  "objective": "Implement the smallest static contract/consumer guard proving current active code and prompts do not use qualitative Pullback v0.2 labels as standalone mechanical action, rebuy, recovery-failure or calibration authority while the policy remains GUIDANCE_ONLY. Do not invent numeric bands or triggers.",
+  "finding_key": "PULLBACK_GUIDANCE_ONLY_CONTAINMENT_GUARD_MISSING",
+  "primary_target": "tests/governance/directly related pullback guidance containment test",
+  "allowed_change_scope": [
+    "tests/governance/directly related Pullback v0.2 containment tests",
+    "scripts/governance/directly related static pullback containment validator if required",
+    "01_CORE_FRAMEWORK/directly related non-semantic machine-readable containment status artifact if existing routing requires it"
+  ],
+  "evidence": [
+    {"kind":"REPO_PATH","ref":"01_CORE_FRAMEWORK/governance/2026-07-10__pullback-policy-v0-2-reproducibility-correction__canonical.md","summary":"Canonical owner suspends mechanical classification authority, forbids action from qualitative labels alone and forbids invented numeric bands."},
+    {"kind":"REPO_PATH","ref":"06_RESEARCH_LAB/existing_system_improvement_12x/T09_PULLBACK_REPRODUCIBILITY.md","summary":"Program finding chooses containment over invented specification while provenance remains incomplete."}
+  ],
+  "reproduction": "On fresh main, confirm Pullback v0.2 remains GUIDANCE_ONLY and no deterministic repository guard currently demonstrates that active consumers cannot map Mild/Moderate/Large/Extreme directly to action/rebuy/calibration semantics without the required reproducibility fields.",
+  "acceptance_tests": {
+    "positive": [
+      "Descriptive pullback-label usage that preserves GUIDANCE_ONLY semantics passes the guard.",
+      "A future owner-authorized mechanically derived artifact is not rejected merely for using a label when all required reproducibility fields and authority are explicit."
+    ],
+    "negative": [
+      "Fixture mapping Moderate directly to REDUCE fails.",
+      "Fixture using a qualitative label alone as rebuy unlock, recovery-failure state or calibration HIT/MISS fails."
+    ]
+  },
+  "authority_boundary": "CODE_REMEDIATION_ONLY",
+  "requires_framework_owner_authority": false,
+  "forbidden_changes": [
+    "market gates",
+    "model weights",
+    "canonical authority",
+    "portfolio logic",
+    "API budget",
+    "new policy semantics",
+    "new pullback thresholds",
+    "new drawdown bands",
+    "automatic pullback classification",
+    "qualitative-label portfolio authority"
+  ],
+  "linked_health_signature": null,
+  "requested_priority": "NORMAL",
+  "post_fix_gate": "POSITIVE_AND_NEGATIVE_CONTAINMENT_FIXTURES_PASS_WITH_ZERO_MARKET_SEMANTIC_CHANGE"
+}
