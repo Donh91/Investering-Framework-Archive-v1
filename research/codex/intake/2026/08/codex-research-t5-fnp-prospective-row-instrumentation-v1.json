@@ -1,0 +1,72 @@
+{
+  "contract": "CODEX_RESEARCH_CANDIDATE_v1",
+  "candidate_id": "codex-research-t5-fnp-prospective-row-instrumentation-v1",
+  "submitted_at_utc": "2026-08-29T16:14:20Z",
+  "status": "SUBMITTED",
+  "origin": {
+    "type": "RESEARCH_THREAD",
+    "thread_label": "cycle-compass-exit-calibration",
+    "source_paths": [
+      "06_RESEARCH_LAB/forward_tests/2026-07-10__active-test-registry__canonical.md",
+      "06_RESEARCH_LAB/forward_tests/2026-07-10__offensive-divergence-and-fnp-ledger__operational.md",
+      "scripts/learning/action_compass_exit_calibration.py"
+    ]
+  },
+  "title": "Instrument prospective T5 FNP rows from frozen existing decisions",
+  "objective": "Implement the smallest deterministic prospective row producer and validator that lets existing T5 FNP_CUMULATIVE record genuine decision divergence, frozen horizons and later outcome attachment from already-authoritative decision/evidence artifacts. Do not create new actions, thresholds, asset-tier semantics or classifications. Fail closed when divergence, lineage, frozen horizons or required observations are unavailable.",
+  "finding_key": "T5_FNP_ROW_PRODUCTION_MISSING",
+  "primary_target": "06_RESEARCH_LAB/forward_tests/2026-07-10__offensive-divergence-and-fnp-ledger__operational.md",
+  "allowed_change_scope": [
+    "scripts/learning/directly related T5 FNP row producer and validator",
+    "tests/learning/directly related T5 FNP tests",
+    ".github/workflows/framework-learning-operations.yml",
+    "research/framework_memory/fnp_forward_rows",
+    "06_RESEARCH_LAB/forward_tests/directly related machine-readable T5 runtime artifact if an existing owner path requires it"
+  ],
+  "evidence": [
+    {
+      "kind": "REPO_PATH",
+      "ref": "06_RESEARCH_LAB/forward_tests/2026-07-10__active-test-registry__canonical.md",
+      "summary": "T5 is ACTIVE_NEEDS_ROWS; required fields include frozen_horizon, asset_tier, blocked_action, benchmark_action, actual_cost, drawdown_avoided, missed_upside and final_classification; blocker is ROW_PRODUCTION."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "06_RESEARCH_LAB/forward_tests/2026-07-10__offensive-divergence-and-fnp-ledger__operational.md",
+      "summary": "Existing append-only owner requires genuine action divergence, frozen 24h/72h/7d horizons and forbids retrospective horizon/action rewriting. Current valid row count is zero."
+    },
+    {
+      "kind": "COMMIT",
+      "ref": "ce3099eb420a1700293f07b31f28cb42203427de",
+      "summary": "Current main already materializes immutable Action Compass outcomes and descriptive exit-warning opportunity-cost calibration; T5 should consume existing frozen authority rather than invent a parallel decision engine."
+    }
+  ],
+  "reproduction": "On fresh main, inspect T5 in the Active Test Registry and the Offensive Divergence/FNP owner. Verify T5 remains blocked by ROW_PRODUCTION with insufficient rows. Search current scripts/workflows for a deterministic producer that creates source-bound prospective T5 divergence rows before outcomes and attaches outcomes only after frozen horizons mature. If such a complete producer already exists, stop as clean no-op; otherwise implement only the missing instrumentation using existing authoritative decision artifacts.",
+  "acceptance_tests": {
+    "positive": [
+      "A synthetic eligible decision divergence with pre-outcome lineage produces exactly one immutable prospective T5 source row with frozen horizons and no outcome fields populated early.",
+      "After a frozen horizon matures with source-bound evidence, the existing row receives or is paired with an immutable outcome artifact that can compute missed_upside/drawdown_avoided without selecting the horizon retrospectively.",
+      "Replay of the same frozen decision is deduplicated and does not create a second valid row."
+    ],
+    "negative": [
+      "No row is valid when benchmark and experimental/current actions do not genuinely diverge.",
+      "Missing required lineage, asset tier, frozen horizon or outcome evidence fails closed as DATA_INSUFFICIENT/BLOCKED and does not count as a valid outcome row.",
+      "The implementation cannot create or modify market gates, thresholds, action semantics, portfolio sizing, canonical phase state or final classification rules beyond what the existing owner explicitly defines."
+    ]
+  },
+  "authority_boundary": "CODE_REMEDIATION_ONLY",
+  "requires_framework_owner_authority": false,
+  "forbidden_changes": [
+    "market gates",
+    "model weights",
+    "canonical authority",
+    "portfolio logic",
+    "API budget",
+    "new policy semantics",
+    "new market engine",
+    "new exit threshold",
+    "retrospective row backfill",
+    "automatic portfolio execution"
+  ],
+  "requested_priority": "EXPEDITED",
+  "post_fix_gate": "PROSPECTIVE_ROW_FIXTURE_PASS_PLUS_THREE_NATURAL_FRAMEWORK_LEARNING_RUNS_WITH_NO_INVALID_OR_DUPLICATE_T5_ROWS"
+}
