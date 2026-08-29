@@ -1,0 +1,60 @@
+{
+  "contract": "CODEX_RESEARCH_CANDIDATE_v1",
+  "candidate_id": "codex-research-outcome-censor-reason-observability-v1",
+  "submitted_at_utc": "2026-08-29T18:20:00Z",
+  "status": "SUBMITTED",
+  "origin": {
+    "type": "AUDIT",
+    "thread_label": "Existing System Improvement 12x - T02",
+    "source_paths": [
+      "06_RESEARCH_LAB/existing_system_improvement_12x/T02_CENSORING_OUTCOME_QUALITY.md",
+      "scripts/learning/outcome_maturation_engine.py",
+      "scripts/lib/metric_resolver.py",
+      "research/architecture_health/LATEST_ARCHITECTURE_HEALTH.json"
+    ]
+  },
+  "title": "Expose immutable outcome censor reason distribution",
+  "objective": "Implement the smallest deterministic read-only summary of existing MATURED_OUTCOME_v3 censor reasons so architecture/learning review can distinguish deliberate quarantine from evidence-availability and provenance/resolver censoring. Preserve every immutable outcome and all current censor semantics.",
+  "finding_key": "OUTCOME_CENSOR_REASON_OBSERVABILITY_MISSING",
+  "primary_target": "scripts/learning/directly related outcome quality summary helper",
+  "allowed_change_scope": [
+    "scripts/learning/directly related read-only outcome censor quality summary helper",
+    "scripts/architecture_health/directly related evidence-health aggregation if an existing owner consumes the summary",
+    "tests/learning/directly related outcome censor quality tests",
+    "tests/architecture/directly related evidence-health tests",
+    "research/architecture_health/directly related generated censor-quality pointer or summary artifact"
+  ],
+  "evidence": [
+    {"kind":"REPO_PATH","ref":"research/architecture_health/LATEST_ARCHITECTURE_HEALTH.json","summary":"Current health exposes aggregate censored_outcome_count and censor_rate but no reason distribution."},
+    {"kind":"REPO_PATH","ref":"scripts/learning/outcome_maturation_engine.py","summary":"Maturation emits multiple materially different censor reasons while preserving immutable outcomes."},
+    {"kind":"REPO_PATH","ref":"scripts/lib/metric_resolver.py","summary":"Resolver defines distinct fail-closed censor statuses for unavailable namespaces, unavailable metrics and root-contract ambiguity/absence."}
+  ],
+  "reproduction": "On fresh main, read architecture health and confirm only aggregate censor count/rate is exposed. Read immutable outcome rows and maturation/resolver code and confirm multiple exact censor reasons exist but are not summarized by reason/class on the health surface.",
+  "acceptance_tests": {
+    "positive": [
+      "Generated reason counts reconcile exactly to immutable MATURED_OUTCOME_v3 files and preserve exact raw reason strings.",
+      "Known reason categories separate deliberate legacy quarantine from availability/contract and provenance/resolver classes without changing outcome status."
+    ],
+    "negative": [
+      "Unknown censor reasons remain UNCLASSIFIED_FAIL_CLOSED and are never silently bucketed into a known causal class.",
+      "The implementation never edits outcome files, uncensors rows, changes maturity windows or uses mutable LATEST evidence as a scored outcome."
+    ]
+  },
+  "authority_boundary": "CODE_REMEDIATION_ONLY",
+  "requires_framework_owner_authority": false,
+  "forbidden_changes": [
+    "market gates",
+    "model weights",
+    "canonical authority",
+    "portfolio logic",
+    "API budget",
+    "new policy semantics",
+    "outcome status rewrite",
+    "retrospective uncensoring",
+    "maturity horizon changes",
+    "metric root guessing"
+  ],
+  "linked_health_signature": null,
+  "requested_priority": "NORMAL",
+  "post_fix_gate": "SUMMARY_RECONCILES_EXACTLY_TO_IMMUTABLE_OUTCOMES_PLUS_ONE_NATURAL_HEALTH_PUBLICATION"
+}

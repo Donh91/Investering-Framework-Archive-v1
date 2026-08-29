@@ -1,0 +1,57 @@
+{
+  "contract": "CODEX_RESEARCH_CANDIDATE_v1",
+  "candidate_id": "codex-research-t8-multi-ping-delay-cost-v1",
+  "submitted_at_utc": "2026-08-29T18:30:00Z",
+  "status": "SUBMITTED",
+  "origin": {
+    "type": "AUDIT",
+    "thread_label": "Existing System Improvement 12x - T04",
+    "source_paths": [
+      "06_RESEARCH_LAB/existing_system_improvement_12x/T04_DELAY_COST_EXISTING_CONFIRMATION.md",
+      "06_RESEARCH_LAB/forward_tests/2026-07-10__active-test-registry__canonical.md"
+    ]
+  },
+  "title": "Instrument T8 multi-ping false-flip and delay-cost rows",
+  "objective": "Implement the smallest deterministic prospective row producer and validator for the existing MULTI_PING_AGGREGATION_VALUE / T8 test, freezing latest-ping baseline, aggregation state, dependency/redundancy and timing before outcome, then measuring false-flip reduction and delay cost after eligible framework outcomes without creating a new consensus authority.",
+  "finding_key": "T8_MULTI_PING_DELAY_COST_ROW_INSTRUMENTATION_MISSING",
+  "primary_target": "scripts/learning/directly related T8 multi-ping row producer/validator",
+  "allowed_change_scope": [
+    "scripts/learning/directly related T8 multi-ping prospective row producer and validator",
+    "tests/learning/directly related T8 tests",
+    "02_DATA_PING/directly related non-canonical T8 runtime row root if existing routing requires it",
+    "06_RESEARCH_LAB/forward_tests/directly related machine-readable T8 runtime artifact",
+    ".github/workflows/framework-learning-operations.yml if the existing learning workflow is the established owner for row materialization"
+  ],
+  "evidence": [
+    {"kind":"REPO_PATH","ref":"06_RESEARCH_LAB/forward_tests/2026-07-10__active-test-registry__canonical.md","summary":"T8 is an existing registered test with zero rows, ROW_INSTRUMENTATION blocker, LATEST_PING_ONLY baseline and explicit delay-cost fields."},
+    {"kind":"REPO_PATH","ref":"06_RESEARCH_LAB/existing_system_improvement_12x/T04_DELAY_COST_EXISTING_CONFIRMATION.md","summary":"Program finding freezes delay-cost and non-independence requirements without introducing new semantics."}
+  ],
+  "reproduction": "On fresh main, confirm T8 remains QUEUED with rows_total 0 and blocked_by ROW_INSTRUMENTATION. Confirm no existing prospective T8 producer freezes latest_ping_state, aggregation_state, delay_minutes and dependency/redundancy before a later framework outcome.",
+  "acceptance_tests": {
+    "positive": [
+      "Eligible prospective fixture freezes latest-ping baseline, aggregation state and exact timing before outcome and later attaches false-flip/delay measurements without rewriting the source row.",
+      "Aggregation redundancy/dependency is preserved as a first-class field so agreement alone cannot count as independent confirmation."
+    ],
+    "negative": [
+      "Duplicate/replay packets do not create artificial persistence or extra eligible rows.",
+      "Historical chat sequences and missing eventual framework states are not reconstructed or inferred into valid T8 outcomes."
+    ]
+  },
+  "authority_boundary": "CODE_REMEDIATION_ONLY",
+  "requires_framework_owner_authority": false,
+  "forbidden_changes": [
+    "market gates",
+    "model weights",
+    "canonical authority",
+    "portfolio logic",
+    "API budget",
+    "new policy semantics",
+    "new consensus engine",
+    "multi-ping promotion to market authority",
+    "historical pseudo-row backfill",
+    "automatic signal promotion"
+  ],
+  "linked_health_signature": null,
+  "requested_priority": "NORMAL",
+  "post_fix_gate": "PROSPECTIVE_T8_FIXTURE_PASS_PLUS_10_ELIGIBLE_STATE_CHANGES_BEFORE_VALUE_CONCLUSION"
+}

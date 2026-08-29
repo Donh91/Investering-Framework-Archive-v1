@@ -1,0 +1,58 @@
+{
+  "contract": "CODEX_RESEARCH_CANDIDATE_v1",
+  "candidate_id": "codex-research-experiment-simplification-review-v1",
+  "submitted_at_utc": "2026-08-29T18:25:00Z",
+  "status": "SUBMITTED",
+  "origin": {
+    "type": "AUDIT",
+    "thread_label": "Existing System Improvement 12x - T03",
+    "source_paths": [
+      "06_RESEARCH_LAB/existing_system_improvement_12x/T03_SIMPLIFICATION_RETIREMENT.md",
+      "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json",
+      "scripts/experiments/experiment_lifecycle.py",
+      "01_CORE_FRAMEWORK/governance/2026-07-22__sensor-relationship-and-incremental-value-standard__canonical.md"
+    ]
+  },
+  "title": "Add read-only experiment simplification and alias clustering review",
+  "objective": "Implement the smallest deterministic read-only simplification review over the existing Experiment Lifecycle registry that flags semantic/path alias families, high-observation zero-outcome incubation and repeated matured-inconclusive families for governance review without automatically merging, retiring, promoting or changing weights.",
+  "finding_key": "EXPERIMENT_SEMANTIC_DUPLICATION_AND_INCONCLUSIVE_COMPRESSION_REVIEW_MISSING",
+  "primary_target": "scripts/experiments/directly related simplification review helper",
+  "allowed_change_scope": [
+    "scripts/experiments/directly related read-only experiment simplification review helper",
+    "tests/experiments/directly related simplification review tests",
+    "research/experiment_lifecycle/directly related generated simplification review artifact"
+  ],
+  "evidence": [
+    {"kind":"REPO_PATH","ref":"research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json","summary":"Registry contains 153 candidates, including large INCUBATING and MATURED_INCONCLUSIVE populations plus repeated mark-price path aliases."},
+    {"kind":"REPO_PATH","ref":"scripts/experiments/experiment_lifecycle.py","summary":"Lifecycle normalizes candidate identity but historical namespace variants can remain separate candidate identities; automatic_age_expiry is false."},
+    {"kind":"REPO_PATH","ref":"01_CORE_FRAMEWORK/governance/2026-07-22__sensor-relationship-and-incremental-value-standard__canonical.md","summary":"Current governance prefers relationship audit, simplification and latent-factor compression over accumulating redundant confirmation."}
+  ],
+  "reproduction": "On fresh main, inspect LATEST_EXPERIMENT_REGISTRY.json and identify multiple candidate IDs representing equivalent target/direction families through namespace/path aliases and a large set of matured-inconclusive/incubating candidates. Confirm no deterministic review artifact currently groups these for KEEP/MERGE_REVIEW/RETIRE_REVIEW without mutation.",
+  "acceptance_tests": {
+    "positive": [
+      "Equivalent known path-alias candidates with the same kind/direction/horizon are grouped with every original candidate ID preserved.",
+      "The report separately flags high-observation zero-outcome incubation and repeated matured-inconclusive families."
+    ],
+    "negative": [
+      "Distinct hypotheses are not collapsed solely because they share a metric path.",
+      "No candidate is deleted, rewritten, auto-retired, auto-merged, promoted or assigned a model weight by the review."
+    ]
+  },
+  "authority_boundary": "CODE_REMEDIATION_ONLY",
+  "requires_framework_owner_authority": false,
+  "forbidden_changes": [
+    "market gates",
+    "model weights",
+    "canonical authority",
+    "portfolio logic",
+    "API budget",
+    "new policy semantics",
+    "automatic experiment retirement",
+    "automatic experiment merge",
+    "automatic promotion",
+    "candidate history deletion"
+  ],
+  "linked_health_signature": null,
+  "requested_priority": "NORMAL",
+  "post_fix_gate": "DETERMINISTIC_CLUSTER_FIXTURE_PASS_PLUS_GOVERNANCE_READBACK_NO_MUTATION"
+}

@@ -1,0 +1,56 @@
+{
+  "contract": "CODEX_RESEARCH_CANDIDATE_v1",
+  "candidate_id": "codex-research-forecast-error-taxonomy-v1",
+  "submitted_at_utc": "2026-08-29T19:04:00Z",
+  "status": "SUBMITTED",
+  "origin": {
+    "type": "AUDIT",
+    "thread_label": "Existing System Improvement 12x - T11",
+    "source_paths": [
+      "06_RESEARCH_LAB/existing_system_improvement_12x/T11_FORECAST_ERROR_TAXONOMY.md",
+      "scripts/learning/outcome_maturation_engine.py",
+      "scripts/learning/build_model_calibration_ledger.py"
+    ]
+  },
+  "title": "Add causally constrained forecast failure-mode sidecar",
+  "objective": "Implement the smallest read-only failure-mode classification sidecar/report over existing frozen forecasts and immutable outcomes, preserving HIT/MISS while distinguishing evaluable direction, magnitude, timing, sequence, state/phase and action-translation error dimensions only when those semantics were prospectively frozen.",
+  "finding_key": "FORECAST_FAILURE_MODE_LEARNING_IS_FRAGMENTED_ACROSS_OWNERS",
+  "primary_target": "scripts/learning/directly related forecast failure taxonomy helper",
+  "allowed_change_scope": [
+    "scripts/learning/directly related forecast failure taxonomy helper",
+    "tests/learning/directly related failure taxonomy tests",
+    "research/framework_memory/directly related non-authoritative failure-analysis sidecar root or summary"
+  ],
+  "evidence": [
+    {"kind":"REPO_PATH","ref":"scripts/learning/outcome_maturation_engine.py","summary":"Existing maturation correctly produces immutable HIT/MISS/CENSORED outcomes from frozen target semantics."},
+    {"kind":"REPO_PATH","ref":"scripts/learning/build_model_calibration_ledger.py","summary":"Current calibration ledger retains HIT/MISS and return but not a unified causally constrained failure-mode taxonomy."}
+  ],
+  "reproduction": "On fresh main, inspect matured outcomes and model calibration ledger and confirm eligible rows are mechanically scored but there is no unified sidecar distinguishing direction versus magnitude/timing/sequence errors while failing closed when those semantics were not frozen.",
+  "acceptance_tests": {
+    "positive": [
+      "A frozen directional target that moved in the forecast direction but failed required magnitude is classified separately from wrong-direction failure when immutable fields support the distinction.",
+      "Unavailable timing/sequence/state/action dimensions are emitted as NOT_EVALUABLE rather than guessed."
+    ],
+    "negative": [
+      "A censored outcome cannot be classified as prediction failure merely because the target was not scored.",
+      "No timing, sequence, phase or action-translation result is reconstructed from hindsight prose when the original forecast did not freeze that semantic."
+    ]
+  },
+  "authority_boundary": "CODE_REMEDIATION_ONLY",
+  "requires_framework_owner_authority": false,
+  "forbidden_changes": [
+    "market gates",
+    "model weights",
+    "canonical authority",
+    "portfolio logic",
+    "API budget",
+    "new policy semantics",
+    "outcome result rewrite",
+    "new composite performance score",
+    "retrospective timing reconstruction",
+    "retrospective sequence reconstruction"
+  ],
+  "linked_health_signature": null,
+  "requested_priority": "NORMAL",
+  "post_fix_gate": "FAILURE_TAXONOMY_FIXTURES_PASS_PLUS_ORIGINAL_HIT_MISS_LEDGER_RECONCILES_UNCHANGED"
+}
