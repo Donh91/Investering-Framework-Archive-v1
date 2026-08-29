@@ -1,0 +1,73 @@
+{
+  "contract": "CODEX_RESEARCH_CANDIDATE_v1",
+  "candidate_id": "codex-research-t6-rotation-survival-row-instrumentation-v1",
+  "submitted_at_utc": "2026-08-29T16:14:20Z",
+  "status": "SUBMITTED",
+  "origin": {
+    "type": "RESEARCH_THREAD",
+    "thread_label": "cycle-compass-exit-calibration",
+    "source_paths": [
+      "06_RESEARCH_LAB/forward_tests/2026-07-10__active-test-registry__canonical.md",
+      "03_DAILY_CAPTURE_LOGS/breadth_rich",
+      "03_DAILY_CAPTURE_LOGS/hourly",
+      "03_DAILY_CAPTURE_LOGS/cadence"
+    ]
+  },
+  "title": "Instrument prospective T6 rotation survival and delay-cost rows",
+  "objective": "Implement the smallest deterministic prospective T6 ROTATION_SURVIVAL_FORWARD row producer and validator that freezes first-cross baseline, sequence start and available ETHBTC/breadth/BTC.D/deployment/flow states before outcomes, then measures survival, delay cost, failure outcome and exit-side outcome as evidence matures. Preserve missingness and right censoring. Do not invent missing axes, thresholds or portfolio actions.",
+  "finding_key": "T6_ROTATION_SURVIVAL_ROW_INSTRUMENTATION_MISSING",
+  "primary_target": "06_RESEARCH_LAB/forward_tests/2026-07-10__active-test-registry__canonical.md",
+  "allowed_change_scope": [
+    "scripts/learning/directly related T6 rotation survival producer and validator",
+    "tests/learning/directly related T6 tests",
+    ".github/workflows/framework-learning-operations.yml",
+    "research/framework_memory/rotation_survival_forward_rows",
+    "06_RESEARCH_LAB/forward_tests/directly related machine-readable T6 runtime artifact if an existing owner path requires it"
+  ],
+  "evidence": [
+    {
+      "kind": "REPO_PATH",
+      "ref": "06_RESEARCH_LAB/forward_tests/2026-07-10__active-test-registry__canonical.md",
+      "summary": "T6 is QUEUED_DATA_DEPENDENT with zero forward-confirmed rows; required fields explicitly include sequence/time-in-state, ETHBTC/breadth/BTC.D/deployment/flow survival, incremental value, delay cost, failure outcome and exit-side outcome."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": ".github/workflows/adaptive-rotation-cadence.yml",
+      "summary": "Current main already produces non-binding rotation cadence observations and optional richer breadth checkpoints, providing existing operational evidence that must remain separate from market authority."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "research/evidence_gap/ADAPTIVE_EVIDENCE_GAP_REGISTRY_v1.json",
+      "summary": "Comparable breadth history remains a prospectively collecting evidence gap; T6 instrumentation must preserve missingness rather than fabricate continuity."
+    }
+  ],
+  "reproduction": "On fresh main, inspect T6 in the Active Test Registry. Verify rows_total and valid_outcome_rows remain zero and blocker is MULTI_AXIS_DATA_COMPLETENESS. Search current scripts/workflows for a producer that freezes FIRST_ETHBTC_CROSS and a sequence_id before outcomes, records right-censored survival by each available axis and later computes delay_cost/failure_outcome/exit_side_outcome. If complete instrumentation already exists, stop as clean no-op; otherwise implement only the missing prospective row lifecycle.",
+  "acceptance_tests": {
+    "positive": [
+      "An eligible first-cross event freezes one immutable sequence source row before outcome evidence, including sequence_id, sequence_start_utc, explicit available/missing axis states and right_censored=true.",
+      "Subsequent observations update survival through append-only observations or immutable sidecars and can later compute delay_cost versus the frozen FIRST_ETHBTC_CROSS baseline without rewriting the initial row.",
+      "A failed/reversed sequence records failure_outcome and exit_side_outcome only from source-bound post-freeze evidence."
+    ],
+    "negative": [
+      "Missing breadth, BTC.D, deployment or flow remains explicit missingness and cannot be inferred or counted as confirmation.",
+      "No historical proxy percentage is promoted into a live threshold and cadence-only operational triggers cannot become market rules.",
+      "No row or outcome may be created retrospectively after observing the result, and no automatic portfolio action or phase promotion is allowed."
+    ]
+  },
+  "authority_boundary": "CODE_REMEDIATION_ONLY",
+  "requires_framework_owner_authority": false,
+  "forbidden_changes": [
+    "market gates",
+    "model weights",
+    "canonical authority",
+    "portfolio logic",
+    "API budget",
+    "new policy semantics",
+    "new market engine",
+    "new live threshold",
+    "historical pseudo-row backfill",
+    "automatic phase promotion"
+  ],
+  "requested_priority": "EXPEDITED",
+  "post_fix_gate": "PROSPECTIVE_SEQUENCE_FIXTURE_PASS_PLUS_THREE_NATURAL_OBSERVATIONS_WITH_NO_RETROSPECTIVE_OR_INFERRED_T6_FIELDS"
+}
