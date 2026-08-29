@@ -1,0 +1,59 @@
+{
+  "contract": "CODEX_RESEARCH_CANDIDATE_v1",
+  "candidate_id": "codex-research-confidence-binding-calibration-v1",
+  "submitted_at_utc": "2026-08-29T18:36:00Z",
+  "status": "SUBMITTED",
+  "origin": {
+    "type": "AUDIT",
+    "thread_label": "Existing System Improvement 12x - T05",
+    "source_paths": [
+      "06_RESEARCH_LAB/existing_system_improvement_12x/T05_CONFIDENCE_CALIBRATION.md",
+      ".github/workflows/daily-director-shadow.yml",
+      "research/api_agent/FORECAST_CANDIDATE_CONTRACT_v2.json",
+      "research/framework_memory/forecast_memory"
+    ]
+  },
+  "title": "Bind existing Daily Director confidence to prospective outcome lineage",
+  "objective": "Implement the smallest research-only immutable confidence-binding sidecar for future valid Daily Director outputs so existing LOW/MEDIUM/HIGH header labels can later be calibrated against causally linked matured outcomes without historical prose backfill or automatic tuning.",
+  "finding_key": "STRUCTURED_CONFIDENCE_NOT_PROSPECTIVELY_BOUND_TO_OUTCOME_LINEAGE",
+  "primary_target": "scripts/api_agent/directly related Daily Director confidence binding helper",
+  "allowed_change_scope": [
+    "scripts/api_agent/directly related Daily Director confidence binding/materialization helper",
+    "tests/api_agent/directly related confidence binding tests",
+    "research/api_agent/directly related immutable confidence binding root or pointer",
+    ".github/workflows/daily-director-shadow.yml only if required to call the existing bounded helper without changing prompt semantics or API budget"
+  ],
+  "evidence": [
+    {"kind":"REPO_PATH","ref":".github/workflows/daily-director-shadow.yml","summary":"Current prompt requires machine-readable CYCLE_HEADER with CONFIDENCE=LOW|MEDIUM|HIGH."},
+    {"kind":"REPO_PATH","ref":"research/api_agent/FORECAST_CANDIDATE_CONTRACT_v2.json","summary":"Forecast contract preserves target and source semantics but does not bind confidence as a forecast field."},
+    {"kind":"REPO_PATH","ref":"research/framework_memory/forecast_memory/2026/08/EXP-FC-01050b2d7b43dcfa98b1.json","summary":"Representative frozen forecast contains target/source lineage but no confidence label."}
+  ],
+  "reproduction": "On fresh main, confirm Daily Director prompt requires structured confidence, then inspect forecast candidate/frozen forecast artifacts and confirm confidence is not causally bound to output hash and eventual outcome lineage. Historical prose extraction is not an admissible substitute.",
+  "acceptance_tests": {
+    "positive": [
+      "A valid future Daily Director output with one CYCLE_HEADER produces exactly one immutable binding containing output/receipt hashes, frozen header fields and exact emitted candidate IDs.",
+      "A later read-only calibration can join only causally linked matured non-censored outcomes to the frozen confidence bucket and reports sample counts."
+    ],
+    "negative": [
+      "Missing or malformed CYCLE_HEADER fails closed as CONFIDENCE_BINDING_UNAVAILABLE and is not inferred from summary/rationale prose.",
+      "No historical prose backfill, prompt tuning, confidence threshold changes, model changes, market-rule changes or automatic portfolio actions occur."
+    ]
+  },
+  "authority_boundary": "CODE_REMEDIATION_ONLY",
+  "requires_framework_owner_authority": false,
+  "forbidden_changes": [
+    "market gates",
+    "model weights",
+    "canonical authority",
+    "portfolio logic",
+    "API budget",
+    "new policy semantics",
+    "historical confidence backfill",
+    "automatic confidence tuning",
+    "forecast target changes",
+    "Daily Director market semantics changes"
+  ],
+  "linked_health_signature": null,
+  "requested_priority": "NORMAL",
+  "post_fix_gate": "CONFIDENCE_BINDING_FIXTURE_PASS_PLUS_MINIMUM_SAMPLE_REMAINS_LOW_SAMPLE_UNTIL_NATURAL_OUTCOMES"
+}
