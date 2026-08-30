@@ -88,6 +88,7 @@ def test_calibration_hides_numeric_probability_during_warmup(tmp_path, monkeypat
                 "status": "MATURED",
                 "result": "HIT",
                 "issued_at_utc": sdc.iso(issued),
+                "source_price_observation_utc": sdc.iso(issued),
                 "target": "BTC",
                 "horizon_hours": 1,
                 "actual_direction": "UP",
@@ -128,6 +129,7 @@ def test_calibration_exposes_conservative_estimate_after_minimum_sample(tmp_path
                 "status": "MATURED",
                 "result": "HIT",
                 "issued_at_utc": sdc.iso(issued),
+                "source_price_observation_utc": sdc.iso(issued),
                 "target": "BTC",
                 "horizon_hours": 1,
                 "actual_direction": "UP",
@@ -151,6 +153,21 @@ def test_calibration_exposes_conservative_estimate_after_minimum_sample(tmp_path
     assert group["empirical_hit_rate"] == 1.0
     assert group["display_probability"] < 1.0
     assert group["display_probability"] == round(21 / 22, 6)
+
+
+def test_horizon_freeze_is_anchored_to_source_observation_and_fails_closed_on_short_remaining_span():
+    observed = datetime(2026, 8, 30, 10, 0, tzinfo=timezone.utc)
+    now = observed + timedelta(minutes=40)
+    obs = {"price_observation_utc": sdc.iso(observed)}
+    cfg = {"minimum_remaining_fraction_of_horizon": 0.5}
+
+    one_hour = sdc._horizon_eligibility(obs, now, 1, cfg)
+    four_hour = sdc._horizon_eligibility(obs, now, 4, cfg)
+
+    assert one_hour["status"] == "INSUFFICIENT_REMAINING_FORWARD_SPAN"
+    assert one_hour["due_at_utc"] == sdc.iso(observed + timedelta(hours=1))
+    assert four_hour["status"] == "ELIGIBLE"
+    assert four_hour["due_at_utc"] == sdc.iso(observed + timedelta(hours=4))
 
 
 def test_market_cap_transmission_marks_microcap_unavailable(tmp_path, monkeypatch):
