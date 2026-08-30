@@ -1,0 +1,75 @@
+{
+  "contract": "CODEX_RESEARCH_CANDIDATE_v1",
+  "candidate_id": "codex-research-accepted-data-ping-lineage-v1",
+  "submitted_at_utc": "2026-08-30T17:18:00Z",
+  "status": "SUBMITTED",
+  "origin": {
+    "type": "AUDIT",
+    "thread_label": "2026-08-30 post-fix measurement-validity audit",
+    "source_paths": [
+      "LATEST_HANDOFF.json",
+      "scripts/architecture/build_latest_handoff.py",
+      "scripts/data_ping/accepted_data_ping_bridge.py",
+      "02_DATA_PING/protocols/2026-08-25__three-horizon-action-compass-output-contract-v1__canonical.md"
+    ]
+  },
+  "title": "Repair accepted DATA PING producer and handoff lineage gap",
+  "objective": "Diagnose why current handoff reports latest_accepted_data_ping as unavailable while the accepted DATA PING bridge implementation remains on current main and its expected accepted-root is absent. Implement the smallest code-only repair that restores truthful producer, activation and lineage semantics without fabricating historical accepted packets.",
+  "finding_key": "ACCEPTED_DATA_PING_LINEAGE_ROOT_ABSENT",
+  "primary_target": "scripts/data_ping/accepted_data_ping_bridge.py",
+  "allowed_change_scope": [
+    "scripts/data_ping/accepted_data_ping_bridge.py",
+    "scripts/architecture/build_latest_handoff.py",
+    "tests directly related to accepted DATA PING bridge and latest handoff behavior",
+    "the exact existing accepted-DATA-PING producer or activation workflow only if fresh-state repository discovery proves it is the current owner"
+  ],
+  "evidence": [
+    {
+      "kind": "REPO_PATH",
+      "ref": "LATEST_HANDOFF.json",
+      "summary": "Current handoff exposes latest_accepted_data_ping as unavailable."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "research/data_ping_bridge/accepted",
+      "summary": "The root consumed by the handoff builder is absent on current main."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "scripts/data_ping/accepted_data_ping_bridge.py",
+      "summary": "Current main retains the implementation intended to hash, deduplicate and persist immutable accepted DATA PING packets and receipts."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "scripts/architecture/build_latest_handoff.py",
+      "summary": "The current handoff builder still scans research/data_ping_bridge/accepted, so this lineage remains an active routing surface."
+    }
+  ],
+  "reproduction": "On fresh main, read LATEST_HANDOFF.json and confirm latest_accepted_data_ping is unavailable; inspect build_latest_handoff.py and confirm it scans research/data_ping_bridge/accepted; confirm that root is absent; inspect accepted_data_ping_bridge.py and determine whether the bounded defect is missing producer/activation wiring, stale routing after intentional retirement, or another implementation-lineage mismatch before changing code.",
+  "acceptance_tests": {
+    "positive": [
+      "When an immutable accepted packet exists, latest handoff resolves to that exact packet path and content hash; when none exists, the handoff remains truthfully unavailable.",
+      "Replaying the same snapshot does not create a second accepted packet.",
+      "Tests cover missing-root, present-root and duplicate-snapshot behavior.",
+      "If producer wiring is repaired, a production-shaped run proves writer and handoff consumer agree on path and contract."
+    ],
+    "negative": [
+      "No historical accepted DATA PING packet may be fabricated, reconstructed or backfilled.",
+      "Action Compass receipts must not be silently reclassified as accepted DATA PING packets.",
+      "No parallel accepted-ping engine or pointer may be created when the existing owner can be repaired.",
+      "No market or portfolio behavior may change."
+    ]
+  },
+  "authority_boundary": "CODE_REMEDIATION_ONLY",
+  "requires_framework_owner_authority": false,
+  "forbidden_changes": [
+    "market gates",
+    "model weights",
+    "canonical authority",
+    "portfolio logic",
+    "API budget",
+    "new policy semantics"
+  ],
+  "requested_priority": "EXPEDITED",
+  "post_fix_gate": "CI plus main readback and one production-shaped lineage observation with no duplicate or fabricated accepted packet."
+}
