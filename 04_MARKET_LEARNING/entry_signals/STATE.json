@@ -3,7 +3,7 @@
   "criteria": {
     "eth_outperforms_btc_24h": true,
     "ethbtc_above_registered_0_0300": true,
-    "top100_proxy_breadth_ge_50pct": true
+    "top100_proxy_breadth_ge_50pct": false
   },
   "definition_version": "ENTRY_SIGNAL_DEFINITION_v1_2_CANONICAL_PROMOTION_GUARD",
   "execution_temperature": "NORMAL",
@@ -28,19 +28,19 @@
     "independent_rotation_confirmation_reason": "PROXY_OR_CANONICAL_COMPATIBILITY_UNCONFIRMED",
     "relative_breadth": {
       "constituent_count": 100,
-      "equal_weight_mean_return_24h_pct": 1.374235,
-      "median_return_24h_pct": 0.890705,
-      "outperforming_btc_count": 50,
-      "outperforming_btc_share": 0.5,
-      "outperforming_eth_count": 28,
-      "outperforming_eth_share": 0.28
+      "equal_weight_mean_return_24h_pct": -0.279927,
+      "median_return_24h_pct": -0.032555,
+      "outperforming_btc_count": 22,
+      "outperforming_btc_share": 0.22,
+      "outperforming_eth_count": 17,
+      "outperforming_eth_share": 0.17
     },
     "rolling_window_confirmation_policy": "Repeated observations from an overlapping rolling window are descriptive persistence only and are not, by themselves, independent confirmation.",
     "sensor_relationship_owner": "01_CORE_FRAMEWORK/governance/2026-07-22__sensor-relationship-and-incremental-value-standard__canonical.md",
     "source_independence_eligible": false,
     "window_semantics": "SOURCE_REPORTED_ROLLING_24H_AT_RETRIEVAL"
   },
-  "observer_state": "LEGACY_PATTERN_OBSERVED_FORWARD_ONLY_NOT_PROMOTION_READY",
+  "observer_state": "NO_PATTERN",
   "promotion_authority": {
     "permits_active_state": false,
     "reason": "FROZEN_BREADTH_PREDICTIVE_GATE_RETIRED_ZERO_WEIGHT_AND_GRADUATED_ALT_DEPLOYMENT_NOT_PROMOTION_READY",
@@ -48,5 +48,5 @@
     "status": "FORWARD_ONLY_NOT_PROMOTION_READY"
   },
   "state": "WAIT",
-  "updated_at_utc": "2026-08-30T20:08:55.774187+00:00"
+  "updated_at_utc": "2026-08-30T22:56:57.675234+00:00"
 }
