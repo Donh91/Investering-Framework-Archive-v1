@@ -17,8 +17,16 @@ SUMMARY = ROOT / "PERFORMANCE_SUMMARY.json"
 HOURLY_POINTER = Path("03_DAILY_CAPTURE_LOGS/hourly/LATEST.json")
 HOURLY_ROOT = Path("03_DAILY_CAPTURE_LOGS/hourly")
 HORIZONS_H = {"24h": 24, "72h": 72, "7d": 168, "14d": 336, "30d": 720}
-DEFINITION_VERSION = "ENTRY_SIGNAL_DEFINITION_v1_1_MEASUREMENT_VALIDITY_GUARD"
+DEFINITION_VERSION = "ENTRY_SIGNAL_DEFINITION_v1_2_CANONICAL_PROMOTION_GUARD"
 SENSOR_RELATIONSHIP_OWNER = "01_CORE_FRAMEWORK/governance/2026-07-22__sensor-relationship-and-incremental-value-standard__canonical.md"
+JULY12_BREADTH_OWNER = "06_RESEARCH_LAB/audit_summaries/2026-07-12__marginal-decision-value-and-breadth-truth-program-v1__canonical.md"
+JULY12_RULE_REGISTRY = "01_CORE_FRAMEWORK/governance/2026-07-12__rule-and-evidence-registry-sensor-audit-v1__canonical-addendum.md"
+GRADUATED_DEPLOYMENT_PROMOTION = {
+    "status": "FORWARD_ONLY_NOT_PROMOTION_READY",
+    "permits_active_state": False,
+    "source": JULY12_RULE_REGISTRY,
+    "reason": "FROZEN_BREADTH_PREDICTIVE_GATE_RETIRED_ZERO_WEIGHT_AND_GRADUATED_ALT_DEPLOYMENT_NOT_PROMOTION_READY",
+}
 HISTORICAL_VALIDITY_POLICY = (
     "Historical signal records remain immutable. Later outcomes may calibrate definition quality but must not "
     "retroactively invalidate a signal solely because the later outcome was poor. A contemporaneous evidence-role "
@@ -65,7 +73,7 @@ def measurement_validity_from_breadth(breadth_obj, agg=None):
     evidence_role = semantics.get("evidence_role", "UNKNOWN")
     canonical_compatible = semantics.get("canonical_compatible") is True
     proxy_only = evidence_role == "PROXY_ONLY"
-    independent_eligible = canonical_compatible and not proxy_only
+    source_independence_eligible = canonical_compatible and not proxy_only
 
     def share(value):
         if value is None or count in (None, 0):
@@ -74,17 +82,20 @@ def measurement_validity_from_breadth(breadth_obj, agg=None):
 
     return {
         "sensor_relationship_owner": SENSOR_RELATIONSHIP_OWNER,
+        "canonical_breadth_owner": JULY12_BREADTH_OWNER,
+        "canonical_rule_registry": JULY12_RULE_REGISTRY,
         "evidence_role": evidence_role,
         "canonical_compatible": canonical_compatible,
         "canonical_large_cap_breadth": semantics.get("canonical_large_cap_breadth", "UNCONFIRMED"),
         "canonical_broad_alt_breadth": semantics.get("canonical_broad_alt_breadth", "UNCONFIRMED"),
-        "absolute_breadth_semantics": (
-            "DESCRIPTIVE_PARTICIPATION_ONLY" if proxy_only or not canonical_compatible else "OWNER_CONFIRMATION_ELIGIBLE"
-        ),
-        "independent_rotation_confirmation_eligible": independent_eligible,
+        "absolute_breadth_semantics": "DESCRIPTIVE_PARTICIPATION_ZERO_EXECUTION_WEIGHT",
+        "source_independence_eligible": source_independence_eligible,
+        "independent_rotation_confirmation_eligible": source_independence_eligible,
         "independent_rotation_confirmation_reason": (
-            "ELIGIBLE" if independent_eligible else "PROXY_OR_CANONICAL_COMPATIBILITY_UNCONFIRMED"
+            "SOURCE_ROLE_ELIGIBLE_BUT_NO_ENTRY_AUTHORITY" if source_independence_eligible else "PROXY_OR_CANONICAL_COMPATIBILITY_UNCONFIRMED"
         ),
+        "breadth_entry_permission": "RETIRED_ZERO_WEIGHT",
+        "graduated_deployment_promotion": GRADUATED_DEPLOYMENT_PROMOTION,
         "relative_breadth": {
             "constituent_count": count,
             "outperforming_btc_count": out_btc,
@@ -179,17 +190,15 @@ def classify(m):
         "eth_outperforms_btc_24h": er is not None and br is not None and er > br,
     }
     pattern_observed = all(legacy_checks.values())
-    validity = m.get("measurement_validity") or {}
-    breadth_authority_eligible = validity.get("independent_rotation_confirmation_eligible") is True
-    active = pattern_observed and breadth_authority_eligible
-    if active:
+    promotion_ready = GRADUATED_DEPLOYMENT_PROMOTION["permits_active_state"] is True
+    if pattern_observed and not promotion_ready:
+        observer_state = "LEGACY_PATTERN_OBSERVED_FORWARD_ONLY_NOT_PROMOTION_READY"
+    elif pattern_observed and promotion_ready:
         observer_state = "AUTHORIZED_PATTERN_OBSERVED"
-    elif pattern_observed:
-        observer_state = "PROXY_PATTERN_OBSERVED_NOT_ACTION_ELIGIBLE"
     else:
         observer_state = "NO_PATTERN"
     heat = "HOT" if ((er or 0) >= 12 or (br or 0) >= 8 or (m.get("median_return_24h_pct") or 0) >= 4) else "NORMAL"
-    state = "GRADUATED_ALTCOIN_TOPUP_ACTIVE" if active else "WAIT"
+    state = "GRADUATED_ALTCOIN_TOPUP_ACTIVE" if pattern_observed and promotion_ready else "WAIT"
     return state, legacy_checks, heat, observer_state
 
 
@@ -198,8 +207,8 @@ def bridge_display_line(state, observer_state, heat, current):
     rel_text = "UNKNOWN" if rel is None else f"{rel * 100:.0f}%"
     return (
         f"LEARNING OBSERVER: {observer_state} | canonical_action_authority=NONE | state={state} | "
-        f"heat={heat} | ETHBTC={current['ethbtc']:.5f} | abs_breadth={current['top100_advance_ratio']*100:.0f}% | "
-        f"outperforming_BTC={rel_text}"
+        f"promotion={GRADUATED_DEPLOYMENT_PROMOTION['status']} | heat={heat} | ETHBTC={current['ethbtc']:.5f} | "
+        f"abs_breadth={current['top100_advance_ratio']*100:.0f}% | outperforming_BTC={rel_text}"
     )
 
 
@@ -338,6 +347,7 @@ def build_summary(now):
             "or authority to rewrite historical event validity."
         ),
         "historical_validity_policy": HISTORICAL_VALIDITY_POLICY,
+        "promotion_authority": GRADUATED_DEPLOYMENT_PROMOTION,
         "horizons": by_horizon,
     })
 
@@ -359,12 +369,13 @@ def main():
         "criteria": checks,
         "market_snapshot": {k: v for k, v in current.items() if k != "constituents"},
         "measurement_validity": current.get("measurement_validity"),
+        "promotion_authority": GRADUATED_DEPLOYMENT_PROMOTION,
         "historical_validity_policy": HISTORICAL_VALIDITY_POLICY,
         "authority": {
             "canonical_market_state": False,
             "portfolio_execution": False,
             "market_rule_change": False,
-            "purpose": "timestamped measurement-validity-aware observation and forward outcome learning",
+            "purpose": "timestamped measurement-validity-aware forward-only observation and outcome learning",
         },
         "data_ping_bridge": {
             "binding": False,
@@ -389,6 +400,7 @@ def main():
             "criteria": checks,
             "market_snapshot": current,
             "measurement_validity": current.get("measurement_validity"),
+            "promotion_authority": GRADUATED_DEPLOYMENT_PROMOTION,
             "historical_validity_policy": HISTORICAL_VALIDITY_POLICY,
             "authority": {"canonical_market_state": False, "portfolio_execution": False, "retrospective_rule_change": False},
         })
@@ -401,6 +413,7 @@ def main():
         "execution_temperature": heat,
         "criteria": checks,
         "measurement_validity": current.get("measurement_validity"),
+        "promotion_authority": GRADUATED_DEPLOYMENT_PROMOTION,
         "historical_validity_policy": HISTORICAL_VALIDITY_POLICY,
     })
     update_outcomes(current, now)
