@@ -1,0 +1,82 @@
+{
+  "contract": "CODEX_RESEARCH_CANDIDATE_v1",
+  "candidate_id": "codex-research-total-market-cap-provenance-and-derivability-v1",
+  "submitted_at_utc": "2026-08-30T18:31:00Z",
+  "status": "SUBMITTED",
+  "origin": {
+    "type": "AUDIT",
+    "thread_label": "weekly-challenger-missing-vs-derivable-audit",
+    "source_paths": [
+      "03_DAILY_CAPTURE_LOGS/breadth_rich/LATEST.json",
+      "scripts/daily_capture/rich_breadth_checkpoint.py",
+      "03_DAILY_CAPTURE_LOGS/btc_d_cmc/latest/BTC_D_SOURCE_RECEIPT.md",
+      "03_DAILY_CAPTURE_LOGS/btc_d_cmc/latest/BTC_D_VALIDATION_REPORT.md",
+      "03_DAILY_CAPTURE_LOGS/README.md"
+    ]
+  },
+  "title": "Resolve total market-cap missing-vs-derivable semantics with source-compatible provenance",
+  "objective": "Resolve the framework's total-market-cap / TOTAL / TOTAL2 missing-versus-derivable semantics without creating false precision. Determine the current consumer/inventory path that labels total market cap unavailable, identify whether an already-collected same-source global market-cap value can be reused and durably exposed, and implement the smallest provenance-safe repair. A CoinGecko BTC market cap divided by CoinMarketCap BTC dominance must never be promoted as canonical TOTAL because the numerator and denominator use different providers/universes. Cross-source calculations, if retained at all, must be explicitly non-binding proxy estimates. Prefer reuse/persistence of an existing same-source global source over a new sensor or hybrid derivation.",
+  "finding_key": "TOTAL_MARKET_CAP_MISSING_DERIVABILITY_PROVENANCE_UNRESOLVED",
+  "primary_target": "existing total-market-cap inventory/consumer and nearest existing global-market owner/interface",
+  "allowed_change_scope": [
+    "scripts/daily_capture/directly related global market or market-context owner/interface",
+    "scripts/data_terminal/directly related existing global market collector/normalizer",
+    "02_DATA_PING/directly related owner/interface or bridge contract if existing",
+    "03_DAILY_CAPTURE_LOGS/directly related compact global-market owner path if existing architecture calls for persistence",
+    "research/api_agent/directly related inventory/context materialization code",
+    "tests/directly related market-cap provenance and derivability tests"
+  ],
+  "evidence": [
+    {
+      "kind": "REPO_PATH",
+      "ref": "scripts/daily_capture/rich_breadth_checkpoint.py",
+      "summary": "The breadth owner is explicitly sourced from COINGECKO_MARKET_CAP; its Bitcoin constituent market_cap_usd is therefore a CoinGecko value."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "03_DAILY_CAPTURE_LOGS/btc_d_cmc/latest/BTC_D_VALIDATION_REPORT.md",
+      "summary": "The BTC.D owner uses CMC_DIRECT_SOURCE_CONVENTION: CoinMarketCap BTC market cap divided by the total market cap of cryptoassets tracked by CoinMarketCap. It explicitly does not represent a different provider/universe convention."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "03_DAILY_CAPTURE_LOGS/README.md",
+      "summary": "The documented permanent daily-capture lanes do not currently name a global total-market-cap owner, so a consumer may legitimately surface the field as unavailable unless another existing owner/interface is reused."
+    },
+    {
+      "kind": "AUDIT_FINDING",
+      "ref": "weekly blind challenger 2026-08-24..30",
+      "summary": "Challenger flagged total market cap as derivable via BTC_mcap / BTC.D. Audit confirms arithmetic derivability but finds provider/universe mismatch between CoinGecko market cap and CMC dominance, so the hybrid result is not canonical without explicit proxy semantics."
+    }
+  ],
+  "reproduction": "On fresh main, locate the exact inventory/consumer that marks total market cap/TOTAL/TOTAL2 unavailable. Trace every proposed input to provider, source timestamp, denominator universe and owner semantics. Demonstrate that CoinGecko BTC market cap divided by CMC_DIRECT_SOURCE_CONVENTION BTC.D is a cross-source hybrid and cannot reproduce a provider-native total by contract. Search for an already-collected same-source global market-cap payload/owner (including existing DATA PING/global market collection paths) before adding any persistence. If an existing same-source value can be reused, bind and expose it with exact timestamps/provenance. If no compatible same-source value exists, preserve UNKNOWN/MISSING or explicitly non-binding CROSS_SOURCE_PROXY rather than inventing canonical TOTAL.",
+  "acceptance_tests": {
+    "positive": [
+      "The affected inventory/consumer distinguishes DIRECT_OWNER, SAME_SOURCE_DERIVED, CROSS_SOURCE_PROXY and UNAVAILABLE/UNKNOWN rather than treating all arithmetic derivations as equivalent.",
+      "Any canonical/owner-grade total market-cap value is built from a provider-native global total or a mathematically equivalent same-provider numerator/denominator with timestamp and universe compatibility proven in the artifact.",
+      "If an existing global-market source is already collected elsewhere, the implementation reuses it rather than creating a duplicate sensor, and persists/exposes only the smallest owner/interface needed by current consumers.",
+      "TOTAL2 or analogous derived values inherit the provenance/quality class of their inputs and fail closed when subtraction inputs are incompatible or stale.",
+      "Fixtures cover same-source derivation, cross-source mismatch, timestamp mismatch, missing value and no-silent-fallback behavior."
+    ],
+    "negative": [
+      "Do not label CoinGecko BTC market cap divided by CoinMarketCap BTC.D as canonical TOTAL or owner-grade total market cap.",
+      "Do not create a second global-market sensor if an existing source/collector already provides the needed value.",
+      "Do not convert missing data to zero, silently substitute current values for point-in-time values, or relax provenance/freshness checks merely to eliminate DATA_MISSING.",
+      "Do not change market gates, model weights, portfolio actions or July 12 breadth/BTC.D zero-weight semantics."
+    ]
+  },
+  "authority_boundary": "CODE_REMEDIATION_ONLY",
+  "requires_framework_owner_authority": false,
+  "forbidden_changes": [
+    "market gates",
+    "model weights",
+    "canonical authority promotion",
+    "portfolio logic",
+    "API budget",
+    "new policy semantics",
+    "cross-source hybrid promoted to canonical",
+    "duplicate global-market sensor",
+    "historical pseudo-values or backfill without point-in-time lineage"
+  ],
+  "requested_priority": "EXPEDITED",
+  "post_fix_gate": "PROVENANCE_FIXTURES_PASS_PLUS_ONE_NATURAL_OWNER_OR_CONSUMER_RUN_WITH_EXPLICIT_MARKET_CAP_QUALITY_CLASS"
+}
