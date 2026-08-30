@@ -1,0 +1,82 @@
+{
+  "contract": "CODEX_RESEARCH_CANDIDATE_v1",
+  "candidate_id": "codex-research-adaptive-cadence-sampling-independence-v1",
+  "submitted_at_utc": "2026-08-30T18:22:00Z",
+  "status": "SUBMITTED",
+  "origin": {
+    "type": "AUDIT",
+    "thread_label": "measurement-validity-post-fix-audit",
+    "source_paths": [
+      ".github/workflows/adaptive-rotation-cadence.yml",
+      "scripts/daily_capture/rich_breadth_checkpoint.py",
+      "research/codex/intake/2026/08/codex-research-t6-rotation-survival-row-instrumentation-v1.json",
+      "06_RESEARCH_LAB/audit_summaries/2026-07-12__marginal-decision-value-and-breadth-truth-program-v1__canonical.md"
+    ]
+  },
+  "title": "Preserve adaptive-cadence sampling provenance and observation independence",
+  "objective": "Make adaptive/boost breadth captures distinguishable from ordinary breadth observations and make downstream T6/learning analysis cadence-aware, so endogenous oversampling and overlapping rolling windows cannot be counted as extra independent confirmation or inflate correlation/survival evidence. Implement the smallest deterministic provenance and normalization repair without changing sampling schedules, boost thresholds, market gates, or portfolio semantics.",
+  "finding_key": "ADAPTIVE_CADENCE_SAMPLING_ORIGIN_AND_INDEPENDENCE_MISSING",
+  "primary_target": "scripts/daily_capture/rich_breadth_checkpoint.py",
+  "allowed_change_scope": [
+    "scripts/daily_capture/rich_breadth_checkpoint.py",
+    ".github/workflows/adaptive-rotation-cadence.yml",
+    "scripts/learning/directly related T6 rotation-survival or measurement-validity producer/validator",
+    "tests/learning/directly related cadence-independence tests",
+    "tests/daily_capture/directly related rich-breadth provenance tests",
+    "research/framework_memory/rotation_survival_forward_rows"
+  ],
+  "evidence": [
+    {
+      "kind": "REPO_PATH",
+      "ref": ".github/workflows/adaptive-rotation-cadence.yml",
+      "summary": "The workflow performs additional rich breadth captures when ETHBTC is near the registered 0.0300 level or Top100 proxy breadth is at least 45%, creating endogenous observation density while correctly declaring the trigger operational-only."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "scripts/daily_capture/rich_breadth_checkpoint.py",
+      "summary": "The shared breadth producer writes retrieval lifecycle and owner semantics but no deterministic capture_origin, sampling_mode, triggering cadence run, or normal-vs-boost provenance field, so downstream files are not self-describing with respect to sampling selection."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "research/codex/intake/2026/08/codex-research-t6-rotation-survival-row-instrumentation-v1.json",
+      "summary": "Existing T6 instrumentation candidate requires prospective sequence rows and says cadence-only triggers cannot become market rules, but does not explicitly require cadence-normalized independent-observation accounting or boost-origin provenance."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "06_RESEARCH_LAB/audit_summaries/2026-07-12__marginal-decision-value-and-breadth-truth-program-v1__canonical.md",
+      "summary": "Canonical research retains breadth only as descriptive zero-weight context and emphasizes survivorship/latency/reproducibility. Sampling-density artifacts therefore must not create synthetic evidence strength."
+    }
+  ],
+  "reproduction": "On fresh main, inspect adaptive-rotation-cadence.yml and rich_breadth_checkpoint.py. Confirm that a boost-active cadence run invokes the same rich breadth producer used for ordinary checkpoints and that the emitted RICH_BREADTH_CHECKPOINT_v1 payload contains no deterministic field identifying adaptive boost origin or parent cadence run. Then inspect prospective T6/learning consumers and verify whether raw capture count or repeated rolling-window checkpoints could be treated as independent observations without explicit cadence-origin/non-overlap filtering. If equivalent deterministic provenance and independence normalization already exist, stop as clean no-op.",
+  "acceptance_tests": {
+    "positive": [
+      "A breadth checkpoint created by adaptive boost carries deterministic sampling provenance sufficient to identify it as ADAPTIVE_BOOST and bind it to the triggering cadence observation/run without changing market evidence semantics.",
+      "Ordinary/unknown historical checkpoints remain distinguishable from adaptive boost; unknown legacy origin stays UNKNOWN rather than being inferred or backfilled.",
+      "T6 or directly related learning analysis records sampling context and reports independent observation counts separately from raw capture counts; overlapping rolling-window/boost checkpoints cannot by themselves increase survival-confirmation count.",
+      "A fixture with one normal checkpoint plus multiple boost checkpoints over the same underlying rolling window produces one independent window-level confirmation or explicit non-independence, not multiple confirmations."
+    ],
+    "negative": [
+      "Do not change the 4H normal cadence, 2H boost cadence, ETHBTC proximity trigger, Top100 45% operational trigger, or any market threshold.",
+      "Do not treat ADAPTIVE_BOOST, capture frequency, or source-quality provenance as market evidence, a rotation vote, a portfolio permission, or canonical state.",
+      "Do not retrospectively infer capture origin for historical files that lack deterministic provenance; preserve UNKNOWN.",
+      "Do not create a second breadth owner, a new market engine, or historical pseudo-rows."
+    ]
+  },
+  "authority_boundary": "CODE_REMEDIATION_ONLY",
+  "requires_framework_owner_authority": false,
+  "forbidden_changes": [
+    "market gates",
+    "model weights",
+    "canonical authority",
+    "portfolio logic",
+    "API budget",
+    "new policy semantics",
+    "sampling schedules",
+    "adaptive boost thresholds",
+    "automatic phase promotion",
+    "historical capture-origin backfill",
+    "new market engine"
+  ],
+  "requested_priority": "EXPEDITED",
+  "post_fix_gate": "PROVENANCE_FIXTURE_PASS_PLUS_T6_INDEPENDENCE_NEGATIVE_CONTROL_PLUS_THREE_NATURAL_ADAPTIVE_CAPTURES_WITH_EXPLICIT_ORIGIN"
+}
