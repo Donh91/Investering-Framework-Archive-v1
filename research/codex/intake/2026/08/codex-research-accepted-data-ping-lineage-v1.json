@@ -4,7 +4,8 @@
   "submitted_at_utc": "2026-08-30T17:18:00Z",
   "status": "SUBMITTED",
   "origin": {
-    "type": "POST_FIX_ARCHITECTURE_AUDIT",
+    "type": "AUDIT",
+    "thread_label": "2026-08-30 post-fix measurement-validity audit",
     "source_paths": [
       "LATEST_HANDOFF.json",
       "scripts/architecture/build_latest_handoff.py",
@@ -13,71 +14,62 @@
     ]
   },
   "title": "Repair accepted DATA PING producer and handoff lineage gap",
-  "objective": "Diagnose why current handoff reports latest_accepted_data_ping as unavailable while the accepted DATA PING bridge implementation remains on current main and its expected accepted-root is absent. Implement the smallest code-only repair that restores truthful producer/activation/lineage semantics without fabricating or backfilling accepted packets and without substituting Action Compass receipts for accepted packets unless an existing authoritative owner explicitly requires that mapping.",
-  "allowed_change_scope": {
-    "primary_targets": [
-      "scripts/data_ping/accepted_data_ping_bridge.py",
-      "scripts/architecture/build_latest_handoff.py"
-    ],
-    "secondary_targets": [
-      "tests directly covering accepted DATA PING bridge and latest handoff behavior",
-      "an exact existing accepted-DATA-PING producer or activation workflow only if fresh-state repository discovery proves that workflow is the current owner"
-    ]
-  },
+  "objective": "Diagnose why current handoff reports latest_accepted_data_ping as unavailable while the accepted DATA PING bridge implementation remains on current main and its expected accepted-root is absent. Implement the smallest code-only repair that restores truthful producer, activation and lineage semantics without fabricating historical accepted packets.",
+  "finding_key": "ACCEPTED_DATA_PING_LINEAGE_ROOT_ABSENT",
+  "primary_target": "scripts/data_ping/accepted_data_ping_bridge.py",
+  "allowed_change_scope": [
+    "scripts/data_ping/accepted_data_ping_bridge.py",
+    "scripts/architecture/build_latest_handoff.py",
+    "tests directly related to accepted DATA PING bridge and latest handoff behavior",
+    "the exact existing accepted-DATA-PING producer or activation workflow only if fresh-state repository discovery proves it is the current owner"
+  ],
   "evidence": [
     {
-      "kind": "CURRENT_MAIN_POINTER",
+      "kind": "REPO_PATH",
       "ref": "LATEST_HANDOFF.json",
-      "summary": "Current handoff exposes latest_accepted_data_ping as unavailable/null."
+      "summary": "Current handoff exposes latest_accepted_data_ping as unavailable."
     },
     {
-      "kind": "MISSING_EXPECTED_ROOT",
+      "kind": "REPO_PATH",
       "ref": "research/data_ping_bridge/accepted",
-      "summary": "The path consumed by build_latest_handoff.py is absent on current main rather than containing immutable accepted packets."
+      "summary": "The root consumed by the handoff builder is absent on current main."
     },
     {
-      "kind": "EXISTING_IMPLEMENTATION",
+      "kind": "REPO_PATH",
       "ref": "scripts/data_ping/accepted_data_ping_bridge.py",
-      "summary": "Current main retains an implementation intended to canonicalize, hash, deduplicate and persist immutable accepted DATA PING packets and sidecar receipts."
+      "summary": "Current main retains the implementation intended to hash, deduplicate and persist immutable accepted DATA PING packets and receipts."
     },
     {
-      "kind": "HANDOFF_CONSUMER",
+      "kind": "REPO_PATH",
       "ref": "scripts/architecture/build_latest_handoff.py",
-      "summary": "The current handoff builder still scans research/data_ping_bridge/accepted and therefore treats this lineage as an active routing surface."
+      "summary": "The current handoff builder still scans research/data_ping_bridge/accepted, so this lineage remains an active routing surface."
     }
   ],
-  "reproduction": [
-    "Read current main LATEST_HANDOFF.json and observe latest_accepted_data_ping is null/unavailable.",
-    "Read scripts/architecture/build_latest_handoff.py and confirm the pointer is built from research/data_ping_bridge/accepted.",
-    "Attempt to enumerate research/data_ping_bridge/accepted on current main and confirm the expected root is absent.",
-    "Read scripts/data_ping/accepted_data_ping_bridge.py and confirm the accepted-packet persistence implementation still exists.",
-    "Determine from current repository wiring whether the defect is a missing producer/activation path, a retired-but-not-declared surface, or another bounded lineage defect before changing code."
-  ],
+  "reproduction": "On fresh main, read LATEST_HANDOFF.json and confirm latest_accepted_data_ping is unavailable; inspect build_latest_handoff.py and confirm it scans research/data_ping_bridge/accepted; confirm that root is absent; inspect accepted_data_ping_bridge.py and determine whether the bounded defect is missing producer/activation wiring, stale routing after intentional retirement, or another implementation-lineage mismatch before changing code.",
   "acceptance_tests": {
     "positive": [
-      "A fresh-state test demonstrates truthful accepted-packet lineage: when an immutable accepted packet exists, latest handoff resolves to that exact packet path and hash; when none exists, handoff explicitly remains unavailable without implying a fabricated packet.",
-      "Accepted DATA PING bridge preserves deterministic snapshot deduplication so replaying the same snapshot does not create a second accepted packet.",
-      "Tests cover missing accepted-root, present accepted-root and duplicate-snapshot behavior.",
-      "If a producer/activation path is repaired, one production-shape run or equivalent repository-integrated test proves the writer and handoff consumer agree on path and contract.",
-      "If current architecture intentionally retired the accepted bridge, the repair makes that retirement explicit in the existing routing surface rather than silently redirecting to an unrelated receipt class."
+      "When an immutable accepted packet exists, latest handoff resolves to that exact packet path and content hash; when none exists, the handoff remains truthfully unavailable.",
+      "Replaying the same snapshot does not create a second accepted packet.",
+      "Tests cover missing-root, present-root and duplicate-snapshot behavior.",
+      "If producer wiring is repaired, a production-shaped run proves writer and handoff consumer agree on path and contract."
     ],
     "negative": [
-      "Do not fabricate, reconstruct or backfill historical accepted DATA PING packets.",
-      "Do not map Action Compass receipts to accepted DATA PING packets without pre-existing authoritative repository ownership for that mapping.",
-      "Do not alter market gates, thresholds, model weights, portfolio logic, canonical market state, Action Compass decision semantics or API budget.",
-      "Do not add a new parallel accepted-ping engine or pointer when the existing owner can be repaired."
+      "No historical accepted DATA PING packet may be fabricated, reconstructed or backfilled.",
+      "Action Compass receipts must not be silently reclassified as accepted DATA PING packets.",
+      "No parallel accepted-ping engine or pointer may be created when the existing owner can be repaired.",
+      "No market or portfolio behavior may change."
     ]
   },
   "authority_boundary": "CODE_REMEDIATION_ONLY",
   "requires_framework_owner_authority": false,
   "forbidden_changes": [
-    "market gates or thresholds",
+    "market gates",
     "model weights",
-    "canonical authority or predecessor rules",
-    "portfolio logic or sizing",
+    "canonical authority",
+    "portfolio logic",
     "API budget",
     "new policy semantics"
   ],
   "requested_priority": "EXPEDITED",
-  "post_fix_gate": "CI must pass, main readback must prove truthful accepted-ping pointer semantics, and a production-shape observation must not create duplicate or fabricated accepted packets."
+  "post_fix_gate": "CI plus main readback and one production-shaped lineage observation with no duplicate or fabricated accepted packet."
 }
