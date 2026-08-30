@@ -6,7 +6,9 @@ on:
       - '02_DATA_PING/protocols/2026-08-30__raw-shadow-direction-confidence-indicator-v1__canonical.md'
       - '04_MARKET_LEARNING/intraday_execution/**'
       - 'scripts/intraday_execution/**'
+      - 'scripts/daily_capture/build_hourly_sequence.py'
       - 'tests/learning/test_intraday_execution_row_shape.py'
+      - '.github/workflows/hourly-sequence-capture.yml'
       - '.github/workflows/intraday-execution-research.yml'
       - '.github/workflows/intraday-execution-gate.yml'
       - '06_RESEARCH_LAB/historical_altseason_pullback_v1/INTRADAY_EXECUTION_COWORK_ADDENDUM.md'
@@ -25,13 +27,14 @@ jobs:
           python-version: '3.12'
       - name: Install focused test dependency
         run: python -m pip install --disable-pip-version-check 'pytest>=8,<9'
-      - name: Compile intraday engines
+      - name: Compile intraday and hourly owner engines
         run: |
+          python -m py_compile scripts/daily_capture/build_hourly_sequence.py
           python -m py_compile scripts/intraday_execution/intraday_execution_research.py
           python -m py_compile scripts/intraday_execution/shadow_direction_confidence.py
       - name: Run focused intraday direction and calibration tests
         run: python -m pytest tests/learning/test_intraday_execution_row_shape.py -q
-      - name: Validate research-only contracts
+      - name: Validate research-only contracts and cadence ordering
         run: |
           python - <<'PY'
           import json
@@ -52,6 +55,16 @@ jobs:
           assert shadow['probability_rule']=='NO_NUMERIC_PROBABILITY_BEFORE_MINIMUM_INDEPENDENT_SAMPLE'
           assert shadow['automatic_signal_reweighting'] is False
           assert shadow['microcap_direction']=='NO_EDGE_UNTIL_ELIGIBLE_OWNER_EXISTS'
+
+          hourly=Path('.github/workflows/hourly-sequence-capture.yml').read_text()
+          intraday=Path('.github/workflows/intraday-execution-research.yml').read_text()
+          assert "cron: '5 * * * *'" in hourly
+          assert "timezone: 'UTC'" in hourly
+          assert 'Materialize each newly completed UTC 1H owner candle' in hourly
+          assert "cron: '15 * * * *'" in intraday
+          assert "timezone: 'UTC'" in intraday
+          assert 'Run after the UTC-aligned hourly owner' in intraday
+
           text=Path('04_MARKET_LEARNING/intraday_execution/README.md').read_text()
           assert 'research_only: true' in text
           assert 'portfolio_execution: false' in text
