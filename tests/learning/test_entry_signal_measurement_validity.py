@@ -33,10 +33,17 @@ class EntrySignalMeasurementValidityTests(unittest.TestCase):
     def test_proxy_only_pattern_fails_closed_to_wait(self):
         state, checks, heat, observer_state = ledger.classify(self._market(False))
         self.assertEqual(state, "WAIT")
+        self.assertEqual(
+            set(checks),
+            {
+                "ethbtc_above_registered_0_0300",
+                "top100_proxy_breadth_ge_50pct",
+                "eth_outperforms_btc_24h",
+            },
+        )
         self.assertTrue(checks["ethbtc_above_registered_0_0300"])
         self.assertTrue(checks["top100_proxy_breadth_ge_50pct"])
         self.assertTrue(checks["eth_outperforms_btc_24h"])
-        self.assertFalse(checks["breadth_authority_eligible"])
         self.assertEqual(observer_state, "PROXY_PATTERN_OBSERVED_NOT_ACTION_ELIGIBLE")
         self.assertEqual(heat, "NORMAL")
 
