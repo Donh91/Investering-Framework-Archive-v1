@@ -1,25 +1,25 @@
 # Operations Dashboard
 
 Overall: **RED**
-Generated: `2026-08-29T19:13:30.323621Z`
+Generated: `2026-08-30T09:50:33.708158Z`
 
 ## Systems
 
 | System | Status | Detail | Age hours |
 |---|---:|---|---:|
-| `daily_capture` | **GREEN** | FRESH | 2.523 |
-| `openai_daily_director` | **RED** | STALE | 51.784 |
-| `weekly_output` | **GREEN** | FRESH | 137.047 |
+| `daily_capture` | **GREEN** | FRESH | 4.422 |
+| `openai_daily_director` | **RED** | STALE | 66.402 |
+| `weekly_output` | **GREEN** | FRESH | 151.664 |
 | `automation_health` | **RED** | - | - |
 | `architecture_health` | **AMBER** | - | - |
-| `experiment_lifecycle` | **GREEN** | FRESH | 11.265 |
-| `experiment_receipt_sync` | **GREEN** | FRESH | 11.265 |
-| `remediation_maturation` | **GREEN** | FRESH | 0.386 |
+| `experiment_lifecycle` | **GREEN** | FRESH | 3.007 |
+| `experiment_receipt_sync` | **GREEN** | FRESH | 3.008 |
+| `remediation_maturation` | **GREEN** | FRESH | 0.364 |
 
 ## AI and learning activity
 
-- OpenAI receipts this month: **147**
-- OpenAI cost this month: **$6.865250**
+- OpenAI receipts this month: **150**
+- OpenAI cost this month: **$6.994232**
 - Pending forecast candidates: **138**
 - Experiment candidates: **153**
 - Experiment dispatch requests: **801**
@@ -36,4 +36,4 @@ Open incident references: **20**
 - **P0** `openai_daily_director` - STALE
 - **P1** `architecture_health` - ['DAILY_DIRECTOR_STALE']
 
-Dashboard SHA-256: `25a523c0cdc1b485051645a7ad7ec3571963f7dc4ec6bc65e648bbb4f2150e95`
+Dashboard SHA-256: `12655d09ee37253c81788538b63361cb2fffb98c15a9359f6ee000c07688782f`
