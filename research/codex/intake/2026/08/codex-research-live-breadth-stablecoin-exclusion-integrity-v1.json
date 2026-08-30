@@ -1,0 +1,88 @@
+{
+  "contract": "CODEX_RESEARCH_CANDIDATE_v1",
+  "candidate_id": "codex-research-live-breadth-stablecoin-exclusion-integrity-v1",
+  "submitted_at_utc": "2026-08-30T20:25:00Z",
+  "status": "SUBMITTED",
+  "origin": {
+    "type": "POST_FIX_MEASUREMENT_VALIDITY_AUDIT",
+    "thread_label": "weekly-challenger-followthrough",
+    "source_paths": [
+      "scripts/data_terminal/top100_breadth_owner_collector.py",
+      "tests/data_terminal/test_top100_breadth_owner_collector.py",
+      "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/08/2026-08-30/owner_snapshot.json",
+      "06_RESEARCH_LAB/audit_summaries/2026-07-12__marginal-decision-value-and-breadth-truth-program-v1__canonical.md",
+      "06_RESEARCH_LAB/audit_summaries/marginal_decision_breadth_v1/SOURCE_AND_REPRODUCIBILITY_RECEIPT.md",
+      "Donh91/Eksperimenter-framework-/scripts/fetch_cmc_frozen_breadth_v2.py"
+    ]
+  },
+  "title": "Make live breadth stablecoin exclusion match its declared universe semantics",
+  "objective": "Repair the existing CoinGecko Top100 breadth proxy so its declared STABLECOINS exclusion is deterministic and truthful. Reuse the already validated exact-stablecoin taxonomy principles from the 12 July frozen-universe research where applicable, add explicit taxonomy/version/limitation provenance, and prevent known stablecoins from entering the 100 eligible constituents. Preserve PROXY_ONLY / non-canonical authority and introduce no market threshold, source call, or portfolio semantics.",
+  "finding_key": "LIVE_BREADTH_DECLARED_STABLECOIN_EXCLUSION_INCOMPLETE",
+  "primary_target": "scripts/data_terminal/top100_breadth_owner_collector.py",
+  "allowed_change_scope": [
+    "scripts/data_terminal/top100_breadth_owner_collector.py",
+    "tests/data_terminal/test_top100_breadth_owner_collector.py",
+    "scripts/data_terminal/a directly related small eligibility taxonomy helper if deduplication materially improves maintainability"
+  ],
+  "evidence": [
+    {
+      "kind": "REPO_PATH",
+      "ref": "scripts/data_terminal/top100_breadth_owner_collector.py",
+      "summary": "The owner advertises explicit_exclusions including STABLECOINS but implements only a small hard-coded symbol set that omits known stablecoins such as USD1, USDG, RLUSD and GHO."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "tests/data_terminal/test_top100_breadth_owner_collector.py",
+      "summary": "The only stablecoin exclusion fixture changes one row to USDT; it does not test current stablecoin taxonomy coverage or semantic consistency between declared exclusions and actual eligible constituents."
+    },
+    {
+      "kind": "LIVE_OWNER_ARTIFACT",
+      "ref": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/08/2026-08-30/owner_snapshot.json",
+      "summary": "Current 100-constituent live proxy includes USD1 (filtered rank 19), Global Dollar/USDG (22), Ripple USD/RLUSD (35) and GHO (80), even though all are exact stablecoin symbols present in the validated 12 July historical taxonomy."
+    },
+    {
+      "kind": "CANONICAL_RESEARCH",
+      "ref": "06_RESEARCH_LAB/audit_summaries/marginal_decision_breadth_v1/SOURCE_AND_REPRODUCIBILITY_RECEIPT.md",
+      "summary": "The validated historical breadth program used exact stablecoin tags and symbols rather than broad protocol tags; this is an existing taxonomy principle, not a new market rule."
+    },
+    {
+      "kind": "EXTERNAL_REPO_CODE_OWNER",
+      "ref": "Donh91/Eksperimenter-framework-/scripts/fetch_cmc_frozen_breadth_v2.py",
+      "summary": "Validated taxonomy explicitly contains GHO, RLUSD, USD1 and USDG and distinguishes stablecoins from volatile stablecoin-protocol tokens."
+    }
+  ],
+  "reproduction": "On fresh main, inspect STABLE_SYMBOLS and the 2026-08-30 breadth owner snapshot. Confirm USD1, USDG, RLUSD and GHO are absent from STABLE_SYMBOLS but present among constituents while universe.explicit_exclusions claims STABLECOINS. Confirm the historical validated taxonomy recognizes those exact symbols. If current main already excludes them and reports an explicit deterministic taxonomy basis, stop as clean no-op.",
+  "acceptance_tests": {
+    "positive": [
+      "Fixtures containing USD1, USDG, RLUSD and GHO in the raw ranked set exclude each with an explicit stablecoin exclusion reason and still fill 100 eligible constituents from deeper ranked rows.",
+      "The owner exposes a deterministic exclusion taxonomy identifier/version or equivalent provenance so consumers can audit what STABLECOINS means for this proxy.",
+      "The live owner remains PROXY_ONLY, canonical_compatible=false and non-binding before and after the repair.",
+      "The existing known-good USDT exclusion test continues to pass, and a fixture for a volatile non-stable asset is not falsely excluded merely because its project/category is associated with stablecoins."
+    ],
+    "negative": [
+      "Do not add an external API call, CoinGecko category call, new provider, or API budget.",
+      "Do not change breadth market thresholds, weights, adaptive cadence triggers, entry permission, canonical compatibility, or portfolio logic.",
+      "Do not infer or backfill historical constituent eligibility where the original snapshot lacks deterministic taxonomy evidence.",
+      "Do not broaden the fix to tokenized treasuries, commodity proxies, wrapped/LST assets, BTC or ETH unless the current live proxy explicitly claims those exclusions or an existing owner contract already requires them; ambiguous classes remain explicit limitations rather than guessed exclusions.",
+      "Do not create a second breadth owner or a new market engine."
+    ]
+  },
+  "authority_boundary": "CODE_REMEDIATION_ONLY",
+  "requires_framework_owner_authority": false,
+  "forbidden_changes": [
+    "market gates",
+    "model weights",
+    "canonical authority",
+    "portfolio logic",
+    "API budget",
+    "new provider",
+    "new market engine",
+    "automatic rule promotion",
+    "historical pseudo-backfill"
+  ],
+  "requested_priority": "EXPEDITED",
+  "post_fix_gate": "STABLECOIN_TAXONOMY_FIXTURE_PASS_PLUS_ONE_NATURAL_BREADTH_CAPTURE_WITH_ZERO_KNOWN_STABLE_SYMBOLS_IN_CONSTITUENTS",
+  "clean_noop_condition": "Fresh main already excludes the verified current stablecoin examples and reports a deterministic truthful exclusion-taxonomy basis without authority changes.",
+  "stop_condition": "Stop if the live proxy intentionally includes stablecoins under a newer explicit canonical owner that supersedes its current STABLECOINS exclusion claim; otherwise preserve current proxy authority and repair the inconsistency.",
+  "escalation_condition": "Escalate only if a complete stablecoin exclusion would require additional source calls or a policy decision beyond reusing already validated exact taxonomy principles."
+}
