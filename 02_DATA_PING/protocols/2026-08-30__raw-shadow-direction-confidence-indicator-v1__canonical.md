@@ -83,7 +83,7 @@ The existing intraday research owner is responsible for this loop:
 RAW/hourly owner evidence
 -> frozen shadow directional prediction
 -> NO_EDGE abstention where appropriate
--> future owner evidence after the frozen horizon
+-> exact future owner candle at the frozen horizon
 -> matured HIT / MISS / ABSTAINED / CENSORED outcome
 -> miss-family diagnostics
 -> calibration group update
@@ -92,6 +92,24 @@ RAW/hourly owner evidence
 ```
 
 A miss must remain visible. It may identify which evidence families aligned with the actual outcome and which opposed it, but it may not automatically change model weights or canonical thresholds. Reweighting or promotion requires separate governed evidence and review.
+
+### 7.1 Forecast clock and anti-leakage rule
+
+The Hourly Sequence owner publishes completed UTC-aligned 1H candles. Its CSV `timestamp_utc` is the candle-open timestamp, not the time at which the close was already observable. Therefore a row labelled `14:00Z` represents the candle that closes at `15:00Z`.
+
+For shadow direction forecasting:
+
+```text
+source candle timestamp_utc = candle open
+forecast source_price_observation_utc = candle open + 1H
+forecast due_at_utc = source_price_observation_utc + requested horizon
+```
+
+A forecast may be frozen only after the source close is observable and only while the configured minimum fraction of the requested horizon remains genuinely forward-looking. A delayed run must fail closed for any horizon that has become too short.
+
+Outcome adjudication must use the exact closed owner candle ending at `due_at_utc`. A later market price may never substitute for a missing exact-horizon candle. If the exact due candle does not arrive inside the configured evidence grace period, the outcome is `CENSORED`, not HIT or MISS.
+
+The existing Hourly Sequence owner is the source owner for these closed candles. Its production cadence must remain sufficiently frequent to make the 1H horizon genuinely prospective; cadence is part of measurement validity, not merely an operations preference.
 
 ## 8. Human output format
 
@@ -120,7 +138,7 @@ P: IKKE TILGÆNGELIG
 
 Do not invent a fallback percentage. The Main Framework may still interpret the underlying RAW packet under normal canonical rules and must still provide the mandatory Action Compass.
 
-An intraday research failure does not transfer authority to another model or conversational estimate.
+An intraday research failure does not transfer authority to another model or conversational estimate. A stale source may still leave a longer horizon eligible, but it may not be used to manufacture a shorter horizon whose configured forward-span gate has failed.
 
 ## 10. Authority boundary
 
@@ -135,6 +153,7 @@ automatic portfolio execution: NO
 shadow diagnostic output: MANDATORY_FOR_RAW_INTERPRETATION
 prospective learning: EXISTING_INTRADAY_OWNER_EXTENSION
 numeric confidence before calibration gate: FORBIDDEN
+later price substitution for exact horizon: FORBIDDEN
 microcap proxy substitution: FORBIDDEN
 99 percent self-declaration: FORBIDDEN
 ```
