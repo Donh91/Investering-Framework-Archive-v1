@@ -1,0 +1,82 @@
+{
+  "contract": "CODEX_RESEARCH_CANDIDATE_v1",
+  "candidate_id": "codex-data-ping-collector-decision-authority-contract-drift-v1",
+  "submitted_at_utc": "2026-08-30T18:36:00Z",
+  "status": "SUBMITTED",
+  "origin": {
+    "type": "AUDIT",
+    "thread_label": "post-fix-data-ping-authority-audit",
+    "source_paths": [
+      "02_DATA_PING/architecture/2026-07-20__data-ping-platform-adr-001__canonical.md",
+      "02_DATA_PING/protocols/2026-07-16__data-ping-decision-context-bridge-v0-1__canonical.md",
+      "06_RESEARCH_LAB/audit_summaries/2026-07-12__marginal-decision-value-and-breadth-truth-program-v1__canonical.md",
+      "01_CORE_FRAMEWORK/governance/2026-07-12__rule-and-evidence-registry-sensor-audit-v1__canonical-addendum.md",
+      "02_DATA_PING/protocols/2026-08-25__three-horizon-action-compass-output-contract-v1__canonical.md"
+    ]
+  },
+  "title": "Remove decision-authority leakage from the DATA PING collector/reference runtime",
+  "objective": "Reproduce and remediate contract drift in the active DATA PING Custom-GPT/reference runtime where collector output emits action-like decision_support states or graduation requirements derived from market interpretation (for example AFVENT_TAET_PAA or graduated-top-up requirements tied to breadth/ETHBTC thresholds) even though the canonical DATA PING architecture assigns rotation, gates, deployment and final interpretation to Main Framework. Locate the actual active 15.5.x reference-implementation source of truth, then implement the smallest deterministic correction or compliance layer so collector output remains source/quality/diagnostic evidence and cannot independently create rotation/deployment/action semantics. Preserve useful raw metrics and deterministic source mathematics.",
+  "finding_key": "DATA_PING_COLLECTOR_DECISION_AUTHORITY_CONTRACT_DRIFT",
+  "primary_target": "active DATA PING 15.5.x reference implementation and its output validator/compliance contract",
+  "allowed_change_scope": [
+    "02_DATA_PING/directly related reference-runtime, validator, protocol or compliance artifacts",
+    "07_PROMPTS_AND_AGENTS/directly related active Custom-GPT/reference-implementation instructions if repository-owned",
+    "scripts/directly related DATA PING validator/compliance code",
+    "tests/directly related DATA PING authority-boundary and packet regression fixtures",
+    "02_DATA_PING/development_validation/directly related regression fixture/readout"
+  ],
+  "evidence": [
+    {
+      "kind": "REPO_PATH",
+      "ref": "02_DATA_PING/architecture/2026-07-20__data-ping-platform-adr-001__canonical.md",
+      "summary": "Canonical ADR assigns collector ownership to source-native rows, normalized observations, receipts, health, freshness, missingness, permitted deterministic source mathematics, packaging and validation. Main Framework owns framework state, gates, recovery, rotation, deployment, rebuy, portfolio actions and final interpretation. Source plugins may not define rotation conclusions or gate results."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "02_DATA_PING/protocols/2026-07-16__data-ping-decision-context-bridge-v0-1__canonical.md",
+      "summary": "Canonical bridge permits bounded decision-delta routing labels only; ACTION_CHANGE requires explicit Main Framework ratification, Custom GPT authority increase is NO, and no new universal threshold is authorized."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "01_CORE_FRAMEWORK/governance/2026-07-12__rule-and-evidence-registry-sensor-audit-v1__canonical-addendum.md",
+      "summary": "Breadth predictive gate is RETIRED_ZERO_WEIGHT and graduated alt deployment is FORWARD_ONLY_NOT_PROMOTION_READY."
+    },
+    {
+      "kind": "AUDIT_FINDING",
+      "ref": "DATA_PING_20260830T115426Z and adjacent 15.5.1 packets",
+      "summary": "Observed collector packet emits decision_support.status AFVENT_TAET_PAA, a rule_basis that uses ETHBTC/ETH-vs-BTC/proxy breadth, and next_required_confirmation text for GRADUERET_TOPUP_KANDIDAT including positive-run and breadth thresholds, while simultaneously declaring framework_interpretation and portfolio_action deferred to Main Framework. This is an authority-boundary contradiction even if the final portfolio action remains deferred."
+    }
+  ],
+  "reproduction": "On fresh main, resolve current canonical DATA PING authority owners, then locate the actual active 15.5.x Custom-GPT/reference-runtime implementation or the closest repository-owned validator/configuration that governs emitted packet fields. Replay a representative packet shape in which ETHBTC > 0.03, ETH outperforms BTC and proxy Top100 breadth >= 0.50. Confirm whether the collector can emit AFVENT_TAET_PAA, GRADUERET_TOPUP_KANDIDAT, rotation_canonical_confirmation interpretations, or threshold-based next-required-action language without Main Framework input. Distinguish descriptive source facts (e.g. advance_ratio, ETHBTC return, relative performance) from market interpretation. If current implementation already prevents this and the supplied packet predates a verified fix, stop as clean no-op with evidence.",
+  "acceptance_tests": {
+    "positive": [
+      "Collector packet preserves raw/source-normalized breadth, ETHBTC, ETH-vs-BTC, derivatives, ETF and liquidity metrics plus freshness/quality semantics.",
+      "Collector may emit neutral diagnostic facts such as threshold_comparison_for_compatibility or evidence availability only when explicitly labeled non-authoritative and not mapped to an action/state/gate conclusion.",
+      "Rotation, PRE_ROTATION, AFVENT_TAET_PAA, GRADUERET_TOPUP_KANDIDAT, deployment readiness and portfolio/action vocabulary are absent from collector-owned decision output or explicitly returned as DEFERRED_TO_MAIN_FRAMEWORK without a collector-computed verdict.",
+      "A regression fixture matching the observed 2026-08-30 packet fails validation if action-like collector decision semantics are present while Main Framework interpretation is deferred.",
+      "The validator makes July-12 zero-weight breadth semantics and July-20 collector/Main-Framework authority boundary mechanically testable rather than relying on prose alone."
+    ],
+    "negative": [
+      "Do not remove useful raw metrics, source provenance, freshness, delta computation, quality status, veto-input facts or deterministic source mathematics.",
+      "Do not introduce replacement market thresholds, hidden scores, model weights, action mappings or portfolio logic into the collector.",
+      "Do not reinterpret the retired breadth gate as active merely because a source becomes canonical-compatible or because absolute breadth exceeds 50%.",
+      "Do not modify Main Framework Action Compass vocabulary or portfolio semantics; this task only restores the collector authority boundary.",
+      "If the active 15.5.x implementation is external to the repository, do not fabricate that it was patched. Materialize the bounded repository-owned compliance/validator/replacement artifact needed for deployment and report the external deployment boundary explicitly."
+    ]
+  },
+  "authority_boundary": "CODE_REMEDIATION_ONLY",
+  "requires_framework_owner_authority": false,
+  "forbidden_changes": [
+    "market gates",
+    "model weights",
+    "portfolio logic",
+    "API budget",
+    "new market engine",
+    "automatic phase promotion",
+    "new universal thresholds",
+    "reactivation of July-12 retired breadth predictive gate",
+    "fabricated claim that an external Custom GPT deployment was updated"
+  ],
+  "requested_priority": "EXPEDITED",
+  "post_fix_gate": "OBSERVED_PACKET_REGRESSION_FAILS_BEFORE_FIX_AND_PASSES_AFTER_FIX_PLUS_ONE_NATURAL_15_5_X_PACKET_WITH_NO_COLLECTOR_ACTION_AUTHORITY_LEAK"
+}
