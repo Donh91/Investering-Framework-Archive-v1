@@ -5,6 +5,8 @@ import csv, json, statistics
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
+from scripts.intraday_execution.shadow_direction_confidence import update_shadow_direction_confidence
+
 ROOT = Path("04_MARKET_LEARNING/intraday_execution")
 OBS = ROOT / "observations"
 EVENTS = ROOT / "events"
@@ -23,30 +25,24 @@ def parse_utc(v): return datetime.fromisoformat(v.replace("Z", "+00:00"))
 def read_json(p):
     try: return json.loads(Path(p).read_text())
     except Exception: return None
-
 def write_json(p, obj):
     p=Path(p); p.parent.mkdir(parents=True, exist_ok=True)
     p.write_text(json.dumps(obj, indent=2, sort_keys=True)+"\n")
-
 def f(row, key):
     v=row.get(key)
     if v in (None, ""): return None
     try: return float(v)
     except Exception: return None
-
 def percentile_rank(values, x):
     vals=[float(v) for v in values if v is not None]
     if not vals or x is None: return None
     return 100.0*sum(v <= x for v in vals)/len(vals)
-
 def mean(xs):
     xs=[x for x in xs if x is not None]
     return statistics.fmean(xs) if xs else None
-
 def median(xs):
     xs=[x for x in xs if x is not None]
     return statistics.median(xs) if xs else None
-
 def pct(a,b):
     return None if a in (None,0) or b is None else (b/a-1.0)*100.0
 
@@ -243,8 +239,16 @@ def main():
     if not cfg or cfg.get("contract")!="INTRADAY_EXECUTION_RESEARCH_CONFIG_v1": raise RuntimeError("config missing/invalid")
     obs=build_snapshot(cfg); recent=recent_observations(cfg["trailing_observations"])
     prev_state=(read_json(STATE) or {}).get("research_state")
-    if recent and recent[-1].get("price_observation_utc")==obs["price_observation_utc"]:
-        mature_events(obs,now); summary=event_summary(now); latest=read_json(LATEST) or {}; latest["generated_at_utc"]=now.isoformat(); latest["duplicate_price_observation_skipped"]=True; latest["event_summary"]=summary; write_json(LATEST,latest); print(json.dumps(latest,sort_keys=True)); return
+    duplicate=bool(recent and recent[-1].get("price_observation_utc")==obs["price_observation_utc"])
+    shadow=update_shadow_direction_confidence(obs,cfg,now,new_prediction=not duplicate)
+    if duplicate:
+        mature_events(obs,now); summary=event_summary(now); latest=read_json(LATEST) or {}
+        latest["generated_at_utc"]=now.isoformat()
+        latest["duplicate_price_observation_skipped"]=True
+        latest["event_summary"]=summary
+        latest["shadow_direction_confidence"]=shadow
+        latest.setdefault("data_ping_bridge",{})["shadow_direction_display_line"]=shadow["data_ping_bridge"]["display_line"]
+        write_json(LATEST,latest); print(json.dumps(latest,sort_keys=True)); return
     state,evidence=classify(cfg,recent,obs,prev_state); obs["contract"]="INTRADAY_EXECUTION_OBSERVATION_v1"; obs["research_state"]=state; obs["adaptive_evidence"]=evidence
     ts=parse_utc(obs["price_observation_utc"]); write_json(OBS/f"{ts:%Y/%m/%d}/{ts:%Y%m%dT%H%M%SZ}.json",obs)
     mature_events(obs,now); open_event(state,obs,now,prev_state); summary=event_summary(now)
@@ -252,7 +256,11 @@ def main():
     write_json(STATE,{"contract":"INTRADAY_EXECUTION_STATE_v1","updated_at_utc":now.isoformat(),"research_state":state,"previous_research_state":prev_state,"observation_count":len(recent)+1,"adaptive_evidence":evidence,"authority":auth})
     latest={"contract":"INTRADAY_EXECUTION_LATEST_v1","generated_at_utc":now.isoformat(),"research_state":state,"previous_research_state":prev_state,
             "market_snapshot":{k:v for k,v in obs.items() if k!="constituents"},"adaptive_evidence":evidence,"event_summary":summary,
-            "data_ping_bridge":{"display_line":f"EXECUTION RESEARCH: {state} | BTC vwap={obs['btc']['vwap_deviation_pct'] if obs['btc']['vwap_deviation_pct'] is not None else 'NA'}% | ETH vwap={obs['eth']['vwap_deviation_pct'] if obs['eth']['vwap_deviation_pct'] is not None else 'NA'}% | breadth={(obs['breadth']['advance_ratio'] or 0)*100:.0f}% | sample={len(recent)+1}"},
+            "shadow_direction_confidence":shadow,
+            "data_ping_bridge":{
+                "display_line":f"EXECUTION RESEARCH: {state} | BTC vwap={obs['btc']['vwap_deviation_pct'] if obs['btc']['vwap_deviation_pct'] is not None else 'NA'}% | ETH vwap={obs['eth']['vwap_deviation_pct'] if obs['eth']['vwap_deviation_pct'] is not None else 'NA'}% | breadth={(obs['breadth']['advance_ratio'] or 0)*100:.0f}% | sample={len(recent)+1}",
+                "shadow_direction_display_line":shadow["data_ping_bridge"]["display_line"],
+            },
             "authority":auth}
     write_json(LATEST,latest); print(json.dumps(latest,sort_keys=True))
 
