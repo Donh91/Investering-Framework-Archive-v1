@@ -3,8 +3,10 @@ name: Intraday Execution Gate
 on:
   pull_request:
     paths:
+      - '02_DATA_PING/protocols/2026-08-30__raw-shadow-direction-confidence-indicator-v1__canonical.md'
       - '04_MARKET_LEARNING/intraday_execution/**'
       - 'scripts/intraday_execution/**'
+      - 'tests/learning/test_intraday_execution_row_shape.py'
       - '.github/workflows/intraday-execution-research.yml'
       - '.github/workflows/intraday-execution-gate.yml'
       - '06_RESEARCH_LAB/historical_altseason_pullback_v1/INTRADAY_EXECUTION_COWORK_ADDENDUM.md'
@@ -21,8 +23,14 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Compile engine
-        run: python -m py_compile scripts/intraday_execution/intraday_execution_research.py
+      - name: Install focused test dependency
+        run: python -m pip install --disable-pip-version-check 'pytest>=8,<9'
+      - name: Compile intraday engines
+        run: |
+          python -m py_compile scripts/intraday_execution/intraday_execution_research.py
+          python -m py_compile scripts/intraday_execution/shadow_direction_confidence.py
+      - name: Run focused intraday direction and calibration tests
+        run: python -m pytest tests/learning/test_intraday_execution_row_shape.py -q
       - name: Validate research-only contracts
         run: |
           python - <<'PY'
@@ -39,11 +47,19 @@ jobs:
               'promotion_requires_separate_review': True,
               'historical_findings_max_classification': 'FORWARD_TEST',
           }
+          shadow=cfg['shadow_direction_confidence']
+          assert shadow['status']=='SHADOW_ONLY_PROSPECTIVE'
+          assert shadow['probability_rule']=='NO_NUMERIC_PROBABILITY_BEFORE_MINIMUM_INDEPENDENT_SAMPLE'
+          assert shadow['automatic_signal_reweighting'] is False
+          assert shadow['microcap_direction']=='NO_EDGE_UNTIL_ELIGIBLE_OWNER_EXISTS'
           text=Path('04_MARKET_LEARNING/intraday_execution/README.md').read_text()
           assert 'research_only: true' in text
           assert 'portfolio_execution: false' in text
           addendum=Path('06_RESEARCH_LAB/historical_altseason_pullback_v1/INTRADAY_EXECUTION_COWORK_ADDENDUM.md').read_text()
           for token in ['HOLD','false-trim','FORWARD_TEST','Top100']:
               assert token in addendum, token
+          protocol=Path('02_DATA_PING/protocols/2026-08-30__raw-shadow-direction-confidence-indicator-v1__canonical.md').read_text()
+          for token in ['NO_EDGE','IKKE KALIBRERET','microcap','HIGH_ASSURANCE_99_ELIGIBLE']:
+              assert token in protocol, token
           print('INTRADAY_EXECUTION_GATE_PASS')
           PY
