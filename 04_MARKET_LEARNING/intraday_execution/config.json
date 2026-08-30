@@ -1,7 +1,7 @@
 {
   "contract": "INTRADAY_EXECUTION_RESEARCH_CONFIG_v1",
-  "purpose": "Research-only timing layer for trim, pullback and reload learning inside an already established regime.",
-  "cadence": "hourly via existing pullback-learning writer",
+  "purpose": "Research-only timing, direction-confidence and calibration layer for trim, pullback, reload and selective intraday forecasting inside the existing framework.",
+  "cadence": "hourly via existing intraday execution research writer",
   "warmup_observations": 48,
   "trailing_observations": 336,
   "event_maturity_hours": 24,
@@ -31,11 +31,35 @@
     "RELOAD_WATCH_RESEARCH",
     "CONTINUATION_RESEARCH"
   ],
+  "shadow_direction_confidence": {
+    "status": "SHADOW_ONLY_PROSPECTIVE",
+    "direction_horizons_hours": [
+      1,
+      4,
+      24
+    ],
+    "minimum_direction_families": 4,
+    "minimum_vote_margin": 2,
+    "max_prediction_issue_lag_minutes": 90,
+    "max_outcome_evidence_lag_hours": 1.5,
+    "minimum_independent_calibration_samples": 20,
+    "strong_calibration_samples": 50,
+    "high_assurance_minimum_independent_samples": 300,
+    "high_assurance_wilson_floor": 0.97,
+    "probability_rule": "NO_NUMERIC_PROBABILITY_BEFORE_MINIMUM_INDEPENDENT_SAMPLE",
+    "calibration_estimator": "LAPLACE_SUCCESS_RATE_WITH_WILSON_LOWER_BOUND",
+    "overlap_control": "GREEDY_NON_OVERLAP_BY_HORIZON",
+    "automatic_signal_reweighting": false,
+    "microcap_direction": "NO_EDGE_UNTIL_ELIGIBLE_OWNER_EXISTS",
+    "market_cap_transmission": "TOP100_RANK_SEGMENT_PROXY_ONLY"
+  },
   "explicit_limitations": {
     "top100_intraday_vwap": "UNAVAILABLE_FROM_CURRENT_CANONICAL_ARCHIVE",
     "top100_opening_range": "UNAVAILABLE_FROM_CURRENT_CANONICAL_ARCHIVE",
     "breadth_is_snapshot_context": true,
-    "btc_eth_execution_features_use_hourly_archive": true
+    "btc_eth_execution_features_use_hourly_archive": true,
+    "market_cap_tiers_are_rank_segment_proxies": true,
+    "microcap_direction_owner": "UNAVAILABLE_FROM_CURRENT_CANONICAL_ARCHIVE"
   },
   "authority": {
     "research_only": true,
