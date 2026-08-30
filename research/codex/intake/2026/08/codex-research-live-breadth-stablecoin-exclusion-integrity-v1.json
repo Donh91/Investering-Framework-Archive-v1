@@ -4,7 +4,7 @@
   "submitted_at_utc": "2026-08-30T20:25:00Z",
   "status": "SUBMITTED",
   "origin": {
-    "type": "POST_FIX_MEASUREMENT_VALIDITY_AUDIT",
+    "type": "AUDIT",
     "thread_label": "weekly-challenger-followthrough",
     "source_paths": [
       "scripts/data_terminal/top100_breadth_owner_collector.py",
@@ -25,31 +25,11 @@
     "scripts/data_terminal/a directly related small eligibility taxonomy helper if deduplication materially improves maintainability"
   ],
   "evidence": [
-    {
-      "kind": "REPO_PATH",
-      "ref": "scripts/data_terminal/top100_breadth_owner_collector.py",
-      "summary": "The owner advertises explicit_exclusions including STABLECOINS but implements only a small hard-coded symbol set that omits known stablecoins such as USD1, USDG, RLUSD and GHO."
-    },
-    {
-      "kind": "REPO_PATH",
-      "ref": "tests/data_terminal/test_top100_breadth_owner_collector.py",
-      "summary": "The only stablecoin exclusion fixture changes one row to USDT; it does not test current stablecoin taxonomy coverage or semantic consistency between declared exclusions and actual eligible constituents."
-    },
-    {
-      "kind": "LIVE_OWNER_ARTIFACT",
-      "ref": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/08/2026-08-30/owner_snapshot.json",
-      "summary": "Current 100-constituent live proxy includes USD1 (filtered rank 19), Global Dollar/USDG (22), Ripple USD/RLUSD (35) and GHO (80), even though all are exact stablecoin symbols present in the validated 12 July historical taxonomy."
-    },
-    {
-      "kind": "CANONICAL_RESEARCH",
-      "ref": "06_RESEARCH_LAB/audit_summaries/marginal_decision_breadth_v1/SOURCE_AND_REPRODUCIBILITY_RECEIPT.md",
-      "summary": "The validated historical breadth program used exact stablecoin tags and symbols rather than broad protocol tags; this is an existing taxonomy principle, not a new market rule."
-    },
-    {
-      "kind": "EXTERNAL_REPO_CODE_OWNER",
-      "ref": "Donh91/Eksperimenter-framework-/scripts/fetch_cmc_frozen_breadth_v2.py",
-      "summary": "Validated taxonomy explicitly contains GHO, RLUSD, USD1 and USDG and distinguishes stablecoins from volatile stablecoin-protocol tokens."
-    }
+    {"kind": "REPO_PATH", "ref": "scripts/data_terminal/top100_breadth_owner_collector.py", "summary": "The owner advertises explicit_exclusions including STABLECOINS but implements only a small hard-coded symbol set that omits known stablecoins such as USD1, USDG, RLUSD and GHO."},
+    {"kind": "TEST", "ref": "tests/data_terminal/test_top100_breadth_owner_collector.py", "summary": "The only stablecoin exclusion fixture changes one row to USDT; it does not test current stablecoin taxonomy coverage or semantic consistency between declared exclusions and actual eligible constituents."},
+    {"kind": "REPO_PATH", "ref": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/08/2026-08-30/owner_snapshot.json", "summary": "Current 100-constituent live proxy includes USD1 (filtered rank 19), Global Dollar/USDG (22), Ripple USD/RLUSD (35) and GHO (80), even though all are exact stablecoin symbols present in the validated 12 July historical taxonomy."},
+    {"kind": "RESEARCH_RECEIPT", "ref": "06_RESEARCH_LAB/audit_summaries/marginal_decision_breadth_v1/SOURCE_AND_REPRODUCIBILITY_RECEIPT.md", "summary": "The validated historical breadth program used exact stablecoin tags and symbols rather than broad protocol tags; this is an existing taxonomy principle, not a new market rule."},
+    {"kind": "OTHER", "ref": "Donh91/Eksperimenter-framework-/scripts/fetch_cmc_frozen_breadth_v2.py", "summary": "Validated taxonomy explicitly contains GHO, RLUSD, USD1 and USDG and distinguishes stablecoins from volatile stablecoin-protocol tokens."}
   ],
   "reproduction": "On fresh main, inspect STABLE_SYMBOLS and the 2026-08-30 breadth owner snapshot. Confirm USD1, USDG, RLUSD and GHO are absent from STABLE_SYMBOLS but present among constituents while universe.explicit_exclusions claims STABLECOINS. Confirm the historical validated taxonomy recognizes those exact symbols. If current main already excludes them and reports an explicit deterministic taxonomy basis, stop as clean no-op.",
   "acceptance_tests": {
@@ -75,11 +55,13 @@
     "canonical authority",
     "portfolio logic",
     "API budget",
+    "new policy semantics",
     "new provider",
     "new market engine",
     "automatic rule promotion",
     "historical pseudo-backfill"
   ],
+  "linked_health_signature": null,
   "requested_priority": "EXPEDITED",
   "post_fix_gate": "STABLECOIN_TAXONOMY_FIXTURE_PASS_PLUS_ONE_NATURAL_BREADTH_CAPTURE_WITH_ZERO_KNOWN_STABLE_SYMBOLS_IN_CONSTITUENTS",
   "clean_noop_condition": "Fresh main already excludes the verified current stablecoin examples and reports a deterministic truthful exclusion-taxonomy basis without authority changes.",
