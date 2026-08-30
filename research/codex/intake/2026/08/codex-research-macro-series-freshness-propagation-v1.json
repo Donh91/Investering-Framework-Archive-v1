@@ -4,7 +4,7 @@
   "submitted_at_utc": "2026-08-30T20:15:00Z",
   "status": "SUBMITTED",
   "origin": {
-    "type": "POST_FIX_MEASUREMENT_VALIDITY_AUDIT",
+    "type": "AUDIT",
     "thread_label": "weekly-challenger-followthrough",
     "source_paths": [
       "scripts/data_terminal/fred_csv_collector.py",
@@ -27,8 +27,8 @@
   "evidence": [
     {"kind": "REPO_PATH", "ref": "scripts/data_terminal/fred_csv_collector.py", "summary": "The FRED owner already computes per-series source_timestamp, retrieval_timestamp, freshness_seconds, stale_after_seconds and PASS/STALE using the existing seven-day stale policy."},
     {"kind": "REPO_PATH", "ref": "scripts/daily_capture/build_capture_index.py", "summary": "latest_fred_values() rereads raw CSV payloads and emits only {value,date}; it does not consume or preserve the owner's per-series source health/freshness fields."},
-    {"kind": "CAPTURE_ARTIFACT", "ref": "03_DAILY_CAPTURE_LOGS/captures/2026/08/27/150924_gh-33086222398-1.json", "summary": "The compact anchor embeds DTWEXBGS date 2026-08-21 value 118.0628 alongside fresher DGS/VIX values but carries no per-series freshness/status, so downstream cannot distinguish latest-available from fresh."},
-    {"kind": "WORKFLOW", "ref": ".github/workflows/daily-raw-owner-capture.yml", "summary": "FRED macro is intentionally collected once per day on source-appropriate cadence; the fix must preserve this cadence rather than recollecting slow data more frequently."}
+    {"kind": "REPO_PATH", "ref": "03_DAILY_CAPTURE_LOGS/captures/2026/08/27/150924_gh-33086222398-1.json", "summary": "The compact anchor embeds DTWEXBGS date 2026-08-21 value 118.0628 alongside fresher DGS/VIX values but carries no per-series freshness/status, so downstream cannot distinguish latest-available from fresh."},
+    {"kind": "REPO_PATH", "ref": ".github/workflows/daily-raw-owner-capture.yml", "summary": "FRED macro is intentionally collected once per day on source-appropriate cadence; the fix must preserve this cadence rather than recollecting slow data more frequently."}
   ],
   "reproduction": "On fresh main, inspect fred_csv_collector.build_artifacts() and confirm source_health rows carry per-series status/freshness. Then inspect build_capture_index.latest_fred_values() and a morning live-anchor capture. Confirm the compact market_metrics.macro entries contain only date/value and omit the already-known owner freshness/status fields. If current main already preserves equivalent deterministic per-series freshness in the compact anchor, stop as clean no-op.",
   "acceptance_tests": {
@@ -48,7 +48,20 @@
   },
   "authority_boundary": "CODE_REMEDIATION_ONLY",
   "requires_framework_owner_authority": false,
-  "forbidden_changes": ["market gates", "model weights", "canonical authority", "portfolio logic", "API budget", "new source", "FRED collection cadence", "stale threshold changes", "historical backfill", "automatic market interpretation"],
+  "forbidden_changes": [
+    "market gates",
+    "model weights",
+    "canonical authority",
+    "portfolio logic",
+    "API budget",
+    "new policy semantics",
+    "new source",
+    "FRED collection cadence",
+    "stale threshold changes",
+    "historical backfill",
+    "automatic market interpretation"
+  ],
+  "linked_health_signature": null,
   "requested_priority": "EXPEDITED",
   "post_fix_gate": "MIXED_FRESHNESS_FIXTURE_PASS_PLUS_ONE_NATURAL_MORNING_ANCHOR_WITH_PER_SERIES_QUALITY_READBACK",
   "clean_noop_condition": "Fresh main already preserves deterministic per-series FRED freshness/status in the compact live-anchor market_metrics.macro surface.",
