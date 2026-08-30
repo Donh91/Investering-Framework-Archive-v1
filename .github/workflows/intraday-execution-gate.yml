@@ -52,6 +52,10 @@ jobs:
           }
           shadow=cfg['shadow_direction_confidence']
           assert shadow['status']=='SHADOW_ONLY_PROSPECTIVE'
+          assert shadow['source_owner_required_cadence_hours']==1
+          assert shadow['source_owner_required_semantics']=='COMPLETED_UTC_1H_CANDLES'
+          assert shadow['forecast_horizon_semantics']=='CLOSED_1H_CANDLE_CLOSE_OBSERVATION_TO_EXACT_HORIZON_DUE'
+          assert shadow['outcome_evidence_rule']=='EXACT_DUE_CLOSED_1H_OWNER_CANDLE_ONLY_NO_LATER_PRICE_SUBSTITUTION'
           assert shadow['probability_rule']=='NO_NUMERIC_PROBABILITY_BEFORE_MINIMUM_INDEPENDENT_SAMPLE'
           assert shadow['automatic_signal_reweighting'] is False
           assert shadow['microcap_direction']=='NO_EDGE_UNTIL_ELIGIBLE_OWNER_EXISTS'
@@ -72,7 +76,15 @@ jobs:
           for token in ['HOLD','false-trim','FORWARD_TEST','Top100']:
               assert token in addendum, token
           protocol=Path('02_DATA_PING/protocols/2026-08-30__raw-shadow-direction-confidence-indicator-v1__canonical.md').read_text()
-          for token in ['NO_EDGE','IKKE KALIBRERET','microcap','HIGH_ASSURANCE_99_ELIGIBLE']:
+          for token in [
+              'NO_EDGE',
+              'IKKE KALIBRERET',
+              'microcap',
+              'HIGH_ASSURANCE_99_ELIGIBLE',
+              'candle-open timestamp',
+              'exact closed owner candle ending at `due_at_utc`',
+              'later price substitution for exact horizon: FORBIDDEN',
+          ]:
               assert token in protocol, token
           print('INTRADAY_EXECUTION_GATE_PASS')
           PY
