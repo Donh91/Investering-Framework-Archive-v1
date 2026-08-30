@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import csv
 import json
 import math
 import statistics
@@ -9,6 +10,7 @@ from pathlib import Path
 from typing import Any
 
 BREADTH = Path("03_DAILY_CAPTURE_LOGS/breadth_rich/LATEST.json")
+HOURLY_ROOT = Path("03_DAILY_CAPTURE_LOGS/hourly")
 PREDICTIONS = Path("04_MARKET_LEARNING/intraday_execution/direction_predictions")
 OUTCOMES = Path("04_MARKET_LEARNING/intraday_execution/direction_outcomes")
 CALIBRATION = Path("04_MARKET_LEARNING/intraday_execution/DIRECTION_CALIBRATION.json")
@@ -35,6 +37,25 @@ def parse_utc(value: str) -> datetime:
 
 def iso(dt: datetime) -> str:
     return dt.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
+
+
+def _source_price_observation_time(obs: dict[str, Any]) -> datetime:
+    """Return when the source close used by the forecast was actually observable.
+
+    The canonical hourly owner labels each closed 1H row with the candle *open*
+    timestamp. Its close is only knowable one hour later. Keep the legacy
+    intraday `price_observation_utc` field unchanged for the existing research
+    owner, but shift it by one hour for shadow forecasting whenever the snapshot
+    is bound to the hourly-sequence owner. An explicit close timestamp takes
+    precedence for future-compatible callers.
+    """
+    explicit = obs.get("price_close_observation_utc")
+    if explicit:
+        return parse_utc(str(explicit))
+    base = parse_utc(str(obs["price_observation_utc"]))
+    if obs.get("hourly_sequence_run_id"):
+        return base + timedelta(hours=1)
+    return base
 
 
 def _direction(value: float | None, neutral: float = 0.0) -> str:
@@ -175,7 +196,12 @@ def build_calibration_summary(cfg: dict[str, Any], now: datetime) -> dict[str, A
     scored = []
     for path in _outcome_paths():
         row = read_json(path)
-        if row and row.get("contract") == "INTRADAY_DIRECTION_OUTCOME_v1" and row.get("status") == "MATURED" and row.get("result") in {"HIT", "MISS"}:
+        if (
+            row
+            and row.get("contract") == "INTRADAY_DIRECTION_OUTCOME_v1"
+            and row.get("status") == "MATURED"
+            and row.get("result") in {"HIT", "MISS"}
+        ):
             scored.append(row)
 
     groups: dict[str, list[dict[str, Any]]] = {}
@@ -204,7 +230,11 @@ def build_calibration_summary(cfg: dict[str, Any], now: datetime) -> dict[str, A
         empirical = hits / total if total else None
         estimate = (hits + 1) / (total + 2) if total else None
         wilson = _wilson_lower(hits, total)
-        briers = [float(row["brier_score"]) for row in independent if isinstance(row.get("brier_score"), (int, float))]
+        briers = [
+            float(row["brier_score"])
+            for row in independent
+            if isinstance(row.get("brier_score"), (int, float))
+        ]
         if total < min_n:
             maturity, display = "WARMUP", None
         elif total < strong_n:
@@ -241,6 +271,7 @@ def build_calibration_summary(cfg: dict[str, Any], now: datetime) -> dict[str, A
             **counts,
             "count": total,
             "hit_rate": round(counts["hit"] / total, 6) if total else None,
+            "independence_control": "NONE_DIAGNOSTIC_ONLY",
             "authority": "DIAGNOSTIC_ONLY_NO_AUTOMATIC_REWEIGHTING",
         }
 
@@ -265,24 +296,36 @@ def _group_id(target: str, horizon: int, direction: str, key: str) -> str:
     return f"{target}:{horizon}H:{direction}:{key}"
 
 
-def _calibration_view(summary: dict[str, Any], target: str, horizon: int, vote_summary: dict[str, Any]) -> dict[str, Any]:
+def _calibration_view(
+    summary: dict[str, Any], target: str, horizon: int, vote_summary: dict[str, Any]
+) -> dict[str, Any]:
     direction = vote_summary["direction"]
     if direction == "NO_EDGE":
-        return {"confidence_status": "ABSTAIN_NO_EDGE", "calibrated_probability": None, "independent_calibration_samples": 0}
+        return {
+            "confidence_status": "ABSTAIN_NO_EDGE",
+            "calibrated_probability": None,
+            "independent_calibration_samples": 0,
+        }
     group_id = _group_id(target, horizon, direction, vote_summary["calibration_key"])
     group = (summary.get("groups") or {}).get(group_id) or {}
     probability = group.get("display_probability")
     return {
         "confidence_status": group.get("maturity", "WARMUP"),
-        "calibrated_probability": round(float(probability) * 100.0, 1) if isinstance(probability, (int, float)) else None,
+        "calibrated_probability": round(float(probability) * 100.0, 1)
+        if isinstance(probability, (int, float))
+        else None,
         "independent_calibration_samples": int(group.get("independent_count", 0)),
         "calibration_group": group_id,
-        "wilson_lower_95_pct": round(float(group["wilson_lower_95"]) * 100.0, 1) if isinstance(group.get("wilson_lower_95"), (int, float)) else None,
+        "wilson_lower_95_pct": round(float(group["wilson_lower_95"]) * 100.0, 1)
+        if isinstance(group.get("wilson_lower_95"), (int, float))
+        else None,
     }
 
 
-def _horizon_eligibility(obs: dict[str, Any], now: datetime, horizon: int, cfg: dict[str, Any]) -> dict[str, Any]:
-    observed_at = parse_utc(obs["price_observation_utc"])
+def _horizon_eligibility(
+    obs: dict[str, Any], now: datetime, horizon: int, cfg: dict[str, Any]
+) -> dict[str, Any]:
+    observed_at = _source_price_observation_time(obs)
     due = observed_at + timedelta(hours=horizon)
     remaining = (due - now).total_seconds() / 3600.0
     minimum = horizon * float(cfg.get("minimum_remaining_fraction_of_horizon", 0.5))
@@ -307,7 +350,7 @@ def write_prediction(
     vote_summaries: dict[str, dict[str, Any]],
     calibration: dict[str, Any],
 ) -> tuple[str, str | None]:
-    observed_at = parse_utc(obs["price_observation_utc"])
+    observed_at = _source_price_observation_time(obs)
     lag_minutes = (now - observed_at).total_seconds() / 60.0
     max_lag = float(cfg.get("max_prediction_issue_lag_minutes", 90))
     if lag_minutes < 0 or lag_minutes > max_lag:
@@ -331,7 +374,11 @@ def write_prediction(
                 "frozen_calibrated_probability_pct": cal["calibrated_probability"],
                 "confidence_status_at_issue": cal["confidence_status"],
             }
-        horizons[f"{horizon}H"] = {"horizon_hours": horizon, **eligibility, "targets": targets}
+        horizons[f"{horizon}H"] = {
+            "horizon_hours": horizon,
+            **eligibility,
+            "targets": targets,
+        }
 
     if not horizons:
         return "NO_ELIGIBLE_FORWARD_HORIZON", None
@@ -341,7 +388,9 @@ def write_prediction(
     prediction = {
         "contract": "INTRADAY_DIRECTION_PREDICTION_v1",
         "issued_at_utc": iso(now),
+        "source_candle_open_utc": obs.get("price_observation_utc"),
         "source_price_observation_utc": iso(observed_at),
+        "source_observation_semantics": "CLOSED_1H_CANDLE_CLOSE_OBSERVABLE_TIME",
         "source_lag_minutes": round(lag_minutes, 3),
         "hourly_sequence_run_id": obs.get("hourly_sequence_run_id"),
         "horizons": horizons,
@@ -356,10 +405,49 @@ def write_prediction(
     return "PREDICTION_FROZEN", str(path)
 
 
+def _exact_hourly_close(due: datetime, target: str) -> dict[str, Any] | None:
+    """Read the exact closed owner candle ending at `due`.
+
+    Hourly CSV timestamps are candle-open timestamps, therefore the row whose
+    timestamp is `due - 1h` supplies the close observed exactly at `due`.
+    Later closes are never substituted for a missing exact-horizon close.
+    """
+    candle_open = due - timedelta(hours=1)
+    path = HOURLY_ROOT / f"{candle_open:%Y/%m/%Y-%m-%d}.csv"
+    if not path.exists():
+        return None
+    close_key = f"{target.lower()}_close"
+    try:
+        with path.open(newline="", encoding="utf-8") as handle:
+            for row in csv.DictReader(handle):
+                stamp = row.get("timestamp_utc")
+                if not stamp or parse_utc(stamp) != candle_open:
+                    continue
+                if row.get("spot_status") != "PASS":
+                    return None
+                raw = row.get(close_key)
+                if raw in (None, ""):
+                    return None
+                try:
+                    close = float(raw)
+                except (TypeError, ValueError):
+                    return None
+                return {
+                    "close": close,
+                    "source_path": path.as_posix(),
+                    "candle_open_utc": iso(candle_open),
+                    "price_observation_utc": iso(due),
+                    "semantics": "EXACT_DUE_CLOSED_1H_OWNER_CANDLE",
+                }
+    except (OSError, csv.Error, ValueError):
+        return None
+    return None
+
+
 def mature_predictions(obs: dict[str, Any], cfg: dict[str, Any], now: datetime) -> dict[str, int]:
-    current_obs_time = parse_utc(obs["price_observation_utc"])
+    current_obs_time = _source_price_observation_time(obs)
     counts = {"matured": 0, "censored": 0, "abstained": 0, "pending": 0}
-    max_lag = float(cfg.get("max_outcome_evidence_lag_hours", 1.5))
+    max_wait = float(cfg.get("max_outcome_evidence_lag_hours", 1.5))
     for path in _prediction_paths():
         pred = read_json(path)
         if not pred or pred.get("contract") != "INTRADAY_DIRECTION_PREDICTION_v1":
@@ -375,35 +463,66 @@ def mature_predictions(obs: dict[str, Any], cfg: dict[str, Any], now: datetime) 
                 if current_obs_time < due:
                     counts["pending"] += 1
                     continue
-                lag_hours = (current_obs_time - due).total_seconds() / 3600.0
+
+                evidence = _exact_hourly_close(due, target)
                 predicted = target_row.get("direction")
                 common = {
                     "contract": "INTRADAY_DIRECTION_OUTCOME_v1",
                     "issued_at_utc": pred["issued_at_utc"],
                     "source_price_observation_utc": pred["source_price_observation_utc"],
+                    "source_candle_open_utc": pred.get("source_candle_open_utc"),
                     "due_at_utc": horizon_row["due_at_utc"],
                     "measured_at_utc": iso(now),
-                    "evidence_observation_utc": iso(current_obs_time),
-                    "evidence_lag_hours": round(lag_hours, 6),
                     "target": target,
                     "horizon_hours": horizon,
                     "predicted_direction": predicted,
                     "calibration_key": target_row.get("calibration_key"),
-                    "calibration_group": _group_id(target, horizon, predicted, target_row.get("calibration_key")),
+                    "calibration_group": _group_id(
+                        target, horizon, predicted, target_row.get("calibration_key")
+                    ),
                     "votes": target_row.get("votes", []),
-                    "frozen_calibrated_probability_pct": target_row.get("frozen_calibrated_probability_pct"),
-                    "authority": {"shadow_only": True, "automatic_rule_changes": False, "portfolio_execution": False},
+                    "frozen_calibrated_probability_pct": target_row.get(
+                        "frozen_calibrated_probability_pct"
+                    ),
+                    "authority": {
+                        "shadow_only": True,
+                        "automatic_rule_changes": False,
+                        "portfolio_execution": False,
+                    },
                 }
-                if lag_hours < -1e-9 or lag_hours > max_lag:
-                    write_json(outcome_path, {**common, "status": "CENSORED", "reason": "OUTCOME_EVIDENCE_LAG_OUTSIDE_FROZEN_WINDOW"})
+
+                if evidence is None:
+                    wait_hours = (current_obs_time - due).total_seconds() / 3600.0
+                    if wait_hours <= max_wait:
+                        counts["pending"] += 1
+                        continue
+                    write_json(
+                        outcome_path,
+                        {
+                            **common,
+                            "status": "CENSORED",
+                            "reason": "EXACT_DUE_OWNER_CANDLE_MISSING_AFTER_GRACE",
+                            "evidence_wait_hours": round(wait_hours, 6),
+                            "substitute_later_price_forbidden": True,
+                        },
+                    )
                     counts["censored"] += 1
                     continue
+
                 start = target_row.get("start_value")
-                end = (obs.get(target.lower()) or {}).get("close")
-                if not isinstance(start, (int, float)) or not isinstance(end, (int, float)) or float(start) == 0:
-                    write_json(outcome_path, {**common, "status": "CENSORED", "reason": "PRICE_EVIDENCE_MISSING"})
+                end = evidence["close"]
+                if not isinstance(start, (int, float)) or float(start) == 0:
+                    write_json(
+                        outcome_path,
+                        {
+                            **common,
+                            "status": "CENSORED",
+                            "reason": "START_PRICE_EVIDENCE_MISSING",
+                        },
+                    )
                     counts["censored"] += 1
                     continue
+
                 ret = (float(end) / float(start) - 1.0) * 100.0
                 actual = "UP" if ret > 0 else ("DOWN" if ret < 0 else "FLAT")
                 if predicted == "NO_EDGE":
@@ -415,8 +534,17 @@ def mature_predictions(obs: dict[str, Any], cfg: dict[str, Any], now: datetime) 
                     p = float(p_pct) / 100.0 if isinstance(p_pct, (int, float)) else None
                     brier = (p - (1.0 if result == "HIT" else 0.0)) ** 2 if p is not None else None
                     counts["matured"] += 1
-                aligned = [v["family"] for v in target_row.get("votes", []) if v.get("direction") == actual and actual in {"UP", "DOWN"}]
-                opposed = [v["family"] for v in target_row.get("votes", []) if v.get("direction") in {"UP", "DOWN"} and v.get("direction") != actual]
+                aligned = [
+                    v["family"]
+                    for v in target_row.get("votes", [])
+                    if v.get("direction") == actual and actual in {"UP", "DOWN"}
+                ]
+                opposed = [
+                    v["family"]
+                    for v in target_row.get("votes", [])
+                    if v.get("direction") in {"UP", "DOWN"} and v.get("direction") != actual
+                ]
+                adjudication_delay = max(0.0, (now - due).total_seconds() / 3600.0)
                 write_json(
                     outcome_path,
                     {
@@ -427,8 +555,17 @@ def mature_predictions(obs: dict[str, Any], cfg: dict[str, Any], now: datetime) 
                         "end_value": end,
                         "return_pct": round(ret, 8),
                         "actual_direction": actual,
+                        "evidence_observation_utc": evidence["price_observation_utc"],
+                        "evidence_candle_open_utc": evidence["candle_open_utc"],
+                        "evidence_source_path": evidence["source_path"],
+                        "evidence_semantics": evidence["semantics"],
+                        "evidence_horizon_error_hours": 0.0,
+                        "adjudication_delay_hours": round(adjudication_delay, 6),
                         "brier_score": round(brier, 8) if brier is not None else None,
-                        "miss_analysis": {"families_aligned_with_actual": aligned, "families_opposed_to_actual": opposed},
+                        "miss_analysis": {
+                            "families_aligned_with_actual": aligned,
+                            "families_opposed_to_actual": opposed,
+                        },
                     },
                 )
     return counts
@@ -444,10 +581,15 @@ def update_shadow_direction_confidence(
     direction_cfg = cfg.get("shadow_direction_confidence") or {}
     maturation = mature_predictions(obs, direction_cfg, now)
     calibration = build_calibration_summary(direction_cfg, now)
-    vote_summaries = {target: summarize_votes(build_votes(target, obs), direction_cfg) for target in ("BTC", "ETH")}
+    vote_summaries = {
+        target: summarize_votes(build_votes(target, obs), direction_cfg)
+        for target in ("BTC", "ETH")
+    }
 
     horizons = {}
-    for horizon in [int(v) for v in direction_cfg.get("direction_horizons_hours", [1, 4, 24])]:
+    for horizon in [
+        int(v) for v in direction_cfg.get("direction_horizons_hours", [1, 4, 24])
+    ]:
         eligibility = _horizon_eligibility(obs, now, horizon, direction_cfg)
         targets = {}
         for target in ("BTC", "ETH"):
@@ -466,12 +608,18 @@ def update_shadow_direction_confidence(
                 "down_votes": base["down_votes"],
                 **cal,
             }
-        horizons[f"{horizon}H"] = {"horizon_hours": horizon, "prediction_eligibility": eligibility, "targets": targets}
+        horizons[f"{horizon}H"] = {
+            "horizon_hours": horizon,
+            "prediction_eligibility": eligibility,
+            "targets": targets,
+        }
 
     prediction_status = "DUPLICATE_PRICE_OBSERVATION_NO_NEW_PREDICTION"
     prediction_path = None
     if new_prediction:
-        prediction_status, prediction_path = write_prediction(obs, direction_cfg, now, vote_summaries, calibration)
+        prediction_status, prediction_path = write_prediction(
+            obs, direction_cfg, now, vote_summaries, calibration
+        )
 
     transmission = build_market_cap_transmission()
     pieces = []
@@ -491,6 +639,8 @@ def update_shadow_direction_confidence(
     return {
         "contract": "SHADOW_DIRECTION_CONFIDENCE_v1",
         "generated_at_utc": iso(now),
+        "source_price_observation_utc": iso(_source_price_observation_time(obs)),
+        "source_observation_semantics": "CLOSED_1H_CANDLE_CLOSE_OBSERVABLE_TIME",
         "status": "SHADOW_ONLY",
         "horizons": horizons,
         "market_cap_transmission": transmission,
@@ -509,5 +659,6 @@ def update_shadow_direction_confidence(
             "portfolio_execution": False,
             "automatic_rule_changes": False,
             "probability_must_be_empirically_calibrated": True,
+            "later_price_substitution_for_exact_horizon": False,
         },
     }
