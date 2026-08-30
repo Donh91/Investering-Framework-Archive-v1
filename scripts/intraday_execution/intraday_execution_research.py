@@ -5,7 +5,10 @@ import csv, json, statistics
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from scripts.intraday_execution.shadow_direction_confidence import update_shadow_direction_confidence
+try:
+    from scripts.intraday_execution.shadow_direction_confidence import update_shadow_direction_confidence
+except ModuleNotFoundError:
+    from shadow_direction_confidence import update_shadow_direction_confidence
 
 ROOT = Path("04_MARKET_LEARNING/intraday_execution")
 OBS = ROOT / "observations"
