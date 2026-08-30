@@ -5,32 +5,48 @@
     "ethbtc_above_registered_0_0300": true,
     "top100_proxy_breadth_ge_50pct": true
   },
-  "definition_version": "ENTRY_SIGNAL_DEFINITION_v1_1_MEASUREMENT_VALIDITY_GUARD",
+  "definition_version": "ENTRY_SIGNAL_DEFINITION_v1_2_CANONICAL_PROMOTION_GUARD",
   "execution_temperature": "NORMAL",
   "historical_validity_policy": "Historical signal records remain immutable. Later outcomes may calibrate definition quality but must not retroactively invalidate a signal solely because the later outcome was poor. A contemporaneous evidence-role or measurement-validity defect may be annotated prospectively without rewriting the historical event.",
   "measurement_validity": {
-    "absolute_breadth_semantics": "DESCRIPTIVE_PARTICIPATION_ONLY",
+    "absolute_breadth_semantics": "DESCRIPTIVE_PARTICIPATION_ZERO_EXECUTION_WEIGHT",
+    "breadth_entry_permission": "RETIRED_ZERO_WEIGHT",
+    "canonical_breadth_owner": "06_RESEARCH_LAB/audit_summaries/2026-07-12__marginal-decision-value-and-breadth-truth-program-v1__canonical.md",
     "canonical_broad_alt_breadth": "UNCONFIRMED",
     "canonical_compatible": false,
     "canonical_large_cap_breadth": "UNCONFIRMED",
+    "canonical_rule_registry": "01_CORE_FRAMEWORK/governance/2026-07-12__rule-and-evidence-registry-sensor-audit-v1__canonical-addendum.md",
     "capture_cadence_note": "Capture-level correlation or survival analysis must account for adaptive/uneven cadence; repeated checkpoints are not assumed independent samples.",
     "evidence_role": "PROXY_ONLY",
+    "graduated_deployment_promotion": {
+      "permits_active_state": false,
+      "reason": "FROZEN_BREADTH_PREDICTIVE_GATE_RETIRED_ZERO_WEIGHT_AND_GRADUATED_ALT_DEPLOYMENT_NOT_PROMOTION_READY",
+      "source": "01_CORE_FRAMEWORK/governance/2026-07-12__rule-and-evidence-registry-sensor-audit-v1__canonical-addendum.md",
+      "status": "FORWARD_ONLY_NOT_PROMOTION_READY"
+    },
     "independent_rotation_confirmation_eligible": false,
     "independent_rotation_confirmation_reason": "PROXY_OR_CANONICAL_COMPATIBILITY_UNCONFIRMED",
     "relative_breadth": {
       "constituent_count": 100,
-      "equal_weight_mean_return_24h_pct": 0.823698,
-      "median_return_24h_pct": 0.336605,
-      "outperforming_btc_count": 35,
-      "outperforming_btc_share": 0.35,
-      "outperforming_eth_count": 30,
-      "outperforming_eth_share": 0.3
+      "equal_weight_mean_return_24h_pct": 1.374235,
+      "median_return_24h_pct": 0.890705,
+      "outperforming_btc_count": 50,
+      "outperforming_btc_share": 0.5,
+      "outperforming_eth_count": 28,
+      "outperforming_eth_share": 0.28
     },
     "rolling_window_confirmation_policy": "Repeated observations from an overlapping rolling window are descriptive persistence only and are not, by themselves, independent confirmation.",
     "sensor_relationship_owner": "01_CORE_FRAMEWORK/governance/2026-07-22__sensor-relationship-and-incremental-value-standard__canonical.md",
+    "source_independence_eligible": false,
     "window_semantics": "SOURCE_REPORTED_ROLLING_24H_AT_RETRIEVAL"
   },
-  "observer_state": "PROXY_PATTERN_OBSERVED_NOT_ACTION_ELIGIBLE",
+  "observer_state": "LEGACY_PATTERN_OBSERVED_FORWARD_ONLY_NOT_PROMOTION_READY",
+  "promotion_authority": {
+    "permits_active_state": false,
+    "reason": "FROZEN_BREADTH_PREDICTIVE_GATE_RETIRED_ZERO_WEIGHT_AND_GRADUATED_ALT_DEPLOYMENT_NOT_PROMOTION_READY",
+    "source": "01_CORE_FRAMEWORK/governance/2026-07-12__rule-and-evidence-registry-sensor-audit-v1__canonical-addendum.md",
+    "status": "FORWARD_ONLY_NOT_PROMOTION_READY"
+  },
   "state": "WAIT",
-  "updated_at_utc": "2026-08-30T17:48:09.192838+00:00"
+  "updated_at_utc": "2026-08-30T20:08:55.774187+00:00"
 }

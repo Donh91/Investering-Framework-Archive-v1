@@ -1,9 +1,9 @@
 {
   "activation_event_count": 8,
   "contract": "ENTRY_SIGNAL_PERFORMANCE_SUMMARY_v1",
-  "definition_version": "ENTRY_SIGNAL_DEFINITION_v1_1_MEASUREMENT_VALIDITY_GUARD",
+  "definition_version": "ENTRY_SIGNAL_DEFINITION_v1_2_CANONICAL_PROMOTION_GUARD",
   "evaluation_note": "Forward outcomes are descriptive definition-quality evidence, not a trading rule, optimized hit threshold, or authority to rewrite historical event validity.",
-  "generated_at_utc": "2026-08-30T17:48:09.192838+00:00",
+  "generated_at_utc": "2026-08-30T20:08:55.774187+00:00",
   "historical_validity_policy": "Historical signal records remain immutable. Later outcomes may calibrate definition quality but must not retroactively invalidate a signal solely because the later outcome was poor. A contemporaneous evidence-role or measurement-validity defect may be annotated prospectively without rewriting the historical event.",
   "horizons": {
     "14d": {
@@ -71,5 +71,11 @@
       "matched_top100_positive_rate_pct": 0.0,
       "matured_event_count": 4
     }
+  },
+  "promotion_authority": {
+    "permits_active_state": false,
+    "reason": "FROZEN_BREADTH_PREDICTIVE_GATE_RETIRED_ZERO_WEIGHT_AND_GRADUATED_ALT_DEPLOYMENT_NOT_PROMOTION_READY",
+    "source": "01_CORE_FRAMEWORK/governance/2026-07-12__rule-and-evidence-registry-sensor-audit-v1__canonical-addendum.md",
+    "status": "FORWARD_ONLY_NOT_PROMOTION_READY"
   }
 }
