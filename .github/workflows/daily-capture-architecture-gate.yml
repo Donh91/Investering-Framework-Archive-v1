@@ -129,9 +129,10 @@ jobs:
           deep=json.loads(Path('research/api_agent/deep_research/DEEP_RESEARCH_QUEUE_v1.json').read_text())
 
           # Source-appropriate cadence: 6 tactical live-anchor schedule entries,
-          # one compact 4x/day hourly cron entry plus one Monday catch-up, 2 weekly builds and one settled ETF owner check.
+          # one UTC-hourly closed-candle owner, 2 weekly builds and one settled ETF owner check.
           assert daily.count("timezone: 'Europe/Copenhagen'")==6
-          assert hourly.count("timezone: 'Europe/Copenhagen'")==2
+          assert hourly.count("timezone: 'UTC'")==1
+          assert hourly.count("timezone: 'Europe/Copenhagen'")==0
           assert weekly.count("timezone: 'Europe/Copenhagen'")==2
           assert etf.count("timezone: 'Europe/Copenhagen'")==1
 
@@ -213,14 +214,17 @@ jobs:
           assert '.github/workflows/daily-settled-etf-calibration.yml' in router
           assert 'pullback_forensics_collector_v1_1.py' in router
 
-          # Hourly lane self-heals one missed regular run and stores already-returned Binance flow fields.
+          # Hourly lane materializes every completed UTC source hour while retaining
+          # a 26-hour overlap window for deterministic self-healing after missed runs.
           assert '--lookback-hours 26' in hourly
-          assert "cron: '10 2 * * 1'" in hourly
+          assert "cron: '5 * * * *'" in hourly
+          assert "timezone: 'UTC'" in hourly
+          assert "cron: '10 2 * * 1'" not in hourly
           for field in ('quote_volume','trade_count','taker_buy_quote_volume','taker_sell_quote_volume','taker_buy_quote_share'):
               assert field in hourly_builder, field
           assert 'forward_fill' in hourly_builder and 'interpolation' in hourly_builder
 
-          # Final weekly build occurs after the Monday catch-up and targets the completed ISO week.
+          # Final weekly build occurs after a post-UTC-close hourly materialization and targets the completed ISO week.
           assert "cron: '25 2 * * 1'" in weekly
           assert '--hourly-root 03_DAILY_CAPTURE_LOGS/hourly' in weekly
           assert '--etf-root 03_DAILY_CAPTURE_LOGS/etf' in weekly
