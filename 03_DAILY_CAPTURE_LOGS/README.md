@@ -59,13 +59,18 @@ Raw source payloads are retained as GitHub Actions artifacts for 14 days and are
 
 ## Lane B — Live Point-in-Time Anchors
 
-Schedule, Europe/Copenhagen:
+Production schedule, Europe/Copenhagen:
 
+- 02:13
 - 06:13
-- 10:47
-- 15:22
-- 19:38
-- 23:11
+- 10:13
+- 14:13
+- 18:13
+- 22:13
+
+The schedule authority is `.github/workflows/daily-raw-owner-capture.yml`; this README mirrors that production cadence and must not be treated as a separate schedule owner.
+
+The **06:13** anchor is the daily slow-context / cold-lane identity: FRED macro context and CFGI 1d context are collected there in addition to the normal tactical owners. Manual workflow dispatch also enables those slow-context owners. The other scheduled anchors retain the normal 4-hour tactical cadence without pretending slow sources have new observations every four hours.
 
 These captures preserve observations that are difficult or impossible to reconstruct retrospectively with equivalent semantics, including:
 
@@ -73,7 +78,7 @@ These captures preserve observations that are difficult or impossible to reconst
 - OKX current swap funding, open interest and mark price
 - Top-100 breadth snapshot
 - CFGI 4h snapshot when enabled
-- FRED macro context once per day at the morning anchor
+- FRED macro context once per day at the 06:13 morning anchor
 - CFGI 1d context once per day when enabled
 
 Spot hourly candles belong to the Hourly Sequence lane and are not redundantly downloaded by every live anchor.
@@ -136,9 +141,9 @@ The live-anchor lane complements that path with:
 
 ## Storage policy
 
-The live daily pipeline must not permanently commit repeated full owner payload bundles five times per day. This avoids repository growth and prevents the monthly raw-storage ceiling from blocking otherwise valid observations.
+The live daily pipeline must not permanently commit repeated full owner payload bundles at every one of the six scheduled live anchors. This avoids repository growth and prevents the monthly raw-storage ceiling from blocking otherwise valid observations.
 
-A bounded permanent cold-lane checkpoint is retained once per day at the morning anchor for the ephemeral owners that cannot be reconstructed later. It excludes large redundant histories. The cold checkpoint may degrade without suppressing the compact market observation; raw source bundles remain available temporarily in Actions artifacts.
+A bounded permanent cold-lane checkpoint is retained once per day at the 06:13 anchor for the ephemeral owners that cannot be reconstructed later. It excludes large redundant histories. The cold checkpoint may degrade without suppressing the compact market observation; raw source bundles remain available temporarily in Actions artifacts.
 
 Permanent Git history is intentionally compact:
 
