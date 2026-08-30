@@ -181,8 +181,6 @@ def classify(m):
     pattern_observed = all(legacy_checks.values())
     validity = m.get("measurement_validity") or {}
     breadth_authority_eligible = validity.get("independent_rotation_confirmation_eligible") is True
-    checks = dict(legacy_checks)
-    checks["breadth_authority_eligible"] = breadth_authority_eligible
     active = pattern_observed and breadth_authority_eligible
     if active:
         observer_state = "AUTHORIZED_PATTERN_OBSERVED"
@@ -192,7 +190,7 @@ def classify(m):
         observer_state = "NO_PATTERN"
     heat = "HOT" if ((er or 0) >= 12 or (br or 0) >= 8 or (m.get("median_return_24h_pct") or 0) >= 4) else "NORMAL"
     state = "GRADUATED_ALTCOIN_TOPUP_ACTIVE" if active else "WAIT"
-    return state, checks, heat, observer_state
+    return state, legacy_checks, heat, observer_state
 
 
 def bridge_display_line(state, observer_state, heat, current):
