@@ -4,7 +4,8 @@
   "submitted_at_utc": "2026-08-30T17:19:00Z",
   "status": "SUBMITTED",
   "origin": {
-    "type": "POST_FIX_MEASUREMENT_VALIDITY_AUDIT",
+    "type": "AUDIT",
+    "thread_label": "2026-08-30 post-fix measurement-validity audit",
     "source_paths": [
       "research/evidence_gap/ADAPTIVE_EVIDENCE_GAP_REGISTRY_v1.json",
       "scripts/api_agent/evidence_gap_registry.py"
@@ -12,49 +13,48 @@
   },
   "title": "Preserve mixed capability routing in evidence-gap families",
   "objective": "Fix family consolidation so an observation already classified EXISTING_REPO_DERIVATION/BACKFILL_QUEUED is not represented as UNKNOWN_SOURCE/SOURCE_DISCOVERY_REQUIRED merely because another metric in the same family is unknown. Use only existing closure semantics.",
-  "allowed_change_scope": {
-    "primary_targets": ["scripts/api_agent/evidence_gap_registry.py"],
-    "secondary_targets": ["directly related evidence-gap registry tests"]
-  },
+  "finding_key": "EVIDENCE_GAP_MIXED_CAPABILITY_COLLAPSE",
+  "primary_target": "scripts/api_agent/evidence_gap_registry.py",
+  "allowed_change_scope": [
+    "scripts/api_agent/evidence_gap_registry.py",
+    "tests directly related to evidence-gap family consolidation"
+  ],
   "evidence": [
     {
-      "kind": "CURRENT_REGISTRY",
+      "kind": "REPO_PATH",
       "ref": "research/evidence_gap/ADAPTIVE_EVIDENCE_GAP_REGISTRY_v1.json#EG-MARKET-STRUCTURE",
-      "summary": "The family contains both EXISTING_REPO_DERIVATION/BACKFILL_QUEUED and UNKNOWN_SOURCE/SOURCE_DISCOVERY_REQUIRED observations, but family-level representation collapses the distinction."
+      "summary": "The family contains both EXISTING_REPO_DERIVATION/BACKFILL_QUEUED and UNKNOWN_SOURCE/SOURCE_DISCOVERY_REQUIRED observations, while family-level representation collapses the distinction."
     },
     {
-      "kind": "PRODUCER_CODE",
+      "kind": "REPO_PATH",
       "ref": "scripts/api_agent/evidence_gap_registry.py",
-      "summary": "The producer already supports the existing derivation and source-discovery routes; the defect is mixed-family consolidation."
+      "summary": "The producer already supports derivation and source-discovery routes; the bounded defect is mixed-family consolidation."
     }
   ],
-  "reproduction": [
-    "Read EG-MARKET-STRUCTURE observations and confirm mixed capability_hint and closure_state values.",
-    "Run family consolidation on a fixture containing one EXISTING_REPO_DERIVATION observation and one UNKNOWN_SOURCE observation.",
-    "Confirm the current aggregate loses the per-capability distinction."
-  ],
+  "reproduction": "On fresh main, inspect EG-MARKET-STRUCTURE and confirm it contains at least one EXISTING_REPO_DERIVATION/BACKFILL_QUEUED observation and at least one UNKNOWN_SOURCE/SOURCE_DISCOVERY_REQUIRED observation. Run the current consolidation logic on an equivalent mixed-capability fixture and demonstrate that family-level output loses or obscures the per-capability routing distinction.",
   "acceptance_tests": {
     "positive": [
-      "Mixed-family output preserves EXISTING_REPO_DERIVATION/BACKFILL_QUEUED and UNKNOWN_SOURCE/SOURCE_DISCOVERY_REQUIRED as distinct machine-readable routes.",
-      "Current family IDs, legacy observations and authority flags remain compatible."
+      "A mixed-family fixture preserves EXISTING_REPO_DERIVATION/BACKFILL_QUEUED and UNKNOWN_SOURCE/SOURCE_DISCOVERY_REQUIRED as distinct machine-readable routes.",
+      "Current family IDs, immutable legacy observations and authority flags remain compatible.",
+      "Current EG-MARKET-STRUCTURE no longer makes derivation-capable observations appear to require source discovery solely because another observation is unknown."
     ],
     "negative": [
-      "Do not create a new closure or policy state.",
-      "Do not convert genuinely unknown metrics into derivation-capable metrics.",
-      "Do not add sources, market thresholds or portfolio behavior.",
-      "Do not rewrite historical observations."
+      "No new closure or policy state is introduced.",
+      "Genuinely unknown metrics remain fail-closed as SOURCE_DISCOVERY_REQUIRED.",
+      "No new source, market threshold or portfolio behavior is introduced.",
+      "Historical observations are not rewritten or deleted."
     ]
   },
   "authority_boundary": "CODE_REMEDIATION_ONLY",
   "requires_framework_owner_authority": false,
   "forbidden_changes": [
-    "market gates or thresholds",
+    "market gates",
     "model weights",
-    "canonical authority or predecessor rules",
-    "portfolio logic or sizing",
+    "canonical authority",
+    "portfolio logic",
     "API budget",
     "new policy semantics"
   ],
   "requested_priority": "NORMAL",
-  "post_fix_gate": "CI and mixed-capability positive/negative fixtures must pass."
+  "post_fix_gate": "CI and mixed-capability positive and negative fixtures must pass, followed by registry readback preserving both existing route classes."
 }
