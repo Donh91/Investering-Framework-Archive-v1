@@ -1,8 +1,10 @@
 {
   "activation_event_count": 8,
   "contract": "ENTRY_SIGNAL_PERFORMANCE_SUMMARY_v1",
-  "evaluation_note": "Positive-rate is descriptive forward evidence, not a trading rule or optimized hit threshold.",
-  "generated_at_utc": "2026-08-30T13:20:36.024628+00:00",
+  "definition_version": "ENTRY_SIGNAL_DEFINITION_v1_1_MEASUREMENT_VALIDITY_GUARD",
+  "evaluation_note": "Forward outcomes are descriptive definition-quality evidence, not a trading rule, optimized hit threshold, or authority to rewrite historical event validity.",
+  "generated_at_utc": "2026-08-30T17:48:09.192838+00:00",
+  "historical_validity_policy": "Historical signal records remain immutable. Later outcomes may calibrate definition quality but must not retroactively invalidate a signal solely because the later outcome was poor. A contemporaneous evidence-role or measurement-validity defect may be annotated prospectively without rewriting the historical event.",
   "horizons": {
     "14d": {
       "btc_mean_return_pct": null,
@@ -10,6 +12,10 @@
       "matched_top100_available_count": 0,
       "matched_top100_mean_return_pct": null,
       "matched_top100_median_return_pct": null,
+      "matched_top100_minus_btc_mean_pp": null,
+      "matched_top100_minus_eth_mean_pp": null,
+      "matched_top100_outperformed_btc_rate_pct": null,
+      "matched_top100_outperformed_eth_rate_pct": null,
       "matched_top100_positive_rate_pct": null,
       "matured_event_count": 0
     },
@@ -19,6 +25,10 @@
       "matched_top100_available_count": 6,
       "matched_top100_mean_return_pct": -0.09530324356159105,
       "matched_top100_median_return_pct": -0.4919855815267789,
+      "matched_top100_minus_btc_mean_pp": -1.5471377907714408,
+      "matched_top100_minus_eth_mean_pp": -0.9152517081521774,
+      "matched_top100_outperformed_btc_rate_pct": 33.333333333333336,
+      "matched_top100_outperformed_eth_rate_pct": 16.666666666666668,
       "matched_top100_positive_rate_pct": 33.333333333333336,
       "matured_event_count": 7
     },
@@ -28,6 +38,10 @@
       "matched_top100_available_count": 0,
       "matched_top100_mean_return_pct": null,
       "matched_top100_median_return_pct": null,
+      "matched_top100_minus_btc_mean_pp": null,
+      "matched_top100_minus_eth_mean_pp": null,
+      "matched_top100_outperformed_btc_rate_pct": null,
+      "matched_top100_outperformed_eth_rate_pct": null,
       "matched_top100_positive_rate_pct": null,
       "matured_event_count": 0
     },
@@ -37,17 +51,25 @@
       "matched_top100_available_count": 6,
       "matched_top100_mean_return_pct": -1.0768606139602166,
       "matched_top100_median_return_pct": -1.2131435928264056,
+      "matched_top100_minus_btc_mean_pp": -2.4200010396433775,
+      "matched_top100_minus_eth_mean_pp": -1.7983982852576952,
+      "matched_top100_outperformed_btc_rate_pct": 0.0,
+      "matched_top100_outperformed_eth_rate_pct": 16.666666666666668,
       "matched_top100_positive_rate_pct": 33.333333333333336,
       "matured_event_count": 7
     },
     "7d": {
-      "btc_mean_return_pct": 4.692339487456883,
-      "eth_mean_return_pct": 3.236749568391351,
-      "matched_top100_available_count": 2,
-      "matched_top100_mean_return_pct": -2.0635368342272167,
-      "matched_top100_median_return_pct": -2.0635368342272167,
+      "btc_mean_return_pct": 4.0713397188760965,
+      "eth_mean_return_pct": 2.8065675153787386,
+      "matched_top100_available_count": 3,
+      "matched_top100_mean_return_pct": -1.9139264325871743,
+      "matched_top100_median_return_pct": -1.6147056293070898,
+      "matched_top100_minus_btc_mean_pp": -2.797563360055875,
+      "matched_top100_minus_eth_mean_pp": -1.961487019004591,
+      "matched_top100_outperformed_btc_rate_pct": 0.0,
+      "matched_top100_outperformed_eth_rate_pct": 33.333333333333336,
       "matched_top100_positive_rate_pct": 0.0,
-      "matured_event_count": 3
+      "matured_event_count": 4
     }
   }
 }

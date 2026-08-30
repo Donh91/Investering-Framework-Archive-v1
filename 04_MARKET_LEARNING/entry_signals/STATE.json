@@ -5,7 +5,32 @@
     "ethbtc_above_registered_0_0300": true,
     "top100_proxy_breadth_ge_50pct": true
   },
+  "definition_version": "ENTRY_SIGNAL_DEFINITION_v1_1_MEASUREMENT_VALIDITY_GUARD",
   "execution_temperature": "NORMAL",
-  "state": "GRADUATED_ALTCOIN_TOPUP_ACTIVE",
-  "updated_at_utc": "2026-08-30T13:20:36.024628+00:00"
+  "historical_validity_policy": "Historical signal records remain immutable. Later outcomes may calibrate definition quality but must not retroactively invalidate a signal solely because the later outcome was poor. A contemporaneous evidence-role or measurement-validity defect may be annotated prospectively without rewriting the historical event.",
+  "measurement_validity": {
+    "absolute_breadth_semantics": "DESCRIPTIVE_PARTICIPATION_ONLY",
+    "canonical_broad_alt_breadth": "UNCONFIRMED",
+    "canonical_compatible": false,
+    "canonical_large_cap_breadth": "UNCONFIRMED",
+    "capture_cadence_note": "Capture-level correlation or survival analysis must account for adaptive/uneven cadence; repeated checkpoints are not assumed independent samples.",
+    "evidence_role": "PROXY_ONLY",
+    "independent_rotation_confirmation_eligible": false,
+    "independent_rotation_confirmation_reason": "PROXY_OR_CANONICAL_COMPATIBILITY_UNCONFIRMED",
+    "relative_breadth": {
+      "constituent_count": 100,
+      "equal_weight_mean_return_24h_pct": 0.823698,
+      "median_return_24h_pct": 0.336605,
+      "outperforming_btc_count": 35,
+      "outperforming_btc_share": 0.35,
+      "outperforming_eth_count": 30,
+      "outperforming_eth_share": 0.3
+    },
+    "rolling_window_confirmation_policy": "Repeated observations from an overlapping rolling window are descriptive persistence only and are not, by themselves, independent confirmation.",
+    "sensor_relationship_owner": "01_CORE_FRAMEWORK/governance/2026-07-22__sensor-relationship-and-incremental-value-standard__canonical.md",
+    "window_semantics": "SOURCE_REPORTED_ROLLING_24H_AT_RETRIEVAL"
+  },
+  "observer_state": "PROXY_PATTERN_OBSERVED_NOT_ACTION_ELIGIBLE",
+  "state": "WAIT",
+  "updated_at_utc": "2026-08-30T17:48:09.192838+00:00"
 }
