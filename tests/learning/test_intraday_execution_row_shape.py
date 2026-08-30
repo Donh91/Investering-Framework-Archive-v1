@@ -155,7 +155,7 @@ def test_calibration_exposes_conservative_estimate_after_minimum_sample(tmp_path
     assert group["display_probability"] == round(21 / 22, 6)
 
 
-def test_horizon_freeze_is_anchored_to_source_observation_and_fails_closed_on_short_remaining_span():
+def test_horizon_freeze_is_anchored_to_generic_source_observation_and_fails_closed_on_short_span():
     observed = datetime(2026, 8, 30, 10, 0, tzinfo=timezone.utc)
     now = observed + timedelta(minutes=40)
     obs = {"price_observation_utc": sdc.iso(observed)}
@@ -168,6 +168,125 @@ def test_horizon_freeze_is_anchored_to_source_observation_and_fails_closed_on_sh
     assert one_hour["due_at_utc"] == sdc.iso(observed + timedelta(hours=1))
     assert four_hour["status"] == "ELIGIBLE"
     assert four_hour["due_at_utc"] == sdc.iso(observed + timedelta(hours=4))
+
+
+def test_hourly_owner_timestamp_is_candle_open_and_forecast_starts_at_observable_close():
+    candle_open = datetime(2026, 8, 30, 10, 0, tzinfo=timezone.utc)
+    observable_close = candle_open + timedelta(hours=1)
+    now = observable_close + timedelta(minutes=10)
+    obs = {
+        "price_observation_utc": sdc.iso(candle_open),
+        "hourly_sequence_run_id": "HOURLY_SEQUENCE_TEST",
+    }
+    cfg = {"minimum_remaining_fraction_of_horizon": 0.5}
+
+    assert sdc._source_price_observation_time(obs) == observable_close
+    one_hour = sdc._horizon_eligibility(obs, now, 1, cfg)
+    assert one_hour["status"] == "ELIGIBLE"
+    assert one_hour["source_cutoff_utc"] == sdc.iso(observable_close)
+    assert one_hour["due_at_utc"] == sdc.iso(observable_close + timedelta(hours=1))
+    assert one_hour["remaining_forward_hours_at_issue"] == round(50 / 60, 6)
+
+
+def _write_prediction_fixture(predictions, issued, source_close, due, *, direction="UP"):
+    sdc.write_json(
+        predictions / "prediction.json",
+        {
+            "contract": "INTRADAY_DIRECTION_PREDICTION_v1",
+            "issued_at_utc": sdc.iso(issued),
+            "source_candle_open_utc": sdc.iso(source_close - timedelta(hours=1)),
+            "source_price_observation_utc": sdc.iso(source_close),
+            "horizons": {
+                "1H": {
+                    "horizon_hours": 1,
+                    "due_at_utc": sdc.iso(due),
+                    "targets": {
+                        "BTC": {
+                            "direction": direction,
+                            "start_value": 100.0,
+                            "calibration_key": "6_of_6",
+                            "votes": [{"family": "return_1h", "direction": direction}],
+                            "frozen_calibrated_probability_pct": None,
+                        }
+                    },
+                }
+            },
+        },
+    )
+
+
+def test_outcome_uses_exact_due_owner_candle_not_a_later_current_price(tmp_path, monkeypatch):
+    predictions = tmp_path / "predictions"
+    outcomes = tmp_path / "outcomes"
+    hourly = tmp_path / "hourly"
+    monkeypatch.setattr(sdc, "PREDICTIONS", predictions)
+    monkeypatch.setattr(sdc, "OUTCOMES", outcomes)
+    monkeypatch.setattr(sdc, "HOURLY_ROOT", hourly)
+
+    source_close = datetime(2026, 8, 30, 11, 0, tzinfo=timezone.utc)
+    due = source_close + timedelta(hours=1)
+    issued = source_close + timedelta(minutes=10)
+    _write_prediction_fixture(predictions, issued, source_close, due)
+
+    path = hourly / "2026/08/2026-08-30.csv"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        "timestamp_utc,btc_close,spot_status\n"
+        f"{sdc.iso(due - timedelta(hours=1))},101.0,PASS\n"
+    )
+
+    # Current price deliberately points the opposite way. It must never be used.
+    obs = {
+        "price_observation_utc": sdc.iso(datetime(2026, 8, 30, 12, 0, tzinfo=timezone.utc)),
+        "hourly_sequence_run_id": "HOURLY_SEQUENCE_LATER",
+        "btc": {"close": 50.0},
+    }
+    counts = sdc.mature_predictions(
+        obs,
+        {"max_outcome_evidence_lag_hours": 1.5},
+        datetime(2026, 8, 30, 13, 5, tzinfo=timezone.utc),
+    )
+
+    assert counts["matured"] == 1
+    result = next(outcomes.rglob("*.json"))
+    row = sdc.read_json(result)
+    assert row["result"] == "HIT"
+    assert row["end_value"] == 101.0
+    assert row["evidence_observation_utc"] == sdc.iso(due)
+    assert row["evidence_horizon_error_hours"] == 0.0
+    assert row["evidence_semantics"] == "EXACT_DUE_CLOSED_1H_OWNER_CANDLE"
+
+
+def test_missing_exact_due_candle_is_censored_instead_of_using_later_price(tmp_path, monkeypatch):
+    predictions = tmp_path / "predictions"
+    outcomes = tmp_path / "outcomes"
+    hourly = tmp_path / "hourly"
+    monkeypatch.setattr(sdc, "PREDICTIONS", predictions)
+    monkeypatch.setattr(sdc, "OUTCOMES", outcomes)
+    monkeypatch.setattr(sdc, "HOURLY_ROOT", hourly)
+
+    source_close = datetime(2026, 8, 30, 10, 0, tzinfo=timezone.utc)
+    due = source_close + timedelta(hours=1)
+    issued = source_close + timedelta(minutes=5)
+    _write_prediction_fixture(predictions, issued, source_close, due)
+
+    obs = {
+        "price_observation_utc": sdc.iso(datetime(2026, 8, 30, 13, 0, tzinfo=timezone.utc)),
+        "hourly_sequence_run_id": "HOURLY_SEQUENCE_LATER",
+        "btc": {"close": 150.0},
+    }
+    counts = sdc.mature_predictions(
+        obs,
+        {"max_outcome_evidence_lag_hours": 1.5},
+        datetime(2026, 8, 30, 14, 5, tzinfo=timezone.utc),
+    )
+
+    assert counts["censored"] == 1
+    result = next(outcomes.rglob("*.json"))
+    row = sdc.read_json(result)
+    assert row["status"] == "CENSORED"
+    assert row["reason"] == "EXACT_DUE_OWNER_CANDLE_MISSING_AFTER_GRACE"
+    assert row["substitute_later_price_forbidden"] is True
 
 
 def test_market_cap_transmission_marks_microcap_unavailable(tmp_path, monkeypatch):
