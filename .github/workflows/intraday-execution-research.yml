@@ -2,7 +2,10 @@ name: Intraday Execution Research
 
 on:
   schedule:
-    - cron: '58 * * * *'
+    # Run after the UTC-aligned hourly owner has had time to materialize the
+    # newly completed candle. UTC is deliberate so DST cannot skip a source hour.
+    - cron: '15 * * * *'
+      timezone: 'UTC'
   workflow_dispatch:
 
 permissions:
@@ -25,8 +28,10 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Compile research engine
-        run: python -m py_compile scripts/intraday_execution/intraday_execution_research.py
+      - name: Compile research engines
+        run: |
+          python -m py_compile scripts/intraday_execution/intraday_execution_research.py
+          python -m py_compile scripts/intraday_execution/shadow_direction_confidence.py
       - name: Validate config authority boundary
         run: |
           python - <<'PY'
@@ -44,6 +49,10 @@ jobs:
           assert a['historical_findings_max_classification']=='FORWARD_TEST'
           assert d['explicit_limitations']['top100_intraday_vwap']=='UNAVAILABLE_FROM_CURRENT_CANONICAL_ARCHIVE'
           assert d['explicit_limitations']['top100_opening_range']=='UNAVAILABLE_FROM_CURRENT_CANONICAL_ARCHIVE'
+          shadow=d['shadow_direction_confidence']
+          assert shadow['status']=='SHADOW_ONLY_PROSPECTIVE'
+          assert shadow['automatic_signal_reweighting'] is False
+          assert shadow['microcap_direction']=='NO_EDGE_UNTIL_ELIGIBLE_OWNER_EXISTS'
           print('INTRADAY_EXECUTION_STATIC_GUARD_PASS')
           PY
       - name: Run prospective research observation
@@ -61,7 +70,14 @@ jobs:
           assert a['canonical_market_state'] is False
           assert a['automatic_rule_changes'] is False
           assert 'display_line' in d['data_ping_bridge']
+          shadow=d['shadow_direction_confidence']
+          assert shadow['contract']=='SHADOW_DIRECTION_CONFIDENCE_v1'
+          assert shadow['status']=='SHADOW_ONLY'
+          assert shadow['source_observation_semantics']=='CLOSED_1H_CANDLE_CLOSE_OBSERVABLE_TIME'
+          assert shadow['authority']['later_price_substitution_for_exact_horizon'] is False
+          assert 'shadow_direction_display_line' in d['data_ping_bridge']
           print(d['data_ping_bridge']['display_line'])
+          print(d['data_ping_bridge']['shadow_direction_display_line'])
           PY
       - name: Commit prospective observations
         shell: bash
