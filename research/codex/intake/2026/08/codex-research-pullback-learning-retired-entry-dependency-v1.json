@@ -1,0 +1,87 @@
+{
+  "contract": "CODEX_RESEARCH_CANDIDATE_v1",
+  "candidate_id": "codex-research-pullback-learning-retired-entry-dependency-v1",
+  "submitted_at_utc": "2026-08-31T01:51:00Z",
+  "status": "SUBMITTED",
+  "origin": {
+    "type": "AUDIT",
+    "thread_label": "post-entry-retirement-downstream-consumer-sweep",
+    "source_paths": [
+      "scripts/pullback_learning/pullback_learning_ledger.py",
+      "04_MARKET_LEARNING/pullback_learning/LATEST.json",
+      "04_MARKET_LEARNING/pullback_learning/STATE.json",
+      "04_MARKET_LEARNING/entry_signals/LATEST.json",
+      "https://github.com/Donh91/Investering-Framework-Archive-v1/pull/657",
+      "research/codex/intake/2026/08/codex-research-intraday-retired-entry-dependency-v1.json"
+    ]
+  },
+  "title": "Repair Pullback Learning retired entry-state dependency",
+  "objective": "Repair the existing adaptive Pullback Learning owner so it is not permanently dead after the canonical retirement of GRADUATED_ALTCOIN_TOPUP_ACTIVE, while preserving the intended regime/context boundary and research-only authority. First discover whether a pre-existing non-binding research eligibility/context owner already expresses when pullback learning may classify risk/reload states. If one exists, bind to it explicitly and fail closed on missing/stale evidence. If no such owner exists, do not invent a new market/regime rule; keep classification fail-closed and escalate the missing eligibility contract to the framework owner. Regardless, continue truthful observation collection only if existing owner semantics permit it, and do not allow the retired entry/breadth gate to regain action, rebuy, canonical-state or portfolio authority.",
+  "finding_key": "PULLBACK_LEARNING_RETIRED_ENTRY_DEPENDENCY_DEAD_CONSUMER",
+  "primary_target": "scripts/pullback_learning/pullback_learning_ledger.py",
+  "allowed_change_scope": [
+    "scripts/pullback_learning/pullback_learning_ledger.py",
+    "tests/pullback_learning/directly related runtime eligibility, liveness and authority tests",
+    "04_MARKET_LEARNING/pullback_learning/directly related non-canonical documentation or machine-readable status artifact only if an existing owner pattern requires it",
+    ".github/workflows/pullback-learning-ledger.yml only if strictly required to preserve the existing owner contract; workflow modification requires current repository-safety safepoint"
+  ],
+  "evidence": [
+    {
+      "kind": "REPO_PATH",
+      "ref": "scripts/pullback_learning/pullback_learning_ledger.py",
+      "summary": "Current classify() computes entry_active = current_obs.get('entry_state') == 'GRADUATED_ALTCOIN_TOPUP_ACTIVE' and returns REGIME_NOT_ACTIVE whenever false, so all pullback risk/reload classifications are unreachable after the retired state became non-permitted."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "04_MARKET_LEARNING/pullback_learning/LATEST.json",
+      "summary": "Current runtime output is REGIME_NOT_ACTIVE while still collecting adaptive observations; current market_snapshot carries entry_state WAIT after the post-retirement Entry Ledger changes."
+    },
+    {
+      "kind": "PR",
+      "ref": "#657",
+      "summary": "Canonical follow-up binds the legacy Entry observer ACTIVE state to explicit promotion status and keeps current promotion fail-closed; source-quality or proxy breadth cannot silently restore the retired breadth/entry gate."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "research/codex/intake/2026/08/codex-research-intraday-retired-entry-dependency-v1.json",
+      "summary": "A separate intraday owner has the same root retirement dependency but a different allowed scope. This candidate intentionally does not duplicate that task and targets Pullback Learning only."
+    }
+  ],
+  "reproduction": "On fresh main, read scripts/pullback_learning/pullback_learning_ledger.py and confirm classify() still requires entry_state == GRADUATED_ALTCOIN_TOPUP_ACTIVE before any PULLBACK_RISK_RESEARCH, PULLBACK_ACTIVE_RESEARCH, RELOAD_WATCH_RESEARCH or NORMAL regime classification can be reached. Read the current Entry Ledger/canonical post-#657 semantics and confirm that legacy ACTIVE is not currently permitted. Read current pullback LATEST/STATE and confirm REGIME_NOT_ACTIVE while observations continue. Search current canonical/research owners for an already authorized research-only regime/eligibility context before proposing any replacement. Stop as clean no-op if a newer current-main fix already removes the dead dependency safely.",
+  "acceptance_tests": {
+    "positive": [
+      "A fixture using an already-existing eligible research-only context, if such an owner is discovered, can reach the appropriate non-canonical Pullback Learning classification without requiring GRADUATED_ALTCOIN_TOPUP_ACTIVE.",
+      "Observation collection and descriptive adaptive statistics remain reproducible and preserve historical rows; missing required context fails closed rather than fabricating eligibility.",
+      "Current research_only=true, portfolio_execution=false, canonical_market_state=false and automatic_rule_changes=false boundaries remain explicit in state/latest outputs.",
+      "If no pre-existing eligible context owner exists, implementation stops short of inventing one and emits/escalates an explicit eligibility-contract gap rather than silently keeping a logically impossible ACTIVE dependency."
+    ],
+    "negative": [
+      "Proxy breadth, legacy entry conditions or canonical_compatible source quality alone cannot reactivate pullback classification authority.",
+      "GRADUATED_ALTCOIN_TOPUP_ACTIVE cannot be restored, reinterpreted or recreated as a hidden prerequisite or alias.",
+      "Pullback research state cannot unlock portfolio action, rebuy, canonical market state, market gates, thresholds or automatic promotion.",
+      "Do not use direction-confidence/T12 or another shadow forecast as a substitute regime permission unless a current owner explicitly authorizes that relationship.",
+      "Do not rewrite historical observations/episodes/outcomes or create a second pullback engine."
+    ]
+  },
+  "authority_boundary": "CODE_REMEDIATION_ONLY",
+  "requires_framework_owner_authority": false,
+  "forbidden_changes": [
+    "market gates",
+    "model weights",
+    "canonical authority",
+    "portfolio logic",
+    "API budget",
+    "new policy semantics",
+    "new pullback threshold",
+    "new regime threshold",
+    "restoring retired entry permission",
+    "automatic rebuy permission",
+    "retrospective evidence rewrite",
+    "new pullback engine"
+  ],
+  "requested_priority": "EXPEDITED",
+  "post_fix_gate": "PULLBACK_LIVENESS_POSITIVE_CONTROL_PLUS_RETIRED_ENTRY_NEGATIVE_CONTROL_PLUS_AUTHORITY_FIREWALL_PASS_PLUS_MAIN_READBACK",
+  "clean_noop_condition": "A newer current-main owner already repairs the Pullback Learning dependency with an existing legitimate research-only eligibility contract, or the Pullback Learning owner has been explicitly retired/superseded.",
+  "stop_condition": "Stop without code changes if candidate hash/status/authority changes, fresh reproduction fails, the required replacement would exceed allowed_change_scope, or no pre-existing eligible research context exists and remediation would require inventing new market/regime policy semantics.",
+  "escalation_condition": "Escalate to FRAMEWORK_OWNER if no existing research-only eligibility owner can replace the retired dependency, or if repair would require new market gates, thresholds, canonical authority, portfolio/rebuy logic, model weights, API budget or new policy semantics."
+}
