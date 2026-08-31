@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
 import urllib.parse
 import urllib.request
 from datetime import datetime, timedelta, timezone
@@ -10,10 +11,11 @@ from pathlib import Path
 
 SYMBOLS = ["BTCUSDT", "ETHUSDT", "ETHBTC"]
 BINANCE_MARKET_DATA_BASE = "https://data-api.binance.vision"
+HOUR_MS = 3_600_000
 
 
 def canonical(value: object) -> bytes:
-    return (json.dumps(value, sort_keys=True, separators=(",", ":")) + "\n").encode()
+    return (json.dumps(value, sort_keys=True, separators=(",", ":"), allow_nan=False) + "\n").encode()
 
 
 def fetch_klines(symbol: str, start_ms: int, end_ms: int, base_url: str = BINANCE_MARKET_DATA_BASE) -> list[list[object]]:
@@ -39,6 +41,47 @@ def summarize_day(rows: list[list[object]], date: str) -> dict[str, object]:
         "first_open_time_ms": int(rows[0][0]),
         "last_close_time_ms": int(rows[-1][6]),
     }
+
+
+def validated_closed_rows(rows, start, end, *, final: bool, symbol: str):
+    """Validate actual UTC candles before any weekly artifact can be published."""
+    if not isinstance(rows, list):
+        raise ValueError(f"invalid_kline_payload:{symbol}")
+    start_ms = int(start.timestamp() * 1000)
+    end_ms = int(end.timestamp() * 1000)
+    closed_end_ms = end_ms - end_ms % HOUR_MS
+    seen = set()
+    closed = []
+    for row in rows:
+        if not isinstance(row, list) or len(row) < 7:
+            raise ValueError(f"invalid_kline_shape:{symbol}")
+        stamp, close_time = row[0], row[6]
+        if type(stamp) is not int or type(close_time) is not int:
+            raise ValueError(f"invalid_kline_timestamp:{symbol}")
+        if stamp % HOUR_MS or close_time != stamp + HOUR_MS - 1:
+            raise ValueError(f"invalid_hour_interval:{symbol}")
+        # A pre-close request may also return the currently forming candle.
+        if not final and stamp == closed_end_ms and closed_end_ms < end_ms:
+            continue
+        if stamp < start_ms or stamp >= closed_end_ms:
+            raise ValueError(f"kline_outside_requested_window:{symbol}")
+        if stamp in seen:
+            raise ValueError(f"duplicate_hour:{symbol}")
+        seen.add(stamp)
+        try:
+            if any(isinstance(value, bool) for value in row[1:6]):
+                raise ValueError("boolean")
+            open_, high, low, close, volume = map(float, row[1:6])
+            if not all(math.isfinite(n) for n in (open_, high, low, close, volume)):
+                raise ValueError("non_finite")
+            if min(open_, high, low, close) <= 0 or volume < 0:
+                raise ValueError("invalid_range")
+            if high < max(open_, close) or low > min(open_, close):
+                raise ValueError("invalid_ohlc")
+        except (TypeError, ValueError, OverflowError) as exc:
+            raise ValueError(f"invalid_kline_values:{symbol}") from exc
+        closed.append(row)
+    return sorted(closed, key=lambda row: row[0])
 
 
 def resolve_window(now: datetime, mode: str) -> tuple[datetime, datetime, bool, str]:
@@ -90,7 +133,7 @@ def main() -> None:
     all_complete = True
     for symbol in SYMBOLS:
         rows = fetch_klines(symbol, int(start.timestamp() * 1000), int(end.timestamp() * 1000), args.base_url)
-        rows = [r for r in rows if int(r[6]) < int(end.timestamp() * 1000) and int(r[6]) <= int(now.timestamp() * 1000)]
+        rows = validated_closed_rows(rows, start, end, final=final, symbol=symbol)
         if not rows:
             raise SystemExit(f"empty_closed_klines:{symbol}")
         if final and len(rows) != expected_hours:
@@ -100,7 +143,7 @@ def main() -> None:
             day = datetime.fromtimestamp(int(row[0]) / 1000, tz=timezone.utc).date().isoformat()
             by_day.setdefault(day, []).append(row)
         daily = [summarize_day(by_day[d], d) for d in sorted(by_day)]
-        completeness = "PASS" if (not final or len(rows) == expected_hours) else "DEGRADED"
+        completeness = "PASS" if len(rows) == expected_hours else "DEGRADED"
         package["symbols"][symbol] = {
             "weekly_open": float(rows[0][1]),
             "weekly_high": max(float(r[2]) for r in rows),

@@ -121,7 +121,15 @@ def parse_spot(body: bytes, symbol: str) -> dict[int, dict[str, float | int]]:
         if not isinstance(row, list) or len(row) < 12:
             raise SourceError("SCHEMA_DRIFT", f"{symbol}:{i}")
         try:
-            stamp = floor_hour_ms(int(row[0]))
+            if type(row[0]) is not int or type(row[6]) is not int:
+                raise ValueError("invalid_time_type")
+            stamp = row[0]
+            if stamp % 3_600_000 or row[6] != stamp + 3_600_000 - 1:
+                raise ValueError("invalid_hour_interval")
+            if stamp in output:
+                raise ValueError("duplicate_hour")
+            if any(isinstance(row[j], bool) for j in (1, 2, 3, 4, 5, 7, 8, 9, 10)):
+                raise ValueError("boolean_numeric")
             open_, high, low, close, base_volume = map(float, row[1:6])
             quote_volume = float(row[7])
             trade_count = int(row[8])
@@ -129,6 +137,11 @@ def parse_spot(body: bytes, symbol: str) -> dict[int, dict[str, float | int]]:
             taker_buy_quote = float(row[10])
         except Exception as exc:
             raise SourceError("SCHEMA_DRIFT", f"{symbol}:{i}:numeric") from exc
+        if (not all(math.isfinite(n) for n in (
+                open_, high, low, close, base_volume, quote_volume, taker_buy_base, taker_buy_quote))
+                or min(open_, high, low, close) <= 0
+                or min(base_volume, quote_volume, trade_count, taker_buy_base, taker_buy_quote) < 0):
+            raise SourceError("INVALID_NUMERIC", f"{symbol}:{i}")
         if high < max(open_, close) or low > min(open_, close):
             raise SourceError("INVALID_OHLC", f"{symbol}:{i}")
         taker_sell_quote = max(0.0, quote_volume - taker_buy_quote)
@@ -430,6 +443,10 @@ def build_rows(start, end, spot_data, oi_data, ls_data, funding_data, spot_statu
                 row[f"{prefix}_return_1h_pct"] = pct_change(candle["close"], previous_close[symbol] or candle["open"])
                 row[f"{prefix}_range_1h_pct"] = range_pct(candle["high"], candle["low"])
                 previous_close[symbol] = candle["close"]
+            else:
+                # Preserve the existing open-to-close boundary convention, but
+                # never label a change from a non-adjacent close as one hour.
+                previous_close[symbol] = None
 
         for symbol, _, _ in DERIVATIVE_SYMBOLS:
             prefix = "btc" if symbol.startswith("BTC") else "eth"
@@ -440,6 +457,8 @@ def build_rows(start, end, spot_data, oi_data, ls_data, funding_data, spot_statu
                 row[f"{prefix}_oi_change_1h_pct"] = pct_change(oi["oi"], previous_oi[symbol])
                 row[f"{prefix}_open_interest_source"] = oi.get("source")
                 previous_oi[symbol] = oi["oi"]
+            else:
+                previous_oi[symbol] = None
             ls = ls_data.get(symbol, {}).get(timestamp_ms)
             if ls:
                 row[f"{prefix}_long_short_ratio"] = ls["ratio"]

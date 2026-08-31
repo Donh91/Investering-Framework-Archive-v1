@@ -41,5 +41,13 @@ class WeeklyMarketCloseEndpointTests(unittest.TestCase):
         self.assertEqual(len(rows), 1)
 
 
+def load_tests(loader, tests, pattern):
+    # This module is already named by the deterministic CI gate. Include the
+    # source-integrity regressions without changing workflows or dependencies.
+    from tests.daily_capture import test_audit_hourly_measurements
+    tests.addTests(loader.loadTestsFromModule(test_audit_hourly_measurements))
+    return tests
+
+
 if __name__ == '__main__':
     unittest.main()
