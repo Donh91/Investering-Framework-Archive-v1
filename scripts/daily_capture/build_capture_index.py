@@ -337,8 +337,10 @@ def main() -> None:
         "captured_at_utc": captured_at.isoformat().replace("+00:00", "Z"),
         "trigger": args.trigger,
         "status": overall,
-        "owners_passed": anchor_passed + context_passed,
+        "owners_passed": sum(owner["status"] == "PASS" for owner in owners),
         "owners_planned": len(owners),
+        "owners_active_planned": sum(owner["status"] != "DISABLED" for owner in owners),
+        "owners_disabled": sum(owner["status"] == "DISABLED" for owner in owners),
         "anchor_core_passed": anchor_passed,
         "anchor_core_planned": len(anchor_core),
         # Compatibility aliases consumed by older health tooling.

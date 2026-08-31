@@ -1,0 +1,34 @@
+{
+  "allowed_change_scope": [
+    "scripts/daily_capture/build_hourly_sequence.py",
+    "scripts/daily_capture/build_weekly_market_close_package.py",
+    "scripts/daily_capture/build_capture_index.py",
+    "tests/daily_capture/test_daily_capture_pipeline.py",
+    "tests/daily_capture/test_weekly_market_close_endpoint.py",
+    "tests/daily_capture/test_audit_hourly_measurements.py"
+  ],
+  "branch": "agent/task-20260831-audit-hourly-integrity",
+  "candidate_id": "codex-research-audit-hourly-measurements-v1",
+  "candidate_path": "research/codex/intake/2026/08/codex-research-audit-hourly-measurements-v1.json",
+  "candidate_sha256": "cb2383d34bafea2597f9e2248164042ce76f35cb3b5e3a6d7d5a291ee700afe6",
+  "contract": "CODEX_RESEARCH_TRANSITION_RECEIPT_v1",
+  "forbidden_changes": [
+    "API budget",
+    "canonical authority",
+    "historical evidence rewrite",
+    "market gates",
+    "model weights",
+    "new policy semantics",
+    "portfolio logic",
+    "restricted provider values in public artifacts",
+    "workflow changes"
+  ],
+  "objective": "Verify unique hourly coverage and honest sequence measurements. Preserve existing owner semantics and historical evidence.",
+  "post_fix_gate": "POSITIVE_AND_NEGATIVE_REGRESSIONS_PLUS_PRODUCTION_SHAPE_REPLAY_PLUS_CI_AND_MAIN_READBACK",
+  "pr_number": null,
+  "receipt_sha256": "a28a23fa6f16e76bc1b6c0ff7173f2b9008d019898417b70fb802ad4fd3df654",
+  "recorded_at_utc": "2026-08-31T06:27:23Z",
+  "signature": "eb484eb56d9d714de993",
+  "state": "IN_REMEDIATION",
+  "task_contract_sha256": "40f2463a92ffe87d6b420208882578118e4b7bdea3dca2e62caae14a64d0d04b"
+}
