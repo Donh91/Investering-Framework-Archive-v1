@@ -112,7 +112,7 @@ class EntrySignalMeasurementValidityTests(unittest.TestCase):
         self.assertIn("must not retroactively invalidate", ledger.HISTORICAL_VALIDITY_POLICY)
         self.assertIn("contemporaneous evidence-role", ledger.HISTORICAL_VALIDITY_POLICY)
 
-    def test_summary_derives_relative_alpha_for_legacy_outcomes_without_rewriting_them(self):
+    def test_summary_excludes_unverified_legacy_horizons_without_rewriting_them(self):
         with tempfile.TemporaryDirectory() as tmp:
             tmp = Path(tmp)
             old_events, old_outcomes, old_summary = ledger.EVENTS, ledger.OUTCOMES, ledger.SUMMARY
@@ -141,8 +141,10 @@ class EntrySignalMeasurementValidityTests(unittest.TestCase):
                 self.assertEqual(before, after)
                 summary = ledger.read_json(ledger.SUMMARY)
                 h = summary["horizons"]["24h"]
-                self.assertAlmostEqual(h["matched_top100_minus_btc_mean_pp"], -4.0)
-                self.assertEqual(h["matched_top100_outperformed_btc_rate_pct"], 0.0)
+                self.assertIsNone(h["matched_top100_minus_btc_mean_pp"])
+                self.assertIsNone(h["matched_top100_outperformed_btc_rate_pct"])
+                self.assertEqual(h["matured_event_count"], 0)
+                self.assertEqual(h["excluded_measurement_count"], 1)
                 self.assertEqual(summary["promotion_authority"]["status"], "FORWARD_ONLY_NOT_PROMOTION_READY")
                 self.assertIn("must not retroactively invalidate", summary["historical_validity_policy"])
             finally:
