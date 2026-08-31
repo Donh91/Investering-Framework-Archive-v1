@@ -103,7 +103,14 @@ def load_hourly_rows(root: Path, iso_year: int, iso_week: int, *, diagnostics: l
         try:
             with path.open(newline="", encoding="utf-8") as handle:
                 reader = csv.DictReader(handle, strict=True)
-                for row in reader:
+                while True:
+                    try:
+                        row = next(reader)
+                    except StopIteration:
+                        break
+                    except csv.Error:
+                        issues.append({'path': str(path), 'line': reader.reader.line_num, 'reason': 'CSV_RECORD_INVALID'})
+                        continue
                     stamp_raw = row.get("timestamp_utc")
                     try:
                         stamp = parse_utc(stamp_raw)

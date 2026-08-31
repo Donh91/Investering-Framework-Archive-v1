@@ -36,6 +36,17 @@ def test_bad_file_does_not_erase_an_independent_valid_file(tmp_path):
     assert any(x['path'] == str(bad) and x['reason'] == 'CSV_READ_ERROR' for x in diagnostics)
 
 
+def test_syntactically_bad_csv_record_does_not_discard_valid_suffix(tmp_path):
+    p = csv_fixture(tmp_path)
+    p.write_text(p.read_text().replace('bad-timestamp,', '"bad"junk,'))
+    before = p.read_bytes()
+    diagnostics = []
+    rows = weekly.load_hourly_rows(tmp_path, 2026, 35, diagnostics=diagnostics)
+    assert [x['btc_close'] for x in rows] == ['100', '102']
+    assert diagnostics == [{'path': str(p), 'line': 3, 'reason': 'CSV_RECORD_INVALID'}]
+    assert p.read_bytes() == before
+
+
 def test_unreadable_hourly_directory_is_diagnosed(tmp_path, monkeypatch):
     def denied_walk(root, onerror):
         onerror(PermissionError(13, 'denied', str(root)))

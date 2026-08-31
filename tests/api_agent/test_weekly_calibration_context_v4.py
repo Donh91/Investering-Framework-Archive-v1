@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import hashlib
 import json
 import tempfile
 import unittest
@@ -21,7 +22,25 @@ class WeeklyCalibrationContextV4Tests(unittest.TestCase):
         registry.write_text(json.dumps({'contract': 'EXPERIMENT_LIFECYCLE_REGISTRY_v1', 'candidates': []}))
         outcomes = root / 'outcomes'
         outcomes.mkdir()
+        (root / 'forecasts').mkdir()
+        (root / 'evidence').mkdir()
         return registry, outcomes, datetime(2026, 8, 24, tzinfo=timezone.utc), datetime(2026, 8, 31, tzinfo=timezone.utc)
+
+    def bind_outcome(self, root, row):
+        forecast = {'contract': 'FROZEN_FORECAST_v1', 'forecast_id': row['forecast_id']}
+        (root / 'forecasts' / (row['forecast_id'] + '.json')).write_text(json.dumps(forecast))
+        row['forecast_sha256'] = hashlib.sha256(module.canonical(forecast)).hexdigest()
+        if row['status'] == 'MATURED':
+            evidence = {'contract': 'SYNTHETIC_TEST_EVIDENCE', 'value': 123}
+            path = Path('evidence') / (row['forecast_id'] + '.json')
+            (root / path).write_text(json.dumps(evidence))
+            row['evidence_path'] = str(path)
+            row['evidence_sha256'] = hashlib.sha256(module.canonical(evidence)).hexdigest()
+        return row
+
+    def load_learning(self, registry, outcomes, start, end):
+        return module.load_experiment_learning(registry, outcomes, start, end,
+            repo_root=registry.parent, forecast_root=registry.parent / 'forecasts')
 
     def test_current_and_legacy_outcomes_preserve_censorship_and_utc_window(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -34,9 +53,10 @@ class WeeklyCalibrationContextV4Tests(unittest.TestCase):
                 {'contract': 'MATURED_OUTCOME_v3', 'forecast_id': 'offset_before_start', 'status': 'CENSORED', 'reason': 'METRIC_UNAVAILABLE', 'created_at_utc': '2026-08-24T00:30:00+02:00'},
             ]
             for i, row in enumerate(rows):
+                self.bind_outcome(Path(tmp), row)
                 (outcomes / f'{i}.json').write_text(json.dumps(row))
             before = {p: p.read_bytes() for p in outcomes.iterdir()}
-            data = module.load_experiment_learning(registry, outcomes, start, end)
+            data = self.load_learning(registry, outcomes, start, end)
             selected = {x['forecast_id']: x for x in data['new_matured_outcomes']}
             self.assertEqual(set(selected), {'legacy', 'current', 'censored'})
             self.assertIsNone(selected['censored']['return_pct'])
@@ -51,6 +71,7 @@ class WeeklyCalibrationContextV4Tests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             registry, outcomes, start, end = self.experiment_fixture(Path(tmp))
             good = {'contract': 'MATURED_OUTCOME_v3', 'forecast_id': 'good', 'status': 'CENSORED', 'reason': 'METRIC_UNAVAILABLE', 'created_at_utc': '2026-08-25T00:00:00Z'}
+            self.bind_outcome(Path(tmp), good)
             for defect in ['truncated', 'wrong_contract', 'contract_type', 'naive_time', 'bad_time', 'not_object', 'nonfinite', 'wrong_status', 'censored_with_score', 'matured_without_return']:
                 with self.subTest(defect=defect):
                     for p in outcomes.iterdir(): p.unlink()
@@ -66,11 +87,39 @@ class WeeklyCalibrationContextV4Tests(unittest.TestCase):
                     if defect == 'censored_with_score': bad['result'] = 'HIT'
                     if defect == 'matured_without_return': bad.update(status='MATURED', result='HIT')
                     (outcomes / 'bad.json').write_text('{' if defect == 'truncated' else json.dumps(bad))
-                    data = module.load_experiment_learning(registry, outcomes, start, end)
+                    data = self.load_learning(registry, outcomes, start, end)
                     self.assertEqual([x['forecast_id'] for x in data['new_matured_outcomes']], ['good'])
                     self.assertFalse(data['matured_outcome_evidence_available'])
                     self.assertTrue(data['outcome_ingestion_diagnostics'])
                     self.assertTrue(data['outcome_ingestion_diagnostics'][0]['path'].endswith('bad.json'))
+
+    def test_matured_outcome_requires_matching_source_bindings(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            registry, outcomes, start, end = self.experiment_fixture(root)
+            good = {'contract': 'MATURED_OUTCOME_v3', 'forecast_id': 'bound', 'status': 'MATURED',
+                    'result': 'HIT', 'return_pct': 1.0, 'created_at_utc': '2026-08-25T00:00:00Z'}
+            for defect in ('missing_forecast_hash', 'missing_evidence_path', 'missing_evidence_hash',
+                           'stale_forecast_hash', 'stale_evidence_hash', 'revised_evidence_file',
+                           'mutable_latest', 'outside_repository'):
+                with self.subTest(defect=defect):
+                    row = self.bind_outcome(root, dict(good))
+                    if defect.startswith('missing_'):
+                        row.pop({'missing_forecast_hash': 'forecast_sha256', 'missing_evidence_path': 'evidence_path',
+                                 'missing_evidence_hash': 'evidence_sha256'}[defect])
+                    if defect == 'stale_forecast_hash': row['forecast_sha256'] = '0' * 64
+                    if defect == 'stale_evidence_hash': row['evidence_sha256'] = '0' * 64
+                    if defect == 'revised_evidence_file': (root / row['evidence_path']).write_text('{"revision":2}')
+                    if defect == 'mutable_latest': row['evidence_path'] = 'evidence/LATEST.json'
+                    if defect == 'outside_repository': row['evidence_path'] = '../outside.json'
+                    path = outcomes / 'outcome.json'
+                    path.write_text(json.dumps(row))
+                    before = path.read_bytes()
+                    data = self.load_learning(registry, outcomes, start, end)
+                    self.assertEqual(data['new_matured_outcomes'], [])
+                    self.assertFalse(data['matured_outcome_evidence_available'])
+                    self.assertTrue(data['outcome_ingestion_diagnostics'])
+                    self.assertEqual(path.read_bytes(), before)
 
     def test_unreadable_outcome_directory_is_not_confirmed_empty(self):
         with tempfile.TemporaryDirectory() as tmp:

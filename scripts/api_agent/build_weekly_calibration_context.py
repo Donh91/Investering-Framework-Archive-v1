@@ -104,7 +104,52 @@ def load_legacy_context(root: Path | None) -> dict[str, Any]:
     }
 
 
-def load_experiment_learning(registry_path: Path, outcome_root: Path, start: datetime, end: datetime) -> dict[str, Any]:
+def load_experiment_learning(registry_path: Path, outcome_root: Path, start: datetime, end: datetime,
+                             *, repo_root: Path | None = None, forecast_root: Path | None = None) -> dict[str, Any]:
+    repo_root = (repo_root or Path.cwd()).resolve()
+    forecast_root = forecast_root or repo_root / 'research/framework_memory/forecast_memory'
+    forecast_paths = None
+    binding_cache = {}
+
+    def bound_document(path: Path, expected: Any):
+        if not isinstance(expected, str) or len(expected) != 64 or any(c not in '0123456789abcdef' for c in expected):
+            raise ValueError('BINDING_HASH_INVALID')
+        path = path.resolve()
+        if not path.is_relative_to(repo_root):
+            raise ValueError('BINDING_PATH_OUTSIDE_REPOSITORY')
+        if path not in binding_cache:
+            document = load_json(path)
+            binding_cache[path] = (document, hashlib.sha256(canonical(document)).hexdigest())
+        document, actual = binding_cache[path]
+        if actual != expected:
+            raise ValueError('BINDING_HASH_MISMATCH_CURRENT_FILE')
+        return document
+
+    def verify_bindings(value):
+        nonlocal forecast_paths
+        if forecast_paths is None:
+            forecast_paths = {}
+            if not forecast_root.is_dir():
+                raise ValueError('FORECAST_ROOT_UNAVAILABLE')
+            def walk_error(exc):
+                raise ValueError('FORECAST_DIRECTORY_UNREADABLE') from exc
+            for directory, _, filenames in os.walk(forecast_root, onerror=walk_error):
+                for filename in filenames:
+                    if filename.endswith('.json'):
+                        forecast_paths.setdefault(Path(filename).stem, []).append(Path(directory) / filename)
+        candidates = forecast_paths.get(value['forecast_id'], [])
+        if len(candidates) != 1:
+            raise ValueError('FORECAST_BINDING_MISSING_OR_AMBIGUOUS')
+        forecast = bound_document(candidates[0], value.get('forecast_sha256'))
+        if not isinstance(forecast, dict) or forecast.get('contract') != 'FROZEN_FORECAST_v1' or forecast.get('forecast_id') != value['forecast_id']:
+            raise ValueError('FORECAST_BINDING_CONTRACT_INVALID')
+        path, digest = value.get('evidence_path'), value.get('evidence_sha256')
+        if value['status'] == 'MATURED' or path is not None or digest is not None:
+            if not isinstance(path, str) or not path or Path(path).name == 'LATEST.json':
+                raise ValueError('EVIDENCE_BINDING_PATH_INVALID')
+            bound_document(repo_root / path, digest)
+        return str(candidates[0])
+
     def unavailable(status: str, reason: str) -> dict[str, Any]:
         return {
             "status": status,
@@ -188,11 +233,19 @@ def load_experiment_learning(registry_path: Path, outcome_root: Path, start: dat
         else:
             diagnostics.append({'path': str(path), 'reason': 'OUTCOME_STATUS_UNSUPPORTED'})
             continue
+        try:
+            forecast_path = verify_bindings(value)
+        except (OSError, UnicodeError, ValueError, RecursionError) as exc:
+            reason = str(exc) if isinstance(exc, ValueError) and str(exc).startswith(('BINDING_', 'FORECAST_', 'EVIDENCE_')) else 'BINDING_EVIDENCE_UNREADABLE'
+            diagnostics.append({'path': str(path), 'reason': reason})
+            continue
         outcomes.append({
             "source_contract": value['contract'],
             "source_authority": value.get('authority'),
             "forecast_id": value.get("forecast_id"),
             "forecast_sha256": value.get("forecast_sha256"),
+            "forecast_path": forecast_path,
+            "source_binding_verification": "CURRENT_FILE_CANONICAL_JSON_SHA256",
             "evidence_path": value.get("evidence_path"),
             "evidence_sha256": value.get("evidence_sha256"),
             "status": value.get("status"),
