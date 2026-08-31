@@ -1,0 +1,66 @@
+{
+  "contract": "CODEX_RESEARCH_CANDIDATE_v1",
+  "candidate_id": "codex-research-audit-etf-adapter-v1",
+  "submitted_at_utc": "2026-08-31T02:10:11Z",
+  "status": "SUBMITTED",
+  "origin": {
+    "type": "AUDIT",
+    "thread_label": "independent-code-audit-2026-08-31",
+    "source_paths": [
+      "06_RESEARCH_LAB/audit_summaries/code_audit_20260831/README.md",
+      "06_RESEARCH_LAB/audit_summaries/code_audit_20260831/reproduce.py"
+    ]
+  },
+  "title": "Consume the current ETF owner contract with strict as-of eligibility",
+  "objective": "Consume the current ETF owner contract with strict as-of eligibility. Preserve existing owner semantics and historical evidence.",
+  "finding_key": "AUDIT_H3_ETF_CURRENT_OWNER_CONTRACT",
+  "primary_target": "scripts/experiments/etf_absorption_transmission_v1.py",
+  "allowed_change_scope": [
+    "scripts/experiments/etf_absorption_transmission_v1.py",
+    "tests/experiments/test_etf_absorption_transmission_v1.py"
+  ],
+  "evidence": [
+    {
+      "kind": "COMMIT",
+      "ref": "fa18006c3c0b2a1ab89f5dcebb3ce4a02bd50195",
+      "summary": "Frozen independent reproduction baseline."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "06_RESEARCH_LAB/audit_summaries/code_audit_20260831/README.md",
+      "summary": "Independent findings and corrected external-audit claims."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "06_RESEARCH_LAB/audit_summaries/code_audit_20260831/reproduce.py",
+      "summary": "Read-only probes with synthetic temporary fixtures; no paid API calls."
+    }
+  ],
+  "reproduction": "Run validate_owner_record against current DAILY_SETTLED_ETF_CALIBRATION_v2 captures. All are rejected because the adapter accepts only v1 and the old source identity. Test the real current owner metadata plus synthetic v1/v2, revision and as-of boundary fixtures. Historical partially known rows must remain explicitly ineligible.",
+  "acceptance_tests": {
+    "positive": [
+      "Fully known, hash-valid current v2 owner evidence can be read without weakening parity, finality, authority or source checks.",
+      "Select the latest eligible session known at the as-of time, then the latest eligible revision of that session.",
+      "Legacy supported evidence is handled deliberately; excluded rows have explicit diagnostic reasons."
+    ],
+    "negative": [
+      "Unknown cells, false parity, bad hashes, non-finite totals, future knowledge or unknown source contracts cannot become eligible.",
+      "A late backfill of an older session cannot displace a newer eligible session. Preserve historical records; do not fetch restricted data or change source policy."
+    ]
+  },
+  "authority_boundary": "CODE_REMEDIATION_ONLY",
+  "requires_framework_owner_authority": false,
+  "forbidden_changes": [
+    "market gates",
+    "model weights",
+    "canonical authority",
+    "portfolio logic",
+    "API budget",
+    "new policy semantics",
+    "workflow changes",
+    "historical evidence rewrite",
+    "restricted provider values in public artifacts"
+  ],
+  "requested_priority": "EXPEDITED",
+  "post_fix_gate": "POSITIVE_AND_NEGATIVE_REGRESSIONS_PLUS_PRODUCTION_SHAPE_REPLAY_PLUS_CI_AND_MAIN_READBACK"
+}
