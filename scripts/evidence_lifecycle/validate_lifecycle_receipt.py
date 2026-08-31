@@ -4,7 +4,7 @@
 import argparse
 import json
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 CONTRACT = "EVIDENCE_LIFECYCLE_RECEIPT_v0_1"
@@ -32,15 +32,22 @@ def parse_time(value):
         return None
     if not isinstance(value, str):
         raise ValueError("timestamp must be string or null")
-    return datetime.fromisoformat(value.replace("Z", "+00:00"))
+    try:
+        stamp = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError as exc:
+        raise ValueError("timestamp must be valid ISO-8601") from exc
+    if stamp.utcoffset() is None:
+        raise ValueError("timestamp requires an explicit timezone")
+    try:
+        return stamp.astimezone(timezone.utc)
+    except (OverflowError, ValueError) as exc:
+        raise ValueError("timestamp is outside the supported UTC range") from exc
 
 
-def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument("receipt")
-    args = ap.parse_args()
-    data = json.loads(Path(args.receipt).read_text())
+def validate_receipt(data):
     errors = []
+    if not isinstance(data, dict):
+        return {"contract": CONTRACT, "valid": False, "errors": ["receipt must be an object"], "missing_or_blocked": []}
 
     if data.get("contract") != CONTRACT:
         errors.append(f"contract must equal {CONTRACT}")
@@ -57,7 +64,7 @@ def main():
     for field in TIME_FIELDS:
         status = status_map.get(field)
         value = data.get(field)
-        if status not in STATUSES:
+        if not isinstance(status, str) or status not in STATUSES:
             errors.append(f"{field}: invalid or missing timestamp status")
             continue
         if status in {"UNAVAILABLE", "CONTRACT_BLOCKED", "NOT_APPLICABLE"} and value is not None:
@@ -78,7 +85,7 @@ def main():
             errors.append(f"invalid ordering: {earlier} > {later}")
 
     def observed(field):
-        return status_map.get(field) in OBSERVED and parsed.get(field) is not None
+        return parsed.get(field) is not None and status_map.get(field) in OBSERVED
 
     # Acceptance is an explicit framework event, not an inferred consequence of
     # retrieval, storage or report generation.
@@ -120,16 +127,28 @@ def main():
     if status_map.get("decision_evaluation_time") == "CONTRACT_BLOCKED" and observed("action_divergence_time"):
         errors.append("CONTRACT_BLOCKED decision_evaluation_time forbids action_divergence_time")
 
-    result = {
+    return {
         "contract": CONTRACT,
         "valid": not errors,
         "errors": errors,
         "missing_or_blocked": [
-            f for f in TIME_FIELDS if status_map.get(f) in {"UNAVAILABLE", "CONTRACT_BLOCKED"}
+            f for f in TIME_FIELDS if status_map.get(f) in ("UNAVAILABLE", "CONTRACT_BLOCKED")
         ],
     }
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("receipt")
+    args = ap.parse_args()
+    try:
+        data = json.loads(Path(args.receipt).read_text())
+        result = validate_receipt(data)
+    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+        result = {"contract": CONTRACT, "valid": False,
+                  "errors": [f"receipt unreadable ({type(exc).__name__}): {args.receipt}"], "missing_or_blocked": []}
     print(json.dumps(result, indent=2, sort_keys=True))
-    return 0 if not errors else 1
+    return 0 if result['valid'] else 1
 
 
 if __name__ == "__main__":
