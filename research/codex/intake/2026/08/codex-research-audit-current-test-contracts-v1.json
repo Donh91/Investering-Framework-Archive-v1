@@ -1,0 +1,73 @@
+{
+  "contract": "CODEX_RESEARCH_CANDIDATE_v1",
+  "candidate_id": "codex-research-audit-current-test-contracts-v1",
+  "submitted_at_utc": "2026-08-31T02:10:11Z",
+  "status": "SUBMITTED",
+  "origin": {
+    "type": "AUDIT",
+    "thread_label": "independent-code-audit-2026-08-31",
+    "source_paths": [
+      "06_RESEARCH_LAB/audit_summaries/code_audit_20260831/README.md",
+      "06_RESEARCH_LAB/audit_summaries/code_audit_20260831/reproduce.py"
+    ]
+  },
+  "title": "Repair current contract guards without concealing cadence drift",
+  "objective": "Repair current contract guards without concealing cadence drift. Preserve existing owner semantics and historical evidence.",
+  "finding_key": "AUDIT_T2_T3_T4_CURRENT_CONTRACT_GUARDS",
+  "primary_target": "scripts/api_agent/validate_deep_research_queue.py",
+  "allowed_change_scope": [
+    "scripts/api_agent/validate_deep_research_queue.py",
+    "tests/api_agent/test_api_gateway.py",
+    "tests/daily_capture/test_cfgi_credit_efficiency.py",
+    "tests/daily_capture/test_weekly_market_close_package.py",
+    "tests/master_monday/test_preflight_package_v3.py",
+    "tests/experiments/test_experiment_forecast_priority.py",
+    "tests/experiments/test_experiment_lifecycle.py",
+    "tests/experiments/test_scientific_admission_lifecycle.py",
+    "tests/api_agent/test_enriched_learning_pipeline.py"
+  ],
+  "evidence": [
+    {
+      "kind": "COMMIT",
+      "ref": "fa18006c3c0b2a1ab89f5dcebb3ce4a02bd50195",
+      "summary": "Frozen independent reproduction baseline."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "06_RESEARCH_LAB/audit_summaries/code_audit_20260831/README.md",
+      "summary": "Independent findings and corrected external-audit claims."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "06_RESEARCH_LAB/audit_summaries/code_audit_20260831/reproduce.py",
+      "summary": "Read-only probes with synthetic temporary fixtures; no paid API calls."
+    }
+  ],
+  "reproduction": "python -m pytest tests/ -q at the pinned SHA returns 4 failed and 823 passed, plus 247 successful subtests. One validator rejects active_research_id=null despite the idle queue owner; two tests assert obsolete weekly package v2; CFGI tests assume old fields/cadence. Current collection policy permits ten fields but prescribes five mixed-timeframe daily captures, whereas the workflow schedules six four-hour captures. Do not turn that real policy discrepancy green by copying implementation into expectations.",
+  "acceptance_tests": {
+    "positive": [
+      "The explicitly idle research queue validates while an unknown non-null active ID is rejected.",
+      "Current v3 weekly close and Master Monday contracts have meaningful behavior tests and production-shaped fixtures.",
+      "Authorized CFGI fields are distinguished from the unresolved schedule/cost-policy discrepancy; policy drift remains visible until separately authorized remediation."
+    ],
+    "negative": [
+      "Do not delete, skip or weaken the credit guard merely to obtain green CI.",
+      "Do not fake live-price evidence in legacy spot fixtures, change workflow cadence, modify policy/budgets or use tests as a second authority."
+    ]
+  },
+  "authority_boundary": "CODE_REMEDIATION_ONLY",
+  "requires_framework_owner_authority": false,
+  "forbidden_changes": [
+    "market gates",
+    "model weights",
+    "canonical authority",
+    "portfolio logic",
+    "API budget",
+    "new policy semantics",
+    "workflow changes",
+    "historical evidence rewrite",
+    "restricted provider values in public artifacts"
+  ],
+  "requested_priority": "EXPEDITED",
+  "post_fix_gate": "POSITIVE_AND_NEGATIVE_REGRESSIONS_PLUS_PRODUCTION_SHAPE_REPLAY_PLUS_CI_AND_MAIN_READBACK"
+}

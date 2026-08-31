@@ -1,0 +1,66 @@
+{
+  "contract": "CODEX_RESEARCH_CANDIDATE_v1",
+  "candidate_id": "codex-research-audit-utc-validation-v1",
+  "submitted_at_utc": "2026-08-31T02:10:11Z",
+  "status": "SUBMITTED",
+  "origin": {
+    "type": "AUDIT",
+    "thread_label": "independent-code-audit-2026-08-31",
+    "source_paths": [
+      "06_RESEARCH_LAB/audit_summaries/code_audit_20260831/README.md",
+      "06_RESEARCH_LAB/audit_summaries/code_audit_20260831/reproduce.py"
+    ]
+  },
+  "title": "Reject ambiguous lifecycle timestamps with structured diagnostics",
+  "objective": "Reject ambiguous lifecycle timestamps with structured diagnostics. Preserve existing owner semantics and historical evidence.",
+  "finding_key": "AUDIT_M13_NAIVE_TIMESTAMP_VALIDATION",
+  "primary_target": "scripts/evidence_lifecycle/validate_lifecycle_receipt.py",
+  "allowed_change_scope": [
+    "scripts/evidence_lifecycle/validate_lifecycle_receipt.py",
+    "scripts/evidence_lifecycle/test_validate_lifecycle_receipt.py",
+    "tests/learning/test_audit_lifecycle_timestamps.py"
+  ],
+  "evidence": [
+    {
+      "kind": "COMMIT",
+      "ref": "fa18006c3c0b2a1ab89f5dcebb3ce4a02bd50195",
+      "summary": "Frozen independent reproduction baseline."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "06_RESEARCH_LAB/audit_summaries/code_audit_20260831/README.md",
+      "summary": "Independent findings and corrected external-audit claims."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "06_RESEARCH_LAB/audit_summaries/code_audit_20260831/reproduce.py",
+      "summary": "Read-only probes with synthetic temporary fixtures; no paid API calls."
+    }
+  ],
+  "reproduction": "Call parse_time with 2026-08-24T12:00:00 and observe a timezone-naive datetime. A receipt mixing that value with an aware timestamp can raise TypeError during ordering instead of returning an invalid result. Use synthetic receipts only.",
+  "acceptance_tests": {
+    "positive": [
+      "Z and explicit-offset timestamps compare on the same UTC timeline.",
+      "Validation reports missing timezone or malformed time as a structured invalid result, without a traceback."
+    ],
+    "negative": [
+      "Naive, malformed or impossible timestamps cannot pass or be silently assigned a timezone.",
+      "Do not change horizon rules, infer timestamps or modify historical receipts."
+    ]
+  },
+  "authority_boundary": "CODE_REMEDIATION_ONLY",
+  "requires_framework_owner_authority": false,
+  "forbidden_changes": [
+    "market gates",
+    "model weights",
+    "canonical authority",
+    "portfolio logic",
+    "API budget",
+    "new policy semantics",
+    "workflow changes",
+    "historical evidence rewrite",
+    "restricted provider values in public artifacts"
+  ],
+  "requested_priority": "EXPEDITED",
+  "post_fix_gate": "POSITIVE_AND_NEGATIVE_REGRESSIONS_PLUS_PRODUCTION_SHAPE_REPLAY_PLUS_CI_AND_MAIN_READBACK"
+}

@@ -1,0 +1,69 @@
+{
+  "contract": "CODEX_RESEARCH_CANDIDATE_v1",
+  "candidate_id": "codex-research-audit-budget-integrity-v1",
+  "submitted_at_utc": "2026-08-31T02:10:11Z",
+  "status": "SUBMITTED",
+  "origin": {
+    "type": "AUDIT",
+    "thread_label": "independent-code-audit-2026-08-31",
+    "source_paths": [
+      "06_RESEARCH_LAB/audit_summaries/code_audit_20260831/README.md",
+      "06_RESEARCH_LAB/audit_summaries/code_audit_20260831/reproduce.py"
+    ]
+  },
+  "title": "Fail closed on unreadable and non-finite API cost evidence",
+  "objective": "Fail closed on unreadable and non-finite API cost evidence. Preserve existing owner semantics and historical evidence.",
+  "finding_key": "AUDIT_H4_N1_COST_EVIDENCE_FAIL_OPEN",
+  "primary_target": "scripts/lib/evidence_io.py",
+  "allowed_change_scope": [
+    "scripts/lib/evidence_io.py",
+    "scripts/api_agent/check_api_lane_budget.py",
+    "scripts/api_agent/check_monthly_cost_guard.py",
+    "tests/api_agent/test_audit_budget_integrity.py",
+    "tests/lib/test_evidence_io.py"
+  ],
+  "evidence": [
+    {
+      "kind": "COMMIT",
+      "ref": "fa18006c3c0b2a1ab89f5dcebb3ce4a02bd50195",
+      "summary": "Frozen independent reproduction baseline."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "06_RESEARCH_LAB/audit_summaries/code_audit_20260831/README.md",
+      "summary": "Independent findings and corrected external-audit claims."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "06_RESEARCH_LAB/audit_summaries/code_audit_20260831/reproduce.py",
+      "summary": "Read-only probes with synthetic temporary fixtures; no paid API calls."
+    }
+  ],
+  "reproduction": "Run the read-only audit probe. A temporary receipt containing truncated JSON makes the lane budget guard exit 0/PASS. A current-month receipt with estimated_cost_usd=NaN makes the monthly guard exit 0/PASS and emit non-standard JSON. Use temporary fixtures, never a paid API call.",
+  "acceptance_tests": {
+    "positive": [
+      "Both guards retain their existing caps, reserves and valid zero-cost behavior; duplicate identical receipts count once.",
+      "Missing optional evidence, unreadable evidence and usable evidence remain distinguishable; errors include a path and reason without payload disclosure.",
+      "Valid finite nonnegative costs and aware timestamps produce deterministic accounting and standard JSON."
+    ],
+    "negative": [
+      "Malformed JSON, invalid timestamps, NaN, Infinity, negative costs, booleans and conflicting duplicate costs cannot yield PASS.",
+      "Do not change caps, task budgets, reserves, billing cadence, source policy or workflow files."
+    ]
+  },
+  "authority_boundary": "CODE_REMEDIATION_ONLY",
+  "requires_framework_owner_authority": false,
+  "forbidden_changes": [
+    "market gates",
+    "model weights",
+    "canonical authority",
+    "portfolio logic",
+    "API budget",
+    "new policy semantics",
+    "workflow changes",
+    "historical evidence rewrite",
+    "restricted provider values in public artifacts"
+  ],
+  "requested_priority": "EXPEDITED",
+  "post_fix_gate": "POSITIVE_AND_NEGATIVE_REGRESSIONS_PLUS_PRODUCTION_SHAPE_REPLAY_PLUS_CI_AND_MAIN_READBACK"
+}
