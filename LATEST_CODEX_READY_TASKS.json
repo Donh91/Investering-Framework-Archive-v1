@@ -1,7 +1,7 @@
 {
   "contract": "CODEX_READY_TASKS_v1",
   "contract_revision": "1.2",
-  "generated_at_utc": "2026-08-31T01:46:12Z",
+  "generated_at_utc": "2026-08-31T01:52:30Z",
   "queue_sources": [
     "AUTOMATION_HEALTH",
     "RESEARCH_INTAKE"
@@ -39,7 +39,7 @@
         "sampling schedules"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 1bdca0e1db62aaccc292 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-08-31T01:46:12Z",
+      "last_observed_at_utc": "2026-08-31T01:52:30Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -101,7 +101,7 @@
         "portfolio logic"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 560bc131167442101f8b --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-08-31T01:46:12Z",
+      "last_observed_at_utc": "2026-08-31T01:52:30Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -166,7 +166,7 @@
         "portfolio logic"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 5d77a6e68e092eed1ca3 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-08-31T01:46:12Z",
+      "last_observed_at_utc": "2026-08-31T01:52:30Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -202,6 +202,71 @@
     },
     {
       "allowed_change_scope": [
+        "scripts/pullback_learning/pullback_learning_ledger.py",
+        "tests/pullback_learning/directly related runtime eligibility, liveness and authority tests",
+        "04_MARKET_LEARNING/pullback_learning/directly related non-canonical documentation or machine-readable status artifact only if an existing owner pattern requires it",
+        ".github/workflows/pullback-learning-ledger.yml only if strictly required to preserve the existing owner contract; workflow modification requires current repository-safety safepoint"
+      ],
+      "candidate_id": "codex-research-pullback-learning-retired-entry-dependency-v1",
+      "candidate_path": "research/codex/intake/2026/08/codex-research-pullback-learning-retired-entry-dependency-v1.json",
+      "candidate_sha256": "451c101ecb1d903c8f15d03112dd13b9e6e31eab2fd62e86c4038c8ada099119",
+      "clean_noop_condition": "The candidate is superseded, already fixed, duplicates a current health task, or fresh evidence no longer reproduces the bounded code defect.",
+      "escalation_condition": "Escalate to FRAMEWORK_OWNER if resolution requires market gates, model weights, canonical authority, portfolio logic, API budget or new policy semantics.",
+      "failure_streak": 0,
+      "finding": "PULLBACK_LEARNING_RETIRED_ENTRY_DEPENDENCY_DEAD_CONSUMER",
+      "first_observed_at_utc": "2026-08-31T01:51:00Z",
+      "forbidden_changes": [
+        "API budget",
+        "automatic rebuy permission",
+        "canonical authority",
+        "market gates",
+        "model weights",
+        "new policy semantics",
+        "new pullback engine",
+        "new pullback threshold",
+        "new regime threshold",
+        "portfolio logic",
+        "restoring retired entry permission",
+        "retrospective evidence rewrite"
+      ],
+      "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 6574d30a3f1e5cbf9e4d --branch <TASK_BRANCH>",
+      "last_observed_at_utc": "2026-08-31T01:52:30Z",
+      "latest_run_id": null,
+      "latest_run_url": null,
+      "lifecycle_state": "ACTIVE",
+      "objective": "Repair the existing adaptive Pullback Learning owner so it is not permanently dead after the canonical retirement of GRADUATED_ALTCOIN_TOPUP_ACTIVE, while preserving the intended regime/context boundary and research-only authority. First discover whether a pre-existing non-binding research eligibility/context owner already expresses when pullback learning may classify risk/reload states. If one exists, bind to it explicitly and fail closed on missing/stale evidence. If no such owner exists, do not invent a new market/regime rule; keep classification fail-closed and escalate the missing eligibility contract to the framework owner. Regardless, continue truthful observation collection only if existing owner semantics permit it, and do not allow the retired entry/breadth gate to regain action, rebuy, canonical-state or portfolio authority.",
+      "observations": 1,
+      "post_fix_gate": "PULLBACK_LIVENESS_POSITIVE_CONTROL_PLUS_RETIRED_ENTRY_NEGATIVE_CONTROL_PLUS_AUTHORITY_FIREWALL_PASS_PLUS_MAIN_READBACK",
+      "precondition": "Candidate codex-research-pullback-learning-retired-entry-dependency-v1 still exists on main at research/codex/intake/2026/08/codex-research-pullback-learning-retired-entry-dependency-v1.json with SHA-256 451c101ecb1d903c8f15d03112dd13b9e6e31eab2fd62e86c4038c8ada099119, status SUBMITTED and authority_boundary CODE_REMEDIATION_ONLY; no superseding fix or duplicate task has made it stale.",
+      "requested_priority": "EXPEDITED",
+      "required_evidence": [
+        "scripts/pullback_learning/pullback_learning_ledger.py",
+        "04_MARKET_LEARNING/pullback_learning/LATEST.json",
+        "#657",
+        "research/codex/intake/2026/08/codex-research-intraday-retired-entry-dependency-v1.json",
+        "reproduction",
+        "positive and negative acceptance tests"
+      ],
+      "risk_class": "B_CODEX_PR_RESEARCH",
+      "route": "CODEX_PR",
+      "signature": "6574d30a3f1e5cbf9e4d",
+      "source_type": "RESEARCH_INTAKE",
+      "state": "CODEX_READY",
+      "stop_condition": "Stop without code changes if candidate hash/status/authority changed, reproduction fails, or the required fix exceeds allowed_change_scope.",
+      "submitted_at_utc": "2026-08-31T01:51:00Z",
+      "success_evidence": [
+        "candidate-linked reproduction",
+        "positive and negative acceptance tests",
+        "PULLBACK_LIVENESS_POSITIVE_CONTROL_PLUS_RETIRED_ENTRY_NEGATIVE_CONTROL_PLUS_AUTHORITY_FIREWALL_PASS_PLUS_MAIN_READBACK"
+      ],
+      "success_streak": 0,
+      "task_contract_sha256": "94777a6e266839c2f4805d5d41a8b0518f87dc72e3440b21fefd94421dce51dd",
+      "transition_receipt_path": "research/codex/transitions/6574d30a3f1e5cbf9e4d.json",
+      "transition_receipt_required": true,
+      "workflow": "research-intake/codex-research-pullback-learning-retired-entry-dependency-v1"
+    },
+    {
+      "allowed_change_scope": [
         "scripts/intraday_execution/intraday_execution_research.py",
         "04_MARKET_LEARNING/intraday_execution/config.json",
         "04_MARKET_LEARNING/intraday_execution/PROTOCOL.md only if needed to keep documentation aligned with existing research-only authority",
@@ -229,7 +294,7 @@
         "re-enabling retired breadth predictive authority"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 6d300c1feb6603433dca --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-08-31T01:46:12Z",
+      "last_observed_at_utc": "2026-08-31T01:52:30Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -294,7 +359,7 @@
         "weakening required forecast fields merely to make parsing pass"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 774d6478412574ae9461 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-08-31T01:46:12Z",
+      "last_observed_at_utc": "2026-08-31T01:52:30Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -358,7 +423,7 @@
         "treating retrieval failure as NO_NEW_MATERIAL_CATALYST"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 794db8bab0e3fe7454f1 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-08-31T01:46:12Z",
+      "last_observed_at_utc": "2026-08-31T01:52:30Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -422,7 +487,7 @@
         "stale threshold changes"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 7b83701444e991ea1722 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-08-31T01:46:12Z",
+      "last_observed_at_utc": "2026-08-31T01:52:30Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -487,7 +552,7 @@
         "rewriting historical research evidence"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 992f7f91fff033487385 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-08-31T01:46:12Z",
+      "last_observed_at_utc": "2026-08-31T01:52:30Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -551,7 +616,7 @@
         "retrospective row backfill"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature b14f0f264547ba5e6ed0 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-08-31T01:46:12Z",
+      "last_observed_at_utc": "2026-08-31T01:52:30Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -609,7 +674,7 @@
         "portfolio logic"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature f1a5d4570b28c8325c8b --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-08-31T01:46:12Z",
+      "last_observed_at_utc": "2026-08-31T01:52:30Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -676,7 +741,7 @@
         "unrelated workflow changes"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature ffa962f667950097668e --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-08-31T01:46:12Z",
+      "last_observed_at_utc": "2026-08-31T01:52:30Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -731,12 +796,12 @@
         "portfolio logic"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_transition_receipt.py --signature 290a6eef59374e2b7615 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-08-31T01:46:12Z",
+      "last_observed_at_utc": "2026-08-31T01:52:30Z",
       "latest_run_id": 33087739962,
       "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/33087739962",
       "lifecycle_state": "ACTIVE",
       "objective": "Resolve SCHEDULE_STALE for daily-director-shadow.yml with the smallest bounded code change that satisfies the existing acceptance gates.",
-      "observations": 19,
+      "observations": 20,
       "post_fix_gate": "3_SUCCESSFUL_EXPECTED_RUNS",
       "precondition": "Fresh Automation Production Health still contains signature 290a6eef59374e2b7615 for daily-director-shadow.yml/SCHEDULE_STALE, and verified lifecycle state does not make the finding non-actionable.",
       "required_evidence": [
@@ -792,7 +857,7 @@
         "retrospective uncensoring"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 3ddfccaba4b59ce99cc8 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-08-31T01:46:12Z",
+      "last_observed_at_utc": "2026-08-31T01:52:30Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -853,7 +918,7 @@
         "portfolio logic"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 49ecf37e76b7834b97a5 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-08-31T01:46:12Z",
+      "last_observed_at_utc": "2026-08-31T01:52:30Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -914,7 +979,7 @@
         "qualitative-label portfolio authority"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 4bc9351c84bc70cb0583 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-08-31T01:46:12Z",
+      "last_observed_at_utc": "2026-08-31T01:52:30Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -975,7 +1040,7 @@
         "portfolio logic"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 644003823eb58c75eeb1 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-08-31T01:46:12Z",
+      "last_observed_at_utc": "2026-08-31T01:52:30Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -1031,7 +1096,7 @@
         "portfolio logic"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 90f76bff777fb07fe2c0 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-08-31T01:46:12Z",
+      "last_observed_at_utc": "2026-08-31T01:52:30Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -1081,12 +1146,12 @@
         "portfolio logic"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_transition_receipt.py --signature a7a5728d50c5b6370e65 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-08-31T01:46:12Z",
+      "last_observed_at_utc": "2026-08-31T01:52:30Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
       "objective": "Resolve NO_RUN_HISTORY for cycle-navigator-weekly-publication.yml with the smallest bounded code change that satisfies the existing acceptance gates.",
-      "observations": 38,
+      "observations": 39,
       "post_fix_gate": "3_SUCCESSFUL_EXPECTED_RUNS",
       "precondition": "Fresh Automation Production Health still contains signature a7a5728d50c5b6370e65 for cycle-navigator-weekly-publication.yml/NO_RUN_HISTORY, and verified lifecycle state does not make the finding non-actionable.",
       "required_evidence": [
@@ -1140,7 +1205,7 @@
         "timestamp rewriting"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature a9f7ba653c7655a20c97 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-08-31T01:46:12Z",
+      "last_observed_at_utc": "2026-08-31T01:52:30Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -1201,7 +1266,7 @@
         "retroactive scoring"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature ad9eb8075d7529802226 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-08-31T01:46:12Z",
+      "last_observed_at_utc": "2026-08-31T01:52:30Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -1262,7 +1327,7 @@
         "portfolio logic"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature c767d605f29f7bd2722b --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-08-31T01:46:12Z",
+      "last_observed_at_utc": "2026-08-31T01:52:30Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -1322,7 +1387,7 @@
         "retrospective timing reconstruction"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature c9adb00c6dc0d7daec45 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-08-31T01:46:12Z",
+      "last_observed_at_utc": "2026-08-31T01:52:30Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -1382,7 +1447,7 @@
         "portfolio logic"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature d5f9cc11d5d7d05418b9 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-08-31T01:46:12Z",
+      "last_observed_at_utc": "2026-08-31T01:52:30Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -1445,7 +1510,7 @@
         "portfolio logic"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature e42a4face457d80066d7 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-08-31T01:46:12Z",
+      "last_observed_at_utc": "2026-08-31T01:52:30Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -1506,7 +1571,7 @@
         "portfolio logic"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature f7ca0bb8cce97bea8619 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-08-31T01:46:12Z",
+      "last_observed_at_utc": "2026-08-31T01:52:30Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
