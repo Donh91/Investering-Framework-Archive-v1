@@ -98,6 +98,10 @@ The first eligible canonical-main Actions run freezes `DIRECTION_REGISTRATION.js
 
 Each outcome links to the exact frozen prediction path and SHA-256, and to the exact due owner candle and its price binding. The validator checks actual UTC maturity, source prices, unchanged forecast fields, HIT/MISS arithmetic, Brier arithmetic and reproducible calibration from validated outcomes. A first production prediction is not a matured 1H outcome. Rounding cannot display 99% without `HIGH_ASSURANCE_99_ELIGIBLE`.
 
+Retries display the frozen BTC and ETH forecast, including its original probability and maturity, rather than recomputing it from mutable breadth or later calibration. Missing or ineligible frozen horizons remain `NO_EDGE(UNAVAILABLE)` in the RAW bridge.
+
+Censoring is allowed only for missing exact-due owner evidence after the configured grace period. The validator checks the immutable source Git commit recorded by the production run, so a later backfill neither changes a valid censor nor allows a known MISS to be discarded. An unreadable source commit fails validation; shallow CI may fetch that exact commit into its Git object cache without changing checkout or branch refs. There is no market API call and no later-price substitution.
+
 ## Authority
 - research_only: true
 - portfolio_execution: false

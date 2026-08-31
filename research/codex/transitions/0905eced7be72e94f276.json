@@ -1,0 +1,36 @@
+{
+  "allowed_change_scope": [
+    "scripts/pullback_learning/pullback_learning_ledger.py",
+    "tests/pullback_learning/directly related suspension, liveness, episode-freeze and authority tests",
+    "04_MARKET_LEARNING/pullback_learning/ELIGIBILITY_STATUS_v1.json only for non-semantic formatting/contract-consumption corrections; do not change permissions or resume criteria",
+    "04_MARKET_LEARNING/pullback_learning/directly related documentation if required"
+  ],
+  "branch": "agent/task-20260831-pullback-suspension-binding",
+  "candidate_id": "codex-research-pullback-learning-suspension-binding-v1",
+  "candidate_path": "research/codex/intake/2026/08/codex-research-pullback-learning-suspension-binding-v1.json",
+  "candidate_sha256": "f43a6eded3a4f8a97749ca2b34061a9af8cafc46c7027a14bb5ec8c09e5c14c9",
+  "contract": "CODEX_RESEARCH_TRANSITION_RECEIPT_v1",
+  "forbidden_changes": [
+    "API budget",
+    "automatic rebuy permission",
+    "canonical authority",
+    "changing ELIGIBILITY_STATUS_v1 permissions or resume criteria",
+    "episode backfill",
+    "market gates",
+    "model weights",
+    "new policy semantics",
+    "new pullback engine",
+    "new pullback or regime thresholds",
+    "portfolio logic",
+    "restoring retired entry permission",
+    "retrospective evidence rewrite"
+  ],
+  "objective": "Implement the already-authorized framework-owner suspension in the existing adaptive Pullback Learning owner. Replace the impossible dependency on GRADUATED_ALTCOIN_TOPUP_ACTIVE with a fail-closed read of 04_MARKET_LEARNING/pullback_learning/ELIGIBILITY_STATUS_v1.json. While status is SUSPENDED_NO_ELIGIBILITY_CONTRACT, continue immutable observation collection and descriptive adaptive statistics, emit REGIME_NOT_ACTIVE with explicit ELIGIBILITY_CONTRACT_UNAVAILABLE reason, create no new pullback/reload research episodes, do not mature or mutate existing episodes, and preserve all research-only/no-portfolio/no-canonical authority boundaries. This task implements an existing owner decision; it must not invent or infer any new eligibility rule, threshold, market state, rebuy permission or portfolio action.",
+  "post_fix_gate": "SUSPENDED_OWNER_BINDING_PASS_PLUS_OBSERVATION_LIVENESS_PASS_PLUS_EPISODE_FREEZE_NEGATIVE_CONTROL_PLUS_RETIRED_ENTRY_NEGATIVE_CONTROL_PLUS_AUTHORITY_FIREWALL_PLUS_MAIN_READBACK",
+  "pr_number": null,
+  "receipt_sha256": "8309c3b7e3730b64b80d87fdf762e69443a13ca32a76b44478756e82e1efa4d0",
+  "recorded_at_utc": "2026-08-31T02:39:49Z",
+  "signature": "0905eced7be72e94f276",
+  "state": "IN_REMEDIATION",
+  "task_contract_sha256": "9984f63a12c806996aa9066631c8f8ada37a685f95a08e160122efe1b45e276c"
+}

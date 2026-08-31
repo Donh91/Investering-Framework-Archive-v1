@@ -240,10 +240,13 @@ def validate_outcome(path: Path, cfg: dict[str, Any], now: datetime | None = Non
     status = row.get("status")
     require(status in {"MATURED", "CENSORED"}, f"OUTCOME_STATUS_INVALID:{path}")
     if status == "CENSORED":
-        if row.get("reason") == "EXACT_DUE_OWNER_CANDLE_MISSING_AFTER_GRACE":
-            require(row.get("substitute_later_price_forbidden") is True, f"OUTCOME_LATER_PRICE_GUARD_MISSING:{path}")
-            require((measured - due).total_seconds() / 3600.0 > float(cfg.get("max_outcome_evidence_lag_hours", 1.5)), f"OUTCOME_CENSORED_BEFORE_GRACE:{path}")
+        require(row.get("reason") == "EXACT_DUE_OWNER_CANDLE_MISSING_AFTER_GRACE", f"OUTCOME_CENSOR_REASON_INVALID:{path}")
+        require(row.get("substitute_later_price_forbidden") is True, f"OUTCOME_LATER_PRICE_GUARD_MISSING:{path}")
+        wait = (measured - due).total_seconds() / 3600.0
+        require(wait > float(cfg.get("max_outcome_evidence_lag_hours", 1.5)), f"OUTCOME_CENSORED_BEFORE_GRACE:{path}")
+        require(owner.finite_number(row.get("evidence_wait_hours")) and math.isclose(row["evidence_wait_hours"], wait, abs_tol=1e-6, rel_tol=0), f"OUTCOME_CENSOR_WAIT_MISMATCH:{path}")
         require(row.get("result") is None and row.get("brier_score") is None, f"CENSORED_OUTCOME_MUST_NOT_SCORE:{path}")
+        require(all(row.get(key) is None for key in ("end_value", "return_pct", "actual_direction", "evidence_observation_utc", "evidence_source_path")), f"CENSORED_OUTCOME_HAS_MATURED_EVIDENCE:{path}")
         return
 
     evidence_time = parse_utc(str(row.get("evidence_observation_utc")))
@@ -346,11 +349,17 @@ def validate_linkage(root: Path, cfg: dict[str, Any], prediction_paths: list[Pat
         for outcome_key, prediction_key in (("predicted_direction", "direction"), ("calibration_key", "calibration_key"), ("votes", "votes"), ("frozen_calibrated_probability_pct", "frozen_calibrated_probability_pct")):
             require(row.get(outcome_key) == target.get(prediction_key), f"OUTCOME_FROZEN_FIELD_DRIFT:{path}:{outcome_key}")
         require(row.get("calibration_group") == owner._group_id(row["target"], row["horizon_hours"], target["direction"], target["calibration_key"]), f"OUTCOME_CALIBRATION_GROUP_DRIFT:{path}")
+        require(row.get("start_value") == target["start_value"], f"OUTCOME_START_PRICE_DRIFT:{path}")
         if row["status"] == "MATURED":
-            require(row["start_value"] == target["start_value"], f"OUTCOME_START_PRICE_DRIFT:{path}")
             evidence = owner._exact_hourly_close(parse_utc(row["due_at_utc"]), row["target"], root=root)
             require(evidence is not None and row["end_value"] == evidence["close"], f"OUTCOME_SOURCE_PRICE_UNVERIFIED:{path}")
             require(row.get("evidence_source_path") == evidence["source_path"] and row.get("evidence_source_binding_sha256") == evidence["source_binding_sha256"], f"OUTCOME_SOURCE_BINDING_MISMATCH:{path}")
+        else:
+            try:
+                evidence = owner.exact_hourly_close_at_commit(root, row["production_context"]["commit_sha"], parse_utc(row["due_at_utc"]), row["target"])
+            except RuntimeError as exc:
+                raise ValidationError(f"OUTCOME_CENSOR_SOURCE_UNVERIFIED:{path}:{exc}") from exc
+            require(evidence is None, f"OUTCOME_CENSORED_DESPITE_EXACT_SOURCE:{path}")
     # Reconstruct only the outcomes observable when each probability was frozen.
     for path, pred in predictions.values():
         issued = parse_utc(pred["issued_at_utc"])

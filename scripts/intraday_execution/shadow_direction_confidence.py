@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import csv
 import hashlib
+import io
 import json
 import math
 import os
@@ -472,6 +473,7 @@ def write_prediction(
                 "frozen_calibrated_probability_pct": cal["calibrated_probability"],
                 "confidence_status_at_issue": cal["confidence_status"],
                 "independent_calibration_samples_at_issue": cal["independent_calibration_samples"],
+                "wilson_lower_95_pct_at_issue": cal.get("wilson_lower_95_pct"),
             }
         horizons[f"{horizon}H"] = {
             "horizon_hours": horizon,
@@ -507,6 +509,30 @@ def write_prediction(
     return "PREDICTION_FROZEN", str(path)
 
 
+def _hourly_source_path(due: datetime) -> Path:
+    candle_open = due - timedelta(hours=1)
+    return HOURLY_ROOT / f"{candle_open:%Y/%m/%Y-%m-%d}.csv"
+
+
+def _close_from_csv(raw_csv: str, due: datetime, target: str, logical_path: Path) -> dict[str, Any] | None:
+    candle_open = due - timedelta(hours=1)
+    try:
+        rows = [row for row in csv.DictReader(io.StringIO(raw_csv))
+                if row.get("timestamp_utc") and parse_utc(row["timestamp_utc"]) == candle_open]
+        if len(rows) != 1 or rows[0].get("spot_status") != "PASS":
+            return None
+        close = float(rows[0][f"{target.lower()}_close"])
+        if not finite_number(close) or close <= 0:
+            return None
+    except (csv.Error, KeyError, TypeError, ValueError):
+        return None
+    binding = {"source_path": logical_path.as_posix(), "candle_open_utc": iso(candle_open),
+               "target": target, "close": close, "spot_status": "PASS"}
+    return {**binding, "price_observation_utc": iso(due),
+            "semantics": "EXACT_DUE_CLOSED_1H_OWNER_CANDLE",
+            "source_binding_sha256": content_hash(binding)}
+
+
 def _exact_hourly_close(due: datetime, target: str, *, root: Path = Path(".")) -> dict[str, Any] | None:
     """Read the exact closed owner candle ending at `due`.
 
@@ -514,47 +540,40 @@ def _exact_hourly_close(due: datetime, target: str, *, root: Path = Path(".")) -
     timestamp is `due - 1h` supplies the close observed exactly at `due`.
     Later closes are never substituted for a missing exact-horizon close.
     """
-    candle_open = due - timedelta(hours=1)
-    logical_path = HOURLY_ROOT / f"{candle_open:%Y/%m/%Y-%m-%d}.csv"
+    logical_path = _hourly_source_path(due)
     path = root / logical_path
-    if not path.exists():
-        return None
-    close_key = f"{target.lower()}_close"
     try:
-        with path.open(newline="", encoding="utf-8") as handle:
-            for row in csv.DictReader(handle):
-                stamp = row.get("timestamp_utc")
-                if not stamp or parse_utc(stamp) != candle_open:
-                    continue
-                if row.get("spot_status") != "PASS":
-                    return None
-                raw = row.get(close_key)
-                if raw in (None, ""):
-                    return None
-                try:
-                    close = float(raw)
-                except (TypeError, ValueError):
-                    return None
-                if not finite_number(close) or close <= 0:
-                    return None
-                binding = {
-                    "source_path": logical_path.as_posix(),
-                    "candle_open_utc": iso(candle_open),
-                    "target": target,
-                    "close": close,
-                    "spot_status": "PASS",
-                }
-                return {
-                    "close": close,
-                    "source_path": logical_path.as_posix(),
-                    "candle_open_utc": iso(candle_open),
-                    "price_observation_utc": iso(due),
-                    "semantics": "EXACT_DUE_CLOSED_1H_OWNER_CANDLE",
-                    "source_binding_sha256": content_hash(binding),
-                }
-    except (OSError, csv.Error, ValueError):
+        return _close_from_csv(path.read_text(encoding="utf-8"), due, target, logical_path)
+    except (OSError, UnicodeError):
         return None
-    return None
+
+
+def exact_hourly_close_at_commit(root: Path, commit: str, due: datetime, target: str) -> dict[str, Any] | None:
+    """Verify censoring against the source snapshot the production run observed.
+
+    A later legitimate backfill must neither erase a frozen censor nor make a
+    MISS eligible for censorship. Git is the existing immutable source archive.
+    Shallow CI may fetch the one recorded commit into its object cache; no
+    checkout, tracked-file write, market API request or ref update is performed.
+    """
+    def git(*args):
+        return subprocess.run(["git", *args], cwd=root, capture_output=True, text=True, timeout=60)
+    try:
+        if git("cat-file", "-e", commit + "^{commit}").returncode:
+            if git("fetch", "--quiet", "--no-tags", "--no-write-fetch-head", "--depth=1", "origin", commit).returncode:
+                raise RuntimeError("CENSOR_SOURCE_COMMIT_UNAVAILABLE")
+        path = _hourly_source_path(due).as_posix()
+        entry = git("ls-tree", commit, "--", path)
+        if entry.returncode:
+            raise RuntimeError("CENSOR_SOURCE_TREE_UNREADABLE")
+        if not entry.stdout.strip():
+            return None
+        source = git("show", f"{commit}:{path}")
+        if source.returncode:
+            raise RuntimeError("CENSOR_SOURCE_BLOB_UNREADABLE")
+        return _close_from_csv(source.stdout, due, target, Path(path))
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        raise RuntimeError("CENSOR_SOURCE_HISTORY_UNAVAILABLE") from exc
 
 
 def mature_predictions(
@@ -596,6 +615,7 @@ def mature_predictions(
                     "target": target,
                     "horizon_hours": horizon,
                     "predicted_direction": predicted,
+                    "start_value": target_row.get("start_value"),
                     "calibration_key": target_row.get("calibration_key"),
                     "calibration_group": _group_id(
                         target, horizon, predicted, target_row.get("calibration_key")
@@ -632,16 +652,7 @@ def mature_predictions(
                 start = target_row.get("start_value")
                 end = evidence["close"]
                 if not finite_number(start) or float(start) <= 0:
-                    write_json(
-                        outcome_path,
-                        {
-                            **common,
-                            "status": "CENSORED",
-                            "reason": "START_PRICE_EVIDENCE_MISSING",
-                        },
-                    )
-                    counts["censored"] += 1
-                    continue
+                    raise RuntimeError("INVALID_FROZEN_START_PRICE")
 
                 ret = (float(end) / float(start) - 1.0) * 100.0
                 actual = "UP" if ret > 0 else ("DOWN" if ret < 0 else "FLAT")
@@ -759,15 +770,45 @@ def update_shadow_direction_confidence(
     elif not research_eligible:
         prediction_status = "RESEARCH_CONTEXT_INELIGIBLE_NO_PREDICTION"
 
+    frozen = read_json(Path(prediction_path)) if prediction_path else None
+    if frozen is None:
+        cutoff = iso(_source_price_observation_time(obs))
+        frozen = next((row for path in _prediction_paths()
+                       if (row := read_json(path)) and row.get("source_price_observation_utc") == cutoff), None)
+    for key, horizon_row in horizons.items():
+        eligible = research_eligible and horizon_row["prediction_eligibility"]["status"] == "ELIGIBLE"
+        frozen_horizon = ((frozen or {}).get("horizons") or {}).get(key) or {}
+        horizon_row["display_basis"] = "FROZEN_PREDICTION" if eligible and frozen_horizon else "NO_ELIGIBLE_FROZEN_PREDICTION"
+        horizon_row["frozen_issued_at_utc"] = (frozen or {}).get("issued_at_utc") if frozen_horizon else None
+        for target, row in horizon_row["targets"].items():
+            fixed = (frozen_horizon.get("targets") or {}).get(target)
+            if eligible and fixed:
+                row.update(
+                    direction=fixed["direction"], evidence_agreement_pct=fixed["evidence_agreement_pct"],
+                    up_votes=sum(v.get("direction") == "UP" for v in fixed["votes"]),
+                    down_votes=sum(v.get("direction") == "DOWN" for v in fixed["votes"]),
+                    calibrated_probability=fixed.get("frozen_calibrated_probability_pct"),
+                    confidence_status=fixed.get("confidence_status_at_issue"),
+                    independent_calibration_samples=fixed.get("independent_calibration_samples_at_issue", 0),
+                    calibration_group=_group_id(target, horizon_row["horizon_hours"], fixed["direction"], fixed["calibration_key"]),
+                    wilson_lower_95_pct=fixed.get("wilson_lower_95_pct_at_issue"),
+                )
+            else:
+                row.update(direction="NO_EDGE", calibrated_probability=None,
+                           independent_calibration_samples=0, calibration_group=None, wilson_lower_95_pct=None)
+                if eligible:
+                    row["confidence_status"] = "NO_FROZEN_PREDICTION"
+
     transmission = build_market_cap_transmission()
     pieces = []
     for key in ("1H", "4H", "24H"):
-        row = horizons.get(key, {}).get("targets", {}).get("BTC", {})
-        if row:
-            p = row.get("calibrated_probability")
-            unavailable = horizons[key]["prediction_eligibility"]["status"] != "ELIGIBLE" or not research_eligible
-            label = "UNAVAILABLE" if unavailable else (p if p is not None else "UNCAL")
-            pieces.append(f"{key} BTC {row.get('direction')}({label})")
+        for target in ("BTC", "ETH"):
+            row = horizons.get(key, {}).get("targets", {}).get(target, {})
+            if row:
+                p = row.get("calibrated_probability")
+                unavailable = horizons[key]["display_basis"] != "FROZEN_PREDICTION"
+                label = "UNAVAILABLE" if unavailable else (p if p is not None else "UNCAL")
+                pieces.append(f"{key} {target} {row.get('direction')}({label})")
     display = (
         "SHADOW DIRECTION: "
         + " | ".join(pieces)

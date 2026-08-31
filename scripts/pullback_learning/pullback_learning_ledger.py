@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import json, statistics, sys
+import hashlib, json, statistics, sys
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -14,6 +14,7 @@ EPISODES = ROOT / "episodes"
 LATEST = ROOT / "LATEST.json"
 STATE = ROOT / "STATE.json"
 SUMMARY = ROOT / "PERFORMANCE_SUMMARY.json"
+ELIGIBILITY_STATUS = ROOT / "ELIGIBILITY_STATUS_v1.json"
 ENTRY_LATEST = Path("04_MARKET_LEARNING/entry_signals/LATEST.json")
 BREADTH_LATEST = Path("03_DAILY_CAPTURE_LOGS/breadth_rich/LATEST.json")
 HOURLY_POINTER = Path("03_DAILY_CAPTURE_LOGS/hourly/LATEST.json")
@@ -37,10 +38,58 @@ def read_json(path):
         return None
 
 
-def write_json(path, obj):
+def write_json(path, obj, *, immutable=False):
     p = Path(path)
     p.parent.mkdir(parents=True, exist_ok=True)
-    p.write_text(json.dumps(obj, indent=2, sort_keys=True) + "\n")
+    body = json.dumps(obj, indent=2, sort_keys=True, allow_nan=False) + "\n"
+    with p.open("x" if immutable else "w") as fh:
+        fh.write(body)
+
+
+def reject_nonfinite(value):
+    raise ValueError("non-finite JSON number")
+
+
+def eligibility_binding():
+    """Consume only the approved suspension; unknown future states cannot resume it."""
+    binding = {
+        "owner_path": str(ELIGIBILITY_STATUS),
+        "owner_sha256": None,
+        "owner_valid": False,
+        "status": "ELIGIBILITY_STATUS_UNAVAILABLE",
+        "classification_reason": "ELIGIBILITY_CONTRACT_UNAVAILABLE",
+        "observation_collection": False,
+        "adaptive_descriptive_statistics": False,
+        "mechanical_research_classification": False,
+        "new_episode_creation": False,
+        "existing_episode_maturation": False,
+    }
+    try:
+        raw = ELIGIBILITY_STATUS.read_bytes()
+        binding["owner_sha256"] = hashlib.sha256(raw).hexdigest()
+        owner = json.loads(raw, parse_constant=reject_nonfinite)
+    except (OSError, UnicodeError, ValueError):
+        return binding
+    if not isinstance(owner, dict):
+        return binding
+    permissions = owner.get("permissions")
+    semantics = owner.get("consumer_semantics")
+    expected = {"observation_collection": True, "adaptive_descriptive_statistics": True,
+                "mechanical_research_classification": False, "new_episode_creation": False,
+                "existing_episode_maturation": False, "canonical_market_state": False,
+                "portfolio_execution": False, "automatic_rule_changes": False, "rebuy_permission": False}
+    valid = (owner.get("contract") == "PULLBACK_LEARNING_ELIGIBILITY_STATUS_v1"
+             and owner.get("authority") == "FRAMEWORK_OWNER_GOVERNANCE_NON_MARKET"
+             and owner.get("status") == "SUSPENDED_NO_ELIGIBILITY_CONTRACT"
+             and isinstance(permissions, dict) and isinstance(semantics, dict)
+             and all(permissions.get(k) is v for k, v in expected.items())
+             and semantics.get("classification_output_when_suspended") == "REGIME_NOT_ACTIVE"
+             and semantics.get("classification_reason") == "ELIGIBILITY_CONTRACT_UNAVAILABLE")
+    if valid:
+        binding.update(owner_valid=True, status=owner["status"],
+                       observation_collection=permissions["observation_collection"],
+                       adaptive_descriptive_statistics=permissions["adaptive_descriptive_statistics"])
+    return binding
 
 
 def parse_utc(value):
@@ -49,7 +98,7 @@ def parse_utc(value):
 
 def percentile_rank(values, x):
     vals = [float(v) for v in values if v is not None]
-    if not vals:
+    if not vals or x is None:
         return None
     return 100.0 * sum(v <= x for v in vals) / len(vals)
 
@@ -59,10 +108,10 @@ def hourly_latest_row():
 
 
 def current_snapshot():
-    entry = read_json(ENTRY_LATEST)
+    entry = read_json(ENTRY_LATEST) or {}
     breadth = read_json(BREADTH_LATEST)
-    if not entry or not breadth:
-        raise RuntimeError("entry signal or breadth latest missing")
+    if not breadth:
+        raise RuntimeError("breadth latest missing")
     agg = breadth.get("aggregate", breadth)
     constituents = {
         str(x.get("asset_id")): float(x["price_usd"])
@@ -131,9 +180,14 @@ def synthetic_index(prev, step_return_pct):
 
 
 def classify(recent, current_obs, previous_state):
+    binding = eligibility_binding()
     n = len(recent)
-    if n < MIN_OBS_FOR_ADAPTIVE:
-        return "LEARNING_WARMUP", {
+    base = {"eligibility_status": binding,
+            "classification_reason": binding["classification_reason"],
+            "rules_are_research_only": True}
+    if n < MIN_OBS_FOR_ADAPTIVE or not binding["adaptive_descriptive_statistics"]:
+        return "REGIME_NOT_ACTIVE", {
+            **base,
             "observation_count": n,
             "minimum_required": MIN_OBS_FOR_ADAPTIVE,
             "adaptive_percentiles_ready": False,
@@ -143,8 +197,9 @@ def classify(recent, current_obs, previous_state):
     steps = [o.get("matched_top100_step_return_pct") for o in recent]
     dd_rank = percentile_rank(drawdowns, current_obs["drawdown_from_running_peak_pct"])
     br_rank = percentile_rank(breadths, current_obs["breadth"])
-    step_rank = percentile_rank(steps, current_obs["matched_top100_step_return_pct"] or 0.0)
+    step_rank = percentile_rank(steps, current_obs.get("matched_top100_step_return_pct"))
     evidence = {
+        **base,
         "observation_count": n,
         "adaptive_percentiles_ready": True,
         "drawdown_percentile_rank": dd_rank,
@@ -152,19 +207,9 @@ def classify(recent, current_obs, previous_state):
         "step_return_percentile_rank": step_rank,
         "rules_are_research_only": True,
     }
-    entry_active = current_obs.get("entry_state") == "GRADUATED_ALTCOIN_TOPUP_ACTIVE"
-    if not entry_active:
-        return "REGIME_NOT_ACTIVE", evidence
-    active = dd_rank is not None and br_rank is not None and step_rank is not None
-    if active and dd_rank <= 10 and br_rank <= 20 and step_rank <= 20:
-        return "PULLBACK_ACTIVE_RESEARCH", evidence
-    if active and dd_rank <= 20 and (br_rank <= 25 or step_rank <= 20):
-        return "PULLBACK_RISK_RESEARCH", evidence
-    prev = recent[-1] if recent else None
-    improving_dd = prev is not None and current_obs["drawdown_from_running_peak_pct"] > prev.get("drawdown_from_running_peak_pct", current_obs["drawdown_from_running_peak_pct"])
-    if previous_state in {"PULLBACK_ACTIVE_RESEARCH", "PULLBACK_RISK_RESEARCH"} and improving_dd and br_rank >= 50 and step_rank >= 70:
-        return "RELOAD_WATCH_RESEARCH", evidence
-    return "NORMAL", evidence
+    # Descriptive ranks remain available. Resumption requires a separate owner
+    # specification and implementation; no Entry/breadth/T12 alias is permission.
+    return "REGIME_NOT_ACTIVE", evidence
 
 
 def episode_files():
@@ -201,6 +246,9 @@ def token_uplift(trim_prices, reload_prices):
 
 
 def update_episode(state, obs, now):
+    binding = eligibility_binding()
+    if not binding["new_episode_creation"] and not binding["existing_episode_maturation"]:
+        return {"status": "SUSPENDED_NO_EPISODE_MUTATION", "eligibility_status": binding}
     path, ep = active_episode()
     risk_states = {"PULLBACK_RISK_RESEARCH", "PULLBACK_ACTIVE_RESEARCH"}
     if ep is None and state in risk_states:
@@ -270,6 +318,7 @@ def build_summary(now):
         "governance": {
             "automatic_rule_changes": False,
             "portfolio_execution": False,
+            "canonical_market_state": False,
             "purpose": "adaptive descriptive learning and future calibration evidence",
             "promotion_requires_separate_review": True,
         },
@@ -280,15 +329,42 @@ def build_summary(now):
 
 def main():
     now = now_utc()
+    binding = eligibility_binding()
+    if not binding["observation_collection"]:
+        state, evidence = classify([], {}, None)
+        latest = {"contract": "PULLBACK_LEARNING_LATEST_v1", "generated_at_utc": now.isoformat(),
+                  "research_state": state, "eligibility_status": binding, "adaptive_evidence": evidence,
+                  "data_ping_bridge": {"display_line": "PULLBACK LEARNING: REGIME_NOT_ACTIVE | ELIGIBILITY_CONTRACT_UNAVAILABLE | collection blocked"},
+                  "authority": {"research_only": True, "portfolio_execution": False,
+                                "canonical_market_state": False, "automatic_rule_changes": False}}
+        write_json(LATEST, latest)
+        write_json(STATE, {**latest, "contract": "PULLBACK_LEARNING_STATE_v1", "updated_at_utc": now.isoformat()})
+        print(json.dumps(latest, sort_keys=True))
+        return
     cur = current_snapshot()
     recent = load_recent_observations()
     prev = recent[-1] if recent else None
-    if prev and prev.get("price_observation_utc") == cur["price_observation_utc"]:
+    if prev and parse_utc(prev["price_observation_utc"]) >= parse_utc(cur["price_observation_utc"]):
         summary = build_summary(now)
         latest = read_json(LATEST) or {}
+        previous_state = (read_json(STATE) or {}).get("research_state")
+        state, evidence = classify(recent, prev, previous_state)
         latest["generated_at_utc"] = now.isoformat()
+        latest["contract"] = "PULLBACK_LEARNING_LATEST_v1"
+        latest["research_state"] = state
+        latest["eligibility_status"] = binding
+        latest["adaptive_evidence"] = evidence
+        latest["market_snapshot"] = {k: v for k, v in prev.items() if k not in {"constituents", "research_state", "adaptive_evidence"}}
         latest["duplicate_price_observation_skipped"] = True
+        latest["out_of_order_price_observation_skipped"] = parse_utc(prev["price_observation_utc"]) > parse_utc(cur["price_observation_utc"])
         latest["performance_summary"] = summary
+        latest["data_ping_bridge"] = {"display_line": "PULLBACK LEARNING: REGIME_NOT_ACTIVE | ELIGIBILITY_CONTRACT_UNAVAILABLE | observation unchanged"}
+        latest["authority"] = {"research_only": True, "portfolio_execution": False,
+                               "canonical_market_state": False, "automatic_rule_changes": False}
+        write_json(STATE, {"contract": "PULLBACK_LEARNING_STATE_v1", "updated_at_utc": now.isoformat(),
+                          "research_state": state, "previous_research_state": previous_state,
+                          "eligibility_status": binding, "adaptive_evidence": evidence,
+                          "observation_count": len(recent), "authority": latest["authority"]})
         write_json(LATEST, latest)
         print(json.dumps(latest, sort_keys=True))
         return
@@ -312,7 +388,7 @@ def main():
     obs["adaptive_evidence"] = evidence
     ts = parse_utc(obs["price_observation_utc"])
     path = OBS / f"{ts:%Y/%m/%d}/{ts:%Y%m%dT%H%M%SZ}.json"
-    write_json(path, obs)
+    write_json(path, obs, immutable=True)
     update_episode(state, obs, now)
     summary = build_summary(now)
     state_obj = {
@@ -321,8 +397,9 @@ def main():
         "research_state": state,
         "previous_research_state": prev_state,
         "adaptive_evidence": evidence,
+        "eligibility_status": binding,
         "observation_count": len(recent) + 1,
-        "authority": {"portfolio_execution": False, "canonical_market_state": False, "research_only": True},
+        "authority": {"portfolio_execution": False, "canonical_market_state": False, "research_only": True, "automatic_rule_changes": False},
     }
     write_json(STATE, state_obj)
     latest = {
@@ -332,9 +409,10 @@ def main():
         "previous_research_state": prev_state,
         "market_snapshot": {k: v for k, v in obs.items() if k != "constituents"},
         "adaptive_evidence": evidence,
+        "eligibility_status": binding,
         "performance_summary": summary,
         "data_ping_bridge": {
-            "display_line": f"PULLBACK LEARNING: {state} | dd={drawdown:.2f}% | breadth={obs['breadth']*100:.0f}% | sample={len(recent)+1}"
+            "display_line": f"PULLBACK LEARNING: {state} | ELIGIBILITY_CONTRACT_UNAVAILABLE | descriptive only | dd={drawdown:.2f}% | breadth={obs['breadth']*100:.0f}% | sample={len(recent)+1}"
         },
         "authority": {
             "portfolio_execution": False,

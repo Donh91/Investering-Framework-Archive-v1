@@ -307,6 +307,96 @@ def test_complete_prediction_outcome_source_chain_passes(tmp_path):
     assert receipt["promotion_status"] == "NOT_PROMOTED_SHADOW_ONLY"
 
 
+def _censored_fixture_row(row):
+    keep = ("contract", "registered_test_id", "registration_receipt_sha256", "production_context",
+            "prediction_path", "prediction_sha256", "issued_at_utc", "source_price_observation_utc",
+            "source_candle_open_utc", "due_at_utc", "target", "horizon_hours", "predicted_direction",
+            "start_value", "calibration_key", "calibration_group", "votes",
+            "frozen_calibrated_probability_pct", "authority")
+    return {**{key: row[key] for key in keep}, "status": "CENSORED",
+            "reason": "EXACT_DUE_OWNER_CANDLE_MISSING_AFTER_GRACE",
+            "measured_at_utc": "2026-08-31T13:00:00Z", "evidence_wait_hours": 2.0,
+            "substitute_later_price_forbidden": True}
+
+
+def _commit_fixture_source(root):
+    import subprocess
+    # A real, local Git source snapshot in this synthetic fixture, never a live receipt.
+    def git(*args):
+        return subprocess.check_output(["git", "-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", *args], cwd=root, stderr=subprocess.DEVNULL, text=True).strip()
+    git("init")
+    git("add", "03_DAILY_CAPTURE_LOGS/hourly")
+    git("commit", "-m", "synthetic source snapshot")
+    return git("rev-parse", "HEAD")
+
+
+def test_arbitrary_censor_reason_cannot_remove_a_scored_outcome(tmp_path):
+    root, _, path, row = complete_ledger_fixture(tmp_path)
+    censored = _censored_fixture_row(row)
+    censored["reason"] = "IGNORE_UNFAVORABLE_RESULT"
+    write_json(path, censored)
+    with pytest.raises(ValidationError, match="OUTCOME_CENSOR_REASON_INVALID"):
+        validate_repository(root)
+
+
+def test_miss_with_available_exact_source_cannot_be_censored(tmp_path):
+    root, _, path, row = complete_ledger_fixture(tmp_path)
+    source = root / owner._hourly_source_path(datetime(2026, 8, 31, 11, tzinfo=timezone.utc))
+    source.write_text(source.read_text().replace(",101,101,PASS", ",99,99,PASS"))
+    evidence = owner._exact_hourly_close(datetime(2026, 8, 31, 11, tzinfo=timezone.utc), "BTC", root=root)
+    row.update(end_value=99.0, return_pct=-1.0, actual_direction="DOWN", result="MISS", evidence_source_binding_sha256=evidence["source_binding_sha256"])
+    write_json(path, row)
+    assert validate_repository(root)["outcome_rows_validated"] == 1
+    censored = _censored_fixture_row(row)
+    censored["production_context"] = {**row["production_context"], "commit_sha": _commit_fixture_source(root)}
+    write_json(path, censored)
+    with pytest.raises(ValidationError, match="OUTCOME_CENSORED_DESPITE_EXACT_SOURCE"):
+        validate_repository(root)
+
+
+def test_valid_censor_remains_bound_to_source_before_late_backfill(tmp_path):
+    root, _, path, row = complete_ledger_fixture(tmp_path)
+    source = root / owner._hourly_source_path(datetime(2026, 8, 31, 11, tzinfo=timezone.utc))
+    completed = source.read_text()
+    source.write_text("\n".join(completed.splitlines()[:2]) + "\n")
+    censored = _censored_fixture_row(row)
+    censored["production_context"] = {**row["production_context"], "commit_sha": _commit_fixture_source(root)}
+    write_json(path, censored)
+    frozen = path.read_bytes()
+    assert validate_repository(root)["outcome_rows_validated"] == 1
+    source.write_text(completed)
+    assert validate_repository(root)["outcome_rows_validated"] == 1
+    assert path.read_bytes() == frozen
+
+
+def test_censor_validation_cannot_treat_unreadable_history_as_missing_evidence(tmp_path):
+    root, _, path, row = complete_ledger_fixture(tmp_path)
+    _commit_fixture_source(root)
+    write_json(path, _censored_fixture_row(row))
+    with pytest.raises(ValidationError, match="OUTCOME_CENSOR_SOURCE_UNVERIFIED"):
+        validate_repository(root)
+
+
+def test_shallow_git_can_verify_censor_snapshot_without_changing_checkout(tmp_path):
+    import subprocess
+    source_repo = tmp_path / "source"
+    source_repo.mkdir()
+    root, _, _, _ = complete_ledger_fixture(source_repo)
+    due = datetime(2026, 8, 31, 11, tzinfo=timezone.utc)
+    source = root / owner._hourly_source_path(due)
+    completed = source.read_text()
+    source.write_text("\n".join(completed.splitlines()[:2]) + "\n")
+    before_backfill = _commit_fixture_source(root)
+    source.write_text(completed)
+    after_backfill = _commit_fixture_source(root)
+    checkout = tmp_path / "shallow"
+    subprocess.run(["git", "clone", "--quiet", "--depth=1", root.as_uri(), str(checkout)], check=True)
+    assert subprocess.run(["git", "cat-file", "-e", before_backfill], cwd=checkout, capture_output=True).returncode != 0
+    assert owner.exact_hourly_close_at_commit(checkout, before_backfill, due, "BTC") is None
+    assert subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=checkout, text=True).strip() == after_backfill
+    assert (checkout / owner._hourly_source_path(due)).read_text() == completed
+
+
 @pytest.mark.parametrize("change,error", [
     ({"prediction_path": "missing.json"}, "OUTCOME_FROZEN_PREDICTION_MISSING"),
     ({"measured_at_utc": "2026-08-31T10:30:00Z"}, "OUTCOME_MEASURED_BEFORE_DUE"),

@@ -449,14 +449,27 @@ def test_owner_runtime_freeze_retry_and_future_maturation_are_separate(tmp_path,
     assert sdc.REGISTRATION.exists()
     assert legacy_path.read_bytes() == legacy_bytes
     frozen = {path: path.read_bytes() for path in sdc.PREDICTIONS.rglob("*.json")}
+    initial_display = json.loads(research.LATEST.read_text())["shadow_direction_confidence"]
+    for horizon in ("1H", "4H", "24H"):
+        assert f"{horizon} BTC " in initial_display["data_ping_bridge"]["display_line"]
+        assert f"{horizon} ETH " in initial_display["data_ping_bridge"]["display_line"]
     if first_issue_minutes > 30:
         latest = json.loads(research.LATEST.read_text())["shadow_direction_confidence"]
         assert all(target["direction"] == "NO_EDGE" and target["calibrated_probability"] is None for target in latest["horizons"]["1H"]["targets"].values())
         assert "1H BTC NO_EDGE(UNAVAILABLE)" in latest["data_ping_bridge"]["display_line"]
         assert all("1H" not in json.loads(raw)["horizons"] for raw in frozen.values())
     clock[0] += timedelta(minutes=5)
-    research.main()
+    with monkeypatch.context() as retry:
+        # Mutable calibration/features would now yield a different forecast;
+        # replay must still display the existing frozen prediction exactly.
+        retry.setattr(sdc, "_calibration_view", lambda *args: {"confidence_status": "CALIBRATED", "calibrated_probability": 77.0, "independent_calibration_samples": 100, "wilson_lower_95_pct": 65.0})
+        retry.setattr(sdc, "build_votes", lambda *args: [{"family": str(i), "direction": "DOWN", "value": -1} for i in range(6)])
+        research.main()
     capsys.readouterr()
+    retried_display = json.loads(research.LATEST.read_text())["shadow_direction_confidence"]
+    for horizon in ("1H", "4H", "24H"):
+        if initial_display["horizons"][horizon]["display_basis"] == "FROZEN_PREDICTION":
+            assert retried_display["horizons"][horizon]["targets"] == initial_display["horizons"][horizon]["targets"]
     assert frozen == {path: path.read_bytes() for path in sdc.PREDICTIONS.rglob("*.json")}
     assert not sdc.OUTCOMES.exists()
 
