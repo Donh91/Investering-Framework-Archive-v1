@@ -144,9 +144,9 @@ def main():
     try:
         data = json.loads(Path(args.receipt).read_text())
         result = validate_receipt(data)
-    except (OSError, UnicodeError, json.JSONDecodeError):
+    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
         result = {"contract": CONTRACT, "valid": False,
-                  "errors": [f"receipt unreadable: {args.receipt}"], "missing_or_blocked": []}
+                  "errors": [f"receipt unreadable ({type(exc).__name__}): {args.receipt}"], "missing_or_blocked": []}
     print(json.dumps(result, indent=2, sort_keys=True))
     return 0 if result['valid'] else 1
 

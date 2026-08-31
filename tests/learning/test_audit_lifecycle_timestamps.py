@@ -79,3 +79,24 @@ def test_bad_document_returns_json_diagnostic(tmp_path, raw):
     result = json.loads(proc.stdout)
     assert proc.returncode != 0 and result['valid'] is False
     assert result['errors']
+
+
+@pytest.mark.parametrize('kind,expected', [('missing', 'FileNotFoundError'),
+                                        ('json', 'JSONDecodeError'),
+                                        ('utf8', 'UnicodeDecodeError'),
+                                        ('directory', 'IsADirectoryError')])
+def test_unreadable_evidence_retains_sanitized_failure_type(tmp_path, kind, expected):
+    path = tmp_path / 'receipt.json'
+    if kind == 'json':
+        path.write_text('{"private_payload": secret-fragment}')
+    elif kind == 'utf8':
+        path.write_bytes(b'\xffprivate-payload')
+    elif kind == 'directory':
+        path.mkdir()
+    proc = subprocess.run([sys.executable, validator.__file__, str(path)], text=True, capture_output=True)
+    result = json.loads(proc.stdout)
+    assert proc.returncode != 0
+    assert expected in result['errors'][0]
+    assert 'private' not in proc.stdout
+    assert 'secret-fragment' not in proc.stdout
+    assert 'Traceback' not in proc.stderr
