@@ -95,3 +95,22 @@ def created_utc(value: dict) -> datetime | None:
         except (OverflowError, ValueError):
             return None
     return None
+
+
+def cost_receipt_identity(value: dict, path: Path, created: datetime) -> tuple:
+    """Prefer provider call IDs to a weaker request/creation-time observation."""
+    single = value.get('response_id')
+    multiple = value.get('response_ids')
+    if single is not None and (not isinstance(single, str) or not single.strip()):
+        raise ValueError('COST_IDENTITY_INVALID')
+    if multiple is not None and (not isinstance(multiple, list) or
+            any(not isinstance(x, str) or not x.strip() for x in multiple)):
+        raise ValueError('COST_IDENTITY_INVALID')
+    if multiple:
+        if len(set(multiple)) != len(multiple) or (single is not None and single not in multiple):
+            raise ValueError('COST_IDENTITY_INVALID')
+        return ('paid_responses', tuple(sorted(multiple)))
+    if single is not None:
+        return ('paid_responses', (single,))
+    request = value.get('request_hash') or value.get('request_sha256')
+    return ('request_observation', str(request), created.isoformat()) if request else ('path', str(path))

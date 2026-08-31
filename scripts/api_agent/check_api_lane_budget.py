@@ -10,7 +10,7 @@ from pathlib import Path
 SCRIPTS_ROOT = Path(__file__).resolve().parents[1]
 if str(SCRIPTS_ROOT) not in sys.path:
     sys.path.insert(0, str(SCRIPTS_ROOT))
-from lib.evidence_io import created_utc, finite_nonnegative, json_evidence_paths, load_evidence
+from lib.evidence_io import cost_receipt_identity, created_utc, finite_nonnegative, json_evidence_paths, load_evidence
 
 
 def parse_created(value: dict) -> datetime | None:
@@ -62,9 +62,11 @@ def main() -> None:
             if created is None or not finite_nonnegative(cost):
                 errors.append({"path": str(path), "reason": "INVALID_COST_OR_TIMESTAMP"})
                 continue
-            request = value.get("request_hash") or value.get("request_sha256")
-            identity = (("response", str(value['response_id'])) if value.get('response_id') else
-                        ("request_observation", str(request), created.isoformat()) if request else ("path", str(path)))
+            try:
+                identity = cost_receipt_identity(value, path, created)
+            except ValueError:
+                errors.append({'path': str(path), 'reason': 'COST_IDENTITY_INVALID'})
+                continue
             accounting = (cost, created.year, created.month)
             if identity in seen:
                 if seen[identity] != accounting:

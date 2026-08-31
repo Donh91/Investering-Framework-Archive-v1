@@ -102,6 +102,39 @@ def test_latest_and_history_copy_of_one_request_count_once(tmp_path, kind):
 
 
 @pytest.mark.parametrize('kind', ['lane', 'monthly'])
+def test_distinct_provider_calls_in_same_second_are_both_counted(tmp_path, kind):
+    first = receipt(response_id=None, response_ids=['paid-response-a'], request_hash='SAME_REQUEST', estimated_cost_usd=5)
+    second = {**first, 'response_ids': ['paid-response-b']}
+    for name, value in [('a', first), ('b', second)]:
+        (tmp_path / f'{name}.json').write_text(json.dumps(value))
+    proc, result = run_guard(tmp_path, kind)
+    assert proc.returncode != 0
+    assert result['status'] == 'BLOCKED'
+    assert result['receipts'] == 2
+    assert result['spent_usd'] == 10
+
+
+@pytest.mark.parametrize('kind', ['lane', 'monthly'])
+def test_provider_id_list_order_does_not_double_count_alias(tmp_path, kind):
+    first = receipt(response_id=None, response_ids=['paid-b', 'paid-a'], estimated_cost_usd=1)
+    second = {**first, 'response_ids': ['paid-a', 'paid-b']}
+    for name, value in [('a', first), ('b', second)]:
+        (tmp_path / f'{name}.json').write_text(json.dumps(value))
+    proc, result = run_guard(tmp_path, kind)
+    assert proc.returncode == 0
+    assert result['receipts'] == 1
+
+
+@pytest.mark.parametrize('kind', ['lane', 'monthly'])
+@pytest.mark.parametrize('bad_ids', ['not-a-list', [None], [True], ['same', 'same']])
+def test_invalid_provider_identity_cannot_authorize_spend(tmp_path, kind, bad_ids):
+    (tmp_path / 'cost.json').write_text(json.dumps(receipt(response_id=None, response_ids=bad_ids)))
+    proc, result = run_guard(tmp_path, kind)
+    assert proc.returncode != 0
+    assert result['cost_evidence_errors'][0]['reason'] == 'COST_IDENTITY_INVALID'
+
+
+@pytest.mark.parametrize('kind', ['lane', 'monthly'])
 def test_cap_and_reserve_boundary_remains_blocking(tmp_path, kind):
     (tmp_path / 'cost.json').write_text(json.dumps(receipt(estimated_cost_usd=9)))
     proc, result = run_guard(tmp_path, kind)
