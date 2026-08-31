@@ -1,4 +1,5 @@
 import json
+from datetime import datetime, timezone
 from pathlib import Path
 
 import pytest
@@ -11,8 +12,15 @@ from scripts.intraday_execution.validate_direction_confidence import (
     REGISTRY,
     TEST_ID,
     ValidationError,
-    validate_repository,
+    validate_repository as _validate_repository,
 )
+from scripts.intraday_execution import shadow_direction_confidence as owner
+from scripts.intraday_execution.validate_direction_confidence import registry_binding_hash
+
+
+def validate_repository(root, **kwargs):
+    # Explicit synthetic clock; the production CLI always uses actual UTC time.
+    return _validate_repository(root, now=kwargs.pop("now", datetime(2026, 9, 1, tzinfo=timezone.utc)), **kwargs)
 
 
 def write_json(path: Path, value: dict) -> None:
@@ -258,3 +266,123 @@ def test_censored_missing_exact_due_requires_substitution_guard(tmp_path):
     write_json(root / OUTCOMES / "2026/08/31/outcome.json", row)
     with pytest.raises(ValidationError, match="OUTCOME_LATER_PRICE_GUARD_MISSING"):
         validate_repository(root)
+
+
+def complete_ledger_fixture(tmp_path, *, with_outcome=True):
+    root = setup_root(tmp_path)
+    context = {"repository": owner.REPOSITORY, "ref": "refs/heads/main", "event": "schedule", "run_id": "12345", "run_attempt": "1", "commit_sha": "a" * 40}
+    registration = {
+        "contract": "INTRADAY_DIRECTION_REGISTRATION_v1",
+        "registered_test_id": TEST_ID,
+        "registered_at_utc": "2026-08-31T08:00:00Z",
+        "production_context": context,
+        "registry_binding_sha256": registry_binding_hash(root),
+        "configuration_sha256": owner.content_hash(base_config()["shadow_direction_confidence"]),
+        "forward_eligibility": "POST_REGISTRATION_CANONICAL_MAIN_ONLY",
+        "prior_rows_adopted": 0,
+    }
+    registration["receipt_sha256"] = owner.content_hash(registration)
+    write_json(root / owner.REGISTRATION, registration)
+    source = root / "03_DAILY_CAPTURE_LOGS/hourly/2026/08/2026-08-31.csv"
+    source.parent.mkdir(parents=True, exist_ok=True)
+    source.write_text("timestamp_utc,btc_close,eth_close,spot_status\n2026-08-31T09:00:00Z,100,100,PASS\n2026-08-31T10:00:00Z,101,101,PASS\n")
+    pred_path = root / PREDICTIONS / "2026/08/31/pred.json"
+    pred = prediction()
+    pred.update(registered_test_id=TEST_ID, registration_receipt_sha256=registration["receipt_sha256"], production_context=context)
+    write_json(pred_path, pred)
+    outcome_path = root / OUTCOMES / "2026/08/31/outcome.json"
+    row = outcome()
+    evidence = owner._exact_hourly_close(datetime(2026, 8, 31, 11, tzinfo=timezone.utc), "BTC", root=root)
+    row.update(registered_test_id=TEST_ID, registration_receipt_sha256=registration["receipt_sha256"], production_context=context, prediction_path=pred_path.relative_to(root).as_posix(), prediction_sha256=owner.file_hash(pred_path), evidence_source_path=evidence["source_path"], evidence_source_binding_sha256=evidence["source_binding_sha256"])
+    if with_outcome:
+        write_json(outcome_path, row)
+    return root, pred_path, outcome_path, row
+
+
+def test_complete_prediction_outcome_source_chain_passes(tmp_path):
+    root, _, _, _ = complete_ledger_fixture(tmp_path)
+    receipt = validate_repository(root)
+    assert receipt["prediction_rows_validated"] == 1
+    assert receipt["outcome_rows_validated"] == 1
+    assert receipt["promotion_status"] == "NOT_PROMOTED_SHADOW_ONLY"
+
+
+@pytest.mark.parametrize("change,error", [
+    ({"prediction_path": "missing.json"}, "OUTCOME_FROZEN_PREDICTION_MISSING"),
+    ({"measured_at_utc": "2026-08-31T10:30:00Z"}, "OUTCOME_MEASURED_BEFORE_DUE"),
+    ({"actual_direction": "DOWN", "end_value": 99.0, "return_pct": -1.0, "result": "HIT"}, "OUTCOME_HIT_MISS_MISMATCH"),
+    ({"return_pct": 100.0}, "OUTCOME_RETURN_MISMATCH"),
+    ({"prediction_sha256": "0" * 64}, "OUTCOME_PREDICTION_HASH_MISMATCH"),
+    ({"evidence_source_binding_sha256": "0" * 64}, "OUTCOME_SOURCE_BINDING_MISMATCH"),
+    ({"calibration_group": "ETH:24H:DOWN:8_of_8"}, "OUTCOME_CALIBRATION_GROUP_DRIFT"),
+    ({"production_context": {}}, "PRODUCTION_REPOSITORY_INVALID"),
+])
+def test_invalid_outcome_cannot_enter_calibration(tmp_path, change, error):
+    root, _, path, row = complete_ledger_fixture(tmp_path)
+    row.update(change)
+    write_json(path, row)
+    with pytest.raises(ValidationError, match=error):
+        validate_repository(root)
+
+
+def test_frozen_prediction_mutation_is_rejected(tmp_path):
+    root, pred_path, _, _ = complete_ledger_fixture(tmp_path)
+    pred = json.loads(pred_path.read_text())
+    pred["horizons"]["1H"]["targets"]["BTC"]["calibration_key"] = "5_of_6"
+    write_json(pred_path, pred)
+    with pytest.raises(ValidationError, match="OUTCOME_PREDICTION_HASH_MISMATCH"):
+        validate_repository(root)
+
+
+def test_duplicate_source_candle_prediction_is_rejected(tmp_path):
+    root, path, _, _ = complete_ledger_fixture(tmp_path, with_outcome=False)
+    write_json(path.with_name("retry.json"), json.loads(path.read_text()))
+    with pytest.raises(ValidationError, match="DUPLICATE_SOURCE_CANDLE_PREDICTION"):
+        validate_repository(root)
+
+
+def test_duplicate_outcome_is_rejected(tmp_path):
+    root, _, path, row = complete_ledger_fixture(tmp_path)
+    write_json(path.with_name("duplicate.json"), row)
+    with pytest.raises(ValidationError, match="DUPLICATE_OUTCOME"):
+        validate_repository(root)
+
+
+def test_prior_registration_and_branch_qa_rows_are_rejected(tmp_path):
+    root, path, _, _ = complete_ledger_fixture(tmp_path, with_outcome=False)
+    row = json.loads(path.read_text())
+    row["production_context"]["ref"] = "refs/heads/agent/task-fixture"
+    write_json(path, row)
+    with pytest.raises(ValidationError, match="PRODUCTION_MAIN_REF_REQUIRED"):
+        validate_repository(root)
+
+
+def test_no_registration_cannot_adopt_qa_rows(tmp_path):
+    root = setup_root(tmp_path)
+    write_json(root / PREDICTIONS / "qa.json", prediction())
+    with pytest.raises(ValidationError, match="REGISTRATION_RECEIPT_MISSING"):
+        validate_repository(root)
+
+
+def test_claimed_probability_requires_observable_prior_outcomes(tmp_path):
+    root, path, _, _ = complete_ledger_fixture(tmp_path, with_outcome=False)
+    row = json.loads(path.read_text())
+    row["horizons"]["1H"]["targets"]["BTC"].update(frozen_calibrated_probability_pct=73.0, confidence_status_at_issue="EARLY_CALIBRATION", independent_calibration_samples_at_issue=20)
+    write_json(path, row)
+    with pytest.raises(ValidationError, match="PREDICTION_PROBABILITY_WITHOUT_PRIOR_CALIBRATION"):
+        validate_repository(root)
+
+
+def test_validator_rejects_insufficient_forward_span(tmp_path):
+    root, path, _, _ = complete_ledger_fixture(tmp_path, with_outcome=False)
+    row = json.loads(path.read_text())
+    row["issued_at_utc"] = "2026-08-31T10:40:00Z"
+    write_json(path, row)
+    with pytest.raises(ValidationError, match="PREDICTION_INSUFFICIENT_FORWARD_SPAN"):
+        validate_repository(root)
+
+
+def test_outcome_cannot_be_asserted_from_a_future_clock(tmp_path):
+    root, _, _, _ = complete_ledger_fixture(tmp_path)
+    with pytest.raises(ValidationError, match="OUTCOME_MEASURED_IN_FUTURE"):
+        validate_repository(root, now=datetime(2026, 8, 31, 10, 30, tzinfo=timezone.utc))

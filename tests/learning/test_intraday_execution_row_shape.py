@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
 
+import pytest
+
 from scripts.intraday_execution.intraday_execution_research import asset_features
 from scripts.intraday_execution import shadow_direction_confidence as sdc
 
@@ -311,3 +313,186 @@ def test_market_cap_transmission_marks_microcap_unavailable(tmp_path, monkeypatc
     assert transmission["small_cap_proxy"]["direction"] == "NO_EDGE"
     assert transmission["microcap"]["direction"] == "NO_EDGE"
     assert transmission["microcap"]["reason"] == "CURRENT_BREADTH_OWNER_STOPS_AT_TOP100"
+
+
+def test_rounding_cannot_display_99_without_high_assurance():
+    group = {"display_probability": 101 / 102, "maturity": "CALIBRATED", "independent_count": 100, "wilson_lower_95": 0.96}
+    summary = {"groups": {"BTC:1H:UP:6_of_6": group}}
+    view = sdc._calibration_view(summary, "BTC", 1, {"direction": "UP", "calibration_key": "6_of_6"})
+    assert view["calibrated_probability"] is None
+
+
+def test_high_assurance_requires_independent_samples_and_wilson_floor():
+    start = datetime(2026, 8, 1, tzinfo=timezone.utc)
+    rows = [{"status": "MATURED", "result": "HIT", "issued_at_utc": sdc.iso(start + timedelta(hours=i)), "source_price_observation_utc": sdc.iso(start + timedelta(hours=i)), "target": "BTC", "horizon_hours": 1, "actual_direction": "UP", "calibration_group": "BTC:1H:UP:6_of_6", "votes": [], "brier_score": None} for i in range(300)]
+    cfg = {"minimum_independent_calibration_samples": 20, "strong_calibration_samples": 50, "high_assurance_minimum_independent_samples": 300, "high_assurance_wilson_floor": 0.97}
+    early = sdc.calibration_summary_from_rows(rows[:100], cfg, start + timedelta(days=20))["groups"]["BTC:1H:UP:6_of_6"]
+    assert early["maturity"] == "CALIBRATED"
+    assert early["display_probability"] is None
+    mature = sdc.calibration_summary_from_rows(rows, cfg, start + timedelta(days=20))["groups"]["BTC:1H:UP:6_of_6"]
+    assert mature["maturity"] == "HIGH_ASSURANCE_99_ELIGIBLE"
+    assert mature["independent_count"] == 300
+    assert mature["wilson_lower_95"] >= 0.97
+    blocked = sdc.calibration_summary_from_rows(rows, {**cfg, "high_assurance_wilson_floor": 0.999}, start + timedelta(days=20))["groups"]["BTC:1H:UP:6_of_6"]
+    assert blocked["maturity"] == "CALIBRATED_STRONG"
+    assert blocked["display_probability"] is None
+
+
+def test_future_due_candle_cannot_mature_before_actual_clock(tmp_path, monkeypatch):
+    monkeypatch.setattr(sdc, "PREDICTIONS", tmp_path / "predictions")
+    monkeypatch.setattr(sdc, "OUTCOMES", tmp_path / "outcomes")
+    monkeypatch.setattr(sdc, "HOURLY_ROOT", tmp_path / "hourly")
+    source_close = datetime(2026, 8, 31, 10, tzinfo=timezone.utc)
+    due = source_close + timedelta(hours=1)
+    _write_prediction_fixture(sdc.PREDICTIONS, source_close + timedelta(minutes=10), source_close, due)
+    path = sdc.HOURLY_ROOT / "2026/08/2026-08-31.csv"
+    path.parent.mkdir(parents=True)
+    path.write_text("timestamp_utc,btc_close,spot_status\n2026-08-31T10:00:00Z,101,PASS\n")
+    # A future-labelled source and an already-present fixture cannot advance UTC.
+    obs = {"price_observation_utc": sdc.iso(due), "hourly_sequence_run_id": "fixture"}
+    counts = sdc.mature_predictions(obs, {}, source_close + timedelta(minutes=30))
+    assert counts == {"matured": 0, "censored": 0, "abstained": 0, "pending": 1}
+    assert not sdc.OUTCOMES.exists()
+
+
+def test_stale_source_cannot_display_long_horizon_as_eligible():
+    close = datetime(2026, 8, 31, 10, tzinfo=timezone.utc)
+    obs = {"price_close_observation_utc": sdc.iso(close)}
+    result = sdc._horizon_eligibility(obs, close + timedelta(hours=2), 24, {})
+    assert result["status"] == "SOURCE_TOO_STALE"
+
+
+def test_branch_or_local_run_has_no_production_context(monkeypatch):
+    monkeypatch.delenv("GITHUB_ACTIONS", raising=False)
+    assert sdc.production_context() is None
+    monkeypatch.setenv("GITHUB_ACTIONS", "true")
+    monkeypatch.setenv("GITHUB_REPOSITORY", sdc.REPOSITORY)
+    monkeypatch.setenv("GITHUB_REF", "refs/heads/agent/task-fixture")
+    monkeypatch.setenv("GITHUB_EVENT_NAME", "workflow_dispatch")
+    monkeypatch.setenv("GITHUB_RUN_ID", "123")
+    assert sdc.production_context() is None
+
+
+@pytest.mark.parametrize("asset", ["btc", "eth", "ethbtc"])
+@pytest.mark.parametrize("invalid_close", [None, True, float("nan"), float("inf"), -float("inf"), 0, -1, "100"])
+def test_prediction_writer_rejects_invalid_price_before_creating_any_row(tmp_path, monkeypatch, asset, invalid_close):
+    monkeypatch.setattr(sdc, "PREDICTIONS", tmp_path / "predictions")
+    now = datetime(2026, 8, 31, 10, 15, tzinfo=timezone.utc)
+    obs = {key: {"close": 100.0} for key in ("btc", "eth", "ethbtc")}
+    obs.update(price_observation_utc="2026-08-31T09:00:00Z", hourly_sequence_run_id="fixture")
+    obs[asset]["close"] = invalid_close
+    result = sdc.write_prediction(obs, {}, now, {}, {}, registration={"receipt_sha256": "fixture"}, context={"run_id": "fixture"})
+    assert result == ("INVALID_SOURCE_PRICE_NO_PREDICTION", None)
+    assert not sdc.PREDICTIONS.exists()
+
+
+@pytest.mark.parametrize("first_issue_minutes", [15, 40])
+def test_owner_runtime_freeze_retry_and_future_maturation_are_separate(tmp_path, monkeypatch, capsys, first_issue_minutes):
+    import csv
+    import json
+    from pathlib import Path
+    from scripts.intraday_execution import intraday_execution_research as research
+    from scripts.intraday_execution.validate_direction_confidence import validate_repository
+
+    repo = Path(__file__).resolve().parents[2]
+    cfg = json.loads((repo / research.CONFIG).read_text())
+    registry_path = Path("06_RESEARCH_LAB/forward_tests/2026-07-10__active-test-registry__canonical.md")
+    registry_text = (repo / registry_path).read_text()
+    monkeypatch.chdir(tmp_path)
+    sdc.write_json(research.CONFIG, cfg)
+    registry_path.parent.mkdir(parents=True)
+    registry_path.write_text(registry_text)
+    sdc.write_json(research.ENTRY, {
+        "contract": "ENTRY_SIGNAL_LATEST_v1", "state": "WAIT",
+        "promotion_authority": {"status": "FORWARD_ONLY_NOT_PROMOTION_READY", "permits_active_state": False},
+        "measurement_validity": {"breadth_entry_permission": "RETIRED_ZERO_WEIGHT"},
+        "authority": {"portfolio_execution": False, "canonical_market_state": False, "market_rule_change": False},
+    })
+    context = {"repository": sdc.REPOSITORY, "ref": "refs/heads/main", "event": "schedule", "run_id": "12345", "run_attempt": "1", "commit_sha": "a" * 40}
+    # Synthetic Actions attestation only; the actual owner and validator run below.
+    monkeypatch.setattr(sdc, "production_context", lambda: context)
+    source_close = datetime(2026, 8, 31, 10, tzinfo=timezone.utc)
+    clock = [source_close + timedelta(minutes=first_issue_minutes)]
+    monkeypatch.setattr(research, "now_utc", lambda: clock[0])
+    rows = []
+
+    def append_candle(opened, close):
+        row = {"timestamp_utc": sdc.iso(opened), "spot_status": "PASS", "ethbtc_close": "0.03", "ethbtc_high": "0.031", "ethbtc_return_1h_pct": "0.1"}
+        for asset in ("btc", "eth"):
+            for key, value in {"close": close, "high": close+1, "low": close-1, "volume": 1, "quote_volume": close, "return_1h_pct": 0.1, "taker_buy_quote_share": 0.6}.items():
+                row[f"{asset}_{key}"] = str(value)
+        rows.append(row)
+
+    def publish_hourly(end):
+        for day in {row["timestamp_utc"][:10] for row in rows}:
+            stamp = datetime.fromisoformat(day)
+            path = sdc.HOURLY_ROOT / f"{stamp:%Y/%m/%Y-%m-%d}.csv"
+            path.parent.mkdir(parents=True, exist_ok=True)
+            with path.open("w", newline="") as handle:
+                writer = csv.DictWriter(handle, fieldnames=list(rows[0]))
+                writer.writeheader()
+                writer.writerows(row for row in rows if row["timestamp_utc"].startswith(day))
+        sdc.write_json(research.HOURLY_POINTER, {"status": "COMPLETE", "run_id": "fixture-hourly", "requested_hours": 26, "window_start_utc": sdc.iso(end-timedelta(hours=26)), "window_end_utc": sdc.iso(end)})
+
+    for index in range(26):
+        append_candle(source_close-timedelta(hours=26-index), 100.0)
+    publish_hourly(source_close)
+    legacy_path = research.OBS / "2026/08/31/20260831T090000Z.json"
+    sdc.write_json(legacy_path, {"contract": "INTRADAY_EXECUTION_OBSERVATION_v1", "price_observation_utc": (source_close-timedelta(hours=1)).isoformat(), "research_state": "REGIME_NOT_ACTIVE"})
+    legacy_bytes = legacy_path.read_bytes()
+
+    research.main()
+    capsys.readouterr()
+    first = validate_repository(tmp_path, now=clock[0])
+    assert first["prediction_rows_validated"] == 1
+    assert first["outcome_rows_validated"] == 0
+    assert sdc.REGISTRATION.exists()
+    assert legacy_path.read_bytes() == legacy_bytes
+    frozen = {path: path.read_bytes() for path in sdc.PREDICTIONS.rglob("*.json")}
+    if first_issue_minutes > 30:
+        latest = json.loads(research.LATEST.read_text())["shadow_direction_confidence"]
+        assert all(target["direction"] == "NO_EDGE" and target["calibrated_probability"] is None for target in latest["horizons"]["1H"]["targets"].values())
+        assert "1H BTC NO_EDGE(UNAVAILABLE)" in latest["data_ping_bridge"]["display_line"]
+        assert all("1H" not in json.loads(raw)["horizons"] for raw in frozen.values())
+    clock[0] += timedelta(minutes=5)
+    research.main()
+    capsys.readouterr()
+    assert frozen == {path: path.read_bytes() for path in sdc.PREDICTIONS.rglob("*.json")}
+    assert not sdc.OUTCOMES.exists()
+
+    entry = json.loads(research.ENTRY.read_text())
+    sdc.write_json(research.ENTRY, {**entry, "state": "GRADUATED_ALTCOIN_TOPUP_ACTIVE"})
+    research.main()
+    capsys.readouterr()
+    latest = json.loads(research.LATEST.read_text())
+    assert latest["adaptive_evidence"]["research_eligibility"]["eligible"] is False
+    assert latest["shadow_direction_confidence"]["prediction_freeze"]["status"] == "RESEARCH_CONTEXT_INELIGIBLE_NO_PREDICTION"
+    assert all(target["direction"] == "NO_EDGE" for horizon in latest["shadow_direction_confidence"]["horizons"].values() for target in horizon["targets"].values())
+    assert legacy_path.read_bytes() == legacy_bytes
+    sdc.write_json(research.ENTRY, entry)
+
+    # Only advancing this explicitly synthetic clock and publishing the exact
+    # next closed candle can produce a fixture outcome. This is not live evidence.
+    append_candle(source_close, 101.0)
+    publish_hourly(source_close+timedelta(hours=1))
+    clock[0] = source_close+timedelta(hours=1, minutes=15)
+    # A branch/local run must not append canonical outcomes or calibration,
+    # even after a genuine prediction's due time has passed in the fixture.
+    calibration_bytes = sdc.CALIBRATION.read_bytes()
+    registration_bytes = sdc.REGISTRATION.read_bytes()
+    monkeypatch.setattr(sdc, "production_context", lambda: None)
+    research.main()
+    capsys.readouterr()
+    assert not sdc.OUTCOMES.exists()
+    assert frozen == {path: path.read_bytes() for path in sdc.PREDICTIONS.rglob("*.json")}
+    assert sdc.CALIBRATION.read_bytes() == calibration_bytes
+    assert sdc.REGISTRATION.read_bytes() == registration_bytes
+    monkeypatch.setattr(sdc, "production_context", lambda: context)
+    research.main()
+    capsys.readouterr()
+    second = validate_repository(tmp_path, now=clock[0])
+    assert second["prediction_rows_validated"] == 2
+    assert second["outcome_rows_validated"] == (2 if first_issue_minutes <= 30 else 0)
+    assert all(json.loads(path.read_text())["horizon_hours"] == 1 for path in sdc.OUTCOMES.rglob("*.json"))
+    assert not research.EVENTS.exists()
+    assert legacy_path.read_bytes() == legacy_bytes

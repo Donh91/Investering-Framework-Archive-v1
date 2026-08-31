@@ -94,6 +94,10 @@ The BTC/ETH 1H/4H/24H direction-calibration lane is separately registered as:
 
 It owns `UP`, `DOWN`, `NO_EDGE`, exact-horizon outcome maturation and empirical calibration. It remains shadow-only. Evidence agreement is not probability, numerical probability is suppressed during warmup, and 99% language is available only through the explicit high-assurance machine gate.
 
+The first eligible canonical-main Actions run freezes `DIRECTION_REGISTRATION.json`. Its timestamp, registry/configuration hashes and production commit/run binding separate forward evidence from branch QA. Existing rows cannot be adopted into this registration. Prediction identity is the source candle, so a retry cannot create another forecast for the same source observation.
+
+Each outcome links to the exact frozen prediction path and SHA-256, and to the exact due owner candle and its price binding. The validator checks actual UTC maturity, source prices, unchanged forecast fields, HIT/MISS arithmetic, Brier arithmetic and reproducible calibration from validated outcomes. A first production prediction is not a matured 1H outcome. Rounding cannot display 99% without `HIGH_ASSURANCE_99_ELIGIBLE`.
+
 ## Authority
 - research_only: true
 - portfolio_execution: false

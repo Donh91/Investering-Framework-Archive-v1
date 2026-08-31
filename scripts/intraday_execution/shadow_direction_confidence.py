@@ -2,9 +2,12 @@
 from __future__ import annotations
 
 import csv
+import hashlib
 import json
 import math
+import os
 import statistics
+import subprocess
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
@@ -14,6 +17,69 @@ HOURLY_ROOT = Path("03_DAILY_CAPTURE_LOGS/hourly")
 PREDICTIONS = Path("04_MARKET_LEARNING/intraday_execution/direction_predictions")
 OUTCOMES = Path("04_MARKET_LEARNING/intraday_execution/direction_outcomes")
 CALIBRATION = Path("04_MARKET_LEARNING/intraday_execution/DIRECTION_CALIBRATION.json")
+REGISTRATION = Path("04_MARKET_LEARNING/intraday_execution/DIRECTION_REGISTRATION.json")
+TEST_ID = "INTRADAY_DIRECTION_CONFIDENCE_V1"
+REPOSITORY = "Donh91/Investering-Framework-Archive-v1"
+
+
+def content_hash(value: Any) -> str:
+    return hashlib.sha256(json.dumps(value, sort_keys=True, separators=(",", ":"), allow_nan=False).encode()).hexdigest()
+
+
+def file_hash(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def finite_number(value: Any) -> bool:
+    return isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value)
+
+
+def production_context() -> dict[str, Any] | None:
+    """Only the existing canonical-main Actions writer can create forward rows."""
+    if (
+        os.environ.get("GITHUB_ACTIONS") != "true"
+        or os.environ.get("GITHUB_REPOSITORY") != REPOSITORY
+        or os.environ.get("GITHUB_REF") != "refs/heads/main"
+        or os.environ.get("GITHUB_EVENT_NAME") not in {"schedule", "workflow_dispatch"}
+        or not os.environ.get("GITHUB_RUN_ID", "").isdigit()
+    ):
+        return None
+    head = subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip()
+    subprocess.run(["git", "merge-base", "--is-ancestor", head, "origin/main"], check=True)
+    return {
+        "repository": REPOSITORY,
+        "ref": "refs/heads/main",
+        "event": os.environ["GITHUB_EVENT_NAME"],
+        "run_id": os.environ["GITHUB_RUN_ID"],
+        "run_attempt": os.environ.get("GITHUB_RUN_ATTEMPT", "1"),
+        "commit_sha": head,
+    }
+
+
+def ensure_registration(cfg: dict[str, Any], now: datetime, context: dict[str, Any] | None) -> dict[str, Any] | None:
+    if not context:
+        return None
+    if REGISTRATION.exists():
+        return read_json(REGISTRATION)
+    if _prediction_paths() or _outcome_paths():
+        raise RuntimeError("REGISTRATION_CANNOT_ADOPT_PREEXISTING_ROWS")
+    try:
+        from scripts.intraday_execution.validate_direction_confidence import registry_binding_hash
+    except ModuleNotFoundError:
+        from validate_direction_confidence import registry_binding_hash
+    receipt = {
+        "contract": "INTRADAY_DIRECTION_REGISTRATION_v1",
+        "registered_test_id": TEST_ID,
+        "registered_at_utc": iso(now),
+        "production_context": context,
+        "registry_binding_sha256": registry_binding_hash(Path(".")),
+        "configuration_sha256": content_hash(cfg),
+        "forward_eligibility": "POST_REGISTRATION_CANONICAL_MAIN_ONLY",
+        "prior_rows_adopted": 0,
+    }
+    receipt["receipt_sha256"] = content_hash(receipt)
+    write_json(REGISTRATION, receipt)
+    return receipt
 
 
 def read_json(path: Path) -> dict[str, Any] | None:
@@ -59,7 +125,7 @@ def _source_price_observation_time(obs: dict[str, Any]) -> datetime:
 
 
 def _direction(value: float | None, neutral: float = 0.0) -> str:
-    if value is None:
+    if not finite_number(value):
         return "MISSING"
     if value > neutral:
         return "UP"
@@ -123,7 +189,7 @@ def _tier_row(rows: list[dict[str, Any]], low: int, high: int) -> dict[str, Any]
         for row in rows
         if isinstance(row.get("filtered_rank"), int)
         and low <= int(row["filtered_rank"]) <= high
-        and isinstance(row.get("change_24h_pct"), (int, float))
+        and finite_number(row.get("change_24h_pct"))
     ]
     changes = [float(row["change_24h_pct"]) for row in selected]
     if not changes:
@@ -192,7 +258,7 @@ def _independent_rows(rows: list[dict[str, Any]], horizon_hours: int) -> list[di
     return chosen
 
 
-def build_calibration_summary(cfg: dict[str, Any], now: datetime) -> dict[str, Any]:
+def build_calibration_summary(cfg: dict[str, Any], now: datetime, *, persist: bool = True) -> dict[str, Any]:
     scored = []
     for path in _outcome_paths():
         row = read_json(path)
@@ -204,6 +270,15 @@ def build_calibration_summary(cfg: dict[str, Any], now: datetime) -> dict[str, A
         ):
             scored.append(row)
 
+    summary = calibration_summary_from_rows(scored, cfg, now)
+    if persist:
+        write_json(CALIBRATION, summary)
+    return summary
+
+
+def calibration_summary_from_rows(scored: list[dict[str, Any]], cfg: dict[str, Any], now: datetime) -> dict[str, Any]:
+    """Pure owner scorer, also used to verify persisted calibration receipts."""
+    scored = [row for row in scored if row.get("status") == "MATURED" and row.get("result") in {"HIT", "MISS"}]
     groups: dict[str, list[dict[str, Any]]] = {}
     family_counts: dict[str, dict[str, int]] = {}
     for row in scored:
@@ -250,6 +325,9 @@ def build_calibration_summary(cfg: dict[str, Any], now: datetime) -> dict[str, A
             )
             maturity = "HIGH_ASSURANCE_99_ELIGIBLE" if eligible_99 else "CALIBRATED_STRONG"
             display = estimate
+        # Rounding must not create a 99% claim before the separate assurance gate.
+        if display is not None and round(display * 100.0, 1) >= 99.0 and maturity != "HIGH_ASSURANCE_99_ELIGIBLE":
+            display = None
         rendered_groups[group_id] = {
             "total_scored_rows": len(rows),
             "independent_count": total,
@@ -288,7 +366,6 @@ def build_calibration_summary(cfg: dict[str, Any], now: datetime) -> dict[str, A
             "portfolio_execution": False,
         },
     }
-    write_json(CALIBRATION, summary)
     return summary
 
 
@@ -309,6 +386,8 @@ def _calibration_view(
     group_id = _group_id(target, horizon, direction, vote_summary["calibration_key"])
     group = (summary.get("groups") or {}).get(group_id) or {}
     probability = group.get("display_probability")
+    if finite_number(probability) and round(float(probability) * 100.0, 1) >= 99.0 and group.get("maturity") != "HIGH_ASSURANCE_99_ELIGIBLE":
+        probability = None
     return {
         "confidence_status": group.get("maturity", "WARMUP"),
         "calibrated_probability": round(float(probability) * 100.0, 1)
@@ -329,7 +408,13 @@ def _horizon_eligibility(
     due = observed_at + timedelta(hours=horizon)
     remaining = (due - now).total_seconds() / 3600.0
     minimum = horizon * float(cfg.get("minimum_remaining_fraction_of_horizon", 0.5))
-    status = "ELIGIBLE" if remaining >= minimum else "INSUFFICIENT_REMAINING_FORWARD_SPAN"
+    lag_minutes = (now - observed_at).total_seconds() / 60.0
+    if lag_minutes < 0:
+        status = "SOURCE_CLOSE_NOT_YET_OBSERVABLE"
+    elif lag_minutes > float(cfg.get("max_prediction_issue_lag_minutes", 90)):
+        status = "SOURCE_TOO_STALE"
+    else:
+        status = "ELIGIBLE" if remaining >= minimum else "INSUFFICIENT_REMAINING_FORWARD_SPAN"
     return {
         "status": status,
         "source_cutoff_utc": iso(observed_at),
@@ -349,12 +434,25 @@ def write_prediction(
     now: datetime,
     vote_summaries: dict[str, dict[str, Any]],
     calibration: dict[str, Any],
+    *,
+    registration: dict[str, Any] | None = None,
+    context: dict[str, Any] | None = None,
 ) -> tuple[str, str | None]:
+    if not registration or not context:
+        return "NO_CANONICAL_REGISTRATION_NO_PREDICTION", None
+    prices = [(obs.get(asset) or {}).get("close") for asset in ("btc", "eth", "ethbtc")]
+    if not obs.get("hourly_sequence_run_id") or not all(finite_number(price) and price > 0 for price in prices):
+        return "INVALID_SOURCE_PRICE_NO_PREDICTION", None
     observed_at = _source_price_observation_time(obs)
     lag_minutes = (now - observed_at).total_seconds() / 60.0
     max_lag = float(cfg.get("max_prediction_issue_lag_minutes", 90))
     if lag_minutes < 0 or lag_minutes > max_lag:
         return "STALE_INPUT_NO_PREDICTION", None
+    # Identity belongs to the source candle, not a retry's wall-clock timestamp.
+    for existing_path in _prediction_paths():
+        existing = read_json(existing_path) or {}
+        if existing.get("source_price_observation_utc") == iso(observed_at):
+            return "DUPLICATE_NOOP", str(existing_path)
 
     horizons: dict[str, Any] = {}
     for horizon in [int(v) for v in cfg.get("direction_horizons_hours", [1, 4, 24])]:
@@ -373,6 +471,7 @@ def write_prediction(
                 "votes": summary["votes"],
                 "frozen_calibrated_probability_pct": cal["calibrated_probability"],
                 "confidence_status_at_issue": cal["confidence_status"],
+                "independent_calibration_samples_at_issue": cal["independent_calibration_samples"],
             }
         horizons[f"{horizon}H"] = {
             "horizon_hours": horizon,
@@ -387,6 +486,9 @@ def write_prediction(
         return "DUPLICATE_NOOP", str(path)
     prediction = {
         "contract": "INTRADAY_DIRECTION_PREDICTION_v1",
+        "registered_test_id": TEST_ID,
+        "registration_receipt_sha256": registration["receipt_sha256"],
+        "production_context": context,
         "issued_at_utc": iso(now),
         "source_candle_open_utc": obs.get("price_observation_utc"),
         "source_price_observation_utc": iso(observed_at),
@@ -405,7 +507,7 @@ def write_prediction(
     return "PREDICTION_FROZEN", str(path)
 
 
-def _exact_hourly_close(due: datetime, target: str) -> dict[str, Any] | None:
+def _exact_hourly_close(due: datetime, target: str, *, root: Path = Path(".")) -> dict[str, Any] | None:
     """Read the exact closed owner candle ending at `due`.
 
     Hourly CSV timestamps are candle-open timestamps, therefore the row whose
@@ -413,7 +515,8 @@ def _exact_hourly_close(due: datetime, target: str) -> dict[str, Any] | None:
     Later closes are never substituted for a missing exact-horizon close.
     """
     candle_open = due - timedelta(hours=1)
-    path = HOURLY_ROOT / f"{candle_open:%Y/%m/%Y-%m-%d}.csv"
+    logical_path = HOURLY_ROOT / f"{candle_open:%Y/%m/%Y-%m-%d}.csv"
+    path = root / logical_path
     if not path.exists():
         return None
     close_key = f"{target.lower()}_close"
@@ -432,20 +535,32 @@ def _exact_hourly_close(due: datetime, target: str) -> dict[str, Any] | None:
                     close = float(raw)
                 except (TypeError, ValueError):
                     return None
+                if not finite_number(close) or close <= 0:
+                    return None
+                binding = {
+                    "source_path": logical_path.as_posix(),
+                    "candle_open_utc": iso(candle_open),
+                    "target": target,
+                    "close": close,
+                    "spot_status": "PASS",
+                }
                 return {
                     "close": close,
-                    "source_path": path.as_posix(),
+                    "source_path": logical_path.as_posix(),
                     "candle_open_utc": iso(candle_open),
                     "price_observation_utc": iso(due),
                     "semantics": "EXACT_DUE_CLOSED_1H_OWNER_CANDLE",
+                    "source_binding_sha256": content_hash(binding),
                 }
     except (OSError, csv.Error, ValueError):
         return None
     return None
 
 
-def mature_predictions(obs: dict[str, Any], cfg: dict[str, Any], now: datetime) -> dict[str, int]:
-    current_obs_time = _source_price_observation_time(obs)
+def mature_predictions(
+    obs: dict[str, Any], cfg: dict[str, Any], now: datetime,
+    *, context: dict[str, Any] | None = None,
+) -> dict[str, int]:
     counts = {"matured": 0, "censored": 0, "abstained": 0, "pending": 0}
     max_wait = float(cfg.get("max_outcome_evidence_lag_hours", 1.5))
     for path in _prediction_paths():
@@ -460,7 +575,7 @@ def mature_predictions(obs: dict[str, Any], cfg: dict[str, Any], now: datetime) 
                 outcome_path = OUTCOMES / f"{issued:%Y/%m/%d}/{issued:%Y%m%dT%H%M%SZ}_{horizon_key}_{target}.json"
                 if outcome_path.exists():
                     continue
-                if current_obs_time < due:
+                if now < due:
                     counts["pending"] += 1
                     continue
 
@@ -468,6 +583,11 @@ def mature_predictions(obs: dict[str, Any], cfg: dict[str, Any], now: datetime) 
                 predicted = target_row.get("direction")
                 common = {
                     "contract": "INTRADAY_DIRECTION_OUTCOME_v1",
+                    "registered_test_id": pred.get("registered_test_id"),
+                    "registration_receipt_sha256": pred.get("registration_receipt_sha256"),
+                    "production_context": context,
+                    "prediction_path": path.as_posix(),
+                    "prediction_sha256": file_hash(path),
                     "issued_at_utc": pred["issued_at_utc"],
                     "source_price_observation_utc": pred["source_price_observation_utc"],
                     "source_candle_open_utc": pred.get("source_candle_open_utc"),
@@ -492,7 +612,7 @@ def mature_predictions(obs: dict[str, Any], cfg: dict[str, Any], now: datetime) 
                 }
 
                 if evidence is None:
-                    wait_hours = (current_obs_time - due).total_seconds() / 3600.0
+                    wait_hours = (now - due).total_seconds() / 3600.0
                     if wait_hours <= max_wait:
                         counts["pending"] += 1
                         continue
@@ -511,7 +631,7 @@ def mature_predictions(obs: dict[str, Any], cfg: dict[str, Any], now: datetime) 
 
                 start = target_row.get("start_value")
                 end = evidence["close"]
-                if not isinstance(start, (int, float)) or float(start) == 0:
+                if not finite_number(start) or float(start) <= 0:
                     write_json(
                         outcome_path,
                         {
@@ -559,6 +679,7 @@ def mature_predictions(obs: dict[str, Any], cfg: dict[str, Any], now: datetime) 
                         "evidence_candle_open_utc": evidence["candle_open_utc"],
                         "evidence_source_path": evidence["source_path"],
                         "evidence_semantics": evidence["semantics"],
+                        "evidence_source_binding_sha256": evidence["source_binding_sha256"],
                         "evidence_horizon_error_hours": 0.0,
                         "adjudication_delay_hours": round(adjudication_delay, 6),
                         "brier_score": round(brier, 8) if brier is not None else None,
@@ -577,10 +698,22 @@ def update_shadow_direction_confidence(
     now: datetime,
     *,
     new_prediction: bool,
+    research_eligible: bool = True,
 ) -> dict[str, Any]:
     direction_cfg = cfg.get("shadow_direction_confidence") or {}
-    maturation = mature_predictions(obs, direction_cfg, now)
-    calibration = build_calibration_summary(direction_cfg, now)
+    try:
+        from scripts.intraday_execution.validate_direction_confidence import validate_repository
+    except ModuleNotFoundError:
+        from validate_direction_confidence import validate_repository
+    # Invalid or unregistered historical rows must not seed new probabilities.
+    validate_repository(Path("."), now=now)
+    context = production_context()
+    registration = ensure_registration(direction_cfg, now, context)
+    maturation = (
+        mature_predictions(obs, direction_cfg, now, context=context)
+        if context else {"matured": 0, "censored": 0, "abstained": 0, "pending": 0}
+    )
+    calibration = build_calibration_summary(direction_cfg, now, persist=context is not None)
     vote_summaries = {
         target: summarize_votes(build_votes(target, obs), direction_cfg)
         for target in ("BTC", "ETH")
@@ -598,16 +731,18 @@ def update_shadow_direction_confidence(
             if eligibility["status"] != "ELIGIBLE":
                 cal = {
                     **cal,
-                    "confidence_status": "NO_PROSPECTIVE_FREEZE_INSUFFICIENT_FORWARD_SPAN",
+                    "confidence_status": "NO_PROSPECTIVE_FREEZE_" + eligibility["status"],
                     "calibrated_probability": None,
                 }
             targets[target] = {
-                "direction": base["direction"],
+                "direction": base["direction"] if eligibility["status"] == "ELIGIBLE" else "NO_EDGE",
                 "evidence_agreement_pct": base["evidence_agreement_pct"],
                 "up_votes": base["up_votes"],
                 "down_votes": base["down_votes"],
                 **cal,
             }
+            if not research_eligible:
+                targets[target].update(direction="NO_EDGE", calibrated_probability=None, confidence_status="RESEARCH_CONTEXT_INELIGIBLE")
         horizons[f"{horizon}H"] = {
             "horizon_hours": horizon,
             "prediction_eligibility": eligibility,
@@ -616,10 +751,13 @@ def update_shadow_direction_confidence(
 
     prediction_status = "DUPLICATE_PRICE_OBSERVATION_NO_NEW_PREDICTION"
     prediction_path = None
-    if new_prediction:
+    if new_prediction and research_eligible:
         prediction_status, prediction_path = write_prediction(
-            obs, direction_cfg, now, vote_summaries, calibration
+            obs, direction_cfg, now, vote_summaries, calibration,
+            registration=registration, context=context,
         )
+    elif not research_eligible:
+        prediction_status = "RESEARCH_CONTEXT_INELIGIBLE_NO_PREDICTION"
 
     transmission = build_market_cap_transmission()
     pieces = []
@@ -627,7 +765,9 @@ def update_shadow_direction_confidence(
         row = horizons.get(key, {}).get("targets", {}).get("BTC", {})
         if row:
             p = row.get("calibrated_probability")
-            pieces.append(f"{key} BTC {row.get('direction')}({p if p is not None else 'UNCAL'})")
+            unavailable = horizons[key]["prediction_eligibility"]["status"] != "ELIGIBLE" or not research_eligible
+            label = "UNAVAILABLE" if unavailable else (p if p is not None else "UNCAL")
+            pieces.append(f"{key} BTC {row.get('direction')}({label})")
     display = (
         "SHADOW DIRECTION: "
         + " | ".join(pieces)

@@ -62,9 +62,14 @@ def hourly_rows():
             for r in csv.DictReader(fh):
                 if r.get("spot_status") != "PASS": continue
                 ts=parse_utc(r["timestamp_utc"])
-                if ts <= end: rows.append((ts,r))
+                if ts < end: rows.append((ts,r))
     rows=sorted({ts:r for ts,r in rows}.items())
     if len(rows) < 6: raise RuntimeError("insufficient hourly rows")
+    required=int(ptr.get("requested_hours") or 0)
+    if required < 6: raise RuntimeError("hourly owner lookback missing/insufficient")
+    expected={end-timedelta(hours=i) for i in range(1,required+1)}
+    if not expected.issubset({ts for ts,_ in rows}):
+        raise RuntimeError("hourly owner window has missing completed candles")
     return ptr, rows
 
 
@@ -330,36 +335,36 @@ def legacy_event_policy(cfg):
 
 
 def main():
-    now=now_utc(); cfg=read_json(CONFIG)
+    cfg=read_json(CONFIG)
     if not cfg or cfg.get("contract")!="INTRADAY_EXECUTION_RESEARCH_CONFIG_v1": raise RuntimeError("config missing/invalid")
     obs=build_snapshot(cfg); recent=recent_observations(cfg["trailing_observations"])
+    # Freeze only after the complete input snapshot has been read.
+    now=now_utc()
     prev_state=(read_json(STATE) or {}).get("research_state")
     event_policy=legacy_event_policy(cfg)
-    duplicate=bool(recent and recent[-1].get("price_observation_utc")==obs["price_observation_utc"])
-    shadow=update_shadow_direction_confidence(obs,cfg,now,new_prediction=not duplicate)
-    if duplicate:
-        if event_policy["outcome_maturation"]: mature_events(obs,now)
-        summary=event_summary(now); latest=read_json(LATEST) or {}
-        latest["generated_at_utc"]=now.isoformat()
-        latest["duplicate_price_observation_skipped"]=True
-        latest["event_summary"]=summary
-        latest["legacy_execution_event_ledger"]=event_policy
-        latest["shadow_direction_confidence"]=shadow
-        latest.setdefault("data_ping_bridge",{})["shadow_direction_display_line"]=shadow["data_ping_bridge"]["display_line"]
-        write_json(LATEST,latest); print(json.dumps(latest,sort_keys=True)); return
+    ts=parse_utc(obs["price_observation_utc"])
+    observation_path=OBS/f"{ts:%Y/%m/%d}/{ts:%Y%m%dT%H%M%SZ}.json"
+    duplicate=observation_path.exists()
     state,evidence=classify(cfg,recent,obs,prev_state); obs["contract"]="INTRADAY_EXECUTION_OBSERVATION_v1"; obs["research_state"]=state; obs["adaptive_evidence"]=evidence
-    ts=parse_utc(obs["price_observation_utc"]); write_json(OBS/f"{ts:%Y/%m/%d}/{ts:%Y%m%dT%H%M%SZ}.json",obs)
+    # T12 has its own source-candle identity. Legacy telemetry must not suppress
+    # its first registered forecast, and a retry must refresh current eligibility.
+    shadow=update_shadow_direction_confidence(obs,cfg,now,new_prediction=True,
+        research_eligible=evidence["research_eligibility"]["eligible"])
+    if not duplicate: write_json(observation_path,obs)
     if event_policy["outcome_maturation"]: mature_events(obs,now)
-    if event_policy["new_event_creation"]: open_event(state,obs,now,prev_state)
+    if not duplicate:
+        if event_policy["new_event_creation"]: open_event(state,obs,now,prev_state)
     summary=event_summary(now)
     auth=cfg["authority"]
-    write_json(STATE,{"contract":"INTRADAY_EXECUTION_STATE_v1","updated_at_utc":now.isoformat(),"research_state":state,"previous_research_state":prev_state,"observation_count":len(recent)+1,"adaptive_evidence":evidence,"legacy_execution_event_ledger":event_policy,"authority":auth})
+    observation_count=len(recent)+(0 if duplicate else 1)
+    write_json(STATE,{"contract":"INTRADAY_EXECUTION_STATE_v1","updated_at_utc":now.isoformat(),"research_state":state,"previous_research_state":prev_state,"observation_count":observation_count,"adaptive_evidence":evidence,"legacy_execution_event_ledger":event_policy,"authority":auth})
     latest={"contract":"INTRADAY_EXECUTION_LATEST_v1","generated_at_utc":now.isoformat(),"research_state":state,"previous_research_state":prev_state,
+            "duplicate_price_observation_skipped":duplicate,
             "market_snapshot":{k:v for k,v in obs.items() if k!="constituents"},"adaptive_evidence":evidence,"event_summary":summary,
             "legacy_execution_event_ledger":event_policy,
             "shadow_direction_confidence":shadow,
             "data_ping_bridge":{
-                "display_line":f"EXECUTION RESEARCH: {state} | eligibility={evidence.get('research_eligibility',{}).get('status','UNKNOWN')} | BTC vwap={obs['btc']['vwap_deviation_pct'] if obs['btc']['vwap_deviation_pct'] is not None else 'NA'}% | ETH vwap={obs['eth']['vwap_deviation_pct'] if obs['eth']['vwap_deviation_pct'] is not None else 'NA'}% | breadth={(obs['breadth']['advance_ratio'] or 0)*100:.0f}% | sample={len(recent)+1}",
+                "display_line":f"EXECUTION RESEARCH: {state} | eligibility={evidence.get('research_eligibility',{}).get('status','UNKNOWN')} | BTC vwap={obs['btc']['vwap_deviation_pct'] if obs['btc']['vwap_deviation_pct'] is not None else 'NA'}% | ETH vwap={obs['eth']['vwap_deviation_pct'] if obs['eth']['vwap_deviation_pct'] is not None else 'NA'}% | breadth={format(obs['breadth']['advance_ratio']*100,'.0f')+'%' if obs['breadth']['advance_ratio'] is not None else 'UNKNOWN'} | sample={observation_count}",
                 "shadow_direction_display_line":shadow["data_ping_bridge"]["display_line"],
             },
             "authority":auth}

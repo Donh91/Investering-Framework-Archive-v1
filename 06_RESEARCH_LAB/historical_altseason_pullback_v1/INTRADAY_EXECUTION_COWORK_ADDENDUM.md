@@ -3,7 +3,42 @@
 This addendum is mandatory challenger context for the Historical Altseason Pullback Laboratory.
 
 ## Why it exists
-The core lab studies regime-relative pullback, trough and continuation behavior. The new prospective `04_MARKET_LEARNING/intraday_execution/` layer studies a narrower question: once risk ownership is already permitted, can intraday execution evidence improve timing of staged top-ups, local trim watches and reloads without damaging HOLD performance?
+The core lab studies regime-relative pullback, trough and continuation behavior. The existing `04_MARKET_LEARNING/intraday_execution/` owner collects non-binding timing telemetry and runs the separately registered T12 direction-calibration test. Current `WAIT` is a forward-only observation context, not market permission. A research label does not authorize staged top-ups, trims or reloads.
+
+## Current authority and collection eligibility
+Read the current Entry Signal Ledger and intraday config rather than infer permission from a research label:
+
+```text
+Entry Signal Ledger contract: ENTRY_SIGNAL_LATEST_v1
+entry state: WAIT
+promotion status: FORWARD_ONLY_NOT_PROMOTION_READY
+permits_active_state: false
+breadth entry permission: RETIRED_ZERO_WEIGHT
+hourly source: completed UTC 1H BTC/ETH/ETHBTC owner evidence
+```
+
+These are collection eligibility conditions only. Missing or incompatible owner evidence fails closed. The retired `GRADUATED_ALTCOIN_TOPUP_ACTIVE` state cannot authorize collection, and proxy or canonical-compatible breadth cannot reactivate it. Breadth remains descriptive research context with zero execution weight. T12 cannot grant itself regime, entry or portfolio permission.
+
+The historical execution-event lane remains `FROZEN_PENDING_SEPARATE_REGISTERED_TEST`:
+
+```text
+new_event_creation: false
+outcome_maturation: false
+historical_rows_preserved: true
+```
+
+Historical rows remain context. Neither new events nor new outcomes for trim/reload hypotheses may be created until that separate question has a governed test registration, benchmark, validator and scorer. HOLD and false-trim comparisons below are challenger questions, not permission to resume that frozen lane.
+
+## T12 prospective evidence boundary
+`INTRADAY_DIRECTION_CONFIDENCE_V1` is the registered BTC/ETH 1H/4H/24H direction-calibration test. Its owner is the existing intraday config, its scorer is `scripts/intraday_execution/shadow_direction_confidence.py`, and its validator is `scripts/intraday_execution/validate_direction_confidence.py`.
+
+- Only canonical-main production after registration is eligible. Branch QA, historical telemetry and initialization rows are not forward evidence.
+- Forecast time is the observable candle close, not the candle-open label. A 1H outcome remains pending until its frozen due time has actually passed.
+- Outcomes require the exact due closed owner candle. A later price cannot substitute for missing evidence.
+- `NO_EDGE` is an abstention, never a directional hit.
+- Evidence agreement is not probability. Numeric probability remains hidden until empirical calibration permits it; 99% wording additionally requires `HIGH_ASSURANCE_99_ELIGIBLE`.
+- Microcap remains `NO_EDGE` / `DATA_GAP` until a legitimate owner exists.
+- Row validity, coverage readiness and promotion status remain separate. No automatic promotion or reweighting is permitted.
 
 ## Prospective evidence to read
 When present, read all files under:
@@ -42,7 +77,7 @@ The current prospective archive supports BTC/ETH execution features from hourly 
 
 ## Required treatment
 - keep this sidecar research-only
-- never promote an execution state directly to a portfolio action
+- never promote an execution state or T12 direction directly to a portfolio action
 - compare every trim/reload hypothesis with HOLD
 - report false positives and missed upside
 - prefer percentile/regime-relative representations over cherry-picked fixed thresholds

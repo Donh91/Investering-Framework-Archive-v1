@@ -169,3 +169,25 @@ def test_legacy_execution_event_lane_remains_frozen_without_separate_registered_
     assert policy["new_event_creation"] is False
     assert policy["outcome_maturation"] is False
     assert policy["historical_rows_preserved"] is True
+
+
+def test_readme_and_cowork_addendum_preserve_current_authority_contract():
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[2]
+    for relative in (
+        "04_MARKET_LEARNING/intraday_execution/README.md",
+        "06_RESEARCH_LAB/historical_altseason_pullback_v1/INTRADAY_EXECUTION_COWORK_ADDENDUM.md",
+    ):
+        text = (root / relative).read_text()
+        for token in (
+            "ENTRY_SIGNAL_LATEST_v1", "WAIT", "FORWARD_ONLY_NOT_PROMOTION_READY",
+            "permits_active_state: false", "RETIRED_ZERO_WEIGHT",
+            "GRADUATED_ALTCOIN_TOPUP_ACTIVE", "zero execution weight",
+            "FROZEN_PENDING_SEPARATE_REGISTERED_TEST", "new_event_creation: false",
+            "outcome_maturation: false", "historical_rows_preserved: true",
+            "INTRADAY_DIRECTION_CONFIDENCE_V1", "NO_EDGE",
+        ):
+            assert token in text, (relative, token)
+        for retired_claim in ("inside an active regime", "once risk ownership is already permitted"):
+            assert retired_claim not in text.lower(), (relative, retired_claim)
