@@ -1,9 +1,14 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
-import csv, json, statistics
+import csv, json, math, statistics
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+
+try:
+    from scripts.intraday_execution.shadow_direction_confidence import update_shadow_direction_confidence
+except ModuleNotFoundError:
+    from shadow_direction_confidence import update_shadow_direction_confidence
 
 ROOT = Path("04_MARKET_LEARNING/intraday_execution")
 OBS = ROOT / "observations"
@@ -23,30 +28,24 @@ def parse_utc(v): return datetime.fromisoformat(v.replace("Z", "+00:00"))
 def read_json(p):
     try: return json.loads(Path(p).read_text())
     except Exception: return None
-
 def write_json(p, obj):
     p=Path(p); p.parent.mkdir(parents=True, exist_ok=True)
     p.write_text(json.dumps(obj, indent=2, sort_keys=True)+"\n")
-
 def f(row, key):
     v=row.get(key)
     if v in (None, ""): return None
     try: return float(v)
     except Exception: return None
-
 def percentile_rank(values, x):
     vals=[float(v) for v in values if v is not None]
     if not vals or x is None: return None
     return 100.0*sum(v <= x for v in vals)/len(vals)
-
 def mean(xs):
     xs=[x for x in xs if x is not None]
     return statistics.fmean(xs) if xs else None
-
 def median(xs):
     xs=[x for x in xs if x is not None]
     return statistics.median(xs) if xs else None
-
 def pct(a,b):
     return None if a in (None,0) or b is None else (b/a-1.0)*100.0
 
@@ -63,9 +62,14 @@ def hourly_rows():
             for r in csv.DictReader(fh):
                 if r.get("spot_status") != "PASS": continue
                 ts=parse_utc(r["timestamp_utc"])
-                if ts <= end: rows.append((ts,r))
+                if ts < end: rows.append((ts,r))
     rows=sorted({ts:r for ts,r in rows}.items())
     if len(rows) < 6: raise RuntimeError("insufficient hourly rows")
+    required=int(ptr.get("requested_hours") or 0)
+    if required < 6: raise RuntimeError("hourly owner lookback missing/insufficient")
+    expected={end-timedelta(hours=i) for i in range(1,required+1)}
+    if not expected.issubset({ts for ts,_ in rows}):
+        raise RuntimeError("hourly owner window has missing completed candles")
     return ptr, rows
 
 
@@ -141,9 +145,28 @@ def build_snapshot(cfg):
     constituents={str(x.get("asset_id")):float(x["price_usd"]) for x in breadth.get("constituents",[]) if x.get("asset_id") and x.get("price_usd") not in (None,0)}
     br=agg.get("advance_ratio")
     if br is None and agg.get("advancer_pct") is not None: br=float(agg["advancer_pct"])/100.0
+    entry_validity=entry.get("measurement_validity") or {}
+    entry_promotion=entry.get("promotion_authority") or entry_validity.get("graduated_deployment_promotion") or {}
+    entry_authority=entry.get("authority") or {}
     return {
       "captured_at_utc":now_utc().isoformat(),"price_observation_utc":ts.isoformat(),"hourly_sequence_run_id":ptr.get("run_id"),
-      "entry_state":entry.get("state"),"pullback_research_state":pull.get("research_state"),
+      "entry_state":entry.get("state"),
+      "entry_context":{
+          "contract":entry.get("contract"),
+          "definition_version":entry.get("definition_version"),
+          "state":entry.get("state"),
+          "observer_state":entry.get("observer_state"),
+          "promotion_status":entry_promotion.get("status"),
+          "permits_active_state":entry_promotion.get("permits_active_state"),
+          "breadth_entry_permission":entry_validity.get("breadth_entry_permission"),
+          "breadth_semantics":entry_validity.get("absolute_breadth_semantics"),
+          "entry_authority":{
+              "portfolio_execution":entry_authority.get("portfolio_execution"),
+              "canonical_market_state":entry_authority.get("canonical_market_state"),
+              "market_rule_change":entry_authority.get("market_rule_change"),
+          },
+      },
+      "pullback_research_state":pull.get("research_state"),
       "btc":asset_features("btc",pairs),"eth":asset_features("eth",pairs),"ethbtc":ethbtc_features(pairs),
       "breadth":{"advance_ratio":br,"advancer_pct":agg.get("advancer_pct"),"equal_weight_mean_return_24h_pct":agg.get("equal_weight_mean_return_24h_pct"),
                  "median_return_24h_pct":agg.get("median_return_24h_pct"),"outperforming_btc_count":agg.get("outperforming_btc_count"),
@@ -153,10 +176,72 @@ def build_snapshot(cfg):
     }
 
 
+def research_context_eligibility(cfg, obs):
+    contract=cfg.get("research_eligibility") or {}
+    authority=cfg.get("authority") or {}
+    entry=obs.get("entry_context") or {}
+    entry_authority=entry.get("entry_authority") or {}
+    configured=contract.get("status")=="ENTRY_LEDGER_FORWARD_ONLY_OBSERVATION_CONTEXT_v1"
+    authority_ok=(
+        authority.get("research_only") is True
+        and authority.get("portfolio_execution") is False
+        and authority.get("canonical_market_state") is False
+        and authority.get("automatic_rule_changes") is False
+    )
+    prices=[(obs.get(asset) or {}).get("close") for asset in ("btc","eth","ethbtc")]
+    source_ok=bool(obs.get("hourly_sequence_run_id")) and all(
+        type(price) in (int,float) and math.isfinite(price) and price > 0
+        for price in prices
+    )
+    entry_contract_ok=entry.get("contract")==contract.get("required_entry_contract")
+    entry_state_ok=entry.get("state")==contract.get("required_entry_state")
+    promotion_ok=(
+        entry.get("promotion_status")==contract.get("required_promotion_status")
+        and entry.get("permits_active_state") is contract.get("required_permits_active_state")
+    )
+    breadth_permission_ok=entry.get("breadth_entry_permission")==contract.get("required_breadth_entry_permission")
+    entry_authority_ok=(
+        entry_authority.get("portfolio_execution") is False
+        and entry_authority.get("canonical_market_state") is False
+    )
+    eligible=(
+        configured and authority_ok and source_ok and entry_contract_ok and entry_state_ok
+        and promotion_ok and breadth_permission_ok and entry_authority_ok
+    )
+    if not configured: reason="RESEARCH_ELIGIBILITY_CONTRACT_MISSING_OR_INVALID"
+    elif not authority_ok: reason="RESEARCH_AUTHORITY_BOUNDARY_INVALID"
+    elif not source_ok: reason="COMPLETED_HOURLY_PRICE_CONTEXT_INSUFFICIENT"
+    elif not entry_contract_ok: reason="ENTRY_OWNER_CONTRACT_MISSING_OR_INCOMPATIBLE"
+    elif not entry_state_ok: reason="ENTRY_OWNER_NOT_FORWARD_ONLY_WAIT_CONTEXT"
+    elif not promotion_ok: reason="ENTRY_PROMOTION_CONTEXT_INCOMPATIBLE"
+    elif not breadth_permission_ok: reason="BREADTH_ENTRY_PERMISSION_NOT_RETIRED_ZERO_WEIGHT"
+    elif not entry_authority_ok: reason="ENTRY_OWNER_AUTHORITY_BOUNDARY_INVALID"
+    else: reason="ELIGIBLE_FORWARD_ONLY_RESEARCH_OBSERVATION_CONTEXT"
+    return {
+        "eligible":eligible,
+        "status":"ELIGIBLE_RESEARCH_CONTEXT" if eligible else "INELIGIBLE_FAIL_CLOSED",
+        "reason":reason,
+        "semantics":contract.get("eligibility_semantics"),
+        "source_owner":contract.get("required_source_owner"),
+        "entry_owner_contract":entry.get("contract"),
+        "entry_signal_state":entry.get("state"),
+        "entry_promotion_status":entry.get("promotion_status"),
+        "entry_permits_active_state":entry.get("permits_active_state"),
+        "breadth_entry_permission":entry.get("breadth_entry_permission"),
+        "entry_signal_role":contract.get("entry_signal_role"),
+        "breadth_role":contract.get("breadth_role"),
+        "direction_confidence_role":contract.get("direction_confidence_role"),
+        "canonical_market_permission":False,
+        "portfolio_execution":False,
+    }
+
+
 def classify(cfg,recent,obs,prev_state):
     n=len(recent)
-    if obs.get("entry_state") != "GRADUATED_ALTCOIN_TOPUP_ACTIVE": return "REGIME_NOT_ACTIVE",{"observation_count":n}
-    if n < cfg["warmup_observations"]: return "LEARNING_WARMUP",{"observation_count":n,"minimum_required":cfg["warmup_observations"]}
+    eligibility=research_context_eligibility(cfg,obs)
+    base={"observation_count":n,"research_eligibility":eligibility}
+    if not eligibility["eligible"]: return "REGIME_NOT_ACTIVE",base
+    if n < cfg["warmup_observations"]: return "LEARNING_WARMUP",{**base,"minimum_required":cfg["warmup_observations"]}
     def hist(path):
         out=[]
         a,b=path
@@ -165,6 +250,7 @@ def classify(cfg,recent,obs,prev_state):
             if v is not None: out.append(v)
         return out
     metrics={
+      **base,
       "btc_vwap_rank":percentile_rank(hist(("btc","vwap_deviation_pct")),obs["btc"]["vwap_deviation_pct"]),
       "eth_vwap_rank":percentile_rank(hist(("eth","vwap_deviation_pct")),obs["eth"]["vwap_deviation_pct"]),
       "btc_rvol_rank":percentile_rank(hist(("btc","rolling_relative_quote_volume")),obs["btc"]["rolling_relative_quote_volume"]),
@@ -214,7 +300,6 @@ def mature_events(obs, now):
         e["status"]="MATURED_24H"; e["matured_at_utc"]=now.isoformat(); e["matched_constituent_count_24h"]=len(vals)
         e["median_matched_return_24h_pct"]=median(vals); e["mean_matched_return_24h_pct"]=mean(vals)
         write_json(p,e)
-
 def open_event(state,obs,now,prev_state):
     if state not in {"OVERHEAT_WATCH_RESEARCH","LOCAL_TRIM_WATCH_RESEARCH","RELOAD_WATCH_RESEARCH"}: return
     if prev_state==state: return
@@ -225,7 +310,6 @@ def open_event(state,obs,now,prev_state):
                   "previous_research_state":prev_state,"opened_at_utc":now.isoformat(),"price_observation_utc":obs["price_observation_utc"],
                   "snapshot":{k:v for k,v in obs.items() if k!="constituents"},"constituents":obs.get("constituents",{}),
                   "authority":{"research_only":True,"portfolio_execution":False,"automatic_rule_changes":False}})
-
 def event_summary(now):
     rows=[read_json(p) for p in event_paths()]; rows=[x for x in rows if x]
     matured=[x for x in rows if x.get("status")=="MATURED_24H"]
@@ -238,21 +322,51 @@ def event_summary(now):
     write_json(SUMMARY,out); return out
 
 
+def legacy_event_policy(cfg):
+    policy=cfg.get("legacy_execution_event_ledger") or {}
+    return {
+        "status":policy.get("status","FROZEN_UNSPECIFIED"),
+        "new_event_creation":policy.get("new_event_creation") is True,
+        "outcome_maturation":policy.get("outcome_maturation") is True,
+        "historical_rows_preserved":policy.get("historical_rows_preserved") is not False,
+        "reason":policy.get("reason"),
+        "authority":policy.get("authority"),
+    }
+
+
 def main():
-    now=now_utc(); cfg=read_json(CONFIG)
+    cfg=read_json(CONFIG)
     if not cfg or cfg.get("contract")!="INTRADAY_EXECUTION_RESEARCH_CONFIG_v1": raise RuntimeError("config missing/invalid")
     obs=build_snapshot(cfg); recent=recent_observations(cfg["trailing_observations"])
+    # Freeze only after the complete input snapshot has been read.
+    now=now_utc()
     prev_state=(read_json(STATE) or {}).get("research_state")
-    if recent and recent[-1].get("price_observation_utc")==obs["price_observation_utc"]:
-        mature_events(obs,now); summary=event_summary(now); latest=read_json(LATEST) or {}; latest["generated_at_utc"]=now.isoformat(); latest["duplicate_price_observation_skipped"]=True; latest["event_summary"]=summary; write_json(LATEST,latest); print(json.dumps(latest,sort_keys=True)); return
+    event_policy=legacy_event_policy(cfg)
+    ts=parse_utc(obs["price_observation_utc"])
+    observation_path=OBS/f"{ts:%Y/%m/%d}/{ts:%Y%m%dT%H%M%SZ}.json"
+    duplicate=observation_path.exists()
     state,evidence=classify(cfg,recent,obs,prev_state); obs["contract"]="INTRADAY_EXECUTION_OBSERVATION_v1"; obs["research_state"]=state; obs["adaptive_evidence"]=evidence
-    ts=parse_utc(obs["price_observation_utc"]); write_json(OBS/f"{ts:%Y/%m/%d}/{ts:%Y%m%dT%H%M%SZ}.json",obs)
-    mature_events(obs,now); open_event(state,obs,now,prev_state); summary=event_summary(now)
+    # T12 has its own source-candle identity. Legacy telemetry must not suppress
+    # its first registered forecast, and a retry must refresh current eligibility.
+    shadow=update_shadow_direction_confidence(obs,cfg,now,new_prediction=True,
+        research_eligible=evidence["research_eligibility"]["eligible"])
+    if not duplicate: write_json(observation_path,obs)
+    if event_policy["outcome_maturation"]: mature_events(obs,now)
+    if not duplicate:
+        if event_policy["new_event_creation"]: open_event(state,obs,now,prev_state)
+    summary=event_summary(now)
     auth=cfg["authority"]
-    write_json(STATE,{"contract":"INTRADAY_EXECUTION_STATE_v1","updated_at_utc":now.isoformat(),"research_state":state,"previous_research_state":prev_state,"observation_count":len(recent)+1,"adaptive_evidence":evidence,"authority":auth})
+    observation_count=len(recent)+(0 if duplicate else 1)
+    write_json(STATE,{"contract":"INTRADAY_EXECUTION_STATE_v1","updated_at_utc":now.isoformat(),"research_state":state,"previous_research_state":prev_state,"observation_count":observation_count,"adaptive_evidence":evidence,"legacy_execution_event_ledger":event_policy,"authority":auth})
     latest={"contract":"INTRADAY_EXECUTION_LATEST_v1","generated_at_utc":now.isoformat(),"research_state":state,"previous_research_state":prev_state,
+            "duplicate_price_observation_skipped":duplicate,
             "market_snapshot":{k:v for k,v in obs.items() if k!="constituents"},"adaptive_evidence":evidence,"event_summary":summary,
-            "data_ping_bridge":{"display_line":f"EXECUTION RESEARCH: {state} | BTC vwap={obs['btc']['vwap_deviation_pct'] if obs['btc']['vwap_deviation_pct'] is not None else 'NA'}% | ETH vwap={obs['eth']['vwap_deviation_pct'] if obs['eth']['vwap_deviation_pct'] is not None else 'NA'}% | breadth={(obs['breadth']['advance_ratio'] or 0)*100:.0f}% | sample={len(recent)+1}"},
+            "legacy_execution_event_ledger":event_policy,
+            "shadow_direction_confidence":shadow,
+            "data_ping_bridge":{
+                "display_line":f"EXECUTION RESEARCH: {state} | eligibility={evidence.get('research_eligibility',{}).get('status','UNKNOWN')} | BTC vwap={obs['btc']['vwap_deviation_pct'] if obs['btc']['vwap_deviation_pct'] is not None else 'NA'}% | ETH vwap={obs['eth']['vwap_deviation_pct'] if obs['eth']['vwap_deviation_pct'] is not None else 'NA'}% | breadth={format(obs['breadth']['advance_ratio']*100,'.0f')+'%' if obs['breadth']['advance_ratio'] is not None else 'UNKNOWN'} | sample={observation_count}",
+                "shadow_direction_display_line":shadow["data_ping_bridge"]["display_line"],
+            },
             "authority":auth}
     write_json(LATEST,latest); print(json.dumps(latest,sort_keys=True))
 

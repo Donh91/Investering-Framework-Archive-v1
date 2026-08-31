@@ -1,0 +1,109 @@
+name: Registered Intraday execution
+description: Validate and run the existing shadow-only Intraday and T12 owner; caller owns main serialization and persistence.
+runs:
+  using: composite
+  steps:
+    - name: Compile research engines and validator
+      shell: bash
+      run: |
+        python -m py_compile scripts/intraday_execution/intraday_execution_research.py
+        python -m py_compile scripts/intraday_execution/shadow_direction_confidence.py
+        python -m py_compile scripts/intraday_execution/validate_direction_confidence.py
+    - name: Validate config authority, research eligibility and registered-test boundary
+      shell: bash
+      run: |
+        python - <<'PY'
+        import json
+        from pathlib import Path
+        p=Path('04_MARKET_LEARNING/intraday_execution/config.json')
+        d=json.loads(p.read_text())
+        assert d['contract']=='INTRADAY_EXECUTION_RESEARCH_CONFIG_v1'
+        a=d['authority']
+        assert a['research_only'] is True
+        assert a['portfolio_execution'] is False
+        assert a['canonical_market_state'] is False
+        assert a['automatic_rule_changes'] is False
+        assert a['promotion_requires_separate_review'] is True
+        assert a['historical_findings_max_classification']=='FORWARD_TEST'
+        assert d['explicit_limitations']['top100_intraday_vwap']=='UNAVAILABLE_FROM_CURRENT_CANONICAL_ARCHIVE'
+        assert d['explicit_limitations']['top100_opening_range']=='UNAVAILABLE_FROM_CURRENT_CANONICAL_ARCHIVE'
+
+        eligibility=d['research_eligibility']
+        assert eligibility['status']=='ENTRY_LEDGER_FORWARD_ONLY_OBSERVATION_CONTEXT_v1'
+        assert eligibility['eligibility_semantics']=='COLLECTION_ELIGIBILITY_ONLY_NOT_MARKET_PERMISSION'
+        assert eligibility['required_source_owner']=='HOURLY_SEQUENCE_COMPLETED_UTC_1H'
+        assert eligibility['required_entry_contract']=='ENTRY_SIGNAL_LATEST_v1'
+        assert eligibility['required_entry_state']=='WAIT'
+        assert eligibility['required_promotion_status']=='FORWARD_ONLY_NOT_PROMOTION_READY'
+        assert eligibility['required_permits_active_state'] is False
+        assert eligibility['required_breadth_entry_permission']=='RETIRED_ZERO_WEIGHT'
+        assert eligibility['entry_signal_role']=='FORWARD_ONLY_OBSERVATION_CONTEXT_NO_ELIGIBILITY_FROM_LEGACY_ACTIVE'
+        assert eligibility['breadth_role']=='DESCRIPTIVE_RESEARCH_CONTEXT_ZERO_EXECUTION_WEIGHT'
+        assert eligibility['direction_confidence_role']=='SHADOW_DIAGNOSTIC_ONLY_NO_REGIME_OR_ENTRY_PERMISSION'
+        assert eligibility['canonical_market_permission_required'] is False
+        assert eligibility['fail_closed_on_missing_or_incompatible_entry_owner'] is True
+
+        legacy=d['legacy_execution_event_ledger']
+        assert legacy['status']=='FROZEN_PENDING_SEPARATE_REGISTERED_TEST'
+        assert legacy['new_event_creation'] is False
+        assert legacy['outcome_maturation'] is False
+        assert legacy['historical_rows_preserved'] is True
+
+        shadow=d['shadow_direction_confidence']
+        assert shadow['status']=='SHADOW_ONLY_PROSPECTIVE'
+        assert shadow['registered_test_id']=='INTRADAY_DIRECTION_CONFIDENCE_V1'
+        assert shadow['active_test_registry_path']=='06_RESEARCH_LAB/forward_tests/2026-07-10__active-test-registry__canonical.md'
+        assert shadow['validator_path']=='scripts/intraday_execution/validate_direction_confidence.py'
+        assert shadow['scorer_path']=='scripts/intraday_execution/shadow_direction_confidence.py'
+        assert shadow['benchmark']=='NO_SKILL_DIRECTION_PROBABILITY_0_50_BRIER_0_25'
+        assert shadow['forward_eligibility_rule']=='POST_REGISTRATION_CANONICAL_MAIN_ONLY'
+        assert shadow['automatic_signal_reweighting'] is False
+        assert shadow['microcap_direction']=='NO_EDGE_UNTIL_ELIGIBLE_OWNER_EXISTS'
+        registry=Path(shadow['active_test_registry_path']).read_text()
+        assert 'test_id: INTRADAY_DIRECTION_CONFIDENCE_V1' in registry
+        assert 'authority: SHADOW_ONLY_RESEARCH_NON_CANONICAL' in registry
+        print('INTRADAY_EXECUTION_STATIC_GUARD_PASS')
+        PY
+    - name: Run prospective research observation
+      shell: bash
+      run: python scripts/intraday_execution/intraday_execution_research.py
+    - name: Validate generated research contract
+      shell: bash
+      run: |
+        python - <<'PY'
+        import json
+        from pathlib import Path
+        d=json.loads(Path('04_MARKET_LEARNING/intraday_execution/LATEST.json').read_text())
+        assert d['contract']=='INTRADAY_EXECUTION_LATEST_v1'
+        a=d['authority']
+        assert a['research_only'] is True
+        assert a['portfolio_execution'] is False
+        assert a['canonical_market_state'] is False
+        assert a['automatic_rule_changes'] is False
+        assert 'display_line' in d['data_ping_bridge']
+        eligibility=(d.get('adaptive_evidence') or {}).get('research_eligibility') or {}
+        assert eligibility.get('status') in {'ELIGIBLE_RESEARCH_CONTEXT','INELIGIBLE_FAIL_CLOSED'}
+        assert eligibility.get('canonical_market_permission') is False
+        assert eligibility.get('portfolio_execution') is False
+        assert eligibility.get('entry_signal_role')=='FORWARD_ONLY_OBSERVATION_CONTEXT_NO_ELIGIBILITY_FROM_LEGACY_ACTIVE'
+        if eligibility.get('status')=='ELIGIBLE_RESEARCH_CONTEXT':
+            assert eligibility.get('entry_signal_state')=='WAIT'
+            assert eligibility.get('entry_promotion_status')=='FORWARD_ONLY_NOT_PROMOTION_READY'
+            assert eligibility.get('entry_permits_active_state') is False
+            assert eligibility.get('breadth_entry_permission')=='RETIRED_ZERO_WEIGHT'
+        legacy=d['legacy_execution_event_ledger']
+        assert legacy['status']=='FROZEN_PENDING_SEPARATE_REGISTERED_TEST'
+        assert legacy['new_event_creation'] is False
+        assert legacy['outcome_maturation'] is False
+        shadow=d['shadow_direction_confidence']
+        assert shadow['contract']=='SHADOW_DIRECTION_CONFIDENCE_v1'
+        assert shadow['status']=='SHADOW_ONLY'
+        assert shadow['source_observation_semantics']=='CLOSED_1H_CANDLE_CLOSE_OBSERVABLE_TIME'
+        assert shadow['authority']['later_price_substitution_for_exact_horizon'] is False
+        assert 'shadow_direction_display_line' in d['data_ping_bridge']
+        print(d['data_ping_bridge']['display_line'])
+        print(d['data_ping_bridge']['shadow_direction_display_line'])
+        PY
+    - name: Validate prospective direction rows before persistence
+      shell: bash
+      run: python scripts/intraday_execution/validate_direction_confidence.py --root . --write-receipt
