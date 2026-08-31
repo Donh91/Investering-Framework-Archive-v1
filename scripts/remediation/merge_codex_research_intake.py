@@ -18,6 +18,8 @@ REQUIRED_FORBIDDEN = {
     "new policy semantics",
 }
 ACTIVE_REMEDIATION_STATES = {"IN_REMEDIATION", "POST_FIX_OBSERVATION", "REOPENED"}
+QUALITY_CONTRACT = "CODEX_EXECUTION_QUALITY_v1"
+QUALITY_STATUSES = {"CAPTURED", "PARTIAL", "UNAVAILABLE"}
 CONTRACT_FIELDS = (
     "signature", "workflow", "finding", "objective", "precondition", "success_evidence",
     "clean_noop_condition", "stop_condition", "escalation_condition", "allowed_change_scope",
@@ -52,6 +54,39 @@ def research_signature(candidate_id: str) -> str:
 
 def task_contract_hash(task: dict[str, Any]) -> str:
     return canonical_hash({k: task.get(k) for k in CONTRACT_FIELDS})
+
+
+def legacy_execution_quality() -> dict[str, Any]:
+    return {
+        "contract": QUALITY_CONTRACT,
+        "telemetry_status": "UNAVAILABLE",
+        "evidence": [],
+        "metrics": {},
+        "failure_attribution": [],
+        "legacy_receipt_without_telemetry": True,
+    }
+
+
+def valid_execution_quality_block(value: Any) -> bool:
+    if not isinstance(value, dict):
+        return False
+    if value.get("contract") != QUALITY_CONTRACT or value.get("telemetry_status") not in QUALITY_STATUSES:
+        return False
+    evidence = value.get("evidence")
+    metrics = value.get("metrics")
+    attribution = value.get("failure_attribution")
+    if not isinstance(evidence, list) or any(not isinstance(x, str) or not x.strip() for x in evidence):
+        return False
+    if not isinstance(metrics, dict) or not isinstance(attribution, list):
+        return False
+    if any(not isinstance(x, dict) or set(x) != {"dimension", "evidence_ref"} for x in attribution):
+        return False
+    status = value.get("telemetry_status")
+    if status in {"CAPTURED", "PARTIAL"} and (not evidence or (not metrics and not attribution)):
+        return False
+    if status == "UNAVAILABLE" and (metrics or attribution):
+        return False
+    return True
 
 
 def candidate_files(repo: Path) -> list[Path]:
@@ -197,6 +232,8 @@ def valid_completion(repo: Path, task: dict[str, Any]) -> dict[str, Any] | None:
         return None
     if not d.get("merge_commit_sha") or not d.get("verification_evidence"):
         return None
+    if "execution_quality" in d and not valid_execution_quality_block(d.get("execution_quality")):
+        return None
     declared = str(d.get("receipt_sha256") or "")
     actual = canonical_hash({k: v for k, v in d.items() if k != "receipt_sha256"})
     return d if declared and declared == actual else None
@@ -233,6 +270,8 @@ def append_ledger(repo: Path, current: list[dict[str, Any]]) -> None:
             "transition_receipt_path": task.get("transition_receipt_path"),
             "post_fix_gate": task.get("post_fix_gate"),
         }
+        if task.get("execution_quality") is not None:
+            event["execution_quality"] = task.get("execution_quality")
         lines.append(json.dumps(event, sort_keys=True))
     if lines:
         with ledger_path.open("a", encoding="utf-8") as f:
@@ -328,6 +367,7 @@ def merge(repo: Path, output_dir: Path) -> dict[str, Any]:
                 task["merge_commit_sha"] = completion.get("merge_commit_sha")
                 task["pr_number"] = completion.get("pr_number")
                 task["verified_at_utc"] = completion.get("verified_at_utc")
+                task["execution_quality"] = completion.get("execution_quality") or legacy_execution_quality()
             elif transition:
                 task["state"] = "IN_REMEDIATION"
                 task["route"] = "CODEX_PR"

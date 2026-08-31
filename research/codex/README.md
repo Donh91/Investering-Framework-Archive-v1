@@ -28,5 +28,20 @@ Research threads may submit evidence but cannot declare `CODEX_READY`. The contr
 
 Standalone research tasks bind fresh state under `research/codex/transitions/`. Verified completion receipts live under `research/codex/completions/`.
 
+## Execution-quality telemetry
+
+New research-origin completion receipts may carry an `execution_quality` block for bounded process observability. `scripts/remediation/write_codex_research_completion_receipt.py` accepts an optional `--execution-telemetry-json` document with contract `CODEX_EXECUTION_TELEMETRY_v1`.
+
+The telemetry lane is observability only. It may record deterministically captured process facts such as pre-edit exploration, first model-triggered test outcome, edit/test rework, final test success, latency or token usage, plus evidence-backed failure attribution. It must not become a model leaderboard, scalar quality authority, task-promotion gate, merge gate, market/framework authority or automatic prompt/self-modification loop.
+
+Rules:
+
+- omitted telemetry is stored explicitly as `telemetry_status: UNAVAILABLE`;
+- `CAPTURED` and `PARTIAL` require explicit evidence and at least one observed metric or failure-attribution item;
+- missing process facts are never inferred from PR count, merge status, elapsed calendar time, commit count or lifecycle state;
+- old valid completion receipts remain valid and are exposed in execution state as legacy `UNAVAILABLE`, without rewriting or backfilling historical receipts;
+- the full `execution_quality` block is covered by the completion receipt hash;
+- `LATEST_CODEX_READY_TASKS.json` remains the sole queue authority regardless of telemetry.
+
 Full agent instructions: `.agents/skills/codex-intake/SKILL.md`.
 Full operational contract: `07_PROMPTS_AND_AGENTS/codex/2026-08-22__codex-research-intake-and-execution-ledger-v1__operational.md`.
