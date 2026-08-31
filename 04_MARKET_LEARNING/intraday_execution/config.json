@@ -31,6 +31,25 @@
     "RELOAD_WATCH_RESEARCH",
     "CONTINUATION_RESEARCH"
   ],
+  "research_eligibility": {
+    "status": "RESEARCH_ONLY_DATA_CONTEXT",
+    "eligibility_semantics": "DATA_AVAILABLE_FOR_RESEARCH_NOT_MARKET_PERMISSION",
+    "required_source_owner": "HOURLY_SEQUENCE_COMPLETED_UTC_1H",
+    "required_price_context": ["btc.close", "eth.close", "ethbtc.close"],
+    "entry_signal_role": "LEGACY_CONTEXT_ONLY_NO_ELIGIBILITY_OR_PERMISSION",
+    "breadth_role": "DESCRIPTIVE_RESEARCH_CONTEXT_ZERO_EXECUTION_WEIGHT",
+    "direction_confidence_role": "SHADOW_DIAGNOSTIC_ONLY_NO_REGIME_OR_ENTRY_PERMISSION",
+    "canonical_market_permission_required": false,
+    "fail_closed_state": "REGIME_NOT_ACTIVE"
+  },
+  "legacy_execution_event_ledger": {
+    "status": "FROZEN_PENDING_SEPARATE_REGISTERED_TEST",
+    "new_event_creation": false,
+    "outcome_maturation": false,
+    "historical_rows_preserved": true,
+    "reason": "LEGACY_EXECUTION_EVENT_OUTCOME_LANE_HAS_NO_SEPARATE_ACTIVE_TEST_REGISTRY_BINDING",
+    "authority": "RESEARCH_TELEMETRY_ONLY_NO_NEW_PROSPECTIVE_EVENT_OUTCOMES"
+  },
   "shadow_direction_confidence": {
     "status": "SHADOW_ONLY_PROSPECTIVE",
     "registered_test_id": "INTRADAY_DIRECTION_CONFIDENCE_V1",
