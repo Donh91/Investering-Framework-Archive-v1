@@ -1,0 +1,32 @@
+{
+  "allowed_change_scope": [
+    "scripts/api_agent/build_weekly_calibration_context.py",
+    "scripts/daily_capture/build_weekly_calibration.py",
+    "tests/api_agent/test_weekly_calibration_context_v4.py",
+    "tests/daily_capture/test_audit_weekly_ingestion.py"
+  ],
+  "branch": "agent/task-20260831-audit-weekly-evidence",
+  "candidate_id": "codex-research-audit-weekly-evidence-v1",
+  "candidate_path": "research/codex/intake/2026/08/codex-research-audit-weekly-evidence-v1.json",
+  "candidate_sha256": "5afb4d0ee5f6f6d1e1b8f01f604700f8a1f8f5f06c25cca92c90be9094e86c59",
+  "contract": "CODEX_RESEARCH_TRANSITION_RECEIPT_v1",
+  "forbidden_changes": [
+    "API budget",
+    "canonical authority",
+    "historical evidence rewrite",
+    "market gates",
+    "model weights",
+    "new policy semantics",
+    "portfolio logic",
+    "restricted provider values in public artifacts",
+    "workflow changes"
+  ],
+  "objective": "Include current matured outcomes and preserve valid CSV rows. Preserve existing owner semantics and historical evidence.",
+  "post_fix_gate": "POSITIVE_AND_NEGATIVE_REGRESSIONS_PLUS_PRODUCTION_SHAPE_REPLAY_PLUS_CI_AND_MAIN_READBACK",
+  "pr_number": null,
+  "receipt_sha256": "f6a4cac435739dee43347775f168d0123cb66f87ae2121950ebcf856e3446497",
+  "recorded_at_utc": "2026-08-31T03:23:26Z",
+  "signature": "b53fa52dc306023f3a12",
+  "state": "IN_REMEDIATION",
+  "task_contract_sha256": "0e557ac6886ce294565c39d8b1e681348bdffed1c95d66e4defa7a48da528ab2"
+}

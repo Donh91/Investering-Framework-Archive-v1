@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import os
 import statistics
 from collections import Counter
 from datetime import date, datetime, timedelta, timezone
@@ -44,7 +45,12 @@ ENRICHED_FIELDS = ENRICHED_BASE_FIELDS + ENRICHED_DERIVED_FIELDS
 
 
 def parse_utc(value: str) -> datetime:
-    return datetime.fromisoformat(value.replace("Z", "+00:00")).astimezone(timezone.utc)
+    if not isinstance(value, str):
+        raise ValueError('TIMESTAMP_TYPE_INVALID')
+    stamp = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    if stamp.utcoffset() is None:
+        raise ValueError('TIMESTAMP_TIMEZONE_REQUIRED')
+    return stamp.astimezone(timezone.utc)
 
 
 def load_packets(root: Path, iso_year: int, iso_week: int) -> list[tuple[Path, dict[str, Any]]]:
@@ -82,23 +88,33 @@ def fmt(value: object) -> str:
     return str(value)
 
 
-def load_hourly_rows(root: Path, iso_year: int, iso_week: int) -> list[dict[str, str]]:
-    rows: dict[str, dict[str, str]] = {}
-    if not root.exists():
+def load_hourly_rows(root: Path, iso_year: int, iso_week: int, *, diagnostics: list[dict] | None = None) -> list[dict[str, str]]:
+    rows: dict[datetime, dict[str, str]] = {}
+    issues = diagnostics if diagnostics is not None else []
+    if not root.is_dir():
+        issues.append({'path': str(root), 'line': None, 'reason': 'HOURLY_ROOT_UNAVAILABLE'})
         return []
-    for path in sorted(root.rglob("*.csv")):
+    paths = []
+    def scan_error(exc):
+        issues.append({'path': str(exc.filename or root), 'line': None, 'reason': 'CSV_DIRECTORY_UNREADABLE'})
+    for directory, _, filenames in os.walk(root, onerror=scan_error):
+        paths.extend(Path(directory) / name for name in filenames if name.endswith('.csv'))
+    for path in sorted(paths):
         try:
             with path.open(newline="", encoding="utf-8") as handle:
-                reader = csv.DictReader(handle)
+                reader = csv.DictReader(handle, strict=True)
                 for row in reader:
                     stamp_raw = row.get("timestamp_utc")
-                    if not stamp_raw:
+                    try:
+                        stamp = parse_utc(stamp_raw)
+                    except (ValueError, OverflowError):
+                        issues.append({'path': str(path), 'line': reader.line_num, 'reason': 'INVALID_TIMESTAMP'})
                         continue
-                    stamp = parse_utc(stamp_raw)
                     y, w, _ = stamp.isocalendar()
                     if y == iso_year and w == iso_week:
-                        rows[stamp_raw] = row
-        except Exception:
+                        rows[stamp] = row
+        except (OSError, UnicodeError, csv.Error):
+            issues.append({'path': str(path), 'line': None, 'reason': 'CSV_READ_ERROR'})
             continue
     return [rows[key] for key in sorted(rows)]
 
@@ -562,7 +578,9 @@ def main() -> None:
         iso_year, iso_week, _ = now.isocalendar()
 
     packets = load_packets(args.input_root, iso_year, iso_week)
-    hourly_rows = load_hourly_rows(args.hourly_root, iso_year, iso_week) if args.hourly_root else []
+    hourly_ingestion_diagnostics = []
+    hourly_rows = load_hourly_rows(args.hourly_root, iso_year, iso_week,
+                                  diagnostics=hourly_ingestion_diagnostics) if args.hourly_root else []
     enriched = enrich_rows(hourly_rows)
     etf_records = load_etf_records(args.etf_root, iso_year, iso_week)
     rich_breadth_root = args.rich_breadth_root or args.input_root.parent / "breadth_rich"
@@ -602,6 +620,7 @@ def main() -> None:
         "iso_week": iso_week,
         "generated_at_utc": now.replace(microsecond=0).isoformat().replace("+00:00", "Z"),
         "gap_diagnostics": gaps,
+        "hourly_ingestion_diagnostics": hourly_ingestion_diagnostics,
         "day_window_actuals": windows,
         "settled_etf": etf,
         "rotation_context": rotation_context,
@@ -629,6 +648,7 @@ def main() -> None:
         "source_capture_paths": source_paths,
         "hourly_sequence": hourly,
         "hourly_gap_diagnostics": gaps,
+        "hourly_ingestion_diagnostics": hourly_ingestion_diagnostics,
         "day_window_actuals": windows,
         "settled_etf": etf,
         "rotation_context": rotation_context,

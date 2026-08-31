@@ -3,6 +3,8 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
+import os
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -16,13 +18,33 @@ def canonical(value: Any) -> bytes:
 
 
 def load_json(path: Path) -> Any:
-    return json.loads(path.read_text())
+    def finite_float(raw: str) -> float:
+        value = float(raw)
+        if not math.isfinite(value):
+            raise ValueError('NON_FINITE_JSON_NUMBER')
+        return value
+    def invalid_constant(raw: str) -> None:
+        raise ValueError('NON_FINITE_JSON_NUMBER')
+    def unique_object(pairs):
+        result = {}
+        for key, value in pairs:
+            if key in result:
+                raise ValueError('DUPLICATE_JSON_KEY')
+            result[key] = value
+        return result
+    return json.loads(path.read_text(), parse_float=finite_float, parse_constant=invalid_constant,
+                      object_pairs_hook=unique_object)
 
 
 def ts(raw: Any) -> datetime:
-    if isinstance(raw, (int, float)):
+    if type(raw) in (int, float):
         return datetime.fromtimestamp(raw, timezone.utc)
-    return datetime.fromisoformat(str(raw).replace("Z", "+00:00")).astimezone(timezone.utc)
+    if not isinstance(raw, str):
+        raise ValueError('TIMESTAMP_TYPE_INVALID')
+    value = datetime.fromisoformat(raw.replace("Z", "+00:00"))
+    if value.utcoffset() is None:
+        raise ValueError('TIMESTAMP_TIMEZONE_REQUIRED')
+    return value.astimezone(timezone.utc)
 
 
 def find_time(output: dict[str, Any], receipt: dict[str, Any] | None) -> datetime | None:
@@ -117,38 +139,73 @@ def load_experiment_learning(registry_path: Path, outcome_root: Path, start: dat
         "GOVERNANCE_REVIEW_PERMITTED",
     }
     candidates = [row for row in registry.get("candidates", []) if isinstance(row, dict)]
-    active = [row for row in candidates if row.get("state") in active_states]
+    active = [row for row in candidates if isinstance(row.get("state"), str) and row['state'] in active_states]
     active.sort(key=lambda row: (str(row.get("state")), str(row.get("created_at_utc"))), reverse=True)
     outcomes = []
-    for path in outcome_root.rglob("*.json") if outcome_root.exists() else []:
+    diagnostics = []
+    outcome_root_available = outcome_root.is_dir()
+    if not outcome_root_available:
+        diagnostics.append({'path': str(outcome_root), 'reason': 'OUTCOME_ROOT_UNAVAILABLE'})
+    paths = []
+    if outcome_root_available:
+        def scan_error(exc):
+            diagnostics.append({'path': str(exc.filename or outcome_root), 'reason': 'OUTCOME_DIRECTORY_UNREADABLE'})
+        for directory, _, filenames in os.walk(outcome_root, onerror=scan_error):
+            paths.extend(Path(directory) / name for name in filenames if name.endswith('.json'))
+    for path in sorted(paths):
         try:
             value = load_json(path)
-        except Exception:
+        except (OSError, UnicodeError, ValueError, RecursionError):
+            diagnostics.append({'path': str(path), 'reason': 'OUTCOME_UNREADABLE'})
             continue
-        if value.get("contract") != "MATURED_OUTCOME_v2":
+        if not isinstance(value, dict) or value.get("contract") not in ("MATURED_OUTCOME_v2", "MATURED_OUTCOME_v3"):
+            diagnostics.append({'path': str(path), 'reason': 'OUTCOME_CONTRACT_UNSUPPORTED'})
             continue
         created = value.get("created_at_utc")
-        if created is None:
-            continue
         try:
             when = ts(created)
-        except Exception:
+        except (ValueError, OverflowError, OSError):
+            diagnostics.append({'path': str(path), 'reason': 'OUTCOME_TIMESTAMP_INVALID'})
             continue
         if not (start <= when < end):
             continue
+        if not isinstance(value.get('forecast_id'), str) or not value['forecast_id']:
+            diagnostics.append({'path': str(path), 'reason': 'OUTCOME_FORECAST_ID_MISSING'})
+            continue
+        if value.get('status') == 'MATURED':
+            measured = value.get('return_pct')
+            try:
+                valid_return = type(measured) in (int, float) and math.isfinite(measured)
+            except OverflowError:
+                valid_return = False
+            if not valid_return or value.get('result') not in ('HIT', 'MISS'):
+                diagnostics.append({'path': str(path), 'reason': 'MATURED_OUTCOME_FIELDS_INVALID'})
+                continue
+        elif value.get('status') == 'CENSORED':
+            if not isinstance(value.get('reason'), str) or not value['reason'] or value.get('return_pct') is not None or value.get('result') is not None:
+                diagnostics.append({'path': str(path), 'reason': 'CENSORED_OUTCOME_FIELDS_INVALID'})
+                continue
+        else:
+            diagnostics.append({'path': str(path), 'reason': 'OUTCOME_STATUS_UNSUPPORTED'})
+            continue
         outcomes.append({
+            "source_contract": value['contract'],
+            "source_authority": value.get('authority'),
             "forecast_id": value.get("forecast_id"),
+            "forecast_sha256": value.get("forecast_sha256"),
+            "evidence_path": value.get("evidence_path"),
+            "evidence_sha256": value.get("evidence_sha256"),
             "status": value.get("status"),
             "result": value.get("result"),
             "reason": value.get("reason"),
             "return_pct": value.get("return_pct"),
             "evidence_lag_hours": value.get("evidence_lag_hours"),
-            "created_at_utc": created,
+            "created_at_utc": when.isoformat().replace('+00:00', 'Z'),
             "path": str(path),
             "outcome_sha256": hashlib.sha256(canonical(value)).hexdigest(),
         })
     outcomes.sort(key=lambda row: str(row.get("created_at_utc")))
-    latent = sum(row.get("state") in {"PROPOSED", "WAITING_FOR_DATA", "WAITING_FOR_MAPPING", "INCUBATING"} for row in candidates)
+    latent = sum(row.get("state") in ("PROPOSED", "WAITING_FOR_DATA", "WAITING_FOR_MAPPING", "INCUBATING") for row in candidates)
     return {
         "status": "AVAILABLE",
         "authority": "SHADOW_ONLY_NO_AUTOMATIC_PROMOTION",
@@ -159,8 +216,11 @@ def load_experiment_learning(registry_path: Path, outcome_root: Path, start: dat
         "active_candidates": active[:50],
         "active_candidates_truncated": len(active) > 50,
         "latent_candidate_count": latent,
-        "new_matured_outcomes": outcomes,
-        "matured_outcome_evidence_available": True,
+        "new_matured_outcomes": outcomes if outcome_root_available else None,
+        "matured_outcome_evidence_available": outcome_root_available and not diagnostics,
+        "outcome_ingestion_diagnostics": diagnostics,
+        "outcome_ingestion_status": 'COMPLETE' if outcome_root_available and not diagnostics else 'INCOMPLETE',
+        "outcome_scoring_performed": False,
         "weekly_review_rule": "Review new prospective outcomes, severe failures, censored evidence and control comparisons. Strange or dormant hypotheses remain retained but receive no authority without mature evidence.",
     }
 
