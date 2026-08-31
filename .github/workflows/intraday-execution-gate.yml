@@ -62,13 +62,19 @@ jobs:
           }
 
           eligibility=cfg['research_eligibility']
-          assert eligibility['status']=='RESEARCH_ONLY_DATA_CONTEXT'
-          assert eligibility['eligibility_semantics']=='DATA_AVAILABLE_FOR_RESEARCH_NOT_MARKET_PERMISSION'
+          assert eligibility['status']=='ENTRY_LEDGER_FORWARD_ONLY_OBSERVATION_CONTEXT_v1'
+          assert eligibility['eligibility_semantics']=='COLLECTION_ELIGIBILITY_ONLY_NOT_MARKET_PERMISSION'
           assert eligibility['required_source_owner']=='HOURLY_SEQUENCE_COMPLETED_UTC_1H'
-          assert eligibility['entry_signal_role']=='LEGACY_CONTEXT_ONLY_NO_ELIGIBILITY_OR_PERMISSION'
+          assert eligibility['required_entry_contract']=='ENTRY_SIGNAL_LATEST_v1'
+          assert eligibility['required_entry_state']=='WAIT'
+          assert eligibility['required_promotion_status']=='FORWARD_ONLY_NOT_PROMOTION_READY'
+          assert eligibility['required_permits_active_state'] is False
+          assert eligibility['required_breadth_entry_permission']=='RETIRED_ZERO_WEIGHT'
+          assert eligibility['entry_signal_role']=='FORWARD_ONLY_OBSERVATION_CONTEXT_NO_ELIGIBILITY_FROM_LEGACY_ACTIVE'
           assert eligibility['breadth_role']=='DESCRIPTIVE_RESEARCH_CONTEXT_ZERO_EXECUTION_WEIGHT'
           assert eligibility['direction_confidence_role']=='SHADOW_DIAGNOSTIC_ONLY_NO_REGIME_OR_ENTRY_PERMISSION'
           assert eligibility['canonical_market_permission_required'] is False
+          assert eligibility['fail_closed_on_missing_or_incompatible_entry_owner'] is True
 
           legacy=cfg['legacy_execution_event_ledger']
           assert legacy['status']=='FROZEN_PENDING_SEPARATE_REGISTERED_TEST'
@@ -108,7 +114,8 @@ jobs:
           research=Path('scripts/intraday_execution/intraday_execution_research.py').read_text()
           assert 'obs.get("entry_state") != "GRADUATED_ALTCOIN_TOPUP_ACTIVE"' not in research
           assert 'research_context_eligibility' in research
-          assert 'LEGACY_CONTEXT_ONLY_NO_ELIGIBILITY_OR_PERMISSION' in json.dumps(cfg)
+          assert 'ENTRY_OWNER_NOT_FORWARD_ONLY_WAIT_CONTEXT' in research
+          assert 'BREADTH_ENTRY_PERMISSION_NOT_RETIRED_ZERO_WEIGHT' in research
           assert 'if event_policy["outcome_maturation"]: mature_events' in research
           assert 'if event_policy["new_event_creation"]: open_event' in research
 
