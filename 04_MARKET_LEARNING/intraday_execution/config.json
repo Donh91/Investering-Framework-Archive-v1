@@ -32,14 +32,20 @@
     "CONTINUATION_RESEARCH"
   ],
   "research_eligibility": {
-    "status": "RESEARCH_ONLY_DATA_CONTEXT",
-    "eligibility_semantics": "DATA_AVAILABLE_FOR_RESEARCH_NOT_MARKET_PERMISSION",
+    "status": "ENTRY_LEDGER_FORWARD_ONLY_OBSERVATION_CONTEXT_v1",
+    "eligibility_semantics": "COLLECTION_ELIGIBILITY_ONLY_NOT_MARKET_PERMISSION",
     "required_source_owner": "HOURLY_SEQUENCE_COMPLETED_UTC_1H",
     "required_price_context": ["btc.close", "eth.close", "ethbtc.close"],
-    "entry_signal_role": "LEGACY_CONTEXT_ONLY_NO_ELIGIBILITY_OR_PERMISSION",
+    "required_entry_contract": "ENTRY_SIGNAL_LATEST_v1",
+    "required_entry_state": "WAIT",
+    "required_promotion_status": "FORWARD_ONLY_NOT_PROMOTION_READY",
+    "required_permits_active_state": false,
+    "required_breadth_entry_permission": "RETIRED_ZERO_WEIGHT",
+    "entry_signal_role": "FORWARD_ONLY_OBSERVATION_CONTEXT_NO_ELIGIBILITY_FROM_LEGACY_ACTIVE",
     "breadth_role": "DESCRIPTIVE_RESEARCH_CONTEXT_ZERO_EXECUTION_WEIGHT",
     "direction_confidence_role": "SHADOW_DIAGNOSTIC_ONLY_NO_REGIME_OR_ENTRY_PERMISSION",
     "canonical_market_permission_required": false,
+    "fail_closed_on_missing_or_incompatible_entry_owner": true,
     "fail_closed_state": "REGIME_NOT_ACTIVE"
   },
   "legacy_execution_event_ledger": {
