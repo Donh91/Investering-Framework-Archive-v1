@@ -1,0 +1,26 @@
+{
+  "candidate_id": "codex-research-audit-budget-integrity-v1",
+  "candidate_sha256": "90a80ce8eb50c31b9fa9036a49153340e82a6d866102482ac4edfe45170638f3",
+  "contract": "CODEX_RESEARCH_COMPLETION_RECEIPT_v1",
+  "execution_quality": {
+    "contract": "CODEX_EXECUTION_QUALITY_v1",
+    "evidence": [],
+    "failure_attribution": [],
+    "metrics": {},
+    "telemetry_status": "UNAVAILABLE"
+  },
+  "merge_commit_sha": "4bfed439fc2b5d1326b2c9af27bad41cbcac9b10",
+  "post_fix_gate": "POSITIVE_AND_NEGATIVE_REGRESSIONS_PLUS_PRODUCTION_SHAPE_REPLAY_PLUS_CI_AND_MAIN_READBACK",
+  "pr_number": 681,
+  "receipt_sha256": "e7ba24e0d07fc4db0de9fbec39f5871b0064794ab931bc98ff7d8421a93feaa0",
+  "signature": "519faf5dbdea209bd86a",
+  "status": "VERIFIED",
+  "task_contract_sha256": "614080e781d38635ebe03750aa9af27ca599a20e3171f2aae5db7a158a16a785",
+  "verification_evidence": [
+    "PR #681 exact-head Codex review 546909b56c at https://github.com/Donh91/Investering-Framework-Archive-v1/pull/681#issuecomment-5473434579 was clean before merge; seven final-head CI gates succeeded.",
+    "152 relevant tests plus 8 subtests passed before merge; main a71372f34c5245855caa2da5b7212edccb3cc5c7 readback preserves exact code and transition bytes and passes 136 focused/integration tests plus 8 subtests.",
+    "Read-only production-shaped replay verifies 167 unique current-month cost receipts, unchanged caps and reserves, valid LATEST/history alias deduplication, unchanged genuine reserve block in the conflict lane, and zero paid API calls.",
+    "Fresh main full tests at 8b7e71ae: 931 passed, 255 subtests passed; 3 pre-existing unrelated CFGI/weekly contract tests still fail and are not claimed fixed by this task."
+  ],
+  "verified_at_utc": "2026-08-31T04:39:10Z"
+}

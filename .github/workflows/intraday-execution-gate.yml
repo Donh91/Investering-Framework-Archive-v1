@@ -13,6 +13,7 @@ on:
       - '.github/workflows/hourly-sequence-capture.yml'
       - '.github/workflows/intraday-execution-research.yml'
       - '.github/workflows/intraday-execution-gate.yml'
+      - '.github/actions/intraday-execution/**'
       - '06_RESEARCH_LAB/forward_tests/2026-07-10__active-test-registry__canonical.md'
       - '06_RESEARCH_LAB/historical_altseason_pullback_v1/INTRADAY_EXECUTION_COWORK_ADDENDUM.md'
 
@@ -29,7 +30,7 @@ jobs:
         with:
           python-version: '3.12'
       - name: Install focused test dependency
-        run: python -m pip install --disable-pip-version-check 'pytest>=8,<9'
+        run: python -m pip install --disable-pip-version-check 'pytest>=8,<9' 'PyYAML>=6,<7'
       - name: Compile intraday, validator and hourly owner engines
         run: |
           python -m py_compile scripts/daily_capture/build_hourly_sequence.py
@@ -121,14 +122,18 @@ jobs:
 
           hourly=Path('.github/workflows/hourly-sequence-capture.yml').read_text()
           intraday=Path('.github/workflows/intraday-execution-research.yml').read_text()
+          runner=Path('.github/actions/intraday-execution/action.yml').read_text()
           assert "cron: '5 * * * *'" in hourly
           assert "timezone: 'UTC'" in hourly
           assert 'Materialize each newly completed UTC 1H owner candle' in hourly
-          assert "cron: '15 * * * *'" in intraday
-          assert "timezone: 'UTC'" in intraday
-          assert 'Run after the UTC-aligned hourly owner' in intraday
-          assert 'validate_direction_confidence.py --root . --write-receipt' in intraday
-          assert intraday.index('Validate prospective direction rows before persistence') < intraday.index('Commit prospective observations')
+          assert '  schedule:' not in intraday
+          assert '    needs: sequence' in hourly
+          assert 'ref: ${{ needs.sequence.outputs.source_commit_sha }}' in hourly
+          assert 'group: framework-main-writer' in hourly and 'group: framework-main-writer' in intraday
+          assert 'uses: ./.github/actions/intraday-execution' in hourly and 'uses: ./.github/actions/intraday-execution' in intraday
+          assert 'validate_direction_confidence.py --root . --write-receipt' in runner
+          assert 'git push' not in runner
+          assert intraday.index('uses: ./.github/actions/intraday-execution') < intraday.index('Commit prospective observations')
 
           text=Path('04_MARKET_LEARNING/intraday_execution/README.md').read_text()
           assert 'research_only: true' in text

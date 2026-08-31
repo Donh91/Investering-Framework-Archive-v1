@@ -1,0 +1,33 @@
+{
+  "allowed_change_scope": [
+    "scripts/lib/evidence_io.py",
+    "scripts/api_agent/check_api_lane_budget.py",
+    "scripts/api_agent/check_monthly_cost_guard.py",
+    "tests/api_agent/test_audit_budget_integrity.py",
+    "tests/lib/test_evidence_io.py"
+  ],
+  "branch": "agent/task-20260831-audit-budget-integrity",
+  "candidate_id": "codex-research-audit-budget-integrity-v1",
+  "candidate_path": "research/codex/intake/2026/08/codex-research-audit-budget-integrity-v1.json",
+  "candidate_sha256": "90a80ce8eb50c31b9fa9036a49153340e82a6d866102482ac4edfe45170638f3",
+  "contract": "CODEX_RESEARCH_TRANSITION_RECEIPT_v1",
+  "forbidden_changes": [
+    "API budget",
+    "canonical authority",
+    "historical evidence rewrite",
+    "market gates",
+    "model weights",
+    "new policy semantics",
+    "portfolio logic",
+    "restricted provider values in public artifacts",
+    "workflow changes"
+  ],
+  "objective": "Fail closed on unreadable and non-finite API cost evidence. Preserve existing owner semantics and historical evidence.",
+  "post_fix_gate": "POSITIVE_AND_NEGATIVE_REGRESSIONS_PLUS_PRODUCTION_SHAPE_REPLAY_PLUS_CI_AND_MAIN_READBACK",
+  "pr_number": null,
+  "receipt_sha256": "b92b6cc0d302c83778c3a964b464d283579b69439adf82f218d94e20b08785bd",
+  "recorded_at_utc": "2026-08-31T02:56:15Z",
+  "signature": "519faf5dbdea209bd86a",
+  "state": "IN_REMEDIATION",
+  "task_contract_sha256": "614080e781d38635ebe03750aa9af27ca599a20e3171f2aae5db7a158a16a785"
+}

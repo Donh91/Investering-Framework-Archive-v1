@@ -30,6 +30,8 @@ historical_rows_preserved: true
 Historical rows remain context. Neither new events nor new outcomes for trim/reload hypotheses may be created until that separate question has a governed test registration, benchmark, validator and scorer. HOLD and false-trim comparisons below are challenger questions, not permission to resume that frozen lane.
 
 ## T12 prospective evidence boundary
+Scheduled collection follows verified Hourly Sequence publication as a dependent Intraday job inside the same main-writer lock. It reads the frozen source commit, not an assumed later cron slot. The separate Intraday workflow is a guarded manual repair path. A delayed or missing source remains ineligible; queue or cron timing is not prospective evidence.
+
 `INTRADAY_DIRECTION_CONFIDENCE_V1` is the registered BTC/ETH 1H/4H/24H direction-calibration test. Its owner is the existing intraday config, its scorer is `scripts/intraday_execution/shadow_direction_confidence.py`, and its validator is `scripts/intraday_execution/validate_direction_confidence.py`.
 
 - Only canonical-main production after registration is eligible. Branch QA, historical telemetry and initialization rows are not forward evidence.

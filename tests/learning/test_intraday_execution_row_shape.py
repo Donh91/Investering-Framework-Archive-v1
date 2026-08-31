@@ -373,6 +373,75 @@ def test_branch_or_local_run_has_no_production_context(monkeypatch):
     assert sdc.production_context() is None
 
 
+def test_scheduled_intraday_chain_keeps_one_writer_lock_and_frozen_source():
+    import yaml
+    from pathlib import Path
+    from scripts.health.check_writer_trigger_safety import inspect
+    root = Path(__file__).resolve().parents[2]
+    hourly_path = root / ".github/workflows/hourly-sequence-capture.yml"
+    manual_path = root / ".github/workflows/intraday-execution-research.yml"
+    hourly = yaml.safe_load(hourly_path.read_text())
+    manual = yaml.safe_load(manual_path.read_text())
+    # PyYAML's YAML 1.1 parser interprets the unquoted Actions key `on` as True.
+    assert set(manual.get("on", manual.get(True))) == {"workflow_dispatch"}
+    for workflow in (hourly, manual):
+        assert workflow["concurrency"] == {"group": "framework-main-writer", "cancel-in-progress": False}
+        assert all("concurrency" not in job for job in workflow["jobs"].values())
+    job = hourly["jobs"]["intraday"]
+    assert job["needs"] == "sequence"
+    assert job["if"] == "github.ref == 'refs/heads/main' && needs.sequence.result == 'success'"
+    assert job["steps"][0]["with"]["ref"] == "${{ needs.sequence.outputs.source_commit_sha }}"
+    assert hourly["jobs"]["sequence"]["outputs"]["source_commit_sha"] == "${{ steps.persist_hourly.outputs.source_commit_sha }}"
+    for steps in (job["steps"], manual["jobs"]["research"]["steps"]):
+        action_index = next(i for i, step in enumerate(steps) if step.get("uses") == "./.github/actions/intraday-execution")
+        commit_index = next(i for i, step in enumerate(steps) if step.get("name") == "Commit prospective observations")
+        assert action_index < commit_index
+    action = yaml.safe_load((root / ".github/actions/intraday-execution/action.yml").read_text())
+    assert action["runs"]["using"] == "composite"
+    action_steps = action["runs"]["steps"]
+    assert all(step.get("shell") == "bash" for step in action_steps if "run" in step)
+    assert action_steps[-1]["run"].strip() == "python scripts/intraday_execution/validate_direction_confidence.py --root . --write-receipt"
+    assert not inspect(hourly_path) and not inspect(manual_path)
+
+
+@pytest.mark.parametrize("mode", ["new_source", "unchanged_source", "push_rejected"])
+def test_hourly_source_output_requires_actual_publication_readback(tmp_path, mode):
+    import os, subprocess, yaml
+    from pathlib import Path
+    root = Path(__file__).resolve().parents[2]
+    workflow = yaml.safe_load((root / ".github/workflows/hourly-sequence-capture.yml").read_text())
+    script = next(step["run"] for step in workflow["jobs"]["sequence"]["steps"] if step.get("id") == "persist_hourly")
+    remote = tmp_path / "remote.git"
+    checkout = tmp_path / "checkout"
+    subprocess.run(["git", "init", "--bare", "-b", "main", str(remote)], check=True, capture_output=True)
+    subprocess.run(["git", "clone", str(remote), str(checkout)], check=True, capture_output=True)
+    def git(*args):
+        return subprocess.check_output(["git", "-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", *args], cwd=checkout, text=True, stderr=subprocess.DEVNULL).strip()
+    source = checkout / "03_DAILY_CAPTURE_LOGS/hourly/fixture.csv"
+    source.parent.mkdir(parents=True)
+    source.write_text("synthetic closed hourly source\n")
+    git("add", ".")
+    git("commit", "-m", "synthetic initial main")
+    git("push", "origin", "HEAD:main")
+    if mode != "unchanged_source":
+        source.write_text(source.read_text() + "synthetic newly completed candle\n")
+    if mode == "push_rejected":
+        hook = remote / "hooks/pre-receive"
+        hook.write_text("#!/bin/sh\nexit 1\n")
+        hook.chmod(0o755)
+    output = tmp_path / "github-output"
+    output.touch()
+    # Exercise the real publication script. Retry delays are unnecessary in this fixture.
+    result = subprocess.run(["bash", "-e", "-o", "pipefail", "-c", "sleep() { :; }\n" + script], cwd=checkout,
+                            env={**os.environ, "GITHUB_RUN_ID": "12345", "GITHUB_OUTPUT": str(output)}, capture_output=True, text=True)
+    if mode == "push_rejected":
+        assert result.returncode != 0
+        assert output.read_text() == ""
+    else:
+        assert result.returncode == 0, result.stderr
+        sha = git("rev-parse", "HEAD")
+        assert output.read_text() == f"source_commit_sha={sha}\n"
+        assert git("rev-parse", "origin/main") == sha
 @pytest.mark.parametrize("asset", ["btc", "eth", "ethbtc"])
 @pytest.mark.parametrize("invalid_close", [None, True, float("nan"), float("inf"), -float("inf"), 0, -1, "100"])
 def test_prediction_writer_rejects_invalid_price_before_creating_any_row(tmp_path, monkeypatch, asset, invalid_close):

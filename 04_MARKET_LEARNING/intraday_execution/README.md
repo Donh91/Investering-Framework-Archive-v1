@@ -26,6 +26,8 @@ The layer studies candidate timing context including:
 - calibrated BTC/ETH direction forecasts in the separately registered T12 shadow test
 
 ## Inputs
+Scheduled execution is chained inside `Hourly Sequence Capture`: the Intraday job depends on successful hourly publication and verified main readback, checks out that exact source commit, and runs the shared `.github/actions/intraday-execution` action. The workflow-level `framework-main-writer` lock remains held across both jobs, so no separately pending Intraday run can be displaced between capture and research. `Intraday Execution Research` remains a main-pinned manual repair path using the same action, without an independent cron. Scheduler delays or missing source hours still fail closed; no scheduled timestamp guarantees a valid 1H forecast.
+
 The layer reuses existing GitHub evidence and does not require a new external paid data source:
 - hourly BTC/ETH/ETHBTC archive
 - quote/base volume for session VWAP
