@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Bounded acceptance tests for lifecycle receipt semantics."""
 
+import hashlib
 import json
 import subprocess
 import tempfile
@@ -144,18 +145,28 @@ def test_acceptance_stamper_does_not_infer_ingest():
 
 def run_bridge(packet: dict, root: Path, snapshot_id: str) -> dict:
     inbox = root / f"inbox-{snapshot_id}"; accepted = root / f"accepted-{snapshot_id}"; rejected = root / f"rejected-{snapshot_id}"
+    receipts = root / f"receipts-{snapshot_id}"
     inbox.mkdir()
     (inbox / "packet.json").write_text(json.dumps(packet))
     subprocess.run([
         "python", str(BRIDGE),
         "--inbox", str(inbox),
         "--accepted-root", str(accepted),
+        "--receipt-root", str(receipts),
         "--rejected-root", str(rejected),
         "--run-id", "test-bridge",
     ], check=True, capture_output=True, text=True)
     stored_paths = list(accepted.rglob(f"{snapshot_id}.json"))
     assert len(stored_paths) == 1
-    return json.loads(stored_paths[0].read_text())["bridge_receipt"]
+    stored = stored_paths[0].read_bytes()
+    assert json.loads(stored) == packet, "the accepted packet must remain pure and immutable"
+    sidecars = list(receipts.rglob(f"{snapshot_id}.receipt.json"))
+    assert len(sidecars) == 1
+    receipt = json.loads(sidecars[0].read_text())
+    assert receipt['contract'] == 'DATA_PING_BRIDGE_RECEIPT_v2'
+    assert receipt['receipt_storage'] == 'SIDECAR'
+    assert receipt['packet_sha256'] == hashlib.sha256(stored).hexdigest()
+    return receipt
 
 
 def packet(snapshot_id: str) -> dict:
