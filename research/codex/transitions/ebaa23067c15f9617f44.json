@@ -1,0 +1,30 @@
+{
+  "allowed_change_scope": [
+    "scripts/experiments/etf_absorption_transmission_v1.py",
+    "tests/experiments/test_etf_absorption_transmission_v1.py"
+  ],
+  "branch": "agent/task-20260831-audit-etf-adapter",
+  "candidate_id": "codex-research-audit-etf-adapter-v1",
+  "candidate_path": "research/codex/intake/2026/08/codex-research-audit-etf-adapter-v1.json",
+  "candidate_sha256": "7856fd58befbd85a7a12a79f17693db2aa0a5a5a1facca9c35eb6b50fc3b0d05",
+  "contract": "CODEX_RESEARCH_TRANSITION_RECEIPT_v1",
+  "forbidden_changes": [
+    "API budget",
+    "canonical authority",
+    "historical evidence rewrite",
+    "market gates",
+    "model weights",
+    "new policy semantics",
+    "portfolio logic",
+    "restricted provider values in public artifacts",
+    "workflow changes"
+  ],
+  "objective": "Consume the current ETF owner contract with strict as-of eligibility. Preserve existing owner semantics and historical evidence.",
+  "post_fix_gate": "POSITIVE_AND_NEGATIVE_REGRESSIONS_PLUS_PRODUCTION_SHAPE_REPLAY_PLUS_CI_AND_MAIN_READBACK",
+  "pr_number": null,
+  "receipt_sha256": "e8d8c3aa8d319e722d175d004df58b998bce9a47a6d5a4bc3567117f731115f4",
+  "recorded_at_utc": "2026-08-31T04:30:31Z",
+  "signature": "ebaa23067c15f9617f44",
+  "state": "IN_REMEDIATION",
+  "task_contract_sha256": "97cee518ff4614f8141999d3a2f5eaaef846bd16301365fb40f9476c55f9b934"
+}
