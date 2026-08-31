@@ -140,9 +140,28 @@ def build_snapshot(cfg):
     constituents={str(x.get("asset_id")):float(x["price_usd"]) for x in breadth.get("constituents",[]) if x.get("asset_id") and x.get("price_usd") not in (None,0)}
     br=agg.get("advance_ratio")
     if br is None and agg.get("advancer_pct") is not None: br=float(agg["advancer_pct"])/100.0
+    entry_validity=entry.get("measurement_validity") or {}
+    entry_promotion=entry.get("promotion_authority") or entry_validity.get("graduated_deployment_promotion") or {}
+    entry_authority=entry.get("authority") or {}
     return {
       "captured_at_utc":now_utc().isoformat(),"price_observation_utc":ts.isoformat(),"hourly_sequence_run_id":ptr.get("run_id"),
-      "entry_state":entry.get("state"),"pullback_research_state":pull.get("research_state"),
+      "entry_state":entry.get("state"),
+      "entry_context":{
+          "contract":entry.get("contract"),
+          "definition_version":entry.get("definition_version"),
+          "state":entry.get("state"),
+          "observer_state":entry.get("observer_state"),
+          "promotion_status":entry_promotion.get("status"),
+          "permits_active_state":entry_promotion.get("permits_active_state"),
+          "breadth_entry_permission":entry_validity.get("breadth_entry_permission"),
+          "breadth_semantics":entry_validity.get("absolute_breadth_semantics"),
+          "entry_authority":{
+              "portfolio_execution":entry_authority.get("portfolio_execution"),
+              "canonical_market_state":entry_authority.get("canonical_market_state"),
+              "market_rule_change":entry_authority.get("market_rule_change"),
+          },
+      },
+      "pullback_research_state":pull.get("research_state"),
       "btc":asset_features("btc",pairs),"eth":asset_features("eth",pairs),"ethbtc":ethbtc_features(pairs),
       "breadth":{"advance_ratio":br,"advancer_pct":agg.get("advancer_pct"),"equal_weight_mean_return_24h_pct":agg.get("equal_weight_mean_return_24h_pct"),
                  "median_return_24h_pct":agg.get("median_return_24h_pct"),"outperforming_btc_count":agg.get("outperforming_btc_count"),
@@ -155,7 +174,9 @@ def build_snapshot(cfg):
 def research_context_eligibility(cfg, obs):
     contract=cfg.get("research_eligibility") or {}
     authority=cfg.get("authority") or {}
-    configured=contract.get("status")=="RESEARCH_ONLY_DATA_CONTEXT"
+    entry=obs.get("entry_context") or {}
+    entry_authority=entry.get("entry_authority") or {}
+    configured=contract.get("status")=="ENTRY_LEDGER_FORWARD_ONLY_OBSERVATION_CONTEXT_v1"
     authority_ok=(
         authority.get("research_only") is True
         and authority.get("portfolio_execution") is False
@@ -166,18 +187,41 @@ def research_context_eligibility(cfg, obs):
         isinstance((obs.get(asset) or {}).get("close"),(int,float))
         for asset in ("btc","eth","ethbtc")
     )
-    eligible=configured and authority_ok and source_ok
+    entry_contract_ok=entry.get("contract")==contract.get("required_entry_contract")
+    entry_state_ok=entry.get("state")==contract.get("required_entry_state")
+    promotion_ok=(
+        entry.get("promotion_status")==contract.get("required_promotion_status")
+        and entry.get("permits_active_state") is contract.get("required_permits_active_state")
+    )
+    breadth_permission_ok=entry.get("breadth_entry_permission")==contract.get("required_breadth_entry_permission")
+    entry_authority_ok=(
+        entry_authority.get("portfolio_execution") is False
+        and entry_authority.get("canonical_market_state") is False
+    )
+    eligible=(
+        configured and authority_ok and source_ok and entry_contract_ok and entry_state_ok
+        and promotion_ok and breadth_permission_ok and entry_authority_ok
+    )
     if not configured: reason="RESEARCH_ELIGIBILITY_CONTRACT_MISSING_OR_INVALID"
     elif not authority_ok: reason="RESEARCH_AUTHORITY_BOUNDARY_INVALID"
     elif not source_ok: reason="COMPLETED_HOURLY_PRICE_CONTEXT_INSUFFICIENT"
-    else: reason="ELIGIBLE_RESEARCH_DATA_CONTEXT_ONLY"
+    elif not entry_contract_ok: reason="ENTRY_OWNER_CONTRACT_MISSING_OR_INCOMPATIBLE"
+    elif not entry_state_ok: reason="ENTRY_OWNER_NOT_FORWARD_ONLY_WAIT_CONTEXT"
+    elif not promotion_ok: reason="ENTRY_PROMOTION_CONTEXT_INCOMPATIBLE"
+    elif not breadth_permission_ok: reason="BREADTH_ENTRY_PERMISSION_NOT_RETIRED_ZERO_WEIGHT"
+    elif not entry_authority_ok: reason="ENTRY_OWNER_AUTHORITY_BOUNDARY_INVALID"
+    else: reason="ELIGIBLE_FORWARD_ONLY_RESEARCH_OBSERVATION_CONTEXT"
     return {
         "eligible":eligible,
         "status":"ELIGIBLE_RESEARCH_CONTEXT" if eligible else "INELIGIBLE_FAIL_CLOSED",
         "reason":reason,
         "semantics":contract.get("eligibility_semantics"),
         "source_owner":contract.get("required_source_owner"),
-        "entry_signal_state":obs.get("entry_state"),
+        "entry_owner_contract":entry.get("contract"),
+        "entry_signal_state":entry.get("state"),
+        "entry_promotion_status":entry.get("promotion_status"),
+        "entry_permits_active_state":entry.get("permits_active_state"),
+        "breadth_entry_permission":entry.get("breadth_entry_permission"),
         "entry_signal_role":contract.get("entry_signal_role"),
         "breadth_role":contract.get("breadth_role"),
         "direction_confidence_role":contract.get("direction_confidence_role"),
