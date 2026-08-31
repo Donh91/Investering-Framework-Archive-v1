@@ -9,10 +9,15 @@ def cfg(*, warmup=0):
     return {
         "warmup_observations": warmup,
         "research_eligibility": {
-            "status": "RESEARCH_ONLY_DATA_CONTEXT",
-            "eligibility_semantics": "DATA_AVAILABLE_FOR_RESEARCH_NOT_MARKET_PERMISSION",
+            "status": "ENTRY_LEDGER_FORWARD_ONLY_OBSERVATION_CONTEXT_v1",
+            "eligibility_semantics": "COLLECTION_ELIGIBILITY_ONLY_NOT_MARKET_PERMISSION",
             "required_source_owner": "HOURLY_SEQUENCE_COMPLETED_UTC_1H",
-            "entry_signal_role": "LEGACY_CONTEXT_ONLY_NO_ELIGIBILITY_OR_PERMISSION",
+            "required_entry_contract": "ENTRY_SIGNAL_LATEST_v1",
+            "required_entry_state": "WAIT",
+            "required_promotion_status": "FORWARD_ONLY_NOT_PROMOTION_READY",
+            "required_permits_active_state": False,
+            "required_breadth_entry_permission": "RETIRED_ZERO_WEIGHT",
+            "entry_signal_role": "FORWARD_ONLY_OBSERVATION_CONTEXT_NO_ELIGIBILITY_FROM_LEGACY_ACTIVE",
             "breadth_role": "DESCRIPTIVE_RESEARCH_CONTEXT_ZERO_EXECUTION_WEIGHT",
             "direction_confidence_role": "SHADOW_DIAGNOSTIC_ONLY_NO_REGIME_OR_ENTRY_PERMISSION",
         },
@@ -45,6 +50,21 @@ def valid_obs(*, entry_state="WAIT", breadth=0.5):
     return {
         "hourly_sequence_run_id": "HOURLY_SEQUENCE_TEST",
         "entry_state": entry_state,
+        "entry_context": {
+            "contract": "ENTRY_SIGNAL_LATEST_v1",
+            "definition_version": "ENTRY_SIGNAL_DEFINITION_v1_2_CANONICAL_PROMOTION_GUARD",
+            "state": entry_state,
+            "observer_state": "NO_PATTERN",
+            "promotion_status": "FORWARD_ONLY_NOT_PROMOTION_READY",
+            "permits_active_state": False,
+            "breadth_entry_permission": "RETIRED_ZERO_WEIGHT",
+            "breadth_semantics": "DESCRIPTIVE_PARTICIPATION_ZERO_EXECUTION_WEIGHT",
+            "entry_authority": {
+                "portfolio_execution": False,
+                "canonical_market_state": False,
+                "market_rule_change": False,
+            },
+        },
         "pullback_research_state": "REGIME_NOT_ACTIVE",
         "btc": dict(neutral_asset),
         "eth": dict(neutral_asset),
@@ -53,30 +73,58 @@ def valid_obs(*, entry_state="WAIT", breadth=0.5):
     }
 
 
-def test_retired_entry_state_cannot_authorize_research_without_hourly_source():
+def test_legacy_active_entry_state_is_rejected_even_with_valid_hourly_source():
     obs = valid_obs(entry_state="GRADUATED_ALTCOIN_TOPUP_ACTIVE", breadth=1.0)
-    obs["hourly_sequence_run_id"] = None
     eligibility = research_context_eligibility(cfg(), obs)
     assert eligibility["eligible"] is False
-    assert eligibility["reason"] == "COMPLETED_HOURLY_PRICE_CONTEXT_INSUFFICIENT"
+    assert eligibility["reason"] == "ENTRY_OWNER_NOT_FORWARD_ONLY_WAIT_CONTEXT"
     state, evidence = classify(cfg(), [], obs, None)
     assert state == "REGIME_NOT_ACTIVE"
     assert evidence["research_eligibility"]["canonical_market_permission"] is False
 
 
-def test_proxy_or_extreme_breadth_cannot_authorize_research_without_hourly_source():
+def test_reactivated_breadth_entry_permission_is_rejected():
     obs = valid_obs(entry_state="WAIT", breadth=1.0)
-    obs["hourly_sequence_run_id"] = None
+    obs["entry_context"]["breadth_entry_permission"] = "ACTIVE_GATE"
     state, evidence = classify(cfg(), [], obs, None)
     assert state == "REGIME_NOT_ACTIVE"
+    assert evidence["research_eligibility"]["reason"] == "BREADTH_ENTRY_PERMISSION_NOT_RETIRED_ZERO_WEIGHT"
     assert evidence["research_eligibility"]["breadth_role"] == "DESCRIPTIVE_RESEARCH_CONTEXT_ZERO_EXECUTION_WEIGHT"
 
 
-def test_valid_nonbinding_hourly_context_keeps_research_owner_alive_with_wait_entry_state():
+def test_promotion_ready_or_permitted_active_state_is_not_silently_accepted():
+    obs = valid_obs(entry_state="WAIT")
+    obs["entry_context"]["promotion_status"] = "PROMOTED"
+    obs["entry_context"]["permits_active_state"] = True
+    eligibility = research_context_eligibility(cfg(), obs)
+    assert eligibility["eligible"] is False
+    assert eligibility["reason"] == "ENTRY_PROMOTION_CONTEXT_INCOMPATIBLE"
+
+
+def test_missing_entry_owner_evidence_fails_closed():
+    obs = valid_obs(entry_state="WAIT")
+    obs["entry_context"] = {}
+    eligibility = research_context_eligibility(cfg(), obs)
+    assert eligibility["eligible"] is False
+    assert eligibility["reason"] == "ENTRY_OWNER_CONTRACT_MISSING_OR_INCOMPATIBLE"
+
+
+def test_missing_hourly_source_fails_closed_despite_valid_wait_context():
+    obs = valid_obs(entry_state="WAIT")
+    obs["hourly_sequence_run_id"] = None
+    eligibility = research_context_eligibility(cfg(), obs)
+    assert eligibility["eligible"] is False
+    assert eligibility["reason"] == "COMPLETED_HOURLY_PRICE_CONTEXT_INSUFFICIENT"
+
+
+def test_valid_forward_only_wait_context_keeps_research_owner_alive():
     obs = valid_obs(entry_state="WAIT", breadth=0.5)
     eligibility = research_context_eligibility(cfg(), obs)
     assert eligibility["eligible"] is True
-    assert eligibility["entry_signal_role"] == "LEGACY_CONTEXT_ONLY_NO_ELIGIBILITY_OR_PERMISSION"
+    assert eligibility["entry_signal_role"] == "FORWARD_ONLY_OBSERVATION_CONTEXT_NO_ELIGIBILITY_FROM_LEGACY_ACTIVE"
+    assert eligibility["entry_promotion_status"] == "FORWARD_ONLY_NOT_PROMOTION_READY"
+    assert eligibility["entry_permits_active_state"] is False
+    assert eligibility["breadth_entry_permission"] == "RETIRED_ZERO_WEIGHT"
     assert eligibility["canonical_market_permission"] is False
     assert eligibility["portfolio_execution"] is False
     state, evidence = classify(cfg(), [], obs, None)
@@ -86,14 +134,14 @@ def test_valid_nonbinding_hourly_context_keeps_research_owner_alive_with_wait_en
 
 def test_direction_confidence_cannot_substitute_as_research_permission():
     obs = valid_obs(entry_state="WAIT")
-    obs["hourly_sequence_run_id"] = None
+    obs["entry_context"] = {}
     obs["shadow_direction_confidence"] = {"direction": "UP", "calibrated_probability": 99.0}
     eligibility = research_context_eligibility(cfg(), obs)
     assert eligibility["eligible"] is False
     assert eligibility["direction_confidence_role"] == "SHADOW_DIAGNOSTIC_ONLY_NO_REGIME_OR_ENTRY_PERMISSION"
 
 
-def test_invalid_authority_fails_closed_even_with_valid_market_context():
+def test_invalid_authority_fails_closed_even_with_valid_owner_context():
     local_cfg = cfg()
     local_cfg["authority"]["portfolio_execution"] = True
     eligibility = research_context_eligibility(local_cfg, valid_obs())
