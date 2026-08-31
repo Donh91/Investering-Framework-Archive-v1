@@ -1,0 +1,27 @@
+{
+  "candidate_id": "codex-research-pullback-learning-suspension-binding-v1",
+  "candidate_sha256": "f43a6eded3a4f8a97749ca2b34061a9af8cafc46c7027a14bb5ec8c09e5c14c9",
+  "contract": "CODEX_RESEARCH_COMPLETION_RECEIPT_v1",
+  "execution_quality": {
+    "contract": "CODEX_EXECUTION_QUALITY_v1",
+    "evidence": [],
+    "failure_attribution": [],
+    "metrics": {},
+    "telemetry_status": "UNAVAILABLE"
+  },
+  "merge_commit_sha": "0d8e0faf5ea8a30f3e276f8a30e27f9581935aaa",
+  "post_fix_gate": "SUSPENDED_OWNER_BINDING_PASS_PLUS_OBSERVATION_LIVENESS_PASS_PLUS_EPISODE_FREEZE_NEGATIVE_CONTROL_PLUS_RETIRED_ENTRY_NEGATIVE_CONTROL_PLUS_AUTHORITY_FIREWALL_PLUS_MAIN_READBACK",
+  "pr_number": 678,
+  "receipt_sha256": "0be6fe3c5c6104192dd813a36fa66aaa3ec3fe0a0c2cd5f1916c384fa0fbf40a",
+  "signature": "0905eced7be72e94f276",
+  "status": "VERIFIED",
+  "task_contract_sha256": "9984f63a12c806996aa9066631c8f8ada37a685f95a08e160122efe1b45e276c",
+  "verification_evidence": [
+    "https://github.com/Donh91/Investering-Framework-Archive-v1/pull/678: exact head 832fb0b582d36ad4f6483bb35c35143326c84375 clean Codex review at 2026-08-31T02:57:39Z",
+    "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/33352098790: existing Pullback gate PASS; all four PR gates green",
+    "main readback 9c398739a36a7930ebcf9e20ab5997742f9b02c4: identical merged runtime/tests/README/transition bytes; 29 focused tests PASS from main",
+    "tests/pullback_learning/test_suspension_binding.py: positive observation/statistics liveness, retired Entry/proxy/T12 authority-negative controls, missing-owner fail-closed, creation/maturation freeze, immutable duplicate/out-of-order history",
+    "Isolated replay of current owner inputs: 36 prior observations unchanged byte-for-byte, zero episodes, repeated run leaves history unchanged; synthetic replay is not production or prospective backfill. First scheduled production execution is tracked separately."
+  ],
+  "verified_at_utc": "2026-08-31T03:07:30Z"
+}

@@ -390,6 +390,8 @@ def test_prediction_writer_rejects_invalid_price_before_creating_any_row(tmp_pat
 def test_owner_runtime_freeze_retry_and_future_maturation_are_separate(tmp_path, monkeypatch, capsys, first_issue_minutes):
     import csv
     import json
+    import os
+    import subprocess
     from pathlib import Path
     from scripts.intraday_execution import intraday_execution_research as research
     from scripts.intraday_execution.validate_direction_confidence import validate_repository
@@ -433,6 +435,13 @@ def test_owner_runtime_freeze_retry_and_future_maturation_are_separate(tmp_path,
                 writer.writeheader()
                 writer.writerows(row for row in rows if row["timestamp_utc"].startswith(day))
         sdc.write_json(research.HOURLY_POINTER, {"status": "COMPLETE", "run_id": "fixture-hourly", "requested_hours": 26, "window_start_utc": sdc.iso(end-timedelta(hours=26)), "window_end_utc": sdc.iso(end)})
+        stamp = sdc.iso(end + timedelta(minutes=5))
+        def git(*args):
+            return subprocess.check_output(["git", "-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", *args], env={**os.environ, "GIT_AUTHOR_DATE": stamp, "GIT_COMMITTER_DATE": stamp}, stderr=subprocess.DEVNULL, text=True).strip()
+        git("init", "-b", "fixture")
+        git("add", "03_DAILY_CAPTURE_LOGS/hourly")
+        git("commit", "-m", "synthetic hourly publication")
+        context["commit_sha"] = git("rev-parse", "HEAD")
 
     for index in range(26):
         append_candle(source_close-timedelta(hours=26-index), 100.0)
@@ -453,6 +462,10 @@ def test_owner_runtime_freeze_retry_and_future_maturation_are_separate(tmp_path,
     for horizon in ("1H", "4H", "24H"):
         assert f"{horizon} BTC " in initial_display["data_ping_bridge"]["display_line"]
         assert f"{horizon} ETH " in initial_display["data_ping_bridge"]["display_line"]
+    assert initial_display["data_ping_bridge"]["display_line"].count("independent_n=") == 6
+    assert initial_display["data_ping_bridge"]["display_line"].count("status=") == 6
+    assert initial_display["data_ping_bridge"]["display_line"].count("agreement=") == 6
+    assert initial_display["data_ping_bridge"]["display_line"].count("(not probability)") == 6
     if first_issue_minutes > 30:
         latest = json.loads(research.LATEST.read_text())["shadow_direction_confidence"]
         assert all(target["direction"] == "NO_EDGE" and target["calibrated_probability"] is None for target in latest["horizons"]["1H"]["targets"].values())

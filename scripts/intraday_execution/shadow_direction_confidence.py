@@ -548,7 +548,10 @@ def _exact_hourly_close(due: datetime, target: str, *, root: Path = Path(".")) -
         return None
 
 
-def exact_hourly_close_at_commit(root: Path, commit: str, due: datetime, target: str) -> dict[str, Any] | None:
+def exact_hourly_close_at_commit(
+    root: Path, commit: str, due: datetime, target: str,
+    *, available_by: datetime | None = None, observed_at: datetime | None = None,
+) -> dict[str, Any] | None:
     """Verify censoring against the source snapshot the production run observed.
 
     A later legitimate backfill must neither erase a frozen censor nor make a
@@ -562,16 +565,50 @@ def exact_hourly_close_at_commit(root: Path, commit: str, due: datetime, target:
         if git("cat-file", "-e", commit + "^{commit}").returncode:
             if git("fetch", "--quiet", "--no-tags", "--no-write-fetch-head", "--depth=1", "origin", commit).returncode:
                 raise RuntimeError("CENSOR_SOURCE_COMMIT_UNAVAILABLE")
+        selected = commit
+        head_stamp = git("show", "-s", "--format=%ct", commit)
+        if head_stamp.returncode:
+            raise RuntimeError("OUTCOME_SOURCE_PUBLICATION_TIME_UNAVAILABLE")
+        if observed_at is not None and int(head_stamp.stdout.strip()) > observed_at.timestamp():
+            raise RuntimeError("OUTCOME_SOURCE_CONTEXT_IN_FUTURE")
+        if available_by is not None and int(head_stamp.stdout.strip()) > available_by.timestamp():
+            # First-parent history follows canonical main publication, excluding
+            # task-branch commits that had not yet landed. Find the latest source
+            # snapshot available by the frozen evidence deadline, not by retry time.
+            for deepen in (0, 128, 512, 2048, 8192):
+                if deepen and git("fetch", "--quiet", "--no-tags", "--no-write-fetch-head", f"--deepen={deepen}", "origin", commit).returncode:
+                    raise RuntimeError("OUTCOME_SOURCE_HISTORY_UNAVAILABLE")
+                history = git("rev-list", "--first-parent", "--timestamp", commit)
+                if history.returncode:
+                    raise RuntimeError("OUTCOME_SOURCE_HISTORY_UNREADABLE")
+                candidates = [line.split() for line in history.stdout.splitlines()]
+                selected = next((sha for stamp, sha in candidates if int(stamp) <= available_by.timestamp()), None)
+                if selected:
+                    break
+                shallow = git("rev-parse", "--is-shallow-repository")
+                if shallow.returncode or shallow.stdout.strip() != "true":
+                    break
+            if not selected:
+                raise RuntimeError("OUTCOME_SOURCE_HISTORY_BEFORE_DEADLINE_UNAVAILABLE")
         path = _hourly_source_path(due).as_posix()
-        entry = git("ls-tree", commit, "--", path)
+        entry = git("ls-tree", selected, "--", path)
         if entry.returncode:
             raise RuntimeError("CENSOR_SOURCE_TREE_UNREADABLE")
         if not entry.stdout.strip():
             return None
-        source = git("show", f"{commit}:{path}")
+        source = git("show", f"{selected}:{path}")
         if source.returncode:
             raise RuntimeError("CENSOR_SOURCE_BLOB_UNREADABLE")
-        return _close_from_csv(source.stdout, due, target, Path(path))
+        evidence = _close_from_csv(source.stdout, due, target, Path(path))
+        if evidence is not None:
+            stamp = git("show", "-s", "--format=%ct", selected)
+            if stamp.returncode:
+                raise RuntimeError("OUTCOME_SOURCE_PUBLICATION_TIME_UNAVAILABLE")
+            published = datetime.fromtimestamp(int(stamp.stdout.strip()), timezone.utc)
+            if published < due:
+                raise RuntimeError("OUTCOME_SOURCE_PUBLISHED_BEFORE_CANDLE_CLOSE")
+            evidence.update(source_commit_sha=selected, source_snapshot_utc=iso(published))
+        return evidence
     except (OSError, subprocess.TimeoutExpired) as exc:
         raise RuntimeError("CENSOR_SOURCE_HISTORY_UNAVAILABLE") from exc
 
@@ -598,7 +635,11 @@ def mature_predictions(
                     counts["pending"] += 1
                     continue
 
-                evidence = _exact_hourly_close(due, target)
+                deadline = due + timedelta(hours=max_wait)
+                evidence = (
+                    exact_hourly_close_at_commit(Path("."), context["commit_sha"], due, target, available_by=min(now, deadline), observed_at=now)
+                    if context else _exact_hourly_close(due, target)
+                )
                 predicted = target_row.get("direction")
                 common = {
                     "contract": "INTRADAY_DIRECTION_OUTCOME_v1",
@@ -611,6 +652,7 @@ def mature_predictions(
                     "source_price_observation_utc": pred["source_price_observation_utc"],
                     "source_candle_open_utc": pred.get("source_candle_open_utc"),
                     "due_at_utc": horizon_row["due_at_utc"],
+                    "evidence_deadline_utc": iso(deadline),
                     "measured_at_utc": iso(now),
                     "target": target,
                     "horizon_hours": horizon,
@@ -691,6 +733,8 @@ def mature_predictions(
                         "evidence_source_path": evidence["source_path"],
                         "evidence_semantics": evidence["semantics"],
                         "evidence_source_binding_sha256": evidence["source_binding_sha256"],
+                        "evidence_source_commit_sha": evidence.get("source_commit_sha"),
+                        "evidence_source_snapshot_utc": evidence.get("source_snapshot_utc"),
                         "evidence_horizon_error_hours": 0.0,
                         "adjudication_delay_hours": round(adjudication_delay, 6),
                         "brier_score": round(brier, 8) if brier is not None else None,
@@ -808,7 +852,13 @@ def update_shadow_direction_confidence(
                 p = row.get("calibrated_probability")
                 unavailable = horizons[key]["display_basis"] != "FROZEN_PREDICTION"
                 label = "UNAVAILABLE" if unavailable else (p if p is not None else "UNCAL")
-                pieces.append(f"{key} {target} {row.get('direction')}({label})")
+                agreement = row.get("evidence_agreement_pct")
+                agreement_label = f"{agreement}%" if agreement is not None else "UNKNOWN"
+                pieces.append(
+                    f"{key} {target} {row.get('direction')}({label})"
+                    f" [status={row.get('confidence_status')}; independent_n={row.get('independent_calibration_samples', 0)};"
+                    f" agreement={agreement_label} (not probability)]"
+                )
     display = (
         "SHADOW DIRECTION: "
         + " | ".join(pieces)

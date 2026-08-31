@@ -11,6 +11,7 @@ from scripts.api_agent.evaluate_mcp_connection_receipt import classify, score_re
 from scripts.api_agent.mcp_research_gateway import build_probe_payload, build_research_payload, load_contract, resolve_headers, select_allowed_tools
 from scripts.api_agent.validate_coingecko_mcp_boundary import validate_boundary
 from scripts.api_agent.validate_deep_research_queue import validate_queue
+from scripts.api_agent import validate_deep_research_queue as queue_validator
 from scripts.api_agent.validate_mcp_connection_program import validate_program
 
 REGISTRY = Path('research/api_agent/API_TASK_REGISTRY_v1.json')
@@ -161,6 +162,29 @@ class ApiGatewayTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,'provider_not_executable'):load_contract(Path('research/api_agent/mcp/BINANCE_AGENT_NATIVE_RESEARCH_v1.json'))
     def test_deep_research_queue_boundary(self):
         self.assertEqual(validate_queue(Path('.')), [])
+
+    def test_deep_research_explicit_idle_and_known_active_ids(self):
+        original_load = queue_validator.load_json
+        state = original_load(queue_validator.STATE_PATH)
+        for active in (None, 'DRQ-001'):
+            with self.subTest(active=active):
+                def read(path):
+                    return {**state, 'active_research_id': active} if path.name == queue_validator.STATE_PATH.name else original_load(path)
+                with patch.object(queue_validator, 'load_json', side_effect=read):
+                    self.assertEqual(validate_queue(Path('.')), [])
+
+    def test_deep_research_malformed_active_id_is_not_idle(self):
+        original_load = queue_validator.load_json
+        state = original_load(queue_validator.STATE_PATH)
+        for active in ('UNKNOWN_ID', '', True, [], {}, 'MISSING_FIELD'):
+            with self.subTest(active=active):
+                bad = {**state, 'active_research_id': active}
+                if active == 'MISSING_FIELD':
+                    bad.pop('active_research_id')
+                def read(path):
+                    return bad if path.name == queue_validator.STATE_PATH.name else original_load(path)
+                with patch.object(queue_validator, 'load_json', side_effect=read):
+                    self.assertTrue(any(x.startswith('state_active_id_') for x in validate_queue(Path('.'))))
     def test_deep_research_current_provider_gate_is_coingecko_only(self):
         _,_,scorecard=deep_research_fixture();self.assertEqual(retained_providers(scorecard), {'CoinGecko'})
     def test_deep_research_initial_task_is_cross_horizon_baseline(self):

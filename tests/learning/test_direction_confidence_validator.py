@@ -268,13 +268,18 @@ def test_censored_missing_exact_due_requires_substitution_guard(tmp_path):
         validate_repository(root)
 
 
-def complete_ledger_fixture(tmp_path, *, with_outcome=True):
+def complete_ledger_fixture(tmp_path, *, with_outcome=True, due_published_at="2026-08-31T11:05:00Z", due_value=101.0):
     root = setup_root(tmp_path)
-    context = {"repository": owner.REPOSITORY, "ref": "refs/heads/main", "event": "schedule", "run_id": "12345", "run_attempt": "1", "commit_sha": "a" * 40}
+    source = root / "03_DAILY_CAPTURE_LOGS/hourly/2026/08/2026-08-31.csv"
+    source.parent.mkdir(parents=True, exist_ok=True)
+    start_csv = "timestamp_utc,btc_close,eth_close,spot_status\n2026-08-31T09:00:00Z,100,100,PASS\n"
+    source.write_text(start_csv)
+    start_commit = _commit_fixture_source(root, "2026-08-31T10:05:00Z")
+    context = {"repository": owner.REPOSITORY, "ref": "refs/heads/main", "event": "schedule", "run_id": "12345", "run_attempt": "1", "commit_sha": start_commit}
     registration = {
         "contract": "INTRADAY_DIRECTION_REGISTRATION_v1",
         "registered_test_id": TEST_ID,
-        "registered_at_utc": "2026-08-31T08:00:00Z",
+        "registered_at_utc": "2026-08-31T10:05:00Z",
         "production_context": context,
         "registry_binding_sha256": registry_binding_hash(root),
         "configuration_sha256": owner.content_hash(base_config()["shadow_direction_confidence"]),
@@ -283,17 +288,17 @@ def complete_ledger_fixture(tmp_path, *, with_outcome=True):
     }
     registration["receipt_sha256"] = owner.content_hash(registration)
     write_json(root / owner.REGISTRATION, registration)
-    source = root / "03_DAILY_CAPTURE_LOGS/hourly/2026/08/2026-08-31.csv"
-    source.parent.mkdir(parents=True, exist_ok=True)
-    source.write_text("timestamp_utc,btc_close,eth_close,spot_status\n2026-08-31T09:00:00Z,100,100,PASS\n2026-08-31T10:00:00Z,101,101,PASS\n")
     pred_path = root / PREDICTIONS / "2026/08/31/pred.json"
     pred = prediction()
     pred.update(registered_test_id=TEST_ID, registration_receipt_sha256=registration["receipt_sha256"], production_context=context)
     write_json(pred_path, pred)
+    source.write_text(start_csv + f"2026-08-31T10:00:00Z,{due_value},{due_value},PASS\n")
+    due_commit = _commit_fixture_source(root, due_published_at)
     outcome_path = root / OUTCOMES / "2026/08/31/outcome.json"
     row = outcome()
     evidence = owner._exact_hourly_close(datetime(2026, 8, 31, 11, tzinfo=timezone.utc), "BTC", root=root)
-    row.update(registered_test_id=TEST_ID, registration_receipt_sha256=registration["receipt_sha256"], production_context=context, prediction_path=pred_path.relative_to(root).as_posix(), prediction_sha256=owner.file_hash(pred_path), evidence_source_path=evidence["source_path"], evidence_source_binding_sha256=evidence["source_binding_sha256"])
+    row.update(registered_test_id=TEST_ID, registration_receipt_sha256=registration["receipt_sha256"], production_context={**context, "commit_sha": due_commit}, prediction_path=pred_path.relative_to(root).as_posix(), prediction_sha256=owner.file_hash(pred_path), evidence_source_path=evidence["source_path"], evidence_source_binding_sha256=evidence["source_binding_sha256"], evidence_source_commit_sha=due_commit, evidence_source_snapshot_utc=due_published_at, evidence_deadline_utc="2026-08-31T12:30:00Z")
+    row.update(end_value=due_value, return_pct=round((due_value/100.0-1)*100, 8), actual_direction="UP" if due_value>100 else "DOWN", result="HIT" if due_value>100 else "MISS")
     if with_outcome:
         write_json(outcome_path, row)
     return root, pred_path, outcome_path, row
@@ -310,7 +315,7 @@ def test_complete_prediction_outcome_source_chain_passes(tmp_path):
 def _censored_fixture_row(row):
     keep = ("contract", "registered_test_id", "registration_receipt_sha256", "production_context",
             "prediction_path", "prediction_sha256", "issued_at_utc", "source_price_observation_utc",
-            "source_candle_open_utc", "due_at_utc", "target", "horizon_hours", "predicted_direction",
+            "source_candle_open_utc", "due_at_utc", "evidence_deadline_utc", "target", "horizon_hours", "predicted_direction",
             "start_value", "calibration_key", "calibration_group", "votes",
             "frozen_calibrated_probability_pct", "authority")
     return {**{key: row[key] for key in keep}, "status": "CENSORED",
@@ -319,14 +324,14 @@ def _censored_fixture_row(row):
             "substitute_later_price_forbidden": True}
 
 
-def _commit_fixture_source(root):
-    import subprocess
+def _commit_fixture_source(root, stamp="2026-08-31T11:05:00Z"):
+    import os, subprocess
     # A real, local Git source snapshot in this synthetic fixture, never a live receipt.
     def git(*args):
-        return subprocess.check_output(["git", "-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", *args], cwd=root, stderr=subprocess.DEVNULL, text=True).strip()
-    git("init")
+        return subprocess.check_output(["git", "-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", *args], cwd=root, env={**os.environ, "GIT_AUTHOR_DATE": stamp, "GIT_COMMITTER_DATE": stamp}, stderr=subprocess.DEVNULL, text=True).strip()
+    git("init", "-b", "fixture")
     git("add", "03_DAILY_CAPTURE_LOGS/hourly")
-    git("commit", "-m", "synthetic source snapshot")
+    git("commit", "--allow-empty", "-m", "synthetic source snapshot")
     return git("rev-parse", "HEAD")
 
 
@@ -340,27 +345,20 @@ def test_arbitrary_censor_reason_cannot_remove_a_scored_outcome(tmp_path):
 
 
 def test_miss_with_available_exact_source_cannot_be_censored(tmp_path):
-    root, _, path, row = complete_ledger_fixture(tmp_path)
-    source = root / owner._hourly_source_path(datetime(2026, 8, 31, 11, tzinfo=timezone.utc))
-    source.write_text(source.read_text().replace(",101,101,PASS", ",99,99,PASS"))
-    evidence = owner._exact_hourly_close(datetime(2026, 8, 31, 11, tzinfo=timezone.utc), "BTC", root=root)
-    row.update(end_value=99.0, return_pct=-1.0, actual_direction="DOWN", result="MISS", evidence_source_binding_sha256=evidence["source_binding_sha256"])
-    write_json(path, row)
+    root, _, path, row = complete_ledger_fixture(tmp_path, due_value=99.0)
     assert validate_repository(root)["outcome_rows_validated"] == 1
     censored = _censored_fixture_row(row)
-    censored["production_context"] = {**row["production_context"], "commit_sha": _commit_fixture_source(root)}
     write_json(path, censored)
     with pytest.raises(ValidationError, match="OUTCOME_CENSORED_DESPITE_EXACT_SOURCE"):
         validate_repository(root)
 
 
 def test_valid_censor_remains_bound_to_source_before_late_backfill(tmp_path):
-    root, _, path, row = complete_ledger_fixture(tmp_path)
+    root, _, path, row = complete_ledger_fixture(tmp_path, due_published_at="2026-08-31T12:45:00Z")
     source = root / owner._hourly_source_path(datetime(2026, 8, 31, 11, tzinfo=timezone.utc))
     completed = source.read_text()
     source.write_text("\n".join(completed.splitlines()[:2]) + "\n")
     censored = _censored_fixture_row(row)
-    censored["production_context"] = {**row["production_context"], "commit_sha": _commit_fixture_source(root)}
     write_json(path, censored)
     frozen = path.read_bytes()
     assert validate_repository(root)["outcome_rows_validated"] == 1
@@ -371,9 +369,10 @@ def test_valid_censor_remains_bound_to_source_before_late_backfill(tmp_path):
 
 def test_censor_validation_cannot_treat_unreadable_history_as_missing_evidence(tmp_path):
     root, _, path, row = complete_ledger_fixture(tmp_path)
-    _commit_fixture_source(root)
-    write_json(path, _censored_fixture_row(row))
-    with pytest.raises(ValidationError, match="OUTCOME_CENSOR_SOURCE_UNVERIFIED"):
+    censored = _censored_fixture_row(row)
+    censored["production_context"] = {**row["production_context"], "commit_sha": "a" * 40}
+    write_json(path, censored)
+    with pytest.raises(ValidationError, match="OUTCOME_SOURCE_HISTORY_UNVERIFIED"):
         validate_repository(root)
 
 
@@ -381,20 +380,52 @@ def test_shallow_git_can_verify_censor_snapshot_without_changing_checkout(tmp_pa
     import subprocess
     source_repo = tmp_path / "source"
     source_repo.mkdir()
-    root, _, _, _ = complete_ledger_fixture(source_repo)
+    root, _, _, row = complete_ledger_fixture(source_repo, due_published_at="2026-08-31T12:45:00Z")
     due = datetime(2026, 8, 31, 11, tzinfo=timezone.utc)
     source = root / owner._hourly_source_path(due)
     completed = source.read_text()
-    source.write_text("\n".join(completed.splitlines()[:2]) + "\n")
-    before_backfill = _commit_fixture_source(root)
-    source.write_text(completed)
-    after_backfill = _commit_fixture_source(root)
+    before_backfill = subprocess.check_output(["git", "rev-parse", "HEAD^"], cwd=root, text=True).strip()
+    after_backfill = row["production_context"]["commit_sha"]
     checkout = tmp_path / "shallow"
     subprocess.run(["git", "clone", "--quiet", "--depth=1", root.as_uri(), str(checkout)], check=True)
     assert subprocess.run(["git", "cat-file", "-e", before_backfill], cwd=checkout, capture_output=True).returncode != 0
-    assert owner.exact_hourly_close_at_commit(checkout, before_backfill, due, "BTC") is None
+    assert owner.exact_hourly_close_at_commit(checkout, after_backfill, due, "BTC", available_by=datetime(2026, 8, 31, 12, 30, tzinfo=timezone.utc)) is None
     assert subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=checkout, text=True).strip() == after_backfill
     assert (checkout / owner._hourly_source_path(due)).read_text() == completed
+
+
+@pytest.mark.parametrize("published,status", [
+    ("2026-08-31T11:05:00Z", "MATURED"),
+    ("2026-08-31T12:30:00Z", "MATURED"),
+    ("2026-08-31T12:30:01Z", "CENSORED"),
+    ("2026-08-31T12:45:00Z", "CENSORED"),
+])
+def test_outage_maturation_uses_publication_deadline_not_scheduler_time(tmp_path, monkeypatch, published, status):
+    root, _, _, row = complete_ledger_fixture(tmp_path, with_outcome=False, due_published_at=published)
+    monkeypatch.chdir(root)
+    now = datetime(2026, 8, 31, 13, tzinfo=timezone.utc)
+    owner.mature_predictions({}, base_config()["shadow_direction_confidence"], now, context=row["production_context"])
+    rows = [json.loads(path.read_text()) for path in (root / OUTCOMES).rglob("*.json")]
+    assert len(rows) == 2
+    assert all(result["status"] == status for result in rows)
+    if status == "CENSORED":
+        assert all(result.get("result") is None and result.get("brier_score") is None for result in rows)
+    assert validate_repository(root)["outcome_rows_validated"] == 2
+
+
+def test_validator_rejects_a_scored_late_backfill(tmp_path):
+    root, _, path, row = complete_ledger_fixture(tmp_path, due_published_at="2026-08-31T12:45:00Z")
+    row["measured_at_utc"] = "2026-08-31T13:00:00Z"
+    write_json(path, row)
+    with pytest.raises(ValidationError, match="OUTCOME_SOURCE_NOT_AVAILABLE_WITHIN_GRACE"):
+        validate_repository(root)
+
+
+def test_source_context_cannot_come_from_after_measurement(tmp_path):
+    root, _, path, row = complete_ledger_fixture(tmp_path, due_published_at="2026-08-31T13:05:00Z")
+    write_json(path, _censored_fixture_row(row))
+    with pytest.raises(ValidationError, match="OUTCOME_SOURCE_CONTEXT_IN_FUTURE"):
+        validate_repository(root)
 
 
 @pytest.mark.parametrize("change,error", [

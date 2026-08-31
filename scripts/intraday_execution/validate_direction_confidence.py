@@ -350,15 +350,23 @@ def validate_linkage(root: Path, cfg: dict[str, Any], prediction_paths: list[Pat
             require(row.get(outcome_key) == target.get(prediction_key), f"OUTCOME_FROZEN_FIELD_DRIFT:{path}:{outcome_key}")
         require(row.get("calibration_group") == owner._group_id(row["target"], row["horizon_hours"], target["direction"], target["calibration_key"]), f"OUTCOME_CALIBRATION_GROUP_DRIFT:{path}")
         require(row.get("start_value") == target["start_value"], f"OUTCOME_START_PRICE_DRIFT:{path}")
+        due = parse_utc(row["due_at_utc"])
+        deadline = due + timedelta(hours=float(cfg.get("max_outcome_evidence_lag_hours", 1.5)))
+        require(row.get("evidence_deadline_utc") == iso(deadline), f"OUTCOME_EVIDENCE_DEADLINE_DRIFT:{path}")
+        try:
+            evidence = owner.exact_hourly_close_at_commit(
+                root, row["production_context"]["commit_sha"], due, row["target"],
+                available_by=min(parse_utc(row["measured_at_utc"]), deadline),
+                observed_at=parse_utc(row["measured_at_utc"]),
+            )
+        except RuntimeError as exc:
+            raise ValidationError(f"OUTCOME_SOURCE_HISTORY_UNVERIFIED:{path}:{exc}") from exc
         if row["status"] == "MATURED":
-            evidence = owner._exact_hourly_close(parse_utc(row["due_at_utc"]), row["target"], root=root)
-            require(evidence is not None and row["end_value"] == evidence["close"], f"OUTCOME_SOURCE_PRICE_UNVERIFIED:{path}")
+            require(evidence is not None, f"OUTCOME_SOURCE_NOT_AVAILABLE_WITHIN_GRACE:{path}")
+            require(row["end_value"] == evidence["close"], f"OUTCOME_SOURCE_PRICE_UNVERIFIED:{path}")
             require(row.get("evidence_source_path") == evidence["source_path"] and row.get("evidence_source_binding_sha256") == evidence["source_binding_sha256"], f"OUTCOME_SOURCE_BINDING_MISMATCH:{path}")
+            require(row.get("evidence_source_commit_sha") == evidence["source_commit_sha"] and row.get("evidence_source_snapshot_utc") == evidence["source_snapshot_utc"], f"OUTCOME_SOURCE_PUBLICATION_BINDING_MISMATCH:{path}")
         else:
-            try:
-                evidence = owner.exact_hourly_close_at_commit(root, row["production_context"]["commit_sha"], parse_utc(row["due_at_utc"]), row["target"])
-            except RuntimeError as exc:
-                raise ValidationError(f"OUTCOME_CENSOR_SOURCE_UNVERIFIED:{path}:{exc}") from exc
             require(evidence is None, f"OUTCOME_CENSORED_DESPITE_EXACT_SOURCE:{path}")
     # Reconstruct only the outcomes observable when each probability was frozen.
     for path, pred in predictions.values():
