@@ -1,4 +1,5 @@
 import json
+import hashlib
 import subprocess
 import sys
 import tempfile
@@ -20,6 +21,8 @@ class WeeklyExperimentContextTest(unittest.TestCase):
             output = root / "context.json"
             daily.mkdir()
             outcomes.mkdir()
+            forecasts = root / 'forecasts'
+            forecasts.mkdir()
             weekly.write_text(json.dumps({"contract": "WEEKLY_CAPTURE_PACK_TEST"}))
             freeze.write_text(json.dumps({
                 "iso_year": 2026,
@@ -52,9 +55,21 @@ class WeeklyExperimentContextTest(unittest.TestCase):
                     },
                 ],
             }))
+            # Explicitly synthetic, hash-bound input fixture. It is never
+            # published as canonical prospective evidence.
+            canonical = lambda x: (json.dumps(x, sort_keys=True, separators=(',', ':')) + '\n').encode()
+            forecast = {'contract': 'FROZEN_FORECAST_v1', 'forecast_id': 'EXP-FC-1',
+                        'frozen_at_utc': '2026-08-04T10:00:00Z', 'outcome_due_utc': '2026-08-07T09:30:00Z',
+                        'direction': 'UP', 'threshold_pct': 1, 'start_value': 100, 'metric_path': 'price'}
+            evidence = {'contract': 'SYNTHETIC_TEST_EVIDENCE', 'captured_at_utc': '2026-08-07T10:00:00Z', 'price': 102.4}
+            (forecasts / 'EXP-FC-1.json').write_bytes(canonical(forecast))
+            (root / 'evidence.json').write_bytes(canonical(evidence))
             (outcomes / "EXP-FC-1.json").write_text(json.dumps({
-                "contract": "MATURED_OUTCOME_v2",
+                "contract": "MATURED_OUTCOME_v3",
                 "forecast_id": "EXP-FC-1",
+                "forecast_sha256": hashlib.sha256(canonical(forecast)).hexdigest(),
+                "evidence_path": "evidence.json",
+                "evidence_sha256": hashlib.sha256(canonical(evidence)).hexdigest(),
                 "status": "MATURED",
                 "result": "HIT",
                 "return_pct": 2.4,
@@ -69,6 +84,8 @@ class WeeklyExperimentContextTest(unittest.TestCase):
                 "--freeze-file", str(freeze),
                 "--experiment-registry", str(registry),
                 "--experiment-outcome-root", str(outcomes),
+                "--experiment-forecast-root", str(forecasts),
+                "--repo-root", str(root),
                 "--output", str(output),
             ], check=True)
             value = json.loads(output.read_text())
@@ -80,6 +97,9 @@ class WeeklyExperimentContextTest(unittest.TestCase):
             self.assertEqual(learning["active_candidates"][0]["candidate_id"], "EC-active")
             self.assertEqual(len(learning["new_matured_outcomes"]), 1)
             self.assertEqual(learning["new_matured_outcomes"][0]["result"], "HIT")
+            self.assertTrue(learning['matured_outcome_evidence_available'])
+            self.assertEqual(learning['outcome_ingestion_diagnostics'], [])
+            self.assertEqual(learning['new_matured_outcomes'][0]['source_binding_verification'], 'CURRENT_FILE_CANONICAL_JSON_SHA256')
 
 
 if __name__ == "__main__":
