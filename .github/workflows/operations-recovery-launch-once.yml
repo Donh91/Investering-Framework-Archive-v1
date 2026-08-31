@@ -24,16 +24,20 @@ jobs:
         with:
           ref: main
           fetch-depth: 1
-      - name: Dispatch current Daily Director and Slow Cycle definitions
+      - name: Dispatch current Hourly Sequence definition
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           echo "launcher_sha=${GITHUB_SHA}"
-          gh workflow run daily-director-shadow.yml --repo "$GITHUB_REPOSITORY" --ref main
-          gh workflow run daily-slow-cycle-shadow.yml --repo "$GITHUB_REPOSITORY" --ref main
+          gh workflow run hourly-sequence-capture.yml --repo "$GITHUB_REPOSITORY" --ref main
           sleep 4
-          echo '--- Daily Director workflow_dispatch runs ---'
-          gh run list --repo "$GITHUB_REPOSITORY" --workflow daily-director-shadow.yml --event workflow_dispatch --limit 3 --json databaseId,createdAt,status,conclusion,headSha,url
-          echo '--- Slow Cycle workflow_dispatch runs ---'
-          gh run list --repo "$GITHUB_REPOSITORY" --workflow daily-slow-cycle-shadow.yml --event workflow_dispatch --limit 3 --json databaseId,createdAt,status,conclusion,headSha,url
+          echo '--- Hourly Sequence workflow_dispatch runs ---'
+          gh run list --repo "$GITHUB_REPOSITORY" --workflow hourly-sequence-capture.yml --event workflow_dispatch --limit 3 --json databaseId,createdAt,status,conclusion,headSha,url
+
+          echo '## Operations Recovery Launch' >> "$GITHUB_STEP_SUMMARY"
+          echo '' >> "$GITHUB_STEP_SUMMARY"
+          echo '- hourly-sequence-capture.yml: dispatched on main' >> "$GITHUB_STEP_SUMMARY"
+          echo '- downstream path: Hourly workflow includes T12 register + predict steps' >> "$GITHUB_STEP_SUMMARY"
+          echo '- repository writes from launcher: none' >> "$GITHUB_STEP_SUMMARY"
+          echo '- launcher lifecycle: one-shot on introducing push only' >> "$GITHUB_STEP_SUMMARY"
