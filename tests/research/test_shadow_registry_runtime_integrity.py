@@ -117,6 +117,29 @@ def test_evaluator_label_cannot_be_borrowed_by_another_sensor(tmp_path, monkeypa
     assert runtime.evaluate_sensor(sensor)['calibration_readiness'] == 'RECOVERY_REQUIRED'
 
 
+@pytest.mark.parametrize('count,field,value', [(0, 'btc_mean_return_pct', 1.), (0, 'eth_mean_return_pct', 0.),
+                                             (0, 'matched_top100_mean_return_pct', 2.),
+                                             (1, 'btc_mean_return_pct', None), (1, 'eth_mean_return_pct', None)])
+def test_count_mean_contradictions_are_not_scorable(tmp_path, monkeypatch, count, field, value):
+    output, doc, sensor = evaluator_fixture(tmp_path, monkeypatch)
+    doc['activation_event_count'] = 1
+    row = doc['horizons']['24h']
+    row.update(matured_event_count=count, btc_mean_return_pct=0. if count else None,
+               eth_mean_return_pct=0. if count else None)
+    row[field] = value
+    output.write_text(json.dumps(doc))
+    assert runtime.evaluate_sensor(sensor)['calibration_readiness'] != 'SCORABLE'
+
+
+def test_matured_returns_can_legitimately_lack_matched_constituents(tmp_path, monkeypatch):
+    output, doc, sensor = evaluator_fixture(tmp_path, monkeypatch)
+    doc['activation_event_count'] = 1
+    doc['horizons']['24h'].update(matured_event_count=1, btc_mean_return_pct=0., eth_mean_return_pct=-1.,
+                                matched_top100_mean_return_pct=None)
+    output.write_text(json.dumps(doc))
+    assert runtime.evaluate_sensor(sensor)['calibration_readiness'] == 'SCORABLE'
+
+
 def weekly_fixture():
     return {'contract': 'SHADOW_WEEKLY_RELEVANCE_SNAPSHOT_v1', 'week': '2026-W36',
             'generated_at_utc': '2026-08-31T00:00:00Z', 'authority': 'RESEARCH_ONLY_NON_CANONICAL',
@@ -153,6 +176,38 @@ def test_corrupt_existing_week_is_not_overwritten(tmp_path, monkeypatch):
         runtime.persist_snapshot(weekly_fixture())
     assert history.read_text() == '{'
     assert not runtime.LATEST.exists()
+
+
+@pytest.mark.parametrize('failure', ['flush', 'install'])
+def test_failed_weekly_publication_leaves_no_partial_history(tmp_path, monkeypatch, failure):
+    monkeypatch.setattr(runtime, 'OUTDIR', tmp_path / 'weekly')
+    monkeypatch.setattr(runtime, 'LATEST', tmp_path / 'LATEST.json')
+    runtime.LATEST.write_text('{"original_latest": true}\n')
+    original = runtime.LATEST.read_bytes()
+    def disk_failure(*args, **kwargs):
+        raise OSError('injected disk failure')
+    monkeypatch.setattr(runtime.os, 'fsync' if failure == 'flush' else 'link', disk_failure)
+    with pytest.raises(OSError, match='injected'):
+        runtime.persist_snapshot(weekly_fixture())
+    assert not (runtime.OUTDIR / '2026-W36.json').exists()
+    assert not list(runtime.OUTDIR.iterdir())
+    assert runtime.LATEST.read_bytes() == original
+
+
+def test_existing_week_wins_atomic_install_race(tmp_path, monkeypatch):
+    monkeypatch.setattr(runtime, 'OUTDIR', tmp_path / 'weekly')
+    monkeypatch.setattr(runtime, 'LATEST', tmp_path / 'LATEST.json')
+    earlier = weekly_fixture()
+    raw = json.dumps(earlier).encode()
+    link = runtime.os.link
+    def install_winner(src, dst):
+        Path(dst).write_bytes(raw)  # Another writer wins before our atomic link.
+        return link(src, dst)
+    monkeypatch.setattr(runtime.os, 'link', install_winner)
+    later = {**earlier, 'generated_at_utc': '2026-08-31T01:00:00Z'}
+    assert runtime.persist_snapshot(later) == 'PRESERVED_EXISTING'
+    assert (runtime.OUTDIR / '2026-W36.json').read_bytes() == raw
+    assert json.loads(runtime.LATEST.read_text()) == later
 
 
 @pytest.mark.parametrize('defect', ['week_only', 'wrong_contract', 'authority', 'bool_type', 'empty_sensors',

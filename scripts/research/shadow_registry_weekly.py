@@ -74,6 +74,10 @@ def entry_evaluator_binding(sensor):
                 x = row.get(key)
                 if key not in row or (x is not None and (type(x) not in (int, float) or not math.isfinite(x))):
                     valid = False
+                if matured == 0 and x is not None:
+                    valid = False
+                if type(matured) is int and matured > 0 and key != 'matched_top100_mean_return_pct' and x is None:
+                    valid = False
     if not valid:
         result['reason'] = 'EVALUATOR_OUTPUT_CONTRACT_INVALID'
         return result, None
@@ -240,19 +244,29 @@ def persist_snapshot(out):
     body = json.dumps(out, indent=2, sort_keys=True, allow_nan=False) + '\n'
     OUTDIR.mkdir(parents=True, exist_ok=True)
     weekly_path = OUTDIR / (out['week'] + '.json')
+    weekly_temporary = None
     try:
-        with weekly_path.open('x') as fh:
+        # Link a fully flushed file into place: atomic and never replaces history.
+        with tempfile.NamedTemporaryFile(mode='w', dir=OUTDIR, delete=False) as fh:
+            weekly_temporary = Path(fh.name)
             fh.write(body)
-        disposition = 'CREATED'
-    except FileExistsError:
-        existing = load_json(weekly_path)
+            fh.flush()
+            os.fsync(fh.fileno())
         try:
-            validate_snapshot(existing)
-            if existing['week'] != out['week']:
-                raise ValueError('existing week mismatch')
-        except ValueError as exc:
-            raise ValueError('existing weekly snapshot invalid; preserved without replacement') from exc
-        disposition = 'PRESERVED_EXISTING'
+            os.link(weekly_temporary, weekly_path)
+            disposition = 'CREATED'
+        except FileExistsError:
+            existing = load_json(weekly_path)
+            try:
+                validate_snapshot(existing)
+                if existing['week'] != out['week']:
+                    raise ValueError('existing week mismatch')
+            except ValueError as exc:
+                raise ValueError('existing weekly snapshot invalid; preserved without replacement') from exc
+            disposition = 'PRESERVED_EXISTING'
+    finally:
+        if weekly_temporary is not None:
+            weekly_temporary.unlink(missing_ok=True)
     LATEST.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.NamedTemporaryFile(mode='w', dir=LATEST.parent, delete=False) as fh:
         temporary = Path(fh.name)
