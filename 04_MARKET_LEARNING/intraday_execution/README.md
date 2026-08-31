@@ -1,14 +1,29 @@
 # Intraday Execution Research Layer
 
-Research-only timing layer for an already-established market regime.
+Research-only timing and calibration layer for forward observation inside the existing framework.
 
 ## Purpose
-This layer does not decide whether altseason or rotation exists. It studies *when* execution may be unusually favorable or unfavorable inside an active regime, especially for:
-- staged top-ups
-- local overheat / trim watch
+This layer does not decide whether altseason, rotation or portfolio permission exists. It studies whether intraday evidence contains incremental timing information while the current Entry Signal Ledger remains in its explicit forward-only observation context.
+
+Current collection eligibility is deliberately narrow and non-binding:
+
+```text
+Entry Signal Ledger contract: ENTRY_SIGNAL_LATEST_v1
+entry state: WAIT
+promotion status: FORWARD_ONLY_NOT_PROMOTION_READY
+permits_active_state: false
+breadth entry permission: RETIRED_ZERO_WEIGHT
+hourly source: completed UTC 1H BTC/ETH/ETHBTC owner evidence
+```
+
+These conditions authorize research collection only. They do not authorize staged top-ups, trims, reloads, market-state changes, model promotion or portfolio execution. Missing or incompatible owner evidence fails closed to `REGIME_NOT_ACTIVE`.
+
+The layer studies candidate timing context including:
+- local expansion / overheat telemetry
 - pullback recognition
-- reload watch
-- continuation after a reset
+- reload-watch telemetry
+- continuation telemetry
+- calibrated BTC/ETH direction forecasts in the separately registered T12 shadow test
 
 ## Inputs
 The layer reuses existing GitHub evidence and does not require a new external paid data source:
@@ -19,11 +34,25 @@ The layer reuses existing GitHub evidence and does not require a new external pa
 - funding events
 - direct ETHBTC
 - Top100 breadth snapshot and constituent prices
-- Entry Signal Ledger state
+- Entry Signal Ledger state, promotion status and measurement-validity context
 - Adaptive Pullback Learning state
 
+## Research eligibility boundary
+The Entry Signal Ledger is an observation-context owner here, not a permission source for portfolio action.
+
+The intraday owner is collection-eligible only when all of the following remain true:
+- completed hourly BTC/ETH/ETHBTC evidence is available;
+- Entry Signal Ledger contract is current;
+- Entry Ledger state is `WAIT`;
+- promotion status is `FORWARD_ONLY_NOT_PROMOTION_READY`;
+- `permits_active_state=false`;
+- `breadth_entry_permission=RETIRED_ZERO_WEIGHT`;
+- both Entry Ledger and this layer remain non-canonical and non-executing.
+
+The retired `GRADUATED_ALTCOIN_TOPUP_ACTIVE` state is not an eligibility gate. Source-quality, proxy breadth, canonical-compatible breadth or Shadow Direction Confidence may not reactivate it indirectly. If canonical promotion governance changes later, this research eligibility contract fails closed until separately reviewed.
+
 ## Execution features
-For BTC and ETH it calculates:
+For BTC and ETH the owner calculates:
 - UTC-session VWAP and close deviation from VWAP
 - rolling relative hourly quote volume
 - previous-day high/low context
@@ -36,20 +65,42 @@ For BTC and ETH it calculates:
 
 For ETHBTC it calculates short momentum and 24h-position context.
 
-Top100 evidence is currently limited to snapshot breadth, equal-weight/median 24h return and constituent-price outcomes. The canonical archive does **not** currently provide historical per-coin intraday VWAP/opening-range data, so the layer must never claim that it does.
+Top100 evidence is currently limited to snapshot breadth, equal-weight/median 24h return and constituent-price context. Breadth is descriptive research context with zero execution weight. The canonical archive does **not** currently provide historical per-coin Top100 intraday VWAP/opening-range data, so the layer must never claim that it does.
 
-## Adaptive design
-The research states use empirical percentile ranks after a warmup period. They are not production thresholds and cannot trigger portfolio execution.
+## Adaptive research states
+The research labels use empirical percentile ranks after a warmup period. They are telemetry labels, not production thresholds and cannot trigger portfolio execution.
 
 Possible research labels:
 `LEARNING_WARMUP`, `REGIME_NOT_ACTIVE`, `NORMAL`, `MOMENTUM_EXPANSION_RESEARCH`, `OVERHEAT_WATCH_RESEARCH`, `LOCAL_TRIM_WATCH_RESEARCH`, `PULLBACK_ACTIVE_RESEARCH`, `RELOAD_WATCH_RESEARCH`, `CONTINUATION_RESEARCH`.
 
-Transition events are stored prospectively and later matured against matched constituent outcomes. A signal is not considered successful merely because it existed. Performance must be compared against HOLD and the existing pullback-learning ledger.
+A label may be observed and archived without becoming a valid outcome-bearing forward-test row.
+
+## Legacy execution-event lane
+The pre-existing `events/` lane is currently:
+
+```text
+FROZEN_PENDING_SEPARATE_REGISTERED_TEST
+new_event_creation: false
+outcome_maturation: false
+historical_rows_preserved: true
+```
+
+Historical event files remain immutable context. No new event creation or maturation is allowed until that distinct outcome question has its own governed Active Test Registry binding, benchmark, validator and scorer. This prevents ordinary research telemetry from silently becoming unregistered prospective evidence.
+
+## T12 Shadow Direction Confidence
+The BTC/ETH 1H/4H/24H direction-calibration lane is separately registered as:
+
+`INTRADAY_DIRECTION_CONFIDENCE_V1`
+
+It owns `UP`, `DOWN`, `NO_EDGE`, exact-horizon outcome maturation and empirical calibration. It remains shadow-only. Evidence agreement is not probability, numerical probability is suppressed during warmup, and 99% language is available only through the explicit high-assurance machine gate.
 
 ## Authority
 - research_only: true
 - portfolio_execution: false
 - canonical_market_state: false
 - automatic_rule_changes: false
+- breadth execution weight: zero
+- Shadow Direction Confidence regime/entry permission: none
+- legacy event outcome creation: frozen
 - historical findings ceiling: FORWARD_TEST
 - any promotion requires separate review
