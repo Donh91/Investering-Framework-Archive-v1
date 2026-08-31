@@ -1,7 +1,7 @@
 # Active Test Registry
 
 **Dato:** 2026-07-11  
-**Last updated:** 2026-08-26
+**Last updated:** 2026-08-31
 **Status:** CANONICAL  
 **Område:** forward tests / active evidence production  
 **Primary folder:** `06_RESEARCH_LAB/forward_tests/`  
@@ -353,6 +353,54 @@ authority: RESEARCH_ONLY_NON_CANONICAL
 ```
 
 T11 registration repairs the missing Active Test Registry binding for an already implemented research-only test. It does not create a new engine, change market semantics, authorize portfolio action or validate the tournament. The first valid row requires a separately merged P0 implementation, passing negative controls and a new future eligibility floor after post-repair owner evidence exists.
+
+## T12 - Intraday Direction Confidence Calibration
+
+```yaml
+test_id: INTRADAY_DIRECTION_CONFIDENCE_V1
+status: ACTIVE_REGISTRATION_REPAIR_WARMUP
+question: Can frozen shadow UP/DOWN/NO_EDGE forecasts for BTC and ETH at 1H, 4H and 24H become empirically calibrated and beat a no-skill probability baseline without look-ahead, false precision or portfolio authority?
+canonical_exception: EXISTING_INTRADAY_RESEARCH_OWNER_REGISTRATION_REPAIR_APPROVED_2026_08_31
+start: FIRST_CANONICAL_MAIN_RUN_AFTER_REGISTRATION_MERGE_AND_VALIDATOR_PASS
+prior_rows_status: PRE_REGISTRATION_QA_OR_INITIALIZATION_NOT_FORWARD_EVIDENCE
+required_fields:
+  - issued_at_utc
+  - source_candle_open_utc
+  - source_price_observation_utc
+  - source_observation_semantics
+  - horizon_hours
+  - due_at_utc
+  - target
+  - frozen_direction
+  - start_value
+  - evidence_agreement_pct
+  - calibration_key
+  - frozen_calibrated_probability_pct
+  - exact_due_end_value
+  - actual_direction
+  - result
+  - brier_score_when_probability_exists
+  - exact_due_evidence_source
+  - authority_shadow_only
+rows_total: 0_POST_REGISTRATION
+valid_source_rows: 0
+valid_outcome_rows: 0
+divergence_days: 0
+benchmark: NO_SKILL_DIRECTION_PROBABILITY_0_50_BRIER_0_25
+blocked_by: WARMUP_AND_POST_REGISTRATION_FORWARD_ROWS
+next_review: AFTER_20_INDEPENDENT_SCORED_OUTCOMES_OR_WEEKLY_STATUS
+promotion_condition: no automatic promotion; separate governance review only after sufficient independent prospective evidence shows calibration and Brier improvement versus the no-skill baseline across relevant target/horizon groups, with no causal-timing, lineage or authority failures; 99 percent wording remains separately gated by the owner high-assurance contract
+kill_condition: immediately suspend affected rows or the test on look-ahead, candle-open-as-observation leakage, later-price substitution, unregistered prospective rows, frozen-field mutation, probability display before its calibration gate, automatic signal reweighting or portfolio authority; retire or redesign groups that remain no-skill after strong prospective calibration maturity
+owner: INTRADAY_EXECUTION_RESEARCH_GOVERNANCE
+ledger_owner: 04_MARKET_LEARNING/intraday_execution/config.json
+prediction_ledger: 04_MARKET_LEARNING/intraday_execution/direction_predictions/
+outcome_ledger: 04_MARKET_LEARNING/intraday_execution/direction_outcomes/
+validator_path: scripts/intraday_execution/validate_direction_confidence.py
+scorer_path: scripts/intraday_execution/shadow_direction_confidence.py
+authority: SHADOW_ONLY_RESEARCH_NON_CANONICAL
+```
+
+T12 is a registration repair for the already implemented intraday execution research owner. It does not create a new engine, sensor, market state, action vocabulary, signal weight or portfolio authority. No branch-era QA artifact counts as prospective evidence. The first eligible row must be produced on canonical main after this registration and its validator are merged. `NO_EDGE` is an allowed abstention and is not counted as a directional hit. Evidence agreement is descriptive and may not be presented as calibrated probability.
 
 ---
 

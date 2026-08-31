@@ -1,0 +1,34 @@
+{
+  "allowed_change_scope": [
+    "scripts/intraday_execution/intraday_execution_research.py",
+    "04_MARKET_LEARNING/intraday_execution/config.json",
+    "04_MARKET_LEARNING/intraday_execution/PROTOCOL.md only if needed to keep documentation aligned with existing research-only authority",
+    "tests/intraday_execution/directly related intraday eligibility and authority tests",
+    "the open PR #665 branch only if fresh-state discovery confirms it is still the active overlapping owner and repository tooling supports safe continuation there"
+  ],
+  "branch": "agent/task-20260830-confidence-calibration",
+  "candidate_id": "codex-research-intraday-retired-entry-dependency-v1",
+  "candidate_path": "research/codex/intake/2026/08/codex-research-intraday-retired-entry-dependency-v1.json",
+  "candidate_sha256": "daba3c395d7fcc5b63d2400bc064c937dff101f287abc4d91ab369be40723e34",
+  "contract": "CODEX_RESEARCH_TRANSITION_RECEIPT_v1",
+  "forbidden_changes": [
+    "API budget",
+    "automatic promotion",
+    "canonical authority",
+    "market gates",
+    "model weights",
+    "new entry threshold",
+    "new policy semantics",
+    "parallel intraday engine",
+    "portfolio logic",
+    "re-enabling retired breadth predictive authority"
+  ],
+  "objective": "Resolve the now-dead dependency in the existing intraday execution research owner where classify() can leave REGIME_NOT_ACTIVE only when entry_state equals the retired GRADUATED_ALTCOIN_TOPUP_ACTIVE observer state. Preserve the 12 July retirement and current non-binding research authority. Reuse an existing explicit research-only eligibility/context contract if one already exists; otherwise fail closed and document the unresolved authority gap rather than inventing a new market gate, threshold or promotion rule. Coordinate with open PR #665 and stop as a clean no-op if that PR resolves the defect before remediation starts.",
+  "post_fix_gate": "NEGATIVE_RETIRED_ENTRY_AUTHORITY_TEST_PLUS_POSITIVE_NON_DEAD_RESEARCH_ELIGIBILITY_TEST_PLUS_MAIN_READBACK",
+  "pr_number": null,
+  "receipt_sha256": "eb3d5b323591e55894211a4ccd5350d07fd03053a4e85e9206794d6b781c047e",
+  "recorded_at_utc": "2026-08-31T02:17:44Z",
+  "signature": "6d300c1feb6603433dca",
+  "state": "IN_REMEDIATION",
+  "task_contract_sha256": "34fc229254d505781c6d5921ce1e1329937b3fa3348cfd1c00c40e0a0bcd3f6b"
+}

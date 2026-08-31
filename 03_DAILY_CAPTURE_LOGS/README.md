@@ -16,16 +16,15 @@ All three lanes are non-binding calibration evidence. They do not replace canoni
 
 ## Lane A — Hourly Sequence Capture
 
-Regular schedule, Europe/Copenhagen:
+Production schedule, UTC:
 
-- 11:55
-- 23:55
+- every hour at `:05 UTC`
 
-Final ISO-week catch-up:
+The schedule authority is `.github/workflows/hourly-sequence-capture.yml`; this README mirrors that production cadence and must not be treated as a separate schedule owner. UTC is deliberate because the underlying Binance/OKX 1h observations are UTC-aligned. Daylight-saving transitions must not skip or duplicate a source hour.
 
-- Monday 02:10 Europe/Copenhagen
+Each run requests the latest **26 completed hours**. Hourly materialization therefore gives roughly 25 hours of deterministic overlap. Rows are merged by UTC hour, so overlap improves resilience and can self-heal temporary missed runs without duplicating permanent observations.
 
-Each run requests the latest **26 completed hours**. The regular runs are approximately 12 hours apart, so the wider lookback creates enough deterministic overlap to reconstruct the sequence after one missed regular run. Rows are merged by UTC hour; overlaps improve resilience without duplicating observations.
+The owner CSV `timestamp_utc` is the **candle-open timestamp**. A row labelled `14:00Z` represents the completed 14:00-15:00 UTC candle, whose close becomes observable at 15:00Z. Consumers that make prospective forecasts must anchor their forecast clock to the observable close, not to the candle-open label.
 
 Permanent hourly fields include, where source data are available:
 
@@ -124,6 +123,8 @@ ETF evidence is settled-daily calibration evidence. It is intentionally **not ho
 
 Higher sampling frequency is not evidence quality by itself.
 
+Hourly Sequence is materialized hourly because its underlying price, ETH/BTC, spot-flow and derivatives series are genuinely 1h-granular and because prospective 1h research requires a newly completed source candle. That cadence does **not** authorize hourly sampling or synthetic updates for slower sources.
+
 The architecture intentionally does **not** synthesize hourly observations for slower data families:
 
 - CFGI remains on its source-appropriate 4h/daily cadence when enabled and is also available through canonical DATA PING.
@@ -147,13 +148,15 @@ A bounded permanent cold-lane checkpoint is retained once per day at the 06:13 a
 
 Permanent Git history is intentionally compact:
 
-- hourly CSV rows
-- hourly run manifests
+- hourly CSV rows merged by UTC hour
+- compact hourly run manifests
 - live-anchor compact indexes
 - one bounded daily raw checkpoint for ephemeral replay
 - settled ETF compact records
 - source health and lineage metadata
 - weekly enriched calibration artifacts
+
+The hourly schedule increases materialization frequency, not permanent row density: a given UTC source hour is still represented once in the merged daily CSV. Repeated raw source bundles remain temporary 14-day Actions artifacts.
 
 ## Weekly calibration bridge
 
@@ -168,7 +171,7 @@ Creates a useful near-end-of-week package for Sunday review, while explicitly re
 Runs after:
 
 - Sunday UTC week close at 24:00 UTC / 02:00 CPH during CEST;
-- the Monday 02:10 final Hourly Sequence catch-up;
+- the first post-close Hourly Sequence materialization at 00:05 UTC, which includes the completed 23:00-24:00 UTC closing candle through the 26-hour overlap window;
 - the separate final market-close package scheduled after week completion.
 
 The final build targets the **previous completed ISO week**, not the new Monday week.
