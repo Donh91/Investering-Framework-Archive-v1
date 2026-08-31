@@ -312,6 +312,106 @@ def test_complete_prediction_outcome_source_chain_passes(tmp_path):
     assert receipt["promotion_status"] == "NOT_PROMOTED_SHADOW_ONLY"
 
 
+@pytest.mark.parametrize("revision", ["99,99,PASS", "100,100,FAIL"])
+def test_later_source_revision_preserves_frozen_prediction_and_outcome(tmp_path, revision):
+    root, pred_path, outcome_path, _ = complete_ledger_fixture(tmp_path)
+    frozen = (pred_path.read_bytes(), outcome_path.read_bytes())
+    source = root / owner._hourly_source_path(datetime(2026, 8, 31, 10, tzinfo=timezone.utc))
+    source.write_text(source.read_text().replace("100,100,PASS", revision))
+    _commit_fixture_source(root, "2026-08-31T12:05:00Z")
+    receipt = validate_repository(root)
+    assert receipt["prediction_rows_validated"] == 1
+    assert receipt["outcome_rows_validated"] == 1
+    assert (pred_path.read_bytes(), outcome_path.read_bytes()) == frozen
+
+
+def test_frozen_start_cannot_be_changed_to_match_later_revision(tmp_path):
+    root, pred_path, _, _ = complete_ledger_fixture(tmp_path, with_outcome=False)
+    source = root / owner._hourly_source_path(datetime(2026, 8, 31, 10, tzinfo=timezone.utc))
+    source.write_text(source.read_text().replace("100,100,PASS", "99,99,PASS"))
+    _commit_fixture_source(root, "2026-08-31T12:05:00Z")
+    pred = json.loads(pred_path.read_text())
+    pred["horizons"]["1H"]["targets"]["BTC"]["start_value"] = 99.0
+    write_json(pred_path, pred)
+    with pytest.raises(ValidationError, match="PREDICTION_SOURCE_PRICE_UNVERIFIED"):
+        validate_repository(root)
+
+
+@pytest.mark.parametrize("merged", [False, True])
+def test_qa_commit_is_not_a_canonical_main_source_even_after_merge(tmp_path, merged):
+    import os, subprocess
+    root, _, _, _ = complete_ledger_fixture(tmp_path)
+    def git(*args):
+        return subprocess.check_output(["git", "-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", *args], cwd=root,
+                                       env={**os.environ, "GIT_AUTHOR_DATE": "2026-08-31T12:05:00Z", "GIT_COMMITTER_DATE": "2026-08-31T12:05:00Z"}, text=True, stderr=subprocess.DEVNULL).strip()
+    git("checkout", "-b", "qa-only")
+    git("commit", "--allow-empty", "-m", "synthetic QA source, never main publication")
+    qa_commit = git("rev-parse", "HEAD")
+    if merged:
+        git("checkout", "main")
+        git("merge", "--no-ff", "qa-only", "-m", "synthetic merge into main")
+        assert subprocess.run(["git", "merge-base", "--is-ancestor", qa_commit, "main"], cwd=root).returncode == 0
+    with pytest.raises(RuntimeError, match="SOURCE_COMMIT_NOT_ON_CANONICAL_MAIN"):
+        owner.exact_hourly_close_at_commit(root, qa_commit, datetime(2026, 8, 31, 11, tzinfo=timezone.utc), "BTC")
+
+
+def test_registration_must_have_its_config_and_binding_on_main(tmp_path):
+    root, pred_path, _, _ = complete_ledger_fixture(tmp_path, with_outcome=False)
+    (root / REGISTRY).write_text("# No T12 registration on this source commit\n")
+    unregistered = _commit_fixture_source(root, "2026-08-31T12:05:00Z")
+    (root / REGISTRY).write_text(registry_text())
+    registration = json.loads((root / owner.REGISTRATION).read_text())
+    registration["production_context"]["commit_sha"] = unregistered
+    registration["registered_at_utc"] = "2026-08-31T12:05:00Z"
+    registration["receipt_sha256"] = owner.content_hash({k: v for k, v in registration.items() if k != "receipt_sha256"})
+    write_json(root / owner.REGISTRATION, registration)
+    pred = json.loads(pred_path.read_text())
+    pred["registration_receipt_sha256"] = registration["receipt_sha256"]
+    write_json(pred_path, pred)
+    with pytest.raises(ValidationError, match="REGISTRATION_MAIN_SNAPSHOT_UNVERIFIED"):
+        validate_repository(root)
+
+
+def test_registration_cannot_be_backdated_before_main_publication(tmp_path):
+    root, _, _, _ = complete_ledger_fixture(tmp_path, with_outcome=False)
+    registration = json.loads((root / owner.REGISTRATION).read_text())
+    registration["registered_at_utc"] = "2026-08-31T10:00:00Z"
+    registration["receipt_sha256"] = owner.content_hash({k: v for k, v in registration.items() if k != "receipt_sha256"})
+    write_json(root / owner.REGISTRATION, registration)
+    with pytest.raises(ValidationError, match="CANONICAL_SOURCE_PUBLISHED_AFTER_REGISTRATION"):
+        validate_repository(root)
+
+
+def test_pr_code_change_can_read_unchanged_canonical_rows(tmp_path, monkeypatch):
+    import subprocess
+    from scripts.intraday_execution.validate_direction_confidence import validate_pr_ledger_boundary
+    root, _, _, _ = complete_ledger_fixture(tmp_path)
+    def git(*args):
+        return subprocess.check_output(["git", "-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", *args], cwd=root, text=True, stderr=subprocess.DEVNULL).strip()
+    git("add", owner.REGISTRATION.as_posix(), PREDICTIONS.as_posix(), OUTCOMES.as_posix())
+    git("commit", "-m", "synthetic canonical owner rows")
+    git("update-ref", "refs/heads/main", git("rev-parse", "HEAD"))
+    (root / "code.txt").write_text("synthetic code-only change\n")
+    git("add", "code.txt")
+    git("commit", "-m", "synthetic code PR")
+    monkeypatch.setenv("GITHUB_ACTIONS", "true")
+    monkeypatch.setenv("GITHUB_EVENT_NAME", "pull_request")
+    monkeypatch.setenv("GITHUB_WORKSPACE", str(root))
+    validate_pr_ledger_boundary(root)
+
+
+def test_pr_cannot_introduce_synthetic_rows_with_real_source_context(tmp_path, monkeypatch):
+    import subprocess
+    root, _, _, _ = complete_ledger_fixture(tmp_path)
+    monkeypatch.setenv("GITHUB_ACTIONS", "true")
+    monkeypatch.setenv("GITHUB_EVENT_NAME", "pull_request")
+    monkeypatch.setenv("GITHUB_WORKSPACE", str(root))
+    subprocess.run(["git", "add", owner.REGISTRATION.as_posix(), PREDICTIONS.as_posix(), OUTCOMES.as_posix()], cwd=root, check=True)
+    subprocess.run(["git", "-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "commit", "-m", "synthetic QA rows on branch"], cwd=root, check=True, capture_output=True)
+    with pytest.raises(ValidationError, match="BRANCH_FORWARD_LEDGER_MUTATION_FORBIDDEN"):
+        validate_repository(root)
+
+
 def _censored_fixture_row(row):
     keep = ("contract", "registered_test_id", "registration_receipt_sha256", "production_context",
             "prediction_path", "prediction_sha256", "issued_at_utc", "source_price_observation_utc",
@@ -330,9 +430,12 @@ def _commit_fixture_source(root, stamp="2026-08-31T11:05:00Z"):
     def git(*args):
         return subprocess.check_output(["git", "-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", *args], cwd=root, env={**os.environ, "GIT_AUTHOR_DATE": stamp, "GIT_COMMITTER_DATE": stamp}, stderr=subprocess.DEVNULL, text=True).strip()
     git("init", "-b", "fixture")
-    git("add", "03_DAILY_CAPTURE_LOGS/hourly")
+    git("add", "03_DAILY_CAPTURE_LOGS/hourly", CONFIG.as_posix(), REGISTRY.as_posix())
     git("commit", "--allow-empty", "-m", "synthetic source snapshot")
-    return git("rev-parse", "HEAD")
+    commit = git("rev-parse", "HEAD")
+    git("update-ref", "refs/heads/main", commit)
+    git("config", "remote.origin.url", root.as_uri())
+    return commit
 
 
 def test_arbitrary_censor_reason_cannot_remove_a_scored_outcome(tmp_path):

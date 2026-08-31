@@ -5,7 +5,9 @@ import argparse
 import hashlib
 import json
 import math
+import os
 import re
+import subprocess
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
@@ -69,7 +71,10 @@ def iter_json(root: Path) -> list[Path]:
 def validate_registry(root: Path) -> str:
     path = root / REGISTRY
     require(path.exists(), "ACTIVE_TEST_REGISTRY_MISSING")
-    text = path.read_text(encoding="utf-8")
+    return validate_registry_text(path.read_text(encoding="utf-8"))
+
+
+def validate_registry_text(text: str) -> str:
     bindings = [block for block in re.findall(r"```yaml\s*\n(.*?)```", text, re.S)
                 if re.search(rf"^test_id: {TEST_ID}\s*$", block, re.M)]
     require(len(bindings) == 1, "ACTIVE_TEST_REGISTRY_BINDING_MISSING_OR_AMBIGUOUS")
@@ -111,6 +116,15 @@ def validate_registration(root: Path, cfg: dict[str, Any], now: datetime) -> dic
     require(row.get("forward_eligibility") == "POST_REGISTRATION_CANONICAL_MAIN_ONLY", "REGISTRATION_FORWARD_RULE_INVALID")
     require(row.get("prior_rows_adopted") == 0, "REGISTRATION_PRIOR_ROWS_FORBIDDEN")
     validate_production_context(row.get("production_context") or {})
+    try:
+        commit = row["production_context"]["commit_sha"]
+        registered_at = parse_utc(row["registered_at_utc"])
+        registered_config = json.loads(owner.canonical_source_text(root, commit, CONFIG, published_by=registered_at))
+        registered_binding = validate_registry_text(owner.canonical_source_text(root, commit, REGISTRY, published_by=registered_at))
+    except (RuntimeError, ValueError) as exc:
+        raise ValidationError(f"REGISTRATION_MAIN_SNAPSHOT_UNVERIFIED:{exc}") from exc
+    require(row.get("configuration_sha256") == owner.content_hash(registered_config.get("shadow_direction_confidence") or {}), "REGISTRATION_CONFIGURATION_NOT_ON_MAIN")
+    require(row.get("registry_binding_sha256") == hashlib.sha256(registered_binding.encode()).hexdigest(), "REGISTRATION_BINDING_NOT_ON_MAIN")
     require(row.get("registry_binding_sha256") == registry_binding_hash(root), "REGISTRATION_REGISTRY_HASH_MISMATCH")
     require(row.get("configuration_sha256") == owner.content_hash(cfg), "REGISTRATION_CONFIG_HASH_MISMATCH")
     require(row.get("receipt_sha256") == owner.content_hash({k: v for k, v in row.items() if k != "receipt_sha256"}), "REGISTRATION_RECEIPT_HASH_MISMATCH")
@@ -327,7 +341,11 @@ def validate_linkage(root: Path, cfg: dict[str, Any], prediction_paths: list[Pat
         cutoffs.add(cutoff)
         for horizon in row["horizons"].values():
             for target, target_row in horizon["targets"].items():
-                evidence = owner._exact_hourly_close(cutoff, target, root=root)
+                try:
+                    issued = parse_utc(row["issued_at_utc"])
+                    evidence = owner.exact_hourly_close_at_commit(root, row["production_context"]["commit_sha"], cutoff, target, available_by=issued, observed_at=issued)
+                except RuntimeError as exc:
+                    raise ValidationError(f"PREDICTION_SOURCE_HISTORY_UNVERIFIED:{path}:{exc}") from exc
                 require(evidence is not None and evidence["close"] == target_row["start_value"], f"PREDICTION_SOURCE_PRICE_UNVERIFIED:{path}:{target}")
     seen: set[tuple[str, int, str]] = set()
     outcomes = [read_json(path) for path in outcome_paths]
@@ -383,9 +401,34 @@ def validate_linkage(root: Path, cfg: dict[str, Any], prediction_paths: list[Pat
                 require(target.get("confidence_status_at_issue") == expected["confidence_status"], f"PREDICTION_CALIBRATION_STATUS_DRIFT:{path}")
 
 
+def validate_pr_ledger_boundary(root: Path) -> None:
+    """A code PR may consume canonical rows but may not create or rewrite them."""
+    workspace = os.environ.get("GITHUB_WORKSPACE")
+    if (os.environ.get("GITHUB_ACTIONS") != "true"
+            or os.environ.get("GITHUB_EVENT_NAME") != "pull_request"
+            or not workspace or root != Path(workspace).resolve()):
+        return
+    paths = [path.as_posix() for path in (owner.REGISTRATION, PREDICTIONS, OUTCOMES, CALIBRATION, VALIDATION)]
+    try:
+        def git(*args):
+            result = subprocess.run(["git", *args], cwd=root, capture_output=True, text=True, timeout=60)
+            require(result.returncode == 0, "PR_LEDGER_DIFF_UNVERIFIED")
+            return result.stdout
+        # Read raw parents even in Actions' default shallow PR merge checkout.
+        parents = [line.split()[1] for line in git("cat-file", "-p", "HEAD").splitlines() if line.startswith("parent ")]
+        require(bool(parents), "PR_CANONICAL_BASE_UNVERIFIED")
+        owner.require_canonical_main_commit(root, parents[0])
+        changed = git("diff", "--name-only", parents[0], "--", *paths)
+        untracked = git("ls-files", "--others", "--exclude-standard", "--", *paths)
+        require(not changed.strip() and not untracked.strip(), "BRANCH_FORWARD_LEDGER_MUTATION_FORBIDDEN")
+    except (OSError, subprocess.TimeoutExpired, RuntimeError) as exc:
+        raise ValidationError(f"PR_LEDGER_BOUNDARY_UNVERIFIED:{exc}") from exc
+
+
 def validate_repository(root: Path, write_receipt: bool = False, *, now: datetime | None = None) -> dict[str, Any]:
     root = root.resolve()
     now = now or datetime.now(timezone.utc)
+    validate_pr_ledger_boundary(root)
     validate_registry(root)
     cfg = validate_config(root)
     prediction_paths = iter_json(root / PREDICTIONS)

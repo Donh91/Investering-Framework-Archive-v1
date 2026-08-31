@@ -7,6 +7,7 @@ import io
 import json
 import math
 import os
+import re
 import statistics
 import subprocess
 from datetime import datetime, timedelta, timezone
@@ -21,6 +22,7 @@ CALIBRATION = Path("04_MARKET_LEARNING/intraday_execution/DIRECTION_CALIBRATION.
 REGISTRATION = Path("04_MARKET_LEARNING/intraday_execution/DIRECTION_REGISTRATION.json")
 TEST_ID = "INTRADAY_DIRECTION_CONFIDENCE_V1"
 REPOSITORY = "Donh91/Investering-Framework-Archive-v1"
+_CANONICAL_MAIN_CACHE: dict[str, tuple[str, set[str]]] = {}
 
 
 def content_hash(value: Any) -> str:
@@ -35,6 +37,56 @@ def finite_number(value: Any) -> bool:
     return isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value)
 
 
+def require_canonical_main_commit(root: Path, commit: str) -> str:
+    """Verify publication on main's first-parent history, not a merged QA branch."""
+    root = root.resolve()
+    cached = _CANONICAL_MAIN_CACHE.get(str(root))
+    if cached and commit in cached[1]:
+        return cached[0]
+    def git(*args):
+        return subprocess.run(["git", *args], cwd=root, capture_output=True, text=True, timeout=60)
+    try:
+        remote = git("ls-remote", "--exit-code", "origin", "refs/heads/main")
+        match = re.fullmatch(r"([0-9a-f]{40})\s+refs/heads/main\s*", remote.stdout)
+        if remote.returncode or not match:
+            raise RuntimeError("CANONICAL_MAIN_REF_UNVERIFIED")
+        main = match.group(1)
+        shallow = git("rev-parse", "--is-shallow-repository")
+        exists = git("cat-file", "-e", main + "^{commit}").returncode == 0
+        if shallow.stdout.strip() == "true" or not exists:
+            options = ("--unshallow",) if shallow.stdout.strip() == "true" else ()
+            if git("fetch", "--quiet", "--no-tags", "--no-write-fetch-head", *options, "origin", main).returncode:
+                raise RuntimeError("CANONICAL_MAIN_HISTORY_UNAVAILABLE")
+        history = git("rev-list", "--first-parent", main)
+        if history.returncode:
+            raise RuntimeError("CANONICAL_MAIN_HISTORY_UNREADABLE")
+        commits = set(history.stdout.splitlines())
+        _CANONICAL_MAIN_CACHE[str(root)] = (main, commits)
+        if commit not in commits:
+            raise RuntimeError("SOURCE_COMMIT_NOT_ON_CANONICAL_MAIN")
+        return main
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        raise RuntimeError("CANONICAL_MAIN_AUTHORITY_UNAVAILABLE") from exc
+
+
+def canonical_source_text(root: Path, commit: str, path: Path, *, published_by: datetime) -> str:
+    require_canonical_main_commit(root, commit)
+    try:
+        stamp = subprocess.run(["git", "show", "-s", "--format=%ct", commit], cwd=root,
+                               capture_output=True, text=True, timeout=60)
+        if stamp.returncode or not stamp.stdout.strip().isdigit():
+            raise RuntimeError("CANONICAL_SOURCE_PUBLICATION_TIME_UNAVAILABLE")
+        if int(stamp.stdout.strip()) > published_by.timestamp():
+            raise RuntimeError("CANONICAL_SOURCE_PUBLISHED_AFTER_REGISTRATION")
+        result = subprocess.run(["git", "show", f"{commit}:{path.as_posix()}"], cwd=root,
+                                capture_output=True, text=True, timeout=60)
+        if result.returncode:
+            raise RuntimeError("CANONICAL_SOURCE_FILE_UNAVAILABLE")
+        return result.stdout
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        raise RuntimeError("CANONICAL_SOURCE_READ_FAILED") from exc
+
+
 def production_context() -> dict[str, Any] | None:
     """Only the existing canonical-main Actions writer can create forward rows."""
     if (
@@ -46,7 +98,7 @@ def production_context() -> dict[str, Any] | None:
     ):
         return None
     head = subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip()
-    subprocess.run(["git", "merge-base", "--is-ancestor", head, "origin/main"], check=True)
+    require_canonical_main_commit(Path("."), head)
     return {
         "repository": REPOSITORY,
         "ref": "refs/heads/main",
@@ -556,12 +608,13 @@ def exact_hourly_close_at_commit(
 
     A later legitimate backfill must neither erase a frozen censor nor make a
     MISS eligible for censorship. Git is the existing immutable source archive.
-    Shallow CI may fetch the one recorded commit into its object cache; no
+    Shallow CI may fetch canonical main history into its object cache; no
     checkout, tracked-file write, market API request or ref update is performed.
     """
     def git(*args):
         return subprocess.run(["git", *args], cwd=root, capture_output=True, text=True, timeout=60)
     try:
+        require_canonical_main_commit(root, commit)
         if git("cat-file", "-e", commit + "^{commit}").returncode:
             if git("fetch", "--quiet", "--no-tags", "--no-write-fetch-head", "--depth=1", "origin", commit).returncode:
                 raise RuntimeError("CENSOR_SOURCE_COMMIT_UNAVAILABLE")

@@ -439,9 +439,11 @@ def test_owner_runtime_freeze_retry_and_future_maturation_are_separate(tmp_path,
         def git(*args):
             return subprocess.check_output(["git", "-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", *args], env={**os.environ, "GIT_AUTHOR_DATE": stamp, "GIT_COMMITTER_DATE": stamp}, stderr=subprocess.DEVNULL, text=True).strip()
         git("init", "-b", "fixture")
-        git("add", "03_DAILY_CAPTURE_LOGS/hourly")
+        git("add", "03_DAILY_CAPTURE_LOGS/hourly", research.CONFIG.as_posix(), registry_path.as_posix())
         git("commit", "-m", "synthetic hourly publication")
         context["commit_sha"] = git("rev-parse", "HEAD")
+        git("update-ref", "refs/heads/main", context["commit_sha"])
+        git("config", "remote.origin.url", tmp_path.as_uri())
 
     for index in range(26):
         append_candle(source_close-timedelta(hours=26-index), 100.0)
