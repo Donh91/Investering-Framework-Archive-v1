@@ -208,6 +208,32 @@ MISSING_SEQUENCE_ISSUE:
   continuation_status: SOURCE_NEEDED
 ```
 
+## 2026-08-30 ex-top-10 dominance source-method audit
+
+Audit: `06_RESEARCH_LAB/audit_summaries/techdev_dominance_20260830/README.md`
+Machine verdict: `06_RESEARCH_LAB/audit_summaries/techdev_dominance_20260830/VERDICT.json`
+Original source: https://x.com/TechDev_52/status/2094062742386651556
+
+```yaml
+classification: SOURCE_BACKED_NOT_OUTCOME
+primary_verdict: REJECT
+verdict_scope: CURRENT_OPERATIONAL_ADMISSION_OF_UNSPECIFIED_SIGNAL
+economic_hypothesis_falsified: false
+original_signal_reproduction: DATA_BLOCKED
+annotated_cases: 3
+complete_historical_event_count: UNKNOWN
+numeric_lead_lag: NOT_EVALUABLE
+valid_outcomes_added: 0
+valid_forward_rows_added: 0
+policy_divergence_rows_added: 0
+original_horizon_and_invalidator: NOT_SPECIFIED
+new_test_or_runtime: false
+framework_or_portfolio_authority: ZERO
+reopen_condition: VERIFIED_ORIGINAL_SETTINGS_AND_CAUSAL_SOURCE_HISTORY
+```
+
+This is an audit discovery pointer, not a scored or forward-eligible ledger row. It does not update historical aggregate row counts. The accompanying independently sourced S&P/BTC appendix is exploratory historical research and does not score TechDev, reopen Round 1/2 or inspect Round 3 values. Retain original-claim uncertainty; do not backdate the August publication to the March chart annotation.
+
 ---
 
 ## Weighting rule
