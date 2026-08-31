@@ -1,0 +1,27 @@
+{
+  "candidate_id": "codex-research-pullback-learning-retired-entry-dependency-v1",
+  "candidate_sha256": "451c101ecb1d903c8f15d03112dd13b9e6e31eab2fd62e86c4038c8ada099119",
+  "contract": "CODEX_RESEARCH_COMPLETION_RECEIPT_v1",
+  "execution_quality": {
+    "contract": "CODEX_EXECUTION_QUALITY_v1",
+    "evidence": [],
+    "failure_attribution": [],
+    "metrics": {},
+    "telemetry_status": "UNAVAILABLE"
+  },
+  "merge_commit_sha": "0d8e0faf5ea8a30f3e276f8a30e27f9581935aaa",
+  "post_fix_gate": "PULLBACK_LIVENESS_POSITIVE_CONTROL_PLUS_RETIRED_ENTRY_NEGATIVE_CONTROL_PLUS_AUTHORITY_FIREWALL_PASS_PLUS_MAIN_READBACK",
+  "pr_number": 678,
+  "receipt_sha256": "cdba732fc5322cb79dbab84ea72dbae6adde4b435f34b61914f480d25aa6b14d",
+  "signature": "6574d30a3f1e5cbf9e4d",
+  "status": "VERIFIED",
+  "task_contract_sha256": "94777a6e266839c2f4805d5d41a8b0518f87dc72e3440b21fefd94421dce51dd",
+  "verification_evidence": [
+    "CLEAN_NOOP_SUPERSEDED_BY_APPROVED_SUSPENSION: framework-owner decision #674 and merged implementation #678 remove the retired Entry dependency without inventing eligibility. No additional code changes.",
+    "research/codex/completions/codex-research-pullback-learning-suspension-binding-v1.json: verified completion 0be6fe3c5c6104192dd813a36fa66aaa3ec3fe0a0c2cd5f1916c384fa0fbf40a; current execution state RESOLVED",
+    "research/codex/transitions/6574d30a3f1e5cbf9e4d.json: current writer-generated transition bf9857fdca4c43c3bf578058b8e76a4dbb46dc882f349557551b0eeed59ebd55 merged via #680; controller recognizes IN_REMEDIATION",
+    "Main 9c398739a36a7930ebcf9e20ab5997742f9b02c4 readback: all 29 tests/pullback_learning tests pass, including positive observation/statistics liveness and negative retired Entry, proxy breadth, T12/direction confidence, classification, episode-creation and maturation controls",
+    "https://github.com/Donh91/Investering-Framework-Archive-v1/pull/678: fresh exact-head Codex review clean; all four CI gates green; merged code preserves original observations/episodes. First scheduled production run is tracked separately."
+  ],
+  "verified_at_utc": "2026-08-31T03:19:19Z"
+}
