@@ -1,0 +1,384 @@
+{
+  "contract": "AUDIT_POST_MERGE_VERIFICATION_v1",
+  "premerge_binding_snapshot_sha": "c15794d892b92be43e1f8e5eb0a8de315aa1a26d",
+  "patch_queue_state_and_predicted_merge_tree_scope": "INITIAL_PREMERGE_SNAPSHOT_NOT_CURRENT_EXECUTION_STATE_OR_ACTUAL_MERGE_TREE",
+  "recorded_at_utc": "2026-08-31T07:38:53.417655+00:00",
+  "tested_main_sha": "8ed01b7f97a4c1dcf363640c35414db4e3c4cbd1",
+  "authority": {
+    "purpose": "CODE_REMEDIATION_VERIFICATION_ONLY",
+    "framework_state_change": false,
+    "portfolio_action": false,
+    "prospective_evidence": false
+  },
+  "independent_review": {
+    "reviewer": "independent_review",
+    "separate_read_only_codex_agent": true,
+    "user_authorized": true,
+    "github_bot_approval_claimed": false,
+    "result": "NO_INTRODUCED_P0_P1_OR_MATERIAL_P2_FINDINGS",
+    "limitations": [
+      "Reviewer did not independently rerun entire testsuite, CI or production replay. Parent independently performed the main test and replay below."
+    ]
+  },
+  "patches": [
+    {
+      "pr": 684,
+      "head": "2e2a4c797159b1b6fe1b3b5a168e44898fc9fa92",
+      "base": "a71372f34c5245855caa2da5b7212edccb3cc5c7",
+      "head_tree": "13d88dd623f2c4a2614420d675c35aa6027f8ec5",
+      "candidate_id": "codex-research-audit-utc-validation-v1",
+      "signature": "c5c44d064aa1c7bcd318",
+      "receipt_sha256": "5fef903d72ac74e4f204bd79e2adcc10198f6ad09d06ae720fd371a943154ed5",
+      "candidate_hash": "6d568d7c596a60da665b5b7e845ff1242bf5da52ed34232707278db5a0cb7b82",
+      "task_hash": "810e04b6fa6b94ca091dbdd3e1e7986de836fed668b324e6c0a6a4ced3950d62",
+      "queue_state": "CODEX_READY",
+      "changed_paths": [
+        "research/codex/transitions/c5c44d064aa1c7bcd318.json",
+        "scripts/evidence_lifecycle/test_validate_lifecycle_receipt.py",
+        "scripts/evidence_lifecycle/validate_lifecycle_receipt.py",
+        "tests/learning/test_audit_lifecycle_timestamps.py"
+      ],
+      "scope": "PASS",
+      "predicted_merge_tree": "40522412c0cd18ddd782102ad1c1e34f844798d2",
+      "merged_pr": 684,
+      "merge_sha": "0ef2e7c2c8462e78d63fd297eab8edcbb5d8d08e",
+      "postmerge_comment_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/pull/684#issuecomment-5475267763",
+      "reviewer_tests_passed": 25,
+      "reviewer_subtests_passed": 0
+    },
+    {
+      "pr": 685,
+      "head": "1dd5e108f72ebbb5364696a973c54cb3a0af994a",
+      "base": "8b7e71ae00fa075e94e15e64e1805f893b1e00e8",
+      "head_tree": "db3864d77446b778de11bb5b6d12d7a0d81f9bbf",
+      "candidate_id": "codex-research-audit-entry-integrity-v1",
+      "signature": "a5c6723d706bb2f703bb",
+      "receipt_sha256": "b41bb7073ffda96c06e5d49270a8dfd7f0c144e1a3226a18040a39a891def1c1",
+      "candidate_hash": "d2e48f4e571cfa955bc0fda720262ee0836a00632ccdfd3f70157b1598b73040",
+      "task_hash": "ba7f8dd731a3e085220e4cc63c8fbf1c6b0f27aaa7c0057a9fa366c669c584a9",
+      "queue_state": "CODEX_READY",
+      "changed_paths": [
+        "04_MARKET_LEARNING/entry_signals/README.md",
+        "research/codex/transitions/a5c6723d706bb2f703bb.json",
+        "scripts/entry_signal/entry_signal_ledger.py",
+        "tests/learning/test_audit_entry_integrity.py",
+        "tests/learning/test_entry_signal_measurement_validity.py"
+      ],
+      "scope": "PASS",
+      "predicted_merge_tree": "20bc245467779bd50803554c0fa2541b9dd6a92a",
+      "merged_pr": 685,
+      "merge_sha": "891b6aecf712a8faf4f582572915fe6a409f1c50",
+      "postmerge_comment_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/pull/685#issuecomment-5475267913",
+      "reviewer_tests_passed": 32,
+      "reviewer_subtests_passed": 0
+    },
+    {
+      "pr": 686,
+      "head": "fbbf0425416fc137a14efa91139310003d4d48a2",
+      "base": "8b7e71ae00fa075e94e15e64e1805f893b1e00e8",
+      "head_tree": "f72ac071641038924694a89427e5ab3218d3e89c",
+      "candidate_id": "codex-research-audit-etf-adapter-v1",
+      "signature": "ebaa23067c15f9617f44",
+      "receipt_sha256": "e8d8c3aa8d319e722d175d004df58b998bce9a47a6d5a4bc3567117f731115f4",
+      "candidate_hash": "7856fd58befbd85a7a12a79f17693db2aa0a5a5a1facca9c35eb6b50fc3b0d05",
+      "task_hash": "97cee518ff4614f8141999d3a2f5eaaef846bd16301365fb40f9476c55f9b934",
+      "queue_state": "CODEX_READY",
+      "changed_paths": [
+        "research/codex/transitions/ebaa23067c15f9617f44.json",
+        "scripts/experiments/etf_absorption_transmission_v1.py",
+        "tests/experiments/test_etf_absorption_transmission_v1.py"
+      ],
+      "scope": "PASS",
+      "predicted_merge_tree": "85a41a86a5fd8e6721d2f73b981089e3fc0fb4f7",
+      "merged_pr": 692,
+      "merge_sha": "8ca1bb7a7d0928b2af9c0f48f2dd369700e52925",
+      "postmerge_comment_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/pull/692#issuecomment-5475268020",
+      "reviewer_tests_passed": 15,
+      "reviewer_subtests_passed": 18
+    },
+    {
+      "pr": 689,
+      "head": "fcb61b3bc266374f639ad0633ad3309884bbbaaa",
+      "base": "52bfcb2cb4a21c9072ce6cff10dd93153d7ebd6d",
+      "head_tree": "00ae088234fdb9751007afae6c6736f90fb02f2d",
+      "candidate_id": "codex-research-audit-weekly-evidence-v1",
+      "signature": "b53fa52dc306023f3a12",
+      "receipt_sha256": "905efd9e0cc6f068d181b94753871b51997156809ac6722f9e2d1b48f01343f1",
+      "candidate_hash": "d97c27ca4a78180a9bd91e5f8aa32b8e483885db4f9f729e52f3a3b35d4fb1db",
+      "task_hash": "d70d823c1e8f694403111bb721f21186229b5970bd2981ee684afea33cd5915c",
+      "queue_state": "CODEX_READY",
+      "changed_paths": [
+        "research/codex/transitions/b53fa52dc306023f3a12.json",
+        "scripts/api_agent/build_weekly_calibration_context.py",
+        "scripts/daily_capture/build_weekly_calibration.py",
+        "tests/api_agent/test_weekly_calibration_context_v4.py",
+        "tests/daily_capture/test_audit_weekly_ingestion.py",
+        "tests/experiments/test_weekly_experiment_context.py"
+      ],
+      "scope": "PASS",
+      "predicted_merge_tree": "c9cac2c0ca64f16ed2f657f9e44f287da2fe0016",
+      "merged_pr": 693,
+      "merge_sha": "40aeb34697f4174abfaeb599eeb667efefc1b3e4",
+      "postmerge_comment_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/pull/693#issuecomment-5475268156",
+      "reviewer_tests_passed": 14,
+      "reviewer_subtests_passed": 18
+    },
+    {
+      "pr": 690,
+      "head": "252ba54d5bc2ffe39ce8889a311d3c3e243a7bca",
+      "base": "3a23292c2a76f3ba0fc2926e091898a0c404e525",
+      "head_tree": "8115101544d6f8a0027bc9a5504c9006aa7878f3",
+      "candidate_id": "codex-research-audit-hourly-measurements-v1",
+      "signature": "eb484eb56d9d714de993",
+      "receipt_sha256": "a28a23fa6f16e76bc1b6c0ff7173f2b9008d019898417b70fb802ad4fd3df654",
+      "candidate_hash": "cb2383d34bafea2597f9e2248164042ce76f35cb3b5e3a6d7d5a291ee700afe6",
+      "task_hash": "40f2463a92ffe87d6b420208882578118e4b7bdea3dca2e62caae14a64d0d04b",
+      "queue_state": "CODEX_READY",
+      "changed_paths": [
+        "research/codex/transitions/eb484eb56d9d714de993.json",
+        "scripts/daily_capture/build_capture_index.py",
+        "scripts/daily_capture/build_hourly_sequence.py",
+        "scripts/daily_capture/build_weekly_market_close_package.py",
+        "tests/daily_capture/test_audit_hourly_measurements.py",
+        "tests/daily_capture/test_weekly_market_close_endpoint.py"
+      ],
+      "scope": "PASS",
+      "predicted_merge_tree": "0840c77d569e5920b20d3aa92360fcd99906c085",
+      "merged_pr": 694,
+      "merge_sha": "7b29e006eb6f458e5105384fa78c849fb08f0c31",
+      "postmerge_comment_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/pull/694#issuecomment-5475268287",
+      "reviewer_tests_passed": 27,
+      "reviewer_subtests_passed": 0
+    },
+    {
+      "pr": 691,
+      "head": "cbb53f6202fc6224e3eadd13af007a97398910e8",
+      "base": "3a23292c2a76f3ba0fc2926e091898a0c404e525",
+      "head_tree": "99af75931698aff5fc04d55b94194f72007dd4ae",
+      "candidate_id": "codex-research-audit-current-test-contracts-v1",
+      "signature": "50b1e1fd5809ae36c2b6",
+      "receipt_sha256": "a461568ac0958d1c3e60185a8e4e8d388585394c754fe340e98336fa25caa1e2",
+      "candidate_hash": "68a9d54a0be8cd7fc8b1b75678d54984ee1809a341e24a32a5cfefb0bc7a30fd",
+      "task_hash": "baea4b14c12eec7e24b10f7931b150c77af1c069de57f38dd4a8383d1fe85b76",
+      "queue_state": "IN_REMEDIATION",
+      "changed_paths": [
+        "tests/daily_capture/test_weekly_market_close_package.py"
+      ],
+      "scope": "PASS",
+      "predicted_merge_tree": "0c9426bfc6cdb980c63f8c0d140316c4610dfdbd",
+      "merged_pr": 695,
+      "merge_sha": "8ed01b7f97a4c1dcf363640c35414db4e3c4cbd1",
+      "postmerge_comment_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/pull/695#issuecomment-5475268420",
+      "reviewer_tests_passed": 8,
+      "reviewer_subtests_passed": 0
+    }
+  ],
+  "main_tests": {
+    "passed": 1146,
+    "failed": 1,
+    "subtests_passed": 291,
+    "remaining_failure": "tests/daily_capture/test_cfgi_credit_efficiency.py::CfgiCreditEfficiencyTests::test_daily_tiered_fields",
+    "junit_sha256": "2c12516449e36a2a9f45483b892df00cb0a34a55601f47dd0a9837ff5e0588c0",
+    "complete_testsuite_green": false
+  },
+  "main_blob_verification": {
+    "observed_at_utc": "2026-08-31T07:33:42.332395+00:00",
+    "main_sha": "8ed01b7f97a4c1dcf363640c35414db4e3c4cbd1",
+    "verified_blobs": [
+      {
+        "pr": 684,
+        "path": "research/codex/transitions/c5c44d064aa1c7bcd318.json",
+        "git_blob": "d92267af17a756f3e030f06cef5875221ce197cd"
+      },
+      {
+        "pr": 684,
+        "path": "scripts/evidence_lifecycle/test_validate_lifecycle_receipt.py",
+        "git_blob": "1607f4c1b275246b7d92c3f49d1135594a7411db"
+      },
+      {
+        "pr": 684,
+        "path": "scripts/evidence_lifecycle/validate_lifecycle_receipt.py",
+        "git_blob": "78666b3e8613b1f45d86d6388a189714222168a7"
+      },
+      {
+        "pr": 684,
+        "path": "tests/learning/test_audit_lifecycle_timestamps.py",
+        "git_blob": "c3c6cbc0c6fc79783d391575e1cdf2a3e24303e2"
+      },
+      {
+        "pr": 685,
+        "path": "04_MARKET_LEARNING/entry_signals/README.md",
+        "git_blob": "ab19ea0c67807fcdb6f22d37547947f47043b824"
+      },
+      {
+        "pr": 685,
+        "path": "research/codex/transitions/a5c6723d706bb2f703bb.json",
+        "git_blob": "ead140e3b9028236138e984b92b62fabfc682021"
+      },
+      {
+        "pr": 685,
+        "path": "scripts/entry_signal/entry_signal_ledger.py",
+        "git_blob": "a8b221fc569ae1ddeaaf1f1767b3d13f0e5ac195"
+      },
+      {
+        "pr": 685,
+        "path": "tests/learning/test_audit_entry_integrity.py",
+        "git_blob": "59a1e05782b515408ca59c695ba4777cafa952ed"
+      },
+      {
+        "pr": 685,
+        "path": "tests/learning/test_entry_signal_measurement_validity.py",
+        "git_blob": "39fa7146c35df620f5d64e421d981ebd6e7cc692"
+      },
+      {
+        "pr": 686,
+        "path": "research/codex/transitions/ebaa23067c15f9617f44.json",
+        "git_blob": "a1440219683934c6db7efd61a23a7ec285c12458"
+      },
+      {
+        "pr": 686,
+        "path": "scripts/experiments/etf_absorption_transmission_v1.py",
+        "git_blob": "0cd4ea3a555339735223b910716174950ecb58ab"
+      },
+      {
+        "pr": 686,
+        "path": "tests/experiments/test_etf_absorption_transmission_v1.py",
+        "git_blob": "cbcbe956cc73ff468a1e535d8a791269d621d3e5"
+      },
+      {
+        "pr": 689,
+        "path": "research/codex/transitions/b53fa52dc306023f3a12.json",
+        "git_blob": "8cfe908d62f82ee8348922a0784216a7ab32227a"
+      },
+      {
+        "pr": 689,
+        "path": "scripts/api_agent/build_weekly_calibration_context.py",
+        "git_blob": "c4ae048e02d9af259d944b278f3e4ff2f91376cd"
+      },
+      {
+        "pr": 689,
+        "path": "scripts/daily_capture/build_weekly_calibration.py",
+        "git_blob": "48d97305dc94fd49384faed57491289fa748549e"
+      },
+      {
+        "pr": 689,
+        "path": "tests/api_agent/test_weekly_calibration_context_v4.py",
+        "git_blob": "8c566c532e3e7c77243f3059116ed97664192f0b"
+      },
+      {
+        "pr": 689,
+        "path": "tests/daily_capture/test_audit_weekly_ingestion.py",
+        "git_blob": "ad62fa931dec58b09799b5de68e6db9629a6f725"
+      },
+      {
+        "pr": 689,
+        "path": "tests/experiments/test_weekly_experiment_context.py",
+        "git_blob": "4b13b40d6d4a25af2465f6f04f3f8f6b694de7f3"
+      },
+      {
+        "pr": 690,
+        "path": "research/codex/transitions/eb484eb56d9d714de993.json",
+        "git_blob": "819343339b5d2fb0088a0e4619f17c40b0f2a6b8"
+      },
+      {
+        "pr": 690,
+        "path": "scripts/daily_capture/build_capture_index.py",
+        "git_blob": "f3de370b71695643fa8225931a5b955423c33c9d"
+      },
+      {
+        "pr": 690,
+        "path": "scripts/daily_capture/build_hourly_sequence.py",
+        "git_blob": "a828d355724575cdedaccfe01700da44fbd64048"
+      },
+      {
+        "pr": 690,
+        "path": "scripts/daily_capture/build_weekly_market_close_package.py",
+        "git_blob": "e3343ee06b76283b2195d65d7b2a766eb84c8fbe"
+      },
+      {
+        "pr": 690,
+        "path": "tests/daily_capture/test_audit_hourly_measurements.py",
+        "git_blob": "00f35451c6f78203532cc339dfb42f7b84d1fee9"
+      },
+      {
+        "pr": 690,
+        "path": "tests/daily_capture/test_weekly_market_close_endpoint.py",
+        "git_blob": "34ffbede6e520fb7748db611c74f0fcb399392e9"
+      },
+      {
+        "pr": 691,
+        "path": "tests/daily_capture/test_weekly_market_close_package.py",
+        "git_blob": "c4607d2cffa4447fadad5ae984a0be279dfa953e"
+      }
+    ],
+    "all_reviewed_blobs_match": true,
+    "cfgi_cadence_guard_unchanged": true
+  },
+  "post_merge_replays": {
+    "contract": "AUDIT_POST_MERGE_REPLAY_v1",
+    "tested_main_sha": "8ed01b7f97a4c1dcf363640c35414db4e3c4cbd1",
+    "recorded_at_utc": "2026-08-31T07:36:38.417057+00:00",
+    "mode": "READ_ONLY_ARCHIVE_AND_ISOLATED_TEMP_OUTPUT",
+    "provider_requests": 0,
+    "canonical_production_writes": false,
+    "prospective_evidence_created": false,
+    "tracks": {
+      "utc": {
+        "count": 142,
+        "valid": 142,
+        "bytes_unchanged": true
+      },
+      "etf": {
+        "source_files": 28,
+        "eligible": 23,
+        "excluded": 4,
+        "asof_session": "2026-08-28",
+        "cutoff_utc": "2026-08-31T00:00:00Z",
+        "bytes_unchanged": true,
+        "authority": "SHADOW_RESEARCH_INPUT_ONLY"
+      },
+      "weekly": {
+        "outcomes_loaded": 118,
+        "source_files": 277,
+        "bindings_validated_by_owner": true,
+        "diagnostics": [],
+        "scoring_performed": false,
+        "bytes_unchanged": true
+      },
+      "entry": {
+        "source_files": 27,
+        "existing_horizon_payloads_preserved": 20,
+        "state": "WAIT",
+        "portfolio_execution": false,
+        "canonical_action_authority": "NONE",
+        "bytes_unchanged": true,
+        "output_location": "DISCARDED_TEMP_COPY_NOT_PRODUCTION"
+      },
+      "hourly": {
+        "source_files": 24,
+        "results": [
+          {
+            "symbol": "btc",
+            "rows": 168,
+            "unique_hours": 168
+          },
+          {
+            "symbol": "eth",
+            "rows": 168,
+            "unique_hours": 168
+          }
+        ],
+        "bytes_unchanged": true,
+        "mode": "ARCHIVE_CSV_RECONSTRUCTION_NOT_PROVIDER_RETRIEVAL",
+        "limitation": "ETHBTC per-hour volume unavailable in CSV, not invented. Three-symbol CLI is covered by deterministic tests and free-source CI smoke."
+      }
+    }
+  },
+  "limits": [
+    "Preexisting invalid DailyDirector push workflow remains unresolved; successful PR checks are not global Actions health.",
+    "Original draft PRs686/689/690/691 were closed and replaced by692/693/694/695 on identical branches/commits after the mark-ready connector failed. No source or transition bytes changed.",
+    "Test-contract task50b remains partial: CFGI cadence mismatch and CI coverage are still open.",
+    "Shadow Registry #676 still requires verified external Vault route before workflow changes. PR665-specific Vault exception is not reused.",
+    "No natural post-merge Intraday production or matured1H outcome is claimed."
+  ]
+}
