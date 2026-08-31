@@ -152,10 +152,46 @@ def build_snapshot(cfg):
     }
 
 
+def research_context_eligibility(cfg, obs):
+    contract=cfg.get("research_eligibility") or {}
+    authority=cfg.get("authority") or {}
+    configured=contract.get("status")=="RESEARCH_ONLY_DATA_CONTEXT"
+    authority_ok=(
+        authority.get("research_only") is True
+        and authority.get("portfolio_execution") is False
+        and authority.get("canonical_market_state") is False
+        and authority.get("automatic_rule_changes") is False
+    )
+    source_ok=bool(obs.get("hourly_sequence_run_id")) and all(
+        isinstance((obs.get(asset) or {}).get("close"),(int,float))
+        for asset in ("btc","eth","ethbtc")
+    )
+    eligible=configured and authority_ok and source_ok
+    if not configured: reason="RESEARCH_ELIGIBILITY_CONTRACT_MISSING_OR_INVALID"
+    elif not authority_ok: reason="RESEARCH_AUTHORITY_BOUNDARY_INVALID"
+    elif not source_ok: reason="COMPLETED_HOURLY_PRICE_CONTEXT_INSUFFICIENT"
+    else: reason="ELIGIBLE_RESEARCH_DATA_CONTEXT_ONLY"
+    return {
+        "eligible":eligible,
+        "status":"ELIGIBLE_RESEARCH_CONTEXT" if eligible else "INELIGIBLE_FAIL_CLOSED",
+        "reason":reason,
+        "semantics":contract.get("eligibility_semantics"),
+        "source_owner":contract.get("required_source_owner"),
+        "entry_signal_state":obs.get("entry_state"),
+        "entry_signal_role":contract.get("entry_signal_role"),
+        "breadth_role":contract.get("breadth_role"),
+        "direction_confidence_role":contract.get("direction_confidence_role"),
+        "canonical_market_permission":False,
+        "portfolio_execution":False,
+    }
+
+
 def classify(cfg,recent,obs,prev_state):
     n=len(recent)
-    if obs.get("entry_state") != "GRADUATED_ALTCOIN_TOPUP_ACTIVE": return "REGIME_NOT_ACTIVE",{"observation_count":n}
-    if n < cfg["warmup_observations"]: return "LEARNING_WARMUP",{"observation_count":n,"minimum_required":cfg["warmup_observations"]}
+    eligibility=research_context_eligibility(cfg,obs)
+    base={"observation_count":n,"research_eligibility":eligibility}
+    if not eligibility["eligible"]: return "REGIME_NOT_ACTIVE",base
+    if n < cfg["warmup_observations"]: return "LEARNING_WARMUP",{**base,"minimum_required":cfg["warmup_observations"]}
     def hist(path):
         out=[]
         a,b=path
@@ -164,6 +200,7 @@ def classify(cfg,recent,obs,prev_state):
             if v is not None: out.append(v)
         return out
     metrics={
+      **base,
       "btc_vwap_rank":percentile_rank(hist(("btc","vwap_deviation_pct")),obs["btc"]["vwap_deviation_pct"]),
       "eth_vwap_rank":percentile_rank(hist(("eth","vwap_deviation_pct")),obs["eth"]["vwap_deviation_pct"]),
       "btc_rvol_rank":percentile_rank(hist(("btc","rolling_relative_quote_volume")),obs["btc"]["rolling_relative_quote_volume"]),
@@ -213,7 +250,6 @@ def mature_events(obs, now):
         e["status"]="MATURED_24H"; e["matured_at_utc"]=now.isoformat(); e["matched_constituent_count_24h"]=len(vals)
         e["median_matched_return_24h_pct"]=median(vals); e["mean_matched_return_24h_pct"]=mean(vals)
         write_json(p,e)
-
 def open_event(state,obs,now,prev_state):
     if state not in {"OVERHEAT_WATCH_RESEARCH","LOCAL_TRIM_WATCH_RESEARCH","RELOAD_WATCH_RESEARCH"}: return
     if prev_state==state: return
@@ -224,7 +260,6 @@ def open_event(state,obs,now,prev_state):
                   "previous_research_state":prev_state,"opened_at_utc":now.isoformat(),"price_observation_utc":obs["price_observation_utc"],
                   "snapshot":{k:v for k,v in obs.items() if k!="constituents"},"constituents":obs.get("constituents",{}),
                   "authority":{"research_only":True,"portfolio_execution":False,"automatic_rule_changes":False}})
-
 def event_summary(now):
     rows=[read_json(p) for p in event_paths()]; rows=[x for x in rows if x]
     matured=[x for x in rows if x.get("status")=="MATURED_24H"]
@@ -237,31 +272,49 @@ def event_summary(now):
     write_json(SUMMARY,out); return out
 
 
+def legacy_event_policy(cfg):
+    policy=cfg.get("legacy_execution_event_ledger") or {}
+    return {
+        "status":policy.get("status","FROZEN_UNSPECIFIED"),
+        "new_event_creation":policy.get("new_event_creation") is True,
+        "outcome_maturation":policy.get("outcome_maturation") is True,
+        "historical_rows_preserved":policy.get("historical_rows_preserved") is not False,
+        "reason":policy.get("reason"),
+        "authority":policy.get("authority"),
+    }
+
+
 def main():
     now=now_utc(); cfg=read_json(CONFIG)
     if not cfg or cfg.get("contract")!="INTRADAY_EXECUTION_RESEARCH_CONFIG_v1": raise RuntimeError("config missing/invalid")
     obs=build_snapshot(cfg); recent=recent_observations(cfg["trailing_observations"])
     prev_state=(read_json(STATE) or {}).get("research_state")
+    event_policy=legacy_event_policy(cfg)
     duplicate=bool(recent and recent[-1].get("price_observation_utc")==obs["price_observation_utc"])
     shadow=update_shadow_direction_confidence(obs,cfg,now,new_prediction=not duplicate)
     if duplicate:
-        mature_events(obs,now); summary=event_summary(now); latest=read_json(LATEST) or {}
+        if event_policy["outcome_maturation"]: mature_events(obs,now)
+        summary=event_summary(now); latest=read_json(LATEST) or {}
         latest["generated_at_utc"]=now.isoformat()
         latest["duplicate_price_observation_skipped"]=True
         latest["event_summary"]=summary
+        latest["legacy_execution_event_ledger"]=event_policy
         latest["shadow_direction_confidence"]=shadow
         latest.setdefault("data_ping_bridge",{})["shadow_direction_display_line"]=shadow["data_ping_bridge"]["display_line"]
         write_json(LATEST,latest); print(json.dumps(latest,sort_keys=True)); return
     state,evidence=classify(cfg,recent,obs,prev_state); obs["contract"]="INTRADAY_EXECUTION_OBSERVATION_v1"; obs["research_state"]=state; obs["adaptive_evidence"]=evidence
     ts=parse_utc(obs["price_observation_utc"]); write_json(OBS/f"{ts:%Y/%m/%d}/{ts:%Y%m%dT%H%M%SZ}.json",obs)
-    mature_events(obs,now); open_event(state,obs,now,prev_state); summary=event_summary(now)
+    if event_policy["outcome_maturation"]: mature_events(obs,now)
+    if event_policy["new_event_creation"]: open_event(state,obs,now,prev_state)
+    summary=event_summary(now)
     auth=cfg["authority"]
-    write_json(STATE,{"contract":"INTRADAY_EXECUTION_STATE_v1","updated_at_utc":now.isoformat(),"research_state":state,"previous_research_state":prev_state,"observation_count":len(recent)+1,"adaptive_evidence":evidence,"authority":auth})
+    write_json(STATE,{"contract":"INTRADAY_EXECUTION_STATE_v1","updated_at_utc":now.isoformat(),"research_state":state,"previous_research_state":prev_state,"observation_count":len(recent)+1,"adaptive_evidence":evidence,"legacy_execution_event_ledger":event_policy,"authority":auth})
     latest={"contract":"INTRADAY_EXECUTION_LATEST_v1","generated_at_utc":now.isoformat(),"research_state":state,"previous_research_state":prev_state,
             "market_snapshot":{k:v for k,v in obs.items() if k!="constituents"},"adaptive_evidence":evidence,"event_summary":summary,
+            "legacy_execution_event_ledger":event_policy,
             "shadow_direction_confidence":shadow,
             "data_ping_bridge":{
-                "display_line":f"EXECUTION RESEARCH: {state} | BTC vwap={obs['btc']['vwap_deviation_pct'] if obs['btc']['vwap_deviation_pct'] is not None else 'NA'}% | ETH vwap={obs['eth']['vwap_deviation_pct'] if obs['eth']['vwap_deviation_pct'] is not None else 'NA'}% | breadth={(obs['breadth']['advance_ratio'] or 0)*100:.0f}% | sample={len(recent)+1}",
+                "display_line":f"EXECUTION RESEARCH: {state} | eligibility={evidence.get('research_eligibility',{}).get('status','UNKNOWN')} | BTC vwap={obs['btc']['vwap_deviation_pct'] if obs['btc']['vwap_deviation_pct'] is not None else 'NA'}% | ETH vwap={obs['eth']['vwap_deviation_pct'] if obs['eth']['vwap_deviation_pct'] is not None else 'NA'}% | breadth={(obs['breadth']['advance_ratio'] or 0)*100:.0f}% | sample={len(recent)+1}",
                 "shadow_direction_display_line":shadow["data_ping_bridge"]["display_line"],
             },
             "authority":auth}
