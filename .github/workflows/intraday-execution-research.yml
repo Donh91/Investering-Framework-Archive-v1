@@ -52,12 +52,19 @@ jobs:
           assert d['explicit_limitations']['top100_opening_range']=='UNAVAILABLE_FROM_CURRENT_CANONICAL_ARCHIVE'
 
           eligibility=d['research_eligibility']
-          assert eligibility['status']=='RESEARCH_ONLY_DATA_CONTEXT'
-          assert eligibility['eligibility_semantics']=='DATA_AVAILABLE_FOR_RESEARCH_NOT_MARKET_PERMISSION'
-          assert eligibility['entry_signal_role']=='LEGACY_CONTEXT_ONLY_NO_ELIGIBILITY_OR_PERMISSION'
+          assert eligibility['status']=='ENTRY_LEDGER_FORWARD_ONLY_OBSERVATION_CONTEXT_v1'
+          assert eligibility['eligibility_semantics']=='COLLECTION_ELIGIBILITY_ONLY_NOT_MARKET_PERMISSION'
+          assert eligibility['required_source_owner']=='HOURLY_SEQUENCE_COMPLETED_UTC_1H'
+          assert eligibility['required_entry_contract']=='ENTRY_SIGNAL_LATEST_v1'
+          assert eligibility['required_entry_state']=='WAIT'
+          assert eligibility['required_promotion_status']=='FORWARD_ONLY_NOT_PROMOTION_READY'
+          assert eligibility['required_permits_active_state'] is False
+          assert eligibility['required_breadth_entry_permission']=='RETIRED_ZERO_WEIGHT'
+          assert eligibility['entry_signal_role']=='FORWARD_ONLY_OBSERVATION_CONTEXT_NO_ELIGIBILITY_FROM_LEGACY_ACTIVE'
           assert eligibility['breadth_role']=='DESCRIPTIVE_RESEARCH_CONTEXT_ZERO_EXECUTION_WEIGHT'
           assert eligibility['direction_confidence_role']=='SHADOW_DIAGNOSTIC_ONLY_NO_REGIME_OR_ENTRY_PERMISSION'
           assert eligibility['canonical_market_permission_required'] is False
+          assert eligibility['fail_closed_on_missing_or_incompatible_entry_owner'] is True
 
           legacy=d['legacy_execution_event_ledger']
           assert legacy['status']=='FROZEN_PENDING_SEPARATE_REGISTERED_TEST'
@@ -96,9 +103,15 @@ jobs:
           assert a['automatic_rule_changes'] is False
           assert 'display_line' in d['data_ping_bridge']
           eligibility=(d.get('adaptive_evidence') or {}).get('research_eligibility') or {}
+          assert eligibility.get('status') in {'ELIGIBLE_RESEARCH_CONTEXT','INELIGIBLE_FAIL_CLOSED'}
           assert eligibility.get('canonical_market_permission') is False
           assert eligibility.get('portfolio_execution') is False
-          assert eligibility.get('entry_signal_role')=='LEGACY_CONTEXT_ONLY_NO_ELIGIBILITY_OR_PERMISSION'
+          assert eligibility.get('entry_signal_role')=='FORWARD_ONLY_OBSERVATION_CONTEXT_NO_ELIGIBILITY_FROM_LEGACY_ACTIVE'
+          if eligibility.get('status')=='ELIGIBLE_RESEARCH_CONTEXT':
+              assert eligibility.get('entry_signal_state')=='WAIT'
+              assert eligibility.get('entry_promotion_status')=='FORWARD_ONLY_NOT_PROMOTION_READY'
+              assert eligibility.get('entry_permits_active_state') is False
+              assert eligibility.get('breadth_entry_permission')=='RETIRED_ZERO_WEIGHT'
           legacy=d['legacy_execution_event_ledger']
           assert legacy['status']=='FROZEN_PENDING_SEPARATE_REGISTERED_TEST'
           assert legacy['new_event_creation'] is False
