@@ -2,10 +2,13 @@ name: Hourly Sequence Capture
 
 on:
   schedule:
-    # Materialize each newly completed UTC 1H owner candle shortly after close.
+    # Materialize each newly completed UTC 1H owner candle after close. Minute 17
+    # deliberately avoids the GitHub Actions top-of-hour congestion window that
+    # caused delayed/missed :05 deliveries on 2026-08-31. The separate watchdog
+    # owns recovery if this primary scheduled event is delayed or dropped.
     # UTC is deliberate: the underlying Binance/OKX hourly candles are UTC-aligned,
     # so DST transitions must not skip or duplicate a source hour.
-    - cron: '5 * * * *'
+    - cron: '17 * * * *'
       timezone: 'UTC'
   workflow_dispatch:
 
