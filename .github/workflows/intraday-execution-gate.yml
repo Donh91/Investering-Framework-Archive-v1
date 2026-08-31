@@ -8,9 +8,11 @@ on:
       - 'scripts/intraday_execution/**'
       - 'scripts/daily_capture/build_hourly_sequence.py'
       - 'tests/learning/test_intraday_execution_row_shape.py'
+      - 'tests/learning/test_direction_confidence_validator.py'
       - '.github/workflows/hourly-sequence-capture.yml'
       - '.github/workflows/intraday-execution-research.yml'
       - '.github/workflows/intraday-execution-gate.yml'
+      - '06_RESEARCH_LAB/forward_tests/2026-07-10__active-test-registry__canonical.md'
       - '06_RESEARCH_LAB/historical_altseason_pullback_v1/INTRADAY_EXECUTION_COWORK_ADDENDUM.md'
 
 permissions:
@@ -27,13 +29,19 @@ jobs:
           python-version: '3.12'
       - name: Install focused test dependency
         run: python -m pip install --disable-pip-version-check 'pytest>=8,<9'
-      - name: Compile intraday and hourly owner engines
+      - name: Compile intraday, validator and hourly owner engines
         run: |
           python -m py_compile scripts/daily_capture/build_hourly_sequence.py
           python -m py_compile scripts/intraday_execution/intraday_execution_research.py
           python -m py_compile scripts/intraday_execution/shadow_direction_confidence.py
-      - name: Run focused intraday direction and calibration tests
-        run: python -m pytest tests/learning/test_intraday_execution_row_shape.py -q
+          python -m py_compile scripts/intraday_execution/validate_direction_confidence.py
+      - name: Run focused intraday direction, calibration and validator tests
+        run: |
+          python -m pytest \
+            tests/learning/test_intraday_execution_row_shape.py \
+            tests/learning/test_direction_confidence_validator.py -q
+      - name: Validate registered prospective owner against repository state
+        run: python scripts/intraday_execution/validate_direction_confidence.py --root .
       - name: Validate research-only contracts and cadence ordering
         run: |
           python - <<'PY'
@@ -52,6 +60,13 @@ jobs:
           }
           shadow=cfg['shadow_direction_confidence']
           assert shadow['status']=='SHADOW_ONLY_PROSPECTIVE'
+          assert shadow['registered_test_id']=='INTRADAY_DIRECTION_CONFIDENCE_V1'
+          assert shadow['active_test_registry_path']=='06_RESEARCH_LAB/forward_tests/2026-07-10__active-test-registry__canonical.md'
+          assert shadow['validator_path']=='scripts/intraday_execution/validate_direction_confidence.py'
+          assert shadow['scorer_path']=='scripts/intraday_execution/shadow_direction_confidence.py'
+          assert shadow['benchmark']=='NO_SKILL_DIRECTION_PROBABILITY_0_50_BRIER_0_25'
+          assert shadow['forward_eligibility_rule']=='POST_REGISTRATION_CANONICAL_MAIN_ONLY'
+          assert shadow['pre_registration_rows']=='INELIGIBLE_QA_OR_INITIALIZATION_ONLY'
           assert shadow['source_owner_required_cadence_hours']==1
           assert shadow['source_owner_required_semantics']=='COMPLETED_UTC_1H_CANDLES'
           assert shadow['forecast_horizon_semantics']=='CLOSED_1H_CANDLE_CLOSE_OBSERVATION_TO_EXACT_HORIZON_DUE'
@@ -59,6 +74,18 @@ jobs:
           assert shadow['probability_rule']=='NO_NUMERIC_PROBABILITY_BEFORE_MINIMUM_INDEPENDENT_SAMPLE'
           assert shadow['automatic_signal_reweighting'] is False
           assert shadow['microcap_direction']=='NO_EDGE_UNTIL_ELIGIBLE_OWNER_EXISTS'
+
+          registry=Path(shadow['active_test_registry_path']).read_text()
+          for token in [
+              'test_id: INTRADAY_DIRECTION_CONFIDENCE_V1',
+              'status: ACTIVE_REGISTRATION_REPAIR_WARMUP',
+              'benchmark: NO_SKILL_DIRECTION_PROBABILITY_0_50_BRIER_0_25',
+              'validator_path: scripts/intraday_execution/validate_direction_confidence.py',
+              'scorer_path: scripts/intraday_execution/shadow_direction_confidence.py',
+              'authority: SHADOW_ONLY_RESEARCH_NON_CANONICAL',
+              'FIRST_CANONICAL_MAIN_RUN_AFTER_REGISTRATION_MERGE_AND_VALIDATOR_PASS',
+          ]:
+              assert token in registry, token
 
           hourly=Path('.github/workflows/hourly-sequence-capture.yml').read_text()
           intraday=Path('.github/workflows/intraday-execution-research.yml').read_text()
@@ -68,6 +95,8 @@ jobs:
           assert "cron: '15 * * * *'" in intraday
           assert "timezone: 'UTC'" in intraday
           assert 'Run after the UTC-aligned hourly owner' in intraday
+          assert 'validate_direction_confidence.py --root . --write-receipt' in intraday
+          assert intraday.index('Validate prospective direction rows before persistence') < intraday.index('Commit prospective observations')
 
           text=Path('04_MARKET_LEARNING/intraday_execution/README.md').read_text()
           assert 'research_only: true' in text
