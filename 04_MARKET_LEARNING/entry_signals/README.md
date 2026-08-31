@@ -107,6 +107,40 @@ No historical activation event is deleted or silently relabelled by v1.2.
 
 Outcome rows measure BTC, ETH, ETHBTC and a matched-constituent Top100 equal-weight return where baseline constituent prices are available. Relative alpha is reported explicitly so a broad-market rise cannot be mistaken for successful altcoin transmission merely because absolute returns were positive.
 
+## State and fixed-horizon integrity (31 August audit repair)
+
+Only an absent `STATE.json` permits initialization. An unreadable, non-object,
+wrong-contract or invalid-state file stops the run before publication; it cannot
+masquerade as a first observation. Strict JSON rejects duplicate keys and
+non-finite numbers. Retired activation permission remains false.
+
+Fixed-horizon returns use the two **source price observation times**, not the age
+of the processing job. Hourly CSV timestamps label candle opens; their close
+prices are available at open + one hour. New snapshots state that close-time
+basis explicitly. Older hourly snapshots are interpreted with the same documented
+one-hour interval without modifying their archived bytes. Missing source times
+are never filled from the event timestamp or capture clock.
+
+No lateness tolerance is defined by this owner, so a valid fixed horizon requires
+the exact source-price endpoint. A late job may describe a frozen 24-hour price
+interval as 24 hours, but a 168-hour price interval cannot fill the 24-hour slot.
+A source still before the endpoint remains pending; an unavailable passed
+endpoint is explicitly censored. These descriptive measurements do not certify
+prospective forecast timing, source publication or predictive efficacy.
+
+The summary independently recomputes the interval and returns from the immutable
+event and recorded endpoint snapshot. Existing opaque or mistimed horizon rows
+remain in the archive and are counted in `excluded_measurement_count`, with
+reasons, rather than silently counted as verified fixed-horizon evidence. The
+repair does not backfill or rewrite old horizon payloads. Mutable descriptive
+path statistics and additional future horizon slots may still advance normally.
+
+Matched-constituent prices are a separately timed source. Their raw observed
+returns remain in descriptive path statistics. Fixed-horizon matched returns
+require explicit constituent observation times aligned with both price endpoints;
+otherwise those fixed-horizon fields are unavailable. No source timestamp is
+inferred from retrieval time. No threshold, trading rule or promotion changes.
+
 ## Main-thread / DATA PING use
 
 When a main-thread analysis or DATA PING reads this ledger, it must treat it as supplementary learning evidence only.

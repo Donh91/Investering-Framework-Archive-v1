@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
-import json, statistics, sys
-from datetime import datetime, timezone
+import json, math, statistics, sys
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 SCRIPTS_ROOT = Path(__file__).resolve().parents[1]
 if str(SCRIPTS_ROOT) not in sys.path:
     sys.path.insert(0, str(SCRIPTS_ROOT))
 from daily_capture.hourly_sequence_consumer import read_latest_complete_spot_row
+from lib.evidence_io import load_evidence
 
 ROOT = Path("04_MARKET_LEARNING/entry_signals")
 EVENTS = ROOT / "events"
@@ -43,20 +44,49 @@ def now_utc():
 
 
 def read_json(path):
-    try:
-        return json.loads(Path(path).read_text())
-    except Exception:
+    evidence = load_evidence(path)
+    if evidence.state == "MISSING" and not Path(path).is_symlink():
         return None
+    if evidence.state != "USABLE" or not isinstance(evidence.value, dict):
+        raise RuntimeError(f"entry evidence unreadable: {path}")
+    return evidence.value
 
 
 def write_json(path, obj):
     p = Path(path)
     p.parent.mkdir(parents=True, exist_ok=True)
-    p.write_text(json.dumps(obj, indent=2, sort_keys=True) + "\n")
+    p.write_text(json.dumps(obj, indent=2, sort_keys=True, allow_nan=False) + "\n")
 
 
 def parse_utc(value):
-    return datetime.fromisoformat(value.replace("Z", "+00:00"))
+    if not isinstance(value, str):
+        raise ValueError("explicit source timestamp required")
+    stamp = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    if stamp.utcoffset() is None:
+        raise ValueError("source timestamp requires timezone")
+    return stamp.astimezone(timezone.utc)
+
+
+def source_price_time(snapshot):
+    """Legacy hourly timestamps label candle open; their prices are closes."""
+    try:
+        stamp = parse_utc(snapshot.get("price_observation_utc"))
+        semantics = snapshot.get("price_timestamp_semantics")
+        if semantics not in (None, "HOURLY_CLOSE_UTC_v1", "EXPLICIT_SOURCE_OBSERVATION_UTC"):
+            return None
+        if semantics is None and snapshot.get("price_source") == "GITHUB_HOURLY_SEQUENCE_DIRECT_CLOSES":
+            stamp += timedelta(hours=1)
+        return stamp
+    except (ValueError, OverflowError):
+        return None
+
+
+def valid_prices(snapshot):
+    try:
+        return all(type(snapshot.get(k)) in (float, int) and math.isfinite(snapshot[k])
+                   and snapshot[k] > 0 for k in ("btc_usdt", "eth_usdt", "ethbtc"))
+    except (OverflowError, ValueError):
+        return False
 
 
 def hourly_latest_row():
@@ -156,7 +186,9 @@ def latest_market():
     directional = hourly_directional_context(pointer)
     return {
         "captured_at_utc": now_utc().isoformat(),
-        "price_observation_utc": hourly_ts.isoformat(),
+        "price_observation_utc": (hourly_ts + timedelta(hours=1)).isoformat(),
+        "hourly_row_open_utc": hourly_ts.isoformat(),
+        "price_timestamp_semantics": "HOURLY_CLOSE_UTC_v1",
         "hourly_sequence_run_id": pointer.get("run_id"),
         "price_source": "GITHUB_HOURLY_SEQUENCE_DIRECT_CLOSES",
         "btc_usdt": float(row["btc_close"]),
@@ -250,6 +282,82 @@ def update_extreme(stats, key, value, now_iso, mode):
         stats[key] = {"value_pct": value, "observed_at_utc": now_iso}
 
 
+def horizon_measurement(base, current, event_time, now, hours):
+    start, end = source_price_time(base), source_price_time(current)
+    due = start + timedelta(hours=hours) if start is not None else None
+    status = "CENSORED_SOURCE_TIMESTAMP_UNAVAILABLE"
+    if start is not None and end is not None:
+        if start > event_time or end > now or end <= start:
+            status = "CENSORED_SOURCE_TIME_INVALID"
+        elif end < due:
+            status = "WAITING_FOR_SOURCE_ENDPOINT"
+        elif end > due:
+            status = "CENSORED_EXACT_ENDPOINT_UNAVAILABLE"
+        elif not valid_prices(base) or not valid_prices(current):
+            status = "CENSORED_INVALID_PRICE"
+        else:
+            status = "VALID_EXACT_SOURCE_HORIZON"
+    return {
+        "status": status,
+        "start_utc": start.isoformat() if start else None,
+        "end_utc": end.isoformat() if end else None,
+        "due_utc": due.isoformat() if due else None,
+        "elapsed_hours": (end - start).total_seconds() / 3600 if start and end else None,
+        "basis": "SOURCE_PRICE_OBSERVATIONS_NOT_PROCESS_AGE",
+        "lateness_tolerance": "NONE_DEFINED_EXACT_ENDPOINT_REQUIRED",
+    }
+
+
+def matched_horizon_return(base, endpoint, hours):
+    """Constituent prices require their own explicit, aligned observation times."""
+    try:
+        start = parse_utc(base.get("constituent_price_observation_utc"))
+        end = parse_utc(endpoint.get("constituent_price_observation_utc"))
+        if (start != source_price_time(base) or end != source_price_time(endpoint)
+                or end - start != timedelta(hours=hours)):
+            return None
+        for snapshot in (base, endpoint):
+            prices = snapshot.get("constituents")
+            if not isinstance(prices, dict) or not prices:
+                return None
+            if any(type(v) not in (int, float) or not math.isfinite(v) or v <= 0 for v in prices.values()):
+                return None
+        return matching_return(base, endpoint)
+    except (ValueError, TypeError, OverflowError):
+        return None
+
+
+def summary_measurement_error(event, row, label):
+    if not event or not isinstance(row, dict):
+        return "MISSING_EVENT_OR_HORIZON"
+    measurement = row.get("measurement")
+    if not isinstance(measurement, dict) or measurement.get("status") != "VALID_EXACT_SOURCE_HORIZON":
+        return "CENSORED_OR_UNVERIFIED_MEASUREMENT"
+    try:
+        base = event["market_snapshot"]
+        endpoint = row["endpoint_market_snapshot"]
+        recorded = parse_utc(row["matured_at_utc"])
+        actual = horizon_measurement(base, endpoint, parse_utc(event["event_time_utc"]), recorded, HORIZONS_H[label])
+        if actual != measurement or actual["status"] != "VALID_EXACT_SOURCE_HORIZON":
+            return "SOURCE_HORIZON_MISMATCH"
+        expected = return_bundle(base, endpoint)
+        for key, bundle_key in (("btc_return_since_signal_pct", "btc_pct"),
+                                ("eth_return_since_signal_pct", "eth_pct"),
+                                ("ethbtc_return_since_signal_pct", "ethbtc_pct")):
+            value = row[key]
+            if type(value) not in (int, float) or not math.isfinite(value) or value != expected[bundle_key]:
+                return "SOURCE_RETURN_MISMATCH"
+        matched = matched_horizon_return(base, endpoint, HORIZONS_H[label])
+        for key, value in (("matched_top100_equal_weight_return_since_signal_pct", matched),
+                           ("matched_top100_minus_btc_pp", None if matched is None else matched - expected["btc_pct"]),
+                           ("matched_top100_minus_eth_pp", None if matched is None else matched - expected["eth_pct"])):
+            if row.get(key) != value:
+                return "MATCHED_SOURCE_HORIZON_MISMATCH"
+    except (KeyError, TypeError, ValueError, OverflowError, ZeroDivisionError):
+        return "MALFORMED_MEASUREMENT"
+    return None
+
+
 def update_outcomes(current, now):
     if not EVENTS.exists():
         return
@@ -270,6 +378,8 @@ def update_outcomes(current, now):
             "path_stats": {},
             "historical_validity_policy": HISTORICAL_VALIDITY_POLICY,
         }
+        if not valid_prices(base) or not valid_prices(current):
+            raise RuntimeError(f"entry outcome prices invalid: {f}")
         rb = return_bundle(base, current)
         ps = out.setdefault("path_stats", {})
         for name, value in rb.items():
@@ -283,19 +393,30 @@ def update_outcomes(current, now):
         for label, h in HORIZONS_H.items():
             if age < h or label in out["horizons"]:
                 continue
+            measurement = horizon_measurement(base, current, t, now, h)
+            if measurement["status"] == "WAITING_FOR_SOURCE_ENDPOINT":
+                continue
+            valid = measurement["status"] == "VALID_EXACT_SOURCE_HORIZON"
+            matched = matched_horizon_return(base, current, h) if valid else None
+            # Breadth constituent prices are a separately timed source. Preserve
+            # their descriptive path returns above, but do not silently certify
+            # them as an hourly-price fixed-horizon measurement.
             out["horizons"][label] = {
                 "matured_at_utc": now_iso,
                 "age_hours": round(age, 3),
                 "price_observation_utc": current.get("price_observation_utc"),
-                "btc_return_since_signal_pct": rb["btc_pct"],
-                "eth_return_since_signal_pct": rb["eth_pct"],
-                "ethbtc_return_since_signal_pct": rb["ethbtc_pct"],
-                "matched_top100_equal_weight_return_since_signal_pct": rb["matched_top100_equal_weight_pct"],
-                "matched_top100_minus_btc_pp": rb["matched_top100_minus_btc_pp"],
-                "matched_top100_minus_eth_pp": rb["matched_top100_minus_eth_pp"],
+                "measurement": measurement,
+                "endpoint_market_snapshot": {k: v for k, v in current.items() if k != "constituents" or matched is not None},
+                "btc_return_since_signal_pct": rb["btc_pct"] if valid else None,
+                "eth_return_since_signal_pct": rb["eth_pct"] if valid else None,
+                "ethbtc_return_since_signal_pct": rb["ethbtc_pct"] if valid else None,
+                "matched_top100_equal_weight_return_since_signal_pct": matched,
+                "matched_top100_minus_btc_pp": None if matched is None else matched - rb["btc_pct"],
+                "matched_top100_minus_eth_pp": None if matched is None else matched - rb["eth_pct"],
+                "matched_top100_measurement_status": "VALID_EXACT_SOURCE_HORIZON" if matched is not None else "UNAVAILABLE_SEPARATE_SOURCE_TIME_NOT_BOUND",
                 "current_top100_advance_ratio": current.get("top100_advance_ratio"),
-                "descriptive_positive_outcome": None if rb["matched_top100_equal_weight_pct"] is None else rb["matched_top100_equal_weight_pct"] > 0,
-                "descriptive_outperformed_btc": None if rb["matched_top100_minus_btc_pp"] is None else rb["matched_top100_minus_btc_pp"] > 0,
+                "descriptive_positive_outcome": None if matched is None else matched > 0,
+                "descriptive_outperformed_btc": None if matched is None else matched > rb["btc_pct"],
                 "historical_validity_policy": HISTORICAL_VALIDITY_POLICY,
             }
         write_json(op, out)
@@ -303,16 +424,26 @@ def update_outcomes(current, now):
 
 def build_summary(now):
     by_horizon = {}
-    activation_events = 0
+    events = {}
     if EVENTS.exists():
-        activation_events = sum(1 for f in EVENTS.glob("*.json") if (read_json(f) or {}).get("event_type") == "ACTIVATION")
+        for f in EVENTS.glob("*.json"):
+            event = read_json(f)
+            if event and event.get("event_type") == "ACTIVATION":
+                events[event["event_id"]] = event
+    activation_events = len(events)
     for label in HORIZONS_H:
         vals, btc_vals, eth_vals, alpha_btc_vals, alpha_eth_vals = [], [], [], [], []
         matured = 0
+        excluded = {}
         if OUTCOMES.exists():
             for f in OUTCOMES.glob("*.json"):
-                h = ((read_json(f) or {}).get("horizons") or {}).get(label)
+                outcome = read_json(f) or {}
+                h = (outcome.get("horizons") or {}).get(label)
                 if not h:
+                    continue
+                error = summary_measurement_error(events.get(outcome.get("event_id")), h, label)
+                if error:
+                    excluded[error] = excluded.get(error, 0) + 1
                     continue
                 matured += 1
                 btc = h["btc_return_since_signal_pct"]
@@ -326,6 +457,8 @@ def build_summary(now):
                     alpha_eth_vals.append(h.get("matched_top100_minus_eth_pp", v - eth))
         by_horizon[label] = {
             "matured_event_count": matured,
+            "excluded_measurement_count": sum(excluded.values()),
+            "excluded_measurement_reasons": excluded,
             "matched_top100_available_count": len(vals),
             "matched_top100_positive_rate_pct": None if not vals else 100.0 * sum(v > 0 for v in vals) / len(vals),
             "matched_top100_mean_return_pct": None if not vals else statistics.fmean(vals),
@@ -354,9 +487,16 @@ def build_summary(now):
 
 def main():
     now = now_utc()
+    prev = read_json(STATE)
+    if prev is not None and (prev.get("contract") != "ENTRY_SIGNAL_STATE_v1" or
+                            prev.get("state") not in ("WAIT", "GRADUATED_ALTCOIN_TOPUP_ACTIVE")):
+        raise RuntimeError("entry state contract invalid; initialization is forbidden")
+    prev = prev or {}
     current = latest_market()
+    source_time = source_price_time(current)
+    if not valid_prices(current) or source_time is None or source_time > now:
+        raise RuntimeError("entry current price evidence invalid")
     state, checks, heat, observer_state = classify(current)
-    prev = read_json(STATE) or {}
     previous = prev.get("state")
     latest = {
         "contract": "ENTRY_SIGNAL_LATEST_v1",
