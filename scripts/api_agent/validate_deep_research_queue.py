@@ -159,7 +159,9 @@ def validate_queue(root: Path = Path(".")) -> List[str]:
     if state.get("max_active_research_items") != 1:
         errors.append("state_max_active_mismatch")
     active = state.get("active_research_id")
-    if active not in set(ids):
+    if "active_research_id" not in state:
+        errors.append("state_active_id_missing")
+    elif active is not None and (not isinstance(active, str) or active not in set(ids)):
         errors.append("state_active_id_unknown")
     state_authority = state.get("authority", {})
     if any(v is not False for v in state_authority.values()):
