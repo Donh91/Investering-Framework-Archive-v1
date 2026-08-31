@@ -1,0 +1,91 @@
+{
+  "contract": "CODEX_RESEARCH_CANDIDATE_v1",
+  "candidate_id": "codex-research-intraday-retired-entry-dependency-v1",
+  "submitted_at_utc": "2026-08-31T00:56:00Z",
+  "status": "SUBMITTED",
+  "origin": {
+    "type": "AUDIT",
+    "thread_label": "post-fix-measurement-validity-followthrough",
+    "source_paths": [
+      "scripts/intraday_execution/intraday_execution_research.py",
+      "04_MARKET_LEARNING/intraday_execution/config.json",
+      "04_MARKET_LEARNING/entry_signals/LATEST.json",
+      "06_RESEARCH_LAB/audit_summaries/2026-07-12__marginal-decision-value-and-breadth-truth-program-v1__canonical.md",
+      "https://github.com/Donh91/Investering-Framework-Archive-v1/pull/665",
+      "https://github.com/Donh91/Investering-Framework-Archive-v1/pull/657"
+    ]
+  },
+  "title": "Remove retired entry-state dependency from intraday research owner",
+  "objective": "Resolve the now-dead dependency in the existing intraday execution research owner where classify() can leave REGIME_NOT_ACTIVE only when entry_state equals the retired GRADUATED_ALTCOIN_TOPUP_ACTIVE observer state. Preserve the 12 July retirement and current non-binding research authority. Reuse an existing explicit research-only eligibility/context contract if one already exists; otherwise fail closed and document the unresolved authority gap rather than inventing a new market gate, threshold or promotion rule. Coordinate with open PR #665 and stop as a clean no-op if that PR resolves the defect before remediation starts.",
+  "finding_key": "INTRADAY_RESEARCH_DEPENDS_ON_RETIRED_ENTRY_STATE",
+  "primary_target": "scripts/intraday_execution/intraday_execution_research.py",
+  "allowed_change_scope": [
+    "scripts/intraday_execution/intraday_execution_research.py",
+    "04_MARKET_LEARNING/intraday_execution/config.json",
+    "04_MARKET_LEARNING/intraday_execution/PROTOCOL.md only if needed to keep documentation aligned with existing research-only authority",
+    "tests/intraday_execution/directly related intraday eligibility and authority tests",
+    "the open PR #665 branch only if fresh-state discovery confirms it is still the active overlapping owner and repository tooling supports safe continuation there"
+  ],
+  "evidence": [
+    {
+      "kind": "REPO_PATH",
+      "ref": "scripts/intraday_execution/intraday_execution_research.py",
+      "summary": "Current classify() returns REGIME_NOT_ACTIVE unless entry_state is GRADUATED_ALTCOIN_TOPUP_ACTIVE, making all later intraday research states unreachable when that observer state is retired."
+    },
+    {
+      "kind": "PR",
+      "ref": "#657",
+      "summary": "Merged measurement-validity remediation binds the legacy entry observer to the 12 July retirement so source-quality improvement alone cannot promote GRADUATED_ALTCOIN_TOPUP_ACTIVE."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "06_RESEARCH_LAB/audit_summaries/2026-07-12__marginal-decision-value-and-breadth-truth-program-v1__canonical.md",
+      "summary": "Canonical 12 July verdict retires the frozen breadth predictive gate at zero weight and keeps graduated alt deployment forward-only/not promotion-ready."
+    },
+    {
+      "kind": "PR",
+      "ref": "#665",
+      "summary": "Open overlapping intraday-confidence PR substantially extends the same owner but its current branch still retains the retired entry-state dependency. A review comment documents the blocking audit finding."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "04_MARKET_LEARNING/intraday_execution/config.json",
+      "summary": "Intraday execution owner is explicitly research-only with no canonical market-state or portfolio authority; any repair must preserve those boundaries."
+    }
+  ],
+  "reproduction": "On fresh main and the current head of open PR #665, inspect scripts/intraday_execution/intraday_execution_research.py::classify(). Confirm the first guard returns REGIME_NOT_ACTIVE unless obs.entry_state == GRADUATED_ALTCOIN_TOPUP_ACTIVE. Then inspect current Entry Signal owner semantics after PR #657 and the 12 July canonical breadth verdict. Confirm the legacy ACTIVE state is not promotion-ready under current authority. If #665 or another already-merged owner has removed this dependency using an explicit pre-existing research-only eligibility contract without re-enabling retired breadth authority, stop as clean no-op.",
+  "acceptance_tests": {
+    "positive": [
+      "A fixture with valid existing non-binding research context can reach the intraday research warmup/classification path without requiring GRADUATED_ALTCOIN_TOPUP_ACTIVE, but only if a pre-existing repository authority explicitly permits that research eligibility.",
+      "The intraday owner remains research_only=true, portfolio_execution=false and canonical_market_state=false after the repair.",
+      "Existing direction-confidence functionality from #665, if present at remediation time, remains shadow-only and cannot substitute as entry/regime permission.",
+      "Focused tests prove the owner is not structurally dead solely because the legacy Entry Signal observer was correctly retired."
+    ],
+    "negative": [
+      "A proxy-only breadth pattern, legacy Entry Signal criteria, or GRADUATED_ALTCOIN_TOPUP_ACTIVE label cannot independently authorize intraday research eligibility or portfolio action.",
+      "Do not re-enable, reinterpret or promote the retired 12 July breadth predictive gate or graduated-alt deployment state.",
+      "Do not invent a new market threshold, entry gate, model weight, canonical state, portfolio rule or policy semantic to make the owner reachable.",
+      "Do not weaken fail-closed behavior when no explicit existing research-only eligibility authority can be identified.",
+      "Do not overwrite or conflict with open PR #665; if its current branch resolves the defect before execution, terminate as clean no-op."
+    ]
+  },
+  "authority_boundary": "CODE_REMEDIATION_ONLY",
+  "requires_framework_owner_authority": false,
+  "forbidden_changes": [
+    "market gates",
+    "model weights",
+    "canonical authority",
+    "portfolio logic",
+    "API budget",
+    "new policy semantics",
+    "re-enabling retired breadth predictive authority",
+    "new entry threshold",
+    "automatic promotion",
+    "parallel intraday engine"
+  ],
+  "requested_priority": "EXPEDITED",
+  "post_fix_gate": "NEGATIVE_RETIRED_ENTRY_AUTHORITY_TEST_PLUS_POSITIVE_NON_DEAD_RESEARCH_ELIGIBILITY_TEST_PLUS_MAIN_READBACK",
+  "clean_noop_condition": "Open PR #665 or another current-main change already removes the retired dependency while preserving 12 July retirement and research-only authority, or fresh-state discovery proves the intraday owner is intentionally retired/superseded.",
+  "stop_condition": "Stop without code changes if the candidate hash/status/authority changed, #665 resolves the defect first, the intraday owner is intentionally superseded, or no pre-existing research-only eligibility authority exists and repair would require a new market/policy rule.",
+  "escalation_condition": "Escalate to FRAMEWORK_OWNER if making the intraday owner reachable requires any new market gate, threshold, canonical authority, portfolio logic, API budget or new policy semantics rather than a bounded code remediation to existing research-only authority."
+}
