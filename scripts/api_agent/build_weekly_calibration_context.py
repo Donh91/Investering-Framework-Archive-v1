@@ -3,6 +3,8 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
+import os
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -16,13 +18,33 @@ def canonical(value: Any) -> bytes:
 
 
 def load_json(path: Path) -> Any:
-    return json.loads(path.read_text())
+    def finite_float(raw: str) -> float:
+        value = float(raw)
+        if not math.isfinite(value):
+            raise ValueError('NON_FINITE_JSON_NUMBER')
+        return value
+    def invalid_constant(raw: str) -> None:
+        raise ValueError('NON_FINITE_JSON_NUMBER')
+    def unique_object(pairs):
+        result = {}
+        for key, value in pairs:
+            if key in result:
+                raise ValueError('DUPLICATE_JSON_KEY')
+            result[key] = value
+        return result
+    return json.loads(path.read_text(), parse_float=finite_float, parse_constant=invalid_constant,
+                      object_pairs_hook=unique_object)
 
 
 def ts(raw: Any) -> datetime:
-    if isinstance(raw, (int, float)):
+    if type(raw) in (int, float):
         return datetime.fromtimestamp(raw, timezone.utc)
-    return datetime.fromisoformat(str(raw).replace("Z", "+00:00")).astimezone(timezone.utc)
+    if not isinstance(raw, str):
+        raise ValueError('TIMESTAMP_TYPE_INVALID')
+    value = datetime.fromisoformat(raw.replace("Z", "+00:00"))
+    if value.utcoffset() is None:
+        raise ValueError('TIMESTAMP_TIMEZONE_REQUIRED')
+    return value.astimezone(timezone.utc)
 
 
 def find_time(output: dict[str, Any], receipt: dict[str, Any] | None) -> datetime | None:
@@ -82,7 +104,52 @@ def load_legacy_context(root: Path | None) -> dict[str, Any]:
     }
 
 
-def load_experiment_learning(registry_path: Path, outcome_root: Path, start: datetime, end: datetime) -> dict[str, Any]:
+def load_experiment_learning(registry_path: Path, outcome_root: Path, start: datetime, end: datetime,
+                             *, repo_root: Path | None = None, forecast_root: Path | None = None) -> dict[str, Any]:
+    repo_root = (repo_root or Path.cwd()).resolve()
+    forecast_root = forecast_root or repo_root / 'research/framework_memory/forecast_memory'
+    forecast_paths = None
+    binding_cache = {}
+
+    def bound_document(path: Path, expected: Any):
+        if not isinstance(expected, str) or len(expected) != 64 or any(c not in '0123456789abcdef' for c in expected):
+            raise ValueError('BINDING_HASH_INVALID')
+        path = path.resolve()
+        if not path.is_relative_to(repo_root):
+            raise ValueError('BINDING_PATH_OUTSIDE_REPOSITORY')
+        if path not in binding_cache:
+            document = load_json(path)
+            binding_cache[path] = (document, hashlib.sha256(canonical(document)).hexdigest())
+        document, actual = binding_cache[path]
+        if actual != expected:
+            raise ValueError('BINDING_HASH_MISMATCH_CURRENT_FILE')
+        return document
+
+    def verify_bindings(value):
+        nonlocal forecast_paths
+        if forecast_paths is None:
+            forecast_paths = {}
+            if not forecast_root.is_dir():
+                raise ValueError('FORECAST_ROOT_UNAVAILABLE')
+            def walk_error(exc):
+                raise ValueError('FORECAST_DIRECTORY_UNREADABLE') from exc
+            for directory, _, filenames in os.walk(forecast_root, onerror=walk_error):
+                for filename in filenames:
+                    if filename.endswith('.json'):
+                        forecast_paths.setdefault(Path(filename).stem, []).append(Path(directory) / filename)
+        candidates = forecast_paths.get(value['forecast_id'], [])
+        if len(candidates) != 1:
+            raise ValueError('FORECAST_BINDING_MISSING_OR_AMBIGUOUS')
+        forecast = bound_document(candidates[0], value.get('forecast_sha256'))
+        if not isinstance(forecast, dict) or forecast.get('contract') != 'FROZEN_FORECAST_v1' or forecast.get('forecast_id') != value['forecast_id']:
+            raise ValueError('FORECAST_BINDING_CONTRACT_INVALID')
+        path, digest = value.get('evidence_path'), value.get('evidence_sha256')
+        if value['status'] == 'MATURED' or path is not None or digest is not None:
+            if not isinstance(path, str) or not path or Path(path).name == 'LATEST.json':
+                raise ValueError('EVIDENCE_BINDING_PATH_INVALID')
+            bound_document(repo_root / path, digest)
+        return str(candidates[0])
+
     def unavailable(status: str, reason: str) -> dict[str, Any]:
         return {
             "status": status,
@@ -117,38 +184,81 @@ def load_experiment_learning(registry_path: Path, outcome_root: Path, start: dat
         "GOVERNANCE_REVIEW_PERMITTED",
     }
     candidates = [row for row in registry.get("candidates", []) if isinstance(row, dict)]
-    active = [row for row in candidates if row.get("state") in active_states]
+    active = [row for row in candidates if isinstance(row.get("state"), str) and row['state'] in active_states]
     active.sort(key=lambda row: (str(row.get("state")), str(row.get("created_at_utc"))), reverse=True)
     outcomes = []
-    for path in outcome_root.rglob("*.json") if outcome_root.exists() else []:
+    diagnostics = []
+    outcome_root_available = outcome_root.is_dir()
+    if not outcome_root_available:
+        diagnostics.append({'path': str(outcome_root), 'reason': 'OUTCOME_ROOT_UNAVAILABLE'})
+    paths = []
+    if outcome_root_available:
+        def scan_error(exc):
+            diagnostics.append({'path': str(exc.filename or outcome_root), 'reason': 'OUTCOME_DIRECTORY_UNREADABLE'})
+        for directory, _, filenames in os.walk(outcome_root, onerror=scan_error):
+            paths.extend(Path(directory) / name for name in filenames if name.endswith('.json'))
+    for path in sorted(paths):
         try:
             value = load_json(path)
-        except Exception:
+        except (OSError, UnicodeError, ValueError, RecursionError):
+            diagnostics.append({'path': str(path), 'reason': 'OUTCOME_UNREADABLE'})
             continue
-        if value.get("contract") != "MATURED_OUTCOME_v2":
+        if not isinstance(value, dict) or value.get("contract") not in ("MATURED_OUTCOME_v2", "MATURED_OUTCOME_v3"):
+            diagnostics.append({'path': str(path), 'reason': 'OUTCOME_CONTRACT_UNSUPPORTED'})
             continue
         created = value.get("created_at_utc")
-        if created is None:
-            continue
         try:
             when = ts(created)
-        except Exception:
+        except (ValueError, OverflowError, OSError):
+            diagnostics.append({'path': str(path), 'reason': 'OUTCOME_TIMESTAMP_INVALID'})
             continue
         if not (start <= when < end):
             continue
+        if not isinstance(value.get('forecast_id'), str) or not value['forecast_id']:
+            diagnostics.append({'path': str(path), 'reason': 'OUTCOME_FORECAST_ID_MISSING'})
+            continue
+        if value.get('status') == 'MATURED':
+            measured = value.get('return_pct')
+            try:
+                valid_return = type(measured) in (int, float) and math.isfinite(measured)
+            except OverflowError:
+                valid_return = False
+            if not valid_return or value.get('result') not in ('HIT', 'MISS'):
+                diagnostics.append({'path': str(path), 'reason': 'MATURED_OUTCOME_FIELDS_INVALID'})
+                continue
+        elif value.get('status') == 'CENSORED':
+            if not isinstance(value.get('reason'), str) or not value['reason'] or value.get('return_pct') is not None or value.get('result') is not None:
+                diagnostics.append({'path': str(path), 'reason': 'CENSORED_OUTCOME_FIELDS_INVALID'})
+                continue
+        else:
+            diagnostics.append({'path': str(path), 'reason': 'OUTCOME_STATUS_UNSUPPORTED'})
+            continue
+        try:
+            forecast_path = verify_bindings(value)
+        except (OSError, UnicodeError, ValueError, RecursionError) as exc:
+            reason = str(exc) if isinstance(exc, ValueError) and str(exc).startswith(('BINDING_', 'FORECAST_', 'EVIDENCE_')) else 'BINDING_EVIDENCE_UNREADABLE'
+            diagnostics.append({'path': str(path), 'reason': reason})
+            continue
         outcomes.append({
+            "source_contract": value['contract'],
+            "source_authority": value.get('authority'),
             "forecast_id": value.get("forecast_id"),
+            "forecast_sha256": value.get("forecast_sha256"),
+            "forecast_path": forecast_path,
+            "source_binding_verification": "CURRENT_FILE_CANONICAL_JSON_SHA256",
+            "evidence_path": value.get("evidence_path"),
+            "evidence_sha256": value.get("evidence_sha256"),
             "status": value.get("status"),
             "result": value.get("result"),
             "reason": value.get("reason"),
             "return_pct": value.get("return_pct"),
             "evidence_lag_hours": value.get("evidence_lag_hours"),
-            "created_at_utc": created,
+            "created_at_utc": when.isoformat().replace('+00:00', 'Z'),
             "path": str(path),
             "outcome_sha256": hashlib.sha256(canonical(value)).hexdigest(),
         })
     outcomes.sort(key=lambda row: str(row.get("created_at_utc")))
-    latent = sum(row.get("state") in {"PROPOSED", "WAITING_FOR_DATA", "WAITING_FOR_MAPPING", "INCUBATING"} for row in candidates)
+    latent = sum(row.get("state") in ("PROPOSED", "WAITING_FOR_DATA", "WAITING_FOR_MAPPING", "INCUBATING") for row in candidates)
     return {
         "status": "AVAILABLE",
         "authority": "SHADOW_ONLY_NO_AUTOMATIC_PROMOTION",
@@ -159,8 +269,11 @@ def load_experiment_learning(registry_path: Path, outcome_root: Path, start: dat
         "active_candidates": active[:50],
         "active_candidates_truncated": len(active) > 50,
         "latent_candidate_count": latent,
-        "new_matured_outcomes": outcomes,
-        "matured_outcome_evidence_available": True,
+        "new_matured_outcomes": outcomes if outcome_root_available else None,
+        "matured_outcome_evidence_available": outcome_root_available and not diagnostics,
+        "outcome_ingestion_diagnostics": diagnostics,
+        "outcome_ingestion_status": 'COMPLETE' if outcome_root_available and not diagnostics else 'INCOMPLETE',
+        "outcome_scoring_performed": False,
         "weekly_review_rule": "Review new prospective outcomes, severe failures, censored evidence and control comparisons. Strange or dormant hypotheses remain retained but receive no authority without mature evidence.",
     }
 
@@ -251,6 +364,8 @@ def main() -> None:
     ap.add_argument("--legacy-root", type=Path)
     ap.add_argument("--experiment-registry", type=Path, default=Path("research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json"))
     ap.add_argument("--experiment-outcome-root", type=Path, default=Path("research/framework_memory/outcome_memory"))
+    ap.add_argument("--experiment-forecast-root", type=Path)
+    ap.add_argument("--repo-root", type=Path, default=Path.cwd())
     ap.add_argument("--output", type=Path, required=True)
     args = ap.parse_args()
 
@@ -309,7 +424,8 @@ def main() -> None:
         "daily_director_rows": outputs,
         "daily_director_count": len(outputs),
         "legacy_research_context": load_legacy_context(args.legacy_root),
-        "experiment_learning": load_experiment_learning(args.experiment_registry, args.experiment_outcome_root, start, end),
+        "experiment_learning": load_experiment_learning(args.experiment_registry, args.experiment_outcome_root, start, end,
+            repo_root=args.repo_root, forecast_root=args.experiment_forecast_root),
         "selection_rule": "latest eligible row per Europe/Copenhagen local date within frozen local week, deduplicated by timestamp and output hash",
         "handoff_targets": ["RAW_WEEKLY_CALIBRATION", "FORECAST_LEDGER", "MASTER_MONDAY_PREP", "SPECIALIST_REVIEW", "EXPERIMENT_GOVERNANCE_REVIEW"],
         "rules": [
