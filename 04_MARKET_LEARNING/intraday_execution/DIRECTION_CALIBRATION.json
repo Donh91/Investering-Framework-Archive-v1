@@ -1,13 +1,145 @@
 {
   "contract": "INTRADAY_DIRECTION_CALIBRATION_v1",
-  "family_reliability": {},
-  "generated_at_utc": "2026-08-31T16:27:35.472413Z",
+  "family_reliability": {
+    "BTC:4H:momentum_acceleration": {
+      "authority": "DIAGNOSTIC_ONLY_NO_AUTOMATIC_REWEIGHTING",
+      "count": 1,
+      "hit": 0,
+      "hit_rate": 0.0,
+      "independence_control": "NONE_DIAGNOSTIC_ONLY",
+      "miss": 1
+    },
+    "BTC:4H:return_1h": {
+      "authority": "DIAGNOSTIC_ONLY_NO_AUTOMATIC_REWEIGHTING",
+      "count": 1,
+      "hit": 0,
+      "hit_rate": 0.0,
+      "independence_control": "NONE_DIAGNOSTIC_ONLY",
+      "miss": 1
+    },
+    "BTC:4H:return_4h": {
+      "authority": "DIAGNOSTIC_ONLY_NO_AUTOMATIC_REWEIGHTING",
+      "count": 1,
+      "hit": 1,
+      "hit_rate": 1.0,
+      "independence_control": "NONE_DIAGNOSTIC_ONLY",
+      "miss": 0
+    },
+    "BTC:4H:session_vwap": {
+      "authority": "DIAGNOSTIC_ONLY_NO_AUTOMATIC_REWEIGHTING",
+      "count": 1,
+      "hit": 1,
+      "hit_rate": 1.0,
+      "independence_control": "NONE_DIAGNOSTIC_ONLY",
+      "miss": 0
+    },
+    "BTC:4H:taker_balance": {
+      "authority": "DIAGNOSTIC_ONLY_NO_AUTOMATIC_REWEIGHTING",
+      "count": 1,
+      "hit": 1,
+      "hit_rate": 1.0,
+      "independence_control": "NONE_DIAGNOSTIC_ONLY",
+      "miss": 0
+    },
+    "BTC:4H:taker_change": {
+      "authority": "DIAGNOSTIC_ONLY_NO_AUTOMATIC_REWEIGHTING",
+      "count": 1,
+      "hit": 1,
+      "hit_rate": 1.0,
+      "independence_control": "NONE_DIAGNOSTIC_ONLY",
+      "miss": 0
+    },
+    "ETH:4H:breadth_balance": {
+      "authority": "DIAGNOSTIC_ONLY_NO_AUTOMATIC_REWEIGHTING",
+      "count": 1,
+      "hit": 0,
+      "hit_rate": 0.0,
+      "independence_control": "NONE_DIAGNOSTIC_ONLY",
+      "miss": 1
+    },
+    "ETH:4H:momentum_acceleration": {
+      "authority": "DIAGNOSTIC_ONLY_NO_AUTOMATIC_REWEIGHTING",
+      "count": 1,
+      "hit": 0,
+      "hit_rate": 0.0,
+      "independence_control": "NONE_DIAGNOSTIC_ONLY",
+      "miss": 1
+    },
+    "ETH:4H:return_1h": {
+      "authority": "DIAGNOSTIC_ONLY_NO_AUTOMATIC_REWEIGHTING",
+      "count": 1,
+      "hit": 1,
+      "hit_rate": 1.0,
+      "independence_control": "NONE_DIAGNOSTIC_ONLY",
+      "miss": 0
+    },
+    "ETH:4H:return_4h": {
+      "authority": "DIAGNOSTIC_ONLY_NO_AUTOMATIC_REWEIGHTING",
+      "count": 1,
+      "hit": 1,
+      "hit_rate": 1.0,
+      "independence_control": "NONE_DIAGNOSTIC_ONLY",
+      "miss": 0
+    },
+    "ETH:4H:session_vwap": {
+      "authority": "DIAGNOSTIC_ONLY_NO_AUTOMATIC_REWEIGHTING",
+      "count": 1,
+      "hit": 1,
+      "hit_rate": 1.0,
+      "independence_control": "NONE_DIAGNOSTIC_ONLY",
+      "miss": 0
+    },
+    "ETH:4H:taker_balance": {
+      "authority": "DIAGNOSTIC_ONLY_NO_AUTOMATIC_REWEIGHTING",
+      "count": 1,
+      "hit": 1,
+      "hit_rate": 1.0,
+      "independence_control": "NONE_DIAGNOSTIC_ONLY",
+      "miss": 0
+    },
+    "ETH:4H:taker_change": {
+      "authority": "DIAGNOSTIC_ONLY_NO_AUTOMATIC_REWEIGHTING",
+      "count": 1,
+      "hit": 1,
+      "hit_rate": 1.0,
+      "independence_control": "NONE_DIAGNOSTIC_ONLY",
+      "miss": 0
+    }
+  },
+  "generated_at_utc": "2026-08-31T20:47:07.883059Z",
   "governance": {
     "automatic_signal_reweighting": false,
     "canonical_market_state": false,
     "portfolio_execution": false,
     "shadow_only": true
   },
-  "groups": {},
-  "scored_outcome_count": 0
+  "groups": {
+    "BTC:4H:UP:4_of_6": {
+      "display_probability": null,
+      "empirical_hit_rate": 1.0,
+      "hits": 1,
+      "independent_count": 1,
+      "laplace_calibrated_estimate": 0.666667,
+      "maturity": "WARMUP",
+      "mean_brier_score": null,
+      "misses": 0,
+      "overlap_control": "GREEDY_NON_OVERLAP_4H",
+      "total_scored_rows": 1,
+      "wilson_lower_95": 0.206549
+    },
+    "ETH:4H:UP:5_of_7": {
+      "display_probability": null,
+      "empirical_hit_rate": 1.0,
+      "hits": 1,
+      "independent_count": 1,
+      "laplace_calibrated_estimate": 0.666667,
+      "maturity": "WARMUP",
+      "mean_brier_score": null,
+      "misses": 0,
+      "overlap_control": "GREEDY_NON_OVERLAP_4H",
+      "total_scored_rows": 1,
+      "wilson_lower_95": 0.206549
+    }
+  },
+  "scored_outcome_count": 2
 }
