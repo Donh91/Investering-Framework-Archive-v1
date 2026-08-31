@@ -33,6 +33,13 @@
   ],
   "shadow_direction_confidence": {
     "status": "SHADOW_ONLY_PROSPECTIVE",
+    "registered_test_id": "INTRADAY_DIRECTION_CONFIDENCE_V1",
+    "active_test_registry_path": "06_RESEARCH_LAB/forward_tests/2026-07-10__active-test-registry__canonical.md",
+    "validator_path": "scripts/intraday_execution/validate_direction_confidence.py",
+    "scorer_path": "scripts/intraday_execution/shadow_direction_confidence.py",
+    "benchmark": "NO_SKILL_DIRECTION_PROBABILITY_0_50_BRIER_0_25",
+    "forward_eligibility_rule": "POST_REGISTRATION_CANONICAL_MAIN_ONLY",
+    "pre_registration_rows": "INELIGIBLE_QA_OR_INITIALIZATION_ONLY",
     "direction_horizons_hours": [1, 4, 24],
     "source_owner_required_cadence_hours": 1,
     "source_owner_required_semantics": "COMPLETED_UTC_1H_CANDLES",
