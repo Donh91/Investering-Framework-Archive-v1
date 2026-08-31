@@ -1,0 +1,83 @@
+name: Hourly Sequence Watchdog
+
+on:
+  schedule:
+    - cron: '42 * * * *'
+      timezone: 'UTC'
+  workflow_run:
+    workflows:
+      - 'Hourly Sequence Capture'
+      - 'Entry Signal Ledger'
+      - 'Pullback Learning Ledger'
+      - 'Daily Live Anchor Capture'
+      - 'Automation Production Health'
+    types: [completed]
+  push:
+    branches: [main]
+    paths-ignore:
+      - '03_DAILY_CAPTURE_LOGS/hourly/**'
+      - '04_MARKET_LEARNING/intraday_execution/**'
+  workflow_dispatch:
+
+permissions:
+  actions: write
+  contents: read
+  issues: write
+
+concurrency:
+  group: hourly-sequence-watchdog
+  cancel-in-progress: true
+
+jobs:
+  verify-and-self-heal:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.head_branch == 'main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 1
+      - name: Check durable Hourly owner and self-heal if stale
+        id: watchdog
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          python scripts/health/hourly_sequence_watchdog.py \
+            --latest 03_DAILY_CAPTURE_LOGS/hourly/LATEST.json \
+            --repo "$GITHUB_REPOSITORY" \
+            --token "$GITHUB_TOKEN" \
+            --workflow hourly-sequence-capture.yml \
+            --ref main \
+            --stale-after-minutes 90 \
+            --recent-run-guard-minutes 12 \
+            --dispatch \
+            --receipt "$RUNNER_TEMP/hourly-watchdog-receipt.json"
+          cat "$RUNNER_TEMP/hourly-watchdog-receipt.json" >> "$GITHUB_STEP_SUMMARY"
+      - name: Publish watchdog receipt artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hourly-sequence-watchdog-${{ github.run_id }}
+          path: ${{ runner.temp }}/hourly-watchdog-receipt.json
+          retention-days: 14
+          if-no-files-found: warn
+      - name: Open or update one sanitized watchdog incident
+        if: steps.watchdog.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          title='HOURLY SEQUENCE WATCHDOG FAILURE'
+          existing=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search "$title in:title" --json number --jq '.[0].number // empty')
+          body="Hourly self-heal watchdog failed in run ${GITHUB_RUN_ID}. No market authority was changed. Inspect the run artifact hourly-sequence-watchdog-${GITHUB_RUN_ID}."
+          if [ -z "$existing" ]; then
+            gh issue create --repo "$GITHUB_REPOSITORY" --title "$title" --body "$body"
+          else
+            gh issue comment "$existing" --repo "$GITHUB_REPOSITORY" --body "$body"
+          fi
+      - name: Fail closed when watchdog could not verify or dispatch
+        if: steps.watchdog.outcome == 'failure'
+        run: exit 1
