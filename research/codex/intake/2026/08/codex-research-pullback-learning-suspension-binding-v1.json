@@ -4,7 +4,7 @@
   "submitted_at_utc": "2026-08-31T02:04:00Z",
   "status": "SUBMITTED",
   "origin": {
-    "type": "FRAMEWORK_OWNER_FOLLOWUP",
+    "type": "AUDIT",
     "thread_label": "pullback-retired-entry-framework-owner-resolution",
     "source_paths": [
       "04_MARKET_LEARNING/pullback_learning/ELIGIBILITY_STATUS_v1.json",
@@ -14,7 +14,8 @@
       "06_RESEARCH_LAB/existing_system_improvement_12x/T09_PULLBACK_REPRODUCIBILITY.md",
       "research/codex/intake/2026/08/codex-research-pullback-learning-retired-entry-dependency-v1.json",
       "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/643"
-    ]
+    ],
+    "submission_subtype": "FRAMEWORK_OWNER_FOLLOWUP"
   },
   "title": "Bind Pullback Learning to explicit suspended eligibility owner",
   "objective": "Implement the already-authorized framework-owner suspension in the existing adaptive Pullback Learning owner. Replace the impossible dependency on GRADUATED_ALTCOIN_TOPUP_ACTIVE with a fail-closed read of 04_MARKET_LEARNING/pullback_learning/ELIGIBILITY_STATUS_v1.json. While status is SUSPENDED_NO_ELIGIBILITY_CONTRACT, continue immutable observation collection and descriptive adaptive statistics, emit REGIME_NOT_ACTIVE with explicit ELIGIBILITY_CONTRACT_UNAVAILABLE reason, create no new pullback/reload research episodes, do not mature or mutate existing episodes, and preserve all research-only/no-portfolio/no-canonical authority boundaries. This task implements an existing owner decision; it must not invent or infer any new eligibility rule, threshold, market state, rebuy permission or portfolio action.",
@@ -43,9 +44,10 @@
       "summary": "Pullback v0.2 remains GUIDANCE_ONLY and mechanical classification authority is suspended until a complete source-backed specification exists."
     },
     {
-      "kind": "CODEX_ESCALATION",
+      "kind": "OTHER",
       "ref": "signature 6574d30a3f1e5cbf9e4d / issue #643",
-      "summary": "Fresh audit found no pre-existing legitimate research-only eligibility owner and correctly escalated rather than substituting proxy breadth, source quality, T12 or direction confidence. The new framework-owner status resolves that missing contract by explicitly suspending classification, not by creating permission."
+      "summary": "Fresh audit found no pre-existing legitimate research-only eligibility owner and correctly escalated rather than substituting proxy breadth, source quality, T12 or direction confidence. The new framework-owner status resolves that missing contract by explicitly suspending classification, not by creating permission.",
+      "evidence_subtype": "CODEX_ESCALATION"
     },
     {
       "kind": "REPO_PATH",
