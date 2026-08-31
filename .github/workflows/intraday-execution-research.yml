@@ -33,7 +33,7 @@ jobs:
           python -m py_compile scripts/intraday_execution/intraday_execution_research.py
           python -m py_compile scripts/intraday_execution/shadow_direction_confidence.py
           python -m py_compile scripts/intraday_execution/validate_direction_confidence.py
-      - name: Validate config authority and registered-test boundary
+      - name: Validate config authority, research eligibility and registered-test boundary
         run: |
           python - <<'PY'
           import json
@@ -50,6 +50,21 @@ jobs:
           assert a['historical_findings_max_classification']=='FORWARD_TEST'
           assert d['explicit_limitations']['top100_intraday_vwap']=='UNAVAILABLE_FROM_CURRENT_CANONICAL_ARCHIVE'
           assert d['explicit_limitations']['top100_opening_range']=='UNAVAILABLE_FROM_CURRENT_CANONICAL_ARCHIVE'
+
+          eligibility=d['research_eligibility']
+          assert eligibility['status']=='RESEARCH_ONLY_DATA_CONTEXT'
+          assert eligibility['eligibility_semantics']=='DATA_AVAILABLE_FOR_RESEARCH_NOT_MARKET_PERMISSION'
+          assert eligibility['entry_signal_role']=='LEGACY_CONTEXT_ONLY_NO_ELIGIBILITY_OR_PERMISSION'
+          assert eligibility['breadth_role']=='DESCRIPTIVE_RESEARCH_CONTEXT_ZERO_EXECUTION_WEIGHT'
+          assert eligibility['direction_confidence_role']=='SHADOW_DIAGNOSTIC_ONLY_NO_REGIME_OR_ENTRY_PERMISSION'
+          assert eligibility['canonical_market_permission_required'] is False
+
+          legacy=d['legacy_execution_event_ledger']
+          assert legacy['status']=='FROZEN_PENDING_SEPARATE_REGISTERED_TEST'
+          assert legacy['new_event_creation'] is False
+          assert legacy['outcome_maturation'] is False
+          assert legacy['historical_rows_preserved'] is True
+
           shadow=d['shadow_direction_confidence']
           assert shadow['status']=='SHADOW_ONLY_PROSPECTIVE'
           assert shadow['registered_test_id']=='INTRADAY_DIRECTION_CONFIDENCE_V1'
@@ -80,6 +95,14 @@ jobs:
           assert a['canonical_market_state'] is False
           assert a['automatic_rule_changes'] is False
           assert 'display_line' in d['data_ping_bridge']
+          eligibility=(d.get('adaptive_evidence') or {}).get('research_eligibility') or {}
+          assert eligibility.get('canonical_market_permission') is False
+          assert eligibility.get('portfolio_execution') is False
+          assert eligibility.get('entry_signal_role')=='LEGACY_CONTEXT_ONLY_NO_ELIGIBILITY_OR_PERMISSION'
+          legacy=d['legacy_execution_event_ledger']
+          assert legacy['status']=='FROZEN_PENDING_SEPARATE_REGISTERED_TEST'
+          assert legacy['new_event_creation'] is False
+          assert legacy['outcome_maturation'] is False
           shadow=d['shadow_direction_confidence']
           assert shadow['contract']=='SHADOW_DIRECTION_CONFIDENCE_v1'
           assert shadow['status']=='SHADOW_ONLY'
