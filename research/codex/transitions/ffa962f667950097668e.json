@@ -1,0 +1,37 @@
+{
+  "allowed_change_scope": [
+    "scripts/research/shadow_registry_weekly.py",
+    ".github/workflows/shadow-registry-weekly.yml",
+    ".github/workflows/shadow-registry-gate.yml",
+    "04_MARKET_LEARNING/shadow_registry/REGISTRY.json",
+    "04_MARKET_LEARNING/shadow_registry/README.md",
+    "tests/research/directly related Shadow Registry runtime, schema, evaluator-readiness, immutability and writer-governance tests"
+  ],
+  "branch": "agent/task-20260831-shadow-registry-integrity-v2",
+  "candidate_id": "codex-research-shadow-registry-runtime-integrity-v1",
+  "candidate_path": "research/codex/intake/2026/08/codex-research-shadow-registry-runtime-integrity-v1.json",
+  "candidate_sha256": "7e16d657818bda99b063467d9eae15597d0985159027e1d7e882868cedf2a0d0",
+  "contract": "CODEX_RESEARCH_TRANSITION_RECEIPT_v1",
+  "forbidden_changes": [
+    "API budget",
+    "automatic sensor promotion",
+    "canonical authority",
+    "market gates",
+    "model weights",
+    "new direct-main governance exception",
+    "new policy semantics",
+    "new shadow engine",
+    "portfolio logic",
+    "relaxing the existing Shadow Sensor Registry schema",
+    "retrospective evidence rewrite",
+    "unrelated workflow changes"
+  ],
+  "objective": "Repair the existing weekly Shadow Registry owner as one bounded integrity task: enforce the existing Shadow Sensor Registry schema rather than a reduced parallel validator; prevent placeholder evaluator strings or path presence from being classified as SCORABLE without a real evaluator contract/output; preserve immutable weekly evidence across same-week reruns; and stop the scheduled workflow from directly committing registry/governance-lane artifacts to main when the active Continuity + Learning governance requires registries to use the reviewed PR lane. Reuse existing owners and existing permitted automation/write patterns only. Do not create a new shadow registry, market rule, promotion path or write-policy semantic.",
+  "post_fix_gate": "SHADOW_SCHEMA_NEGATIVE_CONTROL_PASS_PLUS_EVALUATOR_READINESS_NEGATIVE_CONTROL_PLUS_SAME_WEEK_IMMUTABILITY_REPLAY_PASS_PLUS_COMPLIANT_WRITER_ROUTE_PLUS_CI_AND_MAIN_READBACK",
+  "pr_number": null,
+  "receipt_sha256": "f6a7b49d7ea37ebf1cc7df9e44ef5d792d1bf3aa46c7a673c53b38823d1e88cb",
+  "recorded_at_utc": "2026-08-31T02:23:44Z",
+  "signature": "ffa962f667950097668e",
+  "state": "IN_REMEDIATION",
+  "task_contract_sha256": "61b05643cfdca0cf1d63a15b1052a36b8da10e59c762dfa2fc72459b6664c1ee"
+}

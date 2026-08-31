@@ -1,11 +1,20 @@
 {
   "authority": "RESEARCH_ONLY_NON_CANONICAL",
   "automatic_rule_changes": false,
+  "canonical_market_state": false,
   "contract": "SHADOW_SENSOR_REGISTRY_RUNTIME_v1_1",
+  "metadata_recovery_note": "Unrecovered family-level horizons and evaluator semantics are explicit gaps, not new definitions or collection authority. Per-family forward_observation_enabled is false unless the current family owner is directly bound; this registry does not disable or authorize other registered tests.",
   "portfolio_execution": false,
   "promotion_requires_separate_review": true,
+  "schema_owner": "06_RESEARCH_LAB/historical_sensor_recovery_v1/SHADOW_SENSOR_REGISTRY_SCHEMA.json",
   "sensors": [
     {
+      "data_quality_limitations": [
+        "File presence does not prove a working evaluator, valid outcome, sample independence or source freshness.",
+        "Family-level missing definitions/horizons remain unrecovered; no defaults are imputed.",
+        "M4 audit: output-contract validation does not certify exact fixed-horizon measurement validity."
+      ],
+      "definition_timestamp_or_version": "ENTRY_SIGNAL_DEFINITION_v1_2_CANONICAL_PROMOTION_GUARD",
       "evaluator": "ENTRY_SIGNAL_PERFORMANCE_SUMMARY_v1",
       "evidence_paths": [
         "04_MARKET_LEARNING/entry_signals/LATEST.json",
@@ -14,79 +23,252 @@
         "04_MARKET_LEARNING/entry_signals/outcomes"
       ],
       "family": "entry_signals",
+      "forward_observation_enabled": true,
+      "historical_recoverability": "EVENTS_AND_OUTCOMES_RETAINED; MEASUREMENT_VALIDITY_REQUIRES_SEPARATE_REVIEW",
+      "input_sources": [
+        "04_MARKET_LEARNING/entry_signals/LATEST.json",
+        "04_MARKET_LEARNING/entry_signals/PERFORMANCE_SUMMARY.json",
+        "04_MARKET_LEARNING/entry_signals/events",
+        "04_MARKET_LEARNING/entry_signals/outcomes"
+      ],
+      "intended_horizon": "24h, 72h, 7d, 14d, 30d as defined by the existing Entry Signal Ledger",
+      "known_overlap_with_canonical": [
+        "RELATED_SHADOWS_ARE_NOT_INDEPENDENT_CONFIRMATIONS"
+      ],
+      "outcome_horizons": [
+        "+24h",
+        "+72h",
+        "+7d",
+        "+14d",
+        "+30d"
+      ],
+      "output_semantics": "Descriptive legacy-pattern outcome summary; current observer WAIT; no action authority",
       "relevance_state": "KEEP",
       "sensor_id": "ENTRY_SIGNAL_LEDGER",
+      "source_definition_paths": [
+        "04_MARKET_LEARNING/entry_signals/README.md"
+      ],
       "status": "ACTIVE_SHADOW"
     },
     {
+      "data_quality_limitations": [
+        "File presence does not prove a working evaluator, valid outcome, sample independence or source freshness.",
+        "Family-level missing definitions/horizons remain unrecovered; no defaults are imputed."
+      ],
+      "definition_timestamp_or_version": "SOURCE_PATH_VERSIONED_IN_GIT; EXACT_FAMILY_DEFINITION_REQUIRES_RECOVERY",
       "evaluator": "NONE_RECOVERY_REQUIRED",
       "evidence_paths": [
         "04_MARKET_LEARNING/forward_tests/2026-07-07__forward-test-ledger-gate-btc-partial-graduated-deployment-v1__shadow.md"
       ],
       "family": "legacy_forward_tests",
+      "forward_observation_enabled": false,
+      "historical_recoverability": "SOURCE_AVAILABLE; EXACT_EVALUATOR_RECOVERY_REQUIRED",
+      "input_sources": [
+        "04_MARKET_LEARNING/forward_tests/2026-07-07__forward-test-ledger-gate-btc-partial-graduated-deployment-v1__shadow.md"
+      ],
+      "intended_horizon": "UNRECOVERED_AT_FAMILY_LEVEL",
+      "known_overlap_with_canonical": [
+        "RELATED_SHADOWS_ARE_NOT_INDEPENDENT_CONFIRMATIONS"
+      ],
+      "outcome_horizons": [],
+      "output_semantics": "SOURCE_AVAILABILITY_AND_REGISTERED_OUTPUT_REVIEW_ONLY; NO_MARKET_PERMISSION",
       "relevance_state": "WATCH",
       "sensor_id": "LEGACY_GATE_BTC_PARTIAL_FT1",
+      "source_definition_paths": [
+        "04_MARKET_LEARNING/forward_tests/2026-07-07__forward-test-ledger-gate-btc-partial-graduated-deployment-v1__shadow.md"
+      ],
       "status": "RESEARCH_ONLY"
     },
     {
+      "data_quality_limitations": [
+        "File presence does not prove a working evaluator, valid outcome, sample independence or source freshness.",
+        "Family-level missing definitions/horizons remain unrecovered; no defaults are imputed."
+      ],
+      "definition_timestamp_or_version": "SOURCE_PATH_VERSIONED_IN_GIT; EXACT_FAMILY_DEFINITION_REQUIRES_RECOVERY",
       "evaluator": "NONE_RECOVERY_REQUIRED",
       "evidence_paths": [
         "04_MARKET_LEARNING/forward_tests/2026-07-07__forward-test-ledger-gate-btc-partial-graduated-deployment-v1__shadow.md",
         "04_MARKET_LEARNING/forward_tests/2026-07-07__research-lab-evidence-pack-gate-btc-partial-graduated-deployment-v1__shadow.md"
       ],
       "family": "legacy_forward_tests",
+      "forward_observation_enabled": false,
+      "historical_recoverability": "SOURCE_AVAILABLE; EXACT_EVALUATOR_RECOVERY_REQUIRED",
+      "input_sources": [
+        "04_MARKET_LEARNING/forward_tests/2026-07-07__forward-test-ledger-gate-btc-partial-graduated-deployment-v1__shadow.md",
+        "04_MARKET_LEARNING/forward_tests/2026-07-07__research-lab-evidence-pack-gate-btc-partial-graduated-deployment-v1__shadow.md"
+      ],
+      "intended_horizon": "UNRECOVERED_AT_FAMILY_LEVEL",
+      "known_overlap_with_canonical": [
+        "RELATED_SHADOWS_ARE_NOT_INDEPENDENT_CONFIRMATIONS"
+      ],
+      "outcome_horizons": [],
+      "output_semantics": "SOURCE_AVAILABILITY_AND_REGISTERED_OUTPUT_REVIEW_ONLY; NO_MARKET_PERMISSION",
       "relevance_state": "WATCH",
       "sensor_id": "LEGACY_GRADUATED_DEPLOYMENT_V1_1",
+      "source_definition_paths": [
+        "04_MARKET_LEARNING/forward_tests/2026-07-07__research-lab-evidence-pack-gate-btc-partial-graduated-deployment-v1__shadow.md"
+      ],
       "status": "RESEARCH_ONLY"
     },
     {
+      "data_quality_limitations": [
+        "File presence does not prove a working evaluator, valid outcome, sample independence or source freshness.",
+        "Family-level missing definitions/horizons remain unrecovered; no defaults are imputed."
+      ],
+      "definition_timestamp_or_version": "SOURCE_PATH_VERSIONED_IN_GIT; EXACT_FAMILY_DEFINITION_REQUIRES_RECOVERY",
       "evaluator": "SOURCE_PRESENCE_AND_FUTURE_OUTCOME_REVIEW",
-      "evidence_paths": ["04_MARKET_LEARNING/breadth/forward"],
+      "evidence_paths": [
+        "04_MARKET_LEARNING/breadth/forward"
+      ],
       "family": "breadth",
+      "forward_observation_enabled": false,
+      "historical_recoverability": "SOURCE_AVAILABLE; EXACT_EVALUATOR_RECOVERY_REQUIRED",
+      "input_sources": [
+        "04_MARKET_LEARNING/breadth/forward"
+      ],
+      "intended_horizon": "UNRECOVERED_AT_FAMILY_LEVEL",
+      "known_overlap_with_canonical": [
+        "RELATED_SHADOWS_ARE_NOT_INDEPENDENT_CONFIRMATIONS"
+      ],
+      "outcome_horizons": [],
+      "output_semantics": "SOURCE_AVAILABILITY_AND_REGISTERED_OUTPUT_REVIEW_ONLY; NO_MARKET_PERMISSION",
       "relevance_state": "KEEP",
       "sensor_id": "BREADTH_FORWARD_FAMILY",
+      "source_definition_paths": [
+        "04_MARKET_LEARNING/shadow_protocols/2026-07-11__s4-hybrid-zero-weight-shadow-logging-protocol-v0-1__canonical.md"
+      ],
       "status": "ACTIVE_SHADOW"
     },
     {
+      "data_quality_limitations": [
+        "File presence does not prove a working evaluator, valid outcome, sample independence or source freshness.",
+        "Family-level missing definitions/horizons remain unrecovered; no defaults are imputed."
+      ],
+      "definition_timestamp_or_version": "SOURCE_PATH_VERSIONED_IN_GIT; EXACT_FAMILY_DEFINITION_REQUIRES_RECOVERY",
       "evaluator": "NONE_RECOVERY_REQUIRED",
-      "evidence_paths": ["04_MARKET_LEARNING/fable_ota_shadow"],
+      "evidence_paths": [
+        "04_MARKET_LEARNING/fable_ota_shadow"
+      ],
       "family": "external_shadow_research",
+      "forward_observation_enabled": false,
+      "historical_recoverability": "SOURCE_AVAILABLE; EXACT_EVALUATOR_RECOVERY_REQUIRED",
+      "input_sources": [
+        "04_MARKET_LEARNING/fable_ota_shadow"
+      ],
+      "intended_horizon": "UNRECOVERED_AT_FAMILY_LEVEL",
+      "known_overlap_with_canonical": [
+        "RELATED_SHADOWS_ARE_NOT_INDEPENDENT_CONFIRMATIONS"
+      ],
+      "outcome_horizons": [],
+      "output_semantics": "SOURCE_AVAILABILITY_AND_REGISTERED_OUTPUT_REVIEW_ONLY; NO_MARKET_PERMISSION",
       "relevance_state": "WATCH",
       "sensor_id": "FABLE_OTA_SHADOW_FAMILY",
+      "source_definition_paths": [
+        "04_MARKET_LEARNING/fable_ota_shadow/2026-07-14T164600Z__fable-ota-ping-13__shadow-evaluation.md"
+      ],
       "status": "RESEARCH_ONLY"
     },
     {
+      "data_quality_limitations": [
+        "File presence does not prove a working evaluator, valid outcome, sample independence or source freshness.",
+        "Family-level missing definitions/horizons remain unrecovered; no defaults are imputed."
+      ],
+      "definition_timestamp_or_version": "SOURCE_PATH_VERSIONED_IN_GIT; EXACT_FAMILY_DEFINITION_REQUIRES_RECOVERY",
       "evaluator": "NONE_RECOVERY_REQUIRED",
-      "evidence_paths": ["04_MARKET_LEARNING/cycle_navigator"],
+      "evidence_paths": [
+        "04_MARKET_LEARNING/cycle_navigator"
+      ],
       "family": "cycle_navigator",
+      "forward_observation_enabled": false,
+      "historical_recoverability": "SOURCE_AVAILABLE; EXACT_EVALUATOR_RECOVERY_REQUIRED",
+      "input_sources": [
+        "04_MARKET_LEARNING/cycle_navigator"
+      ],
+      "intended_horizon": "UNRECOVERED_AT_FAMILY_LEVEL",
+      "known_overlap_with_canonical": [
+        "RELATED_SHADOWS_ARE_NOT_INDEPENDENT_CONFIRMATIONS"
+      ],
+      "outcome_horizons": [],
+      "output_semantics": "SOURCE_AVAILABILITY_AND_REGISTERED_OUTPUT_REVIEW_ONLY; NO_MARKET_PERMISSION",
       "relevance_state": "WATCH",
       "sensor_id": "CYCLE_NAVIGATOR_RESEARCH_FAMILY",
+      "source_definition_paths": [
+        "04_MARKET_LEARNING/cycle_navigator/2026-W32/CYCLE_NAVIGATOR_19.md"
+      ],
       "status": "RESEARCH_ONLY"
     },
     {
+      "data_quality_limitations": [
+        "File presence does not prove a working evaluator, valid outcome, sample independence or source freshness.",
+        "Family-level missing definitions/horizons remain unrecovered; no defaults are imputed."
+      ],
+      "definition_timestamp_or_version": "SOURCE_PATH_VERSIONED_IN_GIT; EXACT_FAMILY_DEFINITION_REQUIRES_RECOVERY",
       "evaluator": "RESEARCH_ARTIFACT_ONLY",
-      "evidence_paths": ["06_RESEARCH_LAB/historical_altseason_pullback_v1"],
+      "evidence_paths": [
+        "06_RESEARCH_LAB/historical_altseason_pullback_v1"
+      ],
       "family": "historical_research",
+      "forward_observation_enabled": false,
+      "historical_recoverability": "SOURCE_AVAILABLE; EXACT_EVALUATOR_RECOVERY_REQUIRED",
+      "input_sources": [
+        "06_RESEARCH_LAB/historical_altseason_pullback_v1"
+      ],
+      "intended_horizon": "UNRECOVERED_AT_FAMILY_LEVEL",
+      "known_overlap_with_canonical": [
+        "RELATED_SHADOWS_ARE_NOT_INDEPENDENT_CONFIRMATIONS"
+      ],
+      "outcome_horizons": [],
+      "output_semantics": "SOURCE_AVAILABILITY_AND_REGISTERED_OUTPUT_REVIEW_ONLY; NO_MARKET_PERMISSION",
       "relevance_state": "WATCH",
       "sensor_id": "HISTORICAL_ALTSEASON_PULLBACK_LAB",
+      "source_definition_paths": [
+        "06_RESEARCH_LAB/historical_altseason_pullback_v1/README.md"
+      ],
       "status": "RESEARCH_ONLY"
     },
     {
       "anti_double_counting_required": true,
+      "data_quality_limitations": [
+        "File presence does not prove a working evaluator, valid outcome, sample independence or source freshness.",
+        "Family-level missing definitions/horizons remain unrecovered; no defaults are imputed."
+      ],
+      "definition_timestamp_or_version": "SOURCE_PATH_VERSIONED_IN_GIT; EXACT_FAMILY_DEFINITION_REQUIRES_RECOVERY",
       "evaluator": "NONE_RECOVERY_REQUIRED",
       "evidence_paths": [
         "06_RESEARCH_LAB/historical_sensor_recovery_v1/RECOVERED_LEGACY_SENSOR_DEFINITIONS_2026-08-21.json",
         "04_MARKET_LEARNING/shadow_registry/LEGACY_RECOVERY_QUEUE.json"
       ],
       "family": "legacy_sensor_recovery",
+      "forward_observation_enabled": false,
+      "historical_recoverability": "SOURCE_AVAILABLE; EXACT_EVALUATOR_RECOVERY_REQUIRED",
+      "input_sources": [
+        "06_RESEARCH_LAB/historical_sensor_recovery_v1/RECOVERED_LEGACY_SENSOR_DEFINITIONS_2026-08-21.json",
+        "04_MARKET_LEARNING/shadow_registry/LEGACY_RECOVERY_QUEUE.json"
+      ],
+      "intended_horizon": "UNRECOVERED_AT_FAMILY_LEVEL",
+      "known_overlap_with_canonical": [
+        "RELATED_SHADOWS_ARE_NOT_INDEPENDENT_CONFIRMATIONS"
+      ],
       "notes": "Contains Early Rotation Pre-Trigger, fake-rotation filter, ETF-era divergence classifiers and SRE/FAE/CCE/ODM/RWE meta-learning concepts. Individual promotion requires exact data mapping and separate prospective validation.",
+      "outcome_horizons": [],
+      "output_semantics": "SOURCE_AVAILABILITY_AND_REGISTERED_OUTPUT_REVIEW_ONLY; NO_MARKET_PERMISSION",
       "relevance_state": "WATCH",
       "sensor_id": "RECOVERED_LEGACY_SENSOR_FAMILY_2026_08_21",
+      "source_definition_paths": [
+        "06_RESEARCH_LAB/historical_sensor_recovery_v1/RECOVERED_LEGACY_SENSOR_DEFINITIONS_2026-08-21.json"
+      ],
       "status": "DORMANT_RECOVERABLE",
       "tracking_policy": "WEEKLY_REVIEW_REQUIRED"
     },
     {
       "anti_double_counting_required": true,
+      "collection_state": "QUARANTINED_P0_REPAIR",
+      "data_quality_limitations": [
+        "File presence does not prove a working evaluator, valid outcome, sample independence or source freshness.",
+        "Family-level missing definitions/horizons remain unrecovered; no defaults are imputed.",
+        "QUARANTINED_P0_REPAIR; no prospective eligibility inferred from available artifacts."
+      ],
+      "definition_timestamp_or_version": "SOURCE_PATH_VERSIONED_IN_GIT; EXACT_FAMILY_DEFINITION_REQUIRES_RECOVERY",
       "evaluator": "RESEARCH_ARTIFACT_ONLY",
       "evidence_paths": [
         "04_MARKET_LEARNING/shadow_registry/SHARED_ROW_TOURNAMENT_POINTER.json",
@@ -101,11 +283,33 @@
         "06_RESEARCH_LAB/shared_row_model_tournament_v1/weekly/LATEST.json"
       ],
       "family": "shared_row_model_tournament",
+      "forward_observation_enabled": false,
+      "historical_recoverability": "SOURCE_AVAILABLE; EXACT_EVALUATOR_RECOVERY_REQUIRED",
+      "input_sources": [
+        "04_MARKET_LEARNING/shadow_registry/SHARED_ROW_TOURNAMENT_POINTER.json",
+        "06_RESEARCH_LAB/shared_row_model_tournament_v1/RUNTIME_STATUS.json",
+        "06_RESEARCH_LAB/shared_row_model_tournament_v1/OWNER_BINDING_MATRIX.json",
+        "06_RESEARCH_LAB/shared_row_model_tournament_v1/TRANSFORM_FREEZE_REGISTRY.json",
+        "06_RESEARCH_LAB/shared_row_model_tournament_v1/data/PROSPECTIVE_SHARED_ROW_LEDGER.csv",
+        "06_RESEARCH_LAB/shared_row_model_tournament_v1/14_DIVERGENCE_FNP_LEDGER.csv",
+        "06_RESEARCH_LAB/shared_row_model_tournament_v1/data/CATALYST_LEDGER.csv",
+        "06_RESEARCH_LAB/shared_row_model_tournament_v1/RELEVANCE_STATE.json",
+        "06_RESEARCH_LAB/shared_row_model_tournament_v1/monitor/LATEST.json",
+        "06_RESEARCH_LAB/shared_row_model_tournament_v1/weekly/LATEST.json"
+      ],
+      "intended_horizon": "UNRECOVERED_AT_FAMILY_LEVEL",
+      "known_overlap_with_canonical": [
+        "RELATED_SHADOWS_ARE_NOT_INDEPENDENT_CONFIRMATIONS"
+      ],
       "notes": "P0 scientific-validity quarantine with zero eligible rows at containment. Prospective accumulation resumes only after implementation, negative controls and a new future floor. No direct Master Monday/Cycle Navigator/portfolio authority. Canonical promotion requires separate governance.",
+      "outcome_horizons": [],
+      "output_semantics": "SOURCE_AVAILABILITY_AND_REGISTERED_OUTPUT_REVIEW_ONLY; NO_MARKET_PERMISSION",
       "relevance_state": "WATCH",
       "sensor_id": "SHARED_ROW_MODEL_TOURNAMENT_V1",
+      "source_definition_paths": [
+        "06_RESEARCH_LAB/shared_row_model_tournament_v1/RUNTIME_STATUS.json"
+      ],
       "status": "RESEARCH_ONLY",
-      "collection_state": "QUARANTINED_P0_REPAIR",
       "tracking_policy": "WEEKLY_REVIEW_REQUIRED"
     }
   ]
