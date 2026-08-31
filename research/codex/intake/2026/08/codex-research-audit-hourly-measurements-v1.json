@@ -1,0 +1,70 @@
+{
+  "contract": "CODEX_RESEARCH_CANDIDATE_v1",
+  "candidate_id": "codex-research-audit-hourly-measurements-v1",
+  "submitted_at_utc": "2026-08-31T02:10:11Z",
+  "status": "SUBMITTED",
+  "origin": {
+    "type": "AUDIT",
+    "thread_label": "independent-code-audit-2026-08-31",
+    "source_paths": [
+      "06_RESEARCH_LAB/audit_summaries/code_audit_20260831/README.md",
+      "06_RESEARCH_LAB/audit_summaries/code_audit_20260831/reproduce.py"
+    ]
+  },
+  "title": "Verify unique hourly coverage and honest sequence measurements",
+  "objective": "Verify unique hourly coverage and honest sequence measurements. Preserve existing owner semantics and historical evidence.",
+  "finding_key": "AUDIT_N2_M15_M2_HOURLY_INTEGRITY",
+  "primary_target": "scripts/daily_capture/build_hourly_sequence.py",
+  "allowed_change_scope": [
+    "scripts/daily_capture/build_hourly_sequence.py",
+    "scripts/daily_capture/build_weekly_market_close_package.py",
+    "scripts/daily_capture/build_capture_index.py",
+    "tests/daily_capture/test_daily_capture_pipeline.py",
+    "tests/daily_capture/test_weekly_market_close_endpoint.py",
+    "tests/daily_capture/test_audit_hourly_measurements.py"
+  ],
+  "evidence": [
+    {
+      "kind": "COMMIT",
+      "ref": "fa18006c3c0b2a1ab89f5dcebb3ce4a02bd50195",
+      "summary": "Frozen independent reproduction baseline."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "06_RESEARCH_LAB/audit_summaries/code_audit_20260831/README.md",
+      "summary": "Independent findings and corrected external-audit claims."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "06_RESEARCH_LAB/audit_summaries/code_audit_20260831/reproduce.py",
+      "summary": "Read-only probes with synthetic temporary fixtures; no paid API calls."
+    }
+  ],
+  "reproduction": "Stub fetch_klines with 168 synthetic rows for 2026-W35, replace hour 50 with hour 49, then run final mode at 2026-08-31T00:05Z: the package reports COMPLETE/PASS despite only 167 unique hours. Independently inspect first-hour open fallback and noncontiguous previous_close in build_hourly_sequence, and the passed/planned owner denominator in build_capture_index.",
+  "acceptance_tests": {
+    "positive": [
+      "Final completeness requires the exact unique contiguous UTC hourly grid for the requested window, with valid closed candle boundaries.",
+      "Hourly returns use comparable adjacent observations; a missing predecessor or a gap is explicit missing evidence.",
+      "Passed/planned owner counts use the same owner-role population and preserve separate registered-source information."
+    ],
+    "negative": [
+      "Duplicate, missing, out-of-window, misaligned or conflicting candles cannot receive COMPLETE solely from row count.",
+      "Do not interpolate hours, reinterpret an open-to-close return as close-to-close, rewrite historical captures or add external calls."
+    ]
+  },
+  "authority_boundary": "CODE_REMEDIATION_ONLY",
+  "requires_framework_owner_authority": false,
+  "forbidden_changes": [
+    "market gates",
+    "model weights",
+    "canonical authority",
+    "portfolio logic",
+    "API budget",
+    "new policy semantics",
+    "workflow changes",
+    "historical evidence rewrite",
+    "restricted provider values in public artifacts"
+  ],
+  "requested_priority": "EXPEDITED",
+  "post_fix_gate": "POSITIVE_AND_NEGATIVE_REGRESSIONS_PLUS_PRODUCTION_SHAPE_REPLAY_PLUS_CI_AND_MAIN_READBACK"
+}

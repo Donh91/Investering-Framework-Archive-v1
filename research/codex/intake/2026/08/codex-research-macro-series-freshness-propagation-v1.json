@@ -1,0 +1,70 @@
+{
+  "contract": "CODEX_RESEARCH_CANDIDATE_v1",
+  "candidate_id": "codex-research-macro-series-freshness-propagation-v1",
+  "submitted_at_utc": "2026-08-30T20:15:00Z",
+  "status": "SUBMITTED",
+  "origin": {
+    "type": "AUDIT",
+    "thread_label": "weekly-challenger-followthrough",
+    "source_paths": [
+      "scripts/data_terminal/fred_csv_collector.py",
+      "scripts/data_terminal/fred_multiseries_live_adapter.py",
+      "scripts/daily_capture/build_capture_index.py",
+      "03_DAILY_CAPTURE_LOGS/captures/2026/08/27/150924_gh-33086222398-1.json",
+      ".github/workflows/daily-raw-owner-capture.yml"
+    ]
+  },
+  "title": "Preserve per-series FRED freshness in compact live anchors",
+  "objective": "Repair the compact live-anchor macro embedding so each FRED series preserves deterministic source-timestamp and freshness/health semantics already produced by the FRED owner. A stale slow-frequency observation may remain available as context but must not be indistinguishable from a fresh observation. Implement the smallest owner-consumer lineage repair without changing FRED cadence, source selection, stale thresholds, market interpretation, or API budget.",
+  "finding_key": "FRED_SERIES_FRESHNESS_DROPPED_BY_LIVE_ANCHOR_COMPACTION",
+  "primary_target": "scripts/daily_capture/build_capture_index.py",
+  "allowed_change_scope": [
+    "scripts/daily_capture/build_capture_index.py",
+    "scripts/data_terminal/fred_multiseries_live_adapter.py only if required to expose already-existing owner metadata deterministically",
+    "tests/daily_capture/directly related live-anchor macro freshness tests",
+    "tests/data_terminal/directly related FRED adapter contract tests"
+  ],
+  "evidence": [
+    {"kind": "REPO_PATH", "ref": "scripts/data_terminal/fred_csv_collector.py", "summary": "The FRED owner already computes per-series source_timestamp, retrieval_timestamp, freshness_seconds, stale_after_seconds and PASS/STALE using the existing seven-day stale policy."},
+    {"kind": "REPO_PATH", "ref": "scripts/daily_capture/build_capture_index.py", "summary": "latest_fred_values() rereads raw CSV payloads and emits only {value,date}; it does not consume or preserve the owner's per-series source health/freshness fields."},
+    {"kind": "REPO_PATH", "ref": "03_DAILY_CAPTURE_LOGS/captures/2026/08/27/150924_gh-33086222398-1.json", "summary": "The compact anchor embeds DTWEXBGS date 2026-08-21 value 118.0628 alongside fresher DGS/VIX values but carries no per-series freshness/status, so downstream cannot distinguish latest-available from fresh."},
+    {"kind": "REPO_PATH", "ref": ".github/workflows/daily-raw-owner-capture.yml", "summary": "FRED macro is intentionally collected once per day on source-appropriate cadence; the fix must preserve this cadence rather than recollecting slow data more frequently."}
+  ],
+  "reproduction": "On fresh main, inspect fred_csv_collector.build_artifacts() and confirm source_health rows carry per-series status/freshness. Then inspect build_capture_index.latest_fred_values() and a morning live-anchor capture. Confirm the compact market_metrics.macro entries contain only date/value and omit the already-known owner freshness/status fields. If current main already preserves equivalent deterministic per-series freshness in the compact anchor, stop as clean no-op.",
+  "acceptance_tests": {
+    "positive": [
+      "A fixture with DGS2/DGS10/VIX within freshness policy and DTWEXBGS older than stale_after_seconds produces a compact anchor where the three fresh series remain PASS and DTWEXBGS is explicitly STALE.",
+      "Each embedded macro series carries source_timestamp or equivalent source date, retrieval_timestamp, freshness_seconds, stale_after_seconds and status sufficient for downstream quality-aware use.",
+      "Latest-available stale data remain numerically available as context while their stale status is preserved; no consumer must infer freshness from presence alone.",
+      "The compact anchor remains deterministic and source lineage/readback tests pass without increasing source calls."
+    ],
+    "negative": [
+      "Do not change DEFAULT_STALE_AFTER_SECONDS or introduce a new market/freshness threshold.",
+      "Do not change the FRED collection schedule, add API calls, switch provider, or increase API budget.",
+      "Do not convert STALE to bearish, zero, missing, or a market-state vote.",
+      "Do not forward-fill, interpolate, fabricate a newer source date, or retrospectively rewrite historical captures.",
+      "Do not make macro evidence binding or alter canonical market/portfolio authority."
+    ]
+  },
+  "authority_boundary": "CODE_REMEDIATION_ONLY",
+  "requires_framework_owner_authority": false,
+  "forbidden_changes": [
+    "market gates",
+    "model weights",
+    "canonical authority",
+    "portfolio logic",
+    "API budget",
+    "new policy semantics",
+    "new source",
+    "FRED collection cadence",
+    "stale threshold changes",
+    "historical backfill",
+    "automatic market interpretation"
+  ],
+  "linked_health_signature": null,
+  "requested_priority": "EXPEDITED",
+  "post_fix_gate": "MIXED_FRESHNESS_FIXTURE_PASS_PLUS_ONE_NATURAL_MORNING_ANCHOR_WITH_PER_SERIES_QUALITY_READBACK",
+  "clean_noop_condition": "Fresh main already preserves deterministic per-series FRED freshness/status in the compact live-anchor market_metrics.macro surface.",
+  "stop_condition": "Stop without code changes if the compact anchor is not a downstream decision/calibration input or if equivalent freshness lineage is already preserved through a canonical adjacent field consumed by all readers.",
+  "escalation_condition": "Escalate only if preserving existing owner health would require a breaking compact-anchor contract change rather than a backward-compatible field extension."
+}

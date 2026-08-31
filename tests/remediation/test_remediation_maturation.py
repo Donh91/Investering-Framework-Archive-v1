@@ -5,6 +5,7 @@ from pathlib import Path
 
 from scripts.remediation.build_remediation_maturation import build, canonical_hash, signature
 from scripts.remediation.write_transition_receipt import build_receipt
+from tests.remediation.test_codex_execution_quality_observability import CodexExecutionQualityObservabilityTests
 
 
 class RemediationMaturationTests(unittest.TestCase):

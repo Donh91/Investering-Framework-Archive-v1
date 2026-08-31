@@ -1,0 +1,91 @@
+{
+  "contract": "CODEX_RESEARCH_CANDIDATE_v1",
+  "candidate_id": "codex-research-codex-execution-quality-observability-v1",
+  "submitted_at_utc": "2026-08-31T00:47:00Z",
+  "status": "SUBMITTED",
+  "origin": {
+    "type": "EXTERNAL_REVIEW",
+    "thread_label": "ai-agent-book bounded upstream gap audit",
+    "source_paths": [
+      "https://github.com/bojieli/ai-agent-book/blob/520b784a22a921c05bee2eb5b067e0ac41c9da34/chapter7/model-action-threshold/README.md",
+      "https://github.com/bojieli/ai-agent-book/blob/520b784a22a921c05bee2eb5b067e0ac41c9da34/chapter9/trajectory-verifier/README.md",
+      "scripts/remediation/write_codex_research_completion_receipt.py",
+      "scripts/remediation/merge_codex_research_intake.py"
+    ]
+  },
+  "title": "Codex execution-quality observability gap",
+  "objective": "Extend the existing Codex research execution-observability path so completed remediation can distinguish first-patch success, bounded pre-edit exploration, rework or test cycles, and attributable failure or telemetry-unavailable states when those facts are deterministically available. Preserve current queue authority, transition/completion semantics and backward compatibility. Never fabricate unavailable telemetry, create a new agent/engine/test, rank models as authority, or use telemetry to promote, merge or resolve a task automatically.",
+  "finding_key": "CODEX_EXECUTION_QUALITY_OBSERVABILITY_MISSING",
+  "primary_target": "scripts/remediation/write_codex_research_completion_receipt.py",
+  "allowed_change_scope": [
+    "scripts/remediation/write_codex_research_completion_receipt.py",
+    "scripts/remediation/merge_codex_research_intake.py",
+    "tests/remediation/directly related Codex intake, completion-receipt and execution-ledger tests",
+    "research/codex/README.md only if the existing observability contract requires synchronized documentation"
+  ],
+  "evidence": [
+    {
+      "kind": "COMMIT",
+      "ref": "5cc5b0a293fc0abdcc53aa211f78de2f419c8a80",
+      "summary": "Current Investering control-plane main used for the bounded gap audit."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "scripts/remediation/write_codex_research_completion_receipt.py",
+      "summary": "Current completion receipt records candidate/task identity, PR, merge commit, verification evidence and post-fix gate, but no execution-quality telemetry or explicit telemetry-unavailable state."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "scripts/remediation/merge_codex_research_intake.py",
+      "summary": "Current execution ledger records lifecycle and task-contract transitions, but not first-patch success, pre-edit exploration, edit/test rework cycles or evidence-backed failure attribution."
+    },
+    {
+      "kind": "OTHER",
+      "ref": "https://github.com/bojieli/ai-agent-book/blob/520b784a22a921c05bee2eb5b067e0ac41c9da34/chapter7/model-action-threshold/README.md",
+      "summary": "Pinned upstream experiment demonstrates process metrics such as tool/read calls before first edit, first model-triggered test pass, edits after first test, total edits, final success, latency and token usage, while warning that time-to-first-edit is not a quality score by itself."
+    },
+    {
+      "kind": "OTHER",
+      "ref": "https://github.com/bojieli/ai-agent-book/blob/520b784a22a921c05bee2eb5b067e0ac41c9da34/chapter9/trajectory-verifier/README.md",
+      "summary": "Pinned upstream trajectory-verifier example preserves dimensioned process evidence rather than collapsing execution into a single score, supporting bounded failure-attribution observability rather than autonomous self-modification."
+    }
+  ],
+  "reproduction": "On current main 5cc5b0a293fc0abdcc53aa211f78de2f419c8a80, inspect scripts/remediation/write_codex_research_completion_receipt.py and scripts/remediation/merge_codex_research_intake.py. Construct two synthetic research-origin completion scenarios with the same valid candidate/task hashes, PR/merge evidence, VERIFIED completion status and final RESOLVED lifecycle state: scenario A reaches a passing patch on its first model-triggered test with no rework; scenario B fails the first test and requires multiple edit/test cycles. The current completion receipt and execution event have no structured fields that can distinguish these execution-quality paths. Confirm also that missing historical process telemetry cannot be recovered deterministically from the current receipt itself.",
+  "acceptance_tests": {
+    "positive": [
+      "A production-shaped completion fixture can persist a small structured execution-quality block or equivalent fields for deterministically supplied telemetry, including explicit first-patch/test outcome, bounded pre-edit exploration and rework/test-cycle information where available.",
+      "The receipt hash covers the added telemetry and merge_codex_research_intake.py carries the relevant observability fields into the execution state or ledger without changing queue authority.",
+      "A bounded evidence-backed failure-attribution field or telemetry status can distinguish captured, partially captured and unavailable execution evidence without collapsing the result into one opaque quality score.",
+      "Existing completion receipts created before this change remain valid and resolvable; absent telemetry is represented as unavailable/not captured rather than zero, pass, fail or inferred history.",
+      "Directly related remediation tests pass for both a telemetry-present completion and a legacy telemetry-absent completion."
+    ],
+    "negative": [
+      "Missing process telemetry must never be inferred from PR count, merge status, elapsed calendar time, commit count or historical lifecycle state.",
+      "Execution-quality fields must not change CODEX_READY classification, candidate authority, merge permission, RESOLVED semantics, market/framework authority or post-fix gates.",
+      "Do not create a new agent, engine, active research test, scoring authority, model leaderboard or autonomous prompt/self-modification loop.",
+      "Do not backfill historical completion receipts with invented first-patch, tool-call, token, rework or failure-attribution values.",
+      "Do not require upstream ai-agent-book code or any new external dependency at runtime."
+    ]
+  },
+  "authority_boundary": "CODE_REMEDIATION_ONLY",
+  "requires_framework_owner_authority": false,
+  "forbidden_changes": [
+    "market gates",
+    "model weights",
+    "canonical authority",
+    "portfolio logic",
+    "API budget",
+    "new policy semantics",
+    "automatic merge or self-promotion",
+    "telemetry-driven CODEX_READY promotion",
+    "telemetry-driven resolution or post-fix bypass",
+    "prompt self-modification",
+    "historical telemetry backfill",
+    "new agent or engine",
+    "new active research test",
+    "model ranking as authority",
+    "new runtime external dependency"
+  ],
+  "requested_priority": "NORMAL",
+  "post_fix_gate": "BACKWARD_COMPATIBILITY_FIXTURE_PASS_PLUS_ONE_NEW_CODEX_COMPLETION_RECEIPT_WITH_EXPLICIT_TELEMETRY_STATUS"
+}

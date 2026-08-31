@@ -1,3 +1,5 @@
+import pytest
+
 from scripts.intraday_execution.intraday_execution_research import (
     classify,
     legacy_event_policy,
@@ -115,6 +117,18 @@ def test_missing_hourly_source_fails_closed_despite_valid_wait_context():
     eligibility = research_context_eligibility(cfg(), obs)
     assert eligibility["eligible"] is False
     assert eligibility["reason"] == "COMPLETED_HOURLY_PRICE_CONTEXT_INSUFFICIENT"
+
+
+@pytest.mark.parametrize("asset", ["btc", "eth", "ethbtc"])
+@pytest.mark.parametrize("invalid_close", [True, float("nan"), float("inf"), -float("inf"), 0, -1, "100"])
+def test_invalid_owner_price_cannot_authorize_research_collection(asset, invalid_close):
+    obs = valid_obs(entry_state="WAIT")
+    obs[asset]["close"] = invalid_close
+    eligibility = research_context_eligibility(cfg(), obs)
+    assert eligibility["eligible"] is False
+    assert eligibility["reason"] == "COMPLETED_HOURLY_PRICE_CONTEXT_INSUFFICIENT"
+    state, _ = classify(cfg(), [], obs, None)
+    assert state == "REGIME_NOT_ACTIVE"
 
 
 def test_valid_forward_only_wait_context_keeps_research_owner_alive():

@@ -1,0 +1,70 @@
+{
+  "contract": "CODEX_RESEARCH_CANDIDATE_v1",
+  "candidate_id": "codex-research-audit-director-freshness-v1",
+  "submitted_at_utc": "2026-08-31T02:10:11Z",
+  "status": "SUBMITTED",
+  "origin": {
+    "type": "AUDIT",
+    "thread_label": "independent-code-audit-2026-08-31",
+    "source_paths": [
+      "06_RESEARCH_LAB/audit_summaries/code_audit_20260831/README.md",
+      "06_RESEARCH_LAB/audit_summaries/code_audit_20260831/reproduce.py"
+    ]
+  },
+  "title": "Distinguish an unseen capture ID from fresh Director evidence",
+  "objective": "Distinguish an unseen capture ID from fresh Director evidence. Preserve existing owner semantics and historical evidence.",
+  "finding_key": "AUDIT_D4_UNSEEN_IS_NOT_FRESH",
+  "primary_target": "scripts/api_agent/check_director_freshness.py",
+  "allowed_change_scope": [
+    "scripts/api_agent/check_director_freshness.py",
+    "scripts/api_agent/build_owner_bound_director_context.py",
+    "scripts/api_agent/check_delta_ready.py",
+    "tests/api_agent/test_api_intelligence_v2.py",
+    "tests/api_agent/test_owner_bound_director_context.py",
+    "tests/api_agent/test_audit_director_freshness.py"
+  ],
+  "evidence": [
+    {
+      "kind": "COMMIT",
+      "ref": "fa18006c3c0b2a1ab89f5dcebb3ce4a02bd50195",
+      "summary": "Frozen independent reproduction baseline."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "06_RESEARCH_LAB/audit_summaries/code_audit_20260831/README.md",
+      "summary": "Independent findings and corrected external-audit claims."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "06_RESEARCH_LAB/audit_summaries/code_audit_20260831/reproduce.py",
+      "summary": "Read-only probes with synthetic temporary fixtures; no paid API calls."
+    }
+  ],
+  "reproduction": "The read-only probe passes a never-seen synthetic run ID with captured_at_utc=2026-08-08T14:01:34Z to check_director_freshness and receives fresh_ready=true. Archived Director contexts on August 9-14 reused that capture and reported DELTA_READY at ages up to 151.7 hours. Deduplication is not source freshness.",
+  "acceptance_tests": {
+    "positive": [
+      "Separate source age, timestamp validity and previously processed identity in readiness diagnostics.",
+      "Bind any execution cutoff to an existing current owner contract; if no authoritative cutoff exists, report the blocked decision rather than invent policy.",
+      "Fresh, valid, unseen evidence remains eligible under the existing owner contract; duplicates remain no-ops."
+    ],
+    "negative": [
+      "Unseen identity alone cannot assert freshness; unreadable, missing, naive or future source timestamps cannot be presented as verified fresh.",
+      "Do not create a new market rule, freshness tolerance, API call, schedule or budget; do not mutate historical contexts."
+    ]
+  },
+  "authority_boundary": "CODE_REMEDIATION_ONLY",
+  "requires_framework_owner_authority": false,
+  "forbidden_changes": [
+    "market gates",
+    "model weights",
+    "canonical authority",
+    "portfolio logic",
+    "API budget",
+    "new policy semantics",
+    "workflow changes",
+    "historical evidence rewrite",
+    "restricted provider values in public artifacts"
+  ],
+  "requested_priority": "EXPEDITED",
+  "post_fix_gate": "POSITIVE_AND_NEGATIVE_REGRESSIONS_PLUS_PRODUCTION_SHAPE_REPLAY_PLUS_CI_AND_MAIN_READBACK"
+}

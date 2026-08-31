@@ -1,0 +1,68 @@
+{
+  "contract": "CODEX_RESEARCH_CANDIDATE_v1",
+  "candidate_id": "codex-research-audit-weekly-evidence-v1",
+  "submitted_at_utc": "2026-08-31T02:10:11Z",
+  "status": "SUBMITTED",
+  "origin": {
+    "type": "AUDIT",
+    "thread_label": "independent-code-audit-2026-08-31",
+    "source_paths": [
+      "06_RESEARCH_LAB/audit_summaries/code_audit_20260831/README.md",
+      "06_RESEARCH_LAB/audit_summaries/code_audit_20260831/reproduce.py"
+    ]
+  },
+  "title": "Include current matured outcomes and preserve valid CSV rows",
+  "objective": "Include current matured outcomes and preserve valid CSV rows. Preserve existing owner semantics and historical evidence.",
+  "finding_key": "AUDIT_H2_M3_WEEKLY_EVIDENCE_LOSS",
+  "primary_target": "scripts/api_agent/build_weekly_calibration_context.py",
+  "allowed_change_scope": [
+    "scripts/api_agent/build_weekly_calibration_context.py",
+    "scripts/daily_capture/build_weekly_calibration.py",
+    "tests/api_agent/test_weekly_calibration_context_v4.py",
+    "tests/daily_capture/test_audit_weekly_ingestion.py"
+  ],
+  "evidence": [
+    {
+      "kind": "COMMIT",
+      "ref": "fa18006c3c0b2a1ab89f5dcebb3ce4a02bd50195",
+      "summary": "Frozen independent reproduction baseline."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "06_RESEARCH_LAB/audit_summaries/code_audit_20260831/README.md",
+      "summary": "Independent findings and corrected external-audit claims."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "06_RESEARCH_LAB/audit_summaries/code_audit_20260831/reproduce.py",
+      "summary": "Read-only probes with synthetic temporary fixtures; no paid API calls."
+    }
+  ],
+  "reproduction": "For ISO week 2026-W35, the pinned repository has 118 eligible MATURED_OUTCOME_v2/v3 records, but load_experiment_learning returns zero. A CSV with valid/bad/valid timestamp rows returns only the first valid row. Reproduce using the audit probe and synthetic CSV.",
+  "acceptance_tests": {
+    "positive": [
+      "Read both documented v2 and current v3 matured outcome records in the requested half-open UTC interval.",
+      "Valid rows after a malformed CSV row survive; malformed rows and unreadable files are explicit diagnostics.",
+      "A genuinely empty interval remains empty without fabricating outcomes."
+    ],
+    "negative": [
+      "Unknown contracts, malformed timestamps and unreadable files are not silently represented as complete evidence.",
+      "Do not rewrite historical outcome files, infer missing values or enable outcome scoring for restricted Round 3 data."
+    ]
+  },
+  "authority_boundary": "CODE_REMEDIATION_ONLY",
+  "requires_framework_owner_authority": false,
+  "forbidden_changes": [
+    "market gates",
+    "model weights",
+    "canonical authority",
+    "portfolio logic",
+    "API budget",
+    "new policy semantics",
+    "workflow changes",
+    "historical evidence rewrite",
+    "restricted provider values in public artifacts"
+  ],
+  "requested_priority": "EXPEDITED",
+  "post_fix_gate": "POSITIVE_AND_NEGATIVE_REGRESSIONS_PLUS_PRODUCTION_SHAPE_REPLAY_PLUS_CI_AND_MAIN_READBACK"
+}

@@ -1,0 +1,50 @@
+{
+  "contract": "PULLBACK_LEARNING_ELIGIBILITY_STATUS_v1",
+  "version": "1.0",
+  "effective_at_utc": "2026-08-31T02:03:00Z",
+  "authority": "FRAMEWORK_OWNER_GOVERNANCE_NON_MARKET",
+  "status": "SUSPENDED_NO_ELIGIBILITY_CONTRACT",
+  "purpose": "Make the adaptive Pullback Learning owner fail closed after retirement of its legacy entry-state prerequisite without inventing a replacement market or regime rule.",
+  "permissions": {
+    "observation_collection": true,
+    "adaptive_descriptive_statistics": true,
+    "mechanical_research_classification": false,
+    "new_episode_creation": false,
+    "existing_episode_maturation": false,
+    "canonical_market_state": false,
+    "portfolio_execution": false,
+    "automatic_rule_changes": false,
+    "rebuy_permission": false
+  },
+  "consumer_semantics": {
+    "classification_output_when_suspended": "REGIME_NOT_ACTIVE",
+    "classification_reason": "ELIGIBILITY_CONTRACT_UNAVAILABLE",
+    "entry_signal_role": "LEGACY_CONTEXT_ONLY_NO_ELIGIBILITY_OR_PERMISSION",
+    "breadth_role": "DESCRIPTIVE_RESEARCH_CONTEXT_ZERO_EXECUTION_WEIGHT",
+    "direction_confidence_role": "NOT_AN_ELIGIBILITY_OR_REGIME_PERMISSION_SOURCE",
+    "missing_status_behavior": "FAIL_CLOSED_NO_CLASSIFICATION_OR_EPISODE_MUTATION",
+    "historical_evidence": "PRESERVE_IMMUTABLE_NO_RETROSPECTIVE_RELABEL"
+  },
+  "basis": [
+    "PR #657 retired the legacy breadth/entry permission path and prevents source-quality or proxy breadth from silently restoring it.",
+    "06_RESEARCH_LAB/existing_system_improvement_12x/T09_PULLBACK_REPRODUCIBILITY.md freezes Pullback Policy v0.2 as GUIDANCE_ONLY with mechanical classification authority suspended until a complete specification exists.",
+    "The adaptive Pullback Learning owner currently has descriptive observations but zero closed episodes and insufficient outcome sample, so there is no demonstrated need to manufacture a replacement eligibility rule.",
+    "Codex fresh-state audit for signature 6574d30a3f1e5cbf9e4d found no pre-existing research-only Pullback Learning eligibility/context owner and correctly escalated to FRAMEWORK_OWNER rather than substituting proxy breadth, source quality, T12 or direction confidence."
+  ],
+  "resume_requires": [
+    "separate source-backed eligibility specification",
+    "explicit framework-owner approval of the research-context boundary",
+    "negative controls proving retired entry/breadth authority cannot be restored indirectly",
+    "explicit episode creation and maturation policy",
+    "separate review before any canonical, rebuy or portfolio authority"
+  ],
+  "non_goals": [
+    "no new pullback threshold",
+    "no new regime threshold",
+    "no new market gate",
+    "no replacement entry permission",
+    "no automatic rebuy rule",
+    "no portfolio action",
+    "no retrospective event creation"
+  ]
+}

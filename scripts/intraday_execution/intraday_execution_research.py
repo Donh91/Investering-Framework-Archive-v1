@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
-import csv, json, statistics
+import csv, json, math, statistics
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -183,9 +183,10 @@ def research_context_eligibility(cfg, obs):
         and authority.get("canonical_market_state") is False
         and authority.get("automatic_rule_changes") is False
     )
+    prices=[(obs.get(asset) or {}).get("close") for asset in ("btc","eth","ethbtc")]
     source_ok=bool(obs.get("hourly_sequence_run_id")) and all(
-        isinstance((obs.get(asset) or {}).get("close"),(int,float))
-        for asset in ("btc","eth","ethbtc")
+        type(price) in (int,float) and math.isfinite(price) and price > 0
+        for price in prices
     )
     entry_contract_ok=entry.get("contract")==contract.get("required_entry_contract")
     entry_state_ok=entry.get("state")==contract.get("required_entry_state")
