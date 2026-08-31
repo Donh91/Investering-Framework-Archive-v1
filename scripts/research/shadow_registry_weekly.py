@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
-import argparse, hashlib, json, math, os, subprocess, tempfile
+import argparse, hashlib, json, math, os, subprocess, sys, tempfile
 from datetime import datetime, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
+if str(ROOT / 'scripts') not in sys.path:
+    sys.path.insert(0, str(ROOT / 'scripts'))
+from entry_signal.entry_signal_ledger import HORIZONS_H as ENTRY_HORIZONS
+
 REGISTRY = ROOT / '04_MARKET_LEARNING/shadow_registry/REGISTRY.json'
 OUTDIR = ROOT / '04_MARKET_LEARNING/shadow_registry/weekly'
 LATEST = ROOT / '04_MARKET_LEARNING/shadow_registry/LATEST.json'
@@ -52,7 +56,7 @@ def entry_evaluator_binding(sensor):
     horizons = value.get('horizons')
     valid = (value.get('contract') == sensor['evaluator']
              and type(count) is int and count >= 0
-             and isinstance(horizons, dict) and bool(horizons))
+             and isinstance(horizons, dict) and set(horizons) == set(ENTRY_HORIZONS))
     try:
         stamp = datetime.fromisoformat(value['generated_at_utc'].replace('Z', '+00:00'))
         valid = valid and stamp.utcoffset() is not None
@@ -171,8 +175,68 @@ def validate_registry(reg):
     return True
 
 
+def validate_snapshot(out):
+    """Check the published v1 shape; preservation does not recertify old scores."""
+    if not isinstance(out, dict) or out.get('contract') != 'SHADOW_WEEKLY_RELEVANCE_SNAPSHOT_v1':
+        raise ValueError('weekly snapshot contract invalid')
+    if out.get('authority') != 'RESEARCH_ONLY_NON_CANONICAL':
+        raise ValueError('weekly snapshot authority invalid')
+    for field, expected in {'automatic_rule_changes': False, 'portfolio_execution': False,
+                            'promotion_requires_separate_review': True}.items():
+        if out.get(field) is not expected:
+            raise ValueError('weekly snapshot authority invalid: ' + field)
+    if out.get('anti_double_counting') != 'RELATED_SHADOWS_MUST_NOT_BE_TREATED_AS_INDEPENDENT_CONFIRMATIONS':
+        raise ValueError('weekly snapshot independence firewall invalid')
+    try:
+        stamp = datetime.fromisoformat(out['generated_at_utc'].replace('Z', '+00:00'))
+        if stamp.utcoffset() is None or out['week'] != iso_week(stamp.astimezone(timezone.utc)):
+            raise ValueError('invalid timestamp/week')
+    except (KeyError, AttributeError, TypeError, ValueError) as exc:
+        raise ValueError('weekly snapshot timestamp/week invalid') from exc
+    if not isinstance(out.get('interpretation_rule'), str) or not out['interpretation_rule'].strip():
+        raise ValueError('weekly snapshot interpretation rule missing')
+    rows = out.get('sensors')
+    if not isinstance(rows, list) or not rows:
+        raise ValueError('weekly snapshot sensors missing')
+    ids = set()
+    readiness = {'SCORABLE', 'RECOVERY_REQUIRED', 'SOURCE_MISSING'}
+    for row in rows:
+        if not isinstance(row, dict):
+            raise ValueError('weekly snapshot sensor invalid')
+        for field in ('sensor_id', 'family', 'status', 'registry_relevance_state', 'evaluator'):
+            if not isinstance(row.get(field), str) or not row[field].strip():
+                raise ValueError('weekly snapshot sensor field invalid: ' + field)
+        if row['sensor_id'] in ids or row.get('calibration_readiness') not in readiness:
+            raise ValueError('weekly snapshot sensor identity/readiness invalid')
+        ids.add(row['sensor_id'])
+        evidence = row.get('evidence')
+        if not isinstance(evidence, list) or not evidence:
+            raise ValueError('weekly snapshot evidence missing')
+        for item in evidence:
+            if (not isinstance(item, dict) or not isinstance(item.get('path'), str)
+                    or not item['path'].strip() or type(item.get('exists')) is not bool
+                    or 'commit' not in item or 'committed_at' not in item):
+                raise ValueError('weekly snapshot evidence invalid')
+        for key, expected in {'evidence_path_count': len(evidence),
+                              'missing_path_count': sum(not x['exists'] for x in evidence)}.items():
+            if type(row.get(key)) is not int or row[key] != expected:
+                raise ValueError('weekly snapshot evidence count invalid')
+    summary = out.get('summary')
+    expected_counts = {'sensor_count': len(rows),
+                       'scorable_count': sum(r['calibration_readiness'] == 'SCORABLE' for r in rows),
+                       'recovery_required_count': sum(r['calibration_readiness'] == 'RECOVERY_REQUIRED' for r in rows),
+                       'source_missing_count': sum(r['calibration_readiness'] == 'SOURCE_MISSING' for r in rows)}
+    if not isinstance(summary, dict) or any(type(summary.get(k)) is not int or summary[k] != v
+                                           for k, v in expected_counts.items()):
+        raise ValueError('weekly snapshot summary counts invalid')
+    if summary.get('promotion_candidates') != [r['sensor_id'] for r in rows if r['registry_relevance_state'] == 'PROMOTION_CANDIDATE']:
+        raise ValueError('weekly snapshot summary promotions invalid')
+    return True
+
+
 def persist_snapshot(out):
     """Keep the first weekly evidence immutable; refresh only the LATEST view."""
+    validate_snapshot(out)
     body = json.dumps(out, indent=2, sort_keys=True, allow_nan=False) + '\n'
     OUTDIR.mkdir(parents=True, exist_ok=True)
     weekly_path = OUTDIR / (out['week'] + '.json')
@@ -182,8 +246,12 @@ def persist_snapshot(out):
         disposition = 'CREATED'
     except FileExistsError:
         existing = load_json(weekly_path)
-        if not isinstance(existing, dict) or existing.get('week') != out['week']:
-            raise ValueError('existing weekly snapshot invalid; preserved without replacement')
+        try:
+            validate_snapshot(existing)
+            if existing['week'] != out['week']:
+                raise ValueError('existing week mismatch')
+        except ValueError as exc:
+            raise ValueError('existing weekly snapshot invalid; preserved without replacement') from exc
         disposition = 'PRESERVED_EXISTING'
     LATEST.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.NamedTemporaryFile(mode='w', dir=LATEST.parent, delete=False) as fh:
