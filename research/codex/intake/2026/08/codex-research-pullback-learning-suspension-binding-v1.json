@@ -1,0 +1,94 @@
+{
+  "contract": "CODEX_RESEARCH_CANDIDATE_v1",
+  "candidate_id": "codex-research-pullback-learning-suspension-binding-v1",
+  "submitted_at_utc": "2026-08-31T02:04:00Z",
+  "status": "SUBMITTED",
+  "origin": {
+    "type": "FRAMEWORK_OWNER_FOLLOWUP",
+    "thread_label": "pullback-retired-entry-framework-owner-resolution",
+    "source_paths": [
+      "04_MARKET_LEARNING/pullback_learning/ELIGIBILITY_STATUS_v1.json",
+      "scripts/pullback_learning/pullback_learning_ledger.py",
+      "04_MARKET_LEARNING/pullback_learning/LATEST.json",
+      "04_MARKET_LEARNING/pullback_learning/PERFORMANCE_SUMMARY.json",
+      "06_RESEARCH_LAB/existing_system_improvement_12x/T09_PULLBACK_REPRODUCIBILITY.md",
+      "research/codex/intake/2026/08/codex-research-pullback-learning-retired-entry-dependency-v1.json",
+      "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/643"
+    ]
+  },
+  "title": "Bind Pullback Learning to explicit suspended eligibility owner",
+  "objective": "Implement the already-authorized framework-owner suspension in the existing adaptive Pullback Learning owner. Replace the impossible dependency on GRADUATED_ALTCOIN_TOPUP_ACTIVE with a fail-closed read of 04_MARKET_LEARNING/pullback_learning/ELIGIBILITY_STATUS_v1.json. While status is SUSPENDED_NO_ELIGIBILITY_CONTRACT, continue immutable observation collection and descriptive adaptive statistics, emit REGIME_NOT_ACTIVE with explicit ELIGIBILITY_CONTRACT_UNAVAILABLE reason, create no new pullback/reload research episodes, do not mature or mutate existing episodes, and preserve all research-only/no-portfolio/no-canonical authority boundaries. This task implements an existing owner decision; it must not invent or infer any new eligibility rule, threshold, market state, rebuy permission or portfolio action.",
+  "finding_key": "PULLBACK_LEARNING_BIND_TO_SUSPENDED_ELIGIBILITY_OWNER",
+  "primary_target": "scripts/pullback_learning/pullback_learning_ledger.py",
+  "allowed_change_scope": [
+    "scripts/pullback_learning/pullback_learning_ledger.py",
+    "tests/pullback_learning/directly related suspension, liveness, episode-freeze and authority tests",
+    "04_MARKET_LEARNING/pullback_learning/ELIGIBILITY_STATUS_v1.json only for non-semantic formatting/contract-consumption corrections; do not change permissions or resume criteria",
+    "04_MARKET_LEARNING/pullback_learning/directly related documentation if required"
+  ],
+  "evidence": [
+    {
+      "kind": "REPO_PATH",
+      "ref": "04_MARKET_LEARNING/pullback_learning/ELIGIBILITY_STATUS_v1.json",
+      "summary": "Framework owner explicitly suspends mechanical research classification and episode creation/maturation while allowing observation collection and descriptive statistics; legacy entry, breadth and direction confidence have no eligibility role."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "scripts/pullback_learning/pullback_learning_ledger.py",
+      "summary": "Current classify() still uses GRADUATED_ALTCOIN_TOPUP_ACTIVE as the prerequisite and update_episode() has no independent suspension guard."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "06_RESEARCH_LAB/existing_system_improvement_12x/T09_PULLBACK_REPRODUCIBILITY.md",
+      "summary": "Pullback v0.2 remains GUIDANCE_ONLY and mechanical classification authority is suspended until a complete source-backed specification exists."
+    },
+    {
+      "kind": "CODEX_ESCALATION",
+      "ref": "signature 6574d30a3f1e5cbf9e4d / issue #643",
+      "summary": "Fresh audit found no pre-existing legitimate research-only eligibility owner and correctly escalated rather than substituting proxy breadth, source quality, T12 or direction confidence. The new framework-owner status resolves that missing contract by explicitly suspending classification, not by creating permission."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "04_MARKET_LEARNING/pullback_learning/PERFORMANCE_SUMMARY.json",
+      "summary": "Current owner has zero closed episodes and INSUFFICIENT_SAMPLE, supporting suspension rather than invention of a new rule."
+    }
+  ],
+  "reproduction": "On fresh main after the framework-owner status is merged, confirm ELIGIBILITY_STATUS_v1.json exists with status SUSPENDED_NO_ELIGIBILITY_CONTRACT, observation_collection=true, mechanical_research_classification=false, new_episode_creation=false and existing_episode_maturation=false. Confirm pullback_learning_ledger.py still depends on GRADUATED_ALTCOIN_TOPUP_ACTIVE and does not consume the status owner. Implement only the binding to that explicit owner. Stop as clean no-op if a newer current-main implementation already does so without changing semantics.",
+  "acceptance_tests": {
+    "positive": [
+      "With a valid suspended eligibility status and valid fresh hourly/breadth inputs, a new immutable observation is still written and adaptive descriptive statistics continue, while research_state remains REGIME_NOT_ACTIVE and evidence explicitly records ELIGIBILITY_CONTRACT_UNAVAILABLE / SUSPENDED_NO_ELIGIBILITY_CONTRACT.",
+      "When classification and episode permissions are false, update logic cannot create a new PULLBACK_RISK/PULLBACK_ACTIVE/RELOAD episode and cannot mutate or mature an existing open episode.",
+      "LATEST and STATE preserve explicit research_only=true, portfolio_execution=false, canonical_market_state=false and automatic_rule_changes=false authority, and DATA PING bridge wording makes the suspension visible rather than implying a market call.",
+      "Duplicate price observations remain deduplicated exactly as before and historical observation/episode files are not rewritten."
+    ],
+    "negative": [
+      "GRADUATED_ALTCOIN_TOPUP_ACTIVE, proxy breadth, canonical_compatible source quality, T12 or direction confidence cannot override SUSPENDED_NO_ELIGIBILITY_CONTRACT.",
+      "Missing, malformed or authority-incompatible ELIGIBILITY_STATUS_v1.json fails closed: no mechanical classification and no episode mutation; do not silently fall back to the retired entry gate.",
+      "Do not add any numeric eligibility, pullback, breadth, ETHBTC, BTC.D or regime threshold.",
+      "Do not create a new pullback engine, rebuy permission, canonical market state, portfolio action or automatic rule promotion.",
+      "Do not alter historical observations/episodes/outcomes or manufacture closed episodes."
+    ]
+  },
+  "authority_boundary": "CODE_REMEDIATION_ONLY",
+  "requires_framework_owner_authority": false,
+  "forbidden_changes": [
+    "market gates",
+    "model weights",
+    "canonical authority",
+    "portfolio logic",
+    "API budget",
+    "new policy semantics",
+    "new pullback or regime thresholds",
+    "restoring retired entry permission",
+    "automatic rebuy permission",
+    "episode backfill",
+    "retrospective evidence rewrite",
+    "new pullback engine",
+    "changing ELIGIBILITY_STATUS_v1 permissions or resume criteria"
+  ],
+  "requested_priority": "EXPEDITED",
+  "post_fix_gate": "SUSPENDED_OWNER_BINDING_PASS_PLUS_OBSERVATION_LIVENESS_PASS_PLUS_EPISODE_FREEZE_NEGATIVE_CONTROL_PLUS_RETIRED_ENTRY_NEGATIVE_CONTROL_PLUS_AUTHORITY_FIREWALL_PLUS_MAIN_READBACK",
+  "clean_noop_condition": "A newer current-main implementation already consumes ELIGIBILITY_STATUS_v1 correctly with observation liveness, classification suspension, episode freeze and authority firewall intact, or the adaptive Pullback Learning owner has been explicitly retired/superseded.",
+  "stop_condition": "Stop without code changes if the owner status is absent, its permissions/resume criteria differ from the submitted candidate, candidate hash/status/authority changes, reproduction no longer confirms the stale retired-entry dependency, or implementation would require changing the owner decision rather than consuming it.",
+  "escalation_condition": "Escalate to FRAMEWORK_OWNER if implementation requires changing ELIGIBILITY_STATUS_v1 permissions/resume criteria, introducing any new eligibility or market threshold, granting rebuy/canonical/portfolio authority, or modifying Pullback Policy v0.2 semantics."
+}
