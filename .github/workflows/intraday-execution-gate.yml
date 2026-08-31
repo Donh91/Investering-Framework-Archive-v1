@@ -9,6 +9,7 @@ on:
       - 'scripts/daily_capture/build_hourly_sequence.py'
       - 'tests/learning/test_intraday_execution_row_shape.py'
       - 'tests/learning/test_direction_confidence_validator.py'
+      - 'tests/learning/test_intraday_research_eligibility.py'
       - '.github/workflows/hourly-sequence-capture.yml'
       - '.github/workflows/intraday-execution-research.yml'
       - '.github/workflows/intraday-execution-gate.yml'
@@ -35,11 +36,12 @@ jobs:
           python -m py_compile scripts/intraday_execution/intraday_execution_research.py
           python -m py_compile scripts/intraday_execution/shadow_direction_confidence.py
           python -m py_compile scripts/intraday_execution/validate_direction_confidence.py
-      - name: Run focused intraday direction, calibration and validator tests
+      - name: Run focused intraday direction, calibration, validator and eligibility tests
         run: |
           python -m pytest \
             tests/learning/test_intraday_execution_row_shape.py \
-            tests/learning/test_direction_confidence_validator.py -q
+            tests/learning/test_direction_confidence_validator.py \
+            tests/learning/test_intraday_research_eligibility.py -q
       - name: Validate registered prospective owner against repository state
         run: python scripts/intraday_execution/validate_direction_confidence.py --root .
       - name: Validate research-only contracts and cadence ordering
@@ -58,6 +60,22 @@ jobs:
               'promotion_requires_separate_review': True,
               'historical_findings_max_classification': 'FORWARD_TEST',
           }
+
+          eligibility=cfg['research_eligibility']
+          assert eligibility['status']=='RESEARCH_ONLY_DATA_CONTEXT'
+          assert eligibility['eligibility_semantics']=='DATA_AVAILABLE_FOR_RESEARCH_NOT_MARKET_PERMISSION'
+          assert eligibility['required_source_owner']=='HOURLY_SEQUENCE_COMPLETED_UTC_1H'
+          assert eligibility['entry_signal_role']=='LEGACY_CONTEXT_ONLY_NO_ELIGIBILITY_OR_PERMISSION'
+          assert eligibility['breadth_role']=='DESCRIPTIVE_RESEARCH_CONTEXT_ZERO_EXECUTION_WEIGHT'
+          assert eligibility['direction_confidence_role']=='SHADOW_DIAGNOSTIC_ONLY_NO_REGIME_OR_ENTRY_PERMISSION'
+          assert eligibility['canonical_market_permission_required'] is False
+
+          legacy=cfg['legacy_execution_event_ledger']
+          assert legacy['status']=='FROZEN_PENDING_SEPARATE_REGISTERED_TEST'
+          assert legacy['new_event_creation'] is False
+          assert legacy['outcome_maturation'] is False
+          assert legacy['historical_rows_preserved'] is True
+
           shadow=cfg['shadow_direction_confidence']
           assert shadow['status']=='SHADOW_ONLY_PROSPECTIVE'
           assert shadow['registered_test_id']=='INTRADAY_DIRECTION_CONFIDENCE_V1'
@@ -86,6 +104,13 @@ jobs:
               'FIRST_CANONICAL_MAIN_RUN_AFTER_REGISTRATION_MERGE_AND_VALIDATOR_PASS',
           ]:
               assert token in registry, token
+
+          research=Path('scripts/intraday_execution/intraday_execution_research.py').read_text()
+          assert 'obs.get("entry_state") != "GRADUATED_ALTCOIN_TOPUP_ACTIVE"' not in research
+          assert 'research_context_eligibility' in research
+          assert 'LEGACY_CONTEXT_ONLY_NO_ELIGIBILITY_OR_PERMISSION' in json.dumps(cfg)
+          assert 'if event_policy["outcome_maturation"]: mature_events' in research
+          assert 'if event_policy["new_event_creation"]: open_event' in research
 
           hourly=Path('.github/workflows/hourly-sequence-capture.yml').read_text()
           intraday=Path('.github/workflows/intraday-execution-research.yml').read_text()
