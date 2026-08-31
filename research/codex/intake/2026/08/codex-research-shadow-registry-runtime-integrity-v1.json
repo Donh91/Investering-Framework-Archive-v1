@@ -1,0 +1,109 @@
+{
+  "contract": "CODEX_RESEARCH_CANDIDATE_v1",
+  "candidate_id": "codex-research-shadow-registry-runtime-integrity-v1",
+  "submitted_at_utc": "2026-08-31T01:42:16Z",
+  "status": "SUBMITTED",
+  "origin": {
+    "type": "AUDIT",
+    "thread_label": "post-fix-consumer-and-governance-sweep",
+    "source_paths": [
+      ".github/workflows/shadow-registry-weekly.yml",
+      ".github/workflows/shadow-registry-gate.yml",
+      "scripts/research/shadow_registry_weekly.py",
+      "04_MARKET_LEARNING/shadow_registry/REGISTRY.json",
+      "04_MARKET_LEARNING/shadow_registry/LATEST.json",
+      "06_RESEARCH_LAB/historical_sensor_recovery_v1/SHADOW_SENSOR_REGISTRY_SCHEMA.json",
+      "00_FMOS/CONTINUITY_LEARNING_ARCHITECTURE_v1.md",
+      "00_FMOS/AUTOMATION_ORCHESTRATION_ARCHITECTURE_v2.md",
+      "https://github.com/Donh91/Investering-Framework-Archive-v1/pull/475"
+    ]
+  },
+  "title": "Repair Shadow Registry writer governance and measurement validity",
+  "objective": "Repair the existing weekly Shadow Registry owner as one bounded integrity task: enforce the existing Shadow Sensor Registry schema rather than a reduced parallel validator; prevent placeholder evaluator strings or path presence from being classified as SCORABLE without a real evaluator contract/output; preserve immutable weekly evidence across same-week reruns; and stop the scheduled workflow from directly committing registry/governance-lane artifacts to main when the active Continuity + Learning governance requires registries to use the reviewed PR lane. Reuse existing owners and existing permitted automation/write patterns only. Do not create a new shadow registry, market rule, promotion path or write-policy semantic.",
+  "finding_key": "SHADOW_REGISTRY_RUNTIME_GOVERNANCE_AND_MEASUREMENT_INTEGRITY",
+  "primary_target": "scripts/research/shadow_registry_weekly.py",
+  "allowed_change_scope": [
+    "scripts/research/shadow_registry_weekly.py",
+    ".github/workflows/shadow-registry-weekly.yml",
+    ".github/workflows/shadow-registry-gate.yml",
+    "04_MARKET_LEARNING/shadow_registry/REGISTRY.json",
+    "04_MARKET_LEARNING/shadow_registry/README.md",
+    "tests/research/directly related Shadow Registry runtime, schema, evaluator-readiness, immutability and writer-governance tests"
+  ],
+  "evidence": [
+    {
+      "kind": "REPO_PATH",
+      "ref": "00_FMOS/CONTINUITY_LEARNING_ARCHITECTURE_v1.md",
+      "summary": "Current governance allows scheduled direct main writes only in enumerated data lanes and explicitly classifies registries, schemas and specialist contracts as PR-required; direct-to-main changes in that lane are policy violations."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": ".github/workflows/shadow-registry-weekly.yml",
+      "summary": "Current scheduled workflow runs on main, generates 04_MARKET_LEARNING/shadow_registry/LATEST.json plus weekly snapshots, commits them and pushes HEAD:main directly."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "06_RESEARCH_LAB/historical_sensor_recovery_v1/SHADOW_SENSOR_REGISTRY_SCHEMA.json",
+      "summary": "Existing owner schema requires definition provenance, version, input sources, horizon, output semantics, recoverability, forward-observation status, outcome horizons, canonical overlap and data-quality limitations for every sensor."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "04_MARKET_LEARNING/shadow_registry/REGISTRY.json",
+      "summary": "Current runtime registry omits most fields required by the existing Shadow Sensor Registry schema while using a separate reduced runtime contract."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "scripts/research/shadow_registry_weekly.py",
+      "summary": "Current validate_registry() checks only authority, sensor-id uniqueness, status and relevance_state. evaluate_sensor() marks any present-path sensor SCORABLE whenever evaluator is any non-sentinel string, and main() unconditionally overwrites weekly/YYYY-Www.json on a same-week rerun."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "04_MARKET_LEARNING/shadow_registry/LATEST.json",
+      "summary": "Current weekly output demonstrates the issue: BREADTH_FORWARD_FAMILY is classified SCORABLE with evaluator SOURCE_PRESENCE_AND_FUTURE_OUTCOME_REVIEW even though no validated evaluator output is bound in the runtime; summary reports scorable_count=2."
+    },
+    {
+      "kind": "PR",
+      "ref": "#475",
+      "summary": "The original Shadow Registry activation PR contains unresolved Codex review findings matching all four reproduced current-main defects: writer governance, schema enforcement, false SCORABLE readiness and same-week immutability."
+    }
+  ],
+  "reproduction": "On fresh main: (1) inspect 00_FMOS/CONTINUITY_LEARNING_ARCHITECTURE_v1.md governance lanes and confirm registries are PR-required; inspect .github/workflows/shadow-registry-weekly.yml and confirm it commits 04_MARKET_LEARNING/shadow_registry/LATEST.json plus weekly artifacts and pushes HEAD:main. (2) Compare each current REGISTRY.json sensor with SHADOW_SENSOR_REGISTRY_SCHEMA.json required_sensor_fields; confirm the runtime registry lacks required fields and validate_registry() does not enforce that schema. (3) Inspect evaluate_sensor(); confirm any evaluator other than None/NONE_RECOVERY_REQUIRED/RESEARCH_ARTIFACT_ONLY becomes SCORABLE when evidence paths exist. Confirm current LATEST.json marks BREADTH_FORWARD_FAMILY SCORABLE using SOURCE_PRESENCE_AND_FUTURE_OUTCOME_REVIEW without a validated evaluator output contract. (4) Run or fixture the generator twice for the same ISO week with different timestamps/evidence and confirm weekly/<week>.json is overwritten rather than preserved as immutable history. Stop as clean no-op for any sub-finding already fixed on fresh main, but retain the candidate while any reproduced defect remains.",
+  "acceptance_tests": {
+    "positive": [
+      "The existing SHADOW_SENSOR_REGISTRY_SCHEMA.json is actually loaded/enforced by the Shadow Registry validation path, and a fixture missing any required_sensor_fields fails closed; current registry rows are made compliant through existing owner semantics rather than by weakening the schema.",
+      "Calibration readiness can be SCORABLE only when the evaluator is an explicitly recognized existing evaluator with a validated output/contract required by the runtime; SOURCE_PRESENCE_AND_FUTURE_OUTCOME_REVIEW path presence alone cannot produce SCORABLE.",
+      "A same-ISO-week rerun cannot destroy or silently replace an existing immutable weekly evidence snapshot; LATEST may move, but durable historical observations remain separately addressable or the rerun fails/no-ops according to an existing owner pattern.",
+      "The scheduled Shadow Registry path no longer writes registry/governance-lane artifacts directly to main in violation of the active Continuity + Learning governance. Reuse an already permitted data lane or an existing reviewed branch/PR publication pattern; do not invent a new governance exception.",
+      "Because workflow files are in scope, execute the current repository-safety safepoint sequence before workflow modification, then run the Shadow Registry gate plus focused positive/negative tests and verify post-merge main readback."
+    ],
+    "negative": [
+      "Do not modify, relax or delete SHADOW_SENSOR_REGISTRY_SCHEMA.json merely to make the current reduced runtime registry pass.",
+      "Do not treat file/directory existence, a non-empty evaluator label or legacy status as sufficient evidence of a working evaluator or scientific scorability.",
+      "Do not rewrite, delete or retrospectively relabel existing weekly snapshots or historical sensor evidence.",
+      "Do not create a second Shadow Registry, duplicate evaluator framework, new market threshold, market gate, model weight, promotion rule, canonical authority or portfolio action.",
+      "Do not broaden scheduled direct-main write authority or create a new write-policy semantic to preserve the current workflow shape; follow existing governance instead.",
+      "Do not change unrelated workflows, API budget, provider policy or market semantics."
+    ]
+  },
+  "authority_boundary": "CODE_REMEDIATION_ONLY",
+  "requires_framework_owner_authority": false,
+  "forbidden_changes": [
+    "market gates",
+    "model weights",
+    "canonical authority",
+    "portfolio logic",
+    "API budget",
+    "new policy semantics",
+    "new shadow engine",
+    "automatic sensor promotion",
+    "relaxing the existing Shadow Sensor Registry schema",
+    "retrospective evidence rewrite",
+    "unrelated workflow changes",
+    "new direct-main governance exception"
+  ],
+  "requested_priority": "EXPEDITED",
+  "post_fix_gate": "SHADOW_SCHEMA_NEGATIVE_CONTROL_PASS_PLUS_EVALUATOR_READINESS_NEGATIVE_CONTROL_PLUS_SAME_WEEK_IMMUTABILITY_REPLAY_PASS_PLUS_COMPLIANT_WRITER_ROUTE_PLUS_CI_AND_MAIN_READBACK",
+  "clean_noop_condition": "A newer current-main owner has already repaired all reproduced writer-governance, schema-enforcement, evaluator-readiness and weekly-immutability defects without weakening authority, or the Shadow Registry has been explicitly retired/superseded by current governance.",
+  "stop_condition": "Stop without code changes if the candidate hash/status/authority changes, fresh-state reproduction no longer confirms the defects, the Shadow Registry is intentionally superseded, or fixing the writer requires a new governance exception rather than reusing an existing permitted route.",
+  "escalation_condition": "Escalate to FRAMEWORK_OWNER if remediation requires changing market gates, model weights, canonical authority, portfolio logic, API budget, new policy semantics, the scientific schema itself, or repository write-policy semantics rather than repairing the existing implementation to current owners."
+}
