@@ -3,7 +3,7 @@
   "authority": "RESEARCH_ONLY_NON_CANONICAL",
   "automatic_rule_changes": false,
   "contract": "SHADOW_WEEKLY_RELEVANCE_SNAPSHOT_v1",
-  "generated_at_utc": "2026-08-31T11:49:14.168166+00:00",
+  "generated_at_utc": "2026-09-01T20:31:20.426391+00:00",
   "interpretation_rule": "This runtime records evidence availability and pre-registered evaluator outputs. It does not infer NOISE, REDUNDANT or PROMOTION from file presence alone.",
   "portfolio_execution": false,
   "promotion_requires_separate_review": true,
@@ -12,7 +12,7 @@
       "calibration_readiness": "SCORABLE",
       "entry_signal_summary": {
         "activation_event_count": 8,
-        "generated_at_utc": "2026-08-31T07:43:26.243331+00:00",
+        "generated_at_utc": "2026-09-01T18:53:03.134962+00:00",
         "horizons": {
           "14d": {
             "btc_mean_return_pct": null,
@@ -47,16 +47,27 @@
         }
       },
       "evaluator": "ENTRY_SIGNAL_PERFORMANCE_SUMMARY_v1",
+      "evaluator_binding": {
+        "contract": "ENTRY_SIGNAL_PERFORMANCE_SUMMARY_v1",
+        "output_path": "04_MARKET_LEARNING/entry_signals/PERFORMANCE_SUMMARY.json",
+        "output_sha256": "84c3ec1fdd1453070444c92d9ca1076219d0ca24207ff9a2548e45d700c8a79b",
+        "producer_path": "scripts/entry_signal/entry_signal_ledger.py",
+        "producer_sha256": "74dc5efc9b5e2e4bdfa6e8b437d81a3365b2d70ae01ecd1fad04cc4254eae982",
+        "reason": "REGISTERED_EVALUATOR_OUTPUT_VALID",
+        "scientific_validity": "NOT_CERTIFIED_BY_REGISTRY",
+        "status": "PASS",
+        "validation_scope": "OUTPUT_CONTRACT_SHAPE_NOT_OUTCOME_ACCURACY"
+      },
       "evidence": [
         {
-          "commit": "ff10d1c1d0ae216a21be923e08dd9dd08a7bc25a",
-          "committed_at": "2026-08-31T07:43:26Z",
+          "commit": "c581438d344d0014435edc4169fafa5054412991",
+          "committed_at": "2026-09-01T18:53:03Z",
           "exists": true,
           "path": "04_MARKET_LEARNING/entry_signals/LATEST.json"
         },
         {
-          "commit": "ff10d1c1d0ae216a21be923e08dd9dd08a7bc25a",
-          "committed_at": "2026-08-31T07:43:26Z",
+          "commit": "c581438d344d0014435edc4169fafa5054412991",
+          "committed_at": "2026-09-01T18:53:03Z",
           "exists": true,
           "path": "04_MARKET_LEARNING/entry_signals/PERFORMANCE_SUMMARY.json"
         },
@@ -67,8 +78,8 @@
           "path": "04_MARKET_LEARNING/entry_signals/events"
         },
         {
-          "commit": "ff10d1c1d0ae216a21be923e08dd9dd08a7bc25a",
-          "committed_at": "2026-08-31T07:43:26Z",
+          "commit": "c581438d344d0014435edc4169fafa5054412991",
+          "committed_at": "2026-09-01T18:53:03Z",
           "exists": true,
           "path": "04_MARKET_LEARNING/entry_signals/outcomes"
         }
@@ -83,6 +94,11 @@
     {
       "calibration_readiness": "RECOVERY_REQUIRED",
       "evaluator": "NONE_RECOVERY_REQUIRED",
+      "evaluator_binding": {
+        "reason": "NO_REGISTERED_EVALUATOR_BINDING",
+        "scientific_validity": "NOT_CERTIFIED_BY_REGISTRY",
+        "status": "UNAVAILABLE"
+      },
       "evidence": [
         {
           "commit": "a03cdf6eaeb48a6b97b6d313b30d89c399bb9d3b",
@@ -101,6 +117,11 @@
     {
       "calibration_readiness": "RECOVERY_REQUIRED",
       "evaluator": "NONE_RECOVERY_REQUIRED",
+      "evaluator_binding": {
+        "reason": "NO_REGISTERED_EVALUATOR_BINDING",
+        "scientific_validity": "NOT_CERTIFIED_BY_REGISTRY",
+        "status": "UNAVAILABLE"
+      },
       "evidence": [
         {
           "commit": "a03cdf6eaeb48a6b97b6d313b30d89c399bb9d3b",
@@ -123,8 +144,13 @@
       "status": "RESEARCH_ONLY"
     },
     {
-      "calibration_readiness": "SCORABLE",
+      "calibration_readiness": "RECOVERY_REQUIRED",
       "evaluator": "SOURCE_PRESENCE_AND_FUTURE_OUTCOME_REVIEW",
+      "evaluator_binding": {
+        "reason": "NO_REGISTERED_EVALUATOR_BINDING",
+        "scientific_validity": "NOT_CERTIFIED_BY_REGISTRY",
+        "status": "UNAVAILABLE"
+      },
       "evidence": [
         {
           "commit": "7af04ed702f418078c85ccdac0034d416760ea7e",
@@ -143,6 +169,11 @@
     {
       "calibration_readiness": "RECOVERY_REQUIRED",
       "evaluator": "NONE_RECOVERY_REQUIRED",
+      "evaluator_binding": {
+        "reason": "NO_REGISTERED_EVALUATOR_BINDING",
+        "scientific_validity": "NOT_CERTIFIED_BY_REGISTRY",
+        "status": "UNAVAILABLE"
+      },
       "evidence": [
         {
           "commit": "900d2f7e3f672030fbfd58a1853a3b18eeaa8165",
@@ -161,6 +192,11 @@
     {
       "calibration_readiness": "RECOVERY_REQUIRED",
       "evaluator": "NONE_RECOVERY_REQUIRED",
+      "evaluator_binding": {
+        "reason": "NO_REGISTERED_EVALUATOR_BINDING",
+        "scientific_validity": "NOT_CERTIFIED_BY_REGISTRY",
+        "status": "UNAVAILABLE"
+      },
       "evidence": [
         {
           "commit": "f7277189dd41bfeb816b6e3df60cead561fbe1c5",
@@ -179,6 +215,11 @@
     {
       "calibration_readiness": "RECOVERY_REQUIRED",
       "evaluator": "RESEARCH_ARTIFACT_ONLY",
+      "evaluator_binding": {
+        "reason": "NO_REGISTERED_EVALUATOR_BINDING",
+        "scientific_validity": "NOT_CERTIFIED_BY_REGISTRY",
+        "status": "UNAVAILABLE"
+      },
       "evidence": [
         {
           "commit": "cdd183aadc38a24f162583c537e447cfcf648e3f",
@@ -197,6 +238,11 @@
     {
       "calibration_readiness": "RECOVERY_REQUIRED",
       "evaluator": "NONE_RECOVERY_REQUIRED",
+      "evaluator_binding": {
+        "reason": "NO_REGISTERED_EVALUATOR_BINDING",
+        "scientific_validity": "NOT_CERTIFIED_BY_REGISTRY",
+        "status": "UNAVAILABLE"
+      },
       "evidence": [
         {
           "commit": "a67c0c4cd880958711b36b1aad02d81bbfe543d1",
@@ -221,6 +267,11 @@
     {
       "calibration_readiness": "RECOVERY_REQUIRED",
       "evaluator": "RESEARCH_ARTIFACT_ONLY",
+      "evaluator_binding": {
+        "reason": "NO_REGISTERED_EVALUATOR_BINDING",
+        "scientific_validity": "NOT_CERTIFIED_BY_REGISTRY",
+        "status": "UNAVAILABLE"
+      },
       "evidence": [
         {
           "commit": "c00b70165276a89f42737c0854e17509bd42fcd2",
@@ -265,20 +316,20 @@
           "path": "06_RESEARCH_LAB/shared_row_model_tournament_v1/data/CATALYST_LEDGER.csv"
         },
         {
-          "commit": "a46f794d090fa33f26ce4bdb9e3612fc5c462a74",
-          "committed_at": "2026-08-31T11:09:38Z",
+          "commit": "995e6570e263b6ab6ad5ebad72a46a45e3b498d4",
+          "committed_at": "2026-09-01T19:38:17Z",
           "exists": true,
           "path": "06_RESEARCH_LAB/shared_row_model_tournament_v1/RELEVANCE_STATE.json"
         },
         {
-          "commit": "a46f794d090fa33f26ce4bdb9e3612fc5c462a74",
-          "committed_at": "2026-08-31T11:09:38Z",
+          "commit": "995e6570e263b6ab6ad5ebad72a46a45e3b498d4",
+          "committed_at": "2026-09-01T19:38:17Z",
           "exists": true,
           "path": "06_RESEARCH_LAB/shared_row_model_tournament_v1/monitor/LATEST.json"
         },
         {
-          "commit": "1024ccb6e5d546760401fdff015d60b4d855db85",
-          "committed_at": "2026-08-24T07:20:49Z",
+          "commit": "ba646a055f8175d6f1a134da147f5df0352181dc",
+          "committed_at": "2026-08-31T13:50:31Z",
           "exists": true,
           "path": "06_RESEARCH_LAB/shared_row_model_tournament_v1/weekly/LATEST.json"
         }
@@ -293,8 +344,8 @@
   ],
   "summary": {
     "promotion_candidates": [],
-    "recovery_required_count": 7,
-    "scorable_count": 2,
+    "recovery_required_count": 8,
+    "scorable_count": 1,
     "sensor_count": 9,
     "source_missing_count": 0
   },
