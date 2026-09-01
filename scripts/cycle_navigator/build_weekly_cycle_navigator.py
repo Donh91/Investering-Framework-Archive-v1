@@ -115,6 +115,24 @@ def output_schema() -> dict[str, Any]:
     }
 
 
+def _output_text(raw: dict[str, Any]) -> str:
+    text = raw.get("output_text")
+    if isinstance(text, str) and text:
+        return text
+    parts: list[str] = []
+    for item in raw.get("output", []):
+        if not isinstance(item, dict):
+            continue
+        for content in item.get("content", []):
+            if isinstance(content, dict) and content.get("type") == "output_text":
+                parts.append(str(content.get("text", "")))
+    return "".join(parts)
+
+
+def _next_output_budget(current: int) -> int:
+    return min(max(current * 2, 12_000), 16_000)
+
+
 def call_openai(model: str, prompt: str, context: dict[str, Any], max_output_tokens: int) -> tuple[dict[str, Any], dict[str, Any]]:
     api_key = os.environ.get("OPENAI_API_KEY")
     if not api_key:
@@ -130,34 +148,52 @@ def call_openai(model: str, prompt: str, context: dict[str, Any], max_output_tok
         "Include one base case for this week and one base case for the next 2-3 weeks, plus a clear altseason countdown table. "
         "This publication has no authority to change Master Monday, thresholds, model weights or portfolio execution."
     )
-    payload = {
-        "model": model,
-        "reasoning": {"effort": "high", "context": "current_turn"},
-        "store": False,
-        "max_output_tokens": max_output_tokens,
-        "instructions": instructions,
-        "input": [{"role": "user", "content": [{"type": "input_text", "text": json.dumps({"task": "CYCLE_NAVIGATOR_WEEKLY_PUBLICATION", "prompt": prompt, "context": context}, sort_keys=True)}]}],
-        "text": {"format": {"type": "json_schema", "name": "cycle_navigator_weekly_v1", "strict": True, "schema": output_schema()}}
-    }
-    req = urllib.request.Request("https://api.openai.com/v1/responses", data=canonical_bytes(payload), headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}, method="POST")
-    try:
-        with urllib.request.urlopen(req, timeout=180) as response:
-            raw = json.loads(response.read())
-    except urllib.error.HTTPError as exc:
-        body = exc.read().decode(errors="replace")
-        raise RuntimeError(f"openai_http_{exc.code}:{body[:600]}") from exc
-    text = raw.get("output_text")
-    if not text:
-        parts: list[str] = []
-        for item in raw.get("output", []):
-            for content in item.get("content", []):
-                if content.get("type") == "output_text":
-                    parts.append(content.get("text", ""))
-        text = "".join(parts)
-    if not text:
-        raise RuntimeError("missing_output_text")
-    value = json.loads(text)
-    return value, raw
+    budget = max_output_tokens
+    for attempt in range(2):
+        payload = {
+            "model": model,
+            "reasoning": {"effort": "high", "context": "current_turn"},
+            "store": False,
+            "max_output_tokens": budget,
+            "instructions": instructions,
+            "input": [{"role": "user", "content": [{"type": "input_text", "text": json.dumps({"task": "CYCLE_NAVIGATOR_WEEKLY_PUBLICATION", "prompt": prompt, "context": context}, sort_keys=True)}]}],
+            "text": {"format": {"type": "json_schema", "name": "cycle_navigator_weekly_v1", "strict": True, "schema": output_schema()}}
+        }
+        req = urllib.request.Request(
+            "https://api.openai.com/v1/responses",
+            data=canonical_bytes(payload),
+            headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+            method="POST",
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=180) as response:
+                raw = json.loads(response.read())
+        except urllib.error.HTTPError as exc:
+            body = exc.read().decode(errors="replace")
+            raise RuntimeError(f"openai_http_{exc.code}:{body[:600]}") from exc
+
+        status = raw.get("status")
+        incomplete = raw.get("incomplete_details") if isinstance(raw.get("incomplete_details"), dict) else {}
+        reason = str(incomplete.get("reason") or "")
+        if status == "incomplete":
+            if attempt == 0 and reason in {"max_output_tokens", "max_tokens"}:
+                budget = _next_output_budget(budget)
+                continue
+            raise RuntimeError(f"openai_incomplete:{reason or 'unknown'}")
+
+        text = _output_text(raw)
+        if not text:
+            raise RuntimeError("missing_output_text")
+        try:
+            value = json.loads(text)
+        except json.JSONDecodeError as exc:
+            if attempt == 0:
+                budget = _next_output_budget(budget)
+                continue
+            raise RuntimeError(f"invalid_structured_output_json:{exc.msg}@{exc.pos}") from exc
+        return value, raw
+
+    raise RuntimeError("openai_structured_output_retry_exhausted")
 
 
 def main() -> None:
@@ -165,7 +201,7 @@ def main() -> None:
     ap.add_argument("--repo-root", type=Path, default=Path("."))
     ap.add_argument("--master-monday-pointer", type=Path, required=True)
     ap.add_argument("--model", default="gpt-5.6-sol")
-    ap.add_argument("--max-output-tokens", type=int, default=5000)
+    ap.add_argument("--max-output-tokens", type=int, default=12000)
     args = ap.parse_args()
     repo = args.repo_root.resolve()
     mm_ptr = read_json(repo / args.master_monday_pointer)

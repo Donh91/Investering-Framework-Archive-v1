@@ -70,14 +70,16 @@ jobs:
 
       - name: Build Cycle Navigator from final Master Monday
         if: steps.precheck.outputs.skip != 'true'
+        shell: bash
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
+          set -euo pipefail
           python scripts/cycle_navigator/build_weekly_cycle_navigator.py \
             --repo-root . \
             --master-monday-pointer research/api_agent/outputs/weekly/LATEST_MASTER_MONDAY_DELIVERY_POINTER.json \
             --model gpt-5.6-sol \
-            --max-output-tokens 5000 | tee runtime_cycle_navigator_pointer.json
+            --max-output-tokens 12000 | tee runtime_cycle_navigator_pointer.json
 
       - name: Validate publication contract
         if: steps.precheck.outputs.skip != 'true'
