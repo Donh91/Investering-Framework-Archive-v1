@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import hashlib
 import json
 import math
 from pathlib import Path
@@ -23,6 +24,17 @@ class Row(NamedTuple):
 
 def _finite(value: float) -> bool:
     return math.isfinite(value)
+
+def file_identity(path: Path) -> dict[str, int | str]:
+    raw = path.read_bytes()
+    if not raw:
+        raise ReplayError("empty_input_file")
+    return {
+        "input_dataset_sha256": hashlib.sha256(raw).hexdigest(),
+        "input_dataset_bytes": len(raw),
+        "input_dataset_persisted": False,
+        "input_identity_scope": "LOCAL_TRANSIENT_RESEARCH_MATRIX",
+    }
 
 def load_rows(path: Path) -> list[Row]:
     with path.open(newline="", encoding="utf-8") as handle:
@@ -175,7 +187,9 @@ def main() -> int:
     parser.add_argument("--min-train", type=int, default=18)
     parser.add_argument("--alpha", type=float, default=10.0)
     args = parser.parse_args()
+    identity = file_identity(args.input)
     result = run(load_rows(args.input), args.horizon_rows, args.min_train, args.alpha)
+    result.update(identity)
     print(json.dumps(result, sort_keys=True, separators=(",", ":")))
     return 0
 
