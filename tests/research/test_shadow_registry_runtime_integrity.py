@@ -299,7 +299,9 @@ def test_weekly_workflow_uses_reviewed_pr_lane_not_direct_main():
     assert 'HEAD:main' not in text
     assert 'git push origin main' not in text
     assert 'git push origin HEAD:main' not in text
-    assert 'framework-main-writer' not in text
+    assert 'group: framework-main-writer' in text
+    assert 'git rebase --abort' in text
+    assert 'git merge-base --is-ancestor origin/main HEAD' in text
 
 
 def test_weekly_workflow_retains_bounded_schedule_and_runtime_gate():
