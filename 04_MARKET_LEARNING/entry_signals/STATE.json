@@ -1,9 +1,9 @@
 {
   "contract": "ENTRY_SIGNAL_STATE_v1",
   "criteria": {
-    "eth_outperforms_btc_24h": false,
+    "eth_outperforms_btc_24h": true,
     "ethbtc_above_registered_0_0300": true,
-    "top100_proxy_breadth_ge_50pct": false
+    "top100_proxy_breadth_ge_50pct": true
   },
   "definition_version": "ENTRY_SIGNAL_DEFINITION_v1_2_CANONICAL_PROMOTION_GUARD",
   "execution_temperature": "NORMAL",
@@ -28,19 +28,19 @@
     "independent_rotation_confirmation_reason": "PROXY_OR_CANONICAL_COMPATIBILITY_UNCONFIRMED",
     "relative_breadth": {
       "constituent_count": 100,
-      "equal_weight_mean_return_24h_pct": -1.354929,
-      "median_return_24h_pct": -1.32702,
-      "outperforming_btc_count": 36,
-      "outperforming_btc_share": 0.36,
-      "outperforming_eth_count": 41,
-      "outperforming_eth_share": 0.41
+      "equal_weight_mean_return_24h_pct": 2.217592,
+      "median_return_24h_pct": 1.256055,
+      "outperforming_btc_count": 48,
+      "outperforming_btc_share": 0.48,
+      "outperforming_eth_count": 36,
+      "outperforming_eth_share": 0.36
     },
     "rolling_window_confirmation_policy": "Repeated observations from an overlapping rolling window are descriptive persistence only and are not, by themselves, independent confirmation.",
     "sensor_relationship_owner": "01_CORE_FRAMEWORK/governance/2026-07-22__sensor-relationship-and-incremental-value-standard__canonical.md",
     "source_independence_eligible": false,
     "window_semantics": "SOURCE_REPORTED_ROLLING_24H_AT_RETRIEVAL"
   },
-  "observer_state": "NO_PATTERN",
+  "observer_state": "LEGACY_PATTERN_OBSERVED_FORWARD_ONLY_NOT_PROMOTION_READY",
   "promotion_authority": {
     "permits_active_state": false,
     "reason": "FROZEN_BREADTH_PREDICTIVE_GATE_RETIRED_ZERO_WEIGHT_AND_GRADUATED_ALT_DEPLOYMENT_NOT_PROMOTION_READY",
@@ -48,5 +48,5 @@
     "status": "FORWARD_ONLY_NOT_PROMOTION_READY"
   },
   "state": "WAIT",
-  "updated_at_utc": "2026-08-31T21:07:53.341609+00:00"
+  "updated_at_utc": "2026-09-01T05:50:04.325205+00:00"
 }
