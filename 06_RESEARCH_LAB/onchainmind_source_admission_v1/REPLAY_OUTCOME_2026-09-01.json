@@ -101,7 +101,20 @@
   "sources": {
     "mvrv": "BGEOMETRICS_MVRV_TRANSIENT",
     "price": "BINANCE_BTCUSDT_MONTHLY_KLINE_TRANSIENT",
-    "raw_provider_rows_committed": false
+    "raw_provider_rows_committed": false,
+    "mvrv_request": "https://bitcoin-data.com/v1/mvrv?startday=2022-09-01&endday=2026-08-31",
+    "price_request": "BINANCE BTCUSDT 1M klines, UTC, 2022-09-01 through 2026-08-31"
+  },
+  "reproducibility": {
+    "class": "HASH_BOUND_TRANSIENT_MATRIX_RAW_NOT_ARCHIVED",
+    "input_dataset_sha256": "fa9fc200bb8b0a166ec8fe98042c121e1af729aab2b224ea76b017a99fdaf267",
+    "input_dataset_bytes": 1350,
+    "input_columns": [
+      "date",
+      "price",
+      "mvrv"
+    ],
+    "note": "Hash binds the exact transient research matrix used for the recorded replay. Provider raw rows remain uncommitted."
   },
   "status": "RETROSPECTIVE_EXPLORATORY_RESEARCH_ONLY"
 }
