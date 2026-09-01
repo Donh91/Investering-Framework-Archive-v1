@@ -1,0 +1,65 @@
+{
+  "contract": "ONCHAINMIND_SOURCE_ADMISSION_RESULT_AND_KILL_MATRIX_v1",
+  "date": "2026-09-01",
+  "lanes": [
+    {
+      "disposition": "KEEP",
+      "id": "SOURCE_CONTRACT_HARDENING",
+      "priority": 1,
+      "result": "Provider-specific authority, retention and persistence boundaries frozen; ambiguous paths fail closed.",
+      "status": "PASS"
+    },
+    {
+      "disposition": "KILL_AS_PREDICTIVE_FEATURE_KEEP_AS_CONTEXT",
+      "id": "MVRV_INCREMENTAL_VALUE_REPLAY",
+      "priority": 2,
+      "result": "48 monthly observations; expanding ridge sensitivity alpha 1/10/100; no horizon produced both >=5% MAE improvement and >=5pp direction improvement.",
+      "status": "NO_ROBUST_INCREMENTAL_VALUE"
+    },
+    {
+      "disposition": "STOP",
+      "id": "BROAD_ONCHAIN_METRIC_MINING",
+      "priority": 3,
+      "result": "MVRV failed predictive gate and SOPR extraction path produced contradictory completeness metadata; no 200-metric fishing expedition authorized.",
+      "status": "KILLED"
+    },
+    {
+      "disposition": "KEEP_SHADOW",
+      "id": "URPD_TOPOLOGY",
+      "priority": 4,
+      "result": "Recent dated snapshot access verified; long retention not verified. Derived topology receipts only, no raw public payloads, no buy/sell logic.",
+      "status": "PASS_FOR_PROSPECTIVE_OBSERVATION_ONLY"
+    },
+    {
+      "disposition": "KEEP_OFFLINE_PARSER",
+      "id": "POLYMARKET_EXPECTATIONS",
+      "priority": 5,
+      "result": "Research APIs are openly documented, but durable storage/redistribution contract remains intentionally unresolved for this archive.",
+      "status": "DEFER_NETWORK_COLLECTION"
+    },
+    {
+      "disposition": "REUSE_EXISTING_OWNERS_FIRST",
+      "id": "ETF_INSTITUTIONAL_VS_ORGANIC",
+      "priority": 6,
+      "result": "Potential value remains, but current work found no reason to duplicate ETF/DefiLlama owners before a falsifiable divergence spec exists.",
+      "status": "DEFER"
+    },
+    {
+      "disposition": "NO_CURRENT_BUILD",
+      "id": "SELF_HOSTED_URPD",
+      "priority": 7,
+      "result": "Node/indexer plus acquisition-price lineage burden exceeds current expected marginal research value.",
+      "status": "DEFER_HEAVY"
+    },
+    {
+      "disposition": "CONTEXT_BENCHMARK_ONLY",
+      "id": "BGEOMETRICS_REGIME_SCORE",
+      "priority": 8,
+      "result": "Composite duplicates existing owned signal families and would create pseudo-confirmation.",
+      "status": "REJECT_NEW_VOTE"
+    }
+  ],
+  "portfolio_action": "NONE",
+  "promotion_rule": "NONE_OF_THE_ABOVE_CHANGES_LIVE_FRAMEWORK_STATE",
+  "status": "EXECUTED_RESEARCH_DISPOSITION"
+}
