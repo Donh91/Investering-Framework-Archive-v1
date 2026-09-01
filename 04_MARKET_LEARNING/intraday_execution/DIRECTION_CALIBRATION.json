@@ -1,6 +1,54 @@
 {
   "contract": "INTRADAY_DIRECTION_CALIBRATION_v1",
   "family_reliability": {
+    "BTC:24H:momentum_acceleration": {
+      "authority": "DIAGNOSTIC_ONLY_NO_AUTOMATIC_REWEIGHTING",
+      "count": 1,
+      "hit": 1,
+      "hit_rate": 1.0,
+      "independence_control": "NONE_DIAGNOSTIC_ONLY",
+      "miss": 0
+    },
+    "BTC:24H:return_1h": {
+      "authority": "DIAGNOSTIC_ONLY_NO_AUTOMATIC_REWEIGHTING",
+      "count": 1,
+      "hit": 1,
+      "hit_rate": 1.0,
+      "independence_control": "NONE_DIAGNOSTIC_ONLY",
+      "miss": 0
+    },
+    "BTC:24H:return_4h": {
+      "authority": "DIAGNOSTIC_ONLY_NO_AUTOMATIC_REWEIGHTING",
+      "count": 1,
+      "hit": 0,
+      "hit_rate": 0.0,
+      "independence_control": "NONE_DIAGNOSTIC_ONLY",
+      "miss": 1
+    },
+    "BTC:24H:session_vwap": {
+      "authority": "DIAGNOSTIC_ONLY_NO_AUTOMATIC_REWEIGHTING",
+      "count": 1,
+      "hit": 0,
+      "hit_rate": 0.0,
+      "independence_control": "NONE_DIAGNOSTIC_ONLY",
+      "miss": 1
+    },
+    "BTC:24H:taker_balance": {
+      "authority": "DIAGNOSTIC_ONLY_NO_AUTOMATIC_REWEIGHTING",
+      "count": 1,
+      "hit": 0,
+      "hit_rate": 0.0,
+      "independence_control": "NONE_DIAGNOSTIC_ONLY",
+      "miss": 1
+    },
+    "BTC:24H:taker_change": {
+      "authority": "DIAGNOSTIC_ONLY_NO_AUTOMATIC_REWEIGHTING",
+      "count": 1,
+      "hit": 0,
+      "hit_rate": 0.0,
+      "independence_control": "NONE_DIAGNOSTIC_ONLY",
+      "miss": 1
+    },
     "BTC:4H:momentum_acceleration": {
       "authority": "DIAGNOSTIC_ONLY_NO_AUTOMATIC_REWEIGHTING",
       "count": 2,
@@ -49,15 +97,23 @@
       "independence_control": "NONE_DIAGNOSTIC_ONLY",
       "miss": 0
     },
-    "ETH:4H:breadth_balance": {
+    "ETH:24H:breadth_balance": {
       "authority": "DIAGNOSTIC_ONLY_NO_AUTOMATIC_REWEIGHTING",
-      "count": 2,
+      "count": 1,
       "hit": 1,
-      "hit_rate": 0.5,
+      "hit_rate": 1.0,
       "independence_control": "NONE_DIAGNOSTIC_ONLY",
-      "miss": 1
+      "miss": 0
     },
-    "ETH:4H:ethbtc_1h": {
+    "ETH:24H:momentum_acceleration": {
+      "authority": "DIAGNOSTIC_ONLY_NO_AUTOMATIC_REWEIGHTING",
+      "count": 1,
+      "hit": 1,
+      "hit_rate": 1.0,
+      "independence_control": "NONE_DIAGNOSTIC_ONLY",
+      "miss": 0
+    },
+    "ETH:24H:return_1h": {
       "authority": "DIAGNOSTIC_ONLY_NO_AUTOMATIC_REWEIGHTING",
       "count": 1,
       "hit": 0,
@@ -65,7 +121,47 @@
       "independence_control": "NONE_DIAGNOSTIC_ONLY",
       "miss": 1
     },
-    "ETH:4H:momentum_acceleration": {
+    "ETH:24H:return_4h": {
+      "authority": "DIAGNOSTIC_ONLY_NO_AUTOMATIC_REWEIGHTING",
+      "count": 1,
+      "hit": 0,
+      "hit_rate": 0.0,
+      "independence_control": "NONE_DIAGNOSTIC_ONLY",
+      "miss": 1
+    },
+    "ETH:24H:session_vwap": {
+      "authority": "DIAGNOSTIC_ONLY_NO_AUTOMATIC_REWEIGHTING",
+      "count": 1,
+      "hit": 0,
+      "hit_rate": 0.0,
+      "independence_control": "NONE_DIAGNOSTIC_ONLY",
+      "miss": 1
+    },
+    "ETH:24H:taker_balance": {
+      "authority": "DIAGNOSTIC_ONLY_NO_AUTOMATIC_REWEIGHTING",
+      "count": 1,
+      "hit": 0,
+      "hit_rate": 0.0,
+      "independence_control": "NONE_DIAGNOSTIC_ONLY",
+      "miss": 1
+    },
+    "ETH:24H:taker_change": {
+      "authority": "DIAGNOSTIC_ONLY_NO_AUTOMATIC_REWEIGHTING",
+      "count": 1,
+      "hit": 0,
+      "hit_rate": 0.0,
+      "independence_control": "NONE_DIAGNOSTIC_ONLY",
+      "miss": 1
+    },
+    "ETH:4H:breadth_balance": {
+      "authority": "DIAGNOSTIC_ONLY_NO_AUTOMATIC_REWEIGHTING",
+      "count": 3,
+      "hit": 1,
+      "hit_rate": 0.333333,
+      "independence_control": "NONE_DIAGNOSTIC_ONLY",
+      "miss": 2
+    },
+    "ETH:4H:ethbtc_1h": {
       "authority": "DIAGNOSTIC_ONLY_NO_AUTOMATIC_REWEIGHTING",
       "count": 2,
       "hit": 0,
@@ -73,48 +169,56 @@
       "independence_control": "NONE_DIAGNOSTIC_ONLY",
       "miss": 2
     },
+    "ETH:4H:momentum_acceleration": {
+      "authority": "DIAGNOSTIC_ONLY_NO_AUTOMATIC_REWEIGHTING",
+      "count": 3,
+      "hit": 0,
+      "hit_rate": 0.0,
+      "independence_control": "NONE_DIAGNOSTIC_ONLY",
+      "miss": 3
+    },
     "ETH:4H:return_1h": {
       "authority": "DIAGNOSTIC_ONLY_NO_AUTOMATIC_REWEIGHTING",
-      "count": 2,
+      "count": 3,
       "hit": 1,
-      "hit_rate": 0.5,
+      "hit_rate": 0.333333,
       "independence_control": "NONE_DIAGNOSTIC_ONLY",
-      "miss": 1
+      "miss": 2
     },
     "ETH:4H:return_4h": {
       "authority": "DIAGNOSTIC_ONLY_NO_AUTOMATIC_REWEIGHTING",
-      "count": 2,
-      "hit": 1,
-      "hit_rate": 0.5,
+      "count": 3,
+      "hit": 2,
+      "hit_rate": 0.666667,
       "independence_control": "NONE_DIAGNOSTIC_ONLY",
       "miss": 1
     },
     "ETH:4H:session_vwap": {
       "authority": "DIAGNOSTIC_ONLY_NO_AUTOMATIC_REWEIGHTING",
-      "count": 2,
-      "hit": 1,
-      "hit_rate": 0.5,
+      "count": 3,
+      "hit": 2,
+      "hit_rate": 0.666667,
       "independence_control": "NONE_DIAGNOSTIC_ONLY",
       "miss": 1
     },
     "ETH:4H:taker_balance": {
       "authority": "DIAGNOSTIC_ONLY_NO_AUTOMATIC_REWEIGHTING",
-      "count": 2,
+      "count": 3,
       "hit": 1,
-      "hit_rate": 0.5,
+      "hit_rate": 0.333333,
       "independence_control": "NONE_DIAGNOSTIC_ONLY",
-      "miss": 1
+      "miss": 2
     },
     "ETH:4H:taker_change": {
       "authority": "DIAGNOSTIC_ONLY_NO_AUTOMATIC_REWEIGHTING",
-      "count": 2,
-      "hit": 1,
-      "hit_rate": 0.5,
+      "count": 3,
+      "hit": 2,
+      "hit_rate": 0.666667,
       "independence_control": "NONE_DIAGNOSTIC_ONLY",
       "miss": 1
     }
   },
-  "generated_at_utc": "2026-09-01T12:31:44.113028Z",
+  "generated_at_utc": "2026-09-01T17:18:20.802492Z",
   "governance": {
     "automatic_signal_reweighting": false,
     "canonical_market_state": false,
@@ -122,6 +226,19 @@
     "shadow_only": true
   },
   "groups": {
+    "BTC:24H:UP:4_of_6": {
+      "display_probability": null,
+      "empirical_hit_rate": 0.0,
+      "hits": 0,
+      "independent_count": 1,
+      "laplace_calibrated_estimate": 0.333333,
+      "maturity": "WARMUP",
+      "mean_brier_score": null,
+      "misses": 1,
+      "overlap_control": "GREEDY_NON_OVERLAP_24H",
+      "total_scored_rows": 1,
+      "wilson_lower_95": 0.0
+    },
     "BTC:4H:DOWN:4_of_6": {
       "display_probability": null,
       "empirical_hit_rate": 1.0,
@@ -148,6 +265,19 @@
       "total_scored_rows": 1,
       "wilson_lower_95": 0.206549
     },
+    "ETH:24H:UP:5_of_7": {
+      "display_probability": null,
+      "empirical_hit_rate": 0.0,
+      "hits": 0,
+      "independent_count": 1,
+      "laplace_calibrated_estimate": 0.333333,
+      "maturity": "WARMUP",
+      "mean_brier_score": null,
+      "misses": 1,
+      "overlap_control": "GREEDY_NON_OVERLAP_24H",
+      "total_scored_rows": 1,
+      "wilson_lower_95": 0.0
+    },
     "ETH:4H:UP:5_of_7": {
       "display_probability": null,
       "empirical_hit_rate": 1.0,
@@ -160,6 +290,19 @@
       "overlap_control": "GREEDY_NON_OVERLAP_4H",
       "total_scored_rows": 1,
       "wilson_lower_95": 0.206549
+    },
+    "ETH:4H:UP:5_of_8": {
+      "display_probability": null,
+      "empirical_hit_rate": 0.0,
+      "hits": 0,
+      "independent_count": 1,
+      "laplace_calibrated_estimate": 0.333333,
+      "maturity": "WARMUP",
+      "mean_brier_score": null,
+      "misses": 1,
+      "overlap_control": "GREEDY_NON_OVERLAP_4H",
+      "total_scored_rows": 1,
+      "wilson_lower_95": 0.0
     },
     "ETH:4H:UP:7_of_8": {
       "display_probability": null,
@@ -175,5 +318,5 @@
       "wilson_lower_95": 0.0
     }
   },
-  "scored_outcome_count": 4
+  "scored_outcome_count": 7
 }
