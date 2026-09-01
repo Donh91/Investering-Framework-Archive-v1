@@ -1,6 +1,7 @@
 import importlib.util
 import math
 import pathlib
+import tempfile
 import unittest
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
@@ -43,6 +44,16 @@ class TestReplay(unittest.TestCase):
         result = R.run(synthetic_rows(mvrv_signal=True), 1, 18, 10.0)
         self.assertGreaterEqual(result["challenger"]["direction_accuracy"], 0.0)
         self.assertLessEqual(result["challenger"]["direction_accuracy"], 1.0)
+
+    def test_input_identity_binds_transient_matrix(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = pathlib.Path(tmp) / "matrix.csv"
+            path.write_text("date,price,mvrv\n2026-01-31,100,1.1\n", encoding="utf-8")
+            identity = R.file_identity(path)
+            self.assertEqual(len(identity["input_dataset_sha256"]), 64)
+            self.assertGreater(identity["input_dataset_bytes"], 0)
+            self.assertFalse(identity["input_dataset_persisted"])
+            self.assertEqual(identity["input_identity_scope"], "LOCAL_TRANSIENT_RESEARCH_MATRIX")
 
     def test_bad_horizon_rejected(self):
         with self.assertRaises(R.ReplayError):
