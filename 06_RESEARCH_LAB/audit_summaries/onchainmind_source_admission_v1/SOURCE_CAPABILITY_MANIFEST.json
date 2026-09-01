@@ -1,0 +1,59 @@
+{
+  "architecture_principle": "COPY_LESS_BIND_BETTER",
+  "contract": "ONCHAINMIND_SOURCE_CAPABILITY_MANIFEST_v1",
+  "date": "2026-09-01",
+  "live_weight_change": false,
+  "new_engine": false,
+  "portfolio_action": "NONE",
+  "sources": [
+    {
+      "archive_raw": false,
+      "id": "onchainmind",
+      "incremental_value": "CONCEPT_DISCOVERY",
+      "machine_ingestion": false,
+      "role": "DISCOVERY_ONLY"
+    },
+    {
+      "id": "coinmetrics_community",
+      "incremental_value": "HIGH_FOR_REPRODUCIBLE_BASELINES",
+      "machine_ingestion": true,
+      "raw_archive_policy": "UPSTREAM_BINDING_PREFERRED",
+      "role": "LONG_HISTORY_BASELINE"
+    },
+    {
+      "id": "bgeometrics_standard",
+      "incremental_value": "CONTEXT_ONLY_AFTER_REPLAY",
+      "machine_ingestion": true,
+      "public_raw_archive": false,
+      "role": "TRANSIENT_ONCHAIN_RESEARCH"
+    },
+    {
+      "id": "bgeometrics_urpd",
+      "incremental_value": "PROMISING_DIFFERENTIATED_NOT_YET_PROVEN",
+      "machine_ingestion": true,
+      "public_raw_archive": false,
+      "role": "PROSPECTIVE_STRUCTURE_OBSERVATION"
+    },
+    {
+      "id": "polymarket",
+      "incremental_value": "POTENTIALLY_ORTHOGONAL",
+      "machine_ingestion": false,
+      "reason": "DURABLE_STORAGE_CONTRACT_NOT_CLEARED",
+      "role": "EXPECTATIONS_RESEARCH"
+    },
+    {
+      "id": "defillama",
+      "incremental_value": "NO_NEW_VOTE",
+      "machine_ingestion": true,
+      "new_adapter": false,
+      "role": "EXISTING_OWNER_CROSSCHECK"
+    },
+    {
+      "id": "bgeometrics_regime_score",
+      "incremental_value": "REJECTED_AS_NEW_VOTE_DUE_OVERLAP",
+      "machine_ingestion": false,
+      "role": "BENCHMARK_ONLY"
+    }
+  ],
+  "status": "FINAL_SHADOW_RESEARCH"
+}
