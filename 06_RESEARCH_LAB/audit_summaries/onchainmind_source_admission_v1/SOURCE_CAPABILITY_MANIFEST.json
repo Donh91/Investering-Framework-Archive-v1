@@ -1,0 +1,293 @@
+{
+  "contract": "PUBLIC_RESEARCH_SOURCE_CAPABILITY_MANIFEST_v1",
+  "observed_date": "2026-09-01",
+  "status": "SHADOW_ONLY_SOURCE_DISCOVERY",
+  "authority": {
+    "creates_market_truth": false,
+    "framework_state_change": false,
+    "threshold_change": false,
+    "weight_change": false,
+    "portfolio_action": false,
+    "automatic_collection_authority": false
+  },
+  "principle": "DISCOVER_CONCEPT_THEN_VERIFY_TERMS_THEN_USE_UPSTREAM_MACHINE_SOURCE_THEN_TEST_INCREMENTAL_VALUE",
+  "raw_data_policy": "DO_NOT_COPY_THIRD_PARTY_RAW_DATA_TO_PUBLIC_CONTROL_PLANE_UNLESS_LICENSE_AND_GOVERNANCE_EXPLICITLY_ALLOW_AND_COPY_ADDS_VALUE",
+  "sources": [
+    {
+      "id": "ONCHAINMIND",
+      "name": "On-Chain Mind",
+      "official_url": "https://onchainmind.io",
+      "role": "DISCOVERY_REFERENCE_AND_SHADOW_CONTEXT",
+      "machine_access": "REJECT_DIRECT_AUTOMATED_EXTRACTION",
+      "history_capability": "PLATFORM_DISPLAYS_BROAD_HISTORICAL_ONCHAIN_AND_MARKET_CONTEXT",
+      "legal_use_state": "TERMS_PROHIBIT_SCRAPE_CRAWL_MINE_AUTOMATED_EXTRACTION_AND_THIRD_PARTY_DATA_EXTRACTION_STORAGE_REDISTRIBUTION",
+      "public_raw_archive": false,
+      "incremental_value": "HIGH_AS_CONCEPT_CATALOG_LOW_AS_DATA_OWNER",
+      "high_value_concepts": [
+        "URPD_COST_BASIS_TOPOLOGY",
+        "INSTITUTIONAL_VS_ORGANIC_CAPITAL_FLOW",
+        "OLD_COIN_SPENDING_DORMANCY",
+        "PREDICTION_MARKET_EXPECTATIONS"
+      ],
+      "rejected_for_new_weight": [
+        "PROPRIETARY_COMPOSITES",
+        "STANDARD_TECHNICALS",
+        "ALTSEASON_INDEX",
+        "REDUNDANT_STABLECOIN_PREDICTIVE_VARIANTS",
+        "DERIVATIVES_AS_ROUND3_BYPASS"
+      ],
+      "disposition": "KEEP_SHADOW"
+    },
+    {
+      "id": "CHARTINSPECT",
+      "name": "ChartInspect",
+      "official_url": "https://chartinspect.com",
+      "role": "DISCOVERY_REFERENCE_ONLY",
+      "machine_access": "OFFICIAL_LICENSED_INTERFACE_ONLY",
+      "legal_use_state": "DIRECT_SCRAPING_REVERSE_ENGINEERING_NOT_ACCEPTED_FOR_FRAMEWORK_USE",
+      "public_raw_archive": false,
+      "incremental_value": "NOT_EVALUATED_BEYOND_DISCOVERY",
+      "disposition": "HOLD_DISCOVERY_ONLY"
+    },
+    {
+      "id": "COIN_METRICS_COMMUNITY",
+      "name": "Coin Metrics Community",
+      "official_api": "https://community-api.coinmetrics.io/v4",
+      "official_archive": "https://github.com/coinmetrics/data",
+      "btc_archive_path": "csv/btc.csv",
+      "authentication": "NONE_FOR_COMMUNITY_API",
+      "rate_limit": "10_REQUESTS_PER_6_SECONDS_PER_IP",
+      "license": "CC_BY_NC_4_0",
+      "archive_update": "DAILY",
+      "history_capability": "BTC_COMMUNITY_ARCHIVE_BEGINS_2009_FOR_AVAILABLE_FIELDS",
+      "verified_btc_fields_include": [
+        "PRICE_REFERENCE_RATES",
+        "MARKET_CAP",
+        "MVRV",
+        "ACTIVE_AND_BALANCE_ADDRESSES",
+        "EXCHANGE_INFLOWS_OUTFLOWS_AND_BALANCES_WHERE_AVAILABLE",
+        "HASH_RATE",
+        "ISSUANCE",
+        "SUPPLY",
+        "TRANSACTION_ACTIVITY"
+      ],
+      "not_verified_in_community_archive": [
+        "URPD",
+        "SOPR",
+        "DETAILED_STH_LTH_COST_BASIS",
+        "FULL_DORMANCY_FAMILY",
+        "DETAILED_REALIZED_PROFIT_LOSS"
+      ],
+      "public_raw_archive": "ALLOWED_NONCOMMERCIAL_WITH_ATTRIBUTION_BUT_NOT_RECOMMENDED_AS_DUPLICATE_COPY",
+      "recommended_retrieval": "ON_DEMAND_FROM_OFFICIAL_VERSIONED_ARCHIVE",
+      "incremental_value": "HIGH_FOR_LONG_HISTORY_REPRODUCIBLE_BASELINES",
+      "disposition": "RESEARCH_OWNER_CANDIDATE"
+    },
+    {
+      "id": "BGEOMETRICS",
+      "name": "BGeometrics Bitcoin Data API",
+      "official_url": "https://bgeometrics.com/api/",
+      "api_family": "REST_PLUS_AGENT_MCP",
+      "authentication": "FREE_TIER_AVAILABLE_WITH_PROVIDER_RULES_AND_RATE_LIMITS",
+      "conservative_free_rate_limit": "8_REQUESTS_PER_HOUR_15_PER_DAY",
+      "pricing_page_alternate_limit": "10_REQUESTS_PER_HOUR_15_PER_DAY",
+      "rate_limit_resolution_rule": "USE_LOWER_DOCUMENTED_LIMIT_UNTIL_PROVIDER_RECONCILES",
+      "free_history": "LAST_4_YEARS_FOR_MANY_STANDARD_DAILY_ENDPOINTS",
+      "verified_machine_capabilities": [
+        "MVRV_HISTORY",
+        "STH_LTH_MVRV",
+        "SOPR_VARIANTS",
+        "NUPL",
+        "REALIZED_PRICE_AND_PROFIT_LOSS",
+        "CDD_VDD_DORMANCY",
+        "HODL_WAVES",
+        "HOLDER_COHORTS",
+        "SUPPLY_IN_PROFIT_LOSS",
+        "EXCHANGE_AND_MINER_METRICS",
+        "URPD"
+      ],
+      "urpd_status": {
+        "latest_snapshot": "VERIFIED",
+        "point_in_time_query": "VERIFIED_FOR_RECENT_AUGUST_2026_DATES",
+        "long_history": "NOT_VERIFIED",
+        "observed_examples": {
+          "2026-08-30": "ROWS_PRESENT",
+          "2026-08-29": "ROWS_PRESENT",
+          "2026-08-15": "ROWS_PRESENT",
+          "2026-08-01": "NO_ROWS",
+          "2026-07-15": "NO_ROWS",
+          "2025-01-01": "NO_ROWS"
+        },
+        "inference_ceiling": "RECENT_SNAPSHOT_RETENTION_EXISTS_BUT_EXACT_START_AND_RETENTION_CONTRACT_UNRESOLVED"
+      },
+      "legal_use_state": "PERSONAL_RESEARCH_API_USE_ALLOWED_WITHIN_PLAN_LIMITS_BULK_SITE_SCRAPING_AND_RAW_DATA_REDISTRIBUTION_RESTRICTED",
+      "public_raw_archive": false,
+      "allowed_public_artifact": "VALUE_FREE_PROVENANCE_AND_OWN_AGGREGATED_RESEARCH_FINDINGS",
+      "incremental_value": "HIGH_FOR_RECENT_RICH_ONCHAIN_AND_URPD_PROSPECTIVE_RESEARCH",
+      "disposition": "BOUNDED_RESEARCH_ADAPTER_CANDIDATE"
+    },
+    {
+      "id": "POLYMARKET",
+      "name": "Polymarket Public APIs",
+      "official_docs": "https://docs.polymarket.com/getting-started/api",
+      "gamma_api": "https://gamma-api.polymarket.com",
+      "clob_api": "https://clob.polymarket.com",
+      "data_api": "https://data-api.polymarket.com",
+      "authentication": "PUBLIC_MARKET_DATA_AVAILABLE_WITHOUT_CREDENTIALS",
+      "history_endpoint": "GET /prices-history",
+      "history_parameters": [
+        "market",
+        "startTs",
+        "endTs",
+        "interval",
+        "fidelity"
+      ],
+      "history_intervals": [
+        "max",
+        "all",
+        "1m",
+        "1w",
+        "1d",
+        "6h",
+        "1h"
+      ],
+      "prices_history_rate_limit": "1000_REQUESTS_PER_10_SECONDS",
+      "information_class": "EVENT_EXPECTATIONS_AND_PROBABILITIES",
+      "bulk_storage_redistribution_rights": "UNRESOLVED_BY_THIS_AUDIT",
+      "public_raw_archive": false,
+      "incremental_value": "HIGH_BECAUSE_INFORMATION_CLASS_IS_DISTINCT_FROM_PRICE_ONCHAIN_FLOW_AND_TECHNICALS",
+      "disposition": "SOURCE_CONTRACT_REQUIRED_THEN_EXPECTATIONS_SHADOW_CANDIDATE"
+    },
+    {
+      "id": "DEFILLAMA",
+      "name": "DefiLlama",
+      "official_url": "https://defillama.com",
+      "role": "UPSTREAM_SOURCE_UPGRADE_AND_CROSSCHECK",
+      "machine_access": "PUBLIC_API_FOR_SUPPORTED_ENDPOINTS_PLUS_OPEN_ADAPTER_REPOSITORIES",
+      "useful_families": [
+        "TVL",
+        "STABLECOINS",
+        "DEX_VOLUME",
+        "PROTOCOL_AND_CHAIN_CONTEXT"
+      ],
+      "incremental_value": "MEDIUM_FOR_SOURCE_PROVENANCE_LOW_FOR_NEW_SIGNAL_AUTHORITY",
+      "public_raw_archive": false,
+      "disposition": "KEEP_CROSSCHECK_OR_SOURCE_UPGRADE"
+    },
+    {
+      "id": "BLOCKCHAIN_COM_CHARTS",
+      "name": "Blockchain.com Charts",
+      "official_url": "https://www.blockchain.com/explorer/charts",
+      "role": "POTENTIAL_HISTORICAL_CROSSCHECK",
+      "machine_access": "JSON_DOWNLOAD_OR_API_POTENTIAL_NOT_FULLY_CONTRACTED_IN_THIS_AUDIT",
+      "incremental_value": "MEDIUM_IF_EXACT_ENDPOINT_AND_USE_RIGHTS_RESOLVED",
+      "public_raw_archive": false,
+      "disposition": "HOLD"
+    },
+    {
+      "id": "CHECKONCHAIN",
+      "name": "Checkonchain",
+      "role": "RESEARCH_DISCOVERY_REFERENCE",
+      "machine_access": "RAW_API_OR_DOWNLOAD_CONTRACT_NOT_RESOLVED",
+      "incremental_value": "MEDIUM_FOR_CONCEPT_DISCOVERY",
+      "public_raw_archive": false,
+      "disposition": "DISCOVERY_ONLY"
+    },
+    {
+      "id": "NEWHEDGE",
+      "name": "Newhedge",
+      "role": "WATCHLIST_DATA_PROVIDER",
+      "machine_access": "API_EXISTS_BUT_ACCESS_TERMS_AND_INCREMENTAL_VALUE_NOT_AS_CLEAN_AS_STRONGER_CANDIDATES",
+      "incremental_value": "UNRESOLVED",
+      "public_raw_archive": false,
+      "disposition": "WATCHLIST"
+    },
+    {
+      "id": "CRYPTODATADOWNLOAD",
+      "name": "CryptoDataDownload",
+      "role": "LOW_PRIORITY_HISTORICAL_DOWNLOAD_SOURCE",
+      "machine_access": "DOWNLOADS_AND_API_CAPABILITY",
+      "incremental_value": "LOW_VERSUS_EXISTING_PRICE_AND_STRONGER_ONCHAIN_SOURCES",
+      "public_raw_archive": false,
+      "disposition": "LOW_PRIORITY"
+    }
+  ],
+  "research_candidates": [
+    {
+      "id": "OCM_E1_URPD_TOPOLOGY",
+      "family": "STRESS_AND_STRUCTURE",
+      "question": "DOES_POINT_IN_TIME_COST_BASIS_TOPOLOGY_ADD_INCREMENTAL_STRESS_RECOVERY_OR_CASCADE_INFORMATION_BEYOND_EXISTING_PRICE_TREND_AND_HOLDER_STATE",
+      "preferred_source": "BGEOMETRICS_OR_OTHER_EXPLICITLY_LICENSED_POINT_IN_TIME_URPD_OWNER",
+      "initial_mode": "PROSPECTIVE_SHADOW_COLLECTION",
+      "new_test_created": false,
+      "live_authority": false
+    },
+    {
+      "id": "OCM_E2_COMPACT_ONCHAIN_INCREMENTAL_VALUE",
+      "family": "STRESS_AND_STRUCTURE",
+      "candidate_axes": [
+        "HOLDER_VALUATION_MVRV_OR_STH_MVRV",
+        "REALIZED_BEHAVIOR_SOPR",
+        "OLD_COIN_SPENDING_VDD_OR_DORMANCY"
+      ],
+      "baseline": [
+        "SIMPLE_BTC_PRICE_TREND",
+        "EXISTING_FRAMEWORK_BTC_STATE"
+      ],
+      "evaluation_horizons_candidate": [
+        "7D",
+        "14D",
+        "28D"
+      ],
+      "method_requirement": "DETERMINISTIC_WALK_FORWARD_NO_LLM_NUMERIC_EXTRACTION",
+      "new_test_created": false,
+      "live_authority": false
+    },
+    {
+      "id": "OCM_E3_PREDICTION_MARKET_EXPECTATIONS",
+      "family": "MACRO_CONTEXT_OR_EXPECTATIONS_CONTEXT",
+      "question": "DO_EVENT_PROBABILITY_CHANGES_ADD_CALIBRATED_INCREMENTAL_INFORMATION_BEYOND_SCHEDULED_EVENT_DATA_FRED_AND_PRICE",
+      "preferred_source": "POLYMARKET_PUBLIC_API_AFTER_SOURCE_RIGHTS_CONTRACT",
+      "new_test_created": false,
+      "live_authority": false
+    },
+    {
+      "id": "OCM_E4_INSTITUTIONAL_ORGANIC_CAPITAL_CONFIRMATION",
+      "family": "FLOW_AND_ABSORPTION",
+      "question": "DO_SETTLED_INSTITUTIONAL_FLOWS_CONFIRMED_BY_NATIVE_REALIZED_CAP_OR_HOLDER_FLOW_ADD_INFORMATION_ABOUT_ETF_ERA_PRICE_SURVIVAL",
+      "preferred_sources": "EXISTING_FRAMEWORK_ETF_OWNER_PLUS_REPRODUCIBLE_ONCHAIN_CAPITAL_FLOW_OWNER",
+      "new_engine": false,
+      "live_authority": false
+    }
+  ],
+  "implementation_guardrails": [
+    "NO_OCM_OR_CHARTINSPECT_AUTOMATED_SCRAPING",
+    "NO_PUBLIC_BGEOMETRICS_RAW_DATA_PERSISTENCE",
+    "NO_POLYMARKET_BULK_ARCHIVE_BEFORE_RIGHTS_RESOLUTION",
+    "NO_ROUND3_DERIVATIVES_BYPASS",
+    "NO_PROPRIETARY_COMPOSITE_AS_MACHINE_SIGNAL",
+    "NO_COUNTING_CORRELATED_ONCHAIN_METRICS_AS_INDEPENDENT_CONFIRMATIONS",
+    "NO_LLM_SUMMARY_LAYER_AS_NUMERIC_EVIDENCE",
+    "K17_DETERMINISTIC_PARSING_REQUIRED",
+    "MISSING_DATA_IS_UNKNOWN_NOT_BEARISH",
+    "ROWS_AND_BASELINES_REQUIRED_BEFORE_PROMOTION"
+  ],
+  "next_bounded_work_package": {
+    "recommended": true,
+    "scope": [
+      "COIN_METRICS_COMMUNITY_SOURCE_CONTRACT_AND_REPRODUCIBLE_OWNER",
+      "BGEOMETRICS_TRANSIENT_RESEARCH_ADAPTER_WITH_NO_RAW_PUBLIC_PERSISTENCE",
+      "URPD_PROSPECTIVE_SNAPSHOT_AND_RETENTION_CONTRACT",
+      "POLYMARKET_TERMS_AND_SOURCE_CONTRACT_THEN_EXPECTATIONS_ADAPTER_IF_CLEARED",
+      "DETERMINISTIC_COMPACT_ONCHAIN_INCREMENTAL_VALUE_REPLAY",
+      "KEEP_SHADOW_KILL_DECISION_AGAINST_EXISTING_OWNERS"
+    ],
+    "forbidden_scope": [
+      "NEW_ENGINE",
+      "LIVE_WEIGHT",
+      "PORTFOLIO_ACTION",
+      "THRESHOLD_CHANGE",
+      "AUTOMATIC_MCP_QUEUE_EXPANSION"
+    ]
+  }
+}
