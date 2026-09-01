@@ -1,0 +1,120 @@
+{
+  "authority": "NONE",
+  "contract": "ONCHAIN_INCREMENTAL_VALUE_REPLAY_OUTCOME_2026_09_01_v1",
+  "cross_source_mvrv_spotcheck": {
+    "bgeometrics_vs_coinmetrics_mean_absolute_percent_difference": 0.019049800626612566,
+    "interpretation": "CLOSE_BUT_NOT_IDENTICAL_PIN_SOURCE_METHODOLOGY_DO_NOT_MIX",
+    "sample_dates": 5
+  },
+  "data_quality_findings": [
+    "BGEOMETRICS_BTC_PRICE_STRUCTURED_EXTRACTION_RETURNED_DUPLICATED_HISTORICAL_VALUES_ACROSS_YEARS_AND_WAS_NOT_USED_AS_PRICE_OWNER",
+    "SOPR_STRUCTURED_EXTRACTION_RETURNED_CONTRADICTORY_MISSING_MONTH_METADATA_AND_WAS_EXCLUDED",
+    "THESE_ARE_EXTRACTION_PATH_FINDINGS_NOT_PROOF_OF_PROVIDER_SOURCE_CORRUPTION"
+  ],
+  "descriptive_context": {
+    "interpretation": "VALUATION_CONTEXT_ONLY_SMALL_SAMPLE_NOT_PROMOTION_EVIDENCE",
+    "mvrv_below_1_2": {
+      "forward_1m_count": 8,
+      "forward_1m_median_simple_return": 0.063857,
+      "forward_3m_count": 6,
+      "forward_3m_median_simple_return": 0.219976
+    }
+  },
+  "final_verdict": "NO_ROBUST_INCREMENTAL_PREDICTIVE_VALUE",
+  "framework_effect": "KEEP_MVRV_AS_VALUATION_STRESS_CONTEXT_ONLY",
+  "gate": {
+    "must_hold_across_sensitivity": true,
+    "required_direction_accuracy_delta": 0.05,
+    "required_mae_improvement_fraction": 0.05
+  },
+  "model": {
+    "baseline_features": [
+      "ret1",
+      "ret3",
+      "dd6"
+    ],
+    "challenger_additions": [
+      "mvrv",
+      "mvrv_d1"
+    ],
+    "horizons_rows": [
+      1,
+      3
+    ],
+    "min_train": 18,
+    "ridge_alpha_sensitivity": [
+      1,
+      10,
+      100
+    ]
+  },
+  "runs": [
+    {
+      "alpha": 1,
+      "direction_accuracy_delta": -0.038461538461538436,
+      "horizon_rows": 1,
+      "mae_improvement_fraction": 0.04083912017629819,
+      "verdict": "FAIL"
+    },
+    {
+      "alpha": 1,
+      "direction_accuracy_delta": 0.0,
+      "horizon_rows": 3,
+      "mae_improvement_fraction": 0.07691579955194257,
+      "verdict": "FAIL"
+    },
+    {
+      "alpha": 10,
+      "direction_accuracy_delta": 0.0,
+      "horizon_rows": 1,
+      "mae_improvement_fraction": 0.03655436483831435,
+      "verdict": "FAIL"
+    },
+    {
+      "alpha": 10,
+      "direction_accuracy_delta": 0.0,
+      "horizon_rows": 3,
+      "mae_improvement_fraction": 0.053887883736456046,
+      "verdict": "FAIL"
+    },
+    {
+      "alpha": 100,
+      "direction_accuracy_delta": 0.0,
+      "horizon_rows": 1,
+      "mae_improvement_fraction": 0.006334850258876955,
+      "verdict": "FAIL"
+    },
+    {
+      "alpha": 100,
+      "direction_accuracy_delta": 0.0,
+      "horizon_rows": 3,
+      "mae_improvement_fraction": 8.945170413858995e-05,
+      "verdict": "FAIL"
+    }
+  ],
+  "sample": {
+    "end": "2026-08-31",
+    "frequency": "MONTH_END",
+    "rows": 48,
+    "start": "2022-09-30"
+  },
+  "sources": {
+    "mvrv": "BGEOMETRICS_MVRV_TRANSIENT",
+    "price": "BINANCE_BTCUSDT_MONTHLY_KLINE_TRANSIENT",
+    "raw_provider_rows_committed": false,
+    "mvrv_request": "https://bitcoin-data.com/v1/mvrv?startday=2022-09-01&endday=2026-08-31",
+    "price_request": "BINANCE BTCUSDT 1M klines, UTC, 2022-09-01 through 2026-08-31"
+  },
+  "reproducibility": {
+    "class": "HASH_BOUND_TRANSIENT_MATRIX_RAW_NOT_ARCHIVED",
+    "input_dataset_sha256": "fa9fc200bb8b0a166ec8fe98042c121e1af729aab2b224ea76b017a99fdaf267",
+    "input_dataset_bytes": 1350,
+    "input_columns": [
+      "date",
+      "price",
+      "mvrv"
+    ],
+    "note": "Hash binds the exact transient research matrix used for the recorded replay. Provider raw rows remain uncommitted."
+  },
+  "status": "RETROSPECTIVE_EXPLORATORY_RESEARCH_ONLY"
+}

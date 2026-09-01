@@ -1,0 +1,44 @@
+{
+  "contract": "URPD_PROSPECTIVE_OBSERVATION_CONTRACT_v0_1",
+  "date": "2026-09-01",
+  "derived_features": [
+    "supply_near_spot_5pct",
+    "supply_below_spot_10pct",
+    "supply_above_spot_10pct",
+    "above_below_10pct_asymmetry",
+    "nearest_dense_bin_distance_pct",
+    "nearest_vacuum_bin_distance_pct",
+    "cost_basis_concentration_entropy_norm"
+  ],
+  "kill_if": [
+    "DATE_LINEAGE_CANNOT_BE_BOUND",
+    "BIN_SCHEMA_CHANGES_WITHOUT_VERSIONED_ADAPTER",
+    "DERIVED_FEATURES_DO_NOT_DIVERGE_FROM_SIMPLER_STRESS_CONTEXT",
+    "PROVIDER_TERMS_BLOCK_REQUIRED_RESEARCH_RECEIPTS"
+  ],
+  "maturity": "NONE_THIS_IS_STATE_OBSERVATION_NOT_FORWARD_OUTCOME",
+  "portfolio_action": false,
+  "prediction": false,
+  "promotion": false,
+  "raw_public_persistence": false,
+  "request_lineage": {
+    "reason": "UrpdDay rows do not carry snapshot date; request day must bind the observation.",
+    "required": [
+      "requested_day",
+      "externally_settled_btc_spot",
+      "payload_sha256",
+      "retrieved_at_utc"
+    ],
+    "provider_payload_day_field_present": false,
+    "provider_attested_snapshot_day": false,
+    "lineage_class": "REQUEST_BOUND_ONLY_NOT_PROVIDER_ATTESTED",
+    "interpretation": "The endpoint is date-parameterized, but UrpdDay bins do not echo snapshot date. Treat day as request-bound lineage, not provider-attested point-in-time evidence."
+  },
+  "promotion_requires": [
+    "PROVIDER_ATTESTED_OR_INDEPENDENTLY_REPRODUCIBLE_SNAPSHOT_DAY",
+    "PROSPECTIVE_ROWS_WITH_PRESPECIFIED_OUTCOME_TEST"
+  ],
+  "retention_assumption": "NONE",
+  "source": "BGEOMETRICS_URPD",
+  "status": "SHADOW_ONLY"
+}
