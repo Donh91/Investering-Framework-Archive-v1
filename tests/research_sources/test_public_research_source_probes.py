@@ -61,9 +61,21 @@ class TestResearchSourceProbes(unittest.TestCase):
         result = URPD.summarize_topology(raw, "2026-08-30", 100.0)
         self.assertEqual(result["requested_day"], "2026-08-30")
         self.assertEqual(result["row_count"], 5)
+        self.assertEqual(result["day_lineage"]["lineage_class"], "REQUEST_BOUND_ONLY_NOT_PROVIDER_ATTESTED")
+        self.assertFalse(result["day_lineage"]["provider_attested_snapshot_day"])
         self.assertFalse(result["raw_persisted"])
         self.assertIn("cost_basis_concentration_entropy_norm", result["derived_features"])
         self.assertNotIn("bins", result)
+
+    def test_urpd_rejects_bad_day_and_overlapping_bins(self):
+        with self.assertRaises(URPD.ProbeError):
+            URPD.build_url("2026-02-30")
+        raw = json.dumps([
+            {"priceLower": 80, "priceUpper": 100, "utxoCount": 10, "btcSupply": 1, "pctSupply": 0.5},
+            {"priceLower": 90, "priceUpper": 110, "utxoCount": 10, "btcSupply": 1, "pctSupply": 0.5},
+        ]).encode()
+        with self.assertRaises(URPD.ProbeError):
+            URPD.summarize_topology(raw, "2026-08-30", 100.0)
 
     def test_urpd_rejects_missing_schema(self):
         raw = json.dumps([{"price": 100, "supply": 1}]).encode()
@@ -80,8 +92,10 @@ class TestResearchSourceProbes(unittest.TestCase):
 
     def test_polymarket_rejects_non_probability(self):
         raw = json.dumps({"history": [{"t": 1, "p": 1.2}]}).encode()
+        result = None
         with self.assertRaises(PM.ProbeError):
-            PM.summarize_prices_history(raw)
+            result = PM.summarize_prices_history(raw)
+        self.assertIsNone(result)
 
 
 if __name__ == "__main__":
