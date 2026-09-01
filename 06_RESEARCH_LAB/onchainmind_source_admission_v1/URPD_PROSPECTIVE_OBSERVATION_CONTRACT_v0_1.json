@@ -23,8 +23,21 @@
   "raw_public_persistence": false,
   "request_lineage": {
     "reason": "UrpdDay rows do not carry snapshot date; request day must bind the observation.",
-    "required": ["requested_day", "externally_settled_btc_spot", "payload_sha256", "retrieved_at_utc"]
+    "required": [
+      "requested_day",
+      "externally_settled_btc_spot",
+      "payload_sha256",
+      "retrieved_at_utc"
+    ],
+    "provider_payload_day_field_present": false,
+    "provider_attested_snapshot_day": false,
+    "lineage_class": "REQUEST_BOUND_ONLY_NOT_PROVIDER_ATTESTED",
+    "interpretation": "The endpoint is date-parameterized, but UrpdDay bins do not echo snapshot date. Treat day as request-bound lineage, not provider-attested point-in-time evidence."
   },
+  "promotion_requires": [
+    "PROVIDER_ATTESTED_OR_INDEPENDENTLY_REPRODUCIBLE_SNAPSHOT_DAY",
+    "PROSPECTIVE_ROWS_WITH_PRESPECIFIED_OUTCOME_TEST"
+  ],
   "retention_assumption": "NONE",
   "source": "BGEOMETRICS_URPD",
   "status": "SHADOW_ONLY"
