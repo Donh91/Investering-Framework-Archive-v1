@@ -74,6 +74,64 @@ class SituationRoomStaticDailyAdapterTests(unittest.TestCase):
         )
         self.assertIsNone(result["current_unverified_discoveries"][0]["event_time_utc"])
 
+    def test_situation_room_retrieval_failure_with_healthy_primaries_matches_live_gate(self):
+        result = {
+            "daily_result": "NO_NEW_MATERIAL_CATALYST",
+            "run_status": "PASS",
+            "source_coverage": {
+                "primary_pass": 5,
+                "primary_total": 5,
+                "receipts": [
+                    {
+                        "source_id": "SITUATION_ROOM",
+                        "role": "DISCOVERY_ONLY",
+                        "status": "FAIL",
+                        "error_class": "URLError",
+                    },
+                    {"source_id": "SEC", "role": "PRIMARY", "status": "PASS"},
+                ],
+            },
+        }
+        adapter.apply_situation_room_retrieval_fail_closed(result)
+        self.assertEqual(result["daily_result"], "REVIEW_REQUIRED_UNVERIFIED_DISCOVERY")
+        self.assertEqual(result["run_status"], "DEGRADED")
+        self.assertGreaterEqual(result["source_coverage"]["primary_pass"], 3)
+
+    def test_successful_situation_room_retrieval_preserves_clean_no_event(self):
+        result = {
+            "daily_result": "NO_NEW_MATERIAL_CATALYST",
+            "run_status": "PASS",
+            "source_coverage": {
+                "primary_pass": 5,
+                "primary_total": 5,
+                "receipts": [
+                    {"source_id": "SITUATION_ROOM", "role": "DISCOVERY_ONLY", "status": "PASS"},
+                ],
+            },
+        }
+        adapter.apply_situation_room_retrieval_fail_closed(result)
+        self.assertEqual(result["daily_result"], "NO_NEW_MATERIAL_CATALYST")
+        self.assertEqual(result["run_status"], "PASS")
+
+    def test_primary_source_insufficiency_remains_unknown_and_degraded(self):
+        result = {
+            "daily_result": "UNKNOWN_DUE_TO_SOURCE_FAILURE",
+            "run_status": "DEGRADED",
+            "source_coverage": {
+                "primary_pass": 2,
+                "primary_total": 5,
+                "receipts": [
+                    {"source_id": "SITUATION_ROOM", "role": "DISCOVERY_ONLY", "status": "FAIL"},
+                    {"source_id": "SEC", "role": "PRIMARY", "status": "PASS"},
+                    {"source_id": "TREASURY", "role": "PRIMARY", "status": "PASS"},
+                ],
+            },
+        }
+        adapter.apply_situation_room_retrieval_fail_closed(result)
+        self.assertEqual(result["daily_result"], "UNKNOWN_DUE_TO_SOURCE_FAILURE")
+        self.assertEqual(result["run_status"], "DEGRADED")
+        self.assertLess(result["source_coverage"]["primary_pass"], 3)
+
 
 if __name__ == "__main__":
     unittest.main()
