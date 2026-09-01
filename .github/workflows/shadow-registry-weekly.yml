@@ -8,9 +8,10 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
 
 concurrency:
-  group: framework-main-writer
+  group: shadow-registry-reviewed-pr
   cancel-in-progress: false
 
 jobs:
@@ -26,24 +27,70 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Validate registry contract
-        run: python scripts/research/shadow_registry_weekly.py --validate-only
-      - name: Generate advisory weekly snapshot
-        run: python scripts/research/shadow_registry_weekly.py
-      - name: Commit weekly shadow evidence
+
+      - name: Select deterministic reviewed-PR branch
+        id: branch
         shell: bash
         run: |
+          set -euo pipefail
+          week="$(python - <<'PY'
+          from datetime import datetime, timezone
+          y, w, _ = datetime.now(timezone.utc).isocalendar()
+          print(f'{y}-W{w:02d}')
+          PY
+          )"
+          branch="automation/shadow-registry-${week}"
+          echo "week=$week" >> "$GITHUB_OUTPUT"
+          echo "branch=$branch" >> "$GITHUB_OUTPUT"
+          git fetch origin main
+          if git ls-remote --exit-code --heads origin "refs/heads/${branch}" >/dev/null 2>&1; then
+            git fetch origin "${branch}:${branch}"
+            git checkout "${branch}"
+            git merge --no-edit origin/main
+          else
+            git checkout -b "${branch}" origin/main
+          fi
+
+      - name: Validate registry contract
+        run: python scripts/research/shadow_registry_weekly.py --validate-only
+
+      - name: Generate advisory weekly snapshot
+        run: python scripts/research/shadow_registry_weekly.py
+
+      - name: Run bounded runtime integrity tests
+        run: python -m pytest -q tests/research/test_shadow_registry_runtime_integrity.py
+
+      - name: Commit branch evidence and open reviewed PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BRANCH: ${{ steps.branch.outputs.branch }}
+          WEEK: ${{ steps.branch.outputs.week }}
+        shell: bash
+        run: |
+          set -euo pipefail
           git config user.name 'framework-data-bot'
           git config user.email 'framework-data-bot@users.noreply.github.com'
           git add 04_MARKET_LEARNING/shadow_registry/LATEST.json 04_MARKET_LEARNING/shadow_registry/weekly
-          if git diff --cached --quiet; then exit 0; fi
-          git commit -m "learning: weekly shadow registry ${GITHUB_RUN_ID}"
-          pushed=false
-          for attempt in 1 2 3; do
-            git rebase --abort 2>/dev/null || true
-            if git pull --rebase origin main && git push origin HEAD:main; then pushed=true; break; fi
-            sleep $((attempt * 5))
-          done
-          [ "$pushed" = true ]
-          git fetch origin main
-          git merge-base --is-ancestor HEAD origin/main
+          if ! git diff --cached --quiet; then
+            git commit -m "learning: weekly shadow registry ${WEEK} run ${GITHUB_RUN_ID}"
+            git push --set-upstream origin "$BRANCH"
+          fi
+
+          existing="$(gh pr list --repo "$GITHUB_REPOSITORY" --head "$BRANCH" --base main --state open --json number --jq '.[0].number // empty')"
+          if [ -n "$existing" ]; then
+            echo "SHADOW_REGISTRY_REVIEW_PR_EXISTS number=$existing branch=$BRANCH"
+            exit 0
+          fi
+
+          if git diff --quiet origin/main...HEAD; then
+            echo 'SHADOW_REGISTRY_NO_CHANGE_NO_PR_REQUIRED'
+            exit 0
+          fi
+
+          pr_url="$(gh pr create \
+            --repo "$GITHUB_REPOSITORY" \
+            --base main \
+            --head "$BRANCH" \
+            --title "learning: Shadow Registry ${WEEK}" \
+            --body "Automated weekly Shadow Registry evidence candidate. Research-only, non-canonical. Weekly immutable snapshot plus LATEST refresh. This PR requires normal repository CI/review before merge; the scheduled workflow does not push these registry artifacts directly to main. Source workflow run: ${GITHUB_RUN_ID}.")"
+          echo "SHADOW_REGISTRY_REVIEW_PR_CREATED url=$pr_url branch=$BRANCH"
