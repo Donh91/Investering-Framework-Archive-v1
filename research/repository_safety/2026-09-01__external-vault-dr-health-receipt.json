@@ -1,0 +1,82 @@
+{
+  "contract": "EXTERNAL_VAULT_DR_HEALTH_RECEIPT_v1",
+  "recorded_at_utc": "2026-09-01T17:31:42Z",
+  "status": "BLOCKED_EXTERNAL_ACCESS",
+  "source_repository": "Donh91/Investering-Framework-Archive-v1",
+  "source_main_sha": "0d09dc3ef7be05b002acf8bd59d324158d45d51b",
+  "internal_safepoint": {
+    "branch": "backup-safepoint/2026-09-01-external-vault-dr-recovery",
+    "sha": "0d09dc3ef7be05b002acf8bd59d324158d45d51b",
+    "compare_status": "IDENTICAL",
+    "ahead_by": 0,
+    "behind_by": 0,
+    "classification": "INTERNAL_RECOVERY_ANCHOR_NOT_EXTERNAL_DR"
+  },
+  "canonical_target": {
+    "repository": "Donh91/Investering-Framework-Vault",
+    "required_visibility": "private",
+    "required_independence": "independent_not_fork",
+    "current_connector_probe": "404_NOT_FOUND",
+    "current_repository_existence": "UNRESOLVED_FROM_CURRENT_AUTHORITY",
+    "current_read_access": false,
+    "current_write_access": false,
+    "claim_external_backup_success": false
+  },
+  "github_app_installation": {
+    "installation_id": 144438405,
+    "account": "Donh91",
+    "currently_exposed_repositories": [
+      "Donh91/Investering-Framework-Archive-v1",
+      "Donh91/Eksperimenter-framework-",
+      "Donh91/secrets"
+    ],
+    "canonical_vault_present_in_installation_repository_set": false
+  },
+  "historical_evidence": {
+    "activation_pr": 4,
+    "activation_merge_sha": "d6445e1cc1017725663d6208e18e0bf8e9bbee55",
+    "historical_connector_access": "READ_WRITE_VERIFIED",
+    "historical_connectivity_receipt_commit": "50f1350f4e3e5e4ed7fe235f3de3c948762992b9",
+    "first_preserved_failure_report": "00_ARCHIVE_CONTROL/archive_sync_runs/2026-07-20__github-archive-sync-backup-v1-8.md",
+    "failure_class": "VAULT_UNAVAILABLE_404_CURRENT_CONNECTOR_SESSION"
+  },
+  "rotation_health": {
+    "state_path": "00_ARCHIVE_CONTROL/backup_rotation_state.json",
+    "state_last_updated": "2026-07-13",
+    "last_completed_position": 1,
+    "next_position": 2,
+    "last_completed_iso_week": "2026-W29",
+    "stale_config_claims_connector_read_write_verified": true,
+    "observed_runtime_access_matches_stale_claim": false,
+    "counter_advancement_status": "BLOCKED_SINCE_AT_LEAST_2026-07-20"
+  },
+  "forbidden_fallbacks": {
+    "Donh91/secrets": "REJECTED_RESTRICTED_DATA_PLANE_NOT_CANONICAL_DR_VAULT",
+    "Donh91/Eksperimenter-framework-": "REJECTED_PUBLIC_NONDEDICATED_REPOSITORY",
+    "source_repo_backup_branch": "INTERNAL_SAFEPOINT_ONLY_NOT_EXTERNAL_DR"
+  },
+  "backup_products": {
+    "canonical_disaster_recovery_snapshot": "NOT_VERIFIABLE_TARGET_UNAVAILABLE",
+    "full_git_mirror": "NOT_CONFIGURED",
+    "restore_drill": "NOT_RUN_TARGET_UNAVAILABLE"
+  },
+  "acceptance_gate": [
+    "Canonical Vault target is accessible to the authorized GitHub installation or a separately approved canonical target replacement is completed under governance.",
+    "Target is verified private, independent and not a fork.",
+    "Freeze current source main SHA and create a dated append-only canonical snapshot from that frozen SHA.",
+    "Read back every mandatory seed path and every then-current canonical-index referenced path with matching content or stable digest.",
+    "Write a final external backup receipt with exact source and destination identifiers and no unresolved required paths.",
+    "Perform a non-destructive restore drill and verify representative canonical index, governance, ledger and weekly-operation files.",
+    "Only after all prior conditions pass may external DR status become PASS."
+  ],
+  "required_external_boundary_action": {
+    "preferred_if_repository_still_exists": "Expose Donh91/Investering-Framework-Vault to GitHub App installation 144438405 with the minimum repository access required for the governed snapshot and restore test.",
+    "if_repository_no_longer_exists": "Recreation or canonical target replacement requires a separately governed private independent backup repository decision; no silent substitution is authorized.",
+    "performed_by_this_audit": false
+  },
+  "canonical_backup_configuration_changed": false,
+  "workflow_changed": false,
+  "market_semantics_changed": false,
+  "portfolio_authority_changed": false,
+  "external_vault_claimed_complete": false
+}
