@@ -1,0 +1,116 @@
+{
+  "contract": "ONCHAINMIND_SOURCE_ADMISSION_PRIORITY_AND_KILL_MATRIX_v0_1",
+  "date": "2026-09-01",
+  "status": "PREDECLARED_WORK_QUEUE",
+  "ranking": [
+    {
+      "priority": 1,
+      "id": "P1_SOURCE_CONTRACT_AND_PROBE_HARDENING",
+      "why": "Foundation for every later experiment; low complexity and prevents bad evidence.",
+      "work": [
+        "Sync branch with current main",
+        "Run full repo tests relevant to new scripts",
+        "Harden payload/schema failure modes",
+        "Resolve immutable Coin Metrics ref handling",
+        "Re-check BGeometrics terms and exact rate limits",
+        "Keep Polymarket network blocked until rights cleared"
+      ],
+      "kill_if": [
+        "Provider contract cannot support reproducible personal research",
+        "Schema cannot be validated deterministically",
+        "Required authority/persistence boundary cannot be enforced"
+      ]
+    },
+    {
+      "priority": 2,
+      "id": "P2_COMPACT_ONCHAIN_INCREMENTAL_VALUE_REPLAY",
+      "why": "Highest near-term chance of improving BTC stress/recovery classification using available 4Y data without adding a new engine.",
+      "candidate_features": [
+        "MVRV_OR_STH_MVRV_ONE_VALUATION_AXIS",
+        "SOPR_ONE_REALIZED_BEHAVIOR_AXIS",
+        "VDD_ONE_OLD_COIN_SPENDING_AXIS"
+      ],
+      "baselines": ["SIMPLE_BTC_PRICE_TREND", "EXISTING_FRAMEWORK_BTC_STATE_AT_IDENTICAL_TIMESTAMPS"],
+      "predeclared_horizons": ["7D", "14D", "28D"],
+      "rules": [
+        "One family at a time",
+        "No post-hoc threshold mining",
+        "Expanding/walk-forward only",
+        "Report all horizons",
+        "Report missingness and regime partitions",
+        "Compare leave-one-in and leave-one-out"
+      ],
+      "kill_if": [
+        "No incremental OOS value",
+        "Simple price baseline equals or beats",
+        "Result only exists in one selected regime",
+        "Correlated features create pseudo-confirmation",
+        "Source revisions make replay non-point-in-time-safe"
+      ]
+    },
+    {
+      "priority": 3,
+      "id": "P3_URPD_TOPOLOGY_OBSERVATION",
+      "why": "Most differentiated OnChainMind discovery and potentially useful for stress/cascade structure.",
+      "mode": "SOURCE_OBSERVATION_FIRST_NOT_PREDICTION",
+      "provisional_features": [
+        "supply_near_spot_share",
+        "nearest_dense_cost_basis_distance",
+        "nearest_liquidity_vacuum_distance",
+        "above_below_supply_asymmetry",
+        "cost_basis_concentration_entropy"
+      ],
+      "rules": [
+        "Do not create a buy/sell signal",
+        "Do not claim historical backtest if retention is short",
+        "Freeze bin semantics and BTC settlement source before feature generation",
+        "Store no public raw BGeometrics payloads",
+        "Use restricted/internal evidence plane only if provider terms explicitly permit"
+      ],
+      "kill_if": [
+        "Retention too short to learn",
+        "Feature definitions unstable under bin changes",
+        "Provider terms block durable research records",
+        "No divergence from simpler price/holder stress features"
+      ]
+    },
+    {
+      "priority": 4,
+      "id": "P4_POLYMARKET_EXPECTATIONS_CONTRACT",
+      "why": "Genuinely different information class but legal/data-use ambiguity currently dominates.",
+      "work": [
+        "Resolve official storage/derived-use rights",
+        "Predeclare macro/crypto event taxonomy",
+        "Define market identity and resolution rules",
+        "Only then enable network collector"
+      ],
+      "kill_if": [
+        "Rights remain ambiguous",
+        "Market selection cannot be made without hindsight",
+        "Sparse/unstable market identity prevents reproducible histories"
+      ]
+    },
+    {
+      "priority": 5,
+      "id": "P5_ETF_INSTITUTIONAL_VS_ORGANIC_CONFIRMATION",
+      "why": "Potentially useful ETF-era context but overlaps existing owners and should wait until simpler on-chain work is evaluated.",
+      "work": [
+        "Reuse settled ETF owner",
+        "Select one reproducible native-capital-flow axis",
+        "Test divergence only, not confirmation counting"
+      ],
+      "kill_if": [
+        "No incremental value beyond settled ETF flow + price",
+        "Native flow source cannot be made point-in-time safe"
+      ]
+    },
+    {
+      "priority": 6,
+      "id": "P6_SELF_HOSTED_UTXO_RECONSTRUCTION",
+      "why": "Potential sovereignty but materially heavy.",
+      "status": "DEFER",
+      "trigger": "Only if licensed sources fail or long-history URPD becomes strategically necessary.",
+      "kill_if": ["Storage/indexing/maintenance burden exceeds expected research value"]
+    }
+  ]
+}
