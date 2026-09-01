@@ -1,0 +1,67 @@
+{
+  "contract": "EXTERNAL_VAULT_DR_RECOVERY_RECEIPT_v1",
+  "recorded_at_utc": "2026-09-01T19:06:29Z",
+  "status": "PASS_CANONICAL_DR",
+  "previous_failure_receipt": "research/repository_safety/2026-09-01__external-vault-dr-health-receipt.json",
+  "previous_failure_status": "BLOCKED_EXTERNAL_ACCESS",
+  "recovery_cause": "GITHUB_APP_REPOSITORY_ACCESS_RESTORED_BY_ACCOUNT_OWNER",
+  "source_repository": "Donh91/Investering-Framework-Archive-v1",
+  "source_main_sha": "879b1798856a6e835364a8328025437a7d9f9e62",
+  "source_safepoint": {
+    "branch": "backup-safepoint/2026-09-01-external-vault-canonical-snapshot",
+    "sha": "879b1798856a6e835364a8328025437a7d9f9e62",
+    "status": "VERIFIED_BOUND_TO_FROZEN_SOURCE"
+  },
+  "vault": {
+    "repository": "Donh91/Investering-Framework-Vault",
+    "visibility": "private",
+    "independent_not_fork": true,
+    "current_connector_read": true,
+    "current_connector_write": true,
+    "canonical_snapshot_root": "snapshots/2026-09-01/source-tree/",
+    "snapshot_commit": "1c4fbd2e62842712f7afb5d6f8fa86be4522b476",
+    "receipt_commit": "e0706fa60d5dffd640ce4feff4de95b21a59b09f",
+    "main_after_one_shot_cleanup": "80c415fecaefafb28d5b57104c01377ac609edc5"
+  },
+  "production_proof": {
+    "workflow": "Canonical DR Snapshot Once",
+    "run_id": 33547532410,
+    "job_id": 99988639071,
+    "conclusion": "SUCCESS",
+    "canonical_path_discovery": "PASS_78",
+    "snapshot_copy": "PASS_78_OF_78_BLOB_SHA_MATCH",
+    "paths_expected": 78,
+    "paths_verified": 78,
+    "paths_unresolved": 0,
+    "restore_drill": "PASS_6_OF_6",
+    "remote_receipt_readback": "PASS"
+  },
+  "vault_receipts": {
+    "backup_receipt": "receipts/2026-09-01__backup-receipt.json",
+    "manifest_json": "manifests/2026-09-01__snapshot-manifest.json",
+    "manifest_md": "manifests/2026-09-01__snapshot-manifest.md",
+    "restore_drill_receipt": "receipts/2026-09-01__restore-drill-receipt.json",
+    "latest_status": "latest/backup-status.json",
+    "backup_result": "PASS_CANONICAL_SNAPSHOT",
+    "restore_result": "PASS_RESTORE_DRILL"
+  },
+  "rotation_semantics": {
+    "backup_rotation_counter_advanced": false,
+    "reason": "OUT_OF_CYCLE_HIGH_IMPACT_OVERRIDE_NOT_SCHEDULED_WEEKLY_COUNTER_EVENT",
+    "last_completed_position": 1,
+    "next_position": 2
+  },
+  "separate_product_status": {
+    "full_git_mirror": "NOT_CONFIGURED",
+    "canonical_dr_snapshot": "PASS",
+    "note": "The canonical disaster-recovery snapshot is operationally verified. Full Git mirror remains a separate unconfigured product and is not implied by this PASS."
+  },
+  "authority": {
+    "market_state_changed": false,
+    "portfolio_authority_changed": false,
+    "model_weight_changed": false,
+    "canonical_market_rule_changed": false
+  },
+  "temporary_runner_removed": true,
+  "final_result": "PASS_CANONICAL_DR"
+}
