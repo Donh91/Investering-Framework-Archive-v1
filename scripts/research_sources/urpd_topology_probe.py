@@ -5,7 +5,6 @@ import argparse
 import hashlib
 import json
 import math
-import statistics
 import urllib.parse
 import urllib.request
 from datetime import datetime, timezone
@@ -18,6 +17,13 @@ AUTHORITY = {"binding": False, "canonical_acceptance": False, "state_change": Fa
 
 class ProbeError(ValueError):
     pass
+
+def validate_day(day: str) -> str:
+    try:
+        parsed = datetime.strptime(day, "%Y-%m-%d")
+    except ValueError as exc:
+        raise ProbeError("bad_requested_day") from exc
+    return parsed.strftime("%Y-%m-%d")
 
 def sha256(raw: bytes) -> str:
     return hashlib.sha256(raw).hexdigest()
@@ -60,6 +66,7 @@ def _percentile(values: list[float], q: float) -> float:
     return ordered[low] * (1 - weight) + ordered[high] * weight
 
 def summarize_topology(raw: bytes, requested_day: str, spot_price: float) -> dict[str, Any]:
+    requested_day = validate_day(requested_day)
     if spot_price <= 0 or not math.isfinite(spot_price):
         raise ProbeError("bad_spot_price")
     try:
@@ -82,8 +89,8 @@ def summarize_topology(raw: bytes, requested_day: str, spot_price: float) -> dic
         bins.append({"low": low, "high": high, "pct": pct, "btc": btc, "utxo": utxo})
     bins.sort(key=lambda item: (item["low"], item["high"]))
     for previous, current in zip(bins, bins[1:]):
-        if current["low"] < previous["low"]:
-            raise ProbeError("unsorted_bins")
+        if current["low"] < previous["high"]:
+            raise ProbeError("overlapping_bins")
     mids = [(item["low"] + item["high"]) / 2.0 for item in bins]
     pct_values = [item["pct"] for item in bins]
     pct_total = sum(pct_values)
@@ -104,6 +111,12 @@ def summarize_topology(raw: bytes, requested_day: str, spot_price: float) -> dic
         "source": "BGEOMETRICS",
         "metric": "urpd",
         "requested_day": requested_day,
+        "day_lineage": {
+            "requested_day_bound": True,
+            "provider_payload_day_field_present": False,
+            "provider_attested_snapshot_day": False,
+            "lineage_class": "REQUEST_BOUND_ONLY_NOT_PROVIDER_ATTESTED",
+        },
         "spot_price_input": spot_price,
         "payload_sha256": sha256(raw),
         "payload_bytes": len(raw),
@@ -127,6 +140,7 @@ def summarize_topology(raw: bytes, requested_day: str, spot_price: float) -> dic
     }
 
 def build_url(day: str) -> str:
+    day = validate_day(day)
     return BASE + "?" + urllib.parse.urlencode({"day": day})
 
 def main() -> int:
