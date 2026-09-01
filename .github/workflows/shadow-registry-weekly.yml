@@ -11,14 +11,14 @@ permissions:
   pull-requests: write
 
 concurrency:
-  group: shadow-registry-reviewed-pr
+  group: framework-main-writer
   cancel-in-progress: false
 
 jobs:
   weekly-shadow-calibration:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 12
     steps:
       - uses: actions/checkout@v4
         with:
@@ -27,12 +27,15 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Install test dependency
+        run: python -m pip install --disable-pip-version-check pytest
 
       - name: Select deterministic reviewed-PR branch
         id: branch
         shell: bash
         run: |
           set -euo pipefail
+          git rebase --abort 2>/dev/null || true
           week="$(python - <<'PY'
           from datetime import datetime, timezone
           y, w, _ = datetime.now(timezone.utc).isocalendar()
@@ -50,6 +53,7 @@ jobs:
           else
             git checkout -b "${branch}" origin/main
           fi
+          git merge-base --is-ancestor origin/main HEAD
 
       - name: Validate registry contract
         run: python scripts/research/shadow_registry_weekly.py --validate-only
@@ -73,6 +77,7 @@ jobs:
           git add 04_MARKET_LEARNING/shadow_registry/LATEST.json 04_MARKET_LEARNING/shadow_registry/weekly
           if ! git diff --cached --quiet; then
             git commit -m "learning: weekly shadow registry ${WEEK} run ${GITHUB_RUN_ID}"
+            git merge-base --is-ancestor origin/main HEAD
             git push --set-upstream origin "$BRANCH"
           fi
 
