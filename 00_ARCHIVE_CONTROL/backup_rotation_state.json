@@ -18,11 +18,11 @@
     "status": "VERIFIED_CREATED"
   },
   "last_internal_safepoint": {
-    "date": "2026-07-11",
-    "branch": "backup-safepoint/2026-07-11-repository-safety-v1-live",
+    "date": "2026-09-01",
+    "branch": "backup-safepoint/2026-09-01-external-vault-canonical-snapshot",
     "source_branch": "main",
-    "source_commit_sha": "795cb5401b096d7040d3f55b0c40602efa2146eb",
-    "status": "VERIFIED_CREATED"
+    "source_commit_sha": "879b1798856a6e835364a8328025437a7d9f9e62",
+    "status": "VERIFIED_CREATED_AND_BOUND_TO_EXTERNAL_SNAPSHOT"
   },
   "external_vault": {
     "repository": "Donh91/Investering-Framework-Vault",
@@ -30,13 +30,13 @@
     "visibility": "private",
     "independent_repository_verified": true,
     "must_not_be_fork": true,
-    "connector_access": "READ_WRITE_VERIFIED",
+    "connector_access": "READ_WRITE_VERIFIED_CURRENT_2026-09-01",
     "vault_initialization_commit": "c580b1b38cb743f284bdc152ca1c3a32c7205c56",
     "vault_policy_commit": "49d29977dbd53363b8de432ef3dc50085e47f807",
     "connectivity_receipt_commit": "50f1350f4e3e5e4ed7fe235f3de3c948762992b9",
     "connectivity_receipt_path": "receipts/2026-07-11__vault-connectivity-receipt.json",
     "snapshot_mode": "CANONICAL_DISASTER_RECOVERY_SNAPSHOT",
-    "canonical_snapshot_pipeline": "ARMED_AND_TESTED",
+    "canonical_snapshot_pipeline": "PASS",
     "full_git_mirror_status": "NOT_CONFIGURED",
     "last_copy_pipeline_test": {
       "date": "2026-07-11",
@@ -48,8 +48,24 @@
       "blob_sha_matches": 2,
       "result": "PASS_TEST_ONLY"
     },
-    "last_verified_canonical_snapshot": null,
-    "last_connectivity_verification": "2026-07-13"
+    "last_verified_canonical_snapshot": {
+      "date": "2026-09-01",
+      "source_main_sha": "879b1798856a6e835364a8328025437a7d9f9e62",
+      "source_safepoint_branch": "backup-safepoint/2026-09-01-external-vault-canonical-snapshot",
+      "vault_snapshot_commit": "1c4fbd2e62842712f7afb5d6f8fa86be4522b476",
+      "vault_receipt_commit": "e0706fa60d5dffd640ce4feff4de95b21a59b09f",
+      "vault_main_after_runner_cleanup": "80c415fecaefafb28d5b57104c01377ac609edc5",
+      "snapshot_root": "snapshots/2026-09-01/source-tree/",
+      "manifest_path": "manifests/2026-09-01__snapshot-manifest.md",
+      "receipt_path": "receipts/2026-09-01__backup-receipt.json",
+      "restore_drill_receipt_path": "receipts/2026-09-01__restore-drill-receipt.json",
+      "paths_expected": 78,
+      "paths_verified": 78,
+      "paths_unresolved": 0,
+      "restore_drill_result": "PASS_RESTORE_DRILL",
+      "result": "PASS_CANONICAL_SNAPSHOT"
+    },
+    "last_connectivity_verification": "2026-09-01"
   },
   "last_weekly_validation": {
     "date": "2026-07-13",
@@ -71,5 +87,5 @@
     "canonical_index_or_governance_change": true,
     "workflow_or_security_change": true
   },
-  "last_updated": "2026-07-13"
+  "last_updated": "2026-09-01"
 }
