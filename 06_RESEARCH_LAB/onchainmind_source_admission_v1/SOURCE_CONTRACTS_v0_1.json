@@ -1,0 +1,83 @@
+{
+  "contract": "ONCHAINMIND_SOURCE_ADMISSION_SOURCE_CONTRACTS_v0_1",
+  "date": "2026-09-01",
+  "status": "WORK_PREP_SHADOW_ONLY",
+  "authority_ceiling": "RESEARCH_ONLY",
+  "global_guardrails": [
+    "NO_ONCHAINMIND_AUTOMATED_SCRAPING",
+    "NO_CHARTINSPECT_AUTOMATED_SCRAPING",
+    "NO_PUBLIC_BGEOMETRICS_RAW_DATA_PERSISTENCE",
+    "NO_POLYMARKET_NETWORK_COLLECTION_UNTIL_SOURCE_RIGHTS_CONTRACT_CLEARED",
+    "NO_NEW_ENGINE",
+    "NO_LIVE_WEIGHT_OR_THRESHOLD_CHANGE",
+    "NO_PORTFOLIO_ACTION",
+    "NO_ROUND3_DERIVATIVES_BYPASS",
+    "NO_CORRELATED_ONCHAIN_METRICS_COUNTED_AS_INDEPENDENT_VOTES",
+    "DETERMINISTIC_PARSING_AND_POINT_IN_TIME_LINEAGE_REQUIRED"
+  ],
+  "providers": {
+    "COIN_METRICS_COMMUNITY": {
+      "status": "RESEARCH_OWNER_CANDIDATE",
+      "official_api": "https://community-api.coinmetrics.io/v4",
+      "official_archive": "https://github.com/coinmetrics/data",
+      "btc_archive": "csv/btc.csv",
+      "license": "CC_BY_NC_4_0",
+      "authentication": "NONE",
+      "required_evidence_ref": "IMMUTABLE_GIT_COMMIT_SHA_FOR_EVIDENCE_RUNS",
+      "mutable_main_allowed_for": "DISCOVERY_ONLY",
+      "raw_copy_policy": "DO_NOT_DUPLICATE_ARCHIVE_UNLESS_NEEDED_FOR_A_BOUNDED_FIXTURE",
+      "receipt_requirements": ["source_ref", "url", "payload_sha256", "payload_bytes", "row_count", "earliest_date", "latest_date"],
+      "primary_use": ["LONG_HISTORY_BASELINE", "MVRV_CROSSCHECK", "PRICE_AND_NETWORK_CONTEXT"],
+      "not_primary_for": ["URPD", "DETAILED_STH_LTH", "SOPR", "DORMANCY_STACK"]
+    },
+    "BGEOMETRICS": {
+      "status": "PROVISIONAL_RESEARCH_ADAPTER_CANDIDATE",
+      "official_docs": "https://bgeometrics.com/api/",
+      "api_root": "https://api.bgeometrics.com/v1",
+      "conservative_rate_limit": "8_REQUESTS_PER_HOUR_15_PER_DAY",
+      "allowed_initial_metrics": ["mvrv", "sth-mvrv", "sopr", "vdd", "urpd"],
+      "free_history_claim": "LAST_4_YEARS_FOR_MANY_STANDARD_DAILY_ENDPOINTS",
+      "urpd": "RECENT_POINT_IN_TIME_SNAPSHOTS_VERIFIED_BUT_RETENTION_START_UNKNOWN",
+      "public_raw_persistence": false,
+      "private_internal_persistence": "REQUIRES_EXPLICIT_WORK_RECHECK_OF_PROVIDER_TERMS_BEFORE_ACTIVATION",
+      "receipt_only_public": true,
+      "primary_use": ["COMPACT_ONCHAIN_REPLAY", "URPD_PROSPECTIVE_SOURCE_STUDY"],
+      "must_fail_closed_on": ["EMPTY_PAYLOAD", "SCHEMA_CHANGE", "RATE_LIMIT", "TERMS_AMBIGUITY"]
+    },
+    "POLYMARKET": {
+      "status": "NETWORK_COLLECTION_BLOCKED",
+      "official_docs": "https://docs.polymarket.com/getting-started/api",
+      "history_endpoint": "GET /prices-history",
+      "public_market_data_auth": "NONE",
+      "bulk_storage_redistribution_rights": "UNRESOLVED",
+      "current_code_mode": "OFFLINE_PARSER_ONLY",
+      "activation_gate": "EXPLICIT_SOURCE_RIGHTS_CONTRACT_AND_PREDECLARED_EVENT_TAXONOMY",
+      "primary_use": ["EXPECTATIONS_CONTEXT_RESEARCH"],
+      "forbidden_use": ["PORTFOLIO_SIGNAL", "POST_HOC_EVENT_SELECTION"]
+    },
+    "DEFILLAMA": {
+      "status": "REUSE_EXISTING_OWNER",
+      "existing_owner": "scripts/data_terminal/defillama_stablecoin_owner.py",
+      "new_adapter": false,
+      "primary_use": ["SOURCE_UPGRADE", "CROSSCHECK"],
+      "new_predictive_weight": false
+    },
+    "ONCHAINMIND": {
+      "status": "DISCOVERY_REFERENCE_ONLY",
+      "automated_extraction": false,
+      "raw_archive": false,
+      "primary_use": ["CONCEPT_DISCOVERY", "HUMAN_RESEARCH_CONTEXT"]
+    },
+    "CHARTINSPECT": {
+      "status": "DISCOVERY_REFERENCE_ONLY",
+      "automated_extraction": false,
+      "raw_archive": false
+    },
+    "SELF_HOSTED_BITCOIN_UTXO": {
+      "status": "DEFER_HEAVY_RESEARCH",
+      "discovery": "Open UTXO-set tooling exists (for example Bitcoin Core dumptxoutset parsers), but reconstructing historical realized cost basis/URPD requires price-at-acquisition lineage and substantially heavier node/indexer work.",
+      "decision": "DO_NOT_EXPAND_IN_CURRENT_PACKAGE",
+      "future_trigger": "ONLY_IF_BGEOMETRICS_OR_OTHER_LICENSED_URPD_SOURCE_FAILS_OR_PROVES_TOO_FRAGILE"
+    }
+  }
+}
