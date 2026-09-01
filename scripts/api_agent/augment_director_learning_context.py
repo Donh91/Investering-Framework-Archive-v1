@@ -11,6 +11,7 @@ from typing import Any
 
 DEFAULT_EXPERIMENT_REGISTRY = Path("research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json")
 DEFAULT_BTCD = Path("03_DAILY_CAPTURE_LOGS/btc_d_cmc/latest/BTC_D_DIRECT_SOURCE_DAILY_2023_CURRENT.csv")
+DEFAULT_EXIT_CALIBRATION = Path("research/framework_memory/action_compass_calibration/LATEST_EXIT_WARNING_CALIBRATION.json")
 
 
 def load_json(path: Path) -> dict[str, Any]:
@@ -67,11 +68,22 @@ def btc_dominance(path: Path) -> dict[str, Any]:
     }
 
 
+def exit_warning_calibration(path: Path) -> dict[str, Any]:
+    if not path.exists():
+        return {"status": "UNAVAILABLE_NO_MATERIALIZED_REPORT"}
+    try:
+        value = load_json(path)
+    except Exception:
+        return {"status": "UNAVAILABLE_INVALID"}
+    return value
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--context", type=Path, required=True)
     parser.add_argument("--experiment-registry", type=Path, default=DEFAULT_EXPERIMENT_REGISTRY)
     parser.add_argument("--btcd", type=Path, default=DEFAULT_BTCD)
+    parser.add_argument("--exit-calibration", type=Path, default=DEFAULT_EXIT_CALIBRATION)
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
 
@@ -90,12 +102,21 @@ def main() -> int:
     else:
         context["btc_dominance"] = {"status": "UNAVAILABLE", "reason": "BTCD_OWNER_MISSING"}
 
+    context["action_compass_exit_calibration"] = exit_warning_calibration(args.exit_calibration)
+    if args.exit_calibration.exists():
+        try:
+            load_json(args.exit_calibration)
+        except Exception:
+            pass
+        else:
+            provenance.append({"field": "action_compass_exit_calibration", "path": str(args.exit_calibration), "sha256": sha256(args.exit_calibration)})
+
     context["learning_context_provenance"] = provenance
     context["context_routing_contract"] = {
         "contract": "DIRECTOR_CONTEXT_ROUTING_v1",
         "principle": "COLLECTED_DATA_IS_NOT_AVAILABLE_TO_AN_AGENT_UNLESS_PRESENT_IN_CONTEXT",
         "required_context_families": [
-            "latest_capture", "api_intelligence_v2", "btc_dominance", "experiment_learning"
+            "latest_capture", "api_intelligence_v2", "btc_dominance", "experiment_learning", "action_compass_exit_calibration"
         ],
         "no_automatic_authority_promotion": True,
         "missingness_rule": "NEVER_DESCRIBE_A_PRESENT_CONTEXT_FAMILY_AS_MISSING",
