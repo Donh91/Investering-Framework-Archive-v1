@@ -11,7 +11,7 @@ This folder is the bounded source-admission result produced from the 2026-09-01 
 - **BGeometrics standard on-chain series** are approved only for transient research. Raw payloads are not persisted in the public repository.
 - **MVRV** failed the bounded incremental predictive-value replay. It remains valuation/stress context only.
 - **Broad on-chain metric mining** is killed. No 200-metric fishing expedition.
-- **URPD** is the strongest differentiated candidate and is approved only as a prospective Stress & Structure observation. Recent dated snapshots exist, but long historical retention is not verified.
+- **URPD** is the strongest differentiated candidate and is approved only as a prospective Stress & Structure observation. Recent date-parameterized requests work, but the payload does not attest its own snapshot day and long historical retention is not verified.
 - **Polymarket** openly documents research access, but durable raw storage/redistribution remains unresolved for this archive. The parser stays offline-only.
 - **DefiLlama** reuses the existing owner. No duplicate adapter.
 - **BGeometrics Regime Score** is rejected as a new vote because it recombines signal families already owned by the framework.
