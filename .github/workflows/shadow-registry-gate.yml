@@ -6,6 +6,7 @@ on:
       - '04_MARKET_LEARNING/shadow_registry/**'
       - '06_RESEARCH_LAB/historical_sensor_recovery_v1/**'
       - 'scripts/research/shadow_registry_weekly.py'
+      - 'tests/research/test_shadow_registry_runtime_integrity.py'
       - '.github/workflows/shadow-registry-*.yml'
   workflow_dispatch:
 
@@ -15,17 +16,23 @@ permissions:
 jobs:
   validate:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 8
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+
       - name: Validate registry schema and authority firewall
         run: python scripts/research/shadow_registry_weekly.py --validate-only
+
+      - name: Run Shadow Registry runtime integrity regression suite
+        run: python -m pytest -q tests/research/test_shadow_registry_runtime_integrity.py
+
       - name: Validate recovered legacy queue firewall
         shell: bash
         run: |
+          set -euo pipefail
           python - <<'PY'
           import json
           from pathlib import Path
@@ -41,9 +48,11 @@ jobs:
           assert any(x['sensor_id']=='ODM_V1_OUTCOME_DELAY_MAPPER' for x in q['candidates'])
           print('LEGACY_RECOVERY_QUEUE_GATE_PASS')
           PY
-      - name: Dry generate snapshot and verify non-canonical authority
+
+      - name: Dry generate snapshot and verify research-only authority
         shell: bash
         run: |
+          set -euo pipefail
           python scripts/research/shadow_registry_weekly.py
           python - <<'PY'
           import json
@@ -56,5 +65,7 @@ jobs:
           assert p['summary']['sensor_count'] > 0
           ids={s['sensor_id'] for s in p['sensors']}
           assert 'RECOVERED_LEGACY_SENSOR_FAMILY_2026_08_21' in ids
+          scorable=[s['sensor_id'] for s in p['sensors'] if s['calibration_readiness']=='SCORABLE']
+          assert scorable == ['ENTRY_SIGNAL_LEDGER']
           print('SHADOW_REGISTRY_GATE_PASS')
           PY
