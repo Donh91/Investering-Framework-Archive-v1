@@ -44,3 +44,18 @@ def test_btc_dominance_uses_latest_direct_row(tmp_path: Path) -> None:
     assert out["latest"]["date"] == "2026-08-27"
     assert out["latest"]["btc_dominance"] == "54.9"
     assert "NO_PORTFOLIO_AUTHORITY" in out["authority"]
+
+
+def test_exit_warning_calibration_preserves_valid_report(tmp_path: Path) -> None:
+    path = tmp_path / "calibration.json"
+    expected = {"contract": "ACTION_COMPASS_EXIT_WARNING_CALIBRATION_v1", "status": "PASS", "rows": []}
+    path.write_text(json.dumps(expected))
+    assert module.exit_warning_calibration(path) == expected
+
+
+def test_exit_warning_calibration_marks_missing_and_invalid_without_fabrication(tmp_path: Path) -> None:
+    missing = tmp_path / "missing.json"
+    assert module.exit_warning_calibration(missing) == {"status": "UNAVAILABLE_NO_MATERIALIZED_REPORT"}
+    invalid = tmp_path / "invalid.json"
+    invalid.write_text("not-json")
+    assert module.exit_warning_calibration(invalid) == {"status": "UNAVAILABLE_INVALID"}
