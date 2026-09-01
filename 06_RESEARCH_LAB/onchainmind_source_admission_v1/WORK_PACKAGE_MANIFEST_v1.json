@@ -1,0 +1,54 @@
+{
+  "contract": "ONCHAINMIND_WORK_HANDOFF_MANIFEST_v1",
+  "created_date": "2026-09-01",
+  "repository": "Donh91/Investering-Framework-Archive-v1",
+  "prepared_branch": "agent/task-20260901-onchainmind-source-admission",
+  "branch_head": "b661cf0b6ddad5eba81e64a2ba97427684f0e5ee",
+  "main_observed_at_handoff": "6c5ec9a2ae51bb5950e9be458872febd9be5bb9c",
+  "merge_base": "9dc2ec932bf39ff987deb95ff2e87a3bcb5bf92c",
+  "branch_state": {
+    "ahead_by": 13,
+    "behind_by": 1,
+    "sync_required_before_merge": true
+  },
+  "relevant_main_drift": [
+    {
+      "path": "04_MARKET_LEARNING/external_research/2026-09-01__bitcoin-legacy-onchain-proxy-decay__shadow.md",
+      "effect": "CONTEXT_RELEVANT_NO_KNOWN_PATH_CONFLICT",
+      "bound_into_handoff": true
+    }
+  ],
+  "local_validation": {
+    "command": "python -m unittest discover -s tests/research_sources -p test_*.py",
+    "tests_run": 11,
+    "status": "PASS",
+    "scope": "SYNTHETIC_UNIT_TESTS_ONLY",
+    "full_repo_ci_run": false
+  },
+  "live_source_checks_already_observed": {
+    "bgeometrics_mvrv_machine_readable_history": true,
+    "bgeometrics_urpd_recent_point_in_time_snapshots": true,
+    "bgeometrics_urpd_long_history": false,
+    "coinmetrics_btc_archive_begins_2009_for_available_fields": true,
+    "polymarket_public_history_api_documented": true,
+    "polymarket_storage_rights_resolved": false
+  },
+  "changed_files": [
+    "06_RESEARCH_LAB/audit_summaries/2026-09-01__onchainmind-public-data-source-admission-audit__shadow.md",
+    "06_RESEARCH_LAB/audit_summaries/onchainmind_source_admission_v1/SOURCE_CAPABILITY_MANIFEST.json",
+    "06_RESEARCH_LAB/onchainmind_source_admission_v1/README.md",
+    "06_RESEARCH_LAB/onchainmind_source_admission_v1/SOURCE_CONTRACTS_v0_1.json",
+    "06_RESEARCH_LAB/onchainmind_source_admission_v1/PRIORITY_AND_KILL_MATRIX_v0_1.json",
+    "06_RESEARCH_LAB/onchainmind_source_admission_v1/RESEARCH_EXPERIMENT_SPEC_v0_1.md",
+    "06_RESEARCH_LAB/onchainmind_source_admission_v1/WORK_MASTER_HANDOFF_v1.md",
+    "scripts/research_sources/coinmetrics_community_probe.py",
+    "scripts/research_sources/bgeometrics_research_probe.py",
+    "scripts/research_sources/polymarket_expectations_parser.py",
+    "scripts/research_sources/validate_research_source_receipt.py",
+    "tests/research_sources/test_public_research_source_probes.py",
+    "tests/research_sources/test_research_source_receipt_validator.py"
+  ],
+  "handoff_boundary": "STOP_BEFORE_FULL_REPLAY_RESTRICTED_STORAGE_CI_REMEDIATION_AND_MERGE",
+  "next_owner": "CHATGPT_WORK",
+  "authority_ceiling": "RESEARCH_ONLY"
+}
