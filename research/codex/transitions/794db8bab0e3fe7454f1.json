@@ -1,0 +1,34 @@
+{
+  "allowed_change_scope": [
+    ".github/workflows/situation-room-daily-static.yml",
+    ".github/workflows/situation-room-owner-live-gate.yml",
+    "scripts/data_terminal/situation_room_static_daily_adapter.py",
+    "tests/data_terminal",
+    "tests/health/directly related Situation Room tests"
+  ],
+  "branch": "agent/task-20260829-situation-room-retrieval-failclosed",
+  "candidate_id": "codex-situation-room-daily-static-root-cause-v1",
+  "candidate_path": "research/codex/intake/2026/08/codex-situation-room-daily-static-root-cause-v1.json",
+  "candidate_sha256": "5e5eb4783bfddbb6c63aa39fd71534ea4b62898591a35afdf35c22ad6c3526da",
+  "contract": "CODEX_RESEARCH_TRANSITION_RECEIPT_v1",
+  "forbidden_changes": [
+    "API budget",
+    "automatic merge or self-promotion",
+    "canonical authority",
+    "fabricating event_time_utc",
+    "market gates",
+    "model weights",
+    "new policy semantics",
+    "portfolio logic",
+    "removing independent corroboration requirements",
+    "treating retrieval failure as NO_NEW_MATERIAL_CATALYST"
+  ],
+  "objective": "Reproduce the current Situation Room Daily Static Discovery failure on fresh main, determine why the first natural scheduled production run was cancelled, and implement the smallest deterministic repair that restores a durable discovery artifact without weakening the catalyst firewall, fabricating event timestamps, converting retrieval failure into NO_NEW_MATERIAL_CATALYST, or granting canonical market authority.",
+  "post_fix_gate": "ONE_NATURAL_SCHEDULED_RUN_PLUS_SITUATION_ROOM_OWNER_LIVE_GATE_PASS",
+  "pr_number": null,
+  "receipt_sha256": "4016a074e642325708cf2124ed46014d46acbdb0c24fa1c5a1bca933f6fa2522",
+  "recorded_at_utc": "2026-08-29T22:20:26Z",
+  "signature": "794db8bab0e3fe7454f1",
+  "state": "IN_REMEDIATION",
+  "task_contract_sha256": "fe27763f2fc9e54b0049ccf321630e19bf7435dcb83b9115f25f97e72e4d31ee"
+}

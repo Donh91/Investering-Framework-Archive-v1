@@ -64,6 +64,25 @@ def apply_dated_discovery_fail_closed(result: dict, date_utc: str) -> None:
         result["run_status"] = "DEGRADED"
 
 
+def apply_situation_room_retrieval_fail_closed(result: dict) -> None:
+    """Do not turn an unavailable Situation Room briefing into a clean no-event result."""
+    situation_room_receipt = next(
+        (
+            receipt
+            for receipt in result.get("source_coverage", {}).get("receipts", [])
+            if receipt.get("source_id") == "SITUATION_ROOM"
+        ),
+        None,
+    )
+    if (
+        result.get("daily_result") == "NO_NEW_MATERIAL_CATALYST"
+        and situation_room_receipt is not None
+        and situation_room_receipt.get("status") != "PASS"
+    ):
+        result["daily_result"] = "REVIEW_REQUIRED_UNVERIFIED_DISCOVERY"
+        result["run_status"] = "DEGRADED"
+
+
 def run(output_root: Path, date_utc: str, timeout: int = 15) -> dict:
     original_sources = owner.SOURCES
     original_candidate_links = owner.candidate_links
@@ -76,6 +95,7 @@ def run(output_root: Path, date_utc: str, timeout: int = 15) -> dict:
         owner.candidate_links = original_candidate_links
 
     apply_dated_discovery_fail_closed(result, date_utc)
+    apply_situation_room_retrieval_fail_closed(result)
     result.setdefault("retrieval", {})
     result["retrieval"].update({
         "situation_room_archive_url": SITUATION_ROOM_ARCHIVE,
