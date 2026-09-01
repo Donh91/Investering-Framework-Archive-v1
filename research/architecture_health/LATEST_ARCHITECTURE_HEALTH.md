@@ -1,6 +1,6 @@
 # Architecture Health
 Status: **AMBER**
-Generated: 2026-09-01T06:21:55.861311Z
+Generated: 2026-09-01T08:49:22.687576Z
 
 Owners: 0/0 PASS
 Accepted DATA PINGs: 0
@@ -9,13 +9,13 @@ Experiment candidates: 153
 Codex-ready remediation tasks: 24
 
 ## Freshness hours
-- capture: 1.2027392530555554
-- daily_director: 110.9246836975
-- weekly_calibration: 24.31101975138889
-- etf_owner: 0.050566316111111106
-- experiment_registry: 0.00023925305555555558
-- experiment_receipt_sync: 0.0005170308333333334
-- remediation_queue: 9.286350364166667
+- capture: 3.6601909933333334
+- daily_director: 113.38213543777778
+- weekly_calibration: 26.768471491666666
+- etf_owner: 2.508018056388889
+- experiment_registry: 2.4576909933333333
+- experiment_receipt_sync: 2.457968771111111
+- remediation_queue: 11.743802104444443
 
 ## Evidence health (last 14d)
 - Forecasts due in window: 215
