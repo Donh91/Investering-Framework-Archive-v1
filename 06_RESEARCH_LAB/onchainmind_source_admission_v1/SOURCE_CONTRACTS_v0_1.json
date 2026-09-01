@@ -36,12 +36,15 @@
     "BGEOMETRICS_URPD": {
       "endpoint": "https://bitcoin-data.com/v1/urpd?day=YYYY-MM-DD",
       "long_history_verified": false,
-      "older_snapshot_test": "2026-07-15_EMPTY",
+      "older_snapshot_test": "2026-07-15_REQUEST_EMPTY",
       "openapi_schema": "UrpdDay",
       "predictive_authority": false,
       "raw_public_persistence": false,
-      "recent_snapshot_verified": "2026-08-30_NONEMPTY",
+      "recent_snapshot_verified": "2026-08-30_REQUEST_NONEMPTY_PAYLOAD_DAY_NOT_ATTESTED",
       "request_day_must_be_bound_into_receipt": true,
+      "payload_contains_snapshot_day": false,
+      "provider_attested_point_in_time": false,
+      "day_lineage_class": "REQUEST_BOUND_ONLY_NOT_PROVIDER_ATTESTED",
       "role": "STRESS_AND_STRUCTURE_SHADOW_CONTEXT",
       "schema_fields": ["priceLower", "priceUpper", "utxoCount", "btcSupply", "pctSupply"],
       "status": "APPROVED_PROSPECTIVE_OBSERVATION_ONLY"
