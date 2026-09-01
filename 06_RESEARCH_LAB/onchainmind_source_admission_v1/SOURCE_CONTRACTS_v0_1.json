@@ -1,0 +1,99 @@
+{
+  "authority_ceiling": "RESEARCH_ONLY",
+  "contract": "ONCHAINMIND_SOURCE_ADMISSION_SOURCE_CONTRACTS_v1",
+  "date": "2026-09-01",
+  "global_guardrails": [
+    "NO_ONCHAINMIND_AUTOMATED_SCRAPING",
+    "NO_CHARTINSPECT_AUTOMATED_SCRAPING",
+    "NO_PUBLIC_BGEOMETRICS_RAW_DATA_PERSISTENCE",
+    "NO_POLYMARKET_RAW_HISTORY_ARCHIVE_UNTIL_DURABLE_STORAGE_AND_DERIVED_USE_RIGHTS_ARE_EXPLICIT",
+    "NO_NEW_ENGINE",
+    "NO_LIVE_WEIGHT_OR_THRESHOLD_CHANGE",
+    "NO_PORTFOLIO_ACTION",
+    "NO_ROUND3_DERIVATIVES_BYPASS",
+    "NO_CORRELATED_ONCHAIN_METRICS_COUNTED_AS_INDEPENDENT_VOTES",
+    "DETERMINISTIC_PARSING_AND_POINT_IN_TIME_LINEAGE_REQUIRED"
+  ],
+  "providers": {
+    "BGEOMETRICS": {
+      "allowed_initial_series": ["mvrv", "sth-mvrv", "sopr", "vdd"],
+      "api_root": "https://bitcoin-data.com/v1",
+      "conservative_free_limit": "8_REQUESTS_PER_HOUR_15_PER_DAY_BECAUSE_PUBLIC_PAGES_DISAGREE_ON_8_VS_10_HOURLY",
+      "derived_receipts_public": true,
+      "free_history": "LAST_4_YEARS_FOR_MANY_STANDARD_DAILY_ENDPOINTS",
+      "must_fail_closed_on": ["EMPTY_PAYLOAD", "SCHEMA_CHANGE", "RATE_LIMIT", "RIGHTS_AMBIGUITY", "DATE_LINEAGE_AMBIGUITY"],
+      "official_docs": "https://bgeometrics.com/api/",
+      "predictive_authority": false,
+      "primary_use": ["VALUATION_STRESS_CONTEXT", "BOUNDED_INCREMENTAL_VALUE_RESEARCH", "URPD_PROSPECTIVE_TOPOLOGY"],
+      "public_raw_persistence": false,
+      "status": "APPROVED_TRANSIENT_RESEARCH_ONLY"
+    },
+    "BGEOMETRICS_REGIME_SCORE": {
+      "predictive_authority": false,
+      "reason": "Composite overlaps on-chain, trend, volatility, funding, exchange flow and ETF families already owned by the framework; would create confirmation counting risk.",
+      "status": "REJECT_AS_NEW_VOTE_CONTEXT_BENCHMARK_ONLY"
+    },
+    "BGEOMETRICS_URPD": {
+      "endpoint": "https://bitcoin-data.com/v1/urpd?day=YYYY-MM-DD",
+      "long_history_verified": false,
+      "older_snapshot_test": "2026-07-15_EMPTY",
+      "openapi_schema": "UrpdDay",
+      "predictive_authority": false,
+      "raw_public_persistence": false,
+      "recent_snapshot_verified": "2026-08-30_NONEMPTY",
+      "request_day_must_be_bound_into_receipt": true,
+      "role": "STRESS_AND_STRUCTURE_SHADOW_CONTEXT",
+      "schema_fields": ["priceLower", "priceUpper", "utxoCount", "btcSupply", "pctSupply"],
+      "status": "APPROVED_PROSPECTIVE_OBSERVATION_ONLY"
+    },
+    "CHARTINSPECT": {
+      "automated_extraction": false,
+      "raw_archive": false,
+      "status": "DISCOVERY_REFERENCE_ONLY"
+    },
+    "COIN_METRICS_COMMUNITY": {
+      "authentication": "NONE_FOR_COMMUNITY",
+      "btc_archive": "csv/btc.csv",
+      "license": "CC_BY_NC_4_0",
+      "official_api": "https://community-api.coinmetrics.io/v4",
+      "official_archive": "https://github.com/coinmetrics/data",
+      "predictive_authority": false,
+      "primary_use": ["LONG_HISTORY_BASELINE", "MVRV_CROSSCHECK", "PRICE_AND_NETWORK_CONTEXT"],
+      "raw_copy_policy": "PREFER_UPSTREAM_BINDING_OVER_DUPLICATE_ARCHIVE",
+      "required_evidence_ref": "IMMUTABLE_40_CHAR_GIT_COMMIT_SHA",
+      "status": "APPROVED_RESEARCH_BASELINE",
+      "validated_blob_sha": "5e50f336d268e1f3a38e9885b5aaef36de529700",
+      "validated_ref_2026_09_01": "f1a36afb962731c387bb03982758ab0103063da5"
+    },
+    "DEFILLAMA": {
+      "existing_owner": "scripts/data_terminal/defillama_stablecoin_owner.py",
+      "new_adapter": false,
+      "new_predictive_weight": false,
+      "status": "REUSE_EXISTING_OWNER"
+    },
+    "ONCHAINMIND": {
+      "automated_extraction": false,
+      "raw_archive": false,
+      "role": ["CONCEPT_DISCOVERY", "HUMAN_RESEARCH_CONTEXT"],
+      "status": "DISCOVERY_REFERENCE_ONLY"
+    },
+    "POLYMARKET": {
+      "activation_gate": "EXPLICIT_DURABLE_STORAGE_AND_DERIVED_USE_CONTRACT_PLUS_PREDECLARED_EVENT_TAXONOMY",
+      "current_code_mode": "OFFLINE_PARSER_ONLY",
+      "durable_raw_storage_redistribution": "NOT_EXPLICITLY_CLEARED_FOR_THIS_ARCHIVE",
+      "history_endpoint": "CLOB /prices-history",
+      "official_docs": "https://docs.polymarket.com/",
+      "predictive_authority": false,
+      "public_market_data_auth": "NONE_FOR_PUBLIC_READS",
+      "research_reference": "https://institute.polymarket.com/data",
+      "role": "EXPECTATIONS_CONTEXT_RESEARCH",
+      "status": "RESEARCH_ACCESS_SUPPORTED_PERSISTENCE_RIGHTS_UNRESOLVED"
+    },
+    "SELF_HOSTED_BITCOIN_UTXO": {
+      "future_trigger": "ONLY_IF_LICENSED_URPD_SOURCES_FAIL_OR_LONG_HISTORY_BECOMES_STRATEGICALLY_NECESSARY",
+      "reason": "Historical realized cost basis/URPD requires UTXO/indexer plus price-at-last-move lineage; no bounded mature implementation found that removes that burden.",
+      "status": "DEFER_HEAVY_RESEARCH"
+    }
+  },
+  "status": "SHADOW_RESEARCH_FINAL"
+}
