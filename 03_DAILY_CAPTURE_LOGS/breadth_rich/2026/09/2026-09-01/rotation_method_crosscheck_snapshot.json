@@ -1,0 +1,52 @@
+{
+  "authority": {
+    "binding": false,
+    "can_create_outcome_rows": false,
+    "canonical_acceptance": false,
+    "portfolio_action": false,
+    "shadow_context_only": true,
+    "shared_row_tournament_eligible": false,
+    "state_change": false
+  },
+  "backfill_materialized_as_daily_rows": false,
+  "component_reconciliation": "NOT_AVAILABLE_FROM_CAPTURED_PAGE",
+  "contract": "COINMARKETCAP_ALTCOIN_SEASON_SHADOW_CROSSCHECK_v1",
+  "evidence_grade": "PUBLISHED_LABEL_ONLY",
+  "forward_fill": false,
+  "horizon_days": 90,
+  "interpolation": false,
+  "market_interpretation": false,
+  "methodology": {
+    "benchmark": "BTC",
+    "captured_horizons_days": [
+      90
+    ],
+    "component_returns_available_in_normalized_capture": false,
+    "framework_role": "LOWER_GRADE_INDEPENDENT_METHOD_DISPERSION_CROSSCHECK_ONLY",
+    "headline_horizon_days": 90,
+    "methodology_fingerprint_sha256": "63651be2bc0cbdd65d11d203e646bdd3d9130955a8a7a2559d13cbe1daed4e58",
+    "published_altcoin_season_threshold_inclusive": 75,
+    "published_bitcoin_season_threshold_inclusive": 25,
+    "published_exclusions": [
+      "STABLECOINS",
+      "ASSET_BACKED_AND_WRAPPED_TOKENS"
+    ],
+    "published_score_definition": "PERCENT_OF_TOP_100_COINS_OUTPERFORMING_BTC_SCALED_1_TO_100",
+    "published_universe_description": "TOP_100_COINMARKETCAP_RANKED_COINS",
+    "source_refresh_expectation": "DAILY"
+  },
+  "observation_date_utc": "2026-09-01",
+  "published_score": 25,
+  "retrieved_at_utc": "2026-09-01T10:08:00.765930Z",
+  "source": {
+    "parser_contract": "NEXT_DATA_CMC_ALTCOIN_INDEX_v1",
+    "provider": "CoinMarketCap",
+    "raw_bytes": 501422,
+    "raw_sha256": "5b674839dbe637fc8f9be0dfd0f4e22e359def005bad7938ec434a660c4156c0",
+    "source_build_id": "Vo2VyGSnzaveMcbFcXAOY",
+    "transport": "PUBLIC_HTML_NEXT_DATA_PAYLOAD",
+    "url": "https://coinmarketcap.com/charts/altcoin-season-index/"
+  },
+  "source_state": "BITCOIN_SEASON",
+  "status": "PASS"
+}
