@@ -1,0 +1,196 @@
+{
+  "contract": "SITUATION_ROOM_MANUAL_REVIEW_CROSSWALK_v1",
+  "authority": "RESEARCH_ONLY_NON_CANONICAL",
+  "canonical_effect": false,
+  "market_state_effect": false,
+  "portfolio_effect": false,
+  "source_role": "DISCOVERY_ONLY",
+  "causal_claim": false,
+  "review_date_utc": "2026-09-01",
+  "review_scope": {
+    "requested": "Scrape recent Situation Room material of framework relevance and log historically useful catalyst context against observed market swings without creating signal authority or noise.",
+    "site": "https://situationroom.space",
+    "recent_window_reviewed": "2026-08-25 through 2026-09-01",
+    "deduplicated_existing_coverage": {
+      "2026-08-25_through_2026-08-27": "Already covered by daily Situation Room owner files and manual review 03_DAILY_CAPTURE_LOGS/catalyst_overlay/situation_room/manual_review/2026/08/2026-08-28_catchup.json; not duplicated here."
+    },
+    "new_crosswalk_window": "2026-08-28 through 2026-09-01",
+    "verification_policy": "Situation Room remains discovery/context only. Its interpretations are source claims, not primary-source facts. Market reactions are recorded separately from event descriptions. Temporal overlap must not be read as causal proof."
+  },
+  "source_receipts": [
+    {
+      "date": "2026-08-28",
+      "url": "https://situationroom.space/briefing/2026-08-28",
+      "firecrawl_scrape_id": "01a05db1-c3d8-771d-99d6-44d8cab190bb"
+    },
+    {
+      "date": "2026-08-29",
+      "url": "https://situationroom.space/briefing/2026-08-29",
+      "firecrawl_scrape_id": "01a05db1-9ccf-751e-b3fb-54feeae809c3"
+    },
+    {
+      "date": "2026-08-30",
+      "url": "https://situationroom.space/briefing/2026-08-30",
+      "firecrawl_scrape_id": "01a05db1-67e1-708f-8a0b-300324680866"
+    },
+    {
+      "date": "2026-08-31",
+      "url": "https://situationroom.space/briefing/2026-08-31",
+      "firecrawl_scrape_id": "01a05db1-39ea-746b-a019-c204167a1662"
+    },
+    {
+      "date": "2026-09-01",
+      "url": "https://situationroom.space/briefing/2026-09-01",
+      "firecrawl_scrape_id": "01a05db1-02ec-75cc-8baf-25c9eb1c3fbd"
+    }
+  ],
+  "briefing_crosswalk": [
+    {
+      "date": "2026-08-28",
+      "headline": "Trump rejects Iran June deal, Hormuz reopening stalled",
+      "threat": "QUIET",
+      "conviction": 51,
+      "relevant_source_claims": [
+        "Hormuz reopening remained stalled and Iran-related sanctions/energy risk stayed active.",
+        "The briefing described Bitcoin near 80k before a later same-day reversal toward the high-77k area.",
+        "The briefing framed the structure as reliant on derivative flows and recent exchange outflows rather than broad conviction."
+      ],
+      "framework_categories": [
+        "GEOPOLITICAL_ENERGY",
+        "MACRO_RISK_PREMIUM",
+        "BTC_MARKET_REACTION"
+      ],
+      "repo_market_reaction_refs": [
+        "03_DAILY_CAPTURE_LOGS/hourly/2026/08/2026-08-28.csv"
+      ],
+      "market_reaction_note": "Repository hourly data independently records BTC above 80k early in the UTC session followed by repeated downside hours. This is consistent with a risk-off/reversal day, but the crosswalk does not attribute the move to Hormuz, sanctions, rates, or any single catalyst.",
+      "historical_value": "HIGH_CONTEXT",
+      "learning_note": "Useful as a timestamped macro/geopolitical backdrop for the 28-Aug reversal; retain as context, not explanatory certainty."
+    },
+    {
+      "date": "2026-08-29",
+      "headline": "Six 2011-2014 wallets moved 553 BTC to non-exchange addresses",
+      "threat": "QUIET",
+      "conviction": 53,
+      "relevant_source_claims": [
+        "Six decade-old wallets moved 553 BTC, mostly to non-exchange addresses.",
+        "The briefing explicitly stated that its distribution thesis had proved too early because no adverse one-day price reaction materialized.",
+        "The source concluded that dormant-coin transfers were not reliable short-term price signals in this observation."
+      ],
+      "framework_categories": [
+        "ONCHAIN_SUPPLY_CONTEXT",
+        "NEGATIVE_LEARNING",
+        "SENSOR_OVERINTERPRETATION_RISK"
+      ],
+      "repo_market_reaction_refs": [],
+      "market_reaction_note": "No causal or predictive market-reaction row is created from the dormant-wallet observation.",
+      "historical_value": "HIGH_LEARNING_LOW_SIGNAL",
+      "learning_note": "Preserve as a negative example against turning dormant-wallet activity into a short-horizon trading signal without independent confirmation."
+    },
+    {
+      "date": "2026-08-30",
+      "headline": "Iran sanctions and Gulf strikes cut Hormuz oil flows in half",
+      "threat": "QUIET",
+      "conviction": 53,
+      "relevant_source_claims": [
+        "The briefing described continued Hormuz/energy disruption and tighter Iran sanctions.",
+        "It reported a higher-for-longer macro backdrop with US 10Y around 4.72 percent and DXY near 99.7.",
+        "It simultaneously described some exchange outflows/holder accumulation."
+      ],
+      "framework_categories": [
+        "GEOPOLITICAL_ENERGY",
+        "MACRO_RATES",
+        "BTC_ABSORPTION_CONTEXT"
+      ],
+      "repo_market_reaction_refs": [],
+      "market_reaction_note": "The combination is historically useful because BTC-specific absorption coexisted with restrictive macro conditions; no single-source direction inference is allowed.",
+      "historical_value": "MEDIUM_HIGH_CONTEXT",
+      "learning_note": "Supports keeping BTC-specific demand/absorption separate from broad risk-on or alt-rotation inference."
+    },
+    {
+      "date": "2026-08-31",
+      "headline": "Warsh speech lifts September hike odds to 55-60 percent",
+      "threat": "QUIET",
+      "conviction": 54,
+      "relevant_source_claims": [
+        "The briefing described a hawkish Fed repricing, positive real yields and continued Iran energy risk.",
+        "It claimed Binance exchange reserves were at 2026 highs while ETF inflows had cooled.",
+        "It also noted that Bitcoin had remained relatively resilient despite the macro/geopolitical pressure."
+      ],
+      "framework_categories": [
+        "MACRO_RATES",
+        "EXCHANGE_FLOW_CONTEXT",
+        "ETF_CONTEXT",
+        "BTC_RESILIENCE"
+      ],
+      "repo_market_reaction_refs": [
+        "03_DAILY_CAPTURE_LOGS/hourly/2026/08/2026-08-31.csv"
+      ],
+      "market_reaction_note": "Repository hourly data independently records BTC trading mainly in the high-77k to high-78k region through the observed morning window. This supports a resilience/consolidation description, not proof that any named catalyst was absorbed.",
+      "historical_value": "HIGH_CONTEXT",
+      "learning_note": "Important counterexample to one-factor macro narratives: restrictive rates/energy context did not automatically produce an immediate breakdown."
+    },
+    {
+      "date": "2026-09-01",
+      "headline": "Warsh speech lifts September hike odds to 60 percent",
+      "threat": "QUIET",
+      "conviction": 53,
+      "relevant_source_claims": [
+        "The briefing maintained the hawkish Fed/rates narrative and described higher yields/dollar pressure.",
+        "It repeated high Binance reserve/cooling ETF-flow concerns and MVRV near 1.48.",
+        "It highlighted renewed tanker/Hormuz escalation and higher oil.",
+        "The live Situation Room dashboard later showed BTC near 78k while bonds/oil remained stressed."
+      ],
+      "framework_categories": [
+        "MACRO_RATES",
+        "GEOPOLITICAL_ENERGY",
+        "EXCHANGE_FLOW_CONTEXT",
+        "BTC_RESILIENCE"
+      ],
+      "repo_market_reaction_refs": [
+        "03_DAILY_CAPTURE_LOGS/hourly/2026/09/2026-09-01.csv",
+        "03_DAILY_CAPTURE_LOGS/hourly/LATEST.json",
+        "03_DAILY_CAPTURE_LOGS/captures/LATEST.json"
+      ],
+      "market_reaction_note": "Current framework captures must remain the market-data owner. Situation Room is useful only as catalyst context around the observed consolidation/rotation test. Its BTC, MVRV, exchange-reserve, ETF and macro interpretations do not override canonical owners.",
+      "historical_value": "HIGH_CONTEXT",
+      "learning_note": "Use to annotate the macro/geopolitical environment around 1-Sep intraday rotation/transmission observations; do not contaminate the rotation evidence itself."
+    }
+  ],
+  "cross_period_synthesis": {
+    "persistent_restrictive_context": [
+      "Hawkish Fed/rate-hike repricing",
+      "positive/high real and nominal yields",
+      "Hormuz/Iran energy and oil-risk premium"
+    ],
+    "btc_specific_supportive_or_absorption_context": [
+      "corporate treasury buying",
+      "exchange outflow/absorption observations on some days",
+      "institutional custody and tradable-rail expansion"
+    ],
+    "historical_market_read": "From 25-Aug through 1-Sep, BTC-specific demand/absorption narratives repeatedly coexisted with restrictive macro and energy conditions. The 28-Aug reversal is consistent with a risk-sensitive environment, while 31-Aug through 1-Sep resilience shows that the same macro backdrop did not mechanically dictate immediate price direction.",
+    "rotation_separation_rule": "Situation Room context must not be used to confirm ETH leadership, breadth transmission, altseason, entry permission, or portfolio action. Those remain owned by current framework market and rotation evidence.",
+    "negative_learning": "The 29-Aug dormant-wallet episode is retained specifically as evidence against over-promoting visually compelling on-chain supply events into short-horizon signals without demonstrated incremental decision value."
+  },
+  "disposition": {
+    "retain_for_history": [
+      "28-Aug reversal backdrop: Hormuz/diplomatic failure plus restrictive macro context",
+      "29-Aug dormant-wallet false/early distribution lead as negative learning",
+      "30-Aug persistent energy/rates pressure despite holder-absorption context",
+      "31-Aug hawkish-rates plus energy stress alongside BTC resilience",
+      "1-Sep continued rates/oil stress alongside consolidation and separate rotation/transmission testing"
+    ],
+    "discard_as_noise_for_framework_state": [
+      "Situation Room threat/conviction scores as trading authority",
+      "single-day dormant-wallet distribution inference",
+      "unverified exchange-reserve interpretation as a standalone signal",
+      "Situation Room ETF commentary where canonical ETF owner exists",
+      "any direct mapping from geopolitical headline to portfolio action"
+    ],
+    "new_threshold": false,
+    "new_signal": false,
+    "rule_promotion": false,
+    "rotation_promotion": false,
+    "portfolio_action": false
+  }
+}
