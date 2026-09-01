@@ -29,6 +29,7 @@ Mandatory governance/context:
 - `research/api_agent/API_INTELLIGENCE_POLICY_v2.json`
 - `research/api_agent/SHADOW_ADMISSION_AI_POLICY_v1.json`
 - `scripts/data_terminal/defillama_stablecoin_owner.py`
+- `04_MARKET_LEARNING/external_research/2026-09-01__bitcoin-legacy-onchain-proxy-decay__shadow.md`
 
 Prepared package:
 
@@ -118,6 +119,8 @@ Primary candidate families:
 - one old-coin-spending axis: VDD or one equivalent.
 
 Do not test a zoo of variants.
+
+Treat raw address count, transaction count and UTXO count as potentially decayed adoption proxies in the financialized/ETF era. Do not admit them as adoption truth without a separately validated financialization-adjusted specification.
 
 Use identical timestamps and predeclared 7D, 14D and 28D outcomes.
 
