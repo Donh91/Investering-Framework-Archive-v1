@@ -118,6 +118,15 @@ Therefore provider methodology is part of the evidence identity and may not be s
 
 These are extraction-path failures, not proof that the provider's raw source is bad.
 
+### Replay provenance
+
+The exact transient 48-row `date,price,mvrv` research matrix used for the replay is bound by:
+
+- SHA-256: `fa9fc200bb8b0a166ec8fe98042c121e1af729aab2b224ea76b017a99fdaf267`
+- bytes: `1350`
+
+Provider raw rows remain uncommitted. The hash identifies the exact matrix used without converting transient source material into a public raw-data archive.
+
 ## Agent C - URPD and expectations
 
 ### URPD
@@ -137,11 +146,11 @@ with `UrpdDay` fields:
 - `btcSupply`
 - `pctSupply`
 
-A 2026-08-30 date request returned a non-empty distribution, while 2026-07-15 returned empty during the audit.
+A request with `day=2026-08-30` returned a non-empty distribution, while `day=2026-07-15` returned empty during the audit. The `UrpdDay` schema itself does not echo a snapshot date.
 
-This supports recent point-in-time observation but not a long historical replay claim.
+This supports **date-parameterized, request-bound recent observation**, but it does not provider-attest the snapshot day and does not support a long historical replay claim.
 
-The new probe therefore emits derived topology only and binds the requested day explicitly into the receipt.
+The probe therefore emits derived topology only, binds the requested day explicitly into the receipt, and labels lineage as `REQUEST_BOUND_ONLY_NOT_PROVIDER_ATTESTED`.
 
 ### Polymarket
 
@@ -170,6 +179,8 @@ Every public research receipt must preserve:
 - `raw_persisted=false`,
 - all authority flags false.
 
+The replay runner additionally binds its exact transient input matrix by SHA-256 and byte count, without committing provider raw rows.
+
 ## Final source admission table
 
 | Source/family | Disposition | Role |
@@ -178,7 +189,7 @@ Every public research receipt must preserve:
 | Coin Metrics Community | KEEP | long-history baseline |
 | BGeometrics MVRV | CONTEXT ONLY | valuation/stress |
 | BGeometrics broad metric sweep | KILL | avoid metric fishing |
-| BGeometrics URPD | KEEP SHADOW | prospective structure topology |
+| BGeometrics URPD | KEEP SHADOW | prospective structure topology, request-bound day lineage |
 | BGeometrics Regime Score | REJECT NEW VOTE | benchmark only |
 | Polymarket | DEFER NETWORK | expectations research |
 | DefiLlama | REUSE | existing owner/crosscheck |
@@ -198,3 +209,14 @@ The correct next state is therefore:
 - URPD observed prospectively without action authority,
 - Polymarket held behind an explicit persistence contract,
 - no live framework change.
+
+## Final red-team remediation before merge
+
+A final PR-level review found and fixed two provenance gaps before merge:
+
+1. The replay runner now emits SHA-256 and byte size for the exact local transient research matrix.
+2. URPD lineage is no longer described as provider-attested point-in-time data. The receipt explicitly distinguishes the requested day from the payload, because the provider schema does not include a snapshot-day field.
+
+The URPD parser also rejects malformed calendar dates and overlapping price bins.
+
+These fixes do not change any research verdict or framework authority.
