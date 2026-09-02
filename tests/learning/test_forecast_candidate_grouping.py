@@ -104,15 +104,19 @@ class ForecastCandidateGroupingTests(unittest.TestCase):
         self.assertEqual(queue["counts"]["legacy_identical_duplicate_ids"], 1)
         self.assertEqual(queue["candidates"], [])
 
-    def test_any_post_cutover_multi_path_candidate_id_fails_closed(self):
+    def test_any_post_cutover_multi_path_candidate_id_is_owner_ineligible_quarantine(self):
         cid = "post-dup"
         value = self.candidate(cid, "2026-09-02T10:10:00Z")
         self.write("2026/09/02/a/post-dup.json", value)
         self.write("2026/09/02/b/post-dup.json", value)
         with self.assertRaisesRegex(ValueError, "POST_CUTOVER_DUPLICATE_CANDIDATE_ID"):
             classified_candidate_groups(self.pending)
-        with self.assertRaisesRegex(ValueError, "POST_CUTOVER_DUPLICATE_CANDIDATE_ID"):
-            build_queue(self.pending, self.terminals, datetime(2026, 9, 2, 10, 20, tzinfo=UTC))
+        queue = build_queue(self.pending, self.terminals, datetime(2026, 9, 2, 10, 20, tzinfo=UTC))
+        self.assertEqual(queue["counts"]["post_cutover_duplicate_quarantine_ids"], 1)
+        self.assertEqual(queue["counts"]["decision_required"], 0)
+        self.assertEqual(queue["candidates"], [])
+        self.assertEqual(queue["quarantines"][0]["candidate_id"], cid)
+        self.assertFalse(queue["quarantines"][0]["owner_decision_allowed"])
 
 
 if __name__ == "__main__":
