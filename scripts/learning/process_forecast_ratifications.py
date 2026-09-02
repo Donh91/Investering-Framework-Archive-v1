@@ -15,6 +15,7 @@ sys.path.insert(0, str(ROOT / "scripts" / "lib"))
 sys.path.insert(0, str(ROOT / "scripts" / "learning"))
 
 from forecast_ratification_contract import (  # noqa: E402
+    CANDIDATE_RECORDING_TOLERANCE_MINUTES,
     CUTOVER_COMMIT_SHA,
     DECISION_SLA_MINUTES,
     PACKET_RECORDING_TOLERANCE_MINUTES,
@@ -84,12 +85,12 @@ def index_packets(root: Path) -> dict[str, tuple[dict[str, Any], Path]]:
     return found
 
 
-def packet_git_recorded_at(repo_root: Path, packet_path: Path) -> datetime:
+def git_first_add_at(repo_root: Path, path: Path, label: str) -> datetime:
     repo_root = repo_root.resolve()
     try:
-        rel = packet_path.resolve().relative_to(repo_root).as_posix()
+        rel = path.resolve().relative_to(repo_root).as_posix()
     except ValueError as exc:
-        raise ValueError("RATIFICATION_PACKET_OUTSIDE_REPOSITORY") from exc
+        raise ValueError(f"{label}_OUTSIDE_REPOSITORY") from exc
     proc = subprocess.run(
         ["git", "log", "--diff-filter=A", "--follow", "--reverse", "--format=%cI", "--", rel],
         cwd=repo_root,
@@ -99,11 +100,32 @@ def packet_git_recorded_at(repo_root: Path, packet_path: Path) -> datetime:
     )
     rows = [row.strip() for row in proc.stdout.splitlines() if row.strip()]
     if not rows:
-        raise ValueError(f"RATIFICATION_PACKET_NOT_GIT_RECORDED:{rel}")
+        raise ValueError(f"{label}_NOT_GIT_RECORDED:{rel}")
     return parse_dt(rows[0])
 
 
-def validate_packet_timing(candidate: dict[str, Any], packet: dict[str, Any], git_recorded_at: datetime, now: datetime) -> datetime:
+def validate_candidate_git_timing(candidate: dict[str, Any], candidate_paths: list[Path], repo_root: Path, now: datetime) -> datetime:
+    if len(candidate_paths) != 1:
+        raise ValueError("POST_CUTOVER_DUPLICATE_CANDIDATE_PATHS")
+    git_recorded_at = git_first_add_at(repo_root, candidate_paths[0], "CANDIDATE")
+    created = parse_dt(str(candidate["created_at_utc"]))
+    delta = (git_recorded_at - created).total_seconds()
+    if delta < 0:
+        raise ValueError("CANDIDATE_GIT_RECORD_PRECEDES_CREATED_AT")
+    if delta > CANDIDATE_RECORDING_TOLERANCE_MINUTES * 60:
+        raise ValueError("CANDIDATE_CREATED_AT_BACKDATED_OR_LATE_RECORDED")
+    if git_recorded_at > now:
+        raise ValueError("CANDIDATE_GIT_RECORD_IN_FUTURE")
+    return git_recorded_at
+
+
+def validate_packet_timing(
+    candidate: dict[str, Any],
+    packet: dict[str, Any],
+    packet_git_recorded_at: datetime,
+    candidate_git_recorded_at: datetime,
+    now: datetime,
+) -> datetime:
     if packet.get("candidate_id") != candidate.get("candidate_id"):
         raise ValueError("CANDIDATE_ID_MISMATCH")
     if packet.get("candidate_sha256") != digest(candidate):
@@ -113,11 +135,13 @@ def validate_packet_timing(candidate: dict[str, Any], packet: dict[str, Any], gi
     deadline = decision_deadline(str(candidate["created_at_utc"]))
     if decision_at < created:
         raise ValueError("RATIFICATION_PRECEDES_CANDIDATE")
+    if decision_at < candidate_git_recorded_at:
+        raise ValueError("RATIFICATION_PRECEDES_CANDIDATE_GIT_RECORD")
     if decision_at > deadline:
         raise ValueError("RATIFICATION_DECISION_SLA_EXCEEDED")
     if decision_at > now:
         raise ValueError("RATIFICATION_DECISION_IN_FUTURE")
-    delta = (git_recorded_at - decision_at).total_seconds()
+    delta = (packet_git_recorded_at - decision_at).total_seconds()
     if delta < 0:
         raise ValueError("RATIFICATION_GIT_RECORD_PRECEDES_DECISION")
     if delta > PACKET_RECORDING_TOLERANCE_MINUTES * 60:
@@ -155,6 +179,7 @@ def terminal_record(
     candidate_paths: list[Path],
     disposition: str,
     now: datetime,
+    candidate_git_recorded: datetime | None = None,
     packet: dict[str, Any] | None = None,
     packet_path: Path | None = None,
     packet_git_recorded: datetime | None = None,
@@ -169,10 +194,12 @@ def terminal_record(
         "candidate_sha256": digest(candidate),
         "candidate_paths": [path.as_posix() for path in candidate_paths],
         "candidate_created_at_utc": candidate.get("created_at_utc"),
+        "candidate_git_recorded_at_utc": iso(candidate_git_recorded) if candidate_git_recorded else None,
         "terminal_at_utc": iso(now),
         "disposition": disposition,
         "prospective_cutover_commit_sha": CUTOVER_COMMIT_SHA,
         "decision_sla_minutes": DECISION_SLA_MINUTES,
+        "candidate_recording_tolerance_minutes": CANDIDATE_RECORDING_TOLERANCE_MINUTES,
         "packet_recording_tolerance_minutes": PACKET_RECORDING_TOLERANCE_MINUTES,
         "historical_candidate_rewritten": False,
         "outcome_data_read": False,
@@ -187,7 +214,10 @@ def terminal_record(
             "decision_at_utc": packet.get("decision_at_utc"),
             "git_recorded_at_utc": iso(packet_git_recorded),
             "authority": packet.get("authority"),
+            "owner_actor": packet.get("owner_actor"),
             "outcome_blind": packet.get("outcome_blind"),
+            "decision_basis_scope": packet.get("decision_basis_scope"),
+            "outcome_paths_read": packet.get("outcome_paths_read"),
         }
     if baseline is not None and baseline_path is not None:
         value["baseline"] = {
@@ -213,8 +243,6 @@ def write_terminal(path: Path, value: dict[str, Any]) -> str:
     if path.exists():
         existing = read(path)
         if canon(existing) != canon(value):
-            # terminal_at_utc is allowed to differ only for a duplicate recomputation;
-            # bind comparison to all immutable semantic fields by retaining existing.
             existing_copy = dict(existing)
             value_copy = dict(value)
             existing_copy.pop("terminal_at_utc", None)
@@ -256,27 +284,39 @@ def process(
 
             packet_row = packets.get(cid)
             deadline = decision_deadline(str(candidate["created_at_utc"]))
+            if packet_row is None and now <= deadline:
+                # A new candidate can be untracked in the same maintenance run.
+                # It is never terminalized until its first Git record exists.
+                counts["AWAITING_OWNER_DECISION"] = counts.get("AWAITING_OWNER_DECISION", 0) + 1
+                continue
+
+            candidate_git_recorded = validate_candidate_git_timing(candidate, candidate_paths, repo_root, now)
+
             if packet_row is None:
-                if now <= deadline:
-                    counts["AWAITING_OWNER_DECISION"] = counts.get("AWAITING_OWNER_DECISION", 0) + 1
-                    continue
-                terminal = terminal_record(candidate, candidate_paths, "EXPIRED_NO_OWNER_DECISION", now)
+                terminal = terminal_record(
+                    candidate,
+                    candidate_paths,
+                    "EXPIRED_NO_OWNER_DECISION",
+                    now,
+                    candidate_git_recorded,
+                )
                 write_terminal(terminal_path, terminal)
                 counts["EXPIRED_NO_OWNER_DECISION"] = counts.get("EXPIRED_NO_OWNER_DECISION", 0) + 1
                 continue
 
             packet, packet_path = packet_row
-            git_recorded_at = packet_git_recorded_at(repo_root, packet_path)
-            decision_at = validate_packet_timing(candidate, packet, git_recorded_at, now)
+            packet_git_recorded = git_first_add_at(repo_root, packet_path, "RATIFICATION_PACKET")
+            decision_at = validate_packet_timing(candidate, packet, packet_git_recorded, candidate_git_recorded, now)
             if packet["decision"] == "REJECT":
                 terminal = terminal_record(
                     candidate,
                     candidate_paths,
                     "REJECTED_BY_OWNER",
                     now,
+                    candidate_git_recorded,
                     packet,
                     packet_path,
-                    git_recorded_at,
+                    packet_git_recorded,
                 )
                 write_terminal(terminal_path, terminal)
                 counts["REJECTED_BY_OWNER"] = counts.get("REJECTED_BY_OWNER", 0) + 1
@@ -297,9 +337,10 @@ def process(
                 candidate_paths,
                 "RATIFIED_AND_FROZEN",
                 now,
+                candidate_git_recorded,
                 packet,
                 packet_path,
-                git_recorded_at,
+                packet_git_recorded,
                 baseline_path,
                 baseline,
                 frozen,
