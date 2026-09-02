@@ -4,6 +4,7 @@ from pathlib import Path
 
 UNIT_CONTRACT_VERSION='FORECAST_TARGET_UNITS_v2'
 LINEAGE_CONTRACT='MODEL_CALIBRATION_DATA_PING_LINEAGE_v1'
+ELIGIBILITY_CONTRACT='MODEL_CALIBRATION_SETTLEMENT_ELIGIBILITY_v1'
 
 def load(p):
     try:return json.loads(p.read_text())
@@ -16,43 +17,49 @@ def legacy_unit_ambiguous(f):
     if f.get('source_candidate_id') and f.get('direction')=='RANGE':return False
     return True
 
-def score_eligible(o):
-    # Eligibility is explicit and fail-closed. Historical outcomes pre-dating the
-    # settlement-time contract remain visible in the ledger but cannot silently
-    # contribute to skill/calibration claims.
+def scientific_score_eligible(o):
     return o.get('status')=='MATURED' and o.get('result') in {'HIT','MISS'} and o.get('scientific_score_eligible') is True
 
 def main():
-    ap=argparse.ArgumentParser();ap.add_argument('--forecast-root',type=Path,required=True);ap.add_argument('--outcome-root',type=Path,required=True);ap.add_argument('--output',type=Path,required=True);ap.add_argument('--lineage-output',type=Path);a=ap.parse_args()
+    ap=argparse.ArgumentParser();ap.add_argument('--forecast-root',type=Path,required=True);ap.add_argument('--outcome-root',type=Path,required=True);ap.add_argument('--output',type=Path,required=True);ap.add_argument('--lineage-output',type=Path);ap.add_argument('--eligibility-output',type=Path);a=ap.parse_args()
     forecasts={}
     for p in a.forecast_root.rglob('*.json') if a.forecast_root.exists() else []:
         v=load(p)
         if v and v.get('contract')=='FROZEN_FORECAST_v1':forecasts[v.get('forecast_id')]=v
-    rows=[];lineage_rows=[];quarantined=set()
+    rows=[];lineage_rows=[];eligibility_rows=[];quarantined=set()
     for p in a.outcome_root.rglob('*.json') if a.outcome_root.exists() else []:
         o=load(p)
         if not o or o.get('contract') not in {'MATURED_OUTCOME_v2','MATURED_OUTCOME_v3'}:continue
         f=forecasts.get(o.get('forecast_id'),{})
         if f and legacy_unit_ambiguous(f):
             quarantined.add(o.get('forecast_id'));continue
-        eligible=score_eligible(o)
-        rows.append({
-            'scored_at_utc':o.get('created_at_utc'),'model':f.get('model'),'task':f.get('task'),'prompt_sha256':f.get('prompt_sha256'),
-            'forecast_id':o.get('forecast_id'),'metric_path':f.get('metric_path'),'horizon_days':f.get('horizon_days'),'outcome':o.get('status'),
-            'result':o.get('result'),'hit':(1 if o.get('result')=='HIT' else 0) if eligible else '','return_pct':o.get('return_pct'),
-            'forecast_sha256':o.get('forecast_sha256'),'evidence_sha256':o.get('evidence_sha256'),
+        rows.append({'scored_at_utc':o.get('created_at_utc'),'model':f.get('model'),'task':f.get('task'),'prompt_sha256':f.get('prompt_sha256'),'forecast_id':o.get('forecast_id'),'metric_path':f.get('metric_path'),'horizon_days':f.get('horizon_days'),'outcome':o.get('status'),'result':o.get('result'),'hit':1 if o.get('result')=='HIT' else (0 if o.get('result')=='MISS' else ''),'return_pct':o.get('return_pct'),'forecast_sha256':o.get('forecast_sha256'),'evidence_sha256':o.get('evidence_sha256')})
+        eligible=scientific_score_eligible(o)
+        eligibility_rows.append({
+            'forecast_id':o.get('forecast_id'),
+            'outcome_contract':o.get('contract'),
+            'outcome_status':o.get('status'),
+            'result':o.get('result'),
             'settlement_contract_version':o.get('settlement_contract_version') or 'UNDECLARED_LEGACY',
-            'settlement_target_utc':o.get('settlement_target_utc'),'settlement_observation_utc':o.get('settlement_observation_utc'),
-            'settlement_offset_seconds':o.get('settlement_offset_seconds'),'scientific_score_eligible':eligible,
-            'scientific_score_exclusion_reason':None if eligible else (o.get('scientific_score_exclusion_reason') or 'LEGACY_OUTCOME_WITHOUT_EXPLICIT_SETTLEMENT_ELIGIBILITY')
+            'settlement_target_utc':o.get('settlement_target_utc'),
+            'settlement_observation_utc':o.get('settlement_observation_utc'),
+            'settlement_offset_seconds':o.get('settlement_offset_seconds'),
+            'scientific_score_eligible':eligible,
+            'scientific_score_exclusion_reason':None if eligible else (o.get('scientific_score_exclusion_reason') or 'LEGACY_OUTCOME_WITHOUT_EXPLICIT_SETTLEMENT_ELIGIBILITY'),
+            'forecast_sha256':o.get('forecast_sha256'),
+            'evidence_sha256':o.get('evidence_sha256'),
         })
         lineage=f.get('data_ping_lineage') if isinstance(f.get('data_ping_lineage'),dict) else None
         if lineage:
-            lineage_rows.append({'contract':LINEAGE_CONTRACT,'scored_at_utc':o.get('created_at_utc'),'forecast_id':o.get('forecast_id'),'forecast_sha256':o.get('forecast_sha256'),'accepted_packet_sha256':lineage.get('accepted_packet_sha256'),'accepted_packet_identity':lineage.get('accepted_packet_identity'),'accepted_packet_path':lineage.get('accepted_packet_path'),'action_compass_receipt_id':lineage.get('action_compass_receipt_id'),'action_compass_receipt_sha256':lineage.get('action_compass_receipt_sha256'),'canonical_repository':lineage.get('canonical_repository'),'canonical_commit_sha':lineage.get('canonical_commit_sha'),'owner_contract':lineage.get('owner_contract'),'portfolio_execution':False,'scientific_score_eligible':eligible})
+            lineage_rows.append({'contract':LINEAGE_CONTRACT,'scored_at_utc':o.get('created_at_utc'),'forecast_id':o.get('forecast_id'),'forecast_sha256':o.get('forecast_sha256'),'accepted_packet_sha256':lineage.get('accepted_packet_sha256'),'accepted_packet_identity':lineage.get('accepted_packet_identity'),'accepted_packet_path':lineage.get('accepted_packet_path'),'action_compass_receipt_id':lineage.get('action_compass_receipt_id'),'action_compass_receipt_sha256':lineage.get('action_compass_receipt_sha256'),'canonical_repository':lineage.get('canonical_repository'),'canonical_commit_sha':lineage.get('canonical_commit_sha'),'owner_contract':lineage.get('owner_contract'),'portfolio_execution':False})
     rows.sort(key=lambda r:(str(r['scored_at_utc']),str(r['forecast_id'])))
     lineage_rows.sort(key=lambda r:(str(r['scored_at_utc']),str(r['forecast_id'])))
+    eligibility_rows.sort(key=lambda r:str(r['forecast_id']))
     a.output.parent.mkdir(parents=True,exist_ok=True)
-    fields=['scored_at_utc','model','task','prompt_sha256','forecast_id','metric_path','horizon_days','outcome','result','hit','return_pct','forecast_sha256','evidence_sha256','settlement_contract_version','settlement_target_utc','settlement_observation_utc','settlement_offset_seconds','scientific_score_eligible','scientific_score_exclusion_reason']
+    # The legacy CSV is a locked downstream interface. Keep its columns and row
+    # semantics byte-compatible in shape; scientific settlement eligibility is
+    # carried by a separate fail-closed sidecar instead of silently redefining it.
+    fields=['scored_at_utc','model','task','prompt_sha256','forecast_id','metric_path','horizon_days','outcome','result','hit','return_pct','forecast_sha256','evidence_sha256']
     with a.output.open('w',newline='') as f:
         w=csv.DictWriter(f,fieldnames=fields);w.writeheader();w.writerows(rows)
     lineage_output=a.lineage_output or a.output.with_name(a.output.stem+'_DATA_PING_LINEAGE.jsonl')
@@ -61,8 +68,26 @@ def main():
         lineage_output.write_text(''.join(canon(row)+'\n' for row in lineage_rows))
     elif lineage_output.exists():
         lineage_output.unlink()
-    scored_count=sum(1 for r in rows if r['scientific_score_eligible'] is True)
-    matured_unscorable_count=sum(1 for r in rows if r['outcome']=='MATURED' and r['scientific_score_eligible'] is not True)
+    scientific_scored_count=sum(1 for r in eligibility_rows if r['scientific_score_eligible'] is True)
+    matured_unscorable_count=sum(1 for r in eligibility_rows if r['outcome_status']=='MATURED' and r['scientific_score_eligible'] is not True)
+    eligibility_output=a.eligibility_output or a.output.with_name('MODEL_CALIBRATION_SETTLEMENT_ELIGIBILITY.json')
+    eligibility_output.parent.mkdir(parents=True,exist_ok=True)
+    eligibility_doc={
+        'contract':ELIGIBILITY_CONTRACT,
+        'legacy_calibration_csv_path':str(a.output),
+        'legacy_calibration_csv_role':'DESCRIPTIVE_BACKWARD_COMPATIBILITY_ONLY',
+        'scientific_skill_status':'ELIGIBLE_FOR_SKILL_ANALYSIS' if scientific_scored_count else 'BLOCKED_NO_SETTLEMENT_ELIGIBLE_OUTCOMES',
+        'scientific_scored_count':scientific_scored_count,
+        'matured_unscorable_count':matured_unscorable_count,
+        'row_count':len(eligibility_rows),
+        'rows':eligibility_rows,
+        'authority':{'model_weight_change':False,'portfolio_action':False,'automatic_promotion':False},
+    }
+    eligibility_output.write_text(json.dumps(eligibility_doc,indent=2,sort_keys=True)+'\n')
+    # `scored_count` intentionally retains its established legacy meaning so
+    # existing readers do not break. New scientific consumers must use the
+    # explicit scientific_scored_count / eligibility sidecar.
+    scored_count=sum(1 for r in rows if r['outcome']=='MATURED')
     censored_count=sum(1 for r in rows if r['outcome']=='CENSORED')
-    print(json.dumps({'status':'PASS','scored_count':scored_count,'matured_unscorable_count':matured_unscorable_count,'censored_count':censored_count,'ledger_row_count':len(rows),'data_ping_lineage_row_count':len(lineage_rows),'data_ping_lineage_output':str(lineage_output) if lineage_rows else None,'quarantined_legacy_unit_outcome_count':len(quarantined),'candidate_count':sum(1 for _ in (a.forecast_root.parent/'PENDING').rglob('*.json')) if (a.forecast_root.parent/'PENDING').exists() else 0,'frozen_count':len(forecasts)},sort_keys=True))
+    print(json.dumps({'status':'PASS','scored_count':scored_count,'scientific_scored_count':scientific_scored_count,'matured_unscorable_count':matured_unscorable_count,'censored_count':censored_count,'ledger_row_count':len(rows),'settlement_eligibility_output':str(eligibility_output),'data_ping_lineage_row_count':len(lineage_rows),'data_ping_lineage_output':str(lineage_output) if lineage_rows else None,'quarantined_legacy_unit_outcome_count':len(quarantined),'candidate_count':sum(1 for _ in (a.forecast_root.parent/'PENDING').rglob('*.json')) if (a.forecast_root.parent/'PENDING').exists() else 0,'frozen_count':len(forecasts)},sort_keys=True))
 if __name__=='__main__':main()
