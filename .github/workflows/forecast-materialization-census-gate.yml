@@ -1,0 +1,64 @@
+name: Forecast Materialization Census Gate
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/learning/materialize_forecast_candidates_batch.py'
+      - 'tests/learning/test_forecast_materialization_census.py'
+      - '.github/workflows/continuity-learning-maintenance.yml'
+      - '.github/workflows/forecast-materialization-census-gate.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  materialization-census:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compile census modules
+        run: |
+          python -m py_compile \
+            scripts/learning/materialize_forecast_candidates_batch.py \
+            tests/learning/test_forecast_materialization_census.py
+      - name: Census behavioral regressions
+        run: python tests/learning/test_forecast_materialization_census.py -v
+      - name: Existing source temporal provenance regressions
+        run: python tests/api_agent/test_forecast_candidate_source_temporal_provenance.py -v
+      - name: Existing ratification throughput regressions
+        run: python tests/learning/test_forecast_ratification_throughput.py -v
+      - name: Workflow persistence guard
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          workflow=Path('.github/workflows/continuity-learning-maintenance.yml').read_text()
+          required=[
+              'Materialize forecast candidates and write census',
+              'scripts/learning/materialize_forecast_candidates_batch.py',
+              '--outputs-root research/api_agent/outputs',
+              '--pending-root research/api_agent/forecast_candidates/PENDING',
+              '--census-output research/api_agent/forecast_candidates/LATEST_FORECAST_MATERIALIZATION_CENSUS.json',
+              'git add LATEST_HANDOFF.json LATEST_HANDOFF.md research/api_agent/forecast_candidates',
+          ]
+          for item in required:
+              assert item in workflow, item
+          assert workflow.index('Materialize forecast candidates and write census') < workflow.index('Process prospective owner ratification packets')
+          assert workflow.index('Process prospective owner ratification packets') < workflow.index('Build outcome-free ratification queue for framework owner')
+          PY
+      - name: Census authority guard
+        run: |
+          python - <<'PY'
+          import sys
+          sys.path.insert(0, 'scripts/learning')
+          import materialize_forecast_candidates_batch as m
+          assert m.CENSUS_CONTRACT == 'FORECAST_MATERIALIZATION_CENSUS_v1'
+          for key in ('creates_truth','portfolio_action','framework_state_change','model_weight_change','canonical_promotion','forecast_skill_authority'):
+              assert m.AUTHORITY[key] is False, key
+          PY
