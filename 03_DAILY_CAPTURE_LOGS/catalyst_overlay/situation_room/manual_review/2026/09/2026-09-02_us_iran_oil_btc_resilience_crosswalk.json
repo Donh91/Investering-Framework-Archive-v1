@@ -1,0 +1,105 @@
+{
+  "contract": "SITUATION_ROOM_MANUAL_REVIEW_CROSSWALK_v1",
+  "authority": "RESEARCH_ONLY_NON_CANONICAL",
+  "canonical_effect": false,
+  "market_state_effect": false,
+  "portfolio_effect": false,
+  "source_role": "DISCOVERY_ONLY",
+  "causal_claim": false,
+  "review_date_utc": "2026-09-02",
+  "review_scope": {
+    "requested": "Fresh manual Situation Room refresh using the existing discovery/context lane while automatic owner ingestion remains degraded.",
+    "site": "https://situationroom.space",
+    "briefing_date": "2026-09-02",
+    "verification_policy": "Situation Room is discovery/context only. Only the geopolitical/energy core was independently verified before retention. Situation Room conviction, MVRV, long-term-holder distribution, thin-bid and other interpretive claims are not admitted as framework evidence here. Temporal overlap with market movement is not causal proof."
+  },
+  "source_receipts": [
+    {
+      "source": "SITUATION_ROOM",
+      "url": "https://situationroom.space/briefing/2026-09-02",
+      "firecrawl_scrape_id": "01a0612e-f3c7-776b-84c0-92f65af9ddb7",
+      "generated_at_utc": "2026-09-02T06:00:00Z"
+    },
+    {
+      "source": "SITUATION_ROOM_LIVE_WORKSPACE",
+      "url": "https://situationroom.space",
+      "firecrawl_scrape_id": "01a0612e-b67e-725d-982d-b8b122c7690b",
+      "observed_refresh_utc": "2026-09-02T08:14:07Z"
+    },
+    {
+      "source": "REUTERS_PRIMARY_NEWS_VERIFICATION",
+      "url": "https://www.reuters.com/business/energy/oil-prices-rise-latest-fighting-resurrects-middle-east-supply-disruption-risks-2026-09-01/",
+      "firecrawl_scrape_id": "01a06130-0545-75ca-a1c1-69859f017081",
+      "published_at_utc": "2026-09-01T00:56:11.895Z",
+      "modified_at_utc": "2026-09-01T19:51:44.929Z"
+    }
+  ],
+  "retained_event": {
+    "event_id": "SR_MANUAL_2026-09-02_US_IRAN_HORMUZ_OIL_BTC_RESILIENCE",
+    "headline": "Renewed US-Iran fighting lifts oil above $90 while Bitcoin holds the high-$77k area",
+    "framework_categories": [
+      "GEOPOLITICAL_ENERGY",
+      "MACRO_RISK_PREMIUM",
+      "BTC_RESILIENCE_CONTEXT"
+    ],
+    "verified_event_facts": [
+      "Reuters reported renewed US air strikes on Iranian targets and continued disruption risk around the Strait of Hormuz.",
+      "Reuters reported Brent settling at $94.65 and WTI at $90.22 on 2026-09-01, both up more than $4 per barrel, with supply-disruption fears tied to renewed US-Iran fighting.",
+      "Reuters reported that Iran warned it could prevent Gulf oil exports and that the Strait of Hormuz disruption remained central to energy-risk pricing."
+    ],
+    "situation_room_snapshot": {
+      "briefing_generated_at_utc": "2026-09-02T06:00:00Z",
+      "btc_price_usd": 77635,
+      "btc_24h_change_pct": -1.91,
+      "oil_usd": 90.60,
+      "dxy": 99.76,
+      "us_10y_pct": 4.80,
+      "vix": 16.34,
+      "threat": "QUIET",
+      "conviction": 54,
+      "authority_note": "Threat and conviction are source labels only and have zero framework authority."
+    },
+    "repo_market_reaction_refs": [
+      "03_DAILY_CAPTURE_LOGS/hourly/2026/09/2026-09-01.csv",
+      "03_DAILY_CAPTURE_LOGS/hourly/2026/09/2026-09-02.csv",
+      "03_DAILY_CAPTURE_LOGS/hourly/LATEST.json",
+      "03_DAILY_CAPTURE_LOGS/captures/LATEST.json"
+    ],
+    "market_reaction_note": "Current framework data independently show BTC remaining broadly in the high-$77k region through the overnight/morning window despite the energy/geopolitical shock. This is retained as a resilience observation, not as evidence that Bitcoin is decoupled from macro risk or that the named event caused any specific price path.",
+    "historical_value": "HIGH_CONTEXT",
+    "learning_note": "Useful counterexample to a simple one-factor risk-off mapping: an acute oil/Hormuz shock and high yields can coexist with BTC price stability. Future value comes from comparing whether this resilience survives subsequent sessions, not from treating the event as a bullish signal."
+  },
+  "not_admitted": [
+    {
+      "claim": "Long-term holders are distributing at a faster clip and exchange inflows continue.",
+      "reason": "Situation Room synthesis relied on mixed secondary/on-chain sources and was not independently verified in this review."
+    },
+    {
+      "claim": "The leverage unwind has not cleared the supply / thin bid remains.",
+      "reason": "Interpretive source claim; not independently verified and overlaps with existing derivatives owners."
+    },
+    {
+      "claim": "MVRV 1.46, DCA engine, momentum regime and conviction 54 imply direction.",
+      "reason": "Source-specific model/context outputs have no canonical or portfolio authority."
+    }
+  ],
+  "rotation_separation_rule": "This catalyst context must not confirm ETH leadership, breadth transmission, altseason, Entry Signal promotion or portfolio action. Those remain owned by current framework market/rotation evidence.",
+  "disposition": {
+    "retain_for_history": [
+      "US-Iran/Hormuz escalation and verified oil shock",
+      "high-yield/firm-dollar macro backdrop as reported by Situation Room",
+      "BTC high-$77k resilience during the event window"
+    ],
+    "discard_as_noise_for_framework_state": [
+      "Situation Room threat/conviction scores",
+      "unverified LTH distribution and exchange-flow interpretation",
+      "source-specific MVRV/DCA/momentum outputs",
+      "any direct event-to-trade inference"
+    ],
+    "new_threshold": false,
+    "new_signal": false,
+    "rule_promotion": false,
+    "rotation_promotion": false,
+    "portfolio_action": false
+  }
+}
