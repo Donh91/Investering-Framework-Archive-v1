@@ -68,8 +68,13 @@ def replay_population_eligible(forecast: dict[str, Any], original_outcome: dict[
         return False, "NOT_FROZEN_FORECAST"
     if original_outcome is None:
         return False, "NO_ORIGINAL_OUTCOME"
+    if original_outcome.get("contract") != "MATURED_OUTCOME_v3":
+        return False, "UNSUPPORTED_ORIGINAL_OUTCOME_CONTRACT"
     if original_outcome.get("forecast_id") != forecast.get("forecast_id"):
-        return False, "ORIGINAL_OUTCOME_ID_MISMATCH"
+        raise ValueError("ORIGINAL_OUTCOME_ID_MISMATCH")
+    declared_forecast_hash = original_outcome.get("forecast_sha256")
+    if declared_forecast_hash is not None and declared_forecast_hash != digest(forecast):
+        raise ValueError("ORIGINAL_OUTCOME_FORECAST_HASH_MISMATCH")
     if forecast.get("settlement_contract_version") == SETTLEMENT_EXACT_TARGET_TIME_V1:
         return False, "ALREADY_EXACT_SETTLEMENT"
     if not supports_exact_price_settlement(str(forecast.get("metric_path") or "")):
@@ -182,6 +187,7 @@ def run_replay(
     overlay_root: Path,
     repo_root: Path,
     now: datetime,
+    fixture_dir: Path | None = None,
 ) -> str:
     original_forecast = read(forecast_path)
     original_outcome = read(original_outcome_path)
@@ -201,7 +207,7 @@ def run_replay(
     with tempfile.TemporaryDirectory() as td:
         envelope_path = Path(td) / f"{forecast_id}.json"
         envelope_path.write_bytes(canon(envelope))
-        owner_status = price_owner.run_one(envelope_path, evidence_root, raw_root, now, None)
+        owner_status = price_owner.run_one(envelope_path, evidence_root, raw_root, now, fixture_dir)
         if owner_status not in {"CREATED", "DUPLICATE_NOOP"}:
             raise RuntimeError(f"UNEXPECTED_REPLAY_OWNER_STATUS:{owner_status}")
 
@@ -244,6 +250,7 @@ def main() -> None:
     ap.add_argument("--replay-outcome-root", type=Path, required=True)
     ap.add_argument("--overlay-root", type=Path, required=True)
     ap.add_argument("--repo-root", type=Path, default=Path("."))
+    ap.add_argument("--fixture-dir", type=Path, help="Tests only; production workflows must omit this argument.")
     ap.add_argument("--max-new-replays", type=int, default=10)
     ap.add_argument("--now-utc")
     args = ap.parse_args()
@@ -283,6 +290,7 @@ def main() -> None:
                 args.overlay_root,
                 repo_root,
                 now,
+                args.fixture_dir,
             )
             counts[status] = counts.get(status, 0) + 1
             if status == "CREATED_SUPERSESSION_OVERLAY":
@@ -298,6 +306,7 @@ def main() -> None:
         "max_new_replays": args.max_new_replays,
         "counts": counts,
         "errors": errors,
+        "fixture_mode": args.fixture_dir is not None,
         "authority": AUTHORITY,
     }
     print(json.dumps(result, sort_keys=True))
