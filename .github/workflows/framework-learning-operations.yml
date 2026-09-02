@@ -56,7 +56,21 @@ jobs:
             --receipt-root research/experiment_lifecycle/receipts \
             --sync-output research/experiment_lifecycle/LATEST_EXPERIMENT_RECEIPT_SYNC.json \
             --allow-unavailable
-      - name: Mature due outcomes under strict contract
+      - name: Resolve exact settlement evidence before legacy maturation
+        run: |
+          mkdir -p research/framework_memory/{forecast_memory,outcome_memory,settlement_evidence,settlement_raw,settlement_bindings}
+          python scripts/learning/forecast_settlement_price_owner.py \
+            --forecast-root research/framework_memory/forecast_memory \
+            --output-root research/framework_memory/settlement_evidence \
+            --raw-root research/framework_memory/settlement_raw
+          python scripts/learning/mature_exact_settlement_forecasts.py \
+            --forecast-root research/framework_memory/forecast_memory \
+            --settlement-evidence-root research/framework_memory/settlement_evidence \
+            --output-root research/framework_memory/outcome_memory \
+            --binding-root research/framework_memory/settlement_bindings \
+            --repo-root . \
+            --max-evidence-lag-hours 24
+      - name: Mature remaining due outcomes under strict contract
         run: |
           mkdir -p research/framework_memory/{forecast_memory,outcome_memory}
           python scripts/learning/outcome_maturation_engine.py \
