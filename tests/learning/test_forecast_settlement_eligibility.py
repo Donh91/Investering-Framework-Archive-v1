@@ -11,6 +11,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 ENGINE = ROOT / "scripts" / "learning" / "outcome_maturation_engine.py"
 LEDGER = ROOT / "scripts" / "learning" / "build_model_calibration_ledger.py"
+LEGACY_HEADER = "scored_at_utc,model,task,prompt_sha256,forecast_id,metric_path,horizon_days,outcome,result,hit,return_pct,forecast_sha256,evidence_sha256"
 
 
 class ForecastSettlementEligibilityTest(unittest.TestCase):
@@ -121,7 +122,7 @@ class ForecastSettlementEligibilityTest(unittest.TestCase):
             self.assertEqual(summary["matured"], 0)
             self.assertEqual(summary["censored"], 1)
 
-    def test_calibration_ledger_fails_closed_on_legacy_outcomes(self):
+    def test_calibration_csv_stays_compatible_while_sidecar_fails_closed(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
             frozen = root / "FROZEN"; matured = root / "MATURED"
@@ -148,20 +149,28 @@ class ForecastSettlementEligibilityTest(unittest.TestCase):
                 "settlement_offset_seconds": 0.0,
             }))
             output = root / "ledger.csv"
+            eligibility = root / "eligibility.json"
             result = subprocess.run(
-                [sys.executable, str(LEDGER), "--forecast-root", str(frozen), "--outcome-root", str(matured), "--output", str(output)],
+                [sys.executable, str(LEDGER), "--forecast-root", str(frozen), "--outcome-root", str(matured), "--output", str(output), "--eligibility-output", str(eligibility)],
                 capture_output=True,
                 text=True,
             )
             self.assertEqual(result.returncode, 0, result.stderr)
             summary = json.loads(result.stdout)
+            self.assertEqual(output.read_text().splitlines()[0], LEGACY_HEADER)
             with output.open() as handle:
                 rows = {row["forecast_id"]: row for row in csv.DictReader(handle)}
-            self.assertEqual(summary["scored_count"], 1)
+            eligibility_doc = json.loads(eligibility.read_text())
+            eligibility_rows = {row["forecast_id"]: row for row in eligibility_doc["rows"]}
+            self.assertEqual(summary["scored_count"], 2)
+            self.assertEqual(summary["scientific_scored_count"], 1)
             self.assertEqual(summary["matured_unscorable_count"], 1)
             self.assertEqual(rows["exact"]["hit"], "1")
-            self.assertEqual(rows["legacy"]["hit"], "")
-            self.assertEqual(rows["legacy"]["scientific_score_exclusion_reason"], "LEGACY_OUTCOME_WITHOUT_EXPLICIT_SETTLEMENT_ELIGIBILITY")
+            self.assertEqual(rows["legacy"]["hit"], "1")
+            self.assertTrue(eligibility_rows["exact"]["scientific_score_eligible"])
+            self.assertFalse(eligibility_rows["legacy"]["scientific_score_eligible"])
+            self.assertEqual(eligibility_rows["legacy"]["scientific_score_exclusion_reason"], "LEGACY_OUTCOME_WITHOUT_EXPLICIT_SETTLEMENT_ELIGIBILITY")
+            self.assertEqual(eligibility_doc["legacy_calibration_csv_role"], "DESCRIPTIVE_BACKWARD_COMPATIBILITY_ONLY")
 
 
 if __name__ == "__main__":
