@@ -1,0 +1,44 @@
+{
+  "contract": "BUILDWITHCLAUDE_SHADOW_LIFECYCLE_v1",
+  "recorded_at_utc": "2026-09-02T16:10:00Z",
+  "authority": "RESEARCH_ONLY_NON_CANONICAL",
+  "canonical_effect": false,
+  "portfolio_execution": false,
+  "decision": "CONTINUE_SHADOW_EVENT_DRIVEN_NO_WEEKLY_WRITER",
+  "status": "SHADOW_CANDIDATES_UNPROMOTED",
+  "promotion_permitted": false,
+  "weekly_direct_main_writer_active": false,
+  "event_driven_observer_active": true,
+  "evidence": {
+    "initial_lab_row": "INITIAL_LAB_EVIDENCE_v1.json",
+    "initial_lab_status": "PASS_SYNTHETIC_ONLY",
+    "prospective_rows": 2,
+    "distinct_real_change_target_versions": 1,
+    "observed_target_sha256": "872b13e5721b0d86d36df4a952ba4557aaa1b730a009176008cc375e32264346",
+    "promotion_gate_met": false,
+    "interpretation": "The two persisted prospective rows observe the same target SHA and therefore measure stability/runtime variance rather than two independent real-change observations."
+  },
+  "incident": {
+    "workflow_run_id": 33549173743,
+    "classification": "FALSE_RED_TRIGGER_POLLUTION",
+    "candidate_execution_reached": false,
+    "failure_step": "Pre-flight shadow scope guardrail",
+    "cause": "The broad scripts/research/shadow_* trigger matched unrelated Shadow Registry changes."
+  },
+  "remediation": [
+    "Replace broad BuildWithClaude shadow trigger with exact candidate-owned script paths.",
+    "Replace broad scripts/research/shadow_ guardrail allow-prefix with exact candidate-owned script paths.",
+    "Add namespace regression checks proving Shadow Registry scripts are outside BuildWithClaude admission scope.",
+    "Remove scheduled contents-write weekly evidence materialization and retain a read-only ledger validation gate.",
+    "Retain the existing event-driven prospective observer as artifact-only research evidence generation.",
+    "Do not promote any Round 1 candidate until its preregistered promotion gate is met and separately reviewed."
+  ],
+  "scope_exclusions": [
+    "forecast ratification",
+    "forecast candidate lifecycle",
+    "exact settlement",
+    "historical forecast outcome supersession or replay",
+    "continuity-learning forecast ordering",
+    "PR #725 and fix/forecast-ratification-throughput-20260902"
+  ]
+}
