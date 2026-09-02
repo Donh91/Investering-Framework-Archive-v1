@@ -47,7 +47,7 @@ jobs:
         run: |
           python tests/learning/test_accountability_loop_v1.py -q
           python tests/learning/test_historical_replay_guard.py -q
-          python tests/learning/test_forecast_outcome_supersession.py -q
+          python tests/learning/test_forecast_outcome_supersession_replay.py -q
       - name: Production workflow skill boundary guard
         run: |
           python - <<'PY'
