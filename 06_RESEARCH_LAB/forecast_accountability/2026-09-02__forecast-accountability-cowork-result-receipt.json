@@ -1,0 +1,85 @@
+{
+  "contract": "FORECAST_ACCOUNTABILITY_COWORK_RESULT_RECEIPT_v1",
+  "created_at_utc": "2026-09-02T08:30:00Z",
+  "source_run": {
+    "run_id": "FORECAST_ACCOUNTABILITY_RUN_v1",
+    "result_zip_sha256": "03654dbda65934bde71d2fc0a4dc27f6c2fdd3c6106ef6d68c26f0b9cfb340c1",
+    "result_zip_bytes": 131958,
+    "manifest_members_verified": 12,
+    "manifest_members_failed": 0,
+    "source_authority": "PROPOSAL_FOR_RATIFICATION"
+  },
+  "pinned_source_targets": {
+    "control_plane": "995e6570e263b6ab6ad5ebad72a46a45e3b498d4",
+    "execution_plane": "6a4d9f0754d857b45a6f22327ea0317eaa287a97"
+  },
+  "independently_rechecked_headlines": {
+    "shadow_ledger_rows": 274,
+    "replication_rows": 188,
+    "replication_agree": 175,
+    "replication_disagree": 13,
+    "replication_disagreement_rate": 0.069149,
+    "framework_evidence_lag_hours": {
+      "median": 2.23,
+      "p95": 5.31,
+      "max": 6.85
+    },
+    "framework_own_evidence_timestamp_agreement": "187/188",
+    "g3": "FAIL",
+    "g4": "FAIL",
+    "skill_status": "BLOCKED_PENDING_RESOLVER_ADJUDICATION",
+    "power_status": "UNDERPOWERED"
+  },
+  "accepted_findings": [
+    {
+      "id": "FA-001",
+      "severity": "P0",
+      "finding": "Outcome settlement uses first eligible capture after outcome_due_utc, so publication/scheduling lag can change the market observation being scored.",
+      "current_main_reproduced": true,
+      "disposition": "REMEDIATE"
+    },
+    {
+      "id": "FA-002",
+      "severity": "P0",
+      "finding": "Execution receipts previously conflated structural transport with independent replication for empty FORECAST_TEST requests.",
+      "current_main_reproduced": false,
+      "disposition": "REMEDIATED_EXECUTION_PLANE_PR_8"
+    },
+    {
+      "id": "FA-003",
+      "severity": "P1",
+      "finding": "Write-once historical outcomes can preserve verdicts produced by a superseded resolver and require an append-only replay/supersession layer rather than destructive rewrite.",
+      "current_main_reproduced": true,
+      "disposition": "FOLLOW_ON_REPLAY_LAYER"
+    },
+    {
+      "id": "FA-004",
+      "severity": "P1",
+      "finding": "Pending/ratification throughput can materially alter the evaluated forecast population; the 23 observed UP candidates were all outside the frozen/scored family.",
+      "current_main_reproduced": true,
+      "disposition": "PROSPECTIVE_THROUGHPUT_AUDIT_ONLY_NO_RETROACTIVE_RATIFICATION"
+    }
+  ],
+  "review_corrections": [
+    {
+      "id": "RC-001",
+      "subject": "Brier interpretation",
+      "note": "A deterministic categorical forecast can be represented as 0/1 probability and scored by Brier. The supported limitation is narrower: the current forecast contract does not freeze graded ex-ante probabilities, so probabilistic calibration claims are not available. In-sample calibrated-constant Brier values are not accepted as skill evidence."
+    },
+    {
+      "id": "RC-002",
+      "subject": "effective N presentation",
+      "note": "The reported effective-N arithmetic is consistent with 11*1.074=11.81 and 14*1.090=15.26; a nearby displayed day-count table appears inconsistent. Participation-ratio effective N is retained as a heuristic power diagnostic, not a canonical statistical sample-size estimator."
+    }
+  ],
+  "remediation_boundary": {
+    "market_rule_change": false,
+    "threshold_change": false,
+    "model_weight_change": false,
+    "portfolio_action": false,
+    "historical_outcome_rewrite": false,
+    "retroactive_ratification": false,
+    "automatic_promotion": false
+  },
+  "authority": "RESEARCH_AND_ENGINEERING_REMEDIATION_EVIDENCE_ONLY"
+}

@@ -1,0 +1,36 @@
+name: Forecast Settlement Accountability Gate
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/learning/outcome_maturation_engine.py'
+      - 'scripts/learning/build_model_calibration_ledger.py'
+      - 'tests/learning/test_forecast_settlement_eligibility.py'
+      - '.github/workflows/forecast-settlement-accountability-gate.yml'
+      - '06_RESEARCH_LAB/forecast_accountability/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  settlement-accountability:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compile changed Python
+        run: |
+          python -m py_compile \
+            scripts/learning/outcome_maturation_engine.py \
+            scripts/learning/build_model_calibration_ledger.py \
+            tests/learning/test_forecast_settlement_eligibility.py
+      - name: Settlement eligibility regressions
+        run: python tests/learning/test_forecast_settlement_eligibility.py -v
+      - name: Existing accountability contract regressions
+        run: python tests/learning/test_accountability_loop_v1.py -q
+      - name: Historical replay guard
+        run: python tests/learning/test_historical_replay_guard.py -q
