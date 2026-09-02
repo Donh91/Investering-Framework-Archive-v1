@@ -149,7 +149,10 @@ class ForecastRatificationThroughputTests(unittest.TestCase):
         self.assertEqual(frozen["settlement_activation_semantics"], "FROZEN_AT_RATIFICATION_DECISION_PROSPECTIVE_ONLY")
         terminal = json.loads((self.terminals / "new-1.json").read_text())
         self.assertEqual(terminal["disposition"], "RATIFIED_AND_FROZEN")
-        self.assertEqual(terminal["baseline"]["selection_semantics"], "LATEST_IMMUTABLE_ARCHIVED_CAPTURE_AT_OR_BEFORE_OWNER_DECISION")
+        self.assertEqual(
+            terminal["baseline"]["selection_semantics"],
+            "FRESHEST_IMMUTABLE_ARCHIVED_CAPTURE_AT_OR_BEFORE_OWNER_DECISION_NO_METRIC_HISTORY_FALLBACK",
+        )
         self.assertFalse(terminal["outcome_data_read"])
 
     def test_reject_is_terminal_and_creates_no_forecast(self):
@@ -246,6 +249,7 @@ class ForecastRatificationThroughputTests(unittest.TestCase):
             datetime(2026, 9, 2, 11, 11, tzinfo=UTC),
         )
         self.assertEqual(result["status"], "FAIL")
+        self.assertFalse(result["pipeline_blocking"])
         self.assertIn("CANDIDATE_CREATED_AT_BACKDATED_OR_LATE_RECORDED", result["errors"][0]["error"])
         self.assertEqual(list(self.terminals.glob("*.json")), [])
 
@@ -261,6 +265,7 @@ class ForecastRatificationThroughputTests(unittest.TestCase):
             datetime(2026, 9, 2, 10, 21, tzinfo=UTC),
         )
         self.assertEqual(result["status"], "FAIL")
+        self.assertFalse(result["pipeline_blocking"])
         self.assertIn("RATIFICATION_PRECEDES_CANDIDATE_GIT_RECORD", result["errors"][0]["error"])
 
     def test_backdated_packet_fails_closed(self):
@@ -275,6 +280,7 @@ class ForecastRatificationThroughputTests(unittest.TestCase):
             datetime(2026, 9, 2, 10, 55, tzinfo=UTC),
         )
         self.assertEqual(result["status"], "FAIL")
+        self.assertFalse(result["pipeline_blocking"])
         self.assertIn("RATIFICATION_PACKET_BACKDATED_OR_LATE_RECORDED", result["errors"][0]["error"])
         self.assertEqual(list(self.terminals.glob("*.json")), [])
 
@@ -286,13 +292,16 @@ class ForecastRatificationThroughputTests(unittest.TestCase):
         packet["outcome_paths_read"] = ["research/api_agent/forecast_candidates/MATURED/ff.json"]
         self.write_packet(packet)
         self.commit("invalid leaking packet", "2026-09-02T10:21:00Z")
-        with self.assertRaisesRegex(ValueError, "RATIFICATION_OUTCOME_PATHS_MUST_BE_EMPTY"):
-            process(
-                self.pending, self.packets, self.terminals, self.frozen, self.captures, self.repo,
-                datetime(2026, 9, 2, 10, 30, tzinfo=UTC),
-            )
+        result = process(
+            self.pending, self.packets, self.terminals, self.frozen, self.captures, self.repo,
+            datetime(2026, 9, 2, 10, 30, tzinfo=UTC),
+        )
+        self.assertEqual(result["status"], "FAIL")
+        self.assertFalse(result["pipeline_blocking"])
+        self.assertTrue(any("RATIFICATION_OUTCOME_PATHS_MUST_BE_EMPTY" in row["error"] for row in result["errors"]))
+        self.assertEqual(list(self.frozen.glob("*.json")), [])
 
-    def test_multiple_packets_for_same_candidate_fail_closed(self):
+    def test_multiple_packets_for_same_candidate_fail_closed_without_global_abort(self):
         candidate = self.candidate(cid="multi-packet")
         self.write_candidate(candidate)
         self.commit("candidate", "2026-09-02T10:11:00Z")
@@ -300,11 +309,14 @@ class ForecastRatificationThroughputTests(unittest.TestCase):
         self.write_packet(packet, "a/multi-packet.json")
         self.write_packet(packet, "b/multi-packet.json")
         self.commit("duplicate packets", "2026-09-02T10:21:00Z")
-        with self.assertRaisesRegex(ValueError, "MULTIPLE_RATIFICATION_PACKETS"):
-            process(
-                self.pending, self.packets, self.terminals, self.frozen, self.captures, self.repo,
-                datetime(2026, 9, 2, 10, 30, tzinfo=UTC),
-            )
+        result = process(
+            self.pending, self.packets, self.terminals, self.frozen, self.captures, self.repo,
+            datetime(2026, 9, 2, 10, 30, tzinfo=UTC),
+        )
+        self.assertEqual(result["status"], "FAIL")
+        self.assertFalse(result["pipeline_blocking"])
+        self.assertTrue(any("MULTIPLE_RATIFICATION_PACKETS" in row["error"] for row in result["errors"]))
+        self.assertEqual(list(self.frozen.glob("*.json")), [])
 
     def test_queue_is_outcome_free_and_only_shows_live_post_cutover_candidates(self):
         legacy = self.candidate(cid="legacy-q", created="2026-09-01T23:34:00Z")
