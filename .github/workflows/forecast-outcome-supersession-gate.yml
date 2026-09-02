@@ -1,0 +1,81 @@
+name: Forecast Outcome Supersession Gate
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/learning/replay_superseded_forecast_outcomes.py'
+      - 'tests/learning/test_forecast_outcome_supersession_replay.py'
+      - '.github/workflows/framework-learning-operations.yml'
+      - '.github/workflows/forecast-outcome-supersession-gate.yml'
+      - '06_RESEARCH_LAB/forecast_accountability/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  supersession-replay:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compile replay modules
+        run: |
+          python -m py_compile \
+            scripts/learning/replay_superseded_forecast_outcomes.py \
+            tests/learning/test_forecast_outcome_supersession_replay.py
+      - name: Supersession replay regressions
+        run: python tests/learning/test_forecast_outcome_supersession_replay.py -v
+      - name: Existing exact-settlement owner regressions
+        run: python tests/learning/test_forecast_settlement_price_owner.py -q
+      - name: Existing exact maturation regressions
+        run: python tests/learning/test_mature_exact_settlement_forecasts.py -q
+      - name: Historical replay guard
+        run: python tests/learning/test_historical_replay_guard.py -q
+      - name: Live repository replay-population census without network
+        run: |
+          python - <<'PY'
+          import importlib.util, json
+          from pathlib import Path
+          root=Path('.')
+          path=root/'scripts/learning/replay_superseded_forecast_outcomes.py'
+          spec=importlib.util.spec_from_file_location('supersession',path)
+          mod=importlib.util.module_from_spec(spec); spec.loader.exec_module(mod)
+          forecast_root=root/'research/framework_memory/forecast_memory'
+          outcome_root=root/'research/framework_memory/outcome_memory'
+          counts={}; eligible=[]
+          for fp in sorted(forecast_root.rglob('*.json')):
+              forecast=json.loads(fp.read_text())
+              fid=forecast.get('forecast_id')
+              if not fid: continue
+              op=outcome_root/f'{fid}.json'
+              outcome=json.loads(op.read_text()) if op.exists() else None
+              ok,reason=mod.replay_population_eligible(forecast,outcome)
+              counts[reason]=counts.get(reason,0)+1
+              if ok: eligible.append(fid)
+          print(json.dumps({'counts':counts,'eligible_count':len(eligible),'first_eligible':eligible[:10]},sort_keys=True))
+          assert len(eligible) > 0, 'expected_nonempty_replay_population'
+          PY
+      - name: Production workflow safety guard
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          workflow=Path('.github/workflows/framework-learning-operations.yml').read_text()
+          marker='Replay superseded legacy price outcomes append-only'
+          assert marker in workflow
+          tail=workflow[workflow.index(marker):]
+          assert 'continue-on-error: true' in tail[:300]
+          assert '--max-new-replays 10' in tail
+          assert '--fixture-dir' not in tail
+          assert 'research/framework_memory/outcome_memory' in tail
+          assert 'research/framework_memory/outcome_replays' in tail
+          assert 'research/framework_memory/outcome_supersession' in tail
+          script=Path('scripts/learning/replay_superseded_forecast_outcomes.py').read_text()
+          assert 'selection_uses_original_verdict": False' in script
+          assert 'supersedes_without_mutating": True' in script
+          assert 'historical_outcome_rewrite": False' in script
+          assert 'attempted >= args.max_new_replays' in script
+          PY
