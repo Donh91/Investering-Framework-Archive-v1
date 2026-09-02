@@ -27,16 +27,12 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Materialize new forecast candidates
+      - name: Materialize forecast candidates and write census
         run: |
-          python - <<'PY'
-          import subprocess
-          from pathlib import Path
-          for out in Path('research/api_agent/outputs').rglob('DAILY_DIRECTOR_OUTPUT.json'):
-              receipt=out.with_name('DAILY_DIRECTOR_RECEIPT.json')
-              if receipt.exists():
-                  subprocess.run(['python','scripts/api_agent/materialize_forecast_candidates.py','--output',str(out),'--receipt',str(receipt),'--pending-root','research/api_agent/forecast_candidates/PENDING'],check=True)
-          PY
+          python scripts/learning/materialize_forecast_candidates_batch.py \
+            --outputs-root research/api_agent/outputs \
+            --pending-root research/api_agent/forecast_candidates/PENDING \
+            --census-output research/api_agent/forecast_candidates/LATEST_FORECAST_MATERIALIZATION_CENSUS.json
       - name: Process prospective owner ratification packets
         run: |
           mkdir -p research/api_agent/forecast_candidates/{RATIFICATION_INBOX,RATIFICATION_TERMINAL,FROZEN}
