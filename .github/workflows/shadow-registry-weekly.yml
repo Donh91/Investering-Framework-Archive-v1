@@ -7,6 +7,7 @@ on:
   workflow_dispatch:
 
 permissions:
+  actions: write
   contents: write
   pull-requests: write
 
@@ -36,6 +37,8 @@ jobs:
         run: |
           set -euo pipefail
           git rebase --abort 2>/dev/null || true
+          git config user.name 'framework-data-bot'
+          git config user.email 'framework-data-bot@users.noreply.github.com'
           week="$(python - <<'PY'
           from datetime import datetime, timezone
           y, w, _ = datetime.now(timezone.utc).isocalendar()
@@ -62,9 +65,9 @@ jobs:
         run: python scripts/research/shadow_registry_weekly.py
 
       - name: Run bounded runtime integrity tests
-        run: python -m pytest -q tests/research/test_shadow_registry_runtime_integrity.py
+        run: python -m pytest -q tests/research/test_shadow_registry_runtime_integrity.py tests/research/test_shadow_registry_workflow_governance.py
 
-      - name: Commit branch evidence and open reviewed PR
+      - name: Commit branch evidence, open reviewed PR, and require branch gates
         env:
           GH_TOKEN: ${{ github.token }}
           BRANCH: ${{ steps.branch.outputs.branch }}
@@ -72,8 +75,6 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          git config user.name 'framework-data-bot'
-          git config user.email 'framework-data-bot@users.noreply.github.com'
           git add 04_MARKET_LEARNING/shadow_registry/LATEST.json 04_MARKET_LEARNING/shadow_registry/weekly
           if ! git diff --cached --quiet; then
             git commit -m "learning: weekly shadow registry ${WEEK} run ${GITHUB_RUN_ID}"
@@ -83,19 +84,55 @@ jobs:
 
           existing="$(gh pr list --repo "$GITHUB_REPOSITORY" --head "$BRANCH" --base main --state open --json number --jq '.[0].number // empty')"
           if [ -n "$existing" ]; then
-            echo "SHADOW_REGISTRY_REVIEW_PR_EXISTS number=$existing branch=$BRANCH"
-            exit 0
+            pr_number="$existing"
+            echo "SHADOW_REGISTRY_REVIEW_PR_EXISTS number=$pr_number branch=$BRANCH"
+          else
+            if git diff --quiet origin/main...HEAD; then
+              echo 'SHADOW_REGISTRY_NO_CHANGE_NO_PR_REQUIRED'
+              exit 0
+            fi
+            pr_url="$(gh pr create \
+              --repo "$GITHUB_REPOSITORY" \
+              --base main \
+              --head "$BRANCH" \
+              --title "learning: Shadow Registry ${WEEK}" \
+              --body "Automated weekly Shadow Registry evidence candidate. Research-only, non-canonical. Weekly immutable snapshot plus LATEST refresh. This PR requires normal repository CI/review before merge; the scheduled workflow does not push these registry artifacts directly to main. Source workflow run: ${GITHUB_RUN_ID}.")"
+            pr_number="$(gh pr view "$pr_url" --repo "$GITHUB_REPOSITORY" --json number --jq '.number')"
+            echo "SHADOW_REGISTRY_REVIEW_PR_CREATED number=$pr_number url=$pr_url branch=$BRANCH"
           fi
 
-          if git diff --quiet origin/main...HEAD; then
-            echo 'SHADOW_REGISTRY_NO_CHANGE_NO_PR_REQUIRED'
-            exit 0
-          fi
+          expected_sha="$(git rev-parse HEAD)"
+          gate_summary=""
+          for wf in shadow-registry-gate.yml data-architecture-gate.yml storage-health-gate.yml; do
+            before="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow "$wf" --branch "$BRANCH" --event workflow_dispatch --limit 1 --json databaseId --jq '.[0].databaseId // 0')"
+            gh workflow run "$wf" --repo "$GITHUB_REPOSITORY" --ref "$BRANCH"
 
-          pr_url="$(gh pr create \
-            --repo "$GITHUB_REPOSITORY" \
-            --base main \
-            --head "$BRANCH" \
-            --title "learning: Shadow Registry ${WEEK}" \
-            --body "Automated weekly Shadow Registry evidence candidate. Research-only, non-canonical. Weekly immutable snapshot plus LATEST refresh. This PR requires normal repository CI/review before merge; the scheduled workflow does not push these registry artifacts directly to main. Source workflow run: ${GITHUB_RUN_ID}.")"
-          echo "SHADOW_REGISTRY_REVIEW_PR_CREATED url=$pr_url branch=$BRANCH"
+            run_id=""
+            for _ in $(seq 1 30); do
+              candidate="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow "$wf" --branch "$BRANCH" --event workflow_dispatch --limit 1 --json databaseId --jq '.[0].databaseId // 0')"
+              if [ "$candidate" != "0" ] && [ "$candidate" != "$before" ]; then
+                run_id="$candidate"
+                break
+              fi
+              sleep 2
+            done
+            if [ -z "$run_id" ]; then
+              echo "SHADOW_REGISTRY_GATE_DISPATCH_NOT_OBSERVED workflow=$wf" >&2
+              exit 1
+            fi
+
+            gh run watch "$run_id" --repo "$GITHUB_REPOSITORY" --exit-status
+            meta="$(gh run view "$run_id" --repo "$GITHUB_REPOSITORY" --json conclusion,event,headSha,status,url)"
+            actual_sha="$(printf '%s' "$meta" | jq -r '.headSha')"
+            conclusion="$(printf '%s' "$meta" | jq -r '.conclusion')"
+            event="$(printf '%s' "$meta" | jq -r '.event')"
+            url="$(printf '%s' "$meta" | jq -r '.url')"
+            if [ "$actual_sha" != "$expected_sha" ] || [ "$event" != "workflow_dispatch" ] || [ "$conclusion" != "success" ]; then
+              echo "SHADOW_REGISTRY_GATE_PROOF_INVALID workflow=$wf run=$run_id expected_sha=$expected_sha actual_sha=$actual_sha event=$event conclusion=$conclusion" >&2
+              exit 1
+            fi
+            gate_summary="${gate_summary}\n- ${wf}: PASS (${url})"
+          done
+
+          gh pr comment "$pr_number" --repo "$GITHUB_REPOSITORY" --body "Native Shadow Registry branch-gate proof for ${WEEK}. Exact head: \`${expected_sha}\`.${gate_summary}\n\nAll three workflow_dispatch gates completed SUCCESS against the exact automation-branch SHA. The pull_request-triggered copies may remain action_required when the PR itself was created by GITHUB_TOKEN; those copies are not treated as evidence."
+          echo "SHADOW_REGISTRY_NATIVE_BRANCH_GATES_PASS pr=$pr_number head=$expected_sha"
