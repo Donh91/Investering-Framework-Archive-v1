@@ -1,0 +1,50 @@
+{
+  "contract": "PDLT_LIFECYCLE_FREEZE_2026-09-02",
+  "experiment_id": "PDLT-v1.1-RUN",
+  "decision": "FREEZE_PRESERVE_NOT_RETIRE",
+  "status": "FROZEN_METHODS_BLOCKED_NO_ACTIVE_PROSPECTIVE_RUNTIME",
+  "authority": "SHADOW_RESEARCH_METHODS_ONLY",
+  "effective_from_main_sha": "1ad6217efde83ee1006c0f1157ec7bb71271bf06",
+  "evidence": {
+    "methods_contract_status": "PREEXECUTION_REPAIR_CODED_DISCOVERY_REMAINS_FROZEN",
+    "methods_verdict": "BLOCKED_STATISTICAL_IDENTIFIABILITY",
+    "frozen_model_present_on_main": false,
+    "pdlt_forecast_input_present_on_main": false,
+    "pdlt_outcome_store_present_on_main": false,
+    "daily_census_was_scheduled_direct_main_writer": true,
+    "maturation_was_scheduled_direct_main_writer": true,
+    "historical_bootstrap_had_latent_paid_push_trigger": true,
+    "new_cfgi_credits_authorized": 0,
+    "new_openai_usd_authorized": 0.0
+  },
+  "freeze_actions": {
+    "daily_census": "EXPECTED_BLOCK_READ_ONLY_NO_SCHEDULE",
+    "maturation": "EXPECTED_BLOCK_READ_ONLY_NO_SCHEDULE",
+    "historical_bootstrap": "EXPECTED_BLOCK_READ_ONLY_NO_PAID_TRIGGER",
+    "discovery": "UNCHANGED_EXPECTED_BLOCK",
+    "v1_1_workflow": "VALIDATION_ONLY_NO_PAID_OR_PROSPECTIVE_EXECUTION",
+    "historical_data": "PRESERVED",
+    "model_and_method_code": "PRESERVED_AND_TESTED"
+  },
+  "non_changes": {
+    "canonical_market_rules": true,
+    "market_thresholds": true,
+    "portfolio_authority": true,
+    "forecast_accountability_remediation": true,
+    "forecast_ratification": true,
+    "exact_settlement": true,
+    "historical_outcome_supersession": true,
+    "continuity_learning_ordering": true
+  },
+  "reopen_requirements": [
+    "GREEN_PDLT_RUNTIME_AND_ARCHITECTURE_CI",
+    "INDEPENDENT_REVIEW_OF_DISCOVERY_REPAIR",
+    "EXPLICIT_DECISION_ON_14D_DISTRIBUTION_SEMANTICS",
+    "LLM_SAMPLING_POLICY_OR_D_MINUS_C_DESCRIPTIVE_ONLY_FREEZE",
+    "FNP_METRICS_EXCLUDED_FROM_AUTOMATED_KILL_PROMOTION_UNTIL_EVALUATOR_EXISTS",
+    "EXPLICIT_NEW_CFGI_AND_OPENAI_BUDGET_AUTHORIZATION",
+    "FROZEN_MODEL_MATERIALIZED_WITH_PROVENANCE",
+    "PROSPECTIVE_RUNTIME_REOPENED_BY_REVIEWED_PR"
+  ],
+  "decision_rationale": "Preserve the research hypothesis and methods code, but stop zombie scheduled writes and paid execution while no admissible prospective model/input exists. Reopen only after the original methods blockers and explicit budget/provenance requirements are satisfied."
+}
