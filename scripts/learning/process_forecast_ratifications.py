@@ -14,8 +14,8 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "scripts" / "lib"))
 sys.path.insert(0, str(ROOT / "scripts" / "learning"))
 
-from forecast_candidate_grouping import classified_candidate_groups  # noqa: E402
-from forecast_ratification_baseline import select_archived_baseline  # noqa: E402
+from forecast_candidate_grouping import classified_candidate_groups_with_quarantine  # noqa: E402
+from forecast_ratification_baseline import MAX_BASELINE_AGE_MINUTES, select_archived_baseline  # noqa: E402
 from forecast_ratification_contract import (  # noqa: E402
     CANDIDATE_RECORDING_TOLERANCE_MINUTES,
     CUTOVER_COMMIT_SHA,
@@ -53,43 +53,119 @@ def read(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text())
 
 
-def index_packets(root: Path) -> dict[str, tuple[dict[str, Any], Path]]:
-    found: dict[str, tuple[dict[str, Any], Path]] = {}
-    for path in sorted(root.rglob("*.json")) if root.exists() else []:
-        value = read(path)
-        validate_packet_shape(value)
-        cid = str(value["candidate_id"])
-        if path.stem != cid:
-            raise ValueError(f"RATIFICATION_PACKET_FILENAME_MISMATCH:{path}")
-        if cid in found:
-            raise ValueError(f"MULTIPLE_RATIFICATION_PACKETS:{cid}")
-        found[cid] = (value, path)
-    return found
-
-
-def git_first_add_at(repo_root: Path, path: Path, label: str) -> datetime:
-    repo_root = repo_root.resolve()
+def _repo_relative(repo_root: Path, path: Path, label: str) -> str:
     try:
-        rel = path.resolve().relative_to(repo_root).as_posix()
+        return path.resolve().relative_to(repo_root.resolve()).as_posix()
     except ValueError as exc:
         raise ValueError(f"{label}_OUTSIDE_REPOSITORY") from exc
-    proc = subprocess.run(
-        ["git", "log", "--diff-filter=A", "--follow", "--reverse", "--format=%cI", "--", rel],
-        cwd=repo_root,
+
+
+def _git(repo_root: Path, args: list[str], *, text: bool = True) -> subprocess.CompletedProcess:
+    return subprocess.run(
+        ["git", *args],
+        cwd=repo_root.resolve(),
         capture_output=True,
-        text=True,
+        text=text,
         check=True,
     )
-    rows = [row.strip() for row in proc.stdout.splitlines() if row.strip()]
+
+
+def git_path_has_history(repo_root: Path, path: Path) -> bool:
+    rel = _repo_relative(repo_root, path, "GIT_PATH")
+    proc = _git(repo_root, ["log", "-1", "--format=%H", "--", rel])
+    return bool(str(proc.stdout).strip())
+
+
+def git_first_add_record(repo_root: Path, path: Path, label: str) -> tuple[datetime, str, str, bytes]:
+    """Return first-add time/commit/historical path/content for an immutable record.
+
+    `--follow` preserves rename ancestry. The first-add commit may contain the
+    file under an earlier directory, so resolve the added path from that commit
+    rather than assuming the current path existed there.
+    """
+    rel = _repo_relative(repo_root, path, label)
+    proc = _git(
+        repo_root,
+        ["log", "--diff-filter=A", "--follow", "--reverse", "--format=%H%x09%cI", "--", rel],
+    )
+    rows = [row.strip() for row in str(proc.stdout).splitlines() if row.strip()]
     if not rows:
         raise ValueError(f"{label}_NOT_GIT_RECORDED:{rel}")
-    return parse_dt(rows[0])
+    first = rows[0].split("\t", 1)
+    if len(first) != 2:
+        raise ValueError(f"{label}_GIT_FIRST_ADD_FORMAT_INVALID")
+    commit_sha, recorded_raw = first
+    recorded_at = parse_dt(recorded_raw)
+
+    diff = _git(repo_root, ["diff-tree", "--root", "--no-commit-id", "--name-status", "-r", commit_sha])
+    added_paths: list[str] = []
+    for line in str(diff.stdout).splitlines():
+        parts = line.split("\t")
+        if len(parts) >= 2 and parts[0] == "A":
+            added_paths.append(parts[-1])
+    if rel in added_paths:
+        historical_rel = rel
+    else:
+        same_name = [candidate for candidate in added_paths if Path(candidate).name == path.name]
+        if len(same_name) != 1:
+            raise ValueError(f"{label}_FIRST_ADD_PATH_AMBIGUOUS")
+        historical_rel = same_name[0]
+
+    blob = _git(repo_root, ["show", f"{commit_sha}:{historical_rel}"], text=False).stdout
+    if not isinstance(blob, (bytes, bytearray)):
+        raise ValueError(f"{label}_FIRST_ADD_CONTENT_UNAVAILABLE")
+    return recorded_at, commit_sha, historical_rel, bytes(blob)
+
+
+def validate_first_add_json_binding(repo_root: Path, path: Path, label: str, current: dict[str, Any]) -> tuple[datetime, str]:
+    recorded_at, commit_sha, _, first_blob = git_first_add_record(repo_root, path, label)
+    try:
+        first_value = json.loads(first_blob.decode("utf-8"))
+    except Exception as exc:
+        raise ValueError(f"{label}_FIRST_ADD_JSON_INVALID") from exc
+    if canon(first_value) != canon(current):
+        raise ValueError(f"{label}_CONTENT_CHANGED_AFTER_FIRST_ADD")
+    return recorded_at, commit_sha
+
+
+def index_packets_with_quarantine(root: Path) -> tuple[dict[str, tuple[dict[str, Any], Path]], set[str], list[dict[str, str]]]:
+    found: dict[str, tuple[dict[str, Any], Path]] = {}
+    blocked: set[str] = set()
+    quarantines: list[dict[str, str]] = []
+    for path in sorted(root.rglob("*.json")) if root.exists() else []:
+        inferred = path.stem
+        try:
+            value = read(path)
+        except Exception as exc:
+            blocked.add(inferred)
+            quarantines.append({"candidate_id": inferred, "path": path.as_posix(), "error": f"RATIFICATION_PACKET_JSON_INVALID:{exc}"})
+            continue
+        cid = str(value.get("candidate_id") or inferred)
+        try:
+            validate_packet_shape(value)
+            if path.stem != cid:
+                raise ValueError("RATIFICATION_PACKET_FILENAME_MISMATCH")
+        except Exception as exc:
+            blocked.add(cid)
+            quarantines.append({"candidate_id": cid, "path": path.as_posix(), "error": str(exc)})
+            continue
+        if cid in found:
+            blocked.add(cid)
+            previous = found.pop(cid)
+            quarantines.append({"candidate_id": cid, "path": previous[1].as_posix(), "error": "MULTIPLE_RATIFICATION_PACKETS"})
+            quarantines.append({"candidate_id": cid, "path": path.as_posix(), "error": "MULTIPLE_RATIFICATION_PACKETS"})
+            continue
+        if cid in blocked:
+            quarantines.append({"candidate_id": cid, "path": path.as_posix(), "error": "RATIFICATION_PACKET_ID_ALREADY_QUARANTINED"})
+            continue
+        found[cid] = (value, path)
+    return found, blocked, quarantines
 
 
 def validate_candidate_git_timing(candidate: dict[str, Any], candidate_paths: list[Path], repo_root: Path, now: datetime) -> datetime:
     if len(candidate_paths) != 1:
         raise ValueError("POST_CUTOVER_DUPLICATE_CANDIDATE_PATHS")
-    git_recorded_at = git_first_add_at(repo_root, candidate_paths[0], "CANDIDATE")
+    git_recorded_at, _ = validate_first_add_json_binding(repo_root, candidate_paths[0], "CANDIDATE", candidate)
     created = parse_dt(str(candidate["created_at_utc"]))
     delta = (git_recorded_at - created).total_seconds()
     if delta < 0:
@@ -168,6 +244,7 @@ def terminal_record(
         "decision_sla_minutes": DECISION_SLA_MINUTES,
         "candidate_recording_tolerance_minutes": CANDIDATE_RECORDING_TOLERANCE_MINUTES,
         "packet_recording_tolerance_minutes": PACKET_RECORDING_TOLERANCE_MINUTES,
+        "baseline_max_age_minutes": MAX_BASELINE_AGE_MINUTES,
         "historical_candidate_rewritten": False,
         "outcome_data_read": False,
         "authority": AUTHORITY,
@@ -191,7 +268,7 @@ def terminal_record(
             "path": baseline_path.as_posix(),
             "sha256": digest(baseline),
             "observed_at_utc": iso(ratifier.evidence_timestamp(baseline)),
-            "selection_semantics": "LATEST_IMMUTABLE_ARCHIVED_CAPTURE_AT_OR_BEFORE_OWNER_DECISION",
+            "selection_semantics": "FRESHEST_IMMUTABLE_ARCHIVED_CAPTURE_AT_OR_BEFORE_OWNER_DECISION_NO_METRIC_HISTORY_FALLBACK",
         }
     if frozen is not None and frozen_path is not None:
         value["frozen_forecast"] = {
@@ -208,11 +285,7 @@ def terminal_record(
 
 def legacy_divergent_terminal_record(group: dict[str, Any], now: datetime) -> dict[str, Any]:
     variants = [
-        {
-            "path": row["path"].as_posix(),
-            "sha256": row["sha256"],
-            "created_at_utc": row.get("created_at_utc"),
-        }
+        {"path": row["path"].as_posix(), "sha256": row["sha256"], "created_at_utc": row.get("created_at_utc")}
         for row in group["variants"]
     ]
     value: dict[str, Any] = {
@@ -233,6 +306,52 @@ def legacy_divergent_terminal_record(group: dict[str, Any], now: datetime) -> di
     }
     value["terminal_sha256"] = digest(value)
     return value
+
+
+def post_cutover_quarantine_terminal_record(quarantine: dict[str, Any], now: datetime) -> dict[str, Any]:
+    value: dict[str, Any] = {
+        "contract": RATIFICATION_TERMINAL_V1,
+        "candidate_id": quarantine["candidate_id"],
+        "candidate_sha256": None,
+        "candidate_paths": quarantine.get("paths", []),
+        "candidate_variants": quarantine.get("variants", []),
+        "terminal_at_utc": iso(now),
+        "disposition": "POST_CUTOVER_CANDIDATE_STRUCTURE_QUARANTINED",
+        "quarantine_reason": quarantine.get("error"),
+        "prospective_cutover_commit_sha": CUTOVER_COMMIT_SHA,
+        "historical_candidate_rewritten": False,
+        "outcome_data_read": False,
+        "ratification_allowed": False,
+        "authority": AUTHORITY,
+    }
+    value["terminal_sha256"] = digest(value)
+    return value
+
+
+def verify_terminal_self_hash(value: dict[str, Any]) -> None:
+    expected = value.get("terminal_sha256")
+    material = dict(value)
+    material.pop("terminal_sha256", None)
+    if expected != digest(material):
+        raise ValueError("RATIFICATION_TERMINAL_SELF_HASH_MISMATCH")
+
+
+def verify_existing_terminal(repo_root: Path, path: Path) -> str:
+    current = read(path)
+    verify_terminal_self_hash(current)
+    try:
+        _, _, _, first_blob = git_first_add_record(repo_root, path, "RATIFICATION_TERMINAL")
+    except ValueError as exc:
+        if "NOT_GIT_RECORDED" in str(exc):
+            return "LOCAL_PENDING_COMMIT"
+        raise
+    try:
+        first_value = json.loads(first_blob.decode("utf-8"))
+    except Exception as exc:
+        raise ValueError("RATIFICATION_TERMINAL_FIRST_ADD_JSON_INVALID") from exc
+    if canon(first_value) != canon(current):
+        raise ValueError("RATIFICATION_TERMINAL_CONTENT_CHANGED_AFTER_FIRST_ADD")
+    return "GIT_BOUND"
 
 
 def write_terminal(path: Path, value: dict[str, Any]) -> str:
@@ -262,16 +381,38 @@ def process(
     repo_root: Path,
     now: datetime,
 ) -> dict[str, Any]:
-    groups = classified_candidate_groups(pending_root)
-    packets = index_packets(packet_root)
+    groups, group_quarantines = classified_candidate_groups_with_quarantine(pending_root)
+    packets, blocked_packet_ids, packet_quarantines = index_packets_with_quarantine(packet_root)
     counts: dict[str, int] = {}
-    errors: list[dict[str, str]] = []
+    errors: list[dict[str, str]] = [
+        {"candidate_id": str(row.get("candidate_id") or "UNKNOWN"), "error": str(row.get("error") or "STRUCTURE_QUARANTINED")}
+        for row in [*group_quarantines, *packet_quarantines]
+    ]
+
+    # Persist an append-only fail-closed terminal for identifiable prospective
+    # duplicate groups. Malformed single files remain quarantined by path only.
+    for quarantine in group_quarantines:
+        cid = str(quarantine.get("candidate_id") or "")
+        if not cid or not str(quarantine.get("error") or "").startswith("POST_CUTOVER_DUPLICATE_CANDIDATE_ID"):
+            continue
+        terminal_path = terminal_root / f"{cid}.json"
+        if not terminal_path.exists() and not git_path_has_history(repo_root, terminal_path):
+            write_terminal(terminal_path, post_cutover_quarantine_terminal_record(quarantine, now))
+            counts["POST_CUTOVER_CANDIDATE_STRUCTURE_QUARANTINED"] = counts.get("POST_CUTOVER_CANDIDATE_STRUCTURE_QUARANTINED", 0) + 1
 
     for cid, group in sorted(groups.items()):
         terminal_path = terminal_root / f"{cid}.json"
         if terminal_path.exists():
-            counts["ALREADY_TERMINAL"] = counts.get("ALREADY_TERMINAL", 0) + 1
+            try:
+                verify_existing_terminal(repo_root, terminal_path)
+                counts["ALREADY_TERMINAL"] = counts.get("ALREADY_TERMINAL", 0) + 1
+            except Exception as exc:
+                errors.append({"candidate_id": cid, "error": str(exc)})
             continue
+        if git_path_has_history(repo_root, terminal_path):
+            errors.append({"candidate_id": cid, "error": "RATIFICATION_TERMINAL_MISSING_BUT_GIT_RECORDED"})
+            continue
+
         try:
             classification = group["classification"]
             if classification == "LEGACY_PRE_CUTOVER_DIVERGENT_DUPLICATE":
@@ -288,6 +429,10 @@ def process(
                 counts["LEGACY_PRE_CUTOVER_HINDSIGHT_INELIGIBLE"] = counts.get("LEGACY_PRE_CUTOVER_HINDSIGHT_INELIGIBLE", 0) + 1
                 continue
 
+            if cid in blocked_packet_ids:
+                errors.append({"candidate_id": cid, "error": "RATIFICATION_PACKET_STRUCTURE_QUARANTINED"})
+                continue
+
             packet_row = packets.get(cid)
             deadline = decision_deadline(str(candidate["created_at_utc"]))
             if packet_row is None and now <= deadline:
@@ -297,30 +442,18 @@ def process(
             candidate_git_recorded = validate_candidate_git_timing(candidate, candidate_paths, repo_root, now)
 
             if packet_row is None:
-                terminal = terminal_record(
-                    candidate,
-                    candidate_paths,
-                    "EXPIRED_NO_OWNER_DECISION",
-                    now,
-                    candidate_git_recorded,
-                )
+                terminal = terminal_record(candidate, candidate_paths, "EXPIRED_NO_OWNER_DECISION", now, candidate_git_recorded)
                 write_terminal(terminal_path, terminal)
                 counts["EXPIRED_NO_OWNER_DECISION"] = counts.get("EXPIRED_NO_OWNER_DECISION", 0) + 1
                 continue
 
             packet, packet_path = packet_row
-            packet_git_recorded = git_first_add_at(repo_root, packet_path, "RATIFICATION_PACKET")
+            packet_git_recorded, _ = validate_first_add_json_binding(repo_root, packet_path, "RATIFICATION_PACKET", packet)
             decision_at = validate_packet_timing(candidate, packet, packet_git_recorded, candidate_git_recorded, now)
             if packet["decision"] == "REJECT":
                 terminal = terminal_record(
-                    candidate,
-                    candidate_paths,
-                    "REJECTED_BY_OWNER",
-                    now,
-                    candidate_git_recorded,
-                    packet,
-                    packet_path,
-                    packet_git_recorded,
+                    candidate, candidate_paths, "REJECTED_BY_OWNER", now, candidate_git_recorded,
+                    packet, packet_path, packet_git_recorded,
                 )
                 write_terminal(terminal_path, terminal)
                 counts["REJECTED_BY_OWNER"] = counts.get("REJECTED_BY_OWNER", 0) + 1
@@ -328,27 +461,10 @@ def process(
 
             metric = str((candidate.get("candidate") or {}).get("metric_path") or "")
             baseline_path, baseline, _ = select_baseline(capture_root, metric, decision_at)
-            status, frozen, frozen_path = ratifier.freeze_candidate(
-                candidate,
-                packet,
-                baseline,
-                baseline_path,
-                frozen_root,
-                None,
-            )
+            status, frozen, frozen_path = ratifier.freeze_candidate(candidate, packet, baseline, baseline_path, frozen_root, None)
             terminal = terminal_record(
-                candidate,
-                candidate_paths,
-                "RATIFIED_AND_FROZEN",
-                now,
-                candidate_git_recorded,
-                packet,
-                packet_path,
-                packet_git_recorded,
-                baseline_path,
-                baseline,
-                frozen,
-                frozen_path,
+                candidate, candidate_paths, "RATIFIED_AND_FROZEN", now, candidate_git_recorded,
+                packet, packet_path, packet_git_recorded, baseline_path, baseline, frozen, frozen_path,
             )
             write_terminal(terminal_path, terminal)
             counts["RATIFIED_AND_FROZEN"] = counts.get("RATIFIED_AND_FROZEN", 0) + 1
@@ -357,12 +473,14 @@ def process(
             errors.append({"candidate_id": cid, "error": str(exc)})
 
     orphan_packets = sorted(set(packets) - set(groups))
-    if orphan_packets:
-        errors.append({"candidate_id": "MULTIPLE", "error": "ORPHAN_RATIFICATION_PACKETS:" + ",".join(orphan_packets)})
+    for cid in orphan_packets:
+        errors.append({"candidate_id": cid, "error": "ORPHAN_RATIFICATION_PACKET"})
 
     return {
         "contract": "FORECAST_RATIFICATION_PROCESS_RUN_v1",
         "status": "FAIL" if errors else "PASS",
+        "pipeline_blocking": False,
+        "execution_disposition": "CONTINUE_WITH_QUARANTINE" if errors else "CONTINUE",
         "prospective_cutover_commit_sha": CUTOVER_COMMIT_SHA,
         "outcome_data_read": False,
         "counts": counts,
@@ -392,7 +510,7 @@ def main() -> None:
         now,
     )
     print(json.dumps(result, sort_keys=True))
-    if result["status"] != "PASS":
+    if result.get("pipeline_blocking"):
         raise SystemExit(2)
 
 
