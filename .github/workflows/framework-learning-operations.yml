@@ -56,11 +56,31 @@ jobs:
             --receipt-root research/experiment_lifecycle/receipts \
             --sync-output research/experiment_lifecycle/LATEST_EXPERIMENT_RECEIPT_SYNC.json \
             --allow-unavailable
-      - name: Mature due outcomes under strict contract
+      - name: Resolve exact settlement evidence
         run: |
-          mkdir -p research/framework_memory/{forecast_memory,outcome_memory}
-          python scripts/learning/outcome_maturation_engine.py \
+          mkdir -p research/framework_memory/{forecast_memory,outcome_memory,settlement_evidence,settlement_raw,settlement_bindings}
+          python scripts/learning/forecast_settlement_price_owner.py \
             --forecast-root research/framework_memory/forecast_memory \
+            --output-root research/framework_memory/settlement_evidence \
+            --raw-root research/framework_memory/settlement_raw
+      - name: Mature exact-settlement forecasts against forecast-bound evidence
+        run: |
+          python scripts/learning/mature_exact_settlement_forecasts.py \
+            --forecast-root research/framework_memory/forecast_memory \
+            --settlement-evidence-root research/framework_memory/settlement_evidence \
+            --output-root research/framework_memory/outcome_memory \
+            --binding-root research/framework_memory/settlement_bindings \
+            --repo-root . \
+            --max-evidence-lag-hours 24
+      - name: Build non-exact legacy maturation subset
+        run: |
+          python scripts/learning/build_non_exact_forecast_subset.py \
+            --forecast-root research/framework_memory/forecast_memory \
+            --output-root runtime/non-exact-forecast-subset
+      - name: Mature remaining due outcomes under strict legacy contract
+        run: |
+          python scripts/learning/outcome_maturation_engine.py \
+            --forecast-root runtime/non-exact-forecast-subset \
             --evidence-root 03_DAILY_CAPTURE_LOGS/captures \
             --output-root research/framework_memory/outcome_memory \
             --max-evidence-lag-hours 24

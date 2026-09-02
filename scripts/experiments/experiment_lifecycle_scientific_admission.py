@@ -4,11 +4,18 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
 import experiment_lifecycle as base
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
+from forecast_settlement_contract import (  # noqa: E402
+    SETTLEMENT_EXACT_TARGET_TIME_V1,
+    supports_exact_price_settlement,
+)
 
 UTC = timezone.utc
 ADMISSION_CONTRACT = "EXPERIMENT_SCIENTIFIC_ADMISSION_v1"
@@ -22,6 +29,19 @@ def canonical(value: Any) -> bytes:
 
 def digest(value: Any) -> str:
     return hashlib.sha256(canonical(value)).hexdigest()
+
+
+def apply_exact_settlement_contract(frozen: dict[str, Any]) -> dict[str, Any]:
+    """Freeze exact settlement only for newly created supported price forecasts."""
+    metric_path = str(frozen.get("metric_path") or "")
+    if not supports_exact_price_settlement(metric_path):
+        return frozen
+    existing = frozen.get("settlement_contract_version")
+    if existing not in (None, SETTLEMENT_EXACT_TARGET_TIME_V1):
+        raise ValueError(f"SETTLEMENT_CONTRACT_CONFLICT:{existing}")
+    frozen["settlement_contract_version"] = SETTLEMENT_EXACT_TARGET_TIME_V1
+    frozen["settlement_activation_semantics"] = "FROZEN_AT_CREATION_PROSPECTIVE_ONLY"
+    return frozen
 
 
 def canonical_metric(path: str | None) -> str | None:
@@ -309,6 +329,7 @@ def main() -> None:
                 "controls": {"always_wait": "ALWAYS_WAIT", "single_component_specs": spec["components"], "deterministic_placebo_direction": base.placebo(window), "control_freeze_time_utc": captured, "required_future_reviews": ["REDUNDANCY_COLLINEARITY", "NEGATIVE_CONTROL", "REGIME_STRATIFICATION", "LEAD_LAG_TIMELINESS", "FALSE_POSITIVE_FALSE_NEGATIVE_COST"]},
                 "authority": {"portfolio_action": False, "framework_state_change": False, "model_weight_change": False, "canonical_promotion": False},
             }
+            apply_exact_settlement_contract(frozen)
             if base.write_new(args.forecast_root / when.strftime("%Y/%m") / f"{forecast_id}.json", frozen):
                 new_forecasts += 1
 

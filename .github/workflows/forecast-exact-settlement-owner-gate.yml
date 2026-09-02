@@ -6,8 +6,13 @@ on:
       - 'scripts/lib/forecast_settlement_contract.py'
       - 'scripts/learning/forecast_settlement_price_owner.py'
       - 'scripts/learning/mature_exact_settlement_forecasts.py'
+      - 'scripts/learning/build_non_exact_forecast_subset.py'
+      - 'scripts/experiments/experiment_lifecycle_scientific_admission.py'
       - 'tests/learning/test_forecast_settlement_price_owner.py'
       - 'tests/learning/test_mature_exact_settlement_forecasts.py'
+      - 'tests/learning/test_build_non_exact_forecast_subset.py'
+      - 'tests/experiments/test_exact_settlement_producer.py'
+      - '.github/workflows/framework-learning-operations.yml'
       - '.github/workflows/forecast-exact-settlement-owner-gate.yml'
       - '06_RESEARCH_LAB/forecast_accountability/**'
   workflow_dispatch:
@@ -24,18 +29,26 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Compile settlement modules
+      - name: Compile settlement and producer modules
         run: |
           python -m py_compile \
             scripts/lib/forecast_settlement_contract.py \
             scripts/learning/forecast_settlement_price_owner.py \
             scripts/learning/mature_exact_settlement_forecasts.py \
+            scripts/learning/build_non_exact_forecast_subset.py \
+            scripts/experiments/experiment_lifecycle_scientific_admission.py \
             tests/learning/test_forecast_settlement_price_owner.py \
-            tests/learning/test_mature_exact_settlement_forecasts.py
+            tests/learning/test_mature_exact_settlement_forecasts.py \
+            tests/learning/test_build_non_exact_forecast_subset.py \
+            tests/experiments/test_exact_settlement_producer.py
       - name: Price owner regressions
         run: python tests/learning/test_forecast_settlement_price_owner.py -v
       - name: Exact maturation wrapper regressions
         run: python tests/learning/test_mature_exact_settlement_forecasts.py -v
+      - name: Prospective producer freeze regressions
+        run: python tests/experiments/test_exact_settlement_producer.py -v
+      - name: Legacy subset isolation regressions
+        run: python tests/learning/test_build_non_exact_forecast_subset.py -v
       - name: Settlement eligibility regressions
         run: python tests/learning/test_forecast_settlement_eligibility.py -v
       - name: Existing accountability contract regressions
@@ -57,4 +70,17 @@ jobs:
           assert owner.SETTLEMENT_CONTRACT == contract.SETTLEMENT_EXACT_TARGET_TIME_V1
           assert owner.EVIDENCE_CONTRACT == contract.SETTLEMENT_EVIDENCE_V1
           assert owner.OWNER_CONTRACT == contract.SETTLEMENT_PRICE_OWNER_V1
+          PY
+      - name: Workflow isolation guard
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          workflow=Path('.github/workflows/framework-learning-operations.yml').read_text()
+          assert 'forecast_settlement_price_owner.py' in workflow
+          assert 'mature_exact_settlement_forecasts.py' in workflow
+          assert 'build_non_exact_forecast_subset.py' in workflow
+          assert '--forecast-root runtime/non-exact-forecast-subset' in workflow
+          producer=Path('scripts/experiments/experiment_lifecycle_scientific_admission.py').read_text()
+          assert 'apply_exact_settlement_contract(frozen)' in producer
+          assert producer.index('apply_exact_settlement_contract(frozen)') < producer.index('base.write_new(args.forecast_root')
           PY

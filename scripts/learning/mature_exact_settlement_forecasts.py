@@ -113,6 +113,47 @@ def binding_for(forecast: dict[str, Any], evidence_path: Path, evidence: dict[st
     return binding
 
 
+def merge_engine_summary(total: dict[str, Any], row: dict[str, Any]) -> None:
+    for key in ("matured", "censored", "pending", "quarantined", "scientific_score_eligible", "scientific_score_excluded"):
+        total[key] = int(total.get(key, 0)) + int(row.get(key, 0))
+    total.setdefault("errors", []).extend(row.get("errors", []))
+
+
+def mature_one(
+    forecast: dict[str, Any], evidence: dict[str, Any] | None, output_root: Path,
+    repo_root: Path, now: datetime, max_evidence_lag_hours: float,
+) -> dict[str, Any]:
+    """Run the canonical engine with exactly one forecast and its own evidence.
+
+    Forecast-bound settlement evidence must never compete with another forecast's
+    evidence merely because the two horizons share the same target timestamp.
+    """
+    with tempfile.TemporaryDirectory() as td:
+        temp = Path(td)
+        forecast_root = temp / "forecasts"
+        evidence_root = temp / "evidence"
+        forecast_root.mkdir()
+        evidence_root.mkdir()
+        (forecast_root / f"{forecast['forecast_id']}.json").write_bytes(canon(forecast))
+        if evidence is not None:
+            (evidence_root / f"{forecast['forecast_id']}.json").write_bytes(canon(evidence))
+        command = [
+            sys.executable,
+            str(ENGINE),
+            "--forecast-root", str(forecast_root),
+            "--evidence-root", str(evidence_root),
+            "--output-root", str(output_root),
+            "--now-utc", now.isoformat().replace("+00:00", "Z"),
+            "--max-evidence-lag-hours", str(max_evidence_lag_hours),
+        ]
+        proc = subprocess.run(command, cwd=repo_root, capture_output=True, text=True)
+        if proc.returncode:
+            print(proc.stdout, end="")
+            print(proc.stderr, file=sys.stderr, end="")
+            raise RuntimeError(f"CANONICAL_MATURATION_FAILED:{forecast['forecast_id']}")
+        return json.loads(proc.stdout)
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--forecast-root", type=Path, required=True)
@@ -125,8 +166,8 @@ def main() -> None:
     args = ap.parse_args()
     now = parse_dt(args.now_utc) if args.now_utc else datetime.now(UTC)
     repo_root = args.repo_root.resolve()
-    eligible: list[tuple[Path, dict[str, Any], Path, dict[str, Any]]] = []
-    pending = 0
+    rows: list[tuple[Path, dict[str, Any], Path, dict[str, Any] | None, bool]] = []
+    pre_pending = 0
     errors: list[dict[str, str]] = []
 
     for path in sorted(args.forecast_root.rglob("*.json")) if args.forecast_root.exists() else []:
@@ -136,62 +177,54 @@ def main() -> None:
                 continue
             due = parse_dt(forecast["outcome_due_utc"])
             if now < due:
-                pending += 1
+                pre_pending += 1
                 continue
             outcome_path = args.output_root / f"{forecast['forecast_id']}.json"
             evidence_path = args.settlement_evidence_root / f"{forecast['forecast_id']}.json"
-            if outcome_path.exists():
-                if evidence_path.exists():
-                    evidence = read(evidence_path)
-                    validate_evidence(forecast, evidence, repo_root)
-                    eligible.append((path, forecast, evidence_path, evidence))
+            evidence: dict[str, Any] | None = None
+            if evidence_path.exists():
+                evidence = read(evidence_path)
+                validate_evidence(forecast, evidence, repo_root)
+            elif now <= due + timedelta(hours=args.max_evidence_lag_hours):
+                pre_pending += 1
                 continue
-            if not evidence_path.exists():
-                if now <= due + timedelta(hours=args.max_evidence_lag_hours):
-                    pending += 1
-                    continue
-                eligible.append((path, forecast, evidence_path, {}))
-                continue
-            evidence = read(evidence_path)
-            validate_evidence(forecast, evidence, repo_root)
-            eligible.append((path, forecast, evidence_path, evidence))
+            rows.append((path, forecast, evidence_path, evidence, outcome_path.exists()))
         except Exception as exc:
             errors.append({"path": str(path), "error": str(exc)})
 
     if errors:
-        print(json.dumps({"status": "FAIL", "pending": pending, "errors": errors}, sort_keys=True))
+        print(json.dumps({"status": "FAIL", "pending": pre_pending, "errors": errors}, sort_keys=True))
         raise SystemExit(2)
 
-    engine_summary: dict[str, Any] = {"matured": 0, "censored": 0, "pending": pending}
-    if eligible:
-        with tempfile.TemporaryDirectory() as td:
-            subset = Path(td) / "forecasts"
-            subset.mkdir(parents=True)
-            for source_path, forecast, _, _ in eligible:
-                destination = subset / source_path.name
-                destination.write_bytes(canon(forecast))
-            command = [
-                sys.executable,
-                str(ENGINE),
-                "--forecast-root", str(subset),
-                "--evidence-root", str(args.settlement_evidence_root),
-                "--output-root", str(args.output_root),
-                "--now-utc", now.isoformat().replace("+00:00", "Z"),
-                "--max-evidence-lag-hours", str(args.max_evidence_lag_hours),
-            ]
-            proc = subprocess.run(command, cwd=repo_root, capture_output=True, text=True)
-            if proc.returncode:
-                print(proc.stdout, end="")
-                print(proc.stderr, file=sys.stderr, end="")
-                raise SystemExit(proc.returncode)
-            engine_summary = json.loads(proc.stdout)
-            engine_summary["pending"] = int(engine_summary.get("pending", 0)) + pending
+    engine_summary: dict[str, Any] = {
+        "matured": 0,
+        "censored": 0,
+        "pending": pre_pending,
+        "quarantined": 0,
+        "scientific_score_eligible": 0,
+        "scientific_score_excluded": 0,
+        "errors": [],
+    }
+    for _, forecast, _, evidence, outcome_exists in rows:
+        if outcome_exists:
+            continue
+        try:
+            merge_engine_summary(
+                engine_summary,
+                mature_one(forecast, evidence, args.output_root, repo_root, now, args.max_evidence_lag_hours),
+            )
+        except Exception as exc:
+            errors.append({"forecast_id": str(forecast.get("forecast_id")), "error": str(exc)})
+
+    if errors:
+        print(json.dumps({"status": "FAIL", "engine": engine_summary, "errors": errors}, sort_keys=True))
+        raise SystemExit(2)
 
     bindings_created = 0
     args.binding_root.mkdir(parents=True, exist_ok=True)
-    for _, forecast, evidence_path, evidence in eligible:
+    for _, forecast, evidence_path, evidence, _ in rows:
         outcome_path = args.output_root / f"{forecast['forecast_id']}.json"
-        if not outcome_path.exists() or not evidence:
+        if not outcome_path.exists() or evidence is None:
             continue
         outcome = read(outcome_path)
         binding = binding_for(forecast, evidence_path, evidence, outcome_path, outcome)
@@ -208,6 +241,7 @@ def main() -> None:
         "status": "PASS",
         "engine": engine_summary,
         "bindings_created": bindings_created,
+        "forecast_bound_single_evidence_maturation": True,
         "authority": AUTHORITY,
     }, sort_keys=True))
 
