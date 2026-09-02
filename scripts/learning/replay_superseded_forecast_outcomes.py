@@ -263,6 +263,7 @@ def main() -> None:
     counts: dict[str, int] = {}
     errors: list[dict[str, str]] = []
     created = 0
+    attempted = 0
     for forecast_path in sorted(args.forecast_root.rglob("*.json")) if args.forecast_root.exists() else []:
         try:
             forecast = read(forecast_path)
@@ -278,9 +279,10 @@ def main() -> None:
             if (args.overlay_root / f"{forecast_id}.json").exists():
                 counts["DUPLICATE_NOOP"] = counts.get("DUPLICATE_NOOP", 0) + 1
                 continue
-            if created >= args.max_new_replays:
+            if attempted >= args.max_new_replays:
                 counts["DEFERRED_BATCH_LIMIT"] = counts.get("DEFERRED_BATCH_LIMIT", 0) + 1
                 continue
+            attempted += 1
             status = run_replay(
                 forecast_path,
                 original_outcome_path,
@@ -303,7 +305,9 @@ def main() -> None:
         "status": "FAIL" if errors else "PASS",
         "population_rule": "ALL_EXISTING_OUTCOME_BEARING_LEGACY_FORECASTS_IN_SUPPORTED_EXACT_PRICE_FAMILIES",
         "selection_uses_original_verdict": False,
-        "max_new_replays": args.max_new_replays,
+        "max_replay_attempts": args.max_new_replays,
+        "attempted_replays": attempted,
+        "created_overlays": created,
         "counts": counts,
         "errors": errors,
         "fixture_mode": args.fixture_dir is not None,
