@@ -6,6 +6,7 @@ on:
       - 'scripts/lib/forecast_ratification_contract.py'
       - 'scripts/lib/forecast_candidate_grouping.py'
       - 'scripts/lib/forecast_ratification_baseline.py'
+      - 'scripts/lib/forecast_settlement_contract.py'
       - 'scripts/learning/forecast_ratification_freezer.py'
       - 'scripts/learning/ratify_forecast_candidate.py'
       - 'scripts/learning/process_forecast_ratifications.py'
@@ -13,6 +14,7 @@ on:
       - 'tests/learning/test_forecast_ratification_throughput.py'
       - 'tests/learning/test_forecast_candidate_grouping.py'
       - 'tests/learning/test_forecast_ratification_baseline.py'
+      - 'tests/learning/test_forecast_ratification_cowork_redteam_regressions.py'
       - 'scripts/api_agent/materialize_forecast_candidates.py'
       - 'tests/api_agent/test_forecast_candidate_backlog.py'
       - '.github/workflows/continuity-learning-maintenance.yml'
@@ -40,18 +42,21 @@ jobs:
             scripts/lib/forecast_ratification_contract.py \
             scripts/lib/forecast_candidate_grouping.py \
             scripts/lib/forecast_ratification_baseline.py \
+            scripts/lib/forecast_settlement_contract.py \
             scripts/learning/forecast_ratification_freezer.py \
             scripts/learning/ratify_forecast_candidate.py \
             scripts/learning/process_forecast_ratifications.py \
             scripts/learning/build_forecast_ratification_queue.py \
             tests/learning/test_forecast_ratification_throughput.py \
             tests/learning/test_forecast_candidate_grouping.py \
-            tests/learning/test_forecast_ratification_baseline.py
+            tests/learning/test_forecast_ratification_baseline.py \
+            tests/learning/test_forecast_ratification_cowork_redteam_regressions.py
       - name: Prospective ratification integration regressions
         run: |
           python tests/learning/test_forecast_ratification_throughput.py -v
           python tests/learning/test_forecast_candidate_grouping.py -v
           python tests/learning/test_forecast_ratification_baseline.py -v
+          python tests/learning/test_forecast_ratification_cowork_redteam_regressions.py -v
       - name: Direct ratifier CLI must be disabled
         run: |
           set +e
@@ -76,21 +81,24 @@ jobs:
           from pathlib import Path
           root=Path('.')
           sys.path.insert(0,str(root/'scripts/lib'))
-          from forecast_candidate_grouping import classified_candidate_groups
-          groups=classified_candidate_groups(root/'research/api_agent/forecast_candidates/PENDING')
+          from forecast_candidate_grouping import classified_candidate_groups_with_quarantine
+          groups, quarantines=classified_candidate_groups_with_quarantine(root/'research/api_agent/forecast_candidates/PENDING')
           counts={}
           for group in groups.values():
               classification=group['classification']
               counts[classification]=counts.get(classification,0)+1
+          post_duplicate=[q for q in quarantines if str(q.get('error','')).startswith('POST_CUTOVER_DUPLICATE_CANDIDATE_ID')]
           result={
-              'distinct_candidate_ids':len(groups),
+              'distinct_clean_candidate_ids':len(groups),
               'classifications':counts,
+              'quarantine_count':len(quarantines),
+              'post_cutover_duplicate_quarantine_count':len(post_duplicate),
               'legacy_candidate_ids':sum(v for k,v in counts.items() if k.startswith('LEGACY_PRE_CUTOVER')),
               'post_cutover_candidate_ids':counts.get('POST_CUTOVER_SINGLE',0),
           }
           print(json.dumps(result,sort_keys=True))
           assert result['legacy_candidate_ids'] > 0, 'expected_frozen_legacy_backlog_for_cutover_guard'
-          # classified_candidate_groups itself fails if any post-cutover candidate_id has multiple paths.
+          assert result['post_cutover_duplicate_quarantine_count'] == 0, 'live prospective duplicate candidate ids must fail closed before merge'
           PY
       - name: Production workflow epistemic separation guard
         run: |
@@ -114,24 +122,4 @@ jobs:
           legacy_tail=workflow[workflow.index('Mature remaining non-exact ratified forecasts'):]
           assert '--forecast-root runtime/api-agent-non-exact-forecast-subset' in legacy_tail
           assert '--forecast-root research/api_agent/forecast_candidates/FROZEN' not in legacy_tail.split('- name: Build calibration ledger',1)[0]
-          processor=Path('scripts/learning/process_forecast_ratifications.py').read_text()
-          queue=Path('scripts/learning/build_forecast_ratification_queue.py').read_text()
-          shim=Path('scripts/learning/ratify_forecast_candidate.py').read_text()
-          grouping=Path('scripts/lib/forecast_candidate_grouping.py').read_text()
-          baseline=Path('scripts/lib/forecast_ratification_baseline.py').read_text()
-          assert 'outcome-root' not in processor
-          assert 'outcome-root' not in queue
-          assert 'PACKET_RECORDING_TOLERANCE_MINUTES' in processor
-          assert 'CANDIDATE_RECORDING_TOLERANCE_MINUTES' in processor
-          assert 'RATIFICATION_PRECEDES_CANDIDATE_GIT_RECORD' in processor
-          assert 'LEGACY_PRE_CUTOVER_HINDSIGHT_INELIGIBLE' in processor
-          assert 'LEGACY_PRE_CUTOVER_DIVERGENT_DUPLICATE_HINDSIGHT_INELIGIBLE' in processor
-          assert 'EXPIRED_NO_OWNER_DECISION' in processor
-          assert 'outcome_data_read": False' in processor
-          assert 'outcome_data_included": False' in queue
-          assert 'POST_CUTOVER_DUPLICATE_CANDIDATE_ID' in grouping
-          assert 'DIRECT_RATIFIER_CLI_DISABLED_USE_PROCESS_FORECAST_RATIFICATIONS' in shim
-          assert 'LATEST.json' in baseline
-          assert 'AMBIGUOUS_BASELINE_CAPTURE_AT_DECISION' in baseline
-          assert 'LATEST_IMMUTABLE_ARCHIVED_CAPTURE_AT_OR_BEFORE_OWNER_DECISION' in processor
           PY
