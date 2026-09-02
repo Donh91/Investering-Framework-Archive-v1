@@ -1,159 +1,297 @@
 # Automation Production Health
-Status: **RED**
-Generated: `2026-09-01T18:40:45.739911Z`
-Workflows: 117 local / 124 registered
+Status: **AMBER**
+Generated: `2026-09-02T05:52:56.743713Z`
+Workflows: 117 local / 0 registered
 Scheduled: 43
 Writers: 50
-GREEN / AMBER / RED: 97 / 18 / 2
+GREEN / AMBER / RED: 0 / 117 / 0
 
 ## Workflow matrix
 | Workflow | Lifecycle | Schedule | Writer | Last conclusion | Last run | Status | Findings |
 |---|---|---:|---:|---|---|---|---|
-| `adaptive-decision-miss-validation.yml` | `ACTIVE` | yes | yes | success | 2026-09-01T01:22:40Z | **GREEN** | None |
-| `adaptive-evidence-gap-gate.yml` | `ACTIVE` | no | no | success | 2026-08-28T20:06:33Z | **GREEN** | None |
-| `adaptive-evidence-gap.yml` | `ACTIVE` | yes | yes | success | 2026-09-01T00:48:46Z | **GREEN** | None |
-| `adaptive-gap-validation-gate.yml` | `ACTIVE` | no | no | success | 2026-08-26T14:16:58Z | **GREEN** | None |
-| `adaptive-rotation-cadence.yml` | `ACTIVE` | yes | yes | success | 2026-09-01T14:54:41Z | **GREEN** | None |
-| `api-agent-gateway-gate.yml` | `ACTIVE` | no | no | success | 2026-09-01T16:09:13Z | **GREEN** | None |
-| `automation-production-health-gate.yml` | `ACTIVE` | no | no | success | 2026-09-01T17:19:38Z | **GREEN** | None |
-| `automation-production-health.yml` | `ACTIVE` | yes | yes | in_progress | 2026-09-01T18:40:30Z | **GREEN** | None |
-| `autonomous-research-governance-gate.yml` | `ACTIVE` | no | no | success | 2026-08-23T11:29:50Z | **GREEN** | None |
-| `autonomous-research-governance-loop.yml` | `ACTIVE` | yes | yes | success | 2026-09-01T10:15:58Z | **GREEN** | None |
-| `backtest-engine-foundation.yml` | `ACTIVE` | no | no | success | 2026-08-09T17:25:05Z | **AMBER** | RECOVERING_AFTER_RECENT_FAILURES |
-| `backtest-readiness-contracts.yml` | `ACTIVE` | no | no | success | 2026-07-30T18:08:16Z | **GREEN** | None |
-| `backtest-wave1-2-foundation.yml` | `ACTIVE` | no | no | success | 2026-08-09T17:25:05Z | **AMBER** | RECOVERING_AFTER_RECENT_FAILURES |
-| `backtest-wave1-3-authority-lineage.yml` | `ACTIVE` | no | no | success | 2026-07-28T16:15:15Z | **GREEN** | None |
-| `backtest-wave1-4-prospective.yml` | `ACTIVE` | yes | no | success | 2026-08-31T21:02:02Z | **GREEN** | None |
-| `binance-spot-owner-manual.yml` | `ACTIVE` | no | no | success | 2026-08-01T19:31:36Z | **GREEN** | None |
-| `binance-usdm-owner-manual.yml` | `ACTIVE` | no | no | success | 2026-07-31T20:51:59Z | **GREEN** | None |
-| `buildwithclaude-shadow-evidence-ledger.yml` | `ACTIVE` | yes | yes | success | 2026-08-31T01:33:14Z | **GREEN** | None |
-| `buildwithclaude-shadow-prospective-observer.yml` | `ACTIVE` | no | no | success | 2026-08-23T15:24:40Z | **GREEN** | None |
-| `buildwithclaude-shadow-round1.yml` | `ACTIVE` | no | no | failure | 2026-08-31T03:20:45Z | **RED** | REPEATED_CONSECUTIVE_FAILURES |
-| `cfgi-recovery-launch-once.yml` | `ACTIVE` | no | no | success | 2026-08-23T07:25:36Z | **GREEN** | None |
-| `cfgi-recovery-launch-trigger.yml` | `ACTIVE` | no | yes | skipped | 2026-09-01T17:19:54Z | **GREEN** | None |
-| `cfgi-v3-launch-receipt-publish.yml` | `ACTIVE` | no | yes | success | 2026-08-23T07:24:14Z | **GREEN** | None |
-| `codex-intake-dispatch.yml` | `ACTIVE` | no | no | success | 2026-09-01T16:28:17Z | **GREEN** | None |
-| `continuity-learning-gate.yml` | `ACTIVE` | no | no | success | 2026-09-01T16:09:13Z | **GREEN** | None |
-| `continuity-learning-maintenance.yml` | `ACTIVE` | yes | yes | success | 2026-09-01T00:47:17Z | **AMBER** | RECOVERING_AFTER_RECENT_FAILURES |
-| `cowork-historical-altseason-bundle-gate.yml` | `ACTIVE` | no | no | success | 2026-08-21T09:47:00Z | **GREEN** | None |
-| `cowork-historical-altseason-bundle-receipt.yml` | `ACTIVE` | no | yes | success | 2026-08-21T09:47:59Z | **GREEN** | None |
-| `cowork-historical-altseason-bundle.yml` | `ACTIVE` | no | no | success | 2026-08-21T09:47:47Z | **GREEN** | None |
-| `cross-repo-agent-context-gate.yml` | `ACTIVE` | no | no | success | 2026-08-31T00:58:50Z | **GREEN** | None |
-| `cycle-navigator-autonomous-calibration-gate.yml` | `ACTIVE` | no | no | success | 2026-08-22T19:38:07Z | **GREEN** | None |
-| `cycle-navigator-autonomous-calibration-loop.yml` | `ACTIVE` | yes | yes | success | 2026-08-31T14:06:12Z | **GREEN** | None |
-| `cycle-navigator-weekly-publication.yml` | `ACTIVE` | yes | yes | success | 2026-09-01T17:15:21Z | **GREEN** | None |
-| `daily-capture-architecture-gate.yml` | `ACTIVE` | no | no | success | 2026-09-01T16:05:46Z | **GREEN** | None |
-| `daily-director-shadow.yml` | `ACTIVE` | yes | yes | success | 2026-09-01T16:15:24Z | **AMBER** | SCHEDULE_STALE |
-| `daily-machine-throughput-gate.yml` | `ACTIVE` | no | no | success | 2026-08-28T16:53:47Z | **GREEN** | None |
-| `daily-machine-throughput.yml` | `ACTIVE` | yes | yes | success | 2026-09-01T01:26:39Z | **GREEN** | None |
-| `daily-raw-owner-capture.yml` | `ACTIVE` | yes | yes | success | 2026-09-01T16:37:13Z | **GREEN** | None |
-| `daily-settled-etf-calibration.yml` | `ACTIVE` | yes | yes | success | 2026-09-01T11:33:34Z | **GREEN** | None |
-| `daily-slow-cycle-shadow.yml` | `ACTIVE` | yes | yes | success | 2026-09-01T09:34:21Z | **AMBER** | RECOVERING_AFTER_RECENT_FAILURES |
-| `daily-stablecoin-liquidity.yml` | `ACTIVE` | yes | yes | success | 2026-09-01T10:13:53Z | **GREEN** | None |
-| `data-architecture-gate.yml` | `ACTIVE` | no | no | success | 2026-09-01T17:33:10Z | **GREEN** | None |
-| `data-terminal-shadow-manual.yml` | `ACTIVE` | no | no | success | 2026-09-01T16:25:41Z | **AMBER** | RECOVERING_AFTER_RECENT_FAILURES |
-| `dataset-registry-gate.yml` | `ACTIVE` | no | no | success | 2026-07-31T20:51:59Z | **GREEN** | None |
-| `entry-signal-ledger-gate.yml` | `ACTIVE` | no | no | success | 2026-08-31T04:22:57Z | **AMBER** | RECOVERING_AFTER_RECENT_FAILURES |
-| `entry-signal-ledger.yml` | `ACTIVE` | yes | yes | success | 2026-09-01T15:34:34Z | **AMBER** | RECOVERING_AFTER_RECENT_FAILURES |
-| `ethbtc-persistence-lifecycle.yml` | `ACTIVE` | no | yes | success | 2026-08-27T15:26:37Z | **GREEN** | None |
-| `evidence-closure-gate.yml` | `ACTIVE` | no | no | success | 2026-08-29T08:17:32Z | **GREEN** | None |
-| `evidence-lifecycle-observability-gate.yml` | `ACTIVE` | no | no | success | 2026-08-31T04:28:06Z | **GREEN** | None |
-| `evidence-lifecycle-store-health.yml` | `ACTIVE` | yes | no | success | 2026-09-01T08:40:53Z | **GREEN** | None |
-| `experiment-lifecycle-gate.yml` | `ACTIVE` | no | no | success | 2026-09-01T16:09:13Z | **GREEN** | None |
-| `fetch_btc_d_cmc_free.yml` | `ACTIVE` | no | no | success | 2026-07-12T00:09:38Z | **GREEN** | None |
-| `framework-learning-operations.yml` | `ACTIVE` | yes | yes | success | 2026-09-01T06:15:52Z | **GREEN** | None |
-| `full-architecture-1to7-gate.yml` | `ACTIVE` | no | no | success | 2026-09-01T17:19:38Z | **GREEN** | None |
-| `historical-altseason-cfgi-enrichment.yml` | `RETIRED` | no | no | failure | 2026-08-23T05:18:07Z | **AMBER** | RETIRED_WORKFLOW_LOCAL_FILE_PRESENT |
-| `historical-altseason-cfgi-publish.yml` | `ACTIVE` | no | yes | success | 2026-08-21T08:08:20Z | **GREEN** | None |
-| `historical-altseason-cfgi-reservation.yml` | `RETIRED` | no | no | success | 2026-08-31T06:28:37Z | **AMBER** | RETIRED_WORKFLOW_LOCAL_FILE_PRESENT |
-| `historical-altseason-cfgi-run-audit.yml` | `ACTIVE` | no | yes | success | 2026-08-31T06:12:32Z | **GREEN** | None |
-| `historical-altseason-cfgi-terminal-finalize.yml` | `ACTIVE` | no | no | success | 2026-08-21T13:55:43Z | **GREEN** | None |
-| `historical-altseason-cfgi-terminal-publish.yml` | `ACTIVE` | no | yes | success | 2026-08-21T13:55:57Z | **GREEN** | None |
-| `historical-altseason-free-bootstrap.yml` | `ACTIVE` | no | no | success | 2026-08-31T06:12:32Z | **GREEN** | None |
-| `historical-altseason-free-publish-regression-gate.yml` | `ACTIVE` | no | no | success | 2026-08-21T13:54:37Z | **GREEN** | None |
-| `historical-altseason-free-publish.yml` | `ACTIVE` | no | yes | success | 2026-08-31T06:28:20Z | **GREEN** | None |
-| `historical-altseason-lab-gate.yml` | `ACTIVE` | no | no | success | 2026-08-31T06:12:20Z | **AMBER** | ARTIFACT_RETENTION_UNBOUNDED |
-| `historical-altseason-throughput-gate.yml` | `ACTIVE` | no | no | success | 2026-08-27T15:43:00Z | **AMBER** | RECOVERING_AFTER_RECENT_FAILURES |
-| `hourly-sequence-capture.yml` | `ACTIVE` | yes | yes | success | 2026-09-01T17:17:49Z | **GREEN** | None |
-| `intraday-execution-gate.yml` | `ACTIVE` | no | no | success | 2026-08-31T07:26:23Z | **GREEN** | None |
-| `intraday-execution-research.yml` | `ACTIVE` | no | yes | success | 2026-08-31T00:03:54Z | **GREEN** | None |
-| `legacy-knowledge-bootstrap-gate.yml` | `ACTIVE` | no | no | success | 2026-08-04T19:08:35Z | **GREEN** | None |
-| `mar_wp04c4_gate.yml` | `ACTIVE` | no | no | success | 2026-07-31T01:41:02Z | **GREEN** | None |
-| `master-monday-preflight-gate.yml` | `ACTIVE` | no | no | success | 2026-08-31T07:26:18Z | **GREEN** | None |
-| `master-monday-remaining-gaps.yml` | `ACTIVE` | yes | yes | success | 2026-08-31T11:13:56Z | **GREEN** | None |
-| `okx-swap-owner-manual.yml` | `ACTIVE` | no | no | success | 2026-07-31T20:51:59Z | **GREEN** | None |
-| `operations-dashboard-gate.yml` | `ACTIVE` | no | no | success | 2026-08-27T15:43:00Z | **AMBER** | RECOVERING_AFTER_RECENT_FAILURES |
-| `operations-dashboard.yml` | `ACTIVE` | yes | yes | success | 2026-09-01T09:17:12Z | **GREEN** | None |
-| `operations-recovery-launch-once.yml` | `ACTIVE` | no | no | success | 2026-08-31T16:26:39Z | **GREEN** | None |
-| `owner-bound-daily-director-manual.yml` | `ACTIVE` | no | no | success | 2026-09-01T16:09:13Z | **GREEN** | None |
-| `pdf-inspector-ingestion.yml` | `ACTIVE` | no | no | success | 2026-08-02T18:16:02Z | **GREEN** | None |
-| `pdlt-bootstrap-once.yml` | `ACTIVE` | no | no | skipped | 2026-08-10T15:36:07Z | **GREEN** | None |
-| `pdlt-daily-census.yml` | `ACTIVE` | yes | yes | cancelled | 2026-09-01T00:48:45Z | **RED** | LATEST_RUN_FAILED |
-| `pdlt-discovery-once.yml` | `EXPECTED_BLOCK` | no | no | failure | 2026-08-09T19:58:23Z | **AMBER** | EXPECTED_BLOCK |
-| `pdlt-maturation.yml` | `ACTIVE` | yes | yes | success | 2026-09-01T01:19:01Z | **GREEN** | None |
-| `pdlt-runtime-gate.yml` | `ACTIVE` | no | no | success | 2026-08-10T20:05:49Z | **GREEN** | None |
-| `pdlt-v1-1.yml` | `ACTIVE` | no | no | success | 2026-08-10T15:36:09Z | **GREEN** | None |
-| `phase4-no-hindsight-replay.yml` | `ACTIVE` | no | no | success | 2026-08-23T17:53:27Z | **GREEN** | None |
-| `pullback-learning-gate.yml` | `ACTIVE` | no | no | success | 2026-08-31T02:53:56Z | **AMBER** | RECOVERING_AFTER_RECENT_FAILURES |
-| `pullback-learning-ledger.yml` | `ACTIVE` | yes | yes | success | 2026-09-01T15:13:50Z | **GREEN** | None |
-| `remediation-maturation-gate.yml` | `ACTIVE` | no | no | success | 2026-08-31T00:58:50Z | **GREEN** | None |
-| `remediation-maturation.yml` | `ACTIVE` | yes | yes | success | 2026-09-01T16:28:23Z | **GREEN** | None |
-| `research-execution-coordinator.yml` | `ACTIVE` | yes | yes | success | 2026-09-01T12:31:25Z | **AMBER** | RECOVERING_AFTER_RECENT_FAILURES |
-| `research-owner-breadth-daily.yml` | `ACTIVE` | yes | yes | success | 2026-09-01T10:07:52Z | **GREEN** | None |
-| `research-owner-btcd-daily.yml` | `ACTIVE` | yes | yes | success | 2026-09-01T10:23:48Z | **GREEN** | None |
-| `rich-breadth-checkpoint.yml` | `ACTIVE` | yes | yes | success | 2026-09-01T13:32:22Z | **GREEN** | None |
-| `round3-contract-freeze-gate.yml` | `ACTIVE` | no | no | success | 2026-08-25T21:03:50Z | **GREEN** | None |
-| `round3-v2-materialization.yml` | `ACTIVE` | no | no | success | 2026-08-23T13:17:33Z | **GREEN** | None |
-| `sequential-research-queue.yml` | `ACTIVE` | yes | yes | success | 2026-09-01T11:47:57Z | **GREEN** | None |
-| `shadow-admission-ai-decider.yml` | `ACTIVE` | yes | yes | success | 2026-08-31T01:38:05Z | **GREEN** | None |
-| `shadow-registry-autonomous-portfolio-gate.yml` | `ACTIVE` | no | no | success | 2026-08-22T19:41:03Z | **GREEN** | None |
-| `shadow-registry-autonomous-portfolio-loop.yml` | `ACTIVE` | yes | yes | success | 2026-08-31T14:26:54Z | **GREEN** | None |
-| `shadow-registry-gate.yml` | `ACTIVE` | no | no | success | 2026-08-31T03:20:45Z | **GREEN** | None |
-| `shadow-registry-weekly.yml` | `ACTIVE` | yes | yes | success | 2026-08-31T11:49:03Z | **GREEN** | None |
-| `shared-row-prospective-evidence-loop.yml` | `ACTIVE` | yes | yes | success | 2026-09-01T15:12:38Z | **GREEN** | None |
-| `shared-row-tournament-research-gate.yml` | `ACTIVE` | no | no | success | 2026-08-31T03:20:45Z | **GREEN** | None |
-| `shared-row-tournament-weekly.yml` | `ACTIVE` | yes | yes | success | 2026-08-31T13:50:20Z | **GREEN** | None |
-| `situation-room-daily-static.yml` | `ACTIVE` | yes | yes | success | 2026-09-01T16:30:26Z | **GREEN** | None |
-| `situation-room-owner-live-gate.yml` | `ACTIVE` | no | no | success | 2026-09-01T16:30:25Z | **AMBER** | RECOVERING_AFTER_RECENT_FAILURES |
-| `source-provenance-recovery-gate.yml` | `ACTIVE` | no | no | success | 2026-08-23T11:29:50Z | **GREEN** | None |
-| `source-provenance-recovery-loop.yml` | `ACTIVE` | yes | yes | success | 2026-09-01T09:50:42Z | **GREEN** | None |
-| `specialist-architecture-gate.yml` | `ACTIVE` | no | no | success | 2026-08-23T11:29:50Z | **GREEN** | None |
-| `storage-health-gate.yml` | `ACTIVE` | no | no | success | 2026-09-01T17:33:10Z | **GREEN** | None |
-| `sunday-market-close-and-cfgi.yml` | `ACTIVE` | yes | yes | success | 2026-08-31T05:14:28Z | **AMBER** | RECOVERING_AFTER_RECENT_FAILURES |
-| `top100-breadth-owner-manual.yml` | `ACTIVE` | no | no | success | 2026-08-29T08:17:32Z | **GREEN** | None |
-| `unified-experimental-lifecycle-adjudication.yml` | `ACTIVE` | yes | yes | success | 2026-08-31T14:55:52Z | **GREEN** | None |
-| `validate_m3_forward_ledger.yml` | `ACTIVE` | no | no | none | none | **GREEN** | None |
-| `weekly-api-calibration-shadow.yml` | `ACTIVE` | yes | yes | success | 2026-08-31T06:02:03Z | **GREEN** | None |
-| `weekly-raw-calibration-bridge.yml` | `ACTIVE` | yes | yes | success | 2026-08-31T05:50:31Z | **GREEN** | None |
-| `weekly-sol-adversarial-review.yml` | `ACTIVE` | yes | yes | success | 2026-08-31T09:40:25Z | **GREEN** | None |
+| `adaptive-decision-miss-validation.yml` | `ACTIVE` | yes | yes | none | none | **AMBER** | NO_RUN_HISTORY, WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `adaptive-evidence-gap-gate.yml` | `ACTIVE` | no | no | none | none | **AMBER** | WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `adaptive-evidence-gap.yml` | `ACTIVE` | yes | yes | none | none | **AMBER** | NO_RUN_HISTORY, WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `adaptive-gap-validation-gate.yml` | `ACTIVE` | no | no | none | none | **AMBER** | WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `adaptive-rotation-cadence.yml` | `ACTIVE` | yes | yes | none | none | **AMBER** | NO_RUN_HISTORY, WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `api-agent-gateway-gate.yml` | `ACTIVE` | no | no | none | none | **AMBER** | WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `automation-production-health-gate.yml` | `ACTIVE` | no | no | none | none | **AMBER** | WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `automation-production-health.yml` | `ACTIVE` | yes | yes | none | none | **AMBER** | NO_RUN_HISTORY, WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `autonomous-research-governance-gate.yml` | `ACTIVE` | no | no | none | none | **AMBER** | WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `autonomous-research-governance-loop.yml` | `ACTIVE` | yes | yes | none | none | **AMBER** | NO_RUN_HISTORY, WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `backtest-engine-foundation.yml` | `ACTIVE` | no | no | none | none | **AMBER** | WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `backtest-readiness-contracts.yml` | `ACTIVE` | no | no | none | none | **AMBER** | WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `backtest-wave1-2-foundation.yml` | `ACTIVE` | no | no | none | none | **AMBER** | WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `backtest-wave1-3-authority-lineage.yml` | `ACTIVE` | no | no | none | none | **AMBER** | WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `backtest-wave1-4-prospective.yml` | `ACTIVE` | yes | no | none | none | **AMBER** | NO_RUN_HISTORY, WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `binance-spot-owner-manual.yml` | `ACTIVE` | no | no | none | none | **AMBER** | WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `binance-usdm-owner-manual.yml` | `ACTIVE` | no | no | none | none | **AMBER** | WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `buildwithclaude-shadow-evidence-ledger.yml` | `ACTIVE` | yes | yes | none | none | **AMBER** | NO_RUN_HISTORY, WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `buildwithclaude-shadow-prospective-observer.yml` | `ACTIVE` | no | no | none | none | **AMBER** | WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `buildwithclaude-shadow-round1.yml` | `ACTIVE` | no | no | none | none | **AMBER** | WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `cfgi-recovery-launch-once.yml` | `ACTIVE` | no | no | none | none | **AMBER** | WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `cfgi-recovery-launch-trigger.yml` | `ACTIVE` | no | yes | none | none | **AMBER** | WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `cfgi-v3-launch-receipt-publish.yml` | `ACTIVE` | no | yes | none | none | **AMBER** | WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `codex-intake-dispatch.yml` | `ACTIVE` | no | no | none | none | **AMBER** | WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `continuity-learning-gate.yml` | `ACTIVE` | no | no | none | none | **AMBER** | WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `continuity-learning-maintenance.yml` | `ACTIVE` | yes | yes | none | none | **AMBER** | NO_RUN_HISTORY, WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `cowork-historical-altseason-bundle-gate.yml` | `ACTIVE` | no | no | none | none | **AMBER** | WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `cowork-historical-altseason-bundle-receipt.yml` | `ACTIVE` | no | yes | none | none | **AMBER** | WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `cowork-historical-altseason-bundle.yml` | `ACTIVE` | no | no | none | none | **AMBER** | WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `cross-repo-agent-context-gate.yml` | `ACTIVE` | no | no | none | none | **AMBER** | WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `cycle-navigator-autonomous-calibration-gate.yml` | `ACTIVE` | no | no | none | none | **AMBER** | WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `cycle-navigator-autonomous-calibration-loop.yml` | `ACTIVE` | yes | yes | none | none | **AMBER** | NO_RUN_HISTORY, WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `cycle-navigator-weekly-publication.yml` | `ACTIVE` | yes | yes | none | none | **AMBER** | NO_RUN_HISTORY, WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `daily-capture-architecture-gate.yml` | `ACTIVE` | no | no | none | none | **AMBER** | WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `daily-director-shadow.yml` | `ACTIVE` | yes | yes | none | none | **AMBER** | NO_RUN_HISTORY, WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `daily-machine-throughput-gate.yml` | `ACTIVE` | no | no | none | none | **AMBER** | WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `daily-machine-throughput.yml` | `ACTIVE` | yes | yes | none | none | **AMBER** | NO_RUN_HISTORY, WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `daily-raw-owner-capture.yml` | `ACTIVE` | yes | yes | none | none | **AMBER** | NO_RUN_HISTORY, WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `daily-settled-etf-calibration.yml` | `ACTIVE` | yes | yes | none | none | **AMBER** | NO_RUN_HISTORY, WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `daily-slow-cycle-shadow.yml` | `ACTIVE` | yes | yes | none | none | **AMBER** | NO_RUN_HISTORY, WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `daily-stablecoin-liquidity.yml` | `ACTIVE` | yes | yes | none | none | **AMBER** | NO_RUN_HISTORY, WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `data-architecture-gate.yml` | `ACTIVE` | no | no | none | none | **AMBER** | WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `data-terminal-shadow-manual.yml` | `ACTIVE` | no | no | none | none | **AMBER** | WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `dataset-registry-gate.yml` | `ACTIVE` | no | no | none | none | **AMBER** | WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `entry-signal-ledger-gate.yml` | `ACTIVE` | no | no | none | none | **AMBER** | WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `entry-signal-ledger.yml` | `ACTIVE` | yes | yes | none | none | **AMBER** | NO_RUN_HISTORY, WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `ethbtc-persistence-lifecycle.yml` | `ACTIVE` | no | yes | none | none | **AMBER** | WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `evidence-closure-gate.yml` | `ACTIVE` | no | no | none | none | **AMBER** | WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `evidence-lifecycle-observability-gate.yml` | `ACTIVE` | no | no | none | none | **AMBER** | WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `evidence-lifecycle-store-health.yml` | `ACTIVE` | yes | no | none | none | **AMBER** | NO_RUN_HISTORY, WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `experiment-lifecycle-gate.yml` | `ACTIVE` | no | no | none | none | **AMBER** | WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `fetch_btc_d_cmc_free.yml` | `ACTIVE` | no | no | none | none | **AMBER** | WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `framework-learning-operations.yml` | `ACTIVE` | yes | yes | none | none | **AMBER** | NO_RUN_HISTORY, WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `full-architecture-1to7-gate.yml` | `ACTIVE` | no | no | none | none | **AMBER** | WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `historical-altseason-cfgi-enrichment.yml` | `RETIRED` | no | no | none | none | **AMBER** | RETIRED_WORKFLOW_LOCAL_FILE_PRESENT, WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `historical-altseason-cfgi-publish.yml` | `ACTIVE` | no | yes | none | none | **AMBER** | WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `historical-altseason-cfgi-reservation.yml` | `RETIRED` | no | no | none | none | **AMBER** | RETIRED_WORKFLOW_LOCAL_FILE_PRESENT, WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `historical-altseason-cfgi-run-audit.yml` | `ACTIVE` | no | yes | none | none | **AMBER** | WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `historical-altseason-cfgi-terminal-finalize.yml` | `ACTIVE` | no | no | none | none | **AMBER** | WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `historical-altseason-cfgi-terminal-publish.yml` | `ACTIVE` | no | yes | none | none | **AMBER** | WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `historical-altseason-free-bootstrap.yml` | `ACTIVE` | no | no | none | none | **AMBER** | WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `historical-altseason-free-publish-regression-gate.yml` | `ACTIVE` | no | no | none | none | **AMBER** | WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `historical-altseason-free-publish.yml` | `ACTIVE` | no | yes | none | none | **AMBER** | WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `historical-altseason-lab-gate.yml` | `ACTIVE` | no | no | none | none | **AMBER** | ARTIFACT_RETENTION_UNBOUNDED, WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `historical-altseason-throughput-gate.yml` | `ACTIVE` | no | no | none | none | **AMBER** | WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `hourly-sequence-capture.yml` | `ACTIVE` | yes | yes | none | none | **AMBER** | NO_RUN_HISTORY, WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `intraday-execution-gate.yml` | `ACTIVE` | no | no | none | none | **AMBER** | WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `intraday-execution-research.yml` | `ACTIVE` | no | yes | none | none | **AMBER** | WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `legacy-knowledge-bootstrap-gate.yml` | `ACTIVE` | no | no | none | none | **AMBER** | WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `mar_wp04c4_gate.yml` | `ACTIVE` | no | no | none | none | **AMBER** | WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `master-monday-preflight-gate.yml` | `ACTIVE` | no | no | none | none | **AMBER** | WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `master-monday-remaining-gaps.yml` | `ACTIVE` | yes | yes | none | none | **AMBER** | NO_RUN_HISTORY, WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `okx-swap-owner-manual.yml` | `ACTIVE` | no | no | none | none | **AMBER** | WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `operations-dashboard-gate.yml` | `ACTIVE` | no | no | none | none | **AMBER** | WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `operations-dashboard.yml` | `ACTIVE` | yes | yes | none | none | **AMBER** | NO_RUN_HISTORY, WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `operations-recovery-launch-once.yml` | `ACTIVE` | no | no | none | none | **AMBER** | WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `owner-bound-daily-director-manual.yml` | `ACTIVE` | no | no | none | none | **AMBER** | WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `pdf-inspector-ingestion.yml` | `ACTIVE` | no | no | none | none | **AMBER** | WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `pdlt-bootstrap-once.yml` | `ACTIVE` | no | no | none | none | **AMBER** | WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `pdlt-daily-census.yml` | `ACTIVE` | yes | yes | none | none | **AMBER** | NO_RUN_HISTORY, WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `pdlt-discovery-once.yml` | `EXPECTED_BLOCK` | no | no | none | none | **AMBER** | EXPECTED_BLOCK, WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `pdlt-maturation.yml` | `ACTIVE` | yes | yes | none | none | **AMBER** | NO_RUN_HISTORY, WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `pdlt-runtime-gate.yml` | `ACTIVE` | no | no | none | none | **AMBER** | WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `pdlt-v1-1.yml` | `ACTIVE` | no | no | none | none | **AMBER** | WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `phase4-no-hindsight-replay.yml` | `ACTIVE` | no | no | none | none | **AMBER** | WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `pullback-learning-gate.yml` | `ACTIVE` | no | no | none | none | **AMBER** | WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `pullback-learning-ledger.yml` | `ACTIVE` | yes | yes | none | none | **AMBER** | NO_RUN_HISTORY, WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `remediation-maturation-gate.yml` | `ACTIVE` | no | no | none | none | **AMBER** | WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `remediation-maturation.yml` | `ACTIVE` | yes | yes | none | none | **AMBER** | NO_RUN_HISTORY, WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `research-execution-coordinator.yml` | `ACTIVE` | yes | yes | none | none | **AMBER** | NO_RUN_HISTORY, WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `research-owner-breadth-daily.yml` | `ACTIVE` | yes | yes | none | none | **AMBER** | NO_RUN_HISTORY, WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `research-owner-btcd-daily.yml` | `ACTIVE` | yes | yes | none | none | **AMBER** | NO_RUN_HISTORY, WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `rich-breadth-checkpoint.yml` | `ACTIVE` | yes | yes | none | none | **AMBER** | NO_RUN_HISTORY, WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `round3-contract-freeze-gate.yml` | `ACTIVE` | no | no | none | none | **AMBER** | WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `round3-v2-materialization.yml` | `ACTIVE` | no | no | none | none | **AMBER** | WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `sequential-research-queue.yml` | `ACTIVE` | yes | yes | none | none | **AMBER** | NO_RUN_HISTORY, WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `shadow-admission-ai-decider.yml` | `ACTIVE` | yes | yes | none | none | **AMBER** | NO_RUN_HISTORY, WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `shadow-registry-autonomous-portfolio-gate.yml` | `ACTIVE` | no | no | none | none | **AMBER** | WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `shadow-registry-autonomous-portfolio-loop.yml` | `ACTIVE` | yes | yes | none | none | **AMBER** | NO_RUN_HISTORY, WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `shadow-registry-gate.yml` | `ACTIVE` | no | no | none | none | **AMBER** | WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `shadow-registry-weekly.yml` | `ACTIVE` | yes | yes | none | none | **AMBER** | NO_RUN_HISTORY, WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `shared-row-prospective-evidence-loop.yml` | `ACTIVE` | yes | yes | none | none | **AMBER** | NO_RUN_HISTORY, WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `shared-row-tournament-research-gate.yml` | `ACTIVE` | no | no | none | none | **AMBER** | WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `shared-row-tournament-weekly.yml` | `ACTIVE` | yes | yes | none | none | **AMBER** | NO_RUN_HISTORY, WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `situation-room-daily-static.yml` | `ACTIVE` | yes | yes | none | none | **AMBER** | NO_RUN_HISTORY, WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `situation-room-owner-live-gate.yml` | `ACTIVE` | no | no | none | none | **AMBER** | WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `source-provenance-recovery-gate.yml` | `ACTIVE` | no | no | none | none | **AMBER** | WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `source-provenance-recovery-loop.yml` | `ACTIVE` | yes | yes | none | none | **AMBER** | NO_RUN_HISTORY, WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `specialist-architecture-gate.yml` | `ACTIVE` | no | no | none | none | **AMBER** | WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `storage-health-gate.yml` | `ACTIVE` | no | no | none | none | **AMBER** | WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `sunday-market-close-and-cfgi.yml` | `ACTIVE` | yes | yes | none | none | **AMBER** | NO_RUN_HISTORY, WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `top100-breadth-owner-manual.yml` | `ACTIVE` | no | no | none | none | **AMBER** | WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `unified-experimental-lifecycle-adjudication.yml` | `ACTIVE` | yes | yes | none | none | **AMBER** | NO_RUN_HISTORY, WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `validate_m3_forward_ledger.yml` | `ACTIVE` | no | no | none | none | **AMBER** | WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `weekly-api-calibration-shadow.yml` | `ACTIVE` | yes | yes | none | none | **AMBER** | NO_RUN_HISTORY, WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `weekly-raw-calibration-bridge.yml` | `ACTIVE` | yes | yes | none | none | **AMBER** | NO_RUN_HISTORY, WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `weekly-sol-adversarial-review.yml` | `ACTIVE` | yes | yes | none | none | **AMBER** | NO_RUN_HISTORY, WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
 
 ## Blockers
-- buildwithclaude-shadow-round1.yml:REPEATED_CONSECUTIVE_FAILURES
-- pdlt-daily-census.yml:LATEST_RUN_FAILED
+- None
 
 ## Warnings
-- REGISTERED_WITHOUT_LOCAL_FILE:agent-tool-shadow-round2.yml
-- REGISTERED_WITHOUT_LOCAL_FILE:cfgi-full-profile-smoke-temp.yml
-- REGISTERED_WITHOUT_LOCAL_FILE:cfgi-live-smoke-temp.yml
-- REGISTERED_WITHOUT_LOCAL_FILE:harness-redteam-p0-remediation-gate.yml
-- REGISTERED_WITHOUT_LOCAL_FILE:historical-shadow-validation-stage1-manifest.yml
-- REGISTERED_WITHOUT_LOCAL_FILE:persistent-agent-runtime-readiness-gate.yml
-- REGISTERED_WITHOUT_LOCAL_FILE:t4-microstructure-live-readback.yml
-- backtest-engine-foundation.yml:RECOVERING_AFTER_RECENT_FAILURES
-- backtest-wave1-2-foundation.yml:RECOVERING_AFTER_RECENT_FAILURES
-- continuity-learning-maintenance.yml:RECOVERING_AFTER_RECENT_FAILURES
-- daily-director-shadow.yml:SCHEDULE_STALE
-- daily-slow-cycle-shadow.yml:RECOVERING_AFTER_RECENT_FAILURES
-- data-terminal-shadow-manual.yml:RECOVERING_AFTER_RECENT_FAILURES
-- entry-signal-ledger-gate.yml:RECOVERING_AFTER_RECENT_FAILURES
-- entry-signal-ledger.yml:RECOVERING_AFTER_RECENT_FAILURES
+- adaptive-decision-miss-validation.yml:NO_RUN_HISTORY
+- adaptive-decision-miss-validation.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- adaptive-evidence-gap-gate.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- adaptive-evidence-gap.yml:NO_RUN_HISTORY
+- adaptive-evidence-gap.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- adaptive-gap-validation-gate.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- adaptive-rotation-cadence.yml:NO_RUN_HISTORY
+- adaptive-rotation-cadence.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- api-agent-gateway-gate.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- automation-production-health-gate.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- automation-production-health.yml:NO_RUN_HISTORY
+- automation-production-health.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- autonomous-research-governance-gate.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- autonomous-research-governance-loop.yml:NO_RUN_HISTORY
+- autonomous-research-governance-loop.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- backtest-engine-foundation.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- backtest-readiness-contracts.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- backtest-wave1-2-foundation.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- backtest-wave1-3-authority-lineage.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- backtest-wave1-4-prospective.yml:NO_RUN_HISTORY
+- backtest-wave1-4-prospective.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- binance-spot-owner-manual.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- binance-usdm-owner-manual.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- buildwithclaude-shadow-evidence-ledger.yml:NO_RUN_HISTORY
+- buildwithclaude-shadow-evidence-ledger.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- buildwithclaude-shadow-prospective-observer.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- buildwithclaude-shadow-round1.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- cfgi-recovery-launch-once.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- cfgi-recovery-launch-trigger.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- cfgi-v3-launch-receipt-publish.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- codex-intake-dispatch.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- continuity-learning-gate.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- continuity-learning-maintenance.yml:NO_RUN_HISTORY
+- continuity-learning-maintenance.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- cowork-historical-altseason-bundle-gate.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- cowork-historical-altseason-bundle-receipt.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- cowork-historical-altseason-bundle.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- cross-repo-agent-context-gate.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- cycle-navigator-autonomous-calibration-gate.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- cycle-navigator-autonomous-calibration-loop.yml:NO_RUN_HISTORY
+- cycle-navigator-autonomous-calibration-loop.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- cycle-navigator-weekly-publication.yml:NO_RUN_HISTORY
+- cycle-navigator-weekly-publication.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- daily-capture-architecture-gate.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- daily-director-shadow.yml:NO_RUN_HISTORY
+- daily-director-shadow.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- daily-machine-throughput-gate.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- daily-machine-throughput.yml:NO_RUN_HISTORY
+- daily-machine-throughput.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- daily-raw-owner-capture.yml:NO_RUN_HISTORY
+- daily-raw-owner-capture.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- daily-settled-etf-calibration.yml:NO_RUN_HISTORY
+- daily-settled-etf-calibration.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- daily-slow-cycle-shadow.yml:NO_RUN_HISTORY
+- daily-slow-cycle-shadow.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- daily-stablecoin-liquidity.yml:NO_RUN_HISTORY
+- daily-stablecoin-liquidity.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- data-architecture-gate.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- data-terminal-shadow-manual.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- dataset-registry-gate.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- entry-signal-ledger-gate.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- entry-signal-ledger.yml:NO_RUN_HISTORY
+- entry-signal-ledger.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- ethbtc-persistence-lifecycle.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- evidence-closure-gate.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- evidence-lifecycle-observability-gate.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- evidence-lifecycle-store-health.yml:NO_RUN_HISTORY
+- evidence-lifecycle-store-health.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- experiment-lifecycle-gate.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- fetch_btc_d_cmc_free.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- framework-learning-operations.yml:NO_RUN_HISTORY
+- framework-learning-operations.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- full-architecture-1to7-gate.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
 - historical-altseason-cfgi-enrichment.yml:RETIRED_WORKFLOW_LOCAL_FILE_PRESENT
+- historical-altseason-cfgi-enrichment.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- historical-altseason-cfgi-publish.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
 - historical-altseason-cfgi-reservation.yml:RETIRED_WORKFLOW_LOCAL_FILE_PRESENT
+- historical-altseason-cfgi-reservation.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- historical-altseason-cfgi-run-audit.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- historical-altseason-cfgi-terminal-finalize.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- historical-altseason-cfgi-terminal-publish.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- historical-altseason-free-bootstrap.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- historical-altseason-free-publish-regression-gate.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- historical-altseason-free-publish.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
 - historical-altseason-lab-gate.yml:ARTIFACT_RETENTION_UNBOUNDED
-- historical-altseason-throughput-gate.yml:RECOVERING_AFTER_RECENT_FAILURES
-- operations-dashboard-gate.yml:RECOVERING_AFTER_RECENT_FAILURES
+- historical-altseason-lab-gate.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- historical-altseason-throughput-gate.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- hourly-sequence-capture.yml:NO_RUN_HISTORY
+- hourly-sequence-capture.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- intraday-execution-gate.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- intraday-execution-research.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- legacy-knowledge-bootstrap-gate.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- mar_wp04c4_gate.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- master-monday-preflight-gate.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- master-monday-remaining-gaps.yml:NO_RUN_HISTORY
+- master-monday-remaining-gaps.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- okx-swap-owner-manual.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- operations-dashboard-gate.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- operations-dashboard.yml:NO_RUN_HISTORY
+- operations-dashboard.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- operations-recovery-launch-once.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- owner-bound-daily-director-manual.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- pdf-inspector-ingestion.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- pdlt-bootstrap-once.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- pdlt-daily-census.yml:NO_RUN_HISTORY
+- pdlt-daily-census.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
 - pdlt-discovery-once.yml:EXPECTED_BLOCK
-- pullback-learning-gate.yml:RECOVERING_AFTER_RECENT_FAILURES
-- research-execution-coordinator.yml:RECOVERING_AFTER_RECENT_FAILURES
-- situation-room-owner-live-gate.yml:RECOVERING_AFTER_RECENT_FAILURES
-- sunday-market-close-and-cfgi.yml:RECOVERING_AFTER_RECENT_FAILURES
+- pdlt-discovery-once.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- pdlt-maturation.yml:NO_RUN_HISTORY
+- pdlt-maturation.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- pdlt-runtime-gate.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- pdlt-v1-1.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- phase4-no-hindsight-replay.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- pullback-learning-gate.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- pullback-learning-ledger.yml:NO_RUN_HISTORY
+- pullback-learning-ledger.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- remediation-maturation-gate.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- remediation-maturation.yml:NO_RUN_HISTORY
+- remediation-maturation.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- research-execution-coordinator.yml:NO_RUN_HISTORY
+- research-execution-coordinator.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- research-owner-breadth-daily.yml:NO_RUN_HISTORY
+- research-owner-breadth-daily.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- research-owner-btcd-daily.yml:NO_RUN_HISTORY
+- research-owner-btcd-daily.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- rich-breadth-checkpoint.yml:NO_RUN_HISTORY
+- rich-breadth-checkpoint.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- round3-contract-freeze-gate.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- round3-v2-materialization.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- sequential-research-queue.yml:NO_RUN_HISTORY
+- sequential-research-queue.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- shadow-admission-ai-decider.yml:NO_RUN_HISTORY
+- shadow-admission-ai-decider.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- shadow-registry-autonomous-portfolio-gate.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- shadow-registry-autonomous-portfolio-loop.yml:NO_RUN_HISTORY
+- shadow-registry-autonomous-portfolio-loop.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- shadow-registry-gate.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- shadow-registry-weekly.yml:NO_RUN_HISTORY
+- shadow-registry-weekly.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- shared-row-prospective-evidence-loop.yml:NO_RUN_HISTORY
+- shared-row-prospective-evidence-loop.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- shared-row-tournament-research-gate.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- shared-row-tournament-weekly.yml:NO_RUN_HISTORY
+- shared-row-tournament-weekly.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- situation-room-daily-static.yml:NO_RUN_HISTORY
+- situation-room-daily-static.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- situation-room-owner-live-gate.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- source-provenance-recovery-gate.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- source-provenance-recovery-loop.yml:NO_RUN_HISTORY
+- source-provenance-recovery-loop.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- specialist-architecture-gate.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- storage-health-gate.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- sunday-market-close-and-cfgi.yml:NO_RUN_HISTORY
+- sunday-market-close-and-cfgi.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- top100-breadth-owner-manual.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- unified-experimental-lifecycle-adjudication.yml:NO_RUN_HISTORY
+- unified-experimental-lifecycle-adjudication.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- validate_m3_forward_ledger.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- weekly-api-calibration-shadow.yml:NO_RUN_HISTORY
+- weekly-api-calibration-shadow.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- weekly-raw-calibration-bridge.yml:NO_RUN_HISTORY
+- weekly-raw-calibration-bridge.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- weekly-sol-adversarial-review.yml:NO_RUN_HISTORY
+- weekly-sol-adversarial-review.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
