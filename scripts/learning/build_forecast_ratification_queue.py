@@ -18,9 +18,12 @@ from forecast_ratification_contract import (  # noqa: E402
     DECISION_SLA_MINUTES,
     RATIFICATION_QUEUE_V1,
     RATIFICATION_TERMINAL_V1,
+    SOURCE_FRESHNESS_CUTOVER_COMMIT_SHA,
+    SOURCE_OUTPUT_MAX_AGE_MINUTES,
     decision_deadline,
     iso,
     parse_dt,
+    validate_source_temporal_provenance,
 )
 
 UTC = timezone.utc
@@ -54,21 +57,19 @@ def terminal_ids(root: Path) -> set[str]:
 
 
 def build_queue(pending_root: Path, terminal_root: Path, now: datetime) -> dict[str, Any]:
-    groups, quarantines = classified_candidate_groups_with_quarantine(pending_root)
+    groups, grouping_quarantines = classified_candidate_groups_with_quarantine(pending_root)
     terminal = terminal_ids(terminal_root)
     rows: list[dict[str, Any]] = []
+    quarantines = list(grouping_quarantines)
     counts = {
         "distinct_candidate_ids": len(groups),
         "terminal_candidates": 0,
         "legacy_pre_cutover": 0,
         "legacy_identical_duplicate_ids": 0,
         "legacy_divergent_duplicate_ids": 0,
-        "quarantined_candidate_ids": len({str(row.get('candidate_id') or '') for row in quarantines if row.get('candidate_id')}),
-        "post_cutover_duplicate_quarantine_ids": len({
-            str(row.get('candidate_id'))
-            for row in quarantines
-            if str(row.get('error') or '').startswith('POST_CUTOVER_DUPLICATE_CANDIDATE_ID')
-        }),
+        "quarantined_candidate_ids": len({str(row.get("candidate_id") or "") for row in grouping_quarantines if row.get("candidate_id")}),
+        "post_cutover_duplicate_quarantine_ids": len({str(row.get("candidate_id")) for row in grouping_quarantines if str(row.get("error") or "").startswith("POST_CUTOVER_DUPLICATE_CANDIDATE_ID")}),
+        "source_temporal_quarantine_ids": 0,
         "expired_without_terminal": 0,
         "decision_required": 0,
     }
@@ -87,6 +88,17 @@ def build_queue(pending_root: Path, terminal_root: Path, now: datetime) -> dict[
             continue
 
         candidate = group["candidate"]
+        try:
+            validate_source_temporal_provenance(candidate)
+        except Exception as exc:
+            counts["source_temporal_quarantine_ids"] += 1
+            quarantines.append({
+                "candidate_id": cid,
+                "paths": [path.as_posix() for path in group["paths"]],
+                "error": f"SOURCE_TEMPORAL_PROVENANCE:{exc}",
+            })
+            continue
+
         created = parse_dt(str(candidate["created_at_utc"]))
         deadline = decision_deadline(str(candidate["created_at_utc"]))
         if now > deadline:
@@ -102,6 +114,10 @@ def build_queue(pending_root: Path, terminal_root: Path, now: datetime) -> dict[
             "candidate_group_classification": classification,
             "model": candidate.get("model"),
             "task": candidate.get("task"),
+            "source_output_created_at_utc": candidate.get("source_output_created_at_utc"),
+            "source_output_age_at_materialization_seconds": candidate.get("source_output_age_at_materialization_seconds"),
+            "source_output_max_age_minutes": candidate.get("source_output_max_age_minutes"),
+            "source_receipt_sha256": candidate.get("source_receipt_sha256"),
             "metric_path": payload.get("metric_path"),
             "direction": payload.get("direction"),
             "target_mode": payload.get("target_mode"),
@@ -115,26 +131,27 @@ def build_queue(pending_root: Path, terminal_root: Path, now: datetime) -> dict[
             "outcome_data_included": False,
         })
     counts["decision_required"] = len(rows)
+    counts["quarantined_candidate_ids"] = len({str(row.get("candidate_id") or "") for row in quarantines if row.get("candidate_id")})
     return {
         "contract": RATIFICATION_QUEUE_V1,
         "generated_at_utc": iso(now),
         "prospective_cutover_commit_sha": CUTOVER_COMMIT_SHA,
+        "source_freshness_cutover_commit_sha": SOURCE_FRESHNESS_CUTOVER_COMMIT_SHA,
         "decision_sla_minutes": DECISION_SLA_MINUTES,
+        "source_output_max_age_minutes": SOURCE_OUTPUT_MAX_AGE_MINUTES,
         "outcome_data_included": False,
         "outcome_paths_read": [],
         "self_promotion_allowed": False,
         "legacy_duplicate_policy": "PRE_CUTOVER_MULTI_PATH_IDS_ARE_ARCHIVE_ONLY_POST_CUTOVER_MULTI_PATH_IDS_ARE_QUARANTINED_AND_NEVER_OWNER_VISIBLE",
-        "quarantine_policy": "STRUCTURALLY_INVALID_OR_POST_CUTOVER_DUPLICATE_IDS_ARE_EXCLUDED_FROM_OWNER_QUEUE_WITHOUT_BLOCKING_OTHER_CANDIDATES",
+        "quarantine_policy": "STRUCTURALLY_INVALID_POST_CUTOVER_DUPLICATE_OR_SOURCE_TEMPORALLY_INVALID_IDS_ARE_EXCLUDED_FROM_OWNER_QUEUE_WITHOUT_BLOCKING_OTHER_CANDIDATES",
+        "source_temporal_policy": "POST_SOURCE_FRESHNESS_CUTOVER_OWNER_QUEUE_REQUIRES_RECEIPT_TIME_RECEIPT_HASH_AND_BOUND_SOURCE_AGE",
         "counts": counts,
-        "quarantines": [
-            {
-                "candidate_id": row.get("candidate_id"),
-                "error": row.get("error"),
-                "paths": row.get("paths") or ([row.get("path")] if row.get("path") else []),
-                "owner_decision_allowed": False,
-            }
-            for row in quarantines
-        ],
+        "quarantines": [{
+            "candidate_id": row.get("candidate_id"),
+            "error": row.get("error"),
+            "paths": row.get("paths") or ([row.get("path")] if row.get("path") else []),
+            "owner_decision_allowed": False,
+        } for row in quarantines],
         "candidates": rows,
         "authority": {
             "portfolio_action": False,

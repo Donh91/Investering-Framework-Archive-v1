@@ -5,6 +5,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import time
 import unittest
 from pathlib import Path
 
@@ -38,6 +39,7 @@ class ForecastCandidateBacklogTests(unittest.TestCase):
                 'task': 'DAILY_DIRECTOR_SHADOW',
                 'prompt_hash': 'b' * 64,
                 'context_hash': 'c' * 64,
+                'created_unix': time.time(),
             }))
 
             first = subprocess.run([
