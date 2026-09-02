@@ -7,14 +7,17 @@ on:
       - 'scripts/lib/forecast_candidate_grouping.py'
       - 'scripts/lib/forecast_ratification_baseline.py'
       - 'scripts/lib/forecast_settlement_contract.py'
+      - 'scripts/lib/forecast_evidence_class.py'
       - 'scripts/learning/forecast_ratification_freezer.py'
       - 'scripts/learning/ratify_forecast_candidate.py'
       - 'scripts/learning/process_forecast_ratifications.py'
       - 'scripts/learning/build_forecast_ratification_queue.py'
+      - 'scripts/learning/audit_forecast_evidence_class_boundary.py'
       - 'tests/learning/test_forecast_ratification_throughput.py'
       - 'tests/learning/test_forecast_candidate_grouping.py'
       - 'tests/learning/test_forecast_ratification_baseline.py'
       - 'tests/learning/test_forecast_ratification_cowork_redteam_regressions.py'
+      - 'tests/learning/test_forecast_evidence_class_boundary.py'
       - 'scripts/api_agent/materialize_forecast_candidates.py'
       - 'tests/api_agent/test_forecast_candidate_backlog.py'
       - '.github/workflows/continuity-learning-maintenance.yml'
@@ -43,20 +46,24 @@ jobs:
             scripts/lib/forecast_candidate_grouping.py \
             scripts/lib/forecast_ratification_baseline.py \
             scripts/lib/forecast_settlement_contract.py \
+            scripts/lib/forecast_evidence_class.py \
             scripts/learning/forecast_ratification_freezer.py \
             scripts/learning/ratify_forecast_candidate.py \
             scripts/learning/process_forecast_ratifications.py \
             scripts/learning/build_forecast_ratification_queue.py \
+            scripts/learning/audit_forecast_evidence_class_boundary.py \
             tests/learning/test_forecast_ratification_throughput.py \
             tests/learning/test_forecast_candidate_grouping.py \
             tests/learning/test_forecast_ratification_baseline.py \
-            tests/learning/test_forecast_ratification_cowork_redteam_regressions.py
+            tests/learning/test_forecast_ratification_cowork_redteam_regressions.py \
+            tests/learning/test_forecast_evidence_class_boundary.py
       - name: Prospective ratification integration regressions
         run: |
           python tests/learning/test_forecast_ratification_throughput.py -v
           python tests/learning/test_forecast_candidate_grouping.py -v
           python tests/learning/test_forecast_ratification_baseline.py -v
           python tests/learning/test_forecast_ratification_cowork_redteam_regressions.py -v
+          python tests/learning/test_forecast_evidence_class_boundary.py -v
       - name: Direct ratifier CLI must be disabled
         run: |
           set +e
@@ -74,6 +81,21 @@ jobs:
           python tests/learning/test_build_non_exact_forecast_subset.py -q
       - name: Historical replay immutability guard
         run: python tests/learning/test_historical_replay_guard.py -q
+      - name: Live evidence-class boundary audit
+        run: |
+          python scripts/learning/audit_forecast_evidence_class_boundary.py \
+            --owner-root research/api_agent/forecast_candidates/FROZEN \
+            --experiment-root research/framework_memory/forecast_memory \
+            --output /tmp/FORECAST_EVIDENCE_CLASS_BOUNDARY_AUDIT.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          value=json.loads(Path('/tmp/FORECAST_EVIDENCE_CLASS_BOUNDARY_AUDIT.json').read_text())
+          assert value['status']=='PASS'
+          assert value['cross_evidence_class_pooling_allowed'] is False
+          assert value['forecast_skill_authority'] is False
+          assert value['legacy_unclassified_pooling_allowed'] is False
+          PY
       - name: Live pending population cutover census without outcomes
         run: |
           python - <<'PY'
