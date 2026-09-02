@@ -1,116 +1,69 @@
-name: BuildWithClaude Shadow Evidence Ledger
+name: BuildWithClaude Shadow Evidence Ledger Validation
 
 on:
-  schedule:
-    - cron: '35 1 * * 1'
-      timezone: 'Europe/Copenhagen'
+  pull_request:
+    paths:
+      - '06_RESEARCH_LAB/buildwithclaude_shadow_round1_v1/**'
+      - 'scripts/research/shadow_guardrail_probe.py'
+      - 'scripts/research/validate_buildwithclaude_shadow_round1.py'
+      - '.github/workflows/buildwithclaude-shadow-evidence-ledger.yml'
+      - '.github/workflows/buildwithclaude-shadow-round1.yml'
+      - '.github/workflows/buildwithclaude-shadow-prospective-observer.yml'
   workflow_dispatch:
 
 permissions:
-  contents: write
-
-concurrency:
-  group: framework-main-writer
-  cancel-in-progress: false
+  contents: read
 
 jobs:
-  materialize-prospective-evidence:
-    if: github.ref == 'refs/heads/main'
+  validate-evidence-ledger:
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    timeout-minutes: 8
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: main
-          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Prepare isolated runtime
+      - name: Compile and validate BuildWithClaude shadow contracts
         run: |
-          mkdir -p "$RUNNER_TEMP/bwc-evidence" "$RUNNER_TEMP/bwc-pycache"
-          echo "PYTHONDONTWRITEBYTECODE=1" >> "$GITHUB_ENV"
-          echo "PYTHONPYCACHEPREFIX=$RUNNER_TEMP/bwc-pycache" >> "$GITHUB_ENV"
-      - name: Property evidence
-        run: >-
-          python scripts/research/shadow_session_telemetry.py
-          --output "$RUNNER_TEMP/bwc-evidence/telemetry-property.json"
-          -- python scripts/research/shadow_property_invariant_probe.py
-          --cases 1000
-          --output "$RUNNER_TEMP/bwc-evidence/property.json"
-      - name: Mutation evidence
-        run: >-
-          python scripts/research/shadow_session_telemetry.py
-          --output "$RUNNER_TEMP/bwc-evidence/telemetry-mutation.json"
-          -- python scripts/research/shadow_mutation_probe.py
-          --cases 250
-          --output "$RUNNER_TEMP/bwc-evidence/mutation.json"
-      - name: Telemetry evidence
-        run: >-
-          python scripts/research/shadow_session_telemetry.py
-          --self-test
-          --output "$RUNNER_TEMP/bwc-evidence/telemetry-self-test.json"
-      - name: Guardrail evidence
-        run: |
-          python scripts/research/shadow_guardrail_probe.py --mode self-test --output "$RUNNER_TEMP/bwc-evidence/guardrail-self-test.json"
-          python scripts/research/shadow_guardrail_probe.py --mode post --output "$RUNNER_TEMP/bwc-evidence/guardrail-post.json"
-      - name: Materialize immutable prospective row
-        env:
-          EVIDENCE_DIR: ${{ runner.temp }}/bwc-evidence
-          PATH_POINTER: ${{ runner.temp }}/bwc-evidence/repo_evidence_path.txt
-          OBSERVED_SHA: ${{ github.sha }}
-          EVENT_NAME: ${{ github.event_name }}
+          python -m py_compile \
+            scripts/research/shadow_guardrail_probe.py \
+            scripts/research/validate_buildwithclaude_shadow_round1.py
+          python scripts/research/validate_buildwithclaude_shadow_round1.py
+          python scripts/research/shadow_guardrail_probe.py --mode self-test
+      - name: Validate persisted evidence authority and distinct-version semantics
         run: |
           python - <<'PY'
-          import hashlib, json, os
-          from datetime import datetime, timezone
+          import json
           from pathlib import Path
 
-          d=Path(os.environ['EVIDENCE_DIR'])
-          target=Path('scripts/research/research_governance_common.py')
-          def read(name): return json.loads((d/name).read_text())
-          prop=read('property.json');mut=read('mutation.json');tp=read('telemetry-property.json');tm=read('telemetry-mutation.json');ts=read('telemetry-self-test.json');gs=read('guardrail-self-test.json');gp=read('guardrail-post.json')
-          target_sha256=hashlib.sha256(target.read_bytes()).hexdigest()
-          row={
-            'contract':'BUILDWITHCLAUDE_SHADOW_EVIDENCE_ROW_v1',
-            'evidence_class':'PROSPECTIVE_WEEKLY_CURRENT_MAIN' if os.environ['EVENT_NAME']=='schedule' else 'MANUAL_DIAGNOSTIC',
-            'captured_at_utc':datetime.now(timezone.utc).isoformat().replace('+00:00','Z'),
-            'observed_main_sha':os.environ['OBSERVED_SHA'],
-            'target_path':str(target),
-            'target_sha256':target_sha256,
-            'authority':'RESEARCH_ONLY_NON_CANONICAL','canonical_effect':False,'portfolio_execution':False,
-            'candidates':{
-              'BWC-R1-C1-PROPERTY-INVARIANTS':{'status':prop.get('status'),'generated_cases':prop.get('generated_cases'),'checks':prop.get('checks'),'failure_count':prop.get('failure_count'),'duration_ms':tp.get('duration_ms')},
-              'BWC-R1-C2-MUTATION':{'status':mut.get('candidate_quality'),'executed_mutations':mut.get('executed_mutations'),'killed_mutations':mut.get('killed_mutations'),'kill_rate':mut.get('kill_rate'),'duration_ms':tm.get('duration_ms')},
-              'BWC-R1-C3-SESSION-TELEMETRY':{'status':ts.get('status'),'external_backend':False,'raw_output_persisted':False},
-              'BWC-R1-C4-GUARDRAILS':{'self_test':gs.get('status'),'postflight':gp.get('status')}
-            },
-            'interpretation_note':'Distinct target_sha256 values represent distinct observed code versions. Repeated rows with the same target_sha256 measure stability and runtime variance, not additional real-change count.'
-          }
-          out=Path('06_RESEARCH_LAB/buildwithclaude_shadow_round1_v1/evidence')
-          out.mkdir(parents=True,exist_ok=True)
-          path=out/f"PROSPECTIVE_{target_sha256[:12]}_{os.environ['GITHUB_RUN_ID']}.json"
-          path.write_text(json.dumps(row,sort_keys=True,separators=(',',':'))+'\n')
-          Path(os.environ['PATH_POINTER']).write_text(str(path))
+          root = Path('06_RESEARCH_LAB/buildwithclaude_shadow_round1_v1')
+          evidence = root / 'evidence'
+          rows = []
+          for path in sorted(evidence.glob('*.json')):
+              row = json.loads(path.read_text(encoding='utf-8'))
+              assert row.get('authority') == 'RESEARCH_ONLY_NON_CANONICAL', path
+              assert row.get('canonical_effect') is False, path
+              assert row.get('portfolio_execution') is False, path
+              rows.append((path, row))
+
+          prospective = [row for _, row in rows if row.get('evidence_class') == 'PROSPECTIVE_WEEKLY_CURRENT_MAIN']
+          target_shas = {row.get('target_sha256') for row in prospective if row.get('target_sha256')}
+          assert len(rows) >= 1
+          assert len(prospective) >= 1
+          assert len(target_shas) <= len(prospective)
+
+          lifecycle = json.loads((root / 'BUILDWITHCLAUDE_SHADOW_LIFECYCLE_2026-09-02.json').read_text(encoding='utf-8'))
+          assert lifecycle['decision'] == 'CONTINUE_SHADOW_EVENT_DRIVEN_NO_WEEKLY_WRITER'
+          assert lifecycle['promotion_permitted'] is False
+          assert lifecycle['authority'] == 'RESEARCH_ONLY_NON_CANONICAL'
+          assert lifecycle['weekly_direct_main_writer_active'] is False
+          assert lifecycle['event_driven_observer_active'] is True
+
+          print(json.dumps({
+              'status': 'PASS',
+              'persisted_rows': len(rows),
+              'prospective_rows': len(prospective),
+              'distinct_target_versions': len(target_shas),
+              'interpretation': 'Repeated rows for the same target SHA are stability observations, not additional real-change evidence.'
+          }, sort_keys=True))
           PY
-      - name: Commit evidence only
-        run: |
-          git config user.name framework-shadow-evidence-agent
-          git config user.email framework-shadow-evidence-agent@users.noreply.github.com
-          PATH_TO_ADD=$(cat "$RUNNER_TEMP/bwc-evidence/repo_evidence_path.txt")
-          git add "$PATH_TO_ADD"
-          if ! git diff --cached --quiet; then git commit -m "research: prospective shadow evidence ${GITHUB_RUN_ID}"; fi
-          pushed=false
-          for attempt in 1 2 3; do
-            git rebase --abort 2>/dev/null || true
-            if git pull --rebase origin main && git push origin HEAD:main; then pushed=true; break; fi
-            sleep $((attempt*5))
-          done
-          [ "$pushed" = true ]
-          git fetch origin main
-          git merge-base --is-ancestor HEAD origin/main
-      - uses: actions/upload-artifact@v4
-        with:
-          name: buildwithclaude-shadow-evidence-${{ github.run_id }}
-          path: ${{ runner.temp }}/bwc-evidence
-          retention-days: 30

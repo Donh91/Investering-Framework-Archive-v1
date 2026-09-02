@@ -21,12 +21,15 @@ ALLOWED_EXACT = {
     "scripts/api_agent/shadow_admission_ai_decider.py",
     "scripts/master_monday/publish_master_monday_outputs.py",
     "tests/api_agent/test_shadow_admission_ai_decider.py",
+    "scripts/research/shadow_property_invariant_probe.py",
+    "scripts/research/shadow_mutation_probe.py",
+    "scripts/research/shadow_session_telemetry.py",
+    "scripts/research/shadow_guardrail_probe.py",
     "scripts/research/validate_buildwithclaude_shadow_round1.py",
 }
 
 ALLOWED_PREFIXES = (
     "06_RESEARCH_LAB/buildwithclaude_shadow_round1_v1/",
-    "scripts/research/shadow_",
 )
 
 PROTECTED_PREFIXES = (
@@ -104,6 +107,9 @@ def self_test() -> Dict[str, Any]:
         "06_RESEARCH_LAB/protocols/README.md",
         "06_RESEARCH_LAB/buildwithclaude_shadow_round1_v1/ROUND_CONTRACT.md",
         "scripts/research/shadow_property_invariant_probe.py",
+        "scripts/research/shadow_mutation_probe.py",
+        "scripts/research/shadow_session_telemetry.py",
+        "scripts/research/shadow_guardrail_probe.py",
         ".github/workflows/buildwithclaude-shadow-round1.yml",
         ".github/workflows/buildwithclaude-shadow-prospective-observer.yml",
         ".github/workflows/buildwithclaude-shadow-evidence-ledger.yml",
@@ -118,6 +124,8 @@ def self_test() -> Dict[str, Any]:
         "02_DATA_PING/schema.json",
         ".github/workflows/automation-production-health.yml",
         "scripts/live_market_writer.py",
+        "scripts/research/shadow_registry_weekly.py",
+        "scripts/research/shadow_registry_portfolio_controller.py",
     ]
     allowed_result = evaluate_paths(allowed)
     blocked_result = evaluate_paths(blocked)
@@ -129,6 +137,8 @@ def self_test() -> Dict[str, Any]:
         "data_ping_classified_protected": classes.get("02_DATA_PING/schema.json") == "PROTECTED",
         "production_workflow_classified_protected": classes.get(".github/workflows/automation-production-health.yml") == "PROTECTED_WORKFLOW",
         "unscoped_script_blocked": classes.get("scripts/live_market_writer.py") == "OUTSIDE_ADMISSION_SCOPE",
+        "shadow_registry_weekly_not_buildwithclaude": classes.get("scripts/research/shadow_registry_weekly.py") == "OUTSIDE_ADMISSION_SCOPE",
+        "shadow_registry_portfolio_not_buildwithclaude": classes.get("scripts/research/shadow_registry_portfolio_controller.py") == "OUTSIDE_ADMISSION_SCOPE",
     }
     return {
         "contract": "SHADOW_GUARDRAIL_SELF_TEST_v1",
