@@ -4,9 +4,13 @@ from __future__ import annotations
 import argparse
 import json
 import subprocess
+import sys
 from pathlib import Path
 
-from scripts.lib.forecast_settlement_contract import (
+ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT))
+
+from scripts.lib.forecast_settlement_contract import (  # noqa: E402
     SETTLEMENT_EXACT_TARGET_TIME_V1,
     supports_exact_price_settlement,
 )
