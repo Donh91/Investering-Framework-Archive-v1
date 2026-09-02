@@ -107,9 +107,12 @@ jobs:
           assert 'contents: read' in validation
           assert 'CFGI_API_KEY' not in validation
           assert 'OPENAI_API_KEY' not in validation
-          assert 'historical_collect' not in validation
-          assert 'burst' not in validation
-          assert 'preregister' not in validation
+          assert 'cfgi_owner_collector.py' not in validation
+          assert "inputs.mode == 'historical_collect'" not in validation
+          assert "inputs.mode == 'burst'" not in validation
+          assert '--mode preregister' not in validation
+          assert 'acknowledge_paid_cfgi' not in validation
+          assert 'pdlt-burst' not in validation
           assert '--dry-run' in validation
 
           print('PDLT_RUNTIME_METHODS_POLICY_PASS_FROZEN')
