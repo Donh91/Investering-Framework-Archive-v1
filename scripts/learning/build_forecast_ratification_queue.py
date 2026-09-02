@@ -12,13 +12,13 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "scripts" / "lib"))
 
+from forecast_candidate_grouping import classified_candidate_groups  # noqa: E402
 from forecast_ratification_contract import (  # noqa: E402
     CUTOVER_COMMIT_SHA,
     DECISION_SLA_MINUTES,
     RATIFICATION_QUEUE_V1,
     RATIFICATION_TERMINAL_V1,
     decision_deadline,
-    is_post_cutover_candidate,
     iso,
     parse_dt,
 )
@@ -38,25 +38,6 @@ def read(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text())
 
 
-def index_candidates(root: Path) -> dict[str, tuple[dict[str, Any], list[str]]]:
-    found: dict[str, tuple[dict[str, Any], list[str]]] = {}
-    for path in sorted(root.rglob("*.json")) if root.exists() else []:
-        value = read(path)
-        if value.get("contract") != "FORECAST_CANDIDATE_v1":
-            continue
-        cid = str(value.get("candidate_id") or "")
-        if not cid:
-            raise ValueError(f"CANDIDATE_ID_MISSING:{path}")
-        if cid not in found:
-            found[cid] = (value, [path.as_posix()])
-            continue
-        existing, paths = found[cid]
-        if canon(existing) != canon(value):
-            raise ValueError(f"DIVERGENT_DUPLICATE_CANDIDATE:{cid}")
-        paths.append(path.as_posix())
-    return found
-
-
 def terminal_ids(root: Path) -> set[str]:
     result: set[str] = set()
     for path in sorted(root.rglob("*.json")) if root.exists() else []:
@@ -70,24 +51,33 @@ def terminal_ids(root: Path) -> set[str]:
 
 
 def build_queue(pending_root: Path, terminal_root: Path, now: datetime) -> dict[str, Any]:
-    candidates = index_candidates(pending_root)
+    groups = classified_candidate_groups(pending_root)
     terminal = terminal_ids(terminal_root)
     rows: list[dict[str, Any]] = []
     counts = {
-        "distinct_candidates": len(candidates),
+        "distinct_candidate_ids": len(groups),
         "terminal_candidates": 0,
         "legacy_pre_cutover": 0,
+        "legacy_identical_duplicate_ids": 0,
+        "legacy_divergent_duplicate_ids": 0,
         "expired_without_terminal": 0,
         "decision_required": 0,
     }
 
-    for cid, (candidate, paths) in sorted(candidates.items()):
+    for cid, group in sorted(groups.items()):
         if cid in terminal:
             counts["terminal_candidates"] += 1
             continue
-        if not is_post_cutover_candidate(candidate):
+        classification = group["classification"]
+        if classification.startswith("LEGACY_PRE_CUTOVER"):
             counts["legacy_pre_cutover"] += 1
+            if classification == "LEGACY_PRE_CUTOVER_IDENTICAL_DUPLICATE":
+                counts["legacy_identical_duplicate_ids"] += 1
+            elif classification == "LEGACY_PRE_CUTOVER_DIVERGENT_DUPLICATE":
+                counts["legacy_divergent_duplicate_ids"] += 1
             continue
+
+        candidate = group["candidate"]
         created = parse_dt(str(candidate["created_at_utc"]))
         deadline = decision_deadline(str(candidate["created_at_utc"]))
         if now > deadline:
@@ -99,7 +89,8 @@ def build_queue(pending_root: Path, terminal_root: Path, now: datetime) -> dict[
             "candidate_sha256": digest(candidate),
             "created_at_utc": iso(created),
             "decision_deadline_utc": iso(deadline),
-            "candidate_paths": paths,
+            "candidate_paths": [path.as_posix() for path in group["paths"]],
+            "candidate_group_classification": classification,
             "model": candidate.get("model"),
             "task": candidate.get("task"),
             "metric_path": payload.get("metric_path"),
@@ -123,6 +114,7 @@ def build_queue(pending_root: Path, terminal_root: Path, now: datetime) -> dict[
         "outcome_data_included": False,
         "outcome_paths_read": [],
         "self_promotion_allowed": False,
+        "legacy_duplicate_policy": "PRE_CUTOVER_MULTI_PATH_IDS_ARE_ARCHIVE_ONLY_POST_CUTOVER_MULTI_PATH_IDS_FAIL_CLOSED",
         "counts": counts,
         "candidates": rows,
         "authority": {
