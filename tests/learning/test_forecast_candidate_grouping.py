@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -26,6 +27,9 @@ class ForecastCandidateGroupingTests(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
         self.root = Path(self.tmp.name)
+        subprocess.run(["git", "init", "-q"], cwd=self.root, check=True)
+        subprocess.run(["git", "config", "user.email", "test@example.com"], cwd=self.root, check=True)
+        subprocess.run(["git", "config", "user.name", "test"], cwd=self.root, check=True)
         self.pending = self.root / "PENDING"
         self.terminals = self.root / "TERMINAL"
         self.packets = self.root / "PACKETS"
@@ -34,6 +38,10 @@ class ForecastCandidateGroupingTests(unittest.TestCase):
         for path in (self.pending, self.terminals, self.packets, self.frozen, self.captures):
             path.mkdir(parents=True, exist_ok=True)
         self.addCleanup(self.tmp.cleanup)
+
+    def commit_current(self, message: str):
+        subprocess.run(["git", "add", "-A"], cwd=self.root, check=True)
+        subprocess.run(["git", "commit", "-qm", message], cwd=self.root, check=True)
 
     def candidate(self, cid: str, created: str, rationale: str = "legacy"):
         return {
@@ -73,6 +81,7 @@ class ForecastCandidateGroupingTests(unittest.TestCase):
         cid = "legacy-dup-terminal"
         self.write("2026/08/03/legacy-dup-terminal.json", self.candidate(cid, "2026-08-03T22:40:23Z", "v1"))
         self.write("2026/08/04/legacy-dup-terminal.json", self.candidate(cid, "2026-08-04T22:43:39Z", "v2"))
+        self.commit_current("record legacy candidates")
         result = process(
             self.pending,
             self.packets,
