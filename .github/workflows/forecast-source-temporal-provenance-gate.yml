@@ -1,0 +1,82 @@
+name: Forecast Source Temporal Provenance Gate
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/api_agent/materialize_forecast_candidates.py'
+      - 'scripts/lib/forecast_ratification_contract.py'
+      - 'scripts/learning/build_forecast_ratification_queue.py'
+      - 'tests/api_agent/test_forecast_candidate_source_temporal_provenance.py'
+      - '.github/workflows/daily-director-shadow.yml'
+      - '.github/workflows/continuity-learning-maintenance.yml'
+      - '.github/workflows/forecast-source-temporal-provenance-gate.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  source-temporal-provenance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compile source temporal provenance modules
+        run: |
+          python -m py_compile \
+            scripts/api_agent/materialize_forecast_candidates.py \
+            scripts/lib/forecast_ratification_contract.py \
+            scripts/learning/build_forecast_ratification_queue.py \
+            tests/api_agent/test_forecast_candidate_source_temporal_provenance.py
+      - name: Source freshness behavioral regressions
+        run: python tests/api_agent/test_forecast_candidate_source_temporal_provenance.py -v
+      - name: Existing ratification throughput regressions
+        run: python tests/learning/test_forecast_ratification_throughput.py -v
+      - name: Existing forecast candidate backlog regressions
+        run: python tests/api_agent/test_forecast_candidate_backlog.py -v
+      - name: Live pending source-provenance census
+        run: |
+          python - <<'PY'
+          import json, sys
+          from pathlib import Path
+          sys.path.insert(0, 'scripts/lib')
+          from forecast_ratification_contract import is_post_source_freshness_cutover_candidate, validate_source_temporal_provenance
+          root=Path('research/api_agent/forecast_candidates/PENDING')
+          checked=0
+          failures=[]
+          for path in sorted(root.rglob('*.json')) if root.exists() else []:
+              try:
+                  row=json.loads(path.read_text())
+              except Exception:
+                  continue
+              if row.get('contract') != 'FORECAST_CANDIDATE_v1' or not is_post_source_freshness_cutover_candidate(row):
+                  continue
+              checked += 1
+              try:
+                  validate_source_temporal_provenance(row)
+              except Exception as exc:
+                  failures.append({'path':str(path),'error':str(exc)})
+          print(json.dumps({'post_source_cutover_candidate_count':checked,'failures':failures},sort_keys=True))
+          assert not failures, failures
+          PY
+      - name: Director-to-Continuity cadence guard
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import sys
+          sys.path.insert(0, 'scripts/lib')
+          from forecast_ratification_contract import SOURCE_OUTPUT_MAX_AGE_MINUTES
+          director=Path('.github/workflows/daily-director-shadow.yml').read_text()
+          continuity=Path('.github/workflows/continuity-learning-maintenance.yml').read_text()
+          assert "cron: '30 23 * * *'" in director, 'expected 23:30 Europe/Copenhagen Director run'
+          assert "cron: '45 23 * * *'" in continuity, 'expected 23:45 Europe/Copenhagen Continuity run'
+          scheduled_gap_minutes=15
+          assert SOURCE_OUTPUT_MAX_AGE_MINUTES >= scheduled_gap_minutes
+          assert SOURCE_OUTPUT_MAX_AGE_MINUTES <= 60
+          print({'scheduled_gap_minutes':scheduled_gap_minutes,'source_output_max_age_minutes':SOURCE_OUTPUT_MAX_AGE_MINUTES})
+          PY
