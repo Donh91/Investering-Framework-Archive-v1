@@ -7,6 +7,7 @@ on:
       - '06_RESEARCH_LAB/historical_sensor_recovery_v1/**'
       - 'scripts/research/shadow_registry_weekly.py'
       - 'tests/research/test_shadow_registry_runtime_integrity.py'
+      - 'tests/research/test_shadow_registry_workflow_governance.py'
       - '.github/workflows/shadow-registry-*.yml'
   workflow_dispatch:
 
@@ -28,8 +29,8 @@ jobs:
       - name: Validate registry schema and authority firewall
         run: python scripts/research/shadow_registry_weekly.py --validate-only
 
-      - name: Run Shadow Registry runtime integrity regression suite
-        run: python -m pytest -q tests/research/test_shadow_registry_runtime_integrity.py
+      - name: Run Shadow Registry runtime and workflow governance regression suites
+        run: python -m pytest -q tests/research/test_shadow_registry_runtime_integrity.py tests/research/test_shadow_registry_workflow_governance.py
 
       - name: Validate recovered legacy queue firewall
         shell: bash
