@@ -5,9 +5,14 @@ on:
     paths:
       - '06_RESEARCH_LAB/protocols/SHADOW_IDEA_ADMISSION_*'
       - '06_RESEARCH_LAB/buildwithclaude_shadow_round1_v1/**'
-      - 'scripts/research/shadow_*'
+      - 'scripts/research/shadow_property_invariant_probe.py'
+      - 'scripts/research/shadow_mutation_probe.py'
+      - 'scripts/research/shadow_session_telemetry.py'
+      - 'scripts/research/shadow_guardrail_probe.py'
       - 'scripts/research/validate_buildwithclaude_shadow_round1.py'
       - '.github/workflows/buildwithclaude-shadow-round1.yml'
+      - '.github/workflows/buildwithclaude-shadow-evidence-ledger.yml'
+      - '.github/workflows/buildwithclaude-shadow-prospective-observer.yml'
   workflow_dispatch:
 
 permissions:
