@@ -336,3 +336,13 @@ jobs:
     )
     assert status == "RED"
     assert "WRITE_TARGET_UNKNOWN" in findings
+
+
+def test_current_repository_has_no_unresolved_write_targets() -> None:
+    workflow_root = Path(__file__).parents[2] / ".github" / "workflows"
+    unknown = []
+    for path in sorted(list(workflow_root.glob("*.yml")) + list(workflow_root.glob("*.yaml"))):
+        row = module.workflow_static(path)
+        if row["write_target_class"] == "DYNAMIC_TARGET_UNKNOWN":
+            unknown.append(path.name)
+    assert unknown == [], f"unresolved repository write targets: {unknown}"
