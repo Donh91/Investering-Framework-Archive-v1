@@ -20,6 +20,7 @@ from forecast_ratification_contract import (  # noqa: E402
 )
 from forecast_settlement_contract import (  # noqa: E402
     SETTLEMENT_EXACT_TARGET_TIME_V1,
+    canonical_price_metric_or_original,
     supports_exact_price_settlement,
 )
 
@@ -54,12 +55,15 @@ def at_path(value: Any, path: str) -> Any:
 
 
 def metric_value(evidence: dict[str, Any], metric_path: str) -> Any:
-    direct = at_path(evidence, metric_path)
+    # Supported price aliases are resolved through their canonical leaf so a
+    # model-authored wrapper prefix can never change settlement eligibility.
+    metric = canonical_price_metric_or_original(metric_path)
+    direct = at_path(evidence, metric)
     if direct is not None:
         return direct
     market_metrics = evidence.get("market_metrics")
     if isinstance(market_metrics, dict):
-        return at_path(market_metrics, metric_path)
+        return at_path(market_metrics, metric)
     return None
 
 
@@ -179,7 +183,8 @@ def validate_ratification(candidate: dict[str, Any], packet: dict[str, Any]) -> 
 def build_frozen(candidate_record: dict[str, Any], packet: dict[str, Any], baseline: dict[str, Any], baseline_path: Path, target: dict[str, Any], lineage: dict[str, Any] | None, decision_at: datetime) -> dict[str, Any]:
     candidate = candidate_record["candidate"]
     horizon = int(candidate["horizon_days"])
-    metric = str(candidate["metric_path"])
+    authored_metric = str(candidate["metric_path"])
+    metric = canonical_price_metric_or_original(authored_metric)
     start = metric_value(baseline, metric)
     baseline_hash = digest(baseline)
     forecast_id = "ff_" + hashlib.sha256(canon({
@@ -187,6 +192,7 @@ def build_frozen(candidate_record: dict[str, Any], packet: dict[str, Any], basel
         "ratification": digest(packet),
         "baseline": baseline_hash,
         "decision_at_utc": iso(decision_at),
+        "metric_path": metric,
     })).hexdigest()[:24]
     frozen: dict[str, Any] = {
         "contract": "FROZEN_FORECAST_v1",
@@ -197,6 +203,7 @@ def build_frozen(candidate_record: dict[str, Any], packet: dict[str, Any], basel
         "outcome_due_utc": iso(decision_at + timedelta(days=horizon)),
         "horizon_days": horizon,
         "metric_path": metric,
+        "candidate_authored_metric_path": authored_metric,
         "direction": candidate["direction"],
         "start_value": float(start),
         "target_mode": target["target_mode"],
@@ -238,9 +245,9 @@ def freeze_candidate(candidate_record: dict[str, Any], packet: dict[str, Any], b
     if baseline_at > decision_at:
         raise ValueError("BASELINE_EVIDENCE_AFTER_RATIFICATION_DECISION")
     candidate = candidate_record["candidate"]
-    metric = str(candidate["metric_path"])
+    metric = canonical_price_metric_or_original(str(candidate["metric_path"]))
     start = metric_value(baseline, metric)
-    if not isinstance(start, (int, float)):
+    if not isinstance(start, (int, float)) or isinstance(start, bool):
         raise ValueError("BASELINE_METRIC_UNAVAILABLE")
     target = normalize_target(candidate, float(start))
     lineage = validate_data_ping_lineage(candidate_record, action_compass_receipt)
