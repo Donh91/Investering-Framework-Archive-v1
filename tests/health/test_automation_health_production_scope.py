@@ -218,3 +218,131 @@ def test_slow_cycle_workflow_preserves_only_stale_exit_code() -> None:
     assert '"$collector_rc" -ne 0' in text
     assert '"$collector_rc" -ne 3' in text
     assert 'exit "$collector_rc"' in text
+
+
+def test_current_shadow_registry_is_branch_only_not_direct_main() -> None:
+    path = (
+        Path(__file__).parents[2]
+        / ".github"
+        / "workflows"
+        / "shadow-registry-weekly.yml"
+    )
+    row = module.workflow_static(path)
+    assert row["write_target_class"] == "BRANCH_ONLY"
+    assert row["writes_main"] is False
+    assert not module.MAIN_WRITER_RISKS.intersection(row["static_risks"])
+
+
+def test_current_automation_health_writer_remains_direct_main() -> None:
+    path = (
+        Path(__file__).parents[2]
+        / ".github"
+        / "workflows"
+        / "automation-production-health.yml"
+    )
+    row = module.workflow_static(path)
+    assert row["write_target_class"] == "DIRECT_MAIN"
+    assert row["writes_main"] is True
+
+
+def test_contents_write_without_git_push_is_not_a_main_writer(tmp_path: Path) -> None:
+    path = tmp_path / "permission-only.yml"
+    path.write_text(
+        """name: Permission Only
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  x:
+    steps:
+      - run: echo no-push
+"""
+    )
+    row = module.workflow_static(path)
+    assert row["write_target_class"] == "WRITE_PERMISSION_NO_PUSH"
+    assert row["writes_main"] is False
+
+
+def test_explicit_non_main_ref_is_branch_only(tmp_path: Path) -> None:
+    path = tmp_path / "branch-only.yml"
+    path.write_text(
+        """name: Branch Only
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  x:
+    steps:
+      - run: git push origin HEAD:automation/test-proof
+"""
+    )
+    row = module.workflow_static(path)
+    assert row["write_target_class"] == "BRANCH_ONLY"
+    assert row["writes_main"] is False
+    assert not module.MAIN_WRITER_RISKS.intersection(row["static_risks"])
+
+
+def test_tag_push_is_not_a_main_writer(tmp_path: Path) -> None:
+    path = tmp_path / "tag.yml"
+    path.write_text(
+        """name: Tag
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  x:
+    steps:
+      - run: git push origin refs/tags/v1
+"""
+    )
+    row = module.workflow_static(path)
+    assert row["write_target_class"] == "TAG_OR_OTHER_REF"
+    assert row["writes_main"] is False
+
+
+def test_unresolved_dynamic_push_target_fails_closed(tmp_path: Path) -> None:
+    path = tmp_path / "dynamic.yml"
+    path.write_text(
+        """name: Dynamic
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  x:
+    steps:
+      - run: git push origin "$TARGET_BRANCH"
+"""
+    )
+    row = module.workflow_static(path)
+    assert row["write_target_class"] == "DYNAMIC_TARGET_UNKNOWN"
+    assert row["writes_main"] is False
+    row["live"] = {
+        "state": "active",
+        "latest_run": {
+            "status": "completed",
+            "conclusion": "success",
+            "created_at": "2026-09-02T18:00:00Z",
+        },
+        "recent_failure_count": 0,
+        "success_streak": 1,
+        "failure_streak": 0,
+    }
+    status, findings = module.classify(
+        row, datetime(2026, 9, 2, 19, tzinfo=timezone.utc)
+    )
+    assert status == "RED"
+    assert "WRITE_TARGET_UNKNOWN" in findings
+
+
+def test_current_repository_has_no_unresolved_write_targets() -> None:
+    workflow_root = Path(__file__).parents[2] / ".github" / "workflows"
+    unknown = []
+    for path in sorted(list(workflow_root.glob("*.yml")) + list(workflow_root.glob("*.yaml"))):
+        row = module.workflow_static(path)
+        if row["write_target_class"] == "DYNAMIC_TARGET_UNKNOWN":
+            unknown.append(path.name)
+    assert unknown == [], f"unresolved repository write targets: {unknown}"
