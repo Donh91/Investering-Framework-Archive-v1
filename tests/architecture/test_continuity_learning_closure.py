@@ -7,24 +7,6 @@ ROOT=Path(__file__).resolve().parents[2]
 def load_module(name,path):
     spec=importlib.util.spec_from_file_location(name,ROOT/path);m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m);return m
 
-def prospective_candidate(candidate_id,payload):
-    return {
-        'contract':'FORECAST_CANDIDATE_v1','candidate_id':candidate_id,'ratification_status':'PENDING',
-        'created_at_utc':'2026-09-02T10:10:00Z','self_promotion_allowed':False,
-        'model':'luna','task':'DAILY_DIRECTOR_SHADOW','prompt_sha256':'p','context_sha256':'c','source_output_sha256':'o',
-        'candidate':payload,
-    }
-
-def owner_packet(freezer,candidate):
-    return {
-        'contract':'FORECAST_RATIFICATION_PACKET_v2','candidate_id':candidate['candidate_id'],
-        'candidate_sha256':freezer.digest(candidate),'decision':'RATIFY','decision_at_utc':'2026-09-02T10:20:00Z',
-        'authority':'CHATGPT_FRAMEWORK_OWNER','owner_actor':'continuity-test-owner','outcome_blind':True,
-        'self_promotion_allowed':False,'prospective_cutover_commit_sha':'4057fde279ed0d8eea2df07da10543bda38ee8f8',
-        'decision_basis_scope':['RATIFICATION_QUEUE','CANDIDATE_RECORD'],'outcome_paths_read':[],
-        'decision_rationale':'Prospective fixture decision using candidate and queue only.',
-    }
-
 class ContinuityLearningTests(unittest.TestCase):
     def test_metric_bearing_predecessor_skips_v1(self):
         m=load_module('ctx',Path('scripts/api_agent/build_owner_bound_director_context.py'))
@@ -47,35 +29,29 @@ class ContinuityLearningTests(unittest.TestCase):
             self.assertNotEqual(p.returncode,0);incidents=list((out/'incidents').glob('RAW_STORAGE_blocked.json'));self.assertEqual(len(incidents),1);v=json.loads(incidents[0].read_text());self.assertEqual(v['status'],'BLOCKED');self.assertEqual(v['required_action'],'MIGRATE_RAW_LANE_TO_DEDICATED_DATA_REPOSITORY')
 
     def test_gateway_schema_contains_explicit_target_units(self):
-        m=load_module('gateway',Path('scripts/api_agent/api_gateway.py'));schema=m.output_schema();item=schema['properties']['forecast_candidates']['items'];self.assertIn('forecast_candidates',schema['required']);self.assertIn('target_mode',item['required']);self.assertIn('threshold_pct',item['properties']);self.assertIn('target_value',item['properties']);self.assertNotIn('threshold',item['properties'])
+        m=load_module('gateway',Path('scripts/api_agent/api_gateway.py'));schema=m.output_schema();branches=schema['properties']['forecast_candidates']['items']['anyOf'];self.assertIn('forecast_candidates',schema['required']);self.assertEqual(len(branches),3);self.assertTrue(all('target_mode' in branch['required'] for branch in branches));self.assertTrue(all('threshold_pct' in branch['properties'] for branch in branches));self.assertTrue(all('target_value' in branch['properties'] for branch in branches));self.assertTrue(all('threshold' not in branch['properties'] for branch in branches))
         m.validate_output({'status':'READY','summary':'x','evidence_for':[],'evidence_against':[],'uncertainties':[],'hypotheses':[],'forecast_candidates':[{'metric_path':'market_metrics.x','direction':'UP','target_mode':'PCT_MOVE','threshold_pct':1.0,'target_value':None,'range_low':None,'range_high':None,'horizon_days':7,'rationale':'test'}]})
 
     def test_ratification_absolute_target_is_normalized_before_freeze(self):
-        freezer=load_module('continuity_freezer_target',Path('scripts/learning/forecast_ratification_freezer.py'))
         with tempfile.TemporaryDirectory() as d:
-            r=Path(d);out=r/'frozen';base_path=r/'baseline.json'
-            candidate=prospective_candidate('c1',{'metric_path':'market.x','direction':'DOWN','target_mode':'ABSOLUTE_VALUE','threshold_pct':None,'target_value':98.0,'range_low':None,'range_high':None,'horizon_days':7,'rationale':'r'})
-            packet=owner_packet(freezer,candidate);baseline={'captured_at_utc':'2026-09-02T10:19:00Z','market':{'x':100.0}};base_path.write_text(json.dumps(baseline))
-            status,v,_=freezer.freeze_candidate(candidate,packet,baseline,base_path,out,None)
-            self.assertEqual(status,'FROZEN');self.assertEqual(v['contract'],'FROZEN_FORECAST_v1');self.assertEqual(v['unit_contract_version'],'FORECAST_TARGET_UNITS_v2');self.assertAlmostEqual(v['threshold_pct'],2.0);self.assertEqual(v['target_value'],98.0);self.assertEqual(v['start_value'],100.0)
+            r=Path(d);candidate=r/'c.json';rat=r/'r.json';base=r/'b.json';out=r/'frozen'
+            candidate.write_text(json.dumps({'contract':'FORECAST_CANDIDATE_v1','candidate_id':'c1','ratification_status':'PENDING','model':'luna','task':'DAILY_DIRECTOR_SHADOW','prompt_sha256':'p','context_sha256':'c','source_output_sha256':'o','candidate':{'metric_path':'market.x','direction':'DOWN','target_mode':'ABSOLUTE_VALUE','threshold_pct':None,'target_value':98.0,'range_low':None,'range_high':None,'horizon_days':7,'rationale':'r'}}));base.write_text(json.dumps({'market':{'x':100.0}}));rat.write_text(json.dumps({'contract':'FORECAST_RATIFICATION_PACKET_v1','candidate_id':'c1','decision':'RATIFY','authority':'CHATGPT_FRAMEWORK_OWNER'}))
+            p=subprocess.run(['python',str(ROOT/'scripts/learning/ratify_forecast_candidate.py'),'--candidate',str(candidate),'--ratification',str(rat),'--baseline-evidence',str(base),'--output-root',str(out)],text=True,capture_output=True)
+            self.assertEqual(p.returncode,0,p.stderr);v=json.loads(next(out.glob('*.json')).read_text());self.assertEqual(v['contract'],'FROZEN_FORECAST_v1');self.assertEqual(v['unit_contract_version'],'FORECAST_TARGET_UNITS_v2');self.assertAlmostEqual(v['threshold_pct'],2.0);self.assertEqual(v['target_value'],98.0);self.assertEqual(v['start_value'],100.0)
 
     def test_ratification_absolute_breadth_target_is_normalized_before_freeze(self):
-        freezer=load_module('continuity_freezer_breadth',Path('scripts/learning/forecast_ratification_freezer.py'))
         with tempfile.TemporaryDirectory() as d:
-            r=Path(d);out=r/'frozen';base_path=r/'baseline.json'
-            candidate=prospective_candidate('breadth-c1',{'metric_path':'breadth.decliners','direction':'UP','target_mode':'ABSOLUTE_VALUE','threshold_pct':None,'target_value':58.0,'range_low':None,'range_high':None,'horizon_days':1,'rationale':'breadth absolute target'})
-            packet=owner_packet(freezer,candidate);baseline={'captured_at_utc':'2026-09-02T10:19:00Z','breadth':{'decliners':38.0}};base_path.write_text(json.dumps(baseline))
-            status,v,_=freezer.freeze_candidate(candidate,packet,baseline,base_path,out,None)
-            self.assertEqual(status,'FROZEN');self.assertEqual(v['unit_contract_version'],'FORECAST_TARGET_UNITS_v2');self.assertEqual(v['target_mode'],'ABSOLUTE_VALUE');self.assertEqual(v['target_value'],58.0);self.assertAlmostEqual(v['threshold_pct'],(58.0/38.0-1.0)*100.0)
+            r=Path(d);candidate=r/'c.json';rat=r/'r.json';base=r/'b.json';out=r/'frozen'
+            candidate.write_text(json.dumps({'contract':'FORECAST_CANDIDATE_v1','candidate_id':'breadth-c1','ratification_status':'PENDING','model':'luna','task':'DAILY_DIRECTOR_SHADOW','prompt_sha256':'p','context_sha256':'c','source_output_sha256':'o','candidate':{'metric_path':'breadth.decliners','direction':'UP','target_mode':'ABSOLUTE_VALUE','threshold_pct':None,'target_value':58.0,'range_low':None,'range_high':None,'horizon_days':1,'rationale':'breadth absolute target'}}));base.write_text(json.dumps({'breadth':{'decliners':38.0}}));rat.write_text(json.dumps({'contract':'FORECAST_RATIFICATION_PACKET_v1','candidate_id':'breadth-c1','decision':'RATIFY','authority':'CHATGPT_FRAMEWORK_OWNER'}))
+            p=subprocess.run(['python',str(ROOT/'scripts/learning/ratify_forecast_candidate.py'),'--candidate',str(candidate),'--ratification',str(rat),'--baseline-evidence',str(base),'--output-root',str(out)],text=True,capture_output=True)
+            self.assertEqual(p.returncode,0,p.stderr);v=json.loads(next(out.glob('*.json')).read_text());self.assertEqual(v['unit_contract_version'],'FORECAST_TARGET_UNITS_v2');self.assertEqual(v['target_mode'],'ABSOLUTE_VALUE');self.assertEqual(v['target_value'],58.0);self.assertAlmostEqual(v['threshold_pct'],(58.0/38.0-1.0)*100.0)
 
     def test_ratification_rejects_legacy_ambiguous_threshold(self):
-        freezer=load_module('continuity_freezer_legacy',Path('scripts/learning/forecast_ratification_freezer.py'))
         with tempfile.TemporaryDirectory() as d:
-            r=Path(d);out=r/'frozen';base_path=r/'baseline.json'
-            candidate=prospective_candidate('c-legacy-shape',{'metric_path':'market.x','direction':'DOWN','threshold':98.0,'range_low':None,'range_high':None,'horizon_days':7,'rationale':'r'})
-            packet=owner_packet(freezer,candidate);baseline={'captured_at_utc':'2026-09-02T10:19:00Z','market':{'x':100.0}};base_path.write_text(json.dumps(baseline))
-            with self.assertRaisesRegex(ValueError,'EXPLICIT_DIRECTIONAL_TARGET_MODE_REQUIRED'):
-                freezer.freeze_candidate(candidate,packet,baseline,base_path,out,None)
+            r=Path(d);candidate=r/'c.json';rat=r/'r.json';base=r/'b.json';out=r/'frozen'
+            candidate.write_text(json.dumps({'contract':'FORECAST_CANDIDATE_v1','candidate_id':'c1','ratification_status':'PENDING','candidate':{'metric_path':'market.x','direction':'DOWN','threshold':98.0,'range_low':None,'range_high':None,'horizon_days':7,'rationale':'r'}}));base.write_text(json.dumps({'market':{'x':100.0}}));rat.write_text(json.dumps({'contract':'FORECAST_RATIFICATION_PACKET_v1','candidate_id':'c1','decision':'RATIFY','authority':'CHATGPT_FRAMEWORK_OWNER'}))
+            p=subprocess.run(['python',str(ROOT/'scripts/learning/ratify_forecast_candidate.py'),'--candidate',str(candidate),'--ratification',str(rat),'--baseline-evidence',str(base),'--output-root',str(out)],text=True,capture_output=True)
+            self.assertNotEqual(p.returncode,0);self.assertIn('EXPLICIT_DIRECTIONAL_TARGET_MODE_REQUIRED',p.stderr+p.stdout)
 
     def test_maturation_quarantines_legacy_directional_units(self):
         m=load_module('maturation',Path('scripts/learning/outcome_maturation_engine.py'))

@@ -1,0 +1,34 @@
+{
+  "allowed_change_scope": [
+    ".github/workflows/daily-director-shadow.yml",
+    "research/api_agent/directly related Daily Director prompt, schema and parser code",
+    "scripts/directly related Daily Director forecast candidate validation/materialization code",
+    "tests/api_agent",
+    "tests/directly related Daily Director contract tests"
+  ],
+  "branch": "fix/20260901-daily-director-directional-threshold",
+  "candidate_id": "codex-daily-director-directional-threshold-root-cause-v1",
+  "candidate_path": "research/codex/intake/2026/08/codex-daily-director-directional-threshold-root-cause-v1.json",
+  "candidate_sha256": "6077fcef590be559bb13bacadcd8a3c27dcb78a1bcc7f76473f74eb52ec7e3ed",
+  "contract": "CODEX_RESEARCH_TRANSITION_RECEIPT_v1",
+  "forbidden_changes": [
+    "API budget",
+    "automatic merge or self-promotion",
+    "canonical authority",
+    "converting invalid API output into PASS",
+    "inventing or defaulting a directional percentage threshold without existing contract authority",
+    "market gates",
+    "model weights",
+    "new policy semantics",
+    "portfolio logic",
+    "weakening required forecast fields merely to make parsing pass"
+  ],
+  "objective": "Reproduce and resolve the current Daily Director API_OUTPUT_INVALID failure where both attempts fail with directional_pct_threshold_required. Determine whether the defect is in prompt/schema contract alignment, parser validation, candidate materialization, or model-output shaping, then implement the smallest deterministic repair without relaxing forecast semantics, fabricating thresholds, or allowing invalid API output to pass silently.",
+  "post_fix_gate": "ONE_PRODUCTION_SHAPE_PASS_PLUS_ONE_NATURAL_DAILY_DIRECTOR_PASS_WITH_NO_DIRECTIONAL_THRESHOLD_PARSE_ERROR",
+  "pr_number": 715,
+  "receipt_sha256": "79afbd3c4e617bc3d5f2c3b27d7eff9e4749762a6d410f6925fa903b14abc5af",
+  "recorded_at_utc": "2026-09-01T20:19:46Z",
+  "signature": "774d6478412574ae9461",
+  "state": "IN_REMEDIATION",
+  "task_contract_sha256": "fdf86834f09ef88ecad73cae3dfa1c1ae078643709e975e5fa224baff83f66a7"
+}
