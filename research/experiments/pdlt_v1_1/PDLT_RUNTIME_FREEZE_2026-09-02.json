@@ -1,0 +1,50 @@
+{
+  "contract": "PDLT_RUNTIME_FREEZE_v1",
+  "experiment_id": "PDLT-v1.1-RUN",
+  "recorded_at_utc": "2026-09-02T06:28:10Z",
+  "status": "FROZEN_NO_PROSPECTIVE_EVIDENCE",
+  "authority": "SHADOW_RESEARCH_GOVERNANCE_ONLY",
+  "decision": "FREEZE_RUNTIME_PRESERVE_METHODS_AND_HISTORY",
+  "evidence_at_freeze": {
+    "methods_status": "PREEXECUTION_REPAIR_CODED_DISCOVERY_REMAINS_FROZEN",
+    "methods_verdict": "BLOCKED_STATISTICAL_IDENTIFIABILITY",
+    "validated_frozen_model_present": false,
+    "persisted_pdlt_census_directory_present": false,
+    "persisted_pdlt_forecast_ledger_present": false,
+    "persisted_pdlt_outcome_ledger_present": false,
+    "prospective_census_commit_count_observed": 0,
+    "maturation_commit_count_observed": 0,
+    "historical_bootstrap_role": "IMMUTABLE_PRIOR_RESEARCH_NOT_PROSPECTIVE_EVIDENCE"
+  },
+  "runtime_problem": {
+    "daily_census_was_scheduled_without_a_validated_frozen_model": true,
+    "maturation_was_scheduled_without_a_pdlt_forecast_ledger": true,
+    "maturation_code_can_report_pass_with_zero_created_outcomes": true,
+    "scheduled_runtime_had_contents_write_to_main": true,
+    "current_decision_value": "NONE_UNTIL_PROSPECTIVE_MODEL_AND_EVIDENCE_EXIST"
+  },
+  "preserved_assets": [
+    "PDLT_CONFIG_v1_1",
+    "PDLT methods hardening contract",
+    "historical bootstrap evidence",
+    "discovery implementation",
+    "census and maturation implementations",
+    "runtime and methods tests"
+  ],
+  "reactivation_requirements": [
+    "ALL_PDLT_METHODS_HARDENING_REOPEN_REQUIREMENTS_SATISFIED",
+    "INDEPENDENT_REVIEW_OF_DISCOVERY_REPAIR_PASS",
+    "VALIDATED_IMMUTABLE_FROZEN_MODEL_MATERIALIZED_WITH_PROVENANCE",
+    "PROSPECTIVE_PREREGISTRATION_BOUND_BEFORE_FIRST_FORECAST",
+    "RUNTIME_AND_ARCHITECTURE_CI_GREEN_ON_REACTIVATION_PR",
+    "NO_DIRECT_MAIN_RESEARCH_WRITER_WITHOUT_EXPLICIT_GOVERNED_EXCEPTION",
+    "MISSING_FORECAST_LEDGER_MUST_NOT_BE_REPORTED_AS_HEALTHY_MATURATION",
+    "ANY_PAID_CFGI_OR_OPENAI_SPEND_REQUIRES_EXISTING_BUDGET_GUARDS_AND_EXPLICIT_AUTHORIZATION"
+  ],
+  "authority_effects": {
+    "canonical_promotion": false,
+    "framework_state_change": false,
+    "model_weight_change": false,
+    "portfolio_action": false
+  }
+}
