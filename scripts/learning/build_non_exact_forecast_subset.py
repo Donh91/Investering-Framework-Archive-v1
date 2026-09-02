@@ -4,9 +4,11 @@ from __future__ import annotations
 import argparse
 import json
 import shutil
+import sys
 from pathlib import Path
 
-from scripts.lib.forecast_settlement_contract import SETTLEMENT_EXACT_TARGET_TIME_V1
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
+from forecast_settlement_contract import SETTLEMENT_EXACT_TARGET_TIME_V1  # noqa: E402
 
 
 def build_subset(forecast_root: Path, output_root: Path) -> dict[str, int]:
