@@ -1,11 +1,18 @@
 from __future__ import annotations
 
+import importlib.util
 import json
 import tempfile
 import unittest
 from pathlib import Path
 
-from scripts.learning.build_non_exact_forecast_subset import build_subset
+ROOT = Path(__file__).resolve().parents[2]
+SCRIPT = ROOT / "scripts" / "learning" / "build_non_exact_forecast_subset.py"
+_spec = importlib.util.spec_from_file_location("build_non_exact_forecast_subset", SCRIPT)
+_module = importlib.util.module_from_spec(_spec)
+assert _spec.loader is not None
+_spec.loader.exec_module(_module)
+build_subset = _module.build_subset
 
 
 class NonExactForecastSubsetTests(unittest.TestCase):
