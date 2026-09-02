@@ -1,0 +1,32 @@
+{
+  "allowed_change_scope": [
+    "scripts/data_terminal/top100_breadth_owner_collector.py",
+    "tests/data_terminal/test_top100_breadth_owner_collector.py",
+    "scripts/data_terminal/a directly related small eligibility taxonomy helper if deduplication materially improves maintainability"
+  ],
+  "branch": "fix/20260901-live-breadth-stablecoin-taxonomy",
+  "candidate_id": "codex-research-live-breadth-stablecoin-exclusion-integrity-v1",
+  "candidate_path": "research/codex/intake/2026/08/codex-research-live-breadth-stablecoin-exclusion-integrity-v1.json",
+  "candidate_sha256": "c262a11f99cb9eface291929032c557bd554f25ffb546ea6d29d424406fe8d0a",
+  "contract": "CODEX_RESEARCH_TRANSITION_RECEIPT_v1",
+  "forbidden_changes": [
+    "API budget",
+    "automatic rule promotion",
+    "canonical authority",
+    "historical pseudo-backfill",
+    "market gates",
+    "model weights",
+    "new market engine",
+    "new policy semantics",
+    "new provider",
+    "portfolio logic"
+  ],
+  "objective": "Repair the existing CoinGecko Top100 breadth proxy so its declared STABLECOINS exclusion is deterministic and truthful. Reuse the already validated exact-stablecoin taxonomy principles from the 12 July frozen-universe research where applicable, add explicit taxonomy/version/limitation provenance, and prevent known stablecoins from entering the 100 eligible constituents. Preserve PROXY_ONLY / non-canonical authority and introduce no market threshold, source call, or portfolio semantics.",
+  "post_fix_gate": "STABLECOIN_TAXONOMY_FIXTURE_PASS_PLUS_ONE_NATURAL_BREADTH_CAPTURE_WITH_ZERO_KNOWN_STABLE_SYMBOLS_IN_CONSTITUENTS",
+  "pr_number": 713,
+  "receipt_sha256": "978df7851ebaa98c6a36a10b2ac323b79fdfe10da1fc1c02fc0472f2e2dbef77",
+  "recorded_at_utc": "2026-09-01T20:09:51Z",
+  "signature": "560bc131167442101f8b",
+  "state": "IN_REMEDIATION",
+  "task_contract_sha256": "c487b4d94e54eb1995c5521a8d15bac0e107dd48c36ac6c32c62204dea2777b1"
+}

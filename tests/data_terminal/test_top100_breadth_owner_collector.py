@@ -5,6 +5,9 @@ import tempfile
 import unittest
 
 PATH = pathlib.Path("scripts/data_terminal/top100_breadth_owner_collector.py")
+ARCHIVED_RAW = pathlib.Path(
+    "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/08/2026-08-30/raw_source_payload.json"
+)
 SPEC = importlib.util.spec_from_file_location("breadth_owner", PATH)
 MODULE = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(MODULE)
@@ -81,6 +84,58 @@ class Top100BreadthOwnerTests(unittest.TestCase):
         constituents, exclusions, _ = MODULE.parse(json.dumps(rows).encode())
         self.assertTrue(any(row["reason"] == "STABLECOIN" for row in exclusions))
         self.assertEqual(len(constituents), 100)
+
+    def test_validated_live_stablecoin_leaks_are_excluded_and_backfilled(self):
+        rows = json.loads(payload(104))
+        stablecoins = (
+            ("usd1-wlfi", "usd1", "USD1"),
+            ("global-dollar", "usdg", "Global Dollar"),
+            ("ripple-usd", "rlusd", "Ripple USD"),
+            ("gho", "gho", "GHO"),
+        )
+        for row, (asset_id, symbol, name) in zip(rows, stablecoins):
+            row.update(id=asset_id, symbol=symbol, name=name)
+        constituents, exclusions, _ = MODULE.parse(json.dumps(rows).encode())
+        self.assertEqual(len(constituents), 100)
+        self.assertEqual({row["asset_id"] for row in constituents}.intersection(x[0] for x in stablecoins), set())
+        excluded = {row["asset_id"]: row for row in exclusions}
+        self.assertEqual(set(excluded), {x[0] for x in stablecoins})
+        for asset_id, _, _ in stablecoins:
+            self.assertEqual(excluded[asset_id]["reason"], "STABLECOIN")
+            self.assertEqual(excluded[asset_id]["taxonomy_identifier"], MODULE.STABLECOIN_TAXONOMY_ID)
+            self.assertEqual(excluded[asset_id]["taxonomy_version"], MODULE.STABLECOIN_TAXONOMY_VERSION)
+        self.assertEqual(constituents[-1]["asset_id"], "asset-103")
+
+    def test_taxonomy_provenance_is_explicit_and_deterministic(self):
+        _, _, aggregate = MODULE.parse(payload())
+        taxonomy = MODULE.owner_interface(aggregate, "2026-09-01T00:00:00Z")["universe"][
+            "stablecoin_exclusion_taxonomy"
+        ]
+        self.assertEqual(taxonomy["identifier"], "CMC_FROZEN_BREADTH_V2_EXACT_STABLE_SYMBOLS")
+        self.assertEqual(taxonomy["version"], "2026-07-12")
+        self.assertEqual(taxonomy["exact_symbol_count"], len(MODULE.STABLE_SYMBOLS))
+        self.assertEqual(taxonomy["exact_symbols"], sorted(MODULE.STABLE_SYMBOLS))
+        self.assertEqual(len(taxonomy["exact_symbols_sha256"]), 64)
+        self.assertEqual(taxonomy["validated_source"]["commit"], "7f338cfbac1da29682fea9bb5772e47fb4af421a")
+        self.assertFalse(taxonomy["live_source_tags_available"])
+
+    def test_protocol_association_and_ambiguous_classes_are_not_guessed_as_stablecoins(self):
+        rows = json.loads(payload())
+        rows[0].update(id="maker", symbol="mkr", name="Maker Stablecoin Protocol")
+        rows[1].update(id="blackrock-buidl", symbol="buidl", name="Tokenized Treasury Fund")
+        rows[2].update(id="tether-gold", symbol="xaut", name="Tether Gold")
+        rows[3].update(id="wrapped-bitcoin", symbol="wbtc", name="Wrapped Bitcoin")
+        constituents, exclusions, _ = MODULE.parse(json.dumps(rows).encode())
+        eligible = {row["asset_id"] for row in constituents}
+        self.assertTrue({"maker", "blackrock-buidl", "tether-gold", "wrapped-bitcoin"}.issubset(eligible))
+        self.assertFalse(any(row["reason"] == "STABLECOIN" for row in exclusions))
+
+    def test_archived_reproduction_raw_has_zero_validated_stable_symbols_after_parse(self):
+        constituents, exclusions, _ = MODULE.parse(ARCHIVED_RAW.read_bytes())
+        self.assertEqual(len(constituents), 100)
+        self.assertFalse({row["symbol"].upper() for row in constituents}.intersection(MODULE.STABLE_SYMBOLS))
+        excluded_symbols = {row["symbol"].upper() for row in exclusions if row["reason"] == "STABLECOIN"}
+        self.assertTrue({"USD1", "USDG", "RLUSD", "GHO"}.issubset(excluded_symbols))
 
     def test_blockchaincenter_payload_reconciles_all_horizons(self):
         context = MODULE.build_rotation_context(blockchaincenter_payload(), "2026-08-25T07:15:00Z")

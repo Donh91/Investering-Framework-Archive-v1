@@ -28,9 +28,22 @@ BLOCKCHAINCENTER_URL = "https://www.blockchaincenter.net/altcoin-season-index/"
 COINMARKETCAP_URL = "https://coinmarketcap.com/charts/altcoin-season-index/"
 MAX_SOURCE_BYTES = 2_000_000
 TIMEFRAMES = ("30", "90", "365")
-STABLE_SYMBOLS = {
-    "usdt", "usdc", "dai", "fdusd", "usde", "usds", "tusd", "usdd", "pyusd",
-    "frax", "usdp", "gusd", "lusd", "susd", "crvusd",
+STABLE_SYMBOLS = frozenset({
+    "USDT", "USDC", "BUSD", "DAI", "TUSD", "USDP", "PAX", "GUSD",
+    "USDD", "FRAX", "LUSD", "DOLA", "MIM", "USTC", "UST", "USDN",
+    "FEI", "FDUSD", "PYUSD", "USDE", "USDS", "SUSD", "CRVUSD", "GHO",
+    "CUSD", "CEUR", "EURT", "EURC", "EURS", "XSGD", "XIDR", "BIDR",
+    "IDRT", "VAI", "OUSD", "HUSD", "USDK", "USDX", "USDR", "USDB",
+    "USDL", "USD0", "RLUSD", "USDA", "DJED", "MAI", "MUSD", "ALUSD",
+    "TOR", "USN", "USX", "USK", "USC", "USDJ", "USD1", "USDG",
+})
+STABLECOIN_TAXONOMY_ID = "CMC_FROZEN_BREADTH_V2_EXACT_STABLE_SYMBOLS"
+STABLECOIN_TAXONOMY_VERSION = "2026-07-12"
+STABLECOIN_TAXONOMY_SOURCE = {
+    "repository": "Donh91/Eksperimenter-framework-",
+    "commit": "7f338cfbac1da29682fea9bb5772e47fb4af421a",
+    "path": "scripts/fetch_cmc_frozen_breadth_v2.py",
+    "blob_sha": "4010dc34628b98aad80bf3b6771dc94dae37cd37",
 }
 BREADTH_UNIVERSE_ID = "COINGECKO_MARKET_CAP_TOP100_FILTERED_EX_STABLECOINS_v1"
 BREADTH_UNIVERSE_VERSION = "TOP100_FILTERED_STABLE_EXCLUSION_RICH_BREADTH_v1_2"
@@ -98,6 +111,26 @@ def canonical(value: Any) -> bytes:
     return json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode()
 
 
+def stablecoin_taxonomy_metadata() -> dict[str, Any]:
+    exact_symbols = sorted(STABLE_SYMBOLS)
+    return {
+        "identifier": STABLECOIN_TAXONOMY_ID,
+        "version": STABLECOIN_TAXONOMY_VERSION,
+        "basis": "CASE_NORMALIZED_EXACT_SYMBOL_MATCH",
+        "exact_symbols": exact_symbols,
+        "exact_symbol_count": len(exact_symbols),
+        "exact_symbols_sha256": sha(canonical(exact_symbols)),
+        "validated_source": dict(STABLECOIN_TAXONOMY_SOURCE),
+        "live_source_tags_available": False,
+        "limitations": [
+            "CoinGecko markets payload has no validated stablecoin tags; no category call is added.",
+            "Ambiguous tokenized treasuries, commodity proxies and wrapped/LST assets "
+            "are not inferred as stablecoins.",
+            "Exact-symbol taxonomy can require a reviewed version update when stablecoin symbols change.",
+        ],
+    }
+
+
 def owner_interface(aggregate: dict[str, Any], retrieval: str) -> dict[str, Any]:
     return {
         "universe": {
@@ -110,6 +143,7 @@ def owner_interface(aggregate: dict[str, Any], retrieval: str) -> dict[str, Any]
             "membership_hash": aggregate["membership_hash"],
             "membership_semantics": "POINT_IN_TIME_FILTERED_MEMBERSHIP_AT_RETRIEVAL",
             "explicit_exclusions": ["STABLECOINS", "MISSING_REQUIRED_VALUE"],
+            "stablecoin_exclusion_taxonomy": stablecoin_taxonomy_metadata(),
         },
         "observation": {
             "cutoff_utc": retrieval,
@@ -165,11 +199,19 @@ def parse(payload: bytes) -> tuple[list[dict[str, Any]], list[dict[str, Any]], d
             raise E("SCHEMA_DRIFT", f"row {source_rank} missing fields or is not object")
         asset_id = str(row["id"])
         symbol = str(row["symbol"]).lower()
+        normalized_symbol = symbol.upper()
         if asset_id in seen:
             raise E("DUPLICATE_ASSET", asset_id)
         seen.add(asset_id)
-        if symbol in STABLE_SYMBOLS:
-            exclusions.append({"asset_id": asset_id, "symbol": symbol, "source_rank": source_rank, "reason": "STABLECOIN"})
+        if normalized_symbol in STABLE_SYMBOLS:
+            exclusions.append({
+                "asset_id": asset_id,
+                "symbol": symbol,
+                "source_rank": source_rank,
+                "reason": "STABLECOIN",
+                "taxonomy_identifier": STABLECOIN_TAXONOMY_ID,
+                "taxonomy_version": STABLECOIN_TAXONOMY_VERSION,
+            })
             continue
         change = row["price_change_percentage_24h"]
         if row["market_cap"] is None or row["current_price"] is None or change is None:
