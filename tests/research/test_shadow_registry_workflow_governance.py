@@ -16,6 +16,21 @@ def test_weekly_uses_reviewed_pr_not_direct_main():
     assert "git push origin main" not in text
 
 
+def test_branch_sync_configures_git_identity_before_merge():
+    text = WEEKLY.read_text()
+    block = text.split("- name: Select deterministic reviewed-PR branch", 1)[1].split(
+        "- name: Validate registry contract", 1
+    )[0]
+    name = "git config user.name 'framework-data-bot'"
+    email = "git config user.email 'framework-data-bot@users.noreply.github.com'"
+    merge = "git merge --no-edit origin/main"
+    assert name in block
+    assert email in block
+    assert merge in block
+    assert block.index(name) < block.index(merge)
+    assert block.index(email) < block.index(merge)
+
+
 def test_native_branch_gates_are_dispatched_and_bound_to_exact_head():
     text = WEEKLY.read_text()
     for workflow in (
