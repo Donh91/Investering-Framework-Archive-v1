@@ -84,6 +84,20 @@ jobs:
             --evidence-root 03_DAILY_CAPTURE_LOGS/captures \
             --output-root research/framework_memory/outcome_memory \
             --max-evidence-lag-hours 24
+      - name: Replay superseded legacy price outcomes append-only
+        continue-on-error: true
+        run: |
+          mkdir -p research/framework_memory/{outcome_replay_evidence,outcome_replay_raw,outcome_replays,outcome_supersession}
+          python scripts/learning/replay_superseded_forecast_outcomes.py \
+            --forecast-root research/framework_memory/forecast_memory \
+            --original-outcome-root research/framework_memory/outcome_memory \
+            --evidence-root research/framework_memory/outcome_replay_evidence \
+            --raw-root research/framework_memory/outcome_replay_raw \
+            --replay-outcome-root research/framework_memory/outcome_replays \
+            --overlay-root research/framework_memory/outcome_supersession \
+            --repo-root . \
+            --max-new-replays 10 \
+            | tee research/framework_memory/outcome_supersession/LATEST_REPLAY_RUN.json
       - name: Validate Action Compass receipts and mature continuous sidecars
         run: |
           mkdir -p research/framework_memory/{action_compass_receipts,action_compass_outcomes}
