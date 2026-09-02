@@ -15,6 +15,7 @@ sys.path.insert(0, str(ROOT / "scripts" / "lib"))
 sys.path.insert(0, str(ROOT / "scripts" / "learning"))
 
 from forecast_candidate_grouping import classified_candidate_groups  # noqa: E402
+from forecast_ratification_baseline import select_archived_baseline  # noqa: E402
 from forecast_ratification_contract import (  # noqa: E402
     CANDIDATE_RECORDING_TOLERANCE_MINUTES,
     CUTOVER_COMMIT_SHA,
@@ -131,24 +132,13 @@ def validate_packet_timing(
 
 
 def select_baseline(capture_root: Path, metric: str, decision_at: datetime) -> tuple[Path, dict[str, Any], datetime]:
-    eligible: list[tuple[datetime, Path, dict[str, Any]]] = []
-    for path in sorted(capture_root.rglob("*.json")) if capture_root.exists() else []:
-        try:
-            value = read(path)
-            observed = ratifier.evidence_timestamp(value)
-        except Exception:
-            continue
-        if observed > decision_at:
-            continue
-        start = ratifier.metric_value(value, metric)
-        if not isinstance(start, (int, float)):
-            continue
-        eligible.append((observed, path, value))
-    if not eligible:
-        raise ValueError("NO_BASELINE_EVIDENCE_AT_OR_BEFORE_RATIFICATION_DECISION")
-    eligible.sort(key=lambda row: (row[0], row[1].as_posix()))
-    observed, path, value = eligible[-1]
-    return path, value, observed
+    return select_archived_baseline(
+        capture_root,
+        metric,
+        decision_at,
+        metric_value=ratifier.metric_value,
+        evidence_timestamp=ratifier.evidence_timestamp,
+    )
 
 
 def terminal_record(
@@ -201,6 +191,7 @@ def terminal_record(
             "path": baseline_path.as_posix(),
             "sha256": digest(baseline),
             "observed_at_utc": iso(ratifier.evidence_timestamp(baseline)),
+            "selection_semantics": "LATEST_IMMUTABLE_ARCHIVED_CAPTURE_AT_OR_BEFORE_OWNER_DECISION",
         }
     if frozen is not None and frozen_path is not None:
         value["frozen_forecast"] = {
