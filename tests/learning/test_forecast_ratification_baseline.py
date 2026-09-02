@@ -29,10 +29,13 @@ def evidence_timestamp(value):
 
 
 class ForecastRatificationBaselineTests(unittest.TestCase):
-    def write(self, root: Path, relative: str, observed: str, price: float):
+    def write(self, root: Path, relative: str, observed: str, price: float | None):
         path = root / relative
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(json.dumps({'captured_at_utc': observed, 'market': {'price': price}}))
+        payload = {'captured_at_utc': observed}
+        if price is not None:
+            payload['market'] = {'price': price}
+        path.write_text(json.dumps(payload))
         return path
 
     def test_mutable_latest_pointer_is_never_selected(self):
@@ -90,6 +93,27 @@ class ForecastRatificationBaselineTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, 'NO_ARCHIVED_BASELINE_EVIDENCE'):
                 select_archived_baseline(
                     root, 'market.price', datetime(2026, 9, 2, 10, 20, tzinfo=UTC),
+                    metric_value=metric_value, evidence_timestamp=evidence_timestamp,
+                )
+
+    def test_freshest_capture_missing_metric_never_reaches_back_to_old_metric(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            self.write(root, '2026/09/02/old.json', '2026-09-02T09:00:00Z', 65015.28)
+            self.write(root, '2026/09/02/fresh.json', '2026-09-02T10:19:00Z', None)
+            with self.assertRaisesRegex(ValueError, 'BASELINE_METRIC_UNAVAILABLE_IN_FRESHEST_ARCHIVED_CAPTURE'):
+                select_archived_baseline(
+                    root, 'market.price', datetime(2026, 9, 2, 10, 20, tzinfo=UTC),
+                    metric_value=metric_value, evidence_timestamp=evidence_timestamp,
+                )
+
+    def test_freshest_capture_itself_must_be_recent(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            self.write(root, '2026/09/02/stale.json', '2026-09-02T09:00:00Z', 100.0)
+            with self.assertRaisesRegex(ValueError, 'FRESHEST_ARCHIVED_BASELINE_CAPTURE_STALE'):
+                select_archived_baseline(
+                    root, 'market.price', datetime(2026, 9, 2, 10, 20, 1, tzinfo=UTC),
                     metric_value=metric_value, evidence_timestamp=evidence_timestamp,
                 )
 
