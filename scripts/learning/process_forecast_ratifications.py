@@ -14,6 +14,7 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "scripts" / "lib"))
 sys.path.insert(0, str(ROOT / "scripts" / "learning"))
 
+from forecast_candidate_grouping import classified_candidate_groups  # noqa: E402
 from forecast_ratification_contract import (  # noqa: E402
     CANDIDATE_RECORDING_TOLERANCE_MINUTES,
     CUTOVER_COMMIT_SHA,
@@ -22,12 +23,11 @@ from forecast_ratification_contract import (  # noqa: E402
     RATIFICATION_PACKET_V2,
     RATIFICATION_TERMINAL_V1,
     decision_deadline,
-    is_post_cutover_candidate,
     iso,
     parse_dt,
     validate_packet_shape,
 )
-import ratify_forecast_candidate as ratifier  # noqa: E402
+import forecast_ratification_freezer as ratifier  # noqa: E402
 
 UTC = timezone.utc
 
@@ -50,25 +50,6 @@ def digest(value: Any) -> str:
 
 def read(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text())
-
-
-def index_candidates(root: Path) -> dict[str, tuple[dict[str, Any], list[Path]]]:
-    found: dict[str, tuple[dict[str, Any], list[Path]]] = {}
-    for path in sorted(root.rglob("*.json")) if root.exists() else []:
-        value = read(path)
-        if value.get("contract") != "FORECAST_CANDIDATE_v1":
-            continue
-        cid = str(value.get("candidate_id") or "")
-        if not cid:
-            raise ValueError(f"CANDIDATE_ID_MISSING:{path}")
-        if cid not in found:
-            found[cid] = (value, [path])
-            continue
-        existing, paths = found[cid]
-        if canon(existing) != canon(value):
-            raise ValueError(f"DIVERGENT_DUPLICATE_CANDIDATE:{cid}")
-        paths.append(path)
-    return found
 
 
 def index_packets(root: Path) -> dict[str, tuple[dict[str, Any], Path]]:
@@ -149,10 +130,6 @@ def validate_packet_timing(
     return decision_at
 
 
-def candidate_metric_value(evidence: dict[str, Any], metric: str) -> Any:
-    return ratifier.metric_value(evidence, metric)
-
-
 def select_baseline(capture_root: Path, metric: str, decision_at: datetime) -> tuple[Path, dict[str, Any], datetime]:
     eligible: list[tuple[datetime, Path, dict[str, Any]]] = []
     for path in sorted(capture_root.rglob("*.json")) if capture_root.exists() else []:
@@ -163,7 +140,7 @@ def select_baseline(capture_root: Path, metric: str, decision_at: datetime) -> t
             continue
         if observed > decision_at:
             continue
-        start = candidate_metric_value(value, metric)
+        start = ratifier.metric_value(value, metric)
         if not isinstance(start, (int, float)):
             continue
         eligible.append((observed, path, value))
@@ -238,6 +215,35 @@ def terminal_record(
     return value
 
 
+def legacy_divergent_terminal_record(group: dict[str, Any], now: datetime) -> dict[str, Any]:
+    variants = [
+        {
+            "path": row["path"].as_posix(),
+            "sha256": row["sha256"],
+            "created_at_utc": row.get("created_at_utc"),
+        }
+        for row in group["variants"]
+    ]
+    value: dict[str, Any] = {
+        "contract": RATIFICATION_TERMINAL_V1,
+        "candidate_id": group["candidate_id"],
+        "candidate_sha256": None,
+        "candidate_paths": [path.as_posix() for path in group["paths"]],
+        "candidate_variants": variants,
+        "candidate_variant_count": len(variants),
+        "candidate_group_classification": group["classification"],
+        "terminal_at_utc": iso(now),
+        "disposition": "LEGACY_PRE_CUTOVER_DIVERGENT_DUPLICATE_HINDSIGHT_INELIGIBLE",
+        "prospective_cutover_commit_sha": CUTOVER_COMMIT_SHA,
+        "historical_candidate_rewritten": False,
+        "outcome_data_read": False,
+        "ratification_allowed": False,
+        "authority": AUTHORITY,
+    }
+    value["terminal_sha256"] = digest(value)
+    return value
+
+
 def write_terminal(path: Path, value: dict[str, Any]) -> str:
     path.parent.mkdir(parents=True, exist_ok=True)
     if path.exists():
@@ -265,18 +271,27 @@ def process(
     repo_root: Path,
     now: datetime,
 ) -> dict[str, Any]:
-    candidates = index_candidates(pending_root)
+    groups = classified_candidate_groups(pending_root)
     packets = index_packets(packet_root)
     counts: dict[str, int] = {}
     errors: list[dict[str, str]] = []
 
-    for cid, (candidate, candidate_paths) in sorted(candidates.items()):
+    for cid, group in sorted(groups.items()):
         terminal_path = terminal_root / f"{cid}.json"
         if terminal_path.exists():
             counts["ALREADY_TERMINAL"] = counts.get("ALREADY_TERMINAL", 0) + 1
             continue
         try:
-            if not is_post_cutover_candidate(candidate):
+            classification = group["classification"]
+            if classification == "LEGACY_PRE_CUTOVER_DIVERGENT_DUPLICATE":
+                terminal = legacy_divergent_terminal_record(group, now)
+                write_terminal(terminal_path, terminal)
+                counts[terminal["disposition"]] = counts.get(terminal["disposition"], 0) + 1
+                continue
+
+            candidate = group["candidate"]
+            candidate_paths = group["paths"]
+            if classification.startswith("LEGACY_PRE_CUTOVER"):
                 terminal = terminal_record(candidate, candidate_paths, "LEGACY_PRE_CUTOVER_HINDSIGHT_INELIGIBLE", now)
                 write_terminal(terminal_path, terminal)
                 counts["LEGACY_PRE_CUTOVER_HINDSIGHT_INELIGIBLE"] = counts.get("LEGACY_PRE_CUTOVER_HINDSIGHT_INELIGIBLE", 0) + 1
@@ -285,8 +300,6 @@ def process(
             packet_row = packets.get(cid)
             deadline = decision_deadline(str(candidate["created_at_utc"]))
             if packet_row is None and now <= deadline:
-                # A new candidate can be untracked in the same maintenance run.
-                # It is never terminalized until its first Git record exists.
                 counts["AWAITING_OWNER_DECISION"] = counts.get("AWAITING_OWNER_DECISION", 0) + 1
                 continue
 
@@ -352,7 +365,7 @@ def process(
         except Exception as exc:
             errors.append({"candidate_id": cid, "error": str(exc)})
 
-    orphan_packets = sorted(set(packets) - set(candidates))
+    orphan_packets = sorted(set(packets) - set(groups))
     if orphan_packets:
         errors.append({"candidate_id": "MULTIPLE", "error": "ORPHAN_RATIFICATION_PACKETS:" + ",".join(orphan_packets)})
 
