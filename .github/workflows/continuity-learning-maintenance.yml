@@ -18,7 +18,7 @@ jobs:
   maintain:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
         with:
@@ -37,8 +37,49 @@ jobs:
               if receipt.exists():
                   subprocess.run(['python','scripts/api_agent/materialize_forecast_candidates.py','--output',str(out),'--receipt',str(receipt),'--pending-root','research/api_agent/forecast_candidates/PENDING'],check=True)
           PY
-      - name: Mature ratified forecasts
-        run: python scripts/learning/outcome_maturation_engine.py --forecast-root research/api_agent/forecast_candidates/FROZEN --evidence-root 03_DAILY_CAPTURE_LOGS/captures --output-root research/api_agent/forecast_candidates/MATURED
+      - name: Process prospective owner ratification packets
+        run: |
+          mkdir -p research/api_agent/forecast_candidates/{RATIFICATION_INBOX,RATIFICATION_TERMINAL,FROZEN}
+          python scripts/learning/process_forecast_ratifications.py \
+            --pending-root research/api_agent/forecast_candidates/PENDING \
+            --packet-root research/api_agent/forecast_candidates/RATIFICATION_INBOX \
+            --terminal-root research/api_agent/forecast_candidates/RATIFICATION_TERMINAL \
+            --frozen-root research/api_agent/forecast_candidates/FROZEN \
+            --capture-root 03_DAILY_CAPTURE_LOGS/captures \
+            --repo-root .
+      - name: Build outcome-free ratification queue for framework owner
+        run: |
+          python scripts/learning/build_forecast_ratification_queue.py \
+            --pending-root research/api_agent/forecast_candidates/PENDING \
+            --terminal-root research/api_agent/forecast_candidates/RATIFICATION_TERMINAL \
+            --output research/api_agent/forecast_candidates/LATEST_RATIFICATION_QUEUE.json
+      - name: Resolve exact settlement evidence for ratified price forecasts
+        run: |
+          mkdir -p research/api_agent/forecast_candidates/{SETTLEMENT_EVIDENCE,SETTLEMENT_RAW,SETTLEMENT_BINDINGS,MATURED}
+          python scripts/learning/forecast_settlement_price_owner.py \
+            --forecast-root research/api_agent/forecast_candidates/FROZEN \
+            --output-root research/api_agent/forecast_candidates/SETTLEMENT_EVIDENCE \
+            --raw-root research/api_agent/forecast_candidates/SETTLEMENT_RAW
+      - name: Mature exact-settlement ratified forecasts
+        run: |
+          python scripts/learning/mature_exact_settlement_forecasts.py \
+            --forecast-root research/api_agent/forecast_candidates/FROZEN \
+            --settlement-evidence-root research/api_agent/forecast_candidates/SETTLEMENT_EVIDENCE \
+            --output-root research/api_agent/forecast_candidates/MATURED \
+            --binding-root research/api_agent/forecast_candidates/SETTLEMENT_BINDINGS \
+            --repo-root . \
+            --max-evidence-lag-hours 24
+      - name: Isolate non-exact ratified forecasts for legacy maturation
+        run: |
+          python scripts/learning/build_non_exact_forecast_subset.py \
+            --forecast-root research/api_agent/forecast_candidates/FROZEN \
+            --output-root runtime/api-agent-non-exact-forecast-subset
+      - name: Mature remaining non-exact ratified forecasts
+        run: |
+          python scripts/learning/outcome_maturation_engine.py \
+            --forecast-root runtime/api-agent-non-exact-forecast-subset \
+            --evidence-root 03_DAILY_CAPTURE_LOGS/captures \
+            --output-root research/api_agent/forecast_candidates/MATURED
       - name: Build calibration ledger and settlement eligibility
         run: |
           python scripts/learning/build_model_calibration_ledger.py \

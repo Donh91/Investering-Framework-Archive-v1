@@ -42,6 +42,7 @@ jobs:
             scripts/daily_capture/persist_raw_payloads.py \
             scripts/data_ping/accepted_data_ping_bridge.py \
             scripts/learning/action_compass_accountability.py \
+            scripts/learning/forecast_ratification_freezer.py \
             scripts/learning/ratify_forecast_candidate.py \
             scripts/learning/outcome_maturation_engine.py \
             scripts/learning/build_model_calibration_ledger.py \
@@ -63,8 +64,9 @@ jobs:
           grep -q 'SKIPPED_NO_DELTA' .github/workflows/daily-director-shadow.yml
           grep -q 'LATEST_HANDOFF.json' .github/workflows/continuity-learning-maintenance.yml
           grep -q 'forecast_candidates' scripts/api_agent/api_gateway.py
-          grep -q 'FORECAST_TARGET_UNITS_v2' scripts/learning/ratify_forecast_candidate.py
-          grep -q 'DATA_PING_LEARNING_LINEAGE_v1' scripts/learning/ratify_forecast_candidate.py
+          grep -q 'FORECAST_TARGET_UNITS_v2' scripts/learning/forecast_ratification_freezer.py
+          grep -q 'DATA_PING_LEARNING_LINEAGE_v1' scripts/learning/forecast_ratification_freezer.py
+          grep -q 'DIRECT_RATIFIER_CLI_DISABLED_USE_PROCESS_FORECAST_RATIFICATIONS' scripts/learning/ratify_forecast_candidate.py
           grep -q 'DATA_PING_BRIDGE_RECEIPT_v2' scripts/data_ping/accepted_data_ping_bridge.py
           grep -q 'LEGACY_V1_TARGET_UNIT_AMBIGUOUS' scripts/learning/outcome_maturation_engine.py
           python - <<'PY'

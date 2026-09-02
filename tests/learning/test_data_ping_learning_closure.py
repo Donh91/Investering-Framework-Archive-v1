@@ -10,8 +10,9 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
 BRIDGE = REPO / "scripts/data_ping/accepted_data_ping_bridge.py"
-RATIFIER = REPO / "scripts/learning/ratify_forecast_candidate.py"
 LEDGER = REPO / "scripts/learning/build_model_calibration_ledger.py"
+sys.path.insert(0, str(REPO / "scripts" / "learning"))
+import forecast_ratification_freezer as RATIFIER  # noqa: E402
 
 
 def canon(value):
@@ -144,26 +145,36 @@ class DataPingLearningClosureTests(unittest.TestCase):
             receipt, lineage = self.lineage_fixture()
             candidate = {
                 "contract": "FORECAST_CANDIDATE_v1", "candidate_id": "fc_test_001", "ratification_status": "PENDING",
+                "created_at_utc": "2026-09-02T10:10:00Z", "self_promotion_allowed": False,
                 "model": "test", "task": "test", "prompt_sha256": "1" * 64,
                 "data_ping_lineage": lineage,
                 "candidate": {"metric_path": "market.price", "horizon_days": 1, "direction": "UP", "target_mode": "PCT_MOVE", "threshold_pct": 2.0, "rationale": "test"},
             }
-            ratification = {"contract": "FORECAST_RATIFICATION_PACKET_v1", "candidate_id": "fc_test_001", "decision": "RATIFY", "authority": "CHATGPT_FRAMEWORK_OWNER"}
-            baseline = {"market": {"price": 100.0}}
-            for name, value in (("candidate.json", candidate), ("ratification.json", ratification), ("baseline.json", baseline), ("receipt.json", receipt)):
-                (root / name).write_bytes(canon(value))
-            cmd = [RATIFIER, "--candidate", root / "candidate.json", "--ratification", root / "ratification.json", "--baseline-evidence", root / "baseline.json", "--output-root", out, "--action-compass-receipt", root / "receipt.json"]
-            first = run(*cmd); self.assertEqual(json.loads(first.stdout)["status"], "FROZEN")
-            frozen_path = next(out.glob("*.json")); frozen = json.loads(frozen_path.read_text())
+            ratification = {
+                "contract": "FORECAST_RATIFICATION_PACKET_v2", "candidate_id": "fc_test_001",
+                "candidate_sha256": RATIFIER.digest(candidate), "decision": "RATIFY", "decision_at_utc": "2026-09-02T10:20:00Z",
+                "authority": "CHATGPT_FRAMEWORK_OWNER", "owner_actor": "data-ping-lineage-test",
+                "outcome_blind": True, "self_promotion_allowed": False,
+                "prospective_cutover_commit_sha": "4057fde279ed0d8eea2df07da10543bda38ee8f8",
+                "decision_basis_scope": ["RATIFICATION_QUEUE", "CANDIDATE_RECORD"], "outcome_paths_read": [],
+                "decision_rationale": "Prospective fixture decision using candidate and queue only.",
+            }
+            baseline = {"captured_at_utc": "2026-09-02T10:19:00Z", "market": {"price": 100.0}}
+            receipt_path = root / "receipt.json"; receipt_path.write_bytes(canon(receipt))
+            baseline_path = root / "baseline.json"; baseline_path.write_bytes(canon(baseline))
+            status, frozen, frozen_path = RATIFIER.freeze_candidate(candidate, ratification, baseline, baseline_path, out, receipt_path)
+            self.assertEqual(status, "FROZEN")
             self.assertEqual(frozen["data_ping_lineage"], lineage)
             self.assertFalse(frozen["authority"]["portfolio_action"])
             before = frozen_path.read_bytes()
-            replay = run(*cmd); self.assertEqual(json.loads(replay.stdout)["status"], "DUPLICATE_NOOP")
+            replay_status, replay_frozen, replay_path = RATIFIER.freeze_candidate(candidate, ratification, baseline, baseline_path, out, receipt_path)
+            self.assertEqual(replay_status, "DUPLICATE_NOOP")
+            self.assertEqual(replay_path, frozen_path)
+            self.assertEqual(replay_frozen, frozen)
             self.assertEqual(frozen_path.read_bytes(), before)
             tampered = dict(frozen); tampered["direction"] = "DOWN"; frozen_path.write_bytes(canon(tampered))
-            collision = run(*cmd, check=False)
-            self.assertNotEqual(collision.returncode, 0)
-            self.assertIn("FORECAST_ID_COLLISION", collision.stderr + collision.stdout)
+            with self.assertRaisesRegex(ValueError, "FORECAST_ID_COLLISION"):
+                RATIFIER.freeze_candidate(candidate, ratification, baseline, baseline_path, out, receipt_path)
 
     def test_calibration_ledger_carries_packet_lineage_via_hash_bound_forecast(self):
         with tempfile.TemporaryDirectory() as td:
