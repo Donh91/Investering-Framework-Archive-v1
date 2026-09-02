@@ -5,12 +5,14 @@ on:
     paths:
       - 'scripts/lib/forecast_ratification_contract.py'
       - 'scripts/lib/forecast_candidate_grouping.py'
+      - 'scripts/lib/forecast_ratification_baseline.py'
       - 'scripts/learning/forecast_ratification_freezer.py'
       - 'scripts/learning/ratify_forecast_candidate.py'
       - 'scripts/learning/process_forecast_ratifications.py'
       - 'scripts/learning/build_forecast_ratification_queue.py'
       - 'tests/learning/test_forecast_ratification_throughput.py'
       - 'tests/learning/test_forecast_candidate_grouping.py'
+      - 'tests/learning/test_forecast_ratification_baseline.py'
       - 'scripts/api_agent/materialize_forecast_candidates.py'
       - 'tests/api_agent/test_forecast_candidate_backlog.py'
       - '.github/workflows/continuity-learning-maintenance.yml'
@@ -37,16 +39,19 @@ jobs:
           python -m py_compile \
             scripts/lib/forecast_ratification_contract.py \
             scripts/lib/forecast_candidate_grouping.py \
+            scripts/lib/forecast_ratification_baseline.py \
             scripts/learning/forecast_ratification_freezer.py \
             scripts/learning/ratify_forecast_candidate.py \
             scripts/learning/process_forecast_ratifications.py \
             scripts/learning/build_forecast_ratification_queue.py \
             tests/learning/test_forecast_ratification_throughput.py \
-            tests/learning/test_forecast_candidate_grouping.py
+            tests/learning/test_forecast_candidate_grouping.py \
+            tests/learning/test_forecast_ratification_baseline.py
       - name: Prospective ratification integration regressions
         run: |
           python tests/learning/test_forecast_ratification_throughput.py -v
           python tests/learning/test_forecast_candidate_grouping.py -v
+          python tests/learning/test_forecast_ratification_baseline.py -v
       - name: Direct ratifier CLI must be disabled
         run: |
           set +e
@@ -113,6 +118,7 @@ jobs:
           queue=Path('scripts/learning/build_forecast_ratification_queue.py').read_text()
           shim=Path('scripts/learning/ratify_forecast_candidate.py').read_text()
           grouping=Path('scripts/lib/forecast_candidate_grouping.py').read_text()
+          baseline=Path('scripts/lib/forecast_ratification_baseline.py').read_text()
           assert 'outcome-root' not in processor
           assert 'outcome-root' not in queue
           assert 'PACKET_RECORDING_TOLERANCE_MINUTES' in processor
@@ -125,4 +131,7 @@ jobs:
           assert 'outcome_data_included": False' in queue
           assert 'POST_CUTOVER_DUPLICATE_CANDIDATE_ID' in grouping
           assert 'DIRECT_RATIFIER_CLI_DISABLED_USE_PROCESS_FORECAST_RATIFICATIONS' in shim
+          assert 'LATEST.json' in baseline
+          assert 'AMBIGUOUS_BASELINE_CAPTURE_AT_DECISION' in baseline
+          assert 'LATEST_IMMUTABLE_ARCHIVED_CAPTURE_AT_OR_BEFORE_OWNER_DECISION' in processor
           PY
