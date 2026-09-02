@@ -38,6 +38,31 @@ def candidate_groups(root: Path) -> dict[str, list[dict[str, Any]]]:
     return groups
 
 
+def candidate_groups_with_quarantine(root: Path) -> tuple[dict[str, list[dict[str, Any]]], list[dict[str, str]]]:
+    """Index valid candidate records without letting one malformed file abort the lane."""
+    groups: dict[str, list[dict[str, Any]]] = {}
+    quarantines: list[dict[str, str]] = []
+    for path in sorted(root.rglob("*.json")) if root.exists() else []:
+        try:
+            value = read(path)
+        except Exception as exc:
+            quarantines.append({"candidate_id": path.stem, "path": path.as_posix(), "error": f"CANDIDATE_JSON_INVALID:{exc}"})
+            continue
+        if value.get("contract") != "FORECAST_CANDIDATE_v1":
+            continue
+        cid = str(value.get("candidate_id") or "")
+        if not cid:
+            quarantines.append({"candidate_id": path.stem, "path": path.as_posix(), "error": "CANDIDATE_ID_MISSING"})
+            continue
+        groups.setdefault(cid, []).append({
+            "path": path,
+            "value": value,
+            "sha256": digest(value),
+            "created_at_utc": value.get("created_at_utc"),
+        })
+    return groups, quarantines
+
+
 def classify_candidate_group(candidate_id: str, rows: list[dict[str, Any]]) -> dict[str, Any]:
     if not rows:
         raise ValueError(f"EMPTY_CANDIDATE_GROUP:{candidate_id}")
@@ -76,3 +101,22 @@ def classified_candidate_groups(root: Path) -> dict[str, dict[str, Any]]:
         candidate_id: classify_candidate_group(candidate_id, rows)
         for candidate_id, rows in candidate_groups(root).items()
     }
+
+
+def classified_candidate_groups_with_quarantine(root: Path) -> tuple[dict[str, dict[str, Any]], list[dict[str, Any]]]:
+    raw_groups, quarantines = candidate_groups_with_quarantine(root)
+    classified: dict[str, dict[str, Any]] = {}
+    for candidate_id, rows in sorted(raw_groups.items()):
+        try:
+            classified[candidate_id] = classify_candidate_group(candidate_id, rows)
+        except Exception as exc:
+            quarantines.append({
+                "candidate_id": candidate_id,
+                "error": str(exc),
+                "paths": [row["path"].as_posix() for row in rows],
+                "variants": [
+                    {"path": row["path"].as_posix(), "sha256": row["sha256"], "created_at_utc": row.get("created_at_utc")}
+                    for row in rows
+                ],
+            })
+    return classified, quarantines
