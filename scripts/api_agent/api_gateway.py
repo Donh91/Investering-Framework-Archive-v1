@@ -99,6 +99,69 @@ def validate_output(value: dict[str, Any]) -> None:
         validate_forecast_candidate(candidate)
 
 
+def forecast_candidate_schema() -> dict[str, Any]:
+    required = [
+        "metric_path", "direction", "target_mode", "threshold_pct", "target_value",
+        "range_low", "range_high", "horizon_days", "rationale",
+    ]
+
+    def branch(
+        *,
+        directions: list[str],
+        target_mode: str,
+        threshold_pct: dict[str, Any],
+        target_value: dict[str, Any],
+        range_low: dict[str, Any],
+        range_high: dict[str, Any],
+    ) -> dict[str, Any]:
+        return {
+            "type": "object",
+            "additionalProperties": False,
+            "required": required,
+            "properties": {
+                "metric_path": {"type": "string"},
+                "direction": {"type": "string", "enum": directions},
+                "target_mode": {"type": "string", "enum": [target_mode]},
+                "threshold_pct": threshold_pct,
+                "target_value": target_value,
+                "range_low": range_low,
+                "range_high": range_high,
+                "horizon_days": {"type": "integer", "minimum": 1, "maximum": 90},
+                "rationale": {"type": "string"},
+            },
+        }
+
+    null = {"type": "null"}
+    return {
+        "anyOf": [
+            branch(
+                directions=["UP", "DOWN"],
+                target_mode="PCT_MOVE",
+                threshold_pct={"type": "number", "exclusiveMinimum": 0},
+                target_value=null,
+                range_low=null,
+                range_high=null,
+            ),
+            branch(
+                directions=["UP", "DOWN"],
+                target_mode="ABSOLUTE_VALUE",
+                threshold_pct=null,
+                target_value={"type": "number"},
+                range_low=null,
+                range_high=null,
+            ),
+            branch(
+                directions=["RANGE"],
+                target_mode="ABSOLUTE_RANGE",
+                threshold_pct=null,
+                target_value=null,
+                range_low={"type": "number"},
+                range_high={"type": "number"},
+            ),
+        ]
+    }
+
+
 def output_schema() -> dict[str, Any]:
     return {
         "type": "object", "additionalProperties": False,
@@ -112,21 +175,7 @@ def output_schema() -> dict[str, Any]:
             "hypotheses": {"type": "array", "items": {"type": "string"}},
             "forecast_candidates": {
                 "type": "array",
-                "items": {
-                    "type": "object", "additionalProperties": False,
-                    "required": ["metric_path", "direction", "target_mode", "threshold_pct", "target_value", "range_low", "range_high", "horizon_days", "rationale"],
-                    "properties": {
-                        "metric_path": {"type": "string"},
-                        "direction": {"type": "string", "enum": ["UP", "DOWN", "RANGE"]},
-                        "target_mode": {"type": "string", "enum": ["PCT_MOVE", "ABSOLUTE_VALUE", "ABSOLUTE_RANGE"]},
-                        "threshold_pct": {"type": ["number", "null"]},
-                        "target_value": {"type": ["number", "null"]},
-                        "range_low": {"type": ["number", "null"]},
-                        "range_high": {"type": ["number", "null"]},
-                        "horizon_days": {"type": "integer", "minimum": 1, "maximum": 90},
-                        "rationale": {"type": "string"},
-                    },
-                },
+                "items": forecast_candidate_schema(),
             },
         },
     }

@@ -4,7 +4,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from scripts.api_agent.api_gateway import blocked_output, build_request, estimate_cost, extract_output, load_registry, validate_output
+from scripts.api_agent.api_gateway import blocked_output, build_request, estimate_cost, extract_output, load_registry, output_schema, validate_output
 from scripts.api_agent.advance_deep_research_queue import build_task_packet, retained_providers, select_next
 from scripts.api_agent.advance_mcp_connection_scorecard import apply_evaluation
 from scripts.api_agent.evaluate_mcp_connection_receipt import classify, score_receipt
@@ -107,6 +107,9 @@ class ApiGatewayTests(unittest.TestCase):
         value=valid_output();candidate=directional_pct();candidate.update(target_mode='ABSOLUTE_VALUE',threshold_pct=None,target_value=63000.0);value['forecast_candidates']=[candidate];validate_output(value)
     def test_valid_forecast_candidate_absolute_range(self):
         value=valid_output();value['forecast_candidates']=[{'metric_path':'market_metrics.BTC.close','direction':'RANGE','target_mode':'ABSOLUTE_RANGE','threshold_pct':None,'target_value':None,'range_low':63000.0,'range_high':65000.0,'horizon_days':1,'rationale':'test'}];validate_output(value)
+    def test_directional_pct_null_remains_invalid(self):
+        value=valid_output();candidate=directional_pct();candidate['threshold_pct']=None;value['forecast_candidates']=[candidate]
+        with self.assertRaisesRegex(ValueError,'directional_pct_threshold_required'):validate_output(value)
     def test_legacy_ambiguous_threshold_is_rejected(self):
         value=valid_output();value['forecast_candidates']=[{'metric_path':'market_metrics.BTC.close','direction':'UP','threshold':64000.0,'range_low':None,'range_high':None,'horizon_days':7,'rationale':'legacy ambiguous'}]
         with self.assertRaises(ValueError):validate_output(value)
@@ -117,7 +120,20 @@ class ApiGatewayTests(unittest.TestCase):
         value=valid_output();value['portfolio_action']='BUY'
         with self.assertRaises(ValueError):validate_output(value)
     def test_request_is_store_false_and_current_turn(self):
-        data=load_registry(REGISTRY);cfg=data['tasks']['DAILY_DIRECTOR_SHADOW'];request=build_request('DAILY_DIRECTOR_SHADOW',cfg,'test',{'a':1});self.assertFalse(request['store']);self.assertEqual(request['reasoning']['context'],'current_turn');self.assertEqual(request['model'],'gpt-5.6-luna');item=request['text']['format']['schema']['properties']['forecast_candidates']['items'];self.assertIn('target_mode',item['properties']);self.assertNotIn('threshold',item['properties']);self.assertIn('Never encode an absolute target in a percent field',request['instructions'])
+        data=load_registry(REGISTRY);cfg=data['tasks']['DAILY_DIRECTOR_SHADOW'];request=build_request('DAILY_DIRECTOR_SHADOW',cfg,'test',{'a':1});self.assertFalse(request['store']);self.assertEqual(request['reasoning']['context'],'current_turn');self.assertEqual(request['model'],'gpt-5.6-luna');item=request['text']['format']['schema']['properties']['forecast_candidates']['items'];self.assertEqual(len(item['anyOf']),3);self.assertTrue(all('target_mode' in branch['properties'] for branch in item['anyOf']));self.assertTrue(all('threshold' not in branch['properties'] for branch in item['anyOf']));self.assertIn('Never encode an absolute target in a percent field',request['instructions'])
+    def test_strict_schema_discriminates_existing_target_modes(self):
+        branches=output_schema()['properties']['forecast_candidates']['items']['anyOf']
+        by_mode={branch['properties']['target_mode']['enum'][0]:branch for branch in branches}
+        self.assertEqual(set(by_mode),{'PCT_MOVE','ABSOLUTE_VALUE','ABSOLUTE_RANGE'})
+        self.assertEqual(by_mode['PCT_MOVE']['properties']['direction']['enum'],['UP','DOWN'])
+        self.assertEqual(by_mode['PCT_MOVE']['properties']['threshold_pct'],{'type':'number','exclusiveMinimum':0})
+        self.assertEqual(by_mode['PCT_MOVE']['properties']['target_value'],{'type':'null'})
+        self.assertEqual(by_mode['ABSOLUTE_VALUE']['properties']['threshold_pct'],{'type':'null'})
+        self.assertEqual(by_mode['ABSOLUTE_VALUE']['properties']['target_value'],{'type':'number'})
+        self.assertEqual(by_mode['ABSOLUTE_RANGE']['properties']['direction']['enum'],['RANGE'])
+        self.assertEqual(by_mode['ABSOLUTE_RANGE']['properties']['threshold_pct'],{'type':'null'})
+        self.assertEqual(by_mode['ABSOLUTE_RANGE']['properties']['range_low'],{'type':'number'})
+        self.assertEqual(by_mode['ABSOLUTE_RANGE']['properties']['range_high'],{'type':'number'})
     def test_incomplete_response_is_rejected_before_json_parse(self):
         with self.assertRaisesRegex(ValueError,'response_incomplete'):extract_output({'status':'incomplete','incomplete_details':{'reason':'max_output_tokens'},'output_text':'{"status":'})
     def test_unterminated_json_is_rejected(self):
