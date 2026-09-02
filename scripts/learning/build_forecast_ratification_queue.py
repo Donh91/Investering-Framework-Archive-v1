@@ -12,7 +12,7 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "scripts" / "lib"))
 
-from forecast_candidate_grouping import classified_candidate_groups  # noqa: E402
+from forecast_candidate_grouping import classified_candidate_groups_with_quarantine  # noqa: E402
 from forecast_ratification_contract import (  # noqa: E402
     CUTOVER_COMMIT_SHA,
     DECISION_SLA_MINUTES,
@@ -41,7 +41,10 @@ def read(path: Path) -> dict[str, Any]:
 def terminal_ids(root: Path) -> set[str]:
     result: set[str] = set()
     for path in sorted(root.rglob("*.json")) if root.exists() else []:
-        value = read(path)
+        try:
+            value = read(path)
+        except Exception:
+            continue
         if value.get("contract") != RATIFICATION_TERMINAL_V1:
             continue
         cid = str(value.get("candidate_id") or "")
@@ -51,7 +54,7 @@ def terminal_ids(root: Path) -> set[str]:
 
 
 def build_queue(pending_root: Path, terminal_root: Path, now: datetime) -> dict[str, Any]:
-    groups = classified_candidate_groups(pending_root)
+    groups, quarantines = classified_candidate_groups_with_quarantine(pending_root)
     terminal = terminal_ids(terminal_root)
     rows: list[dict[str, Any]] = []
     counts = {
@@ -60,6 +63,12 @@ def build_queue(pending_root: Path, terminal_root: Path, now: datetime) -> dict[
         "legacy_pre_cutover": 0,
         "legacy_identical_duplicate_ids": 0,
         "legacy_divergent_duplicate_ids": 0,
+        "quarantined_candidate_ids": len({str(row.get('candidate_id') or '') for row in quarantines if row.get('candidate_id')}),
+        "post_cutover_duplicate_quarantine_ids": len({
+            str(row.get('candidate_id'))
+            for row in quarantines
+            if str(row.get('error') or '').startswith('POST_CUTOVER_DUPLICATE_CANDIDATE_ID')
+        }),
         "expired_without_terminal": 0,
         "decision_required": 0,
     }
@@ -114,8 +123,18 @@ def build_queue(pending_root: Path, terminal_root: Path, now: datetime) -> dict[
         "outcome_data_included": False,
         "outcome_paths_read": [],
         "self_promotion_allowed": False,
-        "legacy_duplicate_policy": "PRE_CUTOVER_MULTI_PATH_IDS_ARE_ARCHIVE_ONLY_POST_CUTOVER_MULTI_PATH_IDS_FAIL_CLOSED",
+        "legacy_duplicate_policy": "PRE_CUTOVER_MULTI_PATH_IDS_ARE_ARCHIVE_ONLY_POST_CUTOVER_MULTI_PATH_IDS_ARE_QUARANTINED_AND_NEVER_OWNER_VISIBLE",
+        "quarantine_policy": "STRUCTURALLY_INVALID_OR_POST_CUTOVER_DUPLICATE_IDS_ARE_EXCLUDED_FROM_OWNER_QUEUE_WITHOUT_BLOCKING_OTHER_CANDIDATES",
         "counts": counts,
+        "quarantines": [
+            {
+                "candidate_id": row.get("candidate_id"),
+                "error": row.get("error"),
+                "paths": row.get("paths") or ([row.get("path")] if row.get("path") else []),
+                "owner_decision_allowed": False,
+            }
+            for row in quarantines
+        ],
         "candidates": rows,
         "authority": {
             "portfolio_action": False,
