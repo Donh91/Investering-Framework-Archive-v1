@@ -1,0 +1,46 @@
+{
+  "contract": "AUTO_MARKET_STATE_REPLAY_REPORT_v1",
+  "date": "2026-09-01",
+  "status": "PARTIAL_LINEAGE_GAP",
+  "source_snapshot_commit_sha": "e82ae2a6cd68740e5c71e9e2c812fc2575fdcbf2",
+  "scope": "all suitable durable accepted/manual DATA PING replay inputs discoverable on current main without reconstructing missing historical packets",
+  "packets_discovered": 2,
+  "packets_replayed": 0,
+  "comparable_fields": 0,
+  "coverage_pct": 0.0,
+  "packet_parity_pct": null,
+  "mismatch_classes": [
+    "ACCEPTED_PACKET_ROOT_ABSENT_ON_CURRENT_MAIN",
+    "EXACT_CONTEMPORANEOUS_OWNER_PACKET_NOT_PROVEN_FOR_BOUNDED_HANDOFF"
+  ],
+  "inputs": [
+    {
+      "path": "02_DATA_PING/operational_handoffs/LATEST_ACCEPTED_MARKET_PREDECESSOR_v1.json",
+      "classification": "ACCEPTED_POINTER_METADATA_ONLY",
+      "latest_accepted_snapshot_id": "snap_0e19c112413d471d8270cad1a18148a7",
+      "latest_accepted_snapshot_utc": "2026-07-29T16:51:00.829Z",
+      "replay_eligible": false,
+      "reason": "The native accepted DATA PING packet root expected by the current bridge is absent on current main. Snapshot metadata alone is insufficient for field-level parity."
+    },
+    {
+      "path": "02_DATA_PING/operational_handoffs/LATEST_BOUNDED_DATA_PING_OBSERVATION_v1.json",
+      "classification": "BOUNDED_MANUAL_OBSERVATION_WITH_FIELD_VALUES",
+      "snapshot_id": "snap-20260806T101439Z-caM8nhgy",
+      "snapshot_utc": "2026-08-06T10:14:39.743Z",
+      "replay_eligible": false,
+      "reason": "Current durable owner history does not prove a single exact pinned owner aggregate at the same freeze instant. Nearest before/after captures would introduce temporal inference, which is prohibited."
+    }
+  ],
+  "lineage_evidence": {
+    "known_repo_candidate": "PR #655 documents that LATEST_HANDOFF has no accepted DATA PING pointer while accepted_data_ping_bridge.py still expects research/data_ping_bridge/accepted",
+    "historical_reconstruction_performed": false,
+    "future_or_nearest_receipt_matching_performed": false
+  },
+  "interpretation": "Packet parity remains UNMEASURED, not failed. Acquisition and validation automation may be measured independently, but a 98% total replacement claim is not evidence-supported until accepted/manual replay lineage is restored or new prospective parallel rows are collected.",
+  "authority": {
+    "canonical_market_state": false,
+    "portfolio_action": false,
+    "market_threshold_change": false,
+    "historical_backfill_authority": false
+  }
+}
