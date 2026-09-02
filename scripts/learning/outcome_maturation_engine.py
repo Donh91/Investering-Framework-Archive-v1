@@ -17,6 +17,12 @@ from metric_resolver import (  # noqa: E402  (path is prepared immediately above
 )
 
 UNIT_CONTRACT_VERSION = "FORECAST_TARGET_UNITS_v2"
+SETTLEMENT_EXACT_TARGET_TIME_V1 = "FORECAST_SETTLEMENT_EXACT_TARGET_TIME_v1"
+SETTLEMENT_LEGACY_FIRST_CAPTURE_V0 = "LEGACY_FIRST_CAPTURE_AFTER_DUE_v0"
+SUPPORTED_SETTLEMENT_CONTRACTS = {
+    SETTLEMENT_EXACT_TARGET_TIME_V1,
+    SETTLEMENT_LEGACY_FIRST_CAPTURE_V0,
+}
 
 # Mutable pointer files are not immutable scientific evidence and must never be
 # selected as the evidence anchor for a matured outcome (TASK3 R3-17 item 5).
@@ -42,6 +48,10 @@ def parse_dt(value: str) -> datetime:
     return result.astimezone(timezone.utc)
 
 
+def iso(value: datetime) -> str:
+    return value.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
+
+
 def legacy_unit_ambiguous(forecast: dict[str, Any]) -> bool:
     if forecast.get("contract") != "FROZEN_FORECAST_v1":
         return False
@@ -55,11 +65,30 @@ def legacy_unit_ambiguous(forecast: dict[str, Any]) -> bool:
     return True
 
 
+def settlement_contract(forecast: dict[str, Any]) -> str:
+    """Return the frozen settlement-time contract for this forecast.
+
+    Historical forecasts did not declare a settlement-time contract. They keep
+    their original first-capture-after-due behavior for archive compatibility,
+    but that behavior is explicitly legacy and is never scientific-score
+    eligible. New forecasts may opt into the exact-target-time contract only
+    when their owner can later supply evidence whose observation timestamp is
+    exactly the frozen outcome_due_utc. Publication grace is operational wait
+    time only; it never moves the market observation being scored.
+    """
+    declared = forecast.get("settlement_contract_version")
+    contract = str(declared) if declared else SETTLEMENT_LEGACY_FIRST_CAPTURE_V0
+    if contract not in SUPPORTED_SETTLEMENT_CONTRACTS:
+        raise ValueError(f"unsupported_settlement_contract:{contract}")
+    return contract
+
+
 def validate_forecast(forecast: dict[str, Any]) -> None:
     frozen = parse_dt(forecast["frozen_at_utc"])
     due = parse_dt(forecast["outcome_due_utc"])
     if frozen >= due:
         raise ValueError("invalid_horizon")
+    settlement_contract(forecast)
     direction = forecast.get("direction")
     if direction not in {"UP", "DOWN", "RANGE"}:
         raise ValueError("invalid_direction")
@@ -94,6 +123,46 @@ def classify(forecast: dict[str, Any], start: float, end: float) -> str:
     return "HIT" if hit else "MISS"
 
 
+def settlement_fields(
+    contract: str,
+    due: datetime,
+    evidence_timestamp: datetime | None,
+    *,
+    score_eligible: bool,
+    exclusion_reason: str | None,
+) -> dict[str, Any]:
+    offset = None
+    if evidence_timestamp is not None:
+        offset = round((evidence_timestamp - due).total_seconds(), 6)
+    return {
+        "settlement_contract_version": contract,
+        "settlement_target_utc": iso(due),
+        "settlement_observation_utc": iso(evidence_timestamp) if evidence_timestamp is not None else None,
+        "settlement_offset_seconds": offset,
+        "scientific_score_eligible": score_eligible,
+        "scientific_score_exclusion_reason": exclusion_reason,
+    }
+
+
+def select_evidence(
+    evidence: list[tuple[datetime, Path, dict[str, Any]]],
+    due: datetime,
+    contract: str,
+    max_ts: datetime,
+) -> tuple[datetime, Path, dict[str, Any]] | None:
+    if contract == SETTLEMENT_EXACT_TARGET_TIME_V1:
+        # The publication grace controls how long the system waits for an exact
+        # due-time observation to appear. It must never shift the scored market
+        # observation forward in time.
+        return next((row for row in evidence if row[0] == due), None)
+    return next((row for row in evidence if due <= row[0] <= max_ts), None)
+
+
+def write_outcome(path: Path, outcome: dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(canon(outcome))
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--forecast-root", type=Path, required=True)
@@ -117,7 +186,7 @@ def main() -> None:
             continue
     evidence.sort(key=lambda row: row[0])
 
-    matured = pending = censored = quarantined = 0
+    matured = pending = censored = quarantined = score_eligible = score_excluded = 0
     errors: list[dict[str, str]] = []
     for path in args.forecast_root.rglob("*.json") if args.forecast_root.exists() else []:
         try:
@@ -127,6 +196,7 @@ def main() -> None:
             validate_forecast(forecast)
             forecast_id = forecast["forecast_id"]
             due = parse_dt(forecast["outcome_due_utc"])
+            contract = settlement_contract(forecast)
             if now < due:
                 pending += 1
                 continue
@@ -141,45 +211,62 @@ def main() -> None:
                     "status": "CENSORED",
                     "reason": "LEGACY_V1_TARGET_UNIT_AMBIGUOUS",
                     "forecast_sha256": sha(forecast),
-                    "created_at_utc": now.isoformat().replace("+00:00", "Z"),
+                    "created_at_utc": iso(now),
                     "resolver_version": RESOLVER_VERSION,
                     "metric_path_root_applied": None,
+                    **settlement_fields(
+                        contract,
+                        due,
+                        None,
+                        score_eligible=False,
+                        exclusion_reason="LEGACY_V1_TARGET_UNIT_AMBIGUOUS",
+                    ),
                     "authority": {"model_weight_change": False, "portfolio_action": False},
                 }
-                destination.parent.mkdir(parents=True, exist_ok=True)
-                destination.write_bytes(canon(outcome))
+                write_outcome(destination, outcome)
                 censored += 1
                 quarantined += 1
+                score_excluded += 1
                 continue
 
             max_ts = due + timedelta(hours=args.max_evidence_lag_hours)
-            candidates = [row for row in evidence if due <= row[0] <= max_ts]
-            if not candidates:
+            selected = select_evidence(evidence, due, contract, max_ts)
+            if selected is None:
                 if now <= max_ts:
-                    # The evidence window this forecast declared at freeze time is
-                    # still open. Absence of evidence now is a scheduling artefact,
-                    # not a scientific fact, and the outcome file is permanent once
-                    # written. Stay pending until the original window has elapsed.
-                    # The window itself is never enlarged (TASK3 R3-06).
+                    # Wait for the original evidence/publication window to close.
+                    # Under exact-time settlement this grace is publication delay
+                    # only and never changes the target observation time.
                     pending += 1
                     continue
+                reason = (
+                    "NO_EXACT_TARGET_TIME_EVIDENCE_WITHIN_PUBLICATION_GRACE"
+                    if contract == SETTLEMENT_EXACT_TARGET_TIME_V1
+                    else "NO_EVIDENCE_WITHIN_MAX_LAG"
+                )
                 outcome = {
                     "contract": "MATURED_OUTCOME_v3",
                     "forecast_id": forecast_id,
                     "status": "CENSORED",
-                    "reason": "NO_EVIDENCE_WITHIN_MAX_LAG",
+                    "reason": reason,
                     "forecast_sha256": sha(forecast),
-                    "created_at_utc": now.isoformat().replace("+00:00", "Z"),
+                    "created_at_utc": iso(now),
                     "resolver_version": RESOLVER_VERSION,
                     "metric_path_root_applied": None,
+                    **settlement_fields(
+                        contract,
+                        due,
+                        None,
+                        score_eligible=False,
+                        exclusion_reason=reason,
+                    ),
                     "authority": {"model_weight_change": False, "portfolio_action": False},
                 }
-                destination.parent.mkdir(parents=True, exist_ok=True)
-                destination.write_bytes(canon(outcome))
+                write_outcome(destination, outcome)
                 censored += 1
+                score_excluded += 1
                 continue
 
-            _, evidence_path, evidence_value = candidates[0]
+            evidence_timestamp, evidence_path, evidence_value = selected
             metric_path = forecast["metric_path"]
             resolution = resolve_for_forecast(evidence_value, forecast, metric_path)
             start_value = float(forecast["start_value"])
@@ -201,6 +288,7 @@ def main() -> None:
                 if not baseline_resolution.ok or abs(float(baseline_resolution.value) - start_value) > max(1e-9, abs(start_value) * 1e-8):
                     raise ValueError("start_value_baseline_mismatch")
 
+            exact_observation = contract == SETTLEMENT_EXACT_TARGET_TIME_V1 and evidence_timestamp == due
             if not resolution.ok:
                 outcome = {
                     "contract": "MATURED_OUTCOME_v3",
@@ -210,14 +298,23 @@ def main() -> None:
                     "forecast_sha256": sha(forecast),
                     "evidence_path": str(evidence_path),
                     "evidence_sha256": sha(evidence_value),
-                    "created_at_utc": now.isoformat().replace("+00:00", "Z"),
+                    "created_at_utc": iso(now),
                     "resolver_version": RESOLVER_VERSION,
                     "metric_path_root_applied": resolution.root_contract,
+                    **settlement_fields(
+                        contract,
+                        due,
+                        evidence_timestamp,
+                        score_eligible=False,
+                        exclusion_reason=resolution.status,
+                    ),
                     "authority": {"model_weight_change": False, "portfolio_action": False},
                 }
                 censored += 1
+                score_excluded += 1
             else:
                 end_value = resolution.value
+                exclusion = None if exact_observation else "LEGACY_POST_DUE_CAPTURE_SETTLEMENT"
                 outcome = {
                     "contract": "MATURED_OUTCOME_v3",
                     "forecast_id": forecast_id,
@@ -229,19 +326,37 @@ def main() -> None:
                     "forecast_sha256": sha(forecast),
                     "evidence_path": str(evidence_path),
                     "evidence_sha256": sha(evidence_value),
-                    "evidence_lag_hours": round((candidates[0][0] - due).total_seconds() / 3600, 6),
-                    "created_at_utc": now.isoformat().replace("+00:00", "Z"),
+                    "evidence_lag_hours": round((evidence_timestamp - due).total_seconds() / 3600, 6),
+                    "created_at_utc": iso(now),
                     "resolver_version": RESOLVER_VERSION,
                     "metric_path_root_applied": resolution.root_contract,
+                    **settlement_fields(
+                        contract,
+                        due,
+                        evidence_timestamp,
+                        score_eligible=exact_observation,
+                        exclusion_reason=exclusion,
+                    ),
                     "authority": {"model_weight_change": False, "portfolio_action": False},
                 }
                 matured += 1
-            destination.parent.mkdir(parents=True, exist_ok=True)
-            destination.write_bytes(canon(outcome))
+                if exact_observation:
+                    score_eligible += 1
+                else:
+                    score_excluded += 1
+            write_outcome(destination, outcome)
         except Exception as exc:
             errors.append({"path": str(path), "error": str(exc)})
 
-    print(json.dumps({"matured": matured, "censored": censored, "pending": pending, "quarantined": quarantined, "errors": errors}, sort_keys=True))
+    print(json.dumps({
+        "matured": matured,
+        "censored": censored,
+        "pending": pending,
+        "quarantined": quarantined,
+        "scientific_score_eligible": score_eligible,
+        "scientific_score_excluded": score_excluded,
+        "errors": errors,
+    }, sort_keys=True))
     if errors:
         raise SystemExit(2)
 
