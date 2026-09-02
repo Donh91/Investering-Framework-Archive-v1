@@ -76,20 +76,42 @@ jobs:
             --forecast-root runtime/api-agent-non-exact-forecast-subset \
             --evidence-root 03_DAILY_CAPTURE_LOGS/captures \
             --output-root research/api_agent/forecast_candidates/MATURED
-      - name: Build calibration ledger and settlement eligibility
+      - name: Build calibration ledger and settlement-only eligibility
         run: |
           python scripts/learning/build_model_calibration_ledger.py \
             --forecast-root research/api_agent/forecast_candidates/FROZEN \
             --outcome-root research/api_agent/forecast_candidates/MATURED \
             --output research/api_agent/MODEL_CALIBRATION_LEDGER.csv \
             --eligibility-output research/api_agent/MODEL_CALIBRATION_SETTLEMENT_ELIGIBILITY.json
+      - name: Audit forecast evidence-class separation
+        run: |
+          python scripts/learning/audit_forecast_evidence_class_boundary.py \
+            --owner-root research/api_agent/forecast_candidates/FROZEN \
+            --experiment-root research/framework_memory/forecast_memory \
+            --output research/api_agent/FORECAST_EVIDENCE_CLASS_AUDIT.json
+      - name: Build independent replication eligibility
+        run: |
+          python scripts/learning/build_forecast_replication_eligibility.py \
+            --settlement-eligibility research/api_agent/MODEL_CALIBRATION_SETTLEMENT_ELIGIBILITY.json \
+            --receipt-root research/experiment_lifecycle/receipts \
+            --output research/api_agent/FORECAST_REPLICATION_ELIGIBILITY.json \
+            --min-independent-forecasts 20 \
+            --max-disagreement-rate 0.05
+      - name: Build fail-closed forecast skill admission
+        run: |
+          python scripts/learning/build_forecast_skill_admission.py \
+            --settlement-eligibility research/api_agent/MODEL_CALIBRATION_SETTLEMENT_ELIGIBILITY.json \
+            --replication-eligibility research/api_agent/FORECAST_REPLICATION_ELIGIBILITY.json \
+            --evidence-class-audit research/api_agent/FORECAST_EVIDENCE_CLASS_AUDIT.json \
+            --min-effective-n 20 \
+            --output research/api_agent/FORECAST_SKILL_ADMISSION.json
       - name: Build agent handoff and owner reliability
         run: python scripts/architecture/build_latest_handoff.py --repo-root .
       - name: Commit maintained state
         run: |
           git config user.name framework-learning-bot
           git config user.email framework-learning-bot@users.noreply.github.com
-          git add LATEST_HANDOFF.json LATEST_HANDOFF.md research/api_agent/forecast_candidates research/api_agent/MODEL_CALIBRATION_LEDGER.csv research/api_agent/MODEL_CALIBRATION_SETTLEMENT_ELIGIBILITY.json 03_DAILY_CAPTURE_LOGS/weekly/RELIABILITY_LEDGER.csv
+          git add LATEST_HANDOFF.json LATEST_HANDOFF.md research/api_agent/forecast_candidates research/api_agent/MODEL_CALIBRATION_LEDGER.csv research/api_agent/MODEL_CALIBRATION_SETTLEMENT_ELIGIBILITY.json research/api_agent/FORECAST_EVIDENCE_CLASS_AUDIT.json research/api_agent/FORECAST_REPLICATION_ELIGIBILITY.json research/api_agent/FORECAST_SKILL_ADMISSION.json 03_DAILY_CAPTURE_LOGS/weekly/RELIABILITY_LEDGER.csv
           if git diff --cached --quiet; then exit 0; fi
           git commit -m "learning: maintain continuity surfaces ${GITHUB_RUN_ID}"
           pushed=false
