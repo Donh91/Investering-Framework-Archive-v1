@@ -1,0 +1,29 @@
+{
+  "contract": "NONFORECAST_LEARNING_CLOSURE_v1",
+  "recorded_at_utc": "2026-09-02T16:45:00Z",
+  "authority": "RESEARCH_ONLY_NON_CANONICAL",
+  "canonical_effect": false,
+  "portfolio_execution": false,
+  "scope": "NON_FORECAST_RESEARCH_GOVERNANCE_TO_FUTURE_DIRECTOR_CONTEXT",
+  "finding": "The autonomous research-governance stack produced novelty, decision-impact and meta-orchestrator state, but that state was not routed into the Daily Director context and the independent research execution coordinators consumed different queues. This made the governance output operationally useful for archive/triage but incomplete as a future-decision learning loop.",
+  "remediation": "Route a bounded fail-closed summary of meta-orchestrator, memory-novelty and decision-impact state through the existing augment_director_learning_context.py path with per-file SHA-256 provenance. Preserve research-only authority and do not grant the governance stack automatic execution or canonical authority.",
+  "acceptance": [
+    "research_governance_learning is present in future Daily Director context",
+    "source states must retain RESEARCH_ONLY_NON_CANONICAL authority and no true authority-escalation flags",
+    "missing or invalid governance state is represented explicitly and never fabricated",
+    "context provenance binds each routed governance state by path and SHA-256",
+    "Daily Director context contract lists research_governance_learning as a required family",
+    "no automatic canonical, market-rule, portfolio, paid-data or external-provider authority is introduced"
+  ],
+  "explicit_exclusions": [
+    "PR #725",
+    "fix/forecast-ratification-throughput-20260902",
+    "forecast ratification",
+    "forecast candidate lifecycle",
+    "exact settlement",
+    "historical forecast outcome supersession or replay",
+    "continuity-learning forecast ordering",
+    "forecast calibration or forecast-skill authority"
+  ],
+  "overall_point_8_status_rule": "This receipt can close only Point 8A non-forecast learning closure. Point 8B forecast-accountability remains deferred to the user's separate independent Claude audit."
+}
