@@ -86,10 +86,13 @@ class ForecastRatificationThroughputTests(unittest.TestCase):
             "decision": decision,
             "decision_at_utc": decision_at,
             "authority": "CHATGPT_FRAMEWORK_OWNER",
+            "owner_actor": "GPT-5.6 Sol",
             "outcome_blind": True,
             "self_promotion_allowed": False,
             "prospective_cutover_commit_sha": CUTOVER_COMMIT_SHA,
-            "decision_rationale": "Independent owner decision based only on the frozen candidate and its source context.",
+            "decision_basis_scope": ["RATIFICATION_QUEUE", "CANDIDATE_RECORD"],
+            "outcome_paths_read": [],
+            "decision_rationale": "Independent owner decision based only on the frozen candidate and ratification queue.",
         }
 
     def write_candidate(self, candidate):
