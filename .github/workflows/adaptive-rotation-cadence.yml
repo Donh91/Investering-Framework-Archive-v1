@@ -74,11 +74,14 @@ jobs:
           if breadth is not None and breadth >= 0.45:
               reasons.append('TOP100_PROXY_BREADTH_GE_45PCT')
           active = bool(reasons)
+          source_run_id = f"gh-{os.environ['GITHUB_RUN_ID']}-{os.environ['GITHUB_RUN_ATTEMPT']}"
 
           out = {
               'generated_at_utc': datetime.now(timezone.utc).isoformat(),
               'cadence_contract': 'ADAPTIVE_ROTATION_CADENCE_v1',
               'authority': 'OPERATIONAL_SAMPLING_ONLY_NON_BINDING',
+              'source_run_id': source_run_id,
+              'source_workflow': 'adaptive-rotation-cadence.yml',
               'normal_cadence_hours': 4,
               'boost_cadence_hours': 2,
               'registered_ethbtc_level_read_only': registered_level,
@@ -97,12 +100,19 @@ jobs:
           Path('03_DAILY_CAPTURE_LOGS/cadence/LATEST.json').write_text(json.dumps(out, indent=2, sort_keys=True) + '\n')
           with open(os.environ['GITHUB_OUTPUT'], 'a') as gh:
               gh.write(f"boost_active={'true' if active else 'false'}\n")
+              gh.write(f"cadence_run_id={source_run_id}\n")
+              gh.write(f"cadence_observation_path={f.as_posix()}\n")
           print(json.dumps(out, sort_keys=True))
           PY
 
       - name: Capture boost rich breadth checkpoint
         if: steps.gate.outputs.boost_active == 'true'
-        run: python scripts/daily_capture/rich_breadth_checkpoint.py --output-root 03_DAILY_CAPTURE_LOGS/breadth_rich
+        run: >-
+          python scripts/daily_capture/rich_breadth_checkpoint.py
+          --output-root 03_DAILY_CAPTURE_LOGS/breadth_rich
+          --sampling-mode ADAPTIVE_BOOST
+          --parent-run-id "${{ steps.gate.outputs.cadence_run_id }}"
+          --parent-cadence-observation "${{ steps.gate.outputs.cadence_observation_path }}"
 
       - name: Commit cadence observation and optional boost breadth
         shell: bash
