@@ -102,7 +102,7 @@ class ForecastRatificationThroughputTests(unittest.TestCase):
         return path
 
     def write_capture(self, name, observed, value):
-        path = self.captures / name
+        path = self.captures / "2026/09/02" / name
         path.parent.mkdir(parents=True, exist_ok=True)
         payload = {
             "captured_at_utc": observed,
@@ -115,8 +115,9 @@ class ForecastRatificationThroughputTests(unittest.TestCase):
         path.write_bytes(canon(payload))
         return path, payload
 
-    def write_packet(self, packet):
-        path = self.packets / f"{packet['candidate_id']}.json"
+    def write_packet(self, packet, relative=None):
+        path = self.packets / (relative or f"{packet['candidate_id']}.json")
+        path.parent.mkdir(parents=True, exist_ok=True)
         path.write_bytes(canon(packet))
         return path
 
@@ -148,6 +149,7 @@ class ForecastRatificationThroughputTests(unittest.TestCase):
         self.assertEqual(frozen["settlement_activation_semantics"], "FROZEN_AT_RATIFICATION_DECISION_PROSPECTIVE_ONLY")
         terminal = json.loads((self.terminals / "new-1.json").read_text())
         self.assertEqual(terminal["disposition"], "RATIFIED_AND_FROZEN")
+        self.assertEqual(terminal["baseline"]["selection_semantics"], "LATEST_IMMUTABLE_ARCHIVED_CAPTURE_AT_OR_BEFORE_OWNER_DECISION")
         self.assertFalse(terminal["outcome_data_read"])
 
     def test_reject_is_terminal_and_creates_no_forecast(self):
@@ -190,6 +192,77 @@ class ForecastRatificationThroughputTests(unittest.TestCase):
         self.assertEqual(result["counts"]["EXPIRED_NO_OWNER_DECISION"], 1)
         self.assertEqual(json.loads((self.terminals / "expire-1.json").read_text())["disposition"], "EXPIRED_NO_OWNER_DECISION")
 
+    def test_expired_candidate_cannot_be_resurrected_by_late_ratification(self):
+        candidate = self.candidate(cid="expired-lock")
+        self.write_candidate(candidate)
+        self.commit("candidate", "2026-09-02T10:11:00Z")
+        expired_at = datetime(2026, 9, 2, 11, 11, tzinfo=UTC)
+        first = process(self.pending, self.packets, self.terminals, self.frozen, self.captures, self.repo, expired_at)
+        self.assertEqual(first["counts"]["EXPIRED_NO_OWNER_DECISION"], 1)
+        before = (self.terminals / "expired-lock.json").read_bytes()
+        late_packet = self.packet(candidate, decision="RATIFY", decision_at="2026-09-02T10:20:00Z")
+        self.write_packet(late_packet)
+        self.commit("late ratification after terminal expiry", "2026-09-02T11:12:00Z")
+        second = process(
+            self.pending, self.packets, self.terminals, self.frozen, self.captures, self.repo,
+            datetime(2026, 9, 2, 11, 13, tzinfo=UTC),
+        )
+        self.assertEqual(second["status"], "PASS")
+        self.assertEqual(second["counts"]["ALREADY_TERMINAL"], 1)
+        self.assertEqual((self.terminals / "expired-lock.json").read_bytes(), before)
+        self.assertEqual(list(self.frozen.glob("*.json")), [])
+
+    def test_rejected_candidate_cannot_be_resurrected_by_packet_mutation(self):
+        candidate = self.candidate(cid="reject-lock")
+        self.write_candidate(candidate)
+        self.commit("candidate", "2026-09-02T10:11:00Z")
+        rejected = self.packet(candidate, decision="REJECT")
+        packet_path = self.write_packet(rejected)
+        self.commit("reject packet", "2026-09-02T10:21:00Z")
+        first = process(
+            self.pending, self.packets, self.terminals, self.frozen, self.captures, self.repo,
+            datetime(2026, 9, 2, 10, 30, tzinfo=UTC),
+        )
+        self.assertEqual(first["counts"]["REJECTED_BY_OWNER"], 1)
+        before = (self.terminals / "reject-lock.json").read_bytes()
+        changed = self.packet(candidate, decision="RATIFY", decision_at="2026-09-02T10:20:00Z")
+        packet_path.write_bytes(canon(changed))
+        self.commit("attempt packet decision mutation", "2026-09-02T10:31:00Z")
+        second = process(
+            self.pending, self.packets, self.terminals, self.frozen, self.captures, self.repo,
+            datetime(2026, 9, 2, 10, 32, tzinfo=UTC),
+        )
+        self.assertEqual(second["status"], "PASS")
+        self.assertEqual(second["counts"]["ALREADY_TERMINAL"], 1)
+        self.assertEqual((self.terminals / "reject-lock.json").read_bytes(), before)
+        self.assertEqual(list(self.frozen.glob("*.json")), [])
+
+    def test_backdated_candidate_created_at_fails_closed(self):
+        candidate = self.candidate(cid="candidate-late")
+        self.write_candidate(candidate)
+        self.commit("candidate recorded too late", "2026-09-02T10:30:00Z")
+        result = process(
+            self.pending, self.packets, self.terminals, self.frozen, self.captures, self.repo,
+            datetime(2026, 9, 2, 11, 11, tzinfo=UTC),
+        )
+        self.assertEqual(result["status"], "FAIL")
+        self.assertIn("CANDIDATE_CREATED_AT_BACKDATED_OR_LATE_RECORDED", result["errors"][0]["error"])
+        self.assertEqual(list(self.terminals.glob("*.json")), [])
+
+    def test_decision_cannot_precede_candidate_git_visibility(self):
+        candidate = self.candidate(cid="visibility-1")
+        self.write_candidate(candidate)
+        self.commit("candidate", "2026-09-02T10:19:00Z")
+        packet = self.packet(candidate, decision_at="2026-09-02T10:12:00Z")
+        self.write_packet(packet)
+        self.commit("packet", "2026-09-02T10:20:00Z")
+        result = process(
+            self.pending, self.packets, self.terminals, self.frozen, self.captures, self.repo,
+            datetime(2026, 9, 2, 10, 21, tzinfo=UTC),
+        )
+        self.assertEqual(result["status"], "FAIL")
+        self.assertIn("RATIFICATION_PRECEDES_CANDIDATE_GIT_RECORD", result["errors"][0]["error"])
+
     def test_backdated_packet_fails_closed(self):
         candidate = self.candidate(cid="late-1")
         self.write_candidate(candidate)
@@ -204,6 +277,34 @@ class ForecastRatificationThroughputTests(unittest.TestCase):
         self.assertEqual(result["status"], "FAIL")
         self.assertIn("RATIFICATION_PACKET_BACKDATED_OR_LATE_RECORDED", result["errors"][0]["error"])
         self.assertEqual(list(self.terminals.glob("*.json")), [])
+
+    def test_packet_cannot_claim_outcome_blindness_with_outcome_paths(self):
+        candidate = self.candidate(cid="leak-1")
+        self.write_candidate(candidate)
+        self.commit("candidate", "2026-09-02T10:11:00Z")
+        packet = self.packet(candidate, decision="REJECT")
+        packet["outcome_paths_read"] = ["research/api_agent/forecast_candidates/MATURED/ff.json"]
+        self.write_packet(packet)
+        self.commit("invalid leaking packet", "2026-09-02T10:21:00Z")
+        with self.assertRaisesRegex(ValueError, "RATIFICATION_OUTCOME_PATHS_MUST_BE_EMPTY"):
+            process(
+                self.pending, self.packets, self.terminals, self.frozen, self.captures, self.repo,
+                datetime(2026, 9, 2, 10, 30, tzinfo=UTC),
+            )
+
+    def test_multiple_packets_for_same_candidate_fail_closed(self):
+        candidate = self.candidate(cid="multi-packet")
+        self.write_candidate(candidate)
+        self.commit("candidate", "2026-09-02T10:11:00Z")
+        packet = self.packet(candidate, decision="REJECT")
+        self.write_packet(packet, "a/multi-packet.json")
+        self.write_packet(packet, "b/multi-packet.json")
+        self.commit("duplicate packets", "2026-09-02T10:21:00Z")
+        with self.assertRaisesRegex(ValueError, "MULTIPLE_RATIFICATION_PACKETS"):
+            process(
+                self.pending, self.packets, self.terminals, self.frozen, self.captures, self.repo,
+                datetime(2026, 9, 2, 10, 30, tzinfo=UTC),
+            )
 
     def test_queue_is_outcome_free_and_only_shows_live_post_cutover_candidates(self):
         legacy = self.candidate(cid="legacy-q", created="2026-09-01T23:34:00Z")
