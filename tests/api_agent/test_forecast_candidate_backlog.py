@@ -5,6 +5,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import time
 import unittest
 from pathlib import Path
 
@@ -38,6 +39,7 @@ class ForecastCandidateBacklogTests(unittest.TestCase):
                 'task': 'DAILY_DIRECTOR_SHADOW',
                 'prompt_hash': 'b' * 64,
                 'context_hash': 'c' * 64,
+                'created_unix': time.time(),
             }))
 
             first = subprocess.run([
@@ -127,44 +129,38 @@ class ForecastCandidateBacklogTests(unittest.TestCase):
     def test_handoff_deduplicates_and_quarantines_legacy_target_units(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
-            pending = root / 'research/api_agent/forecast_candidates/PENDING'
-
+            (root / 'research/api_agent/forecast_candidates/PENDING/2026/08/01').mkdir(parents=True, exist_ok=True)
+            (root / 'research/api_agent/forecast_candidates/PENDING/2026/08/02').mkdir(parents=True, exist_ok=True)
+            (root / 'research/api_agent/forecast_candidates/PENDING/2026/08/03').mkdir(parents=True, exist_ok=True)
+            (root / 'research/api_agent/forecast_candidates/PENDING/2026/08/04').mkdir(parents=True, exist_ok=True)
+            base = {
+                'contract': 'FORECAST_CANDIDATE_v1',
+                'candidate_id': 'dup-id',
+                'candidate': {'target_mode': 'PCT_MOVE'},
+            }
+            (root / 'research/api_agent/forecast_candidates/PENDING/2026/08/01/a.json').write_text(json.dumps(base))
+            (root / 'research/api_agent/forecast_candidates/PENDING/2026/08/02/b.json').write_text(json.dumps(base))
             legacy = {
                 'contract': 'FORECAST_CANDIDATE_v1',
-                'candidate_id': 'legacy-1',
-                'created_at_utc': '2026-08-03T00:00:00Z',
-                'ratification_status': 'PENDING',
-                'candidate': {'metric_path': 'spot.ETHUSDT.close', 'direction': 'DOWN', 'threshold': 1800.0, 'horizon_days': 1},
+                'candidate_id': 'legacy-id',
+                'candidate': {'threshold': 64699.1, 'direction': 'DOWN'},
             }
-            actionable = {
+            (root / 'research/api_agent/forecast_candidates/PENDING/2026/08/03/c.json').write_text(json.dumps(legacy))
+            normal = {
                 'contract': 'FORECAST_CANDIDATE_v1',
-                'candidate_id': 'valid-1',
-                'created_at_utc': '2026-08-10T00:00:00Z',
-                'ratification_status': 'PENDING',
-                'candidate': {
-                    'metric_path': 'spot.BTCUSDT.close', 'direction': 'UP', 'target_mode': 'ABSOLUTE_VALUE',
-                    'threshold_pct': None, 'target_value': 70000.0, 'range_low': None, 'range_high': None, 'horizon_days': 3,
-                },
+                'candidate_id': 'normal-id',
+                'candidate': {'target_mode': 'ABSOLUTE_VALUE'},
             }
-            for day, row in [('03', legacy), ('04', legacy), ('10', actionable)]:
-                path = pending / f'2026/08/{day}' / f"{row['candidate_id']}.json"
-                path.parent.mkdir(parents=True, exist_ok=True)
-                path.write_text(json.dumps(row))
-
-            subprocess.run([
-                sys.executable, str(HANDOFF), '--repo-root', str(root)
-            ], cwd=REPO_ROOT, check=True, capture_output=True, text=True)
+            (root / 'research/api_agent/forecast_candidates/PENDING/2026/08/04/d.json').write_text(json.dumps(normal))
+            subprocess.run([sys.executable, str(HANDOFF), '--repo-root', str(root)], cwd=REPO_ROOT, check=True, capture_output=True, text=True)
             handoff = json.loads((root / 'LATEST_HANDOFF.json').read_text())
-
-            self.assertEqual(handoff['pending_forecast_candidate_file_count'], 3)
-            self.assertEqual(handoff['pending_forecast_candidate_distinct_count'], 2)
-            self.assertEqual(handoff['pending_forecast_candidate_count'], 1)
-            self.assertEqual(handoff['quarantined_legacy_forecast_candidate_count'], 1)
-            self.assertEqual(handoff['duplicate_forecast_candidate_file_count'], 1)
-            self.assertEqual(len(handoff['pending_forecast_candidates']), 1)
-            self.assertTrue(handoff['pending_forecast_candidates'][0].endswith('valid-1.json'))
-            self.assertEqual(len(handoff['quarantined_legacy_forecast_candidates']), 1)
-            self.assertTrue(handoff['quarantined_legacy_forecast_candidates'][0].endswith('legacy-1.json'))
+            backlog = handoff['api_agent']['forecast_candidate_backlog']
+            self.assertEqual(backlog['file_count'], 4)
+            self.assertEqual(backlog['distinct_candidate_count'], 3)
+            self.assertEqual(backlog['duplicate_count'], 1)
+            self.assertEqual(backlog['legacy_target_unit_ambiguous_count'], 1)
+            self.assertEqual(backlog['actionable_count'], 2)
+            self.assertEqual(backlog['censored_reason_counts'][LEGACY_TARGET_UNIT_REASON], 1)
 
 
 if __name__ == '__main__':
