@@ -16,6 +16,7 @@ PACKET_RECORDING_TOLERANCE_MINUTES = 15
 
 ALLOWED_AUTHORITIES = frozenset({"CHATGPT_FRAMEWORK_OWNER", "EXPLICIT_USER_MANDATE"})
 ALLOWED_DECISIONS = frozenset({"RATIFY", "REJECT"})
+REQUIRED_DECISION_BASIS_SCOPE = frozenset({"RATIFICATION_QUEUE", "CANDIDATE_RECORD"})
 
 
 def parse_dt(value: str) -> datetime:
@@ -62,3 +63,12 @@ def validate_packet_shape(packet: dict[str, Any]) -> None:
         raise ValueError("RATIFICATION_CANDIDATE_ID_REQUIRED")
     if not packet.get("decision_at_utc"):
         raise ValueError("RATIFICATION_DECISION_TIME_REQUIRED")
+    if not isinstance(packet.get("owner_actor"), str) or not packet.get("owner_actor", "").strip():
+        raise ValueError("RATIFICATION_OWNER_ACTOR_REQUIRED")
+    if not isinstance(packet.get("decision_rationale"), str) or not packet.get("decision_rationale", "").strip():
+        raise ValueError("RATIFICATION_DECISION_RATIONALE_REQUIRED")
+    scope = packet.get("decision_basis_scope")
+    if not isinstance(scope, list) or frozenset(scope) != REQUIRED_DECISION_BASIS_SCOPE or len(scope) != 2:
+        raise ValueError("RATIFICATION_DECISION_BASIS_SCOPE_INVALID")
+    if packet.get("outcome_paths_read") != []:
+        raise ValueError("RATIFICATION_OUTCOME_PATHS_MUST_BE_EMPTY")
