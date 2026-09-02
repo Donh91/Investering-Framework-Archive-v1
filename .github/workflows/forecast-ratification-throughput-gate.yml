@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - 'scripts/lib/forecast_ratification_contract.py'
+      - 'scripts/learning/forecast_ratification_freezer.py'
       - 'scripts/learning/ratify_forecast_candidate.py'
       - 'scripts/learning/process_forecast_ratifications.py'
       - 'scripts/learning/build_forecast_ratification_queue.py'
@@ -33,12 +34,21 @@ jobs:
         run: |
           python -m py_compile \
             scripts/lib/forecast_ratification_contract.py \
+            scripts/learning/forecast_ratification_freezer.py \
             scripts/learning/ratify_forecast_candidate.py \
             scripts/learning/process_forecast_ratifications.py \
             scripts/learning/build_forecast_ratification_queue.py \
             tests/learning/test_forecast_ratification_throughput.py
       - name: Prospective ratification integration regressions
         run: python tests/learning/test_forecast_ratification_throughput.py -v
+      - name: Direct ratifier CLI must be disabled
+        run: |
+          set +e
+          python scripts/learning/ratify_forecast_candidate.py > /tmp/ratifier.out 2>&1
+          rc=$?
+          set -e
+          test "$rc" -ne 0
+          grep -q 'DIRECT_RATIFIER_CLI_DISABLED_USE_PROCESS_FORECAST_RATIFICATIONS' /tmp/ratifier.out
       - name: Existing forecast candidate backlog regressions
         run: python tests/api_agent/test_forecast_candidate_backlog.py -v
       - name: Existing exact settlement regressions
@@ -88,11 +98,15 @@ jobs:
           assert '--forecast-root research/api_agent/forecast_candidates/FROZEN' not in legacy_tail.split('- name: Build calibration ledger',1)[0]
           processor=Path('scripts/learning/process_forecast_ratifications.py').read_text()
           queue=Path('scripts/learning/build_forecast_ratification_queue.py').read_text()
+          shim=Path('scripts/learning/ratify_forecast_candidate.py').read_text()
           assert 'outcome-root' not in processor
           assert 'outcome-root' not in queue
           assert 'PACKET_RECORDING_TOLERANCE_MINUTES' in processor
+          assert 'CANDIDATE_RECORDING_TOLERANCE_MINUTES' in processor
+          assert 'RATIFICATION_PRECEDES_CANDIDATE_GIT_RECORD' in processor
           assert 'LEGACY_PRE_CUTOVER_HINDSIGHT_INELIGIBLE' in processor
           assert 'EXPIRED_NO_OWNER_DECISION' in processor
           assert 'outcome_data_read": False' in processor
           assert 'outcome_data_included": False' in queue
+          assert 'DIRECT_RATIFIER_CLI_DISABLED_USE_PROCESS_FORECAST_RATIFICATIONS' in shim
           PY
