@@ -144,6 +144,12 @@ jobs:
           mkdir -p research/experiment_lifecycle/{candidates,observations,dispatch,receipts,admission} research/framework_memory/{forecast_memory,outcome_memory}
           python scripts/experiments/experiment_lifecycle_scientific_admission.py --repo-root . --daily-output "$DEST/DAILY_DIRECTOR_OUTPUT.json" --daily-context "$DEST/context.json" --daily-receipt "$DEST/DAILY_DIRECTOR_RECEIPT.json" --candidate-root research/experiment_lifecycle/candidates --observation-root research/experiment_lifecycle/observations --dispatch-root research/experiment_lifecycle/dispatch --forecast-root research/framework_memory/forecast_memory --outcome-root research/framework_memory/outcome_memory --receipt-root research/experiment_lifecycle/receipts --registry-output research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json --manifest-output research/experiment_lifecycle/LATEST_EXPERIMENT_DISPATCH_MANIFEST.json --admission-root research/experiment_lifecycle/admission --admission-registry-output research/experiment_lifecycle/LATEST_SCIENTIFIC_ADMISSION_REGISTRY.json --legacy-sensor-catalog 06_RESEARCH_LAB/forward_tests/sensor_pair_discovery_v0_1/SENSOR_PAIR_CATALOG.json --max-new-forecasts 5 | tee runtime/daily-director/experiment_lifecycle_summary.json
 
+      - name: Activate exact settlement only on never-persisted price forecasts
+        run: |
+          python scripts/learning/activate_exact_settlement_on_new_forecasts.py \
+            --repo-root . \
+            --forecast-root research/framework_memory/forecast_memory | tee runtime/daily-director/settlement_activation_summary.json
+
       - name: Commit compact outputs and receipts with verified readback
         shell: bash
         run: |
