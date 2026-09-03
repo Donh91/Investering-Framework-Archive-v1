@@ -1,22 +1,57 @@
 {
-  "contract": "MONTHLY_AI_LEARNING_COUNCIL_STATE_v1",
+  "ai_review_status": {
+    "adversarial": "DEGRADED",
+    "analyst": "DEGRADED"
+  },
   "authority": "RESEARCH_ONLY_NON_CANONICAL",
-  "status": "BOOTSTRAP_WAITING_FOR_FIRST_REVIEW",
-  "primary_action": "CONTINUE_OBSERVING",
-  "target": "MONTHLY_AI_LEARNING_COUNCIL",
-  "reason": "Council is installed but has not completed its first frozen monthly or evidence-milestone review.",
-  "evidence_fingerprint": "",
-  "last_completed_month": null,
-  "last_review_at_utc": null,
-  "last_review_kind": null,
-  "last_matured_outcomes_total": 0,
-  "last_escalation_fingerprint": "",
   "candidate_queue": [],
-  "learning_claims": [],
-  "challenged_claims": [],
   "canonical_effect": false,
-  "portfolio_execution": false,
-  "paid_data_authorized": false,
+  "challenged_claims": [],
+  "contract": "MONTHLY_AI_LEARNING_COUNCIL_STATE_v1",
   "deep_research_authorized": false,
-  "external_provider_calls_authorized": false
+  "evidence_fingerprint": "f02791c101e1aa3b10bb0db733cc20d6d015fd27551b2cd8ef03be1c093c208f",
+  "external_provider_calls_authorized": false,
+  "last_completed_month": "2026-09",
+  "last_escalation_fingerprint": "e2f1db38c96c9958a004809185f3bc8fbfc7694d569ac59b1474c064d13ab5ec",
+  "last_matured_outcomes_total": 286,
+  "last_review_at_utc": "2026-09-03T06:06:24Z",
+  "last_review_kind": "MONTHLY",
+  "learning_claims": [
+    {
+      "candidate_id": "EC-0dc8abd903144198e36e",
+      "matured_outcome_count": 48,
+      "state": "MATURED_SUPPORTED",
+      "title": "Prospective derivatives.BTC-USDT-SWAP.mark_price.mark_price RANGE"
+    },
+    {
+      "candidate_id": "EC-4e02e53e58c3e79ba871",
+      "matured_outcome_count": 46,
+      "state": "MATURED_SUPPORTED",
+      "title": "Prospective derivatives.ETH-USDT-SWAP.mark_price.mark_price DOWN"
+    },
+    {
+      "candidate_id": "EC-5c8b675adec8111650dd",
+      "matured_outcome_count": 41,
+      "state": "MATURED_SUPPORTED",
+      "title": "Prospective derivatives.ETH-USDT-SWAP.mark_price.mark_price DOWN"
+    },
+    {
+      "candidate_id": "EC-23f2161a31fe1f482e99",
+      "matured_outcome_count": 37,
+      "state": "MATURED_SUPPORTED",
+      "title": "Prospective derivatives.BTC-USDT-SWAP.mark_price.mark_price RANGE"
+    },
+    {
+      "candidate_id": "EC-62dc79b74bb6526e7c67",
+      "matured_outcome_count": 31,
+      "state": "MATURED_SUPPORTED",
+      "title": "Prospective derivatives.BTC-USDT-SWAP.mark_price.mark_price DOWN"
+    }
+  ],
+  "paid_data_authorized": false,
+  "portfolio_execution": false,
+  "primary_action": "RUN_INCREMENTAL_VALUE_TEST",
+  "reason": "Matured supportive evidence requires incremental-value review before any promotion.",
+  "status": "REVIEW_COMPLETE",
+  "target": "EC-0e9733866b37fcec87ed"
 }

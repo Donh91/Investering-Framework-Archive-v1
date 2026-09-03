@@ -1,0 +1,4803 @@
+{
+  "authority": "RESEARCH_ONLY_NON_CANONICAL",
+  "contract": "MONTHLY_AI_LEARNING_COUNCIL_FROZEN_CONTEXT_v1",
+  "deterministic_markers": {
+    "current_escalation_fingerprint": "e2f1db38c96c9958a004809185f3bc8fbfc7694d569ac59b1474c064d13ab5ec",
+    "minimum_matured_outcomes_for_learning_claim": 25
+  },
+  "eligibility": {
+    "escalation_trigger": true,
+    "maturation_trigger": true,
+    "matured_outcome_delta": 286,
+    "milestone_due": true,
+    "month_key": "2026-09",
+    "monthly_due": true,
+    "run_review": true
+  },
+  "evidence_census": {
+    "action_compass_calibration": {
+      "cohorts": [],
+      "contract": "ACTION_COMPASS_EXIT_WARNING_CALIBRATION_v1",
+      "generated_at_utc": "2026-09-03T05:59:20Z",
+      "interpretation_boundary": {
+        "automatic_promotion": false,
+        "descriptive_only": true,
+        "hit_miss_labels": false,
+        "market_rule_change": false,
+        "new_thresholds": false,
+        "note": "Measures post-signal upside, drawdown and full-exit reference opportunity cost without defining when to reduce or exit.",
+        "portfolio_action": false
+      },
+      "matured_series_row_count": 0,
+      "source_contract": "ACTION_COMPASS_OUTCOME_SIDECAR_v1_1",
+      "source_sidecar_count": 0,
+      "status": "NO_MATURED_ROWS",
+      "warning_series_row_count": 0
+    },
+    "architecture_health": {
+      "accepted_data_ping_count": 0,
+      "authority": {
+        "framework_state_change": false,
+        "portfolio_action": false
+      },
+      "blockers": [],
+      "cfgi_credits_remaining": null,
+      "contract": "ARCHITECTURE_HEALTH_DASHBOARD_v2_3",
+      "evidence_health": {
+        "adjudicated_outcome_count": 194,
+        "censor_rate": 0.0,
+        "censored_outcome_count": 0,
+        "forecasts_due_in_window": 189,
+        "matured_outcome_count": 194,
+        "window_days": 14
+      },
+      "experiment_lifecycle": {
+        "candidate_count": 178,
+        "path": "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json",
+        "state_counts": {
+          "INCUBATING": 93,
+          "MATURED_INCONCLUSIVE": 32,
+          "MATURED_NOT_SUPPORTED": 5,
+          "MATURED_SUPPORTED": 8,
+          "TARGET_UNIT_QUARANTINED": 8,
+          "WAITING_FOR_DATA": 7,
+          "WAITING_FOR_MAPPING": 24,
+          "WAITING_FOR_MATURITY": 1
+        }
+      },
+      "experiment_receipt_sync": {
+        "hash_mismatches": 0,
+        "imported": 0,
+        "path": "research/experiment_lifecycle/LATEST_EXPERIMENT_RECEIPT_SYNC.json",
+        "status": "PASS"
+      },
+      "freshness_hours": {
+        "capture": 1.4157799644444444,
+        "daily_director": 6.472168853333334,
+        "etf_owner": 0.08657664222222222,
+        "experiment_receipt_sync": 0.0016132977777777776,
+        "experiment_registry": 0.0002244088888888889,
+        "remediation_queue": 8.138279964444445,
+        "weekly_calibration": 71.93461601833333
+      },
+      "generated_at_utc": "2026-09-03T05:59:20.807872Z",
+      "latest_capture_path": "03_DAILY_CAPTURE_LOGS/captures/LATEST.json",
+      "latest_daily_director_path": "research/api_agent/outputs/daily/2026/09/02/233118/DAILY_DIRECTOR_OUTPUT.json",
+      "latest_daily_director_receipt_path": "research/api_agent/outputs/daily/2026/09/02/233118/DAILY_DIRECTOR_RECEIPT.json",
+      "latest_etf_owner_path": "research/etf_owner/LATEST_FARSIDE_ETF_OWNER.json",
+      "latest_weekly_calibration_path": "research/api_agent/outputs/weekly/2026/W35/MASTER_MONDAY_MACHINE_PACKAGE.json",
+      "owners": {
+        "count": 0,
+        "pass_count": 0,
+        "rows": []
+      },
+      "remediation": {
+        "automatic_code_write": false,
+        "automatic_merge": false,
+        "path": "research/remediation/LATEST_REMEDIATION_QUEUE.json",
+        "summary": {
+          "active_remediation": 10,
+          "codex_ready": 19,
+          "needs_more_evidence": 16,
+          "research_intake": 42,
+          "research_intake_errors": 1,
+          "total": 58
+        }
+      },
+      "status": "GREEN"
+    },
+    "automation_health": {
+      "amber_count": 125,
+      "api_error": null,
+      "blockers": [],
+      "cfgi_workflow_count": 20,
+      "contract": "AUTOMATION_PRODUCTION_HEALTH_v2_1",
+      "generated_at_utc": "2026-09-03T05:59:20.987236Z",
+      "green_count": 0,
+      "lifecycle_semantics": "AUTOMATION_LIFECYCLE_v1",
+      "openai_workflow_count": 15,
+      "orphaned_registered_workflows": [],
+      "red_count": 0,
+      "registered_workflow_count": 0,
+      "repository": "Donh91/Investering-Framework-Archive-v1",
+      "scheduled_workflow_count": 41,
+      "status": "AMBER",
+      "warnings": [
+        "adaptive-decision-miss-validation.yml:NO_RUN_HISTORY",
+        "adaptive-decision-miss-validation.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "adaptive-evidence-gap-gate.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "adaptive-evidence-gap.yml:NO_RUN_HISTORY",
+        "adaptive-evidence-gap.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "adaptive-gap-validation-gate.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "adaptive-rotation-cadence.yml:NO_RUN_HISTORY",
+        "adaptive-rotation-cadence.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "api-agent-gateway-gate.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "automation-production-health-gate.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "automation-production-health.yml:NO_RUN_HISTORY",
+        "automation-production-health.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "autonomous-research-governance-gate.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "autonomous-research-governance-loop.yml:NO_RUN_HISTORY",
+        "autonomous-research-governance-loop.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "backtest-engine-foundation.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "backtest-readiness-contracts.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "backtest-wave1-2-foundation.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "backtest-wave1-3-authority-lineage.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "backtest-wave1-4-prospective.yml:NO_RUN_HISTORY",
+        "backtest-wave1-4-prospective.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "binance-spot-owner-manual.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "binance-usdm-owner-manual.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "buildwithclaude-shadow-evidence-ledger.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "buildwithclaude-shadow-prospective-observer.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "buildwithclaude-shadow-round1.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "cfgi-recovery-launch-once.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "cfgi-recovery-launch-trigger.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "cfgi-v3-launch-receipt-publish.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "codex-intake-dispatch.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "continuity-learning-gate.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "continuity-learning-maintenance.yml:NO_RUN_HISTORY",
+        "continuity-learning-maintenance.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "cowork-historical-altseason-bundle-gate.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "cowork-historical-altseason-bundle-receipt.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "cowork-historical-altseason-bundle.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "cross-repo-agent-context-gate.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "cycle-navigator-autonomous-calibration-gate.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "cycle-navigator-autonomous-calibration-loop.yml:NO_RUN_HISTORY",
+        "cycle-navigator-autonomous-calibration-loop.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "cycle-navigator-weekly-publication.yml:NO_RUN_HISTORY",
+        "cycle-navigator-weekly-publication.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "daily-capture-architecture-gate.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "daily-director-shadow.yml:NO_RUN_HISTORY",
+        "daily-director-shadow.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "daily-machine-throughput-gate.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "daily-machine-throughput.yml:NO_RUN_HISTORY",
+        "daily-machine-throughput.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "daily-raw-owner-capture.yml:NO_RUN_HISTORY",
+        "daily-raw-owner-capture.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "daily-settled-etf-calibration.yml:NO_RUN_HISTORY",
+        "daily-settled-etf-calibration.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "daily-slow-cycle-shadow.yml:NO_RUN_HISTORY",
+        "daily-slow-cycle-shadow.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "daily-stablecoin-liquidity.yml:NO_RUN_HISTORY",
+        "daily-stablecoin-liquidity.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "data-architecture-gate.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "data-terminal-shadow-manual.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "dataset-registry-gate.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "entry-signal-ledger-gate.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "entry-signal-ledger.yml:NO_RUN_HISTORY",
+        "entry-signal-ledger.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "ethbtc-persistence-lifecycle.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "evidence-closure-gate.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "evidence-lifecycle-observability-gate.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "evidence-lifecycle-store-health.yml:NO_RUN_HISTORY",
+        "evidence-lifecycle-store-health.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "experiment-lifecycle-gate.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "fetch_btc_d_cmc_free.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "forecast-exact-settlement-owner-gate.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "forecast-materialization-census-gate.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "forecast-outcome-supersession-gate.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "forecast-ratification-throughput-gate.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "forecast-settlement-accountability-gate.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "forecast-source-temporal-provenance-gate.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "framework-learning-operations.yml:NO_RUN_HISTORY",
+        "framework-learning-operations.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "full-architecture-1to7-gate.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "historical-altseason-cfgi-enrichment.yml:RETIRED_WORKFLOW_LOCAL_FILE_PRESENT",
+        "historical-altseason-cfgi-enrichment.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "historical-altseason-cfgi-publish.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "historical-altseason-cfgi-reservation.yml:RETIRED_WORKFLOW_LOCAL_FILE_PRESENT",
+        "historical-altseason-cfgi-reservation.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "historical-altseason-cfgi-run-audit.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "historical-altseason-cfgi-terminal-finalize.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "historical-altseason-cfgi-terminal-publish.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "historical-altseason-free-bootstrap.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "historical-altseason-free-publish-regression-gate.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "historical-altseason-free-publish.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "historical-altseason-lab-gate.yml:ARTIFACT_RETENTION_UNBOUNDED",
+        "historical-altseason-lab-gate.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "historical-altseason-throughput-gate.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "hourly-sequence-capture.yml:NO_RUN_HISTORY",
+        "hourly-sequence-capture.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "intraday-execution-gate.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "intraday-execution-research.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "legacy-knowledge-bootstrap-gate.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "mar_wp04c4_gate.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "master-monday-preflight-gate.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "master-monday-remaining-gaps.yml:NO_RUN_HISTORY",
+        "master-monday-remaining-gaps.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "monthly-ai-learning-council-gate.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "monthly-ai-learning-council.yml:NO_RUN_HISTORY",
+        "monthly-ai-learning-council.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "okx-swap-owner-manual.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "operations-dashboard-gate.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "operations-dashboard.yml:NO_RUN_HISTORY",
+        "operations-dashboard.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "operations-recovery-launch-once.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "owner-bound-daily-director-manual.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "pdf-inspector-ingestion.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "pdlt-bootstrap-once.yml:EXPECTED_BLOCK",
+        "pdlt-bootstrap-once.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "pdlt-daily-census.yml:EXPECTED_BLOCK",
+        "pdlt-daily-census.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "pdlt-discovery-once.yml:EXPECTED_BLOCK",
+        "pdlt-discovery-once.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "pdlt-maturation.yml:EXPECTED_BLOCK",
+        "pdlt-maturation.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "pdlt-runtime-gate.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "pdlt-v1-1.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "phase4-no-hindsight-replay.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "pullback-learning-gate.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "pullback-learning-ledger.yml:NO_RUN_HISTORY",
+        "pullback-learning-ledger.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "remediation-maturation-gate.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "remediation-maturation.yml:NO_RUN_HISTORY",
+        "remediation-maturation.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "research-execution-coordinator.yml:NO_RUN_HISTORY",
+        "research-execution-coordinator.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "research-owner-breadth-daily.yml:NO_RUN_HISTORY",
+        "research-owner-breadth-daily.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "research-owner-btcd-daily.yml:NO_RUN_HISTORY",
+        "research-owner-btcd-daily.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "rich-breadth-checkpoint.yml:NO_RUN_HISTORY",
+        "rich-breadth-checkpoint.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "round3-contract-freeze-gate.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "round3-v2-materialization.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "sequential-research-queue.yml:NO_RUN_HISTORY",
+        "sequential-research-queue.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "shadow-admission-ai-decider.yml:NO_RUN_HISTORY",
+        "shadow-admission-ai-decider.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "shadow-registry-autonomous-portfolio-gate.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "shadow-registry-autonomous-portfolio-loop.yml:NO_RUN_HISTORY",
+        "shadow-registry-autonomous-portfolio-loop.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "shadow-registry-gate.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "shadow-registry-weekly.yml:NO_RUN_HISTORY",
+        "shadow-registry-weekly.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "shared-row-prospective-evidence-loop.yml:NO_RUN_HISTORY",
+        "shared-row-prospective-evidence-loop.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "shared-row-tournament-research-gate.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "shared-row-tournament-weekly.yml:NO_RUN_HISTORY",
+        "shared-row-tournament-weekly.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "situation-room-daily-static.yml:NO_RUN_HISTORY",
+        "situation-room-daily-static.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "situation-room-owner-live-gate.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "source-provenance-recovery-gate.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "source-provenance-recovery-loop.yml:NO_RUN_HISTORY",
+        "source-provenance-recovery-loop.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "specialist-architecture-gate.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "storage-health-gate.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "sunday-market-close-and-cfgi.yml:NO_RUN_HISTORY",
+        "sunday-market-close-and-cfgi.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "top100-breadth-owner-manual.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "unified-experimental-lifecycle-adjudication.yml:NO_RUN_HISTORY",
+        "unified-experimental-lifecycle-adjudication.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "validate_m3_forward_ledger.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "weekly-api-calibration-shadow.yml:NO_RUN_HISTORY",
+        "weekly-api-calibration-shadow.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "weekly-raw-calibration-bridge.yml:NO_RUN_HISTORY",
+        "weekly-raw-calibration-bridge.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE",
+        "weekly-sol-adversarial-review.yml:NO_RUN_HISTORY",
+        "weekly-sol-adversarial-review.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+      ],
+      "workflow_count": 125,
+      "workflows": [
+        {
+          "cfgi_enabled": false,
+          "cron_count": 1,
+          "cron_expressions": [
+            "35 0 * * *"
+          ],
+          "expected_exit_code": null,
+          "findings": [
+            "NO_RUN_HISTORY",
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": true,
+          "path": ".github/workflows/adaptive-decision-miss-validation.yml",
+          "permissions": [
+            {
+              "level": "write",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "Europe/Copenhagen",
+          "scheduled": true,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "adaptive-decision-miss-validation.yml",
+          "writer_group": "framework-main-writer",
+          "writes_main": true
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 0,
+          "cron_expressions": [],
+          "expected_exit_code": null,
+          "findings": [
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/adaptive-evidence-gap-gate.yml",
+          "permissions": [
+            {
+              "level": "read",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "UTC",
+          "scheduled": false,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "adaptive-evidence-gap-gate.yml",
+          "writer_group": null,
+          "writes_main": false
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 1,
+          "cron_expressions": [
+            "50 23 * * *"
+          ],
+          "expected_exit_code": null,
+          "findings": [
+            "NO_RUN_HISTORY",
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": true,
+          "path": ".github/workflows/adaptive-evidence-gap.yml",
+          "permissions": [
+            {
+              "level": "write",
+              "scope": "contents"
+            },
+            {
+              "level": "write",
+              "scope": "issues"
+            }
+          ],
+          "schedule_timezone": "Europe/Copenhagen",
+          "scheduled": true,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "adaptive-evidence-gap.yml",
+          "writer_group": "framework-main-writer",
+          "writes_main": true
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 0,
+          "cron_expressions": [],
+          "expected_exit_code": null,
+          "findings": [
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/adaptive-gap-validation-gate.yml",
+          "permissions": [],
+          "schedule_timezone": "UTC",
+          "scheduled": false,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "adaptive-gap-validation-gate.yml",
+          "writer_group": null,
+          "writes_main": false
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 1,
+          "cron_expressions": [
+            "16 0,4,8,12,16,20 * * *"
+          ],
+          "expected_exit_code": null,
+          "findings": [
+            "NO_RUN_HISTORY",
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/adaptive-rotation-cadence.yml",
+          "permissions": [
+            {
+              "level": "write",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "Europe/Copenhagen",
+          "scheduled": true,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "adaptive-rotation-cadence.yml",
+          "writer_group": "framework-main-writer",
+          "writes_main": true
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 0,
+          "cron_expressions": [],
+          "expected_exit_code": null,
+          "findings": [
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": true,
+          "path": ".github/workflows/api-agent-gateway-gate.yml",
+          "permissions": [
+            {
+              "level": "read",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "UTC",
+          "scheduled": false,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "api-agent-gateway-gate.yml",
+          "writer_group": null,
+          "writes_main": false
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 0,
+          "cron_expressions": [],
+          "expected_exit_code": null,
+          "findings": [
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/automation-production-health-gate.yml",
+          "permissions": [
+            {
+              "level": "read",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "UTC",
+          "scheduled": false,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "automation-production-health-gate.yml",
+          "writer_group": null,
+          "writes_main": false
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 2,
+          "cron_expressions": [
+            "30 5 * * *",
+            "30 17 * * *"
+          ],
+          "expected_exit_code": null,
+          "findings": [
+            "NO_RUN_HISTORY",
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/automation-production-health.yml",
+          "permissions": [
+            {
+              "level": "read",
+              "scope": "actions"
+            },
+            {
+              "level": "write",
+              "scope": "contents"
+            },
+            {
+              "level": "write",
+              "scope": "issues"
+            }
+          ],
+          "schedule_timezone": "Europe/Copenhagen",
+          "scheduled": true,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "automation-production-health.yml",
+          "writer_group": "framework-main-writer",
+          "writes_main": true
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 0,
+          "cron_expressions": [],
+          "expected_exit_code": null,
+          "findings": [
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/autonomous-research-governance-gate.yml",
+          "permissions": [
+            {
+              "level": "read",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "UTC",
+          "scheduled": false,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "autonomous-research-governance-gate.yml",
+          "writer_group": null,
+          "writes_main": false
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 1,
+          "cron_expressions": [
+            "30 7 * * *"
+          ],
+          "expected_exit_code": null,
+          "findings": [
+            "NO_RUN_HISTORY",
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/autonomous-research-governance-loop.yml",
+          "permissions": [
+            {
+              "level": "write",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "Europe/Copenhagen",
+          "scheduled": true,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "autonomous-research-governance-loop.yml",
+          "writer_group": "framework-main-writer",
+          "writes_main": true
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 0,
+          "cron_expressions": [],
+          "expected_exit_code": null,
+          "findings": [
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/backtest-engine-foundation.yml",
+          "permissions": [
+            {
+              "level": "read",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "UTC",
+          "scheduled": false,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "backtest-engine-foundation.yml",
+          "writer_group": null,
+          "writes_main": false
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 0,
+          "cron_expressions": [],
+          "expected_exit_code": null,
+          "findings": [
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/backtest-readiness-contracts.yml",
+          "permissions": [
+            {
+              "level": "read",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "UTC",
+          "scheduled": false,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "backtest-readiness-contracts.yml",
+          "writer_group": null,
+          "writes_main": false
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 0,
+          "cron_expressions": [],
+          "expected_exit_code": null,
+          "findings": [
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/backtest-wave1-2-foundation.yml",
+          "permissions": [
+            {
+              "level": "read",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "UTC",
+          "scheduled": false,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "backtest-wave1-2-foundation.yml",
+          "writer_group": null,
+          "writes_main": false
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 0,
+          "cron_expressions": [],
+          "expected_exit_code": null,
+          "findings": [
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/backtest-wave1-3-authority-lineage.yml",
+          "permissions": [
+            {
+              "level": "read",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "UTC",
+          "scheduled": false,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "backtest-wave1-3-authority-lineage.yml",
+          "writer_group": null,
+          "writes_main": false
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 1,
+          "cron_expressions": [
+            "35 17 * * *"
+          ],
+          "expected_exit_code": null,
+          "findings": [
+            "NO_RUN_HISTORY",
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/backtest-wave1-4-prospective.yml",
+          "permissions": [
+            {
+              "level": "read",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "Europe/Copenhagen",
+          "scheduled": true,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "backtest-wave1-4-prospective.yml",
+          "writer_group": null,
+          "writes_main": false
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 0,
+          "cron_expressions": [],
+          "expected_exit_code": null,
+          "findings": [
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/binance-spot-owner-manual.yml",
+          "permissions": [
+            {
+              "level": "read",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "UTC",
+          "scheduled": false,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "binance-spot-owner-manual.yml",
+          "writer_group": null,
+          "writes_main": false
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 0,
+          "cron_expressions": [],
+          "expected_exit_code": null,
+          "findings": [
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/binance-usdm-owner-manual.yml",
+          "permissions": [
+            {
+              "level": "read",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "UTC",
+          "scheduled": false,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "binance-usdm-owner-manual.yml",
+          "writer_group": null,
+          "writes_main": false
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 0,
+          "cron_expressions": [],
+          "expected_exit_code": null,
+          "findings": [
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/buildwithclaude-shadow-evidence-ledger.yml",
+          "permissions": [
+            {
+              "level": "read",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "UTC",
+          "scheduled": false,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "buildwithclaude-shadow-evidence-ledger.yml",
+          "writer_group": null,
+          "writes_main": false
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 0,
+          "cron_expressions": [],
+          "expected_exit_code": null,
+          "findings": [
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/buildwithclaude-shadow-prospective-observer.yml",
+          "permissions": [
+            {
+              "level": "read",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "UTC",
+          "scheduled": false,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "buildwithclaude-shadow-prospective-observer.yml",
+          "writer_group": null,
+          "writes_main": false
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 0,
+          "cron_expressions": [],
+          "expected_exit_code": null,
+          "findings": [
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/buildwithclaude-shadow-round1.yml",
+          "permissions": [
+            {
+              "level": "read",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "UTC",
+          "scheduled": false,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "buildwithclaude-shadow-round1.yml",
+          "writer_group": null,
+          "writes_main": false
+        },
+        {
+          "cfgi_enabled": true,
+          "cron_count": 0,
+          "cron_expressions": [],
+          "expected_exit_code": null,
+          "findings": [
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/cfgi-recovery-launch-once.yml",
+          "permissions": [
+            {
+              "level": "read",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "UTC",
+          "scheduled": false,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "cfgi-recovery-launch-once.yml",
+          "writer_group": "historical-altseason-cfgi-terminal-guard",
+          "writes_main": false
+        },
+        {
+          "cfgi_enabled": true,
+          "cron_count": 0,
+          "cron_expressions": [],
+          "expected_exit_code": null,
+          "findings": [
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": false,
+          "openai_enabled": false,
+          "path": ".github/workflows/cfgi-recovery-launch-trigger.yml",
+          "permissions": [
+            {
+              "level": "write",
+              "scope": "actions"
+            },
+            {
+              "level": "write",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "UTC",
+          "scheduled": false,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "cfgi-recovery-launch-trigger.yml",
+          "writer_group": "framework-main-writer",
+          "writes_main": true
+        },
+        {
+          "cfgi_enabled": true,
+          "cron_count": 0,
+          "cron_expressions": [],
+          "expected_exit_code": null,
+          "findings": [
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": false,
+          "openai_enabled": false,
+          "path": ".github/workflows/cfgi-v3-launch-receipt-publish.yml",
+          "permissions": [
+            {
+              "level": "read",
+              "scope": "actions"
+            },
+            {
+              "level": "write",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "UTC",
+          "scheduled": false,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "cfgi-v3-launch-receipt-publish.yml",
+          "writer_group": "framework-main-writer",
+          "writes_main": true
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 0,
+          "cron_expressions": [],
+          "expected_exit_code": null,
+          "findings": [
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/codex-intake-dispatch.yml",
+          "permissions": [
+            {
+              "level": "write",
+              "scope": "actions"
+            },
+            {
+              "level": "read",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "UTC",
+          "scheduled": false,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "codex-intake-dispatch.yml",
+          "writer_group": "codex-research-intake-dispatch",
+          "writes_main": false
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 0,
+          "cron_expressions": [],
+          "expected_exit_code": null,
+          "findings": [
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": true,
+          "path": ".github/workflows/continuity-learning-gate.yml",
+          "permissions": [
+            {
+              "level": "read",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "UTC",
+          "scheduled": false,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "continuity-learning-gate.yml",
+          "writer_group": null,
+          "writes_main": false
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 1,
+          "cron_expressions": [
+            "45 23 * * *"
+          ],
+          "expected_exit_code": null,
+          "findings": [
+            "NO_RUN_HISTORY",
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/continuity-learning-maintenance.yml",
+          "permissions": [
+            {
+              "level": "write",
+              "scope": "contents"
+            },
+            {
+              "level": "write",
+              "scope": "issues"
+            }
+          ],
+          "schedule_timezone": "Europe/Copenhagen",
+          "scheduled": true,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "continuity-learning-maintenance.yml",
+          "writer_group": "framework-main-writer",
+          "writes_main": true
+        },
+        {
+          "cfgi_enabled": true,
+          "cron_count": 0,
+          "cron_expressions": [],
+          "expected_exit_code": null,
+          "findings": [
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": false,
+          "openai_enabled": false,
+          "path": ".github/workflows/cowork-historical-altseason-bundle-gate.yml",
+          "permissions": [
+            {
+              "level": "read",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "UTC",
+          "scheduled": false,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "cowork-historical-altseason-bundle-gate.yml",
+          "writer_group": null,
+          "writes_main": false
+        },
+        {
+          "cfgi_enabled": true,
+          "cron_count": 0,
+          "cron_expressions": [],
+          "expected_exit_code": null,
+          "findings": [
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": false,
+          "openai_enabled": false,
+          "path": ".github/workflows/cowork-historical-altseason-bundle-receipt.yml",
+          "permissions": [
+            {
+              "level": "read",
+              "scope": "actions"
+            },
+            {
+              "level": "write",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "UTC",
+          "scheduled": false,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "cowork-historical-altseason-bundle-receipt.yml",
+          "writer_group": "framework-main-writer",
+          "writes_main": true
+        },
+        {
+          "cfgi_enabled": true,
+          "cron_count": 0,
+          "cron_expressions": [],
+          "expected_exit_code": null,
+          "findings": [
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/cowork-historical-altseason-bundle.yml",
+          "permissions": [
+            {
+              "level": "read",
+              "scope": "actions"
+            },
+            {
+              "level": "read",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "UTC",
+          "scheduled": false,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "cowork-historical-altseason-bundle.yml",
+          "writer_group": "cowork-historical-altseason-bundle",
+          "writes_main": false
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 0,
+          "cron_expressions": [],
+          "expected_exit_code": null,
+          "findings": [
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/cross-repo-agent-context-gate.yml",
+          "permissions": [
+            {
+              "level": "read",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "UTC",
+          "scheduled": false,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "cross-repo-agent-context-gate.yml",
+          "writer_group": null,
+          "writes_main": false
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 0,
+          "cron_expressions": [],
+          "expected_exit_code": null,
+          "findings": [
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/cycle-navigator-autonomous-calibration-gate.yml",
+          "permissions": [
+            {
+              "level": "read",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "UTC",
+          "scheduled": false,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "cycle-navigator-autonomous-calibration-gate.yml",
+          "writer_group": null,
+          "writes_main": false
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 1,
+          "cron_expressions": [
+            "20 8 * * 1"
+          ],
+          "expected_exit_code": null,
+          "findings": [
+            "NO_RUN_HISTORY",
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/cycle-navigator-autonomous-calibration-loop.yml",
+          "permissions": [
+            {
+              "level": "write",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "Europe/Copenhagen",
+          "scheduled": true,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "cycle-navigator-autonomous-calibration-loop.yml",
+          "writer_group": "framework-main-writer",
+          "writes_main": true
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 1,
+          "cron_expressions": [
+            "5 9 * * 1"
+          ],
+          "expected_exit_code": null,
+          "findings": [
+            "NO_RUN_HISTORY",
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": true,
+          "path": ".github/workflows/cycle-navigator-weekly-publication.yml",
+          "permissions": [
+            {
+              "level": "write",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "Europe/Copenhagen",
+          "scheduled": true,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "cycle-navigator-weekly-publication.yml",
+          "writer_group": "framework-main-writer",
+          "writes_main": true
+        },
+        {
+          "cfgi_enabled": true,
+          "cron_count": 0,
+          "cron_expressions": [],
+          "expected_exit_code": null,
+          "findings": [
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": true,
+          "path": ".github/workflows/daily-capture-architecture-gate.yml",
+          "permissions": [
+            {
+              "level": "read",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "UTC",
+          "scheduled": false,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "daily-capture-architecture-gate.yml",
+          "writer_group": null,
+          "writes_main": false
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 4,
+          "cron_expressions": [
+            "35 6 * * *",
+            "5 11 * * *",
+            "40 15 * * *",
+            "30 23 * * *"
+          ],
+          "expected_exit_code": null,
+          "findings": [
+            "NO_RUN_HISTORY",
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": true,
+          "path": ".github/workflows/daily-director-shadow.yml",
+          "permissions": [
+            {
+              "level": "write",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "Europe/Copenhagen",
+          "scheduled": true,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "daily-director-shadow.yml",
+          "writer_group": "framework-main-writer",
+          "writes_main": true
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 0,
+          "cron_expressions": [],
+          "expected_exit_code": null,
+          "findings": [
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": false,
+          "openai_enabled": false,
+          "path": ".github/workflows/daily-machine-throughput-gate.yml",
+          "permissions": [
+            {
+              "level": "read",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "UTC",
+          "scheduled": false,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "daily-machine-throughput-gate.yml",
+          "writer_group": null,
+          "writes_main": false
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 1,
+          "cron_expressions": [
+            "50 0 * * *"
+          ],
+          "expected_exit_code": null,
+          "findings": [
+            "NO_RUN_HISTORY",
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/daily-machine-throughput.yml",
+          "permissions": [
+            {
+              "level": "read",
+              "scope": "actions"
+            },
+            {
+              "level": "write",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "Europe/Copenhagen",
+          "scheduled": true,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "daily-machine-throughput.yml",
+          "writer_group": "framework-main-writer",
+          "writes_main": true
+        },
+        {
+          "cfgi_enabled": true,
+          "cron_count": 6,
+          "cron_expressions": [
+            "13 2 * * *",
+            "13 6 * * *",
+            "13 10 * * *",
+            "13 14 * * *",
+            "13 18 * * *",
+            "13 22 * * *"
+          ],
+          "expected_exit_code": null,
+          "findings": [
+            "NO_RUN_HISTORY",
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/daily-raw-owner-capture.yml",
+          "permissions": [
+            {
+              "level": "write",
+              "scope": "contents"
+            },
+            {
+              "level": "write",
+              "scope": "issues"
+            }
+          ],
+          "schedule_timezone": "Europe/Copenhagen",
+          "scheduled": true,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "daily-raw-owner-capture.yml",
+          "writer_group": "framework-main-writer",
+          "writes_main": true
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 1,
+          "cron_expressions": [
+            "5 8 * * *"
+          ],
+          "expected_exit_code": null,
+          "findings": [
+            "NO_RUN_HISTORY",
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/daily-settled-etf-calibration.yml",
+          "permissions": [
+            {
+              "level": "write",
+              "scope": "contents"
+            },
+            {
+              "level": "write",
+              "scope": "issues"
+            }
+          ],
+          "schedule_timezone": "Europe/Copenhagen",
+          "scheduled": true,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "daily-settled-etf-calibration.yml",
+          "writer_group": "framework-main-writer",
+          "writes_main": true
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 1,
+          "cron_expressions": [
+            "37 6 * * *"
+          ],
+          "expected_exit_code": null,
+          "findings": [
+            "NO_RUN_HISTORY",
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/daily-slow-cycle-shadow.yml",
+          "permissions": [
+            {
+              "level": "write",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "Europe/Copenhagen",
+          "scheduled": true,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "daily-slow-cycle-shadow.yml",
+          "writer_group": "framework-main-writer",
+          "writes_main": true
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 1,
+          "cron_expressions": [
+            "25 7 * * *"
+          ],
+          "expected_exit_code": null,
+          "findings": [
+            "NO_RUN_HISTORY",
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/daily-stablecoin-liquidity.yml",
+          "permissions": [
+            {
+              "level": "write",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "Europe/Copenhagen",
+          "scheduled": true,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "daily-stablecoin-liquidity.yml",
+          "writer_group": "framework-main-writer",
+          "writes_main": true
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 0,
+          "cron_expressions": [],
+          "expected_exit_code": null,
+          "findings": [
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/data-architecture-gate.yml",
+          "permissions": [
+            {
+              "level": "read",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "UTC",
+          "scheduled": false,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "data-architecture-gate.yml",
+          "writer_group": null,
+          "writes_main": false
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 0,
+          "cron_expressions": [],
+          "expected_exit_code": null,
+          "findings": [
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/data-terminal-shadow-manual.yml",
+          "permissions": [
+            {
+              "level": "read",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "UTC",
+          "scheduled": false,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "data-terminal-shadow-manual.yml",
+          "writer_group": "data-terminal-shadow-${{ github.event.pull_request.number || github.run_id }}",
+          "writes_main": false
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 0,
+          "cron_expressions": [],
+          "expected_exit_code": null,
+          "findings": [
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/dataset-registry-gate.yml",
+          "permissions": [
+            {
+              "level": "read",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "UTC",
+          "scheduled": false,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "dataset-registry-gate.yml",
+          "writer_group": null,
+          "writes_main": false
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 0,
+          "cron_expressions": [],
+          "expected_exit_code": null,
+          "findings": [
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": false,
+          "openai_enabled": false,
+          "path": ".github/workflows/entry-signal-ledger-gate.yml",
+          "permissions": [
+            {
+              "level": "read",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "UTC",
+          "scheduled": false,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "entry-signal-ledger-gate.yml",
+          "writer_group": null,
+          "writes_main": false
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 1,
+          "cron_expressions": [
+            "50 * * * *"
+          ],
+          "expected_exit_code": null,
+          "findings": [
+            "NO_RUN_HISTORY",
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/entry-signal-ledger.yml",
+          "permissions": [
+            {
+              "level": "write",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "Europe/Copenhagen",
+          "scheduled": true,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "entry-signal-ledger.yml",
+          "writer_group": "framework-main-writer",
+          "writes_main": true
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 0,
+          "cron_expressions": [],
+          "expected_exit_code": null,
+          "findings": [
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/ethbtc-persistence-lifecycle.yml",
+          "permissions": [
+            {
+              "level": "write",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "UTC",
+          "scheduled": false,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "ethbtc-persistence-lifecycle.yml",
+          "writer_group": "framework-main-writer",
+          "writes_main": true
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 0,
+          "cron_expressions": [],
+          "expected_exit_code": null,
+          "findings": [
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/evidence-closure-gate.yml",
+          "permissions": [
+            {
+              "level": "read",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "UTC",
+          "scheduled": false,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "evidence-closure-gate.yml",
+          "writer_group": null,
+          "writes_main": false
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 0,
+          "cron_expressions": [],
+          "expected_exit_code": null,
+          "findings": [
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/evidence-lifecycle-observability-gate.yml",
+          "permissions": [
+            {
+              "level": "read",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "UTC",
+          "scheduled": false,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "evidence-lifecycle-observability-gate.yml",
+          "writer_group": null,
+          "writes_main": false
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 1,
+          "cron_expressions": [
+            "15 5 * * *"
+          ],
+          "expected_exit_code": null,
+          "findings": [
+            "NO_RUN_HISTORY",
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/evidence-lifecycle-store-health.yml",
+          "permissions": [
+            {
+              "level": "read",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "Europe/Copenhagen",
+          "scheduled": true,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "evidence-lifecycle-store-health.yml",
+          "writer_group": null,
+          "writes_main": false
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 0,
+          "cron_expressions": [],
+          "expected_exit_code": null,
+          "findings": [
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/experiment-lifecycle-gate.yml",
+          "permissions": [
+            {
+              "level": "read",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "UTC",
+          "scheduled": false,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "experiment-lifecycle-gate.yml",
+          "writer_group": null,
+          "writes_main": false
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 0,
+          "cron_expressions": [],
+          "expected_exit_code": null,
+          "findings": [
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/fetch_btc_d_cmc_free.yml",
+          "permissions": [
+            {
+              "level": "read",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "UTC",
+          "scheduled": false,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "fetch_btc_d_cmc_free.yml",
+          "writer_group": null,
+          "writes_main": false
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 0,
+          "cron_expressions": [],
+          "expected_exit_code": null,
+          "findings": [
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/forecast-exact-settlement-owner-gate.yml",
+          "permissions": [
+            {
+              "level": "read",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "UTC",
+          "scheduled": false,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "forecast-exact-settlement-owner-gate.yml",
+          "writer_group": null,
+          "writes_main": false
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 0,
+          "cron_expressions": [],
+          "expected_exit_code": null,
+          "findings": [
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/forecast-materialization-census-gate.yml",
+          "permissions": [
+            {
+              "level": "read",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "UTC",
+          "scheduled": false,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "forecast-materialization-census-gate.yml",
+          "writer_group": null,
+          "writes_main": false
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 0,
+          "cron_expressions": [],
+          "expected_exit_code": null,
+          "findings": [
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/forecast-outcome-supersession-gate.yml",
+          "permissions": [
+            {
+              "level": "read",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "UTC",
+          "scheduled": false,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "forecast-outcome-supersession-gate.yml",
+          "writer_group": null,
+          "writes_main": false
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 0,
+          "cron_expressions": [],
+          "expected_exit_code": null,
+          "findings": [
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/forecast-ratification-throughput-gate.yml",
+          "permissions": [
+            {
+              "level": "read",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "UTC",
+          "scheduled": false,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "forecast-ratification-throughput-gate.yml",
+          "writer_group": null,
+          "writes_main": false
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 0,
+          "cron_expressions": [],
+          "expected_exit_code": null,
+          "findings": [
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/forecast-settlement-accountability-gate.yml",
+          "permissions": [
+            {
+              "level": "read",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "UTC",
+          "scheduled": false,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "forecast-settlement-accountability-gate.yml",
+          "writer_group": null,
+          "writes_main": false
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 0,
+          "cron_expressions": [],
+          "expected_exit_code": null,
+          "findings": [
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/forecast-source-temporal-provenance-gate.yml",
+          "permissions": [
+            {
+              "level": "read",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "UTC",
+          "scheduled": false,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "forecast-source-temporal-provenance-gate.yml",
+          "writer_group": null,
+          "writes_main": false
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 2,
+          "cron_expressions": [
+            "5 3 * * 1-5",
+            "20 3 * * *"
+          ],
+          "expected_exit_code": null,
+          "findings": [
+            "NO_RUN_HISTORY",
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/framework-learning-operations.yml",
+          "permissions": [
+            {
+              "level": "write",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "Europe/Copenhagen",
+          "scheduled": true,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "framework-learning-operations.yml",
+          "writer_group": "framework-main-writer",
+          "writes_main": true
+        },
+        {
+          "cfgi_enabled": true,
+          "cron_count": 0,
+          "cron_expressions": [],
+          "expected_exit_code": null,
+          "findings": [
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": true,
+          "path": ".github/workflows/full-architecture-1to7-gate.yml",
+          "permissions": [
+            {
+              "level": "read",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "UTC",
+          "scheduled": false,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "full-architecture-1to7-gate.yml",
+          "writer_group": null,
+          "writes_main": false
+        },
+        {
+          "cfgi_enabled": true,
+          "cron_count": 0,
+          "cron_expressions": [],
+          "expected_exit_code": null,
+          "findings": [
+            "RETIRED_WORKFLOW_LOCAL_FILE_PRESENT",
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": "PROVIDER_TERMINAL_MARKET_HISTORY_UNAVAILABLE_NO_ADDITIONAL_PAID_RETRY",
+          "lifecycle_since": "2026-08-21T09:30:00Z",
+          "lifecycle_state": "RETIRED",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/historical-altseason-cfgi-enrichment.yml",
+          "permissions": [
+            {
+              "level": "read",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "UTC",
+          "scheduled": false,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "historical-altseason-cfgi-enrichment.yml",
+          "writer_group": "historical-altseason-cfgi-enrichment",
+          "writes_main": false
+        },
+        {
+          "cfgi_enabled": true,
+          "cron_count": 0,
+          "cron_expressions": [],
+          "expected_exit_code": null,
+          "findings": [
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/historical-altseason-cfgi-publish.yml",
+          "permissions": [
+            {
+              "level": "write",
+              "scope": "actions"
+            },
+            {
+              "level": "write",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "UTC",
+          "scheduled": false,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "historical-altseason-cfgi-publish.yml",
+          "writer_group": "framework-main-writer",
+          "writes_main": true
+        },
+        {
+          "cfgi_enabled": true,
+          "cron_count": 0,
+          "cron_expressions": [],
+          "expected_exit_code": null,
+          "findings": [
+            "RETIRED_WORKFLOW_LOCAL_FILE_PRESENT",
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": "PROVIDER_TERMINAL_MARKET_HISTORY_UNAVAILABLE_NO_ADDITIONAL_PAID_RETRY",
+          "lifecycle_since": "2026-08-21T09:30:00Z",
+          "lifecycle_state": "RETIRED",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/historical-altseason-cfgi-reservation.yml",
+          "permissions": [
+            {
+              "level": "read",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "UTC",
+          "scheduled": false,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "historical-altseason-cfgi-reservation.yml",
+          "writer_group": "historical-altseason-cfgi-reservation-retired",
+          "writes_main": false
+        },
+        {
+          "cfgi_enabled": true,
+          "cron_count": 0,
+          "cron_expressions": [],
+          "expected_exit_code": null,
+          "findings": [
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": false,
+          "openai_enabled": false,
+          "path": ".github/workflows/historical-altseason-cfgi-run-audit.yml",
+          "permissions": [
+            {
+              "level": "write",
+              "scope": "actions"
+            },
+            {
+              "level": "write",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "UTC",
+          "scheduled": false,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "historical-altseason-cfgi-run-audit.yml",
+          "writer_group": "framework-main-writer",
+          "writes_main": true
+        },
+        {
+          "cfgi_enabled": true,
+          "cron_count": 0,
+          "cron_expressions": [],
+          "expected_exit_code": null,
+          "findings": [
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/historical-altseason-cfgi-terminal-finalize.yml",
+          "permissions": [
+            {
+              "level": "read",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "UTC",
+          "scheduled": false,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "historical-altseason-cfgi-terminal-finalize.yml",
+          "writer_group": "historical-altseason-cfgi-terminal-finalize",
+          "writes_main": false
+        },
+        {
+          "cfgi_enabled": true,
+          "cron_count": 0,
+          "cron_expressions": [],
+          "expected_exit_code": null,
+          "findings": [
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": false,
+          "openai_enabled": false,
+          "path": ".github/workflows/historical-altseason-cfgi-terminal-publish.yml",
+          "permissions": [
+            {
+              "level": "read",
+              "scope": "actions"
+            },
+            {
+              "level": "write",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "UTC",
+          "scheduled": false,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "historical-altseason-cfgi-terminal-publish.yml",
+          "writer_group": "framework-main-writer",
+          "writes_main": true
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 0,
+          "cron_expressions": [],
+          "expected_exit_code": null,
+          "findings": [
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/historical-altseason-free-bootstrap.yml",
+          "permissions": [
+            {
+              "level": "read",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "UTC",
+          "scheduled": false,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "historical-altseason-free-bootstrap.yml",
+          "writer_group": "historical-altseason-free-bootstrap",
+          "writes_main": false
+        },
+        {
+          "cfgi_enabled": true,
+          "cron_count": 0,
+          "cron_expressions": [],
+          "expected_exit_code": null,
+          "findings": [
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/historical-altseason-free-publish-regression-gate.yml",
+          "permissions": [
+            {
+              "level": "read",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "UTC",
+          "scheduled": false,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "historical-altseason-free-publish-regression-gate.yml",
+          "writer_group": null,
+          "writes_main": false
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 0,
+          "cron_expressions": [],
+          "expected_exit_code": null,
+          "findings": [
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/historical-altseason-free-publish.yml",
+          "permissions": [
+            {
+              "level": "read",
+              "scope": "actions"
+            },
+            {
+              "level": "write",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "UTC",
+          "scheduled": false,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "historical-altseason-free-publish.yml",
+          "writer_group": "framework-main-writer",
+          "writes_main": true
+        },
+        {
+          "cfgi_enabled": true,
+          "cron_count": 0,
+          "cron_expressions": [],
+          "expected_exit_code": null,
+          "findings": [
+            "ARTIFACT_RETENTION_UNBOUNDED",
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/historical-altseason-lab-gate.yml",
+          "permissions": [
+            {
+              "level": "read",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "UTC",
+          "scheduled": false,
+          "static_risks": [
+            "ARTIFACT_RETENTION_UNBOUNDED"
+          ],
+          "status": "AMBER",
+          "workflow": "historical-altseason-lab-gate.yml",
+          "writer_group": null,
+          "writes_main": false
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 0,
+          "cron_expressions": [],
+          "expected_exit_code": null,
+          "findings": [
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/historical-altseason-throughput-gate.yml",
+          "permissions": [
+            {
+              "level": "read",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "UTC",
+          "scheduled": false,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "historical-altseason-throughput-gate.yml",
+          "writer_group": null,
+          "writes_main": false
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 1,
+          "cron_expressions": [
+            "5 * * * *"
+          ],
+          "expected_exit_code": null,
+          "findings": [
+            "NO_RUN_HISTORY",
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/hourly-sequence-capture.yml",
+          "permissions": [
+            {
+              "level": "write",
+              "scope": "contents"
+            },
+            {
+              "level": "write",
+              "scope": "issues"
+            }
+          ],
+          "schedule_timezone": "UTC",
+          "scheduled": true,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "hourly-sequence-capture.yml",
+          "writer_group": "framework-main-writer",
+          "writes_main": true
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 0,
+          "cron_expressions": [],
+          "expected_exit_code": null,
+          "findings": [
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": false,
+          "openai_enabled": false,
+          "path": ".github/workflows/intraday-execution-gate.yml",
+          "permissions": [
+            {
+              "level": "read",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "UTC",
+          "scheduled": false,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "intraday-execution-gate.yml",
+          "writer_group": null,
+          "writes_main": false
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 0,
+          "cron_expressions": [],
+          "expected_exit_code": null,
+          "findings": [
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/intraday-execution-research.yml",
+          "permissions": [
+            {
+              "level": "write",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "UTC",
+          "scheduled": false,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "intraday-execution-research.yml",
+          "writer_group": "framework-main-writer",
+          "writes_main": true
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 0,
+          "cron_expressions": [],
+          "expected_exit_code": null,
+          "findings": [
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/legacy-knowledge-bootstrap-gate.yml",
+          "permissions": [
+            {
+              "level": "read",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "UTC",
+          "scheduled": false,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "legacy-knowledge-bootstrap-gate.yml",
+          "writer_group": null,
+          "writes_main": false
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 0,
+          "cron_expressions": [],
+          "expected_exit_code": null,
+          "findings": [
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/mar_wp04c4_gate.yml",
+          "permissions": [
+            {
+              "level": "read",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "UTC",
+          "scheduled": false,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "mar_wp04c4_gate.yml",
+          "writer_group": null,
+          "writes_main": false
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 0,
+          "cron_expressions": [],
+          "expected_exit_code": null,
+          "findings": [
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/master-monday-preflight-gate.yml",
+          "permissions": [
+            {
+              "level": "read",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "UTC",
+          "scheduled": false,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "master-monday-preflight-gate.yml",
+          "writer_group": null,
+          "writes_main": false
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 1,
+          "cron_expressions": [
+            "0 7,8,9 * * 1"
+          ],
+          "expected_exit_code": null,
+          "findings": [
+            "NO_RUN_HISTORY",
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/master-monday-remaining-gaps.yml",
+          "permissions": [
+            {
+              "level": "write",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "Europe/Copenhagen",
+          "scheduled": true,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "master-monday-remaining-gaps.yml",
+          "writer_group": "framework-main-writer",
+          "writes_main": true
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 0,
+          "cron_expressions": [],
+          "expected_exit_code": null,
+          "findings": [
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/monthly-ai-learning-council-gate.yml",
+          "permissions": [
+            {
+              "level": "read",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "UTC",
+          "scheduled": false,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "monthly-ai-learning-council-gate.yml",
+          "writer_group": null,
+          "writes_main": false
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 1,
+          "cron_expressions": [
+            "15 6 * * *"
+          ],
+          "expected_exit_code": null,
+          "findings": [
+            "NO_RUN_HISTORY",
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": true,
+          "path": ".github/workflows/monthly-ai-learning-council.yml",
+          "permissions": [
+            {
+              "level": "write",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "Europe/Copenhagen",
+          "scheduled": true,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "monthly-ai-learning-council.yml",
+          "writer_group": "framework-main-writer",
+          "writes_main": true
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 0,
+          "cron_expressions": [],
+          "expected_exit_code": null,
+          "findings": [
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/okx-swap-owner-manual.yml",
+          "permissions": [
+            {
+              "level": "read",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "UTC",
+          "scheduled": false,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "okx-swap-owner-manual.yml",
+          "writer_group": null,
+          "writes_main": false
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 0,
+          "cron_expressions": [],
+          "expected_exit_code": null,
+          "findings": [
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/operations-dashboard-gate.yml",
+          "permissions": [
+            {
+              "level": "read",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "UTC",
+          "scheduled": false,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "operations-dashboard-gate.yml",
+          "writer_group": null,
+          "writes_main": false
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 2,
+          "cron_expressions": [
+            "0 6 * * *",
+            "0 18 * * *"
+          ],
+          "expected_exit_code": null,
+          "findings": [
+            "NO_RUN_HISTORY",
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/operations-dashboard.yml",
+          "permissions": [
+            {
+              "level": "write",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "Europe/Copenhagen",
+          "scheduled": true,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "operations-dashboard.yml",
+          "writer_group": "framework-main-writer",
+          "writes_main": true
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 0,
+          "cron_expressions": [],
+          "expected_exit_code": null,
+          "findings": [
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": false,
+          "openai_enabled": false,
+          "path": ".github/workflows/operations-recovery-launch-once.yml",
+          "permissions": [
+            {
+              "level": "write",
+              "scope": "actions"
+            },
+            {
+              "level": "read",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "UTC",
+          "scheduled": false,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "operations-recovery-launch-once.yml",
+          "writer_group": "operations-recovery-launch-once",
+          "writes_main": false
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 0,
+          "cron_expressions": [],
+          "expected_exit_code": null,
+          "findings": [
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": true,
+          "path": ".github/workflows/owner-bound-daily-director-manual.yml",
+          "permissions": [
+            {
+              "level": "read",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "UTC",
+          "scheduled": false,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "owner-bound-daily-director-manual.yml",
+          "writer_group": null,
+          "writes_main": false
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 0,
+          "cron_expressions": [],
+          "expected_exit_code": null,
+          "findings": [
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/pdf-inspector-ingestion.yml",
+          "permissions": [
+            {
+              "level": "read",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "UTC",
+          "scheduled": false,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "pdf-inspector-ingestion.yml",
+          "writer_group": "pdf-inspector-ingestion-${{ github.event.pull_request.number || github.run_id }}",
+          "writes_main": false
+        },
+        {
+          "cfgi_enabled": true,
+          "cron_count": 0,
+          "cron_expressions": [],
+          "expected_exit_code": 78,
+          "findings": [
+            "EXPECTED_BLOCK",
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": "PDLT_METHODS_FROZEN_ZERO_NEW_CFGI_CREDITS_AUTHORIZED",
+          "lifecycle_since": "2026-09-02T14:30:46Z",
+          "lifecycle_state": "EXPECTED_BLOCK",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/pdlt-bootstrap-once.yml",
+          "permissions": [
+            {
+              "level": "read",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "UTC",
+          "scheduled": false,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "pdlt-bootstrap-once.yml",
+          "writer_group": null,
+          "writes_main": false
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 0,
+          "cron_expressions": [],
+          "expected_exit_code": 78,
+          "findings": [
+            "EXPECTED_BLOCK",
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": "PDLT_METHODS_FROZEN_NO_ADMISSIBLE_PROSPECTIVE_RUNTIME",
+          "lifecycle_since": "2026-09-02T14:30:46Z",
+          "lifecycle_state": "EXPECTED_BLOCK",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/pdlt-daily-census.yml",
+          "permissions": [
+            {
+              "level": "read",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "UTC",
+          "scheduled": false,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "pdlt-daily-census.yml",
+          "writer_group": null,
+          "writes_main": false
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 0,
+          "cron_expressions": [],
+          "expected_exit_code": 78,
+          "findings": [
+            "EXPECTED_BLOCK",
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": "PDLT_DISCOVERY_FROZEN_METHODS_REPAIR_REQUIRED",
+          "lifecycle_since": "2026-08-10T15:26:50Z",
+          "lifecycle_state": "EXPECTED_BLOCK",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/pdlt-discovery-once.yml",
+          "permissions": [
+            {
+              "level": "read",
+              "scope": "actions"
+            },
+            {
+              "level": "read",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "UTC",
+          "scheduled": false,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "pdlt-discovery-once.yml",
+          "writer_group": "framework-main-writer",
+          "writes_main": false
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 0,
+          "cron_expressions": [],
+          "expected_exit_code": 78,
+          "findings": [
+            "EXPECTED_BLOCK",
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": "PDLT_METHODS_FROZEN_NO_ADMISSIBLE_FORECAST_INPUT",
+          "lifecycle_since": "2026-09-02T14:30:46Z",
+          "lifecycle_state": "EXPECTED_BLOCK",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/pdlt-maturation.yml",
+          "permissions": [
+            {
+              "level": "read",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "UTC",
+          "scheduled": false,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "pdlt-maturation.yml",
+          "writer_group": null,
+          "writes_main": false
+        },
+        {
+          "cfgi_enabled": true,
+          "cron_count": 0,
+          "cron_expressions": [],
+          "expected_exit_code": null,
+          "findings": [
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": true,
+          "path": ".github/workflows/pdlt-runtime-gate.yml",
+          "permissions": [
+            {
+              "level": "read",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "UTC",
+          "scheduled": false,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "pdlt-runtime-gate.yml",
+          "writer_group": null,
+          "writes_main": false
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 0,
+          "cron_expressions": [],
+          "expected_exit_code": null,
+          "findings": [
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/pdlt-v1-1.yml",
+          "permissions": [
+            {
+              "level": "read",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "UTC",
+          "scheduled": false,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "pdlt-v1-1.yml",
+          "writer_group": null,
+          "writes_main": false
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 0,
+          "cron_expressions": [],
+          "expected_exit_code": null,
+          "findings": [
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/phase4-no-hindsight-replay.yml",
+          "permissions": [
+            {
+              "level": "read",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "UTC",
+          "scheduled": false,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "phase4-no-hindsight-replay.yml",
+          "writer_group": null,
+          "writes_main": false
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 0,
+          "cron_expressions": [],
+          "expected_exit_code": null,
+          "findings": [
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/pullback-learning-gate.yml",
+          "permissions": [
+            {
+              "level": "read",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "UTC",
+          "scheduled": false,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "pullback-learning-gate.yml",
+          "writer_group": null,
+          "writes_main": false
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 1,
+          "cron_expressions": [
+            "55 * * * *"
+          ],
+          "expected_exit_code": null,
+          "findings": [
+            "NO_RUN_HISTORY",
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/pullback-learning-ledger.yml",
+          "permissions": [
+            {
+              "level": "write",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "Europe/Copenhagen",
+          "scheduled": true,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "pullback-learning-ledger.yml",
+          "writer_group": "framework-main-writer",
+          "writes_main": true
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 0,
+          "cron_expressions": [],
+          "expected_exit_code": null,
+          "findings": [
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": false,
+          "openai_enabled": false,
+          "path": ".github/workflows/remediation-maturation-gate.yml",
+          "permissions": [
+            {
+              "level": "read",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "UTC",
+          "scheduled": false,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "remediation-maturation-gate.yml",
+          "writer_group": null,
+          "writes_main": false
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 2,
+          "cron_expressions": [
+            "45 5 * * *",
+            "45 17 * * *"
+          ],
+          "expected_exit_code": null,
+          "findings": [
+            "NO_RUN_HISTORY",
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/remediation-maturation.yml",
+          "permissions": [
+            {
+              "level": "write",
+              "scope": "contents"
+            },
+            {
+              "level": "write",
+              "scope": "issues"
+            }
+          ],
+          "schedule_timezone": "Europe/Copenhagen",
+          "scheduled": true,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "remediation-maturation.yml",
+          "writer_group": "framework-main-writer",
+          "writes_main": true
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 2,
+          "cron_expressions": [
+            "10 9 * * *",
+            "10 21 * * *"
+          ],
+          "expected_exit_code": null,
+          "findings": [
+            "NO_RUN_HISTORY",
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": true,
+          "path": ".github/workflows/research-execution-coordinator.yml",
+          "permissions": [
+            {
+              "level": "write",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "Europe/Copenhagen",
+          "scheduled": true,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "research-execution-coordinator.yml",
+          "writer_group": "framework-main-writer",
+          "writes_main": true
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 1,
+          "cron_expressions": [
+            "15 7 * * *"
+          ],
+          "expected_exit_code": null,
+          "findings": [
+            "NO_RUN_HISTORY",
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/research-owner-breadth-daily.yml",
+          "permissions": [
+            {
+              "level": "write",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "Europe/Copenhagen",
+          "scheduled": true,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "research-owner-breadth-daily.yml",
+          "writer_group": "framework-main-writer",
+          "writes_main": true
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 1,
+          "cron_expressions": [
+            "35 7 * * *"
+          ],
+          "expected_exit_code": null,
+          "findings": [
+            "NO_RUN_HISTORY",
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/research-owner-btcd-daily.yml",
+          "permissions": [
+            {
+              "level": "write",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "Europe/Copenhagen",
+          "scheduled": true,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "research-owner-btcd-daily.yml",
+          "writer_group": "framework-main-writer",
+          "writes_main": true
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 1,
+          "cron_expressions": [
+            "18 2,6,10,14,18,22 * * *"
+          ],
+          "expected_exit_code": null,
+          "findings": [
+            "NO_RUN_HISTORY",
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/rich-breadth-checkpoint.yml",
+          "permissions": [
+            {
+              "level": "write",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "Europe/Copenhagen",
+          "scheduled": true,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "rich-breadth-checkpoint.yml",
+          "writer_group": "framework-main-writer",
+          "writes_main": true
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 0,
+          "cron_expressions": [],
+          "expected_exit_code": null,
+          "findings": [
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": false,
+          "openai_enabled": false,
+          "path": ".github/workflows/round3-contract-freeze-gate.yml",
+          "permissions": [
+            {
+              "level": "read",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "UTC",
+          "scheduled": false,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "round3-contract-freeze-gate.yml",
+          "writer_group": null,
+          "writes_main": false
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 0,
+          "cron_expressions": [],
+          "expected_exit_code": null,
+          "findings": [
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/round3-v2-materialization.yml",
+          "permissions": [
+            {
+              "level": "read",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "UTC",
+          "scheduled": false,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "round3-v2-materialization.yml",
+          "writer_group": null,
+          "writes_main": false
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 1,
+          "cron_expressions": [
+            "25 8 * * *"
+          ],
+          "expected_exit_code": null,
+          "findings": [
+            "NO_RUN_HISTORY",
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/sequential-research-queue.yml",
+          "permissions": [
+            {
+              "level": "write",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "Europe/Copenhagen",
+          "scheduled": true,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "sequential-research-queue.yml",
+          "writer_group": "framework-main-writer",
+          "writes_main": true
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 1,
+          "cron_expressions": [
+            "50 1 * * 1"
+          ],
+          "expected_exit_code": null,
+          "findings": [
+            "NO_RUN_HISTORY",
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": true,
+          "path": ".github/workflows/shadow-admission-ai-decider.yml",
+          "permissions": [],
+          "schedule_timezone": "Europe/Copenhagen",
+          "scheduled": true,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "shadow-admission-ai-decider.yml",
+          "writer_group": "framework-main-writer",
+          "writes_main": true
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 0,
+          "cron_expressions": [],
+          "expected_exit_code": null,
+          "findings": [
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/shadow-registry-autonomous-portfolio-gate.yml",
+          "permissions": [
+            {
+              "level": "read",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "UTC",
+          "scheduled": false,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "shadow-registry-autonomous-portfolio-gate.yml",
+          "writer_group": null,
+          "writes_main": false
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 1,
+          "cron_expressions": [
+            "45 8 * * 1"
+          ],
+          "expected_exit_code": null,
+          "findings": [
+            "NO_RUN_HISTORY",
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/shadow-registry-autonomous-portfolio-loop.yml",
+          "permissions": [
+            {
+              "level": "write",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "Europe/Copenhagen",
+          "scheduled": true,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "shadow-registry-autonomous-portfolio-loop.yml",
+          "writer_group": "framework-main-writer",
+          "writes_main": true
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 0,
+          "cron_expressions": [],
+          "expected_exit_code": null,
+          "findings": [
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/shadow-registry-gate.yml",
+          "permissions": [
+            {
+              "level": "read",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "UTC",
+          "scheduled": false,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "shadow-registry-gate.yml",
+          "writer_group": null,
+          "writes_main": false
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 1,
+          "cron_expressions": [
+            "41 7 * * 1"
+          ],
+          "expected_exit_code": null,
+          "findings": [
+            "NO_RUN_HISTORY",
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/shadow-registry-weekly.yml",
+          "permissions": [
+            {
+              "level": "write",
+              "scope": "actions"
+            },
+            {
+              "level": "write",
+              "scope": "contents"
+            },
+            {
+              "level": "write",
+              "scope": "pull-requests"
+            }
+          ],
+          "schedule_timezone": "Europe/Copenhagen",
+          "scheduled": true,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "shadow-registry-weekly.yml",
+          "writer_group": "framework-main-writer",
+          "writes_main": true
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 1,
+          "cron_expressions": [
+            "50 0,6,12,18 * * *"
+          ],
+          "expected_exit_code": null,
+          "findings": [
+            "NO_RUN_HISTORY",
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/shared-row-prospective-evidence-loop.yml",
+          "permissions": [
+            {
+              "level": "write",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "Europe/Copenhagen",
+          "scheduled": true,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "shared-row-prospective-evidence-loop.yml",
+          "writer_group": "framework-main-writer",
+          "writes_main": true
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 0,
+          "cron_expressions": [],
+          "expected_exit_code": null,
+          "findings": [
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": false,
+          "openai_enabled": false,
+          "path": ".github/workflows/shared-row-tournament-research-gate.yml",
+          "permissions": [
+            {
+              "level": "read",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "UTC",
+          "scheduled": false,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "shared-row-tournament-research-gate.yml",
+          "writer_group": null,
+          "writes_main": false
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 1,
+          "cron_expressions": [
+            "20 8 * * 1"
+          ],
+          "expected_exit_code": null,
+          "findings": [
+            "NO_RUN_HISTORY",
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/shared-row-tournament-weekly.yml",
+          "permissions": [
+            {
+              "level": "write",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "Europe/Copenhagen",
+          "scheduled": true,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "shared-row-tournament-weekly.yml",
+          "writer_group": "framework-main-writer",
+          "writes_main": true
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 1,
+          "cron_expressions": [
+            "20 8 * * *"
+          ],
+          "expected_exit_code": null,
+          "findings": [
+            "NO_RUN_HISTORY",
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/situation-room-daily-static.yml",
+          "permissions": [
+            {
+              "level": "write",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "Europe/Copenhagen",
+          "scheduled": true,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "situation-room-daily-static.yml",
+          "writer_group": "framework-main-writer",
+          "writes_main": true
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 0,
+          "cron_expressions": [],
+          "expected_exit_code": null,
+          "findings": [
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/situation-room-owner-live-gate.yml",
+          "permissions": [
+            {
+              "level": "read",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "UTC",
+          "scheduled": false,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "situation-room-owner-live-gate.yml",
+          "writer_group": null,
+          "writes_main": false
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 0,
+          "cron_expressions": [],
+          "expected_exit_code": null,
+          "findings": [
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/source-provenance-recovery-gate.yml",
+          "permissions": [
+            {
+              "level": "read",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "UTC",
+          "scheduled": false,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "source-provenance-recovery-gate.yml",
+          "writer_group": null,
+          "writes_main": false
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 1,
+          "cron_expressions": [
+            "5 7 * * *"
+          ],
+          "expected_exit_code": null,
+          "findings": [
+            "NO_RUN_HISTORY",
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/source-provenance-recovery-loop.yml",
+          "permissions": [
+            {
+              "level": "write",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "Europe/Copenhagen",
+          "scheduled": true,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "source-provenance-recovery-loop.yml",
+          "writer_group": "framework-main-writer",
+          "writes_main": true
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 0,
+          "cron_expressions": [],
+          "expected_exit_code": null,
+          "findings": [
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": false,
+          "openai_enabled": false,
+          "path": ".github/workflows/specialist-architecture-gate.yml",
+          "permissions": [
+            {
+              "level": "read",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "UTC",
+          "scheduled": false,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "specialist-architecture-gate.yml",
+          "writer_group": null,
+          "writes_main": false
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 0,
+          "cron_expressions": [],
+          "expected_exit_code": null,
+          "findings": [
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/storage-health-gate.yml",
+          "permissions": [
+            {
+              "level": "read",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "UTC",
+          "scheduled": false,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "storage-health-gate.yml",
+          "writer_group": null,
+          "writes_main": false
+        },
+        {
+          "cfgi_enabled": true,
+          "cron_count": 2,
+          "cron_expressions": [
+            "35 23 * * 0",
+            "5 2 * * 1"
+          ],
+          "expected_exit_code": null,
+          "findings": [
+            "NO_RUN_HISTORY",
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/sunday-market-close-and-cfgi.yml",
+          "permissions": [
+            {
+              "level": "write",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "Europe/Copenhagen",
+          "scheduled": true,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "sunday-market-close-and-cfgi.yml",
+          "writer_group": "framework-main-writer",
+          "writes_main": true
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 0,
+          "cron_expressions": [],
+          "expected_exit_code": null,
+          "findings": [
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/top100-breadth-owner-manual.yml",
+          "permissions": [
+            {
+              "level": "read",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "UTC",
+          "scheduled": false,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "top100-breadth-owner-manual.yml",
+          "writer_group": null,
+          "writes_main": false
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 1,
+          "cron_expressions": [
+            "5 9 * * 1"
+          ],
+          "expected_exit_code": null,
+          "findings": [
+            "NO_RUN_HISTORY",
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/unified-experimental-lifecycle-adjudication.yml",
+          "permissions": [
+            {
+              "level": "write",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "Europe/Copenhagen",
+          "scheduled": true,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "unified-experimental-lifecycle-adjudication.yml",
+          "writer_group": "framework-main-writer",
+          "writes_main": true
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 0,
+          "cron_expressions": [],
+          "expected_exit_code": null,
+          "findings": [
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/validate_m3_forward_ledger.yml",
+          "permissions": [
+            {
+              "level": "read",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "UTC",
+          "scheduled": false,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "validate_m3_forward_ledger.yml",
+          "writer_group": "m3-validation-${{ github.ref }}",
+          "writes_main": false
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 1,
+          "cron_expressions": [
+            "40 2 * * 1"
+          ],
+          "expected_exit_code": null,
+          "findings": [
+            "NO_RUN_HISTORY",
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": true,
+          "path": ".github/workflows/weekly-api-calibration-shadow.yml",
+          "permissions": [
+            {
+              "level": "write",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "Europe/Copenhagen",
+          "scheduled": true,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "weekly-api-calibration-shadow.yml",
+          "writer_group": "framework-main-writer",
+          "writes_main": true
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 2,
+          "cron_expressions": [
+            "45 23 * * 0",
+            "25 2 * * 1"
+          ],
+          "expected_exit_code": null,
+          "findings": [
+            "NO_RUN_HISTORY",
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": false,
+          "path": ".github/workflows/weekly-raw-calibration-bridge.yml",
+          "permissions": [
+            {
+              "level": "write",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "Europe/Copenhagen",
+          "scheduled": true,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "weekly-raw-calibration-bridge.yml",
+          "writer_group": "framework-main-writer",
+          "writes_main": true
+        },
+        {
+          "cfgi_enabled": false,
+          "cron_count": 1,
+          "cron_expressions": [
+            "10 5 * * 1"
+          ],
+          "expected_exit_code": null,
+          "findings": [
+            "NO_RUN_HISTORY",
+            "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE"
+          ],
+          "lifecycle_reason": null,
+          "lifecycle_since": null,
+          "lifecycle_state": "ACTIVE",
+          "live": null,
+          "manual": true,
+          "openai_enabled": true,
+          "path": ".github/workflows/weekly-sol-adversarial-review.yml",
+          "permissions": [
+            {
+              "level": "write",
+              "scope": "contents"
+            }
+          ],
+          "schedule_timezone": "Europe/Copenhagen",
+          "scheduled": true,
+          "static_risks": [],
+          "status": "AMBER",
+          "workflow": "weekly-sol-adversarial-review.yml",
+          "writer_group": "framework-main-writer",
+          "writes_main": true
+        }
+      ],
+      "writer_count": 48
+    },
+    "experiment_registry": {
+      "candidate_count": 178,
+      "contract": "EXPERIMENT_LIFECYCLE_REGISTRY_v1",
+      "matured_candidates": [
+        {
+          "candidate_id": "EC-0dc8abd903144198e36e",
+          "kind": "FORECAST_TEST",
+          "matured_outcome_count": 48,
+          "scientific_admission_status": null,
+          "state": "MATURED_SUPPORTED",
+          "title": "Prospective derivatives.BTC-USDT-SWAP.mark_price.mark_price RANGE"
+        },
+        {
+          "candidate_id": "EC-4e02e53e58c3e79ba871",
+          "kind": "FORECAST_TEST",
+          "matured_outcome_count": 46,
+          "scientific_admission_status": null,
+          "state": "MATURED_SUPPORTED",
+          "title": "Prospective derivatives.ETH-USDT-SWAP.mark_price.mark_price DOWN"
+        },
+        {
+          "candidate_id": "EC-5c8b675adec8111650dd",
+          "kind": "FORECAST_TEST",
+          "matured_outcome_count": 41,
+          "scientific_admission_status": null,
+          "state": "MATURED_SUPPORTED",
+          "title": "Prospective derivatives.ETH-USDT-SWAP.mark_price.mark_price DOWN"
+        },
+        {
+          "candidate_id": "EC-23f2161a31fe1f482e99",
+          "kind": "FORECAST_TEST",
+          "matured_outcome_count": 37,
+          "scientific_admission_status": null,
+          "state": "MATURED_SUPPORTED",
+          "title": "Prospective derivatives.BTC-USDT-SWAP.mark_price.mark_price RANGE"
+        },
+        {
+          "candidate_id": "EC-62dc79b74bb6526e7c67",
+          "kind": "FORECAST_TEST",
+          "matured_outcome_count": 31,
+          "scientific_admission_status": null,
+          "state": "MATURED_SUPPORTED",
+          "title": "Prospective derivatives.BTC-USDT-SWAP.mark_price.mark_price DOWN"
+        },
+        {
+          "candidate_id": "EC-0e9733866b37fcec87ed",
+          "kind": "FORECAST_TEST",
+          "matured_outcome_count": 11,
+          "scientific_admission_status": null,
+          "state": "MATURED_SUPPORTED",
+          "title": "Prospective derivatives.ETH-USDT-SWAP.mark_price.mark_price DOWN"
+        },
+        {
+          "candidate_id": "EC-8136ca63303d3ccd5605",
+          "kind": "FORECAST_TEST",
+          "matured_outcome_count": 10,
+          "scientific_admission_status": null,
+          "state": "MATURED_NOT_SUPPORTED",
+          "title": "Prospective derivatives.BTC-USDT-SWAP.mark_price.mark_price DOWN"
+        },
+        {
+          "candidate_id": "EC-bdf6c7853fbc34fb9622",
+          "kind": "FORECAST_TEST",
+          "matured_outcome_count": 6,
+          "scientific_admission_status": null,
+          "state": "MATURED_NOT_SUPPORTED",
+          "title": "Prospective derivatives.ETH-USDT-SWAP.mark_price.mark_price RANGE"
+        },
+        {
+          "candidate_id": "EC-6a022715a4b0c523cad0",
+          "kind": "FORECAST_TEST",
+          "matured_outcome_count": 4,
+          "scientific_admission_status": null,
+          "state": "TARGET_UNIT_QUARANTINED",
+          "title": "Prospective spot.BTCUSDT.close DOWN"
+        },
+        {
+          "candidate_id": "EC-b74f09bc816b4648bd72",
+          "kind": "FORECAST_TEST",
+          "matured_outcome_count": 4,
+          "scientific_admission_status": null,
+          "state": "TARGET_UNIT_QUARANTINED",
+          "title": "Prospective spot.BTCUSDT.close RANGE"
+        },
+        {
+          "candidate_id": "EC-1936c8c84ca2d4d02ded",
+          "kind": "FORECAST_TEST",
+          "matured_outcome_count": 3,
+          "scientific_admission_status": null,
+          "state": "TARGET_UNIT_QUARANTINED",
+          "title": "Prospective spot.ETHBTC.close RANGE"
+        },
+        {
+          "candidate_id": "EC-2488b820b4f2e46a3e43",
+          "kind": "FORECAST_TEST",
+          "matured_outcome_count": 3,
+          "scientific_admission_status": null,
+          "state": "TARGET_UNIT_QUARANTINED",
+          "title": "Prospective breadth.decliners DOWN"
+        },
+        {
+          "candidate_id": "EC-3b9478b26fe667b5b496",
+          "kind": "FORECAST_TEST",
+          "matured_outcome_count": 2,
+          "scientific_admission_status": null,
+          "state": "MATURED_SUPPORTED",
+          "title": "Prospective derivatives.ETH-USDT-SWAP.mark_price.mark_price RANGE"
+        },
+        {
+          "candidate_id": "EC-7fbc8c34e64607dab7fb",
+          "kind": "FORECAST_TEST",
+          "matured_outcome_count": 2,
+          "scientific_admission_status": null,
+          "state": "TARGET_UNIT_QUARANTINED",
+          "title": "Prospective spot.BTCUSDT.close RANGE"
+        },
+        {
+          "candidate_id": "EC-01d8e20aee64058a00b7",
+          "kind": "FORECAST_TEST",
+          "matured_outcome_count": 1,
+          "scientific_admission_status": null,
+          "state": "MATURED_INCONCLUSIVE",
+          "title": "Prospective spot.BTCUSDT.close DOWN"
+        },
+        {
+          "candidate_id": "EC-0635053e6c1f7a4bd9c7",
+          "kind": "SENSOR_COMBINATION",
+          "matured_outcome_count": 1,
+          "scientific_admission_status": null,
+          "state": "MATURED_INCONCLUSIVE",
+          "title": "Emergent pair: spot.BTCUSDT.range_pct + derivatives.ETH-USDT-SWAP.funding.funding_rate"
+        },
+        {
+          "candidate_id": "EC-068729e16cc58aba2f37",
+          "kind": "SENSOR_COMBINATION",
+          "matured_outcome_count": 1,
+          "scientific_admission_status": null,
+          "state": "MATURED_INCONCLUSIVE",
+          "title": "Emergent pair: derivatives.BTC-USDT-SWAP.funding.next_funding_rate + spot.ETHUSDT.range_pct"
+        },
+        {
+          "candidate_id": "EC-0b00cbb5103a9b0e102a",
+          "kind": "SENSOR_COMBINATION",
+          "matured_outcome_count": 1,
+          "scientific_admission_status": null,
+          "state": "MATURED_INCONCLUSIVE",
+          "title": "Emergent pair: spot.ETHUSDT.volume + spot.BTCUSDT.range_pct"
+        },
+        {
+          "candidate_id": "EC-15b04cf53ff779f9df7a",
+          "kind": "FORECAST_TEST",
+          "matured_outcome_count": 1,
+          "scientific_admission_status": null,
+          "state": "MATURED_INCONCLUSIVE",
+          "title": "Prospective spot.BTCUSDT.close DOWN"
+        },
+        {
+          "candidate_id": "EC-173e5b69a55e6ed9bd73",
+          "kind": "SENSOR_COMBINATION",
+          "matured_outcome_count": 1,
+          "scientific_admission_status": null,
+          "state": "MATURED_INCONCLUSIVE",
+          "title": "Emergent pair: spot.ETHUSDT.volume + spot.ETHBTC.range_pct"
+        },
+        {
+          "candidate_id": "EC-26623349f61c57f51d94",
+          "kind": "SENSOR_COMBINATION",
+          "matured_outcome_count": 1,
+          "scientific_admission_status": null,
+          "state": "MATURED_INCONCLUSIVE",
+          "title": "Emergent pair: derivatives.BTC-USDT-SWAP.funding.funding_rate + spot.ETHBTC.range_pct"
+        },
+        {
+          "candidate_id": "EC-319da53e424daa099a86",
+          "kind": "SENSOR_COMBINATION",
+          "matured_outcome_count": 1,
+          "scientific_admission_status": null,
+          "state": "MATURED_INCONCLUSIVE",
+          "title": "Emergent pair: spot.ETHUSDT.volume + spot.BTCUSDT.volume"
+        },
+        {
+          "candidate_id": "EC-3ac625950a63b11279a0",
+          "kind": "FORECAST_TEST",
+          "matured_outcome_count": 1,
+          "scientific_admission_status": null,
+          "state": "MATURED_SUPPORTED",
+          "title": "Prospective derivatives.BTC-USDT-SWAP.mark_price.mark_price RANGE"
+        },
+        {
+          "candidate_id": "EC-44f3df71eb74f16d74c9",
+          "kind": "FORECAST_TEST",
+          "matured_outcome_count": 1,
+          "scientific_admission_status": null,
+          "state": "MATURED_INCONCLUSIVE",
+          "title": "Prospective spot.BTCUSDT.close RANGE"
+        },
+        {
+          "candidate_id": "EC-498900261a9bac8b3f11",
+          "kind": "SENSOR_COMBINATION",
+          "matured_outcome_count": 1,
+          "scientific_admission_status": null,
+          "state": "MATURED_INCONCLUSIVE",
+          "title": "Emergent pair: spot.BTCUSDT.range_pct + spot.ETHUSDT.volume"
+        },
+        {
+          "candidate_id": "EC-4bdc0603fa9d62ab7cc0",
+          "kind": "FORECAST_TEST",
+          "matured_outcome_count": 1,
+          "scientific_admission_status": null,
+          "state": "MATURED_INCONCLUSIVE",
+          "title": "Prospective spot.BTCUSDT.close RANGE"
+        },
+        {
+          "candidate_id": "EC-5856a70a166daf756941",
+          "kind": "SENSOR_COMBINATION",
+          "matured_outcome_count": 1,
+          "scientific_admission_status": null,
+          "state": "MATURED_INCONCLUSIVE",
+          "title": "Emergent pair: derivatives.BTC-USDT-SWAP.funding.next_funding_rate + derivatives.BTC-USDT-SWAP.funding.funding_rate"
+        },
+        {
+          "candidate_id": "EC-69264981200e20adc193",
+          "kind": "SENSOR_COMBINATION",
+          "matured_outcome_count": 1,
+          "scientific_admission_status": null,
+          "state": "MATURED_INCONCLUSIVE",
+          "title": "Emergent pair: spot.BTCUSDT.range_pct + spot.ETHUSDT.range_pct"
+        },
+        {
+          "candidate_id": "EC-75969af3fce5f3c85485",
+          "kind": "SENSOR_COMBINATION",
+          "matured_outcome_count": 1,
+          "scientific_admission_status": null,
+          "state": "MATURED_INCONCLUSIVE",
+          "title": "Emergent pair: spot.BTCUSDT.range_pct + spot.ETHUSDT.volume"
+        },
+        {
+          "candidate_id": "EC-75c4d521175143bc8941",
+          "kind": "FORECAST_TEST",
+          "matured_outcome_count": 1,
+          "scientific_admission_status": null,
+          "state": "MATURED_INCONCLUSIVE",
+          "title": "Prospective spot.BTCUSDT.close RANGE"
+        },
+        {
+          "candidate_id": "EC-76bc2c436064b5db847e",
+          "kind": "SENSOR_COMBINATION",
+          "matured_outcome_count": 1,
+          "scientific_admission_status": null,
+          "state": "MATURED_INCONCLUSIVE",
+          "title": "Emergent pair: spot.BTCUSDT.volume + spot.ETHUSDT.range_pct"
+        },
+        {
+          "candidate_id": "EC-7a68c4175a7ef161ab79",
+          "kind": "FORECAST_TEST",
+          "matured_outcome_count": 1,
+          "scientific_admission_status": null,
+          "state": "MATURED_NOT_SUPPORTED",
+          "title": "Prospective derivatives.ETH-USDT-SWAP.mark_price.mark_price RANGE"
+        },
+        {
+          "candidate_id": "EC-8275659d8b03f4d5d471",
+          "kind": "FORECAST_TEST",
+          "matured_outcome_count": 1,
+          "scientific_admission_status": null,
+          "state": "MATURED_INCONCLUSIVE",
+          "title": "Prospective spot.BTCUSDT.close DOWN"
+        },
+        {
+          "candidate_id": "EC-87b318c96683c57d802d",
+          "kind": "FORECAST_TEST",
+          "matured_outcome_count": 1,
+          "scientific_admission_status": null,
+          "state": "MATURED_INCONCLUSIVE",
+          "title": "Prospective spot.BTCUSDT.close RANGE"
+        },
+        {
+          "candidate_id": "EC-88efacd980e682f941ce",
+          "kind": "SENSOR_COMBINATION",
+          "matured_outcome_count": 1,
+          "scientific_admission_status": null,
+          "state": "MATURED_INCONCLUSIVE",
+          "title": "Emergent pair: spot.BTCUSDT.range_pct + spot.BTCUSDT.volume"
+        },
+        {
+          "candidate_id": "EC-8a1a5a458acb26f1654a",
+          "kind": "SENSOR_COMBINATION",
+          "matured_outcome_count": 1,
+          "scientific_admission_status": null,
+          "state": "MATURED_INCONCLUSIVE",
+          "title": "Emergent pair: spot.ETHUSDT.volume + spot.ETHBTC.volume"
+        },
+        {
+          "candidate_id": "EC-8eef8409c04f478ef98f",
+          "kind": "FORECAST_TEST",
+          "matured_outcome_count": 1,
+          "scientific_admission_status": null,
+          "state": "MATURED_INCONCLUSIVE",
+          "title": "Prospective spot.BTCUSDT.close RANGE"
+        },
+        {
+          "candidate_id": "EC-9be46ded02a1cdefc046",
+          "kind": "FORECAST_TEST",
+          "matured_outcome_count": 1,
+          "scientific_admission_status": null,
+          "state": "MATURED_NOT_SUPPORTED",
+          "title": "Prospective derivatives.BTC-USDT-SWAP.mark_price.mark_price RANGE"
+        },
+        {
+          "candidate_id": "EC-a2f9cd33c198f875f6e8",
+          "kind": "FORECAST_TEST",
+          "matured_outcome_count": 1,
+          "scientific_admission_status": null,
+          "state": "MATURED_NOT_SUPPORTED",
+          "title": "Prospective derivatives.BTC-USDT-SWAP.mark_price.mark_price RANGE"
+        },
+        {
+          "candidate_id": "EC-ab9811f92f11b5ea161b",
+          "kind": "FORECAST_TEST",
+          "matured_outcome_count": 1,
+          "scientific_admission_status": null,
+          "state": "MATURED_INCONCLUSIVE",
+          "title": "Prospective spot.ETHUSDT.close DOWN"
+        },
+        {
+          "candidate_id": "EC-b1a17c720a9531ea37f0",
+          "kind": "SENSOR_COMBINATION",
+          "matured_outcome_count": 1,
+          "scientific_admission_status": null,
+          "state": "MATURED_INCONCLUSIVE",
+          "title": "Emergent pair: spot.BTCUSDT.range_pct + derivatives.ETH-USDT-SWAP.funding.next_funding_rate"
+        },
+        {
+          "candidate_id": "EC-c438ef7489c1ea619dd9",
+          "kind": "SENSOR_COMBINATION",
+          "matured_outcome_count": 1,
+          "scientific_admission_status": null,
+          "state": "MATURED_INCONCLUSIVE",
+          "title": "Emergent pair: spot.BTCUSDT.range_pct + derivatives.ETH-USDT-SWAP.funding.funding_rate"
+        },
+        {
+          "candidate_id": "EC-c55e890cbd36164b31af",
+          "kind": "FORECAST_TEST",
+          "matured_outcome_count": 1,
+          "scientific_admission_status": null,
+          "state": "MATURED_INCONCLUSIVE",
+          "title": "Prospective spot.BTCUSDT.close DOWN"
+        },
+        {
+          "candidate_id": "EC-c73ccb22375967fa39b8",
+          "kind": "SENSOR_COMBINATION",
+          "matured_outcome_count": 1,
+          "scientific_admission_status": null,
+          "state": "MATURED_INCONCLUSIVE",
+          "title": "Emergent pair: spot.BTCUSDT.range_pct + spot.BTCUSDT.volume"
+        },
+        {
+          "candidate_id": "EC-ca2926c706eced9a0cd2",
+          "kind": "FORECAST_TEST",
+          "matured_outcome_count": 1,
+          "scientific_admission_status": null,
+          "state": "MATURED_INCONCLUSIVE",
+          "title": "Prospective spot.BTCUSDT.close DOWN"
+        },
+        {
+          "candidate_id": "EC-ccd732656739e43453b6",
+          "kind": "SENSOR_COMBINATION",
+          "matured_outcome_count": 1,
+          "scientific_admission_status": null,
+          "state": "MATURED_INCONCLUSIVE",
+          "title": "Emergent pair: spot.BTCUSDT.volume + spot.ETHUSDT.range_pct"
+        },
+        {
+          "candidate_id": "EC-d0571ffefb246d5f8a5c",
+          "kind": "FORECAST_TEST",
+          "matured_outcome_count": 1,
+          "scientific_admission_status": null,
+          "state": "TARGET_UNIT_QUARANTINED",
+          "title": "Prospective spot.BTCUSDT.close RANGE"
+        },
+        {
+          "candidate_id": "EC-d1084cf43796891f7760",
+          "kind": "SENSOR_COMBINATION",
+          "matured_outcome_count": 1,
+          "scientific_admission_status": null,
+          "state": "MATURED_INCONCLUSIVE",
+          "title": "Emergent pair: spot.ETHBTC.volume + spot.ETHUSDT.range_pct"
+        },
+        {
+          "candidate_id": "EC-d466b9e4383def5909d7",
+          "kind": "SENSOR_COMBINATION",
+          "matured_outcome_count": 1,
+          "scientific_admission_status": null,
+          "state": "MATURED_INCONCLUSIVE",
+          "title": "Emergent pair: spot.ETHUSDT.volume + spot.ETHUSDT.range_pct"
+        },
+        {
+          "candidate_id": "EC-e009d6cfaed90426cf2e",
+          "kind": "FORECAST_TEST",
+          "matured_outcome_count": 1,
+          "scientific_admission_status": null,
+          "state": "MATURED_INCONCLUSIVE",
+          "title": "Prospective spot.ETHUSDT.close RANGE"
+        },
+        {
+          "candidate_id": "EC-f3533193161129e28b2d",
+          "kind": "SENSOR_COMBINATION",
+          "matured_outcome_count": 1,
+          "scientific_admission_status": null,
+          "state": "MATURED_INCONCLUSIVE",
+          "title": "Emergent pair: spot.BTCUSDT.range_pct + spot.ETHUSDT.range_pct"
+        },
+        {
+          "candidate_id": "EC-fc78fc553dfbf8b99195",
+          "kind": "FORECAST_TEST",
+          "matured_outcome_count": 1,
+          "scientific_admission_status": null,
+          "state": "TARGET_UNIT_QUARANTINED",
+          "title": "Prospective spot.ETHUSDT.close DOWN"
+        }
+      ],
+      "state_counts": {
+        "INCUBATING": 93,
+        "MATURED_INCONCLUSIVE": 32,
+        "MATURED_NOT_SUPPORTED": 5,
+        "MATURED_SUPPORTED": 8,
+        "TARGET_UNIT_QUARANTINED": 8,
+        "WAITING_FOR_DATA": 7,
+        "WAITING_FOR_MAPPING": 24,
+        "WAITING_FOR_MATURITY": 1
+      }
+    },
+    "forecast_json_count": 311,
+    "outcome_json_count": 286,
+    "shadow_registry_summary": {
+      "promotion_candidates": [],
+      "recovery_required_count": 8,
+      "scorable_count": 1,
+      "sensor_count": 9,
+      "source_missing_count": 0
+    },
+    "shared_row_snapshot": {
+      "contract": "SHARED_ROW_TOURNAMENT_WEEKLY_v1",
+      "relevance_state": null,
+      "status": "COLLECTING",
+      "summary": null
+    },
+    "weekly_adjudication_summary": {
+      "action_counts": {
+        "ARCHIVE_ONLY_DUPLICATE": 62,
+        "KEEP_QUARANTINED": 8,
+        "KEEP_SHADOW_INCONCLUSIVE": 22,
+        "RUN_FAILURE_AND_RETIREMENT_REVIEW": 5,
+        "RUN_INCREMENTAL_VALUE_AND_ADVERSARIAL_REVIEW": 6,
+        "WAIT_FOR_MAPPING": 1,
+        "WAIT_FOR_MORE_PROSPECTIVE_EVIDENCE": 49
+      },
+      "candidate_count": 153,
+      "escalation_review_count": 11,
+      "shadow_registry_available": true,
+      "shared_row_tournament_available": true
+    },
+    "weekly_escalation_queue": [
+      {
+        "candidate_id": "EC-0e9733866b37fcec87ed",
+        "canonical_effect": false,
+        "kind": "FORECAST_TEST",
+        "lifecycle_state": "MATURED_SUPPORTED",
+        "matured_outcome_count": 7,
+        "portfolio_execution": false,
+        "reason": "supportive outcome exists, but promotion still requires baseline, controls, regime and complexity review",
+        "replication_receipts": [
+          "REPLICATED_FIRED"
+        ],
+        "scientific_admission_status": "QUALIFIED_FOR_FORWARD_TEST",
+        "selected_action": "RUN_INCREMENTAL_VALUE_AND_ADVERSARIAL_REVIEW",
+        "title": "Prospective derivatives.ETH-USDT-SWAP.mark_price.mark_price DOWN"
+      },
+      {
+        "candidate_id": "EC-a2f9cd33c198f875f6e8",
+        "canonical_effect": false,
+        "kind": "FORECAST_TEST",
+        "lifecycle_state": "MATURED_NOT_SUPPORTED",
+        "matured_outcome_count": 1,
+        "portfolio_execution": false,
+        "reason": "negative prospective evidence exists, retirement requires evidence-aware review rather than age expiry",
+        "replication_receipts": [
+          "REPLICATED_FIRED"
+        ],
+        "scientific_admission_status": "QUALIFIED_FOR_FORWARD_TEST",
+        "selected_action": "RUN_FAILURE_AND_RETIREMENT_REVIEW",
+        "title": "Prospective derivatives.BTC-USDT-SWAP.mark_price.mark_price RANGE"
+      },
+      {
+        "candidate_id": "EC-62dc79b74bb6526e7c67",
+        "canonical_effect": false,
+        "kind": "FORECAST_TEST",
+        "lifecycle_state": "MATURED_SUPPORTED",
+        "matured_outcome_count": 31,
+        "portfolio_execution": false,
+        "reason": "supportive outcome exists, but promotion still requires baseline, controls, regime and complexity review",
+        "replication_receipts": [
+          "REPLICATED_FIRED"
+        ],
+        "scientific_admission_status": "QUALIFIED_FOR_FORWARD_TEST",
+        "selected_action": "RUN_INCREMENTAL_VALUE_AND_ADVERSARIAL_REVIEW",
+        "title": "Prospective derivatives.BTC-USDT-SWAP.mark_price.mark_price DOWN"
+      },
+      {
+        "candidate_id": "EC-0dc8abd903144198e36e",
+        "canonical_effect": false,
+        "kind": "FORECAST_TEST",
+        "lifecycle_state": "MATURED_SUPPORTED",
+        "matured_outcome_count": 46,
+        "portfolio_execution": false,
+        "reason": "supportive outcome exists, but promotion still requires baseline, controls, regime and complexity review",
+        "replication_receipts": [
+          "REPLICATED_FIRED"
+        ],
+        "scientific_admission_status": "QUALIFIED_FOR_FORWARD_TEST",
+        "selected_action": "RUN_INCREMENTAL_VALUE_AND_ADVERSARIAL_REVIEW",
+        "title": "Prospective derivatives.BTC-USDT-SWAP.mark_price.mark_price RANGE"
+      },
+      {
+        "candidate_id": "EC-5c8b675adec8111650dd",
+        "canonical_effect": false,
+        "kind": "FORECAST_TEST",
+        "lifecycle_state": "MATURED_SUPPORTED",
+        "matured_outcome_count": 41,
+        "portfolio_execution": false,
+        "reason": "supportive outcome exists, but promotion still requires baseline, controls, regime and complexity review",
+        "replication_receipts": [
+          "REPLICATED_FIRED"
+        ],
+        "scientific_admission_status": "QUALIFIED_FOR_FORWARD_TEST",
+        "selected_action": "RUN_INCREMENTAL_VALUE_AND_ADVERSARIAL_REVIEW",
+        "title": "Prospective derivatives.ETH-USDT-SWAP.mark_price.mark_price DOWN"
+      },
+      {
+        "candidate_id": "EC-8136ca63303d3ccd5605",
+        "canonical_effect": false,
+        "kind": "FORECAST_TEST",
+        "lifecycle_state": "MATURED_NOT_SUPPORTED",
+        "matured_outcome_count": 10,
+        "portfolio_execution": false,
+        "reason": "negative prospective evidence exists, retirement requires evidence-aware review rather than age expiry",
+        "replication_receipts": [
+          "REPLICATED_FIRED"
+        ],
+        "scientific_admission_status": "QUALIFIED_FOR_FORWARD_TEST",
+        "selected_action": "RUN_FAILURE_AND_RETIREMENT_REVIEW",
+        "title": "Prospective derivatives.BTC-USDT-SWAP.mark_price.mark_price DOWN"
+      },
+      {
+        "candidate_id": "EC-bdf6c7853fbc34fb9622",
+        "canonical_effect": false,
+        "kind": "FORECAST_TEST",
+        "lifecycle_state": "MATURED_NOT_SUPPORTED",
+        "matured_outcome_count": 6,
+        "portfolio_execution": false,
+        "reason": "negative prospective evidence exists, retirement requires evidence-aware review rather than age expiry",
+        "replication_receipts": [
+          "REPLICATED_FIRED"
+        ],
+        "scientific_admission_status": "QUALIFIED_FOR_FORWARD_TEST",
+        "selected_action": "RUN_FAILURE_AND_RETIREMENT_REVIEW",
+        "title": "Prospective derivatives.ETH-USDT-SWAP.mark_price.mark_price RANGE"
+      },
+      {
+        "candidate_id": "EC-4e02e53e58c3e79ba871",
+        "canonical_effect": false,
+        "kind": "FORECAST_TEST",
+        "lifecycle_state": "MATURED_SUPPORTED",
+        "matured_outcome_count": 46,
+        "portfolio_execution": false,
+        "reason": "supportive outcome exists, but promotion still requires baseline, controls, regime and complexity review",
+        "replication_receipts": [
+          "REPLICATED_FIRED"
+        ],
+        "scientific_admission_status": "QUALIFIED_FOR_FORWARD_TEST",
+        "selected_action": "RUN_INCREMENTAL_VALUE_AND_ADVERSARIAL_REVIEW",
+        "title": "Prospective derivatives.ETH-USDT-SWAP.mark_price.mark_price DOWN"
+      },
+      {
+        "candidate_id": "EC-7a68c4175a7ef161ab79",
+        "canonical_effect": false,
+        "kind": "FORECAST_TEST",
+        "lifecycle_state": "MATURED_NOT_SUPPORTED",
+        "matured_outcome_count": 1,
+        "portfolio_execution": false,
+        "reason": "negative prospective evidence exists, retirement requires evidence-aware review rather than age expiry",
+        "replication_receipts": [
+          "REPLICATED_FIRED"
+        ],
+        "scientific_admission_status": "QUALIFIED_FOR_FORWARD_TEST",
+        "selected_action": "RUN_FAILURE_AND_RETIREMENT_REVIEW",
+        "title": "Prospective derivatives.ETH-USDT-SWAP.mark_price.mark_price RANGE"
+      },
+      {
+        "candidate_id": "EC-9be46ded02a1cdefc046",
+        "canonical_effect": false,
+        "kind": "FORECAST_TEST",
+        "lifecycle_state": "MATURED_NOT_SUPPORTED",
+        "matured_outcome_count": 1,
+        "portfolio_execution": false,
+        "reason": "negative prospective evidence exists, retirement requires evidence-aware review rather than age expiry",
+        "replication_receipts": [
+          "REPLICATED_FIRED"
+        ],
+        "scientific_admission_status": "QUALIFIED_FOR_FORWARD_TEST",
+        "selected_action": "RUN_FAILURE_AND_RETIREMENT_REVIEW",
+        "title": "Prospective derivatives.BTC-USDT-SWAP.mark_price.mark_price RANGE"
+      },
+      {
+        "candidate_id": "EC-23f2161a31fe1f482e99",
+        "canonical_effect": false,
+        "kind": "FORECAST_TEST",
+        "lifecycle_state": "MATURED_SUPPORTED",
+        "matured_outcome_count": 37,
+        "portfolio_execution": false,
+        "reason": "supportive outcome exists, but promotion still requires baseline, controls, regime and complexity review",
+        "replication_receipts": [
+          "REPLICATED_FIRED"
+        ],
+        "scientific_admission_status": "QUALIFIED_FOR_FORWARD_TEST",
+        "selected_action": "RUN_INCREMENTAL_VALUE_AND_ADVERSARIAL_REVIEW",
+        "title": "Prospective derivatives.BTC-USDT-SWAP.mark_price.mark_price RANGE"
+      }
+    ]
+  },
+  "firewall": {
+    "automatic_canonical_promotion": false,
+    "automatic_market_rule_change": false,
+    "automatic_threshold_change": false,
+    "automatic_weight_change": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "freeze_sha256": "f02791c101e1aa3b10bb0db733cc20d6d015fd27551b2cd8ef03be1c093c208f",
+  "generated_at_utc": "2026-09-03T06:04:26Z",
+  "prior_council_state": {
+    "last_completed_month": null,
+    "last_escalation_fingerprint": "",
+    "last_matured_outcomes_total": 0,
+    "last_review_at_utc": null,
+    "last_review_kind": null
+  },
+  "review_kind": "MONTHLY"
+}
