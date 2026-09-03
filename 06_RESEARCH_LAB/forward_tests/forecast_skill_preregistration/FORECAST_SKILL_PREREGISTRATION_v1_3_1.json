@@ -1,0 +1,145 @@
+{
+  "contract": "FORECAST_SKILL_PREREGISTRATION_v1_3_1",
+  "status": "READY_TO_PREREGISTER_PENDING_MERGE",
+  "date": "2026-09-03",
+  "methodology_cutoff_utc": "2026-09-02T18:54:03Z",
+  "forecast_skill_status": "UNPROVEN",
+  "confirmatory_study_status": "NOT_STARTED_SCIENTIFIC_FIREWALL",
+  "source_package": {
+    "filename": "FORECAST_SKILL_PREREGISTRATION_v1.3.zip",
+    "sha256": "d4f3e8c0f27a40bbfac0af41ab57a9752586becd871307b2f18cb061f9a8ee8d",
+    "manifest_verified": "47/47",
+    "bundled_verifier_verified": "22/22",
+    "sealed_validation_populations": 12,
+    "sealed_trials_per_population": 5200,
+    "sealed_trials_total": 62400,
+    "embedded_original_v1_1_engine_sha256": "df263ac23fb6ff28594590b3f6cb1110a03adaeac211e8267c1add88dca871db",
+    "embedded_original_v1_1_price_history_sha256": "e2871550e90c154c6847ba720c2249fa1f0fda787c90a68d70f0c761ee09a3f1",
+    "acceptance_interpretation": "PASS_UNDER_FROZEN_SIMULATION_VALIDATION_CRITERION"
+  },
+  "supersedes_operational_semantics": "FORECAST_SKILL_PREREGISTRATION_v1.3",
+  "preserves_v1_3_sealed_method_artifacts": true,
+  "primary_population": {
+    "evidence_class": "API_AGENT_OWNER_RATIFIED_PROSPECTIVE_v1",
+    "forecast_family": "F1_DIRECTIONAL_ONLY",
+    "historical_replay_allowed": false,
+    "automated_scientific_experiment_pooling_allowed": false,
+    "pre_activation_rows_allowed": false
+  },
+  "time_index": {
+    "primary": "OUTCOME_DUE_CALENDAR_DAY",
+    "due_day_rule": "outcome_due_day = freeze_day + horizon_days",
+    "calendar_index": "REGULAR_UTC_CALENDAR_INDEX_WITH_EXPLICIT_EMPTY_DAYS",
+    "empty_day_semantics": "OCCUPIES_CALENDAR_BLOCK_FOOTPRINT_BUT_CONTRIBUTES_NEITHER_EVIDENCE_NOR_ZERO"
+  },
+  "cohort": {
+    "window_axis": "FREEZE_ACCRUAL_UTC_CALENDAR",
+    "freeze_accrual_window_days": 240,
+    "start_rule": "FIRST_00_00_00Z_STRICTLY_AFTER_PREREGISTRATION_AND_STUDY_ADMISSION_IMPLEMENTATION_ARE_BOTH_MERGED_CI_VERIFIED_AND_READBACK_VERIFIED",
+    "end_rule": "COHORT_START_UTC_PLUS_240_CALENDAR_DAYS_EXCLUSIVE",
+    "activation_receipt_required_before_first_admission": true,
+    "rolling_extension_allowed": false,
+    "restart_after_outcome_inspection_allowed": false,
+    "rows_after_window_close_allowed": false,
+    "outcome_due_series_may_extend_beyond_freeze_window": true,
+    "failure_of_accrual_gate": "INSUFFICIENT_PROSPECTIVE_EVIDENCE"
+  },
+  "admission": {
+    "contract": "STUDY_ADMISSION_LEDGER_v1",
+    "admission_time": "FORECAST_FREEZE",
+    "outcome_blind": true,
+    "append_only": true,
+    "content_hash_binding_required": true,
+    "source_temporal_provenance_required": true,
+    "prospective_owner_ratification_required": true,
+    "exact_settlement_contract_required": true,
+    "pre_cohort_candidate_or_forecast_ineligible": true
+  },
+  "due_time_revalidation": {
+    "contract": "OUTCOME_BLIND_TECHNICAL_REVALIDATION",
+    "may_decide_study_admission_de_novo": false,
+    "may_read_result_or_price_path_before_revalidation": false,
+    "technical_failure_effect": "OUTCOME_UNAVAILABLE"
+  },
+  "baseline": {
+    "id": "B1_CLIMATOLOGY",
+    "historical_event_window_must_end_before_freeze": true,
+    "trailing_origin_window_days": 180,
+    "minimum_admissible_events": 20,
+    "post_freeze_data_allowed": false
+  },
+  "primary_endpoint": {
+    "row_value": "d_r = HIT_r - p_clim_r",
+    "primary_point_estimate": "Theta_hat = mean(d_r) over admitted resolved F1 rows",
+    "positive_direction": "Theta_hat > 0"
+  },
+  "confirmatory_inference": {
+    "candidate": "B_CALENDAR_BATCH_MEANS_T",
+    "calendar_block_length_days": 28,
+    "block_tiling_origin": "FIRST_OUTCOME_DUE_CALENDAR_POSITION_IN_COHORT_SERIES",
+    "within_due_day_aggregation": "MEAN_D_R",
+    "variance": "NON_OVERLAPPING_CALENDAR_BLOCK_BATCH_MEANS_CLUSTER_ROBUST_CR0",
+    "empty_block_semantics": "DROP_D_G_ZERO_FROM_G_AFTER_RETAINING_CALENDAR_TILING",
+    "reference_distribution": "STUDENT_T",
+    "degrees_of_freedom": "G_MINUS_1_WHERE_G_IS_CALENDAR_BLOCKS_CONTAINING_ADMITTED_FORECASTS",
+    "alpha_one_sided": 0.025,
+    "resampling_in_confirmatory_decision": false,
+    "confirmatory_test_count": 1,
+    "parameter_adjustment_after_activation_allowed": false
+  },
+  "binding_gates": {
+    "freeze_accrual_window_days": 240,
+    "min_admitted_F1_rows": 200,
+    "min_UNIQUE_OUTCOME_DUE_DAYS": 85,
+    "min_UNIQUE_FREEZE_DAYS": 50,
+    "max_share_rows_on_any_OUTCOME_DUE_calendar_day": 0.06,
+    "max_share_rows_in_any_28_calendar_day_block": 0.23,
+    "max_OUTCOME_UNAVAILABLE_share": 0.0,
+    "min_calendar_blocks_containing_admitted_forecasts": null,
+    "occupied_block_count_role": "REPORTED_DIAGNOSTIC_AND_STUDENT_T_DF_NOT_POSTHOC_GATE"
+  },
+  "missingness_correction": {
+    "v1_3_claim_withdrawn": "HIT_ZERO_IMPUTATION_IS_MONOTONICALLY_CONSERVATIVE_FOR_SELECTED_T_TEST",
+    "reason": "LOWERING_AN_OBSERVATION_CAN_REDUCE_CR0_STANDARD_ERROR_MORE_THAN_THE_MEAN_AND_RAISE_THE_T_STATISTIC",
+    "sealed_validation_missing_share": 0.0,
+    "confirmatory_missing_share_cap": 0.0,
+    "nonzero_future_tolerance_requires_new_prospective_validation": true
+  },
+  "span_semantics_correction": {
+    "v1_3_label_withdrawn": "MIN_CALENDAR_SPAN_DAYS_OUTCOME_DUE_EQUALS_240",
+    "correct_semantics": "FIXED_240_DAY_FREEZE_ACCRUAL_WINDOW",
+    "reason": "SEALED_GENERATORS_LOOP_OVER_240_FREEZE_OPPORTUNITY_DAYS_BEFORE_MAPPING_ROWS_TO_OUTCOME_DUE_DAYS",
+    "truncate_due_series_to_240_days": false
+  },
+  "power_context": {
+    "v1_3_empirical_mde80_pp_approx": 11.337,
+    "role": "DESCRIPTIVE_PLANNING_CONTEXT_NOT_SUCCESS_THRESHOLD"
+  },
+  "allowed_verdicts": [
+    "INSUFFICIENT_PROSPECTIVE_EVIDENCE",
+    "ADEQUATE_SAMPLE_NO_DEMONSTRATED_EDGE",
+    "REGIME_SPECIFIC_SIGNAL",
+    "WEAK_PROSPECTIVE_EDGE",
+    "REPLICATED_PROSPECTIVE_SKILL",
+    "PROBABILISTIC_CALIBRATION_NOT_TESTABLE"
+  ],
+  "replication": {
+    "replicated_prospective_skill_requires_independent_replication_gate": true,
+    "confirmatory_test_alone_can_establish_replicated_skill": false
+  },
+  "activation_prerequisites": [
+    "THIS_PREREGISTRATION_MERGED_AND_READBACK_VERIFIED",
+    "ACTIVE_TEST_REGISTRATION_MERGED_AND_READBACK_VERIFIED",
+    "STUDY_ADMISSION_LEDGER_v1_MERGED_CI_AND_READBACK_VERIFIED",
+    "OUTCOME_BLIND_TECHNICAL_REVALIDATION_MERGED_CI_AND_READBACK_VERIFIED",
+    "B_CALENDAR_BATCH_MEANS_T_IMPLEMENTATION_MERGED_CI_AND_READBACK_VERIFIED",
+    "ACTIVATION_RECEIPT_FREEZES_START_AND_END_BEFORE_FIRST_ADMISSION"
+  ],
+  "authority": {
+    "forecast_skill_claim_before_confirmatory_gate": false,
+    "portfolio_action": false,
+    "model_weight_change": false,
+    "automatic_promotion": false,
+    "canonical_market_state_change": false
+  }
+}
