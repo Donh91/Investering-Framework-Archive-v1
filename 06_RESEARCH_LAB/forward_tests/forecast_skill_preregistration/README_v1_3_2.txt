@@ -1,0 +1,1 @@
+Effective pre-activation T13 scientific contract: FORECAST_SKILL_PREREGISTRATION_v1_3_1 + FORECAST_SKILL_PREREGISTRATION_v1_3_2_ERRATUM. Forecast skill remains UNPROVEN.
