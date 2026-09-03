@@ -1,0 +1,90 @@
+name: Forecast Skill Study v1.3.2 Gate
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/lib/forecast_study*_v1_3_2.py'
+      - 'scripts/learning/create_forecast_skill_cohort_activation.py'
+      - 'scripts/learning/build_forecast_study_admissions.py'
+      - 'scripts/learning/build_forecast_study_revalidation.py'
+      - 'scripts/learning/forecast_b1_source_owner.py'
+      - 'scripts/learning/run_forecast_skill_confirmatory_test.py'
+      - 'scripts/learning/validate_forecast_skill_study_admission.py'
+      - 'tests/learning/test_forecast_skill_study_v132.py'
+      - '.github/workflows/continuity-learning-maintenance.yml'
+      - '.github/workflows/forecast-skill-study-v132-gate.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  scientific-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compile T13 runtime
+        run: |
+          python -m py_compile \
+            scripts/lib/forecast_study_common_v1_3_2.py \
+            scripts/lib/forecast_study_b1_v1_3_2.py \
+            scripts/lib/forecast_study_admission_v1_3_2.py \
+            scripts/lib/forecast_study_inference_v1_3_2.py \
+            scripts/lib/forecast_study_v1_3_2.py \
+            scripts/learning/create_forecast_skill_cohort_activation.py \
+            scripts/learning/build_forecast_study_admissions.py \
+            scripts/learning/build_forecast_study_revalidation.py \
+            scripts/learning/forecast_b1_source_owner.py \
+            scripts/learning/run_forecast_skill_confirmatory_test.py \
+            scripts/learning/validate_forecast_skill_study_admission.py
+      - name: Run T13 adversarial unit suite
+        run: python -m unittest discover -s tests/learning -p 'test_forecast_skill_study_v132.py' -v
+      - name: Verify workflow scientific firewall ordering
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          text = Path('.github/workflows/continuity-learning-maintenance.yml').read_text()
+          ordered = [
+              'Build T13 study admissions before outcome access',
+              'Build outcome-blind due-time technical revalidation',
+              'Persist outcome-blind T13 barrier before any settlement source call',
+              'Verify durable T13 admission and revalidation barrier',
+              'Resolve exact settlement evidence for ratified price forecasts',
+              'Mature exact-settlement ratified forecasts',
+              'Maintain T13 scientific status and execute final test at most once',
+          ]
+          positions = [text.index(item) for item in ordered]
+          assert positions == sorted(positions), positions
+          barrier = text[text.index(ordered[2]):text.index(ordered[4])]
+          assert 'git push origin HEAD:main' in barrier
+          assert '--candidate-root research/api_agent/forecast_candidates/PENDING' in text
+          assert 'FORECAST_SKILL_PREREGISTRATION_v1_3_2_ERRATUM.json' in text
+          assert 'forecast_settlement_price_owner.py' not in text[:positions[4]]
+          print('T13_WORKFLOW_FIREWALL_ORDER=PASS')
+          PY
+      - name: Verify frozen statistical semantics are explicit
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          text = ''.join(Path(p).read_text() for p in [
+              'scripts/lib/forecast_study_common_v1_3_2.py',
+              'scripts/lib/forecast_study_admission_v1_3_2.py',
+              'scripts/lib/forecast_study_inference_v1_3_2.py',
+          ])
+          required = [
+              'EACH_OBSERVED_OUTCOME_DUE_CALENDAR_DAY_EQUAL_WEIGHT',
+              'BLOCK_DAYS = 28',
+              'ALPHA = 0.025',
+              'SOURCE_FRESHNESS_CONTRACT = "FORECAST_SOURCE_TEMPORAL_PROVENANCE_v1"',
+              'SOURCE_OUTPUT_MAX_AGE_MINUTES = 60',
+          ]
+          for item in required:
+              assert item in text, item
+          print('T13_FROZEN_SEMANTICS=PASS')
+          PY
