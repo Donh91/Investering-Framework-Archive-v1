@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import json
+import tempfile
+import unittest
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -36,57 +38,63 @@ def seed_repo(root: Path, *, prior_month=None, prior_outcomes=0, current_outcome
         dump(root / f"research/framework_memory/outcome_memory/a/{i}.json", {"i": i})
 
 
-def test_monthly_review_becomes_due_on_day_three(tmp_path: Path) -> None:
-    seed_repo(tmp_path, prior_month="2026-08")
-    ctx = build_context(tmp_path, datetime(2026, 9, 3, 6, 0, tzinfo=UTC))
-    assert ctx["eligibility"]["monthly_due"] is True
-    assert ctx["eligibility"]["run_review"] is True
-    assert ctx["review_kind"] == "MONTHLY"
+class MonthlyAILearningCouncilTests(unittest.TestCase):
+    def test_monthly_review_becomes_due_on_day_three(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            seed_repo(root, prior_month="2026-08")
+            ctx = build_context(root, datetime(2026, 9, 3, 6, 0, tzinfo=UTC))
+            self.assertTrue(ctx["eligibility"]["monthly_due"])
+            self.assertTrue(ctx["eligibility"]["run_review"])
+            self.assertEqual(ctx["review_kind"], "MONTHLY")
+
+    def test_evidence_milestone_can_run_before_monthly_date(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            seed_repo(root, prior_month="2026-09", prior_outcomes=10, current_outcomes=35)
+            ctx = build_context(root, datetime(2026, 9, 10, 6, 0, tzinfo=UTC))
+            self.assertFalse(ctx["eligibility"]["monthly_due"])
+            self.assertTrue(ctx["eligibility"]["maturation_trigger"])
+            self.assertEqual(ctx["review_kind"], "EVIDENCE_MILESTONE")
+
+    def test_deterministic_escalation_outranks_ai_hypothesis(self) -> None:
+        ctx = {"evidence_census": {"weekly_escalation_queue": [{"candidate_id": "C1", "selected_action": "RUN_INCREMENTAL_VALUE_AND_ADVERSARIAL_REVIEW"}]}}
+        action, target, _, queue = choose_primary_action(ctx, {"status": "READY", "hypotheses": ["test me"]})
+        self.assertEqual(action, "RUN_INCREMENTAL_VALUE_TEST")
+        self.assertEqual(target, "C1")
+        self.assertEqual(queue, [])
+
+    def test_ai_hypothesis_is_research_only_candidate(self) -> None:
+        action, target, reason, queue = choose_primary_action({"evidence_census": {"weekly_escalation_queue": []}}, {"status": "READY", "hypotheses": ["Breadth survival adds incremental value; falsify if it does not beat the baseline."]})
+        self.assertEqual(action, "RESEARCH_NEW_HYPOTHESIS")
+        self.assertTrue(target.startswith("MLC-HYP-"))
+        self.assertFalse(queue[0]["canonical_effect"])
+        self.assertIn("falsify", reason.lower())
+
+    def test_learning_claim_requires_floor(self) -> None:
+        ctx = {"evidence_census": {"experiment_registry": {"matured_candidates": [
+            {"candidate_id": "A", "state": "MATURED_SUPPORTED", "matured_outcome_count": 24},
+            {"candidate_id": "B", "state": "MATURED_SUPPORTED", "matured_outcome_count": 25},
+            {"candidate_id": "C", "state": "MATURED_NOT_SUPPORTED", "matured_outcome_count": 30},
+        ]}}}
+        learned, challenged = deterministic_claims(ctx, 25)
+        self.assertEqual([x["candidate_id"] for x in learned], ["B"])
+        self.assertEqual([x["candidate_id"] for x in challenged], ["C"])
+
+    def test_finalize_preserves_firewall_when_ai_missing(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            seed_repo(root, prior_month="2026-08")
+            runtime = root / "runtime"
+            runtime.mkdir()
+            ctx = build_context(root, datetime(2026, 9, 3, 6, 0, tzinfo=UTC))
+            dump(runtime / "context.json", ctx)
+            state = finalize(root, runtime, datetime(2026, 9, 3, 6, 1, tzinfo=UTC))
+            self.assertFalse(state["canonical_effect"])
+            self.assertFalse(state["portfolio_execution"])
+            self.assertFalse(state["paid_data_authorized"])
+            self.assertEqual(state["last_completed_month"], "2026-09")
 
 
-def test_evidence_milestone_can_run_before_monthly_date(tmp_path: Path) -> None:
-    seed_repo(tmp_path, prior_month="2026-09", prior_outcomes=10, current_outcomes=35)
-    ctx = build_context(tmp_path, datetime(2026, 9, 10, 6, 0, tzinfo=UTC))
-    assert ctx["eligibility"]["monthly_due"] is False
-    assert ctx["eligibility"]["maturation_trigger"] is True
-    assert ctx["review_kind"] == "EVIDENCE_MILESTONE"
-
-
-def test_deterministic_escalation_outranks_ai_hypothesis() -> None:
-    ctx = {"evidence_census": {"weekly_escalation_queue": [{"candidate_id": "C1", "selected_action": "RUN_INCREMENTAL_VALUE_AND_ADVERSARIAL_REVIEW"}]}}
-    action, target, _, queue = choose_primary_action(ctx, {"status": "READY", "hypotheses": ["test me"]})
-    assert action == "RUN_INCREMENTAL_VALUE_TEST"
-    assert target == "C1"
-    assert queue == []
-
-
-def test_ai_hypothesis_is_research_only_candidate() -> None:
-    action, target, reason, queue = choose_primary_action({"evidence_census": {"weekly_escalation_queue": []}}, {"status": "READY", "hypotheses": ["Breadth survival adds incremental value; falsify if it does not beat the baseline."]})
-    assert action == "RESEARCH_NEW_HYPOTHESIS"
-    assert target.startswith("MLC-HYP-")
-    assert queue[0]["canonical_effect"] is False
-    assert "falsify" in reason.lower()
-
-
-def test_learning_claim_requires_floor() -> None:
-    ctx = {"evidence_census": {"experiment_registry": {"matured_candidates": [
-        {"candidate_id": "A", "state": "MATURED_SUPPORTED", "matured_outcome_count": 24},
-        {"candidate_id": "B", "state": "MATURED_SUPPORTED", "matured_outcome_count": 25},
-        {"candidate_id": "C", "state": "MATURED_NOT_SUPPORTED", "matured_outcome_count": 30},
-    ]}}}
-    learned, challenged = deterministic_claims(ctx, 25)
-    assert [x["candidate_id"] for x in learned] == ["B"]
-    assert [x["candidate_id"] for x in challenged] == ["C"]
-
-
-def test_finalize_preserves_firewall_when_ai_missing(tmp_path: Path) -> None:
-    seed_repo(tmp_path, prior_month="2026-08")
-    runtime = tmp_path / "runtime"
-    runtime.mkdir()
-    ctx = build_context(tmp_path, datetime(2026, 9, 3, 6, 0, tzinfo=UTC))
-    dump(runtime / "context.json", ctx)
-    state = finalize(tmp_path, runtime, datetime(2026, 9, 3, 6, 1, tzinfo=UTC))
-    assert state["canonical_effect"] is False
-    assert state["portfolio_execution"] is False
-    assert state["paid_data_authorized"] is False
-    assert state["last_completed_month"] == "2026-09"
+if __name__ == "__main__":
+    unittest.main()
