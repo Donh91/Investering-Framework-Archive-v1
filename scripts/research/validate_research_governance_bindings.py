@@ -2,13 +2,13 @@
 from research_governance_common import SPECIALIST_BINDINGS, specialist_binding_report, specialist_states
 from research_meta_orchestrator import orchestrate
 
-expected={"SHARED_ROW","CYCLE_NAVIGATOR","SHADOW_REGISTRY","SOURCE_RECOVERY"}
+expected={"SHARED_ROW","CYCLE_NAVIGATOR","SHADOW_REGISTRY","MONTHLY_COUNCIL","SOURCE_RECOVERY"}
 assert set(SPECIALIST_BINDINGS)==expected
 report=specialist_binding_report()
 assert set(report["expected_sources"])==expected
 assert report["resolvable"] is True, report
 assert not report["missing_all_sources"], report
-for source in ("CYCLE_NAVIGATOR","SHADOW_REGISTRY","SOURCE_RECOVERY"):
+for source in ("CYCLE_NAVIGATOR","SHADOW_REGISTRY","MONTHLY_COUNCIL","SOURCE_RECOVERY"):
     assert report["bindings"][source]["mode"]=="PRIMARY_READY", report
 assert report["bindings"]["SHARED_ROW"]["mode"] in {"PRIMARY_READY","FALLBACK_STATUS_ONLY"}, report
 states=specialist_states()

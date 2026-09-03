@@ -1,0 +1,180 @@
+name: Monthly AI Learning Council
+
+on:
+  schedule:
+    - cron: '15 6 * * *'
+      timezone: 'Europe/Copenhagen'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: framework-main-writer
+  cancel-in-progress: false
+
+jobs:
+  council:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Validate council machinery before review
+        run: |
+          python -m py_compile scripts/research/monthly_ai_learning_council.py
+          python -m unittest tests.research.test_monthly_ai_learning_council -v
+          python scripts/research/validate_research_governance_bindings.py
+
+      - name: Build frozen deterministic context and eligibility
+        id: eligibility
+        run: |
+          mkdir -p runtime/monthly-learning-council
+          python scripts/research/monthly_ai_learning_council.py prepare \
+            --repo-root . \
+            --runtime-root runtime/monthly-learning-council
+          python - <<'PY' >> "$GITHUB_OUTPUT"
+          import json
+          from pathlib import Path
+          x=json.loads(Path('runtime/monthly-learning-council/eligibility.json').read_text())
+          print('run_review='+str(bool(x['run_review'])).lower())
+          print('review_kind='+str(x['review_kind']))
+          print('freeze_sha256='+str(x['freeze_sha256']))
+          PY
+
+      - name: Check analyst lane budget
+        id: analyst_budget
+        if: steps.eligibility.outputs.run_review == 'true'
+        continue-on-error: true
+        run: |
+          python scripts/api_agent/check_api_lane_budget.py \
+            --receipt-root research/api_agent/outputs \
+            --task MONTHLY_LEARNING_ANALYST \
+            --cap-usd 1.0 \
+            --reserve-usd 0.15
+          python scripts/api_agent/check_monthly_cost_guard.py \
+            --receipt-root research/api_agent/outputs \
+            --hard-stop-usd 20 \
+            --reserve-usd 2.0
+
+      - name: Run primary Sol learning analyst
+        id: analyst
+        if: steps.eligibility.outputs.run_review == 'true' && steps.analyst_budget.outcome == 'success'
+        continue-on-error: true
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          python scripts/api_agent/api_gateway.py \
+            --task MONTHLY_LEARNING_ANALYST \
+            --registry research/api_agent/API_TASK_REGISTRY_v1.json \
+            --prompt-file runtime/monthly-learning-council/analyst_prompt.txt \
+            --context-file runtime/monthly-learning-council/context.json \
+            --output-dir runtime/monthly-learning-council/analyst \
+            --intended-write-prefix research/api_agent/outputs/monthly_learning_council/
+
+      - name: Prepare adversarial context with deterministic AI fallback
+        if: steps.eligibility.outputs.run_review == 'true'
+        run: |
+          python scripts/research/monthly_ai_learning_council.py prepare-adversarial \
+            --runtime-root runtime/monthly-learning-council
+
+      - name: Check adversarial lane budget
+        id: adversarial_budget
+        if: steps.eligibility.outputs.run_review == 'true'
+        continue-on-error: true
+        run: |
+          python scripts/api_agent/check_api_lane_budget.py \
+            --receipt-root research/api_agent/outputs \
+            --task MONTHLY_LEARNING_ADVERSARIAL \
+            --cap-usd 1.0 \
+            --reserve-usd 0.15
+          python scripts/api_agent/check_monthly_cost_guard.py \
+            --receipt-root research/api_agent/outputs \
+            --hard-stop-usd 20 \
+            --reserve-usd 1.0
+
+      - name: Run independent Sol adversarial scientist
+        id: adversarial
+        if: steps.eligibility.outputs.run_review == 'true' && steps.adversarial_budget.outcome == 'success'
+        continue-on-error: true
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          python scripts/api_agent/api_gateway.py \
+            --task MONTHLY_LEARNING_ADVERSARIAL \
+            --registry research/api_agent/API_TASK_REGISTRY_v1.json \
+            --prompt-file runtime/monthly-learning-council/adversarial_prompt.txt \
+            --context-file runtime/monthly-learning-council/adversarial_context.json \
+            --output-dir runtime/monthly-learning-council/adversarial \
+            --intended-write-prefix research/api_agent/outputs/monthly_learning_council/
+
+      - name: Finalize deterministic council state
+        if: steps.eligibility.outputs.run_review == 'true'
+        run: |
+          python scripts/research/monthly_ai_learning_council.py finalize \
+            --repo-root . \
+            --runtime-root runtime/monthly-learning-council
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          s=json.loads(Path('research/monthly_learning_council/STATE.json').read_text())
+          assert s['authority']=='RESEARCH_ONLY_NON_CANONICAL'
+          for key in ('canonical_effect','portfolio_execution','paid_data_authorized','deep_research_authorized','external_provider_calls_authorized'):
+              assert s[key] is False, (key,s[key])
+          assert s['primary_action'] in {'CONTINUE_OBSERVING','RESEARCH_NEW_HYPOTHESIS','RUN_INCREMENTAL_VALUE_TEST','RUN_REDUNDANCY_CONFIRMATION'}
+          print('MONTHLY_COUNCIL_FIREWALL_PASS',s['primary_action'],s['target'])
+          PY
+
+      - name: Archive API receipts without making AI authoritative
+        if: steps.eligibility.outputs.run_review == 'true'
+        run: |
+          STAMP=$(date -u +%Y/%m/%d/%H%M%S)
+          DEST="research/api_agent/outputs/monthly_learning_council/${STAMP}"
+          mkdir -p "$DEST"
+          cp runtime/monthly-learning-council/context.json "$DEST/FROZEN_CONTEXT.json"
+          if [[ -f runtime/monthly-learning-council/analyst/output.json ]]; then cp runtime/monthly-learning-council/analyst/output.json "$DEST/ANALYST.json"; fi
+          if [[ -f runtime/monthly-learning-council/analyst/receipt.json ]]; then cp runtime/monthly-learning-council/analyst/receipt.json "$DEST/ANALYST_RECEIPT.json"; fi
+          if [[ -f runtime/monthly-learning-council/adversarial/output.json ]]; then cp runtime/monthly-learning-council/adversarial/output.json "$DEST/ADVERSARIAL.json"; fi
+          if [[ -f runtime/monthly-learning-council/adversarial/receipt.json ]]; then cp runtime/monthly-learning-council/adversarial/receipt.json "$DEST/ADVERSARIAL_RECEIPT.json"; fi
+
+      - name: Revalidate research governance binding after council state
+        if: steps.eligibility.outputs.run_review == 'true'
+        run: |
+          python scripts/research/validate_research_governance_bindings.py
+          python scripts/research/research_decision_impact_router.py --dry-run > runtime/monthly-learning-council/voi_dry_run.json
+          python scripts/research/research_meta_orchestrator.py --dry-run > runtime/monthly-learning-council/meta_dry_run.json
+
+      - name: Commit research-only council outputs with main readback
+        if: steps.eligibility.outputs.run_review == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name framework-learning-council-bot
+          git config user.email framework-learning-council-bot@users.noreply.github.com
+          git add research/monthly_learning_council research/api_agent/outputs/monthly_learning_council
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "learning: monthly AI council ${{ steps.eligibility.outputs.review_kind }} ${GITHUB_RUN_ID}"
+          pushed=false
+          for attempt in 1 2 3; do
+            git rebase --abort 2>/dev/null || true
+            if git pull --rebase origin main && git push origin HEAD:main; then pushed=true; break; fi
+            sleep $((attempt * 5))
+          done
+          [ "$pushed" = true ]
+          git fetch origin main
+          git merge-base --is-ancestor HEAD origin/main
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: monthly-ai-learning-council-${{ github.run_id }}
+          path: runtime/monthly-learning-council/
+          retention-days: 30
+          if-no-files-found: ignore

@@ -1,0 +1,81 @@
+name: Monthly AI Learning Council Gate
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/research/monthly_ai_learning_council.py'
+      - 'tests/research/test_monthly_ai_learning_council.py'
+      - 'research/monthly_learning_council/**'
+      - 'research/api_agent/API_TASK_REGISTRY_v1.json'
+      - 'scripts/research/research_governance_common.py'
+      - '.github/workflows/monthly-ai-learning-council.yml'
+      - '.github/workflows/monthly-ai-learning-council-gate.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compile and test council engine
+        run: |
+          python -m py_compile scripts/research/monthly_ai_learning_council.py scripts/research/research_governance_common.py
+          python -m unittest tests.research.test_monthly_ai_learning_council -v
+      - name: Validate policy and authority firewall
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=json.loads(Path('research/monthly_learning_council/MONTHLY_AI_LEARNING_COUNCIL_POLICY_v1.json').read_text())
+          s=json.loads(Path('research/monthly_learning_council/STATE.json').read_text())
+          assert p['authority']=='RESEARCH_ONLY_NON_CANONICAL'
+          assert s['authority']=='RESEARCH_ONLY_NON_CANONICAL'
+          for key in ('canonical_effect','portfolio_execution'):
+              assert p[key] is False
+              assert s[key] is False
+          for key in ('automatic_market_rule_change','automatic_threshold_change','automatic_weight_change','automatic_canonical_promotion','automatic_paid_data_authorization'):
+              assert p[key] is False
+          tasks=json.loads(Path('research/api_agent/API_TASK_REGISTRY_v1.json').read_text())['tasks']
+          for name in ('MONTHLY_LEARNING_ANALYST','MONTHLY_LEARNING_ADVERSARIAL'):
+              assert tasks[name]['model']=='gpt-5.6-sol'
+              assert tasks[name]['reasoning_effort']=='high'
+              assert tasks[name]['outcome_access'] is True
+              assert tasks[name]['allowed_write_prefix']=='research/api_agent/outputs/monthly_learning_council/'
+          print('MONTHLY_AI_LEARNING_COUNCIL_POLICY_PASS')
+          PY
+      - name: Prove governance binding is resolvable
+        run: |
+          python scripts/research/validate_research_governance_bindings.py
+          python - <<'PY'
+          import sys
+          sys.path.insert(0,'scripts/research')
+          import research_governance_common as c
+          r=c.specialist_binding_report()
+          assert 'MONTHLY_COUNCIL' in r['expected_sources']
+          assert r['bindings']['MONTHLY_COUNCIL']['mode']=='PRIMARY_READY'
+          assert r['resolvable'] is True
+          print('MONTHLY_COUNCIL_GOVERNANCE_BINDING_PASS')
+          PY
+      - name: Dry-run September monthly eligibility without mutation
+        run: |
+          rm -rf runtime/monthly-learning-council-gate
+          python scripts/research/monthly_ai_learning_council.py prepare \
+            --repo-root . \
+            --runtime-root runtime/monthly-learning-council-gate \
+            --now 2026-09-03T06:00:00Z
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          x=json.loads(Path('runtime/monthly-learning-council-gate/eligibility.json').read_text())
+          assert x['run_review'] is True
+          assert x['review_kind']=='MONTHLY'
+          assert len(x['freeze_sha256'])==64
+          print('MONTHLY_COUNCIL_DRY_RUN_PASS',x['freeze_sha256'])
+          PY
