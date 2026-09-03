@@ -1,0 +1,1 @@
+ABANDONED. Do not merge this branch or PR #752. Clean implementation must use a fresh `agent/task-*` branch after repository-safety preflight.
