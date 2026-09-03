@@ -10,7 +10,9 @@ on:
       - 'scripts/learning/forecast_b1_source_owner.py'
       - 'scripts/learning/run_forecast_skill_confirmatory_test.py'
       - 'scripts/learning/validate_forecast_skill_study_admission.py'
+      - 'scripts/learning/build_model_calibration_ledger.py'
       - 'tests/learning/test_forecast_skill_study_v132.py'
+      - 'tests/learning/test_forecast_settlement_scope_t13.py'
       - '.github/workflows/continuity-learning-maintenance.yml'
       - '.github/workflows/forecast-skill-study-v132-gate.yml'
   workflow_dispatch:
@@ -42,9 +44,12 @@ jobs:
             scripts/learning/build_forecast_study_revalidation.py \
             scripts/learning/forecast_b1_source_owner.py \
             scripts/learning/run_forecast_skill_confirmatory_test.py \
-            scripts/learning/validate_forecast_skill_study_admission.py
+            scripts/learning/validate_forecast_skill_study_admission.py \
+            scripts/learning/build_model_calibration_ledger.py
       - name: Run T13 adversarial unit suite
-        run: python -m unittest discover -s tests/learning -p 'test_forecast_skill_study_v132.py' -v
+        run: |
+          python -m unittest discover -s tests/learning -p 'test_forecast_skill_study_v132.py' -v
+          python -m unittest discover -s tests/learning -p 'test_forecast_settlement_scope_t13.py' -v
       - name: Verify workflow scientific firewall ordering
         run: |
           python - <<'PY'
@@ -68,7 +73,7 @@ jobs:
           assert 'forecast_settlement_price_owner.py' not in text[:positions[4]]
           print('T13_WORKFLOW_FIREWALL_ORDER=PASS')
           PY
-      - name: Verify frozen statistical semantics are explicit
+      - name: Verify frozen scientific semantics are explicit
         run: |
           python - <<'PY'
           from pathlib import Path
@@ -76,6 +81,7 @@ jobs:
               'scripts/lib/forecast_study_common_v1_3_2.py',
               'scripts/lib/forecast_study_admission_v1_3_2.py',
               'scripts/lib/forecast_study_inference_v1_3_2.py',
+              'scripts/learning/build_model_calibration_ledger.py',
           ])
           required = [
               'EACH_OBSERVED_OUTCOME_DUE_CALENDAR_DAY_EQUAL_WEIGHT',
@@ -83,6 +89,8 @@ jobs:
               'ALPHA = 0.025',
               'SOURCE_FRESHNESS_CONTRACT = "FORECAST_SOURCE_TEMPORAL_PROVENANCE_v1"',
               'SOURCE_OUTPUT_MAX_AGE_MINUTES = 60',
+              "ELIGIBILITY_SCOPE='SETTLEMENT_TIMING_ONLY'",
+              "'scientific_skill_status':'NOT_ASSESSED_SETTLEMENT_TIMING_ONLY'",
           ]
           for item in required:
               assert item in text, item
