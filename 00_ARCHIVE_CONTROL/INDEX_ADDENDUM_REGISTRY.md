@@ -31,6 +31,7 @@ A registry entry is a navigation pointer only. The referenced file's own status,
 |---|---|---|
 | `00_ARCHIVE_CONTROL/CROSS_REPO_DATA_BOUNDARY.md` | cross-repository control/restricted/credential boundary | REGISTRY_DISCOVERABLE |
 | `00_ARCHIVE_CONTROL/CROSS_REPO_AGENT_CONTEXT_MAP.json` | agent, skill, automation and subsystem routing | REGISTRY_DISCOVERABLE |
+| `00_ARCHIVE_CONTROL/2026-09-04__separation-of-destructive-authority-v1__canonical-addendum.md` | permanent agent safety / source-recovery separation / destructive authority | REGISTRY_DISCOVERABLE |
 | `00_ARCHIVE_CONTROL/2026-08-25__index-addendum-three-horizon-action-compass-output-contract-v1.md` | DATA PING / RAW main-framework interpretation / sole action vocabulary / prospective decision accountability | REGISTRY_DISCOVERABLE |
 | `00_ARCHIVE_CONTROL/2026-09-03__index-addendum-forecast-skill-preregistration-v1-3-1.md` | Research Lab / forecast accountability / T13 confirmatory preregistration / scientific firewall | REGISTRY_DISCOVERABLE |
 | `00_ARCHIVE_CONTROL/2026-09-03__index-addendum-forecast-skill-preregistration-v1-3-2.md` | Research Lab / forecast accountability / T13 sealed endpoint-weighting erratum | REGISTRY_DISCOVERABLE |
