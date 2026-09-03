@@ -18,7 +18,7 @@ jobs:
   maintain:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
         with:
@@ -49,6 +49,54 @@ jobs:
             --pending-root research/api_agent/forecast_candidates/PENDING \
             --terminal-root research/api_agent/forecast_candidates/RATIFICATION_TERMINAL \
             --output research/api_agent/forecast_candidates/LATEST_RATIFICATION_QUEUE.json
+
+      - name: Build T13 study admissions before outcome access
+        run: |
+          python scripts/learning/build_forecast_study_admissions.py \
+            --forecast-root research/api_agent/forecast_candidates/FROZEN \
+            --candidate-root research/api_agent/forecast_candidates/PENDING \
+            --study-root research/api_agent/forecast_skill \
+            --activation research/api_agent/forecast_skill/COHORT_ACTIVATION_v1.json \
+            --preregistration 06_RESEARCH_LAB/forward_tests/forecast_skill_preregistration/FORECAST_SKILL_PREREGISTRATION_v1_3_1.json \
+            --endpoint-erratum 06_RESEARCH_LAB/forward_tests/forecast_skill_preregistration/FORECAST_SKILL_PREREGISTRATION_v1_3_2_ERRATUM.json
+      - name: Build outcome-blind due-time technical revalidation
+        run: |
+          python scripts/learning/build_forecast_study_revalidation.py \
+            --forecast-root research/api_agent/forecast_candidates/FROZEN \
+            --study-root research/api_agent/forecast_skill \
+            --activation research/api_agent/forecast_skill/COHORT_ACTIVATION_v1.json \
+            --preregistration 06_RESEARCH_LAB/forward_tests/forecast_skill_preregistration/FORECAST_SKILL_PREREGISTRATION_v1_3_1.json \
+            --endpoint-erratum 06_RESEARCH_LAB/forward_tests/forecast_skill_preregistration/FORECAST_SKILL_PREREGISTRATION_v1_3_2_ERRATUM.json
+      - name: Persist outcome-blind T13 barrier before any settlement source call
+        run: |
+          git config user.name framework-learning-bot
+          git config user.email framework-learning-bot@users.noreply.github.com
+          git add research/api_agent/forecast_candidates research/api_agent/forecast_skill
+          if git diff --cached --quiet; then
+            git pull --ff-only origin main
+          else
+            git commit -m "learning: freeze outcome-blind T13 state ${GITHUB_RUN_ID}"
+            pushed=false
+            for attempt in 1 2 3; do
+              git rebase --abort 2>/dev/null || true
+              if git pull --rebase origin main && git push origin HEAD:main; then pushed=true; break; fi
+              sleep $((attempt*5))
+            done
+            [ "$pushed" = true ]
+          fi
+          git fetch origin main
+          git merge-base --is-ancestor HEAD origin/main
+      - name: Verify durable T13 admission and revalidation barrier
+        run: |
+          python scripts/learning/validate_forecast_skill_study_admission.py \
+            --forecast-root research/api_agent/forecast_candidates/FROZEN \
+            --candidate-root research/api_agent/forecast_candidates/PENDING \
+            --study-root research/api_agent/forecast_skill \
+            --activation research/api_agent/forecast_skill/COHORT_ACTIVATION_v1.json \
+            --preregistration 06_RESEARCH_LAB/forward_tests/forecast_skill_preregistration/FORECAST_SKILL_PREREGISTRATION_v1_3_1.json \
+            --endpoint-erratum 06_RESEARCH_LAB/forward_tests/forecast_skill_preregistration/FORECAST_SKILL_PREREGISTRATION_v1_3_2_ERRATUM.json \
+            --repo-root .
+
       - name: Resolve exact settlement evidence for ratified price forecasts
         run: |
           mkdir -p research/api_agent/forecast_candidates/{SETTLEMENT_EVIDENCE,SETTLEMENT_RAW,SETTLEMENT_BINDINGS,MATURED}
@@ -83,13 +131,21 @@ jobs:
             --outcome-root research/api_agent/forecast_candidates/MATURED \
             --output research/api_agent/MODEL_CALIBRATION_LEDGER.csv \
             --eligibility-output research/api_agent/MODEL_CALIBRATION_SETTLEMENT_ELIGIBILITY.json
+      - name: Maintain T13 scientific status and execute final test at most once
+        run: |
+          python scripts/learning/run_forecast_skill_confirmatory_test.py \
+            --study-root research/api_agent/forecast_skill \
+            --outcome-root research/api_agent/forecast_candidates/MATURED \
+            --activation research/api_agent/forecast_skill/COHORT_ACTIVATION_v1.json \
+            --preregistration 06_RESEARCH_LAB/forward_tests/forecast_skill_preregistration/FORECAST_SKILL_PREREGISTRATION_v1_3_1.json \
+            --endpoint-erratum 06_RESEARCH_LAB/forward_tests/forecast_skill_preregistration/FORECAST_SKILL_PREREGISTRATION_v1_3_2_ERRATUM.json
       - name: Build agent handoff and owner reliability
         run: python scripts/architecture/build_latest_handoff.py --repo-root .
       - name: Commit maintained state
         run: |
           git config user.name framework-learning-bot
           git config user.email framework-learning-bot@users.noreply.github.com
-          git add LATEST_HANDOFF.json LATEST_HANDOFF.md research/api_agent/forecast_candidates research/api_agent/MODEL_CALIBRATION_LEDGER.csv research/api_agent/MODEL_CALIBRATION_SETTLEMENT_ELIGIBILITY.json 03_DAILY_CAPTURE_LOGS/weekly/RELIABILITY_LEDGER.csv
+          git add LATEST_HANDOFF.json LATEST_HANDOFF.md research/api_agent/forecast_candidates research/api_agent/forecast_skill research/api_agent/MODEL_CALIBRATION_LEDGER.csv research/api_agent/MODEL_CALIBRATION_SETTLEMENT_ELIGIBILITY.json 03_DAILY_CAPTURE_LOGS/weekly/RELIABILITY_LEDGER.csv
           if git diff --cached --quiet; then exit 0; fi
           git commit -m "learning: maintain continuity surfaces ${GITHUB_RUN_ID}"
           pushed=false
