@@ -3,17 +3,17 @@
     {
       "canonical_effect": false,
       "decision_surface": "SENSOR_PORTFOLIO_QUALITY",
-      "evidence_fingerprint": "4c1b652a80e791aa2a4efc83aff2bdb347889a8d5359685af78117ae2c0dd36c",
+      "evidence_fingerprint": "f02791c101e1aa3b10bb0db733cc20d6d015fd27551b2cd8ef03be1c093c208f",
       "execution_mode": "AUTO_LOCAL_RESEARCH",
       "impact_tier": "MEDIUM",
-      "novelty_verdict": null,
+      "novelty_verdict": "NOVEL",
       "orchestrator_action": "QUEUE_BOUNDED_RESEARCH",
       "paid_data_authorized": false,
       "portfolio_execution": false,
-      "reason": "registered source material exists but exact evaluator recovery is still required",
-      "source": "SHADOW_REGISTRY",
-      "specialist_action": "RECOVER_EVALUATOR",
-      "target": "CYCLE_NAVIGATOR_RESEARCH_FAMILY"
+      "reason": "Matured supportive evidence requires incremental-value review before any promotion.",
+      "source": "MONTHLY_COUNCIL",
+      "specialist_action": "RUN_INCREMENTAL_VALUE_TEST",
+      "target": "EC-0e9733866b37fcec87ed"
     }
   ],
   "authority": "RESEARCH_ONLY_NON_CANONICAL",
@@ -26,6 +26,12 @@
         "mode": "PRIMARY_READY",
         "primary_path": "05_CYCLE_NAVIGATOR/autonomous_calibration_v1/STATE.json",
         "selected_path": "05_CYCLE_NAVIGATOR/autonomous_calibration_v1/STATE.json"
+      },
+      "MONTHLY_COUNCIL": {
+        "fallback_path": null,
+        "mode": "PRIMARY_READY",
+        "primary_path": "research/monthly_learning_council/STATE.json",
+        "selected_path": "research/monthly_learning_council/STATE.json"
       },
       "SHADOW_REGISTRY": {
         "fallback_path": null,
@@ -50,6 +56,7 @@
     "contract": "RESEARCH_GOVERNANCE_SPECIALIST_BINDING_REPORT_v1",
     "expected_sources": [
       "CYCLE_NAVIGATOR",
+      "MONTHLY_COUNCIL",
       "SHADOW_REGISTRY",
       "SHARED_ROW",
       "SOURCE_RECOVERY"
@@ -62,16 +69,31 @@
   "contract": "RESEARCH_META_ORCHESTRATOR_STATE_v1",
   "controller_conflicts": [],
   "deep_research_authorized": false,
-  "evidence_fingerprint": "c3ce7531c3be6088111a7fa2e25037cc0c7bacaef5d2d8bf0b4fbb6026b11d4e",
+  "evidence_fingerprint": "bfa1e0200972c2cec923b0bac5f91af2f806e86a501e9841afe3ddf9bb11f2f9",
   "external_provider_calls_authorized": false,
   "max_concurrent_heavy_workstreams": 1,
   "paid_data_authorized": false,
   "portfolio_execution": false,
   "primary_action": "QUEUE_BOUNDED_RESEARCH",
   "primary_execution_mode": "AUTO_LOCAL_RESEARCH",
-  "primary_source": "SHADOW_REGISTRY",
-  "primary_target": "CYCLE_NAVIGATOR_RESEARCH_FAMILY",
+  "primary_source": "MONTHLY_COUNCIL",
+  "primary_target": "EC-0e9733866b37fcec87ed",
   "queue": [
+    {
+      "canonical_effect": false,
+      "decision_surface": "SENSOR_PORTFOLIO_QUALITY",
+      "evidence_fingerprint": "f02791c101e1aa3b10bb0db733cc20d6d015fd27551b2cd8ef03be1c093c208f",
+      "execution_mode": "AUTO_LOCAL_RESEARCH",
+      "impact_tier": "MEDIUM",
+      "novelty_verdict": "NOVEL",
+      "orchestrator_action": "QUEUE_BOUNDED_RESEARCH",
+      "paid_data_authorized": false,
+      "portfolio_execution": false,
+      "reason": "Matured supportive evidence requires incremental-value review before any promotion.",
+      "source": "MONTHLY_COUNCIL",
+      "specialist_action": "RUN_INCREMENTAL_VALUE_TEST",
+      "target": "EC-0e9733866b37fcec87ed"
+    },
     {
       "canonical_effect": false,
       "decision_surface": "SENSOR_PORTFOLIO_QUALITY",
@@ -120,7 +142,7 @@
     {
       "canonical_effect": false,
       "decision_surface": "DATA_INTEGRITY",
-      "evidence_fingerprint": "2080b3ecc49b9f2627502c6252ab9cab29e848d42af7a954b7242686d4f5716c",
+      "evidence_fingerprint": "85c232ccf2f028711c556173c396841bfa7f0c1ff7af11906c3d0ec4299e438e",
       "execution_mode": "AUTO_OBSERVE",
       "impact_tier": "NONE",
       "novelty_verdict": null,
@@ -133,7 +155,7 @@
       "target": "00_ARCHIVE_CONTROL/research_runtime/CFGI_MARKET_PROVIDER_TERMINAL_RECEIPT.json"
     }
   ],
-  "queue_n": 4,
-  "reason": "registered source material exists but exact evaluator recovery is still required",
+  "queue_n": 5,
+  "reason": "Matured supportive evidence requires incremental-value review before any promotion.",
   "sentinel_verdict": "PASS"
 }
