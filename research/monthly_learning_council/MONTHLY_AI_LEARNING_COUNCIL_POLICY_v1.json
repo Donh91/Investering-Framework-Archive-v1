@@ -1,0 +1,33 @@
+{
+  "contract": "MONTHLY_AI_LEARNING_COUNCIL_POLICY_v1",
+  "status": "ACTIVE",
+  "authority": "RESEARCH_ONLY_NON_CANONICAL",
+  "canonical_effect": false,
+  "portfolio_execution": false,
+  "automatic_market_rule_change": false,
+  "automatic_threshold_change": false,
+  "automatic_weight_change": false,
+  "automatic_canonical_promotion": false,
+  "automatic_paid_data_authorization": false,
+  "monthly_review_day": 3,
+  "quarterly_review_months": [1, 4, 7, 10],
+  "matured_outcome_delta_trigger": 25,
+  "minimum_matured_outcomes_for_learning_claim": 25,
+  "max_ai_research_candidates": 5,
+  "max_escalation_candidates_in_context": 25,
+  "ai_lane_caps_usd": {
+    "MONTHLY_LEARNING_ANALYST": 1.0,
+    "MONTHLY_LEARNING_ADVERSARIAL": 1.0
+  },
+  "global_monthly_api_hard_stop_usd": 20.0,
+  "review_rules": {
+    "deterministic_evidence_before_ai": true,
+    "matured_before_learning_claim": true,
+    "semantic_duplicates_are_not_independent_evidence": true,
+    "ai_may_propose_research_only": true,
+    "ai_may_not_modify_existing_test_definition": true,
+    "changed_hypothesis_requires_new_preregistered_test": true,
+    "promotion_requires_separate_canonical_review": true,
+    "budget_failure_must_not_block_deterministic_audit": true
+  }
+}
