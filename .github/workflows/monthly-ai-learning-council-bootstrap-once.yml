@@ -1,0 +1,54 @@
+name: Monthly AI Learning Council Bootstrap Once
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/monthly-ai-learning-council-bootstrap-once.yml'
+  workflow_dispatch:
+
+permissions:
+  actions: write
+  contents: read
+
+jobs:
+  dispatch-if-first-monthly-review-is-due:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 1
+
+      - name: Determine whether current month already completed
+        id: due
+        run: |
+          python - <<'PY' >> "$GITHUB_OUTPUT"
+          import json
+          from datetime import datetime, timezone
+          from pathlib import Path
+          state=json.loads(Path('research/monthly_learning_council/STATE.json').read_text())
+          month=datetime.now(timezone.utc).strftime('%Y-%m')
+          due=state.get('last_completed_month') != month
+          print('dispatch='+str(bool(due)).lower())
+          print('month='+month)
+          print('last_completed_month='+str(state.get('last_completed_month') or 'NONE'))
+          PY
+
+      - name: Dispatch canonical Council workflow on main
+        if: steps.due.outputs.dispatch == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh workflow run monthly-ai-learning-council.yml \
+            --repo "$GITHUB_REPOSITORY" \
+            --ref main
+          echo "MONTHLY_AI_LEARNING_COUNCIL_BOOTSTRAP_DISPATCHED month=${{ steps.due.outputs.month }}"
+
+      - name: Prove dispatcher is non-writing
+        run: |
+          git diff --exit-code
+          echo 'MONTHLY_AI_LEARNING_COUNCIL_BOOTSTRAP_NON_WRITING_PASS'
