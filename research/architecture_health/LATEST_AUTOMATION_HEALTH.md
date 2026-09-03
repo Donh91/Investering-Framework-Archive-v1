@@ -1,10 +1,10 @@
 # Automation Production Health
 Status: **AMBER**
-Generated: `2026-09-03T05:53:14.772424Z`
-Workflows: 123 local / 0 registered
-Scheduled: 40
-Writers: 47
-GREEN / AMBER / RED: 0 / 123 / 0
+Generated: `2026-09-03T05:59:20.987236Z`
+Workflows: 125 local / 0 registered
+Scheduled: 41
+Writers: 48
+GREEN / AMBER / RED: 0 / 125 / 0
 
 ## Workflow matrix
 | Workflow | Lifecycle | Schedule | Writer | Last conclusion | Last run | Status | Findings |
@@ -87,6 +87,8 @@ GREEN / AMBER / RED: 0 / 123 / 0
 | `mar_wp04c4_gate.yml` | `ACTIVE` | no | no | none | none | **AMBER** | WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
 | `master-monday-preflight-gate.yml` | `ACTIVE` | no | no | none | none | **AMBER** | WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
 | `master-monday-remaining-gaps.yml` | `ACTIVE` | yes | yes | none | none | **AMBER** | NO_RUN_HISTORY, WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `monthly-ai-learning-council-gate.yml` | `ACTIVE` | no | no | none | none | **AMBER** | WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
+| `monthly-ai-learning-council.yml` | `ACTIVE` | yes | yes | none | none | **AMBER** | NO_RUN_HISTORY, WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
 | `okx-swap-owner-manual.yml` | `ACTIVE` | no | no | none | none | **AMBER** | WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
 | `operations-dashboard-gate.yml` | `ACTIVE` | no | no | none | none | **AMBER** | WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
 | `operations-dashboard.yml` | `ACTIVE` | yes | yes | none | none | **AMBER** | NO_RUN_HISTORY, WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE |
@@ -238,6 +240,9 @@ GREEN / AMBER / RED: 0 / 123 / 0
 - master-monday-preflight-gate.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
 - master-monday-remaining-gaps.yml:NO_RUN_HISTORY
 - master-monday-remaining-gaps.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- monthly-ai-learning-council-gate.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
+- monthly-ai-learning-council.yml:NO_RUN_HISTORY
+- monthly-ai-learning-council.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
 - okx-swap-owner-manual.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
 - operations-dashboard-gate.yml:WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE
 - operations-dashboard.yml:NO_RUN_HISTORY
