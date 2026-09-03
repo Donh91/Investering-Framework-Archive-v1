@@ -1,0 +1,65 @@
+{
+  "contract": "FORECAST_SKILL_PREREGISTRATION_v1_3_2_ERRATUM",
+  "date": "2026-09-03",
+  "status": "PRE_ACTIVATION_BINDING_ERRATUM",
+  "forecast_skill_status": "UNPROVEN",
+  "confirmatory_study_status": "NOT_STARTED_SCIENTIFIC_FIREWALL",
+  "methodology_cutoff_utc": "2026-09-02T18:54:03Z",
+  "parent_contract": "FORECAST_SKILL_PREREGISTRATION_v1_3_1",
+  "parent_path": "06_RESEARCH_LAB/forward_tests/forecast_skill_preregistration/FORECAST_SKILL_PREREGISTRATION_v1_3_1.json",
+  "source_package_sha256": "d4f3e8c0f27a40bbfac0af41ab57a9752586becd871307b2f18cb061f9a8ee8d",
+  "reason": "The sealed v1.3 implementation computes Theta_hat as the unweighted mean of observed OUTCOME_DUE calendar-day means, while v1.3.1 prose/JSON incorrectly described a row-weighted mean. No confirmatory cohort has activated and no prospective T13 outcome has been admitted or inspected, so this erratum prospectively binds runtime semantics to the already sealed-validated code rather than changing the method.",
+  "supersedes_only": [
+    "FORECAST_SKILL_PREREGISTRATION_v1_3_1.primary_endpoint.primary_point_estimate",
+    "FORECAST_SKILL_PREREGISTRATION_v1_3_1 confirmatory-inference prose describing sum(d_r)/N"
+  ],
+  "preserves_all_other_v1_3_1_semantics": true,
+  "binding_endpoint": {
+    "row_statistic": "d_r = HIT_r - p_clim_r",
+    "within_outcome_due_day": "a_k = arithmetic mean of d_r across admitted F1 rows whose OUTCOME_DUE calendar day equals k",
+    "calendar_mask": "m_k = 1 when outcome-due day k contains at least one admitted F1 row, else 0",
+    "primary_point_estimate": "Theta_hat = sum(a_k * m_k) / sum(m_k)",
+    "weighting": "EACH_OBSERVED_OUTCOME_DUE_CALENDAR_DAY_EQUAL_WEIGHT",
+    "row_weighted_mean_for_confirmatory_test": false,
+    "empty_calendar_days": "RETAINED_IN_REGULAR_CALENDAR_TILING_BUT_CONTRIBUTE_NEITHER_EVIDENCE_NOR_ZERO"
+  },
+  "binding_variance": {
+    "calendar_block_length_days": 28,
+    "tiling_origin": "FIRST_OUTCOME_DUE_CALENDAR_POSITION_IN_COHORT_SERIES",
+    "S_g": "sum(a_k * m_k) within calendar block g",
+    "D_g": "sum(m_k) within calendar block g",
+    "drop_for_variance_only": "blocks with D_g == 0; their calendar footprint remains in the tiling",
+    "G": "number of blocks with D_g > 0",
+    "Theta_hat_equivalent": "sum(S_g) / sum(D_g)",
+    "variance": "G/(G-1) * sum((S_g - Theta_hat*D_g)^2) / (sum(D_g)^2)",
+    "standard_error": "sqrt(variance)",
+    "reference_distribution": "STUDENT_T",
+    "degrees_of_freedom": "G-1",
+    "alpha_one_sided": 0.025,
+    "reject_rule": "Theta_hat/SE > t_ppf(0.975, G-1)"
+  },
+  "sealed_code_binding": {
+    "source_package_path": "inference_bakeoff/candidates.py",
+    "source_package_candidates_py_sha256": "9524492ed5f128c9274902c2e73327bc60174d4da85ea1138658930752a67841",
+    "source_package_engine_semantics": "simulation/src/engine.py::day_aggregate + theta_hat",
+    "selected_candidate": "B_CALENDAR_BATCH_MEANS_T",
+    "design_point_freeze_accrual_days": 240,
+    "calendar_block_length_days": 28
+  },
+  "unchanged_binding_gates": {
+    "freeze_accrual_window_days": 240,
+    "min_admitted_F1_rows": 200,
+    "min_UNIQUE_OUTCOME_DUE_DAYS": 85,
+    "min_UNIQUE_FREEZE_DAYS": 50,
+    "max_share_rows_on_any_OUTCOME_DUE_calendar_day": 0.06,
+    "max_share_rows_in_any_28_calendar_day_block": 0.23,
+    "max_OUTCOME_UNAVAILABLE_share": 0.0
+  },
+  "authority": {
+    "forecast_skill_claim": false,
+    "portfolio_action": false,
+    "model_weight_change": false,
+    "automatic_promotion": false,
+    "canonical_market_state_change": false
+  }
+}
