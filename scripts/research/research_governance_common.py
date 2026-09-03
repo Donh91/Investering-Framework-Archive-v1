@@ -20,6 +20,10 @@ SPECIALIST_BINDINGS = {
         "primary": ROOT / "04_MARKET_LEARNING/shadow_registry/autonomous_portfolio_v1/STATE.json",
         "fallback": None,
     },
+    "MONTHLY_COUNCIL": {
+        "primary": ROOT / "research/monthly_learning_council/STATE.json",
+        "fallback": None,
+    },
     "SOURCE_RECOVERY": {
         "primary": ROOT / "00_ARCHIVE_CONTROL/source_recovery_controller_v1/STATE.json",
         "fallback": None,
