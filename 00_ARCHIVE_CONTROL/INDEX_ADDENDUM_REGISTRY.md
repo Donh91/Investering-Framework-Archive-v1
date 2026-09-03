@@ -33,6 +33,7 @@ A registry entry is a navigation pointer only. The referenced file's own status,
 | `00_ARCHIVE_CONTROL/CROSS_REPO_AGENT_CONTEXT_MAP.json` | agent, skill, automation and subsystem routing | REGISTRY_DISCOVERABLE |
 | `00_ARCHIVE_CONTROL/2026-08-25__index-addendum-three-horizon-action-compass-output-contract-v1.md` | DATA PING / RAW main-framework interpretation / sole action vocabulary / prospective decision accountability | REGISTRY_DISCOVERABLE |
 | `00_ARCHIVE_CONTROL/2026-09-03__index-addendum-forecast-skill-preregistration-v1-3-1.md` | Research Lab / forecast accountability / T13 confirmatory preregistration / scientific firewall | REGISTRY_DISCOVERABLE |
+| `00_ARCHIVE_CONTROL/2026-09-03__index-addendum-forecast-skill-preregistration-v1-3-2.md` | Research Lab / forecast accountability / T13 sealed endpoint-weighting erratum | REGISTRY_DISCOVERABLE |
 | `00_ARCHIVE_CONTROL/2026-07-10__index-addendum-data-ping-hybrid-edge-event-archive.md` | DATA PING / edge events | INDEX_LISTED |
 | `00_ARCHIVE_CONTROL/2026-07-10__index-addendum-gpt-5-6-fresh-eyes-audit-implementation.md` | framework governance | INDEX_LISTED |
 | `00_ARCHIVE_CONTROL/2026-07-11__index-addendum-techdev-historical-batch-1.md` | TechDev source archive | INDEX_LISTED |
