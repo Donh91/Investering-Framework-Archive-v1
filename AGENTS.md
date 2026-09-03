@@ -2,6 +2,22 @@
 
 These instructions apply to all agent work in this repository.
 
+## Permanent safety invariant - separation of destructive authority
+
+Every agent must read and obey:
+
+`00_ARCHIVE_CONTROL/2026-09-04__separation-of-destructive-authority-v1__canonical-addendum.md`
+
+Permanent mnemonic:
+
+```text
+IMPROVE THE AIRCRAFT.
+PROTECT THE PARACHUTE.
+NEVER HOLD BOTH DESTRUCTIVE KEYS.
+```
+
+No autonomous or semi-autonomous principal may simultaneously hold sufficient destructive authority to irreversibly damage both the canonical source system and its independent recovery layer. Do not broaden credentials, disable safeguards, or acquire recovery-destructive authority to complete a source task. If a task would require both destructive authorities, fail closed and split or escalate the task. Model capability, seniority, benchmark performance, prior success, qualification status, or future "golden key" status never overrides this invariant.
+
 ## 0. Cross-repository preflight
 
 The repository estate has three separate planes:
@@ -174,6 +190,7 @@ Use `.agents/skills/prospective-evidence-ledger/SKILL.md` for prospective row cr
 - Preserve historical files unless an approved retirement workflow applies.
 - Follow `01_CORE_FRAMEWORK/governance/2026-07-11__repository-safety-and-backup-policy-v1__canonical.md` before any high-impact operation.
 - Changing `00_ARCHIVE_CONTROL/CANONICAL_INDEX.md`, archive routing, precedence or source governance is high-impact and requires the policy safepoint sequence first.
+- Enforce `00_ARCHIVE_CONTROL/2026-09-04__separation-of-destructive-authority-v1__canonical-addendum.md` permanently. A source-writing principal must not also hold destructive recovery/Vault authority.
 
 ### Mandatory branch assertion before every write
 
