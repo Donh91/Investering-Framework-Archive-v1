@@ -13,6 +13,14 @@ def canonical(value: object) -> bytes:
 
 
 def cfgi_from_capture(packet: dict[str, Any]) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    """Return CFGI rows from a daily capture without adding source calls.
+
+    Prefer the legacy owner-file summary when it is present so historical
+    captures retain their original billing/component semantics. Current
+    DAILY_LIVE_ANCHOR_INDEX_v3 captures expose the accepted point-in-time
+    CFGI observations under market_metrics.sentiment.cfgi.symbols; use that
+    representation only when legacy rows are absent.
+    """
     owner = next((x for x in packet.get("owners", []) if x.get("owner_id") == "cfgi_sentiment"), {})
     rows: list[dict[str, Any]] = []
     billing: dict[str, Any] = {}
@@ -27,10 +35,38 @@ def cfgi_from_capture(packet: dict[str, Any]) -> tuple[list[dict[str, Any]], dic
             fields = summary["fields"]
         if isinstance(summary.get("billing"), dict):
             billing = summary["billing"]
-    if rows and fields and not isinstance(billing.get("credits_used"), int):
-        billing["credits_used"] = len(rows) * len(fields)
-        billing["usage_source"] = "DERIVED_FROM_FIELDS_X_ROWS"
-    return rows, billing
+    if rows:
+        if fields and not isinstance(billing.get("credits_used"), int):
+            billing["credits_used"] = len(rows) * len(fields)
+            billing["usage_source"] = "DERIVED_FROM_FIELDS_X_ROWS"
+        return rows, billing
+
+    sentiment = packet.get("market_metrics", {}).get("sentiment", {})
+    cfgi = sentiment.get("cfgi", {}) if isinstance(sentiment, dict) else {}
+    symbols = cfgi.get("symbols", {}) if isinstance(cfgi, dict) else {}
+    if not isinstance(symbols, dict):
+        return [], billing
+
+    current_rows: list[dict[str, Any]] = []
+    for symbol, observation in symbols.items():
+        if not isinstance(observation, dict):
+            continue
+        score = observation.get("score")
+        if not isinstance(score, (int, float)):
+            continue
+        row: dict[str, Any] = {
+            "symbol": str(symbol),
+            "score": score,
+        }
+        for key in ("classification", "price", "timestamp", "owner_status", "stale"):
+            if key in observation:
+                row[key] = observation[key]
+        components = observation.get("components")
+        if isinstance(components, dict) and components:
+            row["components"] = components
+        current_rows.append(row)
+
+    return current_rows, billing
 
 
 def main() -> None:
