@@ -1,0 +1,37 @@
+{
+  "contract": "FORECAST_SKILL_PREREGISTRATION_SOURCE_BINDING_v1",
+  "source_artifact_filename": "FORECAST_SKILL_PREREGISTRATION_v1.3.zip",
+  "source_artifact_sha256": "d4f3e8c0f27a40bbfac0af41ab57a9752586becd871307b2f18cb061f9a8ee8d",
+  "source_artifact_size_bytes": 169733,
+  "binary_embedded_in_control_plane": false,
+  "binary_embedding_status": "EXTERNAL_HASH_BOUND_SOURCE_PACKAGE",
+  "independent_acceptance_audit": {
+    "manifest_entries": 47,
+    "manifest_hash_matches": 47,
+    "bundled_verifier_checks": 22,
+    "bundled_verifier_passes": 22,
+    "embedded_original_v1_1_engine_sha256": "df263ac23fb6ff28594590b3f6cb1110a03adaeac211e8267c1add88dca871db",
+    "embedded_original_v1_1_price_history_sha256": "e2871550e90c154c6847ba720c2249fa1f0fda787c90a68d70f0c761ee09a3f1",
+    "sealed_validation_populations": 12,
+    "sealed_trials_per_population": 5200,
+    "sealed_trials_total": 62400
+  },
+  "accepted_method_evidence": {
+    "selected_candidate": "B_CALENDAR_BATCH_MEANS_T",
+    "calendar_block_length_days": 28,
+    "alpha_one_sided": 0.025,
+    "validation_status": "PASS_UNDER_FROZEN_SIMULATION_VALIDATION_CRITERION"
+  },
+  "v1_3_1_narrowing_corrections": [
+    "SPAN_240_RELABELED_AS_FIXED_FREEZE_ACCRUAL_WINDOW_NOT_OUTCOME_DUE_SPAN",
+    "MAX_OUTCOME_UNAVAILABLE_SHARE_TIGHTENED_FROM_0_10_TO_0_0"
+  ],
+  "sealed_method_artifacts_modified_by_v1_3_1": false,
+  "forecast_skill_status": "UNPROVEN",
+  "authority": {
+    "portfolio_action": false,
+    "model_weight_change": false,
+    "automatic_promotion": false,
+    "forecast_skill_claim": false
+  }
+}
