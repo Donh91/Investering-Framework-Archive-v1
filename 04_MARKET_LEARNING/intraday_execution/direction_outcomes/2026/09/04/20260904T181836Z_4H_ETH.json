@@ -1,0 +1,79 @@
+{
+  "authority": {
+    "automatic_rule_changes": false,
+    "portfolio_execution": false,
+    "shadow_only": true
+  },
+  "calibration_group": "ETH:4H:DOWN:8_of_8",
+  "calibration_key": "8_of_8",
+  "contract": "INTRADAY_DIRECTION_OUTCOME_v1",
+  "due_at_utc": "2026-09-04T22:00:00Z",
+  "evidence_deadline_utc": "2026-09-04T23:30:00Z",
+  "evidence_wait_hours": 1.956709,
+  "frozen_calibrated_probability_pct": null,
+  "horizon_hours": 4,
+  "issued_at_utc": "2026-09-04T18:18:36.737647Z",
+  "measured_at_utc": "2026-09-04T23:57:24.153042Z",
+  "predicted_direction": "DOWN",
+  "prediction_path": "04_MARKET_LEARNING/intraday_execution/direction_predictions/2026/09/04/20260904T181836Z.json",
+  "prediction_sha256": "92614e1fd54f4e91292f0a00423b57c76e0fc5dbe8c41fa4a8d95a3df4117fef",
+  "production_context": {
+    "commit_sha": "a423b965728c635933386dd1febd6b80028bd018",
+    "event": "schedule",
+    "ref": "refs/heads/main",
+    "repository": "Donh91/Investering-Framework-Archive-v1",
+    "run_attempt": "1",
+    "run_id": "33931319232"
+  },
+  "reason": "EXACT_DUE_OWNER_CANDLE_MISSING_AFTER_GRACE",
+  "registered_test_id": "INTRADAY_DIRECTION_CONFIDENCE_V1",
+  "registration_receipt_sha256": "a61938f9b772f204ab0d5bc1e11798e51ee313bf1e1857f3d6bafd7b6bdf66d2",
+  "source_candle_open_utc": "2026-09-04T17:00:00+00:00",
+  "source_price_observation_utc": "2026-09-04T18:00:00Z",
+  "start_value": 2445.36,
+  "status": "CENSORED",
+  "substitute_later_price_forbidden": true,
+  "target": "ETH",
+  "votes": [
+    {
+      "direction": "DOWN",
+      "family": "return_1h",
+      "value": -0.604415034367
+    },
+    {
+      "direction": "DOWN",
+      "family": "return_4h",
+      "value": -0.2817797387726362
+    },
+    {
+      "direction": "DOWN",
+      "family": "session_vwap",
+      "value": -1.5675892480410014
+    },
+    {
+      "direction": "DOWN",
+      "family": "momentum_acceleration",
+      "value": -0.713422055915
+    },
+    {
+      "direction": "DOWN",
+      "family": "taker_balance",
+      "value": 0.317914644085
+    },
+    {
+      "direction": "DOWN",
+      "family": "taker_change",
+      "value": -0.14056695362233335
+    },
+    {
+      "direction": "DOWN",
+      "family": "ethbtc_1h",
+      "value": -0.194552529183
+    },
+    {
+      "direction": "DOWN",
+      "family": "breadth_balance",
+      "value": 0.44
+    }
+  ]
+}
