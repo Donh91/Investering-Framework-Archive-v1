@@ -30,7 +30,7 @@ Policy owner:
 | growthepie | ETH/L2 transmission history | Public endpoint probe verified | Disabled pending exact dataset redistribution review |
 | Coin Metrics Community | BTC/ETH network + market history | Keyless probe verified for allowed bootstrap metrics | Disabled pending exact CC dataset scope freeze |
 | CoinGecko | Market-price crosscheck | Query-time crosscheck only | Disabled by source-use/storage constraints |
-| The Graph | Protocol-specific historical replay | Auth required | Disabled until subgraph, schema and license are frozen |
+| SQD Portal | Primary protocol-level on-chain replay | Public Portal docs verified, live PR probe required before final admission | Temporary T2 artifact only until Portal terms are frozen |
 
 ## Existing owner reuse
 
@@ -69,31 +69,47 @@ Collects the verified keyless bootstrap metrics:
 
 Runs a metadata/provenance probe only. Raw payload archival is intentionally disabled.
 
-## The Graph
+## SQD Portal, primary protocol replay
 
-The Graph is not silently skipped. It is explicitly blocked at V1 by authentication and per-subgraph source admission.
+SQD replaces The Graph as the active protocol-level replay path because the public Portal HTTP API can be called directly by GitHub Actions without requiring the user to operate Subgraph Studio on desktop.
 
-Before collection, freeze all of:
+The collector uses finalized EVM data only:
 
-- subgraph ID;
-- schema / entity set;
-- chain and protocol identity;
-- source/license terms;
-- historical block support;
-- API-key secret location;
-- bounded research question;
-- retention class.
+`python scripts/research/historical_research_vault.py collect-sqd --dataset ethereum-mainnet --from-block <N> --to-block <N> --address <0x...> --output-root <dir>`
 
-Expected secret name for later automation:
-`GRAPH_API_KEY`
+or an event-topic filter:
 
-No key is committed to Git.
+`python scripts/research/historical_research_vault.py collect-sqd --dataset ethereum-mainnet --from-block <N> --to-block <N> --topic0 <0x...> --output-root <dir>`
+
+Guardrails are deliberate:
+
+- finalized-stream only;
+- maximum 5,000 blocks per capture;
+- at least one contract-address or topic0 filter is mandatory;
+- dataset slug is validated before URL construction;
+- raw response and normalized rows are hashed;
+- output is temporary T2 artifact data, not a Git data dump;
+- no interpolation or inferred rows;
+- no framework or portfolio authority.
+
+The public Portal currently supports unauthenticated use by default. SQD also supports opt-in per-request authorization for Portals. The collector therefore accepts an optional complete `Authorization` header through the runtime environment variable `SQD_PORTAL_AUTHORIZATION`, but no credential is required or committed for the default public Portal path.
+
+A one-block keyless probe is part of the SQD admission PR so live behavior is verified rather than inferred from documentation.
+
+## Deferred alternatives
+
+The Graph is no longer an active vault source or blocker. It remains a deferred optional challenger if a future research question specifically requires an existing subgraph that SQD cannot reproduce efficiently.
+
+Bitquery is a future enriched crosscheck candidate, not an active source. Dune is a future derived SQL/research crosscheck candidate, not an active raw-history owner.
+
+This preserves the source-count discipline: do not add either until SQD has demonstrated incremental replay value or a concrete evidence gap requires them.
 
 ## Storage layout
 
 ```text
 research/historical_research_vault/
   README.md
+  LATEST.json
   SOURCE_REGISTRY_v1.json
   SOURCE_RECIPES_v1.json
   VAULT_BOOTSTRAP_RECEIPT_2026-09-04.json
@@ -116,18 +132,17 @@ V1 is intentionally narrow.
 2. Add ETH/L2 transmission history from growthepie.
 3. Add BTC/ETH independent network/market crosschecks from Coin Metrics Community.
 4. Keep CoinGecko as price crosscheck rather than durable owner.
-5. Admit The Graph only when a research question requires protocol-level history.
+5. Use bounded SQD Portal replays when a concrete protocol-level question requires logs or contract-event history.
 
-Do not add a sixth source until one of the above has demonstrated unique replay value.
+Do not add a sixth active source until one of the above has demonstrated unique replay value or a specific evidence gap cannot be answered by the current five.
 
 ## Automation policy
 
 There is no scheduled collection workflow in V1.
 
-Reason:
-the current operations dashboard already has an automation-health RED and a large experiment/remediation backlog. Adding another scheduled process before the vault proves incremental value would violate the project's backlog-compression and complexity discipline.
+The vault remains evidence-demand driven. A scheduled collector is justified only after bounded replays demonstrate repeatable incremental value that is worth the extra automation surface.
 
-The PR gate is validation-only. A bounded network probe can be run manually with `workflow_dispatch`.
+The PR gate validates contracts and tests. SQD admission additionally uses a one-block public Portal smoke test. Larger source probes remain bounded and temporary.
 
 ## Promotion gate
 
