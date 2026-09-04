@@ -1,0 +1,46 @@
+{
+  "contract": "FORECAST_SKILL_ACTIVE_TEST_REGISTRATION_v1_3_2",
+  "status": "REGISTERED_PRE_ACTIVATION",
+  "test_id": "FORECAST_SKILL_CONFIRMATORY_V1_3_1",
+  "registered_at_utc": "2026-09-03T23:57:05Z",
+  "forecast_skill_status": "UNPROVEN",
+  "confirmatory_study_status": "NOT_STARTED_SCIENTIFIC_FIREWALL",
+  "preregistration_acceptance_contract": "FORECAST_SKILL_PREREGISTRATION_ACCEPTANCE_v1",
+  "preregistration_git_blob_sha1": "640ec49c6ac2057675a9ae7d548e6a35090e4c8e",
+  "endpoint_erratum_git_blob_sha1": "4f5ddcdbb59507c37b734533444db242b3ef4385",
+  "implementation_merge_sha": "58f6297f2665cca5138633873f988a1cf5f3dbd8",
+  "primary_population": {
+    "evidence_class": "API_AGENT_OWNER_RATIFIED_PROSPECTIVE_v1",
+    "forecast_family": "F1_DIRECTIONAL_ONLY",
+    "pre_activation_rows_allowed": false,
+    "historical_replay_allowed": false,
+    "automated_scientific_experiment_pooling_allowed": false
+  },
+  "cohort": {
+    "window_axis": "FREEZE_ACCRUAL_UTC_CALENDAR",
+    "freeze_accrual_window_days": 240,
+    "start_rule": "FIRST_FUTURE_00_00_00Z_STRICTLY_AFTER_ACTIVATION_RECORDING_AND_IMPLEMENTATION_READBACK",
+    "rolling_extension_allowed": false
+  },
+  "inference": {
+    "endpoint_weighting": "EACH_OBSERVED_OUTCOME_DUE_CALENDAR_DAY_EQUAL_WEIGHT",
+    "calendar_block_length_days": 28,
+    "reference_distribution": "STUDENT_T",
+    "degrees_of_freedom": "G_MINUS_1",
+    "alpha_one_sided": 0.025,
+    "max_OUTCOME_UNAVAILABLE_share": 0.0,
+    "confirmatory_test_count": 1
+  },
+  "rows_total": 0,
+  "valid_source_rows": 0,
+  "valid_outcome_rows": 0,
+  "outcome_data_read": false,
+  "activation_allowed_only_after_registration_merge_readback": true,
+  "authority": {
+    "forecast_skill_claim": false,
+    "portfolio_action": false,
+    "model_weight_change": false,
+    "automatic_promotion": false,
+    "canonical_market_state_change": false
+  }
+}
