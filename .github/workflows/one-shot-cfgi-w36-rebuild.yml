@@ -1,0 +1,53 @@
+name: One-shot CFGI W36 rebuild
+
+on:
+  push:
+    branches:
+      - ops/rebuild-cfgi-w36-20260904
+
+permissions:
+  contents: write
+
+jobs:
+  rebuild:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ops/rebuild-cfgi-w36-20260904
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Rebuild weekly CFGI from immutable captures
+        run: |
+          python scripts/daily_capture/build_weekly_cfgi_summary.py \
+            --capture-root 03_DAILY_CAPTURE_LOGS/captures \
+            --output-root 03_DAILY_CAPTURE_LOGS/cfgi_weekly
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('03_DAILY_CAPTURE_LOGS/cfgi_weekly/2026/W36/WEEKLY_CFGI_DERIVED_SUMMARY.json')
+          v=json.loads(p.read_text())
+          assert v['status']=='PASS', v
+          assert v['capture_count']>0, v
+          assert set(v['symbols']) >= {'BTC','ETH','MARKET'}, v
+          assert v['authority']=='SHADOW_CALIBRATION_INPUT'
+          assert v['canonical_data_ping'] is False
+          assert v['framework_state_change'] is False
+          assert v['portfolio_action'] is False
+          print(json.dumps({'status':v['status'],'capture_count':v['capture_count'],'symbols':v['symbols']},sort_keys=True))
+          PY
+      - name: Run CFGI regression tests
+        run: python -m unittest tests.daily_capture.test_cfgi_credit_efficiency -v
+      - name: Commit derived summary and receipt only
+        run: |
+          git config user.name framework-operations-bot
+          git config user.email framework-operations-bot@users.noreply.github.com
+          git add 03_DAILY_CAPTURE_LOGS/cfgi_weekly/2026/W36/WEEKLY_CFGI_DERIVED_SUMMARY.json \
+                  03_DAILY_CAPTURE_LOGS/cfgi_weekly/2026/W36/WEEKLY_CFGI_DERIVED_RECEIPT.json
+          git diff --cached --exit-code && { echo 'No derived change produced'; exit 1; } || true
+          git commit -m "data: rebuild W36 CFGI derived calibration"
+          git push origin HEAD:ops/rebuild-cfgi-w36-20260904
