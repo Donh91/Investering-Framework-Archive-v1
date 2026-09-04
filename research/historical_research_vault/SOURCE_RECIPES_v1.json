@@ -1,0 +1,54 @@
+{
+  "contract": "HISTORICAL_RESEARCH_VAULT_SOURCE_RECIPES_v1",
+  "recipes": [
+    {
+      "inputs": [
+        "03_DAILY_CAPTURE_LOGS/stablecoin_liquidity/LATEST.json",
+        "03_DAILY_CAPTURE_LOGS/stablecoin_liquidity/backfill/global_history.jsonl.gz"
+      ],
+      "method": "REUSE_EXISTING_OWNER",
+      "network_call_required": false,
+      "notes": "Do not create a second DefiLlama stablecoin history.",
+      "source_id": "DEFILLAMA_STABLECOIN_OWNER_EXISTING_v1"
+    },
+    {
+      "endpoint_template": "https://api.growthepie.com/v1/metrics/chains/{chain}/{metric}.json",
+      "method": "GET",
+      "missingness": "PRESERVE_NULLS_NO_INTERPOLATION",
+      "parser": "details.timeseries.daily.types + details.timeseries.daily.data",
+      "source_id": "GROWTHEPIE_ETH_L2_DAILY_v1",
+      "verified_example": "https://api.growthepie.com/v1/metrics/chains/base/stables_mcap.json"
+    },
+    {
+      "endpoint": "https://community-api.coinmetrics.io/v4/timeseries/asset-metrics",
+      "known_keyless_rejections_observed": ["CapRealUSD", "FeeTotUSD"],
+      "method": "GET",
+      "missingness": "PRESERVE_SOURCE_NULLS",
+      "pagination": "next_page_url_until_null",
+      "source_id": "COINMETRICS_COMMUNITY_BTC_ETH_DAILY_v1",
+      "verified_bootstrap_metrics": ["PriceUSD", "SplyCur", "CapMrktCurUSD", "TxCnt"]
+    },
+    {
+      "endpoint_template": "https://api.coingecko.com/api/v3/coins/{coin}/market_chart?vs_currency=usd&days=7&interval=daily",
+      "method": "GET_PROBE_ONLY",
+      "source_id": "COINGECKO_HISTORICAL_CROSSCHECK_v1",
+      "storage": "METADATA_RECEIPT_ONLY_NO_RAW_PAYLOAD_COMMIT"
+    },
+    {
+      "auth": "NONE_BY_DEFAULT_OPTIONAL_AUTHORIZATION_HEADER_FROM_SQD_PORTAL_AUTHORIZATION",
+      "endpoint_template": "https://portal.sqd.dev/datasets/{dataset}/finalized-stream",
+      "fields": ["block.number", "block.timestamp", "block.hash", "block.parentHash", "log.address", "log.topics", "log.data", "log.transactionHash", "log.transactionIndex", "log.logIndex"],
+      "max_blocks_per_capture": 5000,
+      "method": "POST_NDJSON",
+      "missingness": "PRESERVE_SOURCE_ROWS_NO_INTERPOLATION",
+      "preconditions": ["FINALIZED_STREAM", "BOUNDED_BLOCK_RANGE", "ADDRESS_OR_TOPIC0_FILTER", "DATASET_SLUG_ALLOWLIST_SHAPE"],
+      "source_id": "SQD_PORTAL_EVM_REPLAY_v1",
+      "storage": "T2_ACTIONS_ARTIFACT_UNTIL_PROMOTION_GATE",
+      "verified_docs": [
+        "https://docs.sqd.dev/en/api/evm/introduction",
+        "https://docs.sqd.dev/en/api/evm/finalized-stream",
+        "https://docs.sqd.dev/en/portal/overview"
+      ]
+    }
+  ]
+}

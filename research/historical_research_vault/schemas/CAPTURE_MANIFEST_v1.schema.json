@@ -1,0 +1,62 @@
+{
+  "$id": "CAPTURE_MANIFEST_v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "authority": {
+      "additionalProperties": false,
+      "properties": {
+        "framework_state_change": {"const": false},
+        "model_weight_change": {"const": false},
+        "portfolio_action": {"const": false}
+      },
+      "required": ["framework_state_change", "model_weight_change", "portfolio_action"],
+      "type": "object"
+    },
+    "contract": {"const": "HISTORICAL_RESEARCH_VAULT_CAPTURE_MANIFEST_v1"},
+    "coverage": {
+      "additionalProperties": false,
+      "properties": {
+        "end_utc": {"type": ["string", "null"]},
+        "row_count": {"minimum": 0, "type": "integer"},
+        "start_utc": {"type": ["string", "null"]}
+      },
+      "required": ["start_utc", "end_utc", "row_count"],
+      "type": "object"
+    },
+    "dataset_id": {"minLength": 1, "type": "string"},
+    "normalized": {
+      "additionalProperties": false,
+      "properties": {
+        "format": {"type": "string"},
+        "payload_sha256": {"pattern": "^[a-f0-9]{64}$", "type": "string"}
+      },
+      "required": ["format", "payload_sha256"],
+      "type": "object"
+    },
+    "raw": {
+      "additionalProperties": false,
+      "properties": {
+        "payload_bytes": {"minimum": 0, "type": "integer"},
+        "payload_sha256": {"pattern": "^[a-f0-9]{64}$", "type": "string"}
+      },
+      "required": ["payload_sha256", "payload_bytes"],
+      "type": "object"
+    },
+    "retrieved_at_utc": {"format": "date-time", "type": "string"},
+    "source_id": {"minLength": 1, "type": "string"},
+    "storage": {
+      "additionalProperties": false,
+      "properties": {
+        "class": {"enum": ["T0_GIT_METADATA", "T1_GIT_COMPACT_CANONICAL", "T2_ACTIONS_ARTIFACT", "T3_DURABLE_BULK", "T4_EXTERNAL_LICENSED"]},
+        "durable": {"type": "boolean"},
+        "retention_days": {"minimum": 1, "type": ["integer", "null"]}
+      },
+      "required": ["class", "retention_days", "durable"],
+      "type": "object"
+    }
+  },
+  "required": ["contract", "dataset_id", "source_id", "retrieved_at_utc", "coverage", "raw", "normalized", "storage", "authority"],
+  "title": "Historical Research Vault Capture Manifest v1",
+  "type": "object"
+}

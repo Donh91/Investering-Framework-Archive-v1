@@ -241,3 +241,37 @@ They may not:
 ## Promotion path
 
 Hourly Sequence Capture, Live Anchor Capture and Daily Settled ETF Calibration run in parallel with canonical DATA PING. Any replacement, promotion or authority change requires separate parity evidence and explicit governance approval.
+
+## Agent / next-generation model mission card
+
+This README remains architecture documentation first. The following mission cues are navigation only.
+
+High-value audit questions:
+
+```text
+Does the permanent sequence actually cover the source hours it claims?
+Can overlapping fetch windows self-heal without rewriting historical rows?
+Are candle-open labels ever consumed as if they were observable close timestamps?
+Can downstream research failure suppress an otherwise valid market observation?
+Are ETF rows truly final/settled when admitted?
+Are slower sources ever accidentally treated as hourly evidence?
+Do raw-retention limits create hidden replay blind spots?
+Can weekly sequence facts be independently rebuilt from permanent rows?
+```
+
+Astra-class challenge:
+
+- replay selected weeks from permanent rows and compare rebuilt sequence facts byte/semantic-wise;
+- quantify missing-hour and publication-lag effects on downstream forecasts;
+- test whether sequence features add marginal value beyond simple price/ETHBTC baselines;
+- find any timestamp/knowledge-time path that could leak future information;
+- distinguish capture reliability from predictive edge.
+
+Default mode is `READ_ONLY` or bounded replay. Do not alter capture cadence, source contracts, workflow permissions or authority during discovery.
+
+For repository-level onboarding, see:
+
+```text
+../07_PROMPTS_AND_AGENTS/astra/README.md
+../07_PROMPTS_AND_AGENTS/astra/ASTRA_REPOSITORY_MISSION_ROUTER_v1.json
+```

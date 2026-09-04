@@ -1,0 +1,168 @@
+name: Native OTA Research Readback
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/native-ota-research-readback.yml'
+      - 'scripts/research/native_ota_readback.py'
+      - 'tests/research/test_native_ota_readback.py'
+      - 'research/ota_native/**'
+  schedule:
+    # Daily settled-transition check after the hourly 00:05 UTC publication path
+    # has had time to persist the prior UTC session.
+    - cron: '45 2 * * *'
+      timezone: 'Europe/Copenhagen'
+    # Full research readback: Monday + Friday, after the 22:13 live anchor.
+    - cron: '45 22 * * 1,5'
+      timezone: 'Europe/Copenhagen'
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'FULL emits a readback; TRIGGER_ONLY emits only on a settled ETHBTC 0.0300 cross/reclaim.'
+        required: true
+        default: FULL
+        type: choice
+        options:
+          - FULL
+          - TRIGGER_ONLY
+
+concurrency:
+  group: framework-main-writer
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compile deterministic reader
+        run: python -m py_compile scripts/research/native_ota_readback.py
+      - name: Run native OTA regression tests
+        run: python -m unittest tests/research/test_native_ota_readback.py -v
+      - name: Run archive integration readback without source calls
+        run: |
+          python scripts/research/native_ota_readback.py \
+            --trigger PR_VALIDATION \
+            --output-status runtime/native-ota/status.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          report=json.loads(Path('04_MARKET_LEARNING/ota_native/LATEST.json').read_text())
+          assert report['contract']=='NATIVE_OTA_READBACK_v1'
+          assert report['authority']['portfolio_execution'] is False
+          assert report['authority']['canonical_state_change'] is False
+          assert report['source_policy']=='READ_EXISTING_GITHUB_OWNERS_ONLY_NO_NEW_MARKET_SOURCE_CALLS'
+          assert report['settled_session'] is not None
+          assert report['settled_session']['session_status']=='SETTLED_COMPLETE_24H'
+          assert report['owner_readback']['etf']['status']=='PASS'
+          assert report['owner_readback']['pullback_forensics']['status']=='PASS'
+          assert report['owner_readback']['pullback_forensics']['lane2b_moneyness_skew']['semantics']=='MONEYNESS_BUCKET_SKEW_NOT_25_DELTA'
+          assert report['owner_readback']['situation_room']['l4_bridge_status']=='PARTIAL_NATIVE_DISCOVERY_CONTEXT_NOT_FULL_L4_ATTRIBUTION_OWNER'
+          assert report['legacy_claude_ota']['status'] in {'LEGACY_CONTEXT_ONLY','ABSENT'}
+          assert 'etf' not in report['gap_accounting']['framework_data_gaps']
+          assert 'pullback_forensics' not in report['gap_accounting']['framework_data_gaps']
+          assert report['qa']['in_progress_high_may_be_called_cycle_high'] is False
+          PY
+
+  readback:
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    timeout-minutes: 10
+    env:
+      SCHEDULE_ID: ${{ github.event.schedule }}
+      DISPATCH_MODE: ${{ inputs.mode }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Regression guard before production readback
+        run: |
+          python -m py_compile scripts/research/native_ota_readback.py
+          python -m unittest tests/research/test_native_ota_readback.py -v
+
+      - name: Resolve fixed versus trigger-only mode
+        id: mode
+        shell: bash
+        run: |
+          MODE=FULL
+          TRIGGER=MANUAL_FULL
+          if [[ "${GITHUB_EVENT_NAME}" == "schedule" && "${SCHEDULE_ID}" == "45 2 * * *" ]]; then
+            MODE=TRIGGER_ONLY
+            TRIGGER=DAILY_SETTLED_TRANSITION_CHECK
+          elif [[ "${GITHUB_EVENT_NAME}" == "schedule" ]]; then
+            MODE=FULL
+            TRIGGER=FIXED_MONDAY_FRIDAY
+          elif [[ "${DISPATCH_MODE}" == "TRIGGER_ONLY" ]]; then
+            MODE=TRIGGER_ONLY
+            TRIGGER=MANUAL_TRIGGER_ONLY
+          fi
+          echo "mode=${MODE}" >> "$GITHUB_OUTPUT"
+          echo "trigger=${TRIGGER}" >> "$GITHUB_OUTPUT"
+
+      - name: Materialize owner-bound Native OTA readback
+        id: readback
+        shell: bash
+        run: |
+          mkdir -p runtime/native-ota
+          args=(--trigger "${{ steps.mode.outputs.trigger }}" --output-status runtime/native-ota/status.json)
+          if [[ "${{ steps.mode.outputs.mode }}" == "TRIGGER_ONLY" ]]; then
+            args+=(--trigger-only)
+          fi
+          python scripts/research/native_ota_readback.py "${args[@]}"
+          python - <<'PY' >> "$GITHUB_OUTPUT"
+          import json
+          from pathlib import Path
+          s=json.loads(Path('runtime/native-ota/status.json').read_text())
+          print('emitted=' + ('true' if s['emitted'] else 'false'))
+          print('early_triggered=' + ('true' if s['early_triggered'] else 'false'))
+          print('output_path=' + (s['output_path'] or ''))
+          print('report_hash_sha256=' + s['report_hash_sha256'])
+          PY
+
+      - name: Commit emitted Native OTA report with readback proof
+        if: steps.readback.outputs.emitted == 'true'
+        shell: bash
+        run: |
+          test -f 04_MARKET_LEARNING/ota_native/LATEST.json
+          git config user.name 'framework-research-bot'
+          git config user.email 'framework-research-bot@users.noreply.github.com'
+          git add 04_MARKET_LEARNING/ota_native
+          git diff --cached --quiet && exit 0
+          git commit -m "research: native OTA readback ${GITHUB_RUN_ID}"
+          pushed=false
+          for attempt in 1 2 3; do
+            git rebase --abort 2>/dev/null || true
+            if git pull --rebase origin main && git push origin HEAD:main; then
+              pushed=true
+              break
+            fi
+            sleep $((attempt * 5))
+          done
+          [ "$pushed" = true ]
+          git fetch origin main
+          git merge-base --is-ancestor HEAD origin/main
+          test "$(git show origin/main:04_MARKET_LEARNING/ota_native/LATEST.json | python -c 'import json,sys; print(json.load(sys.stdin)["report_hash_sha256"])')" = "${{ steps.readback.outputs.report_hash_sha256 }}"
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: native-ota-readback-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            runtime/native-ota/
+            04_MARKET_LEARNING/ota_native/LATEST.json
+          retention-days: 14
+          if-no-files-found: warn

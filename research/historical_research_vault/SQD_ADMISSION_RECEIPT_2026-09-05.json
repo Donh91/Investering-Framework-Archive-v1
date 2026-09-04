@@ -1,0 +1,36 @@
+{
+  "authority": {
+    "framework_state_change": false,
+    "model_weight_change": false,
+    "portfolio_action": false
+  },
+  "contract": "HISTORICAL_RESEARCH_VAULT_SQD_ADMISSION_RECEIPT_v1",
+  "decision": "ADMIT_AS_PRIMARY_PROTOCOL_LEVEL_ONCHAIN_REPLAY",
+  "evidence": {
+    "authorization_header_supplied": false,
+    "dataset": "ethereum-mainnet",
+    "endpoint": "https://portal.sqd.dev/datasets/ethereum-mainnet/finalized-stream",
+    "github_job_id": 101201769379,
+    "github_workflow_run_id": 33928395135,
+    "head_sha": "762ffed71c9464496cef4c97db8ffdc508b1b41d",
+    "http_status": 200,
+    "payload_bytes": 212,
+    "payload_sha256": "ca22ca4cfaf4bd7e2e95e1a474449738f4253af6f29fca2a0c9c844c05b7e4eb",
+    "probe_block": 21000000,
+    "request_sha256": "50f1efb74fbed4c1f9cc822b31dec0e7683b850810765c2e1904ba04fe150886",
+    "retrieved_at_utc": "2026-09-04T23:09:22Z",
+    "status": "PASS"
+  },
+  "governance": {
+    "durable_capture_enabled": false,
+    "max_blocks_per_capture": 5000,
+    "required_filter": "ADDRESS_OR_TOPIC0",
+    "stream": "FINALIZED_ONLY",
+    "storage": "T2_ACTIONS_ARTIFACT",
+    "scheduled_collection_enabled": false
+  },
+  "source_id": "SQD_PORTAL_EVM_REPLAY_v1",
+  "status": "PASS",
+  "supersedes_active_role": "THE_GRAPH_SUBGRAPH_REPLAY_v1",
+  "superseded_source_disposition": "DEFERRED_OPTIONAL_CHALLENGER_NOT_BLOCKING"
+}

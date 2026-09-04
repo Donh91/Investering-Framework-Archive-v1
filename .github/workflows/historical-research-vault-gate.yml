@@ -1,0 +1,92 @@
+name: historical-research-vault-gate
+
+on:
+  pull_request:
+    paths:
+      - 'research/historical_research_vault/**'
+      - 'scripts/research/historical_research_vault.py'
+      - 'tests/test_historical_research_vault.py'
+      - 'research/dataset_registry/DATASET_REGISTRY_v1.json'
+      - 'research/README.md'
+      - '.github/workflows/historical-research-vault-gate.yml'
+  workflow_dispatch:
+    inputs:
+      network_probe:
+        description: 'Run bounded public-source probes into runner temp only'
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install test dependency
+        run: python -m pip install --disable-pip-version-check pytest
+      - name: Validate vault contracts
+        run: python scripts/research/historical_research_vault.py validate
+      - name: Unit tests
+        run: python -m pytest -q tests/test_historical_research_vault.py
+
+  sqd-keyless-admission-probe:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Probe one finalized Ethereum block through public SQD Portal
+        run: |
+          python scripts/research/historical_research_vault.py probe-sqd \
+            --dataset ethereum-mainnet \
+            --block 21000000
+
+  bounded-network-probe:
+    if: github.event_name == 'workflow_dispatch' && inputs.network_probe == true
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Create temporary capture root
+        run: mkdir -p "$RUNNER_TEMP/historical_research_vault"
+      - name: growthepie bounded capture
+        run: |
+          python scripts/research/historical_research_vault.py collect-growthepie \
+            --chain base \
+            --metric stables_mcap \
+            --output-root "$RUNNER_TEMP/historical_research_vault/growthepie"
+      - name: Coin Metrics bounded capture
+        run: |
+          python scripts/research/historical_research_vault.py collect-coinmetrics \
+            --assets btc,eth \
+            --start-time 2026-08-01 \
+            --end-time 2026-09-01 \
+            --output-root "$RUNNER_TEMP/historical_research_vault/coinmetrics"
+      - name: SQD Portal bounded finalized USDC Transfer capture
+        run: |
+          python scripts/research/historical_research_vault.py collect-sqd \
+            --dataset ethereum-mainnet \
+            --from-block 21000000 \
+            --to-block 21000100 \
+            --address 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48 \
+            --topic0 0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef \
+            --output-root "$RUNNER_TEMP/historical_research_vault/sqd"
+      - name: CoinGecko metadata-only probe
+        run: |
+          python scripts/research/historical_research_vault.py probe-coingecko \
+            --coin bitcoin > "$RUNNER_TEMP/historical_research_vault/coingecko_probe.json"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: historical-research-vault-bounded-probe
+          path: ${{ runner.temp }}/historical_research_vault
+          retention-days: 14
