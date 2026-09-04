@@ -255,7 +255,9 @@ def main() -> None:
     add("A44", "etf", "rolling_sums", "PASS" if etf_week_ok else "UNAVAILABLE", "etf.rolling_sums", etf_week if etf_week else None, "completed-week settled BTC+ETH ETF sequence", "Daily Settled ETF + Weekly Calibration", blocking=True)
     add("A45", "etf", "stale_no_zero", "PASS" if etf_pass and ((etf_record or {}).get("verification") or {}).get("rows_identical_across_retrievals") else "UNAVAILABLE", "etf.stale_no_zero", (etf_record or {}).get("verification"), "two stable retrievals + parity", "Daily Settled ETF Calibration", blocking=True)
 
-    cfgi = (market_metrics.get("sentiment") or {}).get("cfgi") or {}
+    cfgi_container = (market_metrics.get("sentiment") or {}).get("cfgi") or {}
+    nested_symbols = cfgi_container.get("symbols") if isinstance(cfgi_container, dict) else None
+    cfgi = nested_symbols if isinstance(nested_symbols, dict) else cfgi_container
     for aid, name in (("A46", "MARKET"), ("A47", "BTC"), ("A48", "ETH")):
         value = cfgi.get(name) or cfgi.get(name.lower())
         add(aid, "cfgi", name, "PASS" if value not in (None, {}, "") else "UNAVAILABLE", f"cfgi.{name}", value, "source-appropriate CFGI when captured", "DATA PING / CFGI owner")
