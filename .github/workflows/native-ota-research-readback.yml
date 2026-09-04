@@ -7,6 +7,14 @@ on:
       - 'scripts/research/native_ota_readback.py'
       - 'tests/research/test_native_ota_readback.py'
       - 'research/ota_native/**'
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/native-ota-research-readback.yml'
+      - 'scripts/research/native_ota_readback.py'
+      - 'tests/research/test_native_ota_readback.py'
+      - 'research/ota_native/**'
   schedule:
     # Daily settled-transition check after the hourly 00:05 UTC publication path
     # has had time to persist the prior UTC session.
@@ -100,7 +108,10 @@ jobs:
         run: |
           MODE=FULL
           TRIGGER=MANUAL_FULL
-          if [[ "${GITHUB_EVENT_NAME}" == "schedule" && "${SCHEDULE_ID}" == "45 2 * * *" ]]; then
+          if [[ "${GITHUB_EVENT_NAME}" == "push" ]]; then
+            MODE=FULL
+            TRIGGER=POST_MERGE_PRODUCTION_PROOF
+          elif [[ "${GITHUB_EVENT_NAME}" == "schedule" && "${SCHEDULE_ID}" == "45 2 * * *" ]]; then
             MODE=TRIGGER_ONLY
             TRIGGER=DAILY_SETTLED_TRANSITION_CHECK
           elif [[ "${GITHUB_EVENT_NAME}" == "schedule" ]]; then
