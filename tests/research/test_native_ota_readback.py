@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import sys
 import tempfile
 import unittest
 from datetime import datetime, timezone
@@ -11,6 +12,7 @@ MODULE_PATH = Path(__file__).resolve().parents[2] / "scripts/research/native_ota
 spec = importlib.util.spec_from_file_location("native_ota_readback", MODULE_PATH)
 assert spec and spec.loader
 ota = importlib.util.module_from_spec(spec)
+sys.modules[spec.name] = ota
 spec.loader.exec_module(ota)
 
 UTC = timezone.utc
