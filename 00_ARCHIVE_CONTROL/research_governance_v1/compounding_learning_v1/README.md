@@ -1,7 +1,7 @@
 # Compounding Learning Controller v1 — Future Agent Entry Point
 
 **Status:** ACTIVE_RESEARCH_ONLY_NON_CANONICAL  
-**Role:** post-adjudication learning strategy; never scientific adjudication or market authority.
+**Role:** post-adjudication learning strategy, never scientific adjudication or market authority.
 
 ## Mandatory read order for work touching experiment learning, calibration or automatic improvement
 
@@ -19,25 +19,56 @@
 ```text
 Mature prospective evidence
 -> Unified Adjudication decides what the evidence means
--> Compounding Learning decides what to learn/test next
--> existing Research Governance Stack challenges the proposal
+-> Compounding Learning states what was learned, what remains uncertain and what to test next
+-> existing Research Governance Stack challenges and ranks the pre-VOI proposal
 -> normal Scientific Admission decides whether a new forward child test is allowed
 ```
 
+## Descriptive checkpoint schedule
+
+The controller supports the bounded operational sequence:
+
+```text
+7 / 14 / 30 / 60 / 90 / 120 / 180 / 240 days
+```
+
+Profiles expose only the checkpoints relevant to their intended horizon. `LONG` and `CONFIRMATORY` expose the complete schedule. FAST and STANDARD stop earlier. Checkpoints are one-shot learning events and never scientific verdicts by themselves.
+
+Matured-outcome checkpoints remain event-driven where the experiment contract supports them.
+
+## Machine-readable learning contract
+
+Each emitted learning packet is designed to answer:
+
+- `what_we_learned`, copied from the current Unified Adjudication owner action/reason plus an explicit claim limit;
+- `uncertainty`, grounded in the frozen Scientific Admission problem, incremental-value claim, regime dependency and complexity tax;
+- `falsifier`, copied from the frozen admission failure criteria;
+- `what_would_change_view`, split into more-support, less-support and kill/retire criteria;
+- `why_information_rich`, explaining why the proposed test discriminates the frozen claim from its baseline and controls;
+- frozen baseline and negative controls;
+- exact admission-plan source and digest when resolvable.
+
+If the frozen admission detail cannot be resolved, the controller emits empty criteria and an explicit unavailable state. It must never invent a falsifier, baseline or control.
+
+`NEXT_BEST_EXPERIMENT.json` is deliberately a **pre-VOI candidate**, not a final scientific or resource-priority verdict. It must still pass the existing novelty, Decision Impact / VOI, adversarial sentinel, meta-orchestrator and Scientific Admission path.
+
 ## Invariants
 
+- Unified Experimental Lifecycle Adjudication remains the scientific interpretation owner.
+- The Compounding Learning Controller does not independently reclassify evidence.
 - The frozen parent experiment is immutable.
 - No retrospective re-score or hindsight threshold search.
 - Historical requalifications do not inherit old calendar age as prospective learning time.
 - A checkpoint is not a scientific verdict.
 - A supportive or failed parent may only generate a **new child proposal**.
 - The child must pass novelty, VOI, adversarial review, meta-orchestration and scientific admission before prospective execution.
+- Negative evidence is queued before supportive replication as a learning-efficiency rule, not as a market or scientific score.
 - No automatic canonical write, threshold change, weight change, market-rule change, portfolio action or promotion.
 - Missing or stale Unified Adjudication fails closed to `CONTINUE_OBSERVING`.
 
 ## Confirmatory firewall
 
-For `FORECAST_SKILL_CONFIRMATORY_V1_3_1` plus its binding v1.3.2 erratum, controller checkpoints at 30/60/90/120/180 days are operational only:
+For `FORECAST_SKILL_CONFIRMATORY_V1_3_1` plus its binding v1.3.2 erratum, controller checkpoints at 7/14/30/60/90/120/180/240 days are operational only:
 
 ```text
 ACCRUAL_HEALTH
@@ -46,7 +77,7 @@ CONCENTRATION
 MATURITY_READINESS
 ```
 
-They cannot infer interim forecast skill, mutate the method, or create an automatic child test from interim performance. The final preregistered confirmatory test owns the verdict. `FORECAST SKILL = UNPROVEN` until legitimate future evidence says otherwise.
+They cannot infer interim forecast skill, mutate the method, or create an automatic child test from interim performance. Day 240 means final-evaluation readiness only until the preregistered confirmatory owner runs. The final preregistered confirmatory test owns the verdict. `FORECAST SKILL = UNPROVEN` until legitimate future evidence says otherwise.
 
 ## Future Astra / stronger-model audit contract
 
