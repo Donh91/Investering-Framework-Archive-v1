@@ -76,19 +76,32 @@ jobs:
           assert r['resolvable'] is True
           print('MONTHLY_COUNCIL_GOVERNANCE_BINDING_PASS')
           PY
-      - name: Dry-run September monthly eligibility without mutation
+      - name: Dry-run next uncompleted monthly eligibility without mutation
         run: |
           rm -rf runtime/monthly-learning-council-gate
+          NEXT_REVIEW_UTC=$(python - <<'PY'
+          import json
+          from pathlib import Path
+          s=json.loads(Path('research/monthly_learning_council/STATE.json').read_text())
+          y,m=map(int,str(s.get('last_completed_month') or '2026-08').split('-'))
+          if m==12:
+              y,m=y+1,1
+          else:
+              m+=1
+          print(f'{y:04d}-{m:02d}-03T06:00:00Z')
+          PY
+          )
           python scripts/research/monthly_ai_learning_council.py prepare \
             --repo-root . \
             --runtime-root runtime/monthly-learning-council-gate \
-            --now 2026-09-03T06:00:00Z
+            --now "$NEXT_REVIEW_UTC"
           python - <<'PY'
           import json
           from pathlib import Path
           x=json.loads(Path('runtime/monthly-learning-council-gate/eligibility.json').read_text())
           assert x['run_review'] is True
-          assert x['review_kind']=='MONTHLY'
+          assert x['monthly_due'] is True
+          assert x['review_kind'] in {'MONTHLY','QUARTERLY_ARCHITECTURE'}
           assert len(x['freeze_sha256'])==64
-          print('MONTHLY_COUNCIL_DRY_RUN_PASS',x['freeze_sha256'])
+          print('MONTHLY_COUNCIL_DRY_RUN_PASS',x['review_kind'],x['freeze_sha256'])
           PY
