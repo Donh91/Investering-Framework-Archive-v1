@@ -2,7 +2,7 @@
   "contract": "COMPOUNDING_LEARNING_CONTROLLER_POLICY_v1",
   "status": "ACTIVE",
   "authority": "RESEARCH_ONLY_NON_CANONICAL",
-  "purpose": "Turn matured prospective evidence into bounded learning checkpoints and the next falsifiable child-test proposal without rewriting the parent experiment or changing market authority.",
+  "purpose": "Turn matured prospective evidence into bounded descriptive learning checkpoints and the next falsifiable child-test proposal without rewriting the parent experiment, re-adjudicating evidence, peeking through confirmatory firewalls, or changing market authority.",
   "default_profile": "STANDARD",
   "profiles": {
     "FAST": {
@@ -14,11 +14,11 @@
       "matured_checkpoints": [5, 10, 20, 40]
     },
     "LONG": {
-      "day_checkpoints": [30, 60, 90, 120, 180, 240],
+      "day_checkpoints": [7, 14, 30, 60, 90, 120, 180, 240],
       "matured_checkpoints": [10, 25, 50, 100]
     },
     "CONFIRMATORY": {
-      "day_checkpoints": [30, 60, 90, 120, 180],
+      "day_checkpoints": [7, 14, 30, 60, 90, 120, 180, 240],
       "matured_checkpoints": []
     }
   },
@@ -27,6 +27,8 @@
   "next_experiment_route": "EXISTING_RESEARCH_GOVERNANCE_STACK_THEN_SCIENTIFIC_ADMISSION",
   "historical_requalification_day_clock": "DISABLED_UNLESS_EXPLICIT_FORWARD_TEST_START_EXISTS",
   "confirmatory_interim_scope": "ACCRUAL_HEALTH_DATA_QUALITY_CONCENTRATION_AND_MATURITY_READINESS_ONLY",
+  "learning_context_source": "FROZEN_SCIENTIFIC_ADMISSION_PLAN_ONLY",
+  "next_best_selection_claim": "PRE_VOI_CANDIDATE_ONLY",
   "frozen_parent_rewrite_allowed": false,
   "retrospective_rescore_allowed": false,
   "canonical_effect": false,
