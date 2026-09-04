@@ -1,0 +1,148 @@
+{
+  "contract": "ASTRA_REPOSITORY_MISSION_ROUTER_v1",
+  "status": "OPERATIONAL_NAVIGATION_ONLY",
+  "authority": "NONE_BY_ITSELF",
+  "purpose": "Let Astra-class and successor repository-aware models discover domain context and high-value mission hypotheses from GitHub without thread-specific prompts.",
+  "precedence": [
+    "AGENTS.md",
+    "00_ARCHIVE_CONTROL/CANONICAL_INDEX.md",
+    "00_ARCHIVE_CONTROL/INDEX_ADDENDUM_REGISTRY.md",
+    "00_ARCHIVE_CONTROL/CROSS_REPO_AGENT_CONTEXT_MAP.json",
+    "current domain owner/status/receipt",
+    "folder README mission card",
+    "this router"
+  ],
+  "default_mode": "READ_ONLY_QUALIFICATION",
+  "default_rules": {
+    "self_promotion": "FORBIDDEN",
+    "source_write_without_authority": "FORBIDDEN",
+    "recovery_destructive_authority": "NEVER",
+    "missing_data": "UNKNOWN_NOT_NEGATIVE_EVIDENCE",
+    "mission_seed_is_permission": false,
+    "challenge_inherited_plan": true,
+    "prefer_existing_owner_over_new_owner": true,
+    "prefer_replay_repair_validation_retirement_over_new_layer": true
+  },
+  "live_entrypoints": [
+    "LATEST_OPERATIONS_DASHBOARD.json",
+    "LATEST_HANDOFF.json",
+    "research/architecture_health/LATEST_AUTOMATION_HEALTH.json",
+    "research/architecture_health/LATEST_ARCHITECTURE_HEALTH.json",
+    "LATEST_REMEDIATION_QUEUE.json",
+    "LATEST_CODEX_READY_TASKS.json",
+    "LATEST_CODEX_EXECUTION_STATE.json"
+  ],
+  "routes": [
+    {
+      "path": "00_ARCHIVE_CONTROL/",
+      "readme": "00_ARCHIVE_CONTROL/README.md",
+      "role": "authority resolution, precedence, routing, archive governance",
+      "mission_class": "AUTHORITY_AND_CONTRADICTION_AUDIT",
+      "default_authority": "READ_ONLY"
+    },
+    {
+      "path": "00_FMOS/",
+      "readme": "00_FMOS/README.md",
+      "role": "machine memory, lineage, retrieval, owner routing and automation substrate",
+      "mission_class": "MEMORY_LINEAGE_AND_CONTEXT_COMPRESSION",
+      "default_authority": "READ_ONLY"
+    },
+    {
+      "path": "01_CORE_FRAMEWORK/",
+      "readme": "01_CORE_FRAMEWORK/README.md",
+      "role": "durable framework architecture, engines and governance",
+      "mission_class": "FRAMEWORK_ARCHITECTURE_AND_GOVERNANCE_AUDIT",
+      "default_authority": "READ_ONLY"
+    },
+    {
+      "path": "01_CORE_FRAMEWORK/governance/",
+      "readme": "01_CORE_FRAMEWORK/governance/README.md",
+      "role": "permanent governance and safety owners",
+      "mission_class": "SEPARATION_OF_DESTRUCTIVE_AUTHORITY_ENFORCEMENT_AUDIT",
+      "default_authority": "READ_ONLY"
+    },
+    {
+      "path": "02_DATA_PING/",
+      "readme": "02_DATA_PING/README.md",
+      "role": "market-data collection contracts, source QA, runtime handoffs and accepted evidence",
+      "mission_class": "DATA_TRUTH_AND_SELF_REPAIR_AUDIT",
+      "default_authority": "READ_ONLY"
+    },
+    {
+      "path": "03_WEEKLY_OPERATIONS/",
+      "readme": "03_WEEKLY_OPERATIONS/README.md",
+      "role": "Master Monday, weekly backbone and operational automation",
+      "mission_class": "AUTOMATION_CHAIN_AND_WEEKLY_SYNTHESIS_AUDIT",
+      "default_authority": "READ_ONLY"
+    },
+    {
+      "path": "04_MARKET_LEARNING/",
+      "readme": "04_MARKET_LEARNING/README.md",
+      "role": "market structure learning, calibration, sequence memory and opportunity-cost evidence",
+      "mission_class": "CALIBRATION_SEQUENCE_AND_FNP_RESEARCH",
+      "default_authority": "READ_ONLY_RESEARCH"
+    },
+    {
+      "path": "05_CYCLE_NAVIGATOR/",
+      "readme": "05_CYCLE_NAVIGATOR/README.md",
+      "role": "public output, forecast accountability and communication continuity",
+      "mission_class": "FORECAST_ACCOUNTABILITY_AND_BASELINE_AUDIT",
+      "default_authority": "READ_ONLY"
+    },
+    {
+      "path": "06_RESEARCH_LAB/",
+      "readme": "06_RESEARCH_LAB/README.md",
+      "role": "professional opponent, falsification, replays and forward tests",
+      "mission_class": "ADVERSARIAL_RESEARCH_AND_REPLAY",
+      "default_authority": "READ_ONLY_RESEARCH"
+    },
+    {
+      "path": "07_PROMPTS_AND_AGENTS/",
+      "readme": "07_PROMPTS_AND_AGENTS/README.md",
+      "role": "agent procedures, prompts, handoffs and model capability routing",
+      "mission_class": "AGENT_QUALIFICATION_AND_TASK_ROUTING",
+      "default_authority": "READ_ONLY"
+    },
+    {
+      "path": "08_SOURCE_MATERIAL/",
+      "readme": "08_SOURCE_MATERIAL/README.md",
+      "role": "public source evidence and provenance context",
+      "mission_class": "SOURCE_PROVENANCE_AND_EXTRACTION",
+      "default_authority": "READ_ONLY"
+    },
+    {
+      "path": "09_SOURCE_QA/",
+      "readme": "09_SOURCE_QA/README.md",
+      "role": "source, automation and incident QA evidence",
+      "mission_class": "INCIDENT_ROOT_CAUSE_AND_REGRESSION_AUDIT",
+      "default_authority": "READ_ONLY"
+    },
+    {
+      "path": "research/",
+      "readme": "research/README.md",
+      "role": "live research runtime outputs, experiments, remediation and API-agent evidence",
+      "mission_class": "LIVE_RESEARCH_STATE_AND_BACKLOG_COMPRESSION",
+      "default_authority": "READ_ONLY"
+    }
+  ],
+  "qualification_ladder": [
+    "READ",
+    "AUDIT",
+    "RESEARCH_REPLAY",
+    "PATCH_SANDBOX",
+    "PR",
+    "LIMITED_PRODUCTION",
+    "FULL_SOURCE_STEWARD"
+  ],
+  "permanent_ceiling": {
+    "recovery_destructive_authority": "NEVER",
+    "portfolio_execution_from_model_only": "FORBIDDEN",
+    "canonical_self_promotion": "FORBIDDEN"
+  },
+  "first_standing_mission": {
+    "id": "SEPARATION_OF_DESTRUCTIVE_AUTHORITY_ENFORCEMENT_AUDIT",
+    "path": "01_CORE_FRAMEWORK/governance/README.md",
+    "mode": "READ_ONLY",
+    "instruction": "Determine whether the written source/recovery separation policy is technically enforced across repository protection, workflow permissions, credential topology, Vault controls, immutable recovery assets and restore paths. Find enforcement gaps. Change nothing."
+  }
+}
