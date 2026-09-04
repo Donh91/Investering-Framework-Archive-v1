@@ -30,7 +30,7 @@ Policy owner:
 | growthepie | ETH/L2 transmission history | Public endpoint probe verified | Disabled pending exact dataset redistribution review |
 | Coin Metrics Community | BTC/ETH network + market history | Keyless probe verified for allowed bootstrap metrics | Disabled pending exact CC dataset scope freeze |
 | CoinGecko | Market-price crosscheck | Query-time crosscheck only | Disabled by source-use/storage constraints |
-| SQD Portal | Primary protocol-level on-chain replay | Public Portal docs verified, live PR probe required before final admission | Temporary T2 artifact only until Portal terms are frozen |
+| SQD Portal | Primary protocol-level on-chain replay | Keyless live GitHub probe verified | Temporary T2 artifact only until Portal terms are frozen |
 
 ## Existing owner reuse
 
@@ -73,6 +73,18 @@ Runs a metadata/provenance probe only. Raw payload archival is intentionally dis
 
 SQD replaces The Graph as the active protocol-level replay path because the public Portal HTTP API can be called directly by GitHub Actions without requiring the user to operate Subgraph Studio on desktop.
 
+Admission is now live-verified in GitHub Actions. The recorded probe used:
+
+- `ethereum-mainnet/finalized-stream`;
+- block `21000000`;
+- HTTP 200;
+- no Authorization header;
+- hashed request and response payloads;
+- no persisted raw probe payload.
+
+Receipt:
+`research/historical_research_vault/SQD_ADMISSION_RECEIPT_2026-09-05.json`
+
 The collector uses finalized EVM data only:
 
 `python scripts/research/historical_research_vault.py collect-sqd --dataset ethereum-mainnet --from-block <N> --to-block <N> --address <0x...> --output-root <dir>`
@@ -92,9 +104,7 @@ Guardrails are deliberate:
 - no interpolation or inferred rows;
 - no framework or portfolio authority.
 
-The public Portal currently supports unauthenticated use by default. SQD also supports opt-in per-request authorization for Portals. The collector therefore accepts an optional complete `Authorization` header through the runtime environment variable `SQD_PORTAL_AUTHORIZATION`, but no credential is required or committed for the default public Portal path.
-
-A one-block keyless probe is part of the SQD admission PR so live behavior is verified rather than inferred from documentation.
+The public Portal currently works without authentication on the verified default path. SQD also supports opt-in per-request authorization for Portals. The collector therefore accepts an optional complete `Authorization` header through the runtime environment variable `SQD_PORTAL_AUTHORIZATION`, but no credential is required or committed for the verified public Portal path.
 
 ## Deferred alternatives
 
@@ -113,6 +123,7 @@ research/historical_research_vault/
   SOURCE_REGISTRY_v1.json
   SOURCE_RECIPES_v1.json
   VAULT_BOOTSTRAP_RECEIPT_2026-09-04.json
+  SQD_ADMISSION_RECEIPT_2026-09-05.json
   schemas/
     CAPTURE_MANIFEST_v1.schema.json
 ```
