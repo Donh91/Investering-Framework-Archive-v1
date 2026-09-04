@@ -1,0 +1,40 @@
+{
+  "contract": "COMPOUNDING_LEARNING_CONTROLLER_POLICY_v1",
+  "status": "ACTIVE",
+  "authority": "RESEARCH_ONLY_NON_CANONICAL",
+  "purpose": "Turn matured prospective evidence into bounded learning checkpoints and the next falsifiable child-test proposal without rewriting the parent experiment or changing market authority.",
+  "default_profile": "STANDARD",
+  "profiles": {
+    "FAST": {
+      "day_checkpoints": [7, 14, 30],
+      "matured_checkpoints": [5, 10, 20]
+    },
+    "STANDARD": {
+      "day_checkpoints": [7, 14, 30, 60, 90],
+      "matured_checkpoints": [5, 10, 20, 40]
+    },
+    "LONG": {
+      "day_checkpoints": [30, 60, 90, 120, 180, 240],
+      "matured_checkpoints": [10, 25, 50, 100]
+    },
+    "CONFIRMATORY": {
+      "day_checkpoints": [30, 60, 90, 120, 180],
+      "matured_checkpoints": []
+    }
+  },
+  "max_checkpoint_candidates_per_run": 25,
+  "scientific_interpretation_owner": "UNIFIED_EXPERIMENTAL_LIFECYCLE_ADJUDICATION_v1",
+  "next_experiment_route": "EXISTING_RESEARCH_GOVERNANCE_STACK_THEN_SCIENTIFIC_ADMISSION",
+  "historical_requalification_day_clock": "DISABLED_UNLESS_EXPLICIT_FORWARD_TEST_START_EXISTS",
+  "confirmatory_interim_scope": "ACCRUAL_HEALTH_DATA_QUALITY_CONCENTRATION_AND_MATURITY_READINESS_ONLY",
+  "frozen_parent_rewrite_allowed": false,
+  "retrospective_rescore_allowed": false,
+  "canonical_effect": false,
+  "automatic_promotion": false,
+  "automatic_canonical_write": false,
+  "portfolio_execution": false,
+  "model_weight_change": false,
+  "automatic_threshold_change": false,
+  "automatic_weight_change": false,
+  "automatic_market_rule_change": false
+}
