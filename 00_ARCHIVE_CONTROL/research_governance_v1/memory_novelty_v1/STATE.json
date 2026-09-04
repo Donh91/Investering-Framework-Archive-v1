@@ -16,20 +16,28 @@
       "evidence_fingerprint": "f02791c101e1aa3b10bb0db733cc20d6d015fd27551b2cd8ef03be1c093c208f",
       "external_provider_calls_authorized": false,
       "family": "",
-      "matched_record": null,
-      "novelty_reason": "no prior gated proposal clears the conservative exact/near duplicate conditions",
-      "novelty_verdict": "NOVEL",
+      "matched_record": {
+        "action": "RUN_INCREMENTAL_VALUE_TEST",
+        "evidence_fingerprint": "f02791c101e1aa3b10bb0db733cc20d6d015fd27551b2cd8ef03be1c093c208f",
+        "novelty_verdict": "NOVEL",
+        "reason": "Matured supportive evidence requires incremental-value review before any promotion.",
+        "record_type": "NOVELTY_LEDGER",
+        "source": "MONTHLY_COUNCIL",
+        "target": "EC-0e9733866b37fcec87ed"
+      },
+      "novelty_reason": "same source/action/target and same evidence fingerprint already passed through novelty gate",
+      "novelty_verdict": "DUPLICATE_EXACT",
       "paid_data_authorized": false,
       "portfolio_execution": false,
       "reason": "Matured supportive evidence requires incremental-value review before any promotion.",
-      "similarity": 0.0,
+      "similarity": 1.0,
       "source": "MONTHLY_COUNCIL",
       "target": "EC-0e9733866b37fcec87ed"
     }
   ],
-  "reason": "no prior gated proposal clears the conservative exact/near duplicate conditions",
+  "reason": "same source/action/target and same evidence fingerprint already passed through novelty gate",
   "selected_action": "RUN_INCREMENTAL_VALUE_TEST",
   "selected_source": "MONTHLY_COUNCIL",
   "selected_target": "EC-0e9733866b37fcec87ed",
-  "selected_verdict": "NOVEL"
+  "selected_verdict": "DUPLICATE_EXACT"
 }
