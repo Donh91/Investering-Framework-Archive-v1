@@ -35,11 +35,20 @@
       "storage": "METADATA_RECEIPT_ONLY_NO_RAW_PAYLOAD_COMMIT"
     },
     {
-      "endpoint_template": "https://gateway.thegraph.com/api/{GRAPH_API_KEY}/subgraphs/id/{SUBGRAPH_ID}",
-      "method": "POST_GRAPHQL",
-      "preconditions": ["GRAPH_API_KEY", "SUBGRAPH_ID", "SCHEMA_FREEZE", "LICENSE_REVIEW", "BOUNDED_RESEARCH_QUESTION"],
-      "source_id": "THE_GRAPH_SUBGRAPH_REPLAY_v1",
-      "storage": "T2_UNTIL_PROMOTION_GATE"
+      "auth": "NONE_BY_DEFAULT_OPTIONAL_AUTHORIZATION_HEADER_FROM_SQD_PORTAL_AUTHORIZATION",
+      "endpoint_template": "https://portal.sqd.dev/datasets/{dataset}/finalized-stream",
+      "fields": ["block.number", "block.timestamp", "block.hash", "block.parentHash", "log.address", "log.topics", "log.data", "log.transactionHash", "log.transactionIndex", "log.logIndex"],
+      "max_blocks_per_capture": 5000,
+      "method": "POST_NDJSON",
+      "missingness": "PRESERVE_SOURCE_ROWS_NO_INTERPOLATION",
+      "preconditions": ["FINALIZED_STREAM", "BOUNDED_BLOCK_RANGE", "ADDRESS_OR_TOPIC0_FILTER", "DATASET_SLUG_ALLOWLIST_SHAPE"],
+      "source_id": "SQD_PORTAL_EVM_REPLAY_v1",
+      "storage": "T2_ACTIONS_ARTIFACT_UNTIL_PROMOTION_GATE",
+      "verified_docs": [
+        "https://docs.sqd.dev/en/api/evm/introduction",
+        "https://docs.sqd.dev/en/api/evm/finalized-stream",
+        "https://docs.sqd.dev/en/portal/overview"
+      ]
     }
   ]
 }
