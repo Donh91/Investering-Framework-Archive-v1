@@ -125,12 +125,7 @@ def adjudication(
 class CompoundingLearningControllerTest(unittest.TestCase):
     def test_week_checkpoint_is_descriptive_only(self):
         packets, keys = controller.evaluate_candidates(
-            registry(candidate()),
-            admission(),
-            adjudication(),
-            policy(),
-            {},
-            datetime(2026, 1, 8, tzinfo=UTC),
+            registry(candidate()), admission(), adjudication(), policy(), {}, datetime(2026, 1, 8, tzinfo=UTC)
         )
         self.assertEqual(len(packets), 1)
         self.assertIn("EC-1:CHECKPOINT:DAY:7", keys)
@@ -146,20 +141,13 @@ class CompoundingLearningControllerTest(unittest.TestCase):
     def test_full_long_and_confirmatory_checkpoint_schedule_is_exposed(self):
         expected = [7, 14, 30, 60, 90, 120, 180, 240]
         self.assertEqual(controller.PROFILE_DEFAULTS["LONG"]["day_checkpoints"], expected)
-        self.assertEqual(
-            controller.PROFILE_DEFAULTS["CONFIRMATORY"]["day_checkpoints"], expected
-        )
+        self.assertEqual(controller.PROFILE_DEFAULTS["CONFIRMATORY"]["day_checkpoints"], expected)
         controller._validate_policy(policy())
 
     def test_matured_checkpoint_is_event_driven(self):
         row = candidate(created_at_utc="2026-01-07T00:00:00Z", matured_outcome_count=10)
         packets, keys = controller.evaluate_candidates(
-            registry(row),
-            admission(),
-            adjudication(matured=10),
-            policy(),
-            {},
-            datetime(2026, 1, 8, tzinfo=UTC),
+            registry(row), admission(), adjudication(matured=10), policy(), {}, datetime(2026, 1, 8, tzinfo=UTC)
         )
         self.assertEqual(len(packets), 1)
         self.assertIn("EC-1:CHECKPOINT:MATURED:5", keys)
@@ -173,16 +161,9 @@ class CompoundingLearningControllerTest(unittest.TestCase):
             matured=5,
         )
         packets, _ = controller.evaluate_candidates(
-            registry(row),
-            admission(),
-            stale,
-            policy(),
-            {},
-            datetime(2026, 1, 8, tzinfo=UTC),
+            registry(row), admission(), stale, policy(), {}, datetime(2026, 1, 8, tzinfo=UTC)
         )
-        self.assertEqual(
-            packets[0]["learning_state"], "WAIT_FOR_REFRESHED_UNIFIED_ADJUDICATION"
-        )
+        self.assertEqual(packets[0]["learning_state"], "WAIT_FOR_REFRESHED_UNIFIED_ADJUDICATION")
         self.assertFalse(packets[0]["proposal_eligible"])
         self.assertIsNone(packets[0]["what_we_learned"]["owner_action"])
 
@@ -194,26 +175,15 @@ class CompoundingLearningControllerTest(unittest.TestCase):
             matured=10,
         )
         state, proposal = controller.build_state(
-            registry(row),
-            admission(),
-            fresh,
-            policy(),
-            {},
-            datetime(2026, 1, 8, tzinfo=UTC),
+            registry(row), admission(), fresh, policy(), {}, datetime(2026, 1, 8, tzinfo=UTC)
         )
         self.assertEqual(state["primary_action"], "RUN_INCREMENTAL_VALUE_TEST")
         self.assertEqual(proposal["parent_candidate_id"], "EC-1")
-        self.assertEqual(
-            proposal["proposal_status"],
-            "PRE_VOI_CANDIDATE_ROUTE_THROUGH_EXISTING_GOVERNANCE",
-        )
+        self.assertEqual(proposal["proposal_status"], "PRE_VOI_CANDIDATE_ROUTE_THROUGH_EXISTING_GOVERNANCE")
         self.assertTrue(proposal["uncertainty"]["problem_to_solve"])
         self.assertEqual(
             proposal["falsifier"],
-            [
-                "no incremental value versus baseline",
-                "placebo or negative control performs similarly",
-            ],
+            ["no incremental value versus baseline", "placebo or negative control performs similarly"],
         )
         self.assertTrue(proposal["what_would_change_view"]["toward_more_support"])
         self.assertTrue(proposal["why_information_rich"])
@@ -228,23 +198,12 @@ class CompoundingLearningControllerTest(unittest.TestCase):
     def test_missing_admission_detail_does_not_invent_falsifier(self):
         bare = admission()
         bare["candidates"][0].pop("plan")
-        with patch.object(
-            controller,
-            "_admission_detail",
-            return_value=({}, "ADMISSION_DETAIL_UNAVAILABLE"),
-        ):
+        with patch.object(controller, "_admission_detail", return_value=({}, "ADMISSION_DETAIL_UNAVAILABLE")):
             packets, _ = controller.evaluate_candidates(
-                registry(candidate()),
-                bare,
-                adjudication(),
-                policy(),
-                {},
-                datetime(2026, 1, 8, tzinfo=UTC),
+                registry(candidate()), bare, adjudication(), policy(), {}, datetime(2026, 1, 8, tzinfo=UTC)
             )
         self.assertEqual(packets[0]["falsifier"], [])
-        self.assertEqual(
-            packets[0]["admission_plan_status"], "ADMISSION_DETAIL_UNAVAILABLE"
-        )
+        self.assertEqual(packets[0]["admission_plan_status"], "ADMISSION_DETAIL_UNAVAILABLE")
         self.assertIn("must not invent", packets[0]["why_information_rich"])
 
     def test_duplicate_never_spawns_child(self):
@@ -262,9 +221,7 @@ class CompoundingLearningControllerTest(unittest.TestCase):
             datetime(2026, 1, 8, tzinfo=UTC),
         )
         self.assertEqual(state["primary_action"], "CONTINUE_OBSERVING")
-        self.assertEqual(
-            proposal["proposal_status"], "NO_NEW_SCIENTIFICALLY_ELIGIBLE_CHILD_TEST"
-        )
+        self.assertEqual(proposal["proposal_status"], "NO_NEW_SCIENTIFICALLY_ELIGIBLE_CHILD_TEST")
 
     def test_failure_review_can_only_propose_new_regime_stress_child(self):
         row = candidate(state="MATURED_NOT_SUPPORTED", matured_outcome_count=10)
@@ -274,12 +231,7 @@ class CompoundingLearningControllerTest(unittest.TestCase):
             matured=10,
         )
         state, proposal = controller.build_state(
-            registry(row),
-            admission(),
-            fresh,
-            policy(),
-            {},
-            datetime(2026, 1, 8, tzinfo=UTC),
+            registry(row), admission(), fresh, policy(), {}, datetime(2026, 1, 8, tzinfo=UTC)
         )
         self.assertEqual(state["primary_action"], "STRESS_TEST_REGIME_SPECIFICITY")
         self.assertIn("REGIME_SPECIFIC", proposal["next_falsifiable_question"])
@@ -293,16 +245,31 @@ class CompoundingLearningControllerTest(unittest.TestCase):
             controller.LEARNING_PRIORITY["SUPPORTED_NEEDS_INCREMENTAL_VALUE"],
         )
 
+    def test_confirmatory_interim_cannot_spawn_child_even_if_adjudication_escalates(self):
+        row = candidate(
+            title="Forecast Skill Confirmatory V1",
+            test_id="FORECAST_SKILL_CONFIRMATORY_V1_3_1",
+            state="INCUBATING",
+            matured_outcome_count=0,
+        )
+        fresh = adjudication(
+            action="RUN_INCREMENTAL_VALUE_AND_ADVERSARIAL_REVIEW",
+            state="INCUBATING",
+            matured=0,
+        )
+        packets, _ = controller.evaluate_candidates(
+            registry(row), admission(), fresh, policy(), {}, datetime(2026, 1, 8, tzinfo=UTC)
+        )
+        self.assertEqual(packets[0]["learning_state"], "CONFIRMATORY_OPERATIONAL_CHECKPOINT_ONLY")
+        self.assertEqual(packets[0]["recommended_action"], "CONTINUE_OBSERVING")
+        self.assertFalse(packets[0]["proposal_eligible"])
+        self.assertEqual(packets[0]["next_falsifiable_question"], "AWAIT_FINAL_CONFIRMATORY_OWNER_VERDICT")
+
     def test_historical_requalification_has_no_retrospective_day_clock(self):
         old = candidate(created_at_utc="2020-01-01T00:00:00Z")
         historical = admission(historical_candidate_requalification=True)
         packets, keys = controller.evaluate_candidates(
-            registry(old),
-            historical,
-            adjudication(),
-            policy(),
-            {},
-            datetime(2026, 1, 8, tzinfo=UTC),
+            registry(old), historical, adjudication(), policy(), {}, datetime(2026, 1, 8, tzinfo=UTC)
         )
         self.assertEqual(packets, [])
         self.assertEqual(keys, [])
@@ -310,12 +277,7 @@ class CompoundingLearningControllerTest(unittest.TestCase):
     def test_emitted_checkpoint_is_one_shot(self):
         previous = {"emitted_event_keys": ["EC-1:CHECKPOINT:DAY:7"]}
         packets, keys = controller.evaluate_candidates(
-            registry(candidate()),
-            admission(),
-            adjudication(),
-            policy(),
-            previous,
-            datetime(2026, 1, 8, tzinfo=UTC),
+            registry(candidate()), admission(), adjudication(), policy(), previous, datetime(2026, 1, 8, tzinfo=UTC)
         )
         self.assertEqual(packets, [])
         self.assertEqual(keys, [])
