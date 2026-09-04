@@ -1,6 +1,7 @@
-# Repository Safety and Backup Policy v1.0
+# Repository Safety and Backup Policy v1.1
 
 **Date:** 2026-07-11  
+**Amended:** 2026-09-04  
 **Status:** PERMANENT_CANONICAL_GOVERNANCE  
 **Scope:** All agents, automations, connectors and human maintenance affecting the Investering framework repositories.
 
@@ -22,6 +23,79 @@ Core principle:
 ```text
 Agents may work freely inside isolated working branches.
 Agents may not hold unreviewed irreversible power over canonical history.
+```
+
+### 1.1 Permanent separation of destructive authority
+
+This is a permanent architecture invariant for every current and future model, agent, automation, service account, delegated credential and execution principal:
+
+> An agent may improve the aircraft, but it must never simultaneously hold the ability to destroy both the aircraft and the parachute.
+
+Operationally:
+
+```text
+NO AUTONOMOUS OR SEMI-AUTONOMOUS PRINCIPAL MAY SIMULTANEOUSLY HOLD
+SOURCE_DESTRUCTIVE_AUTHORITY AND RECOVERY_DESTRUCTIVE_AUTHORITY.
+```
+
+`SOURCE_DESTRUCTIVE_AUTHORITY` means sufficient authority to make the canonical source materially unrecoverable or to remove the controls that prevent that outcome. It includes, but is not limited to:
+
+- repository or canonical-main deletion;
+- force-push, history rewrite or destructive ref movement;
+- unrecoverable mass deletion, mass overwrite or namespace migration;
+- disabling or materially weakening branch, review, permission or safety controls in a way that creates equivalent destructive capability.
+
+`RECOVERY_DESTRUCTIVE_AUTHORITY` means sufficient authority to destroy, overwrite, invalidate or disable the independent recovery layer. It includes, but is not limited to:
+
+- deleting the external Vault or equivalent recovery repository;
+- force-pushing or rewriting recovery history;
+- deleting, replacing or invalidating immutable snapshots, manifests or receipts;
+- disabling the restore path, backup automation, retention or safeguards in a way that can make recovery unavailable;
+- changing recovery permissions, credentials or rules so that the same autonomous principal gains equivalent destructive control over both source and recovery.
+
+The following do **not** by themselves constitute destructive authority:
+
+- ordinary source work on an isolated task branch followed by reviewed PR and validation;
+- read access to Vault status, manifests, receipts and restore evidence;
+- narrowly constrained append-only backup writing that cannot overwrite or delete prior recovery artifacts.
+
+If a shared connector, platform credential or current repository configuration is broader than this target, record `SEPARATION_ENFORCEMENT_GAP`. The existence of a broad credential is not permission for an autonomous principal to exercise both destructive powers. Technical credential separation and least privilege remain the target state.
+
+Before any destructive or high-impact action, the acting principal must determine:
+
+```yaml
+source_destructive_authority: YES | NO | UNKNOWN
+recovery_destructive_authority: YES | NO | UNKNOWN
+same_principal_session_or_credential: YES | NO | UNKNOWN
+separation_result: PASS | BLOCKED | UNVERIFIED
+```
+
+Fail closed when both destructive authorities would be held by the same autonomous principal:
+
+```text
+SEPARATION_OF_DESTRUCTIVE_AUTHORITY_VIOLATION
+STOP
+DO_NOT_BROADEN_PERMISSIONS
+DO_NOT_DISABLE_SAFEGUARDS
+SPLIT_OR_ESCALATE_TO_SEPARATE_AUTHORITY
+```
+
+If the task is destructive or high-impact and separation cannot be verified, stop with:
+
+```text
+SEPARATION_OF_DESTRUCTIVE_AUTHORITY_UNVERIFIED
+```
+
+No model capability, benchmark performance, seniority, prior success, qualification status, Codex/Astra/Sol/API identity or future "golden key" status overrides this invariant.
+
+An agent may propose stronger controls or clarification. It may not autonomously weaken, bypass, supersede or remove this invariant. Any future weakening or replacement requires explicit repository-owner authorization that names this rule directly, preserves equal or stronger source/recovery separation, and follows the governed high-impact path with fresh independent recovery proof.
+
+Permanent mnemonic:
+
+```text
+IMPROVE THE AIRCRAFT.
+PROTECT THE PARACHUTE.
+NEVER HOLD BOTH DESTRUCTIVE KEYS.
 ```
 
 ## 2. Four-week backup rotation
@@ -95,6 +169,8 @@ The following are forbidden for agents and automations unless the user explicitl
 - modifying branch protection, rulesets, repository permissions or backup credentials
 - deleting the external vault
 - deleting both source and backup copies in the same operation
+- broadening permissions, credentials or bypass rights so that one autonomous principal gains both source-destructive and recovery-destructive authority
+- disabling a source or recovery safeguard merely to make an agent task succeed
 
 No agent may silently reinterpret a destructive operation as routine cleanup.
 
@@ -127,6 +203,7 @@ Requirements:
 5. Exact deletion, movement and replacement manifest.
 6. Pull request with verification results.
 7. No force operations.
+8. Separation of destructive authority must be `PASS`; `BLOCKED` or `UNVERIFIED` stops the operation.
 
 ## 6. Working branch rule
 
@@ -172,9 +249,11 @@ The vault must be:
 - private
 - independent, not a fork
 - used only for backups and restore tests
-- outside normal agent write access where practical
+- outside normal agent destructive access
 - protected from force pushes and deletion
 - configured with the minimum credential necessary for automated backup
+- writable by automation only through narrowly constrained append-only paths where practical
+- governed so ordinary source-working principals cannot also obtain destructive Vault authority
 
 A backup stored only as another branch inside the source repository is a safepoint, not a complete disaster-recovery backup.
 
@@ -221,6 +300,7 @@ LAST_FULL_BACKUP:
 NEXT_FULL_BACKUP_DUE:
 HIGH_IMPACT_CHANGE_DETECTED:
 DELETION_MANIFEST_STATUS:
+SEPARATION_OF_DESTRUCTIVE_AUTHORITY_STATUS:
 ```
 
 At 4/4 it must additionally include:
@@ -244,15 +324,22 @@ source_commit: 8aad34fcc0302f61f1282128f4c943433e6d8429
 status: VERIFIED_CREATED
 ```
 
-External vault:
+Current independent Vault state at this amendment's pre-change gate:
 
 ```text
-status: NOT_CONFIGURED
-consequence: four-week runs can create internal safepoints, but cannot yet claim independent disaster-recovery backup
+vault: Donh91/Investering-Framework-Vault
+status: CONFIGURED_WRITABLE
+pre_change_source_sha: 0ea55212a664f3f0535b640d8fb2129e841a1bac
+pre_change_safepoint: backup-safepoint/2026-09-04-separation-destructive-authority
+canonical_snapshot: PASS 126/126 paths, 0 unresolved
+restore_drill: PASS
+full_git_mirror: NOT_CONFIGURED
 ```
+
+This pre-change snapshot proves recovery of the frozen source state. It does not by itself prove that this amendment's post-merge bytes are already present in the Vault; post-merge backup coverage must be reported separately.
 
 ## 13. Honest limitation
 
 This policy is a guardrail, not an operating-system or GitHub security boundary.
 
-Full protection requires GitHub-side branch rules, an independent vault and a backup credential that normal agents cannot change or delete.
+Full protection requires GitHub-side branch rules, an independent vault and recovery credentials that ordinary source agents cannot change, delete or broaden into dual destructive authority.
