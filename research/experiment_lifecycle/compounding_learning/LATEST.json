@@ -1,0 +1,32 @@
+{
+  "contract": "COMPOUNDING_LEARNING_CONTROLLER_STATE_v1",
+  "status": "PENDING_FIRST_AUTONOMOUS_EVALUATION",
+  "authority": "RESEARCH_ONLY_NON_CANONICAL",
+  "primary_action": "CONTINUE_OBSERVING",
+  "target": "EXPERIMENT_LIFECYCLE",
+  "reason": "Bootstrap pointer only. First production run must establish the activation floor without replaying pre-activation checkpoints.",
+  "learning_loop": "OBSERVE_FREEZE_TEST_MATURE_LEARN_CHALLENGE_RETEST_IMPROVE",
+  "activation_floor_rule": "ALL_PRE_ACTIVATION_CHECKPOINTS_BASELINED_NOT_REPLAYED",
+  "next_best_experiment": {
+    "contract": "NEXT_BEST_EXPERIMENT_PROPOSAL_v1",
+    "authority": "RESEARCH_ONLY_NON_CANONICAL",
+    "proposal_status": "PENDING_FIRST_AUTONOMOUS_EVALUATION",
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "confirmatory_firewall": {
+    "generic_interim_performance_inference_allowed": false,
+    "t13_owner_path": "research/api_agent/forecast_skill",
+    "t13_read_or_mutated_by_controller": false
+  },
+  "canonical_effect": false,
+  "portfolio_execution": false,
+  "paid_data_authorized": false,
+  "deep_research_authorized": false,
+  "external_provider_calls_authorized": false,
+  "automatic_promotion": false,
+  "automatic_canonical_write": false,
+  "automatic_market_rule_change": false,
+  "automatic_threshold_change": false,
+  "automatic_weight_change": false
+}
