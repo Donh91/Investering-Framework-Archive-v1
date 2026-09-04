@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import csv
 import importlib.util
 import json
 import sys
@@ -101,6 +102,16 @@ class NativeOtaTests(unittest.TestCase):
         self.assertEqual(result["settled_eth_led_last_6"], 1)
         self.assertEqual(result["consecutive_btc_led_settled"], 5)
 
+    def test_exact_tie_does_not_count_as_btc_led(self):
+        settled = [
+            session("2026-09-01", 1.0, 1.0, 0.031),
+            session("2026-09-02", 1.0, 0.5, 0.031),
+        ]
+        result = ota.leadership_analysis(settled, None)
+        self.assertEqual(result["settled_ties_last_4"], 1)
+        self.assertEqual(result["settled_btc_led_last_4"], 1)
+        self.assertEqual(result["consecutive_btc_led_settled"], 1)
+
     def test_native_etf_owner_prevents_false_framework_gap(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -116,8 +127,41 @@ class NativeOtaTests(unittest.TestCase):
             }))
             result = ota.latest_etf(root)
             self.assertEqual(result["status"], "PASS")
+            self.assertEqual(result["session_alignment"], "SAME_FINAL_SESSION")
             self.assertEqual(result["latest_final"]["BTC"]["reported_total"], 730.8)
             self.assertEqual(result["latest_final"]["ETH"]["reported_total"], 141.4)
+
+    def test_etf_mismatched_final_sessions_fail_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            path = root / "research/etf_owner/LATEST_FARSIDE_ETF_OWNER.json"
+            path.parent.mkdir(parents=True)
+            path.write_text(json.dumps({
+                "history_rows": {
+                    "BTC": [{"date": "2026-09-03", "reported_total": 1, "session_final": True}],
+                    "ETH": [{"date": "2026-09-02", "reported_total": 2, "session_final": True}],
+                },
+            }))
+            result = ota.latest_etf(root)
+            self.assertEqual(result["status"], "SOURCE_DATA_LIMITATION")
+            self.assertEqual(result["session_alignment"], "BTC_ETH_FINAL_SESSION_MISMATCH_OR_MISSING")
+
+    def test_hourly_loader_requires_pass_and_exact_hour_alignment(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            path = root / "03_DAILY_CAPTURE_LOGS/hourly/2026/09/2026-09-04.csv"
+            path.parent.mkdir(parents=True)
+            fieldnames = ["timestamp_utc", *ota.HOURLY_FIELDS, "spot_status"]
+            numeric = {field: "1" for field in ota.HOURLY_FIELDS}
+            with path.open("w", newline="") as handle:
+                writer = csv.DictWriter(handle, fieldnames=fieldnames)
+                writer.writeheader()
+                writer.writerow({"timestamp_utc": "2026-09-04T00:00:00Z", **numeric, "spot_status": "PASS"})
+                writer.writerow({"timestamp_utc": "2026-09-04T01:00:00Z", **numeric, "spot_status": "FAIL"})
+                writer.writerow({"timestamp_utc": "2026-09-04T02:15:00Z", **numeric, "spot_status": "PASS"})
+            rows = ota.load_hourly_rows(root, lookback_days=9999)
+            self.assertEqual(len(rows), 1)
+            self.assertEqual(rows[0].ts.hour, 0)
 
     def test_options_lane_never_mislabels_moneyness_as_25_delta(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -134,6 +178,15 @@ class NativeOtaTests(unittest.TestCase):
             self.assertEqual(result["lane1_executed_liquidations"]["status_by_asset"]["BTC"], "PASS")
             self.assertEqual(result["lane2b_moneyness_skew"]["semantics"], "MONEYNESS_BUCKET_SKEW_NOT_25_DELTA")
             self.assertEqual(result["lane3_orderbook"]["status"], "DEFERRED_BY_RATIFIED_PILOT")
+
+    def test_gap_accounting_separates_owner_limitation_from_missing_owner(self):
+        result = ota.build_gap_accounting({
+            "missing": {"status": "FRAMEWORK_DATA_GAP"},
+            "limited": {"status": "SOURCE_DATA_LIMITATION"},
+            "healthy": {"status": "PASS"},
+        })
+        self.assertEqual(result["framework_data_gaps"], ["missing"])
+        self.assertEqual(result["owner_source_limitations"], ["limited"])
 
     def test_trigger_only_fires_on_settled_cross_not_live_noise(self):
         below = [session("2026-09-01", 1.0, 1.0, 0.0302), session("2026-09-02", -1.0, -1.0, 0.0299)]
