@@ -1,0 +1,34 @@
+{
+  "contract": "HISTORICAL_RESEARCH_VAULT_LATEST_v1",
+  "status": "BOOTSTRAPPED",
+  "generated_at_utc": "2026-09-04T22:00:39Z",
+  "bootstrap_main_sha": "d1c875f9184d8ee768f04b4fe81cb0a9dedf6e4c",
+  "pointers": {
+    "readme": "research/historical_research_vault/README.md",
+    "source_registry": "research/historical_research_vault/SOURCE_REGISTRY_v1.json",
+    "source_recipes": "research/historical_research_vault/SOURCE_RECIPES_v1.json",
+    "bootstrap_receipt": "research/historical_research_vault/VAULT_BOOTSTRAP_RECEIPT_2026-09-04.json",
+    "capture_manifest_schema": "research/historical_research_vault/schemas/CAPTURE_MANIFEST_v1.schema.json",
+    "global_dataset_registry": "research/dataset_registry/DATASET_REGISTRY_v1.json",
+    "collector": "scripts/research/historical_research_vault.py",
+    "tests": "tests/test_historical_research_vault.py"
+  },
+  "source_states": {
+    "defillama": "EXISTING_OWNER_REUSED",
+    "growthepie": "PUBLIC_ENDPOINT_PROBE_VERIFIED",
+    "coinmetrics_community": "KEYLESS_PROBE_VERIFIED",
+    "coingecko": "QUERY_TIME_ONLY",
+    "the_graph": "AUTH_REQUIRED_NOT_YET_COLLECTED"
+  },
+  "scheduled_collection_enabled": false,
+  "blockers_before_durable_expansion": [
+    "THE_GRAPH_API_KEY_AND_PER_SUBGRAPH_ADMISSION",
+    "GROWTHEPIE_DATASET_REDISTRIBUTION_REVIEW",
+    "COINMETRICS_COMMUNITY_CC_SCOPE_FREEZE"
+  ],
+  "authority": {
+    "framework_state_change": false,
+    "model_weight_change": false,
+    "portfolio_action": false
+  }
+}
