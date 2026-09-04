@@ -72,5 +72,37 @@ class DurableRepairTests(unittest.TestCase):
             row=json.loads(receipt.read_text())['artifacts'][0]
             self.assertNotEqual(row['expected_sha256'],row['readback_sha256'])
 
+    def test_master_monday_reads_current_live_anchor_cfgi_symbols(self):
+        with tempfile.TemporaryDirectory() as td:
+            repo=Path(td)
+            captures=repo/'03_DAILY_CAPTURE_LOGS/captures/2026/09/03'
+            captures.mkdir(parents=True)
+            symbols={
+                'MARKET':{'score':52,'classification':'Neutral','timestamp':'2026-09-03T12:49:11Z','owner_status':'PASS','stale':False},
+                'BTC':{'score':54.5,'classification':'Neutral','price':78307.9921875,'timestamp':'2026-09-03T12:49:11Z','owner_status':'PASS','stale':False},
+                'ETH':{'score':53,'classification':'Neutral','price':2413.75,'timestamp':'2026-09-03T12:49:11Z','owner_status':'PASS','stale':False},
+            }
+            capture={
+                'contract':'DAILY_LIVE_ANCHOR_INDEX_v3',
+                'captured_at_utc':'2026-09-03T12:50:06Z',
+                'market_metrics':{'sentiment':{'cfgi':{'timeframe':'4h','symbols':symbols}}},
+            }
+            (captures/'capture.json').write_text(json.dumps(capture))
+            out=repo/'preflight.json'
+            p=subprocess.run([
+                'python',str(ROOT/'scripts/master_monday/build_preflight_package_v3.py'),
+                '--repo-root',str(repo),
+                '--registry',str(ROOT/'research/master_monday_preflight/MASTER_MONDAY_ACTION_REGISTRY_v2.json'),
+                '--predecessor-registry',str(ROOT/'research/master_monday_preflight/CANONICAL_PREDECESSOR_REGISTRY_v1.json'),
+                '--output',str(out),
+            ],capture_output=True,text=True)
+            self.assertEqual(p.returncode,0,p.stderr)
+            value=json.loads(out.read_text())
+            rows={row['action_id']:row for row in value['source_ledgers']}
+            self.assertEqual(rows['A46']['status'],'PASS')
+            self.assertEqual(rows['A47']['status'],'PASS')
+            self.assertEqual(rows['A48']['status'],'PASS')
+            self.assertEqual(value['cfgi'],symbols)
+
 
 if __name__=='__main__': unittest.main()
