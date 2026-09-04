@@ -19,6 +19,7 @@ from typing import Any, Iterable
 
 UTC = timezone.utc
 CONTRACT = "NATIVE_OTA_READBACK_v1"
+SCHEMA_VERSION = "1.1"
 REGISTERED_ETHBTC_LEVEL = 0.03
 AUTHORITY = {
     "canonical_state_change": False,
@@ -93,7 +94,7 @@ HOURLY_FIELDS = (
 
 
 def load_hourly_rows(repo_root: Path, lookback_days: int = 45) -> list[Hour]:
-    """Load and de-duplicate archived hourly rows by their source timestamp."""
+    """Load only PASS, exact-hour-aligned owner rows and de-duplicate by timestamp."""
     base = repo_root / "03_DAILY_CAPTURE_LOGS/hourly"
     cutoff = utcnow().date() - timedelta(days=lookback_days)
     rows: dict[datetime, Hour] = {}
@@ -106,8 +107,10 @@ def load_hourly_rows(repo_root: Path, lookback_days: int = 45) -> list[Hour]:
         try:
             with path.open(newline="") as handle:
                 for raw in csv.DictReader(handle):
+                    if raw.get("spot_status") != "PASS":
+                        continue
                     ts = parse_dt(raw.get("timestamp_utc"))
-                    if ts is None:
+                    if ts is None or ts.minute != 0 or ts.second != 0 or ts.microsecond != 0:
                         continue
                     values = [safe_float(raw.get(field)) for field in HOURLY_FIELDS]
                     if any(value is None for value in values):
@@ -256,26 +259,39 @@ def threshold_analysis(settled: list[dict[str, Any]], incomplete: dict[str, Any]
     return result
 
 
-def leadership_analysis(settled: list[dict[str, Any]], incomplete: dict[str, Any] | None) -> dict[str, Any]:
-    def eth_led(session: dict[str, Any]) -> bool:
-        spread = session.get("eth_minus_btc_return_pp")
-        return spread is not None and float(spread) > 0.0
+def relative_leader(session: dict[str, Any]) -> str:
+    spread = session.get("eth_minus_btc_return_pp")
+    if spread is None:
+        return "UNKNOWN"
+    value = float(spread)
+    if value > 0.0:
+        return "ETH"
+    if value < 0.0:
+        return "BTC"
+    return "TIE"
 
+
+def leadership_analysis(settled: list[dict[str, Any]], incomplete: dict[str, Any] | None) -> dict[str, Any]:
     last4 = settled[-4:]
     last6 = settled[-6:]
+    settled_leaders = [relative_leader(session) for session in settled]
     result: dict[str, Any] = {
-        "settled_eth_led_last_4": sum(eth_led(session) for session in last4),
+        "settled_eth_led_last_4": sum(relative_leader(session) == "ETH" for session in last4),
+        "settled_btc_led_last_4": sum(relative_leader(session) == "BTC" for session in last4),
+        "settled_ties_last_4": sum(relative_leader(session) == "TIE" for session in last4),
         "settled_sessions_last_4": len(last4),
-        "settled_eth_led_last_6": sum(eth_led(session) for session in last6),
+        "settled_eth_led_last_6": sum(relative_leader(session) == "ETH" for session in last6),
+        "settled_btc_led_last_6": sum(relative_leader(session) == "BTC" for session in last6),
+        "settled_ties_last_6": sum(relative_leader(session) == "TIE" for session in last6),
         "settled_sessions_last_6": len(last6),
-        "consecutive_btc_led_settled": consecutive_tail([not eth_led(session) for session in settled]),
+        "consecutive_btc_led_settled": consecutive_tail([leader == "BTC" for leader in settled_leaders]),
+        "latest_settled_leader": settled_leaders[-1] if settled_leaders else "UNKNOWN",
         "latest_settled_relative_pp": settled[-1]["eth_minus_btc_return_pp"] if settled else None,
         "classification": "DESCRIPTIVE_RELATIVE_LEADERSHIP_ONLY",
     }
     if incomplete:
-        spread = incomplete.get("eth_minus_btc_return_pp")
-        result["in_progress_relative_pp"] = spread
-        result["in_progress_leader"] = "UNKNOWN" if spread is None else ("ETH" if spread > 0 else "BTC")
+        result["in_progress_relative_pp"] = incomplete.get("eth_minus_btc_return_pp")
+        result["in_progress_leader"] = relative_leader(incomplete)
         result["in_progress_semantics"] = "IN_PROGRESS_CONTEXT_ONLY"
     return result
 
@@ -299,11 +315,15 @@ def latest_etf(repo_root: Path) -> dict[str, Any]:
                 "session_final": True,
                 "total_parity": row.get("total_parity"),
             }
+    both_assets = set(latest) == {"BTC", "ETH"}
+    dates = {str(value.get("date")) for value in latest.values()} if both_assets else set()
+    same_session = both_assets and len(dates) == 1
     return {
-        "status": "PASS" if latest else "SOURCE_DATA_LIMITATION",
+        "status": "PASS" if same_session else "SOURCE_DATA_LIMITATION",
         "contract": payload.get("contract"),
         "authority": payload.get("authority"),
         "latest_final": latest,
+        "session_alignment": "SAME_FINAL_SESSION" if same_session else "BTC_ETH_FINAL_SESSION_MISMATCH_OR_MISSING",
         "path": str(path.relative_to(repo_root)),
     }
 
@@ -457,14 +477,46 @@ def material_deltas(current: dict[str, Any], previous: dict[str, Any] | None) ->
     return deltas or [{"id": "NO_MATERIAL_DELTA", "classification": "CONTEXT_ONLY", "claim": "No new settled or threshold-transition evidence since prior native report."}]
 
 
+def build_gap_accounting(owner_readback: dict[str, Any]) -> dict[str, Any]:
+    framework_gaps = [
+        name for name, owner in owner_readback.items()
+        if isinstance(owner, dict) and owner.get("status") == "FRAMEWORK_DATA_GAP"
+    ]
+    source_limitations = [
+        name for name, owner in owner_readback.items()
+        if isinstance(owner, dict) and owner.get("status") == "SOURCE_DATA_LIMITATION"
+    ]
+    return {
+        "framework_data_gaps": framework_gaps,
+        "owner_source_limitations": source_limitations,
+        "ota_context_gaps": [],
+        "rule": "If a native owner artifact exists, absence from an external/legacy OTA context is OTA_CONTEXT_GAP, not FRAMEWORK_DATA_GAP. Native owner limitations remain SOURCE_DATA_LIMITATION and are not silently upgraded to PASS.",
+    }
+
+
 def build_report(repo_root: Path, trigger: str, trigger_only: bool) -> tuple[dict[str, Any], bool]:
     hourly_rows = load_hourly_rows(repo_root)
     settled, incomplete = build_daily(hourly_rows)
     gate = threshold_analysis(settled, incomplete)
+    hourly_status = {
+        "status": "FRAMEWORK_DATA_GAP" if not hourly_rows else ("PASS" if settled else "SOURCE_DATA_LIMITATION"),
+        "accepted_hour_count": len(hourly_rows),
+        "settled_session_count": len(settled),
+        "row_acceptance": "SPOT_STATUS_PASS_AND_EXACT_UTC_HOUR_ALIGNMENT_REQUIRED",
+        "path": "03_DAILY_CAPTURE_LOGS/hourly",
+    }
+    owner_readback = {
+        "hourly": hourly_status,
+        "etf": latest_etf(repo_root),
+        "pullback_forensics": pullback_status(repo_root),
+        "situation_room": situation_room_status(repo_root),
+        "breadth": breadth_status(repo_root),
+        "adaptive_cadence": cadence_status(repo_root),
+    }
 
     report: dict[str, Any] = {
         "contract": CONTRACT,
-        "schema_version": 1,
+        "schema_version": SCHEMA_VERSION,
         "generated_at_utc": iso_z(utcnow()),
         "trigger": trigger,
         "mode": "TRIGGER_ONLY" if trigger_only else "FULL_FIXED_OR_MANUAL",
@@ -474,13 +526,7 @@ def build_report(repo_root: Path, trigger: str, trigger_only: bool) -> tuple[dic
         "in_progress_session": incomplete,
         "ethbtc_gate": gate,
         "eth_leadership": leadership_analysis(settled, incomplete),
-        "owner_readback": {
-            "etf": latest_etf(repo_root),
-            "pullback_forensics": pullback_status(repo_root),
-            "situation_room": situation_room_status(repo_root),
-            "breadth": breadth_status(repo_root),
-            "adaptive_cadence": cadence_status(repo_root),
-        },
+        "owner_readback": owner_readback,
         "legacy_claude_ota": legacy_ota_status(repo_root),
         "governance": {
             "framework_interpretation": "DEFERRED_TO_CURRENT_CANONICAL_OWNERS",
@@ -492,9 +538,13 @@ def build_report(repo_root: Path, trigger: str, trigger_only: bool) -> tuple[dic
         },
         "qa": {
             "settled_definition": "EXACTLY_24_UNIQUE_UTC_HOURLY_ROWS_00_THROUGH_23",
+            "hourly_rows_require_spot_status_pass": True,
+            "hourly_rows_require_exact_utc_hour_alignment": True,
+            "relative_performance_tie_counts_as_btc_led": False,
             "in_progress_high_may_be_called_cycle_high": False,
             "in_progress_data_may_be_called_settled": False,
             "framework_gap_vs_context_gap_separated": True,
+            "source_limitation_vs_framework_gap_separated": True,
             "orderbook_delta_over_60m_allowed": False,
             "data_missing_semantics": "UNKNOWN_NOT_ZERO",
         },
@@ -517,19 +567,11 @@ def build_report(repo_root: Path, trigger: str, trigger_only: bool) -> tuple[dic
                 ("ETHBTC_SETTLED_RECLAIM_REGISTERED_0_0300", gate.get("settled_close_reclaimed_on_latest")),
             ) if active
         ],
-        "adaptive_rotation_attention": report["owner_readback"]["adaptive_cadence"].get("boost_active"),
+        "adaptive_rotation_attention": owner_readback["adaptive_cadence"].get("boost_active"),
         "note": "Adaptive cadence is attention-only and does not create a rule or force a native OTA report.",
     }
 
-    framework_gaps = [
-        name for name, owner in report["owner_readback"].items()
-        if isinstance(owner, dict) and owner.get("status") == "FRAMEWORK_DATA_GAP"
-    ]
-    report["gap_accounting"] = {
-        "framework_data_gaps": framework_gaps,
-        "ota_context_gaps": [],
-        "rule": "If a native owner artifact exists, absence from an external/legacy OTA context is OTA_CONTEXT_GAP, not FRAMEWORK_DATA_GAP.",
-    }
+    report["gap_accounting"] = build_gap_accounting(owner_readback)
 
     report["report_hash_sha256"] = ""
     report["report_hash_sha256"] = sha256_json(report)
