@@ -2,6 +2,30 @@
 
 These instructions apply to all agent work in this repository.
 
+## Permanent safety invariant - separation of destructive authority
+
+Canonical owner:
+
+`01_CORE_FRAMEWORK/governance/2026-07-11__repository-safety-and-backup-policy-v1__canonical.md`
+
+Permanent mnemonic:
+
+```text
+IMPROVE THE AIRCRAFT.
+PROTECT THE PARACHUTE.
+NEVER HOLD BOTH DESTRUCTIVE KEYS.
+```
+
+No autonomous or semi-autonomous principal may simultaneously hold sufficient destructive authority to irreversibly damage both the canonical source system and its independent recovery layer. Do not broaden credentials, disable safeguards, or acquire recovery-destructive authority to complete a source task. If a task would require both destructive authorities, fail closed and split or escalate the task.
+
+This rule is model-agnostic and permanent. Model capability, benchmark performance, seniority, prior success, qualification status, Codex/Astra/Sol/API identity or future "golden key" status never overrides it.
+
+For destructive or high-impact work, if separation cannot be verified, stop with:
+
+```text
+SEPARATION_OF_DESTRUCTIVE_AUTHORITY_UNVERIFIED
+```
+
 ## 0. Cross-repository preflight
 
 The repository estate has three separate planes:
@@ -174,6 +198,8 @@ Use `.agents/skills/prospective-evidence-ledger/SKILL.md` for prospective row cr
 - Preserve historical files unless an approved retirement workflow applies.
 - Follow `01_CORE_FRAMEWORK/governance/2026-07-11__repository-safety-and-backup-policy-v1__canonical.md` before any high-impact operation.
 - Changing `00_ARCHIVE_CONTROL/CANONICAL_INDEX.md`, archive routing, precedence or source governance is high-impact and requires the policy safepoint sequence first.
+- Enforce permanent separation of destructive authority. A source-writing principal must not also hold destructive recovery/Vault authority.
+- Never broaden credentials, weaken safeguards or obtain a recovery-destructive permission merely to make a source task succeed.
 
 ### Mandatory branch assertion before every write
 
@@ -194,6 +220,17 @@ WRITE_BRANCH_UNVERIFIED
 ```
 
 Never omit the branch argument and rely on the tool default. Never create placeholder or test files to probe connector behavior in a production repository.
+
+For any destructive or high-impact operation, also verify:
+
+```yaml
+source_destructive_authority: YES | NO | UNKNOWN
+recovery_destructive_authority: YES | NO | UNKNOWN
+same_principal_session_or_credential: YES | NO | UNKNOWN
+separation_result: PASS | BLOCKED | UNVERIFIED
+```
+
+`BLOCKED` stops with `SEPARATION_OF_DESTRUCTIVE_AUTHORITY_VIOLATION`. `UNVERIFIED` stops with `SEPARATION_OF_DESTRUCTIVE_AUTHORITY_UNVERIFIED`.
 
 ## 7. Archive discipline
 
@@ -228,6 +265,7 @@ Before declaring work complete:
 - verify validator result, coverage readiness and promotion status are separate;
 - verify the diff contains only intended files;
 - verify every write used an explicit non-default task branch;
+- verify separation of destructive authority for every destructive or high-impact operation;
 - report unresolved paths, blocked data and manual interventions honestly.
 
 A remediated write incident cannot receive an unqualified `PASS`. Use `PARTIAL_REMEDIATED` for the write layer and report the final repository state separately.

@@ -1,5 +1,5 @@
 {
-  "schema_version": "1.0",
+  "schema_version": "1.1",
   "status": "CANONICAL_BACKUP_REGISTRY",
   "source_repository": "Donh91/Investering-Framework-Archive-v1",
   "vault_repository": "Donh91/Investering-Framework-Vault",
@@ -9,6 +9,7 @@
     "00_ARCHIVE_CONTROL/CANONICAL_INDEX.md",
     "00_ARCHIVE_CONTROL/ARCHIVE_MAP_AND_ROUTING.md",
     "00_ARCHIVE_CONTROL/backup_rotation_state.json",
+    "00_ARCHIVE_CONTROL/INDEX_ADDENDUM_REGISTRY.md",
     "00_ARCHIVE_CONTROL/*index-addendum*.md",
     "all_paths_explicitly_referenced_by_CANONICAL_INDEX",
     "all_current_latest_pointer_files",
@@ -18,7 +19,12 @@
     "00_ARCHIVE_CONTROL/CANONICAL_INDEX.md",
     "00_ARCHIVE_CONTROL/ARCHIVE_MAP_AND_ROUTING.md",
     "00_ARCHIVE_CONTROL/backup_rotation_state.json",
+    "00_ARCHIVE_CONTROL/vault_backup_registry.json",
+    "00_ARCHIVE_CONTROL/INDEX_ADDENDUM_REGISTRY.md",
+    "AGENTS.md",
+    ".agents/skills/archive-governance/SKILL.md",
     "01_CORE_FRAMEWORK/governance/2026-07-11__repository-safety-and-backup-policy-v1__canonical.md",
+    "01_CORE_FRAMEWORK/governance/2026-07-11__external-vault-activation-and-snapshot-contract-v1-1__canonical.md",
     "01_CORE_FRAMEWORK/governance/2026-07-10__gpt-5-6-fresh-eyes-audit-implementation__canonical.md",
     "01_CORE_FRAMEWORK/governance/2026-07-10__rule-and-evidence-registry__canonical.md",
     "01_CORE_FRAMEWORK/governance/2026-07-10__f12-f12-5-reproducibility-freeze__canonical.md",
@@ -63,9 +69,10 @@
     "Write destination under a dated append-only snapshot root.",
     "Read back each destination file and compare content or stable digest when possible.",
     "PASS requires all mandatory seed paths plus all paths explicitly referenced by the then-current CANONICAL_INDEX.",
+    "Agent bootstrap and repository-write governance owners are mandatory recovery material and must not be omitted from canonical snapshots.",
     "Any missing path produces PARTIAL and an exact unresolved-path list.",
     "Never claim complete Git-history preservation from this connector snapshot."
   ],
   "high_impact_override": "Run an out-of-cycle canonical vault snapshot before any approved high-impact change.",
-  "last_updated": "2026-07-11"
+  "last_updated": "2026-09-04"
 }

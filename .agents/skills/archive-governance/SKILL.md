@@ -1,6 +1,6 @@
 ---
 name: archive-governance
-description: 'Classify, place, update, index, and validate Investering framework material in GitHub. Use when the user says archive, save, preserve, add to GitHub, make canonical, update the archive, place this correctly, or asks whether something belongs in project sources. Differentiator: searches for the existing owner first and enforces duplication, precedence, explicit-branch, safepoint, addendum-registry, incident, backup-scope, and receipt rules before writing.'
+description: 'Classify, place, update, index, and validate Investering framework material in GitHub. Use when the user says archive, save, preserve, add to GitHub, make canonical, update the archive, place this correctly, or asks whether something belongs in project sources. Differentiator: searches for the existing owner first and enforces duplication, precedence, explicit-branch, safepoint, destructive-authority separation, addendum-registry, incident, backup-scope, and receipt rules before writing.'
 ---
 
 # Archive Governance
@@ -46,6 +46,39 @@ impact: LOW | HIGH | UNKNOWN
 ```
 
 If write intent is not explicit, return a recommendation only. Do not mutate the repository.
+
+## Permanent destructive-authority separation gate
+
+Before any destructive or high-impact operation, classify authority under the permanent repository-safety owner:
+
+```yaml
+source_destructive_authority: YES | NO | UNKNOWN
+recovery_destructive_authority: YES | NO | UNKNOWN
+same_principal_session_or_credential: YES | NO | UNKNOWN
+separation_result: PASS | BLOCKED | UNVERIFIED
+```
+
+Interpretation:
+
+- ordinary writes on an isolated task branch followed by PR/review are not by themselves `SOURCE_DESTRUCTIVE_AUTHORITY`;
+- Vault read access, receipt verification and restore-evidence inspection are not `RECOVERY_DESTRUCTIVE_AUTHORITY`;
+- narrowly constrained append-only backup writing that cannot overwrite/delete prior recovery artifacts is not by itself `RECOVERY_DESTRUCTIVE_AUTHORITY`;
+- repository/main deletion, force ref/history rewrite, unrecoverable mass overwrite or removal of equivalent source safeguards is destructive source authority;
+- Vault/recovery deletion, force/history rewrite, immutable snapshot/receipt deletion or overwrite, restore-path disabling or equivalent recovery-safeguard weakening is destructive recovery authority.
+
+If both destructive authorities would be held by the same autonomous principal/session/credential, stop with:
+
+```text
+SEPARATION_OF_DESTRUCTIVE_AUTHORITY_VIOLATION
+```
+
+If the task is destructive or high-impact and separation cannot be verified, stop with:
+
+```text
+SEPARATION_OF_DESTRUCTIVE_AUTHORITY_UNVERIFIED
+```
+
+Never broaden credentials, request bypass rights, disable safeguards or weaken recovery controls merely to clear an agent task. Model capability, benchmark performance, qualification status or model identity never overrides this gate.
 
 ## Mandatory branch assertion
 
@@ -193,6 +226,8 @@ High-impact operations include changing:
 
 Before high-impact work, execute the required safepoint and vault sequence. If that sequence cannot be verified, stop with `HIGH_IMPACT_SAFETY_GATE_BLOCKED`.
 
+The permanent separation gate is independent of the safepoint gate. A valid backup does not authorize one autonomous principal to hold both destructive source and destructive recovery authority.
+
 For normal additions:
 
 - create an isolated task branch;
@@ -253,6 +288,7 @@ paths_deleted:
 canonical_index_change: YES | NO
 addendum_registry_change: YES | NO | NOT_APPLICABLE
 high_impact_gate: PASS | NOT_REQUIRED | BLOCKED
+destructive_authority_separation: PASS | BLOCKED | UNVERIFIED
 duplicate_check:
 source_lineage:
 backup_scope:
@@ -289,9 +325,10 @@ After writing:
 6. Verify every write used the explicit verified task branch.
 7. Verify every addendum is represented correctly in the addendum registry.
 8. Verify high-impact policy compliance.
-9. Verify backup claims against frozen and current SHAs.
-10. Verify the PR diff matches the decision manifest.
-11. Write an implementation receipt when the change is operationally important.
+9. Verify destructive-authority separation for every destructive or high-impact operation.
+10. Verify backup claims against frozen and current SHAs.
+11. Verify the PR diff matches the decision manifest.
+12. Write an implementation receipt when the change is operationally important.
 
 A failed check requires correction and a complete re-run.
 
@@ -320,6 +357,8 @@ The final repository state may still be `PASS` after transparent remediation, bu
 - No placeholder or connector-probe files in production repositories.
 - No force operations.
 - No hidden deletion, movement or replacement.
+- No autonomous principal may simultaneously hold source-destructive and recovery-destructive authority.
+- No credential broadening or safeguard weakening merely to complete a source or recovery task.
 - No claim of canonical promotion without evidence.
 - No automatic conversion of conversation text into doctrine.
 - No full Git mirror claim from a selected-file snapshot.
@@ -330,6 +369,8 @@ The final repository state may still be `PASS` after transparent remediation, bu
 
 - **Existing owner found** -> update or append instead of creating a new owner.
 - **Branch argument absent or default** -> stop with `WRITE_BRANCH_UNVERIFIED`.
+- **Both destructive authorities would be held by one autonomous principal** -> stop with `SEPARATION_OF_DESTRUCTIVE_AUTHORITY_VIOLATION`.
+- **Destructive/high-impact separation cannot be verified** -> stop with `SEPARATION_OF_DESTRUCTIVE_AUTHORITY_UNVERIFIED`.
 - **Placement unclear** -> use `09_ARCHIVE_INBOX/to_classify` only temporarily and record the unresolved routing question.
 - **Canonical evidence insufficient** -> store as shadow, forward test, source note or reject.
 - **Addendum not registered** -> report `ADDENDUM_NOT_REGISTERED`; do not claim global discoverability.
@@ -339,4 +380,4 @@ The final repository state may still be `PASS` after transparent remediation, bu
 
 ## Pilot review
 
-The skill must reduce duplicates, wrong placement, missed addenda, unsafe writes and unsupported promotion. It should be modified or killed if it creates additional archive inflation or manual correction.
+The skill must reduce duplicates, wrong placement, missed addenda, unsafe writes, dual-destructive-authority risk and unsupported promotion. It should be modified or killed if it creates additional archive inflation or manual correction.
