@@ -6,6 +6,9 @@ import gzip
 import hashlib
 import io
 import json
+import os
+import re
+import urllib.error
 import urllib.parse
 import urllib.request
 from datetime import datetime, timezone
@@ -15,8 +18,10 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[2]
 REGISTRY = ROOT / "research/historical_research_vault/SOURCE_REGISTRY_v1.json"
 RECIPES = ROOT / "research/historical_research_vault/SOURCE_RECIPES_v1.json"
-UA = {"User-Agent": "Investering-Historical-Research-Vault/1.0", "Accept": "application/json"}
+UA = {"User-Agent": "Investering-Historical-Research-Vault/1.1", "Accept": "application/json"}
 AUTHORITY = {"framework_state_change": False, "model_weight_change": False, "portfolio_action": False}
+SQD_MAX_BLOCKS = 5000
+SQD_DATASET_RE = re.compile(r"^[a-z0-9][a-z0-9-]{0,127}$")
 
 
 def canonical(value: Any) -> bytes:
@@ -29,6 +34,15 @@ def sha256(body: bytes) -> str:
 
 def now_utc() -> str:
     return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+
+
+def unix_seconds_to_utc(value: Any) -> str | None:
+    if not isinstance(value, (int, float)):
+        return None
+    try:
+        return datetime.fromtimestamp(float(value), tz=timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    except (OverflowError, OSError, ValueError):
+        return None
 
 
 def deterministic_gzip(body: bytes) -> bytes:
@@ -48,6 +62,62 @@ def http_json(url: str, *, timeout: int = 45) -> tuple[Any, dict[str, Any], byte
         "http_status": status,
         "payload_sha256": sha256(raw),
         "payload_bytes": len(raw),
+    }, raw
+
+
+def parse_json_or_ndjson(raw: bytes) -> list[dict[str, Any]]:
+    text = raw.decode("utf-8").strip()
+    if not text:
+        return []
+    try:
+        parsed = json.loads(text)
+    except json.JSONDecodeError:
+        parsed = None
+    if isinstance(parsed, dict):
+        return [parsed]
+    if isinstance(parsed, list):
+        return [row for row in parsed if isinstance(row, dict)]
+
+    out: list[dict[str, Any]] = []
+    for line in text.splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        item = json.loads(line)
+        if isinstance(item, dict):
+            out.append(item)
+        elif isinstance(item, list):
+            out.extend(row for row in item if isinstance(row, dict))
+    return out
+
+
+def http_sqd_post(url: str, payload: dict[str, Any], *, timeout: int = 60) -> tuple[list[dict[str, Any]], dict[str, Any], bytes]:
+    headers = {
+        "User-Agent": "Investering-Historical-Research-Vault/1.1",
+        "Accept": "application/x-ndjson, application/json",
+        "Content-Type": "application/json",
+    }
+    authorization = os.environ.get("SQD_PORTAL_AUTHORIZATION")
+    if authorization:
+        headers["Authorization"] = authorization
+    request_body = canonical(payload)
+    req = urllib.request.Request(url, data=request_body, headers=headers, method="POST")
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as response:
+            raw = response.read()
+            status = int(response.status)
+    except urllib.error.HTTPError as exc:
+        if exc.code in {401, 403}:
+            raise RuntimeError("sqd_portal_authorization_required") from exc
+        raise
+    rows = parse_json_or_ndjson(raw)
+    return rows, {
+        "url": url,
+        "http_status": status,
+        "payload_sha256": sha256(raw),
+        "payload_bytes": len(raw),
+        "request_sha256": sha256(request_body),
+        "authorization_header_supplied": bool(authorization),
     }, raw
 
 
@@ -79,6 +149,10 @@ def validate() -> dict[str, Any]:
             "QUERY_TIME_ONLY_METADATA_RECEIPT", "INDEX_ONLY_NO_DUPLICATE"
         }:
             errors.append(f"invalid_durable_mode:{row['source_id']}")
+    if "THE_GRAPH_SUBGRAPH_REPLAY_v1" in source_ids:
+        errors.append("the_graph_must_not_be_active_primary")
+    if "SQD_PORTAL_EVM_REPLAY_v1" not in source_ids:
+        errors.append("sqd_primary_source_missing")
     return {
         "contract": "HISTORICAL_RESEARCH_VAULT_VALIDATION_v1",
         "status": "PASS" if not errors else "FAIL",
@@ -139,13 +213,47 @@ def normalize_coinmetrics(doc: Any) -> list[dict[str, Any]]:
     return sorted(out, key=lambda row: (row["time"], row["asset"]))
 
 
-def write_capture(*, source_id: str, raw: bytes, normalized_rows: list[dict[str, Any]], output_root: Path, coverage_field: str) -> dict[str, Any]:
+def normalize_sqd_blocks(items: list[dict[str, Any]], *, dataset: str) -> list[dict[str, Any]]:
+    out: list[dict[str, Any]] = []
+    for item in items:
+        if not isinstance(item, dict):
+            continue
+        header = item.get("header")
+        if not isinstance(header, dict):
+            continue
+        number = header.get("number")
+        if not isinstance(number, int):
+            continue
+        logs = item.get("logs", [])
+        if not isinstance(logs, list):
+            logs = []
+        out.append({
+            "dataset": dataset,
+            "block_number": number,
+            "block_timestamp": header.get("timestamp"),
+            "block_time_utc": unix_seconds_to_utc(header.get("timestamp")),
+            "block_hash": header.get("hash"),
+            "parent_hash": header.get("parentHash"),
+            "logs": logs,
+        })
+    return sorted(out, key=lambda row: row["block_number"])
+
+
+def write_capture(
+    *,
+    source_id: str,
+    raw: bytes,
+    normalized_rows: list[dict[str, Any]],
+    output_root: Path,
+    coverage_field: str,
+    raw_filename: str = "raw.json",
+) -> dict[str, Any]:
     output_root.mkdir(parents=True, exist_ok=True)
     norm_body = b"".join(canonical(row) + b"\n" for row in normalized_rows)
     compressed = deterministic_gzip(norm_body)
     (output_root / "normalized.jsonl.gz").write_bytes(compressed)
-    (output_root / "raw.json").write_bytes(raw)
-    coverage_values = [row.get(coverage_field) for row in normalized_rows if row.get(coverage_field)]
+    (output_root / raw_filename).write_bytes(raw)
+    coverage_values = [str(row.get(coverage_field)) for row in normalized_rows if row.get(coverage_field) is not None]
     manifest = {
         "contract": "HISTORICAL_RESEARCH_VAULT_CAPTURE_MANIFEST_v1",
         "dataset_id": f"{source_id}:{now_utc()}",
@@ -211,6 +319,107 @@ def collect_coinmetrics(args: argparse.Namespace) -> dict[str, Any]:
     return {"status": "PASS", "page_count": page_guard, "source_receipts": receipts, "manifest": manifest}
 
 
+def sqd_endpoint(dataset: str) -> str:
+    if not SQD_DATASET_RE.fullmatch(dataset):
+        raise RuntimeError("invalid_sqd_dataset_slug")
+    return f"https://portal.sqd.dev/datasets/{dataset}/finalized-stream"
+
+
+def sqd_filter(addresses: str | None, topic0: str | None) -> dict[str, list[str]]:
+    row: dict[str, list[str]] = {}
+    if addresses:
+        values = [v.strip() for v in addresses.split(",") if v.strip()]
+        if values:
+            row["address"] = values
+    if topic0:
+        values = [v.strip() for v in topic0.split(",") if v.strip()]
+        if values:
+            row["topic0"] = values
+    return row
+
+
+def collect_sqd(args: argparse.Namespace) -> dict[str, Any]:
+    source_id = "SQD_PORTAL_EVM_REPLAY_v1"
+    registry_row = registry_map()[source_id]
+    if registry_row.get("durable_capture_enabled"):
+        raise RuntimeError("unexpected_durable_capture_enabled")
+    if args.to_block < args.from_block:
+        raise RuntimeError("sqd_invalid_block_range")
+    block_count = args.to_block - args.from_block + 1
+    if block_count > SQD_MAX_BLOCKS:
+        raise RuntimeError(f"sqd_block_range_exceeds_{SQD_MAX_BLOCKS}")
+    log_filter = sqd_filter(args.address, args.topic0)
+    if not log_filter:
+        raise RuntimeError("sqd_address_or_topic0_filter_required")
+    payload = {
+        "type": "evm",
+        "fromBlock": args.from_block,
+        "toBlock": args.to_block,
+        "fields": {
+            "block": {"number": True, "timestamp": True, "hash": True, "parentHash": True},
+            "log": {
+                "address": True,
+                "topics": True,
+                "data": True,
+                "transactionHash": True,
+                "transactionIndex": True,
+                "logIndex": True,
+            },
+        },
+        "logs": [log_filter],
+    }
+    url = sqd_endpoint(args.dataset)
+    items, receipt, raw = http_sqd_post(url, payload)
+    rows = normalize_sqd_blocks(items, dataset=args.dataset)
+    if not rows:
+        raise RuntimeError("sqd_empty_or_unparseable")
+    manifest = write_capture(
+        source_id=source_id,
+        raw=raw,
+        normalized_rows=rows,
+        output_root=args.output_root,
+        coverage_field="block_time_utc",
+        raw_filename="raw.ndjson",
+    )
+    return {
+        "status": "PASS",
+        "dataset": args.dataset,
+        "requested_block_count": block_count,
+        "returned_block_rows": len(rows),
+        "source_receipt": receipt,
+        "manifest": manifest,
+    }
+
+
+def probe_sqd(args: argparse.Namespace) -> dict[str, Any]:
+    source_id = "SQD_PORTAL_EVM_REPLAY_v1"
+    payload = {
+        "type": "evm",
+        "fromBlock": args.block,
+        "toBlock": args.block,
+        "includeAllBlocks": True,
+        "fields": {
+            "block": {"number": True, "timestamp": True, "hash": True, "parentHash": True},
+        },
+    }
+    url = sqd_endpoint(args.dataset)
+    items, receipt, _raw = http_sqd_post(url, payload)
+    rows = normalize_sqd_blocks(items, dataset=args.dataset)
+    if not rows or args.block not in {row["block_number"] for row in rows}:
+        raise RuntimeError("sqd_probe_block_missing")
+    return {
+        "contract": "HISTORICAL_RESEARCH_VAULT_SQD_KEYLESS_PROBE_v1",
+        "status": "PASS",
+        "source_id": source_id,
+        "retrieved_at_utc": now_utc(),
+        "dataset": args.dataset,
+        "probe_block": args.block,
+        "source_receipt": receipt,
+        "raw_payload_persisted": False,
+        "authority": AUTHORITY,
+    }
+
+
 def probe_coingecko(args: argparse.Namespace) -> dict[str, Any]:
     source_id = "COINGECKO_HISTORICAL_CROSSCHECK_v1"
     url = "https://api.coingecko.com/api/v3/coins/" + f"{urllib.parse.quote(args.coin)}/market_chart?vs_currency=usd&days=7&interval=daily"
@@ -244,6 +453,18 @@ def main() -> int:
     cm.add_argument("--end-time", required=True)
     cm.add_argument("--output-root", type=Path, required=True)
 
+    sqd = sub.add_parser("collect-sqd")
+    sqd.add_argument("--dataset", default="ethereum-mainnet")
+    sqd.add_argument("--from-block", type=int, required=True)
+    sqd.add_argument("--to-block", type=int, required=True)
+    sqd.add_argument("--address")
+    sqd.add_argument("--topic0")
+    sqd.add_argument("--output-root", type=Path, required=True)
+
+    sqdp = sub.add_parser("probe-sqd")
+    sqdp.add_argument("--dataset", default="ethereum-mainnet")
+    sqdp.add_argument("--block", type=int, default=21000000)
+
     cg = sub.add_parser("probe-coingecko")
     cg.add_argument("--coin", default="bitcoin")
 
@@ -254,6 +475,10 @@ def main() -> int:
         result = collect_growthepie(args)
     elif args.command == "collect-coinmetrics":
         result = collect_coinmetrics(args)
+    elif args.command == "collect-sqd":
+        result = collect_sqd(args)
+    elif args.command == "probe-sqd":
+        result = probe_sqd(args)
     elif args.command == "probe-coingecko":
         result = probe_coingecko(args)
     else:
