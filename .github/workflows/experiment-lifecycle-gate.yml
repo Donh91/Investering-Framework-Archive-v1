@@ -4,6 +4,8 @@ on:
   pull_request:
     paths:
       - 'scripts/experiments/**'
+      - 'scripts/research/compounding_learning_controller.py'
+      - 'scripts/research/research_governance_common.py'
       - 'scripts/api_agent/build_weekly_calibration_context.py'
       - '.github/workflows/daily-director-shadow.yml'
       - '.github/workflows/framework-learning-operations.yml'
@@ -11,8 +13,10 @@ on:
       - '.github/workflows/unified-experimental-lifecycle-adjudication.yml'
       - '.github/workflows/experiment-lifecycle-gate.yml'
       - 'tests/experiments/**'
+      - '00_ARCHIVE_CONTROL/research_governance_v1/compounding_learning_v1/**'
       - '00_FMOS/EXPERIMENT_LIFECYCLE_AND_EXECUTION_PLANE_v1.md'
       - '00_FMOS/EXPERIMENT_SCIENTIFIC_ADMISSION_AND_UNIFIED_ADJUDICATION_v1.md'
+      - 'research/api_agent/API_AGENT_AND_COMPOUNDING_LEARNING_ARCHITECTURE_v1.md'
   workflow_dispatch:
 
 permissions:
@@ -35,6 +39,8 @@ jobs:
             scripts/experiments/unified_experimental_adjudication.py \
             scripts/experiments/rebuild_experiment_registry.py \
             scripts/experiments/sync_experiment_receipts.py \
+            scripts/research/compounding_learning_controller.py \
+            scripts/research/research_governance_common.py \
             scripts/api_agent/build_weekly_calibration_context.py
       - name: Run experiment lifecycle tests
         run: python -m unittest discover -s tests/experiments -v
