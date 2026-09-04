@@ -97,6 +97,14 @@ def validate_source_candidate_binding(candidate_record: dict[str, Any], forecast
     }
 
 
+def validate_candidate_cohort_eligibility(candidate_record: dict[str, Any], cohort_start: datetime, cohort_end: datetime) -> datetime:
+    """Require the immutable source candidate itself, not only later ratification, to originate inside the fixed cohort."""
+    created_at = parse_dt(str(candidate_record.get("created_at_utc") or ""))
+    if not (cohort_start <= created_at < cohort_end):
+        raise ValueError("SOURCE_CANDIDATE_OUTSIDE_COHORT")
+    return created_at
+
+
 def validate_activation(
     activation: dict[str, Any], prereg_bytes: bytes, erratum_bytes: bytes
 ) -> tuple[datetime, datetime]:
