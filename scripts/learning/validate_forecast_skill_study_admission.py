@@ -14,8 +14,10 @@ from forecast_study_v1_3_2 import (  # noqa: E402
     ADMISSION,
     digest,
     digest_bytes,
+    iso,
     parse_dt,
     validate_activation,
+    validate_candidate_cohort_eligibility,
     validate_source_candidate_binding,
     verify_self_hash,
 )
@@ -31,23 +33,12 @@ def repo_relative(repo_root: Path, path: Path) -> str:
 
 def git_first_add(repo_root: Path, path: Path) -> tuple[str, str, bytes]:
     rel = repo_relative(repo_root, path)
-    proc = subprocess.run(
-        ["git", "log", "--diff-filter=A", "--follow", "--reverse", "--format=%H%x09%cI", "--", rel],
-        cwd=repo_root,
-        check=True,
-        capture_output=True,
-        text=True,
-    )
+    proc = subprocess.run(["git", "log", "--diff-filter=A", "--follow", "--reverse", "--format=%H%x09%cI", "--", rel], cwd=repo_root, check=True, capture_output=True, text=True)
     rows = [row for row in proc.stdout.splitlines() if row.strip()]
     if not rows:
         raise ValueError(f"ADMISSION_NOT_GIT_RECORDED:{rel}")
     commit_sha, commit_time = rows[0].split("\t", 1)
-    blob = subprocess.run(
-        ["git", "show", f"{commit_sha}:{rel}"],
-        cwd=repo_root,
-        check=True,
-        capture_output=True,
-    ).stdout
+    blob = subprocess.run(["git", "show", f"{commit_sha}:{rel}"], cwd=repo_root, check=True, capture_output=True).stdout
     return commit_sha, commit_time, blob
 
 
@@ -118,8 +109,11 @@ def main() -> None:
                 raise ValueError("SOURCE_CANDIDATE_UNIQUE_BINDING_REQUIRED")
             candidate_path, candidate_record = candidate_rows[0]
             provenance = validate_source_candidate_binding(candidate_record, forecast)
+            candidate_created_at = validate_candidate_cohort_eligibility(candidate_record, start, end)
             if admission.get("source_candidate_path") != candidate_path.as_posix():
                 raise ValueError("SOURCE_CANDIDATE_PATH_BINDING_FAILURE")
+            if admission.get("source_candidate_created_at_utc") != iso(candidate_created_at):
+                raise ValueError("SOURCE_CANDIDATE_COHORT_BINDING_FAILURE")
             for key, expected in provenance.items():
                 if admission.get(key) != expected:
                     raise ValueError("SOURCE_TEMPORAL_PROVENANCE_BINDING_FAILURE:" + key)
