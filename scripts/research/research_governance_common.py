@@ -28,6 +28,10 @@ SPECIALIST_BINDINGS = {
         "primary": ROOT / "00_ARCHIVE_CONTROL/source_recovery_controller_v1/STATE.json",
         "fallback": None,
     },
+    "COMPOUNDING_LEARNING": {
+        "primary": ROOT / "00_ARCHIVE_CONTROL/research_governance_v1/compounding_learning_v1/STATE.json",
+        "fallback": None,
+    },
 }
 
 RESEARCH_PROPOSAL_ACTIONS = {
