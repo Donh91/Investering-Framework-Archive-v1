@@ -1,0 +1,65 @@
+{
+  "authority": {
+    "framework_state_change": false,
+    "model_weight_change": false,
+    "portfolio_action": false
+  },
+  "automation_decision": {
+    "reason": "Current operations dashboard is RED and backlog is already large; V1 is PR-gated/manual only.",
+    "scheduled_collection_enabled": false
+  },
+  "branch_base_sha": "e75acb1b5b91420286fc852d480b53b50e9b99e8",
+  "checks": [
+    {
+      "evidence": {
+        "blob_size_bytes": 31960,
+        "collector_path": "scripts/data_terminal/defillama_stablecoin_owner.py",
+        "github_blob_sha": "b8854207f91cb139fc74cdfb086e98eaf506715d",
+        "history_path": "03_DAILY_CAPTURE_LOGS/stablecoin_liquidity/backfill/global_history.jsonl.gz"
+      },
+      "source_id": "DEFILLAMA_STABLECOIN_OWNER_EXISTING_v1",
+      "status": "PASS_EXISTING_OWNER_FOUND"
+    },
+    {
+      "evidence": {
+        "historical_start_observed_ms": 1690502400000,
+        "shape": "details.timeseries.daily.types + data",
+        "types_observed": ["unix", "usd", "eth"],
+        "url": "https://api.growthepie.com/v1/metrics/chains/base/stables_mcap.json"
+      },
+      "source_id": "GROWTHEPIE_ETH_L2_DAILY_v1",
+      "status": "PASS_HTTP_200"
+    },
+    {
+      "evidence": {
+        "allowed_probe_http_status": 200,
+        "allowed_probe_metrics": ["PriceUSD", "SplyCur", "CapMrktCurUSD", "TxCnt"],
+        "rejected_probe_http_status": 403,
+        "rejected_probe_metrics": ["CapRealUSD", "FeeTotUSD"]
+      },
+      "source_id": "COINMETRICS_COMMUNITY_BTC_ETH_DAILY_v1",
+      "status": "PASS_KEYLESS_BOOTSTRAP_SCOPE"
+    },
+    {
+      "evidence": {
+        "http_status": 200,
+        "raw_archive_decision": "DISABLED",
+        "url": "https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=7&interval=daily"
+      },
+      "source_id": "COINGECKO_HISTORICAL_CROSSCHECK_v1",
+      "status": "PASS_QUERY_TIME_ONLY"
+    },
+    {
+      "evidence": {
+        "collection_attempted": false,
+        "reason": "Do not create or guess credentials. Per-subgraph admission required.",
+        "required_secret": "GRAPH_API_KEY"
+      },
+      "source_id": "THE_GRAPH_SUBGRAPH_REPLAY_v1",
+      "status": "BLOCKED_AUTH_EXPECTED"
+    }
+  ],
+  "contract": "HISTORICAL_RESEARCH_VAULT_BOOTSTRAP_RECEIPT_v1",
+  "not_an_owner_capture_receipt": true,
+  "observed_at_utc": "2026-09-04T21:39:00Z"
+}

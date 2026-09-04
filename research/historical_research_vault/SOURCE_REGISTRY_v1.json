@@ -1,0 +1,80 @@
+{
+  "authority": {
+    "framework_state_change": false,
+    "model_weight_change": false,
+    "portfolio_action": false
+  },
+  "contract": "HISTORICAL_RESEARCH_VAULT_SOURCE_REGISTRY_v1",
+  "generated_at_utc": "2026-09-04T21:39:00Z",
+  "sources": [
+    {
+      "durable_capture_enabled": false,
+      "existing_history_path": "03_DAILY_CAPTURE_LOGS/stablecoin_liquidity/backfill/global_history.jsonl.gz",
+      "existing_latest_pointer": "03_DAILY_CAPTURE_LOGS/stablecoin_liquidity/LATEST.json",
+      "license_class": "EXISTING_OWNER_TERMS_REVIEW_NO_NEW_REDISTRIBUTION",
+      "owner_collector": "scripts/data_terminal/defillama_stablecoin_owner.py",
+      "provider": "DefiLlama",
+      "research_use": ["stablecoin_supply", "liquidity_regime_context", "historical_replay"],
+      "role": "SUPPLY_LIQUIDITY_HISTORY",
+      "source_id": "DEFILLAMA_STABLECOIN_OWNER_EXISTING_v1",
+      "status": "EXISTING_OWNER_REUSED",
+      "vault_collection_mode": "INDEX_ONLY_NO_DUPLICATE"
+    },
+    {
+      "base_url": "https://api.growthepie.com",
+      "bootstrap_scope": {"chains": ["base"], "metrics": ["stables_mcap"]},
+      "durable_capture_enabled": false,
+      "license_class": "PUBLIC_API_DATASET_REDISTRIBUTION_REVIEW_REQUIRED",
+      "metadata_storage_class": "T0_GIT_METADATA",
+      "provider": "growthepie",
+      "raw_storage_class": "T2_ACTIONS_ARTIFACT",
+      "research_use": ["stablecoin_deployment", "l2_transmission", "ecosystem_activity_replay"],
+      "role": "ETH_L2_TRANSMISSION_HISTORY",
+      "source_id": "GROWTHEPIE_ETH_L2_DAILY_v1",
+      "status": "PUBLIC_ENDPOINT_PROBE_VERIFIED",
+      "vault_collection_mode": "BOUNDED_TEMPORARY_CAPTURE"
+    },
+    {
+      "base_url": "https://community-api.coinmetrics.io/v4",
+      "bootstrap_scope": {"assets": ["btc", "eth"], "frequency": "1d", "metrics": ["PriceUSD", "SplyCur", "CapMrktCurUSD", "TxCnt"]},
+      "durable_capture_enabled": false,
+      "license_class": "COMMUNITY_CC_SCOPE_FREEZE_REQUIRED_BEFORE_DURABLE_REDISTRIBUTION",
+      "metadata_storage_class": "T0_GIT_METADATA",
+      "provider": "Coin Metrics Community",
+      "raw_storage_class": "T2_ACTIONS_ARTIFACT",
+      "research_use": ["price_crosscheck", "market_cap", "supply", "transaction_activity"],
+      "role": "INDEPENDENT_BTC_ETH_NETWORK_MARKET_HISTORY",
+      "source_id": "COINMETRICS_COMMUNITY_BTC_ETH_DAILY_v1",
+      "status": "KEYLESS_PROBE_VERIFIED",
+      "vault_collection_mode": "BOUNDED_TEMPORARY_CAPTURE"
+    },
+    {
+      "base_url": "https://api.coingecko.com/api/v3",
+      "durable_capture_enabled": false,
+      "license_class": "SOURCE_TERMS_STORAGE_REDISTRIBUTION_RESTRICTED",
+      "metadata_storage_class": "T0_GIT_METADATA",
+      "provider": "CoinGecko",
+      "raw_storage_class": "T4_EXTERNAL_LICENSED",
+      "research_use": ["historical_price_crosscheck", "range_validation"],
+      "role": "MARKET_PRICE_CROSSCHECK",
+      "source_id": "COINGECKO_HISTORICAL_CROSSCHECK_v1",
+      "status": "KEYLESS_PROBE_VERIFIED_QUERY_TIME_ONLY",
+      "vault_collection_mode": "QUERY_TIME_ONLY_METADATA_RECEIPT"
+    },
+    {
+      "base_url": "https://gateway.thegraph.com/api",
+      "durable_capture_enabled": false,
+      "license_class": "PER_SUBGRAPH_SOURCE_AND_LICENSE_REVIEW_REQUIRED",
+      "metadata_storage_class": "T0_GIT_METADATA",
+      "provider": "The Graph",
+      "raw_storage_class": "T2_ACTIONS_ARTIFACT",
+      "required_secret": "GRAPH_API_KEY",
+      "research_use": ["dex_replay", "lending_replay", "bridge_replay", "protocol_activity"],
+      "role": "PROTOCOL_LEVEL_ONCHAIN_REPLAY",
+      "source_id": "THE_GRAPH_SUBGRAPH_REPLAY_v1",
+      "status": "AUTH_REQUIRED_NOT_YET_COLLECTED",
+      "vault_collection_mode": "ADMIT_PER_SUBGRAPH"
+    }
+  ],
+  "storage_policy_path": "research/programs/MARKET_ANTICIPATION_RESEARCH_PROGRAM_v1/DATASET_STORAGE_POLICY_v1.md"
+}

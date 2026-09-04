@@ -59,6 +59,10 @@ Audit duplicate candidates, maturity, scoring eligibility and frozen lineage. Av
 
 Use health objects as observability, then inspect their owners and evidence before inferring system quality.
 
+### 7. Historical Research Vault
+
+Use `historical_research_vault/` as the index and governed collection surface for replay-grade historical data. Reuse existing owner datasets before adding sources, keep bulk payloads out of ordinary Git history, and require source/license/storage admission before durable promotion.
+
 ## Current live seed from 2026-09-04
 
 At the time this README was created, the root dashboard reported a large experiment/forecast/remediation backlog and an automation-health RED caused by `daily-slow-cycle-shadow.yml` latest/repeated failures.
@@ -92,6 +96,7 @@ See:
 
 ```text
 ../06_RESEARCH_LAB/README.md
+historical_research_vault/README.md
 codex/README.md
 ../07_PROMPTS_AND_AGENTS/astra/README.md
 ```
