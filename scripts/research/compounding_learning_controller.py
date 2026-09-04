@@ -333,6 +333,21 @@ def _make_packet(
     learning_state, action, reason, proposal_eligible, question = _learning_from_adjudication(
         row, current
     )
+    confirmatory_final_owner_ready = (
+        profile == "CONFIRMATORY"
+        and str(candidate.get("state") or "").upper().startswith("MATURED_")
+        and int(candidate.get("matured_outcome_count") or 0) > 0
+    )
+    if profile == "CONFIRMATORY" and not confirmatory_final_owner_ready:
+        learning_state = "CONFIRMATORY_OPERATIONAL_CHECKPOINT_ONLY"
+        action = "CONTINUE_OBSERVING"
+        reason = (
+            "confirmatory checkpoint is operational only; wait for the preregistered final "
+            "confirmatory owner before scientific learning or child-test proposal"
+        )
+        proposal_eligible = False
+        question = "AWAIT_FINAL_CONFIRMATORY_OWNER_VERDICT"
+
     detail, detail_source = _admission_detail(str(candidate.get("candidate_id") or ""), admission_row)
     context = _learning_context(
         detail,
