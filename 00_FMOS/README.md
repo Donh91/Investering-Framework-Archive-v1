@@ -36,3 +36,37 @@ GitHub is the durable machine memory and governance substrate. ChatGPT is the re
 - `OWNER_SYSTEM_MAP_v0_1.md` retained as superseded bootstrap history.
 
 See `ARCHITECTURE.md`, `GRAPH_AND_RETRIEVAL.md`, `AUTOMATION_TOPOLOGY.md`, `MIGRATION_PLAN.md`, and the WP-00 registry.
+
+## Agent / next-generation model mission card
+
+This section is **navigation only**. FMOS owners above and current machine state remain authoritative.
+
+A repository-aware model should treat FMOS as the place to ask:
+
+```text
+Can the framework reconstruct current truth without conversation memory?
+Can every important claim be traced to an immutable root?
+Can current context be compressed without losing authority, time or failure semantics?
+Can duplicate aliases and stale pointers be detected mechanically?
+Can a fresh model discover the right owner before loading large context?
+```
+
+High-value mission seeds:
+
+1. **Lineage/root collapse audit** - find places where many derived artifacts obscure a small number of real evidence roots.
+2. **Context routing benchmark** - measure whether a fresh agent can reach the correct current owner with minimal context and zero stale-authority mistakes.
+3. **Duplicate/alias compression** - detect semantically identical paths/candidates/receipts without merging distinct evidence.
+4. **AS_OF replay** - verify knowledge-time reconstruction and prevent future information from leaking into historical state.
+5. **Machine memory survival** - test whether the framework remains understandable after model replacement, chat loss or provider change.
+6. **Ownership drift** - compare the WP-00 owner registry with actual current writers, consumers and workflow behavior.
+
+Default authority is `READ_ONLY`.
+
+Do not turn FMOS into a parallel framework brain, independent market authority or portfolio executor. Its value is reliable memory, routing, lineage and replay.
+
+For Astra-class or successor-model onboarding, read:
+
+```text
+../07_PROMPTS_AND_AGENTS/astra/README.md
+../07_PROMPTS_AND_AGENTS/astra/ASTRA_REPOSITORY_MISSION_ROUTER_v1.json
+```
