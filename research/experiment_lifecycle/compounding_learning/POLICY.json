@@ -1,0 +1,68 @@
+{
+  "contract": "COMPOUNDING_LEARNING_POLICY_v1",
+  "status": "ACTIVE",
+  "authority": "RESEARCH_ONLY_NON_CANONICAL",
+  "purpose": "Multi-speed prospective learning checkpoints and next-best-experiment routing over the existing experiment lifecycle without creating a parallel scorer or market authority.",
+  "fast_horizon_days_max": 7,
+  "medium_horizon_days_max": 30,
+  "max_checkpoint_candidates_per_run": 25,
+  "confirmatory_candidate_ids": [],
+  "protected_external_confirmatory_owners": [
+    "research/api_agent/forecast_skill"
+  ],
+  "profiles": {
+    "FAST": {
+      "day_checkpoints": [7, 14, 30],
+      "matured_outcome_checkpoints": [3, 5, 10],
+      "recurring_day_step_after_max": 30,
+      "recurring_matured_step_after_max": 10
+    },
+    "MEDIUM": {
+      "day_checkpoints": [30, 60, 90],
+      "matured_outcome_checkpoints": [5, 10, 20],
+      "recurring_day_step_after_max": 90,
+      "recurring_matured_step_after_max": 20
+    },
+    "LONG": {
+      "day_checkpoints": [60, 120, 180, 240],
+      "matured_outcome_checkpoints": [5, 10, 25, 50],
+      "recurring_day_step_after_max": 120,
+      "recurring_matured_step_after_max": 50
+    },
+    "CONFIRMATORY": {
+      "day_checkpoints": [30, 60, 90, 120, 180],
+      "matured_outcome_checkpoints": [],
+      "recurring_day_step_after_max": 0,
+      "recurring_matured_step_after_max": 0,
+      "interim_performance_inference_allowed": false,
+      "checkpoint_scope": "HEALTH_COVERAGE_AND_MATURITY_READINESS_ONLY"
+    }
+  },
+  "learning_verdicts": [
+    "PROMISING",
+    "INSUFFICIENT_EVIDENCE",
+    "REDUNDANT",
+    "DATA_DEFECT",
+    "FAILED",
+    "REPLICATION_REQUIRED"
+  ],
+  "allowed_next_actions": [
+    "CONTINUE_OBSERVING",
+    "RECOVER_EVIDENCE_PATH",
+    "RUN_INCREMENTAL_VALUE_TEST",
+    "RUN_REDUNDANCY_CONFIRMATION",
+    "DEPRIORITIZE",
+    "FREEZE_NEW_CHALLENGER",
+    "OPEN_PROSPECTIVE_FORWARD_TEST"
+  ],
+  "activation_floor_rule": "ALL_PRE_ACTIVATION_CHECKPOINTS_BASELINED_NOT_REPLAYED",
+  "parent_child_rule": "PARENT_IMMUTABLE_CHILD_REQUIRES_NOVELTY_VOI_AND_SCIENTIFIC_ADMISSION",
+  "canonical_effect": false,
+  "portfolio_execution": false,
+  "automatic_promotion": false,
+  "automatic_canonical_write": false,
+  "automatic_market_rule_change": false,
+  "automatic_threshold_change": false,
+  "automatic_weight_change": false,
+  "automatic_child_registration": false
+}
