@@ -14,6 +14,7 @@ on:
       - 'tests/learning/test_forecast_skill_study_v132.py'
       - 'tests/learning/test_forecast_settlement_scope_t13.py'
       - 'tests/learning/test_forecast_skill_activation_governance_t13.py'
+      - 'tests/learning/test_forecast_skill_precohort_candidate_t13.py'
       - '06_RESEARCH_LAB/forward_tests/forecast_skill_preregistration/FORECAST_SKILL_PREREGISTRATION_ACCEPTANCE_v1.json'
       - '06_RESEARCH_LAB/forward_tests/forecast_skill_preregistration/FORECAST_SKILL_ACTIVE_TEST_REGISTRATION_v1_3_2.json'
       - '.github/workflows/continuity-learning-maintenance.yml'
@@ -54,6 +55,7 @@ jobs:
           python -m unittest discover -s tests/learning -p 'test_forecast_skill_study_v132.py' -v
           python -m unittest discover -s tests/learning -p 'test_forecast_settlement_scope_t13.py' -v
           python -m unittest discover -s tests/learning -p 'test_forecast_skill_activation_governance_t13.py' -v
+          python -m unittest discover -s tests/learning -p 'test_forecast_skill_precohort_candidate_t13.py' -v
       - name: Verify workflow scientific firewall ordering
         run: |
           python - <<'PY'
@@ -87,6 +89,8 @@ jobs:
               'scripts/lib/forecast_study_inference_v1_3_2.py',
               'scripts/learning/build_model_calibration_ledger.py',
               'scripts/learning/create_forecast_skill_cohort_activation.py',
+              'scripts/learning/build_forecast_study_admissions.py',
+              'scripts/learning/validate_forecast_skill_study_admission.py',
           ])
           required = [
               'EACH_OBSERVED_OUTCOME_DUE_CALENDAR_DAY_EQUAL_WEIGHT',
@@ -98,6 +102,8 @@ jobs:
               "'scientific_skill_status':'NOT_ASSESSED_SETTLEMENT_TIMING_ONLY'",
               'governance_prerequisites_verified',
               'require_no_authority(active_test, "ACTIVE_TEST_REGISTRATION")',
+              'validate_candidate_cohort_eligibility',
+              'source_candidate_created_at_utc',
           ]
           for item in required:
               assert item in text, item
