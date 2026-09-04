@@ -1,0 +1,37 @@
+{
+  "contract": "ASTRA_NATIVE_OTA_PRIORITY_POINTER_v1",
+  "created_at_utc": "2026-09-04T23:20:00Z",
+  "priority": "HIGH_NATIVE_OTA_RECONCILIATION",
+  "authority": {
+    "canonical_state_change": false,
+    "market_rule_change": false,
+    "threshold_change": false,
+    "portfolio_execution": false,
+    "experiment_promotion": false
+  },
+  "mission": "Replace recurring manual Claude OTA research pings with a GitHub-native reconciliation workflow that reuses current framework owners, enforces settled-vs-live QA, reconciles true lane availability and source freshness, computes deterministic what-changed deltas, and evaluates registered early-review conditions without creating a parallel market engine.",
+  "primary_design": "research/native_ota_reconciliation/README.md",
+  "implementation_handoff": "research/astra_handoffs/2026-09-05__astra-native-ota-reconciliation-implementation-handoff-v1.md",
+  "target_verdicts": [
+    "CLAUDE_OTA_ROUTINE_RETIREMENT_READY",
+    "CLAUDE_OTA_ROUTINE_RETIREMENT_PARTIAL_BLOCKERS",
+    "CLAUDE_OTA_ROUTINE_RETIREMENT_NOT_READY"
+  ],
+  "core_principle": "RECONCILE_DO_NOT_RECOLLECT",
+  "routine_schedule_target": ["MONDAY_FIXED", "FRIDAY_FIXED"],
+  "early_trigger_policy": "USE_REGISTERED_SETTLED_CONDITIONS_FROM_EXISTING_OWNERS_WITHOUT_DUPLICATE_EXTERNAL_POLLING",
+  "required_capabilities": [
+    "SETTLED_VS_LIVE_QA",
+    "OWNER_PRECEDENCE_OVER_STALE_EXTERNAL_CONTEXT",
+    "LANE_RECONCILIATION",
+    "SOURCE_FRESHNESS_QA",
+    "DETERMINISTIC_WHAT_CHANGED",
+    "REGISTERED_GATE_WATCH",
+    "EARLY_REVIEW_TRIGGER",
+    "PREVIOUS_ACCEPTED_REPORT_LINEAGE",
+    "ZERO_AUTHORITY_GUARDRAILS",
+    "PRODUCTION_PROOF_AND_CURRENT_MAIN_READBACK"
+  ],
+  "cost_policy": "NEAR_ZERO_MARGINAL_MARKET_DATA_COST_WHEN_EXISTING_OWNERS_HAVE_REQUIRED_DATA",
+  "success_definition": "Routine Claude OTA becomes unnecessary for operations; Claude/Astra remain optional challengers or deep-research tools only."
+}
