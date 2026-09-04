@@ -1,0 +1,93 @@
+{
+  "contract": "CODEX_RESEARCH_CANDIDATE_v1",
+  "candidate_id": "codex-master-monday-cfgi-readback-v1",
+  "title": "Fix Master Monday CFGI live-anchor readback",
+  "status": "SUBMITTED",
+  "requested_priority": "EXPEDITED",
+  "authority_boundary": "CODE_REMEDIATION_ONLY",
+  "requires_framework_owner_authority": false,
+  "finding_key": "MASTER_MONDAY_CFGI_CURRENT_SCHEMA_READBACK_MISMATCH",
+  "objective": "Repair the bounded Master Monday preflight CFGI readback so current DAILY_LIVE_ANCHOR_INDEX_v3 observations persisted under market_metrics.sentiment.cfgi.symbols.{MARKET,BTC,ETH} are consumed as existing evidence instead of being reported UNAVAILABLE. Preserve fail-closed behavior and any supported legacy flat CFGI representation. Do not alter capture cadence, source calls, market semantics, thresholds or historical evidence.",
+  "primary_target": "scripts/master_monday/build_preflight_package_v3.py",
+  "origin": {
+    "type": "LIVE_FORENSIC_PREMOVE_ARCHIVE_AUDIT",
+    "thread_label": "2026-09-04 pre-move learning preservation audit",
+    "source_paths": [
+      "scripts/master_monday/build_preflight_package_v3.py",
+      "scripts/daily_capture/build_weekly_cfgi_summary.py",
+      "03_DAILY_CAPTURE_LOGS/captures/2026/09/02/223918_gh-33691403109-1.json",
+      "03_DAILY_CAPTURE_LOGS/captures/2026/09/03/043424_gh-33715519084-1.json",
+      "03_DAILY_CAPTURE_LOGS/captures/2026/09/03/085318_gh-33735765214-1.json",
+      "03_DAILY_CAPTURE_LOGS/captures/2026/09/03/125006_gh-33757461329-1.json",
+      ".github/workflows/master-monday-preflight-gate.yml",
+      ".github/workflows/weekly-api-calibration-shadow.yml"
+    ]
+  },
+  "evidence": [
+    {
+      "kind": "REPO_PATH",
+      "ref": "03_DAILY_CAPTURE_LOGS/captures/2026/09/02/223918_gh-33691403109-1.json",
+      "summary": "Current v3 capture contains fresh PASS CFGI observations under market_metrics.sentiment.cfgi.symbols for BTC, ETH and MARKET."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "03_DAILY_CAPTURE_LOGS/captures/2026/09/03/043424_gh-33715519084-1.json",
+      "summary": "Pre-move 04:34Z capture preserves BTC 45, ETH 47 and MARKET 49.5 CFGI scores under the current symbols nesting."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "03_DAILY_CAPTURE_LOGS/captures/2026/09/03/085318_gh-33735765214-1.json",
+      "summary": "Pre-move 08:53Z capture preserves BTC 47.5, ETH 48.5 and MARKET 48 CFGI observations while breadth had already risen to 77/100."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "scripts/master_monday/build_preflight_package_v3.py",
+      "summary": "Current preflight assigns cfgi=market_metrics.sentiment.cfgi and then reads cfgi.get(MARKET/BTC/ETH), omitting the current symbols nesting and causing A46-A48 false UNAVAILABLE."
+    },
+    {
+      "kind": "COMMIT",
+      "ref": "ebb3ad869d3cea963d34eed5d30d6fcb34301f0d",
+      "summary": "Analogous weekly CFGI reader mismatch was already fixed on main; this candidate must not duplicate or broaden that repair."
+    }
+  ],
+  "allowed_change_scope": [
+    "scripts/master_monday/build_preflight_package_v3.py",
+    "tests/master_monday directly covering preflight CFGI readback",
+    ".github/workflows/master-monday-preflight-gate.yml only if required to execute the added regression test"
+  ],
+  "forbidden_changes": [
+    "Daily Live Anchor capture code or cadence",
+    "Hourly Sequence",
+    "Daily Director Shadow",
+    "CFGI source calls or API budget",
+    "build_weekly_cfgi_summary.py unless fresh reproduction proves the Sep 3 fix is insufficient",
+    "raw or historical evidence rewriting",
+    "backfilling observations that were not captured ex ante",
+    "market gates",
+    "model weights",
+    "canonical authority",
+    "portfolio logic",
+    "thresholds",
+    "automatic promotion or self-merge"
+  ],
+  "reproduction": "On fresh main, use a current DAILY_LIVE_ANCHOR_INDEX_v3 fixture matching the persisted Sep 2-3 captures where market_metrics.sentiment.cfgi.symbols contains MARKET, BTC and ETH observations. Run build_preflight_package_v3.py. Observe that A46-A48 read cfgi.get(name) from the parent object and therefore report UNAVAILABLE even though the persisted observations exist under cfgi.symbols.",
+  "acceptance_tests": {
+    "positive": [
+      "A current v3 fixture with market_metrics.sentiment.cfgi.symbols.MARKET/BTC/ETH causes A46, A47 and A48 to PASS with the exact persisted observation objects.",
+      "The emitted preflight top-level cfgi payload exposes those exact current observations for downstream weekly calibration.",
+      "Any supported legacy flat CFGI shape remains readable without changing historical evidence.",
+      "Master Monday preflight unit tests and master-monday-preflight-gate pass."
+    ],
+    "negative": [
+      "Missing, malformed or non-dict CFGI data remains explicit UNAVAILABLE and is never inferred, forward-filled or substituted.",
+      "No source call, capture cadence, market rule, threshold, model weight or portfolio authority changes are introduced.",
+      "No historical capture, weekly summary or raw artifact is rewritten to make the test pass."
+    ]
+  },
+  "post_fix_gate": "MASTER_MONDAY_PREFLIGHT_GATE_PASS_PLUS_CURRENT_V3_CFGI_A46_A48_REGRESSION_PASS",
+  "clean_noop_condition": "Fresh main already reads current market_metrics.sentiment.cfgi.symbols correctly in Master Monday preflight and a regression test proves A46-A48 PASS; if so, stop without code changes and close the candidate as superseded/no-op.",
+  "stop_condition": "Stop without code changes if reproduction fails, the required fix exceeds the bounded preflight/test scope, or implementation would require changing capture semantics, market authority, thresholds, source calls or historical evidence.",
+  "escalation_condition": "Escalate to FRAMEWORK_OWNER only if current and legacy CFGI representations cannot be supported deterministically without changing evidence semantics.",
+  "rollback_plan": "Revert only the bounded Master Monday preflight/readback code and directly related regression test. Preserve all Sep 1-4 captures, Hourly, Shadow, Pullback Forensics and historical CFGI evidence unchanged.",
+  "submitted_at_utc": "2026-09-04T06:31:21Z"
+}
