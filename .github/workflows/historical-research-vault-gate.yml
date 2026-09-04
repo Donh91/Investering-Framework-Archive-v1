@@ -35,6 +35,20 @@ jobs:
       - name: Unit tests
         run: python -m pytest -q tests/test_historical_research_vault.py
 
+  sqd-keyless-admission-probe:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Probe one finalized Ethereum block through public SQD Portal
+        run: |
+          python scripts/research/historical_research_vault.py probe-sqd \
+            --dataset ethereum-mainnet \
+            --block 21000000
+
   bounded-network-probe:
     if: github.event_name == 'workflow_dispatch' && inputs.network_probe == true
     runs-on: ubuntu-latest
@@ -58,6 +72,15 @@ jobs:
             --start-time 2026-08-01 \
             --end-time 2026-09-01 \
             --output-root "$RUNNER_TEMP/historical_research_vault/coinmetrics"
+      - name: SQD Portal bounded finalized USDC Transfer capture
+        run: |
+          python scripts/research/historical_research_vault.py collect-sqd \
+            --dataset ethereum-mainnet \
+            --from-block 21000000 \
+            --to-block 21000100 \
+            --address 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48 \
+            --topic0 0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef \
+            --output-root "$RUNNER_TEMP/historical_research_vault/sqd"
       - name: CoinGecko metadata-only probe
         run: |
           python scripts/research/historical_research_vault.py probe-coingecko \
