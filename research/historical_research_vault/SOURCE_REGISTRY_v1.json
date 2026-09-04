@@ -5,7 +5,7 @@
     "portfolio_action": false
   },
   "contract": "HISTORICAL_RESEARCH_VAULT_SOURCE_REGISTRY_v1",
-  "generated_at_utc": "2026-09-04T23:05:00Z",
+  "generated_at_utc": "2026-09-04T23:10:00Z",
   "sources": [
     {
       "durable_capture_enabled": false,
@@ -62,6 +62,7 @@
       "vault_collection_mode": "QUERY_TIME_ONLY_METADATA_RECEIPT"
     },
     {
+      "admission_receipt": "research/historical_research_vault/SQD_ADMISSION_RECEIPT_2026-09-05.json",
       "auth_policy": "PUBLIC_PORTAL_NO_ACCOUNT_DEFAULT_AUTH_OPTIONAL_PER_PORTAL",
       "base_url": "https://portal.sqd.dev/datasets",
       "bootstrap_scope": {"dataset": "ethereum-mainnet", "endpoint": "finalized-stream", "probe_block": 21000000},
@@ -74,7 +75,7 @@
       "role": "PRIMARY_PROTOCOL_LEVEL_ONCHAIN_REPLAY",
       "runtime_auth_header_env": "SQD_PORTAL_AUTHORIZATION_OPTIONAL",
       "source_id": "SQD_PORTAL_EVM_REPLAY_v1",
-      "status": "PUBLIC_PORTAL_DOCS_VERIFIED_PENDING_LIVE_PR_PROBE",
+      "status": "KEYLESS_LIVE_PROBE_VERIFIED_2026-09-04",
       "vault_collection_mode": "BOUNDED_FILTERED_FINALIZED_CAPTURE"
     }
   ],
