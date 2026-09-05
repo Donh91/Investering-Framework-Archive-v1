@@ -6,11 +6,19 @@
   "task_registry_owner": "research/api_agent/API_TASK_REGISTRY_v1.json",
   "default_mode": "SHADOW_RECOMMEND_ONLY",
   "production_activation": "EXPLICIT_RUNTIME_FLAG_AFTER_QUALIFICATION",
+  "pricing_snapshot": {
+    "observed_at_utc_date": "2026-09-05",
+    "semantics": "ROUTING_COST_ESTIMATE_ONLY_NOT_BILLING_OR_BUDGET_AUTHORITY",
+    "long_context_threshold_tokens": 272000,
+    "long_context_input_multiplier": 2.0,
+    "long_context_output_multiplier": 1.5
+  },
   "principles": {
     "deterministic_first": true,
     "cheapest_qualified_executor": true,
     "model_identity_never_grants_authority": true,
     "api_models_have_repository_write_authority": false,
+    "profile_write_scope_is_request_not_authority": true,
     "code_write_executor": "CODEX_ONLY",
     "automatic_merge": false,
     "canonical_self_promotion": false,
@@ -29,23 +37,23 @@
     "gpt-5.6-luna": {
       "rank": 1,
       "api_eligible": true,
-      "reasoning_efforts": ["low", "medium", "high", "xhigh", "max"],
+      "reasoning_efforts": ["none", "low", "medium", "high", "xhigh", "max"],
       "capabilities": ["classification", "extraction", "structured_output", "summarization"],
-      "price_per_million": {"input": 1.0, "output": 6.0}
+      "price_per_million": {"input": 0.2, "output": 1.2}
     },
     "gpt-5.6-terra": {
       "rank": 2,
       "api_eligible": true,
-      "reasoning_efforts": ["low", "medium", "high", "xhigh", "max"],
+      "reasoning_efforts": ["none", "low", "medium", "high", "xhigh", "max"],
       "capabilities": ["classification", "conflict_review", "extraction", "structured_output", "summarization", "synthesis"],
-      "price_per_million": {"input": 2.5, "output": 15.0}
+      "price_per_million": {"input": 2.0, "output": 12.0}
     },
     "gpt-5.6-sol": {
       "rank": 3,
       "api_eligible": true,
-      "reasoning_efforts": ["low", "medium", "high", "xhigh", "max"],
+      "reasoning_efforts": ["none", "low", "medium", "high", "xhigh", "max"],
       "capabilities": ["classification", "conflict_review", "difficult_reasoning", "extraction", "research", "review", "structured_output", "summarization", "synthesis"],
-      "price_per_million": {"input": 5.0, "output": 30.0}
+      "price_per_million": {"input": 4.0, "output": 20.0}
     },
     "gpt-6-astra": {
       "rank": 4,
@@ -57,6 +65,7 @@
   },
   "review": {
     "required_after_code_write": true,
+    "code_review_owner": "EXISTING_PR_REVIEW_GOVERNANCE",
     "prefer_different_model_from_worker": true,
     "minimum_capabilities": ["review"],
     "read_only": true
@@ -67,6 +76,7 @@
     "api_override_requires_verified_runtime_snapshot": true,
     "api_override_requires_explicit_gateway_flag": true,
     "code_write_requires_codex_runtime_available": true,
+    "code_write_requires_existing_task_authority": true,
     "deterministic_executor_name": "DETERMINISTIC",
     "code_executor_name": "CODEX",
     "api_executor_name": "OPENAI_API"
