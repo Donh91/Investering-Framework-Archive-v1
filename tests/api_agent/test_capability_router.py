@@ -151,9 +151,9 @@ class CapabilityRouterTests(unittest.TestCase):
         self.assertFalse(plan["router_grants_write_authority"])
         self.assertTrue(all(value is False for value in plan["authority"].values()))
 
-    def test_cost_snapshot_uses_current_luna_rate(self):
+    def test_cost_snapshot_uses_current_luna_rate_below_long_context_threshold(self):
         luna = self.policy["models"]["gpt-5.6-luna"]
-        self.assertEqual(estimate_model_cost(self.policy, luna, 1_000_000, 1_000_000), 2.1)
+        self.assertEqual(estimate_model_cost(self.policy, luna, 100_000, 100_000), 0.14)
 
     def test_long_context_cost_multiplier_is_applied(self):
         astra = self.policy["models"]["gpt-6-astra"]
