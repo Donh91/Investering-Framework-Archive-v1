@@ -1,6 +1,7 @@
 import json
 import tempfile
 import unittest
+from copy import deepcopy
 from pathlib import Path
 
 from scripts.api_agent import api_gateway
@@ -152,7 +153,7 @@ class CapabilityRouterTests(unittest.TestCase):
 
     def test_cost_snapshot_uses_current_luna_rate(self):
         luna = self.policy["models"]["gpt-5.6-luna"]
-        self.assertEqual(estimate_model_cost(self.policy, luna, 1_000_000, 1_000_000), 1.4)
+        self.assertEqual(estimate_model_cost(self.policy, luna, 1_000_000, 1_000_000), 2.1)
 
     def test_long_context_cost_multiplier_is_applied(self):
         astra = self.policy["models"]["gpt-6-astra"]
@@ -173,15 +174,30 @@ class CapabilityRouterTests(unittest.TestCase):
         self.assertEqual(effective["model"], "gpt-5.6-terra")
         self.assertEqual(receipt["mode"], "SHADOW_RECOMMENDATION")
 
-    def test_gateway_activation_requires_runtime_qualification(self):
+    def test_shadow_policy_blocks_live_override_even_if_runtime_model_is_qualified(self):
         registry = api_gateway.load_registry(REGISTRY)
         task = "DAILY_CONFLICT_REVIEW"
-        p = profile(task=task, capabilities=["structured_output"], effort="low")
-        with self.assertRaisesRegex(ValueError, "selected_model_not_qualified"):
+        with self.assertRaisesRegex(ValueError, "routing_policy_not_qualified"):
             select_execution(
                 task=task,
                 task_cfg=registry["tasks"][task],
                 policy=self.policy,
+                runtime=runtime("gpt-5.6-luna", "gpt-5.6-terra", qualified=["gpt-5.6-luna"]),
+                profile=profile(task=task, capabilities=["structured_output"], effort="low"),
+                activate_routing=True,
+            )
+
+    def test_gateway_activation_requires_runtime_qualification_after_policy_qualification(self):
+        registry = api_gateway.load_registry(REGISTRY)
+        task = "DAILY_CONFLICT_REVIEW"
+        p = profile(task=task, capabilities=["structured_output"], effort="low")
+        qualified_policy = deepcopy(self.policy)
+        qualified_policy["status"] = "ACTIVE_QUALIFIED"
+        with self.assertRaisesRegex(ValueError, "selected_model_not_qualified"):
+            select_execution(
+                task=task,
+                task_cfg=registry["tasks"][task],
+                policy=qualified_policy,
                 runtime=runtime("gpt-5.6-luna", "gpt-5.6-terra"),
                 profile=p,
                 activate_routing=True,
@@ -189,7 +205,7 @@ class CapabilityRouterTests(unittest.TestCase):
         effective, _, receipt = select_execution(
             task=task,
             task_cfg=registry["tasks"][task],
-            policy=self.policy,
+            policy=qualified_policy,
             runtime=runtime("gpt-5.6-luna", "gpt-5.6-terra", qualified=["gpt-5.6-luna"]),
             profile=p,
             activate_routing=True,
@@ -207,6 +223,8 @@ class CapabilityRouterTests(unittest.TestCase):
             output_dir = root / "out"
             prompt_file.write_text("test")
             context_file.write_text("{}")
+            original_price = dict(api_gateway.PRICES_PER_MILLION["gpt-5.6-luna"])
+            original_estimator = api_gateway.estimate_cost
             run_gateway_with_effective_registry(
                 task=task,
                 registry=registry,
@@ -221,6 +239,8 @@ class CapabilityRouterTests(unittest.TestCase):
             receipt = json.loads((output_dir / "receipt.json").read_text())
             self.assertEqual(receipt["contract"], "API_AGENT_RECEIPT_v3")
             self.assertEqual(receipt["model"], "gpt-5.6-luna")
+            self.assertEqual(api_gateway.PRICES_PER_MILLION["gpt-5.6-luna"], original_price)
+            self.assertIs(api_gateway.estimate_cost, original_estimator)
             self.assertFalse((output_dir / ".capability_routed_registry.tmp.json").exists())
 
 
