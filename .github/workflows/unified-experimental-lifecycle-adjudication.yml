@@ -16,6 +16,8 @@ on:
       - '00_FMOS/EXPERIMENT_SCIENTIFIC_ADMISSION_AND_UNIFIED_ADJUDICATION_v1.md'
       - '06_RESEARCH_LAB/compounding_learning_controller_v1/**'
   schedule:
+    - cron: '*/10 * * * *'
+      timezone: 'Europe/Copenhagen'
     - cron: '5 9 * * 1'
       timezone: 'Europe/Copenhagen'
   workflow_dispatch:
