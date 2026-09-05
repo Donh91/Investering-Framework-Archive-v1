@@ -132,6 +132,26 @@
       "default_authority": "READ_ONLY"
     }
   ],
+  "specialized_audit_bundles": [
+    {
+      "id": "ASTRA_SKILLS_AGENTS_WITH_REVIEWER_FAILURE_LEARNING_V1",
+      "mode": "READ_ONLY_FIRST",
+      "primary_mission": "07_PROMPTS_AND_AGENTS/astra/ASTRA_SKILLS_AND_AGENTS_AUDIT_MISSION_v1.md",
+      "mandatory_addendum": "07_PROMPTS_AND_AGENTS/astra/ASTRA_REVIEWER_FAILURE_LEARNING_ADDENDUM_v1.md",
+      "relationship": "ADDENDUM_IS_PASS_8_OF_PRIMARY_MISSION_NOT_A_SEPARATE_AGENT_SYSTEM",
+      "purpose": "Audit Skills and agent orchestration, then learn from substantive historical reviewer findings, CI failures, remediation and post-merge defects without copying review prose into permanent instructions.",
+      "default_change_policy": "AUDIT_FIRST_CHANGE_NOTHING",
+      "preferred_prevention_order": [
+        "FIX_IMPLEMENTATION_DEFECT",
+        "CI_OR_TEST",
+        "EXISTING_OWNER_OR_ROUTING",
+        "EXISTING_SKILL_OR_LOCAL_INSTRUCTION",
+        "ROOT_AGENTS_ONLY_IF_TRULY_REPOSITORY_WIDE"
+      ],
+      "automatic_self_modification": false,
+      "new_authority": false
+    }
+  ],
   "qualification_ladder": [
     "READ",
     "AUDIT",
