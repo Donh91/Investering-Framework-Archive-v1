@@ -45,7 +45,21 @@ def select_execution(
     profile: dict[str, Any],
     activate_routing: bool,
 ) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
-    plan = build_execution_plan(policy, runtime, profile)
+    routing_runtime = runtime
+    if activate_routing:
+        if policy.get("status") != "ACTIVE_QUALIFIED":
+            raise ValueError("routing_policy_not_qualified")
+        if policy.get("production_activation") != "EXPLICIT_RUNTIME_FLAG_AFTER_QUALIFICATION":
+            raise ValueError("policy_does_not_allow_runtime_activation")
+        qualified_models = runtime.get("qualified_models")
+        if not isinstance(qualified_models, list) or not qualified_models:
+            raise ValueError("no_runtime_qualified_models")
+        # In live mode selection is constrained to the verified qualified pool,
+        # not merely every model returned by runtime discovery.
+        routing_runtime = deepcopy(runtime)
+        routing_runtime["available_models"] = list(qualified_models)
+
+    plan = build_execution_plan(policy, routing_runtime, profile)
     if plan.get("status") != "READY":
         raise ValueError(f"routing_plan_not_ready:{plan.get('status')}")
     unit = _matching_unit(plan, task)
@@ -68,12 +82,8 @@ def select_execution(
     mode = "SHADOW_RECOMMENDATION"
 
     if activate_routing:
-        if policy.get("status") != "ACTIVE_QUALIFIED":
-            raise ValueError("routing_policy_not_qualified")
-        if policy.get("production_activation") != "EXPLICIT_RUNTIME_FLAG_AFTER_QUALIFICATION":
-            raise ValueError("policy_does_not_allow_runtime_activation")
-        qualified_models = runtime.get("qualified_models")
-        if not isinstance(qualified_models, list) or recommended["model"] not in qualified_models:
+        qualified_models = runtime["qualified_models"]
+        if recommended["model"] not in qualified_models:
             raise ValueError(f"selected_model_not_qualified:{recommended['model']}")
         if recommended["model"] not in policy.get("models", {}):
             raise ValueError("selected_model_not_in_policy")
@@ -90,6 +100,8 @@ def select_execution(
         "plan_sha256": sha256_json(plan),
         "policy_sha256": sha256_json(policy),
         "runtime_capabilities_sha256": sha256_json(runtime),
+        "selection_runtime_sha256": sha256_json(routing_runtime),
+        "selection_pool": "QUALIFIED_MODELS_ONLY" if activate_routing else "AVAILABLE_MODELS_SHADOW",
         "profile_sha256": sha256_json(profile),
         "runtime_confirmed": True,
         "router_grants_write_authority": False,
