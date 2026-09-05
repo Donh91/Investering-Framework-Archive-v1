@@ -42,7 +42,7 @@ jobs:
             tests.api_agent.test_director_learning_context \
             tests.api_agent.test_daily_director_conflict_budget \
             tests.api_agent.test_daily_director_workflow_contract -v
-      - name: Compile gateway, capability routing, intelligence and forecast backlog machinery
+      - name: Compile and CLI-smoke gateway, capability routing, intelligence and forecast backlog machinery
         run: |
           python -m py_compile \
             scripts/api_agent/api_gateway.py \
@@ -63,6 +63,8 @@ jobs:
             tests/api_agent/test_director_learning_context.py \
             tests/api_agent/test_daily_director_conflict_budget.py \
             tests/api_agent/test_daily_director_workflow_contract.py
+          python scripts/api_agent/capability_router.py --help >/dev/null
+          python scripts/api_agent/capability_routed_api_gateway.py --help >/dev/null
       - name: Prepare bounded smoke inputs
         run: |
           mkdir -p api-agent-input
