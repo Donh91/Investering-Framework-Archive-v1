@@ -1,0 +1,49 @@
+{
+  "contract": "COMPOUNDING_LEARNING_CONTROLLER_ASTRA_HANDOFF_v1",
+  "prepared_date": "2026-09-05",
+  "status": "HOLD_FOR_ASTRA_REVIEW",
+  "authority": "RESEARCH_ONLY_NON_CANONICAL",
+  "implementation_allowed_now": false,
+  "activation_allowed_now": false,
+  "base_main_sha_at_plan_creation": "edcd98875b71cb2a3f9a92f5eef4f21332ac1574",
+  "mission": "Convert mature already-adjudicated prospective evidence into durable learning state, calibrated uncertainty, contradiction tracking, and a bounded next-best prospective test proposal.",
+  "architecture_boundary": {
+    "unified_experimental_adjudication_owns": "evidence interpretation and lifecycle action",
+    "compounding_learning_controller_owns": "learning synthesis, unresolved uncertainty, and next-best-test proposal",
+    "new_test_must_reenter_scientific_admission": true
+  },
+  "required_read_order": [
+    "06_RESEARCH_LAB/compounding_learning_controller_v1/README.md",
+    "06_RESEARCH_LAB/compounding_learning_controller_v1/ARCHITECTURE_CONTRACT.md",
+    "06_RESEARCH_LAB/compounding_learning_controller_v1/ASTRA_EXECUTION_PLAN.md",
+    "00_FMOS/EXPERIMENT_LIFECYCLE_AND_EXECUTION_PLANE_v1.md",
+    "00_FMOS/EXPERIMENT_SCIENTIFIC_ADMISSION_AND_UNIFIED_ADJUDICATION_v1.md",
+    "scripts/experiments/unified_experimental_adjudication.py",
+    ".github/workflows/unified-experimental-lifecycle-adjudication.yml",
+    ".github/workflows/framework-learning-operations.yml"
+  ],
+  "exploratory_artifact": {
+    "branch": "agent/task-20260904-compounding-learning-v1",
+    "commit": "fe00da2efe78a5f4b5666b3edba636d09e34edd4",
+    "disposition": "SALVAGE_SOURCE_ONLY_DO_NOT_MERGE_BLINDLY"
+  },
+  "hard_guardrails": [
+    "NO_RETROSPECTIVE_PROSPECTIVE_EVIDENCE",
+    "NO_AUTOMATIC_CANONICAL_PROMOTION",
+    "NO_AUTOMATIC_THRESHOLD_OR_WEIGHT_CHANGE",
+    "NO_PORTFOLIO_EXECUTION_AUTHORITY",
+    "NO_MUTATION_OF_FROZEN_FORECASTS_ADMISSIONS_OUTCOMES_OR_PRIOR_ADJUDICATIONS",
+    "NO_BYPASS_OF_SCIENTIFIC_ADMISSION",
+    "NO_SELF_CONFIRMING_EXPERIMENT_OPTIMIZATION",
+    "APPEND_ONLY_OR_VERSIONED_LEARNING_HISTORY",
+    "FAIL_CLOSED_ON_MISSING_OR_MALFORMED_UPSTREAM_EVIDENCE"
+  ],
+  "expected_v1_outputs": [
+    "LEARNING_STATE_v1",
+    "LEARNING_EVENT_v1",
+    "NEXT_BEST_TEST_PROPOSAL_v1",
+    "LEARNING_BACKLOG_v1"
+  ],
+  "restart_instruction": "Run the plan from fresh current main. Audit first. Rebuild rather than blindly rebase the exploratory branch. Then implement through governed branch, PR, CI, merge and readback only after Astra review.",
+  "owner_pause": "WAIT_FOR_ASTRA"
+}
