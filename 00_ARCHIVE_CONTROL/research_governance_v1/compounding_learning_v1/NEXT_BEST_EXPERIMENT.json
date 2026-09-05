@@ -1,10 +1,112 @@
 {
-  "contract": "NEXT_BEST_EXPERIMENT_PROPOSAL_v1",
+  "action": "STRESS_TEST_REGIME_SPECIFICITY",
   "authority": "RESEARCH_ONLY_NON_CANONICAL",
-  "proposal_status": "INITIALIZED_NO_POST_ADJUDICATION_PROPOSAL_YET",
-  "source": "COMPOUNDING_LEARNING",
+  "automatic_execution": false,
+  "automatic_market_rule_change": false,
+  "automatic_parameter_search": false,
+  "automatic_promotion": false,
+  "automatic_threshold_change": false,
+  "candidate_test_id": "NBT-4e992d0a7c49bec215d3",
   "canonical_effect": false,
-  "portfolio_execution": false,
+  "child_may_mutate_parent": false,
+  "competing_tests_ranked_lower": [
+    {
+      "candidate_test_id": "NBT-a9c0112e82eaa3032a73",
+      "rank": 2,
+      "reason_ranked_lower": "LOWER_TRANSPARENT_INFORMATION_VALUE_SCORE",
+      "score": 91.5
+    },
+    {
+      "candidate_test_id": "NBT-d17f55b043f0924acd9e",
+      "rank": 3,
+      "reason_ranked_lower": "LOWER_TRANSPARENT_INFORMATION_VALUE_SCORE",
+      "score": 91.5
+    },
+    {
+      "candidate_test_id": "NBT-fd68cd26ff37ba558937",
+      "rank": 4,
+      "reason_ranked_lower": "LOWER_TRANSPARENT_INFORMATION_VALUE_SCORE",
+      "score": 91.5
+    },
+    {
+      "candidate_test_id": "NBT-15d60b675fb367fe963f",
+      "rank": 5,
+      "reason_ranked_lower": "LOWER_TRANSPARENT_INFORMATION_VALUE_SCORE",
+      "score": 91.0
+    },
+    {
+      "candidate_test_id": "NBT-5d600717aeb47ea9c65f",
+      "rank": 6,
+      "reason_ranked_lower": "LOWER_TRANSPARENT_INFORMATION_VALUE_SCORE",
+      "score": 91.0
+    }
+  ],
+  "complexity_tax": "LOW",
+  "contract": "NEXT_BEST_EXPERIMENT_PROPOSAL_v1",
+  "evidence_fingerprint": "e7b4e592c8cc87b755605a4c0d26fcfb9f8d587af90f3807ff39c82eea19cf8f",
+  "expected_incremental_value": "UNPROVEN_TO_BE_MEASURED_PROSPECTIVELY",
+  "expected_information_gain": {
+    "components": {
+      "adversarial_disconfirmation_value": 0.85,
+      "complexity_penalty": 0.1,
+      "decision_relevance": 1.0,
+      "falsifiability_strength": 1.0,
+      "independence_from_tested_information": 1.0,
+      "observability_feasibility": 1.0,
+      "regime_coverage": 0.65,
+      "time_to_learning": 0.8,
+      "uncertainty_reduction": 0.95
+    },
+    "score": 91.5,
+    "score_interpretation": "TRANSPARENT_HEURISTIC_FOR_RANKING_NOT_AN_EMPIRICAL_PROBABILITY"
+  },
+  "explicit_baseline": "FROZEN_PARENT_BASELINE_AND_CONTROLS",
+  "explicit_falsifier": "Preregistered regime-conditioned child also fails, or regime split cannot be defined point-in-time without leakage.",
+  "false_negative_cost": "MUST_BE_FROZEN_BY_SCIENTIFIC_ADMISSION",
+  "false_positive_cost": "MUST_BE_FROZEN_BY_SCIENTIFIC_ADMISSION",
+  "frozen_parent_preserved": true,
+  "hypothesis": "Negative parent result is regime-specific rather than a general absence of prospective value.",
   "model_weight_change": false,
-  "automatic_promotion": false
+  "negative_controls": [
+    "ALWAYS_WAIT_CONTROL",
+    "STRONGEST_OR_SINGLE_COMPONENT_CONTROL",
+    "DETERMINISTIC_PLACEBO_DIRECTION"
+  ],
+  "new_test_automatically_admitted": false,
+  "next_route": [
+    "RESEARCH_MEMORY_NOVELTY",
+    "DECISION_IMPACT_VOI",
+    "INDEPENDENT_ADVERSARIAL_SENTINEL",
+    "META_ORCHESTRATOR",
+    "SCIENTIFIC_ADMISSION_OR_EXISTING_OWNER",
+    "PROSPECTIVE_FREEZE_IF_AUTHORIZED",
+    "EXPERIMENT_EXECUTION_PLANE"
+  ],
+  "parent_candidate_id": "EC-bdf6c7853fbc34fb9622",
+  "portfolio_execution": false,
+  "problem_uncertainty": "GENERAL_FAILURE_VERSUS_REGIME_SPECIFICITY_REMAINS_UNRESOLVED",
+  "proposal_status": "PROPOSAL_ONLY_ROUTE_THROUGH_EXISTING_RESEARCH_GOVERNANCE_AND_SCIENTIFIC_ADMISSION",
+  "proposed_priority": 1,
+  "redundancy_risk": "NORMAL",
+  "required_data_lineage": [
+    "EXPERIMENT_LIFECYCLE_REGISTRY_v1",
+    "EXPERIMENT_SCIENTIFIC_ADMISSION_REGISTRY_v1",
+    "UNIFIED_EXPERIMENTAL_LIFECYCLE_ADJUDICATION_v1",
+    "NEW_CHILD_PROSPECTIVE_EVIDENCE_ONLY"
+  ],
+  "requires_scientific_admission": true,
+  "retrospective_rescore_allowed": false,
+  "revisit_condition": "AFTER_NEW_CHILD_HAS_MATURE_PROSPECTIVE_EVIDENCE_AND_UNIFIED_ADJUDICATION",
+  "schema": "NEXT_BEST_TEST_PROPOSAL_v1",
+  "semantic_identity": "b1446242fe2556d012e8e075299ab776c080c6c8eee751eda43c321d58288118",
+  "source": "COMPOUNDING_LEARNING",
+  "target_horizon_regime": {
+    "horizon": "MUST_BE_FIXED_BY_NEW_SCIENTIFIC_ADMISSION",
+    "regime": [
+      "UNSPECIFIED"
+    ],
+    "target": "EC-bdf6c7853fbc34fb9622"
+  },
+  "test_type": "REGIME_SPECIFICITY_FAILURE_STRESS_TEST",
+  "what_would_change_our_view": "Successful prospective regime discrimination narrows the failure domain; repeated failure supports broader retirement review."
 }
