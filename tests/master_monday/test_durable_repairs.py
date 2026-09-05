@@ -72,20 +72,15 @@ class DurableRepairTests(unittest.TestCase):
             row=json.loads(receipt.read_text())['artifacts'][0]
             self.assertNotEqual(row['expected_sha256'],row['readback_sha256'])
 
-    def test_master_monday_reads_current_live_anchor_cfgi_symbols(self):
+    def _run_master_monday_cfgi(self, cfgi_value):
         with tempfile.TemporaryDirectory() as td:
             repo=Path(td)
             captures=repo/'03_DAILY_CAPTURE_LOGS/captures/2026/09/03'
             captures.mkdir(parents=True)
-            symbols={
-                'MARKET':{'score':52,'classification':'Neutral','timestamp':'2026-09-03T12:49:11Z','owner_status':'PASS','stale':False},
-                'BTC':{'score':54.5,'classification':'Neutral','price':78307.9921875,'timestamp':'2026-09-03T12:49:11Z','owner_status':'PASS','stale':False},
-                'ETH':{'score':53,'classification':'Neutral','price':2413.75,'timestamp':'2026-09-03T12:49:11Z','owner_status':'PASS','stale':False},
-            }
             capture={
                 'contract':'DAILY_LIVE_ANCHOR_INDEX_v3',
                 'captured_at_utc':'2026-09-03T12:50:06Z',
-                'market_metrics':{'sentiment':{'cfgi':{'timeframe':'4h','symbols':symbols}}},
+                'market_metrics':{'sentiment':{'cfgi':cfgi_value}},
             }
             (captures/'capture.json').write_text(json.dumps(capture))
             out=repo/'preflight.json'
@@ -96,13 +91,44 @@ class DurableRepairTests(unittest.TestCase):
                 '--predecessor-registry',str(ROOT/'research/master_monday_preflight/CANONICAL_PREDECESSOR_REGISTRY_v1.json'),
                 '--output',str(out),
             ],capture_output=True,text=True)
-            self.assertEqual(p.returncode,0,p.stderr)
-            value=json.loads(out.read_text())
-            rows={row['action_id']:row for row in value['source_ledgers']}
-            self.assertEqual(rows['A46']['status'],'PASS')
-            self.assertEqual(rows['A47']['status'],'PASS')
-            self.assertEqual(rows['A48']['status'],'PASS')
-            self.assertEqual(value['cfgi'],symbols)
+            return p, json.loads(out.read_text()) if out.exists() else None
+
+    def test_master_monday_reads_current_live_anchor_cfgi_symbols(self):
+        symbols={
+            'MARKET':{'score':52,'classification':'Neutral','timestamp':'2026-09-03T12:49:11Z','owner_status':'PASS','stale':False},
+            'BTC':{'score':54.5,'classification':'Neutral','price':78307.9921875,'timestamp':'2026-09-03T12:49:11Z','owner_status':'PASS','stale':False},
+            'ETH':{'score':53,'classification':'Neutral','price':2413.75,'timestamp':'2026-09-03T12:49:11Z','owner_status':'PASS','stale':False},
+        }
+        p,value=self._run_master_monday_cfgi({'timeframe':'4h','symbols':symbols})
+        self.assertEqual(p.returncode,0,p.stderr)
+        rows={row['action_id']:row for row in value['source_ledgers']}
+        self.assertEqual(rows['A46']['status'],'PASS')
+        self.assertEqual(rows['A47']['status'],'PASS')
+        self.assertEqual(rows['A48']['status'],'PASS')
+        self.assertEqual(value['cfgi'],symbols)
+
+    def test_master_monday_reads_legacy_flat_cfgi(self):
+        symbols={
+            'MARKET':{'score':48,'classification':'Neutral'},
+            'BTC':{'score':49,'classification':'Neutral'},
+            'ETH':{'score':47,'classification':'Neutral'},
+        }
+        p,value=self._run_master_monday_cfgi(symbols)
+        self.assertEqual(p.returncode,0,p.stderr)
+        rows={row['action_id']:row for row in value['source_ledgers']}
+        self.assertEqual([rows[aid]['status'] for aid in ('A46','A47','A48')],['PASS','PASS','PASS'])
+        self.assertEqual(value['cfgi'],symbols)
+
+    def test_master_monday_missing_and_malformed_cfgi_fail_closed(self):
+        for cfgi_value in (None,'malformed-cfgi',['malformed-cfgi']):
+            with self.subTest(cfgi_value=cfgi_value):
+                p,value=self._run_master_monday_cfgi(cfgi_value)
+                self.assertEqual(p.returncode,0,p.stderr)
+                rows={row['action_id']:row for row in value['source_ledgers']}
+                self.assertEqual([rows[aid]['status'] for aid in ('A46','A47','A48')],['UNAVAILABLE','UNAVAILABLE','UNAVAILABLE'])
+                missing={row['action_id']:row for row in value['missing']}
+                self.assertEqual([missing[aid]['reason'] for aid in ('A46','A47','A48')],['UNAVAILABLE','UNAVAILABLE','UNAVAILABLE'])
+                self.assertEqual(value['cfgi'],{})
 
 
 if __name__=='__main__': unittest.main()
