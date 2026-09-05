@@ -1,0 +1,84 @@
+{
+  "contract": "CAPABILITY_ROUTING_POLICY_v1",
+  "status": "ACTIVE_SHADOW_FIRST",
+  "owner": "research/api_agent/API_AGENT_AND_COMPOUNDING_LEARNING_ARCHITECTURE_v1.md",
+  "budget_owner": "research/api_agent/API_INTELLIGENCE_POLICY_v2.json",
+  "task_registry_owner": "research/api_agent/API_TASK_REGISTRY_v1.json",
+  "default_mode": "SHADOW_RECOMMEND_ONLY",
+  "production_activation": "EXPLICIT_RUNTIME_FLAG_AFTER_QUALIFICATION",
+  "principles": {
+    "deterministic_first": true,
+    "cheapest_qualified_executor": true,
+    "model_identity_never_grants_authority": true,
+    "api_models_have_repository_write_authority": false,
+    "code_write_executor": "CODEX_ONLY",
+    "automatic_merge": false,
+    "canonical_self_promotion": false,
+    "portfolio_action": false,
+    "fail_closed_on_unverified_runtime_capability": true,
+    "independent_review_after_code_write": true,
+    "preserve_existing_task_budget_and_write_prefix": true
+  },
+  "complexity_rank": {
+    "ROUTINE": 1,
+    "SYNTHESIS": 2,
+    "DIFFICULT": 3,
+    "ARCHITECTURE": 4
+  },
+  "models": {
+    "gpt-5.6-luna": {
+      "rank": 1,
+      "api_eligible": true,
+      "reasoning_efforts": ["low", "medium", "high", "xhigh", "max"],
+      "capabilities": ["classification", "extraction", "structured_output", "summarization"],
+      "price_per_million": {"input": 1.0, "output": 6.0}
+    },
+    "gpt-5.6-terra": {
+      "rank": 2,
+      "api_eligible": true,
+      "reasoning_efforts": ["low", "medium", "high", "xhigh", "max"],
+      "capabilities": ["classification", "conflict_review", "extraction", "structured_output", "summarization", "synthesis"],
+      "price_per_million": {"input": 2.5, "output": 15.0}
+    },
+    "gpt-5.6-sol": {
+      "rank": 3,
+      "api_eligible": true,
+      "reasoning_efforts": ["low", "medium", "high", "xhigh", "max"],
+      "capabilities": ["classification", "conflict_review", "difficult_reasoning", "extraction", "research", "review", "structured_output", "summarization", "synthesis"],
+      "price_per_million": {"input": 5.0, "output": 30.0}
+    },
+    "gpt-6-astra": {
+      "rank": 4,
+      "api_eligible": true,
+      "reasoning_efforts": ["low", "medium", "high", "xhigh", "max"],
+      "capabilities": ["architecture", "classification", "conflict_review", "cross_domain", "difficult_reasoning", "extraction", "orchestration", "research", "review", "structured_output", "summarization", "synthesis"],
+      "price_per_million": {"input": 10.0, "output": 50.0}
+    }
+  },
+  "review": {
+    "required_after_code_write": true,
+    "prefer_different_model_from_worker": true,
+    "minimum_capabilities": ["review"],
+    "read_only": true
+  },
+  "execution": {
+    "max_parallel_units": 4,
+    "astra_parent_only_when_required_by_profile": true,
+    "api_override_requires_verified_runtime_snapshot": true,
+    "api_override_requires_explicit_gateway_flag": true,
+    "code_write_requires_codex_runtime_available": true,
+    "deterministic_executor_name": "DETERMINISTIC",
+    "code_executor_name": "CODEX",
+    "api_executor_name": "OPENAI_API"
+  },
+  "authority": {
+    "creates_truth": false,
+    "framework_state_change": false,
+    "market_rule_change": false,
+    "threshold_change": false,
+    "weight_change": false,
+    "portfolio_action": false,
+    "canonical_promotion": false,
+    "automatic_merge": false
+  }
+}
