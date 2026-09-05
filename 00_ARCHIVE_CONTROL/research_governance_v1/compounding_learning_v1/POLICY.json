@@ -2,27 +2,16 @@
   "contract": "COMPOUNDING_LEARNING_CONTROLLER_POLICY_v1",
   "status": "ACTIVE",
   "authority": "RESEARCH_ONLY_NON_CANONICAL",
-  "purpose": "Turn matured prospective evidence into bounded learning checkpoints and the next falsifiable child-test proposal without rewriting the parent experiment or changing market authority.",
+  "purpose": "Turn mature already-adjudicated prospective evidence into durable learning state, calibrated uncertainty and one bounded next-best prospective test proposal without rewriting the parent experiment or changing market authority.",
   "default_profile": "STANDARD",
   "profiles": {
-    "FAST": {
-      "day_checkpoints": [7, 14, 30],
-      "matured_checkpoints": [5, 10, 20]
-    },
-    "STANDARD": {
-      "day_checkpoints": [7, 14, 30, 60, 90],
-      "matured_checkpoints": [5, 10, 20, 40]
-    },
-    "LONG": {
-      "day_checkpoints": [30, 60, 90, 120, 180, 240],
-      "matured_checkpoints": [10, 25, 50, 100]
-    },
-    "CONFIRMATORY": {
-      "day_checkpoints": [30, 60, 90, 120, 180],
-      "matured_checkpoints": []
-    }
+    "FAST": {"day_checkpoints": [7, 14, 30, 60, 90, 120, 180, 240], "matured_checkpoints": [5, 10, 20]},
+    "STANDARD": {"day_checkpoints": [7, 14, 30, 60, 90, 120, 180, 240], "matured_checkpoints": [5, 10, 20, 40]},
+    "LONG": {"day_checkpoints": [7, 14, 30, 60, 90, 120, 180, 240], "matured_checkpoints": [10, 25, 50, 100]},
+    "CONFIRMATORY": {"day_checkpoints": [7, 14, 30, 60, 90, 120, 180, 240], "matured_checkpoints": []}
   },
   "max_checkpoint_candidates_per_run": 25,
+  "max_next_best_tests_per_run": 1,
   "scientific_interpretation_owner": "UNIFIED_EXPERIMENTAL_LIFECYCLE_ADJUDICATION_v1",
   "next_experiment_route": "EXISTING_RESEARCH_GOVERNANCE_STACK_THEN_SCIENTIFIC_ADMISSION",
   "historical_requalification_day_clock": "DISABLED_UNLESS_EXPLICIT_FORWARD_TEST_START_EXISTS",
