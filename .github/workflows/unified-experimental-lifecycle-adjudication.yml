@@ -1,23 +1,64 @@
 name: Unified Experimental Lifecycle Adjudication
 
 on:
+  pull_request:
+    paths:
+      - '.github/workflows/unified-experimental-lifecycle-adjudication.yml'
+      - 'scripts/experiments/unified_experimental_adjudication.py'
+      - 'scripts/research/compounding_learning_controller.py'
+      - 'scripts/research/compounding_learning_v1_core.py'
+      - 'scripts/health/build_compounding_learning_health.py'
+      - 'scripts/orchestration/build_framework_handoff_manifest.py'
+      - 'tests/experiments/test_compounding_learning_controller.py'
+      - 'tests/experiments/test_compounding_learning_v1_design.py'
+      - 'tests/health/test_compounding_learning_health.py'
+      - '00_ARCHIVE_CONTROL/research_governance_v1/compounding_learning_v1/POLICY.json'
+      - '00_FMOS/EXPERIMENT_SCIENTIFIC_ADMISSION_AND_UNIFIED_ADJUDICATION_v1.md'
+      - '06_RESEARCH_LAB/compounding_learning_controller_v1/**'
   schedule:
     - cron: '5 9 * * 1'
       timezone: 'Europe/Copenhagen'
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: framework-main-writer
   cancel-in-progress: false
 
 jobs:
-  adjudicate:
-    if: github.ref == 'refs/heads/main'
+  validate-pr:
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate Compounding Learning v1 integration
+        run: |
+          python -m py_compile \
+            scripts/experiments/experiment_lifecycle_scientific_admission.py \
+            scripts/experiments/unified_experimental_adjudication.py \
+            scripts/research/compounding_learning_controller.py \
+            scripts/research/compounding_learning_v1_core.py \
+            scripts/health/build_compounding_learning_health.py \
+            scripts/orchestration/build_framework_handoff_manifest.py
+          python -m unittest \
+            tests.experiments.test_scientific_admission_lifecycle \
+            tests.experiments.test_unified_experimental_adjudication \
+            tests.experiments.test_compounding_learning_controller \
+            tests.experiments.test_compounding_learning_v1_design \
+            tests.health.test_compounding_learning_health -v
+
+  adjudicate:
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
     steps:
       - uses: actions/checkout@v4
         with:
@@ -32,11 +73,16 @@ jobs:
           python -m py_compile \
             scripts/experiments/experiment_lifecycle_scientific_admission.py \
             scripts/experiments/unified_experimental_adjudication.py \
-            scripts/research/compounding_learning_controller.py
+            scripts/research/compounding_learning_controller.py \
+            scripts/research/compounding_learning_v1_core.py \
+            scripts/health/build_compounding_learning_health.py \
+            scripts/orchestration/build_framework_handoff_manifest.py
           python -m unittest \
             tests.experiments.test_scientific_admission_lifecycle \
             tests.experiments.test_unified_experimental_adjudication \
-            tests.experiments.test_compounding_learning_controller -v
+            tests.experiments.test_compounding_learning_controller \
+            tests.experiments.test_compounding_learning_v1_design \
+            tests.health.test_compounding_learning_health -v
 
       - name: Build unified authority-free adjudication
         run: |
@@ -70,21 +116,51 @@ jobs:
           python - <<'PY'
           import json
           from pathlib import Path
-          state=json.loads(Path('00_ARCHIVE_CONTROL/research_governance_v1/compounding_learning_v1/STATE.json').read_text())
-          proposal=json.loads(Path('00_ARCHIVE_CONTROL/research_governance_v1/compounding_learning_v1/NEXT_BEST_EXPERIMENT.json').read_text())
+          base=Path('00_ARCHIVE_CONTROL/research_governance_v1/compounding_learning_v1')
+          state=json.loads((base/'STATE.json').read_text())
+          proposal=json.loads((base/'NEXT_BEST_EXPERIMENT.json').read_text())
+          backlog=json.loads((base/'LEARNING_BACKLOG.json').read_text())
           assert state['contract']=='COMPOUNDING_LEARNING_CONTROLLER_STATE_v1'
+          assert state['schema']=='LEARNING_STATE_v1'
           assert state['authority']=='RESEARCH_ONLY_NON_CANONICAL'
           assert state['scientific_interpretation_owner']=='UNIFIED_EXPERIMENTAL_LIFECYCLE_ADJUDICATION_v1'
           assert state['controller_role']=='NEXT_LEARNING_STRATEGY_ONLY'
+          assert state['descriptive_checkpoint_days']==[7,14,30,60,90,120,180,240]
+          assert backlog['contract']=='LEARNING_BACKLOG_v1'
           for key in ('canonical_effect','portfolio_execution','automatic_promotion','automatic_canonical_write','automatic_threshold_change','automatic_weight_change','automatic_market_rule_change','model_weight_change','retrospective_rescore_allowed','frozen_parent_rewrite_allowed'):
               assert state.get(key) is False, (key,state.get(key))
           for key in ('canonical_effect','portfolio_execution','model_weight_change','automatic_promotion'):
               assert proposal.get(key) is False, (key,proposal.get(key))
+          if proposal.get('proposal_status')!='NO_NEW_SCIENTIFICALLY_ELIGIBLE_CHILD_TEST':
+              assert proposal.get('schema')=='NEXT_BEST_TEST_PROPOSAL_v1'
+              assert proposal.get('requires_scientific_admission') is True
+              assert proposal.get('automatic_execution') is False
+              for key in ('problem_uncertainty','hypothesis','explicit_falsifier','what_would_change_our_view','expected_information_gain'):
+                  assert proposal.get(key), key
           t13=state['t13_confirmatory_firewall']
           for key in ('interim_performance_inference_allowed','scientific_method_change_allowed','automatic_child_experiment_allowed'):
               assert t13.get(key) is False, (key,t13.get(key))
           PY
           python scripts/research/validate_research_governance_bindings.py
+
+      - name: Build fail-closed learning health and immediate agent handoff
+        run: |
+          python scripts/health/build_compounding_learning_health.py \
+            --repo-root . \
+            --output research/architecture_health/LATEST_COMPOUNDING_LEARNING_HEALTH.json
+          python scripts/orchestration/build_framework_handoff_manifest.py \
+            --repo-root . \
+            --output research/framework_handoffs/LATEST_FRAMEWORK_HANDOFF_MANIFEST.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          health=json.loads(Path('research/architecture_health/LATEST_COMPOUNDING_LEARNING_HEALTH.json').read_text())
+          handoff=json.loads(Path('research/framework_handoffs/LATEST_FRAMEWORK_HANDOFF_MANIFEST.json').read_text())
+          assert health['status']=='PASS', health
+          order=handoff['agent_read_order']['EXPERIMENT_LEARNING']
+          for required in ('EXPERIMENT_REGISTRY','EXPERIMENT_SCIENTIFIC_ADMISSION','EXPERIMENT_ADJUDICATION','COMPOUNDING_LEARNING_STATE','COMPOUNDING_LEARNING_PROPOSAL','COMPOUNDING_LEARNING_BACKLOG','COMPOUNDING_LEARNING_HEALTH'):
+              assert required in order, (required,order)
+          PY
 
       - name: Commit adjudication and learning state with verified readback
         shell: bash
@@ -94,8 +170,9 @@ jobs:
           git config user.email framework-research-bot@users.noreply.github.com
           git add \
             research/experiment_lifecycle/weekly_adjudication \
-            00_ARCHIVE_CONTROL/research_governance_v1/compounding_learning_v1/STATE.json \
-            00_ARCHIVE_CONTROL/research_governance_v1/compounding_learning_v1/NEXT_BEST_EXPERIMENT.json
+            00_ARCHIVE_CONTROL/research_governance_v1/compounding_learning_v1 \
+            research/architecture_health/LATEST_COMPOUNDING_LEARNING_HEALTH.json \
+            research/framework_handoffs/LATEST_FRAMEWORK_HANDOFF_MANIFEST.json
           if git diff --cached --quiet; then exit 0; fi
           git commit -m "research: adjudicate and compound experiment learning ${GITHUB_RUN_ID}"
           pushed=false
