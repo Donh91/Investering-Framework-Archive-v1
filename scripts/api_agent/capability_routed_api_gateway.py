@@ -7,6 +7,11 @@ from copy import deepcopy
 from pathlib import Path
 from typing import Any
 
+# Support both module import and direct CLI execution from the repository root.
+REPO_ROOT = Path(__file__).resolve().parents[2]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
 from scripts.api_agent import api_gateway
 from scripts.api_agent.capability_router import (
     build_execution_plan,
