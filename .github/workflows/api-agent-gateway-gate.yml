@@ -36,15 +36,18 @@ jobs:
         run: |
           python -m unittest \
             tests.api_agent.test_api_gateway \
+            tests.api_agent.test_capability_router \
             tests.api_agent.test_forecast_candidate_backlog \
             tests.api_agent.test_api_intelligence_v2 \
             tests.api_agent.test_director_learning_context \
             tests.api_agent.test_daily_director_conflict_budget \
             tests.api_agent.test_daily_director_workflow_contract -v
-      - name: Compile gateway, intelligence and forecast backlog machinery
+      - name: Compile gateway, capability routing, intelligence and forecast backlog machinery
         run: |
           python -m py_compile \
             scripts/api_agent/api_gateway.py \
+            scripts/api_agent/capability_router.py \
+            scripts/api_agent/capability_routed_api_gateway.py \
             scripts/api_agent/augment_director_context_v2.py \
             scripts/api_agent/augment_director_learning_context.py \
             scripts/api_agent/check_director_freshness.py \
@@ -54,6 +57,7 @@ jobs:
             scripts/api_agent/run_deep_research_task.py \
             scripts/api_agent/materialize_forecast_candidates.py \
             scripts/architecture/build_latest_handoff.py \
+            tests/api_agent/test_capability_router.py \
             tests/api_agent/test_api_intelligence_v2.py \
             tests/api_agent/test_forecast_candidate_backlog.py \
             tests/api_agent/test_director_learning_context.py \
