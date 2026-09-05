@@ -1,136 +1,128 @@
-# Astra Agent Legibility and Skill Compression Audit v1
+# Astra Agent Legibility and Skill Compression Addendum v1
 
 **Dato:** 2026-09-06  
-**Status:** READ_ONLY_QUALIFICATION_MISSION  
+**Status:** READ_ONLY_AUDIT_ADDENDUM  
 **Authority:** NONE BY ITSELF  
-**Område:** agent routing / skill architecture / context compression / repository legibility  
-**Primary folder:** `07_PROMPTS_AND_AGENTS/astra/`  
-**Depends on:** `AGENTS.md`, `00_ARCHIVE_CONTROL/SKILL_REGISTRY.md`, `00_ARCHIVE_CONTROL/SKILL_ROUTING_INDEX.json`, the six active `.agents/skills/*/SKILL.md` files  
+**Parent mission:** `07_PROMPTS_AND_AGENTS/astra/ASTRA_SKILLS_AND_AGENTS_AUDIT_MISSION_v1.md`  
+**Scope:** only the new machine-routing metadata, OpenAI-facing skill metadata, Finding Disproof Pass and progressive-disclosure decisions  
 
-## Mission
+## Non-duplication rule
 
-Determine whether a future strong repository-aware model can discover, understand, compose and safely evolve the active skill stack with minimal ambiguity, unnecessary context and authority risk.
+This file is **not** a second Astra skills mission.
 
-This is an audit of **agent legibility**, not a request to redesign the framework and not authorization to rewrite the skills.
+Run the existing `ASTRA_SKILLS_AND_AGENTS_AUDIT_MISSION_v1.md` as the owner mission. Use this addendum only when that mission reaches metadata routing, context efficiency, skill-body compression or agent legibility.
 
-Start in:
+Do not create a seventh permanent skill from this addendum.
 
-```text
-MODE = READ_ONLY_QUALIFICATION
-SOURCE_WRITE_AUTHORITY = NONE
-RECOVERY_DESTRUCTIVE_AUTHORITY = NEVER
-NEW_SKILL_AUTHORITY = NONE
-```
+## New artifacts to audit
 
-## Why this mission exists
-
-The active skill stack already has strong governance and authority boundaries. The remaining question is whether those protections are expressed in the most legible and context-efficient way for Astra and future agents.
-
-The target is not fewer words at any cost. The target is:
+Read current main first, then inspect:
 
 ```text
-less irrelevant context
-+ faster owner discovery
-+ clearer side-effect boundaries
-+ no loss of safety or authority semantics
-+ no duplicate agent layer
+00_ARCHIVE_CONTROL/SKILL_ROUTING_INDEX.json
+.agents/skills/canonical-context-router/agents/openai.yaml
+.agents/skills/developer-source-research/agents/openai.yaml
+.agents/skills/research-lab-red-team/agents/openai.yaml
+.agents/skills/prospective-evidence-ledger/agents/openai.yaml
+.agents/skills/codex-intake/agents/openai.yaml
+.agents/skills/archive-governance/agents/openai.yaml
+scripts/agent_skills/validate_skill_architecture.py
 ```
 
-## Mandatory inputs
+`00_ARCHIVE_CONTROL/SKILL_REGISTRY.md` remains the canonical skill registry. The JSON routing index and `agents/openai.yaml` files are discovery/interface surfaces only and must never override repository authority.
 
-Read in this order:
+## Additional agent-legibility dimensions
 
-1. `AGENTS.md`
-2. `00_ARCHIVE_CONTROL/SKILL_REGISTRY.md`
-3. `00_ARCHIVE_CONTROL/SKILL_ROUTING_INDEX.json`
-4. `.agents/skills/canonical-context-router/SKILL.md`
-5. `.agents/skills/developer-source-research/SKILL.md`
-6. `.agents/skills/research-lab-red-team/SKILL.md`
-7. `.agents/skills/prospective-evidence-ledger/SKILL.md`
-8. `.agents/skills/codex-intake/SKILL.md`
-9. `.agents/skills/archive-governance/SKILL.md`
-10. each `.agents/skills/*/agents/openai.yaml`
-11. `scripts/agent_skills/validate_skill_architecture.py`
+In addition to the parent mission's frozen dimensions, explicitly test:
 
-Do not infer repository state from this mission file. Resolve current main and current owners first.
+```yaml
+discoverability:
+authority_visibility:
+context_locality:
+impact_predictability:
+intent_signalling:
+hidden_knowledge:
+progressive_disclosure_quality:
+```
 
-## Audit dimensions
+Interpretation:
 
-Score every active skill on the following dimensions:
+- **discoverability**: can a fresh model reliably find the correct skill?
+- **authority_visibility**: can it immediately see what the skill may not decide, score, promote or write?
+- **context_locality**: is always-loaded text limited to instructions needed on most invocations?
+- **impact_predictability**: can the agent predict READ_ONLY vs external retrieval vs queue/evidence/repository write before invocation?
+- **intent_signalling**: do triggers and `do_not_use_for` rules prevent overlap?
+- **hidden_knowledge**: does safe execution depend on chat memory or obscure unlinked files?
+- **progressive_disclosure_quality**: can rare conditional detail move to shallow references without weakening core safety?
 
-### 1. Discoverability
+## Machine-routing safety checks
 
-Can an agent reliably know that the skill exists and when it applies without loading unrelated prose?
+Verify all of the following:
 
-### 2. Authority visibility
+```yaml
+routing_index_status_is_derived_only: YES
+routing_index_authority_is_none: YES
+markdown_registry_remains_owner: YES
+all_six_active_skills_present_exactly_once: YES
+all_skill_paths_exist: YES
+all_metadata_paths_exist: YES
+side_effect_levels_explicit: YES
+write_or_queue_capable_skills_implicit_invocation: MUST_BE_NO
+market_thresholds_or_live_state_copied_into_metadata: MUST_BE_NO
+metadata_broadens_skill_authority: MUST_BE_NO
+```
 
-Can an agent immediately see what the skill may and may not decide, write, score, promote or execute?
+Current intended implicit-routing policy is deliberately asymmetric:
 
-### 3. Context locality
+```text
+canonical-context-router -> allowed, read-only
+ developer-source-research -> allowed, read-only external retrieval
+ research-lab-red-team -> explicit
+ prospective-evidence-ledger -> explicit
+ codex-intake -> explicit
+ archive-governance -> explicit
+```
 
-Is the always-loaded SKILL body limited to instructions needed on most invocations, while rare or domain-specific detail can be loaded only when relevant?
+Treat any proposal to make a write-, queue- or evidence-mutation-capable skill implicitly invokable as a security finding requiring strong justification.
 
-### 4. Impact predictability
+## Progressive-disclosure gate
 
-Before invoking the skill, can an agent predict whether the operation is read-only, externally retrieving, queue-writing, evidence-writing or repository-writing?
-
-### 5. Intent signalling
-
-Do triggers and `do_not_use_for` rules separate nearby skills cleanly enough to avoid accidental composition or duplicate work?
-
-### 6. Hidden knowledge
-
-Does safe execution depend on unwritten assumptions, prior chat context, one model's memory or obscure files that are not discoverable from the current routing surfaces?
-
-### 7. Composition clarity
-
-Can an agent determine the correct sequence among router, task-specific reasoning, developer research, evidence ledger, red team, Codex intake and archive governance?
-
-### 8. Progressive-disclosure quality
-
-Identify sections that are large, conditional and mechanically separable into shallow `references/` files without weakening the default safety envelope.
-
-## Progressive-disclosure rule
-
-A section is a valid extraction candidate only when **all** of these are true:
+A section may be extracted from a SKILL body into `references/` only when every field below is satisfied:
 
 ```yaml
 needed_on_minority_of_invocations: YES
-semantics_can_be_preserved_verbatim_or_losslessly: YES
-safe_trigger_for_loading_reference_is_clear: YES
+semantics_preserved_losslessly: YES
+safe_reference_trigger_is_clear: YES
 core_authority_boundary_remains_in_SKILL: YES
 core_failure_semantics_remain_in_SKILL: YES
 reference_depth_after_change: ONE_LEVEL
-new_parallel_owner_created: NO
+parallel_owner_created: NO
+measurable_context_or_legibility_gain: YES
 ```
 
-Never move these behind an optional reference solely to save tokens:
+Never move these behind an optional reference merely to reduce tokens:
 
-- write authorization requirements;
+- explicit write authorization;
 - no-direct-main rule;
 - destructive-authority separation;
 - no self-promotion / no portfolio authority;
-- missing-data-as-UNKNOWN rule when material to the skill;
 - frozen-field integrity for prospective evidence;
-- the skill's primary stop/fail-closed conditions;
+- material missing-data-as-UNKNOWN rules;
+- primary stop/fail-closed conditions;
 - canonical-owner precedence.
 
-## Current hypotheses to test, not conclusions
+Starting hypotheses, not conclusions:
 
-The following are starting hypotheses and must be disproved or confirmed from current main:
-
-1. `archive-governance` may contain conditional document-normalization, backup and high-impact detail that can be progressively disclosed while keeping branch/write safety in the core.
-2. `prospective-evidence-ledger` may contain domain-specific Transmission Matrix and optional scoring/coverage detail that can move to references while preserving causal, maturity, lineage and frozen-field rules in the core.
-3. `canonical-context-router` may have DATA PING-specific detail that should be conditional, but its mandatory owner-resolution and conflict logic should remain core.
-4. `developer-source-research` is already compact enough that a refactor may have negative value.
-5. `research-lab-red-team` is likely compact enough that routing metadata may be more valuable than body compression.
-6. `codex-intake` may benefit from metadata/frontmatter normalization, but any rewrite must preserve its current queue and CODEX_READY authority boundary.
+1. `archive-governance` and `prospective-evidence-ledger` are the strongest compression candidates because their current bodies exceed the validator warning threshold.
+2. `developer-source-research` and `research-lab-red-team` may already be compact enough that rewriting them has negative value.
+3. `canonical-context-router` may contain conditionally loadable DATA PING detail, but owner resolution and conflict logic should remain core.
+4. `codex-intake` may benefit from metadata/frontmatter normalization, but its queue and `CODEX_READY` authority boundary must remain unchanged.
 
 ## Finding Disproof Pass
 
-Every proposed finding must survive a separate disproof pass before it is accepted.
+Every proposed architecture finding must be challenged before it is accepted.
 
-For each finding:
+For each finding record:
 
 ```yaml
 finding_id:
@@ -143,100 +135,49 @@ disproof_result: SURVIVES | REJECTED | NARROWED
 smallest_practical_change:
 change_not_needed_if:
 authority_risk:
-context_saving_or_legibility_gain:
+measurable_context_or_legibility_gain:
 ```
 
-Reject findings that are merely stylistic preference, file-count preference or admiration of another repository's architecture.
+Reject findings that reduce to stylistic preference, file-count preference or admiration of another repository.
 
-## New-skill prohibition
+## Validator scope
 
-Do not recommend a seventh permanent skill unless the candidate satisfies the existing `SKILL_REGISTRY.md` expansion rule:
-
-```text
-failure mode observed
-repeated task frequency
-why existing skills cannot cover it
-inputs
-outputs
-validation loop
-authority boundary
-kill criterion
-```
-
-A one-off legibility audit is not enough to justify a new skill.
-
-## Machine-routing audit
-
-Evaluate `00_ARCHIVE_CONTROL/SKILL_ROUTING_INDEX.json` as a derived surface only.
-
-Verify:
-
-- it never claims canonical authority;
-- every skill is present exactly once;
-- every referenced SKILL and metadata path exists;
-- side-effect levels are explicit;
-- write/queue-capable skills do not allow implicit invocation;
-- the Markdown registry remains the canonical owner;
-- machine metadata does not contain market thresholds, scoring rules or live state;
-- `agents/openai.yaml` metadata aligns with the routing index;
-- no metadata field silently broadens skill authority.
-
-## Validator audit
-
-Run or independently review:
+Review or run:
 
 ```bash
 python scripts/agent_skills/validate_skill_architecture.py
 ```
 
-Treat validator PASS as structural evidence only. It does not prove the routing is scientifically correct or that a skill should be kept.
+The validator is intentionally structural. Its PASS means only that routing metadata, file presence and side-effect policy are internally consistent.
 
-Identify false-positive and false-negative cases for the validator before proposing stronger enforcement or CI integration.
+It does **not** prove:
 
-Do **not** add or modify a GitHub Actions workflow during this read-only mission.
+- that a skill should be kept;
+- that routing is scientifically optimal;
+- that market/framework semantics are correct;
+- that progressive disclosure is beneficial;
+- that CI enforcement should be added.
 
-## Required output
+Before proposing CI integration, identify likely validator false positives and false negatives. Do not modify GitHub Actions during the first read-only audit.
 
-Return:
+## Required addendum output
+
+Append these sections to the parent mission's report:
 
 ```markdown
-# ASTRA AGENT LEGIBILITY VERDICT
-
-## Current main SHA
-
-## Active skill stack reconstructed from authority
-
-## Routing and authority map
-
-## Skill-by-skill legibility scorecard
-
-## Progressive-disclosure candidates
-
-## Findings rejected by the disproof pass
-
 ## Machine-routing index assessment
 
 ## agents/openai.yaml assessment
 
-## Validator assessment
+## Agent-legibility findings
 
-## Hidden-knowledge risks
+## Progressive-disclosure candidates
 
-## Duplicate or unnecessary agent concepts
+## Findings rejected or narrowed by the disproof pass
 
-## Changes that would make the system worse
-
-## Ranked minimal-change recommendations
-
-## Recommended first patch, if any
+## Validator false-positive / false-negative risks
 
 ## Explicit NO-CHANGE decisions
 ```
 
-## Acceptance standard
-
-A strong audit should be able to conclude `NO_CHANGE` for some or all skills.
-
-The mission succeeds when it improves confidence in **what should remain untouched** as much as in what should change.
-
-Do not optimize for maximum compression, maximum file count or maximum agent autonomy. Optimize for minimum ambiguity and minimum unnecessary context at unchanged authority.
+A valid outcome may be that no SKILL body should be changed.
