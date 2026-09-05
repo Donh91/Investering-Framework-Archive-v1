@@ -15,6 +15,11 @@ on:
       - '00_ARCHIVE_CONTROL/research_governance_v1/compounding_learning_v1/POLICY.json'
       - '00_FMOS/EXPERIMENT_SCIENTIFIC_ADMISSION_AND_UNIFIED_ADJUDICATION_v1.md'
       - '06_RESEARCH_LAB/compounding_learning_controller_v1/**'
+  push:
+    branches:
+      - main
+    paths:
+      - '00_ARCHIVE_CONTROL/research_governance_v1/compounding_learning_v1/BOOTSTRAP_REQUEST_v1.json'
   schedule:
     - cron: '5 9 * * 1'
       timezone: 'Europe/Copenhagen'
