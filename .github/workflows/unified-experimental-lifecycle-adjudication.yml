@@ -15,11 +15,7 @@ on:
       - '00_ARCHIVE_CONTROL/research_governance_v1/compounding_learning_v1/POLICY.json'
       - '00_FMOS/EXPERIMENT_SCIENTIFIC_ADMISSION_AND_UNIFIED_ADJUDICATION_v1.md'
       - '06_RESEARCH_LAB/compounding_learning_controller_v1/**'
-  issue_comment:
-    types: [created]
   schedule:
-    - cron: '*/10 * * * *'
-      timezone: 'Europe/Copenhagen'
     - cron: '5 9 * * 1'
       timezone: 'Europe/Copenhagen'
   workflow_dispatch:
@@ -58,13 +54,7 @@ jobs:
             tests.health.test_compounding_learning_health -v
 
   adjudicate:
-    if: >-
-      (github.event_name == 'schedule' && github.ref == 'refs/heads/main') ||
-      (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') ||
-      (github.event_name == 'issue_comment' &&
-       github.event.issue.number == 777 &&
-       github.event.comment.user.login == 'Donh91' &&
-       github.event.comment.body == '/bootstrap-compounding-learning-v1')
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     permissions:
       contents: write
     runs-on: ubuntu-latest
