@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import sys
 from copy import deepcopy
 from pathlib import Path
@@ -12,6 +11,7 @@ from scripts.api_agent import api_gateway
 from scripts.api_agent.capability_router import (
     build_execution_plan,
     canonical_bytes,
+    estimate_model_cost,
     load_json,
     sha256_json,
 )
@@ -63,6 +63,8 @@ def select_execution(
     mode = "SHADOW_RECOMMENDATION"
 
     if activate_routing:
+        if policy.get("status") != "ACTIVE_QUALIFIED":
+            raise ValueError("routing_policy_not_qualified")
         if policy.get("production_activation") != "EXPLICIT_RUNTIME_FLAG_AFTER_QUALIFICATION":
             raise ValueError("policy_does_not_allow_runtime_activation")
         qualified_models = runtime.get("qualified_models")
@@ -85,6 +87,7 @@ def select_execution(
         "runtime_capabilities_sha256": sha256_json(runtime),
         "profile_sha256": sha256_json(profile),
         "runtime_confirmed": True,
+        "router_grants_write_authority": False,
         "automatic_merge": False,
         "repository_write_authority": False,
         "authority": {
@@ -94,6 +97,7 @@ def select_execution(
             "threshold_change": False,
             "weight_change": False,
             "portfolio_action": False,
+            "trade_action": False,
             "canonical_promotion": False,
             "automatic_merge": False,
         },
@@ -118,13 +122,9 @@ def run_gateway_with_effective_registry(
     task_cfg["model"] = effective["model"]
     task_cfg["reasoning_effort"] = effective["reasoning_effort"]
 
-    price = policy.get("models", {}).get(effective["model"], {}).get("price_per_million")
-    if not isinstance(price, dict):
+    model_cfg = policy.get("models", {}).get(effective["model"])
+    if not isinstance(model_cfg, dict) or not isinstance(model_cfg.get("price_per_million"), dict):
         raise ValueError(f"routing_price_missing:{effective['model']}")
-    api_gateway.PRICES_PER_MILLION[effective["model"]] = {
-        "input": float(price["input"]),
-        "output": float(price["output"]),
-    }
 
     output_dir.mkdir(parents=True, exist_ok=True)
     temp_registry = output_dir / ".capability_routed_registry.tmp.json"
@@ -148,12 +148,32 @@ def run_gateway_with_effective_registry(
     if dry_run:
         argv.append("--dry-run")
 
+    model_id = effective["model"]
     old_argv = sys.argv
+    old_estimate_cost = api_gateway.estimate_cost
+    old_price = api_gateway.PRICES_PER_MILLION.get(model_id)
+
+    def routed_estimate_cost(model: str, input_tokens: int, output_tokens: int) -> float:
+        cfg = policy.get("models", {}).get(model)
+        if isinstance(cfg, dict):
+            return estimate_model_cost(policy, cfg, input_tokens, output_tokens)
+        return old_estimate_cost(model, input_tokens, output_tokens)
+
+    api_gateway.PRICES_PER_MILLION[model_id] = {
+        "input": float(model_cfg["price_per_million"]["input"]),
+        "output": float(model_cfg["price_per_million"]["output"]),
+    }
+    api_gateway.estimate_cost = routed_estimate_cost
     try:
         sys.argv = argv
         api_gateway.main()
     finally:
         sys.argv = old_argv
+        api_gateway.estimate_cost = old_estimate_cost
+        if old_price is None:
+            api_gateway.PRICES_PER_MILLION.pop(model_id, None)
+        else:
+            api_gateway.PRICES_PER_MILLION[model_id] = old_price
         if temp_registry.exists():
             temp_registry.unlink()
 
@@ -215,6 +235,7 @@ def main() -> int:
 
     routing_receipt["gateway_receipt_sha256"] = sha256_json(gateway_receipt)
     routing_receipt["gateway_status"] = gateway_receipt.get("status")
+    routing_receipt["gateway_estimated_cost_usd"] = gateway_receipt.get("estimated_cost_usd")
     (args.output_dir / "routing_receipt.json").write_bytes(canonical_bytes(routing_receipt))
     print(json.dumps({"routing": routing_receipt, "plan": plan}, sort_keys=True))
     return 0
