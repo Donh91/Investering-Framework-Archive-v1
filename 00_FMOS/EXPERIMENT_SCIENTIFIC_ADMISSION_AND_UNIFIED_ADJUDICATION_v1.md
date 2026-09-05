@@ -94,6 +94,72 @@ The output is research-only and may route candidates to:
 
 It cannot promote a market rule, alter thresholds or weights, change framework state or create portfolio execution.
 
+## Post-adjudication Compounding Learning Controller v1
+
+The `Compounding Learning Controller` runs only after the current Unified Experimental Lifecycle Adjudication has been persisted.
+
+Its ownership boundary is explicit:
+
+- **Unified Experimental Adjudication owns:** what the mature evidence says and which lifecycle action is justified.
+- **Compounding Learning owns:** what was learned across semantic experiment families, what uncertainty remains, and which single prospective child test is most information-rich next.
+
+The controller must not re-adjudicate a candidate. If the lifecycle registry, Scientific Admission registry and adjudication output have drifted out of alignment, the controller fails closed to `WAIT_FOR_REFRESHED_UNIFIED_ADJUDICATION` rather than interpreting the evidence itself.
+
+The controller maintains these research-only products under `00_ARCHIVE_CONTROL/research_governance_v1/compounding_learning_v1/`:
+
+- `STATE.json`, current machine-readable `LEARNING_STATE_v1`;
+- `events/LE-*.json`, append-only `LEARNING_EVENT_v1` records for material changes in mature adjudicated evidence;
+- `NEXT_BEST_EXPERIMENT.json`, one bounded `NEXT_BEST_TEST_PROPOSAL_v1`;
+- `LEARNING_BACKLOG.json`, persistent ranked unresolved questions and deprioritized proposals.
+
+Every next-test proposal must expose at least:
+
+- unresolved uncertainty;
+- hypothesis;
+- frozen baseline;
+- explicit falsifier;
+- what evidence would change the current view;
+- transparent information-value ranking components;
+- negative controls;
+- lineage requirement;
+- redundancy and complexity burden;
+- false-positive / false-negative costs to freeze during Scientific Admission;
+- revisit condition.
+
+The information-value score is an auditable ranking heuristic, not a probability, forecast skill estimate or promotion score.
+
+### Descriptive checkpoints
+
+Every learning profile uses the common descriptive checkpoint surface:
+
+`7 / 14 / 30 / 60 / 90 / 120 / 180 / 240 days`.
+
+These checkpoints may summarize accrual health, data quality, concentration, maturation readiness and already-adjudicated evidence. They do not create interim scientific verdicts by themselves.
+
+For confirmatory studies the firewall is stricter: checkpoint execution may not infer interim performance, change the scientific method, create an automatic child experiment, inspect future outcome evidence for skill inference or alter the final confirmatory test contract.
+
+### Materiality and append-only learning
+
+A new raw observation count is not a learning event by itself.
+
+`LEARNING_EVENT_v1` is emitted only when mature, already-adjudicated evidence materially changes a semantic family's evidence signature or adjudicated status. Previous material events remain immutable. A failed or contradictory result is retained rather than silently removed.
+
+### Next-test boundary
+
+A proposed child test is never execution permission.
+
+Every proposed child must re-enter the existing Scientific Admission path and may execute prospectively only if admitted under that owner. The controller cannot mutate the frozen parent, create retrospective prospective evidence, run automatic parameter search, promote a market rule, alter a threshold or weight, change canonical framework state or create portfolio execution.
+
+The operational health contract is produced at `research/architecture_health/LATEST_COMPOUNDING_LEARNING_HEALTH.json`. Future agents discover the current experiment-learning stack through `research/framework_handoffs/LATEST_FRAMEWORK_HANDOFF_MANIFEST.json`, whose experiment-learning read order is:
+
+1. Experiment Lifecycle Registry;
+2. Scientific Admission Registry;
+3. Unified Experimental Adjudication;
+4. Compounding Learning State;
+5. Next Best Test Proposal;
+6. Learning Backlog;
+7. Compounding Learning Health.
+
 ## Retirement principle
 
 Age alone is not a kill criterion.
