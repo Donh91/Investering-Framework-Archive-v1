@@ -4,7 +4,7 @@ import unittest
 from pathlib import Path
 
 from scripts.api_agent import api_gateway
-from scripts.api_agent.capability_router import build_execution_plan, load_json
+from scripts.api_agent.capability_router import build_execution_plan, estimate_model_cost, load_json
 from scripts.api_agent.capability_routed_api_gateway import run_gateway_with_effective_registry, select_execution
 
 
@@ -49,7 +49,7 @@ def profile(
                 "estimated_input_tokens": 10000,
                 "estimated_output_tokens": 1000,
                 "write_required": write,
-                "allowed_write_scope": scope or [],
+                "requested_write_scope": scope or [],
                 "requires_astra": requires_astra,
                 "independent_review_required": review,
             }
@@ -106,19 +106,30 @@ class CapabilityRouterTests(unittest.TestCase):
         self.assertEqual(plan["units"][0]["model"], "gpt-6-astra")
         self.assertTrue(plan["units"][0]["runtime_confirmed"])
 
-    def test_repository_write_is_codex_only(self):
+    def test_repository_write_is_codex_only_and_router_grants_no_authority(self):
         p = profile(executor_class="CODE", write=True, scope=["scripts/example.py"])
         waiting = build_execution_plan(self.policy, runtime("gpt-6-astra", codex=False), p)
         self.assertEqual(waiting["status"], "WAITING_FOR_CAPABILITY")
         self.assertEqual(waiting["units"][0]["executor"], "CODEX")
         ready = build_execution_plan(self.policy, runtime("gpt-6-astra", codex=True), p)
+        route = ready["units"][0]
         self.assertEqual(ready["status"], "READY")
-        self.assertEqual(ready["units"][0]["executor"], "CODEX")
-        self.assertFalse(ready["units"][0]["automatic_merge"])
+        self.assertEqual(route["executor"], "CODEX")
+        self.assertEqual(route["requested_write_scope"], ["scripts/example.py"])
+        self.assertFalse(route["router_grants_write_authority"])
+        self.assertEqual(route["write_authority_source"], "EXISTING_CODEX_TASK_CONTRACT_REQUIRED")
+        self.assertEqual(route["review_owner"], "EXISTING_PR_REVIEW_GOVERNANCE")
+        self.assertTrue(route["independent_review_required"])
+        self.assertFalse(route["automatic_merge"])
 
     def test_model_unit_cannot_request_repository_write(self):
         p = profile(write=True, scope=["x"])
         with self.assertRaisesRegex(ValueError, "write_requires_code_executor"):
+            build_execution_plan(self.policy, runtime("gpt-5.6-luna"), p)
+
+    def test_model_unit_cannot_carry_requested_write_scope_without_code_executor(self):
+        p = profile(scope=["x"])
+        with self.assertRaisesRegex(ValueError, "write_scope_requires_code_executor"):
             build_execution_plan(self.policy, runtime("gpt-5.6-luna"), p)
 
     def test_independent_review_uses_different_model_when_available(self):
@@ -131,11 +142,21 @@ class CapabilityRouterTests(unittest.TestCase):
         self.assertEqual(route["model"], "gpt-5.6-sol")
         self.assertEqual(route["review"]["model"], "gpt-6-astra")
         self.assertTrue(route["review"]["read_only"])
+        self.assertFalse(route["review"]["repository_write_authority"])
 
     def test_plan_never_grants_framework_or_merge_authority(self):
         plan = build_execution_plan(self.policy, runtime("gpt-5.6-luna"), profile())
         self.assertFalse(plan["automatic_merge"])
+        self.assertFalse(plan["router_grants_write_authority"])
         self.assertTrue(all(value is False for value in plan["authority"].values()))
+
+    def test_cost_snapshot_uses_current_luna_rate(self):
+        luna = self.policy["models"]["gpt-5.6-luna"]
+        self.assertEqual(estimate_model_cost(self.policy, luna, 1_000_000, 1_000_000), 1.4)
+
+    def test_long_context_cost_multiplier_is_applied(self):
+        astra = self.policy["models"]["gpt-6-astra"]
+        self.assertEqual(estimate_model_cost(self.policy, astra, 300_000, 10_000), 6.75)
 
     def test_gateway_shadow_route_does_not_change_baseline_model(self):
         registry = api_gateway.load_registry(REGISTRY)
