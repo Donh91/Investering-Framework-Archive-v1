@@ -63,7 +63,7 @@ class CapabilityRouterTests(unittest.TestCase):
     def setUpClass(cls):
         cls.policy = load_json(POLICY)
 
-    def test_routine_uses_cheapest_verified_qualified_model(self):
+    def test_routine_uses_cheapest_available_model_for_shadow_recommendation(self):
         plan = build_execution_plan(
             self.policy,
             runtime("gpt-5.6-luna", "gpt-5.6-terra", "gpt-5.6-sol"),
@@ -173,6 +173,7 @@ class CapabilityRouterTests(unittest.TestCase):
         self.assertEqual(receipt["recommended"]["model"], "gpt-5.6-luna")
         self.assertEqual(effective["model"], "gpt-5.6-terra")
         self.assertEqual(receipt["mode"], "SHADOW_RECOMMENDATION")
+        self.assertEqual(receipt["selection_pool"], "AVAILABLE_MODELS_SHADOW")
 
     def test_shadow_policy_blocks_live_override_even_if_runtime_model_is_qualified(self):
         registry = api_gateway.load_registry(REGISTRY)
@@ -187,13 +188,13 @@ class CapabilityRouterTests(unittest.TestCase):
                 activate_routing=True,
             )
 
-    def test_gateway_activation_requires_runtime_qualification_after_policy_qualification(self):
+    def test_gateway_activation_requires_nonempty_runtime_qualification_after_policy_qualification(self):
         registry = api_gateway.load_registry(REGISTRY)
         task = "DAILY_CONFLICT_REVIEW"
         p = profile(task=task, capabilities=["structured_output"], effort="low")
         qualified_policy = deepcopy(self.policy)
         qualified_policy["status"] = "ACTIVE_QUALIFIED"
-        with self.assertRaisesRegex(ValueError, "selected_model_not_qualified"):
+        with self.assertRaisesRegex(ValueError, "no_runtime_qualified_models"):
             select_execution(
                 task=task,
                 task_cfg=registry["tasks"][task],
@@ -212,6 +213,24 @@ class CapabilityRouterTests(unittest.TestCase):
         )
         self.assertEqual(effective["model"], "gpt-5.6-luna")
         self.assertEqual(receipt["mode"], "QUALIFIED_OVERRIDE")
+        self.assertEqual(receipt["selection_pool"], "QUALIFIED_MODELS_ONLY")
+
+    def test_live_routing_selects_cheapest_qualified_not_cheapest_merely_available(self):
+        registry = api_gateway.load_registry(REGISTRY)
+        task = "DAILY_CONFLICT_REVIEW"
+        qualified_policy = deepcopy(self.policy)
+        qualified_policy["status"] = "ACTIVE_QUALIFIED"
+        effective, _, receipt = select_execution(
+            task=task,
+            task_cfg=registry["tasks"][task],
+            policy=qualified_policy,
+            runtime=runtime("gpt-5.6-luna", "gpt-5.6-terra", qualified=["gpt-5.6-terra"]),
+            profile=profile(task=task, complexity="SYNTHESIS", capabilities=["synthesis"], effort="medium"),
+            activate_routing=True,
+        )
+        self.assertEqual(effective["model"], "gpt-5.6-terra")
+        self.assertEqual(receipt["recommended"]["model"], "gpt-5.6-terra")
+        self.assertEqual(receipt["selection_pool"], "QUALIFIED_MODELS_ONLY")
 
     def test_routed_adapter_still_uses_existing_gateway_and_receipt_contract(self):
         registry = api_gateway.load_registry(REGISTRY)
