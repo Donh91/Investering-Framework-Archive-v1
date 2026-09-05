@@ -59,10 +59,21 @@ def validate_policy(policy: dict[str, Any]) -> None:
         raise ValueError("model_identity_authority_separation_required")
     if principles.get("api_models_have_repository_write_authority") is not False:
         raise ValueError("api_repository_write_authority_forbidden")
+    if principles.get("profile_write_scope_is_request_not_authority") is not True:
+        raise ValueError("profile_write_scope_must_not_grant_authority")
     if principles.get("code_write_executor") != "CODEX_ONLY":
         raise ValueError("code_write_executor_must_be_codex_only")
     if principles.get("automatic_merge") is not False:
         raise ValueError("automatic_merge_forbidden")
+    pricing = policy.get("pricing_snapshot")
+    if not isinstance(pricing, dict):
+        raise ValueError("pricing_snapshot_required")
+    threshold = pricing.get("long_context_threshold_tokens")
+    if not isinstance(threshold, int) or threshold < 1:
+        raise ValueError("invalid_long_context_threshold")
+    for key in ("long_context_input_multiplier", "long_context_output_multiplier"):
+        if not isinstance(pricing.get(key), (int, float)) or float(pricing[key]) < 1:
+            raise ValueError(f"invalid_pricing_multiplier:{key}")
     models = policy.get("models")
     if not isinstance(models, dict) or not models:
         raise ValueError("capability_policy_models_required")
@@ -83,11 +94,17 @@ def validate_policy(policy: dict[str, Any]) -> None:
 def validate_runtime(runtime: dict[str, Any]) -> None:
     if runtime.get("contract") != "RUNTIME_CAPABILITIES_v1":
         raise ValueError("invalid_runtime_capabilities_contract")
-    _runtime_models(runtime)
+    available = _runtime_models(runtime)
     if not isinstance(runtime.get("codex_available"), bool):
         raise ValueError("runtime_codex_available_required")
     if not isinstance(runtime.get("deterministic_available"), bool):
         raise ValueError("runtime_deterministic_available_required")
+    if "qualified_models" in runtime:
+        qualified = runtime["qualified_models"]
+        if not isinstance(qualified, list) or any(not isinstance(x, str) for x in qualified):
+            raise ValueError("invalid_runtime_qualified_models")
+        if not set(qualified).issubset(available):
+            raise ValueError("qualified_model_not_available")
 
 
 def validate_profile(profile: dict[str, Any]) -> None:
@@ -104,33 +121,54 @@ def validate_profile(profile: dict[str, Any]) -> None:
         if not isinstance(unit_id, str) or not unit_id or unit_id in seen:
             raise ValueError("invalid_or_duplicate_unit_id")
         seen.add(unit_id)
-        if unit.get("executor_class") not in {"MODEL", "CODE", "DETERMINISTIC"}:
+        executor_class = unit.get("executor_class")
+        if executor_class not in {"MODEL", "CODE", "DETERMINISTIC"}:
             raise ValueError(f"invalid_executor_class:{unit_id}")
         if not isinstance(unit.get("write_required", False), bool):
             raise ValueError(f"invalid_write_required:{unit_id}")
         if not isinstance(unit.get("independent_review_required", False), bool):
             raise ValueError(f"invalid_independent_review_required:{unit_id}")
-        if unit.get("write_required") and unit.get("executor_class") != "CODE":
+        if unit.get("write_required") and executor_class != "CODE":
             raise ValueError(f"write_requires_code_executor:{unit_id}")
+        requested_scope = unit.get("requested_write_scope", [])
+        if not isinstance(requested_scope, list) or any(not isinstance(x, str) or not x for x in requested_scope):
+            raise ValueError(f"invalid_requested_write_scope:{unit_id}")
+        if requested_scope and executor_class != "CODE":
+            raise ValueError(f"write_scope_requires_code_executor:{unit_id}")
         if FORBIDDEN_AUTHORITY_KEYS & set(unit):
             raise ValueError(f"authority_key_forbidden_in_unit:{unit_id}")
 
 
-def estimate_model_cost(model_cfg: dict[str, Any], input_tokens: int, output_tokens: int) -> float:
+def estimate_model_cost(policy: dict[str, Any], model_cfg: dict[str, Any], input_tokens: int, output_tokens: int) -> float:
+    if input_tokens < 0 or output_tokens < 0:
+        raise ValueError("negative_token_estimate")
     price = model_cfg["price_per_million"]
-    return round((input_tokens * float(price["input"]) + output_tokens * float(price["output"])) / 1_000_000, 8)
+    input_rate = float(price["input"])
+    output_rate = float(price["output"])
+    pricing = policy["pricing_snapshot"]
+    if input_tokens > int(pricing["long_context_threshold_tokens"]):
+        input_rate *= float(pricing["long_context_input_multiplier"])
+        output_rate *= float(pricing["long_context_output_multiplier"])
+    return round((input_tokens * input_rate + output_tokens * output_rate) / 1_000_000, 8)
 
 
-def _select_api_model(policy: dict[str, Any], runtime: dict[str, Any], unit: dict[str, Any], *, exclude: set[str] | None = None) -> dict[str, Any] | None:
+def _select_api_model(
+    policy: dict[str, Any],
+    runtime: dict[str, Any],
+    unit: dict[str, Any],
+    *,
+    exclude: set[str] | None = None,
+) -> dict[str, Any] | None:
     exclude = exclude or set()
     available = _runtime_models(runtime)
     complexity = str(unit.get("complexity") or "ROUTINE")
     complexity_rank = policy.get("complexity_rank", {}).get(complexity)
     if not isinstance(complexity_rank, int):
         raise ValueError(f"invalid_complexity:{complexity}")
-    required = set(unit.get("required_capabilities") or [])
-    if any(not isinstance(x, str) for x in required):
+    required_values = unit.get("required_capabilities") or []
+    if not isinstance(required_values, list) or any(not isinstance(x, str) for x in required_values):
         raise ValueError("invalid_required_capabilities")
+    required = set(required_values)
     requested_effort = str(unit.get("reasoning_effort") or "low")
     requires_astra = bool(unit.get("requires_astra", False))
     estimated_input = int(unit.get("estimated_input_tokens", 0) or 0)
@@ -147,7 +185,7 @@ def _select_api_model(policy: dict[str, Any], runtime: dict[str, Any], unit: dic
             continue
         if not required.issubset(set(cfg.get("capabilities", []))):
             continue
-        cost = estimate_model_cost(cfg, estimated_input, estimated_output)
+        cost = estimate_model_cost(policy, cfg, estimated_input, estimated_output)
         candidates.append((cost, int(cfg["rank"]), model_id, cfg))
     if not candidates:
         return None
@@ -169,7 +207,8 @@ def route_unit(policy: dict[str, Any], runtime: dict[str, Any], unit: dict[str, 
         "unit_id": unit_id,
         "source_task": unit.get("source_task"),
         "write_required": bool(unit.get("write_required", False)),
-        "allowed_write_scope": unit.get("allowed_write_scope", []),
+        "requested_write_scope": unit.get("requested_write_scope", []),
+        "router_grants_write_authority": False,
     }
     if executor_class == "DETERMINISTIC":
         if runtime["deterministic_available"] is not True:
@@ -178,7 +217,7 @@ def route_unit(policy: dict[str, Any], runtime: dict[str, Any], unit: dict[str, 
     if executor_class == "CODE":
         if not unit.get("write_required"):
             return {**base, "status": "BLOCKED", "executor": policy["execution"]["code_executor_name"], "reason": "CODE_EXECUTOR_REQUIRES_EXPLICIT_WRITE_SCOPE"}
-        scope = unit.get("allowed_write_scope")
+        scope = unit.get("requested_write_scope")
         if not isinstance(scope, list) or not scope or any(not isinstance(x, str) or not x for x in scope):
             return {**base, "status": "BLOCKED", "executor": policy["execution"]["code_executor_name"], "reason": "CODE_WRITE_SCOPE_REQUIRED"}
         if runtime["codex_available"] is not True:
@@ -188,6 +227,9 @@ def route_unit(policy: dict[str, Any], runtime: dict[str, Any], unit: dict[str, 
             "status": "READY",
             "executor": policy["execution"]["code_executor_name"],
             "runtime_confirmed": True,
+            "write_authority_source": "EXISTING_CODEX_TASK_CONTRACT_REQUIRED",
+            "review_owner": policy["review"]["code_review_owner"],
+            "independent_review_required": True,
             "automatic_merge": False,
         }
     selected = _select_api_model(policy, runtime, unit)
@@ -202,10 +244,15 @@ def route_unit(policy: dict[str, Any], runtime: dict[str, Any], unit: dict[str, 
             "reasoning_effort": unit.get("review_reasoning_effort", unit.get("reasoning_effort", "high")),
             "requires_astra": bool(unit.get("review_requires_astra", False)),
         }
-        review = _select_api_model(policy, runtime, review_unit, exclude={selected["model"]} if policy["review"].get("prefer_different_model_from_worker") else set())
+        review = _select_api_model(
+            policy,
+            runtime,
+            review_unit,
+            exclude={selected["model"]} if policy["review"].get("prefer_different_model_from_worker") else set(),
+        )
         if review is None:
             return {**routed, "status": "WAITING_FOR_CAPABILITY", "reason": "INDEPENDENT_REVIEW_MODEL_UNAVAILABLE", "review": None}
-        routed["review"] = {**review, "read_only": True}
+        routed["review"] = {**review, "read_only": True, "repository_write_authority": False}
     return routed
 
 
@@ -223,6 +270,7 @@ def build_execution_plan(policy: dict[str, Any], runtime: dict[str, Any], profil
             "unit_id": "__parent__",
             "executor_class": "MODEL",
             "write_required": False,
+            "requested_write_scope": [],
             "independent_review_required": False,
             "complexity": parent_profile.get("complexity", "ARCHITECTURE"),
             "required_capabilities": parent_profile.get("required_capabilities", ["orchestration"]),
@@ -240,6 +288,8 @@ def build_execution_plan(policy: dict[str, Any], runtime: dict[str, Any], profil
     else:
         status = "READY"
     max_parallel = int(policy.get("execution", {}).get("max_parallel_units", 1))
+    if not 1 <= max_parallel <= 16:
+        raise ValueError("invalid_max_parallel_units")
     parallel_ready = min(sum(1 for r in routes if r["status"] == "READY"), max_parallel)
     return {
         "contract": "CAPABILITY_EXECUTION_PLAN_v1",
@@ -253,6 +303,7 @@ def build_execution_plan(policy: dict[str, Any], runtime: dict[str, Any], profil
         "max_parallel_units": max_parallel,
         "routing_rule": "DETERMINISTIC_FIRST_THEN_CHEAPEST_VERIFIED_QUALIFIED_EXECUTOR",
         "automatic_merge": False,
+        "router_grants_write_authority": False,
         "authority": {
             "creates_truth": False,
             "framework_state_change": False,
@@ -260,6 +311,7 @@ def build_execution_plan(policy: dict[str, Any], runtime: dict[str, Any], profil
             "threshold_change": False,
             "weight_change": False,
             "portfolio_action": False,
+            "trade_action": False,
             "canonical_promotion": False,
             "automatic_merge": False,
         },
@@ -280,8 +332,10 @@ def probe_openai_runtime(api_key: str, *, codex_available: bool = False) -> dict
         "source": "OPENAI_MODELS_API",
         "generated_at_utc": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
         "available_models": ids,
+        "qualified_models": [],
         "codex_available": bool(codex_available),
         "deterministic_available": True,
+        "qualification_note": "MODEL_LISTING_PROVES_DISCOVERY_ONLY_NOT_ROUTING_QUALIFICATION",
     }
 
 
