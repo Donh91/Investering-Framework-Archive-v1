@@ -1,0 +1,76 @@
+{
+  "schema_version": "1.0",
+  "receipt_id": "GLC_WP01B_CBO_MATERIALIZATION_HARNESS_20260905",
+  "recorded_at_utc": "2026-09-05T20:39:17Z",
+  "program_id": "GLOBAL_LIQUIDITY_CAUSAL_CHAIN_RESEARCH_v1",
+  "issue": 206,
+  "source_owner": "CONGRESSIONAL_BUDGET_OFFICE",
+  "source_repository": "US-CBO/cbo-data",
+  "source_repository_commit": "284a95665f9f2f74ed1f482feb629b43fce323da",
+  "control_plane_base_commit": "49be0196aa197a05a4fb16be45f7375755d86a46",
+  "task_branch": "agent/task-20260905-glc-wp01b-cbo-materialize",
+  "implementation": {
+    "tool_path": "tools/backtest_readiness/materialize_cbo_vintages.py",
+    "test_path": "tests/backtest_readiness/test_materialize_cbo_vintages.py",
+    "synthetic_test_result": "PASS_4_OF_4",
+    "capabilities": [
+      "fetch exact owner bytes from immutable CBO repository commit",
+      "accept locally supplied exact vintage bytes as an offline fallback",
+      "calculate SHA-256 and byte length",
+      "calculate CSV data-row count",
+      "enforce canonical date-variable-value schema",
+      "fail closed on duplicate date-variable keys",
+      "require all preregistered CBO target variables",
+      "fail closed on fiscal-year gaps within each target variable span",
+      "emit a source-engineering receipt without economic inference"
+    ]
+  },
+  "bound_vintages": [
+    {
+      "vintage": "2024-06",
+      "path": "data/budget/ten_year_budget/annual_fy_2024-06.csv",
+      "github_blob_sha": "c71ef5986e1ccf6bdb4d993b6fcc141bfc3db9bc"
+    },
+    {
+      "vintage": "2025-01",
+      "path": "data/budget/ten_year_budget/annual_fy_2025-01.csv",
+      "github_blob_sha": "999655e773307bd04b7ea07bd03b81f5d516fa7b"
+    },
+    {
+      "vintage": "2026-02",
+      "path": "data/budget/ten_year_budget/annual_fy_2026-02.csv",
+      "github_blob_sha": "99f55b63bb8db8c214e2ee08de5ce0c216358fac"
+    }
+  ],
+  "current_session_byte_execution": {
+    "status": "BLOCKED_RUNTIME_EXTERNAL_BYTE_STREAM_UNAVAILABLE",
+    "raw_bytes_materialized": 0,
+    "sha256_materialized": 0,
+    "row_counts_materialized": 0,
+    "publication_timestamps_materialized": 0,
+    "fabricated_values": false,
+    "note": "The connected GitHub read surface verified the frozen CBO repository objects and blob bindings, but the current local execution runtime could not retrieve the external raw byte streams required for an independent SHA-256 calculation. No hash, row count or publication timestamp was inferred from partial text responses."
+  },
+  "next_execution": {
+    "command": "python tools/backtest_readiness/materialize_cbo_vintages.py --fetch --output /tmp/cbo-materialization-receipt.json",
+    "required_follow_up": [
+      "run on a worker with outbound HTTPS access to raw.githubusercontent.com",
+      "retain exact generated receipt",
+      "bind official publication timestamps separately",
+      "only then update the existing CBO source manifest, source contract, acquisition state and validators",
+      "keep G20 NO until all readiness dependencies pass"
+    ]
+  },
+  "authority": {
+    "economic_execution_allowed": false,
+    "parameter_search_allowed": false,
+    "final_holdout_access_allowed": false,
+    "framework_promotion_allowed": false,
+    "market_state_change_allowed": false,
+    "gate_change_allowed": false,
+    "rebuy_change_allowed": false,
+    "deployment_change_allowed": false,
+    "portfolio_authority": "NONE"
+  },
+  "completion_status": "HARNESS_IMPLEMENTED_BYTE_EXECUTION_PENDING"
+}
