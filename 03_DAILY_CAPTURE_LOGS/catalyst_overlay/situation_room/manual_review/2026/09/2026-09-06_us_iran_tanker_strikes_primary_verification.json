@@ -1,0 +1,49 @@
+{
+  "contract": "SITUATION_ROOM_MANUAL_REVIEW_v1",
+  "authority": "RESEARCH_ONLY_NON_CANONICAL",
+  "canonical_effect": false,
+  "market_state_effect": false,
+  "portfolio_effect": false,
+  "observation_date_utc": "2026-09-06",
+  "review_type": "PRIMARY_SOURCE_VERIFICATION_OF_EXISTING_DISCOVERY",
+  "source_discovery": {
+    "owner_path": "03_DAILY_CAPTURE_LOGS/catalyst_overlay/situation_room/2026/09/2026-09-06.json",
+    "owner_run_id": "SRDO_e177deba9513334e",
+    "discovery_title": "US tanker strikes disable vessels near Kharg and Jask — Situation Room",
+    "owner_status_before_manual_review": "DISCOVERY_UNVERIFIED",
+    "discovery_url": "https://situationroom.space/briefing/2026-09-06"
+  },
+  "verification": {
+    "status": "PRIMARY_SOURCE_VERIFIED",
+    "primary_source": "U.S. Central Command",
+    "primary_source_url": "https://www.centcom.mil/MEDIA/PUBLIC-RELEASES/Article/4591744/centcom-destroys-3-irgc-oil-tankers-after-iran-targets-2-us-navy-warships/",
+    "primary_source_publication_date": "2026-09-05",
+    "verified_claims": [
+      "CENTCOM states that IRGC ballistic missiles were launched toward two U.S. Navy warships and that no U.S. personnel were harmed.",
+      "CENTCOM states that U.S. forces permanently disabled M/T Downy off Kharg Island.",
+      "CENTCOM states that U.S. forces permanently disabled M/T Stark 1 near Jask.",
+      "CENTCOM states that U.S. forces completely destroyed the unladen M/T Kylo (also known as Noxen) in the Gulf of Oman after directing the crew to abandon ship."
+    ],
+    "independent_secondary_crosscheck": [
+      "CNN report republished by Egypt Independent on 2026-09-06 describes the same three-tanker action and the preceding attacks on U.S. warships.",
+      "Radio Free Europe/Radio Liberty reporting on 2026-09-06 independently describes the same vessels and CENTCOM account."
+    ],
+    "secondary_urls": [
+      "https://www.egyptindependent.com/us-military-strikes-three-iranian-tankers-in-retaliation-for-missile-attacks/",
+      "https://www.rferl.org/a/iran-live-blog-trump-middle-east/33803414.html?lbis=470160"
+    ]
+  },
+  "incremental_relevance": {
+    "new_fact_vs_owner_capture": "The existing daily owner already discovered the tanker-strike headline, but left it unverified. This review adds primary-source verification; it does not add a separate new event.",
+    "market_relevance": "Potential geopolitical/energy-risk catalyst through escalation around Kharg, Jask and the Gulf of Oman. It is context for oil, shipping and risk sentiment, not a standalone crypto market-state signal.",
+    "master_monday_relevance": "Eligible as verified catalyst context for the next Master Monday, while remaining non-canonical and separate from market-reaction evidence."
+  },
+  "guardrails": {
+    "situation_room_role": "DISCOVERY_ONLY",
+    "event_and_market_reaction_separate": true,
+    "automatic_promotion": false,
+    "no_threshold_change": true,
+    "no_portfolio_authority": true,
+    "no_duplicate_collector": true
+  }
+}
