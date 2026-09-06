@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import importlib.util
 import json
 import tempfile
@@ -42,7 +43,7 @@ class WeeklyDirectorIntradaySequenceTests(unittest.TestCase):
             value = {
                 'contract': 'API_AGENT_RECEIPT_v3',
                 'created_at_utc': stamp,
-                'output_hash': f'declared-{name}',
+                'output_hash': hashlib.sha256(module.canonical(output)).hexdigest(),
                 'status': 'PASS',
                 'task': 'DAILY_DIRECTOR_SHADOW',
             }
@@ -83,7 +84,10 @@ class WeeklyDirectorIntradaySequenceTests(unittest.TestCase):
             self.assertEqual(first['direction'], 'ADVANCING')
             self.assertEqual(first['confidence'], 'LOW')
             self.assertEqual(first['source_timestamp_origin'], 'receipt.created_at_utc')
+            self.assertEqual(first['source_timestamp_raw'], '2026-09-03T09:06:56Z')
             self.assertEqual(first['binding_status'], 'PASS')
+            self.assertEqual(first['binding_issues'], [])
+            self.assertEqual(first['declared_output_hash'], first['output_sha256'])
             self.assertEqual(len(first['output_sha256']), 64)
             self.assertEqual(len(first['receipt_sha256']), 64)
             self.assertNotIn('output', first)
@@ -110,6 +114,7 @@ class WeeklyDirectorIntradaySequenceTests(unittest.TestCase):
             self.assertEqual(data['daily_director_intraday_count'], 2)
             self.assertEqual(data['daily_director_intraday_exact_duplicate_count'], 1)
             self.assertEqual(len({row['receipt_sha256'] for row in data['daily_director_intraday_sequence']}), 2)
+            self.assertEqual(data['daily_director_intraday_status'], 'COMPLETE')
 
     def test_missing_receipt_remains_visible_and_fails_closed(self):
         with tempfile.TemporaryDirectory() as td:
@@ -121,8 +126,41 @@ class WeeklyDirectorIntradaySequenceTests(unittest.TestCase):
             self.assertEqual(row['source_timestamp_origin'], 'output.generated_at_utc')
             self.assertIsNone(row['receipt_sha256'])
             self.assertEqual(row['binding_status'], 'INCOMPLETE')
+            self.assertEqual(row['binding_issues'], ['RECEIPT_MISSING'])
             self.assertEqual(data['daily_director_intraday_status'], 'INCOMPLETE')
             self.assertEqual(data['daily_director_intraday_diagnostics'][0]['reason'], 'RECEIPT_MISSING')
+
+    def test_hash_mismatch_and_failed_receipt_remain_visible_and_fail_closed(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            self.write_run(root, 'mismatch', '2026-09-03T10:00:00Z', receipt_extra={'output_hash': '0' * 64})
+            self.write_run(root, 'failed', '2026-09-03T11:00:00Z', receipt_extra={'status': 'API_OUTPUT_INVALID'})
+            data = self.collect(root)
+            self.assertEqual(data['daily_director_intraday_count'], 2)
+            self.assertEqual(data['daily_director_intraday_status'], 'INCOMPLETE')
+            rows = {Path(row['path']).parent.name: row for row in data['daily_director_intraday_sequence']}
+            self.assertEqual(rows['mismatch']['binding_status'], 'INCOMPLETE')
+            self.assertIn('OUTPUT_HASH_MISMATCH', rows['mismatch']['binding_issues'])
+            self.assertEqual(rows['failed']['binding_status'], 'INCOMPLETE')
+            self.assertIn('RECEIPT_STATUS_NOT_PASS', rows['failed']['binding_issues'])
+            reasons = {row['reason'] for row in data['daily_director_intraday_diagnostics']}
+            self.assertIn('OUTPUT_HASH_MISMATCH', reasons)
+            self.assertIn('RECEIPT_STATUS_NOT_PASS', reasons)
+
+    def test_wrong_receipt_identity_and_invalid_declared_hash_fail_closed(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            self.write_run(root, 'identity', '2026-09-03T12:00:00Z', receipt_extra={
+                'contract': 'OTHER_RECEIPT',
+                'task': 'OTHER_TASK',
+                'output_hash': 'not-a-sha',
+            })
+            row = self.collect(root)['daily_director_intraday_sequence'][0]
+            self.assertEqual(row['binding_status'], 'INCOMPLETE')
+            self.assertEqual(
+                set(row['binding_issues']),
+                {'RECEIPT_CONTRACT_INVALID', 'RECEIPT_TASK_INVALID', 'OUTPUT_HASH_INVALID'},
+            )
 
     def test_compaction_is_bounded_without_hiding_source_counts(self):
         with tempfile.TemporaryDirectory() as td:
@@ -135,6 +173,30 @@ class WeeklyDirectorIntradaySequenceTests(unittest.TestCase):
             self.assertEqual(row['forecast_candidate_count'], 10)
             self.assertEqual(len(row['forecast_candidates']), module.DIRECTOR_COMPACT_FORECAST_LIMIT)
             self.assertTrue(row['forecast_candidates_truncated'])
+
+    def test_sep3_frozen_production_sequence_has_four_hash_bound_runs_across_local_day_boundary(self):
+        root = Path('research/api_agent/outputs/daily/2026/09/03')
+        data = self.collect(root)
+        self.assertEqual(data['daily_director_count'], 2)
+        self.assertEqual(
+            [Path(row['path']).parent.name for row in data['daily_director_rows']],
+            ['171420', '232828'],
+        )
+        self.assertEqual(data['daily_director_intraday_count'], 4)
+        rows = data['daily_director_intraday_sequence']
+        self.assertEqual(
+            [Path(row['path']).parent.name for row in rows],
+            ['090656', '132458', '171420', '232828'],
+        )
+        self.assertEqual(
+            [row['source_timestamp_raw'] for row in rows],
+            [1788426397, 1788441883, 1788455619, 1788478089],
+        )
+        self.assertTrue(all(row['source_timestamp_origin'] == 'receipt.created_unix' for row in rows))
+        self.assertTrue(all(row['binding_status'] == 'PASS' for row in rows))
+        self.assertTrue(all(row['binding_issues'] == [] for row in rows))
+        self.assertTrue(all(row['declared_output_hash'] == row['output_sha256'] for row in rows))
+        self.assertEqual(data['daily_director_intraday_status'], 'COMPLETE')
 
 
 if __name__ == '__main__':

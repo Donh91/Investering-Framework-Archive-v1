@@ -21,6 +21,8 @@ DIRECTOR_TIME_FIELDS = (
 )
 DIRECTOR_COMPACT_EVIDENCE_LIMIT = 2
 DIRECTOR_COMPACT_FORECAST_LIMIT = 8
+DIRECTOR_RECEIPT_CONTRACT = "API_AGENT_RECEIPT_v3"
+DIRECTOR_RECEIPT_TASK = "DAILY_DIRECTOR_SHADOW"
 
 
 def canonical(value: Any) -> bytes:
@@ -57,21 +59,46 @@ def ts(raw: Any) -> datetime:
     return value.astimezone(timezone.utc)
 
 
-def find_time_with_source(output: dict[str, Any], receipt: dict[str, Any] | None) -> tuple[datetime | None, str | None]:
+def find_time_with_source(output: dict[str, Any], receipt: dict[str, Any] | None) -> tuple[datetime | None, str | None, Any]:
     for source_name, source in (("receipt", receipt or {}), ("output", output)):
         if not isinstance(source, dict):
             continue
         for key in DIRECTOR_TIME_FIELDS:
             if source.get(key) is not None:
+                raw = source[key]
                 try:
-                    return ts(source[key]), f"{source_name}.{key}"
+                    return ts(raw), f"{source_name}.{key}", raw
                 except Exception:
                     pass
-    return None, None
+    return None, None, None
 
 
 def find_time(output: dict[str, Any], receipt: dict[str, Any] | None) -> datetime | None:
     return find_time_with_source(output, receipt)[0]
+
+
+def is_sha256(value: Any) -> bool:
+    return (
+        isinstance(value, str)
+        and len(value) == 64
+        and all(char in "0123456789abcdef" for char in value)
+    )
+
+
+def director_receipt_binding_issues(receipt: dict[str, Any], output_sha256: str) -> list[str]:
+    issues: list[str] = []
+    if receipt.get("contract") != DIRECTOR_RECEIPT_CONTRACT:
+        issues.append("RECEIPT_CONTRACT_INVALID")
+    if receipt.get("task") != DIRECTOR_RECEIPT_TASK:
+        issues.append("RECEIPT_TASK_INVALID")
+    if receipt.get("status") != "PASS":
+        issues.append("RECEIPT_STATUS_NOT_PASS")
+    declared = receipt.get("output_hash")
+    if not is_sha256(declared):
+        issues.append("OUTPUT_HASH_INVALID")
+    elif declared != output_sha256:
+        issues.append("OUTPUT_HASH_MISMATCH")
+    return issues
 
 
 def compact_text_items(value: Any, *, limit: int = DIRECTOR_COMPACT_EVIDENCE_LIMIT) -> tuple[list[str], int, bool]:
@@ -142,19 +169,21 @@ def compact_director_row(row: dict[str, Any]) -> dict[str, Any]:
     uncertainties, uncertainty_count, uncertainties_truncated = compact_text_items(output.get("uncertainties"))
     forecasts, forecast_count, forecasts_truncated = compact_forecast_candidates(output.get("forecast_candidates"))
     header = parse_cycle_header(output)
-    binding_status = "PASS" if isinstance(receipt, dict) and row["receipt_sha256"] else "INCOMPLETE"
     return {
         "local_day_key": when.astimezone(COPENHAGEN).date().isoformat(),
         "timezone": "Europe/Copenhagen",
         "source_timestamp_utc": when.isoformat().replace("+00:00", "Z"),
         "source_timestamp_local": when.astimezone(COPENHAGEN).isoformat(),
         "source_timestamp_origin": row["timestamp_origin"],
+        "source_timestamp_raw": row["timestamp_raw"],
         "path": str(row["path"]),
         "receipt_path": str(row["receipt_path"]),
         "output_sha256": row["output_sha256"],
         "receipt_sha256": row["receipt_sha256"],
         "declared_output_hash": (receipt or {}).get("output_hash") if isinstance(receipt, dict) else output.get("output_hash"),
-        "binding_status": binding_status,
+        "binding_status": row["binding_status"],
+        "binding_issues": row["binding_issues"],
+        "receipt_contract": (receipt or {}).get("contract") if isinstance(receipt, dict) else None,
         "receipt_status": (receipt or {}).get("status") if isinstance(receipt, dict) else None,
         "task": (receipt or {}).get("task") if isinstance(receipt, dict) else None,
         **header,
@@ -197,30 +226,41 @@ def collect_director_context(daily_output_root: Path, start: datetime, end: date
                 receipt_problem = "RECEIPT_UNREADABLE"
         else:
             receipt_problem = "RECEIPT_MISSING"
-        when, timestamp_origin = find_time_with_source(output, receipt)
+        when, timestamp_origin, timestamp_raw = find_time_with_source(output, receipt)
         if not when or not (start <= when < end):
             continue
         output_sha256 = hashlib.sha256(canonical(output)).hexdigest()
         receipt_sha256 = hashlib.sha256(canonical(receipt)).hexdigest() if receipt else None
+        binding_issues = [receipt_problem] if receipt_problem else (
+            director_receipt_binding_issues(receipt, output_sha256) if isinstance(receipt, dict) else ["RECEIPT_INVALID"]
+        )
+        binding_status = "PASS" if isinstance(receipt, dict) and not binding_issues else "INCOMPLETE"
         row = {
             "when": when,
             "timestamp_origin": timestamp_origin,
+            "timestamp_raw": timestamp_raw,
             "path": path,
             "receipt_path": receipt_path,
             "output": output,
             "receipt": receipt,
             "output_sha256": output_sha256,
             "receipt_sha256": receipt_sha256,
+            "binding_status": binding_status,
+            "binding_issues": binding_issues,
             "legacy_output_hash": output.get("output_hash") or output_sha256,
         }
         raw_candidates.append(row)
-        if receipt_problem:
+        for reason in binding_issues:
             diagnostics.append({
                 "path": str(path),
                 "receipt_path": str(receipt_path),
                 "source_timestamp_utc": when.isoformat().replace("+00:00", "Z"),
+                "source_timestamp_origin": timestamp_origin,
+                "source_timestamp_raw": timestamp_raw,
                 "output_sha256": output_sha256,
-                "reason": receipt_problem,
+                "receipt_sha256": receipt_sha256,
+                "declared_output_hash": (receipt or {}).get("output_hash") if isinstance(receipt, dict) else None,
+                "reason": reason,
             })
 
     raw_candidates.sort(key=lambda row: (
@@ -281,7 +321,8 @@ def collect_director_context(daily_output_root: Path, start: datetime, end: date
         "daily_director_intraday_selection_rule": (
             "all eligible Director runs within the frozen UTC window, ordered by immutable source timestamp UTC "
             "with deterministic output-hash, receipt-hash and path tie-breakers; only exact "
-            "timestamp+output_sha256+receipt_sha256 duplicates are collapsed"
+            "timestamp+output_sha256+receipt_sha256 duplicates are collapsed; PASS binding additionally requires "
+            "the expected Director receipt contract/task/status and an exact canonical output SHA-256 match"
         ),
     }
 
