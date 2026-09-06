@@ -44,6 +44,31 @@ def _runtime_models(runtime: dict[str, Any]) -> set[str]:
     return set(models)
 
 
+def _require_nonempty_string(value: Any, error: str) -> str:
+    if not isinstance(value, str) or not value.strip():
+        raise ValueError(error)
+    return value.strip()
+
+
+def _require_string_list(value: Any, error: str, *, allow_empty: bool = True) -> list[str]:
+    if not isinstance(value, list) or any(not isinstance(x, str) or not x.strip() for x in value):
+        raise ValueError(error)
+    if not allow_empty and not value:
+        raise ValueError(error)
+    return [x.strip() for x in value]
+
+
+def _delegation_policy(policy: dict[str, Any]) -> dict[str, Any]:
+    delegation = policy.get("delegation")
+    if not isinstance(delegation, dict):
+        raise ValueError("delegation_policy_required")
+    return delegation
+
+
+def _is_hardened_profile(policy: dict[str, Any], profile: dict[str, Any]) -> bool:
+    return profile.get("contract") == _delegation_policy(policy).get("hardened_profile_contract")
+
+
 def validate_policy(policy: dict[str, Any]) -> None:
     if policy.get("contract") != "CAPABILITY_ROUTING_POLICY_v1":
         raise ValueError("invalid_capability_routing_policy_contract")
@@ -65,6 +90,45 @@ def validate_policy(policy: dict[str, Any]) -> None:
         raise ValueError("code_write_executor_must_be_codex_only")
     if principles.get("automatic_merge") is not False:
         raise ValueError("automatic_merge_forbidden")
+    for key in (
+        "contract_first_decomposition",
+        "responsibility_before_capability",
+        "least_privilege_context",
+        "delegation_lineage_required_for_hardened_profiles",
+        "bounded_redelegation_only",
+    ):
+        if principles.get(key) is not True:
+            raise ValueError(f"delegation_principle_required:{key}")
+
+    delegation = _delegation_policy(policy)
+    if delegation.get("legacy_profile_contract") != "CAPABILITY_TASK_PROFILE_v1":
+        raise ValueError("invalid_legacy_profile_contract")
+    if delegation.get("hardened_profile_contract") != "CAPABILITY_TASK_PROFILE_v1_1":
+        raise ValueError("invalid_hardened_profile_contract")
+    if delegation.get("lineage_receipt_contract") != "DELEGATION_LINEAGE_RECEIPT_v1_1":
+        raise ValueError("invalid_delegation_lineage_contract")
+    if delegation.get("production_requires_hardened_profile") is not True:
+        raise ValueError("production_must_require_hardened_profile")
+    max_depth = delegation.get("max_delegation_depth")
+    if not isinstance(max_depth, int) or not 0 <= max_depth <= 4:
+        raise ValueError("invalid_max_delegation_depth")
+    max_redelegations = delegation.get("max_redelegations_per_unit")
+    if not isinstance(max_redelegations, int) or not 0 <= max_redelegations <= 1:
+        raise ValueError("invalid_max_redelegations_per_unit")
+    if delegation.get("require_unique_responsibility_scope") is not True:
+        raise ValueError("unique_responsibility_scope_required")
+    if delegation.get("context_policy") != "LEAST_PRIVILEGE_EXPLICIT_REFS":
+        raise ValueError("invalid_context_policy")
+    _require_string_list(delegation.get("forbidden_unbounded_refs"), "invalid_forbidden_unbounded_refs", allow_empty=False)
+    _require_string_list(delegation.get("verification_types"), "invalid_verification_types", allow_empty=False)
+    _require_string_list(delegation.get("failure_modes"), "invalid_failure_modes", allow_empty=False)
+    _require_string_list(delegation.get("escalation_modes"), "invalid_escalation_modes", allow_empty=False)
+    bindings = delegation.get("executor_tool_bindings")
+    if not isinstance(bindings, dict) or set(bindings) != {"MODEL", "CODE", "DETERMINISTIC"}:
+        raise ValueError("invalid_executor_tool_bindings")
+    if any(not isinstance(value, str) or not value for value in bindings.values()):
+        raise ValueError("invalid_executor_tool_binding_value")
+
     pricing = policy.get("pricing_snapshot")
     if not isinstance(pricing, dict):
         raise ValueError("pricing_snapshot_required")
@@ -107,12 +171,135 @@ def validate_runtime(runtime: dict[str, Any]) -> None:
             raise ValueError("qualified_model_not_available")
 
 
-def validate_profile(profile: dict[str, Any]) -> None:
-    if profile.get("contract") != "CAPABILITY_TASK_PROFILE_v1":
+def _validate_hardened_unit(
+    policy: dict[str, Any],
+    profile: dict[str, Any],
+    unit: dict[str, Any],
+    responsibility_scopes: set[str],
+) -> None:
+    delegation = _delegation_policy(policy)
+    unit_id = str(unit["unit_id"])
+    owner = _require_nonempty_string(unit.get("responsibility_owner"), f"responsibility_owner_required:{unit_id}")
+    scope = _require_nonempty_string(unit.get("responsibility_scope"), f"responsibility_scope_required:{unit_id}")
+    if delegation.get("require_unique_responsibility_scope") and scope in responsibility_scopes:
+        raise ValueError(f"duplicate_responsibility_scope:{scope}")
+    responsibility_scopes.add(scope)
+    _require_nonempty_string(unit.get("expected_output"), f"expected_output_required:{unit_id}")
+
+    verification = unit.get("verification_method")
+    if not isinstance(verification, dict):
+        raise ValueError(f"verification_method_required:{unit_id}")
+    if verification.get("type") not in set(delegation["verification_types"]):
+        raise ValueError(f"invalid_verification_type:{unit_id}")
+    _require_string_list(verification.get("success_criteria"), f"verification_success_criteria_required:{unit_id}", allow_empty=False)
+
+    allowed_context = _require_string_list(unit.get("allowed_context"), f"allowed_context_required:{unit_id}")
+    allowed_tools = _require_string_list(unit.get("allowed_tools"), f"allowed_tools_required:{unit_id}")
+    forbidden_refs = set(delegation["forbidden_unbounded_refs"])
+    if forbidden_refs & set(allowed_context):
+        raise ValueError(f"unbounded_context_forbidden:{unit_id}")
+    if forbidden_refs & set(allowed_tools):
+        raise ValueError(f"unbounded_tool_scope_forbidden:{unit_id}")
+    required_tool = delegation["executor_tool_bindings"][unit["executor_class"]]
+    if required_tool not in allowed_tools:
+        raise ValueError(f"executor_tool_not_allowed:{unit_id}:{required_tool}")
+
+    authority_scope = unit.get("authority_scope")
+    if not isinstance(authority_scope, dict):
+        raise ValueError(f"authority_scope_required:{unit_id}")
+    if not isinstance(authority_scope.get("repository_write_requested"), bool):
+        raise ValueError(f"repository_write_request_required:{unit_id}")
+    if authority_scope["repository_write_requested"] is not bool(unit.get("write_required", False)):
+        raise ValueError(f"repository_write_request_mismatch:{unit_id}")
+    if any(authority_scope.get(key) is not False for key in FORBIDDEN_AUTHORITY_KEYS):
+        raise ValueError(f"delegated_authority_must_be_false:{unit_id}")
+
+    budget = unit.get("budget")
+    if not isinstance(budget, dict):
+        raise ValueError(f"budget_required:{unit_id}")
+    max_cost = budget.get("max_estimated_cost_usd")
+    max_input = budget.get("max_input_tokens")
+    max_output = budget.get("max_output_tokens")
+    if not isinstance(max_cost, (int, float)) or float(max_cost) < 0:
+        raise ValueError(f"invalid_cost_budget:{unit_id}")
+    if not isinstance(max_input, int) or max_input < 0:
+        raise ValueError(f"invalid_input_token_budget:{unit_id}")
+    if not isinstance(max_output, int) or max_output < 0:
+        raise ValueError(f"invalid_output_token_budget:{unit_id}")
+    estimated_input = int(unit.get("estimated_input_tokens", 0) or 0)
+    estimated_output = int(unit.get("estimated_output_tokens", 0) or 0)
+    if estimated_input < 0 or estimated_output < 0:
+        raise ValueError(f"negative_token_estimate:{unit_id}")
+    if estimated_input > max_input:
+        raise ValueError(f"estimated_input_exceeds_budget:{unit_id}")
+    if estimated_output > max_output:
+        raise ValueError(f"estimated_output_exceeds_budget:{unit_id}")
+
+    failure_mode = unit.get("failure_mode")
+    if failure_mode not in set(delegation["failure_modes"]):
+        raise ValueError(f"invalid_failure_mode:{unit_id}")
+    escalation = unit.get("escalation_rule")
+    if not isinstance(escalation, dict):
+        raise ValueError(f"escalation_rule_required:{unit_id}")
+    mode = escalation.get("mode")
+    if mode not in set(delegation["escalation_modes"]):
+        raise ValueError(f"invalid_escalation_mode:{unit_id}")
+    max_redelegations = escalation.get("max_redelegations")
+    if not isinstance(max_redelegations, int) or not 0 <= max_redelegations <= int(delegation["max_redelegations_per_unit"]):
+        raise ValueError(f"invalid_unit_redelegation_limit:{unit_id}")
+    target = escalation.get("target")
+    if mode == "STOP":
+        if max_redelegations != 0:
+            raise ValueError(f"stop_cannot_redelegate:{unit_id}")
+        if target not in {None, ""}:
+            raise ValueError(f"stop_target_must_be_empty:{unit_id}")
+    else:
+        _require_nonempty_string(target, f"escalation_target_required:{unit_id}")
+    if failure_mode == "FAIL_CLOSED" and mode != "STOP":
+        raise ValueError(f"fail_closed_requires_stop:{unit_id}")
+    if mode == "REDELEGATE_ONCE":
+        if failure_mode != "REDELEGATE_ONCE_THEN_ESCALATE" or max_redelegations != 1:
+            raise ValueError(f"redelegation_contract_mismatch:{unit_id}")
+        if int(profile["delegation_depth"]) >= int(delegation["max_delegation_depth"]):
+            raise ValueError(f"redelegation_depth_exhausted:{unit_id}")
+    if failure_mode == "REDELEGATE_ONCE_THEN_ESCALATE" and mode != "REDELEGATE_ONCE":
+        raise ValueError(f"redelegation_failure_mode_requires_redelegation:{unit_id}")
+    if failure_mode == "ESCALATE" and mode != "ESCALATE_TO_PARENT":
+        raise ValueError(f"escalate_failure_mode_requires_parent:{unit_id}")
+
+    # Read the values so the contract cannot silently accept blank ownership metadata.
+    if owner == scope:
+        pass
+
+
+def validate_profile(profile: dict[str, Any], policy: dict[str, Any] | None = None) -> None:
+    contract = profile.get("contract")
+    if policy is None:
+        accepted = {"CAPABILITY_TASK_PROFILE_v1", "CAPABILITY_TASK_PROFILE_v1_1"}
+    else:
+        delegation = _delegation_policy(policy)
+        accepted = {delegation["legacy_profile_contract"], delegation["hardened_profile_contract"]}
+    if contract not in accepted:
         raise ValueError("invalid_capability_task_profile_contract")
     units = profile.get("units")
     if not isinstance(units, list) or not units:
         raise ValueError("capability_task_units_required")
+
+    hardened = bool(policy is not None and _is_hardened_profile(policy, profile))
+    responsibility_scopes: set[str] = set()
+    if hardened:
+        delegation = _delegation_policy(policy)
+        _require_nonempty_string(profile.get("task_id"), "hardened_task_id_required")
+        _require_nonempty_string(profile.get("delegator"), "hardened_delegator_required")
+        depth = profile.get("delegation_depth")
+        if not isinstance(depth, int) or not 0 <= depth <= int(delegation["max_delegation_depth"]):
+            raise ValueError("invalid_delegation_depth")
+        parent_task_id = profile.get("parent_task_id")
+        if depth > 0:
+            _require_nonempty_string(parent_task_id, "parent_task_id_required_for_delegation")
+        elif parent_task_id not in {None, ""}:
+            raise ValueError("root_profile_parent_task_id_must_be_empty")
+
     seen: set[str] = set()
     for unit in units:
         if not isinstance(unit, dict):
@@ -137,6 +324,8 @@ def validate_profile(profile: dict[str, Any]) -> None:
             raise ValueError(f"write_scope_requires_code_executor:{unit_id}")
         if FORBIDDEN_AUTHORITY_KEYS & set(unit):
             raise ValueError(f"authority_key_forbidden_in_unit:{unit_id}")
+        if hardened:
+            _validate_hardened_unit(policy, profile, unit, responsibility_scopes)
 
 
 def estimate_model_cost(policy: dict[str, Any], model_cfg: dict[str, Any], input_tokens: int, output_tokens: int) -> float:
@@ -200,7 +389,64 @@ def _select_api_model(
     }
 
 
-def route_unit(policy: dict[str, Any], runtime: dict[str, Any], unit: dict[str, Any]) -> dict[str, Any]:
+def _delegation_input(profile: dict[str, Any], unit: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "task_id": profile.get("task_id"),
+        "parent_task_id": profile.get("parent_task_id"),
+        "delegator": profile.get("delegator"),
+        "delegation_depth": profile.get("delegation_depth"),
+        "unit_id": unit.get("unit_id"),
+        "source_task": unit.get("source_task"),
+        "responsibility_owner": unit.get("responsibility_owner"),
+        "responsibility_scope": unit.get("responsibility_scope"),
+        "expected_output": unit.get("expected_output"),
+        "verification_method": unit.get("verification_method"),
+        "allowed_context": unit.get("allowed_context"),
+        "allowed_tools": unit.get("allowed_tools"),
+        "authority_scope": unit.get("authority_scope"),
+        "budget": unit.get("budget"),
+        "failure_mode": unit.get("failure_mode"),
+        "escalation_rule": unit.get("escalation_rule"),
+    }
+
+
+def _delegation_metadata(policy: dict[str, Any], profile: dict[str, Any] | None, unit: dict[str, Any]) -> dict[str, Any]:
+    if not profile or not _is_hardened_profile(policy, profile):
+        return {"delegation_contract_status": "LEGACY_UNHARDENED"}
+    delegation = _delegation_policy(policy)
+    escalation = unit["escalation_rule"]
+    remaining = int(escalation.get("max_redelegations", 0))
+    if int(profile["delegation_depth"]) >= int(delegation["max_delegation_depth"]):
+        remaining = 0
+    return {
+        "delegation_contract_status": "HARDENED_V1_1",
+        "delegation_lineage_contract": delegation["lineage_receipt_contract"],
+        "task_id": profile["task_id"],
+        "parent_task_id": profile.get("parent_task_id"),
+        "delegator": profile["delegator"],
+        "delegation_depth": profile["delegation_depth"],
+        "responsibility_owner": unit["responsibility_owner"],
+        "responsibility_scope": unit["responsibility_scope"],
+        "expected_output": unit["expected_output"],
+        "verification_method": unit["verification_method"],
+        "allowed_context": unit["allowed_context"],
+        "allowed_tools": unit["allowed_tools"],
+        "authority_scope": unit["authority_scope"],
+        "budget": unit["budget"],
+        "failure_mode": unit["failure_mode"],
+        "escalation_rule": unit["escalation_rule"],
+        "redelegation_remaining": remaining,
+        "delegation_input_sha256": sha256_json(_delegation_input(profile, unit)),
+    }
+
+
+def route_unit(
+    policy: dict[str, Any],
+    runtime: dict[str, Any],
+    unit: dict[str, Any],
+    *,
+    profile: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     unit_id = unit["unit_id"]
     executor_class = unit["executor_class"]
     base = {
@@ -209,6 +455,7 @@ def route_unit(policy: dict[str, Any], runtime: dict[str, Any], unit: dict[str, 
         "write_required": bool(unit.get("write_required", False)),
         "requested_write_scope": unit.get("requested_write_scope", []),
         "router_grants_write_authority": False,
+        **_delegation_metadata(policy, profile, unit),
     }
     if executor_class == "DETERMINISTIC":
         if runtime["deterministic_available"] is not True:
@@ -235,6 +482,17 @@ def route_unit(policy: dict[str, Any], runtime: dict[str, Any], unit: dict[str, 
     selected = _select_api_model(policy, runtime, unit)
     if selected is None:
         return {**base, "status": "WAITING_FOR_CAPABILITY", "executor": policy["execution"]["api_executor_name"], "reason": "NO_VERIFIED_MODEL_SATISFIES_PROFILE"}
+    if profile and _is_hardened_profile(policy, profile):
+        max_cost = float(unit["budget"]["max_estimated_cost_usd"])
+        if float(selected["estimated_cost_usd"]) > max_cost:
+            return {
+                **base,
+                "status": "BLOCKED",
+                "executor": policy["execution"]["api_executor_name"],
+                "reason": "UNIT_COST_BUDGET_EXCEEDED",
+                "estimated_cost_usd": selected["estimated_cost_usd"],
+                "max_estimated_cost_usd": max_cost,
+            }
     routed = {**base, "status": "READY", **selected}
     if unit.get("independent_review_required"):
         review_unit = {
@@ -259,8 +517,8 @@ def route_unit(policy: dict[str, Any], runtime: dict[str, Any], unit: dict[str, 
 def build_execution_plan(policy: dict[str, Any], runtime: dict[str, Any], profile: dict[str, Any]) -> dict[str, Any]:
     validate_policy(policy)
     validate_runtime(runtime)
-    validate_profile(profile)
-    routes = [route_unit(policy, runtime, unit) for unit in profile["units"]]
+    validate_profile(profile, policy)
+    routes = [route_unit(policy, runtime, unit, profile=profile) for unit in profile["units"]]
     parent = None
     parent_profile = profile.get("parent")
     if parent_profile is not None:
@@ -291,17 +549,26 @@ def build_execution_plan(policy: dict[str, Any], runtime: dict[str, Any], profil
     if not 1 <= max_parallel <= 16:
         raise ValueError("invalid_max_parallel_units")
     parallel_ready = min(sum(1 for r in routes if r["status"] == "READY"), max_parallel)
+    hardened = _is_hardened_profile(policy, profile)
     return {
         "contract": "CAPABILITY_EXECUTION_PLAN_v1",
         "status": status,
         "profile_task": profile.get("task_name"),
+        "profile_contract": profile.get("contract"),
+        "delegation_contract_status": "HARDENED_V1_1" if hardened else "LEGACY_UNHARDENED",
+        "task_id": profile.get("task_id"),
+        "parent_task_id": profile.get("parent_task_id"),
+        "delegator": profile.get("delegator"),
+        "delegation_depth": profile.get("delegation_depth"),
         "policy_sha256": sha256_json(policy),
         "runtime_capabilities_sha256": sha256_json(runtime),
+        "profile_sha256": sha256_json(profile),
         "parent": parent,
         "units": routes,
         "parallel_ready_units": parallel_ready,
         "max_parallel_units": max_parallel,
-        "routing_rule": "DETERMINISTIC_FIRST_THEN_CHEAPEST_VERIFIED_QUALIFIED_EXECUTOR",
+        "max_delegation_depth": policy["delegation"]["max_delegation_depth"],
+        "routing_rule": "CONTRACT_FIRST_THEN_DETERMINISTIC_OR_CHEAPEST_VERIFIED_QUALIFIED_EXECUTOR",
         "automatic_merge": False,
         "router_grants_write_authority": False,
         "authority": {

@@ -36,6 +36,46 @@ def _matching_unit(plan: dict[str, Any], task: str) -> dict[str, Any]:
     return matches[0]
 
 
+def _validate_context_attenuation(context: dict[str, Any], allowed_context_refs: list[str]) -> list[str]:
+    source_refs = context.get("source_refs", [])
+    if not isinstance(source_refs, list) or any(not isinstance(x, str) or not x.strip() for x in source_refs):
+        raise ValueError("hardened_context_source_refs_required")
+    normalized = [x.strip() for x in source_refs]
+    if not set(normalized).issubset(set(allowed_context_refs)):
+        extra = sorted(set(normalized) - set(allowed_context_refs))
+        raise ValueError("context_ref_not_allowed:" + ",".join(extra))
+    return normalized
+
+
+def _delegation_lineage(plan: dict[str, Any], unit: dict[str, Any]) -> dict[str, Any] | None:
+    if unit.get("delegation_contract_status") != "HARDENED_V1_1":
+        return None
+    return {
+        "contract": unit["delegation_lineage_contract"],
+        "task_id": unit["task_id"],
+        "parent_task_id": unit.get("parent_task_id"),
+        "child_unit_id": unit["unit_id"],
+        "delegator": unit["delegator"],
+        "responsibility_owner": unit["responsibility_owner"],
+        "responsibility_scope": unit["responsibility_scope"],
+        "delegation_depth": unit["delegation_depth"],
+        "delegation_input_sha256": unit["delegation_input_sha256"],
+        "profile_sha256": plan["profile_sha256"],
+        "allowed_context": unit["allowed_context"],
+        "allowed_tools": unit["allowed_tools"],
+        "verification_method": unit["verification_method"],
+        "failure_mode": unit["failure_mode"],
+        "escalation_rule": unit["escalation_rule"],
+        "redelegation_remaining": unit["redelegation_remaining"],
+        "actual_context_refs": None,
+        "actual_context_sha256": None,
+        "execution_output_sha256": None,
+        "execution_receipt_sha256": None,
+        "verification_status": "PENDING_EXECUTION",
+        "verification_receipt_sha256": None,
+    }
+
+
 def select_execution(
     *,
     task: str,
@@ -51,6 +91,9 @@ def select_execution(
             raise ValueError("routing_policy_not_qualified")
         if policy.get("production_activation") != "EXPLICIT_RUNTIME_FLAG_AFTER_QUALIFICATION":
             raise ValueError("policy_does_not_allow_runtime_activation")
+        delegation = policy.get("delegation", {})
+        if delegation.get("production_requires_hardened_profile") is True and profile.get("contract") != delegation.get("hardened_profile_contract"):
+            raise ValueError("hardened_delegation_profile_required_for_live_routing")
         qualified_models = runtime.get("qualified_models")
         if not isinstance(qualified_models, list) or not qualified_models:
             raise ValueError("no_runtime_qualified_models")
@@ -103,6 +146,8 @@ def select_execution(
         "selection_runtime_sha256": sha256_json(routing_runtime),
         "selection_pool": "QUALIFIED_MODELS_ONLY" if activate_routing else "AVAILABLE_MODELS_SHADOW",
         "profile_sha256": sha256_json(profile),
+        "delegation_contract_status": unit.get("delegation_contract_status"),
+        "delegation_lineage": _delegation_lineage(plan, unit),
         "runtime_confirmed": True,
         "router_grants_write_authority": False,
         "automatic_merge": False,
@@ -133,7 +178,8 @@ def run_gateway_with_effective_registry(
     output_dir: Path,
     intended_write_prefix: str,
     dry_run: bool,
-) -> None:
+    allowed_context_refs: list[str] | None = None,
+) -> dict[str, Any]:
     routed_registry = deepcopy(registry)
     task_cfg = routed_registry["tasks"][task]
     task_cfg["model"] = effective["model"]
@@ -142,6 +188,13 @@ def run_gateway_with_effective_registry(
     model_cfg = policy.get("models", {}).get(effective["model"])
     if not isinstance(model_cfg, dict) or not isinstance(model_cfg.get("price_per_million"), dict):
         raise ValueError(f"routing_price_missing:{effective['model']}")
+
+    context = json.loads(context_file.read_text())
+    if not isinstance(context, dict):
+        raise ValueError("context_object_required")
+    actual_context_refs: list[str] | None = None
+    if allowed_context_refs is not None:
+        actual_context_refs = _validate_context_attenuation(context, allowed_context_refs)
 
     output_dir.mkdir(parents=True, exist_ok=True)
     temp_registry = output_dir / ".capability_routed_registry.tmp.json"
@@ -193,6 +246,33 @@ def run_gateway_with_effective_registry(
             api_gateway.PRICES_PER_MILLION[model_id] = old_price
         if temp_registry.exists():
             temp_registry.unlink()
+    return {
+        "actual_context_refs": actual_context_refs,
+        "actual_context_sha256": sha256_json(context),
+    }
+
+
+def _bind_delegation_execution(
+    routing_receipt: dict[str, Any],
+    gateway_receipt: dict[str, Any],
+    context_binding: dict[str, Any],
+) -> None:
+    lineage = routing_receipt.get("delegation_lineage")
+    if not isinstance(lineage, dict):
+        return
+    lineage["actual_context_refs"] = context_binding.get("actual_context_refs")
+    lineage["actual_context_sha256"] = context_binding.get("actual_context_sha256")
+    lineage["execution_output_sha256"] = gateway_receipt.get("output_hash")
+    lineage["execution_receipt_sha256"] = sha256_json(gateway_receipt)
+    verification_type = (lineage.get("verification_method") or {}).get("type")
+    gateway_pass = gateway_receipt.get("status") == "PASS"
+    if gateway_pass and verification_type in {"SCHEMA_VALIDATION", "HASH_READBACK"}:
+        lineage["verification_status"] = "VERIFIED_BY_EXECUTION_RECEIPT"
+        lineage["verification_receipt_sha256"] = sha256_json(gateway_receipt)
+    elif gateway_pass:
+        lineage["verification_status"] = "PENDING_DECLARED_VERIFICATION"
+    else:
+        lineage["verification_status"] = "EXECUTION_FAILED"
 
 
 def main() -> int:
@@ -228,8 +308,10 @@ def main() -> int:
         profile=profile,
         activate_routing=args.activate_routing,
     )
+    unit = _matching_unit(plan, args.task)
+    allowed_context_refs = unit.get("allowed_context") if unit.get("delegation_contract_status") == "HARDENED_V1_1" else None
 
-    run_gateway_with_effective_registry(
+    context_binding = run_gateway_with_effective_registry(
         task=args.task,
         registry=registry,
         effective=effective,
@@ -239,6 +321,7 @@ def main() -> int:
         output_dir=args.output_dir,
         intended_write_prefix=args.intended_write_prefix,
         dry_run=args.dry_run,
+        allowed_context_refs=allowed_context_refs,
     )
 
     gateway_receipt_path = args.output_dir / "receipt.json"
@@ -253,6 +336,7 @@ def main() -> int:
     routing_receipt["gateway_receipt_sha256"] = sha256_json(gateway_receipt)
     routing_receipt["gateway_status"] = gateway_receipt.get("status")
     routing_receipt["gateway_estimated_cost_usd"] = gateway_receipt.get("estimated_cost_usd")
+    _bind_delegation_execution(routing_receipt, gateway_receipt, context_binding)
     (args.output_dir / "routing_receipt.json").write_bytes(canonical_bytes(routing_receipt))
     print(json.dumps({"routing": routing_receipt, "plan": plan}, sort_keys=True))
     return 0
