@@ -11,6 +11,16 @@ from typing import Any
 from zoneinfo import ZoneInfo
 
 COPENHAGEN = ZoneInfo("Europe/Copenhagen")
+DIRECTOR_TIME_FIELDS = (
+    "captured_at_utc",
+    "created_at_utc",
+    "generated_at_utc",
+    "freeze_utc",
+    "response_created_at_utc",
+    "created_unix",
+)
+DIRECTOR_COMPACT_EVIDENCE_LIMIT = 2
+DIRECTOR_COMPACT_FORECAST_LIMIT = 8
 
 
 def canonical(value: Any) -> bytes:
@@ -47,15 +57,233 @@ def ts(raw: Any) -> datetime:
     return value.astimezone(timezone.utc)
 
 
-def find_time(output: dict[str, Any], receipt: dict[str, Any] | None) -> datetime | None:
-    for source in (receipt or {}, output):
-        for key in ("captured_at_utc", "created_at_utc", "generated_at_utc", "freeze_utc", "response_created_at_utc", "created_unix"):
+def find_time_with_source(output: dict[str, Any], receipt: dict[str, Any] | None) -> tuple[datetime | None, str | None]:
+    for source_name, source in (("receipt", receipt or {}), ("output", output)):
+        if not isinstance(source, dict):
+            continue
+        for key in DIRECTOR_TIME_FIELDS:
             if source.get(key) is not None:
                 try:
-                    return ts(source[key])
+                    return ts(source[key]), f"{source_name}.{key}"
                 except Exception:
                     pass
-    return None
+    return None, None
+
+
+def find_time(output: dict[str, Any], receipt: dict[str, Any] | None) -> datetime | None:
+    return find_time_with_source(output, receipt)[0]
+
+
+def compact_text_items(value: Any, *, limit: int = DIRECTOR_COMPACT_EVIDENCE_LIMIT) -> tuple[list[str], int, bool]:
+    if not isinstance(value, list):
+        return [], 0, False
+    items = [item for item in value if isinstance(item, str)]
+    return items[:limit], len(items), len(items) > limit
+
+
+def compact_forecast_candidates(value: Any) -> tuple[list[dict[str, Any]], int, bool]:
+    if not isinstance(value, list):
+        return [], 0, False
+    allowed = (
+        "metric_path",
+        "horizon_days",
+        "direction",
+        "target_mode",
+        "target_value",
+        "threshold_pct",
+        "range_low",
+        "range_high",
+    )
+    rows = []
+    for item in value:
+        if not isinstance(item, dict):
+            continue
+        rows.append({key: item.get(key) for key in allowed if key in item})
+    return rows[:DIRECTOR_COMPACT_FORECAST_LIMIT], len(rows), len(rows) > DIRECTOR_COMPACT_FORECAST_LIMIT
+
+
+def parse_cycle_header(output: dict[str, Any]) -> dict[str, Any]:
+    summary = output.get("summary")
+    result = {
+        "cycle_header": None,
+        "phase": None,
+        "warning": None,
+        "direction": None,
+        "confidence": None,
+    }
+    if not isinstance(summary, str) or not summary:
+        return result
+    header = summary.splitlines()[0].strip()
+    if not header.startswith("CYCLE_HEADER"):
+        return result
+    result["cycle_header"] = header
+    allowed = {
+        "PHASE": "phase",
+        "WARNING": "warning",
+        "DIRECTION": "direction",
+        "CONFIDENCE": "confidence",
+    }
+    for part in header.split("|")[1:]:
+        if "=" not in part:
+            continue
+        key, value = part.strip().split("=", 1)
+        target = allowed.get(key.strip())
+        if target:
+            result[target] = value.strip() or None
+    return result
+
+
+def compact_director_row(row: dict[str, Any]) -> dict[str, Any]:
+    when = row["when"]
+    output = row["output"]
+    receipt = row["receipt"]
+    evidence_for, evidence_for_count, evidence_for_truncated = compact_text_items(output.get("evidence_for"))
+    evidence_against, evidence_against_count, evidence_against_truncated = compact_text_items(output.get("evidence_against"))
+    uncertainties, uncertainty_count, uncertainties_truncated = compact_text_items(output.get("uncertainties"))
+    forecasts, forecast_count, forecasts_truncated = compact_forecast_candidates(output.get("forecast_candidates"))
+    header = parse_cycle_header(output)
+    binding_status = "PASS" if isinstance(receipt, dict) and row["receipt_sha256"] else "INCOMPLETE"
+    return {
+        "local_day_key": when.astimezone(COPENHAGEN).date().isoformat(),
+        "timezone": "Europe/Copenhagen",
+        "source_timestamp_utc": when.isoformat().replace("+00:00", "Z"),
+        "source_timestamp_local": when.astimezone(COPENHAGEN).isoformat(),
+        "source_timestamp_origin": row["timestamp_origin"],
+        "path": str(row["path"]),
+        "receipt_path": str(row["receipt_path"]),
+        "output_sha256": row["output_sha256"],
+        "receipt_sha256": row["receipt_sha256"],
+        "declared_output_hash": (receipt or {}).get("output_hash") if isinstance(receipt, dict) else output.get("output_hash"),
+        "binding_status": binding_status,
+        "receipt_status": (receipt or {}).get("status") if isinstance(receipt, dict) else None,
+        "task": (receipt or {}).get("task") if isinstance(receipt, dict) else None,
+        **header,
+        "forecast_candidate_count": forecast_count,
+        "forecast_candidates": forecasts,
+        "forecast_candidates_truncated": forecasts_truncated,
+        "evidence_for_count": evidence_for_count,
+        "key_evidence_for": evidence_for,
+        "key_evidence_for_truncated": evidence_for_truncated,
+        "evidence_against_count": evidence_against_count,
+        "key_evidence_against": evidence_against,
+        "key_evidence_against_truncated": evidence_against_truncated,
+        "uncertainty_count": uncertainty_count,
+        "key_uncertainties": uncertainties,
+        "key_uncertainties_truncated": uncertainties_truncated,
+    }
+
+
+def collect_director_context(daily_output_root: Path, start: datetime, end: datetime) -> dict[str, Any]:
+    raw_candidates: list[dict[str, Any]] = []
+    diagnostics: list[dict[str, Any]] = []
+    for path in sorted(daily_output_root.rglob("DAILY_DIRECTOR_OUTPUT.json")):
+        try:
+            output = load_json(path)
+        except Exception:
+            continue
+        if not isinstance(output, dict):
+            continue
+        receipt_path = path.with_name("DAILY_DIRECTOR_RECEIPT.json")
+        receipt: dict[str, Any] | None = None
+        receipt_problem = None
+        if receipt_path.exists():
+            try:
+                receipt_value = load_json(receipt_path)
+                if isinstance(receipt_value, dict):
+                    receipt = receipt_value
+                else:
+                    receipt_problem = "RECEIPT_INVALID"
+            except Exception:
+                receipt_problem = "RECEIPT_UNREADABLE"
+        else:
+            receipt_problem = "RECEIPT_MISSING"
+        when, timestamp_origin = find_time_with_source(output, receipt)
+        if not when or not (start <= when < end):
+            continue
+        output_sha256 = hashlib.sha256(canonical(output)).hexdigest()
+        receipt_sha256 = hashlib.sha256(canonical(receipt)).hexdigest() if receipt else None
+        row = {
+            "when": when,
+            "timestamp_origin": timestamp_origin,
+            "path": path,
+            "receipt_path": receipt_path,
+            "output": output,
+            "receipt": receipt,
+            "output_sha256": output_sha256,
+            "receipt_sha256": receipt_sha256,
+            "legacy_output_hash": output.get("output_hash") or output_sha256,
+        }
+        raw_candidates.append(row)
+        if receipt_problem:
+            diagnostics.append({
+                "path": str(path),
+                "receipt_path": str(receipt_path),
+                "source_timestamp_utc": when.isoformat().replace("+00:00", "Z"),
+                "output_sha256": output_sha256,
+                "reason": receipt_problem,
+            })
+
+    raw_candidates.sort(key=lambda row: (
+        row["when"],
+        row["output_sha256"],
+        row["receipt_sha256"] or "",
+        str(row["path"]),
+    ))
+
+    legacy_candidates = []
+    legacy_seen = set()
+    for row in raw_candidates:
+        key = (row["when"].isoformat(), row["legacy_output_hash"])
+        if key in legacy_seen:
+            continue
+        legacy_seen.add(key)
+        legacy_candidates.append(row)
+
+    by_day: dict[str, dict[str, Any]] = {}
+    for row in legacy_candidates:
+        local_day = row["when"].astimezone(COPENHAGEN).date().isoformat()
+        by_day[local_day] = row
+    outputs = []
+    for day, row in sorted(by_day.items()):
+        when = row["when"]
+        outputs.append({
+            "local_day_key": day,
+            "timezone": "Europe/Copenhagen",
+            "captured_at_utc": when.isoformat().replace("+00:00", "Z"),
+            "captured_at_local": when.astimezone(COPENHAGEN).isoformat(),
+            "path": str(row["path"]),
+            "output_sha256": row["output_sha256"],
+            "receipt_sha256": row["receipt_sha256"],
+            "output": row["output"],
+            "receipt": row["receipt"],
+        })
+
+    sequence = []
+    intraday_seen = set()
+    exact_duplicate_count = 0
+    for row in raw_candidates:
+        key = (row["when"].isoformat(), row["output_sha256"], row["receipt_sha256"])
+        if key in intraday_seen:
+            exact_duplicate_count += 1
+            continue
+        intraday_seen.add(key)
+        sequence.append(compact_director_row(row))
+
+    return {
+        "daily_director_rows": outputs,
+        "daily_director_count": len(outputs),
+        "daily_director_intraday_sequence": sequence,
+        "daily_director_intraday_count": len(sequence),
+        "daily_director_intraday_source_count": len(raw_candidates),
+        "daily_director_intraday_exact_duplicate_count": exact_duplicate_count,
+        "daily_director_intraday_status": "COMPLETE" if not diagnostics else "INCOMPLETE",
+        "daily_director_intraday_diagnostics": diagnostics,
+        "daily_director_intraday_selection_rule": (
+            "all eligible Director runs within the frozen UTC window, ordered by immutable source timestamp UTC "
+            "with deterministic output-hash, receipt-hash and path tie-breakers; only exact "
+            "timestamp+output_sha256+receipt_sha256 duplicates are collapsed"
+        ),
+    }
 
 
 def load_legacy_context(root: Path | None) -> dict[str, Any]:
@@ -374,43 +602,7 @@ def main() -> None:
     weekly_owned = load_weekly_owned_context(args.weekly_pointer, args.capture_root, preflight_file, require_preflight=args.require_preflight)
     start = ts(freeze["window_start_utc"])
     end = ts(freeze["window_end_utc"])
-    candidates = []
-    seen = set()
-    for path in args.daily_output_root.rglob("DAILY_DIRECTOR_OUTPUT.json"):
-        try:
-            output = load_json(path)
-        except Exception:
-            continue
-        receipt_path = path.with_name("DAILY_DIRECTOR_RECEIPT.json")
-        receipt = load_json(receipt_path) if receipt_path.exists() else None
-        when = find_time(output, receipt)
-        if not when or not (start <= when < end):
-            continue
-        output_hash = output.get("output_hash") or hashlib.sha256(canonical(output)).hexdigest()
-        key = (when.isoformat(), output_hash)
-        if key in seen:
-            continue
-        seen.add(key)
-        candidates.append((when, path, output, receipt, output_hash))
-    candidates.sort(key=lambda row: row[0])
-    by_day = {}
-    for row in candidates:
-        local_day = row[0].astimezone(COPENHAGEN).date().isoformat()
-        by_day[local_day] = row
-    outputs = []
-    for day, row in sorted(by_day.items()):
-        when, path, output, receipt, _ = row
-        outputs.append({
-            "local_day_key": day,
-            "timezone": "Europe/Copenhagen",
-            "captured_at_utc": when.isoformat().replace("+00:00", "Z"),
-            "captured_at_local": when.astimezone(COPENHAGEN).isoformat(),
-            "path": str(path),
-            "output_sha256": hashlib.sha256(canonical(output)).hexdigest(),
-            "receipt_sha256": hashlib.sha256(canonical(receipt)).hexdigest() if receipt else None,
-            "output": output,
-            "receipt": receipt,
-        })
+    director_context = collect_director_context(args.daily_output_root, start, end)
     context = {
         "contract": "WEEKLY_API_CALIBRATION_CONTEXT_v6",
         "authority": "SHADOW_ONLY",
@@ -421,8 +613,7 @@ def main() -> None:
         "window_end_utc": freeze["window_end_utc"],
         "freeze_sha256": freeze["freeze_sha256"],
         **weekly_owned,
-        "daily_director_rows": outputs,
-        "daily_director_count": len(outputs),
+        **director_context,
         "legacy_research_context": load_legacy_context(args.legacy_root),
         "experiment_learning": load_experiment_learning(args.experiment_registry, args.experiment_outcome_root, start, end,
             repo_root=args.repo_root, forecast_root=args.experiment_forecast_root),
@@ -439,6 +630,8 @@ def main() -> None:
             "Legacy research is a hypothesis prior only and cannot count as prospective evidence.",
             "Experiment learning may report evidence and review candidates but cannot promote rules automatically.",
             "Latent or strange hypotheses remain retained without affecting weekly conclusions unless new mature evidence exists.",
+            "daily_director_rows remains latest-per-local-day for compatibility; daily_director_intraday_sequence is the compact ex-ante calibration timeline.",
+            "The intraday Director sequence is shadow calibration context only and carries no framework-state, model-weight or portfolio authority.",
             "No framework-state, model-weight or portfolio authority.",
         ],
     }
@@ -447,7 +640,9 @@ def main() -> None:
     args.output.write_bytes(canonical(context))
     print(json.dumps({
         "status": "PASS",
-        "daily_rows": len(outputs),
+        "daily_rows": director_context["daily_director_count"],
+        "daily_intraday_rows": director_context["daily_director_intraday_count"],
+        "daily_intraday_status": director_context["daily_director_intraday_status"],
         "preflight_context_status": weekly_owned["master_monday_preflight"].get("status"),
         "final_168h_market_close_available": weekly_owned["master_monday_preflight"]["final_168h_market_close_available"],
         "weekly_sequence_readiness": weekly_owned["weekly_capture_pointer"].get("readiness"),
