@@ -1,6 +1,6 @@
 # Architecture Health
 Status: **GREEN**
-Generated: 2026-09-06T06:06:46.047389Z
+Generated: 2026-09-06T08:01:44.338096Z
 
 Owners: 0/0 PASS
 Accepted DATA PINGs: 0
@@ -9,13 +9,13 @@ Experiment candidates: 210
 Codex-ready remediation tasks: 21
 
 ## Freshness hours
-- capture: 1.442790941388889
-- daily_director: 6.932790941388888
-- weekly_calibration: 144.05829366194445
-- etf_owner: 0.094978115
-- experiment_registry: 0.0002909413888888889
-- experiment_receipt_sync: 0.0019576080555555554
-- remediation_queue: 12.502235385833334
+- capture: 3.3589828044444445
+- daily_director: 8.848982804444445
+- weekly_calibration: 145.974485525
+- etf_owner: 2.0111699780555554
+- experiment_registry: 1.9164828044444446
+- experiment_receipt_sync: 1.9181494711111111
+- remediation_queue: 14.41842724888889
 
 ## Evidence health (last 14d)
 - Forecasts due in window: 165
