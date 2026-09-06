@@ -25,7 +25,47 @@
     "portfolio_action": false,
     "fail_closed_on_unverified_runtime_capability": true,
     "independent_review_after_code_write": true,
-    "preserve_existing_task_budget_and_write_prefix": true
+    "preserve_existing_task_budget_and_write_prefix": true,
+    "contract_first_decomposition": true,
+    "responsibility_before_capability": true,
+    "least_privilege_context": true,
+    "delegation_lineage_required_for_hardened_profiles": true,
+    "bounded_redelegation_only": true
+  },
+  "delegation": {
+    "status": "ACTIVE_SHADOW_FIRST",
+    "legacy_profile_contract": "CAPABILITY_TASK_PROFILE_v1",
+    "hardened_profile_contract": "CAPABILITY_TASK_PROFILE_v1_1",
+    "lineage_receipt_contract": "DELEGATION_LINEAGE_RECEIPT_v1_1",
+    "production_requires_hardened_profile": true,
+    "max_delegation_depth": 2,
+    "max_redelegations_per_unit": 1,
+    "require_unique_responsibility_scope": true,
+    "context_policy": "LEAST_PRIVILEGE_EXPLICIT_REFS",
+    "forbidden_unbounded_refs": ["*", "ALL", "ENTIRE_REPOSITORY", "ALL_TOOLS"],
+    "verification_types": [
+      "DETERMINISTIC_TEST",
+      "SCHEMA_VALIDATION",
+      "HASH_READBACK",
+      "INDEPENDENT_REVIEW",
+      "OWNER_RECEIPT",
+      "COMPOSITE"
+    ],
+    "failure_modes": [
+      "FAIL_CLOSED",
+      "ESCALATE",
+      "REDELEGATE_ONCE_THEN_ESCALATE"
+    ],
+    "escalation_modes": [
+      "STOP",
+      "ESCALATE_TO_PARENT",
+      "REDELEGATE_ONCE"
+    ],
+    "executor_tool_bindings": {
+      "MODEL": "OPENAI_RESPONSES_API",
+      "CODE": "CODEX",
+      "DETERMINISTIC": "DETERMINISTIC"
+    }
   },
   "complexity_rank": {
     "ROUTINE": 1,
