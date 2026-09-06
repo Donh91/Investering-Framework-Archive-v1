@@ -1,0 +1,101 @@
+{
+  "contract": "ISSUE_618_DELTA_CLOSURE_v1",
+  "issue": 618,
+  "audit_base_main_sha": "8321591c2b5beede4989d16715d9b7c39406e67e",
+  "mode": "DELTA_CLOSURE_NOT_BROAD_RERUN",
+  "authority": "RESEARCH_AND_ARCHITECTURE_AUDIT_ONLY",
+  "canonical_effect": false,
+  "portfolio_execution": false,
+  "threshold_change": false,
+  "weight_change": false,
+  "new_sensor": false,
+  "findings": [
+    {
+      "requirement": "INFORMATION_LOSS",
+      "classification": "MATERIALLY_SUPERSEDED",
+      "evidence": [
+        "scripts/api_agent/augment_director_learning_context.py",
+        "scripts/orchestration/build_framework_handoff_manifest.py",
+        ".github/workflows/daily-director-shadow.yml"
+      ],
+      "residual": "Compounding Learning itself was not in Daily Director context before this delta-closure remediation."
+    },
+    {
+      "requirement": "DUPLICATE_REASONING",
+      "classification": "CLOSED_BY_CURRENT_EVIDENCE",
+      "evidence": [
+        "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json",
+        "research/experiment_lifecycle/weekly_adjudication/LATEST.json",
+        "00_ARCHIVE_CONTROL/research_governance_v1/compounding_learning_v1/STATE.json"
+      ],
+      "reason": "Semantic duplicates are retained for history but blocked from new prospective spend, and learning families expose redundancy/collinearity warnings."
+    },
+    {
+      "requirement": "COLLABORATION_REALITY",
+      "classification": "CLOSED_BY_THIS_REMEDIATION_AFTER_MERGE",
+      "evidence": [
+        "scripts/api_agent/augment_director_compounding_learning_context.py",
+        ".github/workflows/daily-director-shadow.yml"
+      ],
+      "acceptance": "Daily Director context contains compact Compounding Learning state with hash provenance and fail-closed authority/health checks."
+    },
+    {
+      "requirement": "LEARNING_CLOSURE",
+      "classification": "CLOSED_BY_THIS_REMEDIATION_AFTER_MERGE",
+      "evidence": [
+        "research/experiment_lifecycle/weekly_adjudication/LATEST.json",
+        "00_ARCHIVE_CONTROL/research_governance_v1/compounding_learning_v1/STATE.json",
+        "00_ARCHIVE_CONTROL/research_governance_v1/compounding_learning_v1/NEXT_BEST_EXPERIMENT.json",
+        "research/architecture_health/LATEST_COMPOUNDING_LEARNING_HEALTH.json",
+        "scripts/api_agent/augment_director_compounding_learning_context.py"
+      ],
+      "reason": "Matured evidence is adjudicated, synthesized into bounded learning/next-test state, and now routed into later Director context without granting new authority."
+    },
+    {
+      "requirement": "SENSOR_COMPRESSION",
+      "classification": "STILL_OPEN_BOUNDED_RESEARCH",
+      "evidence": [
+        "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json",
+        "00_ARCHIVE_CONTROL/research_governance_v1/compounding_learning_v1/STATE.json"
+      ],
+      "reason": "Duplicate and collinearity signals exist, but a bounded K16-style containment/retain-shadow-combine-kill matrix is not yet proven."
+    },
+    {
+      "requirement": "MID_CYCLE_VS_TERMINAL",
+      "classification": "STILL_OPEN_BOUNDED_INVENTORY",
+      "reason": "Original issue asked only for an inventory of independent dimensions. No new classifier or canonical thresholds are justified here."
+    },
+    {
+      "requirement": "COST_CONGESTION",
+      "classification": "STILL_OPEN_BOUNDED_MEASUREMENT",
+      "evidence": [
+        "research/api_agent/outputs/daily/2026/09/05/231102/DAILY_DIRECTOR_RECEIPT.json",
+        ".github/workflows/daily-director-shadow.yml",
+        "research/architecture_health/LATEST_ARCHITECTURE_HEALTH.json"
+      ],
+      "reason": "Per-run tokens/cost and budget guards exist, but marginal information value per agent/call/collector is not yet measured."
+    }
+  ],
+  "minimal_remediation": {
+    "gap": "COMPOUNDING_LEARNING_NOT_CONSUMED_BY_LATER_DAILY_DIRECTOR",
+    "change": "Add one compact fail-closed Compounding Learning context augmentation after existing Director learning augmentation.",
+    "provenance": "SHA256 for state, proposal, backlog and health is appended to learning_context_provenance.",
+    "failure_semantics": "Missing surfaces remain UNAVAILABLE; invalid authority or health blocks routing; no fabricated fallback.",
+    "new_authority": false
+  },
+  "successor_scope_only_if_needed": [
+    "SENSOR_CONTAINMENT_AND_COMPRESSION",
+    "MID_CYCLE_VS_TERMINAL_DIMENSION_INVENTORY",
+    "MARGINAL_COST_AND_CONGESTION_MEASUREMENT"
+  ],
+  "explicit_non_goals": [
+    "NO_NEW_ENGINE",
+    "NO_NEW_AGENT",
+    "NO_NEW_SENSOR",
+    "NO_THRESHOLD_CHANGE",
+    "NO_WEIGHT_CHANGE",
+    "NO_CANONICAL_PROMOTION",
+    "NO_PORTFOLIO_AUTHORITY",
+    "NO_HISTORICAL_EVIDENCE_REWRITE"
+  ]
+}
