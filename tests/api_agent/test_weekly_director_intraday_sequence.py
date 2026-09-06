@@ -174,10 +174,14 @@ class WeeklyDirectorIntradaySequenceTests(unittest.TestCase):
             self.assertEqual(len(row['forecast_candidates']), module.DIRECTOR_COMPACT_FORECAST_LIMIT)
             self.assertTrue(row['forecast_candidates_truncated'])
 
-    def test_sep3_frozen_production_sequence_has_four_hash_bound_runs(self):
+    def test_sep3_frozen_production_sequence_has_four_hash_bound_runs_across_local_day_boundary(self):
         root = Path('research/api_agent/outputs/daily/2026/09/03')
         data = self.collect(root)
-        self.assertEqual(data['daily_director_count'], 1)
+        self.assertEqual(data['daily_director_count'], 2)
+        self.assertEqual(
+            [Path(row['path']).parent.name for row in data['daily_director_rows']],
+            ['171420', '232828'],
+        )
         self.assertEqual(data['daily_director_intraday_count'], 4)
         rows = data['daily_director_intraday_sequence']
         self.assertEqual(
