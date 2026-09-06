@@ -5,6 +5,8 @@ import importlib.util
 import json
 from pathlib import Path
 
+from tests.api_agent.test_weekly_director_intraday_sequence import WeeklyDirectorIntradaySequenceTests  # noqa: F401
+
 
 SCRIPT = Path(__file__).resolve().parents[2] / "scripts/api_agent/augment_director_learning_context.py"
 spec = importlib.util.spec_from_file_location("augment_director_learning_context", SCRIPT)
