@@ -47,6 +47,9 @@ jobs:
           python scripts/api_agent/augment_director_learning_context.py \
             --context runtime/daily-director/context_v2.json \
             --output runtime/daily-director/context.json
+          python scripts/api_agent/augment_director_compounding_learning_context.py \
+            --context runtime/daily-director/context.json \
+            --output runtime/daily-director/context.json
           cp research/api_agent/prompts/DAILY_DIRECTOR_SHADOW.txt runtime/daily-director/prompt.txt
 
       - name: Determine delta readiness
