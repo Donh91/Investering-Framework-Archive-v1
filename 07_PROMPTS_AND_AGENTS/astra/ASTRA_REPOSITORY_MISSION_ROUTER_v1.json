@@ -152,6 +152,28 @@
       "new_authority": false
     }
   ],
+  "capability_routing": {
+    "status": "SHADOW_FIRST_FAIL_CLOSED",
+    "owner": "research/api_agent/API_AGENT_AND_COMPOUNDING_LEARNING_ARCHITECTURE_v1.md",
+    "policy": "research/api_agent/CAPABILITY_ROUTING_POLICY_v1.json",
+    "planner": "scripts/api_agent/capability_router.py",
+    "api_adapter": "scripts/api_agent/capability_routed_api_gateway.py",
+    "existing_gateway_owner": "scripts/api_agent/api_gateway.py",
+    "purpose": "Let an Astra-class parent reason over a broad execution field while bounded units route to deterministic code, the cheapest verified qualified API model, or Codex without granting new authority.",
+    "routing_rule": "GLOBAL_UNDERSTANDING_THEN_BOUNDED_EXECUTION",
+    "repository_write_executor": "CODEX_ONLY_UNDER_EXISTING_TASK_AUTHORITY",
+    "api_model_repository_write_authority": false,
+    "router_grants_write_authority": false,
+    "automatic_merge": false,
+    "live_model_override_requires": [
+      "POLICY_STATUS_ACTIVE_QUALIFIED",
+      "VERIFIED_RUNTIME_MODEL_AVAILABILITY",
+      "MODEL_PRESENT_IN_RUNTIME_QUALIFIED_MODELS",
+      "EXPLICIT_ACTIVATE_ROUTING_FLAG"
+    ],
+    "runtime_model_discovery_is_qualification": false,
+    "default_until_qualification": "SHADOW_RECOMMENDATION_ONLY"
+  },
   "qualification_ladder": [
     "READ",
     "AUDIT",
