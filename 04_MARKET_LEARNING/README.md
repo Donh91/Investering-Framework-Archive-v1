@@ -60,6 +60,10 @@ Separate institutional BTC demand, ecosystem liquidity, ETH leadership, breadth 
 
 Study what distinguishes durable recovery/rotation from mechanical bounce, fake rotation or liquidity mirage.
 
+### 6. Tactical microcap speculation
+
+Use `tactical_microcap_lab/` for explicitly short-horizon meme, microcap, YOLO and casino plays. This lane studies launch forensics, wallet relationships, liquidity, entry timing, temporary narrative momentum and exit realism without converting speculative trades into long-conviction holdings or canonical portfolio rules.
+
 ## Scientific discipline
 
 Historical evidence can suggest hypotheses. It must not silently rewrite prospective forecasts or promote itself.
@@ -85,6 +89,10 @@ Do not create new thresholds, weights, portfolio actions or canonical rules duri
 
 Strong contradictory evidence is valuable even when it weakens a favorite framework belief.
 
+## Tactical microcap authority guard
+
+The Tactical Microcap Lab is an advisory and learning lane for deliberately high-risk short-lived trades. It may consume regime context from Master Monday or Data Ping, but it cannot alter those owners, auto-execute trades, silently change portfolio sizing or promote a casino position into long conviction.
+
 ## Astra-class challenge
 
 A stronger model should try to find where the framework's safety culture became too uniform.
@@ -104,4 +112,5 @@ See:
 ```text
 ../06_RESEARCH_LAB/README.md
 ../07_PROMPTS_AND_AGENTS/astra/README.md
+tactical_microcap_lab/README.md
 ```
