@@ -1,15 +1,27 @@
 {
-  "contract": "PUBLIC_READ_ONLY_SOURCE_RECOVERY_POLICY_v1",
+  "contract": "PUBLIC_READ_ONLY_SOURCE_ACQUISITION_RECOVERY_POLICY_v1",
   "status": "ACTIVE_RESEARCH_ACQUISITION_BOUNDARY",
   "effective_date": "2026-09-07",
-  "purpose": "Define a fail-closed ladder for recovering useful public research data from websites without turning browser observation, undocumented endpoints or session material into canonical authority.",
+  "purpose": "Define a fail-closed pre-contract acquisition ladder for recovering useful public research data from websites without turning browser observation, undocumented endpoints or session material into canonical authority.",
+  "owner_relationship": {
+    "this_policy_owner": "PUBLIC_PRE_CONTRACT_ACQUISITION_METHOD_ONLY",
+    "existing_provenance_recovery_owner": "00_ARCHIVE_CONTROL/source_recovery_controller_v1/POLICY.json",
+    "existing_provenance_recovery_contract": "SOURCE_PROVENANCE_RECOVERY_POLICY_v1",
+    "precedence": "EXISTING_PROVENANCE_RECOVERY_POLICY_WINS_ON_RETRY_REMEDIATION_QUARANTINE_GAPFILL_AND_PROVENANCE_RECOVERY",
+    "no_parallel_authority": true,
+    "handoff_rule": "Once a source has an admitted source contract or enters an existing provenance/retry/remediation lifecycle, this acquisition policy does not create a second recovery controller. Route provenance failure, stale-source quarantine, retry, gap-fill, transform repair and monitoring to the existing source_recovery_controller_v1 owner.",
+    "existing_controller_provider_call_rule_preserved": "NO_PROVIDER_CALLS_FROM_CONTROLLER"
+  },
   "scope": [
-    "PUBLIC_RESEARCH_SOURCES",
-    "PUBLIC_DASHBOARDS",
-    "DOCUMENTED_OR_OBSERVED_READ_ONLY_ENDPOINTS",
+    "PUBLIC_RESEARCH_SOURCES_BEFORE_SOURCE_CONTRACT_ADMISSION",
+    "PUBLIC_DASHBOARDS_BEFORE_SOURCE_CONTRACT_ADMISSION",
+    "DOCUMENTED_OR_OBSERVED_READ_ONLY_ENDPOINTS_UNDER_ACQUISITION_REVIEW",
     "RESEARCH_RECOVERY_CANDIDATES"
   ],
   "out_of_scope": [
+    "PROVENANCE_RECOVERY_FOR_ALREADY_ADMITTED_SOURCES",
+    "RETRY_OR_GAPFILL_CONTROLLER_AUTHORITY",
+    "STALE_SOURCE_QUARANTINE_AUTHORITY",
     "ACCESS_CONTROL_BYPASS",
     "ACCOUNT_OR_PRIVATE_DATA_EXTRACTION",
     "MUTATING_ENDPOINTS",
@@ -38,7 +50,8 @@
     "terms_rate_limits_and_access_conditions_must_be_respected": true,
     "missing_or_blocked_access_is_unknown_not_permission": true,
     "recovered_endpoint_cannot_replace_canonical_owner_automatically": true,
-    "collector_requires_separate_source_contract_and_governance": true
+    "collector_requires_separate_source_contract_and_governance": true,
+    "admitted_source_failure_routes_to_existing_provenance_recovery_owner": true
   },
   "temporary_capture_boundary": {
     "har_or_equivalent_may_contain_credentials": true,
@@ -59,13 +72,15 @@
     "CREDENTIAL_OR_SECRET_BEARING_CAPTURE_WOULD_ENTER_CONTROL_PLANE",
     "PROVENANCE_NOT_PRESERVABLE",
     "ENDPOINT_STABILITY_NOT_TESTABLE",
-    "CANONICAL_OWNER_REPLACEMENT_REQUIRED"
+    "CANONICAL_OWNER_REPLACEMENT_REQUIRED",
+    "PARALLEL_PROVENANCE_RECOVERY_CONTROLLER_REQUIRED"
   ],
   "classification": {
     "DOCUMENTED_PUBLIC_SOURCE": "May proceed through normal source-contract review.",
     "OBSERVED_PUBLIC_READ_ONLY_ENDPOINT": "Maximum status RESEARCH_RECOVERY_CANDIDATE until separate source-contract review.",
+    "ADMITTED_SOURCE_WITH_PROVENANCE_FAILURE": "Route to 00_ARCHIVE_CONTROL/source_recovery_controller_v1/POLICY.json; do not use this policy as a parallel controller.",
     "SESSION_BOUND_ENDPOINT": "HOLD or REJECT unless an explicit authorized and policy-compliant access contract exists.",
-    "MUTATING_ENDPOINT": "REJECT for source recovery.",
+    "MUTATING_ENDPOINT": "REJECT for source acquisition recovery.",
     "ACCESS_BYPASS_REQUIRED": "REJECT."
   },
   "minimum_provenance": [
@@ -82,6 +97,7 @@
   ],
   "authority": {
     "canonical_data_owner": false,
+    "provenance_recovery_controller": false,
     "framework_state_change": false,
     "portfolio_action": false,
     "market_rule_change": false,
@@ -94,13 +110,14 @@
     "repository": "vercel-labs/agent-browser",
     "revision": "219c47a9dab1776f320d11e66ce934fd239b2cb7",
     "inspected_path": "skill-data/derive-client/SKILL.md",
-    "adopted_mechanism": "browser observation may identify a more efficient direct data path for repeated read-only research",
+    "adopted_mechanism": "browser observation may identify a more efficient direct data path for repeated read-only research before source-contract admission",
     "rejected_or_hardened": [
       "NO_GENERIC_REVERSE_ENGINEERING_AUTHORITY",
       "NO_AUTH_BYPASS",
       "NO_SESSION_SECRET_COMMIT",
       "NO_WRITE_ENDPOINTS",
-      "NO_AUTOMATIC_CANONICAL_PROMOTION"
+      "NO_AUTOMATIC_CANONICAL_PROMOTION",
+      "NO_PARALLEL_PROVENANCE_RECOVERY_OWNER"
     ]
   }
 }
