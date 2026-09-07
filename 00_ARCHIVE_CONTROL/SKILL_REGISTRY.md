@@ -1,11 +1,11 @@
-# Investering Agent Skill Registry v0.4
+# Investering Agent Skill Registry v0.5
 
-**Dato:** 2026-08-28
+**Dato:** 2026-09-07
 **Status:** CANONICAL_OPERATIONAL_REGISTRY  
 **Område:** agent routing / reproducible workflows / archive control  
 **Primary folder:** `00_ARCHIVE_CONTROL/`  
 **Depends on:** `AGENTS.md`, `00_ARCHIVE_CONTROL/CANONICAL_INDEX.md`, `00_ARCHIVE_CONTROL/INDEX_ADDENDUM_REGISTRY.md`, `00_ARCHIVE_CONTROL/ARCHIVE_MAP_AND_ROUTING.md`, `00_ARCHIVE_CONTROL/CROSS_REPO_DATA_BOUNDARY.md`, `00_ARCHIVE_CONTROL/CROSS_REPO_AGENT_CONTEXT_MAP.json`
-**Implementation references:** `07_PROMPTS_AND_AGENTS/github_agent/2026-07-12__investering-agent-skills-v0-1__canonical.md`, `07_PROMPTS_AND_AGENTS/codex/2026-08-22__codex-research-intake-and-execution-ledger-v1__operational.md`, `07_PROMPTS_AND_AGENTS/skill_runs/2026-08-28__developer-source-research-firecrawl__implementation-receipt.md`
+**Implementation references:** `07_PROMPTS_AND_AGENTS/github_agent/2026-07-12__investering-agent-skills-v0-1__canonical.md`, `07_PROMPTS_AND_AGENTS/codex/2026-08-22__codex-research-intake-and-execution-ledger-v1__operational.md`, `07_PROMPTS_AND_AGENTS/skill_runs/2026-08-28__developer-source-research-firecrawl__implementation-receipt.md`, `07_PROMPTS_AND_AGENTS/skill_runs/2026-09-07__skill-quality-gate-design__source-note.md`
 
 ## 1. Purpose
 
@@ -23,6 +23,7 @@ Skills are process instructions. They do not own market truth, framework doctrin
 | research-lab-red-team | `.agents/skills/research-lab-red-team/SKILL.md` | PILOT_ACTIVE | audit, red team, Claude/Grok review, framework proposal, evidence, falsify | Evaluate and classify, no self-promotion |
 | codex-intake | `.agents/skills/codex-intake/SKILL.md` | ACTIVE_OPERATIONAL_V1 | queue for Codex, bounded code defect, research-to-code handoff, CODEX candidate | Prepare/deduplicate bounded research intake only; no CODEX_READY, merge, market or framework authority |
 | developer-source-research | `.agents/skills/developer-source-research/SKILL.md` | PILOT_ACTIVE_READ_ONLY_V0_1 | external API/library behavior, errors, upstream issues/PRs, repository or agent-skill discovery | Retrieve and verify public developer sources only; no code, market or portfolio authority |
+| skill-quality-gate | `.agents/skills/skill-quality-gate/SKILL.md` | PILOT_ACTIVE_READ_ONLY_V0_1 | create/modify/audit skill, trigger tuning, regression review, prove candidate value, retirement review | Read-only meta-evaluation; no authoring, registry mutation, promotion, merge, disable or delete authority |
 
 ## 3. Default composition
 
@@ -48,7 +49,17 @@ canonical-context-router
 -> archive-governance before repository writes
 ```
 
-The router resolves current authority. Prospective Evidence Ledger governs causal row lifecycle and evidence integrity. Developer Source Research retrieves and verifies upstream technical evidence without replacing local repository authority. The red-team skill evaluates decision value and test survival. Codex Intake converts reproducible code-local research findings into governed candidates without granting research code authority. Archive Governance controls placement, duplication, discoverability, write safety and backup-scope truth.
+For repository-local skill creation, modification or retirement review:
+
+```text
+canonical-context-router
+-> developer-source-research only when external prior art is load-bearing
+-> skill-quality-gate
+-> research-lab-red-team only when the evaluation result itself needs falsification
+-> archive-governance only after explicit user authorization for repository writes
+```
+
+The router resolves current authority. Prospective Evidence Ledger governs causal row lifecycle and evidence integrity. Developer Source Research retrieves and verifies upstream technical evidence without replacing local repository authority. The red-team skill evaluates decision value and test survival. Codex Intake converts reproducible code-local research findings into governed candidates without granting research code authority. Skill Quality Gate compares frozen baselines and candidates without authoring or promoting them. Archive Governance controls placement, duplication, discoverability, write safety and backup-scope truth.
 
 ## 4. Global constraints
 
@@ -167,6 +178,35 @@ It may not:
 
 The market-provider MCP queue remains owned by `research/api_agent/mcp/MCP_CONNECTION_EVALUATION_PROGRAM_v1.json`. Firecrawl Developer Index is external developer-source retrieval and must not be added to that market-provider queue.
 
+## 6.2 Skill quality gate contract
+
+`skill-quality-gate` may:
+
+- freeze and verify an immutable baseline skill reference;
+- compare baseline and candidate against the same representative cases;
+- run deterministic repository or contract checks when available;
+- request or consume blind A/B runtime results when the execution harness exists;
+- evaluate positive and negative trigger behavior;
+- detect critical regressions, authority regressions and unsupported completion claims;
+- compare a skill with a no-skill baseline when the harness permits it;
+- return `KEEP_BASELINE`, `ACCEPT_CANDIDATE`, `MODIFY_AND_RETEST`, `RETIRE_REVIEW` or `BLOCKED`.
+
+It may not:
+
+- author or edit the candidate skill as part of evaluation;
+- mutate this registry, merge a PR, disable or delete a skill;
+- treat static inspection as runtime A/B evidence;
+- average away a critical regression;
+- fabricate model, token, cost, latency or evaluator evidence;
+- promote market, framework or portfolio authority.
+
+Canonical pilot assets:
+
+```text
+07_PROMPTS_AND_AGENTS/skill_quality_gate/BASELINES.json
+07_PROMPTS_AND_AGENTS/skill_quality_gate/EVAL_CASES.json
+```
+
 ## 7. Shared pilot metrics
 
 Each qualified use should be assessed against these fields:
@@ -265,6 +305,29 @@ restricted_or_credential_incident: YES | NO
 authority_incident: YES | NO
 ```
 
+## 9.2 Skill Quality Gate pilot metrics
+
+For each qualified skill-change evaluation, additionally record:
+
+```yaml
+skill_under_test:
+evaluation_mode: STATIC_ONLY | DETERMINISTIC_REPLAY | BLIND_AB_RUNTIME | FULL_GATE
+baseline_immutable: YES | NO
+candidate_immutable: YES | NO | PROVISIONAL
+case_set_bound: YES | NO
+evaluator_separated: YES | NO | UNKNOWN
+positive_trigger_result: PASS | PARTIAL | FAIL | NOT_EXECUTED
+negative_trigger_result: PASS | PARTIAL | FAIL | NOT_EXECUTED
+critical_regressions_caught: integer
+authority_regressions_caught: integer
+baseline_without_skill_result: ADDS_VALUE | EQUIVALENT | WORSE_THAN_BASELINE | NOT_EXECUTED
+false_accept_incident: YES | NO
+false_block_incident: YES | NO
+manual_corrections_required: integer
+```
+
+A static review is a qualified use only for static invariants. It cannot count as proof of behavioral improvement.
+
 ## 10. Review gate
 
 Review the skill stack after either:
@@ -274,7 +337,7 @@ Review the skill stack after either:
 
 whichever occurs first.
 
-`prospective-evidence-ledger` must also accumulate at least three real uses before a KEEP decision is justified. `codex-intake` must accumulate at least three real research-origin candidates or deduplicated handoffs before a KEEP decision is justified. `developer-source-research` requires ten qualified external technical uses and the KEEP thresholds declared in its `SKILL.md`.
+`prospective-evidence-ledger` must also accumulate at least three real uses before a KEEP decision is justified. `codex-intake` must accumulate at least three real research-origin candidates or deduplicated handoffs before a KEEP decision is justified. `developer-source-research` requires ten qualified external technical uses and the KEEP thresholds declared in its `SKILL.md`. `skill-quality-gate` requires at least five real skill-change evaluations before a KEEP decision is justified.
 
 Review classifications:
 
@@ -330,6 +393,15 @@ A skill must be modified, suspended or killed if any of the following occurs:
 - enters the market-provider queue, market semantics or portfolio logic;
 - creates a required production dependency or scheduled external-search workflow during the pilot.
 
+`skill-quality-gate` must be immediately modified or suspended if it:
+
+- accepts a behavioral candidate from static inspection alone;
+- evaluates or promotes itself without an independent evaluator;
+- averages away a critical authority, safety or regression failure;
+- edits, merges, disables or deletes a skill as part of evaluation;
+- fabricates runtime, token, cost, latency or no-skill baseline evidence;
+- creates framework, market or portfolio authority.
+
 ## 12. Expansion rule and versioned exceptions
 
 No additional skill should be added without a demonstrated repeated workflow gap.
@@ -364,14 +436,27 @@ authority_boundary: Read-only developer research; no code, market, evidence-row 
 kill_criterion: Fewer than two incremental-value uses in ten qualified runs, any uncorrected source-identity mismatch, or any privacy/authority incident.
 ```
 
+The v0.5 exception is `skill-quality-gate`:
+
+```yaml
+failure_mode_observed: Skill changes can otherwise be accepted from prose review, author confidence or popularity without a frozen baseline, representative regression cases or evidence that the skill adds value over the model without it.
+repeated_task_frequency: Recurring as repository-local skills and agent routing are added, tuned or prepared for newer models.
+why_existing_skills_cannot_cover_it: The router resolves authority, developer-source-research finds prior art, red-team evaluates framework claims, and archive-governance controls writes; none owns baseline-vs-candidate skill evaluation or skill retirement evidence.
+inputs: Immutable baseline skill reference, candidate reference, representative case set and available evaluator/runtime evidence.
+outputs: Evidence-bounded KEEP_BASELINE, ACCEPT_CANDIDATE, MODIFY_AND_RETEST, RETIRE_REVIEW or BLOCKED verdict.
+validation_loop: Deterministic checks first, identical-case comparison, evaluator separation, trigger positive/negative tests, no-skill baseline when available, fresh completion verification.
+authority_boundary: Read-only meta-evaluation; no authoring, registry mutation, merge, disable, delete, market or portfolio authority.
+kill_criterion: Any false acceptance caused by averaging a critical regression, any self-promotion or mutation, or no demonstrated decision value after five real skill-change evaluations.
+```
+
 Potential later candidates such as DATA PING execution, weekly range audit, Master Monday, Cycle Navigator publication and automated agent loops remain `NOT_AUTHORIZED_FOR_BUILD` unless separately governed.
 
 ## 13. Current status
 
 ```yaml
-stack_version: 0.4
+stack_version: 0.5
 stack_status: PILOT_ACTIVE_HARDENED
-skills_active: 6
+skills_active: 7
 stack_qualified_uses_completed_before_v0_3: 1
 prospective_evidence_ledger_version: 0.1
 codex_intake_version: 1
@@ -380,6 +465,10 @@ codex_queue_authority: LATEST_CODEX_READY_TASKS.json
 codex_execution_observability: LATEST_CODEX_EXECUTION_STATE.json
 developer_source_research_version: 0.1
 developer_source_research_status: PILOT_ACTIVE_READ_ONLY
+skill_quality_gate_version: 0.1
+skill_quality_gate_status: PILOT_ACTIVE_READ_ONLY
+skill_quality_gate_baseline_manifest: 07_PROMPTS_AND_AGENTS/skill_quality_gate/BASELINES.json
+skill_quality_gate_case_set: 07_PROMPTS_AND_AGENTS/skill_quality_gate/EVAL_CASES.json
 firecrawl_market_provider_queue_member: NO
 trading_logic_changed: NO
 framework_authority_changed: NO
