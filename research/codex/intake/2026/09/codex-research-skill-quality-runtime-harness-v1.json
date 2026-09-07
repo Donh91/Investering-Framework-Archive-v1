@@ -1,0 +1,103 @@
+{
+  "contract": "CODEX_RESEARCH_CANDIDATE_v1",
+  "candidate_id": "codex-research-skill-quality-runtime-harness-v1",
+  "submitted_at_utc": "2026-09-07T21:31:00Z",
+  "status": "SUBMITTED",
+  "origin": {
+    "type": "RESEARCH_THREAD",
+    "thread_label": "2026-09-07 agent skill ecosystem research",
+    "source_paths": [
+      "07_PROMPTS_AND_AGENTS/skill_runs/2026-09-07__agent-skill-ecosystem-research-and-admission__source-note.md",
+      "07_PROMPTS_AND_AGENTS/skill_quality_gate/BASELINES.json",
+      "07_PROMPTS_AND_AGENTS/skill_quality_gate/EVAL_CASES.json",
+      "07_PROMPTS_AND_AGENTS/skill_quality_gate/EVALUATOR_CALIBRATION_CONTRACT_v1.json",
+      ".agents/skills/skill-quality-gate/SKILL.md"
+    ]
+  },
+  "title": "Build executable runtime harness for skill-quality-gate",
+  "objective": "Implement the smallest framework-local executable runtime evaluation harness for the existing read-only skill-quality-gate. It must compare frozen baseline, candidate and no-skill conditions on identical representative cases in isolated temporary workspaces, grade deterministic assertions before subjective judgment, preserve failed/incomplete runs, support repeated stochastic runs, record observed tokens/cost/time only when actually available, and prevent any uncalibrated LLM judge or aggregate score from overriding critical authority/safety regressions.",
+  "finding_key": "SKILL_QUALITY_RUNTIME_HARNESS_MISSING",
+  "primary_target": "scripts/skill_quality_gate",
+  "allowed_change_scope": [
+    "scripts/skill_quality_gate/**",
+    "tests/skill_quality_gate/**",
+    "07_PROMPTS_AND_AGENTS/skill_quality_gate/runtime/**"
+  ],
+  "evidence": [
+    {
+      "kind": "REPO_PATH",
+      "ref": ".agents/skills/skill-quality-gate/SKILL.md",
+      "summary": "Current gate defines STATIC_ONLY, DETERMINISTIC_REPLAY, BLIND_AB_RUNTIME and FULL_GATE modes but has no local executable runtime harness implementation."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "07_PROMPTS_AND_AGENTS/skill_quality_gate/EVAL_CASES.json",
+      "summary": "Representative positive/negative trigger, authority, regression, autonomy, completion and no-skill cases exist but creation explicitly does not execute them."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "07_PROMPTS_AND_AGENTS/skill_quality_gate/EVALUATOR_CALIBRATION_CONTRACT_v1.json",
+      "summary": "Defines deterministic-first precedence and zero release authority for uncalibrated model judges."
+    },
+    {
+      "kind": "RESEARCH_RECEIPT",
+      "ref": "07_PROMPTS_AND_AGENTS/skill_runs/2026-09-07__skill-hardening-static-eval__receipt.md",
+      "summary": "Prior skill hardening was correctly limited to STATIC_ONLY evidence and explicitly deferred runtime correctness, trigger, autonomy and cost claims."
+    },
+    {
+      "kind": "RESEARCH_RECEIPT",
+      "ref": "07_PROMPTS_AND_AGENTS/skill_runs/2026-09-07__agent-skill-ecosystem-research-and-admission__source-note.md",
+      "summary": "Current external prior-art review identifies isolated real-agent execution, repeated runs, deterministic-first grading and rich side-effect evidence as the bounded missing implementation."
+    },
+    {
+      "kind": "COMMIT",
+      "ref": "43d0d7a05c3d9583640ea6d12627b415f9a5a367",
+      "summary": "Main commit that merged the evaluator-calibration and source-admission hardening before this candidate was submitted."
+    }
+  ],
+  "reproduction": "On current main, inspect `.agents/skills/skill-quality-gate/SKILL.md`, `BASELINES.json` and `EVAL_CASES.json`. The contracts describe runtime A/B and full-gate behavior, but no `scripts/skill_quality_gate` executable runner exists, and existing receipts correctly report runtime_ab_executed=NO or runtime behavioral claims deferred. Therefore the framework can govern runtime evidence but cannot yet produce that evidence locally in a reproducible executable harness.",
+  "acceptance_tests": {
+    "positive": [
+      "An offline/fake-runner test can execute the same bound case set across baseline and candidate conditions for multiple repetitions and produce deterministic structured results without network or external package dependence.",
+      "A no-skill condition is supported when requested and remains distinguishable from baseline and candidate conditions.",
+      "Deterministic assertion failures and critical authority/safety regressions block acceptance regardless of aggregate qualitative results.",
+      "Repeated stochastic runs preserve each run result and report distribution/pass counts or pass@k-style evidence rather than collapsing to one-run superiority.",
+      "Observed token, cost and wall-time fields are populated only when telemetry is actually available; otherwise they are UNKNOWN.",
+      "The harness uses an isolated temporary workspace/worktree for live agent execution, records side effects and cleanup status, and does not mutate the source workspace during evaluation.",
+      "If a real Codex CLI runtime is available, one bounded smoke path can execute through a pluggable adapter without making Codex availability a requirement for the offline deterministic test suite.",
+      "Structured output binds baseline/candidate refs, case-set identity, runtime model/effort when available, repetition count, failed/incomplete runs, and evaluator calibration state."
+    ],
+    "negative": [
+      "An UNCALIBRATED_ADVISORY or CALIBRATED_DEV_ONLY LLM judge cannot by itself produce ACCEPT_CANDIDATE or a release-blocking rejection.",
+      "One stochastic run cannot be reported as stable behavioral superiority.",
+      "A critical authority, safety or repository-governance regression cannot be averaged away by a weighted score or judge preference.",
+      "The harness must not install third-party skill-eval frameworks as a required production/runtime dependency.",
+      "The harness must not edit `.agents/skills/**`, `00_ARCHIVE_CONTROL/SKILL_REGISTRY.md`, market rules, thresholds, weights, portfolio logic or canonical framework authority.",
+      "Evaluation artifacts containing temporary workspace data, model credentials or secret-bearing traces must not be committed as ordinary control-plane evidence."
+    ]
+  },
+  "authority_boundary": "CODE_REMEDIATION_ONLY",
+  "requires_framework_owner_authority": false,
+  "forbidden_changes": [
+    "market gates",
+    "model weights",
+    "canonical authority",
+    "portfolio logic",
+    "API budget",
+    "new policy semantics",
+    "skill authoring or automatic registry mutation",
+    "automatic skill acceptance or retirement",
+    "new market engine or shadow layer",
+    "required third-party runtime dependency",
+    "automatic scheduled benchmark spending"
+  ],
+  "requested_priority": "NORMAL",
+  "post_fix_gate": "OFFLINE_RUNTIME_HARNESS_REGRESSION_SUITE_PASS_PLUS_BOUNDED_REAL_CODEX_SMOKE_WHEN_AVAILABLE_PLUS_MAIN_READBACK_WITH_NO_UNCALIBRATED_JUDGE_RELEASE_AUTHORITY",
+  "clean_noop_condition": "Stop with no code change if an equivalent executable skill-quality runtime harness already exists on fresh main, this candidate is superseded, or the required implementation cannot stay inside the allowed change scope.",
+  "escalation_condition": "Escalate to FRAMEWORK_OWNER if implementation requires modifying skill authority, registry semantics, external paid-service policy, market logic, portfolio logic, credentials policy or any new canonical governance semantics.",
+  "external_prior_art_refs": [
+    "openai/plugins@1e285826e604f66f7208f7ac4dba0fe8341d1f57:plugins/plugin-eval",
+    "tardigrde/agent-skill-eval@59de161f657b82bfaf8f6abe83dfff38552deb21",
+    "ai-evals-course/evals-skills@11d35781d43c281baddd3c6a766b12d81c274c29:skills/validate-evaluator"
+  ]
+}
