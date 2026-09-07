@@ -1,0 +1,116 @@
+{
+  "contract": "INVESTERING_EVALUATOR_CALIBRATION_CONTRACT_v1",
+  "status": "ACTIVE_GOVERNANCE_CONTRACT",
+  "effective_date": "2026-09-07",
+  "scope": "LLM or model-based judges used by skill-quality-gate",
+  "purpose": "Prevent an unvalidated model judge from becoming hidden acceptance or rejection authority for agent-skill changes.",
+  "precedence": {
+    "deterministic_checks_first": true,
+    "critical_regression_hard_blocker": true,
+    "authority_or_safety_failure_hard_blocker": true,
+    "aggregate_score_cannot_override_hard_blocker": true
+  },
+  "calibration_states": [
+    "NOT_USED",
+    "UNCALIBRATED_ADVISORY",
+    "CALIBRATED_DEV_ONLY",
+    "CALIBRATED_HELDOUT"
+  ],
+  "release_authority": {
+    "NOT_USED": "DETERMINISTIC_OR_HUMAN_GOVERNANCE_ONLY",
+    "UNCALIBRATED_ADVISORY": "ZERO_RELEASE_AUTHORITY",
+    "CALIBRATED_DEV_ONLY": "ADVISORY_ONLY",
+    "CALIBRATED_HELDOUT": "MAY_SUPPORT_NON_DETERMINISTIC_COMPARISON_BUT_CANNOT_OVERRIDE_HARD_BLOCKERS"
+  },
+  "required_binding": [
+    "judge_prompt_or_rubric_ref",
+    "judge_prompt_sha256_or_immutable_ref",
+    "model_provider",
+    "exact_model_or_snapshot_id_when_available",
+    "label_owner_or_domain_expert",
+    "label_schema",
+    "dataset_ref",
+    "dataset_sha256_or_immutable_ref",
+    "split_method",
+    "train_ids_or_manifest",
+    "dev_ids_or_manifest",
+    "test_ids_or_manifest",
+    "evaluation_timestamp_utc"
+  ],
+  "data_rules": {
+    "human_or_explicit_governance_labels_required_for_calibration": true,
+    "train_dev_test_disjoint": true,
+    "few_shot_examples_may_not_come_from_dev_or_test": true,
+    "heldout_test_may_not_be_used_for_iteration": true,
+    "missing_labels_are_unknown": true,
+    "synthetic_labels_alone_cannot_establish_human_alignment": true
+  },
+  "minimum_reported_metrics_when_binary_labels_are_used": [
+    "true_positive_rate",
+    "true_negative_rate",
+    "false_positive_count",
+    "false_negative_count",
+    "sample_count_by_class"
+  ],
+  "recommended_optional_metrics": [
+    "confidence_interval",
+    "bias_corrected_aggregate_rate_when_methodologically_valid",
+    "disagreement_categories"
+  ],
+  "threshold_policy": {
+    "canonical_numeric_threshold_defined_here": false,
+    "reason": "External example thresholds are useful prior art but are not adopted as Investering release thresholds without framework-local labeled evidence and governance review.",
+    "external_reference_guidance": "ai-evals-course/evals-skills recommends high TPR/TNR and held-out validation; treat those values as research guidance only."
+  },
+  "invalidation_rules": [
+    "JUDGE_PROMPT_OR_RUBRIC_CHANGED",
+    "MODEL_OR_SNAPSHOT_CHANGED",
+    "LABEL_SCHEMA_CHANGED",
+    "MATERIAL_DOMAIN_OR_CASE_DISTRIBUTION_CHANGED",
+    "DATA_LEAKAGE_OR_SPLIT_CONTAMINATION_DISCOVERED"
+  ],
+  "on_invalidation": "DOWNGRADE_TO_UNCALIBRATED_ADVISORY_UNTIL_REVALIDATED",
+  "runtime_rules": {
+    "identical_inputs_for_compared_conditions": true,
+    "condition_labels_blinded_when_subjective_comparison_is_used": true,
+    "failed_or_incomplete_runs_preserved": true,
+    "single_stochastic_run_is_not_superiority_proof": true,
+    "repeated_runs_required_for_stochastic_behavior_claim": true,
+    "tokens_cost_latency_unknown_if_not_observed": true,
+    "tool_trace_and_side_effect_evidence_preferred_over_final_answer_only": true
+  },
+  "forbidden_claims_without_calibrated_or_deterministic_evidence": [
+    "CANDIDATE_IS_BEHAVIORALLY_SUPERIOR",
+    "TRIGGER_PRECISION_IMPROVED",
+    "TRIGGER_RECALL_IMPROVED",
+    "AUTONOMY_IMPROVED",
+    "CORRECTNESS_IMPROVED",
+    "TOKEN_COST_IMPROVED",
+    "LATENCY_IMPROVED"
+  ],
+  "external_prior_art": [
+    {
+      "repository": "ai-evals-course/evals-skills",
+      "revision": "11d35781d43c281baddd3c6a766b12d81c274c29",
+      "mechanism": "human-labelled train/dev/heldout validation, TPR/TNR, no iteration on held-out test"
+    },
+    {
+      "repository": "openai/plugins",
+      "revision": "1e285826e604f66f7208f7ac4dba0fe8341d1f57",
+      "mechanism": "local deterministic analysis separated from live isolated Codex benchmarking and observed usage"
+    },
+    {
+      "repository": "tardigrde/agent-skill-eval",
+      "revision": "59de161f657b82bfaf8f6abe83dfff38552deb21",
+      "mechanism": "real agent harness, deterministic grading first, repeated runs, cost/time and side-effect evidence"
+    }
+  ],
+  "authority": {
+    "can_accept_skill": false,
+    "can_reject_skill": false,
+    "can_edit_skill": false,
+    "can_mutate_registry": false,
+    "can_change_market_state": false,
+    "can_change_portfolio": false
+  }
+}
