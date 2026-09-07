@@ -1,4 +1,4 @@
-# Codex Intake Skill v1
+# Codex Intake Skill v1.1
 
 Status: ACTIVE OPERATIONAL ROUTING
 Scope: research-to-code remediation handoff only
@@ -65,11 +65,48 @@ A candidate must include:
 - `requires_framework_owner_authority: false`;
 - all forbidden authority classes listed by the schema.
 
+Do not invent new candidate schema fields merely to express a diagnosis. Use the existing objective, evidence, reproduction and acceptance-test surfaces to state what is known and what remains hypothesis.
+
 If evidence is incomplete, route to `NEEDS_MORE_EVIDENCE`. If authority is too broad, reject the Codex route and escalate to framework owner.
+
+## Root-cause discipline before readiness
+
+A reproducible symptom is necessary but not always sufficient for a safe remediation candidate.
+
+Before recommending readiness:
+
+1. identify the smallest reproducible failure surface;
+2. distinguish observed symptom from suspected root cause;
+3. inspect recent relevant changes and a known-working comparison when available;
+4. trace the failing data or control path far enough to identify the component boundary where behavior diverges;
+5. record one primary causal hypothesis when the evidence supports one;
+6. if root cause is not established, label it as unresolved and keep the proposed change bounded enough to test the hypothesis rather than presenting it as a proven fix.
+
+Do not stack multiple speculative fixes into one candidate merely because they are nearby. When independent defects exist, split or link them instead of creating attribution ambiguity.
+
+If repeated fix attempts expose different failures or shared-state coupling, stop treating the task as a simple bounded patch and escalate for architectural review rather than queueing another speculative fix.
+
+## Completion verification discipline
+
+A completion receipt is evidence of closure only when it contains fresh proof from the final merged state.
+
+Required closure evidence, using existing receipt/test surfaces rather than inventing parallel authority:
+
+- the original reproducible symptom or regression case no longer fails;
+- positive acceptance tests pass;
+- negative acceptance tests pass;
+- the relevant bounded regression suite passes when available;
+- the merged code and exact verified commit are the code that was tested;
+- no forbidden change scope was touched;
+- any unresolved assumptions remain explicit.
+
+An agent report, changed diff, green unrelated test or earlier pre-merge run is not sufficient by itself to claim `RESOLVED`.
+
+If fresh verification cannot be obtained, keep the lifecycle state non-final and record the missing evidence. Do not convert confidence into a completion claim.
 
 ## Priority
 
-`EXPEDITED` means queue ordering priority only. It does not bypass evidence, fresh-state binding, CI, review, PR or post-fix gates.
+`EXPEDITED` means queue ordering priority only. It does not bypass evidence, fresh-state binding, root-cause discipline, CI, review, PR or post-fix gates.
 
 ## Observability
 
@@ -98,4 +135,7 @@ Stop intake and escalate if:
 - evidence cannot reproduce the defect;
 - requested paths are broader than needed;
 - the candidate changed after task binding;
-- the task is already fixed or superseded.
+- the task is already fixed or superseded;
+- the proposed fix is presented as proven while the causal diagnosis remains unsupported;
+- repeated failed fixes indicate the problem is architectural rather than a bounded code defect;
+- fresh post-merge verification needed for closure is unavailable.
