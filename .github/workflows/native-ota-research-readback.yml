@@ -5,15 +5,19 @@ on:
     paths:
       - '.github/workflows/native-ota-research-readback.yml'
       - 'scripts/research/native_ota_readback.py'
+      - 'scripts/research/native_ota_adaptive_gate.py'
       - 'tests/research/test_native_ota_readback.py'
+      - 'tests/research/test_native_ota_adaptive_gate.py'
       - 'research/ota_native/**'
   schedule:
-    # Daily settled-transition check after the hourly 00:05 UTC publication path
-    # has had time to persist the prior UTC session.
+    # Cheap daily settled-transition sentinel. Emits only on a settled ETHBTC cross/reclaim.
     - cron: '45 2 * * *'
       timezone: 'Europe/Copenhagen'
-    # Full research readback: Monday + Friday, after the 22:13 live anchor.
-    - cron: '45 22 * * 1,5'
+    # One adaptive Tuesday candidate. The bounded gate decides whether a FULL OTA is worth running.
+    - cron: '45 22 * * 2'
+      timezone: 'Europe/Copenhagen'
+    # One guaranteed full weekly research readback after the 22:13 live anchor.
+    - cron: '45 22 * * 5'
       timezone: 'Europe/Copenhagen'
   workflow_dispatch:
     inputs:
@@ -36,21 +40,28 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-    timeout-minutes: 10
+    timeout-minutes: 12
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Compile deterministic reader
-        run: python -m py_compile scripts/research/native_ota_readback.py
-      - name: Run native OTA regression tests
-        run: python -m unittest tests/research/test_native_ota_readback.py -v
+      - name: Compile deterministic readers
+        run: |
+          python -m py_compile scripts/research/native_ota_readback.py
+          python -m py_compile scripts/research/native_ota_adaptive_gate.py
+      - name: Run Native OTA regression tests
+        run: |
+          python -m unittest tests/research/test_native_ota_readback.py -v
+          python -m unittest tests/research/test_native_ota_adaptive_gate.py -v
       - name: Run archive integration readback without source calls
         run: |
+          mkdir -p runtime/native-ota
           python scripts/research/native_ota_readback.py \
             --trigger PR_VALIDATION \
             --output-status runtime/native-ota/status.json
+          python scripts/research/native_ota_adaptive_gate.py \
+            --output-status runtime/native-ota/adaptive-status.json
           python - <<'PY'
           import json
           from pathlib import Path
@@ -69,6 +80,16 @@ jobs:
           assert 'etf' not in report['gap_accounting']['framework_data_gaps']
           assert 'pullback_forensics' not in report['gap_accounting']['framework_data_gaps']
           assert report['qa']['in_progress_high_may_be_called_cycle_high'] is False
+
+          adaptive=json.loads(Path('04_MARKET_LEARNING/ota_native/adaptive/STATE.json').read_text())
+          assert adaptive['contract']=='NATIVE_OTA_ADAPTIVE_GATE_v1'
+          assert adaptive['canonical_effect'] is False
+          assert adaptive['thresholds_changed'] is False
+          assert adaptive['portfolio_rules_changed'] is False
+          assert adaptive['authority']['portfolio_execution'] is False
+          assert adaptive['authority']['threshold_change'] is False
+          assert adaptive['source_policy']=='READ_EXISTING_GITHUB_OWNERS_ONLY_NO_NEW_MARKET_SOURCE_CALLS'
+          assert adaptive['learning_update'] in {'DAMP_REPEATED_SIGNATURE','BOOST_NOVEL_ACTIVE_SIGNALS'}
           PY
 
   readback:
@@ -76,7 +97,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-    timeout-minutes: 10
+    timeout-minutes: 12
     env:
       SCHEDULE_ID: ${{ github.event.schedule }}
       DISPATCH_MODE: ${{ inputs.mode }}
@@ -92,9 +113,11 @@ jobs:
       - name: Regression guard before production readback
         run: |
           python -m py_compile scripts/research/native_ota_readback.py
+          python -m py_compile scripts/research/native_ota_adaptive_gate.py
           python -m unittest tests/research/test_native_ota_readback.py -v
+          python -m unittest tests/research/test_native_ota_adaptive_gate.py -v
 
-      - name: Resolve fixed versus trigger-only mode
+      - name: Resolve sentinel, adaptive, or fixed mode
         id: mode
         shell: bash
         run: |
@@ -103,9 +126,12 @@ jobs:
           if [[ "${GITHUB_EVENT_NAME}" == "schedule" && "${SCHEDULE_ID}" == "45 2 * * *" ]]; then
             MODE=TRIGGER_ONLY
             TRIGGER=DAILY_SETTLED_TRANSITION_CHECK
-          elif [[ "${GITHUB_EVENT_NAME}" == "schedule" ]]; then
+          elif [[ "${GITHUB_EVENT_NAME}" == "schedule" && "${SCHEDULE_ID}" == "45 22 * * 2" ]]; then
+            MODE=ADAPTIVE
+            TRIGGER=ADAPTIVE_HIGH_VOI
+          elif [[ "${GITHUB_EVENT_NAME}" == "schedule" && "${SCHEDULE_ID}" == "45 22 * * 5" ]]; then
             MODE=FULL
-            TRIGGER=FIXED_MONDAY_FRIDAY
+            TRIGGER=FIXED_WEEKLY_FRIDAY
           elif [[ "${DISPATCH_MODE}" == "TRIGGER_ONLY" ]]; then
             MODE=TRIGGER_ONLY
             TRIGGER=MANUAL_TRIGGER_ONLY
@@ -113,8 +139,28 @@ jobs:
           echo "mode=${MODE}" >> "$GITHUB_OUTPUT"
           echo "trigger=${TRIGGER}" >> "$GITHUB_OUTPUT"
 
+      - name: Evaluate bounded adaptive full-run gate
+        id: adaptive
+        if: steps.mode.outputs.mode == 'ADAPTIVE'
+        shell: bash
+        run: |
+          mkdir -p runtime/native-ota
+          python scripts/research/native_ota_adaptive_gate.py \
+            --output-status runtime/native-ota/adaptive-status.json
+          python - <<'PY' >> "$GITHUB_OUTPUT"
+          import json
+          from pathlib import Path
+          s=json.loads(Path('runtime/native-ota/adaptive-status.json').read_text())
+          state=json.loads(Path('04_MARKET_LEARNING/ota_native/adaptive/STATE.json').read_text())
+          print('evaluated=true')
+          print('run_full=' + ('true' if s['run_full_ota'] else 'false'))
+          print('decision_hash_sha256=' + s['decision_hash_sha256'])
+          print('state_hash_sha256=' + state['state_hash_sha256'])
+          PY
+
       - name: Materialize owner-bound Native OTA readback
         id: readback
+        if: steps.mode.outputs.mode != 'ADAPTIVE' || steps.adaptive.outputs.run_full == 'true'
         shell: bash
         run: |
           mkdir -p runtime/native-ota
@@ -133,16 +179,17 @@ jobs:
           print('report_hash_sha256=' + s['report_hash_sha256'])
           PY
 
-      - name: Commit emitted Native OTA report with readback proof
-        if: steps.readback.outputs.emitted == 'true'
+      - name: Commit emitted OTA or adaptive learning state with readback proof
         shell: bash
         run: |
-          test -f 04_MARKET_LEARNING/ota_native/LATEST.json
+          set -euo pipefail
+          if [[ -d 04_MARKET_LEARNING/ota_native ]]; then
+            git add 04_MARKET_LEARNING/ota_native
+          fi
+          if git diff --cached --quiet; then exit 0; fi
           git config user.name 'framework-research-bot'
           git config user.email 'framework-research-bot@users.noreply.github.com'
-          git add 04_MARKET_LEARNING/ota_native
-          git diff --cached --quiet && exit 0
-          git commit -m "research: native OTA readback ${GITHUB_RUN_ID}"
+          git commit -m "research: native OTA adaptive readback ${GITHUB_RUN_ID}"
           pushed=false
           for attempt in 1 2 3; do
             git rebase --abort 2>/dev/null || true
@@ -155,7 +202,13 @@ jobs:
           [ "$pushed" = true ]
           git fetch origin main
           git merge-base --is-ancestor HEAD origin/main
-          test "$(git show origin/main:04_MARKET_LEARNING/ota_native/LATEST.json | python -c 'import json,sys; print(json.load(sys.stdin)["report_hash_sha256"])')" = "${{ steps.readback.outputs.report_hash_sha256 }}"
+
+          if [[ "${{ steps.readback.outputs.emitted }}" == "true" ]]; then
+            test "$(git show origin/main:04_MARKET_LEARNING/ota_native/LATEST.json | python -c 'import json,sys; print(json.load(sys.stdin)["report_hash_sha256"])')" = "${{ steps.readback.outputs.report_hash_sha256 }}"
+          fi
+          if [[ "${{ steps.adaptive.outputs.evaluated }}" == "true" ]]; then
+            test "$(git show origin/main:04_MARKET_LEARNING/ota_native/adaptive/STATE.json | python -c 'import json,sys; print(json.load(sys.stdin)["decision_hash_sha256"])')" = "${{ steps.adaptive.outputs.decision_hash_sha256 }}"
+          fi
 
       - uses: actions/upload-artifact@v4
         if: always()
@@ -164,5 +217,6 @@ jobs:
           path: |
             runtime/native-ota/
             04_MARKET_LEARNING/ota_native/LATEST.json
+            04_MARKET_LEARNING/ota_native/adaptive/STATE.json
           retention-days: 14
           if-no-files-found: warn

@@ -1,0 +1,47 @@
+{
+  "contract": "NATIVE_OTA_ADAPTIVE_POLICY_v1",
+  "schema_version": 1,
+  "purpose": "Adapt Native OTA cadence and research attention without changing market semantics or authority.",
+  "cadence": {
+    "daily_settled_trigger_sentinel": true,
+    "adaptive_candidate_weekday": "TUESDAY",
+    "fixed_full_weekday": "FRIDAY",
+    "fixed_full_runs_per_iso_week": 1,
+    "max_full_runs_per_iso_week": 2,
+    "minimum_hours_between_full_runs": 72
+  },
+  "adaptive_gate": {
+    "run_score_threshold": 3.0,
+    "breadth_support_reference_read_only": 0.50,
+    "breadth_material_delta_abs": 0.15,
+    "initial_attention_weights": {
+      "settled_transition": 1.25,
+      "classified_new_information": 1.10,
+      "classified_evidential": 1.00,
+      "breadth_regime_change": 1.00,
+      "breadth_material_delta": 0.90,
+      "research_novelty": 0.80,
+      "framework_data_gap": 0.70
+    },
+    "attention_weight_bounds": [0.75, 1.25],
+    "novel_signal_step": 0.05,
+    "repeated_signal_step": -0.05
+  },
+  "self_development_scope": [
+    "ADAPTIVE_CADENCE",
+    "RESEARCH_ATTENTION_PRIORITY",
+    "REDUNDANCY_DAMPING",
+    "NOVELTY_WEIGHTING"
+  ],
+  "immutable_guards": {
+    "canonical_state_change": false,
+    "market_rule_change": false,
+    "threshold_change": false,
+    "portfolio_execution": false,
+    "experiment_promotion": false,
+    "automatic_weight_change_to_market_model": false,
+    "new_market_source_calls": false
+  },
+  "source_policy": "READ_EXISTING_GITHUB_OWNERS_ONLY_NO_NEW_MARKET_SOURCE_CALLS",
+  "fail_closed": true
+}
