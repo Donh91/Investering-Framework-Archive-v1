@@ -1,28 +1,28 @@
 # Operations Dashboard
 
 Overall: **RED**
-Generated: `2026-09-06T18:02:45.727796Z`
+Generated: `2026-09-07T09:09:47.602373Z`
 
 ## Systems
 
 | System | Status | Detail | Age hours |
 |---|---:|---|---:|
-| `daily_capture` | **GREEN** | FRESH | 2.605 |
-| `openai_daily_director` | **GREEN** | FRESH | 1.608 |
-| `weekly_output` | **GREEN** | FRESH | 155.992 |
+| `daily_capture` | **GREEN** | FRESH | 4.447 |
+| `openai_daily_director` | **GREEN** | FRESH | 10.127 |
+| `weekly_output` | **GREEN** | FRESH | 3.99 |
 | `automation_health` | **RED** | - | - |
 | `architecture_health` | **GREEN** | - | - |
-| `experiment_lifecycle` | **GREEN** | FRESH | 1.603 |
-| `experiment_receipt_sync` | **GREEN** | FRESH | 11.935 |
-| `remediation_maturation` | **GREEN** | FRESH | 0.362 |
+| `experiment_lifecycle` | **GREEN** | FRESH | 2.878 |
+| `experiment_receipt_sync` | **GREEN** | FRESH | 2.888 |
+| `remediation_maturation` | **GREEN** | FRESH | 0.513 |
 
 ## AI and learning activity
 
-- OpenAI receipts this month: **64**
-- OpenAI cost this month: **$6.951450**
-- Pending forecast candidates: **154**
-- Experiment candidates: **219**
-- Experiment dispatch requests: **2395**
+- OpenAI receipts this month: **71**
+- OpenAI cost this month: **$7.532743**
+- Pending forecast candidates: **157**
+- Experiment candidates: **220**
+- Experiment dispatch requests: **2488**
 - Codex-ready remediation tasks: **21**
 - Needs-more-evidence items: **14**
 
@@ -34,4 +34,4 @@ Open incident references: **20**
 
 - **P0** `automation_health` - ['daily-slow-cycle-shadow.yml:LATEST_RUN_FAILED', 'daily-slow-cycle-shadow.yml:REPEATED_CONSECUTIVE_FAILURES']
 
-Dashboard SHA-256: `ad7df2b2e0e0aabaa2d42e4fc3e179f2a2413c1124afae7fed2707022fa35ca4`
+Dashboard SHA-256: `9de4fdf8f29af426c22f7bee0155dc4b2faac99af5d896aabb27a98e417ba672`
