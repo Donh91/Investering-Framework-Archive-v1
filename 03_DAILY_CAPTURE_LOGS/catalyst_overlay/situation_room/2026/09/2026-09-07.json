@@ -2,18 +2,46 @@
   "authority": "RESEARCH_ONLY_NON_CANONICAL",
   "canonical_effect": false,
   "contract": "SITUATION_ROOM_DAILY_OWNER_v1",
-  "current_unverified_discoveries": [],
-  "daily_result": "NO_NEW_MATERIAL_CATALYST",
-  "detection_time_utc": "2026-09-07T09:16:54Z",
+  "current_unverified_discoveries": [
+    {
+      "detection_time_utc": "2026-09-07T12:33:47Z",
+      "event_time_precision": "TIMESTAMP",
+      "event_time_utc": "2026-09-07T06:00:21.539000Z",
+      "source_id": "SITUATION_ROOM",
+      "source_receipt": {
+        "bytes": 148255,
+        "error_class": null,
+        "fetched_at_utc": "2026-09-07T12:33:47Z",
+        "http_status": 200,
+        "role": "DISCOVERY_ONLY",
+        "sha256": "a504aac238caed9d1e4eff56a721ed6e2989f0a2a1c6ed9d87d0099f9722cf77",
+        "source_id": "SITUATION_ROOM",
+        "status": "PASS",
+        "url": "https://situationroom.space/briefing/2026-09-07"
+      },
+      "source_role": "DISCOVERY_ONLY",
+      "title": "US tanker strikes lift Brent above 96 dollars \u2014 Situation Room",
+      "url": "https://situationroom.space/briefing/2026-09-07",
+      "verification_status": "DISCOVERY_UNVERIFIED"
+    }
+  ],
+  "daily_result": "REVIEW_REQUIRED_UNVERIFIED_DISCOVERY",
+  "detection_time_utc": "2026-09-07T12:33:47Z",
   "events": [],
   "market_reaction_observations": [],
   "market_reaction_separate_from_event": true,
   "market_state_effect": false,
   "observation_date_utc": "2026-09-07",
   "portfolio_effect": false,
+  "retrieval": {
+    "dynamic_archive_shell_not_required": true,
+    "situation_room_archive_url": "https://situationroom.space/briefings",
+    "situation_room_daily_url": "https://situationroom.space/briefing/2026-09-07",
+    "strategy": "DETERMINISTIC_STATIC_DAILY_BRIEFING"
+  },
   "retroactive_candidate_eligibility": false,
-  "run_id": "SRDO_1a56ecd8e23a98e9",
-  "run_status": "PASS",
+  "run_id": "SRDO_e95cb4abab16aa3d",
+  "run_status": "DEGRADED",
   "shared_row_tournament_eligible": false,
   "situation_room_role": "DISCOVERY_ONLY",
   "source_coverage": {
@@ -21,34 +49,34 @@
     "primary_total": 5,
     "receipts": [
       {
-        "bytes": 0,
-        "error_class": "URLError",
-        "fetched_at_utc": "2026-09-07T09:16:54Z",
-        "http_status": null,
+        "bytes": 148255,
+        "error_class": null,
+        "fetched_at_utc": "2026-09-07T12:33:47Z",
+        "http_status": 200,
         "role": "DISCOVERY_ONLY",
-        "sha256": null,
+        "sha256": "a504aac238caed9d1e4eff56a721ed6e2989f0a2a1c6ed9d87d0099f9722cf77",
         "source_id": "SITUATION_ROOM",
-        "status": "FAIL",
-        "url": "https://situationroom.space/briefings"
+        "status": "PASS",
+        "url": "https://situationroom.space/briefing/2026-09-07"
       },
       {
-        "bytes": 95651,
+        "bytes": 95652,
         "error_class": null,
-        "fetched_at_utc": "2026-09-07T09:17:02Z",
+        "fetched_at_utc": "2026-09-07T12:33:48Z",
         "http_status": 200,
         "role": "PRIMARY",
-        "sha256": "3739eae3ec63de1ff62268574f45cffa1fb9b0f76c6420dcdd19e9e17de2b968",
+        "sha256": "a1eacbaed6e498e869c1af2fe9d12eb127a05f4909d7af21a8a40ca6f081ece0",
         "source_id": "SEC",
         "status": "PASS",
         "url": "https://www.sec.gov/newsroom/press-releases"
       },
       {
-        "bytes": 71637,
+        "bytes": 71635,
         "error_class": null,
-        "fetched_at_utc": "2026-09-07T09:17:02Z",
+        "fetched_at_utc": "2026-09-07T12:33:48Z",
         "http_status": 200,
         "role": "PRIMARY",
-        "sha256": "c444d88e6de06e0bd10ba27aef28e556f2ee21aa15d1530f4f4994bd40c338c4",
+        "sha256": "78f255eb3643a2957a2503cec7c22ba2b43701574879d58ed3d9bc15684989bf",
         "source_id": "TREASURY",
         "status": "PASS",
         "url": "https://home.treasury.gov/news/press-releases"
@@ -56,7 +84,7 @@
       {
         "bytes": 261037,
         "error_class": null,
-        "fetched_at_utc": "2026-09-07T09:17:02Z",
+        "fetched_at_utc": "2026-09-07T12:33:49Z",
         "http_status": 200,
         "role": "PRIMARY",
         "sha256": "b9417957fd29d9f418cfb339b18b920d45ce92d53b16a8c83f17fbae267954f0",
@@ -67,10 +95,10 @@
       {
         "bytes": 65405,
         "error_class": null,
-        "fetched_at_utc": "2026-09-07T09:17:02Z",
+        "fetched_at_utc": "2026-09-07T12:33:49Z",
         "http_status": 200,
         "role": "PRIMARY",
-        "sha256": "bc97acf9f0cfb32103fa05c613ff623eaf6b382586cfbb9a58172586d3f54afd",
+        "sha256": "b31b9303c7a626ac9ec863037e34ed81af1d7675fa3b9e4a94ea609d561ef030",
         "source_id": "CFTC",
         "status": "PASS",
         "url": "https://www.cftc.gov/PressRoom/PressReleases"
@@ -78,10 +106,10 @@
       {
         "bytes": 87266,
         "error_class": null,
-        "fetched_at_utc": "2026-09-07T09:17:02Z",
+        "fetched_at_utc": "2026-09-07T12:33:49Z",
         "http_status": 200,
         "role": "PRIMARY",
-        "sha256": "935e606940f2cfc34486248d988c258238143ba3124e6771f9755a12babc61f5",
+        "sha256": "a0f4da74899f86d52bcd71bb75b98a034dcb98e41e31006f9502d75b46929ba9",
         "source_id": "FEDERAL_RESERVE",
         "status": "PASS",
         "url": "https://www.federalreserve.gov/newsevents/pressreleases.htm"
@@ -89,5 +117,27 @@
     ]
   },
   "unresolved_candidates": [],
-  "unverified_discoveries": []
+  "unverified_discoveries": [
+    {
+      "detection_time_utc": "2026-09-07T12:33:47Z",
+      "event_time_precision": "TIMESTAMP",
+      "event_time_utc": "2026-09-07T06:00:21.539000Z",
+      "source_id": "SITUATION_ROOM",
+      "source_receipt": {
+        "bytes": 148255,
+        "error_class": null,
+        "fetched_at_utc": "2026-09-07T12:33:47Z",
+        "http_status": 200,
+        "role": "DISCOVERY_ONLY",
+        "sha256": "a504aac238caed9d1e4eff56a721ed6e2989f0a2a1c6ed9d87d0099f9722cf77",
+        "source_id": "SITUATION_ROOM",
+        "status": "PASS",
+        "url": "https://situationroom.space/briefing/2026-09-07"
+      },
+      "source_role": "DISCOVERY_ONLY",
+      "title": "US tanker strikes lift Brent above 96 dollars \u2014 Situation Room",
+      "url": "https://situationroom.space/briefing/2026-09-07",
+      "verification_status": "DISCOVERY_UNVERIFIED"
+    }
+  ]
 }
