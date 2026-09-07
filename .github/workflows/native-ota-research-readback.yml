@@ -13,8 +13,8 @@ on:
     # Cheap daily settled-transition sentinel. Emits only on a settled ETHBTC cross/reclaim.
     - cron: '45 2 * * *'
       timezone: 'Europe/Copenhagen'
-    # One adaptive midweek candidate. The bounded gate decides whether a FULL OTA is worth running.
-    - cron: '45 22 * * 3'
+    # One adaptive Tuesday candidate. The bounded gate decides whether a FULL OTA is worth running.
+    - cron: '45 22 * * 2'
       timezone: 'Europe/Copenhagen'
     # One guaranteed full weekly research readback after the 22:13 live anchor.
     - cron: '45 22 * * 5'
@@ -126,7 +126,7 @@ jobs:
           if [[ "${GITHUB_EVENT_NAME}" == "schedule" && "${SCHEDULE_ID}" == "45 2 * * *" ]]; then
             MODE=TRIGGER_ONLY
             TRIGGER=DAILY_SETTLED_TRANSITION_CHECK
-          elif [[ "${GITHUB_EVENT_NAME}" == "schedule" && "${SCHEDULE_ID}" == "45 22 * * 3" ]]; then
+          elif [[ "${GITHUB_EVENT_NAME}" == "schedule" && "${SCHEDULE_ID}" == "45 22 * * 2" ]]; then
             MODE=ADAPTIVE
             TRIGGER=ADAPTIVE_HIGH_VOI
           elif [[ "${GITHUB_EVENT_NAME}" == "schedule" && "${SCHEDULE_ID}" == "45 22 * * 5" ]]; then
