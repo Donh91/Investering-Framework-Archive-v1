@@ -1,4 +1,4 @@
-# Codex Intake Skill v1.1
+# Codex Intake Skill v1
 
 Status: ACTIVE OPERATIONAL ROUTING
 Scope: research-to-code remediation handoff only
