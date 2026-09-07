@@ -1,6 +1,6 @@
 ---
 name: skill-quality-gate
-description: 'Evaluate a new or changed Investering agent skill against a frozen baseline before acceptance. Use for skill creation, skill modification, skill audit, trigger tuning, regression review, retirement review, or requests to prove that a skill change is actually better. Differentiator: requires immutable baseline binding, representative cases, evaluator separation, deterministic regressions, blind comparative judgment where needed, baseline-without-skill value checks, and fresh verification before any acceptance claim. Read-only evaluation only; it cannot edit, register, promote, disable, or delete skills.'
+description: 'Evaluate a new or changed Investering agent skill against a frozen baseline before acceptance. Use for skill creation, skill modification, skill audit, trigger tuning, regression review, retirement review, or requests to prove that a skill change is actually better. Differentiator: requires immutable baseline binding, representative cases, evaluator separation, deterministic regressions, calibrated judge evidence where subjective evaluation is load-bearing, baseline-without-skill value checks, and fresh verification before any acceptance claim. Read-only evaluation only; it cannot edit, register, promote, disable, or delete skills.'
 ---
 
 # Skill Quality Gate
@@ -38,8 +38,9 @@ Read:
 7. `00_ARCHIVE_CONTROL/CROSS_REPO_AGENT_CONTEXT_MAP.json`
 8. `07_PROMPTS_AND_AGENTS/skill_quality_gate/BASELINES.json`
 9. `07_PROMPTS_AND_AGENTS/skill_quality_gate/EVAL_CASES.json`
-10. the exact baseline and candidate skill files or immutable refs being compared
-11. relevant historical skill-run receipts when they encode a real regression case
+10. `07_PROMPTS_AND_AGENTS/skill_quality_gate/EVALUATOR_CALIBRATION_CONTRACT_v1.json`
+11. the exact baseline and candidate skill files or immutable refs being compared
+12. relevant historical skill-run receipts when they encode a real regression case
 
 Do not load the full archive by default.
 
@@ -77,6 +78,8 @@ candidate_blob_sha_or_branch_ref:
 case_set_path:
 case_set_sha_or_commit:
 evaluator_identity_or_method:
+evaluator_calibration_state:
+evaluator_calibration_ref:
 model_and_effort_if_runtime:
 run_isolation_status:
 ```
@@ -145,7 +148,8 @@ When runtime execution is available:
 3. isolate unrelated user-level plugins, hooks, memory and output styles when the harness supports it;
 4. label outputs neutrally, such as `A` and `B`, before comparative judgment;
 5. record which condition was which only after scoring;
-6. preserve failed or incomplete runs instead of silently dropping them.
+6. preserve failed or incomplete runs instead of silently dropping them;
+7. repeat stochastic comparisons before making a superiority claim; one stochastic run is evidence of one run, not stable performance.
 
 Recommended dimensions:
 
@@ -159,6 +163,34 @@ CONCISION
 ```
 
 Correctness, authority compliance and safety are release blockers when materially worse.
+
+### Evaluator calibration gate
+
+Any LLM/model judge used for a load-bearing subjective acceptance or rejection claim must comply with:
+
+```text
+07_PROMPTS_AND_AGENTS/skill_quality_gate/EVALUATOR_CALIBRATION_CONTRACT_v1.json
+```
+
+Allowed calibration states:
+
+```text
+NOT_USED
+UNCALIBRATED_ADVISORY
+CALIBRATED_DEV_ONLY
+CALIBRATED_HELDOUT
+```
+
+Rules:
+
+- `UNCALIBRATED_ADVISORY` has zero release authority;
+- `CALIBRATED_DEV_ONLY` remains advisory and cannot by itself accept or reject a candidate;
+- only `CALIBRATED_HELDOUT` may support a load-bearing subjective comparison, and even then it cannot override a deterministic blocker, critical regression, authority failure or safety failure;
+- judge prompt/rubric, model/snapshot, label schema or material case-distribution changes invalidate prior calibration until revalidated;
+- human-labelled calibration data and train/dev/test separation must be bound when calibration is claimed;
+- missing calibration evidence is `UNKNOWN`, never inferred from judge confidence or eloquence.
+
+If the judge is not sufficiently calibrated, complete the deterministic evaluation and report the subjective result as advisory or `NOT_EXECUTED`; do not manufacture a FULL_GATE verdict.
 
 ## 6. Trigger quality
 
@@ -249,6 +281,8 @@ SKILL_QUALITY_GATE_VERDICT:
   candidate_ref:
   case_set_ref:
   evaluator_separated: YES | NO | UNKNOWN
+  evaluator_calibration_state: NOT_USED | UNCALIBRATED_ADVISORY | CALIBRATED_DEV_ONLY | CALIBRATED_HELDOUT
+  evaluator_calibration_ref:
   deterministic_blockers: []
   critical_regressions: []
   trigger_result: PASS | PARTIAL | FAIL | NOT_EXECUTED
@@ -273,6 +307,7 @@ Allowed only when:
 - no critical regression exists;
 - authority and safety do not regress;
 - required deterministic checks pass;
+- any load-bearing subjective judgment has valid calibration evidence under the calibration contract, or acceptance rests only on deterministic evidence appropriate to the claimed change;
 - the executed comparison supports improvement or necessary compatibility;
 - completion verification is fresh and sufficient for the evaluation mode.
 
@@ -296,6 +331,8 @@ Use when baseline binding, evaluator separation, required source authority, crit
 
 - No self-evaluation or self-promotion by the skill under test.
 - No candidate acceptance from prose quality alone.
+- No uncalibrated LLM judge as hidden release authority.
+- No one-run stochastic superiority claim.
 - No critical regression averaged away.
 - No automatic edits, registry changes, merges, disabling or deletion.
 - No external skill treated as active authority.
