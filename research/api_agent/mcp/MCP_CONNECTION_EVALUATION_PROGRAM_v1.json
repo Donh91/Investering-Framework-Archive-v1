@@ -1,8 +1,8 @@
 {
   "contract": "MCP_CONNECTION_EVALUATION_PROGRAM_v1",
-  "contract_revision": "1.0",
+  "contract_revision": "1.1",
   "status": "OPERATIONAL_SEQUENTIAL_PILOT",
-  "purpose": "Evaluate agent-data connections one at a time for bounded research value, redundancy, reliability, provenance and safety before any broader integration.",
+  "purpose": "Evaluate agent-data connections one at a time for bounded research value, redundancy, reliability, provenance, agent usability and safety before any broader integration.",
   "execution": {
     "sequential": true,
     "max_active_provider_trials": 1,
@@ -27,12 +27,47 @@
     {"rank": 6, "provider": "Binance", "contract_path": "research/api_agent/mcp/BINANCE_AGENT_NATIVE_RESEARCH_v1.json", "role": "PUBLIC_MARKET_DIAGNOSTICS_RESEARCH", "promotion_ceiling": "DIAGNOSTICS_ACTIVE", "initial_state": "OFFICIAL_AGENT_NATIVE_VERIFIED_MCP_SURFACE_UNVERIFIED"}
   ],
   "stages": ["OFFICIAL_DOCS_VERIFICATION", "AUTHORITY_AND_SECRET_BOUNDARY", "MCP_TOOL_DISCOVERY_NO_EXECUTION", "READ_ONLY_ALLOWLIST_VERIFICATION", "BOUNDED_LIVE_SMOKE", "BOUNDED_RESEARCH_CHALLENGE", "REDUNDANCY_AND_INCREMENTAL_VALUE_REVIEW", "RESEARCH_LAB_RED_TEAM_REVIEW", "SHADOW_OBSERVATION_IF_JUSTIFIED", "KEEP_HOLD_KILL_CLASSIFICATION"],
+  "agent_usability_gate": {
+    "applies_within_stage": "BOUNDED_RESEARCH_CHALLENGE",
+    "purpose": "Test whether a research agent can reliably solve a real bounded question with the admitted tool surface, not merely whether the endpoint responds.",
+    "minimum_challenge_properties": [
+      "READ_ONLY",
+      "REALISTIC_FOR_FRAMEWORK_RESEARCH",
+      "INDEPENDENT_OF_OTHER_CHALLENGES",
+      "ANSWER_OR_RESULT_VERIFIABLE",
+      "STABLE_ENOUGH_FOR_THE_TEST_WINDOW"
+    ],
+    "record": [
+      "challenge_id",
+      "tool_selection_success",
+      "required_tool_calls",
+      "unexpected_or_mutating_tool_attempts",
+      "schema_or_description_ambiguity",
+      "pagination_or_filtering_result",
+      "context_payload_fit",
+      "error_actionability",
+      "retry_or_failure_count",
+      "provenance_preserved",
+      "final_result_verifiable",
+      "manual_corrections_required"
+    ],
+    "rules": {
+      "tool_discovery_alone_is_not_usability_pass": true,
+      "one_successful_http_response_is_not_usability_pass": true,
+      "mutation_attempt_is_hard_blocker": true,
+      "missing_provenance_blocks_decision_evidence": true,
+      "unknown_metrics_remain_unknown": true,
+      "aggregate_score_cannot_override_hard_blocker": true
+    }
+  },
+  "source_recovery_policy": "research/api_agent/SOURCE_RECOVERY_POLICY_v1.json",
   "hard_blockers": ["UNOFFICIAL_OR_UNVERIFIED_SERVER", "SECRET_VALUE_PERSISTED_OR_ECHOED", "TRADING_OR_ORDER_EXECUTION_REQUIRED", "FUND_MOVEMENT_REQUIRED", "PORTFOLIO_OR_ACCOUNT_ACCESS_REQUIRED_FOR_PILOT", "MUTATING_TOOL_CALLED", "READ_ONLY_ALLOWLIST_NOT_ENFORCEABLE", "CANONICAL_OWNER_REPLACEMENT_REQUIRED", "PRODUCTION_DEPENDENCY_REQUIRED", "PROVENANCE_NOT_PRESERVABLE", "UNBOUNDED_PROVIDER_COST_OR_PAYMENT"],
   "score": {
     "scale": 100,
     "dimensions": {"connection_reliability": 20, "research_question_coverage": 20, "incremental_information_value": 20, "provenance_and_reproducibility": 15, "crosscheck_quality": 10, "operational_friction": 5, "cost_fit": 5, "failure_isolation": 5},
     "classification": {"KEEP_RESEARCH_ACTIVE_MIN": 80, "KEEP_BOUNDED_OR_SHADOW_MIN": 65, "HOLD_MIN": 50, "KILL_BELOW": 50},
-    "hard_blocker_overrides_score": true
+    "hard_blocker_overrides_score": true,
+    "agent_usability_is_gate_not_new_weight": true
   },
   "ai_review": {
     "required": true,
