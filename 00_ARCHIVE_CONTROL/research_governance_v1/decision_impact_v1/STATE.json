@@ -4,11 +4,26 @@
   "canonical_effect": false,
   "contract": "RESEARCH_DECISION_IMPACT_VOI_STATE_v1",
   "deep_research_authorized": false,
-  "evidence_fingerprint": "cf03201469c2214fbff63c49a894e997afc6265d54aff14c8162ce73f65ef235",
+  "evidence_fingerprint": "56280784cbb5eebb6502b797ccb465ed8706834fe09c89aaa119f35c75adc00b",
   "external_provider_calls_authorized": false,
   "paid_data_authorized": false,
   "portfolio_execution": false,
   "queue": [
+    {
+      "action": "RUN_INCREMENTAL_VALUE_TEST",
+      "canonical_effect": false,
+      "decision_surface": "SENSOR_PORTFOLIO_QUALITY",
+      "deep_research_authorized": false,
+      "evidence_fingerprint": "5c0e9668699e8e80f6e24a421282306f2cc9ccfe700e8f86f31f8f516fe293f7",
+      "impact_tier": "MEDIUM",
+      "novelty_verdict": "REOPEN_WITH_NEW_EVIDENCE",
+      "paid_data_authorized": false,
+      "paid_review_only": false,
+      "portfolio_execution": false,
+      "reason": "Matured supportive evidence requires incremental-value review before any promotion.",
+      "source": "MONTHLY_COUNCIL",
+      "target": "EC-3b9478b26fe667b5b496"
+    },
     {
       "action": "RECOVER_EVALUATOR",
       "canonical_effect": false,
@@ -83,29 +98,14 @@
       "reason": "novelty gate blocked duplicate proposal (DUPLICATE_EXACT)",
       "source": "COMPOUNDING_LEARNING",
       "target": "EC-bdf6c7853fbc34fb9622"
-    },
-    {
-      "action": "RUN_INCREMENTAL_VALUE_TEST",
-      "canonical_effect": false,
-      "decision_surface": "SENSOR_PORTFOLIO_QUALITY",
-      "deep_research_authorized": false,
-      "evidence_fingerprint": "d41c4bb2b5890afce152700d83299007906f13265ab17168b06746e3cf66820c",
-      "impact_tier": "BLOCKED",
-      "novelty_verdict": "DUPLICATE_EXACT",
-      "paid_data_authorized": false,
-      "paid_review_only": false,
-      "portfolio_execution": false,
-      "reason": "novelty gate blocked duplicate proposal (DUPLICATE_EXACT)",
-      "source": "MONTHLY_COUNCIL",
-      "target": "EC-3b9478b26fe667b5b496"
     }
   ],
   "queue_n": 6,
-  "reason": "registered source material exists but exact evaluator recovery is still required",
+  "reason": "Matured supportive evidence requires incremental-value review before any promotion.",
   "resolved_specialist_state_n": 6,
-  "selected_action": "RECOVER_EVALUATOR",
+  "selected_action": "RUN_INCREMENTAL_VALUE_TEST",
   "selected_decision_surface": "SENSOR_PORTFOLIO_QUALITY",
   "selected_impact_tier": "MEDIUM",
-  "selected_source": "SHADOW_REGISTRY",
-  "selected_target": "CYCLE_NAVIGATOR_RESEARCH_FAMILY"
+  "selected_source": "MONTHLY_COUNCIL",
+  "selected_target": "EC-3b9478b26fe667b5b496"
 }
