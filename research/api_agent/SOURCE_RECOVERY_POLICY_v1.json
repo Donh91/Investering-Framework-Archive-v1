@@ -1,0 +1,106 @@
+{
+  "contract": "PUBLIC_READ_ONLY_SOURCE_RECOVERY_POLICY_v1",
+  "status": "ACTIVE_RESEARCH_ACQUISITION_BOUNDARY",
+  "effective_date": "2026-09-07",
+  "purpose": "Define a fail-closed ladder for recovering useful public research data from websites without turning browser observation, undocumented endpoints or session material into canonical authority.",
+  "scope": [
+    "PUBLIC_RESEARCH_SOURCES",
+    "PUBLIC_DASHBOARDS",
+    "DOCUMENTED_OR_OBSERVED_READ_ONLY_ENDPOINTS",
+    "RESEARCH_RECOVERY_CANDIDATES"
+  ],
+  "out_of_scope": [
+    "ACCESS_CONTROL_BYPASS",
+    "ACCOUNT_OR_PRIVATE_DATA_EXTRACTION",
+    "MUTATING_ENDPOINTS",
+    "PORTFOLIO_OR_TRADING_EXECUTION",
+    "CREDENTIAL_COLLECTION",
+    "RESTRICTED_PROVIDER_VALUES_IN_CONTROL_PLANE"
+  ],
+  "recovery_ladder": [
+    "OFFICIAL_DOCUMENTED_API_OR_DOWNLOAD",
+    "CURRENT_PUBLIC_STATIC_OR_SERVER_RENDERED_SOURCE",
+    "PUBLIC_BROWSER_RENDER_IF_REQUIRED",
+    "PUBLIC_NETWORK_OBSERVATION_IF_NECESSARY_AND_AUTHORIZED",
+    "ENDPOINT_AND_ACCESS_CLASSIFICATION",
+    "BOUNDED_READ_ONLY_DIRECT_REPLAY",
+    "PROVENANCE_AND_STABILITY_BINDING",
+    "SOURCE_CONTRACT_REVIEW",
+    "COLLECTOR_IMPLEMENTATION_ONLY_AFTER_SEPARATE_AUTHORIZATION"
+  ],
+  "rules": {
+    "official_documented_source_preferred": true,
+    "browser_is_recovery_not_authority": true,
+    "observed_endpoint_is_unversioned_until_proven_otherwise": true,
+    "direct_replay_must_be_read_only": true,
+    "repeat_observation_required_before_stability_claim": true,
+    "provenance_required": true,
+    "terms_rate_limits_and_access_conditions_must_be_respected": true,
+    "missing_or_blocked_access_is_unknown_not_permission": true,
+    "recovered_endpoint_cannot_replace_canonical_owner_automatically": true,
+    "collector_requires_separate_source_contract_and_governance": true
+  },
+  "temporary_capture_boundary": {
+    "har_or_equivalent_may_contain_credentials": true,
+    "commit_har_to_control_plane": false,
+    "commit_session_cookies_or_tokens": false,
+    "commit_authorization_headers": false,
+    "commit_private_post_bodies": false,
+    "redact_or_delete_secret_bearing_capture_after_bounded_use": true,
+    "credential_plane_rules_remain_in_force": true
+  },
+  "hard_blockers": [
+    "AUTHENTICATION_OR_ACCESS_CONTROL_BYPASS_REQUIRED",
+    "SESSION_OR_ACCOUNT_CREDENTIAL_REPLAY_REQUIRED_WITHOUT_EXPLICIT_AUTHORITY",
+    "MUTATING_OR_WRITE_ENDPOINT_REQUIRED",
+    "PRIVATE_ACCOUNT_OR_PROVIDER_DATA_REQUIRED",
+    "TERMS_OR_ACCESS_CONDITION_UNRESOLVED_FOR_PRODUCTION_USE",
+    "RATE_LIMIT_CANNOT_BE_RESPECTED",
+    "CREDENTIAL_OR_SECRET_BEARING_CAPTURE_WOULD_ENTER_CONTROL_PLANE",
+    "PROVENANCE_NOT_PRESERVABLE",
+    "ENDPOINT_STABILITY_NOT_TESTABLE",
+    "CANONICAL_OWNER_REPLACEMENT_REQUIRED"
+  ],
+  "classification": {
+    "DOCUMENTED_PUBLIC_SOURCE": "May proceed through normal source-contract review.",
+    "OBSERVED_PUBLIC_READ_ONLY_ENDPOINT": "Maximum status RESEARCH_RECOVERY_CANDIDATE until separate source-contract review.",
+    "SESSION_BOUND_ENDPOINT": "HOLD or REJECT unless an explicit authorized and policy-compliant access contract exists.",
+    "MUTATING_ENDPOINT": "REJECT for source recovery.",
+    "ACCESS_BYPASS_REQUIRED": "REJECT."
+  },
+  "minimum_provenance": [
+    "source_url_or_endpoint",
+    "observation_timestamp_utc",
+    "request_method",
+    "access_classification",
+    "response_schema_or_content_identity_when_relevant",
+    "source_owner_or_domain",
+    "retrieval_method",
+    "stability_replay_result",
+    "terms_or_access_review_status",
+    "source_contract_or_research_receipt_ref"
+  ],
+  "authority": {
+    "canonical_data_owner": false,
+    "framework_state_change": false,
+    "portfolio_action": false,
+    "market_rule_change": false,
+    "threshold_change": false,
+    "weight_change": false,
+    "new_engine": false,
+    "automatic_new_sensor": false
+  },
+  "external_prior_art": {
+    "repository": "vercel-labs/agent-browser",
+    "revision": "219c47a9dab1776f320d11e66ce934fd239b2cb7",
+    "inspected_path": "skill-data/derive-client/SKILL.md",
+    "adopted_mechanism": "browser observation may identify a more efficient direct data path for repeated read-only research",
+    "rejected_or_hardened": [
+      "NO_GENERIC_REVERSE_ENGINEERING_AUTHORITY",
+      "NO_AUTH_BYPASS",
+      "NO_SESSION_SECRET_COMMIT",
+      "NO_WRITE_ENDPOINTS",
+      "NO_AUTOMATIC_CANONICAL_PROMOTION"
+    ]
+  }
+}
