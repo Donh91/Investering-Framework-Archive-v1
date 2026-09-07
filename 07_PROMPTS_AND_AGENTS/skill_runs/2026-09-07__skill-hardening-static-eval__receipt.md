@@ -12,7 +12,7 @@ Evaluation mode: `STATIC_ONLY`
 Baseline manifest: `07_PROMPTS_AND_AGENTS/skill_quality_gate/BASELINES.json`  
 Representative case set: `07_PROMPTS_AND_AGENTS/skill_quality_gate/EVAL_CASES.json`  
 Candidate branch base: `db69f28678ea1e8ae01bf6e6a2b4645cce12940e`  
-Candidate branch head after hardening: `fa6061400986dc6a114e90c8403121fdfcd6b01e`
+Candidate file state verified through commit: `549295cf8ad417d4e51ef93a1c5216eaac99b143`
 
 This receipt does not claim runtime A/B execution, token/cost improvement, trigger precision/recall improvement or no-skill baseline superiority.
 
@@ -54,7 +54,7 @@ Deterministic comparison findings:
 skill_name: codex-intake
 evaluation_mode: STATIC_ONLY
 baseline_blob_sha: 581af55e65b4c0a6dad038daca05c9a55c35d355
-candidate_blob_sha: 56d22e5fbc2b8b30f10d55364dbd02f81ea1197e
+candidate_blob_sha: d908a540a96c33de7dd9098c08d9547760024bc7
 evaluator_separated: YES
 deterministic_blockers: []
 critical_regressions: []
@@ -74,6 +74,7 @@ behavioral_improvement_claimed: NO
 Deterministic comparison findings:
 
 - Existing routing-only authority and `LATEST_CODEX_READY_TASKS.json` queue authority are preserved.
+- The public version label remains `v1`, consistent with the current skill registry; this is additive hardening, not a new authority generation.
 - No candidate schema field was invented; the hardening explicitly reuses existing objective, evidence, reproduction and acceptance-test surfaces.
 - Added discipline separates observed symptom from suspected root cause and blocks speculative fix bundles.
 - Repeated failed fixes now trigger architectural escalation instead of unlimited patch attempts.
