@@ -123,3 +123,81 @@ CFGI itself states that its sentiment is a gauge rather than a price predictor a
 ### Promotion test
 
 No NMST or CFGI-derived strategy logic may be promoted solely because it exists in the same ecosystem or looks polished. Promotion requires reproducible post-cost evidence under `GOVERNANCE.md`, with forward or walk-forward survival and an explicit kill criterion.
+
+---
+
+## AT-SRC-0003
+
+Date captured: 2026-09-08
+Source type: Historical public AI trading record / reverse-engineering target
+Project: M.A.E.V.E AI, powered by CFGI
+Primary X target: https://x.com/CFGI_MAEVE
+Status: RESEARCH_QUEUED - ACTIVE RECONSTRUCTION
+Evidence class: MIXED, with primary public sources plus secondary technical/performance material
+Archive path: `04_RESEARCH_LAB/auto_trading/maeve/`
+
+### Why this source is unusually valuable
+
+MAEVE appears to have posted a large number of trades publicly in forward time. If those rows can be recovered with reliable timestamps, they form a labeled historical action dataset rather than a retrospective strategy story.
+
+That makes it possible to test:
+- what public CFGI states preceded MAEVE entries/exits;
+- which features distinguish successful from unsuccessful actions;
+- how decisions changed by coin/timeframe/regime/version;
+- whether public features explain MAEVE behavior;
+- whether residual unexplained behavior is consistent with latent/private inputs, portfolio state or timing/execution effects.
+
+### Primary evidence found
+
+- Original Jan 9 2025 M.A.E.V.E v1.00 launch/roadmap on Pastebin.
+- Official CFGI September 2025 article reporting 1,427 trades and 84.85% win rate.
+- Historical product/dashboard references saying trade history was publicly viewable.
+- Current/public CFGI historical multi-timeframe data infrastructure capable in principle of supporting timestamp replay.
+
+### Secondary evidence found
+
+A detailed technical reconstruction reports:
+- 10 public CFGI inputs + 4 private inputs;
+- 3 aligned trigger points;
+- DCA;
+- coin/timeframe-specific trigger logic;
+- later rolling Market Range Evaluator;
+- dynamic Optimal Data Trigger selection;
+- compatibility/correlation filtering;
+- global + asset GMDI context;
+- portfolio-aware sizing;
+- target/stop/time-loss and possible reversal.
+
+This exact architecture remains HYPOTHESIS until primary documentation is recovered.
+
+### Performance checkpoints found
+
+Approximate public claims changed over time from roughly:
+- 500+ trades around 94-95% win rate;
+- 650-660+ trades around 91.3% win rate;
+- 1,427 trades at 84.85% win rate by Sep 2025.
+
+Do not interpret this as proven degradation until trade counting, version changes, asset universe and market regime are reconstructed. Treat it as a strong research question.
+
+### Immediate research objective
+
+Recover a normalized public MAEVE trade/action ledger with provenance and coverage estimates.
+
+The correct order is:
+
+`public row reconstruction -> historical CFGI/market state -> matched no-trade controls -> behavioral modeling -> outcome attribution -> hypothesis replay -> frozen forward simulation`
+
+### Guardrails
+
+- Do not claim proprietary code or secret indicators have been recovered.
+- Do not infer missing fields into raw evidence.
+- Do not model on post-trade data.
+- Do not optimize on headline win rate.
+- Do not publicly redistribute paid/proprietary CFGI raw historical data without license.
+- Preserve methodology/version boundaries.
+
+### Astra priority
+
+VERY HIGH once sufficient row coverage exists.
+
+Astra should treat MAEVE as a public behavioral reverse-engineering case study and compare interpretable behavioral clones against simple baselines and our existing Framework regime context.
