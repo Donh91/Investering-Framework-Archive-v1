@@ -95,8 +95,8 @@ function qualityClass(status) {
 
 function statusFromText(text) {
   const t = String(text || "").toUpperCase();
+  if (t.includes("ACTIVE WATCH") || t.includes("UNCONFIRMED") || t.includes("PAUSED")) return "watch";
   if (t.includes("ACTIVE") && !t.includes("INACTIVE")) return "active";
-  if (t.includes("WATCH") || t.includes("UNCONFIRMED") || t.includes("PAUSED")) return "watch";
   return "inactive";
 }
 
@@ -244,7 +244,7 @@ function renderRangeState(freeze) {
     ["BTC", ranges.btc_range_low, ranges.btc_range_high],
     ["ETH", ranges.eth_range_low, ranges.eth_range_high]
   ];
-  const publishable = rangePairs.filter(([, low, high]) => Number.isFinite(Number(low)) && Number.isFinite(Number(high)));
+  const publishable = rangePairs.filter(([, low, high]) => low != null && high != null && Number.isFinite(Number(low)) && Number.isFinite(Number(high)));
   const rangeRow = byId("rangeRow");
   rangeRow.innerHTML = "";
 
