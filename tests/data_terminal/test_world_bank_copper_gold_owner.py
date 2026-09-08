@@ -188,18 +188,60 @@ class WorldBankCopperGoldOwnerTests(unittest.TestCase):
         self.assertEqual(registry["fallback"], "NONE")
         self.assertFalse(registry["authority"]["portfolio_action"])
 
-    def test_committed_baseline_is_current_complete_and_manifest_bound(self):
-        root = ROOT / "03_DAILY_CAPTURE_LOGS/slow_cycle/copper_gold"
+    def assert_artifacts_are_complete_and_manifest_bound(self, root):
         latest = json.loads((root / "LATEST.json").read_text())
-        self.assertEqual(latest["status"], "PASS")
-        self.assertEqual(latest["last_period"], "2026-07")
-        self.assertEqual(latest["freshness"]["status"], "PASS")
         with (root / "normalized/monthly_observations.csv").open(newline="", encoding="utf-8") as handle:
             rows = list(csv.DictReader(handle))
-        self.assertEqual(len(rows), 799)
-        self.assertEqual(rows[0]["period"], "1960-01")
-        self.assertEqual(rows[-1]["period"], "2026-07")
+        self.assertGreaterEqual(len(rows), 100)
+        first_year, first_month = map(int, rows[0]["period"].split("-"))
+        self.assertEqual([row["period"] for row in rows], periods(first_year, first_month, len(rows)))
+        self.assertEqual(latest["last_period"], rows[-1]["period"])
+        self.assertEqual(latest["latest_monthly"]["period"], rows[-1]["period"])
+        freshness = latest["freshness"]
+        source_timestamp = owner.period_end_iso(rows[-1]["period"])
+        self.assertEqual(freshness["latest_source_timestamp"], source_timestamp)
+        age = int((owner.parse_timestamp(latest["retrieved_at_utc"]) - owner.parse_timestamp(source_timestamp)).total_seconds())
+        self.assertGreaterEqual(age, 0)
+        self.assertEqual(freshness["freshness_seconds"], age)
+        expected_status = "PASS" if age <= freshness["stale_after_seconds"] else "STALE"
+        self.assertEqual(latest["status"], expected_status)
+        self.assertEqual(freshness["status"], expected_status)
+        revision = json.loads((root / latest["revision_path"]).read_text())
+        self.assertEqual(revision["source"]["payload_sha256"], latest["payload_sha256"])
+        self.assertEqual(revision["coverage"], {
+            "first_period": rows[0]["period"],
+            "last_period": rows[-1]["period"],
+            "observations": len(rows),
+        })
         manifest = json.loads((root / "ARTIFACT_MANIFEST.json").read_text())
+        self.assertEqual(set(manifest["members"]), {
+            latest["revision_path"], "LATEST.json",
+            "normalized/monthly_observations.csv", "derived/settled_2m_features.csv",
+        })
         for relative_path, expected_hash in manifest["members"].items():
             self.assertEqual(owner.sha256_bytes((root / relative_path).read_bytes()), expected_hash)
         self.assertFalse(manifest["authority"]["execution_authority"])
+
+    def test_committed_capture_is_complete_and_manifest_bound(self):
+        self.assert_artifacts_are_complete_and_manifest_bound(ROOT / "03_DAILY_CAPTURE_LOGS/slow_cycle/copper_gold")
+
+    def test_capture_integrity_accepts_new_publication_and_year_rollover(self):
+        # The daily workflow collects before testing. A valid publication must
+        # not be rejected just because July 2026 was the original fixture end.
+        for count, retrieved_at in [(115, "2026-08-27T12:00:00Z"),
+                                    (116, "2026-09-07T12:00:00Z"),
+                                    (120, "2027-01-07T12:00:00Z"),
+                                    (121, "2027-02-07T12:00:00Z")]:
+            with self.subTest(count=count), tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                owner.write_artifacts(root, owner.build(workbook(periods(count=count)), retrieved_at))
+                self.assert_artifacts_are_complete_and_manifest_bound(root)
+
+    def test_capture_integrity_rejects_corrupted_manifest_member(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            owner.write_artifacts(root, build_fixture())
+            member = root / "derived/settled_2m_features.csv"
+            member.write_bytes(member.read_bytes() + b"corrupted\n")
+            with self.assertRaises(AssertionError):
+                self.assert_artifacts_are_complete_and_manifest_bound(root)
