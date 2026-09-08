@@ -1,0 +1,37 @@
+{
+  "source_contract_id": "BH01_BLOCKHORIZON_MANUAL_EXPORT_HISTORICAL_V1",
+  "status": "MANUAL_EXPORT_SEED_ACTIVE__API_PENDING__RESEARCH_ONLY__TERMS_HOLD",
+  "provider": "BlockHorizon",
+  "instrument_scope": [
+    "BTC"
+  ],
+  "access_mode": "USER_INITIATED_MANUAL_EXPORT_ONLY",
+  "automated_collection": "NOT_AUTHORIZED",
+  "canonical_authority": "NONE_BY_ITSELF",
+  "portfolio_authority": "NONE",
+  "raw_storage_policy": {
+    "current": "DO_NOT_PERSIST_PROVIDER_VALUES_TO_GITHUB_OR_MIRROR_WHILE_TERMS_HOLD",
+    "future_if_rights_gate_clears": "Donh91/secrets/raw/BH01_BLOCKHORIZON_MANUAL_EXPORT_HISTORICAL_V1/YYYY/MM/DD/",
+    "control_plane": "METADATA_HASHES_COUNTS_SCHEMA_AND_PROVIDER_VALUE_FREE_BINDINGS_ONLY"
+  },
+  "terms_gate": {
+    "status": "PROVIDER_TERMS_ATTESTATION_INCOMPLETE",
+    "checked_at_utc": "2026-09-08T07:19:00Z",
+    "terms_url": "https://www.blockhorizon.io/policy/terms-and-conditions",
+    "product_export_claim_url": "https://www.blockhorizon.io/",
+    "operational_interpretation": "Current product page advertises full-history exports, while published terms prohibit copying/distribution/mirroring without written consent. This is a fail-closed operational conflict, not a legal determination.",
+    "clearance_requirement": "WRITTEN_CONSENT_OR_CURRENT_TERMS_TEXT_EXPLICITLY_PERMITTING_THE_PLANNED_PRIVATE_RETENTION/MIRROR_USE"
+  },
+  "revision_policy": {
+    "overwrite_history": "FORBIDDEN",
+    "same_hash_redownload": "DEDUPLICATE_BY_SHA256",
+    "different_hash_same_metric": "PRESERVE_AS_NEW_RETRIEVAL_REVISION_AND_REQUIRE_EXPLICIT_AS_OF_RETRIEVAL",
+    "metric_timestamp_vs_retrieval_timestamp": "MUST_REMAIN_SEPARATE"
+  },
+  "analysis_modes": {
+    "RETROSPECTIVE_DESCRIPTIVE": "ALLOWED_LOCAL_RESEARCH_ONLY; current-methodology reconstructed history may be used, explicitly labeled hindsight-aware.",
+    "CONTEMPORANEOUS_REPLAY": "BLOCKED_UNLESS_METHOD_AVAILABILITY_AND_REVISION_STATE_AT_THE_HISTORICAL_TIME_ARE_VERIFIED.",
+    "PROSPECTIVE_FORWARD": "PERMITTED_ONLY_AFTER_SEPARATE_PRE_REGISTRATION; this source contract does not create a test."
+  },
+  "promotion_rule": "Historical findings remain research evidence and may not self-promote into canonical thresholds, weights, runtime authority or portfolio action."
+}
