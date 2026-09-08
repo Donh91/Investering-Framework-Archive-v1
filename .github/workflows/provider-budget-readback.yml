@@ -1,0 +1,132 @@
+name: Provider Budget Readback
+
+on:
+  workflow_run:
+    workflows:
+      - Daily Live Anchor Capture
+    types:
+      - completed
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+  issues: write
+
+concurrency:
+  group: framework-main-writer
+  cancel-in-progress: false
+
+jobs:
+  provider-budget:
+    if: github.event_name == 'workflow_dispatch' || (github.event.workflow_run.head_branch == 'main' && github.event.workflow_run.conclusion == 'success')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Resolve source Live Anchor run
+        id: source
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT_RUN_ID: ${{ github.event.workflow_run.id }}
+        run: |
+          set -euo pipefail
+          RUN_ID="${EVENT_RUN_ID:-}"
+          if [[ -z "$RUN_ID" ]]; then
+            RUN_ID=$(gh run list --workflow daily-raw-owner-capture.yml --branch main --status success --limit 1 --json databaseId --jq '.[0].databaseId')
+          fi
+          test -n "$RUN_ID"
+          echo "run_id=$RUN_ID" >> "$GITHUB_OUTPUT"
+      - name: Download source artifact and extract CFGI receipt
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SOURCE_RUN_ID: ${{ steps.source.outputs.run_id }}
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/provider-budget-artifact
+          ARTIFACT_ID=$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${SOURCE_RUN_ID}/artifacts" --jq '[.artifacts[] | select(.expired == false and (.name | startswith("daily-live-anchor-")))] | sort_by(.created_at) | last | .id')
+          test -n "$ARTIFACT_ID"
+          gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts/${ARTIFACT_ID}/zip" > /tmp/provider-budget-artifact.zip
+          unzip -q /tmp/provider-budget-artifact.zip -d /tmp/provider-budget-artifact
+          test -f /tmp/provider-budget-artifact/cfgi-owner-output/receipt.json
+      - name: Materialize provider credit health without new provider calls
+        run: |
+          python -m py_compile scripts/health/provider_budget_status.py
+          python -m unittest tests.health.test_provider_budget_status -v
+          python scripts/health/provider_budget_status.py \
+            --cfgi-receipt /tmp/provider-budget-artifact/cfgi-owner-output/receipt.json \
+            --source-run-id "gh-${{ steps.source.outputs.run_id }}" \
+            --output-root 03_WEEKLY_OPERATIONS/provider_budget \
+            | tee /tmp/provider-budget-status.json
+      - name: Validate non-market authority and provider status
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path('03_WEEKLY_OPERATIONS/provider_budget/LATEST.json').read_text())
+          assert d['contract']=='PROVIDER_BUDGET_STATUS_v1'
+          assert d['authority']['market_interpretation']=='NONE'
+          assert d['authority']['portfolio_execution'] is False
+          assert d['authority']['market_threshold_change'] is False
+          assert d['providers']['CFGI']['status'] in {'PASS','EXHAUSTED','LOW_INSUFFICIENT_FOR_NEXT_STANDARD_CALL','UNKNOWN_CREDIT_HEADER_ABSENT'}
+          assert 'api_key' not in json.dumps(d).lower()
+          print('PROVIDER_BUDGET_VALID', d['status'], d['providers']['CFGI']['status'], d['providers']['CFGI']['credits_remaining'])
+          PY
+      - name: Commit provider budget health with remote readback
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name framework-operations-bot
+          git config user.email framework-operations-bot@users.noreply.github.com
+          git add 03_WEEKLY_OPERATIONS/provider_budget
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "ops: provider budget readback ${{ steps.source.outputs.run_id }}"
+          pushed=false
+          for attempt in 1 2 3; do
+            git rebase --abort 2>/dev/null || true
+            if git pull --rebase origin main && git push origin HEAD:main; then pushed=true; break; fi
+            sleep $((attempt * 5))
+          done
+          [ "$pushed" = true ]
+          git fetch origin main
+          git merge-base --is-ancestor HEAD origin/main
+          local_sha=$(sha256sum 03_WEEKLY_OPERATIONS/provider_budget/LATEST.json | awk '{print $1}')
+          remote_sha=$(git show origin/main:03_WEEKLY_OPERATIONS/provider_budget/LATEST.json | sha256sum | awk '{print $1}')
+          [ "$local_sha" = "$remote_sha" ]
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: provider-budget-readback-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            /tmp/provider-budget-status.json
+            03_WEEKLY_OPERATIONS/provider_budget/LATEST.json
+          retention-days: 14
+          if-no-files-found: warn
+
+  validate-pr:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo 'workflow_run production path is validated by focused provider-budget tests in repository gates'
+
+  incident:
+    needs: provider-budget
+    if: failure() && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Open provider budget readback incident
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue create --title "AUTOMATION FAILURE: Provider Budget Readback ${GITHUB_RUN_ID}" --body "Provider-credit observability failed. No provider call should be added as a fallback. Inspect Live Anchor artifact/readback chain. Run: ${GITHUB_RUN_ID}" || true
