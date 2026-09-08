@@ -107,15 +107,34 @@ def budget_health(auto_state: Mapping[str, Any], external_budget: Mapping[str, A
         status = external_budget.get("status") or external_budget.get("budget_status")
         remaining = external_budget.get("remaining_monthly_budget")
         spent = external_budget.get("month_to_date_spend")
-        if status or remaining is not None or spent is not None:
+        providers = external_budget.get("providers") if isinstance(external_budget.get("providers"), Mapping) else {}
+        external_signals: list[dict[str, Any]] = []
+        for name, row in sorted(providers.items()):
+            if not isinstance(row, Mapping):
+                continue
+            provider_status = str(row.get("status") or "UNKNOWN")
+            if provider_status in {"EXHAUSTED", "LOW_INSUFFICIENT_FOR_NEXT_STANDARD_CALL"}:
+                external_signals.append({
+                    "provider": str(name),
+                    "status": provider_status,
+                    "reason": row.get("reason"),
+                    "credits_remaining": row.get("credits_remaining"),
+                    "current_standard_call_expected_credits": row.get("current_standard_call_expected_credits"),
+                })
+        if status or remaining is not None or spent is not None or providers:
+            effective = str(status or "AVAILABLE")
+            if external_signals:
+                effective = "DEGRADED"
             return {
-                "status": str(status or "AVAILABLE"),
+                "status": effective,
+                "scope": external_budget.get("scope"),
                 "exact_monthly_spend_available": spent is not None,
                 "exact_remaining_budget_available": remaining is not None,
                 "month_to_date_spend": spent,
                 "remaining_monthly_budget": remaining,
                 "source": "BOUND_EXTERNAL_BUDGET_STATUS",
-                "provider_signals": exhaustion,
+                "providers": providers,
+                "provider_signals": exhaustion + external_signals,
             }
     if exhaustion:
         return {
