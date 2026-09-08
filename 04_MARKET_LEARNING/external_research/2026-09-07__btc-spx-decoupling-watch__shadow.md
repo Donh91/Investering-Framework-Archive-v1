@@ -60,6 +60,79 @@ Track:
 - ETF / spot flow congruence
 - whether the relationship reverts quickly or remains structurally different
 
+## 2026-09-08 follow-up: structural / "super cycle" hypothesis
+
+Source context: User-supplied Willy Woo thread and `BTC Liquidity Cycle` charts citing woocharts.com and Glassnode data.
+
+### Analyst claims observed
+
+Woo presents a broader structural interpretation alongside the BTC–SPX decoupling observation:
+
+- his internal BTC liquidity-cycle model shows a shallower trough than he says would normally be expected at a full cycle bottom;
+- his risk model is described as having reached a sustained downtrend toward zero, which he characterizes as a real structural bottom rather than a mid-bear-market bounce;
+- the recent-investor cost basis is shown remaining above the universal/all-investor cost basis, whereas he says prior cycle bottoms crossed below it;
+- he interprets the combination as more consistent with a mid-bull-market dip than a conventional four-year-cycle reset;
+- he therefore raises, as a hypothesis, that a long-discussed Bitcoin "super cycle" may be developing;
+- he also links the setup to the unusual BTC relationship versus global macro/equities.
+
+These are analyst/model claims from the supplied thread, not independently verified framework facts. The quoted probability language in the post, including `>90%`, must not be imported as a framework probability without reproducible model definition, data, calibration and prospective validation.
+
+### Framework relevance
+
+Research value: HIGH.
+
+This is useful because it directly challenges several structural assumptions rather than merely adding another bullish chart. It should be evaluated as a cycle-type and falsification hypothesis:
+
+`CLASSIC_DEEP_CYCLE_RESET` vs `ETF_ERA_SHALLOW_STRUCTURAL_RESET / EXTENDED_CYCLE`.
+
+The observation is compatible with an existing framework distinction:
+
+- structural floor evidence can improve without behavioral transition confirmation;
+- BTC absorption/resilience can remain strong while ecosystem transmission is weak;
+- BTC health is not ecosystem health;
+- liquidity existence is not automatically broad deployment.
+
+Therefore even if Woo's BTC structural thesis proves directionally correct, it does not by itself confirm ETH leadership, broad rotation, altseason or small/micro-cap deployment.
+
+### Prospective questions
+
+Track this as an extension of the existing shadow research, not as a new engine or weighted signal:
+
+- Does BTC preserve structural support without the deeper reset historically associated with cycle bottoms?
+- Does the recent-investor versus all-investor cost-basis relationship persist, and can the metric definition be independently verified?
+- Does Woo's liquidity-cycle trough actually reaccelerate rather than continue deteriorating?
+- Does the risk-model condition remain stable, and can its construction/calibration be reproduced or independently proxied?
+- Does BTC–SPX decoupling persist while BTC-specific spot/ETF absorption remains strong?
+- Does macro/equity weakness cease to explain BTC direction materially, or does the relationship mean-revert?
+- If BTC remains structurally resilient, does capital eventually transmit into ETH/breadth, or remain concentrated in BTC?
+
+### Falsification / death conditions
+
+Deprioritize or kill the super-cycle interpretation if one or more of the following becomes durable:
+
+- the claimed cost-basis structure reverses in a way inconsistent with the thesis;
+- BTC loses structural support and proceeds into a conventional deep cycle reset;
+- the liquidity-cycle series continues lower rather than producing the claimed shallow-trough reacceleration;
+- BTC–SPX decoupling rapidly mean-reverts and adds no incremental explanatory value;
+- the proprietary risk/liquidity model cannot be defined, reproduced, proxied or prospectively evaluated well enough to distinguish signal from narrative;
+- the thesis only explains outcomes retrospectively and fails forward tests.
+
+### Governance for the follow-up
+
+SHADOW RESEARCH ONLY.
+
+No separate shadow layer.
+No new engine.
+No Core change.
+No trading trigger.
+No portfolio action.
+No cycle-phase promotion from this source alone.
+No rotation or altseason upgrade.
+No threshold or weight change.
+No adoption of the analyst's probability claims as framework probabilities.
+
+The value of this addition is primarily falsification and prospective cycle-structure learning.
+
 ## Governance
 
 SHADOW ONLY.
