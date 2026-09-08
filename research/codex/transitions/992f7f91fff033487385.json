@@ -1,0 +1,35 @@
+{
+  "allowed_change_scope": [
+    "scripts/remediation/merge_codex_research_intake.py",
+    "scripts/remediation/write_codex_research_completion_receipt.py",
+    "scripts/remediation/directly related completion reconciliation helper",
+    ".github/workflows/remediation-maturation.yml",
+    "tests/remediation",
+    "research/codex/completions"
+  ],
+  "branch": "agent/task-20260908-completion-reconciliation-sol",
+  "candidate_id": "codex-research-completion-reconciliation-v1",
+  "candidate_path": "research/codex/intake/2026/08/codex-research-completion-reconciliation-v1.json",
+  "candidate_sha256": "d8511f626ffeb2bbb2c5775c708a305ebd362e4147880484a4ee906a48799b1b",
+  "contract": "CODEX_RESEARCH_TRANSITION_RECEIPT_v1",
+  "forbidden_changes": [
+    "API budget",
+    "automatic merge or self-promotion",
+    "canonical authority",
+    "completion without GitHub merge verification",
+    "fabricated merge status",
+    "market gates",
+    "model weights",
+    "new policy semantics",
+    "portfolio logic",
+    "rewriting historical research evidence"
+  ],
+  "objective": "Prevent merged Codex research-remediation pull requests from remaining or reappearing as IN_REMEDIATION solely because a CODEX_RESEARCH_COMPLETION_RECEIPT_v1 was not materialized. Add deterministic post-merge reconciliation that verifies the bound PR and merge commit before producing the existing completion contract, then lets the current maturation engine advance the task through post-fix observation or resolution.",
+  "post_fix_gate": "TWO_CONSECUTIVE_REMEDIATION_MATURATION_RUNS_WITH_NO_MERGED_RESEARCH_TASK_ZOMBIES",
+  "pr_number": null,
+  "receipt_sha256": "ba69132cfad4c69d868a45856911882bfb603cb156f9de0015ef1f3a1b78727e",
+  "recorded_at_utc": "2026-09-08T14:55:00Z",
+  "signature": "992f7f91fff033487385",
+  "state": "IN_REMEDIATION",
+  "task_contract_sha256": "29297352338a1798bfdb01b00e28b89178f1d21f26bbde7f8ed81f664d304a67"
+}
