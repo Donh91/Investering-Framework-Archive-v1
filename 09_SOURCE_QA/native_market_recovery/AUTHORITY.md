@@ -1,0 +1,1 @@
+Native Market Recovery has operational authority only to re-run already-admitted owner workflows within cooldown policy. It has no authority to change owner definitions, thresholds, portfolio state, historical evidence, or source-admission policy.
