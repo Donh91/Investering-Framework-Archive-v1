@@ -1,0 +1,141 @@
+name: Native Handlekompas Readback
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/native-handlekompas.yml'
+      - 'scripts/data_ping/native_handlekompas.py'
+      - 'tests/data_ping/test_native_handlekompas.py'
+      - '04_MARKET_LEARNING/handlekompas/**'
+      - '02_DATA_PING/operational_handoffs/NATIVE_ZERO_MANUAL_FEED*'
+  schedule:
+    # Entry Signal runs at :50 and materializes AUTO_MARKET_STATE. Read it back shortly after.
+    - cron: '57 * * * *'
+      timezone: 'Europe/Copenhagen'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: framework-main-writer
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compile and test Handlekompas
+        run: |
+          python -m py_compile scripts/data_ping/native_handlekompas.py
+          python -m unittest tests.data_ping.test_native_handlekompas -v
+      - name: Validate against repository Auto Market State when available
+        shell: bash
+        run: |
+          if [ -f 04_MARKET_LEARNING/entry_signals/auto_market_state/LATEST.json ]; then
+            python scripts/data_ping/native_handlekompas.py --no-write > /tmp/native-handlekompas.json
+            python - <<'PY'
+          import json
+          d=json.load(open('/tmp/native-handlekompas.json'))
+          assert d['contract']=='NATIVE_HANDLEKOMPAS_v1'
+          assert d['authority']['portfolio_execution'] is False
+          assert d['authority']['canonical_state_change'] is False
+          assert d['authority']['market_threshold_change'] is False
+          assert d['source']['packet_sha256']
+          assert d['action']['NOW'] in {'PREPARE','HOLD_WAIT','HOLD_DEFENSIVE_WAIT'}
+          assert 'DATA_HEALTH' in d and 'BUDGET_HEALTH' in d
+          PY
+          else
+            echo 'Auto Market State pointer absent in PR checkout; synthetic unit tests are authoritative for this branch validation.'
+          fi
+
+  readback:
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Build latest native Handlekompas
+        run: |
+          python -m py_compile scripts/data_ping/native_handlekompas.py
+          python -m unittest tests.data_ping.test_native_handlekompas -v
+          python scripts/data_ping/native_handlekompas.py --output-root 04_MARKET_LEARNING/handlekompas | tee /tmp/handlekompas-status.json
+      - name: Validate authority and source binding
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          status=json.loads(Path('/tmp/handlekompas-status.json').read_text())
+          pointer=json.loads(Path('04_MARKET_LEARNING/handlekompas/LATEST.json').read_text())
+          packet=json.loads(Path(pointer['handlekompas_path']).read_text())
+          assert pointer['handlekompas_sha256']==status['sha256']==packet['handlekompas_sha256']
+          assert packet['source']['packet_sha256']==pointer['source_packet_sha256']
+          assert packet['authority']['portfolio_execution'] is False
+          assert packet['authority']['canonical_state_change'] is False
+          assert packet['authority']['market_threshold_change'] is False
+          assert packet['action']['TOPUP_GATE'].startswith('REQUIRES_EXISTING_ENTRY_SIGNAL')
+          print('NATIVE_HANDLEKOMPAS_VALID', packet['action']['NOW'], packet['DATA_HEALTH']['status'], packet['BUDGET_HEALTH']['status'])
+          PY
+      - name: Commit Handlekompas with remote readback proof
+        shell: bash
+        run: |
+          git config user.name 'framework-data-bot'
+          git config user.email 'framework-data-bot@users.noreply.github.com'
+          git add 04_MARKET_LEARNING/handlekompas
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "learning: native Handlekompas ${GITHUB_RUN_ID}"
+          pushed=false
+          for attempt in 1 2 3; do
+            git rebase --abort 2>/dev/null || true
+            if git pull --rebase origin main && git push origin HEAD:main; then pushed=true; break; fi
+            sleep $((attempt * 5))
+          done
+          [ "$pushed" = true ]
+          git fetch origin main
+          git merge-base --is-ancestor HEAD origin/main
+          local_sha=$(sha256sum 04_MARKET_LEARNING/handlekompas/LATEST.json | awk '{print $1}')
+          remote_sha=$(git show origin/main:04_MARKET_LEARNING/handlekompas/LATEST.json | sha256sum | awk '{print $1}')
+          [ "$local_sha" = "$remote_sha" ]
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: native-handlekompas-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            /tmp/handlekompas-status.json
+            04_MARKET_LEARNING/handlekompas/LATEST.json
+          retention-days: 14
+          if-no-files-found: warn
+
+  incident:
+    needs: readback
+    if: failure() && github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Publish sanitized incident
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p 09_SOURCE_QA/incidents
+          FILE="09_SOURCE_QA/incidents/INCIDENT_native-handlekompas-${GITHUB_RUN_ID}.md"
+          printf '# AUTOMATION INCIDENT\n\nWorkflow: Native Handlekompas Readback\nRun: %s\nTimestamp UTC: %s\nStatus: FAILED\nManual market-data feeding is NOT required. Inspect/recover the native owner chain.\n' "$GITHUB_RUN_ID" "$(date -u +%FT%TZ)" > "$FILE"
+          git config user.name framework-incident-bot
+          git config user.email framework-incident-bot@users.noreply.github.com
+          git add "$FILE" && git commit -m "incident: native Handlekompas ${GITHUB_RUN_ID}" && git pull --rebase origin main && git push origin HEAD:main
+          gh issue create --title "AUTOMATION FAILURE: Native Handlekompas ${GITHUB_RUN_ID}" --body-file "$FILE" || true
