@@ -1,0 +1,1 @@
+Operator intent: the user should not manually feed routine market data. Routine source failure belongs to the machinery; surfaced alerts should state impact and recovery status, not ask for manual market values.
