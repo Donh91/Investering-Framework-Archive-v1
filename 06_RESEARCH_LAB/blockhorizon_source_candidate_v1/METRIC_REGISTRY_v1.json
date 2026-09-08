@@ -2,316 +2,79 @@
   "registry": "BLOCKHORIZON_METRIC_REGISTRY_v1",
   "status": "RESEARCH_ONLY",
   "source_contract_id": "BH01_BLOCKHORIZON_MANUAL_EXPORT_HISTORICAL_V1",
-  "current_seed_metric_ids": [
-    "BH_PLANB_S2F_2024_REFIT",
-    "BH_COIN_VINTAGES",
-    "BH_NUPL_LTH",
-    "BH_NUPL_STH",
-    "BH_STH_SUPPLY_LOSS_BTC",
-    "BH_STH_SUPPLY_PROFIT_BTC",
-    "BH_SOPR_LTH",
-    "BH_REALIZED_CAP_HODL_WAVES",
-    "BH_SUPPLY_LAST_ACTIVE_10Y_PLUS",
-    "BH_MVRV_LTH",
-    "BH_MVRV_STH",
-    "BH_CDD",
-    "BH_CDD_90D",
-    "BH_SPENT_VOLUME_10Y_PLUS",
-    "BH_COST_BASIS_HEATMAP",
-    "BH_DIFFICULTY",
-    "BH_UTXO_COUNT_TOTAL",
-    "BH_PRICE_OHLC_DAILY",
-    "BH_NUPL",
-    "BH_SUPPLY_LOSS_BTC",
-    "BH_SUPPLY_PROFIT_PCT",
-    "BH_UTXO_LOSS_COUNT",
-    "BH_UTXO_PROFIT_PCT",
-    "BH_CUSHION_DEPTH_FAN",
-    "BH_SOPR",
-    "BH_MVRV",
-    "BH_MVRV_Z",
-    "BH_REALIZED_CAP",
-    "BH_REALIZED_PRICE_FAMILY"
-  ],
+  "current_seed_metric_ids": ["BH_PLANB_S2F_2024_REFIT","BH_COIN_VINTAGES","BH_NUPL_LTH","BH_NUPL_STH","BH_STH_SUPPLY_LOSS_BTC","BH_STH_SUPPLY_PROFIT_BTC","BH_SOPR_LTH","BH_REALIZED_CAP_HODL_WAVES","BH_SUPPLY_LAST_ACTIVE_10Y_PLUS","BH_MVRV_LTH","BH_MVRV_STH","BH_CDD","BH_CDD_90D","BH_SPENT_VOLUME_10Y_PLUS","BH_COST_BASIS_HEATMAP","BH_DIFFICULTY","BH_UTXO_COUNT_TOTAL","BH_PRICE_OHLC_DAILY","BH_NUPL","BH_SUPPLY_LOSS_BTC","BH_SUPPLY_PROFIT_PCT","BH_UTXO_LOSS_COUNT","BH_UTXO_PROFIT_PCT","BH_CUSHION_DEPTH_FAN","BH_SOPR","BH_MVRV","BH_MVRV_Z","BH_REALIZED_CAP","BH_REALIZED_PRICE_FAMILY"],
   "metric_count": 29,
   "families": {
-    "CHALLENGER_MODEL": [
-      {
-        "metric_id": "BH_PLANB_S2F_2024_REFIT",
-        "role": "CHALLENGER_MODEL",
-        "source_filename": "planb_stock_to_flow_rsi_ma_realized_2026-09-07T21-27-35.csv"
-      }
-    ],
-    "COHORT_DISTRIBUTION": [
-      {
-        "metric_id": "BH_COIN_VINTAGES",
-        "role": "COMPLEX_DISTRIBUTION",
-        "source_filename": "coin_vintages_2026-09-08T06-12-03.csv"
-      }
-    ],
+    "CHALLENGER_MODEL": [{"metric_id":"BH_PLANB_S2F_2024_REFIT","role":"CHALLENGER_MODEL","source_filename":"planb_stock_to_flow_rsi_ma_realized_2026-09-07T21-27-35.csv"}],
+    "COHORT_DISTRIBUTION": [{"metric_id":"BH_COIN_VINTAGES","role":"COMPLEX_DISTRIBUTION","source_filename":"coin_vintages_2026-09-08T06-12-03.csv"}],
     "COHORT_PROFITABILITY": [
-      {
-        "metric_id": "BH_NUPL_LTH",
-        "role": "RAW_METRIC",
-        "source_filename": "nupl_long_term_supply_lts__2026-09-07T21-55-54.csv"
-      },
-      {
-        "metric_id": "BH_NUPL_STH",
-        "role": "RAW_METRIC",
-        "source_filename": "nupl_short_term_supply_sts__2026-09-08T07-10-50.csv"
-      },
-      {
-        "metric_id": "BH_STH_SUPPLY_LOSS_BTC",
-        "role": "RAW_METRIC",
-        "source_filename": "supply_short_term_sts_in_loss_2026-09-08T06-10-44(1).csv"
-      },
-      {
-        "metric_id": "BH_STH_SUPPLY_PROFIT_BTC",
-        "role": "RAW_METRIC",
-        "source_filename": "supply_short_term_sts_in_profit_2026-09-08T06-10-24.csv"
-      }
+      {"metric_id":"BH_NUPL_LTH","role":"RAW_METRIC","source_filename":"nupl_long_term_supply_lts__2026-09-07T21-55-54.csv"},
+      {"metric_id":"BH_NUPL_STH","role":"RAW_METRIC","source_filename":"nupl_short_term_supply_sts__2026-09-08T07-10-50.csv"},
+      {"metric_id":"BH_STH_SUPPLY_LOSS_BTC","role":"RAW_METRIC","source_filename":"supply_short_term_sts_in_loss_2026-09-08T06-10-44.csv"},
+      {"metric_id":"BH_STH_SUPPLY_PROFIT_BTC","role":"RAW_METRIC","source_filename":"supply_short_term_sts_in_profit_2026-09-08T06-10-24.csv"}
     ],
-    "COHORT_REALIZED_BEHAVIOR": [
-      {
-        "metric_id": "BH_SOPR_LTH",
-        "role": "RAW_METRIC",
-        "source_filename": "sopr_long_term_supply_lts__2026-09-08T06-05-52.csv"
-      }
-    ],
+    "COHORT_REALIZED_BEHAVIOR": [{"metric_id":"BH_SOPR_LTH","role":"RAW_METRIC","source_filename":"sopr_long_term_supply_lts__2026-09-08T06-05-52.csv"}],
     "COHORT_STRUCTURE": [
-      {
-        "metric_id": "BH_REALIZED_CAP_HODL_WAVES",
-        "role": "RAW_METRIC",
-        "source_filename": "realized_cap_hodl_waves_2026-09-08T06-11-45.csv"
-      },
-      {
-        "metric_id": "BH_SUPPLY_LAST_ACTIVE_10Y_PLUS",
-        "role": "RAW_METRIC",
-        "source_filename": "supply_last_active_10y__2026-09-08T06-14-34.csv"
-      }
+      {"metric_id":"BH_REALIZED_CAP_HODL_WAVES","role":"RAW_METRIC","source_filename":"realized_cap_hodl_waves_2026-09-08T06-11-45.csv"},
+      {"metric_id":"BH_SUPPLY_LAST_ACTIVE_10Y_PLUS","role":"RAW_METRIC","source_filename":"supply_last_active_10y__2026-09-08T06-14-34.csv"}
     ],
     "COHORT_VALUATION": [
-      {
-        "metric_id": "BH_MVRV_LTH",
-        "role": "RAW_METRIC",
-        "source_filename": "mvrv_long_term_supply_2026-09-07T21-54-58.csv"
-      },
-      {
-        "metric_id": "BH_MVRV_STH",
-        "role": "RAW_METRIC",
-        "source_filename": "mvrv_short_term_supply_2026-09-07T21-54-40.csv"
-      }
+      {"metric_id":"BH_MVRV_LTH","role":"RAW_METRIC","source_filename":"mvrv_long_term_supply_2026-09-07T21-54-58.csv"},
+      {"metric_id":"BH_MVRV_STH","role":"RAW_METRIC","source_filename":"mvrv_short_term_supply_2026-09-07T21-54-40.csv"}
     ],
     "COIN_AGE_BEHAVIOR": [
-      {
-        "metric_id": "BH_CDD",
-        "role": "RAW_METRIC",
-        "source_filename": "cdd_coin_days_destroyed__2026-09-08T06-12-59.csv"
-      },
-      {
-        "metric_id": "BH_CDD_90D",
-        "role": "RAW_METRIC",
-        "source_filename": "cdd_90_day_2026-09-08T06-13-08.csv"
-      },
-      {
-        "metric_id": "BH_SPENT_VOLUME_10Y_PLUS",
-        "role": "RAW_METRIC",
-        "source_filename": "spent_volume_10y__2026-09-08T06-12-32.csv"
-      }
+      {"metric_id":"BH_CDD","role":"RAW_METRIC","source_filename":"cdd_coin_days_destroyed__2026-09-08T06-12-59.csv"},
+      {"metric_id":"BH_CDD_90D","role":"RAW_METRIC","source_filename":"cdd_90_day_2026-09-08T06-13-08.csv"},
+      {"metric_id":"BH_SPENT_VOLUME_10Y_PLUS","role":"RAW_METRIC","source_filename":"spent_volume_10y__2026-09-08T06-12-32.csv"}
     ],
-    "COST_BASIS_DISTRIBUTION": [
-      {
-        "metric_id": "BH_COST_BASIS_HEATMAP",
-        "role": "COMPLEX_DISTRIBUTION",
-        "source_filename": "cost_basis_heatmap_2026-09-08T06-13-21.csv"
-      }
-    ],
+    "COST_BASIS_DISTRIBUTION": [{"metric_id":"BH_COST_BASIS_HEATMAP","role":"COMPLEX_DISTRIBUTION","source_filename":"cost_basis_heatmap_2026-09-08T06-13-21.csv"}],
     "NETWORK_STRUCTURE": [
-      {
-        "metric_id": "BH_DIFFICULTY",
-        "role": "STRUCTURAL_CONTEXT",
-        "source_filename": "difficulty_2026-09-07T21-32-23.csv"
-      },
-      {
-        "metric_id": "BH_UTXO_COUNT_TOTAL",
-        "role": "STRUCTURAL_CONTEXT",
-        "source_filename": "utxo_count_total_2026-09-07T21-33-04.csv"
-      }
+      {"metric_id":"BH_DIFFICULTY","role":"STRUCTURAL_CONTEXT","source_filename":"difficulty_2026-09-07T21-32-23.csv"},
+      {"metric_id":"BH_UTXO_COUNT_TOTAL","role":"STRUCTURAL_CONTEXT","source_filename":"utxo_count_total_2026-09-07T21-33-04.csv"}
     ],
-    "PRICE_REFERENCE": [
-      {
-        "metric_id": "BH_PRICE_OHLC_DAILY",
-        "role": "STRUCTURAL_CONTEXT",
-        "source_filename": "price_ohlc_2026-09-07T21-30-50.csv"
-      }
-    ],
+    "PRICE_REFERENCE": [{"metric_id":"BH_PRICE_OHLC_DAILY","role":"STRUCTURAL_CONTEXT","source_filename":"price_ohlc_2026-09-07T21-30-50.csv"}],
     "PROFITABILITY": [
-      {
-        "metric_id": "BH_NUPL",
-        "role": "RAW_METRIC",
-        "source_filename": "nupl_net_unrealized_profit_loss__2026-09-07T21-53-49.csv"
-      },
-      {
-        "metric_id": "BH_SUPPLY_LOSS_BTC",
-        "role": "RAW_METRIC",
-        "source_filename": "supply_in_loss_2026-09-08T07-12-17.csv"
-      },
-      {
-        "metric_id": "BH_SUPPLY_PROFIT_PCT",
-        "role": "RAW_METRIC",
-        "source_filename": "supply_in_profit__2026-09-08T06-06-46.csv"
-      },
-      {
-        "metric_id": "BH_UTXO_LOSS_COUNT",
-        "role": "RAW_METRIC",
-        "source_filename": "utxos_in_loss_2026-09-08T06-08-46.csv"
-      },
-      {
-        "metric_id": "BH_UTXO_PROFIT_PCT",
-        "role": "RAW_METRIC",
-        "source_filename": "utxos_in_profit__2026-09-07T21-29-32.csv"
-      }
+      {"metric_id":"BH_NUPL","role":"RAW_METRIC","source_filename":"nupl_net_unrealized_profit_loss__2026-09-07T21-53-49.csv"},
+      {"metric_id":"BH_SUPPLY_LOSS_BTC","role":"RAW_METRIC","source_filename":"supply_in_loss_2026-09-08T07-12-17.csv"},
+      {"metric_id":"BH_SUPPLY_PROFIT_PCT","role":"RAW_METRIC","source_filename":"supply_in_profit__2026-09-08T06-06-46.csv"},
+      {"metric_id":"BH_UTXO_LOSS_COUNT","role":"RAW_METRIC","source_filename":"utxos_in_loss_2026-09-08T06-08-46.csv"},
+      {"metric_id":"BH_UTXO_PROFIT_PCT","role":"RAW_METRIC","source_filename":"utxos_in_profit__2026-09-07T21-29-32.csv"}
     ],
-    "PROPRIETARY_CHALLENGER": [
-      {
-        "metric_id": "BH_CUSHION_DEPTH_FAN",
-        "role": "CHALLENGER_MODEL",
-        "source_filename": "cushion_depth_fan_2026-09-08T06-14-49.csv"
-      }
-    ],
-    "REALIZED_BEHAVIOR": [
-      {
-        "metric_id": "BH_SOPR",
-        "role": "RAW_METRIC",
-        "source_filename": "sopr_spent_output_profit_ratio__2026-09-08T06-05-26.csv"
-      }
-    ],
+    "PROPRIETARY_CHALLENGER": [{"metric_id":"BH_CUSHION_DEPTH_FAN","role":"CHALLENGER_MODEL","source_filename":"cushion_depth_fan_2026-09-08T06-14-49.csv"}],
+    "REALIZED_BEHAVIOR": [{"metric_id":"BH_SOPR","role":"RAW_METRIC","source_filename":"sopr_spent_output_profit_ratio__2026-09-08T06-05-26.csv"}],
     "VALUATION": [
-      {
-        "metric_id": "BH_MVRV",
-        "role": "RAW_METRIC",
-        "source_filename": "mvrv_market_value_to_realized_value_ratio__2026-09-07T21-54-18.csv"
-      },
-      {
-        "metric_id": "BH_MVRV_Z",
-        "role": "RAW_METRIC",
-        "source_filename": "mvrv_z_score_2026-09-07T21-53-33.csv"
-      },
-      {
-        "metric_id": "BH_REALIZED_CAP",
-        "role": "RAW_METRIC",
-        "source_filename": "realized_cap_2026-09-08T06-11-16(1).csv"
-      },
-      {
-        "metric_id": "BH_REALIZED_PRICE_FAMILY",
-        "role": "RAW_METRIC",
-        "source_filename": "planb_realized_prices_2026-09-07T21-32-34.csv"
-      }
+      {"metric_id":"BH_MVRV","role":"RAW_METRIC","source_filename":"mvrv_market_value_to_realized_value_ratio__2026-09-07T21-54-18.csv"},
+      {"metric_id":"BH_MVRV_Z","role":"RAW_METRIC","source_filename":"mvrv_z_score_2026-09-07T21-53-33.csv"},
+      {"metric_id":"BH_REALIZED_CAP","role":"RAW_METRIC","source_filename":"realized_cap_2026-09-08T06-11-16.csv"},
+      {"metric_id":"BH_REALIZED_PRICE_FAMILY","role":"RAW_METRIC","source_filename":"planb_realized_prices_2026-09-07T21-32-34.csv"}
     ]
   },
   "completion_queue": {
     "P0_CORE_COMPLETION": [
-      {
-        "metric_id": "BH_ASOPR",
-        "chart": "aSOPR",
-        "preferred_format": "CSV"
-      },
-      {
-        "metric_id": "BH_URPD",
-        "chart": "URPD / BlockHorizon UTXO price-distribution variant",
-        "preferred_format": "CSV_IF_BUCKET_COLUMNS_PRESERVED_ELSE_JSON"
-      },
-      {
-        "metric_id": "BH_HODL_WAVES",
-        "chart": "HODL Waves",
-        "preferred_format": "CSV"
-      },
-      {
-        "metric_id": "BH_SUPPLY_LAST_ACTIVE_AGE_BANDS",
-        "chart": "Supply Last Active age-band family",
-        "preferred_format": "ONE_MULTI_SERIES_CSV_IF_AVAILABLE"
-      },
-      {
-        "metric_id": "BH_SPENT_VOLUME_AGE_BANDS",
-        "chart": "Spent Volume age-band family",
-        "preferred_format": "ONE_MULTI_SERIES_CSV_IF_AVAILABLE"
-      }
+      {"metric_id":"BH_ASOPR","chart":"aSOPR","preferred_format":"CSV"},
+      {"metric_id":"BH_URPD","chart":"URPD / BlockHorizon UTXO price-distribution variant","preferred_format":"CSV_IF_BUCKET_COLUMNS_PRESERVED_ELSE_JSON"},
+      {"metric_id":"BH_HODL_WAVES","chart":"HODL Waves","preferred_format":"CSV"},
+      {"metric_id":"BH_SUPPLY_LAST_ACTIVE_AGE_BANDS","chart":"Supply Last Active age-band family","preferred_format":"ONE_MULTI_SERIES_CSV_IF_AVAILABLE"},
+      {"metric_id":"BH_SPENT_VOLUME_AGE_BANDS","chart":"Spent Volume age-band family","preferred_format":"ONE_MULTI_SERIES_CSV_IF_AVAILABLE"}
     ],
     "P1_COHORT_SYMMETRY": [
-      {
-        "metric_id": "BH_SOPR_STH",
-        "chart": "SOPR Short Term Supply",
-        "preferred_format": "CSV"
-      },
-      {
-        "metric_id": "BH_CDD_STH",
-        "chart": "CDD Short Term Supply",
-        "preferred_format": "CSV"
-      },
-      {
-        "metric_id": "BH_CDD_LTH",
-        "chart": "CDD Long Term Supply",
-        "preferred_format": "CSV"
-      }
+      {"metric_id":"BH_SOPR_STH","chart":"SOPR Short Term Supply","preferred_format":"CSV"},
+      {"metric_id":"BH_CDD_STH","chart":"CDD Short Term Supply","preferred_format":"CSV"},
+      {"metric_id":"BH_CDD_LTH","chart":"CDD Long Term Supply","preferred_format":"CSV"}
     ],
     "P2_RESEARCH_EXPANSION": [
-      {
-        "metric_id": "BH_ASOL",
-        "chart": "ASOL: Average Spent Output Lifespan",
-        "preferred_format": "CSV"
-      },
-      {
-        "metric_id": "BH_MVRV_ADJUSTED",
-        "chart": "MVRV Adjusted Ratio",
-        "preferred_format": "CSV"
-      },
-      {
-        "metric_id": "BH_MVRV_MOMENTUM",
-        "chart": "MVRV Momentum Oscillator",
-        "preferred_format": "CSV"
-      },
-      {
-        "metric_id": "BH_BALANCED_PRICE",
-        "chart": "Balanced Price",
-        "preferred_format": "CSV"
-      },
-      {
-        "metric_id": "BH_DELTA_PRICE",
-        "chart": "Delta Price",
-        "preferred_format": "CSV"
-      },
-      {
-        "metric_id": "BH_DELTA_CAP",
-        "chart": "Delta Cap",
-        "preferred_format": "CSV"
-      },
-      {
-        "metric_id": "BH_THERMOCAP_RATIO",
-        "chart": "Market Cap To Thermocap Ratio",
-        "preferred_format": "CSV"
-      },
-      {
-        "metric_id": "BH_DIFFICULTY_RIBBON",
-        "chart": "Difficulty Ribbon",
-        "preferred_format": "CSV"
-      },
-      {
-        "metric_id": "BH_FRM",
-        "chart": "Fee Ratio Multiple",
-        "preferred_format": "CSV"
-      }
+      {"metric_id":"BH_ASOL","chart":"ASOL: Average Spent Output Lifespan","preferred_format":"CSV"},
+      {"metric_id":"BH_MVRV_ADJUSTED","chart":"MVRV Adjusted Ratio","preferred_format":"CSV"},
+      {"metric_id":"BH_MVRV_MOMENTUM","chart":"MVRV Momentum Oscillator","preferred_format":"CSV"},
+      {"metric_id":"BH_BALANCED_PRICE","chart":"Balanced Price","preferred_format":"CSV"},
+      {"metric_id":"BH_DELTA_PRICE","chart":"Delta Price","preferred_format":"CSV"},
+      {"metric_id":"BH_DELTA_CAP","chart":"Delta Cap","preferred_format":"CSV"},
+      {"metric_id":"BH_THERMOCAP_RATIO","chart":"Market Cap To Thermocap Ratio","preferred_format":"CSV"},
+      {"metric_id":"BH_DIFFICULTY_RIBBON","chart":"Difficulty Ribbon","preferred_format":"CSV"},
+      {"metric_id":"BH_FRM","chart":"Fee Ratio Multiple","preferred_format":"CSV"}
     ]
   },
-  "explicit_non_priorities": [
-    "addresses family",
-    "block height",
-    "blocks mined",
-    "plain market cap",
-    "issuance",
-    "fees mean/total",
-    "supply circulating",
-    "additional PlanB composites unless a specific hypothesis needs them"
-  ],
+  "explicit_non_priorities": ["addresses family","block height","blocks mined","plain market cap","issuance","fees mean/total","supply circulating","additional PlanB composites unless a specific hypothesis needs them"],
   "rules": [
     "Do not equate UTXO count profitability with BTC supply profitability.",
     "Do not count STH/LTH variants plus aggregate variants as independent confirmations without incremental-value testing.",
