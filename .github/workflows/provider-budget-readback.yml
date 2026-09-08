@@ -1,6 +1,14 @@
 name: Provider Budget Readback
 
 on:
+  pull_request:
+    paths:
+      - '.github/workflows/provider-budget-readback.yml'
+      - 'scripts/health/provider_budget_status.py'
+      - 'tests/health/test_provider_budget_status.py'
+      - '.github/workflows/native-handlekompas.yml'
+      - 'scripts/data_ping/native_handlekompas.py'
+      - 'tests/data_ping/test_native_handlekompas.py'
   workflow_run:
     workflows:
       - Daily Live Anchor Capture
@@ -19,7 +27,7 @@ concurrency:
 
 jobs:
   provider-budget:
-    if: github.event_name == 'workflow_dispatch' || (github.event.workflow_run.head_branch == 'main' && github.event.workflow_run.conclusion == 'success')
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'workflow_run' && github.event.workflow_run.head_branch == 'main' && github.event.workflow_run.conclusion == 'success')
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -114,8 +122,17 @@ jobs:
   validate-pr:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
-      - run: echo 'workflow_run production path is validated by focused provider-budget tests in repository gates'
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate provider budget parser and Handlekompas integration
+        run: |
+          python -m py_compile scripts/health/provider_budget_status.py scripts/data_ping/native_handlekompas.py
+          python -m unittest tests.health.test_provider_budget_status -v
+          python -m unittest tests.data_ping.test_native_handlekompas -v
 
   incident:
     needs: provider-budget
