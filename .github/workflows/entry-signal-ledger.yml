@@ -1,7 +1,16 @@
 name: Entry Signal Ledger
 
 on:
+  workflow_run:
+    # Hourly capture can be delayed by the shared main-writer queue. Build the
+    # downstream state from the completed owner publication instead of assuming
+    # the fixed :50 fallback always runs after the newest hourly materialization.
+    workflows:
+      - Hourly Sequence Capture
+    types:
+      - completed
   schedule:
+    # Fallback watchdog only; successful Hourly Sequence completion is primary.
     - cron: '50 * * * *'
       timezone: 'Europe/Copenhagen'
   workflow_dispatch:
@@ -15,7 +24,11 @@ concurrency:
 
 jobs:
   ledger:
-    if: github.ref == 'refs/heads/main'
+    if: >-
+      (github.event_name == 'workflow_run' &&
+       github.event.workflow_run.head_branch == 'main' &&
+       github.event.workflow_run.conclusion == 'success') ||
+      (github.event_name != 'workflow_run' && github.ref == 'refs/heads/main')
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
