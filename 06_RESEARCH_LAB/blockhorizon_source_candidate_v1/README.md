@@ -1,67 +1,94 @@
 # BlockHorizon Source Candidate v1
 
-**Status:** API_PENDING / RESEARCH_ONLY  
+**Status:** MANUAL_EXPORT_SEED_ACTIVE / API_PENDING / RESEARCH_ONLY / TERMS_HOLD  
 **Authority:** NONE_BY_ITSELF  
 **Added:** 2026-09-07  
-**Purpose:** Preserve BlockHorizon as a high-priority Bitcoin on-chain source candidate so it is not forgotten while API/MCP access is pending.
+**Updated:** 2026-09-08  
+**Purpose:** Preserve BlockHorizon as a high-priority Bitcoin on-chain historical research source while keeping raw values, source rights, revision semantics and framework authority separate.
 
-## Source endpoints
+## Current state
+
+A user-initiated historical-export seed now exists locally and has been validated into provider-value-free metadata. The current seed contains 29 unique CSV datasets across valuation, profitability, STH/LTH cohorts, realized behavior, coin-age structure, cost-basis distributions, network context and challenger metrics.
+
+Raw BlockHorizon values are **not persisted to GitHub** at this stage.
+
+Reason: the current BlockHorizon product page advertises full-history exports, while the published Terms and Conditions also prohibit copying/distribution/mirroring without written consent. Until the planned retention/mirror use is explicitly permitted, the repository stays fail-closed at metadata/hash level only.
+
+Source endpoints:
 
 - https://www.blockhorizon.io
 - https://charts.blockhorizon.io/dashboard
+- https://www.blockhorizon.io/policy/terms-and-conditions
 
 ## Current treatment
 
-Do not promote BlockHorizon into canonical runtime authority yet.
+Do not promote BlockHorizon into canonical runtime authority.
 
-Until API/MCP access, data rights, timestamps, revision behavior and calculation methodology are validated, treat the site as:
+Treat it as:
 
-- historical research candidate
-- challenger/crosscheck source
-- future ingestion candidate
-- non-authoritative for portfolio actions, thresholds or canonical state
+- historical research source;
+- challenger/crosscheck source;
+- future ingestion candidate;
+- non-authoritative for portfolio actions, thresholds or canonical state.
 
-## Future action when access is available
+## Durable assets
 
-1. Perform a bounded, exhaustive scrape/index of the public site, dashboard, chart catalog, documentation and historical export surfaces.
-2. Preserve discovery metadata, metric names, definitions, source timestamps, update cadence, provenance and access method.
-3. Test export/API/MCP surfaces before relying on browser scraping.
-4. Recover the maximum useful historical series without silently changing historical semantics.
-5. Crosscheck overlapping metrics against existing owner/independent sources before admission.
-6. Verify terms, retention rights and redistribution/storage constraints before persistent bulk archival.
-7. Record any discovered revision/backfill behavior and fail closed on ambiguous timestamps.
+```text
+SOURCE_CONTRACT_v1.json
+SEED_INVENTORY_METADATA_v1.json
+METRIC_REGISTRY_v1.json
+VAULT_ARCHITECTURE_v1.md
+ASTRA_RESEARCH_PROTOCOL_v1.md
+tools/blockhorizon_seed_validator.py
+CURRENT_PRIVATE_BINDING.json  # added only after a hash-bound restricted receipt is merged
+```
 
-## High-value metric families to inspect
+## Data-plane rule
 
-Priority candidates include, where actually exposed and validated:
+```text
+public control plane -> source contract, code, metric registry, hashes/counts/date ranges and value-free bindings
+restricted plane -> raw/normalized provider values only after the provider-rights gate clears
+credential plane -> credentials only, never ordinary repository files
+```
 
-- MVRV / MVRV Z-Score
-- NUPL
-- SOPR / aSOPR
-- Realized Price / Realized Cap
-- URPD and related UTXO price-distribution views
-- supply age / HODL structure
-- miner / issuance / circulating-supply metrics
-- PlanB-derived and cycle-model outputs as challenger evidence only
+## Analysis firewall
 
-## Potential future daily-log contribution
+The 2026 export can support retrospective historical research, but it is not automatically a true information-time replay of prior cycles. Current-methodology reconstructions, later model refits and any unknown provider backfill/revision can create hindsight contamination.
 
-If source quality and machine access pass admission, evaluate whether selected slowly moving on-chain fields should be appended to daily capture logs as contextual evidence, not intraday triggers.
+The research protocol therefore separates:
 
-Candidate daily fields should be chosen only after validation and may include:
+```text
+RETROSPECTIVE_DESCRIPTIVE
+CONTEMPORANEOUS_REPLAY
+PROSPECTIVE_FORWARD
+```
 
-- selected on-chain valuation state
-- realized-price distance/state
-- SOPR/aSOPR regime state
-- NUPL regime state
-- supply-age/HODL regime summaries
-- source freshness timestamp
-- source revision/version marker if available
+No historical result self-promotes into canonical rules.
 
-No daily-log field is authorized by this note alone.
+## Next collection priority
 
-## Re-entry trigger
+P0 remaining:
 
-Resume this work when the user returns with BlockHorizon API/MCP details, credentials/access instructions, or confirmation that machine-readable endpoints are available.
+1. aSOPR
+2. URPD
+3. HODL Waves
+4. Supply Last Active full age-band family
+5. Spent Volume full age-band family
 
-At that point, begin with source-contract and data-rights validation, then historical recovery, then crosschecks, then any admission proposal.
+P1 after that:
+
+- STH SOPR
+- STH CDD
+- LTH CDD
+
+The machine-readable queue is in `METRIC_REGISTRY_v1.json`.
+
+## Re-entry triggers
+
+Resume collection when either:
+
+- the user supplies additional manual exports for local validation;
+- BlockHorizon exposes validated machine-readable access;
+- provider rights/retention terms are explicitly cleared for the planned private storage.
+
+Additional exports may be validated immediately. GitHub raw persistence remains blocked independently until the rights gate clears.
