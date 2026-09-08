@@ -4,8 +4,12 @@ on:
   pull_request:
     paths:
       - '.github/workflows/native-handlekompas.yml'
+      - '.github/workflows/provider-budget-readback.yml'
       - 'scripts/data_ping/native_handlekompas.py'
+      - 'scripts/health/provider_budget_status.py'
       - 'tests/data_ping/test_native_handlekompas.py'
+      - 'tests/health/test_provider_budget_status.py'
+      - '03_WEEKLY_OPERATIONS/provider_budget/**'
       - '04_MARKET_LEARNING/handlekompas/**'
       - '02_DATA_PING/operational_handoffs/NATIVE_ZERO_MANUAL_FEED*'
   schedule:
@@ -34,13 +38,18 @@ jobs:
           python-version: '3.12'
       - name: Compile and test Handlekompas
         run: |
-          python -m py_compile scripts/data_ping/native_handlekompas.py
+          python -m py_compile scripts/data_ping/native_handlekompas.py scripts/health/provider_budget_status.py
           python -m unittest tests.data_ping.test_native_handlekompas -v
+          python -m unittest tests.health.test_provider_budget_status -v
       - name: Validate repository state readback when available
         shell: bash
         run: |
           if [ -f 04_MARKET_LEARNING/entry_signals/auto_market_state/LATEST.json ]; then
-            python scripts/data_ping/native_handlekompas.py --no-write > /tmp/handlekompas.json
+            args=(--no-write)
+            if [ -f 03_WEEKLY_OPERATIONS/provider_budget/LATEST.json ]; then
+              args+=(--budget-status 03_WEEKLY_OPERATIONS/provider_budget/LATEST.json)
+            fi
+            python scripts/data_ping/native_handlekompas.py "${args[@]}" > /tmp/handlekompas.json
             python - <<'PY'
           import json
           d=json.load(open('/tmp/handlekompas.json'))
@@ -69,9 +78,15 @@ jobs:
         with:
           python-version: '3.12'
       - name: Generate latest Handlekompas
+        shell: bash
         run: |
           python -m unittest tests.data_ping.test_native_handlekompas -v
-          python scripts/data_ping/native_handlekompas.py --output-root 04_MARKET_LEARNING/handlekompas | tee /tmp/handlekompas-status.json
+          python -m unittest tests.health.test_provider_budget_status -v
+          args=(--output-root 04_MARKET_LEARNING/handlekompas)
+          if [ -f 03_WEEKLY_OPERATIONS/provider_budget/LATEST.json ]; then
+            args+=(--budget-status 03_WEEKLY_OPERATIONS/provider_budget/LATEST.json)
+          fi
+          python scripts/data_ping/native_handlekompas.py "${args[@]}" | tee /tmp/handlekompas-status.json
       - name: Validate source/hash/authority binding
         run: |
           python - <<'PY'
@@ -85,6 +100,10 @@ jobs:
           assert packet['manual_market_data_required'] is False
           assert packet['authority']['portfolio_execution'] is False
           assert packet['authority']['market_threshold_change'] is False
+          if Path('03_WEEKLY_OPERATIONS/provider_budget/LATEST.json').exists():
+              budget=json.loads(Path('03_WEEKLY_OPERATIONS/provider_budget/LATEST.json').read_text())
+              assert budget['contract']=='PROVIDER_BUDGET_STATUS_v1'
+              assert packet['BUDGET_HEALTH']['source']=='BOUND_EXTERNAL_BUDGET_STATUS'
           print('NATIVE_HANDLEKOMPAS_VALID', packet['action']['NOW'], packet['DATA_HEALTH']['status'], packet['BUDGET_HEALTH']['status'])
           PY
       - name: Commit with remote readback proof
@@ -113,6 +132,7 @@ jobs:
           name: native-handlekompas-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
             /tmp/handlekompas-status.json
+            03_WEEKLY_OPERATIONS/provider_budget/LATEST.json
             04_MARKET_LEARNING/handlekompas/LATEST.json
           retention-days: 14
           if-no-files-found: warn
@@ -129,4 +149,4 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh issue create --title "AUTOMATION FAILURE: Native Handlekompas ${GITHUB_RUN_ID}" --body "Native Handlekompas failed. Manual market-data feeding is not required. Inspect the owner/Auto Market State chain. Run: ${GITHUB_RUN_ID}" || true
+          gh issue create --title "AUTOMATION FAILURE: Native Handlekompas ${GITHUB_RUN_ID}" --body "Native Handlekompas failed. Manual market-data feeding is not required. Inspect the owner/Auto Market State/provider-budget chain. Run: ${GITHUB_RUN_ID}" || true

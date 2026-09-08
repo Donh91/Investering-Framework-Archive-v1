@@ -60,6 +60,26 @@ class NativeHandlekompasTest(unittest.TestCase):
         self.assertTrue(out["BUDGET_HEALTH"]["exact_monthly_spend_available"])
         self.assertEqual(out["BUDGET_HEALTH"]["remaining_monthly_budget"],17.5)
 
+    def test_bound_cfgi_credit_exhaustion_is_visible_without_claiming_monthly_spend(self):
+        budget={
+            "contract":"PROVIDER_BUDGET_STATUS_v1",
+            "status":"DEGRADED",
+            "scope":"PROVIDER_CREDITS_ONLY_NOT_ACCOUNT_MONTHLY_SPEND",
+            "providers":{
+                "CFGI":{
+                    "status":"EXHAUSTED",
+                    "reason":"CFGI_CREDITS_REMAINING_ZERO",
+                    "credits_remaining":0,
+                    "current_standard_call_expected_credits":30,
+                }
+            },
+        }
+        out=build(self.packet(),external_budget=budget)
+        self.assertEqual(out["BUDGET_HEALTH"]["status"],"DEGRADED")
+        self.assertEqual(out["BUDGET_HEALTH"]["providers"]["CFGI"]["credits_remaining"],0)
+        self.assertEqual(out["BUDGET_HEALTH"]["provider_signals"][0]["provider"],"CFGI")
+        self.assertFalse(out["BUDGET_HEALTH"]["exact_monthly_spend_available"])
+
     def test_unknown_exact_budget_is_explicit(self):
         out=build(self.packet())
         self.assertEqual(out["BUDGET_HEALTH"]["status"],"UNKNOWN_EXACT_SPEND_NO_EXHAUSTION_SIGNAL")
@@ -80,7 +100,6 @@ class NativeHandlekompasTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             cwd=Path.cwd()
             try:
-                # Use a relative output root so durable pointer semantics match production.
                 root=Path(tmp)
                 packet=build(self.packet())
                 result=write(packet,root)
