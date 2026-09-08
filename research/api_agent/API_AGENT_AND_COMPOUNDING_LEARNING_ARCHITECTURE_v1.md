@@ -186,3 +186,72 @@ The final preregistered confirmatory test remains the only owner of the study ve
 Any future agent auditing experiments, learning, calibration, forecast skill or automatic improvement should read this architecture plus the controller `POLICY.json`, `STATE.json` and `NEXT_BEST_EXPERIMENT.json` before proposing a new learning engine.
 
 A more capable future agent may improve this controller only by proposing a versioned methodology or a new child test. It must not use its increased capability to retroactively rewrite frozen parents, re-score old evidence under newly invented rules, weaken the confirmatory firewall or bypass the existing Research Governance Stack.
+
+## 2026-09-08 Astra and budget admission candidate
+
+Status: `IMPLEMENTATION_CANDIDATE_NOT_FULLY_ACTIVATED`.
+The current budget owner remains `API_INTELLIGENCE_POLICY_v2.json`: USD 20/month,
+USD 2 global reserve, and the existing lane caps. The two USD 1 monthly
+learning caps already enforced by monthly-ai-learning-council.yml are now also
+explicit in the budget owner. Manual research/prep share the existing research
+lane; unknown task-to-lane assignments fail closed. Historical cost receipts remain
+immutable. New gateway estimates use the official September 8 rates, including
+Astra and the per-request long-context surcharge. They are conservative token
+estimates, not a claim to have read the OpenAI billing account.
+
+The existing `api_gateway.py` now checks the worst-case text request plus its
+bounded retry before the first paid POST. `gateway_budget.py` calls the existing
+monthly and lane evidence guards, applies month pacing with two days of headroom,
+and writes an exclusive local reservation under `runtime/api-cost-ledger`.
+The input bound uses serialized UTF-8 bytes plus 8192 framing tokens. Tool loops,
+server-side conversation history and premium service tiers are rejected by this
+text-only cost-bound path. The output cap includes reasoning output tokens.
+Missing paid-response usage leaves the full reservation outstanding rather than
+recording zero. Long-context pricing is applied to each attempt separately.
+A file lock protects concurrent admissions within the same checkout.
+
+The capability adapter keeps the existing `ACTIVE_SHADOW_FIRST` policy and
+explicit qualification/activation gate. Live overrides additionally require a
+fresh `API_BUDGET_SNAPSHOT_v1` in the trusted runtime snapshot, with status PASS,
+generation timestamp, current YYYY-MM, spent_usd and lane_remaining_usd. The host
+must derive these from the existing budget owners and evidence, not from an LLM.
+The final gateway independently reads cost evidence before paying. Delegated
+input and output budgets, including retry output, constrain the actual request.
+Heavy research can require Astra at low through max; automatic effort uses low
+through xhigh only. The adapter never silently substitutes an unqualified model.
+
+### Exact activation gaps
+
+This candidate does **not** establish a framework-wide hard spending guarantee:
+
+1. The local reservation must be durably published and read back before a paid
+   call, and reconciled across runner crashes, new checkouts and cancellation.
+   A successful end-of-job receipt alone cannot cover that failure window.
+2. All other paid entry points require the same owner-backed reservation path:
+   `mcp_research_gateway.py`, `pdlt_gateway.py`,
+   `adaptive_evidence_gap_auditor.py`, `adaptive_decision_miss_auditor.py`,
+   `evidence_gap_validation_auditor.py`, the direct call used by
+   `shadow_admission_ai_decider.py`, and Cycle Navigator's publication call.
+   MCP tool-derived input and provider/tool fees require bounded accounting
+   before enabling expensive models in those paths. Frozen experimental model
+   assignments must remain pinned unless separately governed.
+3. All paid-call receipts, including Cycle Navigator and ancillary experiments,
+   must be included in one reconciled monthly accounting view. The existing
+   receipt-root guard alone is not proof of OpenAI project-wide expenditure.
+4. Live model access and task qualification must be verified through the approved
+   credential plane. No OpenAI key is available in this Work session; no paid
+   smoke call or account-wide model-access confirmation has been performed.
+5. Codex host usage admission and atomic dispatch reservations must be connected
+   to the actual host. No weekly quota/reset telemetry is available in this
+   session. API dollars cannot be converted into Codex subscription percentages.
+
+Workflow wiring changes must follow the existing repository safety and external
+Vault safepoint sequence before publication. Do not flip the routing policy to
+ACTIVE_QUALIFIED or declare full deployment from deterministic tests alone.
+The task registry, schedules, market rules and portfolio authority are unchanged.
+
+Sources checked 2026-09-08:
+[Astra](https://developers.openai.com/api/docs/models/gpt-6-astra),
+[Luna](https://developers.openai.com/api/docs/models/gpt-5.6-luna),
+[Terra](https://developers.openai.com/api/docs/models/gpt-5.6-terra),
+[Sol](https://developers.openai.com/api/docs/models/gpt-5.6-sol).

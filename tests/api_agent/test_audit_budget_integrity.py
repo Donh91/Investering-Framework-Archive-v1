@@ -180,3 +180,11 @@ def test_overflowed_sum_blocks_with_standard_json(tmp_path, kind):
     assert proc.returncode != 0
     assert result['spent_usd'] is None
     assert result['remaining_usd'] is None
+
+
+def test_manual_research_alias_shares_existing_research_cap(tmp_path):
+    (tmp_path / 'a.json').write_text(json.dumps(receipt(task='RESEARCH_AUTOMATION', response_id='research-call', estimated_cost_usd=5)))
+    (tmp_path / 'b.json').write_text(json.dumps(receipt(task='DEEP_RESEARCH_MANUAL', response_id='manual-call', estimated_cost_usd=5)))
+    proc, result = run_guard(tmp_path, 'lane', '--task', 'RESEARCH_AUTOMATION', '--include-task', 'DEEP_RESEARCH_MANUAL')
+    assert proc.returncode != 0
+    assert result['spent_usd'] == 10

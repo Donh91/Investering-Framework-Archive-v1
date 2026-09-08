@@ -7,7 +7,7 @@
   "default_mode": "SHADOW_RECOMMEND_ONLY",
   "production_activation": "EXPLICIT_RUNTIME_FLAG_AFTER_QUALIFICATION",
   "pricing_snapshot": {
-    "observed_at_utc_date": "2026-09-05",
+    "observed_at_utc_date": "2026-09-08",
     "semantics": "ROUTING_COST_ESTIMATE_ONLY_NOT_BILLING_OR_BUDGET_AUTHORITY",
     "long_context_threshold_tokens": 272000,
     "long_context_input_multiplier": 2.0,
@@ -111,6 +111,7 @@
     "read_only": true
   },
   "execution": {
+    "heavy_research_preferred_model": "gpt-6-astra",
     "max_parallel_units": 4,
     "astra_parent_only_when_required_by_profile": true,
     "api_override_requires_verified_runtime_snapshot": true,
@@ -120,6 +121,17 @@
     "deterministic_executor_name": "DETERMINISTIC",
     "code_executor_name": "CODEX",
     "api_executor_name": "OPENAI_API"
+  },
+  "codex_usage": {
+    "default_model": "gpt-6-astra",
+    "default_effort": "low",
+    "telemetry_max_age_seconds": 900,
+    "weekly_reserve_percent": 20,
+    "rolling_24h_cap_percent": 20,
+    "max_effort_minimum_elapsed_days": 1,
+    "unknown_usage_action": "WAITING_FOR_USAGE",
+    "automatic_api_fallback": false,
+    "speed": "standard"
   },
   "authority": {
     "creates_truth": false,

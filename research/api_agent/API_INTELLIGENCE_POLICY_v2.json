@@ -8,7 +8,9 @@
     "DAILY_CONFLICT_REVIEW": 3.0,
     "WEEKLY_CALIBRATION_SHADOW": 2.5,
     "WEEKLY_ADVERSARIAL_REVIEW": 2.5,
-    "RESEARCH_AUTOMATION": 6.0
+    "RESEARCH_AUTOMATION": 6.0,
+    "MONTHLY_LEARNING_ANALYST": 1.0,
+    "MONTHLY_LEARNING_ADVERSARIAL": 1.0
   },
   "director_schedule": {
     "maximum_runs_per_day": 4,
@@ -40,5 +42,16 @@
     "weight_change": false,
     "portfolio_action": false,
     "canonical_promotion": false
+  },
+  "resource_pacing": {
+    "monthly_headroom_days": 2,
+    "pre_call_reservation_required": true,
+    "retry_cost_included": true,
+    "api_and_codex_pools_separate": true,
+    "automatic_paid_fallback": false
+  },
+  "task_lanes": {
+    "DEEP_RESEARCH_MANUAL": "RESEARCH_AUTOMATION",
+    "MASTER_MONDAY_PREP_SHADOW": "RESEARCH_AUTOMATION"
   }
 }
