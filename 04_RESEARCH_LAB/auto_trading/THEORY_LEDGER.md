@@ -109,6 +109,124 @@ AI may propose changes. It may not silently promote them.
 
 ---
 
+## AT-HYP-0008 - Constrained AI-to-strategy compilation beats opaque AI decisions
+
+Hypothesis:
+Using AI to translate natural-language strategy ideas into a limited, inspectable deterministic rule schema will produce more reproducible and auditable research than allowing an LLM to directly emit BUY/SELL decisions.
+
+Inspired by:
+NMST Foundry's constrained AI form-filler approach.
+
+Test status: HIGH PRIORITY FOR ASTRA
+
+Required comparison:
+- human-authored deterministic rule
+- AI-compiled deterministic rule reviewed before test
+- unconstrained AI decision policy
+
+Success criteria:
+Lower rule ambiguity, higher replay reproducibility and no material loss of post-cost strategy quality.
+
+Falsifier:
+If constrained compilation mainly creates generic rules with no useful research productivity gain, retain AI for analysis/code only.
+
+---
+
+## AT-HYP-0009 - Common-clock/common-cost forward competition improves strategy selection
+
+Hypothesis:
+Strategies evaluated under the same market clock, fill convention, fee model, spread/slippage assumptions and starting capital can be compared more reliably than strategies coming from independent backtests with heterogeneous assumptions.
+
+Inspired by:
+NMST League shared runtime.
+
+Test status: HIGH PRIORITY
+
+Required design:
+- frozen rule version
+- identical starting equity
+- identical price source and candle-close definition
+- identical fee/slippage schedule by liquidity bucket
+- immutable forward-event ledger
+
+Falsifier:
+If ranking is unstable across small reasonable changes in the common execution model, the leaderboard is measuring assumptions rather than edge.
+
+---
+
+## AT-HYP-0010 - Frozen forward records dominate editable backtests for promotion decisions
+
+Hypothesis:
+A strategy that survives a frozen simulated forward period with immutable rules provides materially stronger promotion evidence than one selected from repeated editable backtests.
+
+Test status: HIGH PRIORITY FOR ASTRA
+
+Metrics:
+forward return after costs, drawdown, downside deviation, turnover, strategy drift, consistency and performance relative to frozen baseline.
+
+Guardrail:
+Backtests remain for discovery. Forward records govern confidence.
+
+Falsifier:
+If frozen forward performance is not more predictive of later survival than walk-forward/backtest evidence, reduce its promotion weight.
+
+---
+
+## AT-HYP-0011 - CFGI has more value as a feature family than as a raw sentiment threshold
+
+Hypothesis:
+CFGI can add incremental automated-trading value when used through velocity, divergence, dispersion, component signals and regime interaction, while raw Fear/Greed score thresholds alone will show little robust forward alpha.
+
+Rationale:
+CFGI itself characterizes sentiment as a gauge rather than a price predictor and reports weak next-day predictive relationship for the composite score.
+
+Test status: VERY HIGH PRIORITY FOR ASTRA
+
+Feature families to test:
+1. score level
+2. score delta / velocity
+3. 15m vs 1h vs 4h vs 1d disagreement
+4. asset CFGI minus broad MARKET CFGI
+5. cross-sectional CFGI dispersion across the investable universe
+6. individual component values and component velocity
+7. CFGI behaviour conditional on Framework regime state
+8. CFGI behaviour around flush, reclaim, mechanical recovery and rotation sequences
+
+Baselines:
+- price/volume only
+- simple RSI/momentum
+- framework regime only
+- price/volume + framework regime
+
+Promotion requirement:
+CFGI must add stable post-cost out-of-sample value over these baselines rather than merely explain moves after they occur.
+
+Falsifier:
+If feature ablation shows no stable incremental value across regimes or the value disappears after realistic latency/costs, keep CFGI as context only.
+
+---
+
+## AT-HYP-0012 - Modular data/signal providers improve scientific attribution
+
+Hypothesis:
+Separating data modules, signal modules, strategy logic and execution into independent components improves attribution and reduces the risk that an apparently successful strategy hides which input actually contributed edge.
+
+Inspired by:
+NMST's stated model of supplying data/signals and a marketplace for proven strategy/data modules.
+
+Test status: QUEUED
+
+Example architecture:
+CFGI data module -> feature transformation -> deterministic strategy -> framework regime gate -> execution simulator.
+
+Required experiment:
+Run ablations that remove each module one at a time.
+
+Falsifier:
+If modularization creates complexity without improving attribution, testability or robustness, simplify the stack.
+
+---
+
 ## Candidate metrics for every strategy
 
 At minimum:
