@@ -1,0 +1,31 @@
+{
+  "binding": "BLOCKHORIZON_CURRENT_PRIVATE_BINDING_v1",
+  "status": "PRIVATE_ARCHIVE_SCAFFOLD_ACTIVE__RAW_TRANSFER_PENDING",
+  "source_contract_id": "BH01_BLOCKHORIZON_MANUAL_EXPORT_HISTORICAL_V1",
+  "private_repository": "Donh91/secrets",
+  "private_commit_sha_reachable_from_main": "bd9db93be27079bbc4f6c54ecd79527c9f08ba3c",
+  "private_archive_readme": "raw/BH01_BLOCKHORIZON_MANUAL_EXPORT_HISTORICAL_V1/README.md",
+  "private_raw_root": "raw/BH01_BLOCKHORIZON_MANUAL_EXPORT_HISTORICAL_V1/2026/09/08/",
+  "private_bundle_manifest": {
+    "path": "receipts/BH01_BLOCKHORIZON_MANUAL_EXPORT_HISTORICAL_V1/2026/09/08/manual_export_bundle_manifest.json",
+    "git_blob_sha": "61b0d5ebb5a59b2d0962ecd407728bbd441fb925",
+    "receipt_status": "RAW_FILES_PENDING_TRANSFER_TO_RESTRICTED_PLANE"
+  },
+  "owner_attestation_path": "GOVERNANCE/BLOCKHORIZON_OWNER_ATTESTATION_2026-09-08.json",
+  "expected_bundle": {
+    "received_csv_retrieval_files": 32,
+    "unique_content_hashes": 29,
+    "total_received_bytes": 6472210,
+    "exact_duplicate_groups": 3
+  },
+  "raw_file_validation": {
+    "files_physically_verified_in_private_raw_root": 0,
+    "required_before_complete": 32,
+    "sha256_readback": "PENDING",
+    "completeness_status": "INCOMPLETE",
+    "validation_status": "PENDING_RAW_FILE_TRANSFER"
+  },
+  "public_value_policy": "PROVIDER_VALUE_FREE_BINDINGS_ONLY",
+  "analysis_authority": "NONE_UNTIL_EXACT_PRIVATE_RAW_PATH_HASH_BINDING_IS_COMPLETE",
+  "next_transition": "After raw CSV upload, verify every exact path/byte count/SHA-256 against the private manifest, update the private receipt to RAW_ARCHIVE_COMPLETE, then replace this pointer with the immutable completed private commit binding."
+}
