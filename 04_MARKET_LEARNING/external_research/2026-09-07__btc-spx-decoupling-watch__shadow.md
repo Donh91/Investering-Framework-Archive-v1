@@ -117,6 +117,53 @@ Deprioritize or kill the super-cycle interpretation if one or more of the follow
 - the proprietary risk/liquidity model cannot be defined, reproduced, proxied or prospectively evaluated well enough to distinguish signal from narrative;
 - the thesis only explains outcomes retrospectively and fails forward tests.
 
+### Prospective observation protocol
+
+Registration state: `SHADOW_NOTE_NOT_ACTIVE_TEST`.
+
+The canonical Active Test Registry states that no new active test may be added unless it replaces, merges or directly repairs an existing registered test. This note therefore does not create a new test ID, new forward-test owner, new scheduled workflow or new evidence engine.
+
+Frozen research alternatives from the 2026-09-08 source observation:
+
+- `A_CLASSIC_DEEP_CYCLE_RESET`
+- `B_ETF_ERA_SHALLOW_STRUCTURAL_RESET_EXTENDED_CYCLE`
+
+Future evidence may update the research assessment only when it is source-backed and timestamped. Missing or proprietary methodology remains `UNKNOWN`, not inferred.
+
+Observation axes:
+
+1. `BTC_SPX_RELATIONSHIP` - persistence versus mean reversion, with methodology/window recorded when known.
+2. `BTC_STRUCTURAL_SUPPORT` - whether BTC preserves the shallower structural floor implied by the thesis or proceeds into a conventional deep reset.
+3. `COST_BASIS_RELATIONSHIP` - recent-investor versus all-investor cost basis, only when metric definition and source can be verified.
+4. `WOO_MODEL_VERIFIABILITY` - liquidity-cycle and risk-model methodology status: `VERIFIED`, `PARTIAL_PROXY`, `PROPRIETARY_UNVERIFIED`, or `NOT_TESTABLE`.
+5. `BTC_ABSORPTION_CONGRUENCE` - spot/ETF or other existing framework-owned BTC absorption evidence, without creating a new sensor.
+6. `ECOSYSTEM_TRANSMISSION` - ETH/BTC, breadth and deployment evidence kept separate from BTC structural health.
+
+Allowed shadow assessment labels:
+
+- `INSUFFICIENT_EVIDENCE`
+- `SUPPORTS_A_CLASSIC_RESET`
+- `SUPPORTS_B_EXTENDED_CYCLE`
+- `MIXED_OR_REGIME_DEPENDENT`
+- `FALSIFIED_OR_DEPRIORITIZED`
+- `NOT_TESTABLE`
+
+These labels are qualitative research classifications, not probabilities, scores, market phases or portfolio permissions.
+
+Evidence discipline:
+
+- preserve the original 2026-09-08 hypothesis and source context rather than rewriting it after outcomes;
+- record later analyst revisions separately from the original claim;
+- do not backfill unavailable proprietary model values from chart appearance or narrative;
+- distinguish framework-owned observable proxies from Woo's proprietary/internal models;
+- do not treat correlation, cost-basis structure, BTC absorption or model output as independent confirmation when they share underlying market information;
+- evaluate incremental explanatory value against existing cross-asset/liquidity sensors before any future promotion proposal;
+- a future formal forward test requires compliance with the Active Test Registry, including replacement/merge/direct repair of an existing test or an explicit governance exception. This note alone cannot authorize one.
+
+Review cadence: `EVENT_DRIVEN_WITH_EXISTING_RESEARCH_REVIEWS`.
+
+Revisit only when materially new source evidence, methodology, analyst revision, or framework-owned cross-asset/structural evidence becomes available. No new standalone polling or scheduled automation is created by this note.
+
 ### Governance for the follow-up
 
 SHADOW RESEARCH ONLY.
