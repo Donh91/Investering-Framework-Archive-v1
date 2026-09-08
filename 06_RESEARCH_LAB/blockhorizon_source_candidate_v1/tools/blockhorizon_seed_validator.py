@@ -6,7 +6,14 @@ metadata. It never emits source metric values. If an OHLC file and per-metric
 `Price [USD]` columns are present, it verifies equality and emits only counts.
 """
 from __future__ import annotations
-import argparse, csv, datetime as dt, hashlib, json, pathlib, statistics
+
+import argparse
+import csv
+import datetime as dt
+import hashlib
+import json
+import pathlib
+import statistics
 from collections import defaultdict
 
 
@@ -113,6 +120,12 @@ def price_crosscheck(paths, unique_records, tolerance=0.011):
     }
 
 
+def representative_key(rec):
+    """Prefer stable export names over browser/UI copy suffixes like `(1)`."""
+    name = rec["original_filename"]
+    return ("(" in name, len(name), name)
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--input-dir", required=True)
@@ -120,17 +133,20 @@ def main():
     args = parser.parse_args()
     paths = sorted(pathlib.Path(args.input_dir).glob("*.csv"))
     records = [inspect_csv(path) for path in paths]
-    first = {}
-    unique = []
+
     duplicate_groups = defaultdict(list)
+    records_by_hash = defaultdict(list)
     for rec in records:
         duplicate_groups[rec["sha256"]].append(rec["original_filename"])
-        if rec["sha256"] in first:
-            rec["content_duplicate_of"] = first[rec["sha256"]]
-        else:
-            rec["content_duplicate_of"] = None
-            first[rec["sha256"]] = rec["original_filename"]
-            unique.append(rec)
+        records_by_hash[rec["sha256"]].append(rec)
+
+    unique = []
+    for group in records_by_hash.values():
+        representative = min(group, key=representative_key)
+        representative["content_duplicate_of"] = None
+        unique.append(representative)
+    unique.sort(key=lambda rec: rec["original_filename"])
+
     out = {
         "schema": "BLOCKHORIZON_PROVIDER_VALUE_FREE_INVENTORY_v1",
         "generated_at_utc": dt.datetime.now(dt.timezone.utc).isoformat(),
