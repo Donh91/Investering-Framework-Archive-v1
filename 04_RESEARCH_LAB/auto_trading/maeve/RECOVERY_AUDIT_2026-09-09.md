@@ -120,3 +120,29 @@ This recovery is research evidence, not a live trading strategy and not a recove
 Do not promote MAEVE-derived rules directly into execution. Use the existing AUTO_TRADING governance path:
 
 `reconstructed evidence -> frozen hypothesis -> replay/backtest -> chronological walk-forward -> paper-forward record -> adversarial audit -> promote/revise/kill`
+
+## Restricted evidence binding
+
+Status: `RESTRICTED_DATA_PLANE_BOUND`
+
+The complete research package is now preserved in the restricted data plane and is the private evidence authority for future authorized MAEVE/Astra work.
+
+Immutable binding:
+
+- private repository: `Donh91/secrets`
+- private merge commit reachable from `main`: `c51aeb8ced23d129072977e7b9e317a9e228bfd5`
+- archive root: `raw/MAEVE_PUBLIC_LEDGER_RECOVERY_V1/2026/09/09/`
+- authorized-agent entrypoint: `raw/MAEVE_PUBLIC_LEDGER_RECOVERY_V1/2026/09/09/AGENT_INDEX.md`
+- private metadata manifest: `raw/MAEVE_PUBLIC_LEDGER_RECOVERY_V1/2026/09/09/metadata/MANIFEST.json`
+- exact original package: `raw/MAEVE_PUBLIC_LEDGER_RECOVERY_V1/2026/09/09/MAEVE_LEDGER_RECOVERY.zip`
+- original package bytes: `309855`
+- original package SHA-256: `9770bcf968d9e03f97af7cfd0bcaaf6baad21c928d97b3b610a457dfb87343a5`
+- normalized parent-position CSV: `raw/MAEVE_PUBLIC_LEDGER_RECOVERY_V1/2026/09/09/MAEVE_TRADES_NORMALIZED.csv`
+- normalized CSV bytes: `164399`
+- normalized CSV SHA-256: `532c858ba3d6f0c765419c6869f881bec278aa792108676a6d70933b08f94441`
+
+The private archive also contains all 18 ZIP members unpacked exactly under `extracted/` and line-bounded search copies of oversized text datasets under `searchable/` so repository-aware agents can discover MAEVE rows and research artifacts without depending on ZIP inspection.
+
+The standalone dashboard PNG is currently hash-bound rather than committed as a binary. Its row-level evidence is preserved in `extracted/SCREENSHOT_TRADE_EXTRACTION.csv`. This does not reduce the recovered ledger coverage, but agents must not claim the PNG binary itself is stored in the private repository.
+
+Raw or normalized MAEVE/CFGI values must remain in the restricted data plane. The public control plane may expose only this value-free binding, provenance metadata, research conclusions and governance state.
