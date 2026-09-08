@@ -201,3 +201,57 @@ The correct order is:
 VERY HIGH once sufficient row coverage exists.
 
 Astra should treat MAEVE as a public behavioral reverse-engineering case study and compare interpretable behavioral clones against simple baselines and our existing Framework regime context.
+
+---
+
+## AT-SRC-0004
+
+Date captured: 2026-09-09
+Source type: X / social-media post
+Author: Alex, `@alexcolevv`
+URL: https://x.com/alexcolevv/status/2097417262898487782?s=46
+Status: SCREENED
+Evidence class: ARCHITECTURE INSPIRATION; ANECDOTAL IMPLEMENTATION CLAIM
+
+### Source summary
+
+A mirrored version of the post describes a trader using multiple AI agents to monitor more than 30 stocks. Each agent is assigned a narrower monitoring role, such as a sector, signal type or pattern class. Examples in the post include unusual options flow, cross-asset correlation breaks and unscheduled volume spikes. Human attention is reserved for events that cross an alert threshold. The post explicitly identifies unresolved disagreement between agents as the difficult part of the architecture.
+
+The source is useful as a systems-design prompt, not as evidence that the described setup is profitable or even implemented exactly as narrated.
+
+### Retain
+
+1. Monitoring can be decomposed across specialist agents instead of asking one model to understand every market, feature and pattern simultaneously.
+2. Specialist outputs should feed a common evidence layer rather than independently execute capital decisions.
+3. Human or higher-authority attention should be scarce and triggered by explicit salience/uncertainty gates.
+4. Agent disagreement is not merely an operational nuisance; it can be measured as uncertainty and used to suppress, delay or escalate a proposed action.
+5. Correlation breaks and unscheduled relative-volume events are structurally useful examples of event detectors, but require independent testing before becoming strategy features.
+6. The visualization layer should expose why an alert fired and which agents agreed/disagreed rather than merely display more market screens.
+
+### Do not retain as fact
+
+- The existence, profitability or sophistication of the trader described in the anecdote.
+- That two agents, 20 monitors or 30+ stocks are inherently better than a simpler architecture.
+- That agent-selected thresholds are reliable without frozen rules, calibration and evaluation.
+- Any implied edge from options flow, correlation breaks or volume spikes without out-of-sample evidence.
+
+### Framework overlap
+
+This source largely complements existing hypotheses `AT-HYP-0003` and `AT-HYP-0004` rather than justifying a separate trading engine. The genuinely novel research question is conflict handling between specialist observers and whether disagreement itself contains useful uncertainty information.
+
+### Research follow-up for Astra
+
+Compare:
+- one monolithic observer;
+- deterministic specialist detectors;
+- specialist AI observers with shared feature contracts;
+- confidence-weighted consensus;
+- veto-based consensus;
+- explicit disagreement/no-trade state;
+- higher-authority arbitration only for unresolved high-value cases.
+
+Measure alert precision, recall, false escalation rate, latency, calibration, turnover and downstream post-cost trading value.
+
+### Promotion test
+
+Do not promote a multi-agent architecture because it looks sophisticated. It must outperform a simpler single-owner/deterministic baseline after accounting for coordination errors, latency, token/compute cost and correlated false positives.
