@@ -1,0 +1,124 @@
+name: Native Market Recovery
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/native-market-recovery.yml'
+      - 'scripts/health/native_market_recovery.py'
+      - 'tests/health/test_native_market_recovery.py'
+      - '09_SOURCE_QA/native_market_recovery/**'
+  schedule:
+    # Evaluate after hourly owner capture and before :50 state assembly.
+    - cron: '35 * * * *'
+      timezone: 'Europe/Copenhagen'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write
+  issues: write
+
+concurrency:
+  group: framework-main-writer
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compile and test bounded recovery
+        run: |
+          python -m py_compile scripts/health/native_market_recovery.py
+          python -m unittest tests.health.test_native_market_recovery -v
+
+  recover:
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Build bounded recovery decision
+        id: plan
+        run: |
+          python -m unittest tests.health.test_native_market_recovery -v
+          python scripts/health/native_market_recovery.py | tee /tmp/native-market-recovery.json
+          python - <<'PY' >> "$GITHUB_OUTPUT"
+          import json
+          d=json.load(open('/tmp/native-market-recovery.json'))
+          print('dispatch_count=' + str(len(d['dispatches'])))
+          print('suppressed_count=' + str(len(d['suppressed_retries'])))
+          PY
+      - name: Persist recovery decision before dispatch
+        shell: bash
+        run: |
+          git config user.name framework-operations-bot
+          git config user.email framework-operations-bot@users.noreply.github.com
+          git add 09_SOURCE_QA/native_market_recovery
+          if ! git diff --cached --quiet; then
+            git commit -m "ops: native market recovery ${GITHUB_RUN_ID}"
+            pushed=false
+            for attempt in 1 2 3; do
+              git rebase --abort 2>/dev/null || true
+              if git pull --rebase origin main && git push origin HEAD:main; then pushed=true; break; fi
+              sleep $((attempt * 5))
+            done
+            [ "$pushed" = true ]
+            git fetch origin main
+            git merge-base --is-ancestor HEAD origin/main
+          fi
+      - name: Dispatch bounded owner repairs
+        if: steps.plan.outputs.dispatch_count != '0'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          python - <<'PY' > /tmp/workflows.txt
+          import json
+          d=json.load(open('/tmp/native-market-recovery.json'))
+          for row in d['dispatches']:
+              print(row['workflow'])
+          PY
+          while IFS= read -r workflow; do
+            [ -z "$workflow" ] && continue
+            echo "Dispatching admitted owner repair: $workflow"
+            gh workflow run "$workflow" --ref main
+          done < /tmp/workflows.txt
+      - name: Surface provider/quota suppression
+        if: steps.plan.outputs.suppressed_count != '0'
+        run: echo '::warning::Provider/auth/quota/token/budget condition suppressed automatic retry. This is operational health, not market evidence; Handlekompas will surface it.'
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: native-market-recovery-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            /tmp/native-market-recovery.json
+            09_SOURCE_QA/native_market_recovery/LATEST.json
+            09_SOURCE_QA/native_market_recovery/STATE.json
+          retention-days: 14
+          if-no-files-found: warn
+
+  incident:
+    needs: recover
+    if: failure() && github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Open recovery incident
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue create --title "AUTOMATION FAILURE: Native Market Recovery ${GITHUB_RUN_ID}" --body "Native recovery failed. Manual market-data feeding is not required. Inspect the owner/recovery chain. Run: ${GITHUB_RUN_ID}" || true
