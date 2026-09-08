@@ -15,14 +15,7 @@
   "validation_summary": {
     "all_timestamp_series_strictly_increasing": true,
     "total_duplicate_timestamps": 0,
-    "reference_price_crosscheck": {
-      "status": "PASS",
-      "files_checked": 27,
-      "overlapping_row_comparisons": 138636,
-      "mismatch_count": 0,
-      "tolerance_usd": 0.011,
-      "effect": "ANALYSIS_VIEW_MAY_DEDUPLICATE_REPEATED_PRICE_ONLY_AFTER_THIS_CHECK_PASSES"
-    },
+    "reference_price_crosscheck": {"status":"PASS","files_checked":27,"overlapping_row_comparisons":138636,"mismatch_count":0,"tolerance_usd":0.011,"effect":"ANALYSIS_VIEW_MAY_DEDUPLICATE_REPEATED_PRICE_ONLY_AFTER_THIS_CHECK_PASSES"},
     "blank_cells_interpretation": "UNASSESSED_FAMILY_AWARE; DO_NOT_TREAT_COMPLEX_BUCKET_OR_AGE_BAND_BLANKS_AS GAPS WITHOUT SOURCE SEMANTICS"
   },
   "datasets": [
@@ -30,7 +23,7 @@
     {"metric_id":"BH_COIN_VINTAGES","original_filename":"coin_vintages_2026-09-08T06-12-03.csv","retrieved_at_utc":"2026-09-08T06:12:03Z","sha256":"7c2123c56ae214415415bcfddcf717ae1500b1bd5c9212b885a91b326d7ea41b","bytes":293409,"row_count":5975,"column_count":21,"timestamp_start":"2009-01-11","timestamp_end":"2026-09-07","median_cadence":"DAILY"},
     {"metric_id":"BH_NUPL_LTH","original_filename":"nupl_long_term_supply_lts__2026-09-07T21-55-54.csv","retrieved_at_utc":"2026-09-07T21:55:54Z","sha256":"2649368868617cb813854532b4cdcf1af973e53b26e2c0e796e0444190311d42","bytes":155382,"row_count":5789,"column_count":3,"timestamp_start":"2010-11-01","timestamp_end":"2026-09-06","median_cadence":"DAILY"},
     {"metric_id":"BH_NUPL_STH","original_filename":"nupl_short_term_supply_sts__2026-09-08T07-10-50.csv","retrieved_at_utc":"2026-09-08T07:10:50Z","sha256":"e80a9bc6981af669adf7daf7d960d997b5dff2b93ea4cce7211fc3dcdb987b6f","bytes":157059,"row_count":5790,"column_count":3,"timestamp_start":"2010-11-01","timestamp_end":"2026-09-07","median_cadence":"DAILY"},
-    {"metric_id":"BH_STH_SUPPLY_LOSS_BTC","original_filename":"supply_short_term_sts_in_loss_2026-09-08T06-10-44(1).csv","retrieved_at_utc":"2026-09-08T06:10:44Z","sha256":"52289d1bafd016ad683ab3e64f437bf4ca882905ce73d33e2abf156a723e6ecc","bytes":188194,"row_count":5790,"column_count":3,"timestamp_start":"2010-11-01","timestamp_end":"2026-09-07","median_cadence":"DAILY"},
+    {"metric_id":"BH_STH_SUPPLY_LOSS_BTC","original_filename":"supply_short_term_sts_in_loss_2026-09-08T06-10-44.csv","retrieved_at_utc":"2026-09-08T06:10:44Z","sha256":"52289d1bafd016ad683ab3e64f437bf4ca882905ce73d33e2abf156a723e6ecc","bytes":188194,"row_count":5790,"column_count":3,"timestamp_start":"2010-11-01","timestamp_end":"2026-09-07","median_cadence":"DAILY"},
     {"metric_id":"BH_STH_SUPPLY_PROFIT_BTC","original_filename":"supply_short_term_sts_in_profit_2026-09-08T06-10-24.csv","retrieved_at_utc":"2026-09-08T06:10:24Z","sha256":"d00bf755dc802a82ceab1057965adf1188e4e2c5d9652f85cf05cc560aa557b5","bytes":192978,"row_count":5790,"column_count":3,"timestamp_start":"2010-11-01","timestamp_end":"2026-09-07","median_cadence":"DAILY"},
     {"metric_id":"BH_SOPR_LTH","original_filename":"sopr_long_term_supply_lts__2026-09-08T06-05-52.csv","retrieved_at_utc":"2026-09-08T06:05:52Z","sha256":"af08a37e0372eb2c712c491333af6f13095b005a5dd8e9638448dd1342348164","bytes":155067,"row_count":5790,"column_count":3,"timestamp_start":"2010-11-01","timestamp_end":"2026-09-07","median_cadence":"DAILY"},
     {"metric_id":"BH_REALIZED_CAP_HODL_WAVES","original_filename":"realized_cap_hodl_waves_2026-09-08T06-11-45.csv","retrieved_at_utc":"2026-09-08T06:11:45Z","sha256":"9cf0c498fa1a8766f6aeab5d6167d261c782cd42efed06ac546ad4ea89dcd4ea","bytes":552358,"row_count":6451,"column_count":14,"timestamp_start":"2009-01-09","timestamp_end":"2026-09-07","median_cadence":"DAILY"},
@@ -53,7 +46,7 @@
     {"metric_id":"BH_SOPR","original_filename":"sopr_spent_output_profit_ratio__2026-09-08T06-05-26.csv","retrieved_at_utc":"2026-09-08T06:05:26Z","sha256":"5cc5a9d1baa6b4c461862cb0cff0741dcbd97e359c1d4562f0fb2500b97b102e","bytes":160483,"row_count":5790,"column_count":3,"timestamp_start":"2010-11-01","timestamp_end":"2026-09-07","median_cadence":"DAILY"},
     {"metric_id":"BH_MVRV","original_filename":"mvrv_market_value_to_realized_value_ratio__2026-09-07T21-54-18.csv","retrieved_at_utc":"2026-09-07T21:54:18Z","sha256":"45acb127c53f647a0d22b740b072bb70244b5442cd9148f2b62613b0f1cb3af2","bytes":160460,"row_count":5789,"column_count":3,"timestamp_start":"2010-11-01","timestamp_end":"2026-09-06","median_cadence":"DAILY"},
     {"metric_id":"BH_MVRV_Z","original_filename":"mvrv_z_score_2026-09-07T21-53-33.csv","retrieved_at_utc":"2026-09-07T21:53:33Z","sha256":"55cabafede465a416caa107564391c7b688991472283e8c2037fdaba293e2d35","bytes":155469,"row_count":5789,"column_count":3,"timestamp_start":"2010-11-01","timestamp_end":"2026-09-06","median_cadence":"DAILY"},
-    {"metric_id":"BH_REALIZED_CAP","original_filename":"realized_cap_2026-09-08T06-11-16(1).csv","retrieved_at_utc":"2026-09-08T06:11:16Z","sha256":"1bb437ac6a55107e6cba183324cf874d6b1d77ce2a88694aa0b24516964ad5c8","bytes":205133,"row_count":5790,"column_count":3,"timestamp_start":"2010-11-01","timestamp_end":"2026-09-07","median_cadence":"DAILY"},
+    {"metric_id":"BH_REALIZED_CAP","original_filename":"realized_cap_2026-09-08T06-11-16.csv","retrieved_at_utc":"2026-09-08T06:11:16Z","sha256":"1bb437ac6a55107e6cba183324cf874d6b1d77ce2a88694aa0b24516964ad5c8","bytes":205133,"row_count":5790,"column_count":3,"timestamp_start":"2010-11-01","timestamp_end":"2026-09-07","median_cadence":"DAILY"},
     {"metric_id":"BH_REALIZED_PRICE_FAMILY","original_filename":"planb_realized_prices_2026-09-07T21-32-34.csv","retrieved_at_utc":"2026-09-07T21:32:34Z","sha256":"688776c94996b08fe6576b9946b9befa994f4143ecdf5a295c25c6f5e7cb5c9d","bytes":237273,"row_count":5364,"column_count":5,"timestamp_start":"2011-12-31","timestamp_end":"2026-09-06","median_cadence":"DAILY"}
   ]
 }
