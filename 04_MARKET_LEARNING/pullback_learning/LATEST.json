@@ -1,9 +1,9 @@
 {
   "adaptive_evidence": {
     "adaptive_percentiles_ready": true,
-    "breadth_percentile_rank": 25.0,
+    "breadth_percentile_rank": 40.0,
     "classification_reason": "ELIGIBILITY_CONTRACT_UNAVAILABLE",
-    "drawdown_percentile_rank": 75.0,
+    "drawdown_percentile_rank": 77.5,
     "eligibility_status": {
       "adaptive_descriptive_statistics": true,
       "classification_reason": "ELIGIBILITY_CONTRACT_UNAVAILABLE",
@@ -18,7 +18,7 @@
     },
     "observation_count": 80,
     "rules_are_research_only": true,
-    "step_return_percentile_rank": 15.189873417721518
+    "step_return_percentile_rank": 51.89873417721519
   },
   "authority": {
     "automatic_rule_changes": false,
@@ -28,9 +28,8 @@
   },
   "contract": "PULLBACK_LEARNING_LATEST_v1",
   "data_ping_bridge": {
-    "display_line": "PULLBACK LEARNING: REGIME_NOT_ACTIVE | ELIGIBILITY_CONTRACT_UNAVAILABLE | observation unchanged"
+    "display_line": "PULLBACK LEARNING: REGIME_NOT_ACTIVE | ELIGIBILITY_CONTRACT_UNAVAILABLE | descriptive only | dd=-0.51% | breadth=45% | sample=81"
   },
-  "duplicate_price_observation_skipped": true,
   "eligibility_status": {
     "adaptive_descriptive_statistics": true,
     "classification_reason": "ELIGIBILITY_CONTRACT_UNAVAILABLE",
@@ -43,34 +42,55 @@
     "owner_valid": true,
     "status": "SUSPENDED_NO_ELIGIBILITY_CONTRACT"
   },
-  "generated_at_utc": "2026-09-08T01:29:34.223682+00:00",
+  "generated_at_utc": "2026-09-08T06:34:07.795775+00:00",
   "market_snapshot": {
-    "advancer_pct": 34,
-    "breadth": 0.34,
-    "btc_usdt": 78952.19,
-    "captured_at_utc": "2026-09-07T23:49:02.081189+00:00",
+    "adaptive_evidence": {
+      "adaptive_percentiles_ready": true,
+      "breadth_percentile_rank": 40.0,
+      "classification_reason": "ELIGIBILITY_CONTRACT_UNAVAILABLE",
+      "drawdown_percentile_rank": 77.5,
+      "eligibility_status": {
+        "adaptive_descriptive_statistics": true,
+        "classification_reason": "ELIGIBILITY_CONTRACT_UNAVAILABLE",
+        "existing_episode_maturation": false,
+        "mechanical_research_classification": false,
+        "new_episode_creation": false,
+        "observation_collection": true,
+        "owner_path": "04_MARKET_LEARNING/pullback_learning/ELIGIBILITY_STATUS_v1.json",
+        "owner_sha256": "1f423e723641fb8a3297981f320e3904baaca1f8ff742db8dbfb96ccedfa3192",
+        "owner_valid": true,
+        "status": "SUSPENDED_NO_ELIGIBILITY_CONTRACT"
+      },
+      "observation_count": 80,
+      "rules_are_research_only": true,
+      "step_return_percentile_rank": 51.89873417721519
+    },
+    "advancer_pct": 45,
+    "breadth": 0.45,
+    "btc_usdt": 78906.28,
+    "captured_at_utc": "2026-09-08T06:34:07.796697+00:00",
     "contract": "PULLBACK_LEARNING_OBSERVATION_v1",
-    "drawdown_from_running_peak_pct": -0.8073434712594363,
+    "drawdown_from_running_peak_pct": -0.5082488809833419,
     "entry_heat": "NORMAL",
     "entry_state": "WAIT",
-    "eth_usdt": 2483.06,
-    "ethbtc": 0.03145,
-    "ew_return_24h_pct": -0.232195,
-    "hourly_sequence_run_id": "HOURLY_SEQUENCE_20260907T232620Z_6019a4aa6b5b",
-    "matched_constituent_count": 100,
-    "matched_top100_step_return_pct": -0.8073434712594363,
-    "median_return_24h_pct": -0.403315,
-    "membership_hash": "d7911d3f23bca554c0cb89dfd2c66c324d29915ac371a22702dd3386bc755b6e",
-    "price_observation_utc": "2026-09-07T22:00:00+00:00",
+    "eth_usdt": 2486.04,
+    "ethbtc": 0.03151,
+    "ew_return_24h_pct": 0.564684,
+    "hourly_sequence_run_id": "HOURLY_SEQUENCE_20260908T042411Z_c558cd064512",
+    "matched_constituent_count": 99,
+    "matched_top100_step_return_pct": 0.30152896468644064,
+    "median_return_24h_pct": 0.0,
+    "membership_hash": "9134930889ecfa5fd868e7b56f006a3f5e7bc53f63afccc8db841f26b4422ff0",
+    "price_observation_utc": "2026-09-08T03:00:00+00:00",
     "price_source": "GITHUB_HOURLY_SEQUENCE_DIRECT_CLOSES",
+    "research_state": "REGIME_NOT_ACTIVE",
     "running_peak_index": 116.3952037128316,
-    "synthetic_top100_index": 115.45549463479693
+    "synthetic_top100_index": 115.80362639244285
   },
-  "out_of_order_price_observation_skipped": false,
   "performance_summary": {
     "closed_episode_count": 0,
     "contract": "PULLBACK_LEARNING_PERFORMANCE_SUMMARY_v1",
-    "generated_at_utc": "2026-09-08T01:29:34.223682+00:00",
+    "generated_at_utc": "2026-09-08T06:34:07.795775+00:00",
     "governance": {
       "automatic_rule_changes": false,
       "canonical_market_state": false,
