@@ -72,10 +72,27 @@ def last_kline(path: Path) -> dict[str, Any] | None:
         return None
 
 
+def _fred_health_by_series(directory: Path) -> dict[str, dict[str, Any]]:
+    health = read_json(directory / "source_health.json")
+    if not isinstance(health, dict) or not isinstance(health.get("series"), list):
+        return {}
+    grouped: dict[str, list[dict[str, Any]]] = {}
+    for row in health["series"]:
+        if not isinstance(row, dict):
+            continue
+        series = str(row.get("series") or "").strip().upper()
+        if series:
+            grouped.setdefault(series, []).append(row)
+    # Duplicate health rows are ambiguous. Preserve the numeric observation but do
+    # not manufacture a quality classification from conflicting owner metadata.
+    return {series: rows[0] for series, rows in grouped.items() if len(rows) == 1}
+
+
 def latest_fred_values(directory: Path) -> dict[str, Any]:
     values: dict[str, Any] = {}
+    health_by_series = _fred_health_by_series(directory)
     for path in sorted((directory / "raw/source_payloads").glob("*.csv")):
-        series = path.stem.split("__")[-1]
+        series = path.stem.split("__")[-1].upper()
         try:
             rows = list(csv.DictReader(path.open()))
         except Exception:
@@ -83,12 +100,36 @@ def latest_fred_values(directory: Path) -> dict[str, Any]:
         for row in reversed(rows):
             raw = next((v for k, v in row.items() if k.lower() not in {"date", "observation_date"} and v not in {None, "", "."}), None)
             date = row.get("DATE") or row.get("date") or row.get("observation_date")
-            if raw is not None:
-                try:
-                    values[series] = {"value": float(raw), "date": date}
-                except ValueError:
-                    pass
-                break
+            if raw is None:
+                continue
+            try:
+                compact: dict[str, Any] = {"value": float(raw), "date": date}
+            except ValueError:
+                continue
+
+            health = health_by_series.get(series)
+            if health is not None:
+                quality_fields = {
+                    "source_timestamp": health.get("source_timestamp"),
+                    "retrieval_timestamp": health.get("retrieval_timestamp"),
+                    "freshness_seconds": health.get("freshness_seconds"),
+                    "stale_after_seconds": health.get("stale_after_seconds"),
+                    "status": health.get("status"),
+                }
+                if (
+                    isinstance(quality_fields["source_timestamp"], str)
+                    and isinstance(quality_fields["retrieval_timestamp"], str)
+                    and isinstance(quality_fields["freshness_seconds"], int)
+                    and not isinstance(quality_fields["freshness_seconds"], bool)
+                    and quality_fields["freshness_seconds"] >= 0
+                    and isinstance(quality_fields["stale_after_seconds"], int)
+                    and not isinstance(quality_fields["stale_after_seconds"], bool)
+                    and quality_fields["stale_after_seconds"] >= 0
+                    and quality_fields["status"] in {"PASS", "STALE"}
+                ):
+                    compact.update(quality_fields)
+            values[series] = compact
+            break
     return values
 
 
