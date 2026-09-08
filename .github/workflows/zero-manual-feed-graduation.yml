@@ -1,0 +1,122 @@
+name: Zero Manual Feed Graduation
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/zero-manual-feed-graduation.yml'
+      - 'scripts/data_ping/zero_manual_feed_graduation.py'
+      - 'tests/data_ping/test_zero_manual_feed_graduation.py'
+      - '02_DATA_PING/operational_handoffs/zero_manual_feed_graduation/**'
+  workflow_run:
+    workflows:
+      - Native Handlekompas
+    types:
+      - completed
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: framework-main-writer
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compile and test graduation monitor
+        run: |
+          python -m py_compile scripts/data_ping/zero_manual_feed_graduation.py
+          python -m unittest tests.data_ping.test_zero_manual_feed_graduation -v
+
+  observe:
+    if: github.event_name == 'workflow_run' && github.event.workflow_run.head_branch == 'main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Evaluate natural-cycle graduation evidence
+        env:
+          UPSTREAM_EVENT: ${{ github.event.workflow_run.event }}
+          UPSTREAM_CONCLUSION: ${{ github.event.workflow_run.conclusion }}
+          UPSTREAM_RUN_ID: ${{ github.event.workflow_run.id }}
+        run: |
+          python -m unittest tests.data_ping.test_zero_manual_feed_graduation -v
+          python scripts/data_ping/zero_manual_feed_graduation.py \
+            --upstream-event "$UPSTREAM_EVENT" \
+            --upstream-conclusion "$UPSTREAM_CONCLUSION" \
+            --upstream-run-id "$UPSTREAM_RUN_ID" \
+            | tee /tmp/zero-manual-feed-graduation.json
+      - name: Commit forward-only graduation state with readback
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name framework-operations-bot
+          git config user.email framework-operations-bot@users.noreply.github.com
+          git add 02_DATA_PING/operational_handoffs/zero_manual_feed_graduation/STATE.json
+          if ! git diff --cached --quiet; then
+            git commit -m "ops: zero-manual-feed graduation observation ${GITHUB_RUN_ID}"
+            pushed=false
+            for attempt in 1 2 3; do
+              git rebase --abort 2>/dev/null || true
+              if git pull --rebase origin main && git push origin HEAD:main; then pushed=true; break; fi
+              sleep $((attempt * 5))
+            done
+            [ "$pushed" = true ]
+            git fetch origin main
+            git merge-base --is-ancestor HEAD origin/main
+            local_sha=$(sha256sum 02_DATA_PING/operational_handoffs/zero_manual_feed_graduation/STATE.json | awk '{print $1}')
+            remote_sha=$(git show origin/main:02_DATA_PING/operational_handoffs/zero_manual_feed_graduation/STATE.json | sha256sum | awk '{print $1}')
+            [ "$local_sha" = "$remote_sha" ]
+          fi
+      - name: Close issue 822 only after three distinct valid natural cycles
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          graduated=$(python - <<'PY'
+          import json
+          d=json.load(open('02_DATA_PING/operational_handoffs/zero_manual_feed_graduation/STATE.json'))
+          print('true' if d.get('graduated') is True else 'false')
+          PY
+          )
+          if [ "$graduated" = true ]; then
+            gh issue close 822 --comment "Native zero-manual-feed graduation gate passed: three distinct consecutive natural Native Handlekompas cycles were hash-bound to the latest Auto Market State with zero manual input. Production observation evidence is in 02_DATA_PING/operational_handoffs/zero_manual_feed_graduation/STATE.json. Manual Data Ping remains diagnostic/fallback only." || true
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: zero-manual-feed-graduation-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            /tmp/zero-manual-feed-graduation.json
+            02_DATA_PING/operational_handoffs/zero_manual_feed_graduation/STATE.json
+          retention-days: 14
+          if-no-files-found: warn
+
+  incident:
+    needs: observe
+    if: failure() && github.event_name == 'workflow_run'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Open graduation-monitor incident
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue create --title "AUTOMATION FAILURE: Zero Manual Feed Graduation ${GITHUB_RUN_ID}" --body "Graduation evidence monitor failed. This does not reintroduce manual market-data feeding. Inspect the native Handlekompas graduation chain. Run: ${GITHUB_RUN_ID}" || true
