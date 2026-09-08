@@ -392,6 +392,72 @@ If standardized row-level reconstruction shows the apparent change is purely a r
 
 ---
 
+## AT-HYP-0021 - Specialist observer agents can improve signal coverage without granting execution authority
+
+Hypothesis:
+Decomposing market monitoring into narrowly scoped specialist observers, each responsible for a defined signal family or universe, can improve event detection and attribution compared with one monolithic AI observer, provided the specialists write into a shared evidence contract and cannot independently execute capital decisions.
+
+Inspired by:
+Alex `@alexcolevv` post describing agents assigned to sectors, signal types and pattern classes.
+
+Test status: RESEARCH_QUEUED FOR ASTRA
+
+Candidate specialist roles:
+- relative-volume / unscheduled-volume detector
+- correlation-break detector
+- derivatives / unusual-flow detector where data licensing permits
+- CFGI component-divergence detector
+- regime-transition detector
+- liquidity / execution-risk detector
+
+Required comparison:
+- deterministic detectors only
+- one AI observer consuming all features
+- specialist AI observers with identical downstream arbitration
+
+Metrics:
+alert precision/recall, event attribution, false-positive correlation, latency, compute/token cost, reproducibility and downstream post-cost value.
+
+Falsifier:
+If specialists mainly duplicate each other's alerts or increase coordination cost without improving calibrated detection, collapse them back into fewer deterministic/shared owners.
+
+Guardrail:
+Specialization is an observation architecture, not permission for multiple agents to trade independently.
+
+---
+
+## AT-HYP-0022 - Agent disagreement is a first-class uncertainty signal
+
+Hypothesis:
+When independently scoped observers reach materially conflicting conclusions on the same asset and horizon, the disagreement magnitude can improve risk control if treated as an explicit uncertainty state rather than forcing immediate consensus.
+
+Test status: HIGH PRIORITY ARCHITECTURE HYPOTHESIS
+
+Candidate policies to compare:
+- majority vote
+- confidence-weighted vote
+- calibrated veto by designated risk agent
+- deterministic precedence by evidence class
+- disagreement -> NO_TRADE
+- disagreement -> higher-authority arbitration only when expected value justifies latency
+
+Required measurements:
+- calibration of disagreement versus subsequent forecast/trade error
+- false veto cost
+- false consensus cost
+- time-to-resolution
+- turnover reduction
+- drawdown impact
+- missed-opportunity cost
+
+Key design principle:
+Do not let an LLM improvise tie-breaking rules at runtime. Arbitration policy must be frozen, auditable and replayable.
+
+Falsifier:
+If disagreement has no relationship to error/risk and escalation adds latency or opportunity cost without improving outcomes, do not use it as a gate.
+
+---
+
 ## Candidate metrics for every strategy
 
 At minimum:
