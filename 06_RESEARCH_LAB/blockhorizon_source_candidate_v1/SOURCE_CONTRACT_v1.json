@@ -1,37 +1,65 @@
 {
   "source_contract_id": "BH01_BLOCKHORIZON_MANUAL_EXPORT_HISTORICAL_V1",
-  "status": "MANUAL_EXPORT_SEED_ACTIVE__API_PENDING__RESEARCH_ONLY__TERMS_HOLD",
+  "status": "MANUAL_EXPORT_SEED_ACTIVE__API_PENDING__RESEARCH_ONLY__PRIVATE_RAW_RETENTION_AUTHORIZED",
   "provider": "BlockHorizon",
   "instrument_scope": [
     "BTC"
   ],
   "access_mode": "USER_INITIATED_MANUAL_EXPORT_ONLY",
-  "automated_collection": "NOT_AUTHORIZED",
+  "automated_collection": "NOT_AUTHORIZED_BY_THIS_CONTRACT",
   "canonical_authority": "NONE_BY_ITSELF",
   "portfolio_authority": "NONE",
-  "raw_storage_policy": {
-    "current": "DO_NOT_PERSIST_PROVIDER_VALUES_TO_GITHUB_OR_MIRROR_WHILE_TERMS_HOLD",
-    "future_if_rights_gate_clears": "Donh91/secrets/raw/BH01_BLOCKHORIZON_MANUAL_EXPORT_HISTORICAL_V1/YYYY/MM/DD/",
-    "control_plane": "METADATA_HASHES_COUNTS_SCHEMA_AND_PROVIDER_VALUE_FREE_BINDINGS_ONLY"
+  "owner_attestation": {
+    "recorded_date": "2026-09-08",
+    "basis": "Repository owner explicitly confirmed that the BlockHorizon downloads are authorized and may be retained internally for research.",
+    "authorized_framework_scope": [
+      "PRIVATE_INTERNAL_ARCHIVAL",
+      "INTERNAL_RESEARCH",
+      "FUTURE_BACKTEST_AND_SIMULATION_INPUT"
+    ],
+    "public_redistribution_authority": "NOT_GRANTED_BY_THIS_RECORD",
+    "private_attestation_path": "Donh91/secrets/GOVERNANCE/BLOCKHORIZON_OWNER_ATTESTATION_2026-09-08.json"
   },
-  "terms_gate": {
-    "status": "PROVIDER_TERMS_ATTESTATION_INCOMPLETE",
-    "checked_at_utc": "2026-09-08T07:19:00Z",
-    "terms_url": "https://www.blockhorizon.io/policy/terms-and-conditions",
-    "product_export_claim_url": "https://www.blockhorizon.io/",
-    "operational_interpretation": "Current product page advertises full-history exports, while published terms prohibit copying/distribution/mirroring without written consent. This is a fail-closed operational conflict, not a legal determination.",
-    "clearance_requirement": "WRITTEN_CONSENT_OR_CURRENT_TERMS_TEXT_EXPLICITLY_PERMITTING_THE_PLANNED_PRIVATE_RETENTION/MIRROR_USE"
+  "raw_storage_policy": {
+    "current": "PERSIST_ORIGINAL_MANUAL_EXPORTS_BYTE_FOR_BYTE_IN_RESTRICTED_DATA_PLANE",
+    "repository": "Donh91/secrets",
+    "path_template": "raw/BH01_BLOCKHORIZON_MANUAL_EXPORT_HISTORICAL_V1/YYYY/MM/DD/",
+    "public_control_plane": "METADATA_HASHES_COUNTS_SCHEMA_AND_PROVIDER_VALUE_FREE_BINDINGS_ONLY",
+    "public_raw_values": "FORBIDDEN"
+  },
+  "retention_gate": {
+    "status": "CLEARED_BY_OWNER_ATTESTATION_FOR_PRIVATE_INTERNAL_ARCHIVAL_AND_RESEARCH",
+    "recorded_date": "2026-09-08",
+    "operational_effect": "The earlier fail-closed private-retention hold is removed for user-initiated BlockHorizon exports. Raw values must still remain in the restricted data plane.",
+    "public_redistribution": "NOT_AUTHORIZED_BY_THIS_GATE",
+    "legal_determination": "NONE_MADE_BY_FRAMEWORK"
   },
   "revision_policy": {
     "overwrite_history": "FORBIDDEN",
-    "same_hash_redownload": "DEDUPLICATE_BY_SHA256",
+    "same_hash_redownload": "PRESERVE_RAW_RETRIEVAL_WHEN_ORIGINAL_FILENAME_OR_RETRIEVAL_EVENT_DIFFERS; DEDUPLICATE_ANALYSIS_VIEWS_BY_SHA256",
     "different_hash_same_metric": "PRESERVE_AS_NEW_RETRIEVAL_REVISION_AND_REQUIRE_EXPLICIT_AS_OF_RETRIEVAL",
     "metric_timestamp_vs_retrieval_timestamp": "MUST_REMAIN_SEPARATE"
   },
   "analysis_modes": {
-    "RETROSPECTIVE_DESCRIPTIVE": "ALLOWED_LOCAL_RESEARCH_ONLY; current-methodology reconstructed history may be used, explicitly labeled hindsight-aware.",
+    "RETROSPECTIVE_DESCRIPTIVE": "ALLOWED_RESEARCH; current-methodology reconstructed history must remain explicitly hindsight-aware.",
     "CONTEMPORANEOUS_REPLAY": "BLOCKED_UNLESS_METHOD_AVAILABILITY_AND_REVISION_STATE_AT_THE_HISTORICAL_TIME_ARE_VERIFIED.",
     "PROSPECTIVE_FORWARD": "PERMITTED_ONLY_AFTER_SEPARATE_PRE_REGISTRATION; this source contract does not create a test."
+  },
+  "private_binding_rule": {
+    "required": [
+      "private_repository",
+      "private_commit_sha_reachable_from_main",
+      "exact_path",
+      "bytes",
+      "sha256",
+      "source_contract_id",
+      "retrieval_or_capture_timestamp",
+      "row_or_object_count",
+      "timestamp_range_when_applicable",
+      "completeness_status",
+      "validation_status"
+    ],
+    "current_pointer": "CURRENT_PRIVATE_BINDING.json"
   },
   "promotion_rule": "Historical findings remain research evidence and may not self-promote into canonical thresholds, weights, runtime authority or portfolio action."
 }
