@@ -1,0 +1,34 @@
+{
+  "allowed_change_scope": [
+    "scripts/daily_capture/build_capture_index.py",
+    "scripts/data_terminal/fred_multiseries_live_adapter.py only if required to expose already-existing owner metadata deterministically",
+    "tests/daily_capture/directly related live-anchor macro freshness tests",
+    "tests/data_terminal/directly related FRED adapter contract tests"
+  ],
+  "branch": "agent/task-20260908-fred-freshness-sol",
+  "candidate_id": "codex-research-macro-series-freshness-propagation-v1",
+  "candidate_path": "research/codex/intake/2026/08/codex-research-macro-series-freshness-propagation-v1.json",
+  "candidate_sha256": "0117ac3cc2f7a76db56fa42499210715a9c7d5c3e1116c4b67071e79d9dc8666",
+  "contract": "CODEX_RESEARCH_TRANSITION_RECEIPT_v1",
+  "forbidden_changes": [
+    "API budget",
+    "FRED collection cadence",
+    "automatic market interpretation",
+    "canonical authority",
+    "historical backfill",
+    "market gates",
+    "model weights",
+    "new policy semantics",
+    "new source",
+    "portfolio logic",
+    "stale threshold changes"
+  ],
+  "objective": "Repair the compact live-anchor macro embedding so each FRED series preserves deterministic source-timestamp and freshness/health semantics already produced by the FRED owner. A stale slow-frequency observation may remain available as context but must not be indistinguishable from a fresh observation. Implement the smallest owner-consumer lineage repair without changing FRED cadence, source selection, stale thresholds, market interpretation, or API budget.",
+  "post_fix_gate": "MIXED_FRESHNESS_FIXTURE_PASS_PLUS_ONE_NATURAL_MORNING_ANCHOR_WITH_PER_SERIES_QUALITY_READBACK",
+  "pr_number": null,
+  "receipt_sha256": "PENDING_PR_BINDING",
+  "recorded_at_utc": "2026-09-08T15:43:00Z",
+  "signature": "7b83701444e991ea1722",
+  "state": "IN_REMEDIATION",
+  "task_contract_sha256": "b214b9ceacd07d8aa5d8edb5ace0f1bfbe32db3d6cf257a17553c6ab223d74a2"
+}
