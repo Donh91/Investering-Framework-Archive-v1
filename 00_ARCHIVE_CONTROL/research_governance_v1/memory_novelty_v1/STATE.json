@@ -3,7 +3,7 @@
   "canonical_effect": false,
   "contract": "RESEARCH_MEMORY_NOVELTY_STATE_v1",
   "deep_research_authorized": false,
-  "evidence_fingerprint": "8c0cb801eb5a6bac343a0586f930d04c4916cb6f9682d31fda372df9a148fdf9",
+  "evidence_fingerprint": "1af2b10d5f36dfc00394c47a53788d809f69eba4d239e246e194c5d29e2fd196",
   "paid_data_authorized": false,
   "portfolio_execution": false,
   "proposal_n": 2,
@@ -13,7 +13,7 @@
       "authority": "RESEARCH_ONLY_NON_CANONICAL",
       "canonical_effect": false,
       "deep_research_authorized": false,
-      "evidence_fingerprint": "e7b4e592c8cc87b755605a4c0d26fcfb9f8d587af90f3807ff39c82eea19cf8f",
+      "evidence_fingerprint": "b24b4c2d6bf6e21d81b455fd8941e72d6b71593b0e3685f66ced7d6a1bfe1419",
       "external_provider_calls_authorized": false,
       "family": "EXPERIMENT_LEARNING_AND_CALIBRATION",
       "matched_record": {
@@ -25,8 +25,8 @@
         "source": "COMPOUNDING_LEARNING",
         "target": "EC-bdf6c7853fbc34fb9622"
       },
-      "novelty_reason": "same source/action/target and same evidence fingerprint already passed through novelty gate",
-      "novelty_verdict": "DUPLICATE_EXACT",
+      "novelty_reason": "same research target is recurring, but the evidence fingerprint changed",
+      "novelty_verdict": "REOPEN_WITH_NEW_EVIDENCE",
       "paid_data_authorized": false,
       "portfolio_execution": false,
       "reason": "GENERAL_FAILURE_VERSUS_REGIME_SPECIFICITY_REMAINS_UNRESOLVED",
@@ -39,13 +39,13 @@
       "authority": "RESEARCH_ONLY_NON_CANONICAL",
       "canonical_effect": false,
       "deep_research_authorized": false,
-      "evidence_fingerprint": "5c0e9668699e8e80f6e24a421282306f2cc9ccfe700e8f86f31f8f516fe293f7",
+      "evidence_fingerprint": "b482e4f3581e75db06b6f43ce67259c36060b2ba831966df200bb90f5640977c",
       "external_provider_calls_authorized": false,
       "family": "",
       "matched_record": {
         "action": "RUN_INCREMENTAL_VALUE_TEST",
-        "evidence_fingerprint": "d41c4bb2b5890afce152700d83299007906f13265ab17168b06746e3cf66820c",
-        "novelty_verdict": "NOVEL",
+        "evidence_fingerprint": "5c0e9668699e8e80f6e24a421282306f2cc9ccfe700e8f86f31f8f516fe293f7",
+        "novelty_verdict": "REOPEN_WITH_NEW_EVIDENCE",
         "reason": "Matured supportive evidence requires incremental-value review before any promotion.",
         "record_type": "NOVELTY_LEDGER",
         "source": "MONTHLY_COUNCIL",
@@ -62,8 +62,8 @@
     }
   ],
   "reason": "same research target is recurring, but the evidence fingerprint changed",
-  "selected_action": "RUN_INCREMENTAL_VALUE_TEST",
-  "selected_source": "MONTHLY_COUNCIL",
-  "selected_target": "EC-3b9478b26fe667b5b496",
+  "selected_action": "STRESS_TEST_REGIME_SPECIFICITY",
+  "selected_source": "COMPOUNDING_LEARNING",
+  "selected_target": "EC-bdf6c7853fbc34fb9622",
   "selected_verdict": "REOPEN_WITH_NEW_EVIDENCE"
 }
