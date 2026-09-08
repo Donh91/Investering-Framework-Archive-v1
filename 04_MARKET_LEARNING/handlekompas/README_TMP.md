@@ -1,0 +1,1 @@
+Temporary implementation documentation. Remove/consolidate later if desired; no market authority.
