@@ -12,8 +12,15 @@ on:
       - '03_WEEKLY_OPERATIONS/provider_budget/**'
       - '04_MARKET_LEARNING/handlekompas/**'
       - '02_DATA_PING/operational_handoffs/NATIVE_ZERO_MANUAL_FEED*'
+  workflow_run:
+    # Event-chain the readback to the owner that materializes Auto Market State.
+    # This avoids a fixed-minute race when GitHub Actions queues the :50 writer.
+    workflows:
+      - Entry Signal Ledger
+    types:
+      - completed
   schedule:
-    # Entry Signal materializes Auto Market State at :50; read it back after serialization.
+    # Fallback watchdog only. The workflow_run event is the primary production trigger.
     - cron: '57 * * * *'
       timezone: 'Europe/Copenhagen'
   workflow_dispatch:
@@ -66,7 +73,14 @@ jobs:
           fi
 
   readback:
-    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    if: >-
+      github.event_name != 'pull_request' &&
+      (
+        (github.event_name == 'workflow_run' &&
+         github.event.workflow_run.head_branch == 'main' &&
+         github.event.workflow_run.conclusion == 'success') ||
+        (github.event_name != 'workflow_run' && github.ref == 'refs/heads/main')
+      )
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -139,7 +153,7 @@ jobs:
 
   incident:
     needs: readback
-    if: failure() && github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    if: failure() && github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
