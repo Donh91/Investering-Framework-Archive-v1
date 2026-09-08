@@ -1,0 +1,87 @@
+name: Native Market Recovery v1.1
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/native-market-recovery-v1-1.yml'
+      - 'scripts/health/native_market_recovery_v1_1.py'
+      - 'tests/health/test_native_market_recovery_v1_1.py'
+      - '09_SOURCE_QA/native_market_recovery/**'
+  # Schedule is intentionally omitted until the v1 draft workflow is removed/replaced.
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write
+  issues: write
+
+concurrency:
+  group: framework-main-writer
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compile and test recovery v1.1
+        run: |
+          python -m py_compile scripts/health/native_market_recovery_v1_1.py
+          python -m unittest tests.health.test_native_market_recovery_v1_1 -v
+
+  recover:
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Build bounded recovery decision
+        id: plan
+        run: |
+          python scripts/health/native_market_recovery_v1_1.py | tee /tmp/native-market-recovery.json
+          python - <<'PY' >> "$GITHUB_OUTPUT"
+          import json
+          d=json.load(open('/tmp/native-market-recovery.json'))
+          print('dispatch_count=' + str(len(d['dispatches'])))
+          print('suppressed_count=' + str(len(d['suppressed_retries'])))
+          PY
+      - name: Persist recovery decision before any dispatch
+        shell: bash
+        run: |
+          git config user.name framework-operations-bot
+          git config user.email framework-operations-bot@users.noreply.github.com
+          git add 09_SOURCE_QA/native_market_recovery
+          if ! git diff --cached --quiet; then
+            git commit -m "ops: native market recovery v1.1 ${GITHUB_RUN_ID}"
+            git pull --rebase origin main
+            git push origin HEAD:main
+          fi
+      - name: Dispatch bounded owner repairs
+        if: steps.plan.outputs.dispatch_count != '0'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python - <<'PY' > /tmp/workflows.txt
+          import json
+          d=json.load(open('/tmp/native-market-recovery.json'))
+          for row in d['dispatches']:
+              print(row['workflow'])
+          PY
+          while IFS= read -r workflow; do
+            [ -z "$workflow" ] && continue
+            gh workflow run "$workflow" --ref main
+          done < /tmp/workflows.txt
+      - name: Surface suppressed provider retries
+        if: steps.plan.outputs.suppressed_count != '0'
+        run: echo '::warning::Provider/auth/quota/token/budget condition suppressed automatic retry. Handlekompas must surface this operational state.'
