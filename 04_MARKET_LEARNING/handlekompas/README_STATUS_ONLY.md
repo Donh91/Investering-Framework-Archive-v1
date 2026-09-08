@@ -1,0 +1,1 @@
+See 02_DATA_PING/operational_handoffs/NATIVE_ZERO_MANUAL_FEED_CURRENT_STATUS.json for cross-thread status.
