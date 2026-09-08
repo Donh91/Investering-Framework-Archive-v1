@@ -4,6 +4,8 @@ const MARKET_URL = "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,et
 
 const FALLBACK = {
   issue_number: 25,
+  previous_issue_number: 24,
+  generated_unix: 1788757939,
   status: "DEGRADED",
   market_state: "Unresolved, volatile transition with an active ETH-relative leadership test.",
   base_case_this_week: "An unresolved, volatile transition remains the base case. ETH retains a relative-strength opportunity, but weak proxy breadth and conflicted BTC evidence prevent confirmation of broad expansion.",
@@ -39,6 +41,7 @@ const FALLBACK = {
     { phase: "6. Broad altseason - PAUSED", window: "No calendar ETA until broad, persistent alt/BTC outperformance" }
   ],
   forecast_freeze: {
+    breadth_condition: "Broad altseason remains inactive unless breadth broadens beyond isolated leaders and survives pullbacks.",
     btc_range_low: null,
     btc_range_high: null,
     eth_range_low: null,
@@ -51,11 +54,16 @@ const FALLBACK = {
       "Broad altseason remains inactive through the W37 close."
     ]
   },
+  uncertainties: [
+    "Current BTC and ETH spot prices and volatility inputs were not supplied to the weekly package.",
+    "Some supporting market inputs were supplied as conclusions rather than complete underlying time series."
+  ],
   publication_status: "X_READY_NOT_CONFIRMED_PUBLISHED"
 };
 
 let latestPackage = FALLBACK;
 let latestPointer = null;
+let canonicalFeedAvailable = false;
 
 function byId(id) {
   return document.getElementById(id);
@@ -80,20 +88,22 @@ function issueLabel(pointer, data) {
 
 function qualityClass(status) {
   const s = String(status || "").toUpperCase();
-  return s === "COMPLETE" || s === "OK" ? "ok" : "warn";
+  if (s === "COMPLETE" || s === "OK") return "ok";
+  if (s === "DEGRADED" || s === "PARTIAL") return "warn";
+  return "bad";
 }
 
 function statusFromText(text) {
   const t = String(text || "").toUpperCase();
+  if (t.includes("ACTIVE WATCH") || t.includes("UNCONFIRMED") || t.includes("PAUSED")) return "watch";
   if (t.includes("ACTIVE") && !t.includes("INACTIVE")) return "active";
-  if (t.includes("WATCH") || t.includes("UNCONFIRMED") || t.includes("PAUSED")) return "watch";
   return "inactive";
 }
 
 function cleanPhase(phase) {
   return String(phase || "")
     .replace(/^\d+\.\s*/, "")
-    .replace(/\s[-–]\s(ACTIVE WATCH|ACTIVE|UNCONFIRMED|INACTIVE|PAUSED).*$/i, "")
+    .replace(/\s[-–—]\s(ACTIVE WATCH|ACTIVE|UNCONFIRMED|INACTIVE|PAUSED).*$/i, "")
     .trim();
 }
 
@@ -107,10 +117,36 @@ function phaseStatus(phase) {
   return "Watching";
 }
 
-function renderList(id, items) {
+function humanStatus(value) {
+  return String(value || "unknown").replaceAll("_", " ");
+}
+
+function formatOfficialTime(unix) {
+  const seconds = Number(unix);
+  if (!Number.isFinite(seconds) || seconds <= 0) return "OFFICIAL package time unavailable";
+  const date = new Date(seconds * 1000);
+  return `OFFICIAL package: ${date.toLocaleString([], {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZoneName: "short"
+  })}`;
+}
+
+function renderList(id, items, limit = 6) {
   const root = byId(id);
+  if (!root) return;
   root.innerHTML = "";
-  (items || []).slice(0, 6).forEach((text) => {
+  const safeItems = Array.isArray(items) ? items : [];
+  if (!safeItems.length) {
+    const li = document.createElement("li");
+    li.textContent = "Not available in the current official package.";
+    root.appendChild(li);
+    return;
+  }
+  safeItems.slice(0, limit).forEach((text) => {
     const li = document.createElement("li");
     li.textContent = text;
     root.appendChild(li);
@@ -122,10 +158,10 @@ function renderRotation(items) {
   root.innerHTML = "";
   (items || []).forEach((item) => {
     const card = document.createElement("article");
-    card.className = "rotation-item";
+    const status = statusFromText(item.status);
+    card.className = `rotation-item ${status === "active" ? "active-card" : status === "watch" ? "watch-card" : ""}`;
 
     const dot = document.createElement("i");
-    const status = statusFromText(item.status);
     dot.className = `status-dot ${status}`;
 
     const copy = document.createElement("div");
@@ -140,12 +176,29 @@ function renderRotation(items) {
   });
 }
 
+function renderCountdownProgress(items) {
+  const root = byId("countdownProgress");
+  root.innerHTML = "";
+  (items || []).forEach((item, index) => {
+    const segment = document.createElement("span");
+    const state = statusFromText(item.phase);
+    segment.className = `progress-segment ${state}`;
+    segment.title = `Stage ${index + 1}: ${cleanPhase(item.phase)} - ${phaseStatus(item.phase)}`;
+    root.appendChild(segment);
+  });
+}
+
 function renderCountdown(items) {
   const root = byId("countdown");
   root.innerHTML = "";
   (items || []).forEach((item, index) => {
     const row = document.createElement("div");
     row.className = "timeline-row";
+
+    const button = document.createElement("button");
+    button.className = "timeline-button";
+    button.type = "button";
+    button.setAttribute("aria-expanded", "false");
 
     const number = document.createElement("span");
     number.className = "timeline-index";
@@ -156,7 +209,7 @@ function renderCountdown(items) {
     const strong = document.createElement("strong");
     strong.textContent = cleanPhase(item.phase);
     const small = document.createElement("small");
-    small.textContent = item.window || "";
+    small.textContent = item.window || "Window unavailable";
     copy.append(strong, small);
 
     const badge = document.createElement("span");
@@ -164,9 +217,20 @@ function renderCountdown(items) {
     badge.className = `timeline-status ${state}`;
     badge.textContent = phaseStatus(item.phase);
 
-    row.append(number, copy, badge);
+    const detail = document.createElement("div");
+    detail.className = "timeline-detail";
+    detail.textContent = `${phaseStatus(item.phase)}. ${item.window || "No calendar window is published."}`;
+
+    button.append(number, copy, badge);
+    button.addEventListener("click", () => {
+      const expanded = row.classList.toggle("expanded");
+      button.setAttribute("aria-expanded", String(expanded));
+    });
+
+    row.append(button, detail);
     root.appendChild(row);
   });
+  renderCountdownProgress(items);
 }
 
 function broadAltseasonState(items) {
@@ -174,9 +238,45 @@ function broadAltseasonState(items) {
   return finalStage ? phaseStatus(finalStage.phase).toUpperCase() : "UNCONFIRMED";
 }
 
-function renderNavigator(data, pointer) {
+function renderRangeState(freeze) {
+  const ranges = freeze || {};
+  const rangePairs = [
+    ["BTC", ranges.btc_range_low, ranges.btc_range_high],
+    ["ETH", ranges.eth_range_low, ranges.eth_range_high]
+  ];
+  const publishable = rangePairs.filter(([, low, high]) => low != null && high != null && Number.isFinite(Number(low)) && Number.isFinite(Number(high)));
+  const rangeRow = byId("rangeRow");
+  rangeRow.innerHTML = "";
+
+  if (!publishable.length) {
+    rangeRow.hidden = true;
+    setText("rangeNotice", "Numeric BTC / ETH ranges are intentionally unpublished in this issue because the official machine package freezes those fields as null.");
+    return;
+  }
+
+  setText("rangeNotice", "Numeric price ranges below are frozen in the OFFICIAL weekly package.");
+  publishable.forEach(([asset, low, high]) => {
+    const chip = document.createElement("span");
+    chip.className = "range-chip";
+    chip.textContent = `${asset}: ${price(Number(low))} - ${price(Number(high))}`;
+    rangeRow.appendChild(chip);
+  });
+  rangeRow.hidden = false;
+}
+
+function renderChangeSummary(data) {
+  const strengths = data.evaluation?.strengths || [];
+  const misses = data.evaluation?.misses || [];
+  setText("priorIssueLabel", `Compared with Cycle Navigator #${data.previous_issue_number ?? "prior"}`);
+  setText("stillHolding", strengths[0] || "No supported prior-issue comparison is available in the current package.");
+  setText("changedFromPrior", misses[0] || "No challenged prior-issue call is available in the current package.");
+  setText("nextRequirement", data.forecast_freeze?.breadth_condition || data.forecast_freeze?.structural_calls?.[0] || "No explicit next-step condition is available in the current package.");
+}
+
+function renderNavigator(data, pointer, options = {}) {
   latestPackage = data;
   latestPointer = pointer;
+  canonicalFeedAvailable = Boolean(options.canonical);
 
   setText("issueLabel", issueLabel(pointer, data));
   setText("marketState", compactState(data.market_state));
@@ -185,36 +285,52 @@ function renderNavigator(data, pointer) {
   setText("forwardCase", data.base_case_2_3_weeks);
   setText("reportState", data.market_state);
   setText("altseasonHeadline", broadAltseasonState(data.altseason_countdown));
-  setText("altseasonSubline", "official weekly state");
+  setText("officialTimestamp", formatOfficialTime(data.generated_unix));
+
+  const weekText = pointer
+    ? `OFFICIAL state: ${pointer.iso_year ?? ""}-W${String(pointer.iso_week ?? "-").padStart(2, "0")}`
+    : "OFFICIAL source: embedded fallback snapshot";
+  setText("sourceWeekMeta", weekText);
 
   const score = Number(data.evaluation?.structural_score);
   const hasScore = Number.isFinite(score);
   byId("scoreRing").style.setProperty("--score", hasScore ? Math.max(0, Math.min(100, score)) : 0);
   setText("scoreValue", hasScore ? `${Math.round(score)}%` : "-");
   setText("scoreCaption", hasScore
-    ? `${data.evaluation?.score_status || "Scored"} call-level structural audit of the prior issue.`
+    ? `${data.evaluation?.score_status || "Scored"} call-level structural audit of Cycle Navigator #${data.previous_issue_number ?? "prior"}.`
     : "No reproducible structural score is available for the prior issue.");
 
   const quality = data.status || pointer?.status || "UNKNOWN";
   const qualityBadge = byId("qualityBadge");
   qualityBadge.textContent = quality;
   qualityBadge.className = `quality-badge ${qualityClass(quality)}`;
-  setText("officialStatus", `Official signal: ${quality}`);
 
-  const ranges = data.forecast_freeze || {};
-  const noRanges = [ranges.btc_range_low, ranges.btc_range_high, ranges.eth_range_low, ranges.eth_range_high].every((v) => v == null);
-  setText("rangeNotice", noRanges
-    ? "Numeric BTC / ETH ranges are intentionally not published in this issue because the required spot and volatility inputs were not supplied."
-    : "Numeric price ranges are frozen in the official weekly package.");
+  const dataQualityBadge = byId("dataQualityBadge");
+  dataQualityBadge.textContent = quality;
+  dataQualityBadge.className = `quality-badge ${qualityClass(quality)}`;
+  setText("dataQualityTitle", quality === "DEGRADED" ? "DEGRADED, shown honestly" : "Publication status");
 
+  if (canonicalFeedAvailable) {
+    setText("officialStatus", `OFFICIAL signal: ${quality}`);
+    setText("feedMode", "Feed mode: canonical GitHub pointer/package");
+  } else {
+    setText("officialStatus", "OFFICIAL feed unavailable");
+    setText("feedMode", "Feed mode: embedded fallback snapshot");
+  }
+
+  renderRangeState(data.forecast_freeze);
+  renderChangeSummary(data);
   renderRotation(data.rotation_ladder);
   renderCountdown(data.altseason_countdown);
   renderList("strengths", data.evaluation?.strengths);
   renderList("misses", data.evaluation?.misses);
   renderList("frozenTests", data.forecast_freeze?.structural_calls);
+  renderList("uncertainties", data.uncertainties, 4);
 
-  setText("publicationStatus", `Publication: ${(pointer?.publication_status || data.publication_status || "unknown").replaceAll("_", " ")}`);
-  setText("sourceWeek", pointer ? `Source: completed W${pointer.completed_source_week ?? "-"} · current W${pointer.iso_week ?? "-"}` : "Source: embedded fallback");
+  setText("publicationStatus", `Publication: ${humanStatus(pointer?.publication_status || data.publication_status)}`);
+  setText("sourceWeek", pointer
+    ? `Source: completed W${pointer.completed_source_week ?? "-"} · current W${pointer.iso_week ?? "-"}`
+    : "Source: bounded embedded fallback");
 }
 
 async function loadNavigator() {
@@ -223,15 +339,19 @@ async function loadNavigator() {
     if (!pointerResponse.ok) throw new Error(`Pointer HTTP ${pointerResponse.status}`);
     const pointer = await pointerResponse.json();
 
+    if (!pointer.week_dir || typeof pointer.week_dir !== "string") {
+      throw new Error("Pointer week_dir is missing");
+    }
+
     const packagePath = `${pointer.week_dir}/CYCLE_NAVIGATOR_MACHINE_PACKAGE.json`;
     const packageResponse = await fetch(`${RAW_BASE}${packagePath}?t=${Date.now()}`, { cache: "no-store" });
     if (!packageResponse.ok) throw new Error(`Package HTTP ${packageResponse.status}`);
     const data = await packageResponse.json();
-    renderNavigator(data, pointer);
+
+    renderNavigator(data, pointer, { canonical: true });
   } catch (error) {
-    console.warn("Cycle Navigator canonical feed unavailable, using embedded fallback", error);
-    renderNavigator(FALLBACK, null);
-    setText("officialStatus", "Official feed temporarily unavailable");
+    console.warn("Cycle Navigator canonical feed unavailable, using bounded embedded fallback", error);
+    renderNavigator(FALLBACK, null, { canonical: false });
   }
 }
 
@@ -273,16 +393,16 @@ async function loadMarket() {
 
     const updated = Math.max(Number(btc?.last_updated_at || 0), Number(eth?.last_updated_at || 0));
     const when = updated ? new Date(updated * 1000) : new Date();
-    setText("marketTimestamp", `Updated ${when.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}`);
+    setText("marketTimestamp", `LIVE updated ${when.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}`);
   } catch (error) {
-    console.warn("Live market feed unavailable", error);
-    setText("marketTimestamp", "Live feed unavailable, retrying automatically");
+    console.warn("LIVE market feed unavailable", error);
+    setText("marketTimestamp", "LIVE feed unavailable, retrying automatically");
   }
 }
 
 async function shareSnapshot() {
   const title = `Cycle Navigator #${latestPackage.issue_number ?? ""}`;
-  const text = `${compactState(latestPackage.market_state)}. Broad altseason: ${broadAltseasonState(latestPackage.altseason_countdown)}.`;
+  const text = `${compactState(latestPackage.market_state)}. Broad altseason: ${broadAltseasonState(latestPackage.altseason_countdown)}. Scenario map only, not investment advice.`;
   try {
     if (navigator.share) {
       await navigator.share({ title, text, url: location.href });
@@ -299,7 +419,7 @@ async function shareSnapshot() {
 }
 
 byId("shareButton").addEventListener("click", shareSnapshot);
-renderNavigator(FALLBACK, null);
+renderNavigator(FALLBACK, null, { canonical: false });
 loadNavigator();
 loadMarket();
 setInterval(loadMarket, 60_000);
