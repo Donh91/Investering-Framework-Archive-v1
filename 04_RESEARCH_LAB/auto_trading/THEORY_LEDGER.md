@@ -227,6 +227,171 @@ If modularization creates complexity without improving attribution, testability 
 
 ---
 
+## AT-HYP-0013 - Dynamic top-k feature selection can outperform static sentiment thresholds
+
+Hypothesis:
+For a given coin/timeframe, selecting a small number of recently useful features from a broader feature family can outperform fixed universal thresholds, provided selection is constrained by walk-forward evidence and stability penalties.
+
+MAEVE inspiration:
+Secondary technical material describes a later system selecting three inputs dynamically from 14 candidates.
+
+Test status: VERY HIGH PRIORITY FOR ASTRA
+
+Required comparison:
+- fixed universal 3-trigger rules
+- fixed coin/timeframe-specific rules
+- rolling top-3 selection
+- rolling top-3 with stability/turnover penalty
+- rolling top-3 with correlation/redundancy penalty
+
+Falsifier:
+If dynamic selection improves in-sample fit but loses out-of-sample stability or rotates features excessively, static/simple rules win.
+
+---
+
+## AT-HYP-0014 - AND-gated entries plus asymmetric exits can create high hit-rate behavior
+
+Hypothesis:
+Requiring several independent conditions for entry, while allowing exit on a target, stop, time-loss or opposite qualified signal, can produce a strategy with selective entries and rapid invalidation that exhibits a higher hit rate than symmetric entry/exit gating.
+
+MAEVE inspiration:
+Secondary architecture descriptions report three aligned entry triggers and later simplified exit logic.
+
+Test status: HIGH PRIORITY
+
+Required tests:
+- 1-of-N, 2-of-N and 3-of-N entry gates
+- symmetric vs asymmetric exit rules
+- profit factor and expectancy, not hit rate alone
+- regime-conditioned performance
+
+Falsifier:
+If hit-rate improvement comes mainly from tiny wins and larger losses, or disappears after costs, reject the architecture despite attractive win rate.
+
+---
+
+## AT-HYP-0015 - DCA can inflate headline win rate and hide capital-weighted risk
+
+Hypothesis:
+A strategy using DCA may convert many losing initial entries into profitable final positions, increasing position win rate while simultaneously increasing capital at risk, tail loss and path dependency.
+
+MAEVE inspiration:
+Secondary technical material reports DCA as an important component of the earlier system.
+
+Test status: CRITICAL AUDIT HYPOTHESIS
+
+Required metrics:
+- first-entry accuracy
+- position-level win rate
+- DCA-adjusted cost basis
+- capital-weighted return
+- MAE before final exit
+- maximum capital committed per position
+- drawdown under simultaneous DCA events
+
+Falsifier:
+If DCA materially improves net expectancy and drawdown-adjusted performance rather than merely cosmetic win rate, retain it as a legitimate strategy component.
+
+---
+
+## AT-HYP-0016 - Global-market plus asset-specific regime hierarchy improves action quality
+
+Hypothesis:
+A two-level context model, broad market regime plus asset-specific regime, can improve direction, position size and strategy activation compared with asset signals alone.
+
+MAEVE inspiration:
+GMDI descriptions distinguish global crypto direction from individual-coin direction.
+
+Framework fit:
+This is structurally compatible with existing BTC-vs-ecosystem and regime separation, but must be tested independently rather than assumed.
+
+Test status: HIGH PRIORITY FOR ASTRA
+
+Falsifier:
+If global context simply duplicates asset momentum/volatility without incremental out-of-sample value, do not add another regime layer.
+
+---
+
+## AT-HYP-0017 - Time-loss exits reduce stagnant capital drag
+
+Hypothesis:
+A maximum-hold exit can improve portfolio efficiency when a thesis fails to progress even without hitting price stop, especially for short-horizon strategies.
+
+MAEVE inspiration:
+Secondary technical material reports a maximum-hold / time-loss concept.
+
+Test status: QUEUED
+
+Metrics:
+capital turnover, opportunity cost, expectancy by holding duration, subsequent move after forced exit, false-exit rate.
+
+Falsifier:
+If time-loss systematically exits just before delayed winners and worsens net expectancy, remove or make regime-dependent.
+
+---
+
+## AT-HYP-0018 - Public CFGI features can explain a meaningful fraction of MAEVE actions
+
+Hypothesis:
+A time-valid model using only public CFGI components, public market data and known context can predict MAEVE ENTRY/DCA/EXIT/NONE decisions above simple baselines.
+
+Test status: MAEVE CORE REVERSE-ENGINEERING HYPOTHESIS
+
+Required dataset:
+A provenance-backed MAEVE action ledger plus matched no-trade controls.
+
+Success test:
+Out-of-time action prediction and calibration materially above frequency, price-only and composite-CFGI baselines.
+
+Falsifier:
+If public feature models cannot predict MAEVE action timing better than simple market-state baselines, the public inputs are insufficient to behaviorally clone the system.
+
+Important:
+Failure does not prove the existence or nature of a private signal.
+
+---
+
+## AT-HYP-0019 - Rolling range normalization may matter more than raw sentiment values
+
+Hypothesis:
+The predictive information in sentiment/features is more stable when expressed relative to recent coin/timeframe-specific ranges or percentiles than as absolute thresholds shared across regimes.
+
+MAEVE inspiration:
+Secondary MRE descriptions emphasize rolling range-low, range-high and price differential behavior.
+
+Test status: VERY HIGH PRIORITY
+
+Required comparison:
+- raw feature level
+- rolling percentile
+- z-score
+- distance from rolling extrema
+- velocity conditional on percentile
+
+Falsifier:
+If normalized features add no stable out-of-sample value over raw values, avoid MRE-style complexity.
+
+---
+
+## AT-HYP-0020 - Apparent MAEVE performance changed materially across versions or regimes
+
+Hypothesis:
+The decline in public headline win-rate checkpoints from roughly mid-90s to 84.85% reflects one or more of: broader asset coverage, harder market regimes, changed trade counting, version changes, leverage/short introduction or genuine edge decay.
+
+Test status: RESEARCH_QUEUED
+
+Required evidence:
+- row-level trade history by date
+- version boundaries
+- asset/timeframe mix
+- trade counting definition
+- portfolio return rather than win rate only
+
+Falsifier:
+If standardized row-level reconstruction shows the apparent change is purely a reporting/counting artifact, do not infer edge degradation.
+
+---
+
 ## Candidate metrics for every strategy
 
 At minimum:
