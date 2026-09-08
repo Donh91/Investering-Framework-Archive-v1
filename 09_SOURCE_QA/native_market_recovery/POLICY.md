@@ -1,0 +1,1 @@
+Recovery cadence: evaluate hourly at :35. A lane must be non-PASS on two consecutive evaluations before an owner re-run is eligible. Cooldowns: hourly 2h, live-anchor/breadth/sentiment 4h, stablecoin 12h. Provider/auth/quota/token/budget failures suppress retry to avoid wasting calls and are surfaced instead.
