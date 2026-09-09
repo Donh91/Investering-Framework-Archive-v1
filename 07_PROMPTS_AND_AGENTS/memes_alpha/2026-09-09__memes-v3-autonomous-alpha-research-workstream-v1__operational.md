@@ -10,11 +10,7 @@
 
 Create a GitHub-native background research workstream for Memes v3 / Alpha Lab that can collect public on-chain and market evidence, monitor known research cases and wallets, discover new candidates, learn from matured outcomes, and autonomously propose bounded improvements without requiring manual GitHub administration from the repository owner.
 
-This is not a new market engine.
-
-It is a research workstream inside the existing Research Automation, Research Governance and Compounding Learning architecture.
-
-The workstream has no automatic portfolio or trade authority.
+This is not a new market engine. It is a research workstream inside the existing Research Automation, Research Governance and Compounding Learning architecture. It has no automatic portfolio or trade authority.
 
 ## 2. Primary research objective
 
@@ -41,8 +37,6 @@ Priority research surfaces:
 
 Every case and discovery must preserve origin.
 
-Allowed origin classes:
-
 ```text
 USER_SUPPLIED
 AUTONOMOUS_DISCOVERY
@@ -66,38 +60,39 @@ Hard rules:
 
 `Donh91/Investering-Framework-Archive-v1` owns:
 
-- source contracts;
+- source contracts and operational semantics;
 - collection and classification code;
 - deterministic feature definitions;
 - research schemas;
 - provider-value-free health and receipts;
-- research-governance integration;
+- Research Governance and Compounding Learning integration;
 - model-routing integration;
 - experiment and outcome contracts;
 - Codex remediation candidates;
-- no private competitive watchlist values.
+- no exact competitive watchlist values.
 
 ### Restricted data plane
 
 `Donh91/secrets` owns:
 
-- exact competitive watchlist addresses and token identifiers when privacy is desired;
-- immutable case seed snapshots;
-- raw public-on-chain responses retained for Alpha Lab research;
-- private normalized wallet/event rows;
-- private research alerts when they contain the exact alpha identifiers;
-- immutable hashes and source receipts.
+- exact competitive wallet and token identifiers when privacy is desired;
+- immutable user-supplied case/watchlist seed snapshots;
+- private normalized Alpha Lab research rows;
+- public-source raw captures when they are intentionally retained as restricted competitive research evidence;
+- private research alerts when they contain exact alpha identifiers.
 
-Seed source contract:
+The exact competitive seed is not a Round 3 raw-provider capture and must not be placed under the existing Round 3 `raw/` validator namespace merely to reuse its folder convention.
+
+Seed contract:
 
 ```text
 MEMES_ALPHA_PRIVATE_SEED_V1
 ```
 
-Current private seed is expected under:
+Current seed route:
 
 ```text
-raw/MEMES_ALPHA_PRIVATE_SEED_V1/YYYY/MM/DD/seed.json
+private_research/memes_alpha/seeds/YYYY/MM/DD/seed.json
 ```
 
 Credentials remain in GitHub Actions Secrets or an approved runtime secret manager. They never enter either repository as files.
@@ -118,34 +113,32 @@ Do not add paid providers or paid infrastructure without separate owner authoriz
 
 ## 6. Adaptive collection cadence
 
-The scheduler may execute hourly, but the research state determines how much work is actually performed.
+The scheduler may execute hourly, while internal state determines whether the run performs a full refresh or a deterministic no-op.
 
 ```text
 COLD   = full refresh every 6 hours
 WATCH  = full refresh every 2 hours
 HOT    = full refresh every 1 hour
-EVENT  = immediate bounded follow-up on a newly detected high-value event when existing GitHub orchestration supports it safely
+EVENT  = immediate bounded follow-up on a new high-value event when existing GitHub orchestration supports it safely
 ```
 
-State escalation must be deterministic and evidence-driven.
-
-Examples that may justify HOT or EVENT observation:
+Escalation must be evidence-driven. HOT/EVENT examples include:
 
 - a watched historically strong wallet intentionally buys a previously unseen microcap;
 - two or more independently qualified wallets converge on one token;
 - rapid concentration/accumulation change plus real liquidity growth;
-- a CTO/community takeover appears while wallet accumulation is increasing;
-- propagation accelerates after an on-chain lead event;
+- CTO/community takeover appears while wallet accumulation rises;
+- social propagation accelerates after an on-chain lead event;
 - a provisional wallet creates another matured winning case;
 - a known high-risk distribution pattern appears in an active case.
 
-Routine noise should no-op rather than consume model/API budget.
+Routine noise should no-op rather than consume API budget.
 
 ## 7. Deterministic event classification
 
 The first stage must be code and rules, not an LLM.
 
-Required event classes include:
+Required event classes:
 
 ```text
 INTENTIONAL_BUY
@@ -162,11 +155,11 @@ LIQUIDITY_QUALITY_CHANGE
 WALLET_QUALITY_REVIEW_DUE
 ```
 
-Every event must include immutable source references, observed timestamp, chain, transaction or pool identity where available, origin class and missingness.
+Every event must preserve source references, observed timestamp, chain, transaction/pool identity where available, origin class and missingness.
 
 ## 8. Research features, not buy scores
 
-The workstream may maintain evidence features such as:
+The workstream may maintain research features such as:
 
 - wallet quality;
 - historical hit-rate coverage;
@@ -176,12 +169,10 @@ The workstream may maintain evidence features such as:
 - liquidity quality;
 - narrative propagation state;
 - propagation lead/lag;
-- distribution or rug-risk evidence;
+- distribution/rug-risk evidence;
 - confidence and missingness.
 
-These are research features only.
-
-No single feature or aggregate may become an automatic BUY, SELL, position-size or portfolio instruction.
+No feature or aggregate may become an automatic BUY, SELL, position-size or portfolio instruction.
 
 ## 9. Outcome and learning loop
 
@@ -196,9 +187,7 @@ Default observation windows may include:
 7 days
 ```
 
-The implementation should preserve price/liquidity/volume outcome windows, survival, drawdown, propagation ordering and wallet behavior where the source data supports them.
-
-Learning loop:
+Where supported, attach price/liquidity/volume outcomes, survival, drawdown, propagation ordering and later wallet behavior.
 
 ```text
 observe
@@ -208,17 +197,15 @@ observe
 -> classify false positive / useful lead / unresolved
 -> update wallet evidence history
 -> pass repeated errors or successes into existing Compounding Learning Controller
--> generate a new bounded falsifiable child proposal when justified
+-> generate a bounded falsifiable child proposal when justified
 -> route through Research Memory Novelty, Decision Impact / VOI, Adversarial Sentinel and Meta Orchestrator
 ```
 
-The existing Compounding Learning Controller remains the owner of what to test next. Memes v3 does not create a parallel self-learning engine.
+The existing Compounding Learning Controller remains owner of what to test next. Memes v3 does not create a parallel self-learning engine.
 
 ## 10. Wallet promotion and degradation
 
 Wallet status may evolve only from matured evidence.
-
-Suggested research states:
 
 ```text
 PROVISIONAL
@@ -229,42 +216,30 @@ RETIRED
 CONTEXT_ONLY
 ```
 
-Promotion should require multiple independent matured cases or similarly strong reproducible evidence.
-
-One historical win is insufficient.
-
-Repeated dust, passive receipts, post-pump entries, low-liquidity artifacts or poor forward hit rate should reduce confidence.
-
-All status changes require a durable reason and previous state.
+Promotion should require multiple independent matured cases or similarly strong reproducible evidence. One historical win is insufficient. Repeated dust, passive receipts, post-pump entries, low-liquidity artifacts or poor forward hit rate reduce confidence. All state changes require a durable reason and previous state.
 
 ## 11. Model routing
 
 Follow current `CAPABILITY_ROUTING_POLICY_v1` and API budget owners.
 
-Default:
-
 - deterministic collection/classification first;
-- Luna for cheap extraction, deduplication and routine triage when a model is actually useful;
+- Luna for cheap extraction, deduplication and routine triage when a model adds value;
 - Terra/Sol only for higher-value conflict review or synthesis;
 - Astra only when a future qualified task genuinely needs architecture-level, cross-domain or difficult research capability;
 - no routine Astra burn;
 - cheapest qualified executor wins;
-- never exceed the current API budget or lane caps without explicit owner authorization.
+- never exceed current API hard stop or lane caps without explicit owner authorization.
 
-The current API Gateway has no requirement to browse the web itself. Feed it deterministic source evidence gathered by collectors.
+Feed models deterministic collector evidence. The model does not need to browse autonomously when source acquisition can be deterministic.
 
 ## 12. Research-value routing
 
-Do not spend heavy research on every event.
-
-A heavy lane is justified only when novelty and expected decision/research value are high.
-
-Examples:
+Heavy research is justified only when novelty and expected research value are high, such as:
 
 - two qualified wallets converge before social propagation;
 - a provisional wallet's historical hit rate materially changes;
 - a new repeatable propagation sequence appears;
-- a source disagreement changes the case interpretation;
+- source disagreement changes the case interpretation;
 - a case falsifies an active Alpha Lab hypothesis;
 - an implementation/data gap blocks a high-value research question.
 
@@ -292,7 +267,7 @@ It may not autonomously:
 - authorize paid data;
 - weaken provenance/privacy controls;
 - self-promote a hypothesis;
-- rewrite historical event timestamps or outcomes;
+- rewrite historical event timestamps/outcomes;
 - self-merge Codex changes;
 - create an overlapping parallel research-governance stack.
 
@@ -300,7 +275,7 @@ It may not autonomously:
 
 The owner should not receive routine status noise.
 
-Human-facing alerts are reserved for genuinely useful events, for example:
+Human-facing alerts are reserved for:
 
 ```text
 HIGH_SIGNAL_NEW_BUY
@@ -316,24 +291,22 @@ A routine scan with no meaningful change produces no alert.
 
 ## 15. Initial pilot success criteria
 
-The first implementation should be considered successful only if it can demonstrate all of the following without leaking the private watchlist:
+The first implementation succeeds only if it can:
 
-1. Read a private seed through a hash-bound cross-repository route.
+1. Read the private seed through an explicit cross-repository route without exposing it publicly.
 2. Poll at least Robinhood Chain and Ethereum public evidence deterministically.
-3. Distinguish intentional wallet deployment from passive token receipt in positive and negative fixtures.
+3. Distinguish intentional wallet deployment from passive receipt in positive and negative fixtures.
 4. Detect a synthetic multi-wallet convergence event.
 5. Persist immutable research event rows with origin and source lineage.
 6. Preserve USER_SUPPLIED versus AUTONOMOUS_DISCOVERY truthfully.
 7. Produce no portfolio action.
 8. Stay inside existing API budget and use zero model calls when no model value exists.
-9. Produce a provider-value-free public health/readback receipt.
-10. Run at least 24 hours in shadow mode without duplicate-alert spam, private-data leakage or uncontrolled API usage before any notification escalation is trusted.
+9. Produce provider-value-free public health/readback.
+10. Run at least 24 hours in shadow mode without duplicate-alert spam, private-data leakage or uncontrolled API usage before alert escalation is trusted.
 
 ## 16. Implementation route
 
 Implementation is code work and follows existing Codex routing.
-
-Required lifecycle:
 
 ```text
 owner-approved operational contract
@@ -352,7 +325,7 @@ No manual GitHub steps should be delegated to the repository owner when an autho
 
 ## 17. Kill / rollback conditions
 
-Pause the workstream if any of these occur:
+Pause the workstream on:
 
 ```text
 PRIVATE_WATCHLIST_LEAK
