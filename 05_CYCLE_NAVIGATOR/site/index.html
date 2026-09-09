@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#07111f" />
+  <meta name="description" content="Cycle Navigator - a public crypto market-cycle dashboard with live market context and an official framework-backed weekly outlook." />
+  <title>Cycle Navigator</title>
+  <link rel="preconnect" href="https://api.coingecko.com" />
+  <link rel="preconnect" href="https://raw.githubusercontent.com" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div class="ambient ambient-a"></div>
+  <div class="ambient ambient-b"></div>
+
+  <header class="site-header shell">
+    <a class="brand" href="#top" aria-label="Cycle Navigator home">
+      <span class="brand-mark">CN</span>
+      <span>
+        <strong>Cycle Navigator</strong>
+        <small>Market phase, rotation and altseason map</small>
+      </span>
+    </a>
+    <div class="header-status" aria-label="Feed status">
+      <span class="badge live"><i></i> LIVE market</span>
+      <span class="badge" id="officialStatus">Loading OFFICIAL state</span>
+    </div>
+  </header>
+
+  <main id="top" class="shell">
+    <section class="hero panel">
+      <div class="hero-copy">
+        <div class="eyebrow-row">
+          <span class="eyebrow" id="issueLabel">Cycle Navigator</span>
+          <span class="quality-badge" id="qualityBadge">SYNCING</span>
+        </div>
+        <h1 id="marketState">Loading the latest cycle state...</h1>
+        <p class="hero-lede" id="stateSummary">The official weekly signal is loading from the public framework.</p>
+
+        <div class="state-meta" aria-label="Official state metadata">
+          <span id="officialTimestamp">OFFICIAL package: loading</span>
+          <span id="sourceWeekMeta">Source week: loading</span>
+        </div>
+
+        <div class="hero-rule"></div>
+        <p class="authority-note">LIVE prices are contextual only. The OFFICIAL weekly state, forecasts, score, rotation ladder and altseason countdown change only when a new framework-backed package is published.</p>
+      </div>
+
+      <div class="score-card" aria-label="Prior issue structural score">
+        <span class="score-kicker">Prior issue audit</span>
+        <div class="score-ring" id="scoreRing" style="--score:0">
+          <div>
+            <strong id="scoreValue">-</strong>
+            <small>structural score</small>
+          </div>
+        </div>
+        <p id="scoreCaption">Waiting for the latest reproducible scorecard.</p>
+        <small class="score-disclaimer">Component score only, not an overall precision percentage.</small>
+      </div>
+    </section>
+
+    <section class="section-block" aria-labelledby="pulse-heading">
+      <div class="section-heading">
+        <div>
+          <span class="kicker">LIVE layer</span>
+          <h2 id="pulse-heading">Market pulse</h2>
+        </div>
+        <span class="timestamp" id="marketTimestamp">Connecting...</span>
+      </div>
+      <div class="metric-grid">
+        <article class="metric-card">
+          <span>Bitcoin</span>
+          <strong id="btcPrice">-</strong>
+          <small id="btcChange">24h -</small>
+        </article>
+        <article class="metric-card">
+          <span>Ethereum</span>
+          <strong id="ethPrice">-</strong>
+          <small id="ethChange">24h -</small>
+        </article>
+        <article class="metric-card">
+          <span>ETH / BTC</span>
+          <strong id="ethBtc">-</strong>
+          <small>LIVE relative ratio</small>
+        </article>
+        <article class="metric-card emphasis">
+          <span>Broad altseason</span>
+          <strong id="altseasonHeadline">-</strong>
+          <small>OFFICIAL weekly state</small>
+        </article>
+      </div>
+    </section>
+
+    <section class="section-block" aria-labelledby="weekly-heading">
+      <div class="section-heading">
+        <div>
+          <span class="kicker">Weekly report</span>
+          <h2 id="weekly-heading">What changed, what matters now</h2>
+        </div>
+        <span class="section-note" id="priorIssueLabel">Compared with prior issue</span>
+      </div>
+      <div class="change-grid">
+        <article class="panel change-card">
+          <span class="kicker positive">Still holding</span>
+          <p id="stillHolding">Loading...</p>
+        </article>
+        <article class="panel change-card">
+          <span class="kicker negative">Changed / challenged</span>
+          <p id="changedFromPrior">Loading...</p>
+        </article>
+        <article class="panel change-card action-card">
+          <span class="kicker">What needs to happen next</span>
+          <p id="nextRequirement">Loading...</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="two-col section-block">
+      <article class="panel content-card">
+        <span class="kicker">7-day base case</span>
+        <h2>This week</h2>
+        <p id="weekCase">Loading...</p>
+        <div class="forecast-note" id="rangeNotice"></div>
+        <div class="range-row" id="rangeRow" hidden></div>
+      </article>
+      <article class="panel content-card">
+        <span class="kicker">Forward view</span>
+        <h2>Next 2 to 3 weeks</h2>
+        <p id="forwardCase">Loading...</p>
+      </article>
+    </section>
+
+    <section class="section-block" aria-labelledby="rotation-heading">
+      <div class="section-heading">
+        <div>
+          <span class="kicker">Capital rotation</span>
+          <h2 id="rotation-heading">Rotation ladder</h2>
+        </div>
+        <span class="section-note">BTC → ETH → large caps → midcaps → small caps → microcaps</span>
+      </div>
+      <div class="rotation-flow" aria-hidden="true">
+        <span>BTC</span><i>→</i><span>ETH</span><i>→</i><span>Large</span><i>→</i><span>Mid</span><i>→</i><span>Small</span><i>→</i><span>Micro</span>
+      </div>
+      <div class="rotation-grid" id="rotationGrid"></div>
+    </section>
+
+    <section class="section-block" aria-labelledby="countdown-heading">
+      <div class="section-heading">
+        <div>
+          <span class="kicker">Sequence, not a date prediction</span>
+          <h2 id="countdown-heading">Altseason countdown</h2>
+        </div>
+        <span class="section-note">Tap a stage for detail</span>
+      </div>
+      <div class="countdown-progress panel" id="countdownProgress" aria-label="Altseason stage progression"></div>
+      <div class="timeline panel" id="countdown"></div>
+    </section>
+
+    <section class="two-col section-block">
+      <article class="panel content-card">
+        <span class="kicker positive">Accountability</span>
+        <h2>What worked</h2>
+        <ul class="insight-list" id="strengths"></ul>
+      </article>
+      <article class="panel content-card">
+        <span class="kicker negative">Accountability</span>
+        <h2>What did not</h2>
+        <ul class="insight-list" id="misses"></ul>
+      </article>
+    </section>
+
+    <section class="two-col section-block">
+      <article class="panel content-card">
+        <span class="kicker">Frozen confirmation tests</span>
+        <h2>What this issue can be judged on</h2>
+        <ul class="check-list" id="frozenTests"></ul>
+      </article>
+      <article class="panel content-card quality-card">
+        <span class="kicker">Data quality</span>
+        <h2 id="dataQualityTitle">Publication status</h2>
+        <div class="quality-summary">
+          <span class="quality-badge" id="dataQualityBadge">LOADING</span>
+          <span id="publicationStatus">Publication: loading</span>
+        </div>
+        <ul class="quality-list" id="uncertainties"></ul>
+      </article>
+    </section>
+
+    <section class="section-block panel report-card" aria-labelledby="report-heading">
+      <div class="report-header">
+        <div>
+          <span class="kicker">Official weekly read</span>
+          <h2 id="report-heading">Cycle Navigator snapshot</h2>
+        </div>
+        <button id="shareButton" type="button">Share this snapshot</button>
+      </div>
+      <div class="report-grid">
+        <div>
+          <h3>Current state</h3>
+          <p id="reportState">Loading...</p>
+        </div>
+        <div>
+          <h3>Authority</h3>
+          <p>OFFICIAL state comes from the public GitHub pointer and its referenced machine package. LIVE prices never rewrite the weekly package.</p>
+        </div>
+      </div>
+      <div class="report-footer">
+        <span id="sourceWeek">Source: loading</span>
+        <span id="feedMode">Feed mode: canonical</span>
+      </div>
+    </section>
+
+    <section class="method section-block">
+      <div>
+        <span class="kicker">Methodology</span>
+        <h2>Frozen first, scored later</h2>
+      </div>
+      <p>Forecasts are frozen before outcomes are known, scored against archived evidence, and allowed to abstain when data quality is insufficient. LIVE market prices are context, not permission to rewrite a weekly forecast after the fact.</p>
+    </section>
+  </main>
+
+  <footer class="site-footer shell">
+    <span>Cycle Navigator</span>
+    <span>Scenario map only, not investment advice.</span>
+  </footer>
+
+  <script src="./app.js" defer></script>
+</body>
+</html>

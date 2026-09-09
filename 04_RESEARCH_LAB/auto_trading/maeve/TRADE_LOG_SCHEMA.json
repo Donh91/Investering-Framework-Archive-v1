@@ -1,0 +1,113 @@
+{
+  "schema_version": "1.0",
+  "purpose": "Normalized public MAEVE trade reconstruction. Every field may be null when unsupported. Never infer unsupported values into raw evidence fields.",
+  "record": {
+    "maeve_trade_id": "string",
+    "source": {
+      "source_type": "X|CFGI_DASHBOARD|TELEGRAM|WEB_ARCHIVE|MIRROR|OTHER",
+      "source_url": "string|null",
+      "source_status_id": "string|null",
+      "source_published_at_utc": "datetime|null",
+      "source_capture_at_utc": "datetime|null",
+      "source_evidence_class": "PRIMARY_PUBLIC|SECONDARY_CONTEMPORARY|OTHER",
+      "raw_text_sha256": "string|null",
+      "raw_text_preserved": "boolean",
+      "completeness_note": "string|null"
+    },
+    "action": {
+      "event_type": "ENTRY|DCA|PARTIAL_EXIT|EXIT|STOP|TARGET|TIME_LOSS|REVERSE|UPDATE|UNKNOWN",
+      "side": "LONG|SHORT|SPOT_BUY|SPOT_SELL|UNKNOWN",
+      "asset": "string|null",
+      "quote_asset": "string|null",
+      "product": "SPOT|PERP|MARGIN|UNKNOWN",
+      "timeframe": "15m|1h|4h|1d|other|UNKNOWN",
+      "leverage": "number|null",
+      "position_size_reported": "number|null",
+      "position_size_unit": "string|null"
+    },
+    "timing": {
+      "post_timestamp_utc": "datetime|null",
+      "claimed_signal_timestamp_utc": "datetime|null",
+      "inferred_signal_timestamp_utc": "datetime|null",
+      "fill_timestamp_utc": "datetime|null",
+      "timing_confidence": "HIGH|MEDIUM|LOW|UNKNOWN",
+      "latency_seconds_if_known": "number|null"
+    },
+    "prices": {
+      "reported_entry": "number|null",
+      "reported_exit": "number|null",
+      "reported_target": "number|null",
+      "reported_stop": "number|null",
+      "reported_dca": "number|null",
+      "reconstructed_executable_price": "number|null",
+      "price_source": "string|null"
+    },
+    "position_linkage": {
+      "parent_position_id": "string|null",
+      "dca_sequence_number": "integer|null",
+      "reversal_from_trade_id": "string|null",
+      "concurrent_positions_if_known": "integer|null"
+    },
+    "reported_outcome": {
+      "classification": "WIN|LOSS|BREAKEVEN|OPEN|UNKNOWN",
+      "reported_pnl_pct": "number|null",
+      "reported_pnl_quote": "number|null",
+      "reported_duration_seconds": "number|null"
+    },
+    "reconstructed_outcome": {
+      "gross_return_pct": "number|null",
+      "net_return_pct": "number|null",
+      "fees_bps": "number|null",
+      "slippage_bps": "number|null",
+      "mfe_pct": "number|null",
+      "mae_pct": "number|null",
+      "duration_seconds": "number|null",
+      "capital_weighted_pnl": "number|null"
+    },
+    "cfgi_snapshot": {
+      "methodology_version": "string|null",
+      "composite": {
+        "15m": "number|null",
+        "1h": "number|null",
+        "4h": "number|null",
+        "1d": "number|null"
+      },
+      "components": {
+        "price": "object|null",
+        "volatility": "object|null",
+        "volume": "object|null",
+        "impulse": "object|null",
+        "technical": "object|null",
+        "social": "object|null",
+        "dominance": "object|null",
+        "trends": "object|null",
+        "whales": "object|null",
+        "orders": "object|null"
+      },
+      "derived_features": {
+        "velocity": "object|null",
+        "cross_timeframe_spread": "object|null",
+        "asset_minus_market": "object|null",
+        "rolling_percentiles": "object|null",
+        "component_dispersion": "object|null"
+      }
+    },
+    "market_context": {
+      "ohlcv_features": "object|null",
+      "volatility_features": "object|null",
+      "liquidity_features": "object|null",
+      "framework_regime": "string|null",
+      "framework_regime_confidence": "number|null",
+      "stress_flush_state": "string|null",
+      "rotation_state": "string|null"
+    },
+    "inference": {
+      "maeve_version_era": "string|null",
+      "public_feature_explainability_probability": "number|null",
+      "latent_private_signal_residual": "number|null",
+      "candidate_rule_family": "string|null",
+      "inference_confidence": "HIGH|MEDIUM|LOW|NONE",
+      "notes": "string|null"
+    }
+  }
+}
