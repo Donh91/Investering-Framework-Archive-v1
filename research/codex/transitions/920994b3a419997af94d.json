@@ -1,0 +1,34 @@
+{
+  "allowed_change_scope": [
+    "scripts/api_agent/check_director_freshness.py",
+    "scripts/api_agent/build_owner_bound_director_context.py",
+    "scripts/api_agent/check_delta_ready.py",
+    "tests/api_agent/test_api_intelligence_v2.py",
+    "tests/api_agent/test_owner_bound_director_context.py",
+    "tests/api_agent/test_audit_director_freshness.py"
+  ],
+  "branch": "agent/task-20260909-audit-director-freshness",
+  "candidate_id": "codex-research-audit-director-freshness-v1",
+  "candidate_path": "research/codex/intake/2026/08/codex-research-audit-director-freshness-v1.json",
+  "candidate_sha256": "f8c7ac64c42a8b9244dc56abe2f057132ee09909abdae24b6a75ae5f6c16758f",
+  "contract": "CODEX_RESEARCH_TRANSITION_RECEIPT_v1",
+  "forbidden_changes": [
+    "market gates",
+    "model weights",
+    "canonical authority",
+    "portfolio logic",
+    "API budget",
+    "new policy semantics",
+    "workflow changes",
+    "historical evidence rewrite",
+    "restricted provider values in public artifacts"
+  ],
+  "objective": "Distinguish an unseen capture ID from fresh Director evidence. Preserve existing owner semantics and historical evidence.",
+  "post_fix_gate": "POSITIVE_AND_NEGATIVE_REGRESSIONS_PLUS_PRODUCTION_SHAPE_REPLAY_PLUS_CI_AND_MAIN_READBACK",
+  "pr_number": null,
+  "receipt_sha256": "bebdbf76344f302837c66a29d4ade4c440a80d93b4aa75b287f0d6724a64b275",
+  "recorded_at_utc": "2026-09-09T00:03:30Z",
+  "signature": "920994b3a419997af94d",
+  "state": "IN_REMEDIATION",
+  "task_contract_sha256": "8122dcabc61d71ce38fca543661b97e99cbf953757f48049963fb23eed039890"
+}
