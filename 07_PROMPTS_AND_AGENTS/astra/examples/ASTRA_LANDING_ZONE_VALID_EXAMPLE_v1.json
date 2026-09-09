@@ -1,0 +1,88 @@
+{
+  "contract": "ASTRA_RESEARCH_RUN_ENVELOPE_v1",
+  "run_id": "example-blind-001",
+  "task_family": "token_thesis",
+  "frozen_question": "Does the frozen evidence support the thesis over the stated horizon?",
+  "decision_at": "2026-09-09T18:00:00Z",
+  "required_capabilities": ["adversarial_thesis"],
+  "execution_mode": "BLIND_OPPOSITION",
+  "budget": {
+    "max_agents": 3,
+    "max_parallel_agents": 2,
+    "max_total_tokens": 60000,
+    "max_wallclock_seconds": 900,
+    "effort_ceiling": "HIGH",
+    "escalation_reserve_pct": 20
+  },
+  "escalation_rule": {
+    "load_bearing_disagreement": "EXISTING_ADJUDICATION",
+    "material_coverage_gap": "TARGETED_RETRIEVAL",
+    "budget_exhaustion": "STOP_AND_REPORT_INCOMPLETE"
+  },
+  "authority": {
+    "research_only": true,
+    "market_state_change": false,
+    "portfolio_action": false,
+    "trade_action": false,
+    "canonical_self_promotion": false,
+    "automatic_merge": false
+  },
+  "assignments": [
+    {
+      "assignment_id": "bull-independent",
+      "capability": "adversarial_thesis",
+      "question": "Assess the strongest evidence-supported case for the frozen thesis.",
+      "question_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "responsibility_scope": "strongest support case from frozen evidence only",
+      "mode": "ADVERSARIAL",
+      "blind_group": "thesis-pair-1",
+      "token_budget": 20000,
+      "effort": "HIGH",
+      "commit_before_reveal_required": true,
+      "output_hash": null
+    },
+    {
+      "assignment_id": "bear-independent",
+      "capability": "adversarial_thesis",
+      "question": "Assess the strongest evidence-supported case against the frozen thesis.",
+      "question_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "responsibility_scope": "strongest falsification case from frozen evidence only",
+      "mode": "ADVERSARIAL",
+      "blind_group": "thesis-pair-1",
+      "token_budget": 20000,
+      "effort": "HIGH",
+      "commit_before_reveal_required": true,
+      "output_hash": null
+    }
+  ],
+  "evidence": [
+    {
+      "evidence_id": "ev-001",
+      "source_ref": "example://frozen-primary-source",
+      "content_hash": null,
+      "effective_at": "2026-09-08T12:00:00Z",
+      "observable_at": "2026-09-08T12:05:00Z",
+      "retrieved_at": "2026-09-09T17:45:00Z",
+      "used_for_decision": true,
+      "leakage_status": "POINT_IN_TIME_VALID",
+      "visibility": "PUBLIC_CONTROL_PLANE"
+    }
+  ],
+  "disagreement": {
+    "status": "SHADOW_ONLY",
+    "fact_disagreement_count": 0,
+    "source_collision_count": 0,
+    "interpretation_split": null,
+    "forecast_probability_dispersion": null,
+    "confidence_dispersion": null,
+    "coverage_gap_count": 0,
+    "unresolved_load_bearing_claims": 0,
+    "resolution_status": "NOT_APPLICABLE"
+  },
+  "utility_policy": {
+    "mode": "SHADOW_LOG_ONLY",
+    "auto_pruning_enabled": false,
+    "auto_routing_promotion": false
+  },
+  "utility_observations": []
+}
