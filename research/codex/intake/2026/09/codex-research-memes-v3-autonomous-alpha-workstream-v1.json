@@ -28,7 +28,8 @@
     "Donh91/secrets:tests/memes_alpha/**",
     "Donh91/secrets:schemas/memes_alpha/**",
     "Donh91/secrets:health/MEMES_ALPHA/**",
-    "Donh91/secrets:raw/MEMES_ALPHA_*/**",
+    "Donh91/secrets:private_research/memes_alpha/**",
+    "Donh91/secrets:raw/MEMES_ALPHA_*/** only through a source contract and the existing private raw-envelope validation path",
     "Donh91/secrets:receipts/MEMES_ALPHA_*/**",
     "Donh91/secrets:.github/workflows/memes-alpha-private*.yml"
   ],
@@ -50,7 +51,7 @@
     },
     {
       "kind": "REPO_PATH",
-      "ref": "Donh91/secrets:raw/MEMES_ALPHA_PRIVATE_SEED_V1/2026/09/09/seed.json",
+      "ref": "Donh91/secrets:private_research/memes_alpha/seeds/2026/09/09/seed.json",
       "summary": "Restricted seed contains current user-supplied Alpha Lab cases and provisional wallet research and must not be exposed in the public control plane."
     }
   ],
@@ -65,6 +66,7 @@
       "A no-change hourly run performs a deterministic no-op and makes zero model/API calls.",
       "Any optional model triage uses the existing API Gateway and current research-automation budget owner and cannot increase the monthly or lane cap.",
       "Public health/readback receipt is provider-value-free and exact private identifiers never appear in public workflow logs, public files, issues or PR artifacts.",
+      "Any retained private API payload under raw/MEMES_ALPHA_* conforms to the existing private raw-envelope/source-contract/receipt validation path rather than bypassing it.",
       "Workflow activation includes the repository high-impact safepoint/recovery gate before workflow changes are merged and then completes at least 24 hours of shadow observation before alert escalation is trusted."
     ],
     "negative": [
@@ -73,6 +75,7 @@
       "A user-supplied case can never be rewritten as AUTONOMOUS_DISCOVERY after later success.",
       "Missing transaction, price, liquidity or holder evidence remains UNKNOWN and is never inferred.",
       "Private seed values must fail the public-output redaction test if any exact address or token identifier escapes.",
+      "A competitive seed/config object placed under the Round 3 raw namespace without the required capture envelope must fail validation; the implementation must use the private_research seed route instead.",
       "Rate-limit or source failure must back off/degrade explicitly and must not create synthetic continuity.",
       "The pipeline must fail tests if it emits BUY, SELL, position size, portfolio action, canonical promotion, threshold mutation or model-weight changes.",
       "No implementation may change API hard-stop, lane-cap or reserve values.",
