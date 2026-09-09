@@ -210,6 +210,21 @@ def aggregate_state(observations: list[dict[str, Any]]) -> str:
     return "SOURCE_DISCOVERY_REQUIRED"
 
 
+def capability_routes(observations: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Expose existing per-capability closure routes without weakening the family fail-closed state."""
+    grouped: dict[str, set[str]] = {}
+    for observation in observations:
+        hint = str(observation.get("capability_hint") or "UNKNOWN_SOURCE")
+        state = str(observation.get("closure_state") or "")
+        if state not in ACTIONABLE_STATES and state not in TERMINAL_STATES:
+            continue
+        grouped.setdefault(hint, set()).add(state)
+    return [
+        {"capability_hint": hint, "closure_states": sorted(states)}
+        for hint, states in sorted(grouped.items())
+    ]
+
+
 def build_family_item(
     family_id: str,
     observations: list[dict[str, Any]],
@@ -251,6 +266,7 @@ def build_family_item(
         "data_shape": "FAMILY_AGGREGATE",
         "capability_hint": hints[0] if len(hints) == 1 else "FAMILY_AGGREGATE",
         "capability_hints": hints,
+        "capability_routes": capability_routes(observations),
         "evidence_reference": latest.get("evidence_reference"),
         "first_seen_utc": first_seen,
         "last_seen_utc": last_seen,
