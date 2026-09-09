@@ -53,15 +53,16 @@ The repository owner explicitly confirmed on 2026-09-08 that the BlockHorizon do
 
 For current BlockHorizon work, use this order:
 
-1. `SOURCE_CONTRACT_v1.json`
-2. `CURRENT_PRIVATE_BINDING.json`
-3. `METRIC_REGISTRY_v2.json`
-4. `ASTRA_RESEARCH_PROTOCOL_v1.md`
-5. authorized private archive README
-6. exact private reconciliation receipt
-7. exact private raw artifact only after immutable path/hash binding.
+1. `CURRENT_RESEARCH_READINESS.json`
+2. `SOURCE_CONTRACT_v1.json`
+3. `CURRENT_PRIVATE_BINDING.json`
+4. `METRIC_REGISTRY_v2.json`
+5. `ASTRA_RESEARCH_PROTOCOL_v1.md`
+6. authorized private archive README
+7. exact private reconciliation receipt
+8. exact private raw artifact only after immutable path/hash binding.
 
-`METRIC_REGISTRY_v1.json` and `SEED_INVENTORY_METADATA_v1.json` are retained as historical seed-state records. They must not override the current v2 registry or current binding.
+`METRIC_REGISTRY_v1.json` and `SEED_INVENTORY_METADATA_v1.json` are retained as historical seed-state records. They must not override the current readiness pointer, v2 registry or current binding.
 
 ## Private raw data location
 
@@ -196,6 +197,7 @@ Treat it as:
 ## Durable assets
 
 ```text
+CURRENT_RESEARCH_READINESS.json
 SOURCE_CONTRACT_v1.json
 CURRENT_PRIVATE_BINDING.json
 METRIC_REGISTRY_v2.json
