@@ -1,0 +1,52 @@
+{
+  "state": "BLOCKHORIZON_CURRENT_RESEARCH_READINESS_v1",
+  "status": "READY_FOR_SCHEMA_PROVENANCE_REDUNDANCY_AND_HYPOTHESIS_DESIGN",
+  "updated_at_utc": "2026-09-09T10:19:00Z",
+  "source_contract": "SOURCE_CONTRACT_v1.json",
+  "current_private_binding": "CURRENT_PRIVATE_BINDING.json",
+  "current_metric_registry": "METRIC_REGISTRY_v2.json",
+  "research_protocol": "ASTRA_RESEARCH_PROTOCOL_v1.md",
+  "astra_discovery": {
+    "mission_router": "07_PROMPTS_AND_AGENTS/astra/ASTRA_REPOSITORY_MISSION_ROUTER_v1.json",
+    "mission_bundle_id": "ASTRA_BLOCKHORIZON_HISTORICAL_FEATURE_SURVIVAL_V1",
+    "discovery_priority": "HIGH_AFTER_BASELINE_QUALIFICATION",
+    "instruction": "Astra-class models should discover this task from the shared Astra mission router, then treat this readiness file and ASTRA_RESEARCH_PROTOCOL_v1.md as the current BlockHorizon research entrypoints rather than relying on chat history."
+  },
+  "private_repository": "Donh91/secrets",
+  "private_main_commit": "1700dd8ee4bf7ac03f0e18cd5b3647a07fda645f",
+  "private_raw_snapshot_commit": "a03ae86385cd6a3eb31c75e14bc6355e536552d3",
+  "private_reconciliation_receipt": "receipts/BH01_BLOCKHORIZON_MANUAL_EXPORT_HISTORICAL_V1/2026/09/09/2026-09-09__blockhorizon_combo_reconciliation_receipt_v1.json",
+  "private_reconciliation_receipt_git_blob_sha": "ddaf1d4b13fd56ad4b2ad38b9218b246c0351139",
+  "archive_health": {
+    "csv_files": 55,
+    "unique_content_hashes": 48,
+    "exact_content_duplicate_groups": 7,
+    "total_bytes": 13585728,
+    "latest_batch_files": 14,
+    "latest_batch_unique_hashes": 14,
+    "latest_batch_hash_readback": "PASS_14_OF_14"
+  },
+  "family_state": {
+    "hodl_waves": "COMPLETE_12_OF_12",
+    "cdd_sth_lth": "COMPLETE",
+    "supply_last_active": "PARTIAL_4_OF_12__8_MISSING",
+    "spent_volume": "PARTIAL_4_OF_13__9_MISSING",
+    "remaining_core_family_series": 17
+  },
+  "research_start_blocked_by_missing_family_series": false,
+  "next_phase": [
+    "SCHEMA_DEFINITION_AUDIT",
+    "POINT_IN_TIME_AND_REVISION_RISK_CLASSIFICATION",
+    "REDUNDANCY_AND_OVERLAP_MAP",
+    "INCREMENTAL_VALUE_TEST_DESIGN",
+    "REGIME_ROBUSTNESS_DESIGN",
+    "WALK_FORWARD_AND_LEAVE_ONE_CYCLE_OUT_SPECIFICATION"
+  ],
+  "hard_guardrails": [
+    "NO_RAW_PROVIDER_VALUES_IN_PUBLIC_CONTROL_PLANE",
+    "NO_OUTCOME_SCORING_OR_EDGE_CLAIM_UNLESS_EXISTING_RESEARCH_GATES_AUTHORIZE_IT",
+    "NO_AUTOMATIC_CANONICAL_MARKET_OR_PORTFOLIO_AUTHORITY",
+    "PLANB_POST_RETRIEVAL_MODEL_GRID_ROWS_ARE_NOT_OBSERVED_FUTURE_ACTUALS",
+    "DO_NOT_COLLECT_MORE_OPTIONAL_CHARTS_WITHOUT_A_SPECIFIC_INFORMATION_VALUE_CASE"
+  ]
+}
