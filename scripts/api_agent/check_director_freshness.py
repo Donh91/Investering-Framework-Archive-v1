@@ -21,6 +21,11 @@ def context_capture(path: Path) -> tuple[str | None, object]:
     return (str(run_id) if run_id else None), latest.get("captured_at_utc")
 
 
+def run_id_from_context(path: Path) -> str | None:
+    """Compatibility helper retained for existing callers/tests."""
+    return context_capture(path)[0]
+
+
 def parse_source_timestamp(raw: object) -> datetime | None:
     if not isinstance(raw, str) or not raw.strip():
         return None
@@ -64,7 +69,7 @@ def evaluate(context: Path, output_root: Path, now: datetime | None = None) -> d
     seen: set[str] = set()
     if output_root.exists():
         for path in output_root.rglob("context.json"):
-            run_id, _ = context_capture(path)
+            run_id = run_id_from_context(path)
             if run_id:
                 seen.add(run_id)
     unseen = current_run_id not in seen
