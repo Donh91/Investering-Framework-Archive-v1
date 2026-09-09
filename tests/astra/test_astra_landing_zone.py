@@ -26,6 +26,12 @@ class AstraLandingZoneTests(unittest.TestCase):
     def test_valid_blind_example_passes(self):
         self.assertEqual(MOD.validate_run(deepcopy(self.valid)), [])
 
+    def test_required_capability_must_be_covered(self):
+        run = deepcopy(self.valid)
+        run["required_capabilities"].append("missing_capability")
+        errors = MOD.validate_run(run)
+        self.assertTrue(any("required capabilities" in e for e in errors))
+
     def test_duplicate_question_without_adversarial_or_replication_fails(self):
         run = deepcopy(self.valid)
         run["execution_mode"] = "STANDARD"
@@ -48,11 +54,17 @@ class AstraLandingZoneTests(unittest.TestCase):
         errors = MOD.validate_run(run)
         self.assertTrue(any("not POINT_IN_TIME_VALID" in e for e in errors))
 
-    def test_blind_opposition_requires_commit_before_reveal(self):
+    def test_blind_opposition_requires_commit_before_reveal_protocol(self):
         run = deepcopy(self.valid)
-        run["assignments"][1]["committed_before_reveal"] = False
+        run["assignments"][1]["commit_before_reveal_required"] = False
         errors = MOD.validate_run(run)
-        self.assertTrue(any("committed_before_reveal" in e for e in errors))
+        self.assertTrue(any("commit_before_reveal_required" in e for e in errors))
+
+    def test_escalation_rule_is_required(self):
+        run = deepcopy(self.valid)
+        del run["escalation_rule"]
+        errors = MOD.validate_run(run)
+        self.assertTrue(any("escalation_rule" in e for e in errors))
 
     def test_token_budget_preserves_escalation_reserve(self):
         run = deepcopy(self.valid)
@@ -72,6 +84,23 @@ class AstraLandingZoneTests(unittest.TestCase):
         run["authority"]["trade_action"] = True
         errors = MOD.validate_run(run)
         self.assertTrue(any("authority.trade_action" in e for e in errors))
+
+    def test_utility_observation_requires_external_evaluation_source(self):
+        run = deepcopy(self.valid)
+        run["utility_observations"] = [{
+            "assignment_id": "bull-independent",
+            "mode": "SHADOW_LOG_ONLY",
+            "tokens_used": 100,
+            "latency_ms": 10,
+            "unique_verified_evidence": 0,
+            "material_falsifier_or_contradiction": 0,
+            "decisive_gap_resolution": False,
+            "material_synthesis_delta": False,
+            "quality_or_calibration_delta": None,
+            "failure_or_no_value": True
+        }]
+        errors = MOD.validate_run(run)
+        self.assertTrue(any("evaluation_source" in e for e in errors))
 
 
 if __name__ == "__main__":

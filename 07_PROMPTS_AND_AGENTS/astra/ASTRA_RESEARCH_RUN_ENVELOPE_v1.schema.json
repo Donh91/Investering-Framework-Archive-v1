@@ -13,6 +13,7 @@
     "required_capabilities",
     "execution_mode",
     "budget",
+    "escalation_rule",
     "authority",
     "assignments",
     "evidence",
@@ -45,6 +46,22 @@
         "max_wallclock_seconds": {"type": "integer", "minimum": 1},
         "effort_ceiling": {"enum": ["LOW", "MEDIUM", "HIGH", "XHIGH", "MAX"]},
         "escalation_reserve_pct": {"type": "number", "minimum": 0, "maximum": 50}
+      }
+    },
+    "escalation_rule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["load_bearing_disagreement", "material_coverage_gap", "budget_exhaustion"],
+      "properties": {
+        "load_bearing_disagreement": {
+          "enum": ["TARGETED_VERIFIER", "EXISTING_ADJUDICATION", "REPORT_CONTESTED"]
+        },
+        "material_coverage_gap": {
+          "enum": ["TARGETED_RETRIEVAL", "REPORT_DATA_BLOCKED"]
+        },
+        "budget_exhaustion": {
+          "enum": ["STOP_AND_REPORT_INCOMPLETE", "ESCALATE_TO_PARENT_WITHOUT_NEW_CALLS"]
+        }
       }
     },
     "authority": {
@@ -89,7 +106,7 @@
     "assignment": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["assignment_id", "capability", "question", "question_hash", "responsibility_scope", "mode", "token_budget", "effort", "committed_before_reveal"],
+      "required": ["assignment_id", "capability", "question", "question_hash", "responsibility_scope", "mode", "token_budget", "effort", "commit_before_reveal_required"],
       "properties": {
         "assignment_id": {"type": "string", "minLength": 1},
         "capability": {"type": "string", "minLength": 1},
@@ -100,7 +117,7 @@
         "blind_group": {"type": ["string", "null"]},
         "token_budget": {"type": "integer", "minimum": 1},
         "effort": {"enum": ["LOW", "MEDIUM", "HIGH", "XHIGH", "MAX"]},
-        "committed_before_reveal": {"type": "boolean"},
+        "commit_before_reveal_required": {"type": "boolean"},
         "output_hash": {"type": ["string", "null"]}
       }
     },
@@ -139,10 +156,11 @@
     "utility": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["assignment_id", "mode", "tokens_used", "latency_ms", "unique_verified_evidence", "material_falsifier_or_contradiction", "decisive_gap_resolution", "material_synthesis_delta", "failure_or_no_value"],
+      "required": ["assignment_id", "mode", "evaluation_source", "tokens_used", "latency_ms", "unique_verified_evidence", "material_falsifier_or_contradiction", "decisive_gap_resolution", "material_synthesis_delta", "failure_or_no_value"],
       "properties": {
         "assignment_id": {"type": "string"},
         "mode": {"const": "SHADOW_LOG_ONLY"},
+        "evaluation_source": {"enum": ["DETERMINISTIC", "INDEPENDENT_REVIEW", "MATURED_OUTCOME", "PARENT_SYNTHESIS"]},
         "tokens_used": {"type": "integer", "minimum": 0},
         "latency_ms": {"type": "integer", "minimum": 0},
         "unique_verified_evidence": {"type": "integer", "minimum": 0},

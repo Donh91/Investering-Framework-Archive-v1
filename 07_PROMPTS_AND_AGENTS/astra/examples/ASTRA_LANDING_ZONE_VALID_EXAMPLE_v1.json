@@ -4,7 +4,7 @@
   "task_family": "token_thesis",
   "frozen_question": "Does the frozen evidence support the thesis over the stated horizon?",
   "decision_at": "2026-09-09T18:00:00Z",
-  "required_capabilities": ["fundamentals", "adversarial_thesis"],
+  "required_capabilities": ["adversarial_thesis"],
   "execution_mode": "BLIND_OPPOSITION",
   "budget": {
     "max_agents": 3,
@@ -13,6 +13,11 @@
     "max_wallclock_seconds": 900,
     "effort_ceiling": "HIGH",
     "escalation_reserve_pct": 20
+  },
+  "escalation_rule": {
+    "load_bearing_disagreement": "EXISTING_ADJUDICATION",
+    "material_coverage_gap": "TARGETED_RETRIEVAL",
+    "budget_exhaustion": "STOP_AND_REPORT_INCOMPLETE"
   },
   "authority": {
     "research_only": true,
@@ -33,7 +38,7 @@
       "blind_group": "thesis-pair-1",
       "token_budget": 20000,
       "effort": "HIGH",
-      "committed_before_reveal": true,
+      "commit_before_reveal_required": true,
       "output_hash": null
     },
     {
@@ -46,7 +51,7 @@
       "blind_group": "thesis-pair-1",
       "token_budget": 20000,
       "effort": "HIGH",
-      "committed_before_reveal": true,
+      "commit_before_reveal_required": true,
       "output_hash": null
     }
   ],

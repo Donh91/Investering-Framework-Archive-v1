@@ -53,6 +53,12 @@ def validate_run(run: dict[str, Any]) -> list[str]:
         if assigned_tokens > spendable:
             errors.append("assignment token budgets consume the escalation reserve")
 
+    required_capabilities = set(run.get("required_capabilities", []))
+    assigned_capabilities = {a.get("capability") for a in assignments if isinstance(a, dict)}
+    uncovered = sorted(c for c in required_capabilities if c not in assigned_capabilities)
+    if uncovered:
+        errors.append(f"required capabilities are not covered by assignments: {', '.join(uncovered)}")
+
     by_hash: dict[str, list[dict[str, Any]]] = {}
     for assignment in assignments:
         qh = assignment.get("question_hash")
@@ -71,8 +77,16 @@ def validate_run(run: dict[str, Any]) -> list[str]:
         groups = {a.get("blind_group") for a in assignments}
         if None in groups or len(groups) != 1:
             errors.append("BLIND_OPPOSITION assignments must share one non-null blind_group")
-        if any(not a.get("committed_before_reveal") for a in assignments):
-            errors.append("BLIND_OPPOSITION requires committed_before_reveal=true for every assignment")
+        if any(not a.get("commit_before_reveal_required") for a in assignments):
+            errors.append("BLIND_OPPOSITION requires commit_before_reveal_required=true for every assignment")
+
+    escalation_rule = run.get("escalation_rule")
+    if not isinstance(escalation_rule, dict):
+        errors.append("escalation_rule must be an object")
+    else:
+        for key in ("load_bearing_disagreement", "material_coverage_gap", "budget_exhaustion"):
+            if not escalation_rule.get(key):
+                errors.append(f"escalation_rule.{key} is required")
 
     try:
         decision_at = _dt(run["decision_at"])
@@ -108,6 +122,8 @@ def validate_run(run: dict[str, Any]) -> list[str]:
     for obs in run.get("utility_observations", []):
         if obs.get("mode") != "SHADOW_LOG_ONLY":
             errors.append("utility observation mode must be SHADOW_LOG_ONLY")
+        if not obs.get("evaluation_source"):
+            errors.append("utility observation must identify evaluation_source")
 
     authority = run.get("authority", {})
     if authority.get("research_only") is not True:
