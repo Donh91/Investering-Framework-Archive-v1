@@ -1,0 +1,116 @@
+{
+  "contract": "ASTRA_LANDING_ZONE_POLICY_v1",
+  "status": "PREPARED_NOT_ACTIVE",
+  "authority": "NONE_BY_ITSELF",
+  "purpose": "Operational landing-zone rules for Astra-class research orchestration without creating a new market engine or independent adjudicator.",
+  "inherits": [
+    "AGENTS.md",
+    "00_ARCHIVE_CONTROL/CANONICAL_INDEX.md",
+    "01_CORE_FRAMEWORK/architecture/2026-07-10__simplified-active-framework-map-and-crosswalk__canonical.md",
+    "research/api_agent/CAPABILITY_ROUTING_POLICY_v1.json",
+    "research/api_agent/API_INTELLIGENCE_POLICY_v2.json",
+    "research/api_agent/API_AGENT_AND_COMPOUNDING_LEARNING_ARCHITECTURE_v1.md"
+  ],
+  "principles": {
+    "minimum_sufficient_intelligence": true,
+    "unique_question_ownership": true,
+    "deterministic_first": true,
+    "point_in_time_evidence": true,
+    "blind_opposition_is_execution_mode_not_agent": true,
+    "disagreement_is_data_not_consensus_target": true,
+    "utility_shadow_first": true,
+    "existing_owner_before_new_owner": true
+  },
+  "execution_modes": [
+    "STANDARD",
+    "TARGETED_VERIFIER",
+    "ADVERSARIAL",
+    "REPLICATION",
+    "BLIND_OPPOSITION"
+  ],
+  "spawn_policy": {
+    "duplicate_question_hash_default": "FORBIDDEN",
+    "duplicate_question_hash_allowed_modes": ["ADVERSARIAL", "REPLICATION"],
+    "must_add_required_capability_or_material_verification": true,
+    "deterministic_or_existing_owner_first": true,
+    "stop_when_no_expected_material_delta": true
+  },
+  "evidence_policy": {
+    "required_timestamps": ["effective_at", "observable_at", "retrieved_at"],
+    "historical_decision_rule": "observable_at <= decision_at",
+    "lookahead_status": "QUARANTINED_LOOKAHEAD",
+    "lookahead_may_be_used_for_decision": false,
+    "missing_data": "UNKNOWN_NOT_NEGATIVE_EVIDENCE",
+    "external_content_is_instruction_authority": false
+  },
+  "blind_opposition": {
+    "minimum_independent_assignments": 2,
+    "same_frozen_evidence_required_by_default": true,
+    "commit_before_reveal_required": true,
+    "forced_consensus": false,
+    "reconciliation_owner": "EXISTING_RESEARCH_LAB_F12_AND_UNIFIED_ADJUDICATION"
+  },
+  "disagreement": {
+    "status": "SHADOW_ONLY",
+    "components": [
+      "fact_disagreement_count",
+      "source_collision_count",
+      "interpretation_split",
+      "forecast_probability_dispersion",
+      "confidence_dispersion",
+      "coverage_gap_count",
+      "unresolved_load_bearing_claims",
+      "resolution_status"
+    ],
+    "single_magic_score_required": false,
+    "direct_market_or_portfolio_authority": false
+  },
+  "agent_utility": {
+    "mode": "SHADOW_LOG_ONLY",
+    "auto_pruning_enabled": false,
+    "auto_routing_promotion": false,
+    "recommended_minimum_completed_runs_per_task_family_before_pruning_research": 50,
+    "dimensions": [
+      "unique_verified_evidence",
+      "material_falsifier_or_contradiction",
+      "decisive_gap_resolution",
+      "material_synthesis_delta",
+      "quality_or_calibration_delta",
+      "tokens_used",
+      "latency_ms",
+      "failure_or_no_value"
+    ],
+    "promotion_requires_separate_preregistered_evaluation": true
+  },
+  "budget": {
+    "pricing_authority": "research/api_agent/API_INTELLIGENCE_POLICY_v2.json",
+    "required_run_ceilings": [
+      "max_agents",
+      "max_parallel_agents",
+      "max_total_tokens",
+      "max_wallclock_seconds",
+      "effort_ceiling",
+      "escalation_reserve_pct"
+    ],
+    "preserve_escalation_reserve": true,
+    "weekly_high_effort_budget_should_not_be_front_loaded_without_information_value": true
+  },
+  "activation": {
+    "current": "PREPARED_NOT_ACTIVE",
+    "allowed_next": "SHADOW_LOGGING",
+    "automatic_transition": false,
+    "automatic_self_modification": false
+  },
+  "authority_ceiling": {
+    "creates_truth": false,
+    "framework_state_change": false,
+    "market_rule_change": false,
+    "threshold_change": false,
+    "weight_change": false,
+    "portfolio_action": false,
+    "trade_action": false,
+    "canonical_self_promotion": false,
+    "automatic_merge": false,
+    "recovery_destructive_authority": "NEVER"
+  }
+}
