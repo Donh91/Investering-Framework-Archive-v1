@@ -3,7 +3,7 @@
 **Status:** MANUAL_EXPORT_SEED_ACTIVE / PRIVATE_RAW_ARCHIVE_COMPLETE / API_PENDING / RESEARCH_ONLY  
 **Authority:** NONE_BY_ITSELF  
 **Added:** 2026-09-07  
-**Updated:** 2026-09-08  
+**Updated:** 2026-09-09  
 **Purpose:** Preserve BlockHorizon as a high-priority Bitcoin on-chain historical research source while keeping raw values, source rights, revision semantics and framework authority separate.
 
 ## Current state
@@ -111,23 +111,72 @@ The private raw archive also contains supplemental research CSVs including:
 - aSOPR / Adjusted SOPR;
 - SOPR Short Term Supply.
 
-These are now registered as research inputs. Exact-content re-downloads remain one analytical content object unless retrieval-revision analysis requires otherwise.
+These are registered as research inputs. Exact-content re-downloads remain one analytical content object unless retrieval-revision analysis requires otherwise.
+
+## Provider chart-menu audit 2026-09-09
+
+The user supplied screenshots covering the full BlockHorizon menu of 147 charts. The observed menu does not contain `URPD`, `UTXO Realized Price Distribution` or another separately named URPD chart. Therefore URPD is removed from the BlockHorizon-specific download queue. `Cost-Basis Heatmap`, which is already archived, remains the closest available BlockHorizon price-distribution research input.
+
+The screenshots also establish that the age-band families are separate chart exports rather than one visible combined family export.
 
 ## Next collection priority
 
-P0 remaining:
+### P0 core completion
 
-1. URPD
-2. HODL Waves
-3. Supply Last Active full age-band family
-4. Spent Volume full age-band family
+1. `HODL Waves`
+2. Supply Last Active discrete age-band family, excluding the already archived `Supply Last Active 10y+`:
+   - `Supply Last Active < 24 Hours`
+   - `Supply Last Active 1d-1w`
+   - `Supply Last Active 1w-1m`
+   - `Supply Last Active 1m-3m`
+   - `Supply Last Active 3m-6m`
+   - `Supply Last Active 6m-12m`
+   - `Supply Last Active 1y-2y`
+   - `Supply Last Active 2y-3y`
+   - `Supply Last Active 3y-5y`
+   - `Supply Last Active 5y-7y`
+   - `Supply Last Active 7y-10y`
+3. Spent Volume discrete age-band family, excluding the already archived `Spent Volume 10y+`:
+   - `Spent Volume <1h`
+   - `Spent Volume 1h-24h`
+   - `Spent Volume 1d-1w`
+   - `Spent Volume 1w-1m`
+   - `Spent Volume 1m-3m`
+   - `Spent Volume 3m-6m`
+   - `Spent Volume 6m-12m`
+   - `Spent Volume 1y-2y`
+   - `Spent Volume 2y-3y`
+   - `Spent Volume 3y-5y`
+   - `Spent Volume 5y-7y`
+   - `Spent Volume 7y-10y`
 
-P1 after that:
+Do not spend download quota on the cumulative Supply Last Active views `1+ Years Ago (%)`, `2+ Years Ago (%)`, `3+ Years Ago (%)` or `5+ Years Ago (%)` before the discrete family is complete; they are lower-priority derived/crosscheck views.
 
-- CDD Short Term Supply
-- CDD Long Term Supply
+### P1 cohort symmetry
 
-The machine-readable queue is in `METRIC_REGISTRY_v1.json`.
+- `CDD Short Term Supply`
+- `CDD Long Term Supply`
+
+If every chart requires its own export, closing P0 plus P1 requires 26 additional CSV downloads: 1 HODL Waves + 11 Supply Last Active bands + 12 Spent Volume bands + 2 CDD cohort series.
+
+The exact machine-readable queue is in `METRIC_REGISTRY_v1.json`.
+
+## Lower-priority candidates after P0/P1
+
+The complete menu audit surfaced several potentially useful but non-blocking research candidates, including:
+
+- `Outputs Spent` age bands as a count-vs-volume crosscheck;
+- `Supply Long Term (LTS) Position Change`;
+- `Supply Short Term (STS) Position Change`;
+- `Supply Revived 1+/2+/3+/5+ Years`;
+- `ASOL: Average Spent Output Lifespan`;
+- MVRV Adjusted Ratio and MVRV Momentum Oscillator;
+- Balanced Price, Delta Price, Delta Cap;
+- Market Cap To Thermocap Ratio;
+- Difficulty Ribbon;
+- Fee Ratio Multiple (FRM).
+
+Do not expand into these until P0/P1 is complete and redundancy/incremental-value testing justifies more collection.
 
 ## Re-entry triggers
 

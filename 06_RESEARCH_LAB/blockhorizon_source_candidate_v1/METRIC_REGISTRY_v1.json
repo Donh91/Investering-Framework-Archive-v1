@@ -97,19 +97,76 @@
       {"metric_id":"BH_REALIZED_PRICE_FAMILY","role":"RAW_METRIC","source_filename":"planb_realized_prices_2026-09-07T21-32-34.csv"}
     ]
   },
+  "provider_chart_inventory_observation": {
+    "observed_date": "2026-09-09",
+    "observed_chart_count": 147,
+    "source": "user-supplied complete BlockHorizon chart-menu screenshots",
+    "urpd_or_utxo_realized_price_distribution_present": false,
+    "urpd_treatment": "REMOVE_FROM_BLOCKHORIZON_MISSING_QUEUE; COST_BASIS_HEATMAP_IS_THE_CLOSEST_CURRENTLY_AVAILABLE BLOCKHORIZON PRICE-DISTRIBUTION RESEARCH INPUT",
+    "notes": "This is a provider-menu availability observation, not a claim that URPD cannot exist outside the observed BlockHorizon chart menu."
+  },
   "completion_queue": {
     "P0_CORE_COMPLETION": [
-      {"metric_id":"BH_URPD","chart":"URPD / BlockHorizon UTXO price-distribution variant","preferred_format":"CSV_IF_BUCKET_COLUMNS_PRESERVED_ELSE_JSON"},
-      {"metric_id":"BH_HODL_WAVES","chart":"HODL Waves","preferred_format":"CSV"},
-      {"metric_id":"BH_SUPPLY_LAST_ACTIVE_AGE_BANDS","chart":"Supply Last Active age-band family","preferred_format":"ONE_MULTI_SERIES_CSV_IF_AVAILABLE"},
-      {"metric_id":"BH_SPENT_VOLUME_AGE_BANDS","chart":"Spent Volume age-band family","preferred_format":"ONE_MULTI_SERIES_CSV_IF_AVAILABLE"}
+      {"metric_id":"BH_HODL_WAVES","chart":"HODL Waves","preferred_format":"CSV","expected_downloads":1},
+      {
+        "metric_id":"BH_SUPPLY_LAST_ACTIVE_AGE_BANDS",
+        "chart":"Supply Last Active discrete age-band family",
+        "preferred_format":"CSV_PER_CHART",
+        "already_present":["Supply Last Active 10y+"],
+        "missing_charts":[
+          "Supply Last Active < 24 Hours",
+          "Supply Last Active 1d-1w",
+          "Supply Last Active 1w-1m",
+          "Supply Last Active 1m-3m",
+          "Supply Last Active 3m-6m",
+          "Supply Last Active 6m-12m",
+          "Supply Last Active 1y-2y",
+          "Supply Last Active 2y-3y",
+          "Supply Last Active 3y-5y",
+          "Supply Last Active 5y-7y",
+          "Supply Last Active 7y-10y"
+        ],
+        "expected_downloads":11,
+        "skip_as_derived_cumulative_views":[
+          "Supply Last Active 1+ Years Ago (%)",
+          "Supply Last Active 2+ Years Ago (%)",
+          "Supply Last Active 3+ Years Ago (%)",
+          "Supply Last Active 5+ Years Ago (%)"
+        ]
+      },
+      {
+        "metric_id":"BH_SPENT_VOLUME_AGE_BANDS",
+        "chart":"Spent Volume discrete age-band family",
+        "preferred_format":"CSV_PER_CHART",
+        "already_present":["Spent Volume 10y+"],
+        "missing_charts":[
+          "Spent Volume <1h",
+          "Spent Volume 1h-24h",
+          "Spent Volume 1d-1w",
+          "Spent Volume 1w-1m",
+          "Spent Volume 1m-3m",
+          "Spent Volume 3m-6m",
+          "Spent Volume 6m-12m",
+          "Spent Volume 1y-2y",
+          "Spent Volume 2y-3y",
+          "Spent Volume 3y-5y",
+          "Spent Volume 5y-7y",
+          "Spent Volume 7y-10y"
+        ],
+        "expected_downloads":12
+      }
     ],
     "P1_COHORT_SYMMETRY": [
-      {"metric_id":"BH_CDD_STH","chart":"CDD Short Term Supply","preferred_format":"CSV"},
-      {"metric_id":"BH_CDD_LTH","chart":"CDD Long Term Supply","preferred_format":"CSV"}
+      {"metric_id":"BH_CDD_STH","chart":"CDD Short Term Supply","preferred_format":"CSV","expected_downloads":1},
+      {"metric_id":"BH_CDD_LTH","chart":"CDD Long Term Supply","preferred_format":"CSV","expected_downloads":1}
     ],
+    "TOTAL_EXPECTED_DOWNLOADS_TO_CLOSE_P0_AND_P1_IF_ONE_EXPORT_PER_CHART": 26,
     "P2_RESEARCH_EXPANSION": [
       {"metric_id":"BH_ASOL","chart":"ASOL: Average Spent Output Lifespan","preferred_format":"CSV"},
+      {"metric_id":"BH_OUTPUTS_SPENT_AGE_BANDS","chart":"Outputs Spent discrete age-band family","preferred_format":"CSV_PER_CHART","role":"OPTIONAL_COUNT_VS_VOLUME_CROSSCHECK"},
+      {"metric_id":"BH_SUPPLY_LTS_POSITION_CHANGE","chart":"Supply Long Term (LTS) Position Change","preferred_format":"CSV"},
+      {"metric_id":"BH_SUPPLY_STS_POSITION_CHANGE","chart":"Supply Short Term (STS) Position Change","preferred_format":"CSV"},
+      {"metric_id":"BH_SUPPLY_REVIVED_AGE_THRESHOLDS","chart":"Supply Revived 1+/2+/3+/5+ Years","preferred_format":"CSV_PER_CHART"},
       {"metric_id":"BH_MVRV_ADJUSTED","chart":"MVRV Adjusted Ratio","preferred_format":"CSV"},
       {"metric_id":"BH_MVRV_MOMENTUM","chart":"MVRV Momentum Oscillator","preferred_format":"CSV"},
       {"metric_id":"BH_BALANCED_PRICE","chart":"Balanced Price","preferred_format":"CSV"},
@@ -117,9 +174,17 @@
       {"metric_id":"BH_DELTA_CAP","chart":"Delta Cap","preferred_format":"CSV"},
       {"metric_id":"BH_THERMOCAP_RATIO","chart":"Market Cap To Thermocap Ratio","preferred_format":"CSV"},
       {"metric_id":"BH_DIFFICULTY_RIBBON","chart":"Difficulty Ribbon","preferred_format":"CSV"},
-      {"metric_id":"BH_FRM","chart":"Fee Ratio Multiple","preferred_format":"CSV"}
+      {"metric_id":"BH_FRM","chart":"Fee Ratio Multiple (FRM)","preferred_format":"CSV"}
     ]
   },
+  "derivable_or_low_priority_crosschecks": [
+    "Supply Last Active 1+/2+/3+/5+ Years Ago (%) cumulative views once all discrete age bands are present",
+    "Supply Long Term (LTS) in Profit/Loss because aggregate Supply in Profit/Loss and STS cohort series are already archived",
+    "Realized Price - Long Term Supply (LTS) and Realized Price - Short Term Supply (STS) because cohort realized price is algebraically linked to price and cohort MVRV, subject to definition consistency checks",
+    "Plain Supply Circulating and plain Market Cap",
+    "Price Drawdown because it is derivable from price history",
+    "Pi Cycle Top Indicator because it is reconstructable from price moving averages"
+  ],
   "explicit_non_priorities": [
     "addresses family",
     "block height",
