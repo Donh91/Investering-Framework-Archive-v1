@@ -11,7 +11,6 @@ Local intake hashes verified in the ChatGPT session:
 - `README.md` SHA-256 `90f048fc8ec3ee4e81d281ed38fae8390006349f9ceeb08ce497757748394bae`
 - `MAEVE_LEDGER_RECOVERY.zip` SHA-256 `9770bcf968d9e03f97af7cfd0bcaaf6baad21c928d97b3b610a457dfb87343a5`
 - `MAEVE_TRADES_NORMALIZED.csv` SHA-256 `532c858ba3d6f0c765419c6869f881bec278aa792108676a6d70933b08f94441`
-- dashboard screenshot `IMG_6949.png` SHA-256 `e8d96bef6d181e8f8d0de4f6591d353fae9b8fe7837c3584cdda561b708a6605`
 
 The standalone README and standalone normalized CSV are byte-identical to the copies inside the ZIP.
 
@@ -142,7 +141,5 @@ Immutable binding:
 - normalized CSV SHA-256: `532c858ba3d6f0c765419c6869f881bec278aa792108676a6d70933b08f94441`
 
 The private archive also contains all 18 ZIP members unpacked exactly under `extracted/` and line-bounded search copies of oversized text datasets under `searchable/` so repository-aware agents can discover MAEVE rows and research artifacts without depending on ZIP inspection.
-
-The standalone dashboard PNG is currently hash-bound rather than committed as a binary. Its row-level evidence is preserved in `extracted/SCREENSHOT_TRADE_EXTRACTION.csv`. This does not reduce the recovered ledger coverage, but agents must not claim the PNG binary itself is stored in the private repository.
 
 Raw or normalized MAEVE/CFGI values must remain in the restricted data plane. The public control plane may expose only this value-free binding, provenance metadata, research conclusions and governance state.
