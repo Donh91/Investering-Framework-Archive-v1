@@ -1,0 +1,64 @@
+{
+  "contract": "USAD_CLAUDE_COWORK_PUBLIC_ADJUDICATION_RECEIPT_v1",
+  "recorded_date": "2026-09-09",
+  "status": "ACCEPTED_WITH_CORRECTIONS_NOT_ACTIVE",
+  "source_package_sha256": "19baf61ac9f6d16ea3cd0a205754052361630678280adb5aef5afa171d70ee67",
+  "source_package_integrity": "PASS_STANDALONE_UPLOADS_MATCH_TAR_AND_INTERNAL_MANIFEST_HASHES",
+  "restricted_row_level_destination": "Donh91/secrets/private_research/usad/2026-09-09_claude_cowork/",
+  "public_value_boundary": {
+    "cusip_values_published_here": false,
+    "uei_values_published_here": false,
+    "provider_market_values_published_here": false,
+    "reason": "PUBLIC_CONTROL_PLANE_REMAINS_PROVIDER_VALUE_FREE_AND_CUSIP_RIGHTS_BOUNDARY_IS_FAIL_CLOSED"
+  },
+  "accepted_findings": {
+    "cusip_13f_identity_bridge": "ACCEPT_RESTRICTED_ONLY",
+    "usad01_source_red_team": "ACCEPT_WITH_CODE_LEVEL_ADJUDICATION",
+    "usaspending_identity_standard": "EXACT_LEGAL_NAME_PLUS_EXACT_OFFICIAL_ADDRESS_CAN_SUPPORT_SUPPORTED_PRIMARY_ONLY",
+    "clean_spark_mapping": "AMBIGUOUS_FAIL_CLOSED",
+    "non_match_semantics": "UNKNOWN_NOT_ZERO",
+    "security_scope": "PRESERVE_COMMON_PREFERRED_CONVERTIBLE_DEBT_WARRANT_AND_OTHER_CLASSES_SEPARATELY"
+  },
+  "source_family_adjudication": [
+    {"source":"USAD09_SEC_SCHEDULE_13DG","decision":"P0_CANDIDATE","activation":false},
+    {"source":"USAD10_SEC_NPORT","decision":"P1_TARGETED_ONLY","activation":false},
+    {"source":"USAD11_CFTC_TFF","decision":"P0_CANDIDATE","activation":false},
+    {"source":"USAD12_FEDERAL_REGISTER_GOVINFO","decision":"P0_CANDIDATE_PENDING_COLLECTOR_PROOF","activation":false},
+    {"source":"USAD13_SAM_GOV","decision":"REJECT_CURRENT_MISSION","activation":false},
+    {"source":"USAD14_FORM_SHO","decision":"DEFER_REEVALUATE_2028","activation":false},
+    {"source":"USAD15_NPX","decision":"REJECT_CURRENT_MISSION","activation":false},
+    {"source":"USAD16_OFFICIAL_13F_SECURITIES_LIST","decision":"HIGH_FORMAT_CAPTURE_PRIORITY_IDENTITY_SOURCE","activation":false},
+    {"source":"USAD17_SEC_FTD","decision":"P1_IDENTITY_ONLY","activation":false}
+  ],
+  "claude_corrections": [
+    {
+      "item":"USAD16 urgency",
+      "from":"TIME_SENSITIVE_HISTORY_LOSS",
+      "to":"HIGH_FORMAT_CAPTURE_PRIORITY",
+      "reason":"Machine-readable TXT coverage is newer and format availability may change, but SEC PDF Official List archives remain available back to 1996; therefore archival format/reproducibility risk is supported, literal historical-source loss is not."
+    },
+    {
+      "item":"Private collector blocker",
+      "from":"HUMAN_BLOCKER",
+      "to":"RESOLVED_BY_FRAMEWORK_AGENT",
+      "reason":"The current framework agent can read the restricted collector and tests; Claude's USAD01 findings are source-level and were separately reconciled against code."
+    }
+  ],
+  "private_code_hardening_prepared": [
+    "USAD01_FILING_WINDOW_NOT_EVENT_WINDOW",
+    "EDGAR_ACCEPTANCE_DATETIME_JOIN_REQUIRED",
+    "SEC_BOOLEAN_TRI_STATE_NORMALIZATION",
+    "DERIVATIVE_ONLY_ACCESSION_REGRESSION_TEST",
+    "USAD_KNOWLEDGE_TIME_SCHEMA_V2_CANDIDATE"
+  ],
+  "scientific_firewall": {
+    "collection_activation_changed": false,
+    "hypothesis_testing_active": false,
+    "outcome_scoring_active": false,
+    "data_ping_changed": false,
+    "master_monday_changed": false,
+    "cycle_navigator_changed": false,
+    "portfolio_permissions_changed": false
+  },
+  "next_governed_step": "CI_AND_MERGE_NON_ACTIVATING_ADJUDICATION_ONLY_THEN_SEPARATE_SOURCE_REGISTRATION_TERMS_AND_ACTIVATION_REVIEW"
+}
