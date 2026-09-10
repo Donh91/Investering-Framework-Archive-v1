@@ -52,9 +52,25 @@ Required late-section order:
 
 The 2-3 week and 4-8 week sections are mandatory in future public Cycle Navigator issues unless the source evidence is genuinely unavailable, in which case the section must state `UNAVAILABLE` rather than invent a view.
 
-## Longer-horizon compass semantics
+## Internal longer-horizon analysis
 
-The `2-3 WEEKS` and `4-8 WEEKS` sections are deliberately concise navigation comments, not detailed range forecasts.
+The concise X output must not constrain the internal Cycle Navigator analysis.
+
+The internal machine/readable package should contain a materially more detailed 2-3 week and 4-8 week horizon assessment when evidence permits. Internal analysis may include:
+
+- base, bull and bear paths;
+- expected rotation sequencing;
+- ETH/BTC, breadth, BTC dominance, liquidity, leverage and macro transmission conditions;
+- confirmation and invalidation logic;
+- market-cap ladder implications;
+- confidence and uncertainty;
+- high-level deployment / capital-protection posture.
+
+The internal 2-3 week and 4-8 week analysis is research/navigation context and must remain traceable to issue-time evidence. It may be detailed even though the X version is compressed to one short sentence per horizon.
+
+## Longer-horizon public compass semantics
+
+The `2-3 WEEKS` and `4-8 WEEKS` sections in `CYCLE_NAVIGATOR_X_READY.md` are deliberately concise navigation comments, not detailed range forecasts.
 
 Each should normally be one sentence and should combine:
 
@@ -76,9 +92,25 @@ Wording must reflect the issue-time evidence and may not be copied mechanically 
 
 Weekly price ranges, intraday ranges and explicitly frozen weekly analytical claims remain the primary next-issue evaluation surface.
 
-The `2-3 WEEKS` and `4-8 WEEKS` compass sentences are public directional context and are not included in the normal weekly precision score merely because they are published. They may be archived and later reviewed qualitatively for continuity and calibration, but must not silently inflate or dilute the weekly score.
+The public `2-3 WEEKS` and `4-8 WEEKS` compass sentences are not included in the normal week-to-week precision score. Their purpose is navigation, not forced weekly scoring before those horizons have matured.
 
-A future separate prospective long-horizon scoring protocol may score them only if it defines horizon maturity, frozen claim semantics and outcome rules before the observation period.
+Longer-horizon claims should still be frozen and retained internally so that the framework can later evaluate them at an appropriate checkpoint without hindsight rewrite.
+
+## Longer-horizon checkpoint review
+
+A later checkpoint publication may look back across matured 2-3 week and 4-8 week calls and comment on what actually happened.
+
+This is separate from the normal weekly scorecard.
+
+When used publicly, the checkpoint may include a distinct `LONGER-HORIZON PRECISION` or equivalent highlight, but only after the relevant horizon has matured and only against the exact frozen issue-time claim. It must not retroactively alter prior X posts or mix immature long-horizon calls into the weekly precision number.
+
+The checkpoint is therefore a separate retrospective calibration/highlight layer:
+
+- weekly precision = weekly ranges / intraday / frozen weekly analytical calls;
+- longer-horizon checkpoint = matured 2-3 week and 4-8 week directional/compass calls;
+- the two may be shown together, but their scores or judgments remain clearly separated.
+
+A future mechanical long-horizon scoring protocol may be added if desired, provided horizon maturity, claim semantics and outcome rules are defined prospectively before use.
 
 ## Precision and reproducibility
 
