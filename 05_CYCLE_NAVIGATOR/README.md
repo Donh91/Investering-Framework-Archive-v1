@@ -10,6 +10,22 @@ Cycle Navigator is a public output surface, not an independent market-state auth
 
 Use the current control-plane owner/pointers. The legacy standalone Cycle Navigator repository identifier is historical only and must not be used as the current route.
 
+## Active publication contract
+
+For all future Cycle Navigator issues, use:
+
+`protocols/2026-09-10__weekly-cycle-navigator-publication-contract-v1-1.md`
+
+This contract requires the late-section sequence:
+
+1. coming-week price ranges;
+2. intraday map;
+3. `2-3 WEEKS` - one short direction + action sentence;
+4. `4-8 WEEKS` - one short cycle direction + high-level action sentence;
+5. final takeaway.
+
+The 2-3 week and 4-8 week compass lines are mandatory public navigation context but are not part of the normal weekly precision score unless a separate prospective scoring protocol is defined in advance.
+
 ## What this folder should prove
 
 A useful public forecast product should be:
