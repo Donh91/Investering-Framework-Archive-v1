@@ -1,0 +1,97 @@
+{
+  "schema_version": "CFGI_PDLT_HISTORICAL_BOOTSTRAP_DISCOVERY_V1",
+  "as_of_date": "2026-09-10",
+  "status": "RESEARCH_ONLY",
+  "source": {
+    "workflow_run_id": 31208709813,
+    "workflow_name": "PDLT historical bootstrap once",
+    "source_commit": "d1e864db9f99dd6002c7ad84aad9ce27a2979964",
+    "run_conclusion": "success",
+    "run_started_at_utc": "2026-08-07T18:49:22Z",
+    "artifact_id": 9005783497,
+    "artifact_name": "pdlt-v1-1-historical-bootstrap",
+    "artifact_sha256": "68c554963b87f860efb0e4b6c40cd2bd6ecc1f3a7027956032b87edb35f1ebf8",
+    "artifact_expires_at_utc": "2026-11-05T18:49:22Z",
+    "artifact_size_bytes_api": 86964,
+    "artifact_unpacked_files": 11,
+    "artifact_unpacked_bytes": 957193,
+    "historical_collection_contract": "PDLT_HISTORICAL_COLLECTION_RECEIPT_v1",
+    "experiment_id": "PDLT-v1.1-RUN",
+    "authorized_by": "USER_GO_2026-08-07",
+    "expected_and_used_credits": 12300,
+    "authority": "SHADOW_ONLY"
+  },
+  "validated_blocks": [
+    {
+      "name": "market_4h_depth",
+      "signal_timeframe": "4h",
+      "symbols": ["MARKET"],
+      "rows": 720,
+      "timestamp_min_utc": "2026-07-31T06:48:39Z",
+      "timestamp_max_utc": "2026-08-07T18:34:25Z",
+      "span_hours_approx": 179.763,
+      "median_observation_spacing_minutes_approx": 15.03,
+      "epochs_present": ["UPGRADED_POST_20260708"]
+    },
+    {
+      "name": "btc_eth_4h_crosscheck",
+      "signal_timeframe": "4h",
+      "symbols": ["BTC", "ETH"],
+      "rows_total": 240,
+      "rows_per_symbol": 120,
+      "timestamp_min_utc": "2026-08-06T12:48:52Z",
+      "timestamp_max_utc": "2026-08-07T18:34:25Z",
+      "span_hours_approx": 29.759,
+      "median_observation_spacing_minutes_approx": 15.03,
+      "epochs_present": ["UPGRADED_POST_20260708"]
+    },
+    {
+      "name": "market_btc_eth_1d_context",
+      "signal_timeframe": "1d",
+      "symbols": ["MARKET", "BTC", "ETH"],
+      "rows_total": 270,
+      "rows_per_symbol": 90,
+      "timestamp_min_utc": "2026-08-06T20:18:58Z",
+      "timestamp_max_utc": "2026-08-07T18:34:25Z",
+      "span_hours_approx": 22.258,
+      "median_observation_spacing_minutes_approx": 15.08,
+      "epochs_present": ["UPGRADED_POST_20260708"]
+    }
+  ],
+  "requested_fields": [
+    "score",
+    "volatility",
+    "volume",
+    "impulse",
+    "technical",
+    "social",
+    "dominance",
+    "trends",
+    "whales",
+    "orders"
+  ],
+  "interpretation": {
+    "critical_point": "The provider signal timeframe and the observation cadence are different dimensions in this recovered artifact.",
+    "4h_meaning": "Rows are explicitly sourced under timeframe=4h, but historical signal states are observed at approximately 15-minute cadence.",
+    "1d_meaning": "Rows are explicitly sourced under timeframe=1d, while historical signal states in this block are also observed at approximately 15-minute cadence.",
+    "research_value": "This allows future research to study how slower-horizon CFGI signals form and evolve intraperiodically without requiring a future trading policy to execute every 15 minutes.",
+    "maeve_relevance": "High. The intraperiodic path may help explain timing, persistence, acceleration, disagreement and DCA decisions around a 1h/4h action clock.",
+    "do_not_infer": [
+      "Do not call these rows native 15m signals solely because their observation spacing is about 15 minutes.",
+      "Do not assume the 4h or 1d signal can be reconstructed from ordinary 15m resampling without provider semantics.",
+      "Do not assume this one short-window PDLT artifact constitutes a multi-year historical 4h cube."
+    ]
+  },
+  "retention_risk": {
+    "status": "ACTIVE_ACTIONS_ARTIFACT_NOT_YET_PROVEN_PERMANENTLY_MIRRORED_PRIVATE",
+    "priority": "HIGH",
+    "reason": "The Actions artifact is currently retrievable but has a finite retention date.",
+    "required_preservation": "Preserve the original artifact ZIP byte-for-byte in Donh91/secrets with SHA-256 and source-run provenance before Actions expiry. Do not normalize the raw copy."
+  },
+  "research_role": {
+    "15m_observation_cadence": "MICRO_DYNAMICS_AND_SIGNAL_FORMATION",
+    "1h_future_candidate": "PRIMARY_ACTION_CLOCK_CANDIDATE",
+    "4h_signal_horizon": "PRIMARY_ROBUST_ACTION_CONFIRMATION_CANDIDATE",
+    "1d_signal_horizon": "REGIME_AND_RISK_CONTEXT"
+  }
+}
