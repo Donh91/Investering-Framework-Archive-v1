@@ -1,0 +1,28 @@
+{
+  "contract": "LATEST_ASTRA_LANDING_ZONE_v1",
+  "status": "PREPARED_NOT_ACTIVE",
+  "authority": "NONE_BY_ITSELF",
+  "primary_document": "07_PROMPTS_AND_AGENTS/astra/ASTRA_RESEARCH_INTELLIGENCE_LANDING_ZONE_v1.md",
+  "policy": "07_PROMPTS_AND_AGENTS/astra/ASTRA_LANDING_ZONE_POLICY_v1.json",
+  "run_schema": "07_PROMPTS_AND_AGENTS/astra/ASTRA_RESEARCH_RUN_ENVELOPE_v1.schema.json",
+  "valid_example": "07_PROMPTS_AND_AGENTS/astra/examples/ASTRA_LANDING_ZONE_VALID_EXAMPLE_v1.json",
+  "validator": "scripts/astra/validate_astra_landing_zone.py",
+  "tests": "tests/astra/test_astra_landing_zone.py",
+  "reuses": {
+    "capability_routing": "research/api_agent/CAPABILITY_ROUTING_POLICY_v1.json",
+    "budget_authority": "research/api_agent/API_INTELLIGENCE_POLICY_v2.json",
+    "compounding_learning": "research/api_agent/API_AGENT_AND_COMPOUNDING_LEARNING_ARCHITECTURE_v1.md",
+    "scientific_adjudication": "existing Research Governance Stack / Unified Experimental Lifecycle Adjudication",
+    "falsification": "existing Research Lab / F12 governance"
+  },
+  "hard_non_goals": [
+    "NEW_MARKET_ENGINE",
+    "PERMANENT_TEN_AGENT_SWARM",
+    "DUPLICATE_CAPABILITY_ROUTER",
+    "DUPLICATE_ADJUDICATOR",
+    "AUTOMATIC_AGENT_PRUNING",
+    "AUTOMATIC_ROUTING_PROMOTION",
+    "TRADE_OR_PORTFOLIO_AUTHORITY",
+    "AUTOMATIC_MERGE"
+  ]
+}

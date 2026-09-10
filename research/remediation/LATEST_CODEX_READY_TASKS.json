@@ -1,7 +1,7 @@
 {
   "contract": "CODEX_READY_TASKS_v1",
   "contract_revision": "1.2",
-  "generated_at_utc": "2026-09-08T18:57:32Z",
+  "generated_at_utc": "2026-09-10T18:40:24Z",
   "queue_sources": [
     "AUTOMATION_HEALTH",
     "RESEARCH_INTAKE"
@@ -37,7 +37,7 @@
         "portfolio logic"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 5d77a6e68e092eed1ca3 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-09-08T18:57:32Z",
+      "last_observed_at_utc": "2026-09-10T18:40:24Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -73,6 +73,81 @@
     },
     {
       "allowed_change_scope": [
+        "Donh91/Investering-Framework-Archive-v1:scripts/research/memes_alpha/**",
+        "Donh91/Investering-Framework-Archive-v1:tests/research/memes_alpha/**",
+        "Donh91/Investering-Framework-Archive-v1:research/memes_alpha/**",
+        "Donh91/Investering-Framework-Archive-v1:.github/workflows/memes-alpha-research*.yml",
+        "Donh91/Investering-Framework-Archive-v1:research/api_agent/API_TASK_REGISTRY_v1.json only if required to add an owner-approved research-only task without changing any budget",
+        "Donh91/secrets:collectors/memes_alpha/**",
+        "Donh91/secrets:tests/memes_alpha/**",
+        "Donh91/secrets:schemas/memes_alpha/**",
+        "Donh91/secrets:health/MEMES_ALPHA/**",
+        "Donh91/secrets:private_research/memes_alpha/**",
+        "Donh91/secrets:raw/MEMES_ALPHA_*/** only through a source contract and the existing private raw-envelope validation path",
+        "Donh91/secrets:receipts/MEMES_ALPHA_*/**",
+        "Donh91/secrets:.github/workflows/memes-alpha-private*.yml"
+      ],
+      "candidate_id": "codex-research-memes-v3-autonomous-alpha-workstream-v1",
+      "candidate_path": "research/codex/intake/2026/09/codex-research-memes-v3-autonomous-alpha-workstream-v1.json",
+      "candidate_sha256": "08544842818235950a7f157a509c3e205f2e3b2eef366f2c5e8d56bc4de2da26",
+      "clean_noop_condition": "The candidate is superseded, already fixed, duplicates a current health task, or fresh evidence no longer reproduces the bounded code defect.",
+      "escalation_condition": "Escalate to FRAMEWORK_OWNER if resolution requires market gates, model weights, canonical authority, portfolio logic, API budget or new policy semantics.",
+      "failure_streak": 0,
+      "finding": "MEMES_V3_AUTONOMOUS_ALPHA_WORKSTREAM_NOT_IMPLEMENTED",
+      "first_observed_at_utc": "2026-09-09T19:02:54Z",
+      "forbidden_changes": [
+        "API budget",
+        "Round 3 analysis activation",
+        "automatic buy or sell signals",
+        "automatic canonical promotion",
+        "automatic merge",
+        "automatic trade execution",
+        "canonical authority",
+        "market gates",
+        "model weights",
+        "new policy semantics",
+        "paid data authorization",
+        "portfolio logic",
+        "private watchlist publication"
+      ],
+      "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 61b8772f2bc07deba31b --branch <TASK_BRANCH>",
+      "last_observed_at_utc": "2026-09-10T18:40:24Z",
+      "latest_run_id": null,
+      "latest_run_url": null,
+      "lifecycle_state": "ACTIVE",
+      "objective": "Implement the smallest two-plane, research-only background pipeline defined by the owner-approved Memes v3 operational contract. It must deterministically monitor the private case/watchlist seed, collect public Robinhood Chain and Ethereum evidence, classify intentional wallet deployment versus passive receipts, create immutable research event rows, adapt observation cadence without alert spam, and integrate matured learning with the existing Research Governance and Compounding Learning architecture. It must not emit trades, expose the private watchlist, create a parallel research engine, alter API budgets, or self-promote findings.",
+      "observations": 1,
+      "post_fix_gate": "POSITIVE_AND_NEGATIVE_FIXTURES_PASS_PLUS_PRIVATE_DATA_LEAKAGE_TEST_PASS_PLUS_24H_SHADOW_RUN_WITH_ZERO_DUPLICATE_ALERT_STORM_AND_ZERO_UNBOUNDED_API_USAGE",
+      "precondition": "Candidate codex-research-memes-v3-autonomous-alpha-workstream-v1 still exists on main at research/codex/intake/2026/09/codex-research-memes-v3-autonomous-alpha-workstream-v1.json with SHA-256 08544842818235950a7f157a509c3e205f2e3b2eef366f2c5e8d56bc4de2da26, status SUBMITTED and authority_boundary CODE_REMEDIATION_ONLY; no superseding fix or duplicate task has made it stale.",
+      "requested_priority": "EXPEDITED",
+      "required_evidence": [
+        "07_PROMPTS_AND_AGENTS/memes_alpha/2026-09-09__memes-v3-autonomous-alpha-research-workstream-v1__operational.md",
+        "research/api_agent/API_AGENT_AND_COMPOUNDING_LEARNING_ARCHITECTURE_v1.md",
+        "00_ARCHIVE_CONTROL/research_governance_v1/STACK_MANIFEST.json",
+        "Donh91/secrets:private_research/memes_alpha/seeds/2026/09/09/seed.json",
+        "reproduction",
+        "positive and negative acceptance tests"
+      ],
+      "risk_class": "B_CODEX_PR_RESEARCH",
+      "route": "CODEX_PR",
+      "signature": "61b8772f2bc07deba31b",
+      "source_type": "RESEARCH_INTAKE",
+      "state": "CODEX_READY",
+      "stop_condition": "Stop without code changes if candidate hash/status/authority changed, reproduction fails, or the required fix exceeds allowed_change_scope.",
+      "submitted_at_utc": "2026-09-09T19:02:54Z",
+      "success_evidence": [
+        "candidate-linked reproduction",
+        "positive and negative acceptance tests",
+        "POSITIVE_AND_NEGATIVE_FIXTURES_PASS_PLUS_PRIVATE_DATA_LEAKAGE_TEST_PASS_PLUS_24H_SHADOW_RUN_WITH_ZERO_DUPLICATE_ALERT_STORM_AND_ZERO_UNBOUNDED_API_USAGE"
+      ],
+      "success_streak": 0,
+      "task_contract_sha256": "d4d1f827da686271a2fb25af90e0529039a929ec134ff7803aa80f7b50d984fb",
+      "transition_receipt_path": "research/codex/transitions/61b8772f2bc07deba31b.json",
+      "transition_receipt_required": true,
+      "workflow": "research-intake/codex-research-memes-v3-autonomous-alpha-workstream-v1"
+    },
+    {
+      "allowed_change_scope": [
         "scripts/daily_capture/build_capture_index.py",
         "scripts/data_terminal/fred_multiseries_live_adapter.py only if required to expose already-existing owner metadata deterministically",
         "tests/daily_capture/directly related live-anchor macro freshness tests",
@@ -100,7 +175,7 @@
         "stale threshold changes"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 7b83701444e991ea1722 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-09-08T18:57:32Z",
+      "last_observed_at_utc": "2026-09-10T18:40:24Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -164,7 +239,7 @@
         "workflow changes"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 920994b3a419997af94d --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-09-08T18:57:32Z",
+      "last_observed_at_utc": "2026-09-10T18:40:24Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -200,6 +275,77 @@
     },
     {
       "allowed_change_scope": [
+        "Donh91/Investering-Framework-Archive-v1:scripts/research/memes_alpha/**",
+        "Donh91/Investering-Framework-Archive-v1:tests/research/memes_alpha/**",
+        "Donh91/Investering-Framework-Archive-v1:research/memes_alpha/**",
+        "Donh91/Investering-Framework-Archive-v1:.github/workflows/memes-alpha-research*.yml",
+        "Donh91/secrets:collectors/memes_alpha/**",
+        "Donh91/secrets:tests/memes_alpha/**",
+        "Donh91/secrets:schemas/memes_alpha/**",
+        "Donh91/secrets:health/MEMES_ALPHA/**",
+        "Donh91/secrets:private_research/memes_alpha/**",
+        "Donh91/secrets:.github/workflows/memes-alpha-private*.yml"
+      ],
+      "candidate_id": "codex-research-memes-v3-solana-cross-chain-expansion-v1",
+      "candidate_path": "research/codex/intake/2026/09/codex-research-memes-v3-solana-cross-chain-expansion-v1.json",
+      "candidate_sha256": "501aa6fbd760362f31127e9ffa739871ff39198fc1feba15eafdabadd549c51c",
+      "clean_noop_condition": "The candidate is superseded, already fixed, duplicates a current health task, or fresh evidence no longer reproduces the bounded code defect.",
+      "escalation_condition": "Escalate to FRAMEWORK_OWNER if resolution requires market gates, model weights, canonical authority, portfolio logic, API budget or new policy semantics.",
+      "failure_streak": 0,
+      "finding": "MEMES_V3_SOLANA_CROSS_CHAIN_RESEARCH_LANE_MISSING",
+      "first_observed_at_utc": "2026-09-10T17:30:00Z",
+      "forbidden_changes": [
+        "API budget",
+        "automatic buy or sell signals",
+        "automatic canonical promotion",
+        "automatic merge",
+        "automatic trade execution",
+        "canonical authority",
+        "market gates",
+        "model weights",
+        "new policy semantics",
+        "paid data authorization",
+        "portfolio logic",
+        "private watchlist publication",
+        "rewrite of frozen base candidate"
+      ],
+      "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 923de2eed113038e8a6c --branch <TASK_BRANCH>",
+      "last_observed_at_utc": "2026-09-10T18:40:24Z",
+      "latest_run_id": null,
+      "latest_run_url": null,
+      "lifecycle_state": "ACTIVE",
+      "objective": "Implement the smallest bounded extension of the existing Memes v3 Alpha Research Workstream that adds deterministic Solana collection and cross-chain narrative comparison. Preserve the base workstream and its frozen candidate. Add exact mint verification, creator/authority metadata, buyer acceleration, sniper/bundler/funder cluster features, paid-boost separation and fixed-horizon chain comparison without creating a parallel engine or any trade authority.",
+      "observations": 1,
+      "post_fix_gate": "SOLANA_POSITIVE_AND_NEGATIVE_FIXTURES_PASS_PLUS_CROSS_CHAIN_NO_HINDSIGHT_TEST_PASS_PLUS_PRIVATE_DATA_LEAKAGE_TEST_PASS_PLUS_24H_SHADOW_OBSERVATION_WITH_ZERO_DUPLICATE_ALERT_STORM",
+      "precondition": "Candidate codex-research-memes-v3-solana-cross-chain-expansion-v1 still exists on main at research/codex/intake/2026/09/codex-research-memes-v3-solana-cross-chain-expansion-v1.json with SHA-256 501aa6fbd760362f31127e9ffa739871ff39198fc1feba15eafdabadd549c51c, status SUBMITTED and authority_boundary CODE_REMEDIATION_ONLY; no superseding fix or duplicate task has made it stale.",
+      "requested_priority": "EXPEDITED",
+      "required_evidence": [
+        "07_PROMPTS_AND_AGENTS/memes_alpha/2026-09-10__solana-cross-chain-narrative-expansion-v1__operational-addendum.md",
+        "Donh91/secrets:private_research/memes_alpha/research_leads/2026/09/10/solana_cross_chain_narrative_scan_v1.json",
+        "research/codex/intake/2026/09/codex-research-memes-v3-autonomous-alpha-workstream-v1.json",
+        "reproduction",
+        "positive and negative acceptance tests"
+      ],
+      "risk_class": "B_CODEX_PR_RESEARCH",
+      "route": "CODEX_PR",
+      "signature": "923de2eed113038e8a6c",
+      "source_type": "RESEARCH_INTAKE",
+      "state": "CODEX_READY",
+      "stop_condition": "Stop without code changes if candidate hash/status/authority changed, reproduction fails, or the required fix exceeds allowed_change_scope.",
+      "submitted_at_utc": "2026-09-10T17:30:00Z",
+      "success_evidence": [
+        "candidate-linked reproduction",
+        "positive and negative acceptance tests",
+        "SOLANA_POSITIVE_AND_NEGATIVE_FIXTURES_PASS_PLUS_CROSS_CHAIN_NO_HINDSIGHT_TEST_PASS_PLUS_PRIVATE_DATA_LEAKAGE_TEST_PASS_PLUS_24H_SHADOW_OBSERVATION_WITH_ZERO_DUPLICATE_ALERT_STORM"
+      ],
+      "success_streak": 0,
+      "task_contract_sha256": "aee7526e4d58944c05506327c09a9886bd1feb7a1a904a1cd6185119770ea520",
+      "transition_receipt_path": "research/codex/transitions/923de2eed113038e8a6c.json",
+      "transition_receipt_required": true,
+      "workflow": "research-intake/codex-research-memes-v3-solana-cross-chain-expansion-v1"
+    },
+    {
+      "allowed_change_scope": [
         "scripts/remediation/merge_codex_research_intake.py",
         "scripts/remediation/write_codex_research_completion_receipt.py",
         "scripts/remediation/directly related completion reconciliation helper",
@@ -228,7 +374,7 @@
         "rewriting historical research evidence"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 992f7f91fff033487385 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-09-08T18:57:32Z",
+      "last_observed_at_utc": "2026-09-10T18:40:24Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -292,7 +438,7 @@
         "retrospective row backfill"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature b14f0f264547ba5e6ed0 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-09-08T18:57:32Z",
+      "last_observed_at_utc": "2026-09-10T18:40:24Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -350,7 +496,7 @@
         "portfolio logic"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature f1a5d4570b28c8325c8b --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-09-08T18:57:32Z",
+      "last_observed_at_utc": "2026-09-10T18:40:24Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -417,7 +563,7 @@
         "unrelated workflow changes"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature ffa962f667950097668e --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-09-08T18:57:32Z",
+      "last_observed_at_utc": "2026-09-10T18:40:24Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -484,7 +630,7 @@
         "retrospective uncensoring"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 3ddfccaba4b59ce99cc8 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-09-08T18:57:32Z",
+      "last_observed_at_utc": "2026-09-10T18:40:24Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -545,7 +691,7 @@
         "portfolio logic"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 49ecf37e76b7834b97a5 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-09-08T18:57:32Z",
+      "last_observed_at_utc": "2026-09-10T18:40:24Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -606,7 +752,7 @@
         "qualitative-label portfolio authority"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 4bc9351c84bc70cb0583 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-09-08T18:57:32Z",
+      "last_observed_at_utc": "2026-09-10T18:40:24Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -667,7 +813,7 @@
         "portfolio logic"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 644003823eb58c75eeb1 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-09-08T18:57:32Z",
+      "last_observed_at_utc": "2026-09-10T18:40:24Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -729,7 +875,7 @@
         "skill authoring or automatic registry mutation"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 7aca41ad40562550eec9 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-09-08T18:57:32Z",
+      "last_observed_at_utc": "2026-09-10T18:40:24Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -788,7 +934,7 @@
         "portfolio logic"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 90f76bff777fb07fe2c0 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-09-08T18:57:32Z",
+      "last_observed_at_utc": "2026-09-10T18:40:24Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -848,7 +994,7 @@
         "timestamp rewriting"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature a9f7ba653c7655a20c97 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-09-08T18:57:32Z",
+      "last_observed_at_utc": "2026-09-10T18:40:24Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -909,7 +1055,7 @@
         "retroactive scoring"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature ad9eb8075d7529802226 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-09-08T18:57:32Z",
+      "last_observed_at_utc": "2026-09-10T18:40:24Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -970,7 +1116,7 @@
         "portfolio logic"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature c767d605f29f7bd2722b --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-09-08T18:57:32Z",
+      "last_observed_at_utc": "2026-09-10T18:40:24Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -1030,7 +1176,7 @@
         "retrospective timing reconstruction"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature c9adb00c6dc0d7daec45 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-09-08T18:57:32Z",
+      "last_observed_at_utc": "2026-09-10T18:40:24Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -1090,7 +1236,7 @@
         "portfolio logic"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature d5f9cc11d5d7d05418b9 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-09-08T18:57:32Z",
+      "last_observed_at_utc": "2026-09-10T18:40:24Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -1153,7 +1299,7 @@
         "portfolio logic"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature e42a4face457d80066d7 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-09-08T18:57:32Z",
+      "last_observed_at_utc": "2026-09-10T18:40:24Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -1214,7 +1360,7 @@
         "portfolio logic"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature f7ca0bb8cce97bea8619 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-09-08T18:57:32Z",
+      "last_observed_at_utc": "2026-09-10T18:40:24Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",

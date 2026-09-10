@@ -9,44 +9,44 @@
   "criteria": {
     "eth_outperforms_btc_24h": true,
     "ethbtc_above_registered_0_0300": true,
-    "top100_proxy_breadth_ge_50pct": true
+    "top100_proxy_breadth_ge_50pct": false
   },
   "data_ping_bridge": {
     "binding": false,
     "canonical_action_authority": "NONE",
-    "display_line": "LEARNING OBSERVER: LEGACY_PATTERN_OBSERVED_FORWARD_ONLY_NOT_PROMOTION_READY | canonical_action_authority=NONE | state=WAIT | promotion=FORWARD_ONLY_NOT_PROMOTION_READY | heat=NORMAL | ETHBTC=0.03167 | abs_breadth=54% | outperforming_BTC=62%"
+    "display_line": "LEARNING OBSERVER: NO_PATTERN | canonical_action_authority=NONE | state=WAIT | promotion=FORWARD_ONLY_NOT_PROMOTION_READY | heat=NORMAL | ETHBTC=0.03188 | abs_breadth=22% | outperforming_BTC=42%"
   },
   "definition_version": "ENTRY_SIGNAL_DEFINITION_v1_2_CANONICAL_PROMOTION_GUARD",
   "execution_temperature": "NORMAL",
-  "generated_at_utc": "2026-09-09T01:37:56.562453+00:00",
+  "generated_at_utc": "2026-09-10T22:29:09.433769+00:00",
   "historical_validity_policy": "Historical signal records remain immutable. Later outcomes may calibrate definition quality but must not retroactively invalidate a signal solely because the later outcome was poor. A contemporaneous evidence-role or measurement-validity defect may be annotated prospectively without rewriting the historical event.",
   "market_snapshot": {
-    "breadth_membership_hash": "aeb5a82b2b9b23ffff71e68258410ce6ac2ccb50ef3ff9d8bfce6fcbf6737a7b",
-    "btc_return_24h_pct": -0.44539,
-    "btc_usdt": 78455.8,
-    "captured_at_utc": "2026-09-09T01:37:56.565254+00:00",
-    "equal_weight_mean_return_24h_pct": 1.212756,
-    "eth_return_24h_pct": 0.24091,
-    "eth_usdt": 2485.06,
-    "ethbtc": 0.03167,
+    "breadth_membership_hash": "554ac78490e2893eb31cb1b81fb2f48659e621735280b5b8a95c516aee10261c",
+    "btc_return_24h_pct": -1.57579,
+    "btc_usdt": 77144.0,
+    "captured_at_utc": "2026-09-10T22:29:09.435394+00:00",
+    "equal_weight_mean_return_24h_pct": -2.484448,
+    "eth_return_24h_pct": -0.60135,
+    "eth_usdt": 2460.27,
+    "ethbtc": 0.03188,
     "ethbtc_evidence_semantics": {
       "availability": "AVAILABLE",
       "confirmation_level": "AVAILABLE_NOT_CONFIRMING",
       "directional_interpretation": "OWNER_CONTEXT_ONLY_NOT_USED_AS_A_NEW_THRESHOLD_BY_THIS_LEDGER",
-      "eth_leads_btc_hours": 13,
-      "ethbtc_positive_hours": 11,
+      "eth_leads_btc_hours": 17,
+      "ethbtc_positive_hours": 16,
       "latest_relative_performance": {
-        "eth_minus_btc_return_1h_pp": -0.022958469878509025,
-        "ethbtc_return_1h_pct": -0.0631113916062076,
-        "timestamp_utc": "2026-09-08T23:00:00Z"
+        "eth_minus_btc_return_1h_pp": 0.0988400847776183,
+        "ethbtc_return_1h_pct": 0.06277463904582614,
+        "timestamp_utc": "2026-09-10T21:00:00Z"
       },
       "registered_0_0300_role": "STRUCTURAL_FLOOR_CONTEXT_ONLY",
-      "source_run_id": "HOURLY_SEQUENCE_20260909T000439Z_f829fe4fd80a",
-      "source_run_path": "03_DAILY_CAPTURE_LOGS/hourly/runs/2026/09/09/000439_HOURLY_SEQUENCE_20260909T000439Z_f829fe4fd80a.json",
-      "trailing_ethbtc_positive_run": 0
+      "source_run_id": "HOURLY_SEQUENCE_20260910T222802Z_91b2f8d0a93e",
+      "source_run_path": "03_DAILY_CAPTURE_LOGS/hourly/runs/2026/09/10/222802_HOURLY_SEQUENCE_20260910T222802Z_91b2f8d0a93e.json",
+      "trailing_ethbtc_positive_run": 1
     },
-    "hourly_row_open_utc": "2026-09-08T23:00:00+00:00",
-    "hourly_sequence_run_id": "HOURLY_SEQUENCE_20260909T000439Z_f829fe4fd80a",
+    "hourly_row_open_utc": "2026-09-10T21:00:00+00:00",
+    "hourly_sequence_run_id": "HOURLY_SEQUENCE_20260910T222802Z_91b2f8d0a93e",
     "measurement_validity": {
       "absolute_breadth_semantics": "DESCRIPTIVE_PARTICIPATION_ZERO_EXECUTION_WEIGHT",
       "breadth_entry_permission": "RETIRED_ZERO_WEIGHT",
@@ -67,26 +67,26 @@
       "independent_rotation_confirmation_reason": "PROXY_OR_CANONICAL_COMPATIBILITY_UNCONFIRMED",
       "relative_breadth": {
         "constituent_count": 100,
-        "equal_weight_mean_return_24h_pct": 1.212756,
-        "median_return_24h_pct": 0.010855,
-        "outperforming_btc_count": 62,
-        "outperforming_btc_share": 0.62,
-        "outperforming_eth_count": 40,
-        "outperforming_eth_share": 0.4
+        "equal_weight_mean_return_24h_pct": -2.484448,
+        "median_return_24h_pct": -2.03568,
+        "outperforming_btc_count": 42,
+        "outperforming_btc_share": 0.42,
+        "outperforming_eth_count": 36,
+        "outperforming_eth_share": 0.36
       },
       "rolling_window_confirmation_policy": "Repeated observations from an overlapping rolling window are descriptive persistence only and are not, by themselves, independent confirmation.",
       "sensor_relationship_owner": "01_CORE_FRAMEWORK/governance/2026-07-22__sensor-relationship-and-incremental-value-standard__canonical.md",
       "source_independence_eligible": false,
       "window_semantics": "SOURCE_REPORTED_ROLLING_24H_AT_RETRIEVAL"
     },
-    "median_return_24h_pct": 0.010855,
-    "outperforming_btc_count": 62,
-    "outperforming_eth_count": 40,
-    "price_observation_utc": "2026-09-09T00:00:00+00:00",
+    "median_return_24h_pct": -2.03568,
+    "outperforming_btc_count": 42,
+    "outperforming_eth_count": 36,
+    "price_observation_utc": "2026-09-10T22:00:00+00:00",
     "price_source": "GITHUB_HOURLY_SEQUENCE_DIRECT_CLOSES",
     "price_timestamp_semantics": "HOURLY_CLOSE_UTC_v1",
-    "top100_advance_ratio": 0.54,
-    "top100_advancer_pct": 54
+    "top100_advance_ratio": 0.22,
+    "top100_advancer_pct": 22
   },
   "measurement_validity": {
     "absolute_breadth_semantics": "DESCRIPTIVE_PARTICIPATION_ZERO_EXECUTION_WEIGHT",
@@ -108,19 +108,19 @@
     "independent_rotation_confirmation_reason": "PROXY_OR_CANONICAL_COMPATIBILITY_UNCONFIRMED",
     "relative_breadth": {
       "constituent_count": 100,
-      "equal_weight_mean_return_24h_pct": 1.212756,
-      "median_return_24h_pct": 0.010855,
-      "outperforming_btc_count": 62,
-      "outperforming_btc_share": 0.62,
-      "outperforming_eth_count": 40,
-      "outperforming_eth_share": 0.4
+      "equal_weight_mean_return_24h_pct": -2.484448,
+      "median_return_24h_pct": -2.03568,
+      "outperforming_btc_count": 42,
+      "outperforming_btc_share": 0.42,
+      "outperforming_eth_count": 36,
+      "outperforming_eth_share": 0.36
     },
     "rolling_window_confirmation_policy": "Repeated observations from an overlapping rolling window are descriptive persistence only and are not, by themselves, independent confirmation.",
     "sensor_relationship_owner": "01_CORE_FRAMEWORK/governance/2026-07-22__sensor-relationship-and-incremental-value-standard__canonical.md",
     "source_independence_eligible": false,
     "window_semantics": "SOURCE_REPORTED_ROLLING_24H_AT_RETRIEVAL"
   },
-  "observer_state": "LEGACY_PATTERN_OBSERVED_FORWARD_ONLY_NOT_PROMOTION_READY",
+  "observer_state": "NO_PATTERN",
   "previous_state": "WAIT",
   "promotion_authority": {
     "permits_active_state": false,
