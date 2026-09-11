@@ -1,0 +1,88 @@
+{
+  "contract": "CODEX_RESEARCH_CANDIDATE_v1",
+  "candidate_id": "codex-research-memes-v3-robinhood-disclosed-wallet-cohort-v1",
+  "submitted_at_utc": "2026-09-11T09:58:00Z",
+  "status": "SUBMITTED",
+  "origin": {
+    "type": "OWNER_APPROVED_RESEARCH_INPUT",
+    "thread_label": "Memes v3 / Alpha Lab",
+    "source_paths": [
+      "07_PROMPTS_AND_AGENTS/memes_alpha/2026-09-09__memes-v3-autonomous-alpha-research-workstream-v1__operational.md",
+      "07_PROMPTS_AND_AGENTS/memes_alpha/2026-09-11__memes-v3-empirical-hardening-adjudication-v1__research-addendum.md",
+      "07_PROMPTS_AND_AGENTS/memes_alpha/2026-09-11__robinhood-disclosed-wallet-cohort-v1__research-addendum.md"
+    ]
+  },
+  "title": "Ingest the owner-approved Robinhood disclosed-wallet cohort into the existing Memes v3 watched-wallet research lane",
+  "objective": "Extend the existing Memes v3 implementation plan so collectors resolve the latest valid cumulative private MEMES_ALPHA_PRIVATE_SEED_V1 snapshot rather than hard-coding the original 2026-09-09 seed. The newly bound Robinhood cohort must enter the existing WATCH research universe privately, with deterministic intentional-buy classification, prospective freezing of new-token acquisitions after the public disclosure anchor, entity-independence checks, fixed-horizon outcomes and visibility/capacity research. Do not create a parallel scheduler, engine, alert stack, public watchlist, trade signal or portfolio authority.",
+  "finding_key": "MEMES_V3_PRIVATE_SEED_ROLLFORWARD_AND_RH_COHORT_INGESTION",
+  "depends_on_candidates": [
+    "codex-research-memes-v3-autonomous-alpha-workstream-v1",
+    "codex-research-memes-v3-empirical-hardening-v1"
+  ],
+  "primary_target": "07_PROMPTS_AND_AGENTS/memes_alpha/2026-09-11__robinhood-disclosed-wallet-cohort-v1__research-addendum.md",
+  "allowed_change_scope": [
+    "Donh91/Investering-Framework-Archive-v1:scripts/research/memes_alpha/**",
+    "Donh91/Investering-Framework-Archive-v1:tests/research/memes_alpha/**",
+    "Donh91/Investering-Framework-Archive-v1:research/memes_alpha/**",
+    "Donh91/secrets:collectors/memes_alpha/**",
+    "Donh91/secrets:tests/memes_alpha/**",
+    "Donh91/secrets:schemas/memes_alpha/**",
+    "Donh91/secrets:private_research/memes_alpha/**",
+    "Donh91/secrets:health/MEMES_ALPHA/**",
+    "Donh91/secrets:receipts/MEMES_ALPHA_*/**"
+  ],
+  "evidence": [
+    {
+      "kind": "REPO_PATH",
+      "ref": "07_PROMPTS_AND_AGENTS/memes_alpha/2026-09-11__robinhood-disclosed-wallet-cohort-v1__research-addendum.md",
+      "summary": "Public control-plane addendum binds the cohort, visibility anchor, WATCH semantics and no-trade/privacy boundaries without exposing identifiers."
+    },
+    {
+      "kind": "PRIVATE_RESEARCH_BINDING",
+      "ref": "Donh91/secrets:private_research/memes_alpha/wallet_research/2026/09/11/rektfencer_robinhood_disclosed_cohort_v1.json",
+      "summary": "Restricted cohort artifact contains the six exact Robinhood wallet identifiers, source claims, research mission and pre/post-disclosure protocol."
+    },
+    {
+      "kind": "PRIVATE_SEED_BINDING",
+      "ref": "Donh91/secrets:private_research/memes_alpha/seeds/2026/09/11/seed.json",
+      "summary": "Latest cumulative private seed rolls forward the historical 2026-09-09 seed and adds the cohort without mutating predecessor evidence."
+    }
+  ],
+  "acceptance_tests": {
+    "positive": [
+      "Collector resolves the latest valid cumulative MEMES_ALPHA_PRIVATE_SEED_V1 snapshot by deterministic date/version ordering and preserves predecessor lineage.",
+      "The prior 2026-09-09 seed remains byte-for-byte historical evidence and is not rewritten when the 2026-09-11 seed is activated.",
+      "The private cohort is loaded into WATCH state with all exact identifiers available only to the restricted collector.",
+      "A deterministic intentional acquisition of a previously unseen token by a cohort wallet freezes a prospective research event row before later outcome attachment.",
+      "The frozen row preserves the 2026-09-10T13:27:08.086Z public-disclosure anchor and labels the wallet source as USER_SUPPLIED / external KOL research lead rather than autonomous discovery.",
+      "Two cohort wallets acquiring the same token creates a convergence research event only after duplicate/event dedupe and never assumes independence without entity-graph review.",
+      "1h/6h/24h/7d outcome attachment does not mutate the original event, wallet provenance, visibility anchor or entry timestamp.",
+      "Public health/readback exposes only counts, hashes, timestamps and state, never exact wallet identifiers or source-reported PnL values."
+    ],
+    "negative": [
+      "The source post alone cannot produce QUALIFIED_ALPHA, BUY, SELL, position size or a user-facing high-signal alert.",
+      "Passive receipts, dust, spam and rewards from a cohort wallet do not create NEW_TOKEN_ACQUISITION or INTENTIONAL_BUY events.",
+      "No implementation may hard-code the 2026-09-09 seed as the permanent watchlist.",
+      "No implementation may publish the six exact cohort wallet addresses in public logs, artifacts, issues, health files or pull requests.",
+      "No address count may be treated as independent-entity count without graph evidence.",
+      "No new workflow/scheduler is created if the existing Memes v3 research cadence can consume the cohort."
+    ]
+  },
+  "authority_boundary": "CODE_REMEDIATION_ONLY",
+  "requires_framework_owner_authority": false,
+  "forbidden_changes": [
+    "new parallel engine",
+    "new scheduler when existing Memes v3 cadence suffices",
+    "public competitive watchlist",
+    "automatic trade execution",
+    "BUY/SELL/sizing output",
+    "portfolio logic",
+    "market-state authority",
+    "API budget changes",
+    "automatic wallet qualification",
+    "retroactive provenance rewrite",
+    "automatic merge"
+  ],
+  "requested_priority": "EXPEDITED",
+  "post_fix_gate": "PRIVATE_SEED_ROLLFORWARD_FIXTURE_PASS_PLUS_PRIVATE_IDENTIFIER_LEAKAGE_TEST_PASS_PLUS_INTENTIONAL_BUY_NEGATIVE_CONTROLS_PASS_PLUS_DISCLOSURE_ANCHOR_NO_HINDSIGHT_TEST_PASS_PLUS_24H_SHADOW_OBSERVATION_WITH_ZERO_DUPLICATE_ALERT_STORM_AND_ZERO_TRADE_AUTHORITY"
+}
