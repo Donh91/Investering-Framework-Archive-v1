@@ -232,3 +232,16 @@ REVIEW_AFTER_NEXT_10_FUTURE_ELIGIBLE_EVENTS
 ## Required next action
 
 Make the qualified read-only capability discoverable from the existing Astra onboarding/router, preserving all existing authority ceilings. Do not schedule it, do not create a new engine, and do not add a new API task class.
+
+## Write-governance incident note
+
+During this continuation pass, a post-run de-duplication rule was momentarily appended to the frozen eval JSON. That was a governance mistake because frozen evaluation criteria must not be rewritten after execution. The file was immediately restored to its prior blob (`b9548d58fa25629285884d7fc52bddc08b95cd1d`). No qualification threshold or original case contract remains changed.
+
+Accordingly:
+
+```yaml
+write_governance_result: PARTIAL_REMEDIATED
+frozen_eval_final_state: RESTORED
+qualification_result_effect: NONE
+incident_hidden: NO
+```
