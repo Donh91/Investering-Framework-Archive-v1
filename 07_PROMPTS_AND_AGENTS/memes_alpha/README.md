@@ -37,6 +37,23 @@ The folder must not create a parallel research-governance stack. Existing Resear
   - prioritizes de-manipulated Early Confirmation, conditional wallet alpha, entity-adjusted structure, First Distribution Survival, visibility/capacity, Narrative Instance Selection and cross-chain matching as prospective Shadow research;
   - preserves the 2026-09-11T02:20Z cohort checkpoint schedule and explicitly forbids promotion without exploration -> freeze -> validation -> prospective shadow -> governance.
 
+### FLYBRAIN launch replay
+
+- `2026-09-11__flybrain-launch-replay-case-v1__research-addendum.md`
+  - freezes FLYBRAIN as a high-priority launch/replay case rather than a retrospective winner story;
+  - binds exact Robinhood Chain identity, launch mechanics, pre-launch artifact provenance, agency decomposition, quote-asset beta and first-distribution research;
+  - requires executable sub-minute replay and matched failures before any new feature can be promoted;
+  - remains research-only / shadow-only.
+
+### Autonomous external case discovery
+
+- `2026-09-11__autonomous-case-discovery-discipline-v1__operational-addendum.md`
+  - makes internet-native historical/prospective case discovery a first-class Alpha Lab research discipline so the system does not depend on owner-supplied cases;
+  - uses an explicit lead lifecycle from `DISCOVERED_UNVERIFIED` through replay, matched-family binding, outcome binding and adjudication;
+  - prioritizes unusual real-world/scientific/agentic launches, pre-launch artifacts, semantic pairings, narrative siblings, failures and copycats;
+  - seeds a FLYBRAIN-family discovery cohort while keeping all non-FLYBRAIN entries unverified until identity and chronology are reconstructed;
+  - creates no new signal engine, scheduler, portfolio authority or automatic execution path.
+
 ### Robinhood disclosed-wallet cohort
 
 - `2026-09-11__robinhood-disclosed-wallet-cohort-v1__research-addendum.md`
