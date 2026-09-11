@@ -179,3 +179,20 @@ addendum_registry_change: NOT_APPLICABLE
 high_impact_gate: NOT_REQUIRED
 destructive_authority_separation: PASS_NOT_DESTRUCTIVE
 ```
+
+## 10. Post-qualification red-team note
+
+The later adversarial review preserved the pilot but downgraded the headline uniqueness claim. The original qualification counted 9/10 cases as incremental at the individual source-fact level. After de-duplicating repeated treasury and tokenization/capital-mobility families, the stricter result is 6/10 distinct incremental families, still above the frozen 3/10 minimum gate.
+
+Review owner:
+
+`07_PROMPTS_AND_AGENTS/skill_runs/2026-09-11__tradfi-crypto-transmission-red-team-review__qualification.md`
+
+Result:
+
+```text
+KEEP_AS_READ_ONLY_RESEARCH_CAPABILITY
+NO_MARKET_AUTHORITY
+NO_NEW_ENGINE
+NO_RECURRING_AUTOMATION_YET
+```
