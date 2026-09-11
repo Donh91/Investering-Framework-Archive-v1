@@ -41,6 +41,9 @@ Every candidate must be evaluated against simple baselines and realistic fees, s
 - `GOVERNANCE.md` - safety, evidence and promotion rules.
 - `INTAKE_TEMPLATE.md` - repeatable template for future links, repos and ideas.
 - `ASTRA_HANDOVER.md` - instructions for Astra when it takes ownership of the heavy research phase.
+- `MICROCAP_RESEARCH_AGENT_CONTRACT_v1.md` - governed point-in-time research contract for small/microcap assets before any strategy layer evaluates them.
+- `source_notes/` - deeper source-specific notes when a link is useful but the original material is only partially recoverable or needs dedicated analysis.
+- `maeve/` - MAEVE/CFGI historical action-reconstruction research track.
 
 ## Relationship to existing framework
 
@@ -51,3 +54,5 @@ Useful future architecture should prefer adapters into existing DATA PING / regi
 ## Current seed
 
 Seed #001 comes from a RohOnChain post describing a quant-research course and a workflow where full strategies are built from raw data through backtesting. The useful part is the process discipline. Any performance or income claims attached to the social-media post are unverified and must not be treated as evidence.
+
+The vault now also captures chain-specific AI research-agent patterns. These are treated as upstream evidence-generation workflows only: they may create structured research packets, but they cannot create trading authority. Persuasive outputs such as a concise bull thesis are downstream presentation layers and must never replace internal falsification.
