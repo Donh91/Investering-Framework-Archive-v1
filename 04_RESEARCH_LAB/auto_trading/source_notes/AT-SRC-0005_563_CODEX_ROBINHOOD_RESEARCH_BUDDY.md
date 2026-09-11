@@ -47,18 +47,29 @@ If the original prompt body becomes publicly recoverable later, preserve it as a
 
 ## Framework adaptation
 
-The source inspiration is implemented internally as:
+The source inspiration is implemented internally in two layers:
 
 `04_RESEARCH_LAB/auto_trading/MICROCAP_RESEARCH_AGENT_CONTRACT_v1.md`
 
-That contract deliberately goes beyond the visible source by adding Investering Framework governance, point-in-time evidence controls, explicit falsification, execution-risk checks and future outcome labeling.
+This defines the canonical point-in-time evidence packet and deliberately goes beyond the visible source by adding Investering Framework governance, explicit falsification, execution-risk checks and future outcome labeling.
+
+`04_RESEARCH_LAB/auto_trading/ASTRA_CHAIN_NATIVE_RESEARCH_COMPILER_V1.md`
+
+This is the Astra-era springboard. It extends the visible chain-specific research-buddy idea into versioned chain-native context packs, independent specialist passes, economic-entity rather than address-level research, execution/capacity analysis, visibility/adverse-selection research, matched-failure retrieval and a prospective A/B test against a generic free-form research prompt.
+
+Neither layer creates trade or portfolio authority.
 
 ## Astra follow-up
 
 When Astra takes over this research track:
 
 1. Attempt source recovery for the exact original three-part prompt.
-2. Extract only components that are genuinely absent from our internal contract.
-3. Test whether a structured chain-specific contract improves factual completeness, reproducibility and forward research quality versus a generic free-form LLM prompt.
-4. Keep `bull thesis` generation downstream of evidence and adversarial review.
-5. Never treat social praise of the prompt as trading-performance evidence.
+2. Preserve source provenance and do not infer missing prompt text.
+3. Diff the recovered source against `MICROCAP_RESEARCH_AGENT_CONTRACT_v1.md` and `ASTRA_CHAIN_NATIVE_RESEARCH_COMPILER_V1.md`.
+4. Extract only components that are genuinely absent from the internal contracts.
+5. Test whether a structured chain-specific contract improves factual completeness, reproducibility, execution-risk coverage and forward research quality versus a generic free-form LLM prompt.
+6. Test which chain-native context fields actually add incremental value and remove fields that do not.
+7. Keep `bull thesis` generation downstream of evidence and blind adversarial review.
+8. Use matched failures and prospective outcomes so memorable winners cannot validate the workflow retrospectively.
+9. Investigate whether public visibility and follower-capacity make an otherwise genuine wallet/caller signal economically stale or adversarial.
+10. Never treat social praise of the prompt as trading-performance evidence.
