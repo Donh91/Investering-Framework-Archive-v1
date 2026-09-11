@@ -266,10 +266,11 @@ The first live case should prefer an event with an official primary source and a
 
 ## 12. Completion definition
 
-Pilot v0.1 is ready for use when:
+Pilot v0.1 is ready for qualification when:
 
-- this mission is discoverable from the Astra onboarding README;
-- the frozen eval cases exist;
+- the mission and frozen eval set are present in the Astra folder;
 - a first implementation receipt records the current plugin capability test;
 - no code or API task registry change is required;
 - the workflow remains read-only and routes to existing owners.
+
+Do not add this pilot to standing Astra mission routing or other canonical registries before the 10-case qualification gate passes. If it passes, promote discoverability by updating the existing Astra onboarding/router owner rather than creating a parallel registry.
