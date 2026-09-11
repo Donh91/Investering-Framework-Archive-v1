@@ -170,14 +170,17 @@ OR_PREPARE_A_BOUNDED_CODE_IMPLEMENTATION_UNDER_EXISTING_CODE_AUTHORITY
 
 ```yaml
 archive_content_result: PASS
-write_governance_result: PASS
+write_governance_result: PARTIAL_REMEDIATED
 final_repository_state: PENDING_PR_REVIEW
-incident_count: 0
+incident_count: 1
+incident_summary: POST_RUN_RULE_WAS_MOMENTARILY_APPENDED_TO_FROZEN_EVAL_AND_IMMEDIATELY_REVERTED
 target_branch: agent/task-20260911-tradfi-crypto-transmission-pilot
 canonical_index_change: NO
 addendum_registry_change: NOT_APPLICABLE
 high_impact_gate: NOT_REQUIRED
 destructive_authority_separation: PASS_NOT_DESTRUCTIVE
+frozen_eval_final_blob: b9548d58fa25629285884d7fc52bddc08b95cd1d
+qualification_result_effect: NONE
 ```
 
 ## 10. Post-qualification red-team note
