@@ -1,0 +1,101 @@
+{
+  "contract": "USAD_SOURCE_PREFLIGHT_v1",
+  "recorded_date": "2026-09-09",
+  "status": "PREPARED_NOT_ACTIVE",
+  "control_plane": "Donh91/Investering-Framework-Archive-v1",
+  "restricted_data_plane": "Donh91/secrets",
+  "mode": "PROSPECTIVE_COLLECTION_ONLY",
+  "hypothesis_testing_active": false,
+  "outcome_scoring_active": false,
+  "quiver_dependency": false,
+  "overlap_found": false,
+  "sources": [
+    {
+      "source_contract_id": "USAD01_SEC_FORM345_INSIDERS_V1",
+      "provider": "SEC",
+      "official_route": "SEC_DERA_INSIDER_TRANSACTIONS_AND_EDGAR",
+      "earliest_observed_history": "2006-01-01",
+      "archive_mode": "FULL_BULK_CANDIDATE_OR_TARGETED_AFTER_MECHANICAL_SIZE_AUDIT",
+      "terms_access_state": "TECHNICALLY_READY_FOR_CONTRACT",
+      "activation_state": "NOT_ACTIVE",
+      "priority": "P0"
+    },
+    {
+      "source_contract_id": "USAD02_SEC_13F_HOLDINGS_V1",
+      "provider": "SEC",
+      "official_route": "SEC_DERA_13F_AND_EDGAR",
+      "earliest_observed_history": "2013-07-01",
+      "archive_mode": "TARGETED_UNIVERSE_WITH_ARCHIVE_HASH_MANIFEST_AND_RAW_FILING_LINEAGE",
+      "terms_access_state": "TECHNICALLY_READY_FOR_CONTRACT",
+      "activation_state": "NOT_ACTIVE",
+      "priority": "P0"
+    },
+    {
+      "source_contract_id": "USAD03_FINRA_OFF_EXCHANGE_V1",
+      "provider": "FINRA",
+      "official_route": "FINRA_EQUITY_API_WEEKLYSUMMARY_AND_WEEKLYSUMMARYHISTORIC",
+      "observed_history_semantics": "ROLLING_12_MONTH_PRODUCTION_PLUS_ROLLING_4_YEAR_HISTORIC",
+      "archive_mode": "TARGETED_HISTORIC_WINDOW_CAPTURE",
+      "terms_access_state": "BLOCKED_TERMS_CREDENTIAL_ACCEPTANCE",
+      "activation_state": "NOT_ACTIVE",
+      "priority": "P0"
+    },
+    {
+      "source_contract_id": "USAD04_FINRA_SHORT_POSITIONING_V1",
+      "provider": "FINRA",
+      "official_route": "FINRA_DAILY_SHORT_SALE_FILES_PLUS_EQUITY_API",
+      "earliest_observed_daily_consolidated_nms_history": "2018-08-01",
+      "api_regsho_history_semantics": "ROLLING_12_MONTHS",
+      "archive_mode": "HYBRID_OFFICIAL_FILES_AND_API",
+      "terms_access_state": "BLOCKED_PENDING_FINRA_TERMS_ROUTE",
+      "activation_state": "NOT_ACTIVE",
+      "priority": "P0"
+    },
+    {
+      "source_contract_id": "USAD05_USASPENDING_CONTRACTS_V1",
+      "provider": "USASPENDING",
+      "official_route": "USASPENDING_V2_API_BULK_AND_TARGETED_ENDPOINTS",
+      "archive_mode": "TARGETED_UNIVERSE_BY_LEGAL_ENTITY_AND_RECIPIENT_IDENTIFIER",
+      "terms_access_state": "TECHNICALLY_READY_FOR_CONTRACT",
+      "activation_state": "NOT_ACTIVE",
+      "priority": "P0"
+    },
+    {
+      "source_contract_id": "USAD06_CONGRESS_PTR_V1",
+      "provider": "HOUSE_SENATE_DISCLOSURE_SYSTEMS",
+      "archive_mode": "TARGETED_DISCLOSURE_ARCHIVE",
+      "terms_access_state": "P1_DISCOVERY_REQUIRED",
+      "activation_state": "NOT_ACTIVE",
+      "priority": "P1"
+    },
+    {
+      "source_contract_id": "USAD07_LDA_LOBBYING_V1",
+      "provider": "US_SENATE_LDA",
+      "official_route": "DOWNLOADABLE_XML_AND_REST_QUERY",
+      "archive_mode": "TARGETED_UNIVERSE",
+      "terms_access_state": "P1_TECHNICALLY_PROMISING",
+      "activation_state": "NOT_ACTIVE",
+      "priority": "P1"
+    },
+    {
+      "source_contract_id": "USAD08_USPTO_PATENTS_V1",
+      "provider": "USPTO",
+      "official_route": "USPTO_OPEN_DATA_PORTAL",
+      "archive_mode": "TARGETED_UNIVERSE",
+      "terms_access_state": "P1_BLOCKED_ACCOUNT_MFA",
+      "activation_state": "NOT_ACTIVE",
+      "priority": "P1"
+    }
+  ],
+  "ready_for_source_contract_drafting": [
+    "USAD01_SEC_FORM345_INSIDERS_V1",
+    "USAD02_SEC_13F_HOLDINGS_V1",
+    "USAD05_USASPENDING_CONTRACTS_V1"
+  ],
+  "blocked_pending_external_access_or_terms": [
+    "USAD03_FINRA_OFF_EXCHANGE_V1",
+    "USAD04_FINRA_SHORT_POSITIONING_V1",
+    "USAD08_USPTO_PATENTS_V1"
+  ],
+  "next_gate": "DRAFT_DISABLED_SOURCE_CONTRACT_SCHEMA_COLLECTOR_CANDIDATES_THEN_SEPARATE_REVIEWED_ACTIVATION"
+}

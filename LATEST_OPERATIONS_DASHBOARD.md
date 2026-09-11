@@ -1,29 +1,29 @@
 # Operations Dashboard
 
-Overall: **RED**
-Generated: `2026-09-09T08:51:21.204418Z`
+Overall: **AMBER**
+Generated: `2026-09-10T18:57:47.928884Z`
 
 ## Systems
 
 | System | Status | Detail | Age hours |
 |---|---:|---|---:|
-| `daily_capture` | **GREEN** | FRESH | 4.131 |
-| `openai_daily_director` | **GREEN** | FRESH | 9.274 |
-| `weekly_output` | **GREEN** | FRESH | 51.683 |
-| `automation_health` | **RED** | - | - |
+| `daily_capture` | **GREEN** | FRESH | 2.594 |
+| `openai_daily_director` | **GREEN** | FRESH | 1.761 |
+| `weekly_output` | **GREEN** | FRESH | 85.791 |
+| `automation_health` | **AMBER** | - | - |
 | `architecture_health` | **GREEN** | - | - |
-| `experiment_lifecycle` | **GREEN** | FRESH | 2.641 |
-| `experiment_receipt_sync` | **GREEN** | FRESH | 2.643 |
-| `remediation_maturation` | **GREEN** | FRESH | 0.463 |
+| `experiment_lifecycle` | **GREEN** | FRESH | 1.761 |
+| `experiment_receipt_sync` | **GREEN** | FRESH | 12.632 |
+| `remediation_maturation` | **GREEN** | FRESH | 0.29 |
 
 ## AI and learning activity
 
-- OpenAI receipts this month: **90**
-- OpenAI cost this month: **$9.060889**
-- Pending forecast candidates: **163**
-- Experiment candidates: **240**
-- Experiment dispatch requests: **3256**
-- Codex-ready remediation tasks: **20**
+- OpenAI receipts this month: **100**
+- OpenAI cost this month: **$9.748472**
+- Pending forecast candidates: **166**
+- Experiment candidates: **261**
+- Experiment dispatch requests: **4000**
+- Codex-ready remediation tasks: **22**
 - Needs-more-evidence items: **14**
 
 ## Incidents
@@ -32,6 +32,6 @@ Open incident references: **20**
 
 ## Required actions
 
-- **P0** `automation_health` - ['daily-slow-cycle-shadow.yml:LATEST_RUN_FAILED', 'daily-slow-cycle-shadow.yml:REPEATED_CONSECUTIVE_FAILURES', 'framework-learning-operations.yml:LATEST_RUN_FAILED']
+- **P1** `automation_health` - REQUIRED_INPUT_UNAVAILABLE
 
-Dashboard SHA-256: `884d8d7672dd800b35b62d2d853e18a2238262dc200bf2a7104e7f51421c79af`
+Dashboard SHA-256: `584d14c3320ae8026bdc1933cbdf31281802b212fbeb1732676c7b3dd3e05966`

@@ -1,0 +1,130 @@
+name: Situation Room Verification Shadow Bridge
+
+on:
+  workflow_run:
+    workflows:
+      - 'Situation Room Daily Static Discovery'
+    types:
+      - completed
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: framework-main-writer
+  cancel-in-progress: false
+
+jobs:
+  verify-and-handoff:
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.head_branch == 'main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Refresh current main
+        run: |
+          git fetch origin main
+          git reset --hard origin/main
+
+      - name: Verify bridge syntax and authority defaults
+        run: |
+          python -m py_compile scripts/data_terminal/situation_room_shadow_bridge.py
+          python - <<'PY'
+          from scripts.data_terminal import situation_room_shadow_bridge as bridge
+          assert bridge.AUTHORITY == 'SHADOW_RESEARCH_ONLY_NON_CANONICAL'
+          assert bridge.CONTRACT == 'SITUATION_ROOM_VERIFICATION_SHADOW_BRIDGE_v1'
+          assert bridge.trusted_primary('https://www.ecb.europa.eu/press/example') is True
+          assert bridge.trusted_primary('https://example.com/story') is False
+          score, common = bridge.overlap(
+              'Federal Reserve raises interest rate after inflation report',
+              'Federal Reserve raises interest rate after inflation data',
+          )
+          assert score >= 0.45 and len(common) >= 2, (score, common)
+          print('SITUATION_ROOM_SHADOW_BRIDGE_STATIC_GATE_PASS')
+          PY
+
+      - name: Verify Situation Room discoveries and hand off to Shadow
+        id: bridge
+        shell: bash
+        run: |
+          python scripts/data_terminal/situation_room_shadow_bridge.py \
+            --source-root 03_DAILY_CAPTURE_LOGS/catalyst_overlay/situation_room \
+            --output-root 04_MARKET_LEARNING/external_research/situation_room_shadow \
+            --timeout 8
+
+      - name: Verify fail-closed Shadow contract
+        if: always()
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          root = Path('04_MARKET_LEARNING/external_research/situation_room_shadow')
+          latest_path = root / 'LATEST.json'
+          if not latest_path.exists():
+              print('NO_NEW_SHADOW_OUTPUT')
+              raise SystemExit(0)
+          latest = json.loads(latest_path.read_text())
+          row = json.loads(Path(latest['path']).read_text())
+          assert row['authority'] == 'SHADOW_RESEARCH_ONLY_NON_CANONICAL', row
+          assert row['authority_firewall']['canonical_effect'] is False, row
+          assert row['authority_firewall']['market_state_effect'] is False, row
+          assert row['authority_firewall']['portfolio_effect'] is False, row
+          assert row['authority_firewall']['topup_authority'] is False, row
+          assert row['authority_firewall']['execution_authority'] is False, row
+          for item in row['verified_shadow_context']:
+              assert item['verification_status'] in {
+                  'PRIMARY_EVENT_CORROBORATED',
+                  'PRIMARY_LINK_CORROBORATED',
+              }, item
+              assert item['shadow_admission'] == 'ACCEPTED_VERIFIED_CONTEXT', item
+          for item in row['pending_verification']:
+              assert item['shadow_admission'] == 'NOT_ADMITTED_PENDING_VERIFICATION', item
+          print('SITUATION_ROOM_SHADOW_FIREWALL_PASS', row['status'])
+          PY
+
+      - name: Commit verified Shadow handoff independently
+        shell: bash
+        run: |
+          ROOT=04_MARKET_LEARNING/external_research/situation_room_shadow
+          if [ ! -d "$ROOT" ]; then
+            echo '::notice::No Situation Room Shadow handoff directory was produced.'
+            exit 0
+          fi
+          git config user.name 'framework-shadow-bot'
+          git config user.email 'framework-shadow-bot@users.noreply.github.com'
+          git add "$ROOT"
+          if git diff --cached --quiet; then
+            echo 'No new Situation Room verification/Shadow state to commit.'
+            exit 0
+          fi
+          git commit -m "research: verify Situation Room and hand off to Shadow ${GITHUB_RUN_ID}"
+          pushed=false
+          for attempt in 1 2 3; do
+            git rebase --abort 2>/dev/null || true
+            if git pull --rebase origin main && git push origin HEAD:main; then
+              pushed=true
+              break
+            fi
+            sleep $((attempt * 5))
+          done
+          [ "$pushed" = true ]
+          git fetch origin main
+          git merge-base --is-ancestor HEAD origin/main
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: situation-room-shadow-${{ github.run_id }}-${{ github.run_attempt }}
+          path: 04_MARKET_LEARNING/external_research/situation_room_shadow/
+          retention-days: 14
+          if-no-files-found: ignore
