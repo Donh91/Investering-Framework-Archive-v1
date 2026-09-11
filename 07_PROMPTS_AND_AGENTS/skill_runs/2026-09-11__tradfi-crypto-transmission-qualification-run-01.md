@@ -1,7 +1,7 @@
 # TradFi ↔ Crypto Transmission Pilot - Qualification Run 01
 
 **Dato:** 2026-09-11  
-**Status:** QUALIFICATION_RESULT / PASS_CANDIDATE_PENDING_INDEPENDENT_REVIEW  
+**Status:** QUALIFICATION_RESULT / PASS_CANDIDATE_REVIEWED_WITH_CONSERVATIVE_DEDUP  
 **Område:** plugin qualification / institutional transmission research  
 **Pilot owner:** `07_PROMPTS_AND_AGENTS/astra/TRADFI_CRYPTO_TRANSMISSION_PILOT_v0_1.md`  
 **Frozen eval contract:** `07_PROMPTS_AND_AGENTS/astra/TRADFI_CRYPTO_TRANSMISSION_EVAL_CASES_v0_1.json`
@@ -338,6 +338,8 @@ This degraded-path behavior is counted as a guardrail pass, not as an incrementa
 
 ## 5. Qualification score
 
+Original case-level score:
+
 ```yaml
 eligible_real_cases: 10
 incremental_source_backed_cases: 9
@@ -353,32 +355,48 @@ new_active_test_created: NO
 new_api_task_class_created: NO
 ```
 
-Conservative note:
+Conservative post-run red-team score:
 
-The `9/10` figure measures incremental source/evidence content, not proven decision value. It must not be presented as trading edge, forecast skill or a justification for Core promotion.
+```yaml
+eligible_real_cases: 10
+strict_distinct_incremental_information_families: 6
+minimum_required: 3
+strict_gate_result: PASS
+```
+
+The downgrade avoids counting repeated corporate-treasury examples and closely related tokenization/capital-mobility examples as fully independent information families.
+
+The score measures source/evidence coverage, not proven decision value. It must not be presented as trading edge, forecast skill or justification for Core promotion.
 
 ## 6. Result
 
 ```text
-MINIMUM_10_CASE_GATE: PASS_CANDIDATE
-STRONG_PASS_CONDITION: PASS_CANDIDATE
-STANDING_ROUTING_PROMOTION: NOT_AUTHORIZED_BY_THIS_RUN
+MINIMUM_10_CASE_GATE: PASS
+RED_TEAM_STRICT_GATE: PASS
+RESEARCH_LAB_VERDICT: SHADOW_OBSERVATION
+KEEP_AS_READ_ONLY_RESEARCH_CAPABILITY: YES
+STANDING_MARKET_ROUTING_PROMOTION: FORBIDDEN
 CODE_IMPLEMENTATION: NOT_YET_REQUIRED
+RECURRING_AUTOMATION: NOT_YET_REQUIRED
 PAID_DATA_PURCHASE: NOT_RECOMMENDED
 ```
 
-Why strong-pass candidate:
+Why the capability survives:
 
-TCT-008 and TCT-009 expose institutional collateral/cash-management transmission rails that are not directly represented by crypto-native price, dominance, breadth or ETF-flow sensors. They justify a bounded Research Lab priority around institutional collateral/deployment transmission, subject to independent review and existing-owner routing.
+TCT-008 and TCT-009 expose institutional collateral/cash-management transmission rails that are not directly represented by crypto-native price, dominance, breadth or ETF-flow sensors. TCT-001, TCT-003, TCT-005 and TCT-006 add distinct infrastructure, proxy-quality, miner-liquidity and stablecoin-settlement information families.
+
+Binding adversarial review:
+
+`07_PROMPTS_AND_AGENTS/skill_runs/2026-09-11__tradfi-crypto-transmission-red-team-review__qualification.md`
 
 ## 7. Recommended next action
 
-1. Independent review the classification and 9/10 incremental count, with special focus on avoiding double-counting structural RWA evidence.
-2. If review confirms at least the minimum 3/10 threshold, keep the workflow as a read-only Research Lab capability.
-3. Only then add discoverability to the existing Astra mission router/onboarding owner.
-4. Do not create a new market engine or scheduled collector.
-5. Do not buy premium datasets yet.
-6. Revisit code automation only after several real future events demonstrate repeated manual work and positive information value.
+1. Keep the capability read-only and event-driven.
+2. Add discoverability to the existing Astra onboarding/router only, with no new authority.
+3. Do not create a new market engine or scheduled collector.
+4. Do not buy premium datasets yet.
+5. Review again after the next 10 eligible real events.
+6. Revisit code automation only after repeated future events demonstrate manual-work burden and durable positive information value.
 
 ## 8. Source lineage summary
 
