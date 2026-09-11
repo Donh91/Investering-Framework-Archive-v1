@@ -1,0 +1,100 @@
+{
+  "contract": "CODEX_RESEARCH_CANDIDATE_v1",
+  "candidate_id": "codex-research-memes-v3-launch-replay-recorder-v1",
+  "submitted_at_utc": "2026-09-11T19:20:00Z",
+  "status": "SUBMITTED",
+  "origin": {
+    "type": "OWNER_APPROVED_RESEARCH_CASE",
+    "thread_label": "Memes v3 / Alpha Lab",
+    "source_paths": [
+      "07_PROMPTS_AND_AGENTS/memes_alpha/2026-09-11__flybrain-launch-replay-case-v1__research-addendum.md",
+      "07_PROMPTS_AND_AGENTS/memes_alpha/2026-09-11__memes-v3-empirical-hardening-adjudication-v1__research-addendum.md",
+      "04_RESEARCH_LAB/auto_trading/source_notes/AT-SRC-0009_AWESOME_TRADING_AGENTS_DISCOVERY_RADAR.md"
+    ]
+  },
+  "title": "Extend the existing Memes v3 collector with deterministic launch-replay and pre-launch artifact provenance",
+  "objective": "Extend, not replace, the existing Memes v3 empirical-hardening collector so chain-native launches can be replayed from exact launch state through sub-minute and later checkpoints. Preserve executable quotes, venue-specific opening taxes/fees/exemptions, quote-asset beta, graduation transitions, immutable availability timestamps and optional public-artifact provenance. Use FLYBRAIN as a high-value fixture and matched failures as mandatory controls. Do not create a parallel scheduler, scanner, signal engine, trade path or portfolio authority.",
+  "finding_key": "MEMES_V3_LAUNCH_REPLAY_AND_ARTIFACT_PROVENANCE_GAP",
+  "depends_on_candidates": [
+    "codex-research-memes-v3-autonomous-alpha-workstream-v1",
+    "codex-research-memes-v3-empirical-hardening-v1"
+  ],
+  "primary_target": "07_PROMPTS_AND_AGENTS/memes_alpha/2026-09-11__flybrain-launch-replay-case-v1__research-addendum.md",
+  "implementation_order": [
+    {
+      "priority": "P0",
+      "scope": [
+        "bind exact launch transaction/block/time, chain, venue, token, curve/pool state, pairing asset and creator economics to the existing immutable discovery packet",
+        "support launch-relative observations at T+1s, T+2s, T+5s, T+10s, T+30s, T+60s and later configured checkpoints without mutating the launch row",
+        "store both raw venue state and executable quote after recipient-specific opening tax, standard fee, creator tax, price impact and latency",
+        "record launcher/creator/team opening-tax exemptions where deterministically observable",
+        "distinguish pre-graduation bonding-curve state from post-graduation Uniswap-pool state",
+        "preserve quote asset and deterministic quote-asset/USD decomposition rather than treating USD chart return as native token alpha"
+      ]
+    },
+    {
+      "priority": "P1",
+      "scope": [
+        "add optional public-artifact provenance fields with public_at separate from commit author/committer timestamps",
+        "capture repository creation/publication time, launch-specific artifact visibility, artifact-to-launch lead time and reproducible artifact identity links when present",
+        "capture first external scanner availability as provider-attributed evidence rather than canonical truth",
+        "bind visibility events and first-distribution followups to the existing empirical-hardening observation relation"
+      ]
+    },
+    {
+      "priority": "P2_SHADOW_ONLY",
+      "scope": [
+        "test PRE_LAUNCH_ARTIFACT_PROVENANCE, ARTIFACT_EXECUTABILITY, NARRATIVE_TRUTH_DENSITY, AGENCY_DECOMPOSITION, SCANNER_LEAD_TIME, CREATOR_ECONOMIC_LOOP_INTENSITY and OPEN_SOURCE_FORKABILITY only as research features",
+        "compare each candidate feature against matched failed launches and copycat instances before any promotion"
+      ]
+    }
+  ],
+  "allowed_change_scope": [
+    "Donh91/Investering-Framework-Archive-v1:scripts/research/memes_alpha/**",
+    "Donh91/Investering-Framework-Archive-v1:tests/research/memes_alpha/**",
+    "Donh91/Investering-Framework-Archive-v1:research/memes_alpha/**",
+    "Donh91/secrets:collectors/memes_alpha/**",
+    "Donh91/secrets:tests/memes_alpha/**",
+    "Donh91/secrets:schemas/memes_alpha/**",
+    "Donh91/secrets:private_research/memes_alpha/**",
+    "Donh91/secrets:health/MEMES_ALPHA/**",
+    "Donh91/secrets:receipts/MEMES_ALPHA_*/**"
+  ],
+  "acceptance_tests": {
+    "positive": [
+      "FLYBRAIN launch fixture resolves exact Robinhood Chain CA, launch tx, block, timestamp, creator, GOOGL pairing asset, supply and creator tax from frozen evidence.",
+      "A Pons v2 T+1s/T+2s replay does not report curve price as executable return without applying the recipient-specific opening snipe tax and other required costs.",
+      "Creator/team tax exemptions remain separate from ordinary buyer execution and cannot be treated as public achievable fills.",
+      "Pre-graduation and post-graduation venue states are explicitly distinct.",
+      "Quote-asset return is preserved and USD return can be decomposed without model-mediated arithmetic.",
+      "Git commit author time cannot substitute for public artifact availability time.",
+      "External scanner labels remain provider-attributed and can conflict with deterministic chain reconstruction.",
+      "Every later observation appends to the frozen case rather than rewriting its T0 state.",
+      "Matched failed launches are required before any artifact-provenance or scanner-lead feature is promoted."
+    ],
+    "negative": [
+      "No sub-second/early chart price may be treated as an executable entry without venue tax/fee/impact modelling.",
+      "No public GitHub repository, code velocity, KOL follow, scanner label or creator-fee claim may independently emit BUY/SELL/size or QUALIFIED_ALPHA.",
+      "No hindsight peak may rewrite an earlier feature.",
+      "No new scheduler, duplicate scanner, market-state owner, portfolio path or trade execution path may be introduced.",
+      "No workflow change, API budget increase, paid data acquisition or automatic merge is authorized by this candidate."
+    ]
+  },
+  "authority_boundary": "CODE_REMEDIATION_ONLY",
+  "requires_framework_owner_authority": false,
+  "forbidden_changes": [
+    "new parallel engine",
+    "new independent scheduler",
+    "automatic trade execution",
+    "buy sell sizing outputs",
+    "portfolio logic",
+    "canonical market authority",
+    "paid data authorization",
+    "API budget increase",
+    "private watchlist publication",
+    "retroactive provenance rewrite",
+    "automatic merge"
+  ],
+  "requested_priority": "EXPEDITED_AFTER_MEMES_V3_EMPIRICAL_HARDENING_P0",
+  "post_fix_gate": "FLYBRAIN_FIXTURE_REPLAY_PASS_PLUS_PONS_V2_OPENING_TAX_EXECUTION_TEST_PASS_PLUS_QUOTE_ASSET_DECOMPOSITION_PASS_PLUS_PUBLIC_AT_TIMESTAMP_TEST_PASS_PLUS_MATCHED_FAILURE_FIXTURES_PASS_PLUS_ZERO_TRADE_AUTHORITY"
+}
