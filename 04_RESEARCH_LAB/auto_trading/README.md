@@ -45,6 +45,7 @@ Every candidate must be evaluated against simple baselines and realistic fees, s
 - `ASTRA_DISCOVERY_VALIDATION_RESEARCH_QUEUE.md` - research queue for independent grading, machine-checkable kill switches, search-bias controls, pre-reasoning cost gates, bounded parallelism and future Agents API execution-lane benchmarking.
 - `MICROCAP_RESEARCH_AGENT_CONTRACT_v1.md` - governed point-in-time research contract for small/microcap assets before any strategy layer evaluates them.
 - `MMT_V3_RESEARCH_QUEUE.md` - microstructure/order-flow + typed-scripting research queue, with duplicate-data audit and free/live-first acquisition policy.
+- `NANSEN_MCP_RESEARCH_QUEUE.md` - read-only Nansen evaluation queue for wallet/entity labels, Smart Money/onchain features, duplicate-coverage control, point-in-time label leakage and API-credit efficiency.
 - `source_notes/` - deeper source-specific notes when a link is useful but the original material is only partially recoverable or needs dedicated analysis.
 - `maeve/` - MAEVE/CFGI historical action-reconstruction research track.
 
@@ -65,3 +66,5 @@ The 563 Robinhood Chain research-buddy source is now used in two layers: `MICROC
 MMT Scripting v3 / Market Data is tracked as a candidate **microstructure and deterministic research-compiler layer**, not as another market-state engine. The research order is deliberately: audit duplicate coverage first, exploit free/live prospective collection where sufficient, then buy historical data only for explicit unresolved evidence gaps.
 
 The 2026-09-11 RohOnChain Astra architecture source is retained only for its strongest transferable principles: **independent grading, externally verifiable kill switches, cheap filtering before expensive reasoning, artifact-backed proof that tests ran, and strict separation between discovery and validation**. Its fixed 300-agent swarm, direct deployment, arbitrary risk thresholds and naive universal performance gates are explicitly not adopted. These ideas are queued in `ASTRA_DISCOVERY_VALIDATION_RESEARCH_QUEUE.md` for future Astra testing.
+
+Nansen MCP/API is tracked as a candidate **read-only labeled onchain intelligence layer**, with especially high relevance to Alpha Lab / meme research and future Astra feature studies. Its differentiation must be proved through wallet/entity label quality, historical depth or research-efficiency gains versus existing/free data. The framework must audit duplicate coverage and point-in-time label leakage before paid backfill or recurring use, and Nansen receives no execution/signing authority from this research track.
