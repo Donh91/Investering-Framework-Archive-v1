@@ -37,6 +37,16 @@ The folder must not create a parallel research-governance stack. Existing Resear
   - prioritizes de-manipulated Early Confirmation, conditional wallet alpha, entity-adjusted structure, First Distribution Survival, visibility/capacity, Narrative Instance Selection and cross-chain matching as prospective Shadow research;
   - preserves the 2026-09-11T02:20Z cohort checkpoint schedule and explicitly forbids promotion without exploration -> freeze -> validation -> prospective shadow -> governance.
 
+### Robinhood disclosed-wallet cohort
+
+- `2026-09-11__robinhood-disclosed-wallet-cohort-v1__research-addendum.md`
+  - binds a user-supplied six-wallet Robinhood Chain cohort into the existing watched-wallet research universe without exposing exact wallet identifiers publicly;
+  - treats the cohort as `PROVISIONAL_KOL_DISCLOSED_RH_WALLET_COHORT`, never as qualified smart money from the source claim alone;
+  - freezes the public disclosure anchor for a pre-vs-post visibility / adverse-selection experiment;
+  - requires failed/dead-token reconstruction, entity/funder checks, conditional wallet analysis and prospective new-token acquisition tracking;
+  - defines latest-valid cumulative private-seed resolution so future collectors can absorb new owner-approved research wallets without rewriting historical seeds;
+  - carries no trade, sizing or portfolio authority.
+
 ### Goals & dreams / future top measurement
 
 - `2026-09-11__alpha-meme-lab-goals-and-dreams-v1__vision.md`
