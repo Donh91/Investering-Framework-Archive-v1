@@ -78,6 +78,14 @@ Required comparison:
 
 Measure whether Nansen adds incremental information rather than merely prettier labeling.
 
+The owner-approved experiment contract is now:
+
+`NANSEN_ALPHA_LAB_ABLATION_V1.md`
+
+Its exact competitive cohort is bound privately under:
+
+`Donh91/secrets:private_research/memes_alpha/provider_benchmarks/nansen/2026/09/11/benchmark_manifest_v1.json`
+
 ## P1 — Point-in-time label audit
 
 Critical research question: can historical Nansen labels be reconstructed as they were observable at the decision timestamp?
@@ -169,4 +177,4 @@ Downgrade or stop the lane if:
 
 `RESEARCH_QUEUED / NO PAID BACKFILL / READ_ONLY_ONLY`
 
-The highest-value next step is a duplicate-coverage and endpoint-cost audit, not immediate integration or broad collection.
+The immediate next step is now frozen as a duplicate-coverage + point-in-time + Alpha Lab ablation benchmark. Codex may build the deterministic read-only harness when the existing Memes v3 baseline is operational. A recurring Shadow adapter is explicitly deferred until the benchmark proves incremental value.
