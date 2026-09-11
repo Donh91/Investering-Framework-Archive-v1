@@ -43,6 +43,7 @@ Every candidate must be evaluated against simple baselines and realistic fees, s
 - `ASTRA_HANDOVER.md` - instructions for Astra when it takes ownership of the heavy research phase.
 - `ASTRA_CHAIN_NATIVE_RESEARCH_COMPILER_V1.md` - Astra-era extension of the chain-specific research-agent idea into context packs, specialist blind-opposition passes, visibility/capacity research, failure-aware retrieval and prospective A/B evaluation.
 - `MICROCAP_RESEARCH_AGENT_CONTRACT_v1.md` - governed point-in-time research contract for small/microcap assets before any strategy layer evaluates them.
+- `MMT_V3_RESEARCH_QUEUE.md` - microstructure/order-flow + typed-scripting research queue, with duplicate-data audit and free/live-first acquisition policy.
 - `source_notes/` - deeper source-specific notes when a link is useful but the original material is only partially recoverable or needs dedicated analysis.
 - `maeve/` - MAEVE/CFGI historical action-reconstruction research track.
 
@@ -59,3 +60,5 @@ Seed #001 comes from a RohOnChain post describing a quant-research course and a 
 The vault now also captures chain-specific AI research-agent patterns. These are treated as upstream evidence-generation workflows only: they may create structured research packets, but they cannot create trading authority. Persuasive outputs such as a concise bull thesis are downstream presentation layers and must never replace internal falsification.
 
 The 563 Robinhood Chain research-buddy source is now used in two layers: `MICROCAP_RESEARCH_AGENT_CONTRACT_v1.md` defines the canonical evidence packet, while `ASTRA_CHAIN_NATIVE_RESEARCH_COMPILER_V1.md` defines how Astra should test chain-native context, specialist research decomposition, adverse-selection/visibility, matched failure memory and prospective research-process improvement without creating a parallel engine.
+
+MMT Scripting v3 / Market Data is tracked as a candidate **microstructure and deterministic research-compiler layer**, not as another market-state engine. The research order is deliberately: audit duplicate coverage first, exploit free/live prospective collection where sufficient, then buy historical data only for explicit unresolved evidence gaps.
