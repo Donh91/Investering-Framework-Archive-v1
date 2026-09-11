@@ -226,6 +226,8 @@ NEW_REPRODUCIBLE_CROSS_ASSET_RELATIONSHIP_CANDIDATE
 
 A more eloquent explanation of already-known framework state is `REDUNDANT_WITH_CURRENT_STACK`.
 
+For qualification review, repeated examples inside the same information family must be de-duplicated conservatively. A new source fact is not automatically a new framework information family.
+
 ## 9. Frozen pilot review gate
 
 Review after the first 10 eligible cases.
@@ -274,3 +276,26 @@ Pilot v0.1 is ready for qualification when:
 - the workflow remains read-only and routes to existing owners.
 
 Do not add this pilot to standing Astra mission routing or other canonical registries before the 10-case qualification gate passes. If it passes, promote discoverability by updating the existing Astra onboarding/router owner rather than creating a parallel registry.
+
+## 13. Post-qualification status
+
+The first 10-case run passed the original gate. A subsequent adversarial review then de-duplicated repeated information families and downgraded the headline count from 9/10 source-fact-level incremental cases to 6/10 distinct incremental information families.
+
+Current qualification result:
+
+```text
+STRICT_MINIMUM_GATE = PASS
+EVIDENCE_CLASS = SOURCE_BACKED_RESEARCH_CONTEXT
+RESEARCH_LAB_VERDICT = SHADOW_OBSERVATION
+OPERATIONAL_RECOMMENDATION = KEEP_AS_READ_ONLY_RESEARCH_CAPABILITY
+MARKET_AUTHORITY = ZERO
+PORTFOLIO_AUTHORITY = ZERO
+RECURRING_AUTOMATION = NOT_YET_JUSTIFIED
+PREMIUM_DATA_PURCHASE = NOT_RECOMMENDED
+```
+
+Binding review:
+
+`07_PROMPTS_AND_AGENTS/skill_runs/2026-09-11__tradfi-crypto-transmission-red-team-review__qualification.md`
+
+Future review should occur after the next 10 eligible real events. Stronger claims require prospective outcome evidence, not additional examples of institutional adoption.
