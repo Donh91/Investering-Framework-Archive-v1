@@ -1,7 +1,7 @@
 # Alpha Meme Lab — Goals & Dreams v1
 
 **Date:** 2026-09-11  
-**Status:** VISION / NON-AUTHORITATIVE TARGET STATE  
+**Status:** VISION / NON-AUTHORITATIVE DIRECTIONAL COMPASS  
 **Area:** Memes v3 / Alpha Lab  
 **Authority:** NONE — goals, aspirations and future measurement targets only  
 **Relationship:** Complements the existing Memes v3 research workstream, empirical-hardening addendum and Astra chain-native research compiler. It does not create a new engine, signal, execution path, portfolio authority or promotion rule.
@@ -15,6 +15,31 @@ This file is intentionally aspirational. It records what we hope the project can
 The future evaluation question is not "did we build more machinery?" but:
 
 > Did Alpha Meme Lab become materially better at identifying rare asymmetric opportunities early enough to matter, while becoming materially harder to fool?
+
+### 1.1 Directional compass, never a ceiling
+
+These goals are **reference points, not a finish line**.
+
+They exist to help the framework compare:
+
+- what we intended to achieve;
+- what we actually achieved;
+- where the evidence says the project should move next;
+- where the framework later exceeds the original ambition.
+
+The framework must be free to outperform, replace, extend or invalidate any target in this document when prospective evidence supports doing so.
+
+If the framework is uncertain about direction, these goals may act as a **soft directional compass**. They must never become a hard rule, promotion gate, design constraint, optimization target that blocks discovery, or upper bound on what the project is allowed to become.
+
+A later system is explicitly allowed to discover capabilities, metrics, research methods or outcomes that were not imagined here and are materially better than the frozen vision.
+
+The correct future question is therefore not only:
+
+> Did we reach the goals?
+
+but also:
+
+> Which goals did we exceed, which turned out to be wrong or too small, and what became possible that we had not yet imagined?
 
 ## 2. Desired end-state
 
@@ -203,9 +228,10 @@ Desired Astra behavior:
 - run specialist forensic / execution / narrative / bull / kill passes only when VOI justifies the cost;
 - learn from rejected cases and failures, not only celebrated winners;
 - simplify aggressively where complexity fails to earn its cost;
-- propose bounded, falsifiable changes rather than wholesale redesigns.
+- propose bounded, falsifiable changes rather than wholesale redesigns;
+- treat this vision as a reference point to surpass, not a design boundary to obey.
 
-A successful Astra audit may delete or demote many features. That would be a positive outcome if predictive and falsification quality improves.
+A successful Astra audit may delete or demote many features. That would be a positive outcome if predictive and falsification quality improves. It may also discover materially better capabilities than any target named here, which should be treated as success rather than scope drift.
 
 ## 6. Desired user experience
 
@@ -238,6 +264,8 @@ from
 
 The system should become progressively harder to fool while retaining enough speed to still capture meaningful asymmetry.
 
+This is a waypoint, not a terminal definition of success. If the framework later demonstrates stronger capabilities, the benchmark should expand rather than constrain them.
+
 ## 8. Future top-level measurement
 
 A later dedicated measurement layer should score progress against this vision.
@@ -269,6 +297,10 @@ The eventual north-star metric should reward **useful asymmetric discrimination 
 
 The exact metric must be designed later from sufficient prospective evidence and should be frozen before being used to judge new model iterations.
 
+The future measurement must include room for **goal overrun / capability discovery**: achievements that materially exceed or fall outside this vision should be recorded explicitly rather than compressed into a score that makes them invisible.
+
+A top measurement is therefore an instrument panel, not a speed limiter.
+
 ## 9. Success criterion for the project vision
 
 This vision is considered directionally achieved when Alpha Meme Lab can prospectively and reproducibly:
@@ -284,6 +316,8 @@ This vision is considered directionally achieved when Alpha Meme Lab can prospec
 9. improve over time from prospective outcomes without rewriting the past;
 10. remain simple enough that every promoted component has earned its place empirically.
 
+Reaching these points is not project completion. It is evidence that the project has crossed an important waypoint and should then set more ambitious evidence-backed goals.
+
 Until then, this document remains what it is intended to be:
 
-**a frozen record of the goals and dreams we want future evidence to earn.**
+**a frozen record of directional goals and dreams that future evidence may earn, revise, exceed or render obsolete.**
