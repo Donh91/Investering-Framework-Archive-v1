@@ -226,7 +226,7 @@ NEW_REPRODUCIBLE_CROSS_ASSET_RELATIONSHIP_CANDIDATE
 
 A more eloquent explanation of already-known framework state is `REDUNDANT_WITH_CURRENT_STACK`.
 
-For qualification review, repeated examples inside the same information family must be de-duplicated conservatively. A new source fact is not automatically a new framework information family.
+A post-run review may conservatively de-duplicate repeated examples into broader information families, but the frozen eval criteria themselves must remain unchanged after execution.
 
 ## 9. Frozen pilot review gate
 
