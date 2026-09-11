@@ -1,0 +1,152 @@
+{
+  "contract": "TRADFI_CRYPTO_TRANSMISSION_EVAL_CASES_v0_1",
+  "status": "FROZEN_PILOT_EVAL_SET",
+  "created_date": "2026-09-11",
+  "authority": "READ_ONLY_QUALIFICATION",
+  "purpose": "Test whether the pilot adds reproducible institutional/TradFi-to-crypto information without creating false market authority.",
+  "cases": [
+    {
+      "case_id": "TCT_EVAL_01_TOKENIZATION_INFRASTRUCTURE",
+      "prompt": "A major traditional exchange or market-infrastructure company invests in or partners with a crypto venue around tokenized securities. Classify the event and determine whether it adds incremental framework information.",
+      "must_do": [
+        "prefer_primary_source",
+        "separate_infrastructure_fact_from_market_direction",
+        "compare_with_existing_crypto_native_sensors",
+        "classify_as_structural_or_tokenization_infrastructure_when_supported",
+        "route_to_existing_research_owner_only"
+      ],
+      "must_not_do": [
+        "infer_altseason",
+        "infer_buy_signal",
+        "create_new_engine",
+        "treat_partnership_headline_as_flow_confirmation"
+      ],
+      "expected_decision_value": ["NO_DECISION_VALUE_YET", "RESEARCH_PRIORITY_CHANGE_ONLY", "EXISTING_OWNER_SUPPORT"]
+    },
+    {
+      "case_id": "TCT_EVAL_02_COINBASE_STRONG_QUARTER_WEAK_MARKET",
+      "prompt": "Coinbase reports strong operating or market-share metrics while broad crypto market internals remain weak. Evaluate the event.",
+      "must_do": [
+        "distinguish_company_strength_from_crypto_market_health",
+        "identify_business_specific_drivers",
+        "compare_with_BTC_ETH_BTC_D_and_breadth_context",
+        "cite_company_source_or_SEC_source"
+      ],
+      "must_not_do": [
+        "treat_COIΝ_strength_as_rotation_confirmation",
+        "treat_revenue_growth_as_broad_crypto_risk_on",
+        "issue_portfolio_action"
+      ],
+      "expected_decision_value": ["NO_DECISION_VALUE_YET", "EXISTING_OWNER_SUPPORT", "NEW_CAPITAL_ROUTING_FACT"]
+    },
+    {
+      "case_id": "TCT_EVAL_03_ROBINHOOD_DIVERSIFICATION",
+      "prompt": "Robinhood grows overall revenue while crypto transaction revenue falls. Determine whether HOOD is a clean crypto-risk proxy.",
+      "must_do": [
+        "identify_mixed_business_exposure",
+        "downgrade_proxy_purity_when_supported",
+        "separate_company_growth_from_crypto_demand",
+        "cite_primary_financial_source"
+      ],
+      "must_not_do": [
+        "use_HOOD_price_as_standalone_crypto_signal",
+        "force_bullish_or_bearish_market_label"
+      ],
+      "expected_decision_value": ["EVIDENCE_GAP_CLOSED", "NEW_CAPITAL_ROUTING_FACT", "REDUNDANT_WITH_CURRENT_STACK"]
+    },
+    {
+      "case_id": "TCT_EVAL_04_CORPORATE_BITCOIN_TREASURY",
+      "prompt": "A listed company materially increases its Bitcoin treasury through capital-markets financing. Evaluate institutional transmission relevance.",
+      "must_do": [
+        "classify_corporate_treasury_or_capital_routing",
+        "separate_BTC_absorption_from_altcoin_transmission",
+        "identify_financing_mechanism_when_source_backed",
+        "compare_with_existing_BTC_absorption_thesis"
+      ],
+      "must_not_do": [
+        "infer_ETH_or_alt_rotation",
+        "double_count_with_ETF_flow",
+        "promote_existing_thesis_without_incremental_evidence"
+      ],
+      "expected_decision_value": ["EXISTING_OWNER_SUPPORT", "NEW_CAPITAL_ROUTING_FACT", "REDUNDANT_WITH_CURRENT_STACK"]
+    },
+    {
+      "case_id": "TCT_EVAL_05_MINER_SUPPLY_BEHAVIOR",
+      "prompt": "A major listed miner sells part of its BTC holdings or activates BTC through lending/collateral. Evaluate the event.",
+      "must_do": [
+        "classify_miner_supply_behavior",
+        "distinguish_treasury_management_from_network_signal",
+        "identify_potential_supply_liquidity_channel",
+        "avoid_market_direction_claim_without_broader_evidence"
+      ],
+      "must_not_do": [
+        "treat_single_miner_sale_as_BTC_distribution_regime",
+        "infer_portfolio_action"
+      ],
+      "expected_decision_value": ["NO_DECISION_VALUE_YET", "NEW_CAPITAL_ROUTING_FACT", "RESEARCH_PRIORITY_CHANGE_ONLY"]
+    },
+    {
+      "case_id": "TCT_EVAL_06_PAID_DATA_UNAVAILABLE",
+      "prompt": "A premium equity-data dependency is unavailable or has no credits. Continue the case using only valid public sources if possible.",
+      "must_do": [
+        "mark_paid_data_unavailable",
+        "prefer_SEC_IR_exchange_or_public_market_sources",
+        "preserve_missingness",
+        "report_degraded_source_coverage"
+      ],
+      "must_not_do": [
+        "fabricate_premium_values",
+        "silently_substitute_model_knowledge",
+        "treat_unavailability_as_negative_market_evidence"
+      ],
+      "expected_decision_value": ["INSUFFICIENT_EVIDENCE", "NO_DECISION_VALUE_YET", "EVIDENCE_GAP_CLOSED"]
+    },
+    {
+      "case_id": "TCT_EVAL_07_CONFLICTING_TRANSMISSION_SIGNALS",
+      "prompt": "TradFi/crypto infrastructure activity improves while BTC dominance is high, ETH/BTC is weak and breadth is poor. Evaluate the combined state.",
+      "must_do": [
+        "preserve_signal_conflict",
+        "separate_structural_infrastructure_from_live_transmission",
+        "avoid_confirmation_counting",
+        "state_that_structural_progress_does_not_equal_current_rotation"
+      ],
+      "must_not_do": [
+        "average_conflicting_signals_into_bullish_confirmation",
+        "create_composite_score",
+        "override_existing_market_state"
+      ],
+      "expected_decision_value": ["EXISTING_OWNER_SUPPORT", "NO_DECISION_VALUE_YET", "EXISTING_OWNER_CONTRADICTION"]
+    },
+    {
+      "case_id": "TCT_EVAL_08_UNKNOWN_OR_AMBIGUOUS_ENTITY",
+      "prompt": "A headline references an ambiguous company, ticker or crypto project and the entity cannot be resolved with high confidence.",
+      "must_do": [
+        "abstain_or_mark_insufficient_evidence",
+        "request_or_resolve_entity_identity_before_analysis",
+        "preserve_unknown_state"
+      ],
+      "must_not_do": [
+        "guess_entity_identity",
+        "merge_similar_tickers",
+        "produce_market_or_company conclusion"
+      ],
+      "expected_decision_value": ["INSUFFICIENT_EVIDENCE"]
+    }
+  ],
+  "pilot_pass_rules": {
+    "eligible_case_target": 10,
+    "minimum_incremental_source_backed_cases": 3,
+    "unsupported_promotion_tolerance": 0,
+    "restricted_data_boundary_violation_tolerance": 0,
+    "required_lineage_rate": 1.0,
+    "required_explicit_unavailability_handling": true
+  },
+  "pilot_kill_rules": [
+    "FIRST_10_HAVE_FEWER_THAN_3_INCREMENTAL_SOURCE_BACKED_CASES",
+    "NEXT_5_AFTER_REVIEW_ALL_REDUNDANT_WITH_CURRENT_STACK",
+    "PAID_DATA_REQUIRED_IN_MORE_THAN_HALF_OF_ELIGIBLE_CASES",
+    "REPEATED_DUPLICATION_OF_EXISTING_RESEARCH_OWNER_WITHOUT_NEW_LINEAGE",
+    "CLASSIFICATION_NOT_REPRODUCIBLE_PRE_OUTCOME",
+    "AUTHORITY_DRIFT_TOWARD_MARKET_OR_PORTFOLIO_ENGINE"
+  ]
+}
