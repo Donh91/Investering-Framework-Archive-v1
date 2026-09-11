@@ -28,6 +28,15 @@ The folder must not create a parallel research-governance stack. Existing Resear
   - retains bull-thesis generation only as a downstream presentation artifact after evidence and kill-case review;
   - intended for Astra-era research and Shadow learning, not trade execution.
 
+### Empirical hardening / adverse-selection adjudication
+
+- `2026-09-11__memes-v3-empirical-hardening-adjudication-v1__research-addendum.md`
+  - freezes the multi-source Claude + ChatGPT research adjudication without treating model agreement as independent evidence;
+  - makes exact identity, immutable point-in-time state, entity-before-address, matched failures, executable returns, venue-specific validation and deterministic load-bearing transforms canonical research-method rules;
+  - rejects global smart-wallet, raw holder/volume/social and ticker-only shortcuts as standalone promotion signals;
+  - prioritizes de-manipulated Early Confirmation, conditional wallet alpha, entity-adjusted structure, First Distribution Survival, visibility/capacity, Narrative Instance Selection and cross-chain matching as prospective Shadow research;
+  - preserves the 2026-09-11T02:20Z cohort checkpoint schedule and explicitly forbids promotion without exploration -> freeze -> validation -> prospective shadow -> governance.
+
 Canonical parent contract:
 
 `04_RESEARCH_LAB/auto_trading/MICROCAP_RESEARCH_AGENT_CONTRACT_v1.md`
