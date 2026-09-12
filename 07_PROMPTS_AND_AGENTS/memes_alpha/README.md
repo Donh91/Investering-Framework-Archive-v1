@@ -61,6 +61,7 @@ The folder must not create a parallel research-governance stack. Existing Resear
   - treats the cohort as `PROVISIONAL_KOL_DISCLOSED_RH_WALLET_COHORT`, never as qualified smart money from the source claim alone;
   - freezes the public disclosure anchor for a pre-vs-post visibility / adverse-selection experiment;
   - requires failed/dead-token reconstruction, entity/funder checks, conditional wallet analysis and prospective new-token acquisition tracking;
+  - requires an address-role gate before any PnL/leaderboard-discovered wallet can enter `WATCH`, excluding protocol/service/inventory/router/pool flows from discretionary wallet alpha;
   - defines latest-valid cumulative private-seed resolution so future collectors can absorb new owner-approved research wallets without rewriting historical seeds;
   - carries no trade, sizing or portfolio authority.
 
@@ -80,6 +81,10 @@ Canonical parent contract:
 Source provenance for the 563 research-buddy inspiration remains in:
 
 `04_RESEARCH_LAB/auto_trading/source_notes/AT-SRC-0005_563_CODEX_ROBINHOOD_RESEARCH_BUDDY.md`
+
+Robinhood tool-radar and wallet-leaderboard contamination provenance lives in:
+
+`04_RESEARCH_LAB/auto_trading/source_notes/AT-SRC-0010_MARAN_RH_TOOL_STACK_AND_WALLET_LEADERBOARD_AUDIT.md`
 
 Astra-era chain-native research preparation lives in:
 
