@@ -1,0 +1,29 @@
+{
+  "allowed_change_scope": [
+    "scripts/data_ping/accepted_data_ping_bridge.py",
+    "scripts/architecture/build_latest_handoff.py",
+    "tests directly related to accepted DATA PING bridge and latest handoff behavior",
+    "the exact existing accepted-DATA-PING producer or activation workflow only if fresh-state repository discovery proves it is the current owner"
+  ],
+  "branch": "reconcile/20260909-accepted-data-ping-clean-noop",
+  "candidate_id": "codex-research-accepted-data-ping-lineage-v1",
+  "candidate_path": "research/codex/intake/2026/08/codex-research-accepted-data-ping-lineage-v1.json",
+  "candidate_sha256": "849b4065b6b24009278248c5a347d52b8f77b1cfb5b91844d1f893a5637e3b92",
+  "contract": "CODEX_RESEARCH_TRANSITION_RECEIPT_v1",
+  "forbidden_changes": [
+    "API budget",
+    "canonical authority",
+    "market gates",
+    "model weights",
+    "new policy semantics",
+    "portfolio logic"
+  ],
+  "objective": "Diagnose why current handoff reports latest_accepted_data_ping as unavailable while the accepted DATA PING bridge implementation remains on current main and its expected accepted-root is absent. Implement the smallest code-only repair that restores truthful producer, activation and lineage semantics without fabricating historical accepted packets.",
+  "post_fix_gate": "CI plus main readback and one production-shaped lineage observation with no duplicate or fabricated accepted packet.",
+  "pr_number": 840,
+  "receipt_sha256": "f203f649586467b7bf99dd3652535cf9115381cf34f7fc6301b6e8ffb01208aa",
+  "recorded_at_utc": "2026-09-09T02:14:03Z",
+  "signature": "f1a5d4570b28c8325c8b",
+  "state": "IN_REMEDIATION",
+  "task_contract_sha256": "debe305c8830208da4974eaed5dad22f80af27d4d544689327d4279c8254158c"
+}
