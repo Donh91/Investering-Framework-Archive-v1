@@ -1,0 +1,64 @@
+{
+  "contract": "CODEX_RESEARCH_CANDIDATE_v1",
+  "candidate_id": "codex-research-skill-validator-completeness-v1",
+  "submitted_at_utc": "2026-09-12T14:37:52.239984+00:00",
+  "status": "SUBMITTED",
+  "origin": {
+    "type": "AUDIT",
+    "thread_label": "Astra master current-main audit",
+    "source_paths": [
+      "07_PROMPTS_AND_AGENTS/skill_runs/2026-09-12__astra-master-audit__receipt.md",
+      "00_ARCHIVE_CONTROL/SKILL_REGISTRY.md",
+      "00_ARCHIVE_CONTROL/SKILL_ROUTING_INDEX.json"
+    ]
+  },
+  "title": "Detect omitted registered skills and invalid boolean routing metadata",
+  "objective": "Make the existing structural validator detect canonical-registry inventory omissions and reject non-boolean allow_implicit_invocation values, without editing registry authority, derived routing metadata or frozen historical baselines.",
+  "finding_key": "SKILL_ARCHITECTURE_INVENTORY_FALSE_PASS",
+  "primary_target": "scripts/agent_skills/validate_skill_architecture.py",
+  "allowed_change_scope": [
+    "scripts/agent_skills/validate_skill_architecture.py",
+    "tests/agent_skills/**"
+  ],
+  "evidence": [
+    {
+      "kind": "COMMIT",
+      "ref": "40d7c6c79a30bd6583fa2ed6fbd783ffecd4dd8f"
+    },
+    {
+      "kind": "RESEARCH_RECEIPT",
+      "ref": "07_PROMPTS_AND_AGENTS/skill_runs/2026-09-12__astra-master-audit__receipt.md",
+      "summary": "Independent control reproduces false PASS for omitted seventh registered skill and string boolean."
+    }
+  ],
+  "reproduction": "Run python -B scripts/agent_skills/validate_skill_architecture.py on bound main: exit0 for six derived entries despite seven registered skills. Validator line153 hardcodes6 and line140 coerces JSON string false with bool(). In temporary fixture, omit a canonical registered skill or replace true with string false; both must be rejected.",
+  "acceptance_tests": {
+    "positive": [
+      "Complete derived inventory matching canonical registered skill rows validates under temporary fixtures.",
+      "Real JSON booleans preserve current side-effect validation."
+    ],
+    "negative": [
+      "Omitted canonical registered skill fails regardless of total hardcoded count.",
+      "String false, string true, integers and null are rejected as booleans.",
+      "Frozen BASELINES.json and current registry/index/skill bodies remain unchanged.",
+      "A new or retired registered skill cannot silently escape set reconciliation."
+    ]
+  },
+  "authority_boundary": "CODE_REMEDIATION_ONLY",
+  "requires_framework_owner_authority": false,
+  "forbidden_changes": [
+    "market gates",
+    "model weights",
+    "canonical authority",
+    "portfolio logic",
+    "API budget",
+    "new policy semantics",
+    "frozen historical baseline rewrite",
+    "registry or skill body mutation",
+    "workflow changes"
+  ],
+  "requested_priority": "NORMAL",
+  "post_fix_gate": "FOCUSED_REGRESSION_PASS_AND_EXACT_MAIN_READBACK; CURRENT_METADATA_DRIFT_MAY_REMAIN_EXPLICITLY_FAILING_UNTIL_SEPARATELY_GOVERNED_RECONCILIATION",
+  "clean_noop_condition": "Stop if superseded or current validator already rejects both reproduced controls.",
+  "escalation_condition": "Stop if fixing validator requires editing canonical registry, routing authority, skill bodies, workflow or policy semantics."
+}
