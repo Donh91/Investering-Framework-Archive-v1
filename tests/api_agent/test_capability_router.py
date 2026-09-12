@@ -3,6 +3,7 @@ import tempfile
 import unittest
 from copy import deepcopy
 from pathlib import Path
+from datetime import datetime, timedelta, timezone
 
 from scripts.api_agent import api_gateway
 from scripts.api_agent.capability_router import build_execution_plan, estimate_model_cost, load_json
@@ -18,7 +19,11 @@ REGISTRY = Path("research/api_agent/API_TASK_REGISTRY_v1.json")
 
 
 def runtime(*models, codex=False, qualified=None):
+    now = datetime.now(timezone.utc)
     return {
+        "api_budget": {"contract":"API_BUDGET_SNAPSHOT_v1", "status":"PASS", "generated_at_utc":now.isoformat(), "month":now.strftime("%Y-%m"), "spent_usd":0, "lane_remaining_usd":6},
+        "codex_available_models": list(models) if codex else [],
+        "codex_usage": {"contract":"CODEX_USAGE_SNAPSHOT_v1", "source":"CODEX_HOST_USAGE", "observed_at_utc":now.isoformat(), "weekly_window_start_utc":(now-timedelta(days=3)).isoformat(), "weekly_reset_at_utc":(now+timedelta(days=4)).isoformat(), "weekly_used_percent":10, "rolling_24h_used_percent":1, "reserved_percent":0, "short_window_remaining_percent":80, "estimated_short_window_usage_percent":2},
         "contract": "RUNTIME_CAPABILITIES_v1",
         "source": "TEST_FIXTURE",
         "available_models": list(models),
@@ -57,6 +62,7 @@ def profile(
         "complexity": complexity,
         "required_capabilities": capabilities or [],
         "reasoning_effort": effort,
+        "estimated_codex_usage_percent": 2,
         "estimated_input_tokens": 10000,
         "estimated_output_tokens": 1000,
         "write_required": write,
@@ -339,6 +345,7 @@ class CapabilityRouterTests(unittest.TestCase):
                 runtime=runtime("gpt-5.6-luna", "gpt-5.6-terra", qualified=["gpt-5.6-luna"]),
                 profile=profile(task=task, capabilities=["structured_output"], effort="low"),
                 activate_routing=True,
+            budget_policy=load_json(Path("research/api_agent/API_INTELLIGENCE_POLICY_v2.json")),
             )
 
     def test_live_routing_rejects_legacy_profile_even_after_policy_qualification(self):
@@ -354,6 +361,7 @@ class CapabilityRouterTests(unittest.TestCase):
                 runtime=runtime("gpt-5.6-luna", "gpt-5.6-terra", qualified=["gpt-5.6-luna"]),
                 profile=profile(task=task, capabilities=["structured_output"], effort="low"),
                 activate_routing=True,
+            budget_policy=load_json(Path("research/api_agent/API_INTELLIGENCE_POLICY_v2.json")),
             )
 
     def test_gateway_activation_requires_nonempty_runtime_qualification_after_policy_qualification(self):
@@ -370,6 +378,7 @@ class CapabilityRouterTests(unittest.TestCase):
                 runtime=runtime("gpt-5.6-luna", "gpt-5.6-terra"),
                 profile=p,
                 activate_routing=True,
+            budget_policy=load_json(Path("research/api_agent/API_INTELLIGENCE_POLICY_v2.json")),
             )
         effective, _, receipt = select_execution(
             task=task,
@@ -378,6 +387,7 @@ class CapabilityRouterTests(unittest.TestCase):
             runtime=runtime("gpt-5.6-luna", "gpt-5.6-terra", qualified=["gpt-5.6-luna"]),
             profile=p,
             activate_routing=True,
+            budget_policy=load_json(Path("research/api_agent/API_INTELLIGENCE_POLICY_v2.json")),
         )
         self.assertEqual(effective["model"], "gpt-5.6-luna")
         self.assertEqual(receipt["mode"], "QUALIFIED_OVERRIDE")
@@ -397,6 +407,7 @@ class CapabilityRouterTests(unittest.TestCase):
             runtime=runtime("gpt-5.6-luna", "gpt-5.6-terra", qualified=["gpt-5.6-terra"]),
             profile=profile(task=task, complexity="SYNTHESIS", capabilities=["synthesis"], effort="medium", hardened=True),
             activate_routing=True,
+            budget_policy=load_json(Path("research/api_agent/API_INTELLIGENCE_POLICY_v2.json")),
         )
         self.assertEqual(effective["model"], "gpt-5.6-terra")
         self.assertEqual(receipt["recommended"]["model"], "gpt-5.6-terra")
@@ -510,6 +521,121 @@ class CapabilityRouterTests(unittest.TestCase):
             self.assertEqual(api_gateway.PRICES_PER_MILLION["gpt-5.6-luna"], original_price)
             self.assertIs(api_gateway.estimate_cost, original_estimator)
             self.assertFalse((output_dir / ".capability_routed_registry.tmp.json").exists())
+
+
+
+
+class ResourceBudgetTests(unittest.TestCase):
+    def setUp(self):
+        self.policy = load_json(POLICY)
+        self.budget = load_json(Path('research/api_agent/API_INTELLIGENCE_POLICY_v2.json'))
+        self.now = datetime(2026, 9, 8, 12, tzinfo=timezone.utc)
+
+    def usage(self, day=3, **changes):
+        return dict(contract='CODEX_USAGE_SNAPSHOT_v1', source='CODEX_HOST_USAGE',
+                    observed_at_utc=self.now.isoformat(),
+                    weekly_window_start_utc=(self.now-timedelta(days=day)).isoformat(),
+                    weekly_reset_at_utc=(self.now+timedelta(days=7-day)).isoformat(),
+                    **dict({'weekly_used_percent':10, 'rolling_24h_used_percent':2,
+                            'reserved_percent':0, 'short_window_remaining_percent':80,
+                            'estimated_short_window_usage_percent':2}, **changes))
+
+    def test_reset_day_max_is_blocked_even_with_zero_usage(self):
+        from scripts.api_agent.resource_budget import codex_admission
+        result = codex_admission(self.policy, self.usage(day=0, weekly_used_percent=0), 'max', 1, now=self.now)
+        self.assertEqual(result['reason'], 'MAX_EFFORT_RESET_DAY_PROTECTION')
+
+    def test_low_can_run_on_reset_day_within_paced_allowance(self):
+        from scripts.api_agent.resource_budget import codex_admission
+        self.assertEqual(codex_admission(self.policy, self.usage(day=0, weekly_used_percent=0), 'low', 2, now=self.now)['status'], 'PASS')
+
+    def test_unknown_stale_future_and_invalid_quota_fail_closed(self):
+        from scripts.api_agent.resource_budget import codex_admission
+        cases = [None, {}, self.usage(weekly_used_percent=float('nan')),
+                 self.usage(weekly_used_percent=True), self.usage(weekly_used_percent=101)]
+        for delta in (-901, 1):
+            v = self.usage(); v['observed_at_utc'] = (self.now+timedelta(seconds=delta)).isoformat(); cases.append(v)
+        for value in cases:
+            with self.subTest(value=value):
+                self.assertEqual(codex_admission(self.policy, value, 'low', 1, now=self.now)['status'], 'WAITING_FOR_USAGE')
+
+    def test_weekly_daily_pending_and_short_windows_all_constrain_admission(self):
+        from scripts.api_agent.resource_budget import codex_admission
+        for changes in ({'weekly_used_percent':79}, {'rolling_24h_used_percent':19},
+                        {'reserved_percent':19}, {'short_window_remaining_percent':1}):
+            with self.subTest(changes=changes):
+                self.assertEqual(codex_admission(self.policy, self.usage(**changes), 'low', 2, now=self.now)['status'], 'DEFER_USAGE')
+
+    def test_max_can_run_later_when_all_windows_allow(self):
+        from scripts.api_agent.resource_budget import codex_admission
+        self.assertEqual(codex_admission(self.policy, self.usage(), 'max', 2, now=self.now)['status'], 'PASS')
+
+    def test_monthly_pacing_preserves_reserve_and_accounts_for_prior_spend(self):
+        from scripts.api_agent.resource_budget import monthly_allowance
+        self.assertEqual(monthly_allowance(self.budget, 8.44, now=self.now), 0)
+        self.assertEqual(monthly_allowance(self.budget, 17.9, now=self.now.replace(day=30)), 18-17.9)
+        self.assertEqual(monthly_allowance(self.budget, 20, now=self.now.replace(day=30)), 0)
+
+    def test_api_snapshot_must_be_current_and_same_month(self):
+        from scripts.api_agent.resource_budget import api_admission
+        value = {'contract':'API_BUDGET_SNAPSHOT_v1','status':'PASS', 'generated_at_utc':self.now.isoformat(),
+                 'month':'2026-08','spent_usd':0,'lane_remaining_usd':6}
+        with self.assertRaisesRegex(ValueError, 'stale'):
+            api_admission(self.budget, value, .1, now=self.now)
+        value['month']='2026-09'; value['lane_remaining_usd']=.01
+        self.assertEqual(api_admission(self.budget, value, .1, now=self.now)['status'], 'DEFER_BUDGET')
+
+    def test_api_listing_is_not_codex_access(self):
+        r=runtime('gpt-6-astra', codex=True); r['codex_available_models']=[]
+        result=build_execution_plan(self.policy,r,profile(executor_class='CODE',write=True,scope=['x']))
+        self.assertEqual(result['units'][0]['reason'],'CODEX_ASTRA_ACCESS_UNVERIFIED')
+
+    def test_heavy_research_keeps_astra_requirement(self):
+        p=profile(complexity='DIFFICULT',capabilities=['research'],effort='auto');p['units'][0]['heavy_research']=True
+        result=build_execution_plan(self.policy,runtime('gpt-5.6-sol','gpt-6-astra'),p)
+        self.assertEqual(result['units'][0]['model'],'gpt-6-astra')
+        self.assertEqual(result['units'][0]['reasoning_effort'],'high')
+        result=build_execution_plan(self.policy,runtime('gpt-5.6-sol'),p)
+        self.assertEqual(result['status'],'WAITING_FOR_CAPABILITY')
+
+    def test_astra_prices_long_context_and_effort_validation(self):
+        self.assertEqual(api_gateway.estimate_cost('gpt-6-astra',10000,1000),.15)
+        self.assertEqual(api_gateway.estimate_cost('gpt-6-astra',300000,1000),6.075)
+        with self.assertRaisesRegex(ValueError,'unsupported_astra'):
+            api_gateway.build_request('TEST',{'model':'gpt-6-astra','reasoning_effort':'none','max_output_tokens':100},'x',{})
+        with self.assertRaisesRegex(ValueError,'usage_unknown'):
+            api_gateway.usage_of({'id':'real-paid-response'})
+
+    def test_no_network_when_pre_call_budget_rejects(self):
+        from unittest.mock import patch
+        import sys
+        task='DAILY_DIRECTOR_SHADOW'
+        with tempfile.TemporaryDirectory() as td:
+            root=Path(td); (root/'p').write_text('x'); (root/'c').write_text('{}')
+            argv=['gateway','--task',task,'--registry',str(REGISTRY),'--prompt-file',str(root/'p'),'--context-file',str(root/'c'),'--output-dir',str(root/'out'),'--intended-write-prefix','research/api_agent/outputs/daily/']
+            with patch.object(sys,'argv',argv), patch.dict('os.environ',{'OPENAI_API_KEY':'synthetic'}), patch.object(api_gateway.gateway_budget,'reserve',side_effect=ValueError('budget_rejected')), patch.object(api_gateway,'call_api') as network:
+                with self.assertRaisesRegex(ValueError,'budget_rejected'): api_gateway.main()
+                network.assert_not_called()
+
+    def test_tools_cannot_bypass_text_cost_bound(self):
+        from scripts.api_agent.gateway_budget import request_ceiling
+        with self.assertRaisesRegex(ValueError,'unbounded'):
+            request_ceiling({'model':'gpt-6-astra','max_output_tokens':100,'tools':[{'type':'web_search'}]},api_gateway.estimate_cost)
+
+    def test_retry_is_included_in_reservation_and_unknown_is_preserved(self):
+        from scripts.api_agent import gateway_budget as guard
+        from unittest.mock import patch
+        payload=api_gateway.build_request('DAILY_DIRECTOR_SHADOW',api_gateway.load_registry(REGISTRY)['tasks']['DAILY_DIRECTOR_SHADOW'],'x',{})
+        with tempfile.TemporaryDirectory() as td:
+            root=Path(td); owner=root/'research/api_agent/API_INTELLIGENCE_POLICY_v2.json';owner.parent.mkdir(parents=True);owner.write_text(json.dumps(self.budget))
+            with patch.object(guard,'ROOT',root),patch.object(guard,'_guard',side_effect=[{'spent_usd':0,'month':'2026-09'}, {'remaining_usd':4}]):
+                path, reservation=guard.reserve('DAILY_DIRECTOR_SHADOW',payload,api_gateway.load_registry(REGISTRY),api_gateway.estimate_cost)
+            first=guard.request_ceiling(payload,api_gateway.estimate_cost)
+            self.assertGreater(reservation['maximum_cost_usd'],2*first)
+            self.assertEqual(json.loads(path.read_text())['status'],'RESERVED_OR_UNKNOWN')
+            receipt={'estimated_cost_usd':.01,'response_id':'synthetic-response','response_ids':['synthetic-response'],'created_unix':123}
+            guard.settle(path,reservation,receipt)
+            self.assertEqual(json.loads(path.read_text())['estimated_cost_usd'],.01)
 
 
 if __name__ == "__main__":

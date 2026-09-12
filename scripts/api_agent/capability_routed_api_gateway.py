@@ -13,6 +13,7 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from scripts.api_agent import api_gateway
+from scripts.api_agent.resource_budget import api_admission
 from scripts.api_agent.capability_router import (
     build_execution_plan,
     canonical_bytes,
@@ -84,6 +85,7 @@ def select_execution(
     runtime: dict[str, Any],
     profile: dict[str, Any],
     activate_routing: bool,
+    budget_policy: dict[str, Any] | None = None,
 ) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
     routing_runtime = runtime
     if activate_routing:
@@ -130,7 +132,23 @@ def select_execution(
             raise ValueError(f"selected_model_not_qualified:{recommended['model']}")
         if recommended["model"] not in policy.get("models", {}):
             raise ValueError("selected_model_not_in_policy")
+        if budget_policy is None:
+            raise ValueError("api_budget_owner_required")
+        source_unit = next(u for u in profile["units"] if u["unit_id"] == unit["unit_id"])
+        # Admit the full declared input/output budget including a bounded retry.
+        declared = source_unit["budget"]
+        output_limit = min(task_cfg["max_output_tokens"], declared["max_output_tokens"])
+        retry_limit = min(declared["max_output_tokens"], api_gateway.gateway_budget.retry_output_limit(output_limit))
+        reserve_cost = sum(estimate_model_cost(policy, policy["models"][recommended["model"]], declared["max_input_tokens"], n) for n in (output_limit, retry_limit))
+        if reserve_cost > declared["max_estimated_cost_usd"]:
+            raise ValueError("delegated_retry_budget_exceeded")
+        admission = api_admission(budget_policy, runtime.get("api_budget", {}), reserve_cost)
+        if admission["status"] != "PASS":
+            raise ValueError("api_routing_budget_deferred")
         effective = dict(recommended)
+        effective["max_output_tokens"] = output_limit
+        effective["retry_max_output_tokens"] = retry_limit
+        effective["max_input_tokens"] = declared["max_input_tokens"]
         mode = "QUALIFIED_OVERRIDE"
 
     routing_receipt = {
@@ -184,6 +202,9 @@ def run_gateway_with_effective_registry(
     task_cfg = routed_registry["tasks"][task]
     task_cfg["model"] = effective["model"]
     task_cfg["reasoning_effort"] = effective["reasoning_effort"]
+    if "max_output_tokens" in effective:
+        task_cfg["max_output_tokens"] = min(task_cfg["max_output_tokens"], effective["max_output_tokens"])
+        task_cfg["retry_max_output_tokens"] = effective["retry_max_output_tokens"]
 
     model_cfg = policy.get("models", {}).get(effective["model"])
     if not isinstance(model_cfg, dict) or not isinstance(model_cfg.get("price_per_million"), dict):
@@ -192,6 +213,10 @@ def run_gateway_with_effective_registry(
     context = json.loads(context_file.read_text())
     if not isinstance(context, dict):
         raise ValueError("context_object_required")
+    if "max_input_tokens" in effective:
+        payload = api_gateway.build_request(task, task_cfg, prompt_file.read_text(), context)
+        if len(canonical_bytes(payload)) + 8192 > effective["max_input_tokens"]:
+            raise ValueError("actual_request_exceeds_declared_input_budget")
     actual_context_refs: list[str] | None = None
     if allowed_context_refs is not None:
         actual_context_refs = _validate_context_attenuation(context, allowed_context_refs)
@@ -307,6 +332,7 @@ def main() -> int:
         runtime=runtime,
         profile=profile,
         activate_routing=args.activate_routing,
+        budget_policy=load_json(Path("research/api_agent/API_INTELLIGENCE_POLICY_v2.json")),
     )
     unit = _matching_unit(plan, args.task)
     allowed_context_refs = unit.get("allowed_context") if unit.get("delegation_contract_status") == "HARDENED_V1_1" else None

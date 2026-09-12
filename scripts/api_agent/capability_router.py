@@ -9,6 +9,11 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+try:
+    from scripts.api_agent.resource_budget import codex_admission
+except ModuleNotFoundError:
+    from resource_budget import codex_admission
+
 
 FORBIDDEN_AUTHORITY_KEYS = {
     "portfolio_action",
@@ -359,7 +364,11 @@ def _select_api_model(
         raise ValueError("invalid_required_capabilities")
     required = set(required_values)
     requested_effort = str(unit.get("reasoning_effort") or "low")
+    if requested_effort == "auto":
+        requested_effort = {"ROUTINE": "low", "SYNTHESIS": "medium", "DIFFICULT": "high", "ARCHITECTURE": "xhigh"}[complexity]
     requires_astra = bool(unit.get("requires_astra", False))
+    if unit.get("heavy_research") is True:
+        requires_astra = True
     estimated_input = int(unit.get("estimated_input_tokens", 0) or 0)
     estimated_output = int(unit.get("estimated_output_tokens", 0) or 0)
     candidates: list[tuple[float, int, str, dict[str, Any]]] = []
@@ -469,10 +478,26 @@ def route_unit(
             return {**base, "status": "BLOCKED", "executor": policy["execution"]["code_executor_name"], "reason": "CODE_WRITE_SCOPE_REQUIRED"}
         if runtime["codex_available"] is not True:
             return {**base, "status": "WAITING_FOR_CAPABILITY", "executor": policy["execution"]["code_executor_name"], "reason": "CODEX_RUNTIME_UNAVAILABLE"}
+        model = policy["codex_usage"]["default_model"]
+        # API discovery cannot establish a Codex entitlement.
+        if model not in runtime.get("codex_available_models", []):
+            return {**base, "status": "WAITING_FOR_CAPABILITY", "executor": "CODEX", "reason": "CODEX_ASTRA_ACCESS_UNVERIFIED"}
+        effort = str(unit.get("reasoning_effort") or policy["codex_usage"]["default_effort"])
+        if effort == "auto":
+            effort = {"ROUTINE": "low", "SYNTHESIS": "medium", "DIFFICULT": "high", "ARCHITECTURE": "xhigh"}.get(unit.get("complexity"))
+        if effort not in policy["models"][model]["reasoning_efforts"]:
+            return {**base, "status": "BLOCKED", "executor": "CODEX", "reason": "UNSUPPORTED_CODEX_EFFORT"}
+        admission = codex_admission(policy, runtime.get("codex_usage"), effort, unit.get("estimated_codex_usage_percent"))
+        if admission["status"] != "PASS":
+            return {**base, "status": "WAITING_FOR_CAPABILITY", "executor": "CODEX", "reason": admission["reason"], "usage_admission": admission}
         return {
             **base,
             "status": "READY",
             "executor": policy["execution"]["code_executor_name"],
+            "model": model,
+            "reasoning_effort": effort,
+            "speed": "standard",
+            "usage_admission": admission,
             "runtime_confirmed": True,
             "write_authority_source": "EXISTING_CODEX_TASK_CONTRACT_REQUIRED",
             "review_owner": policy["review"]["code_review_owner"],

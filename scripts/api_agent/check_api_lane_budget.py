@@ -30,6 +30,7 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--receipt-root", type=Path, required=True)
     parser.add_argument("--task", required=True)
+    parser.add_argument("--include-task", action="append", default=[])
     parser.add_argument("--cap-usd", type=float, required=True)
     parser.add_argument("--reserve-usd", type=float, default=0.1)
     args = parser.parse_args()
@@ -55,7 +56,7 @@ def main() -> None:
             if not isinstance(value, dict):
                 errors.append({"path": str(path), "reason": "RECEIPT_OBJECT_REQUIRED"})
                 continue
-            if task_of(value) != args.task:
+            if task_of(value) not in {args.task, *args.include_task}:
                 continue
             created = parse_created(value)
             cost = value.get("estimated_cost_usd")

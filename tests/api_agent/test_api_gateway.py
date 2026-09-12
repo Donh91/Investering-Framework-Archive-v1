@@ -99,7 +99,7 @@ class ApiGatewayTests(unittest.TestCase):
     def test_daily_output_budget_can_hold_strict_schema(self):
         data=load_registry(REGISTRY);self.assertGreaterEqual(data['tasks']['DAILY_DIRECTOR_SHADOW']['max_output_tokens'],2000)
     def test_cost_estimate(self):
-        self.assertEqual(estimate_cost('gpt-5.6-luna',1000000,1000000),7.0);self.assertEqual(estimate_cost('gpt-5.6-terra',1000000,1000000),17.5)
+        self.assertEqual(estimate_cost('gpt-5.6-luna',1000000,1000000),2.2);self.assertEqual(estimate_cost('gpt-5.6-terra',1000000,1000000),22.0)
     def test_valid_output(self):validate_output(valid_output())
     def test_valid_forecast_candidate_pct_move(self):
         value=valid_output();value['forecast_candidates']=[directional_pct()];validate_output(value)

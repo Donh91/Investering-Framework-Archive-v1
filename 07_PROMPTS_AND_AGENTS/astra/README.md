@@ -278,3 +278,49 @@ It is looking for a stronger employee, auditor, developer, researcher and advers
 The best proof that you deserve more responsibility is not asking for more power.
 
 It is finding valuable truths while safely operating with less.
+
+## Astra resource routing, 2026-09-08 implementation candidate
+
+Status: `IMPLEMENTATION_CANDIDATE_NOT_FULLY_ACTIVATED`.
+The user's explicit task authorization takes precedence over this onboarding
+brief; qualification does not require repeating an unrelated entrance mission.
+
+The existing capability router now describes Astra as the Codex worker, with
+`low` as the default. An explicit `auto` effort chooses low, medium, high or
+xhigh from the declared task complexity. Max is an explicit exceptional choice,
+never the result of automatic complexity routing. Heavy research profiles set
+`heavy_research: true`, which requires Astra; unavailable Astra defers the unit.
+Routine API extraction and classification continue to use the cheapest qualified
+model satisfying the profile. Model selection does not grant write authority.
+
+Codex availability and API availability are separate facts. A Codex host must
+supply `codex_available_models` and a fresh `CODEX_USAGE_SNAPSHOT_v1` under the
+runtime's `codex_usage` field. An OpenAI `/v1/models` result is insufficient to
+prove Codex access. The router does not change a ChatGPT account, model picker,
+subscription, entitlement, or the model of an already running conversation.
+
+Codex usage admission in `scripts/api_agent/resource_budget.py` requires:
+
+- host-observed weekly start and reset timestamps, not an assumed Monday reset;
+- weekly usage, rolling 24-hour usage and outstanding reservations as percentages
+  of the same weekly allowance;
+- the task's estimated weekly consumption, derived from comparable observed runs;
+- remaining short-window allowance and the task's estimated short-window usage;
+- a host observation no older than 15 minutes.
+
+Twenty percent of the weekly allowance remains reserved. The rolling 24-hour
+ceiling is 20 percent, and the usable weekly allowance is released progressively
+from the actual reset timestamp with one day of headroom. Automatic Max is
+blocked during the first 24 hours. Missing, stale or invalid telemetry defers
+automated dispatch. API credits are not a fallback for exhausted Codex usage.
+The percentages are framework pacing policy, not OpenAI's quota or tariff.
+
+The host must atomically reserve admitted consumption before dispatch, reconcile
+actual usage after execution, and refresh telemetry at task boundaries. A READY
+plan alone is not an execution lease. This repository currently has no installed
+host adapter performing that action or changing account-level model settings.
+
+Official references checked 2026-09-08:
+[model and effort choices](https://learn.chatgpt.com/docs/models),
+[Codex usage and pricing](https://learn.chatgpt.com/docs/pricing),
+[Astra API model](https://developers.openai.com/api/docs/models/gpt-6-astra).
