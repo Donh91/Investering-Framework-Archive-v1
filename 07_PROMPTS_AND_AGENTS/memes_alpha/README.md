@@ -65,6 +65,16 @@ The folder must not create a parallel research-governance stack. Existing Resear
   - defines latest-valid cumulative private-seed resolution so future collectors can absorb new owner-approved research wallets without rewriting historical seeds;
   - carries no trade, sizing or portfolio authority.
 
+### FOMO Radar forensic benchmark
+
+- `2026-09-12__fomo-radar-forensic-benchmark-v1__research-addendum.md`
+  - freezes `cvxv666/fomo-robinhood-radar` at external commit `1c448e97a9617a19793aafb7963138e36ec5a1bf` as an adversarial architecture/data-quality benchmark rather than a stack to copy wholesale;
+  - adds a `TRADE_PROVENANCE_GATE` after address-role resolution so recipient-spoofed, gifted, dust, passive and service flows cannot silently become wallet conviction;
+  - requires signal condition time, observation time, delivery time and first executable time to remain distinct;
+  - sends receipt provenance, seeded-token quarantine, first-buy convergence, entity-adjusted burst and exit-consensus mechanisms through ablation against the existing Alpha Lab baseline;
+  - preserves the external project's negative calibration evidence and forbids importing its global wallet score or current-score historical replay as canonical alpha;
+  - remains research-only / shadow-only with zero trade authority.
+
 ### Goals & dreams / future top measurement
 
 - `2026-09-11__alpha-meme-lab-goals-and-dreams-v1__vision.md`
@@ -85,6 +95,14 @@ Source provenance for the 563 research-buddy inspiration remains in:
 Robinhood tool-radar and wallet-leaderboard contamination provenance lives in:
 
 `04_RESEARCH_LAB/auto_trading/source_notes/AT-SRC-0010_MARAN_RH_TOOL_STACK_AND_WALLET_LEADERBOARD_AUDIT.md`
+
+Closed-loop research architecture provenance lives in:
+
+`04_RESEARCH_LAB/auto_trading/source_notes/AT-SRC-0011_ANTPALKIN_CLOSED_LOOP_AI_TRADING.md`
+
+FOMO Radar forensic/provenance benchmark provenance lives in:
+
+`04_RESEARCH_LAB/auto_trading/source_notes/AT-SRC-0012_FOMO_ROBINHOOD_RADAR_FORENSIC_BENCHMARK.md`
 
 Astra-era chain-native research preparation lives in:
 
