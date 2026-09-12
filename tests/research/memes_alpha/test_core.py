@@ -1,3 +1,4 @@
+import json
 import sys
 import unittest
 from datetime import datetime, timezone
@@ -19,6 +20,7 @@ from core import (  # noqa: E402
     stable_hash,
     validate_public_payload,
 )
+from public_bridge import convert_private_bridge  # noqa: E402
 
 
 class MemesAlphaCoreTests(unittest.TestCase):
@@ -73,6 +75,25 @@ class MemesAlphaCoreTests(unittest.TestCase):
             validate_public_payload({"wallet_address": "0x" + "a" * 40})
         with self.assertRaises(ValueError):
             validate_public_payload({"leak": "0x" + "a" * 40})
+
+    def test_public_bridge_preserves_private_run_binding(self):
+        private_run_hash = stable_hash("private-run")
+        bridge = {
+            "seed_sha256": stable_hash("seed"),
+            "private_manifest_sha256": private_run_hash,
+            "case_count": 3,
+            "event_counts": {},
+            "observation_counts": {"CASE_OBSERVED": 2, "SOLANA_CANDIDATE_OBSERVED": 1},
+            "chain_coverage": {"ethereum": "PASS", "solana": "PASS"},
+            "health": "PASS",
+            "reason_codes": [],
+            "generated_at": "2026-09-12T00:00:00Z",
+        }
+        raw = json.dumps(bridge, sort_keys=True).encode()
+        public = convert_private_bridge(bridge, raw)
+        self.assertEqual(public["private_manifest_sha256"], private_run_hash)
+        self.assertEqual(public["private_bridge_sha256"], stable_hash(raw))
+        self.assertEqual(public["observation_counts"]["SOLANA_CANDIDATE_OBSERVED"], 1)
 
     def test_adaptive_cadence_and_noop_due_logic(self):
         self.assertEqual(choose_cadence(high_value_event=False, qualified_case_count=0, source_degraded=False), "COLD")
