@@ -1,0 +1,32 @@
+{
+  "allowed_change_scope": [
+    "scripts/api_agent/build_owner_bound_director_context.py",
+    "scripts/api_agent/augment_director_context_v2.py",
+    "tests/api_agent/directly related temporal alignment tests"
+  ],
+  "branch": "agent/task-20260912-temporal-coherence",
+  "candidate_id": "codex-research-temporal-alignment-readout-v1",
+  "candidate_path": "research/codex/intake/2026/08/codex-research-temporal-alignment-readout-v1.json",
+  "candidate_sha256": "8599acd9461d1616f35bf4459a4db144a375ac72ce5bc0263423642bc87cfe7e",
+  "contract": "CODEX_RESEARCH_TRANSITION_RECEIPT_v1",
+  "forbidden_changes": [
+    "API budget",
+    "canonical authority",
+    "data interpolation",
+    "forward fill",
+    "market gates",
+    "model weights",
+    "new freshness threshold",
+    "new policy semantics",
+    "portfolio logic",
+    "timestamp rewriting"
+  ],
+  "objective": "Implement the smallest deterministic read-only temporal-coherence block in the existing owner-bound Director context using already available timestamps and existing owner tolerances, exposing age spread and contract violations without inventing new freshness thresholds, interpolation or market semantics.",
+  "post_fix_gate": "TEMPORAL_ALIGNMENT_FIXTURES_PASS_WITH_ONLY_EXISTING_CONTRACT_THRESHOLDS",
+  "pr_number": null,
+  "receipt_sha256": "dea4cd82132919f1c6544525350b66a565f9bc61ee4549b135e287d2bb48d106",
+  "recorded_at_utc": "2026-09-12T19:40:38Z",
+  "signature": "a9f7ba653c7655a20c97",
+  "state": "IN_REMEDIATION",
+  "task_contract_sha256": "a64652c8dc520f3f1630084d508e1afb46d21994c3d4f1be69a2c8828efb24b2"
+}
