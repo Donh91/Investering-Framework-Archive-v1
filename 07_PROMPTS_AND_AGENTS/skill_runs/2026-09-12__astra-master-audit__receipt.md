@@ -156,3 +156,15 @@ The owner reinforced prioritization of existing Codex/Astra-ready work and auton
   "automatic_resume_scheduled": false
 }
 ```
+
+## Continuation on fresh main ef2319db - runtime restored and next READY task delivered
+
+Local execution now works. Inspection confirmed the old scratch directory was empty, so the former checkout and unpublished work could not be recovered from that directory. A fresh checkout was created from main `ef2319dbff2374f6eacdbe783b32b45efbb670dc`. This narrows the earlier generic exec-server failure: it is not evidence that the runtime remains unavailable. No subagent quota retry, model switch or paid API fallback was used.
+
+Current queue generated 2026-09-12T17:49:07Z contains31 READY tasks, including Situation Room signatures67ed21de4e9d66074112 and89ff174e1412a9f7b8e1. Architecture remains GREEN; automation/dashboard remain RED. Authenticated protection reads now return403 Resource not accessible by integration for both source and Vault; source rulesets collection is empty. Repository admin metadata is not proof that the integration holds administration access. Destructive separation remains UNVERIFIED, so this finding does not clear high-impact workflow changes.
+
+Existing temporal alignment task `a9f7ba653c7655a20c97` passed its current preflight and was implemented in the existing Director augmenter. PR #892 head `ee49728121491a3864d4284d7be06529b6d303cd`, tree `9ea838e9b59a1968185cd91f447d80799f933659`, matches locally tested bytes. Eleven focused/existing tests pass. Baseline/candidate CLI replay on today's retained Director context preserved all previous fields and source bytes. The additional temporal block exposes source ages, timestamp semantics, missingness, after-cutoff timestamps, and only existing predecessor/anchor rules. No new freshness threshold or workflow change. Independent review, CI and main readback remain pending; no completion receipt issued.
+
+```json
+{"mission_complete":false,"local_runtime":"AVAILABLE","old_unpublished_workspace":"NOT_RECOVERED_FROM_EMPTY_SCRATCH","new_prepared_task":{"signature":"a9f7ba653c7655a20c97","pr":892,"head_sha":"ee49728121491a3864d4284d7be06529b6d303cd","state":"PR_OPEN_NOT_MERGED","local_tests":11},"high_impact_gate":"SEPARATION_OF_DESTRUCTIVE_AUTHORITY_UNVERIFIED","automatic_resume_scheduled":false}
+```
