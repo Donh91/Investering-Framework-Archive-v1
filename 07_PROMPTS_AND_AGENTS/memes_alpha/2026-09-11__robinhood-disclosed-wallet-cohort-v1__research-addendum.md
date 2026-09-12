@@ -94,6 +94,37 @@ For each wallet, reconstruct at least the last 20-50 intentional acquisitions wh
 
 Historical source-reported PnL is a lead to reproduce, not ground truth.
 
+## Address-role gate for leaderboard and PnL candidates
+
+A 2026-09-12 owner-supplied Robinhood Chain 7D realized-PnL leaderboard exposed a material failure mode: addresses associated with launchpad/protocol inventory can appear as extremely profitable "traders" when generic wallet-PnL logic does not identify address role first.
+
+Therefore **no leaderboard/PnL-discovered address may enter `WATCH` merely because it ranks highly.**
+
+Before qualification, classify the address from chain-native evidence as one of:
+
+- `EOA_TRADER`;
+- `SMART_ACCOUNT_TRADER`;
+- `PROTOCOL_SERVICE`;
+- `CURVE_OR_LAUNCHPAD_INVENTORY`;
+- `ROUTER`;
+- `POOL_OR_LP_INFRASTRUCTURE`;
+- `FEE_COLLECTOR`;
+- `DEPLOYER_OR_CREATOR_INFRASTRUCTURE`;
+- `BRIDGE_OR_SETTLEMENT`;
+- `UNKNOWN`.
+
+`UNKNOWN` cannot be promoted to wallet-alpha watch status.
+
+Service / inventory / router / pool / fee-collector flows must be excluded from discretionary PnL and intentional-buy evidence. Role classification must precede realized-PnL reproduction, entity clustering and conditional-skill scoring.
+
+The preferred sequence is:
+
+`ADDRESS ROLE -> INTENTIONAL SWAP FILTER -> SERVICE EXCLUSION -> ENTITY CLUSTERING -> PNL REPRODUCTION -> OUTLIER ABLATION -> CONDITIONAL SKILL -> VISIBILITY/CAPACITY -> PROSPECTIVE WATCH`
+
+Detailed exact-address evidence for the 2026-09-12 leaderboard audit remains restricted. Public methodology provenance is recorded in:
+
+`04_RESEARCH_LAB/auto_trading/source_notes/AT-SRC-0010_MARAN_RH_TOOL_STACK_AND_WALLET_LEADERBOARD_AUDIT.md`
+
 ## Promotion boundary
 
 This cohort may contribute to:
