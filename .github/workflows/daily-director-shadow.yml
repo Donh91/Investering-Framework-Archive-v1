@@ -147,11 +147,22 @@ jobs:
           mkdir -p research/experiment_lifecycle/{candidates,observations,dispatch,receipts,admission} research/framework_memory/{forecast_memory,outcome_memory}
           python scripts/experiments/experiment_lifecycle_scientific_admission.py --repo-root . --daily-output "$DEST/DAILY_DIRECTOR_OUTPUT.json" --daily-context "$DEST/context.json" --daily-receipt "$DEST/DAILY_DIRECTOR_RECEIPT.json" --candidate-root research/experiment_lifecycle/candidates --observation-root research/experiment_lifecycle/observations --dispatch-root research/experiment_lifecycle/dispatch --forecast-root research/framework_memory/forecast_memory --outcome-root research/framework_memory/outcome_memory --receipt-root research/experiment_lifecycle/receipts --registry-output research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json --manifest-output research/experiment_lifecycle/LATEST_EXPERIMENT_DISPATCH_MANIFEST.json --admission-root research/experiment_lifecycle/admission --admission-registry-output research/experiment_lifecycle/LATEST_SCIENTIFIC_ADMISSION_REGISTRY.json --legacy-sensor-catalog 06_RESEARCH_LAB/forward_tests/sensor_pair_discovery_v0_1/SENSOR_PAIR_CATALOG.json --max-new-forecasts 5 | tee runtime/daily-director/experiment_lifecycle_summary.json
 
+      - name: Bind structured Director confidence to prospective lineage
+        if: steps.delta.outputs.delta_ready == 'true' && steps.fresh.outputs.fresh_ready == 'true'
+        run: |
+          DEST=$(cat runtime/daily-director/destination.txt)
+          python scripts/api_agent/materialize_director_confidence_binding.py \
+            --daily-output "$DEST/DAILY_DIRECTOR_OUTPUT.json" \
+            --daily-context "$DEST/context.json" \
+            --daily-receipt "$DEST/DAILY_DIRECTOR_RECEIPT.json" \
+            --forecast-root research/framework_memory/forecast_memory \
+            --binding-root research/api_agent/confidence_bindings
+
       - name: Commit compact outputs and receipts with verified readback
         shell: bash
         run: |
           git config user.name 'framework-api-agent'; git config user.email 'framework-api-agent@users.noreply.github.com'
-          git add research/api_agent/outputs/daily research/api_agent/outputs/conflicts research/experiment_lifecycle research/framework_memory/forecast_memory
+          git add research/api_agent/outputs/daily research/api_agent/outputs/conflicts research/api_agent/confidence_bindings research/experiment_lifecycle research/framework_memory/forecast_memory
           if git diff --cached --quiet; then exit 0; fi
           git commit -m "ai: materialize multi-horizon Director ${GITHUB_RUN_ID}"
           pushed=false
