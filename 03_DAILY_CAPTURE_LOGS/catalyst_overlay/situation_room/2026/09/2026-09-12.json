@@ -2,18 +2,46 @@
   "authority": "RESEARCH_ONLY_NON_CANONICAL",
   "canonical_effect": false,
   "contract": "SITUATION_ROOM_DAILY_OWNER_v1",
-  "current_unverified_discoveries": [],
-  "daily_result": "NO_NEW_MATERIAL_CATALYST",
-  "detection_time_utc": "2026-09-12T08:36:42Z",
+  "current_unverified_discoveries": [
+    {
+      "detection_time_utc": "2026-09-12T10:47:56Z",
+      "event_time_precision": "TIMESTAMP",
+      "event_time_utc": "2026-09-12T06:00:25.136000Z",
+      "source_id": "SITUATION_ROOM",
+      "source_receipt": {
+        "bytes": 144934,
+        "error_class": null,
+        "fetched_at_utc": "2026-09-12T10:47:57Z",
+        "http_status": 200,
+        "role": "DISCOVERY_ONLY",
+        "sha256": "2a28ce84b17bfc3c4ea7e1e5196d013ac18e0ab847d8981915c3dcb9c4885dba",
+        "source_id": "SITUATION_ROOM",
+        "status": "PASS",
+        "url": "https://situationroom.space/briefing/2026-09-12"
+      },
+      "source_role": "DISCOVERY_ONLY",
+      "title": "Saudi pipeline halted after Iraq drone attack \u2014 Situation Room",
+      "url": "https://situationroom.space/briefing/2026-09-12",
+      "verification_status": "DISCOVERY_UNVERIFIED"
+    }
+  ],
+  "daily_result": "REVIEW_REQUIRED_UNVERIFIED_DISCOVERY",
+  "detection_time_utc": "2026-09-12T10:47:56Z",
   "events": [],
   "market_reaction_observations": [],
   "market_reaction_separate_from_event": true,
   "market_state_effect": false,
   "observation_date_utc": "2026-09-12",
   "portfolio_effect": false,
+  "retrieval": {
+    "dynamic_archive_shell_not_required": true,
+    "situation_room_archive_url": "https://situationroom.space/briefings",
+    "situation_room_daily_url": "https://situationroom.space/briefing/2026-09-12",
+    "strategy": "DETERMINISTIC_STATIC_DAILY_BRIEFING"
+  },
   "retroactive_candidate_eligibility": false,
-  "run_id": "SRDO_0ecb3caaeea225e8",
-  "run_status": "PASS",
+  "run_id": "SRDO_0964c558d53c6d35",
+  "run_status": "DEGRADED",
   "shared_row_tournament_eligible": false,
   "situation_room_role": "DISCOVERY_ONLY",
   "source_coverage": {
@@ -21,23 +49,23 @@
     "primary_total": 5,
     "receipts": [
       {
-        "bytes": 140150,
+        "bytes": 144934,
         "error_class": null,
-        "fetched_at_utc": "2026-09-12T08:36:42Z",
+        "fetched_at_utc": "2026-09-12T10:47:56Z",
         "http_status": 200,
         "role": "DISCOVERY_ONLY",
-        "sha256": "555320e871a5122a02ab362bca2e0bc198df9eafef10d5e2ac4be4030f41aaaa",
+        "sha256": "2a28ce84b17bfc3c4ea7e1e5196d013ac18e0ab847d8981915c3dcb9c4885dba",
         "source_id": "SITUATION_ROOM",
         "status": "PASS",
-        "url": "https://situationroom.space/briefings"
+        "url": "https://situationroom.space/briefing/2026-09-12"
       },
       {
-        "bytes": 96118,
+        "bytes": 96119,
         "error_class": null,
-        "fetched_at_utc": "2026-09-12T08:36:53Z",
+        "fetched_at_utc": "2026-09-12T10:47:57Z",
         "http_status": 200,
         "role": "PRIMARY",
-        "sha256": "1e3676851725ca4dd9985dc1dfdb7aabe6892a72f4c169d13ad6c22bfd897c29",
+        "sha256": "3beeb0401fbf68524bc173acfd592aa19be567276c40ee1a6175bce6ac44ae18",
         "source_id": "SEC",
         "status": "PASS",
         "url": "https://www.sec.gov/newsroom/press-releases"
@@ -45,21 +73,21 @@
       {
         "bytes": 71384,
         "error_class": null,
-        "fetched_at_utc": "2026-09-12T08:36:53Z",
+        "fetched_at_utc": "2026-09-12T10:47:57Z",
         "http_status": 200,
         "role": "PRIMARY",
-        "sha256": "0163d80297afc99de4c69ef3e776b44b858b7e166605677321ee78b243e18934",
+        "sha256": "8e287176e95343b14114a383a134b36e11d9dedbbfefe8f7cc6c6387dc7e2aae",
         "source_id": "TREASURY",
         "status": "PASS",
         "url": "https://home.treasury.gov/news/press-releases"
       },
       {
-        "bytes": 290097,
+        "bytes": 260810,
         "error_class": null,
-        "fetched_at_utc": "2026-09-12T08:36:53Z",
+        "fetched_at_utc": "2026-09-12T10:47:58Z",
         "http_status": 200,
         "role": "PRIMARY",
-        "sha256": "86c43a652f65550e05198e96ad22dfa061ba7f7b4bd20aa42214ab7d178e3451",
+        "sha256": "0e2d5ae2d316456677699fc7a7f97610660d281feb5a434018e48fb1a49964dd",
         "source_id": "WHITE_HOUSE",
         "status": "PASS",
         "url": "https://www.whitehouse.gov/news/"
@@ -67,10 +95,10 @@
       {
         "bytes": 65424,
         "error_class": null,
-        "fetched_at_utc": "2026-09-12T08:36:53Z",
+        "fetched_at_utc": "2026-09-12T10:47:58Z",
         "http_status": 200,
         "role": "PRIMARY",
-        "sha256": "9b42a66bdbb8d2c71465dcbe53fc1530b214bdaa526df9074a99f287cd76f2f1",
+        "sha256": "4b3b52b8aacfa547a4c4e1eb94bd27dee475307c7169931a6ae770c7f36b1a2c",
         "source_id": "CFTC",
         "status": "PASS",
         "url": "https://www.cftc.gov/PressRoom/PressReleases"
@@ -78,10 +106,10 @@
       {
         "bytes": 87194,
         "error_class": null,
-        "fetched_at_utc": "2026-09-12T08:36:54Z",
+        "fetched_at_utc": "2026-09-12T10:47:58Z",
         "http_status": 200,
         "role": "PRIMARY",
-        "sha256": "4093f8c5382fc24fd2242d12460d5762dbb733bc9814d63fcd1ad5c06ee6c48d",
+        "sha256": "a308fe52c7f3874fe212fa1a7134edbba27da988c024587de0d7dc598eaf860c",
         "source_id": "FEDERAL_RESERVE",
         "status": "PASS",
         "url": "https://www.federalreserve.gov/newsevents/pressreleases.htm"
@@ -91,234 +119,24 @@
   "unresolved_candidates": [],
   "unverified_discoveries": [
     {
-      "detection_time_utc": "2026-09-12T08:36:42Z",
+      "detection_time_utc": "2026-09-12T10:47:56Z",
       "event_time_precision": "TIMESTAMP",
-      "event_time_utc": "2026-09-09T06:00:24.863000Z",
+      "event_time_utc": "2026-09-12T06:00:25.136000Z",
       "source_id": "SITUATION_ROOM",
       "source_receipt": {
-        "bytes": 117689,
+        "bytes": 144934,
         "error_class": null,
-        "fetched_at_utc": "2026-09-12T08:36:43Z",
+        "fetched_at_utc": "2026-09-12T10:47:57Z",
         "http_status": 200,
         "role": "DISCOVERY_ONLY",
-        "sha256": "1c6b157f6be4a73e7555cd13d183fa8e55774a5fe86db5373333cb46809ab88f",
+        "sha256": "2a28ce84b17bfc3c4ea7e1e5196d013ac18e0ab847d8981915c3dcb9c4885dba",
         "source_id": "SITUATION_ROOM",
         "status": "PASS",
-        "url": "https://situationroom.space/briefing/2026-09-09"
+        "url": "https://situationroom.space/briefing/2026-09-12"
       },
       "source_role": "DISCOVERY_ONLY",
-      "title": "Zcash ETF hits $500 million as Bitcoin stalls below $80,000 \u2014 Situation Room",
-      "url": "https://situationroom.space/briefing/2026-09-09",
-      "verification_status": "DISCOVERY_UNVERIFIED"
-    },
-    {
-      "detection_time_utc": "2026-09-12T08:36:42Z",
-      "event_time_precision": "TIMESTAMP",
-      "event_time_utc": "2026-09-03T06:00:20.110000Z",
-      "source_id": "SITUATION_ROOM",
-      "source_receipt": {
-        "bytes": 114889,
-        "error_class": null,
-        "fetched_at_utc": "2026-09-12T08:36:44Z",
-        "http_status": 200,
-        "role": "DISCOVERY_ONLY",
-        "sha256": "274ad00d041ef54e924d707f2826a5a18e0644cecb4ca6ff262d2125397ab80d",
-        "source_id": "SITUATION_ROOM",
-        "status": "PASS",
-        "url": "https://situationroom.space/briefing/2026-09-03"
-      },
-      "source_role": "DISCOVERY_ONLY",
-      "title": "Fed hike odds at 62-70 percent as Bitcoin ETF outflows hit 236 million dollars \u2014 Situation Room",
-      "url": "https://situationroom.space/briefing/2026-09-03",
-      "verification_status": "DISCOVERY_UNVERIFIED"
-    },
-    {
-      "detection_time_utc": "2026-09-12T08:36:42Z",
-      "event_time_precision": "TIMESTAMP",
-      "event_time_utc": "2026-09-02T06:00:20.258000Z",
-      "source_id": "SITUATION_ROOM",
-      "source_receipt": {
-        "bytes": 107218,
-        "error_class": null,
-        "fetched_at_utc": "2026-09-12T08:36:44Z",
-        "http_status": 200,
-        "role": "DISCOVERY_ONLY",
-        "sha256": "6a2adf8c06d11754411eedaa7306636bdfba2bcf370a9f93c6ba885183803372",
-        "source_id": "SITUATION_ROOM",
-        "status": "PASS",
-        "url": "https://situationroom.space/briefing/2026-09-02"
-      },
-      "source_role": "DISCOVERY_ONLY",
-      "title": "Bitcoin holds above $90 oil as dollar stays firm \u2014 Situation Room",
-      "url": "https://situationroom.space/briefing/2026-09-02",
-      "verification_status": "DISCOVERY_UNVERIFIED"
-    },
-    {
-      "detection_time_utc": "2026-09-12T08:36:42Z",
-      "event_time_precision": "TIMESTAMP",
-      "event_time_utc": "2026-08-30T06:00:21.284000Z",
-      "source_id": "SITUATION_ROOM",
-      "source_receipt": {
-        "bytes": 111325,
-        "error_class": null,
-        "fetched_at_utc": "2026-09-12T08:36:45Z",
-        "http_status": 200,
-        "role": "DISCOVERY_ONLY",
-        "sha256": "4f1cf38b832135e5be973c62a8fefaacc0dd6155e93a6845fca64a02b98b86a5",
-        "source_id": "SITUATION_ROOM",
-        "status": "PASS",
-        "url": "https://situationroom.space/briefing/2026-08-30"
-      },
-      "source_role": "DISCOVERY_ONLY",
-      "title": "Iran sanctions and Gulf strikes cut Hormuz oil flows in half. \u2014 Situation Room",
-      "url": "https://situationroom.space/briefing/2026-08-30",
-      "verification_status": "DISCOVERY_UNVERIFIED"
-    },
-    {
-      "detection_time_utc": "2026-09-12T08:36:42Z",
-      "event_time_precision": "TIMESTAMP",
-      "event_time_utc": "2026-08-27T06:00:22.860000Z",
-      "source_id": "SITUATION_ROOM",
-      "source_receipt": {
-        "bytes": 106247,
-        "error_class": null,
-        "fetched_at_utc": "2026-09-12T08:36:46Z",
-        "http_status": 200,
-        "role": "DISCOVERY_ONLY",
-        "sha256": "1af6bc42f180e667b463aec595d0eccf352aa2142102057de6c04dbc6c1455e1",
-        "source_id": "SITUATION_ROOM",
-        "status": "PASS",
-        "url": "https://situationroom.space/briefing/2026-08-27"
-      },
-      "source_role": "DISCOVERY_ONLY",
-      "title": "StarkWare mines first quantum-safe Bitcoin transaction via MARA Slipstream \u2014 Situation Room",
-      "url": "https://situationroom.space/briefing/2026-08-27",
-      "verification_status": "DISCOVERY_UNVERIFIED"
-    },
-    {
-      "detection_time_utc": "2026-09-12T08:36:42Z",
-      "event_time_precision": "TIMESTAMP",
-      "event_time_utc": "2026-08-24T06:00:21.264000Z",
-      "source_id": "SITUATION_ROOM",
-      "source_receipt": {
-        "bytes": 111659,
-        "error_class": null,
-        "fetched_at_utc": "2026-09-12T08:36:47Z",
-        "http_status": 200,
-        "role": "DISCOVERY_ONLY",
-        "sha256": "aee16912f54fbece19dd682475b12ae18e9243a2919bce186633dfd3dae7499b",
-        "source_id": "SITUATION_ROOM",
-        "status": "PASS",
-        "url": "https://situationroom.space/briefing/2026-08-24"
-      },
-      "source_role": "DISCOVERY_ONLY",
-      "title": "Dalio urges bit of Bitcoin as debt hits 40 trillion \u2014 Situation Room",
-      "url": "https://situationroom.space/briefing/2026-08-24",
-      "verification_status": "DISCOVERY_UNVERIFIED"
-    },
-    {
-      "detection_time_utc": "2026-09-12T08:36:42Z",
-      "event_time_precision": "TIMESTAMP",
-      "event_time_utc": "2026-08-23T06:00:19.978000Z",
-      "source_id": "SITUATION_ROOM",
-      "source_receipt": {
-        "bytes": 104584,
-        "error_class": null,
-        "fetched_at_utc": "2026-09-12T08:36:48Z",
-        "http_status": 200,
-        "role": "DISCOVERY_ONLY",
-        "sha256": "205654dbea185215c34a1ea501252bc100149ab2ceb59b7b13e76a6c7c9eb91c",
-        "source_id": "SITUATION_ROOM",
-        "status": "PASS",
-        "url": "https://situationroom.space/briefing/2026-08-23"
-      },
-      "source_role": "DISCOVERY_ONLY",
-      "title": "US sanctions target Iran oil flows as Brent hits 94 dollars \u2014 Situation Room",
-      "url": "https://situationroom.space/briefing/2026-08-23",
-      "verification_status": "DISCOVERY_UNVERIFIED"
-    },
-    {
-      "detection_time_utc": "2026-09-12T08:36:42Z",
-      "event_time_precision": "TIMESTAMP",
-      "event_time_utc": "2026-08-22T06:00:24.745000Z",
-      "source_id": "SITUATION_ROOM",
-      "source_receipt": {
-        "bytes": 113054,
-        "error_class": null,
-        "fetched_at_utc": "2026-09-12T08:36:49Z",
-        "http_status": 200,
-        "role": "DISCOVERY_ONLY",
-        "sha256": "b59a6053110b560fdbfcb1d322fa283a865b8c0ec9c8385928341b226f305021",
-        "source_id": "SITUATION_ROOM",
-        "status": "PASS",
-        "url": "https://situationroom.space/briefing/2026-08-22"
-      },
-      "source_role": "DISCOVERY_ONLY",
-      "title": "Treasury doubles long-bond buybacks as Bitcoin climbs past $78,000 \u2014 Situation Room",
-      "url": "https://situationroom.space/briefing/2026-08-22",
-      "verification_status": "DISCOVERY_UNVERIFIED"
-    },
-    {
-      "detection_time_utc": "2026-09-12T08:36:42Z",
-      "event_time_precision": "TIMESTAMP",
-      "event_time_utc": "2026-08-21T06:00:24.658000Z",
-      "source_id": "SITUATION_ROOM",
-      "source_receipt": {
-        "bytes": 108037,
-        "error_class": null,
-        "fetched_at_utc": "2026-09-12T08:36:50Z",
-        "http_status": 200,
-        "role": "DISCOVERY_ONLY",
-        "sha256": "ac87015ba5b4d4bea49437ba4a435b6382c83a8c9fafbb76a58ccff9b82c0598",
-        "source_id": "SITUATION_ROOM",
-        "status": "PASS",
-        "url": "https://situationroom.space/briefing/2026-08-21"
-      },
-      "source_role": "DISCOVERY_ONLY",
-      "title": "Bitcoin clears $200 million in short liquidations as rally holds above $75,000. \u2014 Situation Room",
-      "url": "https://situationroom.space/briefing/2026-08-21",
-      "verification_status": "DISCOVERY_UNVERIFIED"
-    },
-    {
-      "detection_time_utc": "2026-09-12T08:36:42Z",
-      "event_time_precision": "TIMESTAMP",
-      "event_time_utc": "2026-08-20T06:00:30.203000Z",
-      "source_id": "SITUATION_ROOM",
-      "source_receipt": {
-        "bytes": 100231,
-        "error_class": null,
-        "fetched_at_utc": "2026-09-12T08:36:51Z",
-        "http_status": 200,
-        "role": "DISCOVERY_ONLY",
-        "sha256": "aabf1841c53c276f8ee61e9d442546cab14d2c0cac777c187fa815436d887aac",
-        "source_id": "SITUATION_ROOM",
-        "status": "PASS",
-        "url": "https://situationroom.space/briefing/2026-08-20"
-      },
-      "source_role": "DISCOVERY_ONLY",
-      "title": "$2.7 billion shorts liquidated as Bitcoin nears $70,000. \u2014 Situation Room",
-      "url": "https://situationroom.space/briefing/2026-08-20",
-      "verification_status": "DISCOVERY_UNVERIFIED"
-    },
-    {
-      "detection_time_utc": "2026-09-12T08:36:42Z",
-      "event_time_precision": "TIMESTAMP",
-      "event_time_utc": "2026-08-14T06:00:27.147000Z",
-      "source_id": "SITUATION_ROOM",
-      "source_receipt": {
-        "bytes": 173707,
-        "error_class": null,
-        "fetched_at_utc": "2026-09-12T08:36:52Z",
-        "http_status": 200,
-        "role": "DISCOVERY_ONLY",
-        "sha256": "f5c140c545c3fc2aa186dacb8288098b9d9dcee8dafc0501511c7e5640ea7409",
-        "source_id": "SITUATION_ROOM",
-        "status": "PASS",
-        "url": "https://situationroom.space/briefing/2026-08-14"
-      },
-      "source_role": "DISCOVERY_ONLY",
-      "title": "Copper premium prices 15% tariff odds as Hormuz stays shut day 166. \u2014 Situation Room",
-      "url": "https://situationroom.space/briefing/2026-08-14",
+      "title": "Saudi pipeline halted after Iraq drone attack \u2014 Situation Room",
+      "url": "https://situationroom.space/briefing/2026-09-12",
       "verification_status": "DISCOVERY_UNVERIFIED"
     }
   ]
