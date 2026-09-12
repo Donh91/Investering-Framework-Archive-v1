@@ -219,7 +219,7 @@ When autonomous trading, strategy-generation, validation, paper-trading or execu
 
 ```text
 ASTRA_AUTONOMOUS_TRADING_ARCHITECTURE_REVIEW_POINTER_v1.md
-../..//08_SOURCE_MATERIAL/external_methods/2026-09-12__gpt6-astra-autonomous-quant-fund-architecture__source-note.md
+../../08_SOURCE_MATERIAL/external_methods/2026-09-12__gpt6-astra-autonomous-quant-fund-architecture__source-note.md
 ../../08_SOURCE_MATERIAL/external_methods/2026-09-12__herman-fmz-strategy-corpus__source-note.md
 ```
 
