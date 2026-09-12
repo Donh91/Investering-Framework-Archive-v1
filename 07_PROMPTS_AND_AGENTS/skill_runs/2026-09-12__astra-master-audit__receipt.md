@@ -75,3 +75,84 @@ This checkpoint does not certify exhaustion of the 29 READY tasks, research45 or
 ## Executed PR818 safety correction
 
 Existing PR818 branch advanced to `2fe70a82638278a0a50aa20677b79f6c0245d1b1`, tree `da8226bef0af31cffa11f1d1d4db61c2b81dc91a`, identical to locally reviewed commit `1e36eb5f510ca57565fed8cfba42bf9ab360ba54`. Parent independently reran 19 focused tests: PASS. The helper no longer synthesizes completion receipts and reuses existing valid receipts byte-for-byte. No workflow was changed by this correction. Remote exact-head readback verified; merge, CI and production closure are not claimed. Shell push lacked credentials; the existing authorized GitHub connector created the identical tree and fast-forwarded the explicit existing task branch without force or permission changes.
+
+## Governed continuation checkpoint after owner request to continue
+
+The owner reinforced prioritization of existing Codex/Astra-ready work and autonomy across authorized repositories. Remote readback confirmed the five PRs below remain open at their published heads. A subagent hit a host usage limit; the subsequent local execution attempt failed because the exec server was unavailable. These are actual execution blockers, not permission to switch models or spend the API reserve. Unpublished local work cannot presently be verified and is not reported complete. This checkpoint is consumed through the existing mission/queue discovery path; it does not create a new scheduler or claim an automatic wake-up.
+
+```json
+{
+  "mission_owner": "07_PROMPTS_AND_AGENTS/astra/ASTRA_REPOSITORY_MISSION_ROUTER_v1.json",
+  "mission_complete": false,
+  "execution_state": "DEFERRED_WITH_MACHINE_READABLE_TRIGGER",
+  "owner_priority": "Resolve existing Codex and Astra-ready owners across authorized repositories; optimize autonomy before adding machinery",
+  "resume_requires_all": [
+    "EXECUTION_RUNTIME_AVAILABLE",
+    "HOST_USAGE_CAPACITY_AVAILABLE",
+    "FRESH_MAIN_AND_TASK_CONTRACTS_VERIFIED"
+  ],
+  "merge_requires_all": [
+    "REQUIRED_CI_PASS",
+    "REQUIRED_INDEPENDENT_REVIEW_PASS",
+    "EXISTING_MERGE_AUTHORITY_VERIFIED"
+  ],
+  "high_impact_requires": "SEPARATION_OF_DESTRUCTIVE_AUTHORITY_VERIFIED_AND_EXISTING_SAFEPOINT_SEQUENCE_PASS",
+  "observed_blockers": [
+    "SUBAGENT_HOST_USAGE_LIMIT",
+    "EXEC_SERVER_UNAVAILABLE",
+    "AUTOMATION_PRODUCTION_HEALTH_GATE_WRITER_CONFIGURATION_FAILURE"
+  ],
+  "published_work": [
+    {
+      "pr": 818,
+      "head_sha": "2fe70a82638278a0a50aa20677b79f6c0245d1b1",
+      "state": "OPEN_NOT_MERGED"
+    },
+    {
+      "pr": 886,
+      "head_sha": "386e7b033403a08703a57952f38a3fa2dc5f8521",
+      "state": "OPEN_NOT_MERGED"
+    },
+    {
+      "pr": 888,
+      "head_sha": "81678d3d1b4a9171d9a47e877298401bd2755b43",
+      "state": "OPEN_NOT_MERGED"
+    },
+    {
+      "pr": 889,
+      "head_sha": "b5aad1789ac34fe2e06df9d367c0531f8e3268a9",
+      "state": "OPEN_NOT_MERGED"
+    },
+    {
+      "pr": 890,
+      "head_sha": "dc7c0615ff9b74eae51126f821e6d442a2631066",
+      "state": "OPEN_NOT_MERGED"
+    }
+  ],
+  "local_unpublished_work": {
+    "forecast_error_taxonomy": "TEST_RESULTS_REPORTED_BY_IMPLEMENTER; FINAL_BYTES_AND_DURABLE_COMMIT_NOT_VERIFIED",
+    "sensor_relationship_readout": "IN_PROGRESS_LAST_OBSERVED; DURABLE_COMMIT_NOT_VERIFIED",
+    "t9_reproducibility": "NOT_VERIFIED_EXECUTED"
+  },
+  "t10": {
+    "state": "BLOCKED_BY_REAL_AUTHORITY",
+    "trigger": "Owner-bound current official forecast inventory and exact forecast-ID/ratification/CN/actual/score crosswalk become available; preserve W28 UNSCORED_LINEAGE_GAP"
+  },
+  "continuation_order": [
+    "Reconstruct current state from repository; do not trust this checkpoint over newer owners",
+    "Recover and independently verify unfinished source branches before duplicating work",
+    "Resolve existing shared CI blocker only after its task and high-impact gates permit",
+    "Complete existing PR review, merge and exact-main readback through current authority",
+    "Deduplicate and execute remaining current Codex/Astra tasks across authorized source/data repositories",
+    "Resume deferred research under its specific data and research activation gates"
+  ],
+  "prohibited_workarounds": [
+    "No model switching to bypass usage limits",
+    "No paid API fallback or budget increase to bypass host limits",
+    "No direct-main writes",
+    "No Vault destructive authority",
+    "No fabricated completion or prospective rows"
+  ],
+  "automatic_resume_scheduled": false
+}
+```
