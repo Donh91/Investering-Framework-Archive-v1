@@ -1,0 +1,32 @@
+{
+  "allowed_change_scope": [
+    "scripts/experiments/directly related read-only experiment simplification review helper",
+    "tests/experiments/directly related simplification review tests",
+    "research/experiment_lifecycle/directly related generated simplification review artifact"
+  ],
+  "branch": "agent/task-20260912-experiment-review",
+  "candidate_id": "codex-research-experiment-simplification-review-v1",
+  "candidate_path": "research/codex/intake/2026/08/codex-research-experiment-simplification-review-v1.json",
+  "candidate_sha256": "92a10427c7afe897ac70a95f370533b5b14864a15531b8b3a6b74d8835d18cc1",
+  "contract": "CODEX_RESEARCH_TRANSITION_RECEIPT_v1",
+  "forbidden_changes": [
+    "API budget",
+    "automatic experiment merge",
+    "automatic experiment retirement",
+    "automatic promotion",
+    "candidate history deletion",
+    "canonical authority",
+    "market gates",
+    "model weights",
+    "new policy semantics",
+    "portfolio logic"
+  ],
+  "objective": "Implement the smallest deterministic read-only simplification review over the existing Experiment Lifecycle registry that flags semantic/path alias families, high-observation zero-outcome incubation and repeated matured-inconclusive families for governance review without automatically merging, retiring, promoting or changing weights.",
+  "post_fix_gate": "DETERMINISTIC_CLUSTER_FIXTURE_PASS_PLUS_GOVERNANCE_READBACK_NO_MUTATION",
+  "pr_number": null,
+  "receipt_sha256": "54acc871faf817651668cf9f10302729e44bc2a0aa7ccab37c7c9fc9e77d814c",
+  "recorded_at_utc": "2026-09-12T14:43:10Z",
+  "signature": "d5f9cc11d5d7d05418b9",
+  "state": "IN_REMEDIATION",
+  "task_contract_sha256": "6b23706c680820d9b4f380ef8b3040d8c44a017c948dbcb13be61a33ab712b5b"
+}
