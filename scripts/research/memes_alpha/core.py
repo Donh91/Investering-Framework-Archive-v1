@@ -4,23 +4,14 @@ import hashlib
 import json
 import re
 from collections import defaultdict
-from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Any, Iterable
 
 EVENT_CLASSES = {
-    "INTENTIONAL_BUY",
-    "PASSIVE_RECEIPT",
-    "DUST_OR_SPAM",
-    "SELL_OR_DISTRIBUTION",
-    "FUNDING_SOURCE_LINK",
-    "NEW_TOKEN_ACQUISITION",
-    "MULTI_WALLET_CONVERGENCE",
-    "SUPPLY_ACCUMULATION_CHANGE",
-    "CTO_OR_COMMUNITY_TAKEOVER",
-    "SOCIAL_METADATA_CHANGE",
-    "LIQUIDITY_QUALITY_CHANGE",
-    "WALLET_QUALITY_REVIEW_DUE",
+    "INTENTIONAL_BUY", "PASSIVE_RECEIPT", "DUST_OR_SPAM", "SELL_OR_DISTRIBUTION",
+    "FUNDING_SOURCE_LINK", "NEW_TOKEN_ACQUISITION", "MULTI_WALLET_CONVERGENCE",
+    "SUPPLY_ACCUMULATION_CHANGE", "CTO_OR_COMMUNITY_TAKEOVER", "SOCIAL_METADATA_CHANGE",
+    "LIQUIDITY_QUALITY_CHANGE", "WALLET_QUALITY_REVIEW_DUE",
 }
 ORIGINS = {"USER_SUPPLIED", "AUTONOMOUS_DISCOVERY", "HISTORICAL_REFERENCE", "EXTERNAL_RESEARCH_LEAD"}
 CHAIN_IDS = {"ethereum", "robinhood_chain", "solana", "evm_other", "other"}
@@ -29,6 +20,7 @@ FORBIDDEN_ACTION_KEYS = {"buy", "sell", "position_size", "portfolio_action", "ca
 PRIVATE_KEY_HINTS = {"wallet", "address", "contract", "mint", "token_id", "private_identifier", "provider_value", "raw_value"}
 HEX_ADDRESS = re.compile(r"^0x[a-fA-F0-9]{40}$")
 BASE58_LIKE = re.compile(r"^[1-9A-HJ-NP-Za-km-z]{32,64}$")
+HEX_HASH = re.compile(r"^[a-fA-F0-9]{64}$")
 
 
 def utc_now() -> str:
@@ -60,23 +52,13 @@ def validate_origin(origin: str) -> str:
 
 
 def classify_transfer(obs: dict[str, Any]) -> str:
-    """Classify deterministic wallet movement without model inference.
-
-    Missing evidence never becomes alpha. Incoming-only transfers are passive unless
-    transaction-level evidence proves wallet-initiated capital deployment.
-    """
     if obs.get("spam") or obs.get("dust") or obs.get("airdrop"):
         return "DUST_OR_SPAM"
     direction = obs.get("direction")
-    initiated = obs.get("wallet_initiated") is True
-    capital_committed = obs.get("capital_committed") is True
-    swap_proven = obs.get("swap_proven") is True
     if direction == "OUT" and obs.get("token_disposed") is True:
         return "SELL_OR_DISTRIBUTION"
-    if direction == "IN" and initiated and capital_committed and swap_proven:
+    if direction == "IN" and obs.get("wallet_initiated") is True and obs.get("capital_committed") is True and obs.get("swap_proven") is True:
         return "INTENTIONAL_BUY"
-    if direction == "IN":
-        return "PASSIVE_RECEIPT"
     return "PASSIVE_RECEIPT"
 
 
@@ -85,13 +67,8 @@ def make_event(*, chain_id: str, identity: str, wallet_ref: str, origin: str,
     event_class = classify_transfer(observation)
     event = {
         "schema": "MEMES_ALPHA_RESEARCH_EVENT_v1",
-        "event_id": stable_hash({
-            "chain_id": chain_id,
-            "identity": identity,
-            "wallet_ref": wallet_ref,
-            "observed_at": observed_at,
-            "event_class": event_class,
-        })[:24],
+        "event_id": stable_hash({"chain_id": chain_id, "identity": identity, "wallet_ref": wallet_ref,
+                                 "observed_at": observed_at, "event_class": event_class})[:24],
         "chain_id": chain_id,
         "asset_identity_hash": canonical_identity(chain_id, identity),
         "wallet_identity_hash": stable_hash(wallet_ref),
@@ -126,19 +103,12 @@ def convergence_events(events: Iterable[dict[str, Any]], qualified_wallet_hashes
         earliest[key] = min(earliest.get(key, event["observed_at"]), event["observed_at"])
     out = []
     for (chain_id, asset_hash), wallets in sorted(grouped.items()):
-        if len(wallets) < 2:
-            continue
-        out.append({
-            "schema": "MEMES_ALPHA_RESEARCH_EVENT_v1",
-            "event_id": stable_hash({"chain": chain_id, "asset": asset_hash, "kind": "convergence", "wallets": sorted(wallets)})[:24],
-            "chain_id": chain_id,
-            "asset_identity_hash": asset_hash,
-            "origin": "AUTONOMOUS_DISCOVERY",
-            "event_class": "MULTI_WALLET_CONVERGENCE",
-            "observed_at": earliest[(chain_id, asset_hash)],
-            "qualified_wallet_count": len(wallets),
-            "missingness": [],
-        })
+        if len(wallets) >= 2:
+            out.append({"schema": "MEMES_ALPHA_RESEARCH_EVENT_v1",
+                        "event_id": stable_hash({"chain": chain_id, "asset": asset_hash, "kind": "convergence", "wallets": sorted(wallets)})[:24],
+                        "chain_id": chain_id, "asset_identity_hash": asset_hash, "origin": "AUTONOMOUS_DISCOVERY",
+                        "event_class": "MULTI_WALLET_CONVERGENCE", "observed_at": earliest[(chain_id, asset_hash)],
+                        "qualified_wallet_count": len(wallets), "missingness": []})
     return out
 
 
@@ -152,18 +122,13 @@ def solana_risk_features(*, exact_mint_verified: bool, top10_concentration: floa
         distribution = "CLUSTER_RISK"
     elif top10_concentration is not None and linked_fresh_wallet_cluster is False:
         distribution = "CONCENTRATION_OBSERVED"
-    return {
-        "chain_id": "solana",
-        "identity_verified": True,
-        "distribution_state": distribution,
-        "creator_state": "VERIFIED" if creator_verified is True else "REBUTTED" if creator_verified is False else "UNKNOWN",
-        "paid_boost_state": "PAID" if paid_boost is True else "NOT_OBSERVED" if paid_boost is False else "UNKNOWN",
-        "paid_boost_counts_as_independent_alpha": False,
-    }
+    return {"chain_id": "solana", "identity_verified": True, "distribution_state": distribution,
+            "creator_state": "VERIFIED" if creator_verified is True else "REBUTTED" if creator_verified is False else "UNKNOWN",
+            "paid_boost_state": "PAID" if paid_boost is True else "NOT_OBSERVED" if paid_boost is False else "UNKNOWN",
+            "paid_boost_counts_as_independent_alpha": False}
 
 
 def cross_chain_snapshot(rows: Iterable[dict[str, Any]], horizons=("5m", "15m", "1h", "6h", "24h")) -> dict[str, Any]:
-    """Compare frozen narrative siblings without allowing later outcomes into discovery features."""
     result: dict[str, Any] = {"schema": "MEMES_ALPHA_CROSS_CHAIN_SNAPSHOT_v1", "horizons": list(horizons), "rows": []}
     for row in rows:
         if not row.get("identity_verified"):
@@ -171,13 +136,9 @@ def cross_chain_snapshot(rows: Iterable[dict[str, Any]], horizons=("5m", "15m", 
         frozen = row.get("frozen_discovery_features") or {}
         if any(k in frozen for k in ("future_return", "matured_outcome", "later_price")):
             raise ValueError("no-hindsight violation in frozen discovery features")
-        result["rows"].append({
-            "chain_id": row["chain_id"],
-            "asset_identity_hash": row["asset_identity_hash"],
-            "narrative_id": row.get("narrative_id", "UNKNOWN"),
-            "frozen_discovery_features": frozen,
-            "outcomes_by_horizon": {h: (row.get("outcomes_by_horizon") or {}).get(h, "PENDING") for h in horizons},
-        })
+        result["rows"].append({"chain_id": row["chain_id"], "asset_identity_hash": row["asset_identity_hash"],
+                               "narrative_id": row.get("narrative_id", "UNKNOWN"), "frozen_discovery_features": frozen,
+                               "outcomes_by_horizon": {h: (row.get("outcomes_by_horizon") or {}).get(h, "PENDING") for h in horizons}})
     return result
 
 
@@ -186,9 +147,7 @@ def choose_cadence(*, high_value_event: bool, qualified_case_count: int, source_
         return "COLD"
     if high_value_event:
         return "HOT"
-    if qualified_case_count > 0:
-        return "WATCH"
-    return "COLD"
+    return "WATCH" if qualified_case_count > 0 else "COLD"
 
 
 def cadence_due(last_full_refresh_utc: str | None, cadence: str, now_utc: datetime) -> bool:
@@ -217,12 +176,18 @@ def _looks_private_identifier(value: str) -> bool:
 
 
 def validate_public_payload(payload: Any, path: str = "$") -> None:
-    """Reject likely private identifiers or provider values from public artifacts."""
     if isinstance(payload, dict):
         for key, value in payload.items():
             lower = key.lower()
-            if any(hint in lower for hint in PRIVATE_KEY_HINTS) and not lower.endswith("_hash"):
+            if lower in FORBIDDEN_ACTION_KEYS:
+                raise ValueError(f"forbidden authority key in public payload: {path}.{key}")
+            is_hash_key = lower.endswith("_hash") or lower.endswith("_sha256") or lower in {"private_manifest_sha256", "private_seed_sha256"}
+            if any(hint in lower for hint in PRIVATE_KEY_HINTS) and not is_hash_key:
                 raise ValueError(f"private key not allowed in public payload: {path}.{key}")
+            if is_hash_key and isinstance(value, str):
+                if not HEX_HASH.match(value):
+                    raise ValueError(f"invalid hash field: {path}.{key}")
+                continue
             validate_public_payload(value, f"{path}.{key}")
     elif isinstance(payload, list):
         for i, value in enumerate(payload):
@@ -239,18 +204,11 @@ def build_public_manifest(*, private_manifest_hash: str, seed_hash: str, case_co
     for event_class in event_counts:
         if event_class not in EVENT_CLASSES:
             raise ValueError(f"invalid event class: {event_class}")
-    payload = {
-        "schema": "MEMES_ALPHA_PUBLIC_MANIFEST_v1",
-        "generated_at": generated_at or utc_now(),
-        "private_manifest_sha256": private_manifest_hash,
-        "private_seed_sha256": seed_hash,
-        "case_count": int(case_count),
-        "event_counts": {k: int(v) for k, v in sorted(event_counts.items())},
-        "chain_coverage": dict(sorted(chain_coverage.items())),
-        "health": health,
-        "reason_codes": sorted(set(reason_codes)),
-        "authority": "RESEARCH_ONLY_NO_TRADE_AUTHORITY",
-    }
+    payload = {"schema": "MEMES_ALPHA_PUBLIC_MANIFEST_v1", "generated_at": generated_at or utc_now(),
+               "private_manifest_sha256": private_manifest_hash, "private_seed_sha256": seed_hash,
+               "case_count": int(case_count), "event_counts": {k: int(v) for k, v in sorted(event_counts.items())},
+               "chain_coverage": dict(sorted(chain_coverage.items())), "health": health,
+               "reason_codes": sorted(set(reason_codes)), "authority": "RESEARCH_ONLY_NO_TRADE_AUTHORITY"}
     assert_no_trade_authority(payload)
     validate_public_payload(payload)
     return payload
