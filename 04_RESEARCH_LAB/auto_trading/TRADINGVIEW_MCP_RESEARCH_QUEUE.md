@@ -207,6 +207,26 @@ No trades, no sizing, no execution.
 
 ---
 
+## P2 — Orchestration / adapter separation test
+
+The social thread pairs TradingView MCP with Claude Code remote control and scheduled tasks for overnight monitoring. Treat these as separate capabilities.
+
+Future test must compare:
+
+A. Astra / Agents execution harness schedules and routes the job, calling TradingView MCP only when chart/Pine/UI access is required;
+B. a desktop scheduler owns the entire workflow.
+
+Required outcome:
+
+- orchestration, budgets, retries, authority and audit logging remain with the Astra/Agents owner;
+- TradingView MCP remains a bounded adapter;
+- adapter outage must degrade only the TradingView-specific step, not the whole research system;
+- no scheduler-created rule may bypass ResearchContract, F12 or execution authority boundaries.
+
+Prefer A unless B demonstrates a unique capability that cannot be reproduced safely.
+
+---
+
 ## P2 — Context-efficiency benchmark
 
 The source reports compact targeted outputs as a major advantage.

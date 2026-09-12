@@ -169,6 +169,24 @@ We do not inherit them.
 
 Likewise, "watch my watchlist overnight and send me top trade setups" is a workflow example, not a validated strategy or authority grant.
 
+## Social-thread follow-up: capability separation
+
+Additional screenshots from the same thread make the intended workflow clearer: after the MCP bridge is installed, Miles proposes using Claude Code remote control / scheduled tasks to monitor a watchlist overnight and return a daily report, alongside Pine creation, replay, alerts and chart analysis.
+
+This does **not** change the architectural classification of TradingView MCP. The scheduling/orchestration capability is separate from the chart adapter itself.
+
+For this framework the correct separation remains:
+
+`Astra / Agents execution harness owns orchestration + schedule`
+`-> TradingView MCP is called only when chart/Pine/UI capability is required`
+`-> frozen evidence artifacts return to the canonical Research Lab`
+
+Do not let a convenient desktop scheduler become the owner of strategy logic, risk policy, market truth or promotion decisions.
+
+The thread also markets "replay mode/backtesting in seconds" and live-market-data access. The open-source repository supports replay and chart data access, but neither claim is sufficient to promote TradingView replay to canonical backtesting or TradingView UI state to canonical data authority.
+
+The screenshot binaries themselves are not required as archive artifacts because the substantive thread claims are captured here and the upstream repository is the stronger, inspectable source.
+
 ## Fit with current architecture
 
 Best fit:
