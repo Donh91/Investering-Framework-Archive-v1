@@ -1,0 +1,202 @@
+{
+  "authority": "OBSERVABILITY_ONLY",
+  "authority_firewall": {
+    "market_weight_change": false,
+    "portfolio_action": false,
+    "rotation_authority": "SHADOW_ONLY",
+    "standalone_execution_authority": "ZERO"
+  },
+  "binding_status": "COMMIT_BYTES_VERIFIED",
+  "first_call_and_revision_channels": [
+    {
+      "chain": "2021_2022_CYCLE_TOP",
+      "latest_result": "NOT_SUPPORTED",
+      "original_result": "NOT_SUPPORTED",
+      "revision_cost": "Thesis persisted through large drawdown and multiple deadline/target changes.",
+      "revision_count": "4",
+      "revision_value": "NONE"
+    },
+    {
+      "chain": "2022_BOTTOM",
+      "latest_result": "SUPPORTED_POST_EVENT",
+      "original_result": "NOT_SUPPORTED",
+      "revision_cost": "Final range was issued after the cycle low; original bottom thesis failed and capital-risk window was large.",
+      "revision_count": "3",
+      "revision_value": "HIGH_BUT_LATE"
+    },
+    {
+      "chain": "2025_2026_BTC_PATH",
+      "latest_result": "SUPPORTED_PROVISIONAL_BOTTOM",
+      "original_result": "PARTIAL",
+      "revision_cost": "Initial relief target missed; destination and timing changed repeatedly over seven months.",
+      "revision_count": "5",
+      "revision_value": "HIGH"
+    },
+    {
+      "chain": "2025_2026_ETH_PATH",
+      "latest_result": "SUPPORTED_PROVISIONAL_BOTTOM",
+      "original_result": "PARTIAL",
+      "revision_cost": "Relief target missed; downside destination deepened and timing extended before final hit.",
+      "revision_count": "4",
+      "revision_value": "HIGH"
+    },
+    {
+      "chain": "APRIL_2026_BREAKDOWN_TIMING",
+      "latest_result": "SUPPORTED",
+      "original_result": "NOT_SUPPORTED",
+      "revision_cost": "Approximately four-week timing delay; acting on original timing would have endured an adverse rally.",
+      "revision_count": "2",
+      "revision_value": "HIGH"
+    }
+  ],
+  "historical_calibration": {
+    "anchor_outcome_status_counts": {
+      "NEAR_MISS_NOT_SUPPORTED_STRICT": 4,
+      "NOT_DUE": 3,
+      "NOT_SUPPORTED": 17,
+      "PARTIAL": 3,
+      "SOURCE_BLOCKED": 2,
+      "SUPPORTED": 17,
+      "SUPPORTED_DIRECTIONALLY": 1,
+      "SUPPORTED_POST_EVENT": 1,
+      "SUPPORTED_PROVISIONAL_BOTTOM": 2
+    },
+    "anchor_rows": 50,
+    "category_summary_as_published": [
+      {
+        "NOT_SUPPORTED": "0",
+        "PARTIAL_OR_NEAR_MISS": "0",
+        "SUPPORTED": "1",
+        "category": "BOTTOM_SIGNAL",
+        "eligible_n": "1"
+      },
+      {
+        "NOT_SUPPORTED": "0",
+        "PARTIAL_OR_NEAR_MISS": "0",
+        "SUPPORTED": "1",
+        "category": "EVENT_INTERPRETATION",
+        "eligible_n": "1"
+      },
+      {
+        "NOT_SUPPORTED": "0",
+        "PARTIAL_OR_NEAR_MISS": "0",
+        "SUPPORTED": "1",
+        "category": "INVALIDATION",
+        "eligible_n": "1"
+      },
+      {
+        "NOT_SUPPORTED": "6",
+        "PARTIAL_OR_NEAR_MISS": "0",
+        "SUPPORTED": "3",
+        "category": "PRICE_AND_TIME",
+        "eligible_n": "9"
+      },
+      {
+        "NOT_SUPPORTED": "0",
+        "PARTIAL_OR_NEAR_MISS": "0",
+        "SUPPORTED": "2",
+        "category": "PRICE_PATH",
+        "eligible_n": "2"
+      },
+      {
+        "NOT_SUPPORTED": "2",
+        "PARTIAL_OR_NEAR_MISS": "6",
+        "SUPPORTED": "3",
+        "category": "PRICE_RANGE",
+        "eligible_n": "11"
+      },
+      {
+        "NOT_SUPPORTED": "2",
+        "PARTIAL_OR_NEAR_MISS": "0",
+        "SUPPORTED": "0",
+        "category": "PRICE_TARGET",
+        "eligible_n": "2"
+      },
+      {
+        "NOT_SUPPORTED": "0",
+        "PARTIAL_OR_NEAR_MISS": "0",
+        "SUPPORTED": "1",
+        "category": "REVERSAL_GATE",
+        "eligible_n": "1"
+      },
+      {
+        "NOT_SUPPORTED": "4",
+        "PARTIAL_OR_NEAR_MISS": "1",
+        "SUPPORTED": "6",
+        "category": "ROADMAP",
+        "eligible_n": "11"
+      },
+      {
+        "NOT_SUPPORTED": "3",
+        "PARTIAL_OR_NEAR_MISS": "0",
+        "SUPPORTED": "2",
+        "category": "TIMING_WINDOW",
+        "eligible_n": "5"
+      }
+    ],
+    "category_verdicts_as_published": {
+      "CONDITIONAL_INVALIDATION_OR_RECLAIM_GATES": "OFTEN_MORE_USEFUL_THAN_NARRATIVE",
+      "FRAMEWORK_ACTION_IMPACT": "NOT_EVALUABLE",
+      "PRICE_RANGE_NEAR_TERM_REVISED": "MIXED_TO_USEFUL",
+      "PRICE_TARGET_LONG_RANGE": "NOT_SUPPORTED_IN_ANCHOR_COHORT",
+      "REVISION": "REAL_INFORMATION_WITH_MATERIAL_COST",
+      "ROADMAP": "RETAIN_CONTEXT; exact long-range paths weak",
+      "TIMING_WINDOW": "WEAK_AND_REVISION_DEPENDENT",
+      "TRADE": "SOURCE_OR_INSTRUMENT_DATA_BLOCKED_IN_THIS_PASS"
+    },
+    "corpus_counts_as_of": "2026-07-13",
+    "eligibility_counts": {
+      "DESCRIPTIVE_POST_EVENT": 1,
+      "ELIGIBLE": 44,
+      "NOT_DUE": 2,
+      "NOT_DUE_SOURCE_LIMITED": 1,
+      "SOURCE_BLOCKED": 2
+    },
+    "full_corpus_exhaustive_scoring_claimed": false,
+    "historical_rows_promoted_to_prospective_evidence": 0,
+    "outcome_eligible_anchors": 44,
+    "source_claim_rows": 257,
+    "source_documents": 213
+  },
+  "historical_ledger_counts_preserved": {
+    "scored_rows": 0,
+    "source_backed_claim_rows": 186,
+    "valid_outcome_rows": 0
+  },
+  "limitations": [
+    "Navigation and count reconciliation only; underlying historical outcomes were not independently rescored.",
+    "Corpus counts belong to the 2026-07-13 audit and are not a census of later prospective claims.",
+    "The 44 eligible anchors do not represent exhaustive scoring of all 257 source claims.",
+    "Later revision results never replace original claim results."
+  ],
+  "owners": {
+    "anchors": {
+      "bytes": 13578,
+      "path": "06_RESEARCH_LAB/audit_summaries/techdev_calibration_v1/TECHDEV_ANCHOR_CLAIM_OUTCOME_ROWS.csv",
+      "sha256": "fac3f214cf7f60c45a1c7ca7f004b0569173549271a060750d1d1770f098cff7"
+    },
+    "calibration": {
+      "bytes": 3600,
+      "path": "06_RESEARCH_LAB/forward_tests/2026-07-13__techdev-category-outcome-calibration-v1__canonical-addendum.md",
+      "sha256": "6490d469dd0a10f76340cf25b9b382817b284842c105657d3e952d7b23cc4798"
+    },
+    "categories": {
+      "bytes": 282,
+      "path": "06_RESEARCH_LAB/audit_summaries/techdev_calibration_v1/TECHDEV_CATEGORY_OUTCOME_SUMMARY.csv",
+      "sha256": "71f1ea633a5a8d511442427ead200f531aaabab3c400d7cac71035c8bf643710"
+    },
+    "historical_ledger": {
+      "bytes": 10080,
+      "path": "06_RESEARCH_LAB/forward_tests/2026-07-10__techdev-claim-ledger__operational.md",
+      "sha256": "e1e4df168319d99684661f74a11e07b483a9ff780294f560aca587c21c9d36e1"
+    },
+    "revisions": {
+      "bytes": 1201,
+      "path": "06_RESEARCH_LAB/audit_summaries/techdev_calibration_v1/TECHDEV_REVISION_VALUE_AND_COST.csv",
+      "sha256": "5453fb5e2b89053666ebb5a2638658c26c19c3493f5518303cb5bcc5162d74de"
+    }
+  },
+  "source_commit": "40d7c6c79a30bd6583fa2ed6fbd783ffecd4dd8f",
+  "status": "EXISTING_CALIBRATION_RECONCILED_READOUT_ONLY",
+  "test_id": "TECHDEV_CLAIM_LEDGER"
+}
