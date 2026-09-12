@@ -213,6 +213,20 @@ When you enter a folder with a `README.md` mission card:
 
 Use `ASTRA_REPOSITORY_MISSION_ROUTER_v1.json` as a machine-readable directory, but never as canonical market/governance authority.
 
+### Discoverable specialized research mission - autonomous trading architecture
+
+When autonomous trading, strategy-generation, validation, paper-trading or execution architecture is in scope, also read:
+
+```text
+ASTRA_AUTONOMOUS_TRADING_ARCHITECTURE_REVIEW_POINTER_v1.md
+../..//08_SOURCE_MATERIAL/external_methods/2026-09-12__gpt6-astra-autonomous-quant-fund-architecture__source-note.md
+../../08_SOURCE_MATERIAL/external_methods/2026-09-12__herman-fmz-strategy-corpus__source-note.md
+```
+
+The first path is a read-only research pointer. The two source notes are external research context, not alpha proof or portfolio authority.
+
+The mission is to decide independently what should be `ACCEPT`, `ADAPT`, `REJECT` or `DEFER` after mapping the source architecture against current owners. It must not assume that a six-agent hedge-fund clone is desirable, and a valid outcome may be `BUILD_NOTHING`.
+
 ## Mission selection objective
 
 Prefer work that is difficult for weaker models to execute end-to-end and that improves one or more of:
