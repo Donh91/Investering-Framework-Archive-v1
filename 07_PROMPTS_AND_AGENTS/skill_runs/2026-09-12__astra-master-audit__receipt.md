@@ -168,3 +168,15 @@ Existing temporal alignment task `a9f7ba653c7655a20c97` passed its current prefl
 ```json
 {"mission_complete":false,"local_runtime":"AVAILABLE","old_unpublished_workspace":"NOT_RECOVERED_FROM_EMPTY_SCRATCH","new_prepared_task":{"signature":"a9f7ba653c7655a20c97","pr":892,"head_sha":"ee49728121491a3864d4284d7be06529b6d303cd","state":"PR_OPEN_NOT_MERGED","local_tests":11},"high_impact_gate":"SEPARATION_OF_DESTRUCTIVE_AUTHORITY_UNVERIFIED","automatic_resume_scheduled":false}
 ```
+
+## Codex execution readback - 2026-09-12
+
+Fresh main observed at `b13411a117fb4ebde8a2f52e75ae2b4f37f692b5`. The current ready queue remains the 2026-09-12T17:49:07Z snapshot with 31 tasks; queue file SHA-256 `6cce0a3d15f34d3ebfaf228f20a060677a56af935062b7bdda6374e1bf654187`. PRs #818, #886, #888, #889, #890 and #892 were individually read back and remain open, unmerged, at the previously recorded heads.
+
+PR #892 now has seven successful PR-triggered workflow runs and one failed Automation Production Health run (34715028995). Local writer validation still reproduces PUSH_TRIGGERED_MAIN_WRITER in situation-room-shadow-bridge.yml. Eleven tests pass again on the final candidate. Final-byte CLI replay against the original baseline processes 848 hourly rows and preserves every pre-existing JSON field value except the intentionally recalculated context_hash. Source context bytes remain unchanged, SHA-256 `640558e06c69f370ffa8113bb187877af90294f8b9bdaded7fb933fa5b6dda00`; candidate script SHA-256 `18f4f40294dc33877cbf35cc060f1fc9e39b2916954817bf31694a56ca0d4a71`. The new readout reports AFTER_CUTOFF_TIMESTAMPS_PRESENT, not a freshness pass. This replay checks implementation preservation on retained inputs, not historical decision eligibility.
+
+The Codex connector explicitly reports exhausted code-review usage on #892 (comment 5648251301). No Codex CLI is installed in this execution environment. Local tests and deterministic replay above did run; no separate cloud Codex execution or independent review is claimed. No quota workaround, paid API call, merge, production activation or completion receipt was attempted.
+
+```json
+{"mission_complete":false,"review_dependency":{"state":"BLOCKED_BY_EXTERNAL_DEPENDENCY","reason":"CODEX_CODE_REVIEW_USAGE_LIMIT","resume_trigger":"Independent review becomes available within existing authorization and budget"},"workflow_repair_dependency":{"state":"BLOCKED_BY_REAL_AUTHORITY","reason":"SEPARATION_OF_DESTRUCTIVE_AUTHORITY_UNVERIFIED","resume_trigger":"Current source/recovery separation and required safepoint evidence pass existing high-impact policy"},"pr_892":{"state":"OPEN_NOT_MERGED","local_tests_passed":11,"pr_workflows_success":7,"pr_workflows_failure":1,"final_byte_replay":"PASS_EXISTING_FIELDS_PRESERVED"},"backlog_exhausted":false,"automatic_resume_scheduled":false}
+```
