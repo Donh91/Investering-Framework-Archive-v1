@@ -65,17 +65,28 @@
     for (const mutation of mutations) {
       for (const node of mutation.addedNodes) {
         if (!(node instanceof Element)) continue;
-        bindRevealTargets(node.matches?.('.section-block, .metric-card, .change-card, .content-card, .report-card, .method, .rotation-item, .timeline-row, .insight-list li, .check-list li, .quality-list li') ? node.parentElement || node : node);
+        const scope = node.matches?.('.section-block, .metric-card, .change-card, .content-card, .report-card, .method, .rotation-item, .timeline-row, .insight-list li, .check-list li, .quality-list li')
+          ? node.parentElement || node
+          : node;
+        bindRevealTargets(scope);
       }
     }
+    neutralizePublicSourceLabel();
   });
 
-  mutationObserver.observe(document.body, { childList: true, subtree: true });
+  mutationObserver.observe(document.body, { childList: true, subtree: true, characterData: true });
 
   let ticking = false;
 
   function clamp(value, min = 0, max = 1) {
     return Math.min(max, Math.max(min, value));
+  }
+
+  function neutralizePublicSourceLabel() {
+    const feedMode = document.getElementById('feedMode');
+    if (feedMode?.textContent.includes('GitHub')) {
+      feedMode.textContent = feedMode.textContent.replace('GitHub pointer/package', 'public pointer/package');
+    }
   }
 
   function updateScrollState() {
@@ -125,6 +136,7 @@
   window.addEventListener('scroll', queueScrollUpdate, { passive: true });
   window.addEventListener('resize', queueScrollUpdate, { passive: true });
   updateScrollState();
+  neutralizePublicSourceLabel();
 
   function bindSpotlight(scope = document) {
     if (!finePointer.matches || reduceMotion.matches) return;
@@ -141,7 +153,6 @@
   }
 
   bindSpotlight();
-  mutationObserver.observe(document.body, { childList: true, subtree: true });
 
   const spotlightObserver = new MutationObserver(() => bindSpotlight());
   spotlightObserver.observe(document.body, { childList: true, subtree: true });
