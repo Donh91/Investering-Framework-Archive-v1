@@ -118,14 +118,30 @@ def test_legacy_registry_migration_preserves_rows_and_collapses_families():
     assert len(etf["observations"]) == 2
 
 
-def test_mixed_family_closure_state_is_fail_closed_to_hardest_active_path():
+def test_mixed_family_closure_state_stays_fail_closed_but_preserves_capability_routes():
     mod = load("gap_registry_state", "scripts/api_agent/evidence_gap_registry.py")
     observations = [
-        {"closure_state": "BACKFILL_QUEUED"},
-        {"closure_state": "PROSPECTIVE_CAPTURE_REQUIRED"},
-        {"closure_state": "SOURCE_DISCOVERY_REQUIRED"},
+        {"capability_hint": "EXISTING_REPO_DERIVATION", "closure_state": "BACKFILL_QUEUED"},
+        {"capability_hint": "LIVE_BREADTH", "closure_state": "PROSPECTIVE_CAPTURE_REQUIRED"},
+        {"capability_hint": "UNKNOWN_SOURCE", "closure_state": "SOURCE_DISCOVERY_REQUIRED"},
     ]
     assert mod.aggregate_state(observations) == "SOURCE_DISCOVERY_REQUIRED"
+    assert mod.capability_routes(observations) == [
+        {"capability_hint": "EXISTING_REPO_DERIVATION", "closure_states": ["BACKFILL_QUEUED"]},
+        {"capability_hint": "LIVE_BREADTH", "closure_states": ["PROSPECTIVE_CAPTURE_REQUIRED"]},
+        {"capability_hint": "UNKNOWN_SOURCE", "closure_states": ["SOURCE_DISCOVERY_REQUIRED"]},
+    ]
+
+
+def test_genuinely_unknown_family_remains_source_discovery_only():
+    mod = load("gap_registry_unknown_route", "scripts/api_agent/evidence_gap_registry.py")
+    observations = [
+        {"capability_hint": "UNKNOWN_SOURCE", "closure_state": "SOURCE_DISCOVERY_REQUIRED"},
+    ]
+    assert mod.aggregate_state(observations) == "SOURCE_DISCOVERY_REQUIRED"
+    assert mod.capability_routes(observations) == [
+        {"capability_hint": "UNKNOWN_SOURCE", "closure_states": ["SOURCE_DISCOVERY_REQUIRED"]},
+    ]
 
 
 def test_backfillable_capability_routes_to_backfill():

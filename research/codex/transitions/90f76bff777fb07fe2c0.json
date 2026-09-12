@@ -1,0 +1,27 @@
+{
+  "allowed_change_scope": [
+    "scripts/api_agent/evidence_gap_registry.py",
+    "tests directly related to evidence-gap family consolidation"
+  ],
+  "branch": "agent/task-20260909-evidence-gap-mixed-routing",
+  "candidate_id": "codex-research-evidence-gap-mixed-capability-routing-v1",
+  "candidate_path": "research/codex/intake/2026/08/codex-research-evidence-gap-mixed-capability-routing-v1.json",
+  "candidate_sha256": "56b0af1780608a65c197b5a696e818d659079926de4193f0449a04a9cf51bc01",
+  "contract": "CODEX_RESEARCH_TRANSITION_RECEIPT_v1",
+  "forbidden_changes": [
+    "market gates",
+    "model weights",
+    "canonical authority",
+    "portfolio logic",
+    "API budget",
+    "new policy semantics"
+  ],
+  "objective": "Fix family consolidation so an observation already classified EXISTING_REPO_DERIVATION/BACKFILL_QUEUED is not represented as UNKNOWN_SOURCE/SOURCE_DISCOVERY_REQUIRED merely because another metric in the same family is unknown. Use only existing closure semantics.",
+  "post_fix_gate": "CI and mixed-capability positive and negative fixtures must pass, followed by registry readback preserving both existing route classes.",
+  "pr_number": 842,
+  "receipt_sha256": "4947e945804e7aeff9aa2e6a0f7f7237a98b24205a283ab6448b8fac3a329763",
+  "recorded_at_utc": "2026-09-09T05:08:30Z",
+  "signature": "90f76bff777fb07fe2c0",
+  "state": "IN_REMEDIATION",
+  "task_contract_sha256": "3b57e110be98eeb9783e30e3c07e6fc28d3a248fdb697683099941a3cafce669"
+}
