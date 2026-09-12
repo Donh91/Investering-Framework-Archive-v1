@@ -6,37 +6,17 @@ import json
 import os
 import re
 import subprocess
-import tempfile
 from pathlib import Path
 from typing import Any, Callable
 
-from scripts.remediation.write_codex_research_completion_receipt import (
-    build_completion_receipt,
-    canonical_hash,
-)
+from scripts.remediation.merge_codex_research_intake import valid_completion
+from scripts.remediation.write_codex_research_completion_receipt import canonical_hash
 
 SHA40 = re.compile(r"^[0-9a-f]{40}$")
 
 
 def read_json(path: Path) -> Any:
     return json.loads(path.read_text(encoding="utf-8"))
-
-
-def write_json_atomic(path: Path, value: Any) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    raw = json.dumps(value, indent=2, sort_keys=True) + "\n"
-    fd, tmp_name = tempfile.mkstemp(prefix=f".{path.name}.", dir=str(path.parent))
-    try:
-        with os.fdopen(fd, "w", encoding="utf-8") as f:
-            f.write(raw)
-            f.flush()
-            os.fsync(f.fileno())
-        os.replace(tmp_name, path)
-    finally:
-        try:
-            os.unlink(tmp_name)
-        except FileNotFoundError:
-            pass
 
 
 def valid_transition(task: dict[str, Any], transition: dict[str, Any]) -> bool:
@@ -137,7 +117,10 @@ def verify_merged_pr(
     return merged[0]
 
 
-def _existing_completion_valid(path: Path, expected: dict[str, Any]) -> bool:
+def _existing_completion_valid(
+    repo_root: Path, task: dict[str, Any], pr: dict[str, Any]
+) -> bool:
+    path = repo_root / "research/codex/completions" / f"{task['candidate_id']}.json"
     if not path.exists():
         return False
     current = read_json(path)
@@ -147,11 +130,16 @@ def _existing_completion_valid(path: Path, expected: dict[str, Any]) -> bool:
     actual = canonical_hash({k: v for k, v in current.items() if k != "receipt_sha256"})
     if not declared or declared != actual:
         raise RuntimeError("EXISTING_COMPLETION_HASH_INVALID")
-    immutable_fields = (
-        "contract", "status", "candidate_id", "signature", "candidate_sha256",
-        "task_contract_sha256", "pr_number", "merge_commit_sha", "post_fix_gate",
-    )
-    if any(current.get(k) != expected.get(k) for k in immutable_fields):
+    # The existing completion owner validates the receipt's task bindings,
+    # verification evidence, telemetry and self-hash. Merge metadata alone
+    # cannot replace that separately supplied post-fix verification.
+    if valid_completion(repo_root, task) is None:
+        raise RuntimeError("EXISTING_COMPLETION_INVALID")
+    if (
+        current.get("pr_number") != pr["number"]
+        or current.get("merge_commit_sha") != pr["merge_commit_sha"]
+        or current.get("post_fix_gate") != task.get("post_fix_gate")
+    ):
         raise RuntimeError("EXISTING_COMPLETION_CONTRADICTS_VERIFIED_MERGE")
     return True
 
@@ -204,20 +192,7 @@ def reconcile(
 
         pr_number = int(pr["number"])
         merge_sha = str(pr["merge_commit_sha"])
-        evidence = [
-            f"github_pr:{repo_name}#{pr_number}",
-            f"merge_commit:{merge_sha}",
-            f"transition_receipt:{transition_rel}",
-        ]
-        receipt = build_completion_receipt(
-            repo_root,
-            str(task["candidate_id"]),
-            merge_sha,
-            pr_number,
-            evidence,
-        )
-        out = repo_root / "research/codex/completions" / f"{task['candidate_id']}.json"
-        if _existing_completion_valid(out, receipt):
+        if _existing_completion_valid(repo_root, task, pr):
             reconciled.append({
                 "candidate_id": task.get("candidate_id"),
                 "pr_number": pr_number,
@@ -225,12 +200,15 @@ def reconcile(
                 "status": "ALREADY_PRESENT",
             })
             continue
-        write_json_atomic(out, receipt)
-        reconciled.append({
+        # No generic contract turns arbitrary task-specific post_fix_gate
+        # prose into machine-verifiable proof. Leave the lifecycle non-final
+        # until the existing completion owner supplies its verified receipt.
+        pending.append({
             "candidate_id": task.get("candidate_id"),
             "pr_number": pr_number,
             "merge_commit_sha": merge_sha,
-            "status": "MATERIALIZED",
+            "post_fix_gate": task.get("post_fix_gate"),
+            "reason": "MERGED_POST_FIX_VERIFICATION_REQUIRED",
         })
 
     return {
