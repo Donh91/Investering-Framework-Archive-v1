@@ -258,7 +258,7 @@ def fmt(value):
 
 def price_oi_state(price_return, oi_return):
     if price_return is None or oi_return is None:
-        return "UNAVAILABLE"
+        return None
     if price_return < 0 < oi_return:
         return "PRICE_DOWN_OI_UP"
     if price_return > 0 > oi_return:
@@ -268,6 +268,63 @@ def price_oi_state(price_return, oi_return):
     if price_return < 0 and oi_return < 0:
         return "PRICE_DOWN_OI_DOWN"
     return "MIXED_FLAT"
+
+
+def _present(value) -> bool:
+    return value not in (None, "", "UNAVAILABLE")
+
+
+def hourly_row_quality(row: dict[str, object]) -> str:
+    if str(row.get("spot_status")) != "PASS" or str(row.get("derivatives_status")) != "PASS":
+        return "DEGRADED"
+    for prefix in ("btc", "eth"):
+        if not _present(row.get(f"{prefix}_return_1h_pct")):
+            return "DEGRADED"
+        if not _present(row.get(f"{prefix}_oi_change_1h_pct")):
+            return "DEGRADED"
+        if not _present(row.get(f"{prefix}_price_oi_state")):
+            return "DEGRADED"
+    return "PASS"
+
+
+def _append_superseded_attempt(
+    root: Path,
+    interval_key: str,
+    existing: dict[str, object],
+    incoming: dict[str, object],
+    existing_quality: str,
+    incoming_quality: str,
+    reason: str,
+) -> None:
+    record = {
+        "contract": "HOURLY_SEQUENCE_SUPERSEDED_ATTEMPT_v1",
+        "interval_key": interval_key,
+        "existing_quality": existing_quality,
+        "incoming_quality": incoming_quality,
+        "existing_sha256": normalized_sha256(existing),
+        "incoming_sha256": normalized_sha256(incoming),
+        "existing_run_id": existing.get("run_id"),
+        "incoming_run_id": incoming.get("run_id"),
+        "reason": reason,
+    }
+    record["attempt_id"] = sha256_bytes(
+        json.dumps(record, sort_keys=True, separators=(",", ":")).encode()
+    )[:24]
+    audit = root / "_integrity" / "SUPERSEDED_ATTEMPTS.jsonl"
+    audit.parent.mkdir(parents=True, exist_ok=True)
+    seen: set[str] = set()
+    if audit.exists():
+        for line in audit.read_text(encoding="utf-8").splitlines():
+            try:
+                value = json.loads(line)
+                if value.get("attempt_id"):
+                    seen.add(str(value["attempt_id"]))
+            except json.JSONDecodeError:
+                continue
+    if record["attempt_id"] in seen:
+        return
+    with audit.open("a", encoding="utf-8") as handle:
+        handle.write(json.dumps(record, sort_keys=True, separators=(",", ":")) + "\n")
 
 
 def source_read(fixture_dir: Path | None, name: str, url: str):
@@ -296,10 +353,28 @@ def merge_rows(root: Path, rows: list[dict[str, object]]) -> list[str]:
                         old[row["timestamp_utc"]] = row
         for new in incoming:
             key = str(new["timestamp_utc"])
-            previous = old.get(key, {})
+            normalized = {field: fmt(new.get(field)) for field in FIELDS}
+            previous = old.get(key)
+            if previous is None:
+                old[key] = normalized
+                continue
+
+            previous_quality = hourly_row_quality(previous)
+            incoming_quality = hourly_row_quality(normalized)
+            if previous_quality == "PASS" and incoming_quality == "DEGRADED":
+                _append_superseded_attempt(
+                    root, key, previous, normalized, previous_quality, incoming_quality, "LOWER_QUALITY_RERUN_REJECTED"
+                )
+                continue
+            if previous_quality == incoming_quality:
+                _append_superseded_attempt(
+                    root, key, previous, normalized, previous_quality, incoming_quality, "EQUAL_QUALITY_EXISTING_ROW_WINS"
+                )
+                continue
+
             merged = {}
             for field in FIELDS:
-                new_value = fmt(new.get(field))
+                new_value = normalized[field]
                 merged[field] = new_value if new_value != "" else previous.get(field, "")
             old[key] = merged
         with path.open("w", newline="", encoding="utf-8") as handle:
@@ -440,12 +515,10 @@ def build_rows(start, end, spot_data, oi_data, ls_data, funding_data, spot_statu
                         "taker_buy_quote_volume", "taker_sell_quote_volume", "taker_buy_quote_share",
                     ):
                         row[f"{prefix}_{key}"] = candle[key]
-                row[f"{prefix}_return_1h_pct"] = pct_change(candle["close"], previous_close[symbol] or candle["open"])
+                row[f"{prefix}_return_1h_pct"] = pct_change(candle["close"], previous_close[symbol])
                 row[f"{prefix}_range_1h_pct"] = range_pct(candle["high"], candle["low"])
                 previous_close[symbol] = candle["close"]
             else:
-                # Preserve the existing open-to-close boundary convention, but
-                # never label a change from a non-adjacent close as one hour.
                 previous_close[symbol] = None
 
         for symbol, _, _ in DERIVATIVE_SYMBOLS:
