@@ -2,9 +2,13 @@ import csv
 import json
 import tempfile
 import unittest
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from scripts.daily_capture.hourly_sequence_consumer import read_latest_complete_spot_row
+from scripts.daily_capture.hourly_sequence_consumer import (
+    read_complete_spot_window,
+    read_latest_complete_spot_row,
+)
 
 
 FIELDS = ["timestamp_utc", "spot_status", "btc_close", "eth_close", "ethbtc_close"]
@@ -40,6 +44,16 @@ class HourlySequenceConsumerTests(unittest.TestCase):
             writer = csv.DictWriter(handle, fieldnames=FIELDS)
             writer.writeheader()
             writer.writerows(rows)
+
+    def write_complete_window(self, root: Path, end: str, hours: int = 26) -> None:
+        boundary = datetime.fromisoformat(end.replace("Z", "+00:00")).astimezone(timezone.utc)
+        by_day: dict[str, list[dict[str, str]]] = {}
+        for i in range(hours, 0, -1):
+            ts = boundary - timedelta(hours=i)
+            day = ts.strftime("%Y-%m-%d")
+            by_day.setdefault(day, []).append(self.row(ts.isoformat().replace("+00:00", "Z")))
+        for day, rows in by_day.items():
+            self.write_csv(root, day, rows)
 
     def row(self, ts: str, **overrides) -> dict[str, str]:
         value = {
@@ -142,6 +156,29 @@ class HourlySequenceConsumerTests(unittest.TestCase):
             self.write_csv(root, "2026-08-28", [self.row("2026-08-28T23:00:00Z", ethbtc_close="")])
             with self.assertRaisesRegex(RuntimeError, "missing direct spot close"):
                 read_latest_complete_spot_row(pointer, root)
+
+    def test_full_window_accepts_global_partial_when_spot_is_complete(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            end = "2026-08-29T05:00:00Z"
+            pointer = self.write_pointer(root, end=end, status="PARTIAL", requested_hours=26, spot_complete_hours=26)
+            self.write_complete_window(root, end, 26)
+            resolved, rows = read_complete_spot_window(pointer, root, minimum_rows=6)
+            self.assertEqual(resolved["status"], "PARTIAL")
+            self.assertEqual(len(rows), 26)
+            self.assertEqual(rows[-1][0].isoformat(), "2026-08-29T04:00:00+00:00")
+
+    def test_full_window_fails_closed_when_one_spot_candle_is_missing(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            end = "2026-08-29T05:00:00Z"
+            pointer = self.write_pointer(root, end=end, status="PARTIAL", requested_hours=26, spot_complete_hours=26)
+            self.write_complete_window(root, end, 26)
+            target = root / "2026/08/2026-08-29.csv"
+            rows = list(csv.DictReader(target.open(newline="", encoding="utf-8")))
+            self.write_csv(root, "2026-08-29", rows[1:])
+            with self.assertRaisesRegex(RuntimeError, "missing completed spot candles"):
+                read_complete_spot_window(pointer, root, minimum_rows=6)
 
 
 if __name__ == "__main__":
