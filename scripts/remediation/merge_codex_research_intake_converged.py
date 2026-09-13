@@ -6,8 +6,12 @@ import json
 from pathlib import Path
 from typing import Any
 
-from scripts.remediation import merge_codex_research_intake as base
-from scripts.remediation.mission_convergence import completion_requires_convergence, validate_receipt
+try:
+    from scripts.remediation import merge_codex_research_intake as base
+    from scripts.remediation.mission_convergence import completion_requires_convergence, validate_receipt
+except ModuleNotFoundError:  # direct execution via `python scripts/remediation/...`
+    import merge_codex_research_intake as base
+    from mission_convergence import completion_requires_convergence, validate_receipt
 
 
 def valid_completion(repo: Path, task: dict[str, Any]) -> dict[str, Any] | None:
