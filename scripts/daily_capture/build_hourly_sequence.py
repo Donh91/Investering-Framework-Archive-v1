@@ -258,7 +258,7 @@ def fmt(value):
 
 def price_oi_state(price_return, oi_return):
     if price_return is None or oi_return is None:
-        return "UNAVAILABLE"
+        return ""
     if price_return < 0 < oi_return:
         return "PRICE_DOWN_OI_UP"
     if price_return > 0 > oi_return:
@@ -280,6 +280,32 @@ def source_read(fixture_dir: Path | None, name: str, url: str):
         return "MISSING_FIXTURE", None, str(exc)
 
 
+def derived_quality(row):
+    """Categorical AT-EXP-004 gate, not a general data-quality score."""
+    if row.get("spot_status") != "PASS" or row.get("derivatives_status") != "PASS":
+        return "DEGRADED"
+    for prefix in ("btc", "eth"):
+        values = [_num(row.get(f"{prefix}_{field}")) for field in ("return_1h_pct", "oi_change_1h_pct")]
+        if any(value is None or not math.isfinite(value) for value in values):
+            return "DEGRADED"
+        if row.get(f"{prefix}_price_oi_state") != price_oi_state(*values):
+            return "DEGRADED"
+    return "PASS"
+
+
+def record_superseded(root, key, previous, incoming):
+    receipt = {
+        "contract": "HOURLY_SUPERSEDED_ATTEMPT_v1", "interval": key,
+        "existing_quality": derived_quality(previous), "incoming_quality": derived_quality(incoming),
+        "existing_sha256": normalized_sha256(previous), "incoming_sha256": normalized_sha256(incoming),
+        "reason": "LOWER_QUALITY" if derived_quality(previous) == "PASS" and derived_quality(incoming) != "PASS" else "EQUAL_QUALITY_EXISTING_WINS",
+    }
+    path = root / "superseded" / (normalized_sha256(receipt) + ".json")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    if not path.exists():
+        path.write_text(json.dumps(receipt, sort_keys=True, indent=2) + "\n")
+
+
 def merge_rows(root: Path, rows: list[dict[str, object]]) -> list[str]:
     touched = []
     grouped: dict[str, list[dict[str, object]]] = {}
@@ -297,11 +323,14 @@ def merge_rows(root: Path, rows: list[dict[str, object]]) -> list[str]:
         for new in incoming:
             key = str(new["timestamp_utc"])
             previous = old.get(key, {})
-            merged = {}
-            for field in FIELDS:
-                new_value = fmt(new.get(field))
-                merged[field] = new_value if new_value != "" else previous.get(field, "")
-            old[key] = merged
+            incoming_row = {field: fmt(new.get(field)) for field in FIELDS}
+            # No true detection time exists in this owner. Equal quality retains
+            # the stored row; source_window_end_utc is not a detection timestamp.
+            if previous and not (derived_quality(previous) == "DEGRADED" and derived_quality(incoming_row) == "PASS"):
+                if incoming_row != previous:
+                    record_superseded(root, key, previous, incoming_row)
+                continue
+            old[key] = incoming_row
         with path.open("w", newline="", encoding="utf-8") as handle:
             writer = csv.DictWriter(handle, fieldnames=FIELDS)
             writer.writeheader()
@@ -440,12 +469,11 @@ def build_rows(start, end, spot_data, oi_data, ls_data, funding_data, spot_statu
                         "taker_buy_quote_volume", "taker_sell_quote_volume", "taker_buy_quote_share",
                     ):
                         row[f"{prefix}_{key}"] = candle[key]
-                row[f"{prefix}_return_1h_pct"] = pct_change(candle["close"], previous_close[symbol] or candle["open"])
+                row[f"{prefix}_return_1h_pct"] = pct_change(candle["close"], previous_close[symbol])
                 row[f"{prefix}_range_1h_pct"] = range_pct(candle["high"], candle["low"])
                 previous_close[symbol] = candle["close"]
             else:
-                # Preserve the existing open-to-close boundary convention, but
-                # never label a change from a non-adjacent close as one hour.
+                # A missing adjacent close cannot define a closed one-hour return.
                 previous_close[symbol] = None
 
         for symbol, _, _ in DERIVATIVE_SYMBOLS:
@@ -530,7 +558,7 @@ def main() -> None:
         queries = {
             "oi": (
                 "/api/v5/rubik/stat/contracts/open-interest-history",
-                {"instId": instrument, "period": "1H", "begin": start_ms, "end": end_ms, "limit": 100},
+                {"instId": instrument, "period": "1H", "begin": start_ms - 3_600_000, "end": end_ms, "limit": 100},
             ),
             "long_short": (
                 "/api/v5/rubik/stat/contracts/long-short-account-ratio",
