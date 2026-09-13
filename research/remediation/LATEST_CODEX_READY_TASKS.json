@@ -1,7 +1,7 @@
 {
   "contract": "CODEX_READY_TASKS_v1",
   "contract_revision": "1.2",
-  "generated_at_utc": "2026-09-13T11:11:06Z",
+  "generated_at_utc": "2026-09-13T15:59:00Z",
   "queue_sources": [
     "AUTOMATION_HEALTH",
     "RESEARCH_INTAKE"
@@ -37,7 +37,7 @@
         "portfolio logic"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 5d77a6e68e092eed1ca3 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-09-13T11:11:06Z",
+      "last_observed_at_utc": "2026-09-13T15:59:00Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -111,7 +111,7 @@
         "private watchlist publication"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 61b8772f2bc07deba31b --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-09-13T11:11:06Z",
+      "last_observed_at_utc": "2026-09-13T15:59:00Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -183,7 +183,7 @@
         "rewrite of frozen base candidate"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 923de2eed113038e8a6c --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-09-13T11:11:06Z",
+      "last_observed_at_utc": "2026-09-13T15:59:00Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -247,7 +247,7 @@
         "rewriting historical research evidence"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 992f7f91fff033487385 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-09-13T11:11:06Z",
+      "last_observed_at_utc": "2026-09-13T15:59:00Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -311,7 +311,7 @@
         "retrospective row backfill"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature b14f0f264547ba5e6ed0 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-09-13T11:11:06Z",
+      "last_observed_at_utc": "2026-09-13T15:59:00Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -347,6 +347,80 @@
     },
     {
       "allowed_change_scope": [
+        "scripts/daily_capture/build_hourly_sequence.py",
+        "scripts/data_terminal/situation_room_daily_owner.py",
+        "scripts/lib/directly related sensor-integrity or hourly-state reconstruction helpers",
+        "tests/daily_capture/directly related producer-persistence seam and replay tests",
+        "tests/data_terminal/directly related Situation Room persistence tests",
+        "04_RESEARCH_LAB/auto_trading/experiments/AT-EXP-004/**",
+        "research/experiment_lifecycle/preregistrations/AT-EXP-004/**",
+        "04_RESEARCH_LAB/auto_trading/trials/AT_TRIAL_LEDGER_v2.json",
+        "03_DAILY_CAPTURE_LOGS/hourly/_reconstruction/HOURLY_STATE_RECONSTRUCTION_SIDECAR_v1.json",
+        "research/codex/completions/** directly related to this candidate",
+        "research/codex/transitions/** directly related to this candidate"
+      ],
+      "candidate_id": "codex-research-at-exp-004-bounded-remediation-closure-v1",
+      "candidate_path": "research/codex/intake/2026/09/codex-research-at-exp-004-bounded-remediation-closure-v1.json",
+      "candidate_sha256": "ed60308b52eae1756b02dd9d64f1276696d7ac420ca1786afc0fa718975e1438",
+      "clean_noop_condition": "The candidate is superseded, already fixed, duplicates a current health task, or fresh evidence no longer reproduces the bounded code defect.",
+      "escalation_condition": "Escalate to FRAMEWORK_OWNER if resolution requires market gates, model weights, canonical authority, portfolio logic, API budget or new policy semantics.",
+      "failure_streak": 0,
+      "finding": "AT_EXP_004_SHARED_INTERVAL_KEYED_DOWNGRADE_BOUNDED_CLOSURE",
+      "first_observed_at_utc": "2026-09-13T15:58:30Z",
+      "forbidden_changes": [
+        "API budget",
+        "alpha or execution authority",
+        "automatic merge or self-promotion",
+        "canonical authority",
+        "framework-wide persistence rewrite",
+        "historical evidence rewrite",
+        "market gates",
+        "model weights",
+        "new policy semantics",
+        "portfolio logic",
+        "raw OHLCV semantics",
+        "weekly owner persistence"
+      ],
+      "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature fcc1788f4f8ef1d1e330 --branch <TASK_BRANCH>",
+      "last_observed_at_utc": "2026-09-13T15:59:00Z",
+      "latest_run_id": null,
+      "latest_run_url": null,
+      "lifecycle_state": "ACTIVE",
+      "objective": "On fresh main, preserve and bind the AT-EXP-004 research evidence, then implement the smallest bounded remediation proven by the audit: first correct hourly producer degraded-value semantics, then prevent a lower-quality rerun from replacing a better record for the same interval in the hourly owner and Situation Room dated owner. Add producer-to-persistence-to-reread regression coverage and two-schedule replay equality. Preserve damaged history as immutable evidence, retain explicit downstream quarantine until merged-state readback passes, and do not resume AUTO_TRADING alpha research from this task.",
+      "observations": 1,
+      "post_fix_gate": "POSITIVE_AND_NEGATIVE_CROSS_SEAM_REGRESSIONS_PLUS_TWO_SCHEDULE_REPLAY_EQUALITY_PLUS_RELEVANT_CI_PLUS_MERGED_MAIN_READBACK_PLUS_CODEX_COMPLETION_RECEIPT",
+      "precondition": "Candidate codex-research-at-exp-004-bounded-remediation-closure-v1 still exists on main at research/codex/intake/2026/09/codex-research-at-exp-004-bounded-remediation-closure-v1.json with SHA-256 ed60308b52eae1756b02dd9d64f1276696d7ac420ca1786afc0fa718975e1438, status SUBMITTED and authority_boundary CODE_REMEDIATION_ONLY; no superseding fix or duplicate task has made it stale.",
+      "requested_priority": "EXPEDITED",
+      "required_evidence": [
+        "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/941",
+        "scripts/daily_capture/build_hourly_sequence.py",
+        "scripts/data_terminal/situation_room_daily_owner.py",
+        "scripts/pullback_learning/pullback_learning_ledger.py",
+        "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/885",
+        "research/remediation/LATEST_CODEX_READY_TASKS.json",
+        "reproduction",
+        "positive and negative acceptance tests"
+      ],
+      "risk_class": "B_CODEX_PR_RESEARCH",
+      "route": "CODEX_PR",
+      "signature": "fcc1788f4f8ef1d1e330",
+      "source_type": "RESEARCH_INTAKE",
+      "state": "CODEX_READY",
+      "stop_condition": "Stop without code changes if candidate hash/status/authority changed, reproduction fails, or the required fix exceeds allowed_change_scope.",
+      "submitted_at_utc": "2026-09-13T15:58:30Z",
+      "success_evidence": [
+        "candidate-linked reproduction",
+        "positive and negative acceptance tests",
+        "POSITIVE_AND_NEGATIVE_CROSS_SEAM_REGRESSIONS_PLUS_TWO_SCHEDULE_REPLAY_EQUALITY_PLUS_RELEVANT_CI_PLUS_MERGED_MAIN_READBACK_PLUS_CODEX_COMPLETION_RECEIPT"
+      ],
+      "success_streak": 0,
+      "task_contract_sha256": "e1cdd04fb325691d2d5978065ccc53e2e6a821db136b670e710cceb53295d01b",
+      "transition_receipt_path": "research/codex/transitions/fcc1788f4f8ef1d1e330.json",
+      "transition_receipt_required": true,
+      "workflow": "research-intake/codex-research-at-exp-004-bounded-remediation-closure-v1"
+    },
+    {
+      "allowed_change_scope": [
         ".github/workflows/pullback-learning-ledger.yml",
         "directly related scripts and tests"
       ],
@@ -362,12 +436,12 @@
         "portfolio logic"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_transition_receipt.py --signature 1111dea2a3edf4a3d517 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-09-13T11:10:57Z",
+      "last_observed_at_utc": "2026-09-13T15:58:54Z",
       "latest_run_id": 34743659853,
       "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/34743659853",
       "lifecycle_state": "ACTIVE",
       "objective": "Resolve LATEST_RUN_FAILED for pullback-learning-ledger.yml with the smallest bounded code change that satisfies the existing acceptance gates.",
-      "observations": 20,
+      "observations": 21,
       "post_fix_gate": "3_SUCCESSFUL_EXPECTED_RUNS",
       "precondition": "Fresh Automation Production Health still contains signature 1111dea2a3edf4a3d517 for pullback-learning-ledger.yml/LATEST_RUN_FAILED, and verified lifecycle state does not make the finding non-actionable.",
       "required_evidence": [
@@ -411,12 +485,12 @@
         "portfolio logic"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_transition_receipt.py --signature 3d7823bafe07a0c7bbff --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-09-13T11:10:57Z",
+      "last_observed_at_utc": "2026-09-13T15:58:54Z",
       "latest_run_id": 34743659853,
       "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/34743659853",
       "lifecycle_state": "ACTIVE",
       "objective": "Resolve REPEATED_CONSECUTIVE_FAILURES for pullback-learning-ledger.yml with the smallest bounded code change that satisfies the existing acceptance gates.",
-      "observations": 16,
+      "observations": 17,
       "post_fix_gate": "3_SUCCESSFUL_EXPECTED_RUNS",
       "precondition": "Fresh Automation Production Health still contains signature 3d7823bafe07a0c7bbff for pullback-learning-ledger.yml/REPEATED_CONSECUTIVE_FAILURES, and verified lifecycle state does not make the finding non-actionable.",
       "required_evidence": [
@@ -470,7 +544,7 @@
         "portfolio logic"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 49ecf37e76b7834b97a5 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-09-13T11:11:06Z",
+      "last_observed_at_utc": "2026-09-13T15:59:00Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -531,7 +605,7 @@
         "qualitative-label portfolio authority"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 4bc9351c84bc70cb0583 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-09-13T11:11:06Z",
+      "last_observed_at_utc": "2026-09-13T15:59:00Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -581,12 +655,12 @@
         "portfolio logic"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_transition_receipt.py --signature 5928685943974993d02b --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-09-13T11:10:57Z",
+      "last_observed_at_utc": "2026-09-13T15:58:54Z",
       "latest_run_id": 34727428938,
       "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/34727428938",
       "lifecycle_state": "ACTIVE",
       "objective": "Resolve LATEST_RUN_FAILED for adaptive-decision-miss-validation.yml with the smallest bounded code change that satisfies the existing acceptance gates.",
-      "observations": 13,
+      "observations": 14,
       "post_fix_gate": "3_SUCCESSFUL_EXPECTED_RUNS",
       "precondition": "Fresh Automation Production Health still contains signature 5928685943974993d02b for adaptive-decision-miss-validation.yml/LATEST_RUN_FAILED, and verified lifecycle state does not make the finding non-actionable.",
       "required_evidence": [
@@ -630,12 +704,12 @@
         "portfolio logic"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_transition_receipt.py --signature 67ed21de4e9d66074112 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-09-13T11:10:57Z",
+      "last_observed_at_utc": "2026-09-13T15:58:54Z",
       "latest_run_id": 34690424638,
       "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/34690424638",
       "lifecycle_state": "ACTIVE",
       "objective": "Resolve LATEST_RUN_FAILED for situation-room-shadow-bridge.yml with the smallest bounded code change that satisfies the existing acceptance gates.",
-      "observations": 16,
+      "observations": 17,
       "post_fix_gate": "3_SUCCESSFUL_EXPECTED_RUNS",
       "precondition": "Fresh Automation Production Health still contains signature 67ed21de4e9d66074112 for situation-room-shadow-bridge.yml/LATEST_RUN_FAILED, and verified lifecycle state does not make the finding non-actionable.",
       "required_evidence": [
@@ -679,12 +753,12 @@
         "portfolio logic"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_transition_receipt.py --signature 717933f22c5750a5e7b8 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-09-13T11:10:57Z",
+      "last_observed_at_utc": "2026-09-13T15:58:54Z",
       "latest_run_id": 34727428938,
       "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/34727428938",
       "lifecycle_state": "ACTIVE",
       "objective": "Resolve REPEATED_CONSECUTIVE_FAILURES for adaptive-decision-miss-validation.yml with the smallest bounded code change that satisfies the existing acceptance gates.",
-      "observations": 10,
+      "observations": 11,
       "post_fix_gate": "3_SUCCESSFUL_EXPECTED_RUNS",
       "precondition": "Fresh Automation Production Health still contains signature 717933f22c5750a5e7b8 for adaptive-decision-miss-validation.yml/REPEATED_CONSECUTIVE_FAILURES, and verified lifecycle state does not make the finding non-actionable.",
       "required_evidence": [
@@ -728,12 +802,12 @@
         "portfolio logic"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_transition_receipt.py --signature 76435f4c5454520f559e --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-09-13T11:10:57Z",
+      "last_observed_at_utc": "2026-09-13T15:58:54Z",
       "latest_run_id": 34743656828,
       "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/34743656828",
       "lifecycle_state": "ACTIVE",
       "objective": "Resolve LATEST_RUN_FAILED for entry-signal-ledger.yml with the smallest bounded code change that satisfies the existing acceptance gates.",
-      "observations": 20,
+      "observations": 21,
       "post_fix_gate": "3_SUCCESSFUL_EXPECTED_RUNS",
       "precondition": "Fresh Automation Production Health still contains signature 76435f4c5454520f559e for entry-signal-ledger.yml/LATEST_RUN_FAILED, and verified lifecycle state does not make the finding non-actionable.",
       "required_evidence": [
@@ -788,7 +862,7 @@
         "skill authoring or automatic registry mutation"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 7aca41ad40562550eec9 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-09-13T11:11:06Z",
+      "last_observed_at_utc": "2026-09-13T15:59:00Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -842,12 +916,12 @@
         "portfolio logic"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_transition_receipt.py --signature 89ff174e1412a9f7b8e1 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-09-13T11:10:57Z",
+      "last_observed_at_utc": "2026-09-13T15:58:54Z",
       "latest_run_id": 34690424638,
       "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/34690424638",
       "lifecycle_state": "ACTIVE",
       "objective": "Resolve REPEATED_CONSECUTIVE_FAILURES for situation-room-shadow-bridge.yml with the smallest bounded code change that satisfies the existing acceptance gates.",
-      "observations": 11,
+      "observations": 12,
       "post_fix_gate": "3_SUCCESSFUL_EXPECTED_RUNS",
       "precondition": "Fresh Automation Production Health still contains signature 89ff174e1412a9f7b8e1 for situation-room-shadow-bridge.yml/REPEATED_CONSECUTIVE_FAILURES, and verified lifecycle state does not make the finding non-actionable.",
       "required_evidence": [
@@ -891,12 +965,12 @@
         "portfolio logic"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_transition_receipt.py --signature 8b0a12468a79b71f13db --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-09-13T11:10:57Z",
+      "last_observed_at_utc": "2026-09-13T15:58:54Z",
       "latest_run_id": 34743656828,
       "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/34743656828",
       "lifecycle_state": "ACTIVE",
       "objective": "Resolve REPEATED_CONSECUTIVE_FAILURES for entry-signal-ledger.yml with the smallest bounded code change that satisfies the existing acceptance gates.",
-      "observations": 16,
+      "observations": 17,
       "post_fix_gate": "3_SUCCESSFUL_EXPECTED_RUNS",
       "precondition": "Fresh Automation Production Health still contains signature 8b0a12468a79b71f13db for entry-signal-ledger.yml/REPEATED_CONSECUTIVE_FAILURES, and verified lifecycle state does not make the finding non-actionable.",
       "required_evidence": [
@@ -950,7 +1024,7 @@
         "retroactive scoring"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature ad9eb8075d7529802226 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-09-13T11:11:06Z",
+      "last_observed_at_utc": "2026-09-13T15:59:00Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -1011,7 +1085,7 @@
         "portfolio logic"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature c767d605f29f7bd2722b --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-09-13T11:11:06Z",
+      "last_observed_at_utc": "2026-09-13T15:59:00Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -1071,7 +1145,7 @@
         "retrospective timing reconstruction"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature c9adb00c6dc0d7daec45 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-09-13T11:11:06Z",
+      "last_observed_at_utc": "2026-09-13T15:59:00Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -1131,7 +1205,7 @@
         "portfolio logic"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature d5f9cc11d5d7d05418b9 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-09-13T11:11:06Z",
+      "last_observed_at_utc": "2026-09-13T15:59:00Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -1194,7 +1268,7 @@
         "portfolio logic"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature e42a4face457d80066d7 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-09-13T11:11:06Z",
+      "last_observed_at_utc": "2026-09-13T15:59:00Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -1255,7 +1329,7 @@
         "portfolio logic"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature f7ca0bb8cce97bea8619 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-09-13T11:11:06Z",
+      "last_observed_at_utc": "2026-09-13T15:59:00Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
