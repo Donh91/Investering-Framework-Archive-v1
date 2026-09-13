@@ -70,7 +70,7 @@ class MissionConvergenceTests(unittest.TestCase):
             "gaps": gaps or [],
         }
 
-    def write_completion(self, root, task, *, verified_at="2026-09-13T15:40:00Z"):
+    def write_completion(self, root, task, *, verified_at="2026-09-13T16:10:00Z"):
         receipt = {
             "contract": "CODEX_RESEARCH_COMPLETION_RECEIPT_v1",
             "status": "VERIFIED",
@@ -102,7 +102,7 @@ class MissionConvergenceTests(unittest.TestCase):
             "d" * 40,
             404,
             assessment_path,
-            assessed_at_utc="2026-09-13T15:39:00Z",
+            assessed_at_utc="2026-09-13T16:09:00Z",
         )
         self.assertEqual(receipt["status"], convergence.STATUS_CONVERGED)
         self.assertEqual(receipt["gaps"], [])
@@ -145,7 +145,7 @@ class MissionConvergenceTests(unittest.TestCase):
 
     def test_post_activation_completion_cannot_resolve_without_convergence(self):
         root = self.make_root()
-        candidate, task = self.prepare_task(root)
+        _candidate, task = self.prepare_task(root)
         completion = self.write_completion(root, task)
         self.assertIsNotNone(base.valid_completion(root, task))
         self.assertTrue(convergence.completion_requires_convergence(completion))
@@ -177,10 +177,33 @@ class MissionConvergenceTests(unittest.TestCase):
         convergence_path.write_text(json.dumps(mutated), encoding="utf-8")
         self.assertIsNone(gated.valid_completion(root, task))
 
+    def test_candidate_mutation_after_task_binding_fails_closed(self):
+        root = self.make_root()
+        candidate, task = self.prepare_task(root)
+        candidate["objective"] = "mutated objective after task binding"
+        candidate_path = root / task["candidate_path"]
+        candidate_path.write_text(json.dumps(candidate, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        assessment_path = root / "assessment.json"
+        assessment_path.write_text(json.dumps(self.assessment_for(task, candidate)), encoding="utf-8")
+        with self.assertRaisesRegex(ValueError, "CANDIDATE_HASH_MISMATCH"):
+            convergence.build_receipt(root, task["candidate_id"], "d" * 40, 404, assessment_path)
+
+    def test_convergence_cannot_be_built_before_post_fix_observation(self):
+        root = self.make_root()
+        candidate, task = self.prepare_task(root, state="IN_REMEDIATION")
+        assessment_path = root / "assessment.json"
+        assessment_path.write_text(json.dumps(self.assessment_for(task, candidate)), encoding="utf-8")
+        with self.assertRaisesRegex(ValueError, "TASK_NOT_IN_POST_FIX_OBSERVATION"):
+            convergence.build_receipt(root, candidate["candidate_id"], "d" * 40, 404, assessment_path)
+
+    def test_missing_verification_timestamp_requires_convergence(self):
+        completion = {"contract": "CODEX_RESEARCH_COMPLETION_RECEIPT_v1"}
+        self.assertTrue(convergence.completion_requires_convergence(completion))
+
     def test_legacy_completion_before_activation_is_grandfathered(self):
         root = self.make_root()
         _candidate, task = self.prepare_task(root)
-        completion = self.write_completion(root, task, verified_at="2026-09-13T15:29:59Z")
+        completion = self.write_completion(root, task, verified_at="2026-09-13T15:59:59Z")
         self.assertFalse(convergence.completion_requires_convergence(completion))
         self.assertIsNotNone(gated.valid_completion(root, task))
 
