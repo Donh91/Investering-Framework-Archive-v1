@@ -152,6 +152,69 @@ class CodexResearchMergeReconciliationTests(unittest.TestCase):
             self.assertEqual(selected[0]["post_fix_gate_status"], "REQUIRED_NOT_YET_VERIFIED")
             self.assertNotEqual(selected[0]["state"], "RESOLVED")
 
+    def test_poison_item_does_not_starve_healthy_item(self):
+        from unittest.mock import patch
+
+        for failure in ("invalid_pr", "malformed_transition", "conflicting_receipt", "api_error"):
+            with self.subTest(failure=failure), tempfile.TemporaryDirectory() as td:
+                root = Path(td)
+                bad_candidate = dict(self.candidate(), candidate_id="bad-item")
+                with patch.object(self, "candidate", return_value=bad_candidate):
+                    bad_task, bad_transition = self.write_fixture(root)
+                good_task, _ = self.write_fixture(root)
+                bad_path = root / bad_task["transition_receipt_path"]
+                if failure == "invalid_pr":
+                    bad_transition["pr_number"] = True
+                    bad_transition["receipt_sha256"] = owner.canonical_hash({
+                        k: v for k, v in bad_transition.items() if k != "receipt_sha256"
+                    })
+                    bad_path.write_text(json.dumps(bad_transition))
+                elif failure == "malformed_transition":
+                    bad_path.write_text('["not a receipt"]')
+                else:
+                    bad_transition["pr_number"] = 124
+                    bad_transition["receipt_sha256"] = owner.canonical_hash({
+                        k: v for k, v in bad_transition.items() if k != "receipt_sha256"
+                    })
+                    bad_path.write_text(json.dumps(bad_transition))
+                frozen_path = root / "research/codex/merges/bad-item.json"
+                if failure == "conflicting_receipt":
+                    frozen_path.parent.mkdir(parents=True, exist_ok=True)
+                    frozen_path.write_text('{"immutable": "do not replace"}\n')
+                before = frozen_path.read_bytes() if frozen_path.exists() else None
+                (root / "LATEST_CODEX_EXECUTION_STATE.json").write_text(json.dumps({
+                    "tasks": [dict(bad_task, state="IN_REMEDIATION"),
+                              dict(good_task, state="IN_REMEDIATION")]
+                }))
+
+                def fetch(_repo, number):
+                    if failure == "api_error" and number == 124:
+                        raise RuntimeError("GITHUB_API_UNAVAILABLE:PRIVATE_RESPONSE_CANARY")
+                    return {"number": number, "merged_at": "2026-09-13T09:10:00Z",
+                            "merge_commit_sha": "b" * 40,
+                            "head": {"ref": "agent/test-merge-reconciliation",
+                                     "repo": {"full_name": "Donh91/Investering-Framework-Archive-v1"}}}
+
+                result = reconcile.reconcile(root, "Donh91/Investering-Framework-Archive-v1",
+                                             fetch_one=fetch, verified_at="2026-09-13T09:11:00Z")
+                self.assertEqual([r["candidate_id"] for r in result["reconciled"]],
+                                 [good_task["candidate_id"]])
+                self.assertEqual(len(result["pending"]), 1)
+                self.assertEqual(result["pending"][0]["candidate_id"], "bad-item")
+                self.assertNotIn("PRIVATE_RESPONSE_CANARY", json.dumps(result))
+                self.assertEqual(result["completion_receipts_created"], 0)
+                self.assertFalse(result["resolution_authorized"])
+                if before is not None:
+                    self.assertEqual(frozen_path.read_bytes(), before)
+                else:
+                    self.assertFalse(frozen_path.exists())
+                good_path = root / "research/codex/merges/test-merge-reconciliation.json"
+                good_bytes = good_path.read_bytes()
+                replay = reconcile.reconcile(root, "Donh91/Investering-Framework-Archive-v1",
+                                             fetch_one=fetch, verified_at="2026-09-13T10:11:00Z")
+                self.assertEqual(replay["reconciled"][0]["status"], "ALREADY_PRESENT")
+                self.assertEqual(good_path.read_bytes(), good_bytes)
+
     def test_workflow_reconciles_between_two_owner_materializations(self):
         text = WORKFLOW_PATH.read_text()
         first = text.find("python scripts/remediation/merge_codex_research_intake.py")

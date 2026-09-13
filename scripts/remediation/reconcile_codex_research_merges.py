@@ -162,40 +162,47 @@ def reconcile(
         if task.get("source_type") != "RESEARCH_INTAKE" or task.get("state") not in {"IN_REMEDIATION", "POST_FIX_OBSERVATION"}:
             skipped += 1
             continue
-        transition = valid_transition(repo_root, task)
-        if transition is None:
-            pending.append({"candidate_id": task.get("candidate_id"), "reason": "VALID_TRANSITION_REQUIRED"})
-            continue
+        # A corrupt item must remain blocked without starving unrelated work.
+        # Never replace an existing receipt to make reconciliation succeed.
         try:
+            transition = valid_transition(repo_root, task)
+            if transition is None:
+                pending.append({"candidate_id": task.get("candidate_id"), "reason": "VALID_TRANSITION_REQUIRED"})
+                continue
             pr = verify_merged_pr(repo_name, transition, fetch_one=fetch_one, fetch_many=fetch_many)
-        except RuntimeError as exc:
-            pending.append({"candidate_id": task.get("candidate_id"), "reason": str(exc)})
-            continue
-        if pr is None:
-            pending.append({"candidate_id": task.get("candidate_id"), "reason": "BOUND_PR_NOT_VERIFIED_MERGED"})
-            continue
+            if pr is None:
+                pending.append({"candidate_id": task.get("candidate_id"), "reason": "BOUND_PR_NOT_VERIFIED_MERGED"})
+                continue
 
-        receipt = build_merge_receipt(task, transition, pr, verified_at=verified_at)
-        out = repo_root / "research/codex/merges" / f"{task['candidate_id']}.json"
-        if out.exists():
-            validate_existing_merge_receipt(out, receipt)
-            status = "ALREADY_PRESENT"
-            current = read_json(out, {})
-            receipt_sha = current.get("receipt_sha256")
-        else:
-            out.parent.mkdir(parents=True, exist_ok=True)
-            out.write_text(json.dumps(receipt, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-            status = "CREATED"
-            receipt_sha = receipt["receipt_sha256"]
-        reconciled.append({
-            "candidate_id": task.get("candidate_id"),
-            "pr_number": pr.get("number"),
-            "merge_commit_sha": pr.get("merge_commit_sha"),
-            "merge_receipt_path": out.relative_to(repo_root).as_posix(),
-            "merge_receipt_sha256": receipt_sha,
-            "status": status,
-            "next_state": "POST_FIX_OBSERVATION",
-        })
+            receipt = build_merge_receipt(task, transition, pr, verified_at=verified_at)
+            out = repo_root / "research/codex/merges" / f"{task['candidate_id']}.json"
+            if out.exists():
+                validate_existing_merge_receipt(out, receipt)
+                status = "ALREADY_PRESENT"
+                current = read_json(out, {})
+                receipt_sha = current.get("receipt_sha256")
+            else:
+                out.parent.mkdir(parents=True, exist_ok=True)
+                out.write_text(json.dumps(receipt, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+                status = "CREATED"
+                receipt_sha = receipt["receipt_sha256"]
+            reconciled.append({
+                "candidate_id": task.get("candidate_id"),
+                "pr_number": pr.get("number"),
+                "merge_commit_sha": pr.get("merge_commit_sha"),
+                "merge_receipt_path": out.relative_to(repo_root).as_posix(),
+                "merge_receipt_sha256": receipt_sha,
+                "status": status,
+                "next_state": "POST_FIX_OBSERVATION",
+            })
+        except (ValueError, RuntimeError, KeyError, TypeError, AttributeError, OSError) as exc:
+            # Keep public diagnostics bounded; API errors can contain credentials
+            # or response bodies. Known validation codes are sufficient to route.
+            code = str(exc).split(":", 1)[0]
+            if not re.fullmatch(r"[A-Z][A-Z0-9_]*", code):
+                code = "TASK_RECONCILIATION_INVALID"
+            pending.append({"candidate_id": task.get("candidate_id"), "reason": code})
+            continue
 
     return {
         "contract": "CODEX_RESEARCH_MERGE_RECONCILIATION_v2",
