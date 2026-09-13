@@ -1,3 +1,4 @@
+import hashlib
 import importlib.util
 import json
 import tempfile
@@ -120,6 +121,7 @@ class FactorTestN5IndependentTests(unittest.TestCase):
         self.assertFalse(blocked["trial_accounting"]["outcome_inspected"])
         self.assertEqual(prereg["proposal_trial_n"], 5)
         self.assertEqual(prereg["status"], "PREREGISTERED_BEFORE_OUTCOME_REPLAY")
+        self.assertEqual(hashlib.sha256(SCRIPT.read_bytes()).hexdigest(), prereg["method"]["code_sha256_before_outcome_replay"])
         self.assertFalse(admission["authority"]["portfolio_execution"])
 
     def test_n5_repository_replay_is_deterministic_and_research_only(self):
