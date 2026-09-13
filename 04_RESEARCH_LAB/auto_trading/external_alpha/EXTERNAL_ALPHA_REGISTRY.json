@@ -1,0 +1,197 @@
+{
+  "contract": "EXTERNAL_ALPHA_REGISTRY_V1",
+  "status": "RESEARCH_ONLY",
+  "owner_issue": 937,
+  "scientific_lifecycle_issue": 885,
+  "scoring_version": "EXTERNAL_ALPHA_ADMISSION_V1",
+  "updated_at_utc": "2026-09-13T14:09:34Z",
+  "meta_learning_gate": {
+    "min_candidates_at_source_alpha_stage": 5,
+    "min_settled_source_alpha_rulings": 3,
+    "min_settled_copyability_rulings": 2
+  },
+  "candidates": [
+    {
+      "candidate_id": "EXT-ALPHA-0001",
+      "name": "EdgeOnchain / Oddy",
+      "case_type": "PREDICTION_MARKET_AI",
+      "case_owner_issue": 922,
+      "current_stage": "VERIFY_IDENTITY",
+      "admission": {
+        "expected_score": 53,
+        "expected_decision": "RESEARCH_QUEUE"
+      },
+      "evidence": {
+        "identity_status": "UNRESOLVED",
+        "track_record_status": "RECONSTRUCTABLE_PRIMARY",
+        "loser_coverage": "UNKNOWN",
+        "timestamp_quality": "RECONSTRUCTABLE",
+        "ledger_coverage": "UNKNOWN",
+        "opportunity_set_status": "RECONSTRUCTABLE",
+        "execution_data_status": "RECONSTRUCTABLE",
+        "version_boundaries": "PARTIAL",
+        "falsifier_defined": true,
+        "transfer_value": "HIGH",
+        "marketing_only": false,
+        "selective_winners_only": false
+      },
+      "rulings": {
+        "source_alpha": "PENDING",
+        "observability": "PENDING",
+        "copyability": "PENDING",
+        "scalability": "PENDING"
+      },
+      "candidate_primitives": [
+        "selection_policy",
+        "sizing_policy",
+        "timing_policy",
+        "prediction_calibration",
+        "maker_taker_execution",
+        "latency_decay"
+      ],
+      "next_falsifiable_action": "Resolve and cross-verify canonical Polymarket proxy wallet, then freeze the complete public activity/trade/closed-position ledger.",
+      "references": [
+        "../EDGEONCHAIN_FORENSIC_RESEARCH_QUEUE.md",
+        "../EDGEONCHAIN_E0_E1_EXECUTION_SPEC_v1.md",
+        "../EXTERNAL_STRATEGY_REVERSE_ENGINEERING_PROTOCOL_v1.md"
+      ]
+    },
+    {
+      "candidate_id": "EXT-ALPHA-0002",
+      "name": "MAEVE / CFGI",
+      "case_type": "CRYPTO_AI_TRADER",
+      "case_owner_issue": null,
+      "current_stage": "RECONSTRUCT_OPPORTUNITY_SET",
+      "admission": {
+        "expected_score": 76,
+        "expected_decision": "REVERSE_ENGINEER"
+      },
+      "evidence": {
+        "identity_status": "VERIFIED",
+        "track_record_status": "RECONSTRUCTABLE_PRIMARY",
+        "loser_coverage": "FULL",
+        "timestamp_quality": "POINT_IN_TIME",
+        "ledger_coverage": "NEAR_COMPLETE",
+        "opportunity_set_status": "PARTIAL",
+        "execution_data_status": "PARTIAL",
+        "version_boundaries": "PARTIAL",
+        "falsifier_defined": true,
+        "transfer_value": "HIGH",
+        "marketing_only": false,
+        "selective_winners_only": false
+      },
+      "rulings": {
+        "source_alpha": "PENDING",
+        "observability": "PARTIAL",
+        "copyability": "PENDING",
+        "scalability": "PENDING"
+      },
+      "candidate_primitives": [
+        "entry_gate",
+        "no_trade_gate",
+        "dynamic_feature_selection",
+        "rolling_range_normalization",
+        "multi_timeframe_context",
+        "dca_logic",
+        "exit_logic",
+        "time_loss",
+        "position_sizing"
+      ],
+      "next_falsifiable_action": "Build leakage-clean matched no-trade controls and join recovered actions to time-valid CFGI/market state before fitting the first interpretable behavioral clone.",
+      "references": [
+        "../maeve/README.md",
+        "../maeve/CFGI_MAEVE_DATA_INVENTORY_V1.json",
+        "../ASTRA_HANDOVER.md",
+        "../THEORY_LEDGER.md"
+      ]
+    },
+    {
+      "candidate_id": "EXT-ALPHA-0003",
+      "name": "FOMO Robinhood Radar",
+      "case_type": "WALLET_INTELLIGENCE",
+      "case_owner_issue": 908,
+      "current_stage": "VERIFY_TRACK_RECORD",
+      "admission": {
+        "expected_score": 61,
+        "expected_decision": "RESEARCH_QUEUE"
+      },
+      "evidence": {
+        "identity_status": "PARTIAL",
+        "track_record_status": "OPEN_SOURCE_REPLAY",
+        "loser_coverage": "PARTIAL",
+        "timestamp_quality": "POINT_IN_TIME",
+        "ledger_coverage": "PARTIAL",
+        "opportunity_set_status": "PARTIAL",
+        "execution_data_status": "RECONSTRUCTABLE",
+        "version_boundaries": "PARTIAL",
+        "falsifier_defined": true,
+        "transfer_value": "HIGH",
+        "marketing_only": false,
+        "selective_winners_only": false
+      },
+      "rulings": {
+        "source_alpha": "PENDING",
+        "observability": "PARTIAL",
+        "copyability": "PENDING",
+        "scalability": "PENDING"
+      },
+      "candidate_primitives": [
+        "wallet_identity_resolution",
+        "fill_provenance",
+        "anti_seeding",
+        "dust_filtering",
+        "wallet_book_reconstruction",
+        "cohort_calibration"
+      ],
+      "next_falsifiable_action": "Run an immutable common-clock E1 against simple age/liquidity/volume baselines and preserve post-score outcomes only.",
+      "references": [
+        "../FOMO_RADAR_RESEARCH_QUEUE.md",
+        "../source_notes/AT-SRC-0012_FOMO_RADAR_WALLET_INTELLIGENCE.md",
+        "https://github.com/cvxv666/fomo-robinhood-radar"
+      ]
+    },
+    {
+      "candidate_id": "EXT-ALPHA-0004",
+      "name": "STAMPEDE",
+      "case_type": "WALLET_ROTATION",
+      "case_owner_issue": 908,
+      "current_stage": "VERIFY_TRACK_RECORD",
+      "admission": {
+        "expected_score": 68,
+        "expected_decision": "RESEARCH_QUEUE"
+      },
+      "evidence": {
+        "identity_status": "VERIFIED",
+        "track_record_status": "OPEN_SOURCE_REPLAY",
+        "loser_coverage": "PARTIAL",
+        "timestamp_quality": "POINT_IN_TIME",
+        "ledger_coverage": "PARTIAL",
+        "opportunity_set_status": "PARTIAL",
+        "execution_data_status": "RECONSTRUCTABLE",
+        "version_boundaries": "KNOWN",
+        "falsifier_defined": true,
+        "transfer_value": "HIGH",
+        "marketing_only": false,
+        "selective_winners_only": false
+      },
+      "rulings": {
+        "source_alpha": "PENDING",
+        "observability": "PARTIAL",
+        "copyability": "PENDING",
+        "scalability": "PENDING"
+      },
+      "candidate_primitives": [
+        "same_wallet_sell_buy_rotation",
+        "distinct_wallet_breadth",
+        "rotation_acceleration",
+        "sequence_provenance",
+        "outcome_journaling"
+      ],
+      "next_falsifiable_action": "Replay wallet-rotation alerts under the same clock/cost model as FOMO Radar and test incremental value versus volume, momentum and distinct-wallet-count baselines.",
+      "references": [
+        "https://github.com/Argona7/stampede",
+        "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/908"
+      ]
+    }
+  ]
+}
