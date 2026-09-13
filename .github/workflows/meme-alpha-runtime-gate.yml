@@ -38,6 +38,9 @@ jobs:
           assert p['cadence']['empty_queue_behavior']=='NOOP_NO_MODEL_CALL'
           assert p['budget']['single_task_hard_cap_usd'] <= 0.75
           assert p['budget']['monthly_shared_api_hard_stop_usd'] <= 20.0
+          assert 0 < p['budget']['max_web_search_calls_per_task'] <= 2
+          assert p['budget']['web_search_tool_call_cost_usd_snapshot'] >= 0.01
+          assert p['failure_policy']['infrastructure_failures_do_not_consume_task_attempts'] is True
           assert p['adaptive_development']['may_modify_production_code_directly'] is False
           assert p['adaptive_development']['may_auto_merge'] is False
           assert p['adaptive_development']['codex_is_required_for_research'] is False
@@ -70,6 +73,9 @@ jobs:
           receipt=json.loads(Path('runtime-smoke/out/receipt.json').read_text())
           assert plan['no_op'] is False
           assert receipt['estimated_model_cost_usd']==0.0
+          assert receipt['estimated_web_tool_cost_usd']==0.0
+          assert receipt['estimated_total_cost_usd']==0.0
+          assert receipt['web_search_call_count']==0
           assert receipt['authority']['portfolio_action'] is False
           print('MEME_ALPHA_DRY_RUN_PASS')
           PY
