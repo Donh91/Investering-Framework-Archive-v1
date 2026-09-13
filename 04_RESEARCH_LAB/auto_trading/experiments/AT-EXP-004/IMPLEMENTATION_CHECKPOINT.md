@@ -11,7 +11,7 @@ Removed the current-open fallback from closed one-hour returns. Missing state in
 
 ## Evidence and limits
 
-The four new synthetic composition tests fail on the original base (five subtest failures, zero errors) and pass on the candidate. The focused producer/persistence, hourly measurement, pipeline, Situation Room owner and static adapter suite passes 50 tests. Replay compares all common market fields for every-bar vs every-sixth-bar schedules; only source_window_end_utc is excluded, as declared in the test docstring before execution. Source raw field computation is unchanged. The directional summary now truthfully reports 25 eligible returns from a 26-candle fixture lacking a preceding close.
+The four new synthetic composition tests fail on the original base (five subtest failures, zero errors) and pass on the candidate. The focused producer/persistence, hourly measurement, pipeline, Situation Room owner and static adapter suite passes 51 tests. Replay compares all common market fields for every-bar vs every-sixth-bar schedules; only source_window_end_utc is excluded, as declared in the test docstring before execution. Source raw field computation is unchanged. The directional summary now truthfully reports 25 eligible returns from a 26-candle fixture lacking a preceding close.
 
 A broader daily_capture discovery ran 114 tests with one unrelated CFGI workflow-string expectation failure and one missing-pytest import error. Those paths were not changed. Do not report all repository tests green.
 
@@ -29,3 +29,7 @@ python -B -m unittest tests.daily_capture.test_at004_persistence tests.daily_cap
 ## Low-cost takeover
 
 Work quota telemetry is unavailable. No paid API call was made. Existing API_TASK_REGISTRY_v1 admits research/review output only, while CAPABILITY_ROUTING_POLICY_v1 routes code writes to CODEX_ONLY. A Sol API reviewer can inspect this bounded package through an admitted research task, but is not currently a verified autonomous code/merge executor. API execution was not queued or claimed. The durable Codex transition and PR remain the executable handoff; do not change budget or authority to manufacture fallback capability.
+
+## CI-discovered composition correction
+
+The first candidate failed Situation Room live CI with KeyError retrieval: owner.run wrote a preliminary record before the static adapter applied final failure semantics and metadata, then the new equal-time guard rejected the final write. owner.run now returns an unpersisted candidate; the existing static adapter performs its one final write, and the direct CLI explicitly writes its result. Repository caller search found the static adapter as the sole production caller of owner.run. An additional real-adapter/mocked-fetch regression verifies exactly one write, persisted retrieval metadata, and preservation of final DEGRADED status. This correction stays in the allowed owner file and adds no workflow or adapter changes.

@@ -394,7 +394,8 @@ def run(output_root: Path, date_utc: str, timeout: int = 15) -> dict:
         "portfolio_effect": False,
         "situation_room_role": "DISCOVERY_ONLY",
     }
-    write_outputs(output_root, result)
+    # Return the candidate before persistence: the static adapter applies its
+    # final fail-closed checks and retrieval provenance before its single write.
     return result
 
 
@@ -484,6 +485,7 @@ def main() -> None:
     parser.add_argument("--timeout", type=int, default=15)
     args = parser.parse_args()
     result = run(args.output_root, args.date_utc, timeout=args.timeout)
+    write_outputs(args.output_root, result)
     print(json.dumps({"run_id": result["run_id"], "daily_result": result["daily_result"], "run_status": result["run_status"]}, sort_keys=True))
     if result["daily_result"] == "COLLECTOR_FAILURE":
         raise SystemExit(2)

@@ -91,3 +91,20 @@ class PersistenceTests(unittest.TestCase):
                 for stamp in ('garbage','2026-09-01T16:00:00','2026-09-01T11:00:00Z'):
                     sr.write_outputs(root,dict(good,detection_time_utc=stamp))
                     self.assertEqual(json.loads(dated.read_text()),later)
+
+    def test_static_adapter_persists_only_final_candidate(self):
+        from unittest.mock import patch
+        from scripts.data_terminal import situation_room_static_daily_adapter as adapter
+        def fetch(url, timeout=15):
+            status = 'FAIL' if 'situationroom.space' in url else 'PASS'
+            return sr.FetchResult(url, status, 200 if status == 'PASS' else 503,
+                                  '2026-09-01T12:00:00Z', b'<html></html>', None)
+        with tempfile.TemporaryDirectory() as td, patch.object(sr, 'fetch', fetch):
+            root = Path(td)
+            with patch.object(sr, 'write_outputs', wraps=sr.write_outputs) as writer:
+                result = adapter.run(root, '2026-09-01')
+                self.assertEqual(writer.call_count, 1)
+            saved = json.loads((root/'2026/09/2026-09-01.json').read_text())
+            self.assertEqual(saved, result)
+            self.assertEqual(saved['run_status'], 'DEGRADED')
+            self.assertEqual(saved['retrieval']['strategy'], 'DETERMINISTIC_STATIC_DAILY_BRIEFING')
