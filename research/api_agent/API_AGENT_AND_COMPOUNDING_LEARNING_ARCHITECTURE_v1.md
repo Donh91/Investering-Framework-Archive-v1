@@ -68,13 +68,16 @@ The OpenAI API may analyze, summarize, classify conflicts and propose hypotheses
 
 All API calls pass through API Gateway v1 and produce an immutable receipt containing task, model, reasoning effort, prompt version, input hashes, output hash, token usage and estimated cost.
 
-## Initial task classes
+## Current task classes
 
-- DAILY_DIRECTOR_SHADOW: Luna, low reasoning.
+- DAILY_DIRECTOR_SHADOW: Luna, medium reasoning.
 - DAILY_CONFLICT_REVIEW: Terra, medium reasoning.
 - WEEKLY_CALIBRATION_SHADOW: Terra, medium reasoning.
-- MASTER_MONDAY_PREP_SHADOW: Sol, high reasoning.
+- WEEKLY_ADVERSARIAL_REVIEW: Sol, high reasoning.
+- MASTER_MONDAY_PREP_SHADOW: Sol, high reasoning, manual only.
 - DEEP_RESEARCH_MANUAL: Sol, high reasoning, manual only.
+
+Runtime task settings are owned by `research/api_agent/API_TASK_REGISTRY_v1.json`. Model routing and current routing-cost estimates are owned by `research/api_agent/CAPABILITY_ROUTING_POLICY_v1.json`. Budget authority remains `research/api_agent/API_INTELLIGENCE_POLICY_v2.json`.
 
 ## Promotion ladder
 
