@@ -1,0 +1,42 @@
+{
+  "allowed_change_scope": [
+    "scripts/daily_capture/build_hourly_sequence.py",
+    "scripts/data_terminal/situation_room_daily_owner.py",
+    "scripts/lib/directly related sensor-integrity or hourly-state reconstruction helpers",
+    "tests/daily_capture/directly related producer-persistence seam and replay tests",
+    "tests/data_terminal/directly related Situation Room persistence tests",
+    "04_RESEARCH_LAB/auto_trading/experiments/AT-EXP-004/**",
+    "research/experiment_lifecycle/preregistrations/AT-EXP-004/**",
+    "04_RESEARCH_LAB/auto_trading/trials/AT_TRIAL_LEDGER_v2.json",
+    "03_DAILY_CAPTURE_LOGS/hourly/_reconstruction/HOURLY_STATE_RECONSTRUCTION_SIDECAR_v1.json",
+    "research/codex/completions/** directly related to this candidate",
+    "research/codex/transitions/** directly related to this candidate"
+  ],
+  "branch": "agent/task-20260913-at-exp-004-bounded-remediation",
+  "candidate_id": "codex-research-at-exp-004-bounded-remediation-closure-v1",
+  "candidate_path": "research/codex/intake/2026/09/codex-research-at-exp-004-bounded-remediation-closure-v1.json",
+  "candidate_sha256": "ed60308b52eae1756b02dd9d64f1276696d7ac420ca1786afc0fa718975e1438",
+  "contract": "CODEX_RESEARCH_TRANSITION_RECEIPT_v1",
+  "forbidden_changes": [
+    "API budget",
+    "alpha or execution authority",
+    "automatic merge or self-promotion",
+    "canonical authority",
+    "framework-wide persistence rewrite",
+    "historical evidence rewrite",
+    "market gates",
+    "model weights",
+    "new policy semantics",
+    "portfolio logic",
+    "raw OHLCV semantics",
+    "weekly owner persistence"
+  ],
+  "objective": "On fresh main, preserve and bind the AT-EXP-004 research evidence, then implement the smallest bounded remediation proven by the audit: first correct hourly producer degraded-value semantics, then prevent a lower-quality rerun from replacing a better record for the same interval in the hourly owner and Situation Room dated owner. Add producer-to-persistence-to-reread regression coverage and two-schedule replay equality. Preserve damaged history as immutable evidence, retain explicit downstream quarantine until merged-state readback passes, and do not resume AUTO_TRADING alpha research from this task.",
+  "post_fix_gate": "POSITIVE_AND_NEGATIVE_CROSS_SEAM_REGRESSIONS_PLUS_TWO_SCHEDULE_REPLAY_EQUALITY_PLUS_RELEVANT_CI_PLUS_MERGED_MAIN_READBACK_PLUS_CODEX_COMPLETION_RECEIPT",
+  "pr_number": null,
+  "receipt_sha256": "b3aca6f2564f32d01e6fda05d85e8d280eaac8580bc53213ed3bdb8e507f29af",
+  "recorded_at_utc": "2026-09-13T18:39:26Z",
+  "signature": "fcc1788f4f8ef1d1e330",
+  "state": "IN_REMEDIATION",
+  "task_contract_sha256": "e1cdd04fb325691d2d5978065ccc53e2e6a821db136b670e710cceb53295d01b"
+}
