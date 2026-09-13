@@ -5,7 +5,14 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from scripts.api_agent.meme_alpha_runtime import analyze, build_plan, load_object, validate_output
+from scripts.api_agent.meme_alpha_runtime import (
+    analyze,
+    build_plan,
+    build_request,
+    count_web_search_calls,
+    load_object,
+    validate_output,
+)
 
 
 POLICY = {
@@ -16,7 +23,11 @@ POLICY = {
         "terminal_states": ["COMPLETE", "KILLED", "SUPERSEDED"],
     },
     "model_policy": {"default_model": "gpt-5.6-luna", "default_reasoning_effort": "medium"},
-    "budget": {"single_task_hard_cap_usd": 0.75},
+    "budget": {
+        "single_task_hard_cap_usd": 0.75,
+        "max_web_search_calls_per_task": 2,
+        "web_search_tool_call_cost_usd_snapshot": 0.01,
+    },
     "authority": {
         "portfolio_action": False,
         "automatic_trading": False,
@@ -69,6 +80,15 @@ class MemeAlphaRuntimeTests(unittest.TestCase):
             plan = build_plan(root, POLICY, {"processed_inputs": {}})
             self.assertTrue(plan["no_op"])
 
+    def test_web_request_has_bounded_tool_calls(self) -> None:
+        payload = build_request("gpt-5.6-luna", "medium", "MAL-test", {"status": "QUEUED"}, enable_web=True, max_web_search_calls=2)
+        self.assertEqual(payload["max_tool_calls"], 2)
+        self.assertEqual(payload["tools"][0]["type"], "web_search_preview")
+
+    def test_web_call_counter(self) -> None:
+        response = {"output": [{"type": "web_search_call"}, {"type": "message"}, {"type": "web_search_call"}]}
+        self.assertEqual(count_web_search_calls(response), 2)
+
     def test_dry_run_writes_bounded_receipt_without_api_key(self) -> None:
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
@@ -78,6 +98,10 @@ class MemeAlphaRuntimeTests(unittest.TestCase):
             receipt = analyze(task, load_object(policy_path), out, dry_run=True, enable_web=True, model=None)
             self.assertEqual(receipt["response_id"], "dry-run")
             self.assertEqual(receipt["estimated_model_cost_usd"], 0.0)
+            self.assertEqual(receipt["estimated_web_tool_cost_usd"], 0.0)
+            self.assertEqual(receipt["estimated_total_cost_usd"], 0.0)
+            self.assertEqual(receipt["web_search_call_count"], 0)
+            self.assertTrue(receipt["hosted_tool_cost_in_estimate"])
             self.assertFalse(receipt["authority"]["portfolio_action"])
             self.assertTrue((out / "output.json").exists())
             self.assertTrue((out / "receipt.json").exists())
