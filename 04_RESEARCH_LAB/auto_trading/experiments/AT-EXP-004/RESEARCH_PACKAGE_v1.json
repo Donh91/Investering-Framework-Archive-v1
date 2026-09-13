@@ -1,0 +1,87 @@
+{
+  "contract": "AT_EXP_004_RESEARCH_PACKAGE_v1",
+  "experiment_id": "AT-EXP-004",
+  "status": "BOUNDED_REMEDIATION_IN_PROGRESS",
+  "authority": {
+    "research_only": true,
+    "alpha_reopen_authorized": false,
+    "market_rule_change": false,
+    "model_weight_change": false,
+    "portfolio_action": false,
+    "retroactive_rescore": false
+  },
+  "source_binding": {
+    "repository": "Donh91/Investering-Framework-Archive-v1",
+    "implementation_base_commit": "12cd171bf47cfdc506ae549189e07e2f05ac2d80",
+    "closure_issue": 941,
+    "research_parent_issue": 885,
+    "codex_candidate_id": "codex-research-at-exp-004-bounded-remediation-closure-v1",
+    "codex_candidate_sha256": "ed60308b52eae1756b02dd9d64f1276696d7ac420ca1786afc0fa718975e1438",
+    "task_signature": "fcc1788f4f8ef1d1e330",
+    "task_contract_sha256": "e1cdd04fb325691d2d5978065ccc53e2e6a821db136b670e710cceb53295d01b"
+  },
+  "positive_control": {
+    "detector_suite": "SUITE_VALID",
+    "planted_defects_caught": "10/10",
+    "detector_suite_pin": "429bc3cb6459f0f7b0ac545b0eb8ae8397f37444fc6b43a1c3f9a70a3bc43b93",
+    "hourly_primary_metrics": {
+      "D_RT": "PASS",
+      "D_PI": "FAIL",
+      "D_DC": "FAIL",
+      "D_MS": "FAIL"
+    },
+    "controlled_schedule_dependence": {
+      "affected": 225,
+      "total": 290,
+      "rate_pct": 77.6
+    }
+  },
+  "realised_hourly_defect": {
+    "rows_audited": 867,
+    "destroyed_price_oi_state_observations_per_asset": 157,
+    "destroyed_lane_rate_pct": 18.1,
+    "recoverable_from_same_row_persisted_inputs_pct": 99.4,
+    "raw_ohlcv_independent_crosscheck": {
+      "venue": "BINANCE_PUBLIC",
+      "rows": 867,
+      "open_close_matches": "867/867",
+      "max_absolute_difference": 0
+    },
+    "root_cause_class": "DERIVED_PERSISTENCE_SEMANTICS_NOT_RAW_CAPTURE"
+  },
+  "bounded_shared_failure_mode": {
+    "mechanism": "A later rerun for the same market/observation interval can replace a better stored record with lower-quality recomputed evidence when persistence does not compare categorical evidence quality.",
+    "repair_owners": [
+      "scripts/daily_capture/build_hourly_sequence.py::merge_rows",
+      "scripts/data_terminal/situation_room_daily_owner.py::write_outputs"
+    ],
+    "excluded_from_repair": [
+      "weekly owner persistence",
+      "entry_signal generic writer",
+      "generic intraday writer"
+    ]
+  },
+  "preserved_falsifications": [
+    "Weekly owner production downgrade reachability was falsified in the audited production invocation probe.",
+    "Capture index is not an instance because its identity includes capture time and run id.",
+    "Frozen D_PI semantics are not retroactively repaired or rescored.",
+    "The audit does not justify a framework-wide persistence rewrite or scalar data-quality score."
+  ],
+  "forward_repair_contract": {
+    "quality_order": ["DEGRADED", "PASS"],
+    "hourly_equal_quality_tie": "EXISTING_STORED_ROW_WINS",
+    "situation_room_equal_quality_tie": "LATER_VALID_DETECTION_TIME_MAY_WIN",
+    "missing_previous_close": "RETURN_EMPTY_NON_AUTHORITATIVE",
+    "missing_price_or_oi_return": "PRICE_OI_STATE_EMPTY_NON_AUTHORITATIVE",
+    "historical_archive_rewrite": false,
+    "superseded_attempt_audit_required": true
+  },
+  "downstream_quarantine": {
+    "intraday_execution_research_core": "QUARANTINED_PENDING_FINAL_MERGED_READBACK",
+    "situation_room_dated_lane_and_shadow_bridge": "QUARANTINED_PENDING_FIXED_WRITER_VERIFICATION",
+    "pullback_learning_ledger": "PRESERVE_UNAFFECTED_IF_CLOSE_ONLY_READBACK_CONFIRMS",
+    "raw_hourly_ohlcv_volume_taker_oi_levels": "USABLE_ABSENT_NEW_CONTRARY_EVIDENCE"
+  },
+  "closure_gate": "CODE_AND_CROSS_SEAM_TESTS_AND_TWO_SCHEDULE_REPLAY_AND_MERGED_MAIN_READBACK_AND_COMPLETION_RECEIPT_REQUIRED",
+  "alpha_reopen_rule": "SEPARATE_GOVERNED_DECISION_ONLY_AFTER_FINAL_CLOSURE"
+}
