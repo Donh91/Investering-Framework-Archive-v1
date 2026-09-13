@@ -140,7 +140,9 @@
         </div>
       </div>`;
 
-    hero.parentNode.insertBefore(section, hero.nextSibling);
+    const pulseSection = document.getElementById('pulse-heading')?.closest('section');
+    const anchor = pulseSection || hero;
+    anchor.parentNode.insertBefore(section, anchor.nextSibling);
     section.querySelectorAll('[data-cal-tab]').forEach((button) => {
       button.addEventListener('click', () => {
         const target = button.dataset.calTab;
