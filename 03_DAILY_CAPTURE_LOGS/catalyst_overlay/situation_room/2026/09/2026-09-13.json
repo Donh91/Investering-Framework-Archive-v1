@@ -2,18 +2,46 @@
   "authority": "RESEARCH_ONLY_NON_CANONICAL",
   "canonical_effect": false,
   "contract": "SITUATION_ROOM_DAILY_OWNER_v1",
-  "current_unverified_discoveries": [],
-  "daily_result": "NO_NEW_MATERIAL_CATALYST",
-  "detection_time_utc": "2026-09-13T09:28:00Z",
+  "current_unverified_discoveries": [
+    {
+      "detection_time_utc": "2026-09-13T11:53:19Z",
+      "event_time_precision": "TIMESTAMP",
+      "event_time_utc": "2026-09-13T06:00:25.373000Z",
+      "source_id": "SITUATION_ROOM",
+      "source_receipt": {
+        "bytes": 103940,
+        "error_class": null,
+        "fetched_at_utc": "2026-09-13T11:53:20Z",
+        "http_status": 200,
+        "role": "DISCOVERY_ONLY",
+        "sha256": "fb6bd5712e57046249e2b9ff293e6944af50be504095cad5cb990d721bebb11b",
+        "source_id": "SITUATION_ROOM",
+        "status": "PASS",
+        "url": "https://situationroom.space/briefing/2026-09-13"
+      },
+      "source_role": "DISCOVERY_ONLY",
+      "title": "Trump says Houthis called US seeking no direct strikes \u2014 Situation Room",
+      "url": "https://situationroom.space/briefing/2026-09-13",
+      "verification_status": "DISCOVERY_UNVERIFIED"
+    }
+  ],
+  "daily_result": "REVIEW_REQUIRED_UNVERIFIED_DISCOVERY",
+  "detection_time_utc": "2026-09-13T11:53:19Z",
   "events": [],
   "market_reaction_observations": [],
   "market_reaction_separate_from_event": true,
   "market_state_effect": false,
   "observation_date_utc": "2026-09-13",
   "portfolio_effect": false,
+  "retrieval": {
+    "dynamic_archive_shell_not_required": true,
+    "situation_room_archive_url": "https://situationroom.space/briefings",
+    "situation_room_daily_url": "https://situationroom.space/briefing/2026-09-13",
+    "strategy": "DETERMINISTIC_STATIC_DAILY_BRIEFING"
+  },
   "retroactive_candidate_eligibility": false,
-  "run_id": "SRDO_b6a4c201f83c89db",
-  "run_status": "PASS",
+  "run_id": "SRDO_0b3f7cd592b071a5",
+  "run_status": "DEGRADED",
   "shared_row_tournament_eligible": false,
   "situation_room_role": "DISCOVERY_ONLY",
   "source_coverage": {
@@ -21,34 +49,34 @@
     "primary_total": 5,
     "receipts": [
       {
-        "bytes": 0,
-        "error_class": "URLError",
-        "fetched_at_utc": "2026-09-13T09:28:00Z",
-        "http_status": null,
+        "bytes": 103940,
+        "error_class": null,
+        "fetched_at_utc": "2026-09-13T11:53:19Z",
+        "http_status": 200,
         "role": "DISCOVERY_ONLY",
-        "sha256": null,
+        "sha256": "fb6bd5712e57046249e2b9ff293e6944af50be504095cad5cb990d721bebb11b",
         "source_id": "SITUATION_ROOM",
-        "status": "FAIL",
-        "url": "https://situationroom.space/briefings"
+        "status": "PASS",
+        "url": "https://situationroom.space/briefing/2026-09-13"
       },
       {
-        "bytes": 96118,
+        "bytes": 96119,
         "error_class": null,
-        "fetched_at_utc": "2026-09-13T09:28:09Z",
+        "fetched_at_utc": "2026-09-13T11:53:21Z",
         "http_status": 200,
         "role": "PRIMARY",
-        "sha256": "bb8e57faf46befbff49074ea31840a37a01c239e279d7939b66d8fb77bc78e8d",
+        "sha256": "79e8540f060748f67eb5d2b5bf7f5bf716a409a8d675c6b873bcc5c920bf735c",
         "source_id": "SEC",
         "status": "PASS",
         "url": "https://www.sec.gov/newsroom/press-releases"
       },
       {
-        "bytes": 71385,
+        "bytes": 71382,
         "error_class": null,
-        "fetched_at_utc": "2026-09-13T09:28:09Z",
+        "fetched_at_utc": "2026-09-13T11:53:21Z",
         "http_status": 200,
         "role": "PRIMARY",
-        "sha256": "fbcdf632b442c878683b28d45f57d8bd304954ea0787ebb85038b2fa7857f86b",
+        "sha256": "59b609eaef128cfe6bae813504fca68b4a94bbd528dfec47e1cc129d3d72882c",
         "source_id": "TREASURY",
         "status": "PASS",
         "url": "https://home.treasury.gov/news/press-releases"
@@ -56,7 +84,7 @@
       {
         "bytes": 260810,
         "error_class": null,
-        "fetched_at_utc": "2026-09-13T09:28:09Z",
+        "fetched_at_utc": "2026-09-13T11:53:21Z",
         "http_status": 200,
         "role": "PRIMARY",
         "sha256": "0e2d5ae2d316456677699fc7a7f97610660d281feb5a434018e48fb1a49964dd",
@@ -67,10 +95,10 @@
       {
         "bytes": 65424,
         "error_class": null,
-        "fetched_at_utc": "2026-09-13T09:28:09Z",
+        "fetched_at_utc": "2026-09-13T11:53:21Z",
         "http_status": 200,
         "role": "PRIMARY",
-        "sha256": "fa14f75d940dd49f96e3bea34e893a2856ff74b90a0e85c140c0587e826ea057",
+        "sha256": "4853212dbfaab71198c5f0cc336b642d68d5b40ffd01d888f17f3425ab3e089b",
         "source_id": "CFTC",
         "status": "PASS",
         "url": "https://www.cftc.gov/PressRoom/PressReleases"
@@ -78,10 +106,10 @@
       {
         "bytes": 87194,
         "error_class": null,
-        "fetched_at_utc": "2026-09-13T09:28:09Z",
+        "fetched_at_utc": "2026-09-13T11:53:21Z",
         "http_status": 200,
         "role": "PRIMARY",
-        "sha256": "084368faf9039ad1eeda77afa238a4cabe37a0a854547471c5f8b274fb12ef96",
+        "sha256": "90c2eaaad1f6b54d54fe2c46dd7579b035b46f0fc5bdeba44099e2e24279d548",
         "source_id": "FEDERAL_RESERVE",
         "status": "PASS",
         "url": "https://www.federalreserve.gov/newsevents/pressreleases.htm"
@@ -89,5 +117,27 @@
     ]
   },
   "unresolved_candidates": [],
-  "unverified_discoveries": []
+  "unverified_discoveries": [
+    {
+      "detection_time_utc": "2026-09-13T11:53:19Z",
+      "event_time_precision": "TIMESTAMP",
+      "event_time_utc": "2026-09-13T06:00:25.373000Z",
+      "source_id": "SITUATION_ROOM",
+      "source_receipt": {
+        "bytes": 103940,
+        "error_class": null,
+        "fetched_at_utc": "2026-09-13T11:53:20Z",
+        "http_status": 200,
+        "role": "DISCOVERY_ONLY",
+        "sha256": "fb6bd5712e57046249e2b9ff293e6944af50be504095cad5cb990d721bebb11b",
+        "source_id": "SITUATION_ROOM",
+        "status": "PASS",
+        "url": "https://situationroom.space/briefing/2026-09-13"
+      },
+      "source_role": "DISCOVERY_ONLY",
+      "title": "Trump says Houthis called US seeking no direct strikes \u2014 Situation Room",
+      "url": "https://situationroom.space/briefing/2026-09-13",
+      "verification_status": "DISCOVERY_UNVERIFIED"
+    }
+  ]
 }
