@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - 'scripts/experiments/ai_compiler_vs_policy_e2.py'
+      - 'scripts/experiments/ai_compiler_vs_policy_e2_hourly_adapter.py'
       - 'tests/experiments/test_ai_compiler_vs_policy_e2.py'
       - 'research/experiment_lifecycle/e2/requests/AT-E2-911-v1.json'
       - '.github/workflows/auto-trading-e2-reproducibility.yml'
@@ -40,6 +41,7 @@ jobs:
         run: |
           python -m py_compile \
             scripts/experiments/ai_compiler_vs_policy_e2.py \
+            scripts/experiments/ai_compiler_vs_policy_e2_hourly_adapter.py \
             scripts/experiments/agent_handoff_contract.py \
             tests/experiments/test_ai_compiler_vs_policy_e2.py
       - name: Run focused unit regressions
@@ -47,7 +49,7 @@ jobs:
       - name: Run production-data dry preflight without model calls
         run: |
           rm -rf /tmp/at-e2-preflight
-          python scripts/experiments/ai_compiler_vs_policy_e2.py \
+          python scripts/experiments/ai_compiler_vs_policy_e2_hourly_adapter.py \
             --request research/experiment_lifecycle/e2/requests/AT-E2-911-v1.json \
             --repo-root . \
             --output-dir /tmp/at-e2-preflight \
@@ -58,6 +60,7 @@ jobs:
           r=json.loads(Path('/tmp/at-e2-preflight/result.json').read_text())
           assert r['status']=='COMPLETE'
           assert r['issue']==911
+          assert r['data_firewall']['consumed_columns']==['btc_close','eth_close','spot_status','timestamp_utc']
           assert r['data_firewall']['quarantined_derived_history_used'] is False
           assert r['data_firewall']['evaluation_labels_hidden_from_ai'] is True
           assert r['api']['total_cost_usd']==0.0
@@ -81,7 +84,7 @@ jobs:
       - name: Execute frozen research-only E2 trial
         run: |
           rm -rf /tmp/at-e2-live
-          python scripts/experiments/ai_compiler_vs_policy_e2.py \
+          python scripts/experiments/ai_compiler_vs_policy_e2_hourly_adapter.py \
             --request research/experiment_lifecycle/e2/requests/AT-E2-911-v1.json \
             --repo-root . \
             --output-dir /tmp/at-e2-live \
@@ -98,6 +101,7 @@ jobs:
           assert r['status']=='COMPLETE'
           assert r['api']['model']=='gpt-5.6-luna'
           assert r['api']['total_cost_usd'] <= r['api']['hard_cost_stop_usd'] <= 0.75
+          assert r['data_firewall']['consumed_columns']==['btc_close','eth_close','spot_status','timestamp_utc']
           assert r['data_firewall']['quarantined_derived_history_used'] is False
           assert r['data_firewall']['evaluation_labels_hidden_from_ai'] is True
           assert r['capital_ready'] is False
