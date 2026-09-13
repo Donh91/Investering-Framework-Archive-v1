@@ -99,7 +99,7 @@ class ApiGatewayTests(unittest.TestCase):
     def test_daily_output_budget_can_hold_strict_schema(self):
         data=load_registry(REGISTRY);self.assertGreaterEqual(data['tasks']['DAILY_DIRECTOR_SHADOW']['max_output_tokens'],2000)
     def test_cost_estimate(self):
-        self.assertEqual(estimate_cost('gpt-5.6-luna',1000000,1000000),7.0);self.assertEqual(estimate_cost('gpt-5.6-terra',1000000,1000000),17.5)
+        self.assertEqual(estimate_cost('gpt-5.6-luna',1000000,1000000),1.4);self.assertEqual(estimate_cost('gpt-5.6-terra',1000000,1000000),14.0)
     def test_valid_output(self):validate_output(valid_output())
     def test_valid_forecast_candidate_pct_move(self):
         value=valid_output();value['forecast_candidates']=[directional_pct()];validate_output(value)
@@ -120,7 +120,7 @@ class ApiGatewayTests(unittest.TestCase):
         value=valid_output();value['portfolio_action']='BUY'
         with self.assertRaises(ValueError):validate_output(value)
     def test_request_is_store_false_and_current_turn(self):
-        data=load_registry(REGISTRY);cfg=data['tasks']['DAILY_DIRECTOR_SHADOW'];request=build_request('DAILY_DIRECTOR_SHADOW',cfg,'test',{'a':1});self.assertFalse(request['store']);self.assertEqual(request['reasoning']['context'],'current_turn');self.assertEqual(request['model'],'gpt-5.6-luna');item=request['text']['format']['schema']['properties']['forecast_candidates']['items'];self.assertEqual(len(item['anyOf']),3);self.assertTrue(all('target_mode' in branch['properties'] for branch in item['anyOf']));self.assertTrue(all('threshold' not in branch['properties'] for branch in item['anyOf']));self.assertIn('Never encode an absolute target in a percent field',request['instructions'])
+        data=load_registry(REGISTRY);cfg=data['tasks']['DAILY_DIRECTOR_SHADOW'];request=build_request('DAILY_DIRECTOR_SHADOW',cfg,'test',{'a':1});self.assertFalse(request['store']);self.assertEqual(request['reasoning']['context'],'current_turn');self.assertEqual(request['reasoning']['effort'],'medium');self.assertEqual(request['model'],'gpt-5.6-luna');item=request['text']['format']['schema']['properties']['forecast_candidates']['items'];self.assertEqual(len(item['anyOf']),3);self.assertTrue(all('target_mode' in branch['properties'] for branch in item['anyOf']));self.assertTrue(all('threshold' not in branch['properties'] for branch in item['anyOf']));self.assertIn('Never encode an absolute target in a percent field',request['instructions'])
     def test_strict_schema_discriminates_existing_target_modes(self):
         branches=output_schema()['properties']['forecast_candidates']['items']['anyOf']
         by_mode={branch['properties']['target_mode']['enum'][0]:branch for branch in branches}
