@@ -11,6 +11,7 @@ on:
 permissions:
   contents: write
   issues: write
+  pull-requests: read
 
 concurrency:
   group: framework-main-writer
@@ -29,11 +30,19 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Build remediation queue and merge research intake
+      - name: Build remediation queue, reconcile merged research work and rematerialize state
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           python scripts/remediation/build_remediation_maturation.py \
             --repo-root . \
             --output-dir research/remediation
+          python scripts/remediation/merge_codex_research_intake.py \
+            --repo-root . \
+            --output-dir research/remediation
+          python scripts/remediation/reconcile_codex_research_completions.py \
+            --repo-root . \
+            --repository "$GITHUB_REPOSITORY"
           python scripts/remediation/merge_codex_research_intake.py \
             --repo-root . \
             --output-dir research/remediation
@@ -48,6 +57,7 @@ jobs:
           git config user.email 'framework-remediation-bot@users.noreply.github.com'
           git add \
             research/remediation \
+            research/codex/completions \
             research/codex/LATEST_CODEX_EXECUTION_STATE.json \
             research/codex/LATEST_CODEX_INTAKE_STATUS.json \
             research/codex/CODEX_EXECUTION_LEDGER.jsonl \
@@ -120,6 +130,7 @@ jobs:
           name: remediation-maturation-${{ github.run_id }}
           path: |
             research/remediation/
+            research/codex/completions/
             research/codex/LATEST_CODEX_EXECUTION_STATE.json
             research/codex/LATEST_CODEX_INTAKE_STATUS.json
             research/codex/CODEX_EXECUTION_LEDGER.jsonl
