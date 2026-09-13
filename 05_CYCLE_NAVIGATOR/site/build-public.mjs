@@ -96,20 +96,21 @@ function extractManiaWindow(text) {
 
 function extractXPrecisionClaim(text, publicationIssue, date) {
   const source = String(text || "");
-  const scoredIssueMatch = source.match(/WEEKLY\s+PRECISION\s*,?\s*CN\s*#(\d+)/i);
-  const overallMatch = source.match(/Overall\s+precision\s*:\s*\*{0,2}\s*(\d+(?:\.\d+)?)%/i);
+  const scoredIssueMatch = source.match(/WEEKLY\s+PRECISION\s*,?\s*CN\s*#(\d+)/i)
+    || source.match(/COMPLETE\s+SCORECARD\s*[—–-]?\s*#(\d+)/i);
+  const overallMatch = source.match(/Overall\s+precision\s*:\s*\*{0,2}\s*(\d+(?:\.\d+)?)\s*(?:%|\/\s*100)/i);
   if (!scoredIssueMatch || !overallMatch) return null;
 
   const components = {};
   const componentPatterns = [
-    ["cycle_structure", /Cycle structure\s*:\s*\*{0,2}\s*(\d+(?:\.\d+)?)%/i],
-    ["ethbtc_transition", /ETH\/BTC transition\s*:\s*\*{0,2}\s*(\d+(?:\.\d+)?)%/i],
-    ["breadth_participation", /Breadth\s*\/\s*participation\s*:\s*\*{0,2}\s*(\d+(?:\.\d+)?)%/i],
-    ["rotation_sequencing", /Rotation sequencing\s*:\s*\*{0,2}\s*(\d+(?:\.\d+)?)%/i],
-    ["altseason_timing", /Altseason timing\s*:\s*\*{0,2}\s*(\d+(?:\.\d+)?)%/i],
-    ["deployment_sequencing", /Deployment sequencing\s*:\s*\*{0,2}\s*(\d+(?:\.\d+)?)%/i],
-    ["btc_price_ranges", /BTC price ranges\s*:\s*\*{0,2}\s*(\d+(?:\.\d+)?)%/i],
-    ["eth_price_ranges", /ETH price ranges\s*:\s*\*{0,2}\s*(\d+(?:\.\d+)?)%/i]
+    ["cycle_structure", /Cycle structure\s*:\s*\*{0,2}\s*(\d+(?:\.\d+)?)\s*(?:%|\/\s*100)/i],
+    ["ethbtc_transition", /ETH\/BTC transition\s*:\s*\*{0,2}\s*(\d+(?:\.\d+)?)\s*(?:%|\/\s*100)/i],
+    ["breadth_participation", /Breadth\s*\/\s*participation\s*:\s*\*{0,2}\s*(\d+(?:\.\d+)?)\s*(?:%|\/\s*100)/i],
+    ["rotation_sequencing", /Rotation sequencing\s*:\s*\*{0,2}\s*(\d+(?:\.\d+)?)\s*(?:%|\/\s*100)/i],
+    ["altseason_timing", /Altseason timing\s*:\s*\*{0,2}\s*(\d+(?:\.\d+)?)\s*(?:%|\/\s*100)/i],
+    ["deployment_sequencing", /Deployment sequencing\s*:\s*\*{0,2}\s*(\d+(?:\.\d+)?)\s*(?:%|\/\s*100)/i],
+    ["btc_price_ranges", /BTC price ranges\s*:\s*\*{0,2}\s*(\d+(?:\.\d+)?)\s*(?:%|\/\s*100)/i],
+    ["eth_price_ranges", /ETH price ranges\s*:\s*\*{0,2}\s*(\d+(?:\.\d+)?)\s*(?:%|\/\s*100)/i]
   ];
   for (const [key, pattern] of componentPatterns) {
     const match = source.match(pattern);
