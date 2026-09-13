@@ -14,6 +14,7 @@ const PUBLIC_SITE_FILES = [
   "styles.css",
   "motion.css",
   "journey.css",
+  "vibe.css",
   "app.js",
   "motion.js",
   "journey.js"
