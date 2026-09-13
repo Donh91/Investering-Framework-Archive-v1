@@ -1,0 +1,62 @@
+{
+  "contract": "EXTERNAL_ALPHA_SUPERVISOR_CONTRACT_V1",
+  "status": "RESEARCH_ONLY",
+  "owner_issue": 937,
+  "scientific_lifecycle_issue": 885,
+  "registry_path": "04_RESEARCH_LAB/auto_trading/external_alpha/EXTERNAL_ALPHA_REGISTRY.json",
+  "intake_schema_path": "04_RESEARCH_LAB/auto_trading/external_alpha/CANDIDATE_INTAKE_SCHEMA.json",
+  "discovery_policy_path": "04_RESEARCH_LAB/auto_trading/external_alpha/DISCOVERY_POLICY.md",
+  "execution_policy": {
+    "user_supplied_candidate": "PROCESS_EVENT_DRIVEN",
+    "autonomous_discovery": "BOUNDED_WEEKLY_OR_WHEN_QUEUE_HAS_CAPACITY",
+    "deep_reverse_engineering": "ONLY_AFTER_ADMISSION_AND_RESEARCH_CAPACITY",
+    "meta_learning": "ONLY_WHEN_REGISTRY_GATE_UNLOCKED"
+  },
+  "priority_order": [
+    "EXT-ALPHA-0002",
+    "EXT-ALPHA-0001",
+    "EXT-ALPHA-0003",
+    "EXT-ALPHA-0004"
+  ],
+  "priority_rationale": {
+    "EXT-ALPHA-0002": "MAEVE already exceeds the action-row trigger and is closest to the Framework's target crypto AI execution domain; next bottleneck is leakage-clean opportunity-set reconstruction.",
+    "EXT-ALPHA-0001": "EdgeOnchain is the cleanest methodology laboratory for source-vs-copy alpha but remains blocked on primary identity capture.",
+    "EXT-ALPHA-0003": "FOMO Radar offers high-value wallet provenance primitives but source alpha is not yet independently proven.",
+    "EXT-ALPHA-0004": "STAMPEDE is complementary wallet-rotation evidence and should be tested on the same clock/cost harness as FOMO Radar."
+  },
+  "allowed_autonomous_actions": [
+    "SEARCH_PUBLIC_SOURCES",
+    "DEDUPLICATE_CANDIDATE",
+    "CREATE_INTAKE_PACKET",
+    "UPDATE_RESEARCH_ONLY_REGISTRY_EVIDENCE",
+    "COLLECT_READ_ONLY_PUBLIC_EVIDENCE",
+    "PROPOSE_BOUNDED_EXPERIMENT",
+    "RUN_RESEARCH_ONLY_REPLAY_WHEN_AUTHORIZED",
+    "DOWNGRADE_OR_KILL_ON_HARD_FALSIFIER",
+    "NOMINATE_PRIMITIVE_FOR_885_TESTING"
+  ],
+  "forbidden_autonomous_actions": [
+    "SIGN_TRANSACTION",
+    "CONNECT_PRIVATE_KEY",
+    "DEPOSIT_CAPITAL",
+    "COPYTRADE",
+    "GRANT_PORTFOLIO_EXECUTION",
+    "AUTO_PROMOTE_TO_LIVE_TRADING",
+    "SILENTLY_DELETE_FAILED_TRIALS",
+    "TREAT_SOCIAL_PNL_AS_VERIFIED"
+  ],
+  "budget_rules": {
+    "optimize_for": "EXPECTED_INFORMATION_GAIN_PER_RESEARCH_COST",
+    "stop_on_hard_falsifier": true,
+    "prefer_existing_case_update_over_duplicate_case": true,
+    "prefer_simple_baseline_before_heavy_model": true,
+    "prefer_bounded_discovery_over_continuous_crawling": true
+  },
+  "required_output_for_new_candidate": [
+    "DEDUP_RESULT",
+    "ADMISSION_DECISION",
+    "EVIDENCE_CLASSES",
+    "NEXT_FALSIFIABLE_ACTION",
+    "AUTHORITY_BOUNDARY"
+  ]
+}
