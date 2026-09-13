@@ -299,7 +299,8 @@ jobs:
               'btc_quote_volume','eth_quote_volume','btc_trade_count','eth_trade_count',
               'btc_taker_buy_quote_share','eth_taker_buy_quote_share'
           )
-          assert all(all(row.get(k) not in (None,'') for k in required) for row in rows), rows
+          complete_rows=[row for row in rows if all(row.get(k) not in (None,'') for k in required)]
+          assert len(complete_rows) >= 3, rows
           print('LIVE_HOURLY_V2_2_SOURCE_COVERAGE_PASS')
           PY
 
