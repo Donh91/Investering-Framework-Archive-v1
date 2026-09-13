@@ -24,7 +24,8 @@ def effective_cost(value: dict) -> tuple[float | None, bool, str | None]:
         return None, False, "INVALID_COST_OR_TIMESTAMP"
     model = value.get("model")
     has_usage = "input_tokens" in value or "output_tokens" in value
-    if model in PRICES_PER_MILLION or has_usage:
+    is_api_receipt = value.get("contract") == "API_AGENT_RECEIPT_v3"
+    if is_api_receipt and (model in PRICES_PER_MILLION or has_usage):
         if model not in PRICES_PER_MILLION:
             return None, False, "UNKNOWN_MODEL_FOR_USAGE_RECEIPT"
         input_tokens = value.get("input_tokens")
