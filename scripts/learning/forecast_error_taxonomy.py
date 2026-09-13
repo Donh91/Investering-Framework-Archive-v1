@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 from collections import Counter, defaultdict
+from datetime import datetime
 import hashlib
 import json
 import math
@@ -25,8 +26,19 @@ def explain(forecast, outcome):
     if outcome.get('status') == 'CENSORED':
         row.update(TARGET_RESULT='CENSORED', reason='CENSORED_NOT_PREDICTION_FAILURE')
         return row
-    if not forecast or outcome.get('forecast_sha256') != owner.sha(forecast):
+    if (not forecast or not isinstance(forecast.get('forecast_id'), str) or
+            not forecast['forecast_id'].strip() or
+            outcome.get('forecast_id') != forecast['forecast_id'] or
+            outcome.get('forecast_sha256') != owner.sha(forecast)):
         row['reason'] = 'FORECAST_BINDING_UNAVAILABLE'
+        return row
+    try:
+        times = [datetime.fromisoformat(value.replace('Z', '+00:00')) for value in (
+            forecast['frozen_at_utc'], forecast['outcome_due_utc'], outcome['created_at_utc'])]
+        if any(t.tzinfo is None for t in times) or not times[0] < times[1] <= times[2]:
+            raise ValueError('invalid_chronology')
+    except (ValueError, TypeError, KeyError, AttributeError):
+        row['reason'] = 'CHRONOLOGY_UNAVAILABLE_OR_INVALID'
         return row
     try:
         owner.validate_forecast(forecast)

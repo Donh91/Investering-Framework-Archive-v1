@@ -13,7 +13,7 @@ class TaxonomyTests(unittest.TestCase):
                  frozen_at_utc='2026-01-01T00:00:00Z', outcome_due_utc='2026-01-02T00:00:00Z',
                  start_value=100, threshold_pct=5, metric_path='price')
         o = dict(contract='MATURED_OUTCOME_v3', forecast_id='F1', forecast_sha256=owner.sha(f),
-                 status='MATURED', result=owner.classify(f, 100, end), start_value=100, end_value=end)
+                 status='MATURED', created_at_utc='2026-01-02T00:00:00Z', result=owner.classify(f, 100, end), start_value=100, end_value=end)
         return f, o
 
     def test_direction_vs_magnitude_both_signs_and_no_mutation(self):
@@ -41,6 +41,22 @@ class TaxonomyTests(unittest.TestCase):
         for field, value in [('forecast_sha256', 'wrong'), ('result', 'HIT'), ('end_value', float('nan'))]:
             f, o = self.pair(); o[field] = value
             self.assertEqual(explain(f, o)['DIRECTION'], 'NOT_EVALUABLE')
+
+    def test_missing_and_mismatched_ids_are_not_evaluable(self):
+        for value in (None, '', 'OTHER'):
+            f, o = self.pair(); o['forecast_id'] = value
+            if value in (None, ''):
+                f['forecast_id'] = value; o['forecast_sha256'] = owner.sha(f)
+            self.assertEqual(explain(f, o)['reason'], 'FORECAST_BINDING_UNAVAILABLE')
+
+    def test_early_missing_and_naive_outcomes_are_not_evaluable(self):
+        for value in ('2025-12-31T00:00:00Z', '2026-01-01T12:00:00Z',
+                      '2026-01-02T00:00:00', None, 'bad'):
+            f, o = self.pair(); o['created_at_utc'] = value
+            r = explain(f, o)
+            self.assertEqual(r['reason'], 'CHRONOLOGY_UNAVAILABLE_OR_INVALID')
+            self.assertEqual(r['PRIMARY_FAILURE_CLASS'], 'NOT_EVALUABLE')
+            self.assertEqual(r['TARGET_RESULT'], 'MISS')
 
     def test_no_narrative_timing_or_sequence(self):
         f, o = self.pair(); o['narrative'] = 'early wrong phase and sequence'
