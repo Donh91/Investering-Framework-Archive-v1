@@ -1,0 +1,128 @@
+{
+  "contract": "CODEX_RESEARCH_CANDIDATE_v1",
+  "candidate_id": "codex-research-memes-v3-empirical-hardening-v1",
+  "submitted_at_utc": "2026-09-11T08:39:06Z",
+  "status": "SUBMITTED",
+  "origin": {
+    "type": "RESEARCH_ADJUDICATION",
+    "thread_label": "Memes v3 / Alpha Lab",
+    "source_paths": [
+      "07_PROMPTS_AND_AGENTS/memes_alpha/2026-09-09__memes-v3-autonomous-alpha-research-workstream-v1__operational.md",
+      "07_PROMPTS_AND_AGENTS/memes_alpha/2026-09-10__solana-cross-chain-narrative-expansion-v1__operational-addendum.md",
+      "07_PROMPTS_AND_AGENTS/memes_alpha/2026-09-11__meme-early-token-research-profile-v1__research-addendum.md",
+      "07_PROMPTS_AND_AGENTS/memes_alpha/2026-09-11__memes-v3-empirical-hardening-adjudication-v1__research-addendum.md"
+    ]
+  },
+  "title": "Harden Memes v3 with prospective truth, executable outcomes and entity-aware research",
+  "objective": "Implement the smallest research-only hardening layer required by the 2026-09-11 adjudication. Reuse the existing Memes v3 workstream and microcap contract. Add immutable point-in-time discovery state with field-level provenance and available_at/computed_at, durable prospective cohort follow-up and graveyard semantics, a Rejection Ledger/matched-failure binding, deterministic load-bearing unit conversion tests, executable-return/capacity outcome contracts, conservative entity-graph evidence with service-address exclusions, and visibility/crowding capture. Shadow-label Early Confirmation, conditional wallet skill and First Distribution state only after those foundations exist. Do not create a new engine, public watchlist, trade signal, sizing rule, model-weight authority or budget change.",
+  "finding_key": "MEMES_V3_EMPIRICAL_HARDENING_GAPS",
+  "primary_target": "07_PROMPTS_AND_AGENTS/memes_alpha/2026-09-11__memes-v3-empirical-hardening-adjudication-v1__research-addendum.md",
+  "implementation_order": [
+    {
+      "priority": "P0",
+      "scope": [
+        "point-in-time snapshot contract v2 with exact chain+CA/mint hard key",
+        "field-level provenance, observed_at, available_at, computed_at, source latency and missingness",
+        "prospective cohort re-query/checkpoint support preserving NOT_RETURNED as outcome",
+        "durable census/graveyard and Rejection Ledger semantics",
+        "matched-failure IDs and control bindings",
+        "deterministic tests forbidding model-mediated epoch/decimal/unit conversion"
+      ]
+    },
+    {
+      "priority": "P1",
+      "scope": [
+        "executable-return/capacity contract with venue-specific fees, quote asset, liquidity and latency metadata",
+        "conservative entity graph with STRONG/MEDIUM/WEAK/UNRELIABLE evidence edges and CEX/router/service exclusions",
+        "cluster-adjusted counts without awarding safety for missing cluster evidence",
+        "visibility/crowding fields including public surface, first-visible timestamp and estimated follower-notional/executable-depth pressure"
+      ]
+    },
+    {
+      "priority": "P2_SHADOW_ONLY",
+      "scope": [
+        "Early Confirmation entry taxonomy as versioned shadow labels",
+        "conditional wallet as-of scoring with future-outcome leakage forbidden",
+        "First Distribution state machine with reclaim retained strictly as outcome",
+        "entity-adjusted structure and Organic Capital Acceleration component experiments"
+      ]
+    },
+    {
+      "priority": "DEFER",
+      "scope": [
+        "Narrative Instance predictive scoring until registry/sample is sufficient",
+        "cross-chain predictive weights until matched narrative sample is sufficient",
+        "social propagation scoring until continuous source-lineage capture is trustworthy"
+      ]
+    }
+  ],
+  "allowed_change_scope": [
+    "Donh91/Investering-Framework-Archive-v1:scripts/research/memes_alpha/**",
+    "Donh91/Investering-Framework-Archive-v1:tests/research/memes_alpha/**",
+    "Donh91/Investering-Framework-Archive-v1:research/memes_alpha/**",
+    "Donh91/Investering-Framework-Archive-v1:.github/workflows/memes-alpha-research*.yml only when required for existing research cadence/checkpoints and after existing high-impact safepoint/recovery governance",
+    "Donh91/secrets:collectors/memes_alpha/**",
+    "Donh91/secrets:tests/memes_alpha/**",
+    "Donh91/secrets:schemas/memes_alpha/**",
+    "Donh91/secrets:health/MEMES_ALPHA/**",
+    "Donh91/secrets:private_research/memes_alpha/**",
+    "Donh91/secrets:receipts/MEMES_ALPHA_*/**"
+  ],
+  "evidence": [
+    {
+      "kind": "REPO_PATH",
+      "ref": "07_PROMPTS_AND_AGENTS/memes_alpha/2026-09-11__memes-v3-empirical-hardening-adjudication-v1__research-addendum.md",
+      "summary": "Owner-approved research adjudication freezes the canonical methodology, rejected shortcuts, shadow hypotheses and implementation ordering."
+    },
+    {
+      "kind": "PRIVATE_RESEARCH_BINDING",
+      "ref": "Donh91/secrets:private_research/memes_alpha/prospective/2026/09/11/",
+      "summary": "Private prospective packet contains the frozen 2026-09-11T02:20Z cohort and source-integrity manifest."
+    }
+  ],
+  "acceptance_tests": {
+    "positive": [
+      "A discovery row cannot be mutated after freeze; later outcomes append through a separate observation relation.",
+      "Exact chain plus CA/mint is the primary identity key and same-ticker siblings remain distinct.",
+      "Every load-bearing field exposes observed_at/available_at/computed_at and deterministic provenance.",
+      "Epoch, decimals and token-unit conversion tests run without an LLM and fail on unit mismatch.",
+      "The 2026-09-11T02:20Z cohort can be re-queried at +24h/+7d/+30d/+60d while preserving every original row and recording NOT_RETURNED rather than deleting it.",
+      "Rejection Ledger rows are outcome-tracked with the same minimum outcome schema as accepted discoveries.",
+      "Matched controls bind chain, venue, launch period, token age, liquidity band and size/FDV band where available.",
+      "Executable-return outcome schema distinguishes chart return from executable return and carries position notional, deepest executable pool, fees, impact, latency and EXIT_NOT_EXECUTABLE explicitly.",
+      "Entity graph never merges on shared CEX/router/service evidence alone; edge evidence and confidence remain inspectable.",
+      "Raw buyer/holder counts retain cluster-adjusted twins and no missing cluster relation produces a SAFE/CLEAN bonus.",
+      "Visibility/capacity stores public-surface exposure and capital-pressure inputs without hard-coding the CDAS 6/10 follower examples.",
+      "Early Confirmation, wallet skill and First Distribution outputs remain SHADOW research labels and cannot emit trades."
+    ],
+    "negative": [
+      "A future wallet win cannot change the as-of wallet feature for an older discovery.",
+      "Ticker equality cannot merge two exact instances.",
+      "Raw top-10, raw holder count, raw volume, raw mention count or a vendor smart-wallet label cannot independently promote a research case.",
+      "No implementation may interpret no detected cluster as proof of independence.",
+      "Candle ATH cannot substitute for executable outcome.",
+      "A MemeTrans-trained result cannot be labelled pre-graduation validated without a separate non-graduated transfer test.",
+      "No fixed block 0-3, follower-count, liq/FDV or turnover threshold may become production semantics from this candidate.",
+      "No workflow or code path may emit BUY, SELL, size, portfolio action, canonical promotion, budget change or self-merge."
+    ]
+  },
+  "authority_boundary": "CODE_REMEDIATION_ONLY",
+  "requires_framework_owner_authority": false,
+  "forbidden_changes": [
+    "new parallel engine",
+    "market gates",
+    "production model weights",
+    "canonical market authority",
+    "portfolio logic",
+    "API budget",
+    "automatic trade execution",
+    "automatic buy/sell/sizing signals",
+    "paid data authorization",
+    "private watchlist publication",
+    "retroactive provenance rewrite",
+    "automatic canonical promotion",
+    "automatic merge"
+  ],
+  "requested_priority": "EXPEDITED",
+  "post_fix_gate": "P0_AND_P1_FIXTURES_PASS_PLUS_PRIVATE_DATA_LEAKAGE_TEST_PASS_PLUS_COHORT_CHECKPOINT_DRY_RUN_PASS_PLUS_EXECUTABLE_RETURN_REPRODUCTION_FIXTURES_PASS_PLUS_ENTITY_GRAPH_NEGATIVE_CONTROLS_PASS_PLUS_24H_SHADOW_OBSERVATION_WITH_ZERO_HISTORY_REWRITE_ZERO_DUPLICATE_ALERT_STORM_AND_ZERO_TRADE_AUTHORITY"
+}

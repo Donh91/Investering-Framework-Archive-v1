@@ -1,5 +1,4 @@
-const RAW_BASE = "https://raw.githubusercontent.com/Donh91/Investering-Framework-Archive-v1/main/";
-const POINTER_PATH = "05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json";
+const OFFICIAL_SNAPSHOT_URL = "./data/latest.json";
 const MARKET_URL = "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd&include_24hr_change=true&include_last_updated_at=true";
 
 const FALLBACK = {
@@ -312,7 +311,7 @@ function renderNavigator(data, pointer, options = {}) {
 
   if (canonicalFeedAvailable) {
     setText("officialStatus", `OFFICIAL signal: ${quality}`);
-    setText("feedMode", "Feed mode: canonical GitHub pointer/package");
+    setText("feedMode", "Feed mode: canonical public snapshot");
   } else {
     setText("officialStatus", "OFFICIAL feed unavailable");
     setText("feedMode", "Feed mode: embedded fallback snapshot");
@@ -335,22 +334,19 @@ function renderNavigator(data, pointer, options = {}) {
 
 async function loadNavigator() {
   try {
-    const pointerResponse = await fetch(`${RAW_BASE}${POINTER_PATH}?t=${Date.now()}`, { cache: "no-store" });
-    if (!pointerResponse.ok) throw new Error(`Pointer HTTP ${pointerResponse.status}`);
-    const pointer = await pointerResponse.json();
+    const response = await fetch(`${OFFICIAL_SNAPSHOT_URL}?t=${Date.now()}`, { cache: "no-store" });
+    if (!response.ok) throw new Error(`Public snapshot HTTP ${response.status}`);
+    const snapshot = await response.json();
+    const pointer = snapshot?.pointer;
+    const data = snapshot?.package;
 
-    if (!pointer.week_dir || typeof pointer.week_dir !== "string") {
-      throw new Error("Pointer week_dir is missing");
+    if (!pointer || !data || typeof data !== "object") {
+      throw new Error("Public snapshot is missing pointer/package data");
     }
-
-    const packagePath = `${pointer.week_dir}/CYCLE_NAVIGATOR_MACHINE_PACKAGE.json`;
-    const packageResponse = await fetch(`${RAW_BASE}${packagePath}?t=${Date.now()}`, { cache: "no-store" });
-    if (!packageResponse.ok) throw new Error(`Package HTTP ${packageResponse.status}`);
-    const data = await packageResponse.json();
 
     renderNavigator(data, pointer, { canonical: true });
   } catch (error) {
-    console.warn("Cycle Navigator canonical feed unavailable, using bounded embedded fallback", error);
+    console.warn("Cycle Navigator public snapshot unavailable, using bounded embedded fallback", error);
     renderNavigator(FALLBACK, null, { canonical: false });
   }
 }
