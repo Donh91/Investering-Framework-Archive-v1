@@ -452,6 +452,20 @@ def _append_superseded_attempt(root: Path, existing: dict, incoming: dict, reaso
 
 
 def _replacement_decision(existing: dict, incoming: dict) -> tuple[bool, str]:
+    existing_time = _detection_time(existing)
+    incoming_time = _detection_time(incoming)
+    existing_run = existing.get("run_id")
+    incoming_run = incoming.get("run_id")
+    if (
+        isinstance(existing_run, str)
+        and existing_run
+        and existing_run == incoming_run
+        and existing_time is not None
+        and incoming_time is not None
+        and existing_time == incoming_time
+    ):
+        return True, "SAME_ATTEMPT_FINALIZATION"
+
     rank = {"DEGRADED": 0, "PASS": 1}
     existing_quality = _result_quality(existing)
     incoming_quality = _result_quality(incoming)
@@ -460,8 +474,6 @@ def _replacement_decision(existing: dict, incoming: dict) -> tuple[bool, str]:
     if rank[incoming_quality] < rank[existing_quality]:
         return False, "LOWER_QUALITY_RERUN_REJECTED"
 
-    existing_time = _detection_time(existing)
-    incoming_time = _detection_time(incoming)
     if existing_time is not None and incoming_time is not None and incoming_time > existing_time:
         return True, "LATER_VALID_DETECTION_TIME_TIE_BREAK"
     return False, "EQUAL_QUALITY_EXISTING_RECORD_WINS"
