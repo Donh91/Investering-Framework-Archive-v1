@@ -1,0 +1,122 @@
+{
+  "contract": "USAD_TERMS_AND_RETENTION_READINESS_CANDIDATE_v1",
+  "status": "CANDIDATE_NOT_ACTIVATION_AUTHORITY",
+  "recorded_date": "2026-09-09",
+  "formal_legal_opinion_asserted": false,
+  "legal_conclusion_asserted": false,
+  "collection_authorized_by_this_record": false,
+  "analysis_authorized_by_this_record": false,
+  "owner_context_binding": {
+    "source": "Donh91/secrets:GOVERNANCE/PROVIDER_TERMS_ATTESTATION.json",
+    "account_holder_class": "PERSONAL_INDIVIDUAL",
+    "account_region": "DENMARK_EEA",
+    "intended_use": "PERSONAL_NONCOMMERCIAL_INVESTMENT_AND_RESEARCH",
+    "internal_noncommercial_research_only": true
+  },
+  "sources": [
+    {
+      "source_contract_id": "USAD01_SEC_FORM345_INSIDERS_V1",
+      "provider": "SEC",
+      "official_access_references": [
+        "https://www.sec.gov/search-filings/edgar-search-assistance/accessing-edgar-data",
+        "https://www.sec.gov/about/developer-resources",
+        "https://www.sec.gov/about/privacy-information",
+        "https://www.sec.gov/data-research/sec-markets-data/insider-transactions-data-sets"
+      ],
+      "access_facts_reviewed": [
+        "EDGAR_PUBLIC_FILINGS_DOWNLOADABLE_FREE",
+        "SCRIPTED_ACCESS_EXPLICITLY_SUPPORTED",
+        "MAX_REQUEST_RATE_10_PER_SECOND",
+        "DECLARED_USER_AGENT_REQUIRED_FOR_PROGRAMMATIC_ACCESS",
+        "INSIDER_DATASET_PRESENTED_AS_FILED_AND_UPDATED_QUARTERLY"
+      ],
+      "authentication_required": false,
+      "paid_access_required": false,
+      "retention_review": "NO_SOURCE_SPECIFIC_PRIVATE_RETENTION_LIMIT_IDENTIFIED_IN_REVIEWED_SEC_PUBLIC_ACCESS_POLICY",
+      "redistribution_policy_for_mission": "NO_RAW_VALUES_PUBLIC_REPO_BY_INTERNAL_GOVERNANCE_EVEN_WHERE_PUBLIC_SOURCE",
+      "collection_scope_candidate": "TARGETED_ENTITY_UNIVERSE_PLUS_QUARTER_ARCHIVE_HASH_MANIFEST_AND_ORIGINAL_FILING_LINEAGE",
+      "request_policy": {
+        "max_requests_per_second": 5,
+        "sec_published_max_requests_per_second": 10,
+        "declared_user_agent_required": true,
+        "retry_backoff_required": true,
+        "bulk_or_index_routes_preferred_over_bruteforce": true
+      },
+      "readiness": "PASS_CANDIDATE_PENDING_SEPARATE_REGISTRATION_AND_ACTIVATION"
+    },
+    {
+      "source_contract_id": "USAD02_SEC_13F_HOLDINGS_V1",
+      "provider": "SEC",
+      "official_access_references": [
+        "https://www.sec.gov/search-filings/edgar-search-assistance/accessing-edgar-data",
+        "https://www.sec.gov/about/developer-resources",
+        "https://www.sec.gov/about/privacy-information",
+        "https://www.sec.gov/data-research/sec-markets-data/form-13f-data-sets"
+      ],
+      "access_facts_reviewed": [
+        "EDGAR_PUBLIC_FILINGS_DOWNLOADABLE_FREE",
+        "SCRIPTED_ACCESS_EXPLICITLY_SUPPORTED",
+        "MAX_REQUEST_RATE_10_PER_SECOND",
+        "DECLARED_USER_AGENT_REQUIRED_FOR_PROGRAMMATIC_ACCESS",
+        "FORM13F_DATASETS_PRESENTED_AS_FILED_AND_UPDATED_QUARTERLY"
+      ],
+      "authentication_required": false,
+      "paid_access_required": false,
+      "retention_review": "NO_SOURCE_SPECIFIC_PRIVATE_RETENTION_LIMIT_IDENTIFIED_IN_REVIEWED_SEC_PUBLIC_ACCESS_POLICY",
+      "collection_scope_candidate": "TARGETED_ENTITY_UNIVERSE_WITH_TRANSIENT_QUARTER_ARCHIVE_HASH_AND_ORIGINAL_FILING_LINEAGE",
+      "additional_data_readiness_gate": "CUSIP_OR_EQUIVALENT_ISSUER_IDENTITY_MAP_REQUIRED_BEFORE_TARGETED_HISTORICAL_COLLECTION",
+      "request_policy": {
+        "max_requests_per_second": 5,
+        "sec_published_max_requests_per_second": 10,
+        "declared_user_agent_required": true,
+        "retry_backoff_required": true,
+        "bulk_or_index_routes_preferred_over_bruteforce": true
+      },
+      "readiness": "TERMS_PASS_CANDIDATE_DATA_MAPPING_BLOCKED"
+    },
+    {
+      "source_contract_id": "USAD05_USASPENDING_CONTRACTS_V1",
+      "provider": "USASPENDING",
+      "official_access_references": [
+        "https://api.usaspending.gov/",
+        "https://api.usaspending.gov/docs/endpoints",
+        "https://www.usaspending.gov/about/privacy"
+      ],
+      "access_facts_reviewed": [
+        "OFFICIAL_FEDERAL_SPENDING_OPEN_DATA_SERVICE",
+        "API_CURRENTLY_REQUIRES_NO_AUTHORIZATION",
+        "PUBLIC_DOWNLOAD_AND_BULK_ROUTES_AVAILABLE",
+        "SITE_DOES_NOT_REQUIRE_PERSONAL_INFORMATION_FOR_ACCESS"
+      ],
+      "authentication_required": false,
+      "paid_access_required": false,
+      "retention_review": "NO_SOURCE_SPECIFIC_PRIVATE_RETENTION_LIMIT_IDENTIFIED_FOR_CORE_AWARD_DATA_IN_REVIEWED_PUBLIC_PAGES",
+      "field_exclusions_until_separately_reviewed": [
+        "LEGACY_DUNS_AND_OTHER_DNB_DERIVED_ATTRIBUTES",
+        "THIRD_PARTY_LICENSED_ENRICHMENT_NOT_REQUIRED_FOR_AWARD_LINEAGE"
+      ],
+      "preferred_identity_fields": [
+        "UEI",
+        "RECIPIENT_LEGAL_NAME",
+        "AWARD_ID",
+        "TRANSACTION_OR_MODIFICATION_ID"
+      ],
+      "collection_scope_candidate": "TARGETED_RECIPIENT_UNIVERSE_CORE_AWARD_AND_TRANSACTION_FIELDS_ONLY",
+      "readiness": "PASS_WITH_FIELD_EXCLUSIONS_CANDIDATE_PENDING_ENTITY_UEI_MAPPING_AND_SEPARATE_ACTIVATION"
+    }
+  ],
+  "activation_boundary": {
+    "source_registry_update_required": true,
+    "private_source_binding_update_required": true,
+    "source_specific_terms_receipt_required": true,
+    "separate_reviewed_activation_required": true,
+    "live_collection_before_activation_forbidden": true,
+    "analysis_after_collection_still_forbidden": true
+  },
+  "recommended_pilot_order": [
+    "USAD01_SEC_FORM345_INSIDERS_V1",
+    "USAD05_USASPENDING_CONTRACTS_V1",
+    "USAD02_SEC_13F_HOLDINGS_V1_AFTER_CUSIP_MAPPING_GATE"
+  ],
+  "next_gate": "PREPARE_DISABLED_COLLECTOR_AND_UNIT_TESTS_FOR_USAD01_THEN_HIGH_IMPACT_ACTIVATION_PATH_ONLY_IF_SAFETY_AND_SOURCE_GOVERNANCE_GATES_CAN_BE_SATISFIED"
+}

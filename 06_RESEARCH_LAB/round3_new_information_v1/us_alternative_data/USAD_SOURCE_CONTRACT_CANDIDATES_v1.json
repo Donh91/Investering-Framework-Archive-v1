@@ -1,0 +1,147 @@
+{
+  "contract": "USAD_SOURCE_CONTRACT_CANDIDATES_v1",
+  "status": "DRAFT_NOT_REGISTERED_NOT_ACTIVE",
+  "recorded_date": "2026-09-09",
+  "mode": "PROSPECTIVE_COLLECTION_ONLY",
+  "hypothesis_testing_active": false,
+  "outcome_scoring_active": false,
+  "registration_effect": "NONE",
+  "activation_effect": "NONE",
+  "common_rules": {
+    "append_only": true,
+    "no_fill": true,
+    "no_silent_revision_overwrite": true,
+    "mapping_version_required": true,
+    "knowledge_time_fields": [
+      "event_time",
+      "period_end_time",
+      "filing_time",
+      "public_availability_time",
+      "retrieval_time",
+      "normalization_time"
+    ],
+    "unknown_timestamp_policy": "NULL_OR_UNKNOWN_NEVER_INFER",
+    "public_raw_values_allowed": false,
+    "private_raw_storage_pattern": "raw/<source_contract_id>/YYYY/MM/DD/",
+    "private_receipt_storage_pattern": "receipts/<source_contract_id>/YYYY/MM/DD/"
+  },
+  "source_candidates": [
+    {
+      "source_contract_id": "USAD01_SEC_FORM345_INSIDERS_V1",
+      "provider": "SEC",
+      "instrument": "US_PUBLIC_COMPANY_OWNERSHIP_FILINGS",
+      "data_family": "FORM_3_4_5_INSIDER_TRANSACTIONS",
+      "official_primary_urls": [
+        "https://www.sec.gov/data-research/sec-markets-data/insider-transactions-data-sets",
+        "https://www.sec.gov/search-filings/edgar-application-programming-interfaces"
+      ],
+      "observed_official_coverage": "2006-01_THROUGH_2026-06_AS_OF_PREFLIGHT",
+      "observed_quarterly_archive_count": 82,
+      "observed_total_compressed_mb": 879.17,
+      "archive_mode": "TARGETED_UNIVERSE_PLUS_QUARTER_ARCHIVE_HASH_MANIFEST",
+      "full_bulk_retention_default": false,
+      "reason_full_bulk_not_default": "~0.86_GIB_COMPRESSED_BEFORE_GIT_OVERHEAD_AND_FUTURE_GROWTH",
+      "required_source_fields_or_lineage": [
+        "issuer_cik",
+        "reporting_owner",
+        "relationship_or_role",
+        "transaction_code",
+        "transaction_date",
+        "filing_or_acceptance_time",
+        "acquisition_or_disposition",
+        "security_type",
+        "shares",
+        "reported_price",
+        "resulting_ownership",
+        "direct_or_indirect_ownership",
+        "accession_number",
+        "amendment_identity",
+        "raw_filing_reference"
+      ],
+      "availability_rule": "ORIGINAL_EDGAR_ACCEPTANCE_OR_PUBLIC_FILING_TIME_WHEN_AVAILABLE_QUARTERLY_BULK_POSTING_TIME_IS_SEPARATE",
+      "dedupe_keys": ["accession_number", "owner_identity", "transaction_identity"],
+      "revision_rule": "PRESERVE_ORIGINAL_AND_AMENDMENT_SEPARATELY",
+      "source_status": "DRAFT_PROSPECTIVE_ONLY",
+      "activation_requirement": "SOURCE_TERMS_RETENTION_PROVENANCE_AND_SEPARATE_REVIEWED_ACTIVATION_PASS"
+    },
+    {
+      "source_contract_id": "USAD02_SEC_13F_HOLDINGS_V1",
+      "provider": "SEC",
+      "instrument": "FORM_13F_FILINGS",
+      "data_family": "INSTITUTIONAL_HOLDINGS",
+      "official_primary_urls": [
+        "https://www.sec.gov/data-research/sec-markets-data/form-13f-data-sets",
+        "https://www.sec.gov/search-filings/edgar-application-programming-interfaces"
+      ],
+      "observed_official_coverage": "2013-07_THROUGH_2026-05_AS_OF_PREFLIGHT",
+      "observed_quarterly_archive_count": 53,
+      "observed_total_compressed_mb": 2813.79,
+      "archive_mode": "TARGETED_UNIVERSE_WITH_TRANSIENT_QUARTER_ARCHIVE_HASH_AND_RAW_FILING_LINEAGE",
+      "full_bulk_retention_default": false,
+      "reason_full_bulk_not_default": "~2.75_GIB_COMPRESSED_BEFORE_GIT_OVERHEAD_AND_FUTURE_GROWTH",
+      "required_source_fields_or_lineage": [
+        "filer_cik",
+        "institution_identity",
+        "reporting_period_end",
+        "filing_or_acceptance_time",
+        "issuer",
+        "cusip",
+        "security_type",
+        "shares",
+        "reported_value",
+        "put_call_if_applicable",
+        "investment_discretion",
+        "amendment_status",
+        "accession_number",
+        "raw_filing_reference"
+      ],
+      "availability_rule": "FILING_OR_PUBLICATION_TIME_NOT_REPORTING_PERIOD_END",
+      "dedupe_keys": ["accession_number", "information_table_row_identity"],
+      "revision_rule": "PRESERVE_AMENDMENTS_AND_SOURCE_REFRESHES_SEPARATELY",
+      "source_status": "DRAFT_PROSPECTIVE_ONLY",
+      "activation_requirement": "SOURCE_TERMS_RETENTION_PROVENANCE_AND_SEPARATE_REVIEWED_ACTIVATION_PASS"
+    },
+    {
+      "source_contract_id": "USAD05_USASPENDING_CONTRACTS_V1",
+      "provider": "USASPENDING",
+      "instrument": "US_FEDERAL_AWARDS_AND_TRANSACTIONS",
+      "data_family": "GOVERNMENT_CONTRACTS",
+      "official_primary_urls": [
+        "https://api.usaspending.gov/",
+        "https://api.usaspending.gov/docs/endpoints"
+      ],
+      "archive_mode": "TARGETED_UNIVERSE_BY_LEGAL_ENTITY_RECIPIENT_IDENTIFIER",
+      "required_source_fields_or_lineage": [
+        "recipient_legal_identity",
+        "recipient_identifiers",
+        "award_id",
+        "agency",
+        "sub_agency",
+        "award_type",
+        "award_date",
+        "action_date",
+        "obligated_amount",
+        "potential_award_amount",
+        "naics",
+        "psc",
+        "place_of_performance",
+        "description",
+        "modification_identity",
+        "source_update_or_publication_time"
+      ],
+      "availability_rule": "EARLIEST_DEFENSIBLE_PUBLIC_API_AVAILABILITY_OR_SOURCE_UPDATE_TIME_WHEN_EXPOSED_ELSE_RETRIEVAL_TIME_WITH_EXPLICIT_UNKNOWN_PUBLICATION_TIME",
+      "dedupe_keys": ["award_id", "modification_or_transaction_identity"],
+      "entity_join_rule": "LEGAL_ENTITY_AND_RECIPIENT_IDENTIFIER_FIRST_TICKER_MAPPING_DERIVATIVE_ONLY",
+      "source_status": "DRAFT_PROSPECTIVE_ONLY",
+      "activation_requirement": "SOURCE_TERMS_RETENTION_PROVENANCE_AND_SEPARATE_REVIEWED_ACTIVATION_PASS"
+    }
+  ],
+  "blocked_source_contracts_not_drafted_in_v1": [
+    "USAD03_FINRA_OFF_EXCHANGE_V1",
+    "USAD04_FINRA_SHORT_POSITIONING_V1",
+    "USAD06_CONGRESS_PTR_V1",
+    "USAD07_LDA_LOBBYING_V1",
+    "USAD08_USPTO_PATENTS_V1"
+  ],
+  "next_gate": "TERMS_AND_RETENTION_REVIEW_THEN_DISABLED_COLLECTOR_VALIDATION_THEN_SEPARATE_ACTIVATION_PR"
+}

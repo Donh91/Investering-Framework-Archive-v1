@@ -1,0 +1,35 @@
+name: Astra Landing Zone Gate
+
+on:
+  pull_request:
+    paths:
+      - '07_PROMPTS_AND_AGENTS/astra/**'
+      - 'scripts/astra/validate_astra_landing_zone.py'
+      - 'tests/astra/test_astra_landing_zone.py'
+      - '.github/workflows/astra-landing-zone-gate.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Validate Astra landing-zone contracts
+        run: >-
+          python scripts/astra/validate_astra_landing_zone.py
+          --repo-root .
+          --run-envelope 07_PROMPTS_AND_AGENTS/astra/examples/ASTRA_LANDING_ZONE_VALID_EXAMPLE_v1.json
+
+      - name: Run Astra landing-zone regression tests
+        run: python -m unittest discover -s tests/astra -p 'test_astra_landing_zone.py' -v

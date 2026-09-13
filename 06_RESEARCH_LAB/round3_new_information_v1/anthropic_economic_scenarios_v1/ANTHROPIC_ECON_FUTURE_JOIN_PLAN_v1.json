@@ -1,0 +1,121 @@
+{
+  "contract": "ANTHROPIC_ECON_FUTURE_JOIN_PLAN_v1",
+  "recorded_date": "2026-09-09",
+  "status": "DESIGN_ONLY_NOT_ACTIVE_NOT_A_HYPOTHESIS_REGISTRATION",
+  "purpose": "Preserve how future governed agents may compare real-world observations with Anthropic Econ Scenario Explorer v1.0 assumptions without converting the external model into a trading signal.",
+  "source_prior": "ANTHROPIC_ECON_SCENARIO_PRIORS_v1",
+  "core_rule": "MEASURE_DISTANCE_TO_SCENARIO_ASSUMPTIONS;DO_NOT_TREAT_SCENARIOS_AS_PROBABILITIES_OR_MARKET_TARGETS",
+  "candidate_observation_lanes": [
+    {
+      "lane_id": "AI_CAPABILITY_AND_ADOPTION",
+      "anthropic_dimensions": ["affected_mass_m", "diffusion_share_d", "automation_share_psi", "productivity_log_gain_a"],
+      "future_sources": [
+        "Anthropic Economic Index versioned releases",
+        "independent enterprise AI adoption data",
+        "task-level autonomy/capability benchmarks with stable definitions"
+      ],
+      "join_goal": "Track whether observed AI reach, use, autonomy and productivity are moving toward modest/substantial/extreme assumptions.",
+      "major_risk": "Provider-specific Claude usage is not the same as economy-wide AI adoption.",
+      "admission_state": "UNREGISTERED_FUTURE_RESEARCH"
+    },
+    {
+      "lane_id": "CAPITAL_COMPUTE_INFRASTRUCTURE",
+      "anthropic_dimensions": ["capital_stock", "net_return_to_capital", "capital_share"],
+      "future_sources": [
+        "AI/datacenter capex",
+        "semiconductor and compute investment",
+        "power/grid/datacenter infrastructure",
+        "USAD05 government contracts where relevant",
+        "USAD08 patents if later activated"
+      ],
+      "join_goal": "Test whether AI productivity expansion is accompanied by capital formation and infrastructure deployment consistent with the model's capital channel.",
+      "major_risk": "Market valuation and capex are not interchangeable with measured capital stock or factor income share.",
+      "admission_state": "UNREGISTERED_FUTURE_RESEARCH"
+    },
+    {
+      "lane_id": "INSTITUTIONAL_CAPITAL_OWNERSHIP",
+      "anthropic_dimensions": ["capital_share", "capital_income"],
+      "future_sources": [
+        "USAD02 SEC 13F",
+        "USAD09 Schedule 13D/G",
+        "USAD10 N-PORT targeted holdings"
+      ],
+      "join_goal": "Observe institutional ownership and concentration around AI/compute/infrastructure beneficiaries as a capital-allocation context layer.",
+      "major_risk": "Ownership concentration does not measure macro capital share and must never be used as a direct proxy.",
+      "admission_state": "UNREGISTERED_FUTURE_RESEARCH"
+    },
+    {
+      "lane_id": "LABOR_MARKET_TRANSMISSION",
+      "anthropic_dimensions": ["cognitive_employment", "cognitive_unemployment", "all_worker_unemployment", "cognitive_wage", "other_wage"],
+      "future_sources": [
+        "BLS employment/unemployment",
+        "occupation-level wages",
+        "job openings and worker flows",
+        "AI-exposure classifications with frozen vintage"
+      ],
+      "join_goal": "Compare observed occupational reallocation, wage divergence and unemployment with scenario paths while preserving publication-time vintages.",
+      "major_risk": "Occupation definitions and exposure taxonomies can drift; vintage-locking is required.",
+      "admission_state": "UNREGISTERED_FUTURE_RESEARCH"
+    },
+    {
+      "lane_id": "MACRO_PRODUCTIVITY_AND_FACTOR_SHARES",
+      "anthropic_dimensions": ["gdp_growth", "measured_tfp", "labor_share", "capital_share", "average_wage"],
+      "future_sources": [
+        "BEA GDP vintages",
+        "BLS productivity vintages",
+        "FRED/BEA/BLS labor-share and compensation series"
+      ],
+      "join_goal": "Measure macro outcomes against the external scenario envelope using vintage-correct data.",
+      "major_risk": "Ex-post revised macro series create look-ahead unless real-time vintages are preserved.",
+      "admission_state": "UNREGISTERED_FUTURE_RESEARCH"
+    },
+    {
+      "lane_id": "POLICY_AND_GOVERNMENT_TAILWIND",
+      "anthropic_dimensions": ["adoption", "capital_formation", "worker_adjustment"],
+      "future_sources": [
+        "USAD12 Federal Register/GovInfo",
+        "USAD05 USAspending",
+        "USAD07 LDA lobbying"
+      ],
+      "join_goal": "Track policy, procurement and regulatory conditions that may accelerate or constrain AI diffusion and capital formation.",
+      "major_risk": "Policy events are contextual mechanisms, not scenario parameters themselves.",
+      "admission_state": "UNREGISTERED_FUTURE_RESEARCH"
+    },
+    {
+      "lane_id": "POSITIONING_AND_MARKET_TRANSMISSION",
+      "anthropic_dimensions": ["capital_channel_context_only"],
+      "future_sources": [
+        "USAD11 CFTC TFF",
+        "crypto/TradFi market structure",
+        "RWA/tokenized-equity activity"
+      ],
+      "join_goal": "Study how capital markets react if economic evidence increasingly resembles a given scenario regime.",
+      "major_risk": "This is downstream market reaction research and must not be used to validate the economic model itself.",
+      "admission_state": "UNREGISTERED_FUTURE_RESEARCH"
+    }
+  ],
+  "future_measurement_rules": [
+    "USE_PUBLIC_AVAILABILITY_TIME_NOT_EVENT_TIME_WHERE_RELEVANT",
+    "PRESERVE_DATA_VINTAGES_AND_REVISIONS",
+    "DO_NOT_BACKFILL_MODEL_VERSIONS_SILENTLY",
+    "DO_NOT_TUNE_THRESHOLDS_TO_MAXIMIZE_MARKET_RETURNS",
+    "DISTINGUISH_MODEL_INPUTS_FROM_MODEL_OUTPUTS",
+    "DISTINGUISH_PROVIDER_SPECIFIC_AI_USAGE_FROM_ECONOMY_WIDE_ADOPTION",
+    "PRESERVE_NULL_UNKNOWN_AND_NON_MATCH_SEMANTICS",
+    "NO_DIRECT_CORE_OR_PORTFOLIO_TRIGGER"
+  ],
+  "future_version_comparison": {
+    "required": true,
+    "fields": [
+      "model_version",
+      "scenario_parameter_changes",
+      "calibration_changes",
+      "output_path_changes",
+      "survey_changes",
+      "new_or_removed_caveats",
+      "source_url_changes"
+    ]
+  },
+  "current_action": "ARCHIVE_ONLY",
+  "next_governed_action": "WHEN_ANALYSIS_GATE_OPENS_CREATE_PROSPECTIVE_TEST_DESIGN_WITH_FROZEN_V1_PRIOR_AND_INDEPENDENT_DATA_VINTAGES"
+}
