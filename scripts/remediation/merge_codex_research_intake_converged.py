@@ -13,9 +13,11 @@ except ModuleNotFoundError:  # direct execution via `python scripts/remediation/
     import merge_codex_research_intake as base
     from mission_convergence import completion_requires_convergence, validate_receipt
 
+_BASE_VALID_COMPLETION = base.valid_completion
+
 
 def valid_completion(repo: Path, task: dict[str, Any]) -> dict[str, Any] | None:
-    completion = base.valid_completion(repo, task)
+    completion = _BASE_VALID_COMPLETION(repo, task)
     if completion is None:
         return None
     if not completion_requires_convergence(completion):
