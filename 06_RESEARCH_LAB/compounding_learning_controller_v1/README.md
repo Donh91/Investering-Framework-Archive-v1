@@ -1,9 +1,27 @@
 # Compounding Learning Controller v1 — Astra Handoff
 
-**Status:** `HOLD_FOR_ASTRA_REVIEW`  
+**Status:** `HISTORICAL_BUILD_HANDOFF_CURRENT_IMPLEMENTATION_EXISTS`  
 **Authority:** `RESEARCH_ONLY_NON_CANONICAL`  
 **Prepared:** 2026-09-05  
 **Purpose:** preserve the design, audit findings, implementation intent and acceptance criteria for a future Astra-led build/review.
+
+## Current entry point - verified 2026-09-13
+
+The build-from-scratch instructions below are historical. Main already contains the controller, its active research-only policy, state and next-test proposal. Continue through the [current controller entry point](../../00_ARCHIVE_CONTROL/research_governance_v1/compounding_learning_v1/README.md), which owns the read order and current research constraints.
+
+Verified on main `fe50716373ebebd304402389b568b32086eff04c`:
+
+- `scripts/research/compounding_learning_controller.py`
+- `00_ARCHIVE_CONTROL/research_governance_v1/compounding_learning_v1/POLICY.json`
+- `00_ARCHIVE_CONTROL/research_governance_v1/compounding_learning_v1/STATE.json`
+- `00_ARCHIVE_CONTROL/research_governance_v1/compounding_learning_v1/NEXT_BEST_EXPERIMENT.json`
+- Existing invocation in `.github/workflows/unified-experimental-lifecycle-adjudication.yml`.
+
+Do not rebuild or merge the old exploratory branch merely because this historical handoff says a controller is missing. The remaining Astra mission is an audit of the existing implementation's falsification, learning efficiency, scheduling and redundancy. Resolve fresh main before executing it. Code and retained state establish implementation presence, not current production freshness or scientific success.
+
+This navigation correction grants no authority. Research remains non-canonical; existing scientific admission, independent verification, frozen-parent protection and portfolio boundaries still apply.
+
+## Historical design brief - retained from 2026-09-05
 
 ## Why this exists
 
