@@ -6,6 +6,11 @@ on:
       - 'Situation Room Daily Static Discovery'
     types:
       - completed
+  schedule:
+    # Safety-net run after the 08:20 Europe/Copenhagen Situation Room discovery.
+    # Idempotent source_run_id handling prevents duplicate Shadow admission.
+    - cron: '40 8 * * *'
+      timezone: 'Europe/Copenhagen'
   workflow_dispatch:
 
 permissions:
@@ -17,7 +22,7 @@ concurrency:
 
 jobs:
   verify-and-handoff:
-    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.head_branch == 'main'
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.head_branch == 'main'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -37,7 +42,11 @@ jobs:
 
       - name: Verify bridge syntax and authority defaults
         run: |
-          python -m py_compile scripts/data_terminal/situation_room_shadow_bridge.py
+          python -m py_compile \
+            scripts/data_terminal/situation_room_shadow_bridge.py \
+            scripts/api_agent/augment_director_situation_room_shadow.py \
+            scripts/api_agent/augment_director_compounding_learning_context.py
+          python -m unittest tests.api_agent.test_director_situation_room_shadow -v
           python - <<'PY'
           from scripts.data_terminal import situation_room_shadow_bridge as bridge
           assert bridge.AUTHORITY == 'SHADOW_RESEARCH_ONLY_NON_CANONICAL'

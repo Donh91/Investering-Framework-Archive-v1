@@ -1,0 +1,115 @@
+{
+  "contract": "CODEX_RESEARCH_CANDIDATE_v1",
+  "candidate_id": "codex-research-memes-v3-autonomous-case-discovery-v1",
+  "submitted_at_utc": "2026-09-11T19:40:00Z",
+  "status": "SUBMITTED",
+  "origin": {
+    "type": "OWNER_APPROVED_RESEARCH_DISCIPLINE",
+    "thread_label": "Memes v3 / Alpha Lab",
+    "source_paths": [
+      "07_PROMPTS_AND_AGENTS/memes_alpha/2026-09-11__autonomous-case-discovery-discipline-v1__operational-addendum.md",
+      "07_PROMPTS_AND_AGENTS/memes_alpha/2026-09-11__flybrain-launch-replay-case-v1__research-addendum.md",
+      "07_PROMPTS_AND_AGENTS/memes_alpha/2026-09-11__memes-v3-empirical-hardening-adjudication-v1__research-addendum.md"
+    ],
+    "private_seed": "Donh91/secrets:private_research/memes_alpha/discovery/2026/09/11/flybrain_family_discovery_leads_v1.json"
+  },
+  "title": "Add autonomous external case discovery and matched-family research intake to the existing Memes v3 workstream",
+  "objective": "Extend the existing Memes v3 / Alpha Lab research workstream with a bounded discovery intake that can surface unusual historical and prospective cases from approved public sources, deduplicate them, verify exact identity/provenance, estimate research value-of-information, and route only useful cases into the existing launch-replay and empirical-hardening pipelines. Prefer matched failures and counterexamples over retrospective winner accumulation. Do not create a parallel scanner, independent scheduler, trading path, portfolio authority or automatic promotion system.",
+  "depends_on_candidates": [
+    "codex-research-memes-v3-autonomous-alpha-workstream-v1",
+    "codex-research-memes-v3-empirical-hardening-v1",
+    "codex-research-memes-v3-launch-replay-recorder-v1"
+  ],
+  "finding_key": "MEMES_V3_EXTERNAL_CASE_DISCOVERY_AND_MATCHED_FAMILY_GAP",
+  "primary_target": "07_PROMPTS_AND_AGENTS/memes_alpha/2026-09-11__autonomous-case-discovery-discipline-v1__operational-addendum.md",
+  "implementation_order": [
+    {
+      "priority": "P0",
+      "scope": [
+        "define a deterministic discovery-lead schema with lead_id, discovered_at, source provenance, source class, candidate chain/identity hints, reason-for-interest, uncertainty and state",
+        "implement lifecycle states DISCOVERED_UNVERIFIED -> IDENTITY_VERIFIED -> SOURCE_PROVENANCE_VERIFIED -> REPLAY_CANDIDATE -> MATCHED_FAMILY_BOUND -> OUTCOME_BOUND -> ADJUDICATED",
+        "deduplicate by exact chain+CA/mint when known and by source/narrative fingerprints when identity is unresolved",
+        "preserve rejected leads and reason codes as research negatives rather than deleting them",
+        "forbid any promotion when exact identity or as-of chronology is unresolved"
+      ]
+    },
+    {
+      "priority": "P1",
+      "scope": [
+        "add value-of-information triage that prefers leads adding a new mechanism, matched failure, copycat, same-narrative sibling or unresolved source conflict",
+        "route verified high-value leads into the existing launch-replay / empirical-hardening packet format rather than a new engine",
+        "support primary-source discovery classes including chain evidence, GitHub/public artifacts, launchpad docs, scientific publications, project sites, explorers/scanners and reputable reporting",
+        "bind public_at/observed_at/available_at/computed_at separately and preserve NOT_PROVEN_AS_OF where historical availability cannot be demonstrated",
+        "require matched-family construction before adjudicating candidate features from a famous winner"
+      ]
+    },
+    {
+      "priority": "P2_SHADOW_ONLY",
+      "scope": [
+        "test PRE_LAUNCH_ARTIFACT_PROVENANCE, ARTIFACT_TO_TOKEN_LEAD_TIME, ARTIFACT_EXECUTABILITY, SHIPPING_VELOCITY, NARRATIVE_TRUTH_DENSITY, AGENCY_DECOMPOSITION, NARRATIVE_EMBODIMENT_SPEED, SEMANTIC_QUOTE_ASSET_FIT, CREATOR_ECONOMIC_LOOP_INTENSITY, OPEN_SOURCE_FORKABILITY, COPYCAT_DILUTION_PRESSURE and SCANNER_LEAD_TIME",
+        "evaluate whether family-level features discriminate winners from failures prospectively or in timestamp-faithful historical replay",
+        "keep every proposed feature in Shadow until matched failures and forward outcomes exist"
+      ]
+    }
+  ],
+  "initial_seed_expectation": {
+    "anchor": "FLYBRAIN",
+    "discovery_leads": [
+      "neuron / CL1",
+      "CLORD-1",
+      "Anima",
+      "LUM / Luminous",
+      "GRIFFAIN",
+      "GOAT / Truth Terminal",
+      "BIOHACKING"
+    ],
+    "rule": "All non-FLYBRAIN entries remain DISCOVERED_UNVERIFIED until reconstructed from primary evidence. Names in the seed are not factual validation."
+  },
+  "allowed_change_scope": [
+    "Donh91/Investering-Framework-Archive-v1:scripts/research/memes_alpha/**",
+    "Donh91/Investering-Framework-Archive-v1:tests/research/memes_alpha/**",
+    "Donh91/Investering-Framework-Archive-v1:research/memes_alpha/**",
+    "Donh91/secrets:collectors/memes_alpha/**",
+    "Donh91/secrets:tests/memes_alpha/**",
+    "Donh91/secrets:schemas/memes_alpha/**",
+    "Donh91/secrets:private_research/memes_alpha/**",
+    "Donh91/secrets:health/MEMES_ALPHA/**",
+    "Donh91/secrets:receipts/MEMES_ALPHA_*/**"
+  ],
+  "acceptance_tests": {
+    "positive": [
+      "A social or web hit enters as DISCOVERED_UNVERIFIED and cannot be treated as evidence until exact identity and provenance are verified.",
+      "A historical winner can be selected for replay without allowing later outcome information to populate earlier feature fields.",
+      "A lead with no provable historical public availability records NOT_PROVEN_AS_OF rather than inferred availability.",
+      "The system preserves rejected leads with explicit reason codes and can use them as candidate negatives.",
+      "High-value discovery triage prefers matched failures/copycats or novel mechanisms over duplicate winner stories.",
+      "Verified cases reuse the existing immutable Memes v3 research/replay contracts instead of creating a parallel case engine.",
+      "The FLYBRAIN-family seed can be loaded from the private lead registry without exposing private research state publicly."
+    ],
+    "negative": [
+      "No GitHub repo, scientific story, AI-agent claim, KOL mention, scanner badge or unusual token pairing independently emits BUY, SELL, size or QUALIFIED_ALPHA.",
+      "No later ATH, market cap or survival outcome rewrites an earlier discovery state.",
+      "No new scheduler, duplicate scanner, portfolio path or automatic execution path is introduced.",
+      "No paid data source or API budget increase is authorized.",
+      "No automatic merge or canonical promotion is authorized."
+    ]
+  },
+  "authority_boundary": "CODE_REMEDIATION_ONLY",
+  "requires_framework_owner_authority": false,
+  "forbidden_changes": [
+    "new parallel engine",
+    "new independent scheduler",
+    "automatic trade execution",
+    "buy sell sizing outputs",
+    "portfolio logic",
+    "canonical market authority",
+    "paid data authorization",
+    "API budget increase",
+    "private research publication",
+    "retroactive provenance rewrite",
+    "automatic canonical promotion",
+    "automatic merge"
+  ],
+  "requested_priority": "AFTER_MEMES_V3_LAUNCH_REPLAY_FOUNDATIONS",
+  "post_fix_gate": "DISCOVERY_SCHEMA_PASS_PLUS_IDENTITY_PROVENANCE_GATE_PASS_PLUS_MATCHED_FAILURE_ROUTING_PASS_PLUS_HINDSIGHT_NEGATIVE_CONTROL_PASS_PLUS_PRIVATE_SEED_LEAKAGE_TEST_PASS_PLUS_ZERO_TRADE_AUTHORITY"
+}

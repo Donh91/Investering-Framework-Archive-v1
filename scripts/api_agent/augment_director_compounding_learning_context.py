@@ -4,14 +4,22 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import sys
 from pathlib import Path
 from typing import Any
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+from scripts.api_agent.augment_director_situation_room_shadow import situation_room_shadow
 
 BASE = Path("00_ARCHIVE_CONTROL/research_governance_v1/compounding_learning_v1")
 DEFAULT_STATE = BASE / "STATE.json"
 DEFAULT_PROPOSAL = BASE / "NEXT_BEST_EXPERIMENT.json"
 DEFAULT_BACKLOG = BASE / "LEARNING_BACKLOG.json"
 DEFAULT_HEALTH = Path("research/architecture_health/LATEST_COMPOUNDING_LEARNING_HEALTH.json")
+DEFAULT_SITUATION_ROOM_POINTER = Path("04_MARKET_LEARNING/external_research/situation_room_shadow/LATEST.json")
 
 
 def load_json(path: Path) -> dict[str, Any]:
@@ -190,12 +198,16 @@ def main() -> int:
     parser.add_argument("--proposal", type=Path, default=DEFAULT_PROPOSAL)
     parser.add_argument("--backlog", type=Path, default=DEFAULT_BACKLOG)
     parser.add_argument("--health", type=Path, default=DEFAULT_HEALTH)
+    parser.add_argument("--situation-room-pointer", type=Path, default=DEFAULT_SITUATION_ROOM_POINTER)
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
 
     context = load_json(args.context)
     routed = compounding_learning(args.state, args.proposal, args.backlog, args.health)
     context["compounding_learning"] = routed
+
+    situation_routed, situation_paths = situation_room_shadow(args.situation_room_pointer)
+    context["situation_room_shadow"] = situation_routed
 
     provenance = context.get("learning_context_provenance")
     if not isinstance(provenance, list):
@@ -208,6 +220,13 @@ def main() -> int:
     ):
         if path.exists():
             provenance.append({"field": field, "path": str(path), "sha256": sha256(path)})
+    for idx, path in enumerate(situation_paths):
+        if path.exists():
+            provenance.append({
+                "field": f"situation_room_shadow_{idx}",
+                "path": str(path),
+                "sha256": sha256(path),
+            })
     context["learning_context_provenance"] = provenance
 
     contract = context.get("context_routing_contract")
@@ -221,14 +240,25 @@ def main() -> int:
     required = contract.get("required_context_families")
     if not isinstance(required, list):
         required = []
-    if "compounding_learning" not in required:
-        required.append("compounding_learning")
+    for family in ("compounding_learning", "situation_room_shadow"):
+        if family not in required:
+            required.append(family)
     contract["required_context_families"] = required
+    contract["no_automatic_authority_promotion"] = True
+    contract["situation_room_shadow_rule"] = (
+        "VERIFIED_SHADOW_CONTEXT_MAY_INFORM_ANALYSIS_ONLY; PENDING_DISCOVERIES_ARE_NOT_EVIDENCE"
+    )
     context["context_routing_contract"] = contract
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(context, sort_keys=True, separators=(",", ":")) + "\n", encoding="utf-8")
-    print(json.dumps({"status": routed.get("status"), "closure": routed.get("closure")}, sort_keys=True))
+    print(json.dumps({
+        "status": routed.get("status"),
+        "closure": routed.get("closure"),
+        "situation_room_shadow_status": situation_routed.get("status"),
+        "situation_room_verified_count": situation_routed.get("verified_count", 0),
+        "situation_room_pending_count": situation_routed.get("pending_count", 0),
+    }, sort_keys=True))
     return 0
 
 

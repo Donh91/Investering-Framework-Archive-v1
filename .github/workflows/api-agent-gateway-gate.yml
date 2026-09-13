@@ -40,6 +40,7 @@ jobs:
             tests.api_agent.test_forecast_candidate_backlog \
             tests.api_agent.test_api_intelligence_v2 \
             tests.api_agent.test_director_learning_context \
+            tests.api_agent.test_director_situation_room_shadow \
             tests.api_agent.test_daily_director_conflict_budget \
             tests.api_agent.test_daily_director_workflow_contract -v
       - name: Compile and CLI-smoke gateway, capability routing, intelligence and forecast backlog machinery
@@ -50,6 +51,8 @@ jobs:
             scripts/api_agent/capability_routed_api_gateway.py \
             scripts/api_agent/augment_director_context_v2.py \
             scripts/api_agent/augment_director_learning_context.py \
+            scripts/api_agent/augment_director_compounding_learning_context.py \
+            scripts/api_agent/augment_director_situation_room_shadow.py \
             scripts/api_agent/check_director_freshness.py \
             scripts/api_agent/detect_api_conflict.py \
             scripts/api_agent/check_api_lane_budget.py \
@@ -61,6 +64,7 @@ jobs:
             tests/api_agent/test_api_intelligence_v2.py \
             tests/api_agent/test_forecast_candidate_backlog.py \
             tests/api_agent/test_director_learning_context.py \
+            tests/api_agent/test_director_situation_room_shadow.py \
             tests/api_agent/test_daily_director_conflict_budget.py \
             tests/api_agent/test_daily_director_workflow_contract.py
           python scripts/api_agent/capability_router.py --help >/dev/null

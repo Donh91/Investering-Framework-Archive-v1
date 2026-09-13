@@ -1,0 +1,47 @@
+name: Deploy Cycle Navigator to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "05_CYCLE_NAVIGATOR/site/**"
+      - "05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json"
+      - "05_CYCLE_NAVIGATOR/weekly/**/CYCLE_NAVIGATOR_MACHINE_PACKAGE.json"
+      - "05_CYCLE_NAVIGATOR/published/**"
+      - ".github/workflows/cycle-navigator-pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: cycle-navigator-pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Build privacy-safe public bundle
+        run: node 05_CYCLE_NAVIGATOR/site/build-public.mjs
+
+      - name: Setup GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Cycle Navigator public bundle only
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: 05_CYCLE_NAVIGATOR/site/dist
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

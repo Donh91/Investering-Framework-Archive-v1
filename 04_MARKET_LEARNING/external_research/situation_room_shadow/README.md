@@ -15,6 +15,10 @@ Situation Room Daily Static Discovery
 -> corroboration is attempted against either already verified primary-source events from the Situation Room owner or authoritative primary links exposed by the Situation Room briefing
 -> corroborated items are written to this Shadow lane
 -> unresolved items remain explicitly pending and are not admitted as verified Shadow context
+-> the next Daily Director context build receives the verified Shadow subset through `augment_director_compounding_learning_context.py`
+-> pending discoveries are routed only as queue metadata and are explicitly forbidden from being treated as evidence
+
+A scheduled 08:40 Europe/Copenhagen safety-net reruns the bridge after the normal 08:20 discovery. `source_run_id` idempotence prevents duplicate admission.
 
 ## Accepted automatic verification methods
 
@@ -28,6 +32,14 @@ The bridge is deliberately conservative. A Situation Room headline is never trea
 - `LATEST.json` - latest bridge pointer and counts
 - `YYYY/MM/YYYY-MM-DD.json` - dated verification and Shadow handoff state
 - `VERIFIED_SHADOW_LEDGER.jsonl` - append-only deduplicated verified Shadow records
+
+## Director routing
+
+Verified rows are exposed to Daily Director as `situation_room_shadow.verified_context` with provenance hashes. The Director may use these rows as corroborated non-canonical catalyst context.
+
+`pending_verification` never becomes Director evidence. It may only signal that a discovery still awaits corroboration.
+
+This satisfies the framework routing principle: collected information is not considered available to an agent unless it is explicitly present in that agent's context.
 
 ## Authority firewall
 

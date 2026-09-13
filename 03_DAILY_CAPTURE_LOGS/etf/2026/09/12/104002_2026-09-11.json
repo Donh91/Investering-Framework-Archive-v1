@@ -1,0 +1,104 @@
+{
+  "authority": "SHADOW_CALIBRATION_INPUT_ONLY",
+  "canonical_data_ping": false,
+  "contract": "DAILY_SETTLED_ETF_CALIBRATION_v2",
+  "framework_state_change": false,
+  "portfolio_action": false,
+  "retrieved_at_utc": "2026-09-12T10:40:01.028726Z",
+  "row_signature_sha256": "8aeb7f505c5713e401e0ff8ec676d6d1ed736162d645cddfa79ba69e4fbb1847",
+  "rows": [
+    {
+      "asset": "BTC",
+      "calculated_total": -13.2,
+      "date": "2026-09-11",
+      "fund_headers": [
+        "IBIT",
+        "FBTC",
+        "BITB",
+        "ARKB",
+        "BTCO",
+        "EZBC",
+        "BRRR",
+        "HODL",
+        "BTCW",
+        "MSBT",
+        "GBTC",
+        "BTC"
+      ],
+      "fund_values": [
+        -19.2,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        2.2,
+        0.0,
+        3.8,
+        0.0,
+        0.0
+      ],
+      "reported_total": -13.2,
+      "session_final": true,
+      "total_parity": true,
+      "unknown_cells_fully_accounted_by_reported_total": true,
+      "unknown_fund_cell_count": 0,
+      "unknown_fund_cells": []
+    },
+    {
+      "asset": "ETH",
+      "calculated_total": 216.4,
+      "date": "2026-09-11",
+      "fund_headers": [
+        "ETHA",
+        "ETHB",
+        "FETH",
+        "ETHW",
+        "TETH",
+        "ETHV",
+        "QETH",
+        "EZET",
+        "ETHE",
+        "ETH"
+      ],
+      "fund_values": [
+        148.8,
+        18.3,
+        11.4,
+        29.1,
+        0.0,
+        3.7,
+        0.0,
+        0.0,
+        0.0,
+        5.1
+      ],
+      "reported_total": 216.4,
+      "session_final": true,
+      "total_parity": true,
+      "unknown_cells_fully_accounted_by_reported_total": true,
+      "unknown_fund_cell_count": 0,
+      "unknown_fund_cells": []
+    }
+  ],
+  "session_date": "2026-09-11",
+  "source_hashes_first": {
+    "BTC": "a36d2e556d5bd3bc920b4113aff38e0e46fae10474c694656d9f776d9ab53ee0",
+    "ETH": "5107a9f79889b468cad6e20fa1e9babd0a6cea4cafa1472420648302a95a6a72"
+  },
+  "source_hashes_second": {
+    "BTC": "efd8b3f3bee02f292a52ae141bdcd977ff94e4fcd76e5a9ffca714e580c7822c",
+    "ETH": "7c3acfd77fc7bd7db7af0f8599070da927d20c0d38d273a368b8103bf5dd582c"
+  },
+  "verification": {
+    "all_fund_cells_known": true,
+    "minimum_separation_seconds": 60,
+    "retrieval_count": 2,
+    "rows_identical_across_retrievals": true,
+    "source": "FARSIDE_CANONICAL_ALL_DATA_TABLES",
+    "total_parity_required": true,
+    "unknown_cells_fully_accounted_by_reported_total": true,
+    "unknown_cells_imputed": false
+  }
+}
