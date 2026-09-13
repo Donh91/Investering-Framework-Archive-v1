@@ -11,9 +11,9 @@ from pathlib import Path
 from typing import Any
 
 PRICES_PER_MILLION = {
-    "gpt-5.6-luna": {"input": 1.0, "output": 6.0},
-    "gpt-5.6-terra": {"input": 2.5, "output": 15.0},
-    "gpt-5.6-sol": {"input": 5.0, "output": 30.0},
+    "gpt-5.6-luna": {"input": 0.2, "output": 1.2},
+    "gpt-5.6-terra": {"input": 2.0, "output": 12.0},
+    "gpt-5.6-sol": {"input": 4.0, "output": 20.0},
 }
 FORBIDDEN_KEYS = {"portfolio_action", "trade_action", "buy", "sell", "position_size", "framework_state_change", "model_weight_change", "canonical_promotion"}
 TARGET_MODES = {"PCT_MOVE", "ABSOLUTE_VALUE", "ABSOLUTE_RANGE"}
