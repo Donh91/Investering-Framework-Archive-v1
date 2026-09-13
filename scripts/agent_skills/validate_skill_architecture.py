@@ -40,6 +40,37 @@ def has_frontmatter(skill_text: str) -> bool:
     return skill_text.startswith("---\n") and "\n---\n" in skill_text[4:]
 
 
+def parse_active_skill_names(registry_text: str) -> set[str]:
+    """Return exact skill names from the canonical ``## 2. Active stack`` table."""
+    section_match = re.search(
+        r"^## 2\. Active stack\s*$([\s\S]*?)(?=^##\s|\Z)",
+        registry_text,
+        re.MULTILINE,
+    )
+    if not section_match:
+        raise ValueError("canonical registry missing '## 2. Active stack' section")
+
+    names: list[str] = []
+    for line in section_match.group(1).splitlines():
+        if not line.lstrip().startswith("|"):
+            continue
+        cells = [cell.strip() for cell in line.strip().strip("|").split("|")]
+        if not cells:
+            continue
+        name = cells[0]
+        if name == "Skill" or re.fullmatch(r":?-{3,}:?", name):
+            continue
+        if name:
+            names.append(name)
+
+    if not names:
+        raise ValueError("canonical active stack contains no skill rows")
+    if len(names) != len(set(names)):
+        duplicates = sorted({name for name in names if names.count(name) > 1})
+        raise ValueError(f"duplicate canonical active skill rows: {', '.join(duplicates)}")
+    return set(names)
+
+
 def main() -> int:
     errors: list[str] = []
     warnings: list[str] = []
@@ -65,6 +96,12 @@ def main() -> int:
         fail(errors, "routing index canonical_owner must remain SKILL_REGISTRY.md")
 
     registry_text = CANONICAL_REGISTRY.read_text(encoding="utf-8")
+    try:
+        canonical_active_names = parse_active_skill_names(registry_text)
+    except ValueError as exc:
+        fail(errors, str(exc))
+        canonical_active_names = set()
+
     skills = index.get("skills")
     if not isinstance(skills, list) or not skills:
         fail(errors, "routing index must contain a non-empty skills list")
@@ -99,12 +136,15 @@ def main() -> int:
         if missing:
             fail(errors, f"{name}: missing routing fields: {', '.join(missing)}")
 
+        if not isinstance(name, str) or not name:
+            fail(errors, "every skill entry must have a non-empty string name")
+            continue
         if name in seen:
             fail(errors, f"duplicate skill name: {name}")
         seen.add(name)
 
-        if name not in registry_text:
-            fail(errors, f"{name}: absent from canonical SKILL_REGISTRY.md")
+        if canonical_active_names and name not in canonical_active_names:
+            fail(errors, f"{name}: absent from canonical active skill stack")
 
         skill_rel = entry.get("skill_path")
         meta_rel = entry.get("agents_metadata_path")
@@ -134,10 +174,15 @@ def main() -> int:
         if not has_frontmatter(skill_text):
             warn(warnings, f"{name}: SKILL.md has no YAML frontmatter; normalize only if a bounded refactor preserves semantics")
 
+        routing_policy = entry.get("allow_implicit_invocation")
+        if type(routing_policy) is not bool:
+            fail(errors, f"{name}: allow_implicit_invocation must be a JSON boolean")
+            routing_policy = None
+
         metadata_policy = parse_implicit_policy(meta_path)
         if metadata_policy is None:
             fail(errors, f"{name}: agents/openai.yaml lacks allow_implicit_invocation")
-        elif metadata_policy != bool(entry.get("allow_implicit_invocation")):
+        elif routing_policy is not None and metadata_policy != routing_policy:
             fail(errors, f"{name}: implicit invocation differs between routing index and openai.yaml")
 
         side_effect = str(entry.get("side_effect_level", "")).upper()
@@ -150,9 +195,13 @@ def main() -> int:
             if nested_dirs:
                 fail(errors, f"{name}: references must remain shallow; nested directories found")
 
-    expected_count = 6
-    if len(skills) != expected_count:
-        fail(errors, f"routing index contains {len(skills)} skills; canonical active stack currently expects {expected_count}")
+    if canonical_active_names:
+        missing_from_index = sorted(canonical_active_names - seen)
+        unexpected_in_index = sorted(seen - canonical_active_names)
+        if missing_from_index:
+            fail(errors, f"routing index omits canonical active skills: {', '.join(missing_from_index)}")
+        if unexpected_in_index:
+            fail(errors, f"routing index contains non-active skills: {', '.join(unexpected_in_index)}")
 
     print(f"skill_architecture: skills={len(skills)} errors={len(errors)} warnings={len(warnings)}")
     for message in warnings:
