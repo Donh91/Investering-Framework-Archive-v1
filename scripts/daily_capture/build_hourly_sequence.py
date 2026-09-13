@@ -558,7 +558,7 @@ def main() -> None:
         queries = {
             "oi": (
                 "/api/v5/rubik/stat/contracts/open-interest-history",
-                {"instId": instrument, "period": "1H", "begin": start_ms, "end": end_ms, "limit": 100},
+                {"instId": instrument, "period": "1H", "begin": start_ms - 3_600_000, "end": end_ms, "limit": 100},
             ),
             "long_short": (
                 "/api/v5/rubik/stat/contracts/long-short-account-ratio",
