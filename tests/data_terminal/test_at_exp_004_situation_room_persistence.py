@@ -62,6 +62,20 @@ class AtExp004SituationRoomPersistenceTests(unittest.TestCase):
             self.assertEqual(self.dated(root)["run_id"], "D1")
             self.assertEqual(self.dated(root)["run_status"], "DEGRADED")
 
+    def test_same_attempt_finalization_may_fail_closed_without_being_treated_as_rerun(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            initial = self.result("PASS", "2026-01-01T01:00:00Z", "RUN1")
+            final = self.result("DEGRADED", "2026-01-01T01:00:00Z", "RUN1")
+            final["retrieval"] = {"strategy": "DETERMINISTIC_STATIC_DAILY_BRIEFING"}
+            self.assertTrue(owner.write_outputs(root, initial))
+            self.assertTrue(owner.write_outputs(root, final))
+            stored = self.dated(root)
+            self.assertEqual(stored["run_id"], "RUN1")
+            self.assertEqual(stored["run_status"], "DEGRADED")
+            self.assertEqual(stored["retrieval"]["strategy"], "DETERMINISTIC_STATIC_DAILY_BRIEFING")
+            self.assertFalse((root / "SUPERSEDED_ATTEMPTS.jsonl").exists())
+
     def test_good_then_degraded_preserves_good_and_does_not_append_rejected_events(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
