@@ -7,10 +7,17 @@ const siteDir = dirname(fileURLToPath(import.meta.url));
 const outputPath = resolve(siteDir, "dist/social-card.png");
 const EXPECTED_BYTES = 7416;
 const EXPECTED_SHA256 = "131b7096f3a144333e977a236d0b1bae2a0c6aaff7df3a83e1715aeb70bf9f86";
+const CHUNK_FILES = [
+  "social-card.part1a.b64",
+  "social-card.part1b.b64",
+  "social-card.part2.b64",
+  "social-card.part3.b64",
+  "social-card.part4.b64"
+];
 
 const chunks = [];
-for (let index = 1; index <= 4; index += 1) {
-  chunks.push((await readFile(resolve(siteDir, `social-card.part${index}.b64`), "utf8")).trim());
+for (const file of CHUNK_FILES) {
+  chunks.push((await readFile(resolve(siteDir, file), "utf8")).trim());
 }
 
 const png = Buffer.from(chunks.join(""), "base64");
