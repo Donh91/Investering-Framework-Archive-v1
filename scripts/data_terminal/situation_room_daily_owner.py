@@ -398,11 +398,50 @@ def run(output_root: Path, date_utc: str, timeout: int = 15) -> dict:
     return result
 
 
+def detection_time(result):
+    try:
+        value = datetime.fromisoformat(result["detection_time_utc"].replace("Z", "+00:00"))
+        return value.astimezone(timezone.utc) if value.tzinfo is not None else None
+    except (KeyError, ValueError, TypeError, AttributeError):
+        return None
+
+
+def retain_dated_record(previous, incoming):
+    if previous.get("run_status") == "PASS" and incoming.get("run_status") != "PASS":
+        return True
+    if previous.get("run_status") != "PASS" and incoming.get("run_status") == "PASS":
+        return False
+    old_time, new_time = detection_time(previous), detection_time(incoming)
+    return old_time is None or new_time is None or new_time <= old_time
+
+
+def record_superseded(root, previous, incoming):
+    digest = lambda obj: hashlib.sha256(json.dumps(obj, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+    receipt = {
+        "contract": "SITUATION_ROOM_SUPERSEDED_ATTEMPT_v1",
+        "observation_date_utc": incoming["observation_date_utc"],
+        "existing_run_id": previous.get("run_id"), "incoming_run_id": incoming.get("run_id"),
+        "existing_quality": previous.get("run_status"), "incoming_quality": incoming.get("run_status"),
+        "existing_sha256": digest(previous), "incoming_sha256": digest(incoming),
+        "reason": "LOWER_QUALITY" if previous.get("run_status") == "PASS" and incoming.get("run_status") != "PASS" else "NO_VALID_LATER_DETECTION",
+    }
+    path = root / "superseded" / (digest(receipt) + ".json")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    if not path.exists():
+        path.write_text(json.dumps(receipt, sort_keys=True, indent=2) + "\n")
+
+
 def write_outputs(root: Path, result: dict) -> None:
     date_utc = result["observation_date_utc"]
     year, month, _ = date_utc.split("-")
     dated = root / year / month / f"{date_utc}.json"
     dated.parent.mkdir(parents=True, exist_ok=True)
+    if dated.exists():
+        previous = json.loads(dated.read_text())
+        if retain_dated_record(previous, result):
+            if previous != result:
+                record_superseded(root, previous, result)
+            return  # Neither pointer nor event ledger may consume the rejected attempt.
     dated.write_text(json.dumps(result, sort_keys=True, indent=2) + "\n")
     root.mkdir(parents=True, exist_ok=True)
     latest = {
