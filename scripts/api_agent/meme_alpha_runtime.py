@@ -235,6 +235,7 @@ def build_request(
     *,
     enable_web: bool,
     max_web_search_calls: int = 2,
+    max_output_tokens: int = 3600,
 ) -> dict[str, Any]:
     instructions = (
         "You are the research-only Meme Alpha Lab analyst inside an audited investment framework. "
@@ -243,13 +244,14 @@ def build_request(
         "For wallet research distinguish self-initiated trades from dust, seeded recipient transfers and router attribution. "
         "Never retroactively rewrite historical wallet quality. Preserve negative cases, sellability and exit feasibility. "
         "Do not recommend a buy, sell, position size, portfolio action, automatic trade, canonical promotion or repository mutation. "
-        "Development findings may only be proposed as candidates for the existing governed code/research owners."
+        "Development findings may only be proposed as candidates for the existing governed code/research owners. "
+        "Keep the structured research packet compact: prioritize the strongest evidence, avoid repetition, and keep list items concise."
     )
     payload: dict[str, Any] = {
         "model": model,
         "reasoning": {"effort": effort, "context": "current_turn"},
         "store": False,
-        "max_output_tokens": 1800,
+        "max_output_tokens": max_output_tokens,
         "instructions": instructions,
         "input": [
             {
@@ -363,6 +365,9 @@ def analyze(
     task_id = "MAL-" + task_hash[:16]
     selected_model = model or policy["model_policy"]["default_model"]
     effort = policy["model_policy"]["default_reasoning_effort"]
+    max_output_tokens = int(policy["model_policy"].get("max_output_tokens", 3600))
+    if max_output_tokens < 1800 or max_output_tokens > 8000:
+        raise ValueError("invalid_max_output_tokens")
     max_web_calls = int(policy["budget"].get("max_web_search_calls_per_task", 2))
     if max_web_calls < 0 or max_web_calls > 4:
         raise ValueError("invalid_max_web_search_calls_per_task")
@@ -373,6 +378,7 @@ def analyze(
         task,
         enable_web=enable_web,
         max_web_search_calls=max_web_calls,
+        max_output_tokens=max_output_tokens,
     )
     output_dir.mkdir(parents=True, exist_ok=True)
     request_hash = sha256_bytes(canonical_bytes(request_payload))
@@ -401,10 +407,16 @@ def analyze(
         if not api_key:
             raise SystemExit("OPENAI_API_KEY_missing")
         response = call_api(api_key, request_payload)
+        if response.get("status") == "incomplete":
+            details = response.get("incomplete_details") if isinstance(response.get("incomplete_details"), dict) else {}
+            raise ValueError("model_output_incomplete:" + str(details.get("reason") or "unknown"))
         text = extract_output_text(response)
         if not text:
             raise ValueError("missing_output_text")
-        output = json.loads(text)
+        try:
+            output = json.loads(text)
+        except json.JSONDecodeError as exc:
+            raise ValueError(f"model_output_invalid_json:{exc.msg}") from exc
         validate_output(output)
     observed_urls = collect_urls(response)
     claimed_urls = {x for x in output.get("source_urls", []) if isinstance(x, str)}
@@ -435,6 +447,7 @@ def analyze(
         "response_id": response.get("id"),
         "model": selected_model,
         "reasoning_effort": effort,
+        "max_output_tokens": max_output_tokens,
         "web_search_enabled": enable_web,
         "web_source_count": len(observed_urls),
         "web_search_call_count": web_search_call_count,
