@@ -15,6 +15,30 @@ from scripts.intraday_execution import intraday_execution_research_core as _core
 from scripts.intraday_execution.intraday_execution_research_core import *  # noqa: F401,F403
 
 
+# Keep the canonical module as the public runtime surface. Existing tests and
+# callers legitimately override these bindings on this module; the core split
+# must not silently bypass those overrides.
+_RUNTIME_BINDINGS = (
+    "ROOT",
+    "OBS",
+    "EVENTS",
+    "LATEST",
+    "STATE",
+    "SUMMARY",
+    "CONFIG",
+    "ENTRY",
+    "PULLBACK",
+    "BREADTH",
+    "HOURLY_POINTER",
+    "now_utc",
+)
+
+
+def _sync_runtime_bindings() -> None:
+    for name in _RUNTIME_BINDINGS:
+        setattr(_core, name, globals()[name])
+
+
 def hourly_rows():
     return read_complete_spot_window(
         _core.HOURLY_POINTER,
@@ -23,10 +47,17 @@ def hourly_rows():
     )
 
 
-# Core functions such as build_snapshot resolve hourly_rows in the core module's
-# global namespace, so bind the shared owner before any execution or imported use.
+def main():
+    _sync_runtime_bindings()
+    # Core functions such as build_snapshot resolve hourly_rows in the core
+    # module's global namespace, so bind the shared owner for this execution.
+    _core.hourly_rows = hourly_rows
+    return _core.main()
+
+
+# Imported core helpers that call hourly_rows directly retain the shared owner.
 _core.hourly_rows = hourly_rows
 
 
 if __name__ == "__main__":
-    _core.main()
+    main()
