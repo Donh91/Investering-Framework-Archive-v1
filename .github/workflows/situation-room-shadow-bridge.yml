@@ -11,16 +11,6 @@ on:
     # Idempotent source_run_id handling prevents duplicate Shadow admission.
     - cron: '40 8 * * *'
       timezone: 'Europe/Copenhagen'
-  push:
-    branches:
-      - main
-    paths:
-      - 'scripts/data_terminal/situation_room_shadow_bridge.py'
-      - 'scripts/api_agent/augment_director_situation_room_shadow.py'
-      - 'scripts/api_agent/augment_director_compounding_learning_context.py'
-      - 'tests/api_agent/test_director_situation_room_shadow.py'
-      - '04_MARKET_LEARNING/external_research/situation_room_shadow/README.md'
-      - '.github/workflows/situation-room-shadow-bridge.yml'
   workflow_dispatch:
 
 permissions:

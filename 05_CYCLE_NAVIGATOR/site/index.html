@@ -4,13 +4,15 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#07111f" />
+  <meta name="color-scheme" content="dark" />
   <meta name="description" content="Cycle Navigator - a public crypto market-cycle dashboard with live market context and an official framework-backed weekly outlook." />
   <title>Cycle Navigator</title>
   <link rel="preconnect" href="https://api.coingecko.com" />
-  <link rel="preconnect" href="https://raw.githubusercontent.com" />
   <link rel="stylesheet" href="./styles.css" />
+  <link rel="stylesheet" href="./motion.css" />
 </head>
 <body>
+  <div class="page-progress" aria-hidden="true"><span></span></div>
   <div class="ambient ambient-a"></div>
   <div class="ambient ambient-b"></div>
 
@@ -28,8 +30,19 @@
     </div>
   </header>
 
+  <div class="journey-nav-wrap shell">
+    <nav class="journey-nav" aria-label="Cycle Navigator report sections">
+      <a href="#pulse-heading">Pulse</a>
+      <a href="#weekly-heading">Weekly</a>
+      <a href="#rotation-heading">Rotation</a>
+      <a href="#countdown-heading">Altseason</a>
+      <a href="#report-heading">Audit</a>
+    </nav>
+  </div>
+
   <main id="top" class="shell">
     <section class="hero panel">
+      <div class="hero-orbit" aria-hidden="true"></div>
       <div class="hero-copy">
         <div class="eyebrow-row">
           <span class="eyebrow" id="issueLabel">Cycle Navigator</span>
@@ -45,6 +58,7 @@
 
         <div class="hero-rule"></div>
         <p class="authority-note">LIVE prices are contextual only. The OFFICIAL weekly state, forecasts, score, rotation ladder and altseason countdown change only when a new framework-backed package is published.</p>
+        <span class="scroll-cue" aria-hidden="true">Scroll through the cycle map</span>
       </div>
 
       <div class="score-card" aria-label="Prior issue structural score">
@@ -202,7 +216,7 @@
         </div>
         <div>
           <h3>Authority</h3>
-          <p>OFFICIAL state comes from the public GitHub pointer and its referenced machine package. LIVE prices never rewrite the weekly package.</p>
+          <p>OFFICIAL state is mechanically derived from the canonical Cycle Navigator pointer and its referenced machine package. LIVE prices never rewrite the weekly package.</p>
         </div>
       </div>
       <div class="report-footer">
@@ -226,5 +240,6 @@
   </footer>
 
   <script src="./app.js" defer></script>
+  <script src="./motion.js" defer></script>
 </body>
 </html>
