@@ -8,6 +8,7 @@ from pathlib import Path
 
 REPO = Path(__file__).parents[2]
 SCRIPT = REPO / "scripts" / "experiments" / "factor_test_n5_independent.py"
+RESULT = REPO / "04_RESEARCH_LAB" / "auto_trading" / "experiments" / "E3_TRIAL_N5_INDEPENDENT_RESULT.json"
 SPEC = importlib.util.spec_from_file_location("factor_test_n5", SCRIPT)
 n5 = importlib.util.module_from_spec(SPEC)
 assert SPEC.loader is not None
@@ -127,12 +128,15 @@ class FactorTestN5IndependentTests(unittest.TestCase):
     def test_n5_repository_replay_is_deterministic_and_research_only(self):
         first = n5.evaluate(REPO)
         second = n5.evaluate(REPO)
-        self.assertEqual(n5.canonical(first), n5.canonical(second))
+        encoded = n5.canonical(first)
+        self.assertEqual(encoded, n5.canonical(second))
+        self.assertEqual(encoded, RESULT.read_bytes())
         self.assertEqual(first["trial_accounting"]["proposal_trial_n"], 5)
-        self.assertIn(first["adjudication"]["status"], {"INDEPENDENT_SUPPORT", "INDEPENDENT_NOT_SUPPORTED"})
+        self.assertEqual(first["adjudication"]["status"], "INDEPENDENT_NOT_SUPPORTED")
+        self.assertEqual(first["adjudication"]["eligible_normalized_transforms"], [])
         self.assertFalse(first["authority"]["portfolio_execution"])
         self.assertFalse(first["authority"]["automatic_promotion"])
-        print("N5_AGGREGATE_RESULT=" + n5.canonical(first).decode().strip())
+        print("N5_AGGREGATE_RESULT=" + encoded.decode().strip())
 
 
 if __name__ == "__main__":
