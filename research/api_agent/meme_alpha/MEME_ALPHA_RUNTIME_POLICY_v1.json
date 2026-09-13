@@ -1,0 +1,88 @@
+{
+  "contract": "MEME_ALPHA_RUNTIME_POLICY_v1",
+  "status": "ACTIVE_RESEARCH_ONLY",
+  "owner": "Investering Framework existing research/API-agent stack",
+  "private_workspace": "Donh91/secrets/private_research/memes_alpha",
+  "cadence": {
+    "heartbeat_hours": 4,
+    "event_driven_allowed": true,
+    "max_tasks_per_run": 1,
+    "empty_queue_behavior": "NOOP_NO_MODEL_CALL"
+  },
+  "execution_order": [
+    "DETERMINISTIC_LOCAL",
+    "GITHUB_PUBLIC",
+    "FREE_OR_ALREADY_AUTHORIZED_PROVIDER",
+    "OPENAI_LUNA_WEB_RESEARCH",
+    "OPENAI_SOL_ESCALATION"
+  ],
+  "model_policy": {
+    "default_model": "gpt-5.6-luna",
+    "default_reasoning_effort": "medium",
+    "sol_escalation_requires": [
+      "material_evidence_conflict",
+      "high_value_network_forensics",
+      "methodological_adjudication",
+      "luna_blocked_or_inconclusive"
+    ],
+    "astra_default_allowed": false,
+    "code_write_executor": "CODEX_OR_REVIEWED_AGENT_PR_ONLY"
+  },
+  "budget": {
+    "single_task_soft_cap_usd": 0.35,
+    "single_task_hard_cap_usd": 0.75,
+    "daily_soft_cap_usd": 1.0,
+    "monthly_shared_api_hard_stop_usd": 20.0,
+    "automatic_budget_increase": false
+  },
+  "queue": {
+    "intake_roots": [
+      "private_research/memes_alpha/research_leads",
+      "private_research/memes_alpha/cases",
+      "private_research/memes_alpha/discovery",
+      "private_research/memes_alpha/wallet_research"
+    ],
+    "runtime_root": "private_research/memes_alpha/runtime",
+    "terminal_states": ["COMPLETE", "KILLED", "SUPERSEDED"],
+    "blocked_states": ["BLOCKED", "WAITING_FOR_DATA", "WAITING_FOR_GOVERNANCE"],
+    "eligible_status_tokens": [
+      "QUEUED",
+      "READY",
+      "OPEN",
+      "WATCH",
+      "HIGH_PRIORITY_WATCH",
+      "QUEUED_FOR_INDEPENDENT_REPLAY",
+      "PROVISIONAL",
+      "RESEARCH"
+    ]
+  },
+  "research_controls": {
+    "point_in_time_evidence_required": true,
+    "input_sha256_required": true,
+    "source_urls_required_for_web_claims": true,
+    "negative_cases_required": true,
+    "no_retroactive_wallet_rescore": true,
+    "first_entry_distinct_from_repeat_accumulation": true,
+    "seeded_or_dust_recipient_must_not_count_as_smart_money": true,
+    "sellability_or_exit_feasibility_required_before_positive_alpha_label": true,
+    "matched_failures_required_before_method_promotion": true
+  },
+  "adaptive_development": {
+    "enabled": true,
+    "may_create_research_proposal": true,
+    "may_create_code_candidate": true,
+    "may_modify_production_code_directly": false,
+    "may_auto_merge": false,
+    "codex_is_required_for_research": false,
+    "codex_is_optional_for_bounded_code_work": true
+  },
+  "authority": {
+    "portfolio_action": false,
+    "automatic_trading": false,
+    "canonical_promotion": false,
+    "framework_state_change": false,
+    "market_rule_change": false,
+    "model_weight_change": false,
+    "automatic_merge": false
+  }
+}
