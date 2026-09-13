@@ -1,0 +1,105 @@
+{
+  "contract": "CODEX_RESEARCH_CANDIDATE_v1",
+  "candidate_id": "codex-research-memes-v3-autonomous-alpha-workstream-v1",
+  "submitted_at_utc": "2026-09-09T19:02:54Z",
+  "status": "SUBMITTED",
+  "origin": {
+    "type": "RESEARCH_THREAD",
+    "thread_label": "Memes v3 / Alpha Lab",
+    "source_paths": [
+      "07_PROMPTS_AND_AGENTS/memes_alpha/2026-09-09__memes-v3-autonomous-alpha-research-workstream-v1__operational.md",
+      "research/api_agent/API_AGENT_AND_COMPOUNDING_LEARNING_ARCHITECTURE_v1.md",
+      "research/api_agent/API_INTELLIGENCE_POLICY_v2.json",
+      "research/api_agent/CAPABILITY_ROUTING_POLICY_v1.json",
+      "00_FMOS/AUTOMATION_ORCHESTRATION_ARCHITECTURE_v2.md"
+    ]
+  },
+  "title": "Implement Memes v3 autonomous Alpha Lab research workstream",
+  "objective": "Implement the smallest two-plane, research-only background pipeline defined by the owner-approved Memes v3 operational contract. It must deterministically monitor the private case/watchlist seed, collect public Robinhood Chain and Ethereum evidence, classify intentional wallet deployment versus passive receipts, create immutable research event rows, adapt observation cadence without alert spam, and integrate matured learning with the existing Research Governance and Compounding Learning architecture. It must not emit trades, expose the private watchlist, create a parallel research engine, alter API budgets, or self-promote findings.",
+  "finding_key": "MEMES_V3_AUTONOMOUS_ALPHA_WORKSTREAM_NOT_IMPLEMENTED",
+  "primary_target": "07_PROMPTS_AND_AGENTS/memes_alpha/2026-09-09__memes-v3-autonomous-alpha-research-workstream-v1__operational.md",
+  "allowed_change_scope": [
+    "Donh91/Investering-Framework-Archive-v1:scripts/research/memes_alpha/**",
+    "Donh91/Investering-Framework-Archive-v1:tests/research/memes_alpha/**",
+    "Donh91/Investering-Framework-Archive-v1:research/memes_alpha/**",
+    "Donh91/Investering-Framework-Archive-v1:.github/workflows/memes-alpha-research*.yml",
+    "Donh91/Investering-Framework-Archive-v1:research/api_agent/API_TASK_REGISTRY_v1.json only if required to add an owner-approved research-only task without changing any budget",
+    "Donh91/secrets:collectors/memes_alpha/**",
+    "Donh91/secrets:tests/memes_alpha/**",
+    "Donh91/secrets:schemas/memes_alpha/**",
+    "Donh91/secrets:health/MEMES_ALPHA/**",
+    "Donh91/secrets:private_research/memes_alpha/**",
+    "Donh91/secrets:raw/MEMES_ALPHA_*/** only through a source contract and the existing private raw-envelope validation path",
+    "Donh91/secrets:receipts/MEMES_ALPHA_*/**",
+    "Donh91/secrets:.github/workflows/memes-alpha-private*.yml"
+  ],
+  "evidence": [
+    {
+      "kind": "REPO_PATH",
+      "ref": "07_PROMPTS_AND_AGENTS/memes_alpha/2026-09-09__memes-v3-autonomous-alpha-research-workstream-v1__operational.md",
+      "summary": "Owner-approved operational contract defines scope, provenance, privacy, cadence, deterministic classification, adaptive learning, model routing and kill conditions."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "research/api_agent/API_AGENT_AND_COMPOUNDING_LEARNING_ARCHITECTURE_v1.md",
+      "summary": "Existing compounding-learning owner already provides the automatic research learning path and no-hindsight rules."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "00_ARCHIVE_CONTROL/research_governance_v1/STACK_MANIFEST.json",
+      "summary": "Existing autonomous research governance stack provides novelty, VOI, adversarial review and meta-orchestration without canonical or portfolio authority."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "Donh91/secrets:private_research/memes_alpha/seeds/2026/09/09/seed.json",
+      "summary": "Restricted seed contains current user-supplied Alpha Lab cases and provisional wallet research and must not be exposed in the public control plane."
+    }
+  ],
+  "reproduction": "On current main, search for scripts/research/memes_alpha, research/memes_alpha and a memes-alpha scheduled workflow. No implementation exists. The existing autonomous research stack cannot monitor the Alpha Lab seed because it has no Memes v3 collector/classifier or research rows. After the private seed is merged, run a dry-run implementation against that seed and public explorer/API fixtures. The pipeline must produce deterministic events without revealing exact private identifiers in public logs or artifacts.",
+  "acceptance_tests": {
+    "positive": [
+      "A private-seed fixture is read through an explicit cross-repository binding and the public output contains only hash/count/timestamp/health metadata, not wallet or token identifiers.",
+      "Positive swap fixture classifies a wallet-initiated funded swap as INTENTIONAL_BUY and writes an immutable research event row with source lineage and USER_SUPPLIED or AUTONOMOUS_DISCOVERY origin.",
+      "Two independently qualified wallet fixtures buying the same unseen token trigger MULTI_WALLET_CONVERGENCE exactly once and advance observation state without duplicate-alert spam.",
+      "A Robinhood Chain fixture and an Ethereum ERC20 fixture both pass deterministic collection and classification using public sources.",
+      "A matured synthetic discovery receives 1h/6h/24h/7d outcome attachment without rewriting the frozen discovery timestamp or origin.",
+      "A no-change hourly run performs a deterministic no-op and makes zero model/API calls.",
+      "Any optional model triage uses the existing API Gateway and current research-automation budget owner and cannot increase the monthly or lane cap.",
+      "Public health/readback receipt is provider-value-free and exact private identifiers never appear in public workflow logs, public files, issues or PR artifacts.",
+      "Any retained private API payload under raw/MEMES_ALPHA_* conforms to the existing private raw-envelope/source-contract/receipt validation path rather than bypassing it.",
+      "Workflow activation includes the repository high-impact safepoint/recovery gate before workflow changes are merged and then completes at least 24 hours of shadow observation before alert escalation is trusted."
+    ],
+    "negative": [
+      "Passive receipt, dust, spam and airdrop fixtures never classify as INTENTIONAL_BUY.",
+      "Telegram or social-text-only fixture never promotes a wallet or token to qualified alpha without on-chain evidence.",
+      "A user-supplied case can never be rewritten as AUTONOMOUS_DISCOVERY after later success.",
+      "Missing transaction, price, liquidity or holder evidence remains UNKNOWN and is never inferred.",
+      "Private seed values must fail the public-output redaction test if any exact address or token identifier escapes.",
+      "A competitive seed/config object placed under the Round 3 raw namespace without the required capture envelope must fail validation; the implementation must use the private_research seed route instead.",
+      "Rate-limit or source failure must back off/degrade explicitly and must not create synthetic continuity.",
+      "The pipeline must fail tests if it emits BUY, SELL, position size, portfolio action, canonical promotion, threshold mutation or model-weight changes.",
+      "No implementation may change API hard-stop, lane-cap or reserve values.",
+      "No Codex or automation path may self-merge the implementation."
+    ]
+  },
+  "authority_boundary": "CODE_REMEDIATION_ONLY",
+  "requires_framework_owner_authority": false,
+  "forbidden_changes": [
+    "market gates",
+    "model weights",
+    "canonical authority",
+    "portfolio logic",
+    "API budget",
+    "new policy semantics",
+    "automatic trade execution",
+    "automatic buy or sell signals",
+    "paid data authorization",
+    "private watchlist publication",
+    "Round 3 analysis activation",
+    "automatic canonical promotion",
+    "automatic merge"
+  ],
+  "linked_health_signature": null,
+  "requested_priority": "EXPEDITED",
+  "post_fix_gate": "POSITIVE_AND_NEGATIVE_FIXTURES_PASS_PLUS_PRIVATE_DATA_LEAKAGE_TEST_PASS_PLUS_24H_SHADOW_RUN_WITH_ZERO_DUPLICATE_ALERT_STORM_AND_ZERO_UNBOUNDED_API_USAGE"
+}

@@ -1,0 +1,106 @@
+{
+  "contract": "CODEX_RESEARCH_CANDIDATE_v1",
+  "candidate_id": "codex-research-memes-v3-fomo-radar-ablation-v1",
+  "submitted_at_utc": "2026-09-12T08:58:00Z",
+  "status": "SUBMITTED",
+  "origin": {
+    "type": "OWNER_APPROVED_EXTERNAL_BENCHMARK",
+    "thread_label": "Memes v3 / Alpha Lab",
+    "source_paths": [
+      "07_PROMPTS_AND_AGENTS/memes_alpha/2026-09-12__fomo-radar-forensic-benchmark-v1__research-addendum.md",
+      "04_RESEARCH_LAB/auto_trading/source_notes/AT-SRC-0012_FOMO_ROBINHOOD_RADAR_FORENSIC_BENCHMARK.md",
+      "07_PROMPTS_AND_AGENTS/memes_alpha/2026-09-11__memes-v3-empirical-hardening-adjudication-v1__research-addendum.md"
+    ],
+    "external_repo": "cvxv666/fomo-robinhood-radar",
+    "external_commit": "1c448e97a9617a19793aafb7963138e36ec5a1bf"
+  },
+  "title": "Ablate FOMO Radar provenance, convergence and exit mechanisms against Memes v3 baseline",
+  "objective": "Implement only the minimum Alpha Lab variants needed to test whether receipt-level trade provenance, recipient-spoof rejection, adaptive dust/seed quarantine, first-buy convergence and cohort-exit state add incremental prospective value over the existing Memes v3 baseline. Preserve entity-before-wallet, strict as-of-time evidence, executable returns and Cycle Navigator regime context. Do not fork the external application, import its global wallet score as authority, or create a parallel signal/execution engine.",
+  "finding_key": "MEMES_V3_EXTERNAL_FOMO_RADAR_ABLATION_OPPORTUNITY",
+  "depends_on_candidates": [
+    "codex-research-memes-v3-autonomous-alpha-workstream-v1",
+    "codex-research-memes-v3-empirical-hardening-v1",
+    "codex-research-memes-v3-launch-replay-recorder-v1"
+  ],
+  "primary_target": "07_PROMPTS_AND_AGENTS/memes_alpha/2026-09-12__fomo-radar-forensic-benchmark-v1__research-addendum.md",
+  "implementation_order": [
+    {
+      "priority": "P0",
+      "scope": [
+        "add a deterministic TRADE_PROVENANCE_GATE after address-role resolution and before wallet skill/convergence consumption",
+        "classify intentional trade, recipient-spoof/gifted swap, dust/probe, passive transfer, service/router/protocol flow and unresolved with fail-closed promotion semantics",
+        "preserve receipt evidence and immutable provenance fields so later rule changes can replay old fills without rewriting raw evidence",
+        "add positive and negative fixtures for spoofed recipient flow, seeded multi-wallet flow and genuine wallet buys",
+        "ensure quote assets and service/inventory addresses cannot inflate wallet convergence"
+      ]
+    },
+    {
+      "priority": "P1",
+      "scope": [
+        "implement first-buy convergence as an ablation using strict score-as-of-time evidence only",
+        "compare raw wallet convergence against independent-entity convergence after funder/controller clustering",
+        "persist condition_time, observed_at, computed_at, alert_delivery_time and first_executable_time separately when available",
+        "extend First Distribution Survival with cohort-exit acceleration, fraction of original independent conviction exited, genuine sell vs transfer/migration and new-buyer absorption",
+        "bind Cycle Navigator regime state as evaluation context rather than letting a burst threshold be universal"
+      ]
+    },
+    {
+      "priority": "P2_SHADOW_ONLY",
+      "scope": [
+        "run ablations for no dust filter vs absolute floor vs wallet-relative/adaptive rules and report false-positive/false-negative tradeoffs",
+        "test seeded-token quarantine under adversarial cases without letting a small attacker hide genuine broad demand",
+        "compare external-style global wallet scoring with Conditional Wallet Intelligence and outlier-ablation",
+        "replay FLYBRAIN with replay condition time separated from actual historical detection/delivery/execution time",
+        "reconstruct an exit-consensus case such as CRUMBS only if exact identity and chain history can be reproduced"
+      ]
+    }
+  ],
+  "allowed_change_scope": [
+    "Donh91/Investering-Framework-Archive-v1:scripts/research/memes_alpha/**",
+    "Donh91/Investering-Framework-Archive-v1:tests/research/memes_alpha/**",
+    "Donh91/Investering-Framework-Archive-v1:research/memes_alpha/**",
+    "Donh91/secrets:collectors/memes_alpha/**",
+    "Donh91/secrets:tests/memes_alpha/**",
+    "Donh91/secrets:schemas/memes_alpha/**",
+    "Donh91/secrets:private_research/memes_alpha/**",
+    "Donh91/secrets:health/MEMES_ALPHA/**",
+    "Donh91/secrets:receipts/MEMES_ALPHA_*/**"
+  ],
+  "acceptance_tests": {
+    "positive": [
+      "A recipient-spoof fixture cannot count toward wallet conviction or multi-wallet convergence.",
+      "A genuine wallet buy remains a genuine buy after provenance verification.",
+      "Raw immutable receipt evidence survives changes to dust/seed classification rules and can be replayed deterministically.",
+      "A multi-wallet alert reports both raw wallet count and independent-entity count; linked wallets cannot silently count as independent confirmations.",
+      "Historical replay uses the wallet score/evidence available at that historical moment for promotion-grade evaluation.",
+      "Condition time, system observation time, alert delivery time and first executable time cannot be conflated.",
+      "Exit state distinguishes a trim from broad cohort departure and excludes unknown pre-tape cost/position states where required.",
+      "Every performance table includes sample count, matched baseline, regime context, executable-return assumptions and downside/path metrics.",
+      "The candidate can reject an external mechanism if it fails incremental-value ablation."
+    ],
+    "negative": [
+      "No current/global wallet score may be applied backward to historical trades as promotion evidence.",
+      "No raw wallet headcount, global 0-100 score, Fomo headline PnL, 2x-hit rate or model identity may independently produce QUALIFIED_ALPHA.",
+      "No fixed external dust threshold or burst threshold becomes canonical by copying the external repository.",
+      "No external repository code is vendored wholesale into the Framework without a separate license/security/design review.",
+      "No automatic trading, copy trading, BUY/SELL/size output, new portfolio authority or new independent scheduler is authorized.",
+      "No paid provider, API-budget increase or secret-bearing source is authorized by this candidate."
+    ]
+  },
+  "authority_boundary": "CODE_REMEDIATION_ONLY",
+  "requires_framework_owner_authority": false,
+  "forbidden_changes": [
+    "new parallel scanner or engine",
+    "global wallet score as canonical authority",
+    "current-score hindsight replay for promotion",
+    "automatic execution or copy trading",
+    "buy sell sizing outputs",
+    "portfolio logic",
+    "paid data authorization",
+    "API budget increase",
+    "private watchlist publication",
+    "automatic merge"
+  ],
+  "requested_priority": "EXPEDITED_AFTER_MEMES_V3_EMPIRICAL_HARDENING_AND_LAUNCH_REPLAY_P0",
+  "post_fix_gate": "PROVENANCE_SPOOF_FIXTURE_PASS_PLUS_GENUINE_BUY_CONTROL_PASS_PLUS_ENTITY_CONVERGENCE_ABLATION_PASS_PLUS_STRICT_ASOF_REPLAY_PASS_PLUS_EXIT_STATE_TEST_PASS_PLUS_EXECUTABLE_REGIME_BASELINE_REPORT_PLUS_ZERO_TRADE_AUTHORITY"
+}

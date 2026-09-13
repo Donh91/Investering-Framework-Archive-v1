@@ -1,0 +1,79 @@
+{
+  "contract": "USAD_ENTITY_MASTER_SEED_v1",
+  "status": "DRAFT_DERIVATIVE_MAPPING_NOT_MARKET_EVIDENCE",
+  "recorded_date": "2026-09-09",
+  "source": "SEC_COMPANY_TICKERS_EXCHANGE_JSON",
+  "source_url": "https://www.sec.gov/files/company_tickers_exchange.json",
+  "mapping_policy": {
+    "raw_source_records_immutable": true,
+    "ticker_mapping_is_derivative": true,
+    "ticker_changes_create_versioned_mapping_updates": true,
+    "subsidiary_parent_mapping_requires_separate_evidence": true,
+    "legal_entity_identity_preferred_over_ticker_for_government_contracts": true,
+    "cusip_mapping_not_inferred": true
+  },
+  "seed_entities": [
+    {
+      "ticker": "COIN",
+      "sec_cik": 1679788,
+      "sec_name": "Coinbase Global, Inc.",
+      "exchange": "Nasdaq",
+      "research_lane": "CRYPTO_MARKET_INFRASTRUCTURE"
+    },
+    {
+      "ticker": "HOOD",
+      "sec_cik": 1783879,
+      "sec_name": "Robinhood Markets, Inc.",
+      "exchange": "Nasdaq",
+      "research_lane": "CRYPTO_FINTECH_BROKERAGE"
+    },
+    {
+      "ticker": "MSTR",
+      "sec_cik": 1050446,
+      "sec_name": "Strategy Inc",
+      "exchange": "Nasdaq",
+      "research_lane": "BTC_TREASURY_PROXY"
+    },
+    {
+      "ticker": "MARA",
+      "sec_cik": 1507605,
+      "sec_name": "MARA Holdings, Inc.",
+      "exchange": "Nasdaq",
+      "research_lane": "BITCOIN_MINING"
+    },
+    {
+      "ticker": "RIOT",
+      "sec_cik": 1167419,
+      "sec_name": "Riot Platforms, Inc.",
+      "exchange": "Nasdaq",
+      "research_lane": "BITCOIN_MINING"
+    },
+    {
+      "ticker": "CLSK",
+      "sec_cik": 827876,
+      "sec_name": "CLEANSPARK, INC.",
+      "exchange": "Nasdaq",
+      "research_lane": "BITCOIN_MINING"
+    },
+    {
+      "ticker": "IREN",
+      "sec_cik": 1878848,
+      "sec_name": "IREN Ltd",
+      "exchange": "Nasdaq",
+      "research_lane": "BITCOIN_MINING_AI_DATACENTER"
+    }
+  ],
+  "future_expansion_lanes": [
+    "AI_COMPUTE_SEMICONDUCTORS",
+    "QUANTUM_ADVANCED_COMPUTING",
+    "RWA_TOKENIZATION",
+    "STABLECOIN_PAYMENTS",
+    "EXCHANGE_CUSTODY_SETTLEMENT"
+  ],
+  "forbidden": [
+    "USE_THIS_MAPPING_AS_OUTCOME_EVIDENCE",
+    "SILENTLY_REWRITE_HISTORICAL_TICKERS",
+    "INFER_CUSIP_OR_SUBSIDIARY_LINKS_WITHOUT_SOURCE",
+    "REWRITE_RAW_SOURCE_RECORDS_FROM_ENTITY_MASTER"
+  ]
+}

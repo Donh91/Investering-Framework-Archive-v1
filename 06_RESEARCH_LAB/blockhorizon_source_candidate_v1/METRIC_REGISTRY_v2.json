@@ -1,0 +1,161 @@
+{
+  "registry": "BLOCKHORIZON_METRIC_REGISTRY_v2",
+  "status": "RESEARCH_ONLY__RECONCILED_2026_09_09",
+  "supersedes_for_current_routing": "METRIC_REGISTRY_v1.json",
+  "source_contract_id": "BH01_BLOCKHORIZON_MANUAL_EXPORT_HISTORICAL_V1",
+  "private_binding_file": "CURRENT_PRIVATE_BINDING.json",
+  "private_reconciliation_receipt": "receipts/BH01_BLOCKHORIZON_MANUAL_EXPORT_HISTORICAL_V1/2026/09/09/2026-09-09__blockhorizon_combo_reconciliation_receipt_v1.json",
+  "collection_semantics": {
+    "blockhorizon_all_selector": "EXPORTS_SELECTED_SERIES_OVER_EACH_SERIES_AVAILABLE_HISTORICAL_TIMELINE",
+    "does_not_mean": "ALL_SIBLING_CHARTS_ARE_AUTOMATICALLY_INCLUDED",
+    "combo_csv_policy": "PRESERVE_RAW_COMBO_BYTE_FOR_BYTE; INVENTORY_EVERY_COLUMN; DEDUPLICATE_OVERLAP_ANALYTICALLY"
+  },
+  "archive_summary": {
+    "csv_file_count": 55,
+    "unique_content_sha256_count": 48,
+    "exact_content_duplicate_group_count": 7,
+    "total_bytes": 13585728,
+    "non_reference_export_column_count": 161,
+    "column_count_note": "Distribution buckets and model fields are included, so this is not an independent-chart count."
+  },
+  "supplemental_batch_2026_09_09": {
+    "csv_file_count": 14,
+    "unique_content_sha256_count": 14,
+    "total_bytes": 5539163,
+    "non_reference_export_column_count": 74,
+    "hash_readback": "PASS_14_OF_14",
+    "timestamp_columns": "PASS_14_OF_14",
+    "timestamp_monotonicity": "PASS_14_OF_14"
+  },
+  "family_coverage": {
+    "HODL_WAVES": {
+      "status": "COMPLETE_12_OF_12",
+      "private_source_filename": "hodl_waves_2026-09-09T05-53-13.csv",
+      "buckets": ["<24h","1d-1w","1w-1m","1m-3m","3m-6m","6m-12m","1y-2y","2y-3y","3y-5y","5y-7y","7y-10y",">10y"]
+    },
+    "CDD_COHORT_SYMMETRY": {
+      "status": "COMPLETE",
+      "present": ["CDD Short Term Supply","CDD Long Term Supply"],
+      "private_source_filename": "cdd_coin_days_destroyed__2026-09-09T05-53-44.csv"
+    },
+    "SUPPLY_LAST_ACTIVE_DISCRETE_AGE_BANDS": {
+      "status": "PARTIAL_4_OF_12",
+      "present": [
+        "Supply Last Active < 24 Hours",
+        "Supply Last Active 1d-1w",
+        "Supply Last Active 1y-2y",
+        "Supply Last Active 10y+"
+      ],
+      "missing": [
+        "Supply Last Active 1w-1m",
+        "Supply Last Active 1m-3m",
+        "Supply Last Active 3m-6m",
+        "Supply Last Active 6m-12m",
+        "Supply Last Active 2y-3y",
+        "Supply Last Active 3y-5y",
+        "Supply Last Active 5y-7y",
+        "Supply Last Active 7y-10y"
+      ],
+      "missing_count": 8,
+      "note": "HODL Waves age buckets are not substitutes for Supply Last Active series."
+    },
+    "SPENT_VOLUME_DISCRETE_AGE_BANDS": {
+      "status": "PARTIAL_4_OF_13",
+      "present": [
+        "Spent Volume 1h-24h",
+        "Spent Volume 1y-2y",
+        "Spent Volume 7y-10y",
+        "Spent Volume 10y+"
+      ],
+      "missing": [
+        "Spent Volume <1h",
+        "Spent Volume 1d-1w",
+        "Spent Volume 1w-1m",
+        "Spent Volume 1m-3m",
+        "Spent Volume 3m-6m",
+        "Spent Volume 6m-12m",
+        "Spent Volume 2y-3y",
+        "Spent Volume 3y-5y",
+        "Spent Volume 5y-7y"
+      ],
+      "missing_count": 9
+    },
+    "OUTPUTS_SPENT_DISCRETE_AGE_BANDS": {
+      "status": "OPTIONAL_PARTIAL_4_OF_13",
+      "present": ["Outputs Spent <1h","Outputs Spent 1h-24h","Outputs Spent 1y-2y","Outputs Spent 10y+"],
+      "missing": [
+        "Outputs Spent 1d-1w","Outputs Spent 1w-1m","Outputs Spent 1m-3m","Outputs Spent 3m-6m","Outputs Spent 6m-12m","Outputs Spent 2y-3y","Outputs Spent 3y-5y","Outputs Spent 5y-7y","Outputs Spent 7y-10y"
+      ],
+      "role": "OPTIONAL_COUNT_VS_VOLUME_CROSSCHECK"
+    },
+    "SUPPLY_REVIVED_THRESHOLDS": {
+      "status": "OPTIONAL_PARTIAL_2_OF_4",
+      "present": ["Supply Revived 1+ Years","Supply Revived 5+ Years"],
+      "missing": ["Supply Revived 2+ Years","Supply Revived 3+ Years"]
+    }
+  },
+  "additional_series_present_from_combo_exports": [
+    {"metric_id":"BH_ASOL","chart":"ASOL: Average Spent Output Lifespan","status":"PRESENT"},
+    {"metric_id":"BH_SUPPLY_LTS_POSITION_CHANGE","chart":"Supply Long Term (LTS) Position Change","status":"PRESENT"},
+    {"metric_id":"BH_SUPPLY_STS_POSITION_CHANGE","chart":"Supply Short Term (STS) Position Change","status":"PRESENT"},
+    {"metric_id":"BH_MVRV_ADJUSTED","chart":"MVRV Adjusted Ratio","status":"PRESENT"},
+    {"metric_id":"BH_MVRV_MOMENTUM","chart":"MVRV Momentum Oscillator","status":"PRESENT"},
+    {"metric_id":"BH_SUPPLY_LTS_PROFIT_LOSS","chart":"Supply Long Term (LTS) in Profit/Loss","status":"PRESENT"},
+    {"metric_id":"BH_SUPPLY_STS_PROFIT_LOSS","chart":"Supply Short Term (STS) in Profit/Loss","status":"PRESENT"},
+    {"metric_id":"BH_SUPPLY_ADJUSTED","chart":"Supply Adjusted","status":"PRESENT"},
+    {"metric_id":"BH_SUPPLY_PROBABLY_LOST","chart":"Supply Probably Lost","status":"PRESENT"},
+    {"metric_id":"BH_UTXO_VALUE_SPENT_TOTAL","chart":"UTXO Value Spent Total","status":"PRESENT"},
+    {"metric_id":"BH_UTXOS_SPENT","chart":"UTXOs Spent","status":"PRESENT"}
+  ],
+  "core_completion_queue": {
+    "status": "OPTIONAL_FOR_RESEARCH_START__EXPLICIT_FOR_FAMILY_COMPLETENESS",
+    "remaining_series_count": 17,
+    "missing_supply_last_active": [
+      "Supply Last Active 1w-1m","Supply Last Active 1m-3m","Supply Last Active 3m-6m","Supply Last Active 6m-12m","Supply Last Active 2y-3y","Supply Last Active 3y-5y","Supply Last Active 5y-7y","Supply Last Active 7y-10y"
+    ],
+    "missing_spent_volume": [
+      "Spent Volume <1h","Spent Volume 1d-1w","Spent Volume 1w-1m","Spent Volume 1m-3m","Spent Volume 3m-6m","Spent Volume 6m-12m","Spent Volume 2y-3y","Spent Volume 3y-5y","Spent Volume 5y-7y"
+    ]
+  },
+  "optional_p2_uncollected": [
+    "Balanced Price",
+    "Delta Price",
+    "Delta Cap",
+    "Market Cap To Thermocap Ratio",
+    "Difficulty Ribbon",
+    "Fee Ratio Multiple (FRM)"
+  ],
+  "research_readiness": {
+    "status": "READY_FOR_SCHEMA_PROVENANCE_REDUNDANCY_AND_HYPOTHESIS_DESIGN",
+    "do_not_wait_for_full_family_completion": true,
+    "next_phase": [
+      "schema and definition audit",
+      "point-in-time and revision-risk classification",
+      "redundancy and conditional incremental-value design",
+      "regime-segmented robustness design",
+      "pre-ETF versus ETF-era comparison design",
+      "walk-forward and leave-one-cycle-out test specification",
+      "only then decide whether additional BlockHorizon downloads have positive information value"
+    ]
+  },
+  "future_dated_model_grid_guardrail": {
+    "private_source_filename": "planb_moving_averages_2026-09-09T06-38-17.csv",
+    "future_dated_timestamp_count_vs_retrieval_date": 849,
+    "maximum_timestamp_utc": "2029-01-05T00:00:00Z",
+    "treatment": "MODEL_OR_PROJECTION_GRID_REVIEW_ONLY; NEVER_USE_POST_RETRIEVAL_ROWS_AS_OBSERVED_FUTURE_ACTUALS"
+  },
+  "provider_chart_inventory_observation": {
+    "observed_date": "2026-09-09",
+    "observed_chart_count": 147,
+    "urpd_or_utxo_realized_price_distribution_present": false,
+    "urpd_treatment": "NOT_A_SEPARATE_BLOCKHORIZON_COMPLETION_ITEM; COST_BASIS_HEATMAP_REMAINS_THE_CLOSEST_AVAILABLE_BLOCKHORIZON_PRICE_DISTRIBUTION_INPUT"
+  },
+  "rules": [
+    "Do not equate UTXO count profitability with BTC supply profitability.",
+    "Do not count overlapping aggregate/cohort variants as independent confirmation without incremental-value testing.",
+    "Exact-content duplicate retrievals count once analytically unless retrieval provenance itself is under study.",
+    "Blank cells remain un-imputed until source semantics establish zero, not-applicable or missing.",
+    "PlanB refits and future-dated model grids are challenger/model material, not contemporaneous historical evidence or observed future outcomes.",
+    "No BlockHorizon metric gains canonical runtime, DATA PING, Cycle Navigator or portfolio authority merely by being archived."
+  ]
+}

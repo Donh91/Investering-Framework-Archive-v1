@@ -3,6 +3,7 @@
 Status: NEAR-COMPLETE ARCHIVED-ERA RECONSTRUCTION / ACTIVE RESEARCH
 Date opened: 2026-09-08
 Major recovery accepted: 2026-09-09
+CFGI archive discovery refined: 2026-09-10
 Scope: Public evidence only. Research, replay and behavioral inference. No live execution.
 
 ## Mission
@@ -43,7 +44,37 @@ MAEVE generated a large public forward record rather than only a retrospective b
 
 The recovered package is already sufficient for disciplined work on entry/exit CFGI levels, DCA economics, holding time, asset/timeframe segmentation and prospectivity of public trade publication.
 
-The highest-value future expansion is the historical CFGI feature cube across all ten public algorithm families and four timeframes.
+The highest-value future expansion is no longer a blind historical CFGI bulk pull. It is a complete inventory of the repo-native CFGI material already available, followed by leakage-safe MAEVE joins and only then the smallest documented gap backfill if still necessary.
+
+## CFGI archive discovery update - 2026-09-10
+
+`CFGI_MAEVE_DATA_INVENTORY_V1.json` is the current machine-readable routing and coverage map for MAEVE/CFGI research.
+
+The current repository audit proves that the evidence base is richer than the earlier `feature replay: MISSING` shorthand implied:
+
+- provider availability metadata exists for MARKET, BTC and ETH on native `15m`, `1h`, `4h` and `1d` back to March 2022;
+- targeted local `1h` BTC/ETH historical event windows exist under the historical-altseason research package with no-lookahead field-coverage auditing;
+- immutable point-in-time `4h` CFGI cold-raw captures are persisted in `03_DAILY_CAPTURE_LOGS/raw` from 2026-08-18 onward in the currently inspected archive window;
+- corresponding `1d` cold-raw captures and weekly derived CFGI calibration artifacts also exist;
+- the restricted MAEVE recovery package remains the action-label authority in `Donh91/secrets`.
+
+This does NOT prove that a complete multi-year local CFGI feature cube is already materialized. Provider-side historical availability must not be confused with local stored rows.
+
+It also does NOT prove that the currently observed CFGI component fields map one-for-one to the historically described ten public MAEVE/CFGI algorithm families.
+
+Research therefore follows this order:
+
+`existing repo evidence -> exact coverage/gap map -> leakage-safe MAEVE joins -> timeframe baselines -> only documented missing-cell backfill`
+
+Preferred research roles are:
+
+- `15m`: research microscope for timing, velocity, persistence, transitions and DCA microstructure;
+- `1h`: primary execution-research candidate;
+- `2h`: derived intermediate candidate only from closed `1h` observations unless native provider authority is later proven;
+- `4h`: primary robust execution/confirmation research candidate;
+- `1d`: regime and risk-context layer.
+
+A future policy learned on `15m` must not be assumed to scale mechanically to `1h`, `4h` or `1d`. Astra should compare native single-timeframe baselines chronologically first, then test hierarchical multi-timeframe fusion.
 
 ## Evidence hierarchy
 
@@ -125,6 +156,7 @@ See `RECOVERY_AUDIT_2026-09-09.md` for the detailed independent audit.
 5. Did later versions trade differently from early 2025 versions?
 6. Can residual unexplained decisions reveal the shape or timing of latent/private inputs without pretending to identify proprietary formulas?
 7. Which decision patterns survive chronological out-of-sample testing?
+8. Do `1h` and `4h` MAEVE-inspired models retain useful edge after costs and regime conditioning, and does hierarchical context from `15m`/`1d` improve them without leakage?
 
 ## Behavioral clone, not code theft
 
@@ -151,6 +183,7 @@ A complex model that predicts MAEVE but cannot explain why is lower priority tha
 - Treat CFGI methodology changes as dataset-version boundaries.
 - Do not infer a private signal merely because public models fail.
 - Keep DCA legs linked to their parent position and never double-count execution mirror rows.
+- For any derived `2h` view, use only already-closed `1h` observations at decision time; never use a future-containing resampling bin.
 
 ## Trade-count integrity
 
@@ -179,8 +212,12 @@ Parent-position reconstruction: 432 TOTAL / 426 CLOSED
 Fill reconstruction: 1,073
 Historical X/social reconciliation: HIGH-VALUE PARTIAL
 Historical CFGI composite replay: STRONG STARTING POINT
-Ten-family x four-timeframe feature replay: MISSING / HIGHEST-VALUE NEXT SOURCE
+Provider native-timeframe availability metadata: PROVEN FOR MARKET/BTC/ETH ON 15m/1h/4h/1d BACK TO 2022
+Local targeted 1h materialization: PROVEN FOR BTC/ETH SELECTED EVENT WINDOWS
+Local point-in-time 4h/1d forward cold lane: PROVEN FROM 2026-08-18 IN CURRENTLY INSPECTED ARCHIVE WINDOW
+Complete local multi-year multi-timeframe feature cube: NOT YET PROVEN
+Ten-public-family mapping to observed component fields: NOT YET PROVEN
 Live execution eligibility: FORBIDDEN
 Promotion status: RESEARCH ONLY
 
-The next milestone is not to infer a secret algorithm. It is to recover the clean historical feature cube and run frozen, leakage-safe attribution and replay experiments under existing AUTO_TRADING governance.
+The next milestone is not to infer a secret algorithm and not to launch a blind bulk historical pull. It is to finish the exact repo-native coverage/gap inventory, join MAEVE to already available time-valid `1h`/`4h` evidence, and only then acquire the smallest genuinely missing data required for frozen attribution and replay experiments under existing AUTO_TRADING governance.

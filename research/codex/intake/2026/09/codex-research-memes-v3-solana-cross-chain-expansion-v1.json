@@ -1,0 +1,89 @@
+{
+  "contract": "CODEX_RESEARCH_CANDIDATE_v1",
+  "candidate_id": "codex-research-memes-v3-solana-cross-chain-expansion-v1",
+  "submitted_at_utc": "2026-09-10T17:30:00Z",
+  "status": "SUBMITTED",
+  "origin": {
+    "type": "RESEARCH_THREAD",
+    "thread_label": "Memes v3 / Alpha Lab",
+    "source_paths": [
+      "07_PROMPTS_AND_AGENTS/memes_alpha/2026-09-09__memes-v3-autonomous-alpha-research-workstream-v1__operational.md",
+      "07_PROMPTS_AND_AGENTS/memes_alpha/2026-09-10__solana-cross-chain-narrative-expansion-v1__operational-addendum.md",
+      "Donh91/secrets:private_research/memes_alpha/research_leads/2026/09/10/solana_cross_chain_narrative_scan_v1.json"
+    ]
+  },
+  "title": "Extend Memes v3 research to Solana and cross-chain narrative selection",
+  "objective": "Implement the smallest bounded extension of the existing Memes v3 Alpha Research Workstream that adds deterministic Solana collection and cross-chain narrative comparison. Preserve the base workstream and its frozen candidate. Add exact mint verification, creator/authority metadata, buyer acceleration, sniper/bundler/funder cluster features, paid-boost separation and fixed-horizon chain comparison without creating a parallel engine or any trade authority.",
+  "finding_key": "MEMES_V3_SOLANA_CROSS_CHAIN_RESEARCH_LANE_MISSING",
+  "primary_target": "07_PROMPTS_AND_AGENTS/memes_alpha/2026-09-10__solana-cross-chain-narrative-expansion-v1__operational-addendum.md",
+  "allowed_change_scope": [
+    "Donh91/Investering-Framework-Archive-v1:scripts/research/memes_alpha/**",
+    "Donh91/Investering-Framework-Archive-v1:tests/research/memes_alpha/**",
+    "Donh91/Investering-Framework-Archive-v1:research/memes_alpha/**",
+    "Donh91/Investering-Framework-Archive-v1:.github/workflows/memes-alpha-research*.yml",
+    "Donh91/secrets:collectors/memes_alpha/**",
+    "Donh91/secrets:tests/memes_alpha/**",
+    "Donh91/secrets:schemas/memes_alpha/**",
+    "Donh91/secrets:health/MEMES_ALPHA/**",
+    "Donh91/secrets:private_research/memes_alpha/**",
+    "Donh91/secrets:.github/workflows/memes-alpha-private*.yml"
+  ],
+  "evidence": [
+    {
+      "kind": "REPO_PATH",
+      "ref": "07_PROMPTS_AND_AGENTS/memes_alpha/2026-09-10__solana-cross-chain-narrative-expansion-v1__operational-addendum.md",
+      "summary": "Owner-approved addendum defines Solana as a first-class lane and cross-chain narrative-selection methodology while preserving existing authority boundaries."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "Donh91/secrets:private_research/memes_alpha/research_leads/2026/09/10/solana_cross_chain_narrative_scan_v1.json",
+      "summary": "Restricted research lead records user observation, source-identity caveat, current Solana cases and positive/negative controls."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "research/codex/intake/2026/09/codex-research-memes-v3-autonomous-alpha-workstream-v1.json",
+      "summary": "Existing base implementation candidate remains authoritative and must not be invalidated or rewritten by this extension."
+    }
+  ],
+  "reproduction": "On current main, the owner-approved base Memes v3 workstream and Codex candidate explicitly target Robinhood Chain and Ethereum for the initial deterministic polling requirement. There is no first-class Solana collector/classifier or cross-chain narrative comparison contract in the base implementation. Verify this against the base operational contract and candidate, then implement Solana only as a bounded extension that reuses existing Memes Alpha event/outcome schemas and orchestration.",
+  "acceptance_tests": {
+    "positive": [
+      "A Solana mint fixture is verified as Solana identity before any event row is accepted.",
+      "Pump.fun/PumpSwap or Raydium fixture produces deterministic pool, liquidity, buyer and authority metadata using the existing research event contract or a backwards-compatible extension owned by Memes Alpha.",
+      "A distributed-funder fixture with low top-10 concentration but linked fresh-wallet clusters is flagged for cluster risk rather than classified as clean distribution.",
+      "A paid DexScreener boost is stored separately from organic social/on-chain propagation and never counts as independent alpha evidence.",
+      "Two tokens expressing the same frozen narrative on different chains can be compared at matched 5m/15m/1h/6h/24h horizons without using later outcomes to alter discovery-time features.",
+      "A Solana no-change run performs a deterministic no-op and makes zero unnecessary model calls.",
+      "Private exact watchlist values remain in the restricted plane while public health remains value-free."
+    ],
+    "negative": [
+      "A ticker/name match without exact mint verification cannot create a cross-chain sibling relationship.",
+      "Low top-10 concentration alone cannot classify distribution as organic when bundle/funder evidence is missing or adverse.",
+      "Paid boost, Telegram call or KOL post alone cannot promote a token or wallet to qualified alpha.",
+      "Unknown Solana wallet-cluster evidence remains UNKNOWN and is not inferred from holder counts.",
+      "The extension must not rewrite or invalidate the frozen base Memes v3 Codex candidate.",
+      "The extension must fail if it emits BUY, SELL, position size, portfolio action, canonical promotion, threshold mutation or model-weight changes.",
+      "No implementation may change API hard-stop, lane-cap or reserve values, authorize paid data, or self-merge."
+    ]
+  },
+  "authority_boundary": "CODE_REMEDIATION_ONLY",
+  "requires_framework_owner_authority": false,
+  "forbidden_changes": [
+    "market gates",
+    "model weights",
+    "canonical authority",
+    "portfolio logic",
+    "API budget",
+    "new policy semantics",
+    "automatic trade execution",
+    "automatic buy or sell signals",
+    "paid data authorization",
+    "private watchlist publication",
+    "automatic canonical promotion",
+    "automatic merge",
+    "rewrite of frozen base candidate"
+  ],
+  "linked_health_signature": null,
+  "requested_priority": "EXPEDITED",
+  "post_fix_gate": "SOLANA_POSITIVE_AND_NEGATIVE_FIXTURES_PASS_PLUS_CROSS_CHAIN_NO_HINDSIGHT_TEST_PASS_PLUS_PRIVATE_DATA_LEAKAGE_TEST_PASS_PLUS_24H_SHADOW_OBSERVATION_WITH_ZERO_DUPLICATE_ALERT_STORM"
+}

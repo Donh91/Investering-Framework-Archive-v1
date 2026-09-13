@@ -36,9 +36,12 @@ astra/README.md
 astra/ASTRA_REPOSITORY_MISSION_ROUTER_v1.json
 astra/ASTRA_SKILLS_AND_AGENTS_AUDIT_MISSION_v1.md
 astra/ASTRA_REVIEWER_FAILURE_LEARNING_ADDENDUM_v1.md
+astra/ASTRA_BLOCKHORIZON_RESEARCH_MISSION_POINTER_v1.md
 ```
 
 The Skills & Agents audit mission plus Reviewer & Failure Learning addendum form one audit bundle. The addendum is Pass 8 of the existing audit, not a separate agent system or standing write loop.
+
+The BlockHorizon pointer is navigation only. Its machine-readable mission is `ASTRA_BLOCKHORIZON_HISTORICAL_FEATURE_SURVIVAL_V1` in `ASTRA_REPOSITORY_MISSION_ROUTER_v1.json`; current research authority remains in the BlockHorizon Research Lab folder and its private binding.
 
 These files let a stronger model reconstruct missions from GitHub rather than waiting for a separate instruction in every thread.
 

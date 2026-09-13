@@ -1,51 +1,83 @@
 {
-  "binding": "BLOCKHORIZON_CURRENT_PRIVATE_BINDING_v1",
-  "status": "PRIVATE_RAW_ARCHIVE_COMPLETE__RESEARCH_ONLY",
+  "binding": "BLOCKHORIZON_CURRENT_PRIVATE_BINDING_v2",
+  "status": "PRIVATE_RAW_ARCHIVE_RECONCILED__AGENT_RESEARCH_PREP_READY__RESEARCH_ONLY",
   "source_contract_id": "BH01_BLOCKHORIZON_MANUAL_EXPORT_HISTORICAL_V1",
   "private_repository": "Donh91/secrets",
-  "private_commit_sha_reachable_from_main": "2cb7d1789ff9e9a934d1dcb36e6ba8541c3fdb2f",
+  "private_commit_sha_reachable_from_main": "1700dd8ee4bf7ac03f0e18cd5b3647a07fda645f",
+  "private_raw_snapshot_commit_sha_reachable_from_main": "a03ae86385cd6a3eb31c75e14bc6355e536552d3",
   "private_archive_readme": "raw/BH01_BLOCKHORIZON_MANUAL_EXPORT_HISTORICAL_V1/README.md",
-  "private_raw_root": "raw/BH01_BLOCKHORIZON_MANUAL_EXPORT_HISTORICAL_V1/2026/09/08/",
+  "private_raw_roots": [
+    "raw/BH01_BLOCKHORIZON_MANUAL_EXPORT_HISTORICAL_V1/2026/09/08/",
+    "raw/BH01_BLOCKHORIZON_MANUAL_EXPORT_HISTORICAL_V1/2026/09/09/"
+  ],
   "original_expected_manifest": {
     "pinned_private_commit_sha": "bd9db93be27079bbc4f6c54ecd79527c9f08ba3c",
     "path": "receipts/BH01_BLOCKHORIZON_MANUAL_EXPORT_HISTORICAL_V1/2026/09/08/manual_export_bundle_manifest.json",
     "git_blob_sha": "61b0d5ebb5a59b2d0962ecd407728bbd441fb925",
     "role": "IMMUTABLE_ORIGINAL_32_FILE_EXPECTATION_BASELINE"
   },
-  "completion_receipt": {
+  "original_completion_receipt": {
     "path": "receipts/BH01_BLOCKHORIZON_MANUAL_EXPORT_HISTORICAL_V1/2026/09/08/2026-09-08__raw_archive_completion_receipt_v1.json",
     "git_blob_sha": "e71a8619b3c356dff9ca7477343d3fd0b25818ed",
     "receipt_status": "RAW_ARCHIVE_COMPLETE",
     "expected_raw_completion_commit": "b3d82a692462871de8f75af100eef1c5ab7e1c7e",
-    "private_main_merge_commit": "2cb7d1789ff9e9a934d1dcb36e6ba8541c3fdb2f"
+    "historical_private_main_merge_commit": "2cb7d1789ff9e9a934d1dcb36e6ba8541c3fdb2f"
   },
-  "owner_attestation_path": "GOVERNANCE/BLOCKHORIZON_OWNER_ATTESTATION_2026-09-08.json",
-  "expected_bundle": {
+  "original_expected_bundle": {
     "csv_retrieval_files_verified": 32,
     "csv_retrieval_files_total": 32,
     "unique_content_hashes": 29,
     "total_verified_bytes": 6472210,
     "exact_duplicate_groups": 3,
-    "remaining_expected_files": 0
+    "remaining_expected_files": 0,
+    "status": "COMPLETE_HISTORICAL_BASELINE"
   },
-  "raw_file_validation": {
-    "files_physically_verified_in_private_raw_root": 32,
-    "sha256_readback": "PASS_32_OF_32_EXPECTED",
-    "byte_count_crosscheck": "PASS",
-    "unexpected_hash_mismatches": 0,
-    "completeness_status": "PASS",
-    "validation_status": "RAW_ARCHIVE_COMPLETE"
+  "supplemental_combo_reconciliation_2026_09_09": {
+    "receipt_path": "receipts/BH01_BLOCKHORIZON_MANUAL_EXPORT_HISTORICAL_V1/2026/09/09/2026-09-09__blockhorizon_combo_reconciliation_receipt_v1.json",
+    "receipt_git_blob_sha": "ddaf1d4b13fd56ad4b2ad38b9218b246c0351139",
+    "receipt_bytes": 15271,
+    "receipt_sha256": "b135c287a1564f95196d9fe410215f4272f3a557619c5a5273a185ddb48daf2f",
+    "private_main_merge_commit": "1700dd8ee4bf7ac03f0e18cd5b3647a07fda645f",
+    "raw_snapshot_commit": "a03ae86385cd6a3eb31c75e14bc6355e536552d3",
+    "retrieval_partition": "raw/BH01_BLOCKHORIZON_MANUAL_EXPORT_HISTORICAL_V1/2026/09/09/",
+    "retrieval_window_utc": {
+      "start": "2026-09-09T05:53:13Z",
+      "end": "2026-09-09T06:48:59Z",
+      "basis": "ORIGINAL_EXPORT_FILENAME_TIMESTAMPS"
+    },
+    "csv_files": 14,
+    "unique_content_hashes": 14,
+    "total_bytes": 5539163,
+    "non_reference_export_columns": 74,
+    "non_reference_export_column_count_semantics": "INCLUDES_DISTRIBUTION_BUCKETS_AND_MODEL_FIELDS; NOT_AN_INDEPENDENT_CHART_COUNT",
+    "sha256_readback": "PASS_14_OF_14",
+    "timestamp_column_presence": "PASS_14_OF_14",
+    "timestamp_monotonicity": "PASS_14_OF_14"
   },
-  "duplicate_policy": {
-    "expected_raw_duplicate_filenames": "PRESERVED",
-    "expected_unique_analytical_content_count": 29,
-    "supplemental_csv_retrievals_after_cleanup": 9,
-    "exact_content_duplicates_in_analysis": "COUNT_ONCE_UNLESS_RETRIEVAL_PROVENANCE_IS_THE_RESEARCH_OBJECT",
-    "redundant_json_mirrors": "REMOVED_FROM_CURRENT_PRIVATE_TREE"
+  "archive_wide_reconciled_summary": {
+    "csv_files": 55,
+    "unique_content_hashes": 48,
+    "total_bytes": 13585728,
+    "exact_content_duplicate_groups": 7,
+    "non_reference_export_columns": 161,
+    "duplicate_analysis_rule": "COUNT_EXACT_CONTENT_ONCE_UNLESS_RETRIEVAL_PROVENANCE_IS_THE_RESEARCH_OBJECT"
   },
+  "research_readiness": {
+    "status": "READY_FOR_SCHEMA_PROVENANCE_REDUNDANCY_AND_HYPOTHESIS_DESIGN",
+    "core_family_completion_required_before_research_start": false,
+    "remaining_core_family_series": 17,
+    "next_phase": "REDUNDANCY_INCREMENTAL_VALUE_AND_REGIME_ROBUSTNESS_DESIGN_BEFORE_MORE_OPTIONAL_DOWNLOADS"
+  },
+  "future_dated_model_grid_guardrail": {
+    "private_path": "raw/BH01_BLOCKHORIZON_MANUAL_EXPORT_HISTORICAL_V1/2026/09/09/planb_moving_averages_2026-09-09T06-38-17.csv",
+    "future_dated_timestamp_count_vs_retrieval_date": 849,
+    "maximum_timestamp_utc": "2029-01-05T00:00:00Z",
+    "treatment": "MODEL_OR_PROJECTION_GRID_REVIEW_ONLY; POST_RETRIEVAL_ROWS_MUST_NOT_BE_TREATED_AS_OBSERVED_MARKET_ACTUALS"
+  },
+  "owner_attestation_path": "GOVERNANCE/BLOCKHORIZON_OWNER_ATTESTATION_2026-09-08.json",
   "public_value_policy": "PROVIDER_VALUE_FREE_BINDINGS_ONLY",
   "analysis_authority": "RESEARCH_ONLY_SUBJECT_TO_ASTRA_RESEARCH_PROTOCOL_AND_EXISTING_FRAMEWORK_GOVERNANCE",
   "canonical_market_authority": "NONE_BY_ITSELF",
   "portfolio_authority": "NONE",
-  "next_transition": "Additional BlockHorizon retrievals are appended privately as immutable revisions, validated, and represented publicly only through provider-value-free metadata and bindings."
+  "next_transition": "Authorized agents may begin schema/provenance/redundancy/hypothesis-design work against the bound private archive. Additional provider downloads are optional until incremental-value analysis identifies a concrete need."
 }

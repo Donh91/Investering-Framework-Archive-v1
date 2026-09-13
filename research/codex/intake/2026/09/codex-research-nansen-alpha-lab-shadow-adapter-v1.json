@@ -1,0 +1,100 @@
+{
+  "contract": "CODEX_RESEARCH_CANDIDATE_v1",
+  "candidate_id": "codex-research-nansen-alpha-lab-shadow-adapter-v1",
+  "submitted_at_utc": "2026-09-11T13:55:00Z",
+  "status": "SUBMITTED",
+  "origin": {
+    "type": "OWNER_APPROVED_RESEARCH_TOOL_LEAD",
+    "thread_label": "Memes v3 / Alpha Lab",
+    "source_paths": [
+      "04_RESEARCH_LAB/auto_trading/source_notes/AT-SRC-0008_NANSEN_MCP_ONCHAIN_INTELLIGENCE.md",
+      "04_RESEARCH_LAB/auto_trading/NANSEN_MCP_RESEARCH_QUEUE.md",
+      "04_RESEARCH_LAB/auto_trading/NANSEN_ALPHA_LAB_ABLATION_V1.md",
+      "07_PROMPTS_AND_AGENTS/memes_alpha/2026-09-11__memes-v3-empirical-hardening-adjudication-v1__research-addendum.md"
+    ]
+  },
+  "title": "Benchmark Nansen as an optional read-only Shadow intelligence adapter for Alpha Lab",
+  "objective": "Implement the smallest deterministic read-only harness required to compare current Alpha Lab/free onchain evidence with official Nansen API/MCP output on the same frozen private benchmark cohort. Measure duplicate coverage, unique verified facts, entity-resolution improvement, point-in-time label leakage, research latency and credits consumed. Preserve Nansen-derived data as provider-attributed research evidence only. Do not enable paid backfill, recurring polling, public watchlist exposure, trading, signing, portfolio authority, signal promotion or a parallel market engine.",
+  "finding_key": "NANSEN_ALPHA_LAB_INCREMENTAL_VALUE_UNPROVEN",
+  "depends_on_candidates": [
+    "codex-research-memes-v3-autonomous-alpha-workstream-v1",
+    "codex-research-memes-v3-empirical-hardening-v1"
+  ],
+  "primary_target": "04_RESEARCH_LAB/auto_trading/NANSEN_ALPHA_LAB_ABLATION_V1.md",
+  "implementation_order": [
+    {
+      "priority": "P0",
+      "scope": [
+        "inventory overlap between existing/free Alpha Lab fields and desired Nansen fields",
+        "define provider-attributed point-in-time response envelope with retrieved_at/effective_at/observable_at where available",
+        "add deterministic credit accounting and zero-paid default",
+        "add read-only fixtures and explicit no-credentials/no-call degradation",
+        "bind private benchmark manifest without exposing exact identifiers publicly"
+      ]
+    },
+    {
+      "priority": "P1",
+      "scope": [
+        "run FRAMEWORK_BASELINE, FREE_RAW_EQUIVALENT, NANSEN_AUGMENTED and optional NANSEN_ONLY arms on identical frozen tasks",
+        "measure unique verified facts, duplicate coverage, entity resolution, label conflicts, point-in-time leakage, latency and credits",
+        "preserve Nansen labels as EXTERNAL_LABEL_PRIOR rather than canonical truth"
+      ]
+    },
+    {
+      "priority": "P2_AFTER_EVIDENCE",
+      "scope": [
+        "only if incremental value is demonstrated, implement optional NANSEN_SHADOW_ADAPTER behind existing research routing",
+        "no recurring provider calls unless expected information gain justifies cost and governance allows it"
+      ]
+    }
+  ],
+  "allowed_change_scope": [
+    "Donh91/Investering-Framework-Archive-v1:scripts/research/memes_alpha/**",
+    "Donh91/Investering-Framework-Archive-v1:tests/research/memes_alpha/**",
+    "Donh91/Investering-Framework-Archive-v1:research/memes_alpha/**",
+    "Donh91/Investering-Framework-Archive-v1:04_RESEARCH_LAB/auto_trading/**",
+    "Donh91/secrets:collectors/memes_alpha/**",
+    "Donh91/secrets:tests/memes_alpha/**",
+    "Donh91/secrets:schemas/memes_alpha/**",
+    "Donh91/secrets:private_research/memes_alpha/provider_benchmarks/**",
+    "Donh91/secrets:health/MEMES_ALPHA/**",
+    "Donh91/secrets:receipts/MEMES_ALPHA_*/**"
+  ],
+  "acceptance_tests": {
+    "positive": [
+      "The same frozen benchmark case and timestamp are used across all experiment arms.",
+      "Every Nansen-derived field records provider attribution, retrieval timestamp, endpoint/tool and credits consumed.",
+      "Historical labels that cannot be reconstructed point-in-time are marked RETROSPECTIVE_LABEL_RISK.",
+      "Exact competitive wallet/token identifiers remain in the restricted data plane and do not appear in public logs or artifacts.",
+      "The harness can complete the baseline/free arms with zero Nansen credentials and reports provider arm as unavailable rather than fabricating data.",
+      "Provider calls are read-only and default to zero-paid/free capability until separately authorized.",
+      "Ablation output distinguishes unique verified information from fields already available or derivable free.",
+      "No provider PnL or chart return substitutes for Alpha Lab executable-return outcomes."
+    ],
+    "negative": [
+      "No current Nansen Smart Money label may be silently back-applied to an old decision timestamp.",
+      "No Nansen label may independently promote a wallet/token to QUALIFIED_ALPHA or a trade signal.",
+      "No authenticated UI scraping, proprietary-database copying or proprietary algorithm reverse engineering is permitted.",
+      "No paid backfill, recurring paid polling, budget increase, wallet signing, transaction preparation, BUY/SELL/size output or portfolio action is permitted.",
+      "No new parallel research engine or market-state owner may be created."
+    ]
+  },
+  "authority_boundary": "CODE_REMEDIATION_ONLY",
+  "requires_framework_owner_authority": false,
+  "forbidden_changes": [
+    "automatic trade execution",
+    "wallet signing or transaction preparation",
+    "portfolio logic",
+    "canonical market authority",
+    "automatic signal promotion",
+    "paid Nansen acquisition without separate authorization",
+    "broad historical backfill",
+    "authenticated UI scraping",
+    "proprietary algorithm reverse engineering",
+    "private watchlist publication",
+    "API budget increase",
+    "automatic merge"
+  ],
+  "requested_priority": "EXPEDITED_AFTER_MEMES_V3_BASELINE",
+  "post_fix_gate": "DUPLICATE_COVERAGE_AUDIT_PASS_PLUS_PRIVATE_DATA_LEAKAGE_TEST_PASS_PLUS_POINT_IN_TIME_LABEL_TEST_PASS_PLUS_ZERO_PAID_DEFAULT_PASS_PLUS_READ_ONLY_ABLATION_REPORT_PRODUCED"
+}

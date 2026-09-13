@@ -1,0 +1,318 @@
+{
+  "schema_version": "CFGI_MAEVE_DATA_INVENTORY_V1",
+  "as_of_date": "2026-09-10",
+  "status": "RESEARCH_ONLY",
+  "inventory_state": "DECISION_COMPLETE_WITH_DOCUMENTED_RESIDUAL_GAPS",
+  "authority": "SOURCE_ROUTING_AND_COVERAGE_METADATA_ONLY",
+  "decision": "REUSE_EXISTING_BEFORE_ANY_BACKFILL",
+  "purpose": "Give future Astra/Codex research one leakage-aware map of the already recovered MAEVE evidence, permanently preserved private CFGI and market-context authorities, repo-native CFGI materializations, provider-availability metadata, genuine gaps, and preferred multi-timeframe research ladder without copying restricted provider values into the public control plane.",
+  "private_binding_policy": "Restricted values remain in Donh91/secrets. Public inventory exposes only immutable commit/path/hash/coverage metadata required for agent routing and provenance.",
+  "datasets": [
+    {
+      "dataset_id": "MAEVE_PRIVATE_LEDGER_RECOVERY_V1",
+      "repo": "Donh91/secrets",
+      "path": "raw/MAEVE_PUBLIC_LEDGER_RECOVERY_V1/2026/09/09/",
+      "storage_class": "RESTRICTED",
+      "materialization_status": "MATERIALIZED_PRIVATE_PERMANENT",
+      "immutable_binding": {
+        "commit_sha": "639e767b8348f1a9fabdab0ce27509cf39ba5236",
+        "raw_archive": "MAEVE_LEDGER_RECOVERY.zip",
+        "raw_archive_bytes": 309855,
+        "raw_archive_sha256": "9770bcf968d9e03f97af7cfd0bcaaf6baad21c928d97b3b610a457dfb87343a5",
+        "agent_entry": "AGENT_INDEX.md",
+        "manifest": "metadata/MANIFEST.json"
+      },
+      "coverage_metadata": {
+        "parent_positions": 432,
+        "closed_parent_positions": 426,
+        "fills": 1073,
+        "dca_legs": 641,
+        "archived_era_row_coverage_pct": 99.63,
+        "matched_social_posts": 318,
+        "daily_pnl_days": 370
+      },
+      "research_role": "MAEVE behavioral ground truth and action labels.",
+      "caveats": [
+        "Exact raw and normalized values remain private.",
+        "cfgi_score_entry is currently the cleanest recovered entry-time CFGI field.",
+        "analisis_hora and recovered impulse/volatility/volume sub-score columns are look-ahead suspect until timestamp semantics are resolved.",
+        "DCA-adjusted position success must not be equated with first-entry signal accuracy.",
+        "The recovery does not establish the proprietary algorithm itself."
+      ]
+    },
+    {
+      "dataset_id": "CFGI_HISTORICAL_1H_EVENT_STAGE_V1_PRIVATE_AUTHORITY",
+      "repo": "Donh91/secrets",
+      "path": "raw/CFGI_HISTORICAL_1H_EVENT_STAGE_V1/2026/08/21/",
+      "storage_class": "RESTRICTED",
+      "materialization_status": "MATERIALIZED_PRIVATE_PERMANENT",
+      "immutable_binding": {
+        "commit_sha": "9844e392d8744a23c829ff68bae0080423527f1b",
+        "raw_archive": "historical-altseason-cfgi-stage.zip",
+        "raw_archive_bytes": 10689426,
+        "raw_archive_sha256": "986ef498738cc772e20287c8790a482458c619e0da63a1fdc0e1f5388311337d",
+        "source_workflow_run_id": 32419588422,
+        "source_artifact_id": 9435503375,
+        "source_artifact_expiry_utc": "2026-09-20T05:25:59Z",
+        "agent_entry": "AGENT_INDEX.md",
+        "manifest": "metadata/MANIFEST.json"
+      },
+      "timeframe": "1h",
+      "symbols_materialized": ["BTC", "ETH"],
+      "row_count": 478,
+      "coverage_start_utc": "2025-01-03T16:11:19Z",
+      "coverage_end_utc": "2025-02-09T17:14:29Z",
+      "fields": ["score", "price", "volatility", "volume", "impulse", "technical", "social", "dominance", "trends", "whales", "orders"],
+      "companion_hourly_feature_rows": 25506,
+      "time_integrity": "PASS",
+      "research_role": "Permanent leakage-aware 1h CFGI event-window authority plus companion hourly market features.",
+      "caveat": "MARKET did not materialize in these frozen historical event windows. See CFGI_MARKET_PROVIDER_TERMINAL_RECEIPT_V1; do not proxy-fill it."
+    },
+    {
+      "dataset_id": "CFGI_PDLT_HISTORICAL_BOOTSTRAP_V1_PRIVATE_AUTHORITY",
+      "repo": "Donh91/secrets",
+      "path": "raw/CFGI_PDLT_HISTORICAL_BOOTSTRAP_V1/2026/08/07/",
+      "storage_class": "RESTRICTED",
+      "materialization_status": "MATERIALIZED_PRIVATE_PERMANENT",
+      "immutable_binding": {
+        "commit_sha": "65266e98f55d010138074d32959d6c55fd304b6d",
+        "raw_archive_bytes": 86964,
+        "raw_archive_sha256": "68c554963b87f860efb0e4b6c40cd2bd6ecc1f3a7027956032b87edb35f1ebf8",
+        "source_workflow_run_id": 31208709813,
+        "source_artifact_id": 9005783497,
+        "original_source_artifact_expiry_utc": "2026-11-05T18:49:22Z",
+        "manifest": "metadata/MANIFEST.json"
+      },
+      "observation_count": 1230,
+      "symbols": ["MARKET", "BTC", "ETH"],
+      "algorithm_timeframes": ["4h", "1d"],
+      "observation_cadence_approx": "15m",
+      "coverage": [
+        {"symbol": "MARKET", "timeframe": "4h", "rows": 720, "start_utc": "2026-07-31T06:48:39Z", "end_utc": "2026-08-07T18:34:25Z"},
+        {"symbol": "BTC", "timeframe": "4h", "rows": 120, "start_utc": "2026-08-06T12:48:52Z", "end_utc": "2026-08-07T18:34:25Z"},
+        {"symbol": "ETH", "timeframe": "4h", "rows": 120, "start_utc": "2026-08-06T12:48:52Z", "end_utc": "2026-08-07T18:34:25Z"},
+        {"symbol": "MARKET", "timeframe": "1d", "rows": 90, "start_utc": "2026-08-06T20:18:58Z", "end_utc": "2026-08-07T18:34:25Z"},
+        {"symbol": "BTC", "timeframe": "1d", "rows": 90, "start_utc": "2026-08-06T20:18:58Z", "end_utc": "2026-08-07T18:34:25Z"},
+        {"symbol": "ETH", "timeframe": "1d", "rows": 90, "start_utc": "2026-08-06T20:18:58Z", "end_utc": "2026-08-07T18:34:25Z"}
+      ],
+      "fields": ["score", "volatility", "volume", "impulse", "technical", "social", "dominance", "trends", "whales", "orders"],
+      "time_integrity": "NO_DUPLICATE_TIMESTAMPS_AND_NO_GAPS_OVER_30M_IN_RECORDED_SERIES",
+      "research_role": "High-frequency observation history of 4h/1d CFGI state for transition and persistence research.",
+      "caveats": [
+        "Approximately 15-minute observation cadence of a 4h or 1d algorithm state is not a native 15m algorithm timeframe.",
+        "Do not equate the aggregate plus nine observed components with ten public algorithm families without a proven mapping."
+      ]
+    },
+    {
+      "dataset_id": "HISTORICAL_ALTSEASON_FREE_HOURLY_PANEL_V1_PRIVATE_AUTHORITY",
+      "repo": "Donh91/secrets",
+      "path": "raw/HISTORICAL_ALTSEASON_FREE_HOURLY_PANEL_V1/2026/08/21/",
+      "storage_class": "RESTRICTED",
+      "materialization_status": "MATERIALIZED_PRIVATE_PERMANENT",
+      "immutable_binding": {
+        "commit_sha": "935832c51214149bc12daf4f82d171a57b036631",
+        "raw_archive": "historical-altseason-free-stage.zip",
+        "raw_archive_bytes": 60082610,
+        "raw_archive_sha256": "5c423eb45000c7ba3c9a690e3ffb69f59dc12648a8bbb28907d3600797a70bac",
+        "bulk_member": "extracted/alt_hourly_panel.csv.gz",
+        "bulk_member_bytes": 49378300,
+        "bulk_member_sha256": "91d902c27fecefd087108d011d6cd9eccfd814bdec4be37e7fc87eb9aa6d3229",
+        "source_workflow_run_id": 32469132240,
+        "source_artifact_id": 9442328205,
+        "source_artifact_expiry_utc": "2026-09-20T09:59:33Z",
+        "agent_entry": "AGENT_INDEX.md",
+        "manifest": "metadata/MANIFEST.json"
+      },
+      "granularity": "1h",
+      "rows": 851882,
+      "symbol_count": 35,
+      "includes_maeve_assets": ["BNBUSDT", "DOGEUSDT", "SOLUSDT"],
+      "global_coverage_start_utc": "2020-09-01T01:00:00Z",
+      "global_coverage_end_utc": "2026-07-31T23:00:00Z",
+      "windows": ["ALTSEASON_2020_2021", "MODERN_ANALOGUE_2025_2026"],
+      "research_role": "Matched no-trade controls, altseason comparison, liquidity/volume baseline, MAEVE action-vs-opportunity analysis, and chronological OOS market context.",
+      "caveat": "This is a historical market-context panel, not historical individual-asset CFGI and not an exact historical Top-100 universe."
+    },
+    {
+      "dataset_id": "CFGI_PROVIDER_COVERAGE_METADATA_2026_08_21",
+      "repo": "Donh91/Investering-Framework-Archive-v1",
+      "path": "06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/CFGI_COVERAGE.json",
+      "storage_class": "PUBLIC_METADATA",
+      "materialization_status": "AVAILABILITY_METADATA_NOT_FULL_RAW_CUBE",
+      "symbols": ["MARKET", "BTC", "ETH"],
+      "native_timeframes_proven": ["15m", "1h", "4h", "1d"],
+      "provider_history_first_seen": {
+        "MARKET": "2022-03-29/30",
+        "BTC": "2022-03-30",
+        "ETH": "2022-03-29/30"
+      },
+      "provider_history_last_seen_approx": "2026-08-21T04:34Z",
+      "research_role": "Provider-side availability metadata only; it does not prove the full range is locally materialized.",
+      "caveats": [
+        "No CFGI history before 2022 is supported by this evidence.",
+        "Native 2h coverage is not proven here.",
+        "Documented provider support for MARKET does not override the terminal zero-row result for the frozen 2025 historical windows."
+      ]
+    },
+    {
+      "dataset_id": "CFGI_TARGETED_1H_EVENT_WINDOWS_V1_PUBLIC_DERIVATIVES",
+      "repo": "Donh91/Investering-Framework-Archive-v1",
+      "paths": [
+        "06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/cfgi_targeted.jsonl.gz",
+        "06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/CFGI_FIELD_COVERAGE.json",
+        "06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/CFGI_EVENT_PATHS.jsonl.gz",
+        "06_RESEARCH_LAB/historical_altseason_pullback_v1/artifacts/CFGI_EVENT_SIGNATURES.json"
+      ],
+      "storage_class": "PUBLIC_RESEARCH_ARTIFACTS",
+      "materialization_status": "MATERIALIZED_TARGETED_WINDOWS_WITH_PRIVATE_RAW_AUTHORITY",
+      "private_authority_dataset_id": "CFGI_HISTORICAL_1H_EVENT_STAGE_V1_PRIVATE_AUTHORITY",
+      "timeframe": "1h",
+      "symbols_expected": ["MARKET", "BTC", "ETH"],
+      "symbols_materialized": ["BTC", "ETH"],
+      "market_status": "NOT_TESTABLE_IN_FROZEN_WINDOWS_PROVIDER_RETURNED_ZERO_ROWS",
+      "event_count": 2,
+      "expected_symbol_hours": 726,
+      "available_symbol_hours": 478,
+      "coverage_pct_all_expected_symbol_hours": 65.84,
+      "btc_eth_component_coverage_approx_pct": 98.76,
+      "time_integrity_policy": "LAST_KNOWN_WITHIN_DECLARED_1H_CADENCE_NO_LOOKAHEAD",
+      "research_role": "Public research derivatives around selected historical events; use private authority for exact source provenance."
+    },
+    {
+      "dataset_id": "CFGI_MARKET_PROVIDER_TERMINAL_RECEIPT_V1",
+      "repo": "Donh91/Investering-Framework-Archive-v1",
+      "path": "00_ARCHIVE_CONTROL/research_runtime/CFGI_MARKET_PROVIDER_TERMINAL_RECEIPT.json",
+      "storage_class": "PUBLIC_METADATA",
+      "materialization_status": "TERMINAL_PROVIDER_NO_HISTORICAL_ROWS",
+      "recorded_at_utc": "2026-08-21T09:30:00Z",
+      "requested_symbol": "MARKET",
+      "frozen_intervals": [
+        {"start": "2025-01-03T16:00:00Z", "end": "2025-01-08T16:00:00Z"},
+        {"start": "2025-02-04T18:00:00Z", "end": "2025-02-09T18:00:00Z"}
+      ],
+      "returned_row_count": 0,
+      "decision": "NOT_TESTABLE_NO_FILL_NO_INTERPOLATION_NO_PROXY_NO_ADDITIONAL_PAID_RETRY",
+      "research_role": "Closes MARKET as a provider-unavailable historical slice for the frozen event windows instead of leaving it as an open backfill task."
+    },
+    {
+      "dataset_id": "CFGI_COLD_RAW_4H_FORWARD_LANE",
+      "repo": "Donh91/Investering-Framework-Archive-v1",
+      "path_pattern": "03_DAILY_CAPTURE_LOGS/raw/YYYY/MM/DD/cfgi-owner-output-*.tar.gz",
+      "storage_class": "PUBLIC_COLD_RAW_ARCHIVE",
+      "materialization_status": "MATERIALIZED_POINT_IN_TIME_FORWARD",
+      "timeframe": "4h",
+      "symbols": ["MARKET", "BTC", "ETH"],
+      "coverage_start_observed": "2026-08-18",
+      "coverage_end_observed": "2026-09-09",
+      "research_role": "Immutable point-in-time 4h forward evidence and future walk-forward validation lane.",
+      "integrity_notes": [
+        "Existing PDLT code explicitly requires timeframe == 4h.",
+        "Existing PDLT code deduplicates by source timestamp and requires consecutive 4h spacing.",
+        "Daily RAW_MANIFEST files preserve Git blob SHA and SHA-256 metadata."
+      ]
+    },
+    {
+      "dataset_id": "CFGI_COLD_RAW_1D_FORWARD_LANE",
+      "repo": "Donh91/Investering-Framework-Archive-v1",
+      "path_pattern": "03_DAILY_CAPTURE_LOGS/raw/YYYY/MM/DD/cfgi-1d-owner-output-*.tar.gz",
+      "storage_class": "PUBLIC_COLD_RAW_ARCHIVE",
+      "materialization_status": "MATERIALIZED_POINT_IN_TIME_FORWARD",
+      "timeframe": "1d",
+      "coverage_start_observed": "2026-08-18",
+      "coverage_end_observed": "2026-09-09",
+      "research_role": "Daily regime-context and future walk-forward validation lane.",
+      "caveat": "The detailed inner schema should be verified from the owning collector before using component-level fields."
+    },
+    {
+      "dataset_id": "CFGI_WEEKLY_DERIVED_W32_W37_2026",
+      "repo": "Donh91/Investering-Framework-Archive-v1",
+      "path": "03_DAILY_CAPTURE_LOGS/cfgi_weekly/",
+      "storage_class": "PUBLIC_DERIVED",
+      "materialization_status": "MATERIALIZED_DERIVED",
+      "weeks_observed": ["W32", "W33", "W34", "W35", "W36", "W37"],
+      "research_role": "Weekly calibration and summary context, not a substitute for raw event-time observations."
+    }
+  ],
+  "timeframe_research_ladder": {
+    "15m": {
+      "role": "RESEARCH_MICROSCOPE",
+      "execution_priority": "LOW",
+      "use": "Study MAEVE timing, feature velocity, short-sequence persistence, cross-timeframe transitions, and entry/DCA microstructure. Native 15m must remain distinct from ~15m observations of 4h/1d state."
+    },
+    "1h": {
+      "role": "PRIMARY_EXECUTION_RESEARCH_CANDIDATE",
+      "execution_priority": "HIGH",
+      "use": "Primary candidate for action-clock modeling, matched controls, chronological OOS, and later frozen paper simulation."
+    },
+    "2h": {
+      "role": "DERIVED_INTERMEDIATE_RESEARCH_CANDIDATE",
+      "execution_priority": "MEDIUM",
+      "native_provider_proven": false,
+      "use": "If useful, derive only from CLOSED 1h observations using time-valid transforms. Never use future-containing resampling bins."
+    },
+    "4h": {
+      "role": "PRIMARY_ROBUST_EXECUTION_RESEARCH_CANDIDATE",
+      "execution_priority": "HIGH",
+      "use": "Lower-noise action/confirmation candidate with immutable historical bootstrap and forward cold-raw lanes."
+    },
+    "1d": {
+      "role": "REGIME_FILTER",
+      "execution_priority": "CONTEXT",
+      "use": "Regime, risk-budget and trend-context layer rather than default trade clock."
+    }
+  },
+  "genuine_gaps_not_yet_proven_filled": [
+    "A complete locally materialized multi-year CFGI history across all native 15m/1h/4h/1d timeframes is not yet proven and should not be bulk-backfilled without a research need.",
+    "The mapping between the described ten public MAEVE/CFGI algorithm families and the currently observed aggregate plus component fields is not proven. Do not equate them silently.",
+    "Native 2h provider history is not proven; 2h remains derived-only unless independently evidenced.",
+    "Individual historical CFGI coverage for MAEVE-traded SOL/DOGE/BNB and other assets is not proven; the 851882-row hourly market panel supplies market context, not individual CFGI.",
+    "Recovered MAEVE component-field timestamps require leakage adjudication before entry-feature use.",
+    "Legacy repo paths may contain duplicates or superseded derivatives not exhaustively enumerated here; this does not justify new data collection unless an actual research question exposes a missing cell."
+  ],
+  "closed_non_gaps": [
+    "The two GitHub Actions artifacts expiring on 2026-09-20 are already preserved permanently in Donh91/secrets with immutable hashes; they must not be recopied merely because the temporary artifact remains reachable.",
+    "Historical MARKET for the two frozen 2025 event windows is provider-unavailable and NOT_TESTABLE after a terminal zero-row result. No additional paid retry is authorized.",
+    "High-frequency approximately 15m observations of 4h/1d CFGI state already exist in the private PDLT bootstrap; this is useful but is not native 15m CFGI."
+  ],
+  "next_actions": [
+    {
+      "priority": 1,
+      "action": "Use the permanent MAEVE ledger, private 1h CFGI event stage, private 4h/1d PDLT bootstrap, and private 851882-row hourly market panel as the starting research stack before requesting any new provider history."
+    },
+    {
+      "priority": 2,
+      "action": "For Astra research, join only event-time-valid observations, preserve version boundaries, use matched no-trade controls, and keep DCA capital accounting explicit."
+    },
+    {
+      "priority": 3,
+      "action": "Compare native single-timeframe 1h and 4h models first, then hierarchical multi-timeframe fusion using native 15m only if a documented research need requires it and 1d as regime context."
+    },
+    {
+      "priority": 4,
+      "action": "Only after a concrete experiment identifies a missing symbol/timeframe/time-range cell, test the CFGI API for that smallest necessary gap. Do not reopen terminal MARKET frozen-window retries."
+    },
+    {
+      "priority": 5,
+      "action": "Artifact-retention safety is handled separately by public issue #855, which must rescue any other high-value expiring temporary artifacts to permanent private authorities before expiry."
+    }
+  ],
+  "agent_start_order": [
+    "Read this inventory.",
+    "Open the MAEVE private AGENT_INDEX at the immutable binding.",
+    "Open the private CFGI 1h event-stage AGENT_INDEX and manifest.",
+    "Open the private CFGI PDLT bootstrap manifest for 4h/1d high-frequency observations.",
+    "Open the private hourly altseason-panel AGENT_INDEX and coverage manifest for controls/context.",
+    "Read CFGI_MARKET_PROVIDER_TERMINAL_RECEIPT.json before treating MARKET as a missing frozen-window backfill.",
+    "Only then define a gap-driven provider request."
+  ],
+  "forbidden": [
+    "Blind paid or bulk historical backfill before a concrete gap is tied to a research question",
+    "Public copying of restricted raw provider values",
+    "Using after-the-action fields as entry features",
+    "Assuming approximately 15m observation cadence of 4h/1d state is a native 15m signal",
+    "Assuming a 15m-trained policy scales mechanically to 1h/4h/1d",
+    "Treating derived 2h bins as native provider observations",
+    "Proxy-filling or interpolating terminally unavailable MARKET historical rows",
+    "Live execution authority from this research inventory"
+  ]
+}

@@ -83,6 +83,37 @@ Begin full behavioral reverse engineering when at least one is met:
 
 Until then, prioritize source recovery, parsers, schemas and evidence quality over model fitting.
 
+### CFGI / MAEVE multi-timeframe evidence update - 2026-09-10
+
+Before acquiring any new historical CFGI data, read `maeve/CFGI_MAEVE_DATA_INVENTORY_V1.json` and reuse repo-native evidence first.
+
+The inventory currently proves several distinct evidence classes that must not be conflated:
+
+- provider-side historical availability metadata for MARKET/BTC/ETH on native `15m`, `1h`, `4h` and `1d` back to March 2022;
+- targeted, locally materialized, no-lookahead `1h` BTC/ETH historical event windows with high component-field coverage;
+- immutable point-in-time `4h` CFGI cold-raw captures in `03_DAILY_CAPTURE_LOGS/raw` from 2026-08-18 onward in the currently inspected archive window;
+- point-in-time `1d` cold-raw captures in the same cold lane;
+- weekly derived CFGI calibration artifacts;
+- the restricted MAEVE ledger/recovery package in `Donh91/secrets`, which remains the behavioral action-label authority.
+
+Provider availability is not proof that the entire multi-year raw cube is already materialized locally. Conversely, a missing full-cube proof is not authority to bulk-backfill. First inventory exact local paths, hashes, coverage and overlap; only then request the smallest genuine missing cells.
+
+#### Preferred research ladder
+
+Treat timeframes as different research roles rather than assuming a policy learned on one clock scales mechanically to another:
+
+- `15m` - research microscope. Use for MAEVE timing, feature velocity, persistence, cross-timeframe transitions, entry/DCA microstructure and sequence learning. It is not the preferred default execution clock.
+- `1h` - primary execution-research candidate. Use for interpretable action models, matched controls, chronological OOS and later frozen paper simulation.
+- `2h` - derived intermediate candidate only. Native provider authority is not currently proven. If tested, construct strictly from CLOSED `1h` observations using time-valid transforms such as last value, slope/change, persistence, range and disagreement. Never use future-containing resampling bins, and never label derived observations as native.
+- `4h` - primary robust execution-research candidate. Lower-noise action/confirmation clock with an existing immutable forward cold-raw validation lane.
+- `1d` - regime/risk context. Prefer as trend, regime and risk-budget context rather than the default trade clock.
+
+Astra should first compare native single-timeframe `1h` and `4h` models under identical chronological splits and cost assumptions. Only after those baselines are stable should it test hierarchical fusion, where `15m` supplies time-valid micro-dynamics and `1d` supplies regime context.
+
+Do not equate the currently observed CFGI component fields with the historically described ten public MAEVE/CFGI algorithm families unless a schema or primary source proves that mapping.
+
+Do not use recovered MAEVE `analisis_hora` or related component columns as clean entry features until their timestamp semantics pass leakage adjudication.
+
 ## Required experiment discipline
 
 For every experiment:
