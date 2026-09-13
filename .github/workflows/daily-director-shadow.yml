@@ -89,7 +89,7 @@ jobs:
           reason='SKIPPED_NO_DELTA' if '${{ steps.delta.outputs.delta_ready }}' != 'true' else 'SKIPPED_OWNER_RUN_ALREADY_ANALYZED'
           out={'status':'BLOCKED','summary':'Daily Director skipped because no new eligible owner evidence required analysis.','evidence_for':[],'evidence_against':[],'uncertainties':[reason],'hypotheses':[],'forecast_candidates':[]}
           raw=lambda v:(json.dumps(v,sort_keys=True,separators=(',',':'))+'\n').encode()
-          receipt={'contract':'API_AGENT_RECEIPT_v3','task':'DAILY_DIRECTOR_SHADOW','model':'gpt-5.6-luna','reasoning_effort':'low','context_hash':hashlib.sha256(raw(c)).hexdigest(),'prompt_hash':None,'output_hash':hashlib.sha256(raw(out)).hexdigest(),'response_id':None,'input_tokens':0,'output_tokens':0,'estimated_cost_usd':0.0,'created_unix':int(time.time()),'status':reason,'authority':{'portfolio_action':False,'framework_state_change':False,'model_weight_change':False,'canonical_promotion':False}}
+          receipt={'contract':'API_AGENT_RECEIPT_v3','task':'DAILY_DIRECTOR_SHADOW','model':'gpt-5.6-luna','reasoning_effort':'medium','context_hash':hashlib.sha256(raw(c)).hexdigest(),'prompt_hash':None,'output_hash':hashlib.sha256(raw(out)).hexdigest(),'response_id':None,'input_tokens':0,'output_tokens':0,'estimated_cost_usd':0.0,'created_unix':int(time.time()),'status':reason,'authority':{'portfolio_action':False,'framework_state_change':False,'model_weight_change':False,'canonical_promotion':False}}
           Path('runtime/daily-director/output/output.json').write_bytes(raw(out));Path('runtime/daily-director/output/receipt.json').write_bytes(raw(receipt))
           PY
 
