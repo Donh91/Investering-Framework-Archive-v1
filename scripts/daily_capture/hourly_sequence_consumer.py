@@ -14,8 +14,14 @@ def parse_utc(value: str) -> datetime:
     return datetime.fromisoformat(value.replace("Z", "+00:00"))
 
 
-def _pointer_has_complete_spot(pointer: dict) -> bool:
-    """Return True only when the pointer proves the requested spot window is complete."""
+def pointer_has_complete_spot(pointer: dict) -> bool:
+    """Return True only when the pointer proves the requested spot window is complete.
+
+    Global ``PARTIAL`` can be caused by an incomplete derivatives lane. Spot-only
+    consumers may proceed only when the owner pointer explicitly proves that all
+    requested spot hours are present. Missing/invalid counters and FAILED pointers
+    remain fail-closed.
+    """
     status = pointer.get("status")
     if status == "COMPLETE":
         return True
@@ -50,7 +56,7 @@ def read_latest_complete_spot_row(
         pointer = json.loads(pointer_path.read_text())
     except Exception as exc:
         raise RuntimeError("hourly sequence pointer missing/unreadable") from exc
-    if not _pointer_has_complete_spot(pointer):
+    if not pointer_has_complete_spot(pointer):
         raise RuntimeError("hourly sequence pointer missing/incomplete spot coverage")
 
     raw_end = pointer.get("window_end_utc")
