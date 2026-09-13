@@ -17,7 +17,8 @@ const PUBLIC_SITE_FILES = [
   "vibe.css",
   "app.js",
   "motion.js",
-  "journey.js"
+  "journey.js",
+  "live-context.js"
 ];
 
 function pick(obj, keys) {
