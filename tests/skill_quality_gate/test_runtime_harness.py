@@ -159,6 +159,34 @@ class RuntimeHarnessTests(unittest.TestCase):
         self.assertNotIn("sensitive data", json.dumps(report))
         self.assertNotIn("secret-output.txt", json.dumps(report))
 
+    def test_completed_comparator_failures_are_retained_without_blocking_candidate(self):
+        def runner(request, workspace):
+            skill = workspace / ".agents/skills/example/SKILL.md"
+            candidate = skill.exists() and skill.read_text().startswith("Candidate")
+            return self.responses[request["case_id"]] if candidate else {"status": "COMPLETED", "output": "wrong"}
+        report = self.run_eval(runner)
+        self.assertEqual(report["summary"]["candidate"]["passed"], 4)
+        self.assertEqual(report["summary"]["baseline"]["critical_failures"], 2)
+        self.assertEqual(report["summary"]["no_skill"]["passed"], 0)
+        self.assertEqual(report["deterministic_blockers"], [])
+        self.assertEqual(report["evidence_status"], "COLLECTED_FOR_REVIEW")
+        self.assertEqual(report["release_authority"], "NONE")
+
+    def test_directory_and_permission_changes_fail_workspace_assertion(self):
+        for mutation in ("empty_directory", "file_mode", "root_mode"):
+            with self.subTest(mutation=mutation):
+                def runner(request, workspace):
+                    if mutation == "empty_directory":
+                        (workspace / "empty").mkdir()
+                    else:
+                        target = workspace / "context.txt" if mutation == "file_mode" else workspace
+                        target.chmod(target.stat().st_mode ^ 0o040)
+                    return self.responses[request["case_id"]]
+                report = self.run_eval(runner)
+                self.assertEqual(report["summary"]["candidate"]["critical_failures"], 2)
+                self.assertTrue(all(r["side_effects"] for r in report["runs"]))
+                self.assertEqual(report["evidence_status"], "BLOCKED_BY_DETERMINISTIC_EVIDENCE")
+
     def test_critical_failure_blocks_regardless_of_judge_and_score(self):
         self.responses["safe"]["output"] = '{"status":"PROMOTED"}'
         for state in MOD.CALIBRATION_STATES:
