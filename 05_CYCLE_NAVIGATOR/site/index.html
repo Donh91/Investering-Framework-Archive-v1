@@ -2,11 +2,26 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#030711" />
   <meta name="color-scheme" content="dark" />
   <meta name="description" content="Cycle Navigator — a live crypto cycle map for market phase, capital rotation, altseason timing and public forecast accountability." />
   <title>Cycle Navigator</title>
+  <meta name="format-detection" content="telephone=no" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Cycle Navigator" />
+  <meta property="og:title" content="Cycle Navigator — Market Cycles. With Edge." />
+  <meta property="og:description" content="A live crypto cycle map for market phase, capital rotation, altseason timing and public forecast accountability." />
+  <meta property="og:image" content="https://donh91.github.io/Investering-Framework-Archive-v1/social-card.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Cycle Navigator — Market Cycles. With Edge." />
+  <meta name="twitter:description" content="Market phase · capital rotation · altseason timing · forecast accountability." />
+  <meta name="twitter:image" content="https://donh91.github.io/Investering-Framework-Archive-v1/social-card.png" />
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
   <link rel="preconnect" href="https://api.coingecko.com" />
   <link rel="stylesheet" href="./styles.css" />
   <link rel="stylesheet" href="./motion.css" />
@@ -22,17 +37,12 @@
     <a class="brand" href="#top" aria-label="Cycle Navigator home">
       <span class="brand-mark brand-symbol" aria-hidden="true">
         <svg viewBox="0 0 64 64" role="img">
-          <defs>
-            <linearGradient id="headerLogoGradient" x1="8" y1="10" x2="56" y2="54" gradientUnits="userSpaceOnUse">
-              <stop stop-color="#67E8F9" />
-              <stop offset=".52" stop-color="#60A5FA" />
-              <stop offset="1" stop-color="#A78BFA" />
-            </linearGradient>
-          </defs>
-          <circle cx="32" cy="32" r="27" fill="none" stroke="url(#headerLogoGradient)" stroke-width="2" opacity=".34" />
-          <path d="M43.5 16.5A20 20 0 1 0 47 44" fill="none" stroke="url(#headerLogoGradient)" stroke-width="4.2" stroke-linecap="round" />
-          <path d="M26.8 42.5 44 14.8 37.6 36.2 26.8 42.5Z" fill="url(#headerLogoGradient)" />
-          <circle cx="44" cy="14.8" r="2.3" fill="#E0F2FE" />
+          <circle cx="32" cy="32" r="25.5" fill="none" stroke="#07172f" stroke-width="4.6" stroke-linecap="round"
+                  stroke-dasharray="118 43" transform="rotate(-37 32 32)" />
+          <path d="M31.7 33.2 48.2 13.8 39.8 38.9Z" fill="#2f6fda" />
+          <path d="M32.3 30.8 15.8 50.2 24.2 25.1Z" fill="#07172f" />
+          <circle cx="32" cy="32" r="8.1" fill="#f8fbff" />
+          <circle cx="32" cy="32" r="4.6" fill="#07172f" />
         </svg>
       </span>
       <span class="brand-copy">
@@ -65,22 +75,12 @@
       <div class="hero-copy">
         <div class="hero-brand-lockup" aria-label="Cycle Navigator">
           <svg class="hero-logo" viewBox="0 0 96 96" role="img" aria-hidden="true">
-            <defs>
-              <linearGradient id="heroLogoGradient" x1="9" y1="12" x2="86" y2="83" gradientUnits="userSpaceOnUse">
-                <stop stop-color="#67E8F9" />
-                <stop offset=".45" stop-color="#60A5FA" />
-                <stop offset="1" stop-color="#A78BFA" />
-              </linearGradient>
-              <filter id="heroLogoGlow" x="-60%" y="-60%" width="220%" height="220%">
-                <feGaussianBlur stdDeviation="4" result="blur" />
-                <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-              </filter>
-            </defs>
-            <circle cx="48" cy="48" r="41" fill="none" stroke="url(#heroLogoGradient)" stroke-width="2.2" opacity=".24" />
-            <circle cx="48" cy="48" r="34" fill="none" stroke="url(#heroLogoGradient)" stroke-width="1" opacity=".12" stroke-dasharray="2 7" />
-            <path d="M67 24A31 31 0 1 0 72 66" fill="none" stroke="url(#heroLogoGradient)" stroke-width="6.5" stroke-linecap="round" filter="url(#heroLogoGlow)" />
-            <path d="M39.6 65.6 72.5 18.7 60.6 55.6 39.6 65.6Z" fill="url(#heroLogoGradient)" filter="url(#heroLogoGlow)" />
-            <circle cx="72.5" cy="18.7" r="3.6" fill="#E0F2FE" />
+            <circle cx="48" cy="48" r="38" fill="none" stroke="#07172f" stroke-width="7" stroke-linecap="round"
+                    stroke-dasharray="176 64" transform="rotate(-37 48 48)" />
+            <path d="M47.6 49.8 72.5 20.4 59.8 58.3Z" fill="#2f6fda" />
+            <path d="M48.4 46.2 23.5 75.6 36.2 37.7Z" fill="#07172f" />
+            <circle cx="48" cy="48" r="12.3" fill="#f8fbff" />
+            <circle cx="48" cy="48" r="7" fill="#07172f" />
           </svg>
           <div class="hero-wordmark">
             <span>Cycle</span>

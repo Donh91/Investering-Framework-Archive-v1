@@ -8,6 +8,8 @@
 }
 
 body {
+  overflow-x: clip;
+  -webkit-tap-highlight-color: transparent;
   background:
     radial-gradient(ellipse at 18% -8%, rgba(37,99,235,.18), transparent 34%),
     radial-gradient(ellipse at 82% 16%, rgba(124,58,237,.14), transparent 30%),
@@ -43,12 +45,12 @@ body::after {
 .brand-mark.brand-symbol {
   width: 48px;
   height: 48px;
-  padding: 0;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
+  background: rgba(248,251,255,.98);
+  padding: 5px;
+  border: 1px solid rgba(255,255,255,.86);
+  border-radius: 50%;
   overflow: visible;
-  filter: drop-shadow(0 0 14px rgba(96,165,250,.17));
+  box-shadow: 0 8px 28px rgba(0,0,0,.24), 0 0 25px rgba(96,165,250,.12);
 }
 .brand-symbol svg { width: 100%; height: 100%; display: block; }
 .brand-copy strong {
@@ -77,6 +79,7 @@ body::after {
   backdrop-filter: blur(20px) saturate(135%);
   -webkit-backdrop-filter: blur(20px) saturate(135%);
   box-shadow: 0 15px 55px rgba(0,0,0,.24);
+  overscroll-behavior-x: contain;
 }
 
 .journey-nav a {
@@ -84,6 +87,9 @@ body::after {
   font-size: 10px;
   letter-spacing: .075em;
   text-transform: uppercase;
+  min-height: 34px;
+  display: inline-flex;
+  align-items: center;
 }
 .journey-nav a:hover { color: #d9f8ff; }
 
@@ -142,7 +148,12 @@ body::after {
   width: clamp(68px, 9vw, 96px);
   height: auto;
   overflow: visible;
-  filter: drop-shadow(0 0 20px rgba(96,165,250,.2));
+  box-sizing: border-box;
+  padding: 9px;
+  border-radius: 50%;
+  background: rgba(248,251,255,.98);
+  border: 1px solid rgba(255,255,255,.88);
+  box-shadow: 0 18px 55px rgba(0,0,0,.28), 0 0 42px rgba(96,165,250,.15);
 }
 
 .hero-wordmark {
@@ -245,7 +256,7 @@ body::after {
 
 .site-footer {
   margin-top: 70px;
-  padding-bottom: 34px;
+  padding-bottom: max(34px, calc(env(safe-area-inset-bottom) + 20px));
   border-top: 1px solid rgba(148,163,184,.08);
   padding-top: 20px;
 }
@@ -255,6 +266,8 @@ body::after {
   letter-spacing: .13em;
   color: #8ea4bd;
 }
+
+button, a { touch-action: manipulation; }
 
 @supports (animation-timeline: view()) {
   .cycle-journey .phase-node,
@@ -280,12 +293,12 @@ body::after {
     border-top: 1px solid rgba(148,163,184,.09);
     padding-top: 24px;
   }
-  .journey-nav-wrap { top: 4px; }
+  .journey-nav-wrap { top: max(4px, env(safe-area-inset-top)); }
 }
 
 @media (max-width: 560px) {
   .shell { width: min(100% - 22px, 1240px); }
-  .site-header { padding-top: 16px; }
+  .site-header { padding-top: max(16px, env(safe-area-inset-top)); }
   .brand-mark.brand-symbol { width: 42px; height: 42px; }
   .brand-copy small { display: none; }
   .brand-copy strong { font-size: 12px; letter-spacing: .08em; }
@@ -293,14 +306,16 @@ body::after {
   .journey-nav { padding-inline: 5px; }
   .journey-nav a { font-size: 9px; padding-inline: 9px; }
   .hero { border-radius: 25px; padding: 27px 20px 30px; }
-  .hero-brand-lockup { margin-bottom: 29px; gap: 12px; }
-  .hero-logo { width: 64px; }
+  .hero-brand-lockup { margin-bottom: 29px; gap: 12px; align-items: center; }
+  .hero-logo { width: 64px; padding: 7px; }
+  .hero-wordmark { line-height: .9; }
   .hero-wordmark span { font-size: 14px; }
   .hero-wordmark strong { font-size: 28px; }
   .hero h1 { font-size: clamp(37px, 12.5vw, 58px); }
   .hero-lede { font-size: 15px; }
   .state-meta { font-size: 10px; }
   .score-card { margin-top: 4px; }
+  .score-ring { max-width: 138px; }
   .section-block { margin-top: 48px; }
   .metric-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
   .metric-card { min-height: 132px; padding: 16px; }
