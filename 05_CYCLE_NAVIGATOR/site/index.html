@@ -2,24 +2,52 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="theme-color" content="#07111f" />
-  <meta name="description" content="Cycle Navigator - a public crypto market-cycle dashboard with live market context and an official framework-backed weekly outlook." />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#030711" />
+  <meta name="color-scheme" content="dark" />
+  <meta name="description" content="Cycle Navigator — a live crypto cycle map for market phase, capital rotation, altseason timing and public forecast accountability." />
   <title>Cycle Navigator</title>
+  <meta name="format-detection" content="telephone=no" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Cycle Navigator" />
+  <meta property="og:title" content="Cycle Navigator — Market Cycles. With Edge." />
+  <meta property="og:description" content="A live crypto cycle map for market phase, capital rotation, altseason timing and public forecast accountability." />
+  <meta property="og:image" content="https://donh91.github.io/Investering-Framework-Archive-v1/social-card.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Cycle Navigator — Market Cycles. With Edge." />
+  <meta name="twitter:description" content="Market phase · capital rotation · altseason timing · forecast accountability." />
+  <meta name="twitter:image" content="https://donh91.github.io/Investering-Framework-Archive-v1/social-card.png" />
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
   <link rel="preconnect" href="https://api.coingecko.com" />
-  <link rel="preconnect" href="https://raw.githubusercontent.com" />
   <link rel="stylesheet" href="./styles.css" />
+  <link rel="stylesheet" href="./motion.css" />
+  <link rel="stylesheet" href="./journey.css" />
+  <link rel="stylesheet" href="./vibe.css" />
 </head>
 <body>
+  <div class="page-progress" aria-hidden="true"><span></span></div>
   <div class="ambient ambient-a"></div>
   <div class="ambient ambient-b"></div>
 
   <header class="site-header shell">
     <a class="brand" href="#top" aria-label="Cycle Navigator home">
-      <span class="brand-mark">CN</span>
-      <span>
+      <span class="brand-mark brand-symbol" aria-hidden="true">
+        <svg viewBox="0 0 64 64" role="img">
+          <circle cx="32" cy="32" r="25.5" fill="none" stroke="#07172f" stroke-width="4.6" stroke-linecap="round"
+                  stroke-dasharray="118 43" transform="rotate(-37 32 32)" />
+          <path d="M31.7 33.2 48.2 13.8 39.8 38.9Z" fill="#2f6fda" />
+          <path d="M32.3 30.8 15.8 50.2 24.2 25.1Z" fill="#07172f" />
+          <circle cx="32" cy="32" r="8.1" fill="#f8fbff" />
+          <circle cx="32" cy="32" r="4.6" fill="#07172f" />
+        </svg>
+      </span>
+      <span class="brand-copy">
         <strong>Cycle Navigator</strong>
-        <small>Market phase, rotation and altseason map</small>
+        <small>Market phase · rotation · altseason</small>
       </span>
     </a>
     <div class="header-status" aria-label="Feed status">
@@ -28,15 +56,44 @@
     </div>
   </header>
 
+  <div class="journey-nav-wrap shell">
+    <nav class="journey-nav" aria-label="Cycle Navigator report sections">
+      <a href="#pulse-heading">Pulse</a>
+      <a href="#weekly-heading">Weekly</a>
+      <a href="#cycle-journey-heading">Journey</a>
+      <a href="#rotation-heading">Rotation</a>
+      <a href="#action-compass-heading">Compass</a>
+      <a href="#countdown-heading">Altseason</a>
+      <a href="#public-edition-heading">Public</a>
+      <a href="#report-heading">Audit</a>
+    </nav>
+  </div>
+
   <main id="top" class="shell">
     <section class="hero panel">
+      <div class="hero-orbit" aria-hidden="true"></div>
       <div class="hero-copy">
+        <div class="hero-brand-lockup" aria-label="Cycle Navigator">
+          <svg class="hero-logo" viewBox="0 0 96 96" role="img" aria-hidden="true">
+            <circle cx="48" cy="48" r="38" fill="none" stroke="#07172f" stroke-width="7" stroke-linecap="round"
+                    stroke-dasharray="176 64" transform="rotate(-37 48 48)" />
+            <path d="M47.6 49.8 72.5 20.4 59.8 58.3Z" fill="#2f6fda" />
+            <path d="M48.4 46.2 23.5 75.6 36.2 37.7Z" fill="#07172f" />
+            <circle cx="48" cy="48" r="12.3" fill="#f8fbff" />
+            <circle cx="48" cy="48" r="7" fill="#07172f" />
+          </svg>
+          <div class="hero-wordmark">
+            <span>Cycle</span>
+            <strong>Navigator</strong>
+          </div>
+        </div>
+
         <div class="eyebrow-row">
           <span class="eyebrow" id="issueLabel">Cycle Navigator</span>
           <span class="quality-badge" id="qualityBadge">SYNCING</span>
         </div>
         <h1 id="marketState">Loading the latest cycle state...</h1>
-        <p class="hero-lede" id="stateSummary">The official weekly signal is loading from the public framework.</p>
+        <p class="hero-lede" id="stateSummary">The official weekly signal is loading.</p>
 
         <div class="state-meta" aria-label="Official state metadata">
           <span id="officialTimestamp">OFFICIAL package: loading</span>
@@ -44,7 +101,8 @@
         </div>
 
         <div class="hero-rule"></div>
-        <p class="authority-note">LIVE prices are contextual only. The OFFICIAL weekly state, forecasts, score, rotation ladder and altseason countdown change only when a new framework-backed package is published.</p>
+        <p class="authority-note">LIVE prices are contextual only. OFFICIAL state, forecasts, score, rotation ladder and altseason timing change only when a new frozen Cycle Navigator package is published.</p>
+        <span class="scroll-cue" aria-hidden="true">Scroll the cycle ↓</span>
       </div>
 
       <div class="score-card" aria-label="Prior issue structural score">
@@ -202,7 +260,7 @@
         </div>
         <div>
           <h3>Authority</h3>
-          <p>OFFICIAL state comes from the public GitHub pointer and its referenced machine package. LIVE prices never rewrite the weekly package.</p>
+          <p>OFFICIAL state is mechanically derived from the canonical Cycle Navigator pointer and its referenced machine package. LIVE prices never rewrite the weekly package.</p>
         </div>
       </div>
       <div class="report-footer">
@@ -221,10 +279,13 @@
   </main>
 
   <footer class="site-footer shell">
-    <span>Cycle Navigator</span>
+    <span class="footer-brand">Cycle Navigator</span>
     <span>Scenario map only, not investment advice.</span>
   </footer>
 
   <script src="./app.js" defer></script>
+  <script src="./motion.js" defer></script>
+  <script src="./journey.js" defer></script>
+  <script src="./live-context.js" defer></script>
 </body>
 </html>

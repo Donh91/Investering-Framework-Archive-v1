@@ -66,6 +66,18 @@ def test_valid_zero_cost_and_identical_duplicates_count_once(tmp_path, kind):
 
 
 @pytest.mark.parametrize('kind', ['lane', 'monthly'])
+def test_legacy_token_receipts_are_repriced_without_mutating_receipt(tmp_path, kind):
+    v = receipt(model='gpt-5.6-luna', input_tokens=1_000_000, output_tokens=1_000_000, estimated_cost_usd=7.0)
+    (tmp_path / 'cost.json').write_text(json.dumps(v))
+    proc, result = run_guard(tmp_path, kind)
+    assert proc.returncode == 0
+    assert result['status'] == 'PASS'
+    assert result['spent_usd'] == 1.4
+    assert result['repriced_api_receipts'] == 1
+    assert json.loads((tmp_path / 'cost.json').read_text())['estimated_cost_usd'] == 7.0
+
+
+@pytest.mark.parametrize('kind', ['lane', 'monthly'])
 def test_conflicting_duplicate_costs_cannot_be_hidden_by_file_order(tmp_path, kind):
     for a, b in [(.1, 1.), (1., .1)]:
         (tmp_path / 'a.json').write_text(json.dumps(receipt(estimated_cost_usd=a)))
@@ -78,7 +90,6 @@ def test_conflicting_duplicate_costs_cannot_be_hidden_by_file_order(tmp_path, ki
 @pytest.mark.parametrize('kind', ['lane', 'monthly'])
 def test_same_request_repeated_at_different_times_is_not_one_bill(tmp_path, kind):
     first = receipt(response_id=None, request_hash='SYNTHETIC_REQUEST', estimated_cost_usd=1)
-    # Fix both timestamps within the current UTC month, without using future time.
     stamp = datetime.now(timezone.utc).replace(day=1, hour=0, minute=0, second=0, microsecond=0)
     first['created_at_utc'] = stamp.isoformat()
     second = {**first, 'created_at_utc': (stamp + timedelta(seconds=1)).isoformat()}
