@@ -398,11 +398,88 @@ def run(output_root: Path, date_utc: str, timeout: int = 15) -> dict:
     return result
 
 
-def write_outputs(root: Path, result: dict) -> None:
+def _canonical_sha256(value: dict) -> str:
+    return hashlib.sha256((json.dumps(value, sort_keys=True, separators=(",", ":")) + "\n").encode()).hexdigest()
+
+
+def _result_quality(result: dict) -> str:
+    return "PASS" if result.get("run_status") == "PASS" else "DEGRADED"
+
+
+def _detection_time(result: dict) -> datetime | None:
+    value = result.get("detection_time_utc")
+    if not isinstance(value, str) or not value:
+        return None
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        return None
+    return parsed.astimezone(timezone.utc)
+
+
+def _append_superseded_attempt(root: Path, existing: dict, incoming: dict, reason: str) -> None:
+    record = {
+        "contract": "SITUATION_ROOM_SUPERSEDED_ATTEMPT_v1",
+        "observation_date_utc": incoming.get("observation_date_utc"),
+        "existing_quality": _result_quality(existing),
+        "incoming_quality": _result_quality(incoming),
+        "existing_run_id": existing.get("run_id"),
+        "incoming_run_id": incoming.get("run_id"),
+        "existing_sha256": _canonical_sha256(existing),
+        "incoming_sha256": _canonical_sha256(incoming),
+        "reason": reason,
+    }
+    record["attempt_id"] = hashlib.sha256(
+        json.dumps(record, sort_keys=True, separators=(",", ":")).encode()
+    ).hexdigest()[:24]
+    audit = root / "SUPERSEDED_ATTEMPTS.jsonl"
+    root.mkdir(parents=True, exist_ok=True)
+    seen: set[str] = set()
+    if audit.exists():
+        for line in audit.read_text(encoding="utf-8").splitlines():
+            try:
+                value = json.loads(line)
+                if value.get("attempt_id"):
+                    seen.add(str(value["attempt_id"]))
+            except json.JSONDecodeError:
+                continue
+    if record["attempt_id"] in seen:
+        return
+    with audit.open("a", encoding="utf-8") as handle:
+        handle.write(json.dumps(record, sort_keys=True, separators=(",", ":")) + "\n")
+
+
+def _replacement_decision(existing: dict, incoming: dict) -> tuple[bool, str]:
+    rank = {"DEGRADED": 0, "PASS": 1}
+    existing_quality = _result_quality(existing)
+    incoming_quality = _result_quality(incoming)
+    if rank[incoming_quality] > rank[existing_quality]:
+        return True, "QUALITY_UPGRADE"
+    if rank[incoming_quality] < rank[existing_quality]:
+        return False, "LOWER_QUALITY_RERUN_REJECTED"
+
+    existing_time = _detection_time(existing)
+    incoming_time = _detection_time(incoming)
+    if existing_time is not None and incoming_time is not None and incoming_time > existing_time:
+        return True, "LATER_VALID_DETECTION_TIME_TIE_BREAK"
+    return False, "EQUAL_QUALITY_EXISTING_RECORD_WINS"
+
+
+def write_outputs(root: Path, result: dict) -> bool:
     date_utc = result["observation_date_utc"]
     year, month, _ = date_utc.split("-")
     dated = root / year / month / f"{date_utc}.json"
     dated.parent.mkdir(parents=True, exist_ok=True)
+
+    if dated.exists():
+        existing = json.loads(dated.read_text(encoding="utf-8"))
+        accept, reason = _replacement_decision(existing, result)
+        if not accept:
+            _append_superseded_attempt(root, existing, result, reason)
+            return False
+
     dated.write_text(json.dumps(result, sort_keys=True, indent=2) + "\n")
     root.mkdir(parents=True, exist_ok=True)
     latest = {
@@ -418,24 +495,25 @@ def write_outputs(root: Path, result: dict) -> None:
     (root / "LATEST.json").write_text(json.dumps(latest, sort_keys=True, indent=2) + "\n")
 
     ledger = root / "EVENT_LEDGER.jsonl"
-    existing: set[str] = set()
+    existing_ids: set[str] = set()
     if ledger.exists():
         for line in ledger.read_text().splitlines():
             try:
                 row = json.loads(line)
                 if row.get("event_id"):
-                    existing.add(str(row["event_id"]))
+                    existing_ids.add(str(row["event_id"]))
             except json.JSONDecodeError:
                 continue
     with ledger.open("a", encoding="utf-8") as fh:
         for event in result["events"]:
-            if event["event_id"] in existing:
+            if event["event_id"] in existing_ids:
                 continue
             row = dict(event)
             row["ledger_recorded_at_utc"] = result["detection_time_utc"]
             row["shared_row_tournament_eligible"] = False
             fh.write(json.dumps(row, sort_keys=True, separators=(",", ":")) + "\n")
-            existing.add(event["event_id"])
+            existing_ids.add(event["event_id"])
+    return True
 
 
 def main() -> None:
