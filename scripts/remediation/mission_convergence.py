@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import re
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -14,9 +15,10 @@ ASSESSMENT_CONTRACT = "MISSION_CONVERGENCE_ASSESSMENT_v1"
 STATUS_CONVERGED = "CONVERGED"
 STATUS_NOT_CONVERGED = "NOT_CONVERGED"
 LEGACY_COMPLETION_CONTRACT = "CODEX_RESEARCH_COMPLETION_RECEIPT_v1"
-ACTIVATION_UTC = "2026-09-13T15:30:00Z"
+ACTIVATION_UTC = "2026-09-13T16:00:00Z"
 GAP_TYPES = {"missing", "partial", "contradicts", "unrequested"}
 REQUIREMENT_STATUS = {"SATISFIED", "BLOCKED"}
+SHA40 = re.compile(r"^[0-9a-f]{40}$")
 
 
 def now_iso() -> str:
@@ -58,6 +60,8 @@ def candidate_for_task(repo_root: Path, task: dict[str, Any]) -> dict[str, Any]:
     data = read_json(path)
     if not isinstance(data, dict) or data.get("candidate_id") != task.get("candidate_id"):
         raise ValueError("CANDIDATE_DOCUMENT_INVALID")
+    if canonical_hash(data) != task.get("candidate_sha256"):
+        raise ValueError("CANDIDATE_HASH_MISMATCH")
     return data
 
 
@@ -176,8 +180,12 @@ def build_receipt(
     assessed_at_utc: str | None = None,
 ) -> dict[str, Any]:
     task = task_for_candidate(repo_root, candidate_id)
-    if task.get("state") not in {"POST_FIX_OBSERVATION", "IN_REMEDIATION"}:
-        raise ValueError("TASK_NOT_IN_CONVERGENCE_ELIGIBLE_STATE")
+    if task.get("state") != "POST_FIX_OBSERVATION":
+        raise ValueError("TASK_NOT_IN_POST_FIX_OBSERVATION")
+    if not SHA40.fullmatch(str(merge_commit_sha or "")):
+        raise ValueError("CONVERGENCE_MERGE_SHA_INVALID")
+    if isinstance(pr_number, bool) or not isinstance(pr_number, int) or pr_number <= 0:
+        raise ValueError("CONVERGENCE_PR_NUMBER_INVALID")
     candidate = candidate_for_task(repo_root, task)
     inventory = requirement_inventory(task, candidate)
     assessment = read_json(assessment_path)
@@ -212,7 +220,9 @@ def validate_receipt(repo_root: Path, task: dict[str, Any], completion: dict[str
         return None
     try:
         receipt = read_json(path)
-    except (OSError, json.JSONDecodeError):
+        candidate = candidate_for_task(repo_root, task)
+        authoritative_requirements = requirement_inventory(task, candidate)
+    except (OSError, json.JSONDecodeError, ValueError):
         return None
     if not isinstance(receipt, dict):
         return None
@@ -232,15 +242,15 @@ def validate_receipt(repo_root: Path, task: dict[str, Any], completion: dict[str
         return None
     if receipt.get("gaps") != []:
         return None
-    coverage = receipt.get("coverage")
     requirements = receipt.get("requirements")
-    if not isinstance(coverage, list) or not isinstance(requirements, list):
+    coverage = receipt.get("coverage")
+    if requirements != authoritative_requirements or not isinstance(coverage, list):
         return None
-    expected = {str(x.get("source_ref")) for x in requirements if isinstance(x, dict)}
-    actual = {str(x.get("source_ref")) for x in coverage if isinstance(x, dict) and x.get("status") == "SATISFIED"}
-    if not expected or expected != actual:
+    expected = {item["source_ref"] for item in authoritative_requirements}
+    actual_refs = [str(x.get("source_ref")) for x in coverage if isinstance(x, dict) and x.get("status") == "SATISFIED"]
+    if not expected or len(actual_refs) != len(expected) or set(actual_refs) != expected:
         return None
-    if any(not isinstance(x.get("evidence"), list) or not x.get("evidence") for x in coverage if isinstance(x, dict)):
+    if any(not isinstance(x, dict) or not isinstance(x.get("evidence"), list) or not x.get("evidence") for x in coverage):
         return None
     declared = str(receipt.get("receipt_sha256") or "")
     actual_hash = canonical_hash({k: v for k, v in receipt.items() if k != "receipt_sha256"})
@@ -251,7 +261,9 @@ def completion_requires_convergence(completion: dict[str, Any]) -> bool:
     if completion.get("contract") != LEGACY_COMPLETION_CONTRACT:
         return True
     verified = str(completion.get("verified_at_utc") or "")
-    return bool(verified and verified >= ACTIVATION_UTC)
+    if not verified:
+        return True
+    return verified >= ACTIVATION_UTC
 
 
 def validate_active_completions(repo_root: Path) -> dict[str, Any]:
