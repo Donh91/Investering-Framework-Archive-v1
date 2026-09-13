@@ -3,13 +3,15 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="theme-color" content="#07111f" />
+  <meta name="theme-color" content="#030711" />
   <meta name="color-scheme" content="dark" />
-  <meta name="description" content="Cycle Navigator - a public crypto market-cycle dashboard with live market context and an official framework-backed weekly outlook." />
+  <meta name="description" content="Cycle Navigator — a live crypto cycle map for market phase, capital rotation, altseason timing and public forecast accountability." />
   <title>Cycle Navigator</title>
   <link rel="preconnect" href="https://api.coingecko.com" />
   <link rel="stylesheet" href="./styles.css" />
   <link rel="stylesheet" href="./motion.css" />
+  <link rel="stylesheet" href="./journey.css" />
+  <link rel="stylesheet" href="./vibe.css" />
 </head>
 <body>
   <div class="page-progress" aria-hidden="true"><span></span></div>
@@ -18,10 +20,24 @@
 
   <header class="site-header shell">
     <a class="brand" href="#top" aria-label="Cycle Navigator home">
-      <span class="brand-mark">CN</span>
-      <span>
+      <span class="brand-mark brand-symbol" aria-hidden="true">
+        <svg viewBox="0 0 64 64" role="img">
+          <defs>
+            <linearGradient id="headerLogoGradient" x1="8" y1="10" x2="56" y2="54" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#67E8F9" />
+              <stop offset=".52" stop-color="#60A5FA" />
+              <stop offset="1" stop-color="#A78BFA" />
+            </linearGradient>
+          </defs>
+          <circle cx="32" cy="32" r="27" fill="none" stroke="url(#headerLogoGradient)" stroke-width="2" opacity=".34" />
+          <path d="M43.5 16.5A20 20 0 1 0 47 44" fill="none" stroke="url(#headerLogoGradient)" stroke-width="4.2" stroke-linecap="round" />
+          <path d="M26.8 42.5 44 14.8 37.6 36.2 26.8 42.5Z" fill="url(#headerLogoGradient)" />
+          <circle cx="44" cy="14.8" r="2.3" fill="#E0F2FE" />
+        </svg>
+      </span>
+      <span class="brand-copy">
         <strong>Cycle Navigator</strong>
-        <small>Market phase, rotation and altseason map</small>
+        <small>Market phase · rotation · altseason</small>
       </span>
     </a>
     <div class="header-status" aria-label="Feed status">
@@ -34,8 +50,11 @@
     <nav class="journey-nav" aria-label="Cycle Navigator report sections">
       <a href="#pulse-heading">Pulse</a>
       <a href="#weekly-heading">Weekly</a>
+      <a href="#cycle-journey-heading">Journey</a>
       <a href="#rotation-heading">Rotation</a>
+      <a href="#action-compass-heading">Compass</a>
       <a href="#countdown-heading">Altseason</a>
+      <a href="#public-edition-heading">Public</a>
       <a href="#report-heading">Audit</a>
     </nav>
   </div>
@@ -44,12 +63,37 @@
     <section class="hero panel">
       <div class="hero-orbit" aria-hidden="true"></div>
       <div class="hero-copy">
+        <div class="hero-brand-lockup" aria-label="Cycle Navigator">
+          <svg class="hero-logo" viewBox="0 0 96 96" role="img" aria-hidden="true">
+            <defs>
+              <linearGradient id="heroLogoGradient" x1="9" y1="12" x2="86" y2="83" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#67E8F9" />
+                <stop offset=".45" stop-color="#60A5FA" />
+                <stop offset="1" stop-color="#A78BFA" />
+              </linearGradient>
+              <filter id="heroLogoGlow" x="-60%" y="-60%" width="220%" height="220%">
+                <feGaussianBlur stdDeviation="4" result="blur" />
+                <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+              </filter>
+            </defs>
+            <circle cx="48" cy="48" r="41" fill="none" stroke="url(#heroLogoGradient)" stroke-width="2.2" opacity=".24" />
+            <circle cx="48" cy="48" r="34" fill="none" stroke="url(#heroLogoGradient)" stroke-width="1" opacity=".12" stroke-dasharray="2 7" />
+            <path d="M67 24A31 31 0 1 0 72 66" fill="none" stroke="url(#heroLogoGradient)" stroke-width="6.5" stroke-linecap="round" filter="url(#heroLogoGlow)" />
+            <path d="M39.6 65.6 72.5 18.7 60.6 55.6 39.6 65.6Z" fill="url(#heroLogoGradient)" filter="url(#heroLogoGlow)" />
+            <circle cx="72.5" cy="18.7" r="3.6" fill="#E0F2FE" />
+          </svg>
+          <div class="hero-wordmark">
+            <span>Cycle</span>
+            <strong>Navigator</strong>
+          </div>
+        </div>
+
         <div class="eyebrow-row">
           <span class="eyebrow" id="issueLabel">Cycle Navigator</span>
           <span class="quality-badge" id="qualityBadge">SYNCING</span>
         </div>
         <h1 id="marketState">Loading the latest cycle state...</h1>
-        <p class="hero-lede" id="stateSummary">The official weekly signal is loading from the public framework.</p>
+        <p class="hero-lede" id="stateSummary">The official weekly signal is loading.</p>
 
         <div class="state-meta" aria-label="Official state metadata">
           <span id="officialTimestamp">OFFICIAL package: loading</span>
@@ -57,8 +101,8 @@
         </div>
 
         <div class="hero-rule"></div>
-        <p class="authority-note">LIVE prices are contextual only. The OFFICIAL weekly state, forecasts, score, rotation ladder and altseason countdown change only when a new framework-backed package is published.</p>
-        <span class="scroll-cue" aria-hidden="true">Scroll through the cycle map</span>
+        <p class="authority-note">LIVE prices are contextual only. OFFICIAL state, forecasts, score, rotation ladder and altseason timing change only when a new frozen Cycle Navigator package is published.</p>
+        <span class="scroll-cue" aria-hidden="true">Scroll the cycle ↓</span>
       </div>
 
       <div class="score-card" aria-label="Prior issue structural score">
@@ -235,11 +279,13 @@
   </main>
 
   <footer class="site-footer shell">
-    <span>Cycle Navigator</span>
+    <span class="footer-brand">Cycle Navigator</span>
     <span>Scenario map only, not investment advice.</span>
   </footer>
 
   <script src="./app.js" defer></script>
   <script src="./motion.js" defer></script>
+  <script src="./journey.js" defer></script>
+  <script src="./live-context.js" defer></script>
 </body>
 </html>
