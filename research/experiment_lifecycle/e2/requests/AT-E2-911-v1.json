@@ -15,7 +15,7 @@
     "btc_close",
     "eth_close",
     "spot_status",
-    "timestamp"
+    "timestamp_utc"
   ],
   "contract": "AUTO_TRADING_E2_REQUEST_v1",
   "cutoff_utc": "2026-09-11T23:00:00Z",
@@ -24,7 +24,7 @@
   "evaluation_stride_hours": 2,
   "experiment_id": "AT-E2-911-v1",
   "failed_and_abandoned_attempts_remain_counted": true,
-  "frozen_at_utc": "2026-09-13T22:20:00Z",
+  "frozen_at_utc": "2026-09-13T22:45:00Z",
   "hard_cost_stop_usd": 0.75,
   "issue": 911,
   "model": "gpt-5.6-luna",
@@ -37,9 +37,11 @@
     "economic_noninferiority_bps_per_decision": 5.0,
     "material_reproducibility_gap": 0.05
   },
+  "preregistration_revision": 2,
   "primary_endpoint": "REPEATED_IDENTICAL_INPUT_ACTION_AGREEMENT",
   "proposal_trial_n": 1,
   "reasoning_effort": "medium",
+  "revision_reason": "PRE_LIVE_SCHEMA_BINDING_ONLY: canonical hourly field is timestamp_utc, not timestamp. No live model call occurred before this correction; sample size, cutoff, features, model, repeats, costs and decision thresholds are unchanged.",
   "round_trip_cost_bps": 10.0,
   "secondary_endpoints": [
     "OOS_POST_COST_MEAN_BPS_PER_DECISION",
