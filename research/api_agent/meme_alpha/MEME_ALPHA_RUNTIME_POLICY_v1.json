@@ -35,6 +35,11 @@
     "monthly_shared_api_hard_stop_usd": 20.0,
     "automatic_budget_increase": false
   },
+  "failure_policy": {
+    "max_attempts_per_unchanged_input": 3,
+    "dead_letter_after_max_attempts": true,
+    "automatic_retry_after_source_change": true
+  },
   "queue": {
     "intake_roots": [
       "private_research/memes_alpha/research_leads",
