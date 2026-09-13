@@ -81,9 +81,65 @@ def aggressive_flow(row: dict[str, Any], asset: str) -> float | None:
     return round(2.0*buy-total,6)
 
 
+def horizon_tolerance_hours(hours: int) -> float:
+    """Existing anchor-selection tolerance, also exposed by the readout."""
+    return 1.25 if hours == 1 else min(6.0, max(2.0, hours * 0.25))
+
+
+def temporal_coherence(context: dict[str, Any]) -> dict[str, Any]:
+    """Describe time differences; evaluate only existing predecessor/anchor rules."""
+    def aware(raw: Any) -> datetime | None:
+        try:
+            value = datetime.fromisoformat(str(raw).replace("Z", "+00:00"))
+            return value.astimezone(timezone.utc) if value.tzinfo is not None else None
+        except (ValueError, TypeError):
+            return None
+
+    seq = context.get("api_intelligence_v2", {})
+    cutoff = aware(seq.get("cutoff_utc"))
+    sources = [("latest_capture", "captured_at_utc", context.get("latest_capture", {})),
+               ("previous_capture", "captured_at_utc", context.get("previous_capture", {}))]
+    sources.extend((name, field, seq.get(name, {})) for name, field in (
+        ("rich_breadth", "retrieved_at_utc"), ("latest_settled_etf", "retrieved_at_utc"),
+        ("pullback_forensics", "observed_at_utc"), ("stablecoin_liquidity", "retrieved_at_utc")))
+    owners = {}
+    for name, field, source in sources:
+        raw = source.get(field) if isinstance(source, dict) else None
+        timestamp = aware(raw)
+        age = (cutoff - timestamp).total_seconds() / 3600 if cutoff and timestamp else None
+        owners[name] = {"timestamp_field": field, "timestamp_utc": raw,
+                        "age_hours": age, "timestamp_status": "UNKNOWN" if age is None else "AFTER_CUTOFF" if age < 0 else "AT_OR_BEFORE_CUTOFF",
+                        "freshness_verdict": "NOT_ASSESSED_NO_ADDITIONAL_THRESHOLD"}
+    violations = []
+    # Reuse the existing predecessor verdict instead of duplicating its 48h rule.
+    if context.get("delta_status") == "DELTA_DEGRADED_STALE_PREDECESSOR":
+        violations.append({"family": "previous_capture", "rule": "EXISTING_PREDECESSOR_AGE_GATE"})
+    horizons = {}
+    for hours in HORIZONS_HOURS:
+        row = seq.get("horizons", {}).get(str(hours), {})
+        anchor = aware(row.get("anchor_timestamp_utc"))
+        lag = ((cutoff - timedelta(hours=hours)) - anchor).total_seconds() / 3600 if cutoff and anchor else None
+        tolerance = horizon_tolerance_hours(hours)
+        violation = (lag is not None and not 0 <= lag <= tolerance) or row.get("reason") == "NO_ANCHOR_WITHIN_TOLERANCE"
+        if violation:
+            violations.append({"family": "hourly", "horizon_hours": hours, "rule": "EXISTING_ANCHOR_TOLERANCE"})
+        horizons[str(hours)] = {"nominal_hours": hours, "actual_span_hours": row.get("actual_span_hours"),
+                               "anchor_lag_hours": lag, "existing_tolerance_hours": tolerance,
+                               "status": "EXISTING_CONTRACT_VIOLATION" if violation else "UNKNOWN" if lag is None else "WITHIN_EXISTING_CONTRACTS"}
+    ages = [r["age_hours"] for r in owners.values() if r["age_hours"] is not None]
+    unknown = cutoff is None or any(r["age_hours"] is None for r in owners.values()) or any(r["status"] == "UNKNOWN" for r in horizons.values())
+    after_cutoff = any(r["timestamp_status"] == "AFTER_CUTOFF" for r in owners.values())
+    return {"authority": "READ_ONLY_TEMPORAL_OBSERVABILITY", "decision_cutoff_utc": seq.get("cutoff_utc"),
+            "status": "EXISTING_CONTRACT_VIOLATION" if violations else "PARTIAL_UNKNOWN" if unknown else "AFTER_CUTOFF_TIMESTAMPS_PRESENT" if after_cutoff else "WITHIN_EXISTING_CONTRACTS",
+            "evaluated_rules_only": ["existing predecessor delta_status", "existing hourly anchor tolerance"],
+            "owners": owners, "owner_timestamp_age_spread_hours": max(ages) - min(ages) if len(ages) >= 2 else None,
+            "age_spread_semantics": "DESCRIPTIVE_MIXED_OBSERVATION_AND_RETRIEVAL_TIMES_NOT_A_FRESHNESS_GATE",
+            "horizons": horizons, "violations": violations}
+
+
 def build_horizon(rows: list[dict[str, Any]], cutoff: datetime, hours: int) -> dict[str, Any]:
     if not rows: return {"status": "UNAVAILABLE", "target_hours": hours}
-    latest = rows[-1]; target = cutoff - timedelta(hours=hours); tolerance = 1.25 if hours == 1 else min(6.0, max(2.0, hours * 0.25)); anchor = select_anchor(rows, target, tolerance)
+    latest = rows[-1]; target = cutoff - timedelta(hours=hours); tolerance = horizon_tolerance_hours(hours); anchor = select_anchor(rows, target, tolerance)
     if anchor is None: return {"status": "UNAVAILABLE", "target_hours": hours, "reason": "NO_ANCHOR_WITHIN_TOLERANCE"}
     window = [row for row in rows if anchor["timestamp"] <= row["timestamp"] <= latest["timestamp"]]
     btc_highs=[v for v in (r.get("btc_high") for r in window) if isinstance(v,float)]; btc_lows=[v for v in (r.get("btc_low") for r in window) if isinstance(v,float)]; eth_highs=[v for v in (r.get("eth_high") for r in window) if isinstance(v,float)]; eth_lows=[v for v in (r.get("eth_low") for r in window) if isinstance(v,float)]
@@ -149,6 +205,7 @@ def main() -> None:
     if cutoff is None: raise SystemExit("latest_capture_timestamp_required")
     rows=load_hourly_rows(args.hourly_root,cutoff)
     context["api_intelligence_v2"]={"contract":"API_INTELLIGENCE_SEQUENCE_CONTEXT_v2_2","authority":"SHADOW_CONTEXT_ONLY","canonical_state":False,"cutoff_utc":cutoff.isoformat().replace("+00:00","Z"),"hourly_rows_available":len(rows),"horizons":{str(h):build_horizon(rows,cutoff,h) for h in HORIZONS_HOURS},"ethbtc_0_0300_persistence":ethbtc_persistence(rows),"breadth_delta":breadth_context(context),"rich_breadth":json_pointer_context(args.rich_breadth_pointer,"RICH_BREADTH_CHECKPOINT_v1",("retrieved_at_utc","aggregate","exclusion_count","universe","observation","evidence_semantics","authority")),"latest_settled_etf":settled_etf_context(args.etf_pointer),"pullback_forensics":pullback_forensics_context(args.pullback_pointer),"stablecoin_liquidity":json_pointer_context(args.stablecoin_pointer,"DEFILLAMA_STABLECOIN_LIQUIDITY_OWNER_v1_1",("retrieved_at_utc","global","historical_backfill","chains","source_receipts","payload_sha256","evidence_semantics","authority")),"rules":["All deltas are deterministic observations from retained owner/hourly data.","ETHBTC persistence uses direct retained ETHBTC closes and never a synthetic ETH/USD divided by BTC/USD ratio.","Net aggressive quote flow is taker-buy quote minus inferred taker-sell quote from the same exchange bar and is not labelled CVD.","Rich breadth is point-in-time cross-sectional PROXY_ONLY evidence; canonical large-cap and broad-alt breadth remain UNCONFIRMED unless separate contracts establish them.","Stablecoin supply is SUPPLY_LIQUIDITY context and never deployment confirmation.","Stablecoin historical backfill is copied from the source historical series and is never interpolated or forward-filled.","Settled ETF context is copied only from verified retained ETF owner payload; missing sessions are not imputed.","Pullback Forensics remains SHADOW_RESEARCH_ONLY and cannot create market state or portfolio action.","Unavailable evidence remains unknown and is not imputed."]}
+    context["temporal_coherence"] = temporal_coherence(context)
     context["context_hash"]=hashlib.sha256(canonical_bytes({k:v for k,v in context.items() if k!="context_hash"})).hexdigest(); args.output.parent.mkdir(parents=True,exist_ok=True); args.output.write_bytes(canonical_bytes(context)); print(json.dumps({"status":"PASS","hourly_rows":len(rows),"context_hash":context["context_hash"]},sort_keys=True))
 
 if __name__=="__main__": main()
