@@ -33,12 +33,15 @@
     "single_task_hard_cap_usd": 0.75,
     "daily_soft_cap_usd": 1.0,
     "monthly_shared_api_hard_stop_usd": 20.0,
+    "web_search_tool_call_cost_usd_snapshot": 0.01,
+    "max_web_search_calls_per_task": 2,
     "automatic_budget_increase": false
   },
   "failure_policy": {
     "max_attempts_per_unchanged_input": 3,
     "dead_letter_after_max_attempts": true,
-    "automatic_retry_after_source_change": true
+    "automatic_retry_after_source_change": true,
+    "infrastructure_failures_do_not_consume_task_attempts": true
   },
   "queue": {
     "intake_roots": [
