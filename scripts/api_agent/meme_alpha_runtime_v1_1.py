@@ -7,7 +7,10 @@ import time
 from pathlib import Path
 from typing import Any
 
-from scripts.api_agent import meme_alpha_runtime as base
+try:
+    from scripts.api_agent import meme_alpha_runtime as base
+except ModuleNotFoundError:
+    import meme_alpha_runtime as base
 
 
 def analyze(
