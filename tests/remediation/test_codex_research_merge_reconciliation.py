@@ -217,9 +217,10 @@ class CodexResearchMergeReconciliationTests(unittest.TestCase):
 
     def test_workflow_reconciles_between_two_owner_materializations(self):
         text = WORKFLOW_PATH.read_text()
-        first = text.find("python scripts/remediation/merge_codex_research_intake.py")
+        materialize = "python scripts/remediation/merge_codex_research_intake_converged.py"
+        first = text.find(materialize)
         reconcile_pos = text.find("python scripts/remediation/reconcile_codex_research_merges.py")
-        second = text.find("python scripts/remediation/merge_codex_research_intake.py", first + 1)
+        second = text.find(materialize, first + 1)
         self.assertGreaterEqual(first, 0)
         self.assertGreater(reconcile_pos, first)
         self.assertGreater(second, reconcile_pos)
