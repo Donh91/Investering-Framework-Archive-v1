@@ -14,6 +14,22 @@ def parse_utc(value: str) -> datetime:
     return datetime.fromisoformat(value.replace("Z", "+00:00"))
 
 
+def _pointer_has_complete_spot(pointer: dict) -> bool:
+    """Return True only when the pointer proves the requested spot window is complete."""
+    status = pointer.get("status")
+    if status == "COMPLETE":
+        return True
+    if status != "PARTIAL":
+        return False
+    requested = pointer.get("requested_hours")
+    spot_complete = pointer.get("spot_complete_hours")
+    if isinstance(requested, bool) or isinstance(spot_complete, bool):
+        return False
+    if not isinstance(requested, int) or not isinstance(spot_complete, int) or requested <= 0:
+        return False
+    return spot_complete == requested
+
+
 def read_latest_complete_spot_row(
     pointer_path: Path = DEFAULT_POINTER,
     hourly_root: Path = DEFAULT_ROOT,
@@ -21,17 +37,21 @@ def read_latest_complete_spot_row(
     """Resolve the final materialized spot row from an hourly sequence pointer.
 
     ``window_end_utc`` in ``HOURLY_SEQUENCE_LATEST_POINTER_v2_2`` is an
-    exclusive right boundary.  A pointer ending at 00:00Z therefore owns a
-    final 23:00Z row in the previous UTC day's permanent CSV.  Consumers must
+    exclusive right boundary. A pointer ending at 00:00Z therefore owns a
+    final 23:00Z row in the previous UTC day's permanent CSV. Consumers must
     never interpret the boundary itself as a materialized observation.
+
+    Global pointer status can be ``PARTIAL`` when a derivatives lane is short.
+    That does not invalidate a spot-only consumer when the pointer explicitly
+    proves ``spot_complete_hours == requested_hours``.
     """
 
     try:
         pointer = json.loads(pointer_path.read_text())
     except Exception as exc:
         raise RuntimeError("hourly sequence pointer missing/unreadable") from exc
-    if pointer.get("status") != "COMPLETE":
-        raise RuntimeError("hourly sequence pointer missing/incomplete")
+    if not _pointer_has_complete_spot(pointer):
+        raise RuntimeError("hourly sequence pointer missing/incomplete spot coverage")
 
     raw_end = pointer.get("window_end_utc")
     if not raw_end:
