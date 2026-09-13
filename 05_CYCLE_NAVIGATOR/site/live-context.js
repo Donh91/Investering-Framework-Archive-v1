@@ -75,3 +75,19 @@
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, { once: true });
   else start();
 })();
+
+(() => {
+  'use strict';
+  if (!document.querySelector('link[href$="calibration.css"]')) {
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = './calibration.css';
+    document.head.appendChild(link);
+  }
+  if (!document.querySelector('script[src$="calibration.js"]')) {
+    const script = document.createElement('script');
+    script.src = './calibration.js';
+    script.defer = true;
+    document.head.appendChild(script);
+  }
+})();

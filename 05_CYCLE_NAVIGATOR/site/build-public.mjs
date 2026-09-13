@@ -9,16 +9,19 @@ const dataDir = resolve(outputDir, "data");
 
 const POINTER_PATH = resolve(repoRoot, "05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json");
 const PUBLISHED_ROOT = resolve(repoRoot, "05_CYCLE_NAVIGATOR/published");
+const TRACK_RECORD_PATH = resolve(repoRoot, "05_CYCLE_NAVIGATOR/track_record/CN_TRACK_RECORD_LEDGER.jsonl");
 const PUBLIC_SITE_FILES = [
   "index.html",
   "styles.css",
   "motion.css",
   "journey.css",
   "vibe.css",
+  "calibration.css",
   "app.js",
   "motion.js",
   "journey.js",
   "live-context.js",
+  "calibration.js",
   "favicon.svg",
   "social-card.svg"
 ];
@@ -91,6 +94,38 @@ function extractManiaWindow(text) {
   return prose ? prose[1].trim() : null;
 }
 
+function extractXPrecisionClaim(text, publicationIssue, date) {
+  const source = String(text || "");
+  const scoredIssueMatch = source.match(/WEEKLY\s+PRECISION\s*,?\s*CN\s*#(\d+)/i)
+    || source.match(/COMPLETE\s+SCORECARD\s*[—–-]?\s*#(\d+)/i);
+  const overallMatch = source.match(/Overall\s+precision\s*:\s*\*{0,2}\s*(\d+(?:\.\d+)?)\s*(?:%|\/\s*100)/i);
+  if (!scoredIssueMatch || !overallMatch) return null;
+
+  const components = {};
+  const componentPatterns = [
+    ["cycle_structure", /Cycle structure\s*:\s*\*{0,2}\s*(\d+(?:\.\d+)?)\s*(?:%|\/\s*100)/i],
+    ["ethbtc_transition", /ETH\/BTC transition\s*:\s*\*{0,2}\s*(\d+(?:\.\d+)?)\s*(?:%|\/\s*100)/i],
+    ["breadth_participation", /Breadth\s*\/\s*participation\s*:\s*\*{0,2}\s*(\d+(?:\.\d+)?)\s*(?:%|\/\s*100)/i],
+    ["rotation_sequencing", /Rotation sequencing\s*:\s*\*{0,2}\s*(\d+(?:\.\d+)?)\s*(?:%|\/\s*100)/i],
+    ["altseason_timing", /Altseason timing\s*:\s*\*{0,2}\s*(\d+(?:\.\d+)?)\s*(?:%|\/\s*100)/i],
+    ["deployment_sequencing", /Deployment sequencing\s*:\s*\*{0,2}\s*(\d+(?:\.\d+)?)\s*(?:%|\/\s*100)/i],
+    ["btc_price_ranges", /BTC price ranges\s*:\s*\*{0,2}\s*(\d+(?:\.\d+)?)\s*(?:%|\/\s*100)/i],
+    ["eth_price_ranges", /ETH price ranges\s*:\s*\*{0,2}\s*(\d+(?:\.\d+)?)\s*(?:%|\/\s*100)/i]
+  ];
+  for (const [key, pattern] of componentPatterns) {
+    const match = source.match(pattern);
+    if (match) components[key] = Number(match[1]);
+  }
+
+  return {
+    publication_issue: publicationIssue,
+    scored_issue: Number(scoredIssueMatch[1]),
+    date,
+    overall_precision: Number(overallMatch[1]),
+    components
+  };
+}
+
 async function publicHistory() {
   const candidates = [];
   try {
@@ -113,19 +148,25 @@ async function publicHistory() {
   const latest = candidates[0];
   const latestText = await readFile(latest.path, "utf8");
   let historicalMania = null;
+  const xPrecisionClaims = [];
 
   for (const candidate of candidates) {
     const text = candidate.path === latest.path ? latestText : await readFile(candidate.path, "utf8");
-    const window = extractManiaWindow(text);
-    if (window) {
-      historicalMania = {
-        issue: candidate.issue,
-        date: candidate.date,
-        window
-      };
-      break;
+    if (!historicalMania) {
+      const window = extractManiaWindow(text);
+      if (window) {
+        historicalMania = {
+          issue: candidate.issue,
+          date: candidate.date,
+          window
+        };
+      }
     }
+    const claim = extractXPrecisionClaim(text, candidate.issue, candidate.date);
+    if (claim) xPrecisionClaims.push(claim);
   }
+
+  xPrecisionClaims.sort((a, b) => a.scored_issue - b.scored_issue);
 
   return {
     latest_published_x: {
@@ -133,8 +174,36 @@ async function publicHistory() {
       date: latest.date,
       text: latestText
     },
-    historical_mania_reference: historicalMania
+    historical_mania_reference: historicalMania,
+    x_precision_claims: xPrecisionClaims
   };
+}
+
+async function trackRecord() {
+  try {
+    const raw = await readFile(TRACK_RECORD_PATH, "utf8");
+    const rows = raw
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter(Boolean)
+      .map((line) => JSON.parse(line))
+      .map((row) => pick(row, [
+        "completed_iso_week",
+        "issue_scored",
+        "next_issue",
+        "score_status",
+        "structural_score",
+        "price_range_score",
+        "decision_utility_score",
+        "public_continuity_score",
+        "score_authority"
+      ]))
+      .sort((a, b) => Number(a.issue_scored || 0) - Number(b.issue_scored || 0));
+
+    return { rows };
+  } catch {
+    return { rows: [] };
+  }
 }
 
 async function main() {
@@ -147,13 +216,23 @@ async function main() {
   const packagePath = resolve(repoRoot, weekDir, "CYCLE_NAVIGATOR_MACHINE_PACKAGE.json");
   const pkg = await readJson(packagePath);
   const history = await publicHistory();
+  const track = await trackRecord();
 
   const publicSnapshot = {
-    schema_version: "CYCLE_NAVIGATOR_PUBLIC_SNAPSHOT_V2",
+    schema_version: "CYCLE_NAVIGATOR_PUBLIC_SNAPSHOT_V3",
     generated_at_utc: new Date().toISOString(),
     pointer: sanitizePointer(pointer),
     package: sanitizePackage(pkg),
-    public_history: history
+    public_history: history,
+    calibration: {
+      track_record: track,
+      current: {
+        issue_number: pkg?.issue_number ?? pointer?.issue_number ?? null,
+        provisional_score: null,
+        provisional_status: "IN_PROGRESS_UNTIL_COMPLETED_EVIDENCE",
+        frozen_test_count: Array.isArray(pkg?.forecast_freeze?.structural_calls) ? pkg.forecast_freeze.structural_calls.length : 0
+      }
+    }
   };
 
   await rm(outputDir, { recursive: true, force: true });
