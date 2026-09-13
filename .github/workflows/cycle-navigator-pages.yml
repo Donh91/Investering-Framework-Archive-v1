@@ -38,6 +38,9 @@ jobs:
       - name: Add hidden Apple design prototype
         run: node 05_CYCLE_NAVIGATOR/site/build-apple-prototype.mjs
 
+      - name: Add shortcut and Path to Mania layer
+        run: node 05_CYCLE_NAVIGATOR/site/build-shortcut.mjs
+
       - name: Build and verify social preview
         run: node 05_CYCLE_NAVIGATOR/site/build-social-card.mjs
 
