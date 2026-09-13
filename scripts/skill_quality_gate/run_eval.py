@@ -15,6 +15,7 @@ import os
 from pathlib import Path, PurePosixPath
 import re
 import secrets
+import stat
 import subprocess
 import tempfile
 import time
@@ -140,18 +141,23 @@ def prepare(repo: Path, plan: dict) -> dict:
 
 
 def workspace_state(root: Path) -> dict[str, str]:
-    """Record bytes without following symlinks or retaining file contents."""
-    state = {}
+    """Hash object types, permissions and content without following symlinks."""
+    def fingerprint(path: Path) -> str:
+        mode = path.lstat().st_mode
+        payload = {"type": stat.S_IFMT(mode), "mode": stat.S_IMODE(mode)}
+        if stat.S_ISLNK(mode):
+            payload["target_sha256"] = digest(os.readlink(path).encode())
+        elif stat.S_ISREG(mode):
+            payload["content_sha256"] = digest(path.read_bytes())
+        return digest(canonical(payload))
+
+    state = {".": fingerprint(root)}
     for directory, dirs, files in os.walk(root, followlinks=False):
         for name in dirs[:] + files:
             path = Path(directory) / name
-            key = path.relative_to(root).as_posix()
-            if path.is_symlink():
-                state[key] = "SYMLINK:" + digest(os.readlink(path).encode())
-                if name in dirs:
-                    dirs.remove(name)
-            elif path.is_file():
-                state[key] = digest(path.read_bytes())
+            state[path.relative_to(root).as_posix()] = fingerprint(path)
+            if path.is_symlink() and name in dirs:
+                dirs.remove(name)
     return state
 
 
@@ -340,8 +346,13 @@ def evaluate(repo: Path, plan: dict, runner: Callable, *, judge: Callable | None
             "failed": sum(r["status"] == "FAILED" for r in rows),
             "incomplete": sum(r["status"] == "INCOMPLETE" for r in rows),
             "critical_failures": sum(r["critical"] and not r["deterministic_pass"] for r in rows)}
+    candidate_label = next(c["label"] for c in report["conditions"] if c["name"] == "candidate")
     report["deterministic_blockers"] = [{"condition": r["condition"], "case_id": r["case_id"], "repetition": r["repetition"]}
-                                        for r in report["runs"] if not r["deterministic_pass"] or r["cleanup_status"] != "PASS"]
+                                        for r in report["runs"]
+                                        if (r["condition"] == candidate_label and not r["deterministic_pass"])
+                                        or r["status"] != "COMPLETED"
+                                        or r["side_effect_observation"] != "COMPLETE_WITHIN_WORKSPACE"
+                                        or r["cleanup_status"] != "PASS"]
     report["evidence_status"] = "BLOCKED_BY_DETERMINISTIC_EVIDENCE" if report["deterministic_blockers"] else "COLLECTED_FOR_REVIEW"
     return report
 
