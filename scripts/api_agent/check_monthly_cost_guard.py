@@ -10,11 +10,30 @@ from pathlib import Path
 SCRIPTS_ROOT = Path(__file__).resolve().parents[1]
 if str(SCRIPTS_ROOT) not in sys.path:
     sys.path.insert(0, str(SCRIPTS_ROOT))
+from api_agent.api_gateway import PRICES_PER_MILLION, estimate_cost
 from lib.evidence_io import cost_receipt_identity, created_utc, finite_nonnegative, json_evidence_paths, load_evidence
 
 
 def parse_created(value: dict) -> datetime | None:
     return created_utc(value)
+
+
+def effective_cost(value: dict) -> tuple[float | None, bool, str | None]:
+    recorded = value.get("estimated_cost_usd")
+    if not finite_nonnegative(recorded):
+        return None, False, "INVALID_COST_OR_TIMESTAMP"
+    model = value.get("model")
+    has_usage = "input_tokens" in value or "output_tokens" in value
+    if model in PRICES_PER_MILLION or has_usage:
+        if model not in PRICES_PER_MILLION:
+            return None, False, "UNKNOWN_MODEL_FOR_USAGE_RECEIPT"
+        input_tokens = value.get("input_tokens")
+        output_tokens = value.get("output_tokens")
+        if isinstance(input_tokens, bool) or isinstance(output_tokens, bool) or not isinstance(input_tokens, int) or not isinstance(output_tokens, int) or input_tokens < 0 or output_tokens < 0:
+            return None, False, "INVALID_TOKEN_USAGE"
+        normalized = estimate_cost(str(model), input_tokens, output_tokens)
+        return normalized, abs(float(recorded) - normalized) > 1e-12, None
+    return float(recorded), False, None
 
 
 def main() -> None:
@@ -30,6 +49,7 @@ def main() -> None:
     now = datetime.now(timezone.utc)
     total = 0.0
     receipts = 0
+    repriced_api_receipts = 0
     errors = []
     missing_optional_roots = []
     roots = [(args.receipt_root, False)]
@@ -60,16 +80,17 @@ def main() -> None:
                     errors.append({"path": str(path), "reason": "COST_FIELD_MISSING"})
                 continue
             created = parse_created(value)
-            cost = value["estimated_cost_usd"]
-            if created is None or not finite_nonnegative(cost):
-                errors.append({"path": str(path), "reason": "INVALID_COST_OR_TIMESTAMP"})
+            cost, repriced, cost_error = effective_cost(value)
+            if created is None or cost_error is not None or cost is None:
+                errors.append({"path": str(path), "reason": cost_error or "INVALID_COST_OR_TIMESTAMP"})
                 continue
+            recorded = value.get("estimated_cost_usd")
             try:
                 identity = cost_receipt_identity(value, path, created)
             except ValueError:
                 errors.append({'path': str(path), 'reason': 'COST_IDENTITY_INVALID'})
                 continue
-            accounting = (cost, created.year, created.month)
+            accounting = (recorded, cost, created.year, created.month)
             if identity in seen:
                 if seen[identity] != accounting:
                     errors.append({"path": str(path), "reason": "CONFLICTING_DUPLICATE_COST"})
@@ -78,6 +99,7 @@ def main() -> None:
             if (created.year, created.month) == (now.year, now.month):
                 total += cost
                 receipts += 1
+                repriced_api_receipts += int(repriced)
 
     if not math.isfinite(total):
         errors.append({"path": str(args.receipt_root), "reason": "COST_TOTAL_NONFINITE"})
@@ -88,6 +110,8 @@ def main() -> None:
         "status": status,
         "month": now.strftime("%Y-%m"),
         "receipts": receipts,
+        "repriced_api_receipts": repriced_api_receipts,
+        "cost_basis": "CURRENT_GATEWAY_PRICING_FOR_TOKENIZED_OPENAI_RECEIPTS_ELSE_RECORDED_COST",
         "spent_usd": round(total, 8) if total is not None else None,
         "remaining_usd": round(remaining, 8) if remaining is not None else None,
         "reserve_usd": args.reserve_usd,
