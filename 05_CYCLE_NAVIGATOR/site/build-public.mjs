@@ -18,7 +18,9 @@ const PUBLIC_SITE_FILES = [
   "app.js",
   "motion.js",
   "journey.js",
-  "live-context.js"
+  "live-context.js",
+  "favicon.svg",
+  "social-card.svg"
 ];
 
 function pick(obj, keys) {
@@ -161,6 +163,8 @@ async function main() {
     await copyFile(resolve(siteDir, file), resolve(outputDir, file));
   }
 
+  const socialCardBase64 = (await readFile(resolve(siteDir, "social-card.b64"), "utf8")).trim();
+  await writeFile(resolve(outputDir, "social-card.png"), Buffer.from(socialCardBase64, "base64"));
   await writeFile(resolve(dataDir, "latest.json"), `${JSON.stringify(publicSnapshot, null, 2)}\n`, "utf8");
   console.log(`Built privacy-safe Cycle Navigator public bundle at ${outputDir}`);
 }
