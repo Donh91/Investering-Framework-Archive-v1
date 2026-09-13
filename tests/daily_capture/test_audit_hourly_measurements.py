@@ -122,11 +122,11 @@ class HourlyIntegrityTests(unittest.TestCase):
         spot = {'BTCUSDT': {stamp: candle(100, 105), stamp+2*HOUR: candle(120, 126), stamp+3*HOUR: candle(126, 132.3)}}
         oi = {'BTCUSDT': {stamp: {'oi': 100}, stamp+2*HOUR: {'oi': 130}, stamp+3*HOUR: {'oi': 143}}}
         rows = hourly.build_rows(START, START+timedelta(hours=3), spot, oi, {}, {}, 'PASS', 'PASS')
-        # Existing open-to-close boundary convention remains; no new return definition.
-        self.assertAlmostEqual(rows[0]['btc_return_1h_pct'], 5)
-        self.assertAlmostEqual(rows[2]['btc_return_1h_pct'], 5)
+        # Missing adjacent closes remain unavailable, never substituted with opens.
+        self.assertIsNone(rows[0]['btc_return_1h_pct'])
+        self.assertIsNone(rows[2]['btc_return_1h_pct'])
         self.assertIsNone(rows[2]['btc_oi_change_1h_pct'])
-        self.assertEqual(rows[2]['btc_price_oi_state'], 'UNAVAILABLE')
+        self.assertEqual(rows[2]['btc_price_oi_state'], '')
         self.assertAlmostEqual(rows[3]['btc_return_1h_pct'], 5)
         self.assertAlmostEqual(rows[3]['btc_oi_change_1h_pct'], 10)
 
