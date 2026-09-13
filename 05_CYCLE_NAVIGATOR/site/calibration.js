@@ -11,15 +11,12 @@
     .replaceAll('"', '&quot;')
     .replaceAll("'", '&#039;');
 
-  function mean(values) {
-    const nums = values.filter((value) => Number.isFinite(Number(value))).map(Number);
-    return nums.length ? nums.reduce((a, b) => a + b, 0) / nums.length : null;
-  }
-
-  function fmtScore(value) {
-    const score = Number(value);
-    return Number.isFinite(score) ? `${Math.round(score)}%` : 'N/A';
-  }
+  const numeric = (value) => value != null && value !== '' && Number.isFinite(Number(value));
+  const fmtScore = (value) => numeric(value) ? `${Math.round(Number(value))}%` : 'N/A';
+  const mean = (values) => {
+    const nums = values.filter(numeric).map(Number);
+    return nums.length ? nums.reduce((sum, value) => sum + value, 0) / nums.length : null;
+  };
 
   function isoWeekEndUtc(year, week) {
     const y = Number(year);
@@ -55,8 +52,7 @@
       const scoreLink = document.createElement('a');
       scoreLink.href = '#calibration-heading';
       scoreLink.textContent = 'Score';
-      const publicLink = nav.querySelector('a[href="#public-edition-heading"]');
-      nav.insertBefore(scoreLink, publicLink || null);
+      nav.insertBefore(scoreLink, nav.querySelector('a[href="#public-edition-heading"]') || null);
     }
 
     if (!document.getElementById('calibrationChip')) {
@@ -77,11 +73,10 @@
         <div>
           <span class="kicker">Calibration Center</span>
           <h2 id="calibration-heading">How accurate has Cycle Navigator been?</h2>
-          <p>Machine-valid scores start only where the GitHub track record is reproducible. Current-week scoring stays provisional until the frozen tests can be judged against completed evidence.</p>
+          <p>Machine-valid scores start only where the GitHub track record is reproducible. Current-week scoring stays open until the frozen tests can be judged against completed evidence.</p>
         </div>
         <span class="calibration-freshness" id="calibrationFreshness">Syncing track record…</span>
       </div>
-
       <div class="cal-summary-grid">
         <article class="cal-summary-card primary">
           <span class="cal-summary-label">Latest verified</span>
@@ -91,75 +86,61 @@
         <article class="cal-summary-card">
           <span class="cal-summary-label">Verified rolling mean</span>
           <strong class="cal-summary-value" id="verifiedMean">—</strong>
-          <small class="cal-summary-note" id="verifiedMeanNote">No invented backfill: only machine-valid rows count.</small>
+          <small class="cal-summary-note" id="verifiedMeanNote">Only machine-valid rows count.</small>
         </article>
         <article class="cal-summary-card">
           <span class="cal-summary-label">Current CN scoring</span>
           <strong class="cal-summary-value" id="currentScoreState">OPEN</strong>
-          <small class="cal-summary-note" id="currentScoreNote">Frozen tests are still awaiting completed-week evidence.</small>
+          <small class="cal-summary-note" id="currentScoreNote">Frozen tests are awaiting completed evidence.</small>
         </article>
       </div>
-
       <div class="panel cal-tabs-shell">
         <div class="cal-tabs" role="tablist" aria-label="Calibration views">
           <button class="cal-tab active" type="button" role="tab" aria-selected="true" data-cal-tab="verified">Verified track record</button>
           <button class="cal-tab" type="button" role="tab" aria-selected="false" data-cal-tab="current">Current scoring</button>
           <button class="cal-tab" type="button" role="tab" aria-selected="false" data-cal-tab="xrecord">Public X record</button>
         </div>
-
         <div class="cal-panel active" data-cal-panel="verified">
           <div class="cal-panel-intro">
-            <div>
-              <h3>Reproducible GitHub ledger</h3>
-              <p>This curve begins when the framework can prove the forecast existed before the outcome and score it against completed evidence. Legacy claims are deliberately excluded.</p>
-            </div>
+            <div><h3>Reproducible GitHub ledger</h3><p>The curve begins only when a frozen forecast can be scored against completed evidence. Legacy public claims are excluded.</p></div>
             <span class="cal-method-badge">Machine-valid only</span>
           </div>
           <div class="score-history" id="verifiedScoreHistory"></div>
-          <div class="cal-caveat" id="verifiedCaveat">Older Cycle Navigator issues may have public score claims, but they do not enter this verified line unless the current scoring contract can reproduce them.</div>
+          <div class="cal-caveat">Older CN issues may contain public score claims, but they do not enter this verified line unless the current contract can reproduce them.</div>
         </div>
-
         <div class="cal-panel" data-cal-panel="current">
           <div class="cal-panel-intro">
-            <div>
-              <h3>Current issue · scoring in progress</h3>
-              <p>The current CN is frozen first and scored later. A live percentage is shown only if a valid interim scoring artifact exists; otherwise the page shows the open confirmation tests instead of manufacturing precision.</p>
-            </div>
+            <div><h3>Current issue · scoring in progress</h3><p>A live percentage appears only if a valid interim scoring artifact exists. Otherwise the open confirmation tests are shown instead of manufacturing precision.</p></div>
             <span class="cal-method-badge" id="currentIssueBadge">OPEN</span>
           </div>
           <div class="current-score-grid">
             <article class="current-score-status">
               <span class="cal-summary-label">Next verification checkpoint</span>
               <strong id="currentIssueLabel">Current CN</strong>
-              <small id="currentIssueStatus">Waiting for completed-week evidence and the next official scoring pass.</small>
+              <small id="currentIssueStatus">Waiting for completed-week evidence and the official scoring pass.</small>
               <div class="score-countdown" id="scoreCountdown">Calculating week close…</div>
             </article>
             <div class="frozen-test-list" id="currentFrozenTests"></div>
           </div>
         </div>
-
         <div class="cal-panel" data-cal-panel="xrecord">
           <div class="cal-panel-intro">
-            <div>
-              <h3>What the published X posts claimed</h3>
-              <p>A separate historical view of public precision numbers. Useful for continuity, but intentionally not merged into the reproducible machine-valid curve.</p>
-            </div>
+            <div><h3>What the published X posts claimed</h3><p>A separate history of published precision numbers. Useful for continuity, but never merged into the machine-valid series.</p></div>
             <span class="cal-method-badge">Legacy public record</span>
           </div>
           <div class="x-record-summary">
             <article class="x-aggregate">
               <span class="cal-summary-label">Claimed average</span>
               <strong id="xClaimMean">—</strong>
-              <small id="xClaimMeanNote">Across archived X posts that explicitly published an overall precision percentage.</small>
+              <small id="xClaimMeanNote">Across archived X posts with an explicit overall precision number.</small>
             </article>
             <div class="x-claims" id="xClaims"></div>
           </div>
-          <div class="cal-caveat">Public X precision used an older presentation/scoring approach. It is shown for transparency and history, not as scientific calibration and not as a directly comparable series to the current structural score.</div>
+          <div class="cal-caveat">Public X precision used an older presentation/scoring approach. It is shown for transparency, not as scientific calibration and not as a directly comparable series to the current structural score.</div>
         </div>
       </div>`;
 
     hero.parentNode.insertBefore(section, hero.nextSibling);
-
     section.querySelectorAll('[data-cal-tab]').forEach((button) => {
       button.addEventListener('click', () => {
         const target = button.dataset.calTab;
@@ -168,18 +149,15 @@
           tab.classList.toggle('active', active);
           tab.setAttribute('aria-selected', String(active));
         });
-        section.querySelectorAll('[data-cal-panel]').forEach((panel) => {
-          panel.classList.toggle('active', panel.dataset.calPanel === target);
-        });
+        section.querySelectorAll('[data-cal-panel]').forEach((panel) => panel.classList.toggle('active', panel.dataset.calPanel === target));
       });
     });
-
     return true;
   }
 
   function renderVerified(track) {
     const rows = Array.isArray(track?.rows) ? track.rows : [];
-    const scored = rows.filter((row) => Number.isFinite(Number(row.structural_score)) && String(row.score_status).toUpperCase() === 'REPRODUCIBLE');
+    const scored = rows.filter((row) => numeric(row.structural_score) && String(row.score_status).toUpperCase() === 'REPRODUCIBLE');
     const latest = scored.at(-1);
     const rolling = mean(scored.map((row) => row.structural_score));
 
@@ -194,28 +172,19 @@
       : 'No reproducible numerical weeks yet.';
 
     const root = document.getElementById('verifiedScoreHistory');
-    root.innerHTML = '';
     if (!rows.length) {
       root.innerHTML = '<div class="cal-caveat">Track record unavailable in the public snapshot.</div>';
       return;
     }
-
-    rows.forEach((row) => {
-      const score = Number(row.structural_score);
-      const valid = Number.isFinite(score) && String(row.score_status).toUpperCase() === 'REPRODUCIBLE';
-      const entry = document.createElement('div');
-      entry.className = `score-row ${valid ? '' : 'na'}`;
-      entry.innerHTML = `
-        <div class="score-row-meta">
-          <strong>CN #${esc(row.issue_scored ?? '—')}</strong>
-          <small>W${esc(row.completed_iso_week ?? '—')} · ${esc(row.score_status ?? 'UNKNOWN')}</small>
-        </div>
-        <div class="score-track" aria-label="${valid ? `Structural score ${score}%` : 'No reproducible numerical score'}">
-          ${valid ? `<div class="score-fill" style="--score-width:${Math.max(0, Math.min(100, score))}%"></div>` : ''}
-        </div>
-        <div class="score-row-value">${valid ? fmtScore(score) : 'N/A'}</div>`;
-      root.appendChild(entry);
-    });
+    root.innerHTML = rows.map((row) => {
+      const valid = numeric(row.structural_score) && String(row.score_status).toUpperCase() === 'REPRODUCIBLE';
+      const score = valid ? Math.max(0, Math.min(100, Number(row.structural_score))) : null;
+      return `<div class="score-row ${valid ? '' : 'na'}">
+        <div class="score-row-meta"><strong>CN #${esc(row.issue_scored ?? '—')}</strong><small>W${esc(row.completed_iso_week ?? '—')} · ${esc(row.score_status ?? 'UNKNOWN')}</small></div>
+        <div class="score-track" aria-label="${valid ? `Structural score ${score}%` : 'No reproducible numerical score'}">${valid ? `<div class="score-fill" style="--score-width:${score}%"></div>` : ''}</div>
+        <div class="score-row-value">${valid ? fmtScore(score) : 'N/A'}</div>
+      </div>`;
+    }).join('');
   }
 
   function renderCurrent(snapshot) {
@@ -223,10 +192,9 @@
     const pointer = snapshot?.pointer || {};
     const scoring = snapshot?.calibration?.current || {};
     const tests = Array.isArray(pkg.forecast_freeze?.structural_calls) ? pkg.forecast_freeze.structural_calls : [];
-    const provisional = Number(scoring.provisional_score);
-    const hasProvisional = Number.isFinite(provisional);
+    const hasProvisional = numeric(scoring.provisional_score);
 
-    document.getElementById('currentScoreState').textContent = hasProvisional ? fmtScore(provisional) : 'OPEN';
+    document.getElementById('currentScoreState').textContent = hasProvisional ? fmtScore(scoring.provisional_score) : 'OPEN';
     document.getElementById('currentScoreNote').textContent = hasProvisional
       ? `Provisional only · ${scoring.provisional_status || 'not final'}`
       : `${tests.length} frozen confirmation ${tests.length === 1 ? 'test' : 'tests'} awaiting completed evidence.`;
@@ -234,25 +202,18 @@
     document.getElementById('currentIssueBadge').textContent = hasProvisional ? 'PROVISIONAL' : 'OPEN';
     document.getElementById('currentIssueStatus').textContent = hasProvisional
       ? 'An interim scoring artifact exists. It remains non-final until the official completed-week scoring pass.'
-      : 'No valid interim numerical score is published. This is intentional: open calls are not awarded precision before the outcome is known.';
+      : 'No valid interim numerical score is published. Open calls receive no precision credit before the outcome is known.';
 
-    const root = document.getElementById('currentFrozenTests');
-    root.innerHTML = tests.length ? tests.map((test, index) => `
-      <article class="frozen-test">
-        <span class="frozen-test-index">${index + 1}</span>
-        <p>${esc(test)}</p>
-        <span class="test-open">Open</span>
-      </article>`).join('') : '<div class="cal-caveat">No frozen structural tests are present in the current public package.</div>';
+    document.getElementById('currentFrozenTests').innerHTML = tests.length ? tests.map((test, index) => `
+      <article class="frozen-test"><span class="frozen-test-index">${index + 1}</span><p>${esc(test)}</p><span class="test-open">Open</span></article>`).join('')
+      : '<div class="cal-caveat">No frozen structural tests are present in the current public package.</div>';
 
     if (countdownTimer) clearInterval(countdownTimer);
     const close = isoWeekEndUtc(pointer.iso_year, pointer.iso_week);
     const updateCountdown = () => {
       const node = document.getElementById('scoreCountdown');
       if (!node) return;
-      if (!close) {
-        node.textContent = 'Next checkpoint follows the official completed-week scoring pass.';
-        return;
-      }
+      if (!close) return void (node.textContent = 'Next checkpoint follows the official completed-week scoring pass.');
       const remaining = close.getTime() - Date.now();
       node.textContent = remaining > 0
         ? `ISO week closes in ${duration(remaining)} · verification follows completed evidence`
@@ -268,17 +229,10 @@
     document.getElementById('xClaimMean').textContent = avg == null ? 'N/A' : fmtScore(avg);
     document.getElementById('xClaimMeanNote').textContent = claims.length
       ? `Across ${claims.length} archived X ${claims.length === 1 ? 'claim' : 'claims'} with an explicit overall precision number.`
-      : 'No archived X post with an explicit overall precision percentage was found.';
-
-    const root = document.getElementById('xClaims');
-    root.innerHTML = claims.length ? claims.map((claim) => `
-      <article class="x-claim">
-        <div>
-          <strong>CN #${esc(claim.scored_issue ?? '—')}</strong>
-          <small>Published in CN #${esc(claim.publication_issue ?? '—')} · ${esc(claim.date ?? '')}</small>
-        </div>
-        <span class="x-claim-score">${fmtScore(claim.overall_precision)}</span>
-      </article>`).join('') : '<div class="cal-caveat">No public precision claims found.</div>';
+      : 'No archived X post with an explicit overall precision number was found.';
+    document.getElementById('xClaims').innerHTML = claims.length ? claims.map((claim) => `
+      <article class="x-claim"><div><strong>CN #${esc(claim.scored_issue ?? '—')}</strong><small>Published in CN #${esc(claim.publication_issue ?? '—')} · ${esc(claim.date ?? '')}</small></div><span class="x-claim-score">${fmtScore(claim.overall_precision)}</span></article>`).join('')
+      : '<div class="cal-caveat">No public precision claims found.</div>';
   }
 
   function render(snapshot) {
@@ -305,6 +259,7 @@
     }
   }
 
-  document.addEventListener('DOMContentLoaded', load, { once: true });
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', load, { once: true });
+  else load();
   setInterval(load, 5 * 60_000);
 })();
