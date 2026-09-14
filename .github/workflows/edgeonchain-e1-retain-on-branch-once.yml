@@ -1,0 +1,92 @@
+name: EdgeOnchain E1 Retain On Branch Once
+
+on:
+  push:
+    branches:
+      - agent/task-20260914-edge-e0-identity-probe
+    paths:
+      - '.github/workflows/edgeonchain-e1-retain-on-branch-once.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  retain:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/task-20260914-edge-e0-identity-probe
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Capture public Polymarket ledger
+        run: |
+          set -euo pipefail
+          rm -rf .edge_capture
+          mkdir -p .edge_capture
+          python scripts/experiments/polymarket_external_strategy_capture_v1.py \
+            --query EdgeOnchain \
+            --output-root .edge_capture
+      - name: Bind and stage immutable evidence
+        run: |
+          set -euo pipefail
+          RUN_DIR=$(find .edge_capture -mindepth 1 -maxdepth 1 -type d | sort | tail -1)
+          TARGET='04_RESEARCH_LAB/auto_trading/edgeonchain_evidence/2026-09-14/polymarket'
+          mkdir -p "$TARGET/raw"
+          cp "$RUN_DIR/identity.json" "$TARGET/identity.json"
+          cp "$RUN_DIR/activity.json" "$TARGET/activity.json"
+          cp "$RUN_DIR/trades.json" "$TARGET/trades.json"
+          cp "$RUN_DIR/closed_positions.json" "$TARGET/closed_positions.json"
+          cp "$RUN_DIR/MANIFEST.json" "$TARGET/MANIFEST.json"
+          cp "$RUN_DIR/raw/profile_search.json" "$TARGET/raw/profile_search.json"
+          python - <<'PY'
+          import hashlib, json, os
+          from pathlib import Path
+
+          target = Path('04_RESEARCH_LAB/auto_trading/edgeonchain_evidence/2026-09-14/polymarket')
+          manifest = json.loads((target / 'MANIFEST.json').read_text())
+          files = {}
+          for p in sorted(target.rglob('*.json')):
+              if p.name == 'RETENTION_RECEIPT.json':
+                  continue
+              b = p.read_bytes()
+              files[str(p.relative_to(target))] = {'bytes': len(b), 'sha256': hashlib.sha256(b).hexdigest()}
+          receipt = {
+              'contract': 'EDGEONCHAIN_E0_E1_PERMANENT_RETENTION_v1',
+              'issue': 922,
+              'source': 'POLYMARKET_PUBLIC_APIS',
+              'query': 'EdgeOnchain',
+              'proxy_wallet': manifest['proxy_wallet'],
+              'capture_created_at_utc': manifest['created_at_utc'],
+              'counts': manifest['counts'],
+              'files': files,
+              'source_workflow_run_id': os.environ['GITHUB_RUN_ID'],
+              'source_commit': os.environ['GITHUB_SHA'],
+              'authority': {
+                  'research_only': True,
+                  'portfolio_execution': False,
+                  'exchange_signing': False,
+                  'order_routing': False,
+                  'automatic_promotion': False
+              },
+              'notes': [
+                  'Primary-source public API bytes retained without selective exclusion.',
+                  'Identity requires one exact profile match and matching public-profile proxyWallet.',
+                  'Capture fails closed if collector pagination caps are reached.',
+                  'This retention does not validate alpha, copyability, vault economics, or performance claims.'
+              ]
+          }
+          (target / 'RETENTION_RECEIPT.json').write_text(json.dumps(receipt, sort_keys=True, indent=2) + '\n')
+          print(json.dumps({'status':'RETAINED','proxy_wallet':receipt['proxy_wallet'],'counts':receipt['counts']}, sort_keys=True))
+          PY
+      - name: Commit evidence to research branch only
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add 04_RESEARCH_LAB/auto_trading/edgeonchain_evidence/2026-09-14/polymarket
+          git commit -m 'AUTO_TRADING: retain EdgeOnchain E0/E1 Polymarket evidence'
+          git push origin HEAD:agent/task-20260914-edge-e0-identity-probe
