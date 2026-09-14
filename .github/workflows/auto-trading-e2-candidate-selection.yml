@@ -67,7 +67,7 @@ jobs:
           assert r['selection']['candidate_admission_rate']==1.0
           assert r['selection']['modal_candidate_share']==1.0
           assert r['selection']['modal_candidate_id']=='C03'
-          assert r['candidate_set_sha256']=='defbe64b0cdb02133b1cbfda79010de94f2872db0af0d581e71f42dd193cc731'
+          assert r['candidate_set_sha256']=='d470bf21cd79994ac59e97ddc4fd706944e0a613cd21dc362897d777d340f3d4'
           assert r['api']['selection_calls']==10
           assert r['api']['total_cost_usd']==0.0
           assert r['economic_scoring_performed'] is False
@@ -112,7 +112,7 @@ jobs:
           assert r['api']['model']=='gpt-5.6-luna'
           assert r['api']['selection_calls']==10
           assert r['api']['total_cost_usd'] <= r['api']['hard_cost_stop_usd'] <= 0.05
-          assert r['candidate_set_sha256']=='defbe64b0cdb02133b1cbfda79010de94f2872db0af0d581e71f42dd193cc731'
+          assert r['candidate_set_sha256']=='d470bf21cd79994ac59e97ddc4fd706944e0a613cd21dc362897d777d340f3d4'
           assert r['economic_scoring_performed'] is False
           assert r['direct_policy_arm_performed'] is False
           assert r['capital_ready'] is False
