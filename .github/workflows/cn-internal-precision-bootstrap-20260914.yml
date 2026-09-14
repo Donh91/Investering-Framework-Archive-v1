@@ -1,0 +1,147 @@
+name: CN Internal Precision Bootstrap 2026-09-14
+
+on:
+  push:
+    branches:
+      - chatgpt/cn-internal-precision-ledger-20260914
+    paths:
+      - '.github/workflows/cn-internal-precision-bootstrap-20260914.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  bootstrap:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: chatgpt/cn-internal-precision-ledger-20260914
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Capture immutable public CN identities
+        run: |
+          python - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          root=Path('05_CYCLE_NAVIGATOR/weekly/2026/W38')
+          Path('runtime_public_before.json').write_text(json.dumps({
+            'forecast_freeze':hashlib.sha256((root/'CYCLE_NAVIGATOR_FORECAST_FREEZE.json').read_bytes()).hexdigest(),
+            'scorecard':hashlib.sha256((root/'CYCLE_NAVIGATOR_SCORECARD.json').read_bytes()).hexdigest(),
+          },sort_keys=True)+'\n')
+          PY
+
+      - name: Patch intraday scoring guard and weekly production chain
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          builder=Path('scripts/cycle_navigator/build_weekly_cycle_navigator.py')
+          text=builder.read_text()
+          old='''    calls = freeze.get("structural_calls")\n    if isinstance(calls, list):\n        for index, call in enumerate(calls, start=1):\n            if str(call or "").strip():\n                result.append(f"structural_call_{index}")\n    return result\n'''
+          new='''    calls = freeze.get("structural_calls")\n    if isinstance(calls, list):\n        for index, call in enumerate(calls, start=1):\n            if str(call or "").strip():\n                result.append(f"structural_call_{index}")\n    intraday = freeze.get("intraday_map")\n    if isinstance(intraday, dict):\n        for bucket in ("day_1_2", "day_3_4", "day_5_7"):\n            value = str(intraday.get(bucket) or "").strip()\n            if value and value.upper() != "UNAVAILABLE":\n                result.append(f"intraday_{bucket}")\n    return result\n'''
+          if old not in text:
+              raise SystemExit('builder_expected_score_anchor_missing')
+          builder.write_text(text.replace(old,new,1))
+
+          wf=Path('.github/workflows/cycle-navigator-weekly-publication.yml')
+          text=wf.read_text()
+          anchor='''      - name: Validate publication contract\n        if: steps.precheck.outputs.skip != 'true'\n'''
+          insertion='''      - name: Build internal precision ledger\n        if: steps.precheck.outputs.skip != 'true'\n        run: |\n          python scripts/cycle_navigator/build_internal_precision.py \\\n            --repo-root . \\\n            --pointer 05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json \\\n            | tee runtime_cn_internal_precision.json\n\n'''
+          if anchor not in text:
+              raise SystemExit('weekly_validate_anchor_missing')
+          text=text.replace(anchor,insertion+anchor,1)
+
+          old_required="""            'CYCLE_NAVIGATOR_API_RECEIPT.json',\n          ]"""
+          new_required="""            'CYCLE_NAVIGATOR_API_RECEIPT.json',\n            'CYCLE_NAVIGATOR_INTERNAL_PRECISION_FREEZE.json',\n            'CYCLE_NAVIGATOR_INTERNAL_PRECISION_SCORECARD.json',\n            'CYCLE_NAVIGATOR_INTERNAL_PRECISION_BOX.md',\n          ]"""
+          if old_required not in text:
+              raise SystemExit('weekly_required_anchor_missing')
+          text=text.replace(old_required,new_required,1)
+
+          old_validate="""          if not (root/'CYCLE_NAVIGATOR_X_READY.md').read_text().strip(): raise SystemExit('x_ready_empty')\n          PY"""
+          new_validate="""          if not (root/'CYCLE_NAVIGATOR_X_READY.md').read_text().strip(): raise SystemExit('x_ready_empty')\n          box=(root/'CYCLE_NAVIGATOR_INTERNAL_PRECISION_BOX.md').read_text().strip()\n          if not box: raise SystemExit('internal_precision_box_empty')\n          internal=json.loads((root/'CYCLE_NAVIGATOR_INTERNAL_PRECISION_SCORECARD.json').read_text())\n          if internal.get('mature_parameter_count',0) and internal.get('mature_coverage_pct') != 100.0:\n              raise SystemExit('internal_mature_coverage_not_100pct')\n          PY"""
+          if old_validate not in text:
+              raise SystemExit('weekly_validation_body_anchor_missing')
+          text=text.replace(old_validate,new_validate,1)
+
+          old_paths="""            root/'CYCLE_NAVIGATOR_API_RECEIPT.json',\n            Path('05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json'),\n            Path('05_CYCLE_NAVIGATOR/track_record/CN_TRACK_RECORD_LEDGER.jsonl'),"""
+          new_paths="""            root/'CYCLE_NAVIGATOR_API_RECEIPT.json',\n            root/'CYCLE_NAVIGATOR_INTERNAL_PRECISION_FREEZE.json',\n            root/'CYCLE_NAVIGATOR_INTERNAL_PRECISION_SCORECARD.json',\n            root/'CYCLE_NAVIGATOR_INTERNAL_PRECISION_BOX.md',\n            Path('05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json'),\n            Path('05_CYCLE_NAVIGATOR/track_record/CN_TRACK_RECORD_LEDGER.jsonl'),\n            Path('05_CYCLE_NAVIGATOR/track_record/CN_INTERNAL_PRECISION_LEDGER.jsonl'),"""
+          if old_paths not in text:
+              raise SystemExit('weekly_readback_anchor_missing')
+          wf.write_text(text.replace(old_paths,new_paths,1))
+          PY
+
+      - name: Compile and run precision regressions
+        run: |
+          set -euo pipefail
+          python -m py_compile scripts/cycle_navigator/build_internal_precision.py scripts/cycle_navigator/build_weekly_cycle_navigator.py
+          python tests/cycle_navigator/test_internal_precision.py -v
+          python - <<'PY'
+          import importlib.util
+          from pathlib import Path
+          p=Path('scripts/cycle_navigator/build_weekly_cycle_navigator.py')
+          spec=importlib.util.spec_from_file_location('cn',p);m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m)
+          previous={'forecast_freeze':{'btc_range_low':None,'btc_range_high':None,'eth_range_low':None,'eth_range_high':None,'ethbtc_condition':'up','breadth_condition':'weak','structural_calls':['regime'],'intraday_map':{'day_1_2':'down','day_3_4':'UNAVAILABLE','day_5_7':'recover'}}}
+          ids=m.expected_score_parameter_ids(previous)
+          assert 'intraday_day_1_2' in ids, ids
+          assert 'intraday_day_5_7' in ids, ids
+          assert 'intraday_day_3_4' not in ids, ids
+          PY
+
+      - name: Bootstrap current internal precision artifacts
+        run: |
+          python scripts/cycle_navigator/build_internal_precision.py \
+            --repo-root . \
+            --pointer 05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json \
+            | tee runtime_internal_precision.json
+
+      - name: Prove no public hindsight mutation and expected W37 box
+        run: |
+          python - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          before=json.loads(Path('runtime_public_before.json').read_text())
+          root=Path('05_CYCLE_NAVIGATOR/weekly/2026/W38')
+          assert hashlib.sha256((root/'CYCLE_NAVIGATOR_FORECAST_FREEZE.json').read_bytes()).hexdigest()==before['forecast_freeze']
+          assert hashlib.sha256((root/'CYCLE_NAVIGATOR_SCORECARD.json').read_bytes()).hexdigest()==before['scorecard']
+          internal=json.loads((root/'CYCLE_NAVIGATOR_INTERNAL_PRECISION_SCORECARD.json').read_text())
+          assert internal['issue_scored']==25
+          assert internal['public_weekly_structural_score']==90.0
+          assert internal['mature_parameter_count']==7
+          assert internal['accounted_parameter_count']==7
+          assert internal['mature_coverage_pct']==100.0
+          fam=internal['family_scores']
+          assert fam['regime']==100.0 and fam['ethbtc']==100.0 and fam['breadth']==100.0
+          assert fam['leadership']==100.0 and fam['rotation']==50.0 and fam['altseason']==100.0
+          box=(root/'CYCLE_NAVIGATOR_INTERNAL_PRECISION_BOX.md').read_text()
+          for token in ['Weekly structural 90%','Regime 100%','ETH/BTC 100%','Breadth 100%','Rotation 50%','D1–2 N/A','Self-critique:']:
+              assert token in box, token
+          assert len(box.splitlines()) <= 8
+          PY
+
+      - name: Commit validated implementation to branch
+        run: |
+          set -euo pipefail
+          git config user.name framework-cycle-navigator-bot
+          git config user.email framework-cycle-navigator-bot@users.noreply.github.com
+          git add scripts/cycle_navigator/build_weekly_cycle_navigator.py \
+                  scripts/cycle_navigator/build_internal_precision.py \
+                  tests/cycle_navigator/test_internal_precision.py \
+                  .github/workflows/cycle-navigator-weekly-publication.yml \
+                  05_CYCLE_NAVIGATOR/weekly/2026/W38 \
+                  05_CYCLE_NAVIGATOR/track_record/CN_INTERNAL_PRECISION_LEDGER.jsonl
+          if git diff --cached --quiet; then echo NO_DIFF; exit 1; fi
+          git commit -m 'cycle-navigator: add internal all-parameter precision ledger and compact box'
+          git push origin HEAD:chatgpt/cn-internal-precision-ledger-20260914
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cn-internal-precision-bootstrap-${{ github.run_id }}
+          path: runtime_*.json
+          retention-days: 14
