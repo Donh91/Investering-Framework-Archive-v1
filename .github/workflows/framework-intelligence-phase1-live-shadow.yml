@@ -1,0 +1,56 @@
+name: Framework Intelligence Phase 1 Live Shadow
+
+on:
+  schedule:
+    - cron: '20 9 * * 1'
+      timezone: 'Europe/Copenhagen'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: framework-main-writer
+  cancel-in-progress: false
+
+jobs:
+  observe:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate Phase 1 firewall
+        run: |
+          python -m py_compile scripts/framework_intelligence/build_phase1_live_shadow.py
+          python -m unittest discover -s tests/framework_intelligence -p 'test_phase1_live_shadow.py' -v
+      - name: Build provenance-bound parallel shadow observation
+        run: python scripts/framework_intelligence/build_phase1_live_shadow.py --repo-root . --output-root research/framework_intelligence/phase1
+      - name: Assert no live-consumption authority
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          x=json.loads(Path('research/framework_intelligence/phase1/LATEST.json').read_text())
+          assert x['live_master_monday_influence'] is False
+          assert x['cycle_navigator_influence'] is False
+          assert x['canonical_promotion'] is False
+          assert x['portfolio_authority'] is False
+          assert x['live_consumed'] is False
+          assert x['scientific_firewall']['forecast_skill']=='UNPROVEN'
+          PY
+      - name: Commit shadow observation only
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add research/framework_intelligence/phase1
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'research: phase1 framework intelligence live shadow observation'
+          git pull --rebase origin main
+          git push origin HEAD:main
