@@ -1,0 +1,60 @@
+name: EdgeOnchain E0 Identity Probe Once
+
+on:
+  push:
+    branches:
+      - agent/task-20260914-edge-e0-identity-probe
+    paths:
+      - '.github/workflows/edgeonchain-e0-identity-probe-once.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  identity:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Resolve and freeze canonical Polymarket identity
+        run: |
+          set -euo pipefail
+          mkdir -p out
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from scripts.experiments.polymarket_external_strategy_capture_v1 import resolve_profile, canonical, sha256_bytes
+
+          identity, search_raw = resolve_profile('EdgeOnchain')
+          out = Path('out')
+          identity_bytes = canonical(identity)
+          search_bytes = canonical(search_raw)
+          (out / 'identity.json').write_bytes(identity_bytes)
+          (out / 'profile_search_raw.json').write_bytes(search_bytes)
+          receipt = {
+              'contract': 'EDGEONCHAIN_E0_IDENTITY_PROBE_v1',
+              'status': identity['status'],
+              'query': 'EdgeOnchain',
+              'proxy_wallet': identity['proxy_wallet'],
+              'identity_sha256': sha256_bytes(identity_bytes),
+              'profile_search_raw_sha256': sha256_bytes(search_bytes),
+              'search_url': identity['search_url'],
+              'profile_url': identity['profile_url'],
+              'authority': 'RESEARCH_READ_ONLY',
+              'portfolio_execution': False,
+              'exchange_signing': False,
+              'order_routing': False,
+          }
+          (out / 'RECEIPT.json').write_bytes(canonical(receipt))
+          print(json.dumps(receipt, sort_keys=True))
+          PY
+      - name: Upload immutable probe artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: edgeonchain-e0-identity-probe-${{ github.run_id }}
+          path: out/
+          retention-days: 30
