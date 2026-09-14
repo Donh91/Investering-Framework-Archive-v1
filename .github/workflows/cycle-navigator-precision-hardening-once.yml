@@ -1,0 +1,144 @@
+name: Cycle Navigator Precision Hardening Once
+
+on:
+  push:
+    paths:
+      - 'research/repairs/cn_precision_hardening_trigger.json'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: framework-main-writer
+  cancel-in-progress: false
+
+jobs:
+  harden:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Harden weekly precision accountability
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('scripts/cycle_navigator/build_weekly_cycle_navigator.py')
+          text = path.read_text()
+
+          anchor = 'def output_schema() -> dict[str, Any]:\n'
+          helper = '''def expected_score_parameter_ids(previous_machine: dict[str, Any] | None) -> list[str]:\n    if not isinstance(previous_machine, dict):\n        return []\n    freeze = previous_machine.get("forecast_freeze")\n    if not isinstance(freeze, dict):\n        return []\n    result: list[str] = []\n    if freeze.get("btc_range_low") is not None and freeze.get("btc_range_high") is not None:\n        result.append("btc_range")\n    if freeze.get("eth_range_low") is not None and freeze.get("eth_range_high") is not None:\n        result.append("eth_range")\n    if str(freeze.get("ethbtc_condition") or "").strip():\n        result.append("ethbtc_condition")\n    if str(freeze.get("breadth_condition") or "").strip():\n        result.append("breadth_condition")\n    calls = freeze.get("structural_calls")\n    if isinstance(calls, list):\n        for index, call in enumerate(calls, start=1):\n            if str(call or "").strip():\n                result.append(f"structural_call_{index}")\n    return result\n\n\ndef output_schema() -> dict[str, Any]:\n'''
+          if anchor not in text:
+              raise SystemExit('output_schema_anchor_missing')
+          text = text.replace(anchor, helper, 1)
+
+          old_required = '"public_continuity_score", "score_status", "price_range_score", "structural_score", "decision_utility_score", "strengths", "misses", "method_note"'
+          new_required = '"public_continuity_score", "score_status", "price_range_score", "structural_score", "decision_utility_score", "parameter_scores", "parameter_coverage_pct", "strengths", "misses", "method_note"'
+          if old_required not in text:
+              raise SystemExit('evaluation_required_anchor_missing')
+          text = text.replace(old_required, new_required, 1)
+
+          old_props = '''                    "decision_utility_score": nullable_num,\n                    "strengths": {"type": "array", "items": {"type": "string"}},\n'''
+          new_props = '''                    "decision_utility_score": nullable_num,\n                    "parameter_scores": {\n                        "type": "array",\n                        "items": {\n                            "type": "object",\n                            "additionalProperties": False,\n                            "required": ["parameter_id", "status", "score", "evidence"],\n                            "properties": {\n                                "parameter_id": {"type": "string"},\n                                "status": {"type": "string", "enum": ["SUPPORTED", "MIXED", "CONTRADICTED", "NOT_EVALUABLE"]},\n                                "score": nullable_num,\n                                "evidence": {"type": "string"}\n                            }\n                        }\n                    },\n                    "parameter_coverage_pct": nullable_num,\n                    "strengths": {"type": "array", "items": {"type": "string"}},\n'''
+          if old_props not in text:
+              raise SystemExit('evaluation_properties_anchor_missing')
+          text = text.replace(old_props, new_props, 1)
+
+          old_instruction = '"Score the prior issue honestly. Price-range misses must reduce price-range score even when structural anticipation was strong. "'
+          new_instruction = '"Score the prior issue honestly. Price-range misses must reduce price-range score even when structural anticipation was strong. "\n        "Every non-null frozen prior parameter must receive exactly one parameter_scores row using the exact ids supplied in previous_score_parameter_ids. Use SUPPORTED=100, MIXED=50, CONTRADICTED=0, and NOT_EVALUABLE=null. Never omit a parameter because evidence is inconvenient; preserve it as NOT_EVALUABLE. "'
+          if old_instruction not in text:
+              raise SystemExit('instruction_anchor_missing')
+          text = text.replace(old_instruction, new_instruction, 1)
+
+          old_context_tail = '''        "previous_cycle_navigator_exact_text": prev_text,\n        "previous_cycle_navigator_machine_package": prev_machine,\n        "existing_track_record": maybe_text(repo / "05_CYCLE_NAVIGATOR/track_record/CN_TRACK_RECORD_LEDGER.jsonl")\n    }\n'''
+          new_context_tail = '''        "previous_cycle_navigator_exact_text": prev_text,\n        "previous_cycle_navigator_machine_package": prev_machine,\n        "previous_score_parameter_ids": expected_score_parameter_ids(prev_machine),\n        "existing_track_record": maybe_text(repo / "05_CYCLE_NAVIGATOR/track_record/CN_TRACK_RECORD_LEDGER.jsonl")\n    }\n'''
+          if old_context_tail not in text:
+              raise SystemExit('context_anchor_missing')
+          text = text.replace(old_context_tail, new_context_tail, 1)
+
+          old_week_setup = '''    mm_dir = repo / "research/api_agent/outputs/weekly" / str(year) / f"W{completed_week:02d}"\n    required = ["MASTER_MONDAY_MACHINE_PACKAGE.json", "MASTER_MONDAY_REPORT.md", "MASTER_MONDAY_CALIBRATION_SCORECARD.json", "MASTER_MONDAY_OPERATIONAL_TRANSLATION.json", "MASTER_MONDAY_DELIVERY_POINTER.json"]\n'''
+          new_week_setup = '''    existing_pointer_path = repo / "05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json"\n    if existing_pointer_path.exists():\n        existing_pointer = read_json(existing_pointer_path)\n        if (\n            int(existing_pointer.get("iso_year", -1)) == year\n            and int(existing_pointer.get("completed_source_week", -1)) == completed_week\n        ):\n            # Corrected/reissued Master Monday for the same settled week must never create a second forecast issue.\n            print(json.dumps(existing_pointer, sort_keys=True))\n            return\n\n    mm_dir = repo / "research/api_agent/outputs/weekly" / str(year) / f"W{completed_week:02d}"\n    required = ["MASTER_MONDAY_MACHINE_PACKAGE.json", "MASTER_MONDAY_REPORT.md", "MASTER_MONDAY_CALIBRATION_SCORECARD.json", "MASTER_MONDAY_OPERATIONAL_TRANSLATION.json", "MASTER_MONDAY_DELIVERY_POINTER.json"]\n'''
+          if old_week_setup not in text:
+              raise SystemExit('same_week_guard_anchor_missing')
+          text = text.replace(old_week_setup, new_week_setup, 1)
+
+          old_validation = '''    if value.get("previous_issue_number") not in {prev_issue, None if not prev_issue else -1}:\n        raise SystemExit("previous_issue_number_mismatch")\n\n    freeze = value["forecast_freeze"]\n'''
+          new_validation = '''    if value.get("previous_issue_number") not in {prev_issue, None if not prev_issue else -1}:\n        raise SystemExit("previous_issue_number_mismatch")\n\n    evaluation = value.get("evaluation") or {}\n    expected_ids = context.get("previous_score_parameter_ids") or []\n    parameter_scores = evaluation.get("parameter_scores") or []\n    actual_ids = [row.get("parameter_id") for row in parameter_scores if isinstance(row, dict)]\n    if expected_ids:\n        if actual_ids != expected_ids:\n            raise SystemExit("parameter_score_coverage_mismatch:" + json.dumps({"expected": expected_ids, "actual": actual_ids}, sort_keys=True))\n        if len(set(actual_ids)) != len(actual_ids):\n            raise SystemExit("parameter_score_duplicate_id")\n        score_map = {"SUPPORTED": 100.0, "MIXED": 50.0, "CONTRADICTED": 0.0, "NOT_EVALUABLE": None}\n        evaluable = 0\n        for row in parameter_scores:\n            status = row.get("status")\n            if status not in score_map:\n                raise SystemExit("parameter_score_status_invalid")\n            expected_score = score_map[status]\n            actual_score = row.get("score")\n            if expected_score is None:\n                if actual_score is not None:\n                    raise SystemExit("not_evaluable_score_must_be_null")\n            else:\n                evaluable += 1\n                if actual_score is None or abs(float(actual_score) - expected_score) > 1e-9:\n                    raise SystemExit("parameter_score_value_mismatch")\n        expected_coverage = round((evaluable / len(expected_ids)) * 100.0, 6)\n        coverage = evaluation.get("parameter_coverage_pct")\n        if coverage is None or abs(float(coverage) - expected_coverage) > 1e-6:\n            raise SystemExit("parameter_coverage_pct_mismatch")\n    elif parameter_scores:\n        raise SystemExit("unexpected_parameter_scores_without_prior_freeze")\n\n    if prev_machine is not None:\n        if evaluation.get("score_status") != "REPRODUCIBLE":\n            raise SystemExit("machine_frozen_prior_issue_requires_reproducible_score")\n        prior_freeze = prev_machine.get("forecast_freeze") or {}\n        if prior_freeze.get("structural_calls") and evaluation.get("structural_score") is None:\n            raise SystemExit("structural_score_required_for_frozen_structural_calls")\n        prior_has_range = any(prior_freeze.get(key) is not None for key in ("btc_range_low", "btc_range_high", "eth_range_low", "eth_range_high"))\n        if prior_has_range and evaluation.get("price_range_score") is None:\n            raise SystemExit("price_range_score_required_for_frozen_range")\n        for key in ("public_continuity_score", "price_range_score", "structural_score", "decision_utility_score", "parameter_coverage_pct"):\n            score = evaluation.get(key)\n            if score is not None and not (0.0 <= float(score) <= 100.0):\n                raise SystemExit(f"score_out_of_bounds:{key}")\n\n    freeze = value["forecast_freeze"]\n'''
+          if old_validation not in text:
+              raise SystemExit('validation_anchor_missing')
+          text = text.replace(old_validation, new_validation, 1)
+
+          path.write_text(text)
+          PY
+
+      - name: Add Cycle Navigator precision tests and W37 coverage receipt
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > tests/cycle_navigator/test_precision_accountability.py <<'PY'
+          from __future__ import annotations
+          import importlib.util
+          import json
+          import unittest
+          from pathlib import Path
+
+          ROOT = Path(__file__).resolve().parents[2]
+          spec = importlib.util.spec_from_file_location('cn_weekly_precision', ROOT / 'scripts/cycle_navigator/build_weekly_cycle_navigator.py')
+          module = importlib.util.module_from_spec(spec)
+          assert spec and spec.loader
+          spec.loader.exec_module(module)
+
+          class PrecisionAccountabilityTests(unittest.TestCase):
+              def test_w37_freeze_has_complete_parameter_identity(self):
+                  freeze = json.loads((ROOT / '05_CYCLE_NAVIGATOR/weekly/2026/W37/CYCLE_NAVIGATOR_FORECAST_FREEZE.json').read_text())
+                  machine = {'forecast_freeze': freeze}
+                  self.assertEqual(
+                      module.expected_score_parameter_ids(machine),
+                      ['ethbtc_condition','breadth_condition','structural_call_1','structural_call_2','structural_call_3','structural_call_4','structural_call_5'],
+                  )
+
+              def test_ranges_become_mandatory_score_parameters_when_frozen(self):
+                  machine = {'forecast_freeze': {
+                      'btc_range_low': 1, 'btc_range_high': 2,
+                      'eth_range_low': 3, 'eth_range_high': 4,
+                      'ethbtc_condition': 'up', 'breadth_condition': 'broadens',
+                      'structural_calls': ['a'],
+                  }}
+                  self.assertEqual(
+                      module.expected_score_parameter_ids(machine),
+                      ['btc_range','eth_range','ethbtc_condition','breadth_condition','structural_call_1'],
+                  )
+
+          if __name__ == '__main__':
+              unittest.main()
+          PY
+          python tests/cycle_navigator/test_precision_accountability.py
+          python tests/cycle_navigator/test_weekly_publication_resilience.py
+
+          mkdir -p research/repairs
+          cat > research/repairs/2026-09-14_w37_precision_coverage_audit.json <<'JSON'
+          {"authority":"ACCOUNTABILITY_AUDIT_ONLY","completed_iso_week":37,"contract":"CN_WEEKLY_PARAMETER_COVERAGE_AUDIT_v1","existing_structural_score":90.0,"issue_scored":25,"non_forecast_parameters":["btc_range","eth_range"],"parameter_coverage_pct":100.0,"parameter_scores":[{"parameter_id":"ethbtc_condition","score":100.0,"status":"SUPPORTED"},{"parameter_id":"breadth_condition","score":100.0,"status":"SUPPORTED"},{"parameter_id":"structural_call_1","score":100.0,"status":"SUPPORTED"},{"parameter_id":"structural_call_2","score":100.0,"status":"SUPPORTED"},{"parameter_id":"structural_call_3","score":100.0,"status":"SUPPORTED"},{"parameter_id":"structural_call_4","score":50.0,"status":"MIXED"},{"parameter_id":"structural_call_5","score":100.0,"status":"SUPPORTED"}],"note":"Coverage audit does not redefine the archived 90% structural score. It proves that every non-null W37 frozen forecast parameter is explicitly accounted for; null BTC/ETH ranges were not forecasts and therefore are excluded from scoring.","score_status":"REPRODUCIBLE","source_scorecard":"05_CYCLE_NAVIGATOR/weekly/2026/W38/CYCLE_NAVIGATOR_SCORECARD.json","source_freeze":"05_CYCLE_NAVIGATOR/weekly/2026/W37/CYCLE_NAVIGATOR_FORECAST_FREEZE.json"}
+          JSON
+
+      - name: Commit hardening
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name framework-repair-agent
+          git config user.email framework-repair-agent@users.noreply.github.com
+          git add scripts/cycle_navigator/build_weekly_cycle_navigator.py \
+                  tests/cycle_navigator/test_precision_accountability.py \
+                  research/repairs/2026-09-14_w37_precision_coverage_audit.json
+          git diff --cached --check
+          git commit -m 'fix: make weekly Cycle Navigator scoring exhaustive and idempotent'
+          git pull --rebase origin main
+          git push origin HEAD:main
