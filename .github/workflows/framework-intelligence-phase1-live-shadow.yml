@@ -27,7 +27,9 @@ jobs:
         with:
           python-version: '3.12'
       - name: Validate Phase 1 firewall
-        run: python -m unittest tests.framework_intelligence.test_phase1_live_shadow -v
+        run: |
+          python -m py_compile scripts/framework_intelligence/build_phase1_live_shadow.py
+          python -m unittest discover -s tests/framework_intelligence -p 'test_phase1_live_shadow.py' -v
       - name: Build provenance-bound parallel shadow observation
         run: python scripts/framework_intelligence/build_phase1_live_shadow.py --repo-root . --output-root research/framework_intelligence/phase1
       - name: Assert no live-consumption authority
