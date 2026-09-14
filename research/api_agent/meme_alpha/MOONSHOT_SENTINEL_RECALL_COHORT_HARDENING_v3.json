@@ -1,0 +1,113 @@
+{
+  "contract": "MOONSHOT_SENTINEL_RECALL_COHORT_HARDENING_v3",
+  "status": "ACTIVE_HARDENING",
+  "created_at_utc": "2026-09-14T18:45:00Z",
+  "parent": "MOONSHOT_SENTINEL_CONTRACT_v1",
+  "problem_statement": [
+    "A new-pools feed is not a pure new-token universe, so pre-origin anomaly percentiles can contain old tokens receiving new pools.",
+    "Adaptive learning must never train on unresolved or old-token/new-pool observations.",
+    "Missed-winner recall must not silently ignore unresolved Stage0 candidates, otherwise measured recall can be artificially perfect.",
+    "Single-token origin lookups are rate-limited and therefore cannot be applied to every raw Stage0 candidate every 15 minutes."
+  ],
+  "cohort_semantics": {
+    "pre_origin_contract": "MOONSHOT_PRE_ORIGIN_EVENT_COHORT_v2",
+    "pre_origin_role": "DISCOVERY_PREFILTER_ONLY",
+    "pre_origin_population": "exact-CA-collapsed new-pool events before token-origin adjudication",
+    "pre_origin_may_train_adaptive_rules": false,
+    "pre_origin_may_directly_create_user_alert": false,
+    "fresh_origin_contract": "MOONSHOT_FRESH_ORIGIN_COHORT_v1",
+    "fresh_origin_population": "FRESH_TOKEN_SUPPORTED observations from the active learning epoch",
+    "fresh_origin_age_bucketed": true,
+    "fresh_origin_minimum_peers_for_percentile": 5,
+    "fresh_origin_low_n_state": "FRESH_COHORT_LOW_N",
+    "fresh_origin_is_preferred_for_adaptive_learning": true,
+    "fallback_while_low_n": "origin-supported candidate may use its frozen pre-origin anomaly only for bounded deep-dive admission, never as matured comparative evidence"
+  },
+  "full_stage0_recall_ledger": {
+    "denominator": "every unique exact-CA Stage0 token observation in the active identity epoch",
+    "identity": "network + exact token contract address",
+    "capture_first_target_price": true,
+    "capture_max_observed_target_price_opportunistically": true,
+    "capture_first_observation_time": true,
+    "resolved_origin_required_before_final_winner_label": true,
+    "states": [
+      "RECALL_OPEN",
+      "RECALL_PRICE_OBSERVED",
+      "MISSED_WINNER_PENDING_ORIGIN",
+      "MISSED_WINNER_CONFIRMED",
+      "NON_WINNER_MATURED",
+      "OLD_TOKEN_POOL_EXCLUDED",
+      "RECALL_ORIGIN_UNRESOLVED"
+    ],
+    "unresolved_is_negative_case": false,
+    "unresolved_is_successful_recall": false,
+    "existing_token_new_pool_is_excluded_from_fresh_token_recall_denominator": true,
+    "confirmed_missed_winner_definition": {
+      "minimum_price_multiple_proxy": 5.0,
+      "requires_fresh_token_origin": true,
+      "requires_sellability_or_executable_pool_evidence": true
+    }
+  },
+  "batch_price_observation": {
+    "source": "GeckoTerminal simple token price by token addresses",
+    "endpoint": "/api/v2/simple/networks/{network}/token_price/{addresses}",
+    "purpose": "cheap full-universe recall observation without one API call per token",
+    "maximum_addresses_per_request": 30,
+    "horizons_minutes": [1440, 10080],
+    "price_only_does_not_prove_sellability": true,
+    "price_multiple_threshold_triggers_origin_and_execution_adjudication": true,
+    "conservative_public_rate_limit_assumption_calls_per_minute": 10,
+    "rate_limit_failure_is_unknown_not_negative": true
+  },
+  "origin_resolution": {
+    "normal_priority": "current high-value discovery candidates",
+    "recall_priority": "price-threshold candidates awaiting missed-winner adjudication",
+    "cached_resolutions_reused": true,
+    "http_429_requires_backoff": true,
+    "retry_after_or_exponential_backoff_required": true,
+    "same_candidate_may_not_be_hammered_each_scan": true
+  },
+  "state_retention": {
+    "latest_state_is_active_working_set_not_permanent_raw_archive": true,
+    "active_candidate_retention_days": 8,
+    "preserve_full_detail_beyond_retention_if": [
+      "deep_research_completed",
+      "user_alert_created",
+      "missed_winner_confirmed",
+      "origin_or_integrity_conflict_requires_audit"
+    ],
+    "otherwise_compact_to_daily_recall_archive": true,
+    "daily_archive_preserves": [
+      "exact identity",
+      "first observation",
+      "first target price",
+      "maximum observed multiple",
+      "origin state",
+      "recall state",
+      "final fresh-token denominator eligibility"
+    ],
+    "compaction_may_not_change_learning_metrics": true
+  },
+  "adaptive_learning_separation": {
+    "training_population": "active-epoch FRESH_TOKEN_SUPPORTED only",
+    "recall_audit_population": "full Stage0 exact-CA universe until origin adjudication",
+    "pre_origin_percentiles_are_training_truth": false,
+    "cross_epoch_training_forbidden": true,
+    "old_token_new_pool_may_train": false,
+    "origin_unresolved_may_train": false,
+    "missed_winner_confirmed_must_enter_error_ledger": true
+  },
+  "scheduler_health": {
+    "expected_interval_minutes": 15,
+    "stale_after_minutes": 45,
+    "a_delayed_or_missing_schedule_is_an_operational_health_failure_not_market_silence": true,
+    "runtime_branch_commit_age_is_the_primary_heartbeat": true
+  },
+  "authority": {
+    "portfolio_action": false,
+    "automatic_trading": false,
+    "leverage": false,
+    "code_self_modification": false,
+    "automatic_merge": false
+  }
+}
