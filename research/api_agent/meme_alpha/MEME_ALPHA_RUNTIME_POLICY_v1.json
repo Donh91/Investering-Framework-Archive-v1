@@ -82,6 +82,8 @@
     "discovery_is_not_authentication": true,
     "minimum_external_trust_anchors": 2,
     "minimum_independent_anchor_categories": 2,
+    "minimum_independent_control_roots": 2,
+    "require_structured_provenance_claim_types": true,
     "require_high_confidence_onchain_binding_for_token_ca_claim": true,
     "block_on_unresolved_red_team": true,
     "block_on_repo_forensics_blocker": true,
@@ -92,6 +94,15 @@
     "sanitize_unauthenticated_summary": true,
     "degrade_when_required_but_unproven": true,
     "revocation_must_propagate_to_descendants": true,
+    "structured_provenance_claim_types": [
+      "PROJECT_OWNERSHIP",
+      "REPOSITORY_OWNERSHIP",
+      "MASCOT_CANONICITY",
+      "LORE_CANONICITY",
+      "TOKEN_ISSUANCE",
+      "TOKEN_CA_OWNERSHIP",
+      "CTO_COMMUNITY_LEGITIMACY"
+    ],
     "first_party_states": [
       "NOT_APPLICABLE",
       "UNASSESSED",
