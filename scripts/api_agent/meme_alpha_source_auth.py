@@ -31,6 +31,18 @@ ANCHOR_CATEGORIES = {
     "OTHER_EXTERNAL",
 }
 
+PROVENANCE_CLAIM_TYPES = {
+    "PROJECT_OWNERSHIP",
+    "REPOSITORY_OWNERSHIP",
+    "MASCOT_CANONICITY",
+    "LORE_CANONICITY",
+    "TOKEN_ISSUANCE",
+    "TOKEN_CA_OWNERSHIP",
+    "CTO_COMMUNITY_LEGITIMACY",
+}
+
+FIRST_PARTY_CLAIM_TYPES = PROVENANCE_CLAIM_TYPES - {"CTO_COMMUNITY_LEGITIMACY"}
+
 FIRST_PARTY_TASK_TERMS = (
     "official",
     "first-party",
@@ -68,6 +80,7 @@ def source_authentication_schema() -> dict[str, Any]:
             "state",
             "claimed_entity",
             "subject",
+            "claim_types",
             "first_party_claim_allowed",
             "external_trust_anchors",
             "repository_forensics",
@@ -80,6 +93,11 @@ def source_authentication_schema() -> dict[str, Any]:
             "state": {"type": "string", "enum": sorted(SOURCE_AUTH_STATES)},
             "claimed_entity": {"type": "string"},
             "subject": {"type": "string"},
+            "claim_types": {
+                "type": "array",
+                "maxItems": 8,
+                "items": {"type": "string", "enum": sorted(PROVENANCE_CLAIM_TYPES)},
+            },
             "first_party_claim_allowed": {"type": "boolean"},
             "external_trust_anchors": {
                 "type": "array",
@@ -90,6 +108,7 @@ def source_authentication_schema() -> dict[str, Any]:
                     "required": [
                         "category",
                         "locator",
+                        "control_root_id",
                         "evidence",
                         "external_to_subject",
                         "source_controlled",
@@ -98,6 +117,7 @@ def source_authentication_schema() -> dict[str, Any]:
                     "properties": {
                         "category": {"type": "string", "enum": sorted(ANCHOR_CATEGORIES)},
                         "locator": {"type": "string"},
+                        "control_root_id": {"type": "string"},
                         "evidence": {"type": "string"},
                         "external_to_subject": {"type": "boolean"},
                         "source_controlled": {"type": "boolean"},
@@ -158,6 +178,7 @@ def default_source_authentication() -> dict[str, Any]:
         "state": "NOT_APPLICABLE",
         "claimed_entity": "",
         "subject": "",
+        "claim_types": [],
         "first_party_claim_allowed": False,
         "external_trust_anchors": [],
         "repository_forensics": [],
@@ -168,6 +189,11 @@ def default_source_authentication() -> dict[str, Any]:
 
 
 def task_requires_source_authentication(task: dict[str, Any]) -> bool:
+    if task.get("source_authentication_required") is True:
+        return True
+    structured = task.get("provenance_claim_types")
+    if isinstance(structured, list) and any(item in FIRST_PARTY_CLAIM_TYPES for item in structured):
+        return True
     # Hydrated private context is supporting evidence, not task intent. Ignoring it
     # prevents an unrelated wallet task from becoming provenance-gated simply
     # because an attached file happens to mention GitHub or an official account.
@@ -185,6 +211,8 @@ def _valid_external_anchors(packet: dict[str, Any]) -> list[dict[str, Any]]:
         if not isinstance(anchor, dict):
             continue
         if anchor.get("category") not in ANCHOR_CATEGORIES:
+            continue
+        if not str(anchor.get("control_root_id") or "").strip():
             continue
         if not anchor.get("external_to_subject"):
             continue
@@ -243,6 +271,8 @@ def apply_source_authentication_gate(
     required = task_requires_source_authentication(task)
     minimum_anchors = int(cfg.get("minimum_external_trust_anchors", 2))
     minimum_categories = int(cfg.get("minimum_independent_anchor_categories", 2))
+    minimum_control_roots = int(cfg.get("minimum_independent_control_roots", 2))
+    require_structured_claims = bool(cfg.get("require_structured_provenance_claim_types", True))
     require_onchain_for_token = bool(cfg.get("require_high_confidence_onchain_binding_for_token_ca_claim", True))
     block_on_red_team = bool(cfg.get("block_on_unresolved_red_team", True))
     block_on_repo_forensics = bool(cfg.get("block_on_repo_forensics_blocker", True))
@@ -250,6 +280,8 @@ def apply_source_authentication_gate(
     reasons: list[str] = []
     valid_anchors = _valid_external_anchors(packet)
     categories = {str(anchor.get("category")) for anchor in valid_anchors}
+    control_roots = {str(anchor.get("control_root_id")) for anchor in valid_anchors}
+    claim_types = {str(item) for item in packet.get("claim_types", []) if item in PROVENANCE_CLAIM_TYPES}
     state = str(packet.get("state") or "UNASSESSED")
     scope = str(packet.get("scope") or "NONE")
 
@@ -262,15 +294,25 @@ def apply_source_authentication_gate(
         if state != "AUTHENTICATED_FIRST_PARTY":
             allowed = False
             reasons.append("STATE_NOT_AUTHENTICATED_FIRST_PARTY")
+        if require_structured_claims and not claim_types.intersection(FIRST_PARTY_CLAIM_TYPES):
+            allowed = False
+            reasons.append("STRUCTURED_PROVENANCE_CLAIM_REQUIRED")
         if len(valid_anchors) < minimum_anchors:
             allowed = False
             reasons.append("INSUFFICIENT_EXTERNAL_TRUST_ANCHORS")
         if len(categories) < minimum_categories:
             allowed = False
             reasons.append("INSUFFICIENT_INDEPENDENT_ANCHOR_CATEGORIES")
-        if scope == "TOKEN_CA_BINDING" and require_onchain_for_token and not _has_high_onchain_binding(packet):
+        if len(control_roots) < minimum_control_roots:
             allowed = False
-            reasons.append("HIGH_CONFIDENCE_ONCHAIN_BINDING_REQUIRED")
+            reasons.append("INSUFFICIENT_INDEPENDENT_CONTROL_ROOTS")
+        if scope == "TOKEN_CA_BINDING":
+            if "TOKEN_CA_OWNERSHIP" not in claim_types:
+                allowed = False
+                reasons.append("TOKEN_CA_STRUCTURED_CLAIM_REQUIRED")
+            if require_onchain_for_token and not _has_high_onchain_binding(packet):
+                allowed = False
+                reasons.append("HIGH_CONFIDENCE_ONCHAIN_BINDING_REQUIRED")
         if block_on_red_team and _has_blocking_red_team(packet):
             allowed = False
             reasons.append("RED_TEAM_UNRESOLVED_OR_BLOCKING")
@@ -281,6 +323,7 @@ def apply_source_authentication_gate(
             allowed = False
             reasons.append("SOURCE_STATE_BLOCKS_FIRST_PARTY")
 
+    packet["claim_types"] = sorted(claim_types)
     packet["first_party_claim_allowed"] = allowed
     packet["gate_reasons"] = sorted(set(reasons))
     if required and not allowed and state == "AUTHENTICATED_FIRST_PARTY":
@@ -297,6 +340,10 @@ def apply_source_authentication_gate(
         uncertainty = "SOURCE_AUTHENTICATION_GATE_BLOCKED_FIRST_PARTY_CLAIM"
         if uncertainty not in uncertainties:
             uncertainties.append(uncertainty)
+        if claim_types:
+            structured_note = "AUTH_GATED_STRUCTURED_PROVENANCE_CLAIMS: " + ",".join(sorted(claim_types))
+            if structured_note not in uncertainties:
+                uncertainties.append(structured_note)
         if bool(cfg.get("sanitize_unauthenticated_summary", True)):
             prior_summary = output.get("summary")
             if isinstance(prior_summary, str) and prior_summary.strip():
@@ -305,7 +352,7 @@ def apply_source_authentication_gate(
                     uncertainties.append(archived_summary)
             output["summary"] = _blocked_summary(packet)
         if bool(cfg.get("sanitize_unauthenticated_first_party_findings", True)):
-            kept: list[str] = []
+            kept: list[Any] = []
             moved: list[str] = []
             for item in output.get("verified_findings", []):
                 if not isinstance(item, str):
@@ -328,12 +375,13 @@ def source_authentication_instruction(policy: dict[str, Any]) -> str:
     cfg = policy.get("source_authentication") if isinstance(policy.get("source_authentication"), dict) else {}
     minimum_anchors = int(cfg.get("minimum_external_trust_anchors", 2))
     minimum_categories = int(cfg.get("minimum_independent_anchor_categories", 2))
+    minimum_control_roots = int(cfg.get("minimum_independent_control_roots", 2))
     return (
-        "Treat discovery and source authentication as separate stages. Repository branding, internal README claims, realistic code, "
-        "commit chronology, exact contract addresses, GitHub Verified signatures and self-asserted official status do not prove first-party ownership. "
+        "Treat discovery and source authentication as separate stages. Emit structured provenance claim_types for every provenance claim. "
+        "Repository branding, internal README claims, realistic code, commit chronology, exact contract addresses, GitHub Verified signatures and self-asserted official status do not prove first-party ownership. "
         f"For any official/first-party/project-owned claim require at least {minimum_anchors} independent project-controlled anchors across at least "
-        f"{minimum_categories} external categories, and actively red-team look-alike repositories, disposable authors, copied code, account age, alternate repos, "
-        "domain/social mismatches and chronology. For TOKEN_CA_BINDING claims require a HIGH-confidence on-chain binding. "
+        f"{minimum_categories} external categories and at least {minimum_control_roots} distinct control roots, and actively red-team look-alike repositories, disposable authors, copied code, account age, alternate repos, "
+        "domain/social mismatches and chronology. For TOKEN_CA_BINDING claims require TOKEN_CA_OWNERSHIP plus a HIGH-confidence on-chain binding. "
         "If these conditions are not met, keep the source CANDIDATE/CONFLICTED/INVALIDATED and set first_party_claim_allowed false. "
-        "A community CTO may still be real even when the original first-party provenance is false; score those theses separately."
+        "A community CTO may still be real even when the original first-party provenance is false; score CTO_COMMUNITY_LEGITIMACY separately."
     )

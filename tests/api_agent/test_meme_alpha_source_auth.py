@@ -31,6 +31,8 @@ POLICY = {
         "enabled": True,
         "minimum_external_trust_anchors": 2,
         "minimum_independent_anchor_categories": 2,
+        "minimum_independent_control_roots": 2,
+        "require_structured_provenance_claim_types": True,
         "require_high_confidence_onchain_binding_for_token_ca_claim": True,
         "block_on_unresolved_red_team": True,
         "block_on_repo_forensics_blocker": True,
@@ -67,10 +69,11 @@ def base_output(packet: dict) -> dict:
     }
 
 
-def anchor(category: str, locator: str) -> dict:
+def anchor(category: str, locator: str, control_root_id: str) -> dict:
     return {
         "category": category,
         "locator": locator,
+        "control_root_id": control_root_id,
         "evidence": "project-controlled external link",
         "external_to_subject": True,
         "source_controlled": True,
@@ -84,6 +87,7 @@ class MemeAlphaSourceAuthTests(unittest.TestCase):
         packet.update({
             "scope": "PROJECT_SOURCE",
             "state": "AUTHENTICATED_FIRST_PARTY",
+            "claim_types": ["REPOSITORY_OWNERSHIP", "MASCOT_CANONICITY"],
             "claimed_entity": "Example Project",
             "subject": "github.com/example/project",
             "repository_forensics": [{"signal": "verified_commit", "severity": "INFO", "evidence": "GitHub signature valid"}],
@@ -100,16 +104,17 @@ class MemeAlphaSourceAuthTests(unittest.TestCase):
         self.assertTrue(any(item.startswith("MODEL_SUMMARY_PRE_GATE_UNTRUSTED:") for item in result["uncertainties"]))
         self.assertTrue(any("AUTH_GATED" in item for item in result["uncertainties"]))
 
-    def test_two_external_categories_can_authenticate_project_source(self) -> None:
+    def test_two_external_categories_and_control_roots_can_authenticate_project_source(self) -> None:
         packet = default_source_authentication()
         packet.update({
             "scope": "PROJECT_SOURCE",
             "state": "AUTHENTICATED_FIRST_PARTY",
+            "claim_types": ["REPOSITORY_OWNERSHIP"],
             "claimed_entity": "Example Project",
             "subject": "github.com/example/project",
             "external_trust_anchors": [
-                anchor("OFFICIAL_WEBSITE", "https://example.org/developers"),
-                anchor("OFFICIAL_SOCIAL", "https://x.com/example/status/1"),
+                anchor("OFFICIAL_WEBSITE", "https://example.org/developers", "example.org"),
+                anchor("OFFICIAL_SOCIAL", "https://x.com/example/status/1", "x.com/example"),
             ],
             "red_team_findings": [{"hypothesis": "lookalike repo", "status": "CLEAR", "evidence": "official links converge"}],
         })
@@ -120,16 +125,54 @@ class MemeAlphaSourceAuthTests(unittest.TestCase):
         self.assertEqual(result["source_authentication"]["gate_reasons"], [])
         self.assertEqual(result["summary"], "Authenticated summary remains intact.")
 
+    def test_two_categories_same_control_root_do_not_count_as_independent(self) -> None:
+        packet = default_source_authentication()
+        packet.update({
+            "scope": "PROJECT_SOURCE",
+            "state": "AUTHENTICATED_FIRST_PARTY",
+            "claim_types": ["PROJECT_OWNERSHIP"],
+            "claimed_entity": "Example Project",
+            "subject": "repo",
+            "external_trust_anchors": [
+                anchor("OFFICIAL_WEBSITE", "https://example.org", "example.org"),
+                anchor("OFFICIAL_DOCS", "https://docs.example.org", "example.org"),
+            ],
+        })
+        result = apply_source_authentication_gate(base_output(packet), {"subject": "official repository provenance"}, POLICY)
+        self.assertFalse(result["source_authentication"]["first_party_claim_allowed"])
+        self.assertIn("INSUFFICIENT_INDEPENDENT_CONTROL_ROOTS", result["source_authentication"]["gate_reasons"])
+
+    def test_unstructured_first_party_claim_is_blocked(self) -> None:
+        packet = default_source_authentication()
+        packet.update({
+            "scope": "PROJECT_SOURCE",
+            "state": "AUTHENTICATED_FIRST_PARTY",
+            "claimed_entity": "Example Project",
+            "subject": "repo",
+            "external_trust_anchors": [
+                anchor("OFFICIAL_WEBSITE", "https://example.org", "example.org"),
+                anchor("OFFICIAL_SOCIAL", "https://x.com/example", "x.com/example"),
+            ],
+        })
+        result = apply_source_authentication_gate(base_output(packet), {"source_authentication_required": True}, POLICY)
+        self.assertFalse(result["source_authentication"]["first_party_claim_allowed"])
+        self.assertIn("STRUCTURED_PROVENANCE_CLAIM_REQUIRED", result["source_authentication"]["gate_reasons"])
+
+    def test_structured_task_claim_forces_auth_without_keyword_heuristic(self) -> None:
+        task = {"subject": "maintainer relationship", "provenance_claim_types": ["PROJECT_OWNERSHIP"]}
+        self.assertTrue(task_requires_source_authentication(task))
+
     def test_token_ca_binding_requires_high_onchain_binding(self) -> None:
         packet = default_source_authentication()
         packet.update({
             "scope": "TOKEN_CA_BINDING",
             "state": "AUTHENTICATED_FIRST_PARTY",
+            "claim_types": ["TOKEN_CA_OWNERSHIP"],
             "claimed_entity": "Example Project",
             "subject": "token 0xabc",
             "external_trust_anchors": [
-                anchor("OFFICIAL_WEBSITE", "https://example.org/token"),
-                anchor("OFFICIAL_SOCIAL", "https://x.com/example/status/2"),
+                anchor("OFFICIAL_WEBSITE", "https://example.org/token", "example.org"),
+                anchor("OFFICIAL_SOCIAL", "https://x.com/example/status/2", "x.com/example"),
             ],
             "onchain_bindings": [{"relation": "factory deploy", "confidence": "MEDIUM", "evidence": "plausible factory"}],
         })
@@ -143,11 +186,12 @@ class MemeAlphaSourceAuthTests(unittest.TestCase):
         packet.update({
             "scope": "PROJECT_SOURCE",
             "state": "AUTHENTICATED_FIRST_PARTY",
+            "claim_types": ["REPOSITORY_OWNERSHIP"],
             "claimed_entity": "Example Project",
             "subject": "github.com/example/project",
             "external_trust_anchors": [
-                anchor("OFFICIAL_WEBSITE", "https://example.org/dev"),
-                anchor("OFFICIAL_DOCS", "https://docs.example.org/source"),
+                anchor("OFFICIAL_WEBSITE", "https://example.org/dev", "example.org"),
+                anchor("OFFICIAL_DOCS", "https://docs.example.net/source", "example.net"),
             ],
             "red_team_findings": [{"hypothesis": "spoofed domain redirect", "status": "UNRESOLVED", "evidence": "ownership not proven"}],
         })
@@ -157,7 +201,7 @@ class MemeAlphaSourceAuthTests(unittest.TestCase):
 
     def test_cto_scope_does_not_inherit_false_first_party_status(self) -> None:
         packet = default_source_authentication()
-        packet.update({"scope": "CTO_COMMUNITY", "state": "CANDIDATE", "claimed_entity": "community CTO", "subject": "token"})
+        packet.update({"scope": "CTO_COMMUNITY", "state": "CANDIDATE", "claim_types": ["CTO_COMMUNITY_LEGITIMACY"], "claimed_entity": "community CTO", "subject": "token"})
         result = apply_source_authentication_gate(base_output(packet), {"subject": "community CTO survival"}, POLICY)
         self.assertFalse(result["source_authentication"]["first_party_claim_allowed"])
         self.assertEqual(result["status"], "READY")

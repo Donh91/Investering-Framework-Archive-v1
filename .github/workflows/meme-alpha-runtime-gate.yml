@@ -7,8 +7,10 @@ on:
       - 'scripts/api_agent/meme_alpha_runtime_v1_1.py'
       - 'scripts/api_agent/meme_alpha_runtime_v1_2.py'
       - 'scripts/api_agent/meme_alpha_source_auth.py'
+      - 'scripts/api_agent/meme_alpha_prospective.py'
       - 'tests/api_agent/test_meme_alpha_runtime.py'
       - 'tests/api_agent/test_meme_alpha_source_auth.py'
+      - 'tests/api_agent/test_meme_alpha_prospective.py'
       - 'research/api_agent/meme_alpha/**'
       - '.agents/skills/meme-alpha-supervisor/**'
       - '.github/workflows/meme-alpha-runtime-gate.yml'
@@ -33,10 +35,12 @@ jobs:
           scripts/api_agent/meme_alpha_runtime_v1_1.py
           scripts/api_agent/meme_alpha_runtime_v1_2.py
           scripts/api_agent/meme_alpha_source_auth.py
+          scripts/api_agent/meme_alpha_prospective.py
           tests/api_agent/test_meme_alpha_runtime.py
           tests/api_agent/test_meme_alpha_source_auth.py
+          tests/api_agent/test_meme_alpha_prospective.py
       - name: Run focused tests
-        run: python -m unittest tests.api_agent.test_meme_alpha_runtime tests.api_agent.test_meme_alpha_source_auth -v
+        run: python -m unittest tests.api_agent.test_meme_alpha_runtime tests.api_agent.test_meme_alpha_source_auth tests.api_agent.test_meme_alpha_prospective -v
       - name: Validate policy authority, budget and source-auth gate
         run: |
           python - <<'PY'
@@ -59,12 +63,33 @@ jobs:
           assert sa['enabled'] is True
           assert sa['minimum_external_trust_anchors'] >= 2
           assert sa['minimum_independent_anchor_categories'] >= 2
+          assert sa['minimum_independent_control_roots'] >= 2
+          assert sa['require_structured_provenance_claim_types'] is True
           assert sa['verified_commit_counts_as_ownership'] is False
           assert sa['repository_self_description_counts_as_ownership'] is False
           assert sa['require_high_confidence_onchain_binding_for_token_ca_claim'] is True
           assert sa['revocation_must_propagate_to_descendants'] is True
           assert all(v is False for v in p['authority'].values())
           print('MEME_ALPHA_RUNTIME_POLICY_PASS')
+          PY
+      - name: Validate prospective hardening contract
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=json.loads(Path('research/api_agent/meme_alpha/MEME_ALPHA_PROSPECTIVE_HARDENING_v1.json').read_text())
+          assert p['contract']=='MEME_ALPHA_PROSPECTIVE_HARDENING_v1'
+          assert p['trial_state_machine']['discovery_complete_is_not_outcome_matured'] is True
+          assert p['trial_state_machine']['minimum_unique_ecosystem_trials_for_review'] >= 20
+          assert p['hierarchical_identity']['method_denominator_unit']=='UNIQUE_ECOSYSTEM_TRIAL'
+          assert p['cohort_selection']['manifest_must_precede_token_search'] is True
+          assert p['alpha_measurement_contract']['positive_alpha_requires_sellability'] is True
+          assert p['matched_control']['selection_must_be_frozen_before_outcome'] is True
+          assert p['missed_winner_audit']['required_for_every_outcome_matured_ecosystem_trial'] is True
+          assert p['queue_slo']['P0_event_driven_max_queue_age_minutes'] <= 60
+          assert p['kill_criteria']['evaluate_only_after_minimum_matured_trials'] >= 20
+          assert all(v is False for v in p['authority'].values())
+          print('MEME_ALPHA_PROSPECTIVE_HARDENING_PASS')
           PY
       - name: Dry-run v1.2 worker smoke
         run: |
