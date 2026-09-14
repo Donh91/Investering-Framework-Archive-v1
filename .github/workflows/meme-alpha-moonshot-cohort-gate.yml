@@ -1,0 +1,39 @@
+name: Meme Alpha Moonshot Cohort Gate
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/api_agent/meme_alpha_moonshot_age_cohort.py'
+      - 'tests/api_agent/test_meme_alpha_moonshot_age_cohort.py'
+      - 'research/api_agent/meme_alpha/MOONSHOT_SENTINEL_CHAMPION_v1.json'
+      - '.github/workflows/meme-alpha-moonshot-cohort-gate.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  temporal-cohort-integrity:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compile and test temporal cohorts
+        run: |
+          python -m py_compile scripts/api_agent/meme_alpha_moonshot_age_cohort.py tests/api_agent/test_meme_alpha_moonshot_age_cohort.py
+          python -m unittest tests.api_agent.test_meme_alpha_moonshot_age_cohort -v
+      - name: Assert scan coverage and age-comparable methodology
+        run: |
+          python - <<'PY'
+          import json
+          from scripts.api_agent.meme_alpha_moonshot_age_cohort import AGE_BUCKETS, MIN_PEERS
+          champion=json.load(open('research/api_agent/meme_alpha/MOONSHOT_SENTINEL_CHAMPION_v1.json'))
+          assert champion['scanner']['new_pool_pages_per_scan'] >= 4
+          assert MIN_PEERS >= 5
+          assert AGE_BUCKETS[0] == (0,15)
+          assert AGE_BUCKETS[-1][0] == 1440
+          print('MOONSHOT_TEMPORAL_COHORT_INTEGRITY_PASS')
+          PY
