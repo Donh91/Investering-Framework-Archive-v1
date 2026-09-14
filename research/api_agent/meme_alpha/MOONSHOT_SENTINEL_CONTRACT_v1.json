@@ -1,0 +1,178 @@
+{
+  "contract": "MOONSHOT_SENTINEL_CONTRACT_v1",
+  "status": "ACTIVE_RESEARCH_ALERT_LAYER",
+  "purpose": "Continuously observe broad new-token/pool universes, escalate only rare asymmetric candidates, produce research-only gamble alerts, and improve the alert method autonomously through prospective champion/challenger learning.",
+  "parent_contracts": [
+    "FUSE_LIKE_STEALTH_DISCOVERY_EXPERIMENT_v1",
+    "MEME_ALPHA_PROSPECTIVE_HARDENING_v1",
+    "MICROCAP_RESEARCH_AGENT_CONTRACT_v1",
+    "MEME_ALPHA_RUNTIME_POLICY_v1"
+  ],
+  "initial_scope": {
+    "chains": ["ethereum"],
+    "scan_interval_minutes": 5,
+    "deep_dive_daily_cap": 3,
+    "user_alert_daily_cap": 3,
+    "normal_day_target_alerts": "0-1",
+    "one_alert_per_correlated_cluster": true
+  },
+  "states": [
+    "SILENT",
+    "DEEP_DIVE",
+    "MOONSHOT_WATCH",
+    "MOONSHOT_GAMBLE_ALERT"
+  ],
+  "lifecycle_states": ["ACTIVE", "EXTENDED", "EXPIRED", "INVALIDATED"],
+  "identity": {
+    "primary_key": "chain + exact token contract address",
+    "ticker_is_identity": false,
+    "name_is_identity": false,
+    "pool_address_is_secondary_identity": true
+  },
+  "stage0": {
+    "model_calls": 0,
+    "primary_feed": "GeckoTerminal new pools public API",
+    "secondary_feed_classes": [
+      "direct Ethereum RPC enrichment",
+      "Uniswap v2/v3 pool events",
+      "Uniswap v4 PoolManager Initialize events",
+      "known launchpad/factory events",
+      "approved exact-CA social discovery sources"
+    ],
+    "birth_tape_minutes": [0, 5, 15, 30, 60, 120, 240, 720, 1440],
+    "preserve_all_observed_candidates_for_missed_winner_audit": true
+  },
+  "execution_gate": {
+    "required": [
+      "exact identity resolved",
+      "tradable route resolved",
+      "successful sell evidence or deterministic sell simulation",
+      "liquidity known",
+      "price impact measurable for configured gamble notionals"
+    ],
+    "unknown_is_safe": false,
+    "hard_fail": [
+      "honeypot_or_failed_sell",
+      "identity_conflict",
+      "no_executable_liquidity",
+      "known_blacklist_or_transfer_block_for_normal_holder"
+    ]
+  },
+  "feature_families": {
+    "M": "market microstructure and birth-cohort anomaly",
+    "W": "wallet quality, pre-propagation entries and funding clusters",
+    "S": "exact-CA social propagation and source-history quality",
+    "P": "authenticated product, provenance, usage and execution velocity",
+    "N": "narrative novelty and remaining convexity"
+  },
+  "archetypes": [
+    "PRODUCT_STEALTH",
+    "PURE_MEME_CULTURE",
+    "CABAL_WALLET_PROPAGATION",
+    "ECOSYSTEM_NATIVE_EASTER_EGG",
+    "LAUNCHPAD_NETWORK_EFFECT",
+    "UNCLASSIFIED"
+  ],
+  "alert_gate": {
+    "price_momentum_alone_can_alert": false,
+    "single_social_source_can_alert": false,
+    "single_wallet_can_alert": false,
+    "paid_profile_is_positive_feature": false,
+    "minimum_independent_signal_families": 2,
+    "requires_market_microstructure_family": true,
+    "requires_execution_gate_pass": true,
+    "requires_deep_research_before_gamble_alert": true,
+    "alert_expires_when_entry_conditions_materially_change": true
+  },
+  "convexity": {
+    "multiples": [5, 10, 25, 50, 100],
+    "classification": "FEASIBILITY_NOT_FORECAST",
+    "compare_against_historical_analogue_market_caps": true
+  },
+  "gamble_risk": {
+    "bankroll_owner": "user_defined_external_moonshot_bankroll",
+    "sentinel_may_change_position_size": false,
+    "sentinel_may_average_down": false,
+    "leverage_allowed": false,
+    "automatic_execution": false,
+    "assume_total_loss_possible": true
+  },
+  "adaptive_evolution": {
+    "enabled": true,
+    "human_intervention_required_for_research_rule_evolution": false,
+    "mechanism": "prospective champion/challenger",
+    "mutable_research_parameters": [
+      "birth_cohort_percentile_thresholds",
+      "minimum_signal_family_convergence",
+      "deep_dive_tie_breakers",
+      "alert_expiry_thresholds",
+      "archetype_specific_admission_rules"
+    ],
+    "immutable_without_code_review": [
+      "automatic_execution=false",
+      "leverage_allowed=false",
+      "exact_CA_identity_rule",
+      "missed_winner_audit_required",
+      "prospective_only_evaluation",
+      "negative_cases_retained",
+      "user_alert_daily_cap<=3"
+    ],
+    "challenger_generation": {
+      "source": "matured prospective outcomes and missed-winner ledger",
+      "max_parameter_mutations_per_generation": 2,
+      "no_current_candidate_outcome_leakage": true,
+      "time_ordered_train_validation": true,
+      "holdout_required": true
+    },
+    "auto_promotion": {
+      "allowed_scope": "research alert configuration only",
+      "minimum_matured_observations": 50,
+      "minimum_distinct_calendar_days": 14,
+      "minimum_alerted_or_control_events": 10,
+      "requires_precision_non_degradation": true,
+      "requires_sellability_non_degradation": true,
+      "requires_false_positive_non_increase": true,
+      "requires_validation_utility_improvement_pct": 5.0,
+      "requires_two_consecutive_validation_windows": true,
+      "automatic_rollback_enabled": true
+    },
+    "rollback": {
+      "post_promotion_window_days": 7,
+      "precision_drop_percentage_points": 10,
+      "sellability_drop_percentage_points": 10,
+      "critical_integrity_failure_rolls_back_immediately": true
+    },
+    "code_self_modification": false,
+    "automatic_merge": false,
+    "note": "The system can evolve bounded research configuration autonomously. New code, new authorities or execution capability remain outside autonomous promotion."
+  },
+  "outcome_learning": {
+    "windows": ["1h", "4h", "24h", "3d", "7d"],
+    "required": [
+      "forward_return",
+      "MFE",
+      "MAE",
+      "realizable_return_after_slippage",
+      "sellability",
+      "liquidity_change",
+      "thesis_survival",
+      "alert_state_at_observation"
+    ],
+    "missed_winner_audit": true,
+    "missed_winner_audit_uses_full_stage0_universe": true
+  },
+  "notification": {
+    "outbox_is_source_of_truth": true,
+    "adapters": ["private_github_issue", "generic_webhook", "telegram_bot"],
+    "adapter_failure_does_not_drop_alert": true,
+    "dedupe_by_alert_id": true
+  },
+  "authority": {
+    "portfolio_action": false,
+    "automatic_trading": false,
+    "canonical_market_state_change": false,
+    "leverage": false,
+    "code_self_modification": false,
+    "automatic_merge": false
+  }
+}
