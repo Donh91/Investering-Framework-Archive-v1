@@ -1,0 +1,194 @@
+name: Master Monday Precision Repair Once
+
+on:
+  push:
+    paths:
+      - 'research/repairs/master_monday_precision_repair_trigger.json'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: framework-main-writer
+  cancel-in-progress: false
+
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Patch Master Monday precision semantics
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+
+          preflight = Path('scripts/master_monday/build_preflight_package_v3.py')
+          text = preflight.read_text()
+          old_import = 'from datetime import date, datetime, timezone\n'
+          new_import = 'from datetime import date, datetime, timedelta, timezone\n'
+          if old_import not in text:
+              raise SystemExit('preflight_datetime_import_anchor_missing')
+          text = text.replace(old_import, new_import, 1)
+
+          anchor = 'CAPTURE_V22_ACTIVATION_WEEK = (2026, 32)\n\n\n'
+          helper = '''CAPTURE_V22_ACTIVATION_WEEK = (2026, 32)\n\n\ndef _observed_fixed_holiday(day: date) -> date:\n    if day.weekday() == 5:\n        return day - timedelta(days=1)\n    if day.weekday() == 6:\n        return day + timedelta(days=1)\n    return day\n\n\ndef _nth_weekday(year: int, month: int, weekday: int, n: int) -> date:\n    first = date(year, month, 1)\n    delta = (weekday - first.weekday()) % 7\n    return first + timedelta(days=delta + 7 * (n - 1))\n\n\ndef _last_weekday(year: int, month: int, weekday: int) -> date:\n    if month == 12:\n        cursor = date(year + 1, 1, 1) - timedelta(days=1)\n    else:\n        cursor = date(year, month + 1, 1) - timedelta(days=1)\n    return cursor - timedelta(days=(cursor.weekday() - weekday) % 7)\n\n\ndef _easter_sunday(year: int) -> date:\n    a = year % 19\n    b = year // 100\n    c = year % 100\n    d = b // 4\n    e = b % 4\n    f = (b + 8) // 25\n    g = (b - f + 1) // 3\n    h = (19 * a + b - d - g + 15) % 30\n    i = c // 4\n    k = c % 4\n    l = (32 + 2 * e + 2 * i - h - k) % 7\n    m = (a + 11 * h + 22 * l) // 451\n    month = (h + l - 7 * m + 114) // 31\n    day = ((h + l - 7 * m + 114) % 31) + 1\n    return date(year, month, day)\n\n\ndef nyse_full_day_holidays(year: int) -> set[date]:\n    # NYSE full-day closures used to validate US spot-ETF settlement completeness.\n    # Unexpected/special closures are deliberately NOT inferred and remain fail-closed.\n    return {\n        _observed_fixed_holiday(date(year, 1, 1)),\n        _nth_weekday(year, 1, 0, 3),       # Martin Luther King Jr. Day\n        _nth_weekday(year, 2, 0, 3),       # Washington's Birthday\n        _easter_sunday(year) - timedelta(days=2),  # Good Friday\n        _last_weekday(year, 5, 0),         # Memorial Day\n        _observed_fixed_holiday(date(year, 6, 19)),\n        _observed_fixed_holiday(date(year, 7, 4)),\n        _nth_weekday(year, 9, 0, 1),       # Labor Day\n        _nth_weekday(year, 11, 3, 4),      # Thanksgiving\n        _observed_fixed_holiday(date(year, 12, 25)),\n    }\n\n\ndef expected_nyse_sessions(iso_year: int, iso_week: int) -> list[str]:\n    week_start = date.fromisocalendar(iso_year, iso_week, 1)\n    holidays = nyse_full_day_holidays(week_start.year) | nyse_full_day_holidays((week_start + timedelta(days=4)).year)\n    return [\n        (week_start + timedelta(days=offset)).isoformat()\n        for offset in range(5)\n        if week_start + timedelta(days=offset) not in holidays\n    ]\n\n\n'''
+          if anchor not in text:
+              raise SystemExit('preflight_helper_anchor_missing')
+          text = text.replace(anchor, helper, 1)
+
+          old_etf = '''    etf_week = (weekly_pack or {}).get("settled_etf") or {}\n    etf_counts = etf_week.get("session_counts") or {}\n    etf_week_ok = int(etf_counts.get("BTC") or 0) >= 5 and int(etf_counts.get("ETH") or 0) >= 5\n    add("A44", "etf", "rolling_sums", "PASS" if etf_week_ok else "UNAVAILABLE", "etf.rolling_sums", etf_week if etf_week else None, "completed-week settled BTC+ETH ETF sequence", "Daily Settled ETF + Weekly Calibration", blocking=True)\n'''
+          new_etf = '''    etf_week = (weekly_pack or {}).get("settled_etf") or {}\n    etf_counts = etf_week.get("session_counts") or {}\n    etf_records = [row for row in etf_week.get("records", []) if isinstance(row, dict)]\n    etf_record_dates = {str(row.get("session_date")) for row in etf_records if row.get("session_date")}\n    etf_year = int(weekly_pointer.get("iso_year") or 0)\n    etf_iso_week = int(weekly_pointer.get("iso_week") or 0)\n    expected_etf_dates = expected_nyse_sessions(etf_year, etf_iso_week) if etf_year and etf_iso_week else []\n    expected_etf_count = len(expected_etf_dates)\n    etf_week_ok = (\n        expected_etf_count > 0\n        and etf_record_dates == set(expected_etf_dates)\n        and int(etf_counts.get("BTC") or 0) == expected_etf_count\n        and int(etf_counts.get("ETH") or 0) == expected_etf_count\n    )\n    if etf_week:\n        etf_week = {\n            **etf_week,\n            "calendar_contract": "NYSE_FULL_DAY_SESSION_CALENDAR_v1",\n            "expected_session_dates": expected_etf_dates,\n            "expected_session_count": expected_etf_count,\n            "calendar_completeness": "COMPLETE" if etf_week_ok else "INCOMPLETE",\n        }\n    add("A44", "etf", "rolling_sums", "PASS" if etf_week_ok else "UNAVAILABLE", "etf.rolling_sums", etf_week if etf_week else None, "calendar-complete settled BTC+ETH ETF sequence", "Daily Settled ETF + Weekly Calibration", blocking=True)\n'''
+          if old_etf not in text:
+              raise SystemExit('preflight_etf_anchor_missing')
+          text = text.replace(old_etf, new_etf, 1)
+          preflight.write_text(text)
+
+          publisher = Path('scripts/master_monday/publish_master_monday_outputs.py')
+          text = publisher.read_text()
+          old = '''    evidence_available=(registry_status=='AVAILABLE' and learning.get('matured_outcome_evidence_available') is True and isinstance(matured,list))\n    if not evidence_available:\n        return {\n            'status':'UNAVAILABLE_EXPERIMENT_REGISTRY',\n            'experiment_registry_status':registry_status,\n            'analysis_layer':{},\n            'operational_translation_layer':{},\n            'matured_outcome_count':None,\n            'reason':'Experiment registry evidence is unavailable; an unavailable registry cannot be represented as a valid empty matured-outcome set.',\n        }\n'''
+          new = '''    registry_available=(registry_status=='AVAILABLE')\n    evidence_available=(registry_available and learning.get('matured_outcome_evidence_available') is True and isinstance(matured,list))\n    if not registry_available:\n        return {\n            'status':'UNAVAILABLE_EXPERIMENT_REGISTRY',\n            'experiment_registry_status':registry_status,\n            'outcome_ingestion_status':learning.get('outcome_ingestion_status','UNAVAILABLE'),\n            'analysis_layer':{},\n            'operational_translation_layer':{},\n            'matured_outcome_count':None,\n            'reason':'Experiment registry evidence is unavailable; an unavailable registry cannot be represented as a valid empty matured-outcome set.',\n        }\n    if not evidence_available:\n        return {\n            'status':'INCOMPLETE_EXPERIMENT_OUTCOME_INGESTION',\n            'experiment_registry_status':registry_status,\n            'outcome_ingestion_status':learning.get('outcome_ingestion_status','INCOMPLETE'),\n            'analysis_layer':{},\n            'operational_translation_layer':{},\n            'matured_outcome_count':None,\n            'reason':'Experiment registry is available, but matured-outcome evidence ingestion is incomplete. This lane is degraded without misreporting the registry itself as unavailable.',\n        }\n'''
+          if old not in text:
+              raise SystemExit('publisher_registry_anchor_missing')
+          text = text.replace(old, new, 1)
+          publisher.write_text(text)
+          PY
+
+      - name: Add permanent regression tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > tests/master_monday/test_weekly_precision_regressions.py <<'PY'
+          from __future__ import annotations
+          import importlib.util
+          import unittest
+          from pathlib import Path
+
+          ROOT = Path(__file__).resolve().parents[2]
+
+          def load_module(name: str, path: Path):
+              spec = importlib.util.spec_from_file_location(name, path)
+              module = importlib.util.module_from_spec(spec)
+              assert spec and spec.loader
+              spec.loader.exec_module(module)
+              return module
+
+          preflight = load_module('mm_preflight_v3_precision', ROOT / 'scripts/master_monday/build_preflight_package_v3.py')
+          publisher = load_module('mm_publisher_precision', ROOT / 'scripts/master_monday/publish_master_monday_outputs.py')
+
+          class WeeklyPrecisionRegressionTests(unittest.TestCase):
+              def test_labor_day_week_has_four_expected_sessions(self):
+                  self.assertEqual(
+                      preflight.expected_nyse_sessions(2026, 37),
+                      ['2026-09-08', '2026-09-09', '2026-09-10', '2026-09-11'],
+                  )
+
+              def test_normal_week_has_five_expected_sessions(self):
+                  sessions = preflight.expected_nyse_sessions(2026, 36)
+                  self.assertEqual(len(sessions), 5)
+                  self.assertEqual(sessions[0], '2026-08-31')
+                  self.assertEqual(sessions[-1], '2026-09-04')
+
+              def test_available_registry_with_incomplete_outcomes_is_not_called_unavailable(self):
+                  score = publisher.fallback_scorecard({
+                      'experiment_learning': {
+                          'status': 'AVAILABLE',
+                          'matured_outcome_evidence_available': False,
+                          'outcome_ingestion_status': 'INCOMPLETE',
+                          'new_matured_outcomes': None,
+                      }
+                  })
+                  self.assertEqual(score['experiment_registry_status'], 'AVAILABLE')
+                  self.assertEqual(score['status'], 'INCOMPLETE_EXPERIMENT_OUTCOME_INGESTION')
+                  self.assertEqual(score['outcome_ingestion_status'], 'INCOMPLETE')
+
+              def test_missing_registry_still_fails_closed(self):
+                  score = publisher.fallback_scorecard({
+                      'experiment_learning': {
+                          'status': 'UNAVAILABLE_REGISTRY_MISSING',
+                          'matured_outcome_evidence_available': False,
+                          'new_matured_outcomes': None,
+                      }
+                  })
+                  self.assertEqual(score['status'], 'UNAVAILABLE_EXPERIMENT_REGISTRY')
+
+          if __name__ == '__main__':
+              unittest.main()
+          PY
+          python tests/master_monday/test_weekly_precision_regressions.py
+          python tests/master_monday/test_registry_availability_status.py
+
+      - name: Prove W37 holiday completeness now passes
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p runtime/master-monday-repair
+          python scripts/master_monday/build_preflight_package_v3.py \
+            --repo-root . \
+            --registry research/master_monday_preflight/MASTER_MONDAY_ACTION_REGISTRY_v2.json \
+            --predecessor-registry research/master_monday_preflight/CANONICAL_PREDECESSOR_REGISTRY_v1.json \
+            --output runtime/master-monday-repair/W37_PREFLIGHT_REPAIRED.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=json.loads(Path('runtime/master-monday-repair/W37_PREFLIGHT_REPAIRED.json').read_text())
+          rows={row['action_id']:row for row in p['source_ledgers']}
+          assert rows['A44']['status']=='PASS', rows['A44']
+          assert p['quality']['required_capabilities']['settled_ETF_week_available'] is True
+          assert p['etf']['weekly']['calendar_completeness']=='COMPLETE'
+          assert p['etf']['weekly']['expected_session_dates']==['2026-09-08','2026-09-09','2026-09-10','2026-09-11']
+          assert not [m for m in p['missing'] if m.get('action_id')=='A44']
+          assert p['packet']['status']=='FULL_MASTER_MONDAY_INPUT', p['packet']
+          PY
+
+      - name: Record repair receipt and commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p research/repairs
+          python - <<'PY'
+          import hashlib,json
+          from datetime import datetime, timezone
+          from pathlib import Path
+          repaired=json.loads(Path('runtime/master-monday-repair/W37_PREFLIGHT_REPAIRED.json').read_text())
+          receipt={
+            'contract':'MASTER_MONDAY_PRECISION_REPAIR_RECEIPT_v1',
+            'created_at_utc':datetime.now(timezone.utc).isoformat().replace('+00:00','Z'),
+            'week':'2026-W37',
+            'root_causes':[
+              'ETF_COMPLETENESS_HARDCODED_TO_FIVE_SESSIONS',
+              'EXPERIMENT_REGISTRY_AVAILABILITY_CONFLATED_WITH_OUTCOME_INGESTION_COMPLETENESS'
+            ],
+            'repairs':[
+              'NYSE_CALENDAR_AWARE_ETF_COMPLETENESS',
+              'SEPARATE_REGISTRY_AND_OUTCOME_INGESTION_STATUS',
+              'PERMANENT_REGRESSION_TESTS'
+            ],
+            'w37_preflight_status_after_repair':repaired['packet']['status'],
+            'w37_a44_status_after_repair':next(x['status'] for x in repaired['source_ledgers'] if x['action_id']=='A44'),
+            'w37_expected_etf_sessions':repaired['etf']['weekly']['expected_session_dates'],
+            'authority':{'portfolio_action':False,'canonical_promotion':False},
+          }
+          raw=(json.dumps(receipt,sort_keys=True,separators=(',',':'))+'\n').encode()
+          receipt['receipt_sha256']=hashlib.sha256(raw).hexdigest()
+          Path('research/repairs/2026-09-14_master_monday_precision_repair.json').write_text(json.dumps(receipt,sort_keys=True,separators=(',',':'))+'\n')
+          PY
+          git config user.name framework-repair-agent
+          git config user.email framework-repair-agent@users.noreply.github.com
+          git add scripts/master_monday/build_preflight_package_v3.py \
+                  scripts/master_monday/publish_master_monday_outputs.py \
+                  tests/master_monday/test_weekly_precision_regressions.py \
+                  research/repairs/2026-09-14_master_monday_precision_repair.json
+          git diff --cached --check
+          git commit -m 'fix: harden Master Monday weekly precision accounting'
+          git pull --rebase origin main
+          git push origin HEAD:main
