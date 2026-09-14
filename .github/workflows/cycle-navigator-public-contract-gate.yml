@@ -91,14 +91,17 @@ jobs:
           print(json.dumps({'status':'PASS','issue_scored':scorecard.get('issue_scored'),'completed_iso_week':scorecard.get('completed_iso_week'),'structural_score':scorecard.get('structural_score'),'x_is_downstream_only':True},sort_keys=True))
           PY
 
-      - name: Build public site from canonical CN artifacts
+      - name: Build exact final Pages artifact sequence
         run: |
           set -euo pipefail
           node 05_CYCLE_NAVIGATOR/site/build-public.mjs
+          node 05_CYCLE_NAVIGATOR/site/build-apple-prototype.mjs
+          node 05_CYCLE_NAVIGATOR/site/build-shortcut.mjs
           node 05_CYCLE_NAVIGATOR/site/build-score-bundle.mjs
           node 05_CYCLE_NAVIGATOR/site/build-live-observation.mjs
+          node 05_CYCLE_NAVIGATOR/site/build-social-card.mjs
 
-      - name: Verify public snapshot and live-observation firewall
+      - name: Verify final public artifact and live-observation firewall
         shell: bash
         run: |
           set -euo pipefail
@@ -141,11 +144,20 @@ jobs:
               raise SystemExit('fabricated_live_score_without_eligible_evidence')
 
           index=Path('05_CYCLE_NAVIGATOR/site/dist/index.html').read_text()
-          for script in ('./weekly-score.js','./live-observation.js','./public-copy.js'):
+          required_scripts=('./quiet-production.js','./shortcut.js','./weekly-score.js','./live-observation.js','./public-copy.js')
+          for script in required_scripts:
               if script not in index:
-                  raise SystemExit(f'public_widget_not_injected:{script}')
-          for path in ('05_CYCLE_NAVIGATOR/site/dist/weekly-score.js','05_CYCLE_NAVIGATOR/site/dist/live-observation.js','05_CYCLE_NAVIGATOR/site/dist/public-copy.js'):
+                  raise SystemExit(f'final_public_widget_not_injected:{script}')
+          required_files=(
+              '05_CYCLE_NAVIGATOR/site/dist/weekly-score.js',
+              '05_CYCLE_NAVIGATOR/site/dist/live-observation.js',
+              '05_CYCLE_NAVIGATOR/site/dist/public-copy.js',
+              '05_CYCLE_NAVIGATOR/site/dist/quiet-production.js',
+              '05_CYCLE_NAVIGATOR/site/dist/shortcut.js',
+              '05_CYCLE_NAVIGATOR/site/dist/social-card.png'
+          )
+          for path in required_files:
               if not Path(path).exists():
-                  raise SystemExit(f'public_widget_missing:{path}')
-          print(json.dumps({'status':'PASS','public_score_bundle':'BOUND','live_observation':'FAIL_CLOSED_SAFE'},sort_keys=True))
+                  raise SystemExit(f'final_public_asset_missing:{path}')
+          print(json.dumps({'status':'PASS','final_pages_artifact':'VERIFIED','public_score_bundle':'BOUND','live_observation':'FAIL_CLOSED_SAFE'},sort_keys=True))
           PY
