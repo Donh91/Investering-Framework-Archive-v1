@@ -15,6 +15,27 @@ except ModuleNotFoundError:
     import meme_alpha_url_provenance as url_provenance
 
 
+def _collect_web_queries(response: dict[str, Any]) -> list[str]:
+    queries: list[str] = []
+    for item in response.get("output", []):
+        if not isinstance(item, dict) or item.get("type") not in {"web_search_call", "web_search_preview_call"}:
+            continue
+        action = item.get("action") if isinstance(item.get("action"), dict) else {}
+        query = action.get("query")
+        if isinstance(query, str) and query.strip():
+            queries.append(query.strip())
+        queries_value = action.get("queries")
+        if isinstance(queries_value, list):
+            for value in queries_value:
+                if isinstance(value, str) and value.strip():
+                    queries.append(value.strip())
+    return sorted(dict.fromkeys(queries))
+
+
+def _manifest_sha(value: Any) -> str:
+    return base.sha256_bytes(base.canonical_bytes(value))
+
+
 def analyze(
     task_path: Path,
     policy: dict[str, Any],
@@ -24,17 +45,13 @@ def analyze(
     enable_web: bool,
     model: str | None,
 ) -> dict[str, Any]:
-    """Compatibility hardening for hosted web-search call-count overshoot.
+    """Compatibility hardening for web-call overshoot, provenance and lineage.
 
-    The Responses API is asked for the policy maximum. In production it has
-    occasionally returned one additional web_search_call. That provider-side
-    overshoot must be costed and surfaced, not turn an otherwise valid paid
-    research response into a retry loop. Overshoots beyond the explicit
-    tolerance remain fatal.
-
-    Web provenance is reconciled by canonical URL identity so benign tracking
-    parameters, fragments and trailing slashes cannot cause a retrieved source
-    to be falsely dropped. Host and path identity remain strict.
+    The Responses API is asked for the policy maximum. One provider-side search
+    overshoot may be accepted under policy, fully costed and surfaced. Web source
+    claims are reconciled by canonical URL identity so tracking parameters cannot
+    create false provenance failures. The receipt also freezes policy, prompt,
+    model, query and retrieval lineage needed for prospective research trials.
     """
     task_bytes = task_path.read_bytes()
     task = json.loads(task_bytes)
@@ -66,6 +83,8 @@ def analyze(
     )
     output_dir.mkdir(parents=True, exist_ok=True)
     request_hash = base.sha256_bytes(base.canonical_bytes(request_payload))
+    policy_hash = _manifest_sha(policy)
+    prompt_hash = base.sha256_bytes(str(request_payload.get("instructions") or "").encode("utf-8"))
 
     if dry_run:
         output = {
@@ -84,6 +103,7 @@ def analyze(
         }
         response: dict[str, Any] = {
             "id": "dry-run",
+            "model": selected_model,
             "usage": {"input_tokens": 0, "output_tokens": 0},
             "output": [],
         }
@@ -141,15 +161,27 @@ def analyze(
     if total_cost > hard_cap:
         raise SystemExit(f"single_task_total_cost_exceeded:{total_cost}")
 
+    web_queries = _collect_web_queries(response)
+    query_manifest = {"queries": web_queries}
+    retrieval_manifest = {"urls": sorted(observed_urls)}
+    model_snapshot = str(response.get("model") or selected_model)
+
     receipt = {
         "contract": "MEME_ALPHA_RESEARCH_RECEIPT_v1",
         "task_id": task_id,
         "task_path": str(task_path),
         "input_sha256": task_hash,
         "request_sha256": request_hash,
+        "policy_sha256": policy_hash,
+        "prompt_sha256": prompt_hash,
+        "query_manifest_sha256": _manifest_sha(query_manifest),
+        "retrieval_manifest_sha256": _manifest_sha(retrieval_manifest),
+        "method_version": task.get("method_version"),
+        "method_sha256": task.get("method_sha256"),
         "output_sha256": base.sha256_bytes(base.canonical_bytes(output)),
         "response_id": response.get("id"),
         "model": selected_model,
+        "model_snapshot_or_version": model_snapshot,
         "reasoning_effort": effort,
         "max_output_tokens": max_output_tokens,
         "web_search_enabled": enable_web,
@@ -158,6 +190,7 @@ def analyze(
         "web_search_call_limit_requested": requested_web_calls,
         "web_search_call_overrun_tolerance": overrun_tolerance,
         "web_search_call_overrun": web_overrun,
+        "web_query_count": len(web_queries),
         "input_tokens": input_tokens,
         "output_tokens": output_tokens,
         "estimated_model_cost_usd": model_cost,
@@ -169,7 +202,8 @@ def analyze(
     }
     (output_dir / "output.json").write_bytes(base.canonical_bytes(output))
     (output_dir / "receipt.json").write_bytes(base.canonical_bytes(receipt))
-    (output_dir / "web_sources.json").write_bytes(base.canonical_bytes({"urls": sorted(observed_urls)}))
+    (output_dir / "web_sources.json").write_bytes(base.canonical_bytes(retrieval_manifest))
+    (output_dir / "web_queries.json").write_bytes(base.canonical_bytes(query_manifest))
     return receipt
 
 
