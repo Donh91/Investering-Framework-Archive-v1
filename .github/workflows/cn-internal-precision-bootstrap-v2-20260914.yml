@@ -1,0 +1,90 @@
+name: CN Internal Precision Bootstrap v2 2026-09-14
+
+on:
+  push:
+    branches: [chatgpt/cn-internal-precision-ledger-20260914]
+    paths: ['.github/workflows/cn-internal-precision-bootstrap-v2-20260914.yml']
+
+permissions:
+  contents: write
+
+jobs:
+  bootstrap:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: chatgpt/cn-internal-precision-ledger-20260914
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Capture public identity
+        run: |
+          python - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          root=Path('05_CYCLE_NAVIGATOR/weekly/2026/W38')
+          Path('runtime_public_before.json').write_text(json.dumps({
+            'freeze':hashlib.sha256((root/'CYCLE_NAVIGATOR_FORECAST_FREEZE.json').read_bytes()).hexdigest(),
+            'score':hashlib.sha256((root/'CYCLE_NAVIGATOR_SCORECARD.json').read_bytes()).hexdigest(),
+          },sort_keys=True)+'\n')
+          PY
+      - name: Patch intraday score coverage
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('scripts/cycle_navigator/build_weekly_cycle_navigator.py');t=p.read_text()
+          old='''    calls = freeze.get("structural_calls")\n    if isinstance(calls, list):\n        for index, call in enumerate(calls, start=1):\n            if str(call or "").strip():\n                result.append(f"structural_call_{index}")\n    return result\n'''
+          new='''    calls = freeze.get("structural_calls")\n    if isinstance(calls, list):\n        for index, call in enumerate(calls, start=1):\n            if str(call or "").strip():\n                result.append(f"structural_call_{index}")\n    intraday = freeze.get("intraday_map")\n    if isinstance(intraday, dict):\n        for bucket in ("day_1_2", "day_3_4", "day_5_7"):\n            value = str(intraday.get(bucket) or "").strip()\n            if value and value.upper() != "UNAVAILABLE":\n                result.append(f"intraday_{bucket}")\n    return result\n'''
+          if old not in t: raise SystemExit('builder_anchor_missing')
+          p.write_text(t.replace(old,new,1))
+          PY
+      - name: Test and bootstrap
+        run: |
+          set -euo pipefail
+          python -m py_compile scripts/cycle_navigator/build_internal_precision.py scripts/cycle_navigator/build_weekly_cycle_navigator.py
+          python tests/cycle_navigator/test_internal_precision.py -v
+          python - <<'PY'
+          import importlib.util
+          from pathlib import Path
+          p=Path('scripts/cycle_navigator/build_weekly_cycle_navigator.py');s=importlib.util.spec_from_file_location('cn',p);m=importlib.util.module_from_spec(s);s.loader.exec_module(m)
+          prev={'forecast_freeze':{'ethbtc_condition':'x','breadth_condition':'x','structural_calls':['x'],'intraday_map':{'day_1_2':'x','day_3_4':'UNAVAILABLE','day_5_7':'x'}}}
+          ids=m.expected_score_parameter_ids(prev)
+          assert 'intraday_day_1_2' in ids and 'intraday_day_5_7' in ids and 'intraday_day_3_4' not in ids, ids
+          PY
+          python scripts/cycle_navigator/build_internal_precision.py --repo-root . --pointer 05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json | tee runtime_internal_precision.json
+      - name: Verify immutable public history
+        run: |
+          python - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          before=json.loads(Path('runtime_public_before.json').read_text());root=Path('05_CYCLE_NAVIGATOR/weekly/2026/W38')
+          assert hashlib.sha256((root/'CYCLE_NAVIGATOR_FORECAST_FREEZE.json').read_bytes()).hexdigest()==before['freeze']
+          assert hashlib.sha256((root/'CYCLE_NAVIGATOR_SCORECARD.json').read_bytes()).hexdigest()==before['score']
+          s=json.loads((root/'CYCLE_NAVIGATOR_INTERNAL_PRECISION_SCORECARD.json').read_text())
+          assert s['issue_scored']==25 and s['public_weekly_structural_score']==90.0
+          assert s['mature_parameter_count']==7 and s['accounted_parameter_count']==7 and s['mature_coverage_pct']==100.0
+          assert s['family_scores']['regime']==100.0 and s['family_scores']['rotation']==50.0
+          box=(root/'CYCLE_NAVIGATOR_INTERNAL_PRECISION_BOX.md').read_text()
+          for token in ['Weekly structural 90%','Regime 100%','ETH/BTC 100%','Breadth 100%','Rotation 50%','D1–2 N/A']:
+              assert token in box, token
+          assert len(box.splitlines()) <= 8
+          PY
+      - name: Commit validated code and internal artifacts
+        run: |
+          set -euo pipefail
+          git config user.name framework-cycle-navigator-bot
+          git config user.email framework-cycle-navigator-bot@users.noreply.github.com
+          git add scripts/cycle_navigator/build_weekly_cycle_navigator.py \
+                  05_CYCLE_NAVIGATOR/weekly/2026/W38 \
+                  05_CYCLE_NAVIGATOR/track_record/CN_INTERNAL_PRECISION_LEDGER.jsonl
+          git commit -m 'cycle-navigator: enforce internal precision and intraday accountability'
+          git push origin HEAD:chatgpt/cn-internal-precision-ledger-20260914
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cn-internal-precision-bootstrap-v2-${{ github.run_id }}
+          path: runtime_*.json
+          retention-days: 14
