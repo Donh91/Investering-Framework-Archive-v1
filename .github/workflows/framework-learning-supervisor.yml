@@ -91,8 +91,9 @@ jobs:
           assert q['authority']=='PROPOSAL_ONLY'
           assert p['scientific_status']=='FORECAST_SKILL_UNPROVEN'
           PY
-      - name: Commit learning products with bounded retry
+      - name: Commit learning products with bounded retry and main readback
         run: |
+          set -euo pipefail
           git config user.name 'framework-learning-supervisor[bot]'
           git config user.email 'framework-learning-supervisor@users.noreply.github.com'
           git add research/framework_learning
@@ -105,3 +106,16 @@ jobs:
             sleep $((attempt * 5))
           done
           [ "$pushed" = true ]
+          git fetch origin main
+          for path in \
+            research/framework_learning/LATEST_SUPERVISOR_STATE.json \
+            research/framework_learning/LATEST_MASTER_MONDAY_LEARNING_PACKET.json \
+            research/framework_learning/LATEST_DELEGATION_QUEUE.json
+          do
+            target="/tmp/$(basename "$path")"
+            git show "origin/main:${path}" > "$target"
+            cmp -s "$path" "$target" || {
+              echo "framework_learning_main_readback_mismatch:${path}"
+              exit 1
+            }
+          done
