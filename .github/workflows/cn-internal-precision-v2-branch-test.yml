@@ -1,0 +1,119 @@
+name: CN Internal Precision v2 Branch Test
+
+on:
+  push:
+    branches:
+      - chatgpt/cn-internal-precision-v2-20260914
+    paths:
+      - '.github/workflows/cn-internal-precision-v2-branch-test.yml'
+      - '.github/workflows/cycle-navigator-internal-precision.yml'
+      - 'scripts/cycle_navigator/build_internal_precision.py'
+      - 'scripts/cycle_navigator/validate_internal_precision.py'
+      - 'scripts/cycle_navigator/build_weekly_cycle_navigator.py'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: cn-internal-precision-v2-branch-test
+  cancel-in-progress: false
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: chatgpt/cn-internal-precision-v2-20260914
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Compile all modified Python
+        run: |
+          set -euo pipefail
+          python -m py_compile \
+            scripts/cycle_navigator/build_weekly_cycle_navigator.py \
+            scripts/cycle_navigator/build_internal_precision.py \
+            scripts/cycle_navigator/validate_internal_precision.py
+
+      - name: Verify future CN scorer includes intraday buckets
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import importlib.util
+          p='scripts/cycle_navigator/build_weekly_cycle_navigator.py'
+          spec=importlib.util.spec_from_file_location('cn',p);m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m)
+          freeze={
+            'btc_range_low':None,'btc_range_high':None,'eth_range_low':None,'eth_range_high':None,
+            'ethbtc_condition':'x','breadth_condition':'y','structural_calls':['z'],
+            'intraday_map':{'day_1_2':'a','day_3_4':'UNAVAILABLE','day_5_7':'b'}
+          }
+          got=m.expected_score_parameter_ids({'forecast_freeze':freeze})
+          assert got==['ethbtc_condition','breadth_condition','structural_call_1','intraday_day_1_2','intraday_day_5_7'], got
+          print(got)
+          PY
+
+      - name: Build internal precision from real current archive
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          set -euo pipefail
+          python scripts/cycle_navigator/build_internal_precision.py \
+            --repo-root . \
+            --model gpt-5.6-terra \
+            --max-output-tokens 5000 \
+            | tee runtime_cn_internal_precision_test.json
+
+      - name: Validate internal precision package
+        run: |
+          set -euo pipefail
+          python scripts/cycle_navigator/validate_internal_precision.py \
+            --repo-root . \
+            | tee runtime_cn_internal_precision_validation_test.json
+
+      - name: Guard exact W37 migration semantics
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path('05_CYCLE_NAVIGATOR/weekly/2026/W38')
+          s=json.loads((root/'CYCLE_NAVIGATOR_INTERNAL_PRECISION_SCORECARD.json').read_text())
+          assert s['public_weekly_structural_score']==90.0, s
+          assert s['mature_parameter_count']==7 and s['accounted_parameter_count']==7, s
+          assert s['mature_coverage_pct']==100.0, s
+          assert s['family_scores']=={'altseason':100.0,'breadth':100.0,'ethbtc':100.0,'leadership':100.0,'regime':100.0,'rotation':50.0}, s['family_scores']
+          assert s['mature_long_horizon_awaiting_score_count']==0, s
+          f=json.loads((root/'CYCLE_NAVIGATOR_INTERNAL_PRECISION_FREEZE.json').read_text())
+          assert len(f['claims'])==8, len(f['claims'])
+          assert {'intraday_day_1_2','intraday_day_3_4','intraday_day_5_7','btc_range','eth_range','base_case_4_8_weeks'}.issubset(set(f['unavailable_or_unfrozen']))
+          box=(root/'CYCLE_NAVIGATOR_INTERNAL_PRECISION_BOX.md').read_text().splitlines()
+          assert len(box)==8, box
+          assert 'Rotation 50%' in '\n'.join(box)
+          print('\n'.join(box))
+          PY
+
+      - name: Commit generated current internal package to branch
+        run: |
+          set -euo pipefail
+          git config user.name framework-cycle-navigator-bot
+          git config user.email framework-cycle-navigator-bot@users.noreply.github.com
+          git add 05_CYCLE_NAVIGATOR/weekly/2026/W38 \
+                  05_CYCLE_NAVIGATOR/track_record
+          if git diff --cached --quiet; then
+            echo 'NO_GENERATED_DIFF'
+            exit 1
+          fi
+          git commit -m 'cycle-navigator: materialize W37 internal precision and W38 freeze'
+          git push origin HEAD:chatgpt/cn-internal-precision-v2-20260914
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cn-internal-precision-v2-test-${{ github.run_id }}
+          path: runtime_cn_internal_precision*_test.json
+          retention-days: 14
