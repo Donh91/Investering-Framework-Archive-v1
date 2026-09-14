@@ -29,10 +29,20 @@
     return String(text || '').split(/(?<=[.!?])\s+/).map((part) => part.trim()).find((part) => pattern.test(part)) || '';
   }
 
-  function latestVerified(track) {
+  function verifiedRows(track) {
     return (Array.isArray(track) ? track : [])
-      .filter((row) => String(row?.score_status || '').toUpperCase() === 'REPRODUCIBLE' && Number.isFinite(Number(row?.structural_score)))
-      .at(-1) || null;
+      .filter((row) => String(row?.score_status || '').toUpperCase() === 'REPRODUCIBLE' && Number.isFinite(Number(row?.structural_score)));
+  }
+
+  function latestVerified(track) {
+    return verifiedRows(track).at(-1) || null;
+  }
+
+  function verifiedTrend(track, limit = 3) {
+    return verifiedRows(track)
+      .slice(-limit)
+      .map((row) => `CN #${row.issue_scored} ${Math.round(Number(row.structural_score))}%`)
+      .join(' → ');
   }
 
   function conciseNow(pkg) {
@@ -71,7 +81,7 @@
     }
     if (status === 'RISK_BIAS_ONLY' && horizon.risk_bias) {
       if ($('shortcutDays')) $('shortcutDays').textContent = String(horizon.risk_bias).toUpperCase();
-      if ($('shortcutDaysNote')) $('shortcutDaysNote').textContent = `OFFICIAL CN #${issue} near-term risk bias · not a reconstructed 24–72h price call.`;
+      if ($('shortcutDaysNote')) $('shortcutDaysNote').textContent = `OFFICIAL CN #${issue} · risk bias only · no frozen 24–72h price map.`;
       return;
     }
     if ($('shortcutDays')) $('shortcutDays').textContent = 'NOT PUBLISHED';
@@ -86,6 +96,7 @@
     const active = [...phases].reverse().find((item) => ['ACTIVE', 'ACTIVE WATCH'].includes(phaseState(item.phase)));
     const next = phases.find((item) => phaseState(item.phase) === 'UNCONFIRMED') || phases.find((item) => phaseState(item.phase) === 'ACTIVE WATCH');
     const verified = latestVerified(track);
+    const trend = verifiedTrend(track, 3);
     const openCount = Number(data?.calibration?.current?.frozen_test_count ?? pkg?.forecast_freeze?.structural_calls?.length ?? 0);
 
     if ($('shortcutNow')) $('shortcutNow').textContent = conciseNow(pkg);
@@ -99,7 +110,7 @@
     if ($('shortcutGateNote')) $('shortcutGateNote').textContent = next ? cleanPhase(next.phase) : 'No publishable next-stage window.';
     if ($('shortcutScore')) $('shortcutScore').textContent = verified ? `${Math.round(Number(verified.structural_score))}%` : 'N/A';
     if ($('shortcutScoreNote')) $('shortcutScoreNote').textContent = verified
-      ? `Last verified: CN #${verified.issue_scored}. Current CN #${pkg.issue_number ?? pointer.issue_number ?? '—'}: ${openCount || 'all'} frozen tests still open.`
+      ? `${trend || `CN #${verified.issue_scored} ${Math.round(Number(verified.structural_score))}%`} · Current CN #${pkg.issue_number ?? pointer.issue_number ?? '—'}: ${openCount || 'all'} frozen tests open.`
       : `No reproducible numerical score yet. Current CN #${pkg.issue_number ?? pointer.issue_number ?? '—'} remains open.`;
 
     const unlock = sentenceMatching(pkg.base_case_2_3_weeks, /requires|only if|progress|transmission/i)
