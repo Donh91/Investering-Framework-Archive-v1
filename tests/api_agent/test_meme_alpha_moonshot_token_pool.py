@@ -11,7 +11,7 @@ CONFIG = {
 }
 
 
-def event(token: str, pool: str, *, age: float, liquidity: float, sells: int, volume: float = 0.0) -> dict:
+def event(token: str, pool: str, *, age: float, liquidity: float, sells: int, volume: float = 0.0, buys: int = 10) -> dict:
     return {
         "network": "eth",
         "token_ca": token,
@@ -21,8 +21,10 @@ def event(token: str, pool: str, *, age: float, liquidity: float, sells: int, vo
         "age_minutes": age,
         "liquidity_usd": liquidity,
         "volume_h1_usd": volume,
-        "buys_h1": 10,
+        "buys_h1": buys,
         "sells_h1": sells,
+        "token_role": "base",
+        "token_price_usd": 1.0,
     }
 
 
@@ -46,6 +48,32 @@ class TokenPoolIdentityTests(unittest.TestCase):
         ], CONFIG)
         self.assertEqual(rows[0]["pool_address"], "0xnew")
         self.assertEqual(rows[0]["age_minutes"], 300)
+
+    def test_secondary_pool_activity_cannot_reset_birth_velocity_clock(self) -> None:
+        token = "0x" + "3" * 40
+        rows = collapse_token_pools([
+            event(token, "0xnew", age=5, liquidity=30000, sells=8, buys=60, volume=60000),
+            event(token, "0xold", age=300, liquidity=10000, sells=3, buys=0, volume=0),
+        ], CONFIG)
+        row = rows[0]
+        self.assertEqual(row["age_minutes"], 300)
+        # 60 buys are divided by the token clock capped at 60m, not by the new pool's 5m age.
+        self.assertAlmostEqual(row["buyer_velocity_per_minute"], 1.0)
+        self.assertAlmostEqual(row["transaction_velocity_per_minute"], 71 / 60)
+        self.assertAlmostEqual(row["volume_to_liquidity_h1"], 60000 / 40000)
+        self.assertEqual(row["microstructure_basis"], "TOKEN_AGE_WITH_MULTI_POOL_AGGREGATION")
+
+    def test_canonical_execution_pool_keeps_own_sell_evidence(self) -> None:
+        token = "0x" + "4" * 40
+        rows = collapse_token_pools([
+            event(token, "0xjunk", age=4, liquidity=1000, sells=100, buys=100),
+            event(token, "0xcanon", age=40, liquidity=25000, sells=4, buys=5),
+        ], CONFIG)
+        row = rows[0]
+        self.assertEqual(row["pool_address"], "0xcanon")
+        self.assertEqual(row["sells_h1"], 4)
+        self.assertEqual(row["buys_h1"], 5)
+        self.assertEqual(row["token_aggregate_sells_h1"], 104)
 
     def test_distinct_contracts_never_merge_on_ticker_or_name(self) -> None:
         a = event("0x" + "a" * 40, "0xa", age=10, liquidity=20000, sells=5)

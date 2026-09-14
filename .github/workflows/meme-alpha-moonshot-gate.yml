@@ -4,8 +4,10 @@ on:
   pull_request:
     paths:
       - 'scripts/api_agent/meme_alpha_moonshot_sentinel.py'
+      - 'scripts/api_agent/meme_alpha_moonshot_scan_v2.py'
       - 'scripts/api_agent/meme_alpha_moonshot_token_pool.py'
       - 'tests/api_agent/test_meme_alpha_moonshot_sentinel.py'
+      - 'tests/api_agent/test_meme_alpha_moonshot_scan_v2.py'
       - 'tests/api_agent/test_meme_alpha_moonshot_token_pool.py'
       - 'research/api_agent/meme_alpha/MOONSHOT_SENTINEL_*.json'
       - '.github/workflows/meme-alpha-moonshot-gate.yml'
@@ -27,11 +29,13 @@ jobs:
         run: >-
           python -m py_compile
           scripts/api_agent/meme_alpha_moonshot_sentinel.py
+          scripts/api_agent/meme_alpha_moonshot_scan_v2.py
           scripts/api_agent/meme_alpha_moonshot_token_pool.py
           tests/api_agent/test_meme_alpha_moonshot_sentinel.py
+          tests/api_agent/test_meme_alpha_moonshot_scan_v2.py
           tests/api_agent/test_meme_alpha_moonshot_token_pool.py
       - name: Run focused tests
-        run: python -m unittest tests.api_agent.test_meme_alpha_moonshot_sentinel tests.api_agent.test_meme_alpha_moonshot_token_pool -v
+        run: python -m unittest tests.api_agent.test_meme_alpha_moonshot_sentinel tests.api_agent.test_meme_alpha_moonshot_scan_v2 tests.api_agent.test_meme_alpha_moonshot_token_pool -v
       - name: Validate immutable authority, identity and adaptive bounds
         run: |
           python - <<'PY'
@@ -47,7 +51,12 @@ jobs:
           assert contract['token_origin_gate']['required_before_deep_dive'] is True
           assert contract['token_origin_gate']['required_before_learning_admission'] is True
           assert contract['token_origin_gate']['unknown_is_safe'] is False
+          assert contract['stage0']['target_token_price_captured'] is True
+          assert contract['stage0']['base_quote_semantics_normalized_to_target_token'] is True
+          assert contract['stage0']['token_microstructure_uses_token_age'] is True
+          assert contract['stage0']['canonical_execution_pool_metrics_not_replaced_by_aggregate_metrics'] is True
           assert contract['outcome_learning']['cross_epoch_training_forbidden'] is True
+          assert contract['outcome_learning']['target_token_price_multiple_required'] is True
           assert contract['adaptive_evolution']['enabled'] is True
           assert contract['adaptive_evolution']['code_self_modification'] is False
           assert contract['adaptive_evolution']['automatic_merge'] is False
@@ -66,5 +75,5 @@ jobs:
           assert champion['risk']['average_down'] is False
           assert champion['risk']['leverage'] is False
           assert champion['evolution']['mutation_budget'] <= 2
-          print('MOONSHOT_SENTINEL_IDENTITY_V2_GOVERNANCE_PASS')
+          print('MOONSHOT_SENTINEL_SIGNAL_INTEGRITY_V2_PASS')
           PY

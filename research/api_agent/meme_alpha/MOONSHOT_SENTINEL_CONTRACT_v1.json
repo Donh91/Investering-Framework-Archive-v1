@@ -44,6 +44,15 @@
   "stage0": {
     "model_calls": 0,
     "primary_feed": "GeckoTerminal new pools public API",
+    "scanner_contract": "MOONSHOT_SCAN_BATCH_v2",
+    "target_token_price_captured": true,
+    "target_token_role_captured": true,
+    "base_quote_semantics_normalized_to_target_token": true,
+    "pool_level_base_market_cap_must_not_be_attributed_to_quote_target": true,
+    "token_microstructure_uses_token_age": true,
+    "multi_pool_discovery_metrics_are_aggregated_by_exact_ca": true,
+    "canonical_execution_pool_metrics_not_replaced_by_aggregate_metrics": true,
+    "secondary_pool_may_not_reset_token_birth_clock": true,
     "secondary_feed_classes": [
       "GeckoTerminal top pools by exact token address for origin/canonical-pool resolution",
       "direct Ethereum RPC enrichment",
@@ -63,7 +72,7 @@
       "exact token identity resolved",
       "fresh-token origin gate passed",
       "canonical tradable pool resolved",
-      "successful sell evidence or deterministic sell simulation",
+      "successful target-token sell evidence or deterministic sell simulation",
       "liquidity known",
       "price impact measurable for configured gamble notionals"
     ],
@@ -129,6 +138,7 @@
       "leverage_allowed=false",
       "exact_CA_identity_rule",
       "new_pool_is_not_new_token",
+      "target_token_base_quote_normalization_required",
       "token_origin_gate_required",
       "learning_epoch_isolation_required",
       "missed_winner_audit_required",
@@ -168,9 +178,12 @@
   "outcome_learning": {
     "windows": ["1h", "4h", "24h", "3d", "7d"],
     "required": [
-      "forward_return", "MFE", "MAE", "realizable_return_after_slippage", "sellability",
-      "liquidity_change", "thesis_survival", "alert_state_at_observation"
+      "target_token_price_multiple", "forward_return", "MFE", "MAE",
+      "realizable_return_after_slippage", "sellability", "liquidity_change",
+      "thesis_survival", "alert_state_at_observation"
     ],
+    "target_token_price_multiple_required": true,
+    "base_quote_role_must_be_resolved_at_each_outcome_snapshot": true,
     "missed_winner_audit": true,
     "missed_winner_audit_uses_origin_admitted_stage0_universe": true,
     "cross_epoch_training_forbidden": true
