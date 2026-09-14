@@ -7,6 +7,7 @@ on:
       - "05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json"
       - "05_CYCLE_NAVIGATOR/weekly/**/CYCLE_NAVIGATOR_MACHINE_PACKAGE.json"
       - "05_CYCLE_NAVIGATOR/weekly/**/CYCLE_NAVIGATOR_SCORECARD.json"
+      - "05_CYCLE_NAVIGATOR/weekly/**/CYCLE_NAVIGATOR_INTERNAL_PRECISION_FREEZE.json"
       - ".github/workflows/cycle-navigator-pages.yml"
       - ".github/workflows/cycle-navigator-public-contract-gate.yml"
   push:
@@ -16,6 +17,7 @@ on:
       - "05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json"
       - "05_CYCLE_NAVIGATOR/weekly/**/CYCLE_NAVIGATOR_MACHINE_PACKAGE.json"
       - "05_CYCLE_NAVIGATOR/weekly/**/CYCLE_NAVIGATOR_SCORECARD.json"
+      - "05_CYCLE_NAVIGATOR/weekly/**/CYCLE_NAVIGATOR_INTERNAL_PRECISION_FREEZE.json"
       - ".github/workflows/cycle-navigator-pages.yml"
       - ".github/workflows/cycle-navigator-public-contract-gate.yml"
   workflow_dispatch:
@@ -97,7 +99,11 @@ jobs:
         run: |
           set -euo pipefail
           node 05_CYCLE_NAVIGATOR/site/build-public.mjs
+          node 05_CYCLE_NAVIGATOR/site/build-live-precision.mjs
           node 05_CYCLE_NAVIGATOR/site/build-score-bundle.mjs
+          node 05_CYCLE_NAVIGATOR/site/build-apple-prototype.mjs
+          node 05_CYCLE_NAVIGATOR/site/build-shortcut.mjs
+          node 05_CYCLE_NAVIGATOR/site/validate-live-precision.mjs
 
       - name: Verify public snapshot readback
         shell: bash
@@ -117,10 +123,19 @@ jobs:
                   raise SystemExit(f'public_snapshot_score_mismatch:{key}')
           if 'X is downstream publication only' not in str(snapshot.get('score_authority_note') or ''):
               raise SystemExit('public_snapshot_authority_note_missing')
+          live=((snapshot.get('calibration') or {}).get('current') or {}).get('live_precision') or {}
+          if live.get('authority') != 'OBSERVATION_ONLY_NO_FORECAST_OR_SCORE_AUTHORITY':
+              raise SystemExit('public_snapshot_live_observation_authority_missing')
+          if live.get('provisional_score') is not None:
+              raise SystemExit('public_snapshot_live_observation_created_score')
           if not Path('05_CYCLE_NAVIGATOR/site/dist/weekly-score.js').exists():
               raise SystemExit('weekly_score_widget_missing')
+          if not Path('05_CYCLE_NAVIGATOR/site/dist/live-precision.js').exists():
+              raise SystemExit('live_precision_widget_missing')
           index=Path('05_CYCLE_NAVIGATOR/site/dist/index.html').read_text()
           if './weekly-score.js' not in index:
               raise SystemExit('weekly_score_widget_not_injected')
-          print(json.dumps({'status':'PASS','public_score_bundle':'BOUND'},sort_keys=True))
+          if './live-precision.js' not in index:
+              raise SystemExit('live_precision_widget_not_injected')
+          print(json.dumps({'status':'PASS','public_score_bundle':'BOUND','live_observation':'BOUNDED'},sort_keys=True))
           PY
