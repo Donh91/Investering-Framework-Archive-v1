@@ -1,6 +1,6 @@
 # MASTER MONDAY — 2026-W37
 
-Preflight: **PARTIAL_WITH_EXPLICIT_GAPS**
+Preflight: **FULL_MASTER_MONDAY_INPUT**
 
 API calibration: **SUCCESS**
 
@@ -9,7 +9,7 @@ Experiment registry evidence: **AVAILABLE**
 ## Analysis layer
 
 ```json
-"Shadow-only weekly calibration for ISO week 37: the authoritative final 168-hour market-price path is complete, but the calibration remains DEGRADED because the required completed-week settled ETF sequence is unavailable and outcome ingestion is incomplete, so outcome scoring was not performed. The week was net-negative for BTC and ETH, with a midweek drawdown and partial late-week recovery; ETH/BTC nevertheless rose over the completed week. Latest near-term features and proxy breadth favor elevated pullback/consolidation risk, while positive 72-hour returns, ETH/BTC persistence, neutral CFGI, and mixed microstructure prevent a confirmed breakdown interpretation. Forecast candidates are unratified research objects only; no framework-state, model-weight, threshold, or portfolio implication is made."
+"Shadow-only weekly calibration for ISO week 37: the completed price path supports a volatile pullback/consolidation characterization rather than a clean broad-rotation conclusion. BTC fell about 4.36% and ETH about 1.49% over the authoritative completed week, with the most pronounced decline in the middle two days. ETH nevertheless outperformed BTC materially, with ETH/BTC rising about 3.00% over the week. Recent 24–48 hour weakness and selected OI expansion conflict with a late-week recovery, constructive current BTC microstructure, current 68% proxy breadth, and positive settled weekly ETH ETF flows. The resulting range candidates are unratified research objects, not canonical forecasts, state changes, thresholds, or portfolio instructions."
 ```
 
 ## Operational translation
@@ -25,12 +25,13 @@ Experiment registry evidence: **AVAILABLE**
 
 ```json
 {
-  "status": "UNAVAILABLE_EXPERIMENT_REGISTRY",
+  "status": "INCOMPLETE_EXPERIMENT_OUTCOME_INGESTION",
   "experiment_registry_status": "AVAILABLE",
+  "outcome_ingestion_status": "INCOMPLETE",
   "analysis_layer": {},
   "operational_translation_layer": {},
   "matured_outcome_count": null,
-  "reason": "Experiment registry evidence is unavailable; an unavailable registry cannot be represented as a valid empty matured-outcome set."
+  "reason": "Experiment registry is available, but matured-outcome evidence ingestion is incomplete. This lane is degraded without misreporting the registry itself as unavailable."
 }
 ```
 
