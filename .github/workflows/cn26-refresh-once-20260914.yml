@@ -1,0 +1,127 @@
+name: CN26 Refresh Once 2026-09-14
+
+on:
+  push:
+    branches:
+      - chatgpt/cn26-refresh-trigger-20260914
+    paths:
+      - '.github/workflows/cn26-refresh-once-20260914.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: framework-main-writer
+  cancel-in-progress: false
+
+jobs:
+  refresh-cn26:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: chatgpt/cn26-refresh-trigger-20260914
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Capture immutable pre-refresh identity
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          root=Path('05_CYCLE_NAVIGATOR/weekly/2026/W38')
+          ptr=json.loads(Path('05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json').read_text())
+          score=json.loads((root/'CYCLE_NAVIGATOR_SCORECARD.json').read_text())
+          freeze=root/'CYCLE_NAVIGATOR_FORECAST_FREEZE.json'
+          assert ptr['issue_number']==26, ptr
+          assert ptr['iso_week']==38 and ptr['completed_source_week']==37, ptr
+          assert score['issue_scored']==25 and score['structural_score']==90.0 and score['score_status']=='REPRODUCIBLE', score
+          Path('runtime_cn26_before.json').write_text(json.dumps({
+            'issue_number':ptr['issue_number'],
+            'iso_week':ptr['iso_week'],
+            'completed_source_week':ptr['completed_source_week'],
+            'forecast_freeze_sha256':hashlib.sha256(freeze.read_bytes()).hexdigest(),
+            'scorecard_sha256':hashlib.sha256((root/'CYCLE_NAVIGATOR_SCORECARD.json').read_bytes()).hexdigest(),
+          },sort_keys=True,separators=(',',':'))+'\n')
+          PY
+
+      - name: Enforce monthly API cost guard
+        run: |
+          python scripts/api_agent/check_monthly_cost_guard.py \
+            --receipt-root research/api_agent/outputs \
+            --pending-ledger-root runtime/api-cost-ledger \
+            --hard-stop-usd 20 \
+            --reserve-usd 2.0
+
+      - name: Rebuild CN26 from repaired final Master Monday
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          set -euo pipefail
+          python scripts/cycle_navigator/build_weekly_cycle_navigator.py \
+            --repo-root . \
+            --master-monday-pointer research/api_agent/outputs/weekly/LATEST_MASTER_MONDAY_DELIVERY_POINTER.json \
+            --model gpt-5.6-sol \
+            --max-output-tokens 12000 | tee runtime_cn26_pointer.json
+
+      - name: Fail closed on hindsight rewrite or score drift
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          before=json.loads(Path('runtime_cn26_before.json').read_text())
+          ptr=json.loads(Path('05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json').read_text())
+          root=Path(ptr['week_dir'])
+          score=json.loads((root/'CYCLE_NAVIGATOR_SCORECARD.json').read_text())
+          freeze=root/'CYCLE_NAVIGATOR_FORECAST_FREEZE.json'
+          manifest=json.loads((root/'CYCLE_NAVIGATOR_SOURCE_MANIFEST.json').read_text())
+          mm=Path('research/api_agent/outputs/weekly/LATEST_MASTER_MONDAY_DELIVERY_POINTER.json')
+          mm_sha=hashlib.sha256(mm.read_bytes()).hexdigest()
+          assert ptr['issue_number']==26, ptr
+          assert ptr['iso_week']==38 and ptr['completed_source_week']==37, ptr
+          assert ptr['master_monday_pointer_sha256']==mm_sha, (ptr['master_monday_pointer_sha256'],mm_sha)
+          assert hashlib.sha256(freeze.read_bytes()).hexdigest()==before['forecast_freeze_sha256'], 'FORECAST_FREEZE_CHANGED_HINDSIGHT_REWRITE_FORBIDDEN'
+          assert score['issue_scored']==25 and score['structural_score']==90.0 and score['score_status']=='REPRODUCIBLE', score
+          assert hashlib.sha256((root/'CYCLE_NAVIGATOR_SCORECARD.json').read_bytes()).hexdigest()==before['scorecard_sha256'], 'W37_SCORECARD_DRIFT_FORBIDDEN'
+          assert manifest['master_monday_files']['MASTER_MONDAY_DELIVERY_POINTER.json']==mm_sha, manifest
+          combined='\n'.join([
+            (root/'CYCLE_NAVIGATOR_READABLE.md').read_text(),
+            (root/'CYCLE_NAVIGATOR_X_READY.md').read_text(),
+            (root/'CYCLE_NAVIGATOR_MACHINE_PACKAGE.json').read_text(),
+          ]).lower()
+          forbidden=['settled etf sequence remains unavailable','required completed-w37 settled etf sequence is unavailable']
+          bad=[s for s in forbidden if s in combined]
+          if bad: raise SystemExit('STALE_ETF_GAP_SURVIVED:'+','.join(bad))
+          Path('runtime_cn26_after.json').write_text(json.dumps({
+            'issue_number':26,
+            'iso_week':38,
+            'completed_source_week':37,
+            'forecast_freeze_sha256':before['forecast_freeze_sha256'],
+            'scorecard_sha256':before['scorecard_sha256'],
+            'master_monday_pointer_sha256':mm_sha,
+            'status':'PASS'
+          },sort_keys=True,separators=(',',':'))+'\n')
+          PY
+
+      - name: Commit refreshed same-issue package to branch
+        run: |
+          set -euo pipefail
+          git config user.name framework-cycle-navigator-bot
+          git config user.email framework-cycle-navigator-bot@users.noreply.github.com
+          git add 05_CYCLE_NAVIGATOR/weekly 05_CYCLE_NAVIGATOR/track_record 05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json
+          if git diff --cached --quiet; then echo 'NO_OUTPUT_DIFF'; exit 1; fi
+          git commit -m 'cycle-navigator: refresh CN26 from repaired Master Monday without hindsight drift'
+          git push origin HEAD:chatgpt/cn26-refresh-trigger-20260914
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cn26-refresh-audit-${{ github.run_id }}
+          path: runtime_cn26_*.json
+          retention-days: 14
