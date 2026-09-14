@@ -1,7 +1,7 @@
 {
   "contract": "AUTO_TRADING_HISTORICAL_MARKET_ARCHIVE_RECONCILIATION_CLOSURE_v1",
   "issue": 952,
-  "generated_at_utc": "2026-09-14T18:47:00Z",
+  "generated_at_utc": "2026-09-14T18:45:22Z",
   "public_base_commit": "012c8d9e6a1784116c41c56002fcc5db1c01d878",
   "decision": "P0_RECONCILIATION_ACCEPTANCE_SATISFIED",
   "scope": "DATA_AND_RESEARCH_INTEGRITY_ONLY",
@@ -132,7 +132,8 @@
     },
     {
       "object": "pre-fix AT-EXP-004 stored hourly return/OI-change history",
-      "classification": "UNEXPLAINED_DIFFERENCE_QUARANTINED",
+      "classification": "SYSTEMATIC_DIFFERENCE_EXPLAINED",
+      "status": "QUARANTINED",
       "reason": "Historical derived persistence damage was previously demonstrated; raw source reconciliation does not rehabilitate these derived values."
     },
     {
