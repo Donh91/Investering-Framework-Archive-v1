@@ -11,15 +11,27 @@ def fallback_scorecard(context:dict[str,Any])->dict[str,Any]:
     learning=context.get('experiment_learning') if isinstance(context.get('experiment_learning'),dict) else {}
     registry_status=str(learning.get('status') or 'UNAVAILABLE_CONTEXT')
     matured=learning.get('new_matured_outcomes')
-    evidence_available=(registry_status=='AVAILABLE' and learning.get('matured_outcome_evidence_available') is True and isinstance(matured,list))
-    if not evidence_available:
+    registry_available=(registry_status=='AVAILABLE')
+    evidence_available=(registry_available and learning.get('matured_outcome_evidence_available') is True and isinstance(matured,list))
+    if not registry_available:
         return {
             'status':'UNAVAILABLE_EXPERIMENT_REGISTRY',
             'experiment_registry_status':registry_status,
+            'outcome_ingestion_status':learning.get('outcome_ingestion_status','UNAVAILABLE'),
             'analysis_layer':{},
             'operational_translation_layer':{},
             'matured_outcome_count':None,
             'reason':'Experiment registry evidence is unavailable; an unavailable registry cannot be represented as a valid empty matured-outcome set.',
+        }
+    if not evidence_available:
+        return {
+            'status':'INCOMPLETE_EXPERIMENT_OUTCOME_INGESTION',
+            'experiment_registry_status':registry_status,
+            'outcome_ingestion_status':learning.get('outcome_ingestion_status','INCOMPLETE'),
+            'analysis_layer':{},
+            'operational_translation_layer':{},
+            'matured_outcome_count':None,
+            'reason':'Experiment registry is available, but matured-outcome evidence ingestion is incomplete. This lane is degraded without misreporting the registry itself as unavailable.',
         }
     return {
         'status':'UNAVAILABLE_API_CONTRACT' if matured else 'PENDING_MATURED_OUTCOMES',
