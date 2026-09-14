@@ -75,19 +75,13 @@ def choose_target(resource: dict[str, Any], included: dict[str, dict[str, Any]])
         if address:
             rows.append((address, role, included.get(token_id, {})))
     preferred = [row for row in rows if row[0] not in STABLE_OR_WRAPPED]
+    # Conservative scope: base is preferred when both assets are non-anchor. Quote is selected when base is an anchor.
     selected = preferred[0] if preferred else (rows[0] if rows else None)
     if selected is None:
         return None, None, None, None
     address, role, meta = selected
     attrs = meta.get("attributes") if isinstance(meta.get("attributes"), dict) else {}
     return address, role, str(attrs.get("symbol") or "") or None, str(attrs.get("name") or "") or None
-
-
-def inverse_change_pct(value: Any) -> float:
-    r = number(value) / 100.0
-    if r <= -0.999999:
-        return 0.0
-    return 100.0 * ((1.0 / (1.0 + r)) - 1.0)
 
 
 def normalize_pool(resource: dict[str, Any], included: dict[str, dict[str, Any]], *, now_unix: int | None = None) -> dict[str, Any] | None:
@@ -109,6 +103,7 @@ def normalize_pool(resource: dict[str, Any], included: dict[str, dict[str, Any]]
         buys_h1, sells_h1 = base_buys_h1, base_sells_h1
         buys_m5, sells_m5 = base_buys_m5, base_sells_m5
         price_h1, price_h6 = number(changes.get("h1")), number(changes.get("h6"))
+        price_change_resolved = True
         market_cap = number(attrs.get("market_cap_usd")) or number(attrs.get("fdv_usd"))
         fdv = number(attrs.get("fdv_usd"))
         price_usd = number(attrs.get("base_token_price_usd"))
@@ -116,7 +111,9 @@ def normalize_pool(resource: dict[str, Any], included: dict[str, dict[str, Any]]
         # A base-token buy is economically a quote-token sell and vice versa.
         buys_h1, sells_h1 = base_sells_h1, base_buys_h1
         buys_m5, sells_m5 = base_sells_m5, base_buys_m5
-        price_h1, price_h6 = inverse_change_pct(changes.get("h1")), inverse_change_pct(changes.get("h6"))
+        # Gecko pool price-change fields are base-token oriented. We do not fabricate quote-token USD changes by inversion.
+        price_h1, price_h6 = None, None
+        price_change_resolved = False
         # Pool-level fdv/market-cap fields refer to the base asset, so never misattribute them to a quote target.
         market_cap = 0.0
         fdv = 0.0
@@ -133,6 +130,7 @@ def normalize_pool(resource: dict[str, Any], included: dict[str, dict[str, Any]]
         "token_ca": token_ca,
         "token_role": role,
         "token_price_usd": price_usd,
+        "target_price_change_resolved": price_change_resolved,
         "symbol": symbol,
         "name": name,
         "pool_created_at": attrs.get("pool_created_at"),
@@ -191,6 +189,7 @@ def main() -> int:
         "events": fetch_new_pools(args.network, args.pages),
         "target_token_price_captured": True,
         "base_quote_semantics_normalized": True,
+        "quote_price_change_fails_closed": True,
     }
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_bytes(canonical_bytes(payload))
