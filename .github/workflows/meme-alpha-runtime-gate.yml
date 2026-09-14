@@ -4,7 +4,11 @@ on:
   pull_request:
     paths:
       - 'scripts/api_agent/meme_alpha_runtime.py'
+      - 'scripts/api_agent/meme_alpha_runtime_v1_1.py'
+      - 'scripts/api_agent/meme_alpha_runtime_v1_2.py'
+      - 'scripts/api_agent/meme_alpha_source_auth.py'
       - 'tests/api_agent/test_meme_alpha_runtime.py'
+      - 'tests/api_agent/test_meme_alpha_source_auth.py'
       - 'research/api_agent/meme_alpha/**'
       - '.agents/skills/meme-alpha-supervisor/**'
       - '.github/workflows/meme-alpha-runtime-gate.yml'
@@ -23,10 +27,17 @@ jobs:
         with:
           python-version: '3.12'
       - name: Compile deterministic runtime
-        run: python -m py_compile scripts/api_agent/meme_alpha_runtime.py tests/api_agent/test_meme_alpha_runtime.py
+        run: >-
+          python -m py_compile
+          scripts/api_agent/meme_alpha_runtime.py
+          scripts/api_agent/meme_alpha_runtime_v1_1.py
+          scripts/api_agent/meme_alpha_runtime_v1_2.py
+          scripts/api_agent/meme_alpha_source_auth.py
+          tests/api_agent/test_meme_alpha_runtime.py
+          tests/api_agent/test_meme_alpha_source_auth.py
       - name: Run focused tests
-        run: python -m unittest tests.api_agent.test_meme_alpha_runtime -v
-      - name: Validate policy authority and budget
+        run: python -m unittest tests.api_agent.test_meme_alpha_runtime tests.api_agent.test_meme_alpha_source_auth -v
+      - name: Validate policy authority, budget and source-auth gate
         run: |
           python - <<'PY'
           import json
@@ -44,24 +55,32 @@ jobs:
           assert p['adaptive_development']['may_modify_production_code_directly'] is False
           assert p['adaptive_development']['may_auto_merge'] is False
           assert p['adaptive_development']['codex_is_required_for_research'] is False
+          sa=p['source_authentication']
+          assert sa['enabled'] is True
+          assert sa['minimum_external_trust_anchors'] >= 2
+          assert sa['minimum_independent_anchor_categories'] >= 2
+          assert sa['verified_commit_counts_as_ownership'] is False
+          assert sa['repository_self_description_counts_as_ownership'] is False
+          assert sa['require_high_confidence_onchain_binding_for_token_ca_claim'] is True
+          assert sa['revocation_must_propagate_to_descendants'] is True
           assert all(v is False for v in p['authority'].values())
           print('MEME_ALPHA_RUNTIME_POLICY_PASS')
           PY
-      - name: Dry-run worker smoke
+      - name: Dry-run v1.2 worker smoke
         run: |
           mkdir -p runtime-smoke/private_research/memes_alpha/research_leads runtime-smoke/state runtime-smoke/out
           cat > runtime-smoke/private_research/memes_alpha/research_leads/test.json <<'EOF'
-          {"status":"QUEUED_FOR_INDEPENDENT_REPLAY","priority":"P0","subject":"synthetic wallet provenance smoke"}
+          {"status":"QUEUED_FOR_INDEPENDENT_REPLAY","priority":"P0","subject":"synthetic official GitHub provenance smoke"}
           EOF
           cat > runtime-smoke/state/LATEST_RUNTIME_STATE.json <<'EOF'
           {"contract":"MEME_ALPHA_RUNTIME_STATE_v1","processed_inputs":{},"failure_counts":{}}
           EOF
-          python scripts/api_agent/meme_alpha_runtime.py plan \
+          python scripts/api_agent/meme_alpha_runtime_v1_2.py plan \
             --workspace runtime-smoke \
             --policy research/api_agent/meme_alpha/MEME_ALPHA_RUNTIME_POLICY_v1.json \
             --state runtime-smoke/state/LATEST_RUNTIME_STATE.json \
             --output runtime-smoke/plan.json
-          python scripts/api_agent/meme_alpha_runtime.py analyze \
+          python scripts/api_agent/meme_alpha_runtime_v1_2.py analyze \
             --task runtime-smoke/private_research/memes_alpha/research_leads/test.json \
             --policy research/api_agent/meme_alpha/MEME_ALPHA_RUNTIME_POLICY_v1.json \
             --output-dir runtime-smoke/out \
@@ -71,11 +90,15 @@ jobs:
           from pathlib import Path
           plan=json.loads(Path('runtime-smoke/plan.json').read_text())
           receipt=json.loads(Path('runtime-smoke/out/receipt.json').read_text())
+          output=json.loads(Path('runtime-smoke/out/output.json').read_text())
           assert plan['no_op'] is False
           assert receipt['estimated_model_cost_usd']==0.0
           assert receipt['estimated_web_tool_cost_usd']==0.0
           assert receipt['estimated_total_cost_usd']==0.0
           assert receipt['web_search_call_count']==0
           assert receipt['authority']['portfolio_action'] is False
-          print('MEME_ALPHA_DRY_RUN_PASS')
+          assert receipt['runtime_contract']=='MEME_ALPHA_RUNTIME_v1_2_SOURCE_AUTH'
+          assert receipt['first_party_claim_allowed'] is False
+          assert output['source_authentication']['state']=='CANDIDATE'
+          print('MEME_ALPHA_V1_2_DRY_RUN_PASS')
           PY
