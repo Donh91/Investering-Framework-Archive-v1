@@ -1,0 +1,135 @@
+name: Auto Trading E2 Compiler Reliability
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/experiments/ai_compiler_reliability_e2.py'
+      - 'tests/experiments/test_ai_compiler_reliability_e2.py'
+      - 'research/experiment_lifecycle/e2/requests/AT-E2-COMPILER-RELIABILITY-v2.json'
+      - '.github/workflows/auto-trading-e2-compiler-reliability.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'research/experiment_lifecycle/e2/requests/AT-E2-COMPILER-RELIABILITY-v2.json'
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: deterministic preflight or bounded live compiler reliability gate
+        required: true
+        default: preflight
+        type: choice
+        options: [preflight, live-e2-v2]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: auto-trading-e2-compiler-reliability-v2
+  cancel-in-progress: false
+
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compile bounded E2 v2 harness
+        run: |
+          python -m py_compile \
+            scripts/experiments/ai_compiler_reliability_e2.py \
+            scripts/experiments/ai_compiler_vs_policy_e2.py \
+            scripts/experiments/ai_compiler_vs_policy_e2_hourly_adapter.py \
+            scripts/experiments/agent_handoff_contract.py \
+            tests/experiments/test_ai_compiler_reliability_e2.py
+      - name: Run focused unit and falsifier regressions
+        run: python -m unittest tests.experiments.test_ai_compiler_reliability_e2 -v
+      - name: Run production-data dry preflight without model calls
+        run: |
+          rm -rf /tmp/at-e2-v2-preflight
+          python scripts/experiments/ai_compiler_reliability_e2.py \
+            --request research/experiment_lifecycle/e2/requests/AT-E2-COMPILER-RELIABILITY-v2.json \
+            --repo-root . \
+            --output-dir /tmp/at-e2-v2-preflight \
+            --dry-run
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          r=json.loads(Path('/tmp/at-e2-v2-preflight/result.json').read_text())
+          assert r['contract']=='AUTO_TRADING_E2_COMPILER_RELIABILITY_RESULT_v1'
+          assert r['experiment_id']=='AT-E2-COMPILER-RELIABILITY-v2'
+          assert r['issue']==962
+          assert r['status']=='COMPLETE'
+          assert r['reliability']['structured_output_success_rate']==1.0
+          assert r['reliability']['replayable_rule_admission_rate']==1.0
+          assert r['reliability']['modal_normalized_rule_share']==1.0
+          assert r['api']['compiler_calls']==10
+          assert r['api']['total_cost_usd']==0.0
+          assert r['economic_scoring_performed'] is False
+          assert r['direct_policy_arm_performed'] is False
+          assert r['capital_ready'] is False
+          assert r['no_retroactive_rescore'] is True
+          assert r['no_post_result_prompt_tuning'] is True
+          assert all(v is False for v in r['authority'].values())
+          print('AUTO_TRADING_E2_V2_PREFLIGHT_PASS')
+          PY
+
+  live-e2-v2:
+    needs: preflight
+    if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.mode == 'live-e2-v2')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Execute frozen research-only compiler reliability trial
+        run: |
+          rm -rf /tmp/at-e2-v2-live
+          python scripts/experiments/ai_compiler_reliability_e2.py \
+            --request research/experiment_lifecycle/e2/requests/AT-E2-COMPILER-RELIABILITY-v2.json \
+            --repo-root . \
+            --output-dir /tmp/at-e2-v2-live \
+            | tee /tmp/at-e2-v2-live-summary.log
+      - name: Verify identity, no-economics boundary, authority and cost
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          r=json.loads(Path('/tmp/at-e2-v2-live/result.json').read_text())
+          assert r['contract']=='AUTO_TRADING_E2_COMPILER_RELIABILITY_RESULT_v1'
+          assert r['experiment_id']=='AT-E2-COMPILER-RELIABILITY-v2'
+          assert r['issue']==962
+          assert r['status']=='COMPLETE'
+          assert r['api']['model']=='gpt-5.6-luna'
+          assert r['api']['compiler_calls']==10
+          assert r['api']['total_cost_usd'] <= r['api']['hard_cost_stop_usd'] <= 0.10
+          assert r['economic_scoring_performed'] is False
+          assert r['direct_policy_arm_performed'] is False
+          assert r['capital_ready'] is False
+          assert r['no_retroactive_rescore'] is True
+          assert r['no_post_result_prompt_tuning'] is True
+          assert all(v is False for v in r['authority'].values())
+          print('AUTO_TRADING_E2_V2_LIVE_AUTHORITY_PASS')
+          PY
+      - name: Emit immutable result bytes for retention readback
+        shell: bash
+        run: |
+          echo "E2_V2_RESULT_B64=$(base64 -w0 /tmp/at-e2-v2-live/result.json)"
+          echo "E2_V2_CALLS_B64=$(base64 -w0 /tmp/at-e2-v2-live/calls.jsonl)"
+          echo "E2_V2_DESIGN_B64=$(base64 -w0 /tmp/at-e2-v2-live/design_summary.json)"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: auto-trading-e2-compiler-reliability-v2-${{ github.run_id }}
+          path: |
+            /tmp/at-e2-v2-live/result.json
+            /tmp/at-e2-v2-live/calls.jsonl
+            /tmp/at-e2-v2-live/design_summary.json
+            /tmp/at-e2-v2-live-summary.log
+          retention-days: 30
+          if-no-files-found: error
