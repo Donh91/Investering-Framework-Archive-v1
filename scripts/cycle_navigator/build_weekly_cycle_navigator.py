@@ -75,6 +75,12 @@ def expected_score_parameter_ids(previous_machine: dict[str, Any] | None) -> lis
         for index, call in enumerate(calls, start=1):
             if str(call or "").strip():
                 result.append(f"structural_call_{index}")
+    intraday = freeze.get("intraday_map")
+    if isinstance(intraday, dict):
+        for bucket in ("day_1_2", "day_3_4", "day_5_7"):
+            value = str(intraday.get(bucket) or "").strip()
+            if value and value.upper() != "UNAVAILABLE":
+                result.append(f"intraday_{bucket}")
     return result
 
 
