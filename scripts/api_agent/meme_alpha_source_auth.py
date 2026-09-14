@@ -217,6 +217,18 @@ def _has_high_onchain_binding(packet: dict[str, Any]) -> bool:
     return any(isinstance(row, dict) and row.get("confidence") == "HIGH" and str(row.get("evidence") or "").strip() for row in rows)
 
 
+def _blocked_summary(packet: dict[str, Any]) -> str:
+    subject = str(packet.get("subject") or packet.get("claimed_entity") or "this source").strip()
+    state = str(packet.get("state") or "UNASSESSED")
+    reasons = packet.get("gate_reasons") if isinstance(packet.get("gate_reasons"), list) else []
+    reason_text = ", ".join(str(reason) for reason in reasons) or "SOURCE_AUTHENTICATION_REQUIRED"
+    return (
+        f"Source authentication did not admit first-party provenance for {subject}. "
+        f"State={state}. Gate reasons: {reason_text}. "
+        "Treat discovery evidence as candidate/unverified provenance only; keep any community/CTO thesis separate."
+    )
+
+
 def apply_source_authentication_gate(
     output: dict[str, Any],
     task: dict[str, Any],
@@ -281,9 +293,17 @@ def apply_source_authentication_gate(
     if required and not packet["first_party_claim_allowed"]:
         if output.get("status") == "READY":
             output["status"] = "DEGRADED"
+        uncertainties = output.setdefault("uncertainties", [])
         uncertainty = "SOURCE_AUTHENTICATION_GATE_BLOCKED_FIRST_PARTY_CLAIM"
-        if uncertainty not in output.setdefault("uncertainties", []):
-            output["uncertainties"].append(uncertainty)
+        if uncertainty not in uncertainties:
+            uncertainties.append(uncertainty)
+        if bool(cfg.get("sanitize_unauthenticated_summary", True)):
+            prior_summary = output.get("summary")
+            if isinstance(prior_summary, str) and prior_summary.strip():
+                archived_summary = "MODEL_SUMMARY_PRE_GATE_UNTRUSTED: " + prior_summary.strip()
+                if archived_summary not in uncertainties:
+                    uncertainties.append(archived_summary)
+            output["summary"] = _blocked_summary(packet)
         if bool(cfg.get("sanitize_unauthenticated_first_party_findings", True)):
             kept: list[str] = []
             moved: list[str] = []
@@ -299,7 +319,7 @@ def apply_source_authentication_gate(
             if moved:
                 output["verified_findings"] = kept
                 for item in moved:
-                    output["uncertainties"].append("AUTH_GATED_UNVERIFIED_FIRST_PARTY_CLAIM: " + item)
+                    uncertainties.append("AUTH_GATED_UNVERIFIED_FIRST_PARTY_CLAIM: " + item)
 
     return output
 
