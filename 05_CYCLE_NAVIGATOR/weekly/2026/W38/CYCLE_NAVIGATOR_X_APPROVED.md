@@ -69,8 +69,6 @@ BTC’s main miss was downside, extending roughly $950 below the final lower bou
 
 ETH/BTC strength is holding, but breadth still has not confirmed rotation.
 
-The next step is simple:
-
 **ETH leadership → broader participation → mid-cap transmission**
 
 If breadth expands and survives pullbacks:  
@@ -82,15 +80,13 @@ If ETH stays strong but breadth remains weak:
 If both weaken:  
 → **Pullback / consolidation remains dominant**
 
-Right now:
-
 **Watch transmission, not ETH alone.**
 
 —
 
-⏳ MARKET CYCLE TIMELINE
+⏳ CYCLE TIMELINE
 
-Now: **Volatile consolidation / pullback risk**
+Now: **Volatile consolidation / ETH leadership**
 
 ETA 7-21 days: **Selective ETH + large-cap leadership**
 
@@ -98,56 +94,11 @@ ETA 21-35 days: **Mid-cap transmission if breadth confirms**
 
 ETA 35+ days: **Broader alt expansion if transmission persists**
 
-Final phase: **Parabolic advance → distribution**
-
-—
-
-ALTCOIN CYCLE TIMELINE
-
-Now: **ETH stabilization / leadership**
-
-Next: **ETH + large caps**
-
-Then: **Midcaps**
-
-Later: **Small caps → microcaps**
-
-Broad altseason:
-
-**Countdown remains paused until transmission confirms.**
-
 Expected sequence:
 
 **BTC → ETH → large caps → midcaps → small caps → microcaps**
 
-ETH moved the first part of the sequence forward last week.
-
-Now breadth has to follow.
-
-—
-
-🔍 THE MAIN SIGNAL THIS WEEK
-
-Last week:
-
-**ETH leadership is not altseason.**
-
-This week:
-
-**Relative strength is not rotation until it spreads.**
-
-ETH/BTC ↑ + weak breadth  
-→ Narrow leadership
-
-ETH/BTC ↑ + breadth ↑  
-→ Rotation probability improves
-
-ETH strength + breadth + mid-cap transmission  
-→ Next cycle stage becomes credible
-
-The next confirmation is no longer ETH alone.
-
-**It is transmission.**
+Broad altseason remains paused until transmission confirms.
 
 —
 
@@ -191,31 +142,11 @@ Main expectation:
 
 —
 
-🔭 NEXT 2-3 WEEKS
-
-Selective ETH / large-cap expansion remains the constructive path.
-
-**Prepare for mid-cap deployment if breadth improves and survives pullbacks.**
-
-—
-
-🛰️ NEXT 4-8 WEEKS
-
-Broader rotation remains the constructive path if leadership continues spreading down the market-cap ladder.
-
-**Position for rotation. Protect capital if transmission fails.**
-
-—
-
 🎯 KEY TAKEAWAY
 
-Last week ETH was trying to restart the rotation clock.
+ETH moved the first part of the rotation sequence forward.
 
-It moved.
-
-Now the rest of the market has to follow.
-
-**ETH leadership → breadth expansion → midcaps → small caps → microcaps**
+Now breadth has to follow.
 
 The first stage is developing.
 
