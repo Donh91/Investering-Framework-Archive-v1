@@ -38,7 +38,7 @@ The reproducible record contains a **75% structural score for CN #24** and a **9
 
 BTC and ETH ended W37 net-negative, but their positive 72-hour returns show a partial late-week recovery. ETH/BTC rose over the completed week. That relative persistence, neutral CFGI, and mixed microstructure prevent a confirmed-breakdown interpretation, while weak proxy breadth prevents confirmation of broad rotation.
 
-The settled ETF sequence remains unavailable, and outcome ingestion is incomplete. Those gaps limit confidence and prevent ETF-based conclusions.
+CORRECTION — repaired final Master Monday now contains the calendar-complete W37 settled ETF sequence for all four expected NYSE sessions (2026-09-08 through 2026-09-11): BTC ETF flows totaled -462.7 and ETH ETF flows +196.9 in source-reported units. This evidence correction updates context only; it does not change CN #26's frozen W38 forecast or CN #25's locked 90% W37 structural score. Outcome ingestion remains incomplete.
 
 ## Base case — this week
 

@@ -10,6 +10,8 @@ The unresolved-transition, flat-to-positive ETH/BTC, weak-breadth, and inactive-
 Reproducible structural scores: **CN #24: 75% | CN #25: 90%**. Price-range, decision-utility, cumulative overall, and public-continuity scores remain unavailable; no unsupported average is published.
 
 **CURRENT STATE**
+CORRECTION — repaired final Master Monday now contains the calendar-complete W37 settled ETF sequence for all four expected NYSE sessions (2026-09-08 through 2026-09-11): BTC ETF flows totaled -462.7 and ETH ETF flows +196.9 in source-reported units. This evidence correction updates context only; it does not change CN #26's frozen W38 forecast or CN #25's locked 90% W37 structural score. Outcome ingestion remains incomplete.
+
 Unresolved, volatile consolidation with elevated pullback risk. BTC and ETH ended W37 net-negative but partially recovered late in the week, while ETH/BTC rose. ETH-relative persistence, positive 72-hour returns, neutral CFGI, and mixed microstructure prevent a confirmed-breakdown call; weak breadth prevents broad-rotation confirmation.
 
 **THIS WEEK — BASE CASE**
