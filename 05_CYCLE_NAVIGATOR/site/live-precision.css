@@ -1,0 +1,29 @@
+/* Current-week evidence observer. Never a forecast or score authority. */
+.live-precision-panel{margin-top:12px;padding:22px;overflow:hidden}
+.live-precision-top{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:24px;align-items:start}
+.live-precision-kicker{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.14em;color:var(--muted);font-weight:750;margin-bottom:8px}
+.live-precision-top h3{margin:0;font-size:22px;line-height:1.1;letter-spacing:-.03em}
+.live-precision-top p{margin:8px 0 0;color:var(--muted);font-size:12px;line-height:1.5;max-width:620px}
+.live-precision-count{text-align:right;min-width:104px}
+.live-precision-count strong{display:block;font-size:36px;line-height:1;letter-spacing:-.055em}
+.live-precision-count span{display:block;margin-top:6px;font-size:9px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);font-weight:750}
+.live-precision-meta{display:flex;flex-wrap:wrap;gap:8px 14px;margin:18px 0 12px;padding:12px 0;border-top:1px solid var(--hair);border-bottom:1px solid var(--hair);font-size:10px;line-height:1.45;color:var(--muted)}
+.live-precision-meta span+span::before{content:'•';margin-right:14px;color:var(--hair-strong)}
+.live-precision-tests{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.live-test{border:1px solid var(--hair);border-radius:15px;padding:13px 14px;background:#fff;min-width:0}
+.live-test-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.live-test-head strong{font-size:12px;letter-spacing:-.01em}
+.live-test-status{flex:0 0 auto;font-size:8px;text-transform:uppercase;letter-spacing:.1em;font-weight:800;padding:5px 7px;border-radius:999px;background:#f4f6f8;color:var(--muted)}
+.live-test.positive .live-test-status{background:#f1f8f4;color:#2d6f4f}
+.live-test.negative .live-test-status{background:#fff4f2;color:#9c463e}
+.live-test.proxy .live-test-status{background:#f5f8ff;color:var(--blue)}
+.live-test p{margin:9px 0 0;font-size:10.5px;line-height:1.45;color:var(--muted)}
+.live-empty{padding:18px;border:1px dashed var(--hair-strong);border-radius:15px;color:var(--muted);font-size:11px}
+@media(max-width:700px){
+  .live-precision-panel{padding:18px 16px}
+  .live-precision-top{grid-template-columns:1fr auto;gap:14px}
+  .live-precision-top h3{font-size:19px}
+  .live-precision-count{min-width:72px}.live-precision-count strong{font-size:30px}
+  .live-precision-tests{grid-template-columns:1fr}
+  .live-precision-meta{display:grid;gap:5px}.live-precision-meta span+span::before{content:none;margin:0}
+}
