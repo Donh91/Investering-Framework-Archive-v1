@@ -13,7 +13,7 @@ It is intentionally a presentation and live-context surface, not a new market-st
 3. Live market prices MAY refresh more frequently for context.
 4. Live prices MUST NOT silently change the official weekly state, forecast freeze, structural calls, scorecard, rotation ladder, short-horizon map or altseason countdown.
 5. When the canonical public snapshot is unavailable, the UI may show a clearly bounded embedded fallback, but must label the official feed as unavailable.
-6. If the canonical package status is `DEGRADED`, the public site must expose that status rather than cosmetically hiding it.
+6. If the canonical package status is `DEGRADED`, the public site MUST preserve that semantic as a clear human-facing limited-coverage state. It MAY translate the machine-room token to `LIMITED COVERAGE`, but MUST NOT imply full evidence coverage or fill unavailable inputs.
 7. Numeric forecast ranges must remain absent when the machine package freezes those fields as `null`.
 8. Current production routing follows `00_ARCHIVE_CONTROL/2026-09-14__autonomous-data-authority-transition-v1__canonical.md`. Manual DATA PING is not a prerequisite or default upstream for this site.
 
@@ -38,11 +38,26 @@ Backward-compatible transition rule for an already-published Cycle Navigator iss
 
 This transition adapter is deterministic delivery logic only. It has zero authority to invent, score or promote a new market call.
 
+## Current-week live evidence observation
+
+The site MAY show a current-week evidence check against claims that were already frozen by `CYCLE_NAVIGATOR_INTERNAL_PRECISION_FREEZE_v2`, subject to all of the following firewalls:
+
+- the public contract MUST be `CYCLE_NAVIGATOR_LIVE_PRECISION_OBSERVATION_v1` with authority `OBSERVATION_ONLY_NO_FORECAST_OR_SCORE_AUTHORITY`;
+- the live layer MUST NOT rewrite, replace, settle or promote the frozen CN forecast;
+- the live layer MUST NOT publish a synthetic current-week percentage or overall precision score; `provisional_score` remains `null` until the normal completed-week score authority closes;
+- aliases and correlated duplicate claims MUST NOT be double-counted;
+- direct ETH/BTC checking MAY use the autonomous hourly spot owner only when the exact ISO-week open and a fresh completed spot window are available;
+- rich breadth MAY be surfaced only under its owner semantics as `PROXY_ONLY`; it MUST NOT create canonical breadth, rotation or altseason confirmation;
+- missing, stale or semantically incompatible evidence MUST fail closed as waiting/stale rather than being interpolated or substituted;
+- the browser renders the sanitized observation only and MUST NOT create its own market call from LIVE prices.
+
+The verified weekly `CYCLE_NAVIGATOR_SCORECARD` remains the sole public numerical score authority. The live observation layer is progress visibility, not an early score.
+
 ## Privacy-safe public delivery
 
 The public browser MUST NOT require direct access to the framework repository.
 
-`build-public.mjs` reads the canonical pointer and referenced machine package during deployment and produces `dist/data/latest.json` containing only the fields needed by the public dashboard.
+`build-public.mjs` reads the canonical pointer and referenced machine package during deployment and produces `dist/data/latest.json` containing only the fields needed by the public dashboard. `build-live-precision.mjs` may then append the bounded current-week observation to that same sanitized snapshot before deployment.
 
 The public snapshot MUST NOT expose:
 
@@ -57,6 +72,7 @@ The deployment output is limited to the website assets plus the sanitized public
 ## Refresh cadence
 
 - Live market pulse: approximately every 60 seconds.
+- Bounded current-week evidence observation: rebuilt on the public deployment cadence, including the scheduled approximately three-hour refresh.
 - Public Cycle Navigator snapshot: refreshed whenever the canonical Cycle Navigator publication files change and the hosting platform rebuilds the site.
 - The browser may re-check the same-origin public snapshot approximately every 5 minutes.
 - Official signal cadence: governed by the existing Cycle Navigator publication workflow, not by the site.
@@ -69,12 +85,19 @@ Private/internal authority:
 
 - `05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json`
 - `${week_dir}/CYCLE_NAVIGATOR_MACHINE_PACKAGE.json`
+- `${week_dir}/CYCLE_NAVIGATOR_SCORECARD.json`
 
 Public delivery artifact:
 
 - `/data/latest.json`
 
 The public artifact is a mechanically selected subset of canonical fields. It must never infer or rewrite state.
+
+### Bounded current-week observation layer
+
+Internal inputs are the immutable current CN precision freeze plus autonomous owner evidence. Current supported evidence lanes are direct completed hourly ETH/BTC spot candles and the rich breadth checkpoint under its explicit proxy-only semantics.
+
+Only the sanitized observation object is public. Owner paths, hashes, repository identity and internal run metadata are not public fields.
 
 ### Live context layer
 
@@ -89,7 +112,8 @@ The public release exposes:
 - current official cycle state;
 - live BTC, ETH and ETH/BTC pulse;
 - OFFICIAL `NEXT DAYS` intraday map when published, otherwise an explicitly bounded OFFICIAL risk-bias fallback or `NOT PUBLISHED`;
-- prior-issue reproducible structural score;
+- prior-issue reproducible structural score and verified score history;
+- bounded current-week evidence progress without a synthetic current-week score;
 - this-week base case;
 - 2 to 3 week base case;
 - 4 to 8 week cycle direction when published;
@@ -104,15 +128,25 @@ The public release exposes:
 
 The website can make the weekly report more visual, legible and engaging than the X post, but it must not make the underlying evidence sound more certain than the machine package supports.
 
+Machine-room health tokens should be translated into plain public language when possible, while preserving their evidence-coverage meaning. `DEGRADED` therefore becomes `LIMITED COVERAGE`, never `FULL COVERAGE`.
+
 ## Deployment target
 
 Preferred privacy-preserving production target: a free static host that can build from the private repository and publish only `05_CYCLE_NAVIGATOR/site/dist`.
 
 Current recommended target: Cloudflare Pages free plan with Git integration.
 
-Build command:
+Production build sequence:
 
-`node 05_CYCLE_NAVIGATOR/site/build-public.mjs`
+```sh
+node 05_CYCLE_NAVIGATOR/site/build-public.mjs
+node 05_CYCLE_NAVIGATOR/site/build-live-precision.mjs
+node 05_CYCLE_NAVIGATOR/site/build-score-bundle.mjs
+node 05_CYCLE_NAVIGATOR/site/build-apple-prototype.mjs
+node 05_CYCLE_NAVIGATOR/site/build-shortcut.mjs
+node 05_CYCLE_NAVIGATOR/site/validate-live-precision.mjs
+node 05_CYCLE_NAVIGATOR/site/build-social-card.mjs
+```
 
 Build output directory:
 
