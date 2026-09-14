@@ -57,8 +57,10 @@ class MemeAlphaRuntimeV12HardeningTests(unittest.TestCase):
             valid = self.write_json(
                 root,
                 "private_research/memes_alpha/research_leads/b.json",
-                {"status": "QUEUED", "priority": "P2"},
+                {"status": "QUEUED", "priority": "P3"},
             )
+            legacy_plan = base.build_plan(root, POLICY, {"processed_inputs": {}})
+            self.assertEqual(legacy_plan["selected"]["path"], rejected.relative_to(root).as_posix())
             plan = _build_exact_plan(root, POLICY, {"processed_inputs": {}})
             self.assertFalse(plan["no_op"])
             self.assertEqual(plan["selected"]["path"], valid.relative_to(root).as_posix())
