@@ -24,6 +24,7 @@ FIELDS = {
     "liquidity_resilience": "liquidity_usd",
 }
 MIN_PEERS = 5
+PRE_ORIGIN_CONTRACT = "MOONSHOT_PRE_ORIGIN_EVENT_COHORT_v2"
 
 
 def canonical_bytes(value: Any) -> bytes:
@@ -79,6 +80,12 @@ def peer_indices(events: list[dict[str, Any]], target_index: int) -> tuple[list[
 
 
 def normalize_age_cohorts(events: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Rank exact-CA-collapsed new-pool events by age.
+
+    These percentiles are intentionally *pre-origin*.  A new-pool feed can contain
+    an old token receiving a new pool, so this ranking is a discovery prefilter,
+    never final token-birth truth and never sufficient for adaptive training.
+    """
     output: list[dict[str, Any]] = []
     for index, event in enumerate(events):
         if not isinstance(event, dict):
@@ -92,17 +99,22 @@ def normalize_age_cohorts(events: list[dict[str, Any]]) -> list[dict[str, Any]]:
             for name, source in FIELDS.items()
         }
         row["birth_cohort"] = {
+            "contract": PRE_ORIGIN_CONTRACT,
+            "role": "DISCOVERY_PREFILTER_ONLY",
+            "population": "EXACT_CA_COLLAPSED_NEW_POOL_EVENTS_PRE_ORIGIN",
             "age_bucket": bucket_label(target_bucket),
             "peer_count": len(peer_events),
             "scope": scope,
             "age_comparable": scope != "GLOBAL_FALLBACK_LOW_N",
+            "may_train_adaptive_rules": False,
+            "may_directly_create_user_alert": False,
         }
         output.append(row)
     return output
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Replace Moonshot scan percentiles with age-comparable cohort percentiles.")
+    parser = argparse.ArgumentParser(description="Age-normalize pre-origin Moonshot discovery events.")
     parser.add_argument("--input", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
@@ -111,10 +123,12 @@ def main() -> int:
         raise SystemExit("MOONSHOT_SCAN_BATCH_events_required")
     result = dict(payload)
     result["events"] = normalize_age_cohorts(payload["events"])
-    result["cohort_contract"] = "MOONSHOT_AGE_COHORT_NORMALIZATION_v1"
+    result["cohort_contract"] = PRE_ORIGIN_CONTRACT
+    result["cohort_role"] = "DISCOVERY_PREFILTER_ONLY"
+    result["pre_origin_population_warning"] = "New-pool events can include existing tokens. Origin adjudication is required before learning or alert admission."
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_bytes(canonical_bytes(result))
-    print(json.dumps({"events": len(result["events"]), "cohort_contract": result["cohort_contract"]}, sort_keys=True))
+    print(json.dumps({"events": len(result["events"]), "cohort_contract": result["cohort_contract"], "cohort_role": result["cohort_role"]}, sort_keys=True))
     return 0
 
 
