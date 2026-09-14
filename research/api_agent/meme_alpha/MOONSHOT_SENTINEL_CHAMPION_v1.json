@@ -1,7 +1,7 @@
 {
   "contract": "MOONSHOT_SENTINEL_CHAMPION_v1",
   "status": "ACTIVE_INITIAL_CHAMPION",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "created_at_utc": "2026-09-14T15:42:00Z",
   "method": "interpretable convergence gate; no composite attractiveness score",
   "scanner": {
@@ -12,6 +12,17 @@
     "absolute_minimum_liquidity_usd": 5000,
     "max_candidates_per_scan": 5,
     "max_deep_dives_per_day": 3
+  },
+  "origin_gate": {
+    "contract": "MOONSHOT_TOKEN_ORIGIN_GATE_v2",
+    "required_for_deep_dive": true,
+    "required_for_learning": true,
+    "accepted_status": "FRESH_TOKEN_SUPPORTED",
+    "max_supported_token_age_minutes": 1440,
+    "max_resolution_calls_per_run": 2,
+    "source": "GeckoTerminal top pools by exact token address",
+    "evidence_scope": "top-pool history support; not contract-deployment proof",
+    "existing_token_new_pool_status": "EXISTING_TOKEN_NEW_POOL"
   },
   "birth_cohort_percentile_thresholds": {
     "buyer_velocity": 97.5,
@@ -77,7 +88,7 @@
   },
   "evolution": {
     "generation": 0,
-    "parent_version": null,
+    "parent_version": "1.0.0",
     "mutation_budget": 2,
     "eligible_for_autonomous_research_promotion": true
   }
