@@ -1,0 +1,84 @@
+{
+  "contract": "MOONSHOT_SENTINEL_CHAMPION_v1",
+  "status": "ACTIVE_INITIAL_CHAMPION",
+  "version": "1.0.0",
+  "created_at_utc": "2026-09-14T15:42:00Z",
+  "method": "interpretable convergence gate; no composite attractiveness score",
+  "scanner": {
+    "network": "eth",
+    "new_pool_pages_per_scan": 2,
+    "max_pool_age_minutes": 1440,
+    "minimum_liquidity_usd_for_deep_dive": 12000,
+    "absolute_minimum_liquidity_usd": 5000,
+    "max_candidates_per_scan": 5,
+    "max_deep_dives_per_day": 3
+  },
+  "birth_cohort_percentile_thresholds": {
+    "buyer_velocity": 97.5,
+    "transaction_velocity": 97.5,
+    "volume_to_liquidity": 95.0,
+    "liquidity_resilience": 80.0
+  },
+  "microstructure": {
+    "minimum_successful_sells": 3,
+    "maximum_top10_concentration_pct_when_known": 45.0,
+    "minimum_liquidity_to_fdv_pct_when_known": 3.0,
+    "maximum_one_hour_price_expansion_pct_for_fresh_alert": 500.0,
+    "maximum_six_hour_price_expansion_pct_for_fresh_alert": 1500.0
+  },
+  "convergence": {
+    "minimum_signal_families_for_deep_dive": 2,
+    "minimum_signal_families_for_gamble_alert": 3,
+    "microstructure_required": true,
+    "accepted_gamble_family_sets": [
+      ["M", "S", "W"],
+      ["M", "S", "P"],
+      ["M", "P", "N"],
+      ["M", "W", "N"],
+      ["M", "W", "P"],
+      ["M", "S", "N"]
+    ]
+  },
+  "social": {
+    "minimum_independent_control_roots": 2,
+    "maximum_broad_propagation_saturation_for_fresh_alert": 0.65,
+    "single_kol_is_insufficient": true,
+    "paid_profile_positive_weight": 0
+  },
+  "wallet": {
+    "minimum_independent_quality_wallets": 2,
+    "single_prior_hit_is_smart_money": false,
+    "pre_social_entry_required_for_high_confidence_wallet_signal": true
+  },
+  "product": {
+    "working_product_before_broad_propagation_is_high_value": true,
+    "project_provenance_authentication_required_for_high_confidence": true,
+    "shipping_velocity_windows_hours": [24, 72]
+  },
+  "convexity": {
+    "minimum_remaining_convexity_multiple_for_gamble_alert": 10,
+    "hundred_x_is_feasibility_not_requirement": true
+  },
+  "alert": {
+    "daily_cap": 3,
+    "same_cluster_cooldown_hours": 24,
+    "default_expiry_minutes": 45,
+    "max_entry_market_cap_expansion_from_alert": 2.0,
+    "max_liquidity_deterioration_pct": 25.0,
+    "invalidate_on_sellability_failure": true,
+    "invalidate_on_identity_conflict": true,
+    "invalidate_on_deployer_dump_if_confirmed": true
+  },
+  "risk": {
+    "position_size_output_allowed": false,
+    "automatic_execution": false,
+    "average_down": false,
+    "leverage": false
+  },
+  "evolution": {
+    "generation": 0,
+    "parent_version": null,
+    "mutation_budget": 2,
+    "eligible_for_autonomous_research_promotion": true
+  }
+}
