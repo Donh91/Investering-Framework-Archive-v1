@@ -45,12 +45,24 @@ jobs:
           assert x['live_consumed'] is False
           assert x['scientific_firewall']['forecast_skill']=='UNPROVEN'
           PY
-      - name: Commit shadow observation only
+      - name: Commit shadow observation with bounded retry and main readback
         run: |
+          set -euo pipefail
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add research/framework_intelligence/phase1
           if git diff --cached --quiet; then exit 0; fi
           git commit -m 'research: phase1 framework intelligence live shadow observation'
-          git pull --rebase origin main
-          git push origin HEAD:main
+          pushed=false
+          for attempt in 1 2 3; do
+            git rebase --abort 2>/dev/null || true
+            if git pull --rebase origin main && git push origin HEAD:main; then pushed=true; break; fi
+            sleep $((attempt * 5))
+          done
+          [ "$pushed" = true ]
+          git fetch origin main
+          git show origin/main:research/framework_intelligence/phase1/LATEST.json > /tmp/phase1-main-readback.json
+          cmp -s research/framework_intelligence/phase1/LATEST.json /tmp/phase1-main-readback.json || {
+            echo 'phase1_main_readback_mismatch'
+            exit 1
+          }
