@@ -1,6 +1,6 @@
 ---
 name: meme-alpha-supervisor
-description: 'Operate Meme Alpha Lab as a research-only background subsystem. Use for meme/microcap token cases, contract addresses, wallet forensics, caller/cabal hypotheses, launch replays, smart-money provenance, research queue triage, 24/7 Meme Alpha runtime health, or adaptation of external wallet-intelligence tools. Differentiator: separates discovery from verified on-chain evidence, preserves point-in-time wallet labels, prefers deterministic/free sources before API spend, and routes code findings into existing governed owners instead of creating a parallel engine.'
+description: 'Operate Meme Alpha Lab as a research-only background subsystem. Use for meme/microcap token cases, contract addresses, wallet forensics, caller/cabal hypotheses, launch replays, smart-money provenance, source-authentication, research queue triage, 24/7 Meme Alpha runtime health, or adaptation of external wallet-intelligence tools. Differentiator: separates discovery from source authentication and verified on-chain evidence, preserves point-in-time wallet labels, prefers deterministic/free sources before API spend, and routes code findings into existing governed owners instead of creating a parallel engine.'
 ---
 
 # Meme Alpha Supervisor
@@ -18,7 +18,7 @@ This skill does not own trading, portfolio actions, market rules or canonical pr
 3. Read `research/api_agent/meme_alpha/MEME_ALPHA_RUNTIME_POLICY_v1.json`.
 4. If restricted Meme Alpha material is needed, read `Donh91/secrets/AGENTS.md`, `README.md`, the Meme Alpha runtime contract and only the exact relevant files.
 5. For prospective wallet or event evidence, compose with `prospective-evidence-ledger`.
-6. For claims of edge or promotion, compose with `research-lab-red-team`.
+6. For claims of edge, first-party provenance or promotion, compose with `research-lab-red-team`.
 7. For bounded code defects, use `codex-intake` only after deterministic evidence exists.
 8. Use `archive-governance` before any repository write.
 
@@ -26,9 +26,11 @@ This skill does not own trading, portfolio actions, market rules or canonical pr
 
 ```text
 FREE / DETERMINISTIC FIRST
+DISCOVERY IS NOT AUTHENTICATION
 POINT-IN-TIME BEFORE HINDSIGHT
 SELF-INITIATED TRADE BEFORE ATTRIBUTION
 NEGATIVE CASES BEFORE PERFORMANCE CLAIMS
+ADVERSARIAL SOURCE CHECK BEFORE FIRST-PARTY CLAIM
 ONE BOUNDED TASK PER RUN
 NO CODE AUTHORITY FROM RESEARCH
 NO PORTFOLIO AUTHORITY
@@ -68,6 +70,44 @@ The runtime must:
 - use bounded retries and dead-letter repeated failures;
 - preserve completion receipts and source provenance.
 
+## Source authentication and Easter-egg archaeology
+
+Be aggressive in discovery and hostile in verification.
+
+For new chains, launchpads, protocols and large crypto products, actively search for:
+
+- mascots, examples, test tokens and sample contracts;
+- old commits and deleted/superseded files;
+- SDK examples, docs, metadata and naming conventions;
+- candidate tickers/CAs matching first-party lore;
+- dormant narratives that may later propagate socially.
+
+A discovery hit is only `CANDIDATE`. Never infer first-party ownership from any combination of repository name, self-description, realistic source code, exact CA, commit chronology or GitHub `Verified` signature.
+
+Before `AUTHENTICATED_FIRST_PARTY`, require all applicable controls:
+
+1. at least two independent project-controlled trust anchors external to the source being authenticated;
+2. at least two different anchor categories, such as official website plus official social/docs/domain control;
+3. repository forensics covering owner/account age, author identity/email, fork/clone ancestry, alternate repositories, copied code and timeline consistency;
+4. an adversarial red-team attempt to explain the evidence as a look-alike/spoof;
+5. for exact token/CA claims, HIGH-confidence on-chain binding to authenticated project infrastructure;
+6. no unresolved/blocking red-team finding or repository-forensics blocker.
+
+Source states are:
+
+```text
+NOT_APPLICABLE
+UNASSESSED
+CANDIDATE
+AUTHENTICATED_FIRST_PARTY
+INVALIDATED_FIRST_PARTY
+CONFLICTED
+```
+
+If authentication fails, `first_party_claim_allowed` must be false. Keep community/CTO legitimacy as a separate thesis. A real CTO never inherits official provenance from a spoofed origin story.
+
+If a previously admitted source is invalidated, preserve the failure as a negative/adversarial benchmark and propagate the revocation into descendant research. Do not silently rewrite history. PONSCUPINE is the regression benchmark for this exact failure mode.
+
 ## Wallet and cabal forensics
 
 Never equate token receipt with a voluntary buy.
@@ -97,7 +137,7 @@ A wallet is `PROVISIONAL` until its history is independently supported. Later wa
 
 ## Research output
 
-A qualified run should return:
+A qualified v1.2 run should return:
 
 ```yaml
 status: READY | DEGRADED | BLOCKED
@@ -107,6 +147,15 @@ disconfirming_evidence: []
 uncertainties: []
 wallet_candidates: []
 network_connections: []
+source_authentication:
+  scope: NONE | PROJECT_SOURCE | TOKEN_SOURCE | TOKEN_CA_BINDING | CTO_COMMUNITY
+  state: NOT_APPLICABLE | UNASSESSED | CANDIDATE | AUTHENTICATED_FIRST_PARTY | INVALIDATED_FIRST_PARTY | CONFLICTED
+  first_party_claim_allowed: false
+  external_trust_anchors: []
+  repository_forensics: []
+  onchain_bindings: []
+  red_team_findings: []
+  gate_reasons: []
 source_urls: []
 next_research_steps: []
 development_candidates: []
@@ -117,7 +166,7 @@ Development candidates are proposals only. They may identify a reproducible gap 
 
 ## Relationship to AUTO_TRADING and #908
 
-Meme Alpha discovery/wallet research may run continuously without Codex. Any claim that a wallet/network signal creates repeatable trading edge must enter the existing scientific owner, preserve immutable trial count and point-in-time evidence, and satisfy the leakage and prospective requirements already established under AUTO_TRADING.
+Meme Alpha discovery/wallet research may run continuously without Codex. Any claim that a wallet/network/source signal creates repeatable trading edge must enter the existing scientific owner, preserve immutable trial count and point-in-time evidence, and satisfy the leakage and prospective requirements already established under AUTO_TRADING.
 
 FOMO Radar, STAMPEDE or similar upstream tools are research inputs/benchmarks. Do not copy their thresholds, wallet scores or success claims as truth.
 
@@ -131,6 +180,9 @@ PRIVATE_BINDING_INCOMPLETE
 CREDENTIAL_EXPOSURE_SUSPECTED
 BUDGET_HARD_STOP
 UNTRUSTED_SOURCE_ONLY
+SOURCE_AUTHENTICATION_REQUIRED
+SOURCE_AUTHENTICATION_CONFLICTED
+SOURCE_PROVENANCE_INVALIDATED
 SELLABILITY_UNKNOWN_FOR_POSITIVE_ALPHA_CLAIM
 POINT_IN_TIME_PROVENANCE_MISSING
 REPEATED_RUNTIME_FAILURE
