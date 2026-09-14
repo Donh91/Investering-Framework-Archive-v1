@@ -1,0 +1,52 @@
+{
+  "contract": "AUTO_TRADING_E2_COMPILER_RELIABILITY_REQUEST_v1",
+  "status": "APPROVED_RESEARCH_ONLY",
+  "issue": 962,
+  "experiment_id": "AT-E2-COMPILER-RELIABILITY-v2",
+  "parent_experiment_id": "AT-E2-911-v1",
+  "parent_result_sha256": "53ad7e6b56a9ed24df2ca2285090c8d0967b3836d85a28f2c9e6779628a24168",
+  "frozen_at_utc": "2026-09-14T10:30:00Z",
+  "theory_ids": [
+    "AT-HYP-0004",
+    "AT-HYP-0008"
+  ],
+  "source_root": "03_DAILY_CAPTURE_LOGS/hourly",
+  "cutoff_utc": "2026-09-11T23:00:00Z",
+  "consumed_columns": [
+    "btc_close",
+    "eth_close",
+    "spot_status",
+    "timestamp_utc"
+  ],
+  "design_rows": 120,
+  "evaluation_points": 24,
+  "evaluation_stride_hours": 2,
+  "model": "gpt-5.6-luna",
+  "reasoning_effort": "medium",
+  "compiler_repeats": 10,
+  "compiler_max_output_tokens": 1000,
+  "hard_cost_stop_usd": 0.1,
+  "pre_registered_thresholds": {
+    "structured_output_success_rate": 0.9,
+    "replayable_rule_admission_rate": 0.9,
+    "modal_normalized_rule_share": 0.7
+  },
+  "economic_scoring_enabled": false,
+  "direct_policy_arm_enabled": false,
+  "evaluation_outcomes_hidden_from_ai": true,
+  "failed_and_abandoned_attempts_remain_counted": true,
+  "no_post_result_prompt_tuning": true,
+  "no_retroactive_rescore": true,
+  "identical_primary_payload_required": true,
+  "modal_rule_may_only_seed_new_preregistered_successor": true,
+  "authority": {
+    "automatic_promotion": false,
+    "canonical_effect": false,
+    "exchange_signing": false,
+    "framework_state_change": false,
+    "model_weight_change": false,
+    "order_routing": false,
+    "portfolio_execution": false,
+    "threshold_change": false
+  }
+}
