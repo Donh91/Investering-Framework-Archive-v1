@@ -9,8 +9,10 @@ from typing import Any
 
 try:
     from scripts.api_agent import meme_alpha_runtime as base
+    from scripts.api_agent import meme_alpha_url_provenance as url_provenance
 except ModuleNotFoundError:
     import meme_alpha_runtime as base
+    import meme_alpha_url_provenance as url_provenance
 
 
 def analyze(
@@ -29,6 +31,10 @@ def analyze(
     overshoot must be costed and surfaced, not turn an otherwise valid paid
     research response into a retry loop. Overshoots beyond the explicit
     tolerance remain fatal.
+
+    Web provenance is reconciled by canonical URL identity so benign tracking
+    parameters, fragments and trailing slashes cannot cause a retrieved source
+    to be falsely dropped. Host and path identity remain strict.
     """
     task_bytes = task_path.read_bytes()
     task = json.loads(task_bytes)
@@ -100,11 +106,17 @@ def analyze(
 
     observed_urls = base.collect_urls(response)
     claimed_urls = {x for x in output.get("source_urls", []) if isinstance(x, str)}
-    unsupported_urls = sorted(claimed_urls - observed_urls) if enable_web and not dry_run else []
+    supported_urls, unsupported_urls = (
+        url_provenance.reconcile_source_urls(claimed_urls, observed_urls)
+        if enable_web and not dry_run
+        else (sorted(claimed_urls), [])
+    )
+    if enable_web and not dry_run:
+        output["source_urls"] = supported_urls
     if unsupported_urls:
-        output["source_urls"] = sorted(claimed_urls & observed_urls)
         output.setdefault("uncertainties", []).append(
-            "Dropped source URLs not present in web-search provenance: " + ", ".join(unsupported_urls[:5])
+            "Dropped source URLs not present in web-search provenance after canonical normalization: "
+            + ", ".join(unsupported_urls[:5])
         )
 
     input_tokens, output_tokens = base.usage_of(response)
