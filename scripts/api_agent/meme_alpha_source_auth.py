@@ -168,7 +168,11 @@ def default_source_authentication() -> dict[str, Any]:
 
 
 def task_requires_source_authentication(task: dict[str, Any]) -> bool:
-    text = json.dumps(task, sort_keys=True).lower()
+    # Hydrated private context is supporting evidence, not task intent. Ignoring it
+    # prevents an unrelated wallet task from becoming provenance-gated simply
+    # because an attached file happens to mention GitHub or an official account.
+    intent = {key: value for key, value in task.items() if key != "runtime_hydration"}
+    text = json.dumps(intent, sort_keys=True).lower()
     return any(term in text for term in FIRST_PARTY_TASK_TERMS)
 
 
