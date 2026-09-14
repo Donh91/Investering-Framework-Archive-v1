@@ -63,6 +63,8 @@ jobs:
           assert sa['enabled'] is True
           assert sa['minimum_external_trust_anchors'] >= 2
           assert sa['minimum_independent_anchor_categories'] >= 2
+          assert sa['minimum_independent_control_roots'] >= 2
+          assert sa['require_structured_provenance_claim_types'] is True
           assert sa['verified_commit_counts_as_ownership'] is False
           assert sa['repository_self_description_counts_as_ownership'] is False
           assert sa['require_high_confidence_onchain_binding_for_token_ca_claim'] is True
