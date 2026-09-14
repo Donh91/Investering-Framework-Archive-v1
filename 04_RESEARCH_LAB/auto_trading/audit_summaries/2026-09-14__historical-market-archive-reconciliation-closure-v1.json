@@ -1,0 +1,165 @@
+{
+  "contract": "AUTO_TRADING_HISTORICAL_MARKET_ARCHIVE_RECONCILIATION_CLOSURE_v1",
+  "issue": 952,
+  "generated_at_utc": "2026-09-14T18:47:00Z",
+  "public_base_commit": "012c8d9e6a1784116c41c56002fcc5db1c01d878",
+  "decision": "P0_RECONCILIATION_ACCEPTANCE_SATISFIED",
+  "scope": "DATA_AND_RESEARCH_INTEGRITY_ONLY",
+  "authority": {
+    "research_only": true,
+    "historical_rewrite": false,
+    "retroactive_strategy_rescore": false,
+    "paid_data_expansion": false,
+    "automatic_promotion": false,
+    "canonical_market_authority": false,
+    "portfolio_execution": false,
+    "exchange_signing": false,
+    "order_routing": false
+  },
+  "private_evidence_binding": {
+    "repository": "Donh91/secrets",
+    "current_main_readback_sha": "c5884115e293d40ba6365b67c7fa6373aa11d130",
+    "receipt_path": "receipts/HISTORICAL_ALTSEASON_FREE_HOURLY_PANEL_V1/2026/09/14/2026-09-14__auto_trading_reconciliation_v1.json",
+    "receipt_git_blob_sha": "b133c9bf66b5c8829ad6f4fd37d0c98663c8beee",
+    "raw_values_copied_to_public": false
+  },
+  "inventory": {
+    "public_plane": [
+      {
+        "path": "03_DAILY_CAPTURE_LOGS/hourly/",
+        "role": "CURRENT_AND_HISTORICAL_FRAMEWORK_HOURLY_OWNER",
+        "data_shape": "MIXED_SOURCE_LEVEL_AND_DERIVED_FIELDS",
+        "reconciliation_state": "SOURCE_LEVEL_BTC_ETH_OHLCV_INDEPENDENTLY_VERIFIED_BY_AT_EXP_004__DERIVED_PRE_FIX_RETURN_OI_HISTORY_QUARANTINED",
+        "acquisition_decision": "DO_NOT_DUPLICATE"
+      },
+      {
+        "path": "06_RESEARCH_LAB/blockhorizon_source_candidate_v1/",
+        "role": "PROVIDER_VALUE_FREE_BINDING_AND_RESEARCH_METADATA_FOR_PRIVATE_BLOCKHORIZON_ARCHIVE",
+        "reconciliation_state": "PRIVATE_ARCHIVE_COMPLETE_BUT_NOT_SOURCE_OVERLAP_ADJUDICATED_BY_ISSUE_952",
+        "classification": "INSUFFICIENT_OVERLAP",
+        "acquisition_decision": "DO_NOT_DUPLICATE_EXISTING_PRIVATE_ARCHIVE"
+      }
+    ],
+    "restricted_plane": [
+      {
+        "path": "raw/HISTORICAL_ALTSEASON_FREE_HOURLY_PANEL_V1/",
+        "role": "PRIMARY_HIGH_VALUE_HISTORICAL_HOURLY_PANEL",
+        "source": "BINANCE_VISION_ARCHIVE_FIRST",
+        "data_shape": "RESTRICTED_DERIVED_HOURLY_PANEL_FROM_PUBLIC_BINANCE_KLINES",
+        "classification": "AGREES_WITH_INDEPENDENT_CAPTURE",
+        "acquisition_decision": "AUTHORITATIVE_EXISTING_BYTES__NO_DUPLICATE_BACKFILL"
+      },
+      {
+        "path": "raw/BH01_BLOCKHORIZON_MANUAL_EXPORT_HISTORICAL_V1/",
+        "role": "COMPLETE_PRIVATE_BLOCKHORIZON_RAW_ARCHIVE",
+        "classification": "INSUFFICIENT_OVERLAP",
+        "acquisition_decision": "ARCHIVE_ALREADY_COMPLETE__NO_DUPLICATE_ACQUISITION"
+      },
+      {
+        "path": "raw/CFGI_HISTORICAL_1H_EVENT_STAGE_V1/",
+        "role": "EXISTING_HISTORICAL_MARKET_RESEARCH_SOURCE",
+        "classification": "INSUFFICIENT_OVERLAP",
+        "acquisition_decision": "EXISTS__NO_DUPLICATE_ACQUISITION_WITHOUT_NEW_GAP_PROOF"
+      },
+      {
+        "path": "raw/CFGI_PDLT_HISTORICAL_BOOTSTRAP_V1/",
+        "role": "EXISTING_HISTORICAL_MARKET_RESEARCH_SOURCE",
+        "classification": "INSUFFICIENT_OVERLAP",
+        "acquisition_decision": "EXISTS__NO_DUPLICATE_ACQUISITION_WITHOUT_NEW_GAP_PROOF"
+      },
+      {
+        "path": "raw/SC01_OKX_ETH_OI_HOURLY_V1/",
+        "role": "EXISTING_HISTORICAL_DERIVATIVES_SOURCE",
+        "classification": "INSUFFICIENT_OVERLAP",
+        "acquisition_decision": "EXISTS__NO_DUPLICATE_ACQUISITION_WITHOUT_NEW_GAP_PROOF"
+      },
+      {
+        "path": "raw/SC03_OKX_ETH_REALIZED_FUNDING_V1/",
+        "role": "EXISTING_HISTORICAL_DERIVATIVES_SOURCE",
+        "classification": "INSUFFICIENT_OVERLAP",
+        "acquisition_decision": "EXISTS__NO_DUPLICATE_ACQUISITION_WITHOUT_NEW_GAP_PROOF"
+      },
+      {
+        "path": "raw/SC14_DERIBIT_ETH_TRUE_25D_SKEW_V1/",
+        "role": "EXISTING_HISTORICAL_OPTIONS_SOURCE",
+        "classification": "INSUFFICIENT_OVERLAP",
+        "acquisition_decision": "EXISTS__NO_DUPLICATE_ACQUISITION_WITHOUT_NEW_GAP_PROOF"
+      },
+      {
+        "path": "raw/MAEVE_PUBLIC_LEDGER_RECOVERY_V1/",
+        "role": "EXTERNAL_STRATEGY_ACTION_LEDGER_RECOVERY",
+        "classification": "OUT_OF_SCOPE_FOR_MARKET_SOURCE_OVERLAP",
+        "acquisition_decision": "EXISTS__ROUTE_THROUGH_EXTERNAL_ALPHA_OWNER"
+      }
+    ]
+  },
+  "primary_reconciled_source_family": {
+    "archive_id": "HISTORICAL_ALTSEASON_FREE_HOURLY_PANEL_V1",
+    "restricted_path": "raw/HISTORICAL_ALTSEASON_FREE_HOURLY_PANEL_V1/2026/08/21/",
+    "raw_authority": "PERMANENTLY_ARCHIVED_EXACT_GITHUB_ACTIONS_SOURCE_ARTIFACT",
+    "source_transport": "BINANCE_VISION_ARCHIVE_FIRST",
+    "coverage": {
+      "symbol_count": 35,
+      "row_count": 851882,
+      "timestamp_start_utc": "2020-09-01T01:00:00Z",
+      "timestamp_end_utc": "2026-07-31T23:00:00Z"
+    },
+    "independent_overlap": {
+      "provider": "BINANCE",
+      "transport": "SPOT_API_KLINES_DATABASE",
+      "symbol": "SOLUSDT",
+      "interval": "1h",
+      "date_utc": "2026-07-31",
+      "rows_compared": 24,
+      "timestamp_mismatches": 0,
+      "fields": ["timestamp_ms", "close", "quote_volume", "trade_count", "taker_buy_share"],
+      "max_abs_difference": {
+        "close": 0.0,
+        "quote_volume": 0.0,
+        "trade_count": 0,
+        "taker_buy_share": 0.0
+      },
+      "classification": "AGREES_WITH_INDEPENDENT_CAPTURE"
+    },
+    "source_fields_status": "HISTORICALLY_AND_PROSPECTIVELY_RESEARCH_ADMISSIBLE_WITH_EXISTING_COVERAGE_LIMITS",
+    "derived_fields_status": "NOT_SOURCE_RECONCILED_BY_THIS_RECEIPT__RETAIN_EXISTING_TIME_INTEGRITY_AND_RESEARCH_GATES"
+  },
+  "known_discrepancies_and_quarantines": [
+    {
+      "object": "HISTORICAL_ALTSEASON_FREE_HOURLY_PANEL_V1 retention manifest compressed-member hash",
+      "classification": "SYSTEMATIC_DIFFERENCE_EXPLAINED",
+      "reason": "Original retention manifest contains an incorrect compressed-member SHA while independently redownloaded source artifact, archived bytes and decompressed SHA bind consistently. Original manifest remains immutable and the private append-only correction receipt owns the correction."
+    },
+    {
+      "object": "pre-fix AT-EXP-004 stored hourly return/OI-change history",
+      "classification": "UNEXPLAINED_DIFFERENCE_QUARANTINED",
+      "reason": "Historical derived persistence damage was previously demonstrated; raw source reconciliation does not rehabilitate these derived values."
+    },
+    {
+      "object": "BlockHorizon and other restricted historical source families not independently overlap-checked in #952",
+      "classification": "INSUFFICIENT_OVERLAP",
+      "reason": "Existence/completeness prevents duplicate acquisition but does not confer source-reconciled alpha-evidence status. Each family retains its own owner and gates."
+    }
+  ],
+  "backfill_decision": {
+    "decision": "NO_BULK_BACKFILL",
+    "reason": "The first high-value historical hourly family is already permanently archived and independently reconciled. Other identified historical families already exist in restricted storage; no concrete missing-history set has been proven that justifies duplicate acquisition.",
+    "future_rule": "Acquire only the smallest source-specific missing interval after its owner proves a genuine coverage gap and confirms no authoritative bytes already exist. Prefer free/public sources; paid expansion requires separate authority."
+  },
+  "acceptance": {
+    "public_and_restricted_inventory_explicit": true,
+    "high_value_source_family_independent_overlap_checked": true,
+    "raw_vs_derived_status_explicit": true,
+    "unexplained_discrepancies_fail_closed": true,
+    "smallest_missing_backfill_defined_without_duplication": true,
+    "restricted_raw_values_not_copied_public": true,
+    "durable_reconciliation_receipt_present": true,
+    "all_pass": true
+  },
+  "closure_effect": {
+    "issue_952_p0_archive_reconciliation_blocker": "SATISFIED",
+    "broad_alpha_research": "MAY_RESUME_ONLY_THROUGH_EXISTING_SCIENTIFIC_LIFECYCLE_AND_SEQUENTIAL_QUEUE",
+    "existing_quarantines": "UNCHANGED_UNLESS_SEPARATELY_RECONCILED",
+    "trading_or_capital_authority": "NONE"
+  }
+}
