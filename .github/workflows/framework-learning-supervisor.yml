@@ -107,15 +107,9 @@ jobs:
           done
           [ "$pushed" = true ]
           git fetch origin main
-          for path in \
-            research/framework_learning/LATEST_SUPERVISOR_STATE.json \
-            research/framework_learning/LATEST_MASTER_MONDAY_LEARNING_PACKET.json \
-            research/framework_learning/LATEST_DELEGATION_QUEUE.json
-          do
-            target="/tmp/$(basename "$path")"
-            git show "origin/main:${path}" > "$target"
-            cmp -s "$path" "$target" || {
-              echo "framework_learning_main_readback_mismatch:${path}"
-              exit 1
-            }
-          done
+          git show origin/main:research/framework_learning/LATEST_SUPERVISOR_STATE.json > /tmp/main-LATEST_SUPERVISOR_STATE.json
+          git show origin/main:research/framework_learning/LATEST_MASTER_MONDAY_LEARNING_PACKET.json > /tmp/main-LATEST_MASTER_MONDAY_LEARNING_PACKET.json
+          git show origin/main:research/framework_learning/LATEST_DELEGATION_QUEUE.json > /tmp/main-LATEST_DELEGATION_QUEUE.json
+          cmp -s research/framework_learning/LATEST_SUPERVISOR_STATE.json /tmp/main-LATEST_SUPERVISOR_STATE.json || { echo 'framework_learning_main_readback_mismatch:supervisor_state'; exit 1; }
+          cmp -s research/framework_learning/LATEST_MASTER_MONDAY_LEARNING_PACKET.json /tmp/main-LATEST_MASTER_MONDAY_LEARNING_PACKET.json || { echo 'framework_learning_main_readback_mismatch:master_monday_packet'; exit 1; }
+          cmp -s research/framework_learning/LATEST_DELEGATION_QUEUE.json /tmp/main-LATEST_DELEGATION_QUEUE.json || { echo 'framework_learning_main_readback_mismatch:delegation_queue'; exit 1; }
