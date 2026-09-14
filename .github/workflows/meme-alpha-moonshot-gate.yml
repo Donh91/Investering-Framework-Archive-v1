@@ -4,7 +4,9 @@ on:
   pull_request:
     paths:
       - 'scripts/api_agent/meme_alpha_moonshot_sentinel.py'
+      - 'scripts/api_agent/meme_alpha_moonshot_token_pool.py'
       - 'tests/api_agent/test_meme_alpha_moonshot_sentinel.py'
+      - 'tests/api_agent/test_meme_alpha_moonshot_token_pool.py'
       - 'research/api_agent/meme_alpha/MOONSHOT_SENTINEL_*.json'
       - '.github/workflows/meme-alpha-moonshot-gate.yml'
   workflow_dispatch:
@@ -25,10 +27,12 @@ jobs:
         run: >-
           python -m py_compile
           scripts/api_agent/meme_alpha_moonshot_sentinel.py
+          scripts/api_agent/meme_alpha_moonshot_token_pool.py
           tests/api_agent/test_meme_alpha_moonshot_sentinel.py
+          tests/api_agent/test_meme_alpha_moonshot_token_pool.py
       - name: Run focused tests
-        run: python -m unittest tests.api_agent.test_meme_alpha_moonshot_sentinel -v
-      - name: Validate immutable authority and adaptive bounds
+        run: python -m unittest tests.api_agent.test_meme_alpha_moonshot_sentinel tests.api_agent.test_meme_alpha_moonshot_token_pool -v
+      - name: Validate immutable authority, identity and adaptive bounds
         run: |
           python - <<'PY'
           import json
@@ -36,6 +40,14 @@ jobs:
           contract=json.loads(Path('research/api_agent/meme_alpha/MOONSHOT_SENTINEL_CONTRACT_v1.json').read_text())
           champion=json.loads(Path('research/api_agent/meme_alpha/MOONSHOT_SENTINEL_CHAMPION_v1.json').read_text())
           assert contract['contract']=='MOONSHOT_SENTINEL_CONTRACT_v1'
+          assert contract['learning_epoch']=='MOONSHOT_IDENTITY_EPOCH_v2'
+          assert contract['initial_scope']['scan_interval_minutes']==15
+          assert contract['identity']['new_pool_is_not_new_token'] is True
+          assert contract['identity']['multiple_pools_per_token_expected'] is True
+          assert contract['token_origin_gate']['required_before_deep_dive'] is True
+          assert contract['token_origin_gate']['required_before_learning_admission'] is True
+          assert contract['token_origin_gate']['unknown_is_safe'] is False
+          assert contract['outcome_learning']['cross_epoch_training_forbidden'] is True
           assert contract['adaptive_evolution']['enabled'] is True
           assert contract['adaptive_evolution']['code_self_modification'] is False
           assert contract['adaptive_evolution']['automatic_merge'] is False
@@ -46,10 +58,13 @@ jobs:
           assert contract['gamble_risk']['leverage_allowed'] is False
           assert all(v is False for v in contract['authority'].values())
           assert champion['contract']=='MOONSHOT_SENTINEL_CHAMPION_v1'
+          assert champion['origin_gate']['required_for_deep_dive'] is True
+          assert champion['origin_gate']['required_for_learning'] is True
+          assert champion['origin_gate']['max_resolution_calls_per_run'] <= 2
           assert champion['alert']['daily_cap'] <= 3
           assert champion['risk']['automatic_execution'] is False
           assert champion['risk']['average_down'] is False
           assert champion['risk']['leverage'] is False
           assert champion['evolution']['mutation_budget'] <= 2
-          print('MOONSHOT_SENTINEL_GOVERNANCE_PASS')
+          print('MOONSHOT_SENTINEL_IDENTITY_V2_GOVERNANCE_PASS')
           PY
