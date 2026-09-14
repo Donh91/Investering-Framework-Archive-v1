@@ -52,8 +52,9 @@ class TargetTokenStage0Tests(unittest.TestCase):
         self.assertEqual(event["sells_h1"], 4)
         self.assertEqual(event["market_cap_usd"], 100000.0)
         self.assertEqual(event["price_change_h1_pct"], 25.0)
+        self.assertTrue(event["target_price_change_resolved"])
 
-    def test_quote_target_swaps_transaction_semantics_and_never_steals_base_market_cap(self) -> None:
+    def test_quote_target_swaps_transactions_but_does_not_fabricate_price_change_or_market_cap(self) -> None:
         wrapped = "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
         target = "0x" + "2" * 40
         base_id, quote_id = "eth_" + wrapped, "eth_" + target
@@ -71,8 +72,9 @@ class TargetTokenStage0Tests(unittest.TestCase):
         self.assertEqual(event["sells_m5"], 3)
         self.assertEqual(event["market_cap_usd"], 0.0)
         self.assertEqual(event["fdv_usd"], 0.0)
-        self.assertAlmostEqual(event["price_change_h1_pct"], -20.0, places=6)
-        self.assertAlmostEqual(event["price_change_h6_pct"], -50.0, places=6)
+        self.assertIsNone(event["price_change_h1_pct"])
+        self.assertIsNone(event["price_change_h6_pct"])
+        self.assertFalse(event["target_price_change_resolved"])
 
     def test_same_ticker_does_not_change_exact_ca_target_selection(self) -> None:
         a = "0x" + "a" * 40
