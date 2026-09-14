@@ -1,81 +1,16 @@
-name: Cycle Navigator Precision Hardening V3 Once
+name: Cycle Navigator Precision Hardening V3 Once (Retired)
 
 on:
-  push:
-    paths:
-      - 'research/repairs/cn_precision_hardening_v3_trigger.json'
+  workflow_dispatch:
 
 permissions:
-  contents: write
-
-concurrency:
-  group: framework-main-writer
-  cancel-in-progress: false
+  contents: read
 
 jobs:
-  harden:
+  retired:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: main
-          fetch-depth: 0
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-
-      - name: Reuse already-proven patch logic
-        shell: bash
+      - name: Retired one-time repair
         run: |
-          set -euo pipefail
-          python - <<'PY'
-          from pathlib import Path
-          import textwrap
-          wf=Path('.github/workflows/cycle-navigator-precision-hardening-v2-once.yml').read_text()
-          marker="      - name: Patch Cycle Navigator scoring contract\n"
-          section=wf.split(marker,1)[1].split("      - name: Test exhaustive accountability",1)[0]
-          start=section.index("          python - <<'PY'\n")+len("          python - <<'PY'\n")
-          body=section[start:].rsplit("          PY\n",1)[0]
-          exec(compile(textwrap.dedent(body),'<validated-cn-precision-patch>','exec'))
-          PY
-
-      - name: Run precision and resilience regression tests
-        shell: bash
-        run: |
-          set -euo pipefail
-          python -m pip install --disable-pip-version-check -q pytest
-          python - <<'PY'
-          import importlib.util,json
-          from pathlib import Path
-          root=Path('.')
-          spec=importlib.util.spec_from_file_location('cn_precision',root/'scripts/cycle_navigator/build_weekly_cycle_navigator.py')
-          mod=importlib.util.module_from_spec(spec); assert spec and spec.loader; spec.loader.exec_module(mod)
-          freeze=json.loads((root/'05_CYCLE_NAVIGATOR/weekly/2026/W37/CYCLE_NAVIGATOR_FORECAST_FREEZE.json').read_text())
-          expected=['ethbtc_condition','breadth_condition','structural_call_1','structural_call_2','structural_call_3','structural_call_4','structural_call_5']
-          assert mod.expected_score_parameter_ids({'forecast_freeze':freeze})==expected
-          ranged={'btc_range_low':1,'btc_range_high':2,'eth_range_low':3,'eth_range_high':4,'ethbtc_condition':'x','breadth_condition':'y','structural_calls':['z']}
-          assert mod.expected_score_parameter_ids({'forecast_freeze':ranged})==['btc_range','eth_range','ethbtc_condition','breadth_condition','structural_call_1']
-          PY
-          python -m pytest -q tests/cycle_navigator/test_weekly_publication_resilience.py
-
-      - name: Archive W37 exhaustive parameter coverage
-        shell: bash
-        run: |
-          set -euo pipefail
-          mkdir -p research/repairs
-          cat > research/repairs/2026-09-14_w37_precision_coverage_audit.json <<'JSON'
-          {"authority":"ACCOUNTABILITY_AUDIT_ONLY","completed_iso_week":37,"contract":"CN_WEEKLY_PARAMETER_COVERAGE_AUDIT_v1","existing_structural_score":90.0,"issue_scored":25,"non_forecast_parameters":["btc_range","eth_range"],"parameter_coverage_pct":100.0,"parameter_scores":[{"parameter_id":"ethbtc_condition","score":100.0,"status":"SUPPORTED"},{"parameter_id":"breadth_condition","score":100.0,"status":"SUPPORTED"},{"parameter_id":"structural_call_1","score":100.0,"status":"SUPPORTED"},{"parameter_id":"structural_call_2","score":100.0,"status":"SUPPORTED"},{"parameter_id":"structural_call_3","score":100.0,"status":"SUPPORTED"},{"parameter_id":"structural_call_4","score":50.0,"status":"MIXED"},{"parameter_id":"structural_call_5","score":100.0,"status":"SUPPORTED"}],"note":"Coverage audit does not redefine the archived 90% structural score. It proves every non-null W37 frozen forecast parameter is explicitly accounted for; null BTC/ETH ranges were not forecasts and are excluded from scoring.","score_status":"REPRODUCIBLE","source_scorecard":"05_CYCLE_NAVIGATOR/weekly/2026/W38/CYCLE_NAVIGATOR_SCORECARD.json","source_freeze":"05_CYCLE_NAVIGATOR/weekly/2026/W37/CYCLE_NAVIGATOR_FORECAST_FREEZE.json"}
-          JSON
-
-      - name: Commit hardening
-        shell: bash
-        run: |
-          set -euo pipefail
-          git config user.name framework-repair-agent
-          git config user.email framework-repair-agent@users.noreply.github.com
-          git add scripts/cycle_navigator/build_weekly_cycle_navigator.py research/repairs/2026-09-14_w37_precision_coverage_audit.json
-          git diff --cached --check
-          git commit -m 'fix: make weekly Cycle Navigator scoring exhaustive and idempotent'
-          git pull --rebase origin main
-          git push origin HEAD:main
+          echo "RETIRED: Cycle Navigator precision hardening v3 already completed and is preserved in repository history."
+          echo "No repository writes are performed by this workflow."
