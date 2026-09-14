@@ -1,0 +1,55 @@
+name: Meme Alpha Moonshot Sentinel Gate
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/api_agent/meme_alpha_moonshot_sentinel.py'
+      - 'tests/api_agent/test_meme_alpha_moonshot_sentinel.py'
+      - 'research/api_agent/meme_alpha/MOONSHOT_SENTINEL_*.json'
+      - '.github/workflows/meme-alpha-moonshot-gate.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  moonshot-sentinel-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compile
+        run: >-
+          python -m py_compile
+          scripts/api_agent/meme_alpha_moonshot_sentinel.py
+          tests/api_agent/test_meme_alpha_moonshot_sentinel.py
+      - name: Run focused tests
+        run: python -m unittest tests.api_agent.test_meme_alpha_moonshot_sentinel -v
+      - name: Validate immutable authority and adaptive bounds
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          contract=json.loads(Path('research/api_agent/meme_alpha/MOONSHOT_SENTINEL_CONTRACT_v1.json').read_text())
+          champion=json.loads(Path('research/api_agent/meme_alpha/MOONSHOT_SENTINEL_CHAMPION_v1.json').read_text())
+          assert contract['contract']=='MOONSHOT_SENTINEL_CONTRACT_v1'
+          assert contract['adaptive_evolution']['enabled'] is True
+          assert contract['adaptive_evolution']['code_self_modification'] is False
+          assert contract['adaptive_evolution']['automatic_merge'] is False
+          assert contract['adaptive_evolution']['auto_promotion']['allowed_scope']=='research alert configuration only'
+          assert contract['adaptive_evolution']['challenger_generation']['max_parameter_mutations_per_generation'] <= 2
+          assert contract['initial_scope']['user_alert_daily_cap'] <= 3
+          assert contract['gamble_risk']['automatic_execution'] is False
+          assert contract['gamble_risk']['leverage_allowed'] is False
+          assert all(v is False for v in contract['authority'].values())
+          assert champion['contract']=='MOONSHOT_SENTINEL_CHAMPION_v1'
+          assert champion['alert']['daily_cap'] <= 3
+          assert champion['risk']['automatic_execution'] is False
+          assert champion['risk']['average_down'] is False
+          assert champion['risk']['leverage'] is False
+          assert champion['evolution']['mutation_budget'] <= 2
+          print('MOONSHOT_SENTINEL_GOVERNANCE_PASS')
+          PY
