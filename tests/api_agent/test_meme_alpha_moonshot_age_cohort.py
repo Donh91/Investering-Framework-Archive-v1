@@ -21,6 +21,15 @@ class MoonshotAgeCohortTests(unittest.TestCase):
         self.assertGreater(old["birth_cohort_percentiles"]["buyer_velocity"],80)
         self.assertNotEqual(young["birth_cohort"]["age_bucket"],old["birth_cohort"]["age_bucket"])
 
+    def test_pre_origin_cohort_is_explicitly_discovery_only(self) -> None:
+        events=[{"age_minutes":5+i,"buyer_velocity_per_minute":1+i,"transaction_velocity_per_minute":2+i,"volume_to_liquidity_h1":.1+i,"liquidity_usd":10000+i} for i in range(5)]
+        row=normalize_age_cohorts(events)[0]
+        meta=row["birth_cohort"]
+        self.assertEqual(meta["contract"],"MOONSHOT_PRE_ORIGIN_EVENT_COHORT_v2")
+        self.assertEqual(meta["role"],"DISCOVERY_PREFILTER_ONLY")
+        self.assertFalse(meta["may_train_adaptive_rules"])
+        self.assertFalse(meta["may_directly_create_user_alert"])
+
     def test_sparse_bucket_expands_to_neighbors_without_pretending_exact(self) -> None:
         events=[
             {"age_minutes":5,"buyer_velocity_per_minute":5,"transaction_velocity_per_minute":5,"volume_to_liquidity_h1":1,"liquidity_usd":10000},
