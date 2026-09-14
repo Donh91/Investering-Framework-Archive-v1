@@ -14,41 +14,54 @@ Evaluate whether the proposed Framework Intelligence & Learning Loop adds materi
 
 Evaluate ISO weeks W33, W34, W35, W36 and W37 of 2026.
 
-Each week MUST be reconstructed using a strict point-in-time cutoff. Evidence created after the historical Master Monday decision cutoff for that week is forbidden for that week's simulation, except when explicitly used in a later outcome-audit stage that is separately labelled and never fed back into the simulated decision.
+## Dual-cutoff rule
+
+Each simulated week has two distinct cutoffs:
+
+1. `market_evidence_cutoff_utc` — freezes the market/research evidence set. No new market observation, outcome, candidate firing, daily capture, ETF observation, macro observation, price movement or other factual evidence after this timestamp may influence the simulated weekly interpretation.
+2. `processing_cutoff_utc` — allows later deterministic or agentic processing of the already-frozen eligible inputs so the proposed future Monday ordering can be tested. A processing artifact created after the market cutoff is eligible only if its complete material input set is provably bound to evidence at or before the market cutoff and it introduces no post-cutoff factual evidence.
+
+If that input binding cannot be proven, the later processing artifact is `NOT_EVALUABLE` for that historical simulation.
+
+Later realized outcomes may be attached only after the simulated decision is frozen and only in a separate outcome-audit appendix.
 
 ## Required evidence classes
 
 Every consumed item MUST be classified as one of:
 
-- NOW_CURRENT_AT_CUTOFF
+- NOW_CURRENT_AT_MARKET_CUTOFF
 - RETROSPECTIVE_DESCRIPTIVE
 - LEGACY_RESEARCH_CONTEXT
 - PRE_PREREGISTRATION_PROSPECTIVE
 - PROSPECTIVE_SHADOW
 - CONFIRMATORY_ELIGIBLE
-- OUTCOME_ONLY_POST_CUTOFF
+- PROCESSING_ONLY_POST_MARKET_CUTOFF
+- OUTCOME_ONLY_POST_DECISION
 
-OUTCOME_ONLY_POST_CUTOFF evidence MUST NOT enter the simulated Master Monday decision.
+`PROCESSING_ONLY_POST_MARKET_CUTOFF` may influence the simulation only when its inputs are hash/time-bound to the frozen evidence set. `OUTCOME_ONLY_POST_DECISION` MUST NOT enter the simulated decision.
 
 ## Required simulation chain
 
 For each week:
 
-1. Resolve the exact original Master Monday evidence cutoff and original delivery artifact.
-2. Resolve only artifacts that existed at or before that cutoff.
-3. Reconstruct a duplicate-adjusted hypothesis-family memory from eligible evidence.
-4. Build a Range Lab state from eligible range candidates/outcomes available at the cutoff.
-5. Build a contradiction state separating horizon, regime, evidence-class and source-quality conflicts.
-6. Run a Master Monday Consultation Gate with bounded questions only.
-7. Produce a consultation-augmented shadow interpretation.
-8. Compare the shadow interpretation with the original Master Monday using process-quality metrics, not future price correctness.
-9. After the simulated decision is frozen, attach later outcomes only for an outcome-audit appendix.
+1. Resolve the original frozen weekly market evidence and original Master Monday delivery artifact.
+2. Set the market evidence cutoff from the frozen point-in-time chain, not from later outcomes.
+3. Resolve candidate/adjudication/learning artifacts available for a hypothetical later Monday processing window.
+4. Prove that any post-market-cutoff processing artifact is bound only to frozen eligible inputs; otherwise exclude it.
+5. Reconstruct duplicate-adjusted hypothesis-family memory from eligible evidence.
+6. Build a Range Lab state from eligible range evidence.
+7. Build a contradiction state separating horizon, regime, evidence-class and source-quality conflicts.
+8. Run a Master Monday Consultation Gate with bounded questions only.
+9. Produce a consultation-augmented shadow interpretation.
+10. Compare the shadow interpretation with the original Master Monday using process-quality metrics, not future price correctness.
+11. After the simulated decision is frozen, attach later outcomes only for a separate outcome-audit appendix.
 
 ## Point-in-time firewall
 
 Forbidden:
 
 - reading a later-week learning state and pretending it existed earlier;
+- using new post-cutoff market observations merely because a processing job ran later Monday;
 - reconstructing a forecast after observing its outcome;
 - changing thresholds to improve historical fit;
 - treating semantic duplicates as independent support;
@@ -56,9 +69,11 @@ Forbidden:
 - promoting retrospective descriptive evidence to prospective skill;
 - changing the original historical Master Monday output.
 
+When provenance is ambiguous, classify `NOT_EVALUABLE` rather than infer.
+
 ## Consultation Gate
 
-The simulated Master Monday may ask only bounded questions whose inputs are already eligible at the cutoff, for example:
+The simulated Master Monday may ask only bounded questions whose factual inputs are eligible at the market cutoff, for example:
 
 - Has this sequence appeared in prior eligible evidence?
 - Is current ETHBTC strength supported by breadth/transmission history?
@@ -81,7 +96,7 @@ The consultation gate has no authority to modify canonical rules, thresholds, mo
 
 ## Specialist simulation roles
 
-The Phase 0 simulation should emulate bounded specialist roles where evidence exists:
+Where evidence exists, emulate bounded specialist roles:
 
 - Sequence & Regime Analyst
 - Range Lab Analyst
@@ -115,10 +130,10 @@ Maximum: 20 points per week.
 
 Mandatory hard gates:
 
-- ZERO FUTURE LEAKAGE
-- ZERO RETROSPECTIVE FORECAST CREATION
-- ZERO SILENT CANONICAL PROMOTION
-- ZERO DUPLICATE-EVIDENCE INFLATION
+- ZERO FUTURE_MARKET_LEAKAGE
+- ZERO RETROSPECTIVE_FORECAST_CREATION
+- ZERO SILENT_CANONICAL_PROMOTION
+- ZERO DUPLICATE_EVIDENCE_INFLATION
 
 Any hard-gate failure makes the week's result FAIL regardless of score.
 
@@ -130,7 +145,7 @@ Phase 0 may progress to live parallel shadow only if:
 - median weekly score >= 16/20;
 - no week scores below 14/20;
 - at least three of five weeks show material analytical improvement over the original weekly process OR explicitly demonstrate that no additional consultation was useful;
-- the simulation identifies no unbounded compute path;
+- no unbounded compute path is identified;
 - all proposed methodology improvements remain proposal-only.
 
 Otherwise status is NEEDS_FIX and Phase 1 is blocked.
@@ -159,4 +174,4 @@ Final Phase 0 verdict MUST be exactly one of:
 
 ## Operating principle
 
-The simulation is designed to test whether the framework can use more of what it already knows without becoming more confident than its evidence justifies.
+Test whether the framework can use more of what it already knew at the historical market cutoff without becoming more confident than the evidence justified.
