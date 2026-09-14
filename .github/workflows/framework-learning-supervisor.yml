@@ -1,0 +1,107 @@
+name: Framework Learning Supervisor
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/framework-learning-supervisor.yml'
+      - 'scripts/framework_intelligence/framework_learning_supervisor.py'
+      - 'tests/framework_intelligence/test_framework_learning_supervisor.py'
+      - '00_FMOS/FRAMEWORK_INTELLIGENCE_AND_LEARNING_LOOP_v1.md'
+  schedule:
+    - cron: '35 4 * * *'
+      timezone: 'Europe/Copenhagen'
+    - cron: '35 9 * * 1'
+      timezone: 'Europe/Copenhagen'
+  workflow_dispatch:
+
+concurrency:
+  group: framework-main-writer
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compile supervisor
+        run: python -m py_compile scripts/framework_intelligence/framework_learning_supervisor.py
+      - name: Run supervisor tests
+        run: python -m unittest discover -s tests/framework_intelligence -p 'test_framework_learning_supervisor.py' -v
+      - name: Dry-run current repository state
+        run: |
+          rm -rf runtime/framework-learning-supervisor
+          python scripts/framework_intelligence/framework_learning_supervisor.py \
+            --repo-root . \
+            --output-root runtime/framework-learning-supervisor
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path('runtime/framework-learning-supervisor')
+          s=json.loads((root/'LATEST_SUPERVISOR_STATE.json').read_text())
+          p=json.loads((root/'LATEST_MASTER_MONDAY_LEARNING_PACKET.json').read_text())
+          q=json.loads((root/'LATEST_DELEGATION_QUEUE.json').read_text())
+          assert s['canonical_effect'] is False
+          assert s['portfolio_execution'] is False
+          assert s['master_monday_live_influence'] is False
+          assert p['live_consumption_allowed'] is False
+          assert q['authority']=='PROPOSAL_ONLY'
+          PY
+
+  operate:
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate supervisor firewall
+        run: |
+          python -m py_compile scripts/framework_intelligence/framework_learning_supervisor.py
+          python -m unittest discover -s tests/framework_intelligence -p 'test_framework_learning_supervisor.py' -v
+      - name: Build persistent learning products
+        run: |
+          python scripts/framework_intelligence/framework_learning_supervisor.py \
+            --repo-root . \
+            --output-root research/framework_learning
+      - name: Assert advisory-only authority
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path('research/framework_learning')
+          s=json.loads((root/'LATEST_SUPERVISOR_STATE.json').read_text())
+          p=json.loads((root/'LATEST_MASTER_MONDAY_LEARNING_PACKET.json').read_text())
+          q=json.loads((root/'LATEST_DELEGATION_QUEUE.json').read_text())
+          assert s['canonical_effect'] is False
+          assert s['portfolio_execution'] is False
+          assert s['master_monday_live_influence'] is False
+          assert p['live_consumption_allowed'] is False
+          assert q['authority']=='PROPOSAL_ONLY'
+          assert p['scientific_status']=='FORECAST_SKILL_UNPROVEN'
+          PY
+      - name: Commit learning products with bounded retry
+        run: |
+          git config user.name 'framework-learning-supervisor[bot]'
+          git config user.email 'framework-learning-supervisor@users.noreply.github.com'
+          git add research/framework_learning
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "research: refresh framework learning supervisor ${GITHUB_RUN_ID}"
+          pushed=false
+          for attempt in 1 2 3; do
+            git rebase --abort 2>/dev/null || true
+            if git pull --rebase origin main && git push origin HEAD:main; then pushed=true; break; fi
+            sleep $((attempt * 5))
+          done
+          [ "$pushed" = true ]
