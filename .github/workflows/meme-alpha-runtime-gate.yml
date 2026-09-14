@@ -11,6 +11,7 @@ on:
       - 'scripts/api_agent/meme_alpha_url_provenance.py'
       - 'tests/api_agent/test_meme_alpha_runtime.py'
       - 'tests/api_agent/test_meme_alpha_runtime_v1_1.py'
+      - 'tests/api_agent/test_meme_alpha_runtime_v1_2_hardening.py'
       - 'tests/api_agent/test_meme_alpha_source_auth.py'
       - 'tests/api_agent/test_meme_alpha_prospective.py'
       - 'tests/api_agent/test_meme_alpha_url_provenance.py'
@@ -42,6 +43,7 @@ jobs:
           scripts/api_agent/meme_alpha_url_provenance.py
           tests/api_agent/test_meme_alpha_runtime.py
           tests/api_agent/test_meme_alpha_runtime_v1_1.py
+          tests/api_agent/test_meme_alpha_runtime_v1_2_hardening.py
           tests/api_agent/test_meme_alpha_source_auth.py
           tests/api_agent/test_meme_alpha_prospective.py
           tests/api_agent/test_meme_alpha_url_provenance.py
@@ -50,6 +52,7 @@ jobs:
           python -m unittest
           tests.api_agent.test_meme_alpha_runtime
           tests.api_agent.test_meme_alpha_runtime_v1_1
+          tests.api_agent.test_meme_alpha_runtime_v1_2_hardening
           tests.api_agent.test_meme_alpha_source_auth
           tests.api_agent.test_meme_alpha_prospective
           tests.api_agent.test_meme_alpha_url_provenance
