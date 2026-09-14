@@ -57,12 +57,22 @@ def latest_previous_cn(repo: Path) -> tuple[int, str | None, dict[str, Any] | No
 
 def output_schema() -> dict[str, Any]:
     nullable_num = {"type": ["number", "null"]}
+    intraday_schema = {
+        "type": "object",
+        "additionalProperties": False,
+        "required": ["day_1_2", "day_3_4", "day_5_7"],
+        "properties": {
+            "day_1_2": {"type": "string"},
+            "day_3_4": {"type": "string"},
+            "day_5_7": {"type": "string"},
+        },
+    }
     return {
         "type": "object",
         "additionalProperties": False,
         "required": [
             "status", "issue_number", "previous_issue_number", "market_state",
-            "evaluation", "base_case_this_week", "base_case_2_3_weeks",
+            "evaluation", "base_case_this_week", "base_case_2_3_weeks", "base_case_4_8_weeks",
             "altseason_countdown", "rotation_ladder", "forecast_freeze",
             "readable_markdown", "x_ready_markdown", "uncertainties"
         ],
@@ -87,6 +97,7 @@ def output_schema() -> dict[str, Any]:
             },
             "base_case_this_week": {"type": "string"},
             "base_case_2_3_weeks": {"type": "string"},
+            "base_case_4_8_weeks": {"type": "string"},
             "altseason_countdown": {
                 "type": "array", "minItems": 4,
                 "items": {"type": "object", "additionalProperties": False, "required": ["phase", "window"], "properties": {"phase": {"type": "string"}, "window": {"type": "string"}}}
@@ -97,7 +108,7 @@ def output_schema() -> dict[str, Any]:
             },
             "forecast_freeze": {
                 "type": "object", "additionalProperties": False,
-                "required": ["scoring_contract", "btc_range_low", "btc_range_high", "eth_range_low", "eth_range_high", "ethbtc_condition", "breadth_condition", "structural_calls", "forecast_horizon_days"],
+                "required": ["scoring_contract", "btc_range_low", "btc_range_high", "eth_range_low", "eth_range_high", "ethbtc_condition", "breadth_condition", "structural_calls", "forecast_horizon_days", "intraday_map"],
                 "properties": {
                     "scoring_contract": {"type": "string", "const": "CN_PUBLIC_CONTINUITY_v1"},
                     "btc_range_low": nullable_num, "btc_range_high": nullable_num,
@@ -105,7 +116,8 @@ def output_schema() -> dict[str, Any]:
                     "ethbtc_condition": {"type": "string"},
                     "breadth_condition": {"type": "string"},
                     "structural_calls": {"type": "array", "items": {"type": "string"}},
-                    "forecast_horizon_days": {"type": "integer", "minimum": 5, "maximum": 10}
+                    "forecast_horizon_days": {"type": "integer", "minimum": 5, "maximum": 10},
+                    "intraday_map": intraday_schema
                 }
             },
             "readable_markdown": {"type": "string"},
@@ -144,8 +156,11 @@ def call_openai(model: str, prompt: str, context: dict[str, Any], max_output_tok
         "Score the prior issue honestly. Price-range misses must reduce price-range score even when structural anticipation was strong. "
         "For legacy prior issues without a machine freeze, score only what the exact archived publication and completed-week evidence support and mark LEGACY_BOUNDED. "
         "Never invent historical track-record values. New forecasts must be frozen in explicit machine-readable fields before future outcomes. "
+        "Follow Weekly Cycle Navigator Publication Contract v1.1. After the current-state material, the public output must contain weekly price ranges, an intraday map for Day 1-2 / Day 3-4 / Day 5-7, a 2-3 WEEKS compass, a 4-8 WEEKS compass, then the final takeaway. "
+        "For each intraday bucket, use only the supplied final Master Monday evidence. If the evidence cannot support a bucket, write exactly UNAVAILABLE for that bucket rather than infer or reconstruct a forecast. If weekly BTC or ETH ranges are unavailable, keep their machine values null and state UNAVAILABLE in public prose. "
+        "The 4-8 week line must be a short cycle direction plus high-level action posture; use UNAVAILABLE when evidence does not support it. "
         "The readable output is for the owner and the X-ready output is public-facing. Keep X prose compact with cohesive sections, not excessive one-line spacing. "
-        "Include one base case for this week and one base case for the next 2-3 weeks, plus a clear altseason countdown table. "
+        "Include one base case for this week, one base case for the next 2-3 weeks, one base case for 4-8 weeks, plus a clear altseason countdown table. "
         "This publication has no authority to change Master Monday, thresholds, model weights or portfolio execution."
     )
     budget = max_output_tokens
@@ -157,7 +172,7 @@ def call_openai(model: str, prompt: str, context: dict[str, Any], max_output_tok
             "max_output_tokens": budget,
             "instructions": instructions,
             "input": [{"role": "user", "content": [{"type": "input_text", "text": json.dumps({"task": "CYCLE_NAVIGATOR_WEEKLY_PUBLICATION", "prompt": prompt, "context": context}, sort_keys=True)}]}],
-            "text": {"format": {"type": "json_schema", "name": "cycle_navigator_weekly_v1", "strict": True, "schema": output_schema()}}
+            "text": {"format": {"type": "json_schema", "name": "cycle_navigator_weekly_v1_1", "strict": True, "schema": output_schema()}}
         }
         req = urllib.request.Request(
             "https://api.openai.com/v1/responses",
@@ -224,6 +239,7 @@ def main() -> None:
 
     context = {
         "contract": "CYCLE_NAVIGATOR_WEEKLY_INPUT_v1",
+        "publication_contract": "WEEKLY_CYCLE_NAVIGATOR_PUBLICATION_CONTRACT_v1_1",
         "completed_iso_week": completed_week,
         "target_iso_week": target_week,
         "issue_number": issue,
@@ -240,14 +256,17 @@ def main() -> None:
     prompt = (
         f"Generate Cycle Navigator #{issue} for ISO week W{target_week:02d}. First evaluate Cycle Navigator #{prev_issue} against completed W{completed_week:02d}. "
         "Then freeze the new week's explicit forecasts. The X-ready version must include a precision section, an honest what-went-well/what-went-wrong section, "
-        "a concise public track-record section that only uses archived/reproducible values, a current-state section, one base case for this week, one base case for 2-3 weeks, "
-        "and an easy-to-read altseason countdown. Use cohesive paragraphs and tables where useful."
+        "a concise public track-record section that only uses archived/reproducible values, a current-state section, weekly BTC/ETH ranges or UNAVAILABLE, "
+        "an intraday map with Day 1-2, Day 3-4 and Day 5-7, one base case for this week, one base case for 2-3 weeks, one 4-8 week cycle direction/action posture, "
+        "and an easy-to-read altseason countdown. Every unsupported intraday bucket must be exactly UNAVAILABLE. Use cohesive paragraphs and tables where useful."
     )
     value, raw = call_openai(args.model, prompt, context, args.max_output_tokens)
     if int(value.get("issue_number", -1)) != issue:
         raise SystemExit("issue_number_mismatch")
     if value.get("previous_issue_number") not in {prev_issue, None if not prev_issue else -1}:
         raise SystemExit("previous_issue_number_mismatch")
+    if not str(value.get("base_case_4_8_weeks") or "").strip():
+        raise SystemExit("base_case_4_8_weeks_missing")
 
     freeze = value["forecast_freeze"]
     if freeze.get("scoring_contract") != "CN_PUBLIC_CONTINUITY_v1":
@@ -259,6 +278,13 @@ def main() -> None:
             raise SystemExit(f"partial_{asset}_range")
         if lo is not None and float(lo) >= float(hi):
             raise SystemExit(f"invalid_{asset}_range")
+
+    intraday = freeze.get("intraday_map")
+    if not isinstance(intraday, dict):
+        raise SystemExit("intraday_map_missing")
+    for bucket in ("day_1_2", "day_3_4", "day_5_7"):
+        if not str(intraday.get(bucket) or "").strip():
+            raise SystemExit(f"intraday_{bucket}_missing")
 
     source_manifest = {"contract": "CYCLE_NAVIGATOR_SOURCE_MANIFEST_v1", "issue_number": issue, "completed_iso_week": completed_week, "target_iso_week": target_week, "master_monday_dir": str(mm_dir.relative_to(repo)), "master_monday_files": {name: sha256_bytes((mm_dir / name).read_bytes()) for name in required}, "previous_issue_number": prev_issue or None, "previous_machine_available": prev_machine is not None, "previous_exact_text_available": prev_text is not None}
     package = {"contract": "CYCLE_NAVIGATOR_MACHINE_PACKAGE_v1", "generated_unix": int(time.time()), "authority": "USER_FACING_DERIVED_FROM_FINAL_MASTER_MONDAY", "publication_status": "X_READY_NOT_CONFIRMED_PUBLISHED", "source_manifest_sha256": sha256_bytes(canonical_bytes(source_manifest)), **value}

@@ -72,8 +72,69 @@ function sanitizePackage(pkg) {
       "btc_range_high",
       "eth_range_low",
       "eth_range_high",
-      "structural_calls"
+      "structural_calls",
+      "forecast_horizon_days",
+      "intraday_map"
     ]) : {}
+  };
+}
+
+function stripMarkdown(value) {
+  return String(value || "")
+    .replace(/\*\*/g, "")
+    .replace(/`/g, "")
+    .trim();
+}
+
+function officialShortHorizon(pkg) {
+  const issueNumber = Number(pkg?.issue_number || 0) || null;
+  const map = pkg?.forecast_freeze?.intraday_map;
+  if (map && typeof map === "object") {
+    const day12 = stripMarkdown(map.day_1_2);
+    const day34 = stripMarkdown(map.day_3_4);
+    const day57 = stripMarkdown(map.day_5_7);
+    const published = [day12, day34, day57].some((value) => value && value.toUpperCase() !== "UNAVAILABLE");
+    return {
+      authority: "OFFICIAL_CN",
+      issue_number: issueNumber,
+      status: published ? "INTRADAY_MAP" : "UNAVAILABLE",
+      day_1_2: day12 || "UNAVAILABLE",
+      day_3_4: day34 || "UNAVAILABLE",
+      day_5_7: day57 || "UNAVAILABLE",
+      risk_bias: null,
+      note: published
+        ? "Frozen OFFICIAL Cycle Navigator intraday map. Missing buckets remain UNAVAILABLE."
+        : "The OFFICIAL Cycle Navigator freeze did not publish an evaluable intraday map."
+    };
+  }
+
+  const source = `${String(pkg?.readable_markdown || "")}\n${String(pkg?.x_ready_markdown || "")}`;
+  const riskMatch = source.match(/Near-term\s+risk\s*:\s*\*{0,2}([^\n*]+?)\*{0,2}(?:\s*$|\n)/im);
+  if (riskMatch) {
+    const riskBias = stripMarkdown(riskMatch[1]).replace(/[.;]+$/, "");
+    if (riskBias) {
+      return {
+        authority: "OFFICIAL_CN",
+        issue_number: issueNumber,
+        status: "RISK_BIAS_ONLY",
+        day_1_2: null,
+        day_3_4: null,
+        day_5_7: null,
+        risk_bias: riskBias,
+        note: "Verbatim OFFICIAL Cycle Navigator near-term risk label. This is a risk bias, not a reconstructed 24–72h price forecast."
+      };
+    }
+  }
+
+  return {
+    authority: "OFFICIAL_CN",
+    issue_number: issueNumber,
+    status: "UNAVAILABLE",
+    day_1_2: null,
+    day_3_4: null,
+    day_5_7: null,
+    risk_bias: null,
+    note: "No OFFICIAL short-horizon map is published for this issue. LIVE prices never create one."
   };
 }
 
@@ -223,6 +284,7 @@ async function main() {
     generated_at_utc: new Date().toISOString(),
     pointer: sanitizePointer(pointer),
     package: sanitizePackage(pkg),
+    short_horizon: officialShortHorizon(pkg),
     public_history: history,
     calibration: {
       track_record: track,

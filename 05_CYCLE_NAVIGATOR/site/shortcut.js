@@ -57,6 +57,27 @@
     return 'FORWARD VIEW';
   }
 
+  function renderShortHorizon(data) {
+    const horizon = data?.short_horizon || {};
+    const status = String(horizon.status || 'UNAVAILABLE').toUpperCase();
+    const issue = horizon.issue_number ?? data?.package?.issue_number ?? data?.pointer?.issue_number ?? '—';
+    if (status === 'INTRADAY_MAP') {
+      const day12 = String(horizon.day_1_2 || 'UNAVAILABLE');
+      const day34 = String(horizon.day_3_4 || 'UNAVAILABLE');
+      const day57 = String(horizon.day_5_7 || 'UNAVAILABLE');
+      if ($('shortcutDays')) $('shortcutDays').textContent = day12.toUpperCase() === 'UNAVAILABLE' ? 'DAY 1–2: UNAVAILABLE' : day12;
+      if ($('shortcutDaysNote')) $('shortcutDaysNote').textContent = `OFFICIAL CN #${issue} · D3–4: ${day34} · D5–7: ${day57}`;
+      return;
+    }
+    if (status === 'RISK_BIAS_ONLY' && horizon.risk_bias) {
+      if ($('shortcutDays')) $('shortcutDays').textContent = String(horizon.risk_bias).toUpperCase();
+      if ($('shortcutDaysNote')) $('shortcutDaysNote').textContent = `OFFICIAL CN #${issue} near-term risk bias · not a reconstructed 24–72h price call.`;
+      return;
+    }
+    if ($('shortcutDays')) $('shortcutDays').textContent = 'NOT PUBLISHED';
+    if ($('shortcutDaysNote')) $('shortcutDaysNote').textContent = `CN #${issue} has no OFFICIAL short-horizon map. LIVE prices remain context only.`;
+  }
+
   function renderShortcut(data) {
     const pkg = data?.package || {};
     const pointer = data?.pointer || {};
@@ -69,8 +90,7 @@
 
     if ($('shortcutNow')) $('shortcutNow').textContent = conciseNow(pkg);
     if ($('shortcutNowNote')) $('shortcutNowNote').textContent = active ? `${cleanPhase(active.phase)} · ${phaseState(active.phase)}` : firstSentence(pkg.market_state) || 'Official state unavailable.';
-    if ($('shortcutDays')) $('shortcutDays').textContent = 'NOT PUBLISHED';
-    if ($('shortcutDaysNote')) $('shortcutDaysNote').textContent = 'No OFFICIAL 24–72h feed yet. LIVE prices are context only and never create a short-horizon call.';
+    renderShortHorizon(data);
     if ($('shortcutWeek')) $('shortcutWeek').textContent = weekLabel(pkg.base_case_this_week);
     if ($('shortcutWeekNote')) $('shortcutWeekNote').textContent = firstSentence(pkg.base_case_this_week) || 'No 7-day base case published.';
     if ($('shortcutForward')) $('shortcutForward').textContent = forwardLabel(pkg.base_case_2_3_weeks);
