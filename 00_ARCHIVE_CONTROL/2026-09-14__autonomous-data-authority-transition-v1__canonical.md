@@ -35,6 +35,34 @@ It is NOT the default current upstream route for Master Monday, Cycle Navigator,
 
 A manual DATA PING packet is therefore **not a prerequisite** for a current Master Monday or Cycle Navigator run.
 
+## User-facing thread routing
+
+`HANDLEKOMPAS` threads are the preferred default user-facing workspace for current market direction and for consuming or working with the framework's weekly outputs, including:
+
+- `MASTER MONDAY`;
+- `CYCLE NAVIGATOR`;
+- `CYCLE NAVIGATOR TIL X` / X-ready CN output;
+- current Handlekompas direction, action posture and follow-up interpretation.
+
+This replaces the former practical role of DATA PING threads as the user's recurring market-output workspace. The replacement is **conversation/UI routing only**. It does not restore a manual packet dependency and does not change production data authority.
+
+When the user has designated a conversation as a Handlekompas thread, agents should normally keep Master Monday, Cycle Navigator, X-ready CN output and related direction follow-up in that thread for continuity.
+
+However, thread identity is never a hard dependency:
+
+- if the user explicitly asks for `MASTER MONDAY`, `CYCLE NAVIGATOR`, `CYCLE NAVIGATOR TIL X` or equivalent in another or new thread, fulfill the request there using current autonomous routing;
+- do not require the user to return to a Handlekompas thread;
+- do not treat a Handlekompas thread as market authority, evidence, a source packet, a state owner or portfolio-execution permission;
+- do not copy stale thread prose forward when newer canonical machine outputs or pointers exist.
+
+Default interaction rule:
+
+```text
+HANDLEKOMPAS THREAD = PREFERRED USER-FACING HOME FOR CURRENT DIRECTION + MASTER MONDAY + CYCLE NAVIGATOR + CN/X OUTPUT.
+EXPLICIT REQUEST IN ANY OTHER THREAD = ANSWER THERE; NO REDIRECT REQUIRED.
+THREAD LOCATION NEVER OVERRIDES CURRENT AUTONOMOUS POINTERS OR CANONICAL AUTHORITY.
+```
+
 ## Current-state precedence
 
 For tasks asking what is current now, use this order unless a newer canonical owner explicitly supersedes this contract:
@@ -100,6 +128,8 @@ This transition changes routing clarity only. It does not:
 
 ```text
 CURRENT STATE: FOLLOW CURRENT AUTONOMOUS POINTERS.
+HANDLEKOMPAS THREAD: PREFERRED USER-FACING HOME FOR CURRENT DIRECTION + MASTER MONDAY + CYCLE NAVIGATOR OUTPUT.
+EXPLICIT REQUEST IN ANY THREAD: ANSWER THERE USING CURRENT AUTONOMOUS ROUTING.
 EXPLICIT DATA PING TASK: USE DATA PING CONTRACTS.
 HISTORICAL DATA PING NAME ALONE: NEVER CURRENT AUTHORITY.
 ```
