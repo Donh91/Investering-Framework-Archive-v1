@@ -68,7 +68,8 @@ def validate_trial_record(record: dict[str, Any], policy: dict[str, Any]) -> lis
     if state == "OUTCOME_MATURED":
         if record.get("falsifier_result") in {None, "", "NOT_YET_MATURED"}:
             errors.append("MATURED_REQUIRES_FINAL_FALSIFIER")
-        if record.get("missed_winner_audit") in {None, {}}:
+        missed_winner_audit = record.get("missed_winner_audit")
+        if missed_winner_audit is None or missed_winner_audit == {}:
             errors.append("MATURED_REQUIRES_MISSED_WINNER_AUDIT")
         outcome = str(record.get("outcome_class", ""))
         if outcome == "PROSPECTIVE_SIGNAL_SURVIVED":
