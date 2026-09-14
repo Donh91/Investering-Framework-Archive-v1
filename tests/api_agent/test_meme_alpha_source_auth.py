@@ -35,6 +35,7 @@ POLICY = {
         "block_on_unresolved_red_team": True,
         "block_on_repo_forensics_blocker": True,
         "sanitize_unauthenticated_first_party_findings": True,
+        "sanitize_unauthenticated_summary": True,
     },
     "authority": {
         "portfolio_action": False,
@@ -88,11 +89,15 @@ class MemeAlphaSourceAuthTests(unittest.TestCase):
             "repository_forensics": [{"signal": "verified_commit", "severity": "INFO", "evidence": "GitHub signature valid"}],
         })
         output = base_output(packet)
+        output["summary"] = "The official project repository passed authentication and proves the mascot is canonical."
         output["verified_findings"] = ["The official project repository proves the mascot is canonical."]
         result = apply_source_authentication_gate(output, {"subject": "official GitHub mascot provenance"}, POLICY)
         self.assertFalse(result["source_authentication"]["first_party_claim_allowed"])
         self.assertEqual(result["status"], "DEGRADED")
         self.assertEqual(result["verified_findings"], [])
+        self.assertTrue(result["summary"].startswith("Source authentication did not admit first-party provenance"))
+        self.assertNotIn("passed authentication", result["summary"])
+        self.assertTrue(any(item.startswith("MODEL_SUMMARY_PRE_GATE_UNTRUSTED:") for item in result["uncertainties"]))
         self.assertTrue(any("AUTH_GATED" in item for item in result["uncertainties"]))
 
     def test_two_external_categories_can_authenticate_project_source(self) -> None:
@@ -108,9 +113,12 @@ class MemeAlphaSourceAuthTests(unittest.TestCase):
             ],
             "red_team_findings": [{"hypothesis": "lookalike repo", "status": "CLEAR", "evidence": "official links converge"}],
         })
-        result = apply_source_authentication_gate(base_output(packet), {"subject": "official repository provenance"}, POLICY)
+        output = base_output(packet)
+        output["summary"] = "Authenticated summary remains intact."
+        result = apply_source_authentication_gate(output, {"subject": "official repository provenance"}, POLICY)
         self.assertTrue(result["source_authentication"]["first_party_claim_allowed"])
         self.assertEqual(result["source_authentication"]["gate_reasons"], [])
+        self.assertEqual(result["summary"], "Authenticated summary remains intact.")
 
     def test_token_ca_binding_requires_high_onchain_binding(self) -> None:
         packet = default_source_authentication()
@@ -128,6 +136,7 @@ class MemeAlphaSourceAuthTests(unittest.TestCase):
         result = apply_source_authentication_gate(base_output(packet), {"subject": "official token CA provenance"}, POLICY)
         self.assertFalse(result["source_authentication"]["first_party_claim_allowed"])
         self.assertIn("HIGH_CONFIDENCE_ONCHAIN_BINDING_REQUIRED", result["source_authentication"]["gate_reasons"])
+        self.assertTrue(result["summary"].startswith("Source authentication did not admit first-party provenance"))
 
     def test_red_team_unresolved_blocks_even_with_anchors(self) -> None:
         packet = default_source_authentication()
@@ -152,6 +161,7 @@ class MemeAlphaSourceAuthTests(unittest.TestCase):
         result = apply_source_authentication_gate(base_output(packet), {"subject": "community CTO survival"}, POLICY)
         self.assertFalse(result["source_authentication"]["first_party_claim_allowed"])
         self.assertEqual(result["status"], "READY")
+        self.assertEqual(result["summary"], "test")
 
     def test_runtime_hydration_noise_does_not_force_auth(self) -> None:
         task = {"subject": "wallet cohort", "runtime_hydration": {"context_files": [{"content": "github official repository"}]}}
@@ -169,6 +179,7 @@ class MemeAlphaSourceAuthTests(unittest.TestCase):
             self.assertFalse(receipt["first_party_claim_allowed"])
             self.assertEqual(output["source_authentication"]["state"], "CANDIDATE")
             self.assertEqual(output["status"], "BLOCKED")
+            self.assertTrue(output["summary"].startswith("Source authentication did not admit first-party provenance"))
 
 
 if __name__ == "__main__":
