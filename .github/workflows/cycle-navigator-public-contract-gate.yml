@@ -1,0 +1,126 @@
+name: Cycle Navigator Public Contract Gate
+
+on:
+  pull_request:
+    paths:
+      - "05_CYCLE_NAVIGATOR/site/**"
+      - "05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json"
+      - "05_CYCLE_NAVIGATOR/weekly/**/CYCLE_NAVIGATOR_MACHINE_PACKAGE.json"
+      - "05_CYCLE_NAVIGATOR/weekly/**/CYCLE_NAVIGATOR_SCORECARD.json"
+      - ".github/workflows/cycle-navigator-pages.yml"
+      - ".github/workflows/cycle-navigator-public-contract-gate.yml"
+  push:
+    branches: [main]
+    paths:
+      - "05_CYCLE_NAVIGATOR/site/**"
+      - "05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json"
+      - "05_CYCLE_NAVIGATOR/weekly/**/CYCLE_NAVIGATOR_MACHINE_PACKAGE.json"
+      - "05_CYCLE_NAVIGATOR/weekly/**/CYCLE_NAVIGATOR_SCORECARD.json"
+      - ".github/workflows/cycle-navigator-pages.yml"
+      - ".github/workflows/cycle-navigator-public-contract-gate.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-public-score-authority:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Verify CN scorecard is the single public score authority
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json,re
+          from pathlib import Path
+
+          pointer=json.loads(Path('05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json').read_text())
+          week_dir=str(pointer.get('week_dir') or '')
+          if not week_dir.startswith('05_CYCLE_NAVIGATOR/weekly/') or '..' in week_dir:
+              raise SystemExit('invalid_week_dir')
+          root=Path(week_dir)
+          scorecard=json.loads((root/'CYCLE_NAVIGATOR_SCORECARD.json').read_text())
+          machine=json.loads((root/'CYCLE_NAVIGATOR_MACHINE_PACKAGE.json').read_text())
+
+          if machine.get('evaluation') != scorecard:
+              raise SystemExit('machine_evaluation_scorecard_mismatch')
+          if int(scorecard.get('issue_scored') or 0) != int(machine.get('previous_issue_number') or 0):
+              raise SystemExit('scorecard_issue_lineage_mismatch')
+          if int(scorecard.get('completed_iso_week') or 0) != int(pointer.get('completed_source_week') or 0):
+              raise SystemExit('scorecard_completed_week_mismatch')
+
+          for key in ('structural_score','price_range_score','decision_utility_score','public_continuity_score','parameter_coverage_pct'):
+              value=scorecard.get(key)
+              if value is None: continue
+              value=float(value)
+              if not 0.0 <= value <= 100.0:
+                  raise SystemExit(f'score_out_of_bounds:{key}')
+
+          x=str(machine.get('x_ready_markdown') or '')
+          structural_claims=[float(v) for v in re.findall(r'(?i)structural score\s*:\s*\*{0,2}(\d+(?:\.\d+)?)\s*%', x)]
+          official=scorecard.get('structural_score')
+          if structural_claims:
+              if official is None:
+                  raise SystemExit('x_structural_claim_without_scorecard_score')
+              if any(abs(v-float(official)) > 1e-9 for v in structural_claims):
+                  raise SystemExit('x_structural_claim_mismatch')
+
+          overall_claims=[float(v) for v in re.findall(r'(?i)overall precision\s*:\s*\*{0,2}(\d+(?:\.\d+)?)\s*%', x)]
+          continuity=scorecard.get('public_continuity_score')
+          if overall_claims:
+              if continuity is None:
+                  raise SystemExit('x_overall_precision_claim_without_supported_aggregate')
+              if any(abs(v-float(continuity)) > 1e-9 for v in overall_claims):
+                  raise SystemExit('x_overall_precision_claim_mismatch')
+
+          print(json.dumps({
+              'status':'PASS',
+              'issue_scored':scorecard.get('issue_scored'),
+              'completed_iso_week':scorecard.get('completed_iso_week'),
+              'structural_score':scorecard.get('structural_score'),
+              'x_is_downstream_only':True
+          },sort_keys=True))
+          PY
+
+      - name: Build public site from canonical CN artifacts
+        run: |
+          set -euo pipefail
+          node 05_CYCLE_NAVIGATOR/site/build-public.mjs
+          node 05_CYCLE_NAVIGATOR/site/build-score-bundle.mjs
+
+      - name: Verify public snapshot readback
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          pointer=json.loads(Path('05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json').read_text())
+          scorecard=json.loads((Path(pointer['week_dir'])/'CYCLE_NAVIGATOR_SCORECARD.json').read_text())
+          snapshot=json.loads(Path('05_CYCLE_NAVIGATOR/site/dist/data/latest.json').read_text())
+          bundle=snapshot.get('weekly_score_bundle') or {}
+          if bundle.get('authority') != 'CYCLE_NAVIGATOR_SCORECARD':
+              raise SystemExit('public_snapshot_missing_score_authority')
+          for key in ('issue_scored','completed_iso_week','score_status','structural_score','price_range_score','decision_utility_score','public_continuity_score'):
+              if bundle.get(key) != scorecard.get(key):
+                  raise SystemExit(f'public_snapshot_score_mismatch:{key}')
+          if 'X is downstream publication only' not in str(snapshot.get('score_authority_note') or ''):
+              raise SystemExit('public_snapshot_authority_note_missing')
+          if not Path('05_CYCLE_NAVIGATOR/site/dist/weekly-score.js').exists():
+              raise SystemExit('weekly_score_widget_missing')
+          index=Path('05_CYCLE_NAVIGATOR/site/dist/index.html').read_text()
+          if './weekly-score.js' not in index:
+              raise SystemExit('weekly_score_widget_not_injected')
+          print(json.dumps({'status':'PASS','public_score_bundle':'BOUND'},sort_keys=True))
+          PY
