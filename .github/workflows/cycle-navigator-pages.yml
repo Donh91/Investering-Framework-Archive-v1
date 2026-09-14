@@ -38,17 +38,17 @@ jobs:
       - name: Build privacy-safe public bundle
         run: node 05_CYCLE_NAVIGATOR/site/build-public.mjs
 
-      - name: Bind canonical weekly scorecard to public snapshot
-        run: node 05_CYCLE_NAVIGATOR/site/build-score-bundle.mjs
-
-      - name: Add bounded live observation layer
-        run: node 05_CYCLE_NAVIGATOR/site/build-live-observation.mjs
-
-      - name: Add hidden Apple design prototype
+      - name: Add hidden Apple design prototype and promote production shell
         run: node 05_CYCLE_NAVIGATOR/site/build-apple-prototype.mjs
 
       - name: Add shortcut and Path to Mania layer
         run: node 05_CYCLE_NAVIGATOR/site/build-shortcut.mjs
+
+      - name: Bind canonical weekly scorecard to final public shell
+        run: node 05_CYCLE_NAVIGATOR/site/build-score-bundle.mjs
+
+      - name: Add bounded live observation layer to final public shell
+        run: node 05_CYCLE_NAVIGATOR/site/build-live-observation.mjs
 
       - name: Build and verify social preview
         run: node 05_CYCLE_NAVIGATOR/site/build-social-card.mjs
