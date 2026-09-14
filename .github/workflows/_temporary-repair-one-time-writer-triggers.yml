@@ -1,0 +1,85 @@
+name: Temporary Repair One-Time Writer Triggers
+
+on:
+  push:
+    branches:
+      - agent/repair-one-time-writer-triggers-20260914
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/repair-one-time-writer-triggers-20260914
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Remove generic push triggers from one-time main writers
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import re
+          from pathlib import Path
+
+          paths = [
+              Path('.github/workflows/cycle-navigator-precision-hardening-once.yml'),
+              Path('.github/workflows/cycle-navigator-precision-hardening-v2-once.yml'),
+              Path('.github/workflows/cycle-navigator-precision-hardening-v3-once.yml'),
+              Path('.github/workflows/master-monday-precision-repair-once.yml'),
+          ]
+
+          def remove_push_event(text: str) -> str:
+              lines = text.splitlines(keepends=True)
+              on_idx = next((i for i, line in enumerate(lines) if line.rstrip('\n') == 'on:'), None)
+              if on_idx is None:
+                  raise RuntimeError('missing on block')
+              push_idx = next((i for i in range(on_idx + 1, len(lines)) if lines[i].rstrip('\n') == '  push:'), None)
+              if push_idx is None:
+                  return text
+              end = push_idx + 1
+              while end < len(lines):
+                  raw = lines[end].rstrip('\n')
+                  if re.match(r'^  [A-Za-z_][A-Za-z0-9_-]*:', raw):
+                      break
+                  if raw and not raw.startswith(' '):
+                      break
+                  end += 1
+              del lines[push_idx:end]
+              return ''.join(lines)
+
+          changed = []
+          for path in paths:
+              original = path.read_text()
+              updated = remove_push_event(original)
+              if updated == original:
+                  raise RuntimeError(f'expected push trigger not found: {path}')
+              if '  workflow_dispatch:' not in updated:
+                  raise RuntimeError(f'workflow_dispatch missing after repair: {path}')
+              path.write_text(updated)
+              changed.append(str(path))
+
+          print('\n'.join(changed))
+          PY
+
+      - name: Self-remove helper and commit repair
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm .github/workflows/_temporary-repair-one-time-writer-triggers.yml
+          git config user.name framework-maintenance-bot
+          git config user.email framework-maintenance-bot@users.noreply.github.com
+          git add .github/workflows/cycle-navigator-precision-hardening-once.yml \
+                  .github/workflows/cycle-navigator-precision-hardening-v2-once.yml \
+                  .github/workflows/cycle-navigator-precision-hardening-v3-once.yml \
+                  .github/workflows/master-monday-precision-repair-once.yml \
+                  .github/workflows/_temporary-repair-one-time-writer-triggers.yml
+          git commit -m "automation: make one-time repair workflows manual-only"
+          git push origin HEAD:agent/repair-one-time-writer-triggers-20260914
