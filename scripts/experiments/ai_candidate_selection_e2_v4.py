@@ -3,10 +3,12 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from copy import deepcopy
 from pathlib import Path
 from typing import Any, Callable
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from scripts.experiments import ai_candidate_selection_e2 as v3
 
 base = v3.base
