@@ -9,6 +9,7 @@ on:
       - '04_MARKET_LEARNING/legacy_framework_knowledge_bootstrap_v1/**'
       - 'research/master_monday_preflight/**'
       - 'tests/master_monday/**'
+      - 'tests/orchestration/test_consumer_receipt.py'
       - 'tests/daily_capture/test_master_monday_final_correction.py'
       - 'tests/api_agent/test_weekly_calibration_context_v4.py'
       - '.github/workflows/weekly-api-calibration-shadow.yml'
@@ -29,9 +30,9 @@ jobs:
         with:
           python-version: '3.12'
       - name: Compile hardening modules
-        run: python -m py_compile scripts/master_monday/build_preflight_package_v2.py scripts/master_monday/build_preflight_package_v3.py scripts/master_monday/publish_master_monday_outputs.py scripts/orchestration/verify_durable_readback.py scripts/orchestration/weekly_orchestration_controller.py scripts/api_agent/build_weekly_calibration_context.py
+        run: python -m py_compile scripts/master_monday/build_preflight_package_v2.py scripts/master_monday/build_preflight_package_v3.py scripts/master_monday/publish_master_monday_outputs.py scripts/orchestration/consumer_receipt.py scripts/orchestration/build_framework_handoff_manifest.py scripts/orchestration/verify_durable_readback.py scripts/orchestration/weekly_orchestration_controller.py scripts/api_agent/build_weekly_calibration_context.py
       - name: Run contract and durability tests
-        run: python -m unittest tests.master_monday.test_preflight_package tests.master_monday.test_preflight_package_v2 tests.master_monday.test_durable_repairs tests.daily_capture.test_master_monday_final_correction tests.api_agent.test_weekly_calibration_context_v4 -v
+        run: python -m unittest tests.master_monday.test_preflight_package tests.master_monday.test_preflight_package_v2 tests.master_monday.test_durable_repairs tests.orchestration.test_consumer_receipt tests.daily_capture.test_master_monday_final_correction tests.api_agent.test_weekly_calibration_context_v4 -v
       - name: Verify production integration
         run: |
           grep -q 'build_preflight_package_v3.py' .github/workflows/weekly-api-calibration-shadow.yml
