@@ -16,11 +16,11 @@ def _sha(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def _manifest(root: Path, expected: list[str], evidence: dict[str, dict]) -> Path:
+def _manifest(root: Path, expected: list[str], evidence: dict[str, dict], *, generated_at_utc: str = "2026-09-15T00:00:00Z") -> Path:
     path = root / "research/framework_handoffs/LATEST_FRAMEWORK_HANDOFF_MANIFEST.json"
     _write_json(path, {
         "contract": "FRAMEWORK_HANDOFF_MANIFEST_v2",
-        "generated_at_utc": "2026-09-15T00:00:00Z",
+        "generated_at_utc": generated_at_utc,
         "consumers": {"TEST_CONSUMER": expected},
         "evidence": evidence,
     })
@@ -37,10 +37,15 @@ def test_consumer_receipt_passes_only_when_all_expected_inputs_are_verified(tmp_
         manifest,
         "TEST_CONSUMER",
         ["A"],
-        consumed_at_utc="2026-09-15T01:00:00Z",
+        consumed_at_utc="2026-09-15T00:05:00Z",
+        max_manifest_age_seconds=900,
     )
 
     assert receipt["status"] == "PASS"
+    assert receipt["consumption_state"] == "VERIFIED"
+    assert receipt["manifest_freshness_status"] == "PASS"
+    assert receipt["manifest_age_seconds"] == 300.0
+    assert receipt["manifest_sha256"] == _sha(manifest)
     assert receipt["missing_expected_evidence"] == []
     assert receipt["stale_declared_evidence"] == []
     assert set(receipt["verified_evidence"]) == {"A"}
@@ -59,6 +64,7 @@ def test_consumer_receipt_is_partial_when_expected_input_is_not_declared(tmp_pat
     receipt = build_consumer_receipt(tmp_path, manifest, "TEST_CONSUMER", ["A"])
 
     assert receipt["status"] == "PARTIAL"
+    assert receipt["consumption_state"] == "DEGRADED"
     assert receipt["missing_expected_evidence"] == ["B"]
     assert set(receipt["verified_evidence"]) == {"A"}
 
@@ -71,8 +77,51 @@ def test_consumer_receipt_is_partial_when_manifest_binding_is_stale(tmp_path: Pa
     receipt = build_consumer_receipt(tmp_path, manifest, "TEST_CONSUMER", ["A"])
 
     assert receipt["status"] == "PARTIAL"
+    assert receipt["consumption_state"] == "DEGRADED"
     assert receipt["stale_declared_evidence"] == ["A"]
     assert receipt["verified_evidence"] == {}
+
+
+def test_consumer_receipt_degrades_when_handoff_snapshot_is_too_old(tmp_path: Path) -> None:
+    evidence_path = tmp_path / "research/source/a.json"
+    _write_json(evidence_path, {"value": 1})
+    manifest = _manifest(
+        tmp_path,
+        ["A"],
+        {"A": {"path": "research/source/a.json", "sha256": _sha(evidence_path)}},
+        generated_at_utc="2026-09-15T00:00:00Z",
+    )
+
+    receipt = build_consumer_receipt(
+        tmp_path,
+        manifest,
+        "TEST_CONSUMER",
+        ["A"],
+        consumed_at_utc="2026-09-15T01:00:00Z",
+        max_manifest_age_seconds=900,
+    )
+
+    assert receipt["status"] == "PARTIAL"
+    assert receipt["consumption_state"] == "DEGRADED"
+    assert receipt["manifest_freshness_status"] == "STALE"
+    assert receipt["manifest_age_seconds"] == 3600.0
+    assert "HANDOFF_MANIFEST_STALE" in receipt["reasons"]
+
+
+def test_consumer_receipt_is_unknown_when_manifest_is_unavailable(tmp_path: Path) -> None:
+    missing = tmp_path / "research/framework_handoffs/missing.json"
+    receipt = build_consumer_receipt(
+        tmp_path,
+        missing,
+        "TEST_CONSUMER",
+        ["A"],
+        consumed_at_utc="2026-09-15T01:00:00Z",
+        max_manifest_age_seconds=900,
+    )
+
+    assert receipt["status"] == "UNAVAILABLE"
+    assert receipt["consumption_state"] == "UNKNOWN"
+    assert receipt["reason"] == "HANDOFF_MANIFEST_UNAVAILABLE"
 
 
 def test_stamp_target_recomputes_semantic_self_hash_after_receipt(tmp_path: Path) -> None:
