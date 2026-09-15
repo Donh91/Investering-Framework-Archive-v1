@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any
 
 TIMESTAMP_KEYS = ("captured_at_utc","retrieved_at_utc","created_at_utc","generated_at_utc","completed_at_utc","published_at_utc","freeze_utc","snapshot_utc","created_unix")
+STATUS_SCOPE = "ARCHITECTURE_EVIDENCE_ONLY_NOT_AGGREGATE_SYSTEM_HEALTH"
 
 # Evidence-quality observation window and censor-rate threshold (TASK3 R3-08).
 # These signals exist to separate PLUMBING HEALTH from EVIDENCE HEALTH: a job
@@ -76,6 +77,14 @@ def find_cfgi_remaining(owner):
         if isinstance(billing,dict) and isinstance(billing.get('credits_remaining'),int):return billing['credits_remaining']
     return None
 
+def owner_population_finding(capture_present: bool, owners: list[dict[str, Any]], pass_count: int) -> tuple[str, int] | None:
+    """Return the scoped owner-health finding without treating 0/0 as healthy."""
+    if capture_present and not owners:
+        return ('OWNER_POPULATION_EMPTY',1)
+    if owners and pass_count<max(1,len(owners)-1):
+        return ('OWNER_COVERAGE_DEGRADED',1)
+    return None
+
 def evidence_health(root: Path, now: datetime) -> dict[str, Any]:
     """Observe whether the accountability loop is producing usable evidence.
 
@@ -126,7 +135,8 @@ def main():
     ages={'capture':age_hours(now,cap_ts),'daily_director':age_hours(now,daily_ts),'weekly_calibration':age_hours(now,weekly_ts),'etf_owner':age_hours(now,etf_ts),'experiment_registry':age_hours(now,experiment_ts),'experiment_receipt_sync':age_hours(now,sync_ts),'remediation_queue':age_hours(now,remediation_ts)}
     if cap is None:add('NO_DAILY_CAPTURE',2)
     elif ages['capture'] is None or ages['capture']>8:add('DAILY_CAPTURE_STALE',2)
-    if owners and pass_count<max(1,len(owners)-1):add('OWNER_COVERAGE_DEGRADED',1)
+    owner_finding=owner_population_finding(cap is not None,owners,pass_count)
+    if owner_finding:add(*owner_finding)
     if daily is None:add('NO_DAILY_DIRECTOR_OUTPUT',1)
     elif ages['daily_director'] is None or ages['daily_director']>36:add('DAILY_DIRECTOR_STALE',1)
     monday_or_later=(now.weekday()==0 and now.hour>=4) or now.weekday()>0
@@ -156,8 +166,8 @@ def main():
         if evidence['censor_rate']>=1.0:add('OUTCOME_CENSOR_RATE_HIGH',2)
         elif evidence['censor_rate']>EVIDENCE_CENSOR_RATE_AMBER:add('OUTCOME_CENSOR_RATE_HIGH',1)
     status='RED' if severity>=2 else 'AMBER' if severity==1 else 'GREEN'
-    health={'contract':'ARCHITECTURE_HEALTH_DASHBOARD_v2_3','evidence_health':evidence,'generated_at_utc':now.isoformat().replace('+00:00','Z'),'status':status,'freshness_hours':ages,'owners':{'count':len(owners),'pass_count':pass_count,'rows':owners},'latest_capture_path':str(cap_path) if cap_path else None,'latest_daily_director_path':str(daily_path) if daily_path else None,'latest_daily_director_receipt_path':str(daily_receipt_path) if daily_receipt_path else None,'latest_weekly_calibration_path':str(weekly_path) if weekly_path else None,'latest_etf_owner_path':str(etf_path) if etf_path else None,'experiment_lifecycle':{'path':str(experiment_path) if experiment else None,'candidate_count':(experiment or {}).get('candidate_count'),'state_counts':(experiment or {}).get('state_counts',{})},'experiment_receipt_sync':{'path':str(sync_path) if sync else None,'status':(sync or {}).get('status'),'imported':(sync or {}).get('imported'),'hash_mismatches':(sync or {}).get('hash_mismatches')},'remediation':{'path':str(remediation_path) if remediation else None,'summary':(remediation or {}).get('summary',{}),'automatic_code_write':(remediation or {}).get('automatic_code_write',False),'automatic_merge':(remediation or {}).get('automatic_merge',False)},'accepted_data_ping_count':len(ping_files),'cfgi_credits_remaining':cfgi_remaining,'blockers':blockers,'authority':{'framework_state_change':False,'portfolio_action':False}}
+    health={'contract':'ARCHITECTURE_HEALTH_DASHBOARD_v2_3','evidence_health':evidence,'generated_at_utc':now.isoformat().replace('+00:00','Z'),'status':status,'status_scope':STATUS_SCOPE,'aggregate_system_health_claim':'NOT_ASSERTED','status_semantics':{'GREEN':'No blockers detected within this artifact scoped architecture/evidence inputs. This does not assert automation or aggregate framework health.','AMBER':'At least one scoped architecture/evidence input is incomplete, degraded or not strong enough to support GREEN.','RED':'At least one scoped architecture/evidence blocker is material.'},'freshness_hours':ages,'owners':{'count':len(owners),'pass_count':pass_count,'rows':owners},'latest_capture_path':str(cap_path) if cap_path else None,'latest_daily_director_path':str(daily_path) if daily_path else None,'latest_daily_director_receipt_path':str(daily_receipt_path) if daily_receipt_path else None,'latest_weekly_calibration_path':str(weekly_path) if weekly_path else None,'latest_etf_owner_path':str(etf_path) if etf_path else None,'experiment_lifecycle':{'path':str(experiment_path) if experiment else None,'candidate_count':(experiment or {}).get('candidate_count'),'state_counts':(experiment or {}).get('state_counts',{})},'experiment_receipt_sync':{'path':str(sync_path) if sync else None,'status':(sync or {}).get('status'),'imported':(sync or {}).get('imported'),'hash_mismatches':(sync or {}).get('hash_mismatches')},'remediation':{'path':str(remediation_path) if remediation else None,'summary':(remediation or {}).get('summary',{}),'automatic_code_write':(remediation or {}).get('automatic_code_write',False),'automatic_merge':(remediation or {}).get('automatic_merge',False)},'accepted_data_ping_count':len(ping_files),'cfgi_credits_remaining':cfgi_remaining,'blockers':blockers,'authority':{'framework_state_change':False,'portfolio_action':False}}
     args.json_output.parent.mkdir(parents=True,exist_ok=True);args.json_output.write_text(json.dumps(health,sort_keys=True,separators=(',',':'))+'\n')
-    lines=['# Architecture Health',f'Status: **{status}**',f"Generated: {health['generated_at_utc']}",'',f'Owners: {pass_count}/{len(owners)} PASS',f'Accepted DATA PINGs: {len(ping_files)}',f"CFGI credits remaining: {cfgi_remaining if cfgi_remaining is not None else 'UNKNOWN'}",f"Experiment candidates: {(experiment or {}).get('candidate_count','UNKNOWN')}",f"Codex-ready remediation tasks: {((remediation or {}).get('summary') or {}).get('codex_ready','UNKNOWN')}",'','## Freshness hours']+[f"- {k}: {v if v is not None else 'UNKNOWN'}" for k,v in ages.items()]+['',f"## Evidence health (last {evidence['window_days']}d)",f"- Forecasts due in window: {evidence['forecasts_due_in_window']}",f"- Matured outcomes: {evidence['matured_outcome_count']}",f"- Censored outcomes: {evidence['censored_outcome_count']}",f"- Censor rate: {evidence['censor_rate'] if evidence['censor_rate'] is not None else 'UNKNOWN'}",'','## Blockers']+([f'- {x}' for x in blockers] or ['- None'])
-    args.md_output.write_text('\n'.join(lines)+'\n');print(json.dumps({'status':status,'blockers':blockers},sort_keys=True))
+    lines=['# Architecture Health',f'Status: **{status}**',f'Status scope: **{STATUS_SCOPE}**','Aggregate system health claim: **NOT ASSERTED**',f"Generated: {health['generated_at_utc']}",'',f'Owners: {pass_count}/{len(owners)} PASS',f'Accepted DATA PINGs: {len(ping_files)}',f"CFGI credits remaining: {cfgi_remaining if cfgi_remaining is not None else 'UNKNOWN'}",f"Experiment candidates: {(experiment or {}).get('candidate_count','UNKNOWN')}",f"Codex-ready remediation tasks: {((remediation or {}).get('summary') or {}).get('codex_ready','UNKNOWN')}",'','## Freshness hours']+[f"- {k}: {v if v is not None else 'UNKNOWN'}" for k,v in ages.items()]+['',f"## Evidence health (last {evidence['window_days']}d)",f"- Forecasts due in window: {evidence['forecasts_due_in_window']}",f"- Matured outcomes: {evidence['matured_outcome_count']}",f"- Censored outcomes: {evidence['censored_outcome_count']}",f"- Censor rate: {evidence['censor_rate'] if evidence['censor_rate'] is not None else 'UNKNOWN'}",'','## Blockers']+([f'- {x}' for x in blockers] or ['- None'])
+    args.md_output.write_text('\n'.join(lines)+'\n');print(json.dumps({'status':status,'status_scope':STATUS_SCOPE,'blockers':blockers},sort_keys=True))
 if __name__=='__main__':main()
