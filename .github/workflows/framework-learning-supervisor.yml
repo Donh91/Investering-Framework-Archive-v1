@@ -7,10 +7,12 @@ on:
       - 'scripts/framework_intelligence/framework_learning_supervisor.py'
       - 'scripts/framework_intelligence/operational_memory_v1.py'
       - 'scripts/framework_intelligence/operational_memory_post_production_audit_v1.py'
+      - 'scripts/framework_intelligence/operational_memory_fail_to_codex_intake_v1.py'
       - 'scripts/orchestration/build_framework_handoff_manifest.py'
       - 'tests/framework_intelligence/test_framework_learning_supervisor.py'
       - 'tests/framework_intelligence/test_operational_memory_v1.py'
       - 'tests/framework_intelligence/test_operational_memory_post_production_audit_v1.py'
+      - 'tests/framework_intelligence/test_operational_memory_fail_to_codex_intake_v1.py'
       - '00_FMOS/FRAMEWORK_INTELLIGENCE_AND_LEARNING_LOOP_v1.md'
       - '00_FMOS/OPERATIONAL_MEMORY_AND_RETRIEVAL_v1.md'
   schedule:
@@ -42,13 +44,15 @@ jobs:
             scripts/framework_intelligence/framework_learning_supervisor.py \
             scripts/framework_intelligence/operational_memory_v1.py \
             scripts/framework_intelligence/operational_memory_post_production_audit_v1.py \
+            scripts/framework_intelligence/operational_memory_fail_to_codex_intake_v1.py \
             scripts/orchestration/build_framework_handoff_manifest.py
       - name: Run learning tests
         run: |
           python -m unittest \
             tests.framework_intelligence.test_framework_learning_supervisor \
             tests.framework_intelligence.test_operational_memory_v1 \
-            tests.framework_intelligence.test_operational_memory_post_production_audit_v1 -v
+            tests.framework_intelligence.test_operational_memory_post_production_audit_v1 \
+            tests.framework_intelligence.test_operational_memory_fail_to_codex_intake_v1 -v
       - name: Dry-run current repository state, operational preflight and production audit
         run: |
           rm -rf runtime/framework-learning-supervisor runtime/operational-memory runtime/opmem-preflight.json runtime/opmem-audit.json runtime/opmem-audit.md
@@ -107,6 +111,7 @@ jobs:
     permissions:
       contents: write
       issues: write
+      actions: write
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -123,11 +128,13 @@ jobs:
             scripts/framework_intelligence/framework_learning_supervisor.py \
             scripts/framework_intelligence/operational_memory_v1.py \
             scripts/framework_intelligence/operational_memory_post_production_audit_v1.py \
+            scripts/framework_intelligence/operational_memory_fail_to_codex_intake_v1.py \
             scripts/orchestration/build_framework_handoff_manifest.py
           python -m unittest \
             tests.framework_intelligence.test_framework_learning_supervisor \
             tests.framework_intelligence.test_operational_memory_v1 \
-            tests.framework_intelligence.test_operational_memory_post_production_audit_v1 -v
+            tests.framework_intelligence.test_operational_memory_post_production_audit_v1 \
+            tests.framework_intelligence.test_operational_memory_fail_to_codex_intake_v1 -v
       - name: Build persistent learning, operational memory and autonomous audit
         run: |
           python scripts/framework_intelligence/framework_learning_supervisor.py \
@@ -223,9 +230,86 @@ jobs:
               subprocess.run(['gh','issue','comment',str(existing['number']),'--repo',repo,'--body',body],check=True)
               subprocess.run(['gh','issue','close',str(existing['number']),'--repo',repo],check=True)
           PY
+      - name: Route failed audit to bounded Codex remediation
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          import os
+          import subprocess
+          from datetime import datetime, timezone
+          from pathlib import Path
+
+          path=Path('research/framework_learning/operational_memory/LATEST_OPERATIONAL_MEMORY_POST_PRODUCTION_AUDIT.json')
+          try:
+              audit=json.loads(path.read_text())
+              valid=audit.get('contract')=='OPERATIONAL_MEMORY_POST_PRODUCTION_AUDIT_v1'
+          except Exception:
+              audit={}
+              valid=False
+          if not valid:
+              head=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
+              audit={
+                  'contract':'OPERATIONAL_MEMORY_POST_PRODUCTION_AUDIT_v1',
+                  'generated_at_utc':datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace('+00:00','Z'),
+                  'status':'FAIL',
+                  'source_head_sha':head,
+                  'failures':['audit_file_missing_or_invalid'],
+                  'warnings':[],
+                  'memory_reuse_allowed':False,
+              }
+              path.parent.mkdir(parents=True,exist_ok=True)
+              path.write_text(json.dumps(audit,indent=2,sort_keys=True)+'\n')
+          Path('/tmp/opmem-audit-status').write_text(str(audit.get('status') or 'FAIL'))
+          PY
+
+          result="$(python scripts/framework_intelligence/operational_memory_fail_to_codex_intake_v1.py --repo-root .)"
+          echo "$result"
+          export OPMEM_ROUTE_RESULT="$result"
+          status="$(cat /tmp/opmem-audit-status 2>/dev/null || echo FAIL)"
+          if [ "$status" != "FAIL" ]; then
+            exit 0
+          fi
+
+          path="$(python - <<'PY'
+          import json,os
+          print(json.loads(os.environ['OPMEM_ROUTE_RESULT']).get('path') or '')
+          PY
+          )"
+          created="$(python - <<'PY'
+          import json,os
+          print('true' if json.loads(os.environ['OPMEM_ROUTE_RESULT']).get('created') else 'false')
+          PY
+          )"
+
+          if [ "$created" = "true" ]; then
+            [ -n "$path" ]
+            git config user.name 'framework-learning-supervisor[bot]'
+            git config user.email 'framework-learning-supervisor@users.noreply.github.com'
+            git add "$path"
+            git commit -m "remediation: queue operational memory audit ${GITHUB_RUN_ID}" -- "$path"
+            git stash push -u -m "operational-memory-failed-products-${GITHUB_RUN_ID}" >/dev/null || true
+            pushed=false
+            for attempt in 1 2 3; do
+              git rebase --abort 2>/dev/null || true
+              if git pull --rebase origin main && git push origin HEAD:main; then pushed=true; break; fi
+              sleep $((attempt * 5))
+            done
+            [ "$pushed" = true ]
+          fi
+
+          gh workflow run remediation-maturation.yml --repo "$GITHUB_REPOSITORY" --ref main
       - name: Enforce Operational Memory audit gate
         if: always()
         run: |
+          status="$(cat /tmp/opmem-audit-status 2>/dev/null || echo FAIL)"
+          if [ "$status" = "FAIL" ]; then
+            echo 'operational_memory_audit_failed'
+            exit 1
+          fi
           python - <<'PY'
           import json
           from pathlib import Path
@@ -233,8 +317,6 @@ jobs:
           if not p.exists():
               raise SystemExit('operational_memory_audit_missing')
           audit=json.loads(p.read_text())
-          if audit.get('status')=='FAIL':
-              raise SystemExit('operational_memory_audit_failed')
           if audit.get('memory_reuse_allowed') is not True:
               raise SystemExit('operational_memory_reuse_not_allowed')
           PY
