@@ -28,8 +28,13 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Refresh producer pointers from current repository state
-        run: python scripts/architecture/build_latest_handoff.py --repo-root .
+      - name: Refresh producer pointers and freeze consumer handoff snapshot
+        run: |
+          python scripts/architecture/build_latest_handoff.py --repo-root .
+          mkdir -p runtime/consumer-receipts
+          python scripts/orchestration/build_framework_handoff_manifest.py \
+            --repo-root . \
+            --output runtime/consumer-receipts/OPERATIONS_DASHBOARD_HANDOFF.json
       - name: Build operations dashboard
         run: |
           python scripts/health/build_operations_dashboard.py \
@@ -38,10 +43,11 @@ jobs:
             --md-output research/operations_dashboard/LATEST_OPERATIONS_DASHBOARD.md
           python scripts/orchestration/consumer_receipt.py \
             --repo-root . \
-            --manifest research/framework_handoffs/LATEST_FRAMEWORK_HANDOFF_MANIFEST.json \
+            --manifest runtime/consumer-receipts/OPERATIONS_DASHBOARD_HANDOFF.json \
             --consumer OPERATIONS_DASHBOARD \
             --target research/operations_dashboard/LATEST_OPERATIONS_DASHBOARD.json \
             --self-hash-field dashboard_sha256 \
+            --max-manifest-age-seconds 900 \
             --declared AUTOMATION_HEALTH \
             --declared ARCHITECTURE_HEALTH \
             --declared EXPERIMENT_REGISTRY \
@@ -85,5 +91,6 @@ jobs:
           path: |
             research/operations_dashboard/LATEST_OPERATIONS_DASHBOARD.json
             research/operations_dashboard/LATEST_OPERATIONS_DASHBOARD.md
+            runtime/consumer-receipts/OPERATIONS_DASHBOARD_HANDOFF.json
           retention-days: 14
           if-no-files-found: error
