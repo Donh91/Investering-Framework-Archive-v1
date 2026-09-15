@@ -1,0 +1,23 @@
+{
+  "contract": "CYCLE_NAVIGATOR_PUBLIC_V2_EVIDENCE_CENSUS_v1",
+  "owner_issue": 1012,
+  "status": "IN_PROGRESS_FAIL_CLOSED",
+  "purpose": "Recover point-in-time Cycle Navigator forecasts, price ranges, outcomes and scores across legacy/current namespaces before public v2 scoreboard implementation.",
+  "hard_rules": [
+    "A missing value in a current ledger is not evidence that an historical CN lacked a price range.",
+    "Never reconstruct an old forecast from later outcomes.",
+    "Search legacy canonical namespaces, forecast ledgers, current delivery namespaces, commit/PR history, and archived publication evidence before PRICE_UNVERIFIED.",
+    "Memory-seeded rows are discovery hints only until bound to point-in-time source evidence.",
+    "Public aggregate scores require explicit measurable coverage and frozen scoring semantics."
+  ],
+  "discovery": {
+    "publication_standard_from_cn": 16,
+    "publication_standard_requires": ["BTC weekly range","ETH weekly range","Day 1-2 BTC/ETH range","Day 3-4 BTC/ETH range","Day 5-7 BTC/ETH range","combined Price Range Score"],
+    "continuity_resolution_order": ["explicit previous-CN freeze from latest pointer","03_WEEKLY_OPERATIONS/cycle_navigator/<forecast_week>","03_WEEKLY_OPERATIONS/forecast_ledger","04_MARKET_LEARNING/cycle_navigator/<publication_week>","Git commit and merged-PR history","PRICE_UNVERIFIED only after exhausted search receipt"],
+    "manual_era_early_history": {"status":"DISCOVERY_ONLY_NOT_SCOREABLE_YET","source_class":"memory-seed manifest","known_hints":{"CN1_BTC":[63000,71000],"CN2_BTC":[65000,72000],"CN3_BTC":[66000,73000],"CN4_BTC":[73000,79000],"CN5_BTC":[76500,83500],"CN7_BTC":[79000,83500]},"warning":"Do not publish or score these hints until original/frozen evidence is recovered."},
+    "verified_examples": [{"cn":18,"forecast_week":"2026-W31","provenance":"FROZEN_CANONICAL_COMMIT","weekly":{"BTC":[62200,67200],"ETH":[1800,2075]},"intraday":{"DAY_1_2":{"BTC":[63600,65900],"ETH":[1870,1995]},"DAY_3_4":{"BTC":[62800,66500],"ETH":[1840,2030]},"DAY_5_7":{"BTC":[62200,67200],"ETH":[1800,2075]}},"prior_cn17_range_precision":86.11,"later_precision_audit_score":91,"status":"FROZEN_PUBLISHED_SCORED"}]
+  },
+  "census_target": {"cycle_navigators":"CN1_THROUGH_CURRENT","fields":["original publication/freeze timestamp","forecast week","BTC weekly range","ETH weekly range","BTC/ETH intraday horizon ranges","cycle/regime call","rotation call","ETA/timing claims","realized weekly/intraday ranges","price-range score","structural/cycle score","publication evidence","provenance confidence","manual-vs-automated era"]},
+  "public_scoreboard_gate": "BLOCKED_UNTIL_CENSUS_RECONCILED",
+  "authority": false
+}
