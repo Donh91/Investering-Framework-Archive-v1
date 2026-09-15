@@ -49,6 +49,29 @@ class ArchitectureHealthV21Tests(unittest.TestCase):
         ]
         self.assertIsNone(module.owner_population_finding(True, owners, 2))
 
+    def test_missing_experiment_receipt_sync_is_amber_finding(self):
+        self.assertEqual(
+            module.experiment_receipt_sync_finding(None, None),
+            ('NO_EXPERIMENT_RECEIPT_SYNC', 1),
+        )
+
+    def test_failed_experiment_receipt_sync_is_red_finding(self):
+        self.assertEqual(
+            module.experiment_receipt_sync_finding({'status': 'FAIL'}, 1.0),
+            ('EXPERIMENT_RECEIPT_SYNC_FAILED', 2),
+        )
+
+    def test_stale_experiment_receipt_sync_is_amber_finding(self):
+        self.assertEqual(
+            module.experiment_receipt_sync_finding({'status': 'PASS'}, 73.0),
+            ('EXPERIMENT_RECEIPT_SYNC_STALE', 1),
+        )
+
+    def test_healthy_experiment_receipt_sync_has_no_finding(self):
+        self.assertIsNone(
+            module.experiment_receipt_sync_finding({'status': 'PASS'}, 12.0)
+        )
+
     def test_status_scope_does_not_claim_aggregate_system_health(self):
         self.assertEqual(
             module.STATUS_SCOPE,
