@@ -1,0 +1,132 @@
+{
+  "contract": "PUBLIC_ALPHA_HARVEST_NEW_SOURCES_20260915_v1",
+  "researched_at_utc": "2026-09-15T18:55:00Z",
+  "purpose": "Record newly discovered public research/data exhaust sources found after the Public Alpha Harvest mandate, rank incremental value, and prevent repeated discovery work.",
+  "sources": [
+    {
+      "rank": 1,
+      "name": "Chain of Title",
+      "urls": ["https://chainoftitle.org", "https://huggingface.co/datasets/chainoftitle/chain-of-title"],
+      "classification": "P0_KEEP_LIVE_PROVENANCE_AND_OPERATOR_GRAPH",
+      "license": "CC0-1.0 according to dataset/site",
+      "observed_public_state": {
+        "dataset_deposit_built": "2026-09-08T14:37:38.796Z",
+        "launches_observed_from_creation_tx": 167122,
+        "records_in_deposit": 169888,
+        "graduated_in_deposit": 10454,
+        "operator_wallets_in_deposit": 9015,
+        "continuous_coverage_from": "2026-05-10T07:42:03Z",
+        "live_site_reports_newer_archive_state": true
+      },
+      "incremental_value": [
+        "Immutable first-block launch provenance that present-tense token scanners can no longer reconstruct cheaply after supply is redistributed.",
+        "Creator initial supply share, creator self-buy behavior, outside-buyer counts, curve fill speed, 40+ SOL buyout events, pool/vault reads and rebuild/late-discovery markers.",
+        "Operator/funder graph for wallets that take whole curves, while explicitly warning that common funder is a lead rather than identity/intent proof.",
+        "Whole archive is offered as a SQLite download and per-token/per-wallet JSON records are public, making it suitable as a bounded G1/G4 enrichment source.",
+        "Public negative result states that 19,412 simulated bonding-curve entries in a favorable organic subset during September 2026 produced zero 5x outcomes; useful as a regime/falsifier signal, not a universal theorem."
+      ],
+      "critical_boundaries": [
+        "Coverage/rebuilt/late-discovery fields must be honored; absence outside observed coverage is not clean evidence.",
+        "Shared funder must not be equated with cabal/insider identity because terminals can fund users from common infrastructure.",
+        "Live pool balances are mutable snapshots with age, unlike immutable launch facts.",
+        "The 19,412-entry no-5x result applies to its dated selection and entry simulation; replicate before using as a tail prior.",
+        "Do not trigger historical rebuilds at scale through the public API; prefer the bulk archive for research and respect rebuild budgets."
+      ],
+      "candidate_role": "G1 launch-integrity and G4 creator/operator provenance; negative-regime benchmark; independent verifier for creator/self-buy/buyout/funding hypotheses."
+    },
+    {
+      "rank": 2,
+      "name": "Trenches pump.fun Forward Capture 2026-08",
+      "url": "https://huggingface.co/datasets/Tr4m0ryp/trenches-pumpfun-forward-2026-08",
+      "classification": "P0_KEEP_POINT_IN_TIME_VALIDATION_CORPUS",
+      "license": "PolyForm Noncommercial 1.0.0 according to dataset card",
+      "scale": {
+        "observations": 730850,
+        "mints": 85442,
+        "capture_start": "2026-08-06T22:40:47Z",
+        "capture_end": "2026-08-13T01:07:50Z",
+        "poll_cadence_seconds": 75,
+        "feature_rows": 85442,
+        "label_rows": 84584
+      },
+      "incremental_value": [
+        "Per-field derivability timestamps make point-in-time leakage directly measurable rather than assumed.",
+        "A forward-only time split with 10,800-second embargo is supplied; no shuffling.",
+        "Terminal chain account state supplies a checkable completion label.",
+        "The release documents a real timing leak: X reach data resolved a median 20.52 seconds after its recorded poll stamp, and reach_derivable_at_decision is false for all first-sighting mints.",
+        "Independent recent-August corpus is a strong replication bridge between June retrospective corpora and Alpha Lab's live September shadow."
+      ],
+      "critical_boundaries": [
+        "Vendor feed is completion-enriched: path_completed is 1.135%, roughly five times the historical full-population rate quoted by the source, so do not use raw precision as market prevalence.",
+        "There is a documented 69.09-hour capture gap plus a second 2.09-hour gap; stratify pre/post gap.",
+        "858 non-pump.fun venues have no chain outcome and may not be pooled with pump.fun rates.",
+        "Use path_completed rather than the live graduated resolver because the latter has 80 known false negatives in this release.",
+        "y_theta_70 is degenerate and unusable.",
+        "Negative age at first sighting occurs for 1,225 mints; apply the documented derivability bound or exclude.",
+        "Curve-progress proxies are construction leakage and are explicitly banned from model features."
+      ],
+      "candidate_role": "Independent point-in-time feature replication, leakage canary calibration and forward-style G1/G2 validation."
+    },
+    {
+      "rank": 3,
+      "name": "Zinteck/MELT",
+      "url": "https://huggingface.co/datasets/Zinteck/MELT",
+      "classification": "P0_KEEP_ENTITY_AND_MANIPULATION_RESEARCH",
+      "license": "CC BY-NC 4.0 according to dataset card",
+      "scale": {"rows": 221984351, "approx_download_gb": 25.5},
+      "incremental_value": [
+        "Large-scale pre/post migration, bundle and entity-resolution research corpus.",
+        "Dataset states features are computed strictly from pre-migration data to reduce label leakage.",
+        "Strong independent testbed for bundle/sniper/entity-adjusted concentration and manipulation controls."
+      ],
+      "critical_boundaries": [
+        "Very large corpus, process selectively and preserve license restrictions.",
+        "External entity heuristics remain hypotheses until replicated against Alpha Lab's own event graph."
+      ],
+      "candidate_role": "G1 entity-adjusted concentration, bundle/manipulation and hidden-control research."
+    },
+    {
+      "rank": 4,
+      "name": "Pump Studio sentiment/risk agent corpus",
+      "url": "https://huggingface.co/datasets/Pumpdotstudio/pump-fun-sentiment-100k",
+      "classification": "P2_WATCH_AGENT_ENSEMBLE_ONLY",
+      "license": "CC BY-NC-SA 4.0 according to dataset card",
+      "scale": {"rows": 193410},
+      "incremental_value": [
+        "Validated live token snapshots paired with agent sentiment/risk submissions may support research into disagreement/consensus among external agents."
+      ],
+      "critical_boundaries": [
+        "Sentiment and risk labels are agent-generated opinions, not forward market outcomes.",
+        "Multiple submissions per token/agent can create pseudo-replication.",
+        "Do not train Alpha Lab to imitate external agents without independent outcome linkage."
+      ],
+      "candidate_role": "Optional meta-research on agent disagreement after higher-value market/outcome corpora are exhausted."
+    },
+    {
+      "rank": 5,
+      "name": "PumpSwap historical trades free sample",
+      "url": "https://huggingface.co/datasets/biznus1/pumpswap-historical-trades",
+      "classification": "P2_SAMPLE_ONLY_NO_PURCHASE",
+      "license": "Free sample for evaluation; full dataset commercial according to card",
+      "incremental_value": ["One-hour free ordered PumpSwap sample can validate parsers and execution-order semantics."],
+      "critical_boundaries": ["Full historical corpus is paid and is not authorized by this mandate.", "One-hour sample is not a robust outcome dataset."],
+      "candidate_role": "Parser fixture only unless later value-of-information analysis justifies a paid purchase and user separately authorizes it."
+    },
+    {
+      "rank": 6,
+      "name": "COPEAI lore corpus",
+      "url": "https://huggingface.co/datasets/AgentZeroCopeAI/lore-corpus",
+      "classification": "REJECT_FOR_ALPHA_TRAINING_KEEP_AS_SCHEMA_REFERENCE",
+      "reason": "Only 75 project-specific lore rows and no independent token outcome linkage; useful for provenance schema ideas but not empirical Moonshot alpha."
+    },
+    {
+      "rank": 7,
+      "name": "Easfus crypto agent training corpus",
+      "url": "https://huggingface.co/datasets/zetryn/easfus-crypto-agent-dataset",
+      "classification": "REJECT_FOR_MARKET_EDGE_KEEP_AS_AGENT_UX_REFERENCE",
+      "reason": "Instruction/agent conversation training data rather than point-in-time market observations with independently resolved outcomes."
+    }
+  ],
+  "execution_change": "Insert Chain of Title and the August Trenches forward capture into the active harvest before cross-dataset adjudication. Chain of Title supplies recent immutable launch/operator provenance; Trenches supplies a recent point-in-time leakage-auditable replication cohort.",
+  "authority": {"automatic_trading": false, "portfolio_execution": false, "paid_purchase": false, "live_threshold_change": false}
+}
