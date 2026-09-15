@@ -1,0 +1,27 @@
+name: Meme Alpha Clean G3 Core Gate
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/api_agent/meme_alpha_clean_g3.py'
+      - 'tests/api_agent/test_meme_alpha_clean_g3.py'
+      - '.github/workflows/meme-alpha-clean-g3-core.yml'
+      - 'research/api_agent/meme_alpha/contracts/PROSPECTIVE_CLEAN_G3_BUYER_GRAPH_SPEC_v1.json'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  clean-g3-core:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout research revision
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run clean G3 deterministic tests
+        run: python -m unittest tests.api_agent.test_meme_alpha_clean_g3 -v
