@@ -36,6 +36,17 @@ jobs:
             --repo-root . \
             --json-output research/operations_dashboard/LATEST_OPERATIONS_DASHBOARD.json \
             --md-output research/operations_dashboard/LATEST_OPERATIONS_DASHBOARD.md
+          python scripts/orchestration/consumer_receipt.py \
+            --repo-root . \
+            --manifest research/framework_handoffs/LATEST_FRAMEWORK_HANDOFF_MANIFEST.json \
+            --consumer OPERATIONS_DASHBOARD \
+            --target research/operations_dashboard/LATEST_OPERATIONS_DASHBOARD.json \
+            --self-hash-field dashboard_sha256 \
+            --declared AUTOMATION_HEALTH \
+            --declared ARCHITECTURE_HEALTH \
+            --declared EXPERIMENT_REGISTRY \
+            --declared EXPERIMENT_RECEIPT_SYNC \
+            --declared REMEDIATION_QUEUE
           cp research/operations_dashboard/LATEST_OPERATIONS_DASHBOARD.json LATEST_OPERATIONS_DASHBOARD.json
           cp research/operations_dashboard/LATEST_OPERATIONS_DASHBOARD.md LATEST_OPERATIONS_DASHBOARD.md
       - name: Commit dashboard and verify remote bytes
