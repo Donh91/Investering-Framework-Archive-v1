@@ -7,6 +7,10 @@ This folder is the public control-plane owner for the research-only Meme Alpha b
 - Provider hardening: `scripts/api_agent/meme_alpha_runtime_v1_1.py`
 - Source-authenticated worker: `scripts/api_agent/meme_alpha_runtime_v1_2.py`
 - Deterministic source gate: `scripts/api_agent/meme_alpha_source_auth.py`
+- Fresh-launch research/alert layer: `MOONSHOT_SENTINEL_CONTRACT_v1.json`
+- Cross-stage token memory: `ALPHA_LAB_LIFECYCLE_ENGINE_v1.json`
+- Secondary-expansion/reclaim research: `PHOENIX_RECLAIM_EXPERIMENT_v1.json`
+- Deterministic lifecycle classifier: `scripts/api_agent/meme_alpha_lifecycle_v1.py`
 - Skill: `.agents/skills/meme-alpha-supervisor/SKILL.md`
 - Private workspace: `Donh91/secrets/private_research/memes_alpha/`
 - Private runtime branch: `agent/task-20260913-meme-alpha-live`
@@ -17,6 +21,8 @@ The runtime is not a trading engine. It has zero portfolio, canonical-promotion,
 Operational pattern:
 
 `new/changed private research input -> deterministic SHA queue -> Stage0 -> one bounded research task -> source-authentication gate -> provenance receipt -> private runtime branch -> reviewed promotion only when justified`
+
+The lifecycle layer does not replace Moonshot Sentinel. It persists the same exact-CA identity after the first launch phase so later drawdown, dormancy, wallet re-entry, reclaim and failed-reclaim observations remain part of one auditable token history. Moonshot and Phoenix use separate prospective learning populations and may share evidence infrastructure without sharing trained thresholds.
 
 ## Source-authentication admission
 

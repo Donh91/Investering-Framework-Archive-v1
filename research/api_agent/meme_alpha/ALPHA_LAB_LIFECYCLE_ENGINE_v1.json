@@ -1,0 +1,129 @@
+{
+  "contract": "ALPHA_LAB_LIFECYCLE_ENGINE_v1",
+  "status": "ACTIVE_RESEARCH_DESIGN",
+  "created_at_utc": "2026-09-15T05:35:00Z",
+  "purpose": "Persist one exact-CA token lifecycle across fresh-launch discovery, first expansion, drawdown, dormancy, recovery and secondary expansion so Meme Alpha Lab can learn from state transitions instead of treating each scan as a new object.",
+  "identity": {
+    "primary_key": "chain + exact token contract address",
+    "pool_identity_is_secondary": true,
+    "ticker_or_name_is_identity": false,
+    "multiple_pools_per_token_expected": true,
+    "new_pool_may_not_reset_token_birth_clock": true,
+    "reuse_moonshot_identity_contract": "MOONSHOT_IDENTITY_EPOCH_v2"
+  },
+  "lifecycle_states": [
+    "BIRTH",
+    "EARLY_EXPANSION",
+    "PEAK_FORMATION",
+    "DRAWDOWN",
+    "DORMANCY",
+    "PHOENIX_WAKEUP",
+    "PHOENIX_PRE_RECLAIM_CONVERGENCE",
+    "PHOENIX_RECLAIM",
+    "PHOENIX_RETEST_PENDING",
+    "PHOENIX_RETEST_PASSED",
+    "SECOND_LEG",
+    "FAILED_RECLAIM",
+    "INVALIDATED"
+  ],
+  "ownership": {
+    "fresh_launch_owner": "MOONSHOT_SENTINEL_CONTRACT_v1",
+    "recovery_owner": "PHOENIX_RECLAIM_EXPERIMENT_v1",
+    "wallet_owner": "shared Meme Alpha wallet-quality ledger",
+    "historical_owner": "Historical Lifecycle Lab",
+    "regime_context": "Cycle Navigator read-only stratification",
+    "outcome_owner": "MEME_ALPHA_PROSPECTIVE_HARDENING_v1"
+  },
+  "shared_persistent_features": [
+    "first_seen_utc",
+    "first_liquidity_utc",
+    "prior_peak_market_cap_or_fdv_when_reproducible",
+    "prior_peak_liquidity_usd",
+    "peak_persistence_minutes",
+    "prior_unique_buyer_breadth",
+    "prior_sellability_state",
+    "max_realizable_return_after_slippage",
+    "max_drawdown_from_verified_peak",
+    "time_to_peak_minutes",
+    "peak_to_trough_minutes",
+    "bottom_compression_minutes",
+    "reclaim_attempt_count",
+    "wallet_entry_class_history",
+    "wallet_distribution_history",
+    "social_propagation_timestamps",
+    "holder_and_concentration_history",
+    "regime_context_history"
+  ],
+  "prior_demand_proof": {
+    "purpose": "Distinguish genuine prior market demand from one-wallet wicks or mechanical valuation artifacts.",
+    "eligible_evidence": [
+      "sustained valuation above a material fraction of peak",
+      "independent buyer breadth",
+      "non-trivial successful sells",
+      "surviving executable liquidity",
+      "non-single-entity volume",
+      "holder breadth or concentration improvement where measurable"
+    ],
+    "states": ["REAL_PRIOR_DEMAND", "ARTIFACT_OR_UNPROVEN", "UNKNOWN"],
+    "rule": "A chart wick or reported peak alone is insufficient for Phoenix eligibility."
+  },
+  "wallet_entry_classes": [
+    "ORIGIN_PRE_SOCIAL",
+    "SNIPER",
+    "EARLY_CONFIRMATION",
+    "MOMENTUM",
+    "DISTRIBUTOR",
+    "RE_ENTRY",
+    "FAILED_RE_ENTRY",
+    "UNKNOWN"
+  ],
+  "anti_leakage": {
+    "historical_winners_generate_hypotheses_only": true,
+    "historical_winner_outcomes_may_not_set_live_thresholds": true,
+    "prospective_freeze_before_outcome_required": true,
+    "failed_tokens_retained": true,
+    "missed_winner_audit_required": true,
+    "moonshot_and_phoenix_training_populations_separate": true,
+    "cross_archetype_threshold_training_forbidden": true
+  },
+  "regime_context": {
+    "source": "Cycle Navigator",
+    "role": "STRATIFICATION_ONLY",
+    "allowed_states": ["MICROCAP_REGIME_WEAK", "TRANSITION", "EXPANSION", "UNKNOWN"],
+    "may_veto_candidate": false,
+    "may_rewrite_candidate_timestamp": false,
+    "purpose": "Measure conditional edge by regime without hindsight filtering."
+  },
+  "shared_outcomes": {
+    "horizons": ["1H", "4H", "24H", "3D", "7D"],
+    "required": [
+      "forward_return",
+      "MFE",
+      "MAE",
+      "realizable_return_after_slippage",
+      "sellability",
+      "liquidity_change",
+      "buyer_breadth_change",
+      "wallet_thesis_survival",
+      "social_lead_time_minutes",
+      "lifecycle_state_at_observation"
+    ]
+  },
+  "research_questions": [
+    "Do exact-CA lifecycle transitions predict future executable multiples better than static low-cap filters?",
+    "Does wallet re-entry by wallets that previously timed the same token well add incremental forward information?",
+    "Does independent multi-wallet re-entry before broad social re-propagation add more edge than wallet identity alone?",
+    "Does liquidity survival during deep drawdown separate recoverable survivors from terminal decay?",
+    "Does bottom compression followed by declining sell pressure and accelerating buyer breadth precede secondary expansion?",
+    "How does Phoenix expectancy vary across Cycle Navigator microcap regimes?"
+  ],
+  "authority": {
+    "automatic_trading": false,
+    "portfolio_action": false,
+    "position_size_output": false,
+    "leverage": false,
+    "average_down": false,
+    "automatic_merge": false,
+    "code_self_modification": false
+  }
+}
