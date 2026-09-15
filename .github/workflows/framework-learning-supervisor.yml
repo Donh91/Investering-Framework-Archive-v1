@@ -5,8 +5,12 @@ on:
     paths:
       - '.github/workflows/framework-learning-supervisor.yml'
       - 'scripts/framework_intelligence/framework_learning_supervisor.py'
+      - 'scripts/framework_intelligence/operational_memory_v1.py'
+      - 'scripts/orchestration/build_framework_handoff_manifest.py'
       - 'tests/framework_intelligence/test_framework_learning_supervisor.py'
+      - 'tests/framework_intelligence/test_operational_memory_v1.py'
       - '00_FMOS/FRAMEWORK_INTELLIGENCE_AND_LEARNING_LOOP_v1.md'
+      - '00_FMOS/OPERATIONAL_MEMORY_AND_RETRIEVAL_v1.md'
   schedule:
     - cron: '35 4 * * *'
       timezone: 'Europe/Copenhagen'
@@ -22,22 +26,42 @@ jobs:
   validate:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 12
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Compile supervisor
-        run: python -m py_compile scripts/framework_intelligence/framework_learning_supervisor.py
-      - name: Run supervisor tests
-        run: python -m unittest discover -s tests/framework_intelligence -p 'test_framework_learning_supervisor.py' -v
-      - name: Dry-run current repository state
+      - name: Compile learning stack
         run: |
-          rm -rf runtime/framework-learning-supervisor
+          python -m py_compile \
+            scripts/framework_intelligence/framework_learning_supervisor.py \
+            scripts/framework_intelligence/operational_memory_v1.py \
+            scripts/orchestration/build_framework_handoff_manifest.py
+      - name: Run learning tests
+        run: |
+          python -m unittest \
+            tests.framework_intelligence.test_framework_learning_supervisor \
+            tests.framework_intelligence.test_operational_memory_v1 -v
+      - name: Dry-run current repository state and operational preflight
+        run: |
+          rm -rf runtime/framework-learning-supervisor runtime/operational-memory runtime/opmem-preflight.json
           python scripts/framework_intelligence/framework_learning_supervisor.py \
             --repo-root . \
             --output-root runtime/framework-learning-supervisor
+          python scripts/framework_intelligence/operational_memory_v1.py \
+            --repo-root . \
+            --output-root runtime/operational-memory \
+            harvest --max-commits 120
+          python scripts/framework_intelligence/operational_memory_v1.py \
+            --repo-root . \
+            --output-root runtime/operational-memory \
+            preflight \
+            --task 'repair framework learning workflow' \
+            --path '.github/workflows/framework-learning-supervisor.yml' \
+            --output runtime/opmem-preflight.json >/tmp/opmem-preflight.stdout
           python - <<'PY'
           import json
           from pathlib import Path
@@ -45,11 +69,22 @@ jobs:
           s=json.loads((root/'LATEST_SUPERVISOR_STATE.json').read_text())
           p=json.loads((root/'LATEST_MASTER_MONDAY_LEARNING_PACKET.json').read_text())
           q=json.loads((root/'LATEST_DELEGATION_QUEUE.json').read_text())
+          om=Path('runtime/operational-memory')
+          h=json.loads((om/'LATEST_OPERATIONAL_MEMORY_HEALTH.json').read_text())
+          st=json.loads((om/'LATEST_OPERATIONAL_MEMORY_STATE.json').read_text())
+          pf=json.loads(Path('runtime/opmem-preflight.json').read_text())
           assert s['canonical_effect'] is False
           assert s['portfolio_execution'] is False
           assert s['master_monday_live_influence'] is False
           assert p['live_consumption_allowed'] is False
           assert q['authority']=='PROPOSAL_ONLY'
+          assert h['status']=='PASS', h
+          assert h['source_of_truth']=='CURRENT_GITHUB_MAIN'
+          assert h['memory_role']=='DERIVED_ACCELERATION_LAYER_ONLY'
+          assert st['authority']['canonical_effect'] is False
+          assert st['authority']['automatic_skill_activation'] is False
+          assert pf['authority']['canonical_effect'] is False
+          assert pf['telemetry']['no_savings_claim_without_measurement'] is True
           PY
 
   operate:
@@ -57,7 +92,7 @@ jobs:
     permissions:
       contents: write
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
         with:
@@ -66,16 +101,28 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Validate supervisor firewall
+      - name: Validate learning and operational-memory firewalls
         run: |
-          python -m py_compile scripts/framework_intelligence/framework_learning_supervisor.py
-          python -m unittest discover -s tests/framework_intelligence -p 'test_framework_learning_supervisor.py' -v
-      - name: Build persistent learning products
+          python -m py_compile \
+            scripts/framework_intelligence/framework_learning_supervisor.py \
+            scripts/framework_intelligence/operational_memory_v1.py \
+            scripts/orchestration/build_framework_handoff_manifest.py
+          python -m unittest \
+            tests.framework_intelligence.test_framework_learning_supervisor \
+            tests.framework_intelligence.test_operational_memory_v1 -v
+      - name: Build persistent learning and operational memory
         run: |
           python scripts/framework_intelligence/framework_learning_supervisor.py \
             --repo-root . \
             --output-root research/framework_learning
-      - name: Assert advisory-only authority
+          python scripts/framework_intelligence/operational_memory_v1.py \
+            --repo-root . \
+            --output-root research/framework_learning/operational_memory \
+            harvest --max-commits 250
+          python scripts/orchestration/build_framework_handoff_manifest.py \
+            --repo-root . \
+            --output research/framework_handoffs/LATEST_FRAMEWORK_HANDOFF_MANIFEST.json
+      - name: Assert advisory-only authority and handoff binding
         run: |
           python - <<'PY'
           import json
@@ -84,19 +131,30 @@ jobs:
           s=json.loads((root/'LATEST_SUPERVISOR_STATE.json').read_text())
           p=json.loads((root/'LATEST_MASTER_MONDAY_LEARNING_PACKET.json').read_text())
           q=json.loads((root/'LATEST_DELEGATION_QUEUE.json').read_text())
+          om=root/'operational_memory'
+          h=json.loads((om/'LATEST_OPERATIONAL_MEMORY_HEALTH.json').read_text())
+          st=json.loads((om/'LATEST_OPERATIONAL_MEMORY_STATE.json').read_text())
+          handoff=json.loads(Path('research/framework_handoffs/LATEST_FRAMEWORK_HANDOFF_MANIFEST.json').read_text())
           assert s['canonical_effect'] is False
           assert s['portfolio_execution'] is False
           assert s['master_monday_live_influence'] is False
           assert p['live_consumption_allowed'] is False
           assert q['authority']=='PROPOSAL_ONLY'
           assert p['scientific_status']=='FORECAST_SKILL_UNPROVEN'
+          assert h['status']=='PASS', h
+          assert st['authority']['automatic_promotion'] is False
+          assert st['authority']['automatic_skill_activation'] is False
+          assert handoff['operational_memory_policy']['memory_may_override_current_main'] is False
+          for key in ('OPERATIONAL_MEMORY_HEALTH','OPERATIONAL_MEMORY_INDEX','OPERATIONAL_PROCEDURAL_CANDIDATES'):
+            assert key in handoff['agent_read_order']['CODEX_OPERATIONAL_PREFLIGHT'], key
+            assert key in handoff['agent_read_order']['ASTRA_RESEARCH_ROUTING'], key
           PY
       - name: Commit learning products with bounded retry and main readback
         run: |
           set -euo pipefail
           git config user.name 'framework-learning-supervisor[bot]'
           git config user.email 'framework-learning-supervisor@users.noreply.github.com'
-          git add research/framework_learning
+          git add research/framework_learning research/framework_handoffs/LATEST_FRAMEWORK_HANDOFF_MANIFEST.json
           if git diff --cached --quiet; then exit 0; fi
           git commit -m "research: refresh framework learning supervisor ${GITHUB_RUN_ID}"
           pushed=false
@@ -107,9 +165,15 @@ jobs:
           done
           [ "$pushed" = true ]
           git fetch origin main
-          git show origin/main:research/framework_learning/LATEST_SUPERVISOR_STATE.json > /tmp/main-LATEST_SUPERVISOR_STATE.json
-          git show origin/main:research/framework_learning/LATEST_MASTER_MONDAY_LEARNING_PACKET.json > /tmp/main-LATEST_MASTER_MONDAY_LEARNING_PACKET.json
-          git show origin/main:research/framework_learning/LATEST_DELEGATION_QUEUE.json > /tmp/main-LATEST_DELEGATION_QUEUE.json
-          cmp -s research/framework_learning/LATEST_SUPERVISOR_STATE.json /tmp/main-LATEST_SUPERVISOR_STATE.json || { echo 'framework_learning_main_readback_mismatch:supervisor_state'; exit 1; }
-          cmp -s research/framework_learning/LATEST_MASTER_MONDAY_LEARNING_PACKET.json /tmp/main-LATEST_MASTER_MONDAY_LEARNING_PACKET.json || { echo 'framework_learning_main_readback_mismatch:master_monday_packet'; exit 1; }
-          cmp -s research/framework_learning/LATEST_DELEGATION_QUEUE.json /tmp/main-LATEST_DELEGATION_QUEUE.json || { echo 'framework_learning_main_readback_mismatch:delegation_queue'; exit 1; }
+          for rel in \
+            research/framework_learning/LATEST_SUPERVISOR_STATE.json \
+            research/framework_learning/LATEST_MASTER_MONDAY_LEARNING_PACKET.json \
+            research/framework_learning/LATEST_DELEGATION_QUEUE.json \
+            research/framework_learning/operational_memory/LATEST_OPERATIONAL_MEMORY_STATE.json \
+            research/framework_learning/operational_memory/LATEST_OPERATIONAL_MEMORY_HEALTH.json \
+            research/framework_learning/operational_memory/LATEST_OPERATIONAL_MEMORY_INDEX.json \
+            research/framework_handoffs/LATEST_FRAMEWORK_HANDOFF_MANIFEST.json; do
+            tmp="/tmp/main-$(basename "$rel")"
+            git show "origin/main:$rel" > "$tmp"
+            cmp -s "$rel" "$tmp" || { echo "framework_learning_main_readback_mismatch:$rel"; exit 1; }
+          done
