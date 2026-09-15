@@ -6,8 +6,10 @@ on:
       - 'scripts/learning/outcome_maturation_engine.py'
       - 'scripts/learning/build_model_calibration_ledger.py'
       - 'scripts/learning/build_calibration_population_census.py'
+      - 'research/api_agent/CALIBRATION_POPULATION_CONTRACT.json'
       - 'tests/learning/test_forecast_settlement_eligibility.py'
       - 'tests/learning/test_calibration_population_census.py'
+      - 'tests/learning/test_model_calibration_population_contract.py'
       - '.github/workflows/forecast-settlement-accountability-gate.yml'
       - '06_RESEARCH_LAB/forecast_accountability/**'
   workflow_dispatch:
@@ -31,15 +33,26 @@ jobs:
             scripts/learning/build_model_calibration_ledger.py \
             scripts/learning/build_calibration_population_census.py \
             tests/learning/test_forecast_settlement_eligibility.py \
-            tests/learning/test_calibration_population_census.py
+            tests/learning/test_calibration_population_census.py \
+            tests/learning/test_model_calibration_population_contract.py
       - name: Calibration population census unit tests
         run: python tests/learning/test_calibration_population_census.py -v
+      - name: Calibration population ownership contract tests
+        run: python tests/learning/test_model_calibration_population_contract.py -v
       - name: Calibration population census against repository state
         run: |
           python scripts/learning/build_calibration_population_census.py \
             --repo-root . \
             --output /tmp/CALIBRATION_POPULATION_CENSUS.json
           cat /tmp/CALIBRATION_POPULATION_CENSUS.json
+      - name: Calibration owner state against repository state
+        run: |
+          python scripts/learning/build_model_calibration_ledger.py \
+            --forecast-root research/api_agent/forecast_candidates/FROZEN \
+            --outcome-root research/api_agent/forecast_candidates/MATURED \
+            --output /tmp/MODEL_CALIBRATION_LEDGER.csv \
+            --eligibility-output /tmp/MODEL_CALIBRATION_SETTLEMENT_ELIGIBILITY.json
+          cat /tmp/MODEL_CALIBRATION_SETTLEMENT_ELIGIBILITY.json
       - name: Settlement eligibility regressions
         run: python tests/learning/test_forecast_settlement_eligibility.py -v
       - name: Existing accountability contract regressions
