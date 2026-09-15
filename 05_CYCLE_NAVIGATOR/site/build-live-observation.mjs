@@ -2,116 +2,14 @@ import { createHash } from "node:crypto";
 import { copyFile, readFile, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-
-const siteDir = dirname(fileURLToPath(import.meta.url));
-const repoRoot = resolve(siteDir, "../..");
-const distDir = resolve(siteDir, "dist");
-const pointerPath = resolve(repoRoot, "05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json");
-const snapshotPath = resolve(distDir, "data/latest.json");
-const indexPath = resolve(distDir, "index.html");
-const widgetSource = resolve(siteDir, "live-observation.js");
-const widgetDist = resolve(distDir, "live-observation.js");
-const copySource = resolve(siteDir, "public-copy.js");
-const copyDist = resolve(distDir, "public-copy.js");
-
-const readJson = async (path) => JSON.parse(await readFile(path, "utf8"));
-const sha256 = (bytes) => createHash("sha256").update(bytes).digest("hex");
-const numeric = (value) => value != null && value !== "" && Number.isFinite(Number(value));
-
-function safeWeekDir(pointer) {
-  const weekDir = String(pointer?.week_dir || "");
-  if (!weekDir.startsWith("05_CYCLE_NAVIGATOR/weekly/") || weekDir.includes("..")) {
-    throw new Error("Refusing LIVE observation from invalid week_dir");
-  }
-  return weekDir;
-}
-
-function rangeRows(freeze) {
-  return [
-    ["BTC", freeze?.btc_range_low, freeze?.btc_range_high],
-    ["ETH", freeze?.eth_range_low, freeze?.eth_range_high]
-  ].filter(([, low, high]) => numeric(low) && numeric(high)).map(([asset, low, high]) => ({
-    asset,
-    low: Number(low),
-    high: Number(high),
-    status: "FROZEN_RANGE_AVAILABLE"
-  }));
-}
-
-async function main() {
-  const pointer = await readJson(pointerPath);
-  const weekDir = safeWeekDir(pointer);
-  const root = resolve(repoRoot, weekDir);
-  const publicFreezePath = resolve(root, "CYCLE_NAVIGATOR_FORECAST_FREEZE.json");
-  const internalFreezePath = resolve(root, "CYCLE_NAVIGATOR_INTERNAL_PRECISION_FREEZE.json");
-
-  const publicFreezeBytes = await readFile(publicFreezePath);
-  const publicFreezeHash = sha256(publicFreezeBytes);
-  if (publicFreezeHash !== String(pointer.forecast_freeze_sha256 || "")) {
-    throw new Error("LIVE observation refused: public forecast-freeze hash mismatch");
-  }
-
-  const publicFreeze = JSON.parse(publicFreezeBytes.toString("utf8"));
-  const internalFreeze = await readJson(internalFreezePath);
-  if (String(internalFreeze.source_public_freeze_sha256 || "") !== publicFreezeHash) {
-    throw new Error("LIVE observation refused: internal precision freeze is not bound to current public freeze");
-  }
-  if (Number(internalFreeze.issue_number) !== Number(pointer.issue_number)) {
-    throw new Error("LIVE observation refused: frozen-claim issue mismatch");
-  }
-
-  const claims = Array.isArray(internalFreeze.claims) ? internalFreeze.claims : [];
-  const uniqueClaims = claims.filter((claim) => !claim?.alias_of);
-  const dueThisWeek = uniqueClaims.filter((claim) =>
-    Number(claim?.maturity_iso_year) === Number(pointer.iso_year) &&
-    Number(claim?.maturity_iso_week) === Number(pointer.iso_week)
-  );
-  const ranges = rangeRows(publicFreeze);
-
-  const snapshot = await readJson(snapshotPath);
-  snapshot.live_observation = {
-    contract: "CYCLE_NAVIGATOR_PUBLIC_LIVE_OBSERVATION_v1",
-    authority: "NON_AUTHORITATIVE_OBSERVATION_ONLY",
-    issue_number: Number(pointer.issue_number),
-    iso_year: Number(pointer.iso_year),
-    iso_week: Number(pointer.iso_week),
-    frozen_claim_count: uniqueClaims.length,
-    claims_due_this_week: dueThisWeek.length,
-    provisional_score: null,
-    provisional_score_status: "AWAITING_ELIGIBLE_CANONICAL_OUTCOME_EVIDENCE",
-    frozen_numeric_ranges: ranges,
-    live_price_scoring_allowed: ranges.length > 0,
-    official_weekly_scores_mutable: false,
-    forecast_mutable: false,
-    note: ranges.length
-      ? "Live prices may be compared with the frozen published ranges as observation only. They cannot rewrite the Monday score or forecast."
-      : "Frozen claims are being tracked, but no public provisional percentage is calculated until eligible canonical outcome evidence exists. No numerical price range was published for this issue."
-  };
-
-  await writeFile(snapshotPath, `${JSON.stringify(snapshot, null, 2)}\n`, "utf8");
-  await copyFile(widgetSource, widgetDist);
-  await copyFile(copySource, copyDist);
-
-  let index = await readFile(indexPath, "utf8");
-  for (const script of ["./live-observation.js", "./public-copy.js"]) {
-    if (!index.includes(script)) {
-      index = index.replace("</body>", `  <script src="${script}"></script>\n</body>`);
-    }
-  }
-  await writeFile(indexPath, index, "utf8");
-
-  console.log(JSON.stringify({
-    status: "PASS",
-    issue_number: pointer.issue_number,
-    frozen_claim_count: uniqueClaims.length,
-    claims_due_this_week: dueThisWeek.length,
-    provisional_score: null,
-    frozen_numeric_range_count: ranges.length,
-    authority: "NON_AUTHORITATIVE_OBSERVATION_ONLY"
-  }));
-}
-
-main().catch((error) => {
-  console.error(error);
-  process.exit(1);
-});
+const siteDir=dirname(fileURLToPath(import.meta.url)),repoRoot=resolve(siteDir,"../.."),distDir=resolve(siteDir,"dist");
+const pointerPath=resolve(repoRoot,"05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json"),snapshotPath=resolve(distDir,"data/latest.json"),indexPath=resolve(distDir,"index.html");
+const readJson=async(path,fallback=null)=>{try{return JSON.parse(await readFile(path,"utf8"));}catch{return fallback;}};
+const sha256=(bytes)=>createHash("sha256").update(bytes).digest("hex"),numeric=(v)=>v!=null&&v!==""&&Number.isFinite(Number(v)),clean=(v)=>typeof v==="string"&&v.trim()?v.trim():null;
+function safeWeekDir(p){const d=String(p?.week_dir||"");if(!d.startsWith("05_CYCLE_NAVIGATOR/weekly/")||d.includes(".."))throw new Error("Refusing LIVE observation from invalid week_dir");return d;}
+function rangeRows(f){return [["BTC",f?.btc_range_low,f?.btc_range_high],["ETH",f?.eth_range_low,f?.eth_range_high]].filter(([,l,h])=>numeric(l)&&numeric(h)).map(([asset,l,h])=>({asset,low:Number(l),high:Number(h),status:"FROZEN_RANGE_AVAILABLE"}));}
+function publicAction(source){if(!source||typeof source!=="object")return null;const a=source.action||{},lanes=source.lanes||{},near=lanes.lane1||lanes.near_term||{},next=lanes.lane2||lanes.five_to_seven_day||{},longer=lanes.lane3||lanes.altcoin_market||{};const raw=clean(a.NOW||near.action||near.posture||source.NOW||source.current_action)||"WAIT";const u=raw.toUpperCase();let stance="WAIT";if(/PROTECT|DE-RISK|REDUCE|EXIT|STOP_NEW/.test(u))stance="PROTECT CAPITAL";else if(/BROAD/.test(u)&&/DEPLOY|BUY|TOP/.test(u))stance="BROADER DEPLOYMENT";else if(/SELECTIVE|TOPUP|TOP-UP/.test(u))stance="SELECTIVE";else if(/PREPARE/.test(u))stance="PREPARE";else if(/HOLD/.test(u))stance="HOLD";return{stance,current:raw,next_days:clean(next.action||next.posture||next.summary),longer:clean(longer.action||longer.posture||longer.summary),confirmation:clean(a.PREPARE||near.confirmation_gate||near.confirmation),invalidation:clean(a.RISK_DOWN||near.invalidation_gate||near.invalidation),why:Array.isArray(a.WHY)?a.WHY.slice(0,4):[],generated_at:source.generated_at_utc||source.generated_at||null};}
+function evaluateClaims(dueClaims,entry){const rows=dueClaims.map(c=>({claim_id:c.claim_id,family:c.family,forecast:c.forecast,state:"OPEN",reason:"No eligible in-week evidence yet."}));if(entry?.measurement_validity?.canonical_compatible!==true)return rows;const s=entry.signals||{},breadth=String(s?.breadth?.status||s?.breadth_status||s?.proxy_breadth?.status||"").toUpperCase();if(!breadth)return rows;for(const r of rows){const f=String(r.forecast||"").toLowerCase();if(r.family!=="breadth"&&!f.includes("breadth"))continue;if(f.includes("weak"))r.state=/WEAK|NARROW|LOW/.test(breadth)?"ON_TRACK":/BROAD|STRONG|EXPAND/.test(breadth)?"OFF_TRACK":"MIXED";else if(f.includes("broad"))r.state=/BROAD|STRONG|EXPAND/.test(breadth)?"ON_TRACK":/WEAK|NARROW|LOW/.test(breadth)?"OFF_TRACK":"MIXED";else continue;r.reason="Current canonical-compatible breadth evidence is mechanically comparable with this frozen claim.";}return rows;}
+async function boundHandlekompas(){const p=await readJson(resolve(repoRoot,"04_MARKET_LEARNING/handlekompas/LATEST.json"));const rel=String(p?.handlekompas_path||"");if(!rel.startsWith("04_MARKET_LEARNING/handlekompas/runs/")||rel.includes(".."))return null;const bytes=await readFile(resolve(repoRoot,rel));if(sha256(bytes)!==String(p.handlekompas_sha256||""))throw new Error("LIVE action refused: Handlekompas run hash mismatch");return JSON.parse(bytes.toString("utf8"));}
+async function main(){const pointer=await readJson(pointerPath),root=resolve(repoRoot,safeWeekDir(pointer));const publicFreezeBytes=await readFile(resolve(root,"CYCLE_NAVIGATOR_FORECAST_FREEZE.json")),publicFreezeHash=sha256(publicFreezeBytes);if(publicFreezeHash!==String(pointer.forecast_freeze_sha256||""))throw new Error("LIVE observation refused: public forecast-freeze hash mismatch");const publicFreeze=JSON.parse(publicFreezeBytes.toString("utf8")),internalFreeze=await readJson(resolve(root,"CYCLE_NAVIGATOR_INTERNAL_PRECISION_FREEZE.json"));if(String(internalFreeze.source_public_freeze_sha256||"")!==publicFreezeHash)throw new Error("LIVE observation refused: internal precision freeze is not bound to current public freeze");if(Number(internalFreeze.issue_number)!==Number(pointer.issue_number))throw new Error("LIVE observation refused: frozen-claim issue mismatch");const claims=Array.isArray(internalFreeze.claims)?internalFreeze.claims:[],unique=claims.filter(c=>!c?.alias_of),due=unique.filter(c=>Number(c?.maturity_iso_year)===Number(pointer.iso_year)&&Number(c?.maturity_iso_week)===Number(pointer.iso_week)),ranges=rangeRows(publicFreeze),entry=await readJson(resolve(repoRoot,"04_MARKET_LEARNING/entry_signals/LATEST.json")),states=evaluateClaims(due,entry),measurable=states.filter(r=>r.state!=="OPEN"),points=measurable.reduce((s,r)=>s+(r.state==="ON_TRACK"?1:r.state==="MIXED"?.5:0),0),score=measurable.length?Math.round(points/measurable.length*1000)/10:null,action=publicAction(await boundHandlekompas());const snapshot=await readJson(snapshotPath,{});snapshot.live_observation={contract:"CYCLE_NAVIGATOR_PUBLIC_LIVE_OBSERVATION_v2",authority:"NON_AUTHORITATIVE_OBSERVATION_ONLY",issue_number:Number(pointer.issue_number),iso_year:Number(pointer.iso_year),iso_week:Number(pointer.iso_week),frozen_claim_count:unique.length,claims_due_this_week:due.length,provisional_score:score,provisional_score_status:measurable.length?"PROVISIONAL_PARTIAL":"AWAITING_ELIGIBLE_CANONICAL_OUTCOME_EVIDENCE",provisional_coverage:{measurable:measurable.length,total:due.length,label:`${measurable.length}/${due.length} measurable`},claim_states:states,frozen_numeric_ranges:ranges,live_price_scoring_allowed:ranges.length>0,current_action:action,official_weekly_scores_mutable:false,forecast_mutable:false,note:measurable.length?"Provisional only. OPEN claims are excluded from the denominator and the Monday score remains immutable.":"No due frozen claim has eligible in-week evidence yet, so no provisional percentage is shown."};await writeFile(snapshotPath,`${JSON.stringify(snapshot,null,2)}\n`,`utf8`);for(const f of ["live-observation.js","public-copy.js","public-product.js","public-product.css"])await copyFile(resolve(siteDir,f),resolve(distDir,f));let index=await readFile(indexPath,"utf8");if(!index.includes("./public-product.css"))index=index.replace("</head>",'  <link rel="stylesheet" href="./public-product.css" />\n</head>');for(const script of ["./live-observation.js","./public-copy.js","./public-product.js"])if(!index.includes(script))index=index.replace("</body>",`  <script src="${script}" defer></script>\n</body>`);await writeFile(indexPath,index,"utf8");console.log(JSON.stringify({status:"PASS",issue_number:pointer.issue_number,frozen_claim_count:unique.length,claims_due_this_week:due.length,measurable_claims:measurable.length,provisional_score:score,frozen_numeric_range_count:ranges.length,current_action:action?.stance||null}));}
+main().catch(e=>{console.error(e);process.exit(1);});
