@@ -17,10 +17,23 @@ def load(path: Path) -> dict[str, Any] | None:
 
 
 def file_ref(path: Path, root: Path) -> dict[str, Any] | None:
-    if not path.exists():
+    if not path.exists() or not path.is_file():
         return None
     raw = path.read_bytes()
     return {"path": str(path.relative_to(root)), "sha256": hashlib.sha256(raw).hexdigest(), "bytes": len(raw)}
+
+
+def repo_path(root: Path, raw: Any) -> Path | None:
+    if not isinstance(raw, str) or not raw:
+        return None
+    candidate = Path(raw)
+    if candidate.is_absolute():
+        return None
+    root_resolved = root.resolve()
+    resolved = (root / candidate).resolve()
+    if resolved != root_resolved and root_resolved not in resolved.parents:
+        return None
+    return resolved
 
 
 def main() -> None:
@@ -58,6 +71,22 @@ def main() -> None:
         "CODEX_READY_TASKS": root / "research/remediation/LATEST_CODEX_READY_TASKS.json",
         "NEEDS_MORE_EVIDENCE": root / "research/remediation/LATEST_NEEDS_MORE_EVIDENCE.json",
     }
+
+    # Cycle Navigator consumes the completed Master Monday delivery bundle, not the
+    # lower-level producer lanes that Master Monday has already frozen and adjudicated.
+    mm_pointer_path = root / "research/api_agent/outputs/weekly/LATEST_MASTER_MONDAY_DELIVERY_POINTER.json"
+    mm_pointer = load(mm_pointer_path)
+    if mm_pointer:
+        candidates["MASTER_MONDAY_DELIVERY_POINTER"] = mm_pointer_path
+        machine_path = repo_path(root, mm_pointer.get("machine_package_path"))
+        report_path = repo_path(root, mm_pointer.get("report_path"))
+        if machine_path:
+            candidates["MASTER_MONDAY_MACHINE_PACKAGE"] = machine_path
+            candidates["MASTER_MONDAY_CALIBRATION_SCORECARD"] = machine_path.with_name("MASTER_MONDAY_CALIBRATION_SCORECARD.json")
+            candidates["MASTER_MONDAY_OPERATIONAL_TRANSLATION"] = machine_path.with_name("MASTER_MONDAY_OPERATIONAL_TRANSLATION.json")
+        if report_path:
+            candidates["MASTER_MONDAY_REPORT"] = report_path
+
     evidence = {name: file_ref(path, root) for name, path in candidates.items()}
     evidence = {name: value for name, value in evidence.items() if value is not None}
 
@@ -88,6 +117,13 @@ def main() -> None:
         "OPERATIONAL_MEMORY_INDEX",
         "OPERATIONAL_PROCEDURAL_CANDIDATES",
     ]
+    cycle_navigator_inputs = [
+        "MASTER_MONDAY_DELIVERY_POINTER",
+        "MASTER_MONDAY_MACHINE_PACKAGE",
+        "MASTER_MONDAY_REPORT",
+        "MASTER_MONDAY_CALIBRATION_SCORECARD",
+        "MASTER_MONDAY_OPERATIONAL_TRANSLATION",
+    ]
     manifest = {
         "contract": "FRAMEWORK_HANDOFF_MANIFEST_v2",
         "generated_at_utc": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
@@ -101,7 +137,7 @@ def main() -> None:
         },
         "consumers": {
             "RAW_WEEKLY_CALIBRATION": ["WEEKLY_CALIBRATION", "WEEKLY_CLOSE", "WEEKLY_CAPTURE_BRIDGE", "ETF_OWNER", "EXPERIMENT_REGISTRY"],
-            "CYCLE_NAVIGATOR": ["WEEKLY_CALIBRATION", "WEEKLY_CLOSE", "DAILY_DIRECTOR", "EXPERIMENT_REGISTRY"],
+            "CYCLE_NAVIGATOR": cycle_navigator_inputs,
             "MASTER_MONDAY": ["WEEKLY_CALIBRATION", "WEEKLY_CLOSE", "ETF_OWNER", "ARCHITECTURE_HEALTH", "EXPERIMENT_REGISTRY", "REMEDIATION_QUEUE"],
             "FORECAST_LEDGER": ["WEEKLY_CALIBRATION", "DAILY_DIRECTOR", "EXPERIMENT_REGISTRY", "EXPERIMENT_RECEIPT_SYNC"],
             "OPERATIONS_DASHBOARD": ["AUTOMATION_HEALTH", "ARCHITECTURE_HEALTH", "COMPOUNDING_LEARNING_HEALTH", "OPERATIONAL_MEMORY_HEALTH", "OPERATIONAL_MEMORY_AUDIT", "EXPERIMENT_REGISTRY", "EXPERIMENT_RECEIPT_SYNC", "REMEDIATION_QUEUE"],
