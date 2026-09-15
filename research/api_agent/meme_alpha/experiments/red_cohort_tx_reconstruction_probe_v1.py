@@ -53,7 +53,7 @@ def _rpc_get_transaction(rpc_url: str, signature: str, *, timeout: int = 20) -> 
     req = urllib.request.Request(
         rpc_url,
         data=payload,
-        headers={"Content-Type": "application/json", "User-Agent": "MemeAlphaResearch/1.0"},
+        headers={"Content-Type": "application/json", "User-Agent": "MemeAlphaResearch/1.1"},
         method="POST",
     )
     try:
@@ -61,7 +61,7 @@ def _rpc_get_transaction(rpc_url: str, signature: str, *, timeout: int = 20) -> 
             body = json.loads(response.read().decode("utf-8"))
     except urllib.error.HTTPError as exc:
         return f"HTTP_{exc.code}", None
-    except Exception as exc:  # research probe, preserve failure class not secrets
+    except Exception as exc:
         return f"ERROR_{type(exc).__name__}", None
     if body.get("error"):
         code = body["error"].get("code", "UNKNOWN") if isinstance(body["error"], dict) else "UNKNOWN"
@@ -110,6 +110,53 @@ def _epoch_guess(value: Any) -> tuple[str, int | None]:
     return "NON_EPOCH_OR_RELATIVE", None
 
 
+def _maximum_matching(wallets: list[str], sigs: list[str], tx_by_sig: dict[str, dict[str, Any]]) -> tuple[int, dict[str, str]]:
+    """Maximum wallet->transaction matching using signer membership only.
+
+    This fixes the denominator error in the first probe: a 3-wallet/3-signature
+    row should be evaluated as a bipartite graph, not as 3 wallets against each
+    single transaction independently.
+    """
+    edges: dict[str, list[str]] = {}
+    for wallet in wallets:
+        candidates: list[str] = []
+        for sig in sigs:
+            tx = tx_by_sig.get(sig)
+            if tx is None:
+                continue
+            _, signers = _account_sets(tx)
+            if wallet in signers:
+                candidates.append(sig)
+        edges[wallet] = candidates
+
+    sig_owner: dict[str, str] = {}
+
+    def augment(wallet: str, seen: set[str]) -> bool:
+        for sig in edges.get(wallet, []):
+            if sig in seen:
+                continue
+            seen.add(sig)
+            previous = sig_owner.get(sig)
+            if previous is None or augment(previous, seen):
+                sig_owner[sig] = wallet
+                return True
+        return False
+
+    matched = 0
+    for wallet in wallets:
+        if augment(wallet, set()):
+            matched += 1
+    wallet_to_sig = {wallet: sig for sig, wallet in sig_owner.items()}
+    return matched, wallet_to_sig
+
+
+def _stats(values: list[int]) -> dict[str, Any]:
+    if not values:
+        return {"n": 0}
+    s = sorted(values)
+    return {"n": len(s), "min": s[0], "median": s[len(s) // 2], "max": s[-1]}
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--zip", required=True)
@@ -125,7 +172,6 @@ def main() -> None:
         member = _zip_member_by_basename(zf, "sniper_cohorts_intra.jsonl.gz")
         all_rows = list(_rows(zf, member))
 
-    # Deterministic, content-derived sample rather than first-N/cherry-picked rows.
     ranked = sorted(all_rows, key=lambda r: _hash(str(r.get("mint", ""))))
     sample = ranked[: max(1, args.sample_rows)]
 
@@ -145,7 +191,6 @@ def main() -> None:
     for row in sample:
         for sig in row.get("tx_sigs") or []:
             selected.append((row, str(sig)))
-    # Deduplicate signatures while retaining the first deterministic row association.
     seen: set[str] = set()
     deduped: list[tuple[dict[str, Any], str]] = []
     for row, sig in selected:
@@ -158,60 +203,88 @@ def main() -> None:
 
     status_counts: collections.Counter[str] = collections.Counter()
     pump_tx_count = 0
-    tx_success = 0
-    row_wallets_in_any_account = 0
-    row_wallets_as_signer = 0
-    total_row_wallet_checks = 0
-    tx_blocktimes: list[int] = []
-    detection_minus_block: list[int] = []
     tx_error_free = 0
+    tx_by_sig: dict[str, dict[str, Any]] = {}
+    tx_blocktimes: list[int] = []
 
-    for idx, (row, sig) in enumerate(deduped):
+    for idx, (_, sig) in enumerate(deduped):
         status, tx = _rpc_get_transaction(args.rpc_url, sig)
         status_counts[status] += 1
-        if tx is None:
-            if idx + 1 < len(deduped):
-                time.sleep(args.sleep_seconds)
-            continue
-        tx_success += 1
-        accounts, signers = _account_sets(tx)
-        wallets = {str(w) for w in (row.get("wallets") or [])}
-        total_row_wallet_checks += len(wallets)
-        row_wallets_in_any_account += sum(1 for wallet in wallets if wallet in accounts)
-        row_wallets_as_signer += sum(1 for wallet in wallets if wallet in signers)
-        if _has_pump_evidence(tx):
-            pump_tx_count += 1
-        if (tx.get("meta") or {}).get("err") is None:
-            tx_error_free += 1
-        block_time = tx.get("blockTime")
-        if isinstance(block_time, int):
-            tx_blocktimes.append(block_time)
-            _, detected_epoch = _epoch_guess(row.get("detected_at"))
-            if detected_epoch is not None:
-                detection_minus_block.append(detected_epoch - block_time)
+        if tx is not None:
+            tx_by_sig[sig] = tx
+            if _has_pump_evidence(tx):
+                pump_tx_count += 1
+            if (tx.get("meta") or {}).get("err") is None:
+                tx_error_free += 1
+            if isinstance(tx.get("blockTime"), int):
+                tx_blocktimes.append(int(tx["blockTime"]))
         if idx + 1 < len(deduped):
             time.sleep(args.sleep_seconds)
 
-    def stats(values: list[int]) -> dict[str, Any]:
-        if not values:
-            return {"n": 0}
-        s = sorted(values)
-        return {
-            "n": len(s),
-            "min": s[0],
-            "median": s[len(s)//2],
-            "max": s[-1],
-        }
+    rows_with_any_resolved = 0
+    rows_fully_resolved = 0
+    rows_equal_cardinality_fully_resolved = 0
+    rows_perfect_signer_bijection = 0
+    rows_partial_matching = 0
+    resolved_wallets_total = 0
+    matched_wallets_total = 0
+    detected_minus_earliest_tx: list[int] = []
+    detected_minus_latest_tx: list[int] = []
+    row_matching_summaries: list[dict[str, Any]] = []
+
+    for row in sample:
+        wallets = [str(w) for w in (row.get("wallets") or [])]
+        sigs = [str(s) for s in (row.get("tx_sigs") or [])]
+        resolved_sigs = [sig for sig in sigs if sig in tx_by_sig]
+        if resolved_sigs:
+            rows_with_any_resolved += 1
+        fully_resolved = bool(sigs) and len(resolved_sigs) == len(sigs)
+        if fully_resolved:
+            rows_fully_resolved += 1
+        equal_cardinality = bool(wallets) and len(wallets) == len(sigs)
+        if fully_resolved and equal_cardinality:
+            rows_equal_cardinality_fully_resolved += 1
+
+        matched, wallet_to_sig = _maximum_matching(wallets, sigs, tx_by_sig)
+        resolved_wallets_total += len(wallets) if fully_resolved else 0
+        matched_wallets_total += matched if fully_resolved else 0
+        perfect = fully_resolved and equal_cardinality and matched == len(wallets)
+        if perfect:
+            rows_perfect_signer_bijection += 1
+        elif matched > 0:
+            rows_partial_matching += 1
+
+        blocktimes = [
+            int(tx_by_sig[sig]["blockTime"])
+            for sig in resolved_sigs
+            if isinstance(tx_by_sig[sig].get("blockTime"), int)
+        ]
+        _, detected_epoch = _epoch_guess(row.get("detected_at"))
+        if fully_resolved and blocktimes and detected_epoch is not None:
+            detected_minus_earliest_tx.append(detected_epoch - min(blocktimes))
+            detected_minus_latest_tx.append(detected_epoch - max(blocktimes))
+
+        row_matching_summaries.append({
+            "row_identity_sha256": _hash(str(row.get("mint", ""))),
+            "wallet_count": len(wallets),
+            "tx_sig_count": len(sigs),
+            "resolved_tx_count": len(resolved_sigs),
+            "matched_wallet_count": matched,
+            "equal_cardinality": equal_cardinality,
+            "fully_resolved": fully_resolved,
+            "perfect_signer_bijection": perfect,
+            "raw_wallets_or_signatures_logged": False,
+        })
 
     result = {
-        "experiment": "RED_COHORT_TX_RECONSTRUCTION_FEASIBILITY_v1",
+        "experiment": "RED_COHORT_TX_RECONSTRUCTION_FEASIBILITY_v1_1",
         "source": "RED-COHORT-2026-v1.1.1",
         "sample_design": {
             "all_intra_rows": len(all_rows),
             "deterministic_sample_rows": len(sample),
             "unique_tx_signatures_requested": len(deduped),
             "selection_rule": "sort all rows by SHA256(mint), take first N; then dedupe tx_sigs and cap signatures",
-            "sample_identity_sha256": _hash("|".join(sorted(_hash(str(r.get('mint',''))) for r in sample))),
+            "sample_identity_sha256": _hash("|".join(sorted(_hash(str(r.get("mint", ""))) for r in sample))),
             "raw_mints_or_signatures_logged": False,
         },
         "row_shape": {
@@ -228,33 +301,48 @@ def main() -> None:
                 "min": datetime.fromtimestamp(min(detected_epochs), tz=timezone.utc).isoformat().replace("+00:00", "Z") if detected_epochs else None,
                 "max": datetime.fromtimestamp(max(detected_epochs), tz=timezone.utc).isoformat().replace("+00:00", "Z") if detected_epochs else None,
             },
+            "detected_at_minus_earliest_row_tx_seconds": _stats(detected_minus_earliest_tx),
+            "detected_at_minus_latest_row_tx_seconds": _stats(detected_minus_latest_tx),
+            "interpretation": "detected_at is not assumed to equal entry time or earliest-knowable cohort time",
         },
         "rpc_reconstruction": {
             "rpc_host_class": "PUBLIC_SOLANA_MAINNET_RPC_NO_AUTH",
             "status_counts": dict(sorted(status_counts.items())),
-            "transactions_resolved": tx_success,
+            "transactions_resolved": len(tx_by_sig),
             "transactions_with_pump_program_evidence": pump_tx_count,
             "transactions_error_free": tx_error_free,
-            "row_wallet_checks": total_row_wallet_checks,
-            "row_wallets_present_in_any_tx_account": row_wallets_in_any_account,
-            "row_wallets_present_as_tx_signer": row_wallets_as_signer,
-            "wallet_account_match_rate": round(row_wallets_in_any_account / total_row_wallet_checks, 6) if total_row_wallet_checks else None,
-            "wallet_signer_match_rate": round(row_wallets_as_signer / total_row_wallet_checks, 6) if total_row_wallet_checks else None,
-            "blocktime_stats": stats(tx_blocktimes),
-            "detected_at_minus_tx_blocktime_seconds": stats(detection_minus_block),
+            "blocktime_stats": _stats(tx_blocktimes),
+        },
+        "row_level_bipartite_mapping": {
+            "method": "maximum bipartite matching of row wallets to row tx_sigs using signer membership",
+            "rows_with_any_resolved_tx": rows_with_any_resolved,
+            "rows_fully_resolved": rows_fully_resolved,
+            "rows_equal_cardinality_and_fully_resolved": rows_equal_cardinality_fully_resolved,
+            "rows_with_perfect_signer_bijection": rows_perfect_signer_bijection,
+            "rows_with_partial_matching": rows_partial_matching,
+            "perfect_bijection_rate_given_equal_cardinality_fully_resolved": (
+                round(rows_perfect_signer_bijection / rows_equal_cardinality_fully_resolved, 6)
+                if rows_equal_cardinality_fully_resolved else None
+            ),
+            "matched_wallet_rate_given_fully_resolved": (
+                round(matched_wallets_total / resolved_wallets_total, 6)
+                if resolved_wallets_total else None
+            ),
+            "bounded_row_summaries": row_matching_summaries,
         },
         "decision_logic": {
             "reconstruction_path_supported_if": [
-                "A material fraction of sampled tx_sigs resolve on chain",
-                "Listed cohort wallets are present in the corresponding transaction accounts/signers",
+                "material sampled tx_sigs resolve on chain",
+                "row-level wallet/signature sets support one-to-one signer mapping",
                 "Pump program evidence is present",
-                "detected_at timing is compatible with transaction block times",
+                "timing semantics are treated separately from economic-return semantics",
             ],
             "does_not_prove": [
                 "wallet independence",
                 "profitability",
                 "sellable return",
                 "cohort intent",
+                "earliest-knowable cohort time",
             ],
         },
         "authority": {
