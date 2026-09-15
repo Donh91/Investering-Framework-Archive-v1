@@ -68,9 +68,11 @@ jobs:
               if not any(row.get('system')=='consumer_receipt' for row in actions if isinstance(row,dict)):
                   actions.append({'priority':'P1','system':'consumer_receipt','reason':receipt.get('reasons') or [receipt.get('reason') or 'CONSUMPTION_UNVERIFIED']})
               value['required_actions']=sorted(actions,key=lambda row:(row.get('priority','P9'),row.get('system','')))
-          raw=lambda v:json.dumps(v,sort_keys=True,separators=(',',':')).encode()
-          value['dashboard_sha256']=hashlib.sha256(raw(value)).hexdigest()
-          path.write_text(json.dumps(value,sort_keys=True,separators=(',',':'))+'\n')
+          canonical=lambda v:(json.dumps(v,sort_keys=True,separators=(',',':'))+'\n').encode()
+          value['dashboard_sha256']=hashlib.sha256(canonical(value)).hexdigest()
+          path.write_bytes(canonical(value))
+          check=json.loads(path.read_text()); declared=check.pop('dashboard_sha256')
+          if hashlib.sha256(canonical(check)).hexdigest()!=declared: raise SystemExit('dashboard_self_hash_mismatch_after_consumer_receipt')
           PY
           cp research/operations_dashboard/LATEST_OPERATIONS_DASHBOARD.json LATEST_OPERATIONS_DASHBOARD.json
           cp research/operations_dashboard/LATEST_OPERATIONS_DASHBOARD.md LATEST_OPERATIONS_DASHBOARD.md
