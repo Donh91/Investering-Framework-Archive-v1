@@ -1,0 +1,46 @@
+{
+  "contract": "CHAIN_OF_TITLE_SOURCE_BOUNDARY_v1",
+  "audited_at_utc": "2026-09-15T19:08:00Z",
+  "source": "Chain of Title",
+  "verdict": "KEEP_HIGH_VALUE_BUT_BIND_TO_FROZEN_CC0_DEPOSIT_FOR_BULK_RESEARCH",
+  "reason": "The public historical deposit is exceptionally valuable for immutable launch provenance, creator/self-buy, outside-buyer, buyout, metadata-hash and operator/funder research. Current website terms changed after the deposit and must not be silently treated as identical to the earlier CC0 release.",
+  "licensing_boundary": {
+    "frozen_public_deposit": {
+      "url": "https://huggingface.co/datasets/chainoftitle/chain-of-title",
+      "doi": "10.57967/hf/10338",
+      "observed_license": "CC0-1.0 on the dataset card",
+      "permitted_research_role": "bulk historical internal research subject to the frozen deposit's license and provenance"
+    },
+    "live_site_and_api": {
+      "url": "https://chainoftitle.org/terms.html",
+      "observed_change": "Interim terms effective 2026-09-13 distinguish previously released CC0 copies from API/licensed data and state that licensed data may not be redistributed in bulk or accessed by working around quotas.",
+      "framework_rule": "Do not assume current live API/bulk data inherits the old CC0 terms. Verify current terms before any automated live integration, use normal documented access only, and never work around quotas."
+    }
+  },
+  "research_findings": [
+    "Launch-time metadata is itself perishable. A 2026-09-12 report re-fetched launch documents byte-for-byte and found host-dependent survival; historical capture therefore has genuine provenance/lore value beyond present-tense URLs.",
+    "Image and metadata SHA-256 reuse across launches can support copycat/lore originality research without semantic guessing.",
+    "Operator/funder groups are valuable network evidence but the source explicitly warns that common-funder infrastructure can also be a trading terminal; shared funder alone is not common-control proof.",
+    "The source reports a dated negative experiment: 19,412 simulated bonding-curve positions in a favorable organic subset during September 2026 produced zero 5x outcomes. Treat this as a regime-specific falsifier and replicate independently before changing tail priors."
+  ],
+  "candidate_features_for_preregistration": [
+    "creator_initial_supply_share",
+    "creator_self_buy_at_or_near_launch",
+    "outside_curve_buyer_count",
+    "curve_completion_latency",
+    "single_large_buyout_completion",
+    "creator_prior_launch_count_and_prior_findings_as_of_cutoff",
+    "metadata_document_hash_reuse",
+    "image_hash_reuse",
+    "operator_funder_repeat_count_as_of_cutoff",
+    "pool_depth_snapshot_age_and_decay"
+  ],
+  "anti_overclaim": [
+    "A clean launch record is not a positive alpha signal.",
+    "A finding is not proof of fraud or intent.",
+    "Current pool balance is mutable and must carry observation age.",
+    "Receipt/decode timestamps are not always exact block-time ordering inside a batch.",
+    "Rebuilt and late-discovery records must not be mixed with live-observed records without an explicit cohort flag."
+  ],
+  "authority": {"automatic_trading": false, "portfolio_execution": false, "live_api_integration": false, "paid_or_licensed_access": false}
+}
