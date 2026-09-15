@@ -55,6 +55,23 @@ jobs:
             --declared EXPERIMENT_RECEIPT_SYNC \
             --declared EXPERIMENT_DISPATCH \
             --declared REMEDIATION_QUEUE
+          python - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          path=Path('research/operations_dashboard/LATEST_OPERATIONS_DASHBOARD.json')
+          value=json.loads(path.read_text())
+          value.pop('dashboard_sha256',None)
+          receipt=value.get('consumer_receipt') if isinstance(value.get('consumer_receipt'),dict) else {}
+          if receipt.get('consumption_state')!='VERIFIED':
+              if value.get('overall_status')=='GREEN': value['overall_status']='AMBER'
+              actions=value.get('required_actions') if isinstance(value.get('required_actions'),list) else []
+              if not any(row.get('system')=='consumer_receipt' for row in actions if isinstance(row,dict)):
+                  actions.append({'priority':'P1','system':'consumer_receipt','reason':receipt.get('reasons') or [receipt.get('reason') or 'CONSUMPTION_UNVERIFIED']})
+              value['required_actions']=sorted(actions,key=lambda row:(row.get('priority','P9'),row.get('system','')))
+          raw=lambda v:json.dumps(v,sort_keys=True,separators=(',',':')).encode()
+          value['dashboard_sha256']=hashlib.sha256(raw(value)).hexdigest()
+          path.write_text(json.dumps(value,sort_keys=True,separators=(',',':'))+'\n')
+          PY
           cp research/operations_dashboard/LATEST_OPERATIONS_DASHBOARD.json LATEST_OPERATIONS_DASHBOARD.json
           cp research/operations_dashboard/LATEST_OPERATIONS_DASHBOARD.md LATEST_OPERATIONS_DASHBOARD.md
       - name: Commit dashboard and verify remote bytes
