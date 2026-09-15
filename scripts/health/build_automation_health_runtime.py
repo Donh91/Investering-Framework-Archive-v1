@@ -353,11 +353,13 @@ def live_workflows(
     return result
 
 
-def _copy_with_cancelled_latest_neutralized(row: dict[str, Any]) -> dict[str, Any]:
-    """Prevent a cancellation from being interpreted as LATEST_RUN_FAILED by the base classifier."""
+def _copy_with_non_execution_latest_neutralized(row: dict[str, Any]) -> dict[str, Any]:
+    """Keep cancellations/PR rejections from masquerading as execution failures."""
     live = row.get("live") or {}
     latest = live.get("latest_run") if isinstance(live, dict) else None
-    if not isinstance(latest, dict) or latest.get("conclusion") != CANCELLED_CONCLUSION:
+    if not isinstance(latest, dict) or not (
+        _is_cancelled(latest) or _is_pr_gate_rejection(latest)
+    ):
         return row
     candidate = dict(row)
     candidate_live = dict(live)
@@ -370,7 +372,7 @@ def _copy_with_cancelled_latest_neutralized(row: dict[str, Any]) -> dict[str, An
 
 def classify(row: dict[str, Any], now: Any) -> tuple[str, list[str]]:
     """Apply production-health semantics and fail closed on unresolved write targets."""
-    candidate = _copy_with_cancelled_latest_neutralized(row)
+    candidate = _copy_with_non_execution_latest_neutralized(row)
     if API_DEGRADED:
         # Preserve static and lifecycle findings, but do not infer NO_RUN_HISTORY,
         # LATEST_RUN_FAILED or missing registration from an unavailable global API.
