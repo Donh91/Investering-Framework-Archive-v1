@@ -101,7 +101,6 @@ def verified_weekly_target(root: Path, weekly: dict | None):
 
 
 def receipt_time(data): return first_time(data,('completed_at_utc','created_at_utc','generated_at_utc','timestamp_utc','created_unix'))
-
 def is_api_receipt(path,data): return 'API_AGENT_RECEIPT' in str(data.get('contract') or '') or path.name.endswith('RECEIPT.json') or path.name=='receipt.json'
 
 
@@ -134,6 +133,21 @@ def direct_system(root,path,contract,green_hours,red_hours,reference,missing_rea
     return {'status':combine_status(fresh,semantic),'reason':reason if semantic=='GREEN' else 'INVALID_CONTRACT','path':str(path),'timestamp_utc':stamp.isoformat().replace('+00:00','Z') if stamp else None,'age_hours':age},value
 
 
+def upstream_health_system(value,error,reference):
+    stamp=first_time(value,('generated_at_utc','created_at_utc','completed_at_utc'))
+    fresh,fresh_reason,age=freshness(stamp,reference,18,30)
+    semantic=normalized_status(value.get('status') if value else None)
+    return {
+        'status':combine_status(fresh,semantic),
+        'reason':error or (fresh_reason if fresh!='GREEN' else None),
+        'generated_at_utc':value.get('generated_at_utc') if value else None,
+        'age_hours':age,
+        'freshness_status':fresh,
+        'semantic_status':value.get('status') if value else None,
+        'input_error':error,
+    }
+
+
 def build_dashboard(repo_root,reference=None):
     reference=reference or datetime.now(UTC); handoff,handoff_error=read_json(repo_root/'LATEST_HANDOFF.json'); automation,automation_error=read_json(repo_root/'research/architecture_health/LATEST_AUTOMATION_HEALTH.json'); architecture,architecture_error=read_json(repo_root/'research/architecture_health/LATEST_ARCHITECTURE_HEALTH.json'); pointers=handoff.get('pointers',{}) if handoff else {}
     capture_pointer=pointer_entry(repo_root,pointers.get('latest_capture')); director_pointer=pointer_entry(repo_root,pointers.get('latest_director_output')); weekly_pointer=pointer_entry(repo_root,pointers.get('latest_weekly_output')); capture=pointer_object(repo_root,capture_pointer); director=pointer_object(repo_root,director_pointer); weekly=pointer_object(repo_root,weekly_pointer); director_receipt,director_receipt_path=paired_director_receipt(repo_root,director_pointer); weekly_target,weekly_target_path,weekly_target_hash_status=verified_weekly_target(repo_root,weekly)
@@ -146,7 +160,9 @@ def build_dashboard(repo_root,reference=None):
     if sync and sync.get('status')=='UNAVAILABLE': sync_system['status']='AMBER'; sync_system['reason']='EXECUTION_PLANE_UNAVAILABLE'
     if sync and sync.get('status')=='FAIL': sync_system['status']='RED'; sync_system['reason']='RECEIPT_SYNC_FAILED'
     remediation_system,remediation=direct_system(repo_root,Path('research/remediation/LATEST_REMEDIATION_QUEUE.json'),'REMEDIATION_MATURATION_ENGINE_v1',18,36,reference,'NO_REMEDIATION_QUEUE_YET')
-    systems={'daily_capture':{'status':combine_status(capture_fresh,hash_status(capture_pointer)),'reason':capture_reason,'age_hours':capture_age,'timestamp_utc':capture_time.isoformat().replace('+00:00','Z') if capture_time else None,'pointer':capture_pointer},'openai_daily_director':{'status':combine_status(director_fresh,hash_status(director_pointer),director_semantic),'reason':director_reason,'age_hours':director_age,'timestamp_utc':director_time.isoformat().replace('+00:00','Z') if director_time else None,'semantic_status':semantic_source,'pointer':director_pointer,'receipt_path':director_receipt_path},'weekly_output':{'status':combine_status(weekly_fresh,hash_status(weekly_pointer),weekly_target_integrity),'reason':weekly_reason if weekly_target_integrity=='GREEN' else weekly_target_hash_status,'age_hours':weekly_age,'timestamp_utc':weekly_time.isoformat().replace('+00:00','Z') if weekly_time else None,'pointer':weekly_pointer,'target_path':weekly_target_path,'target_hash_status':weekly_target_hash_status},'automation_health':{'status':normalized_status(automation.get('status') if automation else None),'generated_at_utc':automation.get('generated_at_utc') if automation else None,'red_count':automation.get('red_count') if automation else None,'amber_count':automation.get('amber_count') if automation else None,'blockers':automation.get('blockers',[]) if automation else [],'input_error':automation_error},'architecture_health':{'status':normalized_status(architecture.get('status') if architecture else None),'generated_at_utc':architecture.get('generated_at_utc') if architecture else None,'blockers':architecture.get('blockers',[]) if architecture else [],'input_error':architecture_error},'experiment_lifecycle':experiment_system,'experiment_receipt_sync':sync_system,'remediation_maturation':remediation_system}
+    automation_system=upstream_health_system(automation,automation_error,reference); automation_system.update({'red_count':automation.get('red_count') if automation else None,'amber_count':automation.get('amber_count') if automation else None,'blockers':automation.get('blockers',[]) if automation else []})
+    architecture_system=upstream_health_system(architecture,architecture_error,reference); architecture_system.update({'blockers':architecture.get('blockers',[]) if architecture else []})
+    systems={'daily_capture':{'status':combine_status(capture_fresh,hash_status(capture_pointer)),'reason':capture_reason,'age_hours':capture_age,'timestamp_utc':capture_time.isoformat().replace('+00:00','Z') if capture_time else None,'pointer':capture_pointer},'openai_daily_director':{'status':combine_status(director_fresh,hash_status(director_pointer),director_semantic),'reason':director_reason,'age_hours':director_age,'timestamp_utc':director_time.isoformat().replace('+00:00','Z') if director_time else None,'semantic_status':semantic_source,'pointer':director_pointer,'receipt_path':director_receipt_path},'weekly_output':{'status':combine_status(weekly_fresh,hash_status(weekly_pointer),weekly_target_integrity),'reason':weekly_reason if weekly_target_integrity=='GREEN' else weekly_target_hash_status,'age_hours':weekly_age,'timestamp_utc':weekly_time.isoformat().replace('+00:00','Z') if weekly_time else None,'pointer':weekly_pointer,'target_path':weekly_target_path,'target_hash_status':weekly_target_hash_status},'automation_health':automation_system,'architecture_health':architecture_system,'experiment_lifecycle':experiment_system,'experiment_receipt_sync':sync_system,'remediation_maturation':remediation_system}
     actions=[]
     for name,system in systems.items():
         reason=system.get('reason') or system.get('input_error') or system.get('blockers') or 'REQUIRED_INPUT_UNAVAILABLE'
