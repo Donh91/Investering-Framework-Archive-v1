@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import hashlib
 import json
+import subprocess
+import sys
 from pathlib import Path
 
 from scripts.orchestration.consumer_receipt import build_consumer_receipt, canonical, stamp_target
@@ -138,3 +140,28 @@ def test_stamp_target_recomputes_semantic_self_hash_after_receipt(tmp_path: Path
     assert receipt["status"] == "PASS"
     assert stamped["consumer_receipt"]["contract"] == "CONSUMER_RECEIPT_v1"
     assert declared_hash == hashlib.sha256(canonical(stamped)).hexdigest()
+
+
+def test_framework_handoff_separates_receipt_consumers_from_routing_labels(tmp_path: Path) -> None:
+    output = tmp_path / "handoff.json"
+    subprocess.run(
+        [
+            sys.executable,
+            "scripts/orchestration/build_framework_handoff_manifest.py",
+            "--repo-root",
+            str(tmp_path),
+            "--output",
+            str(output),
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    manifest = json.loads(output.read_text())
+
+    assert set(manifest["consumers"]) == {"MASTER_MONDAY", "CYCLE_NAVIGATOR", "OPERATIONS_DASHBOARD"}
+    assert manifest["consumer_receipt_policy"]["receipt_required_for"] == ["CYCLE_NAVIGATOR", "MASTER_MONDAY", "OPERATIONS_DASHBOARD"]
+    assert manifest["consumer_receipt_policy"]["routing_targets_are_consumers"] is False
+    assert manifest["consumer_receipt_policy"]["producer_success_requires_verified_consumer_receipt"] is True
+    for label in ("RAW_WEEKLY_CALIBRATION", "FORECAST_LEDGER", "EXPERIMENT_LEARNING", "ASTRA_RESEARCH_ROUTING", "CODEX_DELIVERY_ROUTING"):
+        assert label not in manifest["consumers"]
