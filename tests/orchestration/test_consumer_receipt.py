@@ -1,0 +1,91 @@
+from __future__ import annotations
+
+import hashlib
+import json
+from pathlib import Path
+
+from scripts.orchestration.consumer_receipt import build_consumer_receipt, canonical, stamp_target
+
+
+def _write_json(path: Path, value: dict) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(canonical(value))
+
+
+def _sha(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def _manifest(root: Path, expected: list[str], evidence: dict[str, dict]) -> Path:
+    path = root / "research/framework_handoffs/LATEST_FRAMEWORK_HANDOFF_MANIFEST.json"
+    _write_json(path, {
+        "contract": "FRAMEWORK_HANDOFF_MANIFEST_v2",
+        "generated_at_utc": "2026-09-15T00:00:00Z",
+        "consumers": {"TEST_CONSUMER": expected},
+        "evidence": evidence,
+    })
+    return path
+
+
+def test_consumer_receipt_passes_only_when_all_expected_inputs_are_verified(tmp_path: Path) -> None:
+    evidence_path = tmp_path / "research/source/a.json"
+    _write_json(evidence_path, {"value": 1})
+    manifest = _manifest(tmp_path, ["A"], {"A": {"path": "research/source/a.json", "sha256": _sha(evidence_path)}})
+
+    receipt = build_consumer_receipt(
+        tmp_path,
+        manifest,
+        "TEST_CONSUMER",
+        ["A"],
+        consumed_at_utc="2026-09-15T01:00:00Z",
+    )
+
+    assert receipt["status"] == "PASS"
+    assert receipt["missing_expected_evidence"] == []
+    assert receipt["stale_declared_evidence"] == []
+    assert set(receipt["verified_evidence"]) == {"A"}
+
+
+def test_consumer_receipt_is_partial_when_expected_input_is_not_declared(tmp_path: Path) -> None:
+    a = tmp_path / "research/source/a.json"
+    b = tmp_path / "research/source/b.json"
+    _write_json(a, {"value": "a"})
+    _write_json(b, {"value": "b"})
+    manifest = _manifest(tmp_path, ["A", "B"], {
+        "A": {"path": "research/source/a.json", "sha256": _sha(a)},
+        "B": {"path": "research/source/b.json", "sha256": _sha(b)},
+    })
+
+    receipt = build_consumer_receipt(tmp_path, manifest, "TEST_CONSUMER", ["A"])
+
+    assert receipt["status"] == "PARTIAL"
+    assert receipt["missing_expected_evidence"] == ["B"]
+    assert set(receipt["verified_evidence"]) == {"A"}
+
+
+def test_consumer_receipt_is_partial_when_manifest_binding_is_stale(tmp_path: Path) -> None:
+    evidence_path = tmp_path / "research/source/a.json"
+    _write_json(evidence_path, {"value": 1})
+    manifest = _manifest(tmp_path, ["A"], {"A": {"path": "research/source/a.json", "sha256": "0" * 64}})
+
+    receipt = build_consumer_receipt(tmp_path, manifest, "TEST_CONSUMER", ["A"])
+
+    assert receipt["status"] == "PARTIAL"
+    assert receipt["stale_declared_evidence"] == ["A"]
+    assert receipt["verified_evidence"] == {}
+
+
+def test_stamp_target_recomputes_semantic_self_hash_after_receipt(tmp_path: Path) -> None:
+    evidence_path = tmp_path / "research/source/a.json"
+    _write_json(evidence_path, {"value": 1})
+    manifest = _manifest(tmp_path, ["A"], {"A": {"path": "research/source/a.json", "sha256": _sha(evidence_path)}})
+    target = tmp_path / "output.json"
+    _write_json(target, {"contract": "OUTPUT_v1", "payload": 7, "package_sha256": "old"})
+
+    receipt = stamp_target(tmp_path, manifest, "TEST_CONSUMER", target, ["A"], "package_sha256")
+    stamped = json.loads(target.read_text())
+    declared_hash = stamped.pop("package_sha256")
+
+    assert receipt["status"] == "PASS"
+    assert stamped["consumer_receipt"]["contract"] == "CONSUMER_RECEIPT_v1"
+    assert declared_hash == hashlib.sha256(canonical(stamped)).hexdigest()
