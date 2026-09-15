@@ -26,6 +26,7 @@ This is not a new orchestrator, semantic-memory owner or source of truth. Curren
 - `LATEST_OPERATIONAL_MEMORY_INDEX.json` with current-main compatibility;
 - `LATEST_PROCEDURAL_CANDIDATES.json`, candidate-only repeated operational patterns;
 - `LATEST_OPERATIONAL_MEMORY_HEALTH.json`;
+- `LATEST_OPERATIONAL_MEMORY_POST_PRODUCTION_AUDIT.json` and `.md`;
 - deterministic `OPERATIONAL_MEMORY_PREFLIGHT_v1` for task bootstrap.
 
 ## Episode semantics
@@ -60,6 +61,21 @@ A newer related episode is a relation, not automatic supersession. Supersession 
 Repeated accepted work may create a `CANDIDATE_ONLY` procedural pattern after at least three independent commits in the same task/action/path family.
 
 V1 never auto-activates or auto-promotes a skill. Promotion requires governed skill review with clear trigger, preconditions, steps, success criteria, failure modes, versioning and rollback/revalidation semantics.
+
+## Autonomous post-production audit
+
+Every production Supervisor run audits the just-built Operational Memory before it is committed back to `main`.
+
+The audit verifies contract consistency, current-HEAD binding, authority firewalls, stale-memory quarantine, procedural-candidate safety and bounded deterministic retrieval probes. It also records the episode count, compatibility distribution, candidate count, stale share and a shadow retrieval-quality baseline.
+
+Audit states are:
+- `PASS`: continue shadow operation autonomously;
+- `WARN`: continue shadow operation and accumulate evidence, with no user action required;
+- `FAIL`: block Operational Memory reuse for that run, fail the workflow before memory products are committed, and automatically open or update one deduplicated GitHub issue containing the failure evidence and workflow run URL.
+
+When a later run recovers from `FAIL`, the same workflow automatically comments on and closes the escalation issue. Routine `PASS` and `WARN` runs create no issue.
+
+The audit itself has no canonical, scientific, model, skill-promotion or portfolio authority.
 
 ## Retention
 
