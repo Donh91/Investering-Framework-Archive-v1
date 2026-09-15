@@ -2,14 +2,12 @@ name: Meme Alpha Ian G2-G3 Research
 
 on:
   pull_request:
-    branches:
-      - main
+    branches: [main]
     paths:
       - 'research/api_agent/meme_alpha/experiments/ian_g2g3_backfill_v1.py'
       - '.github/workflows/meme-alpha-ian-g2g3-research.yml'
   push:
-    branches:
-      - main
+    branches: [main]
     paths:
       - 'research/api_agent/meme_alpha/experiments/ian_g2g3_backfill_v1.py'
       - '.github/workflows/meme-alpha-ian-g2g3-research.yml'
@@ -25,17 +23,14 @@ jobs:
     steps:
       - name: Checkout research revision
         uses: actions/checkout@v4
-
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-
       - name: Install bounded analysis dependencies
         run: |
           python -m pip install --upgrade pip
           pip install 'pandas>=2.2,<3' 'numpy>=2,<3' 'pyarrow>=17,<22' 'duckdb>=1.1,<2' 'scikit-learn>=1.5,<2'
-
       - name: Download pinned public source artifacts
         shell: bash
         run: |
@@ -43,29 +38,34 @@ jobs:
           mkdir -p /tmp/ian05012
           BASE='https://raw.githubusercontent.com/ian05012/solana-memecoin-dataset/7070d00e1e4492f8604d988549d91785cc5f43f7/data'
           for f in tokens.parquet trades-000.parquet trades-001.parquet trades-002.parquet trades-003.parquet wallet_funding.parquet; do
-            echo "Downloading $f"
             curl -L --fail --retry 5 --retry-delay 2 --connect-timeout 20 "$BASE/$f" -o "/tmp/ian05012/$f"
           done
-          ls -lh /tmp/ian05012
           sha256sum /tmp/ian05012/*.parquet | tee /tmp/ian05012/SHA256SUMS
-
+      - name: Audit source label and timestamp semantics
+        run: |
+          python - <<'PY'
+          import glob, pandas as pd, pyarrow.parquet as pq
+          t = pd.read_parquet('/tmp/ian05012/tokens.parquet')
+          print('TOKEN_ROWS', len(t), 'UNIQUE_TOKENS', t.token_address.nunique())
+          print('CAPTURED_AT_SAMPLE', t.captured_at.head(3).tolist())
+          for c in ['reaches_2x','max_return_1h','max_return_6h','max_return_24h','max_return_3d','runner_peak_x','staged_exit_return','scalp_exit_return','mdd_from_peak','time_to_peak_sec']:
+              if c in t:
+                  x = pd.to_numeric(t[c], errors='coerce')
+                  print('LABEL', c, 'non_null', int(x.notna().sum()), 'zero', int((x==0).sum()), 'mean', x.mean(), 'q', x.quantile([0,.5,.9,.95,.99,1]).to_dict())
+          for f in sorted(glob.glob('/tmp/ian05012/trades-*.parquet')):
+              d = pd.read_parquet(f, columns=['ts'])
+              x = pd.to_numeric(d.ts, errors='coerce')
+              print('TRADE_TS', f, 'min', x.min(), 'median', x.median(), 'max', x.max())
+          PY
       - name: Execute point-in-time G2 vs G3 test
         run: |
           mkdir -p /tmp/alpha-results
-          python research/api_agent/meme_alpha/experiments/ian_g2g3_backfill_v1.py \
-            --data-dir /tmp/ian05012 \
-            --out-dir /tmp/alpha-results
+          python research/api_agent/meme_alpha/experiments/ian_g2g3_backfill_v1.py --data-dir /tmp/ian05012 --out-dir /tmp/alpha-results
           cp /tmp/ian05012/SHA256SUMS /tmp/alpha-results/SHA256SUMS
-
       - name: Emit machine-readable result to log
         if: always()
         run: |
-          if [ -f /tmp/alpha-results/ian_g2g3_results_v1.json ]; then
-            echo '--- RESULT JSON START ---'
-            cat /tmp/alpha-results/ian_g2g3_results_v1.json
-            echo '--- RESULT JSON END ---'
-          fi
-
+          for f in /tmp/alpha-results/*.json; do [ -f "$f" ] && cat "$f"; done
       - name: Upload research artifact
         if: always()
         uses: actions/upload-artifact@v4
