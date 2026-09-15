@@ -1,0 +1,86 @@
+{
+  "contract": "CYCLE_NAVIGATOR_V2_SCOREBOARD_RECOVERY_v1",
+  "status": "PARTIAL_VERIFIED_HISTORY",
+  "scoring_policy": {
+    "historical_scores_locked": true,
+    "retroactive_rewrite_forbidden": true,
+    "comparability_note": "Historical scores may use the scoring contract that was canonical at the time. Do not silently normalize old published scores into a later formula.",
+    "public_scoreboard_rule": "Show scoring-era/method context and coverage rather than manufacture one falsely homogeneous series."
+  },
+  "verified_rows": [
+    {
+      "cn": 15,
+      "forecast_week": "2026-W28",
+      "evaluated_in_publication": 16,
+      "provenance": "PUBLISHED_LOCKED_CN16_SCORECARD",
+      "price_range_score": 85,
+      "btc_range_score": 86,
+      "eth_range_score": 83,
+      "btc_forecast": [60900, 67200],
+      "btc_actual": [61300, 64700],
+      "eth_forecast": [1670, 1950],
+      "eth_actual": [1710, 1830],
+      "intraday_map_score": 80,
+      "day_1_2_score": 87,
+      "day_3_4_score": 75,
+      "day_5_7_score": 79,
+      "cycle_regime": "HIT",
+      "rotation": "HIT",
+      "score_model": "CYCLE_NAVIGATOR_SCORE_V2_BRIDGE",
+      "confidence": "VERIFIED_POINT_IN_TIME"
+    },
+    {
+      "cn": 17,
+      "forecast_week": "2026-W30",
+      "provenance": "OFFICIAL_FORECAST_LEDGER_PLUS_SETTLED_ACTUALS",
+      "range_precision_score": 86.11,
+      "state_precision_score": 75.00,
+      "overall_audit_score": 80.56,
+      "rounded_precision_score": 81,
+      "range_components": {
+        "BTC_1_3D": 67.42,
+        "ETH_1_3D": 81.07,
+        "BTC_5_7D": 95.95,
+        "ETH_5_7D": 100.00
+      },
+      "state_record": {"hits": 3, "misses": 1},
+      "confidence": "VERIFIED_POINT_IN_TIME"
+    },
+    {
+      "cn": 18,
+      "forecast_week": "2026-W31",
+      "provenance": "RECOVERED_FROZEN_CANONICAL_FORECAST_PLUS_VERIFIED_ACTUALS",
+      "range_precision_score": 82.92,
+      "state_precision_score": 100.00,
+      "overall_audit_score": 91.46,
+      "rounded_precision_score": 91,
+      "btc_actual": [62275.00, 65744.60],
+      "eth_actual": [1822.06, 1981.24],
+      "range_components": {
+        "BTC_1_3D": 61.81,
+        "ETH_1_3D": 69.88,
+        "BTC_5_7D": 100.00,
+        "ETH_5_7D": 100.00
+      },
+      "state_record": {"hits": 4, "misses": 0},
+      "confidence": "VERIFIED_POINT_IN_TIME"
+    }
+  ],
+  "discovery_rows_not_yet_public": [
+    {"cn": 1, "btc_forecast_hint": [63000, 71000]},
+    {"cn": 2, "btc_forecast_hint": [65000, 72000]},
+    {"cn": 3, "btc_forecast_hint": [66000, 73000]},
+    {"cn": 4, "btc_forecast_hint": [73000, 79000]},
+    {"cn": 5, "btc_forecast_hint": [76500, 83500]},
+    {"cn": 7, "btc_forecast_hint": [79000, 83500]}
+  ],
+  "next_recovery_priority": [
+    "Recover CN1-CN14 original publication/freeze evidence and actuals.",
+    "Recover CN16 forecast outcome score from subsequent immutable publication/ledger.",
+    "Recover CN19-CN25 weekly scorecards and numerical ranges from current namespace and X archive.",
+    "Identify exact automation-era boundary for public scoreboard labeling.",
+    "Only after coverage census, compute method-aware all-time summaries with explicit N."
+  ],
+  "public_release_gate": "BLOCKED_PENDING_HISTORY_COVERAGE_CENSUS",
+  "authority": false
+}
