@@ -85,6 +85,16 @@ def owner_population_finding(capture_present: bool, owners: list[dict[str, Any]]
         return ('OWNER_COVERAGE_DEGRADED',1)
     return None
 
+def experiment_receipt_sync_finding(sync: dict[str, Any] | None, age: float | None) -> tuple[str, int] | None:
+    """Keep absence distinct from failure while preventing missing sync from looking healthy."""
+    if sync is None:
+        return ('NO_EXPERIMENT_RECEIPT_SYNC',1)
+    if sync.get('status')=='FAIL':
+        return ('EXPERIMENT_RECEIPT_SYNC_FAILED',2)
+    if age is not None and age>72:
+        return ('EXPERIMENT_RECEIPT_SYNC_STALE',1)
+    return None
+
 def evidence_health(root: Path, now: datetime) -> dict[str, Any]:
     """Observe whether the accountability loop is producing usable evidence.
 
@@ -151,8 +161,8 @@ def main():
     if experiment is None:add('NO_EXPERIMENT_REGISTRY',1)
     elif experiment.get('contract')!='EXPERIMENT_LIFECYCLE_REGISTRY_v1':add('EXPERIMENT_REGISTRY_INVALID',2)
     elif ages['experiment_registry'] is None or ages['experiment_registry']>48:add('EXPERIMENT_REGISTRY_STALE',1)
-    if sync is not None and sync.get('status')=='FAIL':add('EXPERIMENT_RECEIPT_SYNC_FAILED',2)
-    elif sync is not None and ages['experiment_receipt_sync'] is not None and ages['experiment_receipt_sync']>72:add('EXPERIMENT_RECEIPT_SYNC_STALE',1)
+    sync_finding=experiment_receipt_sync_finding(sync,ages['experiment_receipt_sync'])
+    if sync_finding:add(*sync_finding)
     if remediation is None:add('NO_REMEDIATION_QUEUE_YET',1)
     elif remediation.get('contract')!='REMEDIATION_MATURATION_ENGINE_v1':add('REMEDIATION_QUEUE_INVALID',2)
     elif ages['remediation_queue'] is None or ages['remediation_queue']>36:add('REMEDIATION_QUEUE_STALE',1)
