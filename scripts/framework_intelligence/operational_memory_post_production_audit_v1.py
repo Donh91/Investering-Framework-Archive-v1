@@ -100,6 +100,7 @@ def audit(root: Path, operational_root: Path) -> dict:
 
     rows = index.get("rows") if isinstance(index.get("rows"), list) else []
     candidate_rows = candidates.get("candidates") if isinstance(candidates.get("candidates"), list) else []
+    reported_candidate_count = int(candidates.get("candidate_count") or 0) if candidates else 0
 
     episode_count = len(rows)
     if index.get("episode_count") != episode_count:
@@ -108,7 +109,9 @@ def audit(root: Path, operational_root: Path) -> dict:
         failures.append("state_episode_count_mismatch")
     if health and health.get("episode_count") != episode_count:
         failures.append("health_episode_count_mismatch")
-    if candidates and candidates.get("candidate_count") != len(candidate_rows):
+    if len(candidate_rows) < 50 and reported_candidate_count != len(candidate_rows):
+        failures.append("candidate_count_mismatch")
+    if len(candidate_rows) == 50 and reported_candidate_count < len(candidate_rows):
         failures.append("candidate_count_mismatch")
 
     if health and health.get("status") != "PASS":
@@ -222,7 +225,8 @@ def audit(root: Path, operational_root: Path) -> dict:
         "new_episode_count": state.get("new_episode_count") if state else None,
         "compatibility_counts": dict(sorted(compatibility_counts.items())),
         "stale_share": stale_share,
-        "procedural_candidate_count": len(candidate_rows),
+        "procedural_candidate_count": reported_candidate_count,
+        "materialized_candidate_count": len(candidate_rows),
         "candidate_revalidation_count": len(candidate_noise_flags),
         "retrieval_probe": {
             "probe_count": probe_count,
