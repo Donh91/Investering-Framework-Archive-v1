@@ -9,6 +9,11 @@ spec = importlib.util.spec_from_file_location('operational_memory_fail_to_codex_
 mod = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(mod)
 
+VALIDATOR_SCRIPT = Path('scripts/remediation/merge_codex_research_intake.py')
+validator_spec = importlib.util.spec_from_file_location('merge_codex_research_intake', VALIDATOR_SCRIPT)
+validator = importlib.util.module_from_spec(validator_spec)
+validator_spec.loader.exec_module(validator)
+
 
 def audit_doc(status='FAIL', failures=None, head='a' * 40):
     return {
@@ -42,7 +47,8 @@ class OperationalMemoryFailToCodexIntakeV1Test(unittest.TestCase):
             audit = self.write_audit(root, audit_doc())
             out = mod.route(root, audit)
             self.assertTrue(out['created'])
-            candidate = json.loads((root / out['path']).read_text())
+            candidate_path = root / out['path']
+            candidate = json.loads(candidate_path.read_text())
             self.assertEqual(candidate['contract'], 'CODEX_RESEARCH_CANDIDATE_v1')
             self.assertEqual(candidate['status'], 'SUBMITTED')
             self.assertEqual(candidate['authority_boundary'], 'CODE_REMEDIATION_ONLY')
@@ -53,6 +59,9 @@ class OperationalMemoryFailToCodexIntakeV1Test(unittest.TestCase):
             self.assertTrue(candidate['authority']['code_remediation_only'])
             self.assertFalse(candidate['authority']['automatic_merge'])
             self.assertEqual(Path(out['path']).stem, candidate['candidate_id'])
+            status, reasons = validator.validate_candidate(candidate_path, candidate)
+            self.assertEqual(status, 'VALID', reasons)
+            self.assertEqual(reasons, [])
 
     def test_same_fail_pending_candidate_dedupes(self):
         with tempfile.TemporaryDirectory() as td:
