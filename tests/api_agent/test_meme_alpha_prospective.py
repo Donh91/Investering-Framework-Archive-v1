@@ -5,10 +5,13 @@ import unittest
 from pathlib import Path
 
 from scripts.api_agent.meme_alpha_prospective import (
+    binary_prevalence_canary,
+    freeze_shadow_observation,
     kill_or_redraft,
     method_review_eligibility,
     queue_slo_status,
     root_trial_id,
+    validate_shadow_feature,
     validate_trial_record,
 )
 
@@ -28,6 +31,25 @@ def lineage() -> dict:
         "model_snapshot_or_version": "2026-09-14",
         "query_manifest_sha256": "f" * 64,
         "retrieval_manifest_sha256": "1" * 64,
+    }
+
+
+def shadow_feature(
+    name: str,
+    value: object,
+    *,
+    effective_at: str = "2026-09-15T12:04:00Z",
+    observed_at: str = "2026-09-15T12:04:30Z",
+    mutability: str = "SNAPSHOT_PINNED",
+) -> dict:
+    return {
+        "feature_name": name,
+        "feature_value_at_cutoff": value,
+        "feature_effective_at_utc": effective_at,
+        "source_observed_at_utc": observed_at,
+        "source_or_schema_version": "fixture-v1",
+        "source_record_or_event_identity": f"fixture:{name}",
+        "mutability_class": mutability,
     }
 
 
@@ -98,6 +120,110 @@ class MemeAlphaProspectiveTests(unittest.TestCase):
         self.assertEqual(result["decision"], "KILL_OR_REDRAFT")
         self.assertIn("ZERO_SELLABLE_PROSPECTIVE_SIGNAL_SURVIVED", result["reasons"])
         self.assertIn("ACTIONABLE_PRECISION_NOT_ABOVE_MATCHED_CONTROL", result["reasons"])
+
+    def test_shadow_packet_is_order_stable_and_hash_stable(self) -> None:
+        identity = {
+            "chain": "solana",
+            "token_id": "Mint111111111111111111111111111111111111111",
+            "token_origin_utc": "2026-09-15T12:00:00Z",
+        }
+        a = shadow_feature("unique_independent_buyers_cumulative", 12)
+        b = shadow_feature("net_real_capital_inflow", 4.2)
+        first = freeze_shadow_observation(
+            identity=identity,
+            cutoff_minutes=5,
+            cutoff_utc="2026-09-15T12:05:00Z",
+            features=[b, a],
+            wallet_roles=["SELF_INITIATED_TRADE", "UNKNOWN"],
+        )
+        second = freeze_shadow_observation(
+            identity=identity,
+            cutoff_minutes=5,
+            cutoff_utc="2026-09-15T12:05:00Z",
+            features=[a, b],
+            wallet_roles=["UNKNOWN", "SELF_INITIATED_TRADE"],
+        )
+        self.assertEqual(first["observation_sha256"], second["observation_sha256"])
+        self.assertEqual([item["feature_name"] for item in first["features"]], sorted([a["feature_name"], b["feature_name"]]))
+        self.assertFalse(first["authority"]["automatic_trading"])
+
+    def test_mutable_live_feature_is_rejected(self) -> None:
+        feature = shadow_feature("creator_label", "BOT_FARM", mutability="MUTABLE_LIVE_FIELD")
+        errors = validate_shadow_feature(feature, "2026-09-15T12:05:00Z")
+        self.assertIn("MUTABLE_LIVE_FIELD_NOT_HISTORICAL_EVIDENCE", errors)
+
+    def test_future_effective_wallet_quality_cannot_backfill(self) -> None:
+        feature = shadow_feature(
+            "wallet_as_of_hit_rate_shrunk",
+            0.72,
+            effective_at="2026-09-15T12:10:00Z",
+            observed_at="2026-09-15T12:10:00Z",
+            mutability="DERIVED_FROM_PINNED_EVENTS",
+        )
+        errors = validate_shadow_feature(feature, "2026-09-15T12:05:00Z")
+        self.assertIn("FEATURE_EFFECTIVE_AFTER_CUTOFF", errors)
+
+    def test_late_snapshot_cannot_masquerade_as_cutoff_state(self) -> None:
+        feature = shadow_feature(
+            "holder_count",
+            99,
+            effective_at="2026-09-15T12:04:00Z",
+            observed_at="2026-09-15T12:06:00Z",
+            mutability="SNAPSHOT_PINNED",
+        )
+        errors = validate_shadow_feature(feature, "2026-09-15T12:05:00Z")
+        self.assertIn("SNAPSHOT_OBSERVED_AFTER_CUTOFF", errors)
+
+    def test_immutable_event_may_be_reconstructed_later_when_event_time_is_pre_cutoff(self) -> None:
+        feature = shadow_feature(
+            "first_sell_latency_seconds",
+            88,
+            effective_at="2026-09-15T12:01:28Z",
+            observed_at="2026-09-15T14:00:00Z",
+            mutability="IMMUTABLE_EVENT",
+        )
+        self.assertEqual(validate_shadow_feature(feature, "2026-09-15T12:05:00Z"), [])
+
+    def test_unknown_feature_is_preserved_without_becoming_negative(self) -> None:
+        feature = shadow_feature(
+            "creator_or_funder_linked_share",
+            "UNKNOWN",
+            mutability="UNKNOWN",
+        )
+        packet = freeze_shadow_observation(
+            identity={
+                "chain": "solana",
+                "token_id": "Mint222222222222222222222222222222222222222",
+                "token_origin_utc": "2026-09-15T12:00:00Z",
+            },
+            cutoff_minutes=5,
+            cutoff_utc="2026-09-15T12:05:00Z",
+            features=[feature],
+        )
+        self.assertEqual(packet["features"][0]["feature_value_at_cutoff"], "UNKNOWN")
+
+    def test_stale_collector_is_degraded_data_not_market_silence(self) -> None:
+        packet = freeze_shadow_observation(
+            identity={
+                "chain": "solana",
+                "token_id": "Mint333333333333333333333333333333333333333",
+                "token_origin_utc": "2026-09-15T12:00:00Z",
+            },
+            cutoff_minutes=5,
+            cutoff_utc="2026-09-15T12:05:00Z",
+            features=[shadow_feature("buyer_velocity", 3.0)],
+            collector_status="STALE",
+        )
+        self.assertEqual(packet["data_state"], "DEGRADED_DATA")
+        self.assertNotIn("NO_ALPHA", packet.values())
+
+    def test_prevalence_canary_flags_large_retro_shadow_shift_without_market_interpretation(self) -> None:
+        retrospective = [True] * 15 + [False] * 85
+        shadow = [True] * 48 + [False] * 52
+        result = binary_prevalence_canary(retrospective, shadow, max_allowed_abs_delta=0.10)
+        self.assertEqual(result["status"], "REVIEW_REQUIRED")
+        self.assertAlmostEqual(result["positive_rate_delta"], 0.33, places=6)
+        self.assertFalse(result["market_interpretation_allowed"])
 
 
 if __name__ == "__main__":
