@@ -14,6 +14,14 @@ from scripts.api_agent.meme_alpha_prospective import (
     validate_shadow_feature,
     validate_trial_record,
 )
+from scripts.api_agent.meme_alpha_pump_g2 import (
+    PUMP_PUBLIC_DOCS_IDL_COMMIT,
+    aggregate_pump_g2_window,
+    normalize_pump_complete_event,
+    normalize_pump_create_event,
+    normalize_pump_trade_event,
+    pump_g2_shadow_features,
+)
 
 POLICY = json.loads(Path("research/api_agent/meme_alpha/MEME_ALPHA_PROSPECTIVE_HARDENING_v1.json").read_text())
 
@@ -50,6 +58,75 @@ def shadow_feature(
         "source_or_schema_version": "fixture-v1",
         "source_record_or_event_identity": f"fixture:{name}",
         "mutability_class": mutability,
+    }
+
+
+def pump_create_raw(*, timestamp: int = 1000, quote_mint: str = "So11111111111111111111111111111111111111112") -> dict:
+    return {
+        "name": "TEST",
+        "symbol": "TEST",
+        "uri": "https://example.invalid/test.json",
+        "mint": "MintPump1111111111111111111111111111111111111",
+        "bondingCurve": "Curve11111111111111111111111111111111111111",
+        "user": "CreatorUser111111111111111111111111111111111",
+        "creator": "Creator11111111111111111111111111111111111",
+        "timestamp": timestamp,
+        "virtualTokenReserves": 1_073_000_000_000_000,
+        "virtualSolReserves": 30_000_000_000,
+        "realTokenReserves": 793_100_000_000_000,
+        "tokenTotalSupply": 1_000_000_000_000_000,
+        "tokenProgram": "TokenProgram11111111111111111111111111111111",
+        "isMayhemMode": False,
+        "isCashbackEnabled": False,
+        "quoteMint": quote_mint,
+    }
+
+
+def pump_trade_raw(
+    *,
+    timestamp: int,
+    user: str,
+    quote_amount: int,
+    token_amount: int,
+    is_buy: bool,
+    real_quote_reserves: int,
+    quote_mint: str = "So11111111111111111111111111111111111111112",
+) -> dict:
+    return {
+        "mint": "MintPump1111111111111111111111111111111111111",
+        "solAmount": quote_amount,
+        "tokenAmount": token_amount,
+        "isBuy": is_buy,
+        "user": user,
+        "timestamp": timestamp,
+        "virtualSolReserves": 30_000_000_000 + real_quote_reserves,
+        "virtualTokenReserves": 1_000_000_000_000_000 - token_amount,
+        "realSolReserves": real_quote_reserves,
+        "realTokenReserves": 700_000_000_000_000,
+        "feeRecipient": "Fee111111111111111111111111111111111111111",
+        "feeBasisPoints": 125,
+        "fee": max(1, quote_amount // 100),
+        "creator": "Creator11111111111111111111111111111111111",
+        "creatorFeeBasisPoints": 30,
+        "creatorFee": max(1, quote_amount // 400),
+        "trackVolume": True,
+        "totalUnclaimedTokens": 0,
+        "totalClaimedTokens": 0,
+        "currentSolVolume": quote_amount,
+        "lastUpdateTimestamp": timestamp,
+        "ixName": "buy" if is_buy else "sell",
+        "mayhemMode": False,
+        "cashbackFeeBasisPoints": 0,
+        "cashback": 0,
+        "buybackFeeBasisPoints": 0,
+        "buybackFee": 0,
+        "shareholders": [],
+        "quoteMint": quote_mint,
+        "quoteAmount": quote_amount,
+        "virtualQuoteReserves": 30_000_000_000 + real_quote_reserves,
+        "realQuoteReserves": real_quote_reserves,
+        "holderRewardsBps": 0,
+        "holderRewards": 0,
     }
 
 
@@ -224,6 +301,136 @@ class MemeAlphaProspectiveTests(unittest.TestCase):
         self.assertEqual(result["status"], "REVIEW_REQUIRED")
         self.assertAlmostEqual(result["positive_rate_delta"], 0.33, places=6)
         self.assertFalse(result["market_interpretation_allowed"])
+
+    def test_pump_official_trade_events_aggregate_g2_without_entity_overclaim(self) -> None:
+        create = normalize_pump_create_event(
+            pump_create_raw(),
+            signature="create-sig",
+            slot=1,
+            event_index=0,
+            observed_at_utc="2026-09-15T12:00:00Z",
+        )
+        raws = [
+            pump_trade_raw(timestamp=1010, user="A", quote_amount=100, token_amount=10, is_buy=True, real_quote_reserves=100),
+            pump_trade_raw(timestamp=1020, user="B", quote_amount=200, token_amount=10, is_buy=True, real_quote_reserves=300),
+            pump_trade_raw(timestamp=1030, user="A", quote_amount=150, token_amount=10, is_buy=True, real_quote_reserves=450),
+            pump_trade_raw(timestamp=1040, user="B", quote_amount=50, token_amount=5, is_buy=False, real_quote_reserves=400),
+        ]
+        trades = [
+            normalize_pump_trade_event(
+                raw,
+                signature=f"trade-{idx}",
+                slot=10 + idx,
+                event_index=0,
+                observed_at_utc="2026-09-15T12:00:30Z",
+            )
+            for idx, raw in enumerate(raws)
+        ]
+        summary = aggregate_pump_g2_window(create, trades + [trades[1]], cutoff_seconds=60)
+        self.assertEqual(summary["trade_count"], 4)
+        self.assertEqual(summary["address_level_unique_buyers"], 2)
+        self.assertEqual(summary["entity_adjusted_unique_buyers"], "UNKNOWN")
+        self.assertEqual(summary["gross_buy_quote_raw"], 450)
+        self.assertEqual(summary["gross_sell_quote_raw"], 50)
+        self.assertEqual(summary["net_trade_quote_flow_raw"], 400)
+        self.assertEqual(summary["first_sell_latency_seconds"], 40)
+        self.assertEqual(summary["repeat_buyer_fraction"], 0.5)
+        self.assertEqual(summary["idl_commit"], PUMP_PUBLIC_DOCS_IDL_COMMIT)
+        self.assertFalse(summary["authority"]["automatic_trading"])
+
+    def test_pump_adapter_preserves_custom_quote_mint_and_raw_units(self) -> None:
+        usdc = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
+        create = normalize_pump_create_event(
+            pump_create_raw(quote_mint=usdc),
+            signature="create-usdc",
+            slot=2,
+            event_index=0,
+            observed_at_utc="2026-09-15T12:00:00Z",
+        )
+        trade = normalize_pump_trade_event(
+            pump_trade_raw(timestamp=1010, user="A", quote_amount=1_500_000, token_amount=1000, is_buy=True, real_quote_reserves=1_500_000, quote_mint=usdc),
+            signature="trade-usdc",
+            slot=3,
+            event_index=0,
+            observed_at_utc="2026-09-15T12:00:10Z",
+        )
+        summary = aggregate_pump_g2_window(create, [trade], cutoff_seconds=60)
+        self.assertEqual(summary["quote_mint"], usdc)
+        self.assertEqual(summary["gross_buy_quote_raw"], 1_500_000)
+        self.assertIn("raw quote-asset units", summary["semantic_warnings"][0])
+
+    def test_pump_quote_mismatch_is_hard_error(self) -> None:
+        create = normalize_pump_create_event(
+            pump_create_raw(),
+            signature="create-sig-2",
+            slot=4,
+            event_index=0,
+            observed_at_utc="2026-09-15T12:00:00Z",
+        )
+        trade = normalize_pump_trade_event(
+            pump_trade_raw(timestamp=1010, user="A", quote_amount=100, token_amount=10, is_buy=True, real_quote_reserves=100, quote_mint="DifferentQuoteMint"),
+            signature="trade-bad-quote",
+            slot=5,
+            event_index=0,
+            observed_at_utc="2026-09-15T12:00:10Z",
+        )
+        with self.assertRaisesRegex(ValueError, "PUMP_G2_QUOTE_MINT_MISMATCH"):
+            aggregate_pump_g2_window(create, [trade], cutoff_seconds=60)
+
+    def test_degraded_capture_is_not_training_eligible(self) -> None:
+        create = normalize_pump_create_event(
+            pump_create_raw(),
+            signature="create-degraded",
+            slot=6,
+            event_index=0,
+            observed_at_utc="2026-09-15T12:00:00Z",
+        )
+        summary = aggregate_pump_g2_window(create, [], cutoff_seconds=300, capture_state="DEGRADED")
+        self.assertFalse(summary["eligible_for_training"])
+        self.assertEqual(summary["trade_count"], 0)
+        self.assertEqual(summary["entity_adjusted_unique_buyers"], "UNKNOWN")
+
+    def test_pump_g2_features_bind_into_point_in_time_shadow_packet(self) -> None:
+        create = normalize_pump_create_event(
+            pump_create_raw(),
+            signature="create-bind",
+            slot=7,
+            event_index=0,
+            observed_at_utc="2026-09-15T12:00:00Z",
+        )
+        trade = normalize_pump_trade_event(
+            pump_trade_raw(timestamp=1010, user="A", quote_amount=100, token_amount=10, is_buy=True, real_quote_reserves=100),
+            signature="trade-bind",
+            slot=8,
+            event_index=0,
+            observed_at_utc="2026-09-15T12:00:10Z",
+        )
+        summary = aggregate_pump_g2_window(create, [trade], cutoff_seconds=300)
+        packet = freeze_shadow_observation(
+            identity={"chain": "solana", "token_id": summary["mint"], "token_origin_utc": summary["token_origin_utc"]},
+            cutoff_minutes=5,
+            cutoff_utc=summary["cutoff_utc"],
+            features=pump_g2_shadow_features(summary),
+        )
+        self.assertEqual(packet["identity"]["token_id"], summary["mint"])
+        self.assertTrue(all(feature["mutability_class"] == "DERIVED_FROM_PINNED_EVENTS" for feature in packet["features"]))
+
+    def test_pump_completion_is_lifecycle_only_not_profitability(self) -> None:
+        complete = normalize_pump_complete_event(
+            {
+                "user": "User",
+                "mint": "MintPump1111111111111111111111111111111111111",
+                "bondingCurve": "Curve11111111111111111111111111111111111111",
+                "timestamp": 1500,
+                "quoteMint": "So11111111111111111111111111111111111111112",
+            },
+            signature="complete-sig",
+            slot=9,
+            event_index=0,
+            observed_at_utc="2026-09-15T12:10:00Z",
+        )
+        self.assertEqual(complete["lifecycle_event"], "BONDING_CURVE_COMPLETE")
+        self.assertEqual(complete["profitability_claim"], "NONE")
 
 
 if __name__ == "__main__":
