@@ -1,0 +1,65 @@
+{
+  "contract": "MEME_ALPHA_RED_COHORT_DETECTOR_SEMANTICS_RESULT_v1_2",
+  "generated_from_run": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/35020760468",
+  "source": {
+    "dataset": "RED-COHORT-2026-v1.1.1",
+    "archive_md5": "172198eade99f702f1da0bfdd4cf3079",
+    "archive_sha256": "f908d10f459e52de0e6f0d77af26db262e41a521dfe3872f30bd795e255841d0",
+    "detector_source_sha256": "7e26694aa776d76176858691608b56c6614173f22fc67695fbcd98af65163606"
+  },
+  "released_detector_semantics": {
+    "first_n_buyers_default": 10,
+    "minimum_pair_cooccurring_launches_default": 3,
+    "maximum_cohort_component_size_default": 12,
+    "buyer_order": "per mint sort by buyer_rank then blockTime and retain first 10",
+    "pair_count": "all unique wallet pairs inside retained buyers; each mint increments each pair once",
+    "qualifying_pair": "pair_count >= 3 launches",
+    "cohort_construction": "union-find all qualifying wallet-pair edges",
+    "component_filter": "discard components larger than 12 wallets",
+    "launch_hit_for_component": "at least two component wallets present in the mint's retained buyers",
+    "final_component_minimum_launches": 3,
+    "score_is_ranking_not_qualification": "10*n_launches + 5/max(avg_first_rank,1) + sqrt(sol_total)"
+  },
+  "released_compact_data": {
+    "cohort_rows": 1012,
+    "cohort_size_range": [2, 12],
+    "cohort_n_launches_range": [3, 42],
+    "intra_launch_rows": 20163,
+    "intra_window_sec_values": [0, 1, 2],
+    "intra_first_rank_range": [1, 48]
+  },
+  "archive_inventory_finding": {
+    "raw_pumpfun_buyers_jsonl_present": false,
+    "detector_code_present": true,
+    "compact_cohort_catalogue_present": true,
+    "compact_intra_launch_rows_present": true,
+    "implication": "full causal replay across all launches cannot be reconstructed from the released zip alone because the detector input pumpfun_buyers.jsonl is not deposited; chain reconstruction or an independently archived first-buyer corpus is required"
+  },
+  "point_in_time_rule": {
+    "released_detected_at_is_entry_time": false,
+    "same_launch_that_creates_the_third_pair_cooccurrence_is_eligible_as_a_prospective_prediction": false,
+    "conservative_effective_time": "after the complete first-10 buyer evidence for the third distinct cooccurring launch is knowable",
+    "eligible_economic_test_population": "strictly subsequent launches only",
+    "final_cohort_membership_may_not_be_backfilled_into_earlier_launches": true
+  },
+  "next_experiment": {
+    "name": "RED_COMPACT_PAIR_CAUSAL_REPLAY_v1",
+    "method": "select deterministic wallet pairs with at least 4 compact intra-launch cooccurrences, reconstruct row wallet-to-signature mappings and blockTimes for the first three cooccurring launches, freeze pair qualification after the third launch, and reserve only strictly subsequent launches for economic testing",
+    "why_pair_first": "pair qualification is the detector's primitive causal event and avoids retrospectively assigning future union-find component membership",
+    "full_online_component_replay_later": true
+  },
+  "artifact": {
+    "name": "meme-alpha-red-detector-semantics-v1",
+    "artifact_id": 10416938137,
+    "artifact_zip_sha256": "23c0ec3b080793bfc7679252a91deb7004990ccbead859f54f51febbe91e425c",
+    "retention_days": 30,
+    "repo_result_is_permanent_summary": true
+  },
+  "authority": {
+    "research_only": true,
+    "automatic_trading": false,
+    "buy_now_promotion": false,
+    "live_threshold_change": false,
+    "portfolio_action": false
+  }
+}
