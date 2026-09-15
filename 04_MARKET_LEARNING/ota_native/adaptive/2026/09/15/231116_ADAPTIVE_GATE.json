@@ -7,11 +7,20 @@
   ],
   "adaptive_score": 4.25,
   "adaptive_score_threshold": 3.0,
-  "attention_weights": {
+  "attention_weights_next": {
     "breadth_material_delta": 0.95,
     "breadth_regime_change": 1.05,
     "classified_evidential": 1.05,
     "classified_new_information": 1.15,
+    "framework_data_gap": 0.7,
+    "research_novelty": 0.8,
+    "settled_transition": 1.25
+  },
+  "attention_weights_used": {
+    "breadth_material_delta": 0.9,
+    "breadth_regime_change": 1.0,
+    "classified_evidential": 1.0,
+    "classified_new_information": 1.1,
     "framework_data_gap": 0.7,
     "research_novelty": 0.8,
     "settled_transition": 1.25
@@ -70,6 +79,5 @@
     "settled_transition": 0.0
   },
   "source_policy": "READ_EXISTING_GITHUB_OWNERS_ONLY_NO_NEW_MARKET_SOURCE_CALLS",
-  "state_hash_sha256": "912790dfa082e0d3a2bd4d6f491556befd6b82294f8b23d33127456071c02ae7",
   "thresholds_changed": false
 }
