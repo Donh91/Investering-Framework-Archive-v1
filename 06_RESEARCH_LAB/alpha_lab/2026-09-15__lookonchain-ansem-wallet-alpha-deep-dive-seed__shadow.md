@@ -1,8 +1,8 @@
 # ALPHA LAB RESEARCH — Lookonchain / Ansem wallet deep-dive seed
 
 Date captured: 2026-09-15
-Status: SHADOW RESEARCH SEED — NOT A TRADING SIGNAL
-Purpose: Preserve a concrete wallet-led alpha research case for later Astra deep dive and possible Alpha Lab methodology work.
+Status: SHADOW RESEARCH SEED + SOURCE CORPUS — NOT A TRADING SIGNAL
+Purpose: Preserve a concrete wallet-led alpha research case and the broader Lookonchain corpus for later Astra/Alpha Lab discovery, falsification and feature research.
 
 ## Source bundle
 
@@ -23,16 +23,49 @@ https://x.com/lookonchain/status/1875814019724144710?s=46&t=SUBrcpc4yI4ppaXpURK0
 ### 3. Lookonchain website supplied for source research
 https://m.lookonchain.com
 
-### 4. Independently discovered Lookonchain feed mirror/page
+### 4. Lookonchain Articles — BROAD ALPHA LAB SOURCE CORPUS
+https://m.lookonchain.com/articles
+Canonical equivalent observed during verification:
+https://www.lookonchain.com/articles
+
+User instruction: treat the article universe as broad material for Alpha Lab to explore, review and analyze. Wallet-edge is only one branch. Do not prematurely constrain discovery to copy-trading or named smart-money wallets.
+
+The articles page visibly spans heterogeneous research objects, including smart-money case studies, Solana memecoin traders, losing trades, token/on-chain mechanics, macro/crypto comparisons and other market/on-chain narratives. This heterogeneity is itself part of the research value and requires classification before conclusions.
+
+### 5. Independently discovered Lookonchain feed mirror/page
 https://lookonchain.com/feeds/63065
 
 This page reproduces the core allegation: the `Ansem-2` wallet spent $233K to purchase 2.79M CASHCAT and links it to Solana wallet CLM6E4.
 
-## Why this belongs in Alpha Lab
+## Alpha Lab corpus mandate
 
-This is useful primarily as a research object for wallet-behaviour analysis, not as influencer-following or a direct copy-trade signal.
+Archive broadly, classify later, test hard before promotion.
 
-Potential Alpha Lab questions:
+Alpha Lab/Astra should mine the Lookonchain corpus for candidate information classes without assuming in advance which class contains edge. Candidate branches include, but are not limited to:
+
+- smart-wallet / trader behavioural edge
+- whale accumulation and distribution
+- exchange inflows/outflows and deposit/withdrawal behaviour
+- entity and wallet-cluster relationships
+- dormant-wallet reactivation
+- insider-like, deployer-linked or coordinated behaviour
+- token launch, sniper and early-entry structure
+- liquidity and holder concentration changes
+- stablecoin and capital-flow behaviour
+- spot versus perp / leverage positioning
+- Hyperliquid and other transparent derivatives positioning
+- rotation and cross-asset capital migration
+- listing-related behaviour
+- event-driven on-chain positioning
+- realized versus unrealized PnL patterns
+- failed traders, capitulation and potentially contrarian information
+- public dissemination effects and alpha decay
+- recurring source/analyst labels whose own historical precision may be measurable
+- entirely new signal families discovered from corpus clustering rather than pre-specified by this document
+
+Do not assume every Lookonchain article is on-chain primary evidence. Separate raw transaction facts, Lookonchain inference/labels, third-party monitoring, narrative commentary and macro/news material in provenance.
+
+## Wallet branch — initial research questions
 
 1. Attribution confidence
    - Is `0x6f5b...3F5` genuinely controlled by the same entity as `CLM6E4...Kg1Q`?
@@ -72,21 +105,68 @@ Potential Alpha Lab questions:
    - Promotion/Conflict Risk
    - Cluster Confirmation, independent high-quality wallets entering same asset
 
+## Corpus-wide research design
+
+For each usable historical observation, preserve or reconstruct where feasible:
+
+`underlying event timestamp -> earliest observable on-chain state -> Lookonchain detection/publication timestamp -> market state at publication -> +5m/+30m/+1h/+6h/+24h/+7d outcomes`
+
+This should support at least four distinct tests:
+
+1. UNDERLYING EVENT EDGE — did the raw on-chain event contain predictive information?
+2. DETECTION EDGE — could Alpha Lab have detected it systematically before publication?
+3. PUBLICATION EDGE — did a Lookonchain publication itself have measurable information value?
+4. EXECUTABLE EDGE — did any apparent edge survive realistic latency, liquidity, spread, fees, slippage, MEV and exit capacity?
+
+Negative examples are mandatory. The corpus visibly contains losing-trader and failed-trade material as well as winners. Alpha Lab must also seek non-featured trades/events where technically possible, because published articles are a selected sample and cannot by themselves establish wallet or signal performance.
+
+## Discovery-first taxonomy
+
+Astra may expand or replace this taxonomy after corpus inspection. Initial labels:
+
+- WALLET_EDGE
+- WHALE_FLOW
+- EXCHANGE_FLOW
+- ENTITY_CLUSTER
+- DORMANT_REACTIVATION
+- INSIDER_CONFLICT
+- TOKEN_LAUNCH_SNIPER
+- LIQUIDITY_STRUCTURE
+- STABLECOIN_FLOW
+- DERIVATIVES_POSITIONING
+- ROTATION_FLOW
+- LISTING_EVENT
+- EVENT_POSITIONING
+- CAPITULATION_CONTRARIAN
+- PUBLICATION_EFFECT
+- SOURCE_PRECISION
+- MACRO_CONTEXT
+- NON_ACTIONABLE_NARRATIVE
+- NEW_DISCOVERY
+
+Multi-label classification is allowed. `NEW_DISCOVERY` exists specifically to prevent the seed taxonomy from becoming a closed epistemic boundary.
+
 ## Required Astra deep-dive output
 
-Astra should not answer `is this wallet good?` qualitatively. Produce an auditable evidence package:
+Astra should not answer `is this wallet good?` qualitatively and should not reduce the project to wallet following. Produce an auditable evidence package:
 
-- address/entity graph with confidence per edge
+- corpus inventory and coverage map
+- article/event taxonomy with provenance
+- candidate hypotheses discovered from the corpus
+- address/entity graphs with confidence per edge where relevant
 - source provenance for every attribution
-- transaction-level sample or full history where feasible
+- transaction-level samples or full histories where feasible
 - PnL methodology and limitations
-- event study around entries
-- delayed-copy simulations
+- event studies around candidate signals
+- delayed-execution simulations
 - liquidity/slippage sensitivity
-- false-positive and failed-trade examples
-- comparison with random/baseline wallets or appropriate benchmark
-- publication-lag analysis for Lookonchain
-- verdict per candidate feature: ADOPT / SHADOW TEST / RESEARCH ONLY / REJECT
+- false-positive, failed-trade and negative-control examples
+- comparison with random/mechanical baselines where appropriate
+- publication-lag and alpha-decay analysis
+- selection-bias analysis of what Lookonchain chooses to publish
+- regime and chain segmentation
+- redundancy check against signals already owned by the wider framework
+- verdict per candidate feature: ADOPT / SHADOW TEST / RESEARCH ONLY / REJECT / ALREADY OWNED
 - explicit kill criteria before any Alpha Lab signal is promoted
 
 ## Governance
@@ -96,11 +176,16 @@ Astra should not answer `is this wallet good?` qualitatively. Produce an auditab
 - No wallet identity claim without reproducible evidence.
 - No cherry-picked winner-only evaluation.
 - No use of Lookonchain labels as ground truth without independent corroboration.
-- Preserve source timestamps because alpha decay is central to the hypothesis.
-- Any future automated wallet-following concept requires forward testing and realistic execution costs before promotion.
+- Preserve source and event timestamps because alpha decay is central to many hypotheses.
+- Separate source observation from source interpretation.
+- Treat publication selection bias as a first-class confounder.
+- Search for negative controls and missing/unpublished comparator events where feasible.
+- No feature promotion merely because it sounds economically plausible.
+- Any future automated wallet-following or corpus-derived signal requires forward testing and realistic execution costs before promotion.
+- Alpha Lab is allowed to discover hypotheses not anticipated in this seed.
 
 ## Initial verdict
 
-KEEP FOR DEEP DIVE.
+KEEP FOR DEEP DIVE — HIGH RESEARCH VALUE, ZERO TRADING AUTHORITY.
 
-The highest-value hypothesis is not `copy Ansem`. It is whether a provenance-scored, liquidity-aware wallet-intelligence layer can identify repeatable early information before public dissemination, and whether that edge survives realistic observation and execution delay.
+The Ansem wallet is one concrete seed, not the scope boundary. The broader hypothesis is whether provenance-scored on-chain and behavioural information within and around the Lookonchain corpus contains repeatable, non-redundant and realistically executable information that Alpha Lab can detect systematically before its value decays.
