@@ -35,9 +35,9 @@ jobs:
           python research/api_agent/meme_alpha/experiments/red_cohort_tx_reconstruction_probe_v1.py \
             --zip /tmp/red-cohort/RED-COHORT-2026-v1_1_1.zip \
             --out /tmp/red-tx-results/red_cohort_tx_reconstruction_probe_v1.json \
-            --sample-rows 24 \
-            --max-signatures 40 \
-            --sleep-seconds 0.30
+            --sample-rows 12 \
+            --max-signatures 12 \
+            --sleep-seconds 2.20
       - name: Upload research artifact
         uses: actions/upload-artifact@v4
         with:
