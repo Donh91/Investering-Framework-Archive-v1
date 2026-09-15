@@ -54,9 +54,9 @@ def _is_unknown(value: Any) -> bool:
 def validate_shadow_feature(feature: dict[str, Any], cutoff_utc: str) -> list[str]:
     """Validate one point-in-time feature without assigning alpha meaning.
 
-    A mutable live field is deliberately not accepted as historical evidence.  A
+    A mutable live field is deliberately not accepted as historical evidence. A
     snapshot-pinned field must have been observed no later than the decision
-    cutoff.  Immutable events and deterministic derivatives may be reconstructed
+    cutoff. Immutable events and deterministic derivatives may be reconstructed
     later, but their effective timestamp still has to pre-date the cutoff.
     """
 
@@ -71,7 +71,7 @@ def validate_shadow_feature(feature: dict[str, Any], cutoff_utc: str) -> list[st
     )
     errors: list[str] = []
     for key in required:
-        if key not in feature or feature[key] in {"", []}:
+        if key not in feature or feature[key] == "" or feature[key] == []:
             errors.append(f"FEATURE_PROVENANCE_MISSING:{key}")
     if errors:
         return errors
@@ -106,7 +106,7 @@ def freeze_shadow_observation(
 ) -> dict[str, Any]:
     """Freeze a deterministic G2/G3 research observation envelope.
 
-    This function does not score, recommend, alert or execute.  Its job is to
+    This function does not score, recommend, alert or execute. Its job is to
     make later retrospective analysis incapable of silently rewriting the
     observation that was actually available at the decision cutoff.
     """
@@ -176,7 +176,7 @@ def binary_prevalence_canary(
 ) -> dict[str, Any]:
     """Compare a binary feature's retrospective and live-shadow prevalence.
 
-    The function is an integrity canary only.  It never interprets a prevalence
+    The function is an integrity canary only. It never interprets a prevalence
     shift as market alpha or as a bearish/bullish signal.
     """
 
