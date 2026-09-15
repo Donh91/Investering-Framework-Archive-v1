@@ -134,17 +134,27 @@ def direct_system(root,path,contract,green_hours,red_hours,reference,missing_rea
 
 
 def upstream_health_system(value,error,reference):
+    if error:
+        return {
+            'status':'UNKNOWN' if error=='MISSING' else 'RED',
+            'reason':error,
+            'generated_at_utc':None,
+            'age_hours':None,
+            'freshness_status':'UNKNOWN',
+            'semantic_status':None,
+            'input_error':error,
+        }
     stamp=first_time(value,('generated_at_utc','created_at_utc','completed_at_utc'))
     fresh,fresh_reason,age=freshness(stamp,reference,18,30)
     semantic=normalized_status(value.get('status') if value else None)
     return {
         'status':combine_status(fresh,semantic),
-        'reason':error or (fresh_reason if fresh!='GREEN' else None),
+        'reason':fresh_reason if fresh!='GREEN' else None,
         'generated_at_utc':value.get('generated_at_utc') if value else None,
         'age_hours':age,
         'freshness_status':fresh,
         'semantic_status':value.get('status') if value else None,
-        'input_error':error,
+        'input_error':None,
     }
 
 
