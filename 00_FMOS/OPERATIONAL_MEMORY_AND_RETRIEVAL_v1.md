@@ -71,11 +71,23 @@ The audit verifies contract consistency, current-HEAD binding, authority firewal
 Audit states are:
 - `PASS`: continue shadow operation autonomously;
 - `WARN`: continue shadow operation and accumulate evidence, with no user action required;
-- `FAIL`: block Operational Memory reuse for that run, fail the workflow before memory products are committed, and automatically open or update one deduplicated GitHub issue containing the failure evidence and workflow run URL.
+- `FAIL`: block Operational Memory reuse for that run, fail the workflow before unhealthy memory products are committed, and automatically open or update one deduplicated GitHub issue containing the failure evidence and workflow run URL.
 
 When a later run recovers from `FAIL`, the same workflow automatically comments on and closes the escalation issue. Routine `PASS` and `WARN` runs create no issue.
 
 The audit itself has no canonical, scientific, model, skill-promotion or portfolio authority.
+
+## Zero-touch FAIL remediation routing
+
+A production audit `FAIL` is also converted automatically into one bounded `CODEX_RESEARCH_CANDIDATE_v1` under `research/codex/intake/YYYY/MM/`.
+
+The failure set is deterministically fingerprinted. Only one uncompleted candidate may exist per failure fingerprint. A recurrence may be created only after the prior matching candidate has a completion receipt. This prevents repeated Supervisor runs from flooding the Codex queue with duplicates.
+
+The generated candidate is restricted to the Operational Memory/Supervisor implementation and tests, requires positive and negative acceptance tests, preserves the existing forbidden-change boundary, and has `CODE_REMEDIATION_ONLY` authority. It cannot authorize market gates, model weights, canonical authority, portfolio logic, API budget or new policy semantics, and it cannot auto-merge.
+
+After the intake is safely committed to `main`, the Supervisor explicitly dispatches the existing `remediation-maturation.yml` workflow. This explicit dispatch is required because a normal push made with GitHub's workflow token is not relied upon to start a second workflow. The existing remediation owner therefore remains the only maturation/queue owner; no parallel repair supervisor is introduced.
+
+GitHub-native automation covers detection, quarantine, incident lifecycle, bounded intake creation, deduplication, remediation maturation dispatch and Codex-ready queueing. The repository does not currently contain a GitHub Actions workflow that itself executes Codex code changes, so this contract does not falsely claim GitHub-native AI code execution. Any external Codex executor remains subject to the existing Codex queue, transition receipts, PR gates and no-automatic-merge authority.
 
 ## Retention
 
