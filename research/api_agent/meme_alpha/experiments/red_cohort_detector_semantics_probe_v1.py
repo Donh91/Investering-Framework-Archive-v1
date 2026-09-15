@@ -42,11 +42,6 @@ def literal(value: ast.AST) -> Any:
         return None
 
 
-def is_relevant(name: str) -> bool:
-    low = name.lower()
-    return any(k in low for k in KEYWORDS)
-
-
 def expr(node: ast.AST | None) -> str | None:
     if node is None:
         return None
@@ -56,92 +51,108 @@ def expr(node: ast.AST | None) -> str | None:
         return None
 
 
+def is_relevant_text(text: str) -> bool:
+    low = text.lower()
+    return any(k in low for k in KEYWORDS)
+
+
 def function_signature(node: ast.FunctionDef | ast.AsyncFunctionDef) -> dict[str, Any]:
     args = list(node.args.posonlyargs) + list(node.args.args)
     defaults = [None] * (len(args) - len(node.args.defaults)) + list(node.args.defaults)
     params = []
     for arg, default in zip(args, defaults):
         params.append({"name": arg.arg, "default_expr": expr(default), "default_literal": literal(default) if default else None})
-    if node.args.vararg:
-        params.append({"name": "*" + node.args.vararg.arg, "default_expr": None, "default_literal": None})
-    for arg, default in zip(node.args.kwonlyargs, node.args.kw_defaults):
-        params.append({"name": arg.arg, "default_expr": expr(default), "default_literal": literal(default) if default else None})
-    if node.args.kwarg:
-        params.append({"name": "**" + node.args.kwarg.arg, "default_expr": None, "default_literal": None})
     return {"name": node.name, "parameters": params}
+
+
+def function_operations(node: ast.FunctionDef | ast.AsyncFunctionDef) -> list[dict[str, Any]]:
+    out: list[dict[str, Any]] = []
+    allowed = (ast.Assign, ast.AnnAssign, ast.AugAssign, ast.For, ast.If, ast.Return, ast.Expr)
+    for sub in ast.walk(node):
+        if not isinstance(sub, allowed):
+            continue
+        text = expr(sub)
+        if not text or not is_relevant_text(text):
+            continue
+        compact = re.sub(r"\s+", " ", text.strip())
+        out.append({"node": type(sub).__name__, "expr": compact[:800]})
+    # stable unique order, favor shorter directly interpretable operations
+    seen: set[str] = set()
+    deduped: list[dict[str, Any]] = []
+    for item in sorted(out, key=lambda x: (len(x["expr"]), x["expr"])):
+        if item["expr"] in seen:
+            continue
+        seen.add(item["expr"])
+        deduped.append(item)
+    return deduped[:100]
 
 
 def inspect_source(source: str) -> dict[str, Any]:
     tree = ast.parse(source)
-    constants: dict[str, Any] = {}
     constant_expressions: dict[str, str | None] = {}
-    functions: list[str] = []
-    target_function_signatures: list[dict[str, Any]] = []
-    comparisons: list[dict[str, Any]] = []
     assignments: list[dict[str, Any]] = []
-    calls: list[dict[str, Any]] = []
-    slices: list[dict[str, Any]] = []
+    comparisons: list[str] = []
+    function_semantics: dict[str, Any] = {}
 
     for node in ast.walk(tree):
-        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
-            functions.append(node.name)
-            if node.name in TARGET_FUNCTIONS:
-                target_function_signatures.append(function_signature(node))
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name in TARGET_FUNCTIONS:
+            function_semantics[node.name] = {
+                "signature": function_signature(node),
+                "operations": function_operations(node),
+            }
         elif isinstance(node, ast.Assign):
-            value = literal(node.value)
             rhs = expr(node.value)
             for target in node.targets:
-                if isinstance(target, ast.Name) and is_relevant(target.id):
-                    assignments.append({"name": target.id, "expr": rhs, "literal_value": value})
-                    if target.id.isupper():
-                        constants[target.id] = value
+                if isinstance(target, ast.Name) and is_relevant_text(target.id):
+                    assignments.append({"name": target.id, "expr": rhs, "literal_value": literal(node.value)})
+                    if target.id in TARGET_CONSTANTS:
                         constant_expressions[target.id] = rhs
         elif isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
-            name = node.target.id
-            if is_relevant(name):
-                value = literal(node.value) if node.value is not None else None
+            if is_relevant_text(node.target.id):
                 rhs = expr(node.value)
-                assignments.append({"name": name, "expr": rhs, "literal_value": value})
-                if name.isupper():
-                    constants[name] = value
-                    constant_expressions[name] = rhs
+                assignments.append({"name": node.target.id, "expr": rhs, "literal_value": literal(node.value) if node.value else None})
+                if node.target.id in TARGET_CONSTANTS:
+                    constant_expressions[node.target.id] = rhs
+        elif isinstance(node, ast.AugAssign):
+            text = expr(node)
+            if text and is_relevant_text(text):
+                assignments.append({"name": expr(node.target), "expr": text, "literal_value": None})
         elif isinstance(node, ast.Compare):
-            text = expr(node) or ""
-            if any(k in text.lower() for k in KEYWORDS):
-                comparisons.append({"expr": text[:500]})
-        elif isinstance(node, ast.Call):
-            text = expr(node) or ""
-            low = text.lower()
-            if any(k in low for k in ("pair", "cohort", "launch", "rank", "buyer")):
-                calls.append({"expr": text[:500]})
-        elif isinstance(node, ast.Subscript):
-            text = expr(node) or ""
-            if "buyer" in text.lower() or "rank" in text.lower():
-                slices.append({"expr": text[:300]})
+            text = expr(node)
+            if text and is_relevant_text(text):
+                comparisons.append(text)
 
     source_lines = source.splitlines()
-    keyword_line_summaries: list[dict[str, Any]] = []
+    fingerprints = []
     for idx, line in enumerate(source_lines, start=1):
-        low = line.lower()
-        if any(k in low for k in ("min_", "cohort", "first_rank", "score", "n_launch", "union", "window_sec", "first_n_buyers")):
-            stripped = re.sub(r"\s+", " ", line.strip())
-            if stripped and not stripped.startswith("#"):
-                keyword_line_summaries.append({"line": idx, "sha256": hashlib.sha256(stripped.encode()).hexdigest(), "length": len(stripped)})
+        stripped = re.sub(r"\s+", " ", line.strip())
+        if stripped and not stripped.startswith("#") and is_relevant_text(stripped):
+            fingerprints.append({"line": idx, "sha256": sha256_bytes(stripped.encode()), "length": len(stripped)})
 
     return {
-        "source_sha256": sha256_bytes(source.encode("utf-8")),
+        "source_sha256": sha256_bytes(source.encode()),
         "line_count": len(source_lines),
-        "relevant_constants": constants,
         "constant_expressions": {k: constant_expressions.get(k) for k in sorted(TARGET_CONSTANTS)},
-        "relevant_assignments": assignments[:120],
-        "function_names": sorted(functions),
-        "target_function_signatures": target_function_signatures,
-        "relevant_comparisons": comparisons[:140],
-        "relevant_calls": calls[:140],
-        "buyer_or_rank_subscripts": slices[:80],
-        "keyword_line_fingerprints": keyword_line_summaries[:160],
+        "relevant_assignments": assignments[:160],
+        "relevant_comparisons": sorted(set(comparisons)),
+        "target_function_semantics": function_semantics,
+        "keyword_line_fingerprints": fingerprints[:180],
         "raw_source_archived": False,
     }
+
+
+def archive_inventory(zf: zipfile.ZipFile) -> list[dict[str, Any]]:
+    out = []
+    for info in zf.infolist():
+        if info.is_dir():
+            continue
+        out.append({
+            "basename": Path(info.filename).name,
+            "path_sha256": sha256_bytes(info.filename.encode()),
+            "uncompressed_bytes": info.file_size,
+            "compressed_bytes": info.compress_size,
+        })
+    return sorted(out, key=lambda x: x["basename"])
 
 
 def main() -> None:
@@ -151,23 +162,20 @@ def main() -> None:
     args = ap.parse_args()
 
     with zipfile.ZipFile(args.zip) as zf:
+        inventory = archive_inventory(zf)
         detector_member = member_by_basename(zf, "analyze_sniper_cohorts.py")
-        source_bytes = zf.read(detector_member)
-        source = source_bytes.decode("utf-8")
+        source = zf.read(detector_member).decode("utf-8")
         detector = inspect_source(source)
-
-        catalogue_member = member_by_basename(zf, "sniper_cohorts.jsonl")
-        intra_member = member_by_basename(zf, "sniper_cohorts_intra.jsonl.gz")
-        catalogue = list(jsonl_rows(zf, catalogue_member))
-        intra = list(jsonl_rows(zf, intra_member))
+        catalogue = list(jsonl_rows(zf, member_by_basename(zf, "sniper_cohorts.jsonl")))
+        intra = list(jsonl_rows(zf, member_by_basename(zf, "sniper_cohorts_intra.jsonl.gz")))
 
     result = {
-        "experiment": "RED_COHORT_DETECTOR_SEMANTICS_PROBE_v1_1",
+        "experiment": "RED_COHORT_DETECTOR_SEMANTICS_PROBE_v1_2",
         "source": "RED-COHORT-2026-v1.1.1",
+        "archive_inventory": inventory,
         "detector": detector,
         "catalogue": {
             "rows": len(catalogue),
-            "keys": sorted({k for row in catalogue for k in row}),
             "n_launches_min": min((int(r.get("n_launches", 0)) for r in catalogue), default=None),
             "n_launches_max": max((int(r.get("n_launches", 0)) for r in catalogue), default=None),
             "cohort_size_min": min((int(r.get("cohort_size", 0)) for r in catalogue), default=None),
@@ -175,18 +183,12 @@ def main() -> None:
         },
         "intra_launch": {
             "rows": len(intra),
-            "keys": sorted({k for row in intra for k in row}),
             "window_sec_values": sorted({int(r.get("window_sec", 0)) for r in intra if r.get("window_sec") is not None}),
             "first_rank_min": min((int(r.get("first_rank", 0)) for r in intra), default=None),
             "first_rank_max": max((int(r.get("first_rank", 0)) for r in intra), default=None),
         },
-        "scientific_question": "derive exact persistence criteria and then replay them causally in event-time order to compute earliest-knowable cohort timestamps",
-        "authority": {
-            "research_only": True,
-            "automatic_trading": False,
-            "buy_now_promotion": False,
-            "live_threshold_change": False,
-        },
+        "scientific_question": "derive exact persistence criteria and replay causally in event-time order; a cohort signal may only affect strictly subsequent launches after its qualifying evidence exists",
+        "authority": {"research_only": True, "automatic_trading": False, "buy_now_promotion": False, "live_threshold_change": False},
     }
     out = Path(args.out)
     out.parent.mkdir(parents=True, exist_ok=True)
