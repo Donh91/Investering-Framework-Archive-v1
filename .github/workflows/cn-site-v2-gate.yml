@@ -18,9 +18,15 @@ jobs:
           node-version: '22'
       - name: Validate public v2 contract
         run: node 05_CYCLE_NAVIGATOR/site/validate-v2.mjs
-      - name: Build public artifact
-        run: node 05_CYCLE_NAVIGATOR/site/build-public.mjs
-      - name: Verify required output
+      - name: Run exact production build chain
+        run: |
+          node 05_CYCLE_NAVIGATOR/site/build-public.mjs
+          node 05_CYCLE_NAVIGATOR/site/build-apple-prototype.mjs
+          node 05_CYCLE_NAVIGATOR/site/build-shortcut.mjs
+          node 05_CYCLE_NAVIGATOR/site/build-score-bundle.mjs
+          node 05_CYCLE_NAVIGATOR/site/build-live-observation.mjs
+          node 05_CYCLE_NAVIGATOR/site/build-social-card.mjs
+      - name: Verify required output and privacy
         run: |
           test -f 05_CYCLE_NAVIGATOR/site/dist/index.html
           test -f 05_CYCLE_NAVIGATOR/site/dist/data/latest.json
@@ -28,3 +34,10 @@ jobs:
           test -f 05_CYCLE_NAVIGATOR/site/dist/history-scoreboard.js
           test -f 05_CYCLE_NAVIGATOR/site/dist/scoreboard.css
           ! grep -R 'Donh91\|Investering-Framework-Archive-v1\|week_dir' 05_CYCLE_NAVIGATOR/site/dist/data/latest.json
+      - name: Verify final production shell is v2
+        run: |
+          grep -q 'WHAT SHOULD I DO NOW?' 05_CYCLE_NAVIGATOR/site/dist/index.html
+          grep -q 'href="#now"' 05_CYCLE_NAVIGATOR/site/dist/index.html
+          grep -q 'href="#path"' 05_CYCLE_NAVIGATOR/site/dist/index.html
+          grep -q 'href="#why"' 05_CYCLE_NAVIGATOR/site/dist/index.html
+          grep -q 'history-scoreboard.js' 05_CYCLE_NAVIGATOR/site/dist/index.html
