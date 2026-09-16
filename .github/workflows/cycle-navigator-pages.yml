@@ -36,9 +36,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
-      - name: Validate v2 public contract
+      - name: Validate public product contract
         run: node 05_CYCLE_NAVIGATOR/site/validate-v2.mjs
-      - name: Build v2 privacy-safe public bundle
+      - name: Build privacy-safe public bundle
         run: node 05_CYCLE_NAVIGATOR/site/build-public.mjs
       - name: Bind canonical weekly scorecard
         run: node 05_CYCLE_NAVIGATOR/site/build-score-bundle.mjs
@@ -46,13 +46,20 @@ jobs:
         run: node 05_CYCLE_NAVIGATOR/site/build-live-observation.mjs
       - name: Build and verify social preview
         run: node 05_CYCLE_NAVIGATOR/site/build-social-card.mjs
-      - name: Verify final v2 shell and privacy
+      - name: Verify final action-first shell and privacy
         run: |
           grep -q 'WHAT SHOULD I DO NOW?' 05_CYCLE_NAVIGATOR/site/dist/index.html
-          grep -q 'href="#now"' 05_CYCLE_NAVIGATOR/site/dist/index.html
-          grep -q 'href="#path"' 05_CYCLE_NAVIGATOR/site/dist/index.html
-          grep -q 'href="#why"' 05_CYCLE_NAVIGATOR/site/dist/index.html
+          grep -q 'public-product.js' 05_CYCLE_NAVIGATOR/site/dist/index.html
           test -f 05_CYCLE_NAVIGATOR/site/dist/history-scoreboard.json
+          test -f 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          test -f 05_CYCLE_NAVIGATOR/site/dist/public-product.css
+          grep -q 'data-tab="now"' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          grep -q 'data-tab="path"' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          grep -q 'data-tab="score"' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          grep -q 'data-tab="how"' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          grep -q 'HANDLEKOMPAS · WHAT SHOULD I DO NOW?' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          grep -q 'Bitcoin to microcaps' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          grep -q 'NEXT HOURLY DATA CYCLE' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
           ! grep -R 'Donh91\|Investering-Framework-Archive-v1\|week_dir' 05_CYCLE_NAVIGATOR/site/dist/data/latest.json
       - name: Setup GitHub Pages
         uses: actions/configure-pages@v5
