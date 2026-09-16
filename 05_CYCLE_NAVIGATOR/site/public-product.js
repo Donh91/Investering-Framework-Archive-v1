@@ -7,15 +7,15 @@ const mean=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:null;
 const pct=v=>Number.isFinite(v)?`${Math.round(v)}%`:'—';
 const clamp=n=>Math.max(0,Math.min(100,Number(n)||0));
 const state=v=>{const s=String(v||'').toUpperCase();if(/PAUSED|INACTIVE|DEFENSIVE/.test(s))return'pause';if(/ACTIVE WATCH|RELATIVE RESILIENCE|ON WATCH|WATCH/.test(s))return'watch';if(/MAJOR LIQUIDITY ANCHOR|NO CONFIRMED MARKET BREAKDOWN|HOLD/.test(s))return'hold';if(/UNCONFIRMED|SELECTIVE PARTICIPATION|WAIT/.test(s))return'wait';if(/ACTIVE|CONFIRMED/.test(s))return'active';return'unknown'};
-const statusLabel=v=>({active:'ACTIVE',hold:'HOLD',watch:'WATCH',wait:'WAIT',pause:'AVOID',unknown:'PENDING'}[state(v)]||'PENDING');
-const actionCopy=v=>({active:'Risk can stay active here while confirmation holds.',hold:'Hold existing exposure. Do not add from this segment alone.',watch:'Watch closely. Prepare, but wait for confirmation.',wait:'Do not broaden risk here yet.',pause:'Avoid new risk until conditions improve.',unknown:'Awaiting enough evidence for a public call.'}[state(v)]||'Awaiting evidence.');
+const statusLabel=v=>({active:'ACTIVE',hold:'HOLD',watch:'WATCH',wait:'WAIT',pause:'WAIT',unknown:'PENDING'}[state(v)]||'PENDING');
+const actionCopy=v=>({active:'Risk can stay active here while confirmation holds.',hold:'Hold existing exposure. Do not add from this segment alone.',watch:'Watch closely. Prepare, but wait for confirmation.',wait:'Do not broaden risk here yet.',pause:'Wait for the preceding rotation to confirm before adding here.',unknown:'Awaiting enough evidence for a public call.'}[state(v)]||'Awaiting evidence.');
 const actionTitle=s=>({HOLD:'HOLD',WAIT:'WAIT',PREPARE:'PREPARE',SELECTIVE:'ADD SELECTIVELY','PROTECT CAPITAL':'REDUCE RISK','BROADER DEPLOYMENT':'ADD BROADLY'}[String(s||'').toUpperCase()]||'WAIT');
 const cleanPhase=v=>String(v||'').replace(/^\d+\.\s*/,'').replace(/\s[—–-]\s(ACTIVE WATCH|ACTIVE|UNCONFIRMED|INACTIVE|PAUSED).*$/i,'').trim();
 
 function investorText(raw){
   let s=String(raw||'').trim();
   if(!s)return'';
-  s=s.replace(/HANDLEKOMPAS/gi,'Market Compass')
+  s=s.replace(/HANDLEKOMPAS/gi,'Market Compass').replace(/\bW\d+\b/g,'This week')
     .replace(/MASTER MONDAY/gi,'weekly review')
     .replace(/FROZEN CYCLE NAVIGATOR/gi,'weekly outlook')
     .replace(/CANONICAL CONFIRMATION/gi,'confirmed signal')
@@ -57,18 +57,15 @@ function phaseCopy(raw){
 
 function stageName(raw,index){
   const s=String(raw||'').toLowerCase();
+  if(/volatile|consolidation|pullback/.test(s))return'Consolidation / transition';
+  if(/eth-relative stabilization|ethereum.*stabil/.test(s))return'Ethereum stabilises vs Bitcoin';
+  if(/selective.*eth|large-cap leadership|large cap leadership/.test(s))return'Ethereum + large caps strengthen';
+  if(/mid-cap|midcap/.test(s))return'Mid-cap participation broadens';
+  if(/small.*micro|small-cap|microcap/.test(s))return'Small & micro caps expand';
+  if(/broad altseason|mania|high-risk/.test(s))return'Broad risk expansion';
   if(/bitcoin|btc/.test(s))return'Bitcoin leadership';
-  if(/ethereum|eth|large cap/.test(s))return'Ethereum + large caps strengthen';
   if(/breadth|broad|altcoin/.test(s))return'Broad altcoin participation';
-  if(/small/.test(s))return'Small-cap expansion';
-  if(/micro|mania|high-risk/.test(s))return'High-risk expansion';
-  return [
-    'Bitcoin leadership',
-    'Consolidation / transition',
-    'Ethereum + large caps strengthen',
-    'Broad altcoin participation',
-    'High-risk expansion'
-  ][index]||phaseCopy(raw);
+  return phaseCopy(raw)||`Stage ${index+1}`;
 }
 
 function parseRangeScore(text){
