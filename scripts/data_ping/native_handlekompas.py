@@ -850,66 +850,63 @@ def write_official_compass(compass: Mapping[str, Any], output_root: Path) -> dic
     dt = datetime.fromisoformat(str(compass["issued_at_utc"]).replace("Z", "+00:00"))
     day_dir = output_root / "daily" / dt.strftime("%Y/%m/%d")
     reason = str(compass.get("run_reason") or "ON_DEMAND")
+    path = day_dir / f"{compass['compass_id']}.json"
+    selected: Mapping[str, Any] = compass
+    existing_freeze = False
     if reason == "SCHEDULED_DAILY" and day_dir.exists():
         existing = sorted(day_dir.glob("CMP-*.json"))
         if existing:
-            prior = read_json(existing[0])
-            return {
-                "status": "EXISTING_DAILY_FREEZE",
-                "path": existing[0].as_posix(),
-                "compass_id": prior.get("compass_id"),
-                "sha256": prior.get("compass_sha256"),
-            }
-    path = day_dir / f"{compass['compass_id']}.json"
+            path = existing[0]
     if path.exists():
         prior = read_json(path)
-        return {
-            "status": "EXISTING_DAILY_FREEZE",
-            "path": path.as_posix(),
-            "compass_id": prior.get("compass_id"),
-            "sha256": prior.get("compass_sha256"),
-        }
-    _immutable_write(path, compass)
+        expected_id = path.stem
+        expected_sha = digest(canon({k: v for k, v in prior.items() if k != "compass_sha256"}))
+        if prior.get("compass_id") != expected_id or prior.get("compass_sha256") != expected_sha:
+            raise ValueError(f"IMMUTABLE_COMPASS_INTEGRITY_FAILED:{path.as_posix()}")
+        selected = prior
+        existing_freeze = True
+        dt = datetime.fromisoformat(str(selected["issued_at_utc"]).replace("Z", "+00:00"))
+    _immutable_write(path, selected)
     compass_content_sha256 = digest(path.read_bytes())
-    public = build_public_projection(compass)
+    public = build_public_projection(selected)
     public["projection_sha256"] = digest(canon({k: v for k, v in public.items() if k != "projection_sha256"}))
-    public_path = output_root / "public" / dt.strftime("%Y/%m/%d") / f"{compass['compass_id']}.json"
+    public_path = output_root / "public" / dt.strftime("%Y/%m/%d") / f"{selected['compass_id']}.json"
     _immutable_write(public_path, public)
     public_content_sha256 = digest(public_path.read_bytes())
 
     pointer = {
         "contract": OFFICIAL_COMPASS_POINTER,
-        "compass_id": compass.get("compass_id"),
-        "issued_at_utc": compass.get("issued_at_utc"),
-        "data_status": compass.get("data_status"),
+        "compass_id": selected.get("compass_id"),
+        "issued_at_utc": selected.get("issued_at_utc"),
+        "data_status": selected.get("data_status"),
         "compass_path": path.as_posix(),
-        "compass_sha256": compass.get("compass_sha256"),
+        "compass_sha256": selected.get("compass_sha256"),
         "compass_content_sha256": compass_content_sha256,
         "public_projection_path": public_path.as_posix(),
         "public_projection_sha256": public.get("projection_sha256"),
         "public_projection_content_sha256": public_content_sha256,
-        "source_packet_sha256": nested(compass, "source_bindings", "auto_market_state", "packet_sha256"),
+        "source_packet_sha256": nested(selected, "source_bindings", "auto_market_state", "packet_sha256"),
         "authority": OFFICIAL_AUTHORITY,
     }
     output_root.mkdir(parents=True, exist_ok=True)
     (output_root / "LATEST_COMPASS.json").write_bytes(canon(pointer))
     public_pointer = {
         "contract": PUBLIC_COMPASS_POINTER,
-        "compass_id": compass.get("compass_id"),
-        "issued_at_utc": compass.get("issued_at_utc"),
-        "data_status": compass.get("data_status"),
+        "compass_id": selected.get("compass_id"),
+        "issued_at_utc": selected.get("issued_at_utc"),
+        "data_status": selected.get("data_status"),
         "public_projection_path": public_path.as_posix(),
         "public_projection_sha256": public.get("projection_sha256"),
         "public_projection_content_sha256": public_content_sha256,
     }
     (output_root / "PUBLIC_LATEST_COMPASS.json").write_bytes(canon(public_pointer))
     return {
-        "status": "WRITTEN",
+        "status": "EXISTING_DAILY_FREEZE" if existing_freeze else "WRITTEN",
         "path": path.as_posix(),
         "public_path": public_path.as_posix(),
         "pointer": (output_root / "LATEST_COMPASS.json").as_posix(),
-        "compass_id": compass.get("compass_id"),
-        "sha256": compass.get("compass_sha256"),
+        "compass_id": selected.get("compass_id"),
+        "sha256": selected.get("compass_sha256"),
     }
 
 

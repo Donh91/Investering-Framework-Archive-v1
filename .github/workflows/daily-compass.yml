@@ -51,7 +51,11 @@ jobs:
           d=json.load(open('/tmp/compass.json'))
           assert d['contract']=='OFFICIAL_DAILY_COMPASS_v1'
           assert set(d['horizons'])=={'NEXT_12H','NEXT_1_3D','NEXT_5_7D','CYCLE_ALTCOINS_3_8W'}
-          assert d['horizons']['CYCLE_ALTCOINS_3_8W']['warning'] in {'NONE','PARABOLIC_ALTSEASON_WARNING','DISTRIBUTION_WARNING','EXIT_WARNING','STRUCTURAL_BREAKDOWN_WARNING'}
+          alt=d['horizons']['CYCLE_ALTCOINS_3_8W']
+          if alt['expected_direction']=='UNAVAILABLE':
+              assert alt.get('warning') is None
+          else:
+              assert alt['warning'] in {'NONE','PARABOLIC_ALTSEASON_WARNING','DISTRIBUTION_WARNING','EXIT_WARNING','STRUCTURAL_BREAKDOWN_WARNING'}
           assert [r['segment'] for r in d['capitalization_ladder']]==['BTC','ETH','LARGE_CAPS','MID_CAPS','SMALL_CAPS','MICROCAPS']
           assert d['authority']['portfolio_execution'] is False
           assert d['authority']['post_hoc_rewrite'] is False
@@ -88,7 +92,6 @@ jobs:
           status=json.load(open('/tmp/official-compass-status.json'))
           if status.get('status')=='EXISTING_DAILY_FREEZE':
               print('OFFICIAL_COMPASS_EXISTING_DAILY_FREEZE', status.get('compass_id'))
-              raise SystemExit(0)
           pointer=json.loads(Path('04_MARKET_LEARNING/handlekompas/official/LATEST_COMPASS.json').read_text())
           freeze=Path(pointer['compass_path'])
           public=Path(pointer['public_projection_path'])
