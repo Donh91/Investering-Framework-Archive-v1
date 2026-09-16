@@ -1,6 +1,6 @@
 ---
 name: canonical-context-router
-description: 'Resolve the current authoritative Investering framework context before analysis or execution. Use for framework, DATA PING, Master Monday, Cycle Navigator, governance, active-version, current-rule, precedence, or cross-domain questions. Differentiator: identifies the canonical owner files, registered index addenda and overrules before any task-specific reasoning begins.'
+description: 'Resolve the current authoritative Investering framework context before analysis or execution. Use for framework, DATA PING, Master Monday, Cycle Navigator, kompas, handlekompas, compass, governance, active-version, current-rule, precedence, or cross-domain questions. Differentiator: identifies the canonical owner files, registered index addenda and overrules before any task-specific reasoning begins.'
 ---
 
 # Canonical Context Router
@@ -66,6 +66,31 @@ A file or path containing `DATA_PING`, `data_ping_derived`, `latest`, or an old 
 
 For `NEXT DAYS` or another short-horizon public field, use an existing current autonomous canonical output only when fresh, eligible and public-safe. If no such output exists, the correct result is unavailable/not published. Do not create a parallel website forecast engine.
 
+### Global Action Compass route - all Investering threads
+
+When the normalized user request is exactly `kompas`, `handlekompas` or `compass`, or one of those words is clearly the primary imperative, classify it as:
+
+```yaml
+task_type: GLOBAL_ACTION_COMPASS
+current_state_required: YES
+global_compass_invocation: YES
+explicit_data_ping_or_raw_packet_input: NO
+```
+
+Then include these files under `Required files`:
+
+```text
+07_PROMPTS_AND_AGENTS/action_compass/2026-09-16__global-action-compass-invocation-contract-v1__canonical.md
+07_PROMPTS_AND_AGENTS/action_compass/GLOBAL_ACTION_COMPASS_ROUTE_v1.json
+02_DATA_PING/protocols/2026-08-25__three-horizon-action-compass-output-contract-v1__canonical.md
+```
+
+The global contract supplies invocation, current-state routing and text-only rendering rules. The Three-Horizon contract supplies the controlled action and altcoin-regime vocabulary. A plain compass invocation is not a fresh DATA PING ingest and does not create a new prospective receipt merely because it was rendered.
+
+The downstream answer must use the current autonomous production route, keep the human-facing compass compact and text-only, add ETA where actionable, and avoid intentionally rendering widgets, API cards, connector cards, interactive charts, raw JSON or tool output.
+
+Do not ask the user which thread, DATA PING version, workflow or agent they mean when a hard trigger is present.
+
 ### Mandatory DATA PING / RAW interpretation route - explicit packet tasks only
 
 When `task_type` is specifically Main-Framework interpretation of a DATA PING packet or RAW market-data ingest, including a replay, correction, replacement thread or future DATA PING version, the context packet must include this owner under `Required files`:
@@ -126,6 +151,7 @@ write_intent: YES | NO
 current_state_required: YES | NO
 historical_context_required: YES | NO
 explicit_data_ping_or_raw_packet_input: YES | NO
+global_compass_invocation: YES | NO
 ```
 
 ### 2. Discover authority
@@ -143,6 +169,8 @@ Find:
 - required source material.
 
 For every registry-discoverable addendum, verify the path and its declared owner before using it.
+
+For a global compass invocation, additionally verify that both the Global Action Compass contract and its machine route are present in `Required files`, along with the active Three-Horizon decision vocabulary owner. Treat it as a current-state route and set render-only receipt behavior to `NO_NEW_RECEIPT` unless the same turn separately contains a fresh eligible ingest.
 
 For explicit DATA PING / RAW Main-Framework interpretation, additionally verify that the Three-Horizon Action Compass owner is present in `Required files`; absence is a routing failure, not an optional omission. The owner is the sole current decision vocabulary for that task class, separates warning from action and requires one immutable receipt attempt for each fresh explicit ingest. The historical E0-E7 Exit Ladder is `RETIRED_UNIMPLEMENTED` and must not be routed as a current owner.
 
@@ -215,6 +243,9 @@ Keep the packet concise. Reference paths rather than copying whole documents.
 - Do not use a broken or missing addendum pointer.
 - Do not treat historical/manual DATA PING as the default upstream source for current CN or Master Monday.
 - Do not classify a DATA PING-named or `latest_master_monday.json` artifact as current without a current pointer binding.
+- Do not ask for thread/version clarification on a hard global compass trigger.
+- Do not route a plain global compass render request as a fresh prospective ingest.
+- Do not intentionally render widgets or raw tool/API output in the downstream global compass answer.
 - Do not omit the Three-Horizon Action Compass owner from an explicit DATA PING / RAW Main-Framework interpretation context packet.
 - Do not route the retired E0-E7 Exit Ladder as current decision vocabulary or map Action Compass warnings into it.
 - Do not treat a replay, duplicate or `NOT_PERSISTED` interpretation as a new prospective receipt row.
@@ -231,8 +262,9 @@ Before completing:
 5. Verify every used registered addendum exists and points to valid owner files.
 6. Verify no legacy or superseded file is presented as current.
 7. Verify all unresolved conflicts are explicit.
-8. For explicit DATA PING / RAW Main-Framework interpretation, verify `02_DATA_PING/protocols/2026-08-25__three-horizon-action-compass-output-contract-v1__canonical.md` or its explicit canonical successor is included in `Required files`, and record whether the input is fresh or replayed for receipt routing.
-9. Re-read the request and confirm the packet contains only task-relevant context.
+8. For a global compass invocation, verify the Global Action Compass canonical contract, machine route and active Three-Horizon decision vocabulary owner are all present, and verify the downstream visible-output policy is `TEXT_ONLY` with no render-only receipt.
+9. For explicit DATA PING / RAW Main-Framework interpretation, verify `02_DATA_PING/protocols/2026-08-25__three-horizon-action-compass-output-contract-v1__canonical.md` or its explicit canonical successor is included in `Required files`, and record whether the input is fresh or replayed for receipt routing.
+10. Re-read the request and confirm the packet contains only task-relevant context.
 
 If any check fails, correct the packet and re-run all checks.
 
@@ -243,6 +275,7 @@ If any check fails, correct the packet and re-run all checks.
 - **Addendum registry missing** -> report `ADDENDUM_REGISTRY_UNAVAILABLE` and use only directly index-listed material plus explicit current routing owners.
 - **Registered addendum missing** -> report `ADDENDUM_PATH_MISSING` and do not use it.
 - **Owner file missing** -> report exact missing path and `OWNER_FILE_MISSING`.
+- **Global compass contract or machine route missing** -> report `GLOBAL_ACTION_COMPASS_ROUTE_UNAVAILABLE`; do not substitute old thread prose.
 - **Required DATA PING action-compass owner missing or unresolved for an explicit packet task** -> report `ACTION_COMPASS_OWNER_UNAVAILABLE`; do not silently fall back to prior-thread wording.
 - **Two current canonical files conflict** -> report `UNRESOLVED_CANONICAL_CONFLICT`.
 - **Requested live state has no current registry/pointer** -> report `LIVE_STATE_NOT_VERIFIED`.
