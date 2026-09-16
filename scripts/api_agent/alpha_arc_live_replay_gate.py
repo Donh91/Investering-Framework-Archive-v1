@@ -18,12 +18,14 @@ BEANCAT_CA = "0x41c8a71f630c636294009fa4fb0cc4c3bbe674fe"
 BEANCAT_POOL = "0x1f7f6a5e2ba06e9b3644afa8db8e1c606b5a5abb"
 BEANCAT_FROM = 16_880_000
 BEANCAT_TO = 16_920_000
-RECENT_SPAN = 9_000
-CHUNK = 3_000
+RECENT_SPAN = 20_000
 
 
-def get_json(url: str, timeout: int = 20) -> Any:
-    req = urllib.request.Request(url, headers={"User-Agent": "Investering-Framework-Arc-Replay/1.0", "Accept": "application/json"})
+def get_json(url: str, timeout: int = 15) -> Any:
+    req = urllib.request.Request(
+        url,
+        headers={"User-Agent": "Investering-Framework-Arc-Replay/1.1", "Accept": "application/json"},
+    )
     with urllib.request.urlopen(req, timeout=timeout) as response:
         return json.loads(response.read())
 
@@ -33,7 +35,14 @@ def contains_all(payload: Any, values: list[str]) -> bool:
     return all(value.lower() in text for value in values)
 
 
-def retrying_rpc_call(rpc_url: str, method: str, params: list[Any], *, timeout: int = 20, attempts: int = 5) -> Any:
+def retrying_rpc_call(
+    rpc_url: str,
+    method: str,
+    params: list[Any],
+    *,
+    timeout: int = 12,
+    attempts: int = 3,
+) -> Any:
     last_error: Exception | None = None
     for attempt in range(attempts):
         try:
@@ -44,112 +53,214 @@ def retrying_rpc_call(rpc_url: str, method: str, params: list[Any], *, timeout: 
                 raise
             retry_after = exc.headers.get("Retry-After") if exc.headers else None
             try:
-                delay = max(float(retry_after), 0.5) if retry_after else min(0.5 * (2 ** attempt), 4.0)
+                delay = max(float(retry_after), 0.25) if retry_after else min(0.5 * (2**attempt), 2.0)
             except ValueError:
-                delay = min(0.5 * (2 ** attempt), 4.0)
+                delay = min(0.5 * (2**attempt), 2.0)
             time.sleep(delay)
-        except TimeoutError as exc:
+        except (urllib.error.URLError, TimeoutError, OSError) as exc:
             last_error = exc
             if attempt == attempts - 1:
                 raise
-            time.sleep(min(0.5 * (2 ** attempt), 4.0))
+            time.sleep(min(0.5 * (2**attempt), 2.0))
     raise RuntimeError(f"RPC_RETRY_EXHAUSTED:{method}:{last_error}")
 
 
 def indexed_logs(venue: str, from_block: int, to_block: int) -> list[dict[str, Any]]:
     meta = arc.VENUES[venue]
-    query = urllib.parse.urlencode({
-        "module": "logs", "action": "getLogs", "fromBlock": from_block, "toBlock": to_block,
-        "address": meta["emitter"], "topic0": meta["topic0"],
-    })
+    query = urllib.parse.urlencode(
+        {
+            "module": "logs",
+            "action": "getLogs",
+            "fromBlock": from_block,
+            "toBlock": to_block,
+            "address": meta["emitter"],
+            "topic0": meta["topic0"],
+        }
+    )
     payload = get_json(f"{ARCSCAN_API}/api?{query}")
     rows = payload.get("result") if isinstance(payload, dict) else None
     return rows if isinstance(rows, list) else []
 
 
-def find_recent_control(rpc_url: str, head: int) -> tuple[dict[str, Any], dict[str, Any], tuple[int, int]]:
+def parse_indexed(venue: str, raw: dict[str, Any]) -> dict[str, Any] | None:
+    return arc.parse_log(venue, raw, None, int(time.time()), "api.arc-scan.org")
+
+
+def exact_rpc_event(
+    rpc_url: str,
+    venue: str,
+    indexed_event: dict[str, Any],
+) -> dict[str, Any]:
+    block = indexed_event.get("block_number")
+    if not isinstance(block, int):
+        raise RuntimeError("INDEX_EVENT_MISSING_BLOCK")
+    meta = arc.VENUES[venue]
+    params = [
+        {
+            "fromBlock": hex(block),
+            "toBlock": hex(block),
+            "address": meta["emitter"],
+            "topics": [meta["topic0"]],
+        }
+    ]
+    rows = retrying_rpc_call(rpc_url, "eth_getLogs", params) or []
+    if not isinstance(rows, list):
+        raise RuntimeError("EXACT_RPC_LOG_RESULT_NOT_LIST")
+    matches: list[dict[str, Any]] = []
+    for raw in rows:
+        if not isinstance(raw, dict):
+            continue
+        parsed = arc.parse_log(venue, raw, None, int(time.time()), arc.rpc_label(rpc_url))
+        if not parsed:
+            continue
+        if (
+            parsed.get("transaction_hash") == indexed_event.get("transaction_hash")
+            and parsed.get("log_index") == indexed_event.get("log_index")
+        ):
+            matches.append(parsed)
+    if len(matches) != 1:
+        raise RuntimeError(f"EXACT_RPC_MATCH_COUNT:{len(matches)}")
+    return matches[0]
+
+
+def find_beancat_index_control() -> dict[str, Any]:
+    matches: list[dict[str, Any]] = []
+    for raw in indexed_logs("uniswap_v3", BEANCAT_FROM, BEANCAT_TO):
+        parsed = parse_indexed("uniswap_v3", raw)
+        if not parsed:
+            continue
+        if (
+            str(parsed.get("target_token_ca") or "").lower() == BEANCAT_CA
+            and str(parsed.get("pool_address") or "").lower() == BEANCAT_POOL
+        ):
+            matches.append(parsed)
+    if len(matches) != 1:
+        raise RuntimeError(f"BEANCAT_INDEX_CONTROL_MATCH_COUNT:{len(matches)}")
+    return matches[0]
+
+
+def find_recent_index_control(head: int) -> tuple[dict[str, Any], tuple[int, int]]:
     start = max(0, head - RECENT_SPAN)
-    replay = arc.scan_range(rpc_url, start, head)
-    candidates = [row for row in replay if row.get("candidate_status") == "USDC_ANCHORED_CANDIDATE"]
+    candidates: list[dict[str, Any]] = []
+    for venue in ("uniswap_v3", "uniswap_v2", "uniswap_v4"):
+        for raw in indexed_logs(venue, start, head):
+            parsed = parse_indexed(venue, raw)
+            if parsed and parsed.get("candidate_status") == "USDC_ANCHORED_CANDIDATE":
+                candidates.append(parsed)
     if not candidates:
-        raise RuntimeError("NO_RECENT_RPC_USDC_CONTROL")
-    candidates.sort(key=lambda row: (row.get("block_number") or -1, row.get("log_index") or -1), reverse=True)
+        raise RuntimeError("NO_RECENT_INDEXED_USDC_CONTROL")
+    candidates.sort(
+        key=lambda row: (row.get("block_number") or -1, row.get("log_index") or -1),
+        reverse=True,
+    )
     preferred = [row for row in candidates if row.get("pool_address")]
-    rpc_event = (preferred or candidates)[0]
-    venue = rpc_event["venue"]
-    block = rpc_event["block_number"]
-    indexed = []
-    for raw in indexed_logs(venue, block, block):
-        parsed = arc.parse_log(venue, raw, None, int(time.time()), "api.arc-scan.org")
-        if parsed and parsed.get("transaction_hash") == rpc_event.get("transaction_hash") and parsed.get("log_index") == rpc_event.get("log_index"):
-            indexed.append(parsed)
-    if len(indexed) != 1:
-        raise RuntimeError(f"RECENT_INDEX_MATCH_COUNT:{len(indexed)}")
-    return indexed[0], rpc_event, (start, head)
+    return (preferred or candidates)[0], (start, head)
+
+
+def parity(indexed_event: dict[str, Any], rpc_event: dict[str, Any]) -> dict[str, bool]:
+    comparable = [
+        "venue",
+        "emitter",
+        "block_number",
+        "transaction_hash",
+        "log_index",
+        "target_token_ca",
+        "quote_asset",
+        "quote_representation",
+        "pool_address",
+        "pool_id",
+        "fee",
+        "tick_spacing",
+    ]
+    return {key: indexed_event.get(key) == rpc_event.get(key) for key in comparable}
 
 
 def run_replay(rpc_url: str) -> dict[str, Any]:
     if not hasattr(arc, "_replay_base_rpc_call"):
         arc._replay_base_rpc_call = arc.rpc_call  # type: ignore[attr-defined]
     arc.rpc_call = retrying_rpc_call
+
     chain_id_hex = retrying_rpc_call(rpc_url, "eth_chainId", [])
     chain_id = int(chain_id_hex, 16) if isinstance(chain_id_hex, str) else None
     if chain_id != arc.CHAIN_ID:
         raise RuntimeError(f"WRONG_CHAIN:{chain_id}")
 
-    historical_status = "PASS"
-    historical_match = None
-    try:
-        events: list[dict[str, Any]] = []
-        for start in range(BEANCAT_FROM, BEANCAT_TO + 1, CHUNK):
-            end = min(start + CHUNK - 1, BEANCAT_TO)
-            events.extend(arc.scan_range(rpc_url, start, end))
-        matches = [row for row in events if row.get("venue") == "uniswap_v3" and str(row.get("target_token_ca") or "").lower() == BEANCAT_CA and str(row.get("pool_address") or "").lower() == BEANCAT_POOL]
-        if len(matches) != 1:
-            raise RuntimeError(f"BEANCAT_CONTROL_MATCH_COUNT:{len(matches)}")
-        historical_match = matches[0]
-    except RuntimeError as exc:
-        if "pruned history unavailable" not in str(exc):
-            raise
-        historical_status = "RPC_HISTORY_PRUNED"
+    # Historical control is index-led only to locate the immutable event. The
+    # actual evidence gate is an exact-block RPC replay of that same event.
+    beancat_index = find_beancat_index_control()
+    beancat_rpc = exact_rpc_event(rpc_url, "uniswap_v3", beancat_index)
+    beancat_parity = parity(beancat_index, beancat_rpc)
+    if not all(beancat_parity.values()):
+        raise RuntimeError(
+            "BEANCAT_INDEX_RPC_PARITY_FAILED:"
+            + ",".join(key for key, value in beancat_parity.items() if not value)
+        )
 
     head_hex = retrying_rpc_call(rpc_url, "eth_blockNumber", [])
     head = int(head_hex, 16)
-    indexed_event, rpc_event, recent_range = find_recent_control(rpc_url, head)
-    comparable = ["venue", "emitter", "block_number", "transaction_hash", "log_index", "target_token_ca", "quote_asset", "quote_representation", "pool_address", "pool_id", "fee", "tick_spacing"]
-    parity = {key: indexed_event.get(key) == rpc_event.get(key) for key in comparable}
-    if not all(parity.values()):
-        raise RuntimeError("INDEX_RPC_PARITY_FAILED:" + ",".join(k for k, v in parity.items() if not v))
+    recent_index, recent_range = find_recent_index_control(head)
+    recent_rpc = exact_rpc_event(rpc_url, recent_index["venue"], recent_index)
+    recent_parity = parity(recent_index, recent_rpc)
+    if not all(recent_parity.values()):
+        raise RuntimeError(
+            "RECENT_INDEX_RPC_PARITY_FAILED:"
+            + ",".join(key for key, value in recent_parity.items() if not value)
+        )
 
     gecko_ok = None
-    if rpc_event.get("pool_address"):
+    if recent_rpc.get("pool_address"):
         try:
-            gecko = get_json(f"{GECKO_API}/networks/arc/pools/{rpc_event['pool_address']}")
-            gecko_ok = contains_all(gecko, [rpc_event["pool_address"], rpc_event["target_token_ca"], arc.USDC_ERC20])
+            gecko = get_json(f"{GECKO_API}/networks/arc/pools/{recent_rpc['pool_address']}")
+            gecko_ok = contains_all(
+                gecko,
+                [recent_rpc["pool_address"], recent_rpc["target_token_ca"], arc.USDC_ERC20],
+            )
         except Exception:
             gecko_ok = None
 
     assertions = {
         "chain_id_5042": chain_id == arc.CHAIN_ID,
-        "recent_index_rpc_parity": all(parity.values()),
-        "market_cap_not_inferred": rpc_event.get("market_cap_usd") is None,
-        "fdv_not_inferred": rpc_event.get("fdv_usd") is None,
-        "new_pool_not_equated_to_new_token": rpc_event.get("new_pool_is_new_token") is False,
-        "shadow_only": rpc_event.get("status") == "SHADOW_ONLY",
-        "data_integrity_pass": rpc_event.get("data_integrity_status") == "PASS",
+        "historical_beancat_exact_rpc_replay": all(beancat_parity.values()),
+        "recent_index_rpc_parity": all(recent_parity.values()),
+        "market_cap_not_inferred": recent_rpc.get("market_cap_usd") is None,
+        "fdv_not_inferred": recent_rpc.get("fdv_usd") is None,
+        "new_pool_not_equated_to_new_token": recent_rpc.get("new_pool_is_new_token") is False,
+        "shadow_only": recent_rpc.get("status") == "SHADOW_ONLY",
+        "data_integrity_pass": recent_rpc.get("data_integrity_status") == "PASS",
     }
     if not all(assertions.values()):
-        raise RuntimeError("ASSERTION_FAILED:" + ",".join(k for k, v in assertions.items() if not v))
+        raise RuntimeError(
+            "ASSERTION_FAILED:" + ",".join(key for key, value in assertions.items() if not value)
+        )
 
     return {
-        "contract": "ALPHA_ARC_HISTORICAL_RPC_REPLAY_GATE_v2",
-        "status": "PASS_WITH_PRUNED_HISTORICAL_CONTROL" if historical_status != "PASS" else "PASS",
-        "authority": {"shadow_activation_eligible": True, "user_alert": False, "adaptive_learning": False, "automatic_trading": False},
+        "contract": "ALPHA_ARC_HISTORICAL_RPC_REPLAY_GATE_v3",
+        "status": "PASS",
+        "authority": {
+            "shadow_activation_eligible": True,
+            "user_alert": False,
+            "adaptive_learning": False,
+            "automatic_trading": False,
+        },
         "chain_id": chain_id,
-        "rpc_source": "rpc.arc-scan.org",
-        "historical_beancat_rpc": {"status": historical_status, "matched_event": historical_match, "reason_if_pruned": "public RPC no longer retains the BEANCAT block range; no empty-result inference is permitted"},
-        "recent_replay": {"head": head, "range": {"from_block": recent_range[0], "to_block": recent_range[1]}, "indexed_event": indexed_event, "rpc_event": rpc_event, "parity": parity},
-        "independent_readback": {"arcscan_index_vs_rpc": True, "geckoterminal_pool_identity": gecko_ok},
+        "rpc_source": arc.rpc_label(rpc_url),
+        "historical_beancat_rpc": {
+            "indexed_event": beancat_index,
+            "rpc_event": beancat_rpc,
+            "parity": beancat_parity,
+        },
+        "recent_replay": {
+            "head": head,
+            "range": {"from_block": recent_range[0], "to_block": recent_range[1]},
+            "indexed_event": recent_index,
+            "rpc_event": recent_rpc,
+            "parity": recent_parity,
+        },
+        "independent_readback": {
+            "arcscan_index_vs_rpc_historical": True,
+            "arcscan_index_vs_rpc_recent": True,
+            "geckoterminal_pool_identity": gecko_ok,
+        },
         "assertions": assertions,
     }
 
@@ -162,7 +273,17 @@ def main() -> int:
     result = run_replay(args.rpc_url)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(result, sort_keys=True, indent=2) + "\n")
-    print(json.dumps({"contract": result["contract"], "status": result["status"], "recent_block": result["recent_replay"]["rpc_event"]["block_number"]}, sort_keys=True))
+    print(
+        json.dumps(
+            {
+                "contract": result["contract"],
+                "status": result["status"],
+                "historical_block": result["historical_beancat_rpc"]["rpc_event"]["block_number"],
+                "recent_block": result["recent_replay"]["rpc_event"]["block_number"],
+            },
+            sort_keys=True,
+        )
+    )
     return 0
 
 
