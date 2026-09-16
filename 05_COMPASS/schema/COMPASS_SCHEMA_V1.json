@@ -1,0 +1,141 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "COMPASS_SCHEMA_V1",
+  "title": "Action Compass v1",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "freeze_id",
+    "artifact_type",
+    "generated_at_utc",
+    "as_of_utc",
+    "authority",
+    "immutable",
+    "market_state",
+    "horizons",
+    "capitalization_ladder",
+    "evidence_manifest",
+    "cn_alignment",
+    "conclusion"
+  ],
+  "properties": {
+    "schema_version": {"const": "ACTION_COMPASS_V1"},
+    "freeze_id": {"type": "string", "minLength": 8},
+    "artifact_type": {"enum": ["DAILY_COMPASS_FREEZE", "EVENT_COMPASS_FREEZE"]},
+    "generated_at_utc": {"type": "string", "format": "date-time"},
+    "as_of_utc": {"type": "string", "format": "date-time"},
+    "authority": {"const": "NAVIGATION_ONLY"},
+    "immutable": {"const": true},
+    "status": {"enum": ["OK", "DEGRADED"]},
+    "market_state": {
+      "type": "object",
+      "required": ["direction", "action", "confidence", "summary", "market"],
+      "properties": {
+        "direction": {"$ref": "#/$defs/direction"},
+        "action": {"$ref": "#/$defs/action"},
+        "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+        "summary": {"type": "string"},
+        "market": {
+          "type": "object",
+          "properties": {
+            "btc_usd": {"type": ["number", "null"]},
+            "eth_usd": {"type": ["number", "null"]},
+            "ethbtc": {"type": ["number", "null"]},
+            "btc_change_24h_pct": {"type": ["number", "null"]},
+            "eth_change_24h_pct": {"type": ["number", "null"]},
+            "ethbtc_change_24h_pct": {"type": ["number", "null"]},
+            "total_market_change_24h_pct": {"type": ["number", "null"]},
+            "btc_dominance_pct": {"type": ["number", "null"]},
+            "eth_dominance_pct": {"type": ["number", "null"]}
+          }
+        }
+      }
+    },
+    "horizons": {
+      "type": "object",
+      "required": ["NOW", "H12", "D1_3", "D5_7"],
+      "properties": {
+        "NOW": {"$ref": "#/$defs/horizon"},
+        "H12": {"$ref": "#/$defs/horizon"},
+        "D1_3": {"$ref": "#/$defs/horizon"},
+        "D5_7": {"$ref": "#/$defs/horizon"}
+      }
+    },
+    "capitalization_ladder": {
+      "type": "object",
+      "required": ["BTC", "ETH", "LARGE_CAP", "MID_CAP", "SMALL_CAP", "MICRO_CAP"],
+      "properties": {
+        "BTC": {"$ref": "#/$defs/ladder"},
+        "ETH": {"$ref": "#/$defs/ladder"},
+        "LARGE_CAP": {"$ref": "#/$defs/ladder"},
+        "MID_CAP": {"$ref": "#/$defs/ladder"},
+        "SMALL_CAP": {"$ref": "#/$defs/ladder"},
+        "MICRO_CAP": {"$ref": "#/$defs/ladder"}
+      }
+    },
+    "evidence_manifest": {
+      "type": "object",
+      "required": ["observed_scalar_points", "minimum_breadth_target", "breadth_target_met", "source_families_expected", "source_families_available", "missing_sources", "point_keys_sha256", "sources"],
+      "properties": {
+        "observed_scalar_points": {"type": "integer", "minimum": 0},
+        "minimum_breadth_target": {"const": 100},
+        "breadth_target_met": {"type": "boolean"},
+        "source_families_expected": {"type": "integer", "minimum": 1},
+        "source_families_available": {"type": "integer", "minimum": 0},
+        "missing_sources": {"type": "array", "items": {"type": "string"}},
+        "point_keys_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "sources": {"type": "array"}
+      }
+    },
+    "evidence_snapshot": {"type": "object"},
+    "cn_alignment": {
+      "type": "object",
+      "required": ["state", "explanation"],
+      "properties": {
+        "state": {"enum": ["ALIGNED", "TACTICAL_DIVERGENCE", "UNAVAILABLE"]},
+        "explanation": {"type": "string"},
+        "cn_issue_number": {"type": ["integer", "null"]}
+      }
+    },
+    "conclusion": {
+      "type": "object",
+      "required": ["now", "next_12h", "next_1_3d", "next_5_7d", "action"],
+      "properties": {
+        "now": {"type": "string"},
+        "next_12h": {"type": "string"},
+        "next_1_3d": {"type": "string"},
+        "next_5_7d": {"type": "string"},
+        "action": {"type": "string"}
+      }
+    }
+  },
+  "$defs": {
+    "direction": {"enum": ["BULLISH", "NEUTRAL", "BEARISH"]},
+    "action": {"enum": ["HOLD", "WAIT", "PREPARE", "DEPLOY", "DE_RISK"]},
+    "horizon": {
+      "type": "object",
+      "required": ["direction", "action", "confidence", "window", "explanation", "confirmation_trigger", "invalidation", "maturity_at_utc"],
+      "properties": {
+        "direction": {"$ref": "#/$defs/direction"},
+        "action": {"$ref": "#/$defs/action"},
+        "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+        "window": {"type": "string"},
+        "explanation": {"type": "string"},
+        "confirmation_trigger": {"type": "string"},
+        "invalidation": {"type": "string"},
+        "maturity_at_utc": {"type": ["string", "null"], "format": "date-time"}
+      }
+    },
+    "ladder": {
+      "type": "object",
+      "required": ["status", "eta", "why", "trigger", "invalidation"],
+      "properties": {
+        "status": {"$ref": "#/$defs/action"},
+        "eta": {"type": "string"},
+        "why": {"type": "string"},
+        "trigger": {"type": "string"},
+        "invalidation": {"type": "string"}
+      }
+    }
+  }
+}
