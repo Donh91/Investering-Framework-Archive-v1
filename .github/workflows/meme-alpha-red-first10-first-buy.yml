@@ -1,0 +1,70 @@
+name: Meme Alpha RED First 10 First BUY
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/meme-alpha-red-first10-first-buy.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  first10-first-buy:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Download pinned RED release
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/red-cohort /tmp/red-first10
+          URL='https://zenodo.org/records/21765387/files/RED-COHORT-2026-v1_1_1.zip?download=1'
+          curl -L --fail --retry 5 --retry-delay 2 --connect-timeout 20 "$URL" -o /tmp/red-cohort/RED-COHORT-2026-v1_1_1.zip
+          echo '172198eade99f702f1da0bfdd4cf3079  /tmp/red-cohort/RED-COHORT-2026-v1_1_1.zip' | md5sum -c -
+          sha256sum /tmp/red-cohort/RED-COHORT-2026-v1_1_1.zip | tee /tmp/red-first10/SHA256SUMS
+      - name: Reconstruct earliest genuine BUY for first 10 deterministic pairs
+        run: |
+          python research/api_agent/meme_alpha/experiments/red_earliest_first_buy_reconstruction_v1.py \
+            --zip /tmp/red-cohort/RED-COHORT-2026-v1_1_1.zip \
+            --out /tmp/red-first10/red_first10_first_buy_v1.json \
+            --pairs 10 \
+            --history-page-size 250 \
+            --max-history-pages 24 \
+            --workers 1
+      - name: Require complete 10-pair causal reconstruction
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          x=json.load(open('/tmp/red-first10/red_first10_first_buy_v1.json'))
+          c=x['counts']; inv=x['invariants']; v=x['verdict']
+          assert c['selected_pairs'] == 10, c
+          assert c['target_launches'] == 29, c
+          assert c['expected_target_occurrences'] == 58, c
+          assert c['materialized_target_occurrences'] == 58, c
+          assert c['fully_mapped_target_launches'] == 29, c
+          assert c['mapped_target_occurrences'] == 58, c
+          assert c['history_complete_occurrences'] == 58, c
+          assert c['history_transactions_complete_occurrences'] == 58, c
+          assert c['earliest_buy_found'] == 58, c
+          assert c['earliest_buy_unambiguous'] == 58, c
+          assert c['unique_historical_transactions_required'] == c['unique_historical_transactions_resolved'], c
+          assert inv['launch_3_excluded_from_prediction'] is True, inv
+          assert inv['only_launch_4_plus_prediction_eligible'] is True, inv
+          assert inv['qualification_launch_prediction_eligible_count'] == 0, inv
+          assert v['causal_first_buy_reconstruction'] == 'SUPPORTED', v
+          assert v['pilot_gate_ready'] is True, v
+          print(json.dumps({'counts':c,'invariants':inv,'verdict':v},sort_keys=True))
+          PY
+      - name: Upload first-10 evidence
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: meme-alpha-red-first10-first-buy-v1
+          path: /tmp/red-first10/
+          retention-days: 30
