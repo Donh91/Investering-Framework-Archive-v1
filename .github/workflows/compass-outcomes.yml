@@ -1,0 +1,112 @@
+name: Official Compass Outcomes
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/compass-outcomes.yml'
+      - 'scripts/learning/compass_outcomes.py'
+      - 'tests/learning/test_compass_outcomes.py'
+      - '04_MARKET_LEARNING/handlekompas/SCORING_CONTRACT_v1.md'
+  schedule:
+    # Mature eligible 12h/72h/168h outcomes after the hourly owner sequence settles.
+    - cron: '27 * * * *'
+      timezone: 'Europe/Copenhagen'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: framework-main-writer
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Test maturity guardrails
+        run: |
+          python -m py_compile scripts/learning/compass_outcomes.py
+          python -m unittest tests.learning.test_compass_outcomes -v
+          python scripts/learning/compass_outcomes.py --dry-run > /tmp/compass-maturity.json
+          python - <<'PY'
+          import json
+          d=json.load(open('/tmp/compass-maturity.json'))
+          assert d['contract']=='OFFICIAL_DAILY_COMPASS_MATURITY_RUN_v1'
+          PY
+
+  mature:
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Mature eligible outcomes only
+        run: |
+          python -m unittest tests.learning.test_compass_outcomes -v
+          python scripts/learning/compass_outcomes.py | tee /tmp/compass-outcomes.json
+      - name: Verify forecasts were not rewritten
+        shell: bash
+        run: |
+          git diff --exit-code -- 04_MARKET_LEARNING/handlekompas/official/daily || {
+            echo 'Forecast freeze changed during scoring'; exit 1;
+          }
+          python - <<'PY'
+          import json
+          d=json.load(open('/tmp/compass-outcomes.json'))
+          for row in d.get('results',[]):
+              if row.get('status')=='MATURED':
+                  assert row.get('horizon') in {'12h','72h','168h'}
+                  assert row.get('outcome_sha256')
+          PY
+      - name: Commit mature outcomes with remote readback
+        shell: bash
+        run: |
+          git config user.name framework-learning-bot
+          git config user.email framework-learning-bot@users.noreply.github.com
+          git add 04_MARKET_LEARNING/handlekompas/official/outcomes
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "learning: mature Compass outcomes ${GITHUB_RUN_ID}"
+          pushed=false
+          for attempt in 1 2 3; do
+            git rebase --abort 2>/dev/null || true
+            if git pull --rebase origin main && git push origin HEAD:main; then pushed=true; break; fi
+            sleep $((attempt * 5))
+          done
+          [ "$pushed" = true ]
+          git fetch origin main
+          git merge-base --is-ancestor HEAD origin/main
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: official-compass-outcomes-${{ github.run_id }}-${{ github.run_attempt }}
+          path: /tmp/compass-outcomes.json
+          retention-days: 30
+          if-no-files-found: warn
+
+  incident:
+    needs: mature
+    if: failure() && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Open Compass outcome incident
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue create --title "AUTOMATION FAILURE: Official Compass Outcomes ${GITHUB_RUN_ID}" --body "Compass maturity/scoring failed. Frozen forecasts must remain unchanged. Run: ${GITHUB_RUN_ID}" || true
