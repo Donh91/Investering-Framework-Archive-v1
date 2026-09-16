@@ -1,0 +1,83 @@
+{
+  "contract": "MEME_ALPHA_LIVE_OBSERVATION_INTEGRITY_v1",
+  "status": "ACTIVE_FAIL_CLOSED",
+  "created_at_utc": "2026-09-16T12:57:00Z",
+  "issue_owner": "#1052",
+  "cross_chain_owner": "#1017",
+  "purpose": "Prevent stale, misidentified or semantically substituted live market observations from reaching Alpha analysis as if they were current canonical state.",
+  "required_order": [
+    "DATA_INTEGRITY",
+    "ALPHA_ANALYSIS",
+    "ACTION"
+  ],
+  "identity_key": [
+    "chain",
+    "exact_token_contract_or_mint"
+  ],
+  "required_live_fields_where_applicable": [
+    "chain",
+    "exact_token_contract_or_mint",
+    "token_identity",
+    "active_pool",
+    "dex_or_venue",
+    "quote_asset",
+    "live_price",
+    "supply_type_and_value",
+    "market_cap",
+    "fdv",
+    "liquidity",
+    "volume_window_and_value",
+    "pool_age",
+    "observed_at_utc",
+    "source",
+    "source_schema_or_version"
+  ],
+  "invariants": {
+    "unknown_is_zero": false,
+    "unknown_is_negative_evidence": false,
+    "market_cap_may_fallback_to_fdv": false,
+    "fdv_may_be_labeled_market_cap": false,
+    "new_pool_is_new_token": false,
+    "missing_chain_may_default_to_ethereum": false,
+    "unreviewed_chain_may_inherit_ethereum_anchor_semantics": false,
+    "social_or_web_observation_may_override_fresher_live_pool_state": false,
+    "material_current_source_conflict_may_be_silently_resolved": false,
+    "performance_multiple_without_reproducible_timestamped_baseline_and_outcome": false
+  },
+  "source_precedence_for_current_market_state": [
+    "IMMUTABLE_OR_DIRECT_ONCHAIN_OBSERVATION",
+    "TIMESTAMPED_LIVE_DEX_OR_POOL_OBSERVATION",
+    "TIMESTAMPED_SCREENSHOT_OF_LIVE_MARKET_UI",
+    "DERIVED_CURRENT_MARKET_AGGREGATOR",
+    "WEB_INDEXED_PAGE_OR_ARTICLE",
+    "SOCIAL_POST_OR_SEARCH_SNIPPET"
+  ],
+  "conflict_state": "DATA_CONFLICT",
+  "degraded_state": "DEGRADED_DATA",
+  "regression_cases": [
+    {
+      "id": "RSTR-2026-09-16-STALE-MCAP",
+      "chain": "robinhood",
+      "token_ca": "0x78b96280C3347E0f58a7147B73eb0EC5fFFf025d",
+      "historical_failure": "A stale web-indexed approximately $600k market-cap observation contaminated live analysis.",
+      "higher_priority_timestamped_observation": {
+        "source_type": "USER_SUPPLIED_TIMESTAMPED_DEXSCREENER_SCREENSHOT",
+        "observed_local_time": "2026-09-16T02:58:00+02:00",
+        "price_usd": 0.00008572,
+        "market_cap_usd": 75000,
+        "liquidity_usd": 26000,
+        "volume_24h_usd": 68000,
+        "price_change_24h_pct": -57.79
+      },
+      "required_regression_behavior": "The stale web observation cannot overwrite or be silently blended into the fresher timestamped live observation. If freshness or identity cannot be reconciled, emit DATA_CONFLICT and stop before ACTION."
+    }
+  ],
+  "authority": {
+    "changes_live_alpha_thresholds": false,
+    "changes_portfolio_authority": false,
+    "automatic_trading": false,
+    "position_sizing": false,
+    "cross_chain_activation": false,
+    "automatic_merge": false
+  }
+}
