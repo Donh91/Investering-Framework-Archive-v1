@@ -1,0 +1,30 @@
+name: Cycle Navigator Site v2 Gate
+on:
+  pull_request:
+    paths:
+      - '05_CYCLE_NAVIGATOR/site/**'
+      - '05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json'
+      - '05_CYCLE_NAVIGATOR/**/CYCLE_NAVIGATOR_MACHINE_PACKAGE.json'
+  workflow_dispatch:
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate public v2 contract
+        run: node 05_CYCLE_NAVIGATOR/site/validate-v2.mjs
+      - name: Build public artifact
+        run: node 05_CYCLE_NAVIGATOR/site/build-public.mjs
+      - name: Verify required output
+        run: |
+          test -f 05_CYCLE_NAVIGATOR/site/dist/index.html
+          test -f 05_CYCLE_NAVIGATOR/site/dist/data/latest.json
+          test -f 05_CYCLE_NAVIGATOR/site/dist/history-scoreboard.json
+          test -f 05_CYCLE_NAVIGATOR/site/dist/history-scoreboard.js
+          test -f 05_CYCLE_NAVIGATOR/site/dist/scoreboard.css
+          ! grep -R 'Donh91\|Investering-Framework-Archive-v1\|week_dir' 05_CYCLE_NAVIGATOR/site/dist/data/latest.json
