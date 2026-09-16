@@ -17,9 +17,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Validate public v2 contract
+      - name: Validate public product contract
         run: node 05_CYCLE_NAVIGATOR/site/validate-v2.mjs
-      - name: Run production-equivalent v2 build chain
+      - name: Run production-equivalent build chain
         run: |
           node 05_CYCLE_NAVIGATOR/site/build-public.mjs
           node 05_CYCLE_NAVIGATOR/site/build-score-bundle.mjs
@@ -30,13 +30,17 @@ jobs:
           test -f 05_CYCLE_NAVIGATOR/site/dist/index.html
           test -f 05_CYCLE_NAVIGATOR/site/dist/data/latest.json
           test -f 05_CYCLE_NAVIGATOR/site/dist/history-scoreboard.json
-          test -f 05_CYCLE_NAVIGATOR/site/dist/history-scoreboard.js
-          test -f 05_CYCLE_NAVIGATOR/site/dist/scoreboard.css
+          test -f 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          test -f 05_CYCLE_NAVIGATOR/site/dist/public-product.css
           ! grep -R 'Donh91\|Investering-Framework-Archive-v1\|week_dir' 05_CYCLE_NAVIGATOR/site/dist/data/latest.json
-      - name: Verify final production shell is v2
+      - name: Verify action-first v3 product shell
         run: |
-          grep -q 'WHAT SHOULD I DO NOW?' 05_CYCLE_NAVIGATOR/site/dist/index.html
-          grep -q 'href="#now"' 05_CYCLE_NAVIGATOR/site/dist/index.html
-          grep -q 'href="#path"' 05_CYCLE_NAVIGATOR/site/dist/index.html
-          grep -q 'href="#why"' 05_CYCLE_NAVIGATOR/site/dist/index.html
-          grep -q 'history-scoreboard.js' 05_CYCLE_NAVIGATOR/site/dist/index.html
+          grep -q 'public-product.js' 05_CYCLE_NAVIGATOR/site/dist/index.html
+          grep -q 'data-tab="now"' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          grep -q 'data-tab="path"' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          grep -q 'data-tab="score"' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          grep -q 'data-tab="how"' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          grep -q 'HANDLEKOMPAS · WHAT SHOULD I DO NOW?' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          grep -q 'Bitcoin to microcaps' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          grep -q 'NEXT HOURLY DATA CYCLE' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          grep -q 'Forecast first. Outcome later.' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
