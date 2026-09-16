@@ -1,0 +1,115 @@
+{
+  "contract": "CROSS_CHAIN_EDGE_TRANSFER_CONTRACT_v1",
+  "status": "ACTIVE_RESEARCH_DESIGN",
+  "created_at_utc": "2026-09-16T19:56:00Z",
+  "purpose": "Allow Meme Alpha Lab to learn from multiple traded and observational chains while preventing silent transfer of chain-specific thresholds, hindsight leakage or execution authority.",
+  "principle": "Research breadth may exceed execution breadth when additional ecosystems provide high expected information gain for reusable alpha features.",
+  "chain_roles": {
+    "LIVE_CANDIDATE_UNIVERSE": "A separately governed chain/venue may produce live candidates only when its own adapter, origin semantics, execution-pool semantics, sellability checks and prospective gate are validated.",
+    "SHADOW_LEARNING": "Collect point-in-time evidence and outcomes, but no user alert or live-rule authority unless separately promoted.",
+    "OBSERVATIONAL_LAB": "Research-only ecosystem used to discover or falsify transferable hypotheses; no execution intent is implied.",
+    "UNSUPPORTED": "No structured inference beyond archived raw evidence."
+  },
+  "research_priority": {
+    "objective": "Maximize expected information gain and prospective edge, not equal chain coverage.",
+    "high_value_conditions": [
+      "new launch mechanics expose earlier or cleaner token-origin evidence",
+      "wallet funding ancestry or bundle structure is observable",
+      "liquidity migration or graduation creates measurable state transitions",
+      "successful-sell evidence can falsify honeypot or exit-feasibility claims",
+      "early-wallet recurrence can be frozen before outcome",
+      "positive and matched negative cases can both be retained",
+      "social propagation timing can be separated from on-chain discovery"
+    ],
+    "downsample_conditions": [
+      "repetitive low-information launches",
+      "provider data cannot preserve exact token identity",
+      "point-in-time evidence cannot be frozen",
+      "only winner cases are available",
+      "cost or rate limits exceed expected research value"
+    ]
+  },
+  "candidate_transfer_features": [
+    "effective_independent_holders",
+    "funding_ancestry_clusters",
+    "recurring_early_wallets",
+    "first_entry_timing",
+    "deployer_history",
+    "bundle_or_common_source_patterns",
+    "successful_sellability",
+    "liquidity_survival",
+    "liquidity_migration_or_graduation",
+    "buyer_breadth",
+    "holder_distribution_evolution",
+    "social_lead_time",
+    "exact_ca_lifecycle_transitions"
+  ],
+  "required_normalization_before_transfer": [
+    "chain_and_venue",
+    "launch_mechanism",
+    "token_age",
+    "quote_asset_and_decimals",
+    "pool_type_and_liquidity_architecture",
+    "holder_semantics",
+    "router_or_aggregator_attribution",
+    "gas_and_transaction_cost_regime",
+    "market_cap_vs_fdv_semantics",
+    "sellability_and_slippage_regime"
+  ],
+  "promotion_gate": {
+    "historical_winners_generate_hypotheses_only": true,
+    "matched_failures_required": true,
+    "missed_winners_required": true,
+    "ambiguous_cases_retained": true,
+    "point_in_time_feature_freeze_required": true,
+    "prospective_validation_required": true,
+    "chain_specific_thresholds_default_to_non_portable": true,
+    "cross_chain_threshold_copy_forbidden": true,
+    "model_confidence_cannot_override_deterministic_safety": true,
+    "unknown_must_remain_unknown": true
+  },
+  "evidence_packet_minimum": [
+    "observed_at_utc",
+    "chain",
+    "exact_token_contract_or_native_identity",
+    "canonical_pool_or_launch_venue_identity",
+    "quote_asset",
+    "source_provenance",
+    "raw_price_when_available",
+    "supply_semantics_when_available",
+    "market_cap_and_fdv_kept_distinct",
+    "liquidity_usd_when_available",
+    "sellability_state",
+    "wallet_or_holder_evidence_when_available",
+    "data_integrity_status"
+  ],
+  "learning_outcomes": {
+    "retain_positive_cases": true,
+    "retain_negative_cases": true,
+    "retain_rugs_and_failed_launches": true,
+    "retain_missed_winners": true,
+    "retain_data_conflicts": true,
+    "survivorship_only_training_forbidden": true,
+    "compare_within_chain_venue_regime_first": true,
+    "cross_chain_meta_analysis_second": true
+  },
+  "integration": {
+    "lifecycle_owner": "ALPHA_LAB_LIFECYCLE_ENGINE_v1",
+    "runtime_policy_owner": "MEME_ALPHA_RUNTIME_POLICY_v1",
+    "prospective_owner": "MEME_ALPHA_PROSPECTIVE_HARDENING_v1",
+    "arc_current_mode": "SHADOW_LEARNING",
+    "arc_direct_event_source": "ARC_DIRECT_EVENT_SOURCES_v1",
+    "wallet_owner": "shared Meme Alpha wallet-quality ledger"
+  },
+  "authority": {
+    "automatic_trading": false,
+    "portfolio_action": false,
+    "position_size_output": false,
+    "live_alert_promotion": false,
+    "canonical_promotion": false,
+    "market_rule_change": false,
+    "model_weight_change": false,
+    "automatic_merge": false,
+    "code_self_modification": false
+  }
+}
