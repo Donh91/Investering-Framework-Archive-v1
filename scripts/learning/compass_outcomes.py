@@ -128,7 +128,7 @@ def native_runs(repo_root: Path, start: datetime, end: datetime) -> list[dict[st
     return sorted(rows, key=lambda row: row["timestamp_utc"])
 
 
-def first_action_event(rows: list[dict[str, Any]], states: set[str]) -> dict[str, Any] | None:
+def first_action_event(rows: list[dict[str, Any]], states: set[str]) -> dict[str, Any]:
     for row in rows:
         if row.get("action") in states:
             return {
@@ -175,17 +175,17 @@ def persistence_baseline(freeze: Mapping[str, Any], realized_pct: float | None) 
     return {"status": "SCORED", "prediction": predicted, "correct": correct, "realized_pct": realized_pct}
 
 
-def action_quality(freeze: Mapping[str, Any], btc_return: float | None, btc_mae: float | None) -> dict[str, Any]:
-    action = str(((freeze.get("horizons") or {}).get("NEXT_12H") or {}).get("action_posture") or freeze.get("action_now") or "NO_EDGE")
+def action_quality(action: Any, btc_return: float | None, btc_mae: float | None) -> dict[str, Any]:
+    action_name = str(action or "NO_EDGE")
     if btc_return is None:
-        return {"status": "UNAVAILABLE", "action": action}
-    if action in {"DEPLOY", "PREPARE"}:
+        return {"status": "UNAVAILABLE", "action": action_name}
+    if action_name in {"DEPLOY", "PREPARE"}:
         result = "FAVORED" if btc_return > 0 else "NOT_FAVORED"
-    elif action in {"WAIT", "HARD_WAIT", "HOLD"}:
+    elif action_name in {"WAIT", "HARD_WAIT", "HOLD"}:
         result = "PROTECTIVE" if btc_return < 0 else "OPPORTUNITY_COST_OR_NEUTRAL"
     else:
         result = "ABSTAINED"
-    return {"status": "PROXY_ONLY", "action": action, "result": result, "btc_return_pct": btc_return, "btc_mae_pct": btc_mae, "note": "Navigation-quality proxy only; not portfolio PnL or execution evidence."}
+    return {"status": "PROXY_ONLY", "action": action_name, "result": result, "btc_return_pct": btc_return, "btc_mae_pct": btc_mae, "note": "Navigation-quality proxy only; not portfolio PnL or execution evidence."}
 
 
 def mature_one(repo_root: Path, freeze_path: Path, horizon: str, now: datetime, output_root: Path) -> dict[str, Any] | None:
@@ -198,9 +198,10 @@ def mature_one(repo_root: Path, freeze_path: Path, horizon: str, now: datetime, 
     if now < target:
         return None
 
-    outcome_path = output_root / "outcomes" / issued.strftime("%Y/%m/%d") / f"{freeze.get('compass_id')}_{horizon}.json"
+    outcome_rel = output_root / "outcomes" / issued.strftime("%Y/%m/%d") / f"{freeze.get('compass_id')}_{horizon}.json"
+    outcome_path = repo_root / outcome_rel
     if outcome_path.exists():
-        return {"status": "ALREADY_MATURED", "path": outcome_path.as_posix()}
+        return {"status": "ALREADY_MATURED", "path": outcome_rel.as_posix()}
 
     rows = load_hourly(repo_root, issued, target + timedelta(hours=2))
     target_row = closest_target(rows, target)
@@ -225,6 +226,8 @@ def mature_one(repo_root: Path, freeze_path: Path, horizon: str, now: datetime, 
     confirm_states = set((((horizon_call.get("confirmation_trigger") or {}).get("states")) or []))
     deteriorate_states = set((((horizon_call.get("invalidation_trigger") or {}).get("states")) or []))
     predicted = horizon_call.get("expected_direction")
+    confirmation_event = first_action_event(action_rows, confirm_states) if confirm_states else {"fired": None, "reason": "NO_MACHINE_TRIGGER"}
+    deterioration_event = first_action_event(action_rows, deteriorate_states) if deteriorate_states else {"fired": None, "reason": "NO_MACHINE_TRIGGER"}
 
     outcome = {
         "contract": CONTRACT,
@@ -251,16 +254,16 @@ def mature_one(repo_root: Path, freeze_path: Path, horizon: str, now: datetime, 
             "eth": direction_score(predicted, eth_return, horizon),
         },
         "triggers": {
-            "confirmation": first_action_event(action_rows, confirm_states) if confirm_states else {"fired": None, "reason": "NO_MACHINE_TRIGGER"},
-            "deterioration": first_action_event(action_rows, deteriorate_states) if deteriorate_states else {"fired": None, "reason": "NO_MACHINE_TRIGGER"},
+            "confirmation": confirmation_event,
+            "deterioration": deterioration_event,
         },
         "timing_accuracy": {
             "status": "PARTIAL",
             "eta_window": horizon_call.get("eta"),
-            "confirmation_first_fired_at_utc": (first_action_event(action_rows, confirm_states) or {}).get("first_fired_at_utc") if confirm_states else None,
+            "confirmation_first_fired_at_utc": confirmation_event.get("first_fired_at_utc"),
             "note": "V1 scores event timing only when the registered native action-state trigger is observable; otherwise timing remains missing.",
         },
-        "action_utility": action_quality(freeze, btc_return, btc_exc["mae_pct"]),
+        "action_utility": action_quality(horizon_call.get("action_posture"), btc_return, btc_exc["mae_pct"]),
         "rotation_ladder_accuracy": {
             "status": "UNAVAILABLE_NO_GOVERNED_CAP_BUCKET_RETURN_SERIES",
             "note": "BTC/ETH outcomes are measured. Large/mid/small/micro tiers are not proxy-scored from unrelated assets.",
@@ -286,7 +289,7 @@ def mature_one(repo_root: Path, freeze_path: Path, horizon: str, now: datetime, 
     outcome["outcome_sha256"] = sha256(canon({k: v for k, v in outcome.items() if k != "outcome_sha256"}))
     outcome_path.parent.mkdir(parents=True, exist_ok=True)
     outcome_path.write_bytes(canon(outcome))
-    return {"status": "MATURED", "path": outcome_path.as_posix(), "horizon": horizon, "compass_id": freeze.get("compass_id"), "outcome_sha256": outcome["outcome_sha256"]}
+    return {"status": "MATURED", "path": outcome_rel.as_posix(), "horizon": horizon, "compass_id": freeze.get("compass_id"), "outcome_sha256": outcome["outcome_sha256"]}
 
 
 def find_freezes(repo_root: Path, output_root: Path) -> list[Path]:
