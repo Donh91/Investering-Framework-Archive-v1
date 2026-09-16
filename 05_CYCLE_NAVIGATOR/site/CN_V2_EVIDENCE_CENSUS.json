@@ -1,11 +1,41 @@
 {
-  "contract": "CYCLE_NAVIGATOR_PUBLIC_V2_EVIDENCE_CENSUS_v1",
+  "contract": "CYCLE_NAVIGATOR_PUBLIC_V2_EVIDENCE_CENSUS_v2",
   "owner_issue": 1012,
-  "status": "IN_PROGRESS_FAIL_CLOSED",
-  "purpose": "Recover point-in-time Cycle Navigator forecasts, price ranges, outcomes and scores across legacy/current namespaces before public v2 scoreboard implementation.",
-  "hard_rules": ["A missing value in a current ledger is not evidence that an historical CN lacked a price range.","Never reconstruct an old forecast from later outcomes.","Search legacy canonical namespaces, forecast ledgers, current delivery namespaces, commit/PR history, and archived publication evidence before PRICE_UNVERIFIED.","Memory-seeded rows are discovery hints only until bound to point-in-time source evidence.","Public aggregate scores require explicit measurable coverage and frozen scoring semantics."],
-  "discovery": {"publication_standard_from_cn":16,"publication_standard_requires":["BTC weekly range","ETH weekly range","Day 1-2 BTC/ETH range","Day 3-4 BTC/ETH range","Day 5-7 BTC/ETH range","combined Price Range Score"],"continuity_resolution_order":["explicit previous-CN freeze from latest pointer","03_WEEKLY_OPERATIONS/cycle_navigator/<forecast_week>","03_WEEKLY_OPERATIONS/forecast_ledger","04_MARKET_LEARNING/cycle_navigator/<publication_week>","Git commit and merged-PR history","PRICE_UNVERIFIED only after exhausted search receipt"],"manual_era_early_history":{"status":"DISCOVERY_ONLY_NOT_SCOREABLE_YET","source_class":"memory-seed manifest","known_hints":{"CN1_BTC":[63000,71000],"CN2_BTC":[65000,72000],"CN3_BTC":[66000,73000],"CN4_BTC":[73000,79000],"CN5_BTC":[76500,83500],"CN7_BTC":[79000,83500]},"warning":"Do not publish or score these hints until original/frozen evidence is recovered."},"verified_examples":[{"cn":18,"forecast_week":"2026-W31","provenance":"FROZEN_CANONICAL_COMMIT","weekly":{"BTC":[62200,67200],"ETH":[1800,2075]},"intraday":{"DAY_1_2":{"BTC":[63600,65900],"ETH":[1870,1995]},"DAY_3_4":{"BTC":[62800,66500],"ETH":[1840,2030]},"DAY_5_7":{"BTC":[62200,67200],"ETH":[1800,2075]}},"prior_cn17_range_precision":86.11,"later_precision_audit_score":91,"status":"FROZEN_PUBLISHED_SCORED"}]},
-  "census_target":{"cycle_navigators":"CN1_THROUGH_CURRENT","fields":["original publication/freeze timestamp","forecast week","BTC weekly range","ETH weekly range","BTC/ETH intraday horizon ranges","cycle/regime call","rotation call","ETA/timing claims","realized weekly/intraday ranges","price-range score","structural/cycle score","publication evidence","provenance confidence","manual-vs-automated era"]},
-  "public_scoreboard_gate":"BLOCKED_UNTIL_CENSUS_RECONCILED",
-  "authority":false
+  "status": "PUBLISHED_X_ARCHIVE_BOUND_RESIDUAL_RECOVERY",
+  "purpose": "Recover point-in-time Cycle Navigator forecasts, outcomes and scores without hindsight before public v2 scoreboard release.",
+  "hard_rules": [
+    "Never reconstruct an old forecast from later outcomes.",
+    "Archived published X text outranks memory-seeded hints for manual-era public history.",
+    "Preserve scores exactly as published under the method used at the time.",
+    "Manual-era published audit scores are historical public record, not later automated-score rows.",
+    "Missing fields remain missing after exhaustive recovery; no synthetic normalization across scoring eras."
+  ],
+  "archive_owners": [
+    "canonical-project-archive/06_CYCLE_NAVIGATOR/published-x-posts/",
+    "canonical-project-archive/06_CYCLE_NAVIGATOR/historical-posts/",
+    "canonical-project-archive/06_CYCLE_NAVIGATOR/CYCLE_NAVIGATOR_HISTORICAL_POST_INDEX.md",
+    "canonical-project-archive/06_CYCLE_NAVIGATOR/CYCLE_NAVIGATOR_FULL_TEXT_BACKFILL_QUEUE.md",
+    "canonical-project-archive/06_CYCLE_NAVIGATOR/archive_manifests/",
+    "canonical-project-archive/06_CYCLE_NAVIGATOR/skill_audits/"
+  ],
+  "manual_archive_discovery": {
+    "full_or_chunked_archived_publications": [1,2,3,4,5,7,8,9,11,12,13,14,15],
+    "raw_full_post_gaps": [6,10],
+    "score_recovery_for_raw_gaps": {"6":"CN7 published scorecard evaluates CN6","10":"CN11 published scorecard evaluates CN10"},
+    "published_score_rows_recovered": [1,2,3,4,5,6,7,8,10,11,12,13,14,15],
+    "published_score_row_still_missing": [9],
+    "source_class": "PUBLISHED_MANUAL_AUDIT",
+    "memory_seed_status": "SUPERSEDED_WHERE_ARCHIVED_PUBLICATION_EXISTS"
+  },
+  "transition": {
+    "locked_publication_standard_from_cn": 16,
+    "rule": "Use archived public/manual audit evidence before CN16, then locked forecast/post/score namespaces and contemporaneous commits from CN16 onward. Preserve method changes explicitly."
+  },
+  "census_target": {
+    "cycle_navigators": "CN1_THROUGH_CURRENT",
+    "fields": ["publication/freeze evidence","forecast week","BTC/ETH ranges","intraday maps","cycle/regime call","rotation call","ETA/timing claims","realized ranges","published component scores","published overall score","method/era","provenance confidence"]
+  },
+  "residual_targets": ["CN9 score evidence","CN16 contemporaneous score evidence","CN19 contemporaneous score evidence"],
+  "public_scoreboard_gate": "MAJORITY_HISTORY_RECOVERED_RESIDUAL_GAPS_FAIL_CLOSED",
+  "authority": false
 }
