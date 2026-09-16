@@ -25,10 +25,12 @@ class MoonshotAgeCohortTests(unittest.TestCase):
         events=[{"age_minutes":5+i,"buyer_velocity_per_minute":1+i,"transaction_velocity_per_minute":2+i,"volume_to_liquidity_h1":.1+i,"liquidity_usd":10000+i} for i in range(5)]
         row=normalize_age_cohorts(events)[0]
         meta=row["birth_cohort"]
-        self.assertEqual(meta["contract"],"MOONSHOT_PRE_ORIGIN_EVENT_COHORT_v2")
+        self.assertEqual(meta["contract"],"MOONSHOT_PRE_ORIGIN_EVENT_COHORT_v3")
         self.assertEqual(meta["role"],"DISCOVERY_PREFILTER_ONLY")
         self.assertFalse(meta["may_train_adaptive_rules"])
         self.assertFalse(meta["may_directly_create_user_alert"])
+        self.assertFalse(meta["unknown_is_zero"])
+        self.assertFalse(meta["unknown_is_negative_evidence"])
 
     def test_sparse_bucket_expands_to_neighbors_without_pretending_exact(self) -> None:
         events=[
@@ -43,6 +45,29 @@ class MoonshotAgeCohortTests(unittest.TestCase):
         self.assertEqual(row["birth_cohort"]["scope"],"ADJACENT_AGE_BUCKET_EXPANSION")
         self.assertTrue(row["birth_cohort"]["age_comparable"])
         self.assertGreaterEqual(row["birth_cohort"]["peer_count"],5)
+
+    def test_unknown_target_metric_remains_unknown_not_zero_percentile(self) -> None:
+        events=[
+            {"age_minutes":5+i,"buyer_velocity_per_minute":None if i == 0 else i,"transaction_velocity_per_minute":2+i,"volume_to_liquidity_h1":.1+i,"liquidity_usd":10000+i}
+            for i in range(5)
+        ]
+        row=normalize_age_cohorts(events)[0]
+        self.assertIsNone(row["birth_cohort_percentiles"]["buyer_velocity"])
+        self.assertEqual(row["birth_cohort_field_status"]["buyer_velocity"]["status"],"UNKNOWN")
+        self.assertEqual(row["birth_cohort_field_status"]["buyer_velocity"]["observed_peer_count"],4)
+        self.assertIn("buyer_velocity",row["birth_cohort"]["unknown_metric_fields"])
+
+    def test_unknown_peer_metric_is_excluded_from_distribution(self) -> None:
+        events=[
+            {"age_minutes":5,"buyer_velocity_per_minute":None,"transaction_velocity_per_minute":1,"volume_to_liquidity_h1":1,"liquidity_usd":10000},
+            {"age_minutes":6,"buyer_velocity_per_minute":1,"transaction_velocity_per_minute":1,"volume_to_liquidity_h1":1,"liquidity_usd":10000},
+            {"age_minutes":7,"buyer_velocity_per_minute":2,"transaction_velocity_per_minute":1,"volume_to_liquidity_h1":1,"liquidity_usd":10000},
+            {"age_minutes":8,"buyer_velocity_per_minute":3,"transaction_velocity_per_minute":1,"volume_to_liquidity_h1":1,"liquidity_usd":10000},
+            {"age_minutes":9,"buyer_velocity_per_minute":4,"transaction_velocity_per_minute":1,"volume_to_liquidity_h1":1,"liquidity_usd":10000},
+        ]
+        row=normalize_age_cohorts(events)[4]
+        self.assertEqual(row["birth_cohort_field_status"]["buyer_velocity"]["observed_peer_count"],4)
+        self.assertGreater(row["birth_cohort_percentiles"]["buyer_velocity"],80)
 
     def test_bucket_boundaries(self) -> None:
         self.assertEqual(age_bucket_index(0),0)
