@@ -4,6 +4,7 @@ import argparse
 import json
 import os
 import time
+import urllib.parse
 import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
@@ -88,6 +89,12 @@ def quote_semantics(a: str | None, b: str | None) -> tuple[str | None, str | Non
     if a_anchor:
         return a, b, a_anchor
     return b, a, b_anchor or "UNKNOWN"
+
+
+def rpc_label(rpc_url: str) -> str:
+    """Return non-secret provenance. Never persist RPC paths, query strings or credentials."""
+    parsed = urllib.parse.urlparse(rpc_url)
+    return parsed.hostname or "configured_arc_rpc"
 
 
 def rpc_call(rpc_url: str, method: str, params: list[Any], *, timeout: int = 20) -> Any:
@@ -175,6 +182,7 @@ def parse_log(venue: str, log: dict[str, Any], block_timestamp: int | None, obse
 
 def scan_range(rpc_url: str, from_block: int, to_block: int, *, timeout: int = 20) -> list[dict[str, Any]]:
     observed_at = int(time.time())
+    source_label = rpc_label(rpc_url)
     raw_logs: list[tuple[str, dict[str, Any]]] = []
     for venue, meta in VENUES.items():
         params = [{
@@ -200,7 +208,7 @@ def scan_range(rpc_url: str, from_block: int, to_block: int, *, timeout: int = 2
     seen: set[tuple[Any, ...]] = set()
     for venue, row in raw_logs:
         block_number = hex_int(row.get("blockNumber"))
-        event = parse_log(venue, row, timestamps.get(block_number) if block_number is not None else None, observed_at, rpc_url)
+        event = parse_log(venue, row, timestamps.get(block_number) if block_number is not None else None, observed_at, source_label)
         if not event:
             continue
         key = (event["venue"], event["transaction_hash"], event["log_index"])
