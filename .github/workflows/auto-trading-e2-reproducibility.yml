@@ -1,0 +1,128 @@
+name: Auto Trading E2 Reproducibility
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/experiments/ai_compiler_vs_policy_e2.py'
+      - 'scripts/experiments/ai_compiler_vs_policy_e2_hourly_adapter.py'
+      - 'tests/experiments/test_ai_compiler_vs_policy_e2.py'
+      - 'research/experiment_lifecycle/e2/requests/AT-E2-911-v1.json'
+      - '.github/workflows/auto-trading-e2-reproducibility.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'research/experiment_lifecycle/e2/requests/AT-E2-911-v1.json'
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: deterministic preflight or bounded live E2
+        required: true
+        default: preflight
+        type: choice
+        options: [preflight, live-e2]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: auto-trading-e2-911-v1
+  cancel-in-progress: false
+
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compile bounded E2 harness
+        run: |
+          python -m py_compile \
+            scripts/experiments/ai_compiler_vs_policy_e2.py \
+            scripts/experiments/ai_compiler_vs_policy_e2_hourly_adapter.py \
+            scripts/experiments/agent_handoff_contract.py \
+            tests/experiments/test_ai_compiler_vs_policy_e2.py
+      - name: Run focused unit regressions
+        run: python -m unittest tests.experiments.test_ai_compiler_vs_policy_e2 -v
+      - name: Run production-data dry preflight without model calls
+        run: |
+          rm -rf /tmp/at-e2-preflight
+          python scripts/experiments/ai_compiler_vs_policy_e2_hourly_adapter.py \
+            --request research/experiment_lifecycle/e2/requests/AT-E2-911-v1.json \
+            --repo-root . \
+            --output-dir /tmp/at-e2-preflight \
+            --dry-run
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          r=json.loads(Path('/tmp/at-e2-preflight/result.json').read_text())
+          assert r['status']=='COMPLETE'
+          assert r['issue']==911
+          assert r['data_firewall']['consumed_columns']==['btc_close','eth_close','spot_status','timestamp_utc']
+          assert r['data_firewall']['quarantined_derived_history_used'] is False
+          assert r['data_firewall']['evaluation_labels_hidden_from_ai'] is True
+          assert r['api']['total_cost_usd']==0.0
+          assert r['capital_ready'] is False
+          assert all(v is False for v in r['authority'].values())
+          print('AUTO_TRADING_E2_PREFLIGHT_PASS')
+          PY
+
+  live-e2:
+    needs: preflight
+    if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.mode == 'live-e2')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Execute frozen research-only E2 trial
+        run: |
+          rm -rf /tmp/at-e2-live
+          python scripts/experiments/ai_compiler_vs_policy_e2_hourly_adapter.py \
+            --request research/experiment_lifecycle/e2/requests/AT-E2-911-v1.json \
+            --repo-root . \
+            --output-dir /tmp/at-e2-live \
+            | tee /tmp/at-e2-live-summary.log
+      - name: Verify authority, trial identity and hard cost gate
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          r=json.loads(Path('/tmp/at-e2-live/result.json').read_text())
+          assert r['contract']=='AUTO_TRADING_E2_RESULT_v1'
+          assert r['experiment_id']=='AT-E2-911-v1'
+          assert r['issue']==911
+          assert r['status']=='COMPLETE'
+          assert r['api']['model']=='gpt-5.6-luna'
+          assert r['api']['total_cost_usd'] <= r['api']['hard_cost_stop_usd'] <= 0.75
+          assert r['data_firewall']['consumed_columns']==['btc_close','eth_close','spot_status','timestamp_utc']
+          assert r['data_firewall']['quarantined_derived_history_used'] is False
+          assert r['data_firewall']['evaluation_labels_hidden_from_ai'] is True
+          assert r['capital_ready'] is False
+          assert r['no_retroactive_rescore'] is True
+          assert r['no_post_result_prompt_tuning'] is True
+          assert all(v is False for v in r['authority'].values())
+          print('AUTO_TRADING_E2_LIVE_AUTHORITY_PASS')
+          PY
+      - name: Emit immutable result bytes for external archive readback
+        shell: bash
+        run: |
+          echo "E2_RESULT_B64=$(base64 -w0 /tmp/at-e2-live/result.json)"
+          echo "E2_CALLS_B64=$(base64 -w0 /tmp/at-e2-live/calls.jsonl)"
+          echo "E2_DESIGN_B64=$(base64 -w0 /tmp/at-e2-live/design_summary.json)"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: auto-trading-e2-911-v1-${{ github.run_id }}
+          path: |
+            /tmp/at-e2-live/result.json
+            /tmp/at-e2-live/calls.jsonl
+            /tmp/at-e2-live/design_summary.json
+            /tmp/at-e2-live-summary.log
+          retention-days: 30
+          if-no-files-found: error

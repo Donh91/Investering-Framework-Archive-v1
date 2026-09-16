@@ -42,6 +42,18 @@ class OperationsDashboardTests(unittest.TestCase):
     def test_automation_red_propagates(self):
         with tempfile.TemporaryDirectory() as tmp:
             root=Path(tmp);self.base_repo(root);self.write_json(root,'research/architecture_health/LATEST_AUTOMATION_HEALTH.json',{'status':'RED','generated_at_utc':'2026-08-04T12:20:00Z','red_count':2,'amber_count':0,'blockers':['workflow-x:LATEST_RUN_FAILED']});self.assertEqual(module.build_dashboard(root,datetime(2026,8,4,13,0,tzinfo=UTC))['overall_status'],'RED')
+    def test_stale_green_automation_health_becomes_red(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);self.base_repo(root);self.write_json(root,'research/architecture_health/LATEST_AUTOMATION_HEALTH.json',{'status':'GREEN','generated_at_utc':'2026-08-03T05:00:00Z','red_count':0,'amber_count':0,'blockers':[]});dashboard=module.build_dashboard(root,datetime(2026,8,4,13,0,tzinfo=UTC));row=dashboard['systems']['automation_health'];self.assertEqual(row['status'],'RED');self.assertEqual(row['reason'],'STALE');self.assertEqual(row['freshness_status'],'RED');self.assertGreater(row['age_hours'],30);self.assertEqual(dashboard['overall_status'],'RED')
+    def test_delayed_green_architecture_health_becomes_amber(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);self.base_repo(root);self.write_json(root,'research/architecture_health/LATEST_ARCHITECTURE_HEALTH.json',{'status':'GREEN','generated_at_utc':'2026-08-03T17:00:00Z','blockers':[]});dashboard=module.build_dashboard(root,datetime(2026,8,4,13,0,tzinfo=UTC));row=dashboard['systems']['architecture_health'];self.assertEqual(row['status'],'AMBER');self.assertEqual(row['reason'],'DELAYED');self.assertEqual(row['freshness_status'],'AMBER');self.assertEqual(row['age_hours'],20.0);self.assertEqual(dashboard['overall_status'],'AMBER')
+    def test_missing_upstream_health_is_unknown_and_p1(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);self.base_repo(root);(root/'research/architecture_health/LATEST_AUTOMATION_HEALTH.json').unlink();dashboard=module.build_dashboard(root,datetime(2026,8,4,13,0,tzinfo=UTC));row=dashboard['systems']['automation_health'];self.assertEqual(row['status'],'UNKNOWN');self.assertEqual(row['reason'],'MISSING');self.assertEqual(row['freshness_status'],'UNKNOWN');action=next(item for item in dashboard['required_actions'] if item['system']=='automation_health');self.assertEqual(action['priority'],'P1');self.assertNotEqual(dashboard['overall_status'],'GREEN')
+    def test_invalid_upstream_health_is_red_and_p0(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);self.base_repo(root);path=root/'research/architecture_health/LATEST_AUTOMATION_HEALTH.json';path.write_text('{broken-json\n',encoding='utf-8');dashboard=module.build_dashboard(root,datetime(2026,8,4,13,0,tzinfo=UTC));row=dashboard['systems']['automation_health'];self.assertEqual(row['status'],'RED');self.assertEqual(row['reason'],'INVALID_JSON');self.assertEqual(row['input_error'],'INVALID_JSON');action=next(item for item in dashboard['required_actions'] if item['system']=='automation_health');self.assertEqual(action['priority'],'P0');self.assertEqual(dashboard['overall_status'],'RED')
     def test_missing_inputs_never_false_green(self):
         with tempfile.TemporaryDirectory() as tmp:
             dashboard=module.build_dashboard(Path(tmp),datetime(2026,8,4,13,0,tzinfo=UTC));self.assertNotEqual(dashboard['overall_status'],'GREEN');self.assertTrue(dashboard['required_actions'])

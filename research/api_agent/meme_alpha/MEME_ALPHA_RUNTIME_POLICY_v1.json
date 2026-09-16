@@ -77,6 +77,51 @@
     "sellability_or_exit_feasibility_required_before_positive_alpha_label": true,
     "matched_failures_required_before_method_promotion": true
   },
+  "source_authentication": {
+    "enabled": true,
+    "discovery_is_not_authentication": true,
+    "minimum_external_trust_anchors": 2,
+    "minimum_independent_anchor_categories": 2,
+    "minimum_independent_control_roots": 2,
+    "require_structured_provenance_claim_types": true,
+    "require_high_confidence_onchain_binding_for_token_ca_claim": true,
+    "block_on_unresolved_red_team": true,
+    "block_on_repo_forensics_blocker": true,
+    "verified_commit_counts_as_ownership": false,
+    "repository_self_description_counts_as_ownership": false,
+    "repository_internal_history_counts_as_external_anchor": false,
+    "sanitize_unauthenticated_first_party_findings": true,
+    "sanitize_unauthenticated_summary": true,
+    "degrade_when_required_but_unproven": true,
+    "revocation_must_propagate_to_descendants": true,
+    "structured_provenance_claim_types": [
+      "PROJECT_OWNERSHIP",
+      "REPOSITORY_OWNERSHIP",
+      "MASCOT_CANONICITY",
+      "LORE_CANONICITY",
+      "TOKEN_ISSUANCE",
+      "TOKEN_CA_OWNERSHIP",
+      "CTO_COMMUNITY_LEGITIMACY"
+    ],
+    "first_party_states": [
+      "NOT_APPLICABLE",
+      "UNASSESSED",
+      "CANDIDATE",
+      "AUTHENTICATED_FIRST_PARTY",
+      "INVALIDATED_FIRST_PARTY",
+      "CONFLICTED"
+    ],
+    "allowed_external_anchor_categories": [
+      "OFFICIAL_WEBSITE",
+      "OFFICIAL_DOCS",
+      "OFFICIAL_SOCIAL",
+      "DOMAIN_CONTROL",
+      "ORGANIZATION_ANCESTRY",
+      "ONCHAIN_PROJECT_CONTROL",
+      "SIGNED_RELEASE",
+      "OTHER_EXTERNAL"
+    ]
+  },
   "adaptive_development": {
     "enabled": true,
     "may_create_research_proposal": true,

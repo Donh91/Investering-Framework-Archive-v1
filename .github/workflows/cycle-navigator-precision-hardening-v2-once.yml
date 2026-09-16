@@ -1,0 +1,16 @@
+name: Cycle Navigator Precision Hardening V2 Once (Retired)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  retired:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Retired one-time repair
+        run: |
+          echo "RETIRED: Cycle Navigator precision hardening v2 already completed and is preserved in repository history."
+          echo "No repository writes are performed by this workflow."

@@ -1,0 +1,74 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "canonical_effect": false,
+    "exchange_signing": false,
+    "framework_state_change": false,
+    "model_weight_change": false,
+    "order_routing": false,
+    "portfolio_execution": false,
+    "threshold_change": false
+  },
+  "compiler_max_output_tokens": 500,
+  "compiler_repeats": 3,
+  "consumed_columns": [
+    "btc_close",
+    "eth_close",
+    "spot_status",
+    "timestamp_utc"
+  ],
+  "contract": "AUTO_TRADING_E2_REQUEST_v1",
+  "cutoff_utc": "2026-09-11T23:00:00Z",
+  "design_rows": 120,
+  "evaluation_points": 24,
+  "evaluation_stride_hours": 2,
+  "experiment_id": "AT-E2-911-v1",
+  "failed_and_abandoned_attempts_remain_counted": true,
+  "frozen_at_utc": "2026-09-13T22:45:00Z",
+  "hard_cost_stop_usd": 0.75,
+  "issue": 911,
+  "model": "gpt-5.6-luna",
+  "no_post_result_prompt_tuning": true,
+  "policy_max_output_tokens": 300,
+  "policy_repeats": 3,
+  "pre_registered_thresholds": {
+    "compiler_min_replay_agreement": 0.95,
+    "direct_min_action_agreement": 0.9,
+    "economic_noninferiority_bps_per_decision": 5.0,
+    "material_reproducibility_gap": 0.05
+  },
+  "preregistration_revision": 2,
+  "primary_endpoint": "REPEATED_IDENTICAL_INPUT_ACTION_AGREEMENT",
+  "proposal_trial_n": 1,
+  "reasoning_effort": "medium",
+  "revision_reason": "PRE_LIVE_SCHEMA_BINDING_ONLY: canonical hourly field is timestamp_utc, not timestamp. No live model call occurred before this correction; sample size, cutoff, features, model, repeats, costs and decision thresholds are unchanged.",
+  "round_trip_cost_bps": 10.0,
+  "secondary_endpoints": [
+    "OOS_POST_COST_MEAN_BPS_PER_DECISION",
+    "BTC_ETH_REPLICATION",
+    "API_COST_USD",
+    "FAILED_CALL_COUNT"
+  ],
+  "source_root": "03_DAILY_CAPTURE_LOGS/hourly",
+  "status": "APPROVED_RESEARCH_ONLY",
+  "theory_ids": [
+    "AT-HYP-0004",
+    "AT-HYP-0008"
+  ],
+  "trial_rules": {
+    "compiler_primary_output": "FIRST_CALL_ONLY_FAIL_CLOSED_TO_FLAT_IF_INVALID",
+    "direct_policy_primary_output": "FIRST_CALL_ONLY_FAIL_CLOSED_TO_FLAT_IF_INVALID",
+    "evaluation_labels_hidden_until_deterministic_evaluator": true,
+    "features": [
+      "ret1_pct",
+      "ret4_pct",
+      "ret12_pct",
+      "vol6_pct",
+      "cross_ret4_pct"
+    ],
+    "identical_frozen_sample_across_arms": true,
+    "quarantined_pre_fix_derived_history_forbidden": true,
+    "rule_search_space": "ONE_FEATURE_WITH_Q25_Q50_Q75_LONG_SHORT_THRESHOLDS",
+    "stored_return_or_oi_change_fields_forbidden": true
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "contract": "FRAMEWORK_LEARNING_SPECIALIST_REGISTRY_v1",
+  "authority": "ROUTING_ONLY_NON_CANONICAL",
+  "specialists": [
+    {"id":"RANGE_LAB_ANALYST","role":"range calibration, width, miss and regime conditioning","default_compute":"DETERMINISTIC_FIRST"},
+    {"id":"SEQUENCE_REGIME_ANALYST","role":"temporal ordering, persistence and regime transferability","default_compute":"DETERMINISTIC_FIRST"},
+    {"id":"ROTATION_ANALYST","role":"ETHBTC, breadth, dominance and transmission","default_compute":"DETERMINISTIC_FIRST"},
+    {"id":"LEVERAGE_MICROSTRUCTURE_ANALYST","role":"OI, funding, liquidations, taker flow and depth","default_compute":"DETERMINISTIC_FIRST"},
+    {"id":"LIQUIDITY_MACRO_ANALYST","role":"ETF, liquidity, stablecoins and macro context","default_compute":"DETERMINISTIC_FIRST"},
+    {"id":"EXPERIMENT_FAMILY_CURATOR","role":"semantic-family memory, negative findings and bounded child-test proposals","default_compute":"DETERMINISTIC_FIRST"},
+    {"id":"CONTRADICTION_ANALYST","role":"material disagreement and false-consensus detection","default_compute":"CHEAP_SPECIALIST"},
+    {"id":"ACCOUNTABILITY_ANALYST","role":"maturation, eligibility, censorship and provenance","default_compute":"DETERMINISTIC_FIRST"},
+    {"id":"INFORMATION_UTILIZATION_ANALYST","role":"find evidence produced but not correctly consumed","default_compute":"DETERMINISTIC_FIRST"},
+    {"id":"METHODOLOGY_AUDITOR","role":"stale assumptions, obsolete fallbacks and method-improvement candidates","default_compute":"SOL_OR_TERRA_IF_NEEDED"},
+    {"id":"COST_MODEL_GOVERNOR","role":"cheapest sufficient route and strong-model escalation control","default_compute":"DETERMINISTIC_FIRST"}
+  ],
+  "forbidden_for_all_specialists": [
+    "CANONICAL_MARKET_STATE_WRITE",
+    "PORTFOLIO_EXECUTION",
+    "AUTOMATIC_MODEL_WEIGHT_CHANGE",
+    "AUTOMATIC_THRESHOLD_CHANGE",
+    "RETROSPECTIVE_FORECAST_CREATION",
+    "SCIENTIFIC_STATUS_PROMOTION"
+  ]
+}

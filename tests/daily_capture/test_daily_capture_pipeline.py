@@ -226,7 +226,7 @@ class DailyCapturePipelineTests(unittest.TestCase):
             self.assertTrue(all(row["btc_open_interest_source"] == "OKX_CONTRACT_OI_HISTORY" for row in rows))
             self.assertTrue(all(row["btc_long_short_source"] == "OKX_GLOBAL_ACCOUNT_RATIO" for row in rows))
             self.assertEqual(rows[0]["btc_oi_change_1h_pct"], "")
-            self.assertEqual(rows[0]["btc_price_oi_state"], "UNAVAILABLE")
+            self.assertEqual(rows[0]["btc_price_oi_state"], "")
             manifest_paths = list((output / "runs").rglob("*.json"))
             manifest = json.loads(manifest_paths[0].read_text())
             self.assertEqual(manifest["contract"], "HOURLY_SEQUENCE_CAPTURE_v2_2")
@@ -239,7 +239,8 @@ class DailyCapturePipelineTests(unittest.TestCase):
             summary = manifest["directional_summary"]
             self.assertEqual(summary["contract"], "HOURLY_DIRECTIONAL_SUMMARY_v1")
             self.assertEqual(summary["source_hourly_run_id"], manifest["run_id"])
-            self.assertEqual(summary["directional_complete_hours"], 26)
+            self.assertEqual(summary["directional_complete_hours"], 25)
+            self.assertEqual(summary["completeness"], "PARTIAL")
             self.assertEqual(summary["evidence_semantics"]["evidence_role"], "OWNER_EVIDENCE")
             self.assertEqual(
                 summary["evidence_semantics"]["registered_threshold_compatibility"],

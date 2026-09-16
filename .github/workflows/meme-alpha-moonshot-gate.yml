@@ -1,0 +1,99 @@
+name: Meme Alpha Moonshot Sentinel Gate
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/api_agent/meme_alpha_moonshot_sentinel.py'
+      - 'scripts/api_agent/meme_alpha_moonshot_scan_v2.py'
+      - 'scripts/api_agent/meme_alpha_moonshot_token_pool.py'
+      - 'scripts/api_agent/meme_alpha_moonshot_age_cohort.py'
+      - 'tests/api_agent/test_meme_alpha_moonshot_sentinel.py'
+      - 'tests/api_agent/test_meme_alpha_moonshot_scan_v2.py'
+      - 'tests/api_agent/test_meme_alpha_moonshot_token_pool.py'
+      - 'tests/api_agent/test_meme_alpha_moonshot_age_cohort.py'
+      - 'research/api_agent/meme_alpha/MOONSHOT_SENTINEL_*.json'
+      - '.github/workflows/meme-alpha-moonshot-gate.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  moonshot-sentinel-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compile
+        run: >-
+          python -m py_compile
+          scripts/api_agent/meme_alpha_moonshot_sentinel.py
+          scripts/api_agent/meme_alpha_moonshot_scan_v2.py
+          scripts/api_agent/meme_alpha_moonshot_token_pool.py
+          scripts/api_agent/meme_alpha_moonshot_age_cohort.py
+          tests/api_agent/test_meme_alpha_moonshot_sentinel.py
+          tests/api_agent/test_meme_alpha_moonshot_scan_v2.py
+          tests/api_agent/test_meme_alpha_moonshot_token_pool.py
+          tests/api_agent/test_meme_alpha_moonshot_age_cohort.py
+      - name: Run focused tests
+        run: >-
+          python -m unittest
+          tests.api_agent.test_meme_alpha_moonshot_sentinel
+          tests.api_agent.test_meme_alpha_moonshot_scan_v2
+          tests.api_agent.test_meme_alpha_moonshot_token_pool
+          tests.api_agent.test_meme_alpha_moonshot_age_cohort -v
+      - name: Validate immutable authority, identity, recall and adaptive bounds
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          contract=json.loads(Path('research/api_agent/meme_alpha/MOONSHOT_SENTINEL_CONTRACT_v1.json').read_text())
+          hard=json.loads(Path('research/api_agent/meme_alpha/MOONSHOT_SENTINEL_RECALL_COHORT_HARDENING_v3.json').read_text())
+          champion=json.loads(Path('research/api_agent/meme_alpha/MOONSHOT_SENTINEL_CHAMPION_v1.json').read_text())
+          assert contract['contract']=='MOONSHOT_SENTINEL_CONTRACT_v1'
+          assert contract['learning_epoch']=='MOONSHOT_IDENTITY_EPOCH_v2'
+          assert contract['initial_scope']['scan_interval_minutes']==15
+          assert contract['identity']['new_pool_is_not_new_token'] is True
+          assert contract['identity']['multiple_pools_per_token_expected'] is True
+          assert contract['token_origin_gate']['required_before_deep_dive'] is True
+          assert contract['token_origin_gate']['required_before_learning_admission'] is True
+          assert contract['token_origin_gate']['unknown_is_safe'] is False
+          assert contract['stage0']['target_token_price_captured'] is True
+          assert contract['stage0']['base_quote_semantics_normalized_to_target_token'] is True
+          assert contract['stage0']['token_microstructure_uses_token_age'] is True
+          assert contract['stage0']['canonical_execution_pool_metrics_not_replaced_by_aggregate_metrics'] is True
+          assert contract['outcome_learning']['cross_epoch_training_forbidden'] is True
+          assert contract['outcome_learning']['target_token_price_multiple_required'] is True
+          assert hard['cohort_semantics']['pre_origin_role']=='DISCOVERY_PREFILTER_ONLY'
+          assert hard['cohort_semantics']['pre_origin_may_train_adaptive_rules'] is False
+          assert hard['cohort_semantics']['fresh_origin_is_preferred_for_adaptive_learning'] is True
+          assert hard['full_stage0_recall_ledger']['unresolved_is_negative_case'] is False
+          assert hard['full_stage0_recall_ledger']['unresolved_is_successful_recall'] is False
+          assert hard['batch_price_observation']['price_only_does_not_prove_sellability'] is True
+          assert hard['batch_price_observation']['maximum_addresses_per_request'] <= 30
+          assert hard['adaptive_learning_separation']['old_token_new_pool_may_train'] is False
+          assert hard['adaptive_learning_separation']['origin_unresolved_may_train'] is False
+          assert hard['scheduler_health']['stale_after_minutes'] == 45
+          assert contract['adaptive_evolution']['enabled'] is True
+          assert contract['adaptive_evolution']['code_self_modification'] is False
+          assert contract['adaptive_evolution']['automatic_merge'] is False
+          assert contract['adaptive_evolution']['auto_promotion']['allowed_scope']=='research alert configuration only'
+          assert contract['adaptive_evolution']['challenger_generation']['max_parameter_mutations_per_generation'] <= 2
+          assert contract['initial_scope']['user_alert_daily_cap'] <= 3
+          assert contract['gamble_risk']['automatic_execution'] is False
+          assert contract['gamble_risk']['leverage_allowed'] is False
+          assert all(v is False for v in contract['authority'].values())
+          assert champion['contract']=='MOONSHOT_SENTINEL_CHAMPION_v1'
+          assert champion['origin_gate']['required_for_deep_dive'] is True
+          assert champion['origin_gate']['required_for_learning'] is True
+          assert champion['origin_gate']['max_resolution_calls_per_run'] <= 2
+          assert champion['alert']['daily_cap'] <= 3
+          assert champion['risk']['automatic_execution'] is False
+          assert champion['risk']['average_down'] is False
+          assert champion['risk']['leverage'] is False
+          assert champion['evolution']['mutation_budget'] <= 2
+          print('MOONSHOT_SENTINEL_RECALL_COHORT_V3_PASS')
+          PY

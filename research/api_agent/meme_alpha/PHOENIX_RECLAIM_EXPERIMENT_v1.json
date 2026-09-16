@@ -1,0 +1,208 @@
+{
+  "contract": "PHOENIX_RECLAIM_EXPERIMENT_v1",
+  "status": "PRE_REGISTERED_RESEARCH_ONLY",
+  "created_at_utc": "2026-09-15T05:37:00Z",
+  "parent_contracts": [
+    "ALPHA_LAB_LIFECYCLE_ENGINE_v1",
+    "MOONSHOT_SENTINEL_CONTRACT_v1",
+    "MEME_ALPHA_PROSPECTIVE_HARDENING_v1",
+    "MEME_ALPHA_RUNTIME_POLICY_v1"
+  ],
+  "purpose": "Test whether previously demonstrated low-cap demand followed by deep drawdown can produce prospectively identifiable, sellable secondary-expansion alpha when recovery is confirmed by microstructure, liquidity survival, wallet re-entry and pre-social timing.",
+  "principle": "The social-post thresholds are discovery inspiration, not canonical alpha rules. Phoenix measures relative lifecycle recovery and state transitions rather than relying on one fixed market-cap filter.",
+  "scope": {
+    "initial_priority_chains": ["robinhood", "ethereum"],
+    "minimum_age_hours_seed": 24,
+    "portfolio_execution": false,
+    "automatic_trading": false,
+    "normal_user_alert_target_per_day": "0",
+    "maximum_user_alerts_per_day": 2
+  },
+  "eligibility": {
+    "required": [
+      "exact token identity resolved",
+      "age at least configured minimum",
+      "REAL_PRIOR_DEMAND or prospectively observed equivalent",
+      "material verified drawdown from a reproducible prior peak",
+      "currently tradable route",
+      "sellability pass or deterministic sell simulation",
+      "non-trivial executable liquidity"
+    ],
+    "seed_ranges_for_research_not_permanent_rules": {
+      "prior_peak_market_cap_usd_floor": 150000,
+      "drawdown_pct_range": [65, 95],
+      "current_market_cap_usd_ceiling_seed": 100000,
+      "current_liquidity_usd_floor_seed": 10000,
+      "volume_usd_24h_floor_seed": 10000
+    },
+    "adaptive_rule": "Absolute seed thresholds must be compared with chain, venue, age and liquidity cohorts before any promotion. Fixed thresholds may not become canonical merely because historical winners fit them."
+  },
+  "hard_fail": [
+    "identity_conflict",
+    "honeypot_or_failed_sell",
+    "no_executable_liquidity",
+    "critical_liquidity_withdrawal_during_recovery",
+    "confirmed_deployer_or_control_entity_dump_that_invalidates_recovery",
+    "prior_peak_is_only_unverified_chart_or_single-entity_artifact"
+  ],
+  "feature_families": {
+    "M": "market microstructure recovery: unique buyer velocity, transaction velocity, buy/sell balance, volume reacceleration, declining sell pressure",
+    "L": "liquidity survival: current/peak liquidity retention, liquidity trend through drawdown and retest, executable depth",
+    "W": "wallet evidence: same-token skilled-wallet re-entry, independent quality-wallet convergence, distribution behavior, economic-entity independence",
+    "S": "social timing: exact-CA social re-propagation, lead time from on-chain wakeup, crowd saturation and control-root independence",
+    "H": "holder structure: holder breadth, concentration change, whale distribution/accumulation where reproducible",
+    "P": "price structure: bottom compression, first reclaim, controlled pullback, retest integrity; price alone can never qualify"
+  },
+  "derived_features": [
+    "liquidity_survival_ratio = current_liquidity / verified_peak_liquidity",
+    "drawdown_from_verified_peak_pct",
+    "buyer_velocity_acceleration",
+    "seller_velocity_deceleration",
+    "volume_reacceleration_vs_bottom_baseline",
+    "bottom_compression_duration",
+    "reclaim_attempt_count",
+    "wallet_reentry_count",
+    "independent_wallet_reentry_count",
+    "wallet_reentry_lead_minutes_vs_social_repropagation",
+    "onchain_wakeup_lead_minutes_vs_social_repropagation"
+  ],
+  "state_machine": {
+    "states": [
+      "INELIGIBLE",
+      "CRASHED_SURVIVOR",
+      "DORMANT",
+      "PHOENIX_WAKEUP",
+      "PHOENIX_PRE_RECLAIM_CONVERGENCE",
+      "PHOENIX_RECLAIM",
+      "PHOENIX_RETEST_PENDING",
+      "PHOENIX_RETEST_PASSED",
+      "PHOENIX_GAMBLE_CANDIDATE",
+      "FAILED_RECLAIM",
+      "INVALIDATED"
+    ],
+    "wakeup_minimum": "At least two independent recovery families, one of which must be M or L. Price-only or volume-only wakeups are forbidden.",
+    "pre_reclaim_convergence": "At least three independent families, with M required and either L or W required; broad social saturation must still be below the configured ceiling.",
+    "reclaim": "Price structure confirms first meaningful reclaim while sellability and liquidity remain valid.",
+    "retest_pending": "After reclaim, the engine must observe a pullback/retest before a gamble candidate can exist.",
+    "retest_passed": "During pullback, liquidity deterioration remains bounded, sellability remains valid, quality-wallet thesis does not materially reverse, and sell pressure does not reaccelerate beyond configured tolerance.",
+    "gamble_candidate": "Research-only state. Requires RETEST_PASSED plus at least three independent signal families including M and at least one of W/L. No automatic trade or position-size authority."
+  },
+  "wallet_alpha": {
+    "highest_value_signal": "same-token RE_ENTRY by a wallet with prospectively demonstrated skill on that token, before broad social re-propagation",
+    "stronger_signal": "two or more economically independent quality wallets re-enter the same exact CA before broad social re-propagation",
+    "single_wallet_is_sufficient_for_user_alert": false,
+    "economic_entity_clustering_required_before_counting_wallets_independent": true,
+    "historical_claims_alone_do_not_make_smart_money": true
+  },
+  "pullback_retest": {
+    "mandatory_before_phoenix_gamble_candidate": true,
+    "purpose": "Use the first pullback as a prospective stress test rather than chasing the initial recovery candle.",
+    "pass_evidence": [
+      "liquidity survives within configured deterioration tolerance",
+      "sellability remains valid",
+      "quality wallets do not materially distribute",
+      "buyer breadth remains above dormant baseline",
+      "sell pressure normalizes or declines",
+      "price does not invalidate the recovered structure"
+    ],
+    "failure_is_retained_as_negative_example": true
+  },
+  "prospective_arms": {
+    "CONTROL": "Matched crashed survivors satisfying broad eligibility but without recovery trigger.",
+    "R": "price reclaim alone; measurement control only and never sufficient for user alert.",
+    "M": "microstructure recovery.",
+    "ML": "microstructure plus liquidity survival.",
+    "MW": "microstructure plus wallet evidence.",
+    "MS": "microstructure plus pre-social recovery.",
+    "MWL": "microstructure plus wallet plus liquidity survival.",
+    "MWLS": "microstructure plus wallet plus liquidity plus pre-social timing."
+  },
+  "matched_control": {
+    "required": true,
+    "dimensions": [
+      "chain",
+      "venue_or_launchpad_class",
+      "token_age_bucket",
+      "prior_peak_bucket",
+      "drawdown_bucket",
+      "current_market_cap_or_fdv_bucket",
+      "liquidity_bucket",
+      "broad_market_day_or_cycle_regime"
+    ],
+    "freeze_before_outcome": true,
+    "dead_and_failed_reclaims_retained": true
+  },
+  "outcomes": {
+    "windows": ["1H", "4H", "24H", "3D", "7D"],
+    "winner_evaluation_labels": [
+      "REALIZABLE_2X_AFTER_RETEST",
+      "REALIZABLE_3X_WITHIN_7D",
+      "REALIZABLE_5X_WITHIN_7D",
+      "SURVIVED_AND_SELLABLE_AT_7D"
+    ],
+    "required_metrics": [
+      "MFE",
+      "MAE",
+      "realizable_return_after_slippage",
+      "sellability",
+      "liquidity_change",
+      "buyer_breadth_change",
+      "time_from_wakeup_to_reclaim",
+      "time_from_reclaim_to_retest",
+      "wallet_reentry_lead_time",
+      "social_repropagation_lead_time",
+      "matched_control_delta"
+    ]
+  },
+  "phoenix_trap_library": {
+    "retain": true,
+    "failure_archetypes": [
+      "ONE_ENTITY_RECOVERY",
+      "VOLUME_WITH_LIQUIDITY_WITHDRAWAL",
+      "WHALE_EXIT_INTO_REBOUND",
+      "HOLDER_BREADTH_DECAY_DURING_PUMP",
+      "SOCIAL_FIRST_ONCHAIN_LATE",
+      "REPEATED_FAILED_RECLAIM",
+      "PRICE_ONLY_FALSE_WAKEUP",
+      "WALLET_REENTRY_THEN_FAST_DISTRIBUTION"
+    ]
+  },
+  "adaptive_evolution": {
+    "separate_champion_from_moonshot": true,
+    "training_population": "prospectively observed Phoenix-eligible crashed survivors only",
+    "minimum_matured_observations_before_parameter_promotion": 50,
+    "minimum_distinct_calendar_days": 14,
+    "holdout_required": true,
+    "time_ordered_validation": true,
+    "matched_control_improvement_required": true,
+    "sellability_non_degradation_required": true,
+    "missed_winner_recall_required": true,
+    "historical_winner_threshold_fitting_forbidden": true,
+    "automatic_code_change": false
+  },
+  "historical_benchmarks": {
+    "role": "HYPOTHESIS_GENERATION_AND_REPLAY_ONLY",
+    "priority": ["SHIRO", "CASHCAT", "PONS", "SEND", "FUSE"],
+    "required_reconstruction": [
+      "exact-CA lifecycle timeline",
+      "launch/first-liquidity window",
+      "early wallet classes",
+      "social propagation timing",
+      "first peak and persistence",
+      "distribution",
+      "drawdowns",
+      "wallet re-entries",
+      "secondary expansions or failed reclaims"
+    ],
+    "may_not_directly_set_live_thresholds": true
+  },
+  "authority": {
+    "automatic_trading": false,
+    "portfolio_action": false,
+    "position_size_output": false,
+    "average_down": false,
+    "leverage": false,
+    "automatic_merge": false,
+    "code_self_modification": false
+  }
+}

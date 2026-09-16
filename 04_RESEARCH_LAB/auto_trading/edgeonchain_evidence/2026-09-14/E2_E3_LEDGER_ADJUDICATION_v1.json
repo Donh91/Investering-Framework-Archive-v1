@@ -1,0 +1,139 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "order_routing": false,
+    "portfolio_execution": false,
+    "research_only": true
+  },
+  "backward_audit": {
+    "identity_reopened": false,
+    "ledger_completeness_reopened": false,
+    "material_findings": [
+      "The complete wallet ledger distinguishes selected-outcome correctness from realized PnL: three positions resolved in favor of the selected outcome but still had negative realized PnL.",
+      "The positive aggregate realized PnL is not temporally stable: the first half is positive and the second half is negative.",
+      "The complete-wallet settlement-order streaks do not reproduce the promotional 25-win or 38/39 claims under this frozen definition."
+    ]
+  },
+  "contract": "EDGEONCHAIN_E2_E3_LEDGER_ADJUDICATION_v1",
+  "e2_claim_reconciliation": {
+    "claim_25_consecutive_wins": {
+      "status": "NOT_REPRODUCED_COMPLETE_WALLET_DEFINITION",
+      "complete_wallet_max_consecutive_correct_selected_outcomes": 18,
+      "caveat": "A promotional claim may refer to a narrower published-pick subset or another ordering. Without a frozen primary claim window/definition this is not evidence that the narrower claim is definitively false."
+    },
+    "claim_38_of_39": {
+      "status": "NOT_REPRODUCED_COMPLETE_WALLET_DEFINITION",
+      "best_correct_count_in_any_39_consecutive_closed_positions": 34,
+      "caveat": "A narrower curated/public-pick subset remains unverified until primary bet-level evidence and a frozen claim definition are available."
+    },
+    "follower_1k_to_85k_or_93k": {
+      "status": "UNVERIFIED_NOT_RECONCILED_TO_CANONICAL_EDGE_WALLET",
+      "reason": "The canonical Edge wallet activity cannot establish a third-party follower/parlay bankroll path, follower modifications, or parlay composition."
+    },
+    "headline_backtest_roi": {
+      "status": "INADMISSIBLE_PENDING_RAW_BACKTEST_AND_CADENCE_RECONCILIATION",
+      "reason": "The previously identified weekly-versus-monthly compounding inconsistency remains unresolved."
+    }
+  },
+  "e3_source_alpha_adjudication": {
+    "status": "NO_VERIFIED_SOURCE_EDGE_FROM_E1_ONLY",
+    "not_a_claim_of_no_edge": true,
+    "reasoning": [
+      "Positive account PnL is observable, but it does not by itself identify prediction alpha.",
+      "Selected-outcome hit rate is only modestly above the average market-implied probability in the closed-position ledger.",
+      "Dependence-aware bootstrap intervals for market residual and equal-notional hold ROI include zero.",
+      "Performance decays materially across time splits, with a negative second half.",
+      "Sizing and execution remain confounded, and maker/taker role has not yet been reconstructed.",
+      "The contemporaneous eligible opportunity set, true event-time enrichment, matched controls and timestamp-appropriate microstructure are not yet frozen."
+    ],
+    "final_source_alpha_gate": "BLOCKED_PENDING_OPPORTUNITY_SET_MICROSTRUCTURE_EVENT_TIME_AND_MATCHED_CONTROLS",
+    "e4_copyability_admission": "NOT_ADMISSIBLE_YET"
+  },
+  "input_binding": {
+    "control_plane_commit": "20f0d3e39c8ce71905bef60603aa5be5c334a435",
+    "evidence_path": "04_RESEARCH_LAB/auto_trading/edgeonchain_evidence/2026-09-14/polymarket",
+    "manifest_sha256": "d34d0fbfeaa79c6de0e436e434b5bcbecc76ce599db270be9adb7efead044d27",
+    "proxy_wallet": "0x50ff5b166049a7c1398f5dba0240ac34a8d8b0e6",
+    "source_contract": "POLYMARKET_EXTERNAL_STRATEGY_CAPTURE_v1",
+    "source_run_id": "20260914T185550Z"
+  },
+  "ledger_integrity": {
+    "activity_rows": 388,
+    "activity_type_counts": {
+      "DEPOSIT": 6,
+      "REDEEM": 171,
+      "TRADE": 195,
+      "WITHDRAWAL": 16
+    },
+    "closed_positions": 172,
+    "closed_conditions_without_trade": 0,
+    "duplicate_exact_trade_rows": 0,
+    "trade_conditions_not_closed": 3,
+    "trade_rows": 195,
+    "trade_side_counts": {
+      "BUY": 188,
+      "SELL": 7
+    },
+    "unique_closed_conditions": 172,
+    "unique_trade_conditions": 175
+  },
+  "method": {
+    "analysis_script": "scripts/experiments/edgeonchain_ledger_analysis_v1.py",
+    "bootstrap_draws": 20000,
+    "bootstrap_seed": 922,
+    "cluster_key": "closed_position_timestamp_utc_date",
+    "correct_selected_outcome_definition": "curPrice == 1",
+    "cost_basis_approximation": "avgPrice * totalBought",
+    "equal_notional_hold_roi": "y / avgPrice - 1",
+    "ordering_for_streaks": "closed_position_timestamp_asc_then_condition_id",
+    "realized_profit_definition": "realizedPnl > 0"
+  },
+  "source_performance_descriptive": {
+    "actual_minus_hypothetical_hold_pnl_usdc": -198.2595527,
+    "brier_score_using_market_avg_price": 0.16284338843023255,
+    "cluster_bootstrap_equal_notional_hold_roi": {
+      "ci95": [-0.11107584671251508, 0.1145577226404704],
+      "cluster_count": 53,
+      "mean": 0.0034553824994836254
+    },
+    "cluster_bootstrap_market_residual_y_minus_p": {
+      "ci95": [-0.0692307550215208, 0.08507143960674156],
+      "cluster_count": 53,
+      "mean": 0.010611046511627904
+    },
+    "cost_basis_approx_usdc": 41109.3116473,
+    "equal_notional_hold_roi_mean": 0.0034553824994836254,
+    "first_half": {
+      "mean_avg_price": 0.7309081395348838,
+      "mean_market_residual_y_minus_p": 0.04816162790697674,
+      "n": 86,
+      "realized_pnl_over_cost_basis_approx": 0.09255786207553122,
+      "realized_pnl_usdc": 2547.4945,
+      "selected_outcome_hit_rate": 0.7790697674418605
+    },
+    "hypothetical_hold_to_resolution_pnl_usdc": 1643.4360527,
+    "hypothetical_hold_weighted_roi": 0.03997722138477934,
+    "log_loss_using_market_avg_price": 0.5004378952663996,
+    "mean_avg_price_market_implied_probability": 0.7510168604651163,
+    "mean_market_residual_y_minus_p": 0.010611046511627904,
+    "negative_realized_pnl_positions": 44,
+    "positive_realized_pnl_positions": 128,
+    "realized_pnl_over_cost_basis_approx": 0.03515448062957088,
+    "realized_pnl_usdc": 1445.1765,
+    "second_half": {
+      "mean_avg_price": 0.7711255813953488,
+      "mean_market_residual_y_minus_p": -0.02693953488372093,
+      "n": 86,
+      "realized_pnl_over_cost_basis_approx": -0.08113603397593297,
+      "realized_pnl_usdc": -1102.318,
+      "selected_outcome_hit_rate": 0.7441860465116279
+    },
+    "selected_outcome_correct": 131,
+    "selected_outcome_hit_rate": 0.7616279069767442
+  },
+  "streak_reconciliation": {
+    "best_correct_count_in_any_39_consecutive_closed_positions": 34,
+    "max_consecutive_correct_selected_outcomes": 18,
+    "max_consecutive_positive_realized_pnl_positions": 16
+  }
+}

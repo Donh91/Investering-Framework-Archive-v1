@@ -64,3 +64,21 @@ Cross-repository evidence uses immutable routing records. Restricted data remain
 ## 7. Safety boundaries
 
 CI must reject modification of append-only records, unknown authority values or subjects, imperative portfolio fields in memory objects, missing knowledge time or lineage, writes outside workflow path whitelists, authority promotion without promotion receipt, credentials in repository files, and restricted or privacy-unscreened raw captures in the public control plane.
+
+## 8. Persistent-subsystem complexity governance
+
+New persistent architecture must justify its continued existence prospectively. A new long-lived agent, specialist, controller, supervisor, router, adjudicator, durable queue, persistent research/learning/memory subsystem, or workflow that introduces a new durable responsibility is governed by `00_FMOS/SUBSYSTEM_SUNSET_CONTRACT_v1.md`.
+
+The declaration belongs in the proposed subsystem's existing owner contract or manifest. It must state:
+
+- the observable decision or operational burden expected to change;
+- the bounded evaluation horizon;
+- the evidence-based kill/merge/retire criterion;
+- overlap with existing owners;
+- the persistent complexity introduced.
+
+Do not create a central sunset registry, scheduler, dashboard or supervisor merely to enforce this rule.
+
+Existing subsystems are grandfathered unless a later change materially expands them into a new durable responsibility. Safety/provenance controls may use a risk-containment value test rather than decision-frequency, but they still require an explicit condition under which a separate subsystem is no longer necessary.
+
+The default architectural action when the required value proposition cannot be stated prospectively is **DO NOT BUILD A NEW SUBSYSTEM**.

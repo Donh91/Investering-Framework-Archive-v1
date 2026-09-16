@@ -1,0 +1,134 @@
+{
+  "contract": "PROSPECTIVE_CLEAN_G3_BUYER_GRAPH_SPEC_v1",
+  "status": "RESEARCH_ONLY_READY_FOR_SHADOW_IMPLEMENTATION",
+  "created_at_utc": "2026-09-15T20:30:00Z",
+  "objective": "Create the first Alpha Lab buyer graph where every current-token wallet observation, prior-wallet quality statistic and entity adjustment is knowable at the frozen candidate cutoff.",
+  "scope": {
+    "phase_1": "Solana/pump.fun current regime",
+    "later_replication": ["Robinhood Chain", "BNB Chain", "Base", "Monad"],
+    "cross_chain_threshold_inheritance": false
+  },
+  "candidate_cutoffs": ["1m", "5m", "15m", "30m"],
+  "identity_key": ["chain", "exact_token_mint", "origin_event_identity"],
+  "current_token_buyer_event_required_fields": [
+    "event_identity",
+    "slot_or_chain_ordering_context",
+    "effective_timestamp_utc",
+    "collector_observed_at_utc",
+    "mint",
+    "wallet",
+    "side",
+    "token_amount",
+    "quote_amount_raw",
+    "quote_mint",
+    "creator_if_event_native",
+    "lifecycle_state",
+    "source_schema_version"
+  ],
+  "self_initiated_trade_gate": {
+    "positive_evidence": ["native buy event attributed to wallet", "transaction path consistent with a user-initiated swap/bonding-curve buy"],
+    "exclude_or_unknown": ["pool address", "router/program address", "transfer-only receipt", "dust/airdrop", "seeded balance without buy", "creator distribution transfer", "unresolved delegated/aggregator attribution"]
+  },
+  "wallet_quality_asof": {
+    "ledger_rule": "Only prior candidate outcomes whose maturity timestamp is <= current candidate cutoff may update wallet quality.",
+    "minimum_fields": [
+      "wallet",
+      "chain",
+      "venue",
+      "role",
+      "prior_matured_candidate_count",
+      "prior_sellable_2x_count",
+      "prior_sellable_5x_count",
+      "prior_sellable_10x_count",
+      "prior_MFE_distribution",
+      "prior_MAE_distribution",
+      "prior_liquidity_survival",
+      "prior_exit_quality_if_observable",
+      "last_quality_update_effective_at_utc"
+    ],
+    "no_backfill": ["future PnL", "future wallet labels", "future token survival", "later-discovered creator/funder relationship"]
+  },
+  "entity_adjustment": {
+    "levels": [
+      "L0_ADDRESS_ONLY",
+      "L1_ROUTER_POOL_EXCLUDED",
+      "L2_SAME_FUNDER_OR_BUNDLE_LINK",
+      "L3_STRONG_CONTROLLER_EVIDENCE"
+    ],
+    "rule": "Same funder alone never proves common controller. Collapse or discount only according to evidence strength, preserving both raw-address and adjusted-entity counts.",
+    "required_outputs": [
+      "raw_qualified_wallet_count",
+      "router_pool_excluded_wallet_count",
+      "effective_entity_count",
+      "largest_linked_entity_size",
+      "same_funder_fraction",
+      "entity_resolution_confidence"
+    ]
+  },
+  "wallet_specialism": {
+    "roles": ["EARLY_LAUNCH", "CURVE_OR_MIGRATION", "MOMENTUM_RUNNER", "TAIL_HOLDER", "EXIT_DISCIPLINE", "PHOENIX_REENTRY", "LORE_NATIVE"],
+    "rule": "A wallet may be strong in one role/venue and weak in another. No global smart score receives direct authority."
+  },
+  "G3_features": [
+    "qualified_wallet_count_raw",
+    "qualified_entity_count_adjusted",
+    "mean_asof_role_quality",
+    "max_asof_role_quality",
+    "quality_weighted_independent_count",
+    "coentry_recurrence_asof",
+    "entry_synchrony_1m_5m_15m_30m",
+    "same_funder_fraction",
+    "largest_linked_entity_size",
+    "wallet_to_public_CA_lead_minutes",
+    "fresh_reentry_fraction_if_phoenix"
+  ],
+  "paired_G2_features": [
+    "net_real_capital_velocity",
+    "capital_per_independent_buyer",
+    "time_to_5_10_25_50_buyers",
+    "buy_sell_imbalance",
+    "early_sell_pressure",
+    "entity_adjusted_concentration",
+    "liquidity_and_slippage_state"
+  ],
+  "outcome_maturation": ["1H", "4H", "24H", "72H", "7D", "14D"],
+  "primary_outcomes": [
+    "sellability_survival",
+    "liquidity_survival",
+    "sellable_2x_24h",
+    "sellable_5x",
+    "sellable_10x",
+    "realizable_MFE",
+    "MAE",
+    "round_trip_ratio"
+  ],
+  "sparse_tail_casebook": ["25x", "50x", "100x"],
+  "ablation_arms": [
+    "G2_ONLY",
+    "RAW_WALLET_COUNT",
+    "ASOF_WALLET_QUALITY",
+    "ENTITY_ADJUSTED_G3",
+    "G2_PLUS_CLEAN_G3",
+    "G2_PLUS_CLEAN_G3_PLUS_CHAIN_REGIME_AND_PROPAGATION"
+  ],
+  "promotion_gate": {
+    "minimum_independent_out_of_sample_cohorts": 2,
+    "working_complexity_bar": "At least ~20% relative improvement in top-bucket precision or recall with AP also improving, without material rug/unsellable degradation.",
+    "not_a_magic_statistical_cutoff": true,
+    "requires_prospective_shadow": true,
+    "requires_matched_failures": true,
+    "requires_missed_winner_audit": true
+  },
+  "shadow_freeze": {
+    "required": true,
+    "rule": "Once a prospective cohort begins, feature definitions and thresholds for that cohort are immutable. Later improvements create a new epoch rather than rewrite history."
+  },
+  "authority": {
+    "research_only": true,
+    "automatic_trading": false,
+    "portfolio_execution": false,
+    "buy_now_promotion": false,
+    "position_sizing": false,
+    "self_modification": false
+  }
+}

@@ -16,16 +16,20 @@ Read `00_ARCHIVE_CONTROL/CROSS_REPO_DATA_BOUNDARY.md` and `00_ARCHIVE_CONTROL/CR
 ## Mandatory read order
 
 1. Read `AGENTS.md`.
-2. Read `00_ARCHIVE_CONTROL/CANONICAL_INDEX.md`.
-3. Read `00_ARCHIVE_CONTROL/INDEX_ADDENDUM_REGISTRY.md`.
-4. Read `00_ARCHIVE_CONTROL/ARCHIVE_MAP_AND_ROUTING.md`.
-5. Read `00_ARCHIVE_CONTROL/SKILL_REGISTRY.md`.
-6. Read `00_ARCHIVE_CONTROL/CROSS_REPO_DATA_BOUNDARY.md`.
-7. Read `00_ARCHIVE_CONTROL/CROSS_REPO_AGENT_CONTEXT_MAP.json`.
-8. Identify the task domain and data classification.
-9. Read the current owner files named by the index or registered addenda for that domain.
-10. Read the exact restricted-plane authority when required and authorized.
-11. Read only directly relevant addenda, ledgers and runtime registries.
+2. Read `00_ARCHIVE_CONTROL/2026-09-14__autonomous-data-authority-transition-v1__canonical.md`.
+3. Read `00_ARCHIVE_CONTROL/CURRENT_PRODUCTION_DATA_AUTHORITY.json`.
+4. Read `00_ARCHIVE_CONTROL/CANONICAL_INDEX.md`.
+5. Read `00_ARCHIVE_CONTROL/INDEX_ADDENDUM_REGISTRY.md`.
+6. Read `00_ARCHIVE_CONTROL/ARCHIVE_MAP_AND_ROUTING.md`.
+7. Read `00_ARCHIVE_CONTROL/SKILL_REGISTRY.md`.
+8. Read `00_ARCHIVE_CONTROL/CROSS_REPO_DATA_BOUNDARY.md`.
+9. Read `00_ARCHIVE_CONTROL/CROSS_REPO_AGENT_CONTEXT_MAP.json`.
+10. Identify the task domain and data classification.
+11. Read the current owner files named by the current routing surfaces, index or registered addenda for that domain.
+12. Read the exact restricted-plane authority when required and authorized.
+13. Read only directly relevant addenda, ledgers and runtime registries.
+
+The 2026-09-14 autonomous-data transition owner supersedes older archive/index prose only for **current production data routing**. Historical sections remain valid for frozen historical periods.
 
 Do not load the entire archive by default.
 
@@ -35,7 +39,7 @@ Use these primary domains:
 
 ```text
 framework architecture or governance -> 01_CORE_FRAMEWORK
-DATA PING protocol, runtime or source QA -> 02_DATA_PING
+DATA PING protocol, explicit packet interpretation, replay or source QA -> 02_DATA_PING
 Master Monday, weekly operations, ledgers or automation -> 03_WEEKLY_OPERATIONS
 market learning or calibration -> 04_MARKET_LEARNING
 Cycle Navigator -> 05_CYCLE_NAVIGATOR
@@ -44,33 +48,63 @@ prompts and agent workflows -> 07_PROMPTS_AND_AGENTS
 external evidence -> 08_SOURCE_MATERIAL
 ```
 
-### Mandatory DATA PING / RAW interpretation route
+### Current production data route
 
-When `task_type` is Main-Framework interpretation of a DATA PING packet or RAW market-data ingest, including a replay, correction, replacement thread or future DATA PING version, the context packet must always include this owner under `Required files`:
+When `current_state_required: YES` for Master Monday, Cycle Navigator, the CN website, short-horizon navigation, or general market-state work, route in this order:
+
+```text
+LATEST_OPERATIONS_DASHBOARD.json / LATEST_HANDOFF.json
+-> exact current autonomous pointer(s), path(s), hash(es), receipt(s)
+-> current domain machine output / pointer
+-> main-framework accepted interpretation or ratification
+-> consumer output (Master Monday / Cycle Navigator / public surface)
+```
+
+Manual DATA PING submission is not a prerequisite for this route.
+
+A file or path containing `DATA_PING`, `data_ping_derived`, `latest`, or an old version identifier is not current merely because of its name. Require an explicit current operational pointer to route to it.
+
+For `NEXT DAYS` or another short-horizon public field, use an existing current autonomous canonical output only when fresh, eligible and public-safe. If no such output exists, the correct result is unavailable/not published. Do not create a parallel website forecast engine.
+
+### Mandatory DATA PING / RAW interpretation route - explicit packet tasks only
+
+When `task_type` is specifically Main-Framework interpretation of a DATA PING packet or RAW market-data ingest, including a replay, correction, replacement thread or future DATA PING version, the context packet must include this owner under `Required files`:
 
 `02_DATA_PING/protocols/2026-08-25__three-horizon-action-compass-output-contract-v1__canonical.md`
 
-This route is mandatory even if the same contract was used in a prior thread. Do not satisfy it from conversation memory or inherited prose. Resolve the file from current GitHub state and honor explicit supersession if a newer canonical owner replaces it.
+This route is mandatory for that explicit packet task even if the same contract was used in a prior thread. Do not satisfy it from conversation memory or inherited prose. Resolve the file from current GitHub state and honor explicit supersession if a newer canonical owner replaces it.
 
-The router itself does not make the portfolio decision. It guarantees that the downstream Main Framework receives the current decision-translation contract and therefore can produce the required three-lane `HANDLEKOMPAS` after analysis.
+This explicit packet rule does not restore DATA PING as the normal upstream production feed for current Master Monday or Cycle Navigator.
+
+The router itself does not make the portfolio decision. It guarantees that the downstream Main Framework receives the applicable decision-translation contract for the explicit packet task.
 
 ## Authority resolution
 
 Apply this order unless a newer canonical file explicitly changes it:
 
 ```text
-1. User-verified actuals and verified DATA PING truth-layer
-2. Main-framework accepted canonical state and runtime configuration
-3. Current GitHub canonical governance and archive history
-4. Grok shadow context
-5. Claude or Research Lab challenger context
-6. Legacy or memory-only context
+CURRENT-STATE TASKS
+1. Current operational cockpit and exact hash-bound autonomous pointers/outputs.
+2. Main-framework accepted canonical state and runtime configuration.
+3. Current canonical methodology/governance needed to interpret those outputs.
+4. User-verified actuals that are explicitly eligible under the active owner.
+5. Historical DATA PING / source / shadow / challenger context.
+6. Legacy or memory-only context.
+
+EXPLICIT DATA PING / RAW PACKET TASKS
+1. Current repository authority and applicable packet contract.
+2. The explicit verified packet/RAW input being interpreted.
+3. Main-framework accepted canonical state and runtime configuration.
+4. Current GitHub canonical governance and archive history.
+5. Shadow/challenger context.
+6. Legacy or memory-only context.
 ```
 
 Within one domain:
 
-- highest explicitly active version wins;
+- highest explicitly active version wins only within the task class it actually governs;
 - newer operational patches override older conflicting files;
+- current autonomous pointer/output beats historical feed descriptions for current-state routing;
 - canonical beats shadow;
 - runtime state does not rewrite permanent methodology;
 - source material supports claims but does not become doctrine;
@@ -91,12 +125,15 @@ requested_action:
 write_intent: YES | NO
 current_state_required: YES | NO
 historical_context_required: YES | NO
+explicit_data_ping_or_raw_packet_input: YES | NO
 ```
 
 ### 2. Discover authority
 
 Find:
 
+- current production-data routing owner;
+- current operational pointer/output when current state is required;
 - canonical owner file;
 - active version or runtime registry;
 - directly index-listed addenda;
@@ -107,7 +144,7 @@ Find:
 
 For every registry-discoverable addendum, verify the path and its declared owner before using it.
 
-For DATA PING / RAW Main-Framework interpretation, additionally verify that the Three-Horizon Action Compass owner is present in `Required files`; absence is a routing failure, not an optional omission. The owner is the sole current decision vocabulary, separates warning from action and requires one immutable receipt attempt for each fresh ingest. The historical E0-E7 Exit Ladder is `RETIRED_UNIMPLEMENTED` and must not be routed as a current owner.
+For explicit DATA PING / RAW Main-Framework interpretation, additionally verify that the Three-Horizon Action Compass owner is present in `Required files`; absence is a routing failure, not an optional omission. The owner is the sole current decision vocabulary for that task class, separates warning from action and requires one immutable receipt attempt for each fresh explicit ingest. The historical E0-E7 Exit Ladder is `RETIRED_UNIMPLEMENTED` and must not be routed as a current owner.
 
 ### 3. Separate state classes
 
@@ -116,6 +153,7 @@ Classify every material file used as one of:
 ```text
 CANONICAL_CURRENT
 OPERATIONAL_CURRENT
+EXPLICIT_PACKET_INPUT
 SHADOW_ONLY
 FORWARD_TEST
 SOURCE_MATERIAL
@@ -124,7 +162,7 @@ SUPERSEDED
 UNKNOWN_STATUS
 ```
 
-Never silently promote an unknown or shadow file.
+Never silently promote an unknown, historical DATA PING, or shadow file.
 
 ### 4. Resolve conflicts
 
@@ -148,6 +186,7 @@ Return:
 ## CONTEXT PACKET
 
 Task domain:
+Current production route:
 Current owner:
 Active version or runtime:
 Required files:
@@ -174,33 +213,40 @@ Keep the packet concise. Reference paths rather than copying whole documents.
 - Do not treat a source-backed claim row as an outcome row.
 - Do not use a legacy namespace when the active top-level namespace exists.
 - Do not use a broken or missing addendum pointer.
-- Do not omit the Three-Horizon Action Compass owner from a DATA PING / RAW Main-Framework interpretation context packet.
+- Do not treat historical/manual DATA PING as the default upstream source for current CN or Master Monday.
+- Do not classify a DATA PING-named or `latest_master_monday.json` artifact as current without a current pointer binding.
+- Do not omit the Three-Horizon Action Compass owner from an explicit DATA PING / RAW Main-Framework interpretation context packet.
 - Do not route the retired E0-E7 Exit Ladder as current decision vocabulary or map Action Compass warnings into it.
 - Do not treat a replay, duplicate or `NOT_PERSISTED` interpretation as a new prospective receipt row.
+- Do not create a short-horizon or market-state engine in the public website to compensate for a missing current autonomous field.
 
 ## Validation loop
 
 Before completing:
 
-1. Verify every listed required path exists.
-2. Verify active versions against the canonical index or runtime registry.
-3. Verify every used registered addendum exists and points to valid owner files.
-4. Verify no legacy or superseded file is presented as current.
-5. Verify all unresolved conflicts are explicit.
-6. For DATA PING / RAW Main-Framework interpretation, verify `02_DATA_PING/protocols/2026-08-25__three-horizon-action-compass-output-contract-v1__canonical.md` or its explicit canonical successor is included in `Required files`, and record whether the input is fresh or replayed for receipt routing.
-7. Re-read the request and confirm the packet contains only task-relevant context.
+1. Verify the current production-data transition owner exists.
+2. Verify every listed required path exists.
+3. When current state is requested, verify the exact current operational pointer/path/hash chain.
+4. Verify active versions against the canonical index or runtime registry while respecting explicit routing supersessions.
+5. Verify every used registered addendum exists and points to valid owner files.
+6. Verify no legacy or superseded file is presented as current.
+7. Verify all unresolved conflicts are explicit.
+8. For explicit DATA PING / RAW Main-Framework interpretation, verify `02_DATA_PING/protocols/2026-08-25__three-horizon-action-compass-output-contract-v1__canonical.md` or its explicit canonical successor is included in `Required files`, and record whether the input is fresh or replayed for receipt routing.
+9. Re-read the request and confirm the packet contains only task-relevant context.
 
 If any check fails, correct the packet and re-run all checks.
 
 ## Failure modes
 
+- **Current production-data owner missing** -> stop and report `CURRENT_DATA_AUTHORITY_UNAVAILABLE`.
 - **Index path missing** -> stop and report `CANONICAL_INDEX_UNAVAILABLE`.
-- **Addendum registry missing** -> report `ADDENDUM_REGISTRY_UNAVAILABLE` and use only directly index-listed material.
+- **Addendum registry missing** -> report `ADDENDUM_REGISTRY_UNAVAILABLE` and use only directly index-listed material plus explicit current routing owners.
 - **Registered addendum missing** -> report `ADDENDUM_PATH_MISSING` and do not use it.
 - **Owner file missing** -> report exact missing path and `OWNER_FILE_MISSING`.
-- **Required DATA PING action-compass owner missing or unresolved** -> report `ACTION_COMPASS_OWNER_UNAVAILABLE`; do not silently fall back to prior-thread wording.
+- **Required DATA PING action-compass owner missing or unresolved for an explicit packet task** -> report `ACTION_COMPASS_OWNER_UNAVAILABLE`; do not silently fall back to prior-thread wording.
 - **Two current canonical files conflict** -> report `UNRESOLVED_CANONICAL_CONFLICT`.
-- **Requested live state has no current registry** -> report `LIVE_STATE_NOT_VERIFIED`.
+- **Requested live state has no current registry/pointer** -> report `LIVE_STATE_NOT_VERIFIED`.
+- **Only historical DATA PING route found for a current-state request** -> report `CURRENT_AUTONOMOUS_ROUTE_NOT_RESOLVED`; do not promote the historical packet.
 - **Search finds only legacy material** -> provide historical context only and state that no current authority was found.
 
 ## Pilot review

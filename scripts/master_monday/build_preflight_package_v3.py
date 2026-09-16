@@ -4,12 +4,79 @@ import argparse
 import csv
 import hashlib
 import json
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
 STATUSES = ("PASS", "PARTIAL", "STALE", "FAIL", "UNAVAILABLE", "SKIPPED_RUNTIME_LIMIT")
 CAPTURE_V22_ACTIVATION_WEEK = (2026, 32)
+
+
+def _observed_fixed_holiday(day: date) -> date:
+    if day.weekday() == 5:
+        return day - timedelta(days=1)
+    if day.weekday() == 6:
+        return day + timedelta(days=1)
+    return day
+
+
+def _nth_weekday(year: int, month: int, weekday: int, n: int) -> date:
+    first = date(year, month, 1)
+    delta = (weekday - first.weekday()) % 7
+    return first + timedelta(days=delta + 7 * (n - 1))
+
+
+def _last_weekday(year: int, month: int, weekday: int) -> date:
+    if month == 12:
+        cursor = date(year + 1, 1, 1) - timedelta(days=1)
+    else:
+        cursor = date(year, month + 1, 1) - timedelta(days=1)
+    return cursor - timedelta(days=(cursor.weekday() - weekday) % 7)
+
+
+def _easter_sunday(year: int) -> date:
+    a = year % 19
+    b = year // 100
+    c = year % 100
+    d = b // 4
+    e = b % 4
+    f = (b + 8) // 25
+    g = (b - f + 1) // 3
+    h = (19 * a + b - d - g + 15) % 30
+    i = c // 4
+    k = c % 4
+    l = (32 + 2 * e + 2 * i - h - k) % 7
+    m = (a + 11 * h + 22 * l) // 451
+    month = (h + l - 7 * m + 114) // 31
+    day = ((h + l - 7 * m + 114) % 31) + 1
+    return date(year, month, day)
+
+
+def nyse_full_day_holidays(year: int) -> set[date]:
+    # NYSE full-day closures used to validate US spot-ETF settlement completeness.
+    # Unexpected/special closures are deliberately NOT inferred and remain fail-closed.
+    return {
+        _observed_fixed_holiday(date(year, 1, 1)),
+        _nth_weekday(year, 1, 0, 3),       # Martin Luther King Jr. Day
+        _nth_weekday(year, 2, 0, 3),       # Washington's Birthday
+        _easter_sunday(year) - timedelta(days=2),  # Good Friday
+        _last_weekday(year, 5, 0),         # Memorial Day
+        _observed_fixed_holiday(date(year, 6, 19)),
+        _observed_fixed_holiday(date(year, 7, 4)),
+        _nth_weekday(year, 9, 0, 1),       # Labor Day
+        _nth_weekday(year, 11, 3, 4),      # Thanksgiving
+        _observed_fixed_holiday(date(year, 12, 25)),
+    }
+
+
+def expected_nyse_sessions(iso_year: int, iso_week: int) -> list[str]:
+    week_start = date.fromisocalendar(iso_year, iso_week, 1)
+    holidays = nyse_full_day_holidays(week_start.year) | nyse_full_day_holidays((week_start + timedelta(days=4)).year)
+    return [
+        (week_start + timedelta(days=offset)).isoformat()
+        for offset in range(5)
+        if week_start + timedelta(days=offset) not in holidays
+    ]
 
 
 def load(path: Path) -> dict[str, Any] | None:
@@ -251,8 +318,27 @@ def main() -> None:
     add("A43", "etf", "ETH_sessions", "PASS" if etf_pass else "UNAVAILABLE", "etf.ETH_sessions", etf_by_asset.get("ETH"), "settled stable ETH ETF row", "Daily Settled ETF Calibration", blocking=True)
     etf_week = (weekly_pack or {}).get("settled_etf") or {}
     etf_counts = etf_week.get("session_counts") or {}
-    etf_week_ok = int(etf_counts.get("BTC") or 0) >= 5 and int(etf_counts.get("ETH") or 0) >= 5
-    add("A44", "etf", "rolling_sums", "PASS" if etf_week_ok else "UNAVAILABLE", "etf.rolling_sums", etf_week if etf_week else None, "completed-week settled BTC+ETH ETF sequence", "Daily Settled ETF + Weekly Calibration", blocking=True)
+    etf_records = [row for row in etf_week.get("records", []) if isinstance(row, dict)]
+    etf_record_dates = {str(row.get("session_date")) for row in etf_records if row.get("session_date")}
+    etf_year = int(weekly_pointer.get("iso_year") or 0)
+    etf_iso_week = int(weekly_pointer.get("iso_week") or 0)
+    expected_etf_dates = expected_nyse_sessions(etf_year, etf_iso_week) if etf_year and etf_iso_week else []
+    expected_etf_count = len(expected_etf_dates)
+    etf_week_ok = (
+        expected_etf_count > 0
+        and etf_record_dates == set(expected_etf_dates)
+        and int(etf_counts.get("BTC") or 0) == expected_etf_count
+        and int(etf_counts.get("ETH") or 0) == expected_etf_count
+    )
+    if etf_week:
+        etf_week = {
+            **etf_week,
+            "calendar_contract": "NYSE_FULL_DAY_SESSION_CALENDAR_v1",
+            "expected_session_dates": expected_etf_dates,
+            "expected_session_count": expected_etf_count,
+            "calendar_completeness": "COMPLETE" if etf_week_ok else "INCOMPLETE",
+        }
+    add("A44", "etf", "rolling_sums", "PASS" if etf_week_ok else "UNAVAILABLE", "etf.rolling_sums", etf_week if etf_week else None, "calendar-complete settled BTC+ETH ETF sequence", "Daily Settled ETF + Weekly Calibration", blocking=True)
     add("A45", "etf", "stale_no_zero", "PASS" if etf_pass and ((etf_record or {}).get("verification") or {}).get("rows_identical_across_retrievals") else "UNAVAILABLE", "etf.stale_no_zero", (etf_record or {}).get("verification"), "two stable retrievals + parity", "Daily Settled ETF Calibration", blocking=True)
 
     raw_cfgi = (market_metrics.get("sentiment") or {}).get("cfgi")

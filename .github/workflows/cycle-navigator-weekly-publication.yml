@@ -44,8 +44,9 @@ jobs:
           mm=Path('research/api_agent/outputs/weekly/LATEST_MASTER_MONDAY_DELIVERY_POINTER.json')
           if not mm.exists(): raise SystemExit('LATEST_MASTER_MONDAY_DELIVERY_POINTER_missing')
           value=json.loads(mm.read_text())
-          required={'iso_year','iso_week'}
-          if not required.issubset(value): raise SystemExit('Master_Monday_pointer_missing_week_identity')
+          if value.get('contract')!='MASTER_MONDAY_DELIVERY_POINTER_v1': raise SystemExit('Master_Monday_pointer_contract_invalid')
+          required={'iso_year','iso_week','machine_package_path','machine_package_sha256','report_path'}
+          if not required.issubset(value): raise SystemExit('Master_Monday_pointer_missing_required_fields')
           digest=hashlib.sha256(mm.read_bytes()).hexdigest()
           latest=Path('05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json')
           skip=False
@@ -81,6 +82,59 @@ jobs:
             --model gpt-5.6-sol \
             --max-output-tokens 12000 | tee runtime_cycle_navigator_pointer.json
 
+      - name: Bind Cycle Navigator to fresh Master Monday consumption receipt
+        if: steps.precheck.outputs.skip != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p runtime/consumer-receipts
+          python scripts/orchestration/build_framework_handoff_manifest.py \
+            --repo-root . \
+            --output runtime/consumer-receipts/CYCLE_NAVIGATOR_HANDOFF.json
+          TARGET=$(python - <<'PY'
+          import json
+          from pathlib import Path
+          ptr=json.loads(Path('05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json').read_text())
+          print(str(Path(ptr['week_dir'])/'CYCLE_NAVIGATOR_MACHINE_PACKAGE.json'))
+          PY
+          )
+          python scripts/orchestration/consumer_receipt.py \
+            --repo-root . \
+            --manifest runtime/consumer-receipts/CYCLE_NAVIGATOR_HANDOFF.json \
+            --consumer CYCLE_NAVIGATOR \
+            --target "$TARGET" \
+            --max-manifest-age-seconds 900 \
+            --declared MASTER_MONDAY_DELIVERY_POINTER \
+            --declared MASTER_MONDAY_MACHINE_PACKAGE \
+            --declared MASTER_MONDAY_REPORT \
+            --declared MASTER_MONDAY_CALIBRATION_SCORECARD \
+            --declared MASTER_MONDAY_OPERATIONAL_TRANSLATION
+          python - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          def canonical(value): return (json.dumps(value,sort_keys=True,separators=(',',':'))+'\n').encode()
+          latest=Path('05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json')
+          pointer=json.loads(latest.read_text())
+          root=Path(pointer['week_dir'])
+          machine_path=root/'CYCLE_NAVIGATOR_MACHINE_PACKAGE.json'
+          machine=json.loads(machine_path.read_text())
+          receipt=machine.get('consumer_receipt') or {}
+          original=str(machine.get('status') or 'DEGRADED').upper()
+          if original=='BLOCKED': effective='BLOCKED'
+          elif original=='DEGRADED': effective='DEGRADED'
+          else: effective='READY' if receipt.get('consumption_state')=='VERIFIED' else 'DEGRADED'
+          machine['status']=effective
+          machine_path.write_bytes(canonical(machine))
+          digest=hashlib.sha256(canonical(machine)).hexdigest()
+          for path in (root/'CYCLE_NAVIGATOR_DELIVERY_POINTER.json',latest):
+              value=json.loads(path.read_text())
+              value['status']=effective
+              value['consumer_receipt_status']=receipt.get('status','UNAVAILABLE')
+              value['consumer_receipt_state']=receipt.get('consumption_state','UNKNOWN')
+              value['machine_package_sha256']=digest
+              path.write_bytes(canonical(value))
+          PY
+
       - name: Validate publication contract
         if: steps.precheck.outputs.skip != 'true'
         run: |
@@ -103,7 +157,11 @@ jobs:
           if missing: raise SystemExit('missing_cycle_navigator_artifacts:'+','.join(missing))
           machine=json.loads((root/'CYCLE_NAVIGATOR_MACHINE_PACKAGE.json').read_text())
           freeze=json.loads((root/'CYCLE_NAVIGATOR_FORECAST_FREEZE.json').read_text())
+          receipt=machine.get('consumer_receipt') or {}
           if machine.get('publication_status')!='X_READY_NOT_CONFIRMED_PUBLISHED': raise SystemExit('publication_status_invalid')
+          if receipt.get('contract')!='CONSUMER_RECEIPT_v1': raise SystemExit('consumer_receipt_missing')
+          if ptr.get('consumer_receipt_state')!=receipt.get('consumption_state'): raise SystemExit('consumer_receipt_pointer_mismatch')
+          if receipt.get('consumption_state')!='VERIFIED' and ptr.get('status')!='DEGRADED': raise SystemExit('unverified_consumption_must_degrade_pointer')
           if freeze.get('scoring_contract')!='CN_PUBLIC_CONTINUITY_v1': raise SystemExit('forecast_scoring_contract_invalid')
           if not (root/'CYCLE_NAVIGATOR_READABLE.md').read_text().strip(): raise SystemExit('readable_empty')
           if not (root/'CYCLE_NAVIGATOR_X_READY.md').read_text().strip(): raise SystemExit('x_ready_empty')
@@ -170,4 +228,5 @@ jobs:
           path: |
             runtime_cn_*.json
             runtime_cn_precheck.txt
+            runtime/consumer-receipts/CYCLE_NAVIGATOR_HANDOFF.json
           retention-days: 14

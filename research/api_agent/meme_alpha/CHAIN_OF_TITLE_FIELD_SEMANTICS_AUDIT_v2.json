@@ -1,0 +1,87 @@
+{
+  "contract": "CHAIN_OF_TITLE_FIELD_SEMANTICS_AUDIT_v2",
+  "audited_at_utc": "2026-09-15T20:20:00Z",
+  "source": "Chain of Title",
+  "status": "KEEP_HIGH_VALUE_WITH_FIELD_LEVEL_GUARDRAILS",
+  "research_role": "Launch provenance, creator/funder/entity adjustment, copycat/manufacturing evidence and historical metadata preservation. Not a general wallet-profitability ledger.",
+  "licensing_boundary": {
+    "frozen_pre_2026_09_13_public_deposit": "Use only according to the frozen release's observed CC0-1.0 terms and provenance.",
+    "current_live_database_and_api": "Treat as separately licensed/current terms. Do not infer CC0 inheritance, redistribute licensed bulk data, or work around quotas.",
+    "rule": "License is release-specific and time-specific. Store source version and observed terms with every bulk research import."
+  },
+  "field_semantics": {
+    "mint": "Exact token identity anchor.",
+    "creator": "Launch creator identity as recorded by the source; useful provenance, not alone proof of common control.",
+    "created_at": "Launch-time anchor subject to source capture/rebuild provenance.",
+    "late_discovery": "Must stratify live-observed vs late/rebuilt records. Do not train time-sensitive launch features as if late records were observed live.",
+    "dev_pct": "Creator initial supply-share style field. Context/risk feature, not monotonic alpha.",
+    "dev_sold": "Observed creator selling state under source semantics. Absence is not proof of future alignment.",
+    "unique_buyers": "Whole-life buyer count may include post-graduation market buyers. It is NOT a curve-only early independent-buyer count.",
+    "curve_buyers": "Outside-creator bonding-curve buyers under source semantics. UNKNOWN/missing cannot become zero.",
+    "snap30_buyers": "First-30-second buyer snapshot may contain market buyers if a launch graduates quickly. It is not interchangeable with curve_buyers.",
+    "bundled_buyers": "Creation-block/bundled buyer evidence. Useful entity/manipulation control, not standalone intent proof.",
+    "graduated": "Potentially inferred/over-broad lifecycle field. Never use alone as authoritative completion.",
+    "graduated_confirmed_by": "Preferred authoritative graduation evidence when populated, e.g. pool or curve_complete. Preserve exact confirmation source.",
+    "create_sig": "Creation transaction provenance.",
+    "create_slot": "On-chain ordering context; preserve distinction between slot/block ordering and decode timestamps.",
+    "metadata_hash_and_image_hash": "Useful for copycat/reuse/provenance comparison. Hash equality proves byte/content equality only, not common intent.",
+    "curve_state_read_timestamp": "Mutable observation timestamp. Staleness must travel with the value.",
+    "peak_price": "Observed peak floor under source coverage, not guaranteed global MFE and not realizable exit.",
+    "peak_at": "Observation timestamp for peak evidence, source-qualified.",
+    "peak_source": "Must be retained. External peak evidence is weaker than event-backed curve/AMM evidence for execution research.",
+    "quote_mint": "Quote-asset field must be preserved. Never generalize one archive-era quote assumption to all current Pump custom-pair events.",
+    "curve_rows_dropped": "Signals possible historical row retention/incompleteness. Incomplete history must not be interpreted as zero activity.",
+    "wallet_flow": "Current licensed schema is specialized toward wallets associated with curve buyouts/operator analysis, not a census of all early buyers and not a generic smart-wallet ledger.",
+    "trades": "Source-specific retained trade subset; do not assume complete token trade tape without checking release semantics.",
+    "hist_trades": "Reconstructed historical trades may provide actual block time, but reconstructed provenance must remain distinct from live-observed records."
+  },
+  "source_clean_record_rules_not_alpha_thresholds": {
+    "creator_share_lt_20pct": "Source transparency/clean-record criterion only.",
+    "outside_curve_buyers_gte_30": "Source transparency/clean-record criterion only.",
+    "curve_completion_gt_60s": "Source transparency/clean-record criterion only.",
+    "largest_single_buy_lt_40_SOL": "Source transparency/clean-record criterion only.",
+    "creator_did_not_sell": "Source transparency/clean-record criterion only.",
+    "framework_rule": "Never import these cutoffs as positive Alpha Lab thresholds without independent winner/failure replication and prospective validation."
+  },
+  "entity_and_funder_rules": [
+    "Shared funder is evidence of relationship, not proof of same controller; trading terminals and shared infrastructure can create false links.",
+    "Combine funder evidence with co-entry, transfer paths, bundle behavior, repeated creator/operator relationships and timing before common-control attribution.",
+    "If the current source withholds or re-derives operator/funder graph tables, preserve UNKNOWN and the source version rather than silently substituting stale relationships.",
+    "Wallet skill and entity identity are separate concepts: a common operator can be skilled, manipulative, both or neither."
+  ],
+  "metadata_and_lore_rules": [
+    "Launch metadata is perishable; archived hash/content evidence can be more informative than current URLs.",
+    "Rebuilt records cannot recover original off-chain content if it changed or disappeared unless that content was preserved at launch.",
+    "Image/document reuse can identify copycat/factory patterns but cannot by itself prove fraudulent intent.",
+    "First-of-chain or original-lore claims require independent provenance, not token metadata alone."
+  ],
+  "outcome_rules": [
+    "Graduation is lifecycle state, not profit.",
+    "Observed peak is not sellable return.",
+    "A clean provenance record is not a BUY signal.",
+    "The source's September cohort finding that no measured bonding-curve positions reached 5x is a dated regime/source-specific falsifier, not a universal Pump.fun tail prior.",
+    "Any Chain of Title field entering G3 must be observable before the candidate cutoff or explicitly treated as later adjudication/context."
+  ],
+  "clean_g3_use": {
+    "approved": [
+      "creator/funder/operator decontamination",
+      "apparent-to-effective wallet independence checks",
+      "creator-history controls AS-OF when timestamps allow",
+      "copycat/factory stratification",
+      "matched failure construction"
+    ],
+    "not_approved": [
+      "general smart-wallet PnL score",
+      "complete first-buyer return history",
+      "global same-funder-equals-cabal rule",
+      "current licensed API as an unrestricted bulk source"
+    ]
+  },
+  "authority": {
+    "research_only": true,
+    "automatic_trading": false,
+    "portfolio_execution": false,
+    "buy_now_promotion": false,
+    "live_threshold_change": false
+  }
+}
