@@ -16,13 +16,21 @@
       "evidence_fingerprint": "54f1ab41be8749a778b0f4b2cb93407238f2ae684aa055ac69dd76e33154e251",
       "external_provider_calls_authorized": false,
       "family": "EXPERIMENT_LEARNING_AND_CALIBRATION",
-      "matched_record": null,
-      "novelty_reason": "no prior gated proposal clears the conservative exact/near duplicate conditions",
-      "novelty_verdict": "NOVEL",
+      "matched_record": {
+        "action": "STRESS_TEST_REGIME_SPECIFICITY",
+        "evidence_fingerprint": "54f1ab41be8749a778b0f4b2cb93407238f2ae684aa055ac69dd76e33154e251",
+        "novelty_verdict": "NOVEL",
+        "reason": "GENERAL_FAILURE_VERSUS_REGIME_SPECIFICITY_REMAINS_UNRESOLVED",
+        "record_type": "NOVELTY_LEDGER",
+        "source": "COMPOUNDING_LEARNING",
+        "target": "EC-3b5610a3c12b040694a9"
+      },
+      "novelty_reason": "same source/action/target and same evidence fingerprint already passed through novelty gate",
+      "novelty_verdict": "DUPLICATE_EXACT",
       "paid_data_authorized": false,
       "portfolio_execution": false,
       "reason": "GENERAL_FAILURE_VERSUS_REGIME_SPECIFICITY_REMAINS_UNRESOLVED",
-      "similarity": 0.0,
+      "similarity": 1.0,
       "source": "COMPOUNDING_LEARNING",
       "target": "EC-3b5610a3c12b040694a9"
     },
@@ -34,20 +42,28 @@
       "evidence_fingerprint": "7a205ad82909bda51ffc50260794f4f684e0250fbf9200467ec521cff9363b32",
       "external_provider_calls_authorized": false,
       "family": "",
-      "matched_record": null,
-      "novelty_reason": "no prior gated proposal clears the conservative exact/near duplicate conditions",
-      "novelty_verdict": "NOVEL",
+      "matched_record": {
+        "action": "RUN_INCREMENTAL_VALUE_TEST",
+        "evidence_fingerprint": "7a205ad82909bda51ffc50260794f4f684e0250fbf9200467ec521cff9363b32",
+        "novelty_verdict": "NOVEL",
+        "reason": "Matured supportive evidence requires incremental-value review before any promotion.",
+        "record_type": "NOVELTY_LEDGER",
+        "source": "MONTHLY_COUNCIL",
+        "target": "EC-13670139587da1823610"
+      },
+      "novelty_reason": "same source/action/target and same evidence fingerprint already passed through novelty gate",
+      "novelty_verdict": "DUPLICATE_EXACT",
       "paid_data_authorized": false,
       "portfolio_execution": false,
       "reason": "Matured supportive evidence requires incremental-value review before any promotion.",
-      "similarity": 0.0,
+      "similarity": 1.0,
       "source": "MONTHLY_COUNCIL",
       "target": "EC-13670139587da1823610"
     }
   ],
-  "reason": "no prior gated proposal clears the conservative exact/near duplicate conditions",
+  "reason": "same source/action/target and same evidence fingerprint already passed through novelty gate",
   "selected_action": "STRESS_TEST_REGIME_SPECIFICITY",
   "selected_source": "COMPOUNDING_LEARNING",
   "selected_target": "EC-3b5610a3c12b040694a9",
-  "selected_verdict": "NOVEL"
+  "selected_verdict": "DUPLICATE_EXACT"
 }
