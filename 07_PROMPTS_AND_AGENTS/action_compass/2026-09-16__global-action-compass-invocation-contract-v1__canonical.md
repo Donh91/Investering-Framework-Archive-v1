@@ -53,6 +53,17 @@ AGENTS.md
 -> Global Action Compass decision translation
 ```
 
+When the official Daily Compass owner is active, resolve
+`04_MARKET_LEARNING/handlekompas/official/LATEST_COMPASS.json` and its exact immutable,
+hash-matching target before composing the visible answer. That artifact is the primary current
+navigation record for `Kompas` / `Handlekompas` / `Compass`; bounded fresh live context may
+clarify it but may not silently rewrite the freeze. A missing, stale or hash-mismatched pointer
+fails closed and must never fall back to old chat prose.
+
+The official machine record preserves `NEXT_12H`, `NEXT_1_3D`, `NEXT_5_7D`, the governed
+`CYCLE_ALTCOINS_3_8W` lane, and the canonical BTC → ETH → large → mid → small → micro ladder.
+Rendering the pointer does not create another freeze or prospective receipt.
+
 Hard rules:
 
 - Never promote an old manual DATA PING, `latest` filename or stale thread summary to current authority.

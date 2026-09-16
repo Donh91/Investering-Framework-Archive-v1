@@ -20,11 +20,15 @@
   "current_production_data_owner": "00_ARCHIVE_CONTROL/2026-09-14__autonomous-data-authority-transition-v1__canonical.md",
   "current_production_data_mirror": "00_ARCHIVE_CONTROL/CURRENT_PRODUCTION_DATA_AUTHORITY.json",
   "decision_vocabulary_owner": "02_DATA_PING/protocols/2026-08-25__three-horizon-action-compass-output-contract-v1__canonical.md",
+  "official_daily_compass_pointer": "04_MARKET_LEARNING/handlekompas/official/LATEST_COMPASS.json",
+  "public_daily_compass_pointer": "04_MARKET_LEARNING/handlekompas/official/PUBLIC_LATEST_COMPASS.json",
   "authority_route": [
     "AGENTS.md",
     "LATEST_OPERATIONS_DASHBOARD.json",
     "LATEST_HANDOFF.json",
     "00_ARCHIVE_CONTROL/CURRENT_PRODUCTION_DATA_AUTHORITY.json",
+    "04_MARKET_LEARNING/handlekompas/official/LATEST_COMPASS.json",
+    "eligible_immutable_official_daily_compass_freeze",
     "current_hash_bound_autonomous_outputs",
     "main_framework_accepted_interpretation",
     "eligible_current_master_monday_cycle_navigator_short_horizon_outputs",
@@ -44,6 +48,13 @@
     "one_sentence_conclusion_required": true,
     "duplicate_rotation_sections_forbidden": true,
     "compact_phone_first": true
+  },
+  "official_compass_policy": {
+    "pointer_first": true,
+    "required_machine_horizons": ["NEXT_12H", "NEXT_1_3D", "NEXT_5_7D", "CYCLE_ALTCOINS_3_8W"],
+    "required_capitalization_order": ["BTC", "ETH", "LARGE_CAPS", "MID_CAPS", "SMALL_CAPS", "MICROCAPS"],
+    "stale_or_missing_pointer": "FAIL_CLOSED_NO_STALE_CHAT_FALLBACK",
+    "render_request_creates_new_freeze": false
   },
   "visible_output_forbidden": [
     "genui_widgets",
