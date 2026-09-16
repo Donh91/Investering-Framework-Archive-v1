@@ -1,10 +1,42 @@
 {
-  "contract":"CYCLE_NAVIGATOR_V2_SCOREBOARD_RECOVERY_v1",
-  "status":"PARTIAL_VERIFIED_HISTORY",
-  "scoring_policy":{"historical_scores_locked":true,"retroactive_rewrite_forbidden":true,"comparability_note":"Historical scores may use the scoring contract canonical at the time. Do not silently normalize old published scores into a later formula.","public_scoreboard_rule":"Show scoring-era/method context and coverage rather than manufacture one falsely homogeneous series."},
-  "census":{"current_issue":25,"historical_issues_available_for_scoring":24,"point_in_time_score_verified_count":8,"point_in_time_score_verified_issues":[15,17,18,20,21,22,23,24],"point_in_time_forecast_verified_but_score_unrecovered_count":1,"point_in_time_forecast_verified_but_score_unrecovered_issues":[19],"score_verified_coverage_of_completed_history":"8/24","score_verified_coverage_pct":33.33,"forecast_or_score_verified_coverage_of_completed_history":"9/24","forecast_or_score_verified_coverage_pct":37.5,"unresolved_completed_history_count":15,"unresolved_completed_history_issues":[1,2,3,4,5,6,7,8,9,10,11,12,13,14,16],"manual_to_automated_boundary":"UNRESOLVED_DO_NOT_GUESS","aggregate_precision_authorized":false,"note":"Verified rows span non-comparable scoring methods. Do not average published overall scores into an all-time precision claim."},
-  "verified_rows":[
-    {"cn":15,"forecast_week":"2026-W28","evaluated_in_publication":16,"provenance":"PUBLISHED_LOCKED_CN16_SCORECARD","price_range_score":85,"btc_range_score":86,"eth_range_score":83,"intraday_map_score":80,"cycle_regime":"HIT","rotation":"HIT","confidence":"VERIFIED_POINT_IN_TIME"},
+  "contract": "CYCLE_NAVIGATOR_V2_SCOREBOARD_RECOVERY_v2",
+  "status": "PUBLISHED_MANUAL_HISTORY_RECOVERED_PARTIAL_LATER_HISTORY",
+  "scoring_policy": {
+    "historical_scores_locked": true,
+    "retroactive_rewrite_forbidden": true,
+    "manual_era_method": "PUBLISHED_MANUAL_AUDIT",
+    "manual_era_note": "Legacy public scores are preserved exactly as published after the then-manual forecast-versus-actual review. They are historical public record, not retroactively recomputed under later automated contracts.",
+    "comparability_note": "Scoring contracts changed over time. Preserve published scores and component evidence by era; do not silently normalize them into a later formula.",
+    "public_scoreboard_rule": "Show method/era and coverage. No falsely homogeneous all-time aggregate."
+  },
+  "census": {
+    "manual_public_score_rows_recovered": 14,
+    "manual_public_score_issues": [1,2,3,4,5,6,7,8,10,11,12,13,14,15],
+    "manual_score_evidence_publication_issues": [1,2,3,4,5,7,8,9,11,12,13,14,15,16],
+    "manual_raw_post_gaps_that_do_not_block_score_recovery": [6,10],
+    "manual_score_rows_still_unrecovered": [9],
+    "later_point_in_time_score_verified_issues": [17,18,20,21,22,23,24],
+    "later_forecast_verified_score_unrecovered_issues": [19],
+    "manual_to_locked_publication_transition": "CN16 introduces the permanent locked publication/Score-v2 standard; preserve pre-CN16 published manual audit semantics separately.",
+    "aggregate_precision_authorized": false
+  },
+  "published_manual_rows": [
+    {"cn":1,"evaluated_in_publication":2,"provenance":"ARCHIVED_PUBLISHED_X_POST","published_overall_precision":88,"btc_price_range_score":92,"btc_intraday_score":89,"cycle_phase_score":95,"rotation_timing_score":78,"confidence":"VERIFIED_PUBLISHED_MANUAL_AUDIT"},
+    {"cn":2,"evaluated_in_publication":3,"provenance":"ARCHIVED_PUBLISHED_X_POST_CHUNK","published_overall_precision":88,"btc_price_range_score":91,"btc_intraday_score":87,"cycle_phase_score":88,"rotation_timing_score":82,"confidence":"VERIFIED_PUBLISHED_MANUAL_AUDIT"},
+    {"cn":3,"evaluated_in_publication":4,"provenance":"ARCHIVED_PUBLISHED_X_POST","published_overall_precision":83,"btc_price_range_score":83,"btc_intraday_score":80,"cycle_phase_score":90,"rotation_timing_score":78,"confidence":"VERIFIED_PUBLISHED_MANUAL_AUDIT"},
+    {"cn":4,"evaluated_in_publication":5,"provenance":"ARCHIVED_PUBLISHED_X_POST","published_overall_precision":86,"btc_price_range_score":88,"btc_intraday_score":82,"cycle_phase_score":92,"rotation_timing_score":95,"confidence":"VERIFIED_PUBLISHED_MANUAL_AUDIT"},
+    {"cn":5,"evaluated_in_publication":6,"provenance":"ARCHIVED_PUBLISHED_SCORE_RECORD","published_overall_precision":86,"confidence":"VERIFIED_PUBLISHED_MANUAL_AUDIT"},
+    {"cn":6,"evaluated_in_publication":7,"provenance":"ARCHIVED_PUBLISHED_X_POST_CN7_SCORECARD","published_overall_precision":92,"btc_price_range_score":91,"btc_intraday_score":87,"cycle_phase_score":94,"rotation_score":96,"confidence":"VERIFIED_PUBLISHED_MANUAL_AUDIT"},
+    {"cn":7,"evaluated_in_publication":8,"provenance":"ARCHIVED_PUBLISHED_X_POST","published_overall_precision":91,"btc_price_range_score":89,"btc_intraday_score":84,"eth_price_range_score":81,"cycle_phase_score":96,"rotation_score":98,"confidence":"VERIFIED_PUBLISHED_MANUAL_AUDIT"},
+    {"cn":8,"evaluated_in_publication":9,"provenance":"ARCHIVED_PUBLISHED_X_POST","published_overall_precision":90,"btc_price_range_score":87,"btc_intraday_score":82,"eth_price_range_score":84,"cycle_phase_score":97,"rotation_score":95,"confidence":"VERIFIED_PUBLISHED_MANUAL_AUDIT"},
+    {"cn":10,"evaluated_in_publication":11,"provenance":"ARCHIVED_PUBLISHED_X_POST_CN11_SCORECARD","published_overall_precision":70,"btc_price_range_score":62,"btc_intraday_score":58,"eth_price_range_score":65,"eth_intraday_score":61,"cycle_phase_score":89,"rotation_score":95,"eth_btc_score":95,"confidence":"VERIFIED_PUBLISHED_MANUAL_AUDIT"},
+    {"cn":11,"evaluated_in_publication":12,"provenance":"ARCHIVED_PUBLISHED_X_POST","published_overall_precision":84,"btc_price_range_score":72,"btc_intraday_score":67,"eth_price_range_score":88,"eth_intraday_score":91,"cycle_phase_score":89,"rotation_score":95,"confidence":"VERIFIED_PUBLISHED_MANUAL_AUDIT"},
+    {"cn":12,"evaluated_in_publication":13,"provenance":"ARCHIVED_PUBLISHED_X_POST","published_overall_precision":79,"btc_price_range_score":72,"btc_intraday_score":61,"eth_price_range_score":88,"eth_intraday_score":78,"cycle_phase_score":86,"rotation_score":95,"confidence":"VERIFIED_PUBLISHED_MANUAL_AUDIT"},
+    {"cn":13,"evaluated_in_publication":14,"provenance":"ARCHIVED_PUBLISHED_X_POST","published_overall_precision":68,"btc_price_range_score":45,"btc_intraday_score":42,"eth_price_range_score":48,"eth_intraday_score":44,"cycle_phase_score":88,"rotation_score":95,"confidence":"VERIFIED_PUBLISHED_MANUAL_AUDIT"},
+    {"cn":14,"evaluated_in_publication":15,"provenance":"ARCHIVED_PUBLISHED_X_POST","published_overall_precision":83,"btc_price_range_score":82,"eth_price_range_score":66,"cycle_phase_score":88,"rotation_score":95,"confidence":"VERIFIED_PUBLISHED_MANUAL_AUDIT"},
+    {"cn":15,"evaluated_in_publication":16,"provenance":"PUBLISHED_LOCKED_CN16_SCORECARD","price_range_score":85,"btc_range_score":86,"eth_range_score":83,"intraday_map_score":80,"cycle_regime":"HIT","rotation":"HIT","confidence":"VERIFIED_POINT_IN_TIME_TRANSITION_ROW"}
+  ],
+  "later_verified_rows": [
     {"cn":17,"forecast_week":"2026-W30","provenance":"OFFICIAL_FORECAST_LEDGER_PLUS_SETTLED_ACTUALS","range_precision_score":86.11,"state_precision_score":75.0,"overall_audit_score":80.56,"rounded_precision_score":81,"confidence":"VERIFIED_POINT_IN_TIME"},
     {"cn":18,"forecast_week":"2026-W31","evaluated_in_publication":19,"provenance":"PUBLISHED_LOCKED_CN19_SCORECARD_PLUS_RECOVERED_FROZEN_CANONICAL_FORECAST","published_overall_precision":90,"published_weekly_range_score":89,"published_intraday_map_score":82,"published_structural_precision":100,"recovered_audit_score":91.46,"confidence":"VERIFIED_POINT_IN_TIME"},
     {"cn":20,"forecast_week":"2026-W33","evaluated_in_publication":21,"provenance":"PUBLISHED_LOCKED_CN21_SCORECARD","published_overall_precision":94,"published_weekly_range_score":92,"published_intraday_map_score":90,"published_structural_precision":100,"btc_range_score":92,"eth_range_score":91,"confidence":"VERIFIED_POINT_IN_TIME"},
@@ -13,9 +45,15 @@
     {"cn":23,"forecast_week":"2026-W36","evaluated_in_publication":24,"provenance":"PUBLISHED_LOCKED_CN24_SCORECARD","published_overall_precision":93,"cycle_structure_score":94,"eth_btc_transition_score":91,"breadth_participation_score":95,"rotation_sequencing_score":92,"altseason_timing_score":97,"deployment_sequencing_score":93,"btc_price_range_score":89,"eth_price_range_score":94,"confidence":"VERIFIED_POINT_IN_TIME"},
     {"cn":24,"forecast_week":"2026-W37","evaluated_in_publication":25,"provenance":"PUBLISHED_LOCKED_CN25_SCORECARD","published_overall_precision":93,"published_overall_precision_unrounded":92.6,"cycle_structure_score":100,"eth_btc_transition_score":100,"breadth_participation_score":100,"rotation_sequencing_score":50,"altseason_timing_score":100,"deployment_sequencing_score":95,"btc_price_range_score":96,"eth_price_range_score":100,"confidence":"VERIFIED_POINT_IN_TIME"}
   ],
-  "verified_forecast_only_rows":[{"cn":19,"forecast_week":"2026-W32","provenance":"FROZEN_CANONICAL_CN19_STATE_PLUS_VERBATIM_PUBLICATION","btc_weekly_range":[60800,65600],"eth_weekly_range":[1750,1960],"intraday":{"day_1_2":{"BTC":[61800,63800],"ETH":[1800,1890]},"day_3_4":{"BTC":[60800,64600],"ETH":[1750,1920]},"day_5_7":{"BTC":[61200,65600],"ETH":[1780,1960]}},"score_status":"NOT_RECOVERED_DO_NOT_INFER","public_score_eligible":false,"confidence":"VERIFIED_POINT_IN_TIME_FORECAST_ONLY"}],
-  "negative_search_receipts":[{"target":"CN16_SCORE_EVIDENCE","result":"NOT_FOUND_IN_SEARCHED_PUBLIC_SURFACES","consequence":"Do not infer a score."},{"target":"CN19_SCORE_EVIDENCE","result":"NOT_FOUND_IN_SEARCHED_PUBLIC_SURFACES","consequence":"Forecast verified, score unrecovered, do not infer."}],
-  "next_recovery_priority":["Recover CN1-CN14 original publication/freeze evidence and actuals.","Search commit/PR history and legacy namespaces for CN16 contemporaneous score evidence.","Search commit/PR history and legacy namespaces for a locked CN20 scorecard or outcome receipt for CN19.","Identify exact manual-to-automated era boundary.","Only after coverage census, compute method-aware summaries with explicit N."],
-  "public_release_gate":"BLOCKED_PENDING_HISTORY_COVERAGE_CENSUS",
-  "authority":false
+  "verified_forecast_only_rows": [
+    {"cn":19,"forecast_week":"2026-W32","provenance":"FROZEN_CANONICAL_CN19_STATE_PLUS_VERBATIM_PUBLICATION","btc_weekly_range":[60800,65600],"eth_weekly_range":[1750,1960],"score_status":"NOT_RECOVERED_DO_NOT_INFER","public_score_eligible":false,"confidence":"VERIFIED_POINT_IN_TIME_FORECAST_ONLY"}
+  ],
+  "residual_recovery_priority": [
+    "Recover CN9 score from CN10 publication/archive/commit evidence.",
+    "Recover CN16 score evidence from contemporaneous CN17/locked ledgers.",
+    "Recover CN19 score from contemporaneous CN20 outcome/score evidence.",
+    "Bind exact publication files/commits for CN5 score record if richer component evidence is available."
+  ],
+  "public_release_gate": "HISTORY_MAJORITY_RECOVERED_RESIDUAL_GAPS_FAIL_CLOSED",
+  "authority": false
 }
