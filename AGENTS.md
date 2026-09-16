@@ -142,6 +142,8 @@ User-facing compass output is **TEXT_ONLY** by default. APIs, connectors, reposi
 
 The compass must preserve the three horizons and controlled action vocabulary from the active Three-Horizon Action Compass owner, add ETA where actionable, fail stale/unsupported lanes closed, keep warnings separate from actions, and avoid repeated rotation sections.
 
+When present and eligible, `04_MARKET_LEARNING/handlekompas/official/LATEST_COMPASS.json` is the pointer-first machine owner for a current Compass render. Read and hash-verify its immutable target before bounded live context. Never replace a missing, stale or mismatched official pointer with inherited chat prose. The pointer render itself creates no new freeze or prospective receipt.
+
 ## 1. Read order
 
 Before framework, DATA PING, weekly operations, Cycle Navigator, Research Lab, evidence-ledger, archive, governance or automation work:
