@@ -11,12 +11,12 @@ CONFIG = {
 }
 
 
-def event(token: str, pool: str, *, age: float, liquidity: float, sells: int, volume: float = 0.0, buys: int = 10) -> dict:
+def event(token: str, pool: str, *, age: float, liquidity: float, sells: int, volume: float = 0.0, buys: int = 10, network: str = "eth") -> dict:
     return {
-        "network": "eth",
+        "network": network,
         "token_ca": token,
         "pool_address": pool,
-        "pool_id": "eth_" + pool,
+        "pool_id": network + "_" + pool,
         "pool_created_at": "2026-09-14T15:00:00Z",
         "age_minutes": age,
         "liquidity_usd": liquidity,
@@ -25,6 +25,10 @@ def event(token: str, pool: str, *, age: float, liquidity: float, sells: int, vo
         "sells_h1": sells,
         "token_role": "base",
         "token_price_usd": 1.0,
+        "market_cap_usd": None,
+        "fdv_usd": 100000.0,
+        "valuation_status": "FDV_ONLY",
+        "data_integrity_status": "PASS",
     }
 
 
@@ -39,6 +43,8 @@ class TokenPoolIdentityTests(unittest.TestCase):
         self.assertEqual(rows[0]["pool_address"], "0xstrong")
         self.assertEqual(rows[0]["observed_pool_count"], 2)
         self.assertEqual(len(rows[0]["observed_pool_set"]), 2)
+        self.assertIsNone(rows[0]["market_cap_usd"])
+        self.assertEqual(rows[0]["fdv_usd"], 100000.0)
 
     def test_token_age_uses_oldest_observed_pool_not_new_secondary_pool(self) -> None:
         token = "0x" + "2" * 40
@@ -83,6 +89,21 @@ class TokenPoolIdentityTests(unittest.TestCase):
         rows = collapse_token_pools([a, b], CONFIG)
         self.assertEqual(len(rows), 2)
         self.assertNotEqual(rows[0]["token_identity"], rows[1]["token_identity"])
+
+    def test_same_evm_address_on_two_chains_is_two_identities(self) -> None:
+        token = "0x" + "c" * 40
+        rows = collapse_token_pools([
+            event(token, "0xeth", age=10, liquidity=20000, sells=5, network="eth"),
+            event(token, "0xarc", age=10, liquidity=20000, sells=5, network="arc"),
+        ], CONFIG)
+        self.assertEqual(len(rows), 2)
+        self.assertEqual({row["token_identity"] for row in rows}, {f"eth:{token}", f"arc:{token}"})
+
+    def test_missing_chain_never_defaults_to_ethereum(self) -> None:
+        row = event("0x" + "d" * 40, "0xmissing", age=10, liquidity=20000, sells=5)
+        row.pop("network")
+        rows = collapse_token_pools([row], CONFIG)
+        self.assertEqual(rows, [])
 
 
 if __name__ == "__main__":

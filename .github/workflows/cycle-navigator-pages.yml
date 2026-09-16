@@ -2,8 +2,7 @@ name: Deploy Cycle Navigator to GitHub Pages
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
     paths:
       - "05_CYCLE_NAVIGATOR/site/**"
       - "05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json"
@@ -22,11 +21,9 @@ permissions:
   contents: read
   pages: write
   id-token: write
-
 concurrency:
   group: cycle-navigator-pages
   cancel-in-progress: true
-
 jobs:
   deploy:
     environment:
@@ -36,18 +33,36 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+      - name: Validate public product contract
+        run: node 05_CYCLE_NAVIGATOR/site/validate-v2.mjs
       - name: Build privacy-safe public bundle
         run: node 05_CYCLE_NAVIGATOR/site/build-public.mjs
-      - name: Add hidden Apple design prototype and promote production shell
-        run: node 05_CYCLE_NAVIGATOR/site/build-apple-prototype.mjs
-      - name: Add shortcut and Path to Mania layer
-        run: node 05_CYCLE_NAVIGATOR/site/build-shortcut.mjs
-      - name: Bind canonical weekly scorecard to final public shell
+      - name: Bind canonical weekly scorecard
         run: node 05_CYCLE_NAVIGATOR/site/build-score-bundle.mjs
-      - name: Add bounded live observation and action-first public layer
+      - name: Add bounded live observation
         run: node 05_CYCLE_NAVIGATOR/site/build-live-observation.mjs
       - name: Build and verify social preview
         run: node 05_CYCLE_NAVIGATOR/site/build-social-card.mjs
+      - name: Verify final investor-facing shell and privacy
+        run: |
+          grep -q 'public-product.js' 05_CYCLE_NAVIGATOR/site/dist/index.html
+          test -f 05_CYCLE_NAVIGATOR/site/dist/history-scoreboard.json
+          test -f 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          test -f 05_CYCLE_NAVIGATOR/site/dist/public-product.css
+          grep -q 'data-tab="now"' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          grep -q 'data-tab="path"' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          grep -q 'data-tab="proof"' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          grep -q 'MARKET COMPASS' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          grep -q 'Bitcoin → microcaps' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          grep -q 'MARKET COMPASS UPDATED' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          grep -q 'HISTORICAL WEEKLY AVERAGE' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          grep -q 'PRICE RANGE ACCURACY' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          grep -q 'MARKET & CYCLE UNDERSTANDING' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          grep -q 'Waiting for evidence' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          grep -q 'What the system actually watches' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          ! grep -q 'HANDLEKOMPAS ·' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          ! grep -q 'MASTER MONDAY →' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          ! grep -R 'Donh91\|Investering-Framework-Archive-v1\|week_dir' 05_CYCLE_NAVIGATOR/site/dist/data/latest.json
       - name: Setup GitHub Pages
         uses: actions/configure-pages@v5
       - name: Upload Cycle Navigator public bundle only

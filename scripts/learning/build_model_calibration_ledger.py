@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import sys
 from pathlib import Path
 
 UNIT_CONTRACT_VERSION = "FORECAST_TARGET_UNITS_v2"
@@ -12,6 +13,7 @@ ELIGIBILITY_SCOPE = "SETTLEMENT_TIMING_ONLY"
 POPULATION_CONTRACT = "CALIBRATION_POPULATION_CONTRACT_v1"
 POPULATION_CONTRACT_PATH = "research/api_agent/CALIBRATION_POPULATION_CONTRACT.json"
 POPULATION_ID = "API_AGENT_RATIFIED_T13"
+REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
 
 
 def load(path: Path):
@@ -23,6 +25,32 @@ def load(path: Path):
 
 def canon(value):
     return json.dumps(value, sort_keys=True, separators=(",", ":"))
+
+
+def path_matches_declared_population(actual: Path, declared: str) -> bool:
+    declared_path = Path(declared)
+    actual_parts = actual.resolve(strict=False).parts
+    if declared_path.is_absolute():
+        return actual_parts == declared_path.resolve(strict=False).parts
+    declared_parts = declared_path.parts
+    return len(actual_parts) >= len(declared_parts) and actual_parts[-len(declared_parts) :] == declared_parts
+
+
+def path_is_within(path: Path, parent: Path) -> bool:
+    try:
+        path.resolve(strict=False).relative_to(parent.resolve(strict=False))
+        return True
+    except ValueError:
+        return False
+
+
+def required_fields_present(value: dict, required_fields: list[str]) -> bool:
+    return all(field in value and value[field] is not None and value[field] != "" for field in required_fields)
+
+
+def fail_closed(reason: str, **details) -> None:
+    print(json.dumps({"status": "BLOCKED", "reason": reason, **details}, sort_keys=True), file=sys.stderr)
+    raise SystemExit(2)
 
 
 def legacy_unit_ambiguous(forecast: dict) -> bool:
@@ -62,23 +90,81 @@ def main():
     parser.add_argument("--eligibility-output", type=Path)
     args = parser.parse_args()
 
+    population_contract = load(REPOSITORY_ROOT / POPULATION_CONTRACT_PATH)
+    population = (
+        population_contract.get("populations", {}).get(POPULATION_ID)
+        if isinstance(population_contract, dict)
+        else None
+    )
+    if not isinstance(population, dict):
+        fail_closed("POPULATION_CONTRACT_INVALID", population_id=POPULATION_ID)
+
+    expected_forecast_root = population.get("forecast_root")
+    expected_outcome_root = population.get("outcome_root")
+    required_forecast_fields = population.get("required_forecast_fields")
+    if (
+        not isinstance(expected_forecast_root, str)
+        or not isinstance(expected_outcome_root, str)
+        or not isinstance(required_forecast_fields, list)
+        or not all(isinstance(field, str) and field for field in required_forecast_fields)
+    ):
+        fail_closed("POPULATION_CONTRACT_INVALID", population_id=POPULATION_ID)
+    forecast_root_matches = path_matches_declared_population(args.forecast_root, expected_forecast_root)
+    outcome_root_matches = path_matches_declared_population(args.outcome_root, expected_outcome_root)
+    strict_population_roots = forecast_root_matches and outcome_root_matches
+    registered_other_roots = {
+        value.get(key)
+        for population_id, value in population_contract.get("populations", {}).items()
+        if population_id != POPULATION_ID and isinstance(value, dict)
+        for key in ("forecast_root", "outcome_root")
+        if isinstance(value.get(key), str)
+    }
+    matches_other_population = any(
+        path_matches_declared_population(actual, declared)
+        for actual in (args.forecast_root, args.outcome_root)
+        for declared in registered_other_roots
+    )
+    noncanonical_fixture = (
+        not matches_other_population
+        and not path_is_within(args.forecast_root, REPOSITORY_ROOT)
+        and not path_is_within(args.outcome_root, REPOSITORY_ROOT)
+        and not path_is_within(args.output, REPOSITORY_ROOT)
+    )
+    if not strict_population_roots and not noncanonical_fixture:
+        fail_closed(
+            "POPULATION_ROOT_MISMATCH",
+            population_id=POPULATION_ID,
+            expected_forecast_root=expected_forecast_root,
+            expected_outcome_root=expected_outcome_root,
+            supplied_forecast_root=str(args.forecast_root),
+            supplied_outcome_root=str(args.outcome_root),
+        )
+
     forecasts = {}
+    invalid_frozen_forecast_count = 0
     for path in args.forecast_root.rglob("*.json") if args.forecast_root.exists() else []:
         value = load(path)
         if value and value.get("contract") == "FROZEN_FORECAST_v1":
+            if strict_population_roots and not required_fields_present(value, required_forecast_fields):
+                invalid_frozen_forecast_count += 1
+                continue
             forecasts[value.get("forecast_id")] = value
 
     rows = []
     lineage_rows = []
     eligibility_rows = []
     quarantined = set()
+    orphan_outcome_count = 0
 
     for path in args.outcome_root.rglob("*.json") if args.outcome_root.exists() else []:
         outcome = load(path)
         if not outcome or outcome.get("contract") not in {"MATURED_OUTCOME_v2", "MATURED_OUTCOME_v3"}:
             continue
-        forecast = forecasts.get(outcome.get("forecast_id"), {})
-        if forecast and legacy_unit_ambiguous(forecast):
+        forecast = forecasts.get(outcome.get("forecast_id"))
+        if not forecast:
+            orphan_outcome_count += 1
+            continue
+        if legacy_unit_ambiguous(forecast):
             quarantined.add(outcome.get("forecast_id"))
             continue
 
@@ -209,6 +295,8 @@ def main():
         "candidate_count": candidate_count,
         "frozen_count": frozen_count,
         "outcome_record_count": outcome_count,
+        "invalid_frozen_forecast_count": invalid_frozen_forecast_count,
+        "orphan_outcome_count": orphan_outcome_count,
         "direct_framework_memory_import_allowed": False,
         "historical_schema_backfill_by_inference_allowed": False,
         "eligibility_scope": ELIGIBILITY_SCOPE,
@@ -254,6 +342,8 @@ def main():
                 "candidate_count": candidate_count,
                 "frozen_count": frozen_count,
                 "outcome_record_count": outcome_count,
+                "invalid_frozen_forecast_count": invalid_frozen_forecast_count,
+                "orphan_outcome_count": orphan_outcome_count,
             },
             sort_keys=True,
         )
