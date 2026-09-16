@@ -6,6 +6,7 @@ on:
       - 'research/api_agent/meme_alpha/experiments/CLEAN_G3_RED_PAIR_QUALIFICATION_FREEZE_v1.json'
       - 'research/api_agent/meme_alpha/experiments/CLEAN_G3_RED_SIGNAL_FREEZE_v1.json'
       - 'research/api_agent/meme_alpha/experiments/red_sellability_aware_outcomes_v1.py'
+      - 'research/api_agent/meme_alpha/experiments/red_sellability_aware_outcomes_throttled_v1.py'
       - '.github/workflows/meme-alpha-red-sellability-outcomes.yml'
   workflow_dispatch:
 
@@ -37,7 +38,7 @@ jobs:
 
       - name: Reconstruct post-signal sellability-aware outcomes
         run: |
-          python research/api_agent/meme_alpha/experiments/red_sellability_aware_outcomes_v1.py \
+          python research/api_agent/meme_alpha/experiments/red_sellability_aware_outcomes_throttled_v1.py \
             --zip /tmp/red-cohort/RED-COHORT-2026-v1_1_1.zip \
             --signal-freeze research/api_agent/meme_alpha/experiments/CLEAN_G3_RED_SIGNAL_FREEZE_v1.json \
             --out /tmp/red-sellability/red_sellability_aware_outcomes_v1.json \
