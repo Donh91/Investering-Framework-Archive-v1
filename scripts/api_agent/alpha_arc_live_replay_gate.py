@@ -16,7 +16,6 @@ ARCSCAN_API = "https://api.arc-scan.org"
 GECKO_API = "https://api.geckoterminal.com/api/v2"
 BEANCAT_CA = "0x41c8a71f630c636294009fa4fb0cc4c3bbe674fe"
 BEANCAT_POOL = "0x1f7f6a5e2ba06e9b3644afa8db8e1c606b5a5abb"
-BEANCAT_FIRST_KNOWN_SWAP_BLOCK = 16_919_185
 BEANCAT_FROM = 16_880_000
 BEANCAT_TO = 16_920_000
 RECENT_SPAN = 9_000
@@ -70,24 +69,23 @@ def indexed_logs(venue: str, from_block: int, to_block: int) -> list[dict[str, A
 
 def find_recent_control(rpc_url: str, head: int) -> tuple[dict[str, Any], dict[str, Any], tuple[int, int]]:
     start = max(0, head - RECENT_SPAN)
-    indexed: list[tuple[str, dict[str, Any], dict[str, Any]]] = []
-    for venue in arc.VENUES:
-        for raw in indexed_logs(venue, start, head):
-            parsed = arc.parse_log(venue, raw, None, int(time.time()), "api.arc-scan.org")
-            if parsed and parsed.get("candidate_status") == "USDC_ANCHORED_CANDIDATE":
-                indexed.append((venue, raw, parsed))
-    if not indexed:
-        raise RuntimeError("NO_RECENT_INDEXED_USDC_CONTROL")
-    indexed.sort(key=lambda item: (item[2].get("block_number") or -1, item[2].get("log_index") or -1), reverse=True)
-    preferred = [item for item in indexed if item[2].get("pool_address")]
-    venue, raw, expected = (preferred or indexed)[0]
-    block = expected["block_number"]
-    replay_from, replay_to = max(start, block - 2), min(head, block + 2)
-    replay = arc.scan_range(rpc_url, replay_from, replay_to)
-    matches = [row for row in replay if row.get("venue") == venue and row.get("transaction_hash") == expected.get("transaction_hash") and row.get("log_index") == expected.get("log_index")]
-    if len(matches) != 1:
-        raise RuntimeError(f"RECENT_RPC_MATCH_COUNT:{len(matches)}")
-    return expected, matches[0], (replay_from, replay_to)
+    replay = arc.scan_range(rpc_url, start, head)
+    candidates = [row for row in replay if row.get("candidate_status") == "USDC_ANCHORED_CANDIDATE"]
+    if not candidates:
+        raise RuntimeError("NO_RECENT_RPC_USDC_CONTROL")
+    candidates.sort(key=lambda row: (row.get("block_number") or -1, row.get("log_index") or -1), reverse=True)
+    preferred = [row for row in candidates if row.get("pool_address")]
+    rpc_event = (preferred or candidates)[0]
+    venue = rpc_event["venue"]
+    block = rpc_event["block_number"]
+    indexed = []
+    for raw in indexed_logs(venue, block, block):
+        parsed = arc.parse_log(venue, raw, None, int(time.time()), "api.arc-scan.org")
+        if parsed and parsed.get("transaction_hash") == rpc_event.get("transaction_hash") and parsed.get("log_index") == rpc_event.get("log_index"):
+            indexed.append(parsed)
+    if len(indexed) != 1:
+        raise RuntimeError(f"RECENT_INDEX_MATCH_COUNT:{len(indexed)}")
+    return indexed[0], rpc_event, (start, head)
 
 
 def run_replay(rpc_url: str) -> dict[str, Any]:
