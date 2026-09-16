@@ -861,6 +861,14 @@ def write_official_compass(compass: Mapping[str, Any], output_root: Path) -> dic
                 "sha256": prior.get("compass_sha256"),
             }
     path = day_dir / f"{compass['compass_id']}.json"
+    if path.exists():
+        prior = read_json(path)
+        return {
+            "status": "EXISTING_DAILY_FREEZE",
+            "path": path.as_posix(),
+            "compass_id": prior.get("compass_id"),
+            "sha256": prior.get("compass_sha256"),
+        }
     _immutable_write(path, compass)
     compass_content_sha256 = digest(path.read_bytes())
     public = build_public_projection(compass)
