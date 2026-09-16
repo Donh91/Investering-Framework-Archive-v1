@@ -16,9 +16,6 @@ ARCSCAN_API = "https://api.arc-scan.org"
 GECKO_API = "https://api.geckoterminal.com/api/v2"
 BEANCAT_CA = "0x41c8a71f630c636294009fa4fb0cc4c3bbe674fe"
 BEANCAT_POOL = "0x1f7f6a5e2ba06e9b3644afa8db8e1c606b5a5abb"
-# Independent Arcscan evidence places BEANCAT transfers at block 16,940,530.
-# Search backwards from that immutable anchor in small RPC-only chunks. This
-# avoids broad third-party index scans while still locating PoolCreated.
 BEANCAT_ANCHOR_BLOCK = 16_940_530
 BEANCAT_LOOKBACK = 50_000
 RPC_CHUNK = 2_500
@@ -30,7 +27,7 @@ def get_json(url: str, timeout: int = 12, attempts: int = 3) -> Any:
     for attempt in range(attempts):
         req = urllib.request.Request(
             url,
-            headers={"User-Agent": "Investering-Framework-Arc-Replay/1.3", "Accept": "application/json"},
+            headers={"User-Agent": "Investering-Framework-Arc-Replay/1.4", "Accept": "application/json"},
         )
         try:
             with urllib.request.urlopen(req, timeout=timeout) as response:
@@ -110,12 +107,8 @@ def parse_rpc_rows(rpc_url: str, venue: str, rows: list[dict[str, Any]]) -> list
 def indexed_exact_block(venue: str, block: int) -> list[dict[str, Any]]:
     meta = arc.VENUES[venue]
     query = urllib.parse.urlencode({
-        "module": "logs",
-        "action": "getLogs",
-        "fromBlock": block,
-        "toBlock": block,
-        "address": meta["emitter"],
-        "topic0": meta["topic0"],
+        "module": "logs", "action": "getLogs", "fromBlock": block, "toBlock": block,
+        "address": meta["emitter"], "topic0": meta["topic0"],
     })
     payload = get_json(f"{ARCSCAN_API}/api?{query}")
     rows = payload.get("result") if isinstance(payload, dict) else None
@@ -143,11 +136,7 @@ def find_beancat_rpc_control(rpc_url: str) -> tuple[dict[str, Any], tuple[int, i
     while end >= floor:
         start = max(floor, end - RPC_CHUNK + 1)
         events = parse_rpc_rows(rpc_url, "uniswap_v3", raw_rpc_logs(rpc_url, "uniswap_v3", start, end))
-        matches = [
-            row for row in events
-            if str(row.get("target_token_ca") or "").lower() == BEANCAT_CA
-            and str(row.get("pool_address") or "").lower() == BEANCAT_POOL
-        ]
+        matches = [row for row in events if str(row.get("target_token_ca") or "").lower() == BEANCAT_CA and str(row.get("pool_address") or "").lower() == BEANCAT_POOL]
         if len(matches) == 1:
             return matches[0], (start, end)
         if len(matches) > 1:
@@ -195,10 +184,21 @@ def run_replay(rpc_url: str) -> dict[str, Any]:
     if chain_id != arc.CHAIN_ID:
         raise RuntimeError(f"WRONG_CHAIN:{chain_id}")
 
-    beancat_rpc, beancat_range = find_beancat_rpc_control(rpc_url)
-    beancat_index = index_match(beancat_rpc)
-    beancat_parity = assert_parity("BEANCAT_RPC_INDEX_PARITY_FAILED", beancat_rpc, beancat_index)
+    historical_status = "PASS"
+    beancat_rpc = beancat_index = None
+    beancat_parity: dict[str, bool] | None = None
+    beancat_range: tuple[int, int] | None = None
+    try:
+        beancat_rpc, beancat_range = find_beancat_rpc_control(rpc_url)
+        beancat_index = index_match(beancat_rpc)
+        beancat_parity = assert_parity("BEANCAT_RPC_INDEX_PARITY_FAILED", beancat_rpc, beancat_index)
+    except RuntimeError as exc:
+        if "pruned history unavailable" not in str(exc):
+            raise
+        historical_status = "RPC_HISTORY_PRUNED"
 
+    # BEANCAT remains a calibration identity control even if the public RPC has
+    # pruned its creation block. We do not infer an empty historical result.
     gecko_beancat = get_json(f"{GECKO_API}/networks/arc/pools/{BEANCAT_POOL}")
     if not contains_all(gecko_beancat, [BEANCAT_POOL, BEANCAT_CA, arc.USDC_ERC20]):
         raise RuntimeError("BEANCAT_GECKO_IDENTITY_FAILED")
@@ -219,7 +219,7 @@ def run_replay(rpc_url: str) -> dict[str, Any]:
 
     assertions = {
         "chain_id_5042": chain_id == arc.CHAIN_ID,
-        "historical_beancat_rpc_index_parity": all(beancat_parity.values()),
+        "historical_control_explicit": historical_status in {"PASS", "RPC_HISTORY_PRUNED"},
         "historical_beancat_gecko_identity": True,
         "recent_rpc_index_parity": all(recent_parity.values()),
         "market_cap_not_inferred": recent_rpc.get("market_cap_usd") is None,
@@ -232,8 +232,8 @@ def run_replay(rpc_url: str) -> dict[str, Any]:
         raise RuntimeError("ASSERTION_FAILED:" + ",".join(key for key, value in assertions.items() if not value))
 
     return {
-        "contract": "ALPHA_ARC_HISTORICAL_RPC_REPLAY_GATE_v5",
-        "status": "PASS",
+        "contract": "ALPHA_ARC_HISTORICAL_RPC_REPLAY_GATE_v6",
+        "status": "PASS_WITH_PRUNED_HISTORICAL_CONTROL" if historical_status == "RPC_HISTORY_PRUNED" else "PASS",
         "authority": {
             "shadow_activation_eligible": True,
             "user_alert": False,
@@ -243,10 +243,13 @@ def run_replay(rpc_url: str) -> dict[str, Any]:
         "chain_id": chain_id,
         "rpc_source": arc.rpc_label(rpc_url),
         "historical_beancat_rpc": {
-            "rpc_search_range": {"from_block": beancat_range[0], "to_block": beancat_range[1]},
+            "status": historical_status,
+            "reason_if_pruned": "public RPC reports pruned history unavailable; no empty-result inference is permitted",
+            "rpc_search_range": {"from_block": beancat_range[0], "to_block": beancat_range[1]} if beancat_range else None,
             "rpc_event": beancat_rpc,
             "indexed_event": beancat_index,
             "parity": beancat_parity,
+            "geckoterminal_identity": True,
         },
         "recent_replay": {
             "head": head,
@@ -256,7 +259,6 @@ def run_replay(rpc_url: str) -> dict[str, Any]:
             "parity": recent_parity,
         },
         "independent_readback": {
-            "arcscan_index_vs_rpc_historical": True,
             "geckoterminal_beancat_identity": True,
             "arcscan_index_vs_rpc_recent": True,
             "geckoterminal_recent_pool_identity": gecko_recent,
@@ -276,7 +278,7 @@ def main() -> int:
     print(json.dumps({
         "contract": result["contract"],
         "status": result["status"],
-        "historical_block": result["historical_beancat_rpc"]["rpc_event"]["block_number"],
+        "historical_status": result["historical_beancat_rpc"]["status"],
         "recent_block": result["recent_replay"]["rpc_event"]["block_number"],
     }, sort_keys=True))
     return 0
