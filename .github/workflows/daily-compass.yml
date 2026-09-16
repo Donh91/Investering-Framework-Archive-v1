@@ -19,6 +19,7 @@ on:
   workflow_dispatch:
 
 permissions:
+  actions: write
   contents: write
   issues: write
 
@@ -122,6 +123,10 @@ jobs:
           local_sha=$(sha256sum 04_MARKET_LEARNING/handlekompas/official/LATEST_COMPASS.json | awk '{print $1}')
           remote_sha=$(git show origin/main:04_MARKET_LEARNING/handlekompas/official/LATEST_COMPASS.json | sha256sum | awk '{print $1}')
           [ "$local_sha" = "$remote_sha" ]
+      - name: Publish current Compass to Cycle Navigator Pages
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run cycle-navigator-pages.yml --ref main
       - uses: actions/upload-artifact@v4
         if: always()
         with:
