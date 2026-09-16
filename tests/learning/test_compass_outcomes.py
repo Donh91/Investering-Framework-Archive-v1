@@ -5,7 +5,7 @@ import unittest
 from datetime import datetime, timezone
 from pathlib import Path
 
-from scripts.learning.compass_outcomes import mature_one
+from scripts.learning.compass_outcomes import action_quality, mature_one
 
 
 class CompassOutcomeTest(unittest.TestCase):
@@ -25,7 +25,7 @@ class CompassOutcomeTest(unittest.TestCase):
                     "invalidation_trigger": {"type": "ACTION_STATE", "states": ["HOLD_DEFENSIVE_WAIT"]},
                 },
                 "NEXT_1_3D": {"expected_direction": "MIXED", "action_posture": "WAIT", "eta": "24-72h"},
-                "NEXT_5_7D": {"expected_direction": "SIDEWAYS", "action_posture": "WAIT", "eta": "120-168h"},
+                "NEXT_5_7D": {"expected_direction": "SIDEWAYS", "action_posture": "PREPARE", "eta": "120-168h"},
             },
             "evidence_snapshot": {"selected_features": []},
         }
@@ -62,7 +62,12 @@ class CompassOutcomeTest(unittest.TestCase):
             outcome_path = root / result["path"]
             outcome = json.loads(outcome_path.read_text())
             self.assertEqual(outcome["direction_accuracy"]["btc"]["result"], "CORRECT")
+            self.assertEqual(outcome["action_utility"]["action"], "HOLD")
             self.assertEqual(original, freeze_path.read_bytes())
+
+    def test_action_quality_is_horizon_action_not_hardwired_to_12h(self):
+        self.assertEqual(action_quality("WAIT", -2.0, -3.0)["action"], "WAIT")
+        self.assertEqual(action_quality("PREPARE", 2.0, -1.0)["action"], "PREPARE")
 
 
 if __name__ == "__main__":
