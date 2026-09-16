@@ -1,0 +1,159 @@
+name: Complete KOMPAS
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/complete-kompas.yml'
+      - 'scripts/data_ping/complete_kompas.py'
+      - '04_MARKET_LEARNING/handlekompas/README.md'
+      - '05_CYCLE_NAVIGATOR/site/build-public.mjs'
+  workflow_run:
+    workflows:
+      - Native Handlekompas
+    types:
+      - completed
+  schedule:
+    # Daily watchdog. Normal production updates are event-chained from Native Handlekompas.
+    - cron: '17 12 * * *'
+      timezone: 'Europe/Copenhagen'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write
+  issues: write
+
+concurrency:
+  group: complete-kompas-main-writer
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compile and exercise COMPLETE KOMPAS against repository state
+        run: |
+          python -m py_compile scripts/data_ping/complete_kompas.py
+          python scripts/data_ping/complete_kompas.py --no-write > /tmp/complete-kompas.json
+          python - <<'PY'
+          import json
+          d=json.load(open('/tmp/complete-kompas.json'))
+          assert d['contract']=='COMPLETE_KOMPAS_v1'
+          assert d['authority']['portfolio_execution'] is False
+          assert d['authority']['historical_rewrite'] is False
+          assert d['lanes']['lane1']['horizon']=='NEXT_12H'
+          assert d['lanes']['lane2']['horizon']=='NEXT_1_3D'
+          assert d['lanes']['lane3']['horizon']=='NEXT_5_7D'
+          assert d['lanes']['lane1']['direction']
+          assert d['lanes']['lane2']['direction']
+          assert d['lanes']['lane3']['direction']
+          expected=['BTC','ETH','LARGE_CAPS','MIDCAPS','SMALL_CAPS','MICROCAPS']
+          assert [x['segment'] for x in d['capital_ladder']]==expected
+          assert all(x['eta'] and x['eta_explanation'] for x in d['capital_ladder'])
+          assert d['evidence_manifest']['semantics'].startswith('POINT_IN_TIME_')
+          assert d['evidence_manifest']['auto_market_state']['packet_sha256']
+          assert d['evidence_manifest']['daily_capture']['sha256']
+          assert d['evidence_manifest']['cycle_navigator']['sha256']
+          print('COMPLETE_KOMPAS_PR_VALID', d['action']['NOW'], d['lanes']['lane1']['direction'])
+          PY
+
+  materialize:
+    if: >-
+      github.event_name != 'pull_request' &&
+      (
+        (github.event_name == 'workflow_run' &&
+         github.event.workflow_run.head_branch == 'main' &&
+         github.event.workflow_run.conclusion == 'success') ||
+        (github.event_name != 'workflow_run' && github.ref == 'refs/heads/main')
+      )
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Build point-in-time COMPLETE KOMPAS and daily benchmark when due
+        run: |
+          python -m py_compile scripts/data_ping/complete_kompas.py
+          python scripts/data_ping/complete_kompas.py | tee /tmp/complete-kompas-status.json
+      - name: Validate horizons, ladder, provenance and immutable-daily semantics
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          s=json.load(open('/tmp/complete-kompas-status.json'))
+          p=json.loads(Path('04_MARKET_LEARNING/handlekompas/COMPLETE_LATEST.json').read_text())
+          run=json.loads(Path(p['kompas_path']).read_text())
+          assert p['kompas_sha256']==s['kompas_sha256']==run['kompas_sha256']
+          assert run['contract']=='COMPLETE_KOMPAS_v1'
+          assert [run['lanes'][x]['horizon'] for x in ('lane1','lane2','lane3')]==['NEXT_12H','NEXT_1_3D','NEXT_5_7D']
+          assert [x['segment'] for x in run['capital_ladder']]==['BTC','ETH','LARGE_CAPS','MIDCAPS','SMALL_CAPS','MICROCAPS']
+          assert all(x['eta'] and x['eta_explanation'] for x in run['capital_ladder'])
+          assert run['evidence_manifest']['daily_capture']['sha256']
+          assert run['evidence_manifest']['cycle_navigator']['sha256']
+          if Path('04_MARKET_LEARNING/handlekompas/DAILY_LATEST.json').exists():
+              dp=json.loads(Path('04_MARKET_LEARNING/handlekompas/DAILY_LATEST.json').read_text())
+              freeze=json.loads(Path(dp['daily_freeze_path']).read_text())
+              assert freeze['daily_freeze_sha256']==dp['daily_freeze_sha256']
+              assert freeze['hindsight_policy'].startswith('IMMUTABLE_FORECAST')
+              assert set(freeze['evaluation_due_utc'])=={'12h','1_3d','5_7d'}
+          print('COMPLETE_KOMPAS_VALID', s['NOW'], s['NEXT_12H'], s['NEXT_1_3D'], s['NEXT_5_7D'], s['daily_freeze_status'])
+          PY
+      - name: Commit KOMPAS stream and daily freeze with remote readback proof
+        shell: bash
+        run: |
+          git config user.name framework-data-bot
+          git config user.email framework-data-bot@users.noreply.github.com
+          git add 04_MARKET_LEARNING/handlekompas
+          if git diff --cached --quiet; then echo 'No KOMPAS delta'; exit 0; fi
+          git commit -m "learning: complete KOMPAS ${GITHUB_RUN_ID}"
+          pushed=false
+          for attempt in 1 2 3; do
+            git rebase --abort 2>/dev/null || true
+            if git pull --rebase origin main && git push origin HEAD:main; then pushed=true; break; fi
+            sleep $((attempt * 5))
+          done
+          [ "$pushed" = true ]
+          git fetch origin main
+          git merge-base --is-ancestor HEAD origin/main
+          local_sha=$(sha256sum 04_MARKET_LEARNING/handlekompas/COMPLETE_LATEST.json | awk '{print $1}')
+          remote_sha=$(git show origin/main:04_MARKET_LEARNING/handlekompas/COMPLETE_LATEST.json | sha256sum | awk '{print $1}')
+          [ "$local_sha" = "$remote_sha" ]
+      - name: Refresh Cycle Navigator public snapshot from the new KOMPAS
+        if: success()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run cycle-navigator-pages.yml --ref main
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: complete-kompas-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            /tmp/complete-kompas-status.json
+            04_MARKET_LEARNING/handlekompas/COMPLETE_LATEST.json
+            04_MARKET_LEARNING/handlekompas/DAILY_LATEST.json
+          retention-days: 14
+          if-no-files-found: warn
+
+  incident:
+    needs: materialize
+    if: failure() && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Open KOMPAS incident
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh issue create --title "AUTOMATION FAILURE: Complete KOMPAS ${GITHUB_RUN_ID}" --body "Complete KOMPAS failed. Inspect the Native Handlekompas → Auto Market State → daily capture → Cycle Navigator bindings. Run: ${GITHUB_RUN_ID}" || true
