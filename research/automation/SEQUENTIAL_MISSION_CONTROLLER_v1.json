@@ -1,0 +1,61 @@
+{
+  "contract": "SEQUENTIAL_MISSION_CONTROLLER_v1",
+  "status": "SHADOW_ACTIVE",
+  "purpose": "Advance bounded engineering missions without user intervention while preserving independent verification and fail-closed authority boundaries.",
+  "owner_issue": 1047,
+  "mission": "CONNECTION_REPAIR_V1",
+  "current_stage": 2,
+  "stages": [2, 3, 4, 5, 6],
+  "stage_2": {
+    "status": "CORRECTION_REQUIRED",
+    "pr": 1046,
+    "reviewed_head_sha": "f812d1b60ea1c0c4d73cb6ac08a282ec9d561bcc",
+    "blocking_findings": [
+      "P1_REJECT_ORPHAN_OUTCOME_WITHOUT_MATCHING_VALID_FROZEN_FORECAST",
+      "P2_REJECT_OR_QUARANTINE_SCHEMA_INCOMPLETE_FROZEN_FORECAST",
+      "P2_VALIDATE_CLI_ROOTS_AGAINST_DECLARED_POPULATION"
+    ]
+  },
+  "advance_policy": {
+    "one_lane_at_a_time": true,
+    "fresh_main_required": true,
+    "search_reproduce_before_implementation": true,
+    "clean_noop_allowed": true,
+    "all_required_checks_success": true,
+    "unresolved_P1_or_P2_review_findings_allowed": false,
+    "independent_exact_head_verification_required": true,
+    "merge_with_expected_head_sha_required": true,
+    "post_merge_main_readback_required": true,
+    "automatic_advance_only_after_readback": true
+  },
+  "terminal_stage_states": [
+    "DONE",
+    "DONE_WITH_EXPLICIT_LIMITATION",
+    "CLEAN_NOOP",
+    "WAITING_FOR_NATURAL_OBSERVATION"
+  ],
+  "stop_states": [
+    "REVIEW_FINDING",
+    "CHECK_FAILURE",
+    "HEAD_SHA_DRIFT",
+    "MAIN_DRIFT_REQUIRES_REBASE",
+    "AUTHORITY_BOUNDARY_UNCLEAR",
+    "DATA_OR_EVIDENCE_AMBIGUITY"
+  ],
+  "authority": {
+    "direct_main_write": false,
+    "force_push": false,
+    "destructive_recovery": false,
+    "market_rule_change": false,
+    "threshold_change": false,
+    "model_weight_change": false,
+    "portfolio_action": false,
+    "canonical_authority_change": false,
+    "api_budget_change": false,
+    "private_data_boundary_change": false,
+    "historical_evidence_mutation": false,
+    "sealed_science_change": false
+  },
+  "handoff_policy": "Framework Supervisor and Codex queue may consume this state. A stage may create/fix a PR and request review automatically, but may not release the next stage until exact-head verification, merge and fresh-main readback are evidenced in issue #1047.",
+  "completion": "After stage 6 reaches a terminal state, mark mission DONE and stop. No ChatGPT app automation is required."
+}
