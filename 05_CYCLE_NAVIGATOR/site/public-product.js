@@ -1,227 +1,26 @@
 (() => {
-  'use strict';
-
-  const esc = value => String(value ?? '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#039;');
-  const short = (value, limit = 220) => { const text = String(value ?? '').trim(); return text.length > limit ? `${text.slice(0, limit - 1).trim()}…` : text; };
-  const cleanPhase = value => String(value || '').replace(/^\d+\.\s*/, '').replace(/\s[—–-]\s(ACTIVE WATCH|ACTIVE|UNCONFIRMED|INACTIVE|PAUSED).*$/i, '').trim();
-  const statusFrom = value => { const text = String(value || '').toUpperCase(); if (text.includes('PAUSED') || text.includes('INACTIVE')) return 'pause'; if (text.includes('ACTIVE WATCH') || text.includes('RELATIVE RESILIENCE') || text.includes('ON WATCH')) return 'watch'; if (text.includes('MAJOR LIQUIDITY ANCHOR') || text.includes('NO CONFIRMED MARKET BREAKDOWN')) return 'hold'; if (text.includes('UNCONFIRMED') || text.includes('SELECTIVE PARTICIPATION')) return 'wait'; if (text.includes('ACTIVE')) return 'active'; return 'unavailable'; };
-  const statusLabel = value => ({ active: 'ACTIVE', hold: 'HOLD', watch: 'WATCH', wait: 'WAIT', pause: 'PAUSE', unavailable: 'UNAVAILABLE' }[statusFrom(value)] || 'UNAVAILABLE');
-  const postureCopy = value => ({ active: 'Current rotation is active.', hold: 'Hold the current posture. Do not broaden risk from this segment alone.', watch: 'Watch and prepare. Confirmation is still required.', wait: 'Wait. Rotation is not confirmed.', pause: 'Pause new risk here until the framework reopens this stage.', unavailable: 'No public posture is available.' }[statusFrom(value)] || 'No public posture is available.');
-  const eraLabel = era => ({ PUBLISHED_MANUAL_AUDIT: 'Published legacy', BRIDGE_PUBLISHED_SCORE: 'Bridge', FROZEN_PROSPECTIVE: 'Frozen prospective', AUTOMATED_CANONICAL: 'Automated canonical' }[era] || 'Published record');
-  const stanceTitle = stance => ({ HOLD: 'HOLD / WAIT', WAIT: 'WAIT', PREPARE: 'PREPARE', SELECTIVE: 'SELECTIVE', 'PROTECT CAPITAL': 'PROTECT CAPITAL', 'BROADER DEPLOYMENT': 'BROADER DEPLOYMENT' }[String(stance || '').toUpperCase()] || 'WAIT');
-  const stanceCopy = stance => ({ HOLD: 'Hold the current posture. Do not broaden risk until the next confirmation gate is met.', WAIT: 'No new broad deployment is confirmed. Wait for the next valid gate.', PREPARE: 'Prepare for a possible transition, but do not treat it as confirmed yet.', SELECTIVE: 'Keep risk selective. Broad deployment is not confirmed.', 'PROTECT CAPITAL': 'Risk conditions are defensive. Avoid broadening exposure until evidence improves.', 'BROADER DEPLOYMENT': 'Broader participation is confirmed by the current public framework state.' }[String(stance || '').toUpperCase()] || 'No new action is confirmed.');
-  const publicGate = raw => {
-    const text = String(raw || '').trim();
-    if (!text) return 'Await the next published confirmation gate.';
-    if (/ETHBTC_STRENGTH.*BREADTH.*HEALTHY/i.test(text)) return 'ETH/BTC strength persists, participation broadens, and source health remains healthy.';
-    if (/BREADTH_LT|ETHBTC_WEAKENS|NATIVE_HEALTH_DEGRADES/i.test(text)) return 'Participation weakens, ETH/BTC rolls over, or source health deteriorates.';
-    if (/ONLY_EXISTING_ENTRY_SIGNAL|REGISTERED_CANONICAL_CONFIRMATION/i.test(text)) return 'Only a canonical entry signal or registered confirmation may reopen top-up risk.';
-    return text.replaceAll('_', ' ').replace(/\bGTE\b/gi, 'at least').replace(/\bLT\b/gi, 'below').replace(/\s+/g, ' ').trim();
-  };
-  const priceText = prices => prices ? `BTC $${Math.round(prices.btc).toLocaleString()} · ETH $${Math.round(prices.eth).toLocaleString()} · ETH/BTC ${prices.ratio.toFixed(5)}` : 'Live price context temporarily unavailable';
-
-  let currentSnapshot = null;
-  let updateTimer = null;
-
-  function ensureShell() {
-    const main = document.querySelector('main');
-    if (!main) return null;
-    let root = document.getElementById('publicProduct');
-    if (!root) {
-      root = document.createElement('section');
-      root.id = 'publicProduct';
-      root.className = 'public-product';
-      root.innerHTML = '<nav class="product-tabs" role="tablist" aria-label="Cycle Navigator"><button class="active" data-tab="now" role="tab" aria-selected="true">NOW</button><button data-tab="path" role="tab" aria-selected="false">PATH</button><button data-tab="score" role="tab" aria-selected="false">SCORE</button><button data-tab="how" role="tab" aria-selected="false">HOW</button></nav><div id="productNow" class="product-view active" role="tabpanel"></div><div id="productPath" class="product-view" role="tabpanel"></div><div id="productScore" class="product-view" role="tabpanel"></div><div id="productHow" class="product-view" role="tabpanel"></div>';
-      main.prepend(root);
-      root.querySelectorAll('[data-tab]').forEach(button => button.addEventListener('click', () => {
-        const target = button.dataset.tab;
-        root.querySelectorAll('[data-tab]').forEach(item => { const selected = item === button; item.classList.toggle('active', selected); item.setAttribute('aria-selected', String(selected)); });
-        root.querySelectorAll('.product-view').forEach(view => view.classList.toggle('active', view.id === `product${target[0].toUpperCase()}${target.slice(1)}`));
-        window.scrollTo({ top: Math.max(0, root.offsetTop - 10), behavior: 'smooth' });
-      }));
-    }
-    main.querySelectorAll(':scope > section:not(#publicProduct)').forEach(section => section.classList.add('legacy-detail'));
-    document.querySelector('.journey-nav-wrap')?.classList.add('legacy-detail');
-    return root;
-  }
-
-  async function fetchJson(url) {
-    const response = await fetch(`${url}${url.includes('?') ? '&' : '?'}v=${Date.now()}`, { cache: 'no-store' });
-    if (!response.ok) throw new Error(`${url} HTTP ${response.status}`);
-    return response.json();
-  }
-
-  async function fetchPrices() {
-    try {
-      const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd', { cache: 'no-store' });
-      if (!response.ok) throw new Error(response.status);
-      const data = await response.json();
-      const btc = Number(data.bitcoin?.usd), eth = Number(data.ethereum?.usd);
-      if (!Number.isFinite(btc) || !Number.isFinite(eth)) throw new Error('invalid market context');
-      return { btc, eth, ratio: eth / btc };
-    } catch {
-      return null;
-    }
-  }
-
-  function parseTime(value) {
-    if (!value) return null;
-    const date = new Date(value);
-    return Number.isNaN(date.getTime()) ? null : date;
-  }
-
-  function nextHourlySourceCycle(now = new Date()) {
-    const next = new Date(now);
-    next.setUTCSeconds(0, 0);
-    if (next.getUTCMinutes() < 5) next.setUTCMinutes(5);
-    else { next.setUTCHours(next.getUTCHours() + 1); next.setUTCMinutes(5); }
-    return next;
-  }
-
-  function duration(ms) {
-    if (!Number.isFinite(ms)) return '—';
-    const total = Math.max(0, Math.ceil(ms / 60000));
-    const hours = Math.floor(total / 60), minutes = total % 60;
-    return hours ? `${hours}h ${minutes}m` : `${minutes}m`;
-  }
-
-  function formatUpdated(date) {
-    if (!date) return 'Timestamp unavailable';
-    return date.toLocaleString([], { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
-  }
-
-  function updateFreshness() {
-    const host = document.getElementById('productFreshness');
-    if (!host || !currentSnapshot) return;
-    const action = currentSnapshot.live_observation?.current_action || {};
-    const pkg = currentSnapshot.package || {};
-    const updated = parseTime(action.generated_at) || (Number(pkg.generated_unix) > 0 ? new Date(Number(pkg.generated_unix) * 1000) : null);
-    const now = new Date();
-    const ageMs = updated ? now - updated : NaN;
-    const stale = Number.isFinite(ageMs) && ageMs > 90 * 60 * 1000;
-    const limited = /DATA_DEGRADED/i.test(String(action.current || ''));
-    const next = nextHourlySourceCycle(now);
-    host.className = `freshness-strip${stale ? ' stale' : ''}${limited ? ' limited' : ''}`;
-    host.innerHTML = `<div><span>${stale ? 'LAST VALID HANDLEKOMPAS' : limited ? 'HANDLEKOMPAS · DATA LIMITED' : 'HANDLEKOMPAS UPDATED'}</span><strong>${esc(formatUpdated(updated))}</strong><small>${updated ? `${esc(duration(ageMs))} ago` : 'No LIVE timestamp published'}</small></div><div><span>NEXT HOURLY DATA CYCLE</span><strong>${esc(duration(next - now))}</strong><small>Owner source runs at :05 UTC · publishing may trail by a few minutes</small></div><div><span>WEEKLY AUTHORITY</span><strong>Frozen CN #${esc(pkg.issue_number ?? '—')}</strong><small>LIVE may update posture, never rewrite the weekly forecast</small></div>`;
-  }
-
-  function phaseSummary(stages) {
-    const active = stages.filter(item => statusFrom(item.phase) === 'active').map(item => cleanPhase(item.phase));
-    const watch = stages.filter(item => statusFrom(item.phase) === 'watch').map(item => cleanPhase(item.phase));
-    const waiting = stages.filter(item => statusFrom(item.phase) === 'wait').map(item => cleanPhase(item.phase));
-    const pieces = [];
-    if (active[0]) pieces.push(`${active[0]} active`);
-    if (watch[0]) pieces.push(`${watch[0]} on watch`);
-    if (waiting[0]) pieces.push(`${waiting[0]} not confirmed`);
-    return pieces.join(' · ') || 'Cycle phase awaiting confirmation.';
-  }
-
-  function rotationCards(rotation, compact = false) {
-    const rows = Array.isArray(rotation) && rotation.length ? rotation : [
-      { segment: 'Bitcoin', status: 'UNAVAILABLE' }, { segment: 'Ethereum', status: 'UNAVAILABLE' }, { segment: 'Large caps', status: 'UNAVAILABLE' }, { segment: 'Mid caps', status: 'UNAVAILABLE' }, { segment: 'Small caps', status: 'UNAVAILABLE' }, { segment: 'Microcaps', status: 'UNAVAILABLE' }
-    ];
-    return `<div class="rotation-compass${compact ? ' compact' : ''}">${rows.map(item => {
-      const state = statusFrom(item.status), label = statusLabel(item.status);
-      return `<article class="rotation-card state-${state}"><div class="rotation-top"><strong>${esc(item.segment || 'Segment')}</strong><span>${esc(label)}</span></div><p>${esc(postureCopy(item.status))}</p><small>${esc(String(item.status || 'Not published').replaceAll('_', ' '))}</small></article>`;
-    }).join('')}</div>`;
-  }
-
-  function renderNow(data, prices) {
-    const pkg = data.package || {}, live = data.live_observation || {}, action = live.current_action || {};
-    const stages = Array.isArray(pkg.altseason_countdown) ? pkg.altseason_countdown : [];
-    const stance = String(action.stance || 'WAIT').toUpperCase();
-    const gate = publicGate(action.confirmation);
-    const invalidation = publicGate(action.invalidation);
-    const dataLimited = /DATA_DEGRADED/i.test(String(action.current || ''));
-    const nextDays = action.next_days ? short(action.next_days, 180) : dataLimited ? 'Stay HOLD / WAIT until source health and the confirmation gate recover. Recheck on the next hourly cycle.' : `Stay ${stanceTitle(stance)} and reassess on the next hourly Handlekompas cycle; broaden risk only after the confirmation gate.`;
-    const whyNow = phaseSummary(stages);
-    const liveAvailable = Boolean(action.generated_at);
-    const currentText = !liveAvailable ? 'LIVE Handlekompas is unavailable. The public product is failing closed and will not infer a new action from price alone.' : dataLimited ? 'Data quality is currently limited. HOLD / WAIT remains the bounded posture and no broader risk is promoted until healthy evidence returns.' : stanceCopy(stance);
-    document.getElementById('productNow').innerHTML = `<section class="action-hero">
-        ${dataLimited ? '<div class="data-limited-badge">LIVE DATA LIMITED</div>' : ''}
-        <div class="action-label">HANDLEKOMPAS · WHAT SHOULD I DO NOW?</div>
-        <div class="action-word">${esc(liveAvailable ? stanceTitle(stance) : 'WAIT')}</div>
-        <p>${esc(currentText)}</p>
-        <div class="phase-line">${esc(whyNow)}</div>
-        <div class="action-grid">
-          <article><span>NEXT 1–3 DAYS</span><p>${esc(nextDays)}</p></article>
-          <article><span>CONFIRMATION</span><p>${esc(gate)}</p></article>
-          <article><span>RISK / INVALIDATION</span><p>${esc(invalidation)}</p></article>
-        </div>
-      </section>
-      <div id="productFreshness" class="freshness-strip"></div>
-      <section class="now-section"><div class="section-title"><div><small>RISK LADDER · HERE AND NOW</small><h2>Bitcoin to microcaps</h2></div><p>The weekly rotation map translated into a simple public posture. LIVE Handlekompas controls the top-level stance.</p></div>${rotationCards(pkg.rotation_ladder, true)}</section>
-      <section class="context-row"><article><span>MARKET CONTEXT</span><strong id="productPrices">${esc(priceText(prices))}</strong><small>Context only. Price cannot rewrite the frozen call.</small></article><article><span>THIS WEEK · FROZEN</span><strong>${esc(short(pkg.base_case_this_week || 'Not published for this issue.', 190))}</strong><small>Master Monday / Cycle Navigator authority</small></article></section>
-      <section class="why-now"><div><small>WHY NOW</small><h2>${esc(whyNow)}</h2></div><p>${esc(short(pkg.market_state || 'Official weekly market state unavailable.', 260))}</p></section>`;
-    updateFreshness();
-  }
-
-  function renderPath(data) {
-    const pkg = data.package || {};
-    const stages = Array.isArray(pkg.altseason_countdown) ? pkg.altseason_countdown : [];
-    document.getElementById('productPath').innerHTML = `<header class="product-head"><small>CONDITIONAL CYCLE MAP</small><h2>Where capital can rotate next.</h2><p>This is a sequence of gates, not a promise of altseason. ETA is shown only where the frozen package publishes a window.</p></header>
-      <section class="path-list">${stages.length ? stages.map((item, index) => `<article class="path-card state-${statusFrom(item.phase)}"><span class="path-index">${index + 1}</span><div><div class="path-name"><strong>${esc(cleanPhase(item.phase))}</strong><span>${esc(statusLabel(item.phase))}</span></div><p>${esc(item.window || 'No verified ETA published')}</p><small>${index === 0 ? 'Current gate.' : index === 1 ? 'Needs persistent ETH relative strength and supporting participation.' : 'Needs broader participation and confirmation through the preceding stage.'}</small></div></article>`).join('') : '<article class="empty-card">No public path is published for this issue.</article>'}</section>
-      <section class="now-section"><div class="section-title"><div><small>ROTATION LADDER</small><h2>Large caps → microcaps</h2></div><p>Current weekly confirmation state by market-cap segment.</p></div>${rotationCards(pkg.rotation_ladder)}</section>
-      <section class="horizon-grid"><article><span>2–3 WEEKS</span><p>${esc(short(pkg.base_case_2_3_weeks || 'No supported 2–3 week view is published.', 260))}</p></article><article><span>4–8 WEEKS</span><p>${esc(short(pkg.base_case_4_8_weeks || pkg.compass_4_8_weeks || 'No supported 4–8 week view is published.', 260))}</p></article></section>`;
-  }
-
-  function renderScore(history) {
-    const root = document.getElementById('productScore');
-    if (!root) return;
-    if (!history?.records?.length) {
-      root.innerHTML = '<header class="product-head"><small>PUBLIC ACCOUNTABILITY</small><h2>Score history unavailable.</h2><p>The site will not reconstruct missing scores from outcomes.</p></header>';
-      return;
-    }
-    const coverage = history.coverage || {}, records = history.records;
-    const bars = records.map(record => `<div class="score-bar-wrap" title="CN #${record.cn}${record.overall == null ? ' · overall unavailable' : ` · ${record.overall}%`}"><span>${record.overall == null ? '—' : `${record.overall}%`}</span><div class="score-bar ${record.overall == null ? 'missing' : ''}" style="--value:${record.overall == null ? 0 : Math.max(0, Math.min(100, Number(record.overall)))}"></div><small>${record.cn}</small></div>`).join('');
-    const rows = [...records].reverse().map(record => `<article class="score-row"><div><strong>CN #${record.cn}</strong><span>${esc(eraLabel(record.era))}</span></div><div class="score-main"><b>${record.overall == null ? '—' : `${record.overall}%`}</b><small>published overall</small></div><p><span>Range</span>${esc(record.range_display || '—')}</p><p><span>Intraday</span>${esc(record.intraday_display || '—')}</p><p><span>Structure</span>${esc(record.structure_display || '—')}</p></article>`).join('');
-    root.innerHTML = `<header class="product-head"><small>PUBLIC ACCOUNTABILITY</small><h2>Scoreboard</h2><p>${esc(coverage.completed_issues ?? records.length)} completed issues are preserved in their original scoring semantics. Open CN #${esc(coverage.latest_open_issue ?? '—')} is excluded until its outcome is scoreable.</p></header>
-      <section class="score-policy"><article><strong>${esc(coverage.completed_issues ?? records.length)}</strong><span>completed CN issues</span></article><article><strong>LOCKED</strong><span>no retroactive rescoring</span></article><article><strong>NO</strong><span>cross-era synthetic average</span></article></section>
-      <section class="score-chart"><div class="score-chart-title"><strong>Published overall score by issue</strong><small>— means that an overall score was not published under that era's method.</small></div><div class="score-bars">${bars}</div></section>
-      <section class="score-history"><div class="section-title"><div><small>FULL RECORD</small><h2>CN #1 → #${records.at(-1)?.cn ?? records.length}</h2></div><p>Legacy and automated records are both first-class publication history.</p></div>${rows}</section>
-      <p class="score-note">${esc(history.provenance_note || 'Missing components remain unavailable and are never reconstructed from outcomes.')}</p>`;
-  }
-
-  function renderHow(data) {
-    const pkg = data.package || {};
-    const steps = [
-      ['1', 'DATA', 'Autonomous market data is materialized and checked before it can feed the public decision layer.'],
-      ['2', 'SPECIALIST ANALYSIS', 'Specialist processes evaluate cycle, relative strength, breadth, rotation, risk and supporting evidence.'],
-      ['3', 'EVIDENCE & CHALLENGE', 'Conflicts, missing inputs and weak evidence are challenged before a state can advance.'],
-      ['4', 'MASTER MONDAY', 'The weekly package becomes the reference point for the new week.'],
-      ['5', 'FROZEN CYCLE NAVIGATOR', 'The forecast is frozen before outcomes are known. It cannot be silently rewritten later.'],
-      ['6', 'LIVE HANDLEKOMPAS', 'Hourly evidence may update the current public posture between Mondays, but it cannot change the frozen weekly forecast or official historical score.'],
-      ['7', 'SCORE & LEARNING', 'After outcomes mature, the published call is scored. Missing evidence stays missing and learning feeds future issues, not the past.']
-    ];
-    document.getElementById('productHow').innerHTML = `<header class="product-head"><small>HOW IT WORKS</small><h2>Forecast first. Outcome later.</h2><p>Enough transparency to understand the machine without publishing proprietary thresholds, weights, prompts or the complete signal recipe.</p></header>
-      <section class="method-flow">${steps.map(step => `<article><span>${step[0]}</span><div><strong>${step[1]}</strong><p>${step[2]}</p></div></article>`).join('')}</section>
-      <section class="trust-grid"><article><span>WEEKLY</span><h3>Frozen authority</h3><p>Cycle Navigator #${esc(pkg.issue_number ?? '—')} is the current weekly reference. LIVE context never rewrites it.</p></article><article><span>LIVE</span><h3>Hourly posture</h3><p>Handlekompas follows the autonomous hourly source chain. If LIVE evidence is unavailable or stale, the site shows that instead of inventing a call.</p></article><article><span>HISTORY</span><h3>Immutable public record</h3><p>Previously published scores stay exactly as published under the method used at the time. No hindsight cleanup.</p></article><article><span>FAIL CLOSED</span><h3>Unknown means unknown</h3><p>Missing ranges, ETA or score components are shown as unavailable, never filled with guesses or LIVE prices.</p></article></section>
-      <section class="method-foot"><strong>Public architecture</strong><p>DATA → SPECIALIST ANALYSIS → EVIDENCE & CHALLENGE → MASTER MONDAY → FROZEN CYCLE NAVIGATOR → LIVE HANDLEKOMPAS → SCORE & LEARNING</p></section>`;
-  }
-
-  async function renderAll() {
-    ensureShell();
-    try {
-      const [snapshot, history, prices] = await Promise.all([fetchJson('./data/latest.json'), fetchJson('./history-scoreboard.json'), fetchPrices()]);
-      currentSnapshot = snapshot;
-      renderNow(snapshot, prices);
-      renderPath(snapshot);
-      renderScore(history);
-      renderHow(snapshot);
-      if (updateTimer) clearInterval(updateTimer);
-      updateTimer = setInterval(updateFreshness, 30 * 1000);
-    } catch (error) {
-      console.warn('Cycle Navigator public product unavailable', error);
-      const now = document.getElementById('productNow');
-      if (now) now.innerHTML = '<section class="fail-card"><small>PUBLIC FEED UNAVAILABLE</small><h1>WAIT</h1><p>The product is failing closed. No action is inferred from LIVE price alone.</p></section>';
-    }
-  }
-
-  renderAll();
-  setInterval(async () => {
-    const prices = await fetchPrices();
-    const node = document.getElementById('productPrices');
-    if (node) node.textContent = priceText(prices);
-  }, 5 * 60 * 1000);
-  setInterval(renderAll, 5 * 60 * 1000);
+'use strict';
+const esc=v=>String(v??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');
+const short=(v,n=230)=>{const s=String(v??'').trim();return s.length>n?s.slice(0,n-1).trim()+'…':s};
+const nums=v=>(String(v??'').match(/\d+(?:\.\d+)?/g)||[]).map(Number).filter(n=>n>=0&&n<=100);
+const mean=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:null;
+const pct=v=>v==null?'—':`${Math.round(v)}%`;
+const state=v=>{const s=String(v||'').toUpperCase();if(/PAUSED|INACTIVE/.test(s))return'pause';if(/ACTIVE WATCH|RELATIVE RESILIENCE|ON WATCH/.test(s))return'watch';if(/MAJOR LIQUIDITY ANCHOR|NO CONFIRMED MARKET BREAKDOWN/.test(s))return'hold';if(/UNCONFIRMED|SELECTIVE PARTICIPATION/.test(s))return'wait';if(/ACTIVE/.test(s))return'active';return'unknown'};
+const label=v=>({active:'ACTIVE',hold:'HOLD',watch:'WATCH',wait:'WAIT',pause:'PAUSE',unknown:'PENDING'}[state(v)]);
+const actionCopy=v=>({active:'Risk can stay active here while confirmation holds.',hold:'Hold existing exposure. Do not add risk from this signal alone.',watch:'Watch closely. Prepare, but wait for confirmation.',wait:'Do not broaden risk yet.',pause:'Pause new risk until conditions improve.',unknown:'Awaiting enough evidence for a public call.'}[state(v)]);
+const title=s=>({HOLD:'HOLD / WAIT',WAIT:'WAIT',PREPARE:'PREPARE',SELECTIVE:'SELECTIVE','PROTECT CAPITAL':'PROTECT CAPITAL','BROADER DEPLOYMENT':'BROADER DEPLOYMENT'}[String(s||'').toUpperCase()]||'WAIT');
+const gate=v=>{let s=String(v||'').trim();if(!s)return'Await the next confirmed signal.';if(/ETHBTC_STRENGTH.*BREADTH.*HEALTHY/i.test(s))return'Ethereum strengthens versus Bitcoin, participation broadens and data quality remains healthy.';if(/BREADTH_LT|ETHBTC_WEAKENS|NATIVE_HEALTH_DEGRADES/i.test(s))return'Participation weakens, Ethereum loses relative strength, or data quality deteriorates.';return s.replaceAll('_',' ').replace(/\bGTE\b/gi,'at least').replace(/\bLT\b/gi,'below').replace(/\s+/g,' ')};
+const phase=v=>String(v||'').replace(/^\d+\.\s*/,'').replace(/\s[—–-]\s(ACTIVE WATCH|ACTIVE|UNCONFIRMED|INACTIVE|PAUSED).*$/i,'').trim();
+let snapshot=null,timer=null;
+function shell(){const main=document.querySelector('main');if(!main)return;let root=document.getElementById('publicProduct');if(!root){root=document.createElement('section');root.id='publicProduct';root.className='public-product';root.innerHTML='<nav class="product-tabs"><button class="active" data-tab="now">NOW</button><button data-tab="path">PATH</button><button data-tab="score">SCORE</button><button data-tab="how">HOW</button></nav><div id="productNow" class="product-view active"></div><div id="productPath" class="product-view"></div><div id="productScore" class="product-view"></div><div id="productHow" class="product-view"></div>';main.prepend(root);root.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{root.querySelectorAll('[data-tab]').forEach(x=>x.classList.toggle('active',x===b));root.querySelectorAll('.product-view').forEach(x=>x.classList.toggle('active',x.id==='product'+b.dataset.tab[0].toUpperCase()+b.dataset.tab.slice(1)));scrollTo({top:Math.max(0,root.offsetTop-8),behavior:'smooth'})})}main.querySelectorAll(':scope > section:not(#publicProduct)').forEach(x=>x.classList.add('legacy-detail'));document.querySelector('.journey-nav-wrap')?.classList.add('legacy-detail')}
+async function json(u){const r=await fetch(`${u}?v=${Date.now()}`,{cache:'no-store'});if(!r.ok)throw Error(r.status);return r.json()}
+async function prices(){try{const r=await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd',{cache:'no-store'}),d=await r.json(),b=+d.bitcoin?.usd,e=+d.ethereum?.usd;return b&&e?`BTC $${Math.round(b).toLocaleString()} · ETH $${Math.round(e).toLocaleString()} · ETH/BTC ${(e/b).toFixed(5)}`:null}catch{return null}}
+function freshness(){const h=document.getElementById('productFreshness');if(!h||!snapshot)return;const a=snapshot.live_observation?.current_action||{},p=snapshot.package||{},d=a.generated_at?new Date(a.generated_at):p.generated_unix?new Date(+p.generated_unix*1000):null,n=new Date(),age=d?n-d:null,next=new Date(n);next.setUTCSeconds(0,0);if(next.getUTCMinutes()<5)next.setUTCMinutes(5);else{next.setUTCHours(next.getUTCHours()+1);next.setUTCMinutes(5)}const mins=x=>`${Math.max(0,Math.ceil(x/60000))} min`;h.innerHTML=`<div><span>LAST UPDATED</span><strong>${d?d.toLocaleString([],{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}):'Awaiting fresh data'}</strong><small>${age!=null?mins(age)+' ago':'No verified live timestamp'}</small></div><div><span>NEXT UPDATE</span><strong>${mins(next-n)}</strong><small>Expected after the next data cycle</small></div><div><span>WEEKLY FORECAST</span><strong>CN #${esc(p.issue_number??'—')}</strong><small>Locked until the next weekly publication</small></div>`}
+function ladder(rows){rows=Array.isArray(rows)&&rows.length?rows:[{segment:'Bitcoin'},{segment:'Ethereum'},{segment:'Large caps'},{segment:'Mid caps'},{segment:'Small caps'},{segment:'Microcaps'}];return `<div class="capital-line">${rows.map((r,i)=>`<div class="capital-step state-${state(r.status)}"><div class="capital-node">${i+1}</div><div class="capital-copy"><strong>${esc(r.segment||'Segment')}</strong><b>${label(r.status)}</b><p>${esc(actionCopy(r.status))}</p><small>ETA · ${state(r.status)==='active'?'NOW':state(r.status)==='watch'?'NEXT CONFIRMATION':state(r.status)==='hold'?'HOLD / RECHECK HOURLY':'NOT CONFIRMED'}</small></div></div>`).join('')}</div>`}
+function now(data,px){const p=data.package||{},a=data.live_observation?.current_action||{},st=String(a.stance||'WAIT').toUpperCase(),available=!!a.generated_at,limited=/DATA_DEGRADED/i.test(String(a.current||'')),stages=Array.isArray(p.altseason_countdown)?p.altseason_countdown:[],active=stages.find(x=>['active','watch'].includes(state(x.phase)));const summary=active?`${phase(active.phase)} · ${label(active.phase)}`:'Cycle transition awaiting confirmation.';document.getElementById('productNow').innerHTML=`<div id="productFreshness" class="freshness-strip"></div><section class="action-hero"><div class="action-label">CYCLE COMPASS · WHAT SHOULD I DO NOW?</div><div class="action-word">${esc(available?title(st):'WAIT')}</div><p>${esc(!available?'Fresh evidence is unavailable. No new risk signal is inferred from price alone.':limited?'Data quality is limited. Keep risk contained until evidence improves.':st==='HOLD'?'Keep current positioning. Do not broaden risk until confirmation improves.':'Use the current stance until the next confirmed change.')}</p><div class="phase-line">${esc(summary)}</div><div class="action-grid"><article><span>NEXT 1–3 DAYS</span><p>${esc(short(a.next_days||'Keep the current stance and reassess as new evidence arrives.',190))}</p></article><article><span>WHAT WOULD IMPROVE THE SETUP?</span><p>${esc(gate(a.confirmation))}</p></article><article><span>WHAT WOULD MAKE IT WORSE?</span><p>${esc(gate(a.invalidation))}</p></article></div></section><section class="now-section"><div class="section-title"><div><small>CAPITAL ROTATION · NOW</small><h2>Bitcoin → microcaps</h2></div><p>One line from lower-risk liquidity leadership toward higher-risk speculation.</p></div>${ladder(p.rotation_ladder)}</section><section class="context-row"><article><span>MARKET SNAPSHOT</span><strong>${esc(px||'Live prices temporarily unavailable')}</strong><small>Context only, never a substitute for the model.</small></article><article><span>THIS WEEK</span><strong>${esc(short(p.base_case_this_week||p.market_state||'No public weekly summary available.',210))}</strong><small>Plain-English translation of the locked weekly forecast.</small></article></section>`;freshness()}
+function path(data){const p=data.package||{},s=Array.isArray(p.altseason_countdown)?p.altseason_countdown:[];document.getElementById('productPath').innerHTML=`<header class="product-head"><small>CYCLE PATH</small><h2>What could happen next?</h2><p>A conditional roadmap. Each stage needs evidence before capital is assumed to rotate further out on the risk curve.</p></header><div class="cycle-line">${s.length?s.map((x,i)=>`<article class="cycle-step state-${state(x.phase)}"><span>${i+1}</span><div><strong>${esc(phase(x.phase))}</strong><b>${label(x.phase)}</b><p>${esc(i===0?'Current market gate and the starting point for the next transition.':i===1?'Requires sustained relative strength and broader participation.':'Requires the preceding stage to confirm and market participation to broaden further.')}</p><small>ETA · ${esc(x.window||'NOT YET SUPPORTED')}</small></div></article>`).join(''):'<p>Awaiting a supported public cycle path.</p>'}</div><section class="horizon-grid"><article><span>NEXT 2–3 WEEKS</span><p>${esc(short(p.base_case_2_3_weeks||'No supported view published.',260))}</p></article><article><span>NEXT 4–8 WEEKS</span><p>${esc(short(p.base_case_4_8_weeks||p.compass_4_8_weeks||'No supported view published.',260))}</p></article></section>`}
+function score(history){const r=history.records||[],overall=r.map(x=>x.overall).filter(Number.isFinite),rangeByIssue=r.map(x=>mean(nums(x.range_display))).filter(Number.isFinite),cycleByIssue=r.map(x=>mean(nums(x.structure_display))).filter(Number.isFinite),O=mean(overall),R=mean(rangeByIssue),C=mean(cycleByIssue);const rows=[...r].reverse().map(x=>{const rr=mean(nums(x.range_display)),cc=mean(nums(x.structure_display));return `<article class="score-row-v4"><div><strong>CN #${x.cn}</strong><small>evaluated in #${x.evaluated_in}</small></div><div><b>${pct(x.overall)}</b><small>weekly score</small></div><div><b>${pct(rr)}</b><small>price ranges</small></div><div><b>${pct(cc)}</b><small>market & cycle</small></div></article>`}).join('');document.getElementById('productScore').innerHTML=`<header class="product-head"><small>TRACK RECORD</small><h2>Scores that stay scored.</h2><p>Every archived publication is shown as recorded. The headline averages use the numerical scores actually published in each category; missing numerical components are not invented.</p></header><section class="score-hero"><article><span>WEEKLY SCORE</span><strong>${pct(O)}</strong><small>${overall.length} published weekly scores</small></article><article><span>PRICE RANGES</span><strong>${pct(R)}</strong><small>${rangeByIssue.length} CN issues with numerical range scores</small></article><article><span>MARKET & CYCLE</span><strong>${pct(C)}</strong><small>${cycleByIssue.length} CN issues with numerical structure / cycle scores</small></article></section><div class="score-explain"><strong>Two long-run lenses</strong><p><b>Price ranges</b> measures how closely published BTC/ETH ranges matched the week. <b>Market & cycle</b> summarizes the published numerical scores for regime, rotation, breadth, ETH/BTC and cycle structure. These are arithmetic summaries of archived public scores, not hindsight rescoring.</p></div><section class="score-history-v4">${rows}</section>`}
+function how(data){document.getElementById('productHow').innerHTML=`<header class="product-head"><small>HOW IT WORKS</small><h2>From raw markets to a decision.</h2><p>The public explanation of the system, detailed enough to audit the idea without exposing proprietary thresholds, weights, prompts or complete source mappings.</p></header><section class="method-flow"><article><span>1</span><div><strong>MARKET DATA</strong><p>Continuously collects price, volume, liquidity, volatility, BTC dominance, ETH/BTC, market breadth, stablecoin conditions, ETF flows, derivatives positioning and selected on-chain activity. Inputs are timestamped and checked for freshness and conflicts.</p></div></article><article><span>2</span><div><strong>MARKET STRUCTURE</strong><p>Transforms those observations into evidence about trend, participation, relative strength, liquidity, risk appetite and where capital is concentrating across Bitcoin, Ethereum, large caps and progressively smaller assets.</p></div></article><article><span>3</span><div><strong>INDEPENDENT ANALYSIS</strong><p>Specialized analytical processes challenge the evidence from different angles. Weak, stale or contradictory inputs reduce confidence instead of being silently filled in.</p></div></article><article><span>4</span><div><strong>WEEKLY FORECAST</strong><p>Once a week the evidence is synthesized into a locked market view: current cycle state, expected path, risk conditions, price expectations where supported, and the conditions that would confirm or invalidate the view.</p></div></article><article><span>5</span><div><strong>LIVE CYCLE COMPASS</strong><p>Fresh data can change the current action posture between weekly forecasts. It can say wait, prepare, stay selective or broaden risk, but it never rewrites what the weekly forecast originally said.</p></div></article><article><span>6</span><div><strong>OUTCOME & SCORE</strong><p>After enough market evidence exists, the original forecast is compared with what actually happened. Price accuracy and market/cycle understanding are tracked separately, alongside the weekly published score.</p></div></article><article><span>7</span><div><strong>LEARNING LOOP</strong><p>Errors and misses become evidence for future versions. Historical calls remain immutable, so improvement cannot be manufactured by editing the past.</p></div></article></section><section class="data-map"><h3>What the system watches</h3><div><span>PRICE & TREND</span><span>BTC / ETH RELATIVE STRENGTH</span><span>MARKET BREADTH</span><span>LIQUIDITY</span><span>BTC DOMINANCE</span><span>STABLECOINS</span><span>ETF FLOWS</span><span>DERIVATIVES</span><span>VOLATILITY</span><span>ON-CHAIN CONTEXT</span><span>ROTATION</span><span>DATA QUALITY</span></div><p>The exact thresholds, weighting logic, source routing and decision recipe remain private.</p></section>`}
+async function render(){shell();try{const [s,h,p]=await Promise.all([json('./data/latest.json'),json('./history-scoreboard.json'),prices()]);snapshot=s;now(s,p);path(s);score(h);how(s);clearInterval(timer);timer=setInterval(freshness,30000)}catch(e){console.warn(e);document.getElementById('productNow').innerHTML='<section class="fail-card"><small>PUBLIC FEED UNAVAILABLE</small><h1>WAIT</h1><p>No action is inferred while verified data is unavailable.</p></section>'}}
+render();setInterval(render,5*60*1000);
 })();
