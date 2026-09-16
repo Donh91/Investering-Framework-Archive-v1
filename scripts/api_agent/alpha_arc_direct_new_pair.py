@@ -216,25 +216,14 @@ def scan_range(rpc_url: str, from_block: int, to_block: int, *, timeout: int = 2
             raise RuntimeError(f"RPC_LOG_RESULT_NOT_LIST:{venue}")
         raw_logs.extend((venue, row) for row in rows if isinstance(row, dict))
 
-    # Timestamps enrich evidence but are not identity-critical. A transient
-    # block-read failure must not erase a valid PoolCreated event already read
-    # from eth_getLogs; preserve the event with a null timestamp instead.
-    timestamps: dict[int, int | None] = {}
-    for _, row in raw_logs:
-        block_number = hex_int(row.get("blockNumber"))
-        if block_number is None or block_number in timestamps:
-            continue
-        try:
-            block = rpc_call(rpc_url, "eth_getBlockByNumber", [hex(block_number), False], timeout=timeout)
-            timestamps[block_number] = hex_int(block.get("timestamp")) if isinstance(block, dict) else None
-        except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError, OSError):
-            timestamps[block_number] = None
-
+    # Hot-path discovery is keyed by immutable block/hash/tx/log identity plus
+    # observed_at. Per-event eth_getBlockByNumber calls add no admission value,
+    # amplify transient RPC failures and can make a 15-minute scan miss its SLO.
+    # Canonical block timestamps may be enriched later, outside discovery.
     output: list[dict[str, Any]] = []
     seen: set[tuple[Any, ...]] = set()
     for venue, row in raw_logs:
-        block_number = hex_int(row.get("blockNumber"))
-        event = parse_log(venue, row, timestamps.get(block_number) if block_number is not None else None, observed_at, source_label)
+        event = parse_log(venue, row, None, observed_at, source_label)
         if not event:
             continue
         key = (event["venue"], event["transaction_hash"], event["log_index"])
