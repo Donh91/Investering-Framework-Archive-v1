@@ -9,6 +9,8 @@ const checks = [
  ['Handlekompas is the NOW authority', product.includes('HANDLEKOMPAS · WHAT SHOULD I DO NOW?')&&product.includes('current_action')],
  ['large-to-micro rotation compass', product.includes('Bitcoin to microcaps')&&product.includes('rotation_ladder')],
  ['freshness and next-cycle timer', product.includes('HANDLEKOMPAS UPDATED')&&product.includes('NEXT HOURLY DATA CYCLE')&&product.includes('nextHourlySourceCycle')],
+ ['degraded LIVE state is explicit and fail-closed', product.includes('LIVE DATA LIMITED')&&product.includes('DATA_DEGRADED')&&product.includes('no broader risk is promoted')],
+ ['descriptive rotation states do not default to false WAIT', product.includes('MAJOR LIQUIDITY ANCHOR')&&product.includes('RELATIVE RESILIENCE')&&product.includes("return 'unavailable'")],
  ['scoreboard rendered from locked history', product.includes('history-scoreboard.json')&&product.includes('no retroactive rescoring')],
  ['How it works pipeline present', product.includes('DATA → SPECIALIST ANALYSIS → EVIDENCE & CHALLENGE → MASTER MONDAY → FROZEN CYCLE NAVIGATOR → LIVE HANDLEKOMPAS → SCORE & LEARNING')],
  ['public product assets deployed', liveBuilder.includes('public-product.js')&&liveBuilder.includes('public-product.css')&&build.includes('history-scoreboard.json')],
