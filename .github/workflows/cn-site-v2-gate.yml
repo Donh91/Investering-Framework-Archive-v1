@@ -24,20 +24,23 @@ jobs:
           node 05_CYCLE_NAVIGATOR/site/build-score-bundle.mjs
           node 05_CYCLE_NAVIGATOR/site/build-live-observation.mjs
           node 05_CYCLE_NAVIGATOR/site/build-social-card.mjs
-      - name: Verify public product
+      - name: Verify public investor product
         run: |
           test -f 05_CYCLE_NAVIGATOR/site/dist/index.html
           test -f 05_CYCLE_NAVIGATOR/site/dist/data/latest.json
           test -f 05_CYCLE_NAVIGATOR/site/dist/history-scoreboard.json
           test -f 05_CYCLE_NAVIGATOR/site/dist/public-product.js
           test -f 05_CYCLE_NAVIGATOR/site/dist/public-product.css
-          grep -q 'CYCLE COMPASS · WHAT SHOULD I DO NOW?' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
-          grep -q 'CAPITAL ROTATION · NOW' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
-          grep -q 'NEXT UPDATE' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
-          grep -q 'PRICE RANGES' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
-          grep -q 'MARKET & CYCLE' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
-          grep -q 'MARKET DATA' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
-          grep -q 'LIVE CYCLE COMPASS' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
-          ! grep -q 'HANDLEKOMPAS · WHAT SHOULD I DO NOW?' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
-          ! grep -q 'MASTER MONDAY' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          grep -q 'data-tab="now"' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          grep -q 'data-tab="path"' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          grep -q 'data-tab="proof"' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          grep -q 'MARKET COMPASS' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          grep -q 'Bitcoin → microcaps' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          grep -q 'HISTORICAL WEEKLY AVERAGE' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          grep -q 'PRICE RANGE ACCURACY' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          grep -q 'MARKET & CYCLE UNDERSTANDING' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          grep -q 'Waiting for evidence' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          grep -q 'What the system actually watches' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          ! grep -q 'HANDLEKOMPAS ·' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
+          ! grep -q 'MASTER MONDAY →' 05_CYCLE_NAVIGATOR/site/dist/public-product.js
           ! grep -R 'Donh91\|Investering-Framework-Archive-v1\|week_dir' 05_CYCLE_NAVIGATOR/site/dist/data/latest.json
