@@ -5,6 +5,7 @@ on:
       - '05_CYCLE_NAVIGATOR/site/**'
       - '05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json'
       - '05_CYCLE_NAVIGATOR/**/CYCLE_NAVIGATOR_MACHINE_PACKAGE.json'
+      - '.github/workflows/cycle-navigator-pages.yml'
   workflow_dispatch:
 jobs:
   validate:
@@ -18,11 +19,9 @@ jobs:
           node-version: '22'
       - name: Validate public v2 contract
         run: node 05_CYCLE_NAVIGATOR/site/validate-v2.mjs
-      - name: Run exact production build chain
+      - name: Run production-equivalent v2 build chain
         run: |
           node 05_CYCLE_NAVIGATOR/site/build-public.mjs
-          node 05_CYCLE_NAVIGATOR/site/build-apple-prototype.mjs
-          node 05_CYCLE_NAVIGATOR/site/build-shortcut.mjs
           node 05_CYCLE_NAVIGATOR/site/build-score-bundle.mjs
           node 05_CYCLE_NAVIGATOR/site/build-live-observation.mjs
           node 05_CYCLE_NAVIGATOR/site/build-social-card.mjs
