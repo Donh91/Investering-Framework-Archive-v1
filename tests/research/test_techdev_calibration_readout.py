@@ -3,7 +3,7 @@ from pathlib import Path
 import tempfile
 import unittest
 
-from scripts.research.techdev_calibration_readout import OWNERS, build_readout
+from scripts.research.techdev_calibration_readout import NAVIGATION_POINTER, OWNERS, READOUT_PATH, build_readout
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -13,7 +13,7 @@ class TechDevCalibrationReadoutTests(unittest.TestCase):
         tmp = tempfile.TemporaryDirectory()
         self.addCleanup(tmp.cleanup)
         root = Path(tmp.name)
-        for path in OWNERS.values():
+        for path in (*OWNERS.values(), NAVIGATION_POINTER):
             target = root / path
             target.parent.mkdir(parents=True, exist_ok=True)
             target.write_bytes((ROOT / path).read_bytes())
@@ -36,6 +36,19 @@ class TechDevCalibrationReadoutTests(unittest.TestCase):
         self.assertEqual(revisions[1]["latest_result"], "SUPPORTED_POST_EVENT")
         self.assertTrue(revisions[1]["revision_cost"])
         self.assertEqual(before, {path: (root / path).read_bytes() for path in OWNERS.values()})
+
+    def test_registered_pointer_navigates_to_current_readout(self):
+        root = self.fixture()
+        report = build_readout(root)
+        self.assertEqual(report["navigation"]["registered_pointer"], NAVIGATION_POINTER)
+        self.assertEqual(report["navigation"]["readout"], READOUT_PATH)
+
+    def test_wrong_navigation_target_is_rejected(self):
+        root = self.fixture()
+        pointer = root / NAVIGATION_POINTER
+        pointer.write_text(pointer.read_text().replace(READOUT_PATH, "06_RESEARCH_LAB/forward_tests/NOT_THE_T7_READOUT.json"))
+        with self.assertRaisesRegex(ValueError, "T7_READOUT_NAVIGATION_POINTER_MISSING_OR_INVALID"):
+            build_readout(root)
 
     def test_missing_anchor_owner_is_not_empty_or_zero_evidence(self):
         root = self.fixture()

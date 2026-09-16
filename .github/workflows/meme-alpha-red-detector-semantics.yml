@@ -1,0 +1,43 @@
+name: Meme Alpha RED Detector Semantics Probe
+
+on:
+  pull_request:
+    paths:
+      - 'research/api_agent/meme_alpha/experiments/red_cohort_detector_semantics_probe_v1.py'
+      - '.github/workflows/meme-alpha-red-detector-semantics.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  detector-semantics:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Checkout research revision
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Download pinned RED release
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/red-cohort /tmp/red-semantics-results
+          URL='https://zenodo.org/records/21765387/files/RED-COHORT-2026-v1_1_1.zip?download=1'
+          curl -L --fail --retry 5 --retry-delay 2 --connect-timeout 20 "$URL" -o /tmp/red-cohort/RED-COHORT-2026-v1_1_1.zip
+          echo '172198eade99f702f1da0bfdd4cf3079  /tmp/red-cohort/RED-COHORT-2026-v1_1_1.zip' | md5sum -c -
+          sha256sum /tmp/red-cohort/RED-COHORT-2026-v1_1_1.zip | tee /tmp/red-semantics-results/SHA256SUMS
+      - name: Probe released detector semantics
+        run: |
+          python research/api_agent/meme_alpha/experiments/red_cohort_detector_semantics_probe_v1.py \
+            --zip /tmp/red-cohort/RED-COHORT-2026-v1_1_1.zip \
+            --out /tmp/red-semantics-results/red_cohort_detector_semantics_probe_v1.json
+      - name: Upload research artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: meme-alpha-red-detector-semantics-v1
+          path: /tmp/red-semantics-results/
+          retention-days: 30

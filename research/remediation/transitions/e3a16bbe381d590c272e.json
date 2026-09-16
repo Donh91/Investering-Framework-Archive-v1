@@ -1,0 +1,36 @@
+{
+  "allowed_change_scope": [
+    ".github/workflows/hourly-sequence-capture.yml",
+    "directly related scripts and tests"
+  ],
+  "branch": "agent/task-20260913-hourly-spot-partial-consumer",
+  "clean_noop_condition": "The finding is absent from fresh health, is non-actionable under verified lifecycle semantics, or the target workflow has been superseded or retired.",
+  "contract": "REMEDIATION_TRANSITION_RECEIPT_v1",
+  "escalation_condition": "Escalate to the framework owner if resolution requires market gates, model weights, canonical authority, portfolio logic, API budget, or new policy semantics.",
+  "finding": "REPEATED_CONSECUTIVE_FAILURES",
+  "forbidden_changes": [
+    "market gates",
+    "model weights",
+    "canonical authority",
+    "portfolio logic"
+  ],
+  "latest_run_id": 34741593607,
+  "objective": "Resolve REPEATED_CONSECUTIVE_FAILURES for hourly-sequence-capture.yml with the smallest bounded code change that satisfies the existing acceptance gates.",
+  "post_fix_gate": "3_SUCCESSFUL_EXPECTED_RUNS",
+  "pr_number": 916,
+  "precondition": "Fresh Automation Production Health still contains signature e3a16bbe381d590c272e for hourly-sequence-capture.yml/REPEATED_CONSECUTIVE_FAILURES, and verified lifecycle state does not make the finding non-actionable.",
+  "receipt_sha256": "913db15b6a0178c5cd7e116c97a6f83acd09bcc1417254783fca3a8f8818ffda",
+  "recorded_at_utc": "2026-09-13T10:02:00Z",
+  "signature": "e3a16bbe381d590c272e",
+  "source_health_generated_at_utc": "2026-09-13T08:26:40.132462Z",
+  "state": "IN_REMEDIATION",
+  "stop_condition": "Stop without code changes if the precondition fails, the finding cannot be reproduced from scoped evidence, or the required fix exceeds allowed change scope.",
+  "success_evidence": [
+    "workflow job logs",
+    "reproduction or repeated identical signature",
+    "positive and negative acceptance tests",
+    "3_SUCCESSFUL_EXPECTED_RUNS"
+  ],
+  "task_contract_sha256": "36a64cef565afb966ea3718367582a4f2b18c96ee430cfa3e6fd5bfbdc497e98",
+  "workflow": "hourly-sequence-capture.yml"
+}

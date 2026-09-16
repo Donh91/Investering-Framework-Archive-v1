@@ -482,7 +482,8 @@ def test_owner_runtime_freeze_retry_and_future_maturation_are_separate(tmp_path,
     context = {"repository": sdc.REPOSITORY, "ref": "refs/heads/main", "event": "schedule", "run_id": "12345", "run_attempt": "1", "commit_sha": "a" * 40}
     # Synthetic Actions attestation only; the actual owner and validator run below.
     monkeypatch.setattr(sdc, "production_context", lambda: context)
-    source_close = datetime(2026, 8, 31, 10, tzinfo=timezone.utc)
+    # Keep the synthetic publication strictly after the canonical T12 registration.
+    source_close = datetime(2026, 8, 31, 18, tzinfo=timezone.utc)
     clock = [source_close + timedelta(minutes=first_issue_minutes)]
     monkeypatch.setattr(research, "now_utc", lambda: clock[0])
     rows = []

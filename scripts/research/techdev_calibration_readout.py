@@ -13,6 +13,8 @@ import re
 import subprocess
 
 BASE = "06_RESEARCH_LAB/audit_summaries/techdev_calibration_v1/"
+NAVIGATION_POINTER = BASE + "HEALTH_CHECK.json"
+READOUT_PATH = "06_RESEARCH_LAB/forward_tests/T7_CALIBRATION_READOUT.json"
 OWNERS = {
     "historical_ledger": "06_RESEARCH_LAB/forward_tests/2026-07-10__techdev-claim-ledger__operational.md",
     "calibration": "06_RESEARCH_LAB/forward_tests/2026-07-13__techdev-category-outcome-calibration-v1__canonical-addendum.md",
@@ -20,6 +22,15 @@ OWNERS = {
     "categories": BASE + "TECHDEV_CATEGORY_OUTCOME_SUMMARY.csv",
     "revisions": BASE + "TECHDEV_REVISION_VALUE_AND_COST.csv",
 }
+
+
+def _validate_navigation(root: Path) -> None:
+    pointer = json.loads((root / NAVIGATION_POINTER).read_text())
+    navigation = pointer.get("non_destructive_navigation", {})
+    if navigation.get("techdev_calibration_readout") != READOUT_PATH:
+        raise ValueError("T7_READOUT_NAVIGATION_POINTER_MISSING_OR_INVALID")
+    if navigation.get("authority") != "OBSERVABILITY_ONLY":
+        raise ValueError("T7_READOUT_NAVIGATION_AUTHORITY_INVALID")
 
 
 def _scalar(text: str, field: str) -> int:
@@ -40,6 +51,7 @@ def _rows(raw: bytes, required: set[str]) -> list[dict[str, str]]:
 
 
 def build_readout(root: Path, source_commit: str | None = None) -> dict:
+    _validate_navigation(root)
     raw = {key: (root / path).read_bytes() for key, path in OWNERS.items()}
     if source_commit is not None:
         if not re.fullmatch(r"[0-9a-f]{40}", source_commit):
@@ -89,6 +101,7 @@ def build_readout(root: Path, source_commit: str | None = None) -> dict:
         "authority": "OBSERVABILITY_ONLY",
         "source_commit": source_commit,
         "binding_status": "COMMIT_BYTES_VERIFIED" if source_commit else "WORKTREE_HASHES_ONLY",
+        "navigation": {"registered_pointer": NAVIGATION_POINTER, "readout": READOUT_PATH},
         "owners": {key: {"path": path, "bytes": len(raw[key]), "sha256": hashlib.sha256(raw[key]).hexdigest()} for key, path in OWNERS.items()},
         "historical_ledger_counts_preserved": {
             field: _scalar(historical, field) for field in ("source_backed_claim_rows", "valid_outcome_rows", "scored_rows")

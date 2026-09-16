@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import re
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -20,6 +21,9 @@ REQUIRED_FORBIDDEN = {
 ACTIVE_REMEDIATION_STATES = {"IN_REMEDIATION", "POST_FIX_OBSERVATION", "REOPENED"}
 QUALITY_CONTRACT = "CODEX_EXECUTION_QUALITY_v1"
 QUALITY_STATUSES = {"CAPTURED", "PARTIAL", "UNAVAILABLE"}
+MERGE_CONTRACT = "CODEX_RESEARCH_MERGE_RECEIPT_v1"
+MERGE_STATUS = "MERGED_VERIFIED"
+SHA40 = re.compile(r"^[0-9a-f]{40}$")
 CONTRACT_FIELDS = (
     "signature", "workflow", "finding", "objective", "precondition", "success_evidence",
     "clean_noop_condition", "stop_condition", "escalation_condition", "allowed_change_scope",
@@ -221,6 +225,32 @@ def valid_transition(repo: Path, task: dict[str, Any]) -> dict[str, Any] | None:
     return d
 
 
+def valid_merge_receipt(repo: Path, task: dict[str, Any]) -> dict[str, Any] | None:
+    path = repo / "research/codex/merges" / f"{task['candidate_id']}.json"
+    d = read_json(path, {})
+    if not d or d.get("contract") != MERGE_CONTRACT or d.get("status") != MERGE_STATUS:
+        return None
+    if d.get("signature") != task["signature"] or d.get("candidate_id") != task["candidate_id"]:
+        return None
+    if d.get("candidate_sha256") != task["candidate_sha256"] or d.get("task_contract_sha256") != task["task_contract_sha256"]:
+        return None
+    if d.get("post_fix_gate") != task.get("post_fix_gate"):
+        return None
+    if d.get("authority") != "OBSERVABILITY_ONLY_NO_COMPLETION_AUTHORITY":
+        return None
+    if not SHA40.fullmatch(str(d.get("merge_commit_sha") or "")):
+        return None
+    pr_number = d.get("pr_number")
+    if isinstance(pr_number, bool) or not isinstance(pr_number, int) or pr_number <= 0:
+        return None
+    branch = str(d.get("branch") or "")
+    if not branch or branch in {"main", "master"} or branch.startswith("backup-") or branch.startswith("backup/"):
+        return None
+    declared = str(d.get("receipt_sha256") or "")
+    actual = canonical_hash({k: v for k, v in d.items() if k != "receipt_sha256"})
+    return d if declared and declared == actual else None
+
+
 def valid_completion(repo: Path, task: dict[str, Any]) -> dict[str, Any] | None:
     path = repo / "research/codex/completions" / f"{task['candidate_id']}.json"
     d = read_json(path, {})
@@ -268,6 +298,7 @@ def append_ledger(repo: Path, current: list[dict[str, Any]]) -> None:
             "task_contract_sha256": task.get("task_contract_sha256"),
             "previous_state": previous.get("state"),
             "transition_receipt_path": task.get("transition_receipt_path"),
+            "merge_receipt_path": task.get("merge_receipt_path"),
             "post_fix_gate": task.get("post_fix_gate"),
         }
         if task.get("execution_quality") is not None:
@@ -358,6 +389,7 @@ def merge(repo: Path, output_dir: Path) -> dict[str, Any]:
             needs_by_sig[sig] = task
         else:
             completion = valid_completion(repo, task)
+            merge_receipt = valid_merge_receipt(repo, task)
             transition = valid_transition(repo, task)
             if completion:
                 task["state"] = "RESOLVED"
@@ -368,6 +400,22 @@ def merge(repo: Path, output_dir: Path) -> dict[str, Any]:
                 task["pr_number"] = completion.get("pr_number")
                 task["verified_at_utc"] = completion.get("verified_at_utc")
                 task["execution_quality"] = completion.get("execution_quality") or legacy_execution_quality()
+            elif merge_receipt:
+                if transition is None:
+                    raise RuntimeError(f"MERGE_RECEIPT_WITHOUT_VALID_TRANSITION:{cid}")
+                if merge_receipt.get("transition_receipt_sha256") != transition.get("receipt_sha256") or merge_receipt.get("branch") != transition.get("branch"):
+                    raise RuntimeError(f"MERGE_RECEIPT_TRANSITION_CONTRADICTION:{cid}")
+                task["state"] = "POST_FIX_OBSERVATION"
+                task["route"] = "EVIDENCE"
+                task["transition_receipt_sha256"] = transition.get("receipt_sha256")
+                task["merge_receipt_path"] = f"research/codex/merges/{cid}.json"
+                task["merge_receipt_sha256"] = merge_receipt.get("receipt_sha256")
+                task["remediation_branch"] = merge_receipt.get("branch")
+                task["pr_number"] = merge_receipt.get("pr_number")
+                task["merge_commit_sha"] = merge_receipt.get("merge_commit_sha")
+                task["merged_at_utc"] = merge_receipt.get("merged_at_utc")
+                task["merge_verified_at_utc"] = merge_receipt.get("verified_at_utc")
+                task["post_fix_gate_status"] = "REQUIRED_NOT_YET_VERIFIED"
             elif transition:
                 task["state"] = "IN_REMEDIATION"
                 task["route"] = "CODEX_PR"

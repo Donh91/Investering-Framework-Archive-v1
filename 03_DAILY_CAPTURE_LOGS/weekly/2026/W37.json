@@ -1,0 +1,2121 @@
+{
+  "authority": "SHADOW_CALIBRATION_INPUT_ONLY",
+  "capture_count": 42,
+  "capture_status_counts": {
+    "COMPLETE": 42
+  },
+  "contract": "WEEKLY_RAW_CALIBRATION_PACK_v3",
+  "day_window_actuals": {
+    "basis": "UTC_ISO_WEEK",
+    "windows": {
+      "DAY1_2": {
+        "btc": {
+          "close": 78455.8,
+          "high": 80443.99,
+          "low": 77620.01,
+          "open": 80341.83
+        },
+        "eth": {
+          "close": 2485.06,
+          "high": 2536.64,
+          "low": 2441.68,
+          "open": 2514.48
+        },
+        "ethbtc": {
+          "close": 0.03167,
+          "high": 0.0318,
+          "low": 0.03127,
+          "open": 0.03129
+        },
+        "observed_hours": 48,
+        "window_end_utc": "2026-09-09T00:00:00Z",
+        "window_start_utc": "2026-09-07T00:00:00Z"
+      },
+      "DAY3_4": {
+        "btc": {
+          "close": 76568.72,
+          "high": 79760.0,
+          "low": 76464.0,
+          "open": 78455.8
+        },
+        "eth": {
+          "close": 2438.27,
+          "high": 2523.3,
+          "low": 2405.85,
+          "open": 2485.07
+        },
+        "ethbtc": {
+          "close": 0.03184,
+          "high": 0.03198,
+          "low": 0.03133,
+          "open": 0.03168
+        },
+        "observed_hours": 48,
+        "window_end_utc": "2026-09-11T00:00:00Z",
+        "window_start_utc": "2026-09-09T00:00:00Z"
+      },
+      "DAY5_7": {
+        "btc": {
+          "close": 76842.01,
+          "high": 79890.0,
+          "low": 76046.58,
+          "open": 76568.73
+        },
+        "eth": {
+          "close": 2477.1,
+          "high": 2665.99,
+          "low": 2433.77,
+          "open": 2438.27
+        },
+        "ethbtc": {
+          "close": 0.03223,
+          "high": 0.03342,
+          "low": 0.03181,
+          "open": 0.03184
+        },
+        "observed_hours": 72,
+        "window_end_utc": "2026-09-14T00:00:00Z",
+        "window_start_utc": "2026-09-11T00:00:00Z"
+      }
+    }
+  },
+  "eligible_capture_count": 42,
+  "enriched_hourly_path": "weekly/2026/W37/WEEKLY_HOURLY_ENRICHED.csv",
+  "forecast_evaluation_performed": false,
+  "framework_state_change": false,
+  "generated_at_utc": "2026-09-14T14:40:48Z",
+  "handoff_targets": [
+    "RAW_WEEKLY_CALIBRATION",
+    "FORECAST_LEDGER_EVALUATION",
+    "MASTER_MONDAY_PREP",
+    "SPECIALIST_WEEKLY_REVIEW",
+    "PULLBACK_SEQUENCE_REPLAY",
+    "ROTATION_SURVIVAL_FORWARD"
+  ],
+  "hourly_gap_diagnostics": {
+    "expected_hours": 168,
+    "max_contiguous_gap_hours": 0,
+    "missing_hour_count": 0,
+    "missing_hours_utc": [],
+    "observed_hours": 168,
+    "per_field_completeness": {
+      "btc_close": {
+        "complete_hours": 168,
+        "coverage_pct": 100.0
+      },
+      "btc_long_short_ratio": {
+        "complete_hours": 168,
+        "coverage_pct": 100.0
+      },
+      "btc_open_interest": {
+        "complete_hours": 168,
+        "coverage_pct": 100.0
+      },
+      "btc_quote_volume": {
+        "complete_hours": 168,
+        "coverage_pct": 100.0
+      },
+      "btc_taker_buy_quote_share": {
+        "complete_hours": 168,
+        "coverage_pct": 100.0
+      },
+      "btc_trade_count": {
+        "complete_hours": 168,
+        "coverage_pct": 100.0
+      },
+      "eth_close": {
+        "complete_hours": 168,
+        "coverage_pct": 100.0
+      },
+      "eth_long_short_ratio": {
+        "complete_hours": 168,
+        "coverage_pct": 100.0
+      },
+      "eth_open_interest": {
+        "complete_hours": 168,
+        "coverage_pct": 100.0
+      },
+      "eth_quote_volume": {
+        "complete_hours": 168,
+        "coverage_pct": 100.0
+      },
+      "eth_taker_buy_quote_share": {
+        "complete_hours": 168,
+        "coverage_pct": 100.0
+      },
+      "eth_trade_count": {
+        "complete_hours": 168,
+        "coverage_pct": 100.0
+      },
+      "ethbtc_close": {
+        "complete_hours": 168,
+        "coverage_pct": 100.0
+      }
+    }
+  },
+  "hourly_ingestion_diagnostics": [],
+  "hourly_sequence": {
+    "btc": {
+      "down_hours": 91,
+      "max_abs_return_1h_pct": 1.55007516693,
+      "max_range_1h_pct": 2.76430577154,
+      "price_oi_state_counts": {
+        "PRICE_DOWN_OI_DOWN": 25,
+        "PRICE_DOWN_OI_UP": 37,
+        "PRICE_UP_OI_DOWN": 27,
+        "PRICE_UP_OI_UP": 25,
+        "UNAVAILABLE": 54
+      },
+      "up_hours": 77,
+      "week_range": {
+        "close": 76842.01,
+        "high": 80443.99,
+        "low": 76046.58,
+        "open": 80341.83
+      }
+    },
+    "contract": "WEEKLY_HOURLY_SEQUENCE_EVIDENCE_v2",
+    "derivatives_oi_complete_hours": 168,
+    "eth": {
+      "down_hours": 95,
+      "max_abs_return_1h_pct": 4.71483979898,
+      "max_range_1h_pct": 6.32084449245,
+      "price_oi_state_counts": {
+        "PRICE_DOWN_OI_DOWN": 22,
+        "PRICE_DOWN_OI_UP": 42,
+        "PRICE_UP_OI_DOWN": 15,
+        "PRICE_UP_OI_UP": 35,
+        "UNAVAILABLE": 54
+      },
+      "up_hours": 73,
+      "week_range": {
+        "close": 2477.1,
+        "high": 2665.99,
+        "low": 2405.85,
+        "open": 2514.48
+      }
+    },
+    "ethbtc": {
+      "down_hours": 80,
+      "up_hours": 73,
+      "week_range": {
+        "close": 0.03223,
+        "high": 0.03342,
+        "low": 0.03127,
+        "open": 0.03129
+      }
+    },
+    "expected_hourly_rows": 168,
+    "first_hour_utc": "2026-09-07T00:00:00Z",
+    "hourly_coverage_pct": 100.0,
+    "last_hour_utc": "2026-09-13T23:00:00Z",
+    "long_short_complete_hours": 168,
+    "market_interpretation": false,
+    "observed_hourly_rows": 168,
+    "sequence_evidence_only": true,
+    "spot_complete_hours": 168,
+    "spot_flow_complete_hours": 168
+  },
+  "iso_week": 37,
+  "iso_year": 2026,
+  "owner_health": {
+    "binance_microstructure": {
+      "PASS": 42
+    },
+    "binance_spot": {
+      "DISABLED": 42
+    },
+    "cfgi_sentiment": {
+      "PASS": 42
+    },
+    "fred_macro": {
+      "DISABLED": 35,
+      "PASS": 7
+    },
+    "okx_swap": {
+      "PASS": 42
+    },
+    "top100_breadth": {
+      "PASS": 42
+    }
+  },
+  "portfolio_action": false,
+  "raw_outcome_analysis": false,
+  "readiness": "READY",
+  "readiness_components": {
+    "anchor_lane": "READY",
+    "hourly_sequence_lane": "READY",
+    "rotation_context_lane": "READY"
+  },
+  "rotation_context": {
+    "authority": "SHADOW_CALIBRATION_INPUT_ONLY",
+    "contract": "WEEKLY_ROTATION_CONTEXT_CALIBRATION_v1",
+    "first_loaded_observation_date_utc": "2026-08-26",
+    "forecast_evaluation_performed": false,
+    "four_to_eight_week_readiness": "MATURING",
+    "framework_role": "STATE_LABEL_AND_BREADTH_VALIDATION_NOT_DECISION_ENGINE",
+    "framework_state_change": false,
+    "historical_backfill_materialized_as_daily_rows": false,
+    "market_interpretation": false,
+    "portfolio_action": false,
+    "readiness": "READY",
+    "readiness_basis": "7_DAY_NEAR_TERM_WINDOW",
+    "source_contract": "BLOCKCHAINCENTER_ALTCOIN_SEASON_SHADOW_CONTEXT_v1",
+    "windows": {
+      "28d": {
+        "daily_observations": [
+          {
+            "failure_state": null,
+            "method_crosscheck": {
+              "failure_state": null,
+              "published_score": 38,
+              "source_path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/08/2026-08-26/rotation_method_crosscheck_snapshot.json",
+              "source_raw_sha256": "5da7ca74ef812834ae242ecd7bba225efe0f4b75b67a6c058b1e090a3b015cc6",
+              "source_state": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "status": "PASS"
+            },
+            "methodology_fingerprint_sha256": "652f18b80d8f4af9aa6a5a441d783ff8332713a1aedeb81e2fd280d9dbfcb7ed",
+            "observation_date_utc": "2026-08-26",
+            "retrieved_at_utc": "2026-08-26T05:50:52.375870Z",
+            "scores": {
+              "30": 37,
+              "365": 35,
+              "90": 39
+            },
+            "source_path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/08/2026-08-26/rotation_context_snapshot.json",
+            "source_raw_sha256": "1982e5aa0de1b54b73efec926a68e00bd923a80b020013a2cf87d78c42a5c300",
+            "source_states": {
+              "30": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "365": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "90": "BETWEEN_PUBLISHED_THRESHOLDS"
+            },
+            "status": "PASS"
+          },
+          {
+            "failure_state": null,
+            "method_crosscheck": {
+              "failure_state": null,
+              "published_score": 37,
+              "source_path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/08/2026-08-27/rotation_method_crosscheck_snapshot.json",
+              "source_raw_sha256": "562a337113138486d8fe702c3e54785b0a6e8e823d1fb848680cd6c985c164ee",
+              "source_state": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "status": "PASS"
+            },
+            "methodology_fingerprint_sha256": "652f18b80d8f4af9aa6a5a441d783ff8332713a1aedeb81e2fd280d9dbfcb7ed",
+            "observation_date_utc": "2026-08-27",
+            "retrieved_at_utc": "2026-08-27T16:31:35.693437Z",
+            "scores": {
+              "30": 41,
+              "365": 35,
+              "90": 39
+            },
+            "source_path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/08/2026-08-27/rotation_context_snapshot.json",
+            "source_raw_sha256": "96fd02d8242c26dcf753bf7f45feb1ab830b1e172ae98d5618d5d7a8f2202b78",
+            "source_states": {
+              "30": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "365": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "90": "BETWEEN_PUBLISHED_THRESHOLDS"
+            },
+            "status": "PASS"
+          },
+          {
+            "failure_state": null,
+            "method_crosscheck": {
+              "failure_state": null,
+              "published_score": 33,
+              "source_path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/08/2026-08-28/rotation_method_crosscheck_snapshot.json",
+              "source_raw_sha256": "566fc15cc323e7832b7cf67d315905198d8662ba6dbb220f359dbd0a875de822",
+              "source_state": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "status": "PASS"
+            },
+            "methodology_fingerprint_sha256": "652f18b80d8f4af9aa6a5a441d783ff8332713a1aedeb81e2fd280d9dbfcb7ed",
+            "observation_date_utc": "2026-08-28",
+            "retrieved_at_utc": "2026-08-28T17:29:22.360927Z",
+            "scores": {
+              "30": 41,
+              "365": 37,
+              "90": 35
+            },
+            "source_path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/08/2026-08-28/rotation_context_snapshot.json",
+            "source_raw_sha256": "d7ced4d93647c70a8f69ea4948ed37733dc894106fb262ff91c14f64f4d5b8ed",
+            "source_states": {
+              "30": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "365": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "90": "BETWEEN_PUBLISHED_THRESHOLDS"
+            },
+            "status": "PASS"
+          },
+          {
+            "failure_state": null,
+            "method_crosscheck": {
+              "failure_state": null,
+              "published_score": 33,
+              "source_path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/08/2026-08-29/rotation_method_crosscheck_snapshot.json",
+              "source_raw_sha256": "ca34d48951d416d1dafe3992f5a2dbffee159131637c7dc7a7d70bee01341b38",
+              "source_state": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "status": "PASS"
+            },
+            "methodology_fingerprint_sha256": "652f18b80d8f4af9aa6a5a441d783ff8332713a1aedeb81e2fd280d9dbfcb7ed",
+            "observation_date_utc": "2026-08-29",
+            "retrieved_at_utc": "2026-08-29T11:40:07.451970Z",
+            "scores": {
+              "30": 37,
+              "365": 35,
+              "90": 35
+            },
+            "source_path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/08/2026-08-29/rotation_context_snapshot.json",
+            "source_raw_sha256": "d6468b7c8be8be71818fc5d61f322b57512ace7563f186a4668dead9ded366b1",
+            "source_states": {
+              "30": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "365": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "90": "BETWEEN_PUBLISHED_THRESHOLDS"
+            },
+            "status": "PASS"
+          },
+          {
+            "failure_state": null,
+            "method_crosscheck": {
+              "failure_state": null,
+              "published_score": 31,
+              "source_path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/08/2026-08-30/rotation_method_crosscheck_snapshot.json",
+              "source_raw_sha256": "8c06d68b8becc991c79a973c7393777e11d206d3a5ecb264f54894327fb25037",
+              "source_state": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "status": "PASS"
+            },
+            "methodology_fingerprint_sha256": "652f18b80d8f4af9aa6a5a441d783ff8332713a1aedeb81e2fd280d9dbfcb7ed",
+            "observation_date_utc": "2026-08-30",
+            "retrieved_at_utc": "2026-08-30T10:29:19.755499Z",
+            "scores": {
+              "30": 33,
+              "365": 37,
+              "90": 31
+            },
+            "source_path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/08/2026-08-30/rotation_context_snapshot.json",
+            "source_raw_sha256": "68eb7fbd5dff62f7504f6f852afed94f4067644b5ee0b2880854ce0920308701",
+            "source_states": {
+              "30": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "365": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "90": "BETWEEN_PUBLISHED_THRESHOLDS"
+            },
+            "status": "PASS"
+          },
+          {
+            "failure_state": null,
+            "method_crosscheck": {
+              "failure_state": null,
+              "published_score": 23,
+              "source_path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/08/2026-08-31/rotation_method_crosscheck_snapshot.json",
+              "source_raw_sha256": "f82cb71d2aa1fc40f2aedea444b3766323d10acbc1dc82229af98ec43757bde8",
+              "source_state": "BITCOIN_SEASON",
+              "status": "PASS"
+            },
+            "methodology_fingerprint_sha256": "652f18b80d8f4af9aa6a5a441d783ff8332713a1aedeb81e2fd280d9dbfcb7ed",
+            "observation_date_utc": "2026-08-31",
+            "retrieved_at_utc": "2026-08-31T11:36:38.889426Z",
+            "scores": {
+              "30": 35,
+              "365": 35,
+              "90": 29
+            },
+            "source_path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/08/2026-08-31/rotation_context_snapshot.json",
+            "source_raw_sha256": "b585a1f764fbfc9d167358561f374e49ce5a224829438d7c999a937be7ad14ae",
+            "source_states": {
+              "30": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "365": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "90": "BETWEEN_PUBLISHED_THRESHOLDS"
+            },
+            "status": "PASS"
+          },
+          {
+            "failure_state": null,
+            "method_crosscheck": {
+              "failure_state": null,
+              "published_score": 25,
+              "source_path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/09/2026-09-01/rotation_method_crosscheck_snapshot.json",
+              "source_raw_sha256": "5b674839dbe637fc8f9be0dfd0f4e22e359def005bad7938ec434a660c4156c0",
+              "source_state": "BITCOIN_SEASON",
+              "status": "PASS"
+            },
+            "methodology_fingerprint_sha256": "652f18b80d8f4af9aa6a5a441d783ff8332713a1aedeb81e2fd280d9dbfcb7ed",
+            "observation_date_utc": "2026-09-01",
+            "retrieved_at_utc": "2026-09-01T10:08:00.765930Z",
+            "scores": {
+              "30": 33,
+              "365": 35,
+              "90": 24
+            },
+            "source_path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/09/2026-09-01/rotation_context_snapshot.json",
+            "source_raw_sha256": "1884138d933e1743e7ae0296c668f9ac760779c88b173772cb26f63de096c6aa",
+            "source_states": {
+              "30": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "365": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "90": "BITCOIN_SEASON"
+            },
+            "status": "PASS"
+          },
+          {
+            "failure_state": null,
+            "method_crosscheck": {
+              "failure_state": null,
+              "published_score": 31,
+              "source_path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/09/2026-09-02/rotation_method_crosscheck_snapshot.json",
+              "source_raw_sha256": "8c85e0a0532cd30d2761be24c920465305991924ea4b9989a8bf5136be90fb66",
+              "source_state": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "status": "PASS"
+            },
+            "methodology_fingerprint_sha256": "652f18b80d8f4af9aa6a5a441d783ff8332713a1aedeb81e2fd280d9dbfcb7ed",
+            "observation_date_utc": "2026-09-02",
+            "retrieved_at_utc": "2026-09-02T09:38:41.526853Z",
+            "scores": {
+              "30": 35,
+              "365": 33,
+              "90": 27
+            },
+            "source_path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/09/2026-09-02/rotation_context_snapshot.json",
+            "source_raw_sha256": "83dd7b48bb62a0e3fe58dc10260eccfc441e630c811e10fa51172d7113dfa384",
+            "source_states": {
+              "30": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "365": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "90": "BETWEEN_PUBLISHED_THRESHOLDS"
+            },
+            "status": "PASS"
+          },
+          {
+            "failure_state": null,
+            "method_crosscheck": {
+              "failure_state": null,
+              "published_score": 35,
+              "source_path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/09/2026-09-03/rotation_method_crosscheck_snapshot.json",
+              "source_raw_sha256": "c0fe0307609cef14af7fbabc8303638dbb257a7d2cd7d7092f290ad2a6538a70",
+              "source_state": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "status": "PASS"
+            },
+            "methodology_fingerprint_sha256": "652f18b80d8f4af9aa6a5a441d783ff8332713a1aedeb81e2fd280d9dbfcb7ed",
+            "observation_date_utc": "2026-09-03",
+            "retrieved_at_utc": "2026-09-03T09:51:49.674489Z",
+            "scores": {
+              "30": 35,
+              "365": 33,
+              "90": 29
+            },
+            "source_path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/09/2026-09-03/rotation_context_snapshot.json",
+            "source_raw_sha256": "2b4260936f7f0e0e9d8802a0147f8f764f7ce0258cfef171573c515890ee0416",
+            "source_states": {
+              "30": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "365": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "90": "BETWEEN_PUBLISHED_THRESHOLDS"
+            },
+            "status": "PASS"
+          },
+          {
+            "failure_state": null,
+            "method_crosscheck": {
+              "failure_state": null,
+              "published_score": 38,
+              "source_path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/09/2026-09-04/rotation_method_crosscheck_snapshot.json",
+              "source_raw_sha256": "3168f29f5e27e1998d4faafe49f2d841b00d592c91a4ba7a72335404861641ae",
+              "source_state": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "status": "PASS"
+            },
+            "methodology_fingerprint_sha256": "652f18b80d8f4af9aa6a5a441d783ff8332713a1aedeb81e2fd280d9dbfcb7ed",
+            "observation_date_utc": "2026-09-04",
+            "retrieved_at_utc": "2026-09-04T09:40:34.784625Z",
+            "scores": {
+              "30": 35,
+              "365": 31,
+              "90": 33
+            },
+            "source_path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/09/2026-09-04/rotation_context_snapshot.json",
+            "source_raw_sha256": "a0ce5f65670016501fa95c1e101f51f0631f8dfe9ee056248de3d0f5f1a46331",
+            "source_states": {
+              "30": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "365": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "90": "BETWEEN_PUBLISHED_THRESHOLDS"
+            },
+            "status": "PASS"
+          },
+          {
+            "failure_state": null,
+            "method_crosscheck": {
+              "failure_state": null,
+              "published_score": 36,
+              "source_path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/09/2026-09-05/rotation_method_crosscheck_snapshot.json",
+              "source_raw_sha256": "d1e75601f8de01af335818f49444d498d2610e618674dcc7714154085ddbb853",
+              "source_state": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "status": "PASS"
+            },
+            "methodology_fingerprint_sha256": "652f18b80d8f4af9aa6a5a441d783ff8332713a1aedeb81e2fd280d9dbfcb7ed",
+            "observation_date_utc": "2026-09-05",
+            "retrieved_at_utc": "2026-09-05T09:06:13.832646Z",
+            "scores": {
+              "30": 45,
+              "365": 33,
+              "90": 33
+            },
+            "source_path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/09/2026-09-05/rotation_context_snapshot.json",
+            "source_raw_sha256": "ad774629f4683cb3ca08e20e42460ec53cecd7f3c2d0d6e06c7125ca00320988",
+            "source_states": {
+              "30": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "365": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "90": "BETWEEN_PUBLISHED_THRESHOLDS"
+            },
+            "status": "PASS"
+          },
+          {
+            "failure_state": null,
+            "method_crosscheck": {
+              "failure_state": null,
+              "published_score": 40,
+              "source_path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/09/2026-09-06/rotation_method_crosscheck_snapshot.json",
+              "source_raw_sha256": "7d1072a400da48e99c1e6af772475972370eb430846571c805fe4aa461e77bab",
+              "source_state": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "status": "PASS"
+            },
+            "methodology_fingerprint_sha256": "652f18b80d8f4af9aa6a5a441d783ff8332713a1aedeb81e2fd280d9dbfcb7ed",
+            "observation_date_utc": "2026-09-06",
+            "retrieved_at_utc": "2026-09-06T09:27:16.610164Z",
+            "scores": {
+              "30": 51,
+              "365": 35,
+              "90": 37
+            },
+            "source_path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/09/2026-09-06/rotation_context_snapshot.json",
+            "source_raw_sha256": "9f77df2efafe2c458163f69bec2732a8e18b9ebd210b1acdd0234aaa886342ea",
+            "source_states": {
+              "30": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "365": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "90": "BETWEEN_PUBLISHED_THRESHOLDS"
+            },
+            "status": "PASS"
+          },
+          {
+            "failure_state": null,
+            "method_crosscheck": {
+              "failure_state": null,
+              "published_score": 46,
+              "source_path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/09/2026-09-07/rotation_method_crosscheck_snapshot.json",
+              "source_raw_sha256": "71e1a4a2a905a0a551cf19450cea55f1b3686c600ab772afd13aa29520942e9f",
+              "source_state": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "status": "PASS"
+            },
+            "methodology_fingerprint_sha256": "652f18b80d8f4af9aa6a5a441d783ff8332713a1aedeb81e2fd280d9dbfcb7ed",
+            "observation_date_utc": "2026-09-07",
+            "retrieved_at_utc": "2026-09-07T10:20:10.248332Z",
+            "scores": {
+              "30": 53,
+              "365": 33,
+              "90": 41
+            },
+            "source_path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/09/2026-09-07/rotation_context_snapshot.json",
+            "source_raw_sha256": "4c609f4aacf5119b7908b82ccb1249013d2e9ae1530e7d3444f08bfb2e3f7d60",
+            "source_states": {
+              "30": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "365": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "90": "BETWEEN_PUBLISHED_THRESHOLDS"
+            },
+            "status": "PASS"
+          },
+          {
+            "failure_state": null,
+            "method_crosscheck": {
+              "failure_state": null,
+              "published_score": 45,
+              "source_path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/09/2026-09-08/rotation_method_crosscheck_snapshot.json",
+              "source_raw_sha256": "092583a763fb289520f870d4d480113a11fc9ea982139dc7921a8dd40265fa7c",
+              "source_state": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "status": "PASS"
+            },
+            "methodology_fingerprint_sha256": "652f18b80d8f4af9aa6a5a441d783ff8332713a1aedeb81e2fd280d9dbfcb7ed",
+            "observation_date_utc": "2026-09-08",
+            "retrieved_at_utc": "2026-09-08T09:42:34.575900Z",
+            "scores": {
+              "30": 61,
+              "365": 33,
+              "90": 43
+            },
+            "source_path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/09/2026-09-08/rotation_context_snapshot.json",
+            "source_raw_sha256": "83067a1073232f7b4fb4fb33287b82845dfac10ca6a8a753fa8be056893f9a08",
+            "source_states": {
+              "30": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "365": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "90": "BETWEEN_PUBLISHED_THRESHOLDS"
+            },
+            "status": "PASS"
+          },
+          {
+            "failure_state": null,
+            "method_crosscheck": {
+              "failure_state": null,
+              "published_score": 44,
+              "source_path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/09/2026-09-09/rotation_method_crosscheck_snapshot.json",
+              "source_raw_sha256": "ed50dd06ba4780853d69c0aedbf73a3ca9d56a78e0a7fbdf0f845af9804ede4d",
+              "source_state": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "status": "PASS"
+            },
+            "methodology_fingerprint_sha256": "652f18b80d8f4af9aa6a5a441d783ff8332713a1aedeb81e2fd280d9dbfcb7ed",
+            "observation_date_utc": "2026-09-09",
+            "retrieved_at_utc": "2026-09-09T09:47:43.660814Z",
+            "scores": {
+              "30": 59,
+              "365": 35,
+              "90": 41
+            },
+            "source_path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/09/2026-09-09/rotation_context_snapshot.json",
+            "source_raw_sha256": "566e10ac61aeb382ff393310c8b34c2f1a54abadb627b8a7b42250697bf2752b",
+            "source_states": {
+              "30": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "365": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "90": "BETWEEN_PUBLISHED_THRESHOLDS"
+            },
+            "status": "PASS"
+          },
+          {
+            "failure_state": null,
+            "method_crosscheck": {
+              "failure_state": null,
+              "published_score": 38,
+              "source_path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/09/2026-09-10/rotation_method_crosscheck_snapshot.json",
+              "source_raw_sha256": "ace56cd2455353ed5d28b807b32b6aea535daac1669e096ca444ac995f791225",
+              "source_state": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "status": "PASS"
+            },
+            "methodology_fingerprint_sha256": "652f18b80d8f4af9aa6a5a441d783ff8332713a1aedeb81e2fd280d9dbfcb7ed",
+            "observation_date_utc": "2026-09-10",
+            "retrieved_at_utc": "2026-09-10T09:45:44.964790Z",
+            "scores": {
+              "30": 43,
+              "365": 33,
+              "90": 33
+            },
+            "source_path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/09/2026-09-10/rotation_context_snapshot.json",
+            "source_raw_sha256": "0f036e6454332ea6c6df8b5d142e63276b324163c1d9ff1b14416ea18ecac5be",
+            "source_states": {
+              "30": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "365": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "90": "BETWEEN_PUBLISHED_THRESHOLDS"
+            },
+            "status": "PASS"
+          },
+          {
+            "failure_state": null,
+            "method_crosscheck": {
+              "failure_state": null,
+              "published_score": 38,
+              "source_path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/09/2026-09-11/rotation_method_crosscheck_snapshot.json",
+              "source_raw_sha256": "7fbc4d03f9b715dfcc81893d35c105dfad3af8cebd0ee95f726d6424f0bd082b",
+              "source_state": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "status": "PASS"
+            },
+            "methodology_fingerprint_sha256": "652f18b80d8f4af9aa6a5a441d783ff8332713a1aedeb81e2fd280d9dbfcb7ed",
+            "observation_date_utc": "2026-09-11",
+            "retrieved_at_utc": "2026-09-11T09:42:48.600296Z",
+            "scores": {
+              "30": 41,
+              "365": 29,
+              "90": 37
+            },
+            "source_path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/09/2026-09-11/rotation_context_snapshot.json",
+            "source_raw_sha256": "e9498813f68a66b7548f9ffab84daaf006ffd80c5fc575874cb1e357e8b4cb9e",
+            "source_states": {
+              "30": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "365": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "90": "BETWEEN_PUBLISHED_THRESHOLDS"
+            },
+            "status": "PASS"
+          },
+          {
+            "failure_state": null,
+            "method_crosscheck": {
+              "failure_state": null,
+              "published_score": 41,
+              "source_path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/09/2026-09-12/rotation_method_crosscheck_snapshot.json",
+              "source_raw_sha256": "457887cd596ee8ed4cee63fae5674a6464f7a5658de180cce97b8f5719ca6ef7",
+              "source_state": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "status": "PASS"
+            },
+            "methodology_fingerprint_sha256": "652f18b80d8f4af9aa6a5a441d783ff8332713a1aedeb81e2fd280d9dbfcb7ed",
+            "observation_date_utc": "2026-09-12",
+            "retrieved_at_utc": "2026-09-12T09:22:46.610200Z",
+            "scores": {
+              "30": 43,
+              "365": 29,
+              "90": 35
+            },
+            "source_path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/09/2026-09-12/rotation_context_snapshot.json",
+            "source_raw_sha256": "1a649fab1027bc20759f6020c425cf63ae2c25a6f6d20a2eab96b8c4e2b318be",
+            "source_states": {
+              "30": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "365": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "90": "BETWEEN_PUBLISHED_THRESHOLDS"
+            },
+            "status": "PASS"
+          },
+          {
+            "failure_state": null,
+            "method_crosscheck": {
+              "failure_state": null,
+              "published_score": 38,
+              "source_path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/09/2026-09-13/rotation_method_crosscheck_snapshot.json",
+              "source_raw_sha256": "6f3cb674430b60772963c2bf4a9c4b8429da8c680012dbdeac3f8214794a8dfb",
+              "source_state": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "status": "PASS"
+            },
+            "methodology_fingerprint_sha256": "652f18b80d8f4af9aa6a5a441d783ff8332713a1aedeb81e2fd280d9dbfcb7ed",
+            "observation_date_utc": "2026-09-13",
+            "retrieved_at_utc": "2026-09-13T10:18:21.845373Z",
+            "scores": {
+              "30": 37,
+              "365": 29,
+              "90": 29
+            },
+            "source_path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/09/2026-09-13/rotation_context_snapshot.json",
+            "source_raw_sha256": "8527abc5cb4869e4754a916902a1aff81550ee1de79b5ec97b640285be73fe42",
+            "source_states": {
+              "30": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "365": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "90": "BETWEEN_PUBLISHED_THRESHOLDS"
+            },
+            "status": "PASS"
+          }
+        ],
+        "degraded_days": 0,
+        "expected_days": 28,
+        "forward_fill": false,
+        "horizons": {
+          "30": {
+            "benchmark_return_decimal": {
+              "change": 0.031965408526,
+              "first": 0.18630945065749,
+              "latest": 0.21827485918345,
+              "maximum": 0.24682470212044,
+              "mean": 0.217704524518,
+              "minimum": 0.18630945065749,
+              "observation_count": 19
+            },
+            "median_alt_minus_btc_return_decimal": {
+              "change": 0.037929017679,
+              "first": -0.075279308226,
+              "latest": -0.037350290547,
+              "maximum": 0.030320958363,
+              "mean": -0.039597807297,
+              "minimum": -0.088895298165,
+              "observation_count": 19
+            },
+            "membership_change_events": 5,
+            "outperforming_btc_share": {
+              "change": 0.0,
+              "first": 0.367346938776,
+              "latest": 0.367346938776,
+              "maximum": 0.612244897959,
+              "mean": 0.416756176155,
+              "minimum": 0.326530612245,
+              "observation_count": 19
+            },
+            "published_threshold_crossings": 0,
+            "score": {
+              "change": 0.0,
+              "first": 37.0,
+              "latest": 37.0,
+              "maximum": 61.0,
+              "mean": 41.842105263158,
+              "minimum": 33.0,
+              "observation_count": 19
+            },
+            "source_state_counts": {
+              "BETWEEN_PUBLISHED_THRESHOLDS": 19
+            },
+            "unique_membership_hash_count": 4
+          },
+          "365": {
+            "benchmark_return_decimal": {
+              "change": -0.035433804319,
+              "first": -0.29451132294135,
+              "latest": -0.32994512726021,
+              "maximum": -0.26450008430282,
+              "mean": -0.290326236032,
+              "minimum": -0.32994512726021,
+              "observation_count": 19
+            },
+            "median_alt_minus_btc_return_decimal": {
+              "change": -0.011455287287,
+              "first": -0.214975873113,
+              "latest": -0.2264311604,
+              "maximum": -0.202525316052,
+              "mean": -0.220335518773,
+              "minimum": -0.230276687852,
+              "observation_count": 19
+            },
+            "membership_change_events": 11,
+            "outperforming_btc_share": {
+              "change": -0.061224489796,
+              "first": 0.34693877551,
+              "latest": 0.285714285714,
+              "maximum": 0.367346938776,
+              "mean": 0.330827067669,
+              "minimum": 0.285714285714,
+              "observation_count": 19
+            },
+            "published_threshold_crossings": 0,
+            "score": {
+              "change": -6.0,
+              "first": 35.0,
+              "latest": 29.0,
+              "maximum": 37.0,
+              "mean": 33.421052631579,
+              "minimum": 29.0,
+              "observation_count": 19
+            },
+            "source_state_counts": {
+              "BETWEEN_PUBLISHED_THRESHOLDS": 19
+            },
+            "unique_membership_hash_count": 10
+          },
+          "90": {
+            "benchmark_return_decimal": {
+              "change": 0.088431331451,
+              "first": 0.067742241324821,
+              "latest": 0.15617357277619,
+              "maximum": 0.32407565496177,
+              "mean": 0.190793247263,
+              "minimum": 0.059884024080014,
+              "observation_count": 19
+            },
+            "median_alt_minus_btc_return_decimal": {
+              "change": -0.026900433574,
+              "first": -0.068564876133,
+              "latest": -0.095465309707,
+              "maximum": -0.010397389585,
+              "mean": -0.103599626278,
+              "minimum": -0.199030816039,
+              "observation_count": 19
+            },
+            "membership_change_events": 6,
+            "outperforming_btc_share": {
+              "change": -0.102040816327,
+              "first": 0.387755102041,
+              "latest": 0.285714285714,
+              "maximum": 0.428571428571,
+              "mean": 0.339419978518,
+              "minimum": 0.244897959184,
+              "observation_count": 19
+            },
+            "published_threshold_crossings": 2,
+            "score": {
+              "change": -10.0,
+              "first": 39.0,
+              "latest": 29.0,
+              "maximum": 43.0,
+              "mean": 34.210526315789,
+              "minimum": 24.0,
+              "observation_count": 19
+            },
+            "source_state_counts": {
+              "BETWEEN_PUBLISHED_THRESHOLDS": 18,
+              "BITCOIN_SEASON": 1
+            },
+            "unique_membership_hash_count": 7
+          }
+        },
+        "independent_method_crosscheck": {
+          "affects_readiness": false,
+          "authority": "LOWER_GRADE_SHADOW_METHOD_DISPERSION_ONLY",
+          "cmc_top100_minus_blockchaincenter_top50_90d_score": {
+            "change": 10.0,
+            "first": -1.0,
+            "latest": 9.0,
+            "maximum": 9.0,
+            "mean": 2.105263157895,
+            "minimum": -6.0,
+            "observation_count": 19
+          },
+          "component_reconciliation": "NOT_AVAILABLE_FROM_CAPTURED_PAGE",
+          "evidence_grade": "PUBLISHED_LABEL_ONLY",
+          "observed_days": 19,
+          "passing_days": 19,
+          "score": {
+            "change": 0.0,
+            "first": 38.0,
+            "latest": 38.0,
+            "maximum": 46.0,
+            "mean": 36.315789473684,
+            "minimum": 23.0,
+            "observation_count": 19
+          },
+          "source_contract": "COINMARKETCAP_ALTCOIN_SEASON_SHADOW_CROSSCHECK_v1",
+          "source_state_counts": {
+            "BETWEEN_PUBLISHED_THRESHOLDS": 17,
+            "BITCOIN_SEASON": 2
+          },
+          "status_counts": {
+            "PASS": 19
+          }
+        },
+        "interpolation": false,
+        "minimum_pass_days_for_ready": 21,
+        "observed_days": 19,
+        "passing_coverage_pct": 67.857,
+        "passing_days": 19,
+        "readiness": "MATURING",
+        "status_counts": {
+          "PASS": 19
+        },
+        "window_end_utc_exclusive": "2026-09-14T00:00:00Z",
+        "window_start_utc": "2026-08-17T00:00:00Z"
+      },
+      "56d": {
+        "daily_observations": [
+          {
+            "failure_state": null,
+            "method_crosscheck": {
+              "failure_state": null,
+              "published_score": 38,
+              "source_path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/08/2026-08-26/rotation_method_crosscheck_snapshot.json",
+              "source_raw_sha256": "5da7ca74ef812834ae242ecd7bba225efe0f4b75b67a6c058b1e090a3b015cc6",
+              "source_state": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "status": "PASS"
+            },
+            "methodology_fingerprint_sha256": "652f18b80d8f4af9aa6a5a441d783ff8332713a1aedeb81e2fd280d9dbfcb7ed",
+            "observation_date_utc": "2026-08-26",
+            "retrieved_at_utc": "2026-08-26T05:50:52.375870Z",
+            "scores": {
+              "30": 37,
+              "365": 35,
+              "90": 39
+            },
+            "source_path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/08/2026-08-26/rotation_context_snapshot.json",
+            "source_raw_sha256": "1982e5aa0de1b54b73efec926a68e00bd923a80b020013a2cf87d78c42a5c300",
+            "source_states": {
+              "30": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "365": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "90": "BETWEEN_PUBLISHED_THRESHOLDS"
+            },
+            "status": "PASS"
+          },
+          {
+            "failure_state": null,
+            "method_crosscheck": {
+              "failure_state": null,
+              "published_score": 37,
+              "source_path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/08/2026-08-27/rotation_method_crosscheck_snapshot.json",
+              "source_raw_sha256": "562a337113138486d8fe702c3e54785b0a6e8e823d1fb848680cd6c985c164ee",
+              "source_state": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "status": "PASS"
+            },
+            "methodology_fingerprint_sha256": "652f18b80d8f4af9aa6a5a441d783ff8332713a1aedeb81e2fd280d9dbfcb7ed",
+            "observation_date_utc": "2026-08-27",
+            "retrieved_at_utc": "2026-08-27T16:31:35.693437Z",
+            "scores": {
+              "30": 41,
+              "365": 35,
+              "90": 39
+            },
+            "source_path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/08/2026-08-27/rotation_context_snapshot.json",
+            "source_raw_sha256": "96fd02d8242c26dcf753bf7f45feb1ab830b1e172ae98d5618d5d7a8f2202b78",
+            "source_states": {
+              "30": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "365": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "90": "BETWEEN_PUBLISHED_THRESHOLDS"
+            },
+            "status": "PASS"
+          },
+          {
+            "failure_state": null,
+            "method_crosscheck": {
+              "failure_state": null,
+              "published_score": 33,
+              "source_path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/08/2026-08-28/rotation_method_crosscheck_snapshot.json",
+              "source_raw_sha256": "566fc15cc323e7832b7cf67d315905198d8662ba6dbb220f359dbd0a875de822",
+              "source_state": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "status": "PASS"
+            },
+            "methodology_fingerprint_sha256": "652f18b80d8f4af9aa6a5a441d783ff8332713a1aedeb81e2fd280d9dbfcb7ed",
+            "observation_date_utc": "2026-08-28",
+            "retrieved_at_utc": "2026-08-28T17:29:22.360927Z",
+            "scores": {
+              "30": 41,
+              "365": 37,
+              "90": 35
+            },
+            "source_path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/08/2026-08-28/rotation_context_snapshot.json",
+            "source_raw_sha256": "d7ced4d93647c70a8f69ea4948ed37733dc894106fb262ff91c14f64f4d5b8ed",
+            "source_states": {
+              "30": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "365": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "90": "BETWEEN_PUBLISHED_THRESHOLDS"
+            },
+            "status": "PASS"
+          },
+          {
+            "failure_state": null,
+            "method_crosscheck": {
+              "failure_state": null,
+              "published_score": 33,
+              "source_path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/08/2026-08-29/rotation_method_crosscheck_snapshot.json",
+              "source_raw_sha256": "ca34d48951d416d1dafe3992f5a2dbffee159131637c7dc7a7d70bee01341b38",
+              "source_state": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "status": "PASS"
+            },
+            "methodology_fingerprint_sha256": "652f18b80d8f4af9aa6a5a441d783ff8332713a1aedeb81e2fd280d9dbfcb7ed",
+            "observation_date_utc": "2026-08-29",
+            "retrieved_at_utc": "2026-08-29T11:40:07.451970Z",
+            "scores": {
+              "30": 37,
+              "365": 35,
+              "90": 35
+            },
+            "source_path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/08/2026-08-29/rotation_context_snapshot.json",
+            "source_raw_sha256": "d6468b7c8be8be71818fc5d61f322b57512ace7563f186a4668dead9ded366b1",
+            "source_states": {
+              "30": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "365": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "90": "BETWEEN_PUBLISHED_THRESHOLDS"
+            },
+            "status": "PASS"
+          },
+          {
+            "failure_state": null,
+            "method_crosscheck": {
+              "failure_state": null,
+              "published_score": 31,
+              "source_path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/08/2026-08-30/rotation_method_crosscheck_snapshot.json",
+              "source_raw_sha256": "8c06d68b8becc991c79a973c7393777e11d206d3a5ecb264f54894327fb25037",
+              "source_state": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "status": "PASS"
+            },
+            "methodology_fingerprint_sha256": "652f18b80d8f4af9aa6a5a441d783ff8332713a1aedeb81e2fd280d9dbfcb7ed",
+            "observation_date_utc": "2026-08-30",
+            "retrieved_at_utc": "2026-08-30T10:29:19.755499Z",
+            "scores": {
+              "30": 33,
+              "365": 37,
+              "90": 31
+            },
+            "source_path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/08/2026-08-30/rotation_context_snapshot.json",
+            "source_raw_sha256": "68eb7fbd5dff62f7504f6f852afed94f4067644b5ee0b2880854ce0920308701",
+            "source_states": {
+              "30": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "365": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "90": "BETWEEN_PUBLISHED_THRESHOLDS"
+            },
+            "status": "PASS"
+          },
+          {
+            "failure_state": null,
+            "method_crosscheck": {
+              "failure_state": null,
+              "published_score": 23,
+              "source_path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/08/2026-08-31/rotation_method_crosscheck_snapshot.json",
+              "source_raw_sha256": "f82cb71d2aa1fc40f2aedea444b3766323d10acbc1dc82229af98ec43757bde8",
+              "source_state": "BITCOIN_SEASON",
+              "status": "PASS"
+            },
+            "methodology_fingerprint_sha256": "652f18b80d8f4af9aa6a5a441d783ff8332713a1aedeb81e2fd280d9dbfcb7ed",
+            "observation_date_utc": "2026-08-31",
+            "retrieved_at_utc": "2026-08-31T11:36:38.889426Z",
+            "scores": {
+              "30": 35,
+              "365": 35,
+              "90": 29
+            },
+            "source_path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/08/2026-08-31/rotation_context_snapshot.json",
+            "source_raw_sha256": "b585a1f764fbfc9d167358561f374e49ce5a224829438d7c999a937be7ad14ae",
+            "source_states": {
+              "30": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "365": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "90": "BETWEEN_PUBLISHED_THRESHOLDS"
+            },
+            "status": "PASS"
+          },
+          {
+            "failure_state": null,
+            "method_crosscheck": {
+              "failure_state": null,
+              "published_score": 25,
+              "source_path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/09/2026-09-01/rotation_method_crosscheck_snapshot.json",
+              "source_raw_sha256": "5b674839dbe637fc8f9be0dfd0f4e22e359def005bad7938ec434a660c4156c0",
+              "source_state": "BITCOIN_SEASON",
+              "status": "PASS"
+            },
+            "methodology_fingerprint_sha256": "652f18b80d8f4af9aa6a5a441d783ff8332713a1aedeb81e2fd280d9dbfcb7ed",
+            "observation_date_utc": "2026-09-01",
+            "retrieved_at_utc": "2026-09-01T10:08:00.765930Z",
+            "scores": {
+              "30": 33,
+              "365": 35,
+              "90": 24
+            },
+            "source_path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/09/2026-09-01/rotation_context_snapshot.json",
+            "source_raw_sha256": "1884138d933e1743e7ae0296c668f9ac760779c88b173772cb26f63de096c6aa",
+            "source_states": {
+              "30": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "365": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "90": "BITCOIN_SEASON"
+            },
+            "status": "PASS"
+          },
+          {
+            "failure_state": null,
+            "method_crosscheck": {
+              "failure_state": null,
+              "published_score": 31,
+              "source_path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/09/2026-09-02/rotation_method_crosscheck_snapshot.json",
+              "source_raw_sha256": "8c85e0a0532cd30d2761be24c920465305991924ea4b9989a8bf5136be90fb66",
+              "source_state": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "status": "PASS"
+            },
+            "methodology_fingerprint_sha256": "652f18b80d8f4af9aa6a5a441d783ff8332713a1aedeb81e2fd280d9dbfcb7ed",
+            "observation_date_utc": "2026-09-02",
+            "retrieved_at_utc": "2026-09-02T09:38:41.526853Z",
+            "scores": {
+              "30": 35,
+              "365": 33,
+              "90": 27
+            },
+            "source_path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/09/2026-09-02/rotation_context_snapshot.json",
+            "source_raw_sha256": "83dd7b48bb62a0e3fe58dc10260eccfc441e630c811e10fa51172d7113dfa384",
+            "source_states": {
+              "30": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "365": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "90": "BETWEEN_PUBLISHED_THRESHOLDS"
+            },
+            "status": "PASS"
+          },
+          {
+            "failure_state": null,
+            "method_crosscheck": {
+              "failure_state": null,
+              "published_score": 35,
+              "source_path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/09/2026-09-03/rotation_method_crosscheck_snapshot.json",
+              "source_raw_sha256": "c0fe0307609cef14af7fbabc8303638dbb257a7d2cd7d7092f290ad2a6538a70",
+              "source_state": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "status": "PASS"
+            },
+            "methodology_fingerprint_sha256": "652f18b80d8f4af9aa6a5a441d783ff8332713a1aedeb81e2fd280d9dbfcb7ed",
+            "observation_date_utc": "2026-09-03",
+            "retrieved_at_utc": "2026-09-03T09:51:49.674489Z",
+            "scores": {
+              "30": 35,
+              "365": 33,
+              "90": 29
+            },
+            "source_path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/09/2026-09-03/rotation_context_snapshot.json",
+            "source_raw_sha256": "2b4260936f7f0e0e9d8802a0147f8f764f7ce0258cfef171573c515890ee0416",
+            "source_states": {
+              "30": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "365": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "90": "BETWEEN_PUBLISHED_THRESHOLDS"
+            },
+            "status": "PASS"
+          },
+          {
+            "failure_state": null,
+            "method_crosscheck": {
+              "failure_state": null,
+              "published_score": 38,
+              "source_path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/09/2026-09-04/rotation_method_crosscheck_snapshot.json",
+              "source_raw_sha256": "3168f29f5e27e1998d4faafe49f2d841b00d592c91a4ba7a72335404861641ae",
+              "source_state": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "status": "PASS"
+            },
+            "methodology_fingerprint_sha256": "652f18b80d8f4af9aa6a5a441d783ff8332713a1aedeb81e2fd280d9dbfcb7ed",
+            "observation_date_utc": "2026-09-04",
+            "retrieved_at_utc": "2026-09-04T09:40:34.784625Z",
+            "scores": {
+              "30": 35,
+              "365": 31,
+              "90": 33
+            },
+            "source_path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/09/2026-09-04/rotation_context_snapshot.json",
+            "source_raw_sha256": "a0ce5f65670016501fa95c1e101f51f0631f8dfe9ee056248de3d0f5f1a46331",
+            "source_states": {
+              "30": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "365": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "90": "BETWEEN_PUBLISHED_THRESHOLDS"
+            },
+            "status": "PASS"
+          },
+          {
+            "failure_state": null,
+            "method_crosscheck": {
+              "failure_state": null,
+              "published_score": 36,
+              "source_path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/09/2026-09-05/rotation_method_crosscheck_snapshot.json",
+              "source_raw_sha256": "d1e75601f8de01af335818f49444d498d2610e618674dcc7714154085ddbb853",
+              "source_state": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "status": "PASS"
+            },
+            "methodology_fingerprint_sha256": "652f18b80d8f4af9aa6a5a441d783ff8332713a1aedeb81e2fd280d9dbfcb7ed",
+            "observation_date_utc": "2026-09-05",
+            "retrieved_at_utc": "2026-09-05T09:06:13.832646Z",
+            "scores": {
+              "30": 45,
+              "365": 33,
+              "90": 33
+            },
+            "source_path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/09/2026-09-05/rotation_context_snapshot.json",
+            "source_raw_sha256": "ad774629f4683cb3ca08e20e42460ec53cecd7f3c2d0d6e06c7125ca00320988",
+            "source_states": {
+              "30": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "365": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "90": "BETWEEN_PUBLISHED_THRESHOLDS"
+            },
+            "status": "PASS"
+          },
+          {
+            "failure_state": null,
+            "method_crosscheck": {
+              "failure_state": null,
+              "published_score": 40,
+              "source_path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/09/2026-09-06/rotation_method_crosscheck_snapshot.json",
+              "source_raw_sha256": "7d1072a400da48e99c1e6af772475972370eb430846571c805fe4aa461e77bab",
+              "source_state": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "status": "PASS"
+            },
+            "methodology_fingerprint_sha256": "652f18b80d8f4af9aa6a5a441d783ff8332713a1aedeb81e2fd280d9dbfcb7ed",
+            "observation_date_utc": "2026-09-06",
+            "retrieved_at_utc": "2026-09-06T09:27:16.610164Z",
+            "scores": {
+              "30": 51,
+              "365": 35,
+              "90": 37
+            },
+            "source_path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/09/2026-09-06/rotation_context_snapshot.json",
+            "source_raw_sha256": "9f77df2efafe2c458163f69bec2732a8e18b9ebd210b1acdd0234aaa886342ea",
+            "source_states": {
+              "30": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "365": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "90": "BETWEEN_PUBLISHED_THRESHOLDS"
+            },
+            "status": "PASS"
+          },
+          {
+            "failure_state": null,
+            "method_crosscheck": {
+              "failure_state": null,
+              "published_score": 46,
+              "source_path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/09/2026-09-07/rotation_method_crosscheck_snapshot.json",
+              "source_raw_sha256": "71e1a4a2a905a0a551cf19450cea55f1b3686c600ab772afd13aa29520942e9f",
+              "source_state": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "status": "PASS"
+            },
+            "methodology_fingerprint_sha256": "652f18b80d8f4af9aa6a5a441d783ff8332713a1aedeb81e2fd280d9dbfcb7ed",
+            "observation_date_utc": "2026-09-07",
+            "retrieved_at_utc": "2026-09-07T10:20:10.248332Z",
+            "scores": {
+              "30": 53,
+              "365": 33,
+              "90": 41
+            },
+            "source_path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/09/2026-09-07/rotation_context_snapshot.json",
+            "source_raw_sha256": "4c609f4aacf5119b7908b82ccb1249013d2e9ae1530e7d3444f08bfb2e3f7d60",
+            "source_states": {
+              "30": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "365": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "90": "BETWEEN_PUBLISHED_THRESHOLDS"
+            },
+            "status": "PASS"
+          },
+          {
+            "failure_state": null,
+            "method_crosscheck": {
+              "failure_state": null,
+              "published_score": 45,
+              "source_path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/09/2026-09-08/rotation_method_crosscheck_snapshot.json",
+              "source_raw_sha256": "092583a763fb289520f870d4d480113a11fc9ea982139dc7921a8dd40265fa7c",
+              "source_state": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "status": "PASS"
+            },
+            "methodology_fingerprint_sha256": "652f18b80d8f4af9aa6a5a441d783ff8332713a1aedeb81e2fd280d9dbfcb7ed",
+            "observation_date_utc": "2026-09-08",
+            "retrieved_at_utc": "2026-09-08T09:42:34.575900Z",
+            "scores": {
+              "30": 61,
+              "365": 33,
+              "90": 43
+            },
+            "source_path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/09/2026-09-08/rotation_context_snapshot.json",
+            "source_raw_sha256": "83067a1073232f7b4fb4fb33287b82845dfac10ca6a8a753fa8be056893f9a08",
+            "source_states": {
+              "30": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "365": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "90": "BETWEEN_PUBLISHED_THRESHOLDS"
+            },
+            "status": "PASS"
+          },
+          {
+            "failure_state": null,
+            "method_crosscheck": {
+              "failure_state": null,
+              "published_score": 44,
+              "source_path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/09/2026-09-09/rotation_method_crosscheck_snapshot.json",
+              "source_raw_sha256": "ed50dd06ba4780853d69c0aedbf73a3ca9d56a78e0a7fbdf0f845af9804ede4d",
+              "source_state": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "status": "PASS"
+            },
+            "methodology_fingerprint_sha256": "652f18b80d8f4af9aa6a5a441d783ff8332713a1aedeb81e2fd280d9dbfcb7ed",
+            "observation_date_utc": "2026-09-09",
+            "retrieved_at_utc": "2026-09-09T09:47:43.660814Z",
+            "scores": {
+              "30": 59,
+              "365": 35,
+              "90": 41
+            },
+            "source_path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/09/2026-09-09/rotation_context_snapshot.json",
+            "source_raw_sha256": "566e10ac61aeb382ff393310c8b34c2f1a54abadb627b8a7b42250697bf2752b",
+            "source_states": {
+              "30": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "365": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "90": "BETWEEN_PUBLISHED_THRESHOLDS"
+            },
+            "status": "PASS"
+          },
+          {
+            "failure_state": null,
+            "method_crosscheck": {
+              "failure_state": null,
+              "published_score": 38,
+              "source_path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/09/2026-09-10/rotation_method_crosscheck_snapshot.json",
+              "source_raw_sha256": "ace56cd2455353ed5d28b807b32b6aea535daac1669e096ca444ac995f791225",
+              "source_state": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "status": "PASS"
+            },
+            "methodology_fingerprint_sha256": "652f18b80d8f4af9aa6a5a441d783ff8332713a1aedeb81e2fd280d9dbfcb7ed",
+            "observation_date_utc": "2026-09-10",
+            "retrieved_at_utc": "2026-09-10T09:45:44.964790Z",
+            "scores": {
+              "30": 43,
+              "365": 33,
+              "90": 33
+            },
+            "source_path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/09/2026-09-10/rotation_context_snapshot.json",
+            "source_raw_sha256": "0f036e6454332ea6c6df8b5d142e63276b324163c1d9ff1b14416ea18ecac5be",
+            "source_states": {
+              "30": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "365": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "90": "BETWEEN_PUBLISHED_THRESHOLDS"
+            },
+            "status": "PASS"
+          },
+          {
+            "failure_state": null,
+            "method_crosscheck": {
+              "failure_state": null,
+              "published_score": 38,
+              "source_path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/09/2026-09-11/rotation_method_crosscheck_snapshot.json",
+              "source_raw_sha256": "7fbc4d03f9b715dfcc81893d35c105dfad3af8cebd0ee95f726d6424f0bd082b",
+              "source_state": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "status": "PASS"
+            },
+            "methodology_fingerprint_sha256": "652f18b80d8f4af9aa6a5a441d783ff8332713a1aedeb81e2fd280d9dbfcb7ed",
+            "observation_date_utc": "2026-09-11",
+            "retrieved_at_utc": "2026-09-11T09:42:48.600296Z",
+            "scores": {
+              "30": 41,
+              "365": 29,
+              "90": 37
+            },
+            "source_path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/09/2026-09-11/rotation_context_snapshot.json",
+            "source_raw_sha256": "e9498813f68a66b7548f9ffab84daaf006ffd80c5fc575874cb1e357e8b4cb9e",
+            "source_states": {
+              "30": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "365": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "90": "BETWEEN_PUBLISHED_THRESHOLDS"
+            },
+            "status": "PASS"
+          },
+          {
+            "failure_state": null,
+            "method_crosscheck": {
+              "failure_state": null,
+              "published_score": 41,
+              "source_path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/09/2026-09-12/rotation_method_crosscheck_snapshot.json",
+              "source_raw_sha256": "457887cd596ee8ed4cee63fae5674a6464f7a5658de180cce97b8f5719ca6ef7",
+              "source_state": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "status": "PASS"
+            },
+            "methodology_fingerprint_sha256": "652f18b80d8f4af9aa6a5a441d783ff8332713a1aedeb81e2fd280d9dbfcb7ed",
+            "observation_date_utc": "2026-09-12",
+            "retrieved_at_utc": "2026-09-12T09:22:46.610200Z",
+            "scores": {
+              "30": 43,
+              "365": 29,
+              "90": 35
+            },
+            "source_path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/09/2026-09-12/rotation_context_snapshot.json",
+            "source_raw_sha256": "1a649fab1027bc20759f6020c425cf63ae2c25a6f6d20a2eab96b8c4e2b318be",
+            "source_states": {
+              "30": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "365": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "90": "BETWEEN_PUBLISHED_THRESHOLDS"
+            },
+            "status": "PASS"
+          },
+          {
+            "failure_state": null,
+            "method_crosscheck": {
+              "failure_state": null,
+              "published_score": 38,
+              "source_path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/09/2026-09-13/rotation_method_crosscheck_snapshot.json",
+              "source_raw_sha256": "6f3cb674430b60772963c2bf4a9c4b8429da8c680012dbdeac3f8214794a8dfb",
+              "source_state": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "status": "PASS"
+            },
+            "methodology_fingerprint_sha256": "652f18b80d8f4af9aa6a5a441d783ff8332713a1aedeb81e2fd280d9dbfcb7ed",
+            "observation_date_utc": "2026-09-13",
+            "retrieved_at_utc": "2026-09-13T10:18:21.845373Z",
+            "scores": {
+              "30": 37,
+              "365": 29,
+              "90": 29
+            },
+            "source_path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/09/2026-09-13/rotation_context_snapshot.json",
+            "source_raw_sha256": "8527abc5cb4869e4754a916902a1aff81550ee1de79b5ec97b640285be73fe42",
+            "source_states": {
+              "30": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "365": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "90": "BETWEEN_PUBLISHED_THRESHOLDS"
+            },
+            "status": "PASS"
+          }
+        ],
+        "degraded_days": 0,
+        "expected_days": 56,
+        "forward_fill": false,
+        "horizons": {
+          "30": {
+            "benchmark_return_decimal": {
+              "change": 0.031965408526,
+              "first": 0.18630945065749,
+              "latest": 0.21827485918345,
+              "maximum": 0.24682470212044,
+              "mean": 0.217704524518,
+              "minimum": 0.18630945065749,
+              "observation_count": 19
+            },
+            "median_alt_minus_btc_return_decimal": {
+              "change": 0.037929017679,
+              "first": -0.075279308226,
+              "latest": -0.037350290547,
+              "maximum": 0.030320958363,
+              "mean": -0.039597807297,
+              "minimum": -0.088895298165,
+              "observation_count": 19
+            },
+            "membership_change_events": 5,
+            "outperforming_btc_share": {
+              "change": 0.0,
+              "first": 0.367346938776,
+              "latest": 0.367346938776,
+              "maximum": 0.612244897959,
+              "mean": 0.416756176155,
+              "minimum": 0.326530612245,
+              "observation_count": 19
+            },
+            "published_threshold_crossings": 0,
+            "score": {
+              "change": 0.0,
+              "first": 37.0,
+              "latest": 37.0,
+              "maximum": 61.0,
+              "mean": 41.842105263158,
+              "minimum": 33.0,
+              "observation_count": 19
+            },
+            "source_state_counts": {
+              "BETWEEN_PUBLISHED_THRESHOLDS": 19
+            },
+            "unique_membership_hash_count": 4
+          },
+          "365": {
+            "benchmark_return_decimal": {
+              "change": -0.035433804319,
+              "first": -0.29451132294135,
+              "latest": -0.32994512726021,
+              "maximum": -0.26450008430282,
+              "mean": -0.290326236032,
+              "minimum": -0.32994512726021,
+              "observation_count": 19
+            },
+            "median_alt_minus_btc_return_decimal": {
+              "change": -0.011455287287,
+              "first": -0.214975873113,
+              "latest": -0.2264311604,
+              "maximum": -0.202525316052,
+              "mean": -0.220335518773,
+              "minimum": -0.230276687852,
+              "observation_count": 19
+            },
+            "membership_change_events": 11,
+            "outperforming_btc_share": {
+              "change": -0.061224489796,
+              "first": 0.34693877551,
+              "latest": 0.285714285714,
+              "maximum": 0.367346938776,
+              "mean": 0.330827067669,
+              "minimum": 0.285714285714,
+              "observation_count": 19
+            },
+            "published_threshold_crossings": 0,
+            "score": {
+              "change": -6.0,
+              "first": 35.0,
+              "latest": 29.0,
+              "maximum": 37.0,
+              "mean": 33.421052631579,
+              "minimum": 29.0,
+              "observation_count": 19
+            },
+            "source_state_counts": {
+              "BETWEEN_PUBLISHED_THRESHOLDS": 19
+            },
+            "unique_membership_hash_count": 10
+          },
+          "90": {
+            "benchmark_return_decimal": {
+              "change": 0.088431331451,
+              "first": 0.067742241324821,
+              "latest": 0.15617357277619,
+              "maximum": 0.32407565496177,
+              "mean": 0.190793247263,
+              "minimum": 0.059884024080014,
+              "observation_count": 19
+            },
+            "median_alt_minus_btc_return_decimal": {
+              "change": -0.026900433574,
+              "first": -0.068564876133,
+              "latest": -0.095465309707,
+              "maximum": -0.010397389585,
+              "mean": -0.103599626278,
+              "minimum": -0.199030816039,
+              "observation_count": 19
+            },
+            "membership_change_events": 6,
+            "outperforming_btc_share": {
+              "change": -0.102040816327,
+              "first": 0.387755102041,
+              "latest": 0.285714285714,
+              "maximum": 0.428571428571,
+              "mean": 0.339419978518,
+              "minimum": 0.244897959184,
+              "observation_count": 19
+            },
+            "published_threshold_crossings": 2,
+            "score": {
+              "change": -10.0,
+              "first": 39.0,
+              "latest": 29.0,
+              "maximum": 43.0,
+              "mean": 34.210526315789,
+              "minimum": 24.0,
+              "observation_count": 19
+            },
+            "source_state_counts": {
+              "BETWEEN_PUBLISHED_THRESHOLDS": 18,
+              "BITCOIN_SEASON": 1
+            },
+            "unique_membership_hash_count": 7
+          }
+        },
+        "independent_method_crosscheck": {
+          "affects_readiness": false,
+          "authority": "LOWER_GRADE_SHADOW_METHOD_DISPERSION_ONLY",
+          "cmc_top100_minus_blockchaincenter_top50_90d_score": {
+            "change": 10.0,
+            "first": -1.0,
+            "latest": 9.0,
+            "maximum": 9.0,
+            "mean": 2.105263157895,
+            "minimum": -6.0,
+            "observation_count": 19
+          },
+          "component_reconciliation": "NOT_AVAILABLE_FROM_CAPTURED_PAGE",
+          "evidence_grade": "PUBLISHED_LABEL_ONLY",
+          "observed_days": 19,
+          "passing_days": 19,
+          "score": {
+            "change": 0.0,
+            "first": 38.0,
+            "latest": 38.0,
+            "maximum": 46.0,
+            "mean": 36.315789473684,
+            "minimum": 23.0,
+            "observation_count": 19
+          },
+          "source_contract": "COINMARKETCAP_ALTCOIN_SEASON_SHADOW_CROSSCHECK_v1",
+          "source_state_counts": {
+            "BETWEEN_PUBLISHED_THRESHOLDS": 17,
+            "BITCOIN_SEASON": 2
+          },
+          "status_counts": {
+            "PASS": 19
+          }
+        },
+        "interpolation": false,
+        "minimum_pass_days_for_ready": 42,
+        "observed_days": 19,
+        "passing_coverage_pct": 33.929,
+        "passing_days": 19,
+        "readiness": "MATURING",
+        "status_counts": {
+          "PASS": 19
+        },
+        "window_end_utc_exclusive": "2026-09-14T00:00:00Z",
+        "window_start_utc": "2026-07-20T00:00:00Z"
+      },
+      "7d": {
+        "daily_observations": [
+          {
+            "failure_state": null,
+            "method_crosscheck": {
+              "failure_state": null,
+              "published_score": 46,
+              "source_path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/09/2026-09-07/rotation_method_crosscheck_snapshot.json",
+              "source_raw_sha256": "71e1a4a2a905a0a551cf19450cea55f1b3686c600ab772afd13aa29520942e9f",
+              "source_state": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "status": "PASS"
+            },
+            "methodology_fingerprint_sha256": "652f18b80d8f4af9aa6a5a441d783ff8332713a1aedeb81e2fd280d9dbfcb7ed",
+            "observation_date_utc": "2026-09-07",
+            "retrieved_at_utc": "2026-09-07T10:20:10.248332Z",
+            "scores": {
+              "30": 53,
+              "365": 33,
+              "90": 41
+            },
+            "source_path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/09/2026-09-07/rotation_context_snapshot.json",
+            "source_raw_sha256": "4c609f4aacf5119b7908b82ccb1249013d2e9ae1530e7d3444f08bfb2e3f7d60",
+            "source_states": {
+              "30": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "365": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "90": "BETWEEN_PUBLISHED_THRESHOLDS"
+            },
+            "status": "PASS"
+          },
+          {
+            "failure_state": null,
+            "method_crosscheck": {
+              "failure_state": null,
+              "published_score": 45,
+              "source_path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/09/2026-09-08/rotation_method_crosscheck_snapshot.json",
+              "source_raw_sha256": "092583a763fb289520f870d4d480113a11fc9ea982139dc7921a8dd40265fa7c",
+              "source_state": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "status": "PASS"
+            },
+            "methodology_fingerprint_sha256": "652f18b80d8f4af9aa6a5a441d783ff8332713a1aedeb81e2fd280d9dbfcb7ed",
+            "observation_date_utc": "2026-09-08",
+            "retrieved_at_utc": "2026-09-08T09:42:34.575900Z",
+            "scores": {
+              "30": 61,
+              "365": 33,
+              "90": 43
+            },
+            "source_path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/09/2026-09-08/rotation_context_snapshot.json",
+            "source_raw_sha256": "83067a1073232f7b4fb4fb33287b82845dfac10ca6a8a753fa8be056893f9a08",
+            "source_states": {
+              "30": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "365": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "90": "BETWEEN_PUBLISHED_THRESHOLDS"
+            },
+            "status": "PASS"
+          },
+          {
+            "failure_state": null,
+            "method_crosscheck": {
+              "failure_state": null,
+              "published_score": 44,
+              "source_path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/09/2026-09-09/rotation_method_crosscheck_snapshot.json",
+              "source_raw_sha256": "ed50dd06ba4780853d69c0aedbf73a3ca9d56a78e0a7fbdf0f845af9804ede4d",
+              "source_state": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "status": "PASS"
+            },
+            "methodology_fingerprint_sha256": "652f18b80d8f4af9aa6a5a441d783ff8332713a1aedeb81e2fd280d9dbfcb7ed",
+            "observation_date_utc": "2026-09-09",
+            "retrieved_at_utc": "2026-09-09T09:47:43.660814Z",
+            "scores": {
+              "30": 59,
+              "365": 35,
+              "90": 41
+            },
+            "source_path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/09/2026-09-09/rotation_context_snapshot.json",
+            "source_raw_sha256": "566e10ac61aeb382ff393310c8b34c2f1a54abadb627b8a7b42250697bf2752b",
+            "source_states": {
+              "30": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "365": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "90": "BETWEEN_PUBLISHED_THRESHOLDS"
+            },
+            "status": "PASS"
+          },
+          {
+            "failure_state": null,
+            "method_crosscheck": {
+              "failure_state": null,
+              "published_score": 38,
+              "source_path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/09/2026-09-10/rotation_method_crosscheck_snapshot.json",
+              "source_raw_sha256": "ace56cd2455353ed5d28b807b32b6aea535daac1669e096ca444ac995f791225",
+              "source_state": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "status": "PASS"
+            },
+            "methodology_fingerprint_sha256": "652f18b80d8f4af9aa6a5a441d783ff8332713a1aedeb81e2fd280d9dbfcb7ed",
+            "observation_date_utc": "2026-09-10",
+            "retrieved_at_utc": "2026-09-10T09:45:44.964790Z",
+            "scores": {
+              "30": 43,
+              "365": 33,
+              "90": 33
+            },
+            "source_path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/09/2026-09-10/rotation_context_snapshot.json",
+            "source_raw_sha256": "0f036e6454332ea6c6df8b5d142e63276b324163c1d9ff1b14416ea18ecac5be",
+            "source_states": {
+              "30": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "365": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "90": "BETWEEN_PUBLISHED_THRESHOLDS"
+            },
+            "status": "PASS"
+          },
+          {
+            "failure_state": null,
+            "method_crosscheck": {
+              "failure_state": null,
+              "published_score": 38,
+              "source_path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/09/2026-09-11/rotation_method_crosscheck_snapshot.json",
+              "source_raw_sha256": "7fbc4d03f9b715dfcc81893d35c105dfad3af8cebd0ee95f726d6424f0bd082b",
+              "source_state": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "status": "PASS"
+            },
+            "methodology_fingerprint_sha256": "652f18b80d8f4af9aa6a5a441d783ff8332713a1aedeb81e2fd280d9dbfcb7ed",
+            "observation_date_utc": "2026-09-11",
+            "retrieved_at_utc": "2026-09-11T09:42:48.600296Z",
+            "scores": {
+              "30": 41,
+              "365": 29,
+              "90": 37
+            },
+            "source_path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/09/2026-09-11/rotation_context_snapshot.json",
+            "source_raw_sha256": "e9498813f68a66b7548f9ffab84daaf006ffd80c5fc575874cb1e357e8b4cb9e",
+            "source_states": {
+              "30": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "365": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "90": "BETWEEN_PUBLISHED_THRESHOLDS"
+            },
+            "status": "PASS"
+          },
+          {
+            "failure_state": null,
+            "method_crosscheck": {
+              "failure_state": null,
+              "published_score": 41,
+              "source_path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/09/2026-09-12/rotation_method_crosscheck_snapshot.json",
+              "source_raw_sha256": "457887cd596ee8ed4cee63fae5674a6464f7a5658de180cce97b8f5719ca6ef7",
+              "source_state": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "status": "PASS"
+            },
+            "methodology_fingerprint_sha256": "652f18b80d8f4af9aa6a5a441d783ff8332713a1aedeb81e2fd280d9dbfcb7ed",
+            "observation_date_utc": "2026-09-12",
+            "retrieved_at_utc": "2026-09-12T09:22:46.610200Z",
+            "scores": {
+              "30": 43,
+              "365": 29,
+              "90": 35
+            },
+            "source_path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/09/2026-09-12/rotation_context_snapshot.json",
+            "source_raw_sha256": "1a649fab1027bc20759f6020c425cf63ae2c25a6f6d20a2eab96b8c4e2b318be",
+            "source_states": {
+              "30": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "365": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "90": "BETWEEN_PUBLISHED_THRESHOLDS"
+            },
+            "status": "PASS"
+          },
+          {
+            "failure_state": null,
+            "method_crosscheck": {
+              "failure_state": null,
+              "published_score": 38,
+              "source_path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/09/2026-09-13/rotation_method_crosscheck_snapshot.json",
+              "source_raw_sha256": "6f3cb674430b60772963c2bf4a9c4b8429da8c680012dbdeac3f8214794a8dfb",
+              "source_state": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "status": "PASS"
+            },
+            "methodology_fingerprint_sha256": "652f18b80d8f4af9aa6a5a441d783ff8332713a1aedeb81e2fd280d9dbfcb7ed",
+            "observation_date_utc": "2026-09-13",
+            "retrieved_at_utc": "2026-09-13T10:18:21.845373Z",
+            "scores": {
+              "30": 37,
+              "365": 29,
+              "90": 29
+            },
+            "source_path": "03_DAILY_CAPTURE_LOGS/breadth_rich/2026/09/2026-09-13/rotation_context_snapshot.json",
+            "source_raw_sha256": "8527abc5cb4869e4754a916902a1aff81550ee1de79b5ec97b640285be73fe42",
+            "source_states": {
+              "30": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "365": "BETWEEN_PUBLISHED_THRESHOLDS",
+              "90": "BETWEEN_PUBLISHED_THRESHOLDS"
+            },
+            "status": "PASS"
+          }
+        ],
+        "degraded_days": 0,
+        "expected_days": 7,
+        "forward_fill": false,
+        "horizons": {
+          "30": {
+            "benchmark_return_decimal": {
+              "change": 0.002503829068,
+              "first": 0.21577103011545,
+              "latest": 0.21827485918345,
+              "maximum": 0.23598324849273,
+              "mean": 0.215248405462,
+              "minimum": 0.19825047020831,
+              "observation_count": 7
+            },
+            "median_alt_minus_btc_return_decimal": {
+              "change": -0.053284467744,
+              "first": 0.015934177197,
+              "latest": -0.037350290547,
+              "maximum": 0.030320958363,
+              "mean": -0.008224489323,
+              "minimum": -0.037350290547,
+              "observation_count": 7
+            },
+            "membership_change_events": 2,
+            "outperforming_btc_share": {
+              "change": -0.163265306122,
+              "first": 0.530612244898,
+              "latest": 0.367346938776,
+              "maximum": 0.612244897959,
+              "mean": 0.481049562682,
+              "minimum": 0.367346938776,
+              "observation_count": 7
+            },
+            "published_threshold_crossings": 0,
+            "score": {
+              "change": -16.0,
+              "first": 53.0,
+              "latest": 37.0,
+              "maximum": 61.0,
+              "mean": 48.142857142857,
+              "minimum": 37.0,
+              "observation_count": 7
+            },
+            "source_state_counts": {
+              "BETWEEN_PUBLISHED_THRESHOLDS": 7
+            },
+            "unique_membership_hash_count": 2
+          },
+          "365": {
+            "benchmark_return_decimal": {
+              "change": -0.051034352121,
+              "first": -0.278910775139,
+              "latest": -0.32994512726021,
+              "maximum": -0.278910775139,
+              "mean": -0.304863787521,
+              "minimum": -0.32994512726021,
+              "observation_count": 7
+            },
+            "median_alt_minus_btc_return_decimal": {
+              "change": -0.020821191619,
+              "first": -0.205609968781,
+              "latest": -0.2264311604,
+              "maximum": -0.205609968781,
+              "mean": -0.219558097761,
+              "minimum": -0.227866599705,
+              "observation_count": 7
+            },
+            "membership_change_events": 4,
+            "outperforming_btc_share": {
+              "change": -0.040816326531,
+              "first": 0.326530612245,
+              "latest": 0.285714285714,
+              "maximum": 0.34693877551,
+              "mean": 0.31195335277,
+              "minimum": 0.285714285714,
+              "observation_count": 7
+            },
+            "published_threshold_crossings": 0,
+            "score": {
+              "change": -4.0,
+              "first": 33.0,
+              "latest": 29.0,
+              "maximum": 35.0,
+              "mean": 31.571428571429,
+              "minimum": 29.0,
+              "observation_count": 7
+            },
+            "source_state_counts": {
+              "BETWEEN_PUBLISHED_THRESHOLDS": 7
+            },
+            "unique_membership_hash_count": 5
+          },
+          "90": {
+            "benchmark_return_decimal": {
+              "change": -0.12232022621,
+              "first": 0.27849379898614,
+              "latest": 0.15617357277619,
+              "maximum": 0.27849379898614,
+              "mean": 0.222891920872,
+              "minimum": 0.15617357277619,
+              "observation_count": 7
+            },
+            "median_alt_minus_btc_return_decimal": {
+              "change": -0.046988812287,
+              "first": -0.04847649742,
+              "latest": -0.095465309707,
+              "maximum": -0.010397389585,
+              "mean": -0.060672761782,
+              "minimum": -0.095987355113,
+              "observation_count": 7
+            },
+            "membership_change_events": 2,
+            "outperforming_btc_share": {
+              "change": -0.122448979592,
+              "first": 0.408163265306,
+              "latest": 0.285714285714,
+              "maximum": 0.428571428571,
+              "mean": 0.367346938775,
+              "minimum": 0.285714285714,
+              "observation_count": 7
+            },
+            "published_threshold_crossings": 0,
+            "score": {
+              "change": -12.0,
+              "first": 41.0,
+              "latest": 29.0,
+              "maximum": 43.0,
+              "mean": 37.0,
+              "minimum": 29.0,
+              "observation_count": 7
+            },
+            "source_state_counts": {
+              "BETWEEN_PUBLISHED_THRESHOLDS": 7
+            },
+            "unique_membership_hash_count": 3
+          }
+        },
+        "independent_method_crosscheck": {
+          "affects_readiness": false,
+          "authority": "LOWER_GRADE_SHADOW_METHOD_DISPERSION_ONLY",
+          "cmc_top100_minus_blockchaincenter_top50_90d_score": {
+            "change": 4.0,
+            "first": 5.0,
+            "latest": 9.0,
+            "maximum": 9.0,
+            "mean": 4.428571428571,
+            "minimum": 1.0,
+            "observation_count": 7
+          },
+          "component_reconciliation": "NOT_AVAILABLE_FROM_CAPTURED_PAGE",
+          "evidence_grade": "PUBLISHED_LABEL_ONLY",
+          "observed_days": 7,
+          "passing_days": 7,
+          "score": {
+            "change": -8.0,
+            "first": 46.0,
+            "latest": 38.0,
+            "maximum": 46.0,
+            "mean": 41.428571428571,
+            "minimum": 38.0,
+            "observation_count": 7
+          },
+          "source_contract": "COINMARKETCAP_ALTCOIN_SEASON_SHADOW_CROSSCHECK_v1",
+          "source_state_counts": {
+            "BETWEEN_PUBLISHED_THRESHOLDS": 7
+          },
+          "status_counts": {
+            "PASS": 7
+          }
+        },
+        "interpolation": false,
+        "minimum_pass_days_for_ready": 5,
+        "observed_days": 7,
+        "passing_coverage_pct": 100.0,
+        "passing_days": 7,
+        "readiness": "READY",
+        "status_counts": {
+          "PASS": 7
+        },
+        "window_end_utc_exclusive": "2026-09-14T00:00:00Z",
+        "window_start_utc": "2026-09-07T00:00:00Z"
+      }
+    }
+  },
+  "sequence_evidence_built": true,
+  "sequence_facts_path": "weekly/2026/W37/WEEKLY_SEQUENCE_FACTS.json",
+  "settled_etf": {
+    "authority": "SHADOW_CALIBRATION_INPUT_ONLY",
+    "contract": "WEEKLY_SETTLED_ETF_CALIBRATION_v1",
+    "records": [
+      {
+        "BTC": -46.6,
+        "ETH": -24.3,
+        "session_date": "2026-09-08"
+      },
+      {
+        "BTC": -120.2,
+        "ETH": 34.7,
+        "session_date": "2026-09-09"
+      },
+      {
+        "BTC": -282.7,
+        "ETH": -29.9,
+        "session_date": "2026-09-10"
+      },
+      {
+        "BTC": -13.2,
+        "ETH": 216.4,
+        "session_date": "2026-09-11"
+      }
+    ],
+    "session_counts": {
+      "BTC": 4,
+      "ETH": 4
+    },
+    "week_total_reported_units": {
+      "BTC": -462.7,
+      "ETH": 196.9
+    }
+  },
+  "source_capture_paths": [
+    "03_DAILY_CAPTURE_LOGS/captures/2026/09/07/044300_gh-34084112424-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/09/07/091651_gh-34105087419-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/09/07/141534_gh-34131942644-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/09/07/174419_gh-34148800800-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/09/07/195637_gh-34157472243-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/09/07/225047_gh-34168024594-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/09/08/043738_gh-34187638418-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/09/08/084929_gh-34206572060-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/09/08/125300_gh-34228593163-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/09/08/163620_gh-34252040214-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/09/08/192539_gh-34268860784-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/09/08/224104_gh-34287107313-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/09/09/044331_gh-34312059687-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/09/09/085559_gh-34331817610-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/09/09/125825_gh-34354148031-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/09/09/163622_gh-34377742884-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/09/09/191606_gh-34394003345-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/09/09/223354_gh-34412814679-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/09/10/044405_gh-34438290808-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/09/10/085454_gh-34457716898-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/09/10/125539_gh-34479490372-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/09/10/162209_gh-34501613820-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/09/10/190704_gh-34518431253-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/09/10/223602_gh-34538210083-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/09/11/044156_gh-34563148188-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/09/11/085256_gh-34581331134-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/09/11/125001_gh-34600945620-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/09/11/162613_gh-34621942101-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/09/11/190902_gh-34637233455-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/09/11/223545_gh-34654666409-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/09/12/043544_gh-34673401368-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/09/12/083639_gh-34683683109-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/09/12/121051_gh-34692953878-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/09/12/153013_gh-34702398111-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/09/12/182138_gh-34710933149-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/09/12/221806_gh-34722348720-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/09/13/044856_gh-34738765227-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/09/13/092753_gh-34749536235-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/09/13/131847_gh-34759473067-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/09/13/161432_gh-34767966020-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/09/13/184638_gh-34775651175-1.json",
+    "03_DAILY_CAPTURE_LOGS/captures/2026/09/13/222455_gh-34786704043-1.json"
+  ]
+}

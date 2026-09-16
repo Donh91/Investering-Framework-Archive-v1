@@ -1,0 +1,163 @@
+name: Cycle Navigator Public Contract Gate
+
+on:
+  pull_request:
+    paths:
+      - "05_CYCLE_NAVIGATOR/site/**"
+      - "05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json"
+      - "05_CYCLE_NAVIGATOR/weekly/**/CYCLE_NAVIGATOR_MACHINE_PACKAGE.json"
+      - "05_CYCLE_NAVIGATOR/weekly/**/CYCLE_NAVIGATOR_SCORECARD.json"
+      - "05_CYCLE_NAVIGATOR/weekly/**/CYCLE_NAVIGATOR_FORECAST_FREEZE.json"
+      - "05_CYCLE_NAVIGATOR/weekly/**/CYCLE_NAVIGATOR_INTERNAL_PRECISION_FREEZE.json"
+      - ".github/workflows/cycle-navigator-pages.yml"
+      - ".github/workflows/cycle-navigator-public-contract-gate.yml"
+  push:
+    branches: [main]
+    paths:
+      - "05_CYCLE_NAVIGATOR/site/**"
+      - "05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json"
+      - "05_CYCLE_NAVIGATOR/weekly/**/CYCLE_NAVIGATOR_MACHINE_PACKAGE.json"
+      - "05_CYCLE_NAVIGATOR/weekly/**/CYCLE_NAVIGATOR_SCORECARD.json"
+      - "05_CYCLE_NAVIGATOR/weekly/**/CYCLE_NAVIGATOR_FORECAST_FREEZE.json"
+      - "05_CYCLE_NAVIGATOR/weekly/**/CYCLE_NAVIGATOR_INTERNAL_PRECISION_FREEZE.json"
+      - ".github/workflows/cycle-navigator-pages.yml"
+      - ".github/workflows/cycle-navigator-public-contract-gate.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-public-score-authority:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Verify CN scorecard is the single public score authority
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json,re
+          from pathlib import Path
+
+          pointer=json.loads(Path('05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json').read_text())
+          week_dir=str(pointer.get('week_dir') or '')
+          if not week_dir.startswith('05_CYCLE_NAVIGATOR/weekly/') or '..' in week_dir:
+              raise SystemExit('invalid_week_dir')
+          root=Path(week_dir)
+          scorecard=json.loads((root/'CYCLE_NAVIGATOR_SCORECARD.json').read_text())
+          machine=json.loads((root/'CYCLE_NAVIGATOR_MACHINE_PACKAGE.json').read_text())
+
+          if machine.get('evaluation') != scorecard:
+              raise SystemExit('machine_evaluation_scorecard_mismatch')
+          if int(scorecard.get('issue_scored') or 0) != int(machine.get('previous_issue_number') or 0):
+              raise SystemExit('scorecard_issue_lineage_mismatch')
+          if int(scorecard.get('completed_iso_week') or 0) != int(pointer.get('completed_source_week') or 0):
+              raise SystemExit('scorecard_completed_week_mismatch')
+
+          for key in ('structural_score','price_range_score','decision_utility_score','public_continuity_score','parameter_coverage_pct'):
+              value=scorecard.get(key)
+              if value is None: continue
+              value=float(value)
+              if not 0.0 <= value <= 100.0:
+                  raise SystemExit(f'score_out_of_bounds:{key}')
+
+          x=str(machine.get('x_ready_markdown') or '')
+          structural_claims=[float(v) for v in re.findall(r'(?i)structural score\s*:\s*\*{0,2}(\d+(?:\.\d+)?)\s*%', x)]
+          official=scorecard.get('structural_score')
+          if structural_claims:
+              if official is None:
+                  raise SystemExit('x_structural_claim_without_scorecard_score')
+              if any(abs(v-float(official)) > 1e-9 for v in structural_claims):
+                  raise SystemExit('x_structural_claim_mismatch')
+
+          overall_claims=[float(v) for v in re.findall(r'(?i)overall precision\s*:\s*\*{0,2}(\d+(?:\.\d+)?)\s*%', x)]
+          continuity=scorecard.get('public_continuity_score')
+          if overall_claims:
+              if continuity is None:
+                  raise SystemExit('x_overall_precision_claim_without_supported_aggregate')
+              if any(abs(v-float(continuity)) > 1e-9 for v in overall_claims):
+                  raise SystemExit('x_overall_precision_claim_mismatch')
+
+          print(json.dumps({'status':'PASS','issue_scored':scorecard.get('issue_scored'),'completed_iso_week':scorecard.get('completed_iso_week'),'structural_score':scorecard.get('structural_score'),'x_is_downstream_only':True},sort_keys=True))
+          PY
+
+      - name: Build exact final Pages artifact sequence
+        run: |
+          set -euo pipefail
+          node 05_CYCLE_NAVIGATOR/site/build-public.mjs
+          node 05_CYCLE_NAVIGATOR/site/build-apple-prototype.mjs
+          node 05_CYCLE_NAVIGATOR/site/build-shortcut.mjs
+          node 05_CYCLE_NAVIGATOR/site/build-score-bundle.mjs
+          node 05_CYCLE_NAVIGATOR/site/build-live-observation.mjs
+          node 05_CYCLE_NAVIGATOR/site/build-social-card.mjs
+
+      - name: Verify final public artifact and live-observation firewall
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          pointer=json.loads(Path('05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json').read_text())
+          root=Path(pointer['week_dir'])
+          scorecard=json.loads((root/'CYCLE_NAVIGATOR_SCORECARD.json').read_text())
+          freeze=json.loads((root/'CYCLE_NAVIGATOR_INTERNAL_PRECISION_FREEZE.json').read_text())
+          public_freeze=json.loads((root/'CYCLE_NAVIGATOR_FORECAST_FREEZE.json').read_text())
+          snapshot=json.loads(Path('05_CYCLE_NAVIGATOR/site/dist/data/latest.json').read_text())
+          bundle=snapshot.get('weekly_score_bundle') or {}
+          live=snapshot.get('live_observation') or {}
+
+          if bundle.get('authority') != 'CYCLE_NAVIGATOR_SCORECARD':
+              raise SystemExit('public_snapshot_missing_score_authority')
+          for key in ('issue_scored','completed_iso_week','score_status','structural_score','price_range_score','decision_utility_score','public_continuity_score'):
+              if bundle.get(key) != scorecard.get(key):
+                  raise SystemExit(f'public_snapshot_score_mismatch:{key}')
+
+          if live.get('authority') != 'NON_AUTHORITATIVE_OBSERVATION_ONLY':
+              raise SystemExit('live_observation_authority_leak')
+          if live.get('official_weekly_scores_mutable') is not False or live.get('forecast_mutable') is not False:
+              raise SystemExit('live_observation_mutability_leak')
+          if int(live.get('issue_number') or 0) != int(pointer.get('issue_number') or 0):
+              raise SystemExit('live_observation_issue_mismatch')
+          unique=[c for c in freeze.get('claims',[]) if not c.get('alias_of')]
+          if int(live.get('frozen_claim_count') or 0) != len(unique):
+              raise SystemExit('live_observation_claim_count_mismatch')
+
+          ranges=[]
+          for asset,prefix in [('BTC','btc'),('ETH','eth')]:
+              low=public_freeze.get(f'{prefix}_range_low'); high=public_freeze.get(f'{prefix}_range_high')
+              if low is not None and high is not None:
+                  ranges.append(asset)
+          if bool(live.get('live_price_scoring_allowed')) != bool(ranges):
+              raise SystemExit('live_price_scoring_gate_mismatch')
+          if not ranges and live.get('provisional_score') is not None:
+              raise SystemExit('fabricated_live_score_without_eligible_evidence')
+
+          index=Path('05_CYCLE_NAVIGATOR/site/dist/index.html').read_text()
+          required_scripts=('./quiet-production.js','./shortcut.js','./weekly-score.js','./live-observation.js','./public-copy.js')
+          for script in required_scripts:
+              if script not in index:
+                  raise SystemExit(f'final_public_widget_not_injected:{script}')
+          required_files=(
+              '05_CYCLE_NAVIGATOR/site/dist/weekly-score.js',
+              '05_CYCLE_NAVIGATOR/site/dist/live-observation.js',
+              '05_CYCLE_NAVIGATOR/site/dist/public-copy.js',
+              '05_CYCLE_NAVIGATOR/site/dist/quiet-production.js',
+              '05_CYCLE_NAVIGATOR/site/dist/shortcut.js',
+              '05_CYCLE_NAVIGATOR/site/dist/social-card.png'
+          )
+          for path in required_files:
+              if not Path(path).exists():
+                  raise SystemExit(f'final_public_asset_missing:{path}')
+          print(json.dumps({'status':'PASS','final_pages_artifact':'VERIFIED','public_score_bundle':'BOUND','live_observation':'FAIL_CLOSED_SAFE'},sort_keys=True))
+          PY

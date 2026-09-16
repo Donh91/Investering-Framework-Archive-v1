@@ -1,0 +1,52 @@
+{
+  "authority": {
+    "alpha_reopen_authorized": false,
+    "canonical_market_state": false,
+    "historical_rewrite": false,
+    "portfolio_execution": false,
+    "retroactive_rescore": false
+  },
+  "canonical_pr": 947,
+  "ci": {
+    "automation_production_health": {"run_id": 34786657438, "status": "PASS"},
+    "continuity_learning": {"run_id": 34786657451, "status": "PASS"},
+    "daily_capture_architecture": {"live_hourly_source_smoke": "PASS", "run_id": 34786657567, "status": "PASS"},
+    "data_architecture": {"run_id": 34786657449, "status": "PASS"},
+    "intraday_execution_gate": {"run_id": 34786657470, "status": "PASS"},
+    "situation_room_owner_live": {"run_id": 34786657514, "status": "PASS"},
+    "storage_health": {"run_id": 34786657559, "status": "PASS"}
+  },
+  "contract": "AT_EXP_004_CLOSURE_READBACK_v1",
+  "downstream_quarantine": {
+    "post_merge_hourly_derived_evidence": {
+      "reason": "Fixed hourly owner bytes are on main and live hourly source coverage passed. This grants data-integrity eligibility only, not alpha or execution authority.",
+      "status": "PROSPECTIVELY_USABLE_UNDER_EXISTING_RESEARCH_GATES"
+    },
+    "pre_fix_hourly_derived_return_and_oi_change_history": {
+      "reason": "Historical derived rows were intentionally not rewritten. Intraday research consumes return_1h_pct and oi_change_1h_pct, so pre-fix derived history cannot be silently treated as repaired.",
+      "status": "REMAINS_QUARANTINED_FOR_RETROSPECTIVE_ALPHA_EVIDENCE"
+    },
+    "pullback_learning_close_only_lane": {
+      "reason": "Current consumer reads latest complete spot closes btc_close, eth_close and ethbtc_close; its separate eligibility suspension remains authoritative.",
+      "status": "UNAFFECTED_BY_AT_EXP_004_DERIVED_STATE_DEFECT"
+    },
+    "raw_hourly_ohlcv_volume_taker_oi_levels": {
+      "reason": "AT-EXP-004 isolated the realised defect to derived/persistence semantics and did not authorize raw-history rewrite.",
+      "status": "USABLE_ABSENT_NEW_CONTRARY_EVIDENCE"
+    },
+    "situation_room": {
+      "reason": "Fixed writer byte is on main and Situation Room live gate passed. No retrospective rewrite or claim of historical downgrade realization.",
+      "status": "PROSPECTIVELY_USABLE_UNDER_EXISTING_RESEARCH_GATES"
+    }
+  },
+  "experiment_id": "AT-EXP-004",
+  "issue": 941,
+  "merge_commit_sha": "6fe6439e6ecdfae22b02b3937625da81adfdb181",
+  "merged_byte_readback": {
+    "scripts/daily_capture/build_hourly_sequence.py": "ffef9352e8e2721c6970d9ef6a21227a0ee9307a",
+    "scripts/data_terminal/situation_room_daily_owner.py": "d412f4cd6911d2c73ed95fcd01cc8ffa2cf2d515"
+  },
+  "next_gate": "Existing Codex completion plus MISSION_CONVERGENCE receipt must resolve #941 lifecycle. AUTO_TRADING alpha research requires a separate governed reopen decision after that resolution.",
+  "status": "BOUNDED_REMEDIATION_VERIFIED_PENDING_LIFECYCLE_RESOLUTION",
+  "verified_at_utc": "2026-09-13T22:27:00Z"
+}

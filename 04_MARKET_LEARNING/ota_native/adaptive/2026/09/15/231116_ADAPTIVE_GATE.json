@@ -1,0 +1,83 @@
+{
+  "active_signal_signature": [
+    "breadth_material_delta",
+    "breadth_regime_change",
+    "classified_evidential",
+    "classified_new_information"
+  ],
+  "adaptive_score": 4.25,
+  "adaptive_score_threshold": 3.0,
+  "attention_weights_next": {
+    "breadth_material_delta": 0.95,
+    "breadth_regime_change": 1.05,
+    "classified_evidential": 1.05,
+    "classified_new_information": 1.15,
+    "framework_data_gap": 0.7,
+    "research_novelty": 0.8,
+    "settled_transition": 1.25
+  },
+  "attention_weights_used": {
+    "breadth_material_delta": 0.9,
+    "breadth_regime_change": 1.0,
+    "classified_evidential": 1.0,
+    "classified_new_information": 1.1,
+    "framework_data_gap": 0.7,
+    "research_novelty": 0.8,
+    "settled_transition": 1.25
+  },
+  "authority": {
+    "automatic_weight_change_to_market_model": false,
+    "canonical_state_change": false,
+    "experiment_promotion": false,
+    "market_rule_change": false,
+    "new_market_source_calls": false,
+    "portfolio_execution": false,
+    "threshold_change": false
+  },
+  "blockers": [],
+  "canonical_effect": false,
+  "classified_delta_counts": {
+    "CONTEXT_ONLY": 1,
+    "EVIDENTIAL": 1,
+    "NEW_INFORMATION": 1
+  },
+  "contract": "NATIVE_OTA_ADAPTIVE_GATE_v1",
+  "decision": "RUN_ADAPTIVE_FULL_OTA",
+  "decision_hash_sha256": "36791d2318a26558bdc15b64f1b867a0b69a72507e2e18aea2daf81f48c361e0",
+  "framework_data_gap_count": 0,
+  "full_ota_runs_this_iso_week_before_decision": 0,
+  "generated_at_utc": "2026-09-15T23:11:16.064169Z",
+  "hours_since_latest_full_ota": null,
+  "latest_breadth_advance_ratio": 0.15,
+  "latest_full_ota_utc": null,
+  "learning_update": "BOOST_NOVEL_ACTIVE_SIGNALS",
+  "market_semantics_changed": false,
+  "portfolio_rules_changed": false,
+  "previous_adaptive_breadth_advance_ratio": 0.57,
+  "reasons": [
+    "breadth_material_delta",
+    "breadth_regime_change",
+    "classified_evidential",
+    "classified_new_information"
+  ],
+  "research_primary_action": "QUEUE_BOUNDED_RESEARCH",
+  "run_full_ota": true,
+  "schema_version": 1,
+  "self_development_scope": [
+    "ADAPTIVE_CADENCE",
+    "RESEARCH_ATTENTION_PRIORITY",
+    "REDUNDANCY_DAMPING",
+    "NOVELTY_WEIGHTING"
+  ],
+  "signal_contributions": {
+    "breadth_material_delta": 0.9,
+    "breadth_regime_change": 1.5,
+    "classified_evidential": 0.75,
+    "classified_new_information": 1.1,
+    "framework_data_gap": 0.0,
+    "research_novelty": 0.0,
+    "settled_transition": 0.0
+  },
+  "source_policy": "READ_EXISTING_GITHUB_OWNERS_ONLY_NO_NEW_MARKET_SOURCE_CALLS",
+  "thresholds_changed": false
+}

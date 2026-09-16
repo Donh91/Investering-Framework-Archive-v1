@@ -37,6 +37,26 @@ jobs:
             --rejected-root research/data_ping_bridge/rejected \
             --processed-root research/data_ping_bridge/processed \
             --run-id "${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+      - name: Capture prospective T6 rotation-survival observation
+        run: |
+          python -m unittest tests.learning.test_t6_rotation_survival -v
+          POINTER=04_MARKET_LEARNING/entry_signals/auto_market_state/LATEST.json
+          CADENCE=03_DAILY_CAPTURE_LOGS/cadence/LATEST.json
+          test -f "$POINTER"
+          test -f "$CADENCE"
+          PACKET=$(python - <<'PY'
+          import json
+          from pathlib import Path
+          p=json.loads(Path('04_MARKET_LEARNING/entry_signals/auto_market_state/LATEST.json').read_text())
+          assert p['contract']=='AUTO_MARKET_STATE_LATEST_POINTER_v1'
+          print(p['packet_path'])
+          PY
+          )
+          test -f "$PACKET"
+          python scripts/learning/t6_rotation_survival.py \
+            --packet "$PACKET" \
+            --cadence "$CADENCE" \
+            --output-root research/framework_memory/rotation_survival_forward_rows
       - name: Capture Farside ETF owner
         continue-on-error: true
         run: |

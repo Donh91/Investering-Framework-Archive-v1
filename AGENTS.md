@@ -61,7 +61,43 @@ Before automation, incident, API-agent, Codex, scheduled delivery or remediation
 
 A health report may be RED while its observer workflow correctly succeeds after durable publication. `CODEX_READY` is a bounded task package, not proof that Codex has run, changed code or merged. `LATEST_CODEX_EXECUTION_STATE.json` is observability only and never overrides `LATEST_CODEX_READY_TASKS.json`. Do not work from conversation memory or an issue summary when newer hash-bound operational files exist.
 
-### 0.1 Research to Codex fast intake
+### 0.1 Current production data authority - binding
+
+Canonical owner:
+
+`00_ARCHIVE_CONTROL/2026-09-14__autonomous-data-authority-transition-v1__canonical.md`
+
+Machine mirror:
+
+`00_ARCHIVE_CONTROL/CURRENT_PRODUCTION_DATA_AUTHORITY.json`
+
+For **current-state** Master Monday, Cycle Navigator, CN site, short-horizon navigation, or market-state tasks, the default route is:
+
+```text
+current operational cockpit
+-> exact current autonomous GitHub Actions / governed collector pointers
+-> hash-bound machine outputs
+-> main-framework accepted interpretation / ratification
+-> current Master Monday / Cycle Navigator output
+```
+
+Manual user-submitted DATA PING is no longer the default upstream feed and is not a prerequisite for current Master Monday or Cycle Navigator production.
+
+`02_DATA_PING/` remains valid for explicit DATA PING/RAW packet interpretation, replay/correction, historical lineage, source QA, collector diagnostics and protocol compatibility. When the task is explicitly a DATA PING/RAW task, its current packet contracts still apply.
+
+Hard routing rules:
+
+```text
+CURRENT STATE -> FOLLOW CURRENT AUTONOMOUS POINTERS.
+EXPLICIT DATA PING TASK -> USE DATA PING CONTRACTS.
+DATA_PING IN A FILENAME/PATH -> DOES NOT MAKE IT CURRENT AUTHORITY.
+```
+
+Historical `data_ping_derived_*` files, old Custom GPT collector references, and `03_WEEKLY_OPERATIONS/master_monday/latest_master_monday.json` must not be promoted to current production authority unless a current operational surface explicitly routes to them.
+
+For website fields such as `NEXT DAYS`, consume an existing current autonomous canonical output only when fresh, eligible and public-safe. If none exists, fail closed rather than creating a parallel forecast engine.
+
+### 0.2 Research to Codex fast intake
 
 When a research thread, Deep Research review, audit or external review finds a reproducible bounded code defect, or the user says an equivalent of `sæt dette i Codex-køen`, load `.agents/skills/codex-intake/SKILL.md`.
 
@@ -90,20 +126,26 @@ The operational contract is `07_PROMPTS_AND_AGENTS/codex/2026-08-22__codex-resea
 
 Before framework, DATA PING, weekly operations, Cycle Navigator, Research Lab, evidence-ledger, archive, governance or automation work:
 
-1. Read `00_ARCHIVE_CONTROL/CANONICAL_INDEX.md`.
-2. Read `00_ARCHIVE_CONTROL/INDEX_ADDENDUM_REGISTRY.md`.
-3. Read `00_ARCHIVE_CONTROL/ARCHIVE_MAP_AND_ROUTING.md`.
-4. Read `00_ARCHIVE_CONTROL/SKILL_REGISTRY.md`.
-5. Read `00_ARCHIVE_CONTROL/CROSS_REPO_DATA_BOUNDARY.md`.
-6. Read `00_ARCHIVE_CONTROL/CROSS_REPO_AGENT_CONTEXT_MAP.json`.
-7. Load the relevant skill from `.agents/skills/`.
-8. Read only the current canonical and operational files identified by those anchors, plus the restricted-plane authority when the map requires it.
+1. Read `00_ARCHIVE_CONTROL/2026-09-14__autonomous-data-authority-transition-v1__canonical.md`.
+2. Read `00_ARCHIVE_CONTROL/CURRENT_PRODUCTION_DATA_AUTHORITY.json`.
+3. Read `00_ARCHIVE_CONTROL/CANONICAL_INDEX.md`.
+4. Read `00_ARCHIVE_CONTROL/INDEX_ADDENDUM_REGISTRY.md`.
+5. Read `00_ARCHIVE_CONTROL/ARCHIVE_MAP_AND_ROUTING.md`.
+6. Read `00_ARCHIVE_CONTROL/SKILL_REGISTRY.md`.
+7. Read `00_ARCHIVE_CONTROL/CROSS_REPO_DATA_BOUNDARY.md`.
+8. Read `00_ARCHIVE_CONTROL/CROSS_REPO_AGENT_CONTEXT_MAP.json`.
+9. Load the relevant skill from `.agents/skills/`.
+10. Read only the current canonical and operational files identified by those anchors, plus the restricted-plane authority when the map requires it.
+
+The 2026-09-14 transition owner explicitly supersedes older archive/index prose **only for current production data routing**. Older sections remain valid historical architecture records for their frozen periods.
 
 Do not rely on conversation memory when repository sources are available.
 
 ## 2. Source and version governance
 
-- The highest explicitly active DATA PING version wins.
+- For current-state work, the newest eligible current autonomous pointer/output chain named by the operational cockpit wins within its governed domain.
+- For an explicit DATA PING/RAW packet task, the highest explicitly active packet/protocol version applicable to that task wins.
+- A historical DATA PING version never overrides a newer current autonomous production pointer solely because it is called a truth-layer or active feed in an older document.
 - Newer operational patches override older conflicting documents in the same domain.
 - Historical, legacy, superseded, shadow and source material remain context, not current authority.
 - `DATA_MISSING` means `UNKNOWN`. It is not negative evidence.
@@ -113,44 +155,49 @@ Do not rely on conversation memory when repository sources are available.
 
 ## 3. Framework roles
 
-- DATA PING captures verified evidence and state.
+- Autonomous collectors, GitHub Actions and governed source owners produce the current production evidence/machine-output chain.
+- DATA PING is an explicit packet/protocol, replay, diagnostic and historical-lineage surface unless a current pointer explicitly routes to it.
 - The main framework owns interpretation, permissions, action and ratification.
 - Shadow and Research Lab challenge, test and learn. They do not self-promote.
 - Prospective evidence ledgers preserve pre-registered inputs, verified outcomes and test accountability.
-- Master Monday is the weekly official synthesis after ratification.
-- Cycle Navigator is public output and pre-registered accountability.
+- Master Monday is the weekly official synthesis after ratification and consumes the current autonomous evidence chain.
+- Cycle Navigator is public output and pre-registered accountability and does not require manual DATA PING submission.
 - GitHub is versioned memory and the governance control plane.
 - The public repository is the control plane; `Donh91/secrets` is the restricted data plane and has no independent market-rule authority.
 
-### 3.1 DATA PING supplemental capture
+### 3.1 DATA PING supplemental capture - explicit/legacy packet contexts only
 
-- Read `02_DATA_PING/protocols/2026-07-28__data-ping-deep-capture-escalation-protocol-v1__canonical.md` for DATA PING analysis, weekly reconciliation, experiment maturity and event-driven evidence gaps.
+This section applies when a task is explicitly about DATA PING analysis, replay, compatibility, a frozen historical period that used DATA PING, or a current pointer that explicitly routes to DATA PING. It does not make manual DATA PING the normal upstream feed for current CN or Master Monday.
+
+- Read `02_DATA_PING/protocols/2026-07-28__data-ping-deep-capture-escalation-protocol-v1__canonical.md` for eligible DATA PING analysis, weekly reconciliation, experiment maturity and event-driven evidence gaps within that task class.
 - The standard DATA PING remains bounded. Do not enlarge it by default.
-- When the weekly record is incomplete or a material event needs higher-resolution evidence, prepare one targeted copy-ready Custom GPT prompt under the protocol.
+- When an eligible historical/packet record is incomplete or a material event needs higher-resolution evidence under the protocol, prepare one targeted copy-ready Custom GPT prompt under the protocol.
 - Check `02_DATA_PING/operational_handoffs/deep_capture_request_ledger_v1.json` before preparing a prompt.
 - Weekly and event-driven requests must be deduplicated by ISO week, method scope and event cluster.
 - A prepared prompt is not evidence, and a returned package is not accepted until source, time, method, settlement and duplication checks pass.
-- Every DATA PING thread handover must preserve pending deep-capture requests and active event windows.
+- Every explicit DATA PING thread handover must preserve pending deep-capture requests and active event windows.
 
-### 3.2 DATA PING / RAW main-thread action compass
+### 3.2 DATA PING / RAW main-thread action compass - explicit packet tasks only
 
-For every Main-Framework response whose primary input is a DATA PING packet or RAW market-data ingest, including duplicate/replay packets, corrected packets, replacement threads and all future DATA PING thread versions:
+This section applies only when the primary input really is a DATA PING packet or RAW market-data ingest/replay. It does **not** define the normal production upstream for current Master Monday, Cycle Navigator or the CN website.
+
+For every Main-Framework response whose primary input is a DATA PING packet or RAW market-data ingest, including duplicate/replay packets, corrected packets, replacement threads and future DATA PING thread versions:
 
 1. resolve current repository authority first;
-2. read `02_DATA_PING/protocols/2026-08-25__three-horizon-action-compass-output-contract-v1__canonical.md` as a mandatory current owner;
+2. read `02_DATA_PING/protocols/2026-08-25__three-horizon-action-compass-output-contract-v1__canonical.md` as a mandatory current owner for that explicit packet task;
 3. apply the contract after evidence interpretation, never inside the collector wire format;
 4. end the human-facing response with the mandatory three-lane `HANDLEKOMPAS` covering the evidence-supported near-term action, the 5-7 day action window and the adaptive 3-4+ week altcoin market compass;
 5. do not rely on conversation memory, prior-thread prose or inherited summaries as a substitute for the current contract;
 6. keep Lane-3 warning and action separate; never infer `REDUCE` or `EXIT` from a warning alone;
-7. treat Three-Horizon Action Compass v1.1 as the sole current decision vocabulary; the historical E0-E7 Exit Ladder is `RETIRED_UNIMPLEMENTED`;
-8. for each fresh ingest, persist exactly one immutable Action Compass receipt through the owner implementation when repository write capability exists;
+7. treat Three-Horizon Action Compass v1.1 as the sole current decision vocabulary for that task class; the historical E0-E7 Exit Ladder is `RETIRED_UNIMPLEMENTED`;
+8. for each fresh explicit ingest, persist exactly one immutable Action Compass receipt through the owner implementation when repository write capability exists;
 9. for a duplicate or replay, emit no new receipt and do not extend an expired action horizon;
 10. if persistence is unavailable or fails, state `persistence_status: NOT_PERSISTED`; do not count the interpretation as prospective evidence;
 11. never persist full chat text, conversation summaries, holdings, quantities, account data, credentials or restricted provider values in the public receipt.
 
-This requirement is cross-thread bootstrap governance. It applies to new chats, replacement threads, handovers and repository-aware agents until a newer canonical contract explicitly supersedes the owner above. It changes decision translation and accountability only and does not increase DATA PING collector authority or automatic portfolio-execution authority.
+This requirement is cross-thread bootstrap governance for explicit DATA PING/RAW packet tasks. It changes decision translation and accountability only and does not increase DATA PING collector authority or automatic portfolio-execution authority.
 
-For a fresh ingest with repository write capability, create a private temporary candidate and run:
+For a fresh explicit ingest with repository write capability, create a private temporary candidate and run:
 
 ```bash
 python scripts/learning/action_compass_accountability.py persist \
@@ -165,11 +212,12 @@ The temporary candidate must not be committed. Commit only the generated receipt
 ## 4. Current architecture constraints
 
 - Tighten and simplify before expanding.
-- Respect the active new-engine freeze.
+- Respect any currently active engine-freeze or equivalent governance discovered from current owners; do not infer an old freeze is still active solely from historical prose.
 - Do not create a new engine, shadow layer, scoring concept or duplicate forward test without an explicit canonical exception.
 - Prefer rows, source-lineage repair, missing-data completion, reproducibility, retirement and compression over new theory.
 - Keep BTC permission and alt permission as separate evidence lanes.
 - No portfolio action may be produced from DATA PING alone.
+- No public website may create an independent market-state or short-horizon forecast engine.
 
 ## 5. Prospective evidence discipline
 
@@ -255,7 +303,8 @@ Every valid index addendum must also be discoverable through `00_ARCHIVE_CONTROL
 Before declaring work complete:
 
 - verify every referenced path exists;
-- verify active versions against the canonical index and addendum registry;
+- verify current production data routing against `00_ARCHIVE_CONTROL/2026-09-14__autonomous-data-authority-transition-v1__canonical.md`;
+- verify active versions against the canonical index and addendum registry while respecting explicit routing supersessions;
 - verify no legacy file was treated as current authority;
 - verify output status and evidence status are explicit;
 - verify no hidden interpolation or unsupported scoring occurred;

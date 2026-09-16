@@ -1,0 +1,393 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#f5f7fb" />
+  <title>Cycle Navigator · Design Study</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink:#07172f;
+      --ink-2:#132541;
+      --blue:#2f6fda;
+      --blue-2:#5c8cf0;
+      --cyan:#63b7ff;
+      --paper:#f5f7fb;
+      --surface:#ffffff;
+      --muted:#6d7888;
+      --hair:rgba(7,23,47,.10);
+      --hair-strong:rgba(7,23,47,.16);
+      --good:#117a55;
+      --warn:#b86a12;
+      --danger:#b33b35;
+      --r-sm:14px;
+      --r-md:22px;
+      --r-lg:32px;
+      --shadow-soft:0 18px 60px rgba(25,45,78,.08),0 2px 10px rgba(25,45,78,.04);
+      --ease-out:cubic-bezier(.23,1,.32,1);
+      --ease-io:cubic-bezier(.77,0,.175,1);
+      --safe-top:env(safe-area-inset-top,0px);
+      --safe-bottom:env(safe-area-inset-bottom,0px);
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth;background:var(--paper)}
+    body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text",Inter,system-ui,sans-serif;background:var(--paper);color:var(--ink);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+    button,a{font:inherit}
+    button{cursor:pointer}
+    .shell{min-height:100vh;padding:calc(18px + var(--safe-top)) 18px calc(106px + var(--safe-bottom))}
+    .page{max-width:1160px;margin:0 auto}
+    .topline{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:52px}
+    .brand{display:flex;align-items:center;gap:14px;min-width:0}
+    .brand-mark{width:48px;height:48px;flex:0 0 48px;filter:drop-shadow(0 8px 20px rgba(47,111,218,.11))}
+    .brand-copy{min-width:0}
+    .brand-name{font-weight:700;letter-spacing:.22em;font-size:12px;white-space:nowrap}
+    .brand-tag{font-size:11px;letter-spacing:.18em;color:var(--muted);text-transform:uppercase;margin-top:4px;white-space:nowrap}
+    .sync{font-size:12px;color:var(--muted);white-space:nowrap}
+    .sync::before{content:"";display:inline-block;width:7px;height:7px;border-radius:99px;background:var(--good);margin-right:7px;box-shadow:0 0 0 4px rgba(17,122,85,.08)}
+    .hero{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(280px,.65fr);gap:44px;align-items:end;margin-bottom:32px}
+    .eyebrow{display:flex;align-items:center;gap:8px;color:var(--blue);font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;margin-bottom:16px}
+    .eyebrow svg,.label-icon svg{width:16px;height:16px;stroke-width:1.8}
+    h1{font-size:clamp(46px,7.5vw,92px);line-height:.94;letter-spacing:-.055em;margin:0;max-width:850px;font-weight:720}
+    .hero-sub{font-size:clamp(18px,2.2vw,26px);line-height:1.28;color:var(--ink-2);max-width:760px;margin:24px 0 0;letter-spacing:-.02em}
+    .hero-status{border:1px solid var(--hair);border-radius:var(--r-lg);padding:24px;background:rgba(255,255,255,.78);box-shadow:var(--shadow-soft);backdrop-filter:blur(18px) saturate(145%);-webkit-backdrop-filter:blur(18px) saturate(145%)}
+    .status-kicker{font-size:11px;text-transform:uppercase;letter-spacing:.16em;color:var(--muted);margin-bottom:10px}
+    .status-value{font-size:28px;line-height:1.05;letter-spacing:-.035em;font-weight:700}
+    .status-meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+    .pill{display:inline-flex;align-items:center;gap:7px;padding:8px 10px;border-radius:999px;font-size:12px;font-weight:650;background:#eef4ff;color:#215aa8;border:1px solid rgba(47,111,218,.12)}
+    .pill.warn{background:#fff6e8;color:#8c5714;border-color:rgba(184,106,18,.16)}
+    .grid{display:grid;gap:14px}
+    .pulse-grid{grid-template-columns:repeat(5,minmax(0,1fr));margin:26px 0 56px}
+    .metric{background:var(--surface);border:1px solid var(--hair);border-radius:var(--r-md);padding:18px 18px 16px;min-height:118px;display:flex;flex-direction:column;justify-content:space-between}
+    .metric-label{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:7px}
+    .metric strong{font-size:28px;letter-spacing:-.035em;font-weight:700;margin-top:18px}
+    .metric small{font-size:11px;color:var(--muted);margin-top:4px}
+    .section{padding:54px 0;border-top:1px solid var(--hair)}
+    .section-head{display:grid;grid-template-columns:minmax(0,.65fr) minmax(280px,.35fr);gap:32px;align-items:end;margin-bottom:28px}
+    .section h2{font-size:clamp(32px,4.6vw,58px);line-height:1;letter-spacing:-.045em;margin:0;font-weight:700}
+    .section-intro{font-size:15px;line-height:1.55;color:var(--muted);margin:0}
+    .now-grid{grid-template-columns:1.2fr .8fr}
+    .panel{background:var(--surface);border:1px solid var(--hair);border-radius:var(--r-lg);padding:26px}
+    .panel-title{font-size:12px;text-transform:uppercase;letter-spacing:.15em;color:var(--muted);margin-bottom:18px;display:flex;align-items:center;gap:8px}
+    .lead-copy{font-size:22px;line-height:1.35;letter-spacing:-.025em;margin:0;color:var(--ink-2)}
+    .bullets{display:grid;gap:12px;margin-top:24px}
+    .bullet{display:grid;grid-template-columns:24px 1fr;gap:10px;align-items:start;font-size:14px;line-height:1.45;color:var(--ink-2)}
+    .bullet-dot{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:#eef4ff;color:var(--blue)}
+    .bullet-dot svg{width:13px;height:13px}
+    .next-gate{display:flex;flex-direction:column;justify-content:space-between;min-height:100%}
+    .gate-time{font-size:54px;line-height:1;letter-spacing:-.055em;font-weight:720;margin:8px 0}
+    .gate-window{font-size:14px;color:var(--muted);line-height:1.45}
+    .gate-rule{margin-top:34px;padding-top:18px;border-top:1px solid var(--hair);font-size:13px;line-height:1.45;color:var(--ink-2)}
+    .timeline{display:grid;gap:0;margin-top:12px}
+    .phase{display:grid;grid-template-columns:44px 1fr auto;gap:16px;align-items:center;padding:20px 0;border-bottom:1px solid var(--hair)}
+    .phase:last-child{border-bottom:0}
+    .phase-index{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:700;border:1px solid var(--hair-strong);background:#fff}
+    .phase.active .phase-index{background:var(--ink);color:#fff;border-color:var(--ink);box-shadow:0 8px 24px rgba(7,23,47,.14)}
+    .phase.watch .phase-index{background:var(--blue);color:#fff;border-color:var(--blue);box-shadow:0 8px 24px rgba(47,111,218,.18)}
+    .phase-title{font-size:16px;font-weight:680;letter-spacing:-.012em}
+    .phase-window{font-size:12px;color:var(--muted);margin-top:4px}
+    .phase-state{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);font-weight:700;text-align:right}
+    .phase.active .phase-state{color:var(--ink)}
+    .phase.watch .phase-state{color:var(--blue)}
+    .rotation{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-top:18px}
+    .rotation-node{position:relative;background:#fff;border:1px solid var(--hair);border-radius:18px;padding:18px 14px;min-height:130px}
+    .rotation-node:not(:last-child)::after{content:"";position:absolute;right:-11px;top:50%;width:12px;border-top:1px solid rgba(47,111,218,.35)}
+    .rotation-node strong{font-size:14px}
+    .rotation-node p{font-size:11px;line-height:1.4;color:var(--muted);margin:12px 0 0}
+    .rotation-node:nth-child(2){border-color:rgba(47,111,218,.28);box-shadow:inset 0 0 0 1px rgba(47,111,218,.06)}
+    .score-grid{grid-template-columns:.65fr 1.35fr}
+    .score-big{display:flex;flex-direction:column;justify-content:space-between;min-height:300px;background:var(--ink);color:#fff;border-color:transparent}
+    .score-big .panel-title{color:rgba(255,255,255,.55)}
+    .score-num{font-size:92px;line-height:.85;letter-spacing:-.075em;font-weight:740}
+    .score-num span{font-size:30px;letter-spacing:-.03em;color:rgba(255,255,255,.62)}
+    .score-caption{font-size:13px;line-height:1.45;color:rgba(255,255,255,.67);max-width:320px}
+    .score-history{display:grid;gap:12px}
+    .score-row{display:grid;grid-template-columns:88px 1fr 58px;gap:14px;align-items:center}
+    .score-row strong{font-size:13px}
+    .score-track{height:8px;border-radius:999px;background:#eef1f5;overflow:hidden}
+    .score-fill{height:100%;border-radius:inherit;background:linear-gradient(90deg,var(--blue),var(--cyan));width:var(--w,0%)}
+    .score-value{text-align:right;font-size:13px;font-weight:700}
+    .x-row{margin-top:24px;padding-top:18px;border-top:1px solid var(--hair);display:flex;align-items:center;justify-content:space-between;gap:16px;font-size:12px;color:var(--muted)}
+    .x-values{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}
+    .x-chip{padding:6px 8px;border:1px solid var(--hair);border-radius:999px;color:var(--ink-2);background:#fff}
+    .footer{display:flex;justify-content:space-between;gap:20px;align-items:center;padding:42px 0 8px;color:var(--muted);font-size:12px}
+    .footer strong{color:var(--ink);font-weight:650}
+    .picker{position:fixed;z-index:50;left:50%;bottom:calc(14px + var(--safe-bottom));transform:translateX(-50%);display:flex;gap:4px;padding:5px;background:rgba(10,16,28,.88);border:1px solid rgba(255,255,255,.12);border-radius:999px;box-shadow:0 14px 40px rgba(7,23,47,.23);backdrop-filter:blur(16px) saturate(150%);-webkit-backdrop-filter:blur(16px) saturate(150%)}
+    .picker button{border:0;color:rgba(255,255,255,.68);background:transparent;padding:10px 13px;border-radius:999px;font-size:12px;font-weight:650;transition:background 160ms var(--ease-out),color 160ms var(--ease-out),transform 120ms var(--ease-out)}
+    .picker button:active{transform:scale(.97)}
+    .picker button[aria-pressed="true"]{background:#fff;color:#07172f}
+    .variant-note{position:fixed;z-index:49;right:18px;bottom:calc(72px + var(--safe-bottom));font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);opacity:.72}
+
+    /* Quiet Precision */
+    body[data-variant="quiet"] .page{max-width:1080px}
+    body[data-variant="quiet"] .topline{margin-bottom:74px}
+    body[data-variant="quiet"] .hero{grid-template-columns:1fr;max-width:890px;gap:30px}
+    body[data-variant="quiet"] .hero-status{max-width:500px;padding:0;border:0;background:transparent;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none}
+    body[data-variant="quiet"] .status-value{font-size:22px}
+    body[data-variant="quiet"] .pulse-grid{margin-top:58px}
+    body[data-variant="quiet"] .metric{box-shadow:none;background:rgba(255,255,255,.58)}
+    body[data-variant="quiet"] .panel{box-shadow:none}
+
+    /* CN Instrument */
+    body[data-variant="instrument"]{background:#eef2f7}
+    body[data-variant="instrument"] .shell{padding-left:14px;padding-right:14px}
+    body[data-variant="instrument"] .page{max-width:1220px}
+    body[data-variant="instrument"] .topline{padding:12px 16px;border-radius:18px;background:rgba(255,255,255,.72);border:1px solid rgba(7,23,47,.08);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);margin-bottom:18px}
+    body[data-variant="instrument"] .hero{background:linear-gradient(135deg,#061329 0%,#0b2142 64%,#10366a 100%);color:#fff;border-radius:38px;padding:38px;min-height:420px;box-shadow:0 30px 80px rgba(4,18,42,.18);position:relative;overflow:hidden}
+    body[data-variant="instrument"] .hero::after{content:"";position:absolute;width:420px;height:420px;border-radius:50%;right:-140px;top:-180px;background:radial-gradient(circle,rgba(78,143,255,.28),rgba(78,143,255,0) 68%)}
+    body[data-variant="instrument"] .hero-sub{color:rgba(255,255,255,.73);max-width:650px}
+    body[data-variant="instrument"] .eyebrow{color:#84b4ff}
+    body[data-variant="instrument"] .hero-status{position:relative;z-index:1;background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.14);box-shadow:none;color:#fff}
+    body[data-variant="instrument"] .status-kicker{color:rgba(255,255,255,.55)}
+    body[data-variant="instrument"] .pill{background:rgba(255,255,255,.11);border-color:rgba(255,255,255,.12);color:#dce9ff}
+    body[data-variant="instrument"] .pill.warn{color:#ffd28a;background:rgba(184,106,18,.16);border-color:rgba(255,210,138,.14)}
+    body[data-variant="instrument"] .pulse-grid{margin-top:-44px;padding:0 22px;position:relative;z-index:2}
+    body[data-variant="instrument"] .metric{box-shadow:0 14px 35px rgba(25,45,78,.10)}
+    body[data-variant="instrument"] .section{border-top-color:rgba(7,23,47,.08)}
+    body[data-variant="instrument"] .panel{box-shadow:0 12px 35px rgba(25,45,78,.06)}
+
+    /* Editorial Navigator */
+    body[data-variant="editorial"]{background:#fbfbfa}
+    body[data-variant="editorial"] .page{max-width:1240px}
+    body[data-variant="editorial"] .topline{margin-bottom:96px}
+    body[data-variant="editorial"] .hero{grid-template-columns:minmax(0,1fr) 340px;align-items:start;gap:80px;margin-bottom:88px}
+    body[data-variant="editorial"] h1{font-size:clamp(62px,9vw,126px);max-width:920px}
+    body[data-variant="editorial"] .hero-sub{font-size:20px;max-width:640px}
+    body[data-variant="editorial"] .hero-status{border-radius:0;border-width:0 0 0 1px;box-shadow:none;background:transparent;padding:8px 0 8px 28px;backdrop-filter:none;-webkit-backdrop-filter:none}
+    body[data-variant="editorial"] .pulse-grid{grid-template-columns:repeat(5,1fr);gap:0;border-top:1px solid var(--hair-strong);border-bottom:1px solid var(--hair-strong);margin:0 0 78px}
+    body[data-variant="editorial"] .metric{border:0;border-right:1px solid var(--hair);border-radius:0;background:transparent;padding:22px 20px;min-height:132px}
+    body[data-variant="editorial"] .metric:last-child{border-right:0}
+    body[data-variant="editorial"] .section{padding:72px 0}
+    body[data-variant="editorial"] .section-head{grid-template-columns:1fr 360px}
+    body[data-variant="editorial"] .section h2{font-size:clamp(42px,6vw,72px)}
+    body[data-variant="editorial"] .panel{border-radius:0;border-width:1px 0;background:transparent;box-shadow:none;padding:28px 0}
+    body[data-variant="editorial"] .now-grid{gap:60px}
+    body[data-variant="editorial"] .timeline{border-top:1px solid var(--hair-strong)}
+    body[data-variant="editorial"] .phase{grid-template-columns:54px 1fr 180px;padding:26px 0}
+    body[data-variant="editorial"] .rotation-node{border-radius:0;border-width:1px 0 1px 1px;background:transparent}
+    body[data-variant="editorial"] .rotation-node:last-child{border-right:1px solid var(--hair)}
+    body[data-variant="editorial"] .score-big{border-radius:24px;background:linear-gradient(150deg,#07172f,#123a72)}
+    body[data-variant="editorial"] .score-grid>.panel:not(.score-big){border:0;padding:10px 0}
+
+    @media (max-width:900px){
+      .shell{padding-left:16px;padding-right:16px}
+      .topline{margin-bottom:44px}
+      .brand-tag{display:none}
+      .sync{font-size:11px}
+      .hero,.section-head,body[data-variant="editorial"] .hero,body[data-variant="editorial"] .section-head{grid-template-columns:1fr;gap:24px}
+      h1,body[data-variant="editorial"] h1{font-size:clamp(48px,15vw,76px)}
+      .hero-sub{font-size:18px}
+      .pulse-grid,body[data-variant="editorial"] .pulse-grid{grid-template-columns:repeat(2,1fr);gap:10px;border:0;margin:34px 0 50px;padding:0}
+      .metric,body[data-variant="editorial"] .metric{border:1px solid var(--hair);border-radius:18px;padding:16px;min-height:110px;background:#fff}
+      .metric:nth-child(5){grid-column:1/-1}
+      .metric strong{font-size:25px}
+      .now-grid,.score-grid{grid-template-columns:1fr}
+      .rotation{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:8px;margin-right:-16px;padding-right:16px;-webkit-overflow-scrolling:touch}
+      .rotation-node{min-width:170px;scroll-snap-align:start}
+      .section{padding:46px 0}
+      .section h2{font-size:42px}
+      body[data-variant="instrument"] .hero{padding:28px 22px;border-radius:28px;min-height:0}
+      body[data-variant="instrument"] .pulse-grid{margin-top:-20px;padding:0 10px}
+      body[data-variant="editorial"] .topline{margin-bottom:56px}
+      body[data-variant="editorial"] .hero{margin-bottom:54px;gap:32px}
+      body[data-variant="editorial"] .hero-status{padding:18px 0 0;border-width:1px 0 0}
+      body[data-variant="editorial"] .section{padding:56px 0}
+      body[data-variant="editorial"] .section h2{font-size:46px}
+      body[data-variant="editorial"] .panel{padding:22px 0}
+      .score-num{font-size:76px}
+      .phase{grid-template-columns:40px 1fr;gap:12px}
+      .phase-state{grid-column:2;text-align:left;margin-top:-8px}
+      .picker{width:calc(100% - 24px);justify-content:space-between}
+      .picker button{flex:1;padding:10px 8px;font-size:11px}
+      .variant-note{display:none}
+    }
+    @media (max-width:520px){
+      .brand-mark{width:42px;height:42px;flex-basis:42px}
+      .brand-name{font-size:11px;letter-spacing:.18em}
+      .sync{max-width:112px;overflow:hidden;text-overflow:ellipsis}
+      .hero-sub{line-height:1.4}
+      .status-meta{gap:6px}
+      .pill{font-size:11px;padding:7px 9px}
+      .section h2,body[data-variant="editorial"] .section h2{font-size:38px}
+      .lead-copy{font-size:19px}
+      .gate-time{font-size:48px}
+      .score-row{grid-template-columns:70px 1fr 48px;gap:10px}
+      .footer{display:block;line-height:1.6}
+    }
+    @media (prefers-reduced-motion:reduce){
+      html{scroll-behavior:auto}
+      *,*::before,*::after{animation:none!important;transition-duration:.01ms!important}
+    }
+  </style>
+</head>
+<body data-variant="quiet">
+  <div class="shell">
+    <main class="page">
+      <div class="topline">
+        <div class="brand">
+          <svg class="brand-mark" viewBox="0 0 64 64" aria-label="Cycle Navigator compass logo">
+            <rect width="64" height="64" rx="15" fill="#f8fbff"/>
+            <circle cx="32" cy="32" r="25.5" fill="none" stroke="#07172f" stroke-width="4.6" stroke-linecap="round" stroke-dasharray="118 43" transform="rotate(-37 32 32)"/>
+            <path d="M31.7 33.2 48.2 13.8 39.8 38.9Z" fill="#2f6fda"/>
+            <path d="M32.3 30.8 15.8 50.2 24.2 25.1Z" fill="#07172f"/>
+            <circle cx="32" cy="32" r="8.1" fill="#f8fbff"/>
+            <circle cx="32" cy="32" r="4.6" fill="#07172f"/>
+          </svg>
+          <div class="brand-copy"><div class="brand-name">CYCLE NAVIGATOR</div><div class="brand-tag">Market cycles. With edge.</div></div>
+        </div>
+        <div class="sync" id="syncState">Syncing official state</div>
+      </div>
+
+      <section class="hero">
+        <div>
+          <div class="eyebrow" id="heroEyebrow"></div>
+          <h1 id="heroTitle">Cycle clarity,<br>without the noise.</h1>
+          <p class="hero-sub" id="heroSub">Loading the current Cycle Navigator state…</p>
+        </div>
+        <aside class="hero-status">
+          <div class="status-kicker">Official cycle state</div>
+          <div class="status-value" id="officialState">—</div>
+          <div class="status-meta"><span class="pill" id="issuePill">CN —</span><span class="pill warn" id="qualityPill">—</span></div>
+        </aside>
+      </section>
+
+      <section class="grid pulse-grid" aria-label="Live market pulse">
+        <article class="metric"><div class="metric-label label-icon" data-icon="bitcoin">BTC</div><strong id="btcPrice">—</strong><small>LIVE · context only</small></article>
+        <article class="metric"><div class="metric-label label-icon" data-icon="diamond">ETH</div><strong id="ethPrice">—</strong><small>LIVE · context only</small></article>
+        <article class="metric"><div class="metric-label label-icon" data-icon="ratio">ETH / BTC</div><strong id="ethBtc">—</strong><small>LIVE · derived</small></article>
+        <article class="metric"><div class="metric-label label-icon" data-icon="pie">BTC dominance</div><strong id="btcDom">—</strong><small>LIVE · contextual</small></article>
+        <article class="metric"><div class="metric-label label-icon" data-icon="globe">Total market</div><strong id="totalCap">—</strong><small id="marketChange">24h —</small></article>
+      </section>
+
+      <section class="section">
+        <div class="section-head"><div><div class="eyebrow" data-icon="signal">Right now</div><h2>What matters.</h2></div><p class="section-intro">A curated read of the official weekly state. LIVE prices add context, but never rewrite the official Cycle Navigator call.</p></div>
+        <div class="grid now-grid">
+          <article class="panel">
+            <div class="panel-title label-icon" data-icon="compass">Current read</div>
+            <p class="lead-copy" id="marketState">—</p>
+            <div class="bullets" id="currentBullets"></div>
+          </article>
+          <article class="panel next-gate">
+            <div><div class="panel-title label-icon" data-icon="clock">Next phase window</div><div class="gate-time" id="gateTime">—</div><div class="gate-window" id="gateWindow">Waiting for official countdown.</div></div>
+            <div class="gate-rule" id="gateRule">The next phase unlocks only when the framework's published confirmation conditions are met.</div>
+          </article>
+        </div>
+      </section>
+
+      <section class="section" id="timeline">
+        <div class="section-head"><div><div class="eyebrow" data-icon="route">Cycle journey</div><h2>Where capital goes next.</h2></div><p class="section-intro">The timeline is intentionally conditional. Calendar time never overrides confirmation — the sequence advances only when market breadth and relative leadership transmit.</p></div>
+        <div class="panel"><div class="timeline" id="phaseTimeline"></div></div>
+        <div class="rotation" id="rotationLadder"></div>
+      </section>
+
+      <section class="section" id="calibration">
+        <div class="section-head"><div><div class="eyebrow" data-icon="check">Calibration</div><h2>Show the receipts.</h2></div><p class="section-intro">Verified machine-readable scores are kept separate from older public X claims. No synthetic precision number is created while a week is still open.</p></div>
+        <div class="grid score-grid">
+          <article class="panel score-big"><div class="panel-title">Latest verified structural score</div><div class="score-num" id="verifiedScore">—<span>%</span></div><div class="score-caption" id="verifiedCaption">Awaiting reproducible score.</div></article>
+          <article class="panel"><div class="panel-title label-icon" data-icon="chart">Verified track record</div><div class="score-history" id="scoreHistory"></div><div class="x-row"><span>Archived public X claims · separate legacy series</span><div class="x-values" id="xValues"></div></div></article>
+        </div>
+      </section>
+
+      <footer class="footer"><strong>Cycle Navigator</strong><span>Scenario map only, not investment advice.</span></footer>
+    </main>
+  </div>
+
+  <div class="variant-note" id="variantNote">Quiet Precision · minimal / white space</div>
+  <nav class="picker" aria-label="Design prototype picker">
+    <button type="button" data-variant="quiet" aria-pressed="true">Quiet Precision</button>
+    <button type="button" data-variant="instrument" aria-pressed="false">CN Instrument</button>
+    <button type="button" data-variant="editorial" aria-pressed="false">Editorial</button>
+  </nav>
+
+  <script>
+    (()=>{
+      'use strict';
+      const DATA='./data/latest.json';
+      const notes={quiet:'Quiet Precision · minimal / white space',instrument:'CN Instrument · financial / focused',editorial:'Editorial Navigator · narrative / spacious'};
+      const $=id=>document.getElementById(id);
+      const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+      const cleanPhase=s=>String(s||'').replace(/^\d+\.\s*/,'').replace(/\s+[—-]\s+(ACTIVE WATCH|ACTIVE|UNCONFIRMED|INACTIVE|PAUSED).*$/i,'').trim();
+      const phaseState=s=>{const m=String(s||'').match(/(?:—|-)\s*(ACTIVE WATCH|ACTIVE|UNCONFIRMED|INACTIVE|PAUSED)/i);return m?m[1].toUpperCase():'UNKNOWN'};
+      const fmtUsd=v=>{const n=Number(v);if(!Number.isFinite(n))return '—';if(n>=1e12)return '$'+(n/1e12).toFixed(2)+'T';if(n>=1e9)return '$'+(n/1e9).toFixed(1)+'B';if(n>=1000)return '$'+n.toLocaleString('en-US',{maximumFractionDigits:0});return '$'+n.toLocaleString('en-US',{maximumFractionDigits:2})};
+      const icon=(name)=>{
+        const common='viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"';
+        const p={
+          compass:'<circle cx="12" cy="12" r="9"/><path d="m15.8 8.2-2.4 5.2-5.2 2.4 2.4-5.2 5.2-2.4Z"/>',
+          signal:'<path d="M4 20v-5M9 20V9M14 20V4M19 20v-8"/>',
+          clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+          route:'<circle cx="5" cy="18" r="2"/><circle cx="19" cy="6" r="2"/><path d="M7 18h3a3 3 0 0 0 3-3V9a3 3 0 0 1 3-3h1"/>',
+          check:'<circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.2 2.2 4.8-5"/>',
+          chart:'<path d="M4 19V9M10 19V5M16 19v-7M22 19V3"/>',
+          bitcoin:'<path d="M9 4h4.5a3 3 0 0 1 0 6H9m0 0h5a3 3 0 0 1 0 6H9M11 2v4m3-4v4m-3 10v4m3-4v4M7 6h2m-2 10h2"/>',
+          diamond:'<path d="m12 2 6 10-6 10-6-10 6-10Z"/><path d="m6 12 6 3 6-3"/>',
+          ratio:'<path d="M7 7h10M7 17h10"/><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/>',
+          pie:'<path d="M12 3a9 9 0 1 0 9 9h-9V3Z"/><path d="M15 3.5A9 9 0 0 1 20.5 9H15V3.5Z"/>',
+          globe:'<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18"/>'
+        };
+        return `<svg ${common}>${p[name]||p.compass}</svg>`;
+      };
+      document.querySelectorAll('[data-icon]').forEach(n=>{const name=n.dataset.icon;n.insertAdjacentHTML('afterbegin',icon(name))});
+
+      function setVariant(v){
+        if(!notes[v])v='quiet';
+        document.body.dataset.variant=v;
+        document.querySelectorAll('.picker button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.variant===v)));
+        $('variantNote').textContent=notes[v];
+        const u=new URL(location.href);u.searchParams.set('v',v);history.replaceState(null,'',u);
+      }
+      document.querySelectorAll('.picker button').forEach(b=>b.addEventListener('click',()=>setVariant(b.dataset.variant)));
+      setVariant(new URL(location.href).searchParams.get('v')||'quiet');
+
+      function render(snapshot){
+        const p=snapshot?.pointer||{}, pkg=snapshot?.package||{}, track=snapshot?.calibration?.track_record?.rows||[];
+        $('syncState').textContent=`Official snapshot · W${p.iso_week??'—'}`;
+        $('heroEyebrow').innerHTML=icon('compass')+`Cycle Navigator #${esc(pkg.issue_number??p.issue_number??'—')}`;
+        $('heroSub').textContent=pkg.base_case_this_week||pkg.market_state||'Official state unavailable.';
+        $('officialState').textContent=pkg.status==='DEGRADED'?'Volatile transition':(pkg.market_state||'Official state');
+        $('issuePill').textContent=`CN #${pkg.issue_number??p.issue_number??'—'} · W${p.iso_week??'—'}`;
+        $('qualityPill').textContent=pkg.status||p.status||'UNKNOWN';
+        $('marketState').textContent=pkg.market_state||'—';
+
+        const strengths=Array.isArray(pkg.evaluation?.strengths)?pkg.evaluation.strengths.slice(0,3):[];
+        $('currentBullets').innerHTML=strengths.length?strengths.map(t=>`<div class="bullet"><span class="bullet-dot">${icon('check')}</span><span>${esc(t)}</span></div>`).join(''):'<div class="bullet"><span class="bullet-dot">'+icon('signal')+'</span><span>Waiting for official evidence summary.</span></div>';
+
+        const phases=Array.isArray(pkg.altseason_countdown)?pkg.altseason_countdown:[];
+        const next=phases.find(x=>phaseState(x.phase)==='UNCONFIRMED')||phases.find(x=>phaseState(x.phase)==='ACTIVE WATCH')||null;
+        $('gateTime').textContent=next?.window?.match(/\d+\s*[–—-]\s*\d+\s*weeks?/i)?.[0]||'Conditional';
+        $('gateWindow').textContent=next?`${cleanPhase(next.phase)} · ${next.window}`:'No publishable calendar window.';
+        $('gateRule').textContent=pkg.base_case_2_3_weeks||'The next phase remains confirmation-gated.';
+        $('phaseTimeline').innerHTML=phases.map((x,i)=>{const state=phaseState(x.phase),cls=state==='ACTIVE'?'active':state==='ACTIVE WATCH'?'watch':'';return `<div class="phase ${cls}"><div class="phase-index">${i+1}</div><div><div class="phase-title">${esc(cleanPhase(x.phase))}</div><div class="phase-window">${esc(x.window||'')}</div></div><div class="phase-state">${esc(state)}</div></div>`}).join('');
+
+        const ladder=Array.isArray(pkg.rotation_ladder)?pkg.rotation_ladder:[];
+        $('rotationLadder').innerHTML=ladder.map(x=>`<article class="rotation-node"><strong>${esc(x.segment)}</strong><p>${esc(x.status)}</p></article>`).join('');
+
+        const reproducible=track.filter(r=>String(r.score_status).toUpperCase()==='REPRODUCIBLE'&&Number.isFinite(Number(r.structural_score)));
+        const latest=reproducible.at(-1);
+        $('verifiedScore').innerHTML=latest?`${Math.round(Number(latest.structural_score))}<span>%</span>`:'—<span>%</span>';
+        $('verifiedCaption').textContent=latest?`CN #${latest.issue_scored} · structural component score · ${latest.score_status}`:'No reproducible numerical score logged.';
+        $('scoreHistory').innerHTML=track.length?track.map(r=>{const valid=String(r.score_status).toUpperCase()==='REPRODUCIBLE'&&Number.isFinite(Number(r.structural_score));const v=valid?Math.max(0,Math.min(100,Number(r.structural_score))):0;return `<div class="score-row"><strong>CN #${esc(r.issue_scored??'—')}</strong><div class="score-track">${valid?`<div class="score-fill" style="--w:${v}%"></div>`:''}</div><div class="score-value">${valid?Math.round(v)+'%':'N/A'}</div></div>`}).join(''):'<div class="score-row"><strong>—</strong><div class="score-track"></div><div class="score-value">N/A</div></div>';
+        const claims=snapshot?.public_history?.x_precision_claims||[];
+        $('xValues').innerHTML=claims.length?claims.map(c=>`<span class="x-chip">#${esc(c.scored_issue)} · ${Math.round(Number(c.overall_precision))}%</span>`).join(''):'<span class="x-chip">No legacy claims</span>';
+      }
+
+      async function loadSnapshot(){
+        try{const r=await fetch(`${DATA}?t=${Date.now()}`,{cache:'no-store'});if(!r.ok)throw new Error(r.status);render(await r.json())}catch(e){$('syncState').textContent='Official snapshot unavailable'}
+      }
+      async function loadLive(){
+        try{
+          const [priceRes,globalRes]=await Promise.all([
+            fetch(`https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd&t=${Date.now()}`,{cache:'no-store'}),
+            fetch(`https://api.coingecko.com/api/v3/global?t=${Date.now()}`,{cache:'no-store'})
+          ]);
+          const prices=priceRes.ok?await priceRes.json():{},g=globalRes.ok?(await globalRes.json())?.data||{}:{};
+          const btc=Number(prices?.bitcoin?.usd),eth=Number(prices?.ethereum?.usd);
+          $('btcPrice').textContent=fmtUsd(btc);$('ethPrice').textContent=fmtUsd(eth);$('ethBtc').textContent=Number.isFinite(btc)&&Number.isFinite(eth)?(eth/btc).toFixed(5):'—';
+          const dom=Number(g?.market_cap_percentage?.btc),cap=Number(g?.total_market_cap?.usd),chg=Number(g?.market_cap_change_percentage_24h_usd);
+          $('btcDom').textContent=Number.isFinite(dom)?dom.toFixed(1)+'%':'—';$('totalCap').textContent=fmtUsd(cap);$('marketChange').textContent=Number.isFinite(chg)?`24h ${chg>=0?'+':''}${chg.toFixed(2)}%`:'24h —';
+        }catch(e){}
+      }
+      loadSnapshot();loadLive();setInterval(loadSnapshot,5*60*1000);setInterval(loadLive,60*1000);
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,30 @@
+{
+  "contract": "AUTONOMOUS_DATA_AUTHORITY_ROUTING_v1",
+  "status": "MACHINE_MIRROR_OF_CANONICAL_OWNER",
+  "effective_date": "2026-09-14",
+  "canonical_owner": "00_ARCHIVE_CONTROL/2026-09-14__autonomous-data-authority-transition-v1__canonical.md",
+  "current_state_route": [
+    "LATEST_OPERATIONS_DASHBOARD.json",
+    "LATEST_HANDOFF.json",
+    "current_hash_bound_autonomous_machine_outputs_and_domain_pointers",
+    "main_framework_accepted_state",
+    "master_monday_or_cycle_navigator_current_output"
+  ],
+  "manual_data_ping_is_default_upstream": false,
+  "manual_data_ping_is_prerequisite_for_master_monday": false,
+  "manual_data_ping_is_prerequisite_for_cycle_navigator": false,
+  "data_ping_valid_roles": [
+    "EXPLICIT_PACKET_INTERPRETATION",
+    "RAW_PACKET_REPLAY_OR_CORRECTION",
+    "HISTORICAL_LINEAGE",
+    "PROTOCOL_COMPATIBILITY",
+    "SOURCE_QA_AND_DIAGNOSTICS"
+  ],
+  "short_horizon_rule": "USE_CURRENT_AUTONOMOUS_CANONICAL_OUTPUT_IF_FRESH_AND_PUBLIC_SAFE_ELSE_FAIL_CLOSED",
+  "forbidden_inferences": [
+    "DATA_PING_NAME_IMPLIES_CURRENT_AUTHORITY",
+    "LATEST_MASTER_MONDAY_FILENAME_IMPLIES_CURRENT_PRODUCTION_POINTER",
+    "HISTORICAL_DATA_PING_RECEIPT_IMPLIES_CURRENT_SHORT_HORIZON_STATE",
+    "WEBSITE_MAY_CREATE_PARALLEL_FORECAST_ENGINE"
+  ]
+}

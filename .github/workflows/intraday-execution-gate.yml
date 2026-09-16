@@ -35,6 +35,7 @@ jobs:
         run: |
           python -m py_compile scripts/daily_capture/build_hourly_sequence.py
           python -m py_compile scripts/intraday_execution/intraday_execution_research.py
+          python -m py_compile scripts/intraday_execution/intraday_execution_research_core.py
           python -m py_compile scripts/intraday_execution/shadow_direction_confidence.py
           python -m py_compile scripts/intraday_execution/validate_direction_confidence.py
       - name: Run focused intraday direction, calibration, validator and eligibility tests
@@ -112,13 +113,17 @@ jobs:
           ]:
               assert token in registry, token
 
-          research=Path('scripts/intraday_execution/intraday_execution_research.py').read_text()
-          assert 'obs.get("entry_state") != "GRADUATED_ALTCOIN_TOPUP_ACTIVE"' not in research
-          assert 'research_context_eligibility' in research
-          assert 'ENTRY_OWNER_NOT_FORWARD_ONLY_WAIT_CONTEXT' in research
-          assert 'BREADTH_ENTRY_PERMISSION_NOT_RETIRED_ZERO_WEIGHT' in research
-          assert 'if event_policy["outcome_maturation"]: mature_events' in research
-          assert 'if event_policy["new_event_creation"]: open_event' in research
+          wrapper=Path('scripts/intraday_execution/intraday_execution_research.py').read_text()
+          core=Path('scripts/intraday_execution/intraday_execution_research_core.py').read_text()
+          assert 'read_complete_spot_window' in wrapper
+          assert 'intraday_execution_research_core' in wrapper
+          assert '_sync_runtime_bindings' in wrapper
+          assert 'obs.get("entry_state") != "GRADUATED_ALTCOIN_TOPUP_ACTIVE"' not in core
+          assert 'research_context_eligibility' in core
+          assert 'ENTRY_OWNER_NOT_FORWARD_ONLY_WAIT_CONTEXT' in core
+          assert 'BREADTH_ENTRY_PERMISSION_NOT_RETIRED_ZERO_WEIGHT' in core
+          assert 'if event_policy["outcome_maturation"]: mature_events' in core
+          assert 'if event_policy["new_event_creation"]: open_event' in core
 
           hourly=Path('.github/workflows/hourly-sequence-capture.yml').read_text()
           intraday=Path('.github/workflows/intraday-execution-research.yml').read_text()

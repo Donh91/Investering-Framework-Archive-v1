@@ -1,0 +1,150 @@
+name: Auto Trading E2 Candidate Selection V4
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/experiments/ai_candidate_selection_e2_v4.py'
+      - 'tests/experiments/test_ai_candidate_selection_e2_v4.py'
+      - 'research/experiment_lifecycle/e2/requests/AT-E2-CANDIDATE-SELECTION-v4.json'
+      - '.github/workflows/auto-trading-e2-candidate-selection-v4.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'research/experiment_lifecycle/e2/requests/AT-E2-CANDIDATE-SELECTION-v4.json'
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: deterministic preflight or bounded live V4 transport-control gate
+        required: true
+        default: preflight
+        type: choice
+        options: [preflight, live-e2-v4]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: auto-trading-e2-candidate-selection-v4
+  cancel-in-progress: false
+
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compile bounded E2 v4 transport-control harness
+        run: |
+          python -m py_compile \
+            scripts/experiments/ai_candidate_selection_e2_v4.py \
+            scripts/experiments/ai_candidate_selection_e2.py \
+            scripts/experiments/ai_compiler_reliability_e2.py \
+            scripts/experiments/ai_compiler_vs_policy_e2.py \
+            scripts/experiments/ai_compiler_vs_policy_e2_hourly_adapter.py \
+            scripts/experiments/agent_handoff_contract.py \
+            tests/experiments/test_ai_candidate_selection_e2_v4.py
+      - name: Run focused V4 invariance and falsifier regressions
+        run: python -m unittest tests.experiments.test_ai_candidate_selection_e2_v4 -v
+      - name: Run production-data dry preflight without model calls
+        run: |
+          rm -rf /tmp/at-e2-v4-preflight
+          python scripts/experiments/ai_candidate_selection_e2_v4.py \
+            --request research/experiment_lifecycle/e2/requests/AT-E2-CANDIDATE-SELECTION-v4.json \
+            --repo-root . \
+            --output-dir /tmp/at-e2-v4-preflight \
+            --dry-run
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          r=json.loads(Path('/tmp/at-e2-v4-preflight/result.json').read_text())
+          assert r['contract']=='AUTO_TRADING_E2_CANDIDATE_SELECTION_RESULT_v1'
+          assert r['experiment_id']=='AT-E2-CANDIDATE-SELECTION-v4'
+          assert r['parent_experiment_id']=='AT-E2-CANDIDATE-SELECTION-v3'
+          assert r['issue']==972
+          assert r['status']=='COMPLETE'
+          assert r['selection']['structured_selection_success_rate']==1.0
+          assert r['selection']['candidate_admission_rate']==1.0
+          assert r['selection']['modal_candidate_share']==1.0
+          assert r['selection']['modal_candidate_id']=='C03'
+          assert r['candidate_set_sha256']=='d470bf21cd79994ac59e97ddc4fd706944e0a613cd21dc362897d777d340f3d4'
+          assert r['api']['selection_calls']==10
+          assert r['api']['selection_max_output_tokens']==1000
+          assert r['api']['total_cost_usd']==0.0
+          assert r['transport_control']['baseline_primary_request_hash']=='5dbda5b90c5f18977c002ef55546299bae3c9a421340ade78f9b8a622d52b61a'
+          assert r['transport_control']['model_facing_change']=='MAX_OUTPUT_TOKENS_ONLY'
+          assert r['economic_scoring_performed'] is False
+          assert r['direct_policy_arm_performed'] is False
+          assert r['capital_ready'] is False
+          assert r['no_retroactive_rescore'] is True
+          assert r['no_post_result_prompt_tuning'] is True
+          assert all(v is False for v in r['authority'].values())
+          print('AUTO_TRADING_E2_V4_PREFLIGHT_PASS')
+          PY
+
+  live-e2-v4:
+    needs: preflight
+    if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.mode == 'live-e2-v4')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Execute frozen research-only V4 transport-control trial
+        run: |
+          rm -rf /tmp/at-e2-v4-live
+          python scripts/experiments/ai_candidate_selection_e2_v4.py \
+            --request research/experiment_lifecycle/e2/requests/AT-E2-CANDIDATE-SELECTION-v4.json \
+            --repo-root . \
+            --output-dir /tmp/at-e2-v4-live \
+            | tee /tmp/at-e2-v4-live-summary.log
+      - name: Verify V4 identity, transport control, authority and cost
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          r=json.loads(Path('/tmp/at-e2-v4-live/result.json').read_text())
+          assert r['contract']=='AUTO_TRADING_E2_CANDIDATE_SELECTION_RESULT_v1'
+          assert r['experiment_id']=='AT-E2-CANDIDATE-SELECTION-v4'
+          assert r['parent_experiment_id']=='AT-E2-CANDIDATE-SELECTION-v3'
+          assert r['issue']==972
+          assert r['status']=='COMPLETE'
+          assert r['api']['model']=='gpt-5.6-luna'
+          assert r['api']['selection_calls']==10
+          assert r['api']['selection_max_output_tokens']==1000
+          assert r['api']['total_cost_usd'] <= r['api']['hard_cost_stop_usd'] <= 0.05
+          assert r['candidate_set_sha256']=='d470bf21cd79994ac59e97ddc4fd706944e0a613cd21dc362897d777d340f3d4'
+          assert r['transport_control']['baseline_primary_request_hash']=='5dbda5b90c5f18977c002ef55546299bae3c9a421340ade78f9b8a622d52b61a'
+          assert r['transport_control']['model_facing_change']=='MAX_OUTPUT_TOKENS_ONLY'
+          assert r['economic_scoring_performed'] is False
+          assert r['direct_policy_arm_performed'] is False
+          assert r['capital_ready'] is False
+          assert r['no_retroactive_rescore'] is True
+          assert r['no_post_result_prompt_tuning'] is True
+          assert all(v is False for v in r['authority'].values())
+          print('AUTO_TRADING_E2_V4_LIVE_AUTHORITY_PASS')
+          PY
+      - name: Emit immutable V4 result bytes for retention readback
+        shell: bash
+        run: |
+          echo "E2_V4_RESULT_B64=$(base64 -w0 /tmp/at-e2-v4-live/result.json)"
+          echo "E2_V4_CALLS_B64=$(base64 -w0 /tmp/at-e2-v4-live/calls.jsonl)"
+          echo "E2_V4_DESIGN_B64=$(base64 -w0 /tmp/at-e2-v4-live/design_summary.json)"
+          echo "E2_V4_CANDIDATES_B64=$(base64 -w0 /tmp/at-e2-v4-live/candidate_set.json)"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: auto-trading-e2-candidate-selection-v4-${{ github.run_id }}
+          path: |
+            /tmp/at-e2-v4-live/result.json
+            /tmp/at-e2-v4-live/calls.jsonl
+            /tmp/at-e2-v4-live/design_summary.json
+            /tmp/at-e2-v4-live/candidate_set.json
+            /tmp/at-e2-v4-live-summary.log
+          retention-days: 30
+          if-no-files-found: error

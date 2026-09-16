@@ -1,0 +1,23 @@
+name: Master Monday W37 Redispatch Once
+
+on:
+  push:
+    paths:
+      - 'research/repairs/master_monday_w37_redispatch_trigger.json'
+
+permissions:
+  actions: write
+  contents: read
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Dispatch production Weekly API Calibration Shadow
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh workflow run 'Weekly API Calibration Shadow' --repo '${{ github.repository }}' --ref main
+          echo 'production_weekly_master_monday_dispatched=true'

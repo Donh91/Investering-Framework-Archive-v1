@@ -1,0 +1,219 @@
+{
+  "contract": "FUSE_LIKE_STEALTH_DISCOVERY_EXPERIMENT_v1",
+  "status": "PRE_REGISTERED_NOT_ACTIVE",
+  "created_at_utc": "2026-09-14T14:55:00Z",
+  "owner": "Meme Alpha Lab using existing Microcap Research Agent and prospective hardening owners",
+  "motivation": {
+    "retrospective_case": "FUSE / Ethereum / 0x126f5ece91d971f8aD62fa4FC1054456B8bd1111",
+    "use_of_case": "FEATURE_HYPOTHESIS_GENERATION_ONLY",
+    "forbidden_use": "FUSE outcome may not set weights, thresholds, winner labels, or count as prospective evidence",
+    "research_question": "Can a cheap deterministic discovery funnel find unusually promising stealth-launched Ethereum microcaps early enough to justify bounded deep research before broad propagation, while maintaining acceptable false-positive rate and cost?"
+  },
+  "reuse_existing_owners": {
+    "research_packet": "04_RESEARCH_LAB/auto_trading/MICROCAP_RESEARCH_AGENT_CONTRACT_v1.md",
+    "prospective_method": "research/api_agent/meme_alpha/MEME_ALPHA_PROSPECTIVE_HARDENING_v1.json",
+    "runtime_policy": "research/api_agent/meme_alpha/MEME_ALPHA_RUNTIME_POLICY_v1.json",
+    "principle": "DISCOVERY_FUNNEL_ONLY; do not create a parallel token-research, regime, portfolio, or trading engine"
+  },
+  "scope": {
+    "initial_chain": "ethereum",
+    "initial_duration_days": 30,
+    "universe_unit": "NEW_CANONICAL_TOKEN_OR_NEW_TRADABLE_POOL_EVENT",
+    "denominator": "all observed eligible Ethereum launch events after deterministic deduplication",
+    "primary_identity_key": "chain + exact canonical contract address",
+    "ticker_or_name_is_identity": false,
+    "max_model_deep_dives_per_day": 3,
+    "portfolio_execution": false,
+    "automatic_trading": false
+  },
+  "stage_0_broad_deterministic_intake": {
+    "model_calls": 0,
+    "goal": "observe thousands of raw events cheaply and preserve a denominator",
+    "required_event_classes": [
+      "EVM CREATE and CREATE2 contract creation candidates",
+      "ERC-20 transfer/interface fingerprints when deterministically identifiable",
+      "Uniswap v2/v3 pool creation events",
+      "Uniswap v4 PoolManager Initialize events and pool identifiers",
+      "known launchpad/factory deployment or pool-initialization events",
+      "DEX new-pair/profile feeds as secondary discovery, never sole truth",
+      "exact-CA mentions from a frozen approved social discovery source universe"
+    ],
+    "uniswap_v4_rule": "Do not assume one newly tradable pool equals one newly deployed pair contract; observe PoolManager initialization semantics explicitly.",
+    "raw_fields": [
+      "observed_at_utc",
+      "chain",
+      "token_ca",
+      "creation_tx_or_first_seen_tx",
+      "pool_id_or_pair",
+      "dex_or_factory",
+      "first_liquidity_timestamp",
+      "first_social_exact_ca_timestamp_when_available"
+    ]
+  },
+  "stage_1_safety_and_executability": {
+    "model_calls": 0,
+    "hard_fail": [
+      "exact identity cannot be resolved",
+      "no verified tradable route after observation window",
+      "sell path fails or explicit honeypot behavior is observed",
+      "executable liquidity is effectively absent for all preregistered test notionals"
+    ],
+    "degrade_not_auto_reject": [
+      "admin or mint controls unresolved",
+      "liquidity lock semantics unresolved",
+      "anonymous team",
+      "scanner disagreement",
+      "paid DEX profile or marketing"
+    ],
+    "test_notionals_usd": [100, 500, 1000],
+    "required_components": [
+      "successful sells observed",
+      "liquidity and price-impact estimate",
+      "route dependence",
+      "buy/sell depth asymmetry where obtainable",
+      "top-holder and deployer concentration excluding known pool/burn infrastructure where reproducible",
+      "bundle/sniper concentration where provider methodology is available"
+    ],
+    "scanner_conflict_state": "UNKNOWN_SCANNER_CONFLICT",
+    "principle": "unknown is not safe"
+  },
+  "stage_1_feature_vector_no_magic_score": {
+    "market_microstructure": [
+      "age_minutes",
+      "liquidity_usd",
+      "liquidity_to_market_cap_when_market_cap_is_reproducible",
+      "volume_to_liquidity_turnover",
+      "unique_buyer_velocity",
+      "holder_growth_velocity",
+      "buy_sell_count_balance",
+      "buy_sell_volume_balance",
+      "successful_sell_count",
+      "top10_concentration",
+      "concentration_change"
+    ],
+    "identity_and_provenance": [
+      "project-published exact CA",
+      "domain/social existence before CA creation",
+      "contract/pool linkage confidence",
+      "project-controlled source authentication"
+    ],
+    "product_and_execution": [
+      "live product before broad token propagation",
+      "on-chain product usage independent of governance-token trading",
+      "fees/revenue/use events observable",
+      "shipping cadence in first 24h and 72h",
+      "bugfix response latency"
+    ],
+    "social_propagation": [
+      "number of exact-CA mentions from distinct control roots",
+      "historical caller-quality ledger available before the current launch",
+      "time from CA/pool creation to first credible mention",
+      "time from first credible mention to broad propagation",
+      "coordination/conflict evidence"
+    ],
+    "narrative_context": [
+      "chain-specific category novelty",
+      "close analogues on other chains",
+      "narrative crowding",
+      "framework market-regime context consumed read-only"
+    ],
+    "rule": "Do not collapse these components into one attractiveness score in v1."
+  },
+  "prospective_comparison_arms": {
+    "CONTROL": "Safety/executability-passing matched launches sampled without feature trigger.",
+    "M": "Microstructure trigger only.",
+    "MS": "Microstructure plus frozen-source exact-CA social propagation.",
+    "MP": "Microstructure plus authenticated live-product/execution evidence.",
+    "MSP": "Microstructure plus social plus authenticated product/execution convergence.",
+    "purpose": "Estimate incremental value of social and product evidence rather than crediting the full FUSE-like bundle post hoc."
+  },
+  "matching_and_sampling": {
+    "control_matching_dimensions": [
+      "observation age band",
+      "liquidity band",
+      "market-cap band when reproducible",
+      "launch venue/factory class",
+      "same broad market day or regime when feasible"
+    ],
+    "deep_dive_selection": "Within each active arm, preserve every triggered candidate in the ledger. If more than the daily deep-dive cap trigger, choose by a frozen deterministic tie-break that does not use future price performance.",
+    "zero_result_days_count": true,
+    "rejected_and_failed_candidates_count": true
+  },
+  "stage_2_bounded_deep_research": {
+    "owner": "MICROCAP_RESEARCH_AGENT_CONTRACT_v1",
+    "activation": "Only candidates admitted by preregistered arm logic receive model/web research.",
+    "mandatory_questions": [
+      "Is the product actually live and causally linked to the exact CA?",
+      "Was product usage measurable before broad propagation?",
+      "Is value capture observable on-chain or only marketing copy?",
+      "Are team/project claims authenticated and what remains unknown?",
+      "Are early social nodes independent control roots and historically informative before this launch?",
+      "Can each preregistered test notional enter and exit after realistic slippage?",
+      "What evidence would falsify the thesis at 1h, 4h, 24h, 3d, and 7d?"
+    ]
+  },
+  "outcome_contract": {
+    "windows": ["1h", "4h", "24h", "3d", "7d"],
+    "per_window": [
+      "forward return",
+      "MFE",
+      "MAE",
+      "realizable return after estimated slippage for each test notional",
+      "liquidity change",
+      "holder/concentration change where available",
+      "exit feasibility",
+      "rug/untradeable/migration state",
+      "original-thesis survival"
+    ],
+    "winner_labels_for_evaluation_not_selection": [
+      "REALIZABLE_2X_WITHIN_24H",
+      "REALIZABLE_3X_WITHIN_7D",
+      "REALIZABLE_5X_WITHIN_7D",
+      "SURVIVED_AND_SELLABLE_AT_7D"
+    ],
+    "primary_method_metrics": [
+      "precision by arm",
+      "recall of all universe winners",
+      "precision_at_daily_deep_dive_cap",
+      "median and tail MFE/MAE",
+      "false-positive rate",
+      "cost per admitted candidate",
+      "cost per prospective winner",
+      "lead time before broad propagation"
+    ],
+    "missed_winner_audit": "Required for the entire Stage-0 universe, not only researched candidates."
+  },
+  "promotion_and_kill": {
+    "minimum_observation_requirement": "At least 30 calendar days and enough triggered/control observations for interpretable arm comparison; do not promote on a few memorable hits.",
+    "promotion_requires": [
+      "At least one triggered arm improves actionable precision versus matched control without unacceptable recall collapse.",
+      "Improvement survives realistic sellability/slippage measurement.",
+      "Signal remains after excluding paid-profile status as a positive feature.",
+      "No single caller, launchpad, or one-off winner explains the majority of measured edge.",
+      "API/model cost remains compatible with Meme Alpha budget policy."
+    ],
+    "kill_or_redraft_if": [
+      "Triggered arms do not beat matched controls.",
+      "Apparent edge disappears after sellability/slippage.",
+      "Social edge exists only when caller universe is selected with hindsight.",
+      "Product evidence becomes observable only after broad token appreciation and therefore has no discovery lead time.",
+      "The funnel requires model/web deep dives on a large fraction of raw contracts and fails the cost objective.",
+      "Uniswap v4 or factory identity cannot be resolved reliably enough to preserve a valid denominator."
+    ]
+  },
+  "fuse_replay_role": {
+    "classification": "RETROSPECTIVE_SANITY_CHECK_ONLY",
+    "expected_without_hindsight": "A reconstruction around the documented approximately 12-hour launch window should test whether FUSE would have been escalated to deep research, not whether it should have been automatically bought.",
+    "may_change_preregistered_rules_after_replay": false
+  },
+  "authority": {
+    "portfolio_action": false,
+    "automatic_trading": false,
+    "canonical_promotion": false,
+    "framework_state_change": false,
+    "market_rule_change": false,
+    "model_weight_change": false,
+    "production_activation": false,
+    "automatic_merge": false
+  }
+}

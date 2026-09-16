@@ -28,14 +28,52 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Refresh producer pointers from current repository state
-        run: python scripts/architecture/build_latest_handoff.py --repo-root .
+      - name: Refresh producer pointers and freeze consumer handoff snapshot
+        run: |
+          python scripts/architecture/build_latest_handoff.py --repo-root .
+          mkdir -p runtime/consumer-receipts
+          python scripts/orchestration/build_framework_handoff_manifest.py \
+            --repo-root . \
+            --output runtime/consumer-receipts/OPERATIONS_DASHBOARD_HANDOFF.json
       - name: Build operations dashboard
         run: |
           python scripts/health/build_operations_dashboard.py \
             --repo-root . \
             --json-output research/operations_dashboard/LATEST_OPERATIONS_DASHBOARD.json \
             --md-output research/operations_dashboard/LATEST_OPERATIONS_DASHBOARD.md
+          python scripts/orchestration/consumer_receipt.py \
+            --repo-root . \
+            --manifest runtime/consumer-receipts/OPERATIONS_DASHBOARD_HANDOFF.json \
+            --consumer OPERATIONS_DASHBOARD \
+            --target research/operations_dashboard/LATEST_OPERATIONS_DASHBOARD.json \
+            --self-hash-field dashboard_sha256 \
+            --max-manifest-age-seconds 900 \
+            --declared LATEST_HANDOFF \
+            --declared AUTOMATION_HEALTH \
+            --declared ARCHITECTURE_HEALTH \
+            --declared EXPERIMENT_REGISTRY \
+            --declared EXPERIMENT_RECEIPT_SYNC \
+            --declared EXPERIMENT_DISPATCH \
+            --declared REMEDIATION_QUEUE
+          python - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          path=Path('research/operations_dashboard/LATEST_OPERATIONS_DASHBOARD.json')
+          value=json.loads(path.read_text())
+          value.pop('dashboard_sha256',None)
+          receipt=value.get('consumer_receipt') if isinstance(value.get('consumer_receipt'),dict) else {}
+          if receipt.get('consumption_state')!='VERIFIED':
+              if value.get('overall_status')=='GREEN': value['overall_status']='AMBER'
+              actions=value.get('required_actions') if isinstance(value.get('required_actions'),list) else []
+              if not any(row.get('system')=='consumer_receipt' for row in actions if isinstance(row,dict)):
+                  actions.append({'priority':'P1','system':'consumer_receipt','reason':receipt.get('reasons') or [receipt.get('reason') or 'CONSUMPTION_UNVERIFIED']})
+              value['required_actions']=sorted(actions,key=lambda row:(row.get('priority','P9'),row.get('system','')))
+          canonical=lambda v:(json.dumps(v,sort_keys=True,separators=(',',':'))+'\n').encode()
+          value['dashboard_sha256']=hashlib.sha256(canonical(value)).hexdigest()
+          path.write_bytes(canonical(value))
+          check=json.loads(path.read_text()); declared=check.pop('dashboard_sha256')
+          if hashlib.sha256(canonical(check)).hexdigest()!=declared: raise SystemExit('dashboard_self_hash_mismatch_after_consumer_receipt')
+          PY
           cp research/operations_dashboard/LATEST_OPERATIONS_DASHBOARD.json LATEST_OPERATIONS_DASHBOARD.json
           cp research/operations_dashboard/LATEST_OPERATIONS_DASHBOARD.md LATEST_OPERATIONS_DASHBOARD.md
       - name: Commit dashboard and verify remote bytes
@@ -74,5 +112,6 @@ jobs:
           path: |
             research/operations_dashboard/LATEST_OPERATIONS_DASHBOARD.json
             research/operations_dashboard/LATEST_OPERATIONS_DASHBOARD.md
+            runtime/consumer-receipts/OPERATIONS_DASHBOARD_HANDOFF.json
           retention-days: 14
           if-no-files-found: error

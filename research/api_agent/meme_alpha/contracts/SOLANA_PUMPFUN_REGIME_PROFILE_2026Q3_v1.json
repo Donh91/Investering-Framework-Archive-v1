@@ -1,0 +1,138 @@
+{
+  "contract": "SOLANA_PUMPFUN_REGIME_PROFILE_2026Q3_v1",
+  "status": "EMPIRICAL_PARTIAL__NO_THRESHOLD_AUTHORITY",
+  "observed_at_utc": "2026-09-15T20:15:00Z",
+  "parent_contract": "MEME_ALPHA_CHAIN_REGIME_PROFILE_v1",
+  "profile_key": {
+    "chain": "Solana",
+    "venue_or_launchpad": "pump.fun",
+    "venue_version": "current_2026_event_schema_with_PumpSwap_and_custom_quote_support",
+    "regime_start": "OPEN__MUST_SPLIT_WHEN_MECHANICS_OR_INCENTIVES_CHANGE",
+    "regime_end_or_open": "OPEN",
+    "quote_asset": "VARIABLE__DO_NOT_ASSUME_SOL",
+    "migration_or_pool_destination": "PumpSwap for current standard lifecycle; verify event-native completion/migration rather than infer from an aggregator",
+    "creator_incentive_regime": "CURRENT_2026__VERSIONED_SEPARATELY_FROM_HISTORICAL_REGIMES",
+    "fee_regime": "CURRENT_2026__REVERIFY_BEFORE_USING_AS_MODEL_FEATURE",
+    "distribution_environment": "HIGH_THROUGHPUT_LAUNCHPAD_WITH_EXTREME_FAILURE_BASE_RATE_AND_HEAVY_BOT_ENTITY_CONTAMINATION"
+  },
+  "mechanics": {
+    "launch_path": "Create -> bonding-curve trading -> completion/migration lifecycle -> PumpSwap trading. Native create/trade/completion events are preferred evidence.",
+    "bonding_curve_or_initial_pool_mechanics": "Venue-native curve state is authoritative for early lifecycle research. Do not substitute later DEX snapshots for launch-time state.",
+    "graduation_or_migration_condition": "Treat completion/migration as an event-defined lifecycle transition. Historical market-cap or virtual-reserve proxies are not graduation proof.",
+    "creator_self_buy_mechanics": "Initial creator buy is observable and should be analysed categorically/non-monotonically; no monotonic positive weight is authorized.",
+    "creator_fee_or_reward_mechanics": "Creator economics changed across 2026 and may change behaviour; version as a regime variable rather than silently pool across eras.",
+    "lp_creation_and_lock_or_burn_semantics": "Post-completion execution is a different liquidity state from the bonding curve and must be modelled separately.",
+    "quote_asset_and_price_unit": "Custom-pair support means quoteMint is explicit and raw quote amounts must retain their native unit until normalized.",
+    "typical_initial_liquidity_topology": "Bonding-curve state before completion; do not apply constant post-DEX liquidity assumptions."
+  },
+  "current_empirical_base_rates": [
+    {
+      "source": "Ian05012 canonical earliest snapshots",
+      "window": "June 2026 selected graduated/trending-biased cohort",
+      "measure": "2x within 24h",
+      "rate": 0.084769,
+      "authority": "SELECTED_COHORT_ONLY__NOT_DENOMINATOR"
+    },
+    {
+      "source": "Ian05012 canonical earliest snapshots",
+      "window": "June 2026 selected graduated/trending-biased cohort",
+      "measure": "runner_peak >= 5x among known runner_peak rows",
+      "rate": 0.009731,
+      "authority": "THEORETICAL_PEAK_SELECTED_COHORT_ONLY"
+    },
+    {
+      "source": "RED-PUMP-2026 corrected study",
+      "window": "2026-05-08 through 2026-06-10 fast-regime observation window",
+      "measure": "observed graduation lower-bound rate",
+      "rate": 0.00198,
+      "authority": "LOWER_BOUND__NOT_24H_TRUTH"
+    },
+    {
+      "source": "Trenches pump.fun Forward Capture 2026-08",
+      "window": "2026-08-06 through 2026-08-13 capture",
+      "measure": "path_completed chain reading",
+      "rate": 0.01135,
+      "authority": "LIFECYCLE_LABEL__NOT_PROFITABILITY"
+    }
+  ],
+  "base_rate_rule": "These rates are deliberately not collapsed into one Solana number. Selection, observation horizon, regime and outcome semantics differ materially.",
+  "market_structure": {
+    "launch_frequency": "HIGH; use denominator-complete/event-native capture where possible rather than newest-N polling.",
+    "candidate_age_interpretation": "Age must be measured against immutable origin/create evidence. Observer timestamp error and pool-age substitution are known failure modes.",
+    "market_cap_semantics": "Explicitly distinguish market cap, FDV and curve/implied valuation. Virtual-reserve-derived values cannot stand in for real reserves or completion state.",
+    "liquidity_semantics": "Curve liquidity/execution and PumpSwap liquidity/execution are different lifecycle states.",
+    "holder_breadth": "Raw holders are not independent economic entities; bundle/funder/router/entity adjustment is required.",
+    "execution": "Sellability, slippage and exit capacity are separate from chart price and theoretical peak."
+  },
+  "risk_and_manipulation": {
+    "known_high_value_controls": [
+      "bundle/sniper concentration",
+      "creator-linked entity share",
+      "common funder / operator overlap",
+      "wash/matched/circular activity",
+      "transfer-to-swap artifacts",
+      "metadata/image copycat reuse",
+      "paid/social amplification contamination",
+      "late source-captured wallet labels"
+    ],
+    "hard_non_inferences": [
+      "Many wallets does not imply many independent buyers.",
+      "Persistent co-entry does not imply insider control.",
+      "Graduation does not imply profitable or sellable tail outcome.",
+      "Social presence does not imply organic propagation.",
+      "A high chart peak does not imply realizable return."
+    ]
+  },
+  "wallet_context": {
+    "chain_local_wallet_skill_required": true,
+    "cross_chain_skill_transferability": "UNPROVEN_BY_DEFAULT",
+    "minimum_asof_history_for_specialist_label": "TO_BE_CALIBRATED_PROSPECTIVELY; history must be matured before candidate cutoff",
+    "wallet_role_archetypes": ["EARLY_LAUNCH", "CURVE_OR_MIGRATION", "MOMENTUM_RUNNER", "TAIL_HOLDER", "EXIT_DISCIPLINE", "PHOENIX_REENTRY"],
+    "entity_adjustment_requirements": ["router/pool exclusion", "transfer/dust exclusion", "same-funder adjustment", "bundle/controller evidence", "self-initiated trade proof"],
+    "current_clean_g3_authority": "NONE_YET__SOURCE_CAPTURED_SMART_LABELS_ARE_SECONDARY_ONLY"
+  },
+  "lifecycle_clocks": {
+    "discovery_cutoffs": ["1m", "5m", "15m", "30m"],
+    "runner_confirmation_hypothesis": "3m/5m/10m survival is retained as a hypothesis only; no production threshold until prospective replication.",
+    "completion": "Use event-native completion state, not market-cap proxy.",
+    "post_completion": "Treat PumpSwap runner/distribution behaviour as a separate stage.",
+    "phoenix": "Re-entry after drawdown is a separate lifecycle model and must not share early-launch training labels by default."
+  },
+  "feature_authority": {
+    "G2": "PRIMARY_RESEARCH_LAYER",
+    "G3_raw_wallet_count": "NEGATIVE_CONTROL",
+    "G3_source_captured_smart": "SECONDARY_HYPOTHESIS_ONLY",
+    "G3_clean_asof_entity_adjusted": "PREREGISTERED__AWAITING_DIRECT_TEST",
+    "social_reach": "TIMING_CONTEXT_ONLY_UNLESS_DERIVABLE_AT_DECISION",
+    "graduation": "LIFECYCLE_OUTCOME_ONLY"
+  },
+  "regime_break_conditions": [
+    "bonding-curve or migration mechanics change",
+    "creator fee/reward schedule changes materially",
+    "supported quote assets or quote-asset mix changes materially",
+    "dominant execution/migration destination changes",
+    "launchpad discovery/capture semantics change",
+    "bot/bundle/entity environment shifts enough to alter feature prevalence",
+    "tail-event base rate changes materially in prospective cohort"
+  ],
+  "current_research_actions": [
+    "Run Trenches forward-split G2 vs source-captured smart-degen secondary ablation as an independent lifecycle replication.",
+    "Use RED-COHORT first-buyer recurrence to define G3 structure but not economic return edge.",
+    "Use Chain of Title creator/funder provenance to decontaminate apparent wallet independence.",
+    "Use prospective native Pump trade events to create the first clean current-token buyer graph with frozen cutoffs.",
+    "Join only matured prior wallet outcomes available before each cutoff.",
+    "Keep 25x/50x/100x in a sparse-tail casebook until event counts support direct statistical authority."
+  ],
+  "authority": {
+    "automatic_trading": false,
+    "portfolio_execution": false,
+    "buy_now_promotion": false,
+    "live_threshold_change": false,
+    "cross_chain_threshold_export": false
+  },
+  "evidence_notes": [
+    "Trenches dataset card documents 85,442 first-sighting rows, 730,850 observations, a forward-only split and per-field derivability stamps; it also states decoded chain paths do not intersect the capture mints.",
+    "RED-COHORT revised result supports structural co-entry information after contamination control but does not prove sellable return edge.",
+    "Existing framework Pump adapter is pinned to venue-native event schema and explicitly preserves quoteMint/custom-pair semantics."
+  ]
+}

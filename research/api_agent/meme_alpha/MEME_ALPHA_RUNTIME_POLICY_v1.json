@@ -1,0 +1,143 @@
+{
+  "contract": "MEME_ALPHA_RUNTIME_POLICY_v1",
+  "status": "ACTIVE_RESEARCH_ONLY",
+  "owner": "Investering Framework existing research/API-agent stack",
+  "private_workspace": "Donh91/secrets/private_research/memes_alpha",
+  "cadence": {
+    "heartbeat_hours": 4,
+    "event_driven_allowed": true,
+    "max_tasks_per_run": 1,
+    "empty_queue_behavior": "NOOP_NO_MODEL_CALL"
+  },
+  "execution_order": [
+    "DETERMINISTIC_LOCAL",
+    "GITHUB_PUBLIC",
+    "FREE_OR_ALREADY_AUTHORIZED_PROVIDER",
+    "OPENAI_LUNA_WEB_RESEARCH",
+    "OPENAI_SOL_ESCALATION"
+  ],
+  "model_policy": {
+    "default_model": "gpt-5.6-luna",
+    "default_reasoning_effort": "medium",
+    "max_output_tokens": 3600,
+    "sol_escalation_requires": [
+      "material_evidence_conflict",
+      "high_value_network_forensics",
+      "methodological_adjudication",
+      "luna_blocked_or_inconclusive"
+    ],
+    "astra_default_allowed": false,
+    "code_write_executor": "CODEX_OR_REVIEWED_AGENT_PR_ONLY"
+  },
+  "budget": {
+    "single_task_soft_cap_usd": 0.35,
+    "single_task_hard_cap_usd": 0.75,
+    "daily_soft_cap_usd": 1.0,
+    "monthly_shared_api_hard_stop_usd": 20.0,
+    "web_search_tool_call_cost_usd_snapshot": 0.01,
+    "max_web_search_calls_per_task": 4,
+    "provider_web_search_overrun_tolerance": 1,
+    "automatic_budget_increase": false
+  },
+  "failure_policy": {
+    "max_attempts_per_unchanged_input": 3,
+    "dead_letter_after_max_attempts": true,
+    "automatic_retry_after_source_change": true,
+    "infrastructure_failures_do_not_consume_task_attempts": true
+  },
+  "queue": {
+    "intake_roots": [
+      "private_research/memes_alpha/research_leads",
+      "private_research/memes_alpha/cases",
+      "private_research/memes_alpha/discovery",
+      "private_research/memes_alpha/wallet_research"
+    ],
+    "runtime_root": "private_research/memes_alpha/runtime",
+    "terminal_states": ["COMPLETE", "KILLED", "SUPERSEDED"],
+    "blocked_states": ["BLOCKED", "WAITING_FOR_DATA", "WAITING_FOR_GOVERNANCE"],
+    "eligible_status_tokens": [
+      "QUEUED",
+      "READY",
+      "OPEN",
+      "WATCH",
+      "HIGH_PRIORITY_WATCH",
+      "QUEUED_FOR_INDEPENDENT_REPLAY",
+      "PROVISIONAL",
+      "RESEARCH"
+    ]
+  },
+  "research_controls": {
+    "point_in_time_evidence_required": true,
+    "input_sha256_required": true,
+    "source_urls_required_for_web_claims": true,
+    "negative_cases_required": true,
+    "no_retroactive_wallet_rescore": true,
+    "first_entry_distinct_from_repeat_accumulation": true,
+    "seeded_or_dust_recipient_must_not_count_as_smart_money": true,
+    "sellability_or_exit_feasibility_required_before_positive_alpha_label": true,
+    "matched_failures_required_before_method_promotion": true
+  },
+  "source_authentication": {
+    "enabled": true,
+    "discovery_is_not_authentication": true,
+    "minimum_external_trust_anchors": 2,
+    "minimum_independent_anchor_categories": 2,
+    "minimum_independent_control_roots": 2,
+    "require_structured_provenance_claim_types": true,
+    "require_high_confidence_onchain_binding_for_token_ca_claim": true,
+    "block_on_unresolved_red_team": true,
+    "block_on_repo_forensics_blocker": true,
+    "verified_commit_counts_as_ownership": false,
+    "repository_self_description_counts_as_ownership": false,
+    "repository_internal_history_counts_as_external_anchor": false,
+    "sanitize_unauthenticated_first_party_findings": true,
+    "sanitize_unauthenticated_summary": true,
+    "degrade_when_required_but_unproven": true,
+    "revocation_must_propagate_to_descendants": true,
+    "structured_provenance_claim_types": [
+      "PROJECT_OWNERSHIP",
+      "REPOSITORY_OWNERSHIP",
+      "MASCOT_CANONICITY",
+      "LORE_CANONICITY",
+      "TOKEN_ISSUANCE",
+      "TOKEN_CA_OWNERSHIP",
+      "CTO_COMMUNITY_LEGITIMACY"
+    ],
+    "first_party_states": [
+      "NOT_APPLICABLE",
+      "UNASSESSED",
+      "CANDIDATE",
+      "AUTHENTICATED_FIRST_PARTY",
+      "INVALIDATED_FIRST_PARTY",
+      "CONFLICTED"
+    ],
+    "allowed_external_anchor_categories": [
+      "OFFICIAL_WEBSITE",
+      "OFFICIAL_DOCS",
+      "OFFICIAL_SOCIAL",
+      "DOMAIN_CONTROL",
+      "ORGANIZATION_ANCESTRY",
+      "ONCHAIN_PROJECT_CONTROL",
+      "SIGNED_RELEASE",
+      "OTHER_EXTERNAL"
+    ]
+  },
+  "adaptive_development": {
+    "enabled": true,
+    "may_create_research_proposal": true,
+    "may_create_code_candidate": true,
+    "may_modify_production_code_directly": false,
+    "may_auto_merge": false,
+    "codex_is_required_for_research": false,
+    "codex_is_optional_for_bounded_code_work": true
+  },
+  "authority": {
+    "portfolio_action": false,
+    "automatic_trading": false,
+    "canonical_promotion": false,
+    "framework_state_change": false,
+    "market_rule_change": false,
+    "model_weight_change": false,
+    "automatic_merge": false
+  }
+}
