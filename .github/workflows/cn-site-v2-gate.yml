@@ -1,0 +1,42 @@
+name: Cycle Navigator Site v2 Gate
+on:
+  pull_request:
+    paths:
+      - '05_CYCLE_NAVIGATOR/site/**'
+      - '05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json'
+      - '05_CYCLE_NAVIGATOR/**/CYCLE_NAVIGATOR_MACHINE_PACKAGE.json'
+      - '.github/workflows/cycle-navigator-pages.yml'
+  workflow_dispatch:
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate public v2 contract
+        run: node 05_CYCLE_NAVIGATOR/site/validate-v2.mjs
+      - name: Run production-equivalent v2 build chain
+        run: |
+          node 05_CYCLE_NAVIGATOR/site/build-public.mjs
+          node 05_CYCLE_NAVIGATOR/site/build-score-bundle.mjs
+          node 05_CYCLE_NAVIGATOR/site/build-live-observation.mjs
+          node 05_CYCLE_NAVIGATOR/site/build-social-card.mjs
+      - name: Verify required output and privacy
+        run: |
+          test -f 05_CYCLE_NAVIGATOR/site/dist/index.html
+          test -f 05_CYCLE_NAVIGATOR/site/dist/data/latest.json
+          test -f 05_CYCLE_NAVIGATOR/site/dist/history-scoreboard.json
+          test -f 05_CYCLE_NAVIGATOR/site/dist/history-scoreboard.js
+          test -f 05_CYCLE_NAVIGATOR/site/dist/scoreboard.css
+          ! grep -R 'Donh91\|Investering-Framework-Archive-v1\|week_dir' 05_CYCLE_NAVIGATOR/site/dist/data/latest.json
+      - name: Verify final production shell is v2
+        run: |
+          grep -q 'WHAT SHOULD I DO NOW?' 05_CYCLE_NAVIGATOR/site/dist/index.html
+          grep -q 'href="#now"' 05_CYCLE_NAVIGATOR/site/dist/index.html
+          grep -q 'href="#path"' 05_CYCLE_NAVIGATOR/site/dist/index.html
+          grep -q 'href="#why"' 05_CYCLE_NAVIGATOR/site/dist/index.html
+          grep -q 'history-scoreboard.js' 05_CYCLE_NAVIGATOR/site/dist/index.html
