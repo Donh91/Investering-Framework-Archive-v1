@@ -189,10 +189,46 @@ class OfficialDailyCompassTest(unittest.TestCase):
             self.assertEqual(rerun["status"], "EXISTING_DAILY_FREEZE")
             self.assertEqual(Path(first["path"]).read_bytes(), frozen_bytes)
             self.assertEqual(rerun["sha256"], first_compass["compass_sha256"])
+            pointer = json.loads((root / "LATEST_COMPASS.json").read_text())
+            self.assertEqual(pointer["issued_at_utc"], first_compass["issued_at_utc"])
+
+    def test_existing_freeze_repairs_derived_projection_and_pointers(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "official"
+            compass = self.build(tmp, run_reason="ON_DEMAND")
+            first = write_official_compass(compass, root)
+            frozen_bytes = Path(first["path"]).read_bytes()
+
+            Path(first["public_path"]).unlink()
+            (root / "LATEST_COMPASS.json").unlink()
+            (root / "PUBLIC_LATEST_COMPASS.json").unlink()
+
+            repaired = write_official_compass(compass, root)
+
+            self.assertEqual(repaired["status"], "EXISTING_DAILY_FREEZE")
+            self.assertEqual(Path(first["path"]).read_bytes(), frozen_bytes)
+            self.assertTrue(Path(first["public_path"]).exists())
+            pointer = json.loads((root / "LATEST_COMPASS.json").read_text())
+            public_pointer = json.loads((root / "PUBLIC_LATEST_COMPASS.json").read_text())
+            self.assertEqual(pointer["compass_content_sha256"], hashlib.sha256(frozen_bytes).hexdigest())
+            self.assertEqual(pointer["public_projection_content_sha256"], public_pointer["public_projection_content_sha256"])
+
+    def test_existing_freeze_integrity_failure_is_blocking(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "official"
+            compass = self.build(tmp, run_reason="ON_DEMAND")
+            first = write_official_compass(compass, root)
+            frozen = json.loads(Path(first["path"]).read_text())
+            frozen["action_now"] = "PREPARE"
+            Path(first["path"]).write_text(json.dumps(frozen))
+
+            with self.assertRaisesRegex(ValueError, "IMMUTABLE_COMPASS_INTEGRITY_FAILED"):
+                write_official_compass(compass, root)
 
     def test_global_route_resolves_official_pointer_first(self):
         route = json.loads(Path("07_PROMPTS_AND_AGENTS/action_compass/GLOBAL_ACTION_COMPASS_ROUTE_v1.json").read_text())
         official = "04_MARKET_LEARNING/handlekompas/official/LATEST_COMPASS.json"
+        self.assertEqual(route["status"], "ACTIVE")
         self.assertEqual(route["official_daily_compass_pointer"], official)
         self.assertIn(official, route["authority_route"])
 
