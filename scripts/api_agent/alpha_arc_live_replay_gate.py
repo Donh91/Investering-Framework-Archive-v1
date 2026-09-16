@@ -3,11 +3,12 @@ from __future__ import annotations
 import argparse
 import json
 import time
+import urllib.error
 import urllib.request
 from pathlib import Path
 from typing import Any
 
-from scripts.api_agent.alpha_arc_direct_new_pair import CHAIN_ID, USDC_ERC20, rpc_call, scan_range
+import scripts.api_agent.alpha_arc_direct_new_pair as arc
 
 RPC_DEFAULT = "https://rpc.arc-scan.org"
 ARCSCAN_API = "https://api.arc-scan.org"
@@ -31,17 +32,44 @@ def contains_all(payload: Any, values: list[str]) -> bool:
     return all(value.lower() in text for value in values)
 
 
+def retrying_rpc_call(rpc_url: str, method: str, params: list[Any], *, timeout: int = 20, attempts: int = 5) -> Any:
+    last_error: Exception | None = None
+    for attempt in range(attempts):
+        try:
+            return arc._replay_base_rpc_call(rpc_url, method, params, timeout=timeout)  # type: ignore[attr-defined]
+        except urllib.error.HTTPError as exc:
+            last_error = exc
+            if exc.code not in {429, 502, 503, 504} or attempt == attempts - 1:
+                raise
+            retry_after = exc.headers.get("Retry-After") if exc.headers else None
+            try:
+                delay = max(float(retry_after), 0.5) if retry_after else min(0.5 * (2 ** attempt), 4.0)
+            except ValueError:
+                delay = min(0.5 * (2 ** attempt), 4.0)
+            time.sleep(delay)
+        except TimeoutError as exc:
+            last_error = exc
+            if attempt == attempts - 1:
+                raise
+            time.sleep(min(0.5 * (2 ** attempt), 4.0))
+    raise RuntimeError(f"RPC_RETRY_EXHAUSTED:{method}:{last_error}")
+
+
 def run_replay(rpc_url: str, from_block: int, to_block: int, chunk: int) -> dict[str, Any]:
-    chain_id_hex = rpc_call(rpc_url, "eth_chainId", [])
+    if not hasattr(arc, "_replay_base_rpc_call"):
+        arc._replay_base_rpc_call = arc.rpc_call  # type: ignore[attr-defined]
+    arc.rpc_call = retrying_rpc_call
+
+    chain_id_hex = retrying_rpc_call(rpc_url, "eth_chainId", [])
     chain_id = int(chain_id_hex, 16) if isinstance(chain_id_hex, str) else None
-    if chain_id != CHAIN_ID:
+    if chain_id != arc.CHAIN_ID:
         raise RuntimeError(f"WRONG_CHAIN:{chain_id}")
 
     events: list[dict[str, Any]] = []
     for start in range(from_block, to_block + 1, chunk):
         end = min(start + chunk - 1, to_block)
-        events.extend(scan_range(rpc_url, start, end))
-        time.sleep(0.15)
+        events.extend(arc.scan_range(rpc_url, start, end))
+        time.sleep(0.25)
 
     matches = [
         row for row in events
@@ -54,10 +82,10 @@ def run_replay(rpc_url: str, from_block: int, to_block: int, chunk: int) -> dict
     match = matches[0]
 
     assertions = {
-        "chain_id_5042": chain_id == CHAIN_ID,
+        "chain_id_5042": chain_id == arc.CHAIN_ID,
         "exact_ca": str(match.get("target_token_ca") or "").lower() == BEANCAT_CA,
         "exact_pool": str(match.get("pool_address") or "").lower() == BEANCAT_POOL,
-        "quote_usdc_erc20": str(match.get("quote_asset") or "").lower() == USDC_ERC20,
+        "quote_usdc_erc20": str(match.get("quote_asset") or "").lower() == arc.USDC_ERC20,
         "quote_representation": match.get("quote_representation") == "USDC_ERC20_6",
         "fee_10000": match.get("fee") == 10_000,
         "creation_precedes_known_swap": isinstance(match.get("block_number"), int) and match["block_number"] <= BEANCAT_FIRST_KNOWN_SWAP_BLOCK,
@@ -74,7 +102,7 @@ def run_replay(rpc_url: str, from_block: int, to_block: int, chunk: int) -> dict
     gecko_pool = get_json(f"{GECKO_API}/networks/arc/pools/{BEANCAT_POOL}")
     independent = {
         "arcscan_token_identity": contains_all(arcscan_token, [BEANCAT_CA]),
-        "geckoterminal_pool_identity": contains_all(gecko_pool, [BEANCAT_POOL, BEANCAT_CA, USDC_ERC20]),
+        "geckoterminal_pool_identity": contains_all(gecko_pool, [BEANCAT_POOL, BEANCAT_CA, arc.USDC_ERC20]),
     }
     if not all(independent.values()):
         raise RuntimeError("INDEPENDENT_READBACK_FAILED:" + ",".join(k for k, v in independent.items() if not v))
