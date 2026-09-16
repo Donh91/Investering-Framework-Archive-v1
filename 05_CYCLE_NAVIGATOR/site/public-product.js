@@ -4,9 +4,9 @@
   const esc = value => String(value ?? '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#039;');
   const short = (value, limit = 220) => { const text = String(value ?? '').trim(); return text.length > limit ? `${text.slice(0, limit - 1).trim()}…` : text; };
   const cleanPhase = value => String(value || '').replace(/^\d+\.\s*/, '').replace(/\s[—–-]\s(ACTIVE WATCH|ACTIVE|UNCONFIRMED|INACTIVE|PAUSED).*$/i, '').trim();
-  const statusFrom = value => { const text = String(value || '').toUpperCase(); if (text.includes('ACTIVE WATCH')) return 'watch'; if (text.includes('UNCONFIRMED')) return 'wait'; if (text.includes('PAUSED') || text.includes('INACTIVE')) return 'pause'; if (text.includes('ACTIVE')) return 'active'; return 'wait'; };
-  const statusLabel = value => ({ active: 'ACTIVE', watch: 'WATCH', wait: 'WAIT', pause: 'PAUSE' }[statusFrom(value)] || 'WAIT');
-  const postureCopy = value => ({ active: 'Current rotation is active.', watch: 'Watch and prepare. Confirmation is still required.', wait: 'Wait. Rotation is not confirmed.', pause: 'Pause new risk here until the framework reopens this stage.' }[statusFrom(value)] || 'Wait for confirmation.');
+  const statusFrom = value => { const text = String(value || '').toUpperCase(); if (text.includes('PAUSED') || text.includes('INACTIVE')) return 'pause'; if (text.includes('ACTIVE WATCH') || text.includes('RELATIVE RESILIENCE') || text.includes('ON WATCH')) return 'watch'; if (text.includes('MAJOR LIQUIDITY ANCHOR') || text.includes('NO CONFIRMED MARKET BREAKDOWN')) return 'hold'; if (text.includes('UNCONFIRMED') || text.includes('SELECTIVE PARTICIPATION')) return 'wait'; if (text.includes('ACTIVE')) return 'active'; return 'unavailable'; };
+  const statusLabel = value => ({ active: 'ACTIVE', hold: 'HOLD', watch: 'WATCH', wait: 'WAIT', pause: 'PAUSE', unavailable: 'UNAVAILABLE' }[statusFrom(value)] || 'UNAVAILABLE');
+  const postureCopy = value => ({ active: 'Current rotation is active.', hold: 'Hold the current posture. Do not broaden risk from this segment alone.', watch: 'Watch and prepare. Confirmation is still required.', wait: 'Wait. Rotation is not confirmed.', pause: 'Pause new risk here until the framework reopens this stage.', unavailable: 'No public posture is available.' }[statusFrom(value)] || 'No public posture is available.');
   const eraLabel = era => ({ PUBLISHED_MANUAL_AUDIT: 'Published legacy', BRIDGE_PUBLISHED_SCORE: 'Bridge', FROZEN_PROSPECTIVE: 'Frozen prospective', AUTOMATED_CANONICAL: 'Automated canonical' }[era] || 'Published record');
   const stanceTitle = stance => ({ HOLD: 'HOLD / WAIT', WAIT: 'WAIT', PREPARE: 'PREPARE', SELECTIVE: 'SELECTIVE', 'PROTECT CAPITAL': 'PROTECT CAPITAL', 'BROADER DEPLOYMENT': 'BROADER DEPLOYMENT' }[String(stance || '').toUpperCase()] || 'WAIT');
   const stanceCopy = stance => ({ HOLD: 'Hold the current posture. Do not broaden risk until the next confirmation gate is met.', WAIT: 'No new broad deployment is confirmed. Wait for the next valid gate.', PREPARE: 'Prepare for a possible transition, but do not treat it as confirmed yet.', SELECTIVE: 'Keep risk selective. Broad deployment is not confirmed.', 'PROTECT CAPITAL': 'Risk conditions are defensive. Avoid broadening exposure until evidence improves.', 'BROADER DEPLOYMENT': 'Broader participation is confirmed by the current public framework state.' }[String(stance || '').toUpperCase()] || 'No new action is confirmed.');
@@ -99,9 +99,10 @@
     const now = new Date();
     const ageMs = updated ? now - updated : NaN;
     const stale = Number.isFinite(ageMs) && ageMs > 90 * 60 * 1000;
+    const limited = /DATA_DEGRADED/i.test(String(action.current || ''));
     const next = nextHourlySourceCycle(now);
-    host.className = `freshness-strip${stale ? ' stale' : ''}`;
-    host.innerHTML = `<div><span>${stale ? 'LAST VALID HANDLEKOMPAS' : 'HANDLEKOMPAS UPDATED'}</span><strong>${esc(formatUpdated(updated))}</strong><small>${updated ? `${esc(duration(ageMs))} ago` : 'No LIVE timestamp published'}</small></div><div><span>NEXT HOURLY DATA CYCLE</span><strong>${esc(duration(next - now))}</strong><small>Owner source runs at :05 UTC · publishing may trail by a few minutes</small></div><div><span>WEEKLY AUTHORITY</span><strong>Frozen CN #${esc(pkg.issue_number ?? '—')}</strong><small>LIVE may update posture, never rewrite the weekly forecast</small></div>`;
+    host.className = `freshness-strip${stale ? ' stale' : ''}${limited ? ' limited' : ''}`;
+    host.innerHTML = `<div><span>${stale ? 'LAST VALID HANDLEKOMPAS' : limited ? 'HANDLEKOMPAS · DATA LIMITED' : 'HANDLEKOMPAS UPDATED'}</span><strong>${esc(formatUpdated(updated))}</strong><small>${updated ? `${esc(duration(ageMs))} ago` : 'No LIVE timestamp published'}</small></div><div><span>NEXT HOURLY DATA CYCLE</span><strong>${esc(duration(next - now))}</strong><small>Owner source runs at :05 UTC · publishing may trail by a few minutes</small></div><div><span>WEEKLY AUTHORITY</span><strong>Frozen CN #${esc(pkg.issue_number ?? '—')}</strong><small>LIVE may update posture, never rewrite the weekly forecast</small></div>`;
   }
 
   function phaseSummary(stages) {
@@ -131,12 +132,13 @@
     const stance = String(action.stance || 'WAIT').toUpperCase();
     const gate = publicGate(action.confirmation);
     const invalidation = publicGate(action.invalidation);
-    const nextDays = action.next_days ? short(action.next_days, 180) : 'No separate 1–3 day action is published. Keep the current Handlekompas until a canonical confirmation changes it.';
+    const dataLimited = /DATA_DEGRADED/i.test(String(action.current || ''));
+    const nextDays = action.next_days ? short(action.next_days, 180) : dataLimited ? 'Stay HOLD / WAIT until source health and the confirmation gate recover. Recheck on the next hourly cycle.' : `Stay ${stanceTitle(stance)} and reassess on the next hourly Handlekompas cycle; broaden risk only after the confirmation gate.`;
     const whyNow = phaseSummary(stages);
     const liveAvailable = Boolean(action.generated_at);
-    const currentText = liveAvailable ? stanceCopy(stance) : 'LIVE Handlekompas is unavailable. The public product is failing closed and will not infer a new action from price alone.';
-    document.getElementById('productNow').innerHTML = `<div id="productFreshness" class="freshness-strip"></div>
-      <section class="action-hero">
+    const currentText = !liveAvailable ? 'LIVE Handlekompas is unavailable. The public product is failing closed and will not infer a new action from price alone.' : dataLimited ? 'Data quality is currently limited. HOLD / WAIT remains the bounded posture and no broader risk is promoted until healthy evidence returns.' : stanceCopy(stance);
+    document.getElementById('productNow').innerHTML = `<section class="action-hero">
+        ${dataLimited ? '<div class="data-limited-badge">LIVE DATA LIMITED</div>' : ''}
         <div class="action-label">HANDLEKOMPAS · WHAT SHOULD I DO NOW?</div>
         <div class="action-word">${esc(liveAvailable ? stanceTitle(stance) : 'WAIT')}</div>
         <p>${esc(currentText)}</p>
@@ -147,6 +149,7 @@
           <article><span>RISK / INVALIDATION</span><p>${esc(invalidation)}</p></article>
         </div>
       </section>
+      <div id="productFreshness" class="freshness-strip"></div>
       <section class="now-section"><div class="section-title"><div><small>RISK LADDER · HERE AND NOW</small><h2>Bitcoin to microcaps</h2></div><p>The weekly rotation map translated into a simple public posture. LIVE Handlekompas controls the top-level stance.</p></div>${rotationCards(pkg.rotation_ladder, true)}</section>
       <section class="context-row"><article><span>MARKET CONTEXT</span><strong id="productPrices">${esc(priceText(prices))}</strong><small>Context only. Price cannot rewrite the frozen call.</small></article><article><span>THIS WEEK · FROZEN</span><strong>${esc(short(pkg.base_case_this_week || 'Not published for this issue.', 190))}</strong><small>Master Monday / Cycle Navigator authority</small></article></section>
       <section class="why-now"><div><small>WHY NOW</small><h2>${esc(whyNow)}</h2></div><p>${esc(short(pkg.market_state || 'Official weekly market state unavailable.', 260))}</p></section>`;
