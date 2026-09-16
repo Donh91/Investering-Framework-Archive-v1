@@ -1,0 +1,74 @@
+name: Action Compass Daily
+
+on:
+  schedule:
+    - cron: "45 6 * * *"
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "daily or event freeze"
+        required: false
+        default: "daily"
+        type: choice
+        options:
+          - daily
+          - event
+
+permissions:
+  contents: write
+
+concurrency:
+  group: action-compass-production
+  cancel-in-progress: false
+
+jobs:
+  freeze-and-score:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Checkout current main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Resolve mode
+        id: mode
+        shell: bash
+        run: |
+          MODE="${{ github.event.inputs.mode }}"
+          if [ -z "$MODE" ]; then MODE="daily"; fi
+          echo "mode=$MODE" >> "$GITHUB_OUTPUT"
+
+      - name: Compile immutable Compass freeze
+        run: python3 scripts/action_compass.py --mode "${{ steps.mode.outputs.mode }}"
+
+      - name: Score matured Compass horizons
+        run: python3 scripts/action_compass_score.py
+
+      - name: Validate current pointer and freeze
+        run: python3 scripts/action_compass.py --validate-latest
+
+      - name: Commit machine artifacts if changed
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "framework-compass-bot"
+          git config user.email "framework-compass-bot@users.noreply.github.com"
+          git add 05_COMPASS
+          if git diff --cached --quiet; then
+            echo "No Compass changes to commit."
+            exit 0
+          fi
+          git commit -m "compass: freeze daily state and score matured horizons"
+          for attempt in 1 2 3; do
+            if git pull --rebase origin main && git push origin HEAD:main; then
+              exit 0
+            fi
+            echo "Push attempt $attempt failed; retrying after refresh."
+            git rebase --abort >/dev/null 2>&1 || true
+            git reset --hard HEAD
+            sleep $((attempt * 4))
+          done
+          echo "Unable to persist Compass after three attempts."
+          exit 1
