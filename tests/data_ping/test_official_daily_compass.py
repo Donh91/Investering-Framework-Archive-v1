@@ -73,7 +73,7 @@ class OfficialDailyCompassTest(unittest.TestCase):
             "altseason_countdown": [{"phase": "Broad altseason — PAUSED", "window": "No calendar ETA"}],
         }
 
-    def build(self, root, *, include_cn=True, issued_at=None, **kwargs):
+    def build(self, root, *, include_cn=True, issued_at=None, run_reason="SCHEDULED_DAILY", **kwargs):
         return build_official_compass(
             self.auto(**kwargs),
             packet_path=Path("04_MARKET_LEARNING/entry_signals/auto_market_state/runs/test.json"),
@@ -81,7 +81,7 @@ class OfficialDailyCompassTest(unittest.TestCase):
             cn_binding={"status": "PASS"} if include_cn else {"status": "UNAVAILABLE"},
             repo_root=Path(root),
             issued_at=issued_at or datetime(2026, 9, 16, 20, 17, tzinfo=timezone.utc),
-            run_reason="SCHEDULED_DAILY",
+            run_reason=run_reason,
         )
 
     def test_deterministic_same_input_same_time(self):
@@ -164,6 +164,31 @@ class OfficialDailyCompassTest(unittest.TestCase):
             public_pointer = json.loads((root / "PUBLIC_LATEST_COMPASS.json").read_text())
             self.assertEqual(pointer["compass_content_sha256"], hashlib.sha256(Path(first["path"]).read_bytes()).hexdigest())
             self.assertEqual(pointer["public_projection_content_sha256"], public_pointer["public_projection_content_sha256"])
+
+    def test_on_demand_same_source_rerun_is_idempotent(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "official"
+            first_compass = self.build(
+                tmp,
+                run_reason="ON_DEMAND",
+                issued_at=datetime(2026, 9, 16, 20, 17, tzinfo=timezone.utc),
+            )
+            rerun_compass = self.build(
+                tmp,
+                run_reason="ON_DEMAND",
+                issued_at=datetime(2026, 9, 16, 20, 18, tzinfo=timezone.utc),
+            )
+            self.assertEqual(first_compass["compass_id"], rerun_compass["compass_id"])
+            self.assertNotEqual(first_compass["compass_sha256"], rerun_compass["compass_sha256"])
+
+            first = write_official_compass(first_compass, root)
+            frozen_bytes = Path(first["path"]).read_bytes()
+            rerun = write_official_compass(rerun_compass, root)
+
+            self.assertEqual(first["status"], "WRITTEN")
+            self.assertEqual(rerun["status"], "EXISTING_DAILY_FREEZE")
+            self.assertEqual(Path(first["path"]).read_bytes(), frozen_bytes)
+            self.assertEqual(rerun["sha256"], first_compass["compass_sha256"])
 
     def test_global_route_resolves_official_pointer_first(self):
         route = json.loads(Path("07_PROMPTS_AND_AGENTS/action_compass/GLOBAL_ACTION_COMPASS_ROUTE_v1.json").read_text())
