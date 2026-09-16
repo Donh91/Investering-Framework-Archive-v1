@@ -1,0 +1,40 @@
+name: External Alpha Registry Gate
+
+on:
+  pull_request:
+    paths:
+      - '04_RESEARCH_LAB/auto_trading/external_alpha/**'
+      - '04_RESEARCH_LAB/auto_trading/maeve/REVERSE_ENGINEERING_READINESS_V1.md'
+      - 'scripts/experiments/external_alpha_registry.py'
+      - 'tests/experiments/test_external_alpha_registry.py'
+      - '.github/workflows/external-alpha-registry-gate.yml'
+  push:
+    branches: [main]
+    paths:
+      - '04_RESEARCH_LAB/auto_trading/external_alpha/**'
+      - '04_RESEARCH_LAB/auto_trading/maeve/REVERSE_ENGINEERING_READINESS_V1.md'
+      - 'scripts/experiments/external_alpha_registry.py'
+      - 'tests/experiments/test_external_alpha_registry.py'
+  schedule:
+    - cron: '15 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate registry contract and admission scores
+        run: |
+          python scripts/experiments/external_alpha_registry.py \
+            04_RESEARCH_LAB/auto_trading/external_alpha/EXTERNAL_ALPHA_REGISTRY.json \
+            --mode validate
+      - name: Run fail-closed external-alpha tests
+        run: python -m unittest tests.experiments.test_external_alpha_registry -v

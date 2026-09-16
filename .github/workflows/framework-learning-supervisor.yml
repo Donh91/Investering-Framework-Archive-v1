@@ -1,0 +1,352 @@
+name: Framework Learning Supervisor
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/framework-learning-supervisor.yml'
+      - 'scripts/framework_intelligence/framework_learning_supervisor.py'
+      - 'scripts/framework_intelligence/operational_memory_v1.py'
+      - 'scripts/framework_intelligence/operational_memory_post_production_audit_v1.py'
+      - 'scripts/framework_intelligence/operational_memory_fail_to_codex_intake_v1.py'
+      - 'scripts/orchestration/build_framework_handoff_manifest.py'
+      - 'tests/framework_intelligence/test_framework_learning_supervisor.py'
+      - 'tests/framework_intelligence/test_operational_memory_v1.py'
+      - 'tests/framework_intelligence/test_operational_memory_post_production_audit_v1.py'
+      - 'tests/framework_intelligence/test_operational_memory_fail_to_codex_intake_v1.py'
+      - '00_FMOS/FRAMEWORK_INTELLIGENCE_AND_LEARNING_LOOP_v1.md'
+      - '00_FMOS/OPERATIONAL_MEMORY_AND_RETRIEVAL_v1.md'
+  schedule:
+    - cron: '35 4 * * *'
+      timezone: 'Europe/Copenhagen'
+    - cron: '35 9 * * 1'
+      timezone: 'Europe/Copenhagen'
+  workflow_dispatch:
+
+concurrency:
+  group: framework-main-writer
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compile learning stack
+        run: |
+          python -m py_compile \
+            scripts/framework_intelligence/framework_learning_supervisor.py \
+            scripts/framework_intelligence/operational_memory_v1.py \
+            scripts/framework_intelligence/operational_memory_post_production_audit_v1.py \
+            scripts/framework_intelligence/operational_memory_fail_to_codex_intake_v1.py \
+            scripts/orchestration/build_framework_handoff_manifest.py
+      - name: Run learning tests
+        run: |
+          python -m unittest \
+            tests.framework_intelligence.test_framework_learning_supervisor \
+            tests.framework_intelligence.test_operational_memory_v1 \
+            tests.framework_intelligence.test_operational_memory_post_production_audit_v1 \
+            tests.framework_intelligence.test_operational_memory_fail_to_codex_intake_v1 -v
+      - name: Dry-run current repository state, operational preflight and production audit
+        run: |
+          rm -rf runtime/framework-learning-supervisor runtime/operational-memory runtime/opmem-preflight.json runtime/opmem-audit.json runtime/opmem-audit.md
+          python scripts/framework_intelligence/framework_learning_supervisor.py \
+            --repo-root . \
+            --output-root runtime/framework-learning-supervisor
+          python scripts/framework_intelligence/operational_memory_v1.py \
+            --repo-root . \
+            --output-root runtime/operational-memory \
+            harvest --max-commits 120
+          python scripts/framework_intelligence/operational_memory_v1.py \
+            --repo-root . \
+            --output-root runtime/operational-memory \
+            preflight \
+            --task 'repair framework learning workflow' \
+            --path '.github/workflows/framework-learning-supervisor.yml' \
+            --output runtime/opmem-preflight.json >/tmp/opmem-preflight.stdout
+          python scripts/framework_intelligence/operational_memory_post_production_audit_v1.py \
+            --repo-root . \
+            --operational-root runtime/operational-memory \
+            --output runtime/opmem-audit.json \
+            --markdown-output runtime/opmem-audit.md \
+            --fail-on-fail
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path('runtime/framework-learning-supervisor')
+          s=json.loads((root/'LATEST_SUPERVISOR_STATE.json').read_text())
+          p=json.loads((root/'LATEST_MASTER_MONDAY_LEARNING_PACKET.json').read_text())
+          q=json.loads((root/'LATEST_DELEGATION_QUEUE.json').read_text())
+          om=Path('runtime/operational-memory')
+          h=json.loads((om/'LATEST_OPERATIONAL_MEMORY_HEALTH.json').read_text())
+          st=json.loads((om/'LATEST_OPERATIONAL_MEMORY_STATE.json').read_text())
+          pf=json.loads(Path('runtime/opmem-preflight.json').read_text())
+          audit=json.loads(Path('runtime/opmem-audit.json').read_text())
+          assert s['canonical_effect'] is False
+          assert s['portfolio_execution'] is False
+          assert s['master_monday_live_influence'] is False
+          assert p['live_consumption_allowed'] is False
+          assert q['authority']=='PROPOSAL_ONLY'
+          assert h['status']=='PASS', h
+          assert h['source_of_truth']=='CURRENT_GITHUB_MAIN'
+          assert h['memory_role']=='DERIVED_ACCELERATION_LAYER_ONLY'
+          assert st['authority']['canonical_effect'] is False
+          assert st['authority']['automatic_skill_activation'] is False
+          assert pf['authority']['canonical_effect'] is False
+          assert pf['telemetry']['no_savings_claim_without_measurement'] is True
+          assert audit['status'] in ('PASS','WARN'), audit
+          assert audit['memory_reuse_allowed'] is True
+          assert audit['automatic_escalation_required'] is False
+          assert audit['authority']['canonical_effect'] is False
+          PY
+
+  operate:
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    permissions:
+      contents: write
+      issues: write
+      actions: write
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate learning and operational-memory firewalls
+        run: |
+          python -m py_compile \
+            scripts/framework_intelligence/framework_learning_supervisor.py \
+            scripts/framework_intelligence/operational_memory_v1.py \
+            scripts/framework_intelligence/operational_memory_post_production_audit_v1.py \
+            scripts/framework_intelligence/operational_memory_fail_to_codex_intake_v1.py \
+            scripts/orchestration/build_framework_handoff_manifest.py
+          python -m unittest \
+            tests.framework_intelligence.test_framework_learning_supervisor \
+            tests.framework_intelligence.test_operational_memory_v1 \
+            tests.framework_intelligence.test_operational_memory_post_production_audit_v1 \
+            tests.framework_intelligence.test_operational_memory_fail_to_codex_intake_v1 -v
+      - name: Build persistent learning, operational memory and autonomous audit
+        run: |
+          python scripts/framework_intelligence/framework_learning_supervisor.py \
+            --repo-root . \
+            --output-root research/framework_learning
+          python scripts/framework_intelligence/operational_memory_v1.py \
+            --repo-root . \
+            --output-root research/framework_learning/operational_memory \
+            harvest --max-commits 250
+          python scripts/framework_intelligence/operational_memory_post_production_audit_v1.py \
+            --repo-root . \
+            --operational-root research/framework_learning/operational_memory \
+            --output research/framework_learning/operational_memory/LATEST_OPERATIONAL_MEMORY_POST_PRODUCTION_AUDIT.json \
+            --markdown-output research/framework_learning/operational_memory/LATEST_OPERATIONAL_MEMORY_POST_PRODUCTION_AUDIT.md
+          python scripts/orchestration/build_framework_handoff_manifest.py \
+            --repo-root . \
+            --output research/framework_handoffs/LATEST_FRAMEWORK_HANDOFF_MANIFEST.json
+      - name: Assert advisory-only authority and handoff binding
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path('research/framework_learning')
+          s=json.loads((root/'LATEST_SUPERVISOR_STATE.json').read_text())
+          p=json.loads((root/'LATEST_MASTER_MONDAY_LEARNING_PACKET.json').read_text())
+          q=json.loads((root/'LATEST_DELEGATION_QUEUE.json').read_text())
+          om=root/'operational_memory'
+          h=json.loads((om/'LATEST_OPERATIONAL_MEMORY_HEALTH.json').read_text())
+          st=json.loads((om/'LATEST_OPERATIONAL_MEMORY_STATE.json').read_text())
+          audit=json.loads((om/'LATEST_OPERATIONAL_MEMORY_POST_PRODUCTION_AUDIT.json').read_text())
+          handoff=json.loads(Path('research/framework_handoffs/LATEST_FRAMEWORK_HANDOFF_MANIFEST.json').read_text())
+          assert s['canonical_effect'] is False
+          assert s['portfolio_execution'] is False
+          assert s['master_monday_live_influence'] is False
+          assert p['live_consumption_allowed'] is False
+          assert q['authority']=='PROPOSAL_ONLY'
+          assert p['scientific_status']=='FORECAST_SKILL_UNPROVEN'
+          assert h['status']=='PASS', h
+          assert st['authority']['automatic_promotion'] is False
+          assert st['authority']['automatic_skill_activation'] is False
+          assert audit['authority']['canonical_effect'] is False
+          assert audit['authority']['automatic_promotion'] is False
+          assert audit['memory_reuse_allowed'] is (audit['status'] != 'FAIL')
+          assert handoff['operational_memory_policy']['memory_may_override_current_main'] is False
+          assert handoff['operational_memory_policy']['post_production_audit_required'] is True
+          assert handoff['operational_memory_policy']['memory_reuse_requires_audit_not_fail'] is True
+          for key in ('OPERATIONAL_MEMORY_HEALTH','OPERATIONAL_MEMORY_AUDIT','OPERATIONAL_MEMORY_INDEX','OPERATIONAL_PROCEDURAL_CANDIDATES'):
+            assert key in handoff['agent_read_order']['CODEX_OPERATIONAL_PREFLIGHT'], key
+            assert key in handoff['agent_read_order']['ASTRA_RESEARCH_ROUTING'], key
+          PY
+      - name: Manage Operational Memory audit escalation
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE_TITLE: '[AUTO] Operational Memory production audit failure'
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          import subprocess
+          from pathlib import Path
+
+          repo=os.environ['GITHUB_REPOSITORY']
+          title=os.environ['ISSUE_TITLE']
+          run_url=f"{os.environ['GITHUB_SERVER_URL']}/{repo}/actions/runs/{os.environ['GITHUB_RUN_ID']}"
+          audit_path=Path('research/framework_learning/operational_memory/LATEST_OPERATIONAL_MEMORY_POST_PRODUCTION_AUDIT.json')
+          try:
+              audit=json.loads(audit_path.read_text())
+              status=audit.get('status','FAIL')
+          except Exception:
+              audit={'status':'FAIL','failures':['audit_file_missing_or_invalid'],'warnings':[],'source_head_sha':os.environ.get('GITHUB_SHA')}
+              status='FAIL'
+
+          raw=subprocess.check_output(['gh','issue','list','--repo',repo,'--state','open','--limit','100','--json','number,title'],text=True)
+          issues=json.loads(raw)
+          existing=next((x for x in issues if x.get('title')==title),None)
+
+          if status=='FAIL':
+              body=(
+                  'Operational Memory post-production audit failed. Memory reuse for this run is blocked.\n\n'
+                  f"Run: {run_url}\n"
+                  f"Source head: `{audit.get('source_head_sha')}`\n"
+                  f"Failures: `{json.dumps(audit.get('failures') or [], sort_keys=True)}`\n"
+                  f"Warnings: `{json.dumps(audit.get('warnings') or [], sort_keys=True)}`\n\n"
+                  'This issue is automation-owned. A healthy later Supervisor run will close it automatically.'
+              )
+              if existing:
+                  subprocess.run(['gh','issue','comment',str(existing['number']),'--repo',repo,'--body',body],check=True)
+              else:
+                  subprocess.run(['gh','issue','create','--repo',repo,'--title',title,'--body',body],check=True)
+          elif existing:
+              body=f"Recovered automatically on {run_url}. Audit status: `{status}`. Closing automation-owned incident."
+              subprocess.run(['gh','issue','comment',str(existing['number']),'--repo',repo,'--body',body],check=True)
+              subprocess.run(['gh','issue','close',str(existing['number']),'--repo',repo],check=True)
+          PY
+      - name: Route failed audit to bounded Codex remediation
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          import os
+          import subprocess
+          from datetime import datetime, timezone
+          from pathlib import Path
+
+          path=Path('research/framework_learning/operational_memory/LATEST_OPERATIONAL_MEMORY_POST_PRODUCTION_AUDIT.json')
+          try:
+              audit=json.loads(path.read_text())
+              valid=audit.get('contract')=='OPERATIONAL_MEMORY_POST_PRODUCTION_AUDIT_v1'
+          except Exception:
+              audit={}
+              valid=False
+          if not valid:
+              head=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
+              audit={
+                  'contract':'OPERATIONAL_MEMORY_POST_PRODUCTION_AUDIT_v1',
+                  'generated_at_utc':datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace('+00:00','Z'),
+                  'status':'FAIL',
+                  'source_head_sha':head,
+                  'failures':['audit_file_missing_or_invalid'],
+                  'warnings':[],
+                  'memory_reuse_allowed':False,
+              }
+              path.parent.mkdir(parents=True,exist_ok=True)
+              path.write_text(json.dumps(audit,indent=2,sort_keys=True)+'\n')
+          Path('/tmp/opmem-audit-status').write_text(str(audit.get('status') or 'FAIL'))
+          PY
+
+          result="$(python scripts/framework_intelligence/operational_memory_fail_to_codex_intake_v1.py --repo-root .)"
+          echo "$result"
+          export OPMEM_ROUTE_RESULT="$result"
+          status="$(cat /tmp/opmem-audit-status 2>/dev/null || echo FAIL)"
+          if [ "$status" != "FAIL" ]; then
+            exit 0
+          fi
+
+          path="$(python - <<'PY'
+          import json,os
+          print(json.loads(os.environ['OPMEM_ROUTE_RESULT']).get('path') or '')
+          PY
+          )"
+          created="$(python - <<'PY'
+          import json,os
+          print('true' if json.loads(os.environ['OPMEM_ROUTE_RESULT']).get('created') else 'false')
+          PY
+          )"
+
+          if [ "$created" = "true" ]; then
+            [ -n "$path" ]
+            git config user.name 'framework-learning-supervisor[bot]'
+            git config user.email 'framework-learning-supervisor@users.noreply.github.com'
+            git add "$path"
+            git commit -m "remediation: queue operational memory audit ${GITHUB_RUN_ID}" -- "$path"
+            git stash push -u -m "operational-memory-failed-products-${GITHUB_RUN_ID}" >/dev/null || true
+            pushed=false
+            for attempt in 1 2 3; do
+              git rebase --abort 2>/dev/null || true
+              if git pull --rebase origin main && git push origin HEAD:main; then pushed=true; break; fi
+              sleep $((attempt * 5))
+            done
+            [ "$pushed" = true ]
+          fi
+
+          gh workflow run remediation-maturation.yml --repo "$GITHUB_REPOSITORY" --ref main
+      - name: Enforce Operational Memory audit gate
+        if: always()
+        run: |
+          status="$(cat /tmp/opmem-audit-status 2>/dev/null || echo FAIL)"
+          if [ "$status" = "FAIL" ]; then
+            echo 'operational_memory_audit_failed'
+            exit 1
+          fi
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('research/framework_learning/operational_memory/LATEST_OPERATIONAL_MEMORY_POST_PRODUCTION_AUDIT.json')
+          if not p.exists():
+              raise SystemExit('operational_memory_audit_missing')
+          audit=json.loads(p.read_text())
+          if audit.get('memory_reuse_allowed') is not True:
+              raise SystemExit('operational_memory_reuse_not_allowed')
+          PY
+      - name: Commit learning products with bounded retry and main readback
+        run: |
+          set -euo pipefail
+          git config user.name 'framework-learning-supervisor[bot]'
+          git config user.email 'framework-learning-supervisor@users.noreply.github.com'
+          git add research/framework_learning research/framework_handoffs/LATEST_FRAMEWORK_HANDOFF_MANIFEST.json
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "research: refresh framework learning supervisor ${GITHUB_RUN_ID}"
+          pushed=false
+          for attempt in 1 2 3; do
+            git rebase --abort 2>/dev/null || true
+            if git pull --rebase origin main && git push origin HEAD:main; then pushed=true; break; fi
+            sleep $((attempt * 5))
+          done
+          [ "$pushed" = true ]
+          git fetch origin main
+          for rel in \
+            research/framework_learning/LATEST_SUPERVISOR_STATE.json \
+            research/framework_learning/LATEST_MASTER_MONDAY_LEARNING_PACKET.json \
+            research/framework_learning/LATEST_DELEGATION_QUEUE.json \
+            research/framework_learning/operational_memory/LATEST_OPERATIONAL_MEMORY_STATE.json \
+            research/framework_learning/operational_memory/LATEST_OPERATIONAL_MEMORY_HEALTH.json \
+            research/framework_learning/operational_memory/LATEST_OPERATIONAL_MEMORY_INDEX.json \
+            research/framework_learning/operational_memory/LATEST_OPERATIONAL_MEMORY_POST_PRODUCTION_AUDIT.json \
+            research/framework_learning/operational_memory/LATEST_OPERATIONAL_MEMORY_POST_PRODUCTION_AUDIT.md \
+            research/framework_handoffs/LATEST_FRAMEWORK_HANDOFF_MANIFEST.json; do
+            tmp="/tmp/main-$(basename "$rel")"
+            git show origin/main:"$rel" > "$tmp"
+            cmp -s "$rel" "$tmp" || { echo "framework_learning_main_readback_mismatch:$rel"; exit 1; }
+          done

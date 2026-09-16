@@ -43,6 +43,14 @@
       "state": "QUEUED_AFTER_FRAGILITY",
       "execution_rule": "NO_EXECUTION_UNTIL_VERIFIED_EXISTING_OWNER_DATA_ADAPTER_IS_AVAILABLE",
       "cost": {"cfgi_credits": 0, "openai_usd": 0.0}
+    },
+    {
+      "order": 5,
+      "experiment_id": "AT-E2-MILES-1007-v1",
+      "state": "PREREGISTERED_BLOCKED_WAITING_FOR_PIT_REPLAY_PURITY_GATE",
+      "execution_rule": "NO_LLM_OR_PAID_EXECUTION_UNTIL_ALL_FROZEN_REQUEST_DATA_GATES_PASS_AND_A_SEPARATE_ADMISSION_DISPATCH_BINDS_MODEL_SAMPLE_COST_CAP_AND_REPRODUCIBILITY_THRESHOLD",
+      "cost": {"cfgi_credits": 0, "openai_usd": 0.0},
+      "authority": "RESEARCH_ONLY_NO_PORTFOLIO_OR_PRODUCTION_AUTHORITY"
     }
   ],
   "shared_evaluator": {

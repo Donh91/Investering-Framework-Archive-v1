@@ -188,5 +188,5 @@ def test_fast_path_uses_nonwriting_dispatcher_and_preserves_single_writer():
     assert "git push" not in dispatcher
     assert "group: framework-main-writer" in writer
     assert "timezone: 'Europe/Copenhagen'" in writer
-    assert "merge_codex_research_intake.py" in writer
+    assert "merge_codex_research_intake_converged.py" in writer
     assert "\n  push:\n" not in writer

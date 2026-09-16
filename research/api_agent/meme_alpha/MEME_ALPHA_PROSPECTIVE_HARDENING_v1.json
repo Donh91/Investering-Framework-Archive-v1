@@ -1,0 +1,104 @@
+{
+  "contract": "MEME_ALPHA_PROSPECTIVE_HARDENING_v1",
+  "created_at_utc": "2026-09-14T13:40:00Z",
+  "status": "ACTIVE_RESEARCH_ONLY",
+  "purpose": "Harden prospective Meme Alpha measurement without changing the discovery hypothesis mid-cohort.",
+  "method_version": "1.1-scientific-hardening",
+  "grandfathered_trials": ["EE-001-ARC-20260914"],
+  "trial_state_machine": {
+    "allowed_states": ["DISCOVERY_OPEN", "DISCOVERY_COMPLETE", "OUTCOME_MATURING", "OUTCOME_MATURED", "INVALIDATED"],
+    "discovery_complete_is_not_outcome_matured": true,
+    "method_review_denominator_state": "OUTCOME_MATURED",
+    "minimum_unique_ecosystem_trials_for_review": 20
+  },
+  "hierarchical_identity": {
+    "ecosystem_trial_format": "EE-NNN-ECOSYSTEM-YYYYMMDD",
+    "artifact_suffix_format": "::A-NNN",
+    "token_match_suffix_format": "::T-NNN",
+    "method_denominator_unit": "UNIQUE_ECOSYSTEM_TRIAL",
+    "artifacts_and_token_matches_do_not_increase_method_denominator": true
+  },
+  "cohort_selection": {
+    "frozen_eligibility_manifest_required_from_trial": 2,
+    "manifest_must_precede_token_search": true,
+    "eligible_universe_sources": ["project launch calendars", "official product/release announcements", "already-archived ecosystem discovery candidates"],
+    "selection_rule": "Within each frozen intake manifest, remove already-tried ecosystems, preserve every exclusion with a reason code, then select by earliest qualifying public launch/relevance timestamp and canonical ecosystem name as deterministic tie-breaker. Rotate across the five pre-existing ecosystem classes before reusing a class when alternatives exist.",
+    "manual_override_requires_recorded_reason": true,
+    "outcome_knowledge_may_not_affect_selection": true
+  },
+  "required_lineage": [
+    "method_version",
+    "method_sha256",
+    "runtime_contract",
+    "runtime_input_sha256",
+    "runtime_output_sha256",
+    "policy_sha256",
+    "prompt_sha256",
+    "model_id",
+    "model_snapshot_or_version",
+    "query_manifest_sha256",
+    "retrieval_manifest_sha256"
+  ],
+  "alpha_measurement_contract": {
+    "frozen_before_trial_002": true,
+    "primary_unit": "SELLABLE_EXECUTABLE_TOKEN_MATCH",
+    "horizons": ["1H", "6H", "24H", "7D"],
+    "required_metrics": [
+      "lead_time_minutes_vs_first_observed_social_propagation",
+      "mfe_after_discovery",
+      "mae_after_discovery",
+      "realizable_return_after_slippage",
+      "exit_feasibility",
+      "actionable_precision",
+      "missed_winner_recall",
+      "matched_control_delta"
+    ],
+    "positive_alpha_requires_sellability": true,
+    "peak_market_cap_is_not_realizable_return": true,
+    "no_token_match_counts_in_denominator": true
+  },
+  "matched_control": {
+    "required_when_positive_candidate_exists": true,
+    "match_dimensions": ["chain_or_ecosystem", "discovery_time_window", "market_cap_bucket", "liquidity_bucket", "token_age_bucket"],
+    "selection_must_be_frozen_before_outcome": true,
+    "unavailable_control_is_retained_as_missing_not_replaced_until_fit": true
+  },
+  "missed_winner_audit": {
+    "required_for_every_outcome_matured_ecosystem_trial": true,
+    "winner_definition": {
+      "minimum_7d_executable_multiple": 2.0,
+      "minimum_liquidity_usd_at_first_eligible_observation": 50000,
+      "minimum_test_exit_notional_usd": 1000
+    },
+    "question": "Did a qualifying ecosystem token become a sellable winner that the frozen archaeology/discovery snapshot failed to surface before propagation?",
+    "misses_count_against_method_recall": true
+  },
+  "queue_slo": {
+    "P0_event_driven_max_queue_age_minutes": 60,
+    "P1_max_queue_age_minutes": 240,
+    "P2_max_queue_age_minutes": 1440,
+    "breach_is_recorded": true,
+    "breach_does_not_rewrite_discovery_timestamp": true
+  },
+  "kill_criteria": {
+    "evaluate_only_after_minimum_matured_trials": 20,
+    "kill_or_redraft_if_any": [
+      "ZERO_SELLABLE_PROSPECTIVE_SIGNAL_SURVIVED",
+      "ACTIONABLE_PRECISION_NOT_ABOVE_MATCHED_CONTROL",
+      "MISSED_WINNER_RECALL_UNACCEPTABLY_LOW_WITH_NO_COMPENSATING_PRECISION_EDGE",
+      "COHORT_SELECTION_INTEGRITY_BROKEN",
+      "LINEAGE_INCOMPLETE_FOR_ANY_NON_GRANDFATHERED_TRIAL"
+    ],
+    "no_extension_merely_because_results_are_disappointing": true,
+    "promotion_requires_existing_research_lifecycle": true
+  },
+  "authority": {
+    "portfolio_action": false,
+    "automatic_trading": false,
+    "canonical_promotion": false,
+    "framework_state_change": false,
+    "market_rule_change": false,
+    "model_weight_change": false,
+    "automatic_merge": false
+  }
+}

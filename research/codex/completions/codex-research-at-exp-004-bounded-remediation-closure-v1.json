@@ -1,0 +1,32 @@
+{
+  "candidate_id": "codex-research-at-exp-004-bounded-remediation-closure-v1",
+  "candidate_sha256": "ed60308b52eae1756b02dd9d64f1276696d7ac420ca1786afc0fa718975e1438",
+  "contract": "CODEX_RESEARCH_COMPLETION_RECEIPT_v1",
+  "execution_quality": {
+    "contract": "CODEX_EXECUTION_QUALITY_v1",
+    "evidence": [],
+    "failure_attribution": [],
+    "metrics": {},
+    "telemetry_status": "UNAVAILABLE"
+  },
+  "merge_commit_sha": "6fe6439e6ecdfae22b02b3937625da81adfdb181",
+  "post_fix_gate": "POSITIVE_AND_NEGATIVE_CROSS_SEAM_REGRESSIONS_PLUS_TWO_SCHEDULE_REPLAY_EQUALITY_PLUS_RELEVANT_CI_PLUS_MERGED_MAIN_READBACK_PLUS_CODEX_COMPLETION_RECEIPT",
+  "pr_number": 947,
+  "receipt_sha256": "c16117ba03a8956cac32c07fe5699f8a1fb7e6d336148fbe735d7ea77f475ef7",
+  "signature": "fcc1788f4f8ef1d1e330",
+  "status": "VERIFIED",
+  "task_contract_sha256": "e1cdd04fb325691d2d5978065ccc53e2e6a821db136b670e710cceb53295d01b",
+  "verification_evidence": [
+    "PR #947 merged to main at 6fe6439e6ecdfae22b02b3937625da81adfdb181.",
+    "Merged-main byte readback: scripts/daily_capture/build_hourly_sequence.py blob ffef9352e8e2721c6970d9ef6a21227a0ee9307a.",
+    "Merged-main byte readback: scripts/data_terminal/situation_room_daily_owner.py blob d412f4cd6911d2c73ed95fcd01cc8ffa2cf2d515.",
+    "Daily Capture Architecture Gate run 34786657567 PASS, including live-hourly-source-smoke job 103803787334 PASS.",
+    "Situation Room Owner Live Gate run 34786657514 PASS.",
+    "Intraday Execution Gate run 34786657470 PASS.",
+    "Automation Production Health Gate run 34786657438 PASS.",
+    "Data Architecture Gate run 34786657449 PASS; Storage Health Gate run 34786657559 PASS; Continuity Learning Gate run 34786657451 PASS.",
+    "Downstream merged-state readback: intraday consumer still uses hourly return_1h_pct and oi_change_1h_pct, so pre-fix derived history remains quarantined; forward observations after the fixed owner are eligible only under existing research gates.",
+    "Downstream merged-state readback: pullback_learning consumes read_latest_complete_spot_row direct closes (btc_close/eth_close/ethbtc_close), so its close-only observation lane is outside this derived-state defect and remains governed by its separate eligibility suspension."
+  ],
+  "verified_at_utc": "2026-09-13T22:27:00Z"
+}

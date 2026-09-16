@@ -1,0 +1,127 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "capital_authority": false,
+    "exchange_signing": false,
+    "market_rule_authority": false,
+    "order_routing": false,
+    "portfolio_execution": false,
+    "research_only": true
+  },
+  "backward_audit": {
+    "e0_identity": "PASS_CANONICAL_PROXY_WALLET_RESOLVED",
+    "e1_ledger": "PASS_COMPLETE_OBSERVABLE_PUBLIC_LEDGER_RETAINED_PUBLIC_AND_PRIVATE",
+    "e2_claims": "PARTIAL_PROMOTIONAL_CLAIMS_NOT_RECONCILED_AND_STREAKS_NOT_REPRODUCED_UNDER_COMPLETE_WALLET_DEFINITION",
+    "e3_source_alpha": "NO_VERIFIED_SOURCE_EDGE",
+    "e4_copyability": "NOT_ADMITTED_BECAUSE_SOURCE_EDGE_NOT_VERIFIED",
+    "e5_vault": "FAIL_CLOSED_NOT_OPERATIONALLY_VERIFIABLE",
+    "e6_forward_test": "NOT_ADMITTED"
+  },
+  "contract": "EDGEONCHAIN_E4_E5_E6_TERMINAL_ADJUDICATION_v1",
+  "e4_copyability": {
+    "classification": "NO_VERIFIED_SOURCE_EDGE",
+    "latency_decay_study": "NOT_ADMITTED",
+    "reasoning": [
+      "The frozen E2/E3 adjudication does not establish source prediction alpha after dependence-aware uncertainty and time-split instability.",
+      "Public Polymarket historical token-price endpoints can support later price-path enrichment, but they do not supply the frozen contemporaneous eligible market universe required to infer selection policy without retrospective leakage.",
+      "The retained E1 capture does not preserve historical best-bid/ask depth, queue state, maker/taker role or first independent observability for every past source action at the resolution required for a clean +30s/+1m/+5m copyability study.",
+      "Running a latency-decay study before source edge is verified would spend research capacity on a downstream quantity whose upstream premise is still unproven."
+    ],
+    "reopen_gate": "SOURCE_ALPHA_MUST_FIRST_PASS_FROZEN_OPPORTUNITY_SET_EVENT_TIME_MICROSTRUCTURE_AND_MATCHED_CONTROL_GATE"
+  },
+  "e5_vault_security_economics": {
+    "status": "FAIL_CLOSED_NOT_OPERATIONALLY_VERIFIABLE",
+    "official_surface_state": {
+      "activity_dashboard": "OFFICIAL_DOCS_STATE_NOT_LIVE_YET",
+      "staking_dashboard": "OFFICIAL_DOCS_DESCRIBE_FUTURE_TOKEN_GATED_ACCESS_WHEN_LAUNCHED",
+      "specific_edge_dune_dashboard": "NOT_INDEPENDENTLY_RESOLVED",
+      "deployed_polygon_vault_contract_addresses": "NOT_INDEPENDENTLY_LOCATED_IN_CURRENT_OFFICIAL_MATERIAL",
+      "final_public_hashlock_audit_report": "NOT_INDEPENDENTLY_LOCATED",
+      "assure_defi_kyc": "CLAIMED_COMPLETE_BY_OFFICIAL_EDGE_DOCS_DIRECT_PROJECT_LINK_PRESENT"
+    },
+    "deploy_level_checks": {
+      "erc4626_accounting_correctness": "UNVERIFIED_NO_BOUND_DEPLOYED_CONTRACT",
+      "totalAssets_semantics_during_deployment": "UNVERIFIED_NO_BOUND_DEPLOYED_CONTRACT",
+      "recordCapitalLoss_behavior": "UNVERIFIED_NO_BOUND_DEPLOYED_CONTRACT",
+      "deposit_redeem_withdraw_behavior": "UNVERIFIED_NO_BOUND_DEPLOYED_CONTRACT",
+      "fifty_percent_deployment_cap_enforcement": "UNVERIFIED_NO_BOUND_DEPLOYED_CONTRACT",
+      "owner_admin_privileges": "UNVERIFIED_NO_BOUND_DEPLOYED_CONTRACT",
+      "ownable2step_transfer_path": "UNVERIFIED_NO_BOUND_DEPLOYED_CONTRACT",
+      "pause_authority": "UNVERIFIED_NO_BOUND_DEPLOYED_CONTRACT",
+      "betting_wallet_permissions": "UNVERIFIED_NO_BOUND_DEPLOYED_CONTRACT",
+      "upgradeability_proxy_status": "UNVERIFIED_NO_BOUND_DEPLOYED_CONTRACT",
+      "settlement_automation_manual_steps": "UNVERIFIED",
+      "emergency_recovery_paths": "UNVERIFIED",
+      "exact_performance_fee_rate_and_basis": "UNVERIFIED_FROM_DEPLOYED_MECHANICS",
+      "final_audit_findings_and_remediation": "UNVERIFIED_NO_PUBLIC_FINAL_REPORT_LOCATED"
+    },
+    "backtest_documentation": {
+      "aggressive_estimated_weekly_roi_pct": 9.2,
+      "aggressive_backtest_bets": 8350,
+      "balanced_estimated_weekly_roi_pct": 5.8,
+      "balanced_backtest_bets": 6200,
+      "conservative_estimated_weekly_roi_pct": 3.5,
+      "conservative_backtest_bets": 14750,
+      "status": "MATERIAL_CADENCE_INCONSISTENCY",
+      "finding": "The vault pages label the rates as weekly ROI while their 36-month example tables compound the same numeric rates on a monthly cadence. A separate one-year example uses weekly compounding. These cannot all be treated as one validated performance representation."
+    },
+    "kyc_interpretation": "IDENTITY_ACCOUNTABILITY_CONTEXT_ONLY_NOT_SECURITY_OR_RETURN_VALIDATION",
+    "hashlock_interpretation": "FAIL_CLOSED_NO_PUBLIC_FINAL_REPORT_LOCATED_DOES_NOT_PROVE_NO_PRIVATE_AUDIT_EXISTS",
+    "verdict": "NO_VAULT_OPERATIONAL_OR_SECURITY_PROMOTION"
+  },
+  "e6_prospective_forward_test": {
+    "status": "NOT_ADMITTED",
+    "reasoning": [
+      "E3 has not verified source prediction alpha after required controls.",
+      "E4 therefore has no verified source edge to test for delayed copyability.",
+      "E5 cannot bind and independently audit a live deployed vault implementation.",
+      "Promotional historical returns and unreconciled streak/follower claims are insufficient admission evidence for a new forward strategy trial."
+    ],
+    "prospective_contract_created": false,
+    "future_observation_wait_required": false,
+    "reopen_gate": [
+      "Frozen primary evidence or prospective collection that establishes an unbiased contemporaneous opportunity set and required E3 controls",
+      "Verified deployed vault addresses with source or bytecode sufficient for contract-level audit",
+      "Exact live fee mechanics and settlement permissions",
+      "Final public audit report or equivalent independently reviewable security evidence if published",
+      "Only after source alpha is verified, a frozen observability and latency-cost protocol for E4"
+    ]
+  },
+  "input_bindings": {
+    "e0_e1_control_plane_commit": "20f0d3e39c8ce71905bef60603aa5be5c334a435",
+    "e0_e1_private_retention_commit": "077be9154d199c118970f3beb423126c96355379",
+    "e2_e3_control_plane_commit": "846ed5d07f6f0510b32dd28b75235b54cc281718",
+    "e2_e3_path": "04_RESEARCH_LAB/auto_trading/edgeonchain_evidence/2026-09-14/E2_E3_LEDGER_ADJUDICATION_v1.json",
+    "issue": 922,
+    "proxy_wallet": "0x50ff5b166049a7c1398f5dba0240ac34a8d8b0e6"
+  },
+  "overall": {
+    "current_work_status": "TERMINAL_CURRENT_WORK_COMPLETE",
+    "decision": "DO_NOT_PROMOTE_EDGEONCHAIN_TO_COPY_TRADING_OR_VAULT_FORWARD_TEST",
+    "issue_can_reopen_on_new_primary_evidence": true,
+    "natural_future_maturation_pending": false,
+    "why_terminal_now": "All currently actionable lifecycle stages have been either completed or fail-closed on evidence. No legitimate E6 cohort has been admitted, so there is no scientific reason to keep an hourly research automation alive waiting for time to pass."
+  },
+  "source_references": [
+    {
+      "purpose": "Official Edge How It Works and backtest/compounding presentation",
+      "url": "https://edgeonchain.gitbook.io/docs/"
+    },
+    {
+      "purpose": "Official Edge vault pages for Conservative, Balanced and Aggressive representations",
+      "url": "https://edgeonchain.gitbook.io/docs/"
+    },
+    {
+      "purpose": "Official Edge activity/staking dashboard documentation and launch-state wording",
+      "url": "https://edgeonchain.gitbook.io/docs/"
+    },
+    {
+      "purpose": "Official Edge team/KYC claim and Assure DeFi project route",
+      "url": "https://edgeonchain.gitbook.io/docs/"
+    },
+    {
+      "purpose": "Polymarket public market-data and historical prices API context",
+      "url": "https://docs.polymarket.com/market-data/overview"
+    }
+  ]
+}

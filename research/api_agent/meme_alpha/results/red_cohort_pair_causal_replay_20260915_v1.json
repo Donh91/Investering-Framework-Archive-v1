@@ -1,0 +1,65 @@
+{
+  "contract": "MEME_ALPHA_RED_COHORT_PAIR_CAUSAL_REPLAY_RESULT_v1",
+  "generated_from_run": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/35021112953",
+  "source": {
+    "dataset": "RED-COHORT-2026-v1.1.1",
+    "archive_md5": "172198eade99f702f1da0bfdd4cf3079",
+    "archive_sha256": "f908d10f459e52de0e6f0d77af26db262e41a521dfe3872f30bd795e255841d0"
+  },
+  "released_detector_rule": {
+    "first_n_buyers": 10,
+    "minimum_distinct_pair_cooccurring_launches": 3,
+    "qualification_launch_is_prediction_eligible": false,
+    "strictly_subsequent_launches_only": true
+  },
+  "bounded_replay": {
+    "selected_pairs": 2,
+    "unique_signatures_requested": 33,
+    "rpc_status_counts": {"OK": 33},
+    "transactions_resolved": 33,
+    "transactions_with_pump_program_evidence": 33,
+    "fully_mapped_rows": 10,
+    "strictly_subsequent_hits_after_pair_qualification": 4
+  },
+  "pair_results": [
+    {
+      "pair_identity_sha256": "0013924fd62ac88c2d7c6f2e4d8ae8895d3cb1b783f989eb5e2d6f607d9cf8bd",
+      "reconstructed_launches": 6,
+      "qualification_time_epoch": 1781652777,
+      "released_detected_at_minus_qualification_event_seconds": 1780,
+      "strictly_subsequent_hits": 3
+    },
+    {
+      "pair_identity_sha256": "00809f110dadd7f30ac21d868c2abf1e16066a409952018e37b6eb9d92108387",
+      "reconstructed_launches": 4,
+      "qualification_time_epoch": 1782170705,
+      "released_detected_at_minus_qualification_event_seconds": 1608,
+      "strictly_subsequent_hits": 1
+    }
+  ],
+  "scientific_verdict": {
+    "causal_pair_qualification_reconstruction": "SUPPORTED_BOUNDED_SAMPLE",
+    "strictly_subsequent_test_population_exists": true,
+    "released_detected_at_is_earliest_knowable": false,
+    "released_detected_at_overstates_latency_seconds_in_sample": [1608, 1780],
+    "wallet_independence": "NOT_PROVEN",
+    "economic_alpha": "NOT_PROVEN",
+    "sellable_return": "NOT_PROVEN",
+    "full_online_union_find_membership": "NOT_PROVEN"
+  },
+  "next_required_step": "join only the four strictly subsequent post-qualification launches to executable sellability-aware outcomes, then expand the deterministic pair sample before any G2-vs-Clean-G3 inference",
+  "artifact": {
+    "name": "meme-alpha-red-causal-pair-replay-v1",
+    "artifact_id": 10417373861,
+    "artifact_zip_sha256": "64cf2944867d6e980c45e6441e6d3231e980bb961d23be513497feec81a61887",
+    "retention_days": 30,
+    "repo_result_is_permanent_summary": true
+  },
+  "authority": {
+    "research_only": true,
+    "automatic_trading": false,
+    "buy_now_promotion": false,
+    "live_threshold_change": false,
+    "portfolio_action": false
+  }
+}

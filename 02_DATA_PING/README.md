@@ -2,7 +2,17 @@
 
 **Status:** NAVIGATION_ONLY  
 **Authority:** NONE_BY_ITSELF  
-**Folder role:** DATA PING collection contracts, source QA, version governance, handoffs, accepted evidence and live-state routing.
+**Folder role:** DATA PING protocol history, explicit packet interpretation/replay, source QA, collector diagnostics, version governance and compatibility handoffs.
+
+## Current production-routing notice
+
+Binding current routing owner:
+
+`../00_ARCHIVE_CONTROL/2026-09-14__autonomous-data-authority-transition-v1__canonical.md`
+
+Manual user-submitted DATA PING is **not** the default upstream feed and is **not a prerequisite** for current Master Monday or Cycle Navigator production. Current-state CN/MM work must resolve the autonomous GitHub Actions / governed collector outputs and exact current machine pointers first.
+
+This folder remains current for explicit DATA PING/RAW packet interpretation, replay/correction, protocol compatibility, source QA, collector diagnostics and historical lineage where DATA PING was genuinely upstream.
 
 ## Entering this folder
 
@@ -13,15 +23,16 @@ Resolve current state from root operational surfaces first:
 ```text
 ../LATEST_OPERATIONS_DASHBOARD.json
 ../LATEST_HANDOFF.json
+../00_ARCHIVE_CONTROL/CURRENT_PRODUCTION_DATA_AUTHORITY.json
 ```
 
-Then follow the exact DATA PING owner/pointers named by current governance and receipts.
+Then follow the exact current owner/pointers named by current governance and receipts. Only route into a DATA PING runtime when the task is explicitly a DATA PING/RAW task or a current pointer actually names that artifact.
 
-Historical handoff files are intentionally preserved and may remain older than the current collector/runtime generation.
+Historical handoff files are intentionally preserved and may remain older than the current autonomous collector/runtime generation.
 
 ## DATA PING's job
 
-DATA PING captures verified observations and state. It does not own unrestricted interpretation or portfolio execution.
+For explicit packet/protocol work, DATA PING captures verified observations and state under its applicable contract. It does not own unrestricted interpretation or portfolio execution, and its historical/manual packet path must not be silently promoted into the normal production upstream for CN or Master Monday.
 
 Core truth rules:
 
@@ -32,6 +43,7 @@ STALE != CURRENT
 PROXY != CANONICAL
 SOURCE CALL DECLARED != SOURCE CALL EXECUTED
 RECEIPT PRESENT != RECEIPT VALID
+DATA_PING_IN_FILENAME != CURRENT_PRODUCTION_AUTHORITY
 ```
 
 Never fabricate a source call, hash, receipt, validator result, freshness timestamp or fallback value to make a packet complete.
@@ -86,13 +98,15 @@ Do not:
 - alter active DATA PING authority;
 - create a new collector family because one source is inconvenient;
 - backfill values without explicit canonical permission;
-- turn DATA PING alone into portfolio action.
+- turn DATA PING alone into portfolio action;
+- route current CN/Master Monday through manual DATA PING merely because a historical contract or filename exists.
 
 Code fixes later require the governed branch -> PR -> CI -> main readback path.
 
 ## Useful adjacent surfaces
 
 ```text
+../00_ARCHIVE_CONTROL/2026-09-14__autonomous-data-authority-transition-v1__canonical.md
 ../09_SOURCE_QA/README.md
 ../research/README.md
 ../07_PROMPTS_AND_AGENTS/astra/README.md
