@@ -88,7 +88,6 @@ jobs:
           status=json.load(open('/tmp/official-compass-status.json'))
           if status.get('status')=='EXISTING_DAILY_FREEZE':
               print('OFFICIAL_COMPASS_EXISTING_DAILY_FREEZE', status.get('compass_id'))
-              raise SystemExit(0)
           pointer=json.loads(Path('04_MARKET_LEARNING/handlekompas/official/LATEST_COMPASS.json').read_text())
           freeze=Path(pointer['compass_path'])
           public=Path(pointer['public_projection_path'])
