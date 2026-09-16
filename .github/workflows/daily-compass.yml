@@ -1,6 +1,12 @@
 name: Official Daily Compass
 
 on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/daily-compass.yml'
+      - 'scripts/data_ping/native_handlekompas.py'
   pull_request:
     paths:
       - '.github/workflows/daily-compass.yml'

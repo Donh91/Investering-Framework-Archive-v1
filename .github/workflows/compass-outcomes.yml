@@ -1,6 +1,13 @@
 name: Official Compass Outcomes
 
 on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/compass-outcomes.yml'
+      - 'scripts/learning/compass_outcomes.py'
+      - '04_MARKET_LEARNING/handlekompas/SCORING_CONTRACT_v1.md'
   pull_request:
     paths:
       - '.github/workflows/compass-outcomes.yml'
