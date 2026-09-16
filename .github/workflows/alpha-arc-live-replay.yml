@@ -24,7 +24,7 @@ jobs:
         run: python -m py_compile scripts/api_agent/alpha_arc_direct_new_pair.py scripts/api_agent/alpha_arc_live_replay_gate.py
       - name: Replay historical Arc pool creation and independent readback
         run: |
-          python scripts/api_agent/alpha_arc_live_replay_gate.py --output arc-live-replay.json
+          python -m scripts.api_agent.alpha_arc_live_replay_gate --output arc-live-replay.json
           cat arc-live-replay.json
       - name: Upload immutable replay evidence
         uses: actions/upload-artifact@v4
