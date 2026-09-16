@@ -1,0 +1,35 @@
+name: Alpha Arc Historical Replay Gate
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/api_agent/alpha_arc_live_replay_gate.py'
+      - 'scripts/api_agent/alpha_arc_direct_new_pair.py'
+      - '.github/workflows/alpha-arc-live-replay.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  arc-historical-replay:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compile replay gate
+        run: python -m py_compile scripts/api_agent/alpha_arc_direct_new_pair.py scripts/api_agent/alpha_arc_live_replay_gate.py
+      - name: Replay historical Arc pool creation and independent readback
+        run: |
+          python scripts/api_agent/alpha_arc_live_replay_gate.py --output arc-live-replay.json
+          cat arc-live-replay.json
+      - name: Upload immutable replay evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: alpha-arc-historical-replay-${{ github.sha }}
+          path: arc-live-replay.json
+          retention-days: 90
+          if-no-files-found: error
