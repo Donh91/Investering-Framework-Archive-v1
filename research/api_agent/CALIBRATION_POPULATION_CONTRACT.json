@@ -1,0 +1,64 @@
+{
+  "contract": "CALIBRATION_POPULATION_CONTRACT_v1",
+  "status": "ACTIVE",
+  "purpose": "Prevent accidental mixing of distinct forecast populations while preserving transparent calibration state.",
+  "authority": {
+    "automatic_path_repoint": false,
+    "historical_backfill_by_inference": false,
+    "model_weight_change": false,
+    "portfolio_action": false,
+    "market_state_change": false
+  },
+  "populations": {
+    "API_AGENT_RATIFIED_T13": {
+      "forecast_root": "research/api_agent/forecast_candidates/FROZEN",
+      "outcome_root": "research/api_agent/forecast_candidates/MATURED",
+      "role": "CANONICAL_MODEL_CALIBRATION_AND_PROSPECTIVE_FORECAST_SKILL_COHORT",
+      "inclusion_rule": "Only explicitly ratified prospective FROZEN_FORECAST_v1 records and their governed matured outcomes.",
+      "required_forecast_fields": [
+        "model",
+        "task",
+        "prompt_sha256",
+        "forecast_id",
+        "metric_path",
+        "horizon_days"
+      ],
+      "empty_cohort_semantics": "NO_FROZEN_RATIFIED_COHORT",
+      "direct_model_calibration_allowed": true
+    },
+    "FRAMEWORK_MEMORY_BROAD": {
+      "forecast_root": "research/framework_memory/forecast_memory",
+      "outcome_root": "research/framework_memory/outcome_memory",
+      "replay_root": "research/framework_memory/outcome_replays",
+      "role": "BROAD_FRAMEWORK_ACCOUNTABILITY_RESEARCH_AND_HISTORICAL_MEMORY",
+      "direct_model_calibration_allowed": false,
+      "reason": "This population is broader and does not currently satisfy the canonical model-calibration schema. It must not be silently repointed into MODEL_CALIBRATION_LEDGER.csv.",
+      "allowed_uses": [
+        "descriptive_accountability",
+        "historical_research",
+        "outcome_replay",
+        "shadow_calibration_research",
+        "population_comparison"
+      ]
+    }
+  },
+  "cross_population_policy": {
+    "automatic_merge": false,
+    "automatic_repoint": false,
+    "historical_schema_enrichment_by_inference": false,
+    "required_before_any_canonical_owner_change": [
+      "population census",
+      "explicit cohort semantics",
+      "prospective schema completeness",
+      "shadow comparison",
+      "reviewed pull request"
+    ]
+  },
+  "state_semantics": {
+    "NO_FROZEN_RATIFIED_COHORT": "No canonical ratified forecast cohort currently exists. An empty calibration ledger is expected and must be reported explicitly rather than presented as a healthy learned state.",
+    "COHORT_PRESENT_AWAITING_OUTCOMES": "Ratified forecasts exist but no governed outcomes have matured yet.",
+    "COHORT_PRESENT_NO_SETTLEMENT_ELIGIBLE_OUTCOMES": "Governed outcomes exist but none are eligible for settlement-timing scoring.",
+    "SETTLEMENT_ELIGIBLE_ROWS_PRESENT": "At least one governed outcome is settlement-eligible. This still does not create forecast-skill authority or model-weight authority."
+  },
+  "decision_guardrail": "DO_NOT_REPOINT_FRAMEWORK_MEMORY_INTO_CANONICAL_MODEL_CALIBRATION_WITHOUT_A_SEPARATE_PROSPECTIVE_CONTRACT_CHANGE"
+}
