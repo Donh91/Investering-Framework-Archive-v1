@@ -1,6 +1,6 @@
 {
   "contract": "NEEDS_MORE_EVIDENCE_v1",
-  "generated_at_utc": "2026-09-17T08:55:53Z",
+  "generated_at_utc": "2026-09-17T19:15:09Z",
   "items": [
     {
       "allowed_change_scope": [
@@ -19,12 +19,12 @@
         "portfolio logic"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_transition_receipt.py --signature 0870aefd8d5cdb528ba6 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-09-17T08:55:44Z",
+      "last_observed_at_utc": "2026-09-17T19:14:58Z",
       "latest_run_id": 34844482464,
       "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/34844482464",
       "lifecycle_state": "ACTIVE",
       "objective": "Resolve SCHEDULE_WITHOUT_EXPLICIT_TIMEZONE for external-alpha-registry-gate.yml with the smallest bounded code change that satisfies the existing acceptance gates.",
-      "observations": 12,
+      "observations": 13,
       "post_fix_gate": "3_SUCCESSFUL_EXPECTED_RUNS",
       "precondition": "Fresh Automation Production Health still contains signature 0870aefd8d5cdb528ba6 for external-alpha-registry-gate.yml/SCHEDULE_WITHOUT_EXPLICIT_TIMEZONE, and verified lifecycle state does not make the finding non-actionable.",
       "required_evidence": [
@@ -36,7 +36,7 @@
       "risk_class": "A_SELF_HEAL_OR_OBSERVE",
       "route": "SELF_HEAL_ALLOWLIST_OR_OBSERVE",
       "signature": "0870aefd8d5cdb528ba6",
-      "source_health_generated_at_utc": "2026-09-17T08:46:51.193302Z",
+      "source_health_generated_at_utc": "2026-09-17T19:08:11.702116Z",
       "state": "PERSISTING",
       "stop_condition": "Stop without code changes if the precondition fails, the finding cannot be reproduced from scoped evidence, or the required fix exceeds allowed change scope.",
       "success_evidence": [
@@ -68,12 +68,12 @@
         "portfolio logic"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_transition_receipt.py --signature 2de053ba171b37fcdd59 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-09-17T08:55:44Z",
+      "last_observed_at_utc": "2026-09-17T19:14:58Z",
       "latest_run_id": 34835737455,
       "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/34835737455",
       "lifecycle_state": "ACTIVE",
       "objective": "Resolve PR_GATE_REJECTION for shadow-registry-gate.yml with the smallest bounded code change that satisfies the existing acceptance gates.",
-      "observations": 3,
+      "observations": 4,
       "post_fix_gate": "CI_PLUS_ONE_PRODUCTION_SHAPE_RUN",
       "precondition": "Fresh Automation Production Health still contains signature 2de053ba171b37fcdd59 for shadow-registry-gate.yml/PR_GATE_REJECTION, and verified lifecycle state does not make the finding non-actionable.",
       "required_evidence": [
@@ -85,7 +85,7 @@
       "risk_class": "A_SELF_HEAL_OR_OBSERVE",
       "route": "SELF_HEAL_ALLOWLIST_OR_OBSERVE",
       "signature": "2de053ba171b37fcdd59",
-      "source_health_generated_at_utc": "2026-09-17T08:46:51.193302Z",
+      "source_health_generated_at_utc": "2026-09-17T19:08:11.702116Z",
       "state": "PERSISTING",
       "stop_condition": "Stop without code changes if the precondition fails, the finding cannot be reproduced from scoped evidence, or the required fix exceeds allowed change scope.",
       "success_evidence": [
@@ -99,6 +99,55 @@
       "transition_receipt_path": "research/remediation/transitions/2de053ba171b37fcdd59.json",
       "transition_receipt_required": true,
       "workflow": "shadow-registry-gate.yml"
+    },
+    {
+      "allowed_change_scope": [
+        ".github/workflows/native-handlekompas.yml",
+        "directly related scripts and tests"
+      ],
+      "clean_noop_condition": "The finding is absent from fresh health, is non-actionable under verified lifecycle semantics, or the target workflow has been superseded or retired.",
+      "escalation_condition": "Escalate to the framework owner if resolution requires market gates, model weights, canonical authority, portfolio logic, API budget, or new policy semantics.",
+      "failure_streak": 0,
+      "finding": "LATEST_RUN_CANCELLED",
+      "first_observed_at_utc": "2026-09-17T19:14:58Z",
+      "forbidden_changes": [
+        "market gates",
+        "model weights",
+        "canonical authority",
+        "portfolio logic"
+      ],
+      "fresh_state_preflight_command": "python scripts/remediation/write_transition_receipt.py --signature 39d91b4524efcbb8073b --branch <TASK_BRANCH>",
+      "last_observed_at_utc": "2026-09-17T19:14:58Z",
+      "latest_run_id": 35251916711,
+      "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/35251916711",
+      "lifecycle_state": "ACTIVE",
+      "objective": "Resolve LATEST_RUN_CANCELLED for native-handlekompas.yml with the smallest bounded code change that satisfies the existing acceptance gates.",
+      "observations": 1,
+      "post_fix_gate": "3_SUCCESSFUL_EXPECTED_RUNS",
+      "precondition": "Fresh Automation Production Health still contains signature 39d91b4524efcbb8073b for native-handlekompas.yml/LATEST_RUN_CANCELLED, and verified lifecycle state does not make the finding non-actionable.",
+      "required_evidence": [
+        "workflow job logs",
+        "reproduction or repeated identical signature",
+        "positive and negative acceptance tests"
+      ],
+      "required_observations": 2,
+      "risk_class": "A_SELF_HEAL_OR_OBSERVE",
+      "route": "OBSERVE",
+      "signature": "39d91b4524efcbb8073b",
+      "source_health_generated_at_utc": "2026-09-17T19:08:11.702116Z",
+      "state": "OBSERVED",
+      "stop_condition": "Stop without code changes if the precondition fails, the finding cannot be reproduced from scoped evidence, or the required fix exceeds allowed change scope.",
+      "success_evidence": [
+        "workflow job logs",
+        "reproduction or repeated identical signature",
+        "positive and negative acceptance tests",
+        "3_SUCCESSFUL_EXPECTED_RUNS"
+      ],
+      "success_streak": 0,
+      "task_contract_sha256": "39dc594b33aeab5487021a993ddde8ff4377683b645c724a0e2fff7a4532655c",
+      "transition_receipt_path": "research/remediation/transitions/39d91b4524efcbb8073b.json",
+      "transition_receipt_required": true,
+      "workflow": "native-handlekompas.yml"
     },
     {
       "allowed_change_scope": [
@@ -117,12 +166,12 @@
         "portfolio logic"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_transition_receipt.py --signature 567527d9b72e9975ed4e --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-09-17T08:55:44Z",
+      "last_observed_at_utc": "2026-09-17T19:14:58Z",
       "latest_run_id": 34806768594,
       "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/34806768594",
       "lifecycle_state": "ACTIVE",
       "objective": "Resolve RECOVERING_AFTER_RECENT_FAILURES for sunday-market-close-and-cfgi.yml with the smallest bounded code change that satisfies the existing acceptance gates.",
-      "observations": 53,
+      "observations": 54,
       "post_fix_gate": "3_SUCCESSFUL_EXPECTED_RUNS",
       "precondition": "Fresh Automation Production Health still contains signature 567527d9b72e9975ed4e for sunday-market-close-and-cfgi.yml/RECOVERING_AFTER_RECENT_FAILURES, and verified lifecycle state does not make the finding non-actionable.",
       "required_evidence": [
@@ -134,7 +183,7 @@
       "risk_class": "A_SELF_HEAL_OR_OBSERVE",
       "route": "SELF_HEAL_ALLOWLIST_OR_OBSERVE",
       "signature": "567527d9b72e9975ed4e",
-      "source_health_generated_at_utc": "2026-09-17T08:46:51.193302Z",
+      "source_health_generated_at_utc": "2026-09-17T19:08:11.702116Z",
       "state": "PERSISTING",
       "stop_condition": "Stop without code changes if the precondition fails, the finding cannot be reproduced from scoped evidence, or the required fix exceeds allowed change scope.",
       "success_evidence": [
@@ -148,6 +197,55 @@
       "transition_receipt_path": "research/remediation/transitions/567527d9b72e9975ed4e.json",
       "transition_receipt_required": true,
       "workflow": "sunday-market-close-and-cfgi.yml"
+    },
+    {
+      "allowed_change_scope": [
+        ".github/workflows/entry-signal-ledger.yml",
+        "directly related scripts and tests"
+      ],
+      "clean_noop_condition": "The finding is absent from fresh health, is non-actionable under verified lifecycle semantics, or the target workflow has been superseded or retired.",
+      "escalation_condition": "Escalate to the framework owner if resolution requires market gates, model weights, canonical authority, portfolio logic, API budget, or new policy semantics.",
+      "failure_streak": 0,
+      "finding": "LATEST_RUN_CANCELLED",
+      "first_observed_at_utc": "2026-09-17T19:14:58Z",
+      "forbidden_changes": [
+        "market gates",
+        "model weights",
+        "canonical authority",
+        "portfolio logic"
+      ],
+      "fresh_state_preflight_command": "python scripts/remediation/write_transition_receipt.py --signature 58b12bb8910d1bd32abd --branch <TASK_BRANCH>",
+      "last_observed_at_utc": "2026-09-17T19:14:58Z",
+      "latest_run_id": 35251909052,
+      "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/35251909052",
+      "lifecycle_state": "ACTIVE",
+      "objective": "Resolve LATEST_RUN_CANCELLED for entry-signal-ledger.yml with the smallest bounded code change that satisfies the existing acceptance gates.",
+      "observations": 1,
+      "post_fix_gate": "3_SUCCESSFUL_EXPECTED_RUNS",
+      "precondition": "Fresh Automation Production Health still contains signature 58b12bb8910d1bd32abd for entry-signal-ledger.yml/LATEST_RUN_CANCELLED, and verified lifecycle state does not make the finding non-actionable.",
+      "required_evidence": [
+        "workflow job logs",
+        "reproduction or repeated identical signature",
+        "positive and negative acceptance tests"
+      ],
+      "required_observations": 2,
+      "risk_class": "A_SELF_HEAL_OR_OBSERVE",
+      "route": "OBSERVE",
+      "signature": "58b12bb8910d1bd32abd",
+      "source_health_generated_at_utc": "2026-09-17T19:08:11.702116Z",
+      "state": "OBSERVED",
+      "stop_condition": "Stop without code changes if the precondition fails, the finding cannot be reproduced from scoped evidence, or the required fix exceeds allowed change scope.",
+      "success_evidence": [
+        "workflow job logs",
+        "reproduction or repeated identical signature",
+        "positive and negative acceptance tests",
+        "3_SUCCESSFUL_EXPECTED_RUNS"
+      ],
+      "success_streak": 0,
+      "task_contract_sha256": "1b4cfbf18248d158c8fd04cbefa89c417fca6a0f2fc93795de4fb7a401dfd374",
+      "transition_receipt_path": "research/remediation/transitions/58b12bb8910d1bd32abd.json",
+      "transition_receipt_required": true,
+      "workflow": "entry-signal-ledger.yml"
     },
     {
       "allowed_change_scope": [
@@ -166,12 +264,12 @@
         "portfolio logic"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_transition_receipt.py --signature 69bcf9c9904b1dd479cd --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-09-17T08:55:44Z",
+      "last_observed_at_utc": "2026-09-17T19:14:58Z",
       "latest_run_id": 34750427925,
       "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/34750427925",
       "lifecycle_state": "ACTIVE",
       "objective": "Resolve REPEATED_PR_GATE_REJECTIONS for entry-signal-ledger-gate.yml with the smallest bounded code change that satisfies the existing acceptance gates.",
-      "observations": 3,
+      "observations": 4,
       "post_fix_gate": "CI_PLUS_ONE_PRODUCTION_SHAPE_RUN",
       "precondition": "Fresh Automation Production Health still contains signature 69bcf9c9904b1dd479cd for entry-signal-ledger-gate.yml/REPEATED_PR_GATE_REJECTIONS, and verified lifecycle state does not make the finding non-actionable.",
       "required_evidence": [
@@ -183,7 +281,7 @@
       "risk_class": "A_SELF_HEAL_OR_OBSERVE",
       "route": "SELF_HEAL_ALLOWLIST_OR_OBSERVE",
       "signature": "69bcf9c9904b1dd479cd",
-      "source_health_generated_at_utc": "2026-09-17T08:46:51.193302Z",
+      "source_health_generated_at_utc": "2026-09-17T19:08:11.702116Z",
       "state": "PERSISTING",
       "stop_condition": "Stop without code changes if the precondition fails, the finding cannot be reproduced from scoped evidence, or the required fix exceeds allowed change scope.",
       "success_evidence": [
@@ -215,12 +313,12 @@
         "portfolio logic"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_transition_receipt.py --signature a2ab02f0f81e286e2edf --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-09-17T08:55:44Z",
+      "last_observed_at_utc": "2026-09-17T19:14:58Z",
       "latest_run_id": 34750427848,
       "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/34750427848",
       "lifecycle_state": "ACTIVE",
       "objective": "Resolve PR_GATE_REJECTION for pullback-learning-gate.yml with the smallest bounded code change that satisfies the existing acceptance gates.",
-      "observations": 3,
+      "observations": 4,
       "post_fix_gate": "CI_PLUS_ONE_PRODUCTION_SHAPE_RUN",
       "precondition": "Fresh Automation Production Health still contains signature a2ab02f0f81e286e2edf for pullback-learning-gate.yml/PR_GATE_REJECTION, and verified lifecycle state does not make the finding non-actionable.",
       "required_evidence": [
@@ -232,7 +330,7 @@
       "risk_class": "A_SELF_HEAL_OR_OBSERVE",
       "route": "SELF_HEAL_ALLOWLIST_OR_OBSERVE",
       "signature": "a2ab02f0f81e286e2edf",
-      "source_health_generated_at_utc": "2026-09-17T08:46:51.193302Z",
+      "source_health_generated_at_utc": "2026-09-17T19:08:11.702116Z",
       "state": "PERSISTING",
       "stop_condition": "Stop without code changes if the precondition fails, the finding cannot be reproduced from scoped evidence, or the required fix exceeds allowed change scope.",
       "success_evidence": [
@@ -264,12 +362,12 @@
         "portfolio logic"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_transition_receipt.py --signature b40412eb187ee51905b8 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-09-17T08:55:44Z",
+      "last_observed_at_utc": "2026-09-17T19:14:58Z",
       "latest_run_id": 34750427848,
       "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/34750427848",
       "lifecycle_state": "ACTIVE",
       "objective": "Resolve REPEATED_PR_GATE_REJECTIONS for pullback-learning-gate.yml with the smallest bounded code change that satisfies the existing acceptance gates.",
-      "observations": 3,
+      "observations": 4,
       "post_fix_gate": "CI_PLUS_ONE_PRODUCTION_SHAPE_RUN",
       "precondition": "Fresh Automation Production Health still contains signature b40412eb187ee51905b8 for pullback-learning-gate.yml/REPEATED_PR_GATE_REJECTIONS, and verified lifecycle state does not make the finding non-actionable.",
       "required_evidence": [
@@ -281,7 +379,7 @@
       "risk_class": "A_SELF_HEAL_OR_OBSERVE",
       "route": "SELF_HEAL_ALLOWLIST_OR_OBSERVE",
       "signature": "b40412eb187ee51905b8",
-      "source_health_generated_at_utc": "2026-09-17T08:46:51.193302Z",
+      "source_health_generated_at_utc": "2026-09-17T19:08:11.702116Z",
       "state": "PERSISTING",
       "stop_condition": "Stop without code changes if the precondition fails, the finding cannot be reproduced from scoped evidence, or the required fix exceeds allowed change scope.",
       "success_evidence": [
@@ -313,12 +411,12 @@
         "portfolio logic"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_transition_receipt.py --signature bdca62b09bcf21bc0e70 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-09-17T08:55:44Z",
+      "last_observed_at_utc": "2026-09-17T19:14:58Z",
       "latest_run_id": 34750427925,
       "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/34750427925",
       "lifecycle_state": "ACTIVE",
       "objective": "Resolve PR_GATE_REJECTION for entry-signal-ledger-gate.yml with the smallest bounded code change that satisfies the existing acceptance gates.",
-      "observations": 3,
+      "observations": 4,
       "post_fix_gate": "CI_PLUS_ONE_PRODUCTION_SHAPE_RUN",
       "precondition": "Fresh Automation Production Health still contains signature bdca62b09bcf21bc0e70 for entry-signal-ledger-gate.yml/PR_GATE_REJECTION, and verified lifecycle state does not make the finding non-actionable.",
       "required_evidence": [
@@ -330,7 +428,7 @@
       "risk_class": "A_SELF_HEAL_OR_OBSERVE",
       "route": "SELF_HEAL_ALLOWLIST_OR_OBSERVE",
       "signature": "bdca62b09bcf21bc0e70",
-      "source_health_generated_at_utc": "2026-09-17T08:46:51.193302Z",
+      "source_health_generated_at_utc": "2026-09-17T19:08:11.702116Z",
       "state": "PERSISTING",
       "stop_condition": "Stop without code changes if the precondition fails, the finding cannot be reproduced from scoped evidence, or the required fix exceeds allowed change scope.",
       "success_evidence": [
@@ -344,55 +442,6 @@
       "transition_receipt_path": "research/remediation/transitions/bdca62b09bcf21bc0e70.json",
       "transition_receipt_required": true,
       "workflow": "entry-signal-ledger-gate.yml"
-    },
-    {
-      "allowed_change_scope": [
-        ".github/workflows/daily-compass.yml",
-        "directly related scripts and tests"
-      ],
-      "clean_noop_condition": "The finding is absent from fresh health, is non-actionable under verified lifecycle semantics, or the target workflow has been superseded or retired.",
-      "escalation_condition": "Escalate to the framework owner if resolution requires market gates, model weights, canonical authority, portfolio logic, API budget, or new policy semantics.",
-      "failure_streak": 0,
-      "finding": "NO_RUN_HISTORY",
-      "first_observed_at_utc": "2026-09-17T08:55:44Z",
-      "forbidden_changes": [
-        "market gates",
-        "model weights",
-        "canonical authority",
-        "portfolio logic"
-      ],
-      "fresh_state_preflight_command": "python scripts/remediation/write_transition_receipt.py --signature c92fcde69498a6acdf0c --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-09-17T08:55:44Z",
-      "latest_run_id": 35150894790,
-      "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/35150894790",
-      "lifecycle_state": "ACTIVE",
-      "objective": "Resolve NO_RUN_HISTORY for daily-compass.yml with the smallest bounded code change that satisfies the existing acceptance gates.",
-      "observations": 1,
-      "post_fix_gate": "3_SUCCESSFUL_EXPECTED_RUNS",
-      "precondition": "Fresh Automation Production Health still contains signature c92fcde69498a6acdf0c for daily-compass.yml/NO_RUN_HISTORY, and verified lifecycle state does not make the finding non-actionable.",
-      "required_evidence": [
-        "workflow job logs",
-        "reproduction or repeated identical signature",
-        "positive and negative acceptance tests"
-      ],
-      "required_observations": 2,
-      "risk_class": "B_CODEX_PR",
-      "route": "OBSERVE",
-      "signature": "c92fcde69498a6acdf0c",
-      "source_health_generated_at_utc": "2026-09-17T08:46:51.193302Z",
-      "state": "OBSERVED",
-      "stop_condition": "Stop without code changes if the precondition fails, the finding cannot be reproduced from scoped evidence, or the required fix exceeds allowed change scope.",
-      "success_evidence": [
-        "workflow job logs",
-        "reproduction or repeated identical signature",
-        "positive and negative acceptance tests",
-        "3_SUCCESSFUL_EXPECTED_RUNS"
-      ],
-      "success_streak": 3,
-      "task_contract_sha256": "1d9e135df1aaf987b839d3240aecf96c726f0c44e3579ec75950b6ca7d293d3e",
-      "transition_receipt_path": "research/remediation/transitions/c92fcde69498a6acdf0c.json",
-      "transition_receipt_required": true,
-      "workflow": "daily-compass.yml"
     },
     {
       "allowed_change_scope": [
@@ -411,12 +460,12 @@
         "portfolio logic"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_transition_receipt.py --signature de75e01cec1253a0a7a5 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-09-17T08:55:44Z",
+      "last_observed_at_utc": "2026-09-17T19:14:58Z",
       "latest_run_id": 35188714135,
       "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/35188714135",
       "lifecycle_state": "ACTIVE",
       "objective": "Resolve LATEST_RUN_FAILED for framework-learning-operations.yml with the smallest bounded code change that satisfies the existing acceptance gates.",
-      "observations": 6,
+      "observations": 7,
       "post_fix_gate": "3_SUCCESSFUL_EXPECTED_RUNS",
       "precondition": "Fresh Automation Production Health still contains signature de75e01cec1253a0a7a5 for framework-learning-operations.yml/LATEST_RUN_FAILED, and verified lifecycle state does not make the finding non-actionable.",
       "required_evidence": [
@@ -428,7 +477,7 @@
       "risk_class": "B_CODEX_PR",
       "route": "OBSERVE",
       "signature": "de75e01cec1253a0a7a5",
-      "source_health_generated_at_utc": "2026-09-17T08:46:51.193302Z",
+      "source_health_generated_at_utc": "2026-09-17T19:08:11.702116Z",
       "state": "OBSERVED",
       "stop_condition": "Stop without code changes if the precondition fails, the finding cannot be reproduced from scoped evidence, or the required fix exceeds allowed change scope.",
       "success_evidence": [
@@ -442,6 +491,55 @@
       "transition_receipt_path": "research/remediation/transitions/de75e01cec1253a0a7a5.json",
       "transition_receipt_required": true,
       "workflow": "framework-learning-operations.yml"
+    },
+    {
+      "allowed_change_scope": [
+        ".github/workflows/situation-room-daily-static.yml",
+        "directly related scripts and tests"
+      ],
+      "clean_noop_condition": "The finding is absent from fresh health, is non-actionable under verified lifecycle semantics, or the target workflow has been superseded or retired.",
+      "escalation_condition": "Escalate to the framework owner if resolution requires market gates, model weights, canonical authority, portfolio logic, API budget, or new policy semantics.",
+      "failure_streak": 0,
+      "finding": "RECOVERING_AFTER_RECENT_FAILURES",
+      "first_observed_at_utc": "2026-09-17T19:14:58Z",
+      "forbidden_changes": [
+        "market gates",
+        "model weights",
+        "canonical authority",
+        "portfolio logic"
+      ],
+      "fresh_state_preflight_command": "python scripts/remediation/write_transition_receipt.py --signature e1f2944741b643b30e68 --branch <TASK_BRANCH>",
+      "last_observed_at_utc": "2026-09-17T19:14:58Z",
+      "latest_run_id": 35217069004,
+      "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/35217069004",
+      "lifecycle_state": "ACTIVE",
+      "objective": "Resolve RECOVERING_AFTER_RECENT_FAILURES for situation-room-daily-static.yml with the smallest bounded code change that satisfies the existing acceptance gates.",
+      "observations": 1,
+      "post_fix_gate": "3_SUCCESSFUL_EXPECTED_RUNS",
+      "precondition": "Fresh Automation Production Health still contains signature e1f2944741b643b30e68 for situation-room-daily-static.yml/RECOVERING_AFTER_RECENT_FAILURES, and verified lifecycle state does not make the finding non-actionable.",
+      "required_evidence": [
+        "workflow job logs",
+        "reproduction or repeated identical signature",
+        "positive and negative acceptance tests"
+      ],
+      "required_observations": 2,
+      "risk_class": "A_SELF_HEAL_OR_OBSERVE",
+      "route": "OBSERVE",
+      "signature": "e1f2944741b643b30e68",
+      "source_health_generated_at_utc": "2026-09-17T19:08:11.702116Z",
+      "state": "OBSERVED",
+      "stop_condition": "Stop without code changes if the precondition fails, the finding cannot be reproduced from scoped evidence, or the required fix exceeds allowed change scope.",
+      "success_evidence": [
+        "workflow job logs",
+        "reproduction or repeated identical signature",
+        "positive and negative acceptance tests",
+        "3_SUCCESSFUL_EXPECTED_RUNS"
+      ],
+      "success_streak": 1,
+      "task_contract_sha256": "e4346a4e042364667da5f2fbf94b80113832e1c0269fc555b3c3ebb5b1b790bd",
+      "transition_receipt_path": "research/remediation/transitions/e1f2944741b643b30e68.json",
+      "transition_receipt_required": true,
+      "workflow": "situation-room-daily-static.yml"
     },
     {
       "allowed_change_scope": [
@@ -460,12 +558,12 @@
         "portfolio logic"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_transition_receipt.py --signature e68b7bdd8ab2d74f3cde --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-09-17T08:55:44Z",
+      "last_observed_at_utc": "2026-09-17T19:14:58Z",
       "latest_run_id": 33363252232,
       "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/33363252232",
       "lifecycle_state": "ACTIVE",
       "objective": "Resolve ARTIFACT_RETENTION_UNBOUNDED for historical-altseason-lab-gate.yml with the smallest bounded code change that satisfies the existing acceptance gates.",
-      "observations": 136,
+      "observations": 137,
       "post_fix_gate": "CI_PLUS_ONE_PRODUCTION_SHAPE_RUN",
       "precondition": "Fresh Automation Production Health still contains signature e68b7bdd8ab2d74f3cde for historical-altseason-lab-gate.yml/ARTIFACT_RETENTION_UNBOUNDED, and verified lifecycle state does not make the finding non-actionable.",
       "required_evidence": [
@@ -477,7 +575,7 @@
       "risk_class": "A_SELF_HEAL_OR_OBSERVE",
       "route": "SELF_HEAL_ALLOWLIST_OR_OBSERVE",
       "signature": "e68b7bdd8ab2d74f3cde",
-      "source_health_generated_at_utc": "2026-09-17T08:46:51.193302Z",
+      "source_health_generated_at_utc": "2026-09-17T19:08:11.702116Z",
       "state": "PERSISTING",
       "stop_condition": "Stop without code changes if the precondition fails, the finding cannot be reproduced from scoped evidence, or the required fix exceeds allowed change scope.",
       "success_evidence": [
@@ -509,12 +607,12 @@
         "portfolio logic"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_transition_receipt.py --signature f884f3870f63d5c419f2 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-09-17T08:55:44Z",
-      "latest_run_id": 35079670788,
-      "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/35079670788",
+      "last_observed_at_utc": "2026-09-17T19:14:58Z",
+      "latest_run_id": 35206149126,
+      "latest_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/35206149126",
       "lifecycle_state": "ACTIVE",
       "objective": "Resolve RECOVERING_AFTER_RECENT_FAILURES for daily-slow-cycle-shadow.yml with the smallest bounded code change that satisfies the existing acceptance gates.",
-      "observations": 41,
+      "observations": 42,
       "post_fix_gate": "3_SUCCESSFUL_EXPECTED_RUNS",
       "precondition": "Fresh Automation Production Health still contains signature f884f3870f63d5c419f2 for daily-slow-cycle-shadow.yml/RECOVERING_AFTER_RECENT_FAILURES, and verified lifecycle state does not make the finding non-actionable.",
       "required_evidence": [
@@ -526,7 +624,7 @@
       "risk_class": "A_SELF_HEAL_OR_OBSERVE",
       "route": "SELF_HEAL_ALLOWLIST_OR_OBSERVE",
       "signature": "f884f3870f63d5c419f2",
-      "source_health_generated_at_utc": "2026-09-17T08:46:51.193302Z",
+      "source_health_generated_at_utc": "2026-09-17T19:08:11.702116Z",
       "state": "PERSISTING",
       "stop_condition": "Stop without code changes if the precondition fails, the finding cannot be reproduced from scoped evidence, or the required fix exceeds allowed change scope.",
       "success_evidence": [
@@ -535,7 +633,7 @@
         "positive and negative acceptance tests",
         "3_SUCCESSFUL_EXPECTED_RUNS"
       ],
-      "success_streak": 8,
+      "success_streak": 9,
       "task_contract_sha256": "26ad293090769085865b5ff4804d655ff2b0e83d05316896ed731f9373e4d71c",
       "transition_receipt_path": "research/remediation/transitions/f884f3870f63d5c419f2.json",
       "transition_receipt_required": true,
