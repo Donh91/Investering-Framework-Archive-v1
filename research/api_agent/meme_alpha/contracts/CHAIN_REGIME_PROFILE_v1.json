@@ -1,0 +1,160 @@
+{
+  "contract": "MEME_ALPHA_CHAIN_REGIME_PROFILE_v1",
+  "status": "RESEARCH_CONTRACT",
+  "purpose": "Prevent global meme-alpha rules from silently treating different chains, launchpads, incentive regimes and liquidity topologies as interchangeable.",
+  "principle": "CHAIN_IS_CONTEXT_NOT_DESTINY",
+  "authority": {
+    "portfolio_execution": false,
+    "automatic_trading": false,
+    "buy_now_promotion": false,
+    "threshold_rewrite": false,
+    "canonical_signal_weight_change": false
+  },
+  "profile_key": [
+    "chain",
+    "venue_or_launchpad",
+    "venue_version",
+    "regime_start",
+    "regime_end_or_open",
+    "quote_asset",
+    "migration_or_pool_destination",
+    "creator_incentive_regime",
+    "fee_regime",
+    "distribution_environment"
+  ],
+  "required_fields": {
+    "mechanics": [
+      "launch_path",
+      "bonding_curve_or_initial_pool_mechanics",
+      "graduation_or_migration_condition",
+      "creator_self_buy_mechanics",
+      "creator_fee_or_reward_mechanics",
+      "lp_creation_and_lock_or_burn_semantics",
+      "quote_asset_and_price_unit",
+      "typical_initial_liquidity_topology"
+    ],
+    "market_structure": [
+      "typical_launch_frequency",
+      "typical_candidate_age_at_discovery",
+      "typical_market_cap_bands",
+      "typical_liquidity_bands",
+      "holder_or_entity_growth_shape",
+      "dominant_execution_venues",
+      "router_and_aggregator_prevalence",
+      "common_slippage_and_exit_capacity_pattern"
+    ],
+    "behavioral_archetypes": [
+      "historically_common_success_archetypes",
+      "historically_common_failure_archetypes",
+      "phoenix_or_cto_prevalence",
+      "first_of_chain_or_native_lore_relevance",
+      "celebrity_or_creator_attention_relevance",
+      "technical_or_product_meme_relevance",
+      "community_takeover_relevance"
+    ],
+    "risk_and_manipulation": [
+      "common_bundle_or_sniper_pattern",
+      "common_creator_or_funder_obfuscation_pattern",
+      "common_wash_or_router_artifacts",
+      "common_holder_count_false_positive",
+      "common_liquidity_failure_mode",
+      "common_copycat_or_identity_collision_mode",
+      "common_social_manipulation_mode"
+    ],
+    "wallet_context": [
+      "chain_local_wallet_skill_required",
+      "cross_chain_skill_transferability",
+      "minimum_asof_history_for_specialist_label",
+      "wallet_role_archetypes",
+      "entity_adjustment_requirements",
+      "known_router_pool_contract_exclusion_rules"
+    ],
+    "lifecycle_clocks": [
+      "expected_launch_to_first_real_demand_window",
+      "expected_launch_to_migration_or_pool_window",
+      "expected_runner_confirmation_windows",
+      "expected_distribution_or_round_trip_windows",
+      "phoenix_reentry_observation_windows"
+    ],
+    "research_calibration": [
+      "current_regime_sample_start",
+      "recent_regime_sample_start",
+      "archetype_history_start",
+      "minimum_matched_failure_count",
+      "minimum_tail_events_before_direct_threshold_authority"
+    ]
+  },
+  "initial_chain_queue": [
+    {
+      "chain": "Solana",
+      "priority": "P0_STATISTICAL_LAB",
+      "venues": ["pump.fun", "Bags", "Meteora-routed launches", "other material launch routes"],
+      "research_role": "Primary statistical laboratory because large public launch denominators, behavioral traces and native event data are available.",
+      "live_threshold_authority": "NONE_UNTIL_REGIME_CALIBRATED"
+    },
+    {
+      "chain": "Robinhood Chain",
+      "priority": "P0_NICHE_EDGE_CONTROL",
+      "venues": ["Robinhood-native pools and launch routes"],
+      "research_role": "Small-n niche/control environment emphasizing lore provenance, recurring ecosystem wallets, Phoenix/CTO behavior and identity authentication.",
+      "live_threshold_authority": "EXISTING_RULES_ONLY__NO_SOLANA_IMPORT"
+    },
+    {
+      "chain": "BNB Chain",
+      "priority": "P1_REPLICATION",
+      "venues": ["Four.meme", "Flap", "PancakeSwap migration routes"],
+      "research_role": "Independent replication environment with different launch mechanics, liquidity topology and wallet behavior.",
+      "live_threshold_authority": "NONE_UNTIL_CHAIN_LOCAL_BACKFILL"
+    },
+    {
+      "chain": "Base",
+      "priority": "P2_REPLICATION",
+      "venues": ["Clanker", "other material Base-native launch routes"],
+      "research_role": "Separate social/distribution and execution regime. No inheritance of Solana thresholds.",
+      "live_threshold_authority": "NONE_UNTIL_CHAIN_LOCAL_BACKFILL"
+    },
+    {
+      "chain": "Monad",
+      "priority": "P2_REPLICATION",
+      "venues": ["nad.fun", "other indexed Monad-native launch routes"],
+      "research_role": "Young-chain regime where first-of-chain narratives, liquidity depth and participant composition may differ materially from mature venues.",
+      "live_threshold_authority": "NONE_UNTIL_CHAIN_LOCAL_BACKFILL"
+    },
+    {
+      "chain": "Ethereum",
+      "priority": "P3_EVENT_DRIVEN",
+      "venues": ["event-driven DEX and launch routes"],
+      "research_role": "Selective event-driven research rather than high-frequency universal scanning unless the denominator and execution economics justify expansion.",
+      "live_threshold_authority": "NONE_UNTIL_CHAIN_LOCAL_BACKFILL"
+    }
+  ],
+  "cross_chain_rules": [
+    "Never apply a Solana-derived threshold directly to another chain.",
+    "Never label a wallet globally smart from one-chain performance alone.",
+    "Wallet skill must carry chain and venue scope unless independently validated cross-chain.",
+    "Launch age, liquidity, market cap, holder breadth and social velocity must be interpreted relative to the chain-regime profile.",
+    "Chain history may define priors and matched-control strata, but cannot excuse fatal sellability, concentration or provenance failures.",
+    "A historical chain stereotype is not a signal. Every profile field must be supported by timestamped empirical evidence and refreshed when mechanics or incentives change.",
+    "When venue mechanics change materially, start a new regime_id instead of silently continuing the old calibration.",
+    "Cross-chain features may only become global if their direction and usefulness replicate across independent chain-regimes."
+  ],
+  "proposed_wallet_specialisms": [
+    "EARLY_LAUNCH",
+    "CURVE_OR_MIGRATION",
+    "PHOENIX_REENTRY",
+    "LORE_NATIVE",
+    "MOMENTUM_RUNNER",
+    "TAIL_HOLDER",
+    "EXIT_DISCIPLINE",
+    "CROSS_CHAIN_VERIFIED"
+  ],
+  "promotion_path": [
+    "DESCRIBE_CHAIN_REGIME",
+    "BACKFILL_MATCHED_WINNERS_AND_FAILURES",
+    "ESTIMATE_CHAIN_LOCAL_BASE_RATES",
+    "TEST_FEATURE_INTERACTIONS_WITH_CHAIN_CONTEXT",
+    "FREEZE_CHAIN_LOCAL_SHADOW_RULES",
+    "RUN_PROSPECTIVE_COHORT",
+    "ONLY_THEN_CONSIDER_CHAIN_LOCAL_THRESHOLD_AUTHORITY"
+  ]
+}

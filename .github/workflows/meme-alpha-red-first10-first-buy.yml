@@ -1,0 +1,100 @@
+# Scale prefix frozen by RED_RECURRING_PAIR_SCALE_CENSUS_v1 manifest 6150ac1d2d4b66c19f9b1c1d90e83ae4509412f73acb563227e2465880ea0c01
+name: Meme Alpha RED First 10 First BUY
+
+on:
+  pull_request:
+    paths:
+      - 'research/api_agent/meme_alpha/experiments/red_earliest_first_buy_reconstruction_v1.py'
+      - '.github/workflows/meme-alpha-red-first10-first-buy.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  first10-first-buy:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Download pinned RED release
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/red-cohort /tmp/red-first10
+          URL='https://zenodo.org/records/21765387/files/RED-COHORT-2026-v1_1_1.zip?download=1'
+          curl -L --fail --retry 5 --retry-delay 2 --connect-timeout 20 "$URL" -o /tmp/red-cohort/RED-COHORT-2026-v1_1_1.zip
+          echo '172198eade99f702f1da0bfdd4cf3079  /tmp/red-cohort/RED-COHORT-2026-v1_1_1.zip' | md5sum -c -
+          sha256sum /tmp/red-cohort/RED-COHORT-2026-v1_1_1.zip | tee /tmp/red-first10/SHA256SUMS
+      - name: Bind exact first-10 cohort to frozen census
+        run: |
+          python - <<'PY'
+          import sys, zipfile
+          sys.path.insert(0, 'research/api_agent/meme_alpha/experiments')
+          from red_earliest_first_buy_reconstruction_v1 import choose_pairs, h, member_by_basename, rows
+          expected = [
+            '0013924fd62ac88c2d7c6f2e4d8ae8895d3cb1b783f989eb5e2d6f607d9cf8bd',
+            '00809f110dadd7f30ac21d868c2abf1e16066a409952018e37b6eb9d92108387',
+            '00bd17c07ca7de952976a08f27f705abeccb360998c9f9dabe60e85459e36ec2',
+            '00c0daf5f56a5e0bc30a9308ab3762eeddf6f29cce6f34812f275ad0adbee860',
+            '00c66a6f8cb133a6db7f4fd55b1651924901529da1a5a9bd80136baa761c5084',
+            '00d59d1f1c59d0e9a002970c48e669783c2f5ca348496bb364596d5959d9ca48',
+            '0170f28a364056b8fb7df9a32fff3915acb84e6f4e2462c766ed530a637f9ea8',
+            '01dc2d5f61ecee71a1d280ec1fe3c43c26a3475bd19847392d806b9854145768',
+            '021f39ce8497f43391fb41eff60d0f69937535b6bbf972e98f7492fc45045342',
+            '026c3df506007df32cd17a766439cf62c89c88107e57c1a653113a64672ad1bb',
+          ]
+          path='/tmp/red-cohort/RED-COHORT-2026-v1_1_1.zip'
+          with zipfile.ZipFile(path) as zf:
+              intra=list(rows(zf, member_by_basename(zf, 'sniper_cohorts_intra.jsonl.gz')))
+          selected=choose_pairs(intra, 10)
+          actual=[h('|'.join(pair)) for pair, _ in selected]
+          launch_counts=[len(pair_rows) for _, pair_rows in selected]
+          assert actual == expected, {'expected': expected, 'actual': actual}
+          assert launch_counts == [6,4,4,4,5,6,4,4,6,6], launch_counts
+          print({'frozen_manifest_sha256':'6150ac1d2d4b66c19f9b1c1d90e83ae4509412f73acb563227e2465880ea0c01','first10_pair_hashes':actual,'launch_counts':launch_counts})
+          PY
+      - name: Reconstruct earliest genuine BUY for first 10 deterministic pairs
+        run: |
+          python research/api_agent/meme_alpha/experiments/red_earliest_first_buy_reconstruction_v1.py \
+            --zip /tmp/red-cohort/RED-COHORT-2026-v1_1_1.zip \
+            --out /tmp/red-first10/red_first10_first_buy_v1.json \
+            --pairs 10 \
+            --history-page-size 250 \
+            --max-history-pages 24 \
+            --workers 1
+      - name: Require complete 10-pair causal reconstruction
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          x=json.load(open('/tmp/red-first10/red_first10_first_buy_v1.json'))
+          c=x['counts']; inv=x['invariants']; v=x['verdict']
+          assert c['selected_pairs'] == 10, c
+          assert c['target_launches'] == 29, c
+          assert c['expected_target_occurrences'] == 58, c
+          assert c['materialized_target_occurrences'] == 58, c
+          assert c['fully_mapped_target_launches'] == 29, c
+          assert c['mapped_target_occurrences'] == 58, c
+          assert c['history_complete_occurrences'] == 58, c
+          assert c['history_transactions_complete_occurrences'] == 58, c
+          assert c['earliest_buy_found'] == 58, c
+          assert c['earliest_buy_unambiguous'] == 58, c
+          assert c['unique_historical_transactions_required'] == c['unique_historical_transactions_resolved'], c
+          assert inv['launch_3_excluded_from_prediction'] is True, inv
+          assert inv['only_launch_4_plus_prediction_eligible'] is True, inv
+          assert inv['qualification_launch_prediction_eligible_count'] == 0, inv
+          assert v['causal_first_buy_reconstruction'] == 'SUPPORTED', v
+          assert v['pilot_gate_ready'] is True, v
+          print(json.dumps({'counts':c,'invariants':inv,'verdict':v},sort_keys=True))
+          PY
+      - name: Upload first-10 evidence
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: meme-alpha-red-first10-first-buy-v1
+          path: /tmp/red-first10/
+          retention-days: 30

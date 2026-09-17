@@ -1,0 +1,67 @@
+{
+  "contract": "IAN05012_SOURCE_AUDIT_v1",
+  "audited_at_utc": "2026-09-15T18:45:00Z",
+  "source": "https://github.com/ian05012/solana-memecoin-dataset",
+  "source_commit": "7070d00e1e4492f8604d988549d91785cc5f43f7",
+  "verdict": "KEEP_HIGH_VALUE_WITH_STRICT_SEMANTIC_CONTROLS",
+  "purpose": "Determine exactly which parts of the public 44k-snapshot / 9.5M-trade / wallet-funding corpus are suitable for Alpha Lab G2/G3 research and which apparent features are structurally biased or only theoretical.",
+  "verified_from_source_code": {
+    "discovery": [
+      "The released collector combines recently completed tokens with GMGN trending ranks ordered by swaps, volume and 1h change.",
+      "The discovery population is therefore selected and not a launch denominator.",
+      "The released collector may differ from the original production collector; the repository README explicitly says the public scripts are a trimmed rewrite while the released dataset has more columns than the scripts currently produce."
+    ],
+    "snapshot_semantics": [
+      "Snapshot captured_at is written at collection time before feature/trade enrichment completes.",
+      "GMGN token statistics, wallet-tag counts, security and social-link presence are queried at snapshot collection time.",
+      "Behavior features are computed from token_trades(addr, 200), i.e. at most the most recent 200 trades returned for the token rather than a complete 1h event stream.",
+      "With ~44k observations and ~9.5M trade rows, the public corpus scale is consistent with this capped recent-trade design; absolute flow/breadth metrics must not be interpreted as full-window totals without further verification.",
+      "The released CLI fallback has different semantics: it synthesizes one buy and one sell row per wallet from aggregate trader totals with approximate holding timestamps. Any mixture of API-history and CLI-synthetic rows must be detected before temporal graph analysis."
+    ],
+    "wallet_semantics": [
+      "Per-trade maker tags and maker_token_tags are stored from the GMGN response seen at collection and can be treated as source-observed-at-cutoff annotations only if the dataset row provenance confirms that path.",
+      "The standalone wallets.parquet historical win-rate/PnL/PageRank fields are not safe as AS-OF features for earlier candidate cutoffs unless reconstructed from prior events.",
+      "Funding edges are useful only when the funding transfer timestamp predates the candidate cutoff. Later-observed links cannot retroactively collapse earlier independent-wallet counts."
+    ],
+    "label_semantics": [
+      "Forward max-return labels are derived from 5-minute market-cap candles, not directly executable trade prices.",
+      "Entry denominator is the first candle open, falling back to close, inside the post-snapshot horizon rather than a guaranteed exact snapshot execution price.",
+      "Candle highs are used for max return after filtering only highs greater than 10x the same candle close, so labels remain theoretical peak opportunities rather than realizable returns.",
+      "If no candles appear and the row is at least 6h old, the released labeler assigns zero returns and marks the sample complete. This conflates true death with provider/data absence unless independently adjudicated.",
+      "reaches_2x is based on max_return_24h and therefore inherits the same candle, observation and realizability limitations."
+    ]
+  },
+  "alpha_lab_usage": {
+    "safe_first_uses": [
+      "Wallet-token co-entry graph after source-row semantic classification.",
+      "Common-funder and repeated-cohort research with funding-edge AS-OF gating.",
+      "Relative/truncated recent-flow trajectory research, explicitly labeled LAST_200_TRADE_WINDOW where applicable.",
+      "Matched retrospective candidate research inside the same selected population.",
+      "Falsification of whether external smart-wallet annotations add value after capital-path and concentration controls."
+    ],
+    "unsafe_without_reconstruction": [
+      "Treating buy_usd_1h, sell_usd_1h, unique_buyers or unique_sellers as complete one-hour totals.",
+      "Using current wallet win_rate/PnL/PageRank as historical features.",
+      "Calling GMGN tags ground truth for smart money, insider or bundler identity.",
+      "Treating max_return labels as capturable PnL.",
+      "Treating no-candle zero labels as proven token death.",
+      "Generalizing prevalence or precision to all Pump.fun launches."
+    ]
+  },
+  "required_backfill_checks": [
+    "Classify every trade row as direct historical trade versus CLI-synthetic aggregate where distinguishable; otherwise quantify ambiguity and exclude affected temporal analyses.",
+    "Measure truncation severity using trade_count-at-cap indicators and treat 200-row saturation as censored flow, not a numeric maximum.",
+    "Reconstruct wallet quality strictly from earlier resolved candidate outcomes, excluding the target token and future outcomes.",
+    "Reconstruct co-entry and common-funder clusters only from relationships effective before each candidate cutoff.",
+    "Recompute primary outcomes from independent OHLCV/on-chain sources on a stratified subset and add sellability/liquidity/slippage labels.",
+    "Pair extreme-tail candidates with same-day/same-lane/mcap/liquidity/age controls and separately audit missed winners.",
+    "Replicate any surviving feature on the near-full-denominator corpus and then prospectively in Alpha Lab shadow."
+  ],
+  "research_implication": "This corpus remains one of the highest-value public sources found because its wallet/funding graph is unusually rich, but it should be used primarily to test network incrementality and falsify wallet hypotheses. It is not clean evidence that its published flow features or forward peaks are directly tradable alpha.",
+  "authority": {
+    "automatic_trading": false,
+    "portfolio_execution": false,
+    "live_threshold_change": false,
+    "candidate_feature_promotion": false
+  }
+}

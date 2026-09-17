@@ -1,0 +1,83 @@
+name: Meme Alpha RED Earliest First BUY
+
+on:
+  pull_request:
+    paths:
+      - 'research/api_agent/meme_alpha/experiments/red_earliest_first_buy_reconstruction_v1.py'
+      - '.github/workflows/meme-alpha-red-earliest-first-buy.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  earliest-first-buy:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - name: Checkout research revision
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Download pinned RED release
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/red-cohort /tmp/red-first-buy
+          URL='https://zenodo.org/records/21765387/files/RED-COHORT-2026-v1_1_1.zip?download=1'
+          curl -L --fail --retry 5 --retry-delay 2 --connect-timeout 20 "$URL" -o /tmp/red-cohort/RED-COHORT-2026-v1_1_1.zip
+          echo '172198eade99f702f1da0bfdd4cf3079  /tmp/red-cohort/RED-COHORT-2026-v1_1_1.zip' | md5sum -c -
+          sha256sum /tmp/red-cohort/RED-COHORT-2026-v1_1_1.zip | tee /tmp/red-first-buy/SHA256SUMS
+
+      - name: Reconstruct earliest genuine BUY fail-closed
+        run: |
+          python research/api_agent/meme_alpha/experiments/red_earliest_first_buy_reconstruction_v1.py \
+            --zip /tmp/red-cohort/RED-COHORT-2026-v1_1_1.zip \
+            --out /tmp/red-first-buy/red_earliest_first_buy_reconstruction_v2.json \
+            --pairs 2 \
+            --history-page-size 250 \
+            --max-history-pages 16 \
+            --workers 1
+
+      - name: Require complete pilot reconstruction and launch-3 exclusion
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          p='/tmp/red-first-buy/red_earliest_first_buy_reconstruction_v2.json'
+          x=json.load(open(p))
+          c=x['counts']
+          inv=x['invariants']
+          assert c['selected_pairs'] == 2, c
+          assert c['target_launches'] == 6, c
+          assert c['expected_target_occurrences'] == 12, c
+          assert c['materialized_target_occurrences'] == 12, c
+          assert c['released_transactions_resolved'] == c['released_signatures_requested'], c
+          assert c['fully_mapped_target_launches'] == 6, c
+          assert c['mapped_target_occurrences'] == 12, c
+          assert c['history_complete_occurrences'] == 12, c
+          assert c['history_transactions_complete_occurrences'] == 12, c
+          assert c['earliest_buy_found'] == 12, c
+          assert c['earliest_buy_unambiguous'] == 12, c
+          assert c['unique_historical_transactions_resolved'] == c['unique_historical_transactions_required'], c
+          assert inv['launch_3_excluded_from_prediction'] is True, inv
+          assert inv['only_launch_4_plus_prediction_eligible'] is True, inv
+          assert inv['qualification_launch_prediction_eligible_count'] == 0, inv
+          assert inv['post_qualification_prediction_ineligible_count'] == 0, inv
+          assert x['verdict']['safe_to_use_released_tx_timestamp_as_first_buy'] is False
+          assert x['verdict']['causal_first_buy_reconstruction'] == 'SUPPORTED', x['verdict']
+          assert x['verdict']['pilot_gate_ready'] is True, x['verdict']
+          print(json.dumps({'counts': c, 'invariants': inv, 'verdict': x['verdict']}, sort_keys=True))
+          PY
+
+      - name: Upload research artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: meme-alpha-red-earliest-first-buy-v2
+          path: /tmp/red-first-buy/
+          retention-days: 30

@@ -1,0 +1,238 @@
+{
+  "contract": "ALPHA_ARC_SOURCE_FIELDMAP_v1",
+  "status": "RESEARCH_COMPLETE_SHADOW_ONLY",
+  "observed_at_utc": "2026-09-16T13:12:00Z",
+  "bound_main_sha": "64fab895ead7de0dab8f118fa619e3c16f98d71d",
+  "owners": {
+    "alpha_lab_v2": "#1052",
+    "cross_chain_adapter": "#1017",
+    "prospective_wallet_harness": "#1018"
+  },
+  "purpose": "Map Arc discovery and wallet-intelligence sources by field and provenance before any cross-chain adapter activation.",
+  "authority": {
+    "research_only": true,
+    "cross_chain_activation": false,
+    "canonical_market_state": false,
+    "automatic_alert_authority": false,
+    "automatic_trading": false,
+    "threshold_change": false,
+    "model_weight_change": false
+  },
+  "source_disposition_legend": {
+    "ADOPT_SHADOW": "Useful enough to ingest only after deterministic adapter validation and point-in-time provenance tests.",
+    "RESEARCH_ONLY": "Useful context or candidate feature source but not ready for automated ingestion.",
+    "REJECT_FIELD": "Do not ingest this derived field as framework evidence without independent reconstruction.",
+    "UNVERIFIED": "Capability or semantics were not independently established in this pass."
+  },
+  "sources": [
+    {
+      "id": "ARC_SCREENER",
+      "url": "https://www.arcscreener.live/",
+      "docs_url": "https://www.arcscreener.live/docs",
+      "new_pairs_url": "https://www.arcscreener.live/new",
+      "disposition": "ADOPT_SHADOW",
+      "source_type": "DIRECT_CHAIN_DISCOVERY_PLUS_DERIVED_INDEXER_MARKET_HISTORY",
+      "verified_observations": [
+        "New-pair page states pool creation events are read directly from Arc chain for Uniswap v2/v3/v4 and appear when the creation event lands.",
+        "Docs distinguish direct-chain launchpad/new-pair data from third-party-indexer charts, holders and historical trades.",
+        "Token screener exposes exact contract, price, liquidity, market cap, FDV, volume, transactions, age/first-seen and pool information where available.",
+        "Docs state pool pricing is selected from the pool carrying liquidity rather than a synthetic venue average.",
+        "Buy routing is simulated before wallet signing, but execution functionality is out of scope for Alpha Lab research."
+      ],
+      "candidate_fields": {
+        "new_pool_event": "ADOPT_SHADOW",
+        "exact_token_ca": "ADOPT_SHADOW",
+        "pool_address": "ADOPT_SHADOW",
+        "dex_version": "ADOPT_SHADOW",
+        "quote_asset": "ADOPT_SHADOW",
+        "pool_created_at": "ADOPT_SHADOW",
+        "price_usd": "ADOPT_SHADOW_WITH_DIRECT_POOL_CROSSCHECK",
+        "liquidity_usd": "ADOPT_SHADOW_WITH_DIRECT_POOL_CROSSCHECK",
+        "market_cap_usd": "RESEARCH_ONLY_UNTIL_SUPPLY_FORMULA_VERIFIED",
+        "fdv_usd": "RESEARCH_ONLY_UNTIL_SUPPLY_FORMULA_VERIFIED",
+        "holders": "RESEARCH_ONLY_DERIVED_INDEXER",
+        "historical_trades": "RESEARCH_ONLY_DERIVED_INDEXER"
+      },
+      "risks": [
+        "Current token pages can expose internally inconsistent-looking derived fields, so each field requires semantic tests rather than UI trust.",
+        "Names/tickers are explicitly non-unique; exact CA remains identity authority.",
+        "No public machine API contract or rate-limit contract was verified in this pass."
+      ]
+    },
+    {
+      "id": "RADARDEX",
+      "url": "https://radardex.pro/",
+      "disposition": "ADOPT_SHADOW",
+      "source_type": "ARC_TERMINAL_AND_LAUNCHPAD_UI_WITH_ONCHAIN_CLAIMS",
+      "verified_observations": [
+        "UI exposes token, market cap, price, age, transactions, volume, traders, holders and liquidity filters/columns.",
+        "UI includes a live swap feed and a Radar launchpad whose tokens are described as live from first trade.",
+        "Launchpad states fixed 1B supply and direct Uniswap V3 launch with a forever-locked LP design.",
+        "Site currently displays an RPC instability warning."
+      ],
+      "candidate_fields": {
+        "new_token_or_pool_discovery": "ADOPT_SHADOW_AFTER_EVENT_CROSSCHECK",
+        "launchpad_origin": "ADOPT_SHADOW_AFTER_FACTORY_EVENT_CROSSCHECK",
+        "market_cap_usd": "RESEARCH_ONLY",
+        "price_usd": "RESEARCH_ONLY",
+        "age": "RESEARCH_ONLY",
+        "transactions": "RESEARCH_ONLY",
+        "volume_usd": "RESEARCH_ONLY",
+        "traders": "RESEARCH_ONLY",
+        "holders": "RESEARCH_ONLY",
+        "liquidity_usd": "RESEARCH_ONLY"
+      },
+      "risks": [
+        "RPC instability is an explicit availability/freshness risk.",
+        "No public machine API, timestamp guarantee or field-formula contract was verified in this pass.",
+        "Launchpad claims must be verified against factory/locker bytecode or events before canonical use."
+      ]
+    },
+    {
+      "id": "ARCTOOLS",
+      "url": "https://arctools.fun/",
+      "insiders_url": "https://arctools.fun/insiders",
+      "intel_url": "https://arctools.fun/intel",
+      "disposition": "ADOPT_SHADOW",
+      "source_type": "CHAIN_WIDE_DERIVED_SWAP_INDEX_AND_WALLET_INTELLIGENCE",
+      "verified_observations": [
+        "Site claims coverage across ten Arc launchpads/venues in one terminal.",
+        "Insider leaderboard is described as top-100 wallets by 30-day on-chain PnL and is recomputed every two minutes.",
+        "Intel page states sources include a chain-wide swap index, native USDC balance snapshots every ten minutes, CCTP TokenMessenger events and insider ranking every two minutes.",
+        "Intel exposes whale swaps, deployer sells, fresh capital/balance moves, bridge flows and wallet activity.",
+        "Terminal exposes market cap, liquidity, volume, top-10 share and insider count.",
+        "Token pages can expose bundle share, deployer share/history and top-holder concentration."
+      ],
+      "candidate_fields": {
+        "raw_swap_events": "ADOPT_SHADOW_IF_EVENT_IDS_AND_BLOCKS_ARE_EXPOSED",
+        "deployer_sell_events": "ADOPT_SHADOW_WITH_ONCHAIN_REPLAY",
+        "bridge_flow_events": "ADOPT_SHADOW_WITH_CCTP_EVENT_REPLAY",
+        "fresh_capital_balance_moves": "RESEARCH_ONLY",
+        "wallet_cluster_events": "RESEARCH_ONLY",
+        "top_holder_concentration": "RESEARCH_ONLY_UNTIL_EXCLUSION_RULES_VERIFIED",
+        "bundle_share": "RESEARCH_ONLY_UNTIL_ENTITY_METHOD_VERIFIED",
+        "wallet_realized_pnl": "RESEARCH_ONLY",
+        "wallet_open_pnl": "RESEARCH_ONLY",
+        "top100_insider_label": "REJECT_FIELD",
+        "token_score": "REJECT_FIELD"
+      },
+      "risks": [
+        "Top-wallet rankings are outcome-derived and can create severe hindsight/selection leakage if used as predictive qualification without AS-OF reconstruction.",
+        "PnL methodology, cost basis, gas/fees, realizability and unsellable-token treatment require independent audit.",
+        "Cluster/bundle/entity labels require deterministic evidence and must not be accepted as identity truth.",
+        "Derived token scores must not be imported into Alpha Lab scoring."
+      ]
+    },
+    {
+      "id": "CIRCLEWARP",
+      "url": "https://circlewarp.fun/",
+      "disposition": "ADOPT_SHADOW",
+      "source_type": "ARC_BONDING_CURVE_LAUNCHPAD_ORIGIN_SOURCE",
+      "verified_observations": [
+        "Launchpad describes Arc-native USDC bonding-curve launches and a graduation event at a configured market-cap threshold currently presented as $69K.",
+        "Displayed ArcFactory source fixes total supply at 1B tokens and can bundle a creator initial buy in the creation transaction.",
+        "Displayed factory source includes owner-controlled setParams for virtual reserves, graduation market cap, fee bps and creation fee.",
+        "Site says Arc-side CCTP intent infrastructure is deployed while source-chain contracts are not yet live."
+      ],
+      "candidate_fields": {
+        "factory_launch_event": "ADOPT_SHADOW_WITH_ONCHAIN_EVENT_REPLAY",
+        "creator_initial_buy": "ADOPT_SHADOW_WITH_TRANSACTION_REPLAY",
+        "bonding_curve_state": "ADOPT_SHADOW_AFTER_CONTRACT_SEMANTICS_VERIFIED",
+        "graduation_event": "ADOPT_SHADOW_WITH_ONCHAIN_EVENT_REPLAY",
+        "migration_destination": "ADOPT_SHADOW_WITH_ONCHAIN_EVENT_REPLAY",
+        "launch_parameter_snapshot": "ADOPT_SHADOW_REQUIRED_PER_LAUNCH"
+      },
+      "risks": [
+        "Do not assume a timeless $69K graduation threshold: displayed factory code exposes owner-settable parameters.",
+        "Marketing statements such as no-admin-keys must be interpreted per launched token/curve, not as proof that factory-level parameters never change.",
+        "Cross-chain intent path is not fully live according to the current site."
+      ]
+    },
+    {
+      "id": "BASEDBOT_ARC",
+      "url": "https://basedbot.app/arc",
+      "disposition": "RESEARCH_ONLY",
+      "source_type": "TRADING_TERMINAL_TOKEN_PAGES",
+      "verified_observations": [
+        "Arc token pages are web-addressable.",
+        "Public BasedBot documentation verifies live new-token/new-pool channels on several networks, but the reviewed docs do not establish the current Arc feed semantics."
+      ],
+      "candidate_fields": {
+        "arc_new_pair_feed": "UNVERIFIED",
+        "arc_launch_event_feed": "UNVERIFIED",
+        "token_market_fields": "RESEARCH_ONLY"
+      },
+      "risks": [
+        "The /arc page exposed no useful machine-readable field contract in this pass.",
+        "Do not infer Arc behavior from Base/BSC documentation."
+      ]
+    },
+    {
+      "id": "CIELO_TRENDING",
+      "url": "https://app.cielo.finance/trending",
+      "disposition": "RESEARCH_ONLY",
+      "source_type": "DERIVED_CROSS_CHAIN_TRENDING_AND_WALLET_ANALYTICS",
+      "verified_observations": [
+        "Trending table exposes age, mindshare, market cap, price change, holders, fresh-wallet percentage, average buy, net flow, liquidity, volume, fees, transactions and network fields."
+      ],
+      "candidate_fields": {
+        "fresh_wallet_pct": "RESEARCH_ONLY",
+        "average_buy": "RESEARCH_ONLY",
+        "net_flow": "RESEARCH_ONLY",
+        "mindshare": "RESEARCH_ONLY",
+        "arc_network_support": "UNVERIFIED"
+      },
+      "risks": [
+        "Arc support was not independently established from the reviewed public page.",
+        "Fresh-wallet and mindshare definitions require methodology and AS-OF semantics before predictive use.",
+        "Derived market cap must never override direct live Arc pool/on-chain state."
+      ]
+    }
+  ],
+  "recommended_adapter_sequence": [
+    {
+      "rank": 1,
+      "source": "ARC_SCREENER",
+      "purpose": "Direct-chain new-pair discovery sensor only",
+      "reason": "Strongest currently documented provenance for second-level Arc pool creation events."
+    },
+    {
+      "rank": 2,
+      "source": "CIRCLEWARP",
+      "purpose": "Launch-origin and launch-mechanism events",
+      "reason": "Launchpad-specific factory events can distinguish token birth, creator initial buy and graduation."
+    },
+    {
+      "rank": 3,
+      "source": "ARCTOOLS",
+      "purpose": "Shadow wallet/deployer/bridge feature source",
+      "reason": "High information value but derived methodology creates hindsight and entity-resolution risk."
+    },
+    {
+      "rank": 4,
+      "source": "RADARDEX",
+      "purpose": "Independent discovery cross-check and Radar launch-origin source",
+      "reason": "Useful breadth but current RPC warning and unverified machine API reduce authority."
+    },
+    {
+      "rank": 5,
+      "source": "BASEDBOT_ARC_AND_CIELO",
+      "purpose": "Research-only corroboration",
+      "reason": "Current Arc field semantics or Arc support are insufficiently verified for adapter work."
+    }
+  ],
+  "implementation_preconditions": [
+    "No Arc source becomes canonical market-state authority from this artifact.",
+    "A deterministic adapter must preserve exact CA + chain + pool + quote + observed_at + block where available.",
+    "Direct event replay must verify new-pair/factory/graduation claims before promotion.",
+    "Market cap and FDV formulas must be independently reconstructed from supply semantics.",
+    "Derived wallet/PnL/cluster labels remain prediction-excluded until point-in-time replay and negative controls exist.",
+    "Source failures and conflicts must emit DEGRADED_DATA or DATA_CONFLICT rather than fall back silently.",
+    "Prospective shadow evidence is required before any alert-gate or scoring promotion."
+  ],
+  "next_eligible_action": {
+    "owner": "#1017",
+    "action": "Build the smallest ArcScreener new-pair discovery adapter as SHADOW_ONLY, using direct creation-event fields only, with deterministic event replay fixtures and no wallet/scoring integration yet.",
+    "why": "This is the minimum step that improves autonomous pre-CA discovery without importing derived smart-money labels or broadening trading authority."
+  }
+}

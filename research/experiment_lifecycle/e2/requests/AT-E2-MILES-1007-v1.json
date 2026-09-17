@@ -1,0 +1,167 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "canonical_effect": false,
+    "exchange_signing": false,
+    "framework_state_change": false,
+    "model_weight_change": false,
+    "order_routing": false,
+    "portfolio_execution": false,
+    "threshold_change": false
+  },
+  "contract": "AUTO_TRADING_E2_EXTERNAL_ADVERSARIAL_BENCHMARK_v1",
+  "experiment_id": "AT-E2-MILES-1007-v1",
+  "issue": 1007,
+  "status": "APPROVED_RESEARCH_ONLY_PREREGISTERED_EXECUTION_BLOCKED",
+  "theory_ids": [
+    "AT-HYP-0004",
+    "AT-HYP-0008"
+  ],
+  "external_case": {
+    "case_id": "EXTERNAL_CASE_MILES_DEUTSCHER_AI_BACKTEST_V1",
+    "source_x_url": "https://x.com/milesdeutscher/status/2099739999705117161",
+    "source_repo": "Miles-Deutscher/Backtesting-Engine",
+    "source_repo_commit": "a8f49c05760fcd0002eaed3c4f1e279e266d12b4",
+    "source_repo_commit_message": "Initial Backtesting Engine release",
+    "source_repo_license": "MIT",
+    "source_claim_treatment": "EXTERNAL_MARKETING_CLAIM_NOT_ACCEPTED_AS_EDGE_EVIDENCE"
+  },
+  "purpose": "Use the Miles Deutscher AI-backtesting workflow as a frozen adversarial benchmark to measure how much apparent AI-generated strategy alpha survives honest evaluation, and to test whether LLM intelligence belongs in strategy compilation or decision-time trading.",
+  "research_questions": [
+    "How much apparent in-sample alpha survives frozen holdout, realistic costs, multiplicity controls, null controls and regime splits?",
+    "Does a frozen deterministic LLM-authored factor outperform or non-inferiorly match a decision-time LLM action agent on unseen data after costs?",
+    "Does decision-time LLM reasoning add reproducible economic value sufficient to justify its extra variance, turnover, latency and API cost?"
+  ],
+  "execution_gate": {
+    "blocked": true,
+    "required_before_any_live_model_experiment": [
+      "POINT_IN_TIME_REPLAYABLE_INPUT_HISTORY_PASS",
+      "PURITY_AND_LOOKAHEAD_GATE_PASS",
+      "QUARANTINED_PRE_FIX_DERIVED_HISTORY_EXCLUDED",
+      "FROZEN_SAMPLE_AND_LABEL_BOUNDARIES_WRITTEN_BEFORE_MODEL_CALL",
+      "DETERMINISTIC_BASELINES_REPRODUCED",
+      "COST_MODEL_FROZEN"
+    ],
+    "forbidden_while_blocked": [
+      "LIVE_MODEL_EXPERIMENT_CALLS",
+      "POST_HOLDOUT_PROMPT_TUNING",
+      "PORTFOLIO_EXECUTION",
+      "PAPER_EXECUTION",
+      "PRODUCTION_INTEGRATION"
+    ]
+  },
+  "arms": {
+    "B0_BUY_AND_HOLD": "Deterministic buy-and-hold baseline on identical frozen sample.",
+    "B1_SIMPLE_SMA": "Deterministic simple SMA crossover baseline with frozen parameters.",
+    "B2_SIMPLE_RSI": "Deterministic simple RSI mean-reversion baseline with frozen parameters.",
+    "A1_CONTENT_LOOP": "LLM may iteratively propose and improve a strategy on training/design data only. Every attempted strategy remains counted. Final selected strategy is frozen before holdout reveal.",
+    "A2_FACTOR_AUTHOR": "LLM receives the permitted frozen design information once and emits deterministic executable strategy rules/code. No LLM is present at decision time.",
+    "A3_ACTION_AGENT": "LLM receives the same permitted information budget at each decision point and emits BUY/HOLD/SELL or equivalent bounded action. No self-modification or rule edits are allowed."
+  },
+  "fairness_rules": {
+    "identical_frozen_oos_sample_across_arms": true,
+    "same_market_information_budget_for_A2_and_A3": true,
+    "same_cost_and_fill_model_across_arms": true,
+    "same_position_limits_across_arms": true,
+    "same_execution_clock_across_arms": true,
+    "failed_and_abandoned_attempts_remain_counted": true,
+    "evaluation_labels_hidden_until_deterministic_evaluator": true,
+    "no_post_result_prompt_tuning": true,
+    "no_strategy_selection_using_holdout": true,
+    "no_survivorship_deletion_of_failed_llm_trials": true
+  },
+  "data_design": {
+    "assets_minimum": [
+      "BTC",
+      "ETH"
+    ],
+    "required_regime_partition": [
+      "TREND_UP",
+      "TREND_DOWN",
+      "CHOP_OR_COMPRESSION",
+      "STRESS_OR_FLUSH"
+    ],
+    "holdout_min_fraction": 0.30,
+    "walk_forward_required": true,
+    "point_in_time_only": true,
+    "raw_future_labels_forbidden_to_model": true
+  },
+  "cost_model": {
+    "fees_required": true,
+    "slippage_required": true,
+    "turnover_costed": true,
+    "api_cost_reported_separately": true,
+    "latency_or_decision_delay_reported_for_action_agent": true,
+    "cost_sensitivity_bps_round_trip": [
+      5,
+      10,
+      20,
+      40
+    ]
+  },
+  "primary_endpoint": "A2_FACTOR_AUTHOR_MINUS_A3_ACTION_AGENT_OOS_POST_COST_RISK_ADJUSTED_UTILITY",
+  "secondary_endpoints": [
+    "OOS_POST_COST_RETURN_VS_B0_B1_B2",
+    "MAX_DRAWDOWN",
+    "DOWNSIDE_ADJUSTED_RETURN",
+    "PROFIT_FACTOR",
+    "TURNOVER",
+    "TIME_IN_MARKET",
+    "TRADE_COUNT",
+    "TRAIN_TO_OOS_ALPHA_DECAY",
+    "NULL_CONTROL_EXCESS_RETURN",
+    "REGIME_ROBUSTNESS",
+    "BTC_ETH_REPLICATION",
+    "REPEATED_IDENTICAL_INPUT_ACTION_AGREEMENT",
+    "RUN_TO_RUN_VARIANCE",
+    "API_COST_USD",
+    "DECISION_LATENCY",
+    "FAILED_CALL_COUNT"
+  ],
+  "alpha_decay_ladder": [
+    "TRAIN_OR_MARKETED_RESULT",
+    "PLUS_FEES",
+    "PLUS_SLIPPAGE",
+    "FROZEN_HOLDOUT",
+    "WALK_FORWARD",
+    "MULTIPLICITY_ADJUSTED",
+    "NULL_CONTROL_ADJUSTED",
+    "REGIME_SPLIT",
+    "CROSS_ASSET_REPLICATION"
+  ],
+  "null_and_multiplicity_controls": {
+    "random_strategy_control_required": true,
+    "label_permutation_or_equivalent_null_required": true,
+    "all_llm_strategy_trials_count_toward_search_budget": true,
+    "winner_only_reporting_forbidden": true,
+    "parameter_and_trial_count_reported": true
+  },
+  "pre_registered_adjudication": {
+    "MILES_CONTENT_EDGE_REJECT": "If attractive training/backtest performance fails to beat the strongest simple deterministic baseline after frozen OOS costs and multiplicity/null controls.",
+    "FACTOR_AUTHOR_SUPPORTED": "A2 must show reproducible post-cost OOS value versus simple baselines and must not materially underperform A3 on the primary endpoint across required replication slices.",
+    "FACTOR_AUTHOR_UNPROVEN": "A2 does not clear deterministic/null baselines with reproducible post-cost OOS value.",
+    "ACTION_AGENT_REJECT": "A3 fails to materially improve the primary endpoint versus A2 while adding materially higher run variance, turnover, latency or API cost.",
+    "ACTION_AGENT_RESEARCH_CONTINUES": "A3 materially and reproducibly improves post-cost OOS utility versus A2 across BTC and ETH and more than one regime, with no unacceptable drawdown or instability penalty.",
+    "NO_ARCHITECTURE_PROMOTION_FROM_SINGLE_PASS": true
+  },
+  "kill_criteria": [
+    "Any detected holdout leakage invalidates the affected run.",
+    "Any use of quarantined non-PIT derived history invalidates the affected run.",
+    "Any tuning after holdout reveal invalidates confirmatory status and converts the run to exploratory only.",
+    "If deterministic baselines cannot be reproduced, the experiment stops before LLM comparison.",
+    "If identical-input reproducibility is below the contract threshold defined in the execution implementation, A3 cannot receive promotion regardless of PnL.",
+    "If results depend on one asset, one regime or one selected run, the claimed general architecture edge remains unproven."
+  ],
+  "reporting_rules": {
+    "report_all_arms": true,
+    "report_all_failed_llm_trials": true,
+    "report_gross_and_net": true,
+    "report_alpha_decay_ladder": true,
+    "report_confidence_or_uncertainty": true,
+    "separate_process_edge_from_predictive_edge": true,
+    "marketing_claim_reproduction_is_not_required_for_scientific_success": true
+  },
+  "frozen_at_utc": "2026-09-15T08:44:39Z",
+  "preregistration_revision": 1,
+  "revision_rule": "Any material change after the first eligible model call requires a new experiment_id. Pre-call schema or path corrections may increment revision only if sample, hypotheses, endpoints, thresholds and evidence boundaries remain unchanged."
+}

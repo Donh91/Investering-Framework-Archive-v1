@@ -122,6 +122,28 @@ A candidate merged to the intake path triggers remediation maturation immediatel
 
 The operational contract is `07_PROMPTS_AND_AGENTS/codex/2026-08-22__codex-research-intake-and-execution-ledger-v1__operational.md`. If a research thread lacks GitHub write capability, it must return a schema-complete candidate payload and explicitly state that it was not persisted.
 
+### 0.3 Global Action Compass invocation - all Investering threads
+
+Canonical owner:
+
+`07_PROMPTS_AND_AGENTS/action_compass/2026-09-16__global-action-compass-invocation-contract-v1__canonical.md`
+
+Machine route:
+
+`07_PROMPTS_AND_AGENTS/action_compass/GLOBAL_ACTION_COMPASS_ROUTE_v1.json`
+
+In any repository-aware Investering thread, an exact prompt of `kompas`, `handlekompas` or `compass` is a hard current-state invocation. The same route applies when one of those words is clearly used as the primary imperative, such as `send kompas` or `kompas nu`.
+
+Do not ask which thread, DATA PING version, workflow or agent the user means. Resolve current authority from the operational cockpit and autonomous production-data route, then apply the global compass contract.
+
+This is not an instruction to reactivate manual DATA PING. A plain compass invocation is a current-state render/decision-translation request. It must not create a new prospective receipt merely because the user requested the view.
+
+User-facing compass output is **TEXT_ONLY** by default. APIs, connectors, repository tools and web retrieval may be used internally when needed, but do not intentionally render widgets, market cards, interactive charts, API/connector result cards, raw JSON, raw tool output or provider diagnostics in the compass response. Keep the authored output compact, phone-first and action-oriented.
+
+The compass must preserve the three horizons and controlled action vocabulary from the active Three-Horizon Action Compass owner, add ETA where actionable, fail stale/unsupported lanes closed, keep warnings separate from actions, and avoid repeated rotation sections.
+
+When present and eligible, `04_MARKET_LEARNING/handlekompas/official/LATEST_COMPASS.json` is the pointer-first machine owner for a current Compass render. Read and hash-verify its immutable target before bounded live context. Never replace a missing, stale or mismatched official pointer with inherited chat prose. The pointer render itself creates no new freeze or prospective receipt.
+
 ## 1. Read order
 
 Before framework, DATA PING, weekly operations, Cycle Navigator, Research Lab, evidence-ledger, archive, governance or automation work:

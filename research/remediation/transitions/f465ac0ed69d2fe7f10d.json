@@ -1,0 +1,36 @@
+{
+  "allowed_change_scope": [
+    ".github/workflows/operations-dashboard.yml",
+    "directly related scripts and tests"
+  ],
+  "branch": "agent/operational-memory-retrieval-v1-20260915",
+  "clean_noop_condition": "The finding is absent from fresh health, is non-actionable under verified lifecycle semantics, or the target workflow has been superseded or retired.",
+  "contract": "REMEDIATION_TRANSITION_RECEIPT_v1",
+  "escalation_condition": "Escalate to the framework owner if resolution requires market gates, model weights, canonical authority, portfolio logic, API budget, or new policy semantics.",
+  "finding": "REPEATED_CONSECUTIVE_FAILURES",
+  "forbidden_changes": [
+    "market gates",
+    "model weights",
+    "canonical authority",
+    "portfolio logic"
+  ],
+  "latest_run_id": 35204469736,
+  "objective": "Resolve REPEATED_CONSECUTIVE_FAILURES for operations-dashboard.yml with the smallest bounded code change that satisfies the existing acceptance gates.",
+  "post_fix_gate": "3_SUCCESSFUL_EXPECTED_RUNS",
+  "pr_number": 1006,
+  "precondition": "Fresh Automation Production Health still contains signature f465ac0ed69d2fe7f10d for operations-dashboard.yml/REPEATED_CONSECUTIVE_FAILURES, and verified lifecycle state does not make the finding non-actionable.",
+  "receipt_sha256": "efc74a8e0ff91ccec6d17954ac97c6a512d25ce5eefb29e926626d88259800c5",
+  "recorded_at_utc": "2026-09-17T20:07:37Z",
+  "signature": "f465ac0ed69d2fe7f10d",
+  "source_health_generated_at_utc": "2026-09-17T19:08:11.702116Z",
+  "state": "IN_REMEDIATION",
+  "stop_condition": "Stop without code changes if the precondition fails, the finding cannot be reproduced from scoped evidence, or the required fix exceeds allowed change scope.",
+  "success_evidence": [
+    "workflow job logs",
+    "reproduction or repeated identical signature",
+    "positive and negative acceptance tests",
+    "3_SUCCESSFUL_EXPECTED_RUNS"
+  ],
+  "task_contract_sha256": "93bbe730eeb6a4501d08aee1679640dc47aac944e4d7bd242136011b1404d626",
+  "workflow": "operations-dashboard.yml"
+}

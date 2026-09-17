@@ -1,0 +1,63 @@
+name: Meme Alpha Trenches Point-in-Time Research
+
+on:
+  pull_request:
+    paths:
+      - 'research/api_agent/meme_alpha/experiments/trenches_point_in_time_ablation_v1.py'
+      - 'research/api_agent/meme_alpha/experiments/CLEAN_G3_SOURCE_CAPABILITY_MATRIX_v1.json'
+      - 'research/api_agent/meme_alpha/contracts/SOLANA_PUMPFUN_REGIME_PROFILE_2026Q3_v1.json'
+      - '.github/workflows/meme-alpha-trenches-point-in-time.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  point-in-time-ablation:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Checkout research revision
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install bounded analysis dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install 'pandas>=2.2,<3' 'numpy>=2,<3' 'pyarrow>=17,<22' 'scikit-learn>=1.5,<2'
+
+      - name: Download published forward-capture artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/trenches
+          BASE='https://huggingface.co/datasets/Tr4m0ryp/trenches-pumpfun-forward-2026-08/resolve/main'
+          for f in features.parquet labels.parquet split.json MANIFEST.json; do
+            curl -L --fail --retry 5 --retry-delay 2 --connect-timeout 20 "$BASE/$f?download=true" -o "/tmp/trenches/$f"
+          done
+          sha256sum /tmp/trenches/features.parquet /tmp/trenches/labels.parquet /tmp/trenches/split.json /tmp/trenches/MANIFEST.json | tee /tmp/trenches/SHA256SUMS
+
+      - name: Execute point-in-time lifecycle ablation
+        run: |
+          mkdir -p /tmp/trenches-results
+          python research/api_agent/meme_alpha/experiments/trenches_point_in_time_ablation_v1.py \
+            --data-dir /tmp/trenches \
+            --out-dir /tmp/trenches-results
+          cp /tmp/trenches/SHA256SUMS /tmp/trenches-results/SHA256SUMS
+          cp /tmp/trenches/MANIFEST.json /tmp/trenches-results/SOURCE_MANIFEST.json
+
+      - name: Emit machine-readable result to log
+        run: |
+          cat /tmp/trenches-results/trenches_point_in_time_ablation_v1.json
+          cat /tmp/trenches-results/trenches_point_in_time_ablation_v1.md
+
+      - name: Upload research artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: meme-alpha-trenches-point-in-time-v1
+          path: /tmp/trenches-results/
+          retention-days: 30
