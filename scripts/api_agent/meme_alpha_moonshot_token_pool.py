@@ -60,10 +60,11 @@ def pool_quality_key(event: dict[str, Any], config: dict[str, Any]) -> tuple[Any
 
 def pool_summary(event: dict[str, Any]) -> dict[str, Any]:
     keys = (
-        "pool_address", "pool_id", "dex_id", "pool_created_at", "age_minutes",
-        "token_role", "token_price_usd", "liquidity_usd", "market_cap_usd",
-        "volume_h1_usd", "buys_h1", "sells_h1", "price_change_h1_pct",
-        "price_change_h6_pct", "raw_sha256",
+        "network", "pool_address", "pool_id", "dex_id", "pool_created_at", "age_minutes",
+        "token_role", "token_price_usd", "liquidity_usd", "market_cap_usd", "fdv_usd",
+        "valuation_status", "volume_h1_usd", "buys_h1", "sells_h1", "price_change_h1_pct",
+        "price_change_h6_pct", "observed_at_unix", "observed_at_utc", "source", "source_schema",
+        "data_integrity_status", "data_integrity_unknown_fields", "raw_sha256",
     )
     return {key: event.get(key) for key in keys if key in event}
 
@@ -73,9 +74,10 @@ def collapse_token_pools(events: list[dict[str, Any]], config: dict[str, Any]) -
     for event in events:
         if not isinstance(event, dict):
             continue
-        network = str(event.get("network") or "eth")
+        network = str(event.get("network") or "").strip().lower()
         token = str(event.get("token_ca") or "").lower()
-        if not token:
+        # Identity is chain + exact token. Missing chain is unresolved, never silently Ethereum.
+        if not network or not token:
             continue
         groups.setdefault(f"{network}:{token}", []).append(event)
 
@@ -100,7 +102,7 @@ def collapse_token_pools(events: list[dict[str, Any]], config: dict[str, Any]) -
         row["age_minutes"] = token_age
         row["buyer_velocity_per_minute"] = aggregate_buys_h1 / denom_age
         row["transaction_velocity_per_minute"] = (aggregate_buys_h1 + aggregate_sells_h1) / denom_age
-        row["volume_to_liquidity_h1"] = aggregate_volume_h1 / aggregate_liquidity if aggregate_liquidity > 0 else 0.0
+        row["volume_to_liquidity_h1"] = aggregate_volume_h1 / aggregate_liquidity if aggregate_liquidity > 0 else None
         row["token_aggregate_buys_h1"] = aggregate_buys_h1
         row["token_aggregate_sells_h1"] = aggregate_sells_h1
         row["token_aggregate_volume_h1_usd"] = aggregate_volume_h1
@@ -117,7 +119,7 @@ def collapse_token_pools(events: list[dict[str, Any]], config: dict[str, Any]) -
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Collapse a new-pools feed to one deterministic token-level observation per exact CA.")
+    parser = argparse.ArgumentParser(description="Collapse a new-pools feed to one deterministic token-level observation per exact chain+CA.")
     parser.add_argument("--input", type=Path, required=True)
     parser.add_argument("--config", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
@@ -130,8 +132,9 @@ def main() -> int:
     result["raw_pool_event_count"] = len(payload["events"])
     result["events"] = collapse_token_pools(payload["events"], config)
     result["token_event_count"] = len(result["events"])
-    result["pool_identity_contract"] = "MOONSHOT_TOKEN_POOL_IDENTITY_v2"
-    result["microstructure_contract"] = "MOONSHOT_TOKEN_MICROSTRUCTURE_AGGREGATION_v2"
+    result["pool_identity_contract"] = "MOONSHOT_TOKEN_POOL_IDENTITY_v3"
+    result["microstructure_contract"] = "MOONSHOT_TOKEN_MICROSTRUCTURE_AGGREGATION_v3"
+    result["missing_network_fails_closed"] = True
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_bytes(canonical_bytes(result))
     print(json.dumps({"raw_pool_events": result["raw_pool_event_count"], "token_events": result["token_event_count"], "contract": result["pool_identity_contract"]}, sort_keys=True))

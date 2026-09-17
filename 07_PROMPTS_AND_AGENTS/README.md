@@ -29,6 +29,16 @@ model replaceability
 least privilege
 ```
 
+## Alpha Lab - Tokens & Moonshots entrypoint
+
+For any Alpha Lab, meme, microcap, early-token, mispriced-asset or moonshot research, read this standing mandate before material evaluation or logging:
+
+```text
+memes_alpha/2026-09-16__alpha-lab-tokens-moonshots-standing-mandate-v1__policy.md
+```
+
+It expands the historical meme-only scope into **Alpha Lab - Tokens & Moonshots** and governs pre-outcome logging, live market-data integrity, adaptive wallet forensics, anti-hindsight discipline and later success/failure learning. Existing `memes_alpha` research remains evidence and procedure where compatible with that mandate.
+
 ## Astra / successor model entrypoint
 
 ```text

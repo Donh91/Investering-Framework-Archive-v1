@@ -24,20 +24,26 @@ FIELDS = {
     "liquidity_resilience": "liquidity_usd",
 }
 MIN_PEERS = 5
-PRE_ORIGIN_CONTRACT = "MOONSHOT_PRE_ORIGIN_EVENT_COHORT_v2"
+PRE_ORIGIN_CONTRACT = "MOONSHOT_PRE_ORIGIN_EVENT_COHORT_v3"
 
 
 def canonical_bytes(value: Any) -> bytes:
     return (json.dumps(value, sort_keys=True, separators=(",", ":")) + "\n").encode()
 
 
-def number(value: Any, default: float = 0.0) -> float:
+def optional_number(value: Any) -> float | None:
     try:
         if value is None or value == "":
-            return default
-        return float(value)
+            return None
+        parsed = float(value)
+        return parsed if math.isfinite(parsed) else None
     except (TypeError, ValueError):
-        return default
+        return None
+
+
+def number(value: Any, default: float = 0.0) -> float:
+    parsed = optional_number(value)
+    return default if parsed is None else parsed
 
 
 def age_bucket_index(age_minutes: float) -> int:
@@ -53,10 +59,13 @@ def bucket_label(index: int) -> str:
     return f"{lo}-{hi if hi is not None else 'inf'}m"
 
 
-def percentile_rank(values: list[float], value: float) -> float:
-    finite = [x for x in values if math.isfinite(x)]
+def percentile_rank(values: list[float | None], value: float | None) -> float | None:
+    """Rank only observed finite values. UNKNOWN is never silently treated as zero."""
+    if value is None or not math.isfinite(value):
+        return None
+    finite = [x for x in values if x is not None and math.isfinite(x)]
     if not finite:
-        return 0.0
+        return None
     less = sum(1 for x in finite if x < value)
     equal = sum(1 for x in finite if x == value)
     return 100.0 * (less + 0.5 * equal) / len(finite)
@@ -82,9 +91,13 @@ def peer_indices(events: list[dict[str, Any]], target_index: int) -> tuple[list[
 def normalize_age_cohorts(events: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """Rank exact-CA-collapsed new-pool events by age.
 
-    These percentiles are intentionally *pre-origin*.  A new-pool feed can contain
+    These percentiles are intentionally *pre-origin*. A new-pool feed can contain
     an old token receiving a new pool, so this ranking is a discovery prefilter,
     never final token-birth truth and never sufficient for adaptive training.
+
+    Missing metrics remain UNKNOWN and are excluded from peer distributions. This
+    prevents source gaps from becoming synthetic zero observations that can poison
+    cohort ranks and later learning.
     """
     output: list[dict[str, Any]] = []
     for index, event in enumerate(events):
@@ -94,10 +107,22 @@ def normalize_age_cohorts(events: list[dict[str, Any]]) -> list[dict[str, Any]]:
         peers, scope = peer_indices(events, target_bucket)
         peer_events = [events[i] for i in peers if isinstance(events[i], dict)]
         row = dict(event)
-        row["birth_cohort_percentiles"] = {
-            name: round(percentile_rank([number(peer.get(source)) for peer in peer_events], number(event.get(source))), 3)
-            for name, source in FIELDS.items()
-        }
+        percentiles: dict[str, float | None] = {}
+        field_status: dict[str, dict[str, Any]] = {}
+        for name, source in FIELDS.items():
+            target_value = optional_number(event.get(source))
+            peer_values = [optional_number(peer.get(source)) for peer in peer_events]
+            observed_peer_values = [value for value in peer_values if value is not None]
+            rank = percentile_rank(peer_values, target_value)
+            percentiles[name] = round(rank, 3) if rank is not None else None
+            field_status[name] = {
+                "status": "OBSERVED" if target_value is not None else "UNKNOWN",
+                "observed_peer_count": len(observed_peer_values),
+                "total_peer_count": len(peer_events),
+            }
+        row["birth_cohort_percentiles"] = percentiles
+        row["birth_cohort_field_status"] = field_status
+        unknown_fields = [name for name, meta in field_status.items() if meta["status"] == "UNKNOWN"]
         row["birth_cohort"] = {
             "contract": PRE_ORIGIN_CONTRACT,
             "role": "DISCOVERY_PREFILTER_ONLY",
@@ -106,6 +131,9 @@ def normalize_age_cohorts(events: list[dict[str, Any]]) -> list[dict[str, Any]]:
             "peer_count": len(peer_events),
             "scope": scope,
             "age_comparable": scope != "GLOBAL_FALLBACK_LOW_N",
+            "unknown_metric_fields": unknown_fields,
+            "unknown_is_zero": False,
+            "unknown_is_negative_evidence": False,
             "may_train_adaptive_rules": False,
             "may_directly_create_user_alert": False,
         }
@@ -125,6 +153,7 @@ def main() -> int:
     result["events"] = normalize_age_cohorts(payload["events"])
     result["cohort_contract"] = PRE_ORIGIN_CONTRACT
     result["cohort_role"] = "DISCOVERY_PREFILTER_ONLY"
+    result["unknown_metrics_excluded_from_percentiles"] = True
     result["pre_origin_population_warning"] = "New-pool events can include existing tokens. Origin adjudication is required before learning or alert admission."
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_bytes(canonical_bytes(result))
