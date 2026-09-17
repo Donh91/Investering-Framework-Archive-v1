@@ -1,0 +1,102 @@
+{
+  "contract": "CODEX_RESEARCH_CANDIDATE_v1",
+  "candidate_id": "codex-research-alpha-adversarial-runtime-wiring-v1",
+  "submitted_at_utc": "2026-09-17T19:40:00Z",
+  "status": "SUBMITTED",
+  "origin": {
+    "type": "AUDIT",
+    "thread_label": "Alpha Lab adversarial maintenance / PONSCUPINE stale-action incident",
+    "source_paths": [
+      ".agents/skills/meme-alpha-adversarial-maintainer/SKILL.md",
+      "07_PROMPTS_AND_AGENTS/memes_alpha/2026-09-17__adversarial-maintenance-two-agent-design-v1__canonical-addendum.md",
+      "research/api_agent/meme_alpha/MEME_ALPHA_RUNTIME_POLICY_v1.json",
+      "research/api_agent/meme_alpha/LIVE_OBSERVATION_INTEGRITY_CONTRACT_v1.json",
+      "research/codex/intake/2026/09/codex-research-memes-v3-autonomous-alpha-workstream-v1.json"
+    ]
+  },
+  "title": "Wire Alpha Lab adversarial maintenance into existing autonomous runtime",
+  "objective": "Implement the smallest bounded runtime wiring that makes the owner-approved Meme Alpha adversarial maintainer an event-driven and heartbeat-eligible task type inside the EXISTING Meme Alpha Supervisor/runtime, routes qualified findings to existing adjudication/remediation owners, and adversarially retests fixes. Reproduce the 2026-09-17 PONSCUPINE stale-action incident as the first regression: historical market state must never reach a present-tense actionable label without a same-run exact-CA live observation gate. Reuse the existing Memes v3 autonomous workstream and Codex/remediation machinery; create no parallel scheduler, scanner, scorer, ledger, forecast engine, trading authority, API budget or merge authority.",
+  "finding_key": "MEME_ALPHA_ADVERSARIAL_MAINTENANCE_NOT_RUNTIME_WIRED",
+  "primary_target": "research/api_agent/meme_alpha/MEME_ALPHA_RUNTIME_POLICY_v1.json",
+  "allowed_change_scope": [
+    "Donh91/Investering-Framework-Archive-v1:scripts/research/memes_alpha/**",
+    "Donh91/Investering-Framework-Archive-v1:tests/research/memes_alpha/**",
+    "Donh91/Investering-Framework-Archive-v1:research/memes_alpha/**",
+    "Donh91/Investering-Framework-Archive-v1:research/api_agent/meme_alpha/** only for implementation/readback fields consistent with already owner-approved semantics",
+    "Donh91/Investering-Framework-Archive-v1:.github/workflows/memes-alpha-research*.yml",
+    "Donh91/secrets:collectors/memes_alpha/**",
+    "Donh91/secrets:tests/memes_alpha/**",
+    "Donh91/secrets:schemas/memes_alpha/**",
+    "Donh91/secrets:health/MEMES_ALPHA/**",
+    "Donh91/secrets:private_research/memes_alpha/**",
+    "Donh91/secrets:.github/workflows/memes-alpha-private*.yml"
+  ],
+  "evidence": [
+    {
+      "kind": "REPO_PATH",
+      "ref": ".agents/skills/meme-alpha-adversarial-maintainer/SKILL.md",
+      "summary": "Owner-approved adversarial role exists but does not itself prove runtime selection or routing."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "07_PROMPTS_AND_AGENTS/memes_alpha/2026-09-17__adversarial-maintenance-two-agent-design-v1__canonical-addendum.md",
+      "summary": "Canonical design requires attack -> reproduce -> classify -> route -> verify/retest without a parallel engine."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "research/api_agent/meme_alpha/MEME_ALPHA_RUNTIME_POLICY_v1.json",
+      "summary": "Existing runtime already owns 4-hour heartbeat, event-driven execution, bounded one-task runs, NOOP behavior, budget and model routing."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "research/codex/intake/2026/09/codex-research-memes-v3-autonomous-alpha-workstream-v1.json",
+      "summary": "Existing CODEX_READY autonomous Alpha workstream is the dependency/host and must be reused rather than duplicated."
+    },
+    {
+      "kind": "OTHER",
+      "ref": "GitHub issue #1087 P0 stale-action incident addendum",
+      "summary": "PONSCUPINE current action inherited an old approximately 0.9M market-cap observation; exact-CA live refresh later showed approximately 20K and materially changed the action."
+    }
+  ],
+  "reproduction": "From fresh main, prove that the adversarial skill and canonical addendum exist, then trace the actual Meme Alpha runtime/supervisor task-selection path. The defect is reproduced if no production runtime path selects an ADVERSARIAL_MAINTENANCE/ADVERSARIAL_REPLAY task and/or if a fixture containing a historical PONSCUPINE market snapshot can still render a present-tense actionable label without a same-run exact-CA/chain/canonical-pool live observation PASS. First check whether the existing Memes v3 autonomous workstream has already implemented equivalent wiring; if yes, link/reuse it and NOOP duplicate code. If its host runtime is not yet landed, preserve this candidate as a dependency-aware follow-up and do not build a parallel runtime.",
+  "acceptance_tests": {
+    "positive": [
+      "Existing Meme Alpha Supervisor/runtime can select exactly one bounded ADVERSARIAL_MAINTENANCE or ADVERSARIAL_REPLAY task on an eligible event without a new scheduler.",
+      "A reproduced P0/P1 finding routes through existing adjudication/remediation ownership and records a bounded repair/retest lifecycle without giving the adversarial role self-adjudication or merge authority.",
+      "PONSCUPINE regression with a stale historical market snapshot forces a new same-run exact-CA live observation before any present-tense action can render.",
+      "After a bounded fix fixture, the original adversarial reproduction and one neighboring variant both pass before closure.",
+      "P2/P3 qualified findings can remain SHADOW without generating code work or user alert spam.",
+      "No eligible adversarial work produces a deterministic NOOP with zero model/API calls, preserving existing runtime budget behavior.",
+      "Implementation reuses the existing Memes v3 autonomous workstream, Prospective Evidence, research red-team and Codex/remediation owners rather than duplicating them."
+    ],
+    "negative": [
+      "A stale prior price/MC/FDV/liquidity snapshot must never satisfy a present-tense action request.",
+      "Missing exact CA, chain, canonical pool or required liquidity must fail closed for current actionable output.",
+      "FDV must not silently substitute for missing MC and UNKNOWN must not become zero or a carried-forward value.",
+      "A fresh HTTP/API fetch with stale provider payload timestamp must not satisfy ACTION_LIVE.",
+      "A multi-token current ranking must not render an actionable label for any candidate lacking its own same-run live observation PASS.",
+      "The adversarial role must not create a parallel scheduler, scanner, scorer, evidence ledger, forecast engine or repair authority.",
+      "The adversarial role must not self-adjudicate, self-merge, emit trades, change portfolio logic, market gates, model weights, API budget or canonical authority.",
+      "If the existing autonomous workstream host is not implemented yet, this task must not bypass it by creating a second runtime."
+    ]
+  },
+  "authority_boundary": "CODE_REMEDIATION_ONLY",
+  "requires_framework_owner_authority": false,
+  "forbidden_changes": [
+    "market gates",
+    "model weights",
+    "canonical authority",
+    "portfolio logic",
+    "API budget",
+    "new policy semantics",
+    "automatic trade execution",
+    "automatic buy or sell signals",
+    "automatic merge",
+    "parallel Alpha runtime",
+    "parallel evidence ledger",
+    "parallel forecast engine"
+  ],
+  "linked_health_signature": null,
+  "requested_priority": "EXPEDITED",
+  "post_fix_gate": "PONSCUPINE_STALE_ACTION_REPLAY_FAILS_CLOSED_PLUS_NEIGHBOR_VARIANT_PASS_PLUS_AUTONOMOUS_ROUTE_AND_RETEST_PASS_PLUS_ZERO_PARALLEL_RUNTIME"
+}
