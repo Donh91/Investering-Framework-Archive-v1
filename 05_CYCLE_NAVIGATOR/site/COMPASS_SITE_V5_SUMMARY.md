@@ -1,0 +1,1 @@
+Compass v5 makes the official daily Compass the public NOW authority while preserving the weekly Cycle Navigator as the frozen cycle/accountability product. It exposes only decision-useful public-safe fields and fails closed.
