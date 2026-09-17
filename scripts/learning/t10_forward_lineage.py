@@ -15,6 +15,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
 import re
 from pathlib import Path
 from typing import Any
@@ -111,7 +112,7 @@ def immutable_reference(root: Path, relative: str | None) -> tuple[dict[str, Any
     path = root / relative
     if not path.is_file() or path.is_symlink():
         return None, "file_missing"
-    return {"path": relative, "sha256": sha256_file(path), "immutable": True}, None
+    return {"path": relative, "sha256": sha256_file(path), "immutable": False}, None
 
 
 def read_text(root: Path, relative: str) -> str:
@@ -164,11 +165,51 @@ def receipt_links(
     artifacts = receipt.get("artifact_paths")
     if not isinstance(artifacts, dict):
         return False, ["receipt_artifact_paths_missing"]
+    verification = receipt.get("artifact_verification")
+    if not isinstance(verification, list):
+        return False, ["receipt_artifact_verification_missing"]
     missing: list[str] = []
     for label, path in expected.items():
         if path not in artifacts.values():
             missing.append(f"receipt_to_{label}")
+        bindings = [row for row in verification
+                    if isinstance(row, dict) and row.get("path") == path]
+        if len(bindings) != 1 or not re.fullmatch(r"[0-9a-f]{40}", str(bindings[0].get("blob_sha", ""))):
+            missing.append(f"{label}:frozen_blob_binding_missing")
+            continue
+        content = (root / path).read_bytes()
+        actual_blob = hashlib.sha1(b"blob " + str(len(content)).encode() + b"\0" + content).hexdigest()
+        if actual_blob != bindings[0]["blob_sha"]:
+            missing.append(f"{label}:frozen_blob_mismatch")
     return not missing, missing
+
+
+def row_score_reference(root: Path, score_path: str, forecast_id: str) -> dict[str, Any] | None:
+    """Require explicit row identity; a weekly aggregate is not a row score.
+
+    Legacy prose/category summaries need owner-approved mappings and remain
+    unresolved here. This observer must not invent those mappings or rescore.
+    """
+    if not score_path.endswith(".json"):
+        return None
+    try:
+        score = read_json(root, score_path)
+    except (OSError, ValueError):
+        return None
+    rows = score.get("rows")
+    if not isinstance(rows, list):
+        return None
+    matches = [(i, row) for i, row in enumerate(rows)
+               if isinstance(row, dict) and row.get("forecast_id") == forecast_id]
+    if len(matches) != 1:
+        return None
+    index, row = matches[0]
+    value = row.get("score")
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return None
+    if not math.isfinite(value):
+        return None
+    return {"path": score_path, "json_pointer": f"/rows/{index}", "forecast_id": forecast_id}
 
 
 def actual_links_to_score(
@@ -293,6 +334,10 @@ def routed_week(
         )
         link_checks["receipt_links_owner_artifacts"] = receipt_ok
         missing.extend(receipt_missing)
+        if receipt_ok:
+            for edge in ("forecast", "source_master_monday", "cn_handoff"):
+                references[edge]["immutable"] = True
+                references[edge]["verification"] = "RATIFICATION_RECEIPT_BLOB_MATCH"
 
         forecast_ok, forecast_method = score_links_to_forecast(
             root,
@@ -315,18 +360,22 @@ def routed_week(
         if not actual_ok:
             missing.append("score_to_verified_actual")
 
-    status = "COMPLETE_SCORED_LINEAGE" if not missing else "INCOMPLETE_SCORING_BLOCKED"
-    rows = [
-        {
+    rows = []
+    for forecast_id in forecast_ids:
+        score_row = row_score_reference(root, str(route["score"]), forecast_id) if references.get("score") else None
+        row_missing = list(missing)
+        if score_row is None:
+            row_missing.append("score_row:explicit_forecast_id_binding_missing_or_invalid")
+        rows.append({
             "forecast_id": forecast_id,
             "week": week,
-            "status": status,
-            "scoring_status": "SCORED" if not missing else "BLOCKED",
-            "missing_edges": missing,
+            "status": "COMPLETE_SCORED_LINEAGE" if not row_missing else "INCOMPLETE_SCORING_BLOCKED",
+            "scoring_status": "SCORED" if not row_missing else "BLOCKED",
+            "missing_edges": row_missing,
             "references": references,
-        }
-        for forecast_id in forecast_ids
-    ]
+            "score_row": score_row,
+        })
+    status = "COMPLETE_SCORED_LINEAGE" if rows and all(row["scoring_status"] == "SCORED" for row in rows) else "INCOMPLETE_SCORING_BLOCKED"
     return {
         "week": week,
         "status": status,
@@ -375,13 +424,17 @@ def build_report(root: Path, owner_routes: dict[str, dict[str, Any]] | None = No
             }
         else:
             item = routed_week(root, week, relative, forecast_ids, routes[week])
+        if not forecast_ids:
+            item["status"] = "INCOMPLETE_SCORING_BLOCKED"
+            item["missing_edges"] = list(item["missing_edges"]) + ["forecast_ids:empty_or_unrecognized"]
         weeks.append(item)
         all_rows.extend(item["rows"])
 
     forward = [row for row in all_rows if row["week"] != HISTORICAL_GAP_WEEK]
     complete_forward = [row for row in forward if row["status"] == "COMPLETE_SCORED_LINEAGE"]
     w28_rows = [row for row in all_rows if row["week"] == HISTORICAL_GAP_WEEK]
-    gate_pass = bool(forward) and len(complete_forward) == len(forward) and bool(w28_rows) and all(
+    empty_ledgers = sum(not item["forecast_ids"] for item in weeks)
+    gate_pass = not empty_ledgers and bool(forward) and len(complete_forward) == len(forward) and bool(w28_rows) and all(
         row["status"] == "UNSCORED_LINEAGE_GAP" for row in w28_rows
     )
     return {
@@ -390,6 +443,7 @@ def build_report(root: Path, owner_routes: dict[str, dict[str, Any]] | None = No
         "discovery": {
             "ledger_glob": f"03_WEEKLY_OPERATIONS/forecast_ledger/{LEDGER_GLOB}",
             "official_ledgers": len(ledgers),
+            "empty_or_unrecognized_ledgers": empty_ledgers,
             "future_unrouted_ledgers_fail_closed": True,
             "mutable_references_accepted": False,
         },

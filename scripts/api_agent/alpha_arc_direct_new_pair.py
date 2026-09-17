@@ -4,6 +4,7 @@ import argparse
 import json
 import os
 import time
+import urllib.error
 import urllib.parse
 import urllib.request
 from datetime import datetime, timezone
@@ -97,14 +98,33 @@ def rpc_label(rpc_url: str) -> str:
     return parsed.hostname or "configured_arc_rpc"
 
 
-def rpc_call(rpc_url: str, method: str, params: list[Any], *, timeout: int = 20) -> Any:
+def rpc_call(rpc_url: str, method: str, params: list[Any], *, timeout: int = 20, attempts: int = 4) -> Any:
     body = json.dumps({"jsonrpc": "2.0", "id": 1, "method": method, "params": params}).encode()
-    req = urllib.request.Request(rpc_url, data=body, headers={"Content-Type": "application/json", "User-Agent": "Investering-Framework-Arc-Shadow/1.0"})
-    with urllib.request.urlopen(req, timeout=timeout) as response:
-        payload = json.loads(response.read())
-    if payload.get("error"):
-        raise RuntimeError(f"RPC_ERROR:{method}:{payload['error']}")
-    return payload.get("result")
+    last_error: Exception | None = None
+    for attempt in range(attempts):
+        req = urllib.request.Request(rpc_url, data=body, headers={"Content-Type": "application/json", "User-Agent": "Investering-Framework-Arc-Shadow/1.1"})
+        try:
+            with urllib.request.urlopen(req, timeout=timeout) as response:
+                payload = json.loads(response.read())
+            if payload.get("error"):
+                raise RuntimeError(f"RPC_ERROR:{method}:{payload['error']}")
+            return payload.get("result")
+        except urllib.error.HTTPError as exc:
+            last_error = exc
+            if exc.code not in {429, 502, 503, 504} or attempt == attempts - 1:
+                raise
+            retry_after = exc.headers.get("Retry-After") if exc.headers else None
+            try:
+                delay = max(float(retry_after), 0.5) if retry_after else min(0.75 * (2**attempt), 4.0)
+            except ValueError:
+                delay = min(0.75 * (2**attempt), 4.0)
+            time.sleep(delay)
+        except (urllib.error.URLError, TimeoutError, OSError) as exc:
+            last_error = exc
+            if attempt == attempts - 1:
+                raise
+            time.sleep(min(0.75 * (2**attempt), 4.0))
+    raise RuntimeError(f"RPC_RETRY_EXHAUSTED:{method}:{last_error}")
 
 
 def parse_log(venue: str, log: dict[str, Any], block_timestamp: int | None, observed_at: int, rpc_source: str) -> dict[str, Any] | None:
@@ -196,19 +216,14 @@ def scan_range(rpc_url: str, from_block: int, to_block: int, *, timeout: int = 2
             raise RuntimeError(f"RPC_LOG_RESULT_NOT_LIST:{venue}")
         raw_logs.extend((venue, row) for row in rows if isinstance(row, dict))
 
-    timestamps: dict[int, int | None] = {}
-    for _, row in raw_logs:
-        block_number = hex_int(row.get("blockNumber"))
-        if block_number is None or block_number in timestamps:
-            continue
-        block = rpc_call(rpc_url, "eth_getBlockByNumber", [hex(block_number), False], timeout=timeout)
-        timestamps[block_number] = hex_int(block.get("timestamp")) if isinstance(block, dict) else None
-
+    # Hot-path discovery is keyed by immutable block/hash/tx/log identity plus
+    # observed_at. Per-event eth_getBlockByNumber calls add no admission value,
+    # amplify transient RPC failures and can make a 15-minute scan miss its SLO.
+    # Canonical block timestamps may be enriched later, outside discovery.
     output: list[dict[str, Any]] = []
     seen: set[tuple[Any, ...]] = set()
     for venue, row in raw_logs:
-        block_number = hex_int(row.get("blockNumber"))
-        event = parse_log(venue, row, timestamps.get(block_number) if block_number is not None else None, observed_at, source_label)
+        event = parse_log(venue, row, None, observed_at, source_label)
         if not event:
             continue
         key = (event["venue"], event["transaction_hash"], event["log_index"])

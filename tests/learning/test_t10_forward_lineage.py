@@ -24,7 +24,7 @@ class T10ForwardLineageTests(unittest.TestCase):
         receipt = f"owners/{week}/receipt.json"
         handoff = f"owners/{week}/handoff.md"
         actual = f"actuals/{week}.json"
-        score = f"scores/{week}.md"
+        score = f"scores/{week}.json"
         source_id = f"ACTUAL-{week}"
         self.write(root, ledger, f"source_master_monday: {source}\n- MM_2026_W29_RANGE_A\n")
         self.write(root, source, "ratified source")
@@ -32,10 +32,14 @@ class T10ForwardLineageTests(unittest.TestCase):
         self.write(
             root,
             receipt,
-            {"artifact_paths": {"forecast": ledger, "source": source, "handoff": handoff}},
+            {"artifact_paths": {"forecast": ledger, "source": source, "handoff": handoff},
+             "artifact_verification": [
+                 {"path": p, "blob_sha": hashlib.sha1(b"blob " + str(len((root / p).read_bytes())).encode() + b"\0" + (root / p).read_bytes()).hexdigest()}
+                 for p in (ledger, source, handoff)]},
         )
         self.write(root, actual, {"archive_id": source_id})
-        self.write(root, score, f"source_forecast: {ledger}\nsource_actuals: {source_id}\n")
+        self.write(root, score, {"source_forecast": ledger, "source_actuals": source_id,
+                               "rows": [{"forecast_id": "MM_2026_W29_RANGE_A", "score": 0}]})
         return {
             week: {
                 "source_master_monday": source,
@@ -55,7 +59,62 @@ class T10ForwardLineageTests(unittest.TestCase):
             row = report["rows"][0]
             self.assertEqual(row["status"], "COMPLETE_SCORED_LINEAGE")
             self.assertEqual(set(row["references"]), {"forecast", "source_master_monday", "ratification_receipt", "cn_handoff", "verified_actual", "score"})
-            self.assertTrue(all(ref["immutable"] for ref in row["references"].values()))
+            self.assertTrue(all(row["references"][edge]["immutable"] for edge in ("forecast", "source_master_monday", "cn_handoff")))
+            self.assertFalse(row["references"]["score"]["immutable"])
+            self.assertEqual(row["score_row"]["json_pointer"], "/rows/0")
+
+    def test_modified_frozen_inputs_are_blocked(self):
+        for edge in ("forecast", "source_master_monday", "cn_handoff"):
+            with self.subTest(edge=edge), tempfile.TemporaryDirectory() as td:
+                root = Path(td)
+                routes = self.complete_fixture(root)
+                path = next(root.glob("03_WEEKLY_OPERATIONS/forecast_ledger/*")) if edge == "forecast" else root / routes["2026-W29"][edge]
+                path.write_text(path.read_text() + "\nretroactive rewrite")
+                row = build_report(root, routes)["rows"][0]
+                self.assertEqual(row["scoring_status"], "BLOCKED")
+                self.assertIn(f"{edge}:frozen_blob_mismatch", row["missing_edges"])
+                self.assertFalse(row["references"][edge]["immutable"])
+
+    def test_missing_or_duplicate_frozen_binding_blocks(self):
+        for duplicate in (False, True):
+            with self.subTest(duplicate=duplicate), tempfile.TemporaryDirectory() as td:
+                root = Path(td)
+                routes = self.complete_fixture(root)
+                path = root / routes["2026-W29"]["ratification_receipt"]
+                receipt = json.loads(path.read_text())
+                receipt["artifact_verification"] = receipt["artifact_verification"] * 2 if duplicate else []
+                self.write(root, str(path.relative_to(root)), receipt)
+                self.assertEqual(build_report(root, routes)["rows"][0]["scoring_status"], "BLOCKED")
+
+    def test_week_aggregate_or_other_row_never_scores_forecast(self):
+        for rows in ([], [{"forecast_id": "OTHER", "score": 100}],
+                     [{"forecast_id": "MM_2026_W29_RANGE_A", "score": None}],
+                     [{"forecast_id": "MM_2026_W29_RANGE_A", "score": True}],
+                     [{"forecast_id": "MM_2026_W29_RANGE_A", "score": 50}] * 2):
+            with self.subTest(rows=rows), tempfile.TemporaryDirectory() as td:
+                root = Path(td)
+                routes = self.complete_fixture(root)
+                path = root / routes["2026-W29"]["score"]
+                score = json.loads(path.read_text())
+                score.update(rows=rows, weekly_score=100)
+                self.write(root, str(path.relative_to(root)), score)
+                row = build_report(root, routes)["rows"][0]
+                self.assertEqual(row["scoring_status"], "BLOCKED")
+                self.assertIsNone(row["score_row"])
+
+    def test_empty_official_ledger_fails_gate_even_without_rows(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            routes = self.complete_fixture(root)
+            w28 = "03_WEEKLY_OPERATIONS/forecast_ledger/2026-07-06__forecast-ledger-2026-w28__official.md"
+            self.write(root, w28, "MM_2026_W28_RANGE_A")
+            self.assertEqual(build_report(root, routes)["post_fix_gate"]["status"], "PASS")
+            empty = "03_WEEKLY_OPERATIONS/forecast_ledger/2026-08-03__forecast-ledger-2026-w32__official.md"
+            for content in ("", "FUTURE_UNRECOGNIZED_ID"):
+                self.write(root, empty, content)
+                report = build_report(root, routes)
+                self.assertEqual(report["discovery"]["empty_or_unrecognized_ledgers"], 1)
+                self.assertEqual(report["post_fix_gate"]["status"], "FAIL")
 
     def test_missing_edge_is_exact_and_blocks_scoring(self):
         with tempfile.TemporaryDirectory() as td:
