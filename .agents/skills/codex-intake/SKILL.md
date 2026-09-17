@@ -60,12 +60,12 @@ A research thread may submit evidence, but it may not self-declare `CODEX_READY`
 
 ### Owner-aware, economical triage
 
-- Reuse the existing owner/branch for the same defect. Attach new reproduction evidence to its PR or current handoff rather than submitting a competing candidate. Preserve the no-self-merge rule after material repair.
+- Reuse the existing owner/branch for the same defect. Return a read-only deduplication result when the new evidence adds no governed value. When durable new evidence does warrant persistence, submit it only through one schema-bound candidate on an isolated branch and link that candidate to the existing signature/owner; do not write directly to its PR branch, handoff or other ad hoc surface. Preserve the no-self-merge rule after material repair.
 - Group investigation only when exact logs and reproduction establish a shared failing component. One bounded repair can serve multiple findings, but each signature retains its own receipt and post-fix gate. Similar workflow names alone do not justify merging independent defects or scopes.
 - A correctly enforced budget, authority or evidence guard is not a code defect. Record the observed blocker without raising limits, weakening guards or changing failure semantics merely to make CI green. A distinct observability defect needs its own reproduction.
 - Check the actual test runner, collected test count and exit status. Zero collected tests, skipped execution or unrelated green checks do not verify a fix.
 - Compare suspected stale findings against fresh runs and owner contracts. Already-fixed or superseded findings need reconciliation evidence, not artificial code changes or manual deletion from generated queue files. A partial merge does not resolve a whole owner.
-- Use deterministic inspection first. Escalate only a named unresolved causal or architectural question to frontier-model review, with exact evidence and a bounded expected decision. Reuse evidence within its immutable binding; refresh changed heads, task contracts, runs and receipts before action. Do not repeat an unchanged audit or add another agent/controller merely to increase activity.
+- Use deterministic inspection first. If a named causal or architectural question remains unresolved, prepare an advisory request with exact evidence and a bounded expected decision. Leave execution pending unless an existing authorized owner or the user explicitly authorizes the model route and its verified budget gate. Reuse evidence within its immutable binding; refresh changed heads, task contracts, runs and receipts before action. Do not repeat an unchanged audit or add another agent/controller merely to increase activity.
 
 These are intake decisions, not new lifecycle states, model-budget authority or permission to execute a fix inside this skill. Use existing schema fields and the current handoff for evidence; do not create a parallel queue.
 
