@@ -15,7 +15,7 @@ if(compass.data_status==='OK'){
   if(segments!=='BTC,ETH,LARGE_CAPS,MID_CAPS,SMALL_CAPS,MICROCAPS') throw Error('wrong capitalization ladder');
 }
 if(!index.includes('./compass-product-v5.js')) throw Error('Compass renderer not activated');
-for(const token of ['MARKET COMPASS','NEXT 12 HOURS','NEXT 1–3 DAYS','NEXT 5–7 DAYS','ALTCOIN ACTION · OFFICIAL COMPASS','Bitcoin → microcaps']) if(!renderer.includes(token)) throw Error(`renderer missing ${token}`);
+for(const token of ['MARKET COMPASS','NEXT 12 HOURS','NEXT 1–3 DAYS','NEXT 5–7 DAYS','ALTCOIN ACTION · OFFICIAL COMPASS','Bitcoin → microcaps','CURRENT POSITION','NEXT IF CONFIRMED','NEXT WINDOW','Time horizon: now → 5–7 days.','ROTATION POSITION','EXPECTED WINDOW']) if(!renderer.includes(token)) throw Error(`renderer missing ${token}`);
 if(/HANDLEKOMPAS|MASTER MONDAY/.test(renderer)) throw Error('internal product language leaked');
 if(/source_bindings|evidence_snapshot/.test(JSON.stringify(compass))) throw Error('private Compass evidence leaked');
-console.log(JSON.stringify({status:'PASS',compass_id:compass.compass_id,data_status:compass.data_status,altcoin_action:compass.horizons?.CYCLE_ALTCOINS_3_8W?.action_posture||null}));
+console.log(JSON.stringify({status:'PASS',compass_id:compass.compass_id,data_status:compass.data_status,altcoin_action:compass.horizons?.CYCLE_ALTCOINS_3_8W?.action_posture||null,rotation_position_ui:true}));
