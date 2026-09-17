@@ -1,18 +1,54 @@
 import { mkdir, readFile, rm, writeFile, copyFile } from "node:fs/promises";
-import { dirname, resolve } from "node:path";
+import { createHash } from "node:crypto";
+import { dirname, resolve, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 const siteDir=dirname(fileURLToPath(import.meta.url)); const repoRoot=resolve(siteDir,"../.."); const outputDir=resolve(siteDir,"dist"); const dataDir=resolve(outputDir,"data");
 const POINTER_PATH=resolve(repoRoot,"05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json");
-const PUBLIC_SITE_FILES=["index.html","styles.css","scoreboard.css","motion.css","journey.css","vibe.css","app.js","history-scoreboard.js","history-scoreboard.json","motion.js","journey.js","live-context.js","favicon.svg","social-card.svg"];
+const COMPASS_POINTER_PATH=resolve(repoRoot,"04_MARKET_LEARNING/handlekompas/official/PUBLIC_LATEST_COMPASS.json");
+const PUBLIC_SITE_FILES=["index.html","styles.css","scoreboard.css","motion.css","journey.css","vibe.css","app.js","compass.js","history-scoreboard.js","history-scoreboard.json","motion.js","journey.js","live-context.js","favicon.svg","social-card.svg"];
 const pick=(obj,keys)=>Object.fromEntries(keys.filter(k=>Object.prototype.hasOwnProperty.call(obj||{},k)).map(k=>[k,obj[k]]));
 const sanitizePointer=p=>pick(p,["iso_year","iso_week","completed_source_week","issue_number","publication_status","status"]);
 function sanitizePackage(pkg){return {...pick(pkg,["issue_number","previous_issue_number","generated_unix","status","market_state","base_case_this_week","base_case_2_3_weeks","base_case_4_8_weeks","compass_4_8_weeks","rotation_ladder","altseason_countdown","altseason_mania_window","uncertainties","publication_status"]),evaluation:pkg?.evaluation?pick(pkg.evaluation,["structural_score","score_status","strengths","misses"]):{},forecast_freeze:pkg?.forecast_freeze?pick(pkg.forecast_freeze,["breadth_condition","btc_range_low","btc_range_high","eth_range_low","eth_range_high","structural_calls","forecast_horizon_days","intraday_map"]):{}}}
 async function readJson(path){return JSON.parse(await readFile(path,"utf8"))}
+async function buildCompassSnapshot(){
+  try{
+    const pointer=await readJson(COMPASS_POINTER_PATH);
+    if(pointer?.contract!=="PUBLIC_COMPASS_LATEST_POINTER_v1") throw new Error("Unexpected public Compass pointer contract");
+    const rel=pointer.public_projection_path;
+    if(typeof rel!=="string"||!rel.startsWith("04_MARKET_LEARNING/handlekompas/official/public/")) throw new Error("Public Compass pointer escaped public projection root");
+    const projectionPath=resolve(repoRoot,rel);
+    if(relative(repoRoot,projectionPath).startsWith("..")) throw new Error("Public Compass path escaped repository");
+    const projectionBytes=await readFile(projectionPath);
+    const projectionContentSha=createHash("sha256").update(projectionBytes).digest("hex");
+    if(projectionContentSha!==pointer?.public_projection_content_sha256) throw new Error("Public Compass pointer/projection content hash mismatch");
+    const projection=JSON.parse(projectionBytes.toString("utf8"));
+    if(projection?.contract!=="PUBLIC_COMPASS_PROJECTION_v1") throw new Error("Unexpected public Compass projection contract");
+    if(projection?.compass_id!==pointer?.compass_id) throw new Error("Public Compass pointer/projection id mismatch");
+    return projection;
+  }catch(error){
+    return {
+      contract:"PUBLIC_COMPASS_PROJECTION_v1",
+      compass_id:null,
+      issued_at_utc:null,
+      data_status:"NOT_PUBLISHED",
+      market_now:{directional_state:"UNAVAILABLE",regime:"NOT_PUBLISHED",summary:"The official daily Compass has not been published yet."},
+      horizons:{},
+      capitalization_ladder:[],
+      action_now:"UNAVAILABLE",
+      next_meaningful_change_eta:null,
+      conclusion:"Official daily Compass unavailable. No short-horizon signal is synthesized by the site.",
+      authority:{official_navigation_output:true,portfolio_execution:false,source_override:false},
+      failure_state:String(error?.message||error),
+    };
+  }
+}
 await rm(outputDir,{recursive:true,force:true}); await mkdir(dataDir,{recursive:true});
 const pointer=await readJson(POINTER_PATH); if(!pointer.week_dir) throw new Error("Canonical pointer has no week_dir");
 const packagePath=resolve(repoRoot,pointer.week_dir,"CYCLE_NAVIGATOR_MACHINE_PACKAGE.json"); const pkg=await readJson(packagePath);
 if(Number(pointer.issue_number)!==Number(pkg.issue_number)) throw new Error("Pointer/package issue mismatch");
 const snapshot={schema:"CN_PUBLIC_SNAPSHOT_V2",generated_at:new Date().toISOString(),authority:false,pointer:sanitizePointer(pointer),package:sanitizePackage(pkg)};
+const compass=await buildCompassSnapshot();
 await writeFile(resolve(dataDir,"latest.json"),JSON.stringify(snapshot,null,2)+"\n");
+await writeFile(resolve(dataDir,"compass.json"),JSON.stringify(compass,null,2)+"\n");
 for(const file of PUBLIC_SITE_FILES){await copyFile(resolve(siteDir,file),resolve(outputDir,file));}
-console.log(`Cycle Navigator public v2 built: issue #${pkg.issue_number}`);
+console.log(`Cycle Navigator public v2 built: issue #${pkg.issue_number}; Compass ${compass.compass_id||compass.data_status}`);

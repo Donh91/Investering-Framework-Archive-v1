@@ -1,19 +1,45 @@
 {
-  "contract": "CN_PUBLIC_HISTORY_SCOREBOARD_V1",
+  "contract": "CN_PUBLIC_HISTORY_SCOREBOARD_V2",
   "authority": false,
+  "coverage": {
+    "completed_issues": 25,
+    "rows_with_published_or_canonical_score_evidence": 25,
+    "latest_open_issue": 26,
+    "note": "Component availability varies by scoring era. A recovered row does not imply that every score family was published."
+  },
   "policy": {
     "historical_scores_locked": true,
     "retroactive_rescoring": false,
     "cross_era_aggregate": false,
-    "missing_evidence": "UNAVAILABLE"
+    "missing_component": "UNAVAILABLE",
+    "open_issue_excluded": true
   },
   "records": [
-    {"cn":15,"evaluated_in":16,"era":"BRIDGE_PUBLISHED_SCORE","overall":null,"weekly_range":85,"intraday":80,"structural":"2/2","note":"CN15 bridge evaluation under new model"},
-    {"cn":16,"evaluated_in":17,"era":"FROZEN_PROSPECTIVE","overall":null,"weekly_range":82,"intraday":60,"structural":"2/2","note":"First fully prospective score under frozen model"},
-    {"cn":17,"evaluated_in":18,"era":"FROZEN_PROSPECTIVE","overall":null,"weekly_range":85,"intraday":74,"structural":"2/2","leadership":"MISS"},
-    {"cn":18,"evaluated_in":19,"era":"FROZEN_PROSPECTIVE","overall":90,"weekly_range":89,"intraday":82,"structural":100},
-    {"cn":19,"evaluated_in":20,"era":"FROZEN_PROSPECTIVE","overall":87,"weekly_range":88,"intraday":72,"structural":100},
-    {"cn":20,"evaluated_in":21,"era":"FROZEN_PROSPECTIVE","overall":94,"weekly_range":92,"intraday":90,"structural":100}
+    {"cn":1,"evaluated_in":2,"era":"PUBLISHED_MANUAL_AUDIT","overall":88,"range_display":"BTC 92","intraday_display":"BTC 89","structure_display":"Cycle 95 · Rotation 78","provenance":"ARCHIVED_PUBLISHED_X_POST"},
+    {"cn":2,"evaluated_in":3,"era":"PUBLISHED_MANUAL_AUDIT","overall":88,"range_display":"BTC 91","intraday_display":"BTC 87","structure_display":"Cycle 88 · Rotation 82","provenance":"ARCHIVED_PUBLISHED_X_POST_CHUNK"},
+    {"cn":3,"evaluated_in":4,"era":"PUBLISHED_MANUAL_AUDIT","overall":83,"range_display":"BTC 83","intraday_display":"BTC 80","structure_display":"Cycle 90 · Rotation 78","provenance":"ARCHIVED_PUBLISHED_X_POST"},
+    {"cn":4,"evaluated_in":5,"era":"PUBLISHED_MANUAL_AUDIT","overall":86,"range_display":"BTC 88","intraday_display":"BTC 82","structure_display":"Cycle 92 · Rotation 95","provenance":"ARCHIVED_PUBLISHED_X_POST"},
+    {"cn":5,"evaluated_in":6,"era":"PUBLISHED_MANUAL_AUDIT","overall":85,"range_display":"BTC 84","intraday_display":"BTC 78","structure_display":"Cycle 93 · Rotation 97","provenance":"RECOVERED_ORIGINAL_CN6_SCORECARD"},
+    {"cn":6,"evaluated_in":7,"era":"PUBLISHED_MANUAL_AUDIT","overall":92,"range_display":"BTC 91","intraday_display":"BTC 87","structure_display":"Cycle 94 · Rotation 96","provenance":"ARCHIVED_CN7_SCORECARD"},
+    {"cn":7,"evaluated_in":8,"era":"PUBLISHED_MANUAL_AUDIT","overall":91,"range_display":"BTC 89 · ETH 81","intraday_display":"BTC 84","structure_display":"Cycle 96 · Rotation 98","provenance":"ARCHIVED_PUBLISHED_X_POST"},
+    {"cn":8,"evaluated_in":9,"era":"PUBLISHED_MANUAL_AUDIT","overall":90,"range_display":"BTC 87 · ETH 84","intraday_display":"BTC 82","structure_display":"Cycle 97 · Rotation 95","provenance":"ARCHIVED_PUBLISHED_X_POST"},
+    {"cn":9,"evaluated_in":10,"era":"PUBLISHED_MANUAL_AUDIT","overall":72,"range_display":"BTC 74 · ETH 63","intraday_display":"BTC 70","structure_display":"Cycle 84 · Rotation 55","provenance":"RECOVERED_ORIGINAL_CN10_SCORECARD"},
+    {"cn":10,"evaluated_in":11,"era":"PUBLISHED_MANUAL_AUDIT","overall":70,"range_display":"BTC 62 · ETH 65","intraday_display":"BTC 58 · ETH 61","structure_display":"Cycle 89 · Rotation 95 · ETH/BTC 95","provenance":"ARCHIVED_CN11_SCORECARD"},
+    {"cn":11,"evaluated_in":12,"era":"PUBLISHED_MANUAL_AUDIT","overall":84,"range_display":"BTC 72 · ETH 88","intraday_display":"BTC 67 · ETH 91","structure_display":"Cycle 89 · Rotation 95","provenance":"ARCHIVED_PUBLISHED_X_POST"},
+    {"cn":12,"evaluated_in":13,"era":"PUBLISHED_MANUAL_AUDIT","overall":79,"range_display":"BTC 72 · ETH 88","intraday_display":"BTC 61 · ETH 78","structure_display":"Cycle 86 · Rotation 95","provenance":"ARCHIVED_PUBLISHED_X_POST"},
+    {"cn":13,"evaluated_in":14,"era":"PUBLISHED_MANUAL_AUDIT","overall":68,"range_display":"BTC 45 · ETH 48","intraday_display":"BTC 42 · ETH 44","structure_display":"Cycle 88 · Rotation 95","provenance":"ARCHIVED_PUBLISHED_X_POST"},
+    {"cn":14,"evaluated_in":15,"era":"PUBLISHED_MANUAL_AUDIT","overall":83,"range_display":"BTC 82 · ETH 66","intraday_display":null,"structure_display":"Cycle 88 · Rotation 95","provenance":"ARCHIVED_PUBLISHED_X_POST"},
+    {"cn":15,"evaluated_in":16,"era":"BRIDGE_PUBLISHED_SCORE","overall":null,"range_display":"Combined 85 · BTC 86 · ETH 83","intraday_display":"80","structure_display":"Regime HIT · Rotation HIT","provenance":"RECOVERED_ORIGINAL_CN16_SCORECARD"},
+    {"cn":16,"evaluated_in":17,"era":"FROZEN_PROSPECTIVE","overall":null,"range_display":"Combined 82 · BTC 93 · ETH 70","intraday_display":"60","structure_display":"Regime 2/2 · Rotation 2/2","provenance":"RECOVERED_ORIGINAL_CN17_SCORECARD"},
+    {"cn":17,"evaluated_in":18,"era":"FROZEN_PROSPECTIVE","overall":null,"range_display":"Combined 85 · BTC 89 · ETH 82","intraday_display":"74","structure_display":"Regime 2/2 · Rotation 2/2 · Leadership MISS","provenance":"RECOVERED_ORIGINAL_CN18_SCORECARD"},
+    {"cn":18,"evaluated_in":19,"era":"FROZEN_PROSPECTIVE","overall":90,"range_display":"89","intraday_display":"82","structure_display":"100","provenance":"RECOVERED_ORIGINAL_CN19_SCORECARD"},
+    {"cn":19,"evaluated_in":20,"era":"FROZEN_PROSPECTIVE","overall":87,"range_display":"88","intraday_display":"72","structure_display":"100","provenance":"RECOVERED_ORIGINAL_CN20_SCORECARD"},
+    {"cn":20,"evaluated_in":21,"era":"FROZEN_PROSPECTIVE","overall":94,"range_display":"92","intraday_display":"90","structure_display":"100","provenance":"PUBLISHED_CN21_SCORECARD"},
+    {"cn":21,"evaluated_in":22,"era":"FROZEN_PROSPECTIVE","overall":72,"range_display":"BTC 55 · ETH 62","intraday_display":"BTC 48 · ETH 54","structure_display":"Cycle 94 · Rotation 95 · ETH/BTC 96","provenance":"PUBLISHED_CN22_SCORECARD"},
+    {"cn":22,"evaluated_in":23,"era":"FROZEN_PROSPECTIVE","overall":88,"range_display":null,"intraday_display":"78","structure_display":"Cycle 93 · ETH/BTC 90 · Breadth 92 · Rotation 82 · Altseason timing 94 · Deployment sequencing 78","provenance":"PUBLISHED_CN23_SCORECARD"},
+    {"cn":23,"evaluated_in":24,"era":"FROZEN_PROSPECTIVE","overall":93,"range_display":"BTC 89 · ETH 94","intraday_display":null,"structure_display":"Cycle 94 · ETH/BTC 91 · Breadth 95 · Rotation 92","provenance":"PUBLISHED_CN24_SCORECARD"},
+    {"cn":24,"evaluated_in":25,"era":"FROZEN_PROSPECTIVE","overall":93,"range_display":"BTC 96 · ETH 100","intraday_display":null,"structure_display":"Cycle 100 · ETH/BTC 100 · Breadth 100 · Rotation 50","provenance":"PUBLISHED_CN25_SCORECARD"},
+    {"cn":25,"evaluated_in":26,"era":"AUTOMATED_CANONICAL","overall":null,"range_display":null,"intraday_display":null,"structure_display":"Structural 90","provenance":"CANONICAL_CN26_SCORECARD"}
   ],
-  "provenance_note": "Values are publication records supplied/recovered from contemporaneous Cycle Navigator publications. This public seed intentionally omits unresolved rows and does not normalize scoring eras."
+  "provenance_note": "Scores are publication records or canonical scorecard records. They remain in the scoring semantics used at the time. Missing components are shown as unavailable, never reconstructed from outcomes."
 }

@@ -1,0 +1,100 @@
+{
+  "contract": "ALPHA_EXTERNAL_REPO_GAP_AUDIT_v1",
+  "status": "COMPLETE_SHADOW_RESEARCH",
+  "observed_at_utc": "2026-09-16T13:16:00Z",
+  "owner": "#1052",
+  "source": {
+    "repository": "andreysuperiorgit/aegis",
+    "url": "https://github.com/andreysuperiorgit/aegis",
+    "bound_main_sha": "f68d0e64532eefcf09f5032dc12a953d7725c94f",
+    "license": "MIT",
+    "maintenance_observation": "Latest reviewed main commit was 2026-09-15T17:47:34Z. Repository contains duplicated root/src-aegis module trees, so code-layout drift risk is non-trivial."
+  },
+  "overall_disposition": "EXTRACT",
+  "do_not_vendor_or_clone": true,
+  "incremental_value": "The strongest transferable idea is durable operational memory linking deployers, wallets, bundles, token lifecycle and later outcomes so future scans can reuse prior evidence. Alpha Lab already owns stronger prospective/recall/evolution governance, so the useful action is to extract memory/entity primitives rather than import AEGIS scoring or execution.",
+  "extract": [
+    {
+      "concept": "DURABLE_DEPLOYER_HISTORY",
+      "value": "Persist deployer-token history and later lifecycle outcomes for future point-in-time qualification.",
+      "required_alpha_lab_correction": "Identity must be chain-aware and evidence must remain AS-OF cutoff safe. Deployer history cannot directly become a safety verdict."
+    },
+    {
+      "concept": "DURABLE_WALLET_AND_BUNDLE_MEMORY",
+      "value": "Persist repeated wallet/bundle relationships so the same entity evidence is not rediscovered on every scan.",
+      "required_alpha_lab_correction": "Store evidence edges and confidence, not permanent smart-money labels. Separate observation, hypothesis, supported learning and canonical learning."
+    },
+    {
+      "concept": "TOKEN_LIFECYCLE_FOLLOWUP",
+      "value": "Follow observed tokens after launch so deployer/wallet histories can learn from survival/failure outcomes.",
+      "required_alpha_lab_correction": "Use fixed prospective horizons, sellability/execution realism, right-censoring and missed-winner accounting already owned by Alpha Lab."
+    },
+    {
+      "concept": "EVENT_DRIVEN_CHAIN_MONITORS",
+      "value": "Factory/event listeners can reduce discovery latency versus broad polling when a chain exposes stable launch events.",
+      "required_alpha_lab_correction": "Route through existing cross-chain adapter owner #1017 and exact event provenance. No parallel scheduler."
+    }
+  ],
+  "reject_or_do_not_copy": [
+    {
+      "item": "MEMORY_ADJUSTMENT_INSIDE_SAFETY_SCORE",
+      "reason": "AEGIS adds deployer/wallet history adjustments directly into the final safety score and verdict. Historical reputation is not contract safety and can create closed-loop confirmation."
+    },
+    {
+      "item": "PERMANENT_SMART_MONEY_BOOLEAN",
+      "reason": "A wallet being flagged smart_money becomes a +10 adjustment. Alpha Lab requires qualification/prediction/outcome separation and prospective evidence rather than durable hindsight labels."
+    },
+    {
+      "item": "ADDRESS_ONLY_PRIMARY_KEYS",
+      "reason": "Reviewed SQLite schema uses address as the primary key for deployers, wallets and tokens while storing chain only as an attribute. Same EVM address on multiple chains can collide and contaminate histories. Alpha Lab requires chain+address identity."
+    },
+    {
+      "item": "CHAINLESS_BUNDLE_PRIMARY_KEY",
+      "reason": "wallet_bundles uses token_address+wallet_address without chain, so cross-chain entity evidence can collide."
+    },
+    {
+      "item": "BUNDLE_COUNT_RESCAN_INFLATION",
+      "reason": "recordBundle uses INSERT OR IGNORE for the bundle edge but increments wallet bundle_count independently, so repeated observation of the same edge can inflate memory unless caller-level dedupe prevents it."
+    },
+    {
+      "item": "ADDRESS_ONLY_STATUS_UPDATE",
+      "reason": "updateTokenStatus resolves a token by address without chain and can therefore update the wrong cross-chain identity."
+    },
+    {
+      "item": "SNIPER_EXECUTION_MODULES",
+      "reason": "AEGIS includes Jupiter/Uniswap sniper execution. Alpha Lab mission is research/discovery/validation/learning; execution authority is explicitly out of scope."
+    }
+  ],
+  "already_owned": [
+    "prospective outcome observation",
+    "full Stage0 recall / missed-winner audit",
+    "fresh-origin-only learning truth",
+    "bounded champion/challenger research evolution",
+    "wallet recurrence research under CLEAN G3",
+    "cross-chain adapter owner",
+    "Research Governance / Codex intake",
+    "private durable runtime state"
+  ],
+  "implementation_candidate": {
+    "name": "alpha-evidence-edge-memory-v1",
+    "disposition": "MERGE_INTO_EXISTING_OWNER",
+    "owner": "#1018 for wallet/entity predictive features; #1052 for Alpha Lab learning semantics; #1017 for chain identity",
+    "objective": "If existing owners do not already materialize it, store chain-aware evidence edges such as deployer->token, funder->wallet, wallet->early-buy, wallet<->wallet co-entry and token->outcome with observed_at/effective_at/source/confidence, then derive point-in-time features from edges instead of permanent smart-money labels.",
+    "precondition": "Deduplicate against current CLEAN G3 pair-hash and capital-wallet evidence stores before implementation.",
+    "forbidden": [
+      "new graph engine if existing evidence stores suffice",
+      "permanent smart-money truth label",
+      "direct score boost from reputation",
+      "retroactive feature rewrite",
+      "trade execution",
+      "automatic canonical promotion"
+    ]
+  },
+  "authority": {
+    "changes_market_rules": false,
+    "changes_scoring_weights": false,
+    "changes_portfolio_authority": false,
+    "automatic_trading": false,
+    "automatic_merge": false
+  }
+}

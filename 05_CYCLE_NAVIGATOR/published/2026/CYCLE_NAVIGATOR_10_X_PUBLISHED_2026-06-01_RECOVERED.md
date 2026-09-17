@@ -1,9 +1,14 @@
-# Cycle Navigator #10 — recovered published X record
+# Cycle Navigator #10 — derived recovery note (raw post missing)
 
 Publication window: June 1–7, 2026
 Recovery date: 2026-09-16
-Source class: USER_SUPPLIED_ORIGINAL_X_TEXT
-Status: RECOVERED_ORIGINAL_PUBLICATION
+Source class: DERIVED_RECONSTRUCTION_WITHOUT_ORIGINAL_X_TEXT
+Status: RAW_POST_GAP_NOT_ORIGINAL_PUBLICATION
+
+The original CN #10 X post text has not been recovered. This legacy-path note
+preserves the recovery-thread reconstruction for audit only; it is not an
+original publication, forecast freeze or independently eligible source. The
+point-in-time score for CN #10 is sourced from the archived CN #11 scorecard.
 
 Published CN #9 evaluation:
 - BTC range: 74% — forecast 80K–88K, actual 72.4K–78.0K
@@ -13,7 +18,7 @@ Published CN #9 evaluation:
 - Rotation: 55%
 - Overall: 72%
 
-Frozen CN #10 forecast:
+Recovery-thread reconstruction of the CN #10 forecast (not an original freeze):
 - BTC weekly: 69K–77K
 - ETH weekly: 1.85K–2.15K
 - Expected behavior: compression → recovery attempts → confirmation
@@ -23,4 +28,5 @@ Frozen CN #10 forecast:
 - BTC Day 5–7: 71K–77K
 - Primary 2–3 week scenario: extended transition
 
-Historical rule: preserve as published. No retrospective rewrite.
+Historical rule: preserve as an explicitly derived audit note. Do not use this
+file as proof that the raw CN #10 publication or a frozen forecast was recovered.

@@ -1,0 +1,31 @@
+name: Compass Production Bootstrap
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/compass-production-bootstrap.yml'
+      - '.github/workflows/daily-compass.yml'
+      - '.github/workflows/compass-outcomes.yml'
+      - 'scripts/data_ping/native_handlekompas.py'
+      - 'scripts/learning/compass_outcomes.py'
+      - '04_MARKET_LEARNING/handlekompas/SCORING_CONTRACT_v1.md'
+
+permissions:
+  actions: write
+  contents: read
+
+jobs:
+  dispatch:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Dispatch pinned Compass production workflows
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh workflow run daily-compass.yml --repo "$GH_REPO" --ref main
+          gh workflow run compass-outcomes.yml --repo "$GH_REPO" --ref main
