@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 const siteDir=dirname(fileURLToPath(import.meta.url)); const repoRoot=resolve(siteDir,"../.."); const outputDir=resolve(siteDir,"dist"); const dataDir=resolve(outputDir,"data");
 const POINTER_PATH=resolve(repoRoot,"05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json");
 const COMPASS_POINTER_PATH=resolve(repoRoot,"04_MARKET_LEARNING/handlekompas/official/PUBLIC_LATEST_COMPASS.json");
-const PUBLIC_SITE_FILES=["index.html","styles.css","scoreboard.css","motion.css","journey.css","vibe.css","app.js","compass.js","history-scoreboard.js","history-scoreboard.json","motion.js","journey.js","live-context.js","favicon.svg","social-card.svg"];
+const PUBLIC_SITE_FILES=["index.html","styles.css","scoreboard.css","motion.css","journey.css","vibe.css","app.js","compass.js","compass-product-v5.js","history-scoreboard.js","history-scoreboard.json","motion.js","journey.js","live-context.js","favicon.svg","social-card.svg"];
 const pick=(obj,keys)=>Object.fromEntries(keys.filter(k=>Object.prototype.hasOwnProperty.call(obj||{},k)).map(k=>[k,obj[k]]));
 const sanitizePointer=p=>pick(p,["iso_year","iso_week","completed_source_week","issue_number","publication_status","status"]);
 function sanitizePackage(pkg){return {...pick(pkg,["issue_number","previous_issue_number","generated_unix","status","market_state","base_case_this_week","base_case_2_3_weeks","base_case_4_8_weeks","compass_4_8_weeks","rotation_ladder","altseason_countdown","altseason_mania_window","uncertainties","publication_status"]),evaluation:pkg?.evaluation?pick(pkg.evaluation,["structural_score","score_status","strengths","misses"]):{},forecast_freeze:pkg?.forecast_freeze?pick(pkg.forecast_freeze,["breadth_condition","btc_range_low","btc_range_high","eth_range_low","eth_range_high","structural_calls","forecast_horizon_days","intraday_map"]):{}}}
@@ -26,20 +26,7 @@ async function buildCompassSnapshot(){
     if(projection?.compass_id!==pointer?.compass_id) throw new Error("Public Compass pointer/projection id mismatch");
     return projection;
   }catch(error){
-    return {
-      contract:"PUBLIC_COMPASS_PROJECTION_v1",
-      compass_id:null,
-      issued_at_utc:null,
-      data_status:"NOT_PUBLISHED",
-      market_now:{directional_state:"UNAVAILABLE",regime:"NOT_PUBLISHED",summary:"The official daily Compass has not been published yet."},
-      horizons:{},
-      capitalization_ladder:[],
-      action_now:"UNAVAILABLE",
-      next_meaningful_change_eta:null,
-      conclusion:"Official daily Compass unavailable. No short-horizon signal is synthesized by the site.",
-      authority:{official_navigation_output:true,portfolio_execution:false,source_override:false},
-      failure_state:String(error?.message||error),
-    };
+    return {contract:"PUBLIC_COMPASS_PROJECTION_v1",compass_id:null,issued_at_utc:null,data_status:"NOT_PUBLISHED",market_now:{directional_state:"UNAVAILABLE",regime:"NOT_PUBLISHED",summary:"The official daily Compass has not been published yet."},horizons:{},capitalization_ladder:[],action_now:"UNAVAILABLE",next_meaningful_change_eta:null,conclusion:"Official daily Compass unavailable. No short-horizon signal is synthesized by the site.",authority:{official_navigation_output:true,portfolio_execution:false,source_override:false},failure_state:String(error?.message||error)};
   }
 }
 await rm(outputDir,{recursive:true,force:true}); await mkdir(dataDir,{recursive:true});
