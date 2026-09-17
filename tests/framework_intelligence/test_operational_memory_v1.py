@@ -81,6 +81,26 @@ class OperationalMemoryV1Test(unittest.TestCase):
             self.assertTrue(pf['reusable_prior_work'])
 
 class HandoffPathRegressionTests(unittest.TestCase):
+    def test_symlink_cycles_are_omitted(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / 'self.json').symlink_to('self.json')
+            (root / 'first.json').symlink_to('second.json')
+            (root / 'second.json').symlink_to('first.json')
+            for name in ('self.json', 'first.json', 'second.json'):
+                with self.subTest(name=name):
+                    self.assertIsNone(file_ref(root / name, root))
+                    self.assertIsNone(repo_path(root, name))
+
+    def test_resolution_errors_are_rejected_before_read(self):
+        for error in (RuntimeError('symlink loop'), OSError('resolution unavailable')):
+            with self.subTest(error=type(error).__name__):
+                with patch.object(Path, 'resolve', side_effect=error), patch.object(
+                    Path, 'read_bytes', side_effect=AssertionError('must not read')
+                ):
+                    self.assertIsNone(file_ref(Path('LATEST.json'), Path('.')))
+                    self.assertIsNone(repo_path(Path('.'), 'LATEST.json'))
+
     def test_relative_and_absolute_roots_have_identical_refs(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td).resolve()
