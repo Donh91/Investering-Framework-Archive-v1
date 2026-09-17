@@ -1,0 +1,42 @@
+{
+  "allowed_change_scope": [
+    "Donh91/Investering-Framework-Archive-v1:scripts/research/memes_alpha/**",
+    "Donh91/Investering-Framework-Archive-v1:tests/research/memes_alpha/**",
+    "Donh91/Investering-Framework-Archive-v1:research/memes_alpha/**",
+    "Donh91/Investering-Framework-Archive-v1:research/api_agent/meme_alpha/** only for implementation/readback fields consistent with already owner-approved semantics",
+    "Donh91/Investering-Framework-Archive-v1:.github/workflows/memes-alpha-research*.yml",
+    "Donh91/secrets:collectors/memes_alpha/**",
+    "Donh91/secrets:tests/memes_alpha/**",
+    "Donh91/secrets:schemas/memes_alpha/**",
+    "Donh91/secrets:health/MEMES_ALPHA/**",
+    "Donh91/secrets:private_research/memes_alpha/**",
+    "Donh91/secrets:.github/workflows/memes-alpha-private*.yml"
+  ],
+  "branch": "agent/task-20260917-alpha-p0-1087",
+  "candidate_id": "codex-research-alpha-adversarial-runtime-wiring-v1",
+  "candidate_path": "research/codex/intake/2026/09/codex-research-alpha-adversarial-runtime-wiring-v1.json",
+  "candidate_sha256": "b6732fb69edba5e2ba9f59407a47a859d0ea17dee6b4710456e65618b1700d38",
+  "contract": "CODEX_RESEARCH_TRANSITION_RECEIPT_v1",
+  "forbidden_changes": [
+    "API budget",
+    "automatic buy or sell signals",
+    "automatic merge",
+    "automatic trade execution",
+    "canonical authority",
+    "market gates",
+    "model weights",
+    "new policy semantics",
+    "parallel Alpha runtime",
+    "parallel evidence ledger",
+    "parallel forecast engine",
+    "portfolio logic"
+  ],
+  "objective": "Implement the smallest bounded runtime wiring that makes the owner-approved Meme Alpha adversarial maintainer an event-driven and heartbeat-eligible task type inside the EXISTING Meme Alpha Supervisor/runtime, routes qualified findings to existing adjudication/remediation owners, and adversarially retests fixes. Reproduce the 2026-09-17 PONSCUPINE stale-action incident as the first regression: historical market state must never reach a present-tense actionable label without a same-run exact-CA live observation gate. Reuse the existing Memes v3 autonomous workstream and Codex/remediation machinery; create no parallel scheduler, scanner, scorer, ledger, forecast engine, trading authority, API budget or merge authority.",
+  "post_fix_gate": "PONSCUPINE_STALE_ACTION_REPLAY_FAILS_CLOSED_PLUS_NEIGHBOR_VARIANT_PASS_PLUS_AUTONOMOUS_ROUTE_AND_RETEST_PASS_PLUS_ZERO_PARALLEL_RUNTIME",
+  "pr_number": null,
+  "receipt_sha256": "e682ec6795b5df30c86fa629447427765e6a259d79819c7c7e20c4643e81c507",
+  "recorded_at_utc": "2026-09-17T22:24:15Z",
+  "signature": "b62105cfe794e5c80c70",
+  "state": "IN_REMEDIATION",
+  "task_contract_sha256": "9fb9674f6d224583dbb3df276278317c5ada64b5e57d070f1e275d4956d3e2c9"
+}
