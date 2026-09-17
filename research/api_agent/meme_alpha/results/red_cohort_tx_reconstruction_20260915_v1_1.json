@@ -1,0 +1,74 @@
+{
+  "contract": "MEME_ALPHA_RED_COHORT_TX_RECONSTRUCTION_RESULT_v1_1",
+  "generated_from_run": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/35019911316",
+  "source": {
+    "dataset": "RED-COHORT-2026-v1.1.1",
+    "zenodo_record": "10.5281/zenodo.21765387",
+    "archive_md5": "172198eade99f702f1da0bfdd4cf3079",
+    "archive_sha256": "f908d10f459e52de0e6f0d77af26db262e41a521dfe3872f30bd795e255841d0"
+  },
+  "sample_design": {
+    "all_intra_rows": 20163,
+    "deterministic_sample_rows": 12,
+    "unique_tx_signatures_requested": 12,
+    "raw_mints_wallets_or_signatures_archived_here": false
+  },
+  "rpc_reconstruction": {
+    "rpc_host_class": "PUBLIC_SOLANA_MAINNET_RPC_NO_AUTH",
+    "status_counts": {"OK": 12},
+    "transactions_resolved": 12,
+    "transactions_error_free": 12,
+    "transactions_with_pump_program_evidence": 12
+  },
+  "row_shape_full_release": {
+    "wallet_count_equals_tx_sig_count_rows": 18999,
+    "wallet_count_differs_tx_sig_count_rows": 1164,
+    "dominant_equal_cardinality_shapes": [
+      {"wallets": 3, "tx_sigs": 3, "rows": 13070},
+      {"wallets": 4, "tx_sigs": 4, "rows": 3623},
+      {"wallets": 5, "tx_sigs": 5, "rows": 1240},
+      {"wallets": 6, "tx_sigs": 6, "rows": 523}
+    ]
+  },
+  "row_level_bipartite_mapping": {
+    "method": "maximum bipartite matching of row wallets to row tx_sigs using signer membership",
+    "rows_with_any_resolved_tx": 3,
+    "rows_fully_resolved": 2,
+    "rows_equal_cardinality_and_fully_resolved": 2,
+    "rows_with_perfect_signer_bijection": 2,
+    "rows_with_partial_matching": 1,
+    "perfect_bijection_rate_given_equal_cardinality_fully_resolved": 1.0,
+    "matched_wallet_rate_given_fully_resolved": 1.0,
+    "third_partial_row": "5 of 6 signatures were inside the bounded 12-signature request cap and all 5 resolved wallets matched distinct signer transactions; this row is not counted as fully resolved"
+  },
+  "timing": {
+    "detected_at_unit": "UNIX_SECONDS",
+    "detected_at_minus_earliest_row_tx_seconds": {"n": 2, "min": 1072, "median": 1846, "max": 1846},
+    "detected_at_minus_latest_row_tx_seconds": {"n": 2, "min": 1072, "median": 1844, "max": 1844},
+    "interpretation": "released detected_at materially post-dates reconstructed first-buyer transactions in the two fully resolved rows and must not be treated as entry time or earliest-knowable cohort time"
+  },
+  "scientific_verdict": {
+    "wallet_to_transaction_reconstruction": "SUPPORTED_BOUNDED_SAMPLE",
+    "one_to_one_signer_mapping": "SUPPORTED_BOUNDED_SAMPLE",
+    "earliest_knowable_cohort_time": "UNRESOLVED_NEXT_TEST",
+    "wallet_independence": "NOT_PROVEN",
+    "profitability": "NOT_PROVEN",
+    "sellable_return": "NOT_PROVEN",
+    "promotion_authority": "NONE"
+  },
+  "next_required_step": "replay the released two-stage cohort detector in event-time order and compute the first timestamp at which each eventual cohort would have satisfied its persistence criteria using only prior launches; then join only post-that-time launches to economic outcomes",
+  "artifact": {
+    "name": "meme-alpha-red-tx-reconstruction-v1",
+    "artifact_id": 10416814265,
+    "artifact_zip_sha256": "d9e48b67f38f8e7fe62d04182894b681c82c122b741767937e3dc30339dafce7",
+    "retention_days": 30,
+    "repo_result_is_permanent_summary": true
+  },
+  "authority": {
+    "research_only": true,
+    "automatic_trading": false,
+    "buy_now_promotion": false,
+    "live_threshold_change": false,
+    "portfolio_action": false
+  }
+}

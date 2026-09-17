@@ -1,0 +1,156 @@
+name: Official Daily Compass
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/daily-compass.yml'
+      - '.github/workflows/compass-outcomes.yml'
+      - 'scripts/data_ping/native_handlekompas.py'
+      - 'scripts/learning/compass_outcomes.py'
+      - 'tests/data_ping/test_official_daily_compass.py'
+      - 'tests/learning/test_compass_outcomes.py'
+      - '04_MARKET_LEARNING/handlekompas/**'
+      - '05_CYCLE_NAVIGATOR/site/**'
+      - 'AGENTS.md'
+  schedule:
+    # Daily accountability freeze after the evening owner cycles; avoids :50/:57 writer chain.
+    - cron: '17 20 * * *'
+      timezone: 'Europe/Copenhagen'
+  workflow_dispatch:
+
+permissions:
+  actions: write
+  contents: write
+  issues: write
+
+concurrency:
+  group: framework-main-writer
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compile and run focused Compass tests
+        run: |
+          python -m py_compile scripts/data_ping/native_handlekompas.py scripts/learning/compass_outcomes.py
+          python -m unittest tests.data_ping.test_native_handlekompas -v
+          python -m unittest tests.data_ping.test_official_daily_compass -v
+          python -m unittest tests.learning.test_compass_outcomes -v
+      - name: Deterministic current-state dry run
+        run: |
+          python scripts/data_ping/native_handlekompas.py --official-daily-compass --run-reason PR_VALIDATION --no-write > /tmp/compass.json
+          python - <<'PY'
+          import json
+          d=json.load(open('/tmp/compass.json'))
+          assert d['contract']=='OFFICIAL_DAILY_COMPASS_v1'
+          assert set(d['horizons'])=={'NEXT_12H','NEXT_1_3D','NEXT_5_7D','CYCLE_ALTCOINS_3_8W'}
+          alt=d['horizons']['CYCLE_ALTCOINS_3_8W']
+          if alt['expected_direction']=='UNAVAILABLE':
+              assert alt.get('warning') is None
+          else:
+              assert alt['warning'] in {'NONE','PARABOLIC_ALTSEASON_WARNING','DISTRIBUTION_WARNING','EXIT_WARNING','STRUCTURAL_BREAKDOWN_WARNING'}
+          assert [r['segment'] for r in d['capitalization_ladder']]==['BTC','ETH','LARGE_CAPS','MID_CAPS','SMALL_CAPS','MICROCAPS']
+          assert d['authority']['portfolio_execution'] is False
+          assert d['authority']['post_hoc_rewrite'] is False
+          assert d['market_reference'].get('btc_usdt') != 0 or d['market_reference'].get('btc_usdt') is None
+          PY
+
+  freeze:
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Produce immutable Compass freeze
+        shell: bash
+        run: |
+          reason=ON_DEMAND
+          if [ "${GITHUB_EVENT_NAME}" = "schedule" ]; then reason=SCHEDULED_DAILY; fi
+          python scripts/data_ping/native_handlekompas.py \
+            --official-daily-compass \
+            --run-reason "$reason" \
+            --output-root 04_MARKET_LEARNING/handlekompas/official \
+            | tee /tmp/official-compass-status.json
+      - name: Validate pointer and public projection binding
+        run: |
+          python - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          status=json.load(open('/tmp/official-compass-status.json'))
+          if status.get('status')=='EXISTING_DAILY_FREEZE':
+              print('OFFICIAL_COMPASS_EXISTING_DAILY_FREEZE', status.get('compass_id'))
+          pointer=json.loads(Path('04_MARKET_LEARNING/handlekompas/official/LATEST_COMPASS.json').read_text())
+          freeze=Path(pointer['compass_path'])
+          public=Path(pointer['public_projection_path'])
+          assert freeze.exists() and public.exists()
+          f=json.loads(freeze.read_text()); p=json.loads(public.read_text())
+          assert f['compass_id']==pointer['compass_id']==p['compass_id']
+          assert f['compass_sha256']==pointer['compass_sha256']
+          assert p['projection_sha256']==pointer['public_projection_sha256']
+          assert hashlib.sha256(freeze.read_bytes()).hexdigest()==pointer['compass_content_sha256']
+          assert hashlib.sha256(public.read_bytes()).hexdigest()==pointer['public_projection_content_sha256']
+          assert f['authority']['portfolio_execution'] is False
+          assert 'source_bindings' not in p and 'evidence_snapshot' not in p
+          print('OFFICIAL_COMPASS_VALID', f['compass_id'], f['data_status'])
+          PY
+      - name: Commit with remote readback proof
+        shell: bash
+        run: |
+          git config user.name framework-data-bot
+          git config user.email framework-data-bot@users.noreply.github.com
+          git add 04_MARKET_LEARNING/handlekompas/official
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "learning: official daily Compass ${GITHUB_RUN_ID}"
+          pushed=false
+          for attempt in 1 2 3; do
+            git rebase --abort 2>/dev/null || true
+            if git pull --rebase origin main && git push origin HEAD:main; then pushed=true; break; fi
+            sleep $((attempt * 5))
+          done
+          [ "$pushed" = true ]
+          git fetch origin main
+          git merge-base --is-ancestor HEAD origin/main
+          local_sha=$(sha256sum 04_MARKET_LEARNING/handlekompas/official/LATEST_COMPASS.json | awk '{print $1}')
+          remote_sha=$(git show origin/main:04_MARKET_LEARNING/handlekompas/official/LATEST_COMPASS.json | sha256sum | awk '{print $1}')
+          [ "$local_sha" = "$remote_sha" ]
+      - name: Publish current Compass to Cycle Navigator Pages
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run cycle-navigator-pages.yml --ref main
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: official-daily-compass-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            /tmp/official-compass-status.json
+            04_MARKET_LEARNING/handlekompas/official/LATEST_COMPASS.json
+            04_MARKET_LEARNING/handlekompas/official/PUBLIC_LATEST_COMPASS.json
+          retention-days: 30
+          if-no-files-found: warn
+
+  incident:
+    needs: freeze
+    if: failure() && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Open Compass incident
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue create --title "AUTOMATION FAILURE: Official Daily Compass ${GITHUB_RUN_ID}" --body "Official Daily Compass failed closed. No portfolio action was executed. Inspect the Native Handlekompas / Auto Market State owner chain. Run: ${GITHUB_RUN_ID}" || true

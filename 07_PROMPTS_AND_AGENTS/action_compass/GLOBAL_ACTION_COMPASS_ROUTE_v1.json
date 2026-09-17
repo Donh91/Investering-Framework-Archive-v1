@@ -1,0 +1,92 @@
+{
+  "contract": "GLOBAL_ACTION_COMPASS_ROUTE_v1",
+  "status": "ACTIVE",
+  "owner": "MAIN_FRAMEWORK",
+  "effective_on": "canonical_main_merge",
+  "hard_triggers": [
+    "kompas",
+    "handlekompas",
+    "compass"
+  ],
+  "trigger_normalization": {
+    "trim_whitespace": true,
+    "lowercase": true,
+    "ignore_trailing_punctuation": true,
+    "exact_one_word_trigger_requires_clarification": false,
+    "primary_imperative_aliases_allowed": true
+  },
+  "scope": "all repository-aware Investering framework threads and agents",
+  "canonical_contract": "07_PROMPTS_AND_AGENTS/action_compass/2026-09-16__global-action-compass-invocation-contract-v1__canonical.md",
+  "current_production_data_owner": "00_ARCHIVE_CONTROL/2026-09-14__autonomous-data-authority-transition-v1__canonical.md",
+  "current_production_data_mirror": "00_ARCHIVE_CONTROL/CURRENT_PRODUCTION_DATA_AUTHORITY.json",
+  "decision_vocabulary_owner": "02_DATA_PING/protocols/2026-08-25__three-horizon-action-compass-output-contract-v1__canonical.md",
+  "official_daily_compass_pointer": "04_MARKET_LEARNING/handlekompas/official/LATEST_COMPASS.json",
+  "public_daily_compass_pointer": "04_MARKET_LEARNING/handlekompas/official/PUBLIC_LATEST_COMPASS.json",
+  "authority_route": [
+    "AGENTS.md",
+    "LATEST_OPERATIONS_DASHBOARD.json",
+    "LATEST_HANDOFF.json",
+    "00_ARCHIVE_CONTROL/CURRENT_PRODUCTION_DATA_AUTHORITY.json",
+    "04_MARKET_LEARNING/handlekompas/official/LATEST_COMPASS.json",
+    "eligible_immutable_official_daily_compass_freeze",
+    "current_hash_bound_autonomous_outputs",
+    "main_framework_accepted_interpretation",
+    "eligible_current_master_monday_cycle_navigator_short_horizon_outputs",
+    "bounded_internal_live_context_when_needed",
+    "global_action_compass_translation"
+  ],
+  "output": {
+    "default_title_da": "🧭 KOMPAS",
+    "default_title_en": "🧭 COMPASS",
+    "visible_output_policy": "TEXT_ONLY",
+    "required_horizons": [
+      "NOW_0_3D",
+      "NEXT_WINDOW_5_7D",
+      "CYCLE_ALTCOINS_3_8W"
+    ],
+    "eta_required_when_actionable": true,
+    "one_sentence_conclusion_required": true,
+    "duplicate_rotation_sections_forbidden": true,
+    "compact_phone_first": true
+  },
+  "official_compass_policy": {
+    "pointer_first": true,
+    "required_machine_horizons": ["NEXT_12H", "NEXT_1_3D", "NEXT_5_7D", "CYCLE_ALTCOINS_3_8W"],
+    "required_capitalization_order": ["BTC", "ETH", "LARGE_CAPS", "MID_CAPS", "SMALL_CAPS", "MICROCAPS"],
+    "stale_or_missing_pointer": "FAIL_CLOSED_NO_STALE_CHAT_FALLBACK",
+    "render_request_creates_new_freeze": false
+  },
+  "visible_output_forbidden": [
+    "genui_widgets",
+    "market_cards",
+    "interactive_charts",
+    "api_result_cards",
+    "connector_result_cards",
+    "raw_json",
+    "raw_tool_output",
+    "source_dumps",
+    "internal_provider_diagnostics"
+  ],
+  "internal_retrieval_allowed": [
+    "github",
+    "approved_apis",
+    "approved_connectors",
+    "web_retrieval",
+    "repository_tools"
+  ],
+  "freshness_policy": "follow_current_owner_rules_no_new_global_threshold",
+  "missing_data_policy": "UNKNOWN_NOT_NEGATIVE",
+  "material_conflict_policy": "DATA_CONFLICT",
+  "stale_lane_fallback": {
+    "action": "WAIT",
+    "user_label": "AFVENT",
+    "reason": "KRÆVER FRISKE DATA"
+  },
+  "render_request_creates_prospective_receipt": false,
+  "fresh_data_ping_or_raw_ingest_receipt_rules_unchanged": true,
+  "automatic_portfolio_execution": false,
+  "new_market_engine_created": false,
+  "new_forecast_engine_created": false,
+  "new_signal_created": false,
+  "new_threshold_created": false
+}

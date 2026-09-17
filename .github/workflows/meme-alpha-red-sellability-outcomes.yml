@@ -1,0 +1,80 @@
+name: Meme Alpha RED Sellability Outcomes
+
+on:
+  pull_request:
+    paths:
+      - 'research/api_agent/meme_alpha/experiments/CLEAN_G3_RED_PAIR_QUALIFICATION_FREEZE_v1.json'
+      - 'research/api_agent/meme_alpha/experiments/CLEAN_G3_RED_SIGNAL_FREEZE_v1.json'
+      - 'research/api_agent/meme_alpha/experiments/red_sellability_aware_outcomes_v1.py'
+      - 'research/api_agent/meme_alpha/experiments/red_sellability_aware_outcomes_throttled_v1.py'
+      - '.github/workflows/meme-alpha-red-sellability-outcomes.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sellability-outcomes:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - name: Checkout research revision
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Download pinned RED release
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/red-cohort /tmp/red-sellability
+          URL='https://zenodo.org/records/21765387/files/RED-COHORT-2026-v1_1_1.zip?download=1'
+          curl -L --fail --retry 5 --retry-delay 2 --connect-timeout 20 "$URL" -o /tmp/red-cohort/RED-COHORT-2026-v1_1_1.zip
+          echo '172198eade99f702f1da0bfdd4cf3079  /tmp/red-cohort/RED-COHORT-2026-v1_1_1.zip' | md5sum -c -
+          sha256sum /tmp/red-cohort/RED-COHORT-2026-v1_1_1.zip | tee /tmp/red-sellability/SHA256SUMS
+
+      - name: Reconstruct post-signal sellability-aware outcomes
+        run: |
+          python research/api_agent/meme_alpha/experiments/red_sellability_aware_outcomes_throttled_v1.py \
+            --zip /tmp/red-cohort/RED-COHORT-2026-v1_1_1.zip \
+            --signal-freeze research/api_agent/meme_alpha/experiments/CLEAN_G3_RED_SIGNAL_FREEZE_v1.json \
+            --out /tmp/red-sellability/red_sellability_aware_outcomes_v1.json \
+            --pairs 2 \
+            --history-page-size 250 \
+            --max-history-pages 50 \
+            --workers 2
+
+      - name: Require causal four-launch pilot and launch-3 exclusion
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          p='/tmp/red-sellability/red_sellability_aware_outcomes_v1.json'
+          x=json.load(open(p))
+          c=x['counts']; inv=x['invariants']; v=x['verdict']
+          assert c['selected_pairs'] == 2, c
+          assert c['qualification_launches_seen_not_scored'] == 2, c
+          assert c['expected_prediction_launches'] == 4, c
+          assert c['materialized_prediction_launches'] == 4, c
+          assert c['ready_prediction_launches'] == 4, c
+          assert c['unique_24h_transactions_required'] == c['unique_24h_transactions_resolved'], c
+          assert inv['qualification_launch_prediction_eligible_count'] == 0, inv
+          assert inv['launch_3_excluded_from_prediction'] is True, inv
+          assert inv['only_launch_4_plus_scored'] is True, inv
+          assert inv['same_slot_entry_forbidden'] is True, inv
+          assert inv['all_required_transactions_resolved'] is True, inv
+          assert v['pilot_outcome_reconstruction'] == 'SUPPORTED', v
+          assert v['safe_for_g2_vs_clean_g3_ablation'] is False, v
+          print(json.dumps({'counts': c, 'invariants': inv, 'verdict': v}, sort_keys=True))
+          PY
+
+      - name: Upload research artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: meme-alpha-red-sellability-outcomes-v1
+          path: /tmp/red-sellability/
+          retention-days: 30

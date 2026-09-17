@@ -1,0 +1,69 @@
+{
+  "contract": "RED_COHORT_JOINABILITY_PROBE_v1",
+  "observed_at_utc": "2026-09-15T20:25:00Z",
+  "source": "RED-COHORT-2026-v1.1.1",
+  "doi": "10.5281/zenodo.21765387",
+  "paper": "arXiv:2607.02795 revised 2026-08",
+  "license": "CC-BY-4.0 for released dataset; detection methodology also carries a disclosed pending US provisional patent, so commercial implementation requires separate legal/licensing review.",
+  "status": "HIGH_VALUE_STRUCTURAL_G3__ECONOMIC_RETURN_JOIN_NOT_YET_PROVEN",
+  "published_inventory": {
+    "buyer_events": 1578333,
+    "launches": 166098,
+    "persistent_cohorts": 1012,
+    "unique_cohort_wallets": 2965,
+    "observation_window": "2026-06-11 21:43 UTC through 2026-06-25 06:52 UTC",
+    "files": 27,
+    "important_files": [
+      "sniper_cohorts.jsonl",
+      "sniper_cohorts_intra.jsonl.gz",
+      "analyze_sniper_cohorts.py",
+      "paper7_v3_psm.py",
+      "paper7_v3_psm_nocohort_zerofill.py",
+      "placebo_bootstrap_v3.py",
+      "placebo_stability_100seeds.json"
+    ]
+  },
+  "revised_result_semantics": {
+    "naive_same_universe_buyer_lift": "+130.9% contaminated pooled contrast",
+    "after_excluding_cohort_wallets_from_outcome": "+63.9% non-cohort buyer-count contrast before launch-quality matching",
+    "propensity_matched_pairs": 5419,
+    "matched_non_cohort_buyer_count_lift": "+16.1%, 95% CI approximately [+13.0%, +19.4%]",
+    "matched_SOL_inflow_lift": "+6.3%, 95% CI approximately [-0.5%, +15.1%], not distinguishable from zero",
+    "activity_matched_placebo": "Biased diagnostic, not a valid causal baseline; do not use its larger lift as proof for or against economic alpha."
+  },
+  "what_it_can_answer": [
+    "Which wallets repeatedly appear together among first buyers across launches?",
+    "How recurrent and synchronized are persistent early-buyer cohorts?",
+    "Does cohort-touched status associate with downstream non-cohort buyer flow after explicit contamination exclusion and launch-quality matching?",
+    "How much of naive apparent wallet edge can disappear after proper causal hygiene?"
+  ],
+  "what_it_cannot_yet_answer": [
+    "Whether a cohort buy produces a sellable 5x/10x return for an observer entering at a frozen signal time.",
+    "Whether cohort members themselves have positive realizable PnL after fees/slippage across prior matured launches.",
+    "Whether wallets in a cohort are independent economic entities rather than same-funder/controller infrastructure.",
+    "Whether the June 2026 result generalizes to later Pump incentive/mechanics regimes or other chains."
+  ],
+  "joinability_probe": {
+    "mint_or_launch_identity": "The intra-launch source data is described as first-buyer-window data per launch and is expected to support launch identity reconstruction. Exact released schema must be inspected before code-level joins are authorized.",
+    "wallet_identity": "Cohort catalogue explicitly contains wallet membership; one vanity prefix is partially redacted in the public release, so exact traceability for that address is intentionally incomplete.",
+    "event_timing": "The study extracts first-ten buyer order/time/commitment information. Exact timestamp field semantics must be read from the released intra JSON and code before using for point-in-time feature construction.",
+    "economic_outcome": "No sellable-return outcome is established by the published buyer-flow analysis. A separate exact-mint outcome source or native chain reconstruction is required.",
+    "entity_adjustment": "Not sufficient from the paper alone. Add same-funder/controller/bundle/router evidence from independent sources before calling cohort wallets independent."
+  },
+  "next_execution": [
+    "Download and hash the current v1.1.1 release in a bounded research runner.",
+    "Inspect README, sniper_cohorts_intra schema and PSM code before assuming field names or timestamp semantics.",
+    "Build a mint/cohort/wallet/event-time normalized table with original source rows retained.",
+    "Search for an exact-mint outcome source covering the same June 11-25 window. Prefer native event/trade reconstruction over vendor chart peaks.",
+    "If a compatible outcome join is found, preregister an observer-entry timestamp and compute sellable 2x/5x/10x plus MFE/MAE/liquidity survival without using future cohort knowledge.",
+    "If no compatible economic join exists, stop retrospective economic inference and use RED-COHORT only to define prospective G3 structural features."
+  ],
+  "promotion_guardrail": "RED-COHORT can improve the definition of clean G3 immediately, but cannot promote G3 weight until economic-return and entity-adjusted evidence exists.",
+  "authority": {
+    "research_only": true,
+    "automatic_trading": false,
+    "portfolio_execution": false,
+    "buy_now_promotion": false,
+    "live_threshold_change": false
+  }
+}

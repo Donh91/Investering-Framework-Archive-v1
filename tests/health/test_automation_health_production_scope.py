@@ -38,182 +38,130 @@ def test_scheduled_health_ignores_task_branch_push_failures(monkeypatch) -> None
         if url.endswith("/Investering-Framework-Archive-v1"):
             return {"default_branch": "main"}
         if "/actions/workflows?" in url:
-            return {
-                "workflows": [
-                    {
-                        "id": 42,
-                        "path": ".github/workflows/scheduled.yml",
-                        "name": "Scheduled",
-                        "state": "active",
-                        "html_url": "https://example.invalid/workflow",
-                    }
-                ]
-            }
+            return {"workflows": [{"id": 42, "path": ".github/workflows/scheduled.yml", "name": "Scheduled", "state": "active", "html_url": "https://example.invalid/workflow"}]}
         if "event=schedule" in url:
-            return {
-                "workflow_runs": [
-                    {
-                        "id": 100,
-                        "event": "schedule",
-                        "head_branch": "main",
-                        "status": "completed",
-                        "conclusion": "success",
-                        "created_at": "2026-08-29T01:00:00Z",
-                        "updated_at": "2026-08-29T01:01:00Z",
-                    }
-                ]
-            }
+            return {"workflow_runs": [{"id": 100, "event": "schedule", "head_branch": "main", "status": "completed", "conclusion": "success", "created_at": "2026-08-29T01:00:00Z", "updated_at": "2026-08-29T01:01:00Z"}]}
         if "branch=main" in url:
-            return {
-                "workflow_runs": [
-                    {
-                        "id": 102,
-                        "event": "push",
-                        "head_branch": "agent/task-noise",
-                        "status": "completed",
-                        "conclusion": "failure",
-                        "created_at": "2026-08-29T03:00:00Z",
-                        "updated_at": "2026-08-29T03:00:00Z",
-                    },
-                    {
-                        "id": 101,
-                        "event": "push",
-                        "head_branch": "agent/task-noise",
-                        "status": "completed",
-                        "conclusion": "failure",
-                        "created_at": "2026-08-29T02:00:00Z",
-                        "updated_at": "2026-08-29T02:00:00Z",
-                    },
-                    {
-                        "id": 100,
-                        "event": "schedule",
-                        "head_branch": "main",
-                        "status": "completed",
-                        "conclusion": "success",
-                        "created_at": "2026-08-29T01:00:00Z",
-                        "updated_at": "2026-08-29T01:01:00Z",
-                    },
-                ]
-            }
+            return {"workflow_runs": [
+                {"id": 102, "event": "push", "head_branch": "agent/task-noise", "status": "completed", "conclusion": "failure", "created_at": "2026-08-29T03:00:00Z", "updated_at": "2026-08-29T03:00:00Z"},
+                {"id": 101, "event": "push", "head_branch": "agent/task-noise", "status": "completed", "conclusion": "failure", "created_at": "2026-08-29T02:00:00Z", "updated_at": "2026-08-29T02:00:00Z"},
+                {"id": 100, "event": "schedule", "head_branch": "main", "status": "completed", "conclusion": "success", "created_at": "2026-08-29T01:00:00Z", "updated_at": "2026-08-29T01:01:00Z"},
+            ]}
         raise AssertionError(url)
 
     monkeypatch.setattr(module.base, "api_json", fake_api)
-    live = module.live_workflows(
-        "Donh91/Investering-Framework-Archive-v1",
-        "token",
-        {"scheduled.yml"},
-    )["scheduled.yml"]
-
+    live = module.live_workflows("Donh91/Investering-Framework-Archive-v1", "token", {"scheduled.yml"})["scheduled.yml"]
     assert live["latest_run"]["id"] == 100
     assert live["failure_streak"] == 0
     assert live["recent_failure_count"] == 0
     assert live["success_streak"] == 1
 
-    row = _scheduled_row()
-    row["live"] = live
-    status, findings = module.classify(
-        row, datetime(2026, 8, 29, 4, tzinfo=timezone.utc)
-    )
+    row = _scheduled_row(); row["live"] = live
+    status, findings = module.classify(row, datetime(2026, 8, 29, 4, tzinfo=timezone.utc))
     assert status == "GREEN"
     assert "LATEST_RUN_FAILED" not in findings
     assert "REPEATED_CONSECUTIVE_FAILURES" not in findings
 
 
-def test_non_scheduled_gate_still_counts_branch_failures(monkeypatch) -> None:
+def test_non_scheduled_pr_gate_rejections_are_amber_not_production_red(monkeypatch) -> None:
     def fake_api(url: str, token: str) -> dict:
         if url.endswith("/Investering-Framework-Archive-v1"):
             return {"default_branch": "main"}
         if "/actions/workflows?" in url:
-            return {
-                "workflows": [
-                    {
-                        "id": 43,
-                        "path": ".github/workflows/gate.yml",
-                        "name": "Gate",
-                        "state": "active",
-                        "html_url": "https://example.invalid/gate",
-                    }
-                ]
-            }
+            return {"workflows": [{"id": 43, "path": ".github/workflows/gate.yml", "name": "Gate", "state": "active", "html_url": "https://example.invalid/gate"}]}
         if "/runs?per_page=10" in url:
-            return {
-                "workflow_runs": [
-                    {
-                        "id": 202,
-                        "event": "pull_request",
-                        "head_branch": "agent/task-bad",
-                        "status": "completed",
-                        "conclusion": "failure",
-                        "created_at": "2026-08-29T03:00:00Z",
-                        "updated_at": "2026-08-29T03:00:00Z",
-                    },
-                    {
-                        "id": 201,
-                        "event": "pull_request",
-                        "head_branch": "agent/task-bad",
-                        "status": "completed",
-                        "conclusion": "failure",
-                        "created_at": "2026-08-29T02:00:00Z",
-                        "updated_at": "2026-08-29T02:00:00Z",
-                    },
-                ]
-            }
+            return {"workflow_runs": [
+                {"id": 202, "event": "pull_request", "head_branch": "agent/task-bad", "status": "completed", "conclusion": "failure", "created_at": "2026-08-29T03:00:00Z", "updated_at": "2026-08-29T03:00:00Z"},
+                {"id": 201, "event": "pull_request", "head_branch": "agent/task-bad", "status": "completed", "conclusion": "failure", "created_at": "2026-08-29T02:00:00Z", "updated_at": "2026-08-29T02:00:00Z"},
+            ]}
         raise AssertionError(url)
 
     monkeypatch.setattr(module.base, "api_json", fake_api)
-    live = module.live_workflows(
-        "Donh91/Investering-Framework-Archive-v1", "token", set()
-    )["gate.yml"]
-    assert live["failure_streak"] == 2
+    live = module.live_workflows("Donh91/Investering-Framework-Archive-v1", "token", set())["gate.yml"]
+    assert live["failure_streak"] == 0
+    assert live["recent_failure_count"] == 0
+    assert live["pr_gate_rejection_streak"] == 2
+    assert live["recent_pr_gate_rejection_count"] == 2
 
-    row = _scheduled_row()
-    row["workflow"] = "gate.yml"
-    row["scheduled"] = False
-    row["cron_expressions"] = []
-    row["live"] = live
-    status, findings = module.classify(
-        row, datetime(2026, 8, 29, 4, tzinfo=timezone.utc)
-    )
+    row = _scheduled_row(); row["workflow"] = "gate.yml"; row["scheduled"] = False; row["cron_expressions"] = []; row["live"] = live
+    status, findings = module.classify(row, datetime(2026, 8, 29, 4, tzinfo=timezone.utc))
+    assert status == "AMBER"
+    assert "PR_GATE_REJECTION" in findings
+    assert "REPEATED_PR_GATE_REJECTIONS" in findings
+    assert "LATEST_RUN_FAILED" not in findings
+    assert "REPEATED_CONSECUTIVE_FAILURES" not in findings
+
+
+def test_scheduled_cancellation_is_amber_not_execution_failure(monkeypatch) -> None:
+    cancelled = {"id": 301, "event": "schedule", "head_branch": "main", "status": "completed", "conclusion": "cancelled", "created_at": "2026-08-29T01:00:00Z", "updated_at": "2026-08-29T01:00:02Z"}
+    def fake_api(url: str, token: str) -> dict:
+        if url.endswith("/Investering-Framework-Archive-v1"): return {"default_branch": "main"}
+        if "/actions/workflows?" in url: return {"workflows": [{"id": 44, "path": ".github/workflows/scheduled.yml", "name": "Scheduled", "state": "active", "html_url": "https://example.invalid/scheduled"}]}
+        if "event=schedule" in url: return {"workflow_runs": [cancelled]}
+        if "branch=main" in url: return {"workflow_runs": [cancelled]}
+        raise AssertionError(url)
+
+    monkeypatch.setattr(module.base, "api_json", fake_api)
+    live = module.live_workflows("Donh91/Investering-Framework-Archive-v1", "token", {"scheduled.yml"})["scheduled.yml"]
+    assert live["recent_failure_count"] == 0
+    assert live["failure_streak"] == 0
+    assert live["recent_cancellation_count"] == 1
+    assert live["cancellation_streak"] == 1
+
+    row = _scheduled_row(); row["live"] = live
+    status, findings = module.classify(row, datetime(2026, 8, 29, 2, tzinfo=timezone.utc))
+    assert status == "AMBER"
+    assert "LATEST_RUN_CANCELLED" in findings
+    assert "LATEST_RUN_FAILED" not in findings
+    assert "REPEATED_CONSECUTIVE_FAILURES" not in findings
+
+
+def test_scheduled_execution_failure_remains_red(monkeypatch) -> None:
+    failure = {"id": 401, "event": "schedule", "head_branch": "main", "status": "completed", "conclusion": "failure", "created_at": "2026-08-29T01:00:00Z", "updated_at": "2026-08-29T01:02:00Z"}
+    def fake_api(url: str, token: str) -> dict:
+        if url.endswith("/Investering-Framework-Archive-v1"): return {"default_branch": "main"}
+        if "/actions/workflows?" in url: return {"workflows": [{"id": 45, "path": ".github/workflows/scheduled.yml", "name": "Scheduled", "state": "active", "html_url": "https://example.invalid/scheduled"}]}
+        if "event=schedule" in url: return {"workflow_runs": [failure]}
+        if "branch=main" in url: return {"workflow_runs": [failure]}
+        raise AssertionError(url)
+
+    monkeypatch.setattr(module.base, "api_json", fake_api)
+    live = module.live_workflows("Donh91/Investering-Framework-Archive-v1", "token", {"scheduled.yml"})["scheduled.yml"]
+    assert live["recent_failure_count"] == 1
+    assert live["failure_streak"] == 1
+    assert live["recent_cancellation_count"] == 0
+
+    row = _scheduled_row(); row["live"] = live
+    status, findings = module.classify(row, datetime(2026, 8, 29, 2, tzinfo=timezone.utc))
     assert status == "RED"
-    assert "REPEATED_CONSECUTIVE_FAILURES" in findings
+    assert "LATEST_RUN_FAILED" in findings
+    assert "LATEST_RUN_CANCELLED" not in findings
 
 
 def test_empty_registry_is_one_global_degradation(monkeypatch) -> None:
     def fake_api(url: str, token: str) -> dict:
-        if url.endswith("/Investering-Framework-Archive-v1"):
-            return {"default_branch": "main"}
-        if "/actions/workflows?" in url:
-            return {"workflows": []}
+        if url.endswith("/Investering-Framework-Archive-v1"): return {"default_branch": "main"}
+        if "/actions/workflows?" in url: return {"workflows": []}
         raise AssertionError(url)
 
     monkeypatch.setattr(module.base, "api_json", fake_api)
     try:
-        module.live_workflows(
-            "Donh91/Investering-Framework-Archive-v1", "token", {"scheduled.yml"}
-        )
+        module.live_workflows("Donh91/Investering-Framework-Archive-v1", "token", {"scheduled.yml"})
     except ValueError as exc:
         assert "EMPTY_WORKFLOW_REGISTRY_RESPONSE" in str(exc)
     else:
         raise AssertionError("empty registry must fail as global API degradation")
 
     assert module.API_DEGRADED is True
-    row = _scheduled_row()
-    row["live"] = None
-    status, findings = module.classify(
-        row, datetime(2026, 8, 29, 4, tzinfo=timezone.utc)
-    )
+    row = _scheduled_row(); row["live"] = None
+    status, findings = module.classify(row, datetime(2026, 8, 29, 4, tzinfo=timezone.utc))
     assert status == "GREEN"
     assert "WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE" not in findings
     assert "NO_RUN_HISTORY" not in findings
 
 
 def test_slow_cycle_workflow_preserves_only_stale_exit_code() -> None:
-    text = (
-        Path(__file__).parents[2]
-        / ".github"
-        / "workflows"
-        / "daily-slow-cycle-shadow.yml"
-    ).read_text()
+    text = (Path(__file__).parents[2] / ".github" / "workflows" / "daily-slow-cycle-shadow.yml").read_text()
     assert "collector_rc=$?" in text
     assert '"$collector_rc" -ne 0' in text
     assert '"$collector_rc" -ne 3' in text
@@ -221,12 +169,7 @@ def test_slow_cycle_workflow_preserves_only_stale_exit_code() -> None:
 
 
 def test_current_shadow_registry_is_branch_only_not_direct_main() -> None:
-    path = (
-        Path(__file__).parents[2]
-        / ".github"
-        / "workflows"
-        / "shadow-registry-weekly.yml"
-    )
+    path = Path(__file__).parents[2] / ".github" / "workflows" / "shadow-registry-weekly.yml"
     row = module.workflow_static(path)
     assert row["write_target_class"] == "BRANCH_ONLY"
     assert row["writes_main"] is False
@@ -234,12 +177,7 @@ def test_current_shadow_registry_is_branch_only_not_direct_main() -> None:
 
 
 def test_current_automation_health_writer_remains_direct_main() -> None:
-    path = (
-        Path(__file__).parents[2]
-        / ".github"
-        / "workflows"
-        / "automation-production-health.yml"
-    )
+    path = Path(__file__).parents[2] / ".github" / "workflows" / "automation-production-health.yml"
     row = module.workflow_static(path)
     assert row["write_target_class"] == "DIRECT_MAIN"
     assert row["writes_main"] is True
@@ -247,8 +185,7 @@ def test_current_automation_health_writer_remains_direct_main() -> None:
 
 def test_contents_write_without_git_push_is_not_a_main_writer(tmp_path: Path) -> None:
     path = tmp_path / "permission-only.yml"
-    path.write_text(
-        """name: Permission Only
+    path.write_text("""name: Permission Only
 on:
   workflow_dispatch:
 permissions:
@@ -257,8 +194,7 @@ jobs:
   x:
     steps:
       - run: echo no-push
-"""
-    )
+""")
     row = module.workflow_static(path)
     assert row["write_target_class"] == "WRITE_PERMISSION_NO_PUSH"
     assert row["writes_main"] is False
@@ -266,8 +202,7 @@ jobs:
 
 def test_explicit_non_main_ref_is_branch_only(tmp_path: Path) -> None:
     path = tmp_path / "branch-only.yml"
-    path.write_text(
-        """name: Branch Only
+    path.write_text("""name: Branch Only
 on:
   workflow_dispatch:
 permissions:
@@ -276,8 +211,7 @@ jobs:
   x:
     steps:
       - run: git push origin HEAD:automation/test-proof
-"""
-    )
+""")
     row = module.workflow_static(path)
     assert row["write_target_class"] == "BRANCH_ONLY"
     assert row["writes_main"] is False
@@ -286,8 +220,7 @@ jobs:
 
 def test_tag_push_is_not_a_main_writer(tmp_path: Path) -> None:
     path = tmp_path / "tag.yml"
-    path.write_text(
-        """name: Tag
+    path.write_text("""name: Tag
 on:
   workflow_dispatch:
 permissions:
@@ -296,8 +229,7 @@ jobs:
   x:
     steps:
       - run: git push origin refs/tags/v1
-"""
-    )
+""")
     row = module.workflow_static(path)
     assert row["write_target_class"] == "TAG_OR_OTHER_REF"
     assert row["writes_main"] is False
@@ -305,8 +237,7 @@ jobs:
 
 def test_unresolved_dynamic_push_target_fails_closed(tmp_path: Path) -> None:
     path = tmp_path / "dynamic.yml"
-    path.write_text(
-        """name: Dynamic
+    path.write_text("""name: Dynamic
 on:
   workflow_dispatch:
 permissions:
@@ -315,25 +246,22 @@ jobs:
   x:
     steps:
       - run: git push origin "$TARGET_BRANCH"
-"""
-    )
+""")
     row = module.workflow_static(path)
     assert row["write_target_class"] == "DYNAMIC_TARGET_UNKNOWN"
     assert row["writes_main"] is False
     row["live"] = {
         "state": "active",
-        "latest_run": {
-            "status": "completed",
-            "conclusion": "success",
-            "created_at": "2026-09-02T18:00:00Z",
-        },
+        "latest_run": {"status": "completed", "event": "workflow_dispatch", "conclusion": "success", "created_at": "2026-09-02T18:00:00Z"},
         "recent_failure_count": 0,
+        "recent_cancellation_count": 0,
+        "recent_pr_gate_rejection_count": 0,
         "success_streak": 1,
         "failure_streak": 0,
+        "cancellation_streak": 0,
+        "pr_gate_rejection_streak": 0,
     }
-    status, findings = module.classify(
-        row, datetime(2026, 9, 2, 19, tzinfo=timezone.utc)
-    )
+    status, findings = module.classify(row, datetime(2026, 9, 2, 19, tzinfo=timezone.utc))
     assert status == "RED"
     assert "WRITE_TARGET_UNKNOWN" in findings
 

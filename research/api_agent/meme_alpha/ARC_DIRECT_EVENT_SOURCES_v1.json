@@ -1,0 +1,80 @@
+{
+  "contract": "ALPHA_ARC_DIRECT_EVENT_SOURCES_v1",
+  "status": "SHADOW_ONLY",
+  "chain": "arc",
+  "chain_id": 5042,
+  "observed_at_utc": "2026-09-16T13:22:00Z",
+  "owner": "#1017",
+  "alpha_owner": "#1052",
+  "deployment_source": {
+    "repository": "Uniswap/contracts",
+    "path": "deployments/json/5042.json",
+    "verified_chain_id": "5042"
+  },
+  "arc_semantics_source": {
+    "repository": "Uniswap/UniswapX",
+    "path": "playbook/chains/arc.md"
+  },
+  "quote_assets": {
+    "usdc_erc20": {
+      "address": "0x3600000000000000000000000000000000000000",
+      "decimals": 6,
+      "role": "CANONICAL_POOL_ACCOUNTING_ANCHOR"
+    },
+    "native_usdc": {
+      "address": "0x0000000000000000000000000000000000000000",
+      "decimals": 18,
+      "role": "V4_NATIVE_CURRENCY_REPRESENTATION",
+      "warning": "Same economic balance as Arc USDC ERC20 interface but different precision. Never mix 18-decimal native units with 6-decimal ERC20 accounting."
+    }
+  },
+  "venues": {
+    "uniswap_v2": {
+      "emitter": "0x89e5db8b5aa49aa85ac63f691524311aeb649eba",
+      "event": "PairCreated(address,address,address,uint256)",
+      "topic0": "0x0d3648bd0f6ba80134a33ba9275ac585d9d315f0ad8355cddefde31afa28d0e9",
+      "pool_identity": "DEPLOYED_PAIR_ADDRESS"
+    },
+    "uniswap_v3": {
+      "emitter": "0xf0db7b58379503491d857db50ac9ece64c653918",
+      "event": "PoolCreated(address,address,uint24,int24,address)",
+      "topic0": "0x783cca1c0412dd0d695e784568c96da2e9c22ff989357a2e8b1d9b2b4e6b7118",
+      "pool_identity": "DEPLOYED_POOL_ADDRESS"
+    },
+    "uniswap_v4": {
+      "emitter": "0x8366a39cc670b4001a1121b8f6a443a643e40951",
+      "event": "Initialize(bytes32,address,address,uint24,int24,address,uint160,int24)",
+      "topic0": "0xdd466e674ea557f56295e2d0218a125ea4b4f0f6f3307b95f85e6110838d6438",
+      "pool_identity": "POOL_ID_NOT_DEPLOYED_POOL_ADDRESS"
+    }
+  },
+  "required_output_provenance": [
+    "chain",
+    "chain_id",
+    "venue",
+    "emitter",
+    "block_number",
+    "block_hash",
+    "block_timestamp",
+    "transaction_hash",
+    "transaction_index",
+    "log_index",
+    "token0_or_currency0",
+    "token1_or_currency1",
+    "quote_asset",
+    "target_token_ca_if_unambiguous",
+    "pool_address_or_pool_id",
+    "observed_at_utc",
+    "rpc_source"
+  ],
+  "invariants": {
+    "new_pool_is_new_token": false,
+    "v4_pool_id_is_contract_address": false,
+    "native_usdc_and_erc20_units_are_interchangeable": false,
+    "market_cap_inference_allowed": false,
+    "fdv_inference_allowed": false,
+    "wallet_labeling_allowed": false,
+    "user_alert_allowed": false,
+    "automatic_trading_allowed": false
+  }
+}

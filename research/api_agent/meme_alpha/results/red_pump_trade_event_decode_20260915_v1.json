@@ -1,0 +1,55 @@
+{
+  "contract": "MEME_ALPHA_RED_PUMP_TRADE_EVENT_DECODE_RESULT_v1",
+  "generated_from_run": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/35021875023",
+  "source": {
+    "dataset": "RED-COHORT-2026-v1.1.1",
+    "archive_md5": "172198eade99f702f1da0bfdd4cf3079",
+    "archive_sha256": "f908d10f459e52de0e6f0d77af26db262e41a521dfe3872f30bd795e255841d0"
+  },
+  "historical_protocol_schema": {
+    "official_repo": "pump-fun/pump-public-docs",
+    "idl_commit": "3c6721a67c0b206b39130b454c8ba22a83ce972e",
+    "idl_commit_date_utc": "2026-05-18T19:03:28Z",
+    "selection_rule": "latest official pump.json commit before RED observation window began 2026-06-11",
+    "trade_event_discriminator": [189, 219, 127, 211, 78, 230, 97, 238]
+  },
+  "bounded_decode": {
+    "transactions_resolved": 20,
+    "rpc_status_counts": {"OK": 20},
+    "trade_events_decoded": 12,
+    "events_matching_target_mint": 12,
+    "events_matching_target_mint_and_pair_wallet": 12,
+    "decoded_buy_events": 6,
+    "decoded_sell_events": 6,
+    "decode_source": {"LOG_PROGRAM_DATA": 12},
+    "all_decoded_events_consumed_schema_without_trailing_bytes": true
+  },
+  "critical_semantic_finding": {
+    "released_tx_sigs_are_safe_proxy_for_first_buy_transactions": false,
+    "evidence": "6 of 12 exact mint+pair-wallet TradeEvents decoded from released row tx_sigs were SELL events, while the released detector itself qualifies pairs from first-N buyers",
+    "impact_on_prior_causal_replay": "PR #1029 proved row wallet-to-transaction reconstruction and recurrence ordering feasibility, but its tx_sig blockTime must not be treated as the first-buyer event time unless the decoded event is independently verified as the relevant first BUY",
+    "required_correction": "for every pair-wallet/mint occurrence, reconstruct that wallet's earliest matching Pump TradeEvent with is_buy=true before pair qualification timing is frozen"
+  },
+  "sellable_outcome_path": {
+    "historical_trade_event_decode": "SUPPORTED",
+    "exact_quote_token_execution": "SUPPORTED",
+    "exact_real_and_virtual_reserve_state": "SUPPORTED",
+    "actual_sell_event_decode": "SUPPORTED",
+    "chart_only_outcome_is_sufficient": false,
+    "next_step": "first-buy reconstruction correction, then enumerate post-signal mint TradeEvents to measure actual executable buy/sell prices, reserve survival, sell evidence, MFE/MAE proxies and exit-capacity feasibility"
+  },
+  "artifact": {
+    "name": "meme-alpha-red-trade-event-decode-v1",
+    "artifact_id": 10417853068,
+    "artifact_zip_sha256": "adfa59b88fc14fa2814a5c5b410ed7ce32cac7a8d5ac9c5f0c00811304b2a293",
+    "retention_days": 30,
+    "repo_result_is_permanent_summary": true
+  },
+  "authority": {
+    "research_only": true,
+    "automatic_trading": false,
+    "buy_now_promotion": false,
+    "live_threshold_change": false,
+    "portfolio_action": false
+  }
+}

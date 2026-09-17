@@ -9,12 +9,14 @@ on:
       - 'scripts/api_agent/meme_alpha_source_auth.py'
       - 'scripts/api_agent/meme_alpha_prospective.py'
       - 'scripts/api_agent/meme_alpha_url_provenance.py'
+      - 'scripts/api_agent/meme_alpha_lifecycle_v1.py'
       - 'tests/api_agent/test_meme_alpha_runtime.py'
       - 'tests/api_agent/test_meme_alpha_runtime_v1_1.py'
       - 'tests/api_agent/test_meme_alpha_runtime_v1_2_hardening.py'
       - 'tests/api_agent/test_meme_alpha_source_auth.py'
       - 'tests/api_agent/test_meme_alpha_prospective.py'
       - 'tests/api_agent/test_meme_alpha_url_provenance.py'
+      - 'tests/api_agent/test_meme_alpha_lifecycle_v1.py'
       - 'research/api_agent/meme_alpha/**'
       - '.agents/skills/meme-alpha-supervisor/**'
       - '.github/workflows/meme-alpha-runtime-gate.yml'
@@ -41,12 +43,14 @@ jobs:
           scripts/api_agent/meme_alpha_source_auth.py
           scripts/api_agent/meme_alpha_prospective.py
           scripts/api_agent/meme_alpha_url_provenance.py
+          scripts/api_agent/meme_alpha_lifecycle_v1.py
           tests/api_agent/test_meme_alpha_runtime.py
           tests/api_agent/test_meme_alpha_runtime_v1_1.py
           tests/api_agent/test_meme_alpha_runtime_v1_2_hardening.py
           tests/api_agent/test_meme_alpha_source_auth.py
           tests/api_agent/test_meme_alpha_prospective.py
           tests/api_agent/test_meme_alpha_url_provenance.py
+          tests/api_agent/test_meme_alpha_lifecycle_v1.py
       - name: Run focused tests
         run: >-
           python -m unittest
@@ -56,6 +60,7 @@ jobs:
           tests.api_agent.test_meme_alpha_source_auth
           tests.api_agent.test_meme_alpha_prospective
           tests.api_agent.test_meme_alpha_url_provenance
+          tests.api_agent.test_meme_alpha_lifecycle_v1
           -v
       - name: Validate policy authority, budget and source-auth gate
         run: |
@@ -106,6 +111,27 @@ jobs:
           assert p['kill_criteria']['evaluate_only_after_minimum_matured_trials'] >= 20
           assert all(v is False for v in p['authority'].values())
           print('MEME_ALPHA_PROSPECTIVE_HARDENING_PASS')
+          PY
+      - name: Validate lifecycle and Phoenix research contracts
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          lifecycle=json.loads(Path('research/api_agent/meme_alpha/ALPHA_LAB_LIFECYCLE_ENGINE_v1.json').read_text())
+          phoenix=json.loads(Path('research/api_agent/meme_alpha/PHOENIX_RECLAIM_EXPERIMENT_v1.json').read_text())
+          assert lifecycle['contract']=='ALPHA_LAB_LIFECYCLE_ENGINE_v1'
+          assert lifecycle['identity']['primary_key']=='chain + exact token contract address'
+          assert lifecycle['anti_leakage']['moonshot_and_phoenix_training_populations_separate'] is True
+          assert lifecycle['regime_context']['may_veto_candidate'] is False
+          assert all(v is False for v in lifecycle['authority'].values())
+          assert phoenix['contract']=='PHOENIX_RECLAIM_EXPERIMENT_v1'
+          assert phoenix['pullback_retest']['mandatory_before_phoenix_gamble_candidate'] is True
+          assert phoenix['wallet_alpha']['single_wallet_is_sufficient_for_user_alert'] is False
+          assert phoenix['matched_control']['freeze_before_outcome'] is True
+          assert phoenix['historical_benchmarks']['may_not_directly_set_live_thresholds'] is True
+          assert phoenix['adaptive_evolution']['separate_champion_from_moonshot'] is True
+          assert all(v is False for v in phoenix['authority'].values())
+          print('MEME_ALPHA_LIFECYCLE_PHOENIX_PASS')
           PY
       - name: Dry-run v1.2 worker smoke
         run: |

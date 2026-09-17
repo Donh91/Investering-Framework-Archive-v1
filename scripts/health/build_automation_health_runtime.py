@@ -3,7 +3,7 @@ from __future__ import annotations
 """Runtime corrections for Automation Production Health.
 
 This is intentionally a thin compatibility layer over build_automation_health.py.
-It keeps the existing report contract and static analysis while correcting three
+It keeps the existing report contract and static analysis while correcting five
 runtime-observability semantics:
 
 1. scheduled workflow health is derived only from production-eligible runs on
@@ -13,13 +13,18 @@ runtime-observability semantics:
    degradation instead of 100+ independent missing-workflow observations;
 3. repository writes are classified by push target, so reviewed-PR branches are
    not mislabeled as direct-main writers and unresolved dynamic targets fail
-   closed instead of being assumed safe.
+   closed instead of being assumed safe;
+4. cancelled runs are interruption/availability evidence, not execution
+   failures: they remain visible as AMBER without masquerading as failed jobs;
+5. pull-request gate rejections remain visible as CI evidence but do not make
+   Automation Production Health RED unless an independent production/static
+   failure also exists.
 """
 
 import importlib.util
 import re
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 from urllib.parse import quote
 
 BASE_PATH = Path(__file__).with_name("build_automation_health.py")
@@ -32,6 +37,8 @@ ORIGINAL_CLASSIFY = base.classify
 ORIGINAL_WORKFLOW_STATIC = base.workflow_static
 API_DEGRADED = False
 PRODUCTION_EVENTS = {"schedule", "workflow_dispatch"}
+PR_EVENTS = {"pull_request", "pull_request_target"}
+CANCELLED_CONCLUSION = "cancelled"
 MAIN_WRITER_RISKS = {
     "NON_GLOBAL_WRITER_LOCK",
     "NO_REBASE_ABORT",
@@ -203,12 +210,45 @@ def _run_view(run: dict[str, Any] | None) -> dict[str, Any] | None:
     }
 
 
+def _is_cancelled(run: dict[str, Any]) -> bool:
+    return run.get("status") == "completed" and run.get("conclusion") == CANCELLED_CONCLUSION
+
+
+def _is_pr_gate_rejection(run: dict[str, Any]) -> bool:
+    return (
+        run.get("status") == "completed"
+        and run.get("event") in PR_EVENTS
+        and run.get("conclusion") not in base.GOOD_CONCLUSIONS
+        and run.get("conclusion") != CANCELLED_CONCLUSION
+    )
+
+
+def _is_execution_failure(run: dict[str, Any]) -> bool:
+    return (
+        run.get("status") == "completed"
+        and run.get("conclusion") not in base.GOOD_CONCLUSIONS
+        and run.get("conclusion") != CANCELLED_CONCLUSION
+        and run.get("event") not in PR_EVENTS
+    )
+
+
+def _leading_run_streak(
+    runs: list[dict[str, Any]], predicate: Callable[[dict[str, Any]], bool]
+) -> int:
+    count = 0
+    for run in runs:
+        if not predicate(run):
+            break
+        count += 1
+    return count
+
+
 def live_workflows(
     repo: str,
     token: str,
     scheduled_workflows: set[str] | None = None,
 ) -> dict[str, dict[str, Any]]:
-    """Return live state with scheduled workflows scoped to production runs."""
+    """Return live state with production failures separated from CI/interruption evidence."""
     global API_DEGRADED
     API_DEGRADED = False
 
@@ -242,10 +282,6 @@ def live_workflows(
         is_scheduled = workflow_name in scheduled_set
 
         if is_scheduled:
-            # The branch query prevents task-branch / PR pushes from becoming
-            # production-health evidence. Event filtering also excludes any
-            # historical push/PR run that happened on main under an older
-            # trigger definition.
             runs = base.api_json(
                 f"{api_base}/actions/workflows/{wid}/runs?branch={branch_q}&per_page=20",
                 token,
@@ -282,11 +318,9 @@ def live_workflows(
             run for run in production_runs if run.get("status") == "completed"
         ]
         conclusions = [run.get("conclusion") for run in recent_completed]
-        recent_failures = [
-            run
-            for run in recent_completed
-            if run.get("conclusion") not in base.GOOD_CONCLUSIONS
-        ]
+        execution_failures = [run for run in recent_completed if _is_execution_failure(run)]
+        cancellations = [run for run in recent_completed if _is_cancelled(run)]
+        pr_gate_rejections = [run for run in recent_completed if _is_pr_gate_rejection(run)]
 
         result[workflow_name] = {
             "workflow_id": wid,
@@ -298,40 +332,95 @@ def live_workflows(
                 if is_scheduled
                 else "all_registered_runs"
             ),
+            "conclusion_semantics": "execution_failures_exclude_cancelled_and_pull_request_gate_rejections",
             "latest_run": _run_view(latest),
             "latest_scheduled_run": _run_view(latest_scheduled),
             "recent_completed_count": len(recent_completed),
-            "recent_failure_count": len(recent_failures),
+            "recent_failure_count": len(execution_failures),
+            "recent_cancellation_count": len(cancellations),
+            "recent_pr_gate_rejection_count": len(pr_gate_rejections),
             "recent_conclusions": conclusions[:5],
             "success_streak": base.leading_streak(conclusions, True),
-            "failure_streak": base.leading_streak(conclusions, False),
+            "failure_streak": _leading_run_streak(recent_completed, _is_execution_failure),
+            "cancellation_streak": _leading_run_streak(recent_completed, _is_cancelled),
+            "pr_gate_rejection_streak": _leading_run_streak(recent_completed, _is_pr_gate_rejection),
         }
 
     return result
 
 
+def _copy_with_non_execution_latest_neutralized(row: dict[str, Any]) -> dict[str, Any]:
+    """Keep cancellations/PR rejections from masquerading as execution failures."""
+    live = row.get("live") or {}
+    latest = live.get("latest_run") if isinstance(live, dict) else None
+    if not isinstance(latest, dict) or not (
+        _is_cancelled(latest) or _is_pr_gate_rejection(latest)
+    ):
+        return row
+    candidate = dict(row)
+    candidate_live = dict(live)
+    candidate_latest = dict(latest)
+    candidate_latest["conclusion"] = "neutral"
+    candidate_live["latest_run"] = candidate_latest
+    candidate["live"] = candidate_live
+    return candidate
+
+
 def classify(row: dict[str, Any], now: Any) -> tuple[str, list[str]]:
-    """Apply runtime health semantics and fail closed on unresolved write targets."""
-    candidate = row
+    """Apply production-health semantics and fail closed on unresolved write targets."""
+    candidate = _copy_with_non_execution_latest_neutralized(row)
     if API_DEGRADED:
-        # Preserve static and lifecycle findings, but do not infer NO_RUN_HISTORY,
-        # LATEST_RUN_FAILED or missing registration from an unavailable global API.
-        candidate = dict(row)
+        candidate = dict(candidate)
         candidate["scheduled"] = False
         candidate["live"] = {
             "state": "active",
             "latest_run": None,
             "recent_failure_count": 0,
             "recent_completed_count": 0,
+            "recent_cancellation_count": 0,
+            "recent_pr_gate_rejection_count": 0,
             "success_streak": 0,
             "failure_streak": 0,
+            "cancellation_streak": 0,
+            "pr_gate_rejection_streak": 0,
         }
 
     status, findings = ORIGINAL_CLASSIFY(candidate, now)
+    findings_set = set(findings)
+    live = row.get("live") or {}
+    latest = live.get("latest_run") if isinstance(live, dict) else None
+    latest_scheduled = live.get("latest_scheduled_run") if isinstance(live, dict) else None
+    semantic_warning = False
+
+    if isinstance(latest, dict) and latest.get("conclusion") == CANCELLED_CONCLUSION:
+        findings_set.add("LATEST_RUN_CANCELLED")
+        semantic_warning = True
+    elif (
+        row.get("scheduled")
+        and isinstance(latest_scheduled, dict)
+        and latest_scheduled.get("conclusion") == CANCELLED_CONCLUSION
+    ):
+        findings_set.add("LATEST_SCHEDULED_RUN_CANCELLED")
+        semantic_warning = True
+
+    if int(live.get("cancellation_streak", 0) or 0) >= 2:
+        findings_set.add("REPEATED_CONSECUTIVE_CANCELLATIONS")
+        semantic_warning = True
+
+    if isinstance(latest, dict) and _is_pr_gate_rejection(latest):
+        findings_set.add("PR_GATE_REJECTION")
+        semantic_warning = True
+    if int(live.get("pr_gate_rejection_streak", 0) or 0) >= 2:
+        findings_set.add("REPEATED_PR_GATE_REJECTIONS")
+        semantic_warning = True
+
     if row.get("write_target_class") == "DYNAMIC_TARGET_UNKNOWN":
-        findings = sorted(set(findings) | {"WRITE_TARGET_UNKNOWN"})
+        findings_set.add("WRITE_TARGET_UNKNOWN")
         status = "RED"
-    return status, findings
+    elif semantic_warning and status == "GREEN":
+        status = "AMBER"
+
+    return status, sorted(findings_set)
 
 
 def main() -> None:

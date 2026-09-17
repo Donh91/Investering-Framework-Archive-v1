@@ -1,0 +1,63 @@
+{
+  "contract": "CLEAN_G3_RED_PAIR_QUALIFICATION_FREEZE_v1",
+  "created_at_utc": "2026-09-16T01:20:00Z",
+  "status": "FROZEN_RESEARCH_EVIDENCE",
+  "source": "RED-COHORT-2026-v1.1.1",
+  "source_pr": 1031,
+  "source_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/35035588106",
+  "source_head_sha": "7f9ed503c4eafb3bfd41ebf929ec7f61adf09acd",
+  "source_merge_sha": "3c4df10c0f136c014cf0e1654e8b917bedd9ef09",
+  "source_artifact": {
+    "name": "meme-alpha-red-earliest-first-buy-v2",
+    "id": 10422954675,
+    "sha256": "74c08f954d3a1d98ebe27667d3b551ae1d44917945409c1523ce67a1eac0bee7"
+  },
+  "historical_protocol_schema": {
+    "pump_idl_commit": "3c6721a67c0b206b39130b454c8ba22a83ce972e"
+  },
+  "qualification_rule": {
+    "qualification_launch_ordinal": 3,
+    "pair_qualification_time": "max earliest genuine historical is_buy=true Pump TradeEvent timestamp across the two recurring pair wallets on launch #3",
+    "pair_qualification_slot": "max earliest genuine historical is_buy=true Pump TradeEvent slot across the two recurring pair wallets on launch #3",
+    "qualification_launch_prediction_eligible": false,
+    "first_prediction_eligible_launch_ordinal": 4,
+    "hard_invariant": "launch #3 establishes qualification and MUST NOT be scored as a predicted economic outcome"
+  },
+  "pairs": [
+    {
+      "pair_identity_sha256": "0013924fd62ac88c2d7c6f2e4d8ae8895d3cb1b783f989eb5e2d6f607d9cf8bd",
+      "qualification_launch_mint_sha256": "d38343baa4a77b7c15055d7e11a14311341bad17969098048e8f4421049a7f3c",
+      "qualification_timestamp": 1781652777,
+      "qualification_slot": 426952653,
+      "wallet_evidence": [
+        {"wallet_sha256": "fcc820b7229fb0b1e33f261dda1078b996a0766ae8694bb9a3ab6f71965f7929", "earliest_buy_timestamp": 1781652777, "earliest_buy_slot": 426952653},
+        {"wallet_sha256": "3e24b8413a9edead403034db783fea3977ba2430d6baa4ab9a9c7204e3d586e9", "earliest_buy_timestamp": 1781652777, "earliest_buy_slot": 426952653}
+      ]
+    },
+    {
+      "pair_identity_sha256": "00809f110dadd7f30ac21d868c2abf1e16066a409952018e37b6eb9d92108387",
+      "qualification_launch_mint_sha256": "0868b6ea4db812316acc4a292439f6eda7e50d799f215bdc29972a99d9d5171a",
+      "qualification_timestamp": 1782170705,
+      "qualification_slot": 428257241,
+      "wallet_evidence": [
+        {"wallet_sha256": "79965f68c333d82287d0bce3e1c3d80c189c50746dedbdbf45d0390ca6b7f6ac", "earliest_buy_timestamp": 1782170705, "earliest_buy_slot": 428257241},
+        {"wallet_sha256": "53fc7e44ea298be880aba8cb667cfb4eb395004bb2e4623236b35d1ed59fa84e", "earliest_buy_timestamp": 1782170705, "earliest_buy_slot": 428257241}
+      ]
+    }
+  ],
+  "invariants": {
+    "selected_pairs": 2,
+    "qualification_launches": 2,
+    "qualification_wallet_occurrences": 4,
+    "all_qualification_wallet_buys_reconstructed": true,
+    "qualification_launch_prediction_eligible_count": 0,
+    "raw_identifiers_logged": false
+  },
+  "authority": {
+    "research_only": true,
+    "automatic_trading": false,
+    "portfolio_execution": false,
+    "buy_now_promotion": false,
+    "live_threshold_change": false
+  }
+}

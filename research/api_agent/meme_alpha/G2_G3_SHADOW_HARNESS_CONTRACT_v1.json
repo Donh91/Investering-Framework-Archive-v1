@@ -1,0 +1,102 @@
+{
+  "contract": "G2_G3_SHADOW_HARNESS_CONTRACT_v1",
+  "status": "ACTIVE_RESEARCH_ONLY_SHADOW_INSTRUMENTATION",
+  "created_at_utc": "2026-09-15T17:48:00Z",
+  "purpose": "Freeze point-in-time G2 capital-path and G3 wallet/network evidence at deterministic early cutoffs so later research can measure incremental sellable-tail edge without hindsight mutation, live-rule changes or trading authority.",
+  "issue_owner": "#1018",
+  "phase": "ENVELOPE_AND_INTEGRITY_CORE",
+  "initial_shadow_scope": {
+    "preferred_first_venue": "Solana/Pump.fun",
+    "source_adapter_activation_in_this_phase": false,
+    "cutoff_minutes": [1, 5, 15, 30],
+    "new_learning_epoch_required_when_live_collection_starts": true,
+    "ethereum_threshold_reuse_by_default": false
+  },
+  "identity": {
+    "primary_key": "chain + exact token contract or mint",
+    "token_origin_required": true,
+    "pool_identity_secondary": true,
+    "new_pool_is_new_token": false,
+    "pool_age_may_reset_token_origin": false
+  },
+  "feature_provenance_required": [
+    "feature_name",
+    "feature_value_at_cutoff",
+    "feature_effective_at_utc",
+    "source_observed_at_utc",
+    "source_or_schema_version",
+    "source_record_or_event_identity",
+    "mutability_class"
+  ],
+  "mutability_classes": [
+    "IMMUTABLE_EVENT",
+    "SNAPSHOT_PINNED",
+    "DERIVED_FROM_PINNED_EVENTS",
+    "MUTABLE_LIVE_FIELD",
+    "UNKNOWN"
+  ],
+  "integrity_rules": {
+    "mutable_live_field_is_historical_training_evidence": false,
+    "snapshot_pinned_observation_after_cutoff_allowed": false,
+    "immutable_event_may_be_reconstructed_after_cutoff_if_effective_before_cutoff": true,
+    "future_wallet_quality_may_backfill_prior_score": false,
+    "later_social_or_caller_state_may_backfill_prior_feature": false,
+    "unknown_is_negative_evidence": false,
+    "collector_stale_means_market_silence": false,
+    "collector_stale_state": "DEGRADED_DATA",
+    "retrospective_vs_shadow_feature_prevalence_canary_required": true,
+    "prevalence_canary_has_market_interpretation_authority": false
+  },
+  "wallet_roles": [
+    "SELF_INITIATED_TRADE",
+    "ROUTER_ATTRIBUTED_TRADE",
+    "DIRECT_TRANSFER",
+    "SEEDED_DUST",
+    "CONSOLIDATION_EXIT_WALLET",
+    "CREATOR_OR_FUNDER_LINKED",
+    "UNKNOWN"
+  ],
+  "g2_feature_families": [
+    "independent_buyer_breadth_velocity_and_acceleration",
+    "net_real_capital_inflow_and_per_buyer",
+    "buy_size_dispersion_and_repeat_buy_fraction",
+    "buy_sell_flow_imbalance_and_first_sell_latency",
+    "capital_progress_per_real_trade",
+    "liquidity_growth_quality_and_price_impact_per_net_capital",
+    "short_window_return_stability_and_realized_volatility"
+  ],
+  "g3_feature_families": [
+    "wallet_as_of_prior_observations_and_shrunk_hit_rate",
+    "prior_realizable_mfe_and_rug_unsellable_rate",
+    "timeliness_and_venue_specialization",
+    "wallet_entry_role",
+    "co_entry_recurrence_and_synchrony",
+    "hold_trim_exit_history",
+    "wallet_to_public_exact_ca_lead_time"
+  ],
+  "future_outcome_binding": {
+    "horizons": ["1H", "4H", "24H", "72H", "7D", "14D"],
+    "multiples": [2, 5, 10, 25, 50, 100],
+    "raw_chart_peak_is_positive_tail_truth": false,
+    "sellability_liquidity_and_slippage_required_for_realizable_tail": true,
+    "right_censoring_must_be_explicit": true
+  },
+  "required_ablation_order": [
+    "BASELINE_MARKET_STRUCTURE",
+    "BASELINE_PLUS_G2",
+    "BASELINE_PLUS_G3",
+    "BASELINE_PLUS_G2_PLUS_G3",
+    "PLUS_ENTITY_CREATOR_CONTROLS",
+    "FULL_PRE_PROPAGATION_STACK"
+  ],
+  "promotion_boundary": "Instrumentation may collect/freeze evidence only. No live Moonshot threshold, BUY_NOW semantics, model weight or user-facing alert expansion until prospective validation demonstrates incremental G3 value over G2 plus controls in time-ordered windows without sellability or false-positive degradation.",
+  "authority": {
+    "portfolio_action": false,
+    "automatic_trading": false,
+    "position_size_output": false,
+    "live_alert_change": false,
+    "market_rule_change": false,
+    "model_weight_change": false,
+    "automatic_merge": false
+  }
+}

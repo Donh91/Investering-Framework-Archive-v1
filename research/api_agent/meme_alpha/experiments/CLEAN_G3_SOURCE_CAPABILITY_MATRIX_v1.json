@@ -1,0 +1,108 @@
+{
+  "contract": "CLEAN_G3_SOURCE_CAPABILITY_MATRIX_v1",
+  "created_at_utc": "2026-09-15T20:10:00Z",
+  "status": "ACTIVE_RESEARCH_MAP",
+  "objective": "Identify which public and native sources can actually answer the preregistered clean-G3 question without hindsight, identity or entity leakage.",
+  "primary_question": "Does point-in-time, entity-adjusted wallet intelligence add incremental sellable 5x/10x edge above G2 capital-path and microstructure?",
+  "non_negotiable_rules": [
+    "A source-captured smart-wallet label is not equivalent to reconstructed AS-OF wallet quality.",
+    "Current wallet PnL or current labels may not be backfilled into historical candidate rows.",
+    "Address count is not economic-entity count.",
+    "A wallet event must be self-initiated trade evidence before attribution; routers, pools, transfers, dust and seeded activity are excluded.",
+    "Theoretical peak return is not a sellable outcome.",
+    "Unknown stays UNKNOWN.",
+    "No historical result changes BUY_NOW or production thresholds without prospective shadow validation."
+  ],
+  "sources": [
+    {
+      "source": "ian05012/solana-memecoin-dataset",
+      "role": "G2_PRIMARY__SOURCE_CAPTURED_G3_SECONDARY",
+      "capabilities": ["detection-time token snapshots", "source-captured smart-wallet annotations", "wallet trade history", "timestamped wallet funding edges", "forward outcome fields"],
+      "clean_g3_at_candidate_cutoff": "NO_ON_CURRENT_RELEASE_UNDER_CANONICAL_JOIN",
+      "reason": "The completed v1.2 audit found zero current-token trade rows joining at or before the canonical earliest candidate snapshot. A clean pre-capture buyer graph could not be reconstructed. Source-captured smart-wallet fields remain hypothesis-only.",
+      "usable_now": ["G2 ablation", "selected-cohort 2x/5x/10x hypothesis generation", "funding graph methodology", "negative/source-semantic audits"],
+      "forbidden_inference": "Do not claim reconstructed AS-OF wallet edge from this release."
+    },
+    {
+      "source": "RED-COHORT-2026 / arXiv:2607.02795",
+      "role": "G3_STRUCTURE_AND_CONTAMINATION_CONTROL",
+      "capabilities": ["1,578,333 buyer events", "166,098 launches", "1,012 persistent first-buyer cohorts", "co-entry recurrence", "contamination-excluded downstream buyer-flow outcome", "launch-quality propensity matching"],
+      "clean_g3_at_candidate_cutoff": "PARTIAL",
+      "reason": "It provides genuine first-buyer/co-entry structure and contamination controls, but the published result is downstream buyer-flow, not sellable economic return or realizable MFE.",
+      "key_research_fact": "The revised matched estimate reports +16.1% non-cohort first-30m buyer-count lift while the +6.3% SOL-inflow estimate is not distinguishable from zero at 95% confidence.",
+      "usable_now": ["cohort recurrence definitions", "contamination exclusion", "matched-failure design", "wallet synchrony falsification"],
+      "next_join_needed": "Attach point-in-time sellable return / liquidity survival outcomes without contaminating the cohort definition."
+    },
+    {
+      "source": "Tr4m0ryp/trenches-pumpfun-forward-2026-08",
+      "role": "POINT_IN_TIME_AND_FIELD_AVAILABILITY_CALIBRATION",
+      "capabilities": ["85,442 first-sighting feature rows", "730,850 point-in-time observations", "per-field tau derivability stamps", "forward-only split", "path_completed chain label", "source-captured smart_degen_count", "funding/holder/bundle/rug screen numerics"],
+      "clean_g3_at_candidate_cutoff": "NO_FOR_RAW_WALLET_RECONSTRUCTION",
+      "reason": "The published decoded per-trade chain files cover an earlier period and have zero-mint intersection with the 85,442 capture mints. The dataset is nevertheless unusually strong for proving whether a field was actually derivable at decision time.",
+      "critical_leakage_findings": [
+        "reach/X fields are not derivable at first sighting in the release and must be excluded from admissible features",
+        "negative first-sighting ages exist and require a conservative observer-time bound",
+        "curve-progress proxies are explicitly banned because they can mechanically encode the lifecycle outcome"
+      ],
+      "usable_now": ["independent G2 lifecycle replication", "source-captured G3 secondary ablation", "point-in-time leakage canary", "Solana regime profiling"],
+      "forbidden_inference": "Do not treat graduation/path_completed as sellable 5x/10x alpha."
+    },
+    {
+      "source": "Chain of Title frozen public deposit",
+      "role": "ENTITY_CREATOR_FUNDER_PROVENANCE",
+      "capabilities": ["launch-time creator provenance", "creator self-buy and initial share", "outside buyers", "operator/funder relationships", "metadata/image hash reuse", "curve completion/buyout context"],
+      "clean_g3_at_candidate_cutoff": "SUPPORTING_NOT_SUFFICIENT",
+      "reason": "Excellent for separating apparently independent addresses from creator/funder/operator structures and for provenance, but not by itself a mature wallet-skill return ledger.",
+      "license_boundary": "Use the frozen public CC0 deposit for bulk historical research. Do not assume current live API data inherits that license or work around current quotas.",
+      "usable_now": ["entity adjustment", "creator/funder control variables", "copycat/provenance features", "matched-failure stratification"]
+    },
+    {
+      "source": "Pump.fun native create/trade/completion events via pinned event adapter",
+      "role": "PROSPECTIVE_G2_AND_CURRENT_TOKEN_BUYER_TRUTH",
+      "capabilities": ["exact mint", "creator", "user/trader", "buy/sell side", "quote amount", "token amount", "timestamp", "reserve state", "quote mint", "completion lifecycle event"],
+      "clean_g3_at_candidate_cutoff": "YES_IF_COMBINED_WITH_MATURED_PRIOR_WALLET_LEDGER",
+      "reason": "Native events can establish who actually bought the current token and when. Clean G3 still requires a separate AS-OF ledger of each wallet's prior matured outcomes and entity/funder relationships.",
+      "usable_now": ["prospective buyer graph", "self-initiated trade attribution after exclusions", "G2 capital path", "future clean-G3 shadow cohort"],
+      "hard_rule": "Completion/migration is lifecycle state, never profitability. Quote asset cannot be assumed to be SOL."
+    },
+    {
+      "source": "SmugCalls public data + Git history",
+      "role": "TEMPORAL_OUTCOME_AND_FALSIFIER_LAYER",
+      "capabilities": ["call-time rows", "ratcheting historical peak snapshots", "late-flex reconstruction", "published negative feature tests", "leakage postmortems"],
+      "clean_g3_at_candidate_cutoff": "NO",
+      "usable_now": ["temporal outcome panel", "late-flex/tail timing", "feature falsifier memory", "runner-survival hypotheses"],
+      "hard_rule": "Final peak is not realizable return; Git-history interval timing is coarse and must not be represented as minute-precise chain timing."
+    },
+    {
+      "source": "MELT public feature/code release",
+      "role": "ENTITY_AND_MANIPULATION_METHODOLOGY",
+      "capabilities": ["holder concentration", "sniper windows", "developer holdings", "early buyer retention", "wash/transfer ratios", "wallet clustering"],
+      "clean_g3_at_candidate_cutoff": "SUPPORTING_NOT_SUFFICIENT",
+      "usable_now": ["entity-adjustment methods", "manipulation controls", "feature definitions"],
+      "license_boundary": "Public release is CC BY-NC 4.0; commercial reuse requires separate permission."
+    }
+  ],
+  "wave_1_decision": {
+    "statistical_lab": "Solana/pump.fun",
+    "execute_now": [
+      "Run an independent point-in-time G2 vs source-captured-G3 secondary ablation on Trenches using the published forward split.",
+      "Freeze a Solana/pump.fun regime profile from only point-in-time and venue-native evidence.",
+      "Probe RED-COHORT for joinable first-buyer/cohort identifiers and outcome-compatible fields.",
+      "Use Chain of Title only as creator/funder/entity adjustment, not as wallet-profitability truth.",
+      "Prepare prospective native Pump buyer-graph capture so the final clean-G3 test no longer depends on mutable third-party wallet labels."
+    ],
+    "do_not_do": [
+      "Do not tune global smart-wallet thresholds.",
+      "Do not import Solana thresholds to Robinhood, BNB, Base or Monad.",
+      "Do not promote graduation predictors into BUY_NOW.",
+      "Do not collapse all wallet roles into one global smart score."
+    ]
+  },
+  "authority": {
+    "research_only": true,
+    "automatic_trading": false,
+    "portfolio_execution": false,
+    "buy_now_promotion": false,
+    "live_threshold_change": false
+  }
+}

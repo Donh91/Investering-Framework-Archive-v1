@@ -1,0 +1,62 @@
+{
+  "contract": "CLEAN_G3_RED_SELLABILITY_PILOT_RESULT_v1",
+  "created_at_utc": "2026-09-16T01:28:00Z",
+  "status": "FROZEN_RESEARCH_EVIDENCE",
+  "source": "RED-COHORT-2026-v1.1.1",
+  "authoritative_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/35043820046",
+  "authoritative_head_sha": "d13baced2db4cf59ebd313c7fe01a6b44307b976",
+  "artifact": {
+    "name": "meme-alpha-red-sellability-outcomes-v1",
+    "id": 10426228286,
+    "sha256": "517513082a3b631eebc3426c5fe0cf2a55f364f950da885964cda0bec69e749d"
+  },
+  "method": {
+    "horizon_seconds": 86400,
+    "venue_scope": "exact historical Pump TradeEvents",
+    "signal": "max earliest genuine BUY across the recurring pair on the current launch",
+    "entry": "first later slot with exactly one exact-mint Pump TradeEvent where that event is BUY; same signal slot forbidden",
+    "multiple_basis": "gross TradeEvent quote_amount/token_amount execution-price ratio; fee fields are retained but this pilot does not claim fee-net PnL",
+    "sellability": "actual SELL at/above threshold; capacity is SELL token amount divided by entry-anchor token amount",
+    "migration_boundary": "Pump-only; no silent claim of post-migration AMM coverage"
+  },
+  "counts": {
+    "selected_pairs": 2,
+    "qualification_launches_seen_not_scored": 2,
+    "prediction_launches": 4,
+    "ready_prediction_launches": 4,
+    "unique_24h_transactions_required": 188,
+    "unique_24h_transactions_resolved": 188,
+    "rpc_http_429_terminal_failures": 0,
+    "launches_reaching_2x_24h": 0,
+    "launches_reaching_5x_24h": 0,
+    "launches_reaching_10x_24h": 0
+  },
+  "rows": [
+    {"pair_identity_sha256":"0013924fd62ac88c2d7c6f2e4d8ae8895d3cb1b783f989eb5e2d6f607d9cf8bd","mint_sha256":"19a66a92f6c518368e5d61c1dd62bc38c9e2c14992126de62e8cce1aba4a4e81","launch_ordinal":4,"exact_pump_trade_events_24h":6,"theoretical_event_mfe_multiple_24h":0.9640254506063454,"sell_anchored_mfe_multiple_24h":0.9640254506063454,"outcome_2x":"NOT_REACHED","outcome_5x":"NOT_REACHED","outcome_10x":"NOT_REACHED","pump_curve_real_token_reserves_zero_observed_24h":false},
+    {"pair_identity_sha256":"0013924fd62ac88c2d7c6f2e4d8ae8895d3cb1b783f989eb5e2d6f607d9cf8bd","mint_sha256":"5de8b6f7794a3bb899f5e3b4a5bf5b134c35f8ea8a9fd3aebcad0d0db508b13e","launch_ordinal":5,"exact_pump_trade_events_24h":57,"theoretical_event_mfe_multiple_24h":1.46245212623196,"sell_anchored_mfe_multiple_24h":1.46245212623196,"outcome_2x":"NOT_REACHED","outcome_5x":"NOT_REACHED","outcome_10x":"NOT_REACHED","pump_curve_real_token_reserves_zero_observed_24h":false},
+    {"pair_identity_sha256":"0013924fd62ac88c2d7c6f2e4d8ae8895d3cb1b783f989eb5e2d6f607d9cf8bd","mint_sha256":"f9a9b9d37f3580ff9f4b1d2f2ffac1ca3c58ce82d3e4b2afb898eb2f40094c00","launch_ordinal":6,"exact_pump_trade_events_24h":16,"theoretical_event_mfe_multiple_24h":0.9809372840800964,"sell_anchored_mfe_multiple_24h":0.9809372840800964,"outcome_2x":"NOT_REACHED","outcome_5x":"NOT_REACHED","outcome_10x":"NOT_REACHED","pump_curve_real_token_reserves_zero_observed_24h":false},
+    {"pair_identity_sha256":"00809f110dadd7f30ac21d868c2abf1e16066a409952018e37b6eb9d92108387","mint_sha256":"a3e2caf9507f15668528646413edfb80595516c3c56ed4c13ba4e1607cc7a9f8","launch_ordinal":4,"exact_pump_trade_events_24h":96,"theoretical_event_mfe_multiple_24h":0.9950631979887413,"sell_anchored_mfe_multiple_24h":0.9950631979887413,"outcome_2x":"NOT_REACHED","outcome_5x":"NOT_REACHED","outcome_10x":"NOT_REACHED","pump_curve_real_token_reserves_zero_observed_24h":false}
+  ],
+  "invariants": {
+    "launch_3_excluded_from_prediction": true,
+    "only_launch_4_plus_scored": true,
+    "same_slot_entry_forbidden": true,
+    "all_required_transactions_resolved": true,
+    "raw_identifiers_logged": false
+  },
+  "interpretation": {
+    "pilot_outcome_reconstruction": "SUPPORTED",
+    "pilot_signal_result": "NEGATIVE_FOR_2X_5X_10X_WITHIN_24H_ON_THE_FOUR_POST_QUALIFICATION_LAUNCHES",
+    "clean_g3_global_hypothesis_falsified": false,
+    "reason": "n=4 post-qualification launches is too small for a general alpha conclusion; this result is evidence against promoting the tested recurring-pair rule, not evidence that all wallet intelligence lacks edge",
+    "safe_for_g2_vs_clean_g3_ablation": false,
+    "next_action": "do not tune on these four rows; scale the same frozen causal construction to a materially larger recurring-wallet cohort and preserve matched failures before any G2 vs CLEAN G3 ablation"
+  },
+  "authority": {
+    "research_only": true,
+    "automatic_trading": false,
+    "portfolio_execution": false,
+    "buy_now_promotion": false,
+    "live_threshold_change": false
+  }
+}

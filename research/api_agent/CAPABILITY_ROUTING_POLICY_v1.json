@@ -6,6 +6,8 @@
   "task_registry_owner": "research/api_agent/API_TASK_REGISTRY_v1.json",
   "default_mode": "SHADOW_RECOMMEND_ONLY",
   "production_activation": "EXPLICIT_RUNTIME_FLAG_AFTER_QUALIFICATION",
+  "routing_strategy": "CAPABILITY_MATCHED_WITH_ESCALATION",
+  "routing_objective": "LOWEST_EXPECTED_TOTAL_TASK_COST_AT_REQUIRED_RELIABILITY",
   "pricing_snapshot": {
     "observed_at_utc_date": "2026-09-05",
     "semantics": "ROUTING_COST_ESTIMATE_ONLY_NOT_BILLING_OR_BUDGET_AUTHORITY",
@@ -16,6 +18,9 @@
   "principles": {
     "deterministic_first": true,
     "cheapest_qualified_executor": true,
+    "optimize_total_task_cost_not_unit_inference_cost": true,
+    "avoid_repeated_low_tier_retries_when_higher_capability_is_more_efficient": true,
+    "escalate_when_expected_error_or_rework_cost_exceeds_model_cost": true,
     "model_identity_never_grants_authority": true,
     "api_models_have_repository_write_authority": false,
     "profile_write_scope_is_request_not_authority": true,
@@ -31,6 +36,77 @@
     "least_privilege_context": true,
     "delegation_lineage_required_for_hardened_profiles": true,
     "bounded_redelegation_only": true
+  },
+  "model_role_policy": {
+    "gpt-5.6-luna": {
+      "role": "ROUTINE_WORKFORCE",
+      "preferred_for": [
+        "classification",
+        "data_cleaning",
+        "deduplication",
+        "extraction",
+        "monitoring",
+        "parsing",
+        "receipt_generation",
+        "schema_checks",
+        "simple_comparisons",
+        "structured_output",
+        "triage"
+      ]
+    },
+    "gpt-5.6-terra": {
+      "role": "INTERMEDIATE_SYNTHESIS_AND_CONFLICT_REVIEW",
+      "preferred_for": [
+        "bounded_conflict_review",
+        "intermediate_synthesis",
+        "moderate_multi_source_review"
+      ]
+    },
+    "gpt-5.6-sol": {
+      "role": "SENIOR_SPECIALIST",
+      "preferred_for": [
+        "architecture_review",
+        "complex_code_review",
+        "complex_research_synthesis",
+        "conflicting_evidence",
+        "difficult_reasoning",
+        "framework_wide_consequence_analysis",
+        "high_rework_cost_tasks",
+        "root_cause_analysis",
+        "scientific_falsification",
+        "strategic_planning"
+      ],
+      "routing_note": "SOL_IS_NOT_A_LUXURY_TIER_TO_MINIMIZE; USE_WHEN_EXPECTED_RELIABILITY_OR_REWORK_SAVINGS_JUSTIFY_IT"
+    },
+    "gpt-6-astra": {
+      "role": "SCARCE_AGENTIC_AND_EXTREME_COMPLEXITY_TIER",
+      "preferred_for": [
+        "agentic_execution",
+        "cross_domain_orchestration",
+        "extreme_context",
+        "highest_complexity_architecture",
+        "long_running_multi_step_work"
+      ],
+      "routing_note": "RESERVE_FOR_TASKS_WHERE_AGENTIC_EXECUTION_OR_CAPABILITY_DELTA_MATERIALLY_EXCEEDS_SOL"
+    }
+  },
+  "escalation_policy": {
+    "default": "START_AT_LOWEST_RELIABLY_QUALIFIED_TIER",
+    "direct_to_sol_when": [
+      "complexity_is_DIFFICULT_or_ARCHITECTURE",
+      "cross_component_or_framework_wide_consequences",
+      "conflicting_or_ambiguous_evidence_with_material_consequence",
+      "root_cause_or_falsification_required",
+      "high_expected_rework_cost",
+      "prior_lower_tier_attempt_failed_or_circled_without_resolution"
+    ],
+    "direct_to_astra_when": [
+      "agentic_execution_is_required",
+      "extreme_context_exceeds_practical_sol_workflow",
+      "cross_domain_orchestration_requires_persistent_multi_step_execution"
+    ],
+    "lower_tier_retry_limit_before_escalation": 1,
+    "budget_authority_unchanged": true
   },
   "delegation": {
     "status": "ACTIVE_SHADOW_FIRST",
