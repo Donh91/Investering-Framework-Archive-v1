@@ -24,6 +24,7 @@ CONTRACT = "T10_FORWARD_LINEAGE_COMPLETENESS_v1"
 HISTORICAL_GAP_WEEK = "2026-W28"
 LEDGER_GLOB = "*__forecast-ledger-*-w*__official.md"
 FORECAST_ID_RE = re.compile(r"\bMM_20\d{2}_W\d{2}_[A-Z0-9_]+\b")
+FORECAST_ID_WEEK_RE = re.compile(r"^MM_(20\d{2})_W(\d{2})_")
 WEEK_RE = re.compile(r"forecast-ledger-(20\d{2})-w(\d{2})", re.IGNORECASE)
 MUTABLE_NAME_RE = re.compile(r"(^|[_-])latest([_.-]|$)", re.IGNORECASE)
 
@@ -153,6 +154,51 @@ def extract_forecast_ids(text: str) -> list[str]:
     return list(dict.fromkeys(FORECAST_ID_RE.findall(text)))
 
 
+def forecast_id_week(forecast_id: str) -> str | None:
+    match = FORECAST_ID_WEEK_RE.match(forecast_id)
+    if not match:
+        return None
+    return f"{match.group(1)}-W{match.group(2)}"
+
+
+def git_blob_sha(path: Path) -> str:
+    content = path.read_bytes()
+    return hashlib.sha1(b"blob " + str(len(content)).encode() + b"\0" + content).hexdigest()
+
+
+def verify_trusted_blob_bindings(
+    root: Path,
+    route: dict[str, Any],
+    paths: dict[str, Any],
+    references: dict[str, Any],
+) -> tuple[bool, list[str]]:
+    """Anchor self-reported lineage evidence outside the mutable evidence set.
+
+    A receipt cannot authenticate itself: a coordinated rewrite of an artifact and
+    its receipt would otherwise retain an internally consistent hash.  Route
+    authority must therefore pin the receipt, verified actual and score blobs.
+    Once the receipt is anchored, its exact blob bindings can authenticate the
+    forecast, ratified source and handoff.
+    """
+    bindings = route.get("trusted_blob_bindings")
+    bindings = bindings if isinstance(bindings, dict) else {}
+    missing: list[str] = []
+    for edge in ("ratification_receipt", "verified_actual", "score"):
+        expected = bindings.get(edge)
+        if not isinstance(expected, str) or not re.fullmatch(r"[0-9a-f]{40}", expected):
+            missing.append(f"{edge}:trusted_blob_binding_missing")
+            continue
+        relative = paths.get(edge)
+        if not isinstance(relative, str) or not (root / relative).is_file():
+            continue
+        if git_blob_sha(root / relative) != expected:
+            missing.append(f"{edge}:trusted_blob_mismatch")
+            continue
+        references[edge]["immutable"] = True
+        references[edge]["verification"] = "TRUSTED_ROUTE_BLOB_MATCH"
+    return not missing, missing
+
+
 def receipt_links(
     root: Path,
     receipt_path: str,
@@ -177,8 +223,7 @@ def receipt_links(
         if len(bindings) != 1 or not re.fullmatch(r"[0-9a-f]{40}", str(bindings[0].get("blob_sha", ""))):
             missing.append(f"{label}:frozen_blob_binding_missing")
             continue
-        content = (root / path).read_bytes()
-        actual_blob = hashlib.sha1(b"blob " + str(len(content)).encode() + b"\0" + content).hexdigest()
+        actual_blob = git_blob_sha(root / path)
         if actual_blob != bindings[0]["blob_sha"]:
             missing.append(f"{label}:frozen_blob_mismatch")
     return not missing, missing
@@ -323,42 +368,46 @@ def routed_week(
 
     link_checks: dict[str, Any] = {}
     if not missing:
-        receipt_ok, receipt_missing = receipt_links(
-            root,
-            str(route["ratification_receipt"]),
-            {
-                "forecast": ledger_path,
-                "source_master_monday": str(route["source_master_monday"]),
-                "cn_handoff": str(route["cn_handoff"]),
-            },
-        )
-        link_checks["receipt_links_owner_artifacts"] = receipt_ok
-        missing.extend(receipt_missing)
-        if receipt_ok:
-            for edge in ("forecast", "source_master_monday", "cn_handoff"):
-                references[edge]["immutable"] = True
-                references[edge]["verification"] = "RATIFICATION_RECEIPT_BLOB_MATCH"
+        trusted_ok, trusted_missing = verify_trusted_blob_bindings(root, route, paths, references)
+        link_checks["trusted_blob_bindings"] = trusted_ok
+        missing.extend(trusted_missing)
+        if trusted_ok:
+            receipt_ok, receipt_missing = receipt_links(
+                root,
+                str(route["ratification_receipt"]),
+                {
+                    "forecast": ledger_path,
+                    "source_master_monday": str(route["source_master_monday"]),
+                    "cn_handoff": str(route["cn_handoff"]),
+                },
+            )
+            link_checks["receipt_links_owner_artifacts"] = receipt_ok
+            missing.extend(receipt_missing)
+            if receipt_ok:
+                for edge in ("forecast", "source_master_monday", "cn_handoff"):
+                    references[edge]["immutable"] = True
+                    references[edge]["verification"] = "ANCHORED_RATIFICATION_RECEIPT_BLOB_MATCH"
 
-        forecast_ok, forecast_method = score_links_to_forecast(
-            root,
-            week,
-            ledger_path,
-            str(route["ratification_receipt"]),
-            str(route["score"]),
-        )
-        link_checks["score_links_forecast"] = {"pass": forecast_ok, "method": forecast_method}
-        if not forecast_ok:
-            missing.append("score_to_forecast")
+            forecast_ok, forecast_method = score_links_to_forecast(
+                root,
+                week,
+                ledger_path,
+                str(route["ratification_receipt"]),
+                str(route["score"]),
+            )
+            link_checks["score_links_forecast"] = {"pass": forecast_ok, "method": forecast_method}
+            if not forecast_ok:
+                missing.append("score_to_forecast")
 
-        actual_ok, actual_method = actual_links_to_score(
-            root,
-            str(route["verified_actual"]),
-            str(route["score"]),
-            dict(route.get("actual_link") or {}),
-        )
-        link_checks["score_links_verified_actual"] = {"pass": actual_ok, "method": actual_method}
-        if not actual_ok:
-            missing.append("score_to_verified_actual")
+            actual_ok, actual_method = actual_links_to_score(
+                root,
+                str(route["verified_actual"]),
+                str(route["score"]),
+                dict(route.get("actual_link") or {}),
+            )
+            link_checks["score_links_verified_actual"] = {"pass": actual_ok, "method": actual_method}
+            if not actual_ok:
+                missing.append("score_to_verified_actual")
 
     rows = []
     for forecast_id in forecast_ids:
@@ -392,13 +441,17 @@ def build_report(root: Path, owner_routes: dict[str, dict[str, Any]] | None = No
     ledgers = sorted(ledger_root.glob(LEDGER_GLOB))
     weeks: list[dict[str, Any]] = []
     all_rows: list[dict[str, Any]] = []
+    mismatched_id_count = 0
 
     for ledger in ledgers:
         relative = ledger.relative_to(root).as_posix()
         week = extract_week(ledger)
         forecast_ids = extract_forecast_ids(ledger.read_text(encoding="utf-8"))
+        valid_ids = [forecast_id for forecast_id in forecast_ids if forecast_id_week(forecast_id) == week]
+        mismatched_ids = [forecast_id for forecast_id in forecast_ids if forecast_id_week(forecast_id) != week]
+        mismatched_id_count += len(mismatched_ids)
         if week == HISTORICAL_GAP_WEEK:
-            item = historical_gap_week(root, relative, forecast_ids)
+            item = historical_gap_week(root, relative, valid_ids)
         elif week not in routes:
             ref, error = immutable_reference(root, relative)
             missing = ["owner_route:missing"]
@@ -407,7 +460,7 @@ def build_report(root: Path, owner_routes: dict[str, dict[str, Any]] | None = No
             item = {
                 "week": week,
                 "status": "INCOMPLETE_SCORING_BLOCKED",
-                "forecast_ids": forecast_ids,
+                "forecast_ids": valid_ids,
                 "missing_edges": missing,
                 "link_checks": {},
                 "rows": [
@@ -419,11 +472,29 @@ def build_report(root: Path, owner_routes: dict[str, dict[str, Any]] | None = No
                         "missing_edges": missing,
                         "references": {"forecast": ref},
                     }
-                    for forecast_id in forecast_ids
+                    for forecast_id in valid_ids
                 ],
             }
         else:
-            item = routed_week(root, week, relative, forecast_ids, routes[week])
+            item = routed_week(root, week, relative, valid_ids, routes[week])
+        if mismatched_ids:
+            forecast_ref, _ = immutable_reference(root, relative)
+            mismatch_missing = ["forecast_id:week_mismatch"]
+            item["status"] = "INCOMPLETE_SCORING_BLOCKED"
+            item["missing_edges"] = list(item["missing_edges"]) + mismatch_missing
+            item["rows"].extend(
+                {
+                    "forecast_id": forecast_id,
+                    "week": week,
+                    "embedded_week": forecast_id_week(forecast_id),
+                    "status": "INCOMPLETE_SCORING_BLOCKED",
+                    "scoring_status": "BLOCKED",
+                    "missing_edges": mismatch_missing,
+                    "references": {"forecast": forecast_ref},
+                }
+                for forecast_id in mismatched_ids
+            )
+        item["forecast_ids"] = forecast_ids
         if not forecast_ids:
             item["status"] = "INCOMPLETE_SCORING_BLOCKED"
             item["missing_edges"] = list(item["missing_edges"]) + ["forecast_ids:empty_or_unrecognized"]
@@ -444,6 +515,7 @@ def build_report(root: Path, owner_routes: dict[str, dict[str, Any]] | None = No
             "ledger_glob": f"03_WEEKLY_OPERATIONS/forecast_ledger/{LEDGER_GLOB}",
             "official_ledgers": len(ledgers),
             "empty_or_unrecognized_ledgers": empty_ledgers,
+            "week_mismatched_forecast_ids": mismatched_id_count,
             "future_unrouted_ledgers_fail_closed": True,
             "mutable_references_accepted": False,
         },

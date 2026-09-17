@@ -18,6 +18,10 @@ class T10ForwardLineageTests(unittest.TestCase):
         else:
             path.write_text(value)
 
+    def blob_sha(self, path: Path) -> str:
+        content = path.read_bytes()
+        return hashlib.sha1(b"blob " + str(len(content)).encode() + b"\0" + content).hexdigest()
+
     def complete_fixture(self, root: Path, week: str = "2026-W29") -> dict:
         ledger = f"03_WEEKLY_OPERATIONS/forecast_ledger/2026-07-13__forecast-ledger-{week.lower()}__official.md"
         source = f"owners/{week}/source.md"
@@ -34,13 +38,13 @@ class T10ForwardLineageTests(unittest.TestCase):
             receipt,
             {"artifact_paths": {"forecast": ledger, "source": source, "handoff": handoff},
              "artifact_verification": [
-                 {"path": p, "blob_sha": hashlib.sha1(b"blob " + str(len((root / p).read_bytes())).encode() + b"\0" + (root / p).read_bytes()).hexdigest()}
+                 {"path": p, "blob_sha": self.blob_sha(root / p)}
                  for p in (ledger, source, handoff)]},
         )
         self.write(root, actual, {"archive_id": source_id})
         self.write(root, score, {"source_forecast": ledger, "source_actuals": source_id,
                                "rows": [{"forecast_id": "MM_2026_W29_RANGE_A", "score": 0}]})
-        return {
+        route = {
             week: {
                 "source_master_monday": source,
                 "ratification_receipt": receipt,
@@ -50,6 +54,11 @@ class T10ForwardLineageTests(unittest.TestCase):
                 "actual_link": {"kind": "shared_token", "token": source_id},
             }
         }
+        route[week]["trusted_blob_bindings"] = {
+            edge: self.blob_sha(root / route[week][edge])
+            for edge in ("ratification_receipt", "verified_actual", "score")
+        }
+        return route
 
     def test_complete_forward_row_has_all_immutable_edges(self):
         with tempfile.TemporaryDirectory() as td:
@@ -59,8 +68,7 @@ class T10ForwardLineageTests(unittest.TestCase):
             row = report["rows"][0]
             self.assertEqual(row["status"], "COMPLETE_SCORED_LINEAGE")
             self.assertEqual(set(row["references"]), {"forecast", "source_master_monday", "ratification_receipt", "cn_handoff", "verified_actual", "score"})
-            self.assertTrue(all(row["references"][edge]["immutable"] for edge in ("forecast", "source_master_monday", "cn_handoff")))
-            self.assertFalse(row["references"]["score"]["immutable"])
+            self.assertTrue(all(row["references"][edge]["immutable"] for edge in row["references"]))
             self.assertEqual(row["score_row"]["json_pointer"], "/rows/0")
 
     def test_modified_frozen_inputs_are_blocked(self):
@@ -98,6 +106,7 @@ class T10ForwardLineageTests(unittest.TestCase):
                 score = json.loads(path.read_text())
                 score.update(rows=rows, weekly_score=100)
                 self.write(root, str(path.relative_to(root)), score)
+                routes["2026-W29"]["trusted_blob_bindings"]["score"] = self.blob_sha(path)
                 row = build_report(root, routes)["rows"][0]
                 self.assertEqual(row["scoring_status"], "BLOCKED")
                 self.assertIsNone(row["score_row"])
@@ -175,6 +184,49 @@ class T10ForwardLineageTests(unittest.TestCase):
             report = build_report(root, {})
             self.assertEqual(report["rows"][0]["status"], "INCOMPLETE_SCORING_BLOCKED")
             self.assertIn("owner_route:missing", report["rows"][0]["missing_edges"])
+
+    def test_coordinated_artifact_and_receipt_rewrite_cannot_self_authenticate(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            routes = self.complete_fixture(root)
+            route = routes["2026-W29"]
+            ledger = next(root.glob("03_WEEKLY_OPERATIONS/forecast_ledger/*"))
+            ledger.write_text(ledger.read_text() + "\ncoordinated rewrite")
+            receipt_path = root / route["ratification_receipt"]
+            receipt = json.loads(receipt_path.read_text())
+            for row in receipt["artifact_verification"]:
+                if row["path"] == str(ledger.relative_to(root)):
+                    row["blob_sha"] = self.blob_sha(ledger)
+            self.write(root, route["ratification_receipt"], receipt)
+
+            row = build_report(root, routes)["rows"][0]
+            self.assertEqual(row["scoring_status"], "BLOCKED")
+            self.assertIn("ratification_receipt:trusted_blob_mismatch", row["missing_edges"])
+            self.assertFalse(row["references"]["ratification_receipt"]["immutable"])
+
+    def test_forecast_id_from_different_week_is_blocked_before_routing(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            routes = self.complete_fixture(root)
+            route = routes["2026-W29"]
+            ledger = next(root.glob("03_WEEKLY_OPERATIONS/forecast_ledger/*"))
+            ledger.write_text(ledger.read_text() + "\n- MM_2026_W30_RANGE_WRONG_WEEK\n")
+            receipt_path = root / route["ratification_receipt"]
+            receipt = json.loads(receipt_path.read_text())
+            for binding in receipt["artifact_verification"]:
+                if binding["path"] == str(ledger.relative_to(root)):
+                    binding["blob_sha"] = self.blob_sha(ledger)
+            self.write(root, route["ratification_receipt"], receipt)
+            route["trusted_blob_bindings"]["ratification_receipt"] = self.blob_sha(receipt_path)
+
+            report = build_report(root, routes)
+            by_id = {row["forecast_id"]: row for row in report["rows"]}
+            self.assertEqual(by_id["MM_2026_W29_RANGE_A"]["scoring_status"], "SCORED")
+            wrong = by_id["MM_2026_W30_RANGE_WRONG_WEEK"]
+            self.assertEqual(wrong["scoring_status"], "BLOCKED")
+            self.assertEqual(wrong["embedded_week"], "2026-W30")
+            self.assertIn("forecast_id:week_mismatch", wrong["missing_edges"])
+            self.assertEqual(report["discovery"]["week_mismatched_forecast_ids"], 1)
 
 
 if __name__ == "__main__":
