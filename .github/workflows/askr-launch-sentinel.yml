@@ -1,0 +1,124 @@
+name: ASKR launch sentinel
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/askr-launch-sentinel.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    env:
+      RH_RPC: https://rpc.mainnet.chain.robinhood.com
+      PONS_V2_FACTORY: "0x7eD598BcEf8bd9Edd8C97A195C6d13f40801EC7e"
+      TARGET_SYMBOL: ASKR
+      TARGET_NAME_HINT: ASKR
+    steps:
+      - name: Poll Pons V2 continuously and alert on ASKR
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          python3 - <<'PY'
+          import json, os, time, urllib.request, urllib.error
+
+          RPC=os.environ["RH_RPC"]
+          FACTORY=os.environ["PONS_V2_FACTORY"].lower()
+          TARGET=os.environ["TARGET_SYMBOL"].upper()
+          REPO=os.environ["GH_REPO"]
+          TOKEN=os.environ["GH_TOKEN"]
+
+          def rpc(method, params):
+              data=json.dumps({"jsonrpc":"2.0","id":1,"method":method,"params":params}).encode()
+              req=urllib.request.Request(RPC,data=data,headers={"Content-Type":"application/json"})
+              with urllib.request.urlopen(req,timeout=15) as r:
+                  out=json.load(r)
+              if "error" in out: raise RuntimeError(out["error"])
+              return out["result"]
+
+          def call(to, data):
+              return rpc("eth_call",[{"to":to,"data":data},"latest"])
+
+          def abi_string(hexdata):
+              if not hexdata or hexdata=="0x": return ""
+              b=bytes.fromhex(hexdata[2:])
+              if len(b)<64: return ""
+              off=int.from_bytes(b[:32],"big")
+              if off+32>len(b): return ""
+              n=int.from_bytes(b[off:off+32],"big")
+              return b[off+32:off+32+n].decode("utf-8","replace")
+
+          def symbol(addr):
+              try: return abi_string(call(addr,"0x95d89b41"))
+              except Exception: return ""
+
+          def name(addr):
+              try: return abi_string(call(addr,"0x06fdde03"))
+              except Exception: return ""
+
+          def issue(ca, curve, deployer, txh, block, nm, sym):
+              body=f"""## ASKR CANDIDATE DETECTED
+
+**Status:** on-chain candidate from the official Pons V2 factory. Verify against HeyAskr primary channels before treating as official.
+
+```text
+{ca}
+```
+
+- chain: Robinhood Chain (4663)
+- Pons V2 factory: {FACTORY}
+- token name: {nm}
+- token symbol: {sym}
+- curve: {curve}
+- deployer: {deployer}
+- block: {block}
+- tx: https://robinhoodchain.blockscout.com/tx/{txh}
+- token: https://robinhoodchain.blockscout.com/address/{ca}
+
+Alpha Lab rule: freeze first-seen now; UNKNOWN != 0; MC != FDV; no ENTRY promotion until canonical pool/curve, live price, liquidity, supply, holder/deployer concentration and primary provenance are verified.
+"""
+              payload=json.dumps({"title":f"🚨 ASKR launch candidate — {ca}","body":body,"labels":[]}).encode()
+              req=urllib.request.Request(f"https://api.github.com/repos/{REPO}/issues",data=payload,method="POST",
+                  headers={"Authorization":f"Bearer {TOKEN}","Accept":"application/vnd.github+json","Content-Type":"application/json"})
+              with urllib.request.urlopen(req,timeout=20) as r:
+                  created=json.load(r)
+              print("ALERT",created.get("html_url"),flush=True)
+
+          latest=int(rpc("eth_blockNumber",[]),16)
+          cursor=max(0,latest-20000)
+          print(f"ASKR sentinel active; backscan from {cursor} to {latest}; then polling every 10s",flush=True)
+          seen=set()
+
+          while True:
+              try:
+                  head=int(rpc("eth_blockNumber",[]),16)
+                  if cursor<=head:
+                      logs=rpc("eth_getLogs",[{"address":FACTORY,"fromBlock":hex(cursor),"toBlock":hex(head)}])
+                      for log in logs:
+                          topics=log.get("topics",[])
+                          if len(topics)<4: continue
+                          ca="0x"+topics[1][-40:]
+                          if ca.lower() in seen: continue
+                          seen.add(ca.lower())
+                          sym=symbol(ca)
+                          nm=name(ca)
+                          if sym.upper()==TARGET or TARGET in nm.upper() or "HEYASKR" in nm.upper():
+                              curve="0x"+topics[2][-40:]
+                              deployer="0x"+topics[3][-40:]
+                              issue(ca,curve,deployer,log["transactionHash"],int(log["blockNumber"],16),nm,sym)
+                              print(f"FOUND {ca} {nm} {sym}",flush=True)
+                              raise SystemExit(0)
+                      cursor=head+1
+              except SystemExit:
+                  raise
+              except Exception as e:
+                  print("poll_error",repr(e),flush=True)
+              time.sleep(10)
+          PY
