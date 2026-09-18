@@ -50,8 +50,9 @@ def entry(*, temp="NORMAL", btc=1.0, eth=1.5, median=1.0):
     }
 
 
-def compass(*, source_sha="old-source", action="PREPARE", data_status="OK"):
+def compass(*, source_sha="old-source", action="PREPARE", data_status="OK", issued_at=None):
     return {
+        "issued_at_utc": issued_at or (NOW-timedelta(hours=6)).isoformat().replace("+00:00","Z"),
         "source_bindings": {"auto_market_state": {"packet_sha256": source_sha}},
         "data_status": data_status,
         "action_now": action,
@@ -141,6 +142,73 @@ class CompassEventRefreshTests(unittest.TestCase):
         self.assertTrue(out["dispatch"])
         self.assertIn("DATA_HEALTH_CHANGED", out["cause_codes"])
         self.assertEqual(out["current_data_status"], "DEGRADED")
+
+    def test_risk_on_change_inside_cooldown_is_suppressed(self):
+        out=decision(
+            latest=compass(action="HOLD_WAIT"),
+            prior_state={
+                "last_heat_state": "NORMAL",
+                "last_requested_source_sha": "previous-request",
+                "last_request_at_utc": (NOW-timedelta(hours=1)).isoformat().replace("+00:00","Z"),
+            },
+        )
+        self.assertFalse(out["dispatch"])
+        self.assertEqual(out["reason"], "COOLDOWN_ACTIVE")
+        self.assertIn("ACTION_STATE_CHANGED", out["suppressed_cause_codes"])
+
+    def test_defensive_change_bypasses_cooldown(self):
+        a=auto_state(breadth=0.20)
+        out=decision(
+            auto=a,
+            latest=compass(action="PREPARE"),
+            prior_state={
+                "last_heat_state": "NORMAL",
+                "last_requested_source_sha": "previous-request",
+                "last_request_at_utc": (NOW-timedelta(hours=1)).isoformat().replace("+00:00","Z"),
+            },
+        )
+        self.assertTrue(out["dispatch"])
+        self.assertTrue(out["protective_bypass"])
+        self.assertIn("ACTION_STATE_CHANGED", out["cause_codes"])
+
+    def test_downside_heat_bypasses_cooldown(self):
+        out=decision(
+            entry_latest=entry(temp="NORMAL", btc=-8.5, eth=-5, median=-2),
+            prior_state={
+                "last_heat_state": "NORMAL",
+                "last_requested_source_sha": "previous-request",
+                "last_request_at_utc": (NOW-timedelta(hours=1)).isoformat().replace("+00:00","Z"),
+            },
+        )
+        self.assertTrue(out["dispatch"])
+        self.assertTrue(out["protective_bypass"])
+        self.assertIn("MARKET_HEAT_ENTERED", out["cause_codes"])
+
+    def test_request_in_flight_suppresses_duplicate_risk_on_dispatch(self):
+        out=decision(
+            latest=compass(action="HOLD_WAIT"),
+            prior_state={
+                "last_heat_state": "NORMAL",
+                "last_requested_source_sha": "new-source",
+                "last_request_at_utc": (NOW-timedelta(minutes=5)).isoformat().replace("+00:00","Z"),
+            },
+        )
+        self.assertFalse(out["dispatch"])
+        self.assertEqual(out["reason"], "REQUEST_IN_FLIGHT")
+        self.assertIn("ACTION_STATE_CHANGED", out["suppressed_cause_codes"])
+
+    def test_unbound_request_retries_after_timeout(self):
+        out=decision(
+            latest=compass(action="HOLD_WAIT"),
+            prior_state={
+                "last_heat_state": "NORMAL",
+                "last_requested_source_sha": "new-source",
+                "last_request_at_utc": (NOW-timedelta(minutes=30)).isoformat().replace("+00:00","Z"),
+            },
+        )
+        self.assertTrue(out["dispatch"])
+        self.assertIn("PRIOR_REQUEST_NOT_BOUND_RETRY", out["cause_codes"])
+        self.assertIn("ACTION_STATE_CHANGED", out["cause_codes"])
 
 
 if __name__ == "__main__":
