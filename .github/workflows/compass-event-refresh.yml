@@ -1,0 +1,104 @@
+name: Compass Event Refresh
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/compass-event-refresh.yml'
+      - '.github/workflows/daily-compass.yml'
+      - 'scripts/data_ping/compass_event_refresh.py'
+      - 'tests/data_ping/test_compass_event_refresh.py'
+      - '04_MARKET_LEARNING/handlekompas/event_refresh/**'
+      - '05_CYCLE_NAVIGATOR/site/**'
+  workflow_run:
+    workflows:
+      - Entry Signal Ledger
+    types:
+      - completed
+  schedule:
+    # Fallback only. New owner evidence is normally evaluated immediately after
+    # Entry Signal Ledger completes.
+    - cron: '55 * * * *'
+  workflow_dispatch:
+
+permissions:
+  actions: write
+  contents: write
+  issues: write
+
+concurrency:
+  group: framework-main-writer
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compile and test event admission
+        run: |
+          python -m py_compile scripts/data_ping/compass_event_refresh.py
+          python -m unittest tests.data_ping.test_compass_event_refresh -v
+
+  detect:
+    if: >-
+      github.event_name != 'pull_request' &&
+      ((github.event_name == 'workflow_run' &&
+        github.event.workflow_run.head_branch == 'main' &&
+        github.event.workflow_run.conclusion == 'success') ||
+       (github.event_name != 'workflow_run' && github.ref == 'refs/heads/main'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Evaluate material Compass change
+        id: decide
+        shell: bash
+        run: |
+          set -euo pipefail
+          python scripts/data_ping/compass_event_refresh.py | tee /tmp/compass-event-decision.json
+          python - <<'PY' >> "$GITHUB_OUTPUT"
+          import json
+          d=json.load(open('/tmp/compass-event-decision.json'))
+          print("dispatch=" + ("true" if d.get("dispatch") else "false"))
+          print("reason=" + str(d.get("reason") or "UNKNOWN"))
+          print("causes=" + ",".join(d.get("cause_codes") or []))
+          PY
+      - name: Persist event watcher state
+        shell: bash
+        run: |
+          git config user.name framework-data-bot
+          git config user.email framework-data-bot@users.noreply.github.com
+          git add 04_MARKET_LEARNING/handlekompas/event_refresh
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "learning: Compass event refresh ${GITHUB_RUN_ID}"
+          pushed=false
+          for attempt in 1 2 3; do
+            git rebase --abort 2>/dev/null || true
+            if git pull --rebase origin main && git push origin HEAD:main; then pushed=true; break; fi
+            sleep $((attempt * 5))
+          done
+          [ "$pushed" = true ]
+          git fetch origin main
+          git merge-base --is-ancestor HEAD origin/main
+      - name: Surface reassessment immediately
+        if: steps.decide.outputs.dispatch == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh workflow run cycle-navigator-pages.yml --ref main
+          gh workflow run daily-compass.yml --ref main -f run_reason=EVENT_DRIVEN
+          echo "EVENT_DRIVEN_COMPASS_DISPATCH causes=${{ steps.decide.outputs.causes }}"
+      - name: No-op proof
+        if: steps.decide.outputs.dispatch != 'true'
+        run: echo "NO_EVENT_REFRESH ${{ steps.decide.outputs.reason }}"
