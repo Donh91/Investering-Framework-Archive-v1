@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import argparse
 import csv
-import hashlib
 import json
 import sys
 from pathlib import Path
@@ -150,7 +149,7 @@ def main():
         if isinstance(value.get(key), str)
     }
     matches_other_population = any(
-        path_matches_declared_population(actual, declared)
+        path_matches_declared_population(actual, declared) or path_matches_declared_shape(actual, declared)
         for actual in (args.forecast_root, args.outcome_root)
         for declared in registered_other_roots
     )
