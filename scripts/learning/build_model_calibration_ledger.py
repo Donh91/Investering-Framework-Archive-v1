@@ -28,10 +28,20 @@ def canon(value):
 
 
 def path_matches_declared_population(actual: Path, declared: str) -> bool:
-    """Canonical population roots are repository-bound, never suffix-bound."""
+    """Return true only for the repository's canonical declared root."""
     declared_path = Path(declared)
     expected = declared_path if declared_path.is_absolute() else REPOSITORY_ROOT / declared_path
     return actual.resolve(strict=False) == expected.resolve(strict=False)
+
+
+def path_matches_declared_shape(actual: Path, declared: str) -> bool:
+    """Identify fixture roots shaped like a declared population without granting canonical status."""
+    declared_path = Path(declared)
+    if declared_path.is_absolute():
+        return actual.resolve(strict=False) == declared_path.resolve(strict=False)
+    actual_parts = actual.resolve(strict=False).parts
+    declared_parts = declared_path.parts
+    return len(actual_parts) >= len(declared_parts) and actual_parts[-len(declared_parts):] == declared_parts
 
 
 def path_is_within(path: Path, parent: Path) -> bool:
@@ -110,6 +120,10 @@ def main():
     forecast_root_matches = path_matches_declared_population(args.forecast_root, expected_forecast_root)
     outcome_root_matches = path_matches_declared_population(args.outcome_root, expected_outcome_root)
     strict_population_roots = forecast_root_matches and outcome_root_matches
+    declared_shape_fixture = (
+        path_matches_declared_shape(args.forecast_root, expected_forecast_root)
+        and path_matches_declared_shape(args.outcome_root, expected_outcome_root)
+    )
     registered_other_roots = {
         value.get(key)
         for population_id, value in population_contract.get("populations", {}).items()
@@ -122,11 +136,17 @@ def main():
         for actual in (args.forecast_root, args.outcome_root)
         for declared in registered_other_roots
     )
+    requested_outputs = [args.output]
+    if args.lineage_output is not None:
+        requested_outputs.append(args.lineage_output)
+    if args.eligibility_output is not None:
+        requested_outputs.append(args.eligibility_output)
     noncanonical_fixture = (
-        not matches_other_population
+        declared_shape_fixture
+        and not matches_other_population
         and not path_is_within(args.forecast_root, REPOSITORY_ROOT)
         and not path_is_within(args.outcome_root, REPOSITORY_ROOT)
-        and not path_is_within(args.output, REPOSITORY_ROOT)
+        and all(not path_is_within(output, REPOSITORY_ROOT) for output in requested_outputs)
     )
     if not strict_population_roots and not noncanonical_fixture:
         fail_closed(
@@ -143,7 +163,7 @@ def main():
     for path in args.forecast_root.rglob("*.json") if args.forecast_root.exists() else []:
         value = load(path)
         if value and value.get("contract") == "FROZEN_FORECAST_v1":
-            if strict_population_roots and not required_fields_present(value, required_forecast_fields):
+            if (strict_population_roots or noncanonical_fixture) and not required_fields_present(value, required_forecast_fields):
                 invalid_frozen_forecast_count += 1
                 continue
             forecasts[value.get("forecast_id")] = value
