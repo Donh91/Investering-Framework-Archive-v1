@@ -118,6 +118,17 @@ class CompassEventRefreshTests(unittest.TestCase):
         self.assertTrue(out["dispatch"])
         self.assertIn("MARKET_HEAT_ENTERED", out["cause_codes"])
 
+    def test_heat_does_not_dispatch_from_degraded_evidence(self):
+        a=auto_state(validation="FAIL")
+        out=decision(
+            auto=a,
+            latest=compass(data_status="DEGRADED", action="HOLD_WAIT_DATA_DEGRADED"),
+            entry_latest=entry(temp="HOT", btc=9),
+            prior_state={"last_heat_state": "NORMAL"},
+        )
+        self.assertFalse(out["dispatch"])
+        self.assertNotIn("MARKET_HEAT_ENTERED", out.get("cause_codes", []))
+
     def test_degraded_owner_health_dispatches_fail_closed_update(self):
         a=auto_state(validation="FAIL")
         out=decision(auto=a)
