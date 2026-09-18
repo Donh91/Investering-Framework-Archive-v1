@@ -228,6 +228,47 @@ class T10ForwardLineageTests(unittest.TestCase):
             self.assertIn("forecast_id:week_mismatch", wrong["missing_edges"])
             self.assertEqual(report["discovery"]["week_mismatched_forecast_ids"], 1)
 
+    def test_pending_censored_or_ineligible_owner_rows_never_score(self):
+        cases = [
+            {"row": {"status": "PENDING_MATURITY", "mature": False}},
+            {"row": {"maturity_status": "CENSORED"}},
+            {"row": {"score_eligible": False}},
+            {"document": {"status": "PENDING_MATURITY", "mature": False}},
+            {"document": {"eligibility_status": "REJECTED"}},
+        ]
+        for case in cases:
+            with self.subTest(case=case), tempfile.TemporaryDirectory() as td:
+                root = Path(td)
+                routes = self.complete_fixture(root)
+                route = routes["2026-W29"]
+                score_path = root / route["score"]
+                score = json.loads(score_path.read_text())
+                score.update(case.get("document", {}))
+                score["rows"][0].update(case.get("row", {}))
+                self.write(root, route["score"], score)
+                route["trusted_blob_bindings"]["score"] = self.blob_sha(score_path)
+
+                row = build_report(root, routes)["rows"][0]
+                self.assertEqual(row["scoring_status"], "BLOCKED")
+                self.assertIsNone(row["score_row"])
+                self.assertIn("score_row:explicit_forecast_id_binding_missing_or_invalid", row["missing_edges"])
+
+    def test_explicit_mature_and_eligible_owner_row_can_score(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            routes = self.complete_fixture(root)
+            route = routes["2026-W29"]
+            score_path = root / route["score"]
+            score = json.loads(score_path.read_text())
+            score.update(status="FINAL", mature=True, score_eligible=True)
+            score["rows"][0].update(status="SCORED", mature=True, score_eligible=True)
+            self.write(root, route["score"], score)
+            route["trusted_blob_bindings"]["score"] = self.blob_sha(score_path)
+
+            row = build_report(root, routes)["rows"][0]
+            self.assertEqual(row["scoring_status"], "SCORED")
+            self.assertIsNotNone(row["score_row"])
+
 
 if __name__ == "__main__":
     unittest.main()
