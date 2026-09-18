@@ -20,7 +20,7 @@ jobs:
     timeout-minutes: 180
     env:
       RH_RPC_OFFICIAL: https://rpc.mainnet.chain.robinhood.com
-      RH_RPC_FALLBACK: https://rpc.nodeflare.app/robinhood/public
+      RH_RPC_FALLBACK: https://robinhood-mainnet-rpc.blockreq.com/v1/rpc/public\n      RH_RPC_TERTIARY: https://rpc.nodeflare.app/robinhood/public
       PONS_V2_FACTORY: "0x7eD598BcEf8bd9Edd8C97A195C6d13f40801EC7e"
       TARGET_SYMBOL: ASKR
       TARGET_NAME: HEYASKR
@@ -35,7 +35,7 @@ jobs:
           cat > /tmp/prove.py <<'PY'
           import json, os, urllib.request, urllib.error, datetime, re, time
 
-          RPCS=[os.environ["RH_RPC_OFFICIAL"], os.environ["RH_RPC_FALLBACK"]]
+          RPCS=[os.environ["RH_RPC_OFFICIAL"], os.environ["RH_RPC_FALLBACK"], os.environ["RH_RPC_TERTIARY"]]
           FACTORY=os.environ["PONS_V2_FACTORY"].lower()
           TOPIC0=os.environ["TOKEN_LAUNCHED_TOPIC0"].lower()
           SITE=os.environ["TARGET_SITE"]
@@ -226,7 +226,7 @@ jobs:
         run: |
           cat > /tmp/watch.py <<'PY'
           import json, os, time, urllib.request, re
-          RPCS=[os.environ["RH_RPC_OFFICIAL"],os.environ["RH_RPC_FALLBACK"]]
+          RPCS=[os.environ["RH_RPC_OFFICIAL"],os.environ["RH_RPC_FALLBACK"],os.environ["RH_RPC_TERTIARY"]]
           FACTORY=os.environ["PONS_V2_FACTORY"].lower()
           TARGET=os.environ["TARGET_SYMBOL"].upper()
           TARGET_NAME=os.environ["TARGET_NAME"].upper()
@@ -305,7 +305,8 @@ jobs:
               payload=json.dumps({"title":title,"body":"\n".join(lines),"assignees":["Donh91"]}).encode()
               req=urllib.request.Request(f"https://api.github.com/repos/{REPO}/issues",data=payload,method="POST",
                   headers={"Authorization":f"Bearer {TOKEN}","Accept":"application/vnd.github+json","Content-Type":"application/json"})
-              with urllib.request.urlopen(req,timeout=20) as r: print("ALERT",json.load(r).get("html_url"),flush=True)\n              return True
+              with urllib.request.urlopen(req,timeout=20) as r: print("ALERT",json.load(r).get("html_url"),flush=True)
+              return True
 
           latest,provider=rpc("eth_blockNumber",[]); latest=int(latest,16)
           cursor=max(0,latest-50000)
