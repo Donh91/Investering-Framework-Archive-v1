@@ -1,0 +1,36 @@
+name: Alpha Lab SHADOW-04 Prospective
+on:
+  workflow_dispatch:
+  push:
+    branches: [agent/alpha-shadow-proof-v1-20260919]
+    paths:
+      - '06_RESEARCH_LAB/alpha_lab/tools/alpha_lab_shadow04_prospective_v1.py'
+      - '.github/workflows/alpha-shadow04-prospective.yml'
+permissions:
+  contents: read
+concurrency:
+  group: alpha-shadow04-prospective
+  cancel-in-progress: false
+jobs:
+  shadow04:
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    steps:
+      - uses: actions/checkout@v4
+      - name: Prospective freeze and capture 1000 future launches
+        run: |
+          python3 06_RESEARCH_LAB/alpha_lab/tools/alpha_lab_shadow04_prospective_v1.py --launches 1000 --max-seconds 7200
+      - name: Evidence summary
+        if: always()
+        run: |
+          for f in shadow04_freeze.json shadow04_result.json; do [ -f "$f" ] && cat "$f" || true; done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: alpha-shadow04-prospective-${{ github.run_id }}
+          path: |
+            shadow04_freeze.json
+            shadow04_result.json
+            shadow04.sqlite
+          if-no-files-found: warn
+          retention-days: 90
