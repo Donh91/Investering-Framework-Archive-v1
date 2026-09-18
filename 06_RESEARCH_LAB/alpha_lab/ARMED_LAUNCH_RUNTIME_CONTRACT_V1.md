@@ -33,18 +33,26 @@ Workflow/file existence is never liveness proof.
 
 ## Fast verified-CA gate
 
-The first time-critical alert must not wait for holders, wallets, MC/FDV, narrative or full R/R.
+Name/symbol are ATTRIBUTES only. Exact or normalized ticker/name matching is NEVER sufficient for VERIFIED_CA.
+
+Admissible identity modes are:
+- A1: exact CA published on a pre-frozen first-party surface and anchored to the expected canonical on-chain launch provenance;
+- A2: pre-committed deployer matched exactly to deployer carried by the canonical launch event;
+- A3: A1 + A2.
 
 VERIFIED_CA requires:
 - expected chain;
-- exact CA from canonical on-chain event OR first-party publication subsequently tied to canonical provenance where applicable;
-- bytecode exists;
-- successful event/receipt provenance where applicable;
-- exact pre-frozen project identity agreement;
-- no substring/fuzzy ticker identity;
+- exact expected factory/venue + event signature when venue is known;
+- A1, A2 or A3 identity mode;
+- successful canonical event/receipt provenance where applicable;
+- no substring/fuzzy/ticker-only identity;
 - healthy observation transport.
 
-If identity is incomplete, label UNVERIFIED_CANDIDATE. Never make it look trade-ready.
+If A1/A2 is unavailable, the system is structurally forbidden from emitting VERIFIED_CA. It may emit CANDIDATE_UNVERIFIED, clearly marked DO NOT TRADE ON THIS, and must enumerate competing CAs when collision evidence exists.
+
+BASKR != ASKR is a permanent regression fixture, but the broader invariant is stronger: an exact ticker clone is still not identity.
+
+The first time-critical VERIFIED_CA alert must not wait for holders, wallets, MC/FDV, narrative or full R/R. These are post-push enrichment.
 
 ## Freshness
 
@@ -59,6 +67,24 @@ Record Tpre, Tarm, T0, T1, T2, T3, Tdelivery when measurable, and Text.
 An alert outside the configured early-latency budget must be downgraded to LATE_DETECTION_ANALYSIS_ONLY. It cannot earn early-edge credit.
 
 Positive information-edge evidence requires a new unknown launch, no user-supplied CA, T3 < Text, and no later identity correction. Replay cannot earn this claim.
+
+## ARMED_READY evidence
+
+ARMED_READY is an expiring claim, not a configuration state. UNKNOWN never passes.
+
+Require fresh artifacts for:
+1. identity mode A1/A2/A3;
+2. chain + venue/factory/topic commitment;
+3. parser selection replay against a broad recent set of unknown real venue launches;
+4. adversarial identity/collision fixtures with zero false VERIFIED accepts;
+5. exact production client transport preflight, including explicit User-Agent;
+6. failover drill;
+7. reconnect + cursor/backfill recovery drill;
+8. measured notification canaries;
+9. external dead-man/liveness proof with advancing chain head;
+10. runtime lifetime covering the launch window.
+
+Readiness expires and must be re-proven during the armed window. Failure immediately downgrades to ARMED_DEGRADED.
 
 ## Runtime architecture rule
 
