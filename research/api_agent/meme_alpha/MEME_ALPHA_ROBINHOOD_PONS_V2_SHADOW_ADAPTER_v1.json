@@ -1,0 +1,90 @@
+{
+  "contract": "MEME_ALPHA_ROBINHOOD_PONS_V2_SHADOW_ADAPTER_v1",
+  "status": "SHADOW_ONLY",
+  "owner_issue": 1017,
+  "parent_engine": "MOONSHOT_SENTINEL_CONTRACT_v1",
+  "purpose": "Add deterministic Robinhood Chain Pons V2 launch discovery as a governed source adapter without creating a parallel scanner, score, ledger, forecast engine or trading authority.",
+  "chain": {
+    "name": "robinhood",
+    "chain_id": 4663,
+    "chain_id_hex": "0x1237",
+    "provider_neutral": true,
+    "provider_chain_id_must_match_before_use": true,
+    "single_provider_success_is_not_liveness_proof": true
+  },
+  "origin": {
+    "venue": "Pons V2",
+    "factory": "0x7ed598bcef8bd9edd8c97a195c6d13f40801ec7e",
+    "event": "TokenLaunched(address indexed token,address indexed curve,address indexed deployer,address pairToken,uint256 launchConfigId,uint256 graduationThreshold)",
+    "topic0": "0x8d4aad4953d0ca700d468f3753aa14432d1b35b43ec6409f051fb6aa43a89607",
+    "token_identity_source": "indexed token topic from canonical factory event",
+    "new_pool_is_new_token": false
+  },
+  "discovery_integrity": {
+    "freeze_raw_launch_before_enrichment": true,
+    "metadata_failure_may_drop_launch": false,
+    "market_data_failure_may_drop_launch": false,
+    "unknown_is_zero": false,
+    "market_cap_may_fallback_to_fdv": false,
+    "canonical_identity": "chain + exact token contract address",
+    "ticker_is_identity": false,
+    "name_is_identity": false,
+    "substring_identity_matching_forbidden": true,
+    "first_party_published_ca_is_candidate_only_until_chain_verified": true
+  },
+  "liveness": {
+    "startup_preflight_required": true,
+    "startup_preflight_is_part_of_health": true,
+    "provider_failover_required_for_operational_activation": true,
+    "head_and_cursor_health_required": true,
+    "provider_error_counters_required": true,
+    "restart_overlap_and_dedup_required": true,
+    "silent_provider_failure_forbidden": true,
+    "provider_disagreement_state": "DATA_CONFLICT"
+  },
+  "learning": {
+    "historical_askr_result": "MISS",
+    "post_repair_askr_result": "REGRESSION_PASS_NO_HISTORICAL_CREDIT",
+    "discovery_recall_measured_separately": true,
+    "detection_latency_measured_separately": true,
+    "external_first_seen_must_not_be_relabelled_autonomous": true,
+    "shadow_rows_may_train": false
+  },
+  "frozen_regression_fixtures": {
+    "positive": {
+      "name": "heyaskr",
+      "symbol": "ASKR",
+      "token_ca": "0xa92768863a55d8a0591709f7f5e594a249d36ea3",
+      "launch_block": 66443556,
+      "launch_tx": "0xa5ffe87bd1e9b6b91f84bb237c2d6408a7df39cb0651f85760004712074585f3",
+      "curve": "0x18a08ece3e8c29df9ae497a09d2a08830561c59b",
+      "deployer": "0x9d9258c2409c5cea1a8e24206a071ed34f3ca352",
+      "expected": "DETECTED_AS_EXACT_PONS_V2_LAUNCH"
+    },
+    "negative_identity": {
+      "name": "Baskr",
+      "symbol": "BASKR",
+      "token_ca": "0x36d7a44ca29b4e1081ec9fdbfa2c5e156b8f5999",
+      "expected": "MUST_NOT_MATCH_ASKR"
+    }
+  },
+  "promotion_gate": {
+    "current_mode": "SHADOW_ONLY",
+    "user_alert_allowed": false,
+    "adaptive_learning_allowed": false,
+    "automatic_trading_allowed": false,
+    "requires_natural_prospective_rows_before_promotion": true,
+    "requires_provider_health_evidence": true,
+    "requires_missed_winner_denominator": true,
+    "requires_false_positive_denominator": true,
+    "requires_existing_owner_integration": true
+  },
+  "authority": {
+    "portfolio_action": false,
+    "user_alert": false,
+    "adaptive_learning": false,
+    "automatic_trading": false,
+    "canonical_market_state_change": false,
+    "automatic_merge": false
+  }
+}

@@ -7,11 +7,14 @@ on:
       - 'scripts/api_agent/meme_alpha_moonshot_scan_v2.py'
       - 'scripts/api_agent/meme_alpha_moonshot_token_pool.py'
       - 'scripts/api_agent/meme_alpha_moonshot_age_cohort.py'
+      - 'scripts/api_agent/meme_alpha_robinhood_pons_v2.py'
       - 'tests/api_agent/test_meme_alpha_moonshot_sentinel.py'
       - 'tests/api_agent/test_meme_alpha_moonshot_scan_v2.py'
       - 'tests/api_agent/test_meme_alpha_moonshot_token_pool.py'
       - 'tests/api_agent/test_meme_alpha_moonshot_age_cohort.py'
+      - 'tests/api_agent/test_meme_alpha_robinhood_pons_v2.py'
       - 'research/api_agent/meme_alpha/MOONSHOT_SENTINEL_*.json'
+      - 'research/api_agent/meme_alpha/MEME_ALPHA_ROBINHOOD_PONS_V2_SHADOW_ADAPTER_v1.json'
       - '.github/workflows/meme-alpha-moonshot-gate.yml'
   workflow_dispatch:
 
@@ -34,17 +37,20 @@ jobs:
           scripts/api_agent/meme_alpha_moonshot_scan_v2.py
           scripts/api_agent/meme_alpha_moonshot_token_pool.py
           scripts/api_agent/meme_alpha_moonshot_age_cohort.py
+          scripts/api_agent/meme_alpha_robinhood_pons_v2.py
           tests/api_agent/test_meme_alpha_moonshot_sentinel.py
           tests/api_agent/test_meme_alpha_moonshot_scan_v2.py
           tests/api_agent/test_meme_alpha_moonshot_token_pool.py
           tests/api_agent/test_meme_alpha_moonshot_age_cohort.py
+          tests/api_agent/test_meme_alpha_robinhood_pons_v2.py
       - name: Run focused tests
         run: >-
           python -m unittest
           tests.api_agent.test_meme_alpha_moonshot_sentinel
           tests.api_agent.test_meme_alpha_moonshot_scan_v2
           tests.api_agent.test_meme_alpha_moonshot_token_pool
-          tests.api_agent.test_meme_alpha_moonshot_age_cohort -v
+          tests.api_agent.test_meme_alpha_moonshot_age_cohort
+          tests.api_agent.test_meme_alpha_robinhood_pons_v2 -v
       - name: Validate immutable authority, identity, recall and adaptive bounds
         run: |
           python - <<'PY'
@@ -53,6 +59,7 @@ jobs:
           contract=json.loads(Path('research/api_agent/meme_alpha/MOONSHOT_SENTINEL_CONTRACT_v1.json').read_text())
           hard=json.loads(Path('research/api_agent/meme_alpha/MOONSHOT_SENTINEL_RECALL_COHORT_HARDENING_v3.json').read_text())
           champion=json.loads(Path('research/api_agent/meme_alpha/MOONSHOT_SENTINEL_CHAMPION_v1.json').read_text())
+          rh=json.loads(Path('research/api_agent/meme_alpha/MEME_ALPHA_ROBINHOOD_PONS_V2_SHADOW_ADAPTER_v1.json').read_text())
           assert contract['contract']=='MOONSHOT_SENTINEL_CONTRACT_v1'
           assert contract['learning_epoch']=='MOONSHOT_IDENTITY_EPOCH_v2'
           assert contract['initial_scope']['scan_interval_minutes']==15
@@ -95,5 +102,19 @@ jobs:
           assert champion['risk']['average_down'] is False
           assert champion['risk']['leverage'] is False
           assert champion['evolution']['mutation_budget'] <= 2
+          assert rh['contract']=='MEME_ALPHA_ROBINHOOD_PONS_V2_SHADOW_ADAPTER_v1'
+          assert rh['status']=='SHADOW_ONLY'
+          assert rh['chain']['chain_id']==4663
+          assert rh['chain']['provider_neutral'] is True
+          assert rh['origin']['factory']=='0x7ed598bcef8bd9edd8c97a195c6d13f40801ec7e'
+          assert rh['discovery_integrity']['freeze_raw_launch_before_enrichment'] is True
+          assert rh['discovery_integrity']['metadata_failure_may_drop_launch'] is False
+          assert rh['discovery_integrity']['market_cap_may_fallback_to_fdv'] is False
+          assert rh['discovery_integrity']['substring_identity_matching_forbidden'] is True
+          assert rh['liveness']['startup_preflight_is_part_of_health'] is True
+          assert rh['liveness']['restart_overlap_and_dedup_required'] is True
+          assert rh['learning']['historical_askr_result']=='MISS'
+          assert rh['learning']['post_repair_askr_result']=='REGRESSION_PASS_NO_HISTORICAL_CREDIT'
+          assert all(v is False for v in rh['authority'].values())
           print('MOONSHOT_SENTINEL_RECALL_COHORT_V3_PASS')
           PY
