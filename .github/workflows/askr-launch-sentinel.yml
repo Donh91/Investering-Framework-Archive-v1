@@ -282,6 +282,32 @@ jobs:
           site_ca=official_site_ca()
           print(f"ACTIVE provider={provider} head={latest} cursor={cursor} site_ca={site_ca}",flush=True)
 
+          # Target-specific fast path: the first-party page may publish the CA at launch.
+          # It is only a proposal until the exact CA is recovered from the canonical Pons V2 TokenLaunched event.
+          if site_ca:
+              padded="0x"+"0"*24+site_ca[2:]
+              hi=latest; floor=max(0,latest-100000); exact=None; exact_provider=None
+              while hi>=floor and exact is None:
+                  lo=max(floor,hi-1999)
+                  try:
+                      xs,ep=rpc("eth_getLogs",[{"address":FACTORY,"topics":[TOPIC0,padded],"fromBlock":hex(lo),"toBlock":hex(hi)}])
+                      if xs:
+                          exact=sorted(xs,key=lambda x:int(x["blockNumber"],16))[-1]
+                          exact_provider=ep
+                          break
+                  except Exception as e:
+                      print("EXACT_SITE_CA_LOOKUP_DEGRADED",repr(e),flush=True)
+                  hi=lo-1
+              if exact:
+                  topics=exact["topics"]
+                  ca=("0x"+topics[1][-40:]).lower()
+                  curve=("0x"+topics[2][-40:]).lower()
+                  deployer=("0x"+topics[3][-40:]).lower()
+                  sym,_=readstr(ca,"0x95d89b41"); nm,_=readstr(ca,"0x06fdde03")
+                  create_issue(ca,curve,deployer,exact["transactionHash"],int(exact["blockNumber"],16),nm,sym,exact_provider,"FIRST_PARTY_CA + PONS_V2_FACTORY_EVENT")
+                  print(f"FOUND_EXACT_SITE_CA {ca} {nm} {sym}",flush=True)
+                  raise SystemExit(0)
+
           while True:
               try:
                   head,provider=rpc("eth_blockNumber",[]); head=int(head,16)
