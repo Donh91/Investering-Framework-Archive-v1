@@ -286,6 +286,18 @@ class ModelCalibrationPopulationContractTests(unittest.TestCase):
     def test_canonical_owner_validator_rejects_semantically_invalid_freeze(self):
         valid = self.canonical_frozen()
         validate_frozen_forecast_record(valid)
+
+        absolute = dict(valid)
+        absolute["target_mode"] = "ABSOLUTE_VALUE"
+        absolute["target_value"] = 101.0
+        absolute["threshold_pct"] = 1.0
+        validate_frozen_forecast_record(absolute)
+        for threshold in (None, 2.0, float("inf")):
+            with self.subTest(absolute_threshold=threshold):
+                row = dict(absolute)
+                row["threshold_pct"] = threshold
+                with self.assertRaises(ValueError):
+                    validate_frozen_forecast_record(row)
         for key, bad in (("prompt_sha256", "bad"), ("horizon_days", -1), ("metric_path", {"bad": True})):
             with self.subTest(key=key):
                 row = dict(valid)
