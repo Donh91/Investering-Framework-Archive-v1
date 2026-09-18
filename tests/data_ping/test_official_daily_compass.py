@@ -16,11 +16,11 @@ from scripts.data_ping.native_handlekompas import (
 
 
 class OfficialDailyCompassTest(unittest.TestCase):
-    def auto(self, *, breadth=0.19, validation="PASS", decision="PASS", blockers=None, btc=75654.0, eth=2396.86, ethbtc=0.03168, deltas=None):
+    def auto(self, *, breadth=0.19, validation="PASS", decision="PASS", blockers=None, btc=75654.0, eth=2396.86, ethbtc=0.03168, deltas=None, packet_sha="packet-sha"):
         return {
             "contract": "AUTO_MARKET_STATE_PACKET_v1",
             "packet_generated_at_utc": "2026-09-16T18:09:48Z",
-            "packet_sha256": "packet-sha",
+            "packet_sha256": packet_sha,
             "source_snapshot": {"exact_commit_sha": "source-commit"},
             "validation_status": validation,
             "decision_context_status": decision,
@@ -226,6 +226,53 @@ class OfficialDailyCompassTest(unittest.TestCase):
             pointer = json.loads((root / "LATEST_COMPASS.json").read_text())
             self.assertEqual(pointer["issued_at_utc"], first_compass["issued_at_utc"])
 
+    def test_on_demand_reuses_latest_when_owner_packet_is_unchanged(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "official"
+            scheduled = self.build(
+                tmp,
+                run_reason="SCHEDULED_MORNING",
+                issued_at=datetime(2026, 9, 16, 6, 17, tzinfo=timezone.utc),
+                packet_sha="same-owner-packet",
+            )
+            requested = self.build(
+                tmp,
+                run_reason="ON_DEMAND",
+                issued_at=datetime(2026, 9, 16, 7, 5, tzinfo=timezone.utc),
+                packet_sha="same-owner-packet",
+            )
+            first = write_official_compass(scheduled, root)
+            second = write_official_compass(requested, root)
+
+            self.assertEqual(first["status"], "WRITTEN")
+            self.assertEqual(second["status"], "EXISTING_DAILY_FREEZE")
+            self.assertEqual(second["compass_id"], first["compass_id"])
+            self.assertEqual(second["path"], first["path"])
+
+    def test_on_demand_writes_when_owner_packet_changed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "official"
+            scheduled = self.build(
+                tmp,
+                run_reason="SCHEDULED_MORNING",
+                issued_at=datetime(2026, 9, 16, 6, 17, tzinfo=timezone.utc),
+                packet_sha="owner-packet-a",
+            )
+            requested = self.build(
+                tmp,
+                run_reason="ON_DEMAND",
+                issued_at=datetime(2026, 9, 16, 7, 5, tzinfo=timezone.utc),
+                packet_sha="owner-packet-b",
+            )
+            first = write_official_compass(scheduled, root)
+            second = write_official_compass(requested, root)
+
+            self.assertEqual(first["status"], "WRITTEN")
+            self.assertEqual(second["status"], "WRITTEN")
+            self.assertNotEqual(second["compass_id"], first["compass_id"])
+            pointer = json.loads((root / "LATEST_COMPASS.json").read_text())
+            self.assertEqual(pointer["source_packet_sha256"], "owner-packet-b")
+
     def test_existing_freeze_repairs_derived_projection_and_pointers(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp) / "official"
@@ -265,6 +312,11 @@ class OfficialDailyCompassTest(unittest.TestCase):
         self.assertEqual(route["status"], "ACTIVE")
         self.assertEqual(route["official_daily_compass_pointer"], official)
         self.assertIn(official, route["authority_route"])
+        refresh = route["official_compass_policy"]["on_demand_refresh"]
+        self.assertTrue(refresh["enabled"])
+        self.assertEqual(refresh["run_reason"], "ON_DEMAND")
+        self.assertEqual(refresh["same_source_behavior"], "REUSE_EXISTING_IMMUTABLE_FREEZE")
+        self.assertFalse(route["official_compass_policy"]["render_request_creates_new_freeze"])
 
 
 if __name__ == "__main__":
