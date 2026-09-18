@@ -50,4 +50,4 @@ jobs:
             exit 0
           fi
           echo "::warning::Missing $expected_reason; dispatching recovery"
-          gh workflow run daily-compass.yml --ref main
+          gh workflow run daily-compass.yml --ref main -f run_reason="$expected_reason"
