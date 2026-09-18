@@ -204,5 +204,40 @@ class ModelCalibrationPopulationContractTests(unittest.TestCase):
             self.assertFalse(output.exists())
 
 
+    def test_suffix_shaped_external_fixture_cannot_write_repository_output(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            frozen = root / "research" / "api_agent" / "forecast_candidates" / "FROZEN"
+            matured = root / "research" / "api_agent" / "forecast_candidates" / "MATURED"
+            frozen.mkdir(parents=True)
+            matured.mkdir(parents=True)
+            repository_output = ROOT / "research" / "api_agent" / "_SHOULD_NOT_WRITE_STAGE2_TEST.csv"
+            repository_eligibility = ROOT / "research" / "api_agent" / "_SHOULD_NOT_WRITE_STAGE2_TEST.json"
+            try:
+                result = subprocess.run(
+                    [
+                        sys.executable,
+                        str(LEDGER),
+                        "--forecast-root",
+                        str(frozen),
+                        "--outcome-root",
+                        str(matured),
+                        "--output",
+                        str(repository_output),
+                        "--eligibility-output",
+                        str(repository_eligibility),
+                    ],
+                    capture_output=True,
+                    text=True,
+                )
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn("POPULATION_ROOT_MISMATCH", result.stderr)
+                self.assertFalse(repository_output.exists())
+                self.assertFalse(repository_eligibility.exists())
+            finally:
+                repository_output.unlink(missing_ok=True)
+                repository_eligibility.unlink(missing_ok=True)
+
+
 if __name__ == "__main__":
     unittest.main()
