@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -11,6 +12,7 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "scripts" / "lib"))
 
 from forecast_ratification_contract import (  # noqa: E402
+    ALLOWED_AUTHORITIES,
     DECISION_SLA_MINUTES,
     RATIFICATION_PACKET_V2,
     decision_deadline,
@@ -35,6 +37,84 @@ def canon(value: Any) -> bytes:
 
 def digest(value: Any) -> str:
     return hashlib.sha256(canon(value)).hexdigest()
+
+
+def _valid_sha256(value: Any) -> bool:
+    return isinstance(value, str) and len(value) == 64 and value == value.lower() and all(ch in "0123456789abcdef" for ch in value)
+
+
+def _finite_number(value: Any) -> bool:
+    return not isinstance(value, bool) and isinstance(value, (int, float)) and math.isfinite(float(value))
+
+
+def validate_frozen_forecast_record(frozen: dict[str, Any]) -> None:
+    """Validate canonical owner-produced FROZEN_FORECAST_v1 records fail-closed."""
+    if not isinstance(frozen, dict) or frozen.get("contract") != "FROZEN_FORECAST_v1":
+        raise ValueError("WRONG_FROZEN_FORECAST_CONTRACT")
+    if frozen.get("unit_contract_version") != UNIT_CONTRACT_VERSION:
+        raise ValueError("FROZEN_UNIT_CONTRACT_INVALID")
+    for key in ("forecast_id", "candidate_id", "model", "task", "metric_path"):
+        if not isinstance(frozen.get(key), str) or not frozen.get(key, "").strip():
+            raise ValueError("FROZEN_REQUIRED_FIELD_INVALID:" + key)
+    for key in ("prompt_sha256", "candidate_sha256", "ratification_sha256", "baseline_evidence_sha256"):
+        if not _valid_sha256(frozen.get(key)):
+            raise ValueError("FROZEN_SHA256_INVALID:" + key)
+    horizon = frozen.get("horizon_days")
+    if isinstance(horizon, bool) or not isinstance(horizon, int) or horizon <= 0:
+        raise ValueError("FROZEN_HORIZON_INVALID")
+    try:
+        frozen_at = parse_dt(str(frozen["frozen_at_utc"]))
+        due_at = parse_dt(str(frozen["outcome_due_utc"]))
+        ratified_at = parse_dt(str(frozen["ratification_decision_at_utc"]))
+        evidence_at = parse_dt(str(frozen["baseline_evidence_observed_at_utc"]))
+    except (KeyError, TypeError, ValueError) as exc:
+        raise ValueError("FROZEN_TIMESTAMP_INVALID") from exc
+    if ratified_at != frozen_at:
+        raise ValueError("FROZEN_RATIFICATION_TIME_MISMATCH")
+    if due_at != frozen_at + timedelta(days=horizon):
+        raise ValueError("FROZEN_HORIZON_TIME_MISMATCH")
+    if evidence_at > frozen_at:
+        raise ValueError("FROZEN_BASELINE_AFTER_RATIFICATION")
+    if frozen.get("ratification_contract") != RATIFICATION_PACKET_V2:
+        raise ValueError("FROZEN_RATIFICATION_CONTRACT_INVALID")
+    if frozen.get("ratification_authority") not in ALLOWED_AUTHORITIES:
+        raise ValueError("FROZEN_RATIFICATION_AUTHORITY_INVALID")
+    if frozen.get("ratification_outcome_blind") is not True:
+        raise ValueError("FROZEN_RATIFICATION_NOT_OUTCOME_BLIND")
+    if not isinstance(frozen.get("baseline_evidence_path"), str) or not frozen.get("baseline_evidence_path", "").strip():
+        raise ValueError("FROZEN_BASELINE_PATH_INVALID")
+    direction = frozen.get("direction")
+    if direction not in {"UP", "DOWN", "RANGE"}:
+        raise ValueError("FROZEN_DIRECTION_INVALID")
+    if not _finite_number(frozen.get("start_value")) or float(frozen["start_value"]) <= 0:
+        raise ValueError("FROZEN_START_VALUE_INVALID")
+    mode = frozen.get("target_mode")
+    if direction in {"UP", "DOWN"}:
+        if mode == "PCT_MOVE":
+            if not _finite_number(frozen.get("threshold_pct")) or float(frozen["threshold_pct"]) <= 0:
+                raise ValueError("FROZEN_THRESHOLD_INVALID")
+        elif mode == "ABSOLUTE_VALUE":
+            target = frozen.get("target_value")
+            if not _finite_number(target):
+                raise ValueError("FROZEN_TARGET_VALUE_INVALID")
+            if direction == "UP" and float(target) <= float(frozen["start_value"]):
+                raise ValueError("FROZEN_UP_TARGET_INVALID")
+            if direction == "DOWN" and float(target) >= float(frozen["start_value"]):
+                raise ValueError("FROZEN_DOWN_TARGET_INVALID")
+        else:
+            raise ValueError("FROZEN_TARGET_MODE_INVALID")
+    else:
+        if mode != "ABSOLUTE_RANGE":
+            raise ValueError("FROZEN_RANGE_MODE_INVALID")
+        low, high = frozen.get("range_lower_value"), frozen.get("range_upper_value")
+        if not _finite_number(low) or not _finite_number(high) or float(low) >= float(high):
+            raise ValueError("FROZEN_RANGE_INVALID")
+    authority = frozen.get("authority")
+    if not isinstance(authority, dict):
+        raise ValueError("FROZEN_AUTHORITY_INVALID")
+    for key in ("portfolio_action", "model_weight_change", "canonical_promotion", "framework_state_change"):
+        if authority.get(key) is not False:
+            raise ValueError("FROZEN_AUTHORITY_ESCALATION:" + key)
 
 
 def load(path: Path) -> dict[str, Any]:
