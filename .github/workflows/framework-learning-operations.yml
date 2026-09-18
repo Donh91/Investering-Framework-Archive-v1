@@ -162,6 +162,11 @@ jobs:
           python scripts/orchestration/build_framework_handoff_manifest.py \
             --repo-root . \
             --output research/framework_handoffs/LATEST_FRAMEWORK_HANDOFF_MANIFEST.json
+      - name: Build deterministic data-consumer index
+        run: |
+          python scripts/orchestration/build_data_consumer_index.py \
+            --repo-root . \
+            --output research/framework_handoffs/LATEST_DATA_CONSUMER_INDEX.json
       - name: Commit compact outputs and verify main readback
         shell: bash
         run: |
