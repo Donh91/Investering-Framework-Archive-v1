@@ -10,73 +10,187 @@ permissions:
   contents: read
   issues: write
 
+concurrency:
+  group: askr-launch-sentinel
+  cancel-in-progress: true
+
 jobs:
   watch:
     runs-on: ubuntu-latest
     timeout-minutes: 180
     env:
-      RH_RPC: https://rpc.mainnet.chain.robinhood.com
+      RH_RPC_OFFICIAL: https://rpc.mainnet.chain.robinhood.com
+      RH_RPC_FALLBACK: https://rpc.nodeflare.app/robinhood/public
       PONS_V2_FACTORY: "0x7eD598BcEf8bd9Edd8C97A195C6d13f40801EC7e"
       TARGET_SYMBOL: ASKR
+      TARGET_NAME: HEYASKR
+      TARGET_SITE: https://heyaskr.ai/token
       TOKEN_LAUNCHED_TOPIC0: "0x8d4aad4953d0ca700d468f3753aa14432d1b35b43ec6409f051fb6aa43a89607"
     steps:
-      - name: Forensic proof of ASKR launch
+      - name: Exact-chain replay + independent official-site discovery proof
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
         run: |
-          python3 - <<'PY'
-          import json, os, urllib.request, datetime
-          RPC=os.environ["RH_RPC"]
+          cat > /tmp/prove.py <<'PY'
+          import json, os, urllib.request, urllib.error, datetime, re, time
+
+          RPCS=[os.environ["RH_RPC_OFFICIAL"], os.environ["RH_RPC_FALLBACK"]]
           FACTORY=os.environ["PONS_V2_FACTORY"].lower()
           TOPIC0=os.environ["TOKEN_LAUNCHED_TOPIC0"].lower()
-          CA="0xa92768863a55d8a0591709f7f5e594a249d36ea3"
+          SITE=os.environ["TARGET_SITE"]
           REPO=os.environ["GH_REPO"]; TOKEN=os.environ["GH_TOKEN"]
-          def rpc(m,p):
-              d=json.dumps({"jsonrpc":"2.0","id":1,"method":m,"params":p}).encode()
-              q=urllib.request.Request(RPC,data=d,headers={"Content-Type":"application/json"})
-              with urllib.request.urlopen(q,timeout=20) as r:o=json.load(r)
-              if "error" in o: raise RuntimeError(o["error"])
-              return o["result"]
-          def decstr(raw):
+          EXPECTED_CHAIN="0x1237"
+
+          provider_failures={}
+          last_provider=None
+
+          def rpc(method, params, providers=None):
+              global last_provider
+              errs=[]
+              for url in (providers or RPCS):
+                  try:
+                      data=json.dumps({"jsonrpc":"2.0","id":1,"method":method,"params":params}).encode()
+                      req=urllib.request.Request(data=data,url=url,headers={"Content-Type":"application/json","User-Agent":"alpha-lab-sentinel/1.0"})
+                      with urllib.request.urlopen(req,timeout=15) as r:
+                          out=json.load(r)
+                      if "error" in out:
+                          raise RuntimeError(out["error"])
+                      # Never trust a fallback until it proves the intended chain.
+                      if method!="eth_chainId":
+                          cid=rpc_chain_id(url)
+                          if cid.lower()!=EXPECTED_CHAIN:
+                              raise RuntimeError(f"wrong_chain:{cid}")
+                      last_provider=url
+                      return out["result"],url
+                  except Exception as e:
+                      provider_failures[url]=repr(e)
+                      errs.append(f"{url}: {e!r}")
+              raise RuntimeError("all_rpc_failed | "+" | ".join(errs))
+
+          _chain_cache={}
+          def rpc_chain_id(url):
+              if url in _chain_cache: return _chain_cache[url]
+              data=json.dumps({"jsonrpc":"2.0","id":1,"method":"eth_chainId","params":[]}).encode()
+              req=urllib.request.Request(url,data=data,headers={"Content-Type":"application/json","User-Agent":"alpha-lab-sentinel/1.0"})
+              with urllib.request.urlopen(req,timeout=12) as r: out=json.load(r)
+              if "error" in out: raise RuntimeError(out["error"])
+              _chain_cache[url]=out["result"]
+              return out["result"]
+
+          def abi_string(raw):
+              if not raw or raw=="0x": return None
               try:
-                  b=bytes.fromhex(raw[2:]); off=int.from_bytes(b[:32],"big"); n=int.from_bytes(b[off:off+32],"big")
-                  return b[off+32:off+32+n].decode()
+                  b=bytes.fromhex(raw[2:])
+                  if len(b)<64:return None
+                  off=int.from_bytes(b[:32],"big")
+                  if off+32>len(b):return None
+                  n=int.from_bytes(b[off:off+32],"big")
+                  if off+32+n>len(b):return None
+                  return b[off+32:off+32+n].decode("utf-8","replace")
               except:return None
-          head=int(rpc("eth_blockNumber",[]),16); padded="0x"+"0"*24+CA[2:]
-          hit=None; hi=head; floor=max(0,head-100000)
-          while hi>=floor and not hit:
-              lo=max(floor,hi-1999)
-              try:
-                  xs=rpc("eth_getLogs",[{"address":FACTORY,"topics":[TOPIC0,padded],"fromBlock":hex(lo),"toBlock":hex(hi)}])
-              except Exception:
-                  xs=[]
-              if xs: hit=xs[-1]; break
-              hi=lo-1
-          lines=["## ASKR exact-chain forensic readback",""]
-          if not hit:
-              lines += [f"- result: **NO_MATCH**",f"- exact CA: `{CA}`",f"- factory: `{FACTORY}`",f"- topic0: `{TOPIC0}`",f"- searched: last {head-floor} blocks","",
-                        "This does not verify the candidate as a Pons V2 launch. Keep provenance unverified."]
+
+          def call(addr,selector,block="latest"):
+              raw,p=rpc("eth_call",[{"to":addr,"data":selector},block])
+              return raw,p
+
+          def discover_from_official_site():
+              req=urllib.request.Request(SITE,headers={"User-Agent":"Mozilla/5.0 AlphaLab/1.0"})
+              with urllib.request.urlopen(req,timeout=20) as r:
+                  html=r.read().decode("utf-8","replace")
+              # First-party page is allowed to propose a CA, never to prove chain provenance.
+              # Prefer the address adjacent to contract-address language; fall back to all EVM addresses.
+              patterns=[
+                  r'(?is)contract\s*address.{0,500}?(0x[a-fA-F0-9]{40})',
+                  r'(?is)what\s+is\s+the\s+contract\s+address.{0,500}?(0x[a-fA-F0-9]{40})'
+              ]
+              for pat in patterns:
+                  m=re.search(pat,html)
+                  if m:return m.group(1).lower(),len(html)
+              xs=re.findall(r'0x[a-fA-F0-9]{40}',html)
+              xs=list(dict.fromkeys(x.lower() for x in xs))
+              return (xs[0] if len(xs)==1 else None),len(html)
+
+          def find_launch(ca,head,lookback=250000):
+              padded="0x"+"0"*24+ca[2:]
+              hi=head; floor=max(0,head-lookback)
+              errors=[]
+              while hi>=floor:
+                  lo=max(floor,hi-1999)
+                  try:
+                      xs,p=rpc("eth_getLogs",[{"address":FACTORY,"topics":[TOPIC0,padded],"fromBlock":hex(lo),"toBlock":hex(hi)}])
+                      if xs:return sorted(xs,key=lambda x:int(x["blockNumber"],16))[-1],p,floor
+                  except Exception as e:
+                      errors.append(repr(e))
+                  hi=lo-1
+              return None,None,floor
+
+          site_ca=None; site_err=None; html_len=None
+          try:
+              site_ca,html_len=discover_from_official_site()
+          except Exception as e:
+              site_err=repr(e)
+
+          # This is the autonomous input: CA comes from the pre-known official launch page,
+          # not from Telegram/user evidence.
+          ca=site_ca
+          lines=["## ASKR autonomous discovery + chain verification proof",""]
+          lines += [f"- first-party page: `{SITE}`",f"- CA independently extracted from first-party page: `{ca}`",f"- page bytes read: `{html_len}`",f"- site error: `{site_err}`",""]
+          if not ca:
+              lines += ["### RESULT: FAIL - no unique CA could be extracted autonomously from the official page."]
           else:
-              topics=hit["topics"]; txh=hit["transactionHash"]; bn=hit["blockNumber"]
-              token="0x"+topics[1][-40:]; curve="0x"+topics[2][-40:]; deployer="0x"+topics[3][-40:]
-              blk=rpc("eth_getBlockByNumber",[bn,False]); ts=int(blk["timestamp"],16)
-              rec=rpc("eth_getTransactionReceipt",[txh]); tx=rpc("eth_getTransactionByHash",[txh])
-              name=decstr(rpc("eth_call",[{"to":CA,"data":"0x06fdde03"},"latest"]))
-              sym=decstr(rpc("eth_call",[{"to":CA,"data":"0x95d89b41"},"latest"]))
-              supply=int(rpc("eth_call",[{"to":CA,"data":"0x18160ddd"},"latest"]),16)
-              code=rpc("eth_getCode",[CA,"latest"])
-              old=(len(topics)>=4 and token.lower()==CA and ((sym or "").upper()=="ASKR" or "ASKR" in (name or "").upper() or "HEYASKR" in (name or "").upper()))
-              lines += ["- result: **CANONICAL_PONS_V2_MATCH**",f"- exact CA: `{CA}`",f"- launch block: `{int(bn,16)}`",
-                        f"- block UTC: `{datetime.datetime.fromtimestamp(ts,datetime.timezone.utc).isoformat()}`",f"- tx: `{txh}`",
-                        f"- token topic: `{token}`",f"- curve topic: `{curve}`",f"- deployer topic: `{deployer}`",
-                        f"- tx.from: `{tx.get('from')}`",f"- tx.to: `{tx.get('to')}`",f"- receipt status: `{int(rec['status'],16)}`",
-                        f"- ERC20 name: `{name}`",f"- ERC20 symbol: `{sym}`",f"- totalSupply raw: `{supply}`",
-                        f"- bytecode size: `{max(0,(len(code)-2)//2)}` bytes","",f"### OLD SENTINEL PARSER REPLAY: **{'PASS' if old else 'FAIL'}**"]
-              if old:
-                  lines += ["The original parser would have recognized this exact launch **if it had processed the event**. Root cause therefore moves to runtime/liveness/RPC coverage rather than event decoding."]
-              else:
-                  lines += ["The original parser would not have recognized the exact launch. Parser/gating remains a root cause."]
+              try:
+                  head,phead=rpc("eth_blockNumber",[])
+                  head=int(head,16)
+                  hit,plog,floor=find_launch(ca,head)
+                  code,pcode=rpc("eth_getCode",[ca,"latest"])
+                  name_raw,pn=call(ca,"0x06fdde03"); sym_raw,ps=call(ca,"0x95d89b41")
+                  supply_raw,psu=call(ca,"0x18160ddd")
+                  name=abi_string(name_raw); sym=abi_string(sym_raw)
+                  supply=int(supply_raw,16) if supply_raw and supply_raw!="0x" else None
+                  lines += [f"- chain head provider: `{phead}`",f"- bytecode provider: `{pcode}`",f"- bytecode size: `{max(0,(len(code)-2)//2)}` bytes",f"- ERC20 name: `{name}`",f"- ERC20 symbol: `{sym}`",f"- totalSupply raw: `{supply}`",""]
+                  if not hit:
+                      lines += ["### RESULT: PARTIAL - first-party CA exists on chain but exact Pons V2 TokenLaunched event was not recovered.",
+                                f"- searched from block `{floor}` to `{head}` with exact factory + topic0 + indexed CA."]
+                  else:
+                      topics=hit["topics"]; txh=hit["transactionHash"]; bn=hit["blockNumber"]
+                      token="0x"+topics[1][-40:]; curve="0x"+topics[2][-40:]; deployer="0x"+topics[3][-40:]
+                      blk,pb=rpc("eth_getBlockByNumber",[bn,False]); ts=int(blk["timestamp"],16)
+                      rec,pr=rpc("eth_getTransactionReceipt",[txh]); tx,pt=rpc("eth_getTransactionByHash",[txh])
+                      old=(len(topics)>=4 and token.lower()==ca and ((sym or "").upper()=="ASKR" or "ASKR" in (name or "").upper() or "HEYASKR" in (name or "").upper()))
+                      lines += ["### RESULT: PASS - CA FOUND INDEPENDENTLY AND VERIFIED ON-CHAIN","",
+                                f"- canonical factory: `{FACTORY}`",
+                                f"- TokenLaunched topic0: `{TOPIC0}`",
+                                f"- event provider: `{plog}`",
+                                f"- launch block: `{int(bn,16)}`",
+                                f"- block UTC: `{datetime.datetime.fromtimestamp(ts,datetime.timezone.utc).isoformat()}`",
+                                f"- launch tx: `{txh}`",
+                                f"- token topic[1]: `{token}`",
+                                f"- curve topic[2]: `{curve}`",
+                                f"- deployer topic[3]: `{deployer}`",
+                                f"- tx.from: `{tx.get('from')}`",
+                                f"- tx.to: `{tx.get('to')}`",
+                                f"- receipt status: `{int(rec['status'],16)}`","",
+                                f"### OLD SENTINEL PARSER REPLAY: **{'PASS' if old else 'FAIL'}**"]
+                      if old:
+                          lines += ["The old parser logic would have identified ASKR from this exact raw launch event. The historical miss was operational availability/transport, not inability to decode this launch."]
+                      else:
+                          lines += ["The old parser would still miss this raw event, so parser/gating remains a root cause."]
+
+              except Exception as e:
+                  lines += ["### RESULT: FAIL-CLOSED - chain verification unavailable",f"`{e!r}`"]
+
+          lines += ["","### Provider health"]
+          for url in RPCS:
+              try:
+                  cid=rpc_chain_id(url)
+                  lines += [f"- `{url}`: chainId `{cid}`"]
+              except Exception as e:
+                  lines += [f"- `{url}`: **FAILED** `{e!r}`"]
+          if provider_failures:
+              lines += ["","### Observed provider failures"]
+              for u,e in provider_failures.items(): lines += [f"- `{u}`: `{e}`"]
+
           body="\n".join(lines)
           print(body,flush=True)
           payload=json.dumps({"body":body}).encode()
@@ -84,66 +198,119 @@ jobs:
               headers={"Authorization":f"Bearer {TOKEN}","Accept":"application/vnd.github+json","Content-Type":"application/json"})
           with urllib.request.urlopen(q,timeout=20) as r: print("commented",json.load(r).get("html_url"),flush=True)
           PY
-      - name: Poll Pons V2 every 10 seconds
+          python3 /tmp/prove.py
+
+      - name: Poll Pons V2 every 10 seconds with provider failover
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
         run: |
           cat > /tmp/watch.py <<'PY'
-          import json, os, time, urllib.request
-          RPC=os.environ["RH_RPC"]; FACTORY=os.environ["PONS_V2_FACTORY"].lower()
-          TARGET=os.environ["TARGET_SYMBOL"].upper(); TOPIC0=os.environ["TOKEN_LAUNCHED_TOPIC0"].lower(); REPO=os.environ["GH_REPO"]; TOKEN=os.environ["GH_TOKEN"]
-          def rpc(method, params):
+          import json, os, time, urllib.request, re
+          RPCS=[os.environ["RH_RPC_OFFICIAL"],os.environ["RH_RPC_FALLBACK"]]
+          FACTORY=os.environ["PONS_V2_FACTORY"].lower()
+          TARGET=os.environ["TARGET_SYMBOL"].upper()
+          TARGET_NAME=os.environ["TARGET_NAME"].upper()
+          TOPIC0=os.environ["TOKEN_LAUNCHED_TOPIC0"].lower()
+          SITE=os.environ["TARGET_SITE"]
+          REPO=os.environ["GH_REPO"]; TOKEN=os.environ["GH_TOKEN"]
+          EXPECTED_CHAIN="0x1237"; chain_cache={}
+          provider_errors={u:0 for u in RPCS}
+
+          def raw_rpc(url,method,params):
               data=json.dumps({"jsonrpc":"2.0","id":1,"method":method,"params":params}).encode()
-              req=urllib.request.Request(RPC,data=data,headers={"Content-Type":"application/json"})
-              with urllib.request.urlopen(req,timeout=15) as r: out=json.load(r)
+              req=urllib.request.Request(url,data=data,headers={"Content-Type":"application/json","User-Agent":"alpha-lab-sentinel/1.0"})
+              with urllib.request.urlopen(req,timeout=12) as r: out=json.load(r)
               if "error" in out: raise RuntimeError(out["error"])
               return out["result"]
-          def call(to,data): return rpc("eth_call",[{"to":to,"data":data},"latest"])
+
+          def healthy(url):
+              try:
+                  if url not in chain_cache: chain_cache[url]=raw_rpc(url,"eth_chainId",[])
+                  return chain_cache[url].lower()==EXPECTED_CHAIN
+              except Exception:
+                  return False
+
+          def rpc(method,params):
+              errs=[]
+              for url in RPCS:
+                  try:
+                      if not healthy(url): raise RuntimeError("chain_health_failed")
+                      out=raw_rpc(url,method,params)
+                      return out,url
+                  except Exception as e:
+                      provider_errors[url]+=1; errs.append(f"{url}:{e!r}")
+              raise RuntimeError("all_rpc_failed | "+" | ".join(errs))
+
           def abi_string(h):
               if not h or h=="0x": return ""
-              b=bytes.fromhex(h[2:])
-              if len(b)<64: return ""
-              off=int.from_bytes(b[:32],"big")
-              if off+32>len(b): return ""
-              n=int.from_bytes(b[off:off+32],"big")
-              return b[off+32:off+32+n].decode("utf-8","replace")
+              try:
+                  b=bytes.fromhex(h[2:]); off=int.from_bytes(b[:32],"big")
+                  n=int.from_bytes(b[off:off+32],"big")
+                  return b[off+32:off+32+n].decode("utf-8","replace")
+              except:return ""
+
           def readstr(addr,selector):
-              try: return abi_string(call(addr,selector))
-              except Exception: return ""
-          def create_issue(ca,curve,deployer,txh,block,nm,sym):
-              lines=["## ASKR CANDIDATE DETECTED","",f"@Donh91 🚨 **ASKR on-chain candidate detected. Open this alert now.**","","**Status:** on-chain candidate from official Pons V2 factory; primary-source verification still required.","","~~~text",ca,"~~~","",f"- chain: Robinhood Chain (4663)",f"- token name: {nm}",f"- token symbol: {sym}",f"- curve: {curve}",f"- deployer: {deployer}",f"- block: {block}",f"- tx: https://robinhoodchain.blockscout.com/tx/{txh}",f"- token: https://robinhoodchain.blockscout.com/address/{ca}","","Freeze first-seen now. UNKNOWN != 0. MC != FDV. No ENTRY promotion before market data, holder/deployer concentration and primary provenance are verified."]
+              try:
+                  x,p=rpc("eth_call",[{"to":addr,"data":selector},"latest"])
+                  return abi_string(x),p
+              except Exception:return "",None
+
+          def official_site_ca():
+              try:
+                  q=urllib.request.Request(SITE,headers={"User-Agent":"Mozilla/5.0 AlphaLab/1.0"})
+                  with urllib.request.urlopen(q,timeout=15) as r: html=r.read().decode("utf-8","replace")
+                  m=re.search(r'(?is)contract\s*address.{0,500}?(0x[a-fA-F0-9]{40})',html)
+                  return m.group(1).lower() if m else None
+              except Exception:return None
+
+          def create_issue(ca,curve,deployer,txh,block,nm,sym,provider,origin):
+              lines=["## ASKR CANDIDATE DETECTED","",f"@Donh91 🚨 **ASKR on-chain candidate detected. Open this alert now.**","",
+                     f"- discovery origin: {origin}",f"- RPC transport: {provider}","",
+                     "~~~text",ca,"~~~","",f"- chain: Robinhood Chain (4663)",f"- token name: {nm or 'UNKNOWN'}",f"- token symbol: {sym or 'UNKNOWN'}",
+                     f"- curve: {curve}",f"- deployer: {deployer}",f"- block: {block}",f"- tx: https://robinhoodchain.blockscout.com/tx/{txh}",
+                     f"- token: https://robinhoodchain.blockscout.com/address/{ca}","",
+                     "Freeze first-seen now. UNKNOWN != 0. MC != FDV. No ENTRY promotion before market data, holder/deployer concentration and primary provenance are verified."]
               payload=json.dumps({"title":f"🚨 ASKR CA FOUND - {ca}","body":"\n".join(lines),"assignees":["Donh91"]}).encode()
-              req=urllib.request.Request(f"https://api.github.com/repos/{REPO}/issues",data=payload,method="POST",headers={"Authorization":f"Bearer {TOKEN}","Accept":"application/vnd.github+json","Content-Type":"application/json"})
+              req=urllib.request.Request(f"https://api.github.com/repos/{REPO}/issues",data=payload,method="POST",
+                  headers={"Authorization":f"Bearer {TOKEN}","Accept":"application/vnd.github+json","Content-Type":"application/json"})
               with urllib.request.urlopen(req,timeout=20) as r: print("ALERT",json.load(r).get("html_url"),flush=True)
-          latest=int(rpc("eth_blockNumber",[]),16); cursor=max(0,latest-20000); seen=set(); last_heartbeat=time.time(); rpc_errors=0
-          print(f"ASKR sentinel active; backscan {cursor}-{latest}; polling every 10s",flush=True)
+
+          latest,provider=rpc("eth_blockNumber",[]); latest=int(latest,16)
+          cursor=max(0,latest-50000)
+          seen=set(); pending={}; last_heartbeat=0
+          site_ca=official_site_ca()
+          print(f"ACTIVE provider={provider} head={latest} cursor={cursor} site_ca={site_ca}",flush=True)
+
           while True:
               try:
-                  head=int(rpc("eth_blockNumber",[]),16)
+                  head,provider=rpc("eth_blockNumber",[]); head=int(head,16)
                   if cursor<=head:
-                      logs=rpc("eth_getLogs",[{"address":FACTORY,"topics":[TOPIC0],"fromBlock":hex(cursor),"toBlock":hex(head)}])
+                      logs,p=rpc("eth_getLogs",[{"address":FACTORY,"topics":[TOPIC0],"fromBlock":hex(cursor),"toBlock":hex(head)}])
                       for log in logs:
                           topics=log.get("topics",[])
                           if len(topics)<4 or topics[0].lower()!=TOPIC0: continue
-                          ca="0x"+topics[1][-40:]
-                          if ca.lower() in seen: continue
-                          seen.add(ca.lower())
-                          sym=readstr(ca,"0x95d89b41"); nm=readstr(ca,"0x06fdde03")
-                          metadata_known=bool(sym or nm)
-                          if (metadata_known and (sym.upper()==TARGET or TARGET in nm.upper() or "HEYASKR" in nm.upper())) or ca.lower()=="0xa92768863a55d8a0591709f7f5e594a249d36ea3":
-                              curve="0x"+topics[2][-40:]; deployer="0x"+topics[3][-40:]
-                              create_issue(ca,curve,deployer,log["transactionHash"],int(log["blockNumber"],16),nm,sym)
-                              print(f"FOUND {ca} {nm} {sym}",flush=True)
-                              raise SystemExit(0)
+                          ca=("0x"+topics[1][-40:]).lower()
+                          if ca in seen: continue
+                          curve=("0x"+topics[2][-40:]).lower(); deployer=("0x"+topics[3][-40:]).lower()
+                          pending[ca]={"curve":curve,"deployer":deployer,"txh":log["transactionHash"],"block":int(log["blockNumber"],16),"provider":p}
                       cursor=head+1
+
+                  # Enrichment is retried from preserved raw launch evidence. A transient metadata failure cannot erase discovery.
+                  for ca,row in list(pending.items()):
+                      sym,sp=readstr(ca,"0x95d89b41"); nm,np=readstr(ca,"0x06fdde03")
+                      match=(sym.upper()==TARGET or TARGET in nm.upper() or TARGET_NAME in nm.upper() or (site_ca and ca==site_ca))
+                      if match:
+                          create_issue(ca,row["curve"],row["deployer"],row["txh"],row["block"],nm,sym,row["provider"],"PONS_V2_FACTORY_EVENT")
+                          seen.add(ca); pending.pop(ca,None)
+                          raise SystemExit(0)
+
                   if time.time()-last_heartbeat>=60:
-                      print(f"HEALTH head={head} cursor={cursor} lag={max(0,head-cursor+1)} rpc_errors={rpc_errors}",flush=True)
+                      print(f"HEALTH head={head} cursor={cursor} lag={max(0,head-cursor+1)} pending={len(pending)} errors={provider_errors}",flush=True)
                       last_heartbeat=time.time()
               except SystemExit: raise
               except Exception as e:
-                  rpc_errors+=1
-                  print("DEGRADED poll_error",repr(e),f"cursor={cursor}",flush=True)
+                  print("DEGRADED",repr(e),f"cursor={cursor}",f"errors={provider_errors}",flush=True)
               time.sleep(10)
           PY
           python3 /tmp/watch.py
