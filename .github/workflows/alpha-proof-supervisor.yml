@@ -1,0 +1,68 @@
+name: Alpha Lab Proof Supervisor
+on:
+  workflow_run:
+    workflows: ["Alpha Lab SHADOW-04 Prospective"]
+    types: [completed]
+  workflow_dispatch:
+permissions:
+  contents: write
+  actions: read
+concurrency:
+  group: framework-main-writer
+  cancel-in-progress: false
+jobs:
+  adjudicate:
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Download SHADOW-04 artifact
+        if: github.event_name == 'workflow_run'
+        uses: actions/download-artifact@v4
+        with:
+          name: alpha-shadow04-prospective-${{ github.event.workflow_run.id }}
+          path: /tmp/alpha-shadow04
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.event.workflow_run.id }}
+      - name: Deterministic adjudication
+        shell: bash
+        run: |
+          set -euo pipefail
+          ART=""
+          if [ -f /tmp/alpha-shadow04/shadow04_result.json ]; then ART=/tmp/alpha-shadow04/shadow04_result.json; fi
+          if [ -n "$ART" ]; then
+            python 06_RESEARCH_LAB/alpha_lab/tools/alpha_proof_supervisor_v1.py "$ART"
+          else
+            python 06_RESEARCH_LAB/alpha_lab/tools/alpha_proof_supervisor_v1.py
+          fi
+          cat 06_RESEARCH_LAB/alpha_lab/proof_state.json
+      - name: Validate safety invariants
+        run: |
+          python - <<'PY'
+          import json
+          p='06_RESEARCH_LAB/alpha_lab/proof_state.json'
+          s=json.load(open(p))
+          assert s.get('portfolio_execution') is False
+          assert s.get('canonical_effect') is False
+          assert s['next_action'] in {'WAIT','RETRY_SHADOW04','START_SHADOW07','COLLECT_SHADOW07','BUILD_ARMED_RUNTIME','STOP_VERIFIED_EDGE_PROGRAMME','HALT_CRITICAL'}
+          print('ALPHA_PROOF_SUPERVISOR_SAFE',s['state'],s['next_action'])
+          PY
+      - name: Commit state if changed
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name framework-research-bot
+          git config user.email framework-research-bot@users.noreply.github.com
+          git add 06_RESEARCH_LAB/alpha_lab/proof_state.json
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "alpha: adjudicate prospective proof state"
+          for attempt in 1 2 3; do
+            git rebase --abort 2>/dev/null || true
+            if git pull --rebase origin main && git push origin HEAD:main; then exit 0; fi
+            sleep $((attempt*5))
+          done
+          exit 1
