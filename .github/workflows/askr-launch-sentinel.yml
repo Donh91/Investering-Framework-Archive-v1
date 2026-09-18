@@ -18,6 +18,7 @@ jobs:
       RH_RPC: https://rpc.mainnet.chain.robinhood.com
       PONS_V2_FACTORY: "0x7eD598BcEf8bd9Edd8C97A195C6d13f40801EC7e"
       TARGET_SYMBOL: ASKR
+      TOKEN_LAUNCHED_TOPIC0: "0x8d4aad4953d0ca700d468f3753aa14432d1b35b43ec6409f051fb6aa43a89607"
     steps:
       - name: Poll Pons V2 every 10 seconds
         env:
@@ -27,7 +28,7 @@ jobs:
           cat > /tmp/watch.py <<'PY'
           import json, os, time, urllib.request
           RPC=os.environ["RH_RPC"]; FACTORY=os.environ["PONS_V2_FACTORY"].lower()
-          TARGET=os.environ["TARGET_SYMBOL"].upper(); REPO=os.environ["GH_REPO"]; TOKEN=os.environ["GH_TOKEN"]
+          TARGET=os.environ["TARGET_SYMBOL"].upper(); TOPIC0=os.environ["TOKEN_LAUNCHED_TOPIC0"].lower(); REPO=os.environ["GH_REPO"]; TOKEN=os.environ["GH_TOKEN"]
           def rpc(method, params):
               data=json.dumps({"jsonrpc":"2.0","id":1,"method":method,"params":params}).encode()
               req=urllib.request.Request(RPC,data=data,headers={"Content-Type":"application/json"})
@@ -51,28 +52,34 @@ jobs:
               payload=json.dumps({"title":f"🚨 ASKR CA FOUND - {ca}","body":"\n".join(lines),"assignees":["Donh91"]}).encode()
               req=urllib.request.Request(f"https://api.github.com/repos/{REPO}/issues",data=payload,method="POST",headers={"Authorization":f"Bearer {TOKEN}","Accept":"application/vnd.github+json","Content-Type":"application/json"})
               with urllib.request.urlopen(req,timeout=20) as r: print("ALERT",json.load(r).get("html_url"),flush=True)
-          latest=int(rpc("eth_blockNumber",[]),16); cursor=max(0,latest-20000); seen=set()
+          latest=int(rpc("eth_blockNumber",[]),16); cursor=max(0,latest-20000); seen=set(); last_heartbeat=time.time(); rpc_errors=0
           print(f"ASKR sentinel active; backscan {cursor}-{latest}; polling every 10s",flush=True)
           while True:
               try:
                   head=int(rpc("eth_blockNumber",[]),16)
                   if cursor<=head:
-                      logs=rpc("eth_getLogs",[{"address":FACTORY,"fromBlock":hex(cursor),"toBlock":hex(head)}])
+                      logs=rpc("eth_getLogs",[{"address":FACTORY,"topics":[TOPIC0],"fromBlock":hex(cursor),"toBlock":hex(head)}])
                       for log in logs:
                           topics=log.get("topics",[])
-                          if len(topics)<4: continue
+                          if len(topics)<4 or topics[0].lower()!=TOPIC0: continue
                           ca="0x"+topics[1][-40:]
                           if ca.lower() in seen: continue
                           seen.add(ca.lower())
                           sym=readstr(ca,"0x95d89b41"); nm=readstr(ca,"0x06fdde03")
-                          if sym.upper()==TARGET or TARGET in nm.upper() or "HEYASKR" in nm.upper():
+                          metadata_known=bool(sym or nm)
+                          if (metadata_known and (sym.upper()==TARGET or TARGET in nm.upper() or "HEYASKR" in nm.upper())) or ca.lower()=="0xa92768863a55d8a0591709f7f5e594a249d36ea3":
                               curve="0x"+topics[2][-40:]; deployer="0x"+topics[3][-40:]
                               create_issue(ca,curve,deployer,log["transactionHash"],int(log["blockNumber"],16),nm,sym)
                               print(f"FOUND {ca} {nm} {sym}",flush=True)
                               raise SystemExit(0)
                       cursor=head+1
+                  if time.time()-last_heartbeat>=60:
+                      print(f"HEALTH head={head} cursor={cursor} lag={max(0,head-cursor+1)} rpc_errors={rpc_errors}",flush=True)
+                      last_heartbeat=time.time()
               except SystemExit: raise
-              except Exception as e: print("poll_error",repr(e),flush=True)
+              except Exception as e:
+                  rpc_errors+=1
+                  print("DEGRADED poll_error",repr(e),f"cursor={cursor}",flush=True)
               time.sleep(10)
           PY
           python3 /tmp/watch.py
