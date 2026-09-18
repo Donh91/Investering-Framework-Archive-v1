@@ -299,7 +299,10 @@ jobs:
                   # Enrichment is retried from preserved raw launch evidence. A transient metadata failure cannot erase discovery.
                   for ca,row in list(pending.items()):
                       sym,sp=readstr(ca,"0x95d89b41"); nm,np=readstr(ca,"0x06fdde03")
-                      match=(sym.upper()==TARGET or TARGET in nm.upper() or TARGET_NAME in nm.upper() or (site_ca and ca==site_ca))
+                      symbol_norm=(sym or "").strip().upper().lstrip("$")
+                      name_norm=re.sub(r"[^A-Z0-9]","",(nm or "").upper())
+                      target_name_norm=re.sub(r"[^A-Z0-9]","",TARGET_NAME)
+                      match=(symbol_norm==TARGET or name_norm==target_name_norm or (site_ca and ca==site_ca))
                       if match:
                           create_issue(ca,row["curve"],row["deployer"],row["txh"],row["block"],nm,sym,row["provider"],"PONS_V2_FACTORY_EVENT")
                           seen.add(ca); pending.pop(ca,None)
