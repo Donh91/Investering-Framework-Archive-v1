@@ -35,6 +35,37 @@ class SentinelTests(unittest.TestCase):
         self.assertTrue(triage["exceptional_microstructure_override"])
         self.assertTrue(triage["families"]["M"])
 
+    def test_material_visibility_gap_routes_to_existing_deep_dive_without_score(self) -> None:
+        event = {
+            "token_ca": "0x" + "a" * 40, "liquidity_usd": 50000, "sells_h1": 5,
+            "price_change_h1_pct": 10, "price_change_h6_pct": 20,
+            "birth_cohort_percentiles": {
+                "buyer_velocity": 98, "transaction_velocity": 98,
+                "volume_to_liquidity": 20,
+            },
+        }
+        triage = s.initial_triage(event, CONFIG)
+        self.assertTrue(triage["families"]["M"])
+        self.assertFalse(triage["exceptional_microstructure_override"])
+        self.assertEqual(triage["family_count"], 1)
+        self.assertEqual(triage["alert_state"], "DEEP_DIVE")
+        self.assertTrue(triage["visibility_gap"]["escalate_existing_deep_dive"])
+        self.assertIsNone(triage["visibility_gap"]["predictive_score"])
+
+    def test_visibility_gap_never_bypasses_execution_gate(self) -> None:
+        event = {
+            "token_ca": "0x" + "b" * 40, "liquidity_usd": 50000, "sells_h1": 0,
+            "price_change_h1_pct": 10, "price_change_h6_pct": 20,
+            "birth_cohort_percentiles": {
+                "buyer_velocity": 98, "transaction_velocity": 98,
+                "volume_to_liquidity": 20,
+            },
+        }
+        triage = s.initial_triage(event, CONFIG)
+        self.assertTrue(triage["visibility_gap"]["escalate_existing_deep_dive"])
+        self.assertFalse(triage["execution_gate_pass"])
+        self.assertEqual(triage["alert_state"], "SILENT")
+
     def test_failed_sell_evidence_blocks_deep_dive(self) -> None:
         event = {
             "token_ca": "0x" + "1" * 40, "liquidity_usd": 50000, "sells_h1": 0,
