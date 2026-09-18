@@ -20,7 +20,7 @@ except ModuleNotFoundError:  # direct script execution
 UNIT_CONTRACT_VERSION = "FORECAST_TARGET_UNITS_v2"
 LINEAGE_CONTRACT = "MODEL_CALIBRATION_DATA_PING_LINEAGE_v1"
 ELIGIBILITY_CONTRACT = "MODEL_CALIBRATION_SETTLEMENT_ELIGIBILITY_v1"
-ELIGIBILITY_SCOPE = "SETTLEMENT_TIMING_ONLY"
+ELIGIBILITY_SCOPE='SETTLEMENT_TIMING_ONLY'
 POPULATION_CONTRACT = "CALIBRATION_POPULATION_CONTRACT_v1"
 POPULATION_CONTRACT_PATH = "research/api_agent/CALIBRATION_POPULATION_CONTRACT.json"
 POPULATION_ID = "API_AGENT_RATIFIED_T13"
@@ -364,7 +364,7 @@ def main():
         "legacy_calibration_csv_path": str(args.output),
         "legacy_calibration_csv_role": "DESCRIPTIVE_BACKWARD_COMPATIBILITY_ONLY",
         "settlement_eligibility_status": population_state,
-        "scientific_skill_status": "NOT_ASSESSED_SETTLEMENT_TIMING_ONLY",
+        'scientific_skill_status':'NOT_ASSESSED_SETTLEMENT_TIMING_ONLY',
         "scientific_skill_authority": False,
         "scientific_scored_count": scientific_scored_count,
         "settlement_eligible_count": settlement_eligible_count,
