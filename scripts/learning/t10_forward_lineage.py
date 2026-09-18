@@ -248,7 +248,7 @@ def owner_score_row_is_mature_and_eligible(score: dict[str, Any], row: dict[str,
             value = obj.get(key)
             if isinstance(value, str) and value.strip().upper() in negative_states:
                 return False
-        for key in ("mature", "is_mature", "score_eligible", "scoring_eligible", "eligible"):
+        for key in ("mature", "is_mature", "score_eligible", "scoring_eligible", "scientific_score_eligible", "eligible"):
             if key in obj and obj.get(key) is not True:
                 return False
     return True
