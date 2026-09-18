@@ -7,6 +7,9 @@ import tempfile
 import unittest
 from pathlib import Path
 
+from scripts.learning.build_model_calibration_ledger import outcome_matches_frozen_forecast
+from scripts.learning.forecast_ratification_freezer import digest, validate_frozen_forecast_record
+
 ROOT = Path(__file__).resolve().parents[2]
 LEDGER = ROOT / "scripts" / "learning" / "build_model_calibration_ledger.py"
 
@@ -61,7 +64,10 @@ class ModelCalibrationPopulationContractTests(unittest.TestCase):
             self.assertEqual(summary["cohort_status"], "NO_FROZEN_RATIFIED_COHORT")
             self.assertEqual(eligibility["cohort_status"], "NO_FROZEN_RATIFIED_COHORT")
             self.assertEqual(eligibility["settlement_eligibility_status"], "NO_FROZEN_RATIFIED_COHORT")
-            self.assertEqual(eligibility["population_id"], "API_AGENT_RATIFIED_T13")
+            self.assertEqual(eligibility["population_id"], "NONCANONICAL_FIXTURE")
+            self.assertEqual(eligibility["canonical_population_id"], "API_AGENT_RATIFIED_T13")
+            self.assertEqual(eligibility["execution_mode"], "NONCANONICAL_FIXTURE")
+            self.assertFalse(eligibility["canonical_population_identity"])
             self.assertEqual(eligibility["candidate_count"], 1)
             self.assertEqual(eligibility["frozen_count"], 0)
             self.assertFalse(eligibility["direct_framework_memory_import_allowed"])
@@ -129,6 +135,10 @@ class ModelCalibrationPopulationContractTests(unittest.TestCase):
             self.assertFalse(eligibility["scientific_skill_authority"])
             self.assertFalse(eligibility["authority"]["model_weight_change"])
             self.assertFalse(eligibility["authority"]["automatic_path_repoint"])
+            self.assertEqual(summary["scientific_scored_count"], 0)
+            self.assertTrue(eligibility["rows"][0]["settlement_score_eligible"])
+            self.assertFalse(eligibility["rows"][0]["scientific_score_eligible"])
+            self.assertEqual(eligibility["rows"][0]["scientific_score_exclusion_reason"], "NONCANONICAL_FIXTURE_NO_SCIENTIFIC_AUTHORITY")
 
     def test_orphan_eligible_outcome_is_quarantined(self):
         with tempfile.TemporaryDirectory() as td:
@@ -237,6 +247,59 @@ class ModelCalibrationPopulationContractTests(unittest.TestCase):
             finally:
                 repository_output.unlink(missing_ok=True)
                 repository_eligibility.unlink(missing_ok=True)
+
+    @staticmethod
+    def canonical_frozen() -> dict:
+        return {
+            "contract": "FROZEN_FORECAST_v1",
+            "unit_contract_version": "FORECAST_TARGET_UNITS_v2",
+            "forecast_id": "ff_test",
+            "candidate_id": "candidate-test",
+            "model": "test-model",
+            "task": "test-task",
+            "prompt_sha256": "a" * 64,
+            "candidate_sha256": "b" * 64,
+            "ratification_sha256": "c" * 64,
+            "baseline_evidence_sha256": "d" * 64,
+            "frozen_at_utc": "2026-09-10T00:00:00Z",
+            "outcome_due_utc": "2026-09-11T00:00:00Z",
+            "ratification_decision_at_utc": "2026-09-10T00:00:00Z",
+            "baseline_evidence_observed_at_utc": "2026-09-09T23:59:00Z",
+            "horizon_days": 1,
+            "metric_path": "spot.BTCUSDT.close",
+            "ratification_contract": "FORECAST_RATIFICATION_PACKET_v2",
+            "ratification_authority": "CHATGPT_FRAMEWORK_OWNER",
+            "ratification_outcome_blind": True,
+            "baseline_evidence_path": "evidence/baseline.json",
+            "direction": "UP",
+            "start_value": 100.0,
+            "target_mode": "PCT_MOVE",
+            "threshold_pct": 1.0,
+            "authority": {
+                "portfolio_action": False,
+                "model_weight_change": False,
+                "canonical_promotion": False,
+                "framework_state_change": False,
+            },
+        }
+
+    def test_canonical_owner_validator_rejects_semantically_invalid_freeze(self):
+        valid = self.canonical_frozen()
+        validate_frozen_forecast_record(valid)
+        for key, bad in (("prompt_sha256", "bad"), ("horizon_days", -1), ("metric_path", {"bad": True})):
+            with self.subTest(key=key):
+                row = dict(valid)
+                row[key] = bad
+                with self.assertRaises(ValueError):
+                    validate_frozen_forecast_record(row)
+
+    def test_outcome_forecast_hash_binding_is_byte_deterministic(self):
+        frozen = self.canonical_frozen()
+        good = {"forecast_sha256": digest(frozen)}
+        self.assertTrue(outcome_matches_frozen_forecast(good, frozen))
+        self.assertFalse(outcome_matches_frozen_forecast({}, frozen))
+        self.assertFalse(outcome_matches_frozen_forecast({"forecast_sha256": "0" * 64}, frozen))
+
 
 
 if __name__ == "__main__":
