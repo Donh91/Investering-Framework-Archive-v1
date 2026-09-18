@@ -67,9 +67,39 @@ class ArchitectureHealthV21Tests(unittest.TestCase):
             ('EXPERIMENT_RECEIPT_SYNC_STALE', 1),
         )
 
+    def test_unavailable_experiment_receipt_sync_is_amber_even_when_fresh(self):
+        self.assertEqual(
+            module.experiment_receipt_sync_finding(
+                {'status': 'DEGRADED', 'sync_state': 'UNAVAILABLE', 'source_reachable': False},
+                0.1,
+            ),
+            ('EXPERIMENT_RECEIPT_SYNC_UNAVAILABLE', 1),
+        )
+
+    def test_source_stale_experiment_receipt_sync_is_amber_even_when_sync_file_is_fresh(self):
+        self.assertEqual(
+            module.experiment_receipt_sync_finding(
+                {'status': 'DEGRADED', 'sync_state': 'STALE', 'source_reachable': True},
+                0.1,
+            ),
+            ('EXPERIMENT_RECEIPT_SOURCE_STALE', 1),
+        )
+
     def test_healthy_experiment_receipt_sync_has_no_finding(self):
         self.assertIsNone(
-            module.experiment_receipt_sync_finding({'status': 'PASS'}, 12.0)
+            module.experiment_receipt_sync_finding(
+                {'status': 'PASS', 'sync_state': 'HEALTHY_NO_CHANGE', 'source_reachable': True},
+                12.0,
+            )
+        )
+
+    def test_claimed_healthy_sync_without_verified_source_is_amber(self):
+        self.assertEqual(
+            module.experiment_receipt_sync_finding(
+                {'status': 'PASS', 'sync_state': 'HEALTHY_NO_CHANGE', 'source_reachable': False},
+                0.1,
+            ),
+            ('EXPERIMENT_RECEIPT_SYNC_SOURCE_NOT_VERIFIED', 1),
         )
 
     def test_status_scope_does_not_claim_aggregate_system_health(self):
