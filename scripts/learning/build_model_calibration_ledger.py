@@ -2,9 +2,21 @@ from __future__ import annotations
 
 import argparse
 import csv
+import hashlib
 import json
 import sys
 from pathlib import Path
+
+try:
+    from scripts.learning.forecast_ratification_freezer import (
+        digest as frozen_forecast_digest,
+        validate_frozen_forecast_record,
+    )
+except ModuleNotFoundError:  # direct script execution
+    from forecast_ratification_freezer import (  # type: ignore
+        digest as frozen_forecast_digest,
+        validate_frozen_forecast_record,
+    )
 
 UNIT_CONTRACT_VERSION = "FORECAST_TARGET_UNITS_v2"
 LINEAGE_CONTRACT = "MODEL_CALIBRATION_DATA_PING_LINEAGE_v1"
@@ -157,12 +169,24 @@ def main():
             supplied_outcome_root=str(args.outcome_root),
         )
 
+    execution_mode = "CANONICAL_CALIBRATION" if strict_population_roots else "NONCANONICAL_FIXTURE"
+    effective_population_id = POPULATION_ID if strict_population_roots else "NONCANONICAL_FIXTURE"
+
     forecasts = {}
     invalid_frozen_forecast_count = 0
     for path in args.forecast_root.rglob("*.json") if args.forecast_root.exists() else []:
         value = load(path)
         if value and value.get("contract") == "FROZEN_FORECAST_v1":
-            if (strict_population_roots or noncanonical_fixture) and not required_fields_present(value, required_forecast_fields):
+            if strict_population_roots:
+                if not required_fields_present(value, required_forecast_fields):
+                    invalid_frozen_forecast_count += 1
+                    continue
+                try:
+                    validate_frozen_forecast_record(value)
+                except ValueError:
+                    invalid_frozen_forecast_count += 1
+                    continue
+            elif not isinstance(value.get("forecast_id"), str) or not value.get("forecast_id", "").strip():
                 invalid_frozen_forecast_count += 1
                 continue
             forecasts[value.get("forecast_id")] = value
@@ -172,6 +196,7 @@ def main():
     eligibility_rows = []
     quarantined = set()
     orphan_outcome_count = 0
+    forecast_binding_failure_count = 0
 
     for path in args.outcome_root.rglob("*.json") if args.outcome_root.exists() else []:
         outcome = load(path)
@@ -180,6 +205,9 @@ def main():
         forecast = forecasts.get(outcome.get("forecast_id"))
         if not forecast:
             orphan_outcome_count += 1
+            continue
+        if strict_population_roots and outcome.get("forecast_sha256") != frozen_forecast_digest(forecast):
+            forecast_binding_failure_count += 1
             continue
         if legacy_unit_ambiguous(forecast):
             quarantined.add(outcome.get("forecast_id"))
@@ -203,7 +231,8 @@ def main():
             }
         )
 
-        eligible = settlement_score_eligible(outcome)
+        settlement_eligible = settlement_score_eligible(outcome)
+        scientific_eligible = settlement_eligible and strict_population_roots
         eligibility_rows.append(
             {
                 "forecast_id": outcome.get("forecast_id"),
@@ -214,15 +243,19 @@ def main():
                 "settlement_target_utc": outcome.get("settlement_target_utc"),
                 "settlement_observation_utc": outcome.get("settlement_observation_utc"),
                 "settlement_offset_seconds": outcome.get("settlement_offset_seconds"),
-                "scientific_score_eligible": eligible,
-                "settlement_score_eligible": eligible,
+                "scientific_score_eligible": scientific_eligible,
+                "settlement_score_eligible": settlement_eligible,
                 "eligibility_scope": ELIGIBILITY_SCOPE,
                 "scientific_skill_eligible": False,
                 "scientific_score_exclusion_reason": None
-                if eligible
+                if scientific_eligible
                 else (
-                    outcome.get("scientific_score_exclusion_reason")
-                    or "LEGACY_OUTCOME_WITHOUT_EXPLICIT_SETTLEMENT_ELIGIBILITY"
+                    "NONCANONICAL_FIXTURE_NO_SCIENTIFIC_AUTHORITY"
+                    if noncanonical_fixture and settlement_eligible
+                    else (
+                        outcome.get("scientific_score_exclusion_reason")
+                        or "LEGACY_OUTCOME_WITHOUT_EXPLICIT_SETTLEMENT_ELIGIBILITY"
+                    )
                 ),
                 "forecast_sha256": outcome.get("forecast_sha256"),
                 "evidence_sha256": outcome.get("evidence_sha256"),
@@ -282,6 +315,7 @@ def main():
         lineage_output.unlink()
 
     settlement_eligible_count = sum(1 for row in eligibility_rows if row["settlement_score_eligible"] is True)
+    scientific_scored_count = sum(1 for row in eligibility_rows if row["scientific_score_eligible"] is True)
     matured_unscorable_count = sum(
         1
         for row in eligibility_rows
@@ -303,7 +337,11 @@ def main():
         "contract": ELIGIBILITY_CONTRACT,
         "population_contract": POPULATION_CONTRACT,
         "population_contract_path": POPULATION_CONTRACT_PATH,
-        "population_id": POPULATION_ID,
+        "population_id": effective_population_id,
+        "canonical_population_id": POPULATION_ID,
+        "execution_mode": execution_mode,
+        "canonical_population_identity": strict_population_roots,
+        "fixture_declared_shape": declared_shape_fixture if noncanonical_fixture else False,
         "cohort_status": population_state,
         "forecast_root": str(args.forecast_root),
         "outcome_root": str(args.outcome_root),
@@ -314,6 +352,7 @@ def main():
         "outcome_record_count": outcome_count,
         "invalid_frozen_forecast_count": invalid_frozen_forecast_count,
         "orphan_outcome_count": orphan_outcome_count,
+        "forecast_binding_failure_count": forecast_binding_failure_count,
         "direct_framework_memory_import_allowed": False,
         "historical_schema_backfill_by_inference_allowed": False,
         "eligibility_scope": ELIGIBILITY_SCOPE,
@@ -322,7 +361,7 @@ def main():
         "settlement_eligibility_status": population_state,
         "scientific_skill_status": "NOT_ASSESSED_SETTLEMENT_TIMING_ONLY",
         "scientific_skill_authority": False,
-        "scientific_scored_count": settlement_eligible_count,
+        "scientific_scored_count": scientific_scored_count,
         "settlement_eligible_count": settlement_eligible_count,
         "matured_unscorable_count": matured_unscorable_count,
         "row_count": len(eligibility_rows),
@@ -343,10 +382,13 @@ def main():
         json.dumps(
             {
                 "status": "PASS",
-                "population_id": POPULATION_ID,
+                "population_id": effective_population_id,
+                "canonical_population_id": POPULATION_ID,
+                "execution_mode": execution_mode,
+                "canonical_population_identity": strict_population_roots,
                 "cohort_status": population_state,
                 "scored_count": scored_count,
-                "scientific_scored_count": settlement_eligible_count,
+                "scientific_scored_count": scientific_scored_count,
                 "settlement_eligible_count": settlement_eligible_count,
                 "scientific_skill_status": "NOT_ASSESSED_SETTLEMENT_TIMING_ONLY",
                 "matured_unscorable_count": matured_unscorable_count,
@@ -361,6 +403,7 @@ def main():
                 "outcome_record_count": outcome_count,
                 "invalid_frozen_forecast_count": invalid_frozen_forecast_count,
                 "orphan_outcome_count": orphan_outcome_count,
+                "forecast_binding_failure_count": forecast_binding_failure_count,
             },
             sort_keys=True,
         )
