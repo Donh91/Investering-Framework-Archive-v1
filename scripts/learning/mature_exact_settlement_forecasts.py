@@ -43,6 +43,31 @@ def read(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text())
 
 
+def repository_relative_root(path: Path, repo_root: Path) -> Path:
+    actual = path if path.is_absolute() else repo_root / path
+    try:
+        relative = actual.resolve(strict=False).relative_to(repo_root.resolve(strict=False))
+    except ValueError as exc:
+        raise ValueError("SETTLEMENT_EVIDENCE_ROOT_OUTSIDE_REPOSITORY") from exc
+    if not relative.parts or ".." in relative.parts:
+        raise ValueError("SETTLEMENT_EVIDENCE_ROOT_NOT_DURABLE")
+    return relative
+
+
+def durable_evidence_reference(
+    evidence_path: Path,
+    evidence_root: Path,
+    repo_root: Path,
+) -> str:
+    root_actual = evidence_root if evidence_root.is_absolute() else repo_root / evidence_root
+    path_actual = evidence_path if evidence_path.is_absolute() else repo_root / evidence_path
+    try:
+        relative = path_actual.resolve(strict=False).relative_to(root_actual.resolve(strict=False))
+    except ValueError as exc:
+        raise ValueError("SETTLEMENT_EVIDENCE_PATH_OUTSIDE_ROOT") from exc
+    return (repository_relative_root(evidence_root, repo_root) / relative).as_posix()
+
+
 def parse_dt(value: str) -> datetime:
     dt = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
     if dt.tzinfo is None:
@@ -90,14 +115,14 @@ def validate_evidence(forecast: dict[str, Any], evidence: dict[str, Any], repo_r
         raise ValueError("SETTLEMENT_EVIDENCE_AUTHORITY_INVALID")
 
 
-def binding_for(forecast: dict[str, Any], evidence_path: Path, evidence: dict[str, Any], outcome_path: Path, outcome: dict[str, Any]) -> dict[str, Any]:
+def binding_for(forecast: dict[str, Any], evidence_reference: str, evidence: dict[str, Any], outcome_path: Path, outcome: dict[str, Any]) -> dict[str, Any]:
     binding = {
         "contract": BINDING_CONTRACT,
         "forecast_id": forecast["forecast_id"],
         "forecast_sha256": digest(forecast),
         "outcome_path": outcome_path.as_posix(),
         "outcome_sha256": digest(outcome),
-        "evidence_path": evidence_path.as_posix(),
+        "evidence_path": evidence_reference,
         "evidence_sha256": digest(evidence),
         "settlement_target_utc": evidence["settlement_target_utc"],
         "source_candle_open_utc": evidence["source_candle_open_utc"],
@@ -122,6 +147,7 @@ def merge_engine_summary(total: dict[str, Any], row: dict[str, Any]) -> None:
 def mature_one(
     forecast: dict[str, Any], evidence: dict[str, Any] | None, output_root: Path,
     repo_root: Path, now: datetime, max_evidence_lag_hours: float,
+    evidence_reference_root: Path | None = None,
 ) -> dict[str, Any]:
     """Run the canonical engine with exactly one forecast and its own evidence.
 
@@ -146,6 +172,8 @@ def mature_one(
             "--now-utc", now.isoformat().replace("+00:00", "Z"),
             "--max-evidence-lag-hours", str(max_evidence_lag_hours),
         ]
+        if evidence is not None and evidence_reference_root is not None:
+            command.extend(["--evidence-reference-root", evidence_reference_root.as_posix()])
         proc = subprocess.run(command, cwd=repo_root, capture_output=True, text=True)
         if proc.returncode:
             print(proc.stdout, end="")
@@ -166,6 +194,7 @@ def main() -> None:
     args = ap.parse_args()
     now = parse_dt(args.now_utc) if args.now_utc else datetime.now(UTC)
     repo_root = args.repo_root.resolve()
+    settlement_evidence_reference_root = repository_relative_root(args.settlement_evidence_root, repo_root)
     rows: list[tuple[Path, dict[str, Any], Path, dict[str, Any] | None, bool]] = []
     pre_pending = 0
     errors: list[dict[str, str]] = []
@@ -211,7 +240,15 @@ def main() -> None:
         try:
             merge_engine_summary(
                 engine_summary,
-                mature_one(forecast, evidence, args.output_root, repo_root, now, args.max_evidence_lag_hours),
+                mature_one(
+                    forecast,
+                    evidence,
+                    args.output_root,
+                    repo_root,
+                    now,
+                    args.max_evidence_lag_hours,
+                    settlement_evidence_reference_root if evidence is not None else None,
+                ),
             )
         except Exception as exc:
             errors.append({"forecast_id": str(forecast.get("forecast_id")), "error": str(exc)})
@@ -222,12 +259,24 @@ def main() -> None:
 
     bindings_created = 0
     args.binding_root.mkdir(parents=True, exist_ok=True)
-    for _, forecast, evidence_path, evidence, _ in rows:
+    for _, forecast, evidence_path, evidence, outcome_existed_before_run in rows:
         outcome_path = args.output_root / f"{forecast['forecast_id']}.json"
         if not outcome_path.exists() or evidence is None:
             continue
         outcome = read(outcome_path)
-        binding = binding_for(forecast, evidence_path, evidence, outcome_path, outcome)
+        evidence_reference = durable_evidence_reference(
+            evidence_path,
+            args.settlement_evidence_root,
+            repo_root,
+        )
+        if not outcome_existed_before_run:
+            if outcome.get("evidence_path") != evidence_reference:
+                raise SystemExit(f"OUTCOME_EVIDENCE_REFERENCE_MISMATCH:{forecast['forecast_id']}")
+            if outcome.get("evidence_reference_scope") != "REPOSITORY_RELATIVE":
+                raise SystemExit(f"OUTCOME_EVIDENCE_REFERENCE_SCOPE_INVALID:{forecast['forecast_id']}")
+            if outcome.get("evidence_sha256") != digest(evidence):
+                raise SystemExit(f"OUTCOME_EVIDENCE_HASH_MISMATCH:{forecast['forecast_id']}")
+        binding = binding_for(forecast, evidence_reference, evidence, outcome_path, outcome)
         binding_path = args.binding_root / f"{forecast['forecast_id']}.json"
         if binding_path.exists():
             existing = read(binding_path)

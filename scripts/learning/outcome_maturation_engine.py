@@ -158,6 +158,44 @@ def select_evidence(
     return next((row for row in evidence if due <= row[0] <= max_ts), None)
 
 
+def evidence_reference_for(
+    evidence_path: Path,
+    evidence_root: Path,
+    evidence_value: dict[str, Any],
+    evidence_reference_root: Path | None,
+) -> tuple[str, str]:
+    """Return and verify the evidence identity stored in a newly written outcome.
+
+    Legacy callers keep execution-path behavior. A caller that stages durable
+    repository evidence through a temporary directory may provide a
+    repository-relative reference root, but that reference earns durable status
+    only when the target exists from the engine's repository cwd and its
+    canonical content hash matches the staged evidence being adjudicated.
+    """
+    if evidence_reference_root is None:
+        return evidence_path.as_posix(), "EXECUTION_PATH"
+    if (
+        evidence_reference_root.is_absolute()
+        or not evidence_reference_root.parts
+        or ".." in evidence_reference_root.parts
+    ):
+        raise ValueError("EVIDENCE_REFERENCE_ROOT_MUST_BE_REPOSITORY_RELATIVE")
+    try:
+        relative = evidence_path.resolve(strict=False).relative_to(evidence_root.resolve(strict=False))
+    except ValueError as exc:
+        raise ValueError("EVIDENCE_PATH_OUTSIDE_EVIDENCE_ROOT") from exc
+    reference = evidence_reference_root / relative
+    if reference.is_absolute() or ".." in reference.parts:
+        raise ValueError("EVIDENCE_REFERENCE_MUST_BE_REPOSITORY_RELATIVE")
+    durable_path = Path.cwd() / reference
+    if not durable_path.is_file():
+        raise ValueError("DURABLE_EVIDENCE_REFERENCE_MISSING")
+    durable_value = read(durable_path)
+    if sha(durable_value) != sha(evidence_value):
+        raise ValueError("DURABLE_EVIDENCE_REFERENCE_HASH_MISMATCH")
+    return reference.as_posix(), "REPOSITORY_RELATIVE"
+
+
 def write_outcome(path: Path, outcome: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_bytes(canon(outcome))
@@ -168,6 +206,7 @@ def main() -> None:
     ap.add_argument("--forecast-root", type=Path, required=True)
     ap.add_argument("--evidence-root", type=Path, required=True)
     ap.add_argument("--output-root", type=Path, required=True)
+    ap.add_argument("--evidence-reference-root", type=Path)
     ap.add_argument("--now-utc")
     ap.add_argument("--max-evidence-lag-hours", type=float, default=24.0)
     args = ap.parse_args()
@@ -267,6 +306,12 @@ def main() -> None:
                 continue
 
             evidence_timestamp, evidence_path, evidence_value = selected
+            evidence_reference, evidence_reference_scope = evidence_reference_for(
+                evidence_path,
+                args.evidence_root,
+                evidence_value,
+                args.evidence_reference_root,
+            )
             metric_path = forecast["metric_path"]
             resolution = resolve_for_forecast(evidence_value, forecast, metric_path)
             start_value = float(forecast["start_value"])
@@ -296,7 +341,8 @@ def main() -> None:
                     "status": "CENSORED",
                     "reason": resolution.status,
                     "forecast_sha256": sha(forecast),
-                    "evidence_path": str(evidence_path),
+                    "evidence_path": evidence_reference,
+                    "evidence_reference_scope": evidence_reference_scope,
                     "evidence_sha256": sha(evidence_value),
                     "created_at_utc": iso(now),
                     "resolver_version": RESOLVER_VERSION,
@@ -324,7 +370,8 @@ def main() -> None:
                     "end_value": end_value,
                     "return_pct": round((float(end_value) / start_value - 1) * 100, 8) if start_value else None,
                     "forecast_sha256": sha(forecast),
-                    "evidence_path": str(evidence_path),
+                    "evidence_path": evidence_reference,
+                    "evidence_reference_scope": evidence_reference_scope,
                     "evidence_sha256": sha(evidence_value),
                     "evidence_lag_hours": round((evidence_timestamp - due).total_seconds() / 3600, 6),
                     "created_at_utc": iso(now),
