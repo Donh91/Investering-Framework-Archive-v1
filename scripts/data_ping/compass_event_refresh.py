@@ -177,7 +177,10 @@ def evaluate(
         causes.append("CAPITALIZATION_LADDER_CHANGED")
 
     last_heat = str(prior_state.get("last_heat_state") or "NORMAL")
-    if heat != "NORMAL" and heat != last_heat:
+    # Heat is a refresh accelerator only when the current owner evidence is
+    # decision-eligible. Stale/degraded evidence must never manufacture a
+    # "market move" event; health transitions are handled separately above.
+    if current_data_status == "OK" and heat != "NORMAL" and heat != last_heat:
         causes.append("MARKET_HEAT_ENTERED")
 
     dispatch = bool(causes)
