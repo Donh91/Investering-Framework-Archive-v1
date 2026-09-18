@@ -14,10 +14,12 @@ on:
       - 'AGENTS.md'
   schedule:
     # Two investor-facing freezes per local day. Both run after the hourly :50/:57 owner chain.
-    - cron: '17 8 * * *'
-      timezone: 'Europe/Copenhagen'
-    - cron: '17 20 * * *'
-      timezone: 'Europe/Copenhagen'
+    # UTC cron is intentional. GitHub Actions does not provide a reliable
+    # timezone-aware scheduler contract across repositories. 06:17/18:17 UTC
+    # maps to 08:17/20:17 Copenhagen during CEST. A watchdog below repairs
+    # missed slots and DST policy is explicit instead of silently assumed.
+    - cron: '17 6 * * *'
+    - cron: '17 18 * * *'
   workflow_dispatch:
 
 permissions:
@@ -82,8 +84,8 @@ jobs:
           reason=ON_DEMAND
           if [ "${GITHUB_EVENT_NAME}" = "schedule" ]; then
             case "${{ github.event.schedule }}" in
-              '17 8 * * *') reason=SCHEDULED_MORNING ;;
-              '17 20 * * *') reason=SCHEDULED_EVENING ;;
+              '17 6 * * *') reason=SCHEDULED_MORNING ;;
+              '17 18 * * *') reason=SCHEDULED_EVENING ;;
               *) echo "::error::Unknown Compass schedule: ${{ github.event.schedule }}"; exit 1 ;;
             esac
           fi
