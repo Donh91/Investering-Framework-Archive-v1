@@ -145,7 +145,7 @@ class CompassEventRefreshTests(unittest.TestCase):
 
     def test_risk_on_change_inside_cooldown_is_suppressed(self):
         out=decision(
-            latest=compass(action="HOLD_WAIT"),
+            latest=compass(action="HOLD_WAIT", issued_at=(NOW-timedelta(minutes=30)).isoformat().replace("+00:00","Z")),
             prior_state={
                 "last_heat_state": "NORMAL",
                 "last_requested_source_sha": "previous-request",
@@ -160,7 +160,7 @@ class CompassEventRefreshTests(unittest.TestCase):
         a=auto_state(breadth=0.20)
         out=decision(
             auto=a,
-            latest=compass(action="PREPARE"),
+            latest=compass(action="PREPARE", issued_at=(NOW-timedelta(minutes=30)).isoformat().replace("+00:00","Z")),
             prior_state={
                 "last_heat_state": "NORMAL",
                 "last_requested_source_sha": "previous-request",
@@ -173,6 +173,7 @@ class CompassEventRefreshTests(unittest.TestCase):
 
     def test_downside_heat_bypasses_cooldown(self):
         out=decision(
+            latest=compass(issued_at=(NOW-timedelta(minutes=30)).isoformat().replace("+00:00","Z")),
             entry_latest=entry(temp="NORMAL", btc=-8.5, eth=-5, median=-2),
             prior_state={
                 "last_heat_state": "NORMAL",
