@@ -39,6 +39,12 @@ def canon(value):
     return json.dumps(value, sort_keys=True, separators=(",", ":"))
 
 
+def outcome_matches_frozen_forecast(outcome: dict, forecast: dict) -> bool:
+    expected = frozen_forecast_digest(forecast)
+    supplied = outcome.get("forecast_sha256")
+    return isinstance(supplied, str) and supplied == expected
+
+
 def path_matches_declared_population(actual: Path, declared: str) -> bool:
     """Return true only for the repository's canonical declared root."""
     declared_path = Path(declared)
@@ -206,7 +212,7 @@ def main():
         if not forecast:
             orphan_outcome_count += 1
             continue
-        if strict_population_roots and outcome.get("forecast_sha256") != frozen_forecast_digest(forecast):
+        if strict_population_roots and not outcome_matches_frozen_forecast(outcome, forecast):
             forecast_binding_failure_count += 1
             continue
         if legacy_unit_ambiguous(forecast):
