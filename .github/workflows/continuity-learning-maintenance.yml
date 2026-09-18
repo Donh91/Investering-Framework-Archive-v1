@@ -123,6 +123,7 @@ jobs:
           python scripts/learning/outcome_maturation_engine.py \
             --forecast-root runtime/api-agent-non-exact-forecast-subset \
             --evidence-root 03_DAILY_CAPTURE_LOGS/captures \
+            --evidence-reference-root 03_DAILY_CAPTURE_LOGS/captures \
             --output-root research/api_agent/forecast_candidates/MATURED
       - name: Build calibration ledger and settlement eligibility
         run: |
