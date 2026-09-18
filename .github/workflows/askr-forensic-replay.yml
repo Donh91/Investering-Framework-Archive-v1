@@ -5,6 +5,8 @@ on:
     branches: [main]
     paths: [".github/workflows/askr-forensic-replay.yml"]
   workflow_dispatch:
+  issues:
+    types: [opened]
 
 permissions:
   contents: read
@@ -13,6 +15,7 @@ permissions:
 
 jobs:
   replay:
+    if: github.event_name != 'issues' || startsWith(github.event.issue.title, 'ASKR FORENSIC TRIGGER')
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
