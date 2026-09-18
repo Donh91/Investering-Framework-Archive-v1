@@ -16,7 +16,7 @@ from scripts.data_ping.native_handlekompas import (
 
 
 class OfficialDailyCompassTest(unittest.TestCase):
-    def auto(self, *, breadth=0.19, validation="PASS", decision="PASS", blockers=None, btc=75654.0, eth=2396.86, ethbtc=0.03168, deltas=None, packet_sha="packet-sha"):
+    def auto(self, *, breadth=0.19, validation="PASS", decision="PASS", blockers=None, btc=75654.0, eth=2396.86, ethbtc=0.03168, deltas=None, packet_sha="packet-sha", optional_degraded_lanes=None):
         return {
             "contract": "AUTO_MARKET_STATE_PACKET_v1",
             "packet_generated_at_utc": "2026-09-16T18:09:48Z",
@@ -25,7 +25,7 @@ class OfficialDailyCompassTest(unittest.TestCase):
             "validation_status": validation,
             "decision_context_status": decision,
             "blockers": blockers or [],
-            "optional_degraded_lanes": [],
+            "optional_degraded_lanes": optional_degraded_lanes or [],
             "deltas_since_prior_auto_packet": deltas if deltas is not None else {
                 "btc_usdt": {"pct": -0.3},
                 "eth_usdt": {"pct": -0.7},
@@ -117,6 +117,18 @@ class OfficialDailyCompassTest(unittest.TestCase):
             self.assertEqual(out["data_status"], "DEGRADED")
             self.assertTrue(all(row["status"] == "UNAVAILABLE" for row in out["capitalization_ladder"]))
             self.assertTrue(all(out["horizons"][key]["expected_direction"] == "UNAVAILABLE" for key in HORIZON_ORDER))
+
+    def test_optional_degradation_remains_decision_eligible(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            out = self.build(
+                tmp,
+                validation="DEGRADED",
+                decision="PASS",
+                optional_degraded_lanes=["catalyst_context"],
+            )
+            self.assertEqual(out["data_status"], "OK")
+            self.assertNotEqual(out["market_now"]["directional_state"], "UNAVAILABLE")
+            self.assertNotEqual(out["horizons"]["NEXT_12H"]["expected_direction"], "UNAVAILABLE")
 
     def test_stale_owner_packet_fails_closed_at_issuance_time(self):
         with tempfile.TemporaryDirectory() as tmp:
