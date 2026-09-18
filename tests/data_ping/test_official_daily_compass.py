@@ -165,6 +165,40 @@ class OfficialDailyCompassTest(unittest.TestCase):
             self.assertEqual(pointer["compass_content_sha256"], hashlib.sha256(Path(first["path"]).read_bytes()).hexdigest())
             self.assertEqual(pointer["public_projection_content_sha256"], public_pointer["public_projection_content_sha256"])
 
+    def test_morning_and_evening_are_independent_immutable_slots(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "official"
+            morning = self.build(
+                tmp,
+                run_reason="SCHEDULED_MORNING",
+                issued_at=datetime(2026, 9, 16, 6, 17, tzinfo=timezone.utc),
+            )
+            evening = self.build(
+                tmp,
+                run_reason="SCHEDULED_EVENING",
+                issued_at=datetime(2026, 9, 16, 18, 17, tzinfo=timezone.utc),
+            )
+            self.assertNotEqual(morning["compass_id"], evening["compass_id"])
+
+            first_morning = write_official_compass(morning, root)
+            first_evening = write_official_compass(evening, root)
+            retry_morning = write_official_compass(morning, root)
+            retry_evening = write_official_compass(evening, root)
+
+            self.assertEqual(first_morning["status"], "WRITTEN")
+            self.assertEqual(first_evening["status"], "WRITTEN")
+            self.assertEqual(retry_morning["status"], "EXISTING_DAILY_FREEZE")
+            self.assertEqual(retry_evening["status"], "EXISTING_DAILY_FREEZE")
+            self.assertNotEqual(first_morning["path"], first_evening["path"])
+            self.assertEqual(
+                json.loads(Path(first_morning["path"]).read_text())["run_reason"],
+                "SCHEDULED_MORNING",
+            )
+            self.assertEqual(
+                json.loads(Path(first_evening["path"]).read_text())["run_reason"],
+                "SCHEDULED_EVENING",
+            )
+
     def test_on_demand_same_source_rerun_is_idempotent(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp) / "official"

@@ -853,7 +853,17 @@ def write_official_compass(compass: Mapping[str, Any], output_root: Path) -> dic
     path = day_dir / f"{compass['compass_id']}.json"
     selected: Mapping[str, Any] = compass
     existing_freeze = False
-    if reason == "SCHEDULED_DAILY" and day_dir.exists():
+    scheduled_slot_reasons = {"SCHEDULED_MORNING", "SCHEDULED_EVENING"}
+    if reason in scheduled_slot_reasons and day_dir.exists():
+        # Each scheduled slot owns one immutable freeze per day. A retry of the
+        # same slot reuses that slot only; morning must never suppress evening.
+        for candidate in sorted(day_dir.glob("CMP-*.json")):
+            prior_candidate = read_json(candidate)
+            if str(prior_candidate.get("run_reason") or "") == reason:
+                path = candidate
+                break
+    elif reason == "SCHEDULED_DAILY" and day_dir.exists():
+        # Legacy compatibility for historical single-daily freezes.
         existing = sorted(day_dir.glob("CMP-*.json"))
         if existing:
             path = existing[0]
