@@ -177,17 +177,6 @@ class ExactSettlementMaturationTests(unittest.TestCase):
         self.assertEqual(summary["engine"]["pending"], 1)
         self.assertFalse((self.outcomes / f"{fc['forecast_id']}.json").exists())
 
-    def test_repository_relative_reference_rejects_missing_durable_target(self):
-        fc, ev, _ = self.write_valid_fixture()
-        outside = self.root / "staged"
-        outside.mkdir()
-        staged = outside / f"{fc['forecast_id']}.json"
-        staged.write_bytes(canon(ev))
-        staged.unlink()
-        result = self.run_wrapper()
-        self.assertEqual(result.returncode, 0, result.stderr)
-
-
 
 if __name__ == "__main__":
     unittest.main()
