@@ -21,6 +21,16 @@ on:
     - cron: '17 6 * * *'
     - cron: '17 18 * * *'
   workflow_dispatch:
+    inputs:
+      run_reason:
+        description: 'Optional governed run reason for recovery'
+        required: false
+        type: choice
+        options:
+          - ON_DEMAND
+          - SCHEDULED_MORNING
+          - SCHEDULED_EVENING
+        default: ON_DEMAND
 
 permissions:
   actions: write
@@ -81,7 +91,7 @@ jobs:
       - name: Produce immutable Compass freeze
         shell: bash
         run: |
-          reason=ON_DEMAND
+          reason="${{ inputs.run_reason || 'ON_DEMAND' }}"
           if [ "${GITHUB_EVENT_NAME}" = "schedule" ]; then
             case "${{ github.event.schedule }}" in
               '17 6 * * *') reason=SCHEDULED_MORNING ;;
