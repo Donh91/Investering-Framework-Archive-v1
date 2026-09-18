@@ -198,6 +198,40 @@ class CompassEventRefreshTests(unittest.TestCase):
         self.assertEqual(out["reason"], "REQUEST_IN_FLIGHT")
         self.assertIn("ACTION_STATE_CHANGED", out["suppressed_cause_codes"])
 
+    def test_nonprotective_event_defers_to_imminent_scheduled_slot(self):
+        near=datetime(2026, 9, 18, 18, 0, tzinfo=timezone.utc)  # 20:00 CPH, 17m before fixed slot
+        a=auto_state()
+        out=evaluate(
+            auto_state=a,
+            auto_pointer={"packet_sha256": a["packet_sha256"]},
+            latest_compass=compass(action="HOLD_WAIT"),
+            entry_latest=entry(),
+            prior_state={"last_heat_state": "NORMAL"},
+            cn_package={"market_state": "consolidation", "base_case_this_week": "unresolved consolidation"},
+            cn_binding={"status": "PASS"},
+            now=near,
+        )
+        self.assertFalse(out["dispatch"])
+        self.assertEqual(out["reason"], "SCHEDULED_SLOT_IMMINENT")
+        self.assertIn("ACTION_STATE_CHANGED", out["suppressed_cause_codes"])
+        self.assertLessEqual(out["seconds_to_next_scheduled_compass"], 30*60)
+
+    def test_protective_event_does_not_wait_for_imminent_slot(self):
+        near=datetime(2026, 9, 18, 18, 0, tzinfo=timezone.utc)
+        a=auto_state(breadth=0.20)
+        out=evaluate(
+            auto_state=a,
+            auto_pointer={"packet_sha256": a["packet_sha256"]},
+            latest_compass=compass(action="PREPARE"),
+            entry_latest=entry(),
+            prior_state={"last_heat_state": "NORMAL"},
+            cn_package={"market_state": "consolidation", "base_case_this_week": "unresolved consolidation"},
+            cn_binding={"status": "PASS"},
+            now=near,
+        )
+        self.assertTrue(out["dispatch"])
+        self.assertTrue(out["protective_bypass"])
+
     def test_unbound_request_retries_after_timeout(self):
         out=decision(
             latest=compass(action="HOLD_WAIT"),
