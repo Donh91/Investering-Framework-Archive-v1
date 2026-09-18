@@ -13,10 +13,24 @@ on:
       - '05_CYCLE_NAVIGATOR/site/**'
       - 'AGENTS.md'
   schedule:
-    # Daily accountability freeze after the evening owner cycles; avoids :50/:57 writer chain.
-    - cron: '17 20 * * *'
-      timezone: 'Europe/Copenhagen'
+    # Two investor-facing freezes at 08:17 and 20:17 Europe/Copenhagen.
+    # GitHub cron is UTC-only, so both CET and CEST candidates are scheduled.
+    # The slot gate below activates exactly one candidate per local slot.
+    - cron: '17 6 * * *'
+    - cron: '17 7 * * *'
+    - cron: '17 18 * * *'
+    - cron: '17 19 * * *'
   workflow_dispatch:
+    inputs:
+      run_reason:
+        description: 'Optional governed run reason for recovery'
+        required: false
+        type: choice
+        options:
+          - ON_DEMAND
+          - SCHEDULED_MORNING
+          - SCHEDULED_EVENING
+        default: ON_DEMAND
 
 permissions:
   actions: write
@@ -74,17 +88,46 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Produce immutable Compass freeze
+      - name: Resolve Copenhagen schedule slot
+        id: slot
         shell: bash
         run: |
-          reason=ON_DEMAND
-          if [ "${GITHUB_EVENT_NAME}" = "schedule" ]; then reason=SCHEDULED_DAILY; fi
+          set -euo pipefail
+          if [ "${GITHUB_EVENT_NAME}" != "schedule" ]; then
+            echo "active=true" >> "$GITHUB_OUTPUT"
+            echo "reason=${{ inputs.run_reason || 'ON_DEMAND' }}" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          offset=$(python - <<'PY'
+          from datetime import datetime
+          from zoneinfo import ZoneInfo
+          now=datetime.now(ZoneInfo("Europe/Copenhagen"))
+          print(int(now.utcoffset().total_seconds()//3600))
+          PY
+          )
+          cron='${{ github.event.schedule }}'
+          active=false
+          reason=
+          case "$cron:$offset" in
+            '17 6 * * *:2'|'17 7 * * *:1') active=true; reason=SCHEDULED_MORNING ;;
+            '17 18 * * *:2'|'17 19 * * *:1') active=true; reason=SCHEDULED_EVENING ;;
+          esac
+          echo "active=$active" >> "$GITHUB_OUTPUT"
+          echo "reason=$reason" >> "$GITHUB_OUTPUT"
+          echo "COMPASS_SLOT_GATE cron=$cron cph_utc_offset=$offset active=$active reason=$reason"
+      - name: Produce immutable Compass freeze
+        if: steps.slot.outputs.active == 'true'
+        shell: bash
+        run: |
+          reason="${{ steps.slot.outputs.reason }}"
+          echo "COMPASS_RUN_REASON=$reason"
           python scripts/data_ping/native_handlekompas.py \
             --official-daily-compass \
             --run-reason "$reason" \
             --output-root 04_MARKET_LEARNING/handlekompas/official \
             | tee /tmp/official-compass-status.json
       - name: Validate pointer and public projection binding
+        if: steps.slot.outputs.active == 'true'
         run: |
           python - <<'PY'
           import hashlib,json
@@ -107,6 +150,7 @@ jobs:
           print('OFFICIAL_COMPASS_VALID', f['compass_id'], f['data_status'])
           PY
       - name: Commit with remote readback proof
+        if: steps.slot.outputs.active == 'true'
         shell: bash
         run: |
           git config user.name framework-data-bot
@@ -127,11 +171,12 @@ jobs:
           remote_sha=$(git show origin/main:04_MARKET_LEARNING/handlekompas/official/LATEST_COMPASS.json | sha256sum | awk '{print $1}')
           [ "$local_sha" = "$remote_sha" ]
       - name: Publish current Compass to Cycle Navigator Pages
+        if: steps.slot.outputs.active == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh workflow run cycle-navigator-pages.yml --ref main
       - uses: actions/upload-artifact@v4
-        if: always()
+        if: always() && steps.slot.outputs.active == 'true'
         with:
           name: official-daily-compass-${{ github.run_id }}-${{ github.run_attempt }}
           path: |

@@ -122,8 +122,16 @@ class ExactSettlementMaturationTests(unittest.TestCase):
         self.assertEqual(outcome["result"], "HIT")
         self.assertEqual(outcome["end_value"], 102.0)
         self.assertTrue(outcome["scientific_score_eligible"])
+        expected_reference = f"evidence/{fc['forecast_id']}.json"
+        self.assertEqual(outcome["evidence_path"], expected_reference)
+        self.assertEqual(outcome["evidence_reference_scope"], "REPOSITORY_RELATIVE")
+        self.assertEqual(outcome["evidence_sha256"], digest(ev))
+        self.assertFalse(Path(outcome["evidence_path"]).is_absolute())
+        self.assertNotIn("/tmp/", outcome["evidence_path"])
         binding = json.loads((self.bindings / f"{fc['forecast_id']}.json").read_text())
         self.assertEqual(binding["contract"], "FORECAST_SETTLEMENT_OUTCOME_BINDING_v1")
+        self.assertEqual(binding["evidence_path"], expected_reference)
+        self.assertEqual(binding["evidence_sha256"], digest(ev))
         self.assertEqual(binding["source_candle_close_utc"], ev["source_candle_close_utc"])
         self.assertFalse(binding["authority"]["scientific_skill_authority"])
 
@@ -134,6 +142,31 @@ class ExactSettlementMaturationTests(unittest.TestCase):
         self.assertEqual(result.returncode, 2)
         self.assertIn("SETTLEMENT_RAW_PAYLOAD_HASH_MISMATCH", result.stdout)
         self.assertFalse((self.outcomes / f"{fc['forecast_id']}.json").exists())
+
+    def test_preexisting_transient_outcome_bytes_are_not_rewritten(self):
+        fc, ev, _ = self.write_valid_fixture()
+        self.outcomes.mkdir(parents=True)
+        legacy = {
+            "contract": "MATURED_OUTCOME_v3",
+            "forecast_id": fc["forecast_id"],
+            "status": "MATURED",
+            "result": "HIT",
+            "forecast_sha256": digest(fc),
+            "evidence_path": "/tmp/legacy-run/evidence/source.json",
+            "evidence_sha256": digest(ev),
+            "scientific_score_eligible": True,
+            "authority": {"model_weight_change": False, "portfolio_action": False},
+        }
+        outcome_path = self.outcomes / f"{fc['forecast_id']}.json"
+        outcome_path.write_bytes(canon(legacy))
+        before = outcome_path.read_bytes()
+
+        result = self.run_wrapper()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(outcome_path.read_bytes(), before)
+        binding = json.loads((self.bindings / f"{fc['forecast_id']}.json").read_text())
+        self.assertEqual(binding["evidence_path"], f"evidence/{fc['forecast_id']}.json")
+        self.assertEqual(binding["evidence_sha256"], digest(ev))
 
     def test_missing_evidence_inside_original_grace_stays_pending(self):
         fc = forecast()

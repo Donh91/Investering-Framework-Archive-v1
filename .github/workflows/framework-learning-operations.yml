@@ -75,6 +75,7 @@ jobs:
             --manifest-url https://raw.githubusercontent.com/Donh91/Eksperimenter-framework-/main/experiment_bridge/LATEST_EXECUTION_RECEIPT_MANIFEST.json \
             --receipt-root research/experiment_lifecycle/receipts \
             --sync-output research/experiment_lifecycle/LATEST_EXPERIMENT_RECEIPT_SYNC.json \
+            --max-source-age-hours 24 \
             --allow-unavailable
       - name: Resolve exact settlement evidence
         run: |

@@ -1,0 +1,65 @@
+name: Official Compass Schedule Watchdog
+
+on:
+  schedule:
+    # CET + CEST candidates. The runtime gate activates only the candidate
+    # corresponding to 08:32 / 20:32 Europe/Copenhagen.
+    - cron: '32 6 * * *'
+    - cron: '32 7 * * *'
+    - cron: '32 18 * * *'
+    - cron: '32 19 * * *'
+  workflow_dispatch:
+
+permissions:
+  actions: write
+  contents: read
+  issues: write
+
+concurrency:
+  group: compass-schedule-watchdog
+  cancel-in-progress: false
+
+jobs:
+  recover:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Verify scheduled slot and recover if missing
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          read -r offset today <<< "$(python - <<'PY'
+          from datetime import datetime
+          from zoneinfo import ZoneInfo
+          now=datetime.now(ZoneInfo("Europe/Copenhagen"))
+          print(int(now.utcoffset().total_seconds()//3600), now.strftime("%Y/%m/%d"))
+          PY
+          )"
+          cron='${{ github.event.schedule }}'
+          expected_reason=
+          case "$cron:$offset" in
+            '32 6 * * *:2'|'32 7 * * *:1') expected_reason=SCHEDULED_MORNING ;;
+            '32 18 * * *:2'|'32 19 * * *:1') expected_reason=SCHEDULED_EVENING ;;
+            *)
+              echo "COMPASS_WATCHDOG_INACTIVE cron=$cron cph_utc_offset=$offset"
+              exit 0
+              ;;
+          esac
+          found=false
+          shopt -s nullglob
+          for f in 04_MARKET_LEARNING/handlekompas/official/daily/$today/CMP-*.json; do
+            reason=$(python -c 'import json,sys; print(json.load(open(sys.argv[1])).get("run_reason",""))' "$f")
+            if [ "$reason" = "$expected_reason" ]; then found=true; break; fi
+          done
+          if [ "$found" = true ]; then
+            echo "COMPASS_SLOT_PRESENT $expected_reason"
+            exit 0
+          fi
+          echo "::warning::Missing $expected_reason; dispatching recovery"
+          gh workflow run daily-compass.yml --ref main -f run_reason="$expected_reason"
