@@ -167,6 +167,12 @@ jobs:
           python scripts/orchestration/build_data_consumer_index.py \
             --repo-root . \
             --output research/framework_handoffs/LATEST_DATA_CONSUMER_INDEX.json
+      - name: Build experiment-yield shadow observation
+        run: |
+          python scripts/experiments/build_experiment_yield_shadow.py \
+            --registry research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json \
+            --consumer-index research/framework_handoffs/LATEST_DATA_CONSUMER_INDEX.json \
+            --output research/experiment_lifecycle/LATEST_EXPERIMENT_YIELD_SHADOW.json
       - name: Commit compact outputs and verify main readback
         shell: bash
         run: |
