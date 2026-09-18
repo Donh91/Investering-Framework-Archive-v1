@@ -51,10 +51,30 @@
   },
   "official_compass_policy": {
     "pointer_first": true,
-    "required_machine_horizons": ["NEXT_12H", "NEXT_1_3D", "NEXT_5_7D", "CYCLE_ALTCOINS_3_8W"],
-    "required_capitalization_order": ["BTC", "ETH", "LARGE_CAPS", "MID_CAPS", "SMALL_CAPS", "MICROCAPS"],
+    "required_machine_horizons": [
+      "NEXT_12H",
+      "NEXT_1_3D",
+      "NEXT_5_7D",
+      "CYCLE_ALTCOINS_3_8W"
+    ],
+    "required_capitalization_order": [
+      "BTC",
+      "ETH",
+      "LARGE_CAPS",
+      "MID_CAPS",
+      "SMALL_CAPS",
+      "MICROCAPS"
+    ],
     "stale_or_missing_pointer": "FAIL_CLOSED_NO_STALE_CHAT_FALLBACK",
-    "render_request_creates_new_freeze": false
+    "render_request_creates_new_freeze": false,
+    "on_demand_refresh": {
+      "enabled": true,
+      "workflow": ".github/workflows/daily-compass.yml",
+      "run_reason": "ON_DEMAND",
+      "eligibility": "CURRENT_OWNER_PACKET_SHA_DIFFERS_FROM_LATEST_OFFICIAL_COMPASS_SOURCE_PACKET_SHA",
+      "same_source_behavior": "REUSE_EXISTING_IMMUTABLE_FREEZE",
+      "stale_without_new_owner_evidence": "FAIL_CLOSED_NO_SYNTHETIC_REFRESH"
+    }
   },
   "visible_output_forbidden": [
     "genui_widgets",
@@ -74,7 +94,7 @@
     "web_retrieval",
     "repository_tools"
   ],
-  "freshness_policy": "follow_current_owner_rules_no_new_global_threshold",
+  "freshness_policy": "evaluate current owner evidence on every Compass invocation; create ON_DEMAND freeze only when canonical owner packet changed; otherwise reuse or fail closed",
   "missing_data_policy": "UNKNOWN_NOT_NEGATIVE",
   "material_conflict_policy": "DATA_CONFLICT",
   "stale_lane_fallback": {

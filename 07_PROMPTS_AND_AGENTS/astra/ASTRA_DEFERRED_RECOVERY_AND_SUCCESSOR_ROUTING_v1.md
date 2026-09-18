@@ -88,3 +88,11 @@ Astra remains valuable for genuinely frontier-shaped units, especially unresolve
 
 ## First recovery mission
 Run a fresh-main census of currently live or deferred Astra/frontier-model work across the discovery surface above. Produce a deduplicated owner-bound inventory, requalify each item to the current cheapest qualified lane, identify the highest-value immediately executable Sol/Terra/Deterministic/Codex work, and begin execution under existing authority. Do not wait for Astra merely because the historical mission name contains Astra.
+
+## Current derived recovery view
+
+The latest non-authoritative repository census/routing snapshot is:
+
+`07_PROMPTS_AND_AGENTS/astra/LATEST_ASTRA_DEFERRED_RECOVERY_STATUS.json`
+
+This derived view is navigation and execution-state evidence only. It must never override fresh `main`, a canonical domain owner, current machine queues, capability policy, research governance or budget hard stops. Re-read and replace the view when a future recovery pass materially changes candidate status.

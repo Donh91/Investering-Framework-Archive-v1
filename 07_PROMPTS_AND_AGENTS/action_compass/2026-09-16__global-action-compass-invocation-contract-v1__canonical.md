@@ -62,7 +62,11 @@ fails closed and must never fall back to old chat prose.
 
 The official machine record preserves `NEXT_12H`, `NEXT_1_3D`, `NEXT_5_7D`, the governed
 `CYCLE_ALTCOINS_3_8W` lane, and the canonical BTC → ETH → large → mid → small → micro ladder.
-Rendering the pointer does not create another freeze or prospective receipt.
+Every Compass invocation performs a freshness evaluation before rendering. If the canonical
+Auto Market State owner has a newer packet SHA than the latest official Compass source binding,
+the route may dispatch the existing Official Compass workflow with `run_reason=ON_DEMAND` and
+resolve the resulting immutable pointer before rendering. If the source packet is unchanged,
+reuse the existing freeze; the render request itself must not manufacture a prospective receipt.
 
 Hard rules:
 
@@ -196,16 +200,19 @@ This rule reduces `wait -> prepare -> wait -> prepare` noise without inventing h
 
 ## 8. Render request versus fresh evidence ingest
 
-A plain compass invocation is a **render/current-state request**. It is not automatically a new prospective evidence row.
+A plain compass invocation is a **render/current-state request with a freshness evaluation**. It is not automatically a new prospective evidence row.
 
 Therefore:
 
-- do not create a new immutable Action Compass receipt merely because the user typed `kompas`, `handlekompas` or `compass`;
+- compare the current canonical Auto Market State packet SHA with the source packet SHA bound by the latest official Compass;
+- when the owner packet changed and is eligible, use the existing Official Compass `workflow_dispatch` path to create one `ON_DEMAND` immutable freeze, then resolve that pointer before rendering;
+- when the owner packet is unchanged, reuse the existing immutable freeze and create nothing;
+- when the pointer is stale but no newer eligible owner evidence exists, fail closed rather than minting a synthetic fresh timestamp;
 - do not extend an old receipt horizon by rendering it again;
 - if the same turn separately contains a fresh eligible DATA PING / RAW ingest, the existing fresh-ingest receipt rules still apply;
 - if another current owner already creates a prospective decision record, do not duplicate it under this contract.
 
-This preserves the scientific meaning of the existing accountability ledger.
+This gives the user a genuinely on-demand Compass when new canonical evidence exists while preserving the scientific meaning of the accountability ledger.
 
 ## 9. Language and naming
 
@@ -227,6 +234,7 @@ A compass response is incomplete if any applicable check is `NO`:
 GLOBAL_TRIGGER_RESOLVED: YES/NO
 CURRENT_AUTHORITY_RESOLVED: YES/NO
 CURRENT_DATA_ROUTE_USED: YES/NO
+ON_DEMAND_FRESHNESS_EVALUATED: YES/NO
 NO_STALE_DATA_PING_PROMOTED: YES/NO
 THREE_HORIZONS_PRESENT: YES/NO
 CONTROLLED_ACTIONS_USED: YES/NO

@@ -251,7 +251,17 @@ def initial_triage(event: dict[str, Any], config: dict[str, Any], enrichment: di
     deep_required = _int(config["convergence"].get("minimum_signal_families_for_deep_dive"), 2)
     percentiles = event.get("birth_cohort_percentiles") or {}
     exceptional_m = min(_number(percentiles.get("buyer_velocity")), _number(percentiles.get("transaction_velocity"))) >= 99.0 and m_pass
-    state = "DEEP_DIVE" if exec_pass and (family_count >= deep_required or exceptional_m) else "SILENT"
+    deep_fields_present = any(
+        bool(enrichment.get("families", {}).get(family))
+        for family in ("W", "S", "P", "N")
+    ) if isinstance(enrichment.get("families"), dict) else False
+    visibility_gap_triggers: list[str] = []
+    if m_pass and not deep_fields_present:
+        visibility_gap_triggers.append("MATERIAL_PUBLIC_MICROSTRUCTURE_DEEP_FIELDS_UNKNOWN")
+    visibility_gap_escalation = bool(visibility_gap_triggers)
+    state = "DEEP_DIVE" if exec_pass and (
+        family_count >= deep_required or exceptional_m or visibility_gap_escalation
+    ) else "SILENT"
     return {
         "contract": "MOONSHOT_TRIAGE_v1",
         "alert_state": state,
@@ -262,6 +272,14 @@ def initial_triage(event: dict[str, Any], config: dict[str, Any], enrichment: di
         "family_count": family_count,
         "microstructure_evidence": m_evidence,
         "exceptional_microstructure_override": exceptional_m,
+        "visibility_gap": {
+            "contract": "MEME_ALPHA_VISIBILITY_GAP_v1",
+            "public_microstructure_present": bool(m_pass),
+            "deep_graph_social_product_narrative_present": deep_fields_present,
+            "triggers": visibility_gap_triggers,
+            "escalate_existing_deep_dive": visibility_gap_escalation,
+            "predictive_score": None,
+        },
         "event": event,
     }
 

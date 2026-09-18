@@ -473,8 +473,9 @@ def owner_freshness(auto_state: Mapping[str, Any], as_of: datetime) -> dict[str,
 
 
 def _health_ok(auto_state: Mapping[str, Any], as_of: datetime | None = None) -> bool:
+    validation = str(auto_state.get("validation_status") or "UNKNOWN")
     structural = (
-        str(auto_state.get("validation_status") or "UNKNOWN") == "PASS"
+        validation != "FAIL"
         and str(auto_state.get("decision_context_status") or "UNKNOWN") == "PASS"
         and not list(auto_state.get("blockers") or [])
     )
@@ -853,7 +854,31 @@ def write_official_compass(compass: Mapping[str, Any], output_root: Path) -> dic
     path = day_dir / f"{compass['compass_id']}.json"
     selected: Mapping[str, Any] = compass
     existing_freeze = False
-    if reason == "SCHEDULED_DAILY" and day_dir.exists():
+    if reason == "ON_DEMAND":
+        # A render request is allowed to materialize a fresh Compass only when
+        # the canonical owner packet changed. Reusing the same owner evidence
+        # must not manufacture another prospective observation.
+        latest_pointer_path = output_root / "LATEST_COMPASS.json"
+        if latest_pointer_path.exists():
+            latest_pointer = read_json(latest_pointer_path)
+            current_source_sha = nested(compass, "source_bindings", "auto_market_state", "packet_sha256")
+            if latest_pointer.get("source_packet_sha256") == current_source_sha:
+                latest_path_raw = latest_pointer.get("compass_path")
+                if isinstance(latest_path_raw, str) and latest_path_raw:
+                    latest_path = Path(latest_path_raw)
+                    if latest_path.exists():
+                        path = latest_path
+    scheduled_slot_reasons = {"SCHEDULED_MORNING", "SCHEDULED_EVENING"}
+    if reason in scheduled_slot_reasons and day_dir.exists():
+        # Each scheduled slot owns one immutable freeze per day. A retry of the
+        # same slot reuses that slot only; morning must never suppress evening.
+        for candidate in sorted(day_dir.glob("CMP-*.json")):
+            prior_candidate = read_json(candidate)
+            if str(prior_candidate.get("run_reason") or "") == reason:
+                path = candidate
+                break
+    elif reason == "SCHEDULED_DAILY" and day_dir.exists():
+        # Legacy compatibility for historical single-daily freezes.
         existing = sorted(day_dir.glob("CMP-*.json"))
         if existing:
             path = existing[0]

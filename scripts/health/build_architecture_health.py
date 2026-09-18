@@ -86,11 +86,23 @@ def owner_population_finding(capture_present: bool, owners: list[dict[str, Any]]
     return None
 
 def experiment_receipt_sync_finding(sync: dict[str, Any] | None, age: float | None) -> tuple[str, int] | None:
-    """Keep absence distinct from failure while preventing missing sync from looking healthy."""
+    """Interpret explicit cross-repo freshness without letting a fresh error file look healthy."""
     if sync is None:
         return ('NO_EXPERIMENT_RECEIPT_SYNC',1)
-    if sync.get('status')=='FAIL':
+    state=sync.get('sync_state')
+    if state=='FAILED' or sync.get('status')=='FAIL':
         return ('EXPERIMENT_RECEIPT_SYNC_FAILED',2)
+    if state=='UNAVAILABLE':
+        return ('EXPERIMENT_RECEIPT_SYNC_UNAVAILABLE',1)
+    if state=='STALE':
+        return ('EXPERIMENT_RECEIPT_SOURCE_STALE',1)
+    if state in {'HEALTHY_NEW_DATA','HEALTHY_NO_CHANGE'}:
+        if sync.get('source_reachable') is not True:
+            return ('EXPERIMENT_RECEIPT_SYNC_SOURCE_NOT_VERIFIED',1)
+        if age is not None and age>72:
+            return ('EXPERIMENT_RECEIPT_SYNC_STALE',1)
+        return None
+    # Legacy records remain supported, but cannot conceal an old sync artifact.
     if age is not None and age>72:
         return ('EXPERIMENT_RECEIPT_SYNC_STALE',1)
     return None

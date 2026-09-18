@@ -1,0 +1,254 @@
+name: ASKR forensic replay
+
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/askr-forensic-replay.yml"]
+  workflow_dispatch:
+  issues:
+    types: [opened]
+
+permissions:
+  contents: read
+  issues: write
+  actions: read
+
+jobs:
+  replay:
+    if: github.event_name != 'issues' || startsWith(github.event.issue.title, 'ASKR FORENSIC TRIGGER')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      RH_RPC: https://rpc.mainnet.chain.robinhood.com
+      FACTORY: "0x7eD598BcEf8bd9Edd8C97A195C6d13f40801EC7e"
+      TOPIC0: "0x8d4aad4953d0ca700d468f3753aa14432d1b35b43ec6409f051fb6aa43a89607"
+      CA: "0xa92768863a55d8A0591709f7f5E594A249d36Ea3"
+      TARGET: "ASKR"
+      ISSUE: "1087"
+    steps:
+      - name: Reconstruct exact ASKR launch and old-parser behavior
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          cat > /tmp/replay.py <<'PY'
+          import json, os, urllib.request, datetime, time
+
+          RPC=os.environ["RH_RPC"]
+          FACTORY=os.environ["FACTORY"].lower()
+          TOPIC0=os.environ["TOPIC0"].lower()
+          CA=os.environ["CA"].lower()
+          TARGET=os.environ["TARGET"].upper()
+          REPO=os.environ["GH_REPO"]
+          TOKEN=os.environ["GH_TOKEN"]
+          ISSUE=os.environ["ISSUE"]
+
+          def rpc(method, params):
+              data=json.dumps({"jsonrpc":"2.0","id":1,"method":method,"params":params}).encode()
+              req=urllib.request.Request(RPC,data=data,headers={"Content-Type":"application/json"})
+              with urllib.request.urlopen(req,timeout=25) as r:
+                  out=json.load(r)
+              if "error" in out:
+                  raise RuntimeError(f"{method}: {out['error']}")
+              return out["result"]
+
+          def gh(path):
+              req=urllib.request.Request(
+                  f"https://api.github.com{path}",
+                  headers={"Authorization":f"Bearer {TOKEN}","Accept":"application/vnd.github+json"}
+              )
+              with urllib.request.urlopen(req,timeout=25) as r:
+                  return json.load(r)
+
+          def comment(body):
+              data=json.dumps({"body":body}).encode()
+              req=urllib.request.Request(
+                  f"https://api.github.com/repos/{REPO}/issues/{ISSUE}/comments",
+                  data=data, method="POST",
+                  headers={"Authorization":f"Bearer {TOKEN}","Accept":"application/vnd.github+json","Content-Type":"application/json"}
+              )
+              with urllib.request.urlopen(req,timeout=25) as r:
+                  return json.load(r)
+
+          def abi_string(raw):
+              if not raw or raw=="0x":
+                  return None
+              try:
+                  b=bytes.fromhex(raw[2:])
+                  if len(b) < 64:
+                      return None
+                  off=int.from_bytes(b[:32],"big")
+                  if off+32 > len(b):
+                      return None
+                  n=int.from_bytes(b[off:off+32],"big")
+                  if off+32+n > len(b):
+                      return None
+                  return b[off+32:off+32+n].decode("utf-8","replace")
+              except Exception:
+                  return None
+
+          def eth_call(to, data, block="latest"):
+              try:
+                  return rpc("eth_call",[{"to":to,"data":data},block])
+              except Exception as e:
+                  return {"__error__":repr(e)}
+
+          def decode_str_call(to, selector, block="latest"):
+              r=eth_call(to,selector,block)
+              if isinstance(r,dict):
+                  return None, r["__error__"]
+              return abi_string(r), None
+
+          def uint_call(to, selector, block="latest"):
+              r=eth_call(to,selector,block)
+              if isinstance(r,dict):
+                  return None, r["__error__"]
+              try:
+                  return int(r,16), None
+              except Exception as e:
+                  return None, repr(e)
+
+          head=int(rpc("eth_blockNumber",[]),16)
+          padded_ca="0x"+"0"*24+CA[2:]
+          found=None
+          searched_from=None
+          searched_to=head
+
+          # Search newest -> older so a launch from minutes ago is found quickly.
+          # Expand to 250k blocks if necessary, in conservative 2k chunks.
+          low=max(0,head-250000)
+          hi=head
+          while hi>=low and found is None:
+              lo=max(low,hi-1999)
+              params={"address":FACTORY,"topics":[TOPIC0,padded_ca],"fromBlock":hex(lo),"toBlock":hex(hi)}
+              try:
+                  logs=rpc("eth_getLogs",[params])
+              except Exception:
+                  # fall back to 250-block chunks for providers with range limits
+                  logs=[]
+                  sub_hi=hi
+                  while sub_hi>=lo and found is None:
+                      sub_lo=max(lo,sub_hi-249)
+                      try:
+                          x=rpc("eth_getLogs",[{"address":FACTORY,"topics":[TOPIC0,padded_ca],"fromBlock":hex(sub_lo),"toBlock":hex(sub_hi)}])
+                          logs.extend(x)
+                      except Exception:
+                          pass
+                      sub_hi=sub_lo-1
+              searched_from=lo
+              if logs:
+                  found=sorted(logs,key=lambda x:int(x["blockNumber"],16))[-1]
+                  break
+              hi=lo-1
+
+          code=rpc("eth_getCode",[CA,"latest"])
+          code_size=max(0,(len(code)-2)//2)
+
+          latest_name, latest_name_err=decode_str_call(CA,"0x06fdde03","latest")
+          latest_symbol, latest_symbol_err=decode_str_call(CA,"0x95d89b41","latest")
+          latest_decimals, latest_decimals_err=uint_call(CA,"0x313ce567","latest")
+          latest_supply, latest_supply_err=uint_call(CA,"0x18160ddd","latest")
+
+          lines=[]
+          lines += ["## ASKR forensic replay result",""]
+          lines += [f"- candidate CA: `{CA}`",
+                    f"- factory: `{FACTORY}`",
+                    f"- topic0: `{TOPIC0}`",
+                    f"- chain head at replay: `{head}`",
+                    f"- bytecode size now: `{code_size}` bytes",
+                    f"- latest name: `{latest_name}`",
+                    f"- latest symbol: `{latest_symbol}`",
+                    f"- latest decimals: `{latest_decimals}`",
+                    f"- latest totalSupply raw: `{latest_supply}`",""]
+
+          if not found:
+              lines += ["### RESULT: NO MATCHING PONS V2 TokenLaunched LOG FOUND",
+                        f"Searched exact factory + topic0 + indexed token CA from block {searched_from} through {searched_to}.",
+                        "This means the candidate CA cannot yet be proven as a Pons V2 launch through the expected canonical event with this RPC/query path.",
+                        "Do not relabel it verified.",""]
+          else:
+              block_num=int(found["blockNumber"],16)
+              txh=found["transactionHash"]
+              log_index=int(found["logIndex"],16)
+              topics=[t.lower() for t in found.get("topics",[])]
+              token="0x"+topics[1][-40:] if len(topics)>1 else None
+              curve="0x"+topics[2][-40:] if len(topics)>2 else None
+              deployer="0x"+topics[3][-40:] if len(topics)>3 else None
+              data=found.get("data","0x")
+              words=[data[2+i:2+i+64] for i in range(0,max(0,len(data)-2),64)] if data!="0x" else []
+              pair_token=("0x"+words[0][-40:]) if len(words)>=1 else None
+              launch_config=int(words[1],16) if len(words)>=2 else None
+              graduation_threshold=int(words[2],16) if len(words)>=3 else None
+
+              receipt=rpc("eth_getTransactionReceipt",[txh])
+              tx=rpc("eth_getTransactionByHash",[txh])
+              block=rpc("eth_getBlockByNumber",[found["blockNumber"],False])
+              ts=int(block["timestamp"],16)
+              utc=datetime.datetime.fromtimestamp(ts,datetime.timezone.utc).isoformat()
+              blocktag=found["blockNumber"]
+
+              launch_name, launch_name_err=decode_str_call(CA,"0x06fdde03",blocktag)
+              launch_symbol, launch_symbol_err=decode_str_call(CA,"0x95d89b41",blocktag)
+
+              # Simulate the OLD sentinel exactly: len(topics)>=4 -> token=topics[1] ->
+              # eth_call symbol/name at latest -> match ASKR/name contains ASKR/HEYASKR.
+              old_sym=latest_symbol or ""
+              old_nm=latest_name or ""
+              old_parser_match=(len(topics)>=4 and token.lower()==CA and
+                                (old_sym.upper()==TARGET or TARGET in old_nm.upper() or "HEYASKR" in old_nm.upper()))
+
+              lines += ["### CANONICAL PONS V2 LAUNCH FOUND","",
+                        f"- launch block: `{block_num}`",
+                        f"- block UTC: `{utc}`",
+                        f"- tx: `{txh}`",
+                        f"- log index: `{log_index}`",
+                        f"- token from topic[1]: `{token}`",
+                        f"- curve from topic[2]: `{curve}`",
+                        f"- deployer from topic[3]: `{deployer}`",
+                        f"- pairToken from data: `{pair_token}`",
+                        f"- launchConfigId: `{launch_config}`",
+                        f"- graduationThreshold raw: `{graduation_threshold}`",
+                        f"- launch-block name: `{launch_name}`",
+                        f"- launch-block symbol: `{launch_symbol}`",
+                        f"- receipt status: `{int(receipt['status'],16) if receipt and receipt.get('status') else None}`",
+                        f"- tx.from: `{tx.get('from') if tx else None}`",
+                        f"- tx.to: `{tx.get('to') if tx else None}`","",
+                        f"### OLD SENTINEL REPLAY: `{'PASS' if old_parser_match else 'FAIL'}`","",
+                        f"Old parser would see len(topics)={len(topics)}, token topic match={token.lower()==CA if token else False}, latest symbol=`{latest_symbol}`, latest name=`{latest_name}`.",
+                        "Therefore this replay distinguishes parser/gating failure from runtime/liveness failure.",""]
+
+              # Compare watcher workflow runs with exact chain launch timestamp.
+              try:
+                  runs=gh(f"/repos/{REPO}/actions/workflows/askr-launch-sentinel.yml/runs?per_page=30").get("workflow_runs",[])
+                  relevant=[]
+                  for r in runs:
+                      relevant.append({
+                          "id":r.get("id"),"status":r.get("status"),"conclusion":r.get("conclusion"),
+                          "event":r.get("event"),"created_at":r.get("created_at"),"updated_at":r.get("updated_at"),
+                          "head_sha":r.get("head_sha")
+                      })
+                  lines += ["### WATCHER RUNS AROUND LAUNCH",""]
+                  for r in relevant[:12]:
+                      lines += [f"- run {r['id']}: {r['event']} | {r['status']}/{r['conclusion']} | created {r['created_at']} | updated {r['updated_at']} | sha {r['head_sha']}"]
+                  lines += [""]
+              except Exception as e:
+                  lines += ["### WATCHER RUN QUERY FAILED",f"`{repr(e)}`",""]
+
+          errs=[("latest_name",latest_name_err),("latest_symbol",latest_symbol_err),("latest_decimals",latest_decimals_err),("latest_supply",latest_supply_err)]
+          errs=[f"- {k}: {v}" for k,v in errs if v]
+          if errs:
+              lines += ["### RPC metadata errors"]+errs+[""]
+
+          lines += ["### Interpretation rule",
+                    "This result is evidence only. A PASS on the old parser does **not** prove the watcher was live; it means the raw launch event would have been detectable by the old code if the run/RPC path had actually processed it. A FAIL identifies parser/gating as a root cause candidate.",
+                    "",
+                    "Origin remains EXTERNAL/USER_SUPPLIED until Alpha demonstrates an independent pre-external discovery path."]
+
+          body="\n".join(lines)
+          print(body)
+          comment(body)
+          PY
+
+          python3 /tmp/replay.py
+
+# trigger forensic replay now
