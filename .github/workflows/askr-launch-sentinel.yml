@@ -48,7 +48,7 @@ jobs:
               except Exception: return ""
           def create_issue(ca,curve,deployer,txh,block,nm,sym):
               lines=["## ASKR CANDIDATE DETECTED","","**Status:** on-chain candidate from official Pons V2 factory; primary-source verification still required.","","~~~text",ca,"~~~","",f"- chain: Robinhood Chain (4663)",f"- token name: {nm}",f"- token symbol: {sym}",f"- curve: {curve}",f"- deployer: {deployer}",f"- block: {block}",f"- tx: https://robinhoodchain.blockscout.com/tx/{txh}",f"- token: https://robinhoodchain.blockscout.com/address/{ca}","","Freeze first-seen now. UNKNOWN != 0. MC != FDV. No ENTRY promotion before market data, holder/deployer concentration and primary provenance are verified."]
-              payload=json.dumps({"title":f"ASKR launch candidate - {ca}","body":"\n".join(lines)}).encode()
+              payload=json.dumps({"title":f"🚨 ASKR CA FOUND - {ca}","body":"\\n".join(lines),"assignees":["Donh91"]}).encode()
               req=urllib.request.Request(f"https://api.github.com/repos/{REPO}/issues",data=payload,method="POST",headers={"Authorization":f"Bearer {TOKEN}","Accept":"application/vnd.github+json","Content-Type":"application/json"})
               with urllib.request.urlopen(req,timeout=20) as r: print("ALERT",json.load(r).get("html_url"),flush=True)
           latest=int(rpc("eth_blockNumber",[]),16); cursor=max(0,latest-20000); seen=set()
