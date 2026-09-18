@@ -1,0 +1,53 @@
+name: Official Compass Schedule Watchdog
+
+on:
+  schedule:
+    # UTC watchdogs run after the expected CEST slots. They do not create a
+    # second freeze when the slot already exists.
+    - cron: '32 6 * * *'
+    - cron: '32 18 * * *'
+  workflow_dispatch:
+
+permissions:
+  actions: write
+  contents: read
+  issues: write
+
+concurrency:
+  group: compass-schedule-watchdog
+  cancel-in-progress: false
+
+jobs:
+  recover:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Verify scheduled slot and recover if missing
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          now_hour=$(date -u +%H)
+          if [ "$now_hour" -lt 12 ]; then
+            expected_reason=SCHEDULED_MORNING
+          else
+            expected_reason=SCHEDULED_EVENING
+          fi
+          today=$(date -u +%Y/%m/%d)
+          found=false
+          shopt -s nullglob
+          for f in 04_MARKET_LEARNING/handlekompas/official/daily/$today/CMP-*.json; do
+            reason=$(python -c 'import json,sys; print(json.load(open(sys.argv[1])).get("run_reason",""))' "$f")
+            if [ "$reason" = "$expected_reason" ]; then found=true; break; fi
+          done
+          if [ "$found" = true ]; then
+            echo "COMPASS_SLOT_PRESENT $expected_reason"
+            exit 0
+          fi
+          echo "::warning::Missing $expected_reason; dispatching recovery"
+          gh workflow run daily-compass.yml --ref main
