@@ -39,6 +39,16 @@ DEFAULT_ROOT = Path("04_MARKET_LEARNING/handlekompas/event_refresh")
 CONTRACT = "COMPASS_EVENT_REFRESH_DECISION_v1"
 PUBLIC_CONTRACT = "PUBLIC_COMPASS_EVENT_STATUS_v1"
 STATE_CONTRACT = "COMPASS_EVENT_REFRESH_STATE_v1"
+REQUEST_RETRY_SECONDS = 20 * 60
+NON_PROTECTIVE_COOLDOWN_SECONDS = 3 * 60 * 60
+ACTION_RANK = {
+    "HOLD_WAIT_DATA_DEGRADED": 0,
+    "HOLD_DEFENSIVE_WAIT": 1,
+    "HOLD_WAIT": 2,
+    "PREPARE": 3,
+    "GRADUATED_TOPUP_ACTIVE": 4,
+}
+LADDER_RANK = {"UNAVAILABLE": -1, "HARD_WAIT": 0, "WAIT": 1, "HOLD": 2, "PREPARE": 3, "DEPLOY": 4}
 
 
 def read_json(path: Path) -> dict[str, Any]:
@@ -103,6 +113,47 @@ def _ladder_status(rows: Any) -> list[tuple[str, str]]:
     return out
 
 
+def _age_seconds(now: datetime, value: Any) -> float | None:
+    dt = parse_utc(value)
+    if dt is None:
+        return None
+    age = (now - dt).total_seconds()
+    return age if age >= 0 else None
+
+
+def _ladder_more_defensive(previous: Any, current: Any) -> bool:
+    prev = dict(_ladder_status(previous))
+    cur = dict(_ladder_status(current))
+    for segment, current_status in cur.items():
+        previous_status = prev.get(segment)
+        if previous_status is None:
+            continue
+        if LADDER_RANK.get(current_status, 0) < LADDER_RANK.get(previous_status, 0):
+            return True
+    return False
+
+
+def _protective_transition(
+    *, latest_compass: Mapping[str, Any], current_data_status: str,
+    current_action: str, current_market: Mapping[str, Any], current_ladder: Any,
+    heat: str,
+) -> bool:
+    previous_status = str(latest_compass.get("data_status") or "")
+    if previous_status != current_data_status:
+        return True
+    previous_action = str(latest_compass.get("action_now") or "")
+    if ACTION_RANK.get(current_action, 0) < ACTION_RANK.get(previous_action, 0):
+        return True
+    previous_market = latest_compass.get("market_now") if isinstance(latest_compass.get("market_now"), Mapping) else {}
+    if str(current_market.get("directional_state") or "") == "BEARISH" and str(previous_market.get("directional_state") or "") != "BEARISH":
+        return True
+    if _ladder_more_defensive(latest_compass.get("capitalization_ladder"), current_ladder):
+        return True
+    if heat == "HOT_DOWNSIDE_REASSESSMENT":
+        return True
+    return False
+
+
 def evaluate(
     *,
     auto_state: Mapping[str, Any],
@@ -142,16 +193,21 @@ def evaluate(
             "heat_detail": heat_detail,
         }
 
-    if source_sha == str(prior_state.get("last_dispatched_source_sha") or ""):
-        return {
-            "contract": CONTRACT,
-            "evaluated_at_utc": now.isoformat().replace("+00:00", "Z"),
-            "dispatch": False,
-            "reason": "SOURCE_ALREADY_DISPATCHED",
-            "source_packet_sha256": source_sha,
-            "heat_state": heat,
-            "heat_detail": heat_detail,
-        }
+    last_request_at = prior_state.get("last_request_at_utc") or prior_state.get("last_dispatch_at_utc")
+    last_request_age = _age_seconds(now, last_request_at)
+    last_requested_source = str(
+        prior_state.get("last_requested_source_sha")
+        or prior_state.get("last_dispatched_source_sha")
+        or ""
+    )
+    latest_issued = parse_utc(latest_compass.get("issued_at_utc"))
+    request_unbound = bool(
+        last_request_age is not None
+        and (latest_issued is None or latest_issued < parse_utc(last_request_at))
+        and source_sha != compass_source_sha
+    )
+    request_in_flight = bool(request_unbound and last_request_age < REQUEST_RETRY_SECONDS)
+    request_retry_due = bool(request_unbound and last_request_age >= REQUEST_RETRY_SECONDS)
 
     cn_ok = isinstance(cn_package, Mapping) and str((cn_binding or {}).get("status") or "") == "PASS"
     owner_ok = nh._health_ok(auto_state, now)
@@ -183,17 +239,55 @@ def evaluate(
     if current_data_status == "OK" and heat != "NORMAL" and heat != last_heat:
         causes.append("MARKET_HEAT_ENTERED")
 
+    if request_retry_due and causes:
+        causes.insert(0, "PRIOR_REQUEST_NOT_BOUND_RETRY")
+
+    current_action = str(action.get("NOW") or "")
+    protective = _protective_transition(
+        latest_compass=latest_compass,
+        current_data_status=current_data_status,
+        current_action=current_action,
+        current_market=market,
+        current_ladder=ladder,
+        heat=heat,
+    )
+    cooldown_age = last_request_age
+    suppressed: list[str] = []
+    reason = "NO_MATERIAL_CHANGE"
     dispatch = bool(causes)
+    if dispatch and request_in_flight and not protective:
+        suppressed = list(causes)
+        dispatch = False
+        reason = "REQUEST_IN_FLIGHT"
+    elif (
+        dispatch
+        and not protective
+        and not request_retry_due
+        and cooldown_age is not None
+        and cooldown_age < NON_PROTECTIVE_COOLDOWN_SECONDS
+    ):
+        suppressed = list(causes)
+        dispatch = False
+        reason = "COOLDOWN_ACTIVE"
+    elif dispatch:
+        reason = "MATERIAL_REASSESSMENT_REQUIRED"
+
     return {
         "contract": CONTRACT,
         "evaluated_at_utc": now.isoformat().replace("+00:00", "Z"),
         "dispatch": dispatch,
-        "reason": "MATERIAL_REASSESSMENT_REQUIRED" if dispatch else "NO_MATERIAL_CHANGE",
-        "cause_codes": causes,
+        "reason": reason,
+        "cause_codes": causes if dispatch else [],
+        "suppressed_cause_codes": suppressed,
+        "protective_bypass": protective,
+        "cooldown_seconds": NON_PROTECTIVE_COOLDOWN_SECONDS,
+        "request_retry_seconds": REQUEST_RETRY_SECONDS,
+        "last_request_age_seconds": cooldown_age,
+        "last_requested_source_sha": last_requested_source or None,
         "source_packet_sha256": source_sha,
         "latest_compass_source_packet_sha256": compass_source_sha or None,
         "current_data_status": current_data_status,
-        "current_action": action.get("NOW"),
+        "current_action": current_action,
         "current_market_state": market,
         "current_ladder": _ladder_status(ladder),
         "heat_state": heat,
@@ -230,19 +324,27 @@ def run(repo_root: Path, output_root: Path, now: datetime | None = None) -> dict
     )
 
     heat = str(decision.get("heat_state") or "NORMAL")
+    requested_sha = (
+        decision.get("source_packet_sha256")
+        if decision.get("dispatch")
+        else (prior_state or {}).get("last_requested_source_sha")
+        or (prior_state or {}).get("last_dispatched_source_sha")
+    )
+    requested_at = (
+        decision.get("evaluated_at_utc")
+        if decision.get("dispatch")
+        else (prior_state or {}).get("last_request_at_utc")
+        or (prior_state or {}).get("last_dispatch_at_utc")
+    )
     new_state = {
         "contract": STATE_CONTRACT,
         "last_heat_state": heat,
-        "last_dispatched_source_sha": (
-            decision.get("source_packet_sha256")
-            if decision.get("dispatch")
-            else (prior_state or {}).get("last_dispatched_source_sha")
-        ),
-        "last_dispatch_at_utc": (
-            decision.get("evaluated_at_utc")
-            if decision.get("dispatch")
-            else (prior_state or {}).get("last_dispatch_at_utc")
-        ),
+        "last_requested_source_sha": requested_sha,
+        "last_request_at_utc": requested_at,
+        # Legacy aliases retained for old readers. They mean workflow dispatch
+        # accepted, not that a new Compass necessarily finished binding yet.
+        "last_dispatched_source_sha": requested_sha,
+        "last_dispatch_at_utc": requested_at,
     }
 
     root = repo_root / output_root
