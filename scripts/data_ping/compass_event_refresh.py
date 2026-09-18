@@ -21,7 +21,8 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
 from pathlib import Path
 from typing import Any, Mapping
 
@@ -41,6 +42,7 @@ PUBLIC_CONTRACT = "PUBLIC_COMPASS_EVENT_STATUS_v1"
 STATE_CONTRACT = "COMPASS_EVENT_REFRESH_STATE_v1"
 REQUEST_RETRY_SECONDS = 20 * 60
 NON_PROTECTIVE_COOLDOWN_SECONDS = 3 * 60 * 60
+SCHEDULE_PROXIMITY_SECONDS = 30 * 60
 ACTION_RANK = {
     "HOLD_WAIT_DATA_DEGRADED": 0,
     "HOLD_DEFENSIVE_WAIT": 1,
@@ -131,6 +133,20 @@ def _ladder_more_defensive(previous: Any, current: Any) -> bool:
         if LADDER_RANK.get(current_status, 0) < LADDER_RANK.get(previous_status, 0):
             return True
     return False
+
+
+def _seconds_to_next_scheduled_compass(now: datetime) -> float:
+    cph = ZoneInfo("Europe/Copenhagen")
+    local = now.astimezone(cph)
+    candidates = [
+        local.replace(hour=8, minute=17, second=0, microsecond=0),
+        local.replace(hour=20, minute=17, second=0, microsecond=0),
+    ]
+    for candidate in candidates:
+        if candidate >= local:
+            return (candidate - local).total_seconds()
+    tomorrow = (local + timedelta(days=1)).replace(hour=8, minute=17, second=0, microsecond=0)
+    return (tomorrow - local).total_seconds()
 
 
 def _protective_transition(
@@ -255,10 +271,20 @@ def evaluate(
     suppressed: list[str] = []
     reason = "NO_MATERIAL_CHANGE"
     dispatch = bool(causes)
+    seconds_to_scheduled = _seconds_to_next_scheduled_compass(now)
     if dispatch and request_in_flight and not protective:
         suppressed = list(causes)
         dispatch = False
         reason = "REQUEST_IN_FLIGHT"
+    elif (
+        dispatch
+        and not protective
+        and not request_retry_due
+        and 0 <= seconds_to_scheduled <= SCHEDULE_PROXIMITY_SECONDS
+    ):
+        suppressed = list(causes)
+        dispatch = False
+        reason = "SCHEDULED_SLOT_IMMINENT"
     elif (
         dispatch
         and not protective
@@ -282,6 +308,8 @@ def evaluate(
         "protective_bypass": protective,
         "cooldown_seconds": NON_PROTECTIVE_COOLDOWN_SECONDS,
         "request_retry_seconds": REQUEST_RETRY_SECONDS,
+        "scheduled_slot_proximity_seconds": SCHEDULE_PROXIMITY_SECONDS,
+        "seconds_to_next_scheduled_compass": seconds_to_scheduled,
         "last_request_age_seconds": cooldown_age,
         "last_requested_source_sha": last_requested_source or None,
         "source_packet_sha256": source_sha,
