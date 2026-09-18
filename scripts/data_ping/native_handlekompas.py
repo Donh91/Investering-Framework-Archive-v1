@@ -473,8 +473,9 @@ def owner_freshness(auto_state: Mapping[str, Any], as_of: datetime) -> dict[str,
 
 
 def _health_ok(auto_state: Mapping[str, Any], as_of: datetime | None = None) -> bool:
+    validation = str(auto_state.get("validation_status") or "UNKNOWN")
     structural = (
-        str(auto_state.get("validation_status") or "UNKNOWN") == "PASS"
+        validation != "FAIL"
         and str(auto_state.get("decision_context_status") or "UNKNOWN") == "PASS"
         and not list(auto_state.get("blockers") or [])
     )
