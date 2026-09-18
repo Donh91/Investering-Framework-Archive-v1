@@ -95,12 +95,20 @@ def validate_frozen_forecast_record(frozen: dict[str, Any]) -> None:
                 raise ValueError("FROZEN_THRESHOLD_INVALID")
         elif mode == "ABSOLUTE_VALUE":
             target = frozen.get("target_value")
+            threshold = frozen.get("threshold_pct")
             if not _finite_number(target):
                 raise ValueError("FROZEN_TARGET_VALUE_INVALID")
-            if direction == "UP" and float(target) <= float(frozen["start_value"]):
+            if not _finite_number(threshold) or float(threshold) <= 0:
+                raise ValueError("FROZEN_THRESHOLD_INVALID")
+            start = float(frozen["start_value"])
+            target_value = float(target)
+            if direction == "UP" and target_value <= start:
                 raise ValueError("FROZEN_UP_TARGET_INVALID")
-            if direction == "DOWN" and float(target) >= float(frozen["start_value"]):
+            if direction == "DOWN" and target_value >= start:
                 raise ValueError("FROZEN_DOWN_TARGET_INVALID")
+            derived_threshold = abs(target_value / start - 1.0) * 100.0
+            if abs(float(threshold) - derived_threshold) > max(1e-9, derived_threshold * 1e-8):
+                raise ValueError("FROZEN_THRESHOLD_TARGET_MISMATCH")
         else:
             raise ValueError("FROZEN_TARGET_MODE_INVALID")
     else:
