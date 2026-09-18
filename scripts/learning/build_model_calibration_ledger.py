@@ -142,8 +142,7 @@ def main():
     if args.eligibility_output is not None:
         requested_outputs.append(args.eligibility_output)
     noncanonical_fixture = (
-        declared_shape_fixture
-        and not matches_other_population
+        not matches_other_population
         and not path_is_within(args.forecast_root, REPOSITORY_ROOT)
         and not path_is_within(args.outcome_root, REPOSITORY_ROOT)
         and all(not path_is_within(output, REPOSITORY_ROOT) for output in requested_outputs)
