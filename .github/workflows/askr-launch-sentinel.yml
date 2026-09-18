@@ -20,6 +20,70 @@ jobs:
       TARGET_SYMBOL: ASKR
       TOKEN_LAUNCHED_TOPIC0: "0x8d4aad4953d0ca700d468f3753aa14432d1b35b43ec6409f051fb6aa43a89607"
     steps:
+      - name: Forensic proof of ASKR launch
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          python3 - <<'PY'
+          import json, os, urllib.request, datetime
+          RPC=os.environ["RH_RPC"]
+          FACTORY=os.environ["PONS_V2_FACTORY"].lower()
+          TOPIC0=os.environ["TOKEN_LAUNCHED_TOPIC0"].lower()
+          CA="0xa92768863a55d8a0591709f7f5e594a249d36ea3"
+          REPO=os.environ["GH_REPO"]; TOKEN=os.environ["GH_TOKEN"]
+          def rpc(m,p):
+              d=json.dumps({"jsonrpc":"2.0","id":1,"method":m,"params":p}).encode()
+              q=urllib.request.Request(RPC,data=d,headers={"Content-Type":"application/json"})
+              with urllib.request.urlopen(q,timeout=20) as r:o=json.load(r)
+              if "error" in o: raise RuntimeError(o["error"])
+              return o["result"]
+          def decstr(raw):
+              try:
+                  b=bytes.fromhex(raw[2:]); off=int.from_bytes(b[:32],"big"); n=int.from_bytes(b[off:off+32],"big")
+                  return b[off+32:off+32+n].decode()
+              except:return None
+          head=int(rpc("eth_blockNumber",[]),16); padded="0x"+"0"*24+CA[2:]
+          hit=None; hi=head; floor=max(0,head-100000)
+          while hi>=floor and not hit:
+              lo=max(floor,hi-1999)
+              try:
+                  xs=rpc("eth_getLogs",[{"address":FACTORY,"topics":[TOPIC0,padded],"fromBlock":hex(lo),"toBlock":hex(hi)}])
+              except Exception:
+                  xs=[]
+              if xs: hit=xs[-1]; break
+              hi=lo-1
+          lines=["## ASKR exact-chain forensic readback",""]
+          if not hit:
+              lines += [f"- result: **NO_MATCH**",f"- exact CA: `{CA}`",f"- factory: `{FACTORY}`",f"- topic0: `{TOPIC0}`",f"- searched: last {head-floor} blocks","",
+                        "This does not verify the candidate as a Pons V2 launch. Keep provenance unverified."]
+          else:
+              topics=hit["topics"]; txh=hit["transactionHash"]; bn=hit["blockNumber"]
+              token="0x"+topics[1][-40:]; curve="0x"+topics[2][-40:]; deployer="0x"+topics[3][-40:]
+              blk=rpc("eth_getBlockByNumber",[bn,False]); ts=int(blk["timestamp"],16)
+              rec=rpc("eth_getTransactionReceipt",[txh]); tx=rpc("eth_getTransactionByHash",[txh])
+              name=decstr(rpc("eth_call",[{"to":CA,"data":"0x06fdde03"},"latest"]))
+              sym=decstr(rpc("eth_call",[{"to":CA,"data":"0x95d89b41"},"latest"]))
+              supply=int(rpc("eth_call",[{"to":CA,"data":"0x18160ddd"},"latest"]),16)
+              code=rpc("eth_getCode",[CA,"latest"])
+              old=(len(topics)>=4 and token.lower()==CA and ((sym or "").upper()=="ASKR" or "ASKR" in (name or "").upper() or "HEYASKR" in (name or "").upper()))
+              lines += ["- result: **CANONICAL_PONS_V2_MATCH**",f"- exact CA: `{CA}`",f"- launch block: `{int(bn,16)}`",
+                        f"- block UTC: `{datetime.datetime.fromtimestamp(ts,datetime.timezone.utc).isoformat()}`",f"- tx: `{txh}`",
+                        f"- token topic: `{token}`",f"- curve topic: `{curve}`",f"- deployer topic: `{deployer}`",
+                        f"- tx.from: `{tx.get('from')}`",f"- tx.to: `{tx.get('to')}`",f"- receipt status: `{int(rec['status'],16)}`",
+                        f"- ERC20 name: `{name}`",f"- ERC20 symbol: `{sym}`",f"- totalSupply raw: `{supply}`",
+                        f"- bytecode size: `{max(0,(len(code)-2)//2)}` bytes","",f"### OLD SENTINEL PARSER REPLAY: **{'PASS' if old else 'FAIL'}**"]
+              if old:
+                  lines += ["The original parser would have recognized this exact launch **if it had processed the event**. Root cause therefore moves to runtime/liveness/RPC coverage rather than event decoding."]
+              else:
+                  lines += ["The original parser would not have recognized the exact launch. Parser/gating remains a root cause."]
+          body="\n".join(lines)
+          print(body,flush=True)
+          payload=json.dumps({"body":body}).encode()
+          q=urllib.request.Request(f"https://api.github.com/repos/{REPO}/issues/1087/comments",data=payload,method="POST",
+              headers={"Authorization":f"Bearer {TOKEN}","Accept":"application/vnd.github+json","Content-Type":"application/json"})
+          with urllib.request.urlopen(q,timeout=20) as r: print("commented",json.load(r).get("html_url"),flush=True)
+          PY
       - name: Poll Pons V2 every 10 seconds
         env:
           GH_TOKEN: ${{ github.token }}
