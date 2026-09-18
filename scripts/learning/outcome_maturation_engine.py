@@ -161,18 +161,24 @@ def select_evidence(
 def evidence_reference_for(
     evidence_path: Path,
     evidence_root: Path,
+    evidence_value: dict[str, Any],
     evidence_reference_root: Path | None,
 ) -> tuple[str, str]:
-    """Return the evidence identity stored in a newly written outcome.
+    """Return and verify the evidence identity stored in a newly written outcome.
 
     Legacy callers keep execution-path behavior. A caller that stages durable
-    repository evidence through a temporary directory may instead provide a
-    repository-relative reference root, mapping the selected file back to its
-    durable namespace without changing the evidence bytes.
+    repository evidence through a temporary directory may provide a
+    repository-relative reference root, but that reference earns durable status
+    only when the target exists from the engine's repository cwd and its
+    canonical content hash matches the staged evidence being adjudicated.
     """
     if evidence_reference_root is None:
         return evidence_path.as_posix(), "EXECUTION_PATH"
-    if evidence_reference_root.is_absolute() or ".." in evidence_reference_root.parts:
+    if (
+        evidence_reference_root.is_absolute()
+        or not evidence_reference_root.parts
+        or ".." in evidence_reference_root.parts
+    ):
         raise ValueError("EVIDENCE_REFERENCE_ROOT_MUST_BE_REPOSITORY_RELATIVE")
     try:
         relative = evidence_path.resolve(strict=False).relative_to(evidence_root.resolve(strict=False))
@@ -181,6 +187,12 @@ def evidence_reference_for(
     reference = evidence_reference_root / relative
     if reference.is_absolute() or ".." in reference.parts:
         raise ValueError("EVIDENCE_REFERENCE_MUST_BE_REPOSITORY_RELATIVE")
+    durable_path = Path.cwd() / reference
+    if not durable_path.is_file():
+        raise ValueError("DURABLE_EVIDENCE_REFERENCE_MISSING")
+    durable_value = read(durable_path)
+    if sha(durable_value) != sha(evidence_value):
+        raise ValueError("DURABLE_EVIDENCE_REFERENCE_HASH_MISMATCH")
     return reference.as_posix(), "REPOSITORY_RELATIVE"
 
 
@@ -297,6 +309,7 @@ def main() -> None:
             evidence_reference, evidence_reference_scope = evidence_reference_for(
                 evidence_path,
                 args.evidence_root,
+                evidence_value,
                 args.evidence_reference_root,
             )
             metric_path = forecast["metric_path"]
