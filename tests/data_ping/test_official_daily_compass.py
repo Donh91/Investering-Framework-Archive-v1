@@ -312,6 +312,11 @@ class OfficialDailyCompassTest(unittest.TestCase):
         self.assertEqual(route["status"], "ACTIVE")
         self.assertEqual(route["official_daily_compass_pointer"], official)
         self.assertIn(official, route["authority_route"])
+        refresh = route["official_compass_policy"]["on_demand_refresh"]
+        self.assertTrue(refresh["enabled"])
+        self.assertEqual(refresh["run_reason"], "ON_DEMAND")
+        self.assertEqual(refresh["same_source_behavior"], "REUSE_EXISTING_IMMUTABLE_FREEZE")
+        self.assertFalse(route["official_compass_policy"]["render_request_creates_new_freeze"])
 
 
 if __name__ == "__main__":
