@@ -1,0 +1,206 @@
+{
+  "contract": "ASTRA_DEFERRED_RECOVERY_STATUS_v1",
+  "authority": "DERIVED_NAVIGATION_ONLY_NO_INDEPENDENT_AUTHORITY",
+  "recovery_issue": 1040,
+  "generated_date": "2026-09-18",
+  "fresh_main_anchor": "660290b3061b21a319f480e3247ba135e187b551",
+  "recovery_contract": "07_PROMPTS_AND_AGENTS/astra/ASTRA_DEFERRED_RECOVERY_AND_SUCCESSOR_ROUTING_v1.md",
+  "source_surfaces_checked": [
+    "07_PROMPTS_AND_AGENTS/astra/ directory and mission router",
+    "research/api_agent capability routing, task registry and budget policy",
+    "LATEST_HANDOFF.json",
+    "LATEST_CODEX_READY_TASKS.json and LATEST_CODEX_EXECUTION_STATE.json",
+    "open repository issues matching Astra/frontier/deferred/deep-research/future-model semantics",
+    "canonical owner/readiness surfaces for BlockHorizon, External Alpha, Meme Alpha and Alpha Lab"
+  ],
+  "budget_boundary": {
+    "monthly_hard_stop_usd": 20,
+    "reserve_usd": 2,
+    "research_automation_lane_cap_usd": 6,
+    "changed_by_recovery": false
+  },
+  "summary": {
+    "live_or_relevant_candidates": 8,
+    "verified_recovered_units": 1,
+    "owner_resolved_or_not_stranded": 5,
+    "ready_for_sol_without_astra": 2,
+    "astra_escalation_required": 0,
+    "parallel_owners_created": 0
+  },
+  "ranking_rule": "framework_impact × downstream_unblock × readiness × evidence_value ÷ expected_cost × regression_risk",
+  "candidates": [
+    {
+      "candidate_id": "RECOVERY-BLOCKHORIZON-FIRST-PASS",
+      "source_owner": "06_RESEARCH_LAB/blockhorizon_source_candidate_v1/",
+      "status": "VERIFIED_RECOVERED_FIRST_PASS",
+      "dependency_state": "PRIVATE_BINDING_AND_PUBLIC_ROUTING_VERIFIED",
+      "original_astra_reason": "Historical BlockHorizon mission was explicitly routed as Astra-class research despite the first-pass work being bounded schema/provenance/research-design work.",
+      "selected_lane": [
+        "DETERMINISTIC",
+        "SOL"
+      ],
+      "reason": "First-pass schema/PIT/redundancy/test-design work requires bounded evidence binding and research synthesis, not frontier-only capability.",
+      "expected_cost_class": "LOW_TO_MEDIUM",
+      "completion_evidence": [
+        "PR #1045 merged as ab1f2cd53d74fd847256f68dd61cd7d12fbff3ff",
+        "BLOCKHORIZON_RESEARCH_PREP_BLUEPRINT_v1.json present on main",
+        "restricted reconciliation receipt ddaf1d4b13fd56ad4b2ad38b9218b246c0351139 re-read from Donh91/secrets",
+        "PR #1103 merged as 660290b3061b21a319f480e3247ba135e187b551 after Data Architecture, Storage Health and Astra Landing Zone gates passed",
+        "post-merge main readback routes successors through the frozen blueprint"
+      ],
+      "next_action": "Continue only under the BlockHorizon Research Lab owner with the provider-value-free PIT/provenance evidence matrix and one frozen high-information family question. Do not repeat the first pass."
+    },
+    {
+      "candidate_id": "RECOVERY-SKILLS-AGENTS-AUDIT",
+      "source_owner": "07_PROMPTS_AND_AGENTS/astra/ASTRA_SKILLS_AND_AGENTS_AUDIT_MISSION_v1.md",
+      "status": "READY_SOL_READ_ONLY",
+      "dependency_state": "MISSION_AND_REVIEWER_FAILURE_ADDENDUM_ALREADY_REGISTERED",
+      "original_astra_reason": "Broad cross-repository agent/skill audit and historical reviewer-failure learning were named for Astra.",
+      "selected_lane": [
+        "DETERMINISTIC_PREPROCESSING",
+        "SOL"
+      ],
+      "reason": "Current task is repository reading, clustering, replay reasoning and minimal-delta recommendations. No residual agentic or context capability blocker has been demonstrated.",
+      "expected_cost_class": "MEDIUM",
+      "completion_evidence": [
+        "PR #782 registered reviewer/failure learning as Pass 8 of the existing audit",
+        "mission router exposes ASTRA_SKILLS_AGENTS_WITH_REVIEWER_FAILURE_LEARNING_V1"
+      ],
+      "next_action": "Run the existing read-only audit with deterministic evidence extraction plus Sol synthesis. Route any bounded code defect to existing Codex intake, and do not modify AGENTS/Skills merely because a reviewer comment exists."
+    },
+    {
+      "candidate_id": "RECOVERY-AUTO-TRADING-ARCH-REVIEW",
+      "source_owner": "07_PROMPTS_AND_AGENTS/astra/ASTRA_AUTONOMOUS_TRADING_ARCHITECTURE_REVIEW_POINTER_v1.md",
+      "status": "READY_SOL_READ_ONLY",
+      "dependency_state": "SOURCE_NOTE_AND_POINTER_PRESENT_CURRENT_OWNERS_MUST_BE_REBOUND_AT_EXECUTION",
+      "original_astra_reason": "Independent minimal-delta review of a broad autonomous quant architecture was queued for Astra.",
+      "selected_lane": [
+        "DETERMINISTIC_OWNER_MAP",
+        "SOL"
+      ],
+      "reason": "The first-pass architecture comparison is read-only owner mapping, claim verification, falsification and minimal-delta design. No Astra-only capability is proven.",
+      "expected_cost_class": "MEDIUM_TO_HIGH",
+      "completion_evidence": [
+        "PR #884 archived the source note and read-only mission pointer",
+        "pointer explicitly requires reuse of existing Research Lab and trading owners"
+      ],
+      "next_action": "Execute a fresh-main minimal-delta architecture review with Sol, preserving existing experiment, validation, risk and execution owners. Escalate only if a concrete residual capability gap survives decomposition."
+    },
+    {
+      "candidate_id": "RECOVERY-EXTERNAL-ALPHA-937",
+      "source_owner": "issue #937 Standing lane: External Alpha Discovery & Reverse Engineering",
+      "status": "OWNER_RESOLVED_ACTIVE_NOT_STRANDED",
+      "dependency_state": "V1_OPERATIONAL",
+      "original_astra_reason": "External strategy discovery/reverse engineering and MAEVE readiness had previously been treated as frontier/deep-research work.",
+      "selected_lane": [
+        "EXISTING_OWNER",
+        "DETERMINISTIC",
+        "SOL_AS_NEEDED"
+      ],
+      "reason": "The standing lane, registry, scorer, readiness bridge and tests are already operational. Ongoing cases belong to #937 and scientific lifecycle #885, not recovery.",
+      "expected_cost_class": "OWNER_SPECIFIC",
+      "completion_evidence": [
+        "PR #938 merged as c2a9a0ba98e95ba1a55fc9b09f4164d88bf90d85",
+        "issue #937 operational comment records green validation and seeded MAEVE/CFGI case"
+      ],
+      "next_action": "Do not duplicate. Advance MAEVE or another admitted case only through #937 using its current evidence and falsification gates."
+    },
+    {
+      "candidate_id": "RECOVERY-MEME-G2G3-1018",
+      "source_owner": "issue #1018 Meme Alpha: prospective G2/G3 capital-wallet shadow harness",
+      "status": "OWNER_RESOLVED_ACTIVE_NOT_STRANDED",
+      "dependency_state": "MULTIPLE_BOUNDED_PHASES_ALREADY_MERGED_PROSPECTIVE_EVIDENCE_CONTINUES",
+      "original_astra_reason": "Deep wallet/network research could be misclassified as frontier-only work.",
+      "selected_lane": [
+        "DETERMINISTIC",
+        "CODEX_FOR_IMPLEMENTATION",
+        "SOL_FOR_RESEARCH_SYNTHESIS"
+      ],
+      "reason": "Prospective PIT harness, Pump adapter, CLEAN G3 work, causal first-buy reconstruction and sellability/scale units already exist under #1018 and related owners.",
+      "expected_cost_class": "OWNER_SPECIFIC",
+      "completion_evidence": [
+        "PR #1019 merged phase-1 PIT shadow harness",
+        "subsequent PRs #1020, #1022-#1025, #1029, #1031, #1048 and #1049 progressed the existing owner",
+        "later G2/G3 empirical work is present on main"
+      ],
+      "next_action": "No #1040 implementation. Continue prospective evidence and ablations under #1018 with its private-binding and no-leakage gates."
+    },
+    {
+      "candidate_id": "RECOVERY-CODEX-REMEDIATION-QUEUE",
+      "source_owner": "LATEST_CODEX_READY_TASKS.json / LATEST_CODEX_EXECUTION_STATE.json / issue #643 navigation",
+      "status": "OWNER_RESOLVED_ACTIVE_NOT_STRANDED",
+      "dependency_state": "CURRENT_MACHINE_QUEUE_EXISTS",
+      "original_astra_reason": "Some historical work was informally parked for a stronger model even though bounded implementation/remediation has a governed Codex lane.",
+      "selected_lane": [
+        "CODEX"
+      ],
+      "reason": "The existing machine queue is the readiness authority and already carries bounded code/remediation work with per-task preconditions and post-fix gates.",
+      "expected_cost_class": "PER_EXISTING_TASK_CONTRACT",
+      "completion_evidence": [
+        "LATEST_CODEX_EXECUTION_STATE.json generated 2026-09-17T19:47:16Z reports 23 CODEX_READY tasks",
+        "issue #643 explicitly routes deferred-work requalification to #1040 while forbidding duplicate owners"
+      ],
+      "next_action": "Use the existing queue only. Re-read each task precondition from fresh main and do not create a recovery-specific Codex queue."
+    },
+    {
+      "candidate_id": "RECOVERY-API-DEEP-RESEARCH-LANE",
+      "source_owner": "research/api_agent/API_TASK_REGISTRY_v1.json and CAPABILITY_ROUTING_POLICY_v1.json",
+      "status": "ROUTED_POLICY_NOT_STRANDED",
+      "dependency_state": "QUALIFICATION_AND_BUDGET_GATES_APPLY",
+      "original_astra_reason": "Deep-research/manual-capability language can look like frontier-only work.",
+      "selected_lane": [
+        "DETERMINISTIC",
+        "TERRA_OR_SOL_PER_QUALIFICATION"
+      ],
+      "reason": "Current routing policy already sends bounded research to the cheapest qualified lane and reserves Astra escalation for concrete residual capability needs.",
+      "expected_cost_class": "BOUNDED_BY_EXISTING_API_POLICY",
+      "completion_evidence": [
+        "DEEP_RESEARCH_MANUAL is registered to Sol in API_TASK_REGISTRY_v1",
+        "CAPABILITY_ROUTING_POLICY_v1 enforces cheapest-qualified routing and no model-derived authority"
+      ],
+      "next_action": "No recovery owner action. Use existing API policy only when a canonical owner actually requires the lane, preserving all hard stops and reserve."
+    },
+    {
+      "candidate_id": "RECOVERY-ALPHA-LAB-DEEP-RESEARCH-1087",
+      "source_owner": "issue #1087 Alpha Lab — Rick visibility extraction + empirical row hardening",
+      "status": "OWNER_RESOLVED_ACTIVE_NOT_STRANDED",
+      "dependency_state": "ACTIVE_IMPLEMENTATION_OWNER_WITH_CURRENT_P0_SEQUENCE",
+      "original_astra_reason": "Semantic census surfaced current deep-research language, but this is not historical Astra-deferred work.",
+      "selected_lane": [
+        "EXISTING_ALPHA_LAB_OWNER",
+        "DETERMINISTIC",
+        "CODEX",
+        "SOL_AS_NEEDED"
+      ],
+      "reason": "Issue #1087 has an explicit current implementation owner, ordered P0 work and no request to wait for Astra.",
+      "expected_cost_class": "OWNER_SPECIFIC",
+      "completion_evidence": [
+        "issue #1087 is open and actively updated through 2026-09-18",
+        "issue defines existing-owner reuse, live-action gate and prospective birth-tape priority"
+      ],
+      "next_action": "Exclude from the Astra recovery queue. Continue only under #1087 and its existing Alpha Lab owners."
+    }
+  ],
+  "remaining_recovery_priority": [
+    {
+      "priority": 1,
+      "candidate_id": "RECOVERY-SKILLS-AGENTS-AUDIT",
+      "rationale": "Highest remaining cross-framework prevention/unblock value per bounded read-only effort."
+    },
+    {
+      "priority": 2,
+      "candidate_id": "RECOVERY-AUTO-TRADING-ARCH-REVIEW",
+      "rationale": "High architecture value but broader owner mapping and higher research cost."
+    }
+  ],
+  "astra_escalation_required": [],
+  "completion_assessment": {
+    "census_defensible_for_repository_discoverable_live_work": true,
+    "one_high_value_former_astra_unit_verified": true,
+    "all_identified_live_candidates_routed_blocked_superseded_or_owner_resolved": true,
+    "authority_expanded": false,
+    "api_budget_expanded": false,
+    "issue_1040_can_retire_as_parallel_controller_after_this_view_is_merged": true,
+    "caveat": "Chat-only work that was never persisted to repository state cannot be discovered by this repository census."
+  }
+}
