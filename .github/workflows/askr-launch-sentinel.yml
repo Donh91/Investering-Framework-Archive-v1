@@ -180,13 +180,32 @@ jobs:
               except Exception as e:
                   lines += ["### RESULT: FAIL-CLOSED - chain verification unavailable",f"`{e!r}`"]
 
-          lines += ["","### Provider health"]
+          lines += ["","### Provider health + exact-event parity"]
+          parity=[]
+          if ca:
+              padded_ca="0x"+"0"*24+ca[2:]
           for url in RPCS:
               try:
                   cid=rpc_chain_id(url)
-                  lines += [f"- `{url}`: chainId `{cid}`"]
+                  row=f"- `{url}`: chainId `{cid}`"
+                  if ca:
+                      # Query the immutable ASKR launch block directly on each provider.
+                      known_block=66443556
+                      data=json.dumps({"jsonrpc":"2.0","id":1,"method":"eth_getLogs","params":[{"address":FACTORY,"topics":[TOPIC0,padded_ca],"fromBlock":hex(known_block),"toBlock":hex(known_block)}]}).encode()
+                      req=urllib.request.Request(url,data=data,headers={"Content-Type":"application/json","User-Agent":"alpha-lab-sentinel/1.0"})
+                      with urllib.request.urlopen(req,timeout=15) as rr: out=json.load(rr)
+                      if "error" in out: raise RuntimeError(out["error"])
+                      xs=out["result"]
+                      sig=(xs[0]["transactionHash"].lower(),xs[0]["topics"][1].lower()) if xs else None
+                      parity.append((url,sig))
+                      row += f", exact_log_count `{len(xs)}`, signature `{sig}`"
+                  lines += [row]
               except Exception as e:
+                  parity.append((url,None))
                   lines += [f"- `{url}`: **FAILED** `{e!r}`"]
+          good=[sig for _,sig in parity if sig]
+          if len(good)>=2:
+              lines += [f"- provider parity: **{'PASS' if len(set(good))==1 else 'DATA_CONFLICT'}**"]
           if provider_failures:
               lines += ["","### Observed provider failures"]
               for u,e in provider_failures.items(): lines += [f"- `{u}`: `{e}`"]
@@ -265,16 +284,28 @@ jobs:
               except Exception:return None
 
           def create_issue(ca,curve,deployer,txh,block,nm,sym,provider,origin):
+              title=f"🚨 ASKR CA FOUND - {ca}"
+              # Idempotency: one alert per exact chain+CA target. Historical false positives remain separate regression evidence.
+              try:
+                  q=urllib.request.Request(f"https://api.github.com/repos/{REPO}/issues?state=all&per_page=100",
+                      headers={"Authorization":f"Bearer {TOKEN}","Accept":"application/vnd.github+json"})
+                  with urllib.request.urlopen(q,timeout=20) as rr:
+                      existing=json.load(rr)
+                  if any(i.get("title","").lower()==title.lower() for i in existing):
+                      print(f"ALERT_EXISTS {title}",flush=True)
+                      return False
+              except Exception as e:
+                  print("ALERT_DEDUPE_DEGRADED",repr(e),flush=True)
               lines=["## ASKR CANDIDATE DETECTED","",f"@Donh91 🚨 **ASKR on-chain candidate detected. Open this alert now.**","",
                      f"- discovery origin: {origin}",f"- RPC transport: {provider}","",
                      "~~~text",ca,"~~~","",f"- chain: Robinhood Chain (4663)",f"- token name: {nm or 'UNKNOWN'}",f"- token symbol: {sym or 'UNKNOWN'}",
                      f"- curve: {curve}",f"- deployer: {deployer}",f"- block: {block}",f"- tx: https://robinhoodchain.blockscout.com/tx/{txh}",
                      f"- token: https://robinhoodchain.blockscout.com/address/{ca}","",
                      "Freeze first-seen now. UNKNOWN != 0. MC != FDV. No ENTRY promotion before market data, holder/deployer concentration and primary provenance are verified."]
-              payload=json.dumps({"title":f"🚨 ASKR CA FOUND - {ca}","body":"\n".join(lines),"assignees":["Donh91"]}).encode()
+              payload=json.dumps({"title":title,"body":"\n".join(lines),"assignees":["Donh91"]}).encode()
               req=urllib.request.Request(f"https://api.github.com/repos/{REPO}/issues",data=payload,method="POST",
                   headers={"Authorization":f"Bearer {TOKEN}","Accept":"application/vnd.github+json","Content-Type":"application/json"})
-              with urllib.request.urlopen(req,timeout=20) as r: print("ALERT",json.load(r).get("html_url"),flush=True)
+              with urllib.request.urlopen(req,timeout=20) as r: print("ALERT",json.load(r).get("html_url"),flush=True)\n              return True
 
           latest,provider=rpc("eth_blockNumber",[]); latest=int(latest,16)
           cursor=max(0,latest-50000)
