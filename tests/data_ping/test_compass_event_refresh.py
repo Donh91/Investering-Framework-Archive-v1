@@ -120,9 +120,15 @@ class CompassEventRefreshTests(unittest.TestCase):
 
     def test_heat_does_not_dispatch_from_degraded_evidence(self):
         a=auto_state(validation="FAIL")
+        latest=compass(data_status="DEGRADED", action="HOLD_WAIT_DATA_DEGRADED")
+        latest["market_now"]={"directional_state":"UNAVAILABLE","regime":"DATA_DEGRADED"}
+        latest["capitalization_ladder"]=[
+            {"segment":seg,"status":"UNAVAILABLE"}
+            for seg in ["BTC","ETH","LARGE_CAPS","MID_CAPS","SMALL_CAPS","MICROCAPS"]
+        ]
         out=decision(
             auto=a,
-            latest=compass(data_status="DEGRADED", action="HOLD_WAIT_DATA_DEGRADED"),
+            latest=latest,
             entry_latest=entry(temp="HOT", btc=9),
             prior_state={"last_heat_state": "NORMAL"},
         )
