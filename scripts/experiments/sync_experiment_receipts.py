@@ -202,12 +202,20 @@ def main() -> None:
     try:
         source_generated = parse_utc(generated_raw)
     except (TypeError, ValueError):
-        source_generated = None
+        summary = {
+            **unavailable_summary(now=now, previous=previous, error_class="INVALID_MANIFEST_TIMESTAMP"),
+            "sync_state": "FAILED",
+            "status": "FAIL",
+            "source_reachable": True,
+            "source_manifest_sha256": manifest_sha,
+            "source_manifest_valid": False,
+            "fetch_failures": 0,
+        }
+        write_summary(args.sync_output, summary)
+        print(json.dumps(summary, sort_keys=True))
+        raise SystemExit(2)
 
-    if source_generated is None:
-        source_age_hours = float("inf")
-    else:
-        source_age_hours = max(0.0, (now - source_generated).total_seconds() / 3600.0)
+    source_age_hours = max(0.0, (now - source_generated).total_seconds() / 3600.0)
 
     imported, mismatches, fetch_failures, already_present = sync_receipts(
         manifest,
