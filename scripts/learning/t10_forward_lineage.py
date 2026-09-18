@@ -229,8 +229,33 @@ def receipt_links(
     return not missing, missing
 
 
+def owner_score_row_is_mature_and_eligible(score: dict[str, Any], row: dict[str, Any]) -> bool:
+    """Fail closed unless owner-authored maturity/eligibility metadata is affirmative.
+
+    Numeric score presence alone is never evidence that an outcome is mature or
+    admissible. Explicit pending/censored/rejected states always block. Where an
+    owner emits maturity/eligibility booleans, they must be true. Legacy rows
+    without such metadata remain eligible only when neither document nor row
+    carries a negative/pending state, preserving existing historical behavior
+    without inventing a new owner policy.
+    """
+    negative_states = {
+        "PENDING", "PENDING_MATURITY", "IMMATURE", "CENSORED", "REJECTED",
+        "BLOCKED", "INELIGIBLE", "NOT_ELIGIBLE", "INVALID", "UNSCORED",
+    }
+    for obj in (score, row):
+        for key in ("status", "maturity_status", "scoring_status", "eligibility_status"):
+            value = obj.get(key)
+            if isinstance(value, str) and value.strip().upper() in negative_states:
+                return False
+        for key in ("mature", "is_mature", "score_eligible", "scoring_eligible", "eligible"):
+            if key in obj and obj.get(key) is not True:
+                return False
+    return True
+
+
 def row_score_reference(root: Path, score_path: str, forecast_id: str) -> dict[str, Any] | None:
-    """Require explicit row identity; a weekly aggregate is not a row score.
+    """Require explicit row identity plus owner-compatible maturity/eligibility.
 
     Legacy prose/category summaries need owner-approved mappings and remain
     unresolved here. This observer must not invent those mappings or rescore.
@@ -249,6 +274,8 @@ def row_score_reference(root: Path, score_path: str, forecast_id: str) -> dict[s
     if len(matches) != 1:
         return None
     index, row = matches[0]
+    if not owner_score_row_is_mature_and_eligible(score, row):
+        return None
     value = row.get("score")
     if isinstance(value, bool) or not isinstance(value, (int, float)):
         return None
