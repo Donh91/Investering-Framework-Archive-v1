@@ -233,6 +233,7 @@ class T10ForwardLineageTests(unittest.TestCase):
             {"row": {"status": "PENDING_MATURITY", "mature": False}},
             {"row": {"maturity_status": "CENSORED"}},
             {"row": {"score_eligible": False}},
+            {"row": {"scientific_score_eligible": False}},
             {"document": {"status": "PENDING_MATURITY", "mature": False}},
             {"document": {"eligibility_status": "REJECTED"}},
         ]
@@ -261,7 +262,7 @@ class T10ForwardLineageTests(unittest.TestCase):
             score_path = root / route["score"]
             score = json.loads(score_path.read_text())
             score.update(status="FINAL", mature=True, score_eligible=True)
-            score["rows"][0].update(status="SCORED", mature=True, score_eligible=True)
+            score["rows"][0].update(status="SCORED", mature=True, score_eligible=True, scientific_score_eligible=True)
             self.write(root, route["score"], score)
             route["trusted_blob_bindings"]["score"] = self.blob_sha(score_path)
 
