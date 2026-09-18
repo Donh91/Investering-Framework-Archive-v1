@@ -1,9 +1,9 @@
 # BlockHorizon Source Candidate v1
 
-**Status:** PRIVATE_RAW_ARCHIVE_RECONCILED / AGENT_RESEARCH_PREP_READY / API_PENDING / RESEARCH_ONLY  
+**Status:** PRIVATE_RAW_ARCHIVE_RECONCILED / FIRST_PASS_RESEARCH_PREP_FROZEN / API_PENDING / RESEARCH_ONLY  
 **Authority:** NONE_BY_ITSELF  
 **Added:** 2026-09-07  
-**Updated:** 2026-09-09  
+**Updated:** 2026-09-18  
 **Purpose:** Preserve BlockHorizon as a high-priority Bitcoin on-chain historical research source while keeping raw values, source rights, revision semantics and framework authority separate.
 
 ## Current state
@@ -54,13 +54,14 @@ The repository owner explicitly confirmed on 2026-09-08 that the BlockHorizon do
 For current BlockHorizon work, use this order:
 
 1. `CURRENT_RESEARCH_READINESS.json`
-2. `SOURCE_CONTRACT_v1.json`
-3. `CURRENT_PRIVATE_BINDING.json`
-4. `METRIC_REGISTRY_v2.json`
-5. `ASTRA_RESEARCH_PROTOCOL_v1.md`
-6. authorized private archive README
-7. exact private reconciliation receipt
-8. exact private raw artifact only after immutable path/hash binding.
+2. `BLOCKHORIZON_RESEARCH_PREP_BLUEPRINT_v1.json`
+3. `SOURCE_CONTRACT_v1.json`
+4. `CURRENT_PRIVATE_BINDING.json`
+5. `METRIC_REGISTRY_v2.json`
+6. `ASTRA_RESEARCH_PROTOCOL_v1.md`
+7. authorized private archive README
+8. exact private reconciliation receipt
+9. exact private raw artifact only after immutable path/hash binding.
 
 `METRIC_REGISTRY_v1.json` and `SEED_INVENTORY_METADATA_v1.json` are retained as historical seed-state records. They must not override the current readiness pointer, v2 registry or current binding.
 
@@ -152,18 +153,17 @@ Optional still-uncollected P2 charts include Balanced Price, Delta Price, Delta 
 Current state:
 
 ```text
-READY_FOR_SCHEMA_PROVENANCE_REDUNDANCY_AND_HYPOTHESIS_DESIGN
+FIRST_PASS_RESEARCH_PREP_FROZEN__READY_FOR_NEXT_BOUNDED_RESEARCH_DESIGN
 ```
 
-Recommended next phase:
+The first-pass schema/provenance, point-in-time/revision-risk, redundancy, baseline, regime, walk-forward, negative-control and kill-criteria design is already frozen in `BLOCKHORIZON_RESEARCH_PREP_BLUEPRINT_v1.json` by PR #1045. Do not repeat that pass.
 
-1. schema and definition audit;
-2. point-in-time/revision-risk classification;
-3. overlap and redundancy map;
-4. incremental-value test design against simple baselines;
-5. regime segmentation, including pre-ETF vs ETF-era;
-6. walk-forward and leave-one-cycle-out specification;
-7. only then decide whether any additional BlockHorizon downloads have positive information value.
+Recommended next bounded phase:
+
+1. build a provider-value-free family / PIT / provenance evidence matrix from the immutable registry and reconciliation metadata;
+2. select one high-information family question;
+3. freeze its proposition, baseline, falsifiers, regimes, negative controls and kill criteria under the existing Research Lab owner;
+4. keep contemporaneous replay blocked until historical method and revision-state eligibility is actually verified.
 
 This readiness does not bypass framework analysis/adjudication gates. Outcome scoring, edge claims, threshold search, PnL simulation or promotion remain governed by the existing research framework.
 
@@ -198,6 +198,7 @@ Treat it as:
 
 ```text
 CURRENT_RESEARCH_READINESS.json
+BLOCKHORIZON_RESEARCH_PREP_BLUEPRINT_v1.json
 SOURCE_CONTRACT_v1.json
 CURRENT_PRIVATE_BINDING.json
 METRIC_REGISTRY_v2.json

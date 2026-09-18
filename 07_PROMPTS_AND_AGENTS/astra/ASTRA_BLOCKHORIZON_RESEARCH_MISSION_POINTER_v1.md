@@ -18,11 +18,12 @@ Read in this order:
 2. `07_PROMPTS_AND_AGENTS/astra/README.md`
 3. `07_PROMPTS_AND_AGENTS/astra/ASTRA_REPOSITORY_MISSION_ROUTER_v1.json`
 4. `06_RESEARCH_LAB/blockhorizon_source_candidate_v1/CURRENT_RESEARCH_READINESS.json`
-5. `06_RESEARCH_LAB/blockhorizon_source_candidate_v1/SOURCE_CONTRACT_v1.json`
-6. `06_RESEARCH_LAB/blockhorizon_source_candidate_v1/CURRENT_PRIVATE_BINDING.json`
-7. `06_RESEARCH_LAB/blockhorizon_source_candidate_v1/METRIC_REGISTRY_v2.json`
-8. `06_RESEARCH_LAB/blockhorizon_source_candidate_v1/ASTRA_RESEARCH_PROTOCOL_v1.md`
-9. authorized private BlockHorizon README, reconciliation receipt and exact raw artifacts only through the current immutable binding.
+5. `06_RESEARCH_LAB/blockhorizon_source_candidate_v1/BLOCKHORIZON_RESEARCH_PREP_BLUEPRINT_v1.json`
+6. `06_RESEARCH_LAB/blockhorizon_source_candidate_v1/SOURCE_CONTRACT_v1.json`
+7. `06_RESEARCH_LAB/blockhorizon_source_candidate_v1/CURRENT_PRIVATE_BINDING.json`
+8. `06_RESEARCH_LAB/blockhorizon_source_candidate_v1/METRIC_REGISTRY_v2.json`
+9. `06_RESEARCH_LAB/blockhorizon_source_candidate_v1/ASTRA_RESEARCH_PROTOCOL_v1.md`
+10. authorized private BlockHorizon README, reconciliation receipt and exact raw artifacts only through the current immutable binding.
 
 The domain files above own the current task. This pointer must never override them.
 
@@ -32,7 +33,7 @@ Use the reconciled BlockHorizon historical BTC on-chain archive to determine whi
 
 ## Current first pass
 
-The intended first pass is research preparation, not signal mining:
+The first research-preparation pass is already frozen in `BLOCKHORIZON_RESEARCH_PREP_BLUEPRINT_v1.json` by PR #1045. The block below describes completed preparation scope, not work to repeat:
 
 ```text
 schema + metric-definition audit
@@ -44,7 +45,7 @@ walk-forward + leave-one-cycle-out specification
 negative controls + kill criteria
 ```
 
-The current BlockHorizon readiness state explicitly allows this preparation. It does not independently authorize outcome scoring, edge claims, threshold search, PnL simulation, framework promotion or portfolio action.
+The current BlockHorizon readiness state records this first pass as complete and routes successors to the next bounded unit: a provider-value-free family/PIT/provenance evidence matrix, followed by selection of one high-information family question under the existing Research Lab owner. It does not independently authorize outcome scoring, edge claims, threshold search, PnL simulation, framework promotion or portfolio action.
 
 ## Important current facts to preserve
 
@@ -62,7 +63,8 @@ If you are Astra or a successor model and encounter this file during repository 
 1. resolve the mission bundle in the Astra router;
 2. include it in your ranked mission sequence after mandatory baseline qualification and dependency checks;
 3. challenge whether the proposed research is still the highest marginal-value use of the archive;
-4. if it remains valuable, execute only the research stage currently authorized by the domain protocol;
-5. report what should be killed or simplified, not only what appears promising.
+4. read the frozen prep blueprint and do not repeat its first-pass work;
+5. if the next bounded unit remains valuable, execute only the research stage currently authorized by the domain protocol;
+6. report what should be killed or simplified, not only what appears promising.
 
 A finding from this mission remains research evidence until existing framework governance explicitly promotes it.
