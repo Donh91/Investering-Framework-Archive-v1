@@ -4,7 +4,7 @@ on:
     workflows: ["Alpha Lab SHADOW-04 Prospective"]
     types: [completed]
 permissions:
-  contents: write
+  contents: read
   actions: write
   issues: write
 concurrency:
@@ -22,15 +22,26 @@ jobs:
           fetch-depth: 0
       - name: Regression-test supervisor before evidence mutation
         run: python 06_RESEARCH_LAB/alpha_lab/tools/test_alpha_proof_supervisor_v2.py
-      - name: Load operational proof state
+      - name: Restore latest immutable proof state artifact
         id: state
         shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          STATE_BRANCH=automation/alpha-proof-state-v1
-          if git fetch origin "$STATE_BRANCH:refs/remotes/origin/$STATE_BRANCH" 2>/dev/null; then
-            git show "origin/$STATE_BRANCH:06_RESEARCH_LAB/alpha_lab/proof_state.json" > /tmp/proof_state.json || cp 06_RESEARCH_LAB/alpha_lab/proof_state.json /tmp/proof_state.json
-          else
+          mkdir -p /tmp/previous-state
+          found=false
+          for run_id in $(gh run list --workflow alpha-proof-supervisor.yml --status completed --limit 20 --json databaseId --jq '.[].databaseId'); do
+            rm -rf /tmp/previous-state/*
+            if gh run download "$run_id" -n alpha-proof-state -D /tmp/previous-state >/dev/null 2>&1; then
+              if [ -f /tmp/previous-state/proof_state.json ]; then
+                cp /tmp/previous-state/proof_state.json /tmp/proof_state.json
+                found=true
+                break
+              fi
+            fi
+          done
+          if [ "$found" != "true" ]; then
             cp 06_RESEARCH_LAB/alpha_lab/proof_state.json /tmp/proof_state.json
           fi
           cp /tmp/proof_state.json /tmp/proof_state.before.json
@@ -68,26 +79,17 @@ jobs:
           assert s['next_action'] in {'WAIT','RETRY_SHADOW04','START_SHADOW07','HALT_CRITICAL'}
           print('ALPHA_PROOF_SUPERVISOR_SAFE',s['state'],s['next_action'])
           PY
-      - name: Persist state to isolated evidence branch
+      - name: Persist proof state as immutable run artifact
         if: steps.state.outputs.terminal != 'true'
         shell: bash
-        run: |
-          set -euo pipefail
-          STATE_BRANCH=automation/alpha-proof-state-v1
-          git config user.name framework-research-bot
-          git config user.email framework-research-bot@users.noreply.github.com
-          if git show-ref --verify --quiet "refs/remotes/origin/$STATE_BRANCH"; then
-            git switch -C "$STATE_BRANCH" "origin/$STATE_BRANCH"
-          else
-            git switch -c "$STATE_BRANCH"
-          fi
-          mkdir -p 06_RESEARCH_LAB/alpha_lab
-          cp /tmp/proof_state.json 06_RESEARCH_LAB/alpha_lab/proof_state.json
-          git add 06_RESEARCH_LAB/alpha_lab/proof_state.json
-          if ! git diff --cached --quiet; then
-            git commit -m "alpha: persist prospective proof state"
-            git push origin HEAD:"$STATE_BRANCH"
-          fi
+        run: cp /tmp/proof_state.json proof_state.json
+      - uses: actions/upload-artifact@v4
+        if: steps.state.outputs.terminal != 'true'
+        with:
+          name: alpha-proof-state
+          path: proof_state.json
+          if-no-files-found: error
+          retention-days: 90
       - name: Bounded automatic retry
         if: steps.state.outputs.terminal != 'true'
         shell: bash
@@ -108,7 +110,7 @@ jobs:
           NEW=$(jq -r '.state // ""' /tmp/proof_state.json)
           if [ "$NEW" != "$OLD" ] && { [ "$NEW" = "SHADOW04_PASS" ] || [ "$NEW" = "SHADOW04_FAIL" ] || [ "$NEW" = "HALT_CRITICAL" ]; }; then
             NEXT=$(jq -r '.next_action' /tmp/proof_state.json)
-            gh issue comment 1087 --body "Alpha Lab proof transition: $OLD -> $NEW. NEXT_ACTION=$NEXT. Evidence state is on non-default branch automation/alpha-proof-state-v1. No capital or canonical authority."
+            gh issue comment 1087 --body "ALPHA_PROOF_TERMINAL: $NEW | NEXT_ACTION=$NEXT | source=${{ github.event.workflow_run.head_sha }} | No capital or canonical authority."
           fi
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
