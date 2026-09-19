@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import copy
+import math
 from typing import Any
 
 from scripts.api_agent.meme_alpha_prospective import stable_hash, validate_shadow_feature
@@ -46,6 +47,10 @@ def build_blind_state(observation: dict[str, Any]) -> dict[str, Any]:
         raise ValueError("UNSUPPORTED_OBSERVATION_CONTRACT")
     if not observation.get("observation_sha256"):
         raise ValueError("OBSERVATION_SHA256_REQUIRED")
+    unsigned_observation = copy.deepcopy(observation)
+    supplied_observation_sha256 = str(unsigned_observation.pop("observation_sha256"))
+    if stable_hash(unsigned_observation) != supplied_observation_sha256:
+        raise ValueError("OBSERVATION_SHA256_MISMATCH")
     if _contains_forbidden_key(observation):
         raise ValueError("OUTCOME_LEAKAGE_DETECTED")
 
@@ -92,6 +97,8 @@ def freeze_challenger_prediction(
         raise ValueError("CHALLENGER_REQUIRED")
     if not question_contract_version:
         raise ValueError("QUESTION_CONTRACT_VERSION_REQUIRED")
+    if "route" in predictions:
+        validate_counterfactual_route(str(predictions["route"]))
 
     record = {
         "contract": "JEV_ALPHA_LAB_CHALLENGER_PREDICTION_V1",
@@ -122,11 +129,18 @@ def counterfactual_route(judgments: dict[str, Any]) -> str:
     thresholds.
     """
 
-    conflict = float(judgments.get("evidence_conflict", 0.5))
-    deep_dive = float(judgments.get("deep_dive_value", 0.5))
-    frontier = float(judgments.get("frontier_review_need", 0.5))
-    material = float(judgments.get("material_evidence", 0.5))
-    preserve = float(judgments.get("preserve_verbatim", 0.5))
+    names = ("evidence_conflict", "deep_dive_value", "frontier_review_need", "material_evidence", "preserve_verbatim")
+    values: dict[str, float] = {}
+    for name in names:
+        value = float(judgments.get(name, 0.5))
+        if not math.isfinite(value) or value < 0.0 or value > 1.0:
+            raise ValueError("INVALID_JUDGMENT_PROBABILITY:" + name)
+        values[name] = value
+    conflict = values["evidence_conflict"]
+    deep_dive = values["deep_dive_value"]
+    frontier = values["frontier_review_need"]
+    material = values["material_evidence"]
+    preserve = values["preserve_verbatim"]
 
     if frontier >= 0.80 or conflict >= 0.80:
         return "FRONTIER_REVIEW"
