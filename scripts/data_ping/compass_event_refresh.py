@@ -14,7 +14,9 @@ Materiality reuses existing framework semantics:
 
 A heat episode triggers once, then rearms after NORMAL. Action/health/ladder
 changes are not suppressed by the heat episode. Same-source dispatches are
-deduplicated.
+deduplicated. If required owner freshness is stale, this watcher requests a
+fresh Hourly Sequence first and defers Compass materiality until the canonical
+owner chain has rebuilt from fresh evidence.
 """
 from __future__ import annotations
 
