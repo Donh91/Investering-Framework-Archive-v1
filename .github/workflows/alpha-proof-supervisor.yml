@@ -20,6 +20,8 @@ jobs:
         with:
           ref: main
           fetch-depth: 0
+      - name: Regression-test supervisor before evidence mutation
+        run: python 06_RESEARCH_LAB/alpha_lab/tools/test_alpha_proof_supervisor_v2.py
       - name: Load operational proof state
         id: state
         shell: bash
