@@ -1,0 +1,156 @@
+{
+  "contract": "ALPHA_LAB_PROSPECTIVE_EDGE_EXPERIMENTS_v1",
+  "status": "REGISTRATION_REPAIR_RESEARCH_ONLY",
+  "parent_owner_issue": 1087,
+  "execution_packet_issue": 1134,
+  "test_id": "ALPHA_LAB_PROSPECTIVE_EDGE_V1",
+  "purpose": "Register the already-created E1/E3/E4 Alpha Lab execution packet under existing prospective-evidence governance without creating a scanner, scorer, ledger engine, or trading authority.",
+  "public_control_plane": "Donh91/Investering-Framework-Archive-v1",
+  "restricted_data_plane": "Donh91/secrets",
+  "private_ledger_root": "private_research/memes_alpha/prospective_edge_v1/",
+  "public_receipt_root": "06_RESEARCH_LAB/alpha_lab/prospective_edge_v1/receipts/",
+  "row_identity_field": "row_id",
+  "row_identity_rule": "experiment_id + prereg_id + observation_id",
+  "duplicate_key": [
+    "test_id",
+    "experiment_id",
+    "prereg_id",
+    "observation_id",
+    "source_content_sha256"
+  ],
+  "allowed_write_modes": [
+    "APPEND_INPUT_ROW",
+    "APPEND_OUTCOME_ROW",
+    "APPEND_CORRECTION_ROW",
+    "READ_ONLY"
+  ],
+  "frozen_input_fields": [
+    "test_id",
+    "experiment_id",
+    "prereg_id",
+    "frozen_at_utc",
+    "window_start_utc",
+    "window_end_utc",
+    "spec_sha256",
+    "source_code_sha",
+    "eligibility_manifest_sha256",
+    "metric_definition_sha256",
+    "benchmark_definition_sha256",
+    "kill_condition_sha256"
+  ],
+  "mutable_outcome_fields": [
+    "observed_at_utc",
+    "data_health",
+    "requested_coverage",
+    "returned_coverage",
+    "provider_identity",
+    "source_content_sha256",
+    "source_commit_receipt",
+    "eligibility",
+    "exclusion_reason",
+    "machine_verdict",
+    "metrics"
+  ],
+  "source_contract": {
+    "raw_values_public_forbidden": true,
+    "public_receipt_must_bind_private_commit_path_hash": true,
+    "missing_is_unknown": true,
+    "failed_query_is_not_zero": true,
+    "source_health_is_not_outcome": true
+  },
+  "authority": {
+    "portfolio_action": false,
+    "automatic_trading": false,
+    "canonical_promotion": false,
+    "market_rule_change": false,
+    "model_weight_change": false,
+    "alert_authority": false,
+    "automatic_merge": false
+  },
+  "machine_verdicts": [
+    "COLLECTING",
+    "PROSPECTIVE_PASS",
+    "PROSPECTIVE_FAIL",
+    "DEGRADED",
+    "KILLED"
+  ],
+  "experiment_contracts": {
+    "E1": {
+      "experiment_id": "ALPHA_E1_DISCLOSED_ADDRESS_DEPLOYER",
+      "question": "Do first-party disclosed 0x addresses frozen before T0 match receipt.from/deployer on future eligible Pons launches at a rate that survives prospective falsification?",
+      "historical_seed_credit": 0,
+      "historical_seed_note": "STIMMY is context only and can never count toward prospective confirmation.",
+      "required_frozen_fields": [
+        "first_party_url",
+        "first_party_content_sha256",
+        "disclosed_addresses_sha256",
+        "extraction_timestamp_utc"
+      ],
+      "required_outcome_fields": [
+        "future_launch_id",
+        "canonical_ca",
+        "receipt_from",
+        "deployer",
+        "exact_address_match",
+        "corroboration_state"
+      ],
+      "benchmark": "FROZEN_ELIGIBLE_FUTURE_LAUNCH_BASE_RATE",
+      "promotion_condition": "At least two additional independently eligible prospective confirmations plus separate red-team/governance review.",
+      "kill_condition": "Any cohort-selection or lineage breach kills affected evidence; preregistration must also freeze a max-window end and no extension is allowed merely because confirmations are absent."
+    },
+    "E3": {
+      "experiment_id": "ALPHA_E3_DELTA_PUBLISH",
+      "question": "Does a genuinely pre-frozen first-party CA-publication surface publish early enough relative to canonical T0 to support a useful verified-before-public edge?",
+      "minimum_eligible_rows": 30,
+      "required_frozen_fields": [
+        "first_party_surface_url",
+        "first_party_surface_content_sha256",
+        "external_benchmark_definition_sha256",
+        "external_edge_budget_minutes"
+      ],
+      "required_outcome_fields": [
+        "t0_utc",
+        "first_content_change_utc",
+        "tpublish_utc",
+        "delta_publish_minutes",
+        "ca_provenance_state",
+        "censoring_state"
+      ],
+      "benchmark": "FROZEN_EXTERNAL_OBSERVER_DEFINITION",
+      "promotion_condition": "No automatic promotion. Separate review only after >=30 eligible rows and complete coverage.",
+      "kill_condition": "At >=30 eligible rows, if median delta_publish is worse than the frozen external-edge budget, VERIFIED-before-public is killed or re-scoped to candidate-grade research. No post-hoc surface substitution."
+    },
+    "E4": {
+      "experiment_id": "ALPHA_E4_DEV_BUY_OOS",
+      "question": "Does frozen dev-buy size show fresh out-of-sample lift over an independently reproduced eligible-launch denominator?",
+      "required_frozen_fields": [
+        "denominator_definition_sha256",
+        "dev_buy_metric_sha256",
+        "threshold_definition_sha256",
+        "oos_period_start_utc",
+        "oos_period_end_utc"
+      ],
+      "required_outcome_fields": [
+        "eligible_launches",
+        "qualified_dev_buy_launches",
+        "qualified_outcomes",
+        "base_rate",
+        "observed_rate",
+        "lift",
+        "uncertainty_interval",
+        "data_health"
+      ],
+      "benchmark": "INDEPENDENTLY_REPRODUCED_ELIGIBLE_LAUNCH_BASE_RATE",
+      "promotion_condition": "Fresh OOS lift >=1.5x with uncertainty reported, adequate coverage, no material data-health defect, and separate governance review.",
+      "kill_condition": "Discovery-sample lift cannot count. Any denominator mismatch, outcome leakage, material coverage defect, or inability to independently reproduce the denominator blocks or kills the affected run."
+    }
+  },
+  "E2_hold": {
+    "status": "HOLD_NO_SENSOR",
+    "rule": "Do not build a wallet sensor. Only a separately demonstrated independent wallet effect may justify a future proposal."
+  },
+  "validator_path": "06_RESEARCH_LAB/alpha_lab/tools/validate_alpha_prospective_edge_v1.py",
+  "scorer_path": null,
+  "score_status": "SCORE_METHOD_UNFROZEN_NO_SCORING_AUTHORITY",
+  "promotion_boundary": "VALID_ROW != PROVEN_EDGE; COVERAGE_READY != PROMOTION"
+}
