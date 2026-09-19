@@ -71,9 +71,24 @@ jobs:
           import json
           d=json.load(open('/tmp/compass-event-decision.json'))
           print("dispatch=" + ("true" if d.get("dispatch") else "false"))
+          print("upstream_refresh=" + ("true" if d.get("upstream_refresh_required") else "false"))
           print("reason=" + str(d.get("reason") or "UNKNOWN"))
           print("causes=" + ",".join(d.get("cause_codes") or []))
           PY
+      - name: Request fresh Hourly Sequence when owner evidence is stale
+        if: steps.decide.outputs.upstream_refresh == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          active=$(gh run list --workflow hourly-sequence-capture.yml --limit 20 --json status --jq '[.[] | select(.status=="queued" or .status=="in_progress" or .status=="pending")] | length')
+          if [ "$active" -gt 0 ]; then
+            echo "UPSTREAM_RECOVERY_ALREADY_ACTIVE count=$active"
+          else
+            gh workflow run hourly-sequence-capture.yml --ref main
+            echo "UPSTREAM_HOURLY_SEQUENCE_RECOVERY_REQUESTED reason=${{ steps.decide.outputs.reason }}"
+          fi
       - name: Request event-driven Compass
         if: steps.decide.outputs.dispatch == 'true'
         env:
@@ -107,5 +122,5 @@ jobs:
           gh workflow run cycle-navigator-pages.yml --ref main
           echo "EVENT_DRIVEN_BANNER_DISPATCHED"
       - name: No-op proof
-        if: steps.decide.outputs.dispatch != 'true'
+        if: steps.decide.outputs.dispatch != 'true' && steps.decide.outputs.upstream_refresh != 'true'
         run: echo "NO_EVENT_REFRESH ${{ steps.decide.outputs.reason }}"
