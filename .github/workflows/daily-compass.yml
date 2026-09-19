@@ -65,6 +65,7 @@ jobs:
           import json
           d=json.load(open('/tmp/compass.json'))
           assert d['contract']=='OFFICIAL_DAILY_COMPASS_v1'
+          assert d['schema_version']==2
           assert set(d['horizons'])=={'NEXT_12H','NEXT_1_3D','NEXT_5_7D','CYCLE_ALTCOINS_3_8W'}
           alt=d['horizons']['CYCLE_ALTCOINS_3_8W']
           if alt['expected_direction']=='UNAVAILABLE':

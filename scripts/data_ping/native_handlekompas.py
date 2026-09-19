@@ -20,6 +20,7 @@ from typing import Any, Mapping
 CONTRACT = "NATIVE_HANDLEKOMPAS_v1"
 POINTER = "NATIVE_HANDLEKOMPAS_LATEST_POINTER_v1"
 OFFICIAL_COMPASS_CONTRACT = "OFFICIAL_DAILY_COMPASS_v1"
+OFFICIAL_COMPASS_SCHEMA_VERSION = 2
 OFFICIAL_COMPASS_POINTER = "OFFICIAL_DAILY_COMPASS_LATEST_POINTER_v1"
 PUBLIC_COMPASS_CONTRACT = "PUBLIC_COMPASS_PROJECTION_v1"
 PUBLIC_COMPASS_POINTER = "PUBLIC_COMPASS_LATEST_POINTER_v1"
@@ -966,7 +967,10 @@ def build_official_compass(
     )
     evidence = evidence_snapshot(auto_state, packet_path)
     data_status = "OK" if _health_ok(auto_state, issued) and cn_eligible else "DEGRADED"
-    source_identity = f"{auto_state.get('packet_sha256')}|{issued.date().isoformat()}|{run_reason}"
+    source_identity = (
+        f"{auto_state.get('packet_sha256')}|{issued.date().isoformat()}|{run_reason}|"
+        f"schema={OFFICIAL_COMPASS_SCHEMA_VERSION}"
+    )
     compass_id = f"CMP-{issued:%Y%m%d}-{digest(source_identity.encode())[:12]}"
     next_eta = horizons["NEXT_12H"].get("eta") if data_status == "OK" else None
     conclusion = (
@@ -976,7 +980,7 @@ def build_official_compass(
     )
     packet = {
         "contract": OFFICIAL_COMPASS_CONTRACT,
-        "schema_version": 1,
+        "schema_version": OFFICIAL_COMPASS_SCHEMA_VERSION,
         "compass_id": compass_id,
         "issued_at_utc": issued_text,
         "run_reason": run_reason,
@@ -1045,14 +1049,22 @@ def write_official_compass(compass: Mapping[str, Any], output_root: Path) -> dic
                 if isinstance(latest_path_raw, str) and latest_path_raw:
                     latest_path = Path(latest_path_raw)
                     if latest_path.exists():
-                        path = latest_path
+                        latest_compass = read_json(latest_path)
+                        if (
+                            int(latest_compass.get("schema_version") or 0) == int(compass.get("schema_version") or 0)
+                            and latest_compass.get("protection_tracker") is not None
+                        ):
+                            path = latest_path
     scheduled_slot_reasons = {"SCHEDULED_MORNING", "SCHEDULED_EVENING"}
     if reason in scheduled_slot_reasons and day_dir.exists():
         # Each scheduled slot owns one immutable freeze per day. A retry of the
         # same slot reuses that slot only; morning must never suppress evening.
         for candidate in sorted(day_dir.glob("CMP-*.json")):
             prior_candidate = read_json(candidate)
-            if str(prior_candidate.get("run_reason") or "") == reason:
+            if (
+                str(prior_candidate.get("run_reason") or "") == reason
+                and int(prior_candidate.get("schema_version") or 0) == int(compass.get("schema_version") or 0)
+            ):
                 path = candidate
                 break
     elif reason == "SCHEDULED_DAILY" and day_dir.exists():
