@@ -20,6 +20,7 @@ from typing import Any, Mapping
 CONTRACT = "NATIVE_HANDLEKOMPAS_v1"
 POINTER = "NATIVE_HANDLEKOMPAS_LATEST_POINTER_v1"
 OFFICIAL_COMPASS_CONTRACT = "OFFICIAL_DAILY_COMPASS_v1"
+OFFICIAL_COMPASS_SCHEMA_VERSION = 2
 OFFICIAL_COMPASS_POINTER = "OFFICIAL_DAILY_COMPASS_LATEST_POINTER_v1"
 PUBLIC_COMPASS_CONTRACT = "PUBLIC_COMPASS_PROJECTION_v1"
 PUBLIC_COMPASS_POINTER = "PUBLIC_COMPASS_LATEST_POINTER_v1"
@@ -59,6 +60,10 @@ ALTCOIN_WARNINGS = {
     "NONE", "PARABOLIC_ALTSEASON_WARNING", "DISTRIBUTION_WARNING",
     "EXIT_WARNING", "STRUCTURAL_BREAKDOWN_WARNING",
 }
+PROTECTION_RISK_STATES = {"NORMAL", "BUILDING", "ELEVATED", "HIGH", "CONFIRMED", "UNAVAILABLE"}
+DISTRIBUTION_RISK_STATES = {"NONE", "WARNING", "CONFIRMED", "UNKNOWN"}
+REENTRY_STATES = {"INACTIVE", "WAIT_FOR_FLUSH", "WAIT_FOR_RECLAIM", "REVIEW", "UNAVAILABLE"}
+PROTECTION_RANK = {"UNAVAILABLE": -1, "NORMAL": 0, "BUILDING": 1, "ELEVATED": 2, "HIGH": 3, "CONFIRMED": 4}
 LIMIT_TOKENS = ("QUOTA", "RATE_LIMIT", "USAGE_LIMIT", "429")
 BUDGET_TOKENS = ("TOKEN", "CREDIT", "BUDGET", "INSUFFICIENT_FUNDS")
 AUTH_TOKENS = ("AUTH", "UNAUTHORIZED", "FORBIDDEN", "401", "403", "API_KEY")
@@ -600,6 +605,174 @@ def _altcoin_cycle_lane(cn_package: Mapping[str, Any] | None, posture: str, issu
     }
 
 
+def protection_tracker(
+    auto_state: Mapping[str, Any],
+    action: Mapping[str, Any],
+    market_now: Mapping[str, Any],
+    cn_package: Mapping[str, Any] | None,
+    *,
+    as_of: datetime | None = None,
+    prior_compass: Mapping[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Privacy-safe pullback/distribution + re-entry projection.
+
+    This is a bounded translation of already-canonical Compass/Cycle states.
+    It is deliberately NOT a new pullback classifier and does not consume the
+    research-only pullback-learning lane as authority. Storm/Tsunami-style
+    labels remain UNKNOWN unless a future canonical owner explicitly publishes
+    them.
+    """
+    issued = (as_of or datetime.now(timezone.utc)).astimezone(timezone.utc).replace(microsecond=0)
+    issued_text = issued.isoformat().replace("+00:00", "Z")
+    if not _health_ok(auto_state, issued) or not isinstance(cn_package, Mapping):
+        return {
+            "contract": "COMPASS_PROTECTION_TRACKER_v1",
+            "pullback_risk_state": "UNAVAILABLE",
+            "pullback_class": "UNKNOWN",
+            "distribution_risk": "UNKNOWN",
+            "eta_window": "UNKNOWN",
+            "confidence_quality": "LOW",
+            "decisive_public_drivers": [],
+            "invalidation": "Fresh canonical market and Cycle Navigator evidence is required.",
+            "last_material_change_at": issued_text,
+            "data_quality": "DEGRADED",
+            "reentry_state": "UNAVAILABLE",
+            "reentry_message": "Re-entry review is unavailable until canonical evidence is healthy.",
+            "authority": {
+                "portfolio_execution": False,
+                "wallet_specific": False,
+                "new_market_classifier": False,
+            },
+        }
+
+    posture = str(action.get("NOW") or "HOLD_WAIT")
+    direction = str(market_now.get("directional_state") or "MIXED")
+    structured = cn_package.get("compass_4_8_weeks")
+    structured = structured if isinstance(structured, Mapping) else {}
+    alt = _altcoin_cycle_lane(cn_package, posture, issued)
+    alt_state = str(alt.get("state") or alt.get("label") or "UNCLEAR").upper()
+    alt_warning = str(alt.get("warning") or "NONE").upper()
+    text = " ".join(str(cn_package.get(k) or "") for k in (
+        "market_state", "base_case_this_week", "base_case_2_3_weeks", "base_case_4_8_weeks",
+    )).lower()
+    explicit_pullback = any(token in text for token in (
+        "elevated pullback risk", "pullback risk", "pullback phase",
+    ))
+
+    distribution = "NONE"
+    risk = "NORMAL"
+    risk_class = "UNKNOWN"
+    quality = "MEDIUM"
+    drivers: list[str] = []
+
+    if alt_state == "EXIT_RISK" or alt_warning in {"EXIT_WARNING", "STRUCTURAL_BREAKDOWN_WARNING"}:
+        risk = "CONFIRMED"
+        risk_class = "EXIT_RISK" if alt_state == "EXIT_RISK" or alt_warning == "EXIT_WARNING" else "STRUCTURAL_BREAKDOWN"
+        distribution = "CONFIRMED"
+        quality = "HIGH"
+        drivers.append("Canonical cycle state carries an exit/structural-break warning.")
+    elif alt_state == "DISTRIBUTION":
+        risk = "HIGH"
+        risk_class = "DISTRIBUTION"
+        distribution = "CONFIRMED"
+        quality = "HIGH"
+        drivers.append("Canonical cycle state is distribution.")
+    elif alt_warning == "DISTRIBUTION_WARNING":
+        risk = "HIGH"
+        risk_class = "DISTRIBUTION"
+        distribution = "WARNING"
+        quality = "HIGH"
+        drivers.append("Canonical cycle state carries a distribution warning.")
+    elif posture == "HOLD_DEFENSIVE_WAIT" and direction == "BEARISH":
+        risk = "HIGH" if explicit_pullback else "ELEVATED"
+        risk_class = "DEFENSIVE_PULLBACK"
+        quality = "MEDIUM"
+        drivers.append("Live Compass is defensive while current direction is bearish.")
+        if explicit_pullback:
+            drivers.append("Weekly Cycle Navigator explicitly flags pullback risk.")
+    elif explicit_pullback:
+        risk = "ELEVATED"
+        risk_class = "VOLATILE_CONSOLIDATION"
+        quality = "MEDIUM"
+        drivers.append("Weekly Cycle Navigator explicitly flags elevated pullback/consolidation risk.")
+        if posture in {"PREPARE", "GRADUATED_TOPUP_ACTIVE"} and direction == "BULLISH":
+            drivers.append("Live Compass is constructive, so the weekly risk has not escalated to a confirmed break.")
+    elif posture == "HOLD_DEFENSIVE_WAIT" or direction == "BEARISH":
+        risk = "BUILDING"
+        risk_class = "DEFENSIVE_TRANSITION"
+        quality = "MEDIUM"
+        drivers.append("Live Compass has moved into a defensive or bearish state.")
+
+    eta_candidate = structured.get("pullback_eta_window") or structured.get("distribution_eta_window")
+    eta_window = str(eta_candidate) if isinstance(eta_candidate, str) and eta_candidate.strip() else "UNKNOWN"
+
+    prior_tracker = (prior_compass or {}).get("protection_tracker") if isinstance(prior_compass, Mapping) else None
+    prior_tracker = prior_tracker if isinstance(prior_tracker, Mapping) else {}
+    prior_risk = str(prior_tracker.get("pullback_risk_state") or "NORMAL")
+    prior_reentry = str(prior_tracker.get("reentry_state") or "INACTIVE")
+
+    if risk in {"HIGH", "CONFIRMED"}:
+        reentry = "WAIT_FOR_FLUSH"
+        reentry_message = "Protection phase. Do not treat stabilization alone as a re-entry signal."
+    elif prior_risk in {"HIGH", "CONFIRMED"}:
+        reentry = "WAIT_FOR_RECLAIM"
+        reentry_message = "Risk has eased, but re-entry stays blocked until the existing Compass confirmation gate is restored."
+    elif (
+        prior_reentry == "WAIT_FOR_RECLAIM"
+        and risk in {"NORMAL", "BUILDING"}
+        and posture in {"PREPARE", "GRADUATED_TOPUP_ACTIVE"}
+        and direction == "BULLISH"
+    ):
+        reentry = "REVIEW"
+        reentry_message = "Re-entry review is open; this is a review state, not an automatic buy instruction."
+    elif prior_reentry == "REVIEW" and risk in {"NORMAL", "BUILDING"}:
+        reentry = "REVIEW"
+        reentry_message = "Re-entry review remains open while constructive confirmation persists."
+    else:
+        reentry = "INACTIVE"
+        reentry_message = "No re-entry review is active."
+
+    material = (risk, risk_class, distribution, eta_window, quality, reentry)
+    prior_material = (
+        str(prior_tracker.get("pullback_risk_state") or ""),
+        str(prior_tracker.get("pullback_class") or ""),
+        str(prior_tracker.get("distribution_risk") or ""),
+        str(prior_tracker.get("eta_window") or ""),
+        str(prior_tracker.get("confidence_quality") or ""),
+        str(prior_tracker.get("reentry_state") or ""),
+    )
+    last_change = str(prior_tracker.get("last_material_change_at") or "") if material == prior_material else issued_text
+    if not last_change:
+        last_change = issued_text
+
+    if risk == "NORMAL":
+        invalidation = "No active warning. A material canonical risk escalation is required before this lane becomes prominent."
+    elif risk in {"BUILDING", "ELEVATED"}:
+        invalidation = "Risk downgrades only when later canonical Compass/Cycle evidence removes the warning and live state stays non-defensive."
+    else:
+        invalidation = "Risk downgrades only after canonical distribution/exit evidence clears and recovery confirmation survives reassessment."
+
+    return {
+        "contract": "COMPASS_PROTECTION_TRACKER_v1",
+        "pullback_risk_state": risk,
+        "pullback_class": risk_class,
+        "distribution_risk": distribution,
+        "eta_window": eta_window,
+        "confidence_quality": quality,
+        "decisive_public_drivers": drivers[:4],
+        "invalidation": invalidation,
+        "last_material_change_at": last_change,
+        "data_quality": "OK",
+        "reentry_state": reentry,
+        "reentry_message": reentry_message,
+        "authority": {
+            "portfolio_execution": False,
+            "wallet_specific": False,
+            "new_market_classifier": False,
+        },
+    }
+
+
 def horizon_map(
     auto_state: Mapping[str, Any], action: Mapping[str, Any], cn_package: Mapping[str, Any] | None,
     *, as_of: datetime | None = None,
@@ -761,6 +934,7 @@ def build_public_projection(compass: Mapping[str, Any]) -> dict[str, Any]:
         "market_now": compass.get("market_now"),
         "horizons": public_horizons,
         "capitalization_ladder": public_ladder,
+        "protection_tracker": compass.get("protection_tracker"),
         "action_now": compass.get("action_now"),
         "next_meaningful_change_eta": compass.get("next_meaningful_change_eta"),
         "conclusion": compass.get("conclusion"),
@@ -777,6 +951,7 @@ def build_official_compass(
     repo_root: Path,
     issued_at: datetime | None = None,
     run_reason: str = "ON_DEMAND",
+    prior_compass: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
     issued = (issued_at or datetime.now(timezone.utc)).astimezone(timezone.utc).replace(microsecond=0)
     issued_text = issued.isoformat().replace("+00:00", "Z")
@@ -787,9 +962,15 @@ def build_official_compass(
     market_now = derive_market_now(auto_state, action, as_of=issued)
     horizons = horizon_map(auto_state, action, eligible_cn, as_of=issued)
     ladder = capitalization_ladder(auto_state, action, market_now, as_of=issued)
+    protection = protection_tracker(
+        auto_state, action, market_now, eligible_cn, as_of=issued, prior_compass=prior_compass
+    )
     evidence = evidence_snapshot(auto_state, packet_path)
     data_status = "OK" if _health_ok(auto_state, issued) and cn_eligible else "DEGRADED"
-    source_identity = f"{auto_state.get('packet_sha256')}|{issued.date().isoformat()}|{run_reason}"
+    source_identity = (
+        f"{auto_state.get('packet_sha256')}|{issued.date().isoformat()}|{run_reason}|"
+        f"schema={OFFICIAL_COMPASS_SCHEMA_VERSION}"
+    )
     compass_id = f"CMP-{issued:%Y%m%d}-{digest(source_identity.encode())[:12]}"
     next_eta = horizons["NEXT_12H"].get("eta") if data_status == "OK" else None
     conclusion = (
@@ -799,7 +980,7 @@ def build_official_compass(
     )
     packet = {
         "contract": OFFICIAL_COMPASS_CONTRACT,
-        "schema_version": 1,
+        "schema_version": OFFICIAL_COMPASS_SCHEMA_VERSION,
         "compass_id": compass_id,
         "issued_at_utc": issued_text,
         "run_reason": run_reason,
@@ -825,6 +1006,7 @@ def build_official_compass(
         "market_now": market_now,
         "horizons": horizons,
         "capitalization_ladder": ladder,
+        "protection_tracker": protection,
         "action_now": action.get("NOW"),
         "native_action_contract": action,
         "next_meaningful_change_eta": next_eta,
@@ -867,14 +1049,22 @@ def write_official_compass(compass: Mapping[str, Any], output_root: Path) -> dic
                 if isinstance(latest_path_raw, str) and latest_path_raw:
                     latest_path = Path(latest_path_raw)
                     if latest_path.exists():
-                        path = latest_path
+                        latest_compass = read_json(latest_path)
+                        if (
+                            int(latest_compass.get("schema_version") or 0) == int(compass.get("schema_version") or 0)
+                            and latest_compass.get("protection_tracker") is not None
+                        ):
+                            path = latest_path
     scheduled_slot_reasons = {"SCHEDULED_MORNING", "SCHEDULED_EVENING"}
     if reason in scheduled_slot_reasons and day_dir.exists():
         # Each scheduled slot owns one immutable freeze per day. A retry of the
         # same slot reuses that slot only; morning must never suppress evening.
         for candidate in sorted(day_dir.glob("CMP-*.json")):
             prior_candidate = read_json(candidate)
-            if str(prior_candidate.get("run_reason") or "") == reason:
+            if (
+                str(prior_candidate.get("run_reason") or "") == reason
+                and int(prior_candidate.get("schema_version") or 0) == int(compass.get("schema_version") or 0)
+            ):
                 path = candidate
                 break
     elif reason == "SCHEDULED_DAILY" and day_dir.exists():
@@ -953,6 +1143,18 @@ def main() -> None:
         if args.issued_at_utc:
             issued = datetime.fromisoformat(args.issued_at_utc.replace("Z", "+00:00"))
         cn_package, cn_binding = load_cn_context(args.repo_root)
+        prior_compass = None
+        prior_pointer_path = args.repo_root / args.output_root / "LATEST_COMPASS.json"
+        if prior_pointer_path.exists():
+            try:
+                prior_pointer = read_json(prior_pointer_path)
+                prior_path_raw = prior_pointer.get("compass_path")
+                if isinstance(prior_path_raw, str) and prior_path_raw:
+                    prior_path = args.repo_root / Path(prior_path_raw)
+                    if prior_path.exists():
+                        prior_compass = read_json(prior_path)
+            except Exception:
+                prior_compass = None
         compass = build_official_compass(
             auto_state,
             packet_path=packet_path,
@@ -961,6 +1163,7 @@ def main() -> None:
             repo_root=args.repo_root,
             issued_at=issued,
             run_reason=args.run_reason,
+            prior_compass=prior_compass,
         )
         result = compass if args.no_write else write_official_compass(compass, args.output_root)
         print(json.dumps(result, sort_keys=True))

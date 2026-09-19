@@ -10,6 +10,7 @@ on:
       - '.github/workflows/alpha-shadow04-prospective.yml'
 permissions:
   contents: read
+  issues: read
 concurrency:
   group: alpha-shadow04-prospective
   cancel-in-progress: false
@@ -19,15 +20,31 @@ jobs:
     timeout-minutes: 150
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Stop after terminal prospective adjudication
+        id: terminal
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          if gh api --paginate "repos/$GITHUB_REPOSITORY/issues/1087/comments?per_page=100" --jq '.[].body' | grep -q '^ALPHA_PROOF_TERMINAL:'; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "SHADOW04_ALREADY_TERMINAL"
+            exit 0
+          fi
+          echo "skip=false" >> "$GITHUB_OUTPUT"
       - name: Prospective freeze and capture 1000 future launches
+        if: steps.terminal.outputs.skip != 'true'
         run: |
           python3 06_RESEARCH_LAB/alpha_lab/tools/alpha_lab_shadow04_prospective_v1.py --launches 1000 --max-seconds 7200
       - name: Evidence summary
-        if: always()
+        if: always() && steps.terminal.outputs.skip != 'true'
         run: |
           for f in shadow04_freeze.json shadow04_result.json; do [ -f "$f" ] && cat "$f" || true; done
       - uses: actions/upload-artifact@v4
-        if: always()
+        if: always() && steps.terminal.outputs.skip != 'true'
         with:
           name: alpha-shadow04-prospective-${{ github.run_id }}
           path: |

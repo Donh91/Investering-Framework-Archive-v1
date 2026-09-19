@@ -1,0 +1,85 @@
+{
+  "contract": "JEV_ALPHA_LAB_BLIND_REPLAY_V1",
+  "status": "SHADOW_RESEARCH_ONLY",
+  "model": "jev-1.13.0",
+  "unit": "IMMUTABLE_POINT_IN_TIME_OBSERVATION",
+  "input": {
+    "required_contract": "MEME_ALPHA_G2_G3_SHADOW_OBSERVATION_v1",
+    "outcomes_hidden_during_inference": true,
+    "unknown_preserved": true,
+    "mutable_live_fields_forbidden": true,
+    "identity_and_cutoff_deterministic": true
+  },
+  "primary_judgments": {
+    "material_evidence": "NOUl",
+    "evidence_conflict": "NOUl",
+    "information_density": "SCORE_0_4",
+    "deep_dive_value": "NOUl",
+    "preserve_verbatim": "NOUl",
+    "frontier_review_need": "NOUl"
+  },
+  "excluded_from_jev_authority": [
+    "identity",
+    "provenance_truth",
+    "arithmetic",
+    "date_comparison",
+    "sellability_calculation",
+    "outcome_label",
+    "portfolio_action",
+    "trade_execution",
+    "canonical_signal_weight"
+  ],
+  "challengers": [
+    "EXISTING_ALPHA_LAB_BASELINE",
+    "DETERMINISTIC_ONLY",
+    "SYSTEM_ONE_ADAPTER_FIXED",
+    "JEV_1_13_0"
+  ],
+  "routing_policy": {
+    "jev_auto_drop_allowed": false,
+    "uncertain_high_information_action": "RETAIN_OR_ESCALATE",
+    "counterfactual_actions": ["RETAIN", "DEEP_DIVE", "FRONTIER_REVIEW"],
+    "production_effect": false
+  },
+  "primary_safety_metrics": [
+    "critical_evidence_loss_rate",
+    "false_negative_rate_later_material",
+    "data_conflict_miss_rate",
+    "missed_winner_recall",
+    "authority_invariant_violations"
+  ],
+  "efficiency_metrics": [
+    "frontier_calls_avoided_counterfactual",
+    "downstream_tokens_avoided_counterfactual",
+    "jev_input_tokens",
+    "latency_ms",
+    "estimated_cost"
+  ],
+  "decision_quality_metrics": [
+    "counterfactual_routing_utility",
+    "later_value_discrimination",
+    "brier_score_when_label_valid",
+    "repeated_call_stability"
+  ],
+  "outcome_authority": {
+    "owner": "EXISTING_ALPHA_LAB_OUTCOME_MATURATION",
+    "requires_sellability_for_positive_alpha": true,
+    "ath_or_touched_mfe_alone_is_positive_alpha": false,
+    "missed_winner_audit_required": true
+  },
+  "kill_conditions": [
+    "OUTCOME_LEAKAGE",
+    "CRITICAL_EVIDENCE_SILENTLY_DROPPED",
+    "IDENTITY_OR_PROVENANCE_DELEGATED_TO_JEV",
+    "IMMUTABLE_FIRST_SEEN_VIOLATION",
+    "NO_INCREMENTAL_UTILITY_OVER_SIMPLE_BASELINE",
+    "HELD_OUT_OR_MISSED_WINNER_GAIN_DISAPPEARS",
+    "RESTRICTED_DATA_BOUNDARY_VIOLATION"
+  ],
+  "promotion": {
+    "historical_replay_can_promote_directly": false,
+    "next_gate_after_replay_pass": "PROSPECTIVE_LIVE_SHADOW",
+    "automatic_trading": false,
+    "portfolio_action": false
+  }
+}

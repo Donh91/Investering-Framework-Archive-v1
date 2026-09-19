@@ -1,0 +1,92 @@
+{
+  "authority": {
+    "forecast_change": false,
+    "market_threshold_change": false,
+    "portfolio_execution": false,
+    "purpose": "EVENT_DRIVEN_REASSESSMENT_ADMISSION_ONLY"
+  },
+  "cause_codes": [
+    "DATA_HEALTH_CHANGED",
+    "ACTION_STATE_CHANGED",
+    "MARKET_STATE_CHANGED",
+    "CAPITALIZATION_LADDER_CHANGED",
+    "PROTECTION_STATE_CHANGED"
+  ],
+  "contract": "COMPASS_EVENT_REFRESH_DECISION_v1",
+  "cooldown_seconds": 10800,
+  "current_action": "PREPARE",
+  "current_data_status": "OK",
+  "current_ladder": [
+    [
+      "BTC",
+      "HOLD"
+    ],
+    [
+      "ETH",
+      "PREPARE"
+    ],
+    [
+      "LARGE_CAPS",
+      "PREPARE"
+    ],
+    [
+      "MID_CAPS",
+      "WAIT"
+    ],
+    [
+      "SMALL_CAPS",
+      "HARD_WAIT"
+    ],
+    [
+      "MICROCAPS",
+      "HARD_WAIT"
+    ]
+  ],
+  "current_market_state": {
+    "directional_state": "BULLISH",
+    "regime": "PREPARE",
+    "summary": "Market state is constructive, but deployment still depends on the existing confirmation gate."
+  },
+  "current_protection_tracker": {
+    "authority": {
+      "new_market_classifier": false,
+      "portfolio_execution": false,
+      "wallet_specific": false
+    },
+    "confidence_quality": "MEDIUM",
+    "contract": "COMPASS_PROTECTION_TRACKER_v1",
+    "data_quality": "OK",
+    "decisive_public_drivers": [
+      "Weekly Cycle Navigator explicitly flags elevated pullback/consolidation risk.",
+      "Live Compass is constructive, so the weekly risk has not escalated to a confirmed break."
+    ],
+    "distribution_risk": "NONE",
+    "eta_window": "UNKNOWN",
+    "invalidation": "Risk downgrades only when later canonical Compass/Cycle evidence removes the warning and live state stays non-defensive.",
+    "last_material_change_at": "2026-09-19T09:21:37Z",
+    "pullback_class": "VOLATILE_CONSOLIDATION",
+    "pullback_risk_state": "ELEVATED",
+    "reentry_message": "No re-entry review is active.",
+    "reentry_state": "INACTIVE"
+  },
+  "dispatch": true,
+  "evaluated_at_utc": "2026-09-19T09:21:37Z",
+  "heat_detail": {
+    "btc_return_24h_pct": 4.52775,
+    "downside_semantics": "SYMMETRIC_REUSE_OF_EXISTING_HEAT_MAGNITUDES_EVENT_ONLY",
+    "eth_return_24h_pct": 5.66165,
+    "existing_entry_temperature": "NORMAL",
+    "median_return_24h_pct": 2.76883
+  },
+  "heat_state": "NORMAL",
+  "last_request_age_seconds": 12945.0,
+  "last_requested_source_sha": "15a95ed904aba741a81f87896b354bb35d68d5582369f8e3f2c07d97fb717dba",
+  "latest_compass_source_packet_sha256": "15a95ed904aba741a81f87896b354bb35d68d5582369f8e3f2c07d97fb717dba",
+  "protective_bypass": true,
+  "reason": "MATERIAL_REASSESSMENT_REQUIRED",
+  "request_retry_seconds": 1200,
+  "scheduled_slot_proximity_seconds": 1800,
+  "seconds_to_next_scheduled_compass": 32123.0,
+  "source_packet_sha256": "421a0928432d34595219fb73a78e00cb793ca85986100397eaf4ee780930e078",
+  "suppressed_cause_codes": []
+}

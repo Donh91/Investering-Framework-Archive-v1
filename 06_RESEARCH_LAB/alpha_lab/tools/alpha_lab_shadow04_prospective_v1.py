@@ -34,7 +34,7 @@ def main(a):
  if any(c!=CHAIN for _,c,_ in chain):raise SystemExit("FAIL chainId")
  # Freeze BEFORE future start. +20 blocks guarantees the credited window did not exist at freeze.
  freeze_wall=time.time(); future_start=max(h for _,h in hs)+20
- spec={"test":"SHADOW-04-PROSPECTIVE","frozen_at":freeze_wall,"future_start_block":future_start,"target_launches":a.launches,"chain_id":CHAIN,"factory":FACTORY,"topic0":TOPIC0,"providers":RPCS,"assertions":["future-only","raw-log+receipt-first-seen","two-provider-event-set","ticker-never-identity","no-retrospective-credit"]}
+ spec={"test":"SHADOW-04-PROSPECTIVE","frozen_at":freeze_wall,"future_start_block":future_start,"target_launches":a.launches,"chain_id":CHAIN,"factory":FACTORY,"topic0":TOPIC0,"providers":RPCS,"source_sha":os.environ.get("GITHUB_SHA","UNKNOWN"),"assertions":["future-only","raw-log+receipt-first-seen","two-provider-event-set","ticker-never-identity","no-retrospective-credit"]}
  spec["spec_sha256"]=hashlib.sha256(json.dumps(spec,sort_keys=True,separators=(",",":")).encode()).hexdigest()
  json.dump(spec,open(a.freeze,"w"),indent=2)
  db=sqlite3.connect(a.db); db.execute("PRAGMA journal_mode=WAL"); db.executescript("""CREATE TABLE IF NOT EXISTS seen(tx TEXT,li INTEGER,block INTEGER,ca TEXT,topic3 TEXT,receipt_from TEXT,symbol TEXT,name TEXT,t_seen REAL,raw_log TEXT,raw_receipt TEXT,PRIMARY KEY(tx,li));""");db.commit()
@@ -69,7 +69,8 @@ def main(a):
  reused=collections.Counter(r[2] for r in rows if r[2])
  common=set.intersection(*provider_sets) if provider_sets else set()
  union=set.union(*provider_sets) if provider_sets else set()
- res={"test":"SHADOW-04-PROSPECTIVE","spec_sha256":spec["spec_sha256"],"n":len(rows),"future_start_block":future_start,"end_block":cursor,"receipt_topic3_divergence":diverge,"divergence_pct":round(100*diverge/max(1,len(rows)),2),"nonunique_symbol_rows":sum(v for v in syms.values() if v>1),"nonunique_symbol_pct":round(100*sum(v for v in syms.values() if v>1)/max(1,len(rows)),2),"receipt_from_reused_keys":sum(1 for v in reused.values() if v>1),"provider_union":len(union),"provider_intersection":len(common),"provider_disagreement":len(union-common),"errors":errors[-50:],"prospective":True,"PASS_COLLECTION":len(rows)>=a.launches and len(union-common)==0}
+ first_meta=db.execute("SELECT block,t_seen FROM seen ORDER BY block,li LIMIT 1").fetchone()
+ res={"test":"SHADOW-04-PROSPECTIVE","spec_sha256":spec["spec_sha256"],"source_sha":spec["source_sha"],"n":len(rows),"future_start_block":future_start,"first_observed_block":first_meta[0] if first_meta else None,"first_observed_unix":first_meta[1] if first_meta else None,"end_block":cursor,"receipt_topic3_divergence":diverge,"divergence_pct":round(100*diverge/max(1,len(rows)),2),"nonunique_symbol_rows":sum(v for v in syms.values() if v>1),"nonunique_symbol_pct":round(100*sum(v for v in syms.values() if v>1)/max(1,len(rows)),2),"receipt_from_reused_keys":sum(1 for v in reused.values() if v>1),"provider_union":len(union),"provider_intersection":len(common),"provider_disagreement":len(union-common),"errors":errors[-50:],"prospective":True,"PASS_COLLECTION":len(rows)>=a.launches and len(union-common)==0}
  json.dump(res,open(a.out,"w"),indent=2);print(json.dumps(res,indent=2))
 if __name__=="__main__":
  p=argparse.ArgumentParser();p.add_argument("--launches",type=int,default=1000);p.add_argument("--max-seconds",type=int,default=7200);p.add_argument("--db",default="shadow04.sqlite");p.add_argument("--freeze",default="shadow04_freeze.json");p.add_argument("--out",default="shadow04_result.json");main(p.parse_args())

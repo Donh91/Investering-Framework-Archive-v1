@@ -65,6 +65,7 @@ jobs:
           import json
           d=json.load(open('/tmp/compass.json'))
           assert d['contract']=='OFFICIAL_DAILY_COMPASS_v1'
+          assert d['schema_version']==2
           assert set(d['horizons'])=={'NEXT_12H','NEXT_1_3D','NEXT_5_7D','CYCLE_ALTCOINS_3_8W'}
           alt=d['horizons']['CYCLE_ALTCOINS_3_8W']
           if alt['expected_direction']=='UNAVAILABLE':
@@ -72,6 +73,13 @@ jobs:
           else:
               assert alt['warning'] in {'NONE','PARABOLIC_ALTSEASON_WARNING','DISTRIBUTION_WARNING','EXIT_WARNING','STRUCTURAL_BREAKDOWN_WARNING'}
           assert [r['segment'] for r in d['capitalization_ladder']]==['BTC','ETH','LARGE_CAPS','MID_CAPS','SMALL_CAPS','MICROCAPS']
+          p=d['protection_tracker']
+          assert p['contract']=='COMPASS_PROTECTION_TRACKER_v1'
+          assert p['pullback_risk_state'] in {'NORMAL','BUILDING','ELEVATED','HIGH','CONFIRMED','UNAVAILABLE'}
+          assert p['distribution_risk'] in {'NONE','WARNING','CONFIRMED','UNKNOWN'}
+          assert p['reentry_state'] in {'INACTIVE','WAIT_FOR_FLUSH','WAIT_FOR_RECLAIM','REVIEW','UNAVAILABLE'}
+          assert p['authority']['portfolio_execution'] is False
+          assert p['authority']['wallet_specific'] is False
           assert d['authority']['portfolio_execution'] is False
           assert d['authority']['post_hoc_rewrite'] is False
           assert d['market_reference'].get('btc_usdt') != 0 or d['market_reference'].get('btc_usdt') is None
@@ -148,7 +156,13 @@ jobs:
           assert hashlib.sha256(public.read_bytes()).hexdigest()==pointer['public_projection_content_sha256']
           assert f['authority']['portfolio_execution'] is False
           assert 'source_bindings' not in p and 'evidence_snapshot' not in p
-          print('OFFICIAL_COMPASS_VALID', f['compass_id'], f['data_status'])
+          assert p['protection_tracker']['contract']=='COMPASS_PROTECTION_TRACKER_v1'
+          assert p['protection_tracker']['authority']['portfolio_execution'] is False
+          assert p['protection_tracker']['authority']['wallet_specific'] is False
+          protection_text=json.dumps(p['protection_tracker']).lower()
+          assert not any(k in p['protection_tracker'] for k in ('wallet_address','holdings','positions','portfolio_actions'))
+          assert not __import__('re').search(r'0x[a-f0-9]{8,}', protection_text)
+          print('OFFICIAL_COMPASS_VALID', f['compass_id'], f['data_status'], p['protection_tracker']['pullback_risk_state'], p['protection_tracker']['reentry_state'])
           PY
       - name: Commit with remote readback proof
         if: steps.slot.outputs.active == 'true'

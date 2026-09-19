@@ -1,0 +1,69 @@
+{
+  "authority": {
+    "forecast_change": false,
+    "market_threshold_change": false,
+    "portfolio_execution": false,
+    "purpose": "EVENT_DRIVEN_REASSESSMENT_ADMISSION_ONLY"
+  },
+  "cause_codes": [
+    "DATA_HEALTH_CHANGED",
+    "ACTION_STATE_CHANGED",
+    "MARKET_STATE_CHANGED",
+    "CAPITALIZATION_LADDER_CHANGED"
+  ],
+  "contract": "COMPASS_EVENT_REFRESH_DECISION_v1",
+  "cooldown_seconds": 10800,
+  "current_action": "HOLD_WAIT_DATA_DEGRADED",
+  "current_data_status": "DEGRADED",
+  "current_ladder": [
+    [
+      "BTC",
+      "UNAVAILABLE"
+    ],
+    [
+      "ETH",
+      "UNAVAILABLE"
+    ],
+    [
+      "LARGE_CAPS",
+      "UNAVAILABLE"
+    ],
+    [
+      "MID_CAPS",
+      "UNAVAILABLE"
+    ],
+    [
+      "SMALL_CAPS",
+      "UNAVAILABLE"
+    ],
+    [
+      "MICROCAPS",
+      "UNAVAILABLE"
+    ]
+  ],
+  "current_market_state": {
+    "directional_state": "UNAVAILABLE",
+    "regime": "DATA_DEGRADED",
+    "summary": "Current market direction is unavailable because required state is degraded."
+  },
+  "dispatch": true,
+  "evaluated_at_utc": "2026-09-19T05:12:04Z",
+  "heat_detail": {
+    "btc_return_24h_pct": 4.67621,
+    "downside_semantics": "SYMMETRIC_REUSE_OF_EXISTING_HEAT_MAGNITUDES_EVENT_ONLY",
+    "eth_return_24h_pct": 5.6918,
+    "existing_entry_temperature": "NORMAL",
+    "median_return_24h_pct": 2.556185
+  },
+  "heat_state": "NORMAL",
+  "last_request_age_seconds": 17949.0,
+  "last_requested_source_sha": "ea69b47311bdf3b93cd17d3473f1d61a5207f7a84062bb722921981b43e49e4c",
+  "latest_compass_source_packet_sha256": "ea69b47311bdf3b93cd17d3473f1d61a5207f7a84062bb722921981b43e49e4c",
+  "protective_bypass": true,
+  "reason": "MATERIAL_REASSESSMENT_REQUIRED",
+  "request_retry_seconds": 1200,
+  "scheduled_slot_proximity_seconds": 1800,
+  "seconds_to_next_scheduled_compass": 3896.0,
+  "source_packet_sha256": "9a2d6464d2ca24b008d0d656b219cc518249b4891a31e53f258968ab85223962",
+  "suppressed_cause_codes": []
+}

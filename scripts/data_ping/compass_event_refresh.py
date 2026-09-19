@@ -14,7 +14,9 @@ Materiality reuses existing framework semantics:
 
 A heat episode triggers once, then rearms after NORMAL. Action/health/ladder
 changes are not suppressed by the heat episode. Same-source dispatches are
-deduplicated.
+deduplicated. If required owner freshness is stale, this watcher requests a
+fresh Hourly Sequence first and defers Compass materiality until the canonical
+owner chain has rebuilt from fresh evidence.
 """
 from __future__ import annotations
 
@@ -193,9 +195,32 @@ def evaluate(
             "contract": CONTRACT,
             "evaluated_at_utc": nh.iso(now) if hasattr(nh, "iso") else now.isoformat().replace("+00:00", "Z"),
             "dispatch": False,
+            "upstream_refresh_required": False,
             "reason": "AUTO_STATE_SOURCE_SHA_MISSING",
             "heat_state": heat,
             "heat_detail": heat_detail,
+        }
+
+    owner_freshness = nh.owner_freshness(auto_state, now)
+    if str(owner_freshness.get("status") or "") != "PASS":
+        return {
+            "contract": CONTRACT,
+            "evaluated_at_utc": now.isoformat().replace("+00:00", "Z"),
+            "dispatch": False,
+            "upstream_refresh_required": True,
+            "reason": "UPSTREAM_OWNER_FRESHNESS_STALE",
+            "source_packet_sha256": source_sha,
+            "latest_compass_source_packet_sha256": compass_source_sha or None,
+            "owner_freshness_status": owner_freshness.get("status"),
+            "owner_freshness_reasons": list(owner_freshness.get("reasons") or []),
+            "heat_state": heat,
+            "heat_detail": heat_detail,
+            "authority": {
+                "portfolio_execution": False,
+                "forecast_change": False,
+                "market_threshold_change": False,
+                "purpose": "REQUEST_FRESH_OWNER_EVIDENCE_BEFORE_COMPASS_REASSESSMENT",
+            },
         }
 
     if source_sha == compass_source_sha:
@@ -203,6 +228,7 @@ def evaluate(
             "contract": CONTRACT,
             "evaluated_at_utc": now.isoformat().replace("+00:00", "Z"),
             "dispatch": False,
+            "upstream_refresh_required": False,
             "reason": "LATEST_COMPASS_ALREADY_BINDS_CURRENT_OWNER_PACKET",
             "source_packet_sha256": source_sha,
             "heat_state": heat,
@@ -231,6 +257,9 @@ def evaluate(
     action = nh.action_context(auto_state, as_of=now)
     market = nh.derive_market_now(auto_state, action, as_of=now)
     ladder = nh.capitalization_ladder(auto_state, action, market, as_of=now)
+    protection = nh.protection_tracker(
+        auto_state, action, market, cn_package, as_of=now, prior_compass=latest_compass
+    )
 
     causes: list[str] = []
     if str(latest_compass.get("data_status") or "") != current_data_status:
@@ -247,6 +276,20 @@ def evaluate(
 
     if _ladder_status(latest_compass.get("capitalization_ladder")) != _ladder_status(ladder):
         causes.append("CAPITALIZATION_LADDER_CHANGED")
+
+    previous_protection = latest_compass.get("protection_tracker")
+    if isinstance(previous_protection, Mapping):
+        protection_keys = (
+            "pullback_risk_state", "pullback_class", "distribution_risk",
+            "eta_window", "confidence_quality", "reentry_state",
+        )
+        if tuple(previous_protection.get(k) for k in protection_keys) != tuple(protection.get(k) for k in protection_keys):
+            causes.append("PROTECTION_STATE_CHANGED")
+        if (
+            str(protection.get("reentry_state") or "") == "REVIEW"
+            and str(previous_protection.get("reentry_state") or "") != "REVIEW"
+        ):
+            causes.append("REENTRY_REVIEW_OPENED")
 
     last_heat = str(prior_state.get("last_heat_state") or "NORMAL")
     # Heat is a refresh accelerator only when the current owner evidence is
@@ -267,6 +310,16 @@ def evaluate(
         current_ladder=ladder,
         heat=heat,
     )
+    if isinstance(previous_protection, Mapping):
+        old_risk = str(previous_protection.get("pullback_risk_state") or "NORMAL")
+        new_risk = str(protection.get("pullback_risk_state") or "NORMAL")
+        if nh.PROTECTION_RANK.get(new_risk, -1) > nh.PROTECTION_RANK.get(old_risk, -1):
+            protective = True
+        old_dist = str(previous_protection.get("distribution_risk") or "NONE")
+        new_dist = str(protection.get("distribution_risk") or "NONE")
+        dist_rank = {"NONE": 0, "WARNING": 1, "CONFIRMED": 2, "UNKNOWN": -1}
+        if dist_rank.get(new_dist, -1) > dist_rank.get(old_dist, -1):
+            protective = True
     cooldown_age = last_request_age
     suppressed: list[str] = []
     reason = "NO_MATERIAL_CHANGE"
@@ -302,6 +355,7 @@ def evaluate(
         "contract": CONTRACT,
         "evaluated_at_utc": now.isoformat().replace("+00:00", "Z"),
         "dispatch": dispatch,
+        "upstream_refresh_required": False,
         "reason": reason,
         "cause_codes": causes if dispatch else [],
         "suppressed_cause_codes": suppressed,
@@ -318,6 +372,7 @@ def evaluate(
         "current_action": current_action,
         "current_market_state": market,
         "current_ladder": _ladder_status(ladder),
+        "current_protection_tracker": protection,
         "heat_state": heat,
         "heat_detail": heat_detail,
         "authority": {
@@ -387,12 +442,20 @@ def run(repo_root: Path, output_root: Path, now: datetime | None = None) -> dict
         run_path = run_dir / f"{now:%H%M%S}_{str(decision['source_packet_sha256'])[:12]}.json"
         run_path.write_text(json.dumps(decision, sort_keys=True, indent=2) + "\n")
         (root / "LATEST.json").write_text(json.dumps(decision, sort_keys=True, indent=2) + "\n")
+        protection_event = any(
+            code in {"PROTECTION_STATE_CHANGED", "REENTRY_REVIEW_OPENED"}
+            for code in decision.get("cause_codes", [])
+        )
         public = {
             "contract": PUBLIC_CONTRACT,
             "status": "REASSESSMENT_REQUESTED",
             "detected_at_utc": decision["evaluated_at_utc"],
             "cause_codes": decision.get("cause_codes", []),
-            "message": "Material market move or decision-state change detected. Compass reassessment is in progress.",
+            "message": (
+                "Protection or re-entry state changed. Compass reassessment is in progress."
+                if protection_event
+                else "Material market move or decision-state change detected. Compass reassessment is in progress."
+            ),
             "authority": {
                 "official_compass_change": False,
                 "portfolio_execution": False,

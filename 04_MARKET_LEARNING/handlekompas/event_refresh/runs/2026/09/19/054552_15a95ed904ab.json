@@ -1,0 +1,69 @@
+{
+  "authority": {
+    "forecast_change": false,
+    "market_threshold_change": false,
+    "portfolio_execution": false,
+    "purpose": "EVENT_DRIVEN_REASSESSMENT_ADMISSION_ONLY"
+  },
+  "cause_codes": [
+    "DATA_HEALTH_CHANGED",
+    "ACTION_STATE_CHANGED",
+    "MARKET_STATE_CHANGED",
+    "CAPITALIZATION_LADDER_CHANGED"
+  ],
+  "contract": "COMPASS_EVENT_REFRESH_DECISION_v1",
+  "cooldown_seconds": 10800,
+  "current_action": "PREPARE",
+  "current_data_status": "OK",
+  "current_ladder": [
+    [
+      "BTC",
+      "HOLD"
+    ],
+    [
+      "ETH",
+      "PREPARE"
+    ],
+    [
+      "LARGE_CAPS",
+      "PREPARE"
+    ],
+    [
+      "MID_CAPS",
+      "WAIT"
+    ],
+    [
+      "SMALL_CAPS",
+      "HARD_WAIT"
+    ],
+    [
+      "MICROCAPS",
+      "HARD_WAIT"
+    ]
+  ],
+  "current_market_state": {
+    "directional_state": "BULLISH",
+    "regime": "PREPARE",
+    "summary": "Market state is constructive, but deployment still depends on the existing confirmation gate."
+  },
+  "dispatch": true,
+  "evaluated_at_utc": "2026-09-19T05:45:52Z",
+  "heat_detail": {
+    "btc_return_24h_pct": 4.67621,
+    "downside_semantics": "SYMMETRIC_REUSE_OF_EXISTING_HEAT_MAGNITUDES_EVENT_ONLY",
+    "eth_return_24h_pct": 5.6918,
+    "existing_entry_temperature": "NORMAL",
+    "median_return_24h_pct": 2.556185
+  },
+  "heat_state": "NORMAL",
+  "last_request_age_seconds": 2028.0,
+  "last_requested_source_sha": "9a2d6464d2ca24b008d0d656b219cc518249b4891a31e53f258968ab85223962",
+  "latest_compass_source_packet_sha256": "9a2d6464d2ca24b008d0d656b219cc518249b4891a31e53f258968ab85223962",
+  "protective_bypass": true,
+  "reason": "MATERIAL_REASSESSMENT_REQUIRED",
+  "request_retry_seconds": 1200,
+  "scheduled_slot_proximity_seconds": 1800,
+  "seconds_to_next_scheduled_compass": 1868.0,
+  "source_packet_sha256": "15a95ed904aba741a81f87896b354bb35d68d5582369f8e3f2c07d97fb717dba",
+  "suppressed_cause_codes": []
+}

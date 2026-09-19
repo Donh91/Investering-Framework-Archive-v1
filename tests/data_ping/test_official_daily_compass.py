@@ -11,6 +11,7 @@ from scripts.data_ping.native_handlekompas import (
     OFFICIAL_AUTHORITY,
     build_official_compass,
     build_public_projection,
+    protection_tracker,
     write_official_compass,
 )
 
@@ -94,6 +95,7 @@ class OfficialDailyCompassTest(unittest.TestCase):
     def test_required_horizons_and_ladder_order(self):
         with tempfile.TemporaryDirectory() as tmp:
             out = self.build(tmp)
+            self.assertEqual(out["schema_version"], 2)
             self.assertEqual(tuple(out["horizons"].keys()), HORIZON_ORDER)
             self.assertEqual(tuple(row["segment"] for row in out["capitalization_ladder"]), CAPITALIZATION_ORDER)
             self.assertEqual(out["authority"], OFFICIAL_AUTHORITY)
@@ -151,6 +153,92 @@ class OfficialDailyCompassTest(unittest.TestCase):
             self.assertEqual(out["market_now"]["regime"], "PREPARE")
             self.assertEqual(out["market_now"]["directional_state"], "MIXED")
 
+    def test_weekly_pullback_risk_projects_conservatively(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            out = self.build(
+                tmp,
+                breadth=0.60,
+                deltas={
+                    "btc_usdt": {"pct": 0.5},
+                    "eth_usdt": {"pct": 1.0},
+                    "ethbtc": {"pct": 0.6},
+                },
+            )
+            tracker = out["protection_tracker"]
+            self.assertEqual(tracker["contract"], "COMPASS_PROTECTION_TRACKER_v1")
+            self.assertEqual(tracker["pullback_risk_state"], "ELEVATED")
+            self.assertEqual(tracker["pullback_class"], "VOLATILE_CONSOLIDATION")
+            self.assertEqual(tracker["distribution_risk"], "NONE")
+            self.assertEqual(tracker["eta_window"], "UNKNOWN")
+            self.assertEqual(tracker["reentry_state"], "INACTIVE")
+            self.assertFalse(tracker["authority"]["portfolio_execution"])
+            self.assertFalse(tracker["authority"]["wallet_specific"])
+
+    def test_distribution_cycle_state_escalates_without_wallet_action(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            cn = {
+                "issue_number": 26,
+                "market_state": "Distribution regime.",
+                "base_case_this_week": "Distribution is active.",
+                "base_case_2_3_weeks": "Risk remains defensive.",
+                "compass_4_8_weeks": {
+                    "state": "DISTRIBUTION",
+                    "warning": "DISTRIBUTION_WARNING",
+                    "summary": "Distribution is active.",
+                },
+            }
+            out = build_official_compass(
+                self.auto(),
+                packet_path=Path("04_MARKET_LEARNING/entry_signals/auto_market_state/runs/test.json"),
+                cn_package=cn,
+                cn_binding={"status": "PASS"},
+                repo_root=Path(tmp),
+                issued_at=datetime(2026, 9, 16, 20, 17, tzinfo=timezone.utc),
+                run_reason="ON_DEMAND",
+            )
+            tracker = out["protection_tracker"]
+            self.assertEqual(tracker["pullback_risk_state"], "HIGH")
+            self.assertEqual(tracker["pullback_class"], "DISTRIBUTION")
+            self.assertEqual(tracker["distribution_risk"], "CONFIRMED")
+            self.assertEqual(tracker["confidence_quality"], "HIGH")
+            self.assertEqual(tracker["reentry_state"], "WAIT_FOR_FLUSH")
+
+    def test_reentry_review_requires_prior_reclaim_state_and_constructive_compass(self):
+        now = datetime(2026, 9, 16, 20, 17, tzinfo=timezone.utc)
+        auto = self.auto(
+            breadth=0.60,
+            deltas={
+                "btc_usdt": {"pct": 0.5},
+                "eth_usdt": {"pct": 1.0},
+                "ethbtc": {"pct": 0.6},
+            },
+        )
+        cn = {
+            "issue_number": 26,
+            "market_state": "Constructive transition.",
+            "base_case_this_week": "Constructive transition without an active pullback warning.",
+            "base_case_2_3_weeks": "Selective leadership may broaden.",
+        }
+        action = {"NOW": "PREPARE"}
+        market = {"directional_state": "BULLISH", "regime": "PREPARE"}
+        prior = {
+            "protection_tracker": {
+                "pullback_risk_state": "NORMAL",
+                "pullback_class": "UNKNOWN",
+                "distribution_risk": "NONE",
+                "eta_window": "UNKNOWN",
+                "confidence_quality": "MEDIUM",
+                "reentry_state": "WAIT_FOR_RECLAIM",
+                "last_material_change_at": "2026-09-16T18:00:00Z",
+            }
+        }
+        tracker = protection_tracker(
+            auto, action, market, cn, as_of=now, prior_compass=prior
+        )
+        self.assertEqual(tracker["pullback_risk_state"], "NORMAL")
+        self.assertEqual(tracker["reentry_state"], "REVIEW")
+        self.assertIn("not an automatic buy", tracker["reentry_message"])
+
     def test_public_projection_does_not_leak_internal_bindings_or_threshold_contract(self):
         with tempfile.TemporaryDirectory() as tmp:
             out = self.build(tmp)
@@ -158,6 +246,10 @@ class OfficialDailyCompassTest(unittest.TestCase):
             self.assertNotIn("source_bindings", public)
             self.assertNotIn("evidence_snapshot", public)
             self.assertNotIn("native_action_contract", public)
+            self.assertEqual(public["protection_tracker"]["contract"], "COMPASS_PROTECTION_TRACKER_v1")
+            self.assertFalse(public["protection_tracker"]["authority"]["wallet_specific"])
+            self.assertFalse(any(key in public["protection_tracker"] for key in ("wallet_address", "holdings", "positions", "portfolio_actions")))
+            self.assertNotRegex(json.dumps(public["protection_tracker"]), r"0x[a-fA-F0-9]{8,}")
             for row in public["capitalization_ladder"]:
                 self.assertNotIn("upgrade_trigger", row)
                 self.assertNotIn("deterioration_trigger", row)
@@ -284,6 +376,37 @@ class OfficialDailyCompassTest(unittest.TestCase):
             self.assertNotEqual(second["compass_id"], first["compass_id"])
             pointer = json.loads((root / "LATEST_COMPASS.json").read_text())
             self.assertEqual(pointer["source_packet_sha256"], "owner-packet-b")
+
+    def test_schema_migration_same_source_creates_new_immutable_freeze(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "official"
+            current = self.build(
+                tmp,
+                run_reason="ON_DEMAND",
+                issued_at=datetime(2026, 9, 16, 20, 17, tzinfo=timezone.utc),
+                packet_sha="same-owner-packet",
+            )
+            legacy = json.loads(json.dumps(current))
+            legacy["schema_version"] = 1
+            legacy.pop("protection_tracker", None)
+            legacy_identity = "same-owner-packet|2026-09-16|ON_DEMAND"
+            legacy["compass_id"] = "CMP-20260916-" + hashlib.sha256(legacy_identity.encode()).hexdigest()[:12]
+            legacy_payload = {k: v for k, v in legacy.items() if k != "compass_sha256"}
+            legacy["compass_sha256"] = hashlib.sha256(
+                (json.dumps(legacy_payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False, allow_nan=False) + "\n").encode()
+            ).hexdigest()
+
+            first = write_official_compass(legacy, root)
+            second = write_official_compass(current, root)
+
+            self.assertEqual(first["status"], "WRITTEN")
+            self.assertEqual(second["status"], "WRITTEN")
+            self.assertNotEqual(first["compass_id"], second["compass_id"])
+            self.assertNotEqual(first["path"], second["path"])
+            pointer = json.loads((root / "LATEST_COMPASS.json").read_text())
+            self.assertEqual(pointer["compass_id"], current["compass_id"])
+            published = json.loads(Path(second["public_path"]).read_text())
+            self.assertEqual(published["protection_tracker"]["contract"], "COMPASS_PROTECTION_TRACKER_v1")
 
     def test_existing_freeze_repairs_derived_projection_and_pointers(self):
         with tempfile.TemporaryDirectory() as tmp:
