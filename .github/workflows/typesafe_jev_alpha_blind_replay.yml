@@ -12,6 +12,7 @@ jobs:
     timeout-minutes: 5
     env:
       TYPESAFE_API_KEY: ${{ secrets.TYPESAFE_API_KEY }}
+      PYTHONPATH: ${{ github.workspace }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
