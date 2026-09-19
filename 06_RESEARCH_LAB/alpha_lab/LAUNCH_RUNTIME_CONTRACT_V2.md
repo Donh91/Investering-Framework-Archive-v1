@@ -22,21 +22,27 @@ Before an exact first-party CA is available, the strongest permitted state is CA
 
 IDENTITY_VERIFIED requires:
 1. exact chain;
-2. exact CA from a pre-frozen first-party publication surface or equivalent canonical primary evidence;
-3. canonical on-chain existence/provenance for that exact CA;
-4. no unresolved same-symbol/same-name collision;
-5. healthy source/transport evidence.
+2. publication surface state AUTHENTICATED_FIRST_PARTY under the existing MEME_ALPHA_RUNTIME_POLICY_v1 source-authentication gate, including independently authenticated control roots and structured TOKEN_CA_OWNERSHIP provenance when applicable;
+3. exact CA from that pre-frozen authenticated first-party publication surface or equivalent canonical primary evidence;
+4. canonical on-chain existence/provenance for that exact CA;
+5. no unresolved same-symbol/same-name collision;
+6. healthy source/transport evidence.
+
+A surface that merely looks official, uses the right ticker/name, or publishes a live exact CA cannot satisfy IDENTITY_VERIFIED until first-party control is authenticated. Unresolved ownership is CANDIDATE/DEGRADED, not verified.
 
 No fuzzy/ticker/name-only promotion. UNKNOWN never passes.
 
 ## Deciding experiment: E3 delta_publish
 
 For every eligible launch, freeze before T0:
-- exact first-party publication surface;
-- surface/content hash and frozen_at;
+- exact authenticated first-party publication surface;
+- surface/control-root evidence, content hash and frozen_at;
 - external benchmark definition;
+- numeric external_edge_budget_minutes, immutable for that preregistration;
 - expected chain/venue when known;
 - origin and eligibility.
+
+The frozen E3 row must satisfy the registered ALPHA_LAB_PROSPECTIVE_EDGE_EXPERIMENTS_v1 contract, including first_party_surface_url, first_party_surface_content_sha256, external_benchmark_definition_sha256 and external_edge_budget_minutes. Missing budget or unresolved first-party authentication fails closed before observation begins.
 
 Record:
 - Tpre: first eligible prelaunch evidence;
@@ -53,7 +59,7 @@ Do not fabricate sub-second T0 when chain timestamps are second-granular. Tdeliv
 
 Target >=30 genuinely pre-frozen eligible launches.
 
-The VERIFIED-before-public thesis is killed/re-scoped if the preregistered E3 rule concludes median delta_publish is worse than the external-edge budget. No post-hoc surface substitution or exclusion repair.
+The VERIFIED-before-public thesis is killed/re-scoped if the preregistered E3 rule concludes median delta_publish is worse than the frozen external-edge budget. No post-hoc budget change, surface substitution or exclusion repair.
 
 ## Cursor and transport integrity
 
@@ -76,6 +82,8 @@ The terminal SHADOW-04 result from 2026-09-19 remains FAIL because its preregist
 
 The minimum alert path, if later justified prospectively, is:
 CANDIDATE_RANKED -> PRIMARY_PUBLICATION_SEEN -> IDENTITY_VERIFIED -> ALERT_CREATED.
+
+PRIMARY_PUBLICATION_SEEN means content was observed on the pre-frozen surface. It does not by itself authenticate ownership or authorize IDENTITY_VERIFIED.
 
 Wallets, holders, MC/FDV, narrative and R/R are enrichment and must not delay minimum identity verification.
 
