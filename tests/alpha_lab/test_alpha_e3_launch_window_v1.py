@@ -10,3 +10,8 @@ def test_e3_collector_is_bounded_and_fail_closed():
     assert "OVERLAP=5" in s
     assert "--max-seconds" in s
     assert "published_ca_candidates" in s
+    assert "E3_PREREG_INVALID" in s
+    assert "AUTHENTICATED_FIRST_PARTY" in s
+    assert "external_edge_budget_minutes" in s
+    assert "content_observed_at_utc" in s
+    assert "last_safe_head" in s
