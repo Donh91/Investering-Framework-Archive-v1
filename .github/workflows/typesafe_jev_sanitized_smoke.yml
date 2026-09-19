@@ -1,0 +1,38 @@
+name: TypeSafe Jev Sanitized Smoke
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  jev-smoke:
+    name: Jev sanitized connectivity test
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      TYPESAFE_API_KEY: ${{ secrets.TYPESAFE_API_KEY }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install pinned TypeSafe SDK
+        run: python -m pip install --disable-pip-version-check "typesafe-sdk==0.7.0"
+
+      - name: Verify secret is present without printing it
+        shell: bash
+        run: |
+          if [ -z "$TYPESAFE_API_KEY" ]; then
+            echo "::error::TYPESAFE_API_KEY is missing."
+            exit 2
+          fi
+          echo "TYPESAFE_API_KEY is available to the job."
+
+      - name: Run sanitized Choice Score Noul smoke
+        run: python 07_PROMPTS_AND_AGENTS/typesafe_jev/smoke/jev_sanitized_smoke.py

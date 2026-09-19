@@ -14,9 +14,7 @@ Materiality reuses existing framework semantics:
 
 A heat episode triggers once, then rearms after NORMAL. Action/health/ladder
 changes are not suppressed by the heat episode. Same-source dispatches are
-deduplicated. If required owner freshness is stale, this watcher requests a
-fresh Hourly Sequence first and defers Compass materiality until the canonical
-owner chain has rebuilt from fresh evidence.
+deduplicated.
 """
 from __future__ import annotations
 
@@ -195,32 +193,9 @@ def evaluate(
             "contract": CONTRACT,
             "evaluated_at_utc": nh.iso(now) if hasattr(nh, "iso") else now.isoformat().replace("+00:00", "Z"),
             "dispatch": False,
-            "upstream_refresh_required": False,
             "reason": "AUTO_STATE_SOURCE_SHA_MISSING",
             "heat_state": heat,
             "heat_detail": heat_detail,
-        }
-
-    owner_freshness = nh.owner_freshness(auto_state, now)
-    if str(owner_freshness.get("status") or "") != "PASS":
-        return {
-            "contract": CONTRACT,
-            "evaluated_at_utc": now.isoformat().replace("+00:00", "Z"),
-            "dispatch": False,
-            "upstream_refresh_required": True,
-            "reason": "UPSTREAM_OWNER_FRESHNESS_STALE",
-            "source_packet_sha256": source_sha,
-            "latest_compass_source_packet_sha256": compass_source_sha or None,
-            "owner_freshness_status": owner_freshness.get("status"),
-            "owner_freshness_reasons": list(owner_freshness.get("reasons") or []),
-            "heat_state": heat,
-            "heat_detail": heat_detail,
-            "authority": {
-                "portfolio_execution": False,
-                "forecast_change": False,
-                "market_threshold_change": False,
-                "purpose": "REQUEST_FRESH_OWNER_EVIDENCE_BEFORE_COMPASS_REASSESSMENT",
-            },
         }
 
     if source_sha == compass_source_sha:
@@ -228,7 +203,6 @@ def evaluate(
             "contract": CONTRACT,
             "evaluated_at_utc": now.isoformat().replace("+00:00", "Z"),
             "dispatch": False,
-            "upstream_refresh_required": False,
             "reason": "LATEST_COMPASS_ALREADY_BINDS_CURRENT_OWNER_PACKET",
             "source_packet_sha256": source_sha,
             "heat_state": heat,
@@ -355,7 +329,6 @@ def evaluate(
         "contract": CONTRACT,
         "evaluated_at_utc": now.isoformat().replace("+00:00", "Z"),
         "dispatch": dispatch,
-        "upstream_refresh_required": False,
         "reason": reason,
         "cause_codes": causes if dispatch else [],
         "suppressed_cause_codes": suppressed,

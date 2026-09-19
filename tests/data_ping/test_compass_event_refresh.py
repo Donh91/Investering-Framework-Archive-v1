@@ -7,8 +7,8 @@ from scripts.data_ping.compass_event_refresh import evaluate, heat_state
 NOW = datetime(2026, 9, 18, 16, 0, tzinfo=timezone.utc)
 
 
-def auto_state(*, source_sha="new-source", breadth=0.60, ethbtc=0.031, validation="PASS", fresh_minutes=10):
-    fresh=(NOW-timedelta(minutes=fresh_minutes)).isoformat().replace("+00:00","Z")
+def auto_state(*, source_sha="new-source", breadth=0.60, ethbtc=0.031, validation="PASS"):
+    fresh=(NOW-timedelta(minutes=10)).isoformat().replace("+00:00","Z")
     return {
         "packet_sha256": source_sha,
         "packet_generated_at_utc": fresh,
@@ -90,16 +90,7 @@ class CompassEventRefreshTests(unittest.TestCase):
         a=auto_state(source_sha="same")
         out=decision(auto=a, latest=compass(source_sha="same"), entry_latest=entry(temp="HOT", btc=9))
         self.assertFalse(out["dispatch"])
-        self.assertFalse(out["upstream_refresh_required"])
         self.assertEqual(out["reason"], "LATEST_COMPASS_ALREADY_BINDS_CURRENT_OWNER_PACKET")
-
-    def test_stale_owner_evidence_requests_upstream_recovery_before_same_source_noop(self):
-        a=auto_state(source_sha="same", fresh_minutes=240)
-        out=decision(auto=a, latest=compass(source_sha="same"))
-        self.assertFalse(out["dispatch"])
-        self.assertTrue(out["upstream_refresh_required"])
-        self.assertEqual(out["reason"], "UPSTREAM_OWNER_FRESHNESS_STALE")
-        self.assertTrue(out["owner_freshness_reasons"])
 
     def test_action_change_dispatches(self):
         out=decision(latest=compass(action="HOLD_WAIT"))
