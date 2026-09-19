@@ -5,3 +5,26 @@
 .market-move-banner span{font-size:9px;font-weight:900;letter-spacing:.11em;color:#9a6700}
 .market-move-banner strong{margin-top:4px;font-size:16px;letter-spacing:-.02em;color:#5d4300}
 .market-move-banner small{margin-top:5px;font-size:10px;line-height:1.4;color:#7d6840}
+
+.protection-lane{margin:16px 0 8px;border:1px solid #dfe7f1;border-radius:20px;background:#fff;box-shadow:0 10px 30px rgba(15,31,56,.05);overflow:hidden}
+.protection-tab{padding:15px 17px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.protection-tab span{font-size:9px;font-weight:900;letter-spacing:.11em;color:#667085}
+.protection-tab strong{font-size:15px;letter-spacing:-.02em;color:#172033}
+.protection-tab small{margin-left:auto;color:#7b8798;font-size:9px}
+.protection-lane.quiet{box-shadow:none;background:#fbfcfe}
+.protection-lane.quiet .protection-tab{padding:11px 14px}
+.protection-lane.watch{border-color:#e9d8a6;background:#fffdf7}
+.protection-lane.watch .protection-tab span,.protection-lane.watch .protection-tab strong{color:#8a5a00}
+.protection-lane.danger{border-color:#efb7b7;background:#fff8f8}
+.protection-lane.danger .protection-tab span,.protection-lane.danger .protection-tab strong{color:#9f2d2d}
+.protection-lane.review{border-color:#b9dccb;background:#f7fcf9}
+.protection-lane.review .protection-tab span,.protection-lane.review .protection-tab strong{color:#146c43}
+.protection-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;border-top:1px solid #e8edf3;background:#e8edf3}
+.protection-grid>div{padding:12px 13px;background:rgba(255,255,255,.92)}
+.protection-grid span,.protection-drivers span,.protection-foot span{display:block;font-size:8px;font-weight:900;letter-spacing:.09em;color:#7b8798}
+.protection-grid strong{display:block;margin-top:4px;font-size:12px;line-height:1.3;color:#172033}
+.protection-drivers,.protection-foot{padding:12px 16px;border-top:1px solid #edf1f5}
+.protection-drivers p,.protection-foot p{margin:5px 0 0;color:#53647b;font-size:11px;line-height:1.45}
+.protection-foot small{display:block;margin-top:6px;color:#7b8798;font-size:10px;line-height:1.4}
+@media(max-width:760px){.protection-grid{grid-template-columns:1fr 1fr}.protection-grid>div:last-child{grid-column:1/3}.protection-tab small{width:100%;margin-left:0}}
+
