@@ -17,8 +17,8 @@ Replace the reviewed v1 supervisor design from PR #1131 with a governed state ma
 - First observed block and observation time must be after the frozen future-start boundary.
 - Failed collector runs consume a bounded retry budget instead of disappearing.
 - `SHADOW04_PASS`, `SHADOW04_FAIL` and `HALT_CRITICAL` are terminal.
-- Operational proof state is written only to `automation/alpha-proof-state-v1`, never directly to `main`.
-- The SHADOW-04 collector self-NOOPs after a terminal proof state.
+- Operational proof state is persisted as an immutable per-run Actions artifact, never written to repository branches.
+- A single major-gate terminal marker on #1087 makes the SHADOW-04 collector self-NOOP after PASS/FAIL/HALT.
 - Only major PASS/FAIL/HALT transitions are surfaced to #1087.
 - No scanner, score, portfolio action, autonomous buying, or canonical market effect is authorized.
 
@@ -32,7 +32,7 @@ A SHADOW-04 PASS proves only that the preregistered prospective collection survi
 
 ## Review defects explicitly closed from v1
 
-1. No direct push to main.
+1. No repository write at all from the supervisor.
 2. No non-main upstream artifact can advance a gate.
 3. `spec_sha256` is recomputed and bound to the exact freeze.
 4. Outcomes must occur after the frozen start.
