@@ -239,7 +239,9 @@ class OfficialDailyCompassTest(unittest.TestCase):
             self.assertNotIn("evidence_snapshot", public)
             self.assertNotIn("native_action_contract", public)
             self.assertEqual(public["protection_tracker"]["contract"], "COMPASS_PROTECTION_TRACKER_v1")
-            self.assertNotIn("wallet", json.dumps(public["protection_tracker"]).lower())
+            self.assertFalse(public["protection_tracker"]["authority"]["wallet_specific"])
+            self.assertFalse(any(key in public["protection_tracker"] for key in ("wallet_address", "holdings", "positions", "portfolio_actions")))
+            self.assertNotRegex(json.dumps(public["protection_tracker"]), r"0x[a-fA-F0-9]{8,}")
             for row in public["capitalization_ladder"]:
                 self.assertNotIn("upgrade_trigger", row)
                 self.assertNotIn("deterioration_trigger", row)
