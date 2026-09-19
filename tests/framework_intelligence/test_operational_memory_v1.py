@@ -1,8 +1,15 @@
 import importlib.util
+import hashlib
+import json
+import os
 import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
+
+from scripts.orchestration.build_framework_handoff_manifest import file_ref, repo_path
 
 SCRIPT = Path('scripts/framework_intelligence/operational_memory_v1.py')
 spec = importlib.util.spec_from_file_location('operational_memory_v1', SCRIPT)
@@ -72,6 +79,103 @@ class OperationalMemoryV1Test(unittest.TestCase):
             self.assertEqual(health['status'],'PASS')
             pf=mod.preflight(idx,'fix cycle navigator binding',['05_CYCLE_NAVIGATOR/a.txt'])
             self.assertTrue(pf['reusable_prior_work'])
+
+class HandoffPathRegressionTests(unittest.TestCase):
+    def test_symlink_cycles_are_omitted(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / 'self.json').symlink_to('self.json')
+            (root / 'first.json').symlink_to('second.json')
+            (root / 'second.json').symlink_to('first.json')
+            for name in ('self.json', 'first.json', 'second.json'):
+                with self.subTest(name=name):
+                    self.assertIsNone(file_ref(root / name, root))
+                    self.assertIsNone(repo_path(root, name))
+
+    def test_resolution_errors_are_rejected_before_read(self):
+        for error in (RuntimeError('symlink loop'), OSError('resolution unavailable')):
+            with self.subTest(error=type(error).__name__):
+                with patch.object(Path, 'resolve', side_effect=error), patch.object(
+                    Path, 'read_bytes', side_effect=AssertionError('must not read')
+                ):
+                    self.assertIsNone(file_ref(Path('LATEST.json'), Path('.')))
+                    self.assertIsNone(repo_path(Path('.'), 'LATEST.json'))
+
+    def test_relative_and_absolute_roots_have_identical_refs(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td).resolve()
+            target = root / 'evidence.json'
+            target.write_bytes(b'{"status":"PASS"}\n')
+            relative_root = Path(os.path.relpath(root))
+            resolved = repo_path(relative_root, target.name)
+            expected = {'path': target.name, 'bytes': target.stat().st_size,
+                        'sha256': hashlib.sha256(target.read_bytes()).hexdigest()}
+            self.assertEqual(file_ref(resolved, relative_root), expected)
+            self.assertEqual(file_ref(resolved, root), expected)
+            self.assertEqual(file_ref(relative_root / target.name, relative_root), expected)
+
+    def test_external_file_is_rejected_before_read(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td) / 'repo'
+            root.mkdir()
+            outside = Path(td) / 'outside.json'
+            outside.write_text('{}')
+            with patch.object(Path, 'read_bytes', side_effect=AssertionError('external read')):
+                self.assertIsNone(file_ref(outside, root))
+            self.assertIsNone(repo_path(root, '../outside.json'))
+            self.assertIsNone(repo_path(root, str(outside)))
+
+    def test_file_symlink_escape_is_rejected_before_read(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td) / 'repo'
+            root.mkdir()
+            outside = Path(td) / 'outside.json'
+            outside.write_text('{}')
+            link = root / 'evidence.json'
+            link.symlink_to(outside)
+            with patch.object(Path, 'read_bytes', side_effect=AssertionError('external read')):
+                self.assertIsNone(file_ref(link, root))
+            self.assertIsNone(repo_path(root, link.name))
+
+    def test_directory_symlink_escape_is_rejected(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td) / 'repo'
+            root.mkdir()
+            outside = Path(td) / 'outside'
+            outside.mkdir()
+            (root / 'escape').symlink_to(outside, target_is_directory=True)
+            self.assertIsNone(repo_path(root, 'escape/evidence.json'))
+
+    def test_missing_and_directory_refs_are_absent(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            self.assertIsNone(file_ref(root / 'missing.json', root))
+            self.assertIsNone(file_ref(root, root))
+
+    def test_production_cli_dot_root_with_frozen_week(self):
+        script = Path('scripts/orchestration/build_framework_handoff_manifest.py').resolve()
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            week = 'research/master_monday_preflight/frozen/2026/W37'
+            frozen = root / week
+            frozen.mkdir(parents=True)
+            (frozen / 'WEEKLY_EVIDENCE_FREEZE.json').write_text('{}')
+            (frozen / 'MASTER_MONDAY_GAP_FILL_PACKAGE.json').write_text('{}')
+            pointer = root / 'research/master_monday_preflight/LATEST_MASTER_MONDAY_FREEZE_POINTER.json'
+            pointer.write_text(json.dumps({'week_dir': week}))
+            outputs = []
+            for i, repo_root in enumerate(('.', str(root))):
+                output = root / f'out-{i}.json'
+                result = subprocess.run([sys.executable, '-B', str(script), '--repo-root',
+                                         repo_root, '--output', str(output)], cwd=root,
+                                        capture_output=True, text=True)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                doc = json.loads(output.read_text())
+                doc.pop('generated_at_utc')
+                outputs.append(doc)
+            self.assertEqual(outputs[0], outputs[1])
+            self.assertIn('WEEKLY_EVIDENCE_FREEZE.json', json.dumps(outputs[0]))
+
 
 if __name__ == '__main__':
     unittest.main()

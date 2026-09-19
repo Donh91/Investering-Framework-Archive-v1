@@ -1,0 +1,36 @@
+{
+  "allowed_change_scope": [
+    ".github/workflows/framework-learning-supervisor.yml",
+    "directly related scripts and tests"
+  ],
+  "branch": "agent/operational-memory-retrieval-v1-20260915",
+  "clean_noop_condition": "The finding is absent from fresh health, is non-actionable under verified lifecycle semantics, or the target workflow has been superseded or retired.",
+  "contract": "REMEDIATION_TRANSITION_RECEIPT_v1",
+  "escalation_condition": "Escalate to the framework owner if resolution requires market gates, model weights, canonical authority, portfolio logic, API budget, or new policy semantics.",
+  "finding": "LATEST_RUN_FAILED",
+  "forbidden_changes": [
+    "market gates",
+    "model weights",
+    "canonical authority",
+    "portfolio logic"
+  ],
+  "latest_run_id": 35320152173,
+  "objective": "Resolve LATEST_RUN_FAILED for framework-learning-supervisor.yml with the smallest bounded code change that satisfies the existing acceptance gates.",
+  "post_fix_gate": "3_SUCCESSFUL_EXPECTED_RUNS",
+  "pr_number": 1006,
+  "precondition": "Fresh Automation Production Health still contains signature 6527da8c9acf543d83c1 for framework-learning-supervisor.yml/LATEST_RUN_FAILED, and verified lifecycle state does not make the finding non-actionable.",
+  "receipt_sha256": "8589ed5f7f37afaff76e36cfbdc51fe91930544b0ed3ba5f956fd1525b19da54",
+  "recorded_at_utc": "2026-09-18T20:20:48Z",
+  "signature": "6527da8c9acf543d83c1",
+  "source_health_generated_at_utc": "2026-09-18T18:35:15.158500Z",
+  "state": "IN_REMEDIATION",
+  "stop_condition": "Stop without code changes if the precondition fails, the finding cannot be reproduced from scoped evidence, or the required fix exceeds allowed change scope.",
+  "success_evidence": [
+    "workflow job logs",
+    "reproduction or repeated identical signature",
+    "positive and negative acceptance tests",
+    "3_SUCCESSFUL_EXPECTED_RUNS"
+  ],
+  "task_contract_sha256": "441cde774aca8184ee4012a8a00a5f2962d388057665b2a81b66bced91cbc22d",
+  "workflow": "framework-learning-supervisor.yml"
+}

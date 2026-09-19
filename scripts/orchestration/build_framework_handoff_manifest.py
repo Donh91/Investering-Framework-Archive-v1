@@ -17,6 +17,14 @@ def load(path: Path) -> dict[str, Any] | None:
 
 
 def file_ref(path: Path, root: Path) -> dict[str, Any] | None:
+    # Pointer targets are resolved, while --repo-root may still be relative.
+    # Check containment before reading bytes, including leaf symlink targets.
+    try:
+        path, root = path.resolve(), root.resolve()
+    except (RuntimeError, OSError):
+        return None
+    if not path.is_relative_to(root):
+        return None
     if not path.exists() or not path.is_file():
         return None
     raw = path.read_bytes()
@@ -29,8 +37,11 @@ def repo_path(root: Path, raw: Any) -> Path | None:
     candidate = Path(raw)
     if candidate.is_absolute():
         return None
-    root_resolved = root.resolve()
-    resolved = (root / candidate).resolve()
+    try:
+        root_resolved = root.resolve()
+        resolved = (root / candidate).resolve()
+    except (RuntimeError, OSError):
+        return None
     if resolved != root_resolved and root_resolved not in resolved.parents:
         return None
     return resolved

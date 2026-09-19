@@ -1,0 +1,36 @@
+{
+  "allowed_change_scope": [
+    ".github/workflows/framework-learning-supervisor.yml",
+    "directly related scripts and tests"
+  ],
+  "branch": "agent/operational-memory-retrieval-v1-20260915",
+  "clean_noop_condition": "The finding is absent from fresh health, is non-actionable under verified lifecycle semantics, or the target workflow has been superseded or retired.",
+  "contract": "REMEDIATION_TRANSITION_RECEIPT_v1",
+  "escalation_condition": "Escalate to the framework owner if resolution requires market gates, model weights, canonical authority, portfolio logic, API budget, or new policy semantics.",
+  "finding": "REPEATED_CONSECUTIVE_FAILURES",
+  "forbidden_changes": [
+    "market gates",
+    "model weights",
+    "canonical authority",
+    "portfolio logic"
+  ],
+  "latest_run_id": 35320152173,
+  "objective": "Resolve REPEATED_CONSECUTIVE_FAILURES for framework-learning-supervisor.yml with the smallest bounded code change that satisfies the existing acceptance gates.",
+  "post_fix_gate": "3_SUCCESSFUL_EXPECTED_RUNS",
+  "pr_number": 1006,
+  "precondition": "Fresh Automation Production Health still contains signature e329b0611357d0018a08 for framework-learning-supervisor.yml/REPEATED_CONSECUTIVE_FAILURES, and verified lifecycle state does not make the finding non-actionable.",
+  "receipt_sha256": "f6512abc3aca11e0d0def5a0248d2d6023813de6a4480ddbf014013c6c12f901",
+  "recorded_at_utc": "2026-09-18T20:20:50Z",
+  "signature": "e329b0611357d0018a08",
+  "source_health_generated_at_utc": "2026-09-18T18:35:15.158500Z",
+  "state": "IN_REMEDIATION",
+  "stop_condition": "Stop without code changes if the precondition fails, the finding cannot be reproduced from scoped evidence, or the required fix exceeds allowed change scope.",
+  "success_evidence": [
+    "workflow job logs",
+    "reproduction or repeated identical signature",
+    "positive and negative acceptance tests",
+    "3_SUCCESSFUL_EXPECTED_RUNS"
+  ],
+  "task_contract_sha256": "e424a0f942ca388cfcdcfa01d6f6306a5ffd07bac9b56b81f0d6424335f5b8c6",
+  "workflow": "framework-learning-supervisor.yml"
+}
