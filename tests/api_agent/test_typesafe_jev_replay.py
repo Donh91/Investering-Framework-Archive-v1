@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import unittest
 
-from scripts.api_agent.meme_alpha_prospective import freeze_shadow_observation
+from scripts.api_agent.meme_alpha_prospective import freeze_shadow_observation, stable_hash
 from scripts.api_agent.typesafe_jev_replay import (
     build_blind_state,
     counterfactual_route,
