@@ -159,7 +159,9 @@ jobs:
           assert p['protection_tracker']['contract']=='COMPASS_PROTECTION_TRACKER_v1'
           assert p['protection_tracker']['authority']['portfolio_execution'] is False
           assert p['protection_tracker']['authority']['wallet_specific'] is False
-          assert 'wallet' not in json.dumps(p['protection_tracker']).lower()
+          protection_text=json.dumps(p['protection_tracker']).lower()
+          assert not any(k in p['protection_tracker'] for k in ('wallet_address','holdings','positions','portfolio_actions'))
+          assert not __import__('re').search(r'0x[a-f0-9]{8,}', protection_text)
           print('OFFICIAL_COMPASS_VALID', f['compass_id'], f['data_status'], p['protection_tracker']['pullback_risk_state'], p['protection_tracker']['reentry_state'])
           PY
       - name: Commit with remote readback proof

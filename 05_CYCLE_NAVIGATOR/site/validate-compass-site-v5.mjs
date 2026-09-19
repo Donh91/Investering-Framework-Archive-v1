@@ -26,7 +26,9 @@ if(!index.includes('./compass-product-v5.js')) throw Error('Compass renderer not
 for(const token of ['MARKET COMPASS','NEXT 12 HOURS','NEXT 1–3 DAYS','NEXT 5–7 DAYS','ALTCOIN ACTION · OFFICIAL COMPASS','Bitcoin → microcaps','CURRENT POSITION','NEXT IF CONFIRMED','NEXT WINDOW','Time horizon: now → 5–7 days.','ROTATION POSITION','EXPECTED WINDOW','08:17 / 20:17 CPH','nextCompassAt','MARKET MOVE DETECTED','Compass reassessment in progress','NEXT SCHEDULED COMPASS','event refresh can publish earlier','PROTECTION & RE-ENTRY','PULLBACK RISK','RE-ENTRY','portfolio actions stay private']) if(!renderer.includes(token)) throw Error(`renderer missing ${token}`);
 if(/HANDLEKOMPAS|MASTER MONDAY/.test(renderer)) throw Error('internal product language leaked');
 if(/source_bindings|evidence_snapshot/.test(JSON.stringify(compass))) throw Error('private Compass evidence leaked');
-if(/wallet|0x[a-f0-9]{8,}/i.test(JSON.stringify(compass.protection_tracker||{}))) throw Error('wallet/private portfolio data leaked into protection tracker');
+const protectionText=JSON.stringify(compass.protection_tracker||{});
+for(const key of ['wallet_address','holdings','positions','portfolio_actions']) if(Object.prototype.hasOwnProperty.call(compass.protection_tracker||{},key)) throw Error(`private protection field leaked: ${key}`);
+if(/0x[a-f0-9]{8,}/i.test(protectionText)) throw Error('wallet address leaked into protection tracker');
 if(compass.protection_tracker?.authority?.portfolio_execution!==false) throw Error('protection tracker execution authority leak');
 if(/source_packet_sha256|heat_detail|market_snapshot/.test(JSON.stringify(event))) throw Error('private event evidence leaked');
 console.log(JSON.stringify({status:'PASS',compass_id:compass.compass_id,data_status:compass.data_status,altcoin_action:compass.horizons?.CYCLE_ALTCOINS_3_8W?.action_posture||null,pullback_risk:compass.protection_tracker?.pullback_risk_state||null,reentry_state:compass.protection_tracker?.reentry_state||null,rotation_position_ui:true}));
