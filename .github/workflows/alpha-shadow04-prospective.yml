@@ -19,15 +19,34 @@ jobs:
     timeout-minutes: 150
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Stop after terminal prospective PASS
+        id: terminal
+        shell: bash
+        run: |
+          set -euo pipefail
+          BRANCH=automation/alpha-proof-state-v1
+          if git fetch origin "$BRANCH:refs/remotes/origin/$BRANCH" 2>/dev/null; then
+            if git show "origin/$BRANCH:06_RESEARCH_LAB/alpha_lab/proof_state.json" > /tmp/proof_state.json 2>/dev/null; then
+              if [ "$(jq -r '.state // ""' /tmp/proof_state.json)" = "SHADOW04_PASS" ]; then
+                echo "skip=true" >> "$GITHUB_OUTPUT"
+                echo "SHADOW04_ALREADY_ADJUDICATED_PASS"
+                exit 0
+              fi
+            fi
+          fi
+          echo "skip=false" >> "$GITHUB_OUTPUT"
       - name: Prospective freeze and capture 1000 future launches
+        if: steps.terminal.outputs.skip != 'true'
         run: |
           python3 06_RESEARCH_LAB/alpha_lab/tools/alpha_lab_shadow04_prospective_v1.py --launches 1000 --max-seconds 7200
       - name: Evidence summary
-        if: always()
+        if: always() && steps.terminal.outputs.skip != 'true'
         run: |
           for f in shadow04_freeze.json shadow04_result.json; do [ -f "$f" ] && cat "$f" || true; done
       - uses: actions/upload-artifact@v4
-        if: always()
+        if: always() && steps.terminal.outputs.skip != 'true'
         with:
           name: alpha-shadow04-prospective-${{ github.run_id }}
           path: |
