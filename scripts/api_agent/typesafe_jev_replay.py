@@ -35,9 +35,9 @@ def _verified_unsigned_observation(observation: dict[str, Any]) -> dict[str, Any
 
 def build_blind_state(observation: dict[str, Any]) -> dict[str, Any]:
     """Verify frozen input, then reject outcome leakage before constructing research-only state."""
-    unsigned = _verified_unsigned_observation(observation)
-    if _contains_forbidden_key(unsigned):
+    if _contains_forbidden_key(observation):
         raise ValueError("OUTCOME_LEAKAGE_DETECTED")
+    unsigned = _verified_unsigned_observation(observation)
     cutoff = str(observation.get("cutoff_utc", ""))
     if not cutoff:
         raise ValueError("CUTOFF_REQUIRED")
