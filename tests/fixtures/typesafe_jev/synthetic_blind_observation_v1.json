@@ -1,0 +1,40 @@
+{
+  "contract": "MEME_ALPHA_G2_G3_SHADOW_OBSERVATION_v1",
+  "identity": {
+    "chain": "solana",
+    "token_id": "SyntheticBlindReplay111111111111111111111111111",
+    "token_origin_utc": "2026-09-19T09:00:00Z"
+  },
+  "cutoff_minutes": 5,
+  "cutoff_utc": "2026-09-19T09:05:00Z",
+  "collector_status": "ACTIVE",
+  "data_state": "READY",
+  "features": [
+    {
+      "feature_name": "liquidity_usd",
+      "feature_value_at_cutoff": 75000,
+      "feature_effective_at_utc": "2026-09-19T09:04:00Z",
+      "source_observed_at_utc": "2026-09-19T09:04:30Z",
+      "source_or_schema_version": "synthetic-v1",
+      "source_record_or_event_identity": "synthetic:liquidity",
+      "mutability_class": "SNAPSHOT_PINNED"
+    },
+    {
+      "feature_name": "source_conflict",
+      "feature_value_at_cutoff": "UNKNOWN",
+      "feature_effective_at_utc": "2026-09-19T09:04:00Z",
+      "source_observed_at_utc": "2026-09-19T09:04:30Z",
+      "source_or_schema_version": "synthetic-v1",
+      "source_record_or_event_identity": "synthetic:source-conflict",
+      "mutability_class": "UNKNOWN"
+    }
+  ],
+  "wallet_roles": ["UNKNOWN"],
+  "authority": {
+    "portfolio_action": false,
+    "automatic_trading": false,
+    "position_size_output": false,
+    "live_alert_change": false
+  },
+  "observation_sha256": "synthetic-fixture-sha-not-authoritative"
+}
