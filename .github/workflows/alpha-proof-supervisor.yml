@@ -1,0 +1,112 @@
+name: Alpha Lab Proof Supervisor
+on:
+  workflow_run:
+    workflows: ["Alpha Lab SHADOW-04 Prospective"]
+    types: [completed]
+permissions:
+  contents: write
+  actions: write
+  issues: write
+concurrency:
+  group: alpha-proof-supervisor-state
+  cancel-in-progress: false
+jobs:
+  adjudicate:
+    if: github.event.workflow_run.head_branch == 'main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Load operational proof state
+        id: state
+        shell: bash
+        run: |
+          set -euo pipefail
+          STATE_BRANCH=automation/alpha-proof-state-v1
+          if git fetch origin "$STATE_BRANCH:refs/remotes/origin/$STATE_BRANCH" 2>/dev/null; then
+            git show "origin/$STATE_BRANCH:06_RESEARCH_LAB/alpha_lab/proof_state.json" > /tmp/proof_state.json || cp 06_RESEARCH_LAB/alpha_lab/proof_state.json /tmp/proof_state.json
+          else
+            cp 06_RESEARCH_LAB/alpha_lab/proof_state.json /tmp/proof_state.json
+          fi
+          cp /tmp/proof_state.json /tmp/proof_state.before.json
+          STATE=$(jq -r '.state // ""' /tmp/proof_state.json)
+          case "$STATE" in
+            SHADOW04_PASS|SHADOW04_FAIL|HALT_CRITICAL) echo "terminal=true" >> "$GITHUB_OUTPUT" ;;
+            *) echo "terminal=false" >> "$GITHUB_OUTPUT" ;;
+          esac
+      - name: Download successful SHADOW-04 artifact
+        if: steps.state.outputs.terminal != 'true' && github.event.workflow_run.conclusion == 'success'
+        uses: actions/download-artifact@v4
+        with:
+          name: alpha-shadow04-prospective-${{ github.event.workflow_run.id }}
+          path: /tmp/alpha-shadow04
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.event.workflow_run.id }}
+      - name: Deterministic adjudication
+        if: steps.state.outputs.terminal != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          ARGS=(--state /tmp/proof_state.json --upstream-conclusion "${{ github.event.workflow_run.conclusion }}" --upstream-head-sha "${{ github.event.workflow_run.head_sha }}")
+          [ -f /tmp/alpha-shadow04/shadow04_result.json ] && ARGS+=(--artifact /tmp/alpha-shadow04/shadow04_result.json)
+          [ -f /tmp/alpha-shadow04/shadow04_freeze.json ] && ARGS+=(--freeze /tmp/alpha-shadow04/shadow04_freeze.json)
+          python 06_RESEARCH_LAB/alpha_lab/tools/alpha_proof_supervisor_v2.py "${ARGS[@]}"
+      - name: Validate safety invariants
+        if: steps.state.outputs.terminal != 'true'
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          s=json.load(open('/tmp/proof_state.json'))
+          assert s.get('portfolio_execution') is False
+          assert s.get('canonical_effect') is False
+          assert s['next_action'] in {'WAIT','RETRY_SHADOW04','START_SHADOW07','HALT_CRITICAL'}
+          print('ALPHA_PROOF_SUPERVISOR_SAFE',s['state'],s['next_action'])
+          PY
+      - name: Persist state to isolated evidence branch
+        if: steps.state.outputs.terminal != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          STATE_BRANCH=automation/alpha-proof-state-v1
+          git config user.name framework-research-bot
+          git config user.email framework-research-bot@users.noreply.github.com
+          if git show-ref --verify --quiet "refs/remotes/origin/$STATE_BRANCH"; then
+            git switch -C "$STATE_BRANCH" "origin/$STATE_BRANCH"
+          else
+            git switch -c "$STATE_BRANCH"
+          fi
+          mkdir -p 06_RESEARCH_LAB/alpha_lab
+          cp /tmp/proof_state.json 06_RESEARCH_LAB/alpha_lab/proof_state.json
+          git add 06_RESEARCH_LAB/alpha_lab/proof_state.json
+          if ! git diff --cached --quiet; then
+            git commit -m "alpha: persist prospective proof state"
+            git push origin HEAD:"$STATE_BRANCH"
+          fi
+      - name: Bounded automatic retry
+        if: steps.state.outputs.terminal != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          NEXT=$(jq -r '.next_action' /tmp/proof_state.json)
+          if [ "$NEXT" = "RETRY_SHADOW04" ]; then
+            gh workflow run alpha-shadow04-prospective.yml --ref main
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Major-gate escalation only
+        if: steps.state.outputs.terminal != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          OLD=$(jq -r '.state // ""' /tmp/proof_state.before.json)
+          NEW=$(jq -r '.state // ""' /tmp/proof_state.json)
+          if [ "$NEW" != "$OLD" ] && { [ "$NEW" = "SHADOW04_PASS" ] || [ "$NEW" = "SHADOW04_FAIL" ] || [ "$NEW" = "HALT_CRITICAL" ]; }; then
+            NEXT=$(jq -r '.next_action' /tmp/proof_state.json)
+            gh issue comment 1087 --body "Alpha Lab proof transition: $OLD -> $NEW. NEXT_ACTION=$NEXT. Evidence state is on non-default branch automation/alpha-proof-state-v1. No capital or canonical authority."
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
