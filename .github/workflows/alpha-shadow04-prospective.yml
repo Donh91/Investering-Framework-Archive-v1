@@ -10,6 +10,7 @@ on:
       - '.github/workflows/alpha-shadow04-prospective.yml'
 permissions:
   contents: read
+  issues: read
 concurrency:
   group: alpha-shadow04-prospective
   cancel-in-progress: false
@@ -21,20 +22,17 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Stop after terminal prospective PASS
+      - name: Stop after terminal prospective adjudication
         id: terminal
         shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          BRANCH=automation/alpha-proof-state-v1
-          if git fetch origin "$BRANCH:refs/remotes/origin/$BRANCH" 2>/dev/null; then
-            if git show "origin/$BRANCH:06_RESEARCH_LAB/alpha_lab/proof_state.json" > /tmp/proof_state.json 2>/dev/null; then
-              if [ "$(jq -r '.state // ""' /tmp/proof_state.json)" = "SHADOW04_PASS" ]; then
-                echo "skip=true" >> "$GITHUB_OUTPUT"
-                echo "SHADOW04_ALREADY_ADJUDICATED_PASS"
-                exit 0
-              fi
-            fi
+          if gh api --paginate "repos/$GITHUB_REPOSITORY/issues/1087/comments?per_page=100" --jq '.[].body' | grep -q '^ALPHA_PROOF_TERMINAL:'; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "SHADOW04_ALREADY_TERMINAL"
+            exit 0
           fi
           echo "skip=false" >> "$GITHUB_OUTPUT"
       - name: Prospective freeze and capture 1000 future launches
