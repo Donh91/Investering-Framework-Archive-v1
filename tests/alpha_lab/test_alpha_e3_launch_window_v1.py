@@ -1,5 +1,4 @@
 from pathlib import Path
-import importlib.util
 
 P=Path("06_RESEARCH_LAB/alpha_lab/tools/alpha_e3_launch_window_v1.py")
 def test_e3_collector_is_bounded_and_fail_closed():
