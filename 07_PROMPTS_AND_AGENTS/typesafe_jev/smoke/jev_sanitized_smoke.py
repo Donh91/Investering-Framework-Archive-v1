@@ -70,7 +70,7 @@ def main() -> int:
             "probabilities": response.choices["category"].probabilities,
         },
         "material": {
-            "probability": response.nouls["material"].probability,
+            "probability": response.nouls["material"].noul,
         },
         "priority": {
             "score": response.scores["priority"].score,
