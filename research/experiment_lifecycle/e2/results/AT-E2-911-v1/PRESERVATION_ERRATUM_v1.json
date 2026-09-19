@@ -1,0 +1,44 @@
+{
+  "contract": "AUTO_TRADING_E2_ARTIFACT_PRESERVATION_ERRATUM_v1",
+  "experiment_id": "AT-E2-911-v1",
+  "issue": 911,
+  "invalidated_claim": {
+    "source_receipt": "PRESERVATION_RECEIPT_v1.json",
+    "claim": "byte-for-byte preservation of the GitHub Actions ZIP and materialized result.json",
+    "reason": "post-merge main readback disproved the byte-exact claim"
+  },
+  "observed_after_pr_974": {
+    "pr": 974,
+    "merge_commit_sha": "95ea096ab8685b0a5b74976d2ef421931455d7a6",
+    "repository_zip_size_bytes": 7521,
+    "source_zip_size_bytes": 26596,
+    "repository_result_size_bytes": 8478,
+    "source_result_size_bytes": 8479
+  },
+  "source_expected": {
+    "artifact_id": 10326688832,
+    "workflow_run_id": 34787756305,
+    "workflow_head_sha": "49f82e7316b0aab7447571d8ab6526196eaa1006",
+    "zip_sha256": "9c2e629fd8052041eb77e5dc9edd5e86271843461d3a60f261aa3e5e69669afb",
+    "result_json_sha256": "fbf5879f1c359cb16b74a0206d7c0ad067420b18be580cdbd720e187d0bb06b1",
+    "result_semantic_sha256": "53ad7e6b56a9ed24df2ca2285090c8d0967b3836d85a28f2c9e6779628a24168",
+    "request_sha256": "1903edb3d4cefcfeb4694c840fefeb11c2cb6bdfe34eb5cd65f50ed16ab01dc2"
+  },
+  "correction": {
+    "zip_path": "research/experiment_lifecycle/e2/results/AT-E2-911-v1/auto-trading-e2-911-v1-34787756305.zip",
+    "result_path": "research/experiment_lifecycle/e2/results/AT-E2-911-v1/result.json",
+    "method": "replace repository files with the exact source bytes already verified from the downloaded GitHub Actions artifact; verify branch readback before issuing a v2 receipt"
+  },
+  "cause": "WRITE_PATH_CAUSE_NOT_ASSERTED",
+  "authority": {
+    "adjudication": false,
+    "automatic_promotion": false,
+    "canonical_market_effect": false,
+    "model_weight_change": false,
+    "order_routing": false,
+    "portfolio_execution": false,
+    "threshold_change": false
+  },
+  "no_adjudication": true,
+  "status": "BYTE_PRESERVATION_CLAIM_INVALIDATED_CORRECTION_PENDING_VERIFIED_READBACK"
+}
