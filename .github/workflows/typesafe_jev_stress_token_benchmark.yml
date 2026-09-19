@@ -23,6 +23,8 @@ jobs:
   deterministic-stress:
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    env:
+      PYTHONPATH: ${{ github.workspace }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -30,11 +32,12 @@ jobs:
       - name: Run replay stress suite
         run: python tests/api_agent/test_typesafe_jev_stress.py
   live-jev:
+    env:
+      PYTHONPATH: ${{ github.workspace }}
+      TYPESAFE_API_KEY: ${{ secrets.TYPESAFE_API_KEY }}
     if: github.event_name == 'workflow_dispatch' && inputs.run_live_jev
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    env:
-      TYPESAFE_API_KEY: ${{ secrets.TYPESAFE_API_KEY }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
