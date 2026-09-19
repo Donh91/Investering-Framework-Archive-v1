@@ -1,0 +1,70 @@
+{
+  "contract": "JEV_SHADOW_PILOT_PREPARATION_V0",
+  "prepared_at_utc": "2026-09-19",
+  "status": "PREPARED_NOT_ACTIVE",
+  "authority": {
+    "production_routing": false,
+    "market_state": false,
+    "portfolio_action": false,
+    "trade_execution": false,
+    "canonical_signal_weight": false,
+    "repository_write": false
+  },
+  "credentials": {
+    "env_name": "TYPESAFE_API_KEY",
+    "allowed_locations": [
+      "GitHub Actions Secrets",
+      "approved runtime secret manager/workload identity"
+    ],
+    "repository_file_allowed": false,
+    "issue_or_pr_text_allowed": false
+  },
+  "upstream": {
+    "skill_repository": "typesafe-ai/skills",
+    "skill_path": "skills/typesafe-ai/SKILL.md",
+    "skill_blob_sha": "0109513f9656917dc93cbc5ecddfca465a53ce66",
+    "skill_license": "MIT",
+    "live_docs": "https://docs.typesafe.ai/llms.txt",
+    "current_model_at_preparation": "jev-1.13.0",
+    "alias_for_exploration": "jev-latest",
+    "calibrated_comparison_requires_version_pin": true,
+    "python_sdk_observed_version": "0.7.0",
+    "system_one_adapter_observed_version": "0.2.0"
+  },
+  "input_policy": {
+    "text_only": true,
+    "public_or_sanitized_for_first_pilot": true,
+    "restricted_provider_values": false,
+    "outcomes_hidden_during_replay": true,
+    "minimal_relevant_state": true
+  },
+  "decision_policy": {
+    "atomic_questions": true,
+    "batch_independent_questions": true,
+    "deterministic_math_and_dates": true,
+    "deterministic_permissions_and_hard_rules": true,
+    "uncertainty_routes_to_escalation_or_retention": true,
+    "thresholds_from_local_labeled_data_only": true
+  },
+  "logging_required": [
+    "contract_version",
+    "question_contract_version",
+    "model_returned",
+    "state_fingerprint",
+    "full_choice_or_score_distribution",
+    "noul_probability",
+    "confidence_when_available",
+    "route",
+    "input_tokens",
+    "output_tokens",
+    "latency_when_available",
+    "retry_count_when_available",
+    "observable_downstream_outcome"
+  ],
+  "activation_gate": "SKILL_QUALITY_GATE_PLUS_SHADOW_EVIDENCE",
+  "notes": [
+    "Typed output guarantees interface shape, not semantic correctness.",
+    "Jev 1.13 known jaggedness must be treated as a test plan, not ignored.",
+    "This contract is preparation only and creates no active engine."
+  ]
+}
