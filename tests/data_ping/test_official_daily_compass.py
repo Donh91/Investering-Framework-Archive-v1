@@ -155,7 +155,15 @@ class OfficialDailyCompassTest(unittest.TestCase):
 
     def test_weekly_pullback_risk_projects_conservatively(self):
         with tempfile.TemporaryDirectory() as tmp:
-            out = self.build(tmp)
+            out = self.build(
+                tmp,
+                breadth=0.60,
+                deltas={
+                    "btc_usdt": {"pct": 0.5},
+                    "eth_usdt": {"pct": 1.0},
+                    "ethbtc": {"pct": 0.6},
+                },
+            )
             tracker = out["protection_tracker"]
             self.assertEqual(tracker["contract"], "COMPASS_PROTECTION_TRACKER_v1")
             self.assertEqual(tracker["pullback_risk_state"], "ELEVATED")
