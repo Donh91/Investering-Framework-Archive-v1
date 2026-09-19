@@ -3,10 +3,9 @@ name: Alpha Lab E3 launch-window shadow
 on:
   workflow_dispatch:
     inputs:
-      surface_url:
-        description: Pre-frozen authenticated first-party CA publication surface
+      prereg_path:
+        description: Hash-bound E3 preregistration JSON frozen before T0
         required: true
-        default: https://sherwood.meme/
       max_seconds:
         description: Bounded observation window in seconds
         required: true
@@ -33,7 +32,7 @@ jobs:
         run: |
           mkdir -p artifacts
           python 06_RESEARCH_LAB/alpha_lab/tools/alpha_e3_launch_window_v1.py \
-            --surface "${{ inputs.surface_url }}" \
+            --prereg "${{ inputs.prereg_path }}" \
             --state artifacts/e3_state.json \
             --evidence artifacts/e3_observations.jsonl \
             --max-seconds "${{ inputs.max_seconds }}" \
