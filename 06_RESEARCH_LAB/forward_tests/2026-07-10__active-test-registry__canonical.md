@@ -402,6 +402,47 @@ authority: SHADOW_ONLY_RESEARCH_NON_CANONICAL
 
 T12 is a registration repair for the already implemented intraday execution research owner. It does not create a new engine, sensor, market state, action vocabulary, signal weight or portfolio authority. No branch-era QA artifact counts as prospective evidence. The first eligible row must be produced on canonical main after this registration and its validator are merged. `NO_EDGE` is an allowed abstention and is not counted as a directional hit. Evidence agreement is descriptive and may not be presented as calibrated probability.
 
+
+## T13 - Alpha Lab Prospective Edge Experiments E1/E3/E4
+
+```yaml
+test_id: ALPHA_LAB_PROSPECTIVE_EDGE_V1
+status: ACTIVE_REGISTRATION_REPAIR_PENDING_AUTOMATION
+canonical_exception: EXISTING_ALPHA_LAB_EXECUTION_PACKET_1134_REGISTRATION_REPAIR_APPROVED_2026_09_19
+question: Can the already-created Alpha Lab E1 disclosed-address/deployer, E3 delta-publish and E4 dev-buy OOS challengers survive prospective, leakage-safe falsification without creating a parallel scanner, scorer or ledger engine?
+parent_owner: ISSUE_1087
+execution_packet: ISSUE_1134
+required_fields:
+  - exact preregistration identity and spec hash
+  - frozen start/end before outcome
+  - source/code/eligibility/metric/benchmark/kill hashes
+  - provider identity plus requested/returned coverage and data health
+  - append-only eligibility/exclusion and observation identity
+  - exact private commit/path/hash binding for restricted rows
+  - machine verdict with UNKNOWN distinct from zero/absence
+rows_total: 0_POST_REGISTRATION
+valid_source_rows: 0
+valid_outcome_rows: 0
+divergence_days: 0
+benchmark: EXPERIMENT_SPECIFIC_FROZEN_BASELINE
+blocked_by:
+  - REGISTRATION_PR_NOT_MERGED
+  - PROOF_SUPERVISOR_V2_NOT_MERGED
+  - E1_E3_E4_PREREGISTRATIONS_NOT_YET_FROZEN
+next_review: AFTER_FIRST_VALID_ROW_AND_AT_EACH_MAJOR_GATE
+promotion_condition: no automatic promotion; each sub-experiment must satisfy its frozen prospective gate and then survive separate Research Lab red-team/governance review
+kill_condition: kill affected evidence on hindsight, frozen-field mutation, cohort-selection leakage, denominator mismatch, missing-to-zero conversion, unproven coverage or lineage break; E3 additionally kills VERIFIED-before-public after >=30 eligible rows when median delta_publish is worse than the frozen external-edge budget; E4 cannot promote from discovery sample and requires fresh OOS lift >=1.5x with uncertainty and healthy data
+owner: MEME_ALPHA_SUPERVISOR_WITH_PROSPECTIVE_EVIDENCE_LEDGER
+ledger_contract: 06_RESEARCH_LAB/alpha_lab/ALPHA_LAB_PROSPECTIVE_EDGE_EXPERIMENTS_v1.json
+validator_path: 06_RESEARCH_LAB/alpha_lab/tools/validate_alpha_prospective_edge_v1.py
+private_ledger_root: Donh91/secrets/private_research/memes_alpha/prospective_edge_v1/
+public_receipt_root: 06_RESEARCH_LAB/alpha_lab/prospective_edge_v1/receipts/
+authority: RESEARCH_ONLY_NO_PORTFOLIO_NO_TRADING_NO_AUTO_PROMOTION
+```
+
+T13 is a registration repair for the already-open #1134 child execution packet of #1087. It creates no new market engine, scanner, scorer, wallet sensor, forecast owner or portfolio authority. E2 remains HOLD. The public control plane stores only contracts and provider-value-free provenance receipts; restricted observation values remain in `Donh91/secrets`. A valid row is not proof of edge.
+
+
 ---
 
 ## Review cadence for relationship learning
