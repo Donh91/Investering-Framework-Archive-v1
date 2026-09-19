@@ -45,13 +45,13 @@ def main() -> int:
         ),
         "priority": Score(
             instructions="Score the urgency of human review.",
-            criteria={
-                1: "Routine and can wait.",
-                2: "Low urgency.",
-                3: "Normal review priority.",
-                4: "Prompt review is warranted.",
-                5: "Immediate review is warranted.",
-            },
+            criteria=[
+                "Routine and can wait.",
+                "Low urgency.",
+                "Normal review priority.",
+                "Prompt review is warranted.",
+                "Immediate review is warranted.",
+            ],
         ),
     }
 
