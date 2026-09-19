@@ -39,6 +39,19 @@ memes_alpha/2026-09-16__alpha-lab-tokens-moonshots-standing-mandate-v1__policy.m
 
 It expands the historical meme-only scope into **Alpha Lab - Tokens & Moonshots** and governs pre-outcome logging, live market-data integrity, adaptive wallet forensics, anti-hindsight discipline and later success/failure learning. Existing `memes_alpha` research remains evidence and procedure where compatible with that mandate.
 
+## TypeSafe / Jev shadow integration entrypoint
+
+For TypeSafe / Jev evaluation, source review, skill comparison or future shadow integration, start here:
+
+```text
+typesafe_jev/README.md
+typesafe_jev/2026-09-19__typesafe-skill-and-docs-audit-v1__source-note.md
+typesafe_jev/2026-09-19__jev-shadow-pilot-preparation-v1__forward-test.md
+typesafe_jev/JEV_SHADOW_CONTRACT_V0.json
+```
+
+The upstream TypeSafe skill is pinned as external source evidence under `08_SOURCE_MATERIAL/typesafe_jev/`. It is not an active repository-local skill and carries no framework, market, portfolio or write authority. Any future activation must pass the local Skill Quality Gate and normal branch/PR governance.
+
 ## Astra / successor model entrypoint
 
 ```text
