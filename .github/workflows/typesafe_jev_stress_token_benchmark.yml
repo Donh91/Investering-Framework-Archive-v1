@@ -1,0 +1,63 @@
+name: TypeSafe Jev Stress and Token Benchmark
+on:
+  pull_request:
+    paths:
+      - 'scripts/api_agent/typesafe_jev_*'
+      - 'tests/api_agent/test_typesafe_jev_stress.py'
+      - '.github/workflows/typesafe_jev_stress_token_benchmark.yml'
+  workflow_dispatch:
+    inputs:
+      run_live_jev:
+        description: 'Run live Jev canary'
+        required: true
+        default: false
+        type: boolean
+      run_sol_token_benchmark:
+        description: 'Run one bounded GPT-5.6 Sol API token benchmark'
+        required: true
+        default: false
+        type: boolean
+permissions:
+  contents: read
+jobs:
+  deterministic-stress:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      PYTHONPATH: ${{ github.workspace }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - name: Run replay stress suite
+        run: python tests/api_agent/test_typesafe_jev_stress.py
+  live-jev:
+    env:
+      PYTHONPATH: ${{ github.workspace }}
+      TYPESAFE_API_KEY: ${{ secrets.TYPESAFE_API_KEY }}
+    if: github.event_name == 'workflow_dispatch' && inputs.run_live_jev
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: pip install "typesafe-sdk==0.7.0"
+      - run: test -n "$TYPESAFE_API_KEY"
+      - name: Run live synthetic Jev replay
+        run: python scripts/api_agent/typesafe_jev_replay_runner.py --input tests/fixtures/typesafe_jev/synthetic_blind_observation_v1.json --output /tmp/prediction.json
+  sol-token-benchmark:
+    if: github.event_name == 'workflow_dispatch' && inputs.run_sol_token_benchmark
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      OPENAI_BENCH_MODEL: gpt-5.6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - name: Verify secret without printing it
+        run: test -n "$OPENAI_API_KEY"
+      - name: One-shot Sol token benchmark
+        run: python scripts/api_agent/openai_sol_token_benchmark.py
