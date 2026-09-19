@@ -24,6 +24,8 @@ assert s["source_observation_sha256"]==o["observation_sha256"]
 assert "authority" not in s
 assert s["blind_state_sha256"]==stable_hash({k:v for k,v in s.items() if k!="blind_state_sha256"})
 assert build_blind_state(o)["blind_state_sha256"]==s["blind_state_sha256"]
+x=deepcopy(o); x["observation_sha256"]="0"*64
+expect_error("forged-observation-hash",lambda:build_blind_state(x),"OBSERVATION_SHA256_MISMATCH")
 
 for key in ["outcome","future_price","ath","missed_winner_audit"]:
  x=deepcopy(o); x["nested"]={"a":[{"b":{key:1}}]}
@@ -43,12 +45,15 @@ assert counterfactual_route({"evidence_conflict":.8})=="FRONTIER_REVIEW"
 assert counterfactual_route({"deep_dive_value":.7})=="DEEP_DIVE"
 assert counterfactual_route({"material_evidence":.7})=="DEEP_DIVE"
 assert counterfactual_route({})=="RETAIN"
+for bad in (-0.01,1.01,float("nan"),float("inf")):
+ expect_error("invalid-probability",lambda bad=bad:counterfactual_route({"material_evidence":bad}),"INVALID_JUDGMENT_PROBABILITY")
 for vals in ({"material_evidence":0},{"material_evidence":1},{"evidence_conflict":1},{"frontier_review_need":1}):
  assert counterfactual_route(vals)!="DROP"
 
 p=freeze_challenger_prediction(blind_state=s,challenger="STRESS",question_contract_version="STRESS_V1",predictions={"route":"RETAIN"})
 assert all(v is False for v in p["authority"].values())
 expect_error("prediction leak",lambda:freeze_challenger_prediction(blind_state=s,challenger="STRESS",question_contract_version="STRESS_V1",predictions={"future_price":2}),"PREDICTION_CONTAINS_OUTCOME_FIELD")
+expect_error("forbidden-frozen-route",lambda:freeze_challenger_prediction(blind_state=s,challenger="STRESS",question_contract_version="STRESS_V1",predictions={"route":"DROP"}),"FORBIDDEN_REPLAY_ROUTE")
 
 # Size / irrelevant-detail stress, deterministic only. It proves hashing/validation behavior, not Jev intelligence.
 features=[]
@@ -57,4 +62,4 @@ for i in range(255):
  features.append(f)
 large=obs(features=features); large_state=build_blind_state(large)
 assert len(large_state["features"])==255
-print(json.dumps({"status":"PASS","contract":"JEV_REPLAY_STRESS_V1","checks":"leakage,mutability,time,unknown,route,authority,determinism,255-feature-size","large_state_sha256":large_state["blind_state_sha256"]},sort_keys=True))
+print(json.dumps({"status":"PASS","contract":"JEV_REPLAY_STRESS_V1","checks":"leakage,hash-integrity,mutability,time,unknown,probability-bounds,route,authority,determinism,255-feature-size","large_state_sha256":large_state["blind_state_sha256"]},sort_keys=True))
