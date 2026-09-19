@@ -1,9 +1,14 @@
-# Cycle Navigator #6 — recovered published X record
+# Cycle Navigator #6 — derived recovery note (raw post missing)
 
 Publication window: May 4–10, 2026
 Recovery date: 2026-09-16
-Source class: USER_SUPPLIED_ORIGINAL_X_TEXT
-Status: RECOVERED_ORIGINAL_PUBLICATION
+Source class: DERIVED_RECONSTRUCTION_WITHOUT_ORIGINAL_X_TEXT
+Status: RAW_POST_GAP_NOT_ORIGINAL_PUBLICATION
+
+The original CN #6 X post text has not been recovered. This legacy-path note
+preserves the recovery-thread reconstruction for audit only; it is not an
+original publication, forecast freeze or independently eligible source. The
+point-in-time score for CN #6 is sourced from the archived CN #7 scorecard.
 
 Published CN #5 evaluation:
 - BTC range: 84% — forecast 76.5K–83.5K, actual 75.4K–80.3K
@@ -12,7 +17,7 @@ Published CN #5 evaluation:
 - Rotation: 97%
 - Overall: 85%
 
-Frozen CN #6 forecast:
+Recovery-thread reconstruction of the CN #6 forecast (not an original freeze):
 - Phase: Early Bull, BTC-led; next Mid Bull; timing 2–4 weeks
 - Altcoin cycle: BTC Dominance Expansion; next Early Rotation; timing 2–5 weeks
 - BTC weekly: 79K–83.5K
@@ -23,4 +28,5 @@ Frozen CN #6 forecast:
 - 2–3 week BTC: 83K–92K
 - 8 week BTC: 90K–110K
 
-Historical rule: preserve as published. No retrospective rewrite.
+Historical rule: preserve as an explicitly derived audit note. Do not use this
+file as proof that the raw CN #6 publication or a frozen forecast was recovered.
