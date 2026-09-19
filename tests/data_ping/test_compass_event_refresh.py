@@ -50,8 +50,8 @@ def entry(*, temp="NORMAL", btc=1.0, eth=1.5, median=1.0):
     }
 
 
-def compass(*, source_sha="old-source", action="PREPARE", data_status="OK", issued_at=None):
-    return {
+def compass(*, source_sha="old-source", action="PREPARE", data_status="OK", issued_at=None, protection=None):
+    out = {
         "issued_at_utc": issued_at or (NOW-timedelta(hours=6)).isoformat().replace("+00:00","Z"),
         "source_bindings": {"auto_market_state": {"packet_sha256": source_sha}},
         "data_status": data_status,
@@ -66,6 +66,9 @@ def compass(*, source_sha="old-source", action="PREPARE", data_status="OK", issu
             {"segment": "MICROCAPS", "status": "HARD_WAIT"},
         ],
     }
+    if protection is not None:
+        out["protection_tracker"] = protection
+    return out
 
 
 def decision(**kwargs):
@@ -231,6 +234,80 @@ class CompassEventRefreshTests(unittest.TestCase):
         )
         self.assertTrue(out["dispatch"])
         self.assertTrue(out["protective_bypass"])
+
+    def test_protection_escalation_bypasses_cooldown(self):
+        a=auto_state()
+        latest=compass(
+            protection={
+                "pullback_risk_state": "NORMAL",
+                "pullback_class": "UNKNOWN",
+                "distribution_risk": "NONE",
+                "eta_window": "UNKNOWN",
+                "confidence_quality": "MEDIUM",
+                "reentry_state": "INACTIVE",
+                "last_material_change_at": (NOW-timedelta(hours=6)).isoformat().replace("+00:00","Z"),
+            }
+        )
+        out=evaluate(
+            auto_state=a,
+            auto_pointer={"packet_sha256": a["packet_sha256"]},
+            latest_compass=latest,
+            entry_latest=entry(),
+            prior_state={
+                "last_heat_state": "NORMAL",
+                "last_requested_source_sha": "previous-request",
+                "last_request_at_utc": (NOW-timedelta(hours=1)).isoformat().replace("+00:00","Z"),
+            },
+            cn_package={
+                "market_state": "Distribution regime.",
+                "base_case_this_week": "Distribution is active.",
+                "base_case_2_3_weeks": "Risk remains defensive.",
+                "compass_4_8_weeks": {
+                    "state": "DISTRIBUTION",
+                    "warning": "DISTRIBUTION_WARNING",
+                    "summary": "Distribution is active.",
+                },
+            },
+            cn_binding={"status": "PASS"},
+            now=NOW,
+        )
+        self.assertTrue(out["dispatch"])
+        self.assertTrue(out["protective_bypass"])
+        self.assertIn("PROTECTION_STATE_CHANGED", out["cause_codes"])
+        self.assertEqual(out["current_protection_tracker"]["pullback_risk_state"], "HIGH")
+
+    def test_reentry_review_opening_is_material_but_not_automatic_execution(self):
+        a=auto_state()
+        latest=compass(
+            protection={
+                "pullback_risk_state": "NORMAL",
+                "pullback_class": "UNKNOWN",
+                "distribution_risk": "NONE",
+                "eta_window": "UNKNOWN",
+                "confidence_quality": "MEDIUM",
+                "reentry_state": "WAIT_FOR_RECLAIM",
+                "last_material_change_at": (NOW-timedelta(hours=6)).isoformat().replace("+00:00","Z"),
+            }
+        )
+        out=evaluate(
+            auto_state=a,
+            auto_pointer={"packet_sha256": a["packet_sha256"]},
+            latest_compass=latest,
+            entry_latest=entry(),
+            prior_state={"last_heat_state": "NORMAL"},
+            cn_package={
+                "market_state": "Constructive transition.",
+                "base_case_this_week": "Constructive transition.",
+                "base_case_2_3_weeks": "Selective leadership may broaden.",
+            },
+            cn_binding={"status": "PASS"},
+            now=NOW,
+        )
+        self.assertTrue(out["dispatch"])
+        self.assertIn("PROTECTION_STATE_CHANGED", out["cause_codes"])
+        self.assertIn("REENTRY_REVIEW_OPENED", out["cause_codes"])
+        self.assertEqual(out["current_protection_tracker"]["reentry_state"], "REVIEW")
+        self.assertFalse(out["current_protection_tracker"]["authority"]["portfolio_execution"])
 
     def test_unbound_request_retries_after_timeout(self):
         out=decision(

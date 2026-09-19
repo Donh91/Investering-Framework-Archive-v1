@@ -25,9 +25,26 @@ async function buildCompassSnapshot(){
     const projection=JSON.parse(projectionBytes.toString("utf8"));
     if(projection?.contract!=="PUBLIC_COMPASS_PROJECTION_v1") throw new Error("Unexpected public Compass projection contract");
     if(projection?.compass_id!==pointer?.compass_id) throw new Error("Public Compass pointer/projection id mismatch");
+    if(!projection.protection_tracker){
+      projection.protection_tracker={
+        contract:"COMPASS_PROTECTION_TRACKER_v1",
+        pullback_risk_state:"UNAVAILABLE",
+        pullback_class:"UNKNOWN",
+        distribution_risk:"UNKNOWN",
+        eta_window:"UNKNOWN",
+        confidence_quality:"LOW",
+        decisive_public_drivers:[],
+        invalidation:"Fresh Official Compass evidence with the protection tracker is required.",
+        last_material_change_at:null,
+        data_quality:"DEGRADED",
+        reentry_state:"UNAVAILABLE",
+        reentry_message:"Re-entry review is unavailable until a fresh Official Compass publishes the canonical tracker.",
+        authority:{portfolio_execution:false,wallet_specific:false,new_market_classifier:false}
+      };
+    }
     return projection;
   }catch(error){
-    return {contract:"PUBLIC_COMPASS_PROJECTION_v1",compass_id:null,issued_at_utc:null,data_status:"NOT_PUBLISHED",market_now:{directional_state:"UNAVAILABLE",regime:"NOT_PUBLISHED",summary:"The official daily Compass has not been published yet."},horizons:{},capitalization_ladder:[],action_now:"UNAVAILABLE",next_meaningful_change_eta:null,conclusion:"Official daily Compass unavailable. No short-horizon signal is synthesized by the site.",authority:{official_navigation_output:true,portfolio_execution:false,source_override:false},failure_state:String(error?.message||error)};
+    return {contract:"PUBLIC_COMPASS_PROJECTION_v1",compass_id:null,issued_at_utc:null,data_status:"NOT_PUBLISHED",market_now:{directional_state:"UNAVAILABLE",regime:"NOT_PUBLISHED",summary:"The official daily Compass has not been published yet."},horizons:{},capitalization_ladder:[],protection_tracker:{contract:"COMPASS_PROTECTION_TRACKER_v1",pullback_risk_state:"UNAVAILABLE",pullback_class:"UNKNOWN",distribution_risk:"UNKNOWN",eta_window:"UNKNOWN",confidence_quality:"LOW",decisive_public_drivers:[],invalidation:"Fresh Official Compass evidence is required.",last_material_change_at:null,data_quality:"DEGRADED",reentry_state:"UNAVAILABLE",reentry_message:"Re-entry review is unavailable.",authority:{portfolio_execution:false,wallet_specific:false,new_market_classifier:false}},action_now:"UNAVAILABLE",next_meaningful_change_eta:null,conclusion:"Official daily Compass unavailable. No short-horizon signal is synthesized by the site.",authority:{official_navigation_output:true,portfolio_execution:false,source_override:false},failure_state:String(error?.message||error)};
   }
 }
 async function buildCompassEventSnapshot(){
