@@ -41,7 +41,7 @@ def main() -> int:
         ),
         "material": Noul(
             instructions="Is the duplicate charge material enough to require review?",
-            criteria="Answer yes when the evidence describes a real duplicate financial charge rather than a cosmetic display issue.",
+            criteria={"true": "The evidence describes a real duplicate financial charge rather than a cosmetic display issue.", "false": "The evidence does not establish a real duplicate financial charge."},
         ),
         "priority": Score(
             instructions="Score the urgency of human review.",
