@@ -8,6 +8,7 @@ on:
       - 'scripts/api_agent/meme_alpha_runtime_v1_2.py'
       - 'scripts/api_agent/meme_alpha_source_auth.py'
       - 'scripts/api_agent/meme_alpha_prospective.py'
+      - 'scripts/api_agent/typesafe_jev_replay.py'
       - 'scripts/api_agent/meme_alpha_url_provenance.py'
       - 'scripts/api_agent/meme_alpha_lifecycle_v1.py'
       - 'tests/api_agent/test_meme_alpha_runtime.py'
@@ -15,6 +16,7 @@ on:
       - 'tests/api_agent/test_meme_alpha_runtime_v1_2_hardening.py'
       - 'tests/api_agent/test_meme_alpha_source_auth.py'
       - 'tests/api_agent/test_meme_alpha_prospective.py'
+      - 'tests/api_agent/test_typesafe_jev_replay.py'
       - 'tests/api_agent/test_meme_alpha_url_provenance.py'
       - 'tests/api_agent/test_meme_alpha_lifecycle_v1.py'
       - 'research/api_agent/meme_alpha/**'
@@ -42,6 +44,7 @@ jobs:
           scripts/api_agent/meme_alpha_runtime_v1_2.py
           scripts/api_agent/meme_alpha_source_auth.py
           scripts/api_agent/meme_alpha_prospective.py
+          scripts/api_agent/typesafe_jev_replay.py
           scripts/api_agent/meme_alpha_url_provenance.py
           scripts/api_agent/meme_alpha_lifecycle_v1.py
           tests/api_agent/test_meme_alpha_runtime.py
@@ -49,6 +52,7 @@ jobs:
           tests/api_agent/test_meme_alpha_runtime_v1_2_hardening.py
           tests/api_agent/test_meme_alpha_source_auth.py
           tests/api_agent/test_meme_alpha_prospective.py
+          tests/api_agent/test_typesafe_jev_replay.py
           tests/api_agent/test_meme_alpha_url_provenance.py
           tests/api_agent/test_meme_alpha_lifecycle_v1.py
       - name: Run focused tests
@@ -59,6 +63,7 @@ jobs:
           tests.api_agent.test_meme_alpha_runtime_v1_2_hardening
           tests.api_agent.test_meme_alpha_source_auth
           tests.api_agent.test_meme_alpha_prospective
+          tests.api_agent.test_typesafe_jev_replay
           tests.api_agent.test_meme_alpha_url_provenance
           tests.api_agent.test_meme_alpha_lifecycle_v1
           -v
