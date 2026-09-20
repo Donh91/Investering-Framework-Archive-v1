@@ -1,0 +1,65 @@
+{
+  "contract": "FOMO_ROBINHOOD_PROSPECTIVE_OBSERVATION_RECEIPTS_v1",
+  "observed_date_utc": "2026-09-20",
+  "owner_issue": 1087,
+  "experiment_parent": 1134,
+  "preregistration": "research/api_agent/meme_alpha/experiments/FOMO_ROBINHOOD_INDEPENDENT_CONVERGENCE_PREREG_v1.json",
+  "cohort": "research/api_agent/meme_alpha/experiments/FOMO_ROBINHOOD_PROSPECTIVE_WALLET_COHORT_v0.json",
+  "status": "FIRST_FORWARD_NEGATIVE_CONTROLS",
+  "source": {
+    "name": "FOMO Robinhood Radar",
+    "chain": 4663,
+    "retrieved_live": true,
+    "source_is_canonical_truth": false
+  },
+  "observations": [
+    {
+      "symbol": "WATCH",
+      "contract": "0x71e52e7cd3c13b278cd05e80c9a63b843cbed960",
+      "apparent_pattern": "MULTI_WALLET_CONVERGENCE",
+      "cohort_wallets_visible": ["unipcs", "DumbCrayonEater", "insentos"],
+      "source_reported_buyers_60_plus": 78,
+      "source_reported_liquidity_usd": 21000,
+      "source_reported_first_window": "~2h",
+      "provenance_adjudication": "SEEDED_RECIPIENT_SPOOF_PATTERN",
+      "source_explanation": "provider reports a wave of 136 one-apiece buys pushed into 78 trusted wallets seconds apart; tracked wallets did not initiate the apparent buys",
+      "challenger_eligible": false,
+      "reason": "TRADE_PROVENANCE_GATE_FAIL",
+      "alpha_credit": false,
+      "action": "QUARANTINE_NEGATIVE_CONTROL"
+    },
+    {
+      "symbol": "FURN",
+      "contract": "0xfe907c6990da371935bdc55b58d6908d16e1057d",
+      "apparent_pattern": "MULTI_WALLET_CONVERGENCE",
+      "cohort_wallets_visible": ["unipcs", "DumbCrayonEater", "insentos"],
+      "source_reported_buyers_60_plus": 42,
+      "source_reported_liquidity_usd": 18,
+      "source_reported_first_window": "~13h",
+      "provenance_adjudication": "SEEDED_RECIPIENT_SPOOF_PATTERN",
+      "source_explanation": "provider reports 42 one-apiece buys pushed into a queue of trusted wallets seconds apart; apparent cohort participation is excluded by provider",
+      "challenger_eligible": false,
+      "reason": "TRADE_PROVENANCE_GATE_FAIL_AND_LIQUIDITY_UNSUITABLE",
+      "alpha_credit": false,
+      "action": "QUARANTINE_NEGATIVE_CONTROL"
+    }
+  ],
+  "learning": [
+    "The first live forward observations after preregistration immediately produced exactly the attack class the provenance gate was designed to reject.",
+    "Raw shared-token overlap would have produced a false positive on both WATCH and FURN.",
+    "Wallet score and wallet count cannot override receipt/provenance evidence.",
+    "FURN also demonstrates that apparent convergence can coexist with effectively unusable liquidity.",
+    "These rows count as negative-control evidence for data-quality/provenance machinery, not as eligible convergence events toward the promotion minimum."
+  ],
+  "next": [
+    "Continue forward observation until a self-initiated, entity-independent convergence event survives provenance.",
+    "Before any surviving event counts, complete economic-entity independence checks for participating cohort wallets.",
+    "Record rejected seeded/gift/dust cases as false-positive prevention evidence rather than deleting them."
+  ],
+  "authority": {
+    "buy": false,
+    "sell": false,
+    "copy_trade": false,
+    "portfolio_action": false
+  }
+}
