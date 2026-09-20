@@ -1,0 +1,73 @@
+{
+  "contract": "FOMO_ROBINHOOD_FORWARD_EVIDENCE_HARDENING_v1",
+  "date_utc": "2026-09-20",
+  "owner_issue": 1087,
+  "status": "ACTIVE_FAIL_CLOSED",
+  "purpose": "Correct evidence-lineage weaknesses found in adversarial readback of the first P0/P1/P2 FOMO receipts without rewriting the historical artifacts.",
+  "historical_receipt_adjudication": {
+    "FOMO_ROBINHOOD_PROSPECTIVE_WALLET_COHORT_v0": {
+      "valid_for": ["membership freeze by calendar date", "identity challenger definition"],
+      "not_valid_for": ["minute-level lead-time claims"],
+      "reason": "freeze carries date but not exact observed-at timestamp"
+    },
+    "FOMO_ROBINHOOD_INDEPENDENT_CONVERGENCE_PREREG_v1": {
+      "valid_for": ["hypothesis preregistration", "eligibility and kill criteria"],
+      "not_valid_for": ["sub-day precedence claims against observations lacking exact timestamps"],
+      "reason": "preregistration carries date but not exact immutable timestamp"
+    },
+    "FOMO_ROBINHOOD_FORWARD_NEGATIVE_CONTROLS_20260920": {
+      "valid_for": ["provider-classified forward negative-control evidence"],
+      "not_valid_for": ["independent on-chain proof of recipient spoofing", "minute-level lead-time claims"],
+      "reason": "classification currently relies on provider explanation and date-only observation lineage"
+    }
+  },
+  "required_fields_for_all_new_rows": [
+    "observation_id",
+    "observed_at_utc_exact",
+    "retrieved_at_utc_exact",
+    "source",
+    "source_health",
+    "source_event_timestamp_or_UNKNOWN",
+    "chain",
+    "contract",
+    "wallet_address",
+    "wallet_membership_version",
+    "provenance_class",
+    "provenance_evidence_refs",
+    "provenance_independently_reproduced",
+    "economic_entity_id_or_PENDING",
+    "independence_state",
+    "market_cap_semantics_or_UNKNOWN",
+    "liquidity_or_UNKNOWN",
+    "sellability_state",
+    "champion_first_seen_at_or_UNKNOWN",
+    "challenger_first_seen_at",
+    "lead_time_minutes_or_NOT_COMPARABLE",
+    "promotion_counter_eligible"
+  ],
+  "promotion_counter_gate": {
+    "exact_timestamp_lineage": true,
+    "self_initiated_provenance": true,
+    "independent_provenance_or_explicit_provider_only_label": true,
+    "distinct_economic_entities": true,
+    "market_data_health": true,
+    "sellability_health": true,
+    "future_only": true,
+    "provider_only_negative_control_counts_as_eligible_convergence_event": false
+  },
+  "cohort_bias_policy": {
+    "v0_origin": "owner-supplied screenshot candidates",
+    "v0_must_remain_immutable": true,
+    "population_edge_claim_allowed_from_v0_alone": false,
+    "future_expansion_requires_predeclared_sampling_rule": true,
+    "future_expansion_must_not_select_on_future_winners": true
+  },
+  "authority": {
+    "changes_historical_rows": false,
+    "changes_market_semantics": false,
+    "changes_thresholds": false,
+    "trade": false,
+    "portfolio_action": false,
+    "promotion": false
+  }
+}
