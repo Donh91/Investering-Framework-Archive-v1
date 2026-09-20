@@ -33,13 +33,35 @@
       "skill_path": ".agents/skills/canonical-context-router/SKILL.md",
       "agents_metadata_path": ".agents/skills/canonical-context-router/agents/openai.yaml",
       "purpose": "Resolve current repository authority and return a small verified context packet before task-specific reasoning.",
-      "triggers": ["framework", "DATA PING", "Master Monday", "Cycle Navigator", "current rule", "active version", "precedence", "governance"],
-      "do_not_use_for": ["portfolio decisions", "inventing missing values", "repository writes"],
+      "triggers": [
+        "framework",
+        "DATA PING",
+        "Master Monday",
+        "Cycle Navigator",
+        "current rule",
+        "active version",
+        "precedence",
+        "governance"
+      ],
+      "do_not_use_for": [
+        "portfolio decisions",
+        "inventing missing values",
+        "repository writes"
+      ],
       "default_side_effect_level": "READ_ONLY",
       "side_effect_level": "READ_ONLY",
       "requires_credentials": false,
-      "primary_outputs": ["CONTEXT_PACKET", "authority conflicts", "required owner paths"],
-      "validation_expectations": ["all required paths exist", "active versions verified", "legacy not presented as current", "unresolved conflicts explicit"],
+      "primary_outputs": [
+        "CONTEXT_PACKET",
+        "authority conflicts",
+        "required owner paths"
+      ],
+      "validation_expectations": [
+        "all required paths exist",
+        "active versions verified",
+        "legacy not presented as current",
+        "unresolved conflicts explicit"
+      ],
       "allow_implicit_invocation": true,
       "portability_notes": "Repository-specific authority routing. Safe for implicit discovery because it is read-only and has zero market or write authority."
     },
@@ -50,13 +72,35 @@
       "skill_path": ".agents/skills/developer-source-research/SKILL.md",
       "agents_metadata_path": ".agents/skills/developer-source-research/agents/openai.yaml",
       "purpose": "Resolve external technical uncertainty from current primary developer sources without replacing local repository authority.",
-      "triggers": ["external API", "library behavior", "error diagnosis", "upstream issue", "merged pull request", "repository discovery", "agent-skill discovery"],
-      "do_not_use_for": ["internal repository authority", "market research", "portfolio questions", "code changes"],
+      "triggers": [
+        "external API",
+        "library behavior",
+        "error diagnosis",
+        "upstream issue",
+        "merged pull request",
+        "repository discovery",
+        "agent-skill discovery"
+      ],
+      "do_not_use_for": [
+        "internal repository authority",
+        "market research",
+        "portfolio questions",
+        "code changes"
+      ],
       "default_side_effect_level": "READ_ONLY_EXTERNAL_RETRIEVAL",
       "side_effect_level": "READ_ONLY_EXTERNAL_RETRIEVAL",
       "requires_credentials": false,
-      "primary_outputs": ["verified source bundle", "current-behavior assessment", "fallback reason"],
-      "validation_expectations": ["load-bearing source opened", "current behavior checked", "queries sanitized", "authority boundaries preserved"],
+      "primary_outputs": [
+        "verified source bundle",
+        "current-behavior assessment",
+        "fallback reason"
+      ],
+      "validation_expectations": [
+        "load-bearing source opened",
+        "current behavior checked",
+        "queries sanitized",
+        "authority boundaries preserved"
+      ],
       "allow_implicit_invocation": true,
       "portability_notes": "Read-only technical research. External retrieval is non-authoritative and must remain sanitized."
     },
@@ -67,13 +111,43 @@
       "skill_path": ".agents/skills/prospective-evidence-ledger/SKILL.md",
       "agents_metadata_path": ".agents/skills/prospective-evidence-ledger/agents/openai.yaml",
       "purpose": "Govern the lifecycle of rows for already-registered prospective tests and ledgers.",
-      "triggers": ["freeze input", "forward row", "attach actual", "maturity", "lineage", "coverage readiness", "M3", "FRLP", "FNP", "Transmission Matrix"],
-      "do_not_use_for": ["creating tests", "creating schemas", "inventing scores", "promotion", "market calls", "portfolio actions"],
+      "triggers": [
+        "freeze input",
+        "forward row",
+        "attach actual",
+        "maturity",
+        "lineage",
+        "coverage readiness",
+        "M3",
+        "FRLP",
+        "FNP",
+        "Transmission Matrix"
+      ],
+      "do_not_use_for": [
+        "creating tests",
+        "creating schemas",
+        "inventing scores",
+        "promotion",
+        "market calls",
+        "portfolio actions"
+      ],
       "default_side_effect_level": "READ_ONLY_UNLESS_EXPLICIT_WRITE_AND_ARCHIVE_GOVERNANCE",
       "side_effect_level": "BOUNDED_EVIDENCE_WRITE",
       "requires_credentials": false,
-      "primary_outputs": ["PROSPECTIVE_EVIDENCE_LEDGER_VERDICT", "validated row plan", "coverage status"],
-      "validation_expectations": ["registered owner", "causal ordering", "frozen fields preserved", "maturity", "lineage", "duplicate and event-window controls", "owner validator used"],
+      "primary_outputs": [
+        "PROSPECTIVE_EVIDENCE_LEDGER_VERDICT",
+        "validated row plan",
+        "coverage status"
+      ],
+      "validation_expectations": [
+        "registered owner",
+        "causal ordering",
+        "frozen fields preserved",
+        "maturity",
+        "lineage",
+        "duplicate and event-window controls",
+        "owner validator used"
+      ],
       "allow_implicit_invocation": false,
       "portability_notes": "Framework-specific evidence lifecycle. Must not become a scorer or promotion authority."
     },
@@ -84,13 +158,37 @@
       "skill_path": ".agents/skills/research-lab-red-team/SKILL.md",
       "agents_metadata_path": ".agents/skills/research-lab-red-team/agents/openai.yaml",
       "purpose": "Falsify and classify claims, proposals and research outputs against existing owners, baselines, evidence and kill criteria.",
-      "triggers": ["audit", "red team", "falsify", "framework proposal", "external-model review", "promotion review", "evidence review"],
-      "do_not_use_for": ["self-promotion", "live market-state changes", "portfolio actions", "unrequested repository writes"],
+      "triggers": [
+        "audit",
+        "red team",
+        "falsify",
+        "framework proposal",
+        "external-model review",
+        "promotion review",
+        "evidence review"
+      ],
+      "do_not_use_for": [
+        "self-promotion",
+        "live market-state changes",
+        "portfolio actions",
+        "unrequested repository writes"
+      ],
       "default_side_effect_level": "READ_ONLY",
       "side_effect_level": "READ_ONLY_EVALUATION",
       "requires_credentials": false,
-      "primary_outputs": ["RESEARCH_LAB_VERDICT", "falsifier", "baseline comparison", "authority boundary"],
-      "validation_expectations": ["existing owners checked", "decision divergence assessed", "facts and inferences separated", "false-positive and false-negative costs considered", "verdict bounded by evidence"],
+      "primary_outputs": [
+        "RESEARCH_LAB_VERDICT",
+        "falsifier",
+        "baseline comparison",
+        "authority boundary"
+      ],
+      "validation_expectations": [
+        "existing owners checked",
+        "decision divergence assessed",
+        "facts and inferences separated",
+        "false-positive and false-negative costs considered",
+        "verdict bounded by evidence"
+      ],
       "allow_implicit_invocation": false,
       "portability_notes": "Evaluation only. Explicit invocation is preferred because it changes analysis stance and can broaden task scope."
     },
@@ -101,13 +199,36 @@
       "skill_path": ".agents/skills/codex-intake/SKILL.md",
       "agents_metadata_path": ".agents/skills/codex-intake/agents/openai.yaml",
       "purpose": "Package and deduplicate bounded reproducible research findings for the governed Codex remediation queue.",
-      "triggers": ["queue for Codex", "bounded code defect", "research-to-code handoff", "Codex candidate"],
-      "do_not_use_for": ["market rules", "threshold changes", "model weights", "canonical authority", "portfolio logic", "API budget", "new policy semantics"],
+      "triggers": [
+        "queue for Codex",
+        "bounded code defect",
+        "research-to-code handoff",
+        "Codex candidate"
+      ],
+      "do_not_use_for": [
+        "market rules",
+        "threshold changes",
+        "model weights",
+        "canonical authority",
+        "portfolio logic",
+        "API budget",
+        "new policy semantics"
+      ],
       "default_side_effect_level": "READ_ONLY_UNLESS_EXPLICIT_QUEUE_WRITE",
       "side_effect_level": "BOUNDED_QUEUE_WRITE",
       "requires_credentials": false,
-      "primary_outputs": ["CODEX_RESEARCH_CANDIDATE_v1", "deduplication link", "no-write candidate payload"],
-      "validation_expectations": ["bounded reproduction", "current queue deduplication", "allowed scope minimal", "forbidden changes explicit", "fresh-state gate preserved"],
+      "primary_outputs": [
+        "CODEX_RESEARCH_CANDIDATE_v1",
+        "deduplication link",
+        "no-write candidate payload"
+      ],
+      "validation_expectations": [
+        "bounded reproduction",
+        "current queue deduplication",
+        "allowed scope minimal",
+        "forbidden changes explicit",
+        "fresh-state gate preserved"
+      ],
       "allow_implicit_invocation": false,
       "portability_notes": "Operational routing only. Never self-declares CODEX_READY and never executes the code fix."
     },
@@ -118,15 +239,81 @@
       "skill_path": ".agents/skills/archive-governance/SKILL.md",
       "agents_metadata_path": ".agents/skills/archive-governance/agents/openai.yaml",
       "purpose": "Classify, place, deduplicate and govern repository writes under branch, PR, backup and authority-separation rules.",
-      "triggers": ["archive", "save", "preserve", "add to GitHub", "make canonical", "update archive", "place this correctly"],
-      "do_not_use_for": ["repository mutation without explicit user intent", "direct main writes", "force operations", "credential handling"],
+      "triggers": [
+        "archive",
+        "save",
+        "preserve",
+        "add to GitHub",
+        "make canonical",
+        "update archive",
+        "place this correctly"
+      ],
+      "do_not_use_for": [
+        "repository mutation without explicit user intent",
+        "direct main writes",
+        "force operations",
+        "credential handling"
+      ],
       "default_side_effect_level": "NO_WRITE_WITHOUT_EXPLICIT_INTENT",
       "side_effect_level": "GOVERNED_REPOSITORY_WRITE",
       "requires_credentials": false,
-      "primary_outputs": ["archive decision manifest", "governed branch write plan", "post-write validation result"],
-      "validation_expectations": ["existing owner searched first", "non-default branch verified", "PR path used", "destructive authority separation preserved", "backup claims exact", "readback complete"],
+      "primary_outputs": [
+        "archive decision manifest",
+        "governed branch write plan",
+        "post-write validation result"
+      ],
+      "validation_expectations": [
+        "existing owner searched first",
+        "non-default branch verified",
+        "PR path used",
+        "destructive authority separation preserved",
+        "backup claims exact",
+        "readback complete"
+      ],
       "allow_implicit_invocation": false,
       "portability_notes": "High-consequence write governance. Must never be implicitly granted mutation authority."
+    },
+    {
+      "name": "typesafe-ai",
+      "category": "external-ai-semantic-judgment",
+      "maturity": "INSTALLED_EXPERIMENTAL_SHADOW_ONLY",
+      "skill_path": ".agents/skills/typesafe-ai/SKILL.md",
+      "purpose": "Provide current TypeSafe/System One/JEV integration guidance and cookbook patterns for bounded shadow experiments.",
+      "triggers": [
+        "TypeSafe",
+        "JEV",
+        "System One",
+        "typed judgment",
+        "semantic routing",
+        "TypeSafe cookbook"
+      ],
+      "do_not_use_for": [
+        "market truth",
+        "BUY/SELL",
+        "position sizing",
+        "DROP authority",
+        "identity/provenance truth",
+        "threshold mutation",
+        "self-promotion",
+        "repository writes"
+      ],
+      "default_side_effect_level": "READ_ONLY_ADVISORY",
+      "side_effect_level": "READ_ONLY_ADVISORY",
+      "requires_credentials": false,
+      "primary_outputs": [
+        "TypeSafe integration guidance",
+        "bounded JEV experiment design",
+        "primitive selection"
+      ],
+      "validation_expectations": [
+        "live docs remain source of truth",
+        "deterministic rules stay in code",
+        "shadow-only until prospective evidence",
+        "compare against deterministic/current-policy baseline",
+        "existing framework authority preserved"
+      ],
+      "allow_implicit_invocation": false,
+      "portability_notes": "Exact upstream skill installed project-locally. External guidance only; framework governance and scientific gates remain authoritative."
     }
   ],
   "astra_followup": {
