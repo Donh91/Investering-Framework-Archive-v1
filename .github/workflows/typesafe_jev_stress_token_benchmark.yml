@@ -22,6 +22,16 @@ on:
         required: true
         default: false
         type: boolean
+      run_real_shadow_pilot:
+        description: 'Run one real immutable Alpha Lab observation through Jev, shadow-only'
+        required: true
+        default: false
+        type: boolean
+      observation_path:
+        description: 'Repo-relative immutable MEME_ALPHA_G2_G3_SHADOW_OBSERVATION_v1 JSON path'
+        required: false
+        default: ''
+        type: string
 permissions:
   contents: read
 jobs:
@@ -72,3 +82,37 @@ jobs:
         run: test -n "$OPENAI_API_KEY"
       - name: One-shot Sol token benchmark
         run: python scripts/api_agent/openai_sol_token_benchmark.py
+
+  real-shadow-pilot:
+    if: github.event_name == 'workflow_dispatch' && inputs.run_real_shadow_pilot
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    env:
+      PYTHONPATH: ${{ github.workspace }}
+      TYPESAFE_API_KEY: ${{ secrets.TYPESAFE_API_KEY }}
+      OBSERVATION_PATH: ${{ inputs.observation_path }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: pip install "typesafe-sdk==0.7.0"
+      - name: Validate pilot boundary
+        shell: bash
+        run: |
+          test -n "$TYPESAFE_API_KEY"
+          test -n "$OBSERVATION_PATH"
+          case "$OBSERVATION_PATH" in
+            research/api_agent/meme_alpha/*|tests/fixtures/typesafe_jev/*) ;;
+            *) echo "Observation path outside approved Alpha Lab/JEV evidence roots" >&2; exit 2 ;;
+          esac
+          test -f "$OBSERVATION_PATH"
+      - name: Run one real shadow Jev decision
+        run: python scripts/api_agent/typesafe_jev_replay_runner.py --input "$OBSERVATION_PATH" --output /tmp/real-shadow-prediction.json --repeat 1
+      - name: Preserve sanitized shadow prediction
+        uses: actions/upload-artifact@v4
+        with:
+          name: jev-real-shadow-pilot
+          path: /tmp/real-shadow-prediction.json
+          retention-days: 30
