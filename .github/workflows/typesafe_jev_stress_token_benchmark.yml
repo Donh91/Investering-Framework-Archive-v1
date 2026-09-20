@@ -17,6 +17,11 @@ on:
         required: true
         default: false
         type: boolean
+      run_live_falsification:
+        description: 'Run bounded 20-call Jev injection/repeatability matrix'
+        required: true
+        default: false
+        type: boolean
 permissions:
   contents: read
 jobs:
@@ -35,7 +40,7 @@ jobs:
     env:
       PYTHONPATH: ${{ github.workspace }}
       TYPESAFE_API_KEY: ${{ secrets.TYPESAFE_API_KEY }}
-    if: github.event_name == 'workflow_dispatch' && inputs.run_live_jev
+    if: github.event_name == 'workflow_dispatch' && (inputs.run_live_jev || inputs.run_live_falsification)
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
