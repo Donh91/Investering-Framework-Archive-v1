@@ -137,6 +137,7 @@ def main():
         "phase1": root / "research/framework_intelligence/phase1/LATEST.json",
         "automation_health": root / "research/architecture_health/LATEST_AUTOMATION_HEALTH.json",
         "architecture_health": root / "research/architecture_health/LATEST_ARCHITECTURE_HEALTH.json",
+        "weekly_forensics": root / "research/framework_learning/weekly_forensics/LATEST.json",
     }
     src = {name: load_json(path, {}) or {} for name, path in paths.items()}
     families = normalize_compounding_families(src["compounding_state"])
@@ -198,6 +199,8 @@ def main():
         "range_context": [{"semantic_identity": x["semantic_identity"], "titles": x["titles"][:2], "matured_outcome_count": x["matured_outcome_count"], "status": x["family_status"]} for x in ranges[:5]],
         "method_improvement_candidates": [x for x in staleness if x["status"] == "METHOD_AUDIT_DUE"],
         "scientific_status": "FORECAST_SKILL_UNPROVEN",
+        "weekly_forensics_delta": src["weekly_forensics"].get("master_monday_delta") if src["weekly_forensics"].get("contract") == "WEEKLY_FORENSICS_PACK_v1" and src["weekly_forensics"].get("mode") == "FINAL" else None,
+        "weekly_forensics_authority": "ADVISORY_ONLY",
     }
     supervisor = {
         "contract": "FRAMEWORK_LEARNING_SUPERVISOR_STATE_v1", "authority": "ORCHESTRATION_ONLY", "generated_at_utc": generated, "iso_year": year, "iso_week": week,
