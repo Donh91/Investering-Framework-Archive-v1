@@ -1,0 +1,122 @@
+{
+  "contract": "FOMO_ROBINHOOD_PROSPECTIVE_WALLET_COHORT_v0",
+  "status": "FROZEN_IDENTITY_CANDIDATES_NOT_ALPHA",
+  "freeze_date_utc": "2026-09-20",
+  "owner_issue": 1087,
+  "parent_receipt": "research/api_agent/meme_alpha/experiments/FOMO_ROBINHOOD_P0_SOURCE_FEASIBILITY_20260920.md",
+  "purpose": "Freeze a first small Robinhood wallet cohort from owner-supplied screenshot candidates that can be independently re-pulled from a current public Robinhood trader tape. Membership is frozen before future token outcomes. This is an identity/discovery challenger cohort, not a smart-wallet label.",
+  "selection_policy": {
+    "must_have_been_present_in_owner_screenshot_candidate_set": true,
+    "must_be_independently_repulled_on_current_robinhood_source": true,
+    "winner_or_pnl_threshold_used_for_membership": false,
+    "future_outcomes_used_for_membership": false,
+    "address_role_required_before_signal_use": true,
+    "economic_entity_resolution_required_before_independent_convergence_count": true
+  },
+  "source": {
+    "name": "rhtrenches live fomo.family trader tape",
+    "url": "https://rhtrenches.com/",
+    "observed": "2026-09-20",
+    "role": "identity_and_activity_candidate_source",
+    "canonical_truth": false
+  },
+  "members": [
+    {
+      "handle": "himgajria",
+      "evm_address": "0xd4cf04bc9d7c80b49c6c30a633f7b9bd5370b4d6",
+      "screenshot_candidate": true,
+      "repull_match": true,
+      "address_role": "PENDING",
+      "economic_entity": "PENDING",
+      "signal_eligible": false
+    },
+    {
+      "handle": "remusofmars",
+      "evm_address": "0x8ab8c0843d9738885d6273dfe3de86c56eea364c",
+      "screenshot_candidate": true,
+      "repull_match": true,
+      "address_role": "PENDING",
+      "economic_entity": "PENDING",
+      "signal_eligible": false
+    },
+    {
+      "handle": "fibs",
+      "owner_screenshot_handle": "flbs",
+      "evm_address": "0x80f3b0b712a82172a67e454e313ba6e2b0e7ae64",
+      "screenshot_candidate": true,
+      "repull_match": "ADDRESS_MATCH_HANDLE_TEXT_DIFFERS",
+      "address_role": "PENDING",
+      "economic_entity": "PENDING",
+      "signal_eligible": false
+    },
+    {
+      "handle": "unipcs",
+      "evm_address": "0x0a6ebed0155edb4b21d92ad02897a626cd90119e",
+      "screenshot_candidate": true,
+      "repull_match": true,
+      "address_role": "DELEGATED_SIMPLE7702ACCOUNT_OBSERVED",
+      "economic_entity": "PENDING",
+      "signal_eligible": false
+    },
+    {
+      "handle": "PoorGoat_",
+      "evm_address": "0x9ce0cb4a193acbce0dca3283972341aed6f3f614",
+      "screenshot_candidate": true,
+      "repull_match": true,
+      "address_role": "ACTIVE_ROBINHOOD_ADDRESS_OBSERVED",
+      "economic_entity": "PENDING",
+      "signal_eligible": false
+    },
+    {
+      "handle": "DumbCrayonEater",
+      "evm_address": "0x8f62a08537cede87d511aca6436274ab4ca080a3",
+      "screenshot_candidate": true,
+      "repull_match": true,
+      "address_role": "DELEGATED_SIMPLE7702ACCOUNT_OBSERVED",
+      "economic_entity": "PENDING",
+      "signal_eligible": false
+    },
+    {
+      "handle": "The__Solstice",
+      "evm_address": "0xd1c77a04b87393e98a1220532e72e8f7d0a31c5a",
+      "screenshot_candidate": true,
+      "repull_match": true,
+      "address_role": "ACTIVE_ROBINHOOD_ADDRESS_OBSERVED",
+      "economic_entity": "PENDING",
+      "signal_eligible": false
+    },
+    {
+      "handle": "insentos",
+      "evm_address": "0x93c006f2051cb72168cf8c27cafe0fb2d71682c8",
+      "screenshot_candidate": true,
+      "repull_match": true,
+      "address_role": "ACTIVE_ROBINHOOD_ADDRESS_OBSERVED",
+      "economic_entity": "PENDING",
+      "signal_eligible": false
+    }
+  ],
+  "important_observations": [
+    "Current public tape independently reproduces eight owner-supplied candidate identities/address mappings.",
+    "The screenshot transcription 'flbs' maps by exact address to current handle 'fibs'; treat handle text as unresolved alias/typo until upstream identity history is checked.",
+    "Public chain indexing shows at least unipcs and DumbCrayonEater addresses delegated to Simple7702Account. Account abstraction/delegation is not a disqualifier, but role/entity semantics must be handled explicitly.",
+    "Third-party PnL values conflict materially across sources for some wallets. PnL is therefore not used for cohort membership or quality at freeze."
+  ],
+  "next_gate": {
+    "name": "P1_ROLE_ENTITY_AND_HISTORY",
+    "requirements": [
+      "classify self-initiated trade vs passive transfer/dust for observed activity",
+      "resolve service/router/pool/deployer/contract-like roles",
+      "identify shared control/funding where evidence supports it",
+      "reconstruct full eligible history including losers and exits",
+      "freeze point-in-time wallet quality from matured pre-cutoff outcomes only"
+    ]
+  },
+  "convergence_rule": "No two addresses count as independent wallets until economic-entity checks pass.",
+  "authority": {
+    "buy": false,
+    "sell": false,
+    "copy_trade": false,
+    "portfolio_action": false,
+    "smart_wallet_label": false
+  }
+}
