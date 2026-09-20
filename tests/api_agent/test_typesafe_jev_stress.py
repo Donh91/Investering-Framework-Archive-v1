@@ -19,6 +19,10 @@ def expect_error(name, fn, needle):
   assert needle in str(e), (name,str(e)); return
  raise AssertionError(name+": expected "+needle)
 
+def rehash(packet):
+ packet["observation_sha256"]=stable_hash({k:v for k,v in packet.items() if k!="observation_sha256"})
+ return packet
+
 o=obs(); s=build_blind_state(o)
 assert s["source_observation_sha256"]==o["observation_sha256"]
 assert "authority" not in s
@@ -31,13 +35,13 @@ for key in ["outcome","future_price","ath","missed_winner_audit"]:
  x=deepcopy(o); x["nested"]={"a":[{"b":{key:1}}]}
  expect_error("leak:"+key,lambda x=x:build_blind_state(x),"OUTCOME_LEAKAGE_DETECTED")
 
-x=deepcopy(o); x["features"][0]["mutability_class"]="MUTABLE_LIVE_FIELD"
+x=deepcopy(o); x["features"][0]["mutability_class"]="MUTABLE_LIVE_FIELD"; rehash(x)
 expect_error("mutable",lambda:build_blind_state(x),"MUTABLE_LIVE_FIELD_NOT_HISTORICAL_EVIDENCE")
-x=deepcopy(o); x["features"][0]["source_observed_at_utc"]="2026-09-19T09:06:00Z"
+x=deepcopy(o); x["features"][0]["source_observed_at_utc"]="2026-09-19T09:06:00Z"; rehash(x)
 expect_error("late",lambda:build_blind_state(x),"SNAPSHOT_OBSERVED_AFTER_CUTOFF")
-x=deepcopy(o); x["features"][0]["feature_effective_at_utc"]="2026-09-19T09:06:00Z"
+x=deepcopy(o); x["features"][0]["feature_effective_at_utc"]="2026-09-19T09:06:00Z"; rehash(x)
 expect_error("future-effective",lambda:build_blind_state(x),"FEATURE_EFFECTIVE_AFTER_CUTOFF")
-x=deepcopy(o); x["features"][0]["mutability_class"]="UNKNOWN"; x["features"][0]["feature_value_at_cutoff"]=1
+x=deepcopy(o); x["features"][0]["mutability_class"]="UNKNOWN"; x["features"][0]["feature_value_at_cutoff"]=1; rehash(x)
 expect_error("unknown-positive",lambda:build_blind_state(x),"UNKNOWN_MUTABILITY_CANNOT_CARRY_POSITIVE_VALUE")
 
 assert counterfactual_route({"frontier_review_need":.8})=="FRONTIER_REVIEW"
