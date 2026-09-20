@@ -59,6 +59,28 @@ assert all(v is False for v in p["authority"].values())
 expect_error("prediction leak",lambda:freeze_challenger_prediction(blind_state=s,challenger="STRESS",question_contract_version="STRESS_V1",predictions={"future_price":2}),"PREDICTION_CONTAINS_OUTCOME_FIELD")
 expect_error("forbidden-frozen-route",lambda:freeze_challenger_prediction(blind_state=s,challenger="STRESS",question_contract_version="STRESS_V1",predictions={"route":"DROP"}),"FORBIDDEN_REPLAY_ROUTE")
 
+
+# T-39 deterministic no-model baseline. This is deliberately simple and has no authority.
+def deterministic_baseline(state):
+ names={str(f.get("feature_name","")).lower():f.get("feature_value_at_cutoff") for f in state.get("features",[])}
+ if any(k in names for k in ("source_conflict","data_conflict","provenance_conflict")):
+  return "FRONTIER_REVIEW"
+ if len(state.get("features",[])) >= 8 or any(k in names for k in ("catalyst","deployer_anomaly","wallet_cluster","velocity")):
+  return "DEEP_DIVE"
+ return "RETAIN"
+
+assert deterministic_baseline(s)=="RETAIN"
+baseline_conflict=build_blind_state(obs(features=[deepcopy(BASE_FEATURE),dict(deepcopy(BASE_FEATURE),feature_name="source_conflict",source_record_or_event_identity="stress:conflict")]))
+assert deterministic_baseline(baseline_conflict)=="FRONTIER_REVIEW"
+baseline_dense=build_blind_state(obs(features=[dict(deepcopy(BASE_FEATURE),feature_name=f"dense_{i}",source_record_or_event_identity=f"stress:dense:{i}") for i in range(8)]))
+assert deterministic_baseline(baseline_dense)=="DEEP_DIVE"
+
+# T-12 reverse-leakage canary: route-relevant baseline must not depend on packet shape alone.
+# These two states differ only in irrelevant field naming/ordering, not semantic trigger content.
+shape_a=build_blind_state(obs(features=[dict(deepcopy(BASE_FEATURE),feature_name="irrelevant_a",source_record_or_event_identity="stress:shape:a")]))
+shape_b=build_blind_state(obs(features=[dict(deepcopy(BASE_FEATURE),feature_name="irrelevant_b",source_record_or_event_identity="stress:shape:b")]))
+assert deterministic_baseline(shape_a)==deterministic_baseline(shape_b)=="RETAIN"
+
 # Size / irrelevant-detail stress, deterministic only. It proves hashing/validation behavior, not Jev intelligence.
 features=[]
 for i in range(255):
@@ -66,4 +88,4 @@ for i in range(255):
  features.append(f)
 large=obs(features=features); large_state=build_blind_state(large)
 assert len(large_state["features"])==255
-print(json.dumps({"status":"PASS","contract":"JEV_REPLAY_STRESS_V1","checks":"leakage,hash-integrity,mutability,time,unknown,probability-bounds,route,authority,determinism,255-feature-size","large_state_sha256":large_state["blind_state_sha256"]},sort_keys=True))
+print(json.dumps({"status":"PASS","contract":"JEV_REPLAY_STRESS_V1","checks":"leakage,hash-integrity,mutability,time,unknown,probability-bounds,route,authority,determinism,T39-baseline,T12-shape-canary,255-feature-size","large_state_sha256":large_state["blind_state_sha256"]},sort_keys=True))
