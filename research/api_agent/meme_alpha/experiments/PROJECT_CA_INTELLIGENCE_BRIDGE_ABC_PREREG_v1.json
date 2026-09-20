@@ -1,0 +1,351 @@
+{
+  "contract": "PROJECT_CA_INTELLIGENCE_BRIDGE_ABC_PREREG_v1",
+  "status": "SHADOW_ONLY_PREREGISTERED",
+  "research_date": "2026-09-20",
+  "owner_issue": 1087,
+  "mission_path": "06_RESEARCH_LAB/alpha_lab/PROJECT_CA_INTELLIGENCE_BRIDGE_DEEP_RESEARCH_MISSION_v1.md",
+  "research_report_path": "06_RESEARCH_LAB/alpha_lab/2026-09-20__project-ca-intelligence-bridge-deep-research__shadow.md",
+  "frozen_main_sha": "684ea9703148d1c0bcef7ff65fec93c1ed489d00",
+  "authority": {
+    "research_only": true,
+    "portfolio_action": false,
+    "automatic_trading": false,
+    "buy_sell": false,
+    "user_alert": false,
+    "production_promotion": false,
+    "framework_state_change": false,
+    "market_rule_change": false,
+    "model_weight_change": false,
+    "automatic_merge": false
+  },
+  "parent_contracts": [
+    "MEME_ALPHA_RUNTIME_POLICY_v1",
+    "MEME_ALPHA_PROSPECTIVE_HARDENING_v1",
+    "MEME_ALPHA_ROBINHOOD_PONS_V2_SHADOW_ADAPTER_v1",
+    "MOONSHOT_SENTINEL_CONTRACT_v1",
+    "ALPHA_LAB_LIFECYCLE_ENGINE_v1"
+  ],
+  "champion": {
+    "id": "EXISTING_ALPHA_LAB_MOONSHOT_CHAMPION",
+    "description": "Existing Alpha Lab / Moonshot Sentinel discovery and gates"
+  },
+  "variants": {
+    "A": {
+      "id": "DETERMINISTIC_PROJECT_FIRST",
+      "jev": false,
+      "flow": [
+        "DISCOVER",
+        "DETERMINISTIC_NORMALIZE",
+        "SOURCE_AUTHENTICATION",
+        "PERSISTENT_PROJECT_MEMORY",
+        "MATERIAL_CHANGE_GATE",
+        "PROJECT_TO_CA_BINDING",
+        "EXISTING_ALPHA_LAB_VERIFICATION",
+        "EXISTING_BOUNDED_DEEP_DIVE"
+      ]
+    },
+    "B": {
+      "id": "DETERMINISTIC_PLUS_JEV",
+      "jev": true,
+      "jev_model": "jev-1.13.0",
+      "same_universe_as_A": true,
+      "same_frozen_source_state_as_A": true,
+      "truth_authority": false,
+      "low_confidence_policy": "RETAIN_OR_ESCALATE_NEVER_DROP",
+      "may_not_decide": [
+        "identity",
+        "provenance",
+        "arithmetic",
+        "date_ordering",
+        "market_cap",
+        "liquidity",
+        "sellability",
+        "CA_linkage",
+        "BUY",
+        "SELL",
+        "threshold_promotion",
+        "evidence_drop"
+      ]
+    },
+    "C": {
+      "id": "ADVERSARIAL_DETERMINISTIC_DELTA",
+      "jev": false,
+      "same_universe_as_A_B": true,
+      "frozen_before_prospective_scoring": true,
+      "purpose": "Test whether persistent project memory plus deterministic material-transition and evidence-family delta captures B's useful value without Jev.",
+      "transition_classes": [
+        "NO_TOKEN_TO_PUBLIC_CA",
+        "DESIGN_TO_DEPLOYED_MAINNET",
+        "UNVERIFIED_CODE_TO_VERIFIED_DEPLOYED_CONTRACT",
+        "NO_WORKING_SURFACE_TO_INDEPENDENTLY_OBSERVABLE_LIVE_USE",
+        "NO_CHAIN_SPECIFIC_MECHANISM_TO_NEW_CHAIN_NATIVE_PRIMITIVE",
+        "STABLE_STATE_TO_AUTHENTICATED_CONTRADICTION_OR_CONFLICT"
+      ]
+    }
+  },
+  "jev_atomic_questions": {
+    "real_product_surface": {
+      "decision": "KEEP_CONSTRAINED",
+      "primitive": "Score",
+      "levels": [
+        "NONE",
+        "DESIGN_OR_CODE_ONLY",
+        "PARTLY_LIVE",
+        "LIVE_OBSERVABLE"
+      ],
+      "note": "Jev interprets supplied authenticated or bounded artifacts only and does not verify deployment truth."
+    },
+    "chain_native_specificity": {
+      "decision": "KEEP",
+      "primitive": "Score",
+      "levels": [
+        "GENERIC",
+        "CHAIN_COMPATIBLE",
+        "CHAIN_SPECIFIC",
+        "CHAIN_PRIMITIVE_NATIVE"
+      ]
+    },
+    "mechanic_falsifiability": {
+      "decision": "KEEP",
+      "primitive": "Score",
+      "levels": [
+        "VAGUE",
+        "PARTLY_CHECKABLE",
+        "MOSTLY_CHECKABLE",
+        "DIRECTLY_FALSIFIABLE"
+      ]
+    },
+    "incremental_information": {
+      "decision": "CHANGE",
+      "replacement": "semantic_delta_value",
+      "primitive": "Score",
+      "note": "Deterministic code defines before/after deltas and timestamps; Jev judges semantic materiality only."
+    },
+    "deep_dive_value": {
+      "decision": "KILL_AS_DIRECT_JEV_AUTHORITY",
+      "replacement": "CODE_ROUTING_FROM_FROZEN_SEMANTIC_FEATURES_PLUS_HARD_GATES_AND_QUEUE_BUDGET"
+    }
+  },
+  "jev_observability_required": [
+    "model_id",
+    "model_version",
+    "state_sha256",
+    "question_set_sha256",
+    "question_id",
+    "answer",
+    "probability_distribution",
+    "confidence_if_supported",
+    "latency_ms",
+    "service_error",
+    "representation_order_id"
+  ],
+  "representation_order_test": {
+    "variants": [
+      "CANONICAL_FIELD_ORDER",
+      "REVERSED_EVIDENCE_ITEM_ORDER",
+      "SHUFFLED_NONSEMANTIC_METADATA_ORDER"
+    ],
+    "denominator_rule": "Permutation siblings do not increase the unique-project denominator.",
+    "failure": "MATERIAL_ROUTING_CLASS_FLIP_FROM_ORDER_ALONE"
+  },
+  "population": {
+    "denominator_unit": "UNIQUE_ELIGIBLE_PROJECT_TRIAL",
+    "minimum_future_eligible_projects": 30,
+    "minimum_distinct_regimes": 2,
+    "minimum_qualified_watches": 10,
+    "net_safix_dark_prospective_credit": 0,
+    "eligibility_frozen_before_outcome": true,
+    "preserve_zero_result_days": true,
+    "preserve_all_rejected_candidates": true
+  },
+  "negative_denominator_classes": {
+    "N1": "SERIOUS_CHAIN_NATIVE_PROJECT_NO_TOKEN_WITHIN_WINDOW",
+    "N2": "SERIOUS_PROJECT_TOKEN_LAUNCHES_LATE",
+    "N3": "STRONG_PRODUCT_NARRATIVE_TOKEN_FAILED_OR_POOR_OUTCOME",
+    "N4": "SOCIAL_HYPE_WEAK_PRODUCT_EVIDENCE",
+    "N5": "DUPLICATE_NAME_TICKER_RELAUNCH_MIGRATION_CONFLICT",
+    "N6": "COPYCAT_FORK_SIMILAR_KEYWORDS",
+    "N7": "TOKEN_FIRST_WINNER_OR_CANDIDATE_WITH_LITTLE_PROJECT_SUBSTANCE",
+    "N8": "RUG_UNSELLABLE_LIQUIDITY_COLLAPSE_NONEXITABLE",
+    "N9": "SOURCE_SPOOF_COMPROMISED_OR_ADVERSARIAL_SURFACE",
+    "N10": "NEUTRAL_RANDOM_ELIGIBLE_PROJECT_SAME_SOURCE_AND_WEEK"
+  },
+  "matching_dimensions": [
+    "chain_or_ecosystem",
+    "discovery_week",
+    "source_family",
+    "project_maturity_bucket",
+    "product_archetype",
+    "token_state_at_discovery",
+    "token_age_bucket_if_launched",
+    "liquidity_bucket_if_launched",
+    "market_cap_or_fdv_availability_preserve_unknown",
+    "source_authentication_state"
+  ],
+  "project_to_ca": {
+    "project_identity_separate_from_token_identity": true,
+    "token_primary_key": "chain_id + exact_contract_address",
+    "ticker_is_identity": false,
+    "name_is_identity": false,
+    "binding_states": [
+      "UNBOUND",
+      "CANDIDATE_BINDING",
+      "BOUND_HIGH",
+      "CONFLICTED",
+      "SUPERSEDED_WITH_PROOF",
+      "REVOKED"
+    ],
+    "bound_high_requires": [
+      "EXACT_CHAIN_ID",
+      "EXACT_CA_VERIFIED_ONCHAIN",
+      "AUTHENTICATED_PROJECT_SOURCE_OR_DETERMINISTIC_PROJECT_CONTROLLED_ONCHAIN_RELATION",
+      "NO_UNRESOLVED_MATERIAL_CONFLICT",
+      "SOURCE_OBSERVED_AT_AND_AVAILABLE_AT",
+      "EVIDENCE_HASH",
+      "RELATIONSHIP_TYPE",
+      "EXPLICIT_CONTINUITY_PROOF_IF_MIGRATION_OR_RELAUNCH"
+    ],
+    "material_false_link_tolerance": 0
+  },
+  "metrics": {
+    "primary": [
+      "incremental_early_recall_vs_champion",
+      "false_negative_rate",
+      "precision_among_deep_dive_candidates",
+      "deep_dive_load_per_eligible_project",
+      "lead_time_to_correctly_bound_exact_ca"
+    ],
+    "safety": [
+      "rug_unsellable_burden",
+      "critical_evidence_retention",
+      "identity_conflict_false_link_rate",
+      "source_health_failures",
+      "unknown_preservation",
+      "cost_amplification",
+      "representation_order_flip_rate",
+      "duplicate_denominator_rows"
+    ],
+    "outcome": [
+      "entry_age_distribution",
+      "entry_market_cap_distribution_or_unknown",
+      "entry_liquidity",
+      "sellable_MFE_1h_6h_24h_7d",
+      "sellable_MAE_1h_6h_24h_7d",
+      "realizable_return_after_slippage",
+      "exit_feasibility",
+      "time_to_first_observed_broad_social_or_KOL_propagation",
+      "outcome_conditional_on_evidence_family"
+    ]
+  },
+  "jev_survival_margins": {
+    "efficiency_path": {
+      "deep_dive_load_reduction_min_pct": 20,
+      "early_recall_noninferiority_margin_percentage_points": 5,
+      "deep_dive_precision_must_not_be_worse": true,
+      "material_lead_time_loss_allowed": false
+    },
+    "recall_path": {
+      "early_recall_improvement_min_percentage_points": 10,
+      "max_deep_dive_load_multiple_vs_A": 1.1,
+      "deep_dive_precision_noninferiority_margin_percentage_points": 5,
+      "median_lead_time_must_not_be_worse": true
+    },
+    "versus_C": "B must add value on at least one primary metric beyond ordinary repeated-evaluation noise or Jev is killed/removed from this bridge."
+  },
+  "architecture_survival_gate": {
+    "minimum_prospective_qualified_opportunities_missed_or_materially_later_by_champion": 2,
+    "maximum_material_false_project_to_ca_links": 0,
+    "maximum_critical_evidence_losses": 0,
+    "max_deep_dive_load_multiple_vs_champion_without_compensating_gain": 1.25,
+    "denominator_completeness_required": true
+  },
+  "lifecycle": {
+    "owner_lifecycle": [
+      "DISCOVERY_OPEN",
+      "DISCOVERY_COMPLETE",
+      "OUTCOME_MATURING",
+      "OUTCOME_MATURED",
+      "INVALIDATED"
+    ],
+    "bridge_substates": [
+      "RAW_DISCOVERY",
+      "NORMALIZED",
+      "PROJECT_CLUSTERED",
+      "SOURCE_AUTHENTICATED_OR_BOUNDED",
+      "MATERIAL_DELTA_EVALUATED",
+      "CA_UNBOUND",
+      "CA_CANDIDATE",
+      "CA_BOUND_HIGH",
+      "CA_CONFLICTED",
+      "ALPHA_LAB_HANDOFF",
+      "DEEP_DIVE_OR_RETAINED_WATCH"
+    ],
+    "substates_do_not_increase_denominator": true
+  },
+  "required_trial_fields": [
+    "project_trial_id",
+    "method_version",
+    "frozen_at_utc",
+    "eligibility_manifest_sha256",
+    "discovery",
+    "project_identity",
+    "source_observations",
+    "project_memory_before",
+    "material_delta",
+    "variants.A",
+    "variants.B",
+    "variants.C",
+    "ca_bindings",
+    "existing_alpha_lab_handoff",
+    "deep_dive",
+    "outcome",
+    "missed_winner_audit",
+    "lineage",
+    "authority"
+  ],
+  "kill_criteria": [
+    "DETERMINISTIC_BASELINE_MATCHES_COMPONENT_WITHIN_PREREGISTERED_MARGIN",
+    "CRITICAL_EVIDENCE_LOST_OR_DOWNGRADED",
+    "JEV_ROUTE_DEPENDS_MATERIALLY_ON_REPRESENTATION_ORDER",
+    "INJECTION_OR_SPOOFING_CAUSES_UNSAFE_DOWNGRADE_OR_UNACCEPTABLE_COST_ESCALATION",
+    "MATERIAL_PROJECT_TO_CA_FALSE_LINK",
+    "GAINS_DISAPPEAR_WITH_FAILED_AND_SIMILAR_PROJECT_DENOMINATOR",
+    "ADVANTAGE_ONLY_FOR_NET_SAFIX_DARK_LIKE_NARRATIVES",
+    "PROSPECTIVE_HELD_OUT_ADVANTAGE_FAILS",
+    "DEEP_DIVE_LOAD_RISES_WITHOUT_USEFUL_RECALL_OR_PRECISION_GAIN",
+    "C_MATCHES_B_WITHIN_PREREGISTERED_MARGIN"
+  ],
+  "historical_design_cases_only": [
+    "NET",
+    "SAFIX_SFX",
+    "DARK",
+    "TAGPAD",
+    "HOODSTACK",
+    "8_BALL"
+  ],
+  "external_adversarial_review": {
+    "claude_packet_present_in_mission": true,
+    "executed_in_this_run": false,
+    "reason": "No Claude runtime or connector was available in the execution environment. No external-model output was fabricated.",
+    "frozen_C_prevents_outcome_tuning_before_any_future_external_review": true
+  },
+  "explicit_not_implement": [
+    "NEW_PROJECT_ALPHA_SCANNER_ENGINE",
+    "PARALLEL_LEDGER",
+    "NAME_OR_TICKER_IDENTITY_JOIN",
+    "JEV_ARITHMETIC_DATE_CA_SELLABILITY_AUTHORITY",
+    "JEV_BUY_SELL_OR_USER_ALERT_LABELS",
+    "LOW_CONFIDENCE_EVIDENCE_DROP",
+    "AUTOMATIC_PRODUCTION_PROMOTION",
+    "AUTOMATIC_MODEL_WEIGHT_CHANGE",
+    "RETROSPECTIVE_WINNER_TRAINED_THRESHOLDS",
+    "NET_SAFIX_DARK_AS_SUCCESS_ROWS",
+    "UNREPRODUCED_EXTERNAL_PONS_BASE_RATE",
+    "SOCIAL_ENGAGEMENT_AS_PROJECT_TRUTH",
+    "DEEP_DIVE_EVERY_PROJECT",
+    "NEW_SCHEDULER_IF_EXISTING_MEME_ALPHA_RUNTIME_CAN_OWN_CADENCE",
+    "PRIVATE_SOURCE_VALUES_IN_PUBLIC_CONTROL_PLANE",
+    "CODEX_DEPENDENCY_FOR_RESEARCH"
+  ],
+  "final_research_verdict": "READY_FOR_SHADOW_BUILD"
+}
