@@ -24,6 +24,7 @@ Skills are process instructions. They do not own market truth, framework doctrin
 | codex-intake | `.agents/skills/codex-intake/SKILL.md` | ACTIVE_OPERATIONAL_V1 | queue for Codex, bounded code defect, research-to-code handoff, CODEX candidate | Prepare/deduplicate bounded research intake only; no CODEX_READY, merge, market or framework authority |
 | developer-source-research | `.agents/skills/developer-source-research/SKILL.md` | PILOT_ACTIVE_READ_ONLY_V0_1 | external API/library behavior, errors, upstream issues/PRs, repository or agent-skill discovery | Retrieve and verify public developer sources only; no code, market or portfolio authority |
 | skill-quality-gate | `.agents/skills/skill-quality-gate/SKILL.md` | PILOT_ACTIVE_READ_ONLY_V0_1 | create/modify/audit skill, trigger tuning, regression review, prove candidate value, retirement review | Read-only meta-evaluation; no authoring, registry mutation, promotion, merge, disable or delete authority |
+| typesafe-ai | `.agents/skills/typesafe-ai/SKILL.md` | INSTALLED_EXPERIMENTAL_SHADOW_ONLY | TypeSafe/JEV design, primitives, API integration, cookbook-guided shadow experiments | Advisory/reference only; no market, trading, routing, threshold, promotion or repository-write authority |
 
 ## 3. Default composition
 
@@ -457,6 +458,9 @@ Potential later candidates such as DATA PING execution, weekly range audit, Mast
 stack_version: 0.5
 stack_status: PILOT_ACTIVE_HARDENED
 skills_active: 7
+skills_installed: 8
+typesafe_ai_skill_status: INSTALLED_EXPERIMENTAL_SHADOW_ONLY
+typesafe_ai_upstream_blob_sha: 0109513f9656917dc93cbc5ecddfca465a53ce66
 stack_qualified_uses_completed_before_v0_3: 1
 prospective_evidence_ledger_version: 0.1
 codex_intake_version: 1
