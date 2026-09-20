@@ -1,0 +1,87 @@
+{
+  "contract": "FOMO_ROBINHOOD_PROSPECTIVE_OBSERVER_PACKET_v1",
+  "date_utc": "2026-09-20",
+  "owner_issue": 1087,
+  "experiment_parent": 1134,
+  "status": "READY_FOR_EXISTING_OWNER_RUNTIME_WIRING",
+  "authority": "SHADOW_RESEARCH_ONLY",
+  "inputs": [
+    "research/api_agent/meme_alpha/experiments/FOMO_ROBINHOOD_PROSPECTIVE_WALLET_COHORT_v0.json",
+    "research/api_agent/meme_alpha/experiments/FOMO_ROBINHOOD_INDEPENDENT_CONVERGENCE_PREREG_v1.json",
+    "research/api_agent/meme_alpha/experiments/FOMO_ROBINHOOD_FORWARD_EVIDENCE_HARDENING_v1.json"
+  ],
+  "runtime_design": {
+    "new_parallel_scanner": false,
+    "reuse_existing_owner": true,
+    "cadence": "event_or_existing_director_cadence",
+    "deterministic_first": true,
+    "model_use": "none_for_collection; escalate only ambiguous evidence",
+    "source_priority": [
+      "chain-native receipts/logs",
+      "existing framework market/sellability sources",
+      "current FOMO/RH public tape",
+      "provider enrichment if already authorized"
+    ]
+  },
+  "candidate_flow": [
+    "observe frozen-cohort activity",
+    "persist exact observed_at/retrieved_at before outcome lookup",
+    "classify trade provenance",
+    "reject gift/dust/seed/passive transfer",
+    "collapse shared economic entities before wallet count",
+    "require market-data health and sellability",
+    "form convergence event only after >=2 independent entities",
+    "freeze challenger event before outcome",
+    "read champion first-seen independently",
+    "compute lead time only when both timestamps are comparable",
+    "later settle MFE/MAE/realizable outcome"
+  ],
+  "observation_states": [
+    "RAW_ACTIVITY",
+    "PROVENANCE_REJECT",
+    "ENTITY_PENDING",
+    "MARKET_HEALTH_PENDING",
+    "SELLABILITY_PENDING",
+    "ELIGIBLE_CONVERGENCE_FROZEN",
+    "OUTCOME_PENDING",
+    "SETTLED"
+  ],
+  "fail_closed": {
+    "missing_source": "DEGRADED",
+    "missing_timestamp": "NOT_COMPARABLE",
+    "missing_provenance": "PROVENANCE_PENDING",
+    "missing_entity": "ENTITY_PENDING",
+    "missing_liquidity": "MARKET_HEALTH_PENDING",
+    "missing_sellability": "SELLABILITY_PENDING",
+    "provider_failure": "UNKNOWN_NOT_ZERO"
+  },
+  "promotion_counter": {
+    "initial": 0,
+    "increment_only_state": "ELIGIBLE_CONVERGENCE_FROZEN",
+    "provider_classified_negative_controls_increment": false,
+    "minimum_for_review": 10
+  },
+  "first_runtime_acceptance_test": {
+    "fixture": "WATCH/FURN class recipient-seeding",
+    "expected": "PROVENANCE_REJECT",
+    "must_not_increment_counter": true,
+    "reason": "prevents raw-wallet-overlap regression"
+  },
+  "routing": {
+    "routine_collection": "DETERMINISTIC",
+    "routine_classification_if_structured": "DETERMINISTIC_OR_LUNA",
+    "bounded_conflict": "TERRA",
+    "forensic_or_causal_ambiguity": "SOL_HIGH",
+    "codex": "NOT_REQUIRED_FOR_RESEARCH_PACKET; only if existing owner later requires code write under governance"
+  },
+  "forbidden": [
+    "retrospective winner insertion",
+    "current wallet score applied to historical signal time",
+    "raw wallet count without entity collapse",
+    "provider PnL as alpha truth",
+    "minute-level lead claim from date-only evidence",
+    "BUY/SELL/copy-trade authority",
+    "new scanner/scorer/ledger/learning controller"
+  ],
+  "next_runtime_action": "Wire this packet into the existing #1087/#1134 observation path using the smallest non-duplicative change, then begin append-only prospective collection."
+}
