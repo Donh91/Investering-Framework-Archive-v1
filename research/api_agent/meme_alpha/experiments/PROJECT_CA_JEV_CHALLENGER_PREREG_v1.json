@@ -1,0 +1,132 @@
+{
+  "contract": "ALPHA_LAB_PROJECT_CA_JEV_CHALLENGER_PREREG_v1",
+  "owner_issue": 1087,
+  "status": "PREREGISTERED_SHADOW_ONLY",
+  "authority": "RESEARCH_ONLY",
+  "thesis": "Test whether a project-first -> exact-CA join plus narrow Jev semantic triage improves early high-information discovery over the frozen current champion without unacceptable Deep-Dive load or critical-evidence loss.",
+  "design_basis": [
+    "NET confirmed framework visibility miss",
+    "SAFIX false-negative reconstruction",
+    "DARK false-negative learning case"
+  ],
+  "retrospective_cases_are_design_only": true,
+  "architecture": {
+    "deterministic_stage": [
+      "discover project/public product surfaces",
+      "extract exact factual primitives and timestamps",
+      "preserve UNKNOWN",
+      "bind first-party/on-chain identity when available"
+    ],
+    "jev_stage": "semantic challenger only after deterministic extraction; never identity/provenance/arithmetic/date authority",
+    "ca_join_stage": "keep project candidate alive and bind prospectively to exact CA/factory/pool when evidence appears",
+    "existing_alpha_lab_stage": [
+      "sellability",
+      "liquidity/market health",
+      "age-normalized traction",
+      "provenance/entity",
+      "wallet/source/caller corroboration",
+      "Deep Dive/Qualified Watch"
+    ]
+  },
+  "jev_atomic_questions": [
+    {
+      "id": "real_product_surface",
+      "type": "Noul",
+      "question": "Does the supplied point-in-time evidence show a concrete product/protocol surface with specific falsifiable mechanics rather than generic marketing?"
+    },
+    {
+      "id": "chain_native_specificity",
+      "type": "Score",
+      "levels": [
+        "generic",
+        "weak",
+        "moderate",
+        "strong",
+        "very_strong"
+      ],
+      "question": "How specifically is the project coupled to the target chain's native financial or technical primitives?"
+    },
+    {
+      "id": "mechanic_falsifiability",
+      "type": "Score",
+      "levels": [
+        "none",
+        "low",
+        "moderate",
+        "high",
+        "very_high"
+      ],
+      "question": "How falsifiable and externally checkable are the described mechanics from the supplied evidence?"
+    },
+    {
+      "id": "incremental_information",
+      "type": "Noul",
+      "question": "Does this evidence add material project information beyond ticker/name/social excitement already present?"
+    },
+    {
+      "id": "deep_dive_value",
+      "type": "Noul",
+      "question": "Would the existing specialist Deep Dive machinery likely add useful information to this project candidate?"
+    }
+  ],
+  "jev_rules": {
+    "model_pin": "jev-1.13.0",
+    "canonical_state_order_required": true,
+    "atomic_questions": true,
+    "questions_evaluated_independently": true,
+    "confidence_policy": "confidence may route to retain/escalate only; low confidence must not DROP evidence",
+    "forbidden": [
+      "truth authority",
+      "identity/provenance authority",
+      "BUY/SELL",
+      "autonomous threshold tuning",
+      "single scalar alpha score",
+      "DROP critical evidence"
+    ]
+  },
+  "arms": {
+    "champion": "existing Alpha Lab discovery policy frozen at preregistration",
+    "challenger_a": "deterministic project-first discovery + project-to-CA join, no Jev",
+    "challenger_b": "challenger_a + Jev semantic triage in shadow",
+    "challenger_c": "reserved for independently proposed adversarial architecture; must be frozen before prospective scoring"
+  },
+  "primary_endpoints": [
+    "incremental early recall before champion",
+    "false-negative rate",
+    "precision among Deep Dive candidates",
+    "Deep-Dive load per eligible project",
+    "lead time to exact CA qualified watch"
+  ],
+  "safety_endpoints": [
+    "rug/unsellable burden",
+    "critical-evidence retention",
+    "source/provenance integrity",
+    "identity-conflict rate",
+    "UNKNOWN preservation"
+  ],
+  "outcome_endpoints": [
+    "sellable MFE",
+    "MAE",
+    "realizable outcome after frozen observation"
+  ],
+  "minimum_evidence": {
+    "future_eligible_projects": 30,
+    "regimes": 2,
+    "qualified_watches": 10
+  },
+  "kill_or_redesign_if": [
+    "Jev adds no preregistered utility over challenger_a",
+    "critical evidence is downgraded/dropped",
+    "representation sensitivity changes operational route",
+    "Deep-Dive load rises without recall/precision benefit",
+    "gains depend on NET/SAFIX/DARK-like labels or hindsight",
+    "identity joins create unacceptable false linkage",
+    "prospective advantage fails to reproduce"
+  ],
+  "claude_red_team_packet": {
+    "status": "READY_FOR_EXTERNAL_REVIEW",
+    "repo_access_required": false,
+    "instruction": "Assume the proposed project-first -> CA bridge and Jev triage are wrong. Attack overfitting to NET/SAFIX/DARK, identify alpha classes still missed, identify false-positive classes created, propose the smallest alternative or correction, and define falsifiable prospective tests. Do not recommend a parallel scanner, retrospective winner fitting, or trading authority."
+  },
+  "implementation_rule": "No production code or scheduler change from this preregistration. Actual code write follows canonical CODEX_ONLY routing and independent review."
+}
