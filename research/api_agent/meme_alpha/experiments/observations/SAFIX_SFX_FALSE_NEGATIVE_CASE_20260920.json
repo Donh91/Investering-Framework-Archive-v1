@@ -1,0 +1,85 @@
+{
+  "contract": "ALPHA_LAB_FALSE_NEGATIVE_CASE_v1",
+  "case_id": "SAFIX_SFX_ROBINHOOD_20260920",
+  "owner_issue": 1087,
+  "status": "FALSE_NEGATIVE_RECONSTRUCTION_REQUIRED",
+  "discovered_externally_by_user": true,
+  "chain": "robinhood",
+  "pair_address": "0x51958cce8f6eee392b53c22005325e94ad605c24ed46f5d6fb225a69f8f9bd36",
+  "token_ca": "0x0a574aae41da077713ba32aa05ca151c8759e2f6",
+  "symbol": "SFX",
+  "name": "Safix",
+  "quote": "USDG",
+  "framework_search_result": "NO_PRIOR_MATCH_ON_MAIN_AT_CASE_INTAKE",
+  "historical_credit": false,
+  "public_prelaunch_surface": {
+    "website": "https://safix.ai/",
+    "docs": "https://safix.ai/docs/",
+    "observable_claims": [
+      "private credit for tokenized stocks and real-world assets",
+      "borrow USDG against tokenized assets",
+      "private collateral verification/passport",
+      "Robinhood Chain native design",
+      "USDG settlement",
+      "documented protocol architecture"
+    ],
+    "important": "Claims are public-surface evidence only until implementation/on-chain contracts are independently verified."
+  },
+  "external_market_snapshot_at_intake": {
+    "source": "DexScreener/GeckoTerminal web retrieval",
+    "pair_age_reported": "approximately 16h on DexScreener snapshot; GeckoTerminal crawls varied by retrieval time",
+    "market_cap_usd_approx": 301000,
+    "liquidity_usd_approx": 44000,
+    "volume_24h_usd_approx": 669000,
+    "traders_24h_approx": 595,
+    "holders_reported": 355,
+    "price_change_24h_pct_approx": 557,
+    "security_note": "DexScreener surfaced no Go+/Quick Intel issues; this is not a framework safety proof."
+  },
+  "identity_conflict": {
+    "state": "MATERIAL_RECONSTRUCTION_REQUIRED",
+    "evidence": "Search also surfaced an earlier Pons SAFIX launch at token 0xa03DEcA5c3Ec610758eB8E3ccb3fDfE165E74798, paired ETH, while current user-supplied pair is SFX/USDG token 0x0A574aae41DA077713ba32aa05cA151c8759e2F6.",
+    "rule": "Do not assume migration, same deployer, continuity, or legitimate relaunch until first-party/on-chain linkage is proven."
+  },
+  "why_scanner_should_have_had_a_chance": [
+    "Robinhood-native protocol surface",
+    "tokenized-stock/RWA primitive directly aligned with chain thesis",
+    "USDG-specific product design",
+    "privacy/verification product narrative with substantial documentation",
+    "website/docs were discoverable before the current pair became mature",
+    "post-launch activity rapidly became material relative to microcap size"
+  ],
+  "expected_pipeline": [
+    "CATALYST_PAIRED_EARLY_DISCOVERY candidate from prelaunch public surface",
+    "first-party provenance verification",
+    "Pons/new-launch exact CA freeze at T0",
+    "identity continuity/conflict check",
+    "rug/sellability/market-health gate",
+    "age-normalized traction",
+    "wallet/source corroboration",
+    "QUALIFIED_WATCH only if gates pass"
+  ],
+  "adjudication": {
+    "prelaunch_discoverability": "YES_AS_CANDIDATE_NOT_TOKEN_CA",
+    "launch_time_ca_discoverability": "YES_IN_PRINCIPLE_VIA_EXISTING_PONS_V2_LAUNCH_ADAPTER_IF_THIS_CA_ORIGINATED_FROM_SUPPORTED_FACTORY",
+    "actual_framework_capture": "NO_EVIDENCE_FOUND",
+    "alpha_credit": "NONE",
+    "classification": "SCANNER_FALSE_NEGATIVE_PENDING_CA_ORIGIN_RECONSTRUCTION"
+  },
+  "required_reconstruction": [
+    "prove exact SFX launch factory/event/block/tx/deployer",
+    "determine relationship between earlier SAFIX 0xa03D...4798 and current SFX 0x0A57...e2F6",
+    "timestamp website/docs/X/Telegram first-publication surfaces without hindsight",
+    "reconstruct first 5m/15m/30m/60m market cap, liquidity, buyers, volume and sellability",
+    "check frozen FOMO cohort activity with provenance/entity collapse",
+    "compare earliest qualifying challenger timestamp with champion/scanner first-seen",
+    "record false-negative root cause before changing discovery rules"
+  ],
+  "learning_guardrails": [
+    "do not learn SAFIX keyword or AI/privacy/RWA website equals alpha",
+    "do not use current +500% outcome to promote historical signals",
+    "do not merge the two SAFIX token identities without proof",
+    "do not grant BUY/SELL authority",
+    "preserve full launch denominator and failed similar projects"
+  ]
+}
