@@ -40,7 +40,7 @@ jobs:
     env:
       PYTHONPATH: ${{ github.workspace }}
       TYPESAFE_API_KEY: ${{ secrets.TYPESAFE_API_KEY }}
-    if: (github.event_name == 'workflow_dispatch' && (inputs.run_live_jev || inputs.run_live_falsification)) || (github.event_name == 'pull_request' && github.head_ref == 'agent/task-20260919-jev-stress-token-benchmark-v1')
+    if: github.event_name == 'workflow_dispatch' && (inputs.run_live_jev || inputs.run_live_falsification)
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
