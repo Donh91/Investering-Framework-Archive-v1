@@ -142,15 +142,15 @@ jobs:
             tests.framework_intelligence.test_operational_memory_fail_to_codex_intake_v1 -v
       - name: Build persistent learning, operational memory and autonomous audit
         run: |
-          python scripts/framework_intelligence/framework_learning_supervisor.py \
-            --repo-root . \
-            --output-root research/framework_learning
           if [ "$(TZ=Europe/Copenhagen date +%u)" = "1" ]; then
             python scripts/framework_intelligence/weekly_forensics_v1.py \
               --repo-root . \
               --output-root research/framework_learning/weekly_forensics \
               --mode FINAL
           fi
+          python scripts/framework_intelligence/framework_learning_supervisor.py \
+            --repo-root . \
+            --output-root research/framework_learning
           python scripts/framework_intelligence/operational_memory_v1.py \
             --repo-root . \
             --output-root research/framework_learning/operational_memory \
