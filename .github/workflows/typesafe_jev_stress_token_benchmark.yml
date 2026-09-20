@@ -50,7 +50,7 @@ jobs:
       - run: pip install "typesafe-sdk==0.7.0"
       - run: test -n "$TYPESAFE_API_KEY"
       - name: Run live synthetic Jev replay
-        run: python scripts/api_agent/typesafe_jev_replay_runner.py --input tests/fixtures/typesafe_jev/synthetic_blind_observation_v1.json --output /tmp/prediction.json --repeat 5 --adversarial-suite
+        run: python scripts/api_agent/typesafe_jev_replay_runner.py --input tests/fixtures/typesafe_jev/synthetic_blind_observation_v1.json --output /tmp/prediction.json --repeat 5 --adversarial-suite --representation-suite
       - name: Preserve sanitized falsification evidence
         uses: actions/upload-artifact@v4
         with:
