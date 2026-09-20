@@ -88,7 +88,11 @@ def counterfactual_route(judgments: dict[str, Any]) -> str:
     names=("evidence_conflict","deep_dive_value","frontier_review_need","material_evidence","preserve_verbatim")
     values={}
     for name in names:
-        value=float(judgments.get(name,0.5))
+        raw = judgments.get(name, 0.5)
+        try:
+            value = float(raw)
+        except (TypeError, ValueError, OverflowError):
+            raise ValueError("INVALID_JUDGMENT_PROBABILITY:"+name) from None
         if not math.isfinite(value) or not 0.0 <= value <= 1.0:
             raise ValueError("INVALID_JUDGMENT_PROBABILITY:"+name)
         values[name]=value
