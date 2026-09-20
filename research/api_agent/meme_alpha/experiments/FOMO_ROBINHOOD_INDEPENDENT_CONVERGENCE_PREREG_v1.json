@@ -1,0 +1,83 @@
+{
+  "contract": "FOMO_ROBINHOOD_INDEPENDENT_CONVERGENCE_PREREG_v1",
+  "status": "PREREGISTERED_SHADOW_ONLY",
+  "preregistered_date_utc": "2026-09-20",
+  "owner_issue": 1087,
+  "experiment_parent": 1134,
+  "cohort": "research/api_agent/meme_alpha/experiments/FOMO_ROBINHOOD_PROSPECTIVE_WALLET_COHORT_v0.json",
+  "question": "Does point-in-time independent wallet convergence from the frozen Robinhood cohort improve early token discovery versus the existing Alpha Lab champion after provenance, entity, sellability and winner-selection controls?",
+  "hypothesis": {
+    "challenger": "verified independent cohort wallets self-initiate economically meaningful buys in the same token within a bounded early window",
+    "champion": "existing Alpha Lab / Moonshot discovery path",
+    "claim_if_passes": "incremental discovery evidence only, not BUY authority"
+  },
+  "eligibility": {
+    "token_first_seen_after_preregistration": true,
+    "wallet_membership_frozen_before_token_outcome": true,
+    "wallet_signal_requires_self_initiated_trade": true,
+    "passive_transfer_dust_gift_airdrop_excluded": true,
+    "service_router_pool_deployer_roles_excluded_or_separately_stratified": true,
+    "independence_requires_distinct_economic_entities": true,
+    "market_data_health_required": true,
+    "sellability_required_for_outcome_credit": true,
+    "already_materially_pumped_at_first_challenger_signal": "EXCLUDE_FROM_EARLY_DISCOVERY_CREDIT"
+  },
+  "challenger_features": {
+    "independent_wallet_count": "integer",
+    "window_minutes": [15, 30, 60, 180],
+    "token_age_at_first_signal_minutes": "integer_or_unknown",
+    "market_cap_at_first_signal": "value_with_semantics_or_unknown",
+    "liquidity_at_first_signal": "value_or_unknown",
+    "cohort_buy_notional": "value_or_unknown",
+    "wallet_quality_at_cutoff": "pre_outcome_only",
+    "source_health": "PASS_DEGRADED_UNKNOWN",
+    "provenance_health": "SELF_INITIATED_PASS_REQUIRED"
+  },
+  "primary_metrics": [
+    "lead_time_vs_champion_minutes",
+    "incremental_top_k_recall",
+    "precision",
+    "false_negative_rate",
+    "rug_or_unsellable_burden",
+    "MFE",
+    "MAE",
+    "realizable_outcome"
+  ],
+  "anti_leakage": [
+    "No wallet score may use the candidate token's future outcome.",
+    "No cohort membership may change because a member catches a winner.",
+    "No token may be added retrospectively because it later pumps.",
+    "Missing or failed source data is UNKNOWN/DEGRADED, never absence.",
+    "Shared funding/control collapses wallets to one economic entity before convergence count.",
+    "Provider leaderboard/ranking is descriptive input only and cannot be treated as ground truth alpha."
+  ],
+  "minimum_evidence_before_promotion": {
+    "eligible_future_tokens": 30,
+    "minimum_distinct_market_regimes": 2,
+    "minimum_independent_convergence_events": 10,
+    "requires_uncertainty_reporting": true,
+    "requires_negative_cases": true
+  },
+  "kill_or_revise_if": [
+    "apparent lift disappears after economic-entity collapse",
+    "lift is explained by already-pumped tokens",
+    "rug_or_unsellable burden materially worsens",
+    "lead time is not positive versus champion",
+    "edge depends on one wallet or one token",
+    "provider/source failures create false zeroes",
+    "wallet quality only looks strong under winner-conditioned selection"
+  ],
+  "current_known_source_cautions": [
+    "Public FOMO Radar pages explicitly show dust/gift classifications, proving raw transfers cannot be treated as buys.",
+    "Several pages state the local tape begins after some pre-existing holdings, so historical entry/PnL can be incomplete.",
+    "Third-party PnL representations materially disagree for some addresses; experiment membership and signals must not depend on headline PnL."
+  ],
+  "authority": {
+    "trade": false,
+    "buy": false,
+    "sell": false,
+    "copy_trade": false,
+    "portfolio_action": false,
+    "champion_promotion": false
+  }
+}
