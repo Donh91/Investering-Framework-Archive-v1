@@ -201,7 +201,7 @@ def call_openai(model: str, prompt: str, context: dict[str, Any], max_output_tok
         "For legacy prior issues without a machine freeze, score only what the exact archived publication and completed-week evidence support and mark LEGACY_BOUNDED. "
         "Never invent historical track-record values. New forecasts must be frozen in explicit machine-readable fields before future outcomes. "
         "Follow Weekly Cycle Navigator Publication Contract v1.1. After the current-state material, the public output must contain weekly price ranges, an intraday map for Day 1-2 / Day 3-4 / Day 5-7, a 2-3 WEEKS compass, a 4-8 WEEKS compass, then the final takeaway. "
-        "For each intraday bucket, use only the supplied final Master Monday evidence. If the evidence cannot support a bucket, write exactly UNAVAILABLE for that bucket rather than infer or reconstruct a forecast. If weekly BTC or ETH ranges are unavailable, keep their machine values null and state UNAVAILABLE in public prose. "
+        "For each intraday bucket, use final Master Monday evidence plus the completed-week hourly capture. When that capture is READY with 168 observed hours, numeric BTC/ETH weekly ranges and numeric Day 1-2 / Day 3-4 / Day 5-7 ranges are mandatory; Master Monday omission alone is not a reason for UNAVAILABLE. "
         "The 4-8 week line must be a short cycle direction plus high-level action posture; use UNAVAILABLE when evidence does not support it. "
         "The readable output is for the owner and the X-ready output is public-facing. Keep X prose compact with cohesive sections, not excessive one-line spacing. "
         "Include one base case for this week, one base case for the next 2-3 weeks, one base case for 4-8 weeks, plus a clear altseason countdown table. "
@@ -277,7 +277,7 @@ def main() -> None:
             print(json.dumps(existing_pointer, sort_keys=True))
             return
 
-    mm_dir = repo / "research/api_agent/outputs/weekly" / str(year) / f"W{completed_week:02d}"
+    mm_dir = repo / "research/api_agent/outputs/weekly" / str(year) / f"W{completed_week:02d}"\n    weekly_capture_path = repo / "03_DAILY_CAPTURE_LOGS/weekly" / str(year) / f"W{completed_week:02d}.json"\n    weekly_capture = maybe_json(weekly_capture_path)
     required = ["MASTER_MONDAY_MACHINE_PACKAGE.json", "MASTER_MONDAY_REPORT.md", "MASTER_MONDAY_CALIBRATION_SCORECARD.json", "MASTER_MONDAY_OPERATIONAL_TRANSLATION.json", "MASTER_MONDAY_DELIVERY_POINTER.json"]
     missing = [name for name in required if not (mm_dir / name).exists()]
     if missing:
@@ -303,7 +303,7 @@ def main() -> None:
         "previous_cycle_navigator_exact_text": prev_text,
         "previous_cycle_navigator_machine_package": prev_machine,
         "previous_score_parameter_ids": expected_score_parameter_ids(prev_machine),
-        "existing_track_record": maybe_text(repo / "05_CYCLE_NAVIGATOR/track_record/CN_TRACK_RECORD_LEDGER.jsonl")
+        "existing_track_record": maybe_text(repo / "05_CYCLE_NAVIGATOR/track_record/CN_TRACK_RECORD_LEDGER.jsonl"),\n        "completed_week_hourly_capture": weekly_capture,\n        "range_continuity_rule": "READY 168h hourly capture makes BTC/ETH weekly and intraday ranges mandatory."
     }
     prompt = (
         f"Generate Cycle Navigator #{issue} for ISO week W{target_week:02d}. First evaluate Cycle Navigator #{prev_issue} against completed W{completed_week:02d}. "
