@@ -140,6 +140,12 @@ def test_output_budget_growth_is_bounded():
     assert mod._next_output_budget(16_000) == 16_000
 
 
+def test_intraday_validation_does_not_shadow_structured_output_mapping():
+    source = (ROOT / "scripts/cycle_navigator/build_weekly_cycle_navigator.py").read_text()
+    assert 'bucket_value = str(intraday.get(bucket)' in source
+    assert 'value = str(intraday.get(bucket)' not in source
+
+
 def test_publication_workflow_does_not_mask_builder_failure():
     workflow = (ROOT / ".github/workflows/cycle-navigator-weekly-publication.yml").read_text()
     build = workflow.split("- name: Build Cycle Navigator from final Master Monday", 1)[1]

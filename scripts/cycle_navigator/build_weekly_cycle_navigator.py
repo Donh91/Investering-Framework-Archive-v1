@@ -405,10 +405,10 @@ def main() -> None:
     if not isinstance(intraday, dict):
         raise SystemExit("intraday_map_missing")
     for bucket in ("day_1_2", "day_3_4", "day_5_7"):
-        value = str(intraday.get(bucket) or "").strip()
-        if not value:
+        bucket_value = str(intraday.get(bucket) or "").strip()
+        if not bucket_value:
             raise SystemExit(f"intraday_{bucket}_missing")
-        if hourly_ready and value.upper() == "UNAVAILABLE":
+        if hourly_ready and bucket_value.upper() == "UNAVAILABLE":
             raise SystemExit(f"RANGE_CONTINUITY_BLOCK:intraday_{bucket}_unavailable_despite_168h_ready")
 
     source_manifest = {"contract": "CYCLE_NAVIGATOR_SOURCE_MANIFEST_v1", "issue_number": issue, "completed_iso_week": completed_week, "target_iso_week": target_week, "master_monday_dir": str(mm_dir.relative_to(repo)), "master_monday_files": {name: sha256_bytes((mm_dir / name).read_bytes()) for name in required}, "previous_issue_number": prev_issue or None, "previous_machine_available": prev_machine is not None, "previous_exact_text_available": prev_text is not None}
