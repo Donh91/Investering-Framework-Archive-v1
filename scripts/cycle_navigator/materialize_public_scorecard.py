@@ -107,8 +107,11 @@ def main() -> None:
     price_score = round(sum(r["score"] for r in scored) / len(scored), 2)
 
     market_score = machine_score.get("structural_score")
+    frozen_claim_score = machine_score.get("public_continuity_score")
     if market_score is None:
         raise SystemExit("public_market_structure_score_missing")
+    if frozen_claim_score is None:
+        raise SystemExit("public_frozen_claim_precision_missing")
 
     components = [
         row for row in (machine_score.get("parameter_scores") or [])
@@ -134,6 +137,14 @@ def main() -> None:
             "actuals": str(actual_path.relative_to(root)),
             "actuals_hourly_coverage": 168,
         },
+        "frozen_claim_precision": {
+            "score": float(frozen_claim_score),
+            "parameter_coverage_pct": machine_score.get("parameter_coverage_pct"),
+            "scored_parameter_count": len([r for r in (machine_score.get("parameter_scores") or []) if r.get("score") is not None]),
+            "method": "canonical_public_continuity_score_from_frozen_parameters",
+            "source": str((current_week_dir / "CYCLE_NAVIGATOR_SCORECARD.json").relative_to(root)),
+            "note": "Official reproducible score across the frozen weekly claim set. It is not blended with price-range precision.",
+        },
         "market_structure_precision": {
             "score": float(market_score),
             "aggregation": "canonical_machine_structural_score_bound_to_public_series_binding",
@@ -158,6 +169,7 @@ def main() -> None:
         "public_issue_number": public_issue,
         "forecast_week": forecast_week,
         "scorecard_path": str(target.relative_to(root)),
+        "frozen_claim_score": float(frozen_claim_score),
         "market_structure_score": float(market_score),
         "price_range_score": price_score,
         "combined_score": None,
@@ -170,6 +182,32 @@ def main() -> None:
     index["latest_completed_score"] = dict(latest)
     index["latest_completed_score"].pop("contract", None)
     write_json(index_path, index)
+
+    history_path = root / "05_CYCLE_NAVIGATOR/site/history-scoreboard.json"
+    if history_path.exists():
+        history = read_json(history_path)
+        for row in history.get("records", []):
+            if int(row.get("cn", -1)) == public_issue:
+                row["era"] = "DUAL_TRACK_CANONICAL"
+                row["overall"] = None
+                row["range_display"] = f"Combined {price_score:g} · BTC {asset_scores['BTC']:g} · ETH {asset_scores['ETH']:g}"
+                row["intraday_display"] = (
+                    f"D1–2 {window_scores['day_1_2']:g} · "
+                    f"D3–4 {window_scores['day_3_4']:g} · "
+                    f"D5–7 {window_scores['day_5_7']:g}"
+                )
+                row["structure_display"] = (
+                    f"Frozen claims {float(frozen_claim_score):g} · "
+                    f"Market/Structure {float(market_score):g}"
+                )
+                row["provenance"] = f"PUBLIC_CN{public_issue}_{forecast_week}_DUAL_TRACK_SCORECARD"
+                row["allow_derived_overall"] = False
+                break
+        history["provenance_note"] = (
+            "Recent dual-track records are resolved by public forecast week plus immutable publication lineage. "
+            "Machine issue numbers are not public-series join keys during the September migration offset."
+        )
+        write_json(history_path, history)
 
     print(json.dumps({"status": "PASS", **latest}, sort_keys=True))
 
