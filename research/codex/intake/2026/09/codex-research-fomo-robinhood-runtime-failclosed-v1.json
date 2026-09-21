@@ -1,0 +1,79 @@
+{
+  "contract": "CODEX_RESEARCH_CANDIDATE_v1",
+  "candidate_id": "codex-research-fomo-robinhood-runtime-failclosed-v1",
+  "submitted_at_utc": "2026-09-21T19:24:00Z",
+  "status": "SUBMITTED",
+  "origin": {
+    "type": "SOL_HIGH_INDEPENDENT_AUDIT",
+    "thread_label": "Alpha Lab FOMO Robinhood runtime fail-closed remediation",
+    "source_paths": [
+      "research/api_agent/meme_alpha/experiments/FOMO_ROBINHOOD_RUNTIME_SOL_AUDIT_20260921.md",
+      "research/api_agent/meme_alpha/experiments/FOMO_ROBINHOOD_FORWARD_EVIDENCE_HARDENING_v1.json",
+      "research/api_agent/meme_alpha/experiments/FOMO_ROBINHOOD_PROSPECTIVE_OBSERVER_PACKET_v1.json"
+    ]
+  },
+  "title": "FOMO Robinhood observer/convergence fail-closed remediation",
+  "objective": "Patch only the existing FOMO Robinhood observer and convergence code so promotion eligibility fully respects the already-frozen hardening contract. Do not activate or schedule it.",
+  "finding_key": "FOMO_RUNTIME_PROMOTION_GATE_WEAKER_THAN_FROZEN_CONTRACT",
+  "primary_target": "scripts/api_agent/meme_alpha_fomo_robinhood_observer.py and scripts/api_agent/meme_alpha_fomo_robinhood_convergence.py",
+  "allowed_change_scope": [
+    "Donh91/Investering-Framework-Archive-v1:scripts/api_agent/meme_alpha_fomo_robinhood_observer.py",
+    "Donh91/Investering-Framework-Archive-v1:scripts/api_agent/meme_alpha_fomo_robinhood_convergence.py",
+    "Donh91/Investering-Framework-Archive-v1:tests/**fomo*",
+    "Donh91/Investering-Framework-Archive-v1:tests/**/meme_alpha/**"
+  ],
+  "evidence": [
+    {
+      "kind": "COMMIT",
+      "ref": "58287d3b9b5894d1dc6b6fc7104ccc9a8a1a4615",
+      "summary": "Sol audit freezes F1-F6 and minimal remediation."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "research/api_agent/meme_alpha/experiments/FOMO_ROBINHOOD_FORWARD_EVIDENCE_HARDENING_v1.json",
+      "summary": "Promotion gate requires exact timestamp lineage, self-initiated provenance, independent provenance, distinct economic entities, market-data health, sellability, future-only."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "research/api_agent/meme_alpha/experiments/FOMO_ROBINHOOD_PROSPECTIVE_OBSERVER_PACKET_v1.json",
+      "summary": "Existing owner, fail-closed states, 10-event review minimum, WATCH/FURN regression, no new scanner/ledger."
+    }
+  ],
+  "reproduction": "Read the two current scripts against FOMO_ROBINHOOD_RUNTIME_SOL_AUDIT_20260921.md. Confirm convergence eligibility does not require confirmed independence_state or source_health, observer equates non-null liquidity with market health, exact source lineage is not a convergence requirement, repeated batch replay can report the same convergence as a fresh promotion increment, and frozen 15/30/60/180m window semantics are not fully represented.",
+  "acceptance_tests": {
+    "positive": [
+      "Valid future-only fixture with two confirmed independent economic entities, independently reproduced provenance, healthy source/market data, exact required lineage and sellability PASS can freeze an eligible convergence.",
+      "Frozen 15/30/60/180m windows are evaluated deterministically without increasing unique-project/token denominator.",
+      "Deterministic IDs remain replayable and authority fields remain false."
+    ],
+    "negative": [
+      "WATCH/FURN recipient-seeding fixtures remain rejected and never increment.",
+      "independence_state PENDING cannot converge.",
+      "source_health UNKNOWN/DEGRADED/error cannot converge.",
+      "non-null liquidity without explicit existing market-data-health PASS cannot converge.",
+      "missing required source locator/timestamp/evidence lineage cannot converge.",
+      "replay of an already-seen convergence cannot create a second promotion increment.",
+      "No scheduler, scanner, scorer, standalone ledger, model, BUY/SELL/copy-trade/portfolio authority or historical rewrite is added."
+    ]
+  },
+  "authority_boundary": "CODE_REMEDIATION_ONLY",
+  "requires_framework_owner_authority": false,
+  "forbidden_changes": [
+    "market gates",
+    "model weights",
+    "canonical authority",
+    "portfolio logic",
+    "API budget",
+    "new policy semantics",
+    "production activation",
+    "scheduler",
+    "new scanner",
+    "parallel ledger",
+    "BUY/SELL/copy-trade authority",
+    "historical prospective credit",
+    "cohort membership changes",
+    "threshold invention"
+  ],
+  "requested_priority": "HIGH",
+  "post_fix_gate": "FOMO_FAILCLOSED_FIXTURES_PASS_PLUS_FRESH_MAIN_READBACK_PLUS_SOL_INDEPENDENT_REVIEW_BEFORE_ANY_RUNTIME_WIRING"
+}
