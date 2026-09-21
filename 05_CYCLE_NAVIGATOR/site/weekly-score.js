@@ -36,6 +36,38 @@
     return newerThanBundle || distinctSameWeekRecord ? { ...range, completed_iso_week: rangeWeek } : null;
   }
 
+  function publicScoreCards(card) {
+    const price = card?.price_range_precision || {};
+    const market = card?.market_structure_precision || {};
+    const windows = price?.intraday_window_scores || {};
+    const intraday = [
+      numeric(windows.day_1_2) ? `D1–2 ${fmt(windows.day_1_2)}` : null,
+      numeric(windows.day_3_4) ? `D3–4 ${fmt(windows.day_3_4)}` : null,
+      numeric(windows.day_5_7) ? `D5–7 ${fmt(windows.day_5_7)}` : null
+    ].filter(Boolean).join(' · ') || 'N/A';
+    return `
+      <article class="cal-summary-card">
+        <span class="cal-summary-label">Market / structure</span>
+        <strong class="cal-summary-value">${fmt(market.score)}</strong>
+        <small class="cal-summary-note">Final completed-week public CN score</small>
+      </article>
+      <article class="cal-summary-card">
+        <span class="cal-summary-label">Price ranges</span>
+        <strong class="cal-summary-value">${fmt(price.score)}</strong>
+        <small class="cal-summary-note">BTC ${fmt(price.btc_score)} · ETH ${fmt(price.eth_score)}</small>
+      </article>
+      <article class="cal-summary-card">
+        <span class="cal-summary-label">Intraday ranges</span>
+        <strong class="cal-summary-value" style="font-size:1rem">${esc(intraday)}</strong>
+        <small class="cal-summary-note">Prospectively published ranges vs completed actuals</small>
+      </article>
+      <article class="cal-summary-card">
+        <span class="cal-summary-label">Overall</span>
+        <strong class="cal-summary-value">N/A</strong>
+        <small class="cal-summary-note">Not synthesized without a stable aggregation contract</small>
+      </article>`;
+  }
+
   function rangeScoreCards(range) {
     const windows = range?.intraday_window_scores || {};
     const intraday = [
@@ -100,42 +132,61 @@
 
   function insertPanel(snapshot) {
     if (document.getElementById('weeklyCanonicalScorecard')) return;
+    const publicCard = snapshot?.public_scorecard;
     const bundle = snapshot?.weekly_score_bundle;
     const range = supplementalRangeScore(snapshot, bundle);
-    if (!bundle && !range) return;
+    if (!publicCard && !bundle && !range) return;
 
     const section = document.createElement('section');
     section.id = 'weeklyCanonicalScorecard';
     section.className = 'section-block';
     section.setAttribute('aria-label', 'Weekly verified Cycle Navigator scorecard');
-    const canonicalPanel = bundle ? `
-      <div class="panel">
-        <div class="cal-panel-intro">
-          <div>
-            <span class="kicker">Latest completed precision</span>
-            <h3>CN #${esc(bundle.issue_scored ?? '—')} · completed W${esc(bundle.completed_iso_week ?? '—')}</h3>
-            <p>Canonical Cycle Navigator scorecard generated after final Master Monday. Structural and public-continuity scores remain separate, no synthetic overall score is invented.</p>
-          </div>
-          <span class="cal-method-badge">${esc(bundle.score_status || 'UNKNOWN')}</span>
-        </div>
-        <div class="cal-summary-grid">${scoreCards(bundle)}</div>
-        ${parameterRows(bundle)}
-      </div>` : '';
 
-    const recoveredRangePanel = range ? `
-      <div class="panel" style="margin-top:1rem">
-        <div class="cal-panel-intro">
-          <div>
-            <span class="kicker">Recovered price-range record</span>
-            <h3>CN #${esc(range.issue_scored ?? '—')} · forecast W${esc(range.completed_iso_week ?? '—')}</h3>
-            <p>Separate append-only range record recovered from prospectively published ranges and completed-week actuals. It does not replace or alter the current canonical CN scorecard.</p>
+    if (publicCard) {
+      const publicIssue = publicCard.public_issue_number ?? '—';
+      const forecastWeek = String(publicCard.forecast_week || '').replace(/^\d{4}-W/i, '');
+      section.innerHTML = `
+        <div class="panel">
+          <div class="cal-panel-intro">
+            <div>
+              <span class="kicker">Latest completed public precision</span>
+              <h3>CN #${esc(publicIssue)} · completed W${esc(forecastWeek || '—')}</h3>
+              <p>Resolved from the immutable published public CN forecast and its matching completed-week outcomes. Public issue identity is matched by forecast week and source lineage, never by the migration-era machine issue number alone.</p>
+            </div>
+            <span class="cal-method-badge">${esc(publicCard.status || 'FINAL')}</span>
           </div>
-          <span class="cal-method-badge">${esc(range.status || 'FINAL')}</span>
-        </div>
-        <div class="cal-summary-grid">${rangeScoreCards(range)}</div>
-      </div>` : '';
+          <div class="cal-summary-grid">${publicScoreCards(publicCard)}</div>
+        </div>`;
+    } else {
+      const canonicalPanel = bundle ? `
+        <div class="panel">
+          <div class="cal-panel-intro">
+            <div>
+              <span class="kicker">Machine calibration fallback</span>
+              <h3>Machine issue #${esc(bundle.issue_scored ?? '—')} · completed W${esc(bundle.completed_iso_week ?? '—')}</h3>
+              <p>Public-series scorecard is unavailable. This fallback is machine calibration evidence and must not be treated as public CN identity during a numbering-offset window.</p>
+            </div>
+            <span class="cal-method-badge">${esc(bundle.score_status || 'UNKNOWN')}</span>
+          </div>
+          <div class="cal-summary-grid">${scoreCards(bundle)}</div>
+          ${parameterRows(bundle)}
+        </div>` : '';
 
-    section.innerHTML = canonicalPanel + recoveredRangePanel;
+      const recoveredRangePanel = range ? `
+        <div class="panel" style="margin-top:1rem">
+          <div class="cal-panel-intro">
+            <div>
+              <span class="kicker">Recovered price-range record</span>
+              <h3>CN #${esc(range.issue_scored ?? '—')} · forecast W${esc(range.completed_iso_week ?? '—')}</h3>
+              <p>Separate append-only range record recovered from a prospectively published forecast. It does not establish public-series identity by itself.</p>
+            </div>
+            <span class="cal-method-badge">${esc(range.status || 'FINAL')}</span>
+          </div>
+          <div class="cal-summary-grid">${rangeScoreCards(range)}</div>
+        </div>` : '';
+
+      section.innerHTML = canonicalPanel + recoveredRangePanel;
+    }
 
     const calibration = document.querySelector('.calibration-center');
     if (calibration?.parentNode) {
