@@ -658,7 +658,7 @@ def main() -> None:
         "legacy_research_context": load_legacy_context(args.legacy_root),
         "experiment_learning": load_experiment_learning(args.experiment_registry, args.experiment_outcome_root, start, end,
             repo_root=args.repo_root, forecast_root=args.experiment_forecast_root),
-        "selection_rule": "latest eligible row per Europe/Copenhagen local date within frozen local week, deduplicated by timestamp and output hash",
+        "cycle_navigator_range_score": load_json(args.repo_root / "05_CYCLE_NAVIGATOR/LATEST_RANGE_SCORE.json") if (args.repo_root / "05_CYCLE_NAVIGATOR/LATEST_RANGE_SCORE.json").exists() else {"status": "UNAVAILABLE"},\n        "cycle_navigator_prospective_range": load_json(args.repo_root / "05_CYCLE_NAVIGATOR/LATEST_PROSPECTIVE_RANGE.json") if (args.repo_root / "05_CYCLE_NAVIGATOR/LATEST_PROSPECTIVE_RANGE.json").exists() else {"status": "UNAVAILABLE"},\n        "selection_rule": "latest eligible row per Europe/Copenhagen local date within frozen local week, deduplicated by timestamp and output hash",
         "handoff_targets": ["RAW_WEEKLY_CALIBRATION", "FORECAST_LEDGER", "MASTER_MONDAY_PREP", "SPECIALIST_REVIEW", "EXPERIMENT_GOVERNANCE_REVIEW"],
         "rules": [
             "Do not rewrite frozen forecasts.",\n            "Consume cycle_navigator_range_score when available as the authoritative append-only correction for previously published prospective ranges; do not replace it with a null machine-freeze interpretation.",
