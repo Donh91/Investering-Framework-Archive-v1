@@ -65,13 +65,19 @@ const packagePath=resolve(repoRoot,pointer.week_dir,"CYCLE_NAVIGATOR_MACHINE_PAC
 if(Number(pointer.issue_number)!==Number(pkg.issue_number)) throw new Error("Pointer/package issue mismatch");
 const rangeScore=await readJson(RANGE_SCORE_PATH).catch(()=>null);
 const prospectiveRange=await readJson(PROSPECTIVE_RANGE_PATH).catch(()=>null);
-const publicSeries=await readJson(PUBLIC_SERIES_INDEX_PATH).catch(()=>null);
+const publicSeriesRaw=await readJson(PUBLIC_SERIES_INDEX_PATH).catch(()=>null);
 let publicScorecard=null;
-if(publicSeries?.latest_completed_score?.scorecard_path){
-  const rel=String(publicSeries.latest_completed_score.scorecard_path);
+if(publicSeriesRaw?.latest_completed_score?.scorecard_path){
+  const rel=String(publicSeriesRaw.latest_completed_score.scorecard_path);
   if(!rel.startsWith("05_CYCLE_NAVIGATOR/public_scorecards/")||rel.includes("..")) throw new Error("Public CN scorecard path escaped approved root");
   publicScorecard=await readJson(resolve(repoRoot,rel));
 }
+const publicSeries=publicSeriesRaw?{
+  contract:publicSeriesRaw.contract,
+  latest_published:pick(publicSeriesRaw.latest_published||{},["public_issue_number","forecast_week"]),
+  latest_completed_score:pick(publicSeriesRaw.latest_completed_score||{},["public_issue_number","forecast_week","market_structure_score","price_range_score","combined_score","status"]),
+  current_public_projection:pick(publicSeriesRaw.current_public_projection||{},["public_issue_number","forecast_week","publication_status"])
+}:null;
 const snapshot={schema:"CN_PUBLIC_SNAPSHOT_V2",generated_at:new Date().toISOString(),authority:false,pointer:sanitizePointer(pointer),package:sanitizePackage(pkg),public_series:publicSeries,public_scorecard:publicScorecard,range_score:rangeScore,prospective_range:prospectiveRange};
 const compass=await buildCompassSnapshot();
 const compassEvent=await buildCompassEventSnapshot();
