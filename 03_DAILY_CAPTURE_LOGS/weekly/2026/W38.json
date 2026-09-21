@@ -56,24 +56,24 @@
       },
       "DAY5_7": {
         "btc": {
-          "close": 81091.85,
+          "close": 81178.0,
           "high": 81951.0,
           "low": 76296.0,
           "open": 76417.01
         },
         "eth": {
-          "close": 2634.5,
+          "close": 2645.21,
           "high": 2668.0,
           "low": 2436.89,
           "open": 2447.28
         },
         "ethbtc": {
-          "close": 0.03248,
+          "close": 0.03258,
           "high": 0.0327,
           "low": 0.03183,
           "open": 0.03203
         },
-        "observed_hours": 69,
+        "observed_hours": 72,
         "window_end_utc": "2026-09-21T00:00:00Z",
         "window_start_utc": "2026-09-18T00:00:00Z"
       }
@@ -83,7 +83,7 @@
   "enriched_hourly_path": "weekly/2026/W38/WEEKLY_HOURLY_ENRICHED.csv",
   "forecast_evaluation_performed": false,
   "framework_state_change": false,
-  "generated_at_utc": "2026-09-20T23:31:02Z",
+  "generated_at_utc": "2026-09-21T05:11:08Z",
   "handoff_targets": [
     "RAW_WEEKLY_CALIBRATION",
     "FORECAST_LEDGER_EVALUATION",
@@ -94,104 +94,100 @@
   ],
   "hourly_gap_diagnostics": {
     "expected_hours": 168,
-    "max_contiguous_gap_hours": 3,
-    "missing_hour_count": 3,
-    "missing_hours_utc": [
-      "2026-09-20T21:00:00Z",
-      "2026-09-20T22:00:00Z",
-      "2026-09-20T23:00:00Z"
-    ],
-    "observed_hours": 165,
+    "max_contiguous_gap_hours": 0,
+    "missing_hour_count": 0,
+    "missing_hours_utc": [],
+    "observed_hours": 168,
     "per_field_completeness": {
       "btc_close": {
-        "complete_hours": 165,
-        "coverage_pct": 98.214
+        "complete_hours": 168,
+        "coverage_pct": 100.0
       },
       "btc_long_short_ratio": {
-        "complete_hours": 165,
-        "coverage_pct": 98.214
+        "complete_hours": 168,
+        "coverage_pct": 100.0
       },
       "btc_open_interest": {
-        "complete_hours": 165,
-        "coverage_pct": 98.214
+        "complete_hours": 168,
+        "coverage_pct": 100.0
       },
       "btc_quote_volume": {
-        "complete_hours": 165,
-        "coverage_pct": 98.214
+        "complete_hours": 168,
+        "coverage_pct": 100.0
       },
       "btc_taker_buy_quote_share": {
-        "complete_hours": 165,
-        "coverage_pct": 98.214
+        "complete_hours": 168,
+        "coverage_pct": 100.0
       },
       "btc_trade_count": {
-        "complete_hours": 165,
-        "coverage_pct": 98.214
+        "complete_hours": 168,
+        "coverage_pct": 100.0
       },
       "eth_close": {
-        "complete_hours": 165,
-        "coverage_pct": 98.214
+        "complete_hours": 168,
+        "coverage_pct": 100.0
       },
       "eth_long_short_ratio": {
-        "complete_hours": 165,
-        "coverage_pct": 98.214
+        "complete_hours": 168,
+        "coverage_pct": 100.0
       },
       "eth_open_interest": {
-        "complete_hours": 165,
-        "coverage_pct": 98.214
+        "complete_hours": 168,
+        "coverage_pct": 100.0
       },
       "eth_quote_volume": {
-        "complete_hours": 165,
-        "coverage_pct": 98.214
+        "complete_hours": 168,
+        "coverage_pct": 100.0
       },
       "eth_taker_buy_quote_share": {
-        "complete_hours": 165,
-        "coverage_pct": 98.214
+        "complete_hours": 168,
+        "coverage_pct": 100.0
       },
       "eth_trade_count": {
-        "complete_hours": 165,
-        "coverage_pct": 98.214
+        "complete_hours": 168,
+        "coverage_pct": 100.0
       },
       "ethbtc_close": {
-        "complete_hours": 165,
-        "coverage_pct": 98.214
+        "complete_hours": 168,
+        "coverage_pct": 100.0
       }
     }
   },
   "hourly_ingestion_diagnostics": [],
   "hourly_sequence": {
     "btc": {
-      "down_hours": 80,
+      "down_hours": 82,
       "max_abs_return_1h_pct": 2.60110085311,
       "max_range_1h_pct": 3.24179227751,
       "price_oi_state_counts": {
-        "PRICE_DOWN_OI_DOWN": 42,
-        "PRICE_DOWN_OI_UP": 38,
+        "PRICE_DOWN_OI_DOWN": 43,
+        "PRICE_DOWN_OI_UP": 39,
         "PRICE_UP_OI_DOWN": 37,
-        "PRICE_UP_OI_UP": 48
+        "PRICE_UP_OI_UP": 49
       },
-      "up_hours": 85,
+      "up_hours": 86,
       "week_range": {
-        "close": 81091.85,
+        "close": 81178.0,
         "high": 81951.0,
         "low": 74967.97,
         "open": 76842.01
       }
     },
     "contract": "WEEKLY_HOURLY_SEQUENCE_EVIDENCE_v2",
-    "derivatives_oi_complete_hours": 165,
+    "derivatives_oi_complete_hours": 168,
     "eth": {
-      "down_hours": 71,
+      "down_hours": 72,
       "max_abs_return_1h_pct": 2.09372402328,
       "max_range_1h_pct": 3.73058400597,
       "price_oi_state_counts": {
-        "PRICE_DOWN_OI_DOWN": 41,
+        "PRICE_DOWN_OI_DOWN": 42,
         "PRICE_DOWN_OI_UP": 30,
-        "PRICE_UP_OI_DOWN": 39,
-        "PRICE_UP_OI_UP": 55
+        "PRICE_UP_OI_DOWN": 40,
+        "PRICE_UP_OI_UP": 56
       },
-      "up_hours": 94,
+      "up_hours": 96,
       "week_range": {
-        "close": 2634.5,
+        "close": 2645.21,
         "high": 2668.0,
         "low": 2358.88,
         "open": 2477.1
@@ -199,9 +195,9 @@
     },
     "ethbtc": {
       "down_hours": 80,
-      "up_hours": 73,
+      "up_hours": 75,
       "week_range": {
-        "close": 0.03248,
+        "close": 0.03258,
         "high": 0.03287,
         "low": 0.03134,
         "open": 0.03223
@@ -209,14 +205,14 @@
     },
     "expected_hourly_rows": 168,
     "first_hour_utc": "2026-09-14T00:00:00Z",
-    "hourly_coverage_pct": 98.214,
-    "last_hour_utc": "2026-09-20T20:00:00Z",
-    "long_short_complete_hours": 165,
+    "hourly_coverage_pct": 100.0,
+    "last_hour_utc": "2026-09-20T23:00:00Z",
+    "long_short_complete_hours": 168,
     "market_interpretation": false,
-    "observed_hourly_rows": 165,
+    "observed_hourly_rows": 168,
     "sequence_evidence_only": true,
-    "spot_complete_hours": 165,
-    "spot_flow_complete_hours": 165
+    "spot_complete_hours": 168,
+    "spot_flow_complete_hours": 168
   },
   "iso_week": 38,
   "iso_year": 2026,
