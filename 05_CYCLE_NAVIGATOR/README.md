@@ -4,6 +4,29 @@
 **Authority:** NONE_BY_ITSELF  
 **Folder role:** Public Cycle Navigator continuity, forecast/range accountability, communication templates and performance tracking.
 
+## Precision / frozen-score retrieval - mandatory first stop
+
+For any request about **Cycle Navigator precision, last week's score, today's CN score, frozen ranges, forecast accuracy or calibration**, read these before interpreting weekly folders:
+
+```text
+CANONICAL_SCORE_AND_LINEAGE.md
+public_series/CN_PUBLIC_SERIES_INDEX.json
+```
+
+The September 2026 migration created a **public-series vs machine-series numbering offset**. From W36 onward, machine `issue_number` is one ahead of the actually published public CN number. Therefore:
+
+**Never join or retrieve public CN precision from `issue_number` alone.**
+
+The safe identity is:
+
+```text
+series + public issue number + forecast week + immutable source
+```
+
+In particular, W38's actually published forecast is **public CN #25**, and its prospectively published BTC/ETH intraday ranges are real frozen evidence even though the W38 migration-era machine freeze stores null ranges under machine issue #26.
+
+The latest completed public score must be resolved from `public_series/CN_PUBLIC_SERIES_INDEX.json -> latest_completed_score`. Machine `CYCLE_NAVIGATOR_SCORECARD.json` remains valid machine/calibration evidence but is not automatically the public-series scorecard during this offset window.
+
 ## Current production-routing notice
 
 Binding current routing owner:
