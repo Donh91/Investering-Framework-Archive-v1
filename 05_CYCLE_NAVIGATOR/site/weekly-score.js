@@ -16,17 +16,19 @@
     return match ? Number(match[1]) : null;
   };
 
-  function latestRangeScore(snapshot, bundle) {
+  function supplementalRangeScore(snapshot, bundle) {
     const range = snapshot?.range_score;
     if (!range || !numeric(range.price_range_score) || !numeric(range.issue_scored)) return null;
     const rangeWeek = weekNumber(range.forecast_week);
     const bundleWeek = numeric(bundle?.completed_iso_week) ? Number(bundle.completed_iso_week) : null;
+    const rangeIssue = Number(range.issue_scored);
+    const bundleIssue = numeric(bundle?.issue_scored) ? Number(bundle.issue_scored) : null;
     const newerThanBundle = rangeWeek != null && (bundleWeek == null || rangeWeek > bundleWeek);
-    const fillsMissingSameWeek = rangeWeek != null
+    const distinctSameWeekRecord = rangeWeek != null
       && bundleWeek != null
       && rangeWeek === bundleWeek
-      && !numeric(bundle?.price_range_score);
-    return newerThanBundle || fillsMissingSameWeek ? { ...range, completed_iso_week: rangeWeek } : null;
+      && (bundleIssue == null || rangeIssue !== bundleIssue || !numeric(bundle?.price_range_score));
+    return newerThanBundle || distinctSameWeekRecord ? { ...range, completed_iso_week: rangeWeek } : null;
   }
 
   function rangeScoreCards(range) {
@@ -94,41 +96,41 @@
   function insertPanel(snapshot) {
     if (document.getElementById('weeklyCanonicalScorecard')) return;
     const bundle = snapshot?.weekly_score_bundle;
-    const range = latestRangeScore(snapshot, bundle);
+    const range = supplementalRangeScore(snapshot, bundle);
     if (!bundle && !range) return;
 
     const section = document.createElement('section');
     section.id = 'weeklyCanonicalScorecard';
     section.className = 'section-block';
     section.setAttribute('aria-label', 'Weekly verified Cycle Navigator scorecard');
-    if (range) {
-      section.innerHTML = `
-        <div class="panel">
-          <div class="cal-panel-intro">
-            <div>
-              <span class="kicker">Latest completed precision</span>
-              <h3>CN #${esc(range.issue_scored ?? '—')} · completed W${esc(range.completed_iso_week ?? '—')}</h3>
-              <p>Final reconciled range precision from the prospectively published forecast and 168/168 completed-week hourly actuals. No synthetic overall score is shown.</p>
-            </div>
-            <span class="cal-method-badge">${esc(range.status || 'FINAL')}</span>
+    const canonicalPanel = bundle ? `
+      <div class="panel">
+        <div class="cal-panel-intro">
+          <div>
+            <span class="kicker">Latest completed precision</span>
+            <h3>CN #${esc(bundle.issue_scored ?? '—')} · completed W${esc(bundle.completed_iso_week ?? '—')}</h3>
+            <p>Canonical Cycle Navigator scorecard generated after final Master Monday. Structural and public-continuity scores remain separate, no synthetic overall score is invented.</p>
           </div>
-          <div class="cal-summary-grid">${rangeScoreCards(range)}</div>
-        </div>`;
-    } else {
-      section.innerHTML = `
-        <div class="panel">
-          <div class="cal-panel-intro">
-            <div>
-              <span class="kicker">Weekly verified scorecard</span>
-              <h3>CN #${esc(bundle.issue_scored ?? '—')} · completed W${esc(bundle.completed_iso_week ?? '—')}</h3>
-              <p>Direct from the canonical weekly CN scorecard generated after final Master Monday. X is downstream publication only and is never a score source for this site.</p>
-            </div>
-            <span class="cal-method-badge">${esc(bundle.score_status || 'UNKNOWN')}</span>
+          <span class="cal-method-badge">${esc(bundle.score_status || 'UNKNOWN')}</span>
+        </div>
+        <div class="cal-summary-grid">${scoreCards(bundle)}</div>
+        ${parameterRows(bundle)}
+      </div>` : '';
+
+    const recoveredRangePanel = range ? `
+      <div class="panel" style="margin-top:1rem">
+        <div class="cal-panel-intro">
+          <div>
+            <span class="kicker">Recovered price-range record</span>
+            <h3>CN #${esc(range.issue_scored ?? '—')} · forecast W${esc(range.completed_iso_week ?? '—')}</h3>
+            <p>Separate append-only range record recovered from prospectively published ranges and completed-week actuals. It does not replace or alter the current canonical CN scorecard.</p>
           </div>
-          <div class="cal-summary-grid">${scoreCards(bundle)}</div>
-          ${parameterRows(bundle)}
-        </div>`;
-    }
+          <span class="cal-method-badge">${esc(range.status || 'FINAL')}</span>
+        </div>
+        <div class="cal-summary-grid">${rangeScoreCards(range)}</div>
+      </div>` : '';
+
+    section.innerHTML = canonicalPanel + recoveredRangePanel;
 
     const calibration = document.querySelector('.calibration-center');
     if (calibration?.parentNode) {
