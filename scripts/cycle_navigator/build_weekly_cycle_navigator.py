@@ -55,6 +55,68 @@ def latest_previous_cn(repo: Path) -> tuple[int, str | None, dict[str, Any] | No
     return issue, path.read_text(), None
 
 
+def latest_published_public_issue(repo: Path) -> int:
+    pub = repo / "05_CYCLE_NAVIGATOR/published"
+    found: list[int] = []
+    if pub.exists():
+        for p in pub.rglob("CYCLE_NAVIGATOR_*_X_PUBLISHED_*.md"):
+            m = re.search(r"CYCLE_NAVIGATOR_(\d+)_X_PUBLISHED_", p.name)
+            if m:
+                found.append(int(m.group(1)))
+    return max(found) if found else 0
+
+
+def append_forward_ranges(
+    repo: Path,
+    *,
+    public_issue_number: int,
+    machine_issue_number: int,
+    year: int,
+    week: int,
+    generated_unix: int,
+    freeze: dict[str, Any],
+) -> None:
+    intraday = freeze.get("intraday_map") if isinstance(freeze.get("intraday_map"), dict) else {}
+    rows: list[dict[str, Any]] = []
+    for window in ("day_1_2", "day_3_4", "day_5_7"):
+        text = str(intraday.get(window) or "")
+        for asset in ("BTC", "ETH"):
+            m = re.search(rf"{asset}\s*\$?([\d,]+(?:\.\d+)?)\s*[–-]\s*\$?([\d,]+(?:\.\d+)?)", text, re.I)
+            if m:
+                rows.append({
+                    "contract": "CN_FORWARD_RANGE_FREEZE_v2",
+                    "public_issue_number": public_issue_number,
+                    "machine_issue_number": machine_issue_number,
+                    "forecast_week": f"{year:04d}-W{week:02d}",
+                    "window": window,
+                    "asset": asset,
+                    "forecast_low": float(m.group(1).replace(",", "")),
+                    "forecast_high": float(m.group(2).replace(",", "")),
+                    "generated_unix": generated_unix,
+                    "source": "CYCLE_NAVIGATOR_FORECAST_FREEZE",
+                    "status": "FROZEN_PROSPECTIVE",
+                })
+    if not rows:
+        return
+    ledger = repo / "05_CYCLE_NAVIGATOR/forward_range_ledger/CN_FORWARD_RANGE_LEDGER_v2.jsonl"
+    ledger.parent.mkdir(parents=True, exist_ok=True)
+    existing: set[tuple[int, str, str, str]] = set()
+    if ledger.exists():
+        for line in ledger.read_text().splitlines():
+            if not line.strip():
+                continue
+            try:
+                row = json.loads(line)
+                existing.add((int(row.get("public_issue_number", -1)), str(row.get("forecast_week")), str(row.get("asset")), str(row.get("window"))))
+            except Exception:
+                continue
+    with ledger.open("a") as fh:
+        for row in rows:
+            key=(row["public_issue_number"],row["forecast_week"],row["asset"],row["window"])
+            if key not in existing:
+                fh.write(json.dumps(row, sort_keys=True, separators=(",", ":")) + "\n")
+
+
 def expected_score_parameter_ids(previous_machine: dict[str, Any] | None) -> list[str]:
     if not isinstance(previous_machine, dict):
         return []
@@ -301,6 +363,8 @@ def main() -> None:
 
     prev_issue, prev_text, prev_machine = latest_previous_cn(repo)
     issue = prev_issue + 1
+    latest_public_issue = latest_published_public_issue(repo)
+    public_issue = latest_public_issue + 1
     target_dir = repo / "05_CYCLE_NAVIGATOR/weekly" / str(year) / f"W{target_week:02d}"
     target_dir.mkdir(parents=True, exist_ok=True)
 
@@ -310,6 +374,7 @@ def main() -> None:
         "completed_iso_week": completed_week,
         "target_iso_week": target_week,
         "issue_number": issue,
+        "public_issue_number": public_issue,
         "previous_issue_number": prev_issue or None,
         "master_monday_pointer": mm_ptr,
         "master_monday_machine_package": read_json(mm_dir / "MASTER_MONDAY_MACHINE_PACKAGE.json"),
@@ -325,7 +390,7 @@ def main() -> None:
         "range_continuity_rule": "READY 168h hourly capture makes BTC/ETH weekly and intraday ranges mandatory."
     }
     prompt = (
-        f"Generate Cycle Navigator #{issue} for ISO week W{target_week:02d}. First evaluate Cycle Navigator #{prev_issue} against completed W{completed_week:02d}. "
+        f"Generate internal Cycle Navigator machine issue #{issue} for ISO week W{target_week:02d}, but the continuing public series number for this forecast week is CN #{public_issue}. Use CN #{public_issue} in readable_markdown and x_ready_markdown headings/current-issue references. First evaluate the prior frozen machine issue #{prev_issue} against completed W{completed_week:02d}. "
         "Then freeze the new week's explicit forecasts. The X-ready version must include a precision section, an honest what-went-well/what-went-wrong section, "
         "a concise public track-record section that only uses archived/reproducible values, a current-state section, weekly BTC/ETH ranges or UNAVAILABLE, "
         "an intraday map with Day 1-2, Day 3-4 and Day 5-7, one base case for this week, one base case for 2-3 weeks, one 4-8 week cycle direction/action posture, "
@@ -411,10 +476,11 @@ def main() -> None:
         if hourly_ready and bucket_value.upper() == "UNAVAILABLE":
             raise SystemExit(f"RANGE_CONTINUITY_BLOCK:intraday_{bucket}_unavailable_despite_168h_ready")
 
-    source_manifest = {"contract": "CYCLE_NAVIGATOR_SOURCE_MANIFEST_v1", "issue_number": issue, "completed_iso_week": completed_week, "target_iso_week": target_week, "master_monday_dir": str(mm_dir.relative_to(repo)), "master_monday_files": {name: sha256_bytes((mm_dir / name).read_bytes()) for name in required}, "previous_issue_number": prev_issue or None, "previous_machine_available": prev_machine is not None, "previous_exact_text_available": prev_text is not None}
-    package = {"contract": "CYCLE_NAVIGATOR_MACHINE_PACKAGE_v1", "generated_unix": int(time.time()), "authority": "USER_FACING_DERIVED_FROM_FINAL_MASTER_MONDAY", "publication_status": "X_READY_NOT_CONFIRMED_PUBLISHED", "source_manifest_sha256": sha256_bytes(canonical_bytes(source_manifest)), **value}
+    source_manifest = {"contract": "CYCLE_NAVIGATOR_SOURCE_MANIFEST_v1", "issue_number": issue, "public_issue_number": public_issue, "completed_iso_week": completed_week, "target_iso_week": target_week, "master_monday_dir": str(mm_dir.relative_to(repo)), "master_monday_files": {name: sha256_bytes((mm_dir / name).read_bytes()) for name in required}, "previous_issue_number": prev_issue or None, "previous_machine_available": prev_machine is not None, "previous_exact_text_available": prev_text is not None}
+    generated_unix = int(time.time())
+    package = {"contract": "CYCLE_NAVIGATOR_MACHINE_PACKAGE_v1", "generated_unix": generated_unix, "public_issue_number": public_issue, "authority": "USER_FACING_DERIVED_FROM_FINAL_MASTER_MONDAY", "publication_status": "X_READY_NOT_CONFIRMED_PUBLISHED", "source_manifest_sha256": sha256_bytes(canonical_bytes(source_manifest)), **value}
     scorecard = {"contract": "CYCLE_NAVIGATOR_SCORECARD_v1", "issue_scored": prev_issue or None, "completed_iso_week": completed_week, **value["evaluation"]}
-    pointer = {"contract": "CYCLE_NAVIGATOR_DELIVERY_POINTER_v1", "issue_number": issue, "iso_year": year, "iso_week": target_week, "completed_source_week": completed_week, "week_dir": str(target_dir.relative_to(repo)), "status": value["status"], "publication_status": package["publication_status"], "master_monday_pointer_sha256": sha256_bytes((repo / args.master_monday_pointer).read_bytes()), "machine_package_sha256": sha256_bytes(canonical_bytes(package)), "forecast_freeze_sha256": sha256_bytes(canonical_bytes(freeze))}
+    pointer = {"contract": "CYCLE_NAVIGATOR_DELIVERY_POINTER_v1", "issue_number": issue, "public_issue_number": public_issue, "iso_year": year, "iso_week": target_week, "completed_source_week": completed_week, "week_dir": str(target_dir.relative_to(repo)), "status": value["status"], "publication_status": package["publication_status"], "master_monday_pointer_sha256": sha256_bytes((repo / args.master_monday_pointer).read_bytes()), "machine_package_sha256": sha256_bytes(canonical_bytes(package)), "forecast_freeze_sha256": sha256_bytes(canonical_bytes(freeze))}
 
     (target_dir / "CYCLE_NAVIGATOR_MACHINE_PACKAGE.json").write_bytes(canonical_bytes(package))
     (target_dir / "CYCLE_NAVIGATOR_SCORECARD.json").write_bytes(canonical_bytes(scorecard))
@@ -422,8 +488,19 @@ def main() -> None:
     (target_dir / "CYCLE_NAVIGATOR_READABLE.md").write_text(value["readable_markdown"].rstrip() + "\n")
     (target_dir / "CYCLE_NAVIGATOR_X_READY.md").write_text(value["x_ready_markdown"].rstrip() + "\n")
     (target_dir / "CYCLE_NAVIGATOR_SOURCE_MANIFEST.json").write_bytes(canonical_bytes(source_manifest))
+    binding = {
+        "contract": "CN_PUBLIC_SERIES_BINDING_v1",
+        "forecast_week": f"{year:04d}-W{target_week:02d}",
+        "public_issue_number": public_issue,
+        "machine_issue_number": issue,
+        "publication_status": package["publication_status"],
+        "latest_confirmed_public_issue_at_generation": latest_public_issue,
+        "rule": "PUBLIC_IDENTITY_FROM_CONFIRMED_PUBLISHED_SERIES_MACHINE_IDENTITY_SEPARATE",
+    }
+    (target_dir / "CYCLE_NAVIGATOR_PUBLIC_SERIES_BINDING.json").write_bytes(canonical_bytes(binding))
     (target_dir / "CYCLE_NAVIGATOR_DELIVERY_POINTER.json").write_bytes(canonical_bytes(pointer))
     (repo / "05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json").write_bytes(canonical_bytes(pointer))
+    append_forward_ranges(repo, public_issue_number=public_issue, machine_issue_number=issue, year=year, week=target_week, generated_unix=generated_unix, freeze=freeze)
 
     ledger = repo / "05_CYCLE_NAVIGATOR/track_record/CN_TRACK_RECORD_LEDGER.jsonl"
     ledger.parent.mkdir(parents=True, exist_ok=True)
