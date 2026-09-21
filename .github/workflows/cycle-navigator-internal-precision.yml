@@ -52,6 +52,15 @@ jobs:
             --repo-root . \
             | tee runtime_cn_internal_precision_validation.json
 
+      - name: Materialize completed public Cycle Navigator scorecard
+        run: |
+          set -euo pipefail
+          python scripts/cycle_navigator/materialize_public_scorecard.py \
+            --repo-root . \
+            | tee runtime_cn_public_scorecard.json
+          python scripts/cycle_navigator/validate_public_series.py \
+            | tee runtime_cn_public_series_validation.json
+
       - name: Commit internal precision archive
         shell: bash
         run: |
@@ -59,7 +68,11 @@ jobs:
           git config user.name framework-cycle-navigator-bot
           git config user.email framework-cycle-navigator-bot@users.noreply.github.com
           git add 05_CYCLE_NAVIGATOR/weekly \
-                  05_CYCLE_NAVIGATOR/track_record
+                  05_CYCLE_NAVIGATOR/track_record \
+                  05_CYCLE_NAVIGATOR/public_scorecards \
+                  05_CYCLE_NAVIGATOR/public_series/CN_PUBLIC_SERIES_INDEX.json \
+                  05_CYCLE_NAVIGATOR/LATEST_PUBLIC_SCORECARD.json \
+                  05_CYCLE_NAVIGATOR/site/history-scoreboard.json
           if git diff --cached --quiet; then
             echo 'NO_INTERNAL_PRECISION_DIFF'
             exit 0
@@ -94,7 +107,11 @@ jobs:
             root/'CYCLE_NAVIGATOR_INTERNAL.md',
             Path('05_CYCLE_NAVIGATOR/track_record/CN_INTERNAL_PRECISION_LEDGER.jsonl'),
             Path('05_CYCLE_NAVIGATOR/track_record/CN_INTERNAL_PARAMETER_LEDGER.jsonl'),
+            Path('05_CYCLE_NAVIGATOR/public_series/CN_PUBLIC_SERIES_INDEX.json'),
+            Path('05_CYCLE_NAVIGATOR/LATEST_PUBLIC_SCORECARD.json'),
           ]
+          latest_public=json.loads(Path('05_CYCLE_NAVIGATOR/LATEST_PUBLIC_SCORECARD.json').read_text())
+          paths.append(Path(latest_public['scorecard_path']))
           rows=[]
           for p in paths:
               path=str(p)
@@ -117,5 +134,7 @@ jobs:
         if: always()
         with:
           name: cycle-navigator-internal-precision-${{ github.run_id }}
-          path: runtime_cn_internal_*.json
+          path: |
+            runtime_cn_internal_*.json
+            runtime_cn_public_*.json
           retention-days: 30

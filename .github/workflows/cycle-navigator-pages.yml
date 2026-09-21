@@ -11,7 +11,11 @@ on:
       - "05_CYCLE_NAVIGATOR/weekly/**/CYCLE_NAVIGATOR_FORECAST_FREEZE.json"
       - "05_CYCLE_NAVIGATOR/weekly/**/CYCLE_NAVIGATOR_INTERNAL_PRECISION_FREEZE.json"
       - "05_CYCLE_NAVIGATOR/published/**"
+      - "05_CYCLE_NAVIGATOR/public_series/**"
+      - "05_CYCLE_NAVIGATOR/public_scorecards/**"
+      - "05_CYCLE_NAVIGATOR/CANONICAL_SCORE_AND_LINEAGE.md"
       - "05_CYCLE_NAVIGATOR/track_record/CN_TRACK_RECORD_LEDGER.jsonl"
+      - "scripts/cycle_navigator/validate_public_series.py"
       - "04_MARKET_LEARNING/handlekompas/LATEST.json"
       - "04_MARKET_LEARNING/handlekompas/official/**"
       - "04_MARKET_LEARNING/handlekompas/event_refresh/**"
@@ -35,6 +39,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+      - name: Validate public series identity and score lineage
+        run: python3 scripts/cycle_navigator/validate_public_series.py
       - name: Validate public product contract
         run: node 05_CYCLE_NAVIGATOR/site/validate-v2.mjs
       - name: Build privacy-safe public bundle

@@ -103,7 +103,7 @@ function officialNextDays(pkg){
 
 function renderSnapshot(snapshot){
   latestSnapshot=snapshot;
-  const pointer=snapshot?.pointer||{},pkg=snapshot?.package||{},live=snapshot?.live_observation||{},action=live?.current_action||null,score=snapshot?.weekly_score_bundle||pkg?.evaluation||{};
+  const pointer=snapshot?.pointer||{},pkg=snapshot?.package||{},live=snapshot?.live_observation||{},action=live?.current_action||null,score=snapshot?.machine_calibration_bundle||pkg?.evaluation||{};
   const heroAction=clean(action?.stance)||compactState(pkg.market_state);
   text("issueLabel",issueLabel(pointer,pkg));
   text("marketState",heroAction);

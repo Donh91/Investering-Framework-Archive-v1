@@ -9,6 +9,10 @@ on:
       - "05_CYCLE_NAVIGATOR/weekly/**/CYCLE_NAVIGATOR_SCORECARD.json"
       - "05_CYCLE_NAVIGATOR/weekly/**/CYCLE_NAVIGATOR_FORECAST_FREEZE.json"
       - "05_CYCLE_NAVIGATOR/weekly/**/CYCLE_NAVIGATOR_INTERNAL_PRECISION_FREEZE.json"
+      - "05_CYCLE_NAVIGATOR/public_series/**"
+      - "05_CYCLE_NAVIGATOR/public_scorecards/**"
+      - "05_CYCLE_NAVIGATOR/CANONICAL_SCORE_AND_LINEAGE.md"
+      - "scripts/cycle_navigator/validate_public_series.py"
       - ".github/workflows/cycle-navigator-pages.yml"
       - ".github/workflows/cycle-navigator-public-contract-gate.yml"
   push:
@@ -20,6 +24,10 @@ on:
       - "05_CYCLE_NAVIGATOR/weekly/**/CYCLE_NAVIGATOR_SCORECARD.json"
       - "05_CYCLE_NAVIGATOR/weekly/**/CYCLE_NAVIGATOR_FORECAST_FREEZE.json"
       - "05_CYCLE_NAVIGATOR/weekly/**/CYCLE_NAVIGATOR_INTERNAL_PRECISION_FREEZE.json"
+      - "05_CYCLE_NAVIGATOR/public_series/**"
+      - "05_CYCLE_NAVIGATOR/public_scorecards/**"
+      - "05_CYCLE_NAVIGATOR/CANONICAL_SCORE_AND_LINEAGE.md"
+      - "scripts/cycle_navigator/validate_public_series.py"
       - ".github/workflows/cycle-navigator-pages.yml"
       - ".github/workflows/cycle-navigator-public-contract-gate.yml"
   workflow_dispatch:
@@ -41,7 +49,7 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Verify CN scorecard is the single public score authority
+      - name: Verify machine calibration lineage
         shell: bash
         run: |
           set -euo pipefail
@@ -92,6 +100,9 @@ jobs:
           print(json.dumps({'status':'PASS','issue_scored':scorecard.get('issue_scored'),'completed_iso_week':scorecard.get('completed_iso_week'),'structural_score':scorecard.get('structural_score'),'x_is_downstream_only':True},sort_keys=True))
           PY
 
+      - name: Verify public CN series identity and completed score
+        run: python scripts/cycle_navigator/validate_public_series.py
+
       - name: Build exact final Pages artifact sequence
         run: |
           set -euo pipefail
@@ -115,14 +126,26 @@ jobs:
           freeze=json.loads((root/'CYCLE_NAVIGATOR_INTERNAL_PRECISION_FREEZE.json').read_text())
           public_freeze=json.loads((root/'CYCLE_NAVIGATOR_FORECAST_FREEZE.json').read_text())
           snapshot=json.loads(Path('05_CYCLE_NAVIGATOR/site/dist/data/latest.json').read_text())
-          bundle=snapshot.get('weekly_score_bundle') or {}
+          bundle=snapshot.get('machine_calibration_bundle') or {}
+          public_score=snapshot.get('public_scorecard') or {}
+          public_series=snapshot.get('public_series') or {}
           live=snapshot.get('live_observation') or {}
 
           if bundle.get('authority') != 'CYCLE_NAVIGATOR_SCORECARD':
-              raise SystemExit('public_snapshot_missing_score_authority')
+              raise SystemExit('public_snapshot_missing_machine_calibration')
           for key in ('issue_scored','completed_iso_week','score_status','structural_score','price_range_score','decision_utility_score','public_continuity_score'):
               if bundle.get(key) != scorecard.get(key):
-                  raise SystemExit(f'public_snapshot_score_mismatch:{key}')
+                  raise SystemExit(f'machine_calibration_snapshot_mismatch:{key}')
+
+          if public_score.get('contract') != 'CN_PUBLIC_WEEKLY_SCORECARD_v1':
+              raise SystemExit('public_snapshot_missing_public_scorecard')
+          latest=(public_series.get('latest_completed_score') or {})
+          if int(public_score.get('public_issue_number') or 0) != int(latest.get('public_issue_number') or 0):
+              raise SystemExit('public_score_issue_lineage_mismatch')
+          if public_score.get('forecast_week') != latest.get('forecast_week'):
+              raise SystemExit('public_score_week_lineage_mismatch')
+          if public_score.get('combined_score') is not None:
+              raise SystemExit('unsupported_public_combined_score')
 
           if live.get('authority') != 'NON_AUTHORITATIVE_OBSERVATION_ONLY':
               raise SystemExit('live_observation_authority_leak')
@@ -160,5 +183,5 @@ jobs:
           for path in required_files:
               if not Path(path).exists():
                   raise SystemExit(f'final_public_asset_missing:{path}')
-          print(json.dumps({'status':'PASS','final_pages_artifact':'VERIFIED','public_score_bundle':'BOUND','live_observation':'FAIL_CLOSED_SAFE'},sort_keys=True))
+          print(json.dumps({'status':'PASS','final_pages_artifact':'VERIFIED','public_scorecard':'BOUND_BY_PUBLIC_LINEAGE','machine_calibration':'SEPARATE','live_observation':'FAIL_CLOSED_SAFE'},sort_keys=True))
           PY

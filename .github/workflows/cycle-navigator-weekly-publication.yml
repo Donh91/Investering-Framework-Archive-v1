@@ -152,6 +152,7 @@ jobs:
             'CYCLE_NAVIGATOR_SOURCE_MANIFEST.json',
             'CYCLE_NAVIGATOR_DELIVERY_POINTER.json',
             'CYCLE_NAVIGATOR_API_RECEIPT.json',
+            'CYCLE_NAVIGATOR_PUBLIC_SERIES_BINDING.json',
           ]
           missing=[name for name in required if not (root/name).exists()]
           if missing: raise SystemExit('missing_cycle_navigator_artifacts:'+','.join(missing))
@@ -176,6 +177,8 @@ jobs:
           git config user.email framework-cycle-navigator-bot@users.noreply.github.com
           git add 05_CYCLE_NAVIGATOR/weekly \
                   05_CYCLE_NAVIGATOR/track_record \
+                  05_CYCLE_NAVIGATOR/forward_range_ledger/CN_FORWARD_RANGE_LEDGER_v2.jsonl \
+                  05_CYCLE_NAVIGATOR/public_series/CN_PUBLIC_SERIES_INDEX.json \
                   05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json
           if git diff --cached --quiet; then exit 0; fi
           git commit -m "cycle-navigator: publish weekly package after final Master Monday"
@@ -206,8 +209,11 @@ jobs:
             root/'CYCLE_NAVIGATOR_SOURCE_MANIFEST.json',
             root/'CYCLE_NAVIGATOR_DELIVERY_POINTER.json',
             root/'CYCLE_NAVIGATOR_API_RECEIPT.json',
+            root/'CYCLE_NAVIGATOR_PUBLIC_SERIES_BINDING.json',
             Path('05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json'),
             Path('05_CYCLE_NAVIGATOR/track_record/CN_TRACK_RECORD_LEDGER.jsonl'),
+            Path('05_CYCLE_NAVIGATOR/forward_range_ledger/CN_FORWARD_RANGE_LEDGER_v2.jsonl'),
+            Path('05_CYCLE_NAVIGATOR/public_series/CN_PUBLIC_SERIES_INDEX.json'),
           ]
           rows=[]
           for p in paths:

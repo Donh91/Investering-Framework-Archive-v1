@@ -1,0 +1,108 @@
+{
+  "contract": "CN_PUBLIC_WEEKLY_SCORECARD_v1",
+  "authority": "PUBLIC_FORECAST_ACCOUNTABILITY_ONLY_NO_PORTFOLIO_AUTHORITY",
+  "public_issue_number": 25,
+  "forecast_week": "2026-W38",
+  "outcome_week": "2026-W38",
+  "status": "FINAL_DUAL_TRACK",
+  "issued_publication": {
+    "path": "05_CYCLE_NAVIGATOR/published/2026/CYCLE_NAVIGATOR_25_X_PUBLISHED_2026-09-14.md",
+    "git_blob_sha": "42b77ea9a060288893a8a5b7990a6e10e6452dbf",
+    "publication_receipt": "05_CYCLE_NAVIGATOR/weekly/2026/W38/CYCLE_NAVIGATOR_X_APPROVAL_RECEIPT.json",
+    "publication_status": "PUBLISHED_CONFIRMED_BY_USER"
+  },
+  "price_range_precision": {
+    "score": 71.51,
+    "btc_score": 67.48,
+    "eth_score": 75.53,
+    "intraday_window_scores": {
+      "day_1_2": 58.87,
+      "day_3_4": 67.56,
+      "day_5_7": 88.09
+    },
+    "formula": "70pct_containment_plus_30pct_jaccard",
+    "source": "05_CYCLE_NAVIGATOR/corrections/2026/W38/RANGE_SCORE_CORRECTION.json",
+    "actuals": "03_DAILY_CAPTURE_LOGS/weekly/2026/W38.json",
+    "actuals_hourly_coverage": 168
+  },
+  "market_structure_precision": {
+    "score": 80,
+    "aggregation": "equal_weight_mean_of_five_independent_public_weekly_claim_families_supported_100_mixed_50_contradicted_0",
+    "components": [
+      {
+        "id": "cycle_structure",
+        "score": 100,
+        "status": "SUPPORTED",
+        "published_claim": "Volatile consolidation continues while broad expansion is not confirmed.",
+        "outcome_evidence_binding": "05_CYCLE_NAVIGATOR/weekly/2026/W39/CYCLE_NAVIGATOR_SCORECARD.json#structural_call_1"
+      },
+      {
+        "id": "ethbtc_transition",
+        "score": 100,
+        "status": "SUPPORTED",
+        "published_claim": "ETH/BTC bias is flat-to-positive.",
+        "outcome_evidence_binding": "05_CYCLE_NAVIGATOR/weekly/2026/W39/CYCLE_NAVIGATOR_SCORECARD.json#ethbtc_condition"
+      },
+      {
+        "id": "breadth_participation",
+        "score": 50,
+        "status": "MIXED",
+        "published_claim": "Breadth must broaden before rotation is treated as confirmed.",
+        "outcome_evidence_binding": "05_CYCLE_NAVIGATOR/weekly/2026/W39/CYCLE_NAVIGATOR_SCORECARD.json#breadth_condition"
+      },
+      {
+        "id": "rotation_sequencing",
+        "score": 50,
+        "status": "MIXED",
+        "published_claim": "Rotation remains selective and full smaller-cap transmission is not confirmed.",
+        "outcome_evidence_binding": "05_CYCLE_NAVIGATOR/weekly/2026/W39/CYCLE_NAVIGATOR_SCORECARD.json#structural_call_4"
+      },
+      {
+        "id": "altseason_timing",
+        "score": 100,
+        "status": "SUPPORTED",
+        "published_claim": "Broad altseason remains paused until transmission confirms.",
+        "outcome_evidence_binding": "05_CYCLE_NAVIGATOR/weekly/2026/W39/CYCLE_NAVIGATOR_SCORECARD.json#structural_call_5"
+      }
+    ],
+    "deployment_sequencing": {
+      "score": null,
+      "status": "NOT_EVALUABLE",
+      "reason": "The published HOLD/SELECTIVE/PREPARE posture has no prospectively fixed execution-outcome utility rubric, so it is not converted into a percentage."
+    },
+    "evidence_source": "05_CYCLE_NAVIGATOR/weekly/2026/W39/CYCLE_NAVIGATOR_SCORECARD.json",
+    "note": "The W39 machine scorecard is used only as completed-W38 outcome evidence for claim families that are textually present in the immutable public CN #25 post. Its machine issue number is not treated as the public issue identity.",
+    "family_scores": {
+      "regime": 100,
+      "ethbtc": 100,
+      "breadth": 50,
+      "leadership": 50,
+      "rotation": 50,
+      "altseason": 100
+    },
+    "internal_scorecard_source": "05_CYCLE_NAVIGATOR/weekly/2026/W39/CYCLE_NAVIGATOR_INTERNAL_PRECISION_SCORECARD.json"
+  },
+  "combined_score": null,
+  "combined_score_status": "NOT_DEFINED",
+  "combined_score_reason": "CN_DUAL_PRECISION_CONTRACT_v1 requires an explicit stable aggregation rule before price-range and market/structure precision may be blended.",
+  "lineage": {
+    "public_series_key": "PUBLIC_CN25__2026-W38",
+    "machine_series_collision_detected": true,
+    "collision_note": "The migration-era weekly machine package uses issue_number 26 for W38 while the actually published public series uses CN #25 for W38. Issue number alone is therefore not a valid join key.",
+    "valid_join_key": [
+      "series",
+      "issue_number",
+      "forecast_week",
+      "immutable_source"
+    ],
+    "public_series_binding": "05_CYCLE_NAVIGATOR/weekly/2026/W38/CYCLE_NAVIGATOR_PUBLIC_SERIES_BINDING.json"
+  },
+  "frozen_claim_precision": {
+    "score": 78.57,
+    "parameter_coverage_pct": 100,
+    "scored_parameter_count": 7,
+    "method": "equal_weight_mean_of_seven_required_frozen_parameters",
+    "source": "05_CYCLE_NAVIGATOR/weekly/2026/W39/CYCLE_NAVIGATOR_SCORECARD.json",
+    "note": "Official reproducible continuity score for the W38 frozen claim set. This is not blended with price-range precision."
+  }
+}

@@ -5,6 +5,10 @@ on:
       - '05_CYCLE_NAVIGATOR/site/**'
       - '05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json'
       - '05_CYCLE_NAVIGATOR/**/CYCLE_NAVIGATOR_MACHINE_PACKAGE.json'
+      - '05_CYCLE_NAVIGATOR/public_series/**'
+      - '05_CYCLE_NAVIGATOR/public_scorecards/**'
+      - '05_CYCLE_NAVIGATOR/CANONICAL_SCORE_AND_LINEAGE.md'
+      - 'scripts/cycle_navigator/validate_public_series.py'
       - '.github/workflows/cycle-navigator-pages.yml'
       - '.github/workflows/cn-site-v2-gate.yml'
   workflow_dispatch:
@@ -19,6 +23,7 @@ jobs:
         with: {node-version: '22'}
       - name: Validate and build
         run: |
+          python3 scripts/cycle_navigator/validate_public_series.py
           node 05_CYCLE_NAVIGATOR/site/validate-v2.mjs
           node 05_CYCLE_NAVIGATOR/site/build-public.mjs
           node 05_CYCLE_NAVIGATOR/site/build-score-bundle.mjs

@@ -1,0 +1,68 @@
+{
+  "contract": "CN_PUBLIC_SERIES_INDEX_v1",
+  "authority": "PUBLIC_SERIES_IDENTITY_AND_SCORE_ROUTING_ONLY_NO_MARKET_OR_PORTFOLIO_AUTHORITY",
+  "latest_published": {
+    "public_issue_number": 25,
+    "forecast_week": "2026-W38",
+    "published_path": "05_CYCLE_NAVIGATOR/published/2026/CYCLE_NAVIGATOR_25_X_PUBLISHED_2026-09-14.md",
+    "publication_receipt": "05_CYCLE_NAVIGATOR/weekly/2026/W38/CYCLE_NAVIGATOR_X_APPROVAL_RECEIPT.json"
+  },
+  "latest_completed_score": {
+    "public_issue_number": 25,
+    "forecast_week": "2026-W38",
+    "scorecard_path": "05_CYCLE_NAVIGATOR/public_scorecards/2026/W38/CN25_PUBLIC_SCORECARD.json",
+    "market_structure_score": 80,
+    "price_range_score": 71.51,
+    "combined_score": null,
+    "status": "FINAL_DUAL_TRACK",
+    "frozen_claim_score": 78.57
+  },
+  "current_public_projection": {
+    "public_issue_number": 26,
+    "forecast_week": "2026-W39",
+    "publication_status": "X_READY_NOT_CONFIRMED_PUBLISHED",
+    "machine_issue_number": 27,
+    "machine_week_dir": "05_CYCLE_NAVIGATOR/weekly/2026/W39",
+    "note": "Public numbering continues from the latest actually published CN. The migration-era machine issue counter is a separate internal lineage and must not be shown as the public CN number.",
+    "binding_path": "05_CYCLE_NAVIGATOR/weekly/2026/W39/CYCLE_NAVIGATOR_PUBLIC_SERIES_BINDING.json"
+  },
+  "recent_lineage": [
+    {
+      "public_issue_number": 23,
+      "forecast_week": "2026-W36",
+      "published_path": "05_CYCLE_NAVIGATOR/published/2026/CYCLE_NAVIGATOR_23_X_PUBLISHED_2026-09-01.md",
+      "machine_week_dir": "05_CYCLE_NAVIGATOR/weekly/2026/W36",
+      "machine_issue_number": 24
+    },
+    {
+      "public_issue_number": 24,
+      "forecast_week": "2026-W37",
+      "published_path": "05_CYCLE_NAVIGATOR/published/2026/CYCLE_NAVIGATOR_24_X_PUBLISHED_2026-09-07.md",
+      "machine_week_dir": "05_CYCLE_NAVIGATOR/weekly/2026/W37",
+      "machine_issue_number": 25
+    },
+    {
+      "public_issue_number": 25,
+      "forecast_week": "2026-W38",
+      "published_path": "05_CYCLE_NAVIGATOR/published/2026/CYCLE_NAVIGATOR_25_X_PUBLISHED_2026-09-14.md",
+      "machine_week_dir": "05_CYCLE_NAVIGATOR/weekly/2026/W38",
+      "machine_issue_number": 26
+    },
+    {
+      "public_issue_number": 26,
+      "forecast_week": "2026-W39",
+      "published_path": null,
+      "machine_week_dir": "05_CYCLE_NAVIGATOR/weekly/2026/W39",
+      "machine_issue_number": 27,
+      "binding_path": "05_CYCLE_NAVIGATOR/weekly/2026/W39/CYCLE_NAVIGATOR_PUBLIC_SERIES_BINDING.json"
+    }
+  ],
+  "invariants": [
+    "Never join public and machine Cycle Navigator records on issue_number alone.",
+    "For public precision, resolve forecast_week and immutable published source first.",
+    "For the latest completed public score, use latest_completed_score.scorecard_path.",
+    "Machine CYCLE_NAVIGATOR_SCORECARD.json is not automatically the public-series scorecard during the migration-offset window.",
+    "Price-range and market/structure precision remain separate unless a stable combined-score contract exists.",
+    "Every new weekly machine package must materialize CYCLE_NAVIGATOR_PUBLIC_SERIES_BINDING.json and append its numeric ranges to CN_FORWARD_RANGE_LEDGER_v2.jsonl at freeze time."
+  ]
+}

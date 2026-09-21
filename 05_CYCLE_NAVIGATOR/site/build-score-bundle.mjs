@@ -88,8 +88,8 @@ async function main() {
     requireNumberOrNull(scorecard[field], field);
   }
 
-  snapshot.weekly_score_bundle = sanitizeScorecard(scorecard);
-  snapshot.score_authority_note = "Weekly public scores come directly from the canonical Cycle Navigator scorecard generated after final Master Monday. X is downstream publication only and is never an input to the website score.";
+  snapshot.machine_calibration_bundle = sanitizeScorecard(scorecard);
+  snapshot.machine_calibration_note = "This bundle is migration-era machine calibration evidence. Public Cycle Navigator precision is resolved separately through public_series and public_scorecard by forecast-week lineage.";
   await writeFile(snapshotPath, `${JSON.stringify(snapshot, null, 2)}\n`, "utf8");
 
   await copyFile(sourceWidgetPath, distWidgetPath);
@@ -101,7 +101,7 @@ async function main() {
     await writeFile(distIndexPath, index, "utf8");
   }
 
-  console.log(`Bound public snapshot to ${scorecard.contract || "CYCLE_NAVIGATOR_SCORECARD"} for CN #${scorecard.issue_scored ?? "?"}`);
+  console.log(`Bound machine calibration snapshot to ${scorecard.contract || "CYCLE_NAVIGATOR_SCORECARD"} for machine issue #${scorecard.issue_scored ?? "?"}`);
 }
 
 main().catch((error) => {
