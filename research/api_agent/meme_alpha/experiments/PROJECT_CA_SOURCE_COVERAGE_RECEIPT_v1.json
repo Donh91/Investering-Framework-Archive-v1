@@ -1,0 +1,81 @@
+{
+  "contract": "PROJECT_CA_SOURCE_COVERAGE_RECEIPT_v1",
+  "status": "RESEARCH_ONLY_PREIMPLEMENTATION",
+  "owner": "#1087",
+  "health_classes": [
+    "HEALTHY_NONEMPTY",
+    "HEALTHY_ZERO",
+    "PARTIAL",
+    "DEGRADED",
+    "UNAVAILABLE",
+    "NOT_DUE"
+  ],
+  "absence_rule": "ONLY_HEALTHY_ZERO_SUPPORTS_NO_ELIGIBLE_PROJECT_OR_EVENT",
+  "source_families": [
+    "ECOSYSTEM_DIRECTORY",
+    "ONCHAIN_FACTORY_DEPLOYMENT",
+    "GITHUB_ARTIFACT",
+    "PACKAGE_REGISTRY",
+    "FIRST_PARTY_WEB_DOCS_APP",
+    "AUTHENTICATED_SOCIAL",
+    "VERIFIED_CHAIN_CONTROL",
+    "PONS_FACTORY_METADATA",
+    "WALLET_CALLER",
+    "MARKET_AGGREGATOR"
+  ],
+  "required_run_fields": [
+    "source_family",
+    "run_id",
+    "scheduled_window",
+    "observed_at_utc",
+    "coverage_start",
+    "coverage_end",
+    "health_class",
+    "raw_item_count",
+    "parsed_item_count",
+    "emitted_project_trial_count",
+    "error_class_or_null",
+    "evidence_hash",
+    "estimated_cost",
+    "latency_ms_or_null"
+  ],
+  "ablation": {
+    "population": "FIRST_30_FUTURE_ELIGIBLE_PROJECT_TRIALS",
+    "A": [
+      "ECOSYSTEM_DIRECTORY",
+      "ONCHAIN_FACTORY_DEPLOYMENT",
+      "GITHUB_ARTIFACT",
+      "PACKAGE_REGISTRY"
+    ],
+    "B_add": [
+      "FIRST_PARTY_WEB_DOCS_APP",
+      "AUTHENTICATED_SOCIAL",
+      "VERIFIED_CHAIN_CONTROL",
+      "PONS_FACTORY_METADATA"
+    ],
+    "C_add": [
+      "WALLET_CALLER",
+      "MARKET_AGGREGATOR"
+    ],
+    "metrics": [
+      "UNIQUE_FIRST_SEEN",
+      "MARGINAL_UNIQUE_RECALL",
+      "MEDIAN_LEAD_TIME",
+      "FALSE_IDENTITY_LINKS",
+      "DD_LOAD_WITHOUT_QUALIFIED_WATCH",
+      "REDUNDANT_MIRRORS",
+      "COST_PER_UNIQUE_PROJECT",
+      "COST_PER_QUALIFIED_WATCH"
+    ]
+  },
+  "guardrails": [
+    "PROJECT_TRIAL_IS_DENOMINATOR_NOT_URL",
+    "MIRRORS_NOT_INDEPENDENT_PROJECTS",
+    "NO_SOURCE_WEIGHTS_BEFORE_PROSPECTIVE_EVIDENCE",
+    "NO_SOURCE_REMOVAL_FOR_ZERO_WINS_BEFORE_30_TRIALS",
+    "UNHEALTHY_SOURCE_MISSINGNESS_NOT_EVIDENCE",
+    "ZERO_HISTORICAL_PROSPECTIVE_CREDIT",
+    "NO_TRADE_AUTHORITY",
+    "NO_PARALLEL_LEDGER"
+  ]
+}
