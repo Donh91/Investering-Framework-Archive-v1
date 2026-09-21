@@ -71,7 +71,16 @@
       "reason": "The published HOLD/SELECTIVE/PREPARE posture has no prospectively fixed execution-outcome utility rubric, so it is not converted into a percentage."
     },
     "evidence_source": "05_CYCLE_NAVIGATOR/weekly/2026/W39/CYCLE_NAVIGATOR_SCORECARD.json",
-    "note": "The W39 machine scorecard is used only as completed-W38 outcome evidence for claim families that are textually present in the immutable public CN #25 post. Its machine issue number is not treated as the public issue identity."
+    "note": "The W39 machine scorecard is used only as completed-W38 outcome evidence for claim families that are textually present in the immutable public CN #25 post. Its machine issue number is not treated as the public issue identity.",
+    "family_scores": {
+      "regime": 100,
+      "ethbtc": 100,
+      "breadth": 50,
+      "leadership": 50,
+      "rotation": 50,
+      "altseason": 100
+    },
+    "internal_scorecard_source": "05_CYCLE_NAVIGATOR/weekly/2026/W39/CYCLE_NAVIGATOR_INTERNAL_PRECISION_SCORECARD.json"
   },
   "combined_score": null,
   "combined_score_status": "NOT_DEFINED",
@@ -85,6 +94,15 @@
       "issue_number",
       "forecast_week",
       "immutable_source"
-    ]
+    ],
+    "public_series_binding": "05_CYCLE_NAVIGATOR/weekly/2026/W38/CYCLE_NAVIGATOR_PUBLIC_SERIES_BINDING.json"
+  },
+  "frozen_claim_precision": {
+    "score": 78.57,
+    "parameter_coverage_pct": 100,
+    "scored_parameter_count": 7,
+    "method": "equal_weight_mean_of_seven_required_frozen_parameters",
+    "source": "05_CYCLE_NAVIGATOR/weekly/2026/W39/CYCLE_NAVIGATOR_SCORECARD.json",
+    "note": "Official reproducible continuity score for the W38 frozen claim set. This is not blended with price-range precision."
   }
 }
