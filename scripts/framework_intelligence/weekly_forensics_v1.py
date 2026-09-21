@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 import argparse, hashlib, json
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
 from pathlib import Path
 
 ROUTES={"SELF_HEAL_SAFE","DETERMINISTIC_REPAIR","SOURCE_OWNER","SPECIALIST_AGENT","RESEARCH_EXPERIMENT","CODEX_REQUIRED","GOVERNANCE_REVIEW","WAIT_FOR_EVIDENCE","HUMAN_AUTHORITY","NO_ACTION"}
@@ -23,7 +24,9 @@ def main():
     ap=argparse.ArgumentParser(); ap.add_argument("--repo-root",default="."); ap.add_argument("--output-root",default="research/framework_learning/weekly_forensics"); ap.add_argument("--mode",choices=["PRELIMINARY","FINAL"],default="FINAL"); ap.add_argument("--as-of-utc"); a=ap.parse_args()
     root=Path(a.repo_root); out=root/a.output_root
     now=datetime.fromisoformat(a.as_of_utc.replace("Z","+00:00")) if a.as_of_utc else datetime.now(timezone.utc)
-    y,w,_=now.isocalendar(); gen=now.isoformat().replace("+00:00","Z")
+    local=now.astimezone(ZoneInfo("Europe/Copenhagen"))
+    target=local-timedelta(days=1) if a.mode=="FINAL" and local.weekday()==0 else local
+    y,w,_=target.isocalendar(); gen=now.isoformat().replace("+00:00","Z")
     paths={
       "pullback":root/"04_MARKET_LEARNING/pullback_learning/LATEST.json",
       "eligibility":root/"04_MARKET_LEARNING/pullback_learning/ELIGIBILITY_STATUS_v1.json",
@@ -73,8 +76,15 @@ def main():
          "point_in_time_required":True,"unknown_is_not_zero":True,"existing_remediation_queue_is_sole_repair_queue":True,
          "modules":["PULLBACK_REENTRY","FORECAST_DECISION","ROTATION_TRANSMISSION","META_HEALTH","LEARNING_MATURATION","DATA_EVIDENCE_INTEGRITY"],
          "findings":findings,"actionable_count":len(actionable),"routing_contract":sorted(ROUTES),
-         "master_monday_delta":{"authority":"ADVISORY_ONLY","items":[{"module":x["module"],"severity":x["severity"],"reason":x["reason"],"route":x["route"]} for x in actionable[:8]]}}
+         "master_monday_delta":{"authority":"ADVISORY_ONLY","source_iso_year":y,"source_iso_week":w,"source_mode":a.mode,"items":[{"module":x["module"],"severity":x["severity"],"reason":x["reason"],"route":x["route"]} for x in actionable[:8]]}}
     out.mkdir(parents=True,exist_ok=True); (out/"LATEST.json").write_text(json.dumps(doc,indent=2,sort_keys=True)+"\n")
-    snap=out/"snapshots"/str(y)/f"W{w:02d}"; snap.mkdir(parents=True,exist_ok=True); (snap/f"{a.mode}.json").write_text(json.dumps(doc,indent=2,sort_keys=True)+"\n")
+    snap=out/"snapshots"/str(y)/f"W{w:02d}"; snap.mkdir(parents=True,exist_ok=True); snapfile=snap/f"{a.mode}.json"
+    if a.mode=="FINAL" and snapfile.exists():
+      frozen=read(snapfile,{}) or {}
+      if frozen.get("contract")=="WEEKLY_FORENSICS_PACK_v1":
+        doc=frozen
+        (out/"LATEST.json").write_text(json.dumps(doc,indent=2,sort_keys=True)+"\\n")
+      else: raise SystemExit("FINAL_FREEZE_CONTRACT_INVALID")
+    else: snapfile.write_text(json.dumps(doc,indent=2,sort_keys=True)+"\\n")
     print(json.dumps({"status":"PASS","mode":a.mode,"findings":len(findings),"actionable":len(actionable)}))
 if __name__=="__main__": main()
