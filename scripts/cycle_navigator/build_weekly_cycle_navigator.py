@@ -8,6 +8,7 @@ import re
 import time
 import urllib.error
 import urllib.request
+from datetime import date
 from pathlib import Path
 from typing import Any
 
@@ -55,15 +56,30 @@ def latest_previous_cn(repo: Path) -> tuple[int, str | None, dict[str, Any] | No
     return issue, path.read_text(), None
 
 
-def latest_published_public_issue(repo: Path) -> int:
+def latest_published_public_record(repo: Path) -> dict[str, Any]:
     pub = repo / "05_CYCLE_NAVIGATOR/published"
-    found: list[int] = []
+    found: list[tuple[int, Path, str]] = []
     if pub.exists():
         for p in pub.rglob("CYCLE_NAVIGATOR_*_X_PUBLISHED_*.md"):
-            m = re.search(r"CYCLE_NAVIGATOR_(\d+)_X_PUBLISHED_", p.name)
-            if m:
-                found.append(int(m.group(1)))
-    return max(found) if found else 0
+            m = re.search(r"CYCLE_NAVIGATOR_(\d+)_X_PUBLISHED_(\d{4}-\d{2}-\d{2})", p.name)
+            if not m:
+                continue
+            issue = int(m.group(1))
+            published_date = date.fromisoformat(m.group(2))
+            iso = published_date.isocalendar()
+            found.append((issue, p, f"{iso.year:04d}-W{iso.week:02d}"))
+    if not found:
+        return {"public_issue_number": 0, "forecast_week": None, "published_path": None}
+    issue, path, forecast_week = max(found, key=lambda row: row[0])
+    return {
+        "public_issue_number": issue,
+        "forecast_week": forecast_week,
+        "published_path": str(path.relative_to(repo)),
+    }
+
+
+def latest_published_public_issue(repo: Path) -> int:
+    return int(latest_published_public_record(repo)["public_issue_number"])
 
 
 def append_forward_ranges(
@@ -517,6 +533,39 @@ def main() -> None:
     (target_dir / "CYCLE_NAVIGATOR_DELIVERY_POINTER.json").write_bytes(canonical_bytes(pointer))
     (repo / "05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json").write_bytes(canonical_bytes(pointer))
     append_forward_ranges(repo, public_issue_number=public_issue, machine_issue_number=issue, year=year, week=target_week, generated_unix=generated_unix, freeze=freeze)
+
+    series_path = repo / "05_CYCLE_NAVIGATOR/public_series/CN_PUBLIC_SERIES_INDEX.json"
+    series = maybe_json(series_path) or {
+        "contract": "CN_PUBLIC_SERIES_INDEX_v1",
+        "authority": "PUBLIC_SERIES_IDENTITY_AND_SCORE_ROUTING_ONLY_NO_MARKET_OR_PORTFOLIO_AUTHORITY",
+        "latest_completed_score": None,
+        "recent_lineage": [],
+        "invariants": [],
+    }
+    published_record = latest_published_public_record(repo)
+    if int(published_record.get("public_issue_number", 0) or 0) > 0:
+        series["latest_published"] = published_record
+    series["current_public_projection"] = {
+        "public_issue_number": public_issue,
+        "forecast_week": f"{year:04d}-W{target_week:02d}",
+        "publication_status": package["publication_status"],
+        "machine_issue_number": issue,
+        "machine_week_dir": str(target_dir.relative_to(repo)),
+        "binding_path": str((target_dir / "CYCLE_NAVIGATOR_PUBLIC_SERIES_BINDING.json").relative_to(repo)),
+        "note": "Public numbering follows the actually published series; machine numbering is a separate migration-era lineage.",
+    }
+    lineage = [row for row in series.get("recent_lineage", []) if str(row.get("forecast_week")) != f"{year:04d}-W{target_week:02d}"]
+    lineage.append({
+        "public_issue_number": public_issue,
+        "forecast_week": f"{year:04d}-W{target_week:02d}",
+        "published_path": None,
+        "machine_week_dir": str(target_dir.relative_to(repo)),
+        "machine_issue_number": issue,
+        "binding_path": str((target_dir / "CYCLE_NAVIGATOR_PUBLIC_SERIES_BINDING.json").relative_to(repo)),
+    })
+    series["recent_lineage"] = lineage[-12:]
+    series_path.parent.mkdir(parents=True, exist_ok=True)
+    series_path.write_bytes(canonical_bytes(series))
 
     ledger = repo / "05_CYCLE_NAVIGATOR/track_record/CN_TRACK_RECORD_LEDGER.jsonl"
     ledger.parent.mkdir(parents=True, exist_ok=True)
