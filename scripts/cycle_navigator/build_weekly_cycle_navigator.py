@@ -13,8 +13,7 @@ from typing import Any
 
 
 def canonical_bytes(value: Any) -> bytes:
-    return (json.dumps(value, sort_keys=True, separators=(",", ":")) + "
-").encode()
+    return (json.dumps(value, sort_keys=True, separators=(",", ":")) + "\n").encode()
 
 
 def sha256_bytes(value: bytes) -> str:
@@ -202,7 +201,7 @@ def call_openai(model: str, prompt: str, context: dict[str, Any], max_output_tok
         "For legacy prior issues without a machine freeze, score only what the exact archived publication and completed-week evidence support and mark LEGACY_BOUNDED. "
         "Never invent historical track-record values. New forecasts must be frozen in explicit machine-readable fields before future outcomes. "
         "Follow Weekly Cycle Navigator Publication Contract v1.1. After the current-state material, the public output must contain weekly price ranges, an intraday map for Day 1-2 / Day 3-4 / Day 5-7, a 2-3 WEEKS compass, a 4-8 WEEKS compass, then the final takeaway. "
-        "For each intraday bucket, use final Master Monday evidence plus the completed-week hourly capture. When that capture is READY with 168 observed hours, numeric BTC/ETH weekly ranges and numeric Day 1-2 / Day 3-4 / Day 5-7 ranges are mandatory; Master Monday omission alone is not a reason for UNAVAILABLE. "
+        "For each intraday bucket, use final Master Monday evidence plus the completed-week hourly capture and prospective_range_bridge when supplied. When the hourly capture is READY with 168 observed hours, numeric BTC/ETH weekly ranges and numeric Day 1-2 / Day 3-4 / Day 5-7 ranges are mandatory; Master Monday omission alone is not a reason for UNAVAILABLE. "
         "The 4-8 week line must be a short cycle direction plus high-level action posture; use UNAVAILABLE when evidence does not support it. "
         "The readable output is for the owner and the X-ready output is public-facing. Keep X prose compact with cohesive sections, not excessive one-line spacing. "
         "Include one base case for this week, one base case for the next 2-3 weeks, one base case for 4-8 weeks, plus a clear altseason countdown table. "
@@ -306,8 +305,9 @@ def main() -> None:
         "previous_cycle_navigator_exact_text": prev_text,
         "previous_cycle_navigator_machine_package": prev_machine,
         "previous_score_parameter_ids": expected_score_parameter_ids(prev_machine),
-        "existing_track_record": maybe_text(repo / "05_CYCLE_NAVIGATOR/track_record/CN_TRACK_RECORD_LEDGER.jsonl"),\n        "prospective_range_bridge": maybe_json(repo / "05_CYCLE_NAVIGATOR/LATEST_PROSPECTIVE_RANGE.json"),
+        "existing_track_record": maybe_text(repo / "05_CYCLE_NAVIGATOR/track_record/CN_TRACK_RECORD_LEDGER.jsonl"),
         "completed_week_hourly_capture": weekly_capture,
+        "prospective_range_bridge": maybe_json(repo / "05_CYCLE_NAVIGATOR/LATEST_PROSPECTIVE_RANGE.json"),
         "range_continuity_rule": "READY 168h hourly capture makes BTC/ETH weekly and intraday ranges mandatory."
     }
     prompt = (
@@ -381,12 +381,21 @@ def main() -> None:
         if lo is not None and float(lo) >= float(hi):
             raise SystemExit(f"invalid_{asset}_range")
 
+    hourly_ready = isinstance(weekly_capture, dict) and weekly_capture.get("readiness") == "READY" and int((weekly_capture.get("hourly_gap_diagnostics") or {}).get("observed_hours", 0) or 0) == 168
+    if hourly_ready:
+        for asset in ("btc", "eth"):
+            if freeze.get(f"{asset}_range_low") is None or freeze.get(f"{asset}_range_high") is None:
+                raise SystemExit(f"RANGE_CONTINUITY_BLOCK:{asset}_range_missing_despite_168h_ready")
+
     intraday = freeze.get("intraday_map")
     if not isinstance(intraday, dict):
         raise SystemExit("intraday_map_missing")
     for bucket in ("day_1_2", "day_3_4", "day_5_7"):
-        if not str(intraday.get(bucket) or "").strip():
+        value = str(intraday.get(bucket) or "").strip()
+        if not value:
             raise SystemExit(f"intraday_{bucket}_missing")
+        if hourly_ready and value.upper() == "UNAVAILABLE":
+            raise SystemExit(f"RANGE_CONTINUITY_BLOCK:intraday_{bucket}_unavailable_despite_168h_ready")
 
     source_manifest = {"contract": "CYCLE_NAVIGATOR_SOURCE_MANIFEST_v1", "issue_number": issue, "completed_iso_week": completed_week, "target_iso_week": target_week, "master_monday_dir": str(mm_dir.relative_to(repo)), "master_monday_files": {name: sha256_bytes((mm_dir / name).read_bytes()) for name in required}, "previous_issue_number": prev_issue or None, "previous_machine_available": prev_machine is not None, "previous_exact_text_available": prev_text is not None}
     package = {"contract": "CYCLE_NAVIGATOR_MACHINE_PACKAGE_v1", "generated_unix": int(time.time()), "authority": "USER_FACING_DERIVED_FROM_FINAL_MASTER_MONDAY", "publication_status": "X_READY_NOT_CONFIRMED_PUBLISHED", "source_manifest_sha256": sha256_bytes(canonical_bytes(source_manifest)), **value}
@@ -396,10 +405,8 @@ def main() -> None:
     (target_dir / "CYCLE_NAVIGATOR_MACHINE_PACKAGE.json").write_bytes(canonical_bytes(package))
     (target_dir / "CYCLE_NAVIGATOR_SCORECARD.json").write_bytes(canonical_bytes(scorecard))
     (target_dir / "CYCLE_NAVIGATOR_FORECAST_FREEZE.json").write_bytes(canonical_bytes(freeze))
-    (target_dir / "CYCLE_NAVIGATOR_READABLE.md").write_text(value["readable_markdown"].rstrip() + "
-")
-    (target_dir / "CYCLE_NAVIGATOR_X_READY.md").write_text(value["x_ready_markdown"].rstrip() + "
-")
+    (target_dir / "CYCLE_NAVIGATOR_READABLE.md").write_text(value["readable_markdown"].rstrip() + "\n")
+    (target_dir / "CYCLE_NAVIGATOR_X_READY.md").write_text(value["x_ready_markdown"].rstrip() + "\n")
     (target_dir / "CYCLE_NAVIGATOR_SOURCE_MANIFEST.json").write_bytes(canonical_bytes(source_manifest))
     (target_dir / "CYCLE_NAVIGATOR_DELIVERY_POINTER.json").write_bytes(canonical_bytes(pointer))
     (repo / "05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json").write_bytes(canonical_bytes(pointer))
@@ -408,8 +415,7 @@ def main() -> None:
     ledger.parent.mkdir(parents=True, exist_ok=True)
     row = {"issue_scored": prev_issue or None, "completed_iso_week": completed_week, "next_issue": issue, **value["evaluation"], "score_source": "FROZEN_PRIOR_CN_PLUS_FINAL_MASTER_MONDAY", "score_authority": "PUBLIC_CONTINUITY_NOT_SCIENTIFIC_EDGE"}
     with ledger.open("a") as f:
-        f.write(json.dumps(row, sort_keys=True, separators=(",", ":")) + "
-")
+        f.write(json.dumps(row, sort_keys=True, separators=(",", ":")) + "\n")
 
     usage = raw.get("usage") if isinstance(raw.get("usage"), dict) else {}
     receipt = {"contract": "CYCLE_NAVIGATOR_API_RECEIPT_v1", "response_id": raw.get("id"), "model": args.model, "input_tokens": int(usage.get("input_tokens", 0) or 0), "output_tokens": int(usage.get("output_tokens", 0) or 0), "output_sha256": sha256_bytes(canonical_bytes(value)), "issue_number": issue, "authority": "PUBLICATION_ONLY_NO_CANONICAL_OR_PORTFOLIO_AUTHORITY"}
