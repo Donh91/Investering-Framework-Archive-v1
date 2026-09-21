@@ -1,0 +1,66 @@
+{
+  "contract": "CN_PROSPECTIVE_RANGE_BRIDGE_v1",
+  "authority": "PROSPECTIVE_PUBLICATION_INPUT_NO_PORTFOLIO_AUTHORITY",
+  "status": "READY_CONTINUITY_BASELINE",
+  "target_week": "2026-W39",
+  "generated_after_source_week_close": true,
+  "source_week": "2026-W38",
+  "source_cutoff_utc": "2026-09-21T00:00:00Z",
+  "method": "CONTINUITY_BASELINE_v1_SHIFT_PRIOR_PROSPECTIVE_ENVELOPES_BY_COMPLETED_WEEK_CLOSE_OVER_OPEN",
+  "method_note": "Uses only completed W38 close/open ratio and the prospectively published W38 range envelopes. It does not use W39 outcomes. This bridge exists because the normal CN range handoff failed; the next official CN build may supersede it prospectively, never retrospectively.",
+  "weekly": {
+    "BTC": {
+      "low": 79232,
+      "high": 88740
+    },
+    "ETH": {
+      "low": 2520,
+      "high": 2947
+    }
+  },
+  "intraday": {
+    "day_1_2": {
+      "BTC": {
+        "low": 81345,
+        "high": 86099
+      },
+      "ETH": {
+        "low": 2606,
+        "high": 2819
+      }
+    },
+    "day_3_4": {
+      "BTC": {
+        "low": 79760,
+        "high": 87155
+      },
+      "ETH": {
+        "low": 2542,
+        "high": 2883
+      }
+    },
+    "day_5_7": {
+      "BTC": {
+        "low": 79232,
+        "high": 88740
+      },
+      "ETH": {
+        "low": 2520,
+        "high": 2947
+      }
+    }
+  },
+  "provenance": {
+    "prior_published_ranges": "05_CYCLE_NAVIGATOR/published/2026/CYCLE_NAVIGATOR_25_X_PUBLISHED_2026-09-14.md",
+    "completed_week_actuals": "03_DAILY_CAPTURE_LOGS/weekly/2026/W38.json",
+    "hourly_coverage": 168
+  },
+  "rules": {
+    "prospective_only": true,
+    "no_retroactive_W39_scoring_before_generation": true,
+    "master_monday_consume": true,
+    "cycle_navigator_consume": true,
+    "compass_consume": true,
+    "website_consume": true
+  }
+}

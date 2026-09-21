@@ -1,0 +1,88 @@
+{
+  "contract": "CN_RANGE_CONTINUITY_CORRECTION_v1",
+  "authority": "CN_RANGE_CONTINUITY_CORRECTION_NO_PORTFOLIO_AUTHORITY",
+  "status": "FINAL_RECONCILED_FROM_PROSPECTIVE_PUBLISHED_RANGES",
+  "forecast_week": "2026-W38",
+  "issue_scored": 25,
+  "score_formula": "70pct_containment_plus_30pct_jaccard",
+  "price_range_score": 71.51,
+  "asset_scores": {
+    "BTC": 67.48,
+    "ETH": 75.53
+  },
+  "intraday_window_scores": {
+    "day_1_2": 58.87,
+    "day_3_4": 67.56,
+    "day_5_7": 88.09
+  },
+  "rows": [
+    {
+      "asset": "BTC",
+      "window": "day_1_2",
+      "forecast_low": 77000,
+      "forecast_high": 81500,
+      "actual_low": 74967.97,
+      "actual_high": 79600,
+      "score": 51.23
+    },
+    {
+      "asset": "ETH",
+      "window": "day_1_2",
+      "forecast_low": 2440,
+      "forecast_high": 2640,
+      "actual_low": 2358.88,
+      "actual_high": 2615,
+      "score": 66.5
+    },
+    {
+      "asset": "BTC",
+      "window": "day_3_4",
+      "forecast_low": 75500,
+      "forecast_high": 82500,
+      "actual_low": 75064.82,
+      "actual_high": 77179.47,
+      "score": 62.37
+    },
+    {
+      "asset": "ETH",
+      "window": "day_3_4",
+      "forecast_low": 2380,
+      "forecast_high": 2700,
+      "actual_low": 2369.11,
+      "actual_high": 2483.74,
+      "score": 72.76
+    },
+    {
+      "asset": "BTC",
+      "window": "day_5_7",
+      "forecast_low": 75000,
+      "forecast_high": 84000,
+      "actual_low": 76296,
+      "actual_high": 81951,
+      "score": 88.85
+    },
+    {
+      "asset": "ETH",
+      "window": "day_5_7",
+      "forecast_low": 2360,
+      "forecast_high": 2760,
+      "actual_low": 2436.89,
+      "actual_high": 2668,
+      "score": 87.33
+    }
+  ],
+  "provenance": {
+    "published_copy_path": "05_CYCLE_NAVIGATOR/published/2026/CYCLE_NAVIGATOR_25_X_PUBLISHED_2026-09-14.md",
+    "published_copy_blob_sha": "42b77ea9a060288893a8a5b7990a6e10e6452dbf",
+    "approval_receipt_path": "05_CYCLE_NAVIGATOR/weekly/2026/W38/CYCLE_NAVIGATOR_X_APPROVAL_RECEIPT.json",
+    "range_ledger_path": "05_CYCLE_NAVIGATOR/forward_range_ledger/CN_23_25_RANGE_BACKFILL_2026-09-17.csv",
+    "weekly_actuals_path": "03_DAILY_CAPTURE_LOGS/weekly/2026/W38.json",
+    "hourly_coverage": 168
+  },
+  "rules": {
+    "no_hindsight_forecast_creation": true,
+    "append_only_correction": true,
+    "machine_freeze_not_rewritten": true,
+    "website_and_master_monday_may_consume_score": true
+  }
+}
