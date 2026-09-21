@@ -8,6 +8,7 @@ const COMPASS_POINTER_PATH=resolve(repoRoot,"04_MARKET_LEARNING/handlekompas/off
 const COMPASS_EVENT_STATUS_PATH=resolve(repoRoot,"04_MARKET_LEARNING/handlekompas/event_refresh/PUBLIC_STATUS.json");
 const RANGE_SCORE_PATH=resolve(repoRoot,"05_CYCLE_NAVIGATOR/LATEST_RANGE_SCORE.json");
 const PROSPECTIVE_RANGE_PATH=resolve(repoRoot,"05_CYCLE_NAVIGATOR/LATEST_PROSPECTIVE_RANGE.json");
+const PUBLIC_SERIES_INDEX_PATH=resolve(repoRoot,"05_CYCLE_NAVIGATOR/public_series/CN_PUBLIC_SERIES_INDEX.json");
 const PUBLIC_SITE_FILES=["index.html","styles.css","scoreboard.css","motion.css","journey.css","vibe.css","app.js","compass.js","compass-product-v5.js","compass-product-v5.css","history-scoreboard.js","history-scoreboard.json","motion.js","journey.js","live-context.js","favicon.svg","social-card.svg"];
 const pick=(obj,keys)=>Object.fromEntries(keys.filter(k=>Object.prototype.hasOwnProperty.call(obj||{},k)).map(k=>[k,obj[k]]));
 const sanitizePointer=p=>pick(p,["iso_year","iso_week","completed_source_week","issue_number","publication_status","status"]);
@@ -64,7 +65,14 @@ const packagePath=resolve(repoRoot,pointer.week_dir,"CYCLE_NAVIGATOR_MACHINE_PAC
 if(Number(pointer.issue_number)!==Number(pkg.issue_number)) throw new Error("Pointer/package issue mismatch");
 const rangeScore=await readJson(RANGE_SCORE_PATH).catch(()=>null);
 const prospectiveRange=await readJson(PROSPECTIVE_RANGE_PATH).catch(()=>null);
-const snapshot={schema:"CN_PUBLIC_SNAPSHOT_V2",generated_at:new Date().toISOString(),authority:false,pointer:sanitizePointer(pointer),package:sanitizePackage(pkg),range_score:rangeScore,prospective_range:prospectiveRange};
+const publicSeries=await readJson(PUBLIC_SERIES_INDEX_PATH).catch(()=>null);
+let publicScorecard=null;
+if(publicSeries?.latest_completed_score?.scorecard_path){
+  const rel=String(publicSeries.latest_completed_score.scorecard_path);
+  if(!rel.startsWith("05_CYCLE_NAVIGATOR/public_scorecards/")||rel.includes("..")) throw new Error("Public CN scorecard path escaped approved root");
+  publicScorecard=await readJson(resolve(repoRoot,rel));
+}
+const snapshot={schema:"CN_PUBLIC_SNAPSHOT_V2",generated_at:new Date().toISOString(),authority:false,pointer:sanitizePointer(pointer),package:sanitizePackage(pkg),public_series:publicSeries,public_scorecard:publicScorecard,range_score:rangeScore,prospective_range:prospectiveRange};
 const compass=await buildCompassSnapshot();
 const compassEvent=await buildCompassEventSnapshot();
 await writeFile(resolve(dataDir,"latest.json"),JSON.stringify(snapshot,null,2)+"\n");
