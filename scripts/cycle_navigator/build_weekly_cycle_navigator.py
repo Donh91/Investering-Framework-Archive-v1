@@ -78,6 +78,22 @@ def append_forward_ranges(
 ) -> None:
     intraday = freeze.get("intraday_map") if isinstance(freeze.get("intraday_map"), dict) else {}
     rows: list[dict[str, Any]] = []
+    for asset, prefix in (("BTC", "btc"), ("ETH", "eth")):
+        low, high = freeze.get(f"{prefix}_range_low"), freeze.get(f"{prefix}_range_high")
+        if low is not None and high is not None:
+            rows.append({
+                "contract": "CN_FORWARD_RANGE_FREEZE_v2",
+                "public_issue_number": public_issue_number,
+                "machine_issue_number": machine_issue_number,
+                "forecast_week": f"{year:04d}-W{week:02d}",
+                "window": "weekly",
+                "asset": asset,
+                "forecast_low": float(low),
+                "forecast_high": float(high),
+                "generated_unix": generated_unix,
+                "source": "CYCLE_NAVIGATOR_FORECAST_FREEZE",
+                "status": "FROZEN_PROSPECTIVE",
+            })
     for window in ("day_1_2", "day_3_4", "day_5_7"):
         text = str(intraday.get(window) or "")
         for asset in ("BTC", "ETH"):
