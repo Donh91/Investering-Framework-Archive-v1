@@ -133,7 +133,7 @@
   function insertPanel(snapshot) {
     if (document.getElementById('weeklyCanonicalScorecard')) return;
     const publicCard = snapshot?.public_scorecard;
-    const bundle = snapshot?.weekly_score_bundle;
+    const bundle = snapshot?.machine_calibration_bundle;
     const range = supplementalRangeScore(snapshot, bundle);
     if (!publicCard && !bundle && !range) return;
 
