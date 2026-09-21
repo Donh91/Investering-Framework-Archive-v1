@@ -67,17 +67,12 @@ const prospectiveRange=await readJson(PROSPECTIVE_RANGE_PATH).catch(()=>null);
 const snapshot={schema:"CN_PUBLIC_SNAPSHOT_V2",generated_at:new Date().toISOString(),authority:false,pointer:sanitizePointer(pointer),package:sanitizePackage(pkg),range_score:rangeScore,prospective_range:prospectiveRange};
 const compass=await buildCompassSnapshot();
 const compassEvent=await buildCompassEventSnapshot();
-await writeFile(resolve(dataDir,"latest.json"),JSON.stringify(snapshot,null,2)+"
-");
-await writeFile(resolve(dataDir,"compass.json"),JSON.stringify(compass,null,2)+"
-");
-await writeFile(resolve(dataDir,"compass-event.json"),JSON.stringify(compassEvent,null,2)+"
-");
+await writeFile(resolve(dataDir,"latest.json"),JSON.stringify(snapshot,null,2)+"\n");
+await writeFile(resolve(dataDir,"compass.json"),JSON.stringify(compass,null,2)+"\n");
+await writeFile(resolve(dataDir,"compass-event.json"),JSON.stringify(compassEvent,null,2)+"\n");
 for(const file of PUBLIC_SITE_FILES){await copyFile(resolve(siteDir,file),resolve(outputDir,file));}
 const indexPath=resolve(outputDir,"index.html"); let index=await readFile(indexPath,"utf8");
-if(!index.includes("./compass-product-v5.css")) index=index.replace("</head>",'  <link rel="stylesheet" href="./compass-product-v5.css" />
-</head>');
-if(!index.includes("./compass-product-v5.js")) index=index.replace("</body>",'  <script src="./compass-product-v5.js" defer></script>
-</body>');
+if(!index.includes("./compass-product-v5.css")) index=index.replace("</head>",'  <link rel="stylesheet" href="./compass-product-v5.css" />\n</head>');
+if(!index.includes("./compass-product-v5.js")) index=index.replace("</body>",'  <script src="./compass-product-v5.js" defer></script>\n</body>');
 await writeFile(indexPath,index,"utf8");
 console.log(`Cycle Navigator public v2 built: issue #${pkg.issue_number}; Compass ${compass.compass_id||compass.data_status}`);
