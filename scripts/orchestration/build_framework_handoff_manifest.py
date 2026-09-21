@@ -17,10 +17,14 @@ def load(path: Path) -> dict[str, Any] | None:
 
 
 def file_ref(path: Path, root: Path) -> dict[str, Any] | None:
-    if not path.exists() or not path.is_file():
+    root_resolved = root.resolve()
+    path_resolved = path.resolve()
+    if path_resolved != root_resolved and root_resolved not in path_resolved.parents:
         return None
-    raw = path.read_bytes()
-    return {"path": str(path.relative_to(root)), "sha256": hashlib.sha256(raw).hexdigest(), "bytes": len(raw)}
+    if not path_resolved.exists() or not path_resolved.is_file():
+        return None
+    raw = path_resolved.read_bytes()
+    return {"path": str(path_resolved.relative_to(root_resolved)), "sha256": hashlib.sha256(raw).hexdigest(), "bytes": len(raw)}
 
 
 def repo_path(root: Path, raw: Any) -> Path | None:
@@ -41,7 +45,7 @@ def main() -> None:
     parser.add_argument("--repo-root", type=Path, default=Path("."))
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
-    root = args.repo_root
+    root = args.repo_root.resolve()
     learning_base = root / "00_ARCHIVE_CONTROL/research_governance_v1/compounding_learning_v1"
     operational_base = root / "research/framework_learning/operational_memory"
 
