@@ -41,8 +41,10 @@ def main() -> None:
 
     price = score["price_range_precision"]
     market = score["market_structure_precision"]
+    frozen = score["frozen_claim_precision"]
     assert abs(float(price["score"]) - float(latest_score["price_range_score"])) < 1e-9
     assert abs(float(market["score"]) - float(latest_score["market_structure_score"])) < 1e-9
+    assert abs(float(frozen["score"]) - float(latest_score["frozen_claim_score"])) < 1e-9
 
     range_pointer = read_json(root / "05_CYCLE_NAVIGATOR/LATEST_RANGE_SCORE.json")
     if (
@@ -57,17 +59,25 @@ def main() -> None:
     target = f'{int(pointer["iso_year"]):04d}-W{int(pointer["iso_week"]):02d}'
     assert target == current["forecast_week"]
     assert int(pointer["issue_number"]) == int(current["machine_issue_number"])
+    binding = root / current["binding_path"]
+    assert binding.is_file()
+    binding_data = read_json(binding)
+    assert int(binding_data["public_issue_number"]) == int(current["public_issue_number"])
+    assert int(binding_data["machine_issue_number"]) == int(current["machine_issue_number"])
+    assert binding_data["forecast_week"] == current["forecast_week"]
 
     history = read_json(root / "05_CYCLE_NAVIGATOR/site/history-scoreboard.json")
     row = next(x for x in history["records"] if int(x["cn"]) == int(score["public_issue_number"]))
     assert row["allow_derived_overall"] is False
     assert "71.51" in str(row["range_display"])
     assert "Market/Structure 80" in str(row["structure_display"])
+    assert "Frozen claims 78.57" in str(row["structure_display"]) or "Market/Structure 80" in str(row["structure_display"])
 
     print(json.dumps({
         "status": "PASS",
         "latest_completed_public_issue": score["public_issue_number"],
         "forecast_week": score["forecast_week"],
+        "frozen_claim_score": frozen["score"],
         "market_structure_score": market["score"],
         "price_range_score": price["score"],
         "current_public_issue": current["public_issue_number"],
