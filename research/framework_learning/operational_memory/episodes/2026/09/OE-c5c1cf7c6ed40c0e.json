@@ -1,0 +1,50 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/typesafe_jev_stress_token_benchmark.yml",
+    "07_PROMPTS_AND_AGENTS/typesafe_jev/2026-09-19__jev-stress-and-sol-token-benchmark-v1.md",
+    "07_PROMPTS_AND_AGENTS/typesafe_jev/2026-09-20__JEV_DECISION_GATE_V1.md",
+    "scripts/api_agent/openai_sol_token_benchmark.py",
+    "scripts/api_agent/typesafe_jev_replay.py",
+    "scripts/api_agent/typesafe_jev_replay_runner.py",
+    "tests/api_agent/test_typesafe_jev_replay.py",
+    "tests/api_agent/test_typesafe_jev_stress.py",
+    "tests/fixtures/typesafe_jev/synthetic_blind_observation_v1.json"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "scripts",
+  "episode_id": "OE-c5c1cf7c6ed40c0e",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "UPDATE",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "Merge the tested JEV shadow-only integration, adversarial/repeatability harness, deterministic baseline and anti-false-success decision gate. No trading or production routing authority.",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/typesafe_jev_stress_token_benchmark.yml": "460738f27cfc71497ab1b49f6ee290328a1a395e",
+    "07_PROMPTS_AND_AGENTS/typesafe_jev/2026-09-19__jev-stress-and-sol-token-benchmark-v1.md": "ec5f4380bc916b1db6d02b06e2dba7fbf4072ac0",
+    "07_PROMPTS_AND_AGENTS/typesafe_jev/2026-09-20__JEV_DECISION_GATE_V1.md": "6f32020dbd053f47f5ff963eaf4e8373b59d47b4",
+    "scripts/api_agent/openai_sol_token_benchmark.py": "8ab3f36246259b17cc62a397eddadfb9146213d5",
+    "scripts/api_agent/typesafe_jev_replay.py": "afb7e77c73805f8aadb3c2f4e8d2d2e106dc85cf",
+    "scripts/api_agent/typesafe_jev_replay_runner.py": "f4115128328757be0843c2004147857cd10e68d9",
+    "tests/api_agent/test_typesafe_jev_replay.py": "a38facc11565890c93d356a2aec489a90dc03c59",
+    "tests/api_agent/test_typesafe_jev_stress.py": "2eff2f7e809d79a87a7f7157fe596ca42e3235ea",
+    "tests/fixtures/typesafe_jev/synthetic_blind_observation_v1.json": "32a67cddc8624ae33a92142757ec709cb1b6fc81"
+  },
+  "source_commit_sha": "c5c1cf7c6ed40c0e241489bfe66102c69b70895d",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-09-20T12:34:13+02:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "Integrate bounded Jev shadow decision fabric and falsification gates (#1155)"
+}

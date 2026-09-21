@@ -1,0 +1,152 @@
+{
+  "actionable_count": 3,
+  "authority": "RESEARCH_ONLY_NON_CANONICAL",
+  "automatic_budget_guard_change": false,
+  "automatic_market_semantic_change": false,
+  "automatic_promotion": false,
+  "canonical_effect": false,
+  "contract": "WEEKLY_FORENSICS_PACK_v1",
+  "existing_remediation_queue_is_sole_repair_queue": true,
+  "findings": [
+    {
+      "acceptance_gate": "VALID_ELIGIBILITY_CONTRACT_PLUS_EXISTING_PULLBACK_TESTS",
+      "cheapest_sufficient_executor": "OWNER_OR_SPECIALIST",
+      "dedup_key": "041d7ee71eeaab510ffd",
+      "evidence_refs": [
+        "04_MARKET_LEARNING/pullback_learning/LATEST.json",
+        "04_MARKET_LEARNING/pullback_learning/ELIGIBILITY_STATUS_v1.json"
+      ],
+      "fingerprint": "f0d6a402f61bb60b946c",
+      "module": "PULLBACK_REENTRY",
+      "next_action": "resolve the existing eligibility-owner contract without inventing episodes or bypassing suspension",
+      "owner": "PULLBACK_ELIGIBILITY_OWNER",
+      "reason": "pullback episode eligibility is suspended; descriptive learning may continue but episode creation/maturation must remain blocked",
+      "root_cause_confidence": "HIGH",
+      "route": "GOVERNANCE_REVIEW",
+      "severity": "HIGH",
+      "stop_condition": "stop if a valid superseding eligibility contract already exists"
+    },
+    {
+      "acceptance_gate": "POINT_IN_TIME_PROVENANCE_PRESENT",
+      "cheapest_sufficient_executor": "DETERMINISTIC",
+      "dedup_key": "b49f5d0f60040cbcf526",
+      "evidence_refs": [
+        "04_MARKET_LEARNING/pullback_learning/LATEST.json"
+      ],
+      "fingerprint": "2db4f7694e55399b429e",
+      "module": "PULLBACK_REENTRY",
+      "next_action": "continue observation collection and evaluate only fields available at observation time",
+      "owner": "PULLBACK_LEARNING_LEDGER",
+      "reason": "preserve point-in-time pullback observations for weekly descriptive and near-miss learning; observation_count=None",
+      "root_cause_confidence": "MEDIUM",
+      "route": "WAIT_FOR_EVIDENCE",
+      "severity": "INFO",
+      "stop_condition": "stop if provenance/timestamps are incomplete"
+    },
+    {
+      "acceptance_gate": "EXISTING_TASK_SPECIFIC_POST_FIX_GATE",
+      "cheapest_sufficient_executor": "DETERMINISTIC",
+      "dedup_key": "3ea8e11c5c0493cbfd02",
+      "evidence_refs": [
+        "research/architecture_health/LATEST_AUTOMATION_HEALTH.json",
+        "research/remediation/LATEST_REMEDIATION_QUEUE.json"
+      ],
+      "fingerprint": "5e886ad7c467dc5a3999",
+      "module": "META_HEALTH",
+      "next_action": "deduplicate against the existing remediation queue and route only unresolved reproducible signatures",
+      "owner": "REMEDIATION_MATURATION",
+      "reason": "automation health contains active RED/blocker evidence (red=8, amber=21, blockers=15)",
+      "root_cause_confidence": "HIGH",
+      "route": "DETERMINISTIC_REPAIR",
+      "severity": "HIGH",
+      "stop_condition": "stop when finding is absent, superseded, already fixed, or requires semantic/budget change"
+    },
+    {
+      "acceptance_gate": "MASTER_MONDAY_ADVISORY_FIREWALL_PASS",
+      "cheapest_sufficient_executor": "OWNER_OR_SPECIALIST",
+      "dedup_key": "0d97fd56080a24a17dfc",
+      "evidence_refs": [
+        "research/framework_intelligence/phase1/LATEST.json"
+      ],
+      "fingerprint": "e0b296e7fb76a5193ae0",
+      "module": "CONSUMPTION_HEALTH",
+      "next_action": "carry only a compact advisory delta; do not grant live authority",
+      "owner": "FRAMEWORK_LEARNING_SUPERVISOR",
+      "reason": "high-value advisory evidence exists but is intentionally/not yet consumed by Master Monday",
+      "root_cause_confidence": "MEDIUM",
+      "route": "SOURCE_OWNER",
+      "severity": "MEDIUM",
+      "stop_condition": "stop if phase gate forbids consumption"
+    },
+    {
+      "acceptance_gate": "NO_CANONICAL_PROMOTION",
+      "cheapest_sufficient_executor": "DETERMINISTIC",
+      "dedup_key": "3c59ca520d19b7710afa",
+      "evidence_refs": [
+        "00_ARCHIVE_CONTROL/research_governance_v1/compounding_learning_v1/STATE.json"
+      ],
+      "fingerprint": "28ad055b5fe53cc63caf",
+      "module": "LEARNING_MATURATION",
+      "next_action": "retain delta-only learning and negative memory; no automatic promotion",
+      "owner": "COMPOUNDING_LEARNING_CONTROLLER",
+      "reason": "weekly maturation snapshot: families=156, matured_outcomes=477",
+      "root_cause_confidence": "MEDIUM",
+      "route": "NO_ACTION",
+      "severity": "INFO",
+      "stop_condition": "stop if source authority is not research-only"
+    }
+  ],
+  "generated_at_utc": "2026-09-21T18:17:33.705958Z",
+  "iso_week": 38,
+  "iso_year": 2026,
+  "master_monday_delta": {
+    "authority": "ADVISORY_ONLY",
+    "items": [
+      {
+        "module": "PULLBACK_REENTRY",
+        "reason": "pullback episode eligibility is suspended; descriptive learning may continue but episode creation/maturation must remain blocked",
+        "route": "GOVERNANCE_REVIEW",
+        "severity": "HIGH"
+      },
+      {
+        "module": "META_HEALTH",
+        "reason": "automation health contains active RED/blocker evidence (red=8, amber=21, blockers=15)",
+        "route": "DETERMINISTIC_REPAIR",
+        "severity": "HIGH"
+      },
+      {
+        "module": "CONSUMPTION_HEALTH",
+        "reason": "high-value advisory evidence exists but is intentionally/not yet consumed by Master Monday",
+        "route": "SOURCE_OWNER",
+        "severity": "MEDIUM"
+      }
+    ],
+    "source_iso_week": 38,
+    "source_iso_year": 2026,
+    "source_mode": "FINAL"
+  },
+  "mode": "FINAL",
+  "modules": [
+    "PULLBACK_REENTRY",
+    "FORECAST_DECISION",
+    "ROTATION_TRANSMISSION",
+    "META_HEALTH",
+    "LEARNING_MATURATION",
+    "DATA_EVIDENCE_INTEGRITY"
+  ],
+  "point_in_time_required": true,
+  "portfolio_execution": false,
+  "routing_contract": [
+    "CODEX_REQUIRED",
+    "DETERMINISTIC_REPAIR",
+    "GOVERNANCE_REVIEW",
+    "HUMAN_AUTHORITY",
+    "NO_ACTION",
+    "RESEARCH_EXPERIMENT",
+    "SELF_HEAL_SAFE",
+    "SOURCE_OWNER",
+    "SPECIALIST_AGENT",
+    "WAIT_FOR_EVIDENCE"
+  ],
+  "unknown_is_not_zero": true
+}\n

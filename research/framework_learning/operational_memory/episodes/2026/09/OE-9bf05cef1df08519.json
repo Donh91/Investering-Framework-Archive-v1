@@ -1,0 +1,36 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "scripts/cycle_navigator/build_weekly_cycle_navigator.py",
+    "tests/cycle_navigator/test_weekly_publication_resilience.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "scripts",
+  "episode_id": "OE-9bf05cef1df08519",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "cycle-navigator-weekly-api-publication",
+  "operation_type": "HARDEN",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* fix: retry CN transport failures and normalize structured output * test: cover CN transport timeout and double-encoded JSON",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "scripts/cycle_navigator/build_weekly_cycle_navigator.py": "8a9c48fe828f2edef179a3d7f19e7a49774076c9",
+    "tests/cycle_navigator/test_weekly_publication_resilience.py": "ad869a8da4dcfe70622096af783f97964232bb04"
+  },
+  "source_commit_sha": "9bf05cef1df08519a513f0113b305ab0155712ad",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-09-21T20:05:58+02:00",
+  "task_class": "CYCLE_NAVIGATOR",
+  "task_summary": "Harden Cycle Navigator weekly API publication"
+}

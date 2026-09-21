@@ -1,0 +1,48 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "05_CYCLE_NAVIGATOR/LATEST_PROSPECTIVE_RANGE.json",
+    "05_CYCLE_NAVIGATOR/LATEST_RANGE_SCORE.json",
+    "05_CYCLE_NAVIGATOR/corrections/2026/W38/RANGE_SCORE_CORRECTION.json",
+    "05_CYCLE_NAVIGATOR/site/build-public.mjs",
+    "05_CYCLE_NAVIGATOR/site/history-scoreboard.json",
+    "scripts/api_agent/build_weekly_calibration_context.py",
+    "scripts/cycle_navigator/build_weekly_cycle_navigator.py",
+    "scripts/cycle_navigator/reconcile_published_ranges.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "05_CYCLE_NAVIGATOR",
+  "episode_id": "OE-ac42140598773e3e",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "cycle-navigator-range-continuity-w38-precision",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* Add deterministic Cycle Navigator range reconciliation * Recover W38 Cycle Navigator range precision * Recover W38 Cycle Navigator range precision * Expose reconciled range precision to public Cycle Navigator snapshot * Restore CN25 W38 range precision in public scoreboard * Make 168h hourly capture mandatory input for CN ranges * Feed reconciled CN range precision into Master Monday context * Restore prospective W39 range bridge from frozen W38 evidence * Wire range score and prospective range bridge downstream * Wire range score and prospective range bridge downstream * Wire reconciled and",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "05_CYCLE_NAVIGATOR/LATEST_PROSPECTIVE_RANGE.json": "01f5167d806a5f9bbd2ba6cb261a82692e1e93cc",
+    "05_CYCLE_NAVIGATOR/LATEST_RANGE_SCORE.json": "5be1bc4d6b3f4bb2413f491f12916bc9e9d8ee8a",
+    "05_CYCLE_NAVIGATOR/corrections/2026/W38/RANGE_SCORE_CORRECTION.json": "e9d9dffd9b0e49a48bc26e71fe80537ca1b1f960",
+    "05_CYCLE_NAVIGATOR/site/build-public.mjs": "e8c20cf935078e34a6c89804226e4fbbca1449cd",
+    "05_CYCLE_NAVIGATOR/site/history-scoreboard.json": "9b650205257b815db2808f43a3954178591cb84e",
+    "scripts/api_agent/build_weekly_calibration_context.py": "ed8ed75aba88e3cb2c35ede35d37a700f368af5c",
+    "scripts/cycle_navigator/build_weekly_cycle_navigator.py": "bcc4db2fe1bf3cd8e90aa6fe19b3e723c44580fb",
+    "scripts/cycle_navigator/reconcile_published_ranges.py": "4ddffa90d0c2ba8335697a80eefd4b80b64b9950"
+  },
+  "source_commit_sha": "ac42140598773e3e605df68e4d5797653e616557",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-09-21T13:03:37+02:00",
+  "task_class": "CYCLE_NAVIGATOR",
+  "task_summary": "Repair Cycle Navigator range continuity and W38 precision"
+}

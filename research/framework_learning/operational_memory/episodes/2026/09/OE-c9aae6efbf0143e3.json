@@ -1,0 +1,44 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "05_CYCLE_NAVIGATOR/site/app.js",
+    "05_CYCLE_NAVIGATOR/site/live-observation.js",
+    "05_CYCLE_NAVIGATOR/site/validate-v2.mjs",
+    "05_CYCLE_NAVIGATOR/site/weekly-score.js",
+    "scripts/orchestration/build_framework_handoff_manifest.py",
+    "tests/orchestration/test_consumer_receipt.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "05_CYCLE_NAVIGATOR",
+  "episode_id": "OE-c9aae6efbf0143e3",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "cycle-navigator-homepage-precision-w39-continuity",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* fix: normalize handoff manifest paths * test: cover absolute handoff path regression * fix: fail closed on null live precision * fix: surface latest completed CN precision * fix: show prospective W39 ranges on homepage * test: lock CN homepage precision fallbacks",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "05_CYCLE_NAVIGATOR/site/app.js": "0d2b2c9488a6bf004c9041a3fd4871369197ac1b",
+    "05_CYCLE_NAVIGATOR/site/live-observation.js": "c7a5e24c6a2546eb37474d1ccd677b38761c4a4d",
+    "05_CYCLE_NAVIGATOR/site/validate-v2.mjs": "02db3d793e96a8056d33fd32486f4c3e8761f100",
+    "05_CYCLE_NAVIGATOR/site/weekly-score.js": "d35f095af8238a61b40ec8f751f6ec10be242c01",
+    "scripts/orchestration/build_framework_handoff_manifest.py": "106b0771cc724af56a8eb7f116a16919d36cdd4b",
+    "tests/orchestration/test_consumer_receipt.py": "78213b999a9041ac7836482270df8d5802a4be16"
+  },
+  "source_commit_sha": "c9aae6efbf0143e31ff7a9101685495e12862628",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-09-21T19:55:43+02:00",
+  "task_class": "CYCLE_NAVIGATOR",
+  "task_summary": "Fix Cycle Navigator homepage precision and W39 continuity"
+}
