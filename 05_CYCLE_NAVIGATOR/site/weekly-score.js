@@ -3,7 +3,12 @@
 
   const DATA_URL = './data/latest.json';
   const numeric = (value) => value != null && value !== '' && Number.isFinite(Number(value));
-  const fmt = (value) => numeric(value) ? `${Math.round(Number(value))}%` : 'N/A';
+  const fmt = (value) => {
+    if (!numeric(value)) return 'N/A';
+    const n = Math.round(Number(value) * 100) / 100;
+    const text = Number.isInteger(n) ? String(n) : n.toFixed(2).replace(/0+$/, '').replace(/\.$/, '');
+    return `${text}%`;
+  };
   const esc = (value) => String(value ?? '')
     .replaceAll('&', '&amp;')
     .replaceAll('<', '&lt;')
@@ -34,9 +39,9 @@
   function rangeScoreCards(range) {
     const windows = range?.intraday_window_scores || {};
     const intraday = [
-      numeric(windows.day_1_2) ? `D1–2 ${Math.round(Number(windows.day_1_2))}%` : null,
-      numeric(windows.day_3_4) ? `D3–4 ${Math.round(Number(windows.day_3_4))}%` : null,
-      numeric(windows.day_5_7) ? `D5–7 ${Math.round(Number(windows.day_5_7))}%` : null
+      numeric(windows.day_1_2) ? `D1–2 ${fmt(windows.day_1_2)}` : null,
+      numeric(windows.day_3_4) ? `D3–4 ${fmt(windows.day_3_4)}` : null,
+      numeric(windows.day_5_7) ? `D5–7 ${fmt(windows.day_5_7)}` : null
     ].filter(Boolean).join(' · ') || 'N/A';
     return `
       <article class="cal-summary-card">
