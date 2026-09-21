@@ -27,3 +27,10 @@ PRELIMINARY may run before Sunday close to identify evidence gaps. FINAL must ru
 
 ## Compute
 Deterministic first. Escalate only for material, novel, causally ambiguous findings. Codex is reserved for bounded code changes.
+
+## Replay bootstrap and permanent destination
+A bounded 12-week point-in-time replay may bootstrap recurrence memory from the Git commit that existed at each Sunday cutoff. Missing historical evidence is UNKNOWN, never reconstructed from future data. The replay baseline is consumed by Framework Learning Supervisor and retained as research-only recurrence context. It must not create a second learning owner or repair queue.
+
+Replay is one-time bootstrap. The permanent successor is the normal PRELIMINARY -> FINAL weekly forensics cycle. New weekly evidence compounds into the existing Framework Learning / Compounding Learning surfaces and routes through existing remediation, source-owner, specialist, experiment, governance, wait, or no-action paths. No replay result may directly mutate market semantics or portfolio authority.
+
+Model intelligence is optional and gated: deterministic processing first; a model pass is justified only for material, novel, causally ambiguous cross-system findings. Model output is hypothesis/advisory evidence and must return through the same evidence and governance loop.
