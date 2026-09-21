@@ -47,9 +47,14 @@
     ].filter(Boolean).join(' · ') || 'N/A';
     return `
       <article class="cal-summary-card">
+        <span class="cal-summary-label">Frozen-claim precision</span>
+        <strong class="cal-summary-value">${fmt(card?.frozen_claim_precision?.score)}</strong>
+        <small class="cal-summary-note">Official reproducible score across the frozen weekly claim set</small>
+      </article>
+      <article class="cal-summary-card">
         <span class="cal-summary-label">Market / structure</span>
         <strong class="cal-summary-value">${fmt(market.score)}</strong>
-        <small class="cal-summary-note">Final completed-week public CN score</small>
+        <small class="cal-summary-note">Family-level market/structure precision</small>
       </article>
       <article class="cal-summary-card">
         <span class="cal-summary-label">Price ranges</span>
