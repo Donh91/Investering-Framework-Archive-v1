@@ -27,7 +27,7 @@ class FakeResponse:
         return json.dumps(self.payload).encode()
 
 
-def install_responses(monkeypatch: pytest.MonkeyPatch, responses: list[dict]) -> list[int]:
+def install_responses(monkeypatch: pytest.MonkeyPatch, responses: list[dict | BaseException]) -> list[int]:
     budgets: list[int] = []
     pending = list(responses)
 
@@ -37,7 +37,10 @@ def install_responses(monkeypatch: pytest.MonkeyPatch, responses: list[dict]) ->
         budgets.append(int(payload["max_output_tokens"]))
         if not pending:
             raise AssertionError("unexpected_extra_openai_call")
-        return FakeResponse(pending.pop(0))
+        next_item = pending.pop(0)
+        if isinstance(next_item, BaseException):
+            raise next_item
+        return FakeResponse(next_item)
 
     monkeypatch.setenv("OPENAI_API_KEY", "test-key")
     monkeypatch.setattr(mod.urllib.request, "urlopen", fake_urlopen)
@@ -52,6 +55,36 @@ def test_completed_structured_output_parses_without_retry(monkeypatch):
     assert value == {"ok": True}
     assert raw["status"] == "completed"
     assert budgets == [12_000]
+
+
+def test_double_encoded_structured_object_is_normalized_without_retry(monkeypatch):
+    inner = json.dumps({"ok": True})
+    budgets = install_responses(monkeypatch, [
+        {"status": "completed", "output_text": json.dumps(inner), "usage": {}}
+    ])
+    value, _ = mod.call_openai("test-model", "prompt", {}, 12_000)
+    assert value == {"ok": True}
+    assert budgets == [12_000]
+
+
+def test_transport_timeout_retries_once(monkeypatch):
+    budgets = install_responses(monkeypatch, [
+        TimeoutError("read timed out"),
+        {"status": "completed", "output_text": json.dumps({"ok": True}), "usage": {}},
+    ])
+    value, _ = mod.call_openai("test-model", "prompt", {}, 12_000)
+    assert value == {"ok": True}
+    assert budgets == [12_000, 12_000]
+
+
+def test_second_transport_timeout_fails_closed(monkeypatch):
+    budgets = install_responses(monkeypatch, [
+        TimeoutError("read timed out"),
+        TimeoutError("read timed out again"),
+    ])
+    with pytest.raises(RuntimeError, match="openai_transport_retry_exhausted"):
+        mod.call_openai("test-model", "prompt", {}, 12_000)
+    assert budgets == [12_000, 12_000]
 
 
 def test_token_limit_incomplete_retries_once_with_larger_budget(monkeypatch):
