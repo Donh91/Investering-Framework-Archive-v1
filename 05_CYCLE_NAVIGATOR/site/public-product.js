@@ -94,8 +94,9 @@ function publicScores(record){
   const marketValues=[...parseComponentScores(record.intraday_display),...parseComponentScores(record.structure_display)];
   const market=mean(marketValues);
   const archived=Number.isFinite(record.overall)?Number(record.overall):null;
-  const weekly=archived??mean([price,market].filter(Number.isFinite));
-  return{weekly,price,market,archived,derived:archived==null};
+  const mayDerive = record?.allow_derived_overall === true || !['AUTOMATED_CANONICAL','DUAL_TRACK_CANONICAL'].includes(String(record?.era||''));
+  const weekly=archived??(mayDerive?mean([price,market].filter(Number.isFinite)):null);
+  return{weekly,price,market,archived,derived:archived==null&&Number.isFinite(weekly)};
 }
 
 function sparkline(records){
@@ -129,7 +130,8 @@ function freshness(){
   const age=d?n-d:null,next=new Date(n);next.setUTCSeconds(0,0);if(next.getUTCMinutes()<5)next.setUTCMinutes(5);else{next.setUTCHours(next.getUTCHours()+1);next.setUTCMinutes(5);}
   const mins=x=>{const m=Math.max(0,Math.ceil(x/60000));return m>=60?`${Math.floor(m/60)}h ${m%60}m`:`${m} min`;};
   const stale=age!=null&&age>90*60*1000;
-  h.innerHTML=`<div><span>${stale?'LAST VERIFIED COMPASS':'MARKET COMPASS UPDATED'}</span><strong>${d?d.toLocaleString([],{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}):'Awaiting fresh data'}</strong><small>${age!=null?`${mins(age)} ago`:'No verified live timestamp'}</small></div><div><span>NEXT UPDATE</span><strong>${mins(next-n)}</strong><small>Expected after the next market-data cycle</small></div><div><span>CURRENT WEEKLY OUTLOOK</span><strong>CN #${esc(p.issue_number??'—')}</strong><small>Published weekly view, unchanged by live updates</small></div>`;
+  const publicIssue=snapshot?.public_series?.current_public_projection?.public_issue_number;
+  h.innerHTML=`<div><span>${stale?'LAST VERIFIED COMPASS':'MARKET COMPASS UPDATED'}</span><strong>${d?d.toLocaleString([],{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}):'Awaiting fresh data'}</strong><small>${age!=null?`${mins(age)} ago`:'No verified live timestamp'}</small></div><div><span>NEXT UPDATE</span><strong>${mins(next-n)}</strong><small>Expected after the next market-data cycle</small></div><div><span>CURRENT WEEKLY OUTLOOK</span><strong>CN #${esc(publicIssue??p.issue_number??'—')}</strong><small>Public-series numbering, unchanged by live updates</small></div>`;
 }
 
 function rotationEta(item){
