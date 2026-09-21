@@ -8,6 +8,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
+from scripts.orchestration.build_framework_handoff_manifest import file_ref
 from scripts.orchestration.consumer_receipt import build_consumer_receipt, canonical, stamp_target
 
 
@@ -142,6 +143,17 @@ def test_stamp_target_recomputes_semantic_self_hash_after_receipt(tmp_path: Path
     assert receipt["status"] == "PASS"
     assert stamped["consumer_receipt"]["contract"] == "CONSUMER_RECEIPT_v1"
     assert declared_hash == hashlib.sha256(canonical(stamped)).hexdigest()
+
+
+def test_framework_handoff_file_ref_accepts_absolute_path_with_relative_repo_root() -> None:
+    root = Path(".")
+    target = (Path.cwd() / "scripts/orchestration/build_framework_handoff_manifest.py").resolve()
+
+    ref = file_ref(target, root)
+
+    assert ref is not None
+    assert ref["path"] == "scripts/orchestration/build_framework_handoff_manifest.py"
+    assert ref["sha256"] == _sha(target)
 
 
 def test_framework_handoff_separates_receipt_consumers_from_routing_labels(tmp_path: Path) -> None:
