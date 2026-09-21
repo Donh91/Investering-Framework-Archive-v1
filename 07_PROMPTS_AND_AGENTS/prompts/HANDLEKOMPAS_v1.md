@@ -39,6 +39,7 @@ If a required input is unavailable, state the specific limitation and reduce con
 ## Mandatory rendering rules
 
 - Vertical mobile layout only. Never use a horizontal table.
+- **NO WIDGETS:** Never render widgets, GenUI, charts, cards, carousels, interactive UI components, or other rich UI in ChatGPT-app KOMPAS/HANDLEKOMPAS output. This applies across existing and new chat threads. Use plain vertical text only. Live data may be retrieved internally, but the user-facing KOMPAS must remain text-only.
 - Extremely concise. No long explanatory sections inside HANDLEKOMPAS.
 - Clear language. No ambiguous hedging without an explicit action.
 - Separate BTC market direction from altcoin/microcap behavior.
