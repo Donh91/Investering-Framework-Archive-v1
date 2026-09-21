@@ -1,0 +1,343 @@
+{
+  "schema_version": "TRADINGAGENTS_TRANSFER_CANDIDATES_v1",
+  "created_at": "2026-09-21",
+  "authority": "RESEARCH_ONLY",
+  "source": {
+    "source_id": "AT-SRC-0016",
+    "repository": "TauricResearch/TradingAgents",
+    "release": "v0.5.0",
+    "release_commit": "7fe225224431aeb3adfe1a6a23885c03fc43620a",
+    "source_note": "08_SOURCE_MATERIAL/external_methods/2026-09-21__tauric-tradingagents-v0.5.0__source-note.md",
+    "extraction": "04_RESEARCH_LAB/auto_trading/TRADINGAGENTS_EXTRACTION_2026-09-21.md"
+  },
+  "rules": {
+    "no_parallel_engine": true,
+    "no_live_trading_authority": true,
+    "no_portfolio_authority": true,
+    "no_auto_promotion": true,
+    "retain_negative_evidence": true,
+    "prefer_existing_owner": true,
+    "import_whole_upstream_repo": false
+  },
+  "status_vocabulary": [
+    "DUPLICATE",
+    "PARTIAL_GAP",
+    "NEW_CANDIDATE",
+    "DEFERRED",
+    "REPRODUCTION_ONLY",
+    "REJECTED",
+    "ADOPTED"
+  ],
+  "candidates": [
+    {
+      "id": "TA-X-01",
+      "title": "Run-date clamp for all dated tools",
+      "failure_mode": "A historical run can reach future data when a caller omits or supplies a later date.",
+      "status": "DUPLICATE",
+      "expected_value": "HIGH_CORRECTNESS_ALREADY_COVERED",
+      "implementation_cost": "NONE",
+      "owners": [
+        "07_PROMPTS_AND_AGENTS/astra",
+        "#885"
+      ],
+      "evidence": [
+        "TradingAgents #1331",
+        "TradingAgents #1319",
+        "TradingAgents #1118"
+      ],
+      "next_action": "Retain only as planted-regression inspiration. Do not create a second date-window owner."
+    },
+    {
+      "id": "TA-X-02",
+      "title": "As-filed and vintage-aware fundamentals",
+      "failure_mode": "Historical evaluation consumes present-day profile values, later filings or revisions.",
+      "status": "DEFERRED",
+      "expected_value": "MEDIUM_FUTURE_CROSS_ASSET",
+      "implementation_cost": "MEDIUM",
+      "owners": [
+        "future cross-asset data contract",
+        "observable_at evidence semantics"
+      ],
+      "evidence": [
+        "TradingAgents v0.5.0 SEC EDGAR as-filed",
+        "TradingAgents #1300",
+        "TradingAgents #1275"
+      ],
+      "next_action": "Revisit only when equities/cross-asset fundamentals become load-bearing."
+    },
+    {
+      "id": "TA-X-03",
+      "title": "Coverage gap is not observed absence",
+      "failure_mode": "Empty response from unobserved/partial source coverage is treated as zero or absence evidence.",
+      "status": "DUPLICATE",
+      "expected_value": "HIGH_CORRECTNESS_ALREADY_COVERED",
+      "implementation_cost": "NONE",
+      "owners": [
+        "02_DATA_PING",
+        "#1134"
+      ],
+      "evidence": [
+        "TradingAgents coverage_gap",
+        "TradingAgents v0.5.0 unavailable-window semantics"
+      ],
+      "next_action": "Keep as external corroboration and regression fixture only."
+    },
+    {
+      "id": "TA-X-04",
+      "title": "Typed provider-result and failure taxonomy",
+      "failure_mode": "Provider outage/rate-limit/not-configured/malformed response/genuine empty result collapse into one ambiguous state.",
+      "status": "PARTIAL_GAP",
+      "expected_value": "MEDIUM_HIGH_RELIABILITY",
+      "implementation_cost": "LOW_MEDIUM",
+      "owners": [
+        "#1156"
+      ],
+      "proposed_contract": {
+        "statuses": [
+          "OK",
+          "OBSERVED_EMPTY",
+          "COVERAGE_GAP",
+          "RATE_LIMIT",
+          "NOT_CONFIGURED",
+          "PROVIDER_ERROR",
+          "STALE",
+          "INVALID"
+        ],
+        "required_fields": [
+          "provider_identity",
+          "requested_coverage",
+          "returned_coverage",
+          "status"
+        ]
+      },
+      "next_action": "Verify whether #1156/current provider adapters already expose equivalent typed semantics before proposing any patch."
+    },
+    {
+      "id": "TA-X-05",
+      "title": "Ambiguous action output fails closed to REVIEW/UNKNOWN",
+      "failure_mode": "Unreadable model output is silently coerced to HOLD or another tradeable action.",
+      "status": "PARTIAL_GAP",
+      "priority": "P0",
+      "expected_value": "HIGH",
+      "implementation_cost": "LOW",
+      "owners": [
+        "04_RESEARCH_LAB/auto_trading",
+        "existing action-output contracts"
+      ],
+      "proposed_invariant": "If a unique valid action cannot be deterministically read, emit REVIEW/UNKNOWN with zero trade authority. REVIEW/UNKNOWN is not BUY/HOLD/SELL.",
+      "evidence": [
+        "TradingAgents #1170",
+        "tests/test_signal_processing.py"
+      ],
+      "next_action": "Audit current framework action parsers and add the invariant only where not already mechanically proven."
+    },
+    {
+      "id": "TA-X-06",
+      "title": "Outcome-knowledge-time guard for learned memory",
+      "failure_mode": "Historical/replay decisions consume lessons whose outcomes became known only later.",
+      "status": "NEW_CANDIDATE",
+      "priority": "P0",
+      "expected_value": "VERY_HIGH",
+      "implementation_cost": "LOW_MEDIUM",
+      "owners": [
+        "existing experiment/learning lifecycle",
+        "continuity learning owner"
+      ],
+      "proposed_invariant": "lesson_resolution_observable_at <= decision_at",
+      "required_fields": [
+        "source_decision_id",
+        "source_decision_at",
+        "target_horizon",
+        "outcome_matured_at",
+        "outcome_observable_at",
+        "lesson_created_at",
+        "lesson_version_or_hash"
+      ],
+      "evidence": [
+        "TradingAgents #1251",
+        "tests/test_memory_pointintime.py"
+      ],
+      "next_action": "Fresh-main audit of reusable learning/memory readers. If no equivalent access guard exists, implement the smallest owner-local regression and guard."
+    },
+    {
+      "id": "TA-X-07",
+      "title": "Full-window outcome settlement",
+      "failure_mode": "Rerun settles an outcome from a partial prefix of the configured horizon.",
+      "status": "PARTIAL_GAP",
+      "priority": "P0",
+      "expected_value": "HIGH",
+      "implementation_cost": "LOW",
+      "owners": [
+        "#885",
+        "matured outcome owners"
+      ],
+      "proposed_test": "Given incomplete horizon coverage, settlement must remain PENDING/IMMATURE/DEGRADED and may not become MATURED.",
+      "evidence": [
+        "TradingAgents #1169"
+      ],
+      "next_action": "Bind as a reusable regression to existing lifecycle tests if equivalent proof is absent."
+    },
+    {
+      "id": "TA-X-08",
+      "title": "Backtest/live state and memory isolation",
+      "failure_mode": "Historical evaluation writes into or reads from live/paper decision state.",
+      "status": "PARTIAL_GAP",
+      "priority": "P0",
+      "expected_value": "HIGH",
+      "implementation_cost": "LOW",
+      "owners": [
+        "04_MARKET_LEARNING/backtests",
+        "04_RESEARCH_LAB/auto_trading"
+      ],
+      "proposed_partition_identity": [
+        "mode",
+        "run_id",
+        "candidate_version",
+        "universe",
+        "configuration_fingerprint"
+      ],
+      "evidence": [
+        "TradingAgents tests/test_backtest.py"
+      ],
+      "next_action": "Audit existing stores/paths. Add architecture test only if isolation is not already proven."
+    },
+    {
+      "id": "TA-X-09",
+      "title": "Same decision semantics across backtest and normal pipeline",
+      "failure_mode": "Backtest uses easier/different action parsing or reasoning semantics than prospective use.",
+      "status": "DUPLICATE",
+      "expected_value": "HIGH_DESIGN_TARGET_ALREADY_PRESENT",
+      "implementation_cost": "NONE",
+      "owners": [
+        "04_RESEARCH_LAB/auto_trading",
+        "backtest readiness constitution"
+      ],
+      "next_action": "Use as acceptance criterion for future execution/backtest substrate selection."
+    },
+    {
+      "id": "TA-X-10",
+      "title": "Missing portfolio context is not flat portfolio",
+      "failure_mode": "No holdings input is interpreted as zero positions, creating false sizing/risk semantics.",
+      "status": "DEFERRED",
+      "expected_value": "HIGH_WHEN_CAPITAL_LAYER_EXISTS",
+      "implementation_cost": "LOW",
+      "owners": [
+        "future portfolio/sizing owner"
+      ],
+      "proposed_states": [
+        "PORTFOLIO_KNOWN",
+        "PORTFOLIO_UNSUPPLIED",
+        "PORTFOLIO_STALE",
+        "PORTFOLIO_INVALID"
+      ],
+      "next_action": "Make this a promotion prerequisite when portfolio/sizing research becomes load-bearing."
+    },
+    {
+      "id": "TA-X-11",
+      "title": "No fabricated opponent in adversarial analysis",
+      "failure_mode": "Agent rebuts an argument that no opponent actually supplied.",
+      "status": "DUPLICATE",
+      "expected_value": "HIGH_ALREADY_STRONGER",
+      "implementation_cost": "NONE",
+      "owners": [
+        "07_PROMPTS_AND_AGENTS/astra/BLIND_OPPOSITION"
+      ],
+      "evidence": [
+        "TradingAgents #1176"
+      ],
+      "next_action": "No change. Preserve upstream defect as an anti-pattern supporting commit-before-reveal."
+    },
+    {
+      "id": "TA-X-12",
+      "title": "Checkpoint identity binds to semantic graph/config shape",
+      "failure_mode": "Resumed state continues under incompatible agent roster, mode or semantic configuration.",
+      "status": "PARTIAL_GAP",
+      "priority": "P1",
+      "expected_value": "MEDIUM_HIGH",
+      "implementation_cost": "LOW_MEDIUM",
+      "owners": [
+        "Astra execution plumbing",
+        "#1156"
+      ],
+      "proposed_fingerprint_fields": [
+        "code_sha",
+        "schema_version",
+        "roles_or_capabilities",
+        "execution_mode",
+        "key_config_hashes",
+        "frozen_input_hash"
+      ],
+      "evidence": [
+        "TradingAgents #1089"
+      ],
+      "next_action": "Apply only to owners that actually support checkpoint/resume. Do not build checkpointing to satisfy this candidate."
+    },
+    {
+      "id": "TA-X-13",
+      "title": "Failed research cells remain first-class evidence",
+      "failure_mode": "One failed cell aborts a sweep or failures disappear from the denominator.",
+      "status": "PARTIAL_GAP",
+      "expected_value": "MEDIUM",
+      "implementation_cost": "LOW",
+      "owners": [
+        "immutable experiment lifecycle",
+        "#1156"
+      ],
+      "next_action": "Verify failure rows and denominator preservation in current experiment sweeps; no blind retry semantics."
+    },
+    {
+      "id": "TA-X-14",
+      "title": "Post-correction reproduction of TradingAgents performance claims",
+      "failure_mode": "Old performance is treated as evidence despite later corrections to PIT/memory/outcome semantics.",
+      "status": "REPRODUCTION_ONLY",
+      "expected_value": "LOW_CURRENT_PRIORITY",
+      "implementation_cost": "HIGH",
+      "owners": [
+        "#885"
+      ],
+      "requirements": [
+        "PIT inputs",
+        "isolated evaluation state",
+        "all failure/coverage reporting",
+        "realistic costs for tradable claims",
+        "broader assets/time",
+        "simple baselines",
+        "frozen holdout/walk-forward"
+      ],
+      "next_action": "Do not schedule now. Reconsider only if a future research question requires it."
+    }
+  ],
+  "priority_queue": {
+    "P0_VERIFY_FIRST": [
+      "TA-X-06",
+      "TA-X-05",
+      "TA-X-08",
+      "TA-X-07"
+    ],
+    "P1_IF_GAP_REMAINS": [
+      "TA-X-04",
+      "TA-X-12",
+      "TA-X-13"
+    ],
+    "DEFER": [
+      "TA-X-02",
+      "TA-X-10",
+      "TA-X-14"
+    ],
+    "NO_IMPLEMENTATION_DUPLICATE": [
+      "TA-X-01",
+      "TA-X-03",
+      "TA-X-09",
+      "TA-X-11"
+    ]
+  },
+  "upstream_watch": {
+    "scheduled_daily_watch": false,
+    "revisit_on": [
+      "new major/minor release affecting point-in-time, memory, backtest, decision or evaluation semantics",
+      "new correctness/security issue exposing a novel failure class",
+      "existing framework owner needs a directly relevant tested reference"
+    ],
+    "comparison_base": "v0.5.0@7fe225224431aeb3adfe1a6a23885c03fc43620a"
+  }
+}
