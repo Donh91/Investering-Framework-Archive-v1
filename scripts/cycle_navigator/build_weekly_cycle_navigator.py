@@ -230,6 +230,10 @@ def call_openai(model: str, prompt: str, context: dict[str, Any], max_output_tok
         except urllib.error.HTTPError as exc:
             body = exc.read().decode(errors="replace")
             raise RuntimeError(f"openai_http_{exc.code}:{body[:600]}") from exc
+        except (TimeoutError, urllib.error.URLError) as exc:
+            if attempt == 0:
+                continue
+            raise RuntimeError(f"openai_transport_retry_exhausted:{type(exc).__name__}") from exc
 
         status = raw.get("status")
         incomplete = raw.get("incomplete_details") if isinstance(raw.get("incomplete_details"), dict) else {}
@@ -245,11 +249,21 @@ def call_openai(model: str, prompt: str, context: dict[str, Any], max_output_tok
             raise RuntimeError("missing_output_text")
         try:
             value = json.loads(text)
+            # Some Responses payloads can arrive as a JSON string containing the
+            # schema-conformant object. Normalize that transport quirk once before
+            # treating the output as malformed.
+            if isinstance(value, str):
+                value = json.loads(value)
         except json.JSONDecodeError as exc:
             if attempt == 0:
                 budget = _next_output_budget(budget)
                 continue
             raise RuntimeError(f"invalid_structured_output_json:{exc.msg}@{exc.pos}") from exc
+        if not isinstance(value, dict):
+            if attempt == 0:
+                budget = _next_output_budget(budget)
+                continue
+            raise RuntimeError(f"invalid_structured_output_type:{type(value).__name__}")
         return value, raw
 
     raise RuntimeError("openai_structured_output_retry_exhausted")
