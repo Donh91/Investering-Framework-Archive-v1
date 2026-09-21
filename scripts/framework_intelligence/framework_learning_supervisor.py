@@ -138,6 +138,7 @@ def main():
         "automation_health": root / "research/architecture_health/LATEST_AUTOMATION_HEALTH.json",
         "architecture_health": root / "research/architecture_health/LATEST_ARCHITECTURE_HEALTH.json",
         "weekly_forensics": root / "research/framework_learning/weekly_forensics/LATEST.json",
+        "weekly_forensics_replay": root / "research/framework_learning/weekly_forensics/replay/LATEST_REPLAY_BASELINE.json",
     }
     src = {name: load_json(path, {}) or {} for name, path in paths.items()}
     families = normalize_compounding_families(src["compounding_state"])
@@ -177,11 +178,14 @@ def main():
     change_counts = Counter(x["change"] for x in deltas)
     provenance = {name: {"path": str(path.relative_to(root)), "available": path.exists(), "sha256": sha256(path)} for name, path in paths.items()}
 
+    replay = src.get("weekly_forensics_replay") or {}
+    replay_summary = {"available": replay.get("contract") == "WEEKLY_FORENSICS_REPLAY_BASELINE_v1", "weeks_materialized": replay.get("weeks_materialized"), "anti_hindsight": replay.get("anti_hindsight"), "authority": replay.get("authority")}
+
     generated = now.isoformat().replace("+00:00", "Z")
     memory = {
         "contract": "FRAMEWORK_LEARNING_MEMORY_v1", "authority": "RESEARCH_ONLY_NON_CANONICAL", "generated_at_utc": generated, "iso_year": year, "iso_week": week,
         "semantic_family_owner": "COMPOUNDING_LEARNING_CONTROLLER_STATE_v1", "families": memory_rows, "family_count": len(memory_rows),
-        "scientific_status": {"forecast_skill": "UNPROVEN", "automatic_promotion": False}, "provenance": provenance,
+        "scientific_status": {"forecast_skill": "UNPROVEN", "automatic_promotion": False}, "weekly_forensics_replay_baseline": replay_summary, "provenance": provenance,
     }
     delta_doc = {
         "contract": "WEEKLY_LEARNING_DELTA_v1", "authority": "RESEARCH_ONLY_NON_CANONICAL", "generated_at_utc": generated, "iso_year": year, "iso_week": week,
