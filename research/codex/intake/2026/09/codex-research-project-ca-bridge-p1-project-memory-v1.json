@@ -1,0 +1,100 @@
+{
+  "contract": "CODEX_RESEARCH_CANDIDATE_v1",
+  "candidate_id": "codex-research-project-ca-bridge-p1-project-memory-v1",
+  "submitted_at_utc": "2026-09-21T07:29:00Z",
+  "status": "SUBMITTED",
+  "origin": {
+    "type": "DEEP_RESEARCH",
+    "thread_label": "Alpha Lab Project-to-CA Intelligence Bridge shadow build P1",
+    "source_paths": [
+      "06_RESEARCH_LAB/alpha_lab/2026-09-20__project-ca-intelligence-bridge-deep-research__shadow.md",
+      "research/api_agent/meme_alpha/experiments/PROJECT_CA_INTELLIGENCE_BRIDGE_ABC_PREREG_v1.json",
+      "research/api_agent/meme_alpha/experiments/PROJECT_CA_INTELLIGENCE_BRIDGE_SHADOW_BUILD_CONTRACT_v1.md"
+    ]
+  },
+  "title": "Project-to-CA bridge P1 persistent project memory substrate",
+  "objective": "Implement only P1 of the frozen Project-to-CA shadow build: the smallest child project-memory schema/adapter and focused tests needed to persist a unique eligible project trial before any token exists, while reusing existing Meme Alpha prospective evidence and runtime owners and preserving the frozen A/B/C experiment.",
+  "finding_key": "PROJECT_CA_BRIDGE_P1_PROJECT_MEMORY_MISSING",
+  "primary_target": "research/api_agent/meme_alpha project-memory child substrate",
+  "allowed_change_scope": [
+    "Donh91/Investering-Framework-Archive-v1:scripts/api_agent/meme_alpha/**",
+    "Donh91/Investering-Framework-Archive-v1:tests/**/meme_alpha/**",
+    "Donh91/Investering-Framework-Archive-v1:research/api_agent/meme_alpha/**"
+  ],
+  "evidence": [
+    {
+      "kind": "COMMIT",
+      "ref": "d4f33ff1bf60b917d7ab3c76504b331feec90ea0",
+      "summary": "Merged shadow-build contract from PR #1181."
+    },
+    {
+      "kind": "PR",
+      "ref": "#1180",
+      "summary": "Accepted Deep Research endpoint and frozen A/B/C preregistration."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "research/api_agent/meme_alpha/MEME_ALPHA_PROSPECTIVE_HARDENING_v1.json",
+      "summary": "Existing prospective/outcome owner. No-token matches count in denominator and frozen lineage is required."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "research/api_agent/meme_alpha/ALPHA_LAB_LIFECYCLE_ENGINE_v1.json",
+      "summary": "Existing exact-CA token lifecycle owner. Project identity must remain separate from this token identity."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "research/api_agent/meme_alpha/MEME_ALPHA_RUNTIME_POLICY_v1.json",
+      "summary": "Existing runtime/source-authentication/budget authority. No new scheduler or runtime owner."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": ".agents/skills/prospective-evidence-ledger/SKILL.md",
+      "summary": "Existing evidence discipline requires frozen input immutability, lineage, duplicate controls and no retrospective eligibility."
+    }
+  ],
+  "reproduction": "On fresh main, verify the frozen #1180/#1181 contracts require persistent project memory before token existence, then inspect existing Meme Alpha schemas/runtime. There is no existing child project-memory substrate that can represent a unique eligible project trial with point-in-time source snapshots, aliases without identity authority, no-token persistence, token-state progression and append-only/superseded history. Do not treat this absence as permission to create a parallel ledger or scanner.",
+  "acceptance_tests": {
+    "positive": [
+      "A no-token eligible project can be frozen and persisted with stable project_trial_id, method_version, frozen_at_utc, eligibility_manifest_sha256, discovery, project_identity, source_observations, project_memory_before, material_delta, token_state, CA candidates, lineage and authority.",
+      "Repeated observations that resolve to the same authenticated/bounded project lineage do not create a second denominator trial merely because alias, URL ordering or non-semantic field ordering differs.",
+      "Source observations preserve exact observed_at, available_at where known, source/content hash and authentication/conflict state.",
+      "Historical observations are append-only or explicitly superseded with lineage. No silent rewrite.",
+      "8-Ball-style serious project with NO_TOKEN_OBSERVED persists as an eligible project trial and remains available for later material-change handling.",
+      "HoodStack-style contradictory mutable sources preserve both timestamped observations and conflict state rather than choosing the newest-looking prose.",
+      "Focused deterministic tests pass and prove no outcome field is required to create/freeze project memory."
+    ],
+    "negative": [
+      "Ticker, project name, logo or alias alone cannot establish project identity or token identity.",
+      "Pons/factory token occurrence cannot by itself convert project memory into a project-to-CA BOUND_HIGH relation. P2 semantics remain unimplemented.",
+      "No new scanner, scheduler, standalone ledger, scoring engine, alert path or learning owner is introduced.",
+      "No JEV behavior, A/B/C thresholds, survival margins, denominator classes, market gates, model weights, API budget, portfolio logic or production authority changes.",
+      "NET, SAFIX and DARK cannot increment prospective performance counters through P1 fixtures.",
+      "Missing source data remains UNKNOWN and cannot become zero, false or negative evidence.",
+      "P1 must not implement P2-P6 opportunistically."
+    ]
+  },
+  "authority_boundary": "CODE_REMEDIATION_ONLY",
+  "requires_framework_owner_authority": false,
+  "forbidden_changes": [
+    "market gates",
+    "model weights",
+    "canonical authority",
+    "portfolio logic",
+    "API budget",
+    "new policy semantics",
+    "production activation",
+    "automatic trading",
+    "BUY or SELL authority",
+    "user alerts",
+    "automatic merge",
+    "new scanner",
+    "new scheduler",
+    "parallel ledger",
+    "P2-P6 implementation",
+    "frozen A/B/C experiment semantics",
+    "NET/SAFIX/DARK prospective credit"
+  ],
+  "requested_priority": "NORMAL",
+  "post_fix_gate": "P1_FOCUSED_TESTS_AND_8BALL_HOODSTACK_REGRESSIONS_PASS_PLUS_FRESH_MAIN_READBACK_PLUS_INDEPENDENT_REVIEW_WITH_ZERO_FROZEN_SEMANTIC_DRIFT"
+}
