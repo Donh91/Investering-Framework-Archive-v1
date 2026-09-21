@@ -14,3 +14,5 @@ class WeeklyForensicsTest(unittest.TestCase):
         with self.assertRaises(AssertionError): mod.finding("X","HIGH","MAGIC","r",[],"o","n","s","g")
 
 if __name__=="__main__": unittest.main()
+
+# FINAL snapshots are intentionally immutable and Monday FINAL targets the completed ISO week.
