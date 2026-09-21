@@ -71,10 +71,13 @@ def latest_published_public_record(repo: Path) -> dict[str, Any]:
     if not found:
         return {"public_issue_number": 0, "forecast_week": None, "published_path": None}
     issue, path, forecast_week = max(found, key=lambda row: row[0])
+    y, w = forecast_week.split("-W")
+    receipt = repo / "05_CYCLE_NAVIGATOR/weekly" / y / f"W{int(w):02d}" / "CYCLE_NAVIGATOR_X_APPROVAL_RECEIPT.json"
     return {
         "public_issue_number": issue,
         "forecast_week": forecast_week,
         "published_path": str(path.relative_to(repo)),
+        "publication_receipt": str(receipt.relative_to(repo)) if receipt.exists() else None,
     }
 
 
