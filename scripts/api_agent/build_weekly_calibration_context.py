@@ -661,7 +661,7 @@ def main() -> None:
         "selection_rule": "latest eligible row per Europe/Copenhagen local date within frozen local week, deduplicated by timestamp and output hash",
         "handoff_targets": ["RAW_WEEKLY_CALIBRATION", "FORECAST_LEDGER", "MASTER_MONDAY_PREP", "SPECIALIST_REVIEW", "EXPERIMENT_GOVERNANCE_REVIEW"],
         "rules": [
-            "Do not rewrite frozen forecasts.",
+            "Do not rewrite frozen forecasts.",\n            "Consume cycle_navigator_range_score when available as the authoritative append-only correction for previously published prospective ranges; do not replace it with a null machine-freeze interpretation.",
             "Separate data quality from market evidence.",
             "The preflight settled_week object is the authoritative completed-week price-path source when final_168h_market_close_available=true.",
             "A pre-v2.2 enriched-hourly gap must not be misreported as missing final price-path evidence when the final 168h market close is complete.",
