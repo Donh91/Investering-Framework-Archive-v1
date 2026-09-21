@@ -1,0 +1,65 @@
+{
+  "contract": "TECHDEV_T7_CURRENT_CALIBRATION_READOUT_v1",
+  "generated_at_utc": "2026-09-21T07:40:00Z",
+  "status": "RECONCILED_READ_ONLY",
+  "owner": "T7 TECHDEV_CLAIM_LEDGER",
+  "purpose": "Resolve navigation staleness by pointing the existing T7 owner to the later canonical category calibration without rewriting historical source-ledger state or changing TechDev authority.",
+  "historical_source_ledger": {
+    "path": "06_RESEARCH_LAB/forward_tests/2026-07-10__techdev-claim-ledger__operational.md",
+    "preserved": true,
+    "historical_snapshot": {
+      "unique_source_documents_accounted_for": 141,
+      "source_backed_claim_rows": 186,
+      "valid_outcome_rows_at_that_snapshot": 0,
+      "scored_rows_at_that_snapshot": 0
+    },
+    "interpretation": "Historical operational snapshot only. It is not the latest calibration state and is not rewritten."
+  },
+  "later_canonical_calibration": {
+    "path": "06_RESEARCH_LAB/audit_summaries/2026-07-13__techdev-category-outcome-calibration-and-b1-reconciliation-v1__canonical.md",
+    "research_package_sha256": "f9d747c0b472a18b023ee07bf5dcf47e5a5a1156eb1ab1e6a6fed6f3f8369845",
+    "unique_source_documents": 213,
+    "source_backed_claim_rows_in_corpus": 257,
+    "high_decision_value_anchor_rows_evaluated": 50,
+    "outcome_eligible_anchor_rows": 44,
+    "full_corpus_exhaustive_scoring_claimed": false,
+    "retrospective_rows_promoted_as_forward_evidence": 0,
+    "machine_owners": [
+      "06_RESEARCH_LAB/audit_summaries/techdev_calibration_v1/TECHDEV_ANCHOR_CLAIM_OUTCOME_ROWS.csv",
+      "06_RESEARCH_LAB/audit_summaries/techdev_calibration_v1/TECHDEV_CATEGORY_OUTCOME_SUMMARY.csv",
+      "06_RESEARCH_LAB/audit_summaries/techdev_calibration_v1/TECHDEV_REVISION_VALUE_AND_COST.csv",
+      "06_RESEARCH_LAB/audit_summaries/techdev_calibration_v1/B1_21_VS_22_METRIC_COMPARISON.csv",
+      "06_RESEARCH_LAB/audit_summaries/techdev_calibration_v1/HEALTH_CHECK.json"
+    ]
+  },
+  "category_verdicts": {
+    "macro_compass": "RETAIN_CONTEXT",
+    "exact_timing": "WEAK_AND_REVISION_DEPENDENT",
+    "long_range_price_targets": "NOT_SUPPORTED_IN_ANCHOR_COHORT",
+    "near_term_conditional_gates": "MIXED_TO_USEFUL",
+    "revision_value": "REAL",
+    "revision_cost": "MATERIAL",
+    "standalone_execution_authority": "ZERO",
+    "rotation_authority": "SHADOW_ONLY",
+    "automatic_framework_weight_change": "NONE"
+  },
+  "information_channels": {
+    "first_call_information": "SEPARATE",
+    "revision_information_and_cost": "SEPARATE",
+    "rule": "A later useful revision may not retroactively improve the original claim score."
+  },
+  "blocked_or_non_evaluable": {
+    "trade": "Independently blocked where Issue #90 or complete ETF series were missing. Author-reported outcomes are source context, not verified performance.",
+    "framework_action_impact": "NOT_EVALUABLE because point-in-time framework actions influenced by each claim are not exhaustively backfilled."
+  },
+  "scope_guards": {
+    "anchor_44_is_not_exhaustive_257_score": true,
+    "historical_186_row_snapshot_deleted_or_rewritten": false,
+    "new_scoring_model": false,
+    "market_weight_change": false,
+    "portfolio_action": false,
+    "execution_authority_change": false,
+    "prospective_claim_credit_from_historical_calibration": false
+  },
+  "navigation_verdict": "T7 consumers must resolve both the preserved historical source-ledger snapshot and this later canonical calibration readout. Statements that TechDev has zero outcome calibration are stale unless explicitly scoped to the older operational snapshot."
+}
