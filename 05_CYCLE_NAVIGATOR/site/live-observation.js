@@ -18,7 +18,10 @@
     section.className = 'section-block';
     section.setAttribute('aria-label', 'Live provisional Cycle Navigator observation');
 
-    const hasScore = Number.isFinite(Number(live.provisional_score));
+    const hasScore = live.provisional_score !== null
+      && live.provisional_score !== undefined
+      && live.provisional_score !== ''
+      && Number.isFinite(Number(live.provisional_score));
     const ranges = Array.isArray(live.frozen_numeric_ranges) ? live.frozen_numeric_ranges : [];
     const statusLabel = hasScore ? `${Math.round(Number(live.provisional_score))}% provisional` : 'Tracking';
     const rangeCopy = ranges.length

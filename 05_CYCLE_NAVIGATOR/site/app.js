@@ -74,11 +74,26 @@ function renderCountdown(items){
 function broadAltseasonState(items){
   const row=(items||[]).find(x=>String(x.phase||"").toLowerCase().includes("broad altseason")); return row?phaseStatus(row.phase).toUpperCase():"UNCONFIRMED";
 }
-function renderRanges(freeze){
+function weekNumber(value){const m=String(value||"").match(/W(\d{1,2})$/i);return m?Number(m[1]):null;}
+function renderRanges(snapshot){
   const root=$("rangeRow"); if(!root) return; root.innerHTML="";
-  const pairs=[["BTC",freeze?.btc_range_low,freeze?.btc_range_high],["ETH",freeze?.eth_range_low,freeze?.eth_range_high]].filter(([,l,h])=>l!=null&&h!=null&&Number.isFinite(Number(l))&&Number.isFinite(Number(h)));
-  if(!pairs.length){root.hidden=true;text("rangeNotice","No numerical BTC / ETH range was frozen for this issue. Nothing is reconstructed from LIVE prices.");return;}
-  text("rangeNotice","These numerical ranges were frozen in the official weekly package.");
+  const freeze=snapshot?.package?.forecast_freeze||{},prospective=snapshot?.prospective_range||{},pointer=snapshot?.pointer||{};
+  const pweek=weekNumber(prospective.target_week),currentWeek=Number(pointer.iso_week);
+  const weekly=prospective?.weekly||{};
+  const prospectivePairs=[["BTC",weekly?.BTC?.low,weekly?.BTC?.high],["ETH",weekly?.ETH?.low,weekly?.ETH?.high]]
+    .filter(([,l,h])=>l!=null&&h!=null&&Number.isFinite(Number(l))&&Number.isFinite(Number(h)));
+  const useProspective=prospective?.rules?.website_consume===true
+    && prospectivePairs.length===2
+    && pweek!=null
+    && (!Number.isFinite(currentWeek)||pweek>=currentWeek);
+  const pairs=useProspective
+    ? prospectivePairs
+    : [["BTC",freeze?.btc_range_low,freeze?.btc_range_high],["ETH",freeze?.eth_range_low,freeze?.eth_range_high]]
+        .filter(([,l,h])=>l!=null&&h!=null&&Number.isFinite(Number(l))&&Number.isFinite(Number(h)));
+  if(!pairs.length){root.hidden=true;text("rangeNotice","No prospective or frozen numerical BTC / ETH range is currently available. Nothing is reconstructed from LIVE prices.");return;}
+  text("rangeNotice",useProspective
+    ? `${prospective.target_week} prospective continuity baseline. It was generated after the completed prior-week close and is never retroactively scored before generation.`
+    : "These numerical ranges were frozen in the official weekly package.");
   for(const [asset,l,h] of pairs){const chip=document.createElement("span");chip.className="range-chip";chip.textContent=`${asset}: ${price(Number(l))} – ${price(Number(h))}`;root.appendChild(chip);}root.hidden=false;
 }
 function officialNextDays(pkg){
@@ -109,7 +124,7 @@ function renderSnapshot(snapshot){
 
   const q=publicQuality(pkg.status||pointer.status);for(const id of ["qualityBadge","dataQualityBadge"]){const n=$(id);if(n){n.textContent=q.label;n.className=`quality-badge ${q.cls}`;}}text("dataQualityTitle",q.title);text("officialStatus",`OFFICIAL weekly #${pkg.issue_number ?? pointer.issue_number ?? "—"}`);text("feedMode",live?.authority?"Feed mode: official weekly + bounded LIVE observation":"Feed mode: official weekly snapshot");
 
-  renderRanges(pkg.forecast_freeze);renderRotation(pkg.rotation_ladder);renderCountdown(pkg.altseason_countdown);renderList("strengths",score?.strengths||pkg?.evaluation?.strengths);renderList("misses",score?.misses||pkg?.evaluation?.misses);renderList("frozenTests",pkg?.forecast_freeze?.structural_calls);renderList("uncertainties",pkg.uncertainties,4);
+  renderRanges(snapshot);renderRotation(pkg.rotation_ladder);renderCountdown(pkg.altseason_countdown);renderList("strengths",score?.strengths||pkg?.evaluation?.strengths);renderList("misses",score?.misses||pkg?.evaluation?.misses);renderList("frozenTests",pkg?.forecast_freeze?.structural_calls);renderList("uncertainties",pkg.uncertainties,4);
   text("publicationStatus",`Publication: ${human(pointer.publication_status||pkg.publication_status)}`);text("sourceWeek",pointer.completed_source_week?`Completed source week W${pointer.completed_source_week} · current W${pointer.iso_week}`:"Source week unavailable");
 }
 

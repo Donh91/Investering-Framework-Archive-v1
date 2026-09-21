@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
 const read=p=>readFile(new URL(p,import.meta.url),'utf8');
-const [html,build,liveBuilder,product,history]=await Promise.all([read('./index.html'),read('./build-public.mjs'),read('./build-live-observation.mjs'),read('./public-product.js'),read('./history-scoreboard.json')]);
+const [html,build,liveBuilder,liveWidget,weeklyWidget,app,product,history]=await Promise.all([read('./index.html'),read('./build-public.mjs'),read('./build-live-observation.mjs'),read('./live-observation.js'),read('./weekly-score.js'),read('./app.js'),read('./public-product.js'),read('./history-scoreboard.json')]);
 const h=JSON.parse(history);
 const checks=[
  ['fallback action-first hero',html.includes('WHAT SHOULD I DO NOW?')],
@@ -12,7 +12,9 @@ const checks=[
  ['freshness and next update',product.includes('MARKET COMPASS UPDATED')&&product.includes('NEXT UPDATE')],
  ['conditional path rail with ETA',product.includes('CONDITIONAL MARKET PATH')&&product.includes('YOU ARE HERE')&&product.includes('ETA ·')],
  ['proof rollups',product.includes('HISTORICAL WEEKLY AVERAGE')&&product.includes('PRICE RANGE ACCURACY')&&product.includes('MARKET & CYCLE UNDERSTANDING')],
- ['live score fail-closed',product.includes('Waiting for evidence')&&product.includes('No percentage is shown until at least one call is genuinely scoreable.')],
+ ['live score fail-closed',product.includes('Waiting for evidence')&&product.includes('No percentage is shown until at least one call is genuinely scoreable.')&&liveWidget.includes("live.provisional_score !== null")],
+ ['latest completed precision consumes reconciled range score',weeklyWidget.includes('snapshot?.range_score')&&weeklyWidget.includes('No synthetic overall score is shown.')],
+ ['prospective range bridge reaches homepage',app.includes('snapshot?.prospective_range')&&app.includes('website_consume')&&app.includes('prospective continuity baseline')],
  ['all issue weekly rollup',product.includes('publicScores')&&product.includes('archived??mean')&&product.includes('component rollup')],
  ['issue-level price aggregation',product.includes('Combined\\s+')&&product.includes('(?:BTC|ETH)')],
  ['non-price aggregation',product.includes('parseComponentScores')&&product.includes('intraday_display')&&product.includes('structure_display')],
