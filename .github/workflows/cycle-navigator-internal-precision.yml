@@ -10,6 +10,7 @@ on:
   workflow_dispatch:
 
 permissions:
+  actions: write
   contents: write
 
 concurrency:
@@ -105,6 +106,12 @@ jobs:
             --manifest runtime_cn_internal_readback_manifest.json \
             --ref origin/main \
             --output runtime_cn_internal_readback_receipt.json
+
+      - name: Refresh public Cycle Navigator after verified internal freeze
+        if: success()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run cycle-navigator-pages.yml --ref main
 
       - uses: actions/upload-artifact@v4
         if: always()

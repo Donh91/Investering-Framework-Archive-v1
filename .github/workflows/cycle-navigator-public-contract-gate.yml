@@ -57,7 +57,8 @@ jobs:
           scorecard=json.loads((root/'CYCLE_NAVIGATOR_SCORECARD.json').read_text())
           machine=json.loads((root/'CYCLE_NAVIGATOR_MACHINE_PACKAGE.json').read_text())
 
-          if machine.get('evaluation') != scorecard:
+          scorecard_evaluation={k:v for k,v in scorecard.items() if k not in {'contract','issue_scored','completed_iso_week'}}
+          if machine.get('evaluation') != scorecard_evaluation:
               raise SystemExit('machine_evaluation_scorecard_mismatch')
           if int(scorecard.get('issue_scored') or 0) != int(machine.get('previous_issue_number') or 0):
               raise SystemExit('scorecard_issue_lineage_mismatch')

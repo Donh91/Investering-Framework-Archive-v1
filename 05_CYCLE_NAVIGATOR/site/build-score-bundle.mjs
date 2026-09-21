@@ -71,8 +71,11 @@ async function main() {
   const machine = await readJson(resolve(weekRoot, "CYCLE_NAVIGATOR_MACHINE_PACKAGE.json"));
   const snapshot = await readJson(snapshotPath);
 
-  if (!machine?.evaluation || !isDeepStrictEqual(machine.evaluation, scorecard)) {
-    throw new Error("CN score authority mismatch: machine evaluation and scorecard differ");
+  const scorecardEvaluation = Object.fromEntries(
+    Object.entries(scorecard).filter(([key]) => !["contract", "issue_scored", "completed_iso_week"].includes(key))
+  );
+  if (!machine?.evaluation || !isDeepStrictEqual(machine.evaluation, scorecardEvaluation)) {
+    throw new Error("CN score authority mismatch: machine evaluation and scorecard evaluation payload differ");
   }
   if (Number(scorecard.issue_scored || 0) !== Number(machine.previous_issue_number || 0)) {
     throw new Error("CN score authority mismatch: scorecard issue_scored does not match previous issue");
