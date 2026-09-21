@@ -13,7 +13,8 @@ from typing import Any
 
 
 def canonical_bytes(value: Any) -> bytes:
-    return (json.dumps(value, sort_keys=True, separators=(",", ":")) + "\n").encode()
+    return (json.dumps(value, sort_keys=True, separators=(",", ":")) + "
+").encode()
 
 
 def sha256_bytes(value: bytes) -> str:
@@ -277,7 +278,9 @@ def main() -> None:
             print(json.dumps(existing_pointer, sort_keys=True))
             return
 
-    mm_dir = repo / "research/api_agent/outputs/weekly" / str(year) / f"W{completed_week:02d}"\n    weekly_capture_path = repo / "03_DAILY_CAPTURE_LOGS/weekly" / str(year) / f"W{completed_week:02d}.json"\n    weekly_capture = maybe_json(weekly_capture_path)
+    mm_dir = repo / "research/api_agent/outputs/weekly" / str(year) / f"W{completed_week:02d}"
+    weekly_capture_path = repo / "03_DAILY_CAPTURE_LOGS/weekly" / str(year) / f"W{completed_week:02d}.json"
+    weekly_capture = maybe_json(weekly_capture_path)
     required = ["MASTER_MONDAY_MACHINE_PACKAGE.json", "MASTER_MONDAY_REPORT.md", "MASTER_MONDAY_CALIBRATION_SCORECARD.json", "MASTER_MONDAY_OPERATIONAL_TRANSLATION.json", "MASTER_MONDAY_DELIVERY_POINTER.json"]
     missing = [name for name in required if not (mm_dir / name).exists()]
     if missing:
@@ -303,7 +306,9 @@ def main() -> None:
         "previous_cycle_navigator_exact_text": prev_text,
         "previous_cycle_navigator_machine_package": prev_machine,
         "previous_score_parameter_ids": expected_score_parameter_ids(prev_machine),
-        "existing_track_record": maybe_text(repo / "05_CYCLE_NAVIGATOR/track_record/CN_TRACK_RECORD_LEDGER.jsonl"),\n        "completed_week_hourly_capture": weekly_capture,\n        "range_continuity_rule": "READY 168h hourly capture makes BTC/ETH weekly and intraday ranges mandatory."
+        "existing_track_record": maybe_text(repo / "05_CYCLE_NAVIGATOR/track_record/CN_TRACK_RECORD_LEDGER.jsonl"),\n        "prospective_range_bridge": maybe_json(repo / "05_CYCLE_NAVIGATOR/LATEST_PROSPECTIVE_RANGE.json"),
+        "completed_week_hourly_capture": weekly_capture,
+        "range_continuity_rule": "READY 168h hourly capture makes BTC/ETH weekly and intraday ranges mandatory."
     }
     prompt = (
         f"Generate Cycle Navigator #{issue} for ISO week W{target_week:02d}. First evaluate Cycle Navigator #{prev_issue} against completed W{completed_week:02d}. "
@@ -391,8 +396,10 @@ def main() -> None:
     (target_dir / "CYCLE_NAVIGATOR_MACHINE_PACKAGE.json").write_bytes(canonical_bytes(package))
     (target_dir / "CYCLE_NAVIGATOR_SCORECARD.json").write_bytes(canonical_bytes(scorecard))
     (target_dir / "CYCLE_NAVIGATOR_FORECAST_FREEZE.json").write_bytes(canonical_bytes(freeze))
-    (target_dir / "CYCLE_NAVIGATOR_READABLE.md").write_text(value["readable_markdown"].rstrip() + "\n")
-    (target_dir / "CYCLE_NAVIGATOR_X_READY.md").write_text(value["x_ready_markdown"].rstrip() + "\n")
+    (target_dir / "CYCLE_NAVIGATOR_READABLE.md").write_text(value["readable_markdown"].rstrip() + "
+")
+    (target_dir / "CYCLE_NAVIGATOR_X_READY.md").write_text(value["x_ready_markdown"].rstrip() + "
+")
     (target_dir / "CYCLE_NAVIGATOR_SOURCE_MANIFEST.json").write_bytes(canonical_bytes(source_manifest))
     (target_dir / "CYCLE_NAVIGATOR_DELIVERY_POINTER.json").write_bytes(canonical_bytes(pointer))
     (repo / "05_CYCLE_NAVIGATOR/LATEST_CYCLE_NAVIGATOR_POINTER.json").write_bytes(canonical_bytes(pointer))
@@ -401,7 +408,8 @@ def main() -> None:
     ledger.parent.mkdir(parents=True, exist_ok=True)
     row = {"issue_scored": prev_issue or None, "completed_iso_week": completed_week, "next_issue": issue, **value["evaluation"], "score_source": "FROZEN_PRIOR_CN_PLUS_FINAL_MASTER_MONDAY", "score_authority": "PUBLIC_CONTINUITY_NOT_SCIENTIFIC_EDGE"}
     with ledger.open("a") as f:
-        f.write(json.dumps(row, sort_keys=True, separators=(",", ":")) + "\n")
+        f.write(json.dumps(row, sort_keys=True, separators=(",", ":")) + "
+")
 
     usage = raw.get("usage") if isinstance(raw.get("usage"), dict) else {}
     receipt = {"contract": "CYCLE_NAVIGATOR_API_RECEIPT_v1", "response_id": raw.get("id"), "model": args.model, "input_tokens": int(usage.get("input_tokens", 0) or 0), "output_tokens": int(usage.get("output_tokens", 0) or 0), "output_sha256": sha256_bytes(canonical_bytes(value)), "issue_number": issue, "authority": "PUBLICATION_ONLY_NO_CANONICAL_OR_PORTFOLIO_AUTHORITY"}
