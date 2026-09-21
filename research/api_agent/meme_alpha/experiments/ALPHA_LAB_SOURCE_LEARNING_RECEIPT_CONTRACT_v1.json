@@ -1,0 +1,78 @@
+{
+  "contract": "ALPHA_LAB_SOURCE_LEARNING_RECEIPT_CONTRACT_v1",
+  "status": "RESEARCH_ONLY_PREIMPLEMENTATION",
+  "owner": "#1087",
+  "purpose": "Freeze measurement semantics for prospective source/caller learning without adding runtime authority.",
+  "required_fields": [
+    "source_observation_id",
+    "project_trial_id",
+    "source_family",
+    "source_locator",
+    "observed_at_utc",
+    "available_at_utc",
+    "source_event_at_utc_or_null",
+    "source_health",
+    "coverage_state",
+    "evidence_sha256",
+    "discovery_role",
+    "independent_of_prior_source",
+    "project_state_at_observation",
+    "token_state_at_observation"
+  ],
+  "discovery_roles": [
+    "FIRST_SEEN",
+    "CORROBORATION",
+    "IDENTITY_AUTHORITY",
+    "MARKET_CONTEXT"
+  ],
+  "independence_states": [
+    "TRUE",
+    "FALSE",
+    "UNKNOWN"
+  ],
+  "source_health_rule": "ZERO_RESULT_COUNTS_ONLY_WHEN_COVERAGE_HEALTHY",
+  "clock_fields": [
+    "T_project_first_seen",
+    "T_material_change",
+    "T_ca_candidate",
+    "T_bound_high",
+    "T_market_eligible",
+    "T_champion_first_seen",
+    "T_broad_social_or_KOL",
+    "T_outcome_maturity"
+  ],
+  "scorecard_metrics": [
+    "eligible_calls_or_projects",
+    "first_seen_count",
+    "independent_first_seen_count",
+    "median_lead_to_champion_market_social",
+    "exact_identity_accuracy",
+    "sellability_at_frozen_observation",
+    "realizable_mfe_mae",
+    "false_positive_reject_burden",
+    "source_health_coverage",
+    "conditional_contribution"
+  ],
+  "forbidden": [
+    "ATH_ONLY_RANKING",
+    "RETROSPECTIVE_PROMOTION",
+    "MIRROR_AS_INDEPENDENT_SOURCE",
+    "MISSING_CLOCK_AS_ZERO",
+    "SOURCE_OUTAGE_AS_NO_PROJECT",
+    "SOURCE_FIRST_SEEN_OVERWRITE",
+    "BUY_SELL_AUTHORITY",
+    "MODEL_WEIGHT_CHANGE"
+  ],
+  "prospective_counter_activation_requires": [
+    "P1_PROJECT_MEMORY_PASS",
+    "SOURCE_HEALTH_COVERAGE_RETAINED",
+    "DISTINCT_PROJECT_TOKEN_CLOCKS",
+    "IMMUTABLE_FIRST_SEEN_SOURCE",
+    "P2_FAIL_CLOSED_BINDING",
+    "ROUTE_FOR_EVERY_ELIGIBLE_TRIAL",
+    "HISTORICAL_ROWS_ZERO_CREDIT",
+    "OUTCOME_FIREWALL",
+    "SOURCE_MIRROR_DEDUP",
+    "EXPLICIT_ZERO_COUNTER_ACTIVATION_RECEIPT"
+  ]
+}
