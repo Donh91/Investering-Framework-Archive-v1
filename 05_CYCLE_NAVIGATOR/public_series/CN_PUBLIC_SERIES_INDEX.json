@@ -22,7 +22,8 @@
     "publication_status": "X_READY_NOT_CONFIRMED_PUBLISHED",
     "machine_issue_number": 27,
     "machine_week_dir": "05_CYCLE_NAVIGATOR/weekly/2026/W39",
-    "note": "Public numbering continues from the latest actually published CN. The migration-era machine issue counter is a separate internal lineage and must not be shown as the public CN number."
+    "note": "Public numbering continues from the latest actually published CN. The migration-era machine issue counter is a separate internal lineage and must not be shown as the public CN number.",
+    "binding_path": "05_CYCLE_NAVIGATOR/weekly/2026/W39/CYCLE_NAVIGATOR_PUBLIC_SERIES_BINDING.json"
   },
   "recent_lineage": [
     {
@@ -51,7 +52,8 @@
       "forecast_week": "2026-W39",
       "published_path": null,
       "machine_week_dir": "05_CYCLE_NAVIGATOR/weekly/2026/W39",
-      "machine_issue_number": 27
+      "machine_issue_number": 27,
+      "binding_path": "05_CYCLE_NAVIGATOR/weekly/2026/W39/CYCLE_NAVIGATOR_PUBLIC_SERIES_BINDING.json"
     }
   ],
   "invariants": [
@@ -59,6 +61,7 @@
     "For public precision, resolve forecast_week and immutable published source first.",
     "For the latest completed public score, use latest_completed_score.scorecard_path.",
     "Machine CYCLE_NAVIGATOR_SCORECARD.json is not automatically the public-series scorecard during the migration-offset window.",
-    "Price-range and market/structure precision remain separate unless a stable combined-score contract exists."
+    "Price-range and market/structure precision remain separate unless a stable combined-score contract exists.",
+    "Every new weekly machine package must materialize CYCLE_NAVIGATOR_PUBLIC_SERIES_BINDING.json and append its numeric ranges to CN_FORWARD_RANGE_LEDGER_v2.jsonl at freeze time."
   ]
 }
