@@ -71,7 +71,8 @@ def main() -> None:
     assert row["allow_derived_overall"] is False
     assert "71.51" in str(row["range_display"])
     assert "Market/Structure 80" in str(row["structure_display"])
-    assert "Frozen claims 78.57" in str(row["structure_display"]) or "Market/Structure 80" in str(row["structure_display"])
+    assert "Frozen claims 78.57" in str(row["structure_display"])
+    assert "Market/Structure 80" in str(row["structure_display"])
 
     print(json.dumps({
         "status": "PASS",
