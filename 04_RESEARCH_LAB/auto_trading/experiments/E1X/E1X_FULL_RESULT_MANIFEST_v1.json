@@ -1,0 +1,20 @@
+{
+  "contract": "E1X_FULL_RESULT_MANIFEST_v1",
+  "status": "REPRODUCIBLE_ARTIFACT_NOT_COMMITTED",
+  "run_date": "2026-09-22",
+  "audited_main_sha": "48555838d7292290802887f01aeaf70a45721d85",
+  "artifact": {
+    "name": "E1X_PRODUCTION_TEMPORAL_INTEGRITY_RESULT_v1.json",
+    "bytes": 539141,
+    "sha256": "6113fd9f005acd7a35088e2b61684cf4da1e7c5758aac7a77f68f8a934a0cca8"
+  },
+  "durable_evidence_committed": [
+    "TEMPORAL_INTEGRITY_AUDIT_REPORT.md",
+    "E1X_TEMPORAL_INTEGRITY_FINDINGS_v1.jsonl",
+    "../../../scripts/experiments/strategy_factor_leakage_e1_production.py",
+    "../../../tests/experiments/test_strategy_factor_leakage_e1_production.py"
+  ],
+  "reason": "The full result is a large reproducible run artifact. Preserve its content hash and regeneration command without inflating the control-plane archive.",
+  "regeneration": "python scripts/experiments/strategy_factor_leakage_e1_production.py --coinmetrics-btc <pinned-btc.csv> --event-features <settled_2m_features.csv> --kraken-ohlc <kraken.json> --output 04_RESEARCH_LAB/auto_trading/experiments/E1X/E1X_PRODUCTION_TEMPORAL_INTEGRITY_RESULT_v1.json --findings-output 04_RESEARCH_LAB/auto_trading/experiments/E1X/E1X_TEMPORAL_INTEGRITY_FINDINGS_v1.jsonl",
+  "authority": "RESEARCH_ONLY"
+}
