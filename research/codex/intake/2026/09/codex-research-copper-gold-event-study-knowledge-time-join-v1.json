@@ -1,0 +1,91 @@
+{
+  "contract": "CODEX_RESEARCH_CANDIDATE_v1",
+  "candidate_id": "codex-research-copper-gold-event-study-knowledge-time-join-v1",
+  "submitted_at_utc": "2026-09-22T18:30:00Z",
+  "status": "SUBMITTED",
+  "origin": {
+    "type": "AUDIT",
+    "thread_label": "Temporal integrity / lookahead leakage kill test v1 (E1X)",
+    "source_paths": [
+      "04_RESEARCH_LAB/auto_trading/experiments/E1X/TEMPORAL_INTEGRITY_AUDIT_REPORT.md",
+      "04_RESEARCH_LAB/auto_trading/experiments/E1X/E1X_TEMPORAL_INTEGRITY_FINDINGS_v1.jsonl",
+      "scripts/experiments/strategy_factor_leakage_e1_production.py"
+    ]
+  },
+  "title": "Join copper/gold settled bars in the event study by knowledge time, not bar-end time",
+  "objective": "Make scripts/research/copper_gold_slow_cycle_event_study.py implement its own documented rule ('Copper/Gold is joined only from settled bars known by the event date'). A settled 2M bar may be joined, and a signal event may be entered, only at or after the bar's knowledge time. Knowledge time = the owner-recorded publication date (workbook_updated_on in 03_DAILY_CAPTURE_LOGS/slow_cycle/copper_gold/revisions) where one exists; for months without a recorded publication the run must receive an explicit publication-lag lower bound argument (no default; fail closed when absent) and must write it into the output. Signal events enter at the first BTC end-of-day at or after knowledge time. Emit a NEW study version; never rewrite HISTORICAL_EVENT_STUDY_v2.json.",
+  "finding_key": "COPPER_GOLD_EVENT_STUDY_BAR_END_USED_AS_KNOWLEDGE_TIME",
+  "primary_target": "scripts/research/copper_gold_slow_cycle_event_study.py",
+  "allowed_change_scope": [
+    "scripts/research/copper_gold_slow_cycle_event_study.py",
+    "tests/research/test_copper_gold_slow_cycle_event_study.py",
+    "research/experiments/copper_gold_slow_cycle_shadow_v1/HISTORICAL_EVENT_STUDY_v3.json"
+  ],
+  "evidence": [
+    {
+      "kind": "PR",
+      "ref": "https://github.com/Donh91/Investering-Framework-Archive-v1/pull/1209",
+      "summary": "Merged E1X evidence owner, merge commit 6c971fe01078332c88d4f13eef160235c61c72c3."
+    },
+    {
+      "kind": "COMMIT",
+      "ref": "48555838d7292290802887f01aeaf70a45721d85",
+      "summary": "audited main"
+    },
+    {
+      "kind": "RESEARCH_RECEIPT",
+      "ref": "04_RESEARCH_LAB/auto_trading/experiments/E1X/E1X_TEMPORAL_INTEGRITY_FINDINGS_v1.jsonl#E1X-F01",
+      "summary": "16/16 signal events fail right truncation at their claimed decision time with the owner-recorded publication lag as knowledge time; 24/24 peak state joins pass; the same code passes when bar end is assumed to be knowledge time (RT-A06a)."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "03_DAILY_CAPTURE_LOGS/slow_cycle/copper_gold/revisions",
+      "summary": "workbook_updated_on: July 2026 data published 2026-08-04, August 2026 data 2026-09-02"
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "research/experiments/copper_gold_slow_cycle_shadow_v1/PREREGISTRATION.json",
+      "summary": "kill criterion K02: lookahead or incomplete-bar use required to retain apparent edge"
+    },
+    {
+      "kind": "OTHER",
+      "ref": "coinmetrics/data@f1a36afb962731c387bb03982758ab0103063da5:csv/btc.csv sha256 06495ff8e643432e6948b7b4686ce44fc106217287dabdc1b38351d9ddec46c3",
+      "summary": "exact BTC input of the published study; v2 anchor_results reproduced byte-identically before the sensitivity run"
+    }
+  ],
+  "reproduction": "python scripts/experiments/strategy_factor_leakage_e1_production.py --coinmetrics-btc <btc.csv at the pinned revision> --event-features <settled_2m_features.csv at a008fd47d> --output /tmp/e1x.json; inspect right_truncation case RT-A06b (FAIL, TRUE_FUTURE_LEAKAGE, minimal suffix = the joined bar's own record). Unchanged production signal_events(..., shift_days=L) reproduces the impact: FEB_MAR TURNING_POSITIVE 60d median +23.61% at L=0 becomes +8.88% at L=2 and -9.65% at L=4.",
+  "acceptance_tests": {
+    "positive": [
+      "E1X RT-A06b passes when the event study's own knowledge-time rule is supplied as the record availability.",
+      "Peak-episode state joins are unchanged for bars whose knowledge time precedes the peak date.",
+      "The output records the knowledge-time rule, the explicit lag argument and every bar's knowledge timestamp.",
+      "HISTORICAL_EVENT_STUDY_v2.json bytes are unchanged."
+    ],
+    "negative": [
+      "Running without an explicit publication-lag argument for months lacking a recorded publication fails closed.",
+      "No signal event's entry date precedes its bar's knowledge time.",
+      "No threshold, anchor definition, regime classifier or BTC peak rule changes.",
+      "No interpolation or invented publication date is written for any month."
+    ]
+  },
+  "authority_boundary": "CODE_REMEDIATION_ONLY",
+  "requires_framework_owner_authority": false,
+  "forbidden_changes": [
+    "market gates",
+    "model weights",
+    "canonical authority",
+    "portfolio logic",
+    "API budget",
+    "new policy semantics",
+    "historical artifact rewrite",
+    "threshold or anchor changes",
+    "workflow schedule or trigger changes"
+  ],
+  "requested_priority": "NORMAL",
+  "post_fix_gate": "FOCUSED_REGRESSION_PASS_PLUS_E1X_RT_A06B_PASS_PLUS_V2_BYTE_READBACK",
+  "clean_noop_condition": "Stop if the study has been retired or already joins by knowledge time on fresh main.",
+  "escalation_condition": "Stop and escalate if the fix requires choosing a publication-lag value in code or changing the live owner's schema.",
+  "persistence_status": "EVIDENCE_MERGED_PENDING_INTAKE",
+  "persistence_note": "E1X evidence merged to main via PR #1209 at 6c971fe01078332c88d4f13eef160235c61c72c3. Candidate remains SUBMITTED; only the intake controller may declare CODEX_READY.",
+  "depends_on_evidence": "Satisfied: E1X evidence is present on main at merge commit 6c971fe01078332c88d4f13eef160235c61c72c3. Fresh-state preflight and deduplication still required before code changes."
+}

@@ -1,0 +1,91 @@
+{
+  "contract": "CODEX_RESEARCH_CANDIDATE_v1",
+  "candidate_id": "codex-research-pdlt-discovery-completed-candle-anchor-v1",
+  "submitted_at_utc": "2026-09-22T18:30:00Z",
+  "status": "SUBMITTED",
+  "origin": {
+    "type": "AUDIT",
+    "thread_label": "Temporal integrity / lookahead leakage kill test v1 (E1X)",
+    "source_paths": [
+      "04_RESEARCH_LAB/auto_trading/experiments/E1X/TEMPORAL_INTEGRITY_AUDIT_REPORT.md",
+      "04_RESEARCH_LAB/auto_trading/experiments/E1X/E1X_TEMPORAL_INTEGRITY_FINDINGS_v1.jsonl",
+      "research/experiments/pdlt_v1_1/PDLT_LIFECYCLE_FREEZE_2026-09-02.json"
+    ]
+  },
+  "title": "Anchor PDLT discovery labels on the last candle CLOSED by the CFGI timestamp",
+  "objective": "In scripts/experiments/pdlt_discovery.py, locate() returns the last 4h candle whose OPEN is <= the CFGI timestamp and forward_stats() uses that candle's CLOSE (open+4h) as the decision-time start price, so every discovery label is anchored 0-4h after the signal. Restrict the anchor to the last candle whose close time (open_time + interval) is <= the CFGI timestamp, keep label horizons measured from that anchor, and state the 4h boundary granularity in the report. This is a repair of the discovery methods only; it must not reopen PDLT, schedule any workflow or produce a frozen model.",
+  "finding_key": "PDLT_DISCOVERY_START_PRICE_FROM_UNCLOSED_CANDLE",
+  "primary_target": "scripts/experiments/pdlt_discovery.py",
+  "allowed_change_scope": [
+    "scripts/experiments/pdlt_discovery.py",
+    "tests/experiments/test_pdlt_methods_hardening.py",
+    "tests/experiments/test_pdlt_discovery_anchor.py"
+  ],
+  "evidence": [
+    {
+      "kind": "PR",
+      "ref": "https://github.com/Donh91/Investering-Framework-Archive-v1/pull/1209",
+      "summary": "Merged E1X evidence owner, merge commit 6c971fe01078332c88d4f13eef160235c61c72c3."
+    },
+    {
+      "kind": "COMMIT",
+      "ref": "48555838d7292290802887f01aeaf70a45721d85",
+      "summary": "audited main"
+    },
+    {
+      "kind": "RESEARCH_RECEIPT",
+      "ref": "04_RESEARCH_LAB/auto_trading/experiments/E1X/E1X_TEMPORAL_INTEGRITY_FINDINGS_v1.jsonl#E1X-F02",
+      "summary": "20/20 outputs fail; the only changed fields are 72h.start/7d.start/14d.start; minimal future suffix = 1 record (the 4h candle containing the CFGI timestamp), lead 13246 s (unaligned) / 14400 s (aligned). The completed-candle locate passes (RT-A07-...-REPAIR_CANDIDATE_COMPLETED_CANDLE)."
+    },
+    {
+      "kind": "RESEARCH_RECEIPT",
+      "ref": "04_RESEARCH_LAB/auto_trading/experiments/E1X/TEMPORAL_INTEGRITY_AUDIT_REPORT.md#e1x-f02--true_future_leakage--medium--pdlt-discovery-anchors-labels-on-an-unclosed-candle",
+      "summary": "308 live CFGI 4h rows were first captured 72-879 s after their timestamp (unaligned minutes, e.g. 21:19:14Z): the timestamp is the knowledge time."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "research/experiments/pdlt_v1_1/PDLT_LIFECYCLE_FREEZE_2026-09-02.json",
+      "summary": "reopen requires INDEPENDENT_REVIEW_OF_DISCOVERY_REPAIR"
+    },
+    {
+      "kind": "OTHER",
+      "ref": "PRIVATE_BINDING Donh91/secrets@8b236e7c9773155d0b03027900f6a9a6a3f3567a raw/CFGI_PDLT_HISTORICAL_BOOTSTRAP_V1/2026/08/07/metadata/MANIFEST.json",
+      "summary": "Provider-value-free restricted precheck: archive CFGI_PDLT_HISTORICAL_BOOTSTRAP_V1 binds raw authority bytes=86964 sha256=68c554963b87f860efb0e4b6c40cd2bd6ecc1f3a7027956032b87edb35f1ebf8, row/object count=1230, completeness COMPLETE_FOR_ORIGINAL_PDLT_BOOTSTRAP_ARTIFACT, validation HASH_VERIFIED_AND_ORIGINAL_PDLT_VALIDATED. Private README states timeframe=4h is algorithm timeframe while provider observations arrive at roughly 15-minute cadence, supporting observation-time rather than 4h-period-start semantics. No restricted provider values copied."
+    }
+  ],
+  "reproduction": "python -m unittest tests.experiments.test_strategy_factor_leakage_e1_production.E1XProductionFindingsTest.test_pdlt_discovery_anchor_uses_unclosed_candle. Minimal: candles opening 00:00/04:00/08:00, when=05:00Z; locate() returns the 04:00 candle and forward_stats() uses its 08:00 close. Real PDLT inputs are restricted-plane; real-data magnitude is PRIVATE_DATA_AUTHORITY_UNAVAILABLE and is not claimed.",
+  "acceptance_tests": {
+    "positive": [
+      "E1X RT-A07 PRODUCTION passes (no start field changes when candles closing after the CFGI timestamp are poisoned).",
+      "Existing tests/experiments/test_pdlt_methods_hardening.py passes.",
+      "A CFGI timestamp exactly equal to a candle close anchors on that candle."
+    ],
+    "negative": [
+      "A candle whose close is after the CFGI timestamp is never the anchor.",
+      "No threshold quantile, horizon, split boundary, purge or FNP semantics change.",
+      "pdlt-discovery-once.yml remains blocked; no model or forecast artifact is written."
+    ]
+  },
+  "authority_boundary": "CODE_REMEDIATION_ONLY",
+  "requires_framework_owner_authority": false,
+  "forbidden_changes": [
+    "market gates",
+    "model weights",
+    "canonical authority",
+    "portfolio logic",
+    "API budget",
+    "new policy semantics",
+    "historical artifact rewrite",
+    "threshold or anchor changes",
+    "workflow schedule or trigger changes",
+    "PDLT lane reopening",
+    "paid CFGI or OpenAI execution"
+  ],
+  "requested_priority": "NORMAL",
+  "post_fix_gate": "FOCUSED_REGRESSION_PASS_PLUS_E1X_RT_A07_PASS_PLUS_PDLT_RUNTIME_GATE_GREEN",
+  "clean_noop_condition": "Stop if discovery has been retired or already anchors on completed candles on fresh main.",
+  "escalation_condition": "Fresh restricted-plane preflight must still verify the exact timestamp-field semantics of the bound PDLT input. Stop if that exact field is documented as a period-start label only knowable at +4h; otherwise proceed with completed-candle anchoring. Never copy restricted values into the public PR.",
+  "persistence_status": "EVIDENCE_MERGED_PENDING_INTAKE",
+  "persistence_note": "E1X evidence merged to main via PR #1209 at 6c971fe01078332c88d4f13eef160235c61c72c3. Candidate remains SUBMITTED; only the intake controller may declare CODEX_READY.",
+  "depends_on_evidence": "Satisfied: E1X evidence is present on main at merge commit 6c971fe01078332c88d4f13eef160235c61c72c3. Fresh-state preflight and deduplication still required before code changes."
+}
