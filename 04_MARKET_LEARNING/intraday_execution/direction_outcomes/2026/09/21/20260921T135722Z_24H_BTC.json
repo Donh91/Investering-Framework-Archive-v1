@@ -1,0 +1,69 @@
+{
+  "authority": {
+    "automatic_rule_changes": false,
+    "portfolio_execution": false,
+    "shadow_only": true
+  },
+  "calibration_group": "BTC:24H:UP:4_of_6",
+  "calibration_key": "4_of_6",
+  "contract": "INTRADAY_DIRECTION_OUTCOME_v1",
+  "due_at_utc": "2026-09-22T13:00:00Z",
+  "evidence_deadline_utc": "2026-09-22T14:30:00Z",
+  "evidence_wait_hours": 1.708669,
+  "frozen_calibrated_probability_pct": null,
+  "horizon_hours": 24,
+  "issued_at_utc": "2026-09-21T13:57:22.714119Z",
+  "measured_at_utc": "2026-09-22T14:42:31.208376Z",
+  "predicted_direction": "UP",
+  "prediction_path": "04_MARKET_LEARNING/intraday_execution/direction_predictions/2026/09/21/20260921T135722Z.json",
+  "prediction_sha256": "7012fbb6b59b889c20f97f6f493fa8b87f3876ed9d8408a13aafd0996c516180",
+  "production_context": {
+    "commit_sha": "962a546de36bb5b3e30d1f77a3dba31366ea90fb",
+    "event": "schedule",
+    "ref": "refs/heads/main",
+    "repository": "Donh91/Investering-Framework-Archive-v1",
+    "run_attempt": "1",
+    "run_id": "35742092528"
+  },
+  "reason": "EXACT_DUE_OWNER_CANDLE_MISSING_AFTER_GRACE",
+  "registered_test_id": "INTRADAY_DIRECTION_CONFIDENCE_V1",
+  "registration_receipt_sha256": "a61938f9b772f204ab0d5bc1e11798e51ee313bf1e1857f3d6bafd7b6bdf66d2",
+  "source_candle_open_utc": "2026-09-21T12:00:00+00:00",
+  "source_price_observation_utc": "2026-09-21T13:00:00Z",
+  "start_value": 85323.0,
+  "status": "CENSORED",
+  "substitute_later_price_forbidden": true,
+  "target": "BTC",
+  "votes": [
+    {
+      "direction": "UP",
+      "family": "return_1h",
+      "value": 0.513399018156
+    },
+    {
+      "direction": "UP",
+      "family": "return_4h",
+      "value": 1.8660458452722128
+    },
+    {
+      "direction": "UP",
+      "family": "session_vwap",
+      "value": 2.2498720266042715
+    },
+    {
+      "direction": "UP",
+      "family": "momentum_acceleration",
+      "value": 0.0653604757636666
+    },
+    {
+      "direction": "DOWN",
+      "family": "taker_balance",
+      "value": 0.4929958005
+    },
+    {
+      "direction": "DOWN",
+      "family": "taker_change",
+      "value": -0.07137288138766662
+    }
+  ]
+}
