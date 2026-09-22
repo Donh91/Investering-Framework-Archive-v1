@@ -25,7 +25,7 @@
     {
       "kind": "PR",
       "ref": "https://github.com/Donh91/Investering-Framework-Archive-v1/pull/1209",
-      "summary": "E1X harness, tests, report and findings evidence. Candidate must not land before this evidence PR is merged."
+      "summary": "Merged E1X evidence owner, merge commit 6c971fe01078332c88d4f13eef160235c61c72c3."
     },
     {
       "kind": "COMMIT",
@@ -85,7 +85,7 @@
   "post_fix_gate": "FOCUSED_REGRESSION_PASS_PLUS_E1X_RT_A06B_PASS_PLUS_V2_BYTE_READBACK",
   "clean_noop_condition": "Stop if the study has been retired or already joins by knowledge time on fresh main.",
   "escalation_condition": "Stop and escalate if the fix requires choosing a publication-lag value in code or changing the live owner's schema.",
-  "persistence_status": "PENDING_PR_MERGE",
-  "persistence_note": "Prepared on isolated intake branch. Merge only after PR #1209 lands and current-main evidence paths read back successfully. Research does not self-declare CODEX_READY.",
-  "depends_on_evidence": "PR #1209 must be merged first; then re-bind evidence paths to fresh main before intake merge."
+  "persistence_status": "EVIDENCE_MERGED_PENDING_INTAKE",
+  "persistence_note": "E1X evidence merged to main via PR #1209 at 6c971fe01078332c88d4f13eef160235c61c72c3. Candidate remains SUBMITTED; only the intake controller may declare CODEX_READY.",
+  "depends_on_evidence": "Satisfied: E1X evidence is present on main at merge commit 6c971fe01078332c88d4f13eef160235c61c72c3. Fresh-state preflight and deduplication still required before code changes."
 }
