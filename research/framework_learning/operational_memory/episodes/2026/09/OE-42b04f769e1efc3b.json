@@ -1,0 +1,42 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/cycle-navigator-internal-precision.yml",
+    ".github/workflows/cycle-navigator-public-contract-gate.yml",
+    "05_CYCLE_NAVIGATOR/site/build-score-bundle.mjs",
+    "05_CYCLE_NAVIGATOR/site/validate-v2.mjs",
+    "05_CYCLE_NAVIGATOR/site/weekly-score.js"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "05_CYCLE_NAVIGATOR",
+  "episode_id": "OE-42b04f769e1efc3b",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "UPDATE",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* fix: keep current CN precision primary and range recovery supplemental * test: require canonical precision before recovered ranges * fix: auto-refresh Pages after CN weekly precision settles * fix: compare scorecard evaluation payload to machine evaluation * fix: validate CN scorecard wrapper separately from evaluation",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/cycle-navigator-internal-precision.yml": "b808215fe25288189e6ee56fe50d4c8e3389d4aa",
+    ".github/workflows/cycle-navigator-public-contract-gate.yml": "475a09d04cb3cfb17af10f450aa318a8ea8519df",
+    "05_CYCLE_NAVIGATOR/site/build-score-bundle.mjs": "9197a8a2d6c6d150f99c01af1d187cffb430c071",
+    "05_CYCLE_NAVIGATOR/site/validate-v2.mjs": "f0620721687cf14ded1c89264692ba7cfd58506f",
+    "05_CYCLE_NAVIGATOR/site/weekly-score.js": "2fa6b86ab4f741d4ed0367eebd08c47e6f7f764e"
+  },
+  "source_commit_sha": "42b04f769e1efc3b48d00f52fb2582f49d9eb35e",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-09-21T20:33:04+02:00",
+  "task_class": "CYCLE_NAVIGATOR",
+  "task_summary": "Make current Cycle Navigator precision authoritative on homepage"
+}
