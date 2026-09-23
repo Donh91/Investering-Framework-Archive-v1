@@ -1,0 +1,69 @@
+{
+  "contract": "SOL_PRE_CODEX_RESIDUALIZATION_WAVE_v1",
+  "generated_at_utc": "2026-09-23T07:20:00Z",
+  "authority": "READ_ONLY_GOVERNANCE_RECOMMENDATION",
+  "principle": "Use Sol/API/deterministic existing artifacts first; Codex only for irreducible repository code changes.",
+  "queue_snapshot": {
+    "codex_ready": 23,
+    "in_remediation": 2
+  },
+  "tasks": [
+    {
+      "candidate_id": "codex-research-techdev-t7-calibration-reconciliation-v1",
+      "signature": "c767d605f29f7bd2722b",
+      "sol_verdict": "CLEAN_NOOP_RECOMMENDED",
+      "evidence": [
+        "06_RESEARCH_LAB/forward_tests/TECHDEV_T7_CURRENT_CALIBRATION_READOUT.json"
+      ],
+      "reason": "Requested reconciliation artifact already exists on main with RECONCILED_READ_ONLY status, preserves 186-row historical snapshot, exposes 257 corpus/50 anchors/44 eligible anchors, separates first-call/revision information and preserves zero authority changes.",
+      "codex_residual": "NONE_UNLESS_A_REAL_CONSUMER_STILL_IGNORES_THE_READOUT"
+    },
+    {
+      "candidate_id": "codex-research-experiment-simplification-review-v1",
+      "signature": "d5f9cc11d5d7d05418b9",
+      "sol_verdict": "MOSTLY_PRECOMPUTED_CODEX_RESIDUAL_SMALL",
+      "evidence": [
+        "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json"
+      ],
+      "fresh_registry": {
+        "candidate_count": 380,
+        "state_counts": {
+          "INCUBATING": 286,
+          "MATURED_INCONCLUSIVE": 32,
+          "MATURED_NOT_SUPPORTED": 6,
+          "MATURED_SUPPORTED": 13,
+          "PROPOSED": 2,
+          "TARGET_UNIT_QUARANTINED": 8,
+          "WAITING_FOR_DATA": 7,
+          "WAITING_FOR_MAPPING": 24,
+          "WAITING_FOR_MATURITY": 2
+        }
+      },
+      "reason": "Fresh registry itself exposes large incubation/inconclusive populations and semantic fingerprints/admission labels. Sol can adjudicate simplification candidates without new market semantics. Remaining Codex need is only a deterministic reusable clustering/readout helper plus fixtures if automation is still desired.",
+      "codex_residual": "READ_ONLY_CLUSTER_HELPER_AND_TESTS_ONLY"
+    },
+    {
+      "candidate_id": "codex-research-sensor-relationship-compression-readout-v1",
+      "signature": "49ecf37e76b7834b97a5",
+      "sol_verdict": "DESIGN_AND_ADJUDICATION_SOL_CODEX_RESIDUAL_SMALL",
+      "reason": "Canonical vocabulary/governance and historical audit already exist. No new sensor semantics, weights or market logic are required. Sol can define current readout semantics; Codex is only justified for a deterministic reusable materializer/test if no existing helper can emit it.",
+      "codex_residual": "READ_ONLY_MATERIALIZER_AND_FIXTURES_ONLY"
+    },
+    {
+      "candidate_id": "codex-research-pullback-guidance-containment-guard-v1",
+      "signature": "4bc9351c84bc70cb0583",
+      "sol_verdict": "POLICY_ALREADY_FROZEN_CODEX_RESIDUAL_TEST_ONLY",
+      "reason": "Canonical Pullback v0.2 already freezes GUIDANCE_ONLY and forbids qualitative-label standalone action/rebuy/calibration authority. No policy intelligence remains for Codex. Residual is only static repository enforcement tests/validator if continuous CI protection is desired.",
+      "codex_residual": "STATIC_GUARD_TESTS_ONLY"
+    }
+  ],
+  "queue_policy": [
+    "DO_NOT_SEND_RESEARCH_INTERPRETATION_TO_CODEX",
+    "DO_NOT_SEND_THRESHOLD_OR_WEIGHT_DESIGN_TO_CODEX",
+    "MARK_CLEAN_NOOP_WHEN_MAIN_ALREADY_SATISFIES_OBJECTIVE",
+    "KEEP_CODEX_FOR_REUSABLE_CODE_OR_CI_GUARDS_THAT_CHAT_CANNOT_INSTALL_WITHOUT_CODE_WRITE",
+    "SOL_INDEPENDENT_REVIEW_AFTER_ANY_CODEX_DIFF"
+  ],
+  "no_market_semantic_change": true,
+  "no_trade_authority": true
+}
