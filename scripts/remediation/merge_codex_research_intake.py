@@ -23,6 +23,8 @@ QUALITY_CONTRACT = "CODEX_EXECUTION_QUALITY_v1"
 QUALITY_STATUSES = {"CAPTURED", "PARTIAL", "UNAVAILABLE"}
 MERGE_CONTRACT = "CODEX_RESEARCH_MERGE_RECEIPT_v1"
 MERGE_STATUS = "MERGED_VERIFIED"
+DIRECT_MERGE_CONTRACT = "CODEX_RESEARCH_DIRECT_MERGE_RECEIPT_v1"
+DIRECT_MERGE_STATUS = "DIRECT_MERGE_VERIFIED"
 SHA40 = re.compile(r"^[0-9a-f]{40}$")
 CONTRACT_FIELDS = (
     "signature", "workflow", "finding", "objective", "precondition", "success_evidence",
@@ -251,6 +253,38 @@ def valid_merge_receipt(repo: Path, task: dict[str, Any]) -> dict[str, Any] | No
     return d if declared and declared == actual else None
 
 
+def valid_direct_merge_receipt(repo: Path, task: dict[str, Any]) -> dict[str, Any] | None:
+    """Accept a verified non-Codex merge as post-fix evidence, never as completion."""
+    path = repo / "research/codex/direct_merges" / f"{task['candidate_id']}.json"
+    d = read_json(path, {})
+    if not d or d.get("contract") != DIRECT_MERGE_CONTRACT or d.get("status") != DIRECT_MERGE_STATUS:
+        return None
+    if d.get("resolution_mode") != "DIRECT_NON_CODEX_REPAIR":
+        return None
+    if d.get("authority") != "OBSERVABILITY_ONLY_NO_COMPLETION_AUTHORITY":
+        return None
+    if d.get("signature") != task["signature"] or d.get("candidate_id") != task["candidate_id"]:
+        return None
+    if d.get("candidate_sha256") != task["candidate_sha256"] or d.get("task_contract_sha256") != task["task_contract_sha256"]:
+        return None
+    if d.get("post_fix_gate") != task.get("post_fix_gate"):
+        return None
+    if not SHA40.fullmatch(str(d.get("merge_commit_sha") or "")):
+        return None
+    pr_number = d.get("pr_number")
+    if isinstance(pr_number, bool) or not isinstance(pr_number, int) or pr_number <= 0:
+        return None
+    branch = str(d.get("branch") or "")
+    if not branch or branch in {"main", "master"} or branch.startswith("backup-") or branch.startswith("backup/"):
+        return None
+    evidence = d.get("verification_evidence")
+    if not isinstance(evidence, list) or not evidence or any(not isinstance(x, str) or not x.strip() for x in evidence):
+        return None
+    declared = str(d.get("receipt_sha256") or "")
+    actual = canonical_hash({k: v for k, v in d.items() if k != "receipt_sha256"})
+    return d if declared and declared == actual else None
+
+
 def valid_completion(repo: Path, task: dict[str, Any]) -> dict[str, Any] | None:
     path = repo / "research/codex/completions" / f"{task['candidate_id']}.json"
     d = read_json(path, {})
@@ -390,6 +424,7 @@ def merge(repo: Path, output_dir: Path) -> dict[str, Any]:
         else:
             completion = valid_completion(repo, task)
             merge_receipt = valid_merge_receipt(repo, task)
+            direct_merge_receipt = valid_direct_merge_receipt(repo, task)
             transition = valid_transition(repo, task)
             if completion:
                 task["state"] = "RESOLVED"
@@ -415,6 +450,18 @@ def merge(repo: Path, output_dir: Path) -> dict[str, Any]:
                 task["merge_commit_sha"] = merge_receipt.get("merge_commit_sha")
                 task["merged_at_utc"] = merge_receipt.get("merged_at_utc")
                 task["merge_verified_at_utc"] = merge_receipt.get("verified_at_utc")
+                task["post_fix_gate_status"] = "REQUIRED_NOT_YET_VERIFIED"
+            elif direct_merge_receipt:
+                task["state"] = "POST_FIX_OBSERVATION"
+                task["route"] = "EVIDENCE"
+                task["resolution_mode"] = "DIRECT_NON_CODEX_REPAIR"
+                task["direct_merge_receipt_path"] = f"research/codex/direct_merges/{cid}.json"
+                task["direct_merge_receipt_sha256"] = direct_merge_receipt.get("receipt_sha256")
+                task["remediation_branch"] = direct_merge_receipt.get("branch")
+                task["pr_number"] = direct_merge_receipt.get("pr_number")
+                task["merge_commit_sha"] = direct_merge_receipt.get("merge_commit_sha")
+                task["merged_at_utc"] = direct_merge_receipt.get("merged_at_utc")
+                task["merge_verified_at_utc"] = direct_merge_receipt.get("verified_at_utc")
                 task["post_fix_gate_status"] = "REQUIRED_NOT_YET_VERIFIED"
             elif transition:
                 task["state"] = "IN_REMEDIATION"
