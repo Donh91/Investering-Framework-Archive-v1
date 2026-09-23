@@ -142,7 +142,13 @@ def build_project_memory(
         "lineage": lineage,
         "authority": safe_authority,
     }
-    snapshot["snapshot_sha256"] = _sha256(snapshot)
+    # Hash the current state only. Embedded prior snapshots remain lineage evidence,
+    # but are excluded from the current-state hash to avoid recursive growth semantics.
+    hash_view = dict(snapshot)
+    hash_view["project_memory_before"] = (
+        {"snapshot_sha256": before.get("snapshot_sha256")} if before else None
+    )
+    snapshot["snapshot_sha256"] = _sha256(hash_view)
     return snapshot
 
 
