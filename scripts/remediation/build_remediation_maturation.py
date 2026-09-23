@@ -133,9 +133,81 @@ def load_transition_receipts(repo: Path) -> tuple[dict[str, dict[str, Any]], lis
     return receipts, errors
 
 
+def _health_live_input_status(health: dict[str, Any]) -> tuple[bool, str | None]:
+    """Fail closed when Automation Health lacks a usable live GitHub observation.
+
+    A static-only health build is useful for YAML/static risks but it cannot be used
+    to mature runtime failures: absent live rows would otherwise look like fixes.
+    """
+    api_error = health.get("api_error")
+    if api_error:
+        return False, "AUTOMATION_HEALTH_API_ERROR"
+
+    scheduled = int(health.get("scheduled_workflow_count") or 0)
+    registered = int(health.get("registered_workflow_count") or 0)
+    workflows = [row for row in health.get("workflows", []) if isinstance(row, dict)]
+    scheduled_rows = [row for row in workflows if row.get("scheduled")]
+    live_scheduled = sum(1 for row in scheduled_rows if isinstance(row.get("live"), dict) and row.get("live"))
+
+    # Prefer row-level evidence because old reports may lack aggregate counters.
+    denominator = len(scheduled_rows) or scheduled
+    observed = live_scheduled if scheduled_rows else registered
+    if denominator > 0 and observed * 2 < denominator:
+        return False, "AUTOMATION_HEALTH_LIVE_COVERAGE_INSUFFICIENT"
+    return True, None
+
+
+def _carry_prior_on_blind_health(prior: dict[str, Any], health: dict[str, Any], reason: str) -> dict[str, Any]:
+    """Return prior routing state without crediting successes or minting findings."""
+    carried = json.loads(json.dumps(prior)) if isinstance(prior, dict) else {}
+    items = [row for row in carried.get("items", []) if isinstance(row, dict)]
+    codex = [row for row in carried.get("codex_ready_tasks", []) if isinstance(row, dict)]
+    needs = [row for row in carried.get("needs_more_evidence", []) if isinstance(row, dict)]
+    active = [row for row in carried.get("active_remediation", []) if isinstance(row, dict)]
+    if not carried:
+        carried = {
+            "contract": "REMEDIATION_MATURATION_ENGINE_v1",
+            "contract_revision": "1.2",
+            "authority": "OPERATIONAL_REMEDIATION_ROUTING_ONLY",
+            "items": items,
+            "codex_ready_tasks": codex,
+            "needs_more_evidence": needs,
+            "active_remediation": active,
+            "summary": {
+                "total": 0,
+                "codex_ready": 0,
+                "needs_more_evidence": 0,
+                "active_remediation": 0,
+            },
+        }
+    carried["generated_at_utc"] = now_iso()
+    carried["source_health_generated_at_utc"] = health.get("generated_at_utc")
+    carried["maturation_refusal"] = {
+        "status": "FAIL_CLOSED_PRIOR_STATE_CARRIED",
+        "reason": reason,
+        "health_api_error_present": bool(health.get("api_error")),
+        "scheduled_workflow_count": int(health.get("scheduled_workflow_count") or 0),
+        "registered_workflow_count": int(health.get("registered_workflow_count") or 0),
+        "post_fix_successes_incremented": False,
+        "new_health_signatures_created": False,
+    }
+    carried["automatic_code_write"] = False
+    carried["automatic_merge"] = False
+    carried["framework_state_change"] = False
+    carried["portfolio_action"] = False
+    return carried
+
+
 def build(repo: Path) -> dict[str, Any]:
     health = read_json(repo / "research/architecture_health/LATEST_AUTOMATION_HEALTH.json", {})
     prior = read_json(repo / "research/remediation/LATEST_REMEDIATION_QUEUE.json", {})
+    usable, refusal_reason = _health_live_input_status(health if isinstance(health, dict) else {})
+    if not usable:
+        return _carry_prior_on_blind_health(
+            prior if isinstance(prior, dict) else {},
+            health if isinstance(health, dict) else {},
+            str(refusal_reason),
+        )
     prior_by_sig = {x.get("signature"): x for x in prior.get("items", []) if isinstance(x, dict)}
     transition_by_sig, transition_errors = load_transition_receipts(repo)
     current_signatures: set[str] = set()
@@ -257,7 +329,7 @@ def build(repo: Path) -> dict[str, Any]:
     active_remediation = [x for x in items if x.get("state") in {"IN_REMEDIATION", "POST_FIX_OBSERVATION", "REOPENED"}]
     return {
         "contract": "REMEDIATION_MATURATION_ENGINE_v1",
-        "contract_revision": "1.1",
+        "contract_revision": "1.2",
         "authority": "OPERATIONAL_REMEDIATION_ROUTING_ONLY",
         "generated_at_utc": now_iso(),
         "source_health_generated_at_utc": health.get("generated_at_utc"),
