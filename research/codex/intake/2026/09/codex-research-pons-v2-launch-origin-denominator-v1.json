@@ -1,0 +1,58 @@
+{
+  "candidate_id": "codex-research-pons-v2-launch-origin-denominator-v1",
+  "status": "SUBMITTED",
+  "authority": "CODE_REMEDIATION_ONLY",
+  "owner_issue": 1087,
+  "title": "Pons V2 launch-origin historical denominator extractor",
+  "objective": "Implement the minimum deterministic code needed to extract launch-origin fields for an outcome-blind exact Pons V2 factory sample under PONS_V2_LAUNCH_ORIGIN_MATCHED_DENOMINATOR_v1. Do not interpret outcomes, fit thresholds, score tokens, activate alerts, or change market/trading semantics.",
+  "canonical_inputs": [
+    "06_RESEARCH_LAB/alpha_lab/2026-09-23__pons-v2-launch-origin-matched-denominator-v1.md",
+    "research/api_agent/meme_alpha/experiments/PONS_V2_LAUNCH_ORIGIN_MATCHED_DENOMINATOR_v1.json",
+    "06_RESEARCH_LAB/alpha_lab/2026-09-23__deed-chain-reproduction-adversarial-learning-v2.md",
+    "scripts/api_agent/meme_alpha_robinhood_pons_v2.py"
+  ],
+  "allowed_scope": [
+    "scripts/api_agent/meme_alpha/**",
+    "tests/api_agent/**",
+    "research/api_agent/meme_alpha/**"
+  ],
+  "required_behavior": [
+    "Sample exact Pons V2 TokenLaunched factory rows from a caller-supplied contiguous block range before any outcome lookup.",
+    "Preserve every sampled launch row, including dead/no-market launches and rows with enrichment failures.",
+    "Decode/freeze exact token CA, launch tx, block/log identity, deployer, pair token, launch config id and graduation threshold from the canonical factory event.",
+    "Fetch the launch transaction/receipt deterministically and expose method/input decode health. If launchAndBuy origin fields cannot be decoded, persist UNKNOWN rather than dropping the row.",
+    "Where reproducible from exact launch input/receipt, record creator/caller, recipient, quote in, initial tokens out, total supply, initial creator/caller supply percentage, creator tax/config, snipe-tax exemption count and exemption-address hash.",
+    "Keep exemption membership distinct from token allocation, ownership, insider status and paid promotion.",
+    "Emit source/provider health, observed/retrieved timestamps and evidence hashes.",
+    "Deduplicate only by canonical chain log identity.",
+    "Output a deterministic historical representation artifact suitable for >=30 rows. Do not fetch outcome/price/social labels in the extractor."
+  ],
+  "acceptance_tests": {
+    "positive": [
+      "DEED fixture reproduces exact CA, launch tx and 2.99% initial caller position plus 25 exemption addresses/hash where fixture evidence supports it.",
+      "TAGPAD fixture reproduces ~1.5% creator position and 3 exemptions where canonical fixture evidence supports it.",
+      "FLYBRAIN row is preserved even if some origin fields remain UNKNOWN.",
+      "A sampled launch with no market data remains in the denominator.",
+      "Repeated overlapping block scans deduplicate by block_hash+tx_hash+log_index without denominator loss."
+    ],
+    "negative": [
+      "Provider failure or decode failure cannot become zero exemptions or zero creator position.",
+      "Exemption address cannot be labelled insider, allocation recipient or common owner without separate evidence.",
+      "No market outcome, ATH, social scam/gem label, wallet score or later sell-through may influence sample inclusion.",
+      "No new scanner, scheduler, score, forecast engine, alert, portfolio action or trade authority.",
+      "No production threshold or weight is introduced."
+    ]
+  },
+  "post_fix_gate": "PONS_ORIGIN_EXTRACTOR_TESTS_PASS_PLUS_DEED_TAGPAD_REGRESSION_PLUS_OUTCOME_BLIND_30_ROW_DRY_RUN_PLUS_FRESH_MAIN_READBACK_PLUS_SOL_INDEPENDENT_REVIEW",
+  "forbidden": [
+    "BUY_SELL_AUTHORITY",
+    "USER_ALERT",
+    "AUTO_MERGE",
+    "OUTCOME_BASED_SAMPLING",
+    "THRESHOLD_FITTING",
+    "MODEL_WEIGHT_CHANGE",
+    "MARKET_SEMANTIC_CHANGE",
+    "PARALLEL_SCANNER",
+    "HISTORICAL_ALPHA_CREDIT"
+  ]
+}
