@@ -232,7 +232,7 @@ jobs:
 
 
 def test_real_upload_artifact_step_without_retention_is_flagged(tmp_path: Path) -> None:
-    for uses in ("      - uses: actions/upload-artifact@v4", "      - name: upload\\n        uses: 'actions/upload-artifact@v4'"):
+    for uses in ("      - uses: actions/upload-artifact@v4", "      - name: upload\n        uses: 'actions/upload-artifact@v4'"):
         path = write_workflow(
             tmp_path,
             f"""name: Uploader
