@@ -8,6 +8,19 @@ from scripts.experiments import pdlt_v1_1 as prereg
 
 
 class PDLTMethodsHardeningTests(unittest.TestCase):
+    def test_discovery_anchor_contract_declares_completed_4h_boundary(self):
+        self.assertEqual(discovery.DISCOVERY_ANCHOR_CANDLE_HOURS, 4)
+        self.assertEqual(
+            discovery.anchor_contract(),
+            {
+                "rule": "LAST_COMPLETED_CANDLE_BY_CFGI_TIMESTAMP",
+                "candle_interval_hours": 4,
+                "close_time_definition": "open_time + 4h",
+                "eligibility": "candle_close_time <= cfgi_timestamp",
+                "horizons_measured_from_selected_anchor": True,
+            },
+        )
+
     def test_discovery_anchor_uses_latest_completed_4h_candle(self):
         base = datetime(2026, 1, 1, tzinfo=timezone.utc)
         candles = [
