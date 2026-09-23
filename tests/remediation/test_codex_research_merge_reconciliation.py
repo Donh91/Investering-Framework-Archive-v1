@@ -302,9 +302,16 @@ class CodexResearchMergeReconciliationTests(unittest.TestCase):
         first = text.find(materialize)
         reconcile_pos = text.find("python scripts/remediation/reconcile_codex_research_merges.py")
         second = text.find(materialize, first + 1)
+        convergence_pos = text.find(
+            "python scripts/remediation/mission_convergence.py validate-active-completions",
+            second,
+        )
+        copy_pos = text.find("cp research/remediation/LATEST_REMEDIATION_QUEUE.json", second)
         self.assertGreaterEqual(first, 0)
         self.assertGreater(reconcile_pos, first)
         self.assertGreater(second, reconcile_pos)
+        self.assertGreater(convergence_pos, second)
+        self.assertGreater(copy_pos, convergence_pos)
         self.assertIn("research/codex/merges", text)
 
     def test_workflow_never_rebases_stale_generated_state_before_push(self):
