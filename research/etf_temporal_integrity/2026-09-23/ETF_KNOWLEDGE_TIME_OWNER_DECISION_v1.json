@@ -1,0 +1,67 @@
+{
+  "contract": "ETF_KNOWLEDGE_TIME_OWNER_DECISION_v1",
+  "decision_id": "ISSUE_1211_D1_D7",
+  "decided_at_utc": "2026-09-23T18:55:00Z",
+  "authority": "FRAMEWORK_OWNER_DECISION",
+  "status": "RATIFIED",
+  "evidence_basis": [
+    "research/etf_temporal_integrity/2026-09-23/ETF_OWNER_DECISION_PACKET_1211.md",
+    "research/etf_temporal_integrity/2026-09-23/ETF_KNOWLEDGE_TIME_POLICY_COMPARISON.json",
+    "research/etf_temporal_integrity/2026-09-23/ETF_RIGHT_TRUNCATION_RESULTS.json",
+    "research/etf_temporal_integrity/2026-09-23/ETF_REVISION_SUMMARY.json"
+  ],
+  "decisions": {
+    "D1_live_usable_timestamp": {
+      "rule": "knowledge_available_at_utc = verification_completed_at_utc of the first double-read observation that is complete by the live rule",
+      "completeness": [
+        "total_parity_true",
+        "reported_total_present",
+        "no_nonstructural_unknown_fund_cells",
+        "not_all_dash"
+      ],
+      "rationale": "First-complete had zero contradictions on evidenced sessions; settled double-read alone had four later revisions."
+    },
+    "D2_no_verified_complete_fallback": {
+      "rule": "first observation may exist only as PROVISIONAL; it never receives finality authority",
+      "all_dash_rule": "PENDING_ALL_DASH; never interpret Total 0.0 as observed zero flow"
+    },
+    "D3_unknown_handling": {
+      "rule": "sessions without timed capture remain LOWER_BOUND_ONLY and are not canonical knowledge-time observations"
+    },
+    "D4_source_vintage": {
+      "rule": "append-only vintages; replay at cutoff t binds latest vintage observed <= t; later revisions append and never silently rewrite prior scored vintages"
+    },
+    "D5_historical_backtest_eligibility": {
+      "selected": "A_EXCLUDE_PRE_CAPTURE_HISTORY",
+      "rule": "ETF features are ineligible for official knowledge-time-sensitive backtests before the first timed capture at 2026-07-15T20:48:00Z",
+      "sensitivity_only": "Assumed lag scenarios may be run only as explicitly labelled noncanonical SOURCE_VINTAGE_RISK research. 30.6h is evidence, not canonical policy.",
+      "rejected": [
+        "C_SESSION_CLOSE"
+      ],
+      "rejected_reason": "Session close is falsified by proven future-knowledge leakage."
+    },
+    "D6_feature_knowledge_time": {
+      "rule": "feature knowledge time = max knowledge_available_at_utc across every input row in the feature window"
+    },
+    "D7_post_cutoff_revisions": {
+      "rule": "replay at cutoff t cannot see revisions observed after t; re-evaluation on a later vintage is a new labelled run"
+    }
+  },
+  "live_historical_firewall": {
+    "live_finality_not_weakened": true,
+    "historical_assumption_cannot_set_live_finality": true,
+    "v1_1_row_integrity_owner_separate": true
+  },
+  "implementation_required": [
+    "Map ETF_OBSERVATION_v1 into historical replay inputs.",
+    "Make W30/other ETF trailing features use cumulative-max input knowledge time.",
+    "Exclude pre-capture rows from official knowledge-time-sensitive replays.",
+    "Preserve existing historical outputs as immutable evidence; emit new versions only."
+  ],
+  "forbidden": [
+    "retroactively fabricate provider publication timestamps",
+    "rewrite frozen historical outputs",
+    "use assumed lag as canonical observed knowledge time",
+    "weaken live double-read/parity/schema checks"
+  ]
+}
