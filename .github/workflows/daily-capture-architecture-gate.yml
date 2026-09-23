@@ -323,25 +323,31 @@ jobs:
           snapshot=json.loads(Path('/tmp/farside-live/owner_snapshot.json').read_text())
           assert snapshot.get('status') == 'PASS', snapshot
           assert snapshot.get('unknown_cells_are_not_imputed') is True, snapshot
-          expected={
-              'BTC': ['IBIT','FBTC','BITB','ARKB','BTCO','EZBC','BRRR','HODL','BTCW','MSBT','GBTC','BTC'],
-              'ETH': ['ETHA','ETHB','FETH','ETHW','TETH','ETHV','QETH','EZET','ETHE','ETH'],
+          registered={
+              'BTC': [
+                  ['IBIT','FBTC','BITB','ARKB','BTCO','EZBC','BRRR','HODL','BTCW','MSBT','GBTC','BTC'],
+              ],
+              'ETH': [
+                  ['ETHA','ETHB','FETH','ETHW','TETH','ETHV','QETH','EZET','ETHE','ETH'],
+                  ['ETHA','ETHB','FETH','ETHW','TETH','ETHV','QETH','EZET','MSSE','ETHE','ETH'],
+              ],
           }
           rows={row.get('asset'): row for row in snapshot.get('rows', [])}
           assert set(rows) == {'BTC','ETH'}, rows
-          for asset, funds in expected.items():
+          for asset, schemas in registered.items():
               row=rows[asset]
-              assert row.get('fund_headers') == funds, row
+              funds=row.get('fund_headers')
+              assert funds in schemas, row
               assert row.get('headers') == ['Date', *funds, 'Total'], row
               assert row.get('session_final') is True, row
               assert row.get('total_parity') is True, row
               assert row.get('unknown_cells_fully_accounted_by_reported_total') is True, row
               assert row.get('reported_total') is not None, row
-              assert row.get('header_mode') in {
-                  'DIRECT_DATE_TOTAL',
-                  'SOURCE_TWO_ROW_TICKER_HEADER',
-                  'CANONICAL_ASSET_SCHEMA_EXACT_WIDTH_FALLBACK',
-              }, row
+              mode=row.get('header_mode') or ''
+              assert (
+                  mode in {'DIRECT_DATE_TOTAL','SOURCE_TWO_ROW_TICKER_HEADER'}
+                  or mode.startswith('SOURCE_TICKER_HEADER:')
+              ), row
               source_hash=(snapshot.get('source_hashes') or {}).get(asset, '')
               assert len(source_hash) == 64, snapshot
           print('LIVE_FARSIDE_BTC_ETH_SCHEMA_PASS')
