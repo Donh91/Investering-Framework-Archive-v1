@@ -20,6 +20,7 @@ on:
       - 'tests/api_agent/test_meme_alpha_url_provenance.py'
       - 'tests/api_agent/test_meme_alpha_lifecycle_v1.py'
       - 'research/api_agent/meme_alpha/**'
+      - 'tests/meme_alpha/**'
       - '.agents/skills/meme-alpha-supervisor/**'
       - '.github/workflows/meme-alpha-runtime-gate.yml'
   workflow_dispatch:
@@ -55,6 +56,10 @@ jobs:
           tests/api_agent/test_typesafe_jev_replay.py
           tests/api_agent/test_meme_alpha_url_provenance.py
           tests/api_agent/test_meme_alpha_lifecycle_v1.py
+          research/api_agent/meme_alpha/project_memory_p1.py
+          research/api_agent/meme_alpha/project_ca_binding_p2.py
+          tests/meme_alpha/test_project_memory_p1.py
+          tests/meme_alpha/test_project_ca_binding_p2.py
       - name: Run focused tests
         run: >-
           python -m unittest
@@ -66,6 +71,8 @@ jobs:
           tests.api_agent.test_typesafe_jev_replay
           tests.api_agent.test_meme_alpha_url_provenance
           tests.api_agent.test_meme_alpha_lifecycle_v1
+          tests.meme_alpha.test_project_memory_p1
+          tests.meme_alpha.test_project_ca_binding_p2
           -v
       - name: Validate policy authority, budget and source-auth gate
         run: |
