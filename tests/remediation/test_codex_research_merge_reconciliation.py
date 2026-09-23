@@ -307,6 +307,21 @@ class CodexResearchMergeReconciliationTests(unittest.TestCase):
         self.assertGreater(second, reconcile_pos)
         self.assertIn("research/codex/merges", text)
 
+    def test_workflow_never_rebases_stale_generated_state_before_push(self):
+        text = WORKFLOW_PATH.read_text()
+        loop = text[text.index("for attempt in 1 2 3; do"):]
+        fetch_pos = loop.index("git fetch origin main")
+        reset_pos = loop.index("git reset --hard origin/main")
+        materialize_pos = loop.index("python scripts/remediation/build_remediation_maturation.py")
+        commit_pos = loop.index('git commit -m "remediation: mature operational findings')
+        push_pos = loop.index("git push origin HEAD:main")
+        self.assertGreaterEqual(fetch_pos, 0)
+        self.assertGreater(reset_pos, fetch_pos)
+        self.assertGreater(materialize_pos, reset_pos)
+        self.assertGreater(commit_pos, materialize_pos)
+        self.assertGreater(push_pos, commit_pos)
+        self.assertNotIn("git pull --rebase origin main", loop)
+
 
 if __name__ == "__main__":
     unittest.main()
