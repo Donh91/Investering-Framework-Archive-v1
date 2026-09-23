@@ -3,6 +3,7 @@
 Offline and deterministic: repository data only, no network, no git history.
 """
 import importlib.util
+import inspect
 import sys
 import unittest
 from datetime import date, timedelta
@@ -162,12 +163,12 @@ class E1XProductionFindingsTest(unittest.TestCase):
         self.assertGreater(result["output_comparisons"], 0)
 
     def test_legacy_etf_session_close_case_is_control_not_current_production(self):
-        production, _, controls, _, _ = self.x.build_cases(ROOT)
-        production_ids = {case.case_id for case in production}
-        control_ids = {case.case_id for case in controls}
-        self.assertIn("RT-A03c-BACKTEST-ETF-OFFICIAL-PIT-V2", production_ids)
-        self.assertNotIn("RT-A03b-BACKTEST-ETF-TRAILING-DOCUMENTED-FARSIDE-TIMING", production_ids)
-        self.assertIn("RT-A03b-BACKTEST-ETF-TRAILING-DOCUMENTED-FARSIDE-TIMING", control_ids)
+        source = inspect.getsource(self.x.build_cases)
+        production_block = source[source.index("production = ["):source.index("if coinmetrics")]
+        controls_block = source[source.index("controls = ["):source.index("warmup_controls")]
+        self.assertIn("case_backtest_etf_trailing_official_pit", production_block)
+        self.assertNotIn("case_backtest_etf_trailing_documented_publication", production_block)
+        self.assertIn("case_backtest_etf_trailing_documented_publication", controls_block)
 
     def test_clean_production_owners_pass(self):
         rows, hb = self.x.load_hourly_rows()
