@@ -1,0 +1,42 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/alpha-shadow04-prospective.yml",
+    ".github/workflows/compass-event-refresh.yml",
+    ".github/workflows/compass-schedule-watchdog.yml",
+    ".github/workflows/daily-compass.yml",
+    ".github/workflows/external-alpha-registry-gate.yml"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": ".github",
+  "episode_id": "OE-a29c30533548c9fd",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "UPDATE",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "Make the existing UTC schedule basis explicit without changing cron expressions or runtime slot semantics.",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/alpha-shadow04-prospective.yml": "ce2f551860155b71fb4fe529bda87cf3d7e56077",
+    ".github/workflows/compass-event-refresh.yml": "bb7b941d5b896ec7b3282b0e7b47e8cad29c9964",
+    ".github/workflows/compass-schedule-watchdog.yml": "1a5d0a550978eeda3603bf59fd1ce54367739456",
+    ".github/workflows/daily-compass.yml": "3ce8d10a78740e8d21f2b17c272d35065efc951c",
+    ".github/workflows/external-alpha-registry-gate.yml": "d58cbefb96bd127db50a1c5fcb6dac84ae2a7624"
+  },
+  "source_commit_sha": "a29c30533548c9fd4f5f3edd96cbe0ffcf8820f8",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-09-23T09:28:52+02:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "ops: declare explicit UTC timezone on five schedules"
+}

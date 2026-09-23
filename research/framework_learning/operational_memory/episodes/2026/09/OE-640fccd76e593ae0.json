@@ -1,0 +1,36 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "scripts/health/build_automation_health.py",
+    "tests/health/test_automation_production_health.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "scripts",
+  "episode_id": "OE-640fccd76e593ae0",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "UPDATE",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "Fix artifact-retention static analysis so assertion literals do not masquerade as uploads while real uses steps without retention remain flagged.",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "scripts/health/build_automation_health.py": "bab1b9a740c365e422b7c122782595acb5dd06dd",
+    "tests/health/test_automation_production_health.py": "bc2ff8a5d826080a44a30c7e464e4c04f0ab6e9f"
+  },
+  "source_commit_sha": "640fccd76e593ae0bd363edcb09a0b3cc643a320",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-09-23T09:34:37+02:00",
+  "task_class": "RESEARCH_ARCHIVE",
+  "task_summary": "health: detect artifact uploads from uses steps"
+}

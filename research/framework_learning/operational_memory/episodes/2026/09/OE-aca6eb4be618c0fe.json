@@ -1,0 +1,42 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "06_RESEARCH_LAB/audit_summaries/techdev_calibration_v1/HEALTH_CHECK.json",
+    "06_RESEARCH_LAB/forward_tests/T7_CALIBRATION_READOUT.json",
+    "research/codex/transitions/c767d605f29f7bd2722b.json",
+    "scripts/research/techdev_calibration_readout.py",
+    "tests/research/test_techdev_calibration_readout.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "06_RESEARCH_LAB",
+  "episode_id": "OE-aca6eb4be618c0fe",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "RESEARCH",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "Fresh-main replacement for #889. Read-only reconciliation of historical T7 calibration scopes; no rescoring, market rule, workflow or canonical authority change.",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "06_RESEARCH_LAB/audit_summaries/techdev_calibration_v1/HEALTH_CHECK.json": "97c3beed3b998bee0bc5c53f5da873f971af6f81",
+    "06_RESEARCH_LAB/forward_tests/T7_CALIBRATION_READOUT.json": "391101de39ab2e15877a39e9d20ad33ba9b3fab3",
+    "research/codex/transitions/c767d605f29f7bd2722b.json": "ce6866be3bd57205a46d08d1f66698f94484da75",
+    "scripts/research/techdev_calibration_readout.py": "105abbb580b965b82db79525a98a676f1e06371c",
+    "tests/research/test_techdev_calibration_readout.py": "5a978dd080b0c3af4843d2db4ffa2d4abb18bef8"
+  },
+  "source_commit_sha": "aca6eb4be618c0fedbe25faad5d2418e6dd7f85d",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-09-23T09:28:02+02:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "research: fresh-main T7 historical calibration reconciliation"
+}

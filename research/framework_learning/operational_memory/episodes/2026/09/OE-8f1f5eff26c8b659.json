@@ -1,0 +1,38 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "research/remediation/transitions/67ed21de4e9d66074112.json",
+    "research/remediation/transitions/89ff174e1412a9f7b8e1.json",
+    "tests/api_agent/test_director_situation_room_shadow.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "research",
+  "episode_id": "OE-8f1f5eff26c8b659",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "transplant-verified-situation-room-unittest",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "Fresh-main replacement for #1096. Makes the existing Situation Room tests actually execute under unittest and preserves the two governed transition receipts. No runtime or market semantics changed.",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "research/remediation/transitions/67ed21de4e9d66074112.json": "042231c10f253e4e68825c780589107630da916c",
+    "research/remediation/transitions/89ff174e1412a9f7b8e1.json": "ede1b3f1d8db96c27b41edea5b84b2a4e61e1031",
+    "tests/api_agent/test_director_situation_room_shadow.py": "cc6f3fda915b4e8195ea6a48db8d45521112edff"
+  },
+  "source_commit_sha": "8f1f5eff26c8b6595a0ef7723f2ea76d9d53082f",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-09-23T09:26:51+02:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "repair: transplant verified Situation Room unittest fix"
+}

@@ -1,0 +1,36 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "scripts/health/build_architecture_health.py",
+    "tests/health/test_architecture_health_v2_1.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "scripts",
+  "episode_id": "OE-0d43122ece59e737",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "UPDATE",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "Fix architecture-health capture selection so the pointer cannot replace its target owner rows. Adds focused regression coverage; no market semantics changed.",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "scripts/health/build_architecture_health.py": "078bd9593ae676416b5bc081766014cd6a26cb90",
+    "tests/health/test_architecture_health_v2_1.py": "89ec828ca62df0497736b0a8698f35a6d23285d3"
+  },
+  "source_commit_sha": "0d43122ece59e737461f2ad6ae63ac3539e73a98",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-09-23T09:28:43+02:00",
+  "task_class": "GENERAL_FRAMEWORK",
+  "task_summary": "health: stop capture LATEST pointer from blanking owner population"
+}

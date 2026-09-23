@@ -1,0 +1,42 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "research/codex/transitions/29f285578389eca587bd.json",
+    "scripts/api_agent/meme_alpha_fomo_robinhood_convergence.py",
+    "scripts/api_agent/meme_alpha_fomo_robinhood_observer.py",
+    "tests/api_agent/test_meme_alpha_fomo_robinhood_convergence.py",
+    "tests/api_agent/test_meme_alpha_fomo_robinhood_observer.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "scripts",
+  "episode_id": "OE-fc1e75067103cbb7",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "fresh-main-fomo-robinhood-fail-closed",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "Fresh-main replacement for #1208. Bounded fail-closed FOMO hardening only; no runtime activation, market semantics, threshold, portfolio or budget changes.",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "research/codex/transitions/29f285578389eca587bd.json": "7ba7b07f279c51675d31152c8e45811320d77c53",
+    "scripts/api_agent/meme_alpha_fomo_robinhood_convergence.py": "47ee0904fbe464c5892cb8a5d72f74b96b23bac5",
+    "scripts/api_agent/meme_alpha_fomo_robinhood_observer.py": "ee952ea1e367b214ece6454e47129a3cef476ce0",
+    "tests/api_agent/test_meme_alpha_fomo_robinhood_convergence.py": "9889624bc13c480feed4d14176e8308e374da694",
+    "tests/api_agent/test_meme_alpha_fomo_robinhood_observer.py": "705c01ecae9687c0988d28e95cb104288aeaf90e"
+  },
+  "source_commit_sha": "fc1e75067103cbb788481968aad1d2f704e1a177",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-09-23T09:27:45+02:00",
+  "task_class": "API_AGENT",
+  "task_summary": "repair: fresh-main FOMO Robinhood fail-closed hardening"
+}

@@ -1,0 +1,42 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "04_RESEARCH_LAB/auto_trading/experiments/E1X/E1X_FULL_RESULT_MANIFEST_v1.json",
+    "04_RESEARCH_LAB/auto_trading/experiments/E1X/E1X_TEMPORAL_INTEGRITY_FINDINGS_v1.jsonl",
+    "04_RESEARCH_LAB/auto_trading/experiments/E1X/TEMPORAL_INTEGRITY_AUDIT_REPORT.md",
+    "scripts/experiments/strategy_factor_leakage_e1_production.py",
+    "tests/experiments/test_strategy_factor_leakage_e1_production.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "04_RESEARCH_LAB",
+  "episode_id": "OE-6c971fe01078332c",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "RESEARCH",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "Persist the E1X production knowledge-time leakage harness, tests, audit evidence and reproducible full-result binding. Research-only, no live market semantics changed.",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "04_RESEARCH_LAB/auto_trading/experiments/E1X/E1X_FULL_RESULT_MANIFEST_v1.json": "ca0ab1bf46b842948b00e06bf7b40151ff9d8f39",
+    "04_RESEARCH_LAB/auto_trading/experiments/E1X/E1X_TEMPORAL_INTEGRITY_FINDINGS_v1.jsonl": "e100856984fba8765bcd58b2f136bf66b895612c",
+    "04_RESEARCH_LAB/auto_trading/experiments/E1X/TEMPORAL_INTEGRITY_AUDIT_REPORT.md": "f80f797d6fd88aacc64bf33405fb83488ff61009",
+    "scripts/experiments/strategy_factor_leakage_e1_production.py": "8eb63c48b48a4e5230d5c991598482b0c93f5d50",
+    "tests/experiments/test_strategy_factor_leakage_e1_production.py": "f14e5152d9488493c03b2a27bd70ce13ba385181"
+  },
+  "source_commit_sha": "6c971fe01078332c88d4f13eef160235c61c72c3",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-09-22T20:41:38+02:00",
+  "task_class": "AUTO_TRADING_RESEARCH",
+  "task_summary": "research(AT-E1X): production temporal-integrity kill test"
+}
