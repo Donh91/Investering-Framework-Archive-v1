@@ -1,0 +1,173 @@
+{
+  "package_id": "US_SPOT_CRYPTO_ETF_FLOW_HISTORY_20260923_V1_1",
+  "version": "1.1",
+  "created_from_main_sha": "7e97900732830f5b27a89ea3e37af71da6c10c94",
+  "authority_class": "A2_EVIDENCE_CANDIDATE",
+  "verification_state": "ROW_INTEGRITY_AND_SESSION_SEMANTICS_REPAIRED",
+  "supersedes_for_research": "04_MARKET_LEARNING/truth_layer/etf_flows/2026-07-26__us-spot-crypto-etf-flow-history",
+  "v1_immutable": true,
+  "source": {
+    "type": "RECOVERED_USER_SUPPLIED_EXPORT_IDENTITIES",
+    "btc": {
+      "filename": "Etf btc.md",
+      "bytes": 114272,
+      "sha256": "73ffcff5660b34a55605121c809205b2ba341a9b822bc4047efc61a995cb91fb"
+    },
+    "eth": {
+      "filename": "ETF eth.md",
+      "bytes": 77110,
+      "sha256": "ac623c0bdd72213851dae67798aa461a4e3ea7e4fdea13abd4b54545edb7ed72"
+    }
+  },
+  "v1_source_readback": {
+    "us_spot_btc_etf_flows_daily_2024.csv": {
+      "bytes": 18302,
+      "sha256": "31b6f45128a54440f6431d3c816800ca24a3a2e888d8133b68868c27a0818a7e"
+    },
+    "us_spot_btc_etf_flows_daily_2025.csv": {
+      "bytes": 18640,
+      "sha256": "40e08c5eb2c9dde70e715b95c9fb1ce6734ac5e7ee55f202a66c87c7ddcdadcb"
+    },
+    "us_spot_btc_etf_flows_daily_2026.csv": {
+      "bytes": 10191,
+      "sha256": "2745c15c5ba9080481726485bf0657c35b81f842281f168642e3fc59ccc3c107"
+    },
+    "us_spot_eth_etf_flows_daily_2024.csv": {
+      "bytes": 6925,
+      "sha256": "7feab1b5640373e3a1876eae42b488dd24577b89f2d66c5c28638f8729b78967"
+    },
+    "us_spot_eth_etf_flows_daily_2025.csv": {
+      "bytes": 15618,
+      "sha256": "ad385c7d65dc4d036b54bab89051fe09bc163042e0227d4c04bd5c65d15310fc"
+    },
+    "us_spot_eth_etf_flows_daily_2026.csv": {
+      "bytes": 8556,
+      "sha256": "e65d67c54e80d2e589d1d80a547a2227e293259420ca646e2c91d0c802747240"
+    }
+  },
+  "coverage": {
+    "btc": {
+      "rows": 651,
+      "start_date": "2024-01-11",
+      "end_date": "2026-07-24",
+      "non_sessions": 16
+    },
+    "eth": {
+      "rows": 513,
+      "start_date": "2024-07-23",
+      "end_date": "2026-07-24",
+      "non_sessions": 10
+    }
+  },
+  "row_repairs": {
+    "count": 11,
+    "keys": [
+      "BTC|2025-09-19",
+      "BTC|2025-10-24",
+      "BTC|2025-11-03",
+      "BTC|2025-11-06",
+      "BTC|2025-11-10",
+      "BTC|2025-12-19",
+      "BTC|2025-12-29",
+      "BTC|2026-03-02",
+      "BTC|2026-05-20",
+      "ETH|2024-10-25",
+      "ETH|2024-11-01"
+    ],
+    "evidence": "research/codex/intake/2026/09/codex-research-etf-history-pack-v1-1-row-integrity-v1.json"
+  },
+  "non_session_rows": {
+    "count": 26,
+    "status_value": "NYSE_FULL_CLOSURE",
+    "keys": [
+      "BTC|2024-01-15",
+      "BTC|2024-02-19",
+      "BTC|2024-03-29",
+      "BTC|2024-05-27",
+      "BTC|2024-06-19",
+      "BTC|2024-07-04",
+      "BTC|2024-09-02",
+      "BTC|2024-11-28",
+      "BTC|2024-12-25",
+      "BTC|2025-01-01",
+      "BTC|2025-01-09",
+      "BTC|2025-01-20",
+      "BTC|2025-02-17",
+      "BTC|2025-04-18",
+      "BTC|2025-05-26",
+      "BTC|2025-06-19",
+      "ETH|2024-09-02",
+      "ETH|2024-11-28",
+      "ETH|2024-12-25",
+      "ETH|2025-01-01",
+      "ETH|2025-01-09",
+      "ETH|2025-01-20",
+      "ETH|2025-02-17",
+      "ETH|2025-04-18",
+      "ETH|2025-05-26",
+      "ETH|2025-06-19"
+    ],
+    "evidence": "scripts/experiments/strategy_factor_leakage_e1_production.py#NYSE_CLOSED_2024_2026"
+  },
+  "partitions": {
+    "us_spot_btc_etf_flows_daily_2024.csv": {
+      "rows": 254,
+      "bytes": 22399,
+      "sha256": "db404bff899c2cfc341ad2c55e073bbd20e8db88768a29b2b9f8490cde7b7ccb",
+      "non_sessions": 9,
+      "corrections": 0
+    },
+    "us_spot_btc_etf_flows_daily_2025.csv": {
+      "rows": 257,
+      "bytes": 22809,
+      "sha256": "1fbe03d48f64d32df9c4d6988035c6c9073af30d0fd482ac89fcdf258fd8a290",
+      "non_sessions": 7,
+      "corrections": 7
+    },
+    "us_spot_btc_etf_flows_daily_2026.csv": {
+      "rows": 140,
+      "bytes": 12454,
+      "sha256": "2c2a67589c325bdf45363de3b6c177a311c31abb5686cc4afc79f741bf362b0c",
+      "non_sessions": 0,
+      "corrections": 2
+    },
+    "us_spot_eth_etf_flows_daily_2024.csv": {
+      "rows": 116,
+      "bytes": 8810,
+      "sha256": "790c8a87fb7cbf6c3f665742cf0437acd7ff07a14b450f8ab65625e92b1fceac",
+      "non_sessions": 3,
+      "corrections": 2
+    },
+    "us_spot_eth_etf_flows_daily_2025.csv": {
+      "rows": 257,
+      "bytes": 19759,
+      "sha256": "d5dc050ae44b7e31b2fef63334f4bcf54a34acb8d33791afdc19540bf6e5a6a7",
+      "non_sessions": 7,
+      "corrections": 0
+    },
+    "us_spot_eth_etf_flows_daily_2026.csv": {
+      "rows": 140,
+      "bytes": 10811,
+      "sha256": "7a4074baf2d26fac314b51c1abfe46cdfa81f6ae91d7871e336ffd79db083fa6",
+      "non_sessions": 0,
+      "corrections": 0
+    }
+  },
+  "generated_feature_semantics": {
+    "raw_rows_preserved": true,
+    "trailing_features_trading_sessions_only": true,
+    "closure_rows_increment_session_windows": false,
+    "closure_rows_reset_streaks": false
+  },
+  "knowledge_time": {
+    "assigned_by_pack": false,
+    "status": "NOT_ASSIGNED_BY_ROW_INTEGRITY_PACK",
+    "owner_decision_ref": "research/etf_temporal_integrity/2026-09-23/ETF_KNOWLEDGE_TIME_OWNER_DECISION_v1.json"
+  },
+  "forbidden_authority": [
+    "LIVE_FINALITY",
+    "MARKET_GATE",
+    "PORTFOLIO_ACTION",
+    "MODEL_WEIGHT_CHANGE"
+  ]
+}
