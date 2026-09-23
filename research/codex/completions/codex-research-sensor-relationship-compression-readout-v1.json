@@ -1,0 +1,19 @@
+{
+  "contract": "CODEX_RESEARCH_COMPLETION_RECEIPT_v1",
+  "status": "VERIFIED",
+  "candidate_id": "codex-research-sensor-relationship-compression-readout-v1",
+  "signature": "49ecf37e76b7834b97a5",
+  "candidate_sha256": "d79c0abd29b8426b35f7949b3a4a05258db0fe7f5db56d02b7c6fd4b3bcb5cad",
+  "task_contract_sha256": "e2b9c810e2b98bec84eb34cbe5356b486defdf31a672f256a06d22ca2f6abf8c",
+  "pr_number": 1271,
+  "merge_commit_sha": "ddd8e92178292e0aad98a6aad7159c5658d8bc8e",
+  "verified_at_utc": "2026-09-23T22:41:00Z",
+  "verification_evidence": [
+    "PR #1271 merged the deterministic research-only sensor relationship compression helper, focused tests and generated readout at ddd8e92178292e0aad98a6aad7159c5658d8bc8e.",
+    "Experiment Lifecycle Gate run 35928537124 passed after discovering tests/experiments, alongside successful Data Architecture, Storage Health and Automation Production Health gates.",
+    "Fresh-main readback of 06_RESEARCH_LAB/current_relationship_compression/CURRENT_SENSOR_RELATIONSHIP_COMPRESSION.json blob 61b223007aca0d72948838e2eb12a9ba1793a8b0 contains 54 prospective rows, 2 historical audit rows and 7 semantic-duplicate groups.",
+    "Fresh-main artifact authority is research_only=true and binding/canonical_market_state/market_gate_change/model_weight_change/portfolio_action/automatic_sensor_promotion/automatic_sensor_retirement=false; rules also keep low-linear-correlation=>UNIQUE false, historical proxy=>current validation false and presentation roles=>weights false."
+  ],
+  "post_fix_gate": "DETERMINISTIC_RELATIONSHIP_READOUT_FIXTURE_PASS_PLUS_NO_AUTHORITY_CHANGE_READBACK",
+  "receipt_sha256": "6cf892fa2915770073b2b49b4b26b74d0576b020fd4907067fe475fd441a3cf1"
+}
