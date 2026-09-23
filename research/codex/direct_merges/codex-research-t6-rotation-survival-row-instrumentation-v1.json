@@ -1,0 +1,22 @@
+{
+  "contract": "CODEX_RESEARCH_DIRECT_MERGE_RECEIPT_v1",
+  "status": "DIRECT_MERGE_VERIFIED",
+  "resolution_mode": "DIRECT_NON_CODEX_REPAIR",
+  "authority": "OBSERVABILITY_ONLY_NO_COMPLETION_AUTHORITY",
+  "signature": "5d77a6e68e092eed1ca3",
+  "candidate_id": "codex-research-t6-rotation-survival-row-instrumentation-v1",
+  "candidate_sha256": "5f0b10ac18e001ec132f1d1a2bf1f454648e2c1378d8106e16c0eae3267d76f8",
+  "task_contract_sha256": "2dcf0fce46ce3c00964f9c922cdd0037e56d3f3456660be1b694f7a0a0820162",
+  "branch": "agent/task-20260909-t6-rotation-survival",
+  "pr_number": 841,
+  "merge_commit_sha": "bc303dc6979d2cb40dbc3acadbaa364d9de8094a",
+  "merged_at_utc": "2026-09-13T10:00:53Z",
+  "verified_at_utc": "2026-09-23T22:16:00Z",
+  "post_fix_gate": "PROSPECTIVE_SEQUENCE_FIXTURE_PASS_PLUS_THREE_NATURAL_OBSERVATIONS_WITH_NO_RETROSPECTIVE_OR_INFERRED_T6_FIELDS",
+  "verification_evidence": [
+    "PR #841 merged from the exact transition branch agent/task-20260909-t6-rotation-survival at bc303dc6979d2cb40dbc3acadbaa364d9de8094a.",
+    "Fresh main contains scripts/learning/t6_rotation_survival.py, tests/learning/test_t6_rotation_survival.py and the Framework Learning Operations T6 capture step.",
+    "Two natural observations are currently materialized for 2026-09-14 and 2026-09-15; both preserve inferred=false and retrospective_creation=false. The required third natural observation is not yet present, so this receipt authorizes POST_FIX_OBSERVATION only."
+  ],
+  "receipt_sha256": "6ec25a97886ce559507f52c97e2c3b1a856231768c26b52383dd706df1e79cd7"
+}
