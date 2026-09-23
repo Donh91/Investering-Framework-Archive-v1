@@ -152,6 +152,87 @@ class CodexResearchMergeReconciliationTests(unittest.TestCase):
             self.assertEqual(selected[0]["post_fix_gate_status"], "REQUIRED_NOT_YET_VERIFIED")
             self.assertNotEqual(selected[0]["state"], "RESOLVED")
 
+    def test_direct_non_codex_merge_enters_post_fix_without_fake_transition_or_resolution(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            candidate = self.candidate()
+            candidate_path = root / "research/codex/intake/2026/09/test-merge-reconciliation.json"
+            candidate_path.parent.mkdir(parents=True, exist_ok=True)
+            candidate_path.write_text(json.dumps(candidate, indent=2, sort_keys=True) + "\n")
+            task = owner.build_research_task(root, candidate_path, candidate, owner.canonical_hash(candidate))
+
+            receipt = {
+                "contract": owner.DIRECT_MERGE_CONTRACT,
+                "status": owner.DIRECT_MERGE_STATUS,
+                "resolution_mode": "DIRECT_NON_CODEX_REPAIR",
+                "authority": "OBSERVABILITY_ONLY_NO_COMPLETION_AUTHORITY",
+                "signature": task["signature"],
+                "candidate_id": task["candidate_id"],
+                "candidate_sha256": task["candidate_sha256"],
+                "task_contract_sha256": task["task_contract_sha256"],
+                "branch": "agent/direct-repair",
+                "pr_number": 321,
+                "merge_commit_sha": "d" * 40,
+                "merged_at_utc": "2026-09-13T09:10:00Z",
+                "verified_at_utc": "2026-09-13T09:11:00Z",
+                "post_fix_gate": task["post_fix_gate"],
+                "verification_evidence": ["merged PR implements the candidate scope", "focused regression passed"],
+            }
+            receipt["receipt_sha256"] = owner.canonical_hash({k: v for k, v in receipt.items() if k != "receipt_sha256"})
+            direct_path = root / "research/codex/direct_merges/test-merge-reconciliation.json"
+            direct_path.parent.mkdir(parents=True, exist_ok=True)
+            direct_path.write_text(json.dumps(receipt, indent=2, sort_keys=True) + "\n")
+
+            output = root / "research/remediation"
+            output.mkdir(parents=True, exist_ok=True)
+            (output / "LATEST_REMEDIATION_QUEUE.json").write_text(json.dumps({"items": []}) + "\n")
+            (output / "LATEST_CODEX_READY_TASKS.json").write_text(json.dumps({"tasks": []}) + "\n")
+            (output / "LATEST_NEEDS_MORE_EVIDENCE.json").write_text(json.dumps({"items": []}) + "\n")
+
+            owner.merge(root, output)
+            state = json.loads((root / "LATEST_CODEX_EXECUTION_STATE.json").read_text())
+            selected = [row for row in state["tasks"] if row.get("candidate_id") == "test-merge-reconciliation"]
+            self.assertEqual(len(selected), 1)
+            self.assertEqual(selected[0]["state"], "POST_FIX_OBSERVATION")
+            self.assertEqual(selected[0]["route"], "EVIDENCE")
+            self.assertEqual(selected[0]["resolution_mode"], "DIRECT_NON_CODEX_REPAIR")
+            self.assertEqual(selected[0]["post_fix_gate_status"], "REQUIRED_NOT_YET_VERIFIED")
+            self.assertNotIn("transition_receipt_sha256", selected[0])
+            self.assertNotEqual(selected[0]["state"], "RESOLVED")
+
+            ready = json.loads((output / "LATEST_CODEX_READY_TASKS.json").read_text())
+            self.assertEqual(ready["tasks"], [])
+
+    def test_direct_merge_receipt_must_be_hash_bound_and_task_bound(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            candidate = self.candidate()
+            candidate_path = root / "research/codex/intake/2026/09/test-merge-reconciliation.json"
+            candidate_path.parent.mkdir(parents=True, exist_ok=True)
+            candidate_path.write_text(json.dumps(candidate) + "\n")
+            task = owner.build_research_task(root, candidate_path, candidate, owner.canonical_hash(candidate))
+            path = root / "research/codex/direct_merges/test-merge-reconciliation.json"
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(json.dumps({
+                "contract": owner.DIRECT_MERGE_CONTRACT,
+                "status": owner.DIRECT_MERGE_STATUS,
+                "resolution_mode": "DIRECT_NON_CODEX_REPAIR",
+                "authority": "OBSERVABILITY_ONLY_NO_COMPLETION_AUTHORITY",
+                "signature": task["signature"],
+                "candidate_id": task["candidate_id"],
+                "candidate_sha256": "wrong",
+                "task_contract_sha256": task["task_contract_sha256"],
+                "branch": "agent/direct-repair",
+                "pr_number": 321,
+                "merge_commit_sha": "d" * 40,
+                "merged_at_utc": "2026-09-13T09:10:00Z",
+                "verified_at_utc": "2026-09-13T09:11:00Z",
+                "post_fix_gate": task["post_fix_gate"],
+                "verification_evidence": ["evidence"],
+                "receipt_sha256": "not-valid",
+            }) + "\n")
+            self.assertIsNone(owner.valid_direct_merge_receipt(root, task))
+
     def test_poison_item_does_not_starve_healthy_item(self):
         from unittest.mock import patch
 
