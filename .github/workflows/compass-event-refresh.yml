@@ -18,6 +18,7 @@ on:
     # Fallback only. New owner evidence is normally evaluated immediately after
     # Entry Signal Ledger completes.
     - cron: '55 * * * *'
+      timezone: 'UTC'
   workflow_dispatch:
 
 permissions:

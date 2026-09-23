@@ -5,9 +5,13 @@ on:
     # CET + CEST candidates. The runtime gate activates only the candidate
     # corresponding to 08:32 / 20:32 Europe/Copenhagen.
     - cron: '32 6 * * *'
+      timezone: 'UTC'
     - cron: '32 7 * * *'
+      timezone: 'UTC'
     - cron: '32 18 * * *'
+      timezone: 'UTC'
     - cron: '32 19 * * *'
+      timezone: 'UTC'
   workflow_dispatch:
 
 permissions:
