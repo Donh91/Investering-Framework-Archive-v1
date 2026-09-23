@@ -1,0 +1,31 @@
+{
+  "allowed_change_scope": [
+    "scripts/remediation/reconcile_codex_research_merges.py",
+    "scripts/remediation/merge_codex_research_intake.py",
+    "tests/remediation/test_reconcile_direct_landing.py"
+  ],
+  "branch": "sol/direct-landing-reconcile-v2",
+  "candidate_id": "codex-research-direct-landing-bypasses-merge-reconciliation-v1",
+  "candidate_path": "research/codex/intake/2026/09/codex-research-direct-landing-bypasses-merge-reconciliation-v1.json",
+  "candidate_sha256": "1adcce6239c71d74d7d48c2b7eb81e96285172655b6fb65e13b80f0a69e1abc5",
+  "contract": "CODEX_RESEARCH_TRANSITION_RECEIPT_v1",
+  "forbidden_changes": [
+    "API budget",
+    "canonical authority",
+    "historical artifact rewrite",
+    "market gates",
+    "model weights",
+    "new policy semantics",
+    "paid CFGI or OpenAI execution",
+    "portfolio logic",
+    "threshold or anchor changes",
+    "workflow schedule or trigger changes"
+  ],
+  "objective": "reconcile_codex_research_merges.verify_merged_pr only accepts a merged GitHub PR whose head ref equals the transition branch. Several governed fixes were landed as direct fresh-main replacement commits and their PRs closed unmerged, so the tasks stay IN_REMEDIATION or CODEX_READY indefinitely and invite duplicate Codex work. Add a bounded, evidence-bearing path for this case (for example a direct-landing receipt that binds the main commit SHA, the superseded PR number and a recorded equivalence to the transition branch head or the task's allowed scope), feeding the existing POST_FIX_OBSERVATION/completion flow. Never mark RESOLVED without the task's post-fix gate.",
+  "post_fix_gate": "RECONCILE_TESTS_PASS_PLUS_FIVE_LISTED_TASKS_LEAVE_STALE_STATES",
+  "receipt_sha256": "b4efae1025effe5964cd95ce6653f9c328626ec1ed06e28f4c7152b6d2751baa",
+  "recorded_at_utc": "2026-09-23T21:21:00Z",
+  "signature": "719d63ce62a65a3c08f7",
+  "state": "IN_REMEDIATION",
+  "task_contract_sha256": "09e49ef6ff433fc5269e47bbf1677d4fe19aff1603bfdd3e7e2a1f34ed5c492a"
+}

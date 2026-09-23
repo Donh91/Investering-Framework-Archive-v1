@@ -15,6 +15,7 @@ from scripts.remediation.merge_codex_research_intake import (  # noqa: E402
     canonical_hash,
     now_iso,
     read_json,
+    valid_direct_merge_receipt,
     valid_transition,
 )
 
@@ -159,12 +160,27 @@ def reconcile(
     skipped = 0
 
     for task in tasks:
-        if task.get("source_type") != "RESEARCH_INTAKE" or task.get("state") not in {"IN_REMEDIATION", "POST_FIX_OBSERVATION"}:
+        if task.get("source_type") != "RESEARCH_INTAKE" or task.get("state") not in {"CODEX_READY", "IN_REMEDIATION", "POST_FIX_OBSERVATION"}:
             skipped += 1
             continue
-        # A corrupt item must remain blocked without starving unrelated work.
-        # Never replace an existing receipt to make reconciliation succeed.
+        # A direct-main landing can legitimately have no transition receipt
+        # (for example a task fixed before Codex started it). A hash-bound
+        # direct receipt must still prove that the landing commit is on HEAD/main.
         try:
+            direct = valid_direct_merge_receipt(repo_root, task)
+            if direct is not None:
+                reconciled.append({
+                    "candidate_id": task.get("candidate_id"),
+                    "pr_number": direct.get("pr_number") or direct.get("superseded_pr_number"),
+                    "merge_commit_sha": direct.get("merge_commit_sha") or direct.get("landing_commit_sha"),
+                    "merge_receipt_path": f"research/codex/direct_merges/{task.get('candidate_id')}.json",
+                    "merge_receipt_sha256": direct.get("receipt_sha256"),
+                    "status": "DIRECT_RECEIPT_VERIFIED",
+                    "resolution_mode": direct.get("resolution_mode"),
+                    "next_state": "POST_FIX_OBSERVATION",
+                })
+                continue
+
             transition = valid_transition(repo_root, task)
             if transition is None:
                 pending.append({"candidate_id": task.get("candidate_id"), "reason": "VALID_TRANSITION_REQUIRED"})

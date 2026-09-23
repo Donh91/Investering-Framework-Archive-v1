@@ -5,6 +5,7 @@ import argparse
 import hashlib
 import json
 import re
+import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -253,13 +254,30 @@ def valid_merge_receipt(repo: Path, task: dict[str, Any]) -> dict[str, Any] | No
     return d if declared and declared == actual else None
 
 
+def _commit_is_ancestor_of_head(repo: Path, commit_sha: str) -> bool:
+    """Verify a receipt commit is actually contained in the checked-out main lineage."""
+    if not SHA40.fullmatch(commit_sha):
+        return False
+    try:
+        proc = subprocess.run(
+            ["git", "-C", str(repo), "merge-base", "--is-ancestor", commit_sha, "HEAD"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            check=False,
+        )
+    except OSError:
+        return False
+    return proc.returncode == 0
+
+
 def valid_direct_merge_receipt(repo: Path, task: dict[str, Any]) -> dict[str, Any] | None:
-    """Accept a verified non-Codex merge as post-fix evidence, never as completion."""
+    """Accept verified direct repair evidence as post-fix evidence, never as completion."""
     path = repo / "research/codex/direct_merges" / f"{task['candidate_id']}.json"
     d = read_json(path, {})
     if not d or d.get("contract") != DIRECT_MERGE_CONTRACT or d.get("status") != DIRECT_MERGE_STATUS:
         return None
-    if d.get("resolution_mode") != "DIRECT_NON_CODEX_REPAIR":
+    mode = str(d.get("resolution_mode") or "")
+    if mode not in {"DIRECT_NON_CODEX_REPAIR", "DIRECT_MAIN_LANDING"}:
         return None
     if d.get("authority") != "OBSERVABILITY_ONLY_NO_COMPLETION_AUTHORITY":
         return None
@@ -269,17 +287,34 @@ def valid_direct_merge_receipt(repo: Path, task: dict[str, Any]) -> dict[str, An
         return None
     if d.get("post_fix_gate") != task.get("post_fix_gate"):
         return None
-    if not SHA40.fullmatch(str(d.get("merge_commit_sha") or "")):
-        return None
-    pr_number = d.get("pr_number")
-    if isinstance(pr_number, bool) or not isinstance(pr_number, int) or pr_number <= 0:
-        return None
+
     branch = str(d.get("branch") or "")
     if not branch or branch in {"main", "master"} or branch.startswith("backup-") or branch.startswith("backup/"):
         return None
     evidence = d.get("verification_evidence")
     if not isinstance(evidence, list) or not evidence or any(not isinstance(x, str) or not x.strip() for x in evidence):
         return None
+
+    if mode == "DIRECT_NON_CODEX_REPAIR":
+        commit_sha = str(d.get("merge_commit_sha") or "")
+        pr_number = d.get("pr_number")
+        if not SHA40.fullmatch(commit_sha):
+            return None
+        if isinstance(pr_number, bool) or not isinstance(pr_number, int) or pr_number <= 0:
+            return None
+    else:
+        commit_sha = str(d.get("landing_commit_sha") or "")
+        pr_number = d.get("superseded_pr_number")
+        equivalence = d.get("equivalence_evidence")
+        if isinstance(pr_number, bool) or not isinstance(pr_number, int) or pr_number <= 0:
+            return None
+        if not isinstance(equivalence, list) or not equivalence or any(not isinstance(x, str) or not x.strip() for x in equivalence):
+            return None
+        # This is the core direct-landing safety property: a well-shaped receipt is
+        # insufficient unless the referenced replacement commit is truly on this main lineage.
+        if not _commit_is_ancestor_of_head(repo, commit_sha):
+            return None
+
     declared = str(d.get("receipt_sha256") or "")
     actual = canonical_hash({k: v for k, v in d.items() if k != "receipt_sha256"})
     return d if declared and declared == actual else None
@@ -454,13 +489,13 @@ def merge(repo: Path, output_dir: Path) -> dict[str, Any]:
             elif direct_merge_receipt:
                 task["state"] = "POST_FIX_OBSERVATION"
                 task["route"] = "EVIDENCE"
-                task["resolution_mode"] = "DIRECT_NON_CODEX_REPAIR"
+                task["resolution_mode"] = direct_merge_receipt.get("resolution_mode")
                 task["direct_merge_receipt_path"] = f"research/codex/direct_merges/{cid}.json"
                 task["direct_merge_receipt_sha256"] = direct_merge_receipt.get("receipt_sha256")
                 task["remediation_branch"] = direct_merge_receipt.get("branch")
-                task["pr_number"] = direct_merge_receipt.get("pr_number")
-                task["merge_commit_sha"] = direct_merge_receipt.get("merge_commit_sha")
-                task["merged_at_utc"] = direct_merge_receipt.get("merged_at_utc")
+                task["pr_number"] = direct_merge_receipt.get("pr_number") or direct_merge_receipt.get("superseded_pr_number")
+                task["merge_commit_sha"] = direct_merge_receipt.get("merge_commit_sha") or direct_merge_receipt.get("landing_commit_sha")
+                task["merged_at_utc"] = direct_merge_receipt.get("merged_at_utc") or direct_merge_receipt.get("landed_at_utc")
                 task["merge_verified_at_utc"] = direct_merge_receipt.get("verified_at_utc")
                 task["post_fix_gate_status"] = "REQUIRED_NOT_YET_VERIFIED"
             elif transition:
