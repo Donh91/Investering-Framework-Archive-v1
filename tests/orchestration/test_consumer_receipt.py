@@ -181,6 +181,38 @@ def test_framework_handoff_separates_receipt_consumers_from_routing_labels(tmp_p
         assert label not in manifest["consumers"]
 
 
+class ConsumerReceiptModuleFunctionCollectionTests(unittest.TestCase):
+    """Unittest compatibility wrappers for the eight module-level tests above."""
+
+    def run_with_tmp_path(self, fn) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            fn(Path(directory))
+
+    def test_consumer_receipt_passes_only_when_all_expected_inputs_are_verified_collected(self) -> None:
+        self.run_with_tmp_path(test_consumer_receipt_passes_only_when_all_expected_inputs_are_verified)
+
+    def test_consumer_receipt_is_partial_when_expected_input_is_not_declared_collected(self) -> None:
+        self.run_with_tmp_path(test_consumer_receipt_is_partial_when_expected_input_is_not_declared)
+
+    def test_consumer_receipt_is_partial_when_manifest_binding_is_stale_collected(self) -> None:
+        self.run_with_tmp_path(test_consumer_receipt_is_partial_when_manifest_binding_is_stale)
+
+    def test_consumer_receipt_degrades_when_handoff_snapshot_is_too_old_collected(self) -> None:
+        self.run_with_tmp_path(test_consumer_receipt_degrades_when_handoff_snapshot_is_too_old)
+
+    def test_consumer_receipt_is_unknown_when_manifest_is_unavailable_collected(self) -> None:
+        self.run_with_tmp_path(test_consumer_receipt_is_unknown_when_manifest_is_unavailable)
+
+    def test_stamp_target_recomputes_semantic_self_hash_after_receipt_collected(self) -> None:
+        self.run_with_tmp_path(test_stamp_target_recomputes_semantic_self_hash_after_receipt)
+
+    def test_framework_handoff_file_ref_accepts_absolute_path_with_relative_repo_root_collected(self) -> None:
+        test_framework_handoff_file_ref_accepts_absolute_path_with_relative_repo_root()
+
+    def test_framework_handoff_separates_receipt_consumers_from_routing_labels_collected(self) -> None:
+        self.run_with_tmp_path(test_framework_handoff_separates_receipt_consumers_from_routing_labels)
+
+
 class ConsumerReceiptInvariantGateTest(unittest.TestCase):
     def test_runtime_consumer_topology_is_receipt_only(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
