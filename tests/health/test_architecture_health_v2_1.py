@@ -29,6 +29,59 @@ class ArchitectureHealthV21Tests(unittest.TestCase):
             self.assertEqual(stamp, datetime.fromtimestamp(1785844800, timezone.utc))
             self.assertEqual(value['status'], 'READY')
 
+    def test_capture_latest_pointer_cannot_replace_capture_owner_rows(self):
+        # The daily capture pointer repeats the target captured_at_utc, so the
+        # (timestamp, path) tie-break picks captures/LATEST.json ('L' > '2') and
+        # the owner population silently becomes 0/0.
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / '03_DAILY_CAPTURE_LOGS/captures'
+            capture = root / '2026/09/22/165540_gh-1-1.json'
+            capture.parent.mkdir(parents=True)
+            stamp = '2026-09-22T16:55:40Z'
+            capture.write_text(json.dumps({
+                'captured_at_utc': stamp,
+                'contract': 'DAILY_LIVE_ANCHOR_INDEX_v3',
+                'owners': [{'owner_id': 'a', 'status': 'PASS'}, {'owner_id': 'b', 'status': 'DISABLED'}],
+            }))
+            (root / 'LATEST.json').write_text(json.dumps({
+                'captured_at_utc': stamp,
+                'contract': 'DAILY_LIVE_ANCHOR_LATEST_POINTER_v1',
+                'path': 'captures/2026/09/22/165540_gh-1-1.json',
+            }))
+            unfiltered_path, _, _ = module.latest_json(root)
+            self.assertEqual(unfiltered_path.name, 'LATEST.json')
+            path, value, ts = module.latest_json(root, exclude_names=('LATEST.json',))
+            self.assertEqual(path, capture)
+            self.assertEqual(len(value['owners']), 2)
+            self.assertEqual(ts, datetime(2026, 9, 22, 16, 55, 40, tzinfo=timezone.utc))
+
+    def test_capture_pointer_exclusion_reports_real_owner_coverage_not_empty(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp)
+            captures = repo / '03_DAILY_CAPTURE_LOGS/captures'
+            capture = captures / '2026/09/22/165540_gh-1-1.json'
+            capture.parent.mkdir(parents=True)
+            stamp = datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace('+00:00', 'Z')
+            capture.write_text(json.dumps({'captured_at_utc': stamp, 'owners': [
+                {'owner_id': 'a', 'status': 'PASS'},
+                {'owner_id': 'b', 'status': 'PASS'},
+            ]}))
+            (captures / 'LATEST.json').write_text(json.dumps({'captured_at_utc': stamp, 'path': 'x'}))
+            out_json = repo / 'health.json'
+            out_md = repo / 'health.md'
+            import sys
+            argv = sys.argv
+            sys.argv = ['build_architecture_health.py', '--repo-root', str(repo), '--json-output', str(out_json), '--md-output', str(out_md)]
+            try:
+                module.main()
+            finally:
+                sys.argv = argv
+            health = json.loads(out_json.read_text())
+            self.assertEqual(health['owners']['count'], 2)
+            self.assertEqual(health['owners']['pass_count'], 2)
+            self.assertNotIn('OWNER_POPULATION_EMPTY', health['blockers'])
+            self.assertEqual(health['latest_capture_path'], str(capture))
+
     def test_nested_cfgi_billing_is_discovered(self):
         owner = {'files': [{'summary': {'billing': {'credits_remaining': 98765}}}]}
         self.assertEqual(module.find_cfgi_remaining(owner), 98765)
