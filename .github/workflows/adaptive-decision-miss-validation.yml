@@ -28,12 +28,74 @@ jobs:
           python-version: '3.12'
 
       - name: Enforce bounded miss and validation API budgets
+        id: budget
+        shell: bash
         run: |
-          python scripts/api_agent/check_api_lane_budget.py --receipt-root research/api_agent/outputs --task DECISION_MISS_AUDIT --cap-usd 1.5 --reserve-usd 0.05
-          python scripts/api_agent/check_api_lane_budget.py --receipt-root research/api_agent/outputs --task EVIDENCE_GAP_VALIDATION --cap-usd 1.5 --reserve-usd 0.05
-          python scripts/api_agent/check_monthly_cost_guard.py --receipt-root research/api_agent/outputs --hard-stop-usd 20 --reserve-usd 2.0
+          mkdir -p runtime/adaptive-budget
+          set +e
+          python scripts/api_agent/check_api_lane_budget.py --receipt-root research/api_agent/outputs --task DECISION_MISS_AUDIT --cap-usd 1.5 --reserve-usd 0.05 > runtime/adaptive-budget/decision.json 2> runtime/adaptive-budget/decision.err
+          decision_rc=$?
+          python scripts/api_agent/check_api_lane_budget.py --receipt-root research/api_agent/outputs --task EVIDENCE_GAP_VALIDATION --cap-usd 1.5 --reserve-usd 0.05 > runtime/adaptive-budget/validation.json 2> runtime/adaptive-budget/validation.err
+          validation_rc=$?
+          python scripts/api_agent/check_monthly_cost_guard.py --receipt-root research/api_agent/outputs --hard-stop-usd 20 --reserve-usd 2.0 > runtime/adaptive-budget/monthly.json 2> runtime/adaptive-budget/monthly.err
+          monthly_rc=$?
+          set -e
+          cat runtime/adaptive-budget/decision.json
+          cat runtime/adaptive-budget/validation.json
+          cat runtime/adaptive-budget/monthly.json
+          cat runtime/adaptive-budget/decision.err >&2 || true
+          cat runtime/adaptive-budget/validation.err >&2 || true
+          cat runtime/adaptive-budget/monthly.err >&2 || true
+          DECISION_RC="$decision_rc" VALIDATION_RC="$validation_rc" MONTHLY_RC="$monthly_rc" python - <<'PY'
+          import json, os
+          from pathlib import Path
+
+          checks = [
+              ("DECISION_MISS_AUDIT", Path("runtime/adaptive-budget/decision.json"), int(os.environ["DECISION_RC"])),
+              ("EVIDENCE_GAP_VALIDATION", Path("runtime/adaptive-budget/validation.json"), int(os.environ["VALIDATION_RC"])),
+              ("MONTHLY_API_COST", Path("runtime/adaptive-budget/monthly.json"), int(os.environ["MONTHLY_RC"])),
+          ]
+          holds = []
+          for label, path, rc in checks:
+              try:
+                  row = json.loads(path.read_text())
+              except Exception as exc:
+                  raise SystemExit(f"budget_guard_output_invalid:{label}:{exc}")
+              status = row.get("status")
+              errors = row.get("cost_evidence_errors")
+              remaining = row.get("remaining_usd")
+              reserve = row.get("reserve_usd")
+              if status == "PASS":
+                  if rc != 0 or errors:
+                      raise SystemExit(f"budget_guard_pass_inconsistent:{label}")
+                  continue
+              clean_budget_hold = (
+                  status == "BLOCKED"
+                  and rc != 0
+                  and errors == []
+                  and isinstance(remaining, (int, float))
+                  and not isinstance(remaining, bool)
+                  and isinstance(reserve, (int, float))
+                  and not isinstance(reserve, bool)
+                  and remaining <= reserve
+              )
+              if not clean_budget_hold:
+                  raise SystemExit(f"budget_guard_block_not_clean:{label}")
+              holds.append(label)
+
+          output = Path(os.environ["GITHUB_OUTPUT"])
+          with output.open("a") as handle:
+              handle.write(f"eligible={'false' if holds else 'true'}\n")
+              handle.write(f"hold_reason={','.join(holds) if holds else 'NONE'}\n")
+          PY
+
+      - name: Record expected budget hold
+        if: steps.budget.outputs.eligible != 'true'
+        run: |
+          echo "Adaptive decision-miss / gap-validation skipped by existing API budget guard: ${{ steps.budget.outputs.hold_reason }}" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Audit matured evidence for decision and timing misses
+        if: steps.budget.outputs.eligible == 'true'
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
@@ -53,12 +115,14 @@ jobs:
             --max-documents 28
 
       - name: Persist decision miss memory
+        if: steps.budget.outputs.eligible == 'true'
         run: |
           python scripts/api_agent/decision_miss_registry.py \
             --audit runtime/adaptive-miss/MISS_AUDIT.json \
             --registry research/evidence_gap/ADAPTIVE_DECISION_MISS_REGISTRY_v1.json
 
       - name: Route miss-derived evidence gaps through existing closure engine
+        if: steps.budget.outputs.eligible == 'true'
         run: |
           python scripts/api_agent/evidence_gap_registry.py \
             --audit runtime/adaptive-miss/GAP_AUDIT_FROM_MISSES.json \
@@ -67,6 +131,7 @@ jobs:
             --queue research/evidence_gap/ADAPTIVE_EVIDENCE_GAP_QUEUE_v1.json
 
       - name: Validate gap value on non-discovery evidence
+        if: steps.budget.outputs.eligible == 'true'
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
@@ -92,6 +157,7 @@ jobs:
             --min-days 14
 
       - name: Materialize immutable audit receipts
+        if: steps.budget.outputs.eligible == 'true'
         run: |
           STAMP=$(date -u +%Y/%m/%d/%H%M%S)
           MDEST="research/api_agent/outputs/decision_miss/${STAMP}"
@@ -103,6 +169,7 @@ jobs:
           cp runtime/gap-validation/VALIDATION_RECEIPT.json "$VDEST/VALIDATION_RECEIPT.json"
 
       - name: Commit miss and validation memory with verified readback
+        if: steps.budget.outputs.eligible == 'true'
         shell: bash
         run: |
           git config user.name 'framework-adaptive-learning-bot'
