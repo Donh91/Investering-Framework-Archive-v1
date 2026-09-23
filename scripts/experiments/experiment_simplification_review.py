@@ -85,6 +85,24 @@ def recommendation(row: dict[str, Any], semantic_group_size: int, high_zero_outc
 def build_review(registry: dict[str, Any], candidates: dict[str, dict[str, Any]]) -> dict[str, Any]:
     rows = [row for row in registry.get("candidates", []) if isinstance(row, dict)]
     by_id = {str(row.get("candidate_id")): row for row in rows if row.get("candidate_id")}
+    registry_id_rows: dict[str, list[dict[str, Any]]] = {}
+    for row in rows:
+        cid = str(row.get("candidate_id") or "")
+        if cid:
+            registry_id_rows.setdefault(cid, []).append(row)
+    duplicate_candidate_id_rows = [
+        {
+            "candidate_id": cid,
+            "row_count": len(items),
+            "created_at_utc_values": sorted({str(item.get("created_at_utc") or "") for item in items}),
+            "states": sorted({str(item.get("state") or "") for item in items}),
+            "titles": sorted({str(item.get("title") or "") for item in items}),
+            "review": "REGISTRY_DUPLICATE_ID_READ_ONLY_REVIEW",
+            "automatic_action": False,
+        }
+        for cid, items in sorted(registry_id_rows.items())
+        if len(items) > 1
+    ]
 
     semantic_groups: dict[str, list[str]] = {}
     for cid, candidate in candidates.items():
@@ -210,7 +228,10 @@ def build_review(registry: dict[str, Any], candidates: dict[str, dict[str, Any]]
             "candidate_history_mutation": False,
         },
         "recommendation_vocabulary": sorted(ALLOWED_RECOMMENDATIONS),
+        "registry_row_count": len(rows),
         "candidate_count": len(reviewed),
+        "unique_candidate_count": len(by_id),
+        "duplicate_candidate_id_rows": duplicate_candidate_id_rows,
         "review_counts": counts,
         "high_observation_zero_outcome_definition": {
             "population": "INCUBATING_WITH_ZERO_MATURED_OUTCOMES",
