@@ -1,0 +1,1061 @@
+{
+ "contract": "ETF_REVISION_SUMMARY_v1",
+ "definitions": {
+  "DATA_REVISION": "a later vintage of the same session carries a different fund or total value",
+  "KNOWLEDGE_TIME_DELAY": "no value change; the session was absent, all-dash or incomplete when an attempt looked (counted in the policy comparison, never here)",
+  "taxonomy": [
+   "LATE_FUND_VALUE",
+   "NEW_FUND_BACKFILL",
+   "TOTAL_RECOMPUTE",
+   "SCHEMA_EXTENSION",
+   "SOURCE_CORRECTION",
+   "LATE_PUBLICATION",
+   "UNKNOWN_REVISION"
+  ],
+  "excluded_not_source_revisions": [
+   "ETH 2026-07-20 3.7 (transcription error, superseded 2026-07-22T06:03:35Z)",
+   "11 malformed v1 pack rows (#1212 defect, not a source vintage)"
+  ]
+ },
+ "revised_sessions": 35,
+ "revised_sessions_btc": 14,
+ "revised_sessions_eth": 21,
+ "revision_events": 39,
+ "by_kind_and_asset": {
+  "LATE_FUND_VALUE|BTC": 14,
+  "LATE_FUND_VALUE|ETH": 12,
+  "NEW_FUND_BACKFILL|ETH": 13
+ },
+ "per_kind": {
+  "LATE_FUND_VALUE": {
+   "events": 26,
+   "sessions": 26,
+   "btc": 14,
+   "eth": 12,
+   "abs_total_delta_usd_m": {
+    "n": 26,
+    "median": 60.1,
+    "max": 503.0,
+    "p90": 239.3
+   },
+   "lag_after_session_close_h": {
+    "n": 26,
+    "median": 11.41,
+    "max": 30.59,
+    "p90": 30.37
+   },
+   "lag_after_first_observation_h": {
+    "n": 26,
+    "median": 4.46,
+    "max": 24.23,
+    "p90": 24.04
+   }
+  },
+  "NEW_FUND_BACKFILL": {
+   "events": 13,
+   "sessions": 13,
+   "btc": 0,
+   "eth": 13,
+   "abs_total_delta_usd_m": {
+    "n": 13,
+    "median": 0.8,
+    "max": 14.3,
+    "p90": 5.1
+   },
+   "lag_after_session_close_h": {
+    "n": 13,
+    "median": 835.48,
+    "max": 1363.48,
+    "p90": 1315.48
+   },
+   "lag_after_first_observation_h": {
+    "n": 13,
+    "median": 829.12,
+    "max": 1060.69,
+    "p90": 1060.69
+   }
+  }
+ },
+ "kinds_with_zero_events": [
+  "SCHEMA_EXTENSION",
+  "SOURCE_CORRECTION",
+  "TOTAL_RECOMPUTE",
+  "UNKNOWN_REVISION"
+ ],
+ "schema_extension_without_value_change_sessions": 527,
+ "late_publication_note": "no session was proven absent after its close by an automated attempt (FLO/settled first attempts after close already listed the row); publication-time lower bounds therefore stay the session close",
+ "abs_total_delta_usd_m": {
+  "n": 39,
+  "median": 24.3,
+  "max": 503.0,
+  "p90": 209.2
+ },
+ "lag_after_session_close_h": {
+  "n": 39,
+  "median": 11.82,
+  "max": 1363.48,
+  "p90": 1195.48
+ },
+ "lag_after_first_observation_h": {
+  "n": 39,
+  "median": 4.72,
+  "max": 1060.69,
+  "p90": 1060.69
+ },
+ "max_observed_revision_lag": {
+  "after_close_h": 1363.48,
+  "event": {
+   "asset": "ETH",
+   "session_date": "2026-07-28",
+   "kind": "NEW_FUND_BACKFILL",
+   "from_source": "FARSIDE_ETF_OWNER_SNAPSHOT_v4",
+   "to_source": "LAB_LIVE_READ_2026_09_23",
+   "from_observed_at": "2026-08-11T03:12:13.766467Z",
+   "to_observed_at": "2026-09-23T15:29:04.427937Z",
+   "total_from": 9.4,
+   "total_to": 14.5,
+   "total_delta": 5.1,
+   "lag_after_first_observation_h": 1060.69,
+   "lag_after_session_close_h": 1363.48,
+   "components": {
+    "NEW_FUND_BACKFILL": 5.1
+   }
+  }
+ },
+ "sign_changes": [
+  {
+   "asset": "BTC",
+   "session": "2026-08-11",
+   "from": -42.4,
+   "to": 7.8
+  },
+  {
+   "asset": "ETH",
+   "session": "2026-08-10",
+   "from": 5.3,
+   "to": -14.6
+  }
+ ],
+ "zero_to_value_changes": [
+  {
+   "asset": "BTC",
+   "session": "2026-09-08",
+   "to": -46.6
+  },
+  {
+   "asset": "ETH",
+   "session": "2026-08-12",
+   "to": 7.4
+  },
+  {
+   "asset": "ETH",
+   "session": "2026-09-08",
+   "to": -24.3
+  }
+ ],
+ "material_revisions_abs_delta_ge_100m": [
+  {
+   "asset": "BTC",
+   "session": "2026-08-17",
+   "kind": "LATE_FUND_VALUE",
+   "from": 137.3,
+   "to": 297.5,
+   "to_source": "FARSIDE_ETF_OWNER_SNAPSHOT_v4"
+  },
+  {
+   "asset": "BTC",
+   "session": "2026-08-18",
+   "kind": "LATE_FUND_VALUE",
+   "from": 45.7,
+   "to": 189.3,
+   "to_source": "DAILY_SETTLED_ETF_CALIBRATION_v2"
+  },
+  {
+   "asset": "BTC",
+   "session": "2026-08-19",
+   "kind": "LATE_FUND_VALUE",
+   "from": 164.2,
+   "to": 517.2,
+   "to_source": "FARSIDE_ETF_OWNER_SNAPSHOT_v4"
+  },
+  {
+   "asset": "BTC",
+   "session": "2026-08-20",
+   "kind": "LATE_FUND_VALUE",
+   "from": 103.3,
+   "to": 606.3,
+   "to_source": "DAILY_SETTLED_ETF_CALIBRATION_v2"
+  },
+  {
+   "asset": "BTC",
+   "session": "2026-08-21",
+   "kind": "LATE_FUND_VALUE",
+   "from": 68.2,
+   "to": 307.5,
+   "to_source": "DAILY_SETTLED_ETF_CALIBRATION_v2"
+  },
+  {
+   "asset": "BTC",
+   "session": "2026-08-24",
+   "kind": "LATE_FUND_VALUE",
+   "from": 128.7,
+   "to": 337.6,
+   "to_source": "DAILY_SETTLED_ETF_CALIBRATION_v2"
+  },
+  {
+   "asset": "BTC",
+   "session": "2026-08-25",
+   "kind": "LATE_FUND_VALUE",
+   "from": 29.9,
+   "to": 314.3,
+   "to_source": "DAILY_SETTLED_ETF_CALIBRATION_v2"
+  },
+  {
+   "asset": "ETH",
+   "session": "2026-08-19",
+   "kind": "LATE_FUND_VALUE",
+   "from": 17.7,
+   "to": 186.8,
+   "to_source": "FARSIDE_ETF_OWNER_SNAPSHOT_v4"
+  },
+  {
+   "asset": "ETH",
+   "session": "2026-08-20",
+   "kind": "LATE_FUND_VALUE",
+   "from": 10.3,
+   "to": 219.5,
+   "to_source": "DAILY_SETTLED_ETF_CALIBRATION_v2"
+  },
+  {
+   "asset": "ETH",
+   "session": "2026-08-21",
+   "kind": "LATE_FUND_VALUE",
+   "from": 23.3,
+   "to": 184.0,
+   "to_source": "DAILY_SETTLED_ETF_CALIBRATION_v2"
+  },
+  {
+   "asset": "ETH",
+   "session": "2026-08-25",
+   "kind": "LATE_FUND_VALUE",
+   "from": 25.8,
+   "to": 179.8,
+   "to_source": "DAILY_SETTLED_ETF_CALIBRATION_v2"
+  }
+ ],
+ "rolling_feature_changes_first_vs_latest_vintage_W30": {
+  "BTC": {
+   "total_usd_millions": {
+    "rows_changed": 14,
+    "max_abs_change": 503.0,
+    "first_dates": [
+     "2026-07-16",
+     "2026-08-10",
+     "2026-08-11"
+    ]
+   },
+   "rolling_net_flow_3s_usd_millions": {
+    "rows_changed": 20,
+    "max_abs_change": 1095.3,
+    "first_dates": [
+     "2026-07-16",
+     "2026-07-17",
+     "2026-07-20"
+    ]
+   },
+   "rolling_net_flow_5s_usd_millions": {
+    "rows_changed": 26,
+    "max_abs_change": 1588.6,
+    "first_dates": [
+     "2026-07-16",
+     "2026-07-17",
+     "2026-07-20"
+    ]
+   },
+   "rolling_net_flow_10s_usd_millions": {
+    "rows_changed": 40,
+    "max_abs_change": 1892.4,
+    "first_dates": [
+     "2026-07-16",
+     "2026-07-17",
+     "2026-07-20"
+    ]
+   },
+   "rolling_net_flow_20s_usd_millions": {
+    "rows_changed": 48,
+    "max_abs_change": 1845.8,
+    "first_dates": [
+     "2026-07-16",
+     "2026-07-17",
+     "2026-07-20"
+    ]
+   },
+   "signed_flow_streak_sessions": {
+    "rows_changed": 8,
+    "max_abs_change": 3,
+    "first_dates": [
+     "2026-08-11",
+     "2026-08-12",
+     "2026-08-13"
+    ]
+   },
+   "reversal_flag": {
+    "rows_changed": 3,
+    "max_abs_change": null,
+    "first_dates": [
+     "2026-08-11",
+     "2026-08-12",
+     "2026-09-08"
+    ]
+   }
+  },
+  "ETH": {
+   "total_usd_millions": {
+    "rows_changed": 21,
+    "max_abs_change": 210.4,
+    "first_dates": [
+     "2026-07-28",
+     "2026-07-29",
+     "2026-07-30"
+    ]
+   },
+   "rolling_net_flow_3s_usd_millions": {
+    "rows_changed": 34,
+    "max_abs_change": 543.3,
+    "first_dates": [
+     "2026-07-28",
+     "2026-07-29",
+     "2026-07-30"
+    ]
+   },
+   "rolling_net_flow_5s_usd_millions": {
+    "rows_changed": 39,
+    "max_abs_change": 788.2,
+    "first_dates": [
+     "2026-07-28",
+     "2026-07-29",
+     "2026-07-30"
+    ]
+   },
+   "rolling_net_flow_10s_usd_millions": {
+    "rows_changed": 40,
+    "max_abs_change": 887.4,
+    "first_dates": [
+     "2026-07-28",
+     "2026-07-29",
+     "2026-07-30"
+    ]
+   },
+   "rolling_net_flow_20s_usd_millions": {
+    "rows_changed": 40,
+    "max_abs_change": 883.0,
+    "first_dates": [
+     "2026-07-28",
+     "2026-07-29",
+     "2026-07-30"
+    ]
+   },
+   "signed_flow_streak_sessions": {
+    "rows_changed": 5,
+    "max_abs_change": 6,
+    "first_dates": [
+     "2026-08-10",
+     "2026-08-11",
+     "2026-08-12"
+    ]
+   },
+   "reversal_flag": {
+    "rows_changed": 5,
+    "max_abs_change": null,
+    "first_dates": [
+     "2026-08-10",
+     "2026-08-11",
+     "2026-08-12"
+    ]
+   }
+  }
+ },
+ "no_source_corrections_in_history": "all 1127 non-malformed, non-closure v1 rows equal the 2026-09-23 live vintage (zero-fill equivalence); no historical value was restated between 2026-07-26 and 2026-09-23 except the MSSE column",
+ "pending_all_dash_rows_accepted_as_zero_flow": [
+  "BTC 2026-09-08 and ETH 2026-09-08 at 2026-09-09T05:55:36Z: every fund '-', Total 0.0, parity True, session_final True, owner status PASS"
+ ],
+ "settled_rows_stored_with_unknown_cells": 7,
+ "downstream": {
+  "daily_director_contexts_with_false_final_settled_rows": 15,
+  "daily_director_outputs_quoting_them": [
+   "research/api_agent/outputs/daily/2026/08/18/093532/DAILY_DIRECTOR_OUTPUT.json (BTC 137.3, ETH 5.0; final 297.5 / 30.9)",
+   "research/api_agent/outputs/daily/2026/08/18/141002/DAILY_DIRECTOR_OUTPUT.json",
+   "research/api_agent/outputs/daily/2026/08/18/214942/DAILY_DIRECTOR_OUTPUT.json",
+   "research/api_agent/outputs/daily/2026/08/20/093603/DAILY_DIRECTOR_OUTPUT.json (BTC 164.2, ETH 17.7 'passed parity'; final 517.2 / 189.1 incl. MSSE)",
+   "research/api_agent/outputs/daily/2026/08/20/215544/DAILY_DIRECTOR_OUTPUT.json ('Settled ETF context is verified for 2026-08-19: BTC 164.2')"
+  ],
+  "authority_of_consumer": "SHADOW_CONTEXT_ONLY (director); forecast_candidates emitted in those runs; causal effect of the ETF numbers on the candidates is not attributable -> UNKNOWN",
+  "weekly_settled_calibration_W34": "used the corrected signatures (297.5 / 517.2) - SAFE because it reads the latest signature at freeze time",
+  "stage_1_etf_flow_leg_2026_07_16": "live gate evaluated NOT_FIRED at 03:41:48Z on the provisional row (IBIT not reported) and ratified at 06:34:00Z after the late IBIT value - handled correctly by humans, not by code"
+ },
+ "events": [
+  {
+   "asset": "BTC",
+   "session_date": "2026-07-16",
+   "kind": "LATE_FUND_VALUE",
+   "from_source": "DATA_PING_ACCEPTED_PAYLOAD",
+   "to_source": "DATA_PING_FARSIDE_SUPPLEMENT",
+   "from_observed_at": "2026-07-17T03:41:48Z",
+   "to_observed_at": "2026-07-17T06:34:00Z",
+   "total_from": 45.7,
+   "total_to": 79.1,
+   "total_delta": 33.4,
+   "lag_after_first_observation_h": 2.87,
+   "lag_after_session_close_h": 10.57,
+   "components": {
+    "LATE_FUND_VALUE": 33.4
+   }
+  },
+  {
+   "asset": "BTC",
+   "session_date": "2026-08-10",
+   "kind": "LATE_FUND_VALUE",
+   "from_source": "FARSIDE_ETF_OWNER_SNAPSHOT_v4",
+   "to_source": "DAILY_SETTLED_ETF_CALIBRATION_v2",
+   "from_observed_at": "2026-08-11T03:12:13.766467Z",
+   "to_observed_at": "2026-08-11T07:24:21.497046Z",
+   "total_from": -91.0,
+   "total_to": -144.6,
+   "total_delta": -53.6,
+   "lag_after_first_observation_h": 4.26,
+   "lag_after_session_close_h": 11.41,
+   "components": {
+    "LATE_FUND_VALUE": -53.6
+   }
+  },
+  {
+   "asset": "BTC",
+   "session_date": "2026-08-11",
+   "kind": "LATE_FUND_VALUE",
+   "from_source": "FARSIDE_ETF_OWNER_SNAPSHOT_v4",
+   "to_source": "DAILY_SETTLED_ETF_CALIBRATION_v2",
+   "from_observed_at": "2026-08-12T03:30:35.669589Z",
+   "to_observed_at": "2026-08-12T07:47:50.031472Z",
+   "total_from": -42.4,
+   "total_to": 7.8,
+   "total_delta": 50.2,
+   "lag_after_first_observation_h": 4.33,
+   "lag_after_session_close_h": 11.8,
+   "components": {
+    "LATE_FUND_VALUE": 50.2
+   }
+  },
+  {
+   "asset": "BTC",
+   "session_date": "2026-08-12",
+   "kind": "LATE_FUND_VALUE",
+   "from_source": "FARSIDE_ETF_OWNER_SNAPSHOT_v4",
+   "to_source": "DAILY_SETTLED_ETF_CALIBRATION_v2",
+   "from_observed_at": "2026-08-13T03:33:48.862213Z",
+   "to_observed_at": "2026-08-13T07:49:09.657359Z",
+   "total_from": -46.8,
+   "total_to": -61.1,
+   "total_delta": -14.3,
+   "lag_after_first_observation_h": 4.29,
+   "lag_after_session_close_h": 11.82,
+   "components": {
+    "LATE_FUND_VALUE": -14.3
+   }
+  },
+  {
+   "asset": "BTC",
+   "session_date": "2026-08-13",
+   "kind": "LATE_FUND_VALUE",
+   "from_source": "FARSIDE_ETF_OWNER_SNAPSHOT_v4",
+   "to_source": "DAILY_SETTLED_ETF_CALIBRATION_v2",
+   "from_observed_at": "2026-08-14T03:31:17.641411Z",
+   "to_observed_at": "2026-08-14T07:47:15.566369Z",
+   "total_from": -125.4,
+   "total_to": -131.1,
+   "total_delta": -5.7,
+   "lag_after_first_observation_h": 4.31,
+   "lag_after_session_close_h": 11.79,
+   "components": {
+    "LATE_FUND_VALUE": -5.7
+   }
+  },
+  {
+   "asset": "BTC",
+   "session_date": "2026-08-14",
+   "kind": "LATE_FUND_VALUE",
+   "from_source": "FARSIDE_ETF_OWNER_SNAPSHOT_v4",
+   "to_source": "DAILY_SETTLED_ETF_CALIBRATION_v2",
+   "from_observed_at": "2026-08-15T02:27:43.454308Z",
+   "to_observed_at": "2026-08-15T06:55:07.498208Z",
+   "total_from": -0.7,
+   "total_to": -56.2,
+   "total_delta": -55.5,
+   "lag_after_first_observation_h": 4.46,
+   "lag_after_session_close_h": 10.92,
+   "components": {
+    "LATE_FUND_VALUE": -55.5
+   }
+  },
+  {
+   "asset": "BTC",
+   "session_date": "2026-08-17",
+   "kind": "LATE_FUND_VALUE",
+   "from_source": "DAILY_SETTLED_ETF_CALIBRATION_v2",
+   "to_source": "FARSIDE_ETF_OWNER_SNAPSHOT_v4",
+   "from_observed_at": "2026-08-18T07:01:04.073497Z",
+   "to_observed_at": "2026-08-19T02:22:15.786641Z",
+   "total_from": 137.3,
+   "total_to": 297.5,
+   "total_delta": 160.2,
+   "lag_after_first_observation_h": 24.04,
+   "lag_after_session_close_h": 30.37,
+   "components": {
+    "LATE_FUND_VALUE": 160.2
+   }
+  },
+  {
+   "asset": "BTC",
+   "session_date": "2026-08-18",
+   "kind": "LATE_FUND_VALUE",
+   "from_source": "FARSIDE_ETF_OWNER_SNAPSHOT_v4",
+   "to_source": "DAILY_SETTLED_ETF_CALIBRATION_v2",
+   "from_observed_at": "2026-08-19T02:32:41.155921Z",
+   "to_observed_at": "2026-08-19T07:02:05.027780Z",
+   "total_from": 45.7,
+   "total_to": 189.3,
+   "total_delta": 143.6,
+   "lag_after_first_observation_h": 4.66,
+   "lag_after_session_close_h": 11.03,
+   "components": {
+    "LATE_FUND_VALUE": 143.6
+   }
+  },
+  {
+   "asset": "BTC",
+   "session_date": "2026-08-19",
+   "kind": "LATE_FUND_VALUE",
+   "from_source": "DAILY_SETTLED_ETF_CALIBRATION_v2",
+   "to_source": "FARSIDE_ETF_OWNER_SNAPSHOT_v4",
+   "from_observed_at": "2026-08-20T07:03:12.654280Z",
+   "to_observed_at": "2026-08-21T02:35:35.015749Z",
+   "total_from": 164.2,
+   "total_to": 517.2,
+   "total_delta": 353.0,
+   "lag_after_first_observation_h": 24.23,
+   "lag_after_session_close_h": 30.59,
+   "components": {
+    "LATE_FUND_VALUE": 353.0
+   }
+  },
+  {
+   "asset": "BTC",
+   "session_date": "2026-08-20",
+   "kind": "LATE_FUND_VALUE",
+   "from_source": "FARSIDE_ETF_OWNER_SNAPSHOT_v4",
+   "to_source": "DAILY_SETTLED_ETF_CALIBRATION_v2",
+   "from_observed_at": "2026-08-21T02:38:18.598311Z",
+   "to_observed_at": "2026-08-21T07:04:02.597208Z",
+   "total_from": 103.3,
+   "total_to": 606.3,
+   "total_delta": 503.0,
+   "lag_after_first_observation_h": 4.47,
+   "lag_after_session_close_h": 11.07,
+   "components": {
+    "LATE_FUND_VALUE": 503.0
+   }
+  },
+  {
+   "asset": "BTC",
+   "session_date": "2026-08-21",
+   "kind": "LATE_FUND_VALUE",
+   "from_source": "FARSIDE_ETF_OWNER_SNAPSHOT_v4",
+   "to_source": "DAILY_SETTLED_ETF_CALIBRATION_v2",
+   "from_observed_at": "2026-08-22T02:29:17.348388Z",
+   "to_observed_at": "2026-08-22T06:56:35.271746Z",
+   "total_from": 68.2,
+   "total_to": 307.5,
+   "total_delta": 239.3,
+   "lag_after_first_observation_h": 4.45,
+   "lag_after_session_close_h": 10.94,
+   "components": {
+    "LATE_FUND_VALUE": 239.3
+   }
+  },
+  {
+   "asset": "BTC",
+   "session_date": "2026-08-24",
+   "kind": "LATE_FUND_VALUE",
+   "from_source": "FARSIDE_ETF_OWNER_SNAPSHOT_v4",
+   "to_source": "DAILY_SETTLED_ETF_CALIBRATION_v2",
+   "from_observed_at": "2026-08-25T02:32:32.720679Z",
+   "to_observed_at": "2026-08-25T07:05:19.129392Z",
+   "total_from": 128.7,
+   "total_to": 337.6,
+   "total_delta": 208.9,
+   "lag_after_first_observation_h": 4.72,
+   "lag_after_session_close_h": 11.09,
+   "components": {
+    "LATE_FUND_VALUE": 208.9
+   }
+  },
+  {
+   "asset": "BTC",
+   "session_date": "2026-08-25",
+   "kind": "LATE_FUND_VALUE",
+   "from_source": "FARSIDE_ETF_OWNER_SNAPSHOT_v4",
+   "to_source": "DAILY_SETTLED_ETF_CALIBRATION_v2",
+   "from_observed_at": "2026-08-26T02:43:40.951681Z",
+   "to_observed_at": "2026-08-26T07:05:15.029737Z",
+   "total_from": 29.9,
+   "total_to": 314.3,
+   "total_delta": 284.4,
+   "lag_after_first_observation_h": 4.46,
+   "lag_after_session_close_h": 11.09,
+   "components": {
+    "LATE_FUND_VALUE": 284.4
+   }
+  },
+  {
+   "asset": "BTC",
+   "session_date": "2026-09-08",
+   "kind": "LATE_FUND_VALUE",
+   "from_source": "FARSIDE_ETF_OWNER_SNAPSHOT_v4",
+   "to_source": "DAILY_SETTLED_ETF_CALIBRATION_v2",
+   "from_observed_at": "2026-09-09T05:55:36.041975Z",
+   "to_observed_at": "2026-09-09T11:14:58.458699Z",
+   "total_from": 0.0,
+   "total_to": -46.6,
+   "total_delta": -46.6,
+   "lag_after_first_observation_h": 5.32,
+   "lag_after_session_close_h": 15.25,
+   "components": {
+    "LATE_FUND_VALUE": -46.6
+   }
+  },
+  {
+   "asset": "ETH",
+   "session_date": "2026-07-28",
+   "kind": "NEW_FUND_BACKFILL",
+   "from_source": "FARSIDE_ETF_OWNER_SNAPSHOT_v4",
+   "to_source": "LAB_LIVE_READ_2026_09_23",
+   "from_observed_at": "2026-08-11T03:12:13.766467Z",
+   "to_observed_at": "2026-09-23T15:29:04.427937Z",
+   "total_from": 9.4,
+   "total_to": 14.5,
+   "total_delta": 5.1,
+   "lag_after_first_observation_h": 1060.69,
+   "lag_after_session_close_h": 1363.48,
+   "components": {
+    "NEW_FUND_BACKFILL": 5.1
+   }
+  },
+  {
+   "asset": "ETH",
+   "session_date": "2026-07-29",
+   "kind": "NEW_FUND_BACKFILL",
+   "from_source": "FARSIDE_ETF_OWNER_SNAPSHOT_v4",
+   "to_source": "LAB_LIVE_READ_2026_09_23",
+   "from_observed_at": "2026-08-12T03:30:35.669589Z",
+   "to_observed_at": "2026-09-23T15:29:04.427937Z",
+   "total_from": -32.9,
+   "total_to": -18.6,
+   "total_delta": 14.3,
+   "lag_after_first_observation_h": 1060.69,
+   "lag_after_session_close_h": 1339.48,
+   "components": {
+    "NEW_FUND_BACKFILL": 14.3
+   }
+  },
+  {
+   "asset": "ETH",
+   "session_date": "2026-07-30",
+   "kind": "NEW_FUND_BACKFILL",
+   "from_source": "FARSIDE_ETF_OWNER_SNAPSHOT_v4",
+   "to_source": "LAB_LIVE_READ_2026_09_23",
+   "from_observed_at": "2026-08-13T03:33:48.862213Z",
+   "to_observed_at": "2026-09-23T15:29:04.427937Z",
+   "total_from": 12.8,
+   "total_to": 13.2,
+   "total_delta": 0.4,
+   "lag_after_first_observation_h": 1060.69,
+   "lag_after_session_close_h": 1315.48,
+   "components": {
+    "NEW_FUND_BACKFILL": 0.4
+   }
+  },
+  {
+   "asset": "ETH",
+   "session_date": "2026-08-03",
+   "kind": "NEW_FUND_BACKFILL",
+   "from_source": "FARSIDE_ETF_OWNER_SNAPSHOT_v4",
+   "to_source": "LAB_LIVE_READ_2026_09_23",
+   "from_observed_at": "2026-08-17T02:34:55.274475Z",
+   "to_observed_at": "2026-09-23T15:29:04.427937Z",
+   "total_from": -11.9,
+   "total_to": -11.3,
+   "total_delta": 0.6,
+   "lag_after_first_observation_h": 1060.69,
+   "lag_after_session_close_h": 1219.48,
+   "components": {
+    "NEW_FUND_BACKFILL": 0.6
+   }
+  },
+  {
+   "asset": "ETH",
+   "session_date": "2026-08-04",
+   "kind": "NEW_FUND_BACKFILL",
+   "from_source": "FARSIDE_ETF_OWNER_SNAPSHOT_v4",
+   "to_source": "LAB_LIVE_READ_2026_09_23",
+   "from_observed_at": "2026-08-18T02:30:16.880817Z",
+   "to_observed_at": "2026-09-23T15:29:04.427937Z",
+   "total_from": 53.1,
+   "total_to": 53.7,
+   "total_delta": 0.6,
+   "lag_after_first_observation_h": 1060.69,
+   "lag_after_session_close_h": 1195.48,
+   "components": {
+    "NEW_FUND_BACKFILL": 0.6
+   }
+  },
+  {
+   "asset": "ETH",
+   "session_date": "2026-08-10",
+   "kind": "LATE_FUND_VALUE",
+   "from_source": "FARSIDE_ETF_OWNER_SNAPSHOT_v4",
+   "to_source": "DAILY_SETTLED_ETF_CALIBRATION_v2",
+   "from_observed_at": "2026-08-11T03:12:13.766467Z",
+   "to_observed_at": "2026-08-11T07:24:21.497046Z",
+   "total_from": 5.3,
+   "total_to": -14.6,
+   "total_delta": -19.9,
+   "lag_after_first_observation_h": 4.26,
+   "lag_after_session_close_h": 11.41,
+   "components": {
+    "LATE_FUND_VALUE": -19.9
+   }
+  },
+  {
+   "asset": "ETH",
+   "session_date": "2026-08-11",
+   "kind": "LATE_FUND_VALUE",
+   "from_source": "FARSIDE_ETF_OWNER_SNAPSHOT_v4",
+   "to_source": "DAILY_SETTLED_ETF_CALIBRATION_v2",
+   "from_observed_at": "2026-08-12T03:30:35.669589Z",
+   "to_observed_at": "2026-08-12T07:47:50.031472Z",
+   "total_from": -2.3,
+   "total_to": -1.7,
+   "total_delta": 0.6,
+   "lag_after_first_observation_h": 4.33,
+   "lag_after_session_close_h": 11.8,
+   "components": {
+    "LATE_FUND_VALUE": 0.6
+   }
+  },
+  {
+   "asset": "ETH",
+   "session_date": "2026-08-12",
+   "kind": "LATE_FUND_VALUE",
+   "from_source": "FARSIDE_ETF_OWNER_SNAPSHOT_v4",
+   "to_source": "DAILY_SETTLED_ETF_CALIBRATION_v2",
+   "from_observed_at": "2026-08-13T03:33:48.862213Z",
+   "to_observed_at": "2026-08-13T07:49:09.657359Z",
+   "total_from": 0.0,
+   "total_to": 7.4,
+   "total_delta": 7.4,
+   "lag_after_first_observation_h": 4.29,
+   "lag_after_session_close_h": 11.82,
+   "components": {
+    "LATE_FUND_VALUE": 7.4
+   }
+  },
+  {
+   "asset": "ETH",
+   "session_date": "2026-08-13",
+   "kind": "LATE_FUND_VALUE",
+   "from_source": "FARSIDE_ETF_OWNER_SNAPSHOT_v4",
+   "to_source": "DAILY_SETTLED_ETF_CALIBRATION_v2",
+   "from_observed_at": "2026-08-14T03:31:17.641411Z",
+   "to_observed_at": "2026-08-14T07:47:15.566369Z",
+   "total_from": 6.5,
+   "total_to": 5.9,
+   "total_delta": -0.6,
+   "lag_after_first_observation_h": 4.31,
+   "lag_after_session_close_h": 11.79,
+   "components": {
+    "LATE_FUND_VALUE": -0.6
+   }
+  },
+  {
+   "asset": "ETH",
+   "session_date": "2026-08-13",
+   "kind": "NEW_FUND_BACKFILL",
+   "from_source": "FARSIDE_ETF_OWNER_SNAPSHOT_v4",
+   "to_source": "LAB_LIVE_READ_2026_09_23",
+   "from_observed_at": "2026-08-27T11:15:57.800986Z",
+   "to_observed_at": "2026-09-23T15:29:04.427937Z",
+   "total_from": 5.9,
+   "total_to": 6.7,
+   "total_delta": 0.8,
+   "lag_after_first_observation_h": 972.0,
+   "lag_after_session_close_h": 979.48,
+   "components": {
+    "NEW_FUND_BACKFILL": 0.8
+   }
+  },
+  {
+   "asset": "ETH",
+   "session_date": "2026-08-17",
+   "kind": "LATE_FUND_VALUE",
+   "from_source": "DAILY_SETTLED_ETF_CALIBRATION_v2",
+   "to_source": "FARSIDE_ETF_OWNER_SNAPSHOT_v4",
+   "from_observed_at": "2026-08-18T07:01:04.073497Z",
+   "to_observed_at": "2026-08-19T02:22:15.786641Z",
+   "total_from": 5.0,
+   "total_to": 30.9,
+   "total_delta": 25.9,
+   "lag_after_first_observation_h": 24.04,
+   "lag_after_session_close_h": 30.37,
+   "components": {
+    "LATE_FUND_VALUE": 25.9
+   }
+  },
+  {
+   "asset": "ETH",
+   "session_date": "2026-08-18",
+   "kind": "LATE_FUND_VALUE",
+   "from_source": "FARSIDE_ETF_OWNER_SNAPSHOT_v4",
+   "to_source": "DAILY_SETTLED_ETF_CALIBRATION_v2",
+   "from_observed_at": "2026-08-19T02:32:41.155921Z",
+   "to_observed_at": "2026-08-19T07:02:05.027780Z",
+   "total_from": 6.7,
+   "total_to": 71.4,
+   "total_delta": 64.7,
+   "lag_after_first_observation_h": 4.66,
+   "lag_after_session_close_h": 11.03,
+   "components": {
+    "LATE_FUND_VALUE": 64.7
+   }
+  },
+  {
+   "asset": "ETH",
+   "session_date": "2026-08-19",
+   "kind": "LATE_FUND_VALUE",
+   "from_source": "DAILY_SETTLED_ETF_CALIBRATION_v2",
+   "to_source": "FARSIDE_ETF_OWNER_SNAPSHOT_v4",
+   "from_observed_at": "2026-08-20T07:03:12.654280Z",
+   "to_observed_at": "2026-08-21T02:35:35.015749Z",
+   "total_from": 17.7,
+   "total_to": 186.8,
+   "total_delta": 169.1,
+   "lag_after_first_observation_h": 24.23,
+   "lag_after_session_close_h": 30.59,
+   "components": {
+    "LATE_FUND_VALUE": 169.1
+   }
+  },
+  {
+   "asset": "ETH",
+   "session_date": "2026-08-19",
+   "kind": "NEW_FUND_BACKFILL",
+   "from_source": "FARSIDE_ETF_OWNER_SNAPSHOT_v4",
+   "to_source": "LAB_LIVE_READ_2026_09_23",
+   "from_observed_at": "2026-09-02T05:53:36.398024Z",
+   "to_observed_at": "2026-09-23T15:29:04.427937Z",
+   "total_from": 186.8,
+   "total_to": 189.1,
+   "total_delta": 2.3,
+   "lag_after_first_observation_h": 829.12,
+   "lag_after_session_close_h": 835.48,
+   "components": {
+    "NEW_FUND_BACKFILL": 2.3
+   }
+  },
+  {
+   "asset": "ETH",
+   "session_date": "2026-08-20",
+   "kind": "LATE_FUND_VALUE",
+   "from_source": "FARSIDE_ETF_OWNER_SNAPSHOT_v4",
+   "to_source": "DAILY_SETTLED_ETF_CALIBRATION_v2",
+   "from_observed_at": "2026-08-21T02:38:18.598311Z",
+   "to_observed_at": "2026-08-21T07:04:02.597208Z",
+   "total_from": 10.3,
+   "total_to": 219.5,
+   "total_delta": 209.2,
+   "lag_after_first_observation_h": 4.47,
+   "lag_after_session_close_h": 11.07,
+   "components": {
+    "LATE_FUND_VALUE": 209.2
+   }
+  },
+  {
+   "asset": "ETH",
+   "session_date": "2026-08-20",
+   "kind": "NEW_FUND_BACKFILL",
+   "from_source": "FARSIDE_ETF_OWNER_SNAPSHOT_v4",
+   "to_source": "LAB_LIVE_READ_2026_09_23",
+   "from_observed_at": "2026-09-03T05:54:09.131960Z",
+   "to_observed_at": "2026-09-23T15:29:04.427937Z",
+   "total_from": 219.5,
+   "total_to": 220.7,
+   "total_delta": 1.2,
+   "lag_after_first_observation_h": 804.89,
+   "lag_after_session_close_h": 811.48,
+   "components": {
+    "NEW_FUND_BACKFILL": 1.2
+   }
+  },
+  {
+   "asset": "ETH",
+   "session_date": "2026-08-21",
+   "kind": "LATE_FUND_VALUE",
+   "from_source": "FARSIDE_ETF_OWNER_SNAPSHOT_v4",
+   "to_source": "DAILY_SETTLED_ETF_CALIBRATION_v2",
+   "from_observed_at": "2026-08-22T02:29:17.348388Z",
+   "to_observed_at": "2026-08-22T06:56:35.271746Z",
+   "total_from": 23.3,
+   "total_to": 184.0,
+   "total_delta": 160.7,
+   "lag_after_first_observation_h": 4.45,
+   "lag_after_session_close_h": 10.94,
+   "components": {
+    "LATE_FUND_VALUE": 160.7
+   }
+  },
+  {
+   "asset": "ETH",
+   "session_date": "2026-08-21",
+   "kind": "NEW_FUND_BACKFILL",
+   "from_source": "FARSIDE_ETF_OWNER_SNAPSHOT_v4",
+   "to_source": "LAB_LIVE_READ_2026_09_23",
+   "from_observed_at": "2026-09-04T05:58:59.933141Z",
+   "to_observed_at": "2026-09-23T15:29:04.427937Z",
+   "total_from": 184.0,
+   "total_to": 184.8,
+   "total_delta": 0.8,
+   "lag_after_first_observation_h": 781.0,
+   "lag_after_session_close_h": 787.48,
+   "components": {
+    "NEW_FUND_BACKFILL": 0.8
+   }
+  },
+  {
+   "asset": "ETH",
+   "session_date": "2026-08-24",
+   "kind": "LATE_FUND_VALUE",
+   "from_source": "FARSIDE_ETF_OWNER_SNAPSHOT_v4",
+   "to_source": "DAILY_SETTLED_ETF_CALIBRATION_v2",
+   "from_observed_at": "2026-08-25T02:32:32.720679Z",
+   "to_observed_at": "2026-08-25T07:05:19.129392Z",
+   "total_from": 24.7,
+   "total_to": 115.6,
+   "total_delta": 90.9,
+   "lag_after_first_observation_h": 4.72,
+   "lag_after_session_close_h": 11.09,
+   "components": {
+    "LATE_FUND_VALUE": 90.9
+   }
+  },
+  {
+   "asset": "ETH",
+   "session_date": "2026-08-25",
+   "kind": "LATE_FUND_VALUE",
+   "from_source": "FARSIDE_ETF_OWNER_SNAPSHOT_v4",
+   "to_source": "DAILY_SETTLED_ETF_CALIBRATION_v2",
+   "from_observed_at": "2026-08-26T02:43:40.951681Z",
+   "to_observed_at": "2026-08-26T07:05:15.029737Z",
+   "total_from": 25.8,
+   "total_to": 179.8,
+   "total_delta": 154.0,
+   "lag_after_first_observation_h": 4.46,
+   "lag_after_session_close_h": 11.09,
+   "components": {
+    "LATE_FUND_VALUE": 154.0
+   }
+  },
+  {
+   "asset": "ETH",
+   "session_date": "2026-08-27",
+   "kind": "NEW_FUND_BACKFILL",
+   "from_source": "FARSIDE_ETF_OWNER_SNAPSHOT_v4",
+   "to_source": "LAB_LIVE_READ_2026_09_23",
+   "from_observed_at": "2026-09-11T05:53:00.451876Z",
+   "to_observed_at": "2026-09-23T15:29:04.427937Z",
+   "total_from": 225.8,
+   "total_to": 234.4,
+   "total_delta": 8.6,
+   "lag_after_first_observation_h": 626.78,
+   "lag_after_session_close_h": 643.48,
+   "components": {
+    "NEW_FUND_BACKFILL": 8.6
+   }
+  },
+  {
+   "asset": "ETH",
+   "session_date": "2026-09-01",
+   "kind": "NEW_FUND_BACKFILL",
+   "from_source": "FARSIDE_ETF_OWNER_SNAPSHOT_v4",
+   "to_source": "LAB_LIVE_READ_2026_09_23",
+   "from_observed_at": "2026-09-15T06:07:18.568708Z",
+   "to_observed_at": "2026-09-23T15:29:04.427937Z",
+   "total_from": 8.6,
+   "total_to": 10.9,
+   "total_delta": 2.3,
+   "lag_after_first_observation_h": 513.76,
+   "lag_after_session_close_h": 523.48,
+   "components": {
+    "NEW_FUND_BACKFILL": 2.3
+   }
+  },
+  {
+   "asset": "ETH",
+   "session_date": "2026-09-04",
+   "kind": "NEW_FUND_BACKFILL",
+   "from_source": "FARSIDE_ETF_OWNER_SNAPSHOT_v4",
+   "to_source": "LAB_LIVE_READ_2026_09_23",
+   "from_observed_at": "2026-09-15T06:07:18.568708Z",
+   "to_observed_at": "2026-09-23T15:29:04.427937Z",
+   "total_from": 25.9,
+   "total_to": 26.4,
+   "total_delta": 0.5,
+   "lag_after_first_observation_h": 441.65,
+   "lag_after_session_close_h": 451.48,
+   "components": {
+    "NEW_FUND_BACKFILL": 0.5
+   }
+  },
+  {
+   "asset": "ETH",
+   "session_date": "2026-09-08",
+   "kind": "LATE_FUND_VALUE",
+   "from_source": "FARSIDE_ETF_OWNER_SNAPSHOT_v4",
+   "to_source": "DAILY_SETTLED_ETF_CALIBRATION_v2",
+   "from_observed_at": "2026-09-09T05:55:36.041975Z",
+   "to_observed_at": "2026-09-09T11:14:58.458699Z",
+   "total_from": 0.0,
+   "total_to": -24.3,
+   "total_delta": -24.3,
+   "lag_after_first_observation_h": 5.32,
+   "lag_after_session_close_h": 15.25,
+   "components": {
+    "LATE_FUND_VALUE": -24.3
+   }
+  },
+  {
+   "asset": "ETH",
+   "session_date": "2026-09-15",
+   "kind": "NEW_FUND_BACKFILL",
+   "from_source": "DAILY_SETTLED_ETF_CALIBRATION_v2",
+   "to_source": "LAB_LIVE_READ_2026_09_23",
+   "from_observed_at": "2026-09-16T11:25:31.831805Z",
+   "to_observed_at": "2026-09-23T15:29:04.427937Z",
+   "total_from": -142.3,
+   "total_to": -142.0,
+   "total_delta": 0.3,
+   "lag_after_first_observation_h": 172.06,
+   "lag_after_session_close_h": 187.48,
+   "components": {
+    "NEW_FUND_BACKFILL": 0.3
+   }
+  }
+ ]
+}

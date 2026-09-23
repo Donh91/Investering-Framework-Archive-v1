@@ -1,0 +1,105 @@
+"""Section 1 (owner map) + Section 9 (consumer audit). Static, evidence-cited; no consumer is changed."""
+from __future__ import annotations
+
+from etf_lab_common import WORK, write_json
+
+PKG = WORK / "pkg"
+
+ASSUMPTIONS = ["date_row_is_session", "zero_is_observed", "total_exists", "all_funds_exist", "session_close_is_knowledge_time", "latest_snapshot_is_historical"]
+
+OWNER_MAP = [
+    {"component": "live source parser", "owner": "scripts/data_terminal/farside_etf_owner.py parse_table/decorate", "producer": "Farside HTML (bitcoin/ethereum-etf-flow-all-data)",
+     "consumers": ["daily-settled-etf-calibration.yml", "framework-learning-operations.yml (FLO capture)"], "authority": "SHADOW_ONLY snapshot",
+     "timestamp_semantics": "retrieved_at_utc = script start (before fetch); rows dated >= UTC retrieval date excluded; session_final=True for every other row (calendar claim, not observed finality)",
+     "revision_policy": "none (stateless; returns last 10 sessions of the current page)", "failure_policy": "HEADER_* / COLUMN_COUNT_DRIFT per asset -> DEGRADED; SOURCE_UNAVAILABLE exit 2",
+     "immutability_policy": "n/a (stateless)", "codex_owner": "e9fd7efd / d15b736c (CODEX_READY: settled workflow LATEST_RUN_FAILED / REPEATED)"},
+    {"component": "live settlement verifier", "owner": ".github/workflows/daily-settled-etf-calibration.yml step 'Require stable settled BTC and ETH rows'",
+     "producer": "two owner snapshots 65 s apart", "consumers": ["03_DAILY_CAPTURE_LOGS/etf writer (same step)"], "authority": "SHADOW_CALIBRATION_INPUT_ONLY",
+     "timestamp_semantics": "retrieved_at_utc of second read; verification_completed_at_utc on LATEST pointer and lifecycle receipt",
+     "revision_policy": "a changed row gets a new row_signature file; older files kept", "failure_policy": "assert -> job fails (fail closed); parity + reported_total + identical double read required; unknown cells allowed when parity holds",
+     "immutability_policy": "append-only by signature", "codex_owner": "e9fd7efd / d15b736c"},
+    {"component": "live settled capture", "owner": "03_DAILY_CAPTURE_LOGS/etf/YYYY/MM/DD/HHMMSS_<session>.json + LATEST.json + evidence_lifecycle/settled_etf receipts",
+     "producer": "settled verifier", "consumers": ["auto_market_state.py", "augment_director_context_v2.py", "build_weekly_calibration.py", "etf_absorption_transmission_v1.py", "code_audit reproduce.py"],
+     "authority": "SHADOW_CALIBRATION_INPUT_ONLY", "timestamp_semantics": "session_date + retrieved_at_utc; no publication time", "revision_policy": "append new signature; pointer moves to newest latest session",
+     "failure_policy": "none at read time (consumers trust session_final flag)", "immutability_policy": "files never rewritten", "codex_owner": "same as verifier"},
+    {"component": "FLO owner capture", "owner": "framework-learning-operations.yml step 'Capture Farside ETF owner' -> research/etf_owner/YYYY/MM/DD/HHMMSS + LATEST_FARSIDE_ETF_OWNER.json",
+     "producer": "farside_etf_owner.py (continue-on-error)", "consumers": ["truth_integrity.py", "build_architecture_health.py", "native_ota_readback.py", "build_framework_handoff_manifest.py"],
+     "authority": "SHADOW_ONLY", "timestamp_semantics": "retrieved_at_utc", "revision_policy": "none; each run a new directory", "failure_policy": "continue-on-error (DEGRADED snapshot still committed)",
+     "immutability_policy": "per-run directory", "codex_owner": "none ETF-specific"},
+    {"component": "historical raw pack", "owner": "Project exports 'Etf btc.md' / 'ETF eth.md' (uploaded 2026-07-26T19:28:44Z) + 08_SOURCE_MATERIAL/market_data/etf_flows/2026-07-06 raw CSVs",
+     "producer": "user export of the Farside API", "consumers": ["history pack v1 build (one-off)", "run_phase4_no_hindsight_replay.py (07-06 CSVs)"], "authority": "source material",
+     "timestamp_semantics": "session date only; export time = upload time", "revision_policy": "single retrospective vintage", "failure_policy": "n/a", "immutability_policy": "Project upload; 07-06 BTC CSV corrupt (separate defect)",
+     "codex_owner": "none"},
+    {"component": "historical normalized pack v1", "owner": "04_MARKET_LEARNING/truth_layer/etf_flows/2026-07-26__us-spot-crypto-etf-flow-history/data + manifest + CHECKSUMS (commit 4e2ba082d)",
+     "producer": "one commit 2026-07-26", "consumers": ["E1X harness", "pack builder/validator"], "authority": "A2_EVIDENCE_CANDIDATE, no market authority",
+     "timestamp_semantics": "manifest knowledge_time_rule.default = AVAILABLE_AFTER_US_SESSION_CLOSE (falsified by evidence: every evidenced session first observable >= 9.7 h after close)",
+     "revision_policy": "immutable; supersede by v1.1", "failure_policy": "own validator FAILS on committed bytes ('btc: null cell') but is not run in CI", "immutability_policy": "v1 bytes must never change",
+     "codex_owner": "4a968f5f / candidate codex-research-etf-history-pack-v1-1-row-integrity-v1 (#1212, E1X D01)"},
+    {"component": "historical feature builders", "owner": "pack scripts/build_etf_flow_features.py (pandas) + backtest_engine/w30_replay.py build_etf_trailing/build_etf_divergence",
+     "producer": "pack v1 / W30 golden fixture (external, hash-pinned signatures)", "consumers": ["backtest_engine readiness + signature replay", "E1X RT-A03/A04"], "authority": "research/backtest",
+     "timestamp_semantics": "W30: feature_knowledge_available_at_utc = row not_before_session_close_utc (own row only); pack builder: AVAILABLE_AFTER_US_SESSION_CLOSE",
+     "revision_policy": "none", "failure_policy": "W30 validate_etf_sessions forbids weekends, duplicates, synthetic zeros; closures pass", "immutability_policy": "golden signatures", "codex_owner": "none (F04 routes to framework owner #1211)"},
+    {"component": "backtest knowledge-time contract", "owner": "issue #1211 (E1X F04) - FRAMEWORK OWNER decision", "producer": "-", "consumers": ["any ETF backtest"], "authority": "owner decision pending",
+     "timestamp_semantics": "undecided", "revision_policy": "undecided", "failure_policy": "-", "immutability_policy": "-", "codex_owner": "none (not code-only)"},
+    {"component": "E1X temporal-integrity test", "owner": "scripts/experiments/strategy_factor_leakage_e1_production.py + tests/experiments/test_strategy_factor_leakage_e1_production.py",
+     "producer": "-", "consumers": ["E1X report / findings"], "authority": "research", "timestamp_semantics": "Record.available_at = evidenced knowledge time", "revision_policy": "REVISION records",
+     "failure_policy": "NOT_RUN never PASS", "immutability_policy": "-", "codex_owner": "none"},
+]
+
+CONSUMERS = [
+    {"path": "scripts/data_terminal/farside_etf_owner.py", "role": "producer/parser", "classification": ["BROKEN", "SOURCE_VINTAGE_RISK"],
+     "assumptions": {"date_row_is_session": "YES - any row with a date label and one numeric cell is a session (closure rows '-'..'0.0' were rows until 2025-06-19)",
+                     "zero_is_observed": "YES - an all-dash row with Total 0.0 parses as a 0.0 flow with parity True (seen 2026-09-09T05:55Z for 09-08)",
+                     "total_exists": "partly - missing Total -> parity None; DEGRADED only if it is the latest row",
+                     "all_funds_exist": "YES via CANONICAL_ASSET_SCHEMA_EXACT_WIDTH_FALLBACK (binds by width, silent mislabel on same-width reorder)",
+                     "session_close_is_knowledge_time": "YES - session_final=True for every row dated before the UTC retrieval date",
+                     "latest_snapshot_is_historical": "n/a"},
+     "evidence": "ETF_LIVE_SCHEMA_REPRODUCTION.json; ledger rows FARSIDE_ETF_OWNER_SNAPSHOT_v4 2026-09-09T05:55:36Z"},
+    {"path": ".github/workflows/daily-settled-etf-calibration.yml", "role": "finality verifier + writer", "classification": ["BROKEN", "SOURCE_VINTAGE_RISK"],
+     "assumptions": {"date_row_is_session": "YES (inherits owner)", "zero_is_observed": "YES - all-dash 0.0 row passes every assert", "total_exists": "NO - asserts reported_total",
+                     "all_funds_exist": "NO - unknown cells tolerated when parity holds (7 settled rows stored with unknown cells)", "session_close_is_knowledge_time": "YES - asserts session_final flag",
+                     "latest_snapshot_is_historical": "NO - append-only signatures"},
+     "evidence": "false-final captures 2026-08-17/08-19 (BTC 137.3->297.5, 164.2->517.2; ETH 5.0->30.9, 17.7->186.8)"},
+    {"path": "scripts/data_ping/auto_market_state.py", "role": "live consumer (LATEST pointer)", "classification": ["SOURCE_VINTAGE_RISK"],
+     "assumptions": {"session_close_is_knowledge_time": "YES - trusts session_final flag -> ETF_SETTLED_FINAL_PARITY", "latest_snapshot_is_historical": "YES for live use"}, "evidence": "lines ~160-215"},
+    {"path": "scripts/data_ping/native_handlekompas.py", "role": "feature consumer of auto state (btc_etf_musd, eth_etf_musd)", "classification": ["SOURCE_VINTAGE_RISK"],
+     "assumptions": {"zero_is_observed": "YES (inherits)", "session_close_is_knowledge_time": "inherits"}, "evidence": "lines 368-385"},
+    {"path": "scripts/api_agent/augment_director_context_v2.py", "role": "director context (latest_settled_etf)", "classification": ["SOURCE_VINTAGE_RISK"],
+     "assumptions": {"session_close_is_knowledge_time": "YES - 'verified' wording", "latest_snapshot_is_historical": "YES"},
+     "evidence": "15 director contexts / 5 outputs quoted false-final 08-17 and 08-19 values"},
+    {"path": "scripts/daily_capture/build_weekly_calibration.py", "role": "weekly settled ETF calibration", "classification": ["SOURCE_VINTAGE_RISK"],
+     "assumptions": {"latest_snapshot_is_historical": "YES - latest retrieved_at per session at build time; a later rebuild uses later vintages"},
+     "evidence": "W34 package used corrected 297.5 / 517.2 (safe at freeze time only)"},
+    {"path": "scripts/master_monday/build_preflight_package_v3.py", "role": "weekly consumer", "classification": ["SOURCE_VINTAGE_RISK"], "assumptions": {"latest_snapshot_is_historical": "inherits weekly"}, "evidence": "line 319"},
+    {"path": "scripts/research/native_ota_readback.py", "role": "OTA readback of LATEST FLO owner", "classification": ["SOURCE_VINTAGE_RISK"],
+     "assumptions": {"session_close_is_knowledge_time": "YES - filters session_final True (includes provisional 02:30Z rows)", "zero_is_observed": "YES"}, "evidence": "lines 283-300"},
+    {"path": "scripts/experiments/etf_absorption_transmission_v1.py", "role": "shadow experiment", "classification": ["SAFE"],
+     "assumptions": {"session_close_is_knowledge_time": "NO - known_at = retrieved_at, as-of join, conflict fail-closed"}, "evidence": "E1X NO_ISSUE; knowledge time is the observation time"},
+    {"path": "backtest_engine/w30_replay.py (build_etf_trailing, build_etf_divergence) + signature_replay.py", "role": "backtest feature builder", "classification": ["#1211_DEPENDENT", "V1.1_DEPENDENT"],
+     "assumptions": {"session_close_is_knowledge_time": "YES (F04)", "date_row_is_session": "YES - closure rows pass validate_etf_sessions", "zero_is_observed": "YES",
+                     "latest_snapshot_is_historical": "YES", "feature_claim": "own-row knowledge time; not max over window inputs (non-monotone policies leak)"},
+     "evidence": "ETF_RIGHT_TRUNCATION_RESULTS.json"},
+    {"path": "04_MARKET_LEARNING/truth_layer/.../scripts/build_etf_flow_features.py", "role": "pack feature builder", "classification": ["V1.1_DEPENDENT", "#1211_DEPENDENT"],
+     "assumptions": {"date_row_is_session": "YES", "zero_is_observed": "YES", "session_close_is_knowledge_time": "YES (column knowledge_time_convention)"}, "evidence": "v1.1 revalidation prototype"},
+    {"path": "04_MARKET_LEARNING/truth_layer/.../scripts/validate_etf_flow_history.py", "role": "pack validator", "classification": ["V1.1_DEPENDENT"],
+     "assumptions": {"total_exists": "checks it - FAILS on committed v1 bytes ('btc: null cell') although README states 0 null cells"}, "evidence": "run on a copy 2026-09-23"},
+    {"path": "scripts/experiments/strategy_factor_leakage_e1_production.py", "role": "E1X harness", "classification": ["SAFE"],
+     "assumptions": {"total_exists": "excludes malformed rows, never repairs", "date_row_is_session": "documents closure rows, does not exclude"}, "evidence": "load_etf_pack binding"},
+    {"path": "scripts/research/run_phase4_no_hindsight_replay.py", "role": "phase-4 replay", "classification": ["BROKEN"],
+     "assumptions": {"total_exists": "reads 08_SOURCE_MATERIAL 2026-07-06 BTC raw CSV (corrupt) - separate defect"}, "evidence": "prior mission forensics"},
+    {"path": "scripts/data_ping/truth_integrity.py", "role": "freshness/contract lane", "classification": ["NOT_APPLICABLE"], "assumptions": {}, "evidence": "contract + freshness only"},
+    {"path": "scripts/health/build_architecture_health.py", "role": "health", "classification": ["NOT_APPLICABLE"], "assumptions": {}, "evidence": "status/age only"},
+    {"path": "scripts/orchestration/build_framework_handoff_manifest.py", "role": "manifest", "classification": ["NOT_APPLICABLE"], "assumptions": {}, "evidence": "path reference only"},
+    {"path": "scripts/api_agent/{adaptive_decision_miss_auditor,adaptive_evidence_gap_auditor,evidence_gap_registry}.py", "role": "label hints", "classification": ["NOT_APPLICABLE"], "assumptions": {}, "evidence": "'SETTLED_ETF' hint strings"},
+    {"path": "scripts/daily_capture/classify_verification_scope.py", "role": "path classifier", "classification": ["NOT_APPLICABLE"], "assumptions": {}, "evidence": "FARSIDE_SOURCE_PATHS"},
+    {"path": "06_RESEARCH_LAB/audit_summaries/code_audit_20260831/reproduce.py", "role": "audit reproduction", "classification": ["NOT_APPLICABLE"], "assumptions": {}, "evidence": "reads settled captures for counts"},
+]
+
+
+if __name__ == "__main__":
+    from collections import Counter
+    c = Counter(x for row in CONSUMERS for x in row["classification"])
+    write_json(PKG / "ETF_CONSUMER_AUDIT.json", {"contract": "ETF_CONSUMER_AUDIT_v1", "consumers_changed": 0, "assumptions_checked": ASSUMPTIONS,
+                                                 "classification_counts": dict(c), "owner_map": OWNER_MAP, "consumers": CONSUMERS,
+                                                 "no_new_owner_needed": "every component has an owner; the missing piece is a contract (ETF_OBSERVATION_v1) and an owner decision (#1211), not a new engine"})
+    print(dict(c))

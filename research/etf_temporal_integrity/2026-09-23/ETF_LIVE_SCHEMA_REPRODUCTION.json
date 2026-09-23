@@ -1,0 +1,1093 @@
+{
+ "contract": "ETF_LIVE_SCHEMA_REPRODUCTION_v1",
+ "generated_by": "scripts/research/etf_temporal_integrity_lab/live_schema_lab.py (research only)",
+ "source_capture": {
+  "btc": {
+   "url": "https://farside.co.uk/bitcoin-etf-flow-all-data/",
+   "request_started_utc": "2026-09-23T15:29:02.665519Z",
+   "retrieved_at_utc": "2026-09-23T15:29:03.547720Z",
+   "bytes": 812873,
+   "sha256": "eceaf80c69000a515c17a04fa4a1ef49954671466150a09c1264f3300169e537"
+  },
+  "eth": {
+   "url": "https://farside.co.uk/ethereum-etf-flow-all-data/",
+   "request_started_utc": "2026-09-23T15:29:03.549451Z",
+   "retrieved_at_utc": "2026-09-23T15:29:04.427937Z",
+   "bytes": 615457,
+   "sha256": "03e7d90f3b3320cfbaaebd94469dc221ea84413f261c02eae0ae48254a2bd19a"
+  }
+ },
+ "capture_client": "urllib with the owner's User-Agent (same client path as farside_etf_owner.py); curl with the same UA received a Cloudflare 403 challenge page and was not retried or circumvented",
+ "raw_html_is_not_a_stable_vintage_id": "raw page sha256 differs on every fetch (6b37840e.. at 15:28:53Z via owner, eceaf80c.. at 15:29:03Z); a vintage id must hash the parsed table, see table_content_sha256",
+ "eth": {
+  "table_content_sha256": "a3a4b4ee07d045c994e10bc7f067a78bd520ef3b89d13cb5ec96d6b81f54e995",
+  "html_structure": "one <table class=\"etf\">; <thead> holds a <th> ticker row whose FIRST cell is blank and LAST cell is 'Total', followed by a <th> Fee row; <tbody> starts with a <td> Seed row, a stray unclosed <tr>, then date rows; footer <td> Total row",
+  "ticker_row": [
+   "",
+   "ETHA",
+   "ETHB",
+   "FETH",
+   "ETHW",
+   "TETH",
+   "ETHV",
+   "QETH",
+   "EZET",
+   "MSSE",
+   "ETHE",
+   "ETH",
+   "Total"
+  ],
+  "issuer_name_row_present": false,
+  "fund_count": 11,
+  "msse_position": {
+   "index_in_funds_0_based": 8,
+   "between": [
+    "EZET",
+    "ETHE"
+   ]
+  },
+  "meta_rows": [
+   [
+    "Fee",
+    "0.25%",
+    "0.25%",
+    "0.25%",
+    "0.20%",
+    "0.21%",
+    "0.20%",
+    "0.25%",
+    "0.19%",
+    "0.14%",
+    "2.50%",
+    "0.15%",
+    ""
+   ],
+   [
+    "Seed",
+    "10.6",
+    "104.7",
+    "4.4",
+    "2.5",
+    "2.3",
+    "10.2",
+    "1.1",
+    "2.7",
+    "",
+    "9,199.3*",
+    "1,022.5*",
+    "10,360"
+   ]
+  ],
+  "footer_total_row": [
+   "Total",
+   "13,154.9",
+   "853.3",
+   "2,367.5",
+   "398.4",
+   "37.8",
+   "161.0",
+   "25.6",
+   "67.8",
+   "39.3",
+   "(5,416.9)",
+   "2,022.5",
+   "13,711.2"
+  ],
+  "date_rows": 555,
+  "date_row_cell_widths": [
+   13
+  ],
+  "first_date": "2024-07-23",
+  "last_date": "2026-09-23",
+  "msse": {
+   "first_non_blank_date": "2026-07-27",
+   "non_blank_rows": 41,
+   "non_zero_rows": 14,
+   "raw_cell_values_before_first_value": [
+    "-"
+   ],
+   "seed_cell": "",
+   "values": [
+    {
+     "date": "2026-07-27",
+     "raw": "0.0"
+    },
+    {
+     "date": "2026-07-28",
+     "raw": "5.1"
+    },
+    {
+     "date": "2026-07-29",
+     "raw": "14.3"
+    },
+    {
+     "date": "2026-07-30",
+     "raw": "0.4"
+    },
+    {
+     "date": "2026-07-31",
+     "raw": "0.0"
+    },
+    {
+     "date": "2026-08-03",
+     "raw": "0.6"
+    },
+    {
+     "date": "2026-08-04",
+     "raw": "0.6"
+    },
+    {
+     "date": "2026-08-05",
+     "raw": "0.0"
+    },
+    {
+     "date": "2026-08-06",
+     "raw": "0.0"
+    },
+    {
+     "date": "2026-08-07",
+     "raw": "0.0"
+    },
+    {
+     "date": "2026-08-10",
+     "raw": "0.0"
+    },
+    {
+     "date": "2026-08-11",
+     "raw": "0.0"
+    },
+    {
+     "date": "2026-08-12",
+     "raw": "0.0"
+    },
+    {
+     "date": "2026-08-13",
+     "raw": "0.8"
+    },
+    {
+     "date": "2026-08-14",
+     "raw": "0.0"
+    },
+    {
+     "date": "2026-08-17",
+     "raw": "0.0"
+    },
+    {
+     "date": "2026-08-18",
+     "raw": "0.0"
+    },
+    {
+     "date": "2026-08-19",
+     "raw": "2.3"
+    },
+    {
+     "date": "2026-08-20",
+     "raw": "1.2"
+    },
+    {
+     "date": "2026-08-21",
+     "raw": "0.8"
+    },
+    {
+     "date": "2026-08-24",
+     "raw": "0.0"
+    },
+    {
+     "date": "2026-08-25",
+     "raw": "0.0"
+    },
+    {
+     "date": "2026-08-26",
+     "raw": "0.0"
+    },
+    {
+     "date": "2026-08-27",
+     "raw": "8.6"
+    },
+    {
+     "date": "2026-08-28",
+     "raw": "0.0"
+    },
+    {
+     "date": "2026-08-31",
+     "raw": "0.0"
+    },
+    {
+     "date": "2026-09-01",
+     "raw": "2.3"
+    },
+    {
+     "date": "2026-09-02",
+     "raw": "0.0"
+    },
+    {
+     "date": "2026-09-03",
+     "raw": "0.0"
+    },
+    {
+     "date": "2026-09-04",
+     "raw": "0.5"
+    },
+    {
+     "date": "2026-09-08",
+     "raw": "0.0"
+    },
+    {
+     "date": "2026-09-09",
+     "raw": "0.0"
+    },
+    {
+     "date": "2026-09-10",
+     "raw": "0.0"
+    },
+    {
+     "date": "2026-09-11",
+     "raw": "0.0"
+    },
+    {
+     "date": "2026-09-14",
+     "raw": "0.0"
+    },
+    {
+     "date": "2026-09-15",
+     "raw": "0.3"
+    },
+    {
+     "date": "2026-09-16",
+     "raw": "0.0"
+    },
+    {
+     "date": "2026-09-17",
+     "raw": "0.0"
+    },
+    {
+     "date": "2026-09-18",
+     "raw": "0.0"
+    },
+    {
+     "date": "2026-09-21",
+     "raw": "1.5"
+    },
+    {
+     "date": "2026-09-22",
+     "raw": "0.0"
+    }
+   ]
+  },
+  "blank_zero_absent_semantics": {
+   "dash": "'-' parses to None (unknown). Used both for funds not yet launched (e.g. MSSE before 2026-07-27, ETHB early rows) and, per July supplements, for funds not yet reported (IBIT 2026-07-16 provisional). The page does not distinguish the two.",
+   "zero": "'0.0' is a reported zero flow",
+   "absent_column": "a fund column that did not exist in an earlier layout (MSSE before 2026-09-18) has no cell at all in earlier vintages"
+  },
+  "total_reconciliation_live": {
+   "rows": 555,
+   "parity_with_msse": 555,
+   "parity_without_msse_only_when_msse_zero_or_blank": 545,
+   "parity_fail": []
+  },
+  "second_change_detected": {
+   "finding": "LAYOUT_CHANGE_IN_ADDITION_TO_MSSE",
+   "before": "issuer-name row [blank, Blackrock, ..., Total] followed by ticker row [blank, ETHA, ..., blank] (matched by SOURCE_TWO_ROW_TICKER_HEADER; every stored v4 ETH snapshot 2026-08-10..2026-09-15 reports that mode)",
+   "after": "single ticker row [blank, ETHA, ..., MSSE, ..., Total] followed by a Fee row; no issuer-name row",
+   "consequence": "the owner's two-row path can never match the new layout; the only path that can bind it is the exact-width fallback",
+   "last_observed_old_layout": "2026-09-17T11:35:26Z (last settled capture, owner PASS)",
+   "first_observed_new_layout": "UNKNOWN in repo (first failing settled run 2026-09-18; its snapshot is not committed). Confirmed live 2026-09-23T11:16:50Z (owner snapshot, HEADER_NOT_FOUND) and 15:29:04Z (this capture)."
+  },
+  "two_row_header_valid": false
+ },
+ "btc": {
+  "table_content_sha256": "312e81df8e746c60fb7084c945da4c6e1b9599474e35e122c7959c4e9ac26b29",
+  "header_row": [
+   "Date",
+   "IBIT",
+   "FBTC",
+   "BITB",
+   "ARKB",
+   "BTCO",
+   "EZBC",
+   "BRRR",
+   "HODL",
+   "BTCW",
+   "MSBT",
+   "GBTC",
+   "BTC",
+   "Total"
+  ],
+  "fund_count": 12,
+  "date_rows": 693,
+  "date_row_cell_widths": [
+   14
+  ],
+  "first_date": "2024-01-11",
+  "last_date": "2026-09-23",
+  "header_mode_in_production": "DIRECT_DATE_TOTAL",
+  "footer_total_row": [
+   "Total",
+   "64,856",
+   "10,868",
+   "2,134",
+   "1,376",
+   "144",
+   "319",
+   "329",
+   "1,013",
+   "82",
+   "733",
+   "(27,841)",
+   "2,932",
+   "56,943"
+  ]
+ },
+ "variants": {
+  "PRODUCTION_MAIN": "scripts/data_terminal/farside_etf_owner.py at b854dbc31 unchanged",
+  "SCRATCH_ADD_MSSE_TO_FROZEN_SCHEMA": "same code, CANONICAL_FUND_HEADERS['ETH'] with MSSE inserted between EZET and ETHE (the smallest likely repair)",
+  "STRICT_REGISTRY_PROTOTYPE": "research prototype: bind by source ticker row only, exact match to a registered schema, explicit KNOWN_ADDITIVE_SCHEMA_REVISION for MSSE, no width fallback"
+ },
+ "fixture_matrix": [
+  {
+   "fixture_id": "LIVE_ETH_CURRENT_PAGE",
+   "asset": "ETH",
+   "kind": "LIVE",
+   "note": "captured page, all 555 date rows",
+   "fixture_sha256": "e3d963722a9da9adfe3295f9f0e219c25c740ebf9f6647268f6241385efeea1d",
+   "PRODUCTION_MAIN": {
+    "outcome": "FAIL_CLOSED",
+    "error": "HEADER_NOT_FOUND"
+   },
+   "SCRATCH_ADD_MSSE_TO_FROZEN_SCHEMA": {
+    "outcome": "ACCEPTED_MAPPING_MATCHES_SOURCE",
+    "header_mode": "CANONICAL_ASSET_SCHEMA_EXACT_WIDTH_FALLBACK",
+    "rows": 554,
+    "fund_headers": [
+     "ETHA",
+     "ETHB",
+     "FETH",
+     "ETHW",
+     "TETH",
+     "ETHV",
+     "QETH",
+     "EZET",
+     "MSSE",
+     "ETHE",
+     "ETH"
+    ],
+    "parity_failures": 0,
+    "mislabel_rows": 0,
+    "mislabel_example": []
+   },
+   "STRICT_REGISTRY_PROTOTYPE": {
+    "outcome": "ACCEPTED_MAPPING_MATCHES_SOURCE",
+    "header_mode": "STRICT_SOURCE_TICKER_BINDING:FARSIDE_ETH_v2_11F_MSSE:KNOWN_ADDITIVE_SCHEMA_REVISION",
+    "rows": 554,
+    "fund_headers": [
+     "ETHA",
+     "ETHB",
+     "FETH",
+     "ETHW",
+     "TETH",
+     "ETHV",
+     "QETH",
+     "EZET",
+     "MSSE",
+     "ETHE",
+     "ETH"
+    ],
+    "parity_failures": 0,
+    "mislabel_rows": 0,
+    "mislabel_example": []
+   }
+  },
+  {
+   "fixture_id": "LIVE_BTC_CURRENT_PAGE",
+   "asset": "BTC",
+   "kind": "LIVE",
+   "note": "captured page, all date rows",
+   "fixture_sha256": "723ccdaa50b42dabefa0b9b20cf5e24b61565731302b0a4d8486ecd60be56ca0",
+   "PRODUCTION_MAIN": {
+    "outcome": "ACCEPTED_MAPPING_MATCHES_SOURCE",
+    "header_mode": "DIRECT_DATE_TOTAL",
+    "rows": 692,
+    "fund_headers": [
+     "IBIT",
+     "FBTC",
+     "BITB",
+     "ARKB",
+     "BTCO",
+     "EZBC",
+     "BRRR",
+     "HODL",
+     "BTCW",
+     "MSBT",
+     "GBTC",
+     "BTC"
+    ],
+    "parity_failures": 0,
+    "mislabel_rows": 0,
+    "mislabel_example": []
+   },
+   "SCRATCH_ADD_MSSE_TO_FROZEN_SCHEMA": {
+    "outcome": "ACCEPTED_MAPPING_MATCHES_SOURCE",
+    "header_mode": "DIRECT_DATE_TOTAL",
+    "rows": 692,
+    "fund_headers": [
+     "IBIT",
+     "FBTC",
+     "BITB",
+     "ARKB",
+     "BTCO",
+     "EZBC",
+     "BRRR",
+     "HODL",
+     "BTCW",
+     "MSBT",
+     "GBTC",
+     "BTC"
+    ],
+    "parity_failures": 0,
+    "mislabel_rows": 0,
+    "mislabel_example": []
+   },
+   "STRICT_REGISTRY_PROTOTYPE": {
+    "outcome": "ACCEPTED_MAPPING_MATCHES_SOURCE",
+    "header_mode": "STRICT_SOURCE_TICKER_BINDING:FARSIDE_BTC_v1_12F:BASELINE",
+    "rows": 692,
+    "fund_headers": [
+     "IBIT",
+     "FBTC",
+     "BITB",
+     "ARKB",
+     "BTCO",
+     "EZBC",
+     "BRRR",
+     "HODL",
+     "BTCW",
+     "MSBT",
+     "GBTC",
+     "BTC"
+    ],
+    "parity_failures": 0,
+    "mislabel_rows": 0,
+    "mislabel_example": []
+   }
+  },
+  {
+   "fixture_id": "RECENT_HISTORY_ETH_LAST25_NEW_LAYOUT",
+   "asset": "ETH",
+   "kind": "HISTORY",
+   "note": "last 25 live sessions through 2026-09-22",
+   "fixture_sha256": "880e4e85121c4ccc63ce97ad9649e68455f295d85519a5316ed24d48120cea53",
+   "PRODUCTION_MAIN": {
+    "outcome": "FAIL_CLOSED",
+    "error": "HEADER_NOT_FOUND"
+   },
+   "SCRATCH_ADD_MSSE_TO_FROZEN_SCHEMA": {
+    "outcome": "ACCEPTED_MAPPING_MATCHES_SOURCE",
+    "header_mode": "CANONICAL_ASSET_SCHEMA_EXACT_WIDTH_FALLBACK",
+    "rows": 25,
+    "fund_headers": [
+     "ETHA",
+     "ETHB",
+     "FETH",
+     "ETHW",
+     "TETH",
+     "ETHV",
+     "QETH",
+     "EZET",
+     "MSSE",
+     "ETHE",
+     "ETH"
+    ],
+    "parity_failures": 0,
+    "mislabel_rows": 0,
+    "mislabel_example": []
+   },
+   "STRICT_REGISTRY_PROTOTYPE": {
+    "outcome": "ACCEPTED_MAPPING_MATCHES_SOURCE",
+    "header_mode": "STRICT_SOURCE_TICKER_BINDING:FARSIDE_ETH_v2_11F_MSSE:KNOWN_ADDITIVE_SCHEMA_REVISION",
+    "rows": 25,
+    "fund_headers": [
+     "ETHA",
+     "ETHB",
+     "FETH",
+     "ETHW",
+     "TETH",
+     "ETHV",
+     "QETH",
+     "EZET",
+     "MSSE",
+     "ETHE",
+     "ETH"
+    ],
+    "parity_failures": 0,
+    "mislabel_rows": 0,
+    "mislabel_example": []
+   }
+  },
+  {
+   "fixture_id": "OLD_SHAPE_ETH_TWO_ROW_10F",
+   "asset": "ETH",
+   "kind": "OLD_SHAPE",
+   "note": "pre-change layout (issuer row + ticker row, 10 funds) as frozen in tests/architecture fixture 7c17bb367; values = live minus MSSE column",
+   "fixture_sha256": "3a2f5adeb96e88c185a9b7e14e838e8f38dabeaa8aeed75eef6ed30fc966a99e",
+   "PRODUCTION_MAIN": {
+    "outcome": "ACCEPTED_MAPPING_MATCHES_SOURCE",
+    "header_mode": "SOURCE_TWO_ROW_TICKER_HEADER",
+    "rows": 25,
+    "fund_headers": [
+     "ETHA",
+     "ETHB",
+     "FETH",
+     "ETHW",
+     "TETH",
+     "ETHV",
+     "QETH",
+     "EZET",
+     "ETHE",
+     "ETH"
+    ],
+    "parity_failures": 4,
+    "mislabel_rows": 0,
+    "mislabel_example": []
+   },
+   "SCRATCH_ADD_MSSE_TO_FROZEN_SCHEMA": {
+    "outcome": "FAIL_CLOSED",
+    "error": "HEADER_NOT_FOUND"
+   },
+   "STRICT_REGISTRY_PROTOTYPE": {
+    "outcome": "ACCEPTED_MAPPING_MATCHES_SOURCE",
+    "header_mode": "STRICT_SOURCE_TICKER_BINDING:FARSIDE_ETH_v1_10F:BASELINE",
+    "rows": 25,
+    "fund_headers": [
+     "ETHA",
+     "ETHB",
+     "FETH",
+     "ETHW",
+     "TETH",
+     "ETHV",
+     "QETH",
+     "EZET",
+     "ETHE",
+     "ETH"
+    ],
+    "parity_failures": 4,
+    "mislabel_rows": 0,
+    "mislabel_example": []
+   }
+  },
+  {
+   "fixture_id": "ISOLATE_LAYOUT_ONLY_NEW_LAYOUT_10F",
+   "asset": "ETH",
+   "kind": "ISOLATION",
+   "note": "new single ticker-row layout WITHOUT MSSE: isolates the layout change",
+   "fixture_sha256": "9bb8621f5324a132a42ccd216ea948ec06797f5acf8e109a14a7cfe035fc6ef6",
+   "PRODUCTION_MAIN": {
+    "outcome": "ACCEPTED_MAPPING_MATCHES_SOURCE",
+    "header_mode": "CANONICAL_ASSET_SCHEMA_EXACT_WIDTH_FALLBACK",
+    "rows": 25,
+    "fund_headers": [
+     "ETHA",
+     "ETHB",
+     "FETH",
+     "ETHW",
+     "TETH",
+     "ETHV",
+     "QETH",
+     "EZET",
+     "ETHE",
+     "ETH"
+    ],
+    "parity_failures": 4,
+    "mislabel_rows": 0,
+    "mislabel_example": []
+   },
+   "SCRATCH_ADD_MSSE_TO_FROZEN_SCHEMA": {
+    "outcome": "FAIL_CLOSED",
+    "error": "HEADER_NOT_FOUND"
+   },
+   "STRICT_REGISTRY_PROTOTYPE": {
+    "outcome": "ACCEPTED_MAPPING_MATCHES_SOURCE",
+    "header_mode": "STRICT_SOURCE_TICKER_BINDING:FARSIDE_ETH_v1_10F:BASELINE",
+    "rows": 25,
+    "fund_headers": [
+     "ETHA",
+     "ETHB",
+     "FETH",
+     "ETHW",
+     "TETH",
+     "ETHV",
+     "QETH",
+     "EZET",
+     "ETHE",
+     "ETH"
+    ],
+    "parity_failures": 4,
+    "mislabel_rows": 0,
+    "mislabel_example": []
+   }
+  },
+  {
+   "fixture_id": "ISOLATE_MSSE_ONLY_OLD_TWO_ROW_11F",
+   "asset": "ETH",
+   "kind": "ISOLATION",
+   "note": "old two-row layout WITH MSSE: isolates the added column",
+   "fixture_sha256": "25c4326a789486365fb49317590a3f2de50d380552119a6ad1e2ceffe58069c7",
+   "PRODUCTION_MAIN": {
+    "outcome": "FAIL_CLOSED",
+    "error": "HEADER_NOT_FOUND"
+   },
+   "SCRATCH_ADD_MSSE_TO_FROZEN_SCHEMA": {
+    "outcome": "ACCEPTED_MAPPING_MATCHES_SOURCE",
+    "header_mode": "SOURCE_TWO_ROW_TICKER_HEADER",
+    "rows": 25,
+    "fund_headers": [
+     "ETHA",
+     "ETHB",
+     "FETH",
+     "ETHW",
+     "TETH",
+     "ETHV",
+     "QETH",
+     "EZET",
+     "MSSE",
+     "ETHE",
+     "ETH"
+    ],
+    "parity_failures": 0,
+    "mislabel_rows": 0,
+    "mislabel_example": []
+   },
+   "STRICT_REGISTRY_PROTOTYPE": {
+    "outcome": "ACCEPTED_MAPPING_MATCHES_SOURCE",
+    "header_mode": "STRICT_SOURCE_TICKER_BINDING:FARSIDE_ETH_v2_11F_MSSE:KNOWN_ADDITIVE_SCHEMA_REVISION",
+    "rows": 25,
+    "fund_headers": [
+     "ETHA",
+     "ETHB",
+     "FETH",
+     "ETHW",
+     "TETH",
+     "ETHV",
+     "QETH",
+     "EZET",
+     "MSSE",
+     "ETHE",
+     "ETH"
+    ],
+    "parity_failures": 0,
+    "mislabel_rows": 0,
+    "mislabel_example": []
+   }
+  },
+  {
+   "fixture_id": "OLD_SHAPE_BTC_DIRECT",
+   "asset": "BTC",
+   "kind": "OLD_SHAPE",
+   "note": "BTC Date..Total layout",
+   "fixture_sha256": "30a8ff72497dcc3052c4bde3fa6f28dfde84f525f736dd02314c56efc06ef688",
+   "PRODUCTION_MAIN": {
+    "outcome": "ACCEPTED_MAPPING_MATCHES_SOURCE",
+    "header_mode": "DIRECT_DATE_TOTAL",
+    "rows": 24,
+    "fund_headers": [
+     "IBIT",
+     "FBTC",
+     "BITB",
+     "ARKB",
+     "BTCO",
+     "EZBC",
+     "BRRR",
+     "HODL",
+     "BTCW",
+     "MSBT",
+     "GBTC",
+     "BTC"
+    ],
+    "parity_failures": 0,
+    "mislabel_rows": 0,
+    "mislabel_example": []
+   },
+   "SCRATCH_ADD_MSSE_TO_FROZEN_SCHEMA": {
+    "outcome": "ACCEPTED_MAPPING_MATCHES_SOURCE",
+    "header_mode": "DIRECT_DATE_TOTAL",
+    "rows": 24,
+    "fund_headers": [
+     "IBIT",
+     "FBTC",
+     "BITB",
+     "ARKB",
+     "BTCO",
+     "EZBC",
+     "BRRR",
+     "HODL",
+     "BTCW",
+     "MSBT",
+     "GBTC",
+     "BTC"
+    ],
+    "parity_failures": 0,
+    "mislabel_rows": 0,
+    "mislabel_example": []
+   },
+   "STRICT_REGISTRY_PROTOTYPE": {
+    "outcome": "ACCEPTED_MAPPING_MATCHES_SOURCE",
+    "header_mode": "STRICT_SOURCE_TICKER_BINDING:FARSIDE_BTC_v1_12F:BASELINE",
+    "rows": 24,
+    "fund_headers": [
+     "IBIT",
+     "FBTC",
+     "BITB",
+     "ARKB",
+     "BTCO",
+     "EZBC",
+     "BRRR",
+     "HODL",
+     "BTCW",
+     "MSBT",
+     "GBTC",
+     "BTC"
+    ],
+    "parity_failures": 0,
+    "mislabel_rows": 0,
+    "mislabel_example": []
+   }
+  },
+  {
+   "fixture_id": "NEG_MALFORMED_HEADER_NO_TOTAL_LABEL",
+   "asset": "ETH",
+   "kind": "NEGATIVE",
+   "note": "header last cell 'Tot' (no Total label), same width",
+   "fixture_sha256": "97c639ceeef7b80e9fdee36dc4e6294b210cbfdb7504dc01515e54e25a4a04a2",
+   "PRODUCTION_MAIN": {
+    "outcome": "FAIL_CLOSED",
+    "error": "HEADER_NOT_FOUND"
+   },
+   "SCRATCH_ADD_MSSE_TO_FROZEN_SCHEMA": {
+    "outcome": "ACCEPTED_MAPPING_MATCHES_SOURCE",
+    "header_mode": "CANONICAL_ASSET_SCHEMA_EXACT_WIDTH_FALLBACK",
+    "rows": 25,
+    "fund_headers": [
+     "ETHA",
+     "ETHB",
+     "FETH",
+     "ETHW",
+     "TETH",
+     "ETHV",
+     "QETH",
+     "EZET",
+     "MSSE",
+     "ETHE",
+     "ETH"
+    ],
+    "parity_failures": 0,
+    "mislabel_rows": 0,
+    "mislabel_example": []
+   },
+   "STRICT_REGISTRY_PROTOTYPE": {
+    "outcome": "FAIL_CLOSED",
+    "error": "HEADER_NOT_FOUND"
+   }
+  },
+  {
+   "fixture_id": "NEG_MALFORMED_HEADER_NO_HEADER_ROW",
+   "asset": "ETH",
+   "kind": "NEGATIVE",
+   "note": "no header row at all, 12-value rows (tests width-only binding)",
+   "fixture_sha256": "c147d3759f1d048d819a69a6d12114564585f4a5065c3bb69ba2b5cc86ed07b0",
+   "PRODUCTION_MAIN": {
+    "outcome": "FAIL_CLOSED",
+    "error": "HEADER_NOT_FOUND"
+   },
+   "SCRATCH_ADD_MSSE_TO_FROZEN_SCHEMA": {
+    "outcome": "ACCEPTED_MAPPING_MATCHES_SOURCE",
+    "header_mode": "CANONICAL_ASSET_SCHEMA_EXACT_WIDTH_FALLBACK",
+    "rows": 25,
+    "fund_headers": [
+     "ETHA",
+     "ETHB",
+     "FETH",
+     "ETHW",
+     "TETH",
+     "ETHV",
+     "QETH",
+     "EZET",
+     "MSSE",
+     "ETHE",
+     "ETH"
+    ],
+    "parity_failures": 0,
+    "mislabel_rows": 0,
+    "mislabel_example": []
+   },
+   "STRICT_REGISTRY_PROTOTYPE": {
+    "outcome": "FAIL_CLOSED",
+    "error": "HEADER_NOT_FOUND"
+   }
+  },
+  {
+   "fixture_id": "NEG_UNKNOWN_COLUMN_ADDED",
+   "asset": "ETH",
+   "kind": "NEGATIVE",
+   "note": "unregistered ticker XETH inserted (13 funds)",
+   "fixture_sha256": "be11ba7d8e053f7c0c8a5231776e522b6c7016606006212ac1edbeb965828ac5",
+   "PRODUCTION_MAIN": {
+    "outcome": "FAIL_CLOSED",
+    "error": "HEADER_NOT_FOUND"
+   },
+   "SCRATCH_ADD_MSSE_TO_FROZEN_SCHEMA": {
+    "outcome": "FAIL_CLOSED",
+    "error": "HEADER_NOT_FOUND"
+   },
+   "STRICT_REGISTRY_PROTOTYPE": {
+    "outcome": "FAIL_CLOSED",
+    "error": "UNKNOWN_SCHEMA_REVISION"
+   }
+  },
+  {
+   "fixture_id": "NEG_UNKNOWN_COLUMN_SAME_WIDTH",
+   "asset": "ETH",
+   "kind": "NEGATIVE",
+   "note": "MSSE replaced by unregistered MSSX, width unchanged",
+   "fixture_sha256": "e588d47cff9e729ec0abeb0b0d7afdae996b3018d54319dbfe2c5b58eb212aa7",
+   "PRODUCTION_MAIN": {
+    "outcome": "FAIL_CLOSED",
+    "error": "HEADER_NOT_FOUND"
+   },
+   "SCRATCH_ADD_MSSE_TO_FROZEN_SCHEMA": {
+    "outcome": "SILENT_MISLABEL",
+    "header_mode": "CANONICAL_ASSET_SCHEMA_EXACT_WIDTH_FALLBACK",
+    "rows": 25,
+    "fund_headers": [
+     "ETHA",
+     "ETHB",
+     "FETH",
+     "ETHW",
+     "TETH",
+     "ETHV",
+     "QETH",
+     "EZET",
+     "MSSE",
+     "ETHE",
+     "ETH"
+    ],
+    "parity_failures": 0,
+    "mislabel_rows": 25,
+    "mislabel_example": [
+     {
+      "date": "2026-08-18",
+      "fund": "MSSE",
+      "bound_raw": "0.0",
+      "source_raw": "FUND_NOT_IN_SOURCE"
+     }
+    ]
+   },
+   "STRICT_REGISTRY_PROTOTYPE": {
+    "outcome": "FAIL_CLOSED",
+    "error": "UNKNOWN_SCHEMA_REVISION"
+   }
+  },
+  {
+   "fixture_id": "NEG_REORDERED_COLUMNS_ETH",
+   "asset": "ETH",
+   "kind": "NEGATIVE",
+   "note": "source swaps ETHE/ETH columns (header and values), width unchanged",
+   "fixture_sha256": "1284ea3eb0083b893df279d76757629f0701d13dfb09227ee590ce32c4d86f9b",
+   "PRODUCTION_MAIN": {
+    "outcome": "FAIL_CLOSED",
+    "error": "HEADER_NOT_FOUND"
+   },
+   "SCRATCH_ADD_MSSE_TO_FROZEN_SCHEMA": {
+    "outcome": "SILENT_MISLABEL",
+    "header_mode": "CANONICAL_ASSET_SCHEMA_EXACT_WIDTH_FALLBACK",
+    "rows": 25,
+    "fund_headers": [
+     "ETHA",
+     "ETHB",
+     "FETH",
+     "ETHW",
+     "TETH",
+     "ETHV",
+     "QETH",
+     "EZET",
+     "MSSE",
+     "ETHE",
+     "ETH"
+    ],
+    "parity_failures": 0,
+    "mislabel_rows": 18,
+    "mislabel_example": [
+     {
+      "date": "2026-08-18",
+      "fund": "ETHE",
+      "bound_raw": "2.7",
+      "source_raw": "1.5"
+     }
+    ]
+   },
+   "STRICT_REGISTRY_PROTOTYPE": {
+    "outcome": "FAIL_CLOSED",
+    "error": "UNKNOWN_SCHEMA_REVISION:REORDERED"
+   }
+  },
+  {
+   "fixture_id": "NEG_REORDERED_COLUMNS_BTC",
+   "asset": "BTC",
+   "kind": "NEGATIVE",
+   "note": "source swaps GBTC/BTC columns",
+   "fixture_sha256": "956b964b5fc6a8339c11dc79c97f0ce152747c01e6bad37f45c6b0d419372e83",
+   "PRODUCTION_MAIN": {
+    "outcome": "FAIL_CLOSED",
+    "error": "HEADER_SCHEMA_MISMATCH"
+   },
+   "SCRATCH_ADD_MSSE_TO_FROZEN_SCHEMA": {
+    "outcome": "FAIL_CLOSED",
+    "error": "HEADER_SCHEMA_MISMATCH"
+   },
+   "STRICT_REGISTRY_PROTOTYPE": {
+    "outcome": "FAIL_CLOSED",
+    "error": "UNKNOWN_SCHEMA_REVISION:REORDERED"
+   }
+  },
+  {
+   "fixture_id": "NEG_DUPLICATE_TICKER",
+   "asset": "ETH",
+   "kind": "NEGATIVE",
+   "note": "ETHE appears twice (ETH header renamed)",
+   "fixture_sha256": "fe9e87447a08bc0980e37f427bc131b8826612ced3f31daaeaf774607bd530b3",
+   "PRODUCTION_MAIN": {
+    "outcome": "FAIL_CLOSED",
+    "error": "HEADER_NOT_FOUND"
+   },
+   "SCRATCH_ADD_MSSE_TO_FROZEN_SCHEMA": {
+    "outcome": "ACCEPTED_INVALID_SOURCE_SCHEMA",
+    "header_mode": "CANONICAL_ASSET_SCHEMA_EXACT_WIDTH_FALLBACK",
+    "rows": 25,
+    "fund_headers": [
+     "ETHA",
+     "ETHB",
+     "FETH",
+     "ETHW",
+     "TETH",
+     "ETHV",
+     "QETH",
+     "EZET",
+     "MSSE",
+     "ETHE",
+     "ETH"
+    ],
+    "parity_failures": 0
+   },
+   "STRICT_REGISTRY_PROTOTYPE": {
+    "outcome": "FAIL_CLOSED",
+    "error": "DUPLICATE_TICKER"
+   }
+  },
+  {
+   "fixture_id": "NEG_MISSING_TOTAL_COLUMN",
+   "asset": "ETH",
+   "kind": "NEGATIVE",
+   "note": "Total column removed from header and every row",
+   "fixture_sha256": "9e81cc75d01e05d136fcef3442643158029c5fabd30d5805968326cf4df28198",
+   "PRODUCTION_MAIN": {
+    "outcome": "ACCEPTED_INVALID_SOURCE_SCHEMA",
+    "header_mode": "CANONICAL_ASSET_SCHEMA_EXACT_WIDTH_FALLBACK",
+    "rows": 25,
+    "fund_headers": [
+     "ETHA",
+     "ETHB",
+     "FETH",
+     "ETHW",
+     "TETH",
+     "ETHV",
+     "QETH",
+     "EZET",
+     "ETHE",
+     "ETH"
+    ],
+    "parity_failures": 25
+   },
+   "SCRATCH_ADD_MSSE_TO_FROZEN_SCHEMA": {
+    "outcome": "FAIL_CLOSED",
+    "error": "HEADER_NOT_FOUND"
+   },
+   "STRICT_REGISTRY_PROTOTYPE": {
+    "outcome": "FAIL_CLOSED",
+    "error": "HEADER_NOT_FOUND"
+   }
+  },
+  {
+   "fixture_id": "NEG_MISSING_TOTAL_CELL_ONE_ROW",
+   "asset": "ETH",
+   "kind": "NEGATIVE",
+   "note": "latest row lacks its Total cell (row short by one)",
+   "fixture_sha256": "1a4981e410e655ef226af9c7ce82613fd4bc7c7dce261635e16c3d3345276e91",
+   "PRODUCTION_MAIN": {
+    "outcome": "FAIL_CLOSED",
+    "error": "HEADER_NOT_FOUND"
+   },
+   "SCRATCH_ADD_MSSE_TO_FROZEN_SCHEMA": {
+    "outcome": "FAIL_CLOSED",
+    "error": "HEADER_NOT_FOUND"
+   },
+   "STRICT_REGISTRY_PROTOTYPE": {
+    "outcome": "FAIL_CLOSED",
+    "error": "COLUMN_COUNT_DRIFT"
+   }
+  }
+ ],
+ "contract_verdicts": {
+  "PRODUCTION_MAIN": {
+   "passes_contract": false,
+   "violations": [
+    {
+     "fixture": "LIVE_ETH_CURRENT_PAGE",
+     "outcome": "FAIL_CLOSED",
+     "error": "HEADER_NOT_FOUND"
+    },
+    {
+     "fixture": "RECENT_HISTORY_ETH_LAST25_NEW_LAYOUT",
+     "outcome": "FAIL_CLOSED",
+     "error": "HEADER_NOT_FOUND"
+    },
+    {
+     "fixture": "NEG_MISSING_TOTAL_COLUMN",
+     "outcome": "ACCEPTED_INVALID_SOURCE_SCHEMA",
+     "mode": "CANONICAL_ASSET_SCHEMA_EXACT_WIDTH_FALLBACK"
+    }
+   ]
+  },
+  "SCRATCH_ADD_MSSE_TO_FROZEN_SCHEMA": {
+   "passes_contract": false,
+   "violations": [
+    {
+     "fixture": "NEG_MALFORMED_HEADER_NO_TOTAL_LABEL",
+     "outcome": "ACCEPTED_MAPPING_MATCHES_SOURCE",
+     "mode": "CANONICAL_ASSET_SCHEMA_EXACT_WIDTH_FALLBACK"
+    },
+    {
+     "fixture": "NEG_MALFORMED_HEADER_NO_HEADER_ROW",
+     "outcome": "ACCEPTED_MAPPING_MATCHES_SOURCE",
+     "mode": "CANONICAL_ASSET_SCHEMA_EXACT_WIDTH_FALLBACK"
+    },
+    {
+     "fixture": "NEG_UNKNOWN_COLUMN_SAME_WIDTH",
+     "outcome": "SILENT_MISLABEL",
+     "mode": "CANONICAL_ASSET_SCHEMA_EXACT_WIDTH_FALLBACK"
+    },
+    {
+     "fixture": "NEG_REORDERED_COLUMNS_ETH",
+     "outcome": "SILENT_MISLABEL",
+     "mode": "CANONICAL_ASSET_SCHEMA_EXACT_WIDTH_FALLBACK"
+    },
+    {
+     "fixture": "NEG_DUPLICATE_TICKER",
+     "outcome": "ACCEPTED_INVALID_SOURCE_SCHEMA",
+     "mode": "CANONICAL_ASSET_SCHEMA_EXACT_WIDTH_FALLBACK"
+    }
+   ]
+  },
+  "STRICT_REGISTRY_PROTOTYPE": {
+   "passes_contract": true,
+   "violations": []
+  }
+ }
+}
