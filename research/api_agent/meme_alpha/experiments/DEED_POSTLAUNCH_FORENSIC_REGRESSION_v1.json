@@ -1,0 +1,58 @@
+{
+  "contract": "DEED_POSTLAUNCH_FORENSIC_REGRESSION_v1",
+  "status": "HISTORICAL_PENDING_CHAIN_REPRODUCTION",
+  "owner": "#1087",
+  "chain_id": 4663,
+  "token_symbol": "DEED",
+  "token_contract": "0x5e55f18453545d0d4314c5106a2d8db934298e95",
+  "prospective_credit": 0,
+  "social_allegations": {
+    "state": "UNVERIFIED_PENDING_CHAIN_REPRODUCTION",
+    "claims": [
+      "PRIVILEGED_SUPPLY_TO_TRACKED_WALLETS",
+      "EARLY_EXIT",
+      "PAID_KOL_PROMOTION",
+      "COORDINATED_EXIT_LIQUIDITY_STRUCTURE"
+    ]
+  },
+  "required_forensics": [
+    "CREATION_DISTRIBUTION",
+    "ROUND_NUMBER_DORMANT_RECIPIENTS",
+    "PRETRADING_FREE_TRANSFERS",
+    "COORDINATED_EXIT",
+    "DEPLOYER_PROVENANCE",
+    "CREATOR_FEE_FLOW",
+    "HOLDER_CONCENTRATION",
+    "PROMOTION_CLOCK"
+  ],
+  "transfer_semantics": [
+    "SELF_INITIATED_BUY",
+    "PRIVILEGED_PRELAUNCH_TRANSFER",
+    "GIFT_DUST_SEED",
+    "CREATOR_DEV_ALLOCATION",
+    "PAID_PROMOTER_ALLOCATION",
+    "UNKNOWN_TRANSFER"
+  ],
+  "shadow_fields": [
+    "privileged_supply_pct_before_public_trade",
+    "fresh_recipient_count_before_public_trade",
+    "common_funder_cluster_count",
+    "pretrade_transfer_recipient_count",
+    "tracked_wallet_privileged_transfer_count",
+    "recipient_exit_common_destination_state",
+    "creator_fee_destination_alignment_state",
+    "historical_launch_recipient_sellthrough_pct",
+    "promotion_after_privileged_distribution_state",
+    "deployer_single_use_state",
+    "deployer_funding_provenance_state"
+  ],
+  "guardrails": [
+    "UNKNOWN_NEVER_ZERO",
+    "NO_PERSON_OR_PROJECT_FRAUD_LABEL_WITHOUT_REPRODUCED_EVIDENCE",
+    "NO_RETRO_ALPHA_CREDIT",
+    "NO_NEW_SCORE_OR_THRESHOLD",
+    "NO_TRADE_AUTHORITY",
+    "TRACKED_WALLET_REPUTATION_CANNOT_OVERRIDE_TRANSFER_PROVENANCE"
+  ],
+  "next_gate": "REPRODUCE_INITIAL_DISTRIBUTION_AND_ALLEGED_TRACKED_WALLET_ALLOCATIONS_FROM_CHAIN_RECEIPTS"
+}
