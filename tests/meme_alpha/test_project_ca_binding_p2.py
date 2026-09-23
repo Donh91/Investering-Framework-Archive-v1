@@ -117,9 +117,10 @@ class P2BindingTests(unittest.TestCase):
         self.assertEqual(high["binding_state"], "BOUND_HIGH")
         self.assertEqual(high["superseded_prior_binding"]["lineage_state"], "SUPERSEDED_WITH_PROOF")
 
-    def test_source_outage_is_not_revocation(self):
+    def test_source_outage_does_not_revoke_frozen_authenticated_binding(self):
         row = bind(project_control_binding={"authenticated": False, "source_health": "UNAVAILABLE"})
-        self.assertEqual(row["binding_state"], "CANDIDATE_BINDING")
+        self.assertEqual(row["binding_state"], "BOUND_HIGH")
+        self.assertNotEqual(row["binding_state"], "REVOKED")
 
     def test_revocation_requires_explicit_hashed_evidence(self):
         with self.assertRaises(ProjectCABindingError):
