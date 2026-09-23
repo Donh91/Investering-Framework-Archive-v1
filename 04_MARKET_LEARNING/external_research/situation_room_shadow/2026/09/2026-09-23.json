@@ -1,0 +1,54 @@
+{
+  "authority": "SHADOW_RESEARCH_ONLY_NON_CANONICAL",
+  "authority_firewall": {
+    "canonical_effect": false,
+    "execution_authority": false,
+    "market_state_effect": false,
+    "portfolio_effect": false,
+    "topup_authority": false
+  },
+  "contract": "SITUATION_ROOM_VERIFICATION_SHADOW_BRIDGE_v1",
+  "generated_at_utc": "2026-09-23T11:38:29Z",
+  "observation_date_utc": "2026-09-23",
+  "pending_verification": [
+    {
+      "canonical_effect": false,
+      "detection_time_utc": "2026-09-23T11:37:55Z",
+      "event_time_utc": "2026-09-23T06:00:20.895000Z",
+      "market_state_effect": false,
+      "portfolio_effect": false,
+      "shadow_admission": "NOT_ADMITTED_PENDING_VERIFICATION",
+      "shadow_id": "SRSH_2a7811a18d28cd805229",
+      "source": "SITUATION_ROOM",
+      "source_receipt": {
+        "bytes": 104471,
+        "error_class": null,
+        "fetched_at_utc": "2026-09-23T11:37:56Z",
+        "http_status": 200,
+        "role": "DISCOVERY_ONLY",
+        "sha256": "995dafa5bc7d4b34ed8084672084a5d93ca21e7bd65c255bd4e1dc4b61c05bee",
+        "source_id": "SITUATION_ROOM",
+        "status": "PASS",
+        "url": "https://situationroom.space/briefing/2026-09-23"
+      },
+      "title": "Bitcoin streak since 2012 collides with positive exchange inflows \u2014 Situation Room",
+      "url": "https://situationroom.space/briefing/2026-09-23",
+      "verification_status": "PENDING_PRIMARY_VERIFICATION"
+    }
+  ],
+  "source_owner_contract": "SITUATION_ROOM_DAILY_OWNER_v1",
+  "source_owner_path": "03_DAILY_CAPTURE_LOGS/catalyst_overlay/situation_room/2026/09/2026-09-23.json",
+  "source_run_id": "SRDO_d4228ae69173f264",
+  "status": "PENDING_VERIFICATION",
+  "verification_policy": {
+    "accepted_methods": [
+      "OWNER_PRIMARY_EVENT_TITLE_OVERLAP",
+      "SITUATION_ROOM_LINKED_PRIMARY_SOURCE"
+    ],
+    "automatic_admission_requires_primary_corroboration": true,
+    "minimum_shared_tokens": 2,
+    "minimum_title_overlap": 0.45,
+    "situation_room_is_discovery_only": true
+  },
+  "verified_shadow_context": []
+}
