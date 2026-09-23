@@ -267,6 +267,40 @@ def provider_call(
     raise RuntimeError("ALL_ROBINHOOD_PROVIDERS_FAILED:" + json.dumps(errors, sort_keys=True))
 
 
+def provider_preflight(rpc_urls: Iterable[str], *, timeout: int = 15) -> dict[str, Any]:
+    """Probe every configured provider without turning one-provider success into health proof."""
+    rows: list[dict[str, Any]] = []
+    for url in rpc_urls:
+        label = provider_label(url)
+        row: dict[str, Any] = {
+            "provider": label,
+            "chain_id_ok": False,
+            "head_block": None,
+            "state": "UNAVAILABLE",
+            "error": None,
+        }
+        try:
+            chain_id = rpc_call(url, "eth_chainId", [], timeout=timeout)
+            if str(chain_id).lower() != CHAIN_ID_HEX:
+                raise RuntimeError(f"WRONG_CHAIN:{chain_id}")
+            head = hex_int(rpc_call(url, "eth_blockNumber", [], timeout=timeout))
+            if head is None:
+                raise RuntimeError("INVALID_HEAD_BLOCK")
+            row.update({"chain_id_ok": True, "head_block": head, "state": "HEALTHY"})
+        except Exception as exc:
+            row["error"] = repr(exc)
+        rows.append(row)
+    healthy = [x for x in rows if x["state"] == "HEALTHY"]
+    return {
+        "providers": rows,
+        "configured_provider_count": len(rows),
+        "healthy_provider_count": len(healthy),
+        "provider_redundancy_proven": len(healthy) >= 2,
+        "minimum_healthy_head": min((x["head_block"] for x in healthy), default=None),
+        "maximum_healthy_head": max((x["head_block"] for x in healthy), default=None),
+    }
+
+
 def _log_params(from_block: int, to_block: int, *, token_ca: str | None = None) -> dict[str, Any]:
     if from_block < 0 or to_block < from_block:
         raise ValueError("INVALID_BLOCK_RANGE")
@@ -291,6 +325,10 @@ def scan_range(
 ) -> dict[str, Any]:
     """Scan canonical Pons V2 launches with bounded ranges and provider failover."""
     observed = int(time.time())
+    rpc_urls = list(rpc_urls)
+    preflight = provider_preflight(rpc_urls, timeout=timeout)
+    min_head = preflight["minimum_healthy_head"]
+    cursor_covered = min_head is not None and to_block <= min_head
     events: list[dict[str, Any]] = []
     provider_errors: dict[str, str] = {}
     providers_used: set[str] = set()
@@ -329,6 +367,15 @@ def scan_range(
         deduped.values(),
         key=lambda row: (row.get("block_number") or -1, row.get("log_index") or -1),
     )
+    if preflight["healthy_provider_count"] == 0:
+        health_class = "UNAVAILABLE"
+    elif not preflight["provider_redundancy_proven"] or not cursor_covered:
+        health_class = "PARTIAL"
+    elif output:
+        health_class = "HEALTHY_NONEMPTY"
+    else:
+        health_class = "HEALTHY_ZERO"
+
     return {
         "contract": "MEME_ALPHA_ROBINHOOD_PONS_V2_BATCH_v1",
         "status": "SHADOW_ONLY",
@@ -338,6 +385,18 @@ def scan_range(
         "to_block": to_block,
         "target_ca": normalize_address(token_ca) if token_ca else None,
         "event_count": len(output),
+        "source_health": {
+            "health_class": health_class,
+            "observed_at_utc": datetime.fromtimestamp(observed, tz=timezone.utc).isoformat().replace("+00:00", "Z"),
+            "coverage_start_block": from_block,
+            "coverage_end_block": to_block,
+            "head_and_cursor_health": "PASS" if cursor_covered else "UNKNOWN_OR_LAGGING",
+            "provider_redundancy_proven": preflight["provider_redundancy_proven"],
+            "configured_provider_count": preflight["configured_provider_count"],
+            "healthy_provider_count": preflight["healthy_provider_count"],
+            "provider_preflight": preflight["providers"],
+            "absence_is_evidence": health_class == "HEALTHY_ZERO",
+        },
         "providers_used": sorted(providers_used),
         "provider_errors": provider_errors,
         "events": output,

@@ -150,7 +150,18 @@ class RobinhoodPonsV2AdapterTests(unittest.TestCase):
             self.assertEqual(method, "eth_getLogs")
             return [raw, raw], "fixture.rpc", {}
 
-        with patch.object(r, "provider_call", side_effect=fake_provider_call):
+        preflight = {
+            "providers": [
+                {"provider": "fixture.rpc", "chain_id_ok": True, "head_block": LAUNCH_BLOCK + 10, "state": "HEALTHY", "error": None},
+                {"provider": "backup.rpc", "chain_id_ok": True, "head_block": LAUNCH_BLOCK + 9, "state": "HEALTHY", "error": None},
+            ],
+            "configured_provider_count": 2,
+            "healthy_provider_count": 2,
+            "provider_redundancy_proven": True,
+            "minimum_healthy_head": LAUNCH_BLOCK + 9,
+            "maximum_healthy_head": LAUNCH_BLOCK + 10,
+        }
+        with patch.object(r, "provider_preflight", return_value=preflight), patch.object(r, "provider_call", side_effect=fake_provider_call):
             batch = r.scan_range(
                 ["https://fixture.rpc"],
                 LAUNCH_BLOCK,
@@ -163,7 +174,66 @@ class RobinhoodPonsV2AdapterTests(unittest.TestCase):
         self.assertEqual(batch["events"][0]["token_ca"], ASKR)
         self.assertEqual(batch["target_ca"], ASKR)
         self.assertEqual(batch["providers_used"], ["fixture.rpc"])
+        self.assertEqual(batch["source_health"]["health_class"], "HEALTHY_NONEMPTY")
+        self.assertFalse(batch["source_health"]["absence_is_evidence"])
         self.assertFalse(batch["authority"]["user_alert"])
+
+
+    def test_healthy_zero_requires_redundant_provider_and_cursor_health(self) -> None:
+        preflight = {
+            "providers": [
+                {"provider": "a.rpc", "chain_id_ok": True, "head_block": 200, "state": "HEALTHY", "error": None},
+                {"provider": "b.rpc", "chain_id_ok": True, "head_block": 201, "state": "HEALTHY", "error": None},
+            ],
+            "configured_provider_count": 2,
+            "healthy_provider_count": 2,
+            "provider_redundancy_proven": True,
+            "minimum_healthy_head": 200,
+            "maximum_healthy_head": 201,
+        }
+        with patch.object(r, "provider_preflight", return_value=preflight), patch.object(
+            r, "provider_call", return_value=([], "a.rpc", {})
+        ):
+            batch = r.scan_range(["https://a.rpc", "https://b.rpc"], 100, 110)
+        self.assertEqual(batch["source_health"]["health_class"], "HEALTHY_ZERO")
+        self.assertTrue(batch["source_health"]["absence_is_evidence"])
+
+    def test_single_provider_zero_is_partial_not_absence_evidence(self) -> None:
+        preflight = {
+            "providers": [
+                {"provider": "a.rpc", "chain_id_ok": True, "head_block": 200, "state": "HEALTHY", "error": None},
+            ],
+            "configured_provider_count": 1,
+            "healthy_provider_count": 1,
+            "provider_redundancy_proven": False,
+            "minimum_healthy_head": 200,
+            "maximum_healthy_head": 200,
+        }
+        with patch.object(r, "provider_preflight", return_value=preflight), patch.object(
+            r, "provider_call", return_value=([], "a.rpc", {})
+        ):
+            batch = r.scan_range(["https://a.rpc"], 100, 110)
+        self.assertEqual(batch["source_health"]["health_class"], "PARTIAL")
+        self.assertFalse(batch["source_health"]["absence_is_evidence"])
+
+    def test_cursor_ahead_of_verified_head_is_partial(self) -> None:
+        preflight = {
+            "providers": [
+                {"provider": "a.rpc", "chain_id_ok": True, "head_block": 105, "state": "HEALTHY", "error": None},
+                {"provider": "b.rpc", "chain_id_ok": True, "head_block": 106, "state": "HEALTHY", "error": None},
+            ],
+            "configured_provider_count": 2,
+            "healthy_provider_count": 2,
+            "provider_redundancy_proven": True,
+            "minimum_healthy_head": 105,
+            "maximum_healthy_head": 106,
+        }
+        with patch.object(r, "provider_preflight", return_value=preflight), patch.object(
+            r, "provider_call", return_value=([], "a.rpc", {})
+        ):
+            batch = r.scan_range(["https://a.rpc", "https://b.rpc"], 100, 110)
+        self.assertEqual(batch["source_health"]["health_class"], "PARTIAL")
+        self.assertFalse(batch["source_health"]["absence_is_evidence"])
 
     def test_padded_address_topic_is_exact_indexed_topic_shape(self) -> None:
         topic = r.padded_address_topic(ASKR)
