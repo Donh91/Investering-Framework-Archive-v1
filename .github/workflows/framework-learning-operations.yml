@@ -57,6 +57,15 @@ jobs:
             --packet "$PACKET" \
             --cadence "$CADENCE" \
             --output-root research/framework_memory/rotation_survival_forward_rows
+      - name: Capture prospective T5 FNP source rows
+        run: |
+          python -m unittest tests.learning.test_fnp_cumulative_forward -v
+          python scripts/learning/fnp_cumulative_forward.py scan \
+            --t2-receipt-root research/api_agent/coordination \
+            --t2-maturity-root research/api_agent/coordination \
+            --output-root research/framework_memory/fnp_forward_rows \
+            --run-id "${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+
       - name: Capture Farside ETF owner
         continue-on-error: true
         run: |

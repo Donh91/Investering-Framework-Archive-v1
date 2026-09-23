@@ -1,0 +1,40 @@
+{
+  "contract": "T5_FNP_RUNTIME_v1",
+  "status": "PROSPECTIVE_SOURCE_INSTRUMENTATION_ACTIVE_EVALUATOR_BLOCKED",
+  "activation_utc": "2026-09-23T23:52:00Z",
+  "test_id": "FNP_CUMULATIVE",
+  "upstream_existing_owner": "GATE_BTC_PARTIAL_FT_1",
+  "upstream_receipt_contract": "BTC_PARTIAL_WAIT_COVERAGE_RECEIPT_v1",
+  "upstream_maturity_contract": "BTC_PARTIAL_WAIT_MATURITY_RECEIPT_v1",
+  "upstream_discovery_root": "research/api_agent/coordination",
+  "output_root": "research/framework_memory/fnp_forward_rows",
+  "frozen_horizons": [
+    "24H",
+    "72H",
+    "7D"
+  ],
+  "eligible_source_rule": "ONLY_EXPLICIT_T2_DIVERGENCE_CAPTURED_AFTER_ACTIVATION",
+  "no_divergence_behavior": "NO_T5_SOURCE_ROW",
+  "duplicate_behavior": "IMMUTABLE_DUPLICATE_NOOP",
+  "historical_backfill": false,
+  "outcome_evaluator": {
+    "available": false,
+    "status": "BLOCKED_AUTHORITATIVE_FNP_EVALUATOR_MISSING",
+    "governance_reference": "research/experiments/pdlt_v1_1/PDLT_METHODS_HARDENING_P2_2026-08-10.json",
+    "blocked_claim": "FNP_DAMAGE_AVOIDED_MISSED_UPSIDE",
+    "derived_metrics_emitted": false,
+    "final_classification_emitted": false
+  },
+  "authority": {
+    "research_only": true,
+    "binding": false,
+    "framework_state_change": false,
+    "market_rule_change": false,
+    "market_threshold_change": false,
+    "model_weight_change": false,
+    "portfolio_action": false,
+    "automatic_execution": false,
+    "automatic_promotion": false,
+    "classification_authority": false
+  }
+}
