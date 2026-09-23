@@ -1,0 +1,26 @@
+{
+  "contract": "CODEX_RESEARCH_DIRECT_MERGE_RECEIPT_v1",
+  "status": "DIRECT_MERGE_VERIFIED",
+  "resolution_mode": "DIRECT_MAIN_LANDING",
+  "authority": "OBSERVABILITY_ONLY_NO_COMPLETION_AUTHORITY",
+  "signature": "c767d605f29f7bd2722b",
+  "candidate_id": "codex-research-techdev-t7-calibration-reconciliation-v1",
+  "candidate_sha256": "3d1323857ddb31dfa652fb5c95363fc955db7b4ed9868982fc3c93d636a89306",
+  "task_contract_sha256": "9e97d6a83df8e3ed3360a2076ccab61a98d83f48f143b7f703f643cf2362e175",
+  "branch": "agent/task-20260912-techdev-t7-readout",
+  "superseded_pr_number": 889,
+  "landing_commit_sha": "aca6eb4be618c0fedbe25faad5d2418e6dd7f85d",
+  "landed_at_utc": "2026-09-23T07:28:02Z",
+  "verified_at_utc": "2026-09-23T21:30:00Z",
+  "post_fix_gate": "T7_READOUT_RECONCILES_LATER_CANONICAL_CALIBRATION_WITH_NO_HISTORY_REWRITE",
+  "equivalence_evidence": [
+    "PR #889 implements the bounded T7 read-only calibration reconciliation; direct main commit aca6eb4be618c0fedbe25faad5d2418e6dd7f85d is explicitly titled fresh-main replacement for #889.",
+    "Both artifacts preserve historical ledgers and do not rescore, alter workflow routing, or grant canonical/market authority."
+  ],
+  "verification_evidence": [
+    "GitHub main contains aca6eb4be618c0fedbe25faad5d2418e6dd7f85d.",
+    "Direct landing commit records a read-only reconciliation of historical T7 calibration scopes.",
+    "Post-fix gate remains REQUIRED_NOT_YET_VERIFIED; this receipt only removes stale Codex execution state."
+  ],
+  "receipt_sha256": "be34996cc314b3ac039c6a24e86ceebd952f68dd120b87da9f24382be4d1b39b"
+}

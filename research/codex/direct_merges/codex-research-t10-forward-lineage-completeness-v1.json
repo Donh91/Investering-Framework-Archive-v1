@@ -1,0 +1,26 @@
+{
+  "contract": "CODEX_RESEARCH_DIRECT_MERGE_RECEIPT_v1",
+  "status": "DIRECT_MERGE_VERIFIED",
+  "resolution_mode": "DIRECT_MAIN_LANDING",
+  "authority": "OBSERVABILITY_ONLY_NO_COMPLETION_AUTHORITY",
+  "signature": "ad9eb8075d7529802226",
+  "candidate_id": "codex-research-t10-forward-lineage-completeness-v1",
+  "candidate_sha256": "1eda2e1823bc52ccb281b27fb653e70d2c84c23569b8df29602a842cb0dd8664",
+  "task_contract_sha256": "b2ffaee3ed7484ca533776845f77d77dd14da075671dbf2cd371cf9420278714",
+  "branch": "agent/task-20260916-t10-forward-lineage",
+  "superseded_pr_number": 1072,
+  "landing_commit_sha": "f976a97519c44dc72302f614a2bdb8324ec8b5d2",
+  "landed_at_utc": "2026-09-18T07:25:31Z",
+  "verified_at_utc": "2026-09-23T21:30:00Z",
+  "post_fix_gate": "FORWARD_LINEAGE_REPORT_RECONCILES_TO_OFFICIAL_ROWS_AND_PRESERVES_W28_UNSCORED",
+  "equivalence_evidence": [
+    "PR #1072 is the bounded T10 lineage task branch; direct main commit f976a97519c44dc72302f614a2bdb8324ec8b5d2 transplants the same T10 script, tests, report and transition onto fresh main and adds owner-maturity eligibility hardening.",
+    "The direct landing preserves W28 as unscored and does not fabricate historical lineage or alter portfolio/market authority."
+  ],
+  "verification_evidence": [
+    "GitHub main contains f976a97519c44dc72302f614a2bdb8324ec8b5d2.",
+    "PR #1072's own production result was fail-closed rather than fabricated completeness; the direct landing preserves that bounded semantics.",
+    "Post-fix gate remains REQUIRED_NOT_YET_VERIFIED; this receipt only removes stale Codex execution state."
+  ],
+  "receipt_sha256": "f6bcb9a6ae21f50c1c12a5f6d0e2cd7027606639cd7651c9bbb7359e031da668"
+}
