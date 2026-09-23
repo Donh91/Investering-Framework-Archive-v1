@@ -1,0 +1,76 @@
+{
+  "acceptance_tests": {
+    "negative": [
+      "No incident file is deleted, moved or rewritten.",
+      "A resolution receipt that names no successful run or owner is rejected.",
+      "No workflow trigger or schedule changes."
+    ],
+    "positive": [
+      "An incident with a valid resolution receipt is excluded from open_incidents.",
+      "An unresolved incident is included regardless of filename order or age.",
+      "Dashboard open_count equals the number of unresolved incidents, uncapped or with an explicit truncation flag."
+    ]
+  },
+  "allowed_change_scope": [
+    "scripts/architecture/build_latest_handoff.py",
+    "scripts/health/build_operations_dashboard.py",
+    "tests/health/test_operations_dashboard.py",
+    "tests/architecture/test_latest_handoff_incidents.py"
+  ],
+  "authority_boundary": "CODE_REMEDIATION_ONLY",
+  "candidate_id": "codex-research-open-incident-count-is-filename-window-v1",
+  "clean_noop_condition": "Stop if fresh main already derives open incidents from an explicit resolution state.",
+  "contract": "CODEX_RESEARCH_CANDIDATE_v1",
+  "depends_on_evidence": "Satisfied by fresh-main reproduction; incident-to-owner mapping is in the 2026-09-23 backlog sweep deliverable.",
+  "escalation_condition": "Escalate to the framework owner if resolution semantics require a new governance state rather than an evidence receipt.",
+  "evidence": [
+    {
+      "kind": "COMMIT",
+      "ref": "1d0dfa84093f311a3dbd6ecd8d3fc0f46151e909",
+      "summary": "fresh main rebind for persistence; target paths unchanged since the 2026-09-23 reproduction"
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "scripts/architecture/build_latest_handoff.py#L79",
+      "summary": "open_incidents is derived from the lexicographic tail of incident markdown filenames rather than explicit unresolved state"
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "scripts/health/build_operations_dashboard.py#L184",
+      "summary": "dashboard open_count is len(handoff.open_incidents), so the tail size becomes the reported count"
+    }
+  ],
+  "finding_key": "OPEN_INCIDENT_COUNT_IS_LEXICOGRAPHIC_FILENAME_WINDOW",
+  "forbidden_changes": [
+    "market gates",
+    "model weights",
+    "canonical authority",
+    "portfolio logic",
+    "API budget",
+    "new policy semantics",
+    "historical artifact rewrite",
+    "threshold or anchor changes",
+    "workflow schedule or trigger changes",
+    "paid CFGI or OpenAI execution"
+  ],
+  "objective": "build_latest_handoff.py sets open_incidents from the last 20 incident filenames and build_operations_dashboard.py reports len(open_incidents) as the open count. With more than 20 incident files the count becomes a filename window, not unresolved state, and incidents cannot explicitly close. Add a minimal append-only resolution path that leaves incident files immutable and derives open incidents from valid resolution evidence.",
+  "origin": {
+    "source_paths": [
+      "scripts/architecture/build_latest_handoff.py",
+      "scripts/health/build_operations_dashboard.py",
+      "09_SOURCE_QA/incidents/"
+    ],
+    "thread_label": "Backlog compression and non-Codex recovery sweep v1",
+    "type": "AUDIT"
+  },
+  "persistence_note": "Persisted on isolated intake branch by ChatGPT after independent review of the Cowork deliverable. Only the intake controller may declare CODEX_READY.",
+  "persistence_status": "PENDING_PR_MERGE",
+  "post_fix_gate": "OPERATIONS_DASHBOARD_GATE_GREEN_AND_OPEN_COUNT_EQUALS_UNRESOLVED",
+  "primary_target": "scripts/architecture/build_latest_handoff.py",
+  "reproduction": "On the sweep's fresh main there were 113 incident files, while LATEST_HANDOFF open_incidents was an alphabetical tail of 20 that included stale August incidents. Re-run the exact filename-window reproduction on fresh main before code change.",
+  "requested_priority": "NORMAL",
+  "requires_framework_owner_authority": false,
+  "status": "SUBMITTED",
+  "submitted_at_utc": "2026-09-23T07:00:00Z",
+  "title": "Open-incident count is the last 20 incident filenames, not incidents that are open"
+}

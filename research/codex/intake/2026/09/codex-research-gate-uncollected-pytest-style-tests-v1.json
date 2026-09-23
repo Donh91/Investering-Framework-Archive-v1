@@ -1,0 +1,82 @@
+{
+  "acceptance_tests": {
+    "negative": [
+      "No test assertion is removed or weakened.",
+      "No production script behaviour changes.",
+      "No workflow trigger, schedule or permission changes."
+    ],
+    "positive": [
+      "Gate logs show the 7 director-learning-context tests and 8 consumer-receipt module tests executing and passing.",
+      "A deliberately failing assertion in either module fails its gate.",
+      "Other modules in both gate steps still run."
+    ]
+  },
+  "allowed_change_scope": [
+    ".github/workflows/api-agent-gateway-gate.yml",
+    ".github/workflows/master-monday-preflight-gate.yml",
+    "tests/api_agent/test_director_learning_context.py",
+    "tests/orchestration/test_consumer_receipt.py"
+  ],
+  "authority_boundary": "CODE_REMEDIATION_ONLY",
+  "candidate_id": "codex-research-gate-uncollected-pytest-style-tests-v1",
+  "clean_noop_condition": "Stop if both gates already execute these module-level tests on fresh main (collected count > 0 for each module).",
+  "contract": "CODEX_RESEARCH_CANDIDATE_v1",
+  "depends_on_evidence": "Satisfied by fresh-main reproduction above; re-run the three commands before changing code.",
+  "escalation_condition": "Escalate if running the tests for real exposes a failing assertion; fix scope then belongs to that module's owner, not to this candidate.",
+  "evidence": [
+    {
+      "kind": "COMMIT",
+      "ref": "1d0dfa84093f311a3dbd6ecd8d3fc0f46151e909",
+      "summary": "fresh main rebind for persistence; target paths unchanged since the 2026-09-23 reproduction"
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "tests/api_agent/test_director_learning_context.py",
+      "summary": "7 module-level test_* functions using tmp_path; no TestCase; unittest does not collect those module-level pytest functions"
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "tests/orchestration/test_consumer_receipt.py",
+      "summary": "8 module-level pytest functions plus 1 TestCase test; unittest collects only the TestCase"
+    },
+    {
+      "kind": "PR",
+      "ref": "https://github.com/Donh91/Investering-Framework-Archive-v1/pull/1219",
+      "summary": "Fresh-main replacement for the same defect class previously seen in Situation Room test collection; separate owner/scope"
+    }
+  ],
+  "finding_key": "GATE_UNITTEST_INVOCATION_SILENTLY_SKIPS_PYTEST_STYLE_TESTS",
+  "forbidden_changes": [
+    "market gates",
+    "model weights",
+    "canonical authority",
+    "portfolio logic",
+    "API budget",
+    "new policy semantics",
+    "historical artifact rewrite",
+    "threshold or anchor changes",
+    "workflow schedule or trigger changes",
+    "paid CFGI or OpenAI execution"
+  ],
+  "objective": "api-agent-gateway-gate.yml runs `python -m unittest ... tests.api_agent.test_director_learning_context`; that module defines 7 module-level pytest functions (tmp_path fixture) and no TestCase, so unittest collects 0 of them (the 7 tests it reports belong to an imported TestCase module). master-monday-preflight-gate.yml runs `python -m unittest ... tests.orchestration.test_consumer_receipt`; 8 module-level pytest functions are never collected (only the one TestCase test runs). Make each gate execute these tests for real (run the affected modules with pytest, or convert them to unittest.TestCase with tempfile fixtures as PR #1096 did for test_director_situation_room_shadow) and make the gate fail if the collected count for those modules is zero.",
+  "origin": {
+    "source_paths": [
+      ".github/workflows/api-agent-gateway-gate.yml",
+      ".github/workflows/master-monday-preflight-gate.yml",
+      "tests/api_agent/test_director_learning_context.py",
+      "tests/orchestration/test_consumer_receipt.py"
+    ],
+    "thread_label": "Backlog compression and non-Codex recovery sweep v1",
+    "type": "AUDIT"
+  },
+  "persistence_note": "Persisted on isolated intake branch by ChatGPT after independent review of the Cowork deliverable. Only the intake controller may declare CODEX_READY.",
+  "persistence_status": "PENDING_PR_MERGE",
+  "post_fix_gate": "BOTH_GATES_GREEN_WITH_NONZERO_COLLECTED_COUNTS",
+  "primary_target": ".github/workflows/api-agent-gateway-gate.yml",
+  "reproduction": "On the sweep's fresh main: python3.12 -m unittest -v tests.api_agent.test_director_learning_context collected 0 tests from that file; python3.12 -m unittest tests.orchestration.test_consumer_receipt ran 1 TestCase test; pytest collected and passed the module-level tests. Re-run on fresh main before code change.",
+  "requested_priority": "NORMAL",
+  "requires_framework_owner_authority": false,
+  "status": "SUBMITTED",
+  "submitted_at_utc": "2026-09-23T07:00:00Z",
+  "title": "Gates invoke pytest-style test modules with unittest, so 15 tests never execute"
+}
