@@ -978,7 +978,14 @@ def event_study_records(features_path: Path, btc: list[tuple[date, float]], know
     for anchor, rows in anchors.items():
         for row in rows:
             when = knowledge(row["bar_end_period"]) if knowledge else ts(row["bar_end_timestamp"])
-            records.append(Record(when, "VALUE", f"{anchor}|{row['bar_end_period']}", ("FEATURE", anchor, row)))
+            payload = dict(row)
+            # Model the production repair explicitly: the join helper receives
+            # the time at which this feature row was actually knowable.
+            payload["knowledge_at"] = when
+            payload["knowledge_time_status"] = (
+                "E1X_PUBLICATION_KNOWLEDGE" if knowledge else "E1X_LEGACY_BAR_END_CLAIM"
+            )
+            records.append(Record(when, "VALUE", f"{anchor}|{row['bar_end_period']}", ("FEATURE", anchor, payload)))
     for day, price in btc:
         # Coin Metrics PriceUSD for date d is the end-of-day d reference rate.
         records.append(Record(datetime(day.year, day.month, day.day, tzinfo=UTC) + D1, "OUTCOME_SOURCE", f"BTC|{day.isoformat()}", ("BTC", day, price)))
@@ -1049,7 +1056,7 @@ def case_event_study(features_path: Path, btc: list[tuple[date, float]], peak_da
         knowledge_time_rule="bar_end_timestamp (code assumption)" if claimed_only else json.dumps(rule, sort_keys=True),
         downstream=["research/experiments/copper_gold_slow_cycle_shadow_v1/HISTORICAL_EVENT_STUDY_v2.json",
                     "COPPER_GOLD_SLOW_CYCLE_SHADOW_v1 kill criterion K02", "TDBC / slow-cycle context interpretation"],
-        expected="PASS" if claimed_only else "FAIL", data_binding=binding,
+        expected="PASS", data_binding=binding,
         notes=["Future BTC prices are value-poisoned, never removed, because forward returns are declared outcome labels; decision fields (event existence, event_date, entry btc_price, joined state) must not move."])
 
 
@@ -1852,8 +1859,8 @@ ADJUDICATION: dict[str, dict[str, Any]] = {
         "causal_mechanism": "latest_settled_state/signal_events treat bar_end_timestamp (period end 23:59:59Z) as knowledge time and enter BTC at the end of the bar-end day; the World Bank monthly average is published later (owner receipts: July 2026 data on 2026-08-04, August 2026 data on 2026-09-02), so every signal event is anchored 1-4+ days before its input was knowable.",
         "affected_downstream": ["research/experiments/copper_gold_slow_cycle_shadow_v1/HISTORICAL_EVENT_STUDY_v2.json", "COPPER_GOLD_SLOW_CYCLE_SHADOW_v1 kill criterion K02", "any interpretation of turning_negative vs controls"],
         "historical_contamination": "HISTORICAL_EVENT_STUDY_v2.json signal-event summaries (anchor_results) are contaminated; objective_btc_peak_episodes state joins are NOT (24/24 invariant). Preserve v2; regenerate as a new version with a knowledge-time join.",
-        "remediation_status": "NOT_IMPLEMENTED_CODEX_CANDIDATE_PREPARED",
-        "remediation_route": "codex-research-copper-gold-event-study-knowledge-time-join-v1 (NOT_PERSISTED)",
+        "remediation_status": "IMPLEMENTED_DIRECT_REPAIR_PENDING_POST_FIX_OBSERVATION",
+        "remediation_route": "direct governed repair; preserve HISTORICAL_EVENT_STUDY_v2.json and emit v3 only",
     },
     "RT-A09-AT-E3-N5-FACTOR-EXAMPLES-EVENT_TIME": {
         "finding_id": "E1X-F03", "severity": "LOW",

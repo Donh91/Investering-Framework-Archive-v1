@@ -129,7 +129,7 @@ class E1XProductionFindingsTest(unittest.TestCase):
         self.assertNotIn("RT-A07-AT-PDLT-DISCOVERY-PRODUCTION", self.x.ADJUDICATION)
         self.assertNotIn("RT-A07-AT-PDLT-DISCOVERY-SEEDED_LEGACY_OPEN_TIME_ANCHOR", self.x.ADJUDICATION)
 
-    def test_copper_gold_event_study_joins_bars_before_publication(self):
+    def test_copper_gold_event_study_respects_publication_knowledge_after_repair(self):
         knowledge, rule = self.x.cg_knowledge_time_factory()
         self.assertGreater(rule["minimum_observed_lag_seconds"], 0)
         start = date(2010, 7, 18)
@@ -139,10 +139,9 @@ class E1XProductionFindingsTest(unittest.TestCase):
         claimed = self.x.run_right_truncation(self.x.case_event_study(features, btc, peaks, knowledge, rule, {}, True))
         published = self.x.run_right_truncation(self.x.case_event_study(features, btc, peaks, knowledge, rule, {}, False))
         self.assertEqual(claimed["observed"], "PASS")
-        self.assertEqual(published["observed"], "FAIL")
-        self.assertEqual(published["classifications"], ["TRUE_FUTURE_LEAKAGE"])
-        failing = {m["output_key"].split("|")[0] for m in published["mismatches"]}
-        self.assertEqual(failing, {"SIG"})
+        self.assertEqual(published["observed"], "PASS")
+        self.assertEqual(published["classifications"], ["NO_ISSUE"])
+        self.assertGreater(published["output_comparisons"], 0)
 
     def test_etf_trailing_documented_farside_timing(self):
         btc_rows, _ = self.x.load_etf_pack("btc")

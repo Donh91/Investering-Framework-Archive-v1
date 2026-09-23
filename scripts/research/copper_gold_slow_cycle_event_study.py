@@ -11,7 +11,7 @@ import bisect
 import csv
 import hashlib
 import json
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
@@ -32,6 +32,77 @@ def sha256_file(path: Path) -> str:
     return digest.hexdigest()
 
 
+def parse_utc(value: str) -> datetime:
+    parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    return parsed.astimezone(timezone.utc)
+
+
+def btc_eod(day: date) -> datetime:
+    return datetime(day.year, day.month, day.day, 23, 59, 59, tzinfo=timezone.utc)
+
+
+def load_publication_evidence(revisions_dir: Path) -> dict[str, dict[str, Any]]:
+    """Read owner-recorded workbook publication dates; never infer missing dates."""
+    if not revisions_dir.exists():
+        raise ValueError("publication_revisions_dir_missing")
+    evidence: dict[str, dict[str, Any]] = {}
+    for path in sorted(revisions_dir.glob("*.json")):
+        receipt = json.loads(path.read_text(encoding="utf-8"))
+        period = receipt.get("coverage", {}).get("last_period")
+        updated = receipt.get("source", {}).get("workbook_updated_on")
+        if not period or not updated:
+            continue
+        published = datetime.strptime(updated, "%B %d, %Y").replace(tzinfo=timezone.utc)
+        item = evidence.setdefault(period, {
+            "knowledge_at": published,
+            "workbook_updated_on": updated,
+            "receipts": [],
+        })
+        # Multiple receipts for one period are allowed; the earliest owner-recorded
+        # publication date is the first known availability bound for that period.
+        if published < item["knowledge_at"]:
+            item["knowledge_at"] = published
+            item["workbook_updated_on"] = updated
+        item["receipts"].append(path.as_posix())
+    return evidence
+
+
+def annotate_feature_knowledge(
+    row: dict[str, Any],
+    publication_evidence: dict[str, dict[str, Any]],
+    publication_lag_lower_bound_seconds: int | None,
+) -> None:
+    if publication_lag_lower_bound_seconds is None:
+        raise ValueError("publication_lag_lower_bound_seconds_required")
+    if publication_lag_lower_bound_seconds < 0:
+        raise ValueError("publication_lag_lower_bound_seconds_must_be_nonnegative")
+    period = row["bar_end_period"]
+    recorded = publication_evidence.get(period)
+    if recorded:
+        row["knowledge_at"] = recorded["knowledge_at"]
+        row["knowledge_time_status"] = "OWNER_RECORDED_WORKBOOK_UPDATED_ON"
+        row["knowledge_time_receipts"] = list(recorded["receipts"])
+    else:
+        row["knowledge_at"] = parse_utc(row["bar_end_timestamp"]) + timedelta(
+            seconds=publication_lag_lower_bound_seconds
+        )
+        row["knowledge_time_status"] = "EXPLICIT_PUBLICATION_LAG_LOWER_BOUND"
+        row["knowledge_time_receipts"] = []
+
+
+def row_knowledge_at(row: dict[str, Any]) -> datetime:
+    value = row.get("knowledge_at")
+    if isinstance(value, datetime):
+        return value.astimezone(timezone.utc)
+    if isinstance(value, str):
+        return parse_utc(value)
+    # Compatibility for pure helper tests only. Production build_study always
+    # annotates knowledge time before joining or creating signal events.
+    return parse_utc(row["bar_end_timestamp"])
+
+
 def load_btc(path: Path) -> list[tuple[date, float]]:
     rows = []
     with path.open(newline="", encoding="utf-8") as handle:
@@ -50,7 +121,11 @@ def load_btc(path: Path) -> list[tuple[date, float]]:
     return rows
 
 
-def load_features(path: Path) -> dict[str, list[dict[str, Any]]]:
+def load_features(
+    path: Path,
+    publication_evidence: dict[str, dict[str, Any]] | None = None,
+    publication_lag_lower_bound_seconds: int | None = None,
+) -> dict[str, list[dict[str, Any]]]:
     anchors: dict[str, list[dict[str, Any]]] = {}
     with path.open(newline="", encoding="utf-8") as handle:
         for row in csv.DictReader(handle):
@@ -60,6 +135,10 @@ def load_features(path: Path) -> dict[str, list[dict[str, Any]]]:
             parsed["bar_end_day"] = date.fromisoformat(row["bar_end_timestamp"][:10])
             for field in ("ratio_close_proxy", "macd_histogram", "rsi_14_wilder"):
                 parsed[field] = float(row[field]) if row.get(field) else None
+            if publication_evidence is not None:
+                annotate_feature_knowledge(
+                    parsed, publication_evidence, publication_lag_lower_bound_seconds
+                )
             anchors.setdefault(row["anchor_id"], []).append(parsed)
     if set(anchors) != {"JAN_FEB", "FEB_MAR"}:
         raise ValueError("both_anchor_variants_required")
@@ -129,37 +208,43 @@ def objective_peak_episodes(series: list[tuple[date, float]]) -> list[dict[str, 
 
 
 def latest_settled_state(rows: list[dict[str, Any]], event_day: date) -> dict[str, Any] | None:
-    eligible = [row for row in rows if row["bar_end_day"] <= event_day]
+    event_at = btc_eod(event_day)
+    eligible = [row for row in rows if row_knowledge_at(row) <= event_at]
     if not eligible:
         return None
     row = eligible[-1]
     return {
         "bar_end_period": row["bar_end_period"],
         "bar_end_timestamp": row["bar_end_timestamp"],
+        "knowledge_available_at_utc": row_knowledge_at(row).isoformat().replace("+00:00", "Z"),
+        "knowledge_time_status": row.get("knowledge_time_status", "LEGACY_BAR_END_COMPATIBILITY_ONLY"),
         "regime_state": row["regime_state"],
         "macd_histogram": row["macd_histogram"],
         "rsi_14_wilder": row["rsi_14_wilder"],
-        "lookahead_guard": "BAR_END_ON_OR_BEFORE_EVENT",
+        "lookahead_guard": "KNOWLEDGE_AVAILABLE_ON_OR_BEFORE_EVENT_EOD",
     }
 
 
 def signal_events(rows: list[dict[str, Any]], state: str, btc: list[tuple[date, float]], shift_days: int = 0) -> list[dict[str, Any]]:
     days = [row[0] for row in btc]
+    eods = [btc_eod(day) for day in days]
     output = []
     for row in rows:
         if row["regime_state"] != state:
             continue
-        event_day = row["bar_end_day"] + timedelta(days=shift_days)
-        if event_day < days[0]:
+        knowledge_at = row_knowledge_at(row) + timedelta(days=shift_days)
+        if knowledge_at < eods[0]:
             continue
-        index = index_on_or_after(days, event_day)
-        if index is None:
+        index = bisect.bisect_left(eods, knowledge_at)
+        if index >= len(btc):
             continue
         metrics = forward_metrics(btc, index)
         if metrics["return_240d_pct"] is None:
             continue
         output.append({
             "source_bar_end_period": row["bar_end_period"],
+            "source_knowledge_available_at_utc": row_knowledge_at(row).isoformat().replace("+00:00", "Z"),
+            "knowledge_time_status": row.get("knowledge_time_status", "LEGACY_BAR_END_COMPATIBILITY_ONLY"),
             "event_date": btc[index][0].isoformat(),
             "btc_price": btc[index][1],
             "regime_state": state,
@@ -185,9 +270,20 @@ def summarize(events: list[dict[str, Any]]) -> dict[str, Any]:
     return output
 
 
-def build_study(features_path: Path, btc_path: Path, btc_source: dict[str, Any] | None = None) -> dict[str, Any]:
+def build_study(
+    features_path: Path,
+    btc_path: Path,
+    publication_revisions_dir: Path,
+    publication_lag_lower_bound_seconds: int,
+    btc_source: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     btc = load_btc(btc_path)
-    anchors = load_features(features_path)
+    publication_evidence = load_publication_evidence(publication_revisions_dir)
+    anchors = load_features(
+        features_path,
+        publication_evidence=publication_evidence,
+        publication_lag_lower_bound_seconds=publication_lag_lower_bound_seconds,
+    )
     peaks = []
     for peak in objective_peak_episodes(btc):
         peaks.append({
@@ -208,7 +304,7 @@ def build_study(features_path: Path, btc_path: Path, btc_source: dict[str, Any] 
             "control_turning_negative_shifted_91d": {"events": shifted, "summary": summarize(shifted)},
         }
     return {
-        "contract": "COPPER_GOLD_SLOW_CYCLE_EVENT_STUDY_v2",
+        "contract": "COPPER_GOLD_SLOW_CYCLE_EVENT_STUDY_v3",
         "status": "EXPLORATORY_SMALL_N_NOT_VALIDATION",
         "source_lineage": {
             "features_path": features_path.as_posix(),
@@ -217,11 +313,22 @@ def build_study(features_path: Path, btc_path: Path, btc_source: dict[str, Any] 
             "btc_first_observation": btc[0][0].isoformat(),
             "btc_last_observation": btc[-1][0].isoformat(),
             **(btc_source or {}),
+            "publication_revisions_dir": publication_revisions_dir.as_posix(),
+            "publication_revision_receipts": {
+                period: {
+                    "workbook_updated_on": item["workbook_updated_on"],
+                    "knowledge_available_at_utc": item["knowledge_at"].isoformat().replace("+00:00", "Z"),
+                    "receipts": item["receipts"],
+                }
+                for period, item in sorted(publication_evidence.items())
+            },
+            "publication_lag_lower_bound_seconds": publication_lag_lower_bound_seconds,
         },
         "method": {
             "objective_peak_label": "Trailing-365d high followed by at least 20% drawdown inside 365d; candidates within 180d clustered at highest price.",
             "terminal_proxy": "At least 50% drawdown and no reclaim of event price inside 365d.",
-            "state_join": "Latest settled 2M bar ending on or before BTC event date.",
+            "state_join": "Latest settled 2M bar whose knowledge time is on or before BTC event end-of-day.",
+            "knowledge_time_rule": "Owner-recorded workbook_updated_on where available; otherwise explicit bar-end + publication-lag lower bound supplied by the run.",
             "negative_controls": ["TURNING_POSITIVE", "TURNING_NEGATIVE shifted 91 calendar days"],
             "threshold_optimization": False,
             "interpolation": False,
@@ -234,6 +341,7 @@ def build_study(features_path: Path, btc_path: Path, btc_source: dict[str, Any] 
             "Peak labels use future outcomes and cannot be used as live signals.",
             "The study does not prove incremental value against the full framework baseline.",
             "World Bank monthly period averages are a macro proxy, not TechDev's exact futures series.",
+            "Historical publication timestamps are unavailable for most months; fallback knowledge times are an explicit lower-bound assumption, never recorded publication facts.",
         ],
         "incremental_value_verdict": "NOT_VALIDATED_REQUIRES_PROSPECTIVE_BASELINE_COMPARISON",
         "authority": AUTHORITY,
@@ -247,6 +355,8 @@ def main() -> int:
     parser.add_argument("--btc-source-repository")
     parser.add_argument("--btc-source-revision")
     parser.add_argument("--btc-source-path")
+    parser.add_argument("--publication-revisions-dir", type=Path, required=True)
+    parser.add_argument("--publication-lag-lower-bound-seconds", type=int, required=True)
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
     source = {
@@ -256,7 +366,13 @@ def main() -> int:
             "btc_source_path": args.btc_source_path,
         }.items() if value
     }
-    study = build_study(args.settled_features, args.btc_csv, source)
+    study = build_study(
+        args.settled_features,
+        args.btc_csv,
+        args.publication_revisions_dir,
+        args.publication_lag_lower_bound_seconds,
+        source,
+    )
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(study, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     print(json.dumps({"status": study["status"], "objective_peak_count": len(study["objective_btc_peak_episodes"]), "output": str(args.output)}, sort_keys=True))
