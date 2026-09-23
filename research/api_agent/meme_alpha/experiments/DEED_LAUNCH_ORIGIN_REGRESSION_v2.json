@@ -1,0 +1,75 @@
+{
+  "contract": "DEED_LAUNCH_ORIGIN_REGRESSION_v2",
+  "status": "PARTIAL_CHAIN_REPRODUCTION",
+  "owner": "#1087",
+  "prospective_credit": 0,
+  "chain_id": 4663,
+  "token_contract": "0x5E55f18453545d0D4314C5106a2D8Db934298E95",
+  "launch_tx": "0x36536d4e8bd99303b7782e88dfe965f2cd9be5e8169725400eb2b4e884f94bc7",
+  "launch_block": 69205683,
+  "launch_timestamp_utc": "2026-09-21T23:51:56Z",
+  "launch_caller": "0x0052BB21E9CccfcB790913fe3D9bc52cC45d9dD9",
+  "method": "launchAndBuy",
+  "quote_in_eth": 0.053336,
+  "total_supply": 1000000000,
+  "initial_tokens_to_caller": 29900000,
+  "initial_supply_pct": 2.99,
+  "snipe_tax_exemption_count": 25,
+  "tracked_wallet_findings": {
+    "DumbCrayonEater": {
+      "address": "0x8f62a08537cede87d511aca6436274ab4ca080a3",
+      "deed_exposure": "OBSERVED_ON_PUBLIC_WALLET_SURFACE",
+      "acquisition_provenance": "UNKNOWN"
+    },
+    "unipcs": {
+      "address": "0x0a6ebed0155edb4b21d92ad02897a626cd90119e",
+      "deed_allocation": "NOT_REPRODUCED_THIS_PASS"
+    }
+  },
+  "verified": [
+    "EXACT_CA",
+    "LAUNCH_TX",
+    "LAUNCH_TIMESTAMP",
+    "LAUNCH_CALLER",
+    "FIXED_1B_SUPPLY",
+    "LAUNCH_AND_BUY",
+    "29_9M_TO_CALLER",
+    "2_99_PERCENT_INITIAL_CALLER_POSITION",
+    "25_ADDRESS_SNIPE_TAX_EXEMPTION_ARRAY"
+  ],
+  "not_verified": [
+    "ONE_PERCENT_TO_NAMED_TRACKED_WALLETS",
+    "UNIPCS_EXIT_AT_350K_MC",
+    "PAID_KOLS",
+    "COMMON_OWNERSHIP_OF_EXEMPTION_ADDRESSES",
+    "COORDINATED_PROCEEDS"
+  ],
+  "future_launch_receipt_fields": [
+    "launch_tx_hash",
+    "launcher_version",
+    "caller",
+    "recipient",
+    "quote_in",
+    "initial_tokens_out",
+    "initial_supply_pct",
+    "snipe_tax_exemption_count",
+    "exemption_addresses_hash",
+    "creator_tax",
+    "pair_token",
+    "token_supply",
+    "project_metadata_hash",
+    "first_public_ca_timestamp",
+    "first_market_eligible_timestamp"
+  ],
+  "guardrails": [
+    "EXEMPTION_MEMBERSHIP_NOT_ALLOCATION",
+    "WALLET_REPUTATION_NOT_PROVENANCE",
+    "FRESH_WALLET_NOT_FRAUD_PROOF",
+    "ROUND_BALANCE_NOT_FRAUD_PROOF",
+    "COMMON_BRIDGE_NOT_COMMON_OWNER",
+    "EXACT_CA_BEFORE_MARKET_CHART",
+    "NO_OUTCOME_DERIVED_THRESHOLD",
+    "MATCHED_DENOMINATOR_REQUIRED_BEFORE_PROMOTION",
+    "NO_TRADE_AUTHORITY"
+  ]
+}
