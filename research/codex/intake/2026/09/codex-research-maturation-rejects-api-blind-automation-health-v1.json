@@ -1,0 +1,83 @@
+{
+  "acceptance_tests": {
+    "negative": [
+      "No finding WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE becomes CODEX_READY when api_error is set.",
+      "No change to thresholds, risk classes or post-fix gate counts for valid input.",
+      "No workflow trigger or schedule changes."
+    ],
+    "positive": [
+      "A health report with api_error set leaves every prior item state and post_fix_successes unchanged and records a refusal reason.",
+      "A normal token-bearing report still matures findings exactly as before (existing tests pass)."
+    ]
+  },
+  "allowed_change_scope": [
+    "scripts/remediation/build_remediation_maturation.py",
+    "tests/remediation/test_remediation_maturation_api_blind_health.py"
+  ],
+  "authority_boundary": "CODE_REMEDIATION_ONLY",
+  "candidate_id": "codex-research-maturation-rejects-api-blind-automation-health-v1",
+  "clean_noop_condition": "Stop if fresh main already rejects API-degraded health input in maturation.",
+  "contract": "CODEX_RESEARCH_CANDIDATE_v1",
+  "depends_on_evidence": "Satisfied by the commit history; re-verify on fresh main.",
+  "escalation_condition": "Escalate if the owner prefers the dashboard or health producer to be the only guard.",
+  "evidence": [
+    {
+      "kind": "COMMIT",
+      "ref": "389e4ab2f",
+      "summary": "2026-08-31 queue built on blind health: OBSERVED jumped from 1 to 159"
+    },
+    {
+      "kind": "COMMIT",
+      "ref": "f77c4d4bb",
+      "summary": "2026-08-31 same blind input: CODEX_READY 66, PERSISTING 118, RESOLVED 8 -> 13"
+    },
+    {
+      "kind": "COMMIT",
+      "ref": "9b4c72305",
+      "summary": "2026-09-04 queue built on blind health"
+    },
+    {
+      "kind": "COMMIT",
+      "ref": "574daaaae",
+      "summary": "2026-09-15 FLO commit replaced RED health with AMBER 0 / blind rows"
+    },
+    {
+      "kind": "COMMIT",
+      "ref": "8e27eb76b97bec4956424945d315749fa664bf94",
+      "summary": "Fresh-main rebind: maturation still contains no api_error guard; companion FLO canonical-writer fix is PR #1232."
+    }
+  ],
+  "finding_key": "REMEDIATION_MATURATION_CONSUMES_API_BLIND_HEALTH",
+  "forbidden_changes": [
+    "market gates",
+    "model weights",
+    "canonical authority",
+    "portfolio logic",
+    "API budget",
+    "new policy semantics",
+    "historical artifact rewrite",
+    "threshold or anchor changes",
+    "workflow schedule or trigger changes",
+    "paid CFGI or OpenAI execution"
+  ],
+  "objective": "build_remediation_maturation.build() reads research/architecture_health/LATEST_AUTOMATION_HEALTH.json without checking whether the live GitHub audit actually ran. A report built without a token has api_error set and every workflow finding WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE / NO_RUN_HISTORY, so real findings vanish (counted as post-fix successes for IN_REMEDIATION/POST_FIX items) and blind findings mint new tasks. Make maturation fail closed on such input: when api_error is set or the report lacks live run data for most scheduled workflows, carry the prior queue forward unchanged, record the refusal reason, and do not increment post_fix_successes or create signatures from API-unavailability findings.",
+  "origin": {
+    "source_paths": [
+      "scripts/remediation/build_remediation_maturation.py",
+      "scripts/health/build_automation_health.py",
+      "research/remediation/LATEST_REMEDIATION_QUEUE.json"
+    ],
+    "thread_label": "Operational Truth Reset & Evidence Debt Burn-down v1",
+    "type": "AUDIT"
+  },
+  "persistence_note": "Prepared by the Operational Truth Reset sweep and persisted from fresh main by ChatGPT. Only the intake controller may declare CODEX_READY.",
+  "persistence_status": "PENDING_PR_MERGE",
+  "post_fix_gate": "MATURATION_TESTS_PASS_PLUS_BLIND_INPUT_FIXTURE_NOOP",
+  "primary_target": "scripts/remediation/build_remediation_maturation.py",
+  "reproduction": "On fresh main, build_remediation_maturation.py still has no api_error guard. The supplied sweep reproduced a tokenless automation-health report with api_error set and blind workflow rows, then showed maturation treating prior RED signatures as absent.",
+  "requested_priority": "EXPEDITED",
+  "requires_framework_owner_authority": false,
+  "status": "SUBMITTED",
+  "submitted_at_utc": "2026-09-23T11:40:00Z",
+  "title": "Remediation maturation must not consume an API-blind Automation Health report"
+}

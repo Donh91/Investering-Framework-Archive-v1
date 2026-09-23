@@ -1,0 +1,84 @@
+{
+  "acceptance_tests": {
+    "negative": [
+      "A receipt naming a commit not on main is rejected.",
+      "A receipt without post-fix gate evidence cannot produce RESOLVED.",
+      "No existing merge or completion receipt is rewritten."
+    ],
+    "positive": [
+      "A direct-landing receipt bound to a main commit moves the task to POST_FIX_OBSERVATION, never directly to RESOLVED.",
+      "The existing PR-merge path is unchanged."
+    ]
+  },
+  "allowed_change_scope": [
+    "scripts/remediation/reconcile_codex_research_merges.py",
+    "scripts/remediation/merge_codex_research_intake.py",
+    "tests/remediation/test_reconcile_direct_landing.py"
+  ],
+  "authority_boundary": "CODE_REMEDIATION_ONLY",
+  "candidate_id": "codex-research-direct-landing-bypasses-merge-reconciliation-v1",
+  "clean_noop_condition": "Stop if fresh main already reconciles direct landings.",
+  "contract": "CODEX_RESEARCH_CANDIDATE_v1",
+  "depends_on_evidence": "Satisfied; re-verify task states on fresh main.",
+  "escalation_condition": "Escalate to the framework owner if accepting non-PR landings requires a governance decision about review evidence.",
+  "evidence": [
+    {
+      "kind": "COMMIT",
+      "ref": "fc1e75067",
+      "summary": "FOMO 29f28557 landed directly (replaces PR #1208); task IN_REMEDIATION"
+    },
+    {
+      "kind": "COMMIT",
+      "ref": "aca6eb4be",
+      "summary": "T7 c767d605 landed directly (replaces PR #889); task IN_REMEDIATION"
+    },
+    {
+      "kind": "COMMIT",
+      "ref": "f976a9751",
+      "summary": "T10 ad9eb807 landed directly 2026-09-18; PR #1072 closed unmerged, 3-line diff to its head; task IN_REMEDIATION"
+    },
+    {
+      "kind": "COMMIT",
+      "ref": "2d1116824",
+      "summary": "PDLT 07f98812 landed directly (replaces #1214) + PR #1228 merged 343cfdd67; task still CODEX_READY (no transition receipt)"
+    },
+    {
+      "kind": "COMMIT",
+      "ref": "8ed01b7f9",
+      "summary": "audit-current-test-contracts 50b1e1fd: PR #695 merged 2026-08-31 from the exact transition branch yet no merge receipt exists; IN_REMEDIATION for 23 days"
+    }
+  ],
+  "finding_key": "DIRECT_FRESH_MAIN_LANDING_BYPASSES_RESEARCH_MERGE_RECONCILIATION",
+  "forbidden_changes": [
+    "market gates",
+    "model weights",
+    "canonical authority",
+    "portfolio logic",
+    "API budget",
+    "new policy semantics",
+    "historical artifact rewrite",
+    "threshold or anchor changes",
+    "workflow schedule or trigger changes",
+    "paid CFGI or OpenAI execution"
+  ],
+  "objective": "reconcile_codex_research_merges.verify_merged_pr only accepts a merged GitHub PR whose head ref equals the transition branch. Several governed fixes were landed as direct fresh-main replacement commits and their PRs closed unmerged, so the tasks stay IN_REMEDIATION or CODEX_READY indefinitely and invite duplicate Codex work. Add a bounded, evidence-bearing path for this case (for example a direct-landing receipt that binds the main commit SHA, the superseded PR number and a recorded equivalence to the transition branch head or the task's allowed scope), feeding the existing POST_FIX_OBSERVATION/completion flow. Never mark RESOLVED without the task's post-fix gate.",
+  "origin": {
+    "source_paths": [
+      "scripts/remediation/reconcile_codex_research_merges.py",
+      "scripts/remediation/merge_codex_research_intake.py",
+      "research/codex/transitions/"
+    ],
+    "thread_label": "Operational Truth Reset & Evidence Debt Burn-down v1",
+    "type": "AUDIT"
+  },
+  "persistence_note": "Prepared by the Operational Truth Reset sweep and persisted from fresh main by ChatGPT. Only the intake controller may declare CODEX_READY.",
+  "persistence_status": "PENDING_PR_MERGE",
+  "post_fix_gate": "RECONCILE_TESTS_PASS_PLUS_FIVE_LISTED_TASKS_LEAVE_STALE_STATES",
+  "primary_target": "scripts/remediation/reconcile_codex_research_merges.py",
+  "reproduction": "On fresh main: LATEST_CODEX_EXECUTION_STATE still lists 50b1e1fd, 29f28557, ad9eb807, c767d605 IN_REMEDIATION and 07f98812 CODEX_READY; each fix is present on main. Re-verify merge/completion receipt absence and focused post-fix gates before implementation.",
+  "requested_priority": "EXPEDITED",
+  "requires_framework_owner_authority": false,
+  "status": "SUBMITTED",
+  "submitted_at_utc": "2026-09-23T11:40:00Z",
+  "title": "Research fixes landed as direct fresh-main commits never leave IN_REMEDIATION / CODEX_READY"
+}
