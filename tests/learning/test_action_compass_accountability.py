@@ -410,5 +410,22 @@ class OutcomeTests(AccountabilityHarness):
         self.assertIn("action_compass_outcomes", selected[0]["path"])
 
 
+class T9ReproducibilityCollectedSmokeTests(unittest.TestCase):
+    def test_dedicated_t9_reproducibility_suite_passes(self):
+        result = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "unittest",
+                "tests.learning.test_action_compass_reproducibility",
+                "-v",
+            ],
+            cwd=ROOT,
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr[-4000:])
+
+
 if __name__ == "__main__":
     unittest.main()
