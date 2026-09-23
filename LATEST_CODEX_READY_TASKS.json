@@ -1,7 +1,7 @@
 {
   "contract": "CODEX_READY_TASKS_v1",
   "contract_revision": "1.2",
-  "generated_at_utc": "2026-09-23T22:52:10Z",
+  "generated_at_utc": "2026-09-23T22:54:48Z",
   "queue_sources": [
     "AUTOMATION_HEALTH",
     "RESEARCH_INTAKE"
@@ -48,7 +48,7 @@
         "private watchlist publication"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 61b8772f2bc07deba31b --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-09-23T22:52:10Z",
+      "last_observed_at_utc": "2026-09-23T22:54:48Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -120,7 +120,7 @@
         "rewrite of frozen base candidate"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 923de2eed113038e8a6c --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-09-23T22:52:10Z",
+      "last_observed_at_utc": "2026-09-23T22:54:48Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -183,7 +183,7 @@
         "retrospective row backfill"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature b14f0f264547ba5e6ed0 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-09-23T22:52:10Z",
+      "last_observed_at_utc": "2026-09-23T22:54:48Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -254,7 +254,7 @@
         "portfolio logic"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature b62105cfe794e5c80c70 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-09-23T22:52:10Z",
+      "last_observed_at_utc": "2026-09-23T22:54:48Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -464,7 +464,7 @@
         "portfolio logic"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature d5f9cc11d5d7d05418b9 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-09-23T22:52:10Z",
+      "last_observed_at_utc": "2026-09-23T22:54:48Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -576,7 +576,7 @@
         "portfolio logic"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature e42a4face457d80066d7 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-09-23T22:52:10Z",
+      "last_observed_at_utc": "2026-09-23T22:54:48Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -709,68 +709,6 @@
     },
     {
       "allowed_change_scope": [
-        "scripts/learning/directly related T9 Action Compass reproducibility runner/comparator",
-        "tests/learning/directly related T9 reproducibility tests",
-        "tests/fixtures/directly related synthetic Action Compass replay fixtures",
-        "06_RESEARCH_LAB/forward_tests/directly related machine-readable T9 runtime/readback artifact if existing owner routing requires it"
-      ],
-      "candidate_id": "codex-research-t9-action-compass-reproducibility-v1",
-      "candidate_path": "research/codex/intake/2026/08/codex-research-t9-action-compass-reproducibility-v1.json",
-      "candidate_sha256": "21b7997f7176d6d4bc4bd2890c74173e395733788d518e4c6d92dc555d98919d",
-      "clean_noop_condition": "The candidate is superseded, already fixed, duplicates a current health task, or fresh evidence no longer reproduces the bounded code defect.",
-      "escalation_condition": "Escalate to FRAMEWORK_OWNER if resolution requires market gates, model weights, canonical authority, portfolio logic, API budget or new policy semantics.",
-      "failure_streak": 0,
-      "finding": "T9_CONTROLLED_REPLAY_FIXTURE_AND_COMPARATOR_MISSING",
-      "first_observed_at_utc": "2026-08-29T18:16:00Z",
-      "forbidden_changes": [
-        "API budget",
-        "Action Compass controlled vocabulary",
-        "automatic promotion",
-        "canonical authority",
-        "historical pseudo-row backfill",
-        "market gates",
-        "model weights",
-        "new market engine",
-        "new policy semantics",
-        "portfolio logic"
-      ],
-      "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature f7ca0bb8cce97bea8619 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-09-23T22:52:10Z",
-      "latest_run_id": null,
-      "latest_run_url": null,
-      "lifecycle_state": "ACTIVE",
-      "objective": "Implement the smallest research-only controlled replay fixture and semantic comparator for the existing CHIEF_REPRODUCIBILITY / T9 test so identical frozen fixtures can be evaluated for exact machine-action/state/warning agreement while allowing bounded non-semantic metadata or wording variance. Do not create market semantics or historical pseudo-rows.",
-      "observations": 1,
-      "post_fix_gate": "CONTROLLED_REPLAY_FIXTURE_PASS_PLUS_10_ELIGIBLE_REPLAYS_BEFORE_ANY_REPRODUCIBILITY_CONCLUSION",
-      "precondition": "Candidate codex-research-t9-action-compass-reproducibility-v1 still exists on main at research/codex/intake/2026/08/codex-research-t9-action-compass-reproducibility-v1.json with SHA-256 21b7997f7176d6d4bc4bd2890c74173e395733788d518e4c6d92dc555d98919d, status SUBMITTED and authority_boundary CODE_REMEDIATION_ONLY; no superseding fix or duplicate task has made it stale.",
-      "requested_priority": "NORMAL",
-      "required_evidence": [
-        "06_RESEARCH_LAB/forward_tests/2026-07-10__active-test-registry__canonical.md",
-        "02_DATA_PING/protocols/2026-08-25__three-horizon-action-compass-output-contract-v1__canonical.md",
-        "scripts/learning/action_compass_accountability.py",
-        "reproduction",
-        "positive and negative acceptance tests"
-      ],
-      "risk_class": "B_CODEX_PR_RESEARCH",
-      "route": "CODEX_PR",
-      "signature": "f7ca0bb8cce97bea8619",
-      "source_type": "RESEARCH_INTAKE",
-      "state": "CODEX_READY",
-      "stop_condition": "Stop without code changes if candidate hash/status/authority changed, reproduction fails, or the required fix exceeds allowed_change_scope.",
-      "submitted_at_utc": "2026-08-29T18:16:00Z",
-      "success_evidence": [
-        "candidate-linked reproduction",
-        "positive and negative acceptance tests",
-        "CONTROLLED_REPLAY_FIXTURE_PASS_PLUS_10_ELIGIBLE_REPLAYS_BEFORE_ANY_REPRODUCIBILITY_CONCLUSION"
-      ],
-      "success_streak": 0,
-      "task_contract_sha256": "1c9c8f7fa16cfdf185b67d8f619c63c49ce8018ac9262c4dacd0697647d2c05f",
-      "transition_receipt_path": "research/codex/transitions/f7ca0bb8cce97bea8619.json",
-      "transition_receipt_required": true,
-      "workflow": "research-intake/codex-research-t9-action-compass-reproducibility-v1"
-    },
-    {
-      "allowed_change_scope": [
         "Donh91/Investering-Framework-Archive-v1:scripts/api_agent/meme_alpha/**",
         "Donh91/Investering-Framework-Archive-v1:tests/**/meme_alpha/**",
         "Donh91/Investering-Framework-Archive-v1:research/api_agent/meme_alpha/**"
@@ -803,7 +741,7 @@
         "user alerts"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature fb4a2d5e71b40ba39d61 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-09-23T22:52:10Z",
+      "last_observed_at_utc": "2026-09-23T22:54:48Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
