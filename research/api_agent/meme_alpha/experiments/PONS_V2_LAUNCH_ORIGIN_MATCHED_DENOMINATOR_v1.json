@@ -1,0 +1,62 @@
+{
+  "contract": "PONS_V2_LAUNCH_ORIGIN_MATCHED_DENOMINATOR_v1",
+  "status": "HISTORICAL_REPRESENTATION_PREREG",
+  "owner": "#1087",
+  "prospective_credit": 0,
+  "seed_rows": [
+    {
+      "case": "TAGPAD",
+      "ca": "0x1998e567d1ea5aab594250db38522cdbe95bef0c",
+      "initial_creator_pct": 1.5,
+      "exemption_count": 3,
+      "outcome_note": "SEVERE_DOWNSIDE_AFTER_WAIT"
+    },
+    {
+      "case": "DEED",
+      "ca": "0x5e55f18453545d0d4314c5106a2d8db934298e95",
+      "initial_creator_pct": 2.99,
+      "exemption_count": 25,
+      "outcome_note": "SEVERE_BOOM_BUST"
+    },
+    {
+      "case": "FLYBRAIN",
+      "ca": "0x4eb990547bce4a982432ca88cf5fae7eed1a2d35",
+      "initial_creator_pct": null,
+      "exemption_count": null,
+      "outcome_note": "MAJOR_EARLY_EXPANSION_THEN_DISTRIBUTION"
+    }
+  ],
+  "naive_hypothesis_status": "FALSIFIED_AS_USEFUL_STANDALONE_RULE",
+  "refined_hypothesis": "DEGREE_AND_BEHAVIOR_OF_PRIVILEGED_LAUNCH_ACCESS_MAY_ADD_RISK_INFORMATION",
+  "historical_min_n": 30,
+  "historical_expand_n": 100,
+  "sampling": "OUTCOME_BLIND_EXACT_PONS_V2_FACTORY_ROWS",
+  "origin_fields": [
+    "CREATOR_INITIAL_POSITION_PCT",
+    "PRIVILEGED_ENTITY_COUNT",
+    "PRIVILEGED_SUPPLY_PCT_T0_T5M",
+    "PRIVILEGED_NET_BUY_PCT_T0_T5M",
+    "PRIVILEGED_FREE_TRANSFER_PCT_PRE_PUBLIC",
+    "PUBLIC_EXECUTION_TAX_DISADVANTAGE_T0_T5S"
+  ],
+  "post_t0_fields": [
+    "PRIVILEGED_SELLTHROUGH_PCT_T0_T60M",
+    "PRIVILEGED_SELLTHROUGH_PCT_T0_T24H",
+    "PRIVILEGED_PROCEEDS_CONVERGENCE_STATE",
+    "PRIVILEGED_COMMON_FUNDER_STATE",
+    "CREATOR_FIRST_SELL_SECONDS",
+    "CREATOR_24H_SELLTHROUGH_PCT"
+  ],
+  "guardrails": [
+    "UNKNOWN_NEVER_ZERO",
+    "NO_OUTCOME_BLIND_SAMPLE_REPLACEMENT",
+    "NO_ATH_ONLY_OUTCOME",
+    "NO_THRESHOLD_FITTING_H1",
+    "NO_EXEMPTION_COUNT_STANDALONE_REJECT",
+    "NO_SOCIAL_SCAM_LABEL_AS_OUTCOME",
+    "NO_RETRO_ALPHA_CREDIT",
+    "NO_TRADE_AUTHORITY",
+    "CODE_WRITES_REQUIRE_CANONICAL_CODEX_ROUTE"
+  ],
+  "next_gate": "DETERMINISTIC_HISTORICAL_PONS_V2_ORIGIN_EXTRACTOR_OVER_OUTCOME_BLIND_FACTORY_SAMPLE"
+}
