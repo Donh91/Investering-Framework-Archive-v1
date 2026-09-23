@@ -298,6 +298,8 @@ def valid_direct_merge_receipt(repo: Path, task: dict[str, Any]) -> dict[str, An
     if mode == "DIRECT_NON_CODEX_REPAIR":
         commit_sha = str(d.get("merge_commit_sha") or "")
         pr_number = d.get("pr_number")
+        if not SHA40.fullmatch(commit_sha):
+            return None
         if isinstance(pr_number, bool) or not isinstance(pr_number, int) or pr_number <= 0:
             return None
     else:
@@ -308,11 +310,10 @@ def valid_direct_merge_receipt(repo: Path, task: dict[str, Any]) -> dict[str, An
             return None
         if not isinstance(equivalence, list) or not equivalence or any(not isinstance(x, str) or not x.strip() for x in equivalence):
             return None
-
-    # This is the core direct-landing safety property: a well-shaped receipt is
-    # insufficient unless the referenced repair commit is truly on this main lineage.
-    if not _commit_is_ancestor_of_head(repo, commit_sha):
-        return None
+        # This is the core direct-landing safety property: a well-shaped receipt is
+        # insufficient unless the referenced replacement commit is truly on this main lineage.
+        if not _commit_is_ancestor_of_head(repo, commit_sha):
+            return None
 
     declared = str(d.get("receipt_sha256") or "")
     actual = canonical_hash({k: v for k, v in d.items() if k != "receipt_sha256"})
