@@ -1,7 +1,7 @@
 {
   "contract": "CODEX_READY_TASKS_v1",
   "contract_revision": "1.2",
-  "generated_at_utc": "2026-09-23T22:55:26Z",
+  "generated_at_utc": "2026-09-23T23:39:39Z",
   "queue_sources": [
     "AUTOMATION_HEALTH",
     "RESEARCH_INTAKE"
@@ -48,7 +48,7 @@
         "private watchlist publication"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 61b8772f2bc07deba31b --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-09-23T22:55:26Z",
+      "last_observed_at_utc": "2026-09-23T23:39:39Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -120,7 +120,7 @@
         "rewrite of frozen base candidate"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 923de2eed113038e8a6c --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-09-23T22:55:26Z",
+      "last_observed_at_utc": "2026-09-23T23:39:39Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -183,7 +183,7 @@
         "retrospective row backfill"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature b14f0f264547ba5e6ed0 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-09-23T22:55:26Z",
+      "last_observed_at_utc": "2026-09-23T23:39:39Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -254,7 +254,7 @@
         "portfolio logic"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature b62105cfe794e5c80c70 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-09-23T22:55:26Z",
+      "last_observed_at_utc": "2026-09-23T23:39:39Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -439,67 +439,6 @@
     },
     {
       "allowed_change_scope": [
-        "scripts/experiments/directly related read-only experiment simplification review helper",
-        "tests/experiments/directly related simplification review tests",
-        "research/experiment_lifecycle/directly related generated simplification review artifact"
-      ],
-      "candidate_id": "codex-research-experiment-simplification-review-v1",
-      "candidate_path": "research/codex/intake/2026/08/codex-research-experiment-simplification-review-v1.json",
-      "candidate_sha256": "92a10427c7afe897ac70a95f370533b5b14864a15531b8b3a6b74d8835d18cc1",
-      "clean_noop_condition": "The candidate is superseded, already fixed, duplicates a current health task, or fresh evidence no longer reproduces the bounded code defect.",
-      "escalation_condition": "Escalate to FRAMEWORK_OWNER if resolution requires market gates, model weights, canonical authority, portfolio logic, API budget or new policy semantics.",
-      "failure_streak": 0,
-      "finding": "EXPERIMENT_SEMANTIC_DUPLICATION_AND_INCONCLUSIVE_COMPRESSION_REVIEW_MISSING",
-      "first_observed_at_utc": "2026-08-29T18:25:00Z",
-      "forbidden_changes": [
-        "API budget",
-        "automatic experiment merge",
-        "automatic experiment retirement",
-        "automatic promotion",
-        "candidate history deletion",
-        "canonical authority",
-        "market gates",
-        "model weights",
-        "new policy semantics",
-        "portfolio logic"
-      ],
-      "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature d5f9cc11d5d7d05418b9 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-09-23T22:55:26Z",
-      "latest_run_id": null,
-      "latest_run_url": null,
-      "lifecycle_state": "ACTIVE",
-      "objective": "Implement the smallest deterministic read-only simplification review over the existing Experiment Lifecycle registry that flags semantic/path alias families, high-observation zero-outcome incubation and repeated matured-inconclusive families for governance review without automatically merging, retiring, promoting or changing weights.",
-      "observations": 1,
-      "post_fix_gate": "DETERMINISTIC_CLUSTER_FIXTURE_PASS_PLUS_GOVERNANCE_READBACK_NO_MUTATION",
-      "precondition": "Candidate codex-research-experiment-simplification-review-v1 still exists on main at research/codex/intake/2026/08/codex-research-experiment-simplification-review-v1.json with SHA-256 92a10427c7afe897ac70a95f370533b5b14864a15531b8b3a6b74d8835d18cc1, status SUBMITTED and authority_boundary CODE_REMEDIATION_ONLY; no superseding fix or duplicate task has made it stale.",
-      "requested_priority": "NORMAL",
-      "required_evidence": [
-        "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json",
-        "scripts/experiments/experiment_lifecycle.py",
-        "01_CORE_FRAMEWORK/governance/2026-07-22__sensor-relationship-and-incremental-value-standard__canonical.md",
-        "reproduction",
-        "positive and negative acceptance tests"
-      ],
-      "risk_class": "B_CODEX_PR_RESEARCH",
-      "route": "CODEX_PR",
-      "signature": "d5f9cc11d5d7d05418b9",
-      "source_type": "RESEARCH_INTAKE",
-      "state": "CODEX_READY",
-      "stop_condition": "Stop without code changes if candidate hash/status/authority changed, reproduction fails, or the required fix exceeds allowed_change_scope.",
-      "submitted_at_utc": "2026-08-29T18:25:00Z",
-      "success_evidence": [
-        "candidate-linked reproduction",
-        "positive and negative acceptance tests",
-        "DETERMINISTIC_CLUSTER_FIXTURE_PASS_PLUS_GOVERNANCE_READBACK_NO_MUTATION"
-      ],
-      "success_streak": 0,
-      "task_contract_sha256": "6b23706c680820d9b4f380ef8b3040d8c44a017c948dbcb13be61a33ab712b5b",
-      "transition_receipt_path": "research/codex/transitions/d5f9cc11d5d7d05418b9.json",
-      "transition_receipt_required": true,
-      "workflow": "research-intake/codex-research-experiment-simplification-review-v1"
-    },
-    {
-      "allowed_change_scope": [
         ".github/workflows/framework-learning-operations.yml",
         "directly related scripts and tests"
       ],
@@ -576,7 +515,7 @@
         "portfolio logic"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature e42a4face457d80066d7 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-09-23T22:55:26Z",
+      "last_observed_at_utc": "2026-09-23T23:39:39Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -706,77 +645,6 @@
       "transition_receipt_path": "research/remediation/transitions/f22fa37ead720d16b5d8.json",
       "transition_receipt_required": true,
       "workflow": "framework-learning-operations.yml"
-    },
-    {
-      "allowed_change_scope": [
-        "Donh91/Investering-Framework-Archive-v1:scripts/api_agent/meme_alpha/**",
-        "Donh91/Investering-Framework-Archive-v1:tests/**/meme_alpha/**",
-        "Donh91/Investering-Framework-Archive-v1:research/api_agent/meme_alpha/**"
-      ],
-      "candidate_id": "codex-research-project-ca-bridge-p1-project-memory-v1",
-      "candidate_path": "research/codex/intake/2026/09/codex-research-project-ca-bridge-p1-project-memory-v1.json",
-      "candidate_sha256": "e3080d0f045f887a2bafd198588beeaa2e9812ec238e2911be182fffe37ad40b",
-      "clean_noop_condition": "The candidate is superseded, already fixed, duplicates a current health task, or fresh evidence no longer reproduces the bounded code defect.",
-      "escalation_condition": "Escalate to FRAMEWORK_OWNER if resolution requires market gates, model weights, canonical authority, portfolio logic, API budget or new policy semantics.",
-      "failure_streak": 0,
-      "finding": "PROJECT_CA_BRIDGE_P1_PROJECT_MEMORY_MISSING",
-      "first_observed_at_utc": "2026-09-21T07:29:00Z",
-      "forbidden_changes": [
-        "API budget",
-        "BUY or SELL authority",
-        "NET/SAFIX/DARK prospective credit",
-        "P2-P6 implementation",
-        "automatic merge",
-        "automatic trading",
-        "canonical authority",
-        "frozen A/B/C experiment semantics",
-        "market gates",
-        "model weights",
-        "new policy semantics",
-        "new scanner",
-        "new scheduler",
-        "parallel ledger",
-        "portfolio logic",
-        "production activation",
-        "user alerts"
-      ],
-      "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature fb4a2d5e71b40ba39d61 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-09-23T22:55:26Z",
-      "latest_run_id": null,
-      "latest_run_url": null,
-      "lifecycle_state": "ACTIVE",
-      "objective": "Implement only P1 of the frozen Project-to-CA shadow build: the smallest child project-memory schema/adapter and focused tests needed to persist a unique eligible project trial before any token exists, while reusing existing Meme Alpha prospective evidence and runtime owners and preserving the frozen A/B/C experiment.",
-      "observations": 1,
-      "post_fix_gate": "P1_FOCUSED_TESTS_AND_8BALL_HOODSTACK_REGRESSIONS_PASS_PLUS_FRESH_MAIN_READBACK_PLUS_INDEPENDENT_REVIEW_WITH_ZERO_FROZEN_SEMANTIC_DRIFT",
-      "precondition": "Candidate codex-research-project-ca-bridge-p1-project-memory-v1 still exists on main at research/codex/intake/2026/09/codex-research-project-ca-bridge-p1-project-memory-v1.json with SHA-256 e3080d0f045f887a2bafd198588beeaa2e9812ec238e2911be182fffe37ad40b, status SUBMITTED and authority_boundary CODE_REMEDIATION_ONLY; no superseding fix or duplicate task has made it stale.",
-      "requested_priority": "NORMAL",
-      "required_evidence": [
-        "d4f33ff1bf60b917d7ab3c76504b331feec90ea0",
-        "#1180",
-        "research/api_agent/meme_alpha/MEME_ALPHA_PROSPECTIVE_HARDENING_v1.json",
-        "research/api_agent/meme_alpha/ALPHA_LAB_LIFECYCLE_ENGINE_v1.json",
-        "research/api_agent/meme_alpha/MEME_ALPHA_RUNTIME_POLICY_v1.json",
-        ".agents/skills/prospective-evidence-ledger/SKILL.md",
-        "reproduction",
-        "positive and negative acceptance tests"
-      ],
-      "risk_class": "B_CODEX_PR_RESEARCH",
-      "route": "CODEX_PR",
-      "signature": "fb4a2d5e71b40ba39d61",
-      "source_type": "RESEARCH_INTAKE",
-      "state": "CODEX_READY",
-      "stop_condition": "Stop without code changes if candidate hash/status/authority changed, reproduction fails, or the required fix exceeds allowed_change_scope.",
-      "submitted_at_utc": "2026-09-21T07:29:00Z",
-      "success_evidence": [
-        "candidate-linked reproduction",
-        "positive and negative acceptance tests",
-        "P1_FOCUSED_TESTS_AND_8BALL_HOODSTACK_REGRESSIONS_PASS_PLUS_FRESH_MAIN_READBACK_PLUS_INDEPENDENT_REVIEW_WITH_ZERO_FROZEN_SEMANTIC_DRIFT"
-      ],
-      "success_streak": 0,
-      "task_contract_sha256": "16e428f8aa8063c80eaceddf6bb79f343d6312aa0b5ded4b21ce8711c2da697f",
-      "transition_receipt_path": "research/codex/transitions/fb4a2d5e71b40ba39d61.json",
-      "transition_receipt_required": true,
-      "workflow": "research-intake/codex-research-project-ca-bridge-p1-project-memory-v1"
     }
   ]
 }
