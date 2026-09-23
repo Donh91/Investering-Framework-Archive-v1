@@ -1,0 +1,282 @@
+{
+  "contract": "CODEX_RESEARCH_CANDIDATE_v1",
+  "candidate_id": "codex-research-etf-history-pack-v1-1-row-integrity-v1",
+  "title": "Create immutable ETF history-pack v1.1 with recovered malformed rows and explicit non-session semantics",
+  "status": "SUBMITTED",
+  "submitted_at_utc": "2026-09-23T07:55:00Z",
+  "requested_priority": "NORMAL",
+  "finding_key": "E1X_D01_ETF_HISTORY_PACK_ROW_INTEGRITY_AND_NON_SESSION_SEMANTICS",
+  "authority_boundary": "CODE_REMEDIATION_ONLY",
+  "requires_framework_owner_authority": false,
+  "primary_target": "04_MARKET_LEARNING/truth_layer/etf_flows/2026-07-26__us-spot-crypto-etf-flow-history",
+  "allowed_change_scope": [
+    "04_MARKET_LEARNING/truth_layer/etf_flows/** new v1.1/supersession artifacts only",
+    "tests/research/** directly related ETF history-pack v1.1 validation only"
+  ],
+  "forbidden_changes": [
+    "market gates",
+    "model weights",
+    "canonical authority",
+    "portfolio logic",
+    "API budget",
+    "new policy semantics",
+    "historical artifact rewrite",
+    "delete or mutate v1 pack bytes",
+    "ETF signal thresholds",
+    "live ETF owner finality semantics",
+    "workflow schedule or trigger changes",
+    "paid data authorization"
+  ],
+  "objective": "Preserve the existing v1 ETF history pack byte-for-byte and create a superseding v1.1 research pack that repairs the 11 one-cell-short rows from the exact original exports and makes NYSE full-closure rows explicit non-sessions. The v1.1 builder must retain raw rows but must not count closure rows as trading sessions in N-session windows/streaks. Do not silently rewrite v1, infer publication/finality time, or change live ETF owner semantics.",
+  "reproduction": "E1X D01 reproduced 11 malformed rows (9 BTC, 2 ETH) and 26 all-zero NYSE-closure rows. The exact original exports have now been recovered from the user's project Library and independently hash-bound: Etf btc.md = 114272 bytes, SHA-256 73ffcff5660b34a55605121c809205b2ba341a9b822bc4047efc61a995cb91fb, 651 rows; ETF eth.md = 77110 bytes, SHA-256 ac623c0bdd72213851dae67798aa461a4e3ea7e4fdea13abd4b54545edb7ed72, 513 rows. The 11 exact source rows are frozen in recovery_evidence below so implementation does not require Library access.",
+  "evidence": [
+    {
+      "kind": "ISSUE",
+      "ref": "https://github.com/Donh91/Investering-Framework-Archive-v1/issues/1212",
+      "summary": "E1X D01 owner issue with reproduced malformed/non-session counts and source recovery update."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "04_MARKET_LEARNING/truth_layer/etf_flows/2026-07-26__us-spot-crypto-etf-flow-history",
+      "summary": "Immutable v1 pack to preserve; three affected partitions are structurally corrupt while three clean partitions match their manifests."
+    },
+    {
+      "kind": "REPO_PATH",
+      "ref": "04_RESEARCH_LAB/auto_trading/experiments/E1X/E1X_TEMPORAL_INTEGRITY_FINDINGS_v1.jsonl#E1X-D01",
+      "summary": "Durable research finding. Keep historical v1 finding intact after v1.1 is created."
+    }
+  ],
+  "recovery_evidence": {
+    "source_exports": [
+      {
+        "name": "Etf btc.md",
+        "bytes": 114272,
+        "sha256": "73ffcff5660b34a55605121c809205b2ba341a9b822bc4047efc61a995cb91fb",
+        "rows": 651
+      },
+      {
+        "name": "ETF eth.md",
+        "bytes": 77110,
+        "sha256": "ac623c0bdd72213851dae67798aa461a4e3ea7e4fdea13abd4b54545edb7ed72",
+        "rows": 513
+      }
+    ],
+    "malformed_rows": [
+      {
+        "asset": "BTC",
+        "date": "2025-09-19",
+        "IBIT": 246.1,
+        "FBTC": 0,
+        "BITB": 0,
+        "ARKB": 0,
+        "BTCO": 0,
+        "EZBC": 0,
+        "BRRR": 0,
+        "HODL": 0,
+        "BTCW": 0,
+        "MSBT": 0,
+        "GBTC": -23.5,
+        "BTC": 0,
+        "Total": 222.6
+      },
+      {
+        "asset": "BTC",
+        "date": "2025-10-24",
+        "IBIT": 32.7,
+        "FBTC": 57.9,
+        "BITB": 0,
+        "ARKB": 0,
+        "BTCO": 0,
+        "EZBC": 0,
+        "BRRR": 0,
+        "HODL": 0,
+        "BTCW": 0,
+        "MSBT": 0,
+        "GBTC": 0,
+        "BTC": 0,
+        "Total": 90.6
+      },
+      {
+        "asset": "BTC",
+        "date": "2025-11-03",
+        "IBIT": -186.5,
+        "FBTC": 0,
+        "BITB": 0,
+        "ARKB": 0,
+        "BTCO": 0,
+        "EZBC": 0,
+        "BRRR": 0,
+        "HODL": 0,
+        "BTCW": 0,
+        "MSBT": 0,
+        "GBTC": 0,
+        "BTC": 0,
+        "Total": -186.5
+      },
+      {
+        "asset": "BTC",
+        "date": "2025-11-06",
+        "IBIT": 112.4,
+        "FBTC": 61.6,
+        "BITB": 5.5,
+        "ARKB": 60.4,
+        "BTCO": 0,
+        "EZBC": 0,
+        "BRRR": 0,
+        "HODL": 0,
+        "BTCW": 0,
+        "MSBT": 0,
+        "GBTC": 0,
+        "BTC": 0,
+        "Total": 239.9
+      },
+      {
+        "asset": "BTC",
+        "date": "2025-11-10",
+        "IBIT": 0,
+        "FBTC": 0,
+        "BITB": 1.2,
+        "ARKB": 0,
+        "BTCO": 0,
+        "EZBC": 0,
+        "BRRR": 0,
+        "HODL": 0,
+        "BTCW": 0,
+        "MSBT": 0,
+        "GBTC": 0,
+        "BTC": 0,
+        "Total": 1.2
+      },
+      {
+        "asset": "BTC",
+        "date": "2025-12-19",
+        "IBIT": -173.6,
+        "FBTC": 15.3,
+        "BITB": 0,
+        "ARKB": 0,
+        "BTCO": 0,
+        "EZBC": 0,
+        "BRRR": 0,
+        "HODL": 0,
+        "BTCW": 0,
+        "MSBT": 0,
+        "GBTC": 0,
+        "BTC": 0,
+        "Total": -158.3
+      },
+      {
+        "asset": "BTC",
+        "date": "2025-12-29",
+        "IBIT": -7.9,
+        "FBTC": 5.7,
+        "BITB": 0,
+        "ARKB": -6.7,
+        "BTCO": -10.4,
+        "EZBC": 0,
+        "BRRR": 0,
+        "HODL": 0,
+        "BTCW": 0,
+        "MSBT": 0,
+        "GBTC": 0,
+        "BTC": 0,
+        "Total": -19.3
+      },
+      {
+        "asset": "BTC",
+        "date": "2026-03-02",
+        "IBIT": 263.2,
+        "FBTC": 94.8,
+        "BITB": 36.4,
+        "ARKB": 5.7,
+        "BTCO": 6.2,
+        "EZBC": 14,
+        "BRRR": 0,
+        "HODL": 19.5,
+        "BTCW": 0,
+        "MSBT": 0,
+        "GBTC": 0,
+        "BTC": 18.4,
+        "Total": 458.2
+      },
+      {
+        "asset": "BTC",
+        "date": "2026-05-20",
+        "IBIT": -61.5,
+        "FBTC": -10.1,
+        "BITB": 0,
+        "ARKB": 0,
+        "BTCO": 0,
+        "EZBC": 0,
+        "BRRR": 0,
+        "HODL": 0,
+        "BTCW": 0,
+        "MSBT": 1.1,
+        "GBTC": 0,
+        "BTC": 0,
+        "Total": -70.5
+      },
+      {
+        "asset": "ETH",
+        "date": "2024-10-25",
+        "ETHA": 0,
+        "ETHB": 0,
+        "FETH": 0,
+        "ETHW": 0,
+        "TETH": 0,
+        "ETHV": 0,
+        "QETH": 0,
+        "EZET": 0,
+        "ETHE": -19.2,
+        "ETH": 0,
+        "Total": -19.2
+      },
+      {
+        "asset": "ETH",
+        "date": "2024-11-01",
+        "ETHA": 0,
+        "ETHB": 0,
+        "FETH": 0,
+        "ETHW": 0,
+        "TETH": 0,
+        "ETHV": 0,
+        "QETH": 0.5,
+        "EZET": 0,
+        "ETHE": -11.4,
+        "ETH": 0,
+        "Total": -10.9
+      }
+    ],
+    "non_session_evidence": "Use the 26 exact rows already reproduced in issue #1212 / E1X D01 and verify each against a deterministic US exchange closure calendar. Preserve rows; flag them as non-session rather than deleting them."
+  },
+  "acceptance_tests": {
+    "positive": [
+      "Every v1 file remains byte-identical to pre-fix main.",
+      "v1.1 contains the same row coverage/counts as v1 but all rows have the declared schema width and Total reconciles at one-decimal precision.",
+      "The 11 repaired rows match recovery_evidence exactly.",
+      "Exactly the reproduced exchange-closure rows are flagged non-session; real trading-session zero-flow rows remain trading sessions.",
+      "N-session rolling sums/counts/streaks are computed over trading sessions only and a closure row neither increments a session window nor resets a signed streak.",
+      "v1.1 manifest/checksums bind all new source/data/script artifacts and pass deterministic readback."
+    ],
+    "negative": [
+      "Do not delete or modify any v1 artifact.",
+      "Do not use the known-corrupt 2026-07-06 BTC raw CSV as source authority.",
+      "Do not infer ETF publication/finality timestamps or resolve #1211/F04 in this task.",
+      "Do not change live ETF owner schema/finality logic, market thresholds, portfolio rules or any workflow."
+    ]
+  },
+  "post_fix_gate": "V1_BYTE_READBACK_PLUS_V1_1_SCHEMA_TOTAL_SESSION_VALIDATION_PLUS_FOCUSED_REGRESSION_PASS",
+  "clean_noop_condition": "Stop if a fresh-main v1.1 superseding pack already exists with the same source hashes, 11 repaired rows and explicit non-session handling.",
+  "stop_condition": "Stop without changes if the source hashes or frozen recovery rows conflict with fresh evidence, if the repair requires changing v1 bytes, or if a current owner already implements the same v1.1 supersession.",
+  "escalation_condition": "Escalate to FRAMEWORK_OWNER if the repair would require publication/finality semantics, market signal changes or a choice other than preserving v1 and creating a research-only v1.1 supersession.",
+  "origin": {
+    "type": "AUDIT",
+    "thread_label": "E1X D01 follow-up / backlog compression",
+    "source_paths": [
+      "04_RESEARCH_LAB/auto_trading/experiments/E1X/E1X_TEMPORAL_INTEGRITY_FINDINGS_v1.jsonl",
+      "04_MARKET_LEARNING/truth_layer/etf_flows/2026-07-26__us-spot-crypto-etf-flow-history",
+      "issue #1212"
+    ]
+  },
+  "persistence_status": "PENDING_PR_MERGE",
+  "persistence_note": "Submitted after independent recovery of both original source exports and exact hash verification. Only the existing Codex intake controller may declare CODEX_READY."
+}
