@@ -1,0 +1,45 @@
+{
+  "contract": "AGENT_INVOCATION_CONTRIBUTION_LEDGER_SHADOW_v1",
+  "status": "SHADOW_ONLY_PREREGISTERED",
+  "authority": "META_LEARNING_ONLY",
+  "canonical_truth_rule": "SIDECAR_NEVER_OVERRIDES_CANONICAL_SOURCE_OR_EXECUTION_RECEIPT",
+  "contribution_states": [
+    "NO_NEW_INFORMATION",
+    "DUPLICATE_CONFIRMATION",
+    "CONFLICT_DETECTED",
+    "IDENTITY_RESOLVED",
+    "PROVENANCE_RESOLVED",
+    "SOURCE_HEALTH_FAILURE_DETECTED",
+    "CANDIDATE_REJECTED_USEFULLY",
+    "CANDIDATE_ESCALATED",
+    "FALSE_NEGATIVE_DISCOVERED",
+    "PROSPECTIVE_SIGNAL_CONTRIBUTION",
+    "CONTEXT_OMISSION_PREVENTED",
+    "UNKNOWN"
+  ],
+  "post_outcome_adjudications": [
+    "USEFUL_INCREMENTAL",
+    "USEFUL_REJECTION",
+    "USEFUL_CONFLICT_DETECTION",
+    "REDUNDANT",
+    "NO_MEASURABLE_VALUE",
+    "HARMFUL",
+    "UNRESOLVED",
+    "NOT_OUTCOME_ELIGIBLE"
+  ],
+  "invariants": [
+    "positive_outcome_never_grants_credit_by_itself",
+    "predictive_credit_requires_pre_outcome_freeze",
+    "cheaper_champion_state_must_be_reconstructable",
+    "model_output_is_not_evidence_truth",
+    "unknown_never_coerced_to_zero",
+    "noop_and_redundant_invocations_remain_in_denominator",
+    "post_outcome_false_negative_learning_gets_no_prospective_signal_credit",
+    "legacy_receipts_are_not_rewritten"
+  ],
+  "first_domain": "ALPHA_LAB_SELECTIVE_INTELLIGENCE_ESCALATION",
+  "runtime_status": "NOT_IMPLEMENTED_SIDE_CAR_OBSERVATION_ALLOWED",
+  "promotion_authority": false,
+  "market_authority": false,
+  "portfolio_authority": false
+}
