@@ -153,10 +153,15 @@ jobs:
             --repo-root . \
             --json-output research/architecture_health/LATEST_ARCHITECTURE_HEALTH.json \
             --md-output research/architecture_health/LATEST_ARCHITECTURE_HEALTH.md
+          # This job has no actions:read token, so the automation report built
+          # here is static-only (every workflow WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE).
+          # Keep it as a non-canonical runtime check; the canonical
+          # LATEST_AUTOMATION_HEALTH is owned by automation-production-health.yml.
+          mkdir -p runtime/automation-health-static
           python scripts/health/build_automation_health.py \
             --workflow-root .github/workflows \
-            --json-output research/architecture_health/LATEST_AUTOMATION_HEALTH.json \
-            --md-output research/architecture_health/LATEST_AUTOMATION_HEALTH.md
+            --json-output runtime/automation-health-static/AUTOMATION_HEALTH_STATIC.json \
+            --md-output runtime/automation-health-static/AUTOMATION_HEALTH_STATIC.md
       - name: Build downstream integration manifest
         run: |
           python scripts/orchestration/build_framework_handoff_manifest.py \
