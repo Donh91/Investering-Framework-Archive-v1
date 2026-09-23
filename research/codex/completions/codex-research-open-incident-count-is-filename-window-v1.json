@@ -1,0 +1,20 @@
+{
+  "contract": "CODEX_RESEARCH_COMPLETION_RECEIPT_v1",
+  "status": "VERIFIED",
+  "candidate_id": "codex-research-open-incident-count-is-filename-window-v1",
+  "signature": "0d8e569e7924526a7378",
+  "candidate_sha256": "b6daa9d59bae63852a3a4d46accf69462e830b37981ae1a46012cf806d711fdb",
+  "task_contract_sha256": "1edaf204edd6e2fc1d59dd085c29706e6712eda62f468c5d310260dbf3b3369b",
+  "pr_number": 1264,
+  "merge_commit_sha": "139954aa556e431f8d4f5a1dff47cbe0fa2d819e",
+  "verified_at_utc": "2026-09-23T21:50:00Z",
+  "verification_evidence": [
+    "PR #1264 merged at 139954aa556e431f8d4f5a1dff47cbe0fa2d819e after Operations Dashboard, API Agent Gateway, Storage Health, Full Architecture 1-7, Continuity Learning, Data Architecture and Automation Production Health gates all passed.",
+    "Operations Dashboard Gate run 35924605195 / job 107396566168 ran 16 tests PASS, including test_incident_resolution_is_append_only_uncapped_and_dashboard_matches and test_invalid_incident_resolution_receipt_cannot_close_incident.",
+    "The positive regression created 25 immutable incident files, validly resolved exactly one, kept all 24 unresolved paths visible without truncation and proved dashboard open_count=24, incident_file_count=25 and resolved_count=1.",
+    "The negative regression proved a receipt lacking required owner/successful-run evidence cannot close an incident and is surfaced in invalid_incident_resolution_receipts.",
+    "PR #1264 changed no workflow file; incident markdown bytes are explicitly asserted unchanged by the regression."
+  ],
+  "post_fix_gate": "OPERATIONS_DASHBOARD_GATE_GREEN_AND_OPEN_COUNT_EQUALS_UNRESOLVED",
+  "receipt_sha256": "59a27f3c4d47e01ffea8647baba34a56366bfbe17305b07bef1c3eb6b6654b25"
+}
