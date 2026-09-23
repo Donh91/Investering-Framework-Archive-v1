@@ -303,7 +303,7 @@ class CodexResearchMergeReconciliationTests(unittest.TestCase):
         reconcile_pos = text.find("python scripts/remediation/reconcile_codex_research_merges.py")
         second = text.find(materialize, first + 1)
         convergence_pos = text.find(
-            "python scripts/remediation/mission_convergence.py validate-active-completions --repo-root .",
+            "python scripts/remediation/mission_convergence.py validate-active-completions",
             second,
         )
         copy_pos = text.find("cp research/remediation/LATEST_REMEDIATION_QUEUE.json", second)
