@@ -105,6 +105,47 @@ class ExperimentSimplificationReviewTests(unittest.TestCase):
         self.assertFalse(out["authority"]["automatic_retirement"])
         self.assertFalse(out["authority"]["candidate_history_mutation"])
 
+
+    def test_current_registry_readback_is_deterministic_and_candidate_bytes_are_unchanged(self) -> None:
+        from pathlib import Path
+        import hashlib
+        import json
+
+        from scripts.experiments.experiment_simplification_review import load_candidates
+
+        repo = Path(__file__).resolve().parents[2]
+        registry_path = repo / "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json"
+        candidate_root = repo / "research/experiment_lifecycle/candidates"
+        registry = json.loads(registry_path.read_text(encoding="utf-8"))
+
+        before = {
+            path.relative_to(repo).as_posix(): hashlib.sha256(path.read_bytes()).hexdigest()
+            for path in sorted(candidate_root.rglob("*.json"))
+        }
+        candidates = load_candidates(candidate_root)
+        first = build_review(registry, candidates)
+        second = build_review(registry, candidates)
+        after = {
+            path.relative_to(repo).as_posix(): hashlib.sha256(path.read_bytes()).hexdigest()
+            for path in sorted(candidate_root.rglob("*.json"))
+        }
+
+        self.assertEqual(before, after)
+        self.assertEqual(first, second)
+        self.assertEqual(first["candidate_count"], len(registry.get("candidates", [])))
+        self.assertFalse(first["authority"]["candidate_history_mutation"])
+        self.assertFalse(first["authority"]["automatic_merge"])
+        self.assertFalse(first["authority"]["automatic_retirement"])
+        self.assertFalse(first["authority"]["automatic_promotion"])
+        self.assertFalse(first["authority"]["model_weight_change"])
+        self.assertFalse(first["authority"]["market_gate_change"])
+        self.assertFalse(first["authority"]["portfolio_action"])
+        self.assertFalse(first["rules"]["same_metric_path_alone_can_merge"])
+        for group in first["exact_semantic_alias_groups"]:
+            self.assertEqual(group["recommendation"], "MERGE_REVIEW")
+            self.assertFalse(group["automatic_merge"])
+            self.assertFalse(group["automatic_retirement"])
+
     def test_not_supported_only_routes_to_retire_review_never_auto_retires(self) -> None:
         row = registry_row("EC-x", state="MATURED_NOT_SUPPORTED", obs=50, outcomes=5)
         out = build_review({"generated_at_utc": "x", "candidates": [row]}, {"EC-x": candidate("EC-x", "spot.BTCUSDT.close")})
