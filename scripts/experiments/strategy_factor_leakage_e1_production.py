@@ -810,6 +810,160 @@ def case_backtest_etf_trailing_documented_publication(asset_rows, binding) -> Ri
         notes=["Only one session in the pack has publication-time evidence; every other session's true publication time is UNKNOWN and is not guessed."])
 
 
+def _documented_farside_pit_observations(raw: dict[str, str]) -> list[dict[str, Any]]:
+    """Two evidenced vintages for the canonical F04 regression, with no invented knowledge time."""
+    final_row = _etf_row("BTC", raw)
+    metadata = {
+        "date", "total_usd_millions", "not_before_session_close_utc",
+        "publication_timestamp_verified", "asset", "source", "method_id",
+    }
+    funds = {k: v for k, v in final_row.items() if k not in metadata}
+
+    def fund_cells(provisional: bool) -> dict[str, dict[str, Any]]:
+        cells: dict[str, dict[str, Any]] = {}
+        for fund, value in funds.items():
+            if provisional and fund == FARSIDE_EVIDENCE["provisional_missing_fund"]:
+                cells[fund] = {"raw": "-", "value": None, "cell_status": "DASH_UNRESOLVED"}
+            elif value in ("", None):
+                cells[fund] = {"raw": "-", "value": None, "cell_status": "DASH_STRUCTURAL"}
+            else:
+                numeric = float(value)
+                cells[fund] = {
+                    "raw": str(value),
+                    "value": numeric,
+                    "cell_status": "REPORTED_ZERO" if numeric == 0 else "REPORTED",
+                }
+        return cells
+
+    schema = {
+        "source_ticker_row": list(funds),
+        "schema_id": "E1X_DOCUMENTED_FARSIDE_BTC_FIXTURE",
+        "schema_hash": "E1X_DOCUMENTED_FARSIDE_BTC_FIXTURE",
+        "schema_status": "KNOWN_SCHEMA",
+    }
+    provenance = {
+        "producer": "E1X_DOCUMENTED_FARSIDE_EVIDENCE",
+        "evidence_path": FARSIDE_EVIDENCE["evidence_paths"][0],
+        "table_content_sha256": "EVIDENCE_BOUND_FIXTURE",
+        "row_hash": "EVIDENCE_BOUND_FIXTURE",
+    }
+    provisional = {
+        "contract": "ETF_OBSERVATION_v1",
+        "asset": "BTC",
+        "session_date": FARSIDE_EVIDENCE["session"],
+        "is_trading_session": True,
+        "source_observed_at_utc": FARSIDE_EVIDENCE["provisional_seen_at_utc"],
+        "observed_at_status": "OBSERVED",
+        "verification_completed_at_utc": None,
+        "knowledge_available_at_utc": None,
+        "knowledge_time_status": "UNKNOWN",
+        "knowledge_rule_id": None,
+        "schema": schema,
+        "row": {
+            "fund_cells": fund_cells(True),
+            "reported_total": FARSIDE_EVIDENCE["provisional_total_usd_m"],
+            "calculated_total": FARSIDE_EVIDENCE["provisional_total_usd_m"],
+            "parity": True,
+            "unknown_cells": 1,
+            "all_dash_row": False,
+        },
+        "completeness_status": "INCOMPLETE_PENDING_FUNDS",
+        "finality_status": "PROVISIONAL",
+        "revision": {"vintage_seq": 1, "supersedes_row_hash": None, "revision_kind": "NONE", "total_delta": None},
+        "provenance": provenance,
+    }
+    final = {
+        "contract": "ETF_OBSERVATION_v1",
+        "asset": "BTC",
+        "session_date": FARSIDE_EVIDENCE["session"],
+        "is_trading_session": True,
+        "source_observed_at_utc": FARSIDE_EVIDENCE["final_verified_at_utc"],
+        "observed_at_status": "OBSERVED",
+        "verification_completed_at_utc": FARSIDE_EVIDENCE["final_verified_at_utc"],
+        "knowledge_available_at_utc": FARSIDE_EVIDENCE["final_verified_at_utc"],
+        "knowledge_time_status": "OBSERVED",
+        "knowledge_rule_id": "ISSUE_1211_D1_D7",
+        "schema": schema,
+        "row": {
+            "fund_cells": fund_cells(False),
+            "reported_total": FARSIDE_EVIDENCE["final_total_usd_m"],
+            "calculated_total": FARSIDE_EVIDENCE["final_total_usd_m"],
+            "parity": True,
+            "unknown_cells": 0,
+            "all_dash_row": False,
+        },
+        "completeness_status": "COMPLETE_WITH_STRUCTURAL_DASH" if any(v in ("", None) for v in funds.values()) else "COMPLETE",
+        "finality_status": "VERIFIED_STABLE_AT_OBSERVATION",
+        "revision": {"vintage_seq": 2, "supersedes_row_hash": "PROVISIONAL", "revision_kind": "LATE_FUND_VALUE", "total_delta": 33.4},
+        "provenance": provenance,
+    }
+    return [provisional, final]
+
+
+def compute_backtest_etf_trailing_official_pit(records: list[Record]) -> dict[str, Output]:
+    from backtest_engine import etf_pit_replay as pit
+
+    if not records:
+        return {}
+    cutoff = max(record.available_at for record in records)
+    observations = [record.payload for record in records]
+    out: dict[str, Output] = {}
+    for asset in ("BTC", "ETH"):
+        rows = pit.select_etf_pit_rows(observations, asset, iso(cutoff))
+        for row in pit.build_etf_trailing_pit(rows, asset):
+            fields = {
+                k: v for k, v in row.items()
+                if k not in (
+                    "asset", "date", "knowledge_available_at_utc",
+                    "feature_knowledge_available_at_utc", "knowledge_rule_id",
+                    "feature_method_id",
+                )
+            }
+            out[f"{asset}|{row['date']}"] = Output(
+                ts(row["feature_knowledge_available_at_utc"]),
+                fields,
+            )
+    return out
+
+
+def case_backtest_etf_trailing_official_pit(btc_rows, binding) -> RightTruncationCase:
+    raw = next(row for row in btc_rows if row["date"] == FARSIDE_EVIDENCE["session"])
+    observations = _documented_farside_pit_observations(raw)
+    records = [
+        Record(
+            ts(obs["source_observed_at_utc"]),
+            "VALUE",
+            f"BTC|{obs['session_date']}|v{obs['revision']['vintage_seq']}",
+            obs,
+        )
+        for obs in observations
+    ]
+    return RightTruncationCase(
+        case_id="RT-A03c-BACKTEST-ETF-OFFICIAL-PIT-V2",
+        owner="backtest_engine ETF PIT replay v2 / ISSUE_1211_D1_D7",
+        production_path="backtest_engine/etf_pit_replay.py",
+        production_callable="select_etf_pit_rows + build_etf_trailing_pit",
+        description=(
+            "Owner-ratified ETF PIT replay: provisional observations are ineligible, "
+            "verified complete observations become knowable at verification time, "
+            "and no session-close timestamp is synthesized."
+        ),
+        records=records,
+        compute=compute_backtest_etf_trailing_official_pit,
+        targets=[
+            us_session_close_utc(date.fromisoformat(FARSIDE_EVIDENCE["session"])),
+            ts(FARSIDE_EVIDENCE["provisional_seen_at_utc"]),
+            ts("2026-07-17T05:00:00Z"),
+            ts(FARSIDE_EVIDENCE["final_verified_at_utc"]),
+            ts("2026-07-17T12:00:00Z"),
+        ],
+        knowledge_time_rule="ISSUE_1211_D1_D7: first verified complete observation; D5(a) pre-capture exclusion; D6 cumulative-max feature K",
+        downstream=["official ETF knowledge-time-sensitive historical replay"],
+        expected="PASS",
+        data_binding={**binding, "owner_decision_id": "ISSUE_1211_D1_D7", "farside_evidence": FARSIDE_EVIDENCE},
+    )
+
+
 def compute_truth_layer_etf_features(records: list[Record]) -> dict[str, Output]:
     mod = load_module("e1x_etf_feature_builder", ETF_FEATURE_SCRIPT)
     with tempfile.TemporaryDirectory() as temp:
@@ -1877,8 +2031,8 @@ ADJUDICATION: dict[str, dict[str, Any]] = {
         "causal_mechanism": "build_etf_trailing sets feature_knowledge_available_at_utc = not_before_session_close_utc, a lower bound. Documented case BTC 2026-07-16: at 03:41:48Z next day only 45.7 (IBIT not reported) was known; the complete 79.1 was verified at 06:34:00Z. The row claimed at 20:00Z is not knowable for >=7.7h (TRUE_FUTURE_LEAKAGE vs the claim) and its first value is later revised (SOURCE_VINTAGE_RISK).",
         "affected_downstream": ["backtest_engine W30 replay / run-engineering-gates", "any backtest that consumes the 2026-07-26 ETF history pack at session-close knowledge time"],
         "historical_contamination": "The ETF history pack is a single retrospective vintage without per-row publication times; only one session has in-repo publication evidence. Other sessions: UNKNOWN, not guessed. The pack README's own next-session labelling rule is consistent with the evidence; the W30 knowledge claim is not.",
-        "remediation_status": "NOT_IMPLEMENTED_GOVERNANCE_CHOICE",
-        "remediation_route": "framework owner: ETF knowledge-time policy (next-session rule or first verified complete retrieval)",
+        "remediation_status": "REPAIRED_BY_OFFICIAL_PIT_V2; LEGACY_SESSION_CLOSE_CASE_RETAINED_AS_NEGATIVE_CONTROL",
+        "remediation_route": "backtest_engine/etf_pit_replay.py under ratified owner decision ISSUE_1211_D1_D7",
     },
     "RT-A12-DATA-PING-AUTO-MARKET-STATE-BTC-D-ASOF": {
         "finding_id": "E1X-F05", "severity": "LOW",
@@ -2028,7 +2182,7 @@ def build_cases(repo: Path = REPO, coinmetrics: Path | None = None, event_featur
     notes: dict[str, Any] = {}
     production = [
         case_backtest_hourly_volatility(rows, hb), case_backtest_daily_utc(rows, hb),
-        case_backtest_etf_trailing_claimed(etf, etf_b), case_backtest_etf_trailing_documented_publication(etf, etf_b),
+        case_backtest_etf_trailing_official_pit(etf["BTC"], etf_b),
         case_truth_layer_etf_features(etf, etf_b), case_copper_gold_owner(cg_rows, cgb),
     ]
     if coinmetrics is not None and coinmetrics.exists():
@@ -2058,7 +2212,8 @@ def build_cases(repo: Path = REPO, coinmetrics: Path | None = None, event_featur
     controls = [control_clean_trailing_mean(rows), control_seeded_negative_shift(rows), control_seeded_full_sample_zscore(cg_rows),
                 control_seeded_centered_rolling(etf), control_seeded_bfill(rows), control_seeded_ema_right(rows),
                 control_seeded_nondeterminism(rows), control_late_listing(obs), control_membership(obs, True), control_membership(obs, False),
-                control_source_revision(cg_rows), case_pdlt("SEEDED_LEGACY_OPEN_TIME_ANCHOR"), case_pdlt("LABEL_TIME_TRUNCATION_CONTROL")]
+                control_source_revision(cg_rows), case_backtest_etf_trailing_documented_publication(etf, etf_b),
+                case_pdlt("SEEDED_LEGACY_OPEN_TIME_ANCHOR"), case_pdlt("LABEL_TIME_TRUNCATION_CONTROL")]
     warmup_controls = [control_seeded_ema_warmup(rows, 150), control_seeded_ema_warmup(rows, 1000)]
     notes["pullback_live_stored_vs_pit"] = pullback_stored_vs_pit(obs)
     return production, warmups, controls, warmup_controls, notes

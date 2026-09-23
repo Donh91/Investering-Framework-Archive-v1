@@ -3,6 +3,7 @@
 Offline and deterministic: repository data only, no network, no git history.
 """
 import importlib.util
+import inspect
 import sys
 import unittest
 from datetime import date, timedelta
@@ -152,6 +153,22 @@ class E1XProductionFindingsTest(unittest.TestCase):
         self.assertEqual(by_target.get("2026-07-16T20:00:00Z"), "TRUE_FUTURE_LEAKAGE")
         self.assertEqual(by_target.get("2026-07-17T05:00:00Z"), "SOURCE_VINTAGE_RISK")
         self.assertNotIn("2026-07-17T12:00:00Z", by_target)
+
+    def test_etf_official_pit_v2_passes_right_truncation(self):
+        btc_rows, binding = self.x.load_etf_pack("btc")
+        case = self.x.case_backtest_etf_trailing_official_pit(btc_rows, {"btc": binding})
+        result = self.x.run_right_truncation(case)
+        self.assertEqual(result["observed"], "PASS")
+        self.assertEqual(result["classifications"], ["NO_ISSUE"])
+        self.assertGreater(result["output_comparisons"], 0)
+
+    def test_legacy_etf_session_close_case_is_control_not_current_production(self):
+        source = inspect.getsource(self.x.build_cases)
+        production_block = source[source.index("production = ["):source.index("if coinmetrics")]
+        controls_block = source[source.index("controls = ["):source.index("warmup_controls")]
+        self.assertIn("case_backtest_etf_trailing_official_pit", production_block)
+        self.assertNotIn("case_backtest_etf_trailing_documented_publication", production_block)
+        self.assertIn("case_backtest_etf_trailing_documented_publication", controls_block)
 
     def test_clean_production_owners_pass(self):
         rows, hb = self.x.load_hourly_rows()
