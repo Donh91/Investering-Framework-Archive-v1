@@ -361,7 +361,7 @@ def workflow_static(path: Path) -> dict[str, Any]:
     # Only a real `uses:` step uploads an artifact. A plain substring search also
     # matched assertion literals such as `'actions/upload-artifact@v4' in paid`
     # inside gate scripts that upload nothing.
-    uploads_artifact = re.search(r"(?m)^\\s*(?:-\\s+)?uses:\\s*['\"]?actions/upload-artifact@", text) is not None
+    uploads_artifact = re.search(r"(?m)^\s*(?:-\s+)?uses:\s*['\"]?actions/upload-artifact@", text) is not None
     if uploads_artifact and "retention-days:" not in text:
         risks.append("ARTIFACT_RETENTION_UNBOUNDED")
 
