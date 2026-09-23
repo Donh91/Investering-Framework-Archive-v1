@@ -2,9 +2,15 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+
+# This file is invoked both as a module and directly from the production workflow.
+# Direct script execution puts scripts/orchestration on sys.path, not the repo root.
+if __package__ in {None, ""}:
+    sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from scripts.orchestration.build_framework_handoff_manifest import load
 
