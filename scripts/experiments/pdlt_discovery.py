@@ -96,7 +96,7 @@ def btc_candles(owner: dict[str, Any]) -> list[dict[str, Any]]:
 def locate(candles: list[dict[str, Any]], when: datetime) -> int | None:
     idx = None
     for i, row in enumerate(candles):
-        if row["dt"] <= when:
+        if row["dt"] + timedelta(hours=4) <= when:
             idx = i
         else:
             break
