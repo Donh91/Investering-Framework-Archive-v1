@@ -10,6 +10,7 @@ def memory():
         "contract": "PROJECT_CA_PROJECT_MEMORY_P1_v1",
         "project_trial_id": "PCA-P1-test",
         "snapshot_sha256": "1" * 64,
+        "authority": {"project_ca_binding": False, "automatic_trading": False},
     }
 
 
@@ -52,7 +53,33 @@ class P2BindingTests(unittest.TestCase):
         self.assertEqual(bind()["binding_state"], "BOUND_HIGH")
 
     def test_project_controlled_onchain_relation_can_reach_bound_high(self):
-        self.assertEqual(bind(relationship_type="PROJECT_CONTROLLED_ONCHAIN_RELATION")["binding_state"], "BOUND_HIGH")
+        rows = evidence()
+        rows[0]["authentication_state"] = "CANDIDATE"
+        self.assertEqual(bind(
+            relationship_type="PROJECT_CONTROLLED_ONCHAIN_RELATION",
+            binding_provenance=rows,
+        )["binding_state"], "BOUND_HIGH")
+
+    def test_unauthenticated_first_party_claim_cannot_reach_bound_high(self):
+        rows = evidence()
+        rows[0]["authentication_state"] = "CANDIDATE"
+        self.assertEqual(bind(
+            binding_provenance=rows,
+            project_control_binding={"authenticated": False},
+        )["binding_state"], "CANDIDATE_BINDING")
+
+    def test_forged_p1_shell_without_snapshot_is_rejected(self):
+        with self.assertRaises(ProjectCABindingError):
+            bind(project_memory={
+                "contract": "PROJECT_CA_PROJECT_MEMORY_P1_v1",
+                "project_trial_id": "PCA-P1-forged",
+            })
+
+    def test_p1_input_cannot_pregrant_binding_authority(self):
+        forged = memory()
+        forged["authority"]["project_ca_binding"] = True
+        with self.assertRaises(ProjectCABindingError):
+            bind(project_memory=forged)
 
     def test_pons_factory_launch_is_candidate_only(self):
         row = bind(relationship_type="FACTORY_LAUNCH_CANDIDATE_ONLY")
