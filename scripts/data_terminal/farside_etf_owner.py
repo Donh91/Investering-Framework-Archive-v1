@@ -89,7 +89,8 @@ def source_ticker_header_candidate(cells: list[str], asset: str) -> tuple[list[s
     if first not in {"", "date"} or last != "total":
         return None
 
-    tickers = [clean(value).upper() for value in cells[1:-1]]
+    raw_tickers = [clean(value) for value in cells[1:-1]]
+    tickers = [value.upper() for value in raw_tickers]
     if not tickers:
         return None
 
@@ -98,9 +99,13 @@ def source_ticker_header_candidate(cells: list[str], asset: str) -> tuple[list[s
         return ["Date", *schema["tickers"], "Total"], schema["schema_id"]
 
     # Issuer-name rows in the legacy two-row ETH layout also have blank...Total
-    # edges. Only ticker-like rows are schema claims; issuer rows fall through so
-    # the exact second-row ticker matcher below can handle them.
-    ticker_like = all(re.fullmatch(r"[A-Z0-9]{2,6}", ticker) for ticker in tickers)
+    # edges. Only source tokens already presented as uppercase ticker symbols are
+    # schema claims; title/mixed-case issuer labels fall through to the exact
+    # second-row ticker matcher below.
+    ticker_like = all(
+        value == value.upper() and re.fullmatch(r"[A-Z0-9]{2,6}", value)
+        for value in raw_tickers
+    )
     if not ticker_like:
         return None
     if len(set(tickers)) != len(tickers):
