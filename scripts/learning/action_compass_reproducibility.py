@@ -3,22 +3,32 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import sys
 from pathlib import Path
 from typing import Any
 
-from scripts.learning.action_compass_accountability import (
-    DATA_QUALITY_TAGS,
-    digest,
-    parse_time,
-    validate_action_compass,
-    validate_tags,
-)
+_REPO_ROOT = Path(__file__).resolve().parents[2]
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
+
+from scripts.learning import action_compass_accountability as owner  # noqa: E402
 
 FIXTURE_CONTRACT = "ACTION_COMPASS_REPRO_FIXTURE_v1"
 RESULT_CONTRACT = "ACTION_COMPASS_REPRO_RESULT_v1"
 FIXTURE_CLASSES = {"SYNTHETIC_CONTROLLED", "POST_ACTIVATION_FROZEN_RECEIPT"}
+INPUT_BINDING_FIELDS = (
+    "input_packet_sha256",
+    "input_binding_status",
+    "input_contract",
+    "source_reference",
+    "source_timestamp_utc",
+    "canonical_repository",
+    "canonical_commit_sha",
+    "owner_contract",
+)
 SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 SAFE_ID_RE = re.compile(r"^[A-Z0-9][A-Z0-9_.:-]{2,100}$")
+RECEIPT_ROOT = Path("research/framework_memory/action_compass_receipts")
 
 
 def exact_keys(value: dict[str, Any], required: set[str], label: str) -> None:
@@ -37,7 +47,7 @@ def validate_relative_source(value: Any) -> str:
     if path.is_absolute() or ".." in path.parts:
         raise ValueError("fixture_source_reference_unsafe")
     lowered = value.lower()
-    if "chat" in lowered or "conversation" in lowered:
+    if "chat" in lowered or "conversation" in lowered or "transcript" in lowered:
         raise ValueError("historical_chat_fixture_forbidden")
     if any(part.upper() == "LATEST.JSON" or part.upper().startswith("LATEST.") for part in path.parts):
         raise ValueError("mutable_latest_fixture_forbidden")
@@ -65,71 +75,68 @@ def validate_fixture(value: Any) -> dict[str, Any]:
         raise ValueError("fixture_contract_invalid")
     if not isinstance(value["fixture_id"], str) or not SAFE_ID_RE.fullmatch(value["fixture_id"]):
         raise ValueError("fixture_id_invalid")
+
     fixture_class = value["fixture_class"]
     if fixture_class not in FIXTURE_CLASSES:
         raise ValueError("fixture_class_invalid")
     source = validate_relative_source(value["source_reference"])
-    frozen_at = parse_time(value["frozen_at_utc"])
-    activation = parse_time(value["activation_utc"])
+    frozen_at = owner.parse_time(value["frozen_at_utc"])
+    activation = owner.parse_time(value["activation_utc"])
     if frozen_at < activation:
         raise ValueError("pre_activation_fixture_forbidden")
-    if not isinstance(value["frozen_input"], dict):
+
+    frozen = value["frozen_input"]
+    if not isinstance(frozen, dict):
         raise ValueError("frozen_input_object_required")
+    exact_keys(frozen, set(INPUT_BINDING_FIELDS), "frozen_input")
     sha = value["frozen_input_sha256"]
     if not isinstance(sha, str) or not SHA256_RE.fullmatch(sha):
         raise ValueError("frozen_input_sha256_invalid")
-    if digest(value["frozen_input"]) != sha:
+    if owner.digest(frozen) != sha:
         raise ValueError("frozen_input_hash_mismatch")
+
+    source_time = owner.parse_time(frozen["source_timestamp_utc"])
+    if source_time < activation:
+        raise ValueError("pre_activation_input_forbidden")
+    if source_time > frozen_at:
+        raise ValueError("frozen_input_after_fixture_freeze")
+
     if fixture_class == "SYNTHETIC_CONTROLLED":
         if not source.startswith("tests/fixtures/action_compass_reproducibility/"):
             raise ValueError("synthetic_fixture_source_invalid")
         eligible = False
     else:
-        if not source.startswith("research/framework_memory/action_compass_receipts/"):
+        if not source.startswith(RECEIPT_ROOT.as_posix() + "/"):
             raise ValueError("post_activation_receipt_source_invalid")
-        eligible = True
+        eligible = frozen["input_binding_status"] == "VERIFIED_REPO_FILE"
+
     return {
         "fixture_id": value["fixture_id"],
         "fixture_class": fixture_class,
         "source_reference": source,
         "frozen_input_sha256": sha,
-        "frozen_at_utc": value["frozen_at_utc"],
+        "frozen_input": frozen,
         "activation_utc": value["activation_utc"],
         "eligible_replay": eligible,
     }
 
 
-def validate_output(value: Any) -> dict[str, Any]:
-    if not isinstance(value, dict):
-        raise ValueError("replay_output_object_required")
-    exact_keys(
-        value,
-        {"replay_id", "interpreted_at_utc", "producer_model", "wording", "data_quality_tags", "action_compass"},
-        "replay_output",
-    )
-    replay_id = value["replay_id"]
-    if not isinstance(replay_id, str) or not SAFE_ID_RE.fullmatch(replay_id):
-        raise ValueError("replay_id_invalid")
-    interpreted = parse_time(value["interpreted_at_utc"])
-    model = value["producer_model"]
-    if not isinstance(model, str) or not 1 <= len(model) <= 100:
-        raise ValueError("producer_model_invalid")
-    wording = value["wording"]
-    if not isinstance(wording, str) or len(wording) > 2000:
-        raise ValueError("wording_invalid")
-    validate_tags(value["data_quality_tags"], "data_quality_tags", DATA_QUALITY_TAGS, 8)
-    validate_action_compass(value["action_compass"], interpreted)
+def semantic_projection(candidate: dict[str, Any]) -> dict[str, Any]:
+    # T01 explicitly freezes machine actions/state/warning, horizons/validity
+    # semantics and data-quality classification. Rationale/model metadata is
+    # intentionally outside this projection.
     return {
-        "replay_id": replay_id,
-        "semantic": {
-            "action_compass": value["action_compass"],
-            "data_quality_tags": sorted(value["data_quality_tags"]),
-        },
-        "metadata": {
-            "interpreted_at_utc": value["interpreted_at_utc"],
-            "producer_model": model,
-            "wording": wording,
-        },
+        "action_compass": candidate["action_compass"],
+        "data_quality_tags": sorted(candidate["data_quality_tags"]),
+    }
+
+
+def metadata_projection(candidate: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "interpreted_at_utc": candidate["interpreted_at_utc"],
+        "producer_model": candidate["producer_model"],
+        "rationale_tags": sorted(candidate["rationale_tags"]),
+        "baseline_observer": candidate["baseline_observer"],
     }
 
 
@@ -156,6 +163,21 @@ def diff_paths(left: Any, right: Any, prefix: str = "") -> list[str]:
     return [] if left == right else [prefix or "$"]
 
 
+def validate_replay(candidate: Any, frozen_input: dict[str, Any], activation_utc: str) -> dict[str, Any]:
+    if not isinstance(candidate, dict):
+        raise ValueError("replay_candidate_object_required")
+    owner.validate_candidate(candidate)
+    mismatched = [field for field in INPUT_BINDING_FIELDS if candidate.get(field) != frozen_input[field]]
+    if mismatched:
+        raise ValueError("replay_input_binding_mismatch:" + ",".join(mismatched))
+    if owner.parse_time(candidate["interpreted_at_utc"]) < owner.parse_time(activation_utc):
+        raise ValueError("pre_activation_interpretation_forbidden")
+    return {
+        "semantic": semantic_projection(candidate),
+        "metadata": metadata_projection(candidate),
+    }
+
+
 def compare_replays(fixture: dict[str, Any], outputs: list[Any]) -> dict[str, Any]:
     fixture_info = validate_fixture(fixture)
     if not isinstance(outputs, list) or len(outputs) < 2:
@@ -163,14 +185,11 @@ def compare_replays(fixture: dict[str, Any], outputs: list[Any]) -> dict[str, An
 
     validated: list[dict[str, Any]] = []
     invalid: list[dict[str, Any]] = []
-    seen_ids: set[str] = set()
     for index, raw in enumerate(outputs):
         try:
-            row = validate_output(raw)
-            if row["replay_id"] in seen_ids:
-                raise ValueError("duplicate_replay_id")
-            seen_ids.add(row["replay_id"])
-            validated.append(row)
+            validated.append(
+                validate_replay(raw, fixture_info["frozen_input"], fixture_info["activation_utc"])
+            )
         except (ValueError, KeyError, TypeError) as exc:
             invalid.append({"index": index, "error": str(exc)})
 
@@ -178,10 +197,10 @@ def compare_replays(fixture: dict[str, Any], outputs: list[Any]) -> dict[str, An
     metadata_variance = False
     reference = validated[0] if validated else None
     if reference is not None:
-        for row in validated[1:]:
+        for index, row in enumerate(validated[1:], start=1):
             paths = diff_paths(reference["semantic"], row["semantic"])
             if paths:
-                disagreements.append({"replay_id": row["replay_id"], "paths": paths})
+                disagreements.append({"replay_index": index, "paths": paths})
             if row["metadata"] != reference["metadata"]:
                 metadata_variance = True
 
@@ -208,10 +227,10 @@ def compare_replays(fixture: dict[str, Any], outputs: list[Any]) -> dict[str, An
         "valid_replay_count": len(validated),
         "eligible_replay_count": eligible_replay_count,
         "synthetic_replay_count": len(validated) if not fixture_info["eligible_replay"] else 0,
-        "semantic_reference_sha256": digest(reference["semantic"]) if reference else None,
+        "semantic_reference_sha256": owner.digest(reference["semantic"]) if reference else None,
         "semantic_disagreements": disagreements,
         "invalid_outputs": invalid,
-        "metadata_or_wording_variance_observed": metadata_variance,
+        "metadata_variance_observed": metadata_variance,
         "prospective_action_compass_receipt_created": False,
         "reproducibility_conclusion_authorized": False,
         "reproducibility_conclusion_minimum_eligible_replays": 10,
@@ -228,11 +247,18 @@ def compare_replays(fixture: dict[str, Any], outputs: list[Any]) -> dict[str, An
     }
 
 
+def output_is_inside_receipt_root(output: Path, repo_root: Path) -> bool:
+    target = output.resolve()
+    root = (repo_root / RECEIPT_ROOT).resolve()
+    return target == root or root in target.parents
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--fixture", type=Path, required=True)
     parser.add_argument("--outputs", type=Path, required=True)
     parser.add_argument("--output", type=Path)
+    parser.add_argument("--repo-root", type=Path, default=Path("."))
     args = parser.parse_args()
 
     fixture = json.loads(args.fixture.read_text(encoding="utf-8"))
@@ -240,6 +266,8 @@ def main() -> None:
     result = compare_replays(fixture, outputs)
     raw = json.dumps(result, indent=2, sort_keys=True) + "\n"
     if args.output:
+        if output_is_inside_receipt_root(args.output, args.repo_root):
+            raise SystemExit("ACTION_COMPASS_REPRO_ERROR:receipt_root_output_forbidden")
         args.output.parent.mkdir(parents=True, exist_ok=True)
         args.output.write_text(raw, encoding="utf-8")
     print(raw, end="")
