@@ -358,7 +358,15 @@ def workflow_static(path: Path) -> dict[str, Any]:
         risks.append("PR_TARGET_WITH_WRITE_OR_SECRET")
     if scheduled and "timezone:" not in text:
         risks.append("SCHEDULE_WITHOUT_EXPLICIT_TIMEZONE")
-    if "actions/upload-artifact@" in text and "retention-days:" not in text:
+    # Only a real `uses:` step uploads an artifact. A plain substring search also
+    # matched assertion literals such as `'actions/upload-artifact@v4' in paid`
+    # inside gate scripts that upload nothing.
+    uploads_artifact = any(
+        ("actions/upload-artifact@" in line)
+        and (line.lstrip().startswith("uses:") or line.lstrip().startswith("- uses:"))
+        for line in text.splitlines()
+    )
+    if uploads_artifact and "retention-days:" not in text:
         risks.append("ARTIFACT_RETENTION_UNBOUNDED")
 
     if lifecycle_state == "EXPECTED_BLOCK":
