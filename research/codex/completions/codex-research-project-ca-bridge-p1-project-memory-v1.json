@@ -1,0 +1,21 @@
+{
+  "contract": "CODEX_RESEARCH_COMPLETION_RECEIPT_v1",
+  "status": "VERIFIED",
+  "candidate_id": "codex-research-project-ca-bridge-p1-project-memory-v1",
+  "signature": "fb4a2d5e71b40ba39d61",
+  "candidate_sha256": "e3080d0f045f887a2bafd198588beeaa2e9812ec238e2911be182fffe37ad40b",
+  "task_contract_sha256": "16e428f8aa8063c80eaceddf6bb79f343d6312aa0b5ded4b21ce8711c2da697f",
+  "pr_number": 1281,
+  "merge_commit_sha": "1755a7a68536aa709c00716906f0c9de485d8eb6",
+  "verified_at_utc": "2026-09-23T23:45:00Z",
+  "verification_evidence": [
+    "Fresh-main independent review reproduced five bounded P1 defects: observations or availability after frozen_at_utc could enter a frozen snapshot, non-UTC/free-text timestamps were accepted, nested outcome-derived discovery fields bypassed the top-level firewall, and supersessions could be backdated.",
+    "PR #1281 fails closed on all five defects while preserving the append-only path: later evidence is admitted only through an explicitly later supersession with stable project_trial_id and supersedes_snapshot_sha256 lineage.",
+    "8-Ball no-token persistence and HoodStack conflicting mutable-source regressions remain intact; independent tests additionally prove freeze-time exclusion, availability-time exclusion, valid later supersession, backdated-supersession rejection, strict UTC timestamps and recursive hindsight-field rejection.",
+    "Fresh-main readback confirms the temporal guards, recursive discovery firewall and independent-review test class are present. The orphan parallel P1 implementation under scripts/api_agent/meme_alpha and its duplicate test were removed after fresh code search found no consumers outside that duplicate test.",
+    "PR #1281 passed eight relevant gates including Meme Alpha Runtime, Continuity Learning, API Agent Gateway, Full Architecture 1-7, Owner-Bound Daily Director Manual, Data Architecture, Storage Health and Automation Production Health.",
+    "Fresh-main merge receipt is MERGED_VERIFIED and binds transition receipt 43fd7e0a58fdba8f6c74daec5d4e7e3bc09baa12e92d9019a45971f2e8de9687. P2-P6, frozen A/B/C semantics, Project-to-CA binding, NET/SAFIX/DARK credit, scanners, schedulers, market gates, model weights, portfolio/trading and alert authority remain unchanged."
+  ],
+  "post_fix_gate": "P1_FOCUSED_TESTS_AND_8BALL_HOODSTACK_REGRESSIONS_PASS_PLUS_FRESH_MAIN_READBACK_PLUS_INDEPENDENT_REVIEW_WITH_ZERO_FROZEN_SEMANTIC_DRIFT",
+  "receipt_sha256": "e9b3fb2f91963acd3f93c0b65b7728ce2fc9ad49b70116b79b61c4754dd65572"
+}
