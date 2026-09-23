@@ -92,6 +92,11 @@ def build_binding(
     if project_memory.get("contract") != "PROJECT_CA_PROJECT_MEMORY_P1_v1":
         raise ProjectCABindingError("P2 requires a P1-frozen project memory")
     project_trial_id = _text(project_memory.get("project_trial_id"), "project_trial_id")
+    _text(project_memory.get("snapshot_sha256"), "project_memory.snapshot_sha256")
+    p1_authority = project_memory.get("authority")
+    if p1_authority is not None:
+        if p1_authority.get("project_ca_binding") is True or p1_authority.get("project_to_ca_binding") is True:
+            raise ProjectCABindingError("P1 input must not already grant Project-to-CA binding authority")
     chain, ca = _token_key(chain_id, token_ca)
     relationship_type = _text(relationship_type, "relationship_type")
     if relationship_type not in RELATIONSHIP_TYPES:
@@ -113,10 +118,22 @@ def build_binding(
         and str(onchain_verification.get("token_ca", "")).lower() == ca
         and bool(onchain_verification.get("evidence_sha256"))
     )
+    first_party_source_ok = any(
+        x["authentication_state"] == "AUTHENTICATED_FIRST_PARTY"
+        and x["conflict_state"] in {"NONE", "RESOLVED"}
+        for x in evidence
+    )
     project_control_ok = (
         project_control_binding.get("authenticated") is True
         and bool(project_control_binding.get("evidence_sha256"))
     )
+    authenticated_relation_ok = (
+        first_party_source_ok
+        if relationship_type == "FIRST_PARTY_EXPLICIT_CA"
+        else project_control_ok
+    )
+    if relationship_type in CONTINUITY_RELATIONSHIPS:
+        authenticated_relation_ok = first_party_source_ok or project_control_ok
     timestamps_and_hashes_ok = bool(evidence) and all(
         x["available_at_utc"] is not None and x["evidence_sha256"] for x in evidence
     )
@@ -139,7 +156,7 @@ def build_binding(
         state = "CONFLICTED"
     elif (
         onchain_ok
-        and project_control_ok
+        and authenticated_relation_ok
         and timestamps_and_hashes_ok
         and relationship_supports_high
         and continuity_ok
