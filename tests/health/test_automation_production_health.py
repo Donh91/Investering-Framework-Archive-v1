@@ -211,6 +211,66 @@ jobs:
     assert "SCHEDULE_WITHOUT_EXPLICIT_TIMEZONE" not in row["static_risks"]
 
 
+def test_upload_artifact_literal_inside_step_is_not_an_artifact_upload(tmp_path: Path) -> None:
+    path = write_workflow(
+        tmp_path,
+        """name: Static Gate
+on:
+  pull_request:
+jobs:
+  gate:
+    steps:
+      - run: |
+          python - <<'PY'
+          paid = open('other.yml').read()
+          assert 'actions/upload-artifact@v4' in paid
+          PY
+""",
+    )
+    row = module.workflow_static(path)
+    assert "ARTIFACT_RETENTION_UNBOUNDED" not in row["static_risks"]
+
+
+def test_real_upload_artifact_step_without_retention_is_flagged(tmp_path: Path) -> None:
+    for uses in ("      - uses: actions/upload-artifact@v4", "      - name: upload\\n        uses: 'actions/upload-artifact@v4'"):
+        path = write_workflow(
+            tmp_path,
+            f"""name: Uploader
+on:
+  pull_request:
+jobs:
+  gate:
+    steps:
+{uses}
+        with:
+          name: evidence
+          path: out/
+""",
+        )
+        row = module.workflow_static(path)
+        assert "ARTIFACT_RETENTION_UNBOUNDED" in row["static_risks"], uses
+
+
+def test_real_upload_artifact_step_with_retention_is_not_flagged(tmp_path: Path) -> None:
+    path = write_workflow(
+        tmp_path,
+        """name: Uploader
+on:
+  pull_request:
+jobs:
+  gate:
+    steps:
+      - uses: actions/upload-artifact@v4
+        with:
+          name: evidence
+          path: out/
+          retention-days: 14
+""",
+    )
+    row = module.workflow_static(path)
+    assert "ARTIFACT_RETENTION_UNBOUNDED" not in row["static_risks"]
+
+
 def test_job_named_schedule_does_not_make_manual_workflow_scheduled(tmp_path: Path) -> None:
     path = write_workflow(
         tmp_path,
