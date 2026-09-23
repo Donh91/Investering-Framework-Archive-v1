@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+from datetime import datetime, timezone
 from typing import Any, Mapping, Sequence
 
 TOKEN_STATES = frozenset({"NO_TOKEN_OBSERVED", "TOKEN_CANDIDATE", "TOKEN_BOUND", "TOKEN_CONFLICT"})
@@ -35,12 +36,47 @@ def _require_text(value: Any, field: str) -> str:
     return value.strip()
 
 
+def _require_utc(value: Any, field: str) -> str:
+    """Exact UTC instant ending in Z; free text is never a point-in-time stamp."""
+    text = _require_text(value, field)
+    if not text.endswith("Z"):
+        raise ProjectMemoryError(f"{field} must be an explicit UTC timestamp ending in Z")
+    try:
+        parsed = datetime.fromisoformat(text[:-1] + "+00:00")
+    except ValueError as exc:
+        raise ProjectMemoryError(f"{field} is not a valid UTC timestamp") from exc
+    if parsed.tzinfo is None or parsed.utcoffset() != timezone.utc.utcoffset(None):
+        raise ProjectMemoryError(f"{field} must be UTC")
+    return text
+
+
+def _instant(text: str) -> datetime:
+    return datetime.fromisoformat(text[:-1] + "+00:00")
+
+
+FORBIDDEN_DISCOVERY_KEYS = frozenset({"outcome", "winner", "failure", "return", "mfe", "mae"})
+
+
+def _forbidden_discovery_paths(value: Any, path: str = "discovery") -> list[str]:
+    hits: list[str] = []
+    if isinstance(value, Mapping):
+        for key, child in value.items():
+            here = f"{path}.{key}"
+            if str(key).lower() in FORBIDDEN_DISCOVERY_KEYS:
+                hits.append(here)
+            hits.extend(_forbidden_discovery_paths(child, here))
+    elif isinstance(value, list):
+        for index, child in enumerate(value):
+            hits.extend(_forbidden_discovery_paths(child, f"{path}[{index}]"))
+    return hits
+
+
 def _source_observation(row: Mapping[str, Any]) -> dict[str, Any]:
     source_ref = _require_text(row.get("source_ref"), "source_ref")
-    observed_at = _require_text(row.get("observed_at_utc"), "observed_at_utc")
+    observed_at = _require_utc(row.get("observed_at_utc"), "observed_at_utc")
     available_at = row.get("available_at_utc")
     if available_at is not None:
-        available_at = _require_text(available_at, "available_at_utc")
+        available_at = _require_utc(available_at, "available_at_utc")
     content_hash = _require_text(row.get("content_sha256"), "content_sha256")
     auth = _require_text(row.get("authentication_state"), "authentication_state")
     conflict = _require_text(row.get("conflict_state"), "conflict_state")
@@ -92,7 +128,7 @@ def build_project_memory(
     project identity or binding authority here.
     """
     method_version = _require_text(method_version, "method_version")
-    frozen_at_utc = _require_text(frozen_at_utc, "frozen_at_utc")
+    frozen_at_utc = _require_utc(frozen_at_utc, "frozen_at_utc")
     eligibility_manifest_sha256 = _require_text(
         eligibility_manifest_sha256, "eligibility_manifest_sha256"
     )
@@ -101,12 +137,17 @@ def build_project_memory(
 
     identity, identity_key = _identity(project_identity)
     sources = [_source_observation(x) for x in source_observations]
+    frozen_instant = _instant(frozen_at_utc)
+    for src in sources:
+        if _instant(src["observed_at_utc"]) > frozen_instant:
+            raise ProjectMemoryError("source observation observed after frozen_at_utc; supersede instead")
+        if src["available_at_utc"] is not None and _instant(src["available_at_utc"]) > frozen_instant:
+            raise ProjectMemoryError("source observation available after frozen_at_utc; supersede instead")
     sources = sorted(sources, key=lambda x: (
         x["source_ref"], x["observed_at_utc"], x["content_sha256"]
     ))
     discovery_frozen = json.loads(_canonical(discovery))
-    forbidden_discovery_keys = {"outcome", "winner", "failure", "return", "mfe", "mae"}
-    if forbidden_discovery_keys.intersection(discovery_frozen):
+    if _forbidden_discovery_paths(discovery_frozen):
         raise ProjectMemoryError("outcome-derived discovery fields are forbidden in P1")
 
     project_trial_id = "PCA-P1-" + identity_key[:20]
@@ -167,6 +208,10 @@ def supersede_project_memory(previous: Mapping[str, Any], **changes: Any) -> dic
         "ca_candidates": previous["ca_candidates"],
     }
     required.update(changes)
+    new_frozen = _require_utc(required.get("frozen_at_utc"), "frozen_at_utc")
+    previous_frozen = _require_utc(previous.get("frozen_at_utc"), "previous.frozen_at_utc")
+    if _instant(new_frozen) < _instant(previous_frozen):
+        raise ProjectMemoryError("supersession cannot be frozen before the snapshot it supersedes")
     result = build_project_memory(**required)
     if result["project_trial_id"] != previous["project_trial_id"]:
         raise ProjectMemoryError("supersession cannot change project identity lineage")
