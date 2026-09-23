@@ -45,10 +45,18 @@ def row_timestamp(value: dict[str,Any]) -> datetime | None:
                 if dt:return dt
     return None
 
-def latest_json(root: Path):
+def latest_json(root: Path, exclude_names: tuple[str, ...] = ()):
+    """Return the newest timestamped JSON evidence row under root.
+
+    exclude_names removes pointer files that repeat the target timestamp but not
+    its body. The daily capture LATEST.json pointer carries the same
+    captured_at_utc as its target and wins the (timestamp, path) tie-break, which
+    previously replaced the capture's owner rows with an empty population.
+    """
     rows=[]
     if root.exists():
         for path in root.rglob('*.json'):
+            if path.name in exclude_names:continue
             value=read_json(path)
             if value is None:continue
             ts=row_timestamp(value)
@@ -138,7 +146,7 @@ def evidence_health(root: Path, now: datetime) -> dict[str, Any]:
 
 def main():
     ap=argparse.ArgumentParser();ap.add_argument('--repo-root',type=Path,default=Path('.'));ap.add_argument('--json-output',type=Path,required=True);ap.add_argument('--md-output',type=Path,required=True);ap.add_argument('--now-utc');args=ap.parse_args();root=args.repo_root;now=parse_dt(args.now_utc) if args.now_utc else datetime.now(timezone.utc);assert now
-    cap_path,cap,cap_ts=latest_json(root/'03_DAILY_CAPTURE_LOGS/captures');daily_path,daily,daily_ts,daily_receipt_path=latest_paired_output(root/'research/api_agent/outputs/daily','DAILY_DIRECTOR_OUTPUT.json','DAILY_DIRECTOR_RECEIPT.json');weekly_path,weekly,weekly_ts=latest_json(root/'research/api_agent/outputs/weekly');etf_path,etf,etf_ts=latest_json(root/'research/etf_owner')
+    cap_path,cap,cap_ts=latest_json(root/'03_DAILY_CAPTURE_LOGS/captures',exclude_names=('LATEST.json',));daily_path,daily,daily_ts,daily_receipt_path=latest_paired_output(root/'research/api_agent/outputs/daily','DAILY_DIRECTOR_OUTPUT.json','DAILY_DIRECTOR_RECEIPT.json');weekly_path,weekly,weekly_ts=latest_json(root/'research/api_agent/outputs/weekly');etf_path,etf,etf_ts=latest_json(root/'research/etf_owner')
     experiment_path=root/'research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json';experiment=read_json(experiment_path);experiment_ts=row_timestamp(experiment or {})
     sync_path=root/'research/experiment_lifecycle/LATEST_EXPERIMENT_RECEIPT_SYNC.json';sync=read_json(sync_path);sync_ts=row_timestamp(sync or {})
     remediation_path=root/'research/remediation/LATEST_REMEDIATION_QUEUE.json';remediation=read_json(remediation_path);remediation_ts=row_timestamp(remediation or {})
