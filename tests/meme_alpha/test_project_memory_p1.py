@@ -68,7 +68,9 @@ class ProjectMemoryP1Tests(unittest.TestCase):
             "authentication_state": "AUTHENTICATED",
             "conflict_state": "CONFLICTED",
         }]
-        row = build_project_memory(**base(source_observations=sources))
+        # Freeze after both conflicting observations exist. A 15:30 snapshot
+        # must not contain the 15:31 observation.
+        row = build_project_memory(**base(source_observations=sources, frozen_at_utc="2026-09-23T15:32:00Z"))
         self.assertEqual(len(row["source_observations"]), 2)
         self.assertEqual(
             {x["content_sha256"] for x in row["source_observations"]},
@@ -103,6 +105,66 @@ class ProjectMemoryP1Tests(unittest.TestCase):
         ))
         self.assertFalse(row["authority"]["project_ca_binding"])
         self.assertEqual(row["token_state"], "TOKEN_CANDIDATE")
+
+
+class ProjectMemoryP1IndependentReviewTests(unittest.TestCase):
+    """Independent-review regressions: temporal and hindsight hardening."""
+
+    def later_source(self, observed="2026-09-23T15:31:00Z", available=None):
+        return {
+            "source_ref": "fixture:official",
+            "observed_at_utc": observed,
+            "available_at_utc": available,
+            "content_sha256": "c" * 64,
+            "authentication_state": "AUTHENTICATED",
+            "conflict_state": "CONFLICTED",
+        }
+
+    def test_observation_after_freeze_cannot_enter_frozen_snapshot(self):
+        sources = list(base()["source_observations"]) + [self.later_source()]
+        with self.assertRaises(ProjectMemoryError):
+            build_project_memory(**base(source_observations=sources))
+
+    def test_availability_after_freeze_cannot_enter_frozen_snapshot(self):
+        sources = [self.later_source(observed="2026-09-23T15:00:00Z", available="2026-09-23T16:00:00Z")]
+        with self.assertRaises(ProjectMemoryError):
+            build_project_memory(**base(source_observations=sources))
+
+    def test_later_observation_is_admitted_through_append_only_supersession(self):
+        first = build_project_memory(**base())
+        second = supersede_project_memory(
+            first,
+            frozen_at_utc="2026-09-23T15:32:00Z",
+            source_observations=list(first["source_observations"]) + [self.later_source()],
+            material_delta={"state": "CONFLICTING_MUTABLE_SOURCE"},
+        )
+        self.assertEqual(len(second["source_observations"]), 2)
+        self.assertEqual(second["lineage"]["supersedes_snapshot_sha256"], first["snapshot_sha256"])
+
+    def test_backdated_supersession_is_rejected(self):
+        first = build_project_memory(**base())
+        with self.assertRaises(ProjectMemoryError):
+            supersede_project_memory(first, frozen_at_utc="2026-09-23T15:00:00Z")
+
+    def test_free_text_or_offset_timestamps_are_rejected(self):
+        for value in ("yesterday", "2026-09-23T15:30:00+02:00"):
+            with self.assertRaises(ProjectMemoryError):
+                build_project_memory(**base(frozen_at_utc=value))
+        bad = dict(base()["source_observations"][0], observed_at_utc="sometime")
+        with self.assertRaises(ProjectMemoryError):
+            build_project_memory(**base(source_observations=[bad]))
+
+    def test_nested_outcome_fields_in_discovery_are_rejected(self):
+        for discovery in (
+            {"source": "fixture", "meta": {"outcome": "winner"}},
+            {"source": "fixture", "signals": [{"mfe": 5.0}]},
+        ):
+            with self.assertRaises(ProjectMemoryError):
+                build_project_memory(**base(discovery=discovery))
+
+    def test_non_outcome_nested_discovery_is_still_accepted(self):
+        row = build_project_memory(**base(discovery={"source": "fixture", "meta": {"channel": "official"}}))
+        self.assertEqual(row["discovery"]["meta"]["channel"], "official")
 
 
 if __name__ == "__main__":
