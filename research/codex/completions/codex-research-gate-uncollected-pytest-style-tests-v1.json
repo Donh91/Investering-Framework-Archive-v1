@@ -1,0 +1,19 @@
+{
+  "contract": "CODEX_RESEARCH_COMPLETION_RECEIPT_v1",
+  "status": "VERIFIED",
+  "candidate_id": "codex-research-gate-uncollected-pytest-style-tests-v1",
+  "signature": "b753d6295680eb62d7a3",
+  "candidate_sha256": "ba94e4fc55a02516fba52f9ac209436eac792ec92ab0c5a3400b1f31a7566b2b",
+  "task_contract_sha256": "ab021abcef0e32db5a5594a4843b6492ab0c8840dcd1c5a7e7a4aa7f9cb3500e",
+  "pr_number": 1260,
+  "merge_commit_sha": "4b82f0efdbb66aaa1154c50246158a0dde997f18",
+  "verified_at_utc": "2026-09-23T21:44:00Z",
+  "verification_evidence": [
+    "PR #1260 merged at 4b82f0efdbb66aaa1154c50246158a0dde997f18 and changed only the candidate transition receipt plus the two in-scope test modules; no production script or workflow file changed.",
+    "API Agent Gateway Gate run 35924007914 executed all seven DirectorLearningContextUnittestCollectionTests by name and finished 97 tests PASS, while other gateway modules continued to execute.",
+    "Master Monday Preflight Gate run 35924007972 executed all eight ConsumerReceiptModuleFunctionCollectionTests by name and finished 31 tests PASS, while the existing invariant and other preflight modules continued to execute.",
+    "The compatibility wrappers call each original test function directly and contain no AssertionError/exception swallowing; therefore an underlying failing assertion propagates to unittest and fails the existing gate command."
+  ],
+  "post_fix_gate": "BOTH_GATES_GREEN_WITH_NONZERO_COLLECTED_COUNTS",
+  "receipt_sha256": "51ac681a76f55ef3d8c1fdfd03a432e9ddb6e36c9908664cb682dee17804eea4"
+}
