@@ -85,4 +85,64 @@ class OperationsDashboardTests(unittest.TestCase):
             self.refresh_handoff(root)
             refreshed=json.loads((root/'LATEST_HANDOFF.json').read_text())['pointers']['latest_director_output']
             self.assertEqual(refreshed,original)
+    def test_incident_resolution_is_append_only_uncapped_and_dashboard_matches(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);self.base_repo(root)
+            incident_root=root/'09_SOURCE_QA/incidents';incident_root.mkdir(parents=True)
+            originals={}
+            for index in range(25):
+                path=incident_root/f'INCIDENT_{index:03d}.md'
+                path.write_text(f'# incident {index}\n',encoding='utf-8')
+                originals[path.name]=path.read_bytes()
+            resolution=incident_root/'resolutions/resolved-000.json';resolution.parent.mkdir()
+            resolution.write_text(json.dumps({
+                'contract':'SOURCE_QA_INCIDENT_RESOLUTION_v1',
+                'incident_path':'09_SOURCE_QA/incidents/INCIDENT_000.md',
+                'owner':'automation-health-owner',
+                'successful_run_id':123456,
+                'successful_run_conclusion':'success',
+                'resolved_at_utc':'2026-08-04T12:30:00Z',
+            })+'\n',encoding='utf-8')
+
+            self.refresh_handoff(root)
+            handoff=json.loads((root/'LATEST_HANDOFF.json').read_text())
+            self.assertEqual(handoff['incident_file_count'],25)
+            self.assertEqual(handoff['resolved_incident_count'],1)
+            self.assertEqual(len(handoff['open_incidents']),24)
+            self.assertFalse(handoff['open_incidents_truncated'])
+            self.assertNotIn('09_SOURCE_QA/incidents/INCIDENT_000.md',handoff['open_incidents'])
+            self.assertIn('09_SOURCE_QA/incidents/INCIDENT_001.md',handoff['open_incidents'])
+            self.assertIn('09_SOURCE_QA/incidents/INCIDENT_024.md',handoff['open_incidents'])
+            for name, raw in originals.items():
+                self.assertEqual((incident_root/name).read_bytes(),raw)
+
+            dashboard=module.build_dashboard(root,datetime(2026,8,4,13,0,tzinfo=UTC))
+            self.assertEqual(dashboard['incidents']['open_count'],24)
+            self.assertEqual(dashboard['incidents']['incident_file_count'],25)
+            self.assertEqual(dashboard['incidents']['resolved_count'],1)
+            self.assertFalse(dashboard['incidents']['truncated'])
+
+    def test_invalid_incident_resolution_receipt_cannot_close_incident(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);self.base_repo(root)
+            incident_root=root/'09_SOURCE_QA/incidents';incident_root.mkdir(parents=True)
+            incident=incident_root/'INCIDENT_old.md';incident.write_text('# unresolved\n',encoding='utf-8')
+            resolution=incident_root/'resolutions/invalid.json';resolution.parent.mkdir()
+            resolution.write_text(json.dumps({
+                'contract':'SOURCE_QA_INCIDENT_RESOLUTION_v1',
+                'incident_path':'09_SOURCE_QA/incidents/INCIDENT_old.md',
+                'owner':'',
+                'successful_run_conclusion':'success',
+                'resolved_at_utc':'2026-08-04T12:30:00Z',
+            })+'\n',encoding='utf-8')
+
+            self.refresh_handoff(root)
+            handoff=json.loads((root/'LATEST_HANDOFF.json').read_text())
+            self.assertEqual(handoff['open_incidents'],['09_SOURCE_QA/incidents/INCIDENT_old.md'])
+            self.assertEqual(handoff['resolved_incident_count'],0)
+            self.assertEqual(handoff['incident_resolution_receipt_count'],1)
+            self.assertEqual(handoff['invalid_incident_resolution_receipts'],[
+                '09_SOURCE_QA/incidents/resolutions/invalid.json'
+            ])
+
 if __name__=='__main__':unittest.main()
