@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import tempfile
+import unittest
 from pathlib import Path
 
 SCRIPT = Path(__file__).resolve().parents[2] / "scripts/api_agent/augment_director_situation_room_shadow.py"
@@ -50,30 +52,47 @@ def _write_valid(tmp_path: Path) -> Path:
     return pointer
 
 
-def test_verified_shadow_is_routed_and_pending_is_not_evidence(tmp_path: Path) -> None:
-    pointer = _write_valid(tmp_path)
-    out, paths = module.situation_room_shadow(pointer)
-    assert out["status"] == "READY"
-    assert out["verified_count"] == 1
-    assert out["pending_count"] == 1
-    assert out["verified_context"][0]["verification_status"] == "PRIMARY_LINK_CORROBORATED"
-    assert out["pending_titles_context_only"] == ["Unverified discovery"]
-    assert "Pending items are discovery queue metadata, not evidence" in out["instruction"]
-    assert len(paths) == 2
+class DirectorSituationRoomShadowTest(unittest.TestCase):
+    def setUp(self) -> None:
+        self.temporary_directory = tempfile.TemporaryDirectory()
+        self.tmp_path = Path(self.temporary_directory.name)
 
+    def tearDown(self) -> None:
+        self.temporary_directory.cleanup()
 
-def test_authority_breach_fails_closed(tmp_path: Path) -> None:
-    pointer = _write_valid(tmp_path)
-    row_path = Path(json.loads(pointer.read_text())["path"])
-    row = json.loads(row_path.read_text())
-    row["authority_firewall"]["portfolio_effect"] = True
-    row_path.write_text(json.dumps(row))
-    out, _ = module.situation_room_shadow(pointer)
-    assert out["status"] == "BLOCKED_AUTHORITY_FIREWALL"
+    def test_verified_shadow_is_routed_and_pending_is_not_evidence(self) -> None:
+        pointer = _write_valid(self.tmp_path)
+        out, paths = module.situation_room_shadow(pointer)
+        self.assertEqual(out["status"], "READY")
+        self.assertEqual(out["verified_count"], 1)
+        self.assertEqual(out["pending_count"], 1)
+        self.assertEqual(out["verified_context"][0]["verification_status"], "PRIMARY_LINK_CORROBORATED")
+        self.assertEqual(out["pending_titles_context_only"], ["Unverified discovery"])
+        self.assertIn("Pending items are discovery queue metadata, not evidence", out["instruction"])
+        self.assertEqual(len(paths), 2)
 
+    def test_authority_breach_fails_closed(self) -> None:
+        pointer = _write_valid(self.tmp_path)
+        row_path = Path(json.loads(pointer.read_text())["path"])
+        row = json.loads(row_path.read_text())
+        row["authority_firewall"]["portfolio_effect"] = True
+        row_path.write_text(json.dumps(row))
+        out, _ = module.situation_room_shadow(pointer)
+        self.assertEqual(out["status"], "BLOCKED_AUTHORITY_FIREWALL")
 
-def test_missing_pointer_is_explicit_unavailable(tmp_path: Path) -> None:
-    out, paths = module.situation_room_shadow(tmp_path / "missing.json")
-    assert out["status"] == "UNAVAILABLE"
-    assert out["reason"] == "SITUATION_ROOM_SHADOW_POINTER_MISSING"
-    assert paths == []
+    def test_unverified_context_cannot_enter_verified_output(self) -> None:
+        pointer = _write_valid(self.tmp_path)
+        row_path = Path(json.loads(pointer.read_text())["path"])
+        row = json.loads(row_path.read_text())
+        row["verified_shadow_context"][0]["verification_status"] = "PENDING_PRIMARY_VERIFICATION"
+        row_path.write_text(json.dumps(row))
+        out, _ = module.situation_room_shadow(pointer)
+        self.assertEqual(out["status"], "READY")
+        self.assertEqual(out["verified_count"], 0)
+        self.assertEqual(out["verified_context"], [])
+
+    def test_missing_pointer_is_explicit_unavailable(self) -> None:
+        out, paths = module.situation_room_shadow(self.tmp_path / "missing.json")
+        self.assertEqual(out["status"], "UNAVAILABLE")
+        self.assertEqual(out["reason"], "SITUATION_ROOM_SHADOW_POINTER_MISSING")
+        self.assertEqual(paths, [])
