@@ -132,7 +132,20 @@ class ExperimentSimplificationReviewTests(unittest.TestCase):
 
         self.assertEqual(before, after)
         self.assertEqual(first, second)
-        self.assertEqual(first["candidate_count"], len(registry.get("candidates", [])))
+        registry_rows = registry.get("candidates", [])
+        unique_ids = {row.get("candidate_id") for row in registry_rows if isinstance(row, dict) and row.get("candidate_id")}
+        self.assertEqual(first["registry_row_count"], len(registry_rows))
+        self.assertEqual(first["candidate_count"], len(unique_ids))
+        self.assertEqual(first["unique_candidate_count"], len(unique_ids))
+        duplicate_ids = {
+            cid for cid in unique_ids
+            if sum(1 for row in registry_rows if isinstance(row, dict) and row.get("candidate_id") == cid) > 1
+        }
+        self.assertEqual({row["candidate_id"] for row in first["duplicate_candidate_id_rows"]}, duplicate_ids)
+        for row in first["duplicate_candidate_id_rows"]:
+            self.assertGreater(row["row_count"], 1)
+            self.assertEqual(row["review"], "REGISTRY_DUPLICATE_ID_READ_ONLY_REVIEW")
+            self.assertFalse(row["automatic_action"])
         self.assertFalse(first["authority"]["candidate_history_mutation"])
         self.assertFalse(first["authority"]["automatic_merge"])
         self.assertFalse(first["authority"]["automatic_retirement"])
