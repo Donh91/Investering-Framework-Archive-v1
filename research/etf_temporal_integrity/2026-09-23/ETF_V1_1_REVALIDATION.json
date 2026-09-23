@@ -1,0 +1,647 @@
+{
+ "contract": "ETF_V1_1_REVALIDATION_v1",
+ "scope": "#1212 / candidate codex-research-etf-history-pack-v1-1-row-integrity-v1 (4a968f5f); no #1211 semantics",
+ "source_export_hashes": {
+  "candidate_claims": [
+   {
+    "name": "Etf btc.md",
+    "bytes": 114272,
+    "sha256": "73ffcff5660b34a55605121c809205b2ba341a9b822bc4047efc61a995cb91fb",
+    "rows": 651
+   },
+   {
+    "name": "ETF eth.md",
+    "bytes": 77110,
+    "sha256": "ac623c0bdd72213851dae67798aa461a4e3ea7e4fdea13abd4b54545edb7ed72",
+    "rows": 513
+   }
+  ],
+  "reverified_this_session": false,
+  "why_not": "the Projects tool returns extracted text for these document uploads, not original bytes; byte-level sha256 cannot be recomputed from it. Content-level checks below use the text export and the independent live Farside vintage.",
+  "content_check": "Etf btc.md read in full via project_read: 651-row JSON export, 11 Jan 2024..24 Jul 2026, '-' cells exported as 0.0; BTC 2025-09-19 row = IBIT 246.1, GBTC -23.5, Total 222.6 (matches the frozen recovery row)"
+ },
+ "v1_immutable_readback": {
+  "data/us_spot_btc_etf_flows_daily_2024.csv": {
+   "sha256_now": "31b6f45128a54440f6431d3c816800ca24a3a2e888d8133b68868c27a0818a7e",
+   "checksums_file": "31b6f45128a54440f6431d3c816800ca24a3a2e888d8133b68868c27a0818a7e",
+   "matches_checksums": true,
+   "bytes": 18302,
+   "git_commits_touching": [
+    "4e2ba082d 2026-07-26T22:03:17+02:00"
+   ]
+  },
+  "data/us_spot_btc_etf_flows_daily_2025.csv": {
+   "sha256_now": "40e08c5eb2c9dde70e715b95c9fb1ce6734ac5e7ee55f202a66c87c7ddcdadcb",
+   "checksums_file": "67c9596f135e4225995a016ba4386840ee79bb9c79528fb4ee764f9e63025eff",
+   "matches_checksums": false,
+   "bytes": 18640,
+   "git_commits_touching": [
+    "4e2ba082d 2026-07-26T22:03:17+02:00"
+   ]
+  },
+  "data/us_spot_btc_etf_flows_daily_2026.csv": {
+   "sha256_now": "2745c15c5ba9080481726485bf0657c35b81f842281f168642e3fc59ccc3c107",
+   "checksums_file": "7a375da54548efdad9285b34a84837162a2729b5ab704f0633faca1a538d8c3a",
+   "matches_checksums": false,
+   "bytes": 10191,
+   "git_commits_touching": [
+    "4e2ba082d 2026-07-26T22:03:17+02:00"
+   ]
+  },
+  "data/us_spot_eth_etf_flows_daily_2024.csv": {
+   "sha256_now": "7feab1b5640373e3a1876eae42b488dd24577b89f2d66c5c28638f8729b78967",
+   "checksums_file": "cd971e8b9d027ecd170680822477206b839c6b4d961fce7103647f153eb456f4",
+   "matches_checksums": false,
+   "bytes": 6925,
+   "git_commits_touching": [
+    "4e2ba082d 2026-07-26T22:03:17+02:00"
+   ]
+  },
+  "data/us_spot_eth_etf_flows_daily_2025.csv": {
+   "sha256_now": "ad385c7d65dc4d036b54bab89051fe09bc163042e0227d4c04bd5c65d15310fc",
+   "checksums_file": "ad385c7d65dc4d036b54bab89051fe09bc163042e0227d4c04bd5c65d15310fc",
+   "matches_checksums": true,
+   "bytes": 15618,
+   "git_commits_touching": [
+    "4e2ba082d 2026-07-26T22:03:17+02:00"
+   ]
+  },
+  "data/us_spot_eth_etf_flows_daily_2026.csv": {
+   "sha256_now": "e65d67c54e80d2e589d1d80a547a2227e293259420ca646e2c91d0c802747240",
+   "checksums_file": "e65d67c54e80d2e589d1d80a547a2227e293259420ca646e2c91d0c802747240",
+   "matches_checksums": true,
+   "bytes": 8556,
+   "git_commits_touching": [
+    "4e2ba082d 2026-07-26T22:03:17+02:00"
+   ]
+  }
+ },
+ "v1_checksum_summary": {
+  "files": 6,
+  "matching": 3,
+  "mismatching": [
+   "data/us_spot_btc_etf_flows_daily_2025.csv",
+   "data/us_spot_btc_etf_flows_daily_2026.csv",
+   "data/us_spot_eth_etf_flows_daily_2024.csv"
+  ]
+ },
+ "malformed_rows": [
+  {
+   "asset": "BTC",
+   "date": "2025-09-19",
+   "pack_cells_nonempty": 12,
+   "schema_width": 13,
+   "frozen_recovery_row_present": true,
+   "frozen_total": 222.6,
+   "live_total_2026_09_23": 222.6,
+   "frozen_equals_live_total": true,
+   "frozen_fund_values_equal_live_by_ticker": true,
+   "frozen_vs_live_fund_mismatches": [],
+   "v1_cells_only_candidate_drop_positions": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+   ],
+   "mapping_from_v1_cells_alone_unique": false,
+   "mapping_from_keyed_source_deterministic": true
+  },
+  {
+   "asset": "BTC",
+   "date": "2025-10-24",
+   "pack_cells_nonempty": 12,
+   "schema_width": 13,
+   "frozen_recovery_row_present": true,
+   "frozen_total": 90.6,
+   "live_total_2026_09_23": 90.6,
+   "frozen_equals_live_total": true,
+   "frozen_fund_values_equal_live_by_ticker": true,
+   "frozen_vs_live_fund_mismatches": [],
+   "v1_cells_only_candidate_drop_positions": [
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11
+   ],
+   "mapping_from_v1_cells_alone_unique": false,
+   "mapping_from_keyed_source_deterministic": true
+  },
+  {
+   "asset": "BTC",
+   "date": "2025-11-03",
+   "pack_cells_nonempty": 12,
+   "schema_width": 13,
+   "frozen_recovery_row_present": true,
+   "frozen_total": -186.5,
+   "live_total_2026_09_23": -186.5,
+   "frozen_equals_live_total": true,
+   "frozen_fund_values_equal_live_by_ticker": true,
+   "frozen_vs_live_fund_mismatches": [],
+   "v1_cells_only_candidate_drop_positions": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11
+   ],
+   "mapping_from_v1_cells_alone_unique": false,
+   "mapping_from_keyed_source_deterministic": true
+  },
+  {
+   "asset": "BTC",
+   "date": "2025-11-06",
+   "pack_cells_nonempty": 12,
+   "schema_width": 13,
+   "frozen_recovery_row_present": true,
+   "frozen_total": 239.9,
+   "live_total_2026_09_23": 239.9,
+   "frozen_equals_live_total": true,
+   "frozen_fund_values_equal_live_by_ticker": true,
+   "frozen_vs_live_fund_mismatches": [],
+   "v1_cells_only_candidate_drop_positions": [
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11
+   ],
+   "mapping_from_v1_cells_alone_unique": false,
+   "mapping_from_keyed_source_deterministic": true
+  },
+  {
+   "asset": "BTC",
+   "date": "2025-11-10",
+   "pack_cells_nonempty": 12,
+   "schema_width": 13,
+   "frozen_recovery_row_present": true,
+   "frozen_total": 1.2,
+   "live_total_2026_09_23": 1.2,
+   "frozen_equals_live_total": true,
+   "frozen_fund_values_equal_live_by_ticker": true,
+   "frozen_vs_live_fund_mismatches": [],
+   "v1_cells_only_candidate_drop_positions": [
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11
+   ],
+   "mapping_from_v1_cells_alone_unique": false,
+   "mapping_from_keyed_source_deterministic": true
+  },
+  {
+   "asset": "BTC",
+   "date": "2025-12-19",
+   "pack_cells_nonempty": 12,
+   "schema_width": 13,
+   "frozen_recovery_row_present": true,
+   "frozen_total": -158.3,
+   "live_total_2026_09_23": -158.3,
+   "frozen_equals_live_total": true,
+   "frozen_fund_values_equal_live_by_ticker": true,
+   "frozen_vs_live_fund_mismatches": [],
+   "v1_cells_only_candidate_drop_positions": [
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11
+   ],
+   "mapping_from_v1_cells_alone_unique": false,
+   "mapping_from_keyed_source_deterministic": true
+  },
+  {
+   "asset": "BTC",
+   "date": "2025-12-29",
+   "pack_cells_nonempty": 12,
+   "schema_width": 13,
+   "frozen_recovery_row_present": true,
+   "frozen_total": -19.3,
+   "live_total_2026_09_23": -19.3,
+   "frozen_equals_live_total": true,
+   "frozen_fund_values_equal_live_by_ticker": true,
+   "frozen_vs_live_fund_mismatches": [],
+   "v1_cells_only_candidate_drop_positions": [
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11
+   ],
+   "mapping_from_v1_cells_alone_unique": false,
+   "mapping_from_keyed_source_deterministic": true
+  },
+  {
+   "asset": "BTC",
+   "date": "2026-03-02",
+   "pack_cells_nonempty": 12,
+   "schema_width": 13,
+   "frozen_recovery_row_present": true,
+   "frozen_total": 458.2,
+   "live_total_2026_09_23": 458.2,
+   "frozen_equals_live_total": true,
+   "frozen_fund_values_equal_live_by_ticker": true,
+   "frozen_vs_live_fund_mismatches": [],
+   "v1_cells_only_candidate_drop_positions": [
+    8,
+    9,
+    10
+   ],
+   "mapping_from_v1_cells_alone_unique": false,
+   "mapping_from_keyed_source_deterministic": true
+  },
+  {
+   "asset": "BTC",
+   "date": "2026-05-20",
+   "pack_cells_nonempty": 12,
+   "schema_width": 13,
+   "frozen_recovery_row_present": true,
+   "frozen_total": -70.5,
+   "live_total_2026_09_23": -70.5,
+   "frozen_equals_live_total": true,
+   "frozen_fund_values_equal_live_by_ticker": true,
+   "frozen_vs_live_fund_mismatches": [],
+   "v1_cells_only_candidate_drop_positions": [
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+   ],
+   "mapping_from_v1_cells_alone_unique": false,
+   "mapping_from_keyed_source_deterministic": true
+  },
+  {
+   "asset": "ETH",
+   "date": "2024-10-25",
+   "pack_cells_nonempty": 10,
+   "schema_width": 11,
+   "frozen_recovery_row_present": true,
+   "frozen_total": -19.2,
+   "live_total_2026_09_23": -19.2,
+   "frozen_equals_live_total": true,
+   "frozen_fund_values_equal_live_by_ticker": true,
+   "frozen_vs_live_fund_mismatches": [],
+   "v1_cells_only_candidate_drop_positions": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "mapping_from_v1_cells_alone_unique": false,
+   "mapping_from_keyed_source_deterministic": true
+  },
+  {
+   "asset": "ETH",
+   "date": "2024-11-01",
+   "pack_cells_nonempty": 10,
+   "schema_width": 11,
+   "frozen_recovery_row_present": true,
+   "frozen_total": -10.9,
+   "live_total_2026_09_23": -10.9,
+   "frozen_equals_live_total": true,
+   "frozen_fund_values_equal_live_by_ticker": true,
+   "frozen_vs_live_fund_mismatches": [],
+   "v1_cells_only_candidate_drop_positions": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "mapping_from_v1_cells_alone_unique": false,
+   "mapping_from_keyed_source_deterministic": true
+  }
+ ],
+ "malformed_summary": {
+  "count": 11,
+  "btc": 9,
+  "eth": 2,
+  "frozen_rows_present": 11,
+  "frozen_total_equals_live": 11,
+  "frozen_funds_equal_live_by_ticker": 11,
+  "v1_cells_alone_give_unique_mapping": 0,
+  "keyed_source_mapping_deterministic": 11,
+  "note": "a one-cell-short row cannot be repaired from its own cells (zero columns make the dropped position ambiguous); the repair must come from a keyed source (export JSON keys or live ticker header)"
+ },
+ "non_session_rows": [
+  {
+   "asset": "BTC",
+   "date": "2024-01-15",
+   "pack_all_zero": true,
+   "live_row_present": true,
+   "live_fund_cells_all_dash": true,
+   "live_total_cell": "0.0",
+   "live_owner_parse_would_keep_as_zero_flow_row": true
+  },
+  {
+   "asset": "BTC",
+   "date": "2024-02-19",
+   "pack_all_zero": true,
+   "live_row_present": true,
+   "live_fund_cells_all_dash": true,
+   "live_total_cell": "0.0",
+   "live_owner_parse_would_keep_as_zero_flow_row": true
+  },
+  {
+   "asset": "BTC",
+   "date": "2024-03-29",
+   "pack_all_zero": true,
+   "live_row_present": true,
+   "live_fund_cells_all_dash": true,
+   "live_total_cell": "0.0",
+   "live_owner_parse_would_keep_as_zero_flow_row": true
+  },
+  {
+   "asset": "BTC",
+   "date": "2024-05-27",
+   "pack_all_zero": true,
+   "live_row_present": true,
+   "live_fund_cells_all_dash": true,
+   "live_total_cell": "0.0",
+   "live_owner_parse_would_keep_as_zero_flow_row": true
+  },
+  {
+   "asset": "BTC",
+   "date": "2024-06-19",
+   "pack_all_zero": true,
+   "live_row_present": true,
+   "live_fund_cells_all_dash": true,
+   "live_total_cell": "0.0",
+   "live_owner_parse_would_keep_as_zero_flow_row": true
+  },
+  {
+   "asset": "BTC",
+   "date": "2024-07-04",
+   "pack_all_zero": true,
+   "live_row_present": true,
+   "live_fund_cells_all_dash": true,
+   "live_total_cell": "0.0",
+   "live_owner_parse_would_keep_as_zero_flow_row": true
+  },
+  {
+   "asset": "BTC",
+   "date": "2024-09-02",
+   "pack_all_zero": true,
+   "live_row_present": true,
+   "live_fund_cells_all_dash": true,
+   "live_total_cell": "0.0",
+   "live_owner_parse_would_keep_as_zero_flow_row": true
+  },
+  {
+   "asset": "BTC",
+   "date": "2024-11-28",
+   "pack_all_zero": true,
+   "live_row_present": true,
+   "live_fund_cells_all_dash": true,
+   "live_total_cell": "0.0",
+   "live_owner_parse_would_keep_as_zero_flow_row": true
+  },
+  {
+   "asset": "BTC",
+   "date": "2024-12-25",
+   "pack_all_zero": true,
+   "live_row_present": true,
+   "live_fund_cells_all_dash": true,
+   "live_total_cell": "0.0",
+   "live_owner_parse_would_keep_as_zero_flow_row": true
+  },
+  {
+   "asset": "BTC",
+   "date": "2025-01-01",
+   "pack_all_zero": true,
+   "live_row_present": true,
+   "live_fund_cells_all_dash": true,
+   "live_total_cell": "0.0",
+   "live_owner_parse_would_keep_as_zero_flow_row": true
+  },
+  {
+   "asset": "BTC",
+   "date": "2025-01-09",
+   "pack_all_zero": true,
+   "live_row_present": true,
+   "live_fund_cells_all_dash": true,
+   "live_total_cell": "0.0",
+   "live_owner_parse_would_keep_as_zero_flow_row": true
+  },
+  {
+   "asset": "BTC",
+   "date": "2025-01-20",
+   "pack_all_zero": true,
+   "live_row_present": true,
+   "live_fund_cells_all_dash": true,
+   "live_total_cell": "0.0",
+   "live_owner_parse_would_keep_as_zero_flow_row": true
+  },
+  {
+   "asset": "BTC",
+   "date": "2025-02-17",
+   "pack_all_zero": true,
+   "live_row_present": true,
+   "live_fund_cells_all_dash": true,
+   "live_total_cell": "0.0",
+   "live_owner_parse_would_keep_as_zero_flow_row": true
+  },
+  {
+   "asset": "BTC",
+   "date": "2025-04-18",
+   "pack_all_zero": true,
+   "live_row_present": true,
+   "live_fund_cells_all_dash": true,
+   "live_total_cell": "0.0",
+   "live_owner_parse_would_keep_as_zero_flow_row": true
+  },
+  {
+   "asset": "BTC",
+   "date": "2025-05-26",
+   "pack_all_zero": true,
+   "live_row_present": true,
+   "live_fund_cells_all_dash": true,
+   "live_total_cell": "0.0",
+   "live_owner_parse_would_keep_as_zero_flow_row": true
+  },
+  {
+   "asset": "BTC",
+   "date": "2025-06-19",
+   "pack_all_zero": true,
+   "live_row_present": true,
+   "live_fund_cells_all_dash": true,
+   "live_total_cell": "0.0",
+   "live_owner_parse_would_keep_as_zero_flow_row": true
+  },
+  {
+   "asset": "ETH",
+   "date": "2024-09-02",
+   "pack_all_zero": true,
+   "live_row_present": true,
+   "live_fund_cells_all_dash": true,
+   "live_total_cell": "0.0",
+   "live_owner_parse_would_keep_as_zero_flow_row": true
+  },
+  {
+   "asset": "ETH",
+   "date": "2024-11-28",
+   "pack_all_zero": true,
+   "live_row_present": true,
+   "live_fund_cells_all_dash": true,
+   "live_total_cell": "0.0",
+   "live_owner_parse_would_keep_as_zero_flow_row": true
+  },
+  {
+   "asset": "ETH",
+   "date": "2024-12-25",
+   "pack_all_zero": true,
+   "live_row_present": true,
+   "live_fund_cells_all_dash": true,
+   "live_total_cell": "0.0",
+   "live_owner_parse_would_keep_as_zero_flow_row": true
+  },
+  {
+   "asset": "ETH",
+   "date": "2025-01-01",
+   "pack_all_zero": true,
+   "live_row_present": true,
+   "live_fund_cells_all_dash": true,
+   "live_total_cell": "0.0",
+   "live_owner_parse_would_keep_as_zero_flow_row": true
+  },
+  {
+   "asset": "ETH",
+   "date": "2025-01-09",
+   "pack_all_zero": true,
+   "live_row_present": true,
+   "live_fund_cells_all_dash": true,
+   "live_total_cell": "0.0",
+   "live_owner_parse_would_keep_as_zero_flow_row": true
+  },
+  {
+   "asset": "ETH",
+   "date": "2025-01-20",
+   "pack_all_zero": true,
+   "live_row_present": true,
+   "live_fund_cells_all_dash": true,
+   "live_total_cell": "0.0",
+   "live_owner_parse_would_keep_as_zero_flow_row": true
+  },
+  {
+   "asset": "ETH",
+   "date": "2025-02-17",
+   "pack_all_zero": true,
+   "live_row_present": true,
+   "live_fund_cells_all_dash": true,
+   "live_total_cell": "0.0",
+   "live_owner_parse_would_keep_as_zero_flow_row": true
+  },
+  {
+   "asset": "ETH",
+   "date": "2025-04-18",
+   "pack_all_zero": true,
+   "live_row_present": true,
+   "live_fund_cells_all_dash": true,
+   "live_total_cell": "0.0",
+   "live_owner_parse_would_keep_as_zero_flow_row": true
+  },
+  {
+   "asset": "ETH",
+   "date": "2025-05-26",
+   "pack_all_zero": true,
+   "live_row_present": true,
+   "live_fund_cells_all_dash": true,
+   "live_total_cell": "0.0",
+   "live_owner_parse_would_keep_as_zero_flow_row": true
+  },
+  {
+   "asset": "ETH",
+   "date": "2025-06-19",
+   "pack_all_zero": true,
+   "live_row_present": true,
+   "live_fund_cells_all_dash": true,
+   "live_total_cell": "0.0",
+   "live_owner_parse_would_keep_as_zero_flow_row": true
+  }
+ ],
+ "non_session_summary": {
+  "count": 26,
+  "btc": 16,
+  "eth": 10,
+  "all_zero_in_pack": 26,
+  "live_source_fund_cells_all_dash_total_0_0": 26,
+  "live_owner_parser_would_keep_as_zero_flow": 26,
+  "closure_rows_listed_by_farside_after_2025_06_19": "none (2025-07-04 .. 2026-09-07 closures have no row on the live page)",
+  "last_date": "2025-06-19"
+ },
+ "unaffected_rows": {
+  "identical_to_live_vintage": 1127,
+  "differences": [],
+  "difference_count": 0
+ },
+ "non_session_semantics_prototype_W30": {
+  "BTC": {
+   "closure_rows_in_v1": 16,
+   "closure_rows_emitted_as_zero_flow_feature_rows": 16,
+   "closure_rows_reset_signed_streak": 16,
+   "session_rows_with_different_N_session_sums_if_closures_excluded": 238,
+   "session_rows_with_different_signed_streak_if_closures_excluded": 54
+  },
+  "ETH": {
+   "closure_rows_in_v1": 10,
+   "closure_rows_emitted_as_zero_flow_feature_rows": 10,
+   "closure_rows_reset_signed_streak": 10,
+   "session_rows_with_different_N_session_sums_if_closures_excluded": 141,
+   "session_rows_with_different_signed_streak_if_closures_excluded": 35
+  }
+ },
+ "pack_validator_on_committed_bytes": {
+  "command": "python scripts/validate_etf_flow_history.py (on a temporary copy of the pack)",
+  "exit_code": 1,
+  "output": "FAIL: btc: null cell",
+  "note": "README/manifest claim STRUCTURE_VALIDATED with 0 null cells; the committed bytes fail the pack's own fail-closed validator; no CI job runs it"
+ },
+ "verdict": {
+  "v1_1_still_needed": true,
+  "reasons": [
+   "11 malformed rows still in v1 (9 BTC, 2 ETH); v1 bytes must stay immutable",
+   "26 closure rows still exported as zero flow; the live source shows every fund as '-' with Total '0.0' for them (same shape as a pending row)",
+   "the non-session prototype shows closure rows change N-session sums and reset streaks in the production W30 feature builder"
+  ],
+  "candidate_packet_consistent_with_fresh_evidence": true
+ }
+}

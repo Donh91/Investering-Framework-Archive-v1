@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "ETF_OBSERVATION_v1",
+  "title": "ETF_OBSERVATION_v1 - one observed vintage of one asset-session row",
+  "description": "Minimal shared contract for Farside BTC/ETH ETF flow observations. It is a record shape, not an engine: the live owner, the settled verifier and any historical pack emit or map to it; no parallel subsystem. Research proposal (2026-09-23), not adopted. Times are never invented: a field that is not evidenced is null and its status says why.",
+  "type": "object",
+  "required": ["contract", "asset", "session_date", "is_trading_session", "source_observed_at_utc", "observed_at_status", "verification_completed_at_utc",
+               "knowledge_available_at_utc", "knowledge_time_status", "schema", "row", "completeness_status", "finality_status", "revision", "provenance"],
+  "properties": {
+    "contract": {"const": "ETF_OBSERVATION_v1"},
+    "asset": {"enum": ["BTC", "ETH"]},
+    "session_date": {"type": "string", "format": "date", "description": "US trading date the flow belongs to. Never a knowledge time."},
+    "is_trading_session": {"type": "boolean", "description": "False for NYSE full closures; such rows are recorded but never counted as sessions or as zero flow."},
+    "source_observed_at_utc": {"type": ["string", "null"], "format": "date-time", "description": "When this vintage was read from the source (retrieval), or the documented time an intermediary recorded it."},
+    "observed_at_status": {"enum": ["OBSERVED", "FILE_TIMESTAMP", "GIT_COMMIT_UPPER_BOUND", "UNKNOWN"]},
+    "verification_completed_at_utc": {"type": ["string", "null"], "format": "date-time", "description": "When an independent check (e.g. identical double read + parity) completed for this vintage; null if none."},
+    "knowledge_available_at_utc": {"type": ["string", "null"], "format": "date-time",
+      "description": "The time from which a replay may use THIS vintage. Live: = verification_completed_at_utc (or source_observed_at_utc if the consumer accepts unverified). Historical: set only by the #1211 owner rule; null when UNKNOWN."},
+    "knowledge_time_status": {"enum": ["OBSERVED", "LOWER_BOUND_ONLY", "ASSUMED_BY_OWNER_RULE", "UNKNOWN"],
+      "description": "OBSERVED = a timed capture exists; LOWER_BOUND_ONLY = only the session close is known; ASSUMED_BY_OWNER_RULE = a declared rule, never evidence; UNKNOWN otherwise."},
+    "knowledge_rule_id": {"type": ["string", "null"], "description": "Identifier of the owner rule when status is ASSUMED_BY_OWNER_RULE (e.g. #1211 decision id)."},
+    "schema": {
+      "type": "object",
+      "required": ["source_ticker_row", "schema_id", "schema_hash", "schema_status"],
+      "properties": {
+        "source_ticker_row": {"type": "array", "items": {"type": "string"}, "description": "Tickers exactly as published, in published order (binding is by name, never by width)."},
+        "schema_id": {"type": "string", "description": "Registered schema, e.g. FARSIDE_ETH_v2_11F_MSSE."},
+        "schema_hash": {"type": "string"},
+        "schema_status": {"enum": ["KNOWN_SCHEMA", "KNOWN_ADDITIVE_SCHEMA_REVISION", "UNKNOWN_SCHEMA_REVISION"],
+          "description": "UNKNOWN_SCHEMA_REVISION must fail closed: no row may be emitted with it."}
+      }
+    },
+    "row": {
+      "type": "object",
+      "required": ["fund_cells", "reported_total", "calculated_total", "parity", "unknown_cells"],
+      "properties": {
+        "fund_cells": {"type": "object", "additionalProperties": {"type": "object", "required": ["raw", "value", "cell_status"],
+          "properties": {"raw": {"type": "string"}, "value": {"type": ["number", "null"]},
+                         "cell_status": {"enum": ["REPORTED", "REPORTED_ZERO", "DASH_UNRESOLVED", "DASH_STRUCTURAL", "ABSENT_COLUMN"]}}}},
+        "reported_total": {"type": ["number", "null"]},
+        "calculated_total": {"type": ["number", "null"]},
+        "parity": {"type": ["boolean", "null"]},
+        "unknown_cells": {"type": "integer"},
+        "all_dash_row": {"type": "boolean", "description": "Every fund cell is '-'. Such a row is PENDING or a closure, never a 0.0 flow, whatever the Total cell says."}
+      }
+    },
+    "completeness_status": {"enum": ["COMPLETE", "COMPLETE_WITH_STRUCTURAL_DASH", "INCOMPLETE_PENDING_FUNDS", "PENDING_ALL_DASH", "NOT_ASSESSABLE"]},
+    "finality_status": {"enum": ["PROVISIONAL", "VERIFIED_STABLE_AT_OBSERVATION", "SUPERSEDED"],
+      "description": "Nothing is ever FINAL: VERIFIED_STABLE_AT_OBSERVATION means identical double read at that time; a later differing vintage sets the earlier one to SUPERSEDED via a new record."},
+    "revision": {
+      "type": "object",
+      "required": ["vintage_seq", "supersedes_row_hash", "revision_kind"],
+      "properties": {
+        "vintage_seq": {"type": "integer", "minimum": 1},
+        "supersedes_row_hash": {"type": ["string", "null"]},
+        "revision_kind": {"enum": ["NONE", "LATE_FUND_VALUE", "NEW_FUND_BACKFILL", "TOTAL_RECOMPUTE", "SCHEMA_EXTENSION", "SOURCE_CORRECTION", "LATE_PUBLICATION", "UNKNOWN_REVISION"]},
+        "total_delta": {"type": ["number", "null"]}
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "required": ["producer", "evidence_path", "table_content_sha256", "row_hash"],
+      "properties": {
+        "producer": {"type": "string"},
+        "evidence_path": {"type": "string"},
+        "raw_page_sha256": {"type": ["string", "null"], "description": "Informational only: differs on every fetch (dynamic page)."},
+        "table_content_sha256": {"type": "string", "description": "Hash of the parsed table; the stable vintage identity."},
+        "row_hash": {"type": "string"},
+        "git_commit": {"type": ["string", "null"]}
+      }
+    }
+  },
+  "x-rules": [
+    "Feature knowledge time = max(knowledge_available_at_utc) over every input row of the feature (trailing windows: cumulative max). Never the row's own time alone.",
+    "A consumer may not treat session_date, session close or a calendar flag as knowledge or finality.",
+    "Historical convenience rules (ASSUMED_BY_OWNER_RULE) are for replay only and never set finality_status or feed live settlement.",
+    "Non-sessions (is_trading_session=false) and PENDING_ALL_DASH rows never increment N-session windows, never reset streaks and are never 0.0 flows."
+  ]
+}

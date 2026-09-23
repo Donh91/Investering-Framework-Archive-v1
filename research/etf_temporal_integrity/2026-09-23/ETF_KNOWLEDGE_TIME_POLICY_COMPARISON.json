@@ -1,0 +1,1561 @@
+{
+ "contract": "ETF_KNOWLEDGE_TIME_POLICY_COMPARISON_v1",
+ "policies": {
+  "A_SESSION_CLOSE": "K = NYSE close (16:00 ET; 13:00 on early closes)",
+  "B_FIRST_OBSERVED": "K = first real-time observation; value = that observation",
+  "C_FIRST_COMPLETE_OBSERVED": "K = first observation that is complete by the live rule (parity, total present, every unknown cell was also unknown in the previous session of the same snapshot; all-dash rows never complete)",
+  "D_FIRST_VERIFIED_FINAL_OBSERVED": "K = verification_completed_at of the first settled double-read capture",
+  "E_CONSERVATIVE_FIXED_LAG": "K = close + L, L from E_lag_basis (descriptive in-sample maximum; never tuned)",
+  "F_NEXT_TRADING_SESSION": "K = next NYSE session open 09:30 ET"
+ },
+ "references": {
+  "LATEST_VINTAGE": "judged against the latest known vintage (2026-09-23 live read, includes MSSE backfill)",
+  "PRE_BACKFILL_VINTAGE": "judged against the last pre-MSSE vintage: isolates KNOWLEDGE-TIME DELAY from the MSSE DATA REVISION"
+ },
+ "LATEST_VINTAGE": {
+  "results": {
+   "A_SESSION_CLOSE": {
+    "sessions_total": 1220,
+    "coverage_defined": 1220,
+    "coverage_share": 1.0,
+    "evaluable_with_realtime_evidence": 118,
+    "outcomes": {
+     "DEFINED_UNVERIFIABLE_HISTORY": 1102,
+     "UNKNOWN_AT_K": 83,
+     "PROVEN_LOOKAHEAD": 35
+    },
+    "usable_verified": 0,
+    "usable_unverified_history": 1102,
+    "unknown": 1185,
+    "later_revisions_after_declared_time": 35,
+    "revision_kinds_after_K": {},
+    "revision_lag_after_K_hours": null,
+    "false_finality": 0,
+    "lookahead_failures_proven": 35,
+    "data_loss_sessions": 0,
+    "feature_latency_after_close_hours": {
+     "median": 0.0,
+     "max": 0.0
+    },
+    "examples": {
+     "UNKNOWN_AT_K": [
+      {
+       "asset": "BTC",
+       "session": "2026-06-26",
+       "K": "2026-06-26T20:00:00Z",
+       "value_at_K": null,
+       "latest_vintage": -444.5
+      },
+      {
+       "asset": "BTC",
+       "session": "2026-06-29",
+       "K": "2026-06-29T20:00:00Z",
+       "value_at_K": null,
+       "latest_vintage": -231.0
+      },
+      {
+       "asset": "BTC",
+       "session": "2026-06-30",
+       "K": "2026-06-30T20:00:00Z",
+       "value_at_K": null,
+       "latest_vintage": -222.6
+      },
+      {
+       "asset": "BTC",
+       "session": "2026-07-01",
+       "K": "2026-07-01T20:00:00Z",
+       "value_at_K": null,
+       "latest_vintage": -296.0
+      }
+     ],
+     "PROVEN_LOOKAHEAD": [
+      {
+       "asset": "BTC",
+       "session": "2026-07-16",
+       "K": "2026-07-16T20:00:00Z",
+       "value_at_K": null,
+       "latest_vintage": 79.1
+      },
+      {
+       "asset": "BTC",
+       "session": "2026-08-10",
+       "K": "2026-08-10T20:00:00Z",
+       "value_at_K": null,
+       "latest_vintage": -144.6
+      },
+      {
+       "asset": "BTC",
+       "session": "2026-08-11",
+       "K": "2026-08-11T20:00:00Z",
+       "value_at_K": null,
+       "latest_vintage": 7.8
+      },
+      {
+       "asset": "BTC",
+       "session": "2026-08-12",
+       "K": "2026-08-12T20:00:00Z",
+       "value_at_K": null,
+       "latest_vintage": -61.1
+      }
+     ]
+    }
+   },
+   "B_FIRST_OBSERVED": {
+    "sessions_total": 1220,
+    "coverage_defined": 118,
+    "coverage_share": 0.0967,
+    "evaluable_with_realtime_evidence": 118,
+    "outcomes": {
+     "UNDEFINED_NO_REALTIME_EVIDENCE": 1102,
+     "CONSISTENT_AT_K": 83,
+     "REVISED_AFTER_K": 35
+    },
+    "usable_verified": 83,
+    "usable_unverified_history": 0,
+    "unknown": 0,
+    "later_revisions_after_declared_time": 35,
+    "revision_kinds_after_K": {
+     "LATE_FUND_VALUE": 25,
+     "NEW_FUND_BACKFILL": 10
+    },
+    "revision_lag_after_K_hours": {
+     "max": 1060.69,
+     "median": 5.32
+    },
+    "false_finality": "NOT_A_FINALITY_CLAIM",
+    "lookahead_failures_proven": 0,
+    "data_loss_sessions": 1102,
+    "feature_latency_after_close_hours": {
+     "median": 16.7,
+     "max": 456.82
+    },
+    "examples": {
+     "CONSISTENT_AT_K": [
+      {
+       "asset": "BTC",
+       "session": "2026-06-26",
+       "K": "2026-07-15T20:48:55Z",
+       "value_at_K": -444.5,
+       "latest_vintage": -444.5
+      },
+      {
+       "asset": "BTC",
+       "session": "2026-06-29",
+       "K": "2026-07-15T20:48:55Z",
+       "value_at_K": -231.0,
+       "latest_vintage": -231.0
+      },
+      {
+       "asset": "BTC",
+       "session": "2026-06-30",
+       "K": "2026-07-15T20:48:55Z",
+       "value_at_K": -222.6,
+       "latest_vintage": -222.6
+      },
+      {
+       "asset": "BTC",
+       "session": "2026-07-01",
+       "K": "2026-07-15T20:48:55Z",
+       "value_at_K": -296.0,
+       "latest_vintage": -296.0
+      }
+     ],
+     "REVISED_AFTER_K": [
+      {
+       "asset": "BTC",
+       "session": "2026-07-16",
+       "K": "2026-07-17T03:41:48Z",
+       "value_at_K": 45.7,
+       "latest_vintage": 79.1
+      },
+      {
+       "asset": "BTC",
+       "session": "2026-08-10",
+       "K": "2026-08-11T03:08:48.625344Z",
+       "value_at_K": -91.0,
+       "latest_vintage": -144.6
+      },
+      {
+       "asset": "BTC",
+       "session": "2026-08-11",
+       "K": "2026-08-12T03:27:57.351571Z",
+       "value_at_K": -42.4,
+       "latest_vintage": 7.8
+      },
+      {
+       "asset": "BTC",
+       "session": "2026-08-12",
+       "K": "2026-08-13T03:31:35.074074Z",
+       "value_at_K": -46.8,
+       "latest_vintage": -61.1
+      }
+     ]
+    }
+   },
+   "C_FIRST_COMPLETE_OBSERVED": {
+    "sessions_total": 1220,
+    "coverage_defined": 104,
+    "coverage_share": 0.0852,
+    "evaluable_with_realtime_evidence": 104,
+    "outcomes": {
+     "UNDEFINED_NO_REALTIME_EVIDENCE": 1102,
+     "UNDEFINED_NO_QUALIFYING_OBSERVATION": 14,
+     "CONSISTENT_AT_K": 91,
+     "REVISED_AFTER_K": 13
+    },
+    "usable_verified": 91,
+    "usable_unverified_history": 0,
+    "unknown": 0,
+    "later_revisions_after_declared_time": 13,
+    "revision_kinds_after_K": {
+     "NEW_FUND_BACKFILL": 13
+    },
+    "revision_lag_after_K_hours": {
+     "max": 1060.69,
+     "median": 804.89
+    },
+    "false_finality": 13,
+    "lookahead_failures_proven": 0,
+    "data_loss_sessions": 1116,
+    "feature_latency_after_close_hours": {
+     "median": 15.59,
+     "max": 319.93
+    },
+    "examples": {
+     "CONSISTENT_AT_K": [
+      {
+       "asset": "BTC",
+       "session": "2026-07-06",
+       "K": "2026-07-20T03:55:40Z",
+       "value_at_K": 265.7,
+       "latest_vintage": 265.7
+      },
+      {
+       "asset": "BTC",
+       "session": "2026-07-07",
+       "K": "2026-07-20T03:55:40Z",
+       "value_at_K": 21.5,
+       "latest_vintage": 21.5
+      },
+      {
+       "asset": "BTC",
+       "session": "2026-07-08",
+       "K": "2026-07-20T03:55:40Z",
+       "value_at_K": -84.9,
+       "latest_vintage": -84.9
+      },
+      {
+       "asset": "BTC",
+       "session": "2026-07-09",
+       "K": "2026-07-20T03:55:40Z",
+       "value_at_K": -95.3,
+       "latest_vintage": -95.3
+      }
+     ],
+     "REVISED_AFTER_K": [
+      {
+       "asset": "ETH",
+       "session": "2026-07-28",
+       "K": "2026-08-10T10:47:32.105989Z",
+       "value_at_K": 9.4,
+       "latest_vintage": 14.5
+      },
+      {
+       "asset": "ETH",
+       "session": "2026-07-29",
+       "K": "2026-08-10T10:47:32.105989Z",
+       "value_at_K": -32.9,
+       "latest_vintage": -18.6
+      },
+      {
+       "asset": "ETH",
+       "session": "2026-07-30",
+       "K": "2026-08-10T10:47:32.105989Z",
+       "value_at_K": 12.8,
+       "latest_vintage": 13.2
+      },
+      {
+       "asset": "ETH",
+       "session": "2026-08-03",
+       "K": "2026-08-10T10:47:32.105989Z",
+       "value_at_K": -11.9,
+       "latest_vintage": -11.3
+      }
+     ]
+    }
+   },
+   "D_FIRST_VERIFIED_FINAL_OBSERVED": {
+    "sessions_total": 1220,
+    "coverage_defined": 74,
+    "coverage_share": 0.0607,
+    "evaluable_with_realtime_evidence": 74,
+    "outcomes": {
+     "UNDEFINED_NO_REALTIME_EVIDENCE": 1102,
+     "UNDEFINED_NO_QUALIFYING_OBSERVATION": 44,
+     "CONSISTENT_AT_K": 58,
+     "REVISED_AFTER_K": 16
+    },
+    "usable_verified": 58,
+    "usable_unverified_history": 0,
+    "unknown": 0,
+    "later_revisions_after_declared_time": 16,
+    "revision_kinds_after_K": {
+     "LATE_FUND_VALUE": 4,
+     "NEW_FUND_BACKFILL": 12
+    },
+    "revision_lag_after_K_hours": {
+     "max": 1060.69,
+     "median": 788.48
+    },
+    "false_finality": 16,
+    "lookahead_failures_proven": 0,
+    "data_loss_sessions": 1146,
+    "feature_latency_after_close_hours": {
+     "median": 15.2,
+     "max": 326.79
+    },
+    "examples": {
+     "CONSISTENT_AT_K": [
+      {
+       "asset": "BTC",
+       "session": "2026-07-27",
+       "K": "2026-08-10T10:47:32.105989Z",
+       "value_at_K": -11.6,
+       "latest_vintage": -11.6
+      },
+      {
+       "asset": "BTC",
+       "session": "2026-07-28",
+       "K": "2026-08-10T10:47:32.105989Z",
+       "value_at_K": -49.7,
+       "latest_vintage": -49.7
+      },
+      {
+       "asset": "BTC",
+       "session": "2026-07-29",
+       "K": "2026-08-10T10:47:32.105989Z",
+       "value_at_K": 32.1,
+       "latest_vintage": 32.1
+      },
+      {
+       "asset": "BTC",
+       "session": "2026-07-30",
+       "K": "2026-08-10T10:47:32.105989Z",
+       "value_at_K": 233.1,
+       "latest_vintage": 233.1
+      }
+     ],
+     "REVISED_AFTER_K": [
+      {
+       "asset": "BTC",
+       "session": "2026-08-17",
+       "K": "2026-08-18T07:01:05Z",
+       "value_at_K": 137.3,
+       "latest_vintage": 297.5
+      },
+      {
+       "asset": "BTC",
+       "session": "2026-08-19",
+       "K": "2026-08-20T07:03:14Z",
+       "value_at_K": 164.2,
+       "latest_vintage": 517.2
+      },
+      {
+       "asset": "ETH",
+       "session": "2026-07-28",
+       "K": "2026-08-10T10:47:32.105989Z",
+       "value_at_K": 9.4,
+       "latest_vintage": 14.5
+      },
+      {
+       "asset": "ETH",
+       "session": "2026-07-29",
+       "K": "2026-08-10T10:47:32.105989Z",
+       "value_at_K": -32.9,
+       "latest_vintage": -18.6
+      }
+     ]
+    }
+   },
+   "E_CONSERVATIVE_FIXED_LAG": {
+    "sessions_total": 1220,
+    "coverage_defined": 1220,
+    "coverage_share": 1.0,
+    "evaluable_with_realtime_evidence": 118,
+    "outcomes": {
+     "DEFINED_UNVERIFIABLE_HISTORY": 1102,
+     "UNKNOWN_AT_K": 47,
+     "CONSISTENT_AT_K": 58,
+     "PROVEN_LOOKAHEAD": 13
+    },
+    "usable_verified": 58,
+    "usable_unverified_history": 1102,
+    "unknown": 1149,
+    "later_revisions_after_declared_time": 13,
+    "revision_kinds_after_K": {
+     "NEW_FUND_BACKFILL": 8
+    },
+    "revision_lag_after_K_hours": {
+     "max": 948.89,
+     "median": 684.89
+    },
+    "false_finality": 0,
+    "lookahead_failures_proven": 13,
+    "data_loss_sessions": 0,
+    "feature_latency_after_close_hours": {
+     "median": 30.59,
+     "max": 30.59
+    },
+    "examples": {
+     "UNKNOWN_AT_K": [
+      {
+       "asset": "BTC",
+       "session": "2026-06-26",
+       "K": "2026-06-28T02:35:35.015749Z",
+       "value_at_K": null,
+       "latest_vintage": -444.5
+      },
+      {
+       "asset": "BTC",
+       "session": "2026-06-29",
+       "K": "2026-07-01T02:35:35.015749Z",
+       "value_at_K": null,
+       "latest_vintage": -231.0
+      },
+      {
+       "asset": "BTC",
+       "session": "2026-06-30",
+       "K": "2026-07-02T02:35:35.015749Z",
+       "value_at_K": null,
+       "latest_vintage": -222.6
+      },
+      {
+       "asset": "BTC",
+       "session": "2026-07-01",
+       "K": "2026-07-03T02:35:35.015749Z",
+       "value_at_K": null,
+       "latest_vintage": -296.0
+      }
+     ],
+     "CONSISTENT_AT_K": [
+      {
+       "asset": "BTC",
+       "session": "2026-07-14",
+       "K": "2026-07-16T02:35:35.015749Z",
+       "value_at_K": 181.1,
+       "latest_vintage": 181.1
+      },
+      {
+       "asset": "BTC",
+       "session": "2026-07-16",
+       "K": "2026-07-18T02:35:35.015749Z",
+       "value_at_K": 79.1,
+       "latest_vintage": 79.1
+      },
+      {
+       "asset": "BTC",
+       "session": "2026-07-20",
+       "K": "2026-07-22T02:35:35.015749Z",
+       "value_at_K": 226.8,
+       "latest_vintage": 226.8
+      },
+      {
+       "asset": "BTC",
+       "session": "2026-07-22",
+       "K": "2026-07-24T02:35:35.015749Z",
+       "value_at_K": 69.1,
+       "latest_vintage": 69.1
+      }
+     ],
+     "PROVEN_LOOKAHEAD": [
+      {
+       "asset": "ETH",
+       "session": "2026-07-28",
+       "K": "2026-07-30T02:35:35.015749Z",
+       "value_at_K": null,
+       "latest_vintage": 14.5
+      },
+      {
+       "asset": "ETH",
+       "session": "2026-07-29",
+       "K": "2026-07-31T02:35:35.015749Z",
+       "value_at_K": null,
+       "latest_vintage": -18.6
+      },
+      {
+       "asset": "ETH",
+       "session": "2026-07-30",
+       "K": "2026-08-01T02:35:35.015749Z",
+       "value_at_K": null,
+       "latest_vintage": 13.2
+      },
+      {
+       "asset": "ETH",
+       "session": "2026-08-03",
+       "K": "2026-08-05T02:35:35.015749Z",
+       "value_at_K": null,
+       "latest_vintage": -11.3
+      }
+     ]
+    }
+   },
+   "F_NEXT_TRADING_SESSION": {
+    "sessions_total": 1220,
+    "coverage_defined": 1220,
+    "coverage_share": 1.0,
+    "evaluable_with_realtime_evidence": 118,
+    "outcomes": {
+     "DEFINED_UNVERIFIABLE_HISTORY": 1102,
+     "UNKNOWN_AT_K": 47,
+     "CONSISTENT_AT_K": 55,
+     "PROVEN_LOOKAHEAD": 16
+    },
+    "usable_verified": 55,
+    "usable_unverified_history": 1102,
+    "unknown": 1149,
+    "later_revisions_after_declared_time": 16,
+    "revision_kinds_after_K": {
+     "LATE_FUND_VALUE": 4,
+     "NEW_FUND_BACKFILL": 7
+    },
+    "revision_lag_after_K_hours": {
+     "max": 961.98,
+     "median": 505.98
+    },
+    "false_finality": 0,
+    "lookahead_failures_proven": 16,
+    "data_loss_sessions": 0,
+    "feature_latency_after_close_hours": {
+     "median": 17.5,
+     "max": 89.5
+    },
+    "examples": {
+     "UNKNOWN_AT_K": [
+      {
+       "asset": "BTC",
+       "session": "2026-06-26",
+       "K": "2026-06-29T13:30:00Z",
+       "value_at_K": null,
+       "latest_vintage": -444.5
+      },
+      {
+       "asset": "BTC",
+       "session": "2026-06-29",
+       "K": "2026-06-30T13:30:00Z",
+       "value_at_K": null,
+       "latest_vintage": -231.0
+      },
+      {
+       "asset": "BTC",
+       "session": "2026-06-30",
+       "K": "2026-07-01T13:30:00Z",
+       "value_at_K": null,
+       "latest_vintage": -222.6
+      },
+      {
+       "asset": "BTC",
+       "session": "2026-07-01",
+       "K": "2026-07-02T13:30:00Z",
+       "value_at_K": null,
+       "latest_vintage": -296.0
+      }
+     ],
+     "CONSISTENT_AT_K": [
+      {
+       "asset": "BTC",
+       "session": "2026-07-16",
+       "K": "2026-07-17T13:30:00Z",
+       "value_at_K": 79.1,
+       "latest_vintage": 79.1
+      },
+      {
+       "asset": "BTC",
+       "session": "2026-07-17",
+       "K": "2026-07-20T13:30:00Z",
+       "value_at_K": 132.3,
+       "latest_vintage": 132.3
+      },
+      {
+       "asset": "BTC",
+       "session": "2026-07-22",
+       "K": "2026-07-23T13:30:00Z",
+       "value_at_K": 69.1,
+       "latest_vintage": 69.1
+      },
+      {
+       "asset": "BTC",
+       "session": "2026-07-23",
+       "K": "2026-07-24T13:30:00Z",
+       "value_at_K": -225.1,
+       "latest_vintage": -225.1
+      }
+     ],
+     "PROVEN_LOOKAHEAD": [
+      {
+       "asset": "BTC",
+       "session": "2026-08-17",
+       "K": "2026-08-18T13:30:00Z",
+       "value_at_K": 137.3,
+       "latest_vintage": 297.5
+      },
+      {
+       "asset": "BTC",
+       "session": "2026-08-19",
+       "K": "2026-08-20T13:30:00Z",
+       "value_at_K": 164.2,
+       "latest_vintage": 517.2
+      },
+      {
+       "asset": "ETH",
+       "session": "2026-07-28",
+       "K": "2026-07-29T13:30:00Z",
+       "value_at_K": null,
+       "latest_vintage": 14.5
+      },
+      {
+       "asset": "ETH",
+       "session": "2026-07-29",
+       "K": "2026-07-30T13:30:00Z",
+       "value_at_K": null,
+       "latest_vintage": -18.6
+      }
+     ]
+    }
+   }
+  },
+  "verdicts": {
+   "A_SESSION_CLOSE": {
+    "verdict": "UNSUPPORTED",
+    "why": "35 sessions where the bound value was provably not observable at K"
+   },
+   "B_FIRST_OBSERVED": {
+    "verdict": "SUPPORTED_AS_VINTAGE_TIME_NOT_FINALITY",
+    "why": "K is an observed time, but the observed value is revised later in 35 sessions; requires vintage-accurate storage; drops 1102 of 1220 sessions (all pre-capture history)"
+   },
+   "C_FIRST_COMPLETE_OBSERVED": {
+    "verdict": "UNSUPPORTED_AS_FINALITY",
+    "why": "13 sessions revised after K ({'NEW_FUND_BACKFILL': 13}); drops 1116 of 1220 sessions (all pre-capture history)"
+   },
+   "D_FIRST_VERIFIED_FINAL_OBSERVED": {
+    "verdict": "UNSUPPORTED_AS_FINALITY",
+    "why": "16 sessions revised after K ({'LATE_FUND_VALUE': 4, 'NEW_FUND_BACKFILL': 12}); drops 1146 of 1220 sessions (all pre-capture history)"
+   },
+   "E_CONSERVATIVE_FIXED_LAG": {
+    "verdict": "UNSUPPORTED",
+    "why": "13 sessions where the bound value was provably not observable at K"
+   },
+   "F_NEXT_TRADING_SESSION": {
+    "verdict": "UNSUPPORTED",
+    "why": "16 sessions where the bound value was provably not observable at K"
+   }
+  }
+ },
+ "PRE_BACKFILL_VINTAGE": {
+  "results": {
+   "A_SESSION_CLOSE": {
+    "sessions_total": 1220,
+    "coverage_defined": 1220,
+    "coverage_share": 1.0,
+    "evaluable_with_realtime_evidence": 118,
+    "outcomes": {
+     "DEFINED_UNVERIFIABLE_HISTORY": 1102,
+     "UNKNOWN_AT_K": 92,
+     "PROVEN_LOOKAHEAD": 26
+    },
+    "usable_verified": 0,
+    "usable_unverified_history": 1102,
+    "unknown": 1194,
+    "later_revisions_after_declared_time": 26,
+    "revision_kinds_after_K": {},
+    "revision_lag_after_K_hours": null,
+    "false_finality": 0,
+    "lookahead_failures_proven": 26,
+    "data_loss_sessions": 0,
+    "feature_latency_after_close_hours": {
+     "median": 0.0,
+     "max": 0.0
+    },
+    "examples": {
+     "UNKNOWN_AT_K": [
+      {
+       "asset": "BTC",
+       "session": "2026-06-26",
+       "K": "2026-06-26T20:00:00Z",
+       "value_at_K": null,
+       "latest_vintage": -444.5
+      },
+      {
+       "asset": "BTC",
+       "session": "2026-06-29",
+       "K": "2026-06-29T20:00:00Z",
+       "value_at_K": null,
+       "latest_vintage": -231.0
+      },
+      {
+       "asset": "BTC",
+       "session": "2026-06-30",
+       "K": "2026-06-30T20:00:00Z",
+       "value_at_K": null,
+       "latest_vintage": -222.6
+      },
+      {
+       "asset": "BTC",
+       "session": "2026-07-01",
+       "K": "2026-07-01T20:00:00Z",
+       "value_at_K": null,
+       "latest_vintage": -296.0
+      }
+     ],
+     "PROVEN_LOOKAHEAD": [
+      {
+       "asset": "BTC",
+       "session": "2026-07-16",
+       "K": "2026-07-16T20:00:00Z",
+       "value_at_K": null,
+       "latest_vintage": 79.1
+      },
+      {
+       "asset": "BTC",
+       "session": "2026-08-10",
+       "K": "2026-08-10T20:00:00Z",
+       "value_at_K": null,
+       "latest_vintage": -144.6
+      },
+      {
+       "asset": "BTC",
+       "session": "2026-08-11",
+       "K": "2026-08-11T20:00:00Z",
+       "value_at_K": null,
+       "latest_vintage": 7.8
+      },
+      {
+       "asset": "BTC",
+       "session": "2026-08-12",
+       "K": "2026-08-12T20:00:00Z",
+       "value_at_K": null,
+       "latest_vintage": -61.1
+      }
+     ]
+    }
+   },
+   "B_FIRST_OBSERVED": {
+    "sessions_total": 1220,
+    "coverage_defined": 118,
+    "coverage_share": 0.0967,
+    "evaluable_with_realtime_evidence": 118,
+    "outcomes": {
+     "UNDEFINED_NO_REALTIME_EVIDENCE": 1102,
+     "CONSISTENT_AT_K": 92,
+     "REVISED_AFTER_K": 26
+    },
+    "usable_verified": 92,
+    "usable_unverified_history": 0,
+    "unknown": 0,
+    "later_revisions_after_declared_time": 26,
+    "revision_kinds_after_K": {
+     "LATE_FUND_VALUE": 26
+    },
+    "revision_lag_after_K_hours": {
+     "max": 24.23,
+     "median": 4.46
+    },
+    "false_finality": "NOT_A_FINALITY_CLAIM",
+    "lookahead_failures_proven": 0,
+    "data_loss_sessions": 1102,
+    "feature_latency_after_close_hours": {
+     "median": 16.7,
+     "max": 456.82
+    },
+    "examples": {
+     "CONSISTENT_AT_K": [
+      {
+       "asset": "BTC",
+       "session": "2026-06-26",
+       "K": "2026-07-15T20:48:55Z",
+       "value_at_K": -444.5,
+       "latest_vintage": -444.5
+      },
+      {
+       "asset": "BTC",
+       "session": "2026-06-29",
+       "K": "2026-07-15T20:48:55Z",
+       "value_at_K": -231.0,
+       "latest_vintage": -231.0
+      },
+      {
+       "asset": "BTC",
+       "session": "2026-06-30",
+       "K": "2026-07-15T20:48:55Z",
+       "value_at_K": -222.6,
+       "latest_vintage": -222.6
+      },
+      {
+       "asset": "BTC",
+       "session": "2026-07-01",
+       "K": "2026-07-15T20:48:55Z",
+       "value_at_K": -296.0,
+       "latest_vintage": -296.0
+      }
+     ],
+     "REVISED_AFTER_K": [
+      {
+       "asset": "BTC",
+       "session": "2026-07-16",
+       "K": "2026-07-17T03:41:48Z",
+       "value_at_K": 45.7,
+       "latest_vintage": 79.1
+      },
+      {
+       "asset": "BTC",
+       "session": "2026-08-10",
+       "K": "2026-08-11T03:08:48.625344Z",
+       "value_at_K": -91.0,
+       "latest_vintage": -144.6
+      },
+      {
+       "asset": "BTC",
+       "session": "2026-08-11",
+       "K": "2026-08-12T03:27:57.351571Z",
+       "value_at_K": -42.4,
+       "latest_vintage": 7.8
+      },
+      {
+       "asset": "BTC",
+       "session": "2026-08-12",
+       "K": "2026-08-13T03:31:35.074074Z",
+       "value_at_K": -46.8,
+       "latest_vintage": -61.1
+      }
+     ]
+    }
+   },
+   "C_FIRST_COMPLETE_OBSERVED": {
+    "sessions_total": 1220,
+    "coverage_defined": 104,
+    "coverage_share": 0.0852,
+    "evaluable_with_realtime_evidence": 104,
+    "outcomes": {
+     "UNDEFINED_NO_REALTIME_EVIDENCE": 1102,
+     "UNDEFINED_NO_QUALIFYING_OBSERVATION": 14,
+     "CONSISTENT_AT_K": 104
+    },
+    "usable_verified": 104,
+    "usable_unverified_history": 0,
+    "unknown": 0,
+    "later_revisions_after_declared_time": 0,
+    "revision_kinds_after_K": {},
+    "revision_lag_after_K_hours": null,
+    "false_finality": 0,
+    "lookahead_failures_proven": 0,
+    "data_loss_sessions": 1116,
+    "feature_latency_after_close_hours": {
+     "median": 15.59,
+     "max": 319.93
+    },
+    "examples": {
+     "CONSISTENT_AT_K": [
+      {
+       "asset": "BTC",
+       "session": "2026-07-06",
+       "K": "2026-07-20T03:55:40Z",
+       "value_at_K": 265.7,
+       "latest_vintage": 265.7
+      },
+      {
+       "asset": "BTC",
+       "session": "2026-07-07",
+       "K": "2026-07-20T03:55:40Z",
+       "value_at_K": 21.5,
+       "latest_vintage": 21.5
+      },
+      {
+       "asset": "BTC",
+       "session": "2026-07-08",
+       "K": "2026-07-20T03:55:40Z",
+       "value_at_K": -84.9,
+       "latest_vintage": -84.9
+      },
+      {
+       "asset": "BTC",
+       "session": "2026-07-09",
+       "K": "2026-07-20T03:55:40Z",
+       "value_at_K": -95.3,
+       "latest_vintage": -95.3
+      }
+     ]
+    }
+   },
+   "D_FIRST_VERIFIED_FINAL_OBSERVED": {
+    "sessions_total": 1220,
+    "coverage_defined": 74,
+    "coverage_share": 0.0607,
+    "evaluable_with_realtime_evidence": 74,
+    "outcomes": {
+     "UNDEFINED_NO_REALTIME_EVIDENCE": 1102,
+     "UNDEFINED_NO_QUALIFYING_OBSERVATION": 44,
+     "CONSISTENT_AT_K": 70,
+     "REVISED_AFTER_K": 4
+    },
+    "usable_verified": 70,
+    "usable_unverified_history": 0,
+    "unknown": 0,
+    "later_revisions_after_declared_time": 4,
+    "revision_kinds_after_K": {
+     "LATE_FUND_VALUE": 4
+    },
+    "revision_lag_after_K_hours": {
+     "max": 19.54,
+     "median": 19.45
+    },
+    "false_finality": 4,
+    "lookahead_failures_proven": 0,
+    "data_loss_sessions": 1146,
+    "feature_latency_after_close_hours": {
+     "median": 15.2,
+     "max": 326.79
+    },
+    "examples": {
+     "CONSISTENT_AT_K": [
+      {
+       "asset": "BTC",
+       "session": "2026-07-27",
+       "K": "2026-08-10T10:47:32.105989Z",
+       "value_at_K": -11.6,
+       "latest_vintage": -11.6
+      },
+      {
+       "asset": "BTC",
+       "session": "2026-07-28",
+       "K": "2026-08-10T10:47:32.105989Z",
+       "value_at_K": -49.7,
+       "latest_vintage": -49.7
+      },
+      {
+       "asset": "BTC",
+       "session": "2026-07-29",
+       "K": "2026-08-10T10:47:32.105989Z",
+       "value_at_K": 32.1,
+       "latest_vintage": 32.1
+      },
+      {
+       "asset": "BTC",
+       "session": "2026-07-30",
+       "K": "2026-08-10T10:47:32.105989Z",
+       "value_at_K": 233.1,
+       "latest_vintage": 233.1
+      }
+     ],
+     "REVISED_AFTER_K": [
+      {
+       "asset": "BTC",
+       "session": "2026-08-17",
+       "K": "2026-08-18T07:01:05Z",
+       "value_at_K": 137.3,
+       "latest_vintage": 297.5
+      },
+      {
+       "asset": "BTC",
+       "session": "2026-08-19",
+       "K": "2026-08-20T07:03:14Z",
+       "value_at_K": 164.2,
+       "latest_vintage": 517.2
+      },
+      {
+       "asset": "ETH",
+       "session": "2026-08-17",
+       "K": "2026-08-18T07:01:05Z",
+       "value_at_K": 5.0,
+       "latest_vintage": 30.9
+      },
+      {
+       "asset": "ETH",
+       "session": "2026-08-19",
+       "K": "2026-08-20T07:03:14Z",
+       "value_at_K": 17.7,
+       "latest_vintage": 186.8
+      }
+     ]
+    }
+   },
+   "E_CONSERVATIVE_FIXED_LAG": {
+    "sessions_total": 1220,
+    "coverage_defined": 1220,
+    "coverage_share": 1.0,
+    "evaluable_with_realtime_evidence": 118,
+    "outcomes": {
+     "DEFINED_UNVERIFIABLE_HISTORY": 1102,
+     "UNKNOWN_AT_K": 52,
+     "CONSISTENT_AT_K": 66
+    },
+    "usable_verified": 66,
+    "usable_unverified_history": 1102,
+    "unknown": 1154,
+    "later_revisions_after_declared_time": 0,
+    "revision_kinds_after_K": {},
+    "revision_lag_after_K_hours": null,
+    "false_finality": 0,
+    "lookahead_failures_proven": 0,
+    "data_loss_sessions": 0,
+    "feature_latency_after_close_hours": {
+     "median": 30.59,
+     "max": 30.59
+    },
+    "examples": {
+     "UNKNOWN_AT_K": [
+      {
+       "asset": "BTC",
+       "session": "2026-06-26",
+       "K": "2026-06-28T02:35:35.015749Z",
+       "value_at_K": null,
+       "latest_vintage": -444.5
+      },
+      {
+       "asset": "BTC",
+       "session": "2026-06-29",
+       "K": "2026-07-01T02:35:35.015749Z",
+       "value_at_K": null,
+       "latest_vintage": -231.0
+      },
+      {
+       "asset": "BTC",
+       "session": "2026-06-30",
+       "K": "2026-07-02T02:35:35.015749Z",
+       "value_at_K": null,
+       "latest_vintage": -222.6
+      },
+      {
+       "asset": "BTC",
+       "session": "2026-07-01",
+       "K": "2026-07-03T02:35:35.015749Z",
+       "value_at_K": null,
+       "latest_vintage": -296.0
+      }
+     ],
+     "CONSISTENT_AT_K": [
+      {
+       "asset": "BTC",
+       "session": "2026-07-14",
+       "K": "2026-07-16T02:35:35.015749Z",
+       "value_at_K": 181.1,
+       "latest_vintage": 181.1
+      },
+      {
+       "asset": "BTC",
+       "session": "2026-07-16",
+       "K": "2026-07-18T02:35:35.015749Z",
+       "value_at_K": 79.1,
+       "latest_vintage": 79.1
+      },
+      {
+       "asset": "BTC",
+       "session": "2026-07-20",
+       "K": "2026-07-22T02:35:35.015749Z",
+       "value_at_K": 226.8,
+       "latest_vintage": 226.8
+      },
+      {
+       "asset": "BTC",
+       "session": "2026-07-22",
+       "K": "2026-07-24T02:35:35.015749Z",
+       "value_at_K": 69.1,
+       "latest_vintage": 69.1
+      }
+     ]
+    }
+   },
+   "F_NEXT_TRADING_SESSION": {
+    "sessions_total": 1220,
+    "coverage_defined": 1220,
+    "coverage_share": 1.0,
+    "evaluable_with_realtime_evidence": 118,
+    "outcomes": {
+     "DEFINED_UNVERIFIABLE_HISTORY": 1102,
+     "UNKNOWN_AT_K": 52,
+     "CONSISTENT_AT_K": 62,
+     "PROVEN_LOOKAHEAD": 4
+    },
+    "usable_verified": 62,
+    "usable_unverified_history": 1102,
+    "unknown": 1154,
+    "later_revisions_after_declared_time": 4,
+    "revision_kinds_after_K": {
+     "LATE_FUND_VALUE": 4
+    },
+    "revision_lag_after_K_hours": {
+     "max": 13.09,
+     "median": 12.98
+    },
+    "false_finality": 0,
+    "lookahead_failures_proven": 4,
+    "data_loss_sessions": 0,
+    "feature_latency_after_close_hours": {
+     "median": 17.5,
+     "max": 89.5
+    },
+    "examples": {
+     "UNKNOWN_AT_K": [
+      {
+       "asset": "BTC",
+       "session": "2026-06-26",
+       "K": "2026-06-29T13:30:00Z",
+       "value_at_K": null,
+       "latest_vintage": -444.5
+      },
+      {
+       "asset": "BTC",
+       "session": "2026-06-29",
+       "K": "2026-06-30T13:30:00Z",
+       "value_at_K": null,
+       "latest_vintage": -231.0
+      },
+      {
+       "asset": "BTC",
+       "session": "2026-06-30",
+       "K": "2026-07-01T13:30:00Z",
+       "value_at_K": null,
+       "latest_vintage": -222.6
+      },
+      {
+       "asset": "BTC",
+       "session": "2026-07-01",
+       "K": "2026-07-02T13:30:00Z",
+       "value_at_K": null,
+       "latest_vintage": -296.0
+      }
+     ],
+     "CONSISTENT_AT_K": [
+      {
+       "asset": "BTC",
+       "session": "2026-07-16",
+       "K": "2026-07-17T13:30:00Z",
+       "value_at_K": 79.1,
+       "latest_vintage": 79.1
+      },
+      {
+       "asset": "BTC",
+       "session": "2026-07-17",
+       "K": "2026-07-20T13:30:00Z",
+       "value_at_K": 132.3,
+       "latest_vintage": 132.3
+      },
+      {
+       "asset": "BTC",
+       "session": "2026-07-22",
+       "K": "2026-07-23T13:30:00Z",
+       "value_at_K": 69.1,
+       "latest_vintage": 69.1
+      },
+      {
+       "asset": "BTC",
+       "session": "2026-07-23",
+       "K": "2026-07-24T13:30:00Z",
+       "value_at_K": -225.1,
+       "latest_vintage": -225.1
+      }
+     ],
+     "PROVEN_LOOKAHEAD": [
+      {
+       "asset": "BTC",
+       "session": "2026-08-17",
+       "K": "2026-08-18T13:30:00Z",
+       "value_at_K": 137.3,
+       "latest_vintage": 297.5
+      },
+      {
+       "asset": "BTC",
+       "session": "2026-08-19",
+       "K": "2026-08-20T13:30:00Z",
+       "value_at_K": 164.2,
+       "latest_vintage": 517.2
+      },
+      {
+       "asset": "ETH",
+       "session": "2026-08-17",
+       "K": "2026-08-18T13:30:00Z",
+       "value_at_K": 5.0,
+       "latest_vintage": 30.9
+      },
+      {
+       "asset": "ETH",
+       "session": "2026-08-19",
+       "K": "2026-08-20T13:30:00Z",
+       "value_at_K": 17.7,
+       "latest_vintage": 186.8
+      }
+     ]
+    }
+   }
+  },
+  "verdicts": {
+   "A_SESSION_CLOSE": {
+    "verdict": "UNSUPPORTED",
+    "why": "26 sessions where the bound value was provably not observable at K"
+   },
+   "B_FIRST_OBSERVED": {
+    "verdict": "SUPPORTED_AS_VINTAGE_TIME_NOT_FINALITY",
+    "why": "K is an observed time, but the observed value is revised later in 26 sessions; requires vintage-accurate storage; drops 1102 of 1220 sessions (all pre-capture history)"
+   },
+   "C_FIRST_COMPLETE_OBSERVED": {
+    "verdict": "SUPPORTED",
+    "why": "no contradiction in evaluable sessions; drops 1116 of 1220 sessions (all pre-capture history)"
+   },
+   "D_FIRST_VERIFIED_FINAL_OBSERVED": {
+    "verdict": "UNSUPPORTED_AS_FINALITY",
+    "why": "4 sessions revised after K ({'LATE_FUND_VALUE': 4}); drops 1146 of 1220 sessions (all pre-capture history)"
+   },
+   "E_CONSERVATIVE_FIXED_LAG": {
+    "verdict": "NOT_ENOUGH_EVIDENCE",
+    "why": "consistent in-sample only by construction (L is the in-sample maximum completion lag); no out-of-sample or pre-2026-07 publication evidence exists, so the lag cannot be validated for the history it would be applied to"
+   },
+   "F_NEXT_TRADING_SESSION": {
+    "verdict": "UNSUPPORTED",
+    "why": "4 sessions where the bound value was provably not observable at K"
+   }
+  }
+ },
+ "E_lag_basis": {
+  "rule": "L = maximum over daily-cadence sessions of (first live-rule-complete observation - session close); a descriptive UPPER bound of observed completion, not tuned on any outcome",
+  "L_hours": 30.593,
+  "L_defining_session": {
+   "asset": "BTC",
+   "session": "2026-08-19",
+   "complete_upper_bound_h": 30.593,
+   "incomplete_lower_bound_h": 6.528
+  },
+  "minimal_non_contradicted_lag_hours": 9.927,
+  "daily_cadence_sessions": 54,
+  "complete_upper_bound_quantiles_h": {
+   "min": 9.71,
+   "p50": 11.09,
+   "p90": 15.59,
+   "max": 30.59
+  },
+  "excluded_observation_limited_sessions": 50,
+  "basis": [
+   {
+    "asset": "BTC",
+    "session": "2026-08-10",
+    "complete_upper_bound_h": 11.406,
+    "incomplete_lower_bound_h": 7.204
+   },
+   {
+    "asset": "BTC",
+    "session": "2026-08-11",
+    "complete_upper_bound_h": 11.797,
+    "incomplete_lower_bound_h": 7.51
+   },
+   {
+    "asset": "BTC",
+    "session": "2026-08-12",
+    "complete_upper_bound_h": 11.819,
+    "incomplete_lower_bound_h": 7.564
+   },
+   {
+    "asset": "BTC",
+    "session": "2026-08-13",
+    "complete_upper_bound_h": 11.788,
+    "incomplete_lower_bound_h": 7.522
+   },
+   {
+    "asset": "BTC",
+    "session": "2026-08-14",
+    "complete_upper_bound_h": 10.919,
+    "incomplete_lower_bound_h": 6.462
+   },
+   {
+    "asset": "BTC",
+    "session": "2026-08-17",
+    "complete_upper_bound_h": 30.371,
+    "incomplete_lower_bound_h": 6.505
+   },
+   {
+    "asset": "BTC",
+    "session": "2026-08-18",
+    "complete_upper_bound_h": 11.035,
+    "incomplete_lower_bound_h": 6.545
+   },
+   {
+    "asset": "BTC",
+    "session": "2026-08-19",
+    "complete_upper_bound_h": 30.593,
+    "incomplete_lower_bound_h": 6.528
+   },
+   {
+    "asset": "BTC",
+    "session": "2026-08-20",
+    "complete_upper_bound_h": 11.067,
+    "incomplete_lower_bound_h": 6.638
+   },
+   {
+    "asset": "BTC",
+    "session": "2026-08-21",
+    "complete_upper_bound_h": 10.943,
+    "incomplete_lower_bound_h": 6.488
+   },
+   {
+    "asset": "BTC",
+    "session": "2026-08-24",
+    "complete_upper_bound_h": 11.089,
+    "incomplete_lower_bound_h": 6.542
+   },
+   {
+    "asset": "BTC",
+    "session": "2026-08-25",
+    "complete_upper_bound_h": 11.088,
+    "incomplete_lower_bound_h": 6.728
+   },
+   {
+    "asset": "BTC",
+    "session": "2026-08-26",
+    "complete_upper_bound_h": 15.15,
+    "incomplete_lower_bound_h": null
+   },
+   {
+    "asset": "BTC",
+    "session": "2026-08-27",
+    "complete_upper_bound_h": 16.7,
+    "incomplete_lower_bound_h": null
+   },
+   {
+    "asset": "BTC",
+    "session": "2026-08-28",
+    "complete_upper_bound_h": 11.906,
+    "incomplete_lower_bound_h": null
+   },
+   {
+    "asset": "BTC",
+    "session": "2026-08-31",
+    "complete_upper_bound_h": 10.22,
+    "incomplete_lower_bound_h": null
+   },
+   {
+    "asset": "BTC",
+    "session": "2026-09-01",
+    "complete_upper_bound_h": 9.723,
+    "incomplete_lower_bound_h": null
+   },
+   {
+    "asset": "BTC",
+    "session": "2026-09-02",
+    "complete_upper_bound_h": 9.71,
+    "incomplete_lower_bound_h": null
+   },
+   {
+    "asset": "BTC",
+    "session": "2026-09-03",
+    "complete_upper_bound_h": 9.798,
+    "incomplete_lower_bound_h": null
+   },
+   {
+    "asset": "BTC",
+    "session": "2026-09-04",
+    "complete_upper_bound_h": 9.835,
+    "incomplete_lower_bound_h": null
+   },
+   {
+    "asset": "BTC",
+    "session": "2026-09-08",
+    "complete_upper_bound_h": 15.25,
+    "incomplete_lower_bound_h": 9.927
+   },
+   {
+    "asset": "BTC",
+    "session": "2026-09-09",
+    "complete_upper_bound_h": 9.897,
+    "incomplete_lower_bound_h": null
+   },
+   {
+    "asset": "BTC",
+    "session": "2026-09-10",
+    "complete_upper_bound_h": 9.883,
+    "incomplete_lower_bound_h": null
+   },
+   {
+    "asset": "BTC",
+    "session": "2026-09-11",
+    "complete_upper_bound_h": 9.897,
+    "incomplete_lower_bound_h": null
+   },
+   {
+    "asset": "BTC",
+    "session": "2026-09-14",
+    "complete_upper_bound_h": 10.122,
+    "incomplete_lower_bound_h": null
+   },
+   {
+    "asset": "BTC",
+    "session": "2026-09-15",
+    "complete_upper_bound_h": 15.426,
+    "incomplete_lower_bound_h": null
+   },
+   {
+    "asset": "BTC",
+    "session": "2026-09-16",
+    "complete_upper_bound_h": 15.591,
+    "incomplete_lower_bound_h": null
+   },
+   {
+    "asset": "ETH",
+    "session": "2026-08-10",
+    "complete_upper_bound_h": 11.406,
+    "incomplete_lower_bound_h": 7.204
+   },
+   {
+    "asset": "ETH",
+    "session": "2026-08-11",
+    "complete_upper_bound_h": 11.797,
+    "incomplete_lower_bound_h": 7.51
+   },
+   {
+    "asset": "ETH",
+    "session": "2026-08-12",
+    "complete_upper_bound_h": 11.819,
+    "incomplete_lower_bound_h": 7.564
+   },
+   {
+    "asset": "ETH",
+    "session": "2026-08-13",
+    "complete_upper_bound_h": 11.788,
+    "incomplete_lower_bound_h": 7.522
+   },
+   {
+    "asset": "ETH",
+    "session": "2026-08-14",
+    "complete_upper_bound_h": 10.919,
+    "incomplete_lower_bound_h": 6.462
+   },
+   {
+    "asset": "ETH",
+    "session": "2026-08-17",
+    "complete_upper_bound_h": 30.371,
+    "incomplete_lower_bound_h": 6.505
+   },
+   {
+    "asset": "ETH",
+    "session": "2026-08-18",
+    "complete_upper_bound_h": 11.035,
+    "incomplete_lower_bound_h": 6.545
+   },
+   {
+    "asset": "ETH",
+    "session": "2026-08-19",
+    "complete_upper_bound_h": 30.593,
+    "incomplete_lower_bound_h": 6.528
+   },
+   {
+    "asset": "ETH",
+    "session": "2026-08-20",
+    "complete_upper_bound_h": 11.067,
+    "incomplete_lower_bound_h": 6.638
+   },
+   {
+    "asset": "ETH",
+    "session": "2026-08-21",
+    "complete_upper_bound_h": 10.943,
+    "incomplete_lower_bound_h": 6.488
+   },
+   {
+    "asset": "ETH",
+    "session": "2026-08-24",
+    "complete_upper_bound_h": 11.089,
+    "incomplete_lower_bound_h": 6.542
+   },
+   {
+    "asset": "ETH",
+    "session": "2026-08-25",
+    "complete_upper_bound_h": 11.088,
+    "incomplete_lower_bound_h": 6.728
+   },
+   {
+    "asset": "ETH",
+    "session": "2026-08-26",
+    "complete_upper_bound_h": 15.15,
+    "incomplete_lower_bound_h": null
+   },
+   {
+    "asset": "ETH",
+    "session": "2026-08-27",
+    "complete_upper_bound_h": 16.7,
+    "incomplete_lower_bound_h": null
+   },
+   {
+    "asset": "ETH",
+    "session": "2026-08-28",
+    "complete_upper_bound_h": 11.906,
+    "incomplete_lower_bound_h": null
+   },
+   {
+    "asset": "ETH",
+    "session": "2026-08-31",
+    "complete_upper_bound_h": 10.22,
+    "incomplete_lower_bound_h": null
+   },
+   {
+    "asset": "ETH",
+    "session": "2026-09-01",
+    "complete_upper_bound_h": 9.723,
+    "incomplete_lower_bound_h": null
+   },
+   {
+    "asset": "ETH",
+    "session": "2026-09-02",
+    "complete_upper_bound_h": 9.71,
+    "incomplete_lower_bound_h": null
+   },
+   {
+    "asset": "ETH",
+    "session": "2026-09-03",
+    "complete_upper_bound_h": 9.798,
+    "incomplete_lower_bound_h": null
+   },
+   {
+    "asset": "ETH",
+    "session": "2026-09-04",
+    "complete_upper_bound_h": 9.835,
+    "incomplete_lower_bound_h": null
+   },
+   {
+    "asset": "ETH",
+    "session": "2026-09-08",
+    "complete_upper_bound_h": 15.25,
+    "incomplete_lower_bound_h": 9.927
+   },
+   {
+    "asset": "ETH",
+    "session": "2026-09-09",
+    "complete_upper_bound_h": 9.897,
+    "incomplete_lower_bound_h": null
+   },
+   {
+    "asset": "ETH",
+    "session": "2026-09-10",
+    "complete_upper_bound_h": 9.883,
+    "incomplete_lower_bound_h": null
+   },
+   {
+    "asset": "ETH",
+    "session": "2026-09-11",
+    "complete_upper_bound_h": 9.897,
+    "incomplete_lower_bound_h": null
+   },
+   {
+    "asset": "ETH",
+    "session": "2026-09-14",
+    "complete_upper_bound_h": 10.122,
+    "incomplete_lower_bound_h": null
+   },
+   {
+    "asset": "ETH",
+    "session": "2026-09-15",
+    "complete_upper_bound_h": 15.426,
+    "incomplete_lower_bound_h": null
+   },
+   {
+    "asset": "ETH",
+    "session": "2026-09-16",
+    "complete_upper_bound_h": 15.591,
+    "incomplete_lower_bound_h": null
+   }
+  ]
+ }
+}

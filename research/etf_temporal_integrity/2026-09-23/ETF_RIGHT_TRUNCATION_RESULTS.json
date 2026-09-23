@@ -1,0 +1,6326 @@
+{
+ "contract": "ETF_RIGHT_TRUNCATION_RESULTS_v1",
+ "harness": "scripts/experiments/strategy_factor_leakage_e1_production.py (unchanged) run_right_truncation",
+ "outcome_vocabulary": [
+  "PASS",
+  "TRUE_FUTURE_LEAKAGE",
+  "SOURCE_VINTAGE_RISK",
+  "INSUFFICIENT_HISTORY",
+  "UNKNOWN"
+ ],
+ "attribution_rules": {
+  "SOURCE_VINTAGE_RISK": "culprit is a later vintage (REVISION) of a session",
+  "TRUE_FUTURE_LEAKAGE_PROVEN": "rule-based policy; the culprit session was provably not knowable at K (policy evidence table)",
+  "TRUE_FUTURE_LEAKAGE_FEATURE_CLAIM_NON_MONOTONE": "observation-based policy; a trailing feature is claimed at its own row's K although an input row's own K is later",
+  "OBSERVATION_LIMITED_UNKNOWN": "the culprit record is late only because no automated capture looked earlier; not proof"
+ },
+ "absorption_feature": "not re-run: scripts/experiments/etf_absorption_transmission_v1.py joins settled captures as-of retrieved_at (its knowledge time IS the observation time, policy B/D semantics); E1X recorded NO_ISSUE. It inherits the SOURCE_VINTAGE_RISK of settled rows (08-17/08-19, MSSE).",
+ "results": [
+  {
+   "reference": "PRE_BACKFILL_VINTAGE",
+   "policy": "A_SESSION_CLOSE",
+   "feature_family": "W30_TRAILING_AND_DIVERGENCE",
+   "mode": "TRUNCATE",
+   "outcome": "TRUE_FUTURE_LEAKAGE",
+   "mismatch_attribution": {
+    "OBSERVATION_LIMITED_UNKNOWN": 29,
+    "TRUE_FUTURE_LEAKAGE_PROVEN": 7,
+    "SOURCE_VINTAGE_RISK": 4
+   },
+   "sessions_claimed": 1235,
+   "sessions_dropped_by_policy": 0,
+   "history_sessions_unverifiable": 1117,
+   "harness": {
+    "case_id": "RT-ETF-A_SESSION_CLOSE-W30_TRAILING_AND_DIVERGENCE-TRUNCATE-PRE_BACKFILL_VINTAGE",
+    "records": 1261,
+    "record_kinds": {
+     "REVISION": 26,
+     "VALUE": 1235
+    },
+    "outputs_full": 1778,
+    "targets_tested": 73,
+    "output_comparisons": 123512,
+    "mismatch_count": 584,
+    "minimized_mismatch_count": 80,
+    "contaminating_lead_seconds": {
+     "min": 2935,
+     "max": 1644535
+    },
+    "observed": "FAIL",
+    "classifications": [
+     "SOURCE_VINTAGE_RISK",
+     "TRUE_FUTURE_LEAKAGE"
+    ],
+    "first_mismatches": [
+     {
+      "target_utc": "2026-06-26T20:00:00Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-26T20:00:00Z",
+      "field_difference_count": 1,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1644535
+      },
+      "fields": [
+       "__OUTPUT__"
+      ]
+     },
+     {
+      "target_utc": "2026-06-29T20:00:00Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-26T20:00:00Z",
+      "field_difference_count": 1,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1385335
+      },
+      "fields": [
+       "__OUTPUT__"
+      ]
+     },
+     {
+      "target_utc": "2026-06-30T20:00:00Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-26T20:00:00Z",
+      "field_difference_count": 1,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1298935
+      },
+      "fields": [
+       "__OUTPUT__"
+      ]
+     },
+     {
+      "target_utc": "2026-07-01T20:00:00Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-26T20:00:00Z",
+      "field_difference_count": 1,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1212535
+      },
+      "fields": [
+       "__OUTPUT__"
+      ]
+     },
+     {
+      "target_utc": "2026-07-02T20:00:00Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-26T20:00:00Z",
+      "field_difference_count": 1,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1126135
+      },
+      "fields": [
+       "__OUTPUT__"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "reference": "PRE_BACKFILL_VINTAGE",
+   "policy": "A_SESSION_CLOSE",
+   "feature_family": "W30_TRAILING_AND_DIVERGENCE",
+   "mode": "POISON",
+   "outcome": "TRUE_FUTURE_LEAKAGE",
+   "mismatch_attribution": {
+    "OBSERVATION_LIMITED_UNKNOWN": 29,
+    "TRUE_FUTURE_LEAKAGE_PROVEN": 7,
+    "SOURCE_VINTAGE_RISK": 4
+   },
+   "sessions_claimed": 1235,
+   "sessions_dropped_by_policy": 0,
+   "history_sessions_unverifiable": 1117,
+   "harness": {
+    "case_id": "RT-ETF-A_SESSION_CLOSE-W30_TRAILING_AND_DIVERGENCE-POISON-PRE_BACKFILL_VINTAGE",
+    "records": 1261,
+    "record_kinds": {
+     "REVISION": 26,
+     "VALUE": 1235
+    },
+    "outputs_full": 1778,
+    "targets_tested": 73,
+    "output_comparisons": 123512,
+    "mismatch_count": 584,
+    "minimized_mismatch_count": 80,
+    "contaminating_lead_seconds": {
+     "min": 2935,
+     "max": 1644535
+    },
+    "observed": "FAIL",
+    "classifications": [
+     "SOURCE_VINTAGE_RISK",
+     "TRUE_FUTURE_LEAKAGE"
+    ],
+    "first_mismatches": [
+     {
+      "target_utc": "2026-06-26T20:00:00Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-26T20:00:00Z",
+      "field_difference_count": 10,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1644535
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "flow_acceleration_3s_usd_millions",
+       "reversal_flag",
+       "rolling_net_flow_10s_usd_millions",
+       "rolling_net_flow_1s_usd_millions"
+      ]
+     },
+     {
+      "target_utc": "2026-06-29T20:00:00Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-26T20:00:00Z",
+      "field_difference_count": 10,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1385335
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "flow_acceleration_3s_usd_millions",
+       "reversal_flag",
+       "rolling_net_flow_10s_usd_millions",
+       "rolling_net_flow_1s_usd_millions"
+      ]
+     },
+     {
+      "target_utc": "2026-06-30T20:00:00Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-26T20:00:00Z",
+      "field_difference_count": 10,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1298935
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "flow_acceleration_3s_usd_millions",
+       "reversal_flag",
+       "rolling_net_flow_10s_usd_millions",
+       "rolling_net_flow_1s_usd_millions"
+      ]
+     },
+     {
+      "target_utc": "2026-07-01T20:00:00Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-26T20:00:00Z",
+      "field_difference_count": 10,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1212535
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "flow_acceleration_3s_usd_millions",
+       "reversal_flag",
+       "rolling_net_flow_10s_usd_millions",
+       "rolling_net_flow_1s_usd_millions"
+      ]
+     },
+     {
+      "target_utc": "2026-07-02T20:00:00Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-26T20:00:00Z",
+      "field_difference_count": 10,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1126135
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "flow_acceleration_3s_usd_millions",
+       "reversal_flag",
+       "rolling_net_flow_10s_usd_millions",
+       "rolling_net_flow_1s_usd_millions"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "reference": "PRE_BACKFILL_VINTAGE",
+   "policy": "A_SESSION_CLOSE",
+   "feature_family": "W30_CUMMAX_FEATURE_CLAIM",
+   "mode": "TRUNCATE",
+   "outcome": "TRUE_FUTURE_LEAKAGE",
+   "mismatch_attribution": {
+    "OBSERVATION_LIMITED_UNKNOWN": 29,
+    "TRUE_FUTURE_LEAKAGE_PROVEN": 7,
+    "SOURCE_VINTAGE_RISK": 4
+   },
+   "sessions_claimed": 1235,
+   "sessions_dropped_by_policy": 0,
+   "history_sessions_unverifiable": 1117,
+   "harness": {
+    "case_id": "RT-ETF-A_SESSION_CLOSE-W30_CUMMAX_FEATURE_CLAIM-TRUNCATE-PRE_BACKFILL_VINTAGE",
+    "records": 1261,
+    "record_kinds": {
+     "REVISION": 26,
+     "VALUE": 1235
+    },
+    "outputs_full": 1778,
+    "targets_tested": 73,
+    "output_comparisons": 123512,
+    "mismatch_count": 584,
+    "minimized_mismatch_count": 80,
+    "contaminating_lead_seconds": {
+     "min": 2935,
+     "max": 1644535
+    },
+    "observed": "FAIL",
+    "classifications": [
+     "SOURCE_VINTAGE_RISK",
+     "TRUE_FUTURE_LEAKAGE"
+    ],
+    "first_mismatches": [
+     {
+      "target_utc": "2026-06-26T20:00:00Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-26T20:00:00Z",
+      "field_difference_count": 1,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1644535
+      },
+      "fields": [
+       "__OUTPUT__"
+      ]
+     },
+     {
+      "target_utc": "2026-06-29T20:00:00Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-26T20:00:00Z",
+      "field_difference_count": 1,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1385335
+      },
+      "fields": [
+       "__OUTPUT__"
+      ]
+     },
+     {
+      "target_utc": "2026-06-30T20:00:00Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-26T20:00:00Z",
+      "field_difference_count": 1,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1298935
+      },
+      "fields": [
+       "__OUTPUT__"
+      ]
+     },
+     {
+      "target_utc": "2026-07-01T20:00:00Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-26T20:00:00Z",
+      "field_difference_count": 1,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1212535
+      },
+      "fields": [
+       "__OUTPUT__"
+      ]
+     },
+     {
+      "target_utc": "2026-07-02T20:00:00Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-26T20:00:00Z",
+      "field_difference_count": 1,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1126135
+      },
+      "fields": [
+       "__OUTPUT__"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "reference": "PRE_BACKFILL_VINTAGE",
+   "policy": "A_SESSION_CLOSE",
+   "feature_family": "W30_CUMMAX_FEATURE_CLAIM",
+   "mode": "POISON",
+   "outcome": "TRUE_FUTURE_LEAKAGE",
+   "mismatch_attribution": {
+    "OBSERVATION_LIMITED_UNKNOWN": 29,
+    "TRUE_FUTURE_LEAKAGE_PROVEN": 7,
+    "SOURCE_VINTAGE_RISK": 4
+   },
+   "sessions_claimed": 1235,
+   "sessions_dropped_by_policy": 0,
+   "history_sessions_unverifiable": 1117,
+   "harness": {
+    "case_id": "RT-ETF-A_SESSION_CLOSE-W30_CUMMAX_FEATURE_CLAIM-POISON-PRE_BACKFILL_VINTAGE",
+    "records": 1261,
+    "record_kinds": {
+     "REVISION": 26,
+     "VALUE": 1235
+    },
+    "outputs_full": 1778,
+    "targets_tested": 73,
+    "output_comparisons": 123512,
+    "mismatch_count": 584,
+    "minimized_mismatch_count": 80,
+    "contaminating_lead_seconds": {
+     "min": 2935,
+     "max": 1644535
+    },
+    "observed": "FAIL",
+    "classifications": [
+     "SOURCE_VINTAGE_RISK",
+     "TRUE_FUTURE_LEAKAGE"
+    ],
+    "first_mismatches": [
+     {
+      "target_utc": "2026-06-26T20:00:00Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-26T20:00:00Z",
+      "field_difference_count": 10,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1644535
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "flow_acceleration_3s_usd_millions",
+       "reversal_flag",
+       "rolling_net_flow_10s_usd_millions",
+       "rolling_net_flow_1s_usd_millions"
+      ]
+     },
+     {
+      "target_utc": "2026-06-29T20:00:00Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-26T20:00:00Z",
+      "field_difference_count": 10,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1385335
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "flow_acceleration_3s_usd_millions",
+       "reversal_flag",
+       "rolling_net_flow_10s_usd_millions",
+       "rolling_net_flow_1s_usd_millions"
+      ]
+     },
+     {
+      "target_utc": "2026-06-30T20:00:00Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-26T20:00:00Z",
+      "field_difference_count": 10,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1298935
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "flow_acceleration_3s_usd_millions",
+       "reversal_flag",
+       "rolling_net_flow_10s_usd_millions",
+       "rolling_net_flow_1s_usd_millions"
+      ]
+     },
+     {
+      "target_utc": "2026-07-01T20:00:00Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-26T20:00:00Z",
+      "field_difference_count": 10,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1212535
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "flow_acceleration_3s_usd_millions",
+       "reversal_flag",
+       "rolling_net_flow_10s_usd_millions",
+       "rolling_net_flow_1s_usd_millions"
+      ]
+     },
+     {
+      "target_utc": "2026-07-02T20:00:00Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-26T20:00:00Z",
+      "field_difference_count": 10,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1126135
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "flow_acceleration_3s_usd_millions",
+       "reversal_flag",
+       "rolling_net_flow_10s_usd_millions",
+       "rolling_net_flow_1s_usd_millions"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "reference": "PRE_BACKFILL_VINTAGE",
+   "policy": "A_SESSION_CLOSE",
+   "feature_family": "TRUTH_LAYER_PACK_BUILDER",
+   "mode": "TRUNCATE",
+   "outcome": "UNKNOWN",
+   "mismatch_attribution": {
+    "OBSERVATION_LIMITED_UNKNOWN": 2
+   },
+   "sessions_claimed": 1235,
+   "sessions_dropped_by_policy": 0,
+   "history_sessions_unverifiable": 1117,
+   "harness": {
+    "case_id": "RT-ETF-A_SESSION_CLOSE-TRUTH_LAYER_PACK_BUILDER-TRUNCATE-PRE_BACKFILL_VINTAGE",
+    "records": 1261,
+    "record_kinds": {
+     "REVISION": 26,
+     "VALUE": 1235
+    },
+    "outputs_full": 1235,
+    "targets_tested": 8,
+    "output_comparisons": 14,
+    "mismatch_count": 2,
+    "minimized_mismatch_count": 2,
+    "contaminating_lead_seconds": {
+     "min": 70143,
+     "max": 70144
+    },
+    "observed": "FAIL",
+    "classifications": [
+     "TRUE_FUTURE_LEAKAGE"
+    ],
+    "first_mismatches": [
+     {
+      "target_utc": "2026-09-22T20:00:00Z",
+      "output_key": "BTC|2026-09-22",
+      "claimed_available_at_utc": "2026-09-22T20:00:00Z",
+      "field_difference_count": 1,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-09-22",
+       "kind": "VALUE",
+       "available_at_utc": "2026-09-23T15:29:03Z",
+       "lead_after_target_seconds": 70143
+      },
+      "fields": [
+       "__OUTPUT__"
+      ]
+     },
+     {
+      "target_utc": "2026-09-22T20:00:00Z",
+      "output_key": "ETH|2026-09-22",
+      "claimed_available_at_utc": "2026-09-22T20:00:00Z",
+      "field_difference_count": 1,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "ETH|2026-09-22",
+       "kind": "VALUE",
+       "available_at_utc": "2026-09-23T15:29:04Z",
+       "lead_after_target_seconds": 70144
+      },
+      "fields": [
+       "__OUTPUT__"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "reference": "PRE_BACKFILL_VINTAGE",
+   "policy": "B_FIRST_OBSERVED",
+   "feature_family": "W30_TRAILING_AND_DIVERGENCE",
+   "mode": "TRUNCATE",
+   "outcome": "TRUE_FUTURE_LEAKAGE",
+   "mismatch_attribution": {
+    "SOURCE_VINTAGE_RISK": 31,
+    "TRUE_FUTURE_LEAKAGE_FEATURE_CLAIM_NON_MONOTONE": 9
+   },
+   "sessions_claimed": 118,
+   "sessions_dropped_by_policy": 1117,
+   "history_sessions_unverifiable": 0,
+   "harness": {
+    "case_id": "RT-ETF-B_FIRST_OBSERVED-W30_TRAILING_AND_DIVERGENCE-TRUNCATE-PRE_BACKFILL_VINTAGE",
+    "records": 144,
+    "record_kinds": {
+     "REVISION": 26,
+     "VALUE": 118
+    },
+    "outputs_full": 177,
+    "targets_tested": 51,
+    "output_comparisons": 5468,
+    "mismatch_count": 49,
+    "minimized_mismatch_count": 49,
+    "contaminating_lead_seconds": {
+     "min": 10332,
+     "max": 626802
+    },
+    "observed": "FAIL",
+    "classifications": [
+     "SOURCE_VINTAGE_RISK",
+     "TRUE_FUTURE_LEAKAGE"
+    ],
+    "first_mismatches": [
+     {
+      "target_utc": "2026-07-17T03:41:48Z",
+      "output_key": "BTC|2026-07-16",
+      "claimed_available_at_utc": "2026-07-17T03:41:48Z",
+      "field_difference_count": 9,
+      "classification": "SOURCE_VINTAGE_RISK",
+      "first_contaminating_record": {
+       "key": "BTC|2026-07-16",
+       "kind": "REVISION",
+       "available_at_utc": "2026-07-17T06:34:00Z",
+       "lead_after_target_seconds": 10332
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "flow_acceleration_3s_usd_millions",
+       "issuer_concentration_abs_share",
+       "rolling_net_flow_10s_usd_millions",
+       "rolling_net_flow_1s_usd_millions"
+      ]
+     },
+     {
+      "target_utc": "2026-07-17T06:34:00Z",
+      "output_key": "BTC|2026-07-16",
+      "claimed_available_at_utc": "2026-07-17T03:41:48Z",
+      "field_difference_count": 6,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-07-15",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-20T03:55:40Z",
+       "lead_after_target_seconds": 249700
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "flow_acceleration_3s_usd_millions",
+       "rolling_net_flow_10s_usd_millions",
+       "rolling_net_flow_3s_usd_millions",
+       "rolling_net_flow_5s_usd_millions"
+      ]
+     },
+     {
+      "target_utc": "2026-07-19T20:00:33Z",
+      "output_key": "BTC|2026-07-16",
+      "claimed_available_at_utc": "2026-07-17T03:41:48Z",
+      "field_difference_count": 6,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-07-15",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-20T03:55:40Z",
+       "lead_after_target_seconds": 28507
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "flow_acceleration_3s_usd_millions",
+       "rolling_net_flow_10s_usd_millions",
+       "rolling_net_flow_3s_usd_millions",
+       "rolling_net_flow_5s_usd_millions"
+      ]
+     },
+     {
+      "target_utc": "2026-08-03T04:40:49Z",
+      "output_key": "BTC|2026-07-31",
+      "claimed_available_at_utc": "2026-08-03T04:40:49Z",
+      "field_difference_count": 9,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-07-27",
+       "kind": "VALUE",
+       "available_at_utc": "2026-08-10T10:47:32Z",
+       "lead_after_target_seconds": 626802
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "flow_acceleration_3s_usd_millions",
+       "reversal_flag",
+       "rolling_20s_complete",
+       "rolling_net_flow_10s_usd_millions"
+      ]
+     },
+     {
+      "target_utc": "2026-08-11T03:08:48Z",
+      "output_key": "BTC|2026-08-10",
+      "claimed_available_at_utc": "2026-08-11T03:08:48Z",
+      "field_difference_count": 9,
+      "classification": "SOURCE_VINTAGE_RISK",
+      "first_contaminating_record": {
+       "key": "BTC|2026-08-10",
+       "kind": "REVISION",
+       "available_at_utc": "2026-08-11T07:24:21Z",
+       "lead_after_target_seconds": 15332
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "flow_acceleration_3s_usd_millions",
+       "issuer_concentration_abs_share",
+       "rolling_net_flow_10s_usd_millions",
+       "rolling_net_flow_1s_usd_millions"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "reference": "PRE_BACKFILL_VINTAGE",
+   "policy": "B_FIRST_OBSERVED",
+   "feature_family": "W30_TRAILING_AND_DIVERGENCE",
+   "mode": "POISON",
+   "outcome": "TRUE_FUTURE_LEAKAGE",
+   "mismatch_attribution": {
+    "SOURCE_VINTAGE_RISK": 31,
+    "TRUE_FUTURE_LEAKAGE_FEATURE_CLAIM_NON_MONOTONE": 9
+   },
+   "sessions_claimed": 118,
+   "sessions_dropped_by_policy": 1117,
+   "history_sessions_unverifiable": 0,
+   "harness": {
+    "case_id": "RT-ETF-B_FIRST_OBSERVED-W30_TRAILING_AND_DIVERGENCE-POISON-PRE_BACKFILL_VINTAGE",
+    "records": 144,
+    "record_kinds": {
+     "REVISION": 26,
+     "VALUE": 118
+    },
+    "outputs_full": 177,
+    "targets_tested": 51,
+    "output_comparisons": 5468,
+    "mismatch_count": 49,
+    "minimized_mismatch_count": 49,
+    "contaminating_lead_seconds": {
+     "min": 10332,
+     "max": 626802
+    },
+    "observed": "FAIL",
+    "classifications": [
+     "SOURCE_VINTAGE_RISK",
+     "TRUE_FUTURE_LEAKAGE"
+    ],
+    "first_mismatches": [
+     {
+      "target_utc": "2026-07-17T03:41:48Z",
+      "output_key": "BTC|2026-07-16",
+      "claimed_available_at_utc": "2026-07-17T03:41:48Z",
+      "field_difference_count": 8,
+      "classification": "SOURCE_VINTAGE_RISK",
+      "first_contaminating_record": {
+       "key": "BTC|2026-07-16",
+       "kind": "REVISION",
+       "available_at_utc": "2026-07-17T06:34:00Z",
+       "lead_after_target_seconds": 10332
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "flow_acceleration_3s_usd_millions",
+       "issuer_concentration_abs_share",
+       "rolling_net_flow_10s_usd_millions",
+       "rolling_net_flow_1s_usd_millions"
+      ]
+     },
+     {
+      "target_utc": "2026-07-17T06:34:00Z",
+      "output_key": "BTC|2026-07-16",
+      "claimed_available_at_utc": "2026-07-17T03:41:48Z",
+      "field_difference_count": 4,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-07-15",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-20T03:55:40Z",
+       "lead_after_target_seconds": 249700
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "rolling_net_flow_10s_usd_millions",
+       "rolling_net_flow_3s_usd_millions",
+       "rolling_net_flow_5s_usd_millions"
+      ]
+     },
+     {
+      "target_utc": "2026-07-19T20:00:33Z",
+      "output_key": "BTC|2026-07-16",
+      "claimed_available_at_utc": "2026-07-17T03:41:48Z",
+      "field_difference_count": 4,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-07-15",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-20T03:55:40Z",
+       "lead_after_target_seconds": 28507
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "rolling_net_flow_10s_usd_millions",
+       "rolling_net_flow_3s_usd_millions",
+       "rolling_net_flow_5s_usd_millions"
+      ]
+     },
+     {
+      "target_utc": "2026-08-03T04:40:49Z",
+      "output_key": "BTC|2026-07-31",
+      "claimed_available_at_utc": "2026-08-03T04:40:49Z",
+      "field_difference_count": 6,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-07-27",
+       "kind": "VALUE",
+       "available_at_utc": "2026-08-10T10:47:32Z",
+       "lead_after_target_seconds": 626802
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "flow_acceleration_3s_usd_millions",
+       "rolling_net_flow_10s_usd_millions",
+       "rolling_net_flow_20s_usd_millions",
+       "rolling_net_flow_3s_usd_millions"
+      ]
+     },
+     {
+      "target_utc": "2026-08-11T03:08:48Z",
+      "output_key": "BTC|2026-08-10",
+      "claimed_available_at_utc": "2026-08-11T03:08:48Z",
+      "field_difference_count": 9,
+      "classification": "SOURCE_VINTAGE_RISK",
+      "first_contaminating_record": {
+       "key": "BTC|2026-08-10",
+       "kind": "REVISION",
+       "available_at_utc": "2026-08-11T07:24:21Z",
+       "lead_after_target_seconds": 15332
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "flow_acceleration_3s_usd_millions",
+       "issuer_concentration_abs_share",
+       "rolling_net_flow_10s_usd_millions",
+       "rolling_net_flow_1s_usd_millions"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "reference": "PRE_BACKFILL_VINTAGE",
+   "policy": "B_FIRST_OBSERVED",
+   "feature_family": "W30_CUMMAX_FEATURE_CLAIM",
+   "mode": "TRUNCATE",
+   "outcome": "SOURCE_VINTAGE_RISK",
+   "mismatch_attribution": {
+    "SOURCE_VINTAGE_RISK": 38
+   },
+   "sessions_claimed": 118,
+   "sessions_dropped_by_policy": 1117,
+   "history_sessions_unverifiable": 0,
+   "harness": {
+    "case_id": "RT-ETF-B_FIRST_OBSERVED-W30_CUMMAX_FEATURE_CLAIM-TRUNCATE-PRE_BACKFILL_VINTAGE",
+    "records": 144,
+    "record_kinds": {
+     "REVISION": 26,
+     "VALUE": 118
+    },
+    "outputs_full": 177,
+    "targets_tested": 51,
+    "output_comparisons": 5453,
+    "mismatch_count": 38,
+    "minimized_mismatch_count": 38,
+    "contaminating_lead_seconds": {
+     "min": 15332,
+     "max": 87229
+    },
+    "observed": "FAIL",
+    "classifications": [
+     "SOURCE_VINTAGE_RISK"
+    ],
+    "first_mismatches": [
+     {
+      "target_utc": "2026-08-11T03:08:48Z",
+      "output_key": "BTC|2026-08-10",
+      "claimed_available_at_utc": "2026-08-11T03:08:48Z",
+      "field_difference_count": 9,
+      "classification": "SOURCE_VINTAGE_RISK",
+      "first_contaminating_record": {
+       "key": "BTC|2026-08-10",
+       "kind": "REVISION",
+       "available_at_utc": "2026-08-11T07:24:21Z",
+       "lead_after_target_seconds": 15332
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "flow_acceleration_3s_usd_millions",
+       "issuer_concentration_abs_share",
+       "rolling_net_flow_10s_usd_millions",
+       "rolling_net_flow_1s_usd_millions"
+      ]
+     },
+     {
+      "target_utc": "2026-08-12T03:27:57Z",
+      "output_key": "BTC|2026-08-11",
+      "claimed_available_at_utc": "2026-08-12T03:27:57Z",
+      "field_difference_count": 11,
+      "classification": "SOURCE_VINTAGE_RISK",
+      "first_contaminating_record": {
+       "key": "BTC|2026-08-11",
+       "kind": "REVISION",
+       "available_at_utc": "2026-08-12T07:47:50Z",
+       "lead_after_target_seconds": 15592
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "flow_acceleration_3s_usd_millions",
+       "issuer_concentration_abs_share",
+       "reversal_flag",
+       "rolling_net_flow_10s_usd_millions"
+      ]
+     },
+     {
+      "target_utc": "2026-08-13T03:31:35Z",
+      "output_key": "BTC|2026-08-12",
+      "claimed_available_at_utc": "2026-08-13T03:31:35Z",
+      "field_difference_count": 9,
+      "classification": "SOURCE_VINTAGE_RISK",
+      "first_contaminating_record": {
+       "key": "BTC|2026-08-12",
+       "kind": "REVISION",
+       "available_at_utc": "2026-08-13T07:49:09Z",
+       "lead_after_target_seconds": 15454
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "flow_acceleration_3s_usd_millions",
+       "issuer_concentration_abs_share",
+       "rolling_net_flow_10s_usd_millions",
+       "rolling_net_flow_1s_usd_millions"
+      ]
+     },
+     {
+      "target_utc": "2026-08-14T03:28:51Z",
+      "output_key": "BTC|2026-08-13",
+      "claimed_available_at_utc": "2026-08-14T03:28:51Z",
+      "field_difference_count": 9,
+      "classification": "SOURCE_VINTAGE_RISK",
+      "first_contaminating_record": {
+       "key": "BTC|2026-08-13",
+       "kind": "REVISION",
+       "available_at_utc": "2026-08-14T07:47:15Z",
+       "lead_after_target_seconds": 15504
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "flow_acceleration_3s_usd_millions",
+       "issuer_concentration_abs_share",
+       "rolling_net_flow_10s_usd_millions",
+       "rolling_net_flow_1s_usd_millions"
+      ]
+     },
+     {
+      "target_utc": "2026-08-15T02:27:43Z",
+      "output_key": "BTC|2026-08-14",
+      "claimed_available_at_utc": "2026-08-15T02:27:43Z",
+      "field_difference_count": 9,
+      "classification": "SOURCE_VINTAGE_RISK",
+      "first_contaminating_record": {
+       "key": "BTC|2026-08-14",
+       "kind": "REVISION",
+       "available_at_utc": "2026-08-15T06:55:07Z",
+       "lead_after_target_seconds": 16044
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "flow_acceleration_3s_usd_millions",
+       "issuer_concentration_abs_share",
+       "rolling_net_flow_10s_usd_millions",
+       "rolling_net_flow_1s_usd_millions"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "reference": "PRE_BACKFILL_VINTAGE",
+   "policy": "B_FIRST_OBSERVED",
+   "feature_family": "W30_CUMMAX_FEATURE_CLAIM",
+   "mode": "POISON",
+   "outcome": "SOURCE_VINTAGE_RISK",
+   "mismatch_attribution": {
+    "SOURCE_VINTAGE_RISK": 38
+   },
+   "sessions_claimed": 118,
+   "sessions_dropped_by_policy": 1117,
+   "history_sessions_unverifiable": 0,
+   "harness": {
+    "case_id": "RT-ETF-B_FIRST_OBSERVED-W30_CUMMAX_FEATURE_CLAIM-POISON-PRE_BACKFILL_VINTAGE",
+    "records": 144,
+    "record_kinds": {
+     "REVISION": 26,
+     "VALUE": 118
+    },
+    "outputs_full": 177,
+    "targets_tested": 51,
+    "output_comparisons": 5453,
+    "mismatch_count": 38,
+    "minimized_mismatch_count": 38,
+    "contaminating_lead_seconds": {
+     "min": 15332,
+     "max": 87229
+    },
+    "observed": "FAIL",
+    "classifications": [
+     "SOURCE_VINTAGE_RISK"
+    ],
+    "first_mismatches": [
+     {
+      "target_utc": "2026-08-11T03:08:48Z",
+      "output_key": "BTC|2026-08-10",
+      "claimed_available_at_utc": "2026-08-11T03:08:48Z",
+      "field_difference_count": 9,
+      "classification": "SOURCE_VINTAGE_RISK",
+      "first_contaminating_record": {
+       "key": "BTC|2026-08-10",
+       "kind": "REVISION",
+       "available_at_utc": "2026-08-11T07:24:21Z",
+       "lead_after_target_seconds": 15332
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "flow_acceleration_3s_usd_millions",
+       "issuer_concentration_abs_share",
+       "rolling_net_flow_10s_usd_millions",
+       "rolling_net_flow_1s_usd_millions"
+      ]
+     },
+     {
+      "target_utc": "2026-08-12T03:27:57Z",
+      "output_key": "BTC|2026-08-11",
+      "claimed_available_at_utc": "2026-08-12T03:27:57Z",
+      "field_difference_count": 11,
+      "classification": "SOURCE_VINTAGE_RISK",
+      "first_contaminating_record": {
+       "key": "BTC|2026-08-11",
+       "kind": "REVISION",
+       "available_at_utc": "2026-08-12T07:47:50Z",
+       "lead_after_target_seconds": 15592
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "flow_acceleration_3s_usd_millions",
+       "issuer_concentration_abs_share",
+       "reversal_flag",
+       "rolling_net_flow_10s_usd_millions"
+      ]
+     },
+     {
+      "target_utc": "2026-08-13T03:31:35Z",
+      "output_key": "BTC|2026-08-12",
+      "claimed_available_at_utc": "2026-08-13T03:31:35Z",
+      "field_difference_count": 9,
+      "classification": "SOURCE_VINTAGE_RISK",
+      "first_contaminating_record": {
+       "key": "BTC|2026-08-12",
+       "kind": "REVISION",
+       "available_at_utc": "2026-08-13T07:49:09Z",
+       "lead_after_target_seconds": 15454
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "flow_acceleration_3s_usd_millions",
+       "issuer_concentration_abs_share",
+       "rolling_net_flow_10s_usd_millions",
+       "rolling_net_flow_1s_usd_millions"
+      ]
+     },
+     {
+      "target_utc": "2026-08-14T03:28:51Z",
+      "output_key": "BTC|2026-08-13",
+      "claimed_available_at_utc": "2026-08-14T03:28:51Z",
+      "field_difference_count": 9,
+      "classification": "SOURCE_VINTAGE_RISK",
+      "first_contaminating_record": {
+       "key": "BTC|2026-08-13",
+       "kind": "REVISION",
+       "available_at_utc": "2026-08-14T07:47:15Z",
+       "lead_after_target_seconds": 15504
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "flow_acceleration_3s_usd_millions",
+       "issuer_concentration_abs_share",
+       "rolling_net_flow_10s_usd_millions",
+       "rolling_net_flow_1s_usd_millions"
+      ]
+     },
+     {
+      "target_utc": "2026-08-15T02:27:43Z",
+      "output_key": "BTC|2026-08-14",
+      "claimed_available_at_utc": "2026-08-15T02:27:43Z",
+      "field_difference_count": 9,
+      "classification": "SOURCE_VINTAGE_RISK",
+      "first_contaminating_record": {
+       "key": "BTC|2026-08-14",
+       "kind": "REVISION",
+       "available_at_utc": "2026-08-15T06:55:07Z",
+       "lead_after_target_seconds": 16044
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "flow_acceleration_3s_usd_millions",
+       "issuer_concentration_abs_share",
+       "rolling_net_flow_10s_usd_millions",
+       "rolling_net_flow_1s_usd_millions"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "reference": "PRE_BACKFILL_VINTAGE",
+   "policy": "B_FIRST_OBSERVED",
+   "feature_family": "TRUTH_LAYER_PACK_BUILDER",
+   "mode": "TRUNCATE",
+   "outcome": "SOURCE_VINTAGE_RISK",
+   "mismatch_attribution": {
+    "SOURCE_VINTAGE_RISK": 4
+   },
+   "sessions_claimed": 118,
+   "sessions_dropped_by_policy": 1117,
+   "history_sessions_unverifiable": 0,
+   "harness": {
+    "case_id": "RT-ETF-B_FIRST_OBSERVED-TRUTH_LAYER_PACK_BUILDER-TRUNCATE-PRE_BACKFILL_VINTAGE",
+    "records": 144,
+    "record_kinds": {
+     "REVISION": 26,
+     "VALUE": 118
+    },
+    "outputs_full": 118,
+    "targets_tested": 8,
+    "output_comparisons": 39,
+    "mismatch_count": 4,
+    "minimized_mismatch_count": 4,
+    "contaminating_lead_seconds": {
+     "min": 15592,
+     "max": 16789
+    },
+    "observed": "FAIL",
+    "classifications": [
+     "SOURCE_VINTAGE_RISK"
+    ],
+    "first_mismatches": [
+     {
+      "target_utc": "2026-08-12T03:27:57Z",
+      "output_key": "BTC|2026-08-11",
+      "claimed_available_at_utc": "2026-08-12T03:27:57Z",
+      "field_difference_count": 21,
+      "classification": "SOURCE_VINTAGE_RISK",
+      "first_contaminating_record": {
+       "key": "BTC|2026-08-11",
+       "kind": "REVISION",
+       "available_at_utc": "2026-08-12T07:47:50Z",
+       "lead_after_target_seconds": 15592
+      },
+      "fields": [
+       "cumulative_total_flow_usd_m",
+       "flow_change_1s_usd_m",
+       "flow_mean_10s_usd_m",
+       "flow_mean_20s_usd_m",
+       "flow_mean_3s_usd_m"
+      ]
+     },
+     {
+      "target_utc": "2026-08-19T02:22:15Z",
+      "output_key": "BTC|2026-08-18",
+      "claimed_available_at_utc": "2026-08-19T02:22:15Z",
+      "field_difference_count": 16,
+      "classification": "SOURCE_VINTAGE_RISK",
+      "first_contaminating_record": {
+       "key": "BTC|2026-08-18",
+       "kind": "REVISION",
+       "available_at_utc": "2026-08-19T07:02:05Z",
+       "lead_after_target_seconds": 16789
+      },
+      "fields": [
+       "cumulative_total_flow_usd_m",
+       "flow_change_1s_usd_m",
+       "flow_mean_10s_usd_m",
+       "flow_mean_20s_usd_m",
+       "flow_mean_3s_usd_m"
+      ]
+     },
+     {
+      "target_utc": "2026-08-12T03:27:57Z",
+      "output_key": "ETH|2026-08-11",
+      "claimed_available_at_utc": "2026-08-12T03:27:57Z",
+      "field_difference_count": 15,
+      "classification": "SOURCE_VINTAGE_RISK",
+      "first_contaminating_record": {
+       "key": "ETH|2026-08-11",
+       "kind": "REVISION",
+       "available_at_utc": "2026-08-12T07:47:50Z",
+       "lead_after_target_seconds": 15592
+      },
+      "fields": [
+       "cumulative_total_flow_usd_m",
+       "flow_change_1s_usd_m",
+       "flow_mean_10s_usd_m",
+       "flow_mean_20s_usd_m",
+       "flow_mean_3s_usd_m"
+      ]
+     },
+     {
+      "target_utc": "2026-08-19T02:22:15Z",
+      "output_key": "ETH|2026-08-18",
+      "claimed_available_at_utc": "2026-08-19T02:22:15Z",
+      "field_difference_count": 17,
+      "classification": "SOURCE_VINTAGE_RISK",
+      "first_contaminating_record": {
+       "key": "ETH|2026-08-18",
+       "kind": "REVISION",
+       "available_at_utc": "2026-08-19T07:02:05Z",
+       "lead_after_target_seconds": 16789
+      },
+      "fields": [
+       "cumulative_total_flow_usd_m",
+       "flow_change_1s_usd_m",
+       "flow_mean_10s_usd_m",
+       "flow_mean_20s_usd_m",
+       "flow_mean_3s_usd_m"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "reference": "PRE_BACKFILL_VINTAGE",
+   "policy": "C_FIRST_COMPLETE_OBSERVED",
+   "feature_family": "W30_TRAILING_AND_DIVERGENCE",
+   "mode": "TRUNCATE",
+   "outcome": "TRUE_FUTURE_LEAKAGE",
+   "mismatch_attribution": {
+    "TRUE_FUTURE_LEAKAGE_FEATURE_CLAIM_NON_MONOTONE": 3
+   },
+   "sessions_claimed": 104,
+   "sessions_dropped_by_policy": 1131,
+   "history_sessions_unverifiable": 0,
+   "harness": {
+    "case_id": "RT-ETF-C_FIRST_COMPLETE_OBSERVED-W30_TRAILING_AND_DIVERGENCE-TRUNCATE-PRE_BACKFILL_VINTAGE",
+    "records": 130,
+    "record_kinds": {
+     "REVISION": 26,
+     "VALUE": 104
+    },
+    "outputs_full": 155,
+    "targets_tested": 37,
+    "output_comparisons": 3351,
+    "mismatch_count": 3,
+    "minimized_mismatch_count": 3,
+    "contaminating_lead_seconds": {
+     "min": 249700,
+     "max": 626802
+    },
+    "observed": "FAIL",
+    "classifications": [
+     "TRUE_FUTURE_LEAKAGE"
+    ],
+    "first_mismatches": [
+     {
+      "target_utc": "2026-07-17T06:34:00Z",
+      "output_key": "BTC|2026-07-16",
+      "claimed_available_at_utc": "2026-07-17T06:34:00Z",
+      "field_difference_count": 5,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-07-15",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-20T03:55:40Z",
+       "lead_after_target_seconds": 249700
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "flow_acceleration_3s_usd_millions",
+       "rolling_net_flow_3s_usd_millions",
+       "rolling_net_flow_5s_usd_millions",
+       "signed_flow_streak_sessions"
+      ]
+     },
+     {
+      "target_utc": "2026-08-03T04:40:49Z",
+      "output_key": "BTC|2026-07-31",
+      "claimed_available_at_utc": "2026-08-03T04:40:49Z",
+      "field_difference_count": 7,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-07-28",
+       "kind": "VALUE",
+       "available_at_utc": "2026-08-10T10:47:32Z",
+       "lead_after_target_seconds": 626802
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "flow_acceleration_3s_usd_millions",
+       "reversal_flag",
+       "rolling_net_flow_10s_usd_millions",
+       "rolling_net_flow_3s_usd_millions"
+      ]
+     },
+     {
+      "target_utc": "2026-08-03T04:40:49Z",
+      "output_key": "ETH|2026-07-31",
+      "claimed_available_at_utc": "2026-08-03T04:40:49Z",
+      "field_difference_count": 6,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "ETH|2026-07-28",
+       "kind": "VALUE",
+       "available_at_utc": "2026-08-10T10:47:32Z",
+       "lead_after_target_seconds": 626802
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "flow_acceleration_3s_usd_millions",
+       "rolling_net_flow_10s_usd_millions",
+       "rolling_net_flow_3s_usd_millions",
+       "rolling_net_flow_5s_usd_millions"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "reference": "PRE_BACKFILL_VINTAGE",
+   "policy": "C_FIRST_COMPLETE_OBSERVED",
+   "feature_family": "W30_TRAILING_AND_DIVERGENCE",
+   "mode": "POISON",
+   "outcome": "TRUE_FUTURE_LEAKAGE",
+   "mismatch_attribution": {
+    "TRUE_FUTURE_LEAKAGE_FEATURE_CLAIM_NON_MONOTONE": 3
+   },
+   "sessions_claimed": 104,
+   "sessions_dropped_by_policy": 1131,
+   "history_sessions_unverifiable": 0,
+   "harness": {
+    "case_id": "RT-ETF-C_FIRST_COMPLETE_OBSERVED-W30_TRAILING_AND_DIVERGENCE-POISON-PRE_BACKFILL_VINTAGE",
+    "records": 130,
+    "record_kinds": {
+     "REVISION": 26,
+     "VALUE": 104
+    },
+    "outputs_full": 155,
+    "targets_tested": 37,
+    "output_comparisons": 3351,
+    "mismatch_count": 3,
+    "minimized_mismatch_count": 3,
+    "contaminating_lead_seconds": {
+     "min": 249700,
+     "max": 626802
+    },
+    "observed": "FAIL",
+    "classifications": [
+     "TRUE_FUTURE_LEAKAGE"
+    ],
+    "first_mismatches": [
+     {
+      "target_utc": "2026-07-17T06:34:00Z",
+      "output_key": "BTC|2026-07-16",
+      "claimed_available_at_utc": "2026-07-17T06:34:00Z",
+      "field_difference_count": 3,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-07-15",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-20T03:55:40Z",
+       "lead_after_target_seconds": 249700
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "rolling_net_flow_3s_usd_millions",
+       "rolling_net_flow_5s_usd_millions"
+      ]
+     },
+     {
+      "target_utc": "2026-08-03T04:40:49Z",
+      "output_key": "BTC|2026-07-31",
+      "claimed_available_at_utc": "2026-08-03T04:40:49Z",
+      "field_difference_count": 5,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-07-28",
+       "kind": "VALUE",
+       "available_at_utc": "2026-08-10T10:47:32Z",
+       "lead_after_target_seconds": 626802
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "flow_acceleration_3s_usd_millions",
+       "rolling_net_flow_10s_usd_millions",
+       "rolling_net_flow_3s_usd_millions",
+       "rolling_net_flow_5s_usd_millions"
+      ]
+     },
+     {
+      "target_utc": "2026-08-03T04:40:49Z",
+      "output_key": "ETH|2026-07-31",
+      "claimed_available_at_utc": "2026-08-03T04:40:49Z",
+      "field_difference_count": 6,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "ETH|2026-07-28",
+       "kind": "VALUE",
+       "available_at_utc": "2026-08-10T10:47:32Z",
+       "lead_after_target_seconds": 626802
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "flow_acceleration_3s_usd_millions",
+       "rolling_net_flow_10s_usd_millions",
+       "rolling_net_flow_3s_usd_millions",
+       "rolling_net_flow_5s_usd_millions"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "reference": "PRE_BACKFILL_VINTAGE",
+   "policy": "C_FIRST_COMPLETE_OBSERVED",
+   "feature_family": "W30_CUMMAX_FEATURE_CLAIM",
+   "mode": "TRUNCATE",
+   "outcome": "INSUFFICIENT_HISTORY",
+   "mismatch_attribution": {},
+   "sessions_claimed": 104,
+   "sessions_dropped_by_policy": 1131,
+   "history_sessions_unverifiable": 0,
+   "harness": {
+    "case_id": "RT-ETF-C_FIRST_COMPLETE_OBSERVED-W30_CUMMAX_FEATURE_CLAIM-TRUNCATE-PRE_BACKFILL_VINTAGE",
+    "records": 130,
+    "record_kinds": {
+     "REVISION": 26,
+     "VALUE": 104
+    },
+    "outputs_full": 155,
+    "targets_tested": 37,
+    "output_comparisons": 3341,
+    "mismatch_count": 0,
+    "minimized_mismatch_count": 0,
+    "contaminating_lead_seconds": null,
+    "observed": "PASS",
+    "classifications": [
+     "NO_ISSUE"
+    ],
+    "first_mismatches": []
+   }
+  },
+  {
+   "reference": "PRE_BACKFILL_VINTAGE",
+   "policy": "C_FIRST_COMPLETE_OBSERVED",
+   "feature_family": "W30_CUMMAX_FEATURE_CLAIM",
+   "mode": "POISON",
+   "outcome": "INSUFFICIENT_HISTORY",
+   "mismatch_attribution": {},
+   "sessions_claimed": 104,
+   "sessions_dropped_by_policy": 1131,
+   "history_sessions_unverifiable": 0,
+   "harness": {
+    "case_id": "RT-ETF-C_FIRST_COMPLETE_OBSERVED-W30_CUMMAX_FEATURE_CLAIM-POISON-PRE_BACKFILL_VINTAGE",
+    "records": 130,
+    "record_kinds": {
+     "REVISION": 26,
+     "VALUE": 104
+    },
+    "outputs_full": 155,
+    "targets_tested": 37,
+    "output_comparisons": 3341,
+    "mismatch_count": 0,
+    "minimized_mismatch_count": 0,
+    "contaminating_lead_seconds": null,
+    "observed": "PASS",
+    "classifications": [
+     "NO_ISSUE"
+    ],
+    "first_mismatches": []
+   }
+  },
+  {
+   "reference": "PRE_BACKFILL_VINTAGE",
+   "policy": "C_FIRST_COMPLETE_OBSERVED",
+   "feature_family": "TRUTH_LAYER_PACK_BUILDER",
+   "mode": "TRUNCATE",
+   "outcome": "INSUFFICIENT_HISTORY",
+   "mismatch_attribution": {},
+   "sessions_claimed": 104,
+   "sessions_dropped_by_policy": 1131,
+   "history_sessions_unverifiable": 0,
+   "harness": {
+    "case_id": "RT-ETF-C_FIRST_COMPLETE_OBSERVED-TRUTH_LAYER_PACK_BUILDER-TRUNCATE-PRE_BACKFILL_VINTAGE",
+    "records": 130,
+    "record_kinds": {
+     "REVISION": 26,
+     "VALUE": 104
+    },
+    "outputs_full": 104,
+    "targets_tested": 8,
+    "output_comparisons": 18,
+    "mismatch_count": 0,
+    "minimized_mismatch_count": 0,
+    "contaminating_lead_seconds": null,
+    "observed": "PASS",
+    "classifications": [
+     "NO_ISSUE"
+    ],
+    "first_mismatches": []
+   }
+  },
+  {
+   "reference": "PRE_BACKFILL_VINTAGE",
+   "policy": "D_FIRST_VERIFIED_FINAL_OBSERVED",
+   "feature_family": "W30_TRAILING_AND_DIVERGENCE",
+   "mode": "TRUNCATE",
+   "outcome": "SOURCE_VINTAGE_RISK",
+   "mismatch_attribution": {
+    "SOURCE_VINTAGE_RISK": 6
+   },
+   "sessions_claimed": 74,
+   "sessions_dropped_by_policy": 1161,
+   "history_sessions_unverifiable": 0,
+   "harness": {
+    "case_id": "RT-ETF-D_FIRST_VERIFIED_FINAL_OBSERVED-W30_TRAILING_AND_DIVERGENCE-TRUNCATE-PRE_BACKFILL_VINTAGE",
+    "records": 99,
+    "record_kinds": {
+     "REVISION": 25,
+     "VALUE": 74
+    },
+    "outputs_full": 111,
+    "targets_tested": 36,
+    "output_comparisons": 2448,
+    "mismatch_count": 6,
+    "minimized_mismatch_count": 6,
+    "contaminating_lead_seconds": {
+     "min": 69670,
+     "max": 70341
+    },
+    "observed": "FAIL",
+    "classifications": [
+     "SOURCE_VINTAGE_RISK"
+    ],
+    "first_mismatches": [
+     {
+      "target_utc": "2026-08-18T07:01:05Z",
+      "output_key": "BTC|2026-08-17",
+      "claimed_available_at_utc": "2026-08-18T07:01:05Z",
+      "field_difference_count": 8,
+      "classification": "SOURCE_VINTAGE_RISK",
+      "first_contaminating_record": {
+       "key": "BTC|2026-08-17",
+       "kind": "REVISION",
+       "available_at_utc": "2026-08-19T02:22:15Z",
+       "lead_after_target_seconds": 69670
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "flow_acceleration_3s_usd_millions",
+       "issuer_concentration_abs_share",
+       "rolling_net_flow_10s_usd_millions",
+       "rolling_net_flow_1s_usd_millions"
+      ]
+     },
+     {
+      "target_utc": "2026-08-20T07:03:14Z",
+      "output_key": "BTC|2026-08-19",
+      "claimed_available_at_utc": "2026-08-20T07:03:14Z",
+      "field_difference_count": 8,
+      "classification": "SOURCE_VINTAGE_RISK",
+      "first_contaminating_record": {
+       "key": "BTC|2026-08-19",
+       "kind": "REVISION",
+       "available_at_utc": "2026-08-21T02:35:35Z",
+       "lead_after_target_seconds": 70341
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "flow_acceleration_3s_usd_millions",
+       "issuer_concentration_abs_share",
+       "rolling_net_flow_10s_usd_millions",
+       "rolling_net_flow_1s_usd_millions"
+      ]
+     },
+     {
+      "target_utc": "2026-08-18T07:01:05Z",
+      "output_key": "DIV|2026-08-17",
+      "claimed_available_at_utc": "2026-08-18T07:01:05Z",
+      "field_difference_count": 3,
+      "classification": "SOURCE_VINTAGE_RISK",
+      "first_contaminating_record": {
+       "key": "BTC|2026-08-17",
+       "kind": "REVISION",
+       "available_at_utc": "2026-08-19T02:22:15Z",
+       "lead_after_target_seconds": 69670
+      },
+      "fields": [
+       "btc_minus_eth_flow_usd_millions",
+       "total_usd_millions_btc",
+       "total_usd_millions_eth"
+      ]
+     },
+     {
+      "target_utc": "2026-08-18T07:01:05Z",
+      "output_key": "ETH|2026-08-17",
+      "claimed_available_at_utc": "2026-08-18T07:01:05Z",
+      "field_difference_count": 8,
+      "classification": "SOURCE_VINTAGE_RISK",
+      "first_contaminating_record": {
+       "key": "ETH|2026-08-17",
+       "kind": "REVISION",
+       "available_at_utc": "2026-08-19T02:22:15Z",
+       "lead_after_target_seconds": 69670
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "flow_acceleration_3s_usd_millions",
+       "issuer_concentration_abs_share",
+       "rolling_net_flow_10s_usd_millions",
+       "rolling_net_flow_1s_usd_millions"
+      ]
+     },
+     {
+      "target_utc": "2026-08-20T07:03:14Z",
+      "output_key": "DIV|2026-08-19",
+      "claimed_available_at_utc": "2026-08-20T07:03:14Z",
+      "field_difference_count": 3,
+      "classification": "SOURCE_VINTAGE_RISK",
+      "first_contaminating_record": {
+       "key": "BTC|2026-08-19",
+       "kind": "REVISION",
+       "available_at_utc": "2026-08-21T02:35:35Z",
+       "lead_after_target_seconds": 70341
+      },
+      "fields": [
+       "btc_minus_eth_flow_usd_millions",
+       "total_usd_millions_btc",
+       "total_usd_millions_eth"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "reference": "PRE_BACKFILL_VINTAGE",
+   "policy": "D_FIRST_VERIFIED_FINAL_OBSERVED",
+   "feature_family": "W30_TRAILING_AND_DIVERGENCE",
+   "mode": "POISON",
+   "outcome": "SOURCE_VINTAGE_RISK",
+   "mismatch_attribution": {
+    "SOURCE_VINTAGE_RISK": 6
+   },
+   "sessions_claimed": 74,
+   "sessions_dropped_by_policy": 1161,
+   "history_sessions_unverifiable": 0,
+   "harness": {
+    "case_id": "RT-ETF-D_FIRST_VERIFIED_FINAL_OBSERVED-W30_TRAILING_AND_DIVERGENCE-POISON-PRE_BACKFILL_VINTAGE",
+    "records": 99,
+    "record_kinds": {
+     "REVISION": 25,
+     "VALUE": 74
+    },
+    "outputs_full": 111,
+    "targets_tested": 36,
+    "output_comparisons": 2448,
+    "mismatch_count": 6,
+    "minimized_mismatch_count": 6,
+    "contaminating_lead_seconds": {
+     "min": 69670,
+     "max": 70341
+    },
+    "observed": "FAIL",
+    "classifications": [
+     "SOURCE_VINTAGE_RISK"
+    ],
+    "first_mismatches": [
+     {
+      "target_utc": "2026-08-18T07:01:05Z",
+      "output_key": "BTC|2026-08-17",
+      "claimed_available_at_utc": "2026-08-18T07:01:05Z",
+      "field_difference_count": 8,
+      "classification": "SOURCE_VINTAGE_RISK",
+      "first_contaminating_record": {
+       "key": "BTC|2026-08-17",
+       "kind": "REVISION",
+       "available_at_utc": "2026-08-19T02:22:15Z",
+       "lead_after_target_seconds": 69670
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "flow_acceleration_3s_usd_millions",
+       "issuer_concentration_abs_share",
+       "rolling_net_flow_10s_usd_millions",
+       "rolling_net_flow_1s_usd_millions"
+      ]
+     },
+     {
+      "target_utc": "2026-08-20T07:03:14Z",
+      "output_key": "BTC|2026-08-19",
+      "claimed_available_at_utc": "2026-08-20T07:03:14Z",
+      "field_difference_count": 8,
+      "classification": "SOURCE_VINTAGE_RISK",
+      "first_contaminating_record": {
+       "key": "BTC|2026-08-19",
+       "kind": "REVISION",
+       "available_at_utc": "2026-08-21T02:35:35Z",
+       "lead_after_target_seconds": 70341
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "flow_acceleration_3s_usd_millions",
+       "issuer_concentration_abs_share",
+       "rolling_net_flow_10s_usd_millions",
+       "rolling_net_flow_1s_usd_millions"
+      ]
+     },
+     {
+      "target_utc": "2026-08-18T07:01:05Z",
+      "output_key": "DIV|2026-08-17",
+      "claimed_available_at_utc": "2026-08-18T07:01:05Z",
+      "field_difference_count": 3,
+      "classification": "SOURCE_VINTAGE_RISK",
+      "first_contaminating_record": {
+       "key": "BTC|2026-08-17",
+       "kind": "REVISION",
+       "available_at_utc": "2026-08-19T02:22:15Z",
+       "lead_after_target_seconds": 69670
+      },
+      "fields": [
+       "btc_minus_eth_flow_usd_millions",
+       "total_usd_millions_btc",
+       "total_usd_millions_eth"
+      ]
+     },
+     {
+      "target_utc": "2026-08-18T07:01:05Z",
+      "output_key": "ETH|2026-08-17",
+      "claimed_available_at_utc": "2026-08-18T07:01:05Z",
+      "field_difference_count": 8,
+      "classification": "SOURCE_VINTAGE_RISK",
+      "first_contaminating_record": {
+       "key": "ETH|2026-08-17",
+       "kind": "REVISION",
+       "available_at_utc": "2026-08-19T02:22:15Z",
+       "lead_after_target_seconds": 69670
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "flow_acceleration_3s_usd_millions",
+       "issuer_concentration_abs_share",
+       "rolling_net_flow_10s_usd_millions",
+       "rolling_net_flow_1s_usd_millions"
+      ]
+     },
+     {
+      "target_utc": "2026-08-20T07:03:14Z",
+      "output_key": "DIV|2026-08-19",
+      "claimed_available_at_utc": "2026-08-20T07:03:14Z",
+      "field_difference_count": 3,
+      "classification": "SOURCE_VINTAGE_RISK",
+      "first_contaminating_record": {
+       "key": "BTC|2026-08-19",
+       "kind": "REVISION",
+       "available_at_utc": "2026-08-21T02:35:35Z",
+       "lead_after_target_seconds": 70341
+      },
+      "fields": [
+       "btc_minus_eth_flow_usd_millions",
+       "total_usd_millions_btc",
+       "total_usd_millions_eth"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "reference": "PRE_BACKFILL_VINTAGE",
+   "policy": "D_FIRST_VERIFIED_FINAL_OBSERVED",
+   "feature_family": "W30_CUMMAX_FEATURE_CLAIM",
+   "mode": "TRUNCATE",
+   "outcome": "SOURCE_VINTAGE_RISK",
+   "mismatch_attribution": {
+    "SOURCE_VINTAGE_RISK": 6
+   },
+   "sessions_claimed": 74,
+   "sessions_dropped_by_policy": 1161,
+   "history_sessions_unverifiable": 0,
+   "harness": {
+    "case_id": "RT-ETF-D_FIRST_VERIFIED_FINAL_OBSERVED-W30_CUMMAX_FEATURE_CLAIM-TRUNCATE-PRE_BACKFILL_VINTAGE",
+    "records": 99,
+    "record_kinds": {
+     "REVISION": 25,
+     "VALUE": 74
+    },
+    "outputs_full": 111,
+    "targets_tested": 36,
+    "output_comparisons": 2448,
+    "mismatch_count": 6,
+    "minimized_mismatch_count": 6,
+    "contaminating_lead_seconds": {
+     "min": 69670,
+     "max": 70341
+    },
+    "observed": "FAIL",
+    "classifications": [
+     "SOURCE_VINTAGE_RISK"
+    ],
+    "first_mismatches": [
+     {
+      "target_utc": "2026-08-18T07:01:05Z",
+      "output_key": "BTC|2026-08-17",
+      "claimed_available_at_utc": "2026-08-18T07:01:05Z",
+      "field_difference_count": 8,
+      "classification": "SOURCE_VINTAGE_RISK",
+      "first_contaminating_record": {
+       "key": "BTC|2026-08-17",
+       "kind": "REVISION",
+       "available_at_utc": "2026-08-19T02:22:15Z",
+       "lead_after_target_seconds": 69670
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "flow_acceleration_3s_usd_millions",
+       "issuer_concentration_abs_share",
+       "rolling_net_flow_10s_usd_millions",
+       "rolling_net_flow_1s_usd_millions"
+      ]
+     },
+     {
+      "target_utc": "2026-08-20T07:03:14Z",
+      "output_key": "BTC|2026-08-19",
+      "claimed_available_at_utc": "2026-08-20T07:03:14Z",
+      "field_difference_count": 8,
+      "classification": "SOURCE_VINTAGE_RISK",
+      "first_contaminating_record": {
+       "key": "BTC|2026-08-19",
+       "kind": "REVISION",
+       "available_at_utc": "2026-08-21T02:35:35Z",
+       "lead_after_target_seconds": 70341
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "flow_acceleration_3s_usd_millions",
+       "issuer_concentration_abs_share",
+       "rolling_net_flow_10s_usd_millions",
+       "rolling_net_flow_1s_usd_millions"
+      ]
+     },
+     {
+      "target_utc": "2026-08-18T07:01:05Z",
+      "output_key": "DIV|2026-08-17",
+      "claimed_available_at_utc": "2026-08-18T07:01:05Z",
+      "field_difference_count": 3,
+      "classification": "SOURCE_VINTAGE_RISK",
+      "first_contaminating_record": {
+       "key": "BTC|2026-08-17",
+       "kind": "REVISION",
+       "available_at_utc": "2026-08-19T02:22:15Z",
+       "lead_after_target_seconds": 69670
+      },
+      "fields": [
+       "btc_minus_eth_flow_usd_millions",
+       "total_usd_millions_btc",
+       "total_usd_millions_eth"
+      ]
+     },
+     {
+      "target_utc": "2026-08-18T07:01:05Z",
+      "output_key": "ETH|2026-08-17",
+      "claimed_available_at_utc": "2026-08-18T07:01:05Z",
+      "field_difference_count": 8,
+      "classification": "SOURCE_VINTAGE_RISK",
+      "first_contaminating_record": {
+       "key": "ETH|2026-08-17",
+       "kind": "REVISION",
+       "available_at_utc": "2026-08-19T02:22:15Z",
+       "lead_after_target_seconds": 69670
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "flow_acceleration_3s_usd_millions",
+       "issuer_concentration_abs_share",
+       "rolling_net_flow_10s_usd_millions",
+       "rolling_net_flow_1s_usd_millions"
+      ]
+     },
+     {
+      "target_utc": "2026-08-20T07:03:14Z",
+      "output_key": "DIV|2026-08-19",
+      "claimed_available_at_utc": "2026-08-20T07:03:14Z",
+      "field_difference_count": 3,
+      "classification": "SOURCE_VINTAGE_RISK",
+      "first_contaminating_record": {
+       "key": "BTC|2026-08-19",
+       "kind": "REVISION",
+       "available_at_utc": "2026-08-21T02:35:35Z",
+       "lead_after_target_seconds": 70341
+      },
+      "fields": [
+       "btc_minus_eth_flow_usd_millions",
+       "total_usd_millions_btc",
+       "total_usd_millions_eth"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "reference": "PRE_BACKFILL_VINTAGE",
+   "policy": "D_FIRST_VERIFIED_FINAL_OBSERVED",
+   "feature_family": "W30_CUMMAX_FEATURE_CLAIM",
+   "mode": "POISON",
+   "outcome": "SOURCE_VINTAGE_RISK",
+   "mismatch_attribution": {
+    "SOURCE_VINTAGE_RISK": 6
+   },
+   "sessions_claimed": 74,
+   "sessions_dropped_by_policy": 1161,
+   "history_sessions_unverifiable": 0,
+   "harness": {
+    "case_id": "RT-ETF-D_FIRST_VERIFIED_FINAL_OBSERVED-W30_CUMMAX_FEATURE_CLAIM-POISON-PRE_BACKFILL_VINTAGE",
+    "records": 99,
+    "record_kinds": {
+     "REVISION": 25,
+     "VALUE": 74
+    },
+    "outputs_full": 111,
+    "targets_tested": 36,
+    "output_comparisons": 2448,
+    "mismatch_count": 6,
+    "minimized_mismatch_count": 6,
+    "contaminating_lead_seconds": {
+     "min": 69670,
+     "max": 70341
+    },
+    "observed": "FAIL",
+    "classifications": [
+     "SOURCE_VINTAGE_RISK"
+    ],
+    "first_mismatches": [
+     {
+      "target_utc": "2026-08-18T07:01:05Z",
+      "output_key": "BTC|2026-08-17",
+      "claimed_available_at_utc": "2026-08-18T07:01:05Z",
+      "field_difference_count": 8,
+      "classification": "SOURCE_VINTAGE_RISK",
+      "first_contaminating_record": {
+       "key": "BTC|2026-08-17",
+       "kind": "REVISION",
+       "available_at_utc": "2026-08-19T02:22:15Z",
+       "lead_after_target_seconds": 69670
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "flow_acceleration_3s_usd_millions",
+       "issuer_concentration_abs_share",
+       "rolling_net_flow_10s_usd_millions",
+       "rolling_net_flow_1s_usd_millions"
+      ]
+     },
+     {
+      "target_utc": "2026-08-20T07:03:14Z",
+      "output_key": "BTC|2026-08-19",
+      "claimed_available_at_utc": "2026-08-20T07:03:14Z",
+      "field_difference_count": 8,
+      "classification": "SOURCE_VINTAGE_RISK",
+      "first_contaminating_record": {
+       "key": "BTC|2026-08-19",
+       "kind": "REVISION",
+       "available_at_utc": "2026-08-21T02:35:35Z",
+       "lead_after_target_seconds": 70341
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "flow_acceleration_3s_usd_millions",
+       "issuer_concentration_abs_share",
+       "rolling_net_flow_10s_usd_millions",
+       "rolling_net_flow_1s_usd_millions"
+      ]
+     },
+     {
+      "target_utc": "2026-08-18T07:01:05Z",
+      "output_key": "DIV|2026-08-17",
+      "claimed_available_at_utc": "2026-08-18T07:01:05Z",
+      "field_difference_count": 3,
+      "classification": "SOURCE_VINTAGE_RISK",
+      "first_contaminating_record": {
+       "key": "BTC|2026-08-17",
+       "kind": "REVISION",
+       "available_at_utc": "2026-08-19T02:22:15Z",
+       "lead_after_target_seconds": 69670
+      },
+      "fields": [
+       "btc_minus_eth_flow_usd_millions",
+       "total_usd_millions_btc",
+       "total_usd_millions_eth"
+      ]
+     },
+     {
+      "target_utc": "2026-08-18T07:01:05Z",
+      "output_key": "ETH|2026-08-17",
+      "claimed_available_at_utc": "2026-08-18T07:01:05Z",
+      "field_difference_count": 8,
+      "classification": "SOURCE_VINTAGE_RISK",
+      "first_contaminating_record": {
+       "key": "ETH|2026-08-17",
+       "kind": "REVISION",
+       "available_at_utc": "2026-08-19T02:22:15Z",
+       "lead_after_target_seconds": 69670
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "flow_acceleration_3s_usd_millions",
+       "issuer_concentration_abs_share",
+       "rolling_net_flow_10s_usd_millions",
+       "rolling_net_flow_1s_usd_millions"
+      ]
+     },
+     {
+      "target_utc": "2026-08-20T07:03:14Z",
+      "output_key": "DIV|2026-08-19",
+      "claimed_available_at_utc": "2026-08-20T07:03:14Z",
+      "field_difference_count": 3,
+      "classification": "SOURCE_VINTAGE_RISK",
+      "first_contaminating_record": {
+       "key": "BTC|2026-08-19",
+       "kind": "REVISION",
+       "available_at_utc": "2026-08-21T02:35:35Z",
+       "lead_after_target_seconds": 70341
+      },
+      "fields": [
+       "btc_minus_eth_flow_usd_millions",
+       "total_usd_millions_btc",
+       "total_usd_millions_eth"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "reference": "PRE_BACKFILL_VINTAGE",
+   "policy": "D_FIRST_VERIFIED_FINAL_OBSERVED",
+   "feature_family": "TRUTH_LAYER_PACK_BUILDER",
+   "mode": "TRUNCATE",
+   "outcome": "SOURCE_VINTAGE_RISK",
+   "mismatch_attribution": {
+    "SOURCE_VINTAGE_RISK": 2
+   },
+   "sessions_claimed": 74,
+   "sessions_dropped_by_policy": 1161,
+   "history_sessions_unverifiable": 0,
+   "harness": {
+    "case_id": "RT-ETF-D_FIRST_VERIFIED_FINAL_OBSERVED-TRUTH_LAYER_PACK_BUILDER-TRUNCATE-PRE_BACKFILL_VINTAGE",
+    "records": 99,
+    "record_kinds": {
+     "REVISION": 25,
+     "VALUE": 74
+    },
+    "outputs_full": 74,
+    "targets_tested": 8,
+    "output_comparisons": 34,
+    "mismatch_count": 2,
+    "minimized_mismatch_count": 2,
+    "contaminating_lead_seconds": {
+     "min": 70341,
+     "max": 70341
+    },
+    "observed": "FAIL",
+    "classifications": [
+     "SOURCE_VINTAGE_RISK"
+    ],
+    "first_mismatches": [
+     {
+      "target_utc": "2026-08-20T07:03:14Z",
+      "output_key": "BTC|2026-08-19",
+      "claimed_available_at_utc": "2026-08-20T07:03:14Z",
+      "field_difference_count": 17,
+      "classification": "SOURCE_VINTAGE_RISK",
+      "first_contaminating_record": {
+       "key": "BTC|2026-08-19",
+       "kind": "REVISION",
+       "available_at_utc": "2026-08-21T02:35:35Z",
+       "lead_after_target_seconds": 70341
+      },
+      "fields": [
+       "cumulative_total_flow_usd_m",
+       "flow_change_1s_usd_m",
+       "flow_mean_10s_usd_m",
+       "flow_mean_20s_usd_m",
+       "flow_mean_3s_usd_m"
+      ]
+     },
+     {
+      "target_utc": "2026-08-20T07:03:14Z",
+      "output_key": "ETH|2026-08-19",
+      "claimed_available_at_utc": "2026-08-20T07:03:14Z",
+      "field_difference_count": 17,
+      "classification": "SOURCE_VINTAGE_RISK",
+      "first_contaminating_record": {
+       "key": "ETH|2026-08-19",
+       "kind": "REVISION",
+       "available_at_utc": "2026-08-21T02:35:35Z",
+       "lead_after_target_seconds": 70341
+      },
+      "fields": [
+       "cumulative_total_flow_usd_m",
+       "flow_change_1s_usd_m",
+       "flow_mean_10s_usd_m",
+       "flow_mean_20s_usd_m",
+       "flow_mean_3s_usd_m"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "reference": "PRE_BACKFILL_VINTAGE",
+   "policy": "E_CONSERVATIVE_FIXED_LAG",
+   "feature_family": "W30_TRAILING_AND_DIVERGENCE",
+   "mode": "TRUNCATE",
+   "outcome": "SOURCE_VINTAGE_RISK",
+   "mismatch_attribution": {
+    "OBSERVATION_LIMITED_UNKNOWN": 39,
+    "SOURCE_VINTAGE_RISK": 1
+   },
+   "sessions_claimed": 1235,
+   "sessions_dropped_by_policy": 0,
+   "history_sessions_unverifiable": 1117,
+   "harness": {
+    "case_id": "RT-ETF-E_CONSERVATIVE_FIXED_LAG-W30_TRAILING_AND_DIVERGENCE-TRUNCATE-PRE_BACKFILL_VINTAGE",
+    "records": 1261,
+    "record_kinds": {
+     "REVISION": 26,
+     "VALUE": 1235
+    },
+    "outputs_full": 1778,
+    "targets_tested": 73,
+    "output_comparisons": 123467,
+    "mismatch_count": 398,
+    "minimized_mismatch_count": 80,
+    "contaminating_lead_seconds": {
+     "min": 0,
+     "max": 1534400
+    },
+    "observed": "FAIL",
+    "classifications": [
+     "SOURCE_VINTAGE_RISK",
+     "TRUE_FUTURE_LEAKAGE"
+    ],
+    "first_mismatches": [
+     {
+      "target_utc": "2026-06-28T02:35:34Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-28T02:35:34Z",
+      "field_difference_count": 1,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1534400
+      },
+      "fields": [
+       "__OUTPUT__"
+      ]
+     },
+     {
+      "target_utc": "2026-07-01T02:35:34Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-28T02:35:34Z",
+      "field_difference_count": 1,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1275200
+      },
+      "fields": [
+       "__OUTPUT__"
+      ]
+     },
+     {
+      "target_utc": "2026-07-02T02:35:34Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-28T02:35:34Z",
+      "field_difference_count": 1,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1188800
+      },
+      "fields": [
+       "__OUTPUT__"
+      ]
+     },
+     {
+      "target_utc": "2026-07-03T02:35:34Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-28T02:35:34Z",
+      "field_difference_count": 1,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1102400
+      },
+      "fields": [
+       "__OUTPUT__"
+      ]
+     },
+     {
+      "target_utc": "2026-07-04T02:35:34Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-28T02:35:34Z",
+      "field_difference_count": 1,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1016000
+      },
+      "fields": [
+       "__OUTPUT__"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "reference": "PRE_BACKFILL_VINTAGE",
+   "policy": "E_CONSERVATIVE_FIXED_LAG",
+   "feature_family": "W30_TRAILING_AND_DIVERGENCE",
+   "mode": "POISON",
+   "outcome": "SOURCE_VINTAGE_RISK",
+   "mismatch_attribution": {
+    "OBSERVATION_LIMITED_UNKNOWN": 39,
+    "SOURCE_VINTAGE_RISK": 1
+   },
+   "sessions_claimed": 1235,
+   "sessions_dropped_by_policy": 0,
+   "history_sessions_unverifiable": 1117,
+   "harness": {
+    "case_id": "RT-ETF-E_CONSERVATIVE_FIXED_LAG-W30_TRAILING_AND_DIVERGENCE-POISON-PRE_BACKFILL_VINTAGE",
+    "records": 1261,
+    "record_kinds": {
+     "REVISION": 26,
+     "VALUE": 1235
+    },
+    "outputs_full": 1778,
+    "targets_tested": 73,
+    "output_comparisons": 123467,
+    "mismatch_count": 398,
+    "minimized_mismatch_count": 80,
+    "contaminating_lead_seconds": {
+     "min": 0,
+     "max": 1534400
+    },
+    "observed": "FAIL",
+    "classifications": [
+     "SOURCE_VINTAGE_RISK",
+     "TRUE_FUTURE_LEAKAGE"
+    ],
+    "first_mismatches": [
+     {
+      "target_utc": "2026-06-28T02:35:34Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-28T02:35:34Z",
+      "field_difference_count": 10,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1534400
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "flow_acceleration_3s_usd_millions",
+       "reversal_flag",
+       "rolling_net_flow_10s_usd_millions",
+       "rolling_net_flow_1s_usd_millions"
+      ]
+     },
+     {
+      "target_utc": "2026-07-01T02:35:34Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-28T02:35:34Z",
+      "field_difference_count": 10,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1275200
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "flow_acceleration_3s_usd_millions",
+       "reversal_flag",
+       "rolling_net_flow_10s_usd_millions",
+       "rolling_net_flow_1s_usd_millions"
+      ]
+     },
+     {
+      "target_utc": "2026-07-02T02:35:34Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-28T02:35:34Z",
+      "field_difference_count": 10,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1188800
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "flow_acceleration_3s_usd_millions",
+       "reversal_flag",
+       "rolling_net_flow_10s_usd_millions",
+       "rolling_net_flow_1s_usd_millions"
+      ]
+     },
+     {
+      "target_utc": "2026-07-03T02:35:34Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-28T02:35:34Z",
+      "field_difference_count": 10,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1102400
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "flow_acceleration_3s_usd_millions",
+       "reversal_flag",
+       "rolling_net_flow_10s_usd_millions",
+       "rolling_net_flow_1s_usd_millions"
+      ]
+     },
+     {
+      "target_utc": "2026-07-04T02:35:34Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-28T02:35:34Z",
+      "field_difference_count": 10,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1016000
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "flow_acceleration_3s_usd_millions",
+       "reversal_flag",
+       "rolling_net_flow_10s_usd_millions",
+       "rolling_net_flow_1s_usd_millions"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "reference": "PRE_BACKFILL_VINTAGE",
+   "policy": "E_CONSERVATIVE_FIXED_LAG",
+   "feature_family": "W30_CUMMAX_FEATURE_CLAIM",
+   "mode": "TRUNCATE",
+   "outcome": "SOURCE_VINTAGE_RISK",
+   "mismatch_attribution": {
+    "OBSERVATION_LIMITED_UNKNOWN": 39,
+    "SOURCE_VINTAGE_RISK": 1
+   },
+   "sessions_claimed": 1235,
+   "sessions_dropped_by_policy": 0,
+   "history_sessions_unverifiable": 1117,
+   "harness": {
+    "case_id": "RT-ETF-E_CONSERVATIVE_FIXED_LAG-W30_CUMMAX_FEATURE_CLAIM-TRUNCATE-PRE_BACKFILL_VINTAGE",
+    "records": 1261,
+    "record_kinds": {
+     "REVISION": 26,
+     "VALUE": 1235
+    },
+    "outputs_full": 1778,
+    "targets_tested": 73,
+    "output_comparisons": 123467,
+    "mismatch_count": 398,
+    "minimized_mismatch_count": 80,
+    "contaminating_lead_seconds": {
+     "min": 0,
+     "max": 1534400
+    },
+    "observed": "FAIL",
+    "classifications": [
+     "SOURCE_VINTAGE_RISK",
+     "TRUE_FUTURE_LEAKAGE"
+    ],
+    "first_mismatches": [
+     {
+      "target_utc": "2026-06-28T02:35:34Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-28T02:35:34Z",
+      "field_difference_count": 1,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1534400
+      },
+      "fields": [
+       "__OUTPUT__"
+      ]
+     },
+     {
+      "target_utc": "2026-07-01T02:35:34Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-28T02:35:34Z",
+      "field_difference_count": 1,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1275200
+      },
+      "fields": [
+       "__OUTPUT__"
+      ]
+     },
+     {
+      "target_utc": "2026-07-02T02:35:34Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-28T02:35:34Z",
+      "field_difference_count": 1,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1188800
+      },
+      "fields": [
+       "__OUTPUT__"
+      ]
+     },
+     {
+      "target_utc": "2026-07-03T02:35:34Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-28T02:35:34Z",
+      "field_difference_count": 1,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1102400
+      },
+      "fields": [
+       "__OUTPUT__"
+      ]
+     },
+     {
+      "target_utc": "2026-07-04T02:35:34Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-28T02:35:34Z",
+      "field_difference_count": 1,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1016000
+      },
+      "fields": [
+       "__OUTPUT__"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "reference": "PRE_BACKFILL_VINTAGE",
+   "policy": "E_CONSERVATIVE_FIXED_LAG",
+   "feature_family": "W30_CUMMAX_FEATURE_CLAIM",
+   "mode": "POISON",
+   "outcome": "SOURCE_VINTAGE_RISK",
+   "mismatch_attribution": {
+    "OBSERVATION_LIMITED_UNKNOWN": 39,
+    "SOURCE_VINTAGE_RISK": 1
+   },
+   "sessions_claimed": 1235,
+   "sessions_dropped_by_policy": 0,
+   "history_sessions_unverifiable": 1117,
+   "harness": {
+    "case_id": "RT-ETF-E_CONSERVATIVE_FIXED_LAG-W30_CUMMAX_FEATURE_CLAIM-POISON-PRE_BACKFILL_VINTAGE",
+    "records": 1261,
+    "record_kinds": {
+     "REVISION": 26,
+     "VALUE": 1235
+    },
+    "outputs_full": 1778,
+    "targets_tested": 73,
+    "output_comparisons": 123467,
+    "mismatch_count": 398,
+    "minimized_mismatch_count": 80,
+    "contaminating_lead_seconds": {
+     "min": 0,
+     "max": 1534400
+    },
+    "observed": "FAIL",
+    "classifications": [
+     "SOURCE_VINTAGE_RISK",
+     "TRUE_FUTURE_LEAKAGE"
+    ],
+    "first_mismatches": [
+     {
+      "target_utc": "2026-06-28T02:35:34Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-28T02:35:34Z",
+      "field_difference_count": 10,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1534400
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "flow_acceleration_3s_usd_millions",
+       "reversal_flag",
+       "rolling_net_flow_10s_usd_millions",
+       "rolling_net_flow_1s_usd_millions"
+      ]
+     },
+     {
+      "target_utc": "2026-07-01T02:35:34Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-28T02:35:34Z",
+      "field_difference_count": 10,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1275200
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "flow_acceleration_3s_usd_millions",
+       "reversal_flag",
+       "rolling_net_flow_10s_usd_millions",
+       "rolling_net_flow_1s_usd_millions"
+      ]
+     },
+     {
+      "target_utc": "2026-07-02T02:35:34Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-28T02:35:34Z",
+      "field_difference_count": 10,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1188800
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "flow_acceleration_3s_usd_millions",
+       "reversal_flag",
+       "rolling_net_flow_10s_usd_millions",
+       "rolling_net_flow_1s_usd_millions"
+      ]
+     },
+     {
+      "target_utc": "2026-07-03T02:35:34Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-28T02:35:34Z",
+      "field_difference_count": 10,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1102400
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "flow_acceleration_3s_usd_millions",
+       "reversal_flag",
+       "rolling_net_flow_10s_usd_millions",
+       "rolling_net_flow_1s_usd_millions"
+      ]
+     },
+     {
+      "target_utc": "2026-07-04T02:35:34Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-28T02:35:34Z",
+      "field_difference_count": 10,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1016000
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "flow_acceleration_3s_usd_millions",
+       "reversal_flag",
+       "rolling_net_flow_10s_usd_millions",
+       "rolling_net_flow_1s_usd_millions"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "reference": "PRE_BACKFILL_VINTAGE",
+   "policy": "E_CONSERVATIVE_FIXED_LAG",
+   "feature_family": "TRUTH_LAYER_PACK_BUILDER",
+   "mode": "TRUNCATE",
+   "outcome": "PASS",
+   "mismatch_attribution": {},
+   "sessions_claimed": 1235,
+   "sessions_dropped_by_policy": 0,
+   "history_sessions_unverifiable": 1117,
+   "harness": {
+    "case_id": "RT-ETF-E_CONSERVATIVE_FIXED_LAG-TRUTH_LAYER_PACK_BUILDER-TRUNCATE-PRE_BACKFILL_VINTAGE",
+    "records": 1261,
+    "record_kinds": {
+     "REVISION": 26,
+     "VALUE": 1235
+    },
+    "outputs_full": 1235,
+    "targets_tested": 8,
+    "output_comparisons": 14,
+    "mismatch_count": 0,
+    "minimized_mismatch_count": 0,
+    "contaminating_lead_seconds": null,
+    "observed": "PASS",
+    "classifications": [
+     "NO_ISSUE"
+    ],
+    "first_mismatches": []
+   }
+  },
+  {
+   "reference": "PRE_BACKFILL_VINTAGE",
+   "policy": "F_NEXT_TRADING_SESSION",
+   "feature_family": "W30_TRAILING_AND_DIVERGENCE",
+   "mode": "TRUNCATE",
+   "outcome": "SOURCE_VINTAGE_RISK",
+   "mismatch_attribution": {
+    "OBSERVATION_LIMITED_UNKNOWN": 38,
+    "SOURCE_VINTAGE_RISK": 2
+   },
+   "sessions_claimed": 1235,
+   "sessions_dropped_by_policy": 0,
+   "history_sessions_unverifiable": 1117,
+   "harness": {
+    "case_id": "RT-ETF-F_NEXT_TRADING_SESSION-W30_TRAILING_AND_DIVERGENCE-TRUNCATE-PRE_BACKFILL_VINTAGE",
+    "records": 1261,
+    "record_kinds": {
+     "REVISION": 26,
+     "VALUE": 1235
+    },
+    "outputs_full": 1778,
+    "targets_tested": 73,
+    "output_comparisons": 123470,
+    "mismatch_count": 414,
+    "minimized_mismatch_count": 80,
+    "contaminating_lead_seconds": {
+     "min": 7143,
+     "max": 1408735
+    },
+    "observed": "FAIL",
+    "classifications": [
+     "SOURCE_VINTAGE_RISK",
+     "TRUE_FUTURE_LEAKAGE"
+    ],
+    "first_mismatches": [
+     {
+      "target_utc": "2026-06-29T13:30:00Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-29T13:30:00Z",
+      "field_difference_count": 1,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1408735
+      },
+      "fields": [
+       "__OUTPUT__"
+      ]
+     },
+     {
+      "target_utc": "2026-06-30T13:30:00Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-29T13:30:00Z",
+      "field_difference_count": 1,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1322335
+      },
+      "fields": [
+       "__OUTPUT__"
+      ]
+     },
+     {
+      "target_utc": "2026-07-01T13:30:00Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-29T13:30:00Z",
+      "field_difference_count": 1,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1235935
+      },
+      "fields": [
+       "__OUTPUT__"
+      ]
+     },
+     {
+      "target_utc": "2026-07-02T13:30:00Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-29T13:30:00Z",
+      "field_difference_count": 1,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1149535
+      },
+      "fields": [
+       "__OUTPUT__"
+      ]
+     },
+     {
+      "target_utc": "2026-07-06T13:30:00Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-29T13:30:00Z",
+      "field_difference_count": 1,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 803935
+      },
+      "fields": [
+       "__OUTPUT__"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "reference": "PRE_BACKFILL_VINTAGE",
+   "policy": "F_NEXT_TRADING_SESSION",
+   "feature_family": "W30_TRAILING_AND_DIVERGENCE",
+   "mode": "POISON",
+   "outcome": "SOURCE_VINTAGE_RISK",
+   "mismatch_attribution": {
+    "OBSERVATION_LIMITED_UNKNOWN": 38,
+    "SOURCE_VINTAGE_RISK": 2
+   },
+   "sessions_claimed": 1235,
+   "sessions_dropped_by_policy": 0,
+   "history_sessions_unverifiable": 1117,
+   "harness": {
+    "case_id": "RT-ETF-F_NEXT_TRADING_SESSION-W30_TRAILING_AND_DIVERGENCE-POISON-PRE_BACKFILL_VINTAGE",
+    "records": 1261,
+    "record_kinds": {
+     "REVISION": 26,
+     "VALUE": 1235
+    },
+    "outputs_full": 1778,
+    "targets_tested": 73,
+    "output_comparisons": 123470,
+    "mismatch_count": 414,
+    "minimized_mismatch_count": 80,
+    "contaminating_lead_seconds": {
+     "min": 7143,
+     "max": 1408735
+    },
+    "observed": "FAIL",
+    "classifications": [
+     "SOURCE_VINTAGE_RISK",
+     "TRUE_FUTURE_LEAKAGE"
+    ],
+    "first_mismatches": [
+     {
+      "target_utc": "2026-06-29T13:30:00Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-29T13:30:00Z",
+      "field_difference_count": 10,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1408735
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "flow_acceleration_3s_usd_millions",
+       "reversal_flag",
+       "rolling_net_flow_10s_usd_millions",
+       "rolling_net_flow_1s_usd_millions"
+      ]
+     },
+     {
+      "target_utc": "2026-06-30T13:30:00Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-29T13:30:00Z",
+      "field_difference_count": 10,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1322335
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "flow_acceleration_3s_usd_millions",
+       "reversal_flag",
+       "rolling_net_flow_10s_usd_millions",
+       "rolling_net_flow_1s_usd_millions"
+      ]
+     },
+     {
+      "target_utc": "2026-07-01T13:30:00Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-29T13:30:00Z",
+      "field_difference_count": 10,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1235935
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "flow_acceleration_3s_usd_millions",
+       "reversal_flag",
+       "rolling_net_flow_10s_usd_millions",
+       "rolling_net_flow_1s_usd_millions"
+      ]
+     },
+     {
+      "target_utc": "2026-07-02T13:30:00Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-29T13:30:00Z",
+      "field_difference_count": 10,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1149535
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "flow_acceleration_3s_usd_millions",
+       "reversal_flag",
+       "rolling_net_flow_10s_usd_millions",
+       "rolling_net_flow_1s_usd_millions"
+      ]
+     },
+     {
+      "target_utc": "2026-07-06T13:30:00Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-29T13:30:00Z",
+      "field_difference_count": 10,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 803935
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "flow_acceleration_3s_usd_millions",
+       "reversal_flag",
+       "rolling_net_flow_10s_usd_millions",
+       "rolling_net_flow_1s_usd_millions"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "reference": "PRE_BACKFILL_VINTAGE",
+   "policy": "F_NEXT_TRADING_SESSION",
+   "feature_family": "W30_CUMMAX_FEATURE_CLAIM",
+   "mode": "TRUNCATE",
+   "outcome": "SOURCE_VINTAGE_RISK",
+   "mismatch_attribution": {
+    "OBSERVATION_LIMITED_UNKNOWN": 38,
+    "SOURCE_VINTAGE_RISK": 2
+   },
+   "sessions_claimed": 1235,
+   "sessions_dropped_by_policy": 0,
+   "history_sessions_unverifiable": 1117,
+   "harness": {
+    "case_id": "RT-ETF-F_NEXT_TRADING_SESSION-W30_CUMMAX_FEATURE_CLAIM-TRUNCATE-PRE_BACKFILL_VINTAGE",
+    "records": 1261,
+    "record_kinds": {
+     "REVISION": 26,
+     "VALUE": 1235
+    },
+    "outputs_full": 1778,
+    "targets_tested": 73,
+    "output_comparisons": 123470,
+    "mismatch_count": 414,
+    "minimized_mismatch_count": 80,
+    "contaminating_lead_seconds": {
+     "min": 7143,
+     "max": 1408735
+    },
+    "observed": "FAIL",
+    "classifications": [
+     "SOURCE_VINTAGE_RISK",
+     "TRUE_FUTURE_LEAKAGE"
+    ],
+    "first_mismatches": [
+     {
+      "target_utc": "2026-06-29T13:30:00Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-29T13:30:00Z",
+      "field_difference_count": 1,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1408735
+      },
+      "fields": [
+       "__OUTPUT__"
+      ]
+     },
+     {
+      "target_utc": "2026-06-30T13:30:00Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-29T13:30:00Z",
+      "field_difference_count": 1,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1322335
+      },
+      "fields": [
+       "__OUTPUT__"
+      ]
+     },
+     {
+      "target_utc": "2026-07-01T13:30:00Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-29T13:30:00Z",
+      "field_difference_count": 1,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1235935
+      },
+      "fields": [
+       "__OUTPUT__"
+      ]
+     },
+     {
+      "target_utc": "2026-07-02T13:30:00Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-29T13:30:00Z",
+      "field_difference_count": 1,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1149535
+      },
+      "fields": [
+       "__OUTPUT__"
+      ]
+     },
+     {
+      "target_utc": "2026-07-06T13:30:00Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-29T13:30:00Z",
+      "field_difference_count": 1,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 803935
+      },
+      "fields": [
+       "__OUTPUT__"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "reference": "PRE_BACKFILL_VINTAGE",
+   "policy": "F_NEXT_TRADING_SESSION",
+   "feature_family": "W30_CUMMAX_FEATURE_CLAIM",
+   "mode": "POISON",
+   "outcome": "SOURCE_VINTAGE_RISK",
+   "mismatch_attribution": {
+    "OBSERVATION_LIMITED_UNKNOWN": 38,
+    "SOURCE_VINTAGE_RISK": 2
+   },
+   "sessions_claimed": 1235,
+   "sessions_dropped_by_policy": 0,
+   "history_sessions_unverifiable": 1117,
+   "harness": {
+    "case_id": "RT-ETF-F_NEXT_TRADING_SESSION-W30_CUMMAX_FEATURE_CLAIM-POISON-PRE_BACKFILL_VINTAGE",
+    "records": 1261,
+    "record_kinds": {
+     "REVISION": 26,
+     "VALUE": 1235
+    },
+    "outputs_full": 1778,
+    "targets_tested": 73,
+    "output_comparisons": 123470,
+    "mismatch_count": 414,
+    "minimized_mismatch_count": 80,
+    "contaminating_lead_seconds": {
+     "min": 7143,
+     "max": 1408735
+    },
+    "observed": "FAIL",
+    "classifications": [
+     "SOURCE_VINTAGE_RISK",
+     "TRUE_FUTURE_LEAKAGE"
+    ],
+    "first_mismatches": [
+     {
+      "target_utc": "2026-06-29T13:30:00Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-29T13:30:00Z",
+      "field_difference_count": 10,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1408735
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "flow_acceleration_3s_usd_millions",
+       "reversal_flag",
+       "rolling_net_flow_10s_usd_millions",
+       "rolling_net_flow_1s_usd_millions"
+      ]
+     },
+     {
+      "target_utc": "2026-06-30T13:30:00Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-29T13:30:00Z",
+      "field_difference_count": 10,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1322335
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "flow_acceleration_3s_usd_millions",
+       "reversal_flag",
+       "rolling_net_flow_10s_usd_millions",
+       "rolling_net_flow_1s_usd_millions"
+      ]
+     },
+     {
+      "target_utc": "2026-07-01T13:30:00Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-29T13:30:00Z",
+      "field_difference_count": 10,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1235935
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "flow_acceleration_3s_usd_millions",
+       "reversal_flag",
+       "rolling_net_flow_10s_usd_millions",
+       "rolling_net_flow_1s_usd_millions"
+      ]
+     },
+     {
+      "target_utc": "2026-07-02T13:30:00Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-29T13:30:00Z",
+      "field_difference_count": 10,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1149535
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "flow_acceleration_3s_usd_millions",
+       "reversal_flag",
+       "rolling_net_flow_10s_usd_millions",
+       "rolling_net_flow_1s_usd_millions"
+      ]
+     },
+     {
+      "target_utc": "2026-07-06T13:30:00Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-29T13:30:00Z",
+      "field_difference_count": 10,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 803935
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "flow_acceleration_3s_usd_millions",
+       "reversal_flag",
+       "rolling_net_flow_10s_usd_millions",
+       "rolling_net_flow_1s_usd_millions"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "reference": "PRE_BACKFILL_VINTAGE",
+   "policy": "F_NEXT_TRADING_SESSION",
+   "feature_family": "TRUTH_LAYER_PACK_BUILDER",
+   "mode": "TRUNCATE",
+   "outcome": "UNKNOWN",
+   "mismatch_attribution": {
+    "OBSERVATION_LIMITED_UNKNOWN": 2
+   },
+   "sessions_claimed": 1235,
+   "sessions_dropped_by_policy": 0,
+   "history_sessions_unverifiable": 1117,
+   "harness": {
+    "case_id": "RT-ETF-F_NEXT_TRADING_SESSION-TRUTH_LAYER_PACK_BUILDER-TRUNCATE-PRE_BACKFILL_VINTAGE",
+    "records": 1261,
+    "record_kinds": {
+     "REVISION": 26,
+     "VALUE": 1235
+    },
+    "outputs_full": 1235,
+    "targets_tested": 8,
+    "output_comparisons": 14,
+    "mismatch_count": 2,
+    "minimized_mismatch_count": 2,
+    "contaminating_lead_seconds": {
+     "min": 7143,
+     "max": 7144
+    },
+    "observed": "FAIL",
+    "classifications": [
+     "TRUE_FUTURE_LEAKAGE"
+    ],
+    "first_mismatches": [
+     {
+      "target_utc": "2026-09-23T13:30:00Z",
+      "output_key": "BTC|2026-09-22",
+      "claimed_available_at_utc": "2026-09-23T13:30:00Z",
+      "field_difference_count": 1,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-09-22",
+       "kind": "VALUE",
+       "available_at_utc": "2026-09-23T15:29:03Z",
+       "lead_after_target_seconds": 7143
+      },
+      "fields": [
+       "__OUTPUT__"
+      ]
+     },
+     {
+      "target_utc": "2026-09-23T13:30:00Z",
+      "output_key": "ETH|2026-09-22",
+      "claimed_available_at_utc": "2026-09-23T13:30:00Z",
+      "field_difference_count": 1,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "ETH|2026-09-22",
+       "kind": "VALUE",
+       "available_at_utc": "2026-09-23T15:29:04Z",
+       "lead_after_target_seconds": 7144
+      },
+      "fields": [
+       "__OUTPUT__"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "reference": "LATEST_VINTAGE",
+   "policy": "A_SESSION_CLOSE",
+   "feature_family": "W30_TRAILING_AND_DIVERGENCE",
+   "mode": "TRUNCATE",
+   "outcome": "TRUE_FUTURE_LEAKAGE",
+   "mismatch_attribution": {
+    "OBSERVATION_LIMITED_UNKNOWN": 29,
+    "TRUE_FUTURE_LEAKAGE_PROVEN": 6,
+    "SOURCE_VINTAGE_RISK": 5
+   },
+   "sessions_claimed": 1235,
+   "sessions_dropped_by_policy": 0,
+   "history_sessions_unverifiable": 1117,
+   "harness": {
+    "case_id": "RT-ETF-A_SESSION_CLOSE-W30_TRAILING_AND_DIVERGENCE-TRUNCATE-LATEST_VINTAGE",
+    "records": 1274,
+    "record_kinds": {
+     "REVISION": 39,
+     "VALUE": 1235
+    },
+    "outputs_full": 1778,
+    "targets_tested": 74,
+    "output_comparisons": 125290,
+    "mismatch_count": 1923,
+    "minimized_mismatch_count": 80,
+    "contaminating_lead_seconds": {
+     "min": 2935,
+     "max": 3744282
+    },
+    "observed": "FAIL",
+    "classifications": [
+     "SOURCE_VINTAGE_RISK",
+     "TRUE_FUTURE_LEAKAGE"
+    ],
+    "first_mismatches": [
+     {
+      "target_utc": "2026-06-26T20:00:00Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-26T20:00:00Z",
+      "field_difference_count": 1,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1644535
+      },
+      "fields": [
+       "__OUTPUT__"
+      ]
+     },
+     {
+      "target_utc": "2026-06-29T20:00:00Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-26T20:00:00Z",
+      "field_difference_count": 1,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1385335
+      },
+      "fields": [
+       "__OUTPUT__"
+      ]
+     },
+     {
+      "target_utc": "2026-06-30T20:00:00Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-26T20:00:00Z",
+      "field_difference_count": 1,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1298935
+      },
+      "fields": [
+       "__OUTPUT__"
+      ]
+     },
+     {
+      "target_utc": "2026-07-01T20:00:00Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-26T20:00:00Z",
+      "field_difference_count": 1,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1212535
+      },
+      "fields": [
+       "__OUTPUT__"
+      ]
+     },
+     {
+      "target_utc": "2026-07-02T20:00:00Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-26T20:00:00Z",
+      "field_difference_count": 1,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1126135
+      },
+      "fields": [
+       "__OUTPUT__"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "reference": "LATEST_VINTAGE",
+   "policy": "A_SESSION_CLOSE",
+   "feature_family": "W30_TRAILING_AND_DIVERGENCE",
+   "mode": "POISON",
+   "outcome": "TRUE_FUTURE_LEAKAGE",
+   "mismatch_attribution": {
+    "OBSERVATION_LIMITED_UNKNOWN": 29,
+    "TRUE_FUTURE_LEAKAGE_PROVEN": 6,
+    "SOURCE_VINTAGE_RISK": 5
+   },
+   "sessions_claimed": 1235,
+   "sessions_dropped_by_policy": 0,
+   "history_sessions_unverifiable": 1117,
+   "harness": {
+    "case_id": "RT-ETF-A_SESSION_CLOSE-W30_TRAILING_AND_DIVERGENCE-POISON-LATEST_VINTAGE",
+    "records": 1274,
+    "record_kinds": {
+     "REVISION": 39,
+     "VALUE": 1235
+    },
+    "outputs_full": 1778,
+    "targets_tested": 74,
+    "output_comparisons": 125290,
+    "mismatch_count": 1923,
+    "minimized_mismatch_count": 80,
+    "contaminating_lead_seconds": {
+     "min": 2935,
+     "max": 3744282
+    },
+    "observed": "FAIL",
+    "classifications": [
+     "SOURCE_VINTAGE_RISK",
+     "TRUE_FUTURE_LEAKAGE"
+    ],
+    "first_mismatches": [
+     {
+      "target_utc": "2026-06-26T20:00:00Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-26T20:00:00Z",
+      "field_difference_count": 10,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1644535
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "flow_acceleration_3s_usd_millions",
+       "reversal_flag",
+       "rolling_net_flow_10s_usd_millions",
+       "rolling_net_flow_1s_usd_millions"
+      ]
+     },
+     {
+      "target_utc": "2026-06-29T20:00:00Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-26T20:00:00Z",
+      "field_difference_count": 10,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1385335
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "flow_acceleration_3s_usd_millions",
+       "reversal_flag",
+       "rolling_net_flow_10s_usd_millions",
+       "rolling_net_flow_1s_usd_millions"
+      ]
+     },
+     {
+      "target_utc": "2026-06-30T20:00:00Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-26T20:00:00Z",
+      "field_difference_count": 10,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1298935
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "flow_acceleration_3s_usd_millions",
+       "reversal_flag",
+       "rolling_net_flow_10s_usd_millions",
+       "rolling_net_flow_1s_usd_millions"
+      ]
+     },
+     {
+      "target_utc": "2026-07-01T20:00:00Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-26T20:00:00Z",
+      "field_difference_count": 10,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1212535
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "flow_acceleration_3s_usd_millions",
+       "reversal_flag",
+       "rolling_net_flow_10s_usd_millions",
+       "rolling_net_flow_1s_usd_millions"
+      ]
+     },
+     {
+      "target_utc": "2026-07-02T20:00:00Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-26T20:00:00Z",
+      "field_difference_count": 10,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1126135
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "flow_acceleration_3s_usd_millions",
+       "reversal_flag",
+       "rolling_net_flow_10s_usd_millions",
+       "rolling_net_flow_1s_usd_millions"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "reference": "LATEST_VINTAGE",
+   "policy": "A_SESSION_CLOSE",
+   "feature_family": "W30_CUMMAX_FEATURE_CLAIM",
+   "mode": "TRUNCATE",
+   "outcome": "TRUE_FUTURE_LEAKAGE",
+   "mismatch_attribution": {
+    "OBSERVATION_LIMITED_UNKNOWN": 29,
+    "TRUE_FUTURE_LEAKAGE_PROVEN": 6,
+    "SOURCE_VINTAGE_RISK": 5
+   },
+   "sessions_claimed": 1235,
+   "sessions_dropped_by_policy": 0,
+   "history_sessions_unverifiable": 1117,
+   "harness": {
+    "case_id": "RT-ETF-A_SESSION_CLOSE-W30_CUMMAX_FEATURE_CLAIM-TRUNCATE-LATEST_VINTAGE",
+    "records": 1274,
+    "record_kinds": {
+     "REVISION": 39,
+     "VALUE": 1235
+    },
+    "outputs_full": 1778,
+    "targets_tested": 74,
+    "output_comparisons": 125290,
+    "mismatch_count": 1923,
+    "minimized_mismatch_count": 80,
+    "contaminating_lead_seconds": {
+     "min": 2935,
+     "max": 3744282
+    },
+    "observed": "FAIL",
+    "classifications": [
+     "SOURCE_VINTAGE_RISK",
+     "TRUE_FUTURE_LEAKAGE"
+    ],
+    "first_mismatches": [
+     {
+      "target_utc": "2026-06-26T20:00:00Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-26T20:00:00Z",
+      "field_difference_count": 1,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1644535
+      },
+      "fields": [
+       "__OUTPUT__"
+      ]
+     },
+     {
+      "target_utc": "2026-06-29T20:00:00Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-26T20:00:00Z",
+      "field_difference_count": 1,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1385335
+      },
+      "fields": [
+       "__OUTPUT__"
+      ]
+     },
+     {
+      "target_utc": "2026-06-30T20:00:00Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-26T20:00:00Z",
+      "field_difference_count": 1,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1298935
+      },
+      "fields": [
+       "__OUTPUT__"
+      ]
+     },
+     {
+      "target_utc": "2026-07-01T20:00:00Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-26T20:00:00Z",
+      "field_difference_count": 1,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1212535
+      },
+      "fields": [
+       "__OUTPUT__"
+      ]
+     },
+     {
+      "target_utc": "2026-07-02T20:00:00Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-26T20:00:00Z",
+      "field_difference_count": 1,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1126135
+      },
+      "fields": [
+       "__OUTPUT__"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "reference": "LATEST_VINTAGE",
+   "policy": "A_SESSION_CLOSE",
+   "feature_family": "TRUTH_LAYER_PACK_BUILDER",
+   "mode": "TRUNCATE",
+   "outcome": "UNKNOWN",
+   "mismatch_attribution": {
+    "OBSERVATION_LIMITED_UNKNOWN": 2
+   },
+   "sessions_claimed": 1235,
+   "sessions_dropped_by_policy": 0,
+   "history_sessions_unverifiable": 1117,
+   "harness": {
+    "case_id": "RT-ETF-A_SESSION_CLOSE-TRUTH_LAYER_PACK_BUILDER-TRUNCATE-LATEST_VINTAGE",
+    "records": 1274,
+    "record_kinds": {
+     "REVISION": 39,
+     "VALUE": 1235
+    },
+    "outputs_full": 1235,
+    "targets_tested": 8,
+    "output_comparisons": 14,
+    "mismatch_count": 2,
+    "minimized_mismatch_count": 2,
+    "contaminating_lead_seconds": {
+     "min": 70143,
+     "max": 70144
+    },
+    "observed": "FAIL",
+    "classifications": [
+     "TRUE_FUTURE_LEAKAGE"
+    ],
+    "first_mismatches": [
+     {
+      "target_utc": "2026-09-22T20:00:00Z",
+      "output_key": "BTC|2026-09-22",
+      "claimed_available_at_utc": "2026-09-22T20:00:00Z",
+      "field_difference_count": 1,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-09-22",
+       "kind": "VALUE",
+       "available_at_utc": "2026-09-23T15:29:03Z",
+       "lead_after_target_seconds": 70143
+      },
+      "fields": [
+       "__OUTPUT__"
+      ]
+     },
+     {
+      "target_utc": "2026-09-22T20:00:00Z",
+      "output_key": "ETH|2026-09-22",
+      "claimed_available_at_utc": "2026-09-22T20:00:00Z",
+      "field_difference_count": 1,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "ETH|2026-09-22",
+       "kind": "VALUE",
+       "available_at_utc": "2026-09-23T15:29:04Z",
+       "lead_after_target_seconds": 70144
+      },
+      "fields": [
+       "__OUTPUT__"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "reference": "LATEST_VINTAGE",
+   "policy": "B_FIRST_OBSERVED",
+   "feature_family": "W30_TRAILING_AND_DIVERGENCE",
+   "mode": "TRUNCATE",
+   "outcome": "TRUE_FUTURE_LEAKAGE",
+   "mismatch_attribution": {
+    "SOURCE_VINTAGE_RISK": 37,
+    "TRUE_FUTURE_LEAKAGE_FEATURE_CLAIM_NON_MONOTONE": 3
+   },
+   "sessions_claimed": 118,
+   "sessions_dropped_by_policy": 1117,
+   "history_sessions_unverifiable": 0,
+   "harness": {
+    "case_id": "RT-ETF-B_FIRST_OBSERVED-W30_TRAILING_AND_DIVERGENCE-TRUNCATE-LATEST_VINTAGE",
+    "records": 157,
+    "record_kinds": {
+     "REVISION": 39,
+     "VALUE": 118
+    },
+    "outputs_full": 177,
+    "targets_tested": 51,
+    "output_comparisons": 5468,
+    "mismatch_count": 1232,
+    "minimized_mismatch_count": 80,
+    "contaminating_lead_seconds": {
+     "min": 0,
+     "max": 3818492
+    },
+    "observed": "FAIL",
+    "classifications": [
+     "SOURCE_VINTAGE_RISK",
+     "TRUE_FUTURE_LEAKAGE"
+    ],
+    "first_mismatches": [
+     {
+      "target_utc": "2026-07-17T03:41:48Z",
+      "output_key": "BTC|2026-07-16",
+      "claimed_available_at_utc": "2026-07-17T03:41:48Z",
+      "field_difference_count": 9,
+      "classification": "SOURCE_VINTAGE_RISK",
+      "first_contaminating_record": {
+       "key": "BTC|2026-07-16",
+       "kind": "REVISION",
+       "available_at_utc": "2026-07-17T06:34:00Z",
+       "lead_after_target_seconds": 10332
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "flow_acceleration_3s_usd_millions",
+       "issuer_concentration_abs_share",
+       "rolling_net_flow_10s_usd_millions",
+       "rolling_net_flow_1s_usd_millions"
+      ]
+     },
+     {
+      "target_utc": "2026-07-17T06:34:00Z",
+      "output_key": "BTC|2026-07-16",
+      "claimed_available_at_utc": "2026-07-17T03:41:48Z",
+      "field_difference_count": 6,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-07-15",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-20T03:55:40Z",
+       "lead_after_target_seconds": 249700
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "flow_acceleration_3s_usd_millions",
+       "rolling_net_flow_10s_usd_millions",
+       "rolling_net_flow_3s_usd_millions",
+       "rolling_net_flow_5s_usd_millions"
+      ]
+     },
+     {
+      "target_utc": "2026-07-19T20:00:33Z",
+      "output_key": "BTC|2026-07-16",
+      "claimed_available_at_utc": "2026-07-17T03:41:48Z",
+      "field_difference_count": 6,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-07-15",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-20T03:55:40Z",
+       "lead_after_target_seconds": 28507
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "flow_acceleration_3s_usd_millions",
+       "rolling_net_flow_10s_usd_millions",
+       "rolling_net_flow_3s_usd_millions",
+       "rolling_net_flow_5s_usd_millions"
+      ]
+     },
+     {
+      "target_utc": "2026-08-03T04:40:49Z",
+      "output_key": "BTC|2026-07-31",
+      "claimed_available_at_utc": "2026-08-03T04:40:49Z",
+      "field_difference_count": 9,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-07-27",
+       "kind": "VALUE",
+       "available_at_utc": "2026-08-10T10:47:32Z",
+       "lead_after_target_seconds": 626802
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "flow_acceleration_3s_usd_millions",
+       "reversal_flag",
+       "rolling_20s_complete",
+       "rolling_net_flow_10s_usd_millions"
+      ]
+     },
+     {
+      "target_utc": "2026-08-10T10:47:32Z",
+      "output_key": "DIV|2026-07-28",
+      "claimed_available_at_utc": "2026-08-10T10:47:32Z",
+      "field_difference_count": 2,
+      "classification": "SOURCE_VINTAGE_RISK",
+      "first_contaminating_record": {
+       "key": "ETH|2026-07-28",
+       "kind": "REVISION",
+       "available_at_utc": "2026-09-23T15:29:04Z",
+       "lead_after_target_seconds": 3818492
+      },
+      "fields": [
+       "btc_minus_eth_flow_usd_millions",
+       "total_usd_millions_eth"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "reference": "LATEST_VINTAGE",
+   "policy": "B_FIRST_OBSERVED",
+   "feature_family": "W30_TRAILING_AND_DIVERGENCE",
+   "mode": "POISON",
+   "outcome": "TRUE_FUTURE_LEAKAGE",
+   "mismatch_attribution": {
+    "SOURCE_VINTAGE_RISK": 37,
+    "TRUE_FUTURE_LEAKAGE_FEATURE_CLAIM_NON_MONOTONE": 3
+   },
+   "sessions_claimed": 118,
+   "sessions_dropped_by_policy": 1117,
+   "history_sessions_unverifiable": 0,
+   "harness": {
+    "case_id": "RT-ETF-B_FIRST_OBSERVED-W30_TRAILING_AND_DIVERGENCE-POISON-LATEST_VINTAGE",
+    "records": 157,
+    "record_kinds": {
+     "REVISION": 39,
+     "VALUE": 118
+    },
+    "outputs_full": 177,
+    "targets_tested": 51,
+    "output_comparisons": 5468,
+    "mismatch_count": 1232,
+    "minimized_mismatch_count": 80,
+    "contaminating_lead_seconds": {
+     "min": 0,
+     "max": 3818492
+    },
+    "observed": "FAIL",
+    "classifications": [
+     "SOURCE_VINTAGE_RISK",
+     "TRUE_FUTURE_LEAKAGE"
+    ],
+    "first_mismatches": [
+     {
+      "target_utc": "2026-07-17T03:41:48Z",
+      "output_key": "BTC|2026-07-16",
+      "claimed_available_at_utc": "2026-07-17T03:41:48Z",
+      "field_difference_count": 8,
+      "classification": "SOURCE_VINTAGE_RISK",
+      "first_contaminating_record": {
+       "key": "BTC|2026-07-16",
+       "kind": "REVISION",
+       "available_at_utc": "2026-07-17T06:34:00Z",
+       "lead_after_target_seconds": 10332
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "flow_acceleration_3s_usd_millions",
+       "issuer_concentration_abs_share",
+       "rolling_net_flow_10s_usd_millions",
+       "rolling_net_flow_1s_usd_millions"
+      ]
+     },
+     {
+      "target_utc": "2026-07-17T06:34:00Z",
+      "output_key": "BTC|2026-07-16",
+      "claimed_available_at_utc": "2026-07-17T03:41:48Z",
+      "field_difference_count": 4,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-07-15",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-20T03:55:40Z",
+       "lead_after_target_seconds": 249700
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "rolling_net_flow_10s_usd_millions",
+       "rolling_net_flow_3s_usd_millions",
+       "rolling_net_flow_5s_usd_millions"
+      ]
+     },
+     {
+      "target_utc": "2026-07-19T20:00:33Z",
+      "output_key": "BTC|2026-07-16",
+      "claimed_available_at_utc": "2026-07-17T03:41:48Z",
+      "field_difference_count": 4,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-07-15",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-20T03:55:40Z",
+       "lead_after_target_seconds": 28507
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "rolling_net_flow_10s_usd_millions",
+       "rolling_net_flow_3s_usd_millions",
+       "rolling_net_flow_5s_usd_millions"
+      ]
+     },
+     {
+      "target_utc": "2026-08-03T04:40:49Z",
+      "output_key": "BTC|2026-07-31",
+      "claimed_available_at_utc": "2026-08-03T04:40:49Z",
+      "field_difference_count": 6,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-07-27",
+       "kind": "VALUE",
+       "available_at_utc": "2026-08-10T10:47:32Z",
+       "lead_after_target_seconds": 626802
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "flow_acceleration_3s_usd_millions",
+       "rolling_net_flow_10s_usd_millions",
+       "rolling_net_flow_20s_usd_millions",
+       "rolling_net_flow_3s_usd_millions"
+      ]
+     },
+     {
+      "target_utc": "2026-08-10T10:47:32Z",
+      "output_key": "DIV|2026-07-28",
+      "claimed_available_at_utc": "2026-08-10T10:47:32Z",
+      "field_difference_count": 2,
+      "classification": "SOURCE_VINTAGE_RISK",
+      "first_contaminating_record": {
+       "key": "ETH|2026-07-28",
+       "kind": "REVISION",
+       "available_at_utc": "2026-09-23T15:29:04Z",
+       "lead_after_target_seconds": 3818492
+      },
+      "fields": [
+       "btc_minus_eth_flow_usd_millions",
+       "total_usd_millions_eth"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "reference": "LATEST_VINTAGE",
+   "policy": "B_FIRST_OBSERVED",
+   "feature_family": "W30_CUMMAX_FEATURE_CLAIM",
+   "mode": "TRUNCATE",
+   "outcome": "SOURCE_VINTAGE_RISK",
+   "mismatch_attribution": {
+    "SOURCE_VINTAGE_RISK": 40
+   },
+   "sessions_claimed": 118,
+   "sessions_dropped_by_policy": 1117,
+   "history_sessions_unverifiable": 0,
+   "harness": {
+    "case_id": "RT-ETF-B_FIRST_OBSERVED-W30_CUMMAX_FEATURE_CLAIM-TRUNCATE-LATEST_VINTAGE",
+    "records": 157,
+    "record_kinds": {
+     "REVISION": 39,
+     "VALUE": 118
+    },
+    "outputs_full": 177,
+    "targets_tested": 51,
+    "output_comparisons": 5453,
+    "mismatch_count": 1221,
+    "minimized_mismatch_count": 80,
+    "contaminating_lead_seconds": {
+     "min": 0,
+     "max": 3818492
+    },
+    "observed": "FAIL",
+    "classifications": [
+     "SOURCE_VINTAGE_RISK"
+    ],
+    "first_mismatches": [
+     {
+      "target_utc": "2026-08-10T10:47:32Z",
+      "output_key": "DIV|2026-07-28",
+      "claimed_available_at_utc": "2026-08-10T10:47:32Z",
+      "field_difference_count": 2,
+      "classification": "SOURCE_VINTAGE_RISK",
+      "first_contaminating_record": {
+       "key": "ETH|2026-07-28",
+       "kind": "REVISION",
+       "available_at_utc": "2026-09-23T15:29:04Z",
+       "lead_after_target_seconds": 3818492
+      },
+      "fields": [
+       "btc_minus_eth_flow_usd_millions",
+       "total_usd_millions_eth"
+      ]
+     },
+     {
+      "target_utc": "2026-08-11T03:08:48Z",
+      "output_key": "BTC|2026-08-10",
+      "claimed_available_at_utc": "2026-08-11T03:08:48Z",
+      "field_difference_count": 9,
+      "classification": "SOURCE_VINTAGE_RISK",
+      "first_contaminating_record": {
+       "key": "BTC|2026-08-10",
+       "kind": "REVISION",
+       "available_at_utc": "2026-08-11T07:24:21Z",
+       "lead_after_target_seconds": 15332
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "flow_acceleration_3s_usd_millions",
+       "issuer_concentration_abs_share",
+       "rolling_net_flow_10s_usd_millions",
+       "rolling_net_flow_1s_usd_millions"
+      ]
+     },
+     {
+      "target_utc": "2026-08-11T07:24:21Z",
+      "output_key": "DIV|2026-07-28",
+      "claimed_available_at_utc": "2026-08-10T10:47:32Z",
+      "field_difference_count": 2,
+      "classification": "SOURCE_VINTAGE_RISK",
+      "first_contaminating_record": {
+       "key": "ETH|2026-07-28",
+       "kind": "REVISION",
+       "available_at_utc": "2026-09-23T15:29:04Z",
+       "lead_after_target_seconds": 3744282
+      },
+      "fields": [
+       "btc_minus_eth_flow_usd_millions",
+       "total_usd_millions_eth"
+      ]
+     },
+     {
+      "target_utc": "2026-08-12T03:27:57Z",
+      "output_key": "BTC|2026-08-11",
+      "claimed_available_at_utc": "2026-08-12T03:27:57Z",
+      "field_difference_count": 11,
+      "classification": "SOURCE_VINTAGE_RISK",
+      "first_contaminating_record": {
+       "key": "BTC|2026-08-11",
+       "kind": "REVISION",
+       "available_at_utc": "2026-08-12T07:47:50Z",
+       "lead_after_target_seconds": 15592
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "flow_acceleration_3s_usd_millions",
+       "issuer_concentration_abs_share",
+       "reversal_flag",
+       "rolling_net_flow_10s_usd_millions"
+      ]
+     },
+     {
+      "target_utc": "2026-08-12T07:47:50Z",
+      "output_key": "DIV|2026-07-28",
+      "claimed_available_at_utc": "2026-08-10T10:47:32Z",
+      "field_difference_count": 2,
+      "classification": "SOURCE_VINTAGE_RISK",
+      "first_contaminating_record": {
+       "key": "ETH|2026-07-28",
+       "kind": "REVISION",
+       "available_at_utc": "2026-09-23T15:29:04Z",
+       "lead_after_target_seconds": 3656474
+      },
+      "fields": [
+       "btc_minus_eth_flow_usd_millions",
+       "total_usd_millions_eth"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "reference": "LATEST_VINTAGE",
+   "policy": "B_FIRST_OBSERVED",
+   "feature_family": "TRUTH_LAYER_PACK_BUILDER",
+   "mode": "TRUNCATE",
+   "outcome": "SOURCE_VINTAGE_RISK",
+   "mismatch_attribution": {
+    "SOURCE_VINTAGE_RISK": 4,
+    "NOT_MINIMIZED": 3
+   },
+   "sessions_claimed": 118,
+   "sessions_dropped_by_policy": 1117,
+   "history_sessions_unverifiable": 0,
+   "harness": {
+    "case_id": "RT-ETF-B_FIRST_OBSERVED-TRUTH_LAYER_PACK_BUILDER-TRUNCATE-LATEST_VINTAGE",
+    "records": 157,
+    "record_kinds": {
+     "REVISION": 39,
+     "VALUE": 118
+    },
+    "outputs_full": 118,
+    "targets_tested": 8,
+    "output_comparisons": 39,
+    "mismatch_count": 7,
+    "minimized_mismatch_count": 4,
+    "contaminating_lead_seconds": {
+     "min": 15592,
+     "max": 2348405
+    },
+    "observed": "FAIL",
+    "classifications": [
+     "SOURCE_VINTAGE_RISK"
+    ],
+    "first_mismatches": [
+     {
+      "target_utc": "2026-08-12T03:27:57Z",
+      "output_key": "BTC|2026-08-11",
+      "claimed_available_at_utc": "2026-08-12T03:27:57Z",
+      "field_difference_count": 21,
+      "classification": "SOURCE_VINTAGE_RISK",
+      "first_contaminating_record": {
+       "key": "BTC|2026-08-11",
+       "kind": "REVISION",
+       "available_at_utc": "2026-08-12T07:47:50Z",
+       "lead_after_target_seconds": 15592
+      },
+      "fields": [
+       "cumulative_total_flow_usd_m",
+       "flow_change_1s_usd_m",
+       "flow_mean_10s_usd_m",
+       "flow_mean_20s_usd_m",
+       "flow_mean_3s_usd_m"
+      ]
+     },
+     {
+      "target_utc": "2026-08-19T02:22:15Z",
+      "output_key": "BTC|2026-08-18",
+      "claimed_available_at_utc": "2026-08-19T02:22:15Z",
+      "field_difference_count": 16,
+      "classification": "SOURCE_VINTAGE_RISK",
+      "first_contaminating_record": {
+       "key": "BTC|2026-08-18",
+       "kind": "REVISION",
+       "available_at_utc": "2026-08-19T07:02:05Z",
+       "lead_after_target_seconds": 16789
+      },
+      "fields": [
+       "cumulative_total_flow_usd_m",
+       "flow_change_1s_usd_m",
+       "flow_mean_10s_usd_m",
+       "flow_mean_20s_usd_m",
+       "flow_mean_3s_usd_m"
+      ]
+     },
+     {
+      "target_utc": "2026-08-27T11:08:59Z",
+      "output_key": "ETH|2026-08-26",
+      "claimed_available_at_utc": "2026-08-27T11:08:59Z",
+      "field_difference_count": 8,
+      "classification": "SOURCE_VINTAGE_RISK",
+      "first_contaminating_record": {
+       "key": "ETH|2026-07-28",
+       "kind": "REVISION",
+       "available_at_utc": "2026-09-23T15:29:04Z",
+       "lead_after_target_seconds": 2348405
+      },
+      "fields": [
+       "cumulative_total_flow_usd_m",
+       "flow_mean_10s_usd_m",
+       "flow_mean_20s_usd_m",
+       "flow_mean_5s_usd_m",
+       "flow_sum_10s_usd_m"
+      ]
+     },
+     {
+      "target_utc": "2026-09-03T05:42:35Z",
+      "output_key": "ETH|2026-09-02",
+      "claimed_available_at_utc": "2026-09-03T05:42:35Z",
+      "field_difference_count": 11,
+      "classification": "SOURCE_VINTAGE_RISK",
+      "first_contaminating_record": {
+       "key": "ETH|2026-07-28",
+       "kind": "REVISION",
+       "available_at_utc": "2026-09-23T15:29:04Z",
+       "lead_after_target_seconds": 1763189
+      },
+      "fields": [
+       "cumulative_total_flow_usd_m",
+       "flow_change_1s_usd_m",
+       "flow_mean_10s_usd_m",
+       "flow_mean_20s_usd_m",
+       "flow_mean_3s_usd_m"
+      ]
+     },
+     {
+      "target_utc": "2026-09-12T05:53:50Z",
+      "output_key": "ETH|2026-09-11",
+      "claimed_available_at_utc": "2026-09-12T05:53:50Z",
+      "field_difference_count": 8,
+      "classification": "NOT_MINIMIZED",
+      "first_contaminating_record": null,
+      "fields": [
+       "cumulative_total_flow_usd_m",
+       "flow_mean_10s_usd_m",
+       "flow_mean_20s_usd_m",
+       "flow_mean_5s_usd_m",
+       "flow_sum_10s_usd_m"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "reference": "LATEST_VINTAGE",
+   "policy": "C_FIRST_COMPLETE_OBSERVED",
+   "feature_family": "W30_TRAILING_AND_DIVERGENCE",
+   "mode": "TRUNCATE",
+   "outcome": "TRUE_FUTURE_LEAKAGE",
+   "mismatch_attribution": {
+    "TRUE_FUTURE_LEAKAGE_FEATURE_CLAIM_NON_MONOTONE": 3,
+    "SOURCE_VINTAGE_RISK": 37
+   },
+   "sessions_claimed": 104,
+   "sessions_dropped_by_policy": 1131,
+   "history_sessions_unverifiable": 0,
+   "harness": {
+    "case_id": "RT-ETF-C_FIRST_COMPLETE_OBSERVED-W30_TRAILING_AND_DIVERGENCE-TRUNCATE-LATEST_VINTAGE",
+    "records": 143,
+    "record_kinds": {
+     "REVISION": 39,
+     "VALUE": 104
+    },
+    "outputs_full": 155,
+    "targets_tested": 37,
+    "output_comparisons": 3351,
+    "mismatch_count": 938,
+    "minimized_mismatch_count": 80,
+    "contaminating_lead_seconds": {
+     "min": 0,
+     "max": 3818492
+    },
+    "observed": "FAIL",
+    "classifications": [
+     "SOURCE_VINTAGE_RISK",
+     "TRUE_FUTURE_LEAKAGE"
+    ],
+    "first_mismatches": [
+     {
+      "target_utc": "2026-07-17T06:34:00Z",
+      "output_key": "BTC|2026-07-16",
+      "claimed_available_at_utc": "2026-07-17T06:34:00Z",
+      "field_difference_count": 5,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-07-15",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-20T03:55:40Z",
+       "lead_after_target_seconds": 249700
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "flow_acceleration_3s_usd_millions",
+       "rolling_net_flow_3s_usd_millions",
+       "rolling_net_flow_5s_usd_millions",
+       "signed_flow_streak_sessions"
+      ]
+     },
+     {
+      "target_utc": "2026-08-03T04:40:49Z",
+      "output_key": "BTC|2026-07-31",
+      "claimed_available_at_utc": "2026-08-03T04:40:49Z",
+      "field_difference_count": 7,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-07-28",
+       "kind": "VALUE",
+       "available_at_utc": "2026-08-10T10:47:32Z",
+       "lead_after_target_seconds": 626802
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "flow_acceleration_3s_usd_millions",
+       "reversal_flag",
+       "rolling_net_flow_10s_usd_millions",
+       "rolling_net_flow_3s_usd_millions"
+      ]
+     },
+     {
+      "target_utc": "2026-08-10T10:47:32Z",
+      "output_key": "DIV|2026-07-28",
+      "claimed_available_at_utc": "2026-08-10T10:47:32Z",
+      "field_difference_count": 2,
+      "classification": "SOURCE_VINTAGE_RISK",
+      "first_contaminating_record": {
+       "key": "ETH|2026-07-28",
+       "kind": "REVISION",
+       "available_at_utc": "2026-09-23T15:29:04Z",
+       "lead_after_target_seconds": 3818492
+      },
+      "fields": [
+       "btc_minus_eth_flow_usd_millions",
+       "total_usd_millions_eth"
+      ]
+     },
+     {
+      "target_utc": "2026-08-11T07:24:21Z",
+      "output_key": "DIV|2026-07-28",
+      "claimed_available_at_utc": "2026-08-10T10:47:32Z",
+      "field_difference_count": 2,
+      "classification": "SOURCE_VINTAGE_RISK",
+      "first_contaminating_record": {
+       "key": "ETH|2026-07-28",
+       "kind": "REVISION",
+       "available_at_utc": "2026-09-23T15:29:04Z",
+       "lead_after_target_seconds": 3744282
+      },
+      "fields": [
+       "btc_minus_eth_flow_usd_millions",
+       "total_usd_millions_eth"
+      ]
+     },
+     {
+      "target_utc": "2026-08-12T07:47:50Z",
+      "output_key": "DIV|2026-07-28",
+      "claimed_available_at_utc": "2026-08-10T10:47:32Z",
+      "field_difference_count": 2,
+      "classification": "SOURCE_VINTAGE_RISK",
+      "first_contaminating_record": {
+       "key": "ETH|2026-07-28",
+       "kind": "REVISION",
+       "available_at_utc": "2026-09-23T15:29:04Z",
+       "lead_after_target_seconds": 3656474
+      },
+      "fields": [
+       "btc_minus_eth_flow_usd_millions",
+       "total_usd_millions_eth"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "reference": "LATEST_VINTAGE",
+   "policy": "C_FIRST_COMPLETE_OBSERVED",
+   "feature_family": "W30_TRAILING_AND_DIVERGENCE",
+   "mode": "POISON",
+   "outcome": "TRUE_FUTURE_LEAKAGE",
+   "mismatch_attribution": {
+    "TRUE_FUTURE_LEAKAGE_FEATURE_CLAIM_NON_MONOTONE": 3,
+    "SOURCE_VINTAGE_RISK": 37
+   },
+   "sessions_claimed": 104,
+   "sessions_dropped_by_policy": 1131,
+   "history_sessions_unverifiable": 0,
+   "harness": {
+    "case_id": "RT-ETF-C_FIRST_COMPLETE_OBSERVED-W30_TRAILING_AND_DIVERGENCE-POISON-LATEST_VINTAGE",
+    "records": 143,
+    "record_kinds": {
+     "REVISION": 39,
+     "VALUE": 104
+    },
+    "outputs_full": 155,
+    "targets_tested": 37,
+    "output_comparisons": 3351,
+    "mismatch_count": 938,
+    "minimized_mismatch_count": 80,
+    "contaminating_lead_seconds": {
+     "min": 0,
+     "max": 3818492
+    },
+    "observed": "FAIL",
+    "classifications": [
+     "SOURCE_VINTAGE_RISK",
+     "TRUE_FUTURE_LEAKAGE"
+    ],
+    "first_mismatches": [
+     {
+      "target_utc": "2026-07-17T06:34:00Z",
+      "output_key": "BTC|2026-07-16",
+      "claimed_available_at_utc": "2026-07-17T06:34:00Z",
+      "field_difference_count": 3,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-07-15",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-20T03:55:40Z",
+       "lead_after_target_seconds": 249700
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "rolling_net_flow_3s_usd_millions",
+       "rolling_net_flow_5s_usd_millions"
+      ]
+     },
+     {
+      "target_utc": "2026-08-03T04:40:49Z",
+      "output_key": "BTC|2026-07-31",
+      "claimed_available_at_utc": "2026-08-03T04:40:49Z",
+      "field_difference_count": 5,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-07-28",
+       "kind": "VALUE",
+       "available_at_utc": "2026-08-10T10:47:32Z",
+       "lead_after_target_seconds": 626802
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "flow_acceleration_3s_usd_millions",
+       "rolling_net_flow_10s_usd_millions",
+       "rolling_net_flow_3s_usd_millions",
+       "rolling_net_flow_5s_usd_millions"
+      ]
+     },
+     {
+      "target_utc": "2026-08-10T10:47:32Z",
+      "output_key": "DIV|2026-07-28",
+      "claimed_available_at_utc": "2026-08-10T10:47:32Z",
+      "field_difference_count": 2,
+      "classification": "SOURCE_VINTAGE_RISK",
+      "first_contaminating_record": {
+       "key": "ETH|2026-07-28",
+       "kind": "REVISION",
+       "available_at_utc": "2026-09-23T15:29:04Z",
+       "lead_after_target_seconds": 3818492
+      },
+      "fields": [
+       "btc_minus_eth_flow_usd_millions",
+       "total_usd_millions_eth"
+      ]
+     },
+     {
+      "target_utc": "2026-08-11T07:24:21Z",
+      "output_key": "DIV|2026-07-28",
+      "claimed_available_at_utc": "2026-08-10T10:47:32Z",
+      "field_difference_count": 2,
+      "classification": "SOURCE_VINTAGE_RISK",
+      "first_contaminating_record": {
+       "key": "ETH|2026-07-28",
+       "kind": "REVISION",
+       "available_at_utc": "2026-09-23T15:29:04Z",
+       "lead_after_target_seconds": 3744282
+      },
+      "fields": [
+       "btc_minus_eth_flow_usd_millions",
+       "total_usd_millions_eth"
+      ]
+     },
+     {
+      "target_utc": "2026-08-12T07:47:50Z",
+      "output_key": "DIV|2026-07-28",
+      "claimed_available_at_utc": "2026-08-10T10:47:32Z",
+      "field_difference_count": 2,
+      "classification": "SOURCE_VINTAGE_RISK",
+      "first_contaminating_record": {
+       "key": "ETH|2026-07-28",
+       "kind": "REVISION",
+       "available_at_utc": "2026-09-23T15:29:04Z",
+       "lead_after_target_seconds": 3656474
+      },
+      "fields": [
+       "btc_minus_eth_flow_usd_millions",
+       "total_usd_millions_eth"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "reference": "LATEST_VINTAGE",
+   "policy": "C_FIRST_COMPLETE_OBSERVED",
+   "feature_family": "W30_CUMMAX_FEATURE_CLAIM",
+   "mode": "TRUNCATE",
+   "outcome": "SOURCE_VINTAGE_RISK",
+   "mismatch_attribution": {
+    "SOURCE_VINTAGE_RISK": 40
+   },
+   "sessions_claimed": 104,
+   "sessions_dropped_by_policy": 1131,
+   "history_sessions_unverifiable": 0,
+   "harness": {
+    "case_id": "RT-ETF-C_FIRST_COMPLETE_OBSERVED-W30_CUMMAX_FEATURE_CLAIM-TRUNCATE-LATEST_VINTAGE",
+    "records": 143,
+    "record_kinds": {
+     "REVISION": 39,
+     "VALUE": 104
+    },
+    "outputs_full": 155,
+    "targets_tested": 37,
+    "output_comparisons": 3341,
+    "mismatch_count": 935,
+    "minimized_mismatch_count": 80,
+    "contaminating_lead_seconds": {
+     "min": 0,
+     "max": 3818492
+    },
+    "observed": "FAIL",
+    "classifications": [
+     "SOURCE_VINTAGE_RISK"
+    ],
+    "first_mismatches": [
+     {
+      "target_utc": "2026-08-10T10:47:32Z",
+      "output_key": "DIV|2026-07-28",
+      "claimed_available_at_utc": "2026-08-10T10:47:32Z",
+      "field_difference_count": 2,
+      "classification": "SOURCE_VINTAGE_RISK",
+      "first_contaminating_record": {
+       "key": "ETH|2026-07-28",
+       "kind": "REVISION",
+       "available_at_utc": "2026-09-23T15:29:04Z",
+       "lead_after_target_seconds": 3818492
+      },
+      "fields": [
+       "btc_minus_eth_flow_usd_millions",
+       "total_usd_millions_eth"
+      ]
+     },
+     {
+      "target_utc": "2026-08-11T07:24:21Z",
+      "output_key": "DIV|2026-07-28",
+      "claimed_available_at_utc": "2026-08-10T10:47:32Z",
+      "field_difference_count": 2,
+      "classification": "SOURCE_VINTAGE_RISK",
+      "first_contaminating_record": {
+       "key": "ETH|2026-07-28",
+       "kind": "REVISION",
+       "available_at_utc": "2026-09-23T15:29:04Z",
+       "lead_after_target_seconds": 3744282
+      },
+      "fields": [
+       "btc_minus_eth_flow_usd_millions",
+       "total_usd_millions_eth"
+      ]
+     },
+     {
+      "target_utc": "2026-08-12T07:47:50Z",
+      "output_key": "DIV|2026-07-28",
+      "claimed_available_at_utc": "2026-08-10T10:47:32Z",
+      "field_difference_count": 2,
+      "classification": "SOURCE_VINTAGE_RISK",
+      "first_contaminating_record": {
+       "key": "ETH|2026-07-28",
+       "kind": "REVISION",
+       "available_at_utc": "2026-09-23T15:29:04Z",
+       "lead_after_target_seconds": 3656474
+      },
+      "fields": [
+       "btc_minus_eth_flow_usd_millions",
+       "total_usd_millions_eth"
+      ]
+     },
+     {
+      "target_utc": "2026-08-13T07:49:09Z",
+      "output_key": "DIV|2026-07-28",
+      "claimed_available_at_utc": "2026-08-10T10:47:32Z",
+      "field_difference_count": 2,
+      "classification": "SOURCE_VINTAGE_RISK",
+      "first_contaminating_record": {
+       "key": "ETH|2026-07-28",
+       "kind": "REVISION",
+       "available_at_utc": "2026-09-23T15:29:04Z",
+       "lead_after_target_seconds": 3569994
+      },
+      "fields": [
+       "btc_minus_eth_flow_usd_millions",
+       "total_usd_millions_eth"
+      ]
+     },
+     {
+      "target_utc": "2026-08-14T07:47:15Z",
+      "output_key": "DIV|2026-07-28",
+      "claimed_available_at_utc": "2026-08-10T10:47:32Z",
+      "field_difference_count": 2,
+      "classification": "SOURCE_VINTAGE_RISK",
+      "first_contaminating_record": {
+       "key": "ETH|2026-07-28",
+       "kind": "REVISION",
+       "available_at_utc": "2026-09-23T15:29:04Z",
+       "lead_after_target_seconds": 3483708
+      },
+      "fields": [
+       "btc_minus_eth_flow_usd_millions",
+       "total_usd_millions_eth"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "reference": "LATEST_VINTAGE",
+   "policy": "C_FIRST_COMPLETE_OBSERVED",
+   "feature_family": "TRUTH_LAYER_PACK_BUILDER",
+   "mode": "TRUNCATE",
+   "outcome": "SOURCE_VINTAGE_RISK",
+   "mismatch_attribution": {
+    "SOURCE_VINTAGE_RISK": 4,
+    "NOT_MINIMIZED": 1
+   },
+   "sessions_claimed": 104,
+   "sessions_dropped_by_policy": 1131,
+   "history_sessions_unverifiable": 0,
+   "harness": {
+    "case_id": "RT-ETF-C_FIRST_COMPLETE_OBSERVED-TRUTH_LAYER_PACK_BUILDER-TRUNCATE-LATEST_VINTAGE",
+    "records": 143,
+    "record_kinds": {
+     "REVISION": 39,
+     "VALUE": 104
+    },
+    "outputs_full": 104,
+    "targets_tested": 8,
+    "output_comparisons": 18,
+    "mismatch_count": 5,
+    "minimized_mismatch_count": 4,
+    "contaminating_lead_seconds": {
+     "min": 1676470,
+     "max": 3569994
+    },
+    "observed": "FAIL",
+    "classifications": [
+     "SOURCE_VINTAGE_RISK"
+    ],
+    "first_mismatches": [
+     {
+      "target_utc": "2026-08-13T07:49:09Z",
+      "output_key": "ETH|2026-08-12",
+      "claimed_available_at_utc": "2026-08-13T07:49:09Z",
+      "field_difference_count": 6,
+      "classification": "SOURCE_VINTAGE_RISK",
+      "first_contaminating_record": {
+       "key": "ETH|2026-07-28",
+       "kind": "REVISION",
+       "available_at_utc": "2026-09-23T15:29:04Z",
+       "lead_after_target_seconds": 3569994
+      },
+      "fields": [
+       "cumulative_total_flow_usd_m",
+       "flow_mean_10s_usd_m",
+       "flow_mean_20s_usd_m",
+       "flow_sum_10s_usd_m",
+       "flow_sum_20s_usd_m"
+      ]
+     },
+     {
+      "target_utc": "2026-08-21T02:35:35Z",
+      "output_key": "ETH|2026-08-19",
+      "claimed_available_at_utc": "2026-08-21T02:35:35Z",
+      "field_difference_count": 12,
+      "classification": "SOURCE_VINTAGE_RISK",
+      "first_contaminating_record": {
+       "key": "ETH|2026-07-28",
+       "kind": "REVISION",
+       "available_at_utc": "2026-09-23T15:29:04Z",
+       "lead_after_target_seconds": 2897609
+      },
+      "fields": [
+       "cumulative_total_flow_usd_m",
+       "flow_change_1s_usd_m",
+       "flow_mean_10s_usd_m",
+       "flow_mean_20s_usd_m",
+       "flow_mean_3s_usd_m"
+      ]
+     },
+     {
+      "target_utc": "2026-08-28T12:41:59Z",
+      "output_key": "ETH|2026-08-27",
+      "claimed_available_at_utc": "2026-08-28T12:41:59Z",
+      "field_difference_count": 12,
+      "classification": "SOURCE_VINTAGE_RISK",
+      "first_contaminating_record": {
+       "key": "ETH|2026-07-28",
+       "kind": "REVISION",
+       "available_at_utc": "2026-09-23T15:29:04Z",
+       "lead_after_target_seconds": 2256425
+      },
+      "fields": [
+       "cumulative_total_flow_usd_m",
+       "flow_change_1s_usd_m",
+       "flow_mean_10s_usd_m",
+       "flow_mean_20s_usd_m",
+       "flow_mean_3s_usd_m"
+      ]
+     },
+     {
+      "target_utc": "2026-09-04T05:47:54Z",
+      "output_key": "ETH|2026-09-03",
+      "claimed_available_at_utc": "2026-09-04T05:47:54Z",
+      "field_difference_count": 10,
+      "classification": "SOURCE_VINTAGE_RISK",
+      "first_contaminating_record": {
+       "key": "ETH|2026-07-28",
+       "kind": "REVISION",
+       "available_at_utc": "2026-09-23T15:29:04Z",
+       "lead_after_target_seconds": 1676470
+      },
+      "fields": [
+       "cumulative_total_flow_usd_m",
+       "flow_mean_10s_usd_m",
+       "flow_mean_20s_usd_m",
+       "flow_mean_3s_usd_m",
+       "flow_mean_5s_usd_m"
+      ]
+     },
+     {
+      "target_utc": "2026-09-12T05:53:50Z",
+      "output_key": "ETH|2026-09-11",
+      "claimed_available_at_utc": "2026-09-12T05:53:50Z",
+      "field_difference_count": 8,
+      "classification": "NOT_MINIMIZED",
+      "first_contaminating_record": null,
+      "fields": [
+       "cumulative_total_flow_usd_m",
+       "flow_mean_10s_usd_m",
+       "flow_mean_20s_usd_m",
+       "flow_mean_5s_usd_m",
+       "flow_sum_10s_usd_m"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "reference": "LATEST_VINTAGE",
+   "policy": "D_FIRST_VERIFIED_FINAL_OBSERVED",
+   "feature_family": "W30_TRAILING_AND_DIVERGENCE",
+   "mode": "TRUNCATE",
+   "outcome": "SOURCE_VINTAGE_RISK",
+   "mismatch_attribution": {
+    "SOURCE_VINTAGE_RISK": 40
+   },
+   "sessions_claimed": 74,
+   "sessions_dropped_by_policy": 1161,
+   "history_sessions_unverifiable": 0,
+   "harness": {
+    "case_id": "RT-ETF-D_FIRST_VERIFIED_FINAL_OBSERVED-W30_TRAILING_AND_DIVERGENCE-TRUNCATE-LATEST_VINTAGE",
+    "records": 112,
+    "record_kinds": {
+     "REVISION": 38,
+     "VALUE": 74
+    },
+    "outputs_full": 111,
+    "targets_tested": 37,
+    "output_comparisons": 2559,
+    "mismatch_count": 1103,
+    "minimized_mismatch_count": 80,
+    "contaminating_lead_seconds": {
+     "min": 69670,
+     "max": 3818492
+    },
+    "observed": "FAIL",
+    "classifications": [
+     "SOURCE_VINTAGE_RISK"
+    ],
+    "first_mismatches": [
+     {
+      "target_utc": "2026-08-10T10:47:32Z",
+      "output_key": "DIV|2026-07-28",
+      "claimed_available_at_utc": "2026-08-10T10:47:32Z",
+      "field_difference_count": 2,
+      "classification": "SOURCE_VINTAGE_RISK",
+      "first_contaminating_record": {
+       "key": "ETH|2026-07-28",
+       "kind": "REVISION",
+       "available_at_utc": "2026-09-23T15:29:04Z",
+       "lead_after_target_seconds": 3818492
+      },
+      "fields": [
+       "btc_minus_eth_flow_usd_millions",
+       "total_usd_millions_eth"
+      ]
+     },
+     {
+      "target_utc": "2026-08-11T07:24:21Z",
+      "output_key": "DIV|2026-07-28",
+      "claimed_available_at_utc": "2026-08-10T10:47:32Z",
+      "field_difference_count": 2,
+      "classification": "SOURCE_VINTAGE_RISK",
+      "first_contaminating_record": {
+       "key": "ETH|2026-07-28",
+       "kind": "REVISION",
+       "available_at_utc": "2026-09-23T15:29:04Z",
+       "lead_after_target_seconds": 3744282
+      },
+      "fields": [
+       "btc_minus_eth_flow_usd_millions",
+       "total_usd_millions_eth"
+      ]
+     },
+     {
+      "target_utc": "2026-08-12T07:47:50Z",
+      "output_key": "DIV|2026-07-28",
+      "claimed_available_at_utc": "2026-08-10T10:47:32Z",
+      "field_difference_count": 2,
+      "classification": "SOURCE_VINTAGE_RISK",
+      "first_contaminating_record": {
+       "key": "ETH|2026-07-28",
+       "kind": "REVISION",
+       "available_at_utc": "2026-09-23T15:29:04Z",
+       "lead_after_target_seconds": 3656474
+      },
+      "fields": [
+       "btc_minus_eth_flow_usd_millions",
+       "total_usd_millions_eth"
+      ]
+     },
+     {
+      "target_utc": "2026-08-13T07:49:09Z",
+      "output_key": "DIV|2026-07-28",
+      "claimed_available_at_utc": "2026-08-10T10:47:32Z",
+      "field_difference_count": 2,
+      "classification": "SOURCE_VINTAGE_RISK",
+      "first_contaminating_record": {
+       "key": "ETH|2026-07-28",
+       "kind": "REVISION",
+       "available_at_utc": "2026-09-23T15:29:04Z",
+       "lead_after_target_seconds": 3569994
+      },
+      "fields": [
+       "btc_minus_eth_flow_usd_millions",
+       "total_usd_millions_eth"
+      ]
+     },
+     {
+      "target_utc": "2026-08-14T07:47:15Z",
+      "output_key": "DIV|2026-07-28",
+      "claimed_available_at_utc": "2026-08-10T10:47:32Z",
+      "field_difference_count": 2,
+      "classification": "SOURCE_VINTAGE_RISK",
+      "first_contaminating_record": {
+       "key": "ETH|2026-07-28",
+       "kind": "REVISION",
+       "available_at_utc": "2026-09-23T15:29:04Z",
+       "lead_after_target_seconds": 3483708
+      },
+      "fields": [
+       "btc_minus_eth_flow_usd_millions",
+       "total_usd_millions_eth"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "reference": "LATEST_VINTAGE",
+   "policy": "D_FIRST_VERIFIED_FINAL_OBSERVED",
+   "feature_family": "W30_TRAILING_AND_DIVERGENCE",
+   "mode": "POISON",
+   "outcome": "SOURCE_VINTAGE_RISK",
+   "mismatch_attribution": {
+    "SOURCE_VINTAGE_RISK": 40
+   },
+   "sessions_claimed": 74,
+   "sessions_dropped_by_policy": 1161,
+   "history_sessions_unverifiable": 0,
+   "harness": {
+    "case_id": "RT-ETF-D_FIRST_VERIFIED_FINAL_OBSERVED-W30_TRAILING_AND_DIVERGENCE-POISON-LATEST_VINTAGE",
+    "records": 112,
+    "record_kinds": {
+     "REVISION": 38,
+     "VALUE": 74
+    },
+    "outputs_full": 111,
+    "targets_tested": 37,
+    "output_comparisons": 2559,
+    "mismatch_count": 1103,
+    "minimized_mismatch_count": 80,
+    "contaminating_lead_seconds": {
+     "min": 69670,
+     "max": 3818492
+    },
+    "observed": "FAIL",
+    "classifications": [
+     "SOURCE_VINTAGE_RISK"
+    ],
+    "first_mismatches": [
+     {
+      "target_utc": "2026-08-10T10:47:32Z",
+      "output_key": "DIV|2026-07-28",
+      "claimed_available_at_utc": "2026-08-10T10:47:32Z",
+      "field_difference_count": 2,
+      "classification": "SOURCE_VINTAGE_RISK",
+      "first_contaminating_record": {
+       "key": "ETH|2026-07-28",
+       "kind": "REVISION",
+       "available_at_utc": "2026-09-23T15:29:04Z",
+       "lead_after_target_seconds": 3818492
+      },
+      "fields": [
+       "btc_minus_eth_flow_usd_millions",
+       "total_usd_millions_eth"
+      ]
+     },
+     {
+      "target_utc": "2026-08-11T07:24:21Z",
+      "output_key": "DIV|2026-07-28",
+      "claimed_available_at_utc": "2026-08-10T10:47:32Z",
+      "field_difference_count": 2,
+      "classification": "SOURCE_VINTAGE_RISK",
+      "first_contaminating_record": {
+       "key": "ETH|2026-07-28",
+       "kind": "REVISION",
+       "available_at_utc": "2026-09-23T15:29:04Z",
+       "lead_after_target_seconds": 3744282
+      },
+      "fields": [
+       "btc_minus_eth_flow_usd_millions",
+       "total_usd_millions_eth"
+      ]
+     },
+     {
+      "target_utc": "2026-08-12T07:47:50Z",
+      "output_key": "DIV|2026-07-28",
+      "claimed_available_at_utc": "2026-08-10T10:47:32Z",
+      "field_difference_count": 2,
+      "classification": "SOURCE_VINTAGE_RISK",
+      "first_contaminating_record": {
+       "key": "ETH|2026-07-28",
+       "kind": "REVISION",
+       "available_at_utc": "2026-09-23T15:29:04Z",
+       "lead_after_target_seconds": 3656474
+      },
+      "fields": [
+       "btc_minus_eth_flow_usd_millions",
+       "total_usd_millions_eth"
+      ]
+     },
+     {
+      "target_utc": "2026-08-13T07:49:09Z",
+      "output_key": "DIV|2026-07-28",
+      "claimed_available_at_utc": "2026-08-10T10:47:32Z",
+      "field_difference_count": 2,
+      "classification": "SOURCE_VINTAGE_RISK",
+      "first_contaminating_record": {
+       "key": "ETH|2026-07-28",
+       "kind": "REVISION",
+       "available_at_utc": "2026-09-23T15:29:04Z",
+       "lead_after_target_seconds": 3569994
+      },
+      "fields": [
+       "btc_minus_eth_flow_usd_millions",
+       "total_usd_millions_eth"
+      ]
+     },
+     {
+      "target_utc": "2026-08-14T07:47:15Z",
+      "output_key": "DIV|2026-07-28",
+      "claimed_available_at_utc": "2026-08-10T10:47:32Z",
+      "field_difference_count": 2,
+      "classification": "SOURCE_VINTAGE_RISK",
+      "first_contaminating_record": {
+       "key": "ETH|2026-07-28",
+       "kind": "REVISION",
+       "available_at_utc": "2026-09-23T15:29:04Z",
+       "lead_after_target_seconds": 3483708
+      },
+      "fields": [
+       "btc_minus_eth_flow_usd_millions",
+       "total_usd_millions_eth"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "reference": "LATEST_VINTAGE",
+   "policy": "D_FIRST_VERIFIED_FINAL_OBSERVED",
+   "feature_family": "W30_CUMMAX_FEATURE_CLAIM",
+   "mode": "TRUNCATE",
+   "outcome": "SOURCE_VINTAGE_RISK",
+   "mismatch_attribution": {
+    "SOURCE_VINTAGE_RISK": 40
+   },
+   "sessions_claimed": 74,
+   "sessions_dropped_by_policy": 1161,
+   "history_sessions_unverifiable": 0,
+   "harness": {
+    "case_id": "RT-ETF-D_FIRST_VERIFIED_FINAL_OBSERVED-W30_CUMMAX_FEATURE_CLAIM-TRUNCATE-LATEST_VINTAGE",
+    "records": 112,
+    "record_kinds": {
+     "REVISION": 38,
+     "VALUE": 74
+    },
+    "outputs_full": 111,
+    "targets_tested": 37,
+    "output_comparisons": 2559,
+    "mismatch_count": 1103,
+    "minimized_mismatch_count": 80,
+    "contaminating_lead_seconds": {
+     "min": 69670,
+     "max": 3818492
+    },
+    "observed": "FAIL",
+    "classifications": [
+     "SOURCE_VINTAGE_RISK"
+    ],
+    "first_mismatches": [
+     {
+      "target_utc": "2026-08-10T10:47:32Z",
+      "output_key": "DIV|2026-07-28",
+      "claimed_available_at_utc": "2026-08-10T10:47:32Z",
+      "field_difference_count": 2,
+      "classification": "SOURCE_VINTAGE_RISK",
+      "first_contaminating_record": {
+       "key": "ETH|2026-07-28",
+       "kind": "REVISION",
+       "available_at_utc": "2026-09-23T15:29:04Z",
+       "lead_after_target_seconds": 3818492
+      },
+      "fields": [
+       "btc_minus_eth_flow_usd_millions",
+       "total_usd_millions_eth"
+      ]
+     },
+     {
+      "target_utc": "2026-08-11T07:24:21Z",
+      "output_key": "DIV|2026-07-28",
+      "claimed_available_at_utc": "2026-08-10T10:47:32Z",
+      "field_difference_count": 2,
+      "classification": "SOURCE_VINTAGE_RISK",
+      "first_contaminating_record": {
+       "key": "ETH|2026-07-28",
+       "kind": "REVISION",
+       "available_at_utc": "2026-09-23T15:29:04Z",
+       "lead_after_target_seconds": 3744282
+      },
+      "fields": [
+       "btc_minus_eth_flow_usd_millions",
+       "total_usd_millions_eth"
+      ]
+     },
+     {
+      "target_utc": "2026-08-12T07:47:50Z",
+      "output_key": "DIV|2026-07-28",
+      "claimed_available_at_utc": "2026-08-10T10:47:32Z",
+      "field_difference_count": 2,
+      "classification": "SOURCE_VINTAGE_RISK",
+      "first_contaminating_record": {
+       "key": "ETH|2026-07-28",
+       "kind": "REVISION",
+       "available_at_utc": "2026-09-23T15:29:04Z",
+       "lead_after_target_seconds": 3656474
+      },
+      "fields": [
+       "btc_minus_eth_flow_usd_millions",
+       "total_usd_millions_eth"
+      ]
+     },
+     {
+      "target_utc": "2026-08-13T07:49:09Z",
+      "output_key": "DIV|2026-07-28",
+      "claimed_available_at_utc": "2026-08-10T10:47:32Z",
+      "field_difference_count": 2,
+      "classification": "SOURCE_VINTAGE_RISK",
+      "first_contaminating_record": {
+       "key": "ETH|2026-07-28",
+       "kind": "REVISION",
+       "available_at_utc": "2026-09-23T15:29:04Z",
+       "lead_after_target_seconds": 3569994
+      },
+      "fields": [
+       "btc_minus_eth_flow_usd_millions",
+       "total_usd_millions_eth"
+      ]
+     },
+     {
+      "target_utc": "2026-08-14T07:47:15Z",
+      "output_key": "DIV|2026-07-28",
+      "claimed_available_at_utc": "2026-08-10T10:47:32Z",
+      "field_difference_count": 2,
+      "classification": "SOURCE_VINTAGE_RISK",
+      "first_contaminating_record": {
+       "key": "ETH|2026-07-28",
+       "kind": "REVISION",
+       "available_at_utc": "2026-09-23T15:29:04Z",
+       "lead_after_target_seconds": 3483708
+      },
+      "fields": [
+       "btc_minus_eth_flow_usd_millions",
+       "total_usd_millions_eth"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "reference": "LATEST_VINTAGE",
+   "policy": "D_FIRST_VERIFIED_FINAL_OBSERVED",
+   "feature_family": "TRUTH_LAYER_PACK_BUILDER",
+   "mode": "TRUNCATE",
+   "outcome": "SOURCE_VINTAGE_RISK",
+   "mismatch_attribution": {
+    "SOURCE_VINTAGE_RISK": 4,
+    "NOT_MINIMIZED": 13
+   },
+   "sessions_claimed": 74,
+   "sessions_dropped_by_policy": 1161,
+   "history_sessions_unverifiable": 0,
+   "harness": {
+    "case_id": "RT-ETF-D_FIRST_VERIFIED_FINAL_OBSERVED-TRUTH_LAYER_PACK_BUILDER-TRUNCATE-LATEST_VINTAGE",
+    "records": 112,
+    "record_kinds": {
+     "REVISION": 38,
+     "VALUE": 74
+    },
+    "outputs_full": 74,
+    "targets_tested": 8,
+    "output_comparisons": 34,
+    "mismatch_count": 17,
+    "minimized_mismatch_count": 4,
+    "contaminating_lead_seconds": {
+     "min": 70341,
+     "max": 3818492
+    },
+    "observed": "FAIL",
+    "classifications": [
+     "SOURCE_VINTAGE_RISK"
+    ],
+    "first_mismatches": [
+     {
+      "target_utc": "2026-08-10T10:47:32Z",
+      "output_key": "ETH|2026-07-28",
+      "claimed_available_at_utc": "2026-08-10T10:47:32Z",
+      "field_difference_count": 11,
+      "classification": "SOURCE_VINTAGE_RISK",
+      "first_contaminating_record": {
+       "key": "ETH|2026-07-28",
+       "kind": "REVISION",
+       "available_at_utc": "2026-09-23T15:29:04Z",
+       "lead_after_target_seconds": 3818492
+      },
+      "fields": [
+       "cumulative_total_flow_usd_m",
+       "flow_change_1s_usd_m",
+       "flow_mean_10s_usd_m",
+       "flow_mean_20s_usd_m",
+       "flow_mean_3s_usd_m"
+      ]
+     },
+     {
+      "target_utc": "2026-08-14T07:47:15Z",
+      "output_key": "ETH|2026-08-13",
+      "claimed_available_at_utc": "2026-08-14T07:47:15Z",
+      "field_difference_count": 12,
+      "classification": "SOURCE_VINTAGE_RISK",
+      "first_contaminating_record": {
+       "key": "ETH|2026-07-28",
+       "kind": "REVISION",
+       "available_at_utc": "2026-09-23T15:29:04Z",
+       "lead_after_target_seconds": 3483708
+      },
+      "fields": [
+       "cumulative_total_flow_usd_m",
+       "flow_change_1s_usd_m",
+       "flow_mean_10s_usd_m",
+       "flow_mean_20s_usd_m",
+       "flow_mean_3s_usd_m"
+      ]
+     },
+     {
+      "target_utc": "2026-08-20T07:03:14Z",
+      "output_key": "BTC|2026-08-19",
+      "claimed_available_at_utc": "2026-08-20T07:03:14Z",
+      "field_difference_count": 17,
+      "classification": "SOURCE_VINTAGE_RISK",
+      "first_contaminating_record": {
+       "key": "BTC|2026-08-19",
+       "kind": "REVISION",
+       "available_at_utc": "2026-08-21T02:35:35Z",
+       "lead_after_target_seconds": 70341
+      },
+      "fields": [
+       "cumulative_total_flow_usd_m",
+       "flow_change_1s_usd_m",
+       "flow_mean_10s_usd_m",
+       "flow_mean_20s_usd_m",
+       "flow_mean_3s_usd_m"
+      ]
+     },
+     {
+      "target_utc": "2026-08-26T07:05:16Z",
+      "output_key": "ETH|2026-08-25",
+      "claimed_available_at_utc": "2026-08-26T07:05:16Z",
+      "field_difference_count": 10,
+      "classification": "SOURCE_VINTAGE_RISK",
+      "first_contaminating_record": {
+       "key": "ETH|2026-07-28",
+       "kind": "REVISION",
+       "available_at_utc": "2026-09-23T15:29:04Z",
+       "lead_after_target_seconds": 2449428
+      },
+      "fields": [
+       "cumulative_total_flow_usd_m",
+       "flow_mean_10s_usd_m",
+       "flow_mean_20s_usd_m",
+       "flow_mean_3s_usd_m",
+       "flow_mean_5s_usd_m"
+      ]
+     },
+     {
+      "target_utc": "2026-08-29T12:39:34Z",
+      "output_key": "ETH|2026-08-28",
+      "claimed_available_at_utc": "2026-08-29T12:39:34Z",
+      "field_difference_count": 11,
+      "classification": "NOT_MINIMIZED",
+      "first_contaminating_record": null,
+      "fields": [
+       "cumulative_total_flow_usd_m",
+       "flow_change_1s_usd_m",
+       "flow_mean_10s_usd_m",
+       "flow_mean_20s_usd_m",
+       "flow_mean_3s_usd_m"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "reference": "LATEST_VINTAGE",
+   "policy": "E_CONSERVATIVE_FIXED_LAG",
+   "feature_family": "W30_TRAILING_AND_DIVERGENCE",
+   "mode": "TRUNCATE",
+   "outcome": "SOURCE_VINTAGE_RISK",
+   "mismatch_attribution": {
+    "OBSERVATION_LIMITED_UNKNOWN": 25,
+    "SOURCE_VINTAGE_RISK": 15
+   },
+   "sessions_claimed": 1235,
+   "sessions_dropped_by_policy": 0,
+   "history_sessions_unverifiable": 1117,
+   "harness": {
+    "case_id": "RT-ETF-E_CONSERVATIVE_FIXED_LAG-W30_TRAILING_AND_DIVERGENCE-TRUNCATE-LATEST_VINTAGE",
+    "records": 1274,
+    "record_kinds": {
+     "REVISION": 39,
+     "VALUE": 1235
+    },
+    "outputs_full": 1778,
+    "targets_tested": 74,
+    "output_comparisons": 125242,
+    "mismatch_count": 1709,
+    "minimized_mismatch_count": 80,
+    "contaminating_lead_seconds": {
+     "min": 0,
+     "max": 3744282
+    },
+    "observed": "FAIL",
+    "classifications": [
+     "SOURCE_VINTAGE_RISK",
+     "TRUE_FUTURE_LEAKAGE"
+    ],
+    "first_mismatches": [
+     {
+      "target_utc": "2026-06-28T02:35:34Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-28T02:35:34Z",
+      "field_difference_count": 1,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1534400
+      },
+      "fields": [
+       "__OUTPUT__"
+      ]
+     },
+     {
+      "target_utc": "2026-07-01T02:35:34Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-28T02:35:34Z",
+      "field_difference_count": 1,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1275200
+      },
+      "fields": [
+       "__OUTPUT__"
+      ]
+     },
+     {
+      "target_utc": "2026-07-02T02:35:34Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-28T02:35:34Z",
+      "field_difference_count": 1,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1188800
+      },
+      "fields": [
+       "__OUTPUT__"
+      ]
+     },
+     {
+      "target_utc": "2026-07-03T02:35:34Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-28T02:35:34Z",
+      "field_difference_count": 1,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1102400
+      },
+      "fields": [
+       "__OUTPUT__"
+      ]
+     },
+     {
+      "target_utc": "2026-07-04T02:35:34Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-28T02:35:34Z",
+      "field_difference_count": 1,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1016000
+      },
+      "fields": [
+       "__OUTPUT__"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "reference": "LATEST_VINTAGE",
+   "policy": "E_CONSERVATIVE_FIXED_LAG",
+   "feature_family": "W30_TRAILING_AND_DIVERGENCE",
+   "mode": "POISON",
+   "outcome": "SOURCE_VINTAGE_RISK",
+   "mismatch_attribution": {
+    "OBSERVATION_LIMITED_UNKNOWN": 25,
+    "SOURCE_VINTAGE_RISK": 15
+   },
+   "sessions_claimed": 1235,
+   "sessions_dropped_by_policy": 0,
+   "history_sessions_unverifiable": 1117,
+   "harness": {
+    "case_id": "RT-ETF-E_CONSERVATIVE_FIXED_LAG-W30_TRAILING_AND_DIVERGENCE-POISON-LATEST_VINTAGE",
+    "records": 1274,
+    "record_kinds": {
+     "REVISION": 39,
+     "VALUE": 1235
+    },
+    "outputs_full": 1778,
+    "targets_tested": 74,
+    "output_comparisons": 125242,
+    "mismatch_count": 1709,
+    "minimized_mismatch_count": 80,
+    "contaminating_lead_seconds": {
+     "min": 0,
+     "max": 3744282
+    },
+    "observed": "FAIL",
+    "classifications": [
+     "SOURCE_VINTAGE_RISK",
+     "TRUE_FUTURE_LEAKAGE"
+    ],
+    "first_mismatches": [
+     {
+      "target_utc": "2026-06-28T02:35:34Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-28T02:35:34Z",
+      "field_difference_count": 10,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1534400
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "flow_acceleration_3s_usd_millions",
+       "reversal_flag",
+       "rolling_net_flow_10s_usd_millions",
+       "rolling_net_flow_1s_usd_millions"
+      ]
+     },
+     {
+      "target_utc": "2026-07-01T02:35:34Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-28T02:35:34Z",
+      "field_difference_count": 10,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1275200
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "flow_acceleration_3s_usd_millions",
+       "reversal_flag",
+       "rolling_net_flow_10s_usd_millions",
+       "rolling_net_flow_1s_usd_millions"
+      ]
+     },
+     {
+      "target_utc": "2026-07-02T02:35:34Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-28T02:35:34Z",
+      "field_difference_count": 10,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1188800
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "flow_acceleration_3s_usd_millions",
+       "reversal_flag",
+       "rolling_net_flow_10s_usd_millions",
+       "rolling_net_flow_1s_usd_millions"
+      ]
+     },
+     {
+      "target_utc": "2026-07-03T02:35:34Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-28T02:35:34Z",
+      "field_difference_count": 10,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1102400
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "flow_acceleration_3s_usd_millions",
+       "reversal_flag",
+       "rolling_net_flow_10s_usd_millions",
+       "rolling_net_flow_1s_usd_millions"
+      ]
+     },
+     {
+      "target_utc": "2026-07-04T02:35:34Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-28T02:35:34Z",
+      "field_difference_count": 10,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1016000
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "flow_acceleration_3s_usd_millions",
+       "reversal_flag",
+       "rolling_net_flow_10s_usd_millions",
+       "rolling_net_flow_1s_usd_millions"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "reference": "LATEST_VINTAGE",
+   "policy": "E_CONSERVATIVE_FIXED_LAG",
+   "feature_family": "W30_CUMMAX_FEATURE_CLAIM",
+   "mode": "TRUNCATE",
+   "outcome": "SOURCE_VINTAGE_RISK",
+   "mismatch_attribution": {
+    "OBSERVATION_LIMITED_UNKNOWN": 25,
+    "SOURCE_VINTAGE_RISK": 15
+   },
+   "sessions_claimed": 1235,
+   "sessions_dropped_by_policy": 0,
+   "history_sessions_unverifiable": 1117,
+   "harness": {
+    "case_id": "RT-ETF-E_CONSERVATIVE_FIXED_LAG-W30_CUMMAX_FEATURE_CLAIM-TRUNCATE-LATEST_VINTAGE",
+    "records": 1274,
+    "record_kinds": {
+     "REVISION": 39,
+     "VALUE": 1235
+    },
+    "outputs_full": 1778,
+    "targets_tested": 74,
+    "output_comparisons": 125242,
+    "mismatch_count": 1709,
+    "minimized_mismatch_count": 80,
+    "contaminating_lead_seconds": {
+     "min": 0,
+     "max": 3744282
+    },
+    "observed": "FAIL",
+    "classifications": [
+     "SOURCE_VINTAGE_RISK",
+     "TRUE_FUTURE_LEAKAGE"
+    ],
+    "first_mismatches": [
+     {
+      "target_utc": "2026-06-28T02:35:34Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-28T02:35:34Z",
+      "field_difference_count": 1,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1534400
+      },
+      "fields": [
+       "__OUTPUT__"
+      ]
+     },
+     {
+      "target_utc": "2026-07-01T02:35:34Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-28T02:35:34Z",
+      "field_difference_count": 1,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1275200
+      },
+      "fields": [
+       "__OUTPUT__"
+      ]
+     },
+     {
+      "target_utc": "2026-07-02T02:35:34Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-28T02:35:34Z",
+      "field_difference_count": 1,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1188800
+      },
+      "fields": [
+       "__OUTPUT__"
+      ]
+     },
+     {
+      "target_utc": "2026-07-03T02:35:34Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-28T02:35:34Z",
+      "field_difference_count": 1,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1102400
+      },
+      "fields": [
+       "__OUTPUT__"
+      ]
+     },
+     {
+      "target_utc": "2026-07-04T02:35:34Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-28T02:35:34Z",
+      "field_difference_count": 1,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1016000
+      },
+      "fields": [
+       "__OUTPUT__"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "reference": "LATEST_VINTAGE",
+   "policy": "E_CONSERVATIVE_FIXED_LAG",
+   "feature_family": "TRUTH_LAYER_PACK_BUILDER",
+   "mode": "TRUNCATE",
+   "outcome": "PASS",
+   "mismatch_attribution": {},
+   "sessions_claimed": 1235,
+   "sessions_dropped_by_policy": 0,
+   "history_sessions_unverifiable": 1117,
+   "harness": {
+    "case_id": "RT-ETF-E_CONSERVATIVE_FIXED_LAG-TRUTH_LAYER_PACK_BUILDER-TRUNCATE-LATEST_VINTAGE",
+    "records": 1274,
+    "record_kinds": {
+     "REVISION": 39,
+     "VALUE": 1235
+    },
+    "outputs_full": 1235,
+    "targets_tested": 8,
+    "output_comparisons": 14,
+    "mismatch_count": 0,
+    "minimized_mismatch_count": 0,
+    "contaminating_lead_seconds": null,
+    "observed": "PASS",
+    "classifications": [
+     "NO_ISSUE"
+    ],
+    "first_mismatches": []
+   }
+  },
+  {
+   "reference": "LATEST_VINTAGE",
+   "policy": "F_NEXT_TRADING_SESSION",
+   "feature_family": "W30_TRAILING_AND_DIVERGENCE",
+   "mode": "TRUNCATE",
+   "outcome": "SOURCE_VINTAGE_RISK",
+   "mismatch_attribution": {
+    "OBSERVATION_LIMITED_UNKNOWN": 25,
+    "SOURCE_VINTAGE_RISK": 15
+   },
+   "sessions_claimed": 1235,
+   "sessions_dropped_by_policy": 0,
+   "history_sessions_unverifiable": 1117,
+   "harness": {
+    "case_id": "RT-ETF-F_NEXT_TRADING_SESSION-W30_TRAILING_AND_DIVERGENCE-TRUNCATE-LATEST_VINTAGE",
+    "records": 1274,
+    "record_kinds": {
+     "REVISION": 39,
+     "VALUE": 1235
+    },
+    "outputs_full": 1778,
+    "targets_tested": 74,
+    "output_comparisons": 125248,
+    "mismatch_count": 1788,
+    "minimized_mismatch_count": 80,
+    "contaminating_lead_seconds": {
+     "min": 7143,
+     "max": 3808744
+    },
+    "observed": "FAIL",
+    "classifications": [
+     "SOURCE_VINTAGE_RISK",
+     "TRUE_FUTURE_LEAKAGE"
+    ],
+    "first_mismatches": [
+     {
+      "target_utc": "2026-06-29T13:30:00Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-29T13:30:00Z",
+      "field_difference_count": 1,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1408735
+      },
+      "fields": [
+       "__OUTPUT__"
+      ]
+     },
+     {
+      "target_utc": "2026-06-30T13:30:00Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-29T13:30:00Z",
+      "field_difference_count": 1,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1322335
+      },
+      "fields": [
+       "__OUTPUT__"
+      ]
+     },
+     {
+      "target_utc": "2026-07-01T13:30:00Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-29T13:30:00Z",
+      "field_difference_count": 1,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1235935
+      },
+      "fields": [
+       "__OUTPUT__"
+      ]
+     },
+     {
+      "target_utc": "2026-07-02T13:30:00Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-29T13:30:00Z",
+      "field_difference_count": 1,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1149535
+      },
+      "fields": [
+       "__OUTPUT__"
+      ]
+     },
+     {
+      "target_utc": "2026-07-06T13:30:00Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-29T13:30:00Z",
+      "field_difference_count": 1,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 803935
+      },
+      "fields": [
+       "__OUTPUT__"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "reference": "LATEST_VINTAGE",
+   "policy": "F_NEXT_TRADING_SESSION",
+   "feature_family": "W30_TRAILING_AND_DIVERGENCE",
+   "mode": "POISON",
+   "outcome": "SOURCE_VINTAGE_RISK",
+   "mismatch_attribution": {
+    "OBSERVATION_LIMITED_UNKNOWN": 25,
+    "SOURCE_VINTAGE_RISK": 15
+   },
+   "sessions_claimed": 1235,
+   "sessions_dropped_by_policy": 0,
+   "history_sessions_unverifiable": 1117,
+   "harness": {
+    "case_id": "RT-ETF-F_NEXT_TRADING_SESSION-W30_TRAILING_AND_DIVERGENCE-POISON-LATEST_VINTAGE",
+    "records": 1274,
+    "record_kinds": {
+     "REVISION": 39,
+     "VALUE": 1235
+    },
+    "outputs_full": 1778,
+    "targets_tested": 74,
+    "output_comparisons": 125248,
+    "mismatch_count": 1788,
+    "minimized_mismatch_count": 80,
+    "contaminating_lead_seconds": {
+     "min": 7143,
+     "max": 3808744
+    },
+    "observed": "FAIL",
+    "classifications": [
+     "SOURCE_VINTAGE_RISK",
+     "TRUE_FUTURE_LEAKAGE"
+    ],
+    "first_mismatches": [
+     {
+      "target_utc": "2026-06-29T13:30:00Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-29T13:30:00Z",
+      "field_difference_count": 10,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1408735
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "flow_acceleration_3s_usd_millions",
+       "reversal_flag",
+       "rolling_net_flow_10s_usd_millions",
+       "rolling_net_flow_1s_usd_millions"
+      ]
+     },
+     {
+      "target_utc": "2026-06-30T13:30:00Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-29T13:30:00Z",
+      "field_difference_count": 10,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1322335
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "flow_acceleration_3s_usd_millions",
+       "reversal_flag",
+       "rolling_net_flow_10s_usd_millions",
+       "rolling_net_flow_1s_usd_millions"
+      ]
+     },
+     {
+      "target_utc": "2026-07-01T13:30:00Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-29T13:30:00Z",
+      "field_difference_count": 10,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1235935
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "flow_acceleration_3s_usd_millions",
+       "reversal_flag",
+       "rolling_net_flow_10s_usd_millions",
+       "rolling_net_flow_1s_usd_millions"
+      ]
+     },
+     {
+      "target_utc": "2026-07-02T13:30:00Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-29T13:30:00Z",
+      "field_difference_count": 10,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1149535
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "flow_acceleration_3s_usd_millions",
+       "reversal_flag",
+       "rolling_net_flow_10s_usd_millions",
+       "rolling_net_flow_1s_usd_millions"
+      ]
+     },
+     {
+      "target_utc": "2026-07-06T13:30:00Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-29T13:30:00Z",
+      "field_difference_count": 10,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 803935
+      },
+      "fields": [
+       "flow_acceleration_1s_usd_millions",
+       "flow_acceleration_3s_usd_millions",
+       "reversal_flag",
+       "rolling_net_flow_10s_usd_millions",
+       "rolling_net_flow_1s_usd_millions"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "reference": "LATEST_VINTAGE",
+   "policy": "F_NEXT_TRADING_SESSION",
+   "feature_family": "W30_CUMMAX_FEATURE_CLAIM",
+   "mode": "TRUNCATE",
+   "outcome": "SOURCE_VINTAGE_RISK",
+   "mismatch_attribution": {
+    "OBSERVATION_LIMITED_UNKNOWN": 25,
+    "SOURCE_VINTAGE_RISK": 15
+   },
+   "sessions_claimed": 1235,
+   "sessions_dropped_by_policy": 0,
+   "history_sessions_unverifiable": 1117,
+   "harness": {
+    "case_id": "RT-ETF-F_NEXT_TRADING_SESSION-W30_CUMMAX_FEATURE_CLAIM-TRUNCATE-LATEST_VINTAGE",
+    "records": 1274,
+    "record_kinds": {
+     "REVISION": 39,
+     "VALUE": 1235
+    },
+    "outputs_full": 1778,
+    "targets_tested": 74,
+    "output_comparisons": 125248,
+    "mismatch_count": 1788,
+    "minimized_mismatch_count": 80,
+    "contaminating_lead_seconds": {
+     "min": 7143,
+     "max": 3808744
+    },
+    "observed": "FAIL",
+    "classifications": [
+     "SOURCE_VINTAGE_RISK",
+     "TRUE_FUTURE_LEAKAGE"
+    ],
+    "first_mismatches": [
+     {
+      "target_utc": "2026-06-29T13:30:00Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-29T13:30:00Z",
+      "field_difference_count": 1,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1408735
+      },
+      "fields": [
+       "__OUTPUT__"
+      ]
+     },
+     {
+      "target_utc": "2026-06-30T13:30:00Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-29T13:30:00Z",
+      "field_difference_count": 1,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1322335
+      },
+      "fields": [
+       "__OUTPUT__"
+      ]
+     },
+     {
+      "target_utc": "2026-07-01T13:30:00Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-29T13:30:00Z",
+      "field_difference_count": 1,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1235935
+      },
+      "fields": [
+       "__OUTPUT__"
+      ]
+     },
+     {
+      "target_utc": "2026-07-02T13:30:00Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-29T13:30:00Z",
+      "field_difference_count": 1,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 1149535
+      },
+      "fields": [
+       "__OUTPUT__"
+      ]
+     },
+     {
+      "target_utc": "2026-07-06T13:30:00Z",
+      "output_key": "BTC|2026-06-26",
+      "claimed_available_at_utc": "2026-06-29T13:30:00Z",
+      "field_difference_count": 1,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-06-26",
+       "kind": "VALUE",
+       "available_at_utc": "2026-07-15T20:48:55Z",
+       "lead_after_target_seconds": 803935
+      },
+      "fields": [
+       "__OUTPUT__"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "reference": "LATEST_VINTAGE",
+   "policy": "F_NEXT_TRADING_SESSION",
+   "feature_family": "TRUTH_LAYER_PACK_BUILDER",
+   "mode": "TRUNCATE",
+   "outcome": "UNKNOWN",
+   "mismatch_attribution": {
+    "OBSERVATION_LIMITED_UNKNOWN": 2
+   },
+   "sessions_claimed": 1235,
+   "sessions_dropped_by_policy": 0,
+   "history_sessions_unverifiable": 1117,
+   "harness": {
+    "case_id": "RT-ETF-F_NEXT_TRADING_SESSION-TRUTH_LAYER_PACK_BUILDER-TRUNCATE-LATEST_VINTAGE",
+    "records": 1274,
+    "record_kinds": {
+     "REVISION": 39,
+     "VALUE": 1235
+    },
+    "outputs_full": 1235,
+    "targets_tested": 8,
+    "output_comparisons": 14,
+    "mismatch_count": 2,
+    "minimized_mismatch_count": 2,
+    "contaminating_lead_seconds": {
+     "min": 7143,
+     "max": 7144
+    },
+    "observed": "FAIL",
+    "classifications": [
+     "TRUE_FUTURE_LEAKAGE"
+    ],
+    "first_mismatches": [
+     {
+      "target_utc": "2026-09-23T13:30:00Z",
+      "output_key": "BTC|2026-09-22",
+      "claimed_available_at_utc": "2026-09-23T13:30:00Z",
+      "field_difference_count": 1,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "BTC|2026-09-22",
+       "kind": "VALUE",
+       "available_at_utc": "2026-09-23T15:29:03Z",
+       "lead_after_target_seconds": 7143
+      },
+      "fields": [
+       "__OUTPUT__"
+      ]
+     },
+     {
+      "target_utc": "2026-09-23T13:30:00Z",
+      "output_key": "ETH|2026-09-22",
+      "claimed_available_at_utc": "2026-09-23T13:30:00Z",
+      "field_difference_count": 1,
+      "classification": "TRUE_FUTURE_LEAKAGE",
+      "first_contaminating_record": {
+       "key": "ETH|2026-09-22",
+       "kind": "VALUE",
+       "available_at_utc": "2026-09-23T15:29:04Z",
+       "lead_after_target_seconds": 7144
+      },
+      "fields": [
+       "__OUTPUT__"
+      ]
+     }
+    ]
+   }
+  }
+ ],
+ "f04_contamination": {
+  "structural_leak_confirmed": true,
+  "structural_basis": "every evidenced session was first observable after its session close (min first-observation lag 6.33 h); W30 build_etf_trailing claims feature_knowledge_available_at_utc = session close",
+  "feature_rows_at_session_close_vs_point_in_time": {
+   "PRE_BACKFILL_VINTAGE": {
+    "rows_compared": 177,
+    "rows_differing_at_claim": 0,
+    "rows_missing_at_claim": 177,
+    "differing_dates": [
+     "BTC|2026-06-26",
+     "BTC|2026-06-29",
+     "BTC|2026-06-30",
+     "BTC|2026-07-01",
+     "BTC|2026-07-02",
+     "BTC|2026-07-06",
+     "BTC|2026-07-07",
+     "BTC|2026-07-08",
+     "BTC|2026-07-09",
+     "BTC|2026-07-10",
+     "BTC|2026-07-13",
+     "BTC|2026-07-14",
+     "BTC|2026-07-15",
+     "BTC|2026-07-16",
+     "BTC|2026-07-17",
+     "BTC|2026-07-20",
+     "BTC|2026-07-22",
+     "BTC|2026-07-23",
+     "BTC|2026-07-27",
+     "BTC|2026-07-28",
+     "BTC|2026-07-29",
+     "BTC|2026-07-30",
+     "BTC|2026-07-31",
+     "BTC|2026-08-03",
+     "BTC|2026-08-04",
+     "BTC|2026-08-05",
+     "BTC|2026-08-06",
+     "BTC|2026-08-07",
+     "BTC|2026-08-10",
+     "BTC|2026-08-11",
+     "BTC|2026-08-12",
+     "BTC|2026-08-13",
+     "BTC|2026-08-14",
+     "BTC|2026-08-17",
+     "BTC|2026-08-18",
+     "BTC|2026-08-19",
+     "BTC|2026-08-20",
+     "BTC|2026-08-21",
+     "BTC|2026-08-24",
+     "BTC|2026-08-25"
+    ],
+    "by_field": {}
+   },
+   "LATEST_VINTAGE": {
+    "rows_compared": 177,
+    "rows_differing_at_claim": 0,
+    "rows_missing_at_claim": 177,
+    "differing_dates": [
+     "BTC|2026-06-26",
+     "BTC|2026-06-29",
+     "BTC|2026-06-30",
+     "BTC|2026-07-01",
+     "BTC|2026-07-02",
+     "BTC|2026-07-06",
+     "BTC|2026-07-07",
+     "BTC|2026-07-08",
+     "BTC|2026-07-09",
+     "BTC|2026-07-10",
+     "BTC|2026-07-13",
+     "BTC|2026-07-14",
+     "BTC|2026-07-15",
+     "BTC|2026-07-16",
+     "BTC|2026-07-17",
+     "BTC|2026-07-20",
+     "BTC|2026-07-22",
+     "BTC|2026-07-23",
+     "BTC|2026-07-27",
+     "BTC|2026-07-28",
+     "BTC|2026-07-29",
+     "BTC|2026-07-30",
+     "BTC|2026-07-31",
+     "BTC|2026-08-03",
+     "BTC|2026-08-04",
+     "BTC|2026-08-05",
+     "BTC|2026-08-06",
+     "BTC|2026-08-07",
+     "BTC|2026-08-10",
+     "BTC|2026-08-11",
+     "BTC|2026-08-12",
+     "BTC|2026-08-13",
+     "BTC|2026-08-14",
+     "BTC|2026-08-17",
+     "BTC|2026-08-18",
+     "BTC|2026-08-19",
+     "BTC|2026-08-20",
+     "BTC|2026-08-21",
+     "BTC|2026-08-24",
+     "BTC|2026-08-25"
+    ],
+    "by_field": {}
+   }
+  },
+  "stage1_signal_timing_2026_07_onward": [
+   {
+    "session": "2026-07-16",
+    "claimed_by_session_close": "2026-07-16T20:00:00Z",
+    "first_observation_supporting_signal": "2026-07-17T06:34:00Z",
+    "delay_h": 10.57,
+    "evidence": "OBSERVED"
+   },
+   {
+    "session": "2026-07-17",
+    "claimed_by_session_close": "2026-07-17T20:00:00Z",
+    "first_observation_supporting_signal": "2026-07-19T20:00:33Z",
+    "delay_h": 48.01,
+    "evidence": "OBSERVED"
+   },
+   {
+    "session": "2026-07-20",
+    "claimed_by_session_close": "2026-07-20T20:00:00Z",
+    "first_observation_supporting_signal": "2026-07-21T21:15:00Z",
+    "delay_h": 25.25,
+    "evidence": "OBSERVED"
+   },
+   {
+    "session": "2026-07-21",
+    "claimed_by_session_close": "2026-07-21T20:00:00Z",
+    "first_observation_supporting_signal": null,
+    "delay_h": null,
+    "evidence": "NO_REALTIME_EVIDENCE"
+   },
+   {
+    "session": "2026-07-22",
+    "claimed_by_session_close": "2026-07-22T20:00:00Z",
+    "first_observation_supporting_signal": "2026-07-23T07:09:13Z",
+    "delay_h": 11.15,
+    "evidence": "OBSERVED"
+   },
+   {
+    "session": "2026-08-05",
+    "claimed_by_session_close": "2026-08-05T20:00:00Z",
+    "first_observation_supporting_signal": "2026-08-10T10:47:32.105989Z",
+    "delay_h": 110.79,
+    "evidence": "OBSERVED"
+   },
+   {
+    "session": "2026-08-06",
+    "claimed_by_session_close": "2026-08-06T20:00:00Z",
+    "first_observation_supporting_signal": "2026-08-10T10:47:32.105989Z",
+    "delay_h": 86.79,
+    "evidence": "OBSERVED"
+   },
+   {
+    "session": "2026-08-07",
+    "claimed_by_session_close": "2026-08-07T20:00:00Z",
+    "first_observation_supporting_signal": "2026-08-10T10:47:32.105989Z",
+    "delay_h": 62.79,
+    "evidence": "OBSERVED"
+   },
+   {
+    "session": "2026-08-19",
+    "claimed_by_session_close": "2026-08-19T20:00:00Z",
+    "first_observation_supporting_signal": "2026-08-21T02:35:35.015749Z",
+    "delay_h": 30.59,
+    "evidence": "OBSERVED"
+   },
+   {
+    "session": "2026-08-20",
+    "claimed_by_session_close": "2026-08-20T20:00:00Z",
+    "first_observation_supporting_signal": "2026-08-21T07:04:02.597208Z",
+    "delay_h": 11.07,
+    "evidence": "OBSERVED"
+   },
+   {
+    "session": "2026-08-21",
+    "claimed_by_session_close": "2026-08-21T20:00:00Z",
+    "first_observation_supporting_signal": "2026-08-22T06:56:35.271746Z",
+    "delay_h": 10.94,
+    "evidence": "OBSERVED"
+   },
+   {
+    "session": "2026-08-24",
+    "claimed_by_session_close": "2026-08-24T20:00:00Z",
+    "first_observation_supporting_signal": "2026-08-25T07:05:19.129392Z",
+    "delay_h": 11.09,
+    "evidence": "OBSERVED"
+   },
+   {
+    "session": "2026-08-25",
+    "claimed_by_session_close": "2026-08-25T20:00:00Z",
+    "first_observation_supporting_signal": "2026-08-26T07:05:15.029737Z",
+    "delay_h": 11.09,
+    "evidence": "OBSERVED"
+   },
+   {
+    "session": "2026-08-26",
+    "claimed_by_session_close": "2026-08-26T20:00:00Z",
+    "first_observation_supporting_signal": "2026-08-27T11:08:59.336976Z",
+    "delay_h": 15.15,
+    "evidence": "OBSERVED"
+   },
+   {
+    "session": "2026-08-27",
+    "claimed_by_session_close": "2026-08-27T20:00:00Z",
+    "first_observation_supporting_signal": "2026-08-28T12:41:59.050289Z",
+    "delay_h": 16.7,
+    "evidence": "OBSERVED"
+   },
+   {
+    "session": "2026-09-04",
+    "claimed_by_session_close": "2026-09-04T20:00:00Z",
+    "first_observation_supporting_signal": "2026-09-05T05:50:04.331811Z",
+    "delay_h": 9.83,
+    "evidence": "OBSERVED"
+   },
+   {
+    "session": "2026-09-21",
+    "claimed_by_session_close": "2026-09-21T20:00:00Z",
+    "first_observation_supporting_signal": "2026-09-23T15:29:03.547720Z",
+    "delay_h": 43.48,
+    "evidence": "OBSERVED"
+   },
+   {
+    "session": "2026-09-22",
+    "claimed_by_session_close": "2026-09-22T20:00:00Z",
+    "first_observation_supporting_signal": "2026-09-23T15:29:03.547720Z",
+    "delay_h": 19.48,
+    "evidence": "OBSERVED"
+   }
+  ],
+  "material_performance_impact": "UNKNOWN",
+  "material_basis": "No recorded backtest decision, forecast, score or outcome consumes W30 build_etf_trailing or the pack feature table (consumers: golden replay fixture + E1X harness only). Impact on a future ETF-flow backtest is structural (on every evidenced session the first observation came >= 6.3 h after the close; 0 of 177 evidenced feature rows were computable at their session-close claim) and value-level on revised sessions; performance impact cannot be measured without a consuming strategy."
+ }
+}
