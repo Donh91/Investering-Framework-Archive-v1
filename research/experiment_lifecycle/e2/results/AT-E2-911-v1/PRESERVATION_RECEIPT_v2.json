@@ -1,0 +1,64 @@
+{
+  "contract": "AUTO_TRADING_E2_ARTIFACT_PRESERVATION_RECEIPT_v2",
+  "experiment_id": "AT-E2-911-v1",
+  "issue": 911,
+  "status": "BYTE_EXACT_PRESERVATION_VERIFIED_PRE_MERGE",
+  "supersedes_byte_preservation_claims_in": "PRESERVATION_RECEIPT_v1.json",
+  "does_not_supersede": [
+    "the original frozen experiment request",
+    "the original result semantics",
+    "the original trial identity",
+    "future scientific adjudication"
+  ],
+  "erratum_path": "research/experiment_lifecycle/e2/results/AT-E2-911-v1/PRESERVATION_ERRATUM_v1.json",
+  "source": {
+    "workflow_run_id": 34787756305,
+    "workflow_run_url": "https://github.com/Donh91/Investering-Framework-Archive-v1/actions/runs/34787756305",
+    "workflow_head_sha": "49f82e7316b0aab7447571d8ab6526196eaa1006",
+    "artifact_id": 10326688832,
+    "artifact_name": "auto-trading-e2-911-v1-34787756305",
+    "artifact_expires_at": "2026-10-13T22:57:16Z",
+    "artifact_zip_size_bytes": 26596,
+    "artifact_zip_sha256": "9c2e629fd8052041eb77e5dc9edd5e86271843461d3a60f261aa3e5e69669afb"
+  },
+  "repository_binding": {
+    "branch": "agent/task-20260914-e2-911-byte-exact-correction",
+    "verified_branch_head_before_this_receipt": "1fcc73896375895f89de6ebe87f19a17bb7dad68",
+    "zip_path": "research/experiment_lifecycle/e2/results/AT-E2-911-v1/auto-trading-e2-911-v1-34787756305.zip",
+    "zip_git_blob_sha1": "dc90cda23e6e2d741b838c44d2bbe5a4c84c5ef8",
+    "zip_size_bytes": 26596,
+    "result_path": "research/experiment_lifecycle/e2/results/AT-E2-911-v1/result.json",
+    "result_git_blob_sha1": "b57ea35efd18c53743d7def83bbee7b971836cac",
+    "result_size_bytes": 8479
+  },
+  "source_hashes": {
+    "result_json_sha256": "fbf5879f1c359cb16b74a0206d7c0ad067420b18be580cdbd720e187d0bb06b1",
+    "result_semantic_sha256": "53ad7e6b56a9ed24df2ca2285090c8d0967b3836d85a28f2c9e6779628a24168",
+    "request_sha256": "1903edb3d4cefcfeb4694c840fefeb11c2cb6bdfe34eb5cd65f50ed16ab01dc2"
+  },
+  "verification": {
+    "source_artifact_downloaded_from_github_actions": true,
+    "restoration_workflow_run_id": 34858698767,
+    "restoration_workflow_conclusion": "success",
+    "restoration_verified_zip_sha256_before_commit": true,
+    "restoration_verified_zip_size_before_commit": true,
+    "restoration_verified_result_sha256_before_commit": true,
+    "restoration_verified_result_size_before_commit": true,
+    "post_write_branch_directory_readback_verified_zip_size_26596": true,
+    "post_write_branch_directory_readback_verified_result_size_8479": true,
+    "post_write_branch_readback_verified_expected_git_blob_bindings": true,
+    "post_merge_main_readback": "PENDING_PR_MERGE"
+  },
+  "preservation_scope": {
+    "adjudication": false,
+    "automatic_promotion": false,
+    "capital_authority": false,
+    "market_semantic_change": false,
+    "model_weight_change": false,
+    "order_routing": false,
+    "portfolio_execution": false,
+    "rescore": false,
+    "threshold_change": false
+  },
+  "note": "This receipt corrects only the byte-preservation claim. The original E2 result remains uninterpreted here. Primary endpoint and FAILED_CALL_COUNT must be handled only in a separate scientific adjudication step."
+}
