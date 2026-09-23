@@ -140,7 +140,7 @@ class E1XProductionFindingsTest(unittest.TestCase):
         published = self.x.run_right_truncation(self.x.case_event_study(features, btc, peaks, knowledge, rule, {}, False))
         self.assertEqual(claimed["observed"], "PASS")
         self.assertEqual(published["observed"], "PASS")
-        self.assertEqual(published["classifications"], [])
+        self.assertEqual(published["classifications"], ["NO_ISSUE"])
         self.assertGreater(published["output_comparisons"], 0)
 
     def test_etf_trailing_documented_farside_timing(self):
