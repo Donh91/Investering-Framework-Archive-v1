@@ -208,5 +208,62 @@ class ConsumerReceiptInvariantGateTest(unittest.TestCase):
                 self.assertNotIn(label, manifest["consumers"])
 
 
+def load_tests(loader, tests, pattern):
+    import functools
+    import inspect
+    import tempfile
+    import unittest
+
+    if not __debug__:
+        raise RuntimeError("Local assertion tests require non-optimized Python")
+
+    expected = {
+        "test_consumer_receipt_passes_only_when_all_expected_inputs_are_verified": ("tmp_path",),
+        "test_consumer_receipt_is_partial_when_expected_input_is_not_declared": ("tmp_path",),
+        "test_consumer_receipt_is_partial_when_manifest_binding_is_stale": ("tmp_path",),
+        "test_consumer_receipt_degrades_when_handoff_snapshot_is_too_old": ("tmp_path",),
+        "test_consumer_receipt_is_unknown_when_manifest_is_unavailable": ("tmp_path",),
+        "test_stamp_target_recomputes_semantic_self_hash_after_receipt": ("tmp_path",),
+        "test_framework_handoff_separates_receipt_consumers_from_routing_labels": ("tmp_path",),
+        "test_framework_handoff_file_ref_accepts_absolute_path_with_relative_repo_root": (),
+    }
+    local = {
+        name: value
+        for name, value in globals().items()
+        if name.startswith("test_")
+        and inspect.isfunction(value)
+        and value.__module__ == __name__
+    }
+    if set(local) != set(expected):
+        raise RuntimeError(
+            f"Local test manifest mismatch: missing={sorted(set(expected) - set(local))}; "
+            f"unexpected={sorted(set(local) - set(expected))}"
+        )
+    for name, function in local.items():
+        parameters = tuple(inspect.signature(function).parameters.values())
+        if tuple(parameter.name for parameter in parameters) != expected[name] or any(
+            parameter.kind is not inspect.Parameter.POSITIONAL_OR_KEYWORD
+            or parameter.default is not inspect.Parameter.empty
+            for parameter in parameters
+        ):
+            raise RuntimeError(f"Unexpected local test signature: {name}")
+
+    def make_case(function, parameter_names):
+        @functools.wraps(function)
+        def run():
+            if parameter_names:
+                with tempfile.TemporaryDirectory() as directory:
+                    function(Path(directory))
+            else:
+                function()
+
+        return unittest.FunctionTestCase(run)
+
+    tests.addTests(
+        make_case(local[name], expected[name]) for name in sorted(expected)
+    )
+    return tests
+
+
 if __name__ == "__main__":
     unittest.main()
