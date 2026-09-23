@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+import hashlib
+import json
 import unittest
+from pathlib import Path
 
-from scripts.experiments.experiment_simplification_review import build_review, strict_semantic_key
+from scripts.experiments.experiment_simplification_review import build_review, load_candidates, strict_semantic_key
 
 
 def candidate(cid: str, path: str, *, direction: str = "DOWN", horizon: int = 7, threshold: float = 5.0, hypothesis: str = "h") -> dict:
@@ -104,6 +107,35 @@ class ExperimentSimplificationReviewTests(unittest.TestCase):
         self.assertEqual(out["high_observation_zero_outcome_definition"]["authority"], "DESCRIPTIVE_REVIEW_ONLY")
         self.assertFalse(out["authority"]["automatic_retirement"])
         self.assertFalse(out["authority"]["candidate_history_mutation"])
+
+    def test_current_registry_readback_is_read_only_and_non_mutating(self) -> None:
+        root = Path(__file__).resolve().parents[2]
+        registry_path = root / "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json"
+        candidate_root = root / "research/experiment_lifecycle/candidates"
+        before_registry = hashlib.sha256(registry_path.read_bytes()).hexdigest()
+        before_candidates = {
+            path.relative_to(root).as_posix(): hashlib.sha256(path.read_bytes()).hexdigest()
+            for path in candidate_root.rglob("*.json")
+        }
+        registry = json.loads(registry_path.read_text())
+        out = build_review(registry, load_candidates(candidate_root))
+        self.assertEqual(out["candidate_count"], registry["candidate_count"])
+        self.assertTrue(out["authority"]["read_only"])
+        self.assertFalse(out["authority"]["automatic_merge"])
+        self.assertFalse(out["authority"]["automatic_retirement"])
+        self.assertFalse(out["authority"]["automatic_promotion"])
+        self.assertFalse(out["authority"]["model_weight_change"])
+        self.assertFalse(out["authority"]["market_gate_change"])
+        self.assertFalse(out["authority"]["portfolio_action"])
+        self.assertFalse(out["authority"]["candidate_history_mutation"])
+        self.assertEqual(hashlib.sha256(registry_path.read_bytes()).hexdigest(), before_registry)
+        after_candidates = {
+            path.relative_to(root).as_posix(): hashlib.sha256(path.read_bytes()).hexdigest()
+            for path in candidate_root.rglob("*.json")
+        }
+        self.assertEqual(after_candidates, before_candidates)
+        self.assertTrue(out["exact_semantic_alias_groups"])
+        self.assertTrue(out["high_observation_zero_outcome_incubating"])
 
     def test_not_supported_only_routes_to_retire_review_never_auto_retires(self) -> None:
         row = registry_row("EC-x", state="MATURED_NOT_SUPPORTED", obs=50, outcomes=5)
