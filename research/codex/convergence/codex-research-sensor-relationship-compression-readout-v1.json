@@ -1,0 +1,123 @@
+{
+  "contract": "MISSION_CONVERGENCE_RECEIPT_v1",
+  "status": "CONVERGED",
+  "candidate_id": "codex-research-sensor-relationship-compression-readout-v1",
+  "signature": "49ecf37e76b7834b97a5",
+  "candidate_sha256": "d79c0abd29b8426b35f7949b3a4a05258db0fe7f5db56d02b7c6fd4b3bcb5cad",
+  "task_contract_sha256": "e2b9c810e2b98bec84eb34cbe5356b486defdf31a672f256a06d22ca2f6abf8c",
+  "pr_number": 1271,
+  "merge_commit_sha": "ddd8e92178292e0aad98a6aad7159c5658d8bc8e",
+  "assessed_at_utc": "2026-09-23T22:36:00Z",
+  "requirements": [
+    {
+      "source_ref": "objective",
+      "text": "Implement the smallest deterministic research-only readout that summarizes existing sensor-family relationship evidence using the canonical relationship vocabulary, distinguishes historical from prospective evidence and exposes presentation roles for double-count prevention without changing weights or market semantics.",
+      "kind": "OBJECTIVE"
+    },
+    {
+      "source_ref": "acceptance:positive:1",
+      "text": "Known related sensor/test families are represented using only canonical relationship classes with exact source/test IDs and evidence class/sample status.",
+      "kind": "ACCEPTANCE_POSITIVE"
+    },
+    {
+      "source_ref": "acceptance:positive:2",
+      "text": "Presentation roles PRIMARY/VALIDATION/AUDIT_ONLY/DATA_BLOCKED/UNRESOLVED are clearly non-weighting metadata and preserve unresolved states.",
+      "kind": "ACCEPTANCE_POSITIVE"
+    },
+    {
+      "source_ref": "acceptance:negative:1",
+      "text": "Low Pearson/Spearman correlation alone cannot produce UNIQUE.",
+      "kind": "ACCEPTANCE_NEGATIVE"
+    },
+    {
+      "source_ref": "acceptance:negative:2",
+      "text": "No sensor is removed, promoted, reweighted or counted as independent confirmation by this readout.",
+      "kind": "ACCEPTANCE_NEGATIVE"
+    },
+    {
+      "source_ref": "authority:allowed_change_scope",
+      "text": "scripts/experiments directly related read-only sensor relationship/compression helper | tests/experiments directly related relationship compression tests | 06_RESEARCH_LAB directly related generated current relationship/compression artifact",
+      "kind": "AUTHORITY_BOUNDARY"
+    },
+    {
+      "source_ref": "post_fix_gate",
+      "text": "DETERMINISTIC_RELATIONSHIP_READOUT_FIXTURE_PASS_PLUS_NO_AUTHORITY_CHANGE_READBACK",
+      "kind": "POST_FIX_GATE"
+    }
+  ],
+  "coverage": [
+    {
+      "source_ref": "objective",
+      "status": "SATISFIED",
+      "evidence": [
+        "PR #1271 merged at ddd8e92178292e0aad98a6aad7159c5658d8bc8e after Experiment Lifecycle, Data Architecture, Automation Production Health and Storage Health gates passed.",
+        "Independent focused relationship-compression fixtures passed 6/6, including low-linear-correlation NOT UNIQUE, semantic duplicate REDUNDANT/AUDIT_ONLY, DATA_BLOCKED fail-closed, duplicate-group count-once metadata and zero authority/weight invariants.",
+        "Current readout was materialized from the exact then-current Experiment Lifecycle registry with 54 prospective sensor-combination rows, 7 semantic duplicate groups and 2 explicit historical proxy rows; historical rows remain current_prospective_validation=false.",
+        "Generated readout authority is research-only/non-binding with canonical_market_state=false, market_gate_change=false, model_weight_change=false, portfolio_action=false and no automatic sensor promotion/retirement."
+      ]
+    },
+    {
+      "source_ref": "acceptance:positive:1",
+      "status": "SATISFIED",
+      "evidence": [
+        "PR #1271 merged at ddd8e92178292e0aad98a6aad7159c5658d8bc8e after Experiment Lifecycle, Data Architecture, Automation Production Health and Storage Health gates passed.",
+        "Independent focused relationship-compression fixtures passed 6/6, including low-linear-correlation NOT UNIQUE, semantic duplicate REDUNDANT/AUDIT_ONLY, DATA_BLOCKED fail-closed, duplicate-group count-once metadata and zero authority/weight invariants.",
+        "Current readout was materialized from the exact then-current Experiment Lifecycle registry with 54 prospective sensor-combination rows, 7 semantic duplicate groups and 2 explicit historical proxy rows; historical rows remain current_prospective_validation=false.",
+        "Generated readout authority is research-only/non-binding with canonical_market_state=false, market_gate_change=false, model_weight_change=false, portfolio_action=false and no automatic sensor promotion/retirement."
+      ]
+    },
+    {
+      "source_ref": "acceptance:positive:2",
+      "status": "SATISFIED",
+      "evidence": [
+        "PR #1271 merged at ddd8e92178292e0aad98a6aad7159c5658d8bc8e after Experiment Lifecycle, Data Architecture, Automation Production Health and Storage Health gates passed.",
+        "Independent focused relationship-compression fixtures passed 6/6, including low-linear-correlation NOT UNIQUE, semantic duplicate REDUNDANT/AUDIT_ONLY, DATA_BLOCKED fail-closed, duplicate-group count-once metadata and zero authority/weight invariants.",
+        "Current readout was materialized from the exact then-current Experiment Lifecycle registry with 54 prospective sensor-combination rows, 7 semantic duplicate groups and 2 explicit historical proxy rows; historical rows remain current_prospective_validation=false.",
+        "Generated readout authority is research-only/non-binding with canonical_market_state=false, market_gate_change=false, model_weight_change=false, portfolio_action=false and no automatic sensor promotion/retirement."
+      ]
+    },
+    {
+      "source_ref": "acceptance:negative:1",
+      "status": "SATISFIED",
+      "evidence": [
+        "PR #1271 merged at ddd8e92178292e0aad98a6aad7159c5658d8bc8e after Experiment Lifecycle, Data Architecture, Automation Production Health and Storage Health gates passed.",
+        "Independent focused relationship-compression fixtures passed 6/6, including low-linear-correlation NOT UNIQUE, semantic duplicate REDUNDANT/AUDIT_ONLY, DATA_BLOCKED fail-closed, duplicate-group count-once metadata and zero authority/weight invariants.",
+        "Current readout was materialized from the exact then-current Experiment Lifecycle registry with 54 prospective sensor-combination rows, 7 semantic duplicate groups and 2 explicit historical proxy rows; historical rows remain current_prospective_validation=false.",
+        "Generated readout authority is research-only/non-binding with canonical_market_state=false, market_gate_change=false, model_weight_change=false, portfolio_action=false and no automatic sensor promotion/retirement."
+      ]
+    },
+    {
+      "source_ref": "acceptance:negative:2",
+      "status": "SATISFIED",
+      "evidence": [
+        "PR #1271 merged at ddd8e92178292e0aad98a6aad7159c5658d8bc8e after Experiment Lifecycle, Data Architecture, Automation Production Health and Storage Health gates passed.",
+        "Independent focused relationship-compression fixtures passed 6/6, including low-linear-correlation NOT UNIQUE, semantic duplicate REDUNDANT/AUDIT_ONLY, DATA_BLOCKED fail-closed, duplicate-group count-once metadata and zero authority/weight invariants.",
+        "Current readout was materialized from the exact then-current Experiment Lifecycle registry with 54 prospective sensor-combination rows, 7 semantic duplicate groups and 2 explicit historical proxy rows; historical rows remain current_prospective_validation=false.",
+        "Generated readout authority is research-only/non-binding with canonical_market_state=false, market_gate_change=false, model_weight_change=false, portfolio_action=false and no automatic sensor promotion/retirement."
+      ]
+    },
+    {
+      "source_ref": "authority:allowed_change_scope",
+      "status": "SATISFIED",
+      "evidence": [
+        "PR #1271 merged at ddd8e92178292e0aad98a6aad7159c5658d8bc8e after Experiment Lifecycle, Data Architecture, Automation Production Health and Storage Health gates passed.",
+        "Independent focused relationship-compression fixtures passed 6/6, including low-linear-correlation NOT UNIQUE, semantic duplicate REDUNDANT/AUDIT_ONLY, DATA_BLOCKED fail-closed, duplicate-group count-once metadata and zero authority/weight invariants.",
+        "Current readout was materialized from the exact then-current Experiment Lifecycle registry with 54 prospective sensor-combination rows, 7 semantic duplicate groups and 2 explicit historical proxy rows; historical rows remain current_prospective_validation=false.",
+        "Generated readout authority is research-only/non-binding with canonical_market_state=false, market_gate_change=false, model_weight_change=false, portfolio_action=false and no automatic sensor promotion/retirement."
+      ]
+    },
+    {
+      "source_ref": "post_fix_gate",
+      "status": "SATISFIED",
+      "evidence": [
+        "PR #1271 merged at ddd8e92178292e0aad98a6aad7159c5658d8bc8e after Experiment Lifecycle, Data Architecture, Automation Production Health and Storage Health gates passed.",
+        "Independent focused relationship-compression fixtures passed 6/6, including low-linear-correlation NOT UNIQUE, semantic duplicate REDUNDANT/AUDIT_ONLY, DATA_BLOCKED fail-closed, duplicate-group count-once metadata and zero authority/weight invariants.",
+        "Current readout was materialized from the exact then-current Experiment Lifecycle registry with 54 prospective sensor-combination rows, 7 semantic duplicate groups and 2 explicit historical proxy rows; historical rows remain current_prospective_validation=false.",
+        "Generated readout authority is research-only/non-binding with canonical_market_state=false, market_gate_change=false, model_weight_change=false, portfolio_action=false and no automatic sensor promotion/retirement."
+      ]
+    }
+  ],
+  "gaps": [],
+  "authority": "CLOSURE_GATE_ONLY_NO_MARKET_OR_PORTFOLIO_AUTHORITY",
+  "receipt_sha256": "da883e677cf6c35b06b42b69a2c00f710bb0b7e3b588d7557074d926f4a221c2"
+}
