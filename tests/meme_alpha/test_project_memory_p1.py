@@ -12,7 +12,7 @@ def base(**overrides):
         method_version="p1-test",
         frozen_at_utc="2026-09-23T15:30:00Z",
         eligibility_manifest_sha256="a" * 64,
-        discovery={"source": "fixture", "outcome": "not-present"},
+        discovery={"source": "fixture"},
         project_identity={
             "control_roots": [{
                 "root_type": "AUTHENTICATED_PROJECT_ROOT",
@@ -85,6 +85,10 @@ class ProjectMemoryP1Tests(unittest.TestCase):
         self.assertEqual(first["project_trial_id"], second["project_trial_id"])
         self.assertEqual(second["project_memory_before"], first)
         self.assertEqual(second["lineage"]["supersedes_snapshot_sha256"], first["snapshot_sha256"])
+
+    def test_outcome_derived_discovery_is_rejected(self):
+        with self.assertRaises(ProjectMemoryError):
+            build_project_memory(**base(discovery={"source": "fixture", "outcome": "winner"}))
 
     def test_p1_cannot_grant_binding_or_trading_authority(self):
         with self.assertRaises(ProjectMemoryError):
