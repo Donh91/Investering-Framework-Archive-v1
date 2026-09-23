@@ -5,16 +5,16 @@
   "signature": "d5f9cc11d5d7d05418b9",
   "candidate_sha256": "92a10427c7afe897ac70a95f370533b5b14864a15531b8b3a6b74d8835d18cc1",
   "task_contract_sha256": "6b23706c680820d9b4f380ef8b3040d8c44a017c948dbcb13be61a33ab712b5b",
-  "pr_number": 1273,
-  "merge_commit_sha": "161aa4bd2a5b7581fb2c61747ec2e4ef4d168cdb",
-  "verified_at_utc": "2026-09-23T22:49:00Z",
+  "pr_number": 1280,
+  "merge_commit_sha": "e01087b707f9c289470c3d0b454f32a286b9c2e3",
+  "verified_at_utc": "2026-09-23T23:45:00Z",
   "verification_evidence": [
-    "PR #1273 merged the deterministic read-only experiment simplification helper and focused fixtures at 161aa4bd2a5b7581fb2c61747ec2e4ef4d168cdb after Experiment Lifecycle, Data Architecture, Storage Health and Automation Production Health gates passed.",
-    "Follow-up PR #1277 merged the current-registry non-mutation regression at 10ffabb6e8ad77fdc7cf1bb27a8c1c7a403b9746; Experiment Lifecycle Gate run 35930222499 passed against the live registry/candidate corpus.",
-    "The live-registry regression runs the review twice, requires deterministic identical output, hashes every candidate JSON before and after and requires byte-for-byte equality, and reasserts zero automatic merge, retirement, promotion, model-weight, market-gate or portfolio authority.",
-    "Current registry readback exposed 387 registry rows, 379 unique candidate IDs and 8 duplicate-ID legacy families; the implementation preserves these as explicit read-only registry-duplication diagnostics rather than silently deleting, merging or treating them as hypothesis diversity.",
-    "Exact semantic alias clustering uses existing canonical metric normalization and full semantic identity; same target path alone remains explicitly insufficient merge authority."
+    "PR #1273 merged the deterministic read-only simplification review and synthetic fixtures; PR #1277 added a current-registry non-mutation regression that passed Experiment Lifecycle Gate.",
+    "Current-registry verification preserves 387 registry rows, 379 unique candidate IDs and 8 duplicate-ID legacy families as explicit read-only diagnostics; repeated review output is deterministic and candidate JSON bytes remain unchanged.",
+    "Independent Claude review reproduced an entrypoint/import-order defect. PR #1280 repaired direct-script and isolated-module execution without changing review semantics and regenerated the canonical transition receipt on branch sol/experiment-simplification-entrypoint-fix.",
+    "PR #1280 passed Data Architecture, Storage Health, Experiment Lifecycle and Automation Production Health gates. Entry-point regressions cover isolated unittest collection, direct execution from outside the repo, module execution and current-registry CLI read-only behavior.",
+    "Fresh-main merge receipt for PR #1280 is MERGED_VERIFIED and binds transition receipt 987c49b9558852d52a5016b49925bc125de3ba0575f1b5721bd8a9ad1bd1a55e. No automatic merge, retirement, promotion, market-gate, model-weight, portfolio or candidate-history authority was introduced."
   ],
   "post_fix_gate": "DETERMINISTIC_CLUSTER_FIXTURE_PASS_PLUS_GOVERNANCE_READBACK_NO_MUTATION",
-  "receipt_sha256": "30fdfed28f44d4276c2978f440bb8fd7c8520d120ea6653c38ed50815ee8952d"
+  "receipt_sha256": "52133b8ed75ed37637f43287c5bdd26b8a013a1698e6e9cc83ebbff003429dfe"
 }
