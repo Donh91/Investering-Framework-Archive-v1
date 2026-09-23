@@ -3,11 +3,22 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import sys
 from pathlib import Path
 from statistics import median
 from typing import Any
 
-from scripts.experiments.experiment_lifecycle_scientific_admission import semantic_spec
+# Importable as a module, runnable as a script and collectable in isolation.
+# experiment_lifecycle_scientific_admission does a bare import of
+# experiment_lifecycle, so scripts/experiments must be available on sys.path.
+# Direct script execution additionally needs the repository root.
+_REPO_ROOT = Path(__file__).resolve().parents[2]
+_EXPERIMENTS_DIR = Path(__file__).resolve().parent
+for _path in (str(_REPO_ROOT), str(_EXPERIMENTS_DIR)):
+    if _path not in sys.path:
+        sys.path.insert(0, _path)
+
+from scripts.experiments.experiment_lifecycle_scientific_admission import semantic_spec  # noqa: E402
 
 ALLOWED_RECOMMENDATIONS = {
     "KEEP",
