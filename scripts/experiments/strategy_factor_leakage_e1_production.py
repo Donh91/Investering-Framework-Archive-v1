@@ -1130,7 +1130,7 @@ def pdlt_records(cfgi, candles, candle_knowledge: str = "CLOSE") -> list[Record]
 
 
 def completed_candle_locate(candles: list[dict[str, Any]], when: datetime) -> int | None:
-    """Completed-candle anchor: last candle whose CLOSE is <= when (production since PR #1214)."""
+    """Independent completed-candle control matching repaired production semantics."""
     idx = None
     for i, row in enumerate(candles):
         if row["dt"] + H4 <= when:
@@ -1156,7 +1156,8 @@ def case_pdlt(variant: str) -> RightTruncationCase:
     cfgi, candles = pdlt_synthetic(aligned=aligned)
     knowledge = "OPEN" if variant == "LABEL_TIME_TRUNCATION_CONTROL" else "CLOSE"
     override = {"REPAIR_CANDIDATE_COMPLETED_CANDLE": completed_candle_locate,
-                "SEEDED_LEGACY_OPEN_TIME_ANCHOR": legacy_open_time_locate}.get(variant)
+                "SEEDED_LEGACY_OPEN_TIME_ANCHOR": legacy_open_time_locate,
+                "LABEL_TIME_TRUNCATION_CONTROL": legacy_open_time_locate}.get(variant)
     # PRODUCTION anchors on completed 4h candles since PR #1214; the legacy
     # open-time anchor is kept as a seeded negative so the detector stays proven.
     expected = {"PRODUCTION": "PASS", "ALIGNED_TIMESTAMPS": "PASS", "REPAIR_CANDIDATE_COMPLETED_CANDLE": "PASS",
@@ -1170,7 +1171,7 @@ def case_pdlt(variant: str) -> RightTruncationCase:
                      "ALIGNED_TIMESTAMPS": "Same, CFGI timestamps aligned to 4h boundaries.",
                      "REPAIR_CANDIDATE_COMPLETED_CANDLE": "Same inputs; locate() restricted to candles closed by the CFGI timestamp.",
                      "SEEDED_LEGACY_OPEN_TIME_ANCHOR": "Seeded negative: locate() replaced by the pre-#1214 open-time anchor.",
-                     "LABEL_TIME_TRUNCATION_CONTROL": "Detector-blindness control: candles truncated by OPEN (label) time instead of knowledge time."}[variant],
+                     "LABEL_TIME_TRUNCATION_CONTROL": "Detector-blindness control: legacy open-time locator with candles incorrectly declared knowable at OPEN time."}[variant],
         records=pdlt_records(cfgi, candles, knowledge), compute=lambda recs: compute_pdlt(recs, override), max_targets=20,
         decision_fields=lambda name: not name.endswith(PDLT_OUTCOME_SUFFIXES), censor_future=poison_outcome_source,
         excluded_field_reason={s: "OUTCOME_LABEL_BY_DESIGN" for s in PDLT_OUTCOME_SUFFIXES},
@@ -1854,15 +1855,6 @@ ADJUDICATION: dict[str, dict[str, Any]] = {
         "remediation_status": "NOT_IMPLEMENTED_CODEX_CANDIDATE_PREPARED",
         "remediation_route": "codex-research-copper-gold-event-study-knowledge-time-join-v1 (NOT_PERSISTED)",
     },
-    "RT-A07-AT-PDLT-DISCOVERY-PRODUCTION": {
-        "finding_id": "E1X-F02", "severity": "MEDIUM",
-        "feature": "PDLT discovery label anchor 72h.start / 7d.start / 14d.start",
-        "causal_mechanism": "locate() returns the last 4h candle whose OPEN is <= the CFGI timestamp and forward_stats() uses that candle's CLOSE (open+4h) as the decision-time start price, so the anchor is 0-4h after the signal (exactly 4h when timestamps are 4h-aligned). Live CFGI 4h rows are captured 1-15 minutes after their timestamp, i.e. the timestamp is the knowledge time.",
-        "affected_downstream": ["PDLT discovery labels event72/event7d/event14d and fixed-calendar holdout screen", "any PDLT discovery report or frozen model derived from build_dataset", "PDLT reopen requirement INDEPENDENT_REVIEW_OF_DISCOVERY_REPAIR"],
-        "historical_contamination": "Every historical PDLT discovery label ever produced by build_dataset. Real-data magnitude UNKNOWN (inputs in restricted plane; no discovery report or frozen model is present on main).",
-        "remediation_status": "NOT_IMPLEMENTED_LANE_FROZEN_CODEX_CANDIDATE_PREPARED",
-        "remediation_route": "codex-research-pdlt-discovery-completed-candle-anchor-v1 (NOT_PERSISTED); repair candidate proven in RT-A07-...-REPAIR_CANDIDATE_COMPLETED_CANDLE",
-    },
     "RT-A09-AT-E3-N5-FACTOR-EXAMPLES-EVENT_TIME": {
         "finding_id": "E1X-F03", "severity": "LOW",
         "feature": "AT-E3-0019 N5 window features and entry anchor",
@@ -2047,7 +2039,7 @@ def build_cases(repo: Path = REPO, coinmetrics: Path | None = None, event_featur
         notes["event_study_knowledge_rule"] = rule
     else:
         notes["event_study"] = "NOT_RUN: Coin Metrics btc.csv (pinned revision f1a36afb) not supplied"
-    production += [case_pdlt("PRODUCTION"), case_pdlt("ALIGNED_TIMESTAMPS"), case_pdlt("REPAIR_CANDIDATE_COMPLETED_CANDLE"), case_pdlt("SEEDED_LEGACY_OPEN_TIME_ANCHOR"),
+    production += [case_pdlt("PRODUCTION"), case_pdlt("ALIGNED_TIMESTAMPS"), case_pdlt("REPAIR_CANDIDATE_COMPLETED_CANDLE"),
                    case_e2_features(rows, hb), case_n5("EVENT_TIME"), case_n5("CAPTURE_TIME"), case_intraday(rows, hb),
                    case_pullback_replay_loader(obs, pb), case_master_monday_selectors(rows, hb), case_spar()]
     try:
@@ -2059,7 +2051,7 @@ def build_cases(repo: Path = REPO, coinmetrics: Path | None = None, event_featur
     controls = [control_clean_trailing_mean(rows), control_seeded_negative_shift(rows), control_seeded_full_sample_zscore(cg_rows),
                 control_seeded_centered_rolling(etf), control_seeded_bfill(rows), control_seeded_ema_right(rows),
                 control_seeded_nondeterminism(rows), control_late_listing(obs), control_membership(obs, True), control_membership(obs, False),
-                control_source_revision(cg_rows), case_pdlt("LABEL_TIME_TRUNCATION_CONTROL")]
+                control_source_revision(cg_rows), case_pdlt("SEEDED_LEGACY_OPEN_TIME_ANCHOR"), case_pdlt("LABEL_TIME_TRUNCATION_CONTROL")]
     warmup_controls = [control_seeded_ema_warmup(rows, 150), control_seeded_ema_warmup(rows, 1000)]
     notes["pullback_live_stored_vs_pit"] = pullback_stored_vs_pit(obs)
     return production, warmups, controls, warmup_controls, notes
