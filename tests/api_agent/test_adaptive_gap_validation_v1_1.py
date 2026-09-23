@@ -49,3 +49,27 @@ def test_decision_miss_registry_marks_discovery_only_and_bounds_attribution(tmp_
     assert item['authority']['sensor_weight_change'] is False
     assert payload['attribution_semantics']['aligned_sensor_count_proves_independence'] is False
     assert payload['authority']['automatic_sensor_promotion'] is False
+
+def test_adaptive_workflow_treats_only_clean_budget_exhaustion_as_hold():
+    text=(ROOT/'.github/workflows/adaptive-decision-miss-validation.yml').read_text()
+    assert 'id: budget' in text
+    assert 'clean_budget_hold = (' in text
+    assert 'errors == []' in text
+    assert 'remaining <= reserve' in text
+    assert 'budget_guard_block_not_clean' in text
+    assert 'Record expected budget hold' in text
+    assert "if: steps.budget.outputs.eligible != 'true'" in text
+    for name in (
+        'Audit matured evidence for decision and timing misses',
+        'Persist decision miss memory',
+        'Route miss-derived evidence gaps through existing closure engine',
+        'Validate gap value on non-discovery evidence',
+        'Materialize immutable audit receipts',
+        'Commit miss and validation memory with verified readback',
+    ):
+        marker=f'- name: {name}\n        if: steps.budget.outputs.eligible == \'true\''
+        assert marker in text
+    assert '--task DECISION_MISS_AUDIT --cap-usd 1.5 --reserve-usd 0.05' in text
+    assert '--task EVIDENCE_GAP_VALIDATION --cap-usd 1.5 --reserve-usd 0.05' in text
+    assert '--hard-stop-usd 20 --reserve-usd 2.0' in text
+
