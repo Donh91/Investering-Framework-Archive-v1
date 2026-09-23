@@ -1,0 +1,33 @@
+{
+  "allowed_change_scope": [
+    ".github/workflows/api-agent-gateway-gate.yml",
+    ".github/workflows/master-monday-preflight-gate.yml",
+    "tests/api_agent/test_director_learning_context.py",
+    "tests/orchestration/test_consumer_receipt.py"
+  ],
+  "branch": "agent/task-20260923-ci-collection-guard-v1",
+  "candidate_id": "codex-research-gate-uncollected-pytest-style-tests-v1",
+  "candidate_path": "research/codex/intake/2026/09/codex-research-gate-uncollected-pytest-style-tests-v1.json",
+  "candidate_sha256": "ba94e4fc55a02516fba52f9ac209436eac792ec92ab0c5a3400b1f31a7566b2b",
+  "contract": "CODEX_RESEARCH_TRANSITION_RECEIPT_v1",
+  "forbidden_changes": [
+    "API budget",
+    "canonical authority",
+    "historical artifact rewrite",
+    "market gates",
+    "model weights",
+    "new policy semantics",
+    "paid CFGI or OpenAI execution",
+    "portfolio logic",
+    "threshold or anchor changes",
+    "workflow schedule or trigger changes"
+  ],
+  "objective": "api-agent-gateway-gate.yml runs `python -m unittest ... tests.api_agent.test_director_learning_context`; that module defines 7 module-level pytest functions (tmp_path fixture) and no TestCase, so unittest collects 0 of them (the 7 tests it reports belong to an imported TestCase module). master-monday-preflight-gate.yml runs `python -m unittest ... tests.orchestration.test_consumer_receipt`; 8 module-level pytest functions are never collected (only the one TestCase test runs). Make each gate execute these tests for real (run the affected modules with pytest, or convert them to unittest.TestCase with tempfile fixtures as PR #1096 did for test_director_situation_room_shadow) and make the gate fail if the collected count for those modules is zero.",
+  "post_fix_gate": "BOTH_GATES_GREEN_WITH_NONZERO_COLLECTED_COUNTS",
+  "pr_number": null,
+  "receipt_sha256": "0ecb02ce01dc6184a8278653bcb3bbd1fc19b10696abfe1d7647ead0930b4a07",
+  "recorded_at_utc": "2026-09-23T20:47:00Z",
+  "signature": "b753d6295680eb62d7a3",
+  "state": "IN_REMEDIATION",
+  "task_contract_sha256": "ab021abcef0e32db5a5594a4843b6492ab0c8840dcd1c5a7e7a4aa7f9cb3500e"
+}
