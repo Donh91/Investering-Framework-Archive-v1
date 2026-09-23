@@ -20,6 +20,22 @@ CANONICAL_FUND_HEADERS = {
     "ETH": ["ETHA", "ETHB", "FETH", "ETHW", "TETH", "ETHV", "QETH", "EZET", "ETHE", "ETH"],
 }
 
+# Explicitly registered source schemas. Width alone is never authority: a same-width
+# rename/reorder must fail closed because totals can still reconcile under a wrong
+# ticker binding.
+FUND_SCHEMA_REGISTRY = {
+    "BTC": [
+        {"schema_id": "FARSIDE_BTC_v1_12F", "tickers": CANONICAL_FUND_HEADERS["BTC"]},
+    ],
+    "ETH": [
+        {"schema_id": "FARSIDE_ETH_v1_10F", "tickers": CANONICAL_FUND_HEADERS["ETH"]},
+        {
+            "schema_id": "FARSIDE_ETH_v2_11F_MSSE",
+            "tickers": CANONICAL_FUND_HEADERS["ETH"][:8] + ["MSSE"] + CANONICAL_FUND_HEADERS["ETH"][8:],
+        },
+    ],
+}
+
 
 def clean(value: str) -> str:
     value = re.sub(r"<[^>]+>", " ", value)
@@ -57,22 +73,59 @@ def looks_like_header(cells: list[str]) -> bool:
     return normalized[0] == "date" and normalized[-1] == "total"
 
 
-def two_row_header_candidate(rows: list[list[str]], asset: str) -> list[str] | None:
-    expected = CANONICAL_FUND_HEADERS[asset]
-    expected_norm = [value.lower() for value in expected]
-    # Ethereum's current Farside table uses one issuer-name row ending in Total
-    # followed by a ticker row with blank edge cells. Reconstruct only the schema,
-    # never values, and only when the ticker sequence exactly matches the frozen
-    # source schema.
+def registered_schema(asset: str, tickers: list[str]) -> dict[str, Any] | None:
+    for schema in FUND_SCHEMA_REGISTRY[asset]:
+        if tickers == schema["tickers"]:
+            return schema
+    return None
+
+
+def source_ticker_header_candidate(cells: list[str], asset: str) -> tuple[list[str], str] | None:
+    """Bind a one-row source header only by exact ticker names, never by width."""
+    if len(cells) < 3:
+        return None
+    first = clean(cells[0]).lower()
+    last = clean(cells[-1]).lower()
+    if first not in {"", "date"} or last != "total":
+        return None
+
+    tickers = [clean(value).upper() for value in cells[1:-1]]
+    if not tickers:
+        return None
+    if len(set(tickers)) != len(tickers):
+        raise ValueError("DUPLICATE_TICKER")
+
+    schema = registered_schema(asset, tickers)
+    if schema is not None:
+        return ["Date", *schema["tickers"], "Total"], schema["schema_id"]
+
+    # Issuer-name rows in the legacy two-row ETH layout also have blank...Total
+    # edges. Only ticker-like rows are schema claims; issuer rows fall through so
+    # the exact second-row ticker matcher below can handle them.
+    if all(re.fullmatch(r"[A-Z0-9]{2,6}", ticker) for ticker in tickers):
+        if any(set(tickers) == set(schema["tickers"]) for schema in FUND_SCHEMA_REGISTRY[asset]):
+            raise ValueError("UNKNOWN_SCHEMA_REVISION:REORDERED")
+        raise ValueError("UNKNOWN_SCHEMA_REVISION")
+    return None
+
+
+def two_row_header_candidate(rows: list[list[str]], asset: str) -> tuple[list[str], str] | None:
+    """Accept the legacy issuer-row + ticker-row layout only by exact registry match."""
     for index, cells in enumerate(rows[:-1]):
         normalized = normalized_header(cells)
         if not normalized or normalized[-1] != "total":
             continue
         next_cells = rows[index + 1]
-        next_norm = normalized_header(next_cells)
-        tickers = [value for value in next_norm if value]
-        if tickers == expected_norm:
-            return ["Date", *expected, "Total"]
+        if len(next_cells) < 3:
+            continue
+        tickers = [clean(value).upper() for value in next_cells[1:-1] if clean(value)]
+        if not tickers:
+            continue
+        if len(set(tickers)) != len(tickers):
+            raise ValueError("DUPLICATE_TICKER")
+        schema = registered_schema(asset, tickers)
+        if schema is not None:
+            return ["Date", *schema["tickers"], "Total"], schema["schema_id"]
     return None
 
 
@@ -85,12 +138,23 @@ def parse_table(html: str, asset: str, today_utc: date) -> tuple[list[dict[str, 
     for tr in table_rows:
         th = [clean(cell) for cell in re.findall(r"<th\b[^>]*>(.*?)</th>", tr, re.I | re.S)]
         cells = [clean(cell) for cell in re.findall(r"<t[dh]\b[^>]*>(.*?)</t[dh]>", tr, re.I | re.S)]
-        if looks_like_header(cells):
-            headers = cells
+
+        matched_header = None
+        for candidate in (cells, th):
+            if not candidate:
+                continue
+            matched_header = source_ticker_header_candidate(candidate, asset)
+            if matched_header is not None:
+                headers, schema_id = matched_header
+                header_mode = (
+                    "DIRECT_DATE_TOTAL"
+                    if clean(candidate[0]).lower() == "date"
+                    else f"SOURCE_TICKER_HEADER:{schema_id}"
+                )
+                break
+        if matched_header is not None:
             continue
-        if looks_like_header(th):
-            headers = th
-            continue
+
         if len(cells) < 3:
             continue
         parsed_date = parse_date_label(cells[0])
@@ -109,26 +173,20 @@ def parse_table(html: str, asset: str, today_utc: date) -> tuple[list[dict[str, 
         })
 
     if not headers:
-        headers = two_row_header_candidate(non_date_rows, asset)
-        if headers:
+        two_row = two_row_header_candidate(non_date_rows, asset)
+        if two_row is not None:
+            headers, _schema_id = two_row
+            # Preserve the established mode string for historical consumers/tests.
             header_mode = "SOURCE_TWO_ROW_TICKER_HEADER"
 
-    if not headers and parsed:
-        expected = ["Date", *CANONICAL_FUND_HEADERS[asset], "Total"]
-        expected_values = len(expected) - 1
-        if all(len(row["values"]) == expected_values for row in parsed):
-            # Last-resort schema binding only: the asset-specific column order is
-            # frozen above and accepted solely when every parsed source row has the
-            # exact expected width. No numeric value is filled or transformed.
-            headers = expected
-            header_mode = "CANONICAL_ASSET_SCHEMA_EXACT_WIDTH_FALLBACK"
-
+    # Width-only fallback was removed deliberately. A renamed or reordered source
+    # table can preserve both width and Total parity while silently binding values
+    # to the wrong funds.
     if not headers or len(headers) < 3:
         raise ValueError("HEADER_NOT_FOUND")
     if not looks_like_header(headers):
         raise ValueError("HEADER_CONTRACT_DRIFT")
-    expected_headers = ["Date", *CANONICAL_FUND_HEADERS[asset], "Total"]
-    if normalized_header(headers) != normalized_header(expected_headers):
+    if registered_schema(asset, headers[1:-1]) is None:
         raise ValueError("HEADER_SCHEMA_MISMATCH")
     final_rows = [row for row in parsed if date.fromisoformat(row["date"]) < today_utc]
     return final_rows, headers, header_mode
