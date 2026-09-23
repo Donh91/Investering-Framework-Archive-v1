@@ -17,6 +17,7 @@ on:
       - 'tests/experiments/test_external_alpha_registry.py'
   schedule:
     - cron: '15 6 * * 1'
+      timezone: 'UTC'
   workflow_dispatch:
 
 permissions:
