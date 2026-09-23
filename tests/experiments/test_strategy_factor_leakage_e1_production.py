@@ -88,8 +88,16 @@ class E1XProductionFindingsTest(unittest.TestCase):
     def setUpClass(cls):
         cls.x = load_module()
 
-    def test_pdlt_discovery_anchor_uses_unclosed_candle(self):
-        result = self.x.run_right_truncation(self.x.case_pdlt("PRODUCTION"))
+    def test_pdlt_discovery_production_anchor_passes_after_completed_candle_fix(self):
+        # PR #1214 anchors discovery on the last completed 4h candle.
+        for variant in ("PRODUCTION", "ALIGNED_TIMESTAMPS"):
+            with self.subTest(variant=variant):
+                result = self.x.run_right_truncation(self.x.case_pdlt(variant))
+                self.assertEqual(result["observed"], "PASS")
+                self.assertGreater(result["output_comparisons"], 10)
+
+    def test_pdlt_seeded_legacy_open_time_anchor_is_still_detected(self):
+        result = self.x.run_right_truncation(self.x.case_pdlt("SEEDED_LEGACY_OPEN_TIME_ANCHOR"))
         self.assertEqual(result["observed"], "FAIL")
         self.assertEqual(result["classifications"], ["TRUE_FUTURE_LEAKAGE"])
         fields = {d["field"] for m in result["mismatches"] for d in m["field_differences"]}

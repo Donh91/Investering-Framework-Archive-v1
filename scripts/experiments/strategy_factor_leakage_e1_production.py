@@ -1130,10 +1130,21 @@ def pdlt_records(cfgi, candles, candle_knowledge: str = "CLOSE") -> list[Record]
 
 
 def completed_candle_locate(candles: list[dict[str, Any]], when: datetime) -> int | None:
-    """Repair candidate (NOT applied to production): last candle whose CLOSE is <= when."""
+    """Completed-candle anchor: last candle whose CLOSE is <= when (production since PR #1214)."""
     idx = None
     for i, row in enumerate(candles):
         if row["dt"] + H4 <= when:
+            idx = i
+        else:
+            break
+    return idx
+
+
+def legacy_open_time_locate(candles: list[dict[str, Any]], when: datetime) -> int | None:
+    """Seeded negative control: the pre-#1214 production anchor (candle OPEN <= when)."""
+    idx = None
+    for i, row in enumerate(candles):
+        if row["dt"] <= when:
             idx = i
         else:
             break
@@ -1144,16 +1155,21 @@ def case_pdlt(variant: str) -> RightTruncationCase:
     aligned = variant == "ALIGNED_TIMESTAMPS"
     cfgi, candles = pdlt_synthetic(aligned=aligned)
     knowledge = "OPEN" if variant == "LABEL_TIME_TRUNCATION_CONTROL" else "CLOSE"
-    override = completed_candle_locate if variant == "REPAIR_CANDIDATE_COMPLETED_CANDLE" else None
-    expected = {"PRODUCTION": "FAIL", "ALIGNED_TIMESTAMPS": "FAIL", "REPAIR_CANDIDATE_COMPLETED_CANDLE": "PASS", "LABEL_TIME_TRUNCATION_CONTROL": "PASS"}[variant]
+    override = {"REPAIR_CANDIDATE_COMPLETED_CANDLE": completed_candle_locate,
+                "SEEDED_LEGACY_OPEN_TIME_ANCHOR": legacy_open_time_locate}.get(variant)
+    # PRODUCTION anchors on completed 4h candles since PR #1214; the legacy
+    # open-time anchor is kept as a seeded negative so the detector stays proven.
+    expected = {"PRODUCTION": "PASS", "ALIGNED_TIMESTAMPS": "PASS", "REPAIR_CANDIDATE_COMPLETED_CANDLE": "PASS",
+                "SEEDED_LEGACY_OPEN_TIME_ANCHOR": "FAIL", "LABEL_TIME_TRUNCATION_CONTROL": "PASS"}[variant]
     return RightTruncationCase(
         case_id=f"RT-A07-AT-PDLT-DISCOVERY-{variant}",
         owner="AUTO_TRADING / PDLT v1.1 discovery (FROZEN_METHODS_BLOCKED)",
         production_path="scripts/experiments/pdlt_discovery.py",
-        production_callable="build_dataset -> locate + forward_stats" + (" [locate replaced by repair candidate]" if override else ""),
+        production_callable="build_dataset -> locate + forward_stats" + (f" [locate replaced by {override.__name__}]" if override else ""),
         description={"PRODUCTION": "Production dataset builder; 4h candle knowable at open+4h; CFGI knowable at its timestamp (observed live semantics).",
                      "ALIGNED_TIMESTAMPS": "Same, CFGI timestamps aligned to 4h boundaries.",
                      "REPAIR_CANDIDATE_COMPLETED_CANDLE": "Same inputs; locate() restricted to candles closed by the CFGI timestamp.",
+                     "SEEDED_LEGACY_OPEN_TIME_ANCHOR": "Seeded negative: locate() replaced by the pre-#1214 open-time anchor.",
                      "LABEL_TIME_TRUNCATION_CONTROL": "Detector-blindness control: candles truncated by OPEN (label) time instead of knowledge time."}[variant],
         records=pdlt_records(cfgi, candles, knowledge), compute=lambda recs: compute_pdlt(recs, override), max_targets=20,
         decision_fields=lambda name: not name.endswith(PDLT_OUTCOME_SUFFIXES), censor_future=poison_outcome_source,
@@ -2031,7 +2047,7 @@ def build_cases(repo: Path = REPO, coinmetrics: Path | None = None, event_featur
         notes["event_study_knowledge_rule"] = rule
     else:
         notes["event_study"] = "NOT_RUN: Coin Metrics btc.csv (pinned revision f1a36afb) not supplied"
-    production += [case_pdlt("PRODUCTION"), case_pdlt("ALIGNED_TIMESTAMPS"), case_pdlt("REPAIR_CANDIDATE_COMPLETED_CANDLE"),
+    production += [case_pdlt("PRODUCTION"), case_pdlt("ALIGNED_TIMESTAMPS"), case_pdlt("REPAIR_CANDIDATE_COMPLETED_CANDLE"), case_pdlt("SEEDED_LEGACY_OPEN_TIME_ANCHOR"),
                    case_e2_features(rows, hb), case_n5("EVENT_TIME"), case_n5("CAPTURE_TIME"), case_intraday(rows, hb),
                    case_pullback_replay_loader(obs, pb), case_master_monday_selectors(rows, hb), case_spar()]
     try:
