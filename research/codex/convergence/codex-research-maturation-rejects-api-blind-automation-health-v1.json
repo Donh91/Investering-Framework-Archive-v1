@@ -1,0 +1,144 @@
+{
+  "contract": "MISSION_CONVERGENCE_RECEIPT_v1",
+  "status": "CONVERGED",
+  "candidate_id": "codex-research-maturation-rejects-api-blind-automation-health-v1",
+  "signature": "f976903834cfe0b49297",
+  "candidate_sha256": "ea591396b267d7f7cc58d652e3e85def3d4e1ea0c5ad0c57f8bca9428dc6540d",
+  "task_contract_sha256": "fd6a5a285409a5c22ee3da4d29d56ed73cd86d785415fd7cdb8b7ce25f280a2e",
+  "pr_number": 1249,
+  "merge_commit_sha": "cbc29156551ee6f19b78c4dd04fe60532391b994",
+  "assessed_at_utc": "2026-09-23T21:38:00Z",
+  "requirements": [
+    {
+      "source_ref": "objective",
+      "text": "build_remediation_maturation.build() reads research/architecture_health/LATEST_AUTOMATION_HEALTH.json without checking whether the live GitHub audit actually ran. A report built without a token has api_error set and every workflow finding WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE / NO_RUN_HISTORY, so real findings vanish (counted as post-fix successes for IN_REMEDIATION/POST_FIX items) and blind findings mint new tasks. Make maturation fail closed on such input: when api_error is set or the report lacks live run data for most scheduled workflows, carry the prior queue forward unchanged, record the refusal reason, and do not increment post_fix_successes or create signatures from API-unavailability findings.",
+      "kind": "OBJECTIVE"
+    },
+    {
+      "source_ref": "acceptance:positive:1",
+      "text": "A health report with api_error set leaves every prior item state and post_fix_successes unchanged and records a refusal reason.",
+      "kind": "ACCEPTANCE_POSITIVE"
+    },
+    {
+      "source_ref": "acceptance:positive:2",
+      "text": "A normal token-bearing report still matures findings exactly as before (existing tests pass).",
+      "kind": "ACCEPTANCE_POSITIVE"
+    },
+    {
+      "source_ref": "acceptance:negative:1",
+      "text": "No finding WORKFLOW_NOT_REGISTERED_OR_API_UNAVAILABLE becomes CODEX_READY when api_error is set.",
+      "kind": "ACCEPTANCE_NEGATIVE"
+    },
+    {
+      "source_ref": "acceptance:negative:2",
+      "text": "No change to thresholds, risk classes or post-fix gate counts for valid input.",
+      "kind": "ACCEPTANCE_NEGATIVE"
+    },
+    {
+      "source_ref": "acceptance:negative:3",
+      "text": "No workflow trigger or schedule changes.",
+      "kind": "ACCEPTANCE_NEGATIVE"
+    },
+    {
+      "source_ref": "authority:allowed_change_scope",
+      "text": "scripts/remediation/build_remediation_maturation.py | tests/remediation/test_remediation_maturation_api_blind_health.py",
+      "kind": "AUTHORITY_BOUNDARY"
+    },
+    {
+      "source_ref": "authority:forbidden_changes",
+      "text": "market gates | model weights | canonical authority | portfolio logic | API budget | new policy semantics | historical artifact rewrite | threshold or anchor changes | workflow schedule or trigger changes | paid CFGI or OpenAI execution",
+      "kind": "AUTHORITY_BOUNDARY"
+    },
+    {
+      "source_ref": "post_fix_gate",
+      "text": "MATURATION_TESTS_PASS_PLUS_BLIND_INPUT_FIXTURE_NOOP",
+      "kind": "POST_FIX_GATE"
+    }
+  ],
+  "coverage": [
+    {
+      "source_ref": "objective",
+      "status": "SATISFIED",
+      "evidence": [
+        "PR #1249 merged at cbc29156551ee6f19b78c4dd04fe60532391b994 and implements fail-closed handling for api_error and insufficient scheduled-workflow live coverage while preserving valid-input maturation behavior.",
+        "PR #1257 Remediation Maturation Gate run 35923438190 executed tests.remediation.test_remediation_maturation_api_blind_health: 4/4 PASS, including api_error carry-forward/no-new-signature, majority-missing-live fail-closed, valid-live input path, and prior-object immutability.",
+        "PR #1257 merged at b7ab316145c74f59acf02f9ba0269c8a7da94571 with all five repo gates green; the gate change added only the existing regression command and did not change workflow triggers or schedule."
+      ]
+    },
+    {
+      "source_ref": "acceptance:positive:1",
+      "status": "SATISFIED",
+      "evidence": [
+        "PR #1249 merged at cbc29156551ee6f19b78c4dd04fe60532391b994 and implements fail-closed handling for api_error and insufficient scheduled-workflow live coverage while preserving valid-input maturation behavior.",
+        "PR #1257 Remediation Maturation Gate run 35923438190 executed tests.remediation.test_remediation_maturation_api_blind_health: 4/4 PASS, including api_error carry-forward/no-new-signature, majority-missing-live fail-closed, valid-live input path, and prior-object immutability.",
+        "PR #1257 merged at b7ab316145c74f59acf02f9ba0269c8a7da94571 with all five repo gates green; the gate change added only the existing regression command and did not change workflow triggers or schedule."
+      ]
+    },
+    {
+      "source_ref": "acceptance:positive:2",
+      "status": "SATISFIED",
+      "evidence": [
+        "PR #1249 merged at cbc29156551ee6f19b78c4dd04fe60532391b994 and implements fail-closed handling for api_error and insufficient scheduled-workflow live coverage while preserving valid-input maturation behavior.",
+        "PR #1257 Remediation Maturation Gate run 35923438190 executed tests.remediation.test_remediation_maturation_api_blind_health: 4/4 PASS, including api_error carry-forward/no-new-signature, majority-missing-live fail-closed, valid-live input path, and prior-object immutability.",
+        "PR #1257 merged at b7ab316145c74f59acf02f9ba0269c8a7da94571 with all five repo gates green; the gate change added only the existing regression command and did not change workflow triggers or schedule."
+      ]
+    },
+    {
+      "source_ref": "acceptance:negative:1",
+      "status": "SATISFIED",
+      "evidence": [
+        "PR #1249 merged at cbc29156551ee6f19b78c4dd04fe60532391b994 and implements fail-closed handling for api_error and insufficient scheduled-workflow live coverage while preserving valid-input maturation behavior.",
+        "PR #1257 Remediation Maturation Gate run 35923438190 executed tests.remediation.test_remediation_maturation_api_blind_health: 4/4 PASS, including api_error carry-forward/no-new-signature, majority-missing-live fail-closed, valid-live input path, and prior-object immutability.",
+        "PR #1257 merged at b7ab316145c74f59acf02f9ba0269c8a7da94571 with all five repo gates green; the gate change added only the existing regression command and did not change workflow triggers or schedule."
+      ]
+    },
+    {
+      "source_ref": "acceptance:negative:2",
+      "status": "SATISFIED",
+      "evidence": [
+        "PR #1249 merged at cbc29156551ee6f19b78c4dd04fe60532391b994 and implements fail-closed handling for api_error and insufficient scheduled-workflow live coverage while preserving valid-input maturation behavior.",
+        "PR #1257 Remediation Maturation Gate run 35923438190 executed tests.remediation.test_remediation_maturation_api_blind_health: 4/4 PASS, including api_error carry-forward/no-new-signature, majority-missing-live fail-closed, valid-live input path, and prior-object immutability.",
+        "PR #1257 merged at b7ab316145c74f59acf02f9ba0269c8a7da94571 with all five repo gates green; the gate change added only the existing regression command and did not change workflow triggers or schedule."
+      ]
+    },
+    {
+      "source_ref": "acceptance:negative:3",
+      "status": "SATISFIED",
+      "evidence": [
+        "PR #1249 merged at cbc29156551ee6f19b78c4dd04fe60532391b994 and implements fail-closed handling for api_error and insufficient scheduled-workflow live coverage while preserving valid-input maturation behavior.",
+        "PR #1257 Remediation Maturation Gate run 35923438190 executed tests.remediation.test_remediation_maturation_api_blind_health: 4/4 PASS, including api_error carry-forward/no-new-signature, majority-missing-live fail-closed, valid-live input path, and prior-object immutability.",
+        "PR #1257 merged at b7ab316145c74f59acf02f9ba0269c8a7da94571 with all five repo gates green; the gate change added only the existing regression command and did not change workflow triggers or schedule."
+      ]
+    },
+    {
+      "source_ref": "authority:allowed_change_scope",
+      "status": "SATISFIED",
+      "evidence": [
+        "PR #1249 merged at cbc29156551ee6f19b78c4dd04fe60532391b994 and implements fail-closed handling for api_error and insufficient scheduled-workflow live coverage while preserving valid-input maturation behavior.",
+        "PR #1257 Remediation Maturation Gate run 35923438190 executed tests.remediation.test_remediation_maturation_api_blind_health: 4/4 PASS, including api_error carry-forward/no-new-signature, majority-missing-live fail-closed, valid-live input path, and prior-object immutability.",
+        "PR #1257 merged at b7ab316145c74f59acf02f9ba0269c8a7da94571 with all five repo gates green; the gate change added only the existing regression command and did not change workflow triggers or schedule."
+      ]
+    },
+    {
+      "source_ref": "authority:forbidden_changes",
+      "status": "SATISFIED",
+      "evidence": [
+        "PR #1249 merged at cbc29156551ee6f19b78c4dd04fe60532391b994 and implements fail-closed handling for api_error and insufficient scheduled-workflow live coverage while preserving valid-input maturation behavior.",
+        "PR #1257 Remediation Maturation Gate run 35923438190 executed tests.remediation.test_remediation_maturation_api_blind_health: 4/4 PASS, including api_error carry-forward/no-new-signature, majority-missing-live fail-closed, valid-live input path, and prior-object immutability.",
+        "PR #1257 merged at b7ab316145c74f59acf02f9ba0269c8a7da94571 with all five repo gates green; the gate change added only the existing regression command and did not change workflow triggers or schedule."
+      ]
+    },
+    {
+      "source_ref": "post_fix_gate",
+      "status": "SATISFIED",
+      "evidence": [
+        "PR #1249 merged at cbc29156551ee6f19b78c4dd04fe60532391b994 and implements fail-closed handling for api_error and insufficient scheduled-workflow live coverage while preserving valid-input maturation behavior.",
+        "PR #1257 Remediation Maturation Gate run 35923438190 executed tests.remediation.test_remediation_maturation_api_blind_health: 4/4 PASS, including api_error carry-forward/no-new-signature, majority-missing-live fail-closed, valid-live input path, and prior-object immutability.",
+        "PR #1257 merged at b7ab316145c74f59acf02f9ba0269c8a7da94571 with all five repo gates green; the gate change added only the existing regression command and did not change workflow triggers or schedule."
+      ]
+    }
+  ],
+  "gaps": [],
+  "authority": "CLOSURE_GATE_ONLY_NO_MARKET_OR_PORTFOLIO_AUTHORITY",
+  "receipt_sha256": "55e4c95581f198f42a339f671f6c0746253b5d768cf8e32773394f67ac4a7714"
+}
