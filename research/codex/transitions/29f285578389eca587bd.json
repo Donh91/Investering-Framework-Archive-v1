@@ -1,0 +1,37 @@
+{
+  "allowed_change_scope": [
+    "Donh91/Investering-Framework-Archive-v1:scripts/api_agent/meme_alpha_fomo_robinhood_observer.py",
+    "Donh91/Investering-Framework-Archive-v1:scripts/api_agent/meme_alpha_fomo_robinhood_convergence.py",
+    "Donh91/Investering-Framework-Archive-v1:tests/**fomo*",
+    "Donh91/Investering-Framework-Archive-v1:tests/**/meme_alpha/**"
+  ],
+  "branch": "agent/fomo-robinhood-failclosed-v1-20260922",
+  "candidate_id": "codex-research-fomo-robinhood-runtime-failclosed-v1",
+  "candidate_path": "research/codex/intake/2026/09/codex-research-fomo-robinhood-runtime-failclosed-v1.json",
+  "candidate_sha256": "5870c85bcd66b13c3e68273ff10b8f3f93b9ce13234bf882a9baec380176ecf9",
+  "contract": "CODEX_RESEARCH_TRANSITION_RECEIPT_v1",
+  "forbidden_changes": [
+    "API budget",
+    "BUY/SELL/copy-trade authority",
+    "canonical authority",
+    "cohort membership changes",
+    "historical prospective credit",
+    "market gates",
+    "model weights",
+    "new policy semantics",
+    "new scanner",
+    "parallel ledger",
+    "portfolio logic",
+    "production activation",
+    "scheduler",
+    "threshold invention"
+  ],
+  "objective": "Patch only the existing FOMO Robinhood observer and convergence code so promotion eligibility fully respects the already-frozen hardening contract. Do not activate or schedule it.",
+  "post_fix_gate": "FOMO_FAILCLOSED_FIXTURES_PASS_PLUS_FRESH_MAIN_READBACK_PLUS_SOL_INDEPENDENT_REVIEW_BEFORE_ANY_RUNTIME_WIRING",
+  "pr_number": 1208,
+  "receipt_sha256": "db7aec2f940de653526e16b114fb83b329fc92b4e348f1446ee6b1451cfd5360",
+  "recorded_at_utc": "2026-09-22T17:10:14Z",
+  "signature": "29f285578389eca587bd",
+  "state": "IN_REMEDIATION",
+  "task_contract_sha256": "0712b2740d07b9f24c49b3c6dcf8a54577f44aa44a9d9b005333eefb55f0c15d"
+}
