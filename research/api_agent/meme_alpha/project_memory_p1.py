@@ -7,7 +7,6 @@ from __future__ import annotations
 
 import hashlib
 import json
-from dataclasses import dataclass
 from typing import Any, Mapping, Sequence
 
 TOKEN_STATES = frozenset({"NO_TOKEN_OBSERVED", "TOKEN_CANDIDATE", "TOKEN_BOUND", "TOKEN_CONFLICT"})
@@ -106,6 +105,9 @@ def build_project_memory(
         x["source_ref"], x["observed_at_utc"], x["content_sha256"]
     ))
     discovery_frozen = json.loads(_canonical(discovery))
+    forbidden_discovery_keys = {"outcome", "winner", "failure", "return", "mfe", "mae"}
+    if forbidden_discovery_keys.intersection(discovery_frozen):
+        raise ProjectMemoryError("outcome-derived discovery fields are forbidden in P1")
 
     project_trial_id = "PCA-P1-" + identity_key[:20]
     before = json.loads(_canonical(project_memory_before)) if project_memory_before else None
