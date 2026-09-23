@@ -51,7 +51,8 @@ jobs:
             tests/health/test_operations_dashboard.py \
             tests/health/test_writer_trigger_safety_v2.py \
             tests/health/test_observer_and_orchestration_semantics.py \
-            tests/health/test_codex_research_intake.py
+            tests/health/test_codex_research_intake.py \
+            tests/health/test_canonical_automation_health_writer.py
       - name: Run static repository inventory without API
         run: |
           python scripts/health/build_automation_health.py --workflow-root .github/workflows --json-output /tmp/automation-health.json --md-output /tmp/automation-health.md || code=$?
