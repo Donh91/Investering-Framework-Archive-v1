@@ -88,20 +88,45 @@ class E1XProductionFindingsTest(unittest.TestCase):
     def setUpClass(cls):
         cls.x = load_module()
 
-    def test_pdlt_discovery_anchor_uses_unclosed_candle(self):
-        result = self.x.run_right_truncation(self.x.case_pdlt("PRODUCTION"))
+    def test_pdlt_current_production_and_aligned_are_causal_nonvacuously(self):
+        for variant in ("PRODUCTION", "ALIGNED_TIMESTAMPS"):
+            with self.subTest(variant=variant):
+                result = self.x.run_right_truncation(self.x.case_pdlt(variant))
+                self.assertEqual(result["observed"], "PASS")
+                self.assertEqual(result["classifications"], ["NO_ISSUE"])
+                self.assertGreater(result["output_comparisons"], 0)
+
+    def test_pdlt_legacy_open_time_fixture_reproduces_historical_defect(self):
+        result = self.x.run_right_truncation(self.x.case_pdlt("LEGACY_OPEN_TIME"))
         self.assertEqual(result["observed"], "FAIL")
         self.assertEqual(result["classifications"], ["TRUE_FUTURE_LEAKAGE"])
         fields = {d["field"] for m in result["mismatches"] for d in m["field_differences"]}
+        self.assertTrue(fields)
         self.assertTrue(fields <= {"72h.start", "7d.start", "14d.start"})
         lead = result["contaminating_lead_seconds"]
         self.assertTrue(0 < lead["min"] <= lead["max"] <= 4 * 3600)
 
-    def test_pdlt_label_time_truncation_is_blind_and_completed_candle_anchor_passes(self):
+    def test_pdlt_label_time_truncation_is_blind_and_completed_candle_control_passes(self):
         blind = self.x.run_right_truncation(self.x.case_pdlt("LABEL_TIME_TRUNCATION_CONTROL"))
         repaired = self.x.run_right_truncation(self.x.case_pdlt("REPAIR_CANDIDATE_COMPLETED_CANDLE"))
         self.assertEqual(blind["observed"], "PASS")
+        self.assertEqual(blind["classifications"], ["NO_ISSUE"])
+        self.assertGreater(blind["output_comparisons"], 0)
         self.assertEqual(repaired["observed"], "PASS")
+        self.assertEqual(repaired["classifications"], ["NO_ISSUE"])
+        self.assertGreater(repaired["output_comparisons"], 0)
+
+    def test_pdlt_repaired_production_is_not_reemitted_as_current_finding(self):
+        current = self.x.run_right_truncation(self.x.case_pdlt("PRODUCTION"))
+        findings = self.x.build_findings({
+            "right_truncation": [current],
+            "warmup": [],
+            "source_vintage_probes": {},
+            "audited_main_sha": "TEST",
+        })
+        self.assertFalse(any(row["finding_id"] == "E1X-F02" for row in findings))
+        self.assertNotIn("RT-A07-AT-PDLT-DISCOVERY-PRODUCTION", self.x.ADJUDICATION)
+        self.assertNotIn("RT-A07-AT-PDLT-DISCOVERY-LEGACY_OPEN_TIME", self.x.ADJUDICATION)
 
     def test_copper_gold_event_study_joins_bars_before_publication(self):
         knowledge, rule = self.x.cg_knowledge_time_factory()

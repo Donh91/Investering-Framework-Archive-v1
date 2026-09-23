@@ -24,6 +24,17 @@ MIN_TRAIN_FIRES = 8
 MIN_HOLDOUT_FIRES = 8
 MAX_FORWARD_CANDIDATES = 3
 DISCOVERY_FAMILY_SIZE = len(FIELDS) * len(Q_LEVELS) + (len(FIELDS) * (len(FIELDS) - 1) // 2) * 2
+DISCOVERY_ANCHOR_CANDLE_HOURS = 4
+
+
+def anchor_contract() -> dict[str, Any]:
+    return {
+        "rule": "LAST_COMPLETED_CANDLE_BY_CFGI_TIMESTAMP",
+        "candle_interval_hours": DISCOVERY_ANCHOR_CANDLE_HOURS,
+        "close_time_definition": f"open_time + {DISCOVERY_ANCHOR_CANDLE_HOURS}h",
+        "eligibility": "candle_close_time <= cfgi_timestamp",
+        "horizons_measured_from_selected_anchor": True,
+    }
 
 
 def canon(v: Any) -> bytes:
@@ -96,7 +107,7 @@ def btc_candles(owner: dict[str, Any]) -> list[dict[str, Any]]:
 def locate(candles: list[dict[str, Any]], when: datetime) -> int | None:
     idx = None
     for i, row in enumerate(candles):
-        if row["dt"] <= when:
+        if row["dt"] + timedelta(hours=DISCOVERY_ANCHOR_CANDLE_HOURS) <= when:
             idx = i
         else:
             break
@@ -385,6 +396,7 @@ def discover(block: dict[str, Any], price_owner: dict[str, Any]) -> tuple[dict[s
     }
     report = {
         "contract": "PDLT_DISCOVERY_REPORT_v1",
+        "anchor_contract": anchor_contract(),
         "model_sha256": sha(model),
         "post_epoch_rows": len(rows),
         "split": split_meta,

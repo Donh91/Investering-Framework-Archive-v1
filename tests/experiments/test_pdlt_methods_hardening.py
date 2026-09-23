@@ -1,13 +1,62 @@
 from __future__ import annotations
 
 import unittest
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone
 
 from scripts.experiments import pdlt_discovery as discovery
 from scripts.experiments import pdlt_v1_1 as prereg
 
 
 class PDLTMethodsHardeningTests(unittest.TestCase):
+    def test_discovery_anchor_contract_declares_completed_4h_boundary(self):
+        self.assertEqual(discovery.DISCOVERY_ANCHOR_CANDLE_HOURS, 4)
+        self.assertEqual(
+            discovery.anchor_contract(),
+            {
+                "rule": "LAST_COMPLETED_CANDLE_BY_CFGI_TIMESTAMP",
+                "candle_interval_hours": 4,
+                "close_time_definition": "open_time + 4h",
+                "eligibility": "candle_close_time <= cfgi_timestamp",
+                "horizons_measured_from_selected_anchor": True,
+            },
+        )
+
+    def test_discovery_anchor_uses_latest_completed_4h_candle(self):
+        base = datetime(2026, 1, 1, tzinfo=timezone.utc)
+        candles = [
+            {"dt": base + timedelta(hours=hour), "close": 100.0, "low": 99.0, "high": 101.0}
+            for hour in (0, 4, 8, 12)
+        ]
+
+        self.assertIsNone(discovery.locate(candles, base + timedelta(hours=3, minutes=59, seconds=59)))
+        self.assertEqual(discovery.locate(candles, base + timedelta(hours=4)), 0)
+        self.assertEqual(discovery.locate(candles, base + timedelta(hours=7, minutes=59, seconds=59)), 0)
+        self.assertEqual(discovery.locate(candles, base + timedelta(hours=8)), 1)
+        self.assertEqual(discovery.locate(candles, base + timedelta(hours=10)), 1)
+        self.assertEqual(discovery.locate(candles, base + timedelta(hours=12)), 2)
+        self.assertEqual(discovery.locate(candles, base + timedelta(hours=16)), 3)
+
+        sparse = [candles[0], candles[2]]
+        self.assertEqual(discovery.locate(sparse, base + timedelta(hours=10)), 0)
+
+    def test_forward_stats_remains_relative_to_selected_completed_anchor(self):
+        base = datetime(2026, 1, 1, tzinfo=timezone.utc)
+        candles = [
+            {"dt": base + timedelta(hours=0), "close": 100.0, "low": 99.0, "high": 101.0},
+            {"dt": base + timedelta(hours=4), "close": 100.0, "low": 98.0, "high": 102.0},
+            {"dt": base + timedelta(hours=8), "close": 105.0, "low": 90.0, "high": 110.0},
+            {"dt": base + timedelta(hours=12), "close": 106.0, "low": 95.0, "high": 108.0},
+        ]
+
+        idx = discovery.locate(candles, base + timedelta(hours=10))
+        self.assertEqual(idx, 1)
+        stats = discovery.forward_stats(candles, idx, 4)
+        self.assertIsNotNone(stats)
+        self.assertEqual(stats["start"], 100.0)
+        self.assertAlmostEqual(stats["adverse_pct"], 10.0)
+        self.assertAlmostEqual(stats["favorable_pct"], 10.0)
+        self.assertEqual(stats["end_close"], 105.0)
+
     def test_discovery_family_is_full_120_rule_search(self):
         self.assertEqual(discovery.DISCOVERY_FAMILY_SIZE, 120)
         self.assertEqual(prereg.DISCOVERY_METHODS["enumerated_rule_count"], 120)
