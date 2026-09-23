@@ -1,55 +1,9 @@
 {
-  "contract": "MISSION_CONVERGENCE_RECEIPT_v1",
-  "status": "CONVERGED",
-  "candidate_id": "codex-research-pullback-guidance-containment-guard-v1",
-  "signature": "4bc9351c84bc70cb0583",
-  "candidate_sha256": "09bdd3977a33bb371fb51d9ccee56d8f38dbfa97a9dd06af461e736ddbb96c06",
-  "task_contract_sha256": "178d75139fe05303727ec578a839ee7b6b21f50320535f9c8f1fb85a5706913c",
-  "pr_number": 1270,
-  "merge_commit_sha": "c65bb03d73267f01e624825677a153b4e287402b",
   "assessed_at_utc": "2026-09-23T22:30:00Z",
-  "requirements": [
-    {
-      "source_ref": "objective",
-      "text": "Implement the smallest static contract/consumer guard proving current active code and prompts do not use qualitative Pullback v0.2 labels as standalone mechanical action, rebuy, recovery-failure or calibration authority while the policy remains GUIDANCE_ONLY. Do not invent numeric bands or triggers.",
-      "kind": "OBJECTIVE"
-    },
-    {
-      "source_ref": "acceptance:positive:1",
-      "text": "Descriptive pullback-label usage that preserves GUIDANCE_ONLY semantics passes the guard.",
-      "kind": "ACCEPTANCE_POSITIVE"
-    },
-    {
-      "source_ref": "acceptance:positive:2",
-      "text": "A future owner-authorized mechanically derived artifact is not rejected merely for using a label when all required reproducibility fields and authority are explicit.",
-      "kind": "ACCEPTANCE_POSITIVE"
-    },
-    {
-      "source_ref": "acceptance:negative:1",
-      "text": "Fixture mapping Moderate directly to REDUCE fails.",
-      "kind": "ACCEPTANCE_NEGATIVE"
-    },
-    {
-      "source_ref": "acceptance:negative:2",
-      "text": "Fixture using a qualitative label alone as rebuy unlock, recovery-failure state or calibration HIT/MISS fails.",
-      "kind": "ACCEPTANCE_NEGATIVE"
-    },
-    {
-      "source_ref": "authority:allowed_change_scope",
-      "text": "tests/governance directly related Pullback v0.2 containment tests | scripts/governance directly related static pullback containment validator if required | 01_CORE_FRAMEWORK directly related non-semantic machine-readable containment status artifact if existing routing requires it",
-      "kind": "AUTHORITY_BOUNDARY"
-    },
-    {
-      "source_ref": "authority:forbidden_changes",
-      "text": "market gates | model weights | canonical authority | portfolio logic | API budget | new policy semantics | new pullback thresholds | new drawdown bands | automatic pullback classification | qualitative-label portfolio authority",
-      "kind": "AUTHORITY_BOUNDARY"
-    },
-    {
-      "source_ref": "post_fix_gate",
-      "text": "POSITIVE_AND_NEGATIVE_CONTAINMENT_FIXTURES_PASS_WITH_ZERO_MARKET_SEMANTIC_CHANGE",
-      "kind": "POST_FIX_GATE"
-    }
-  ],
+  "authority": "CLOSURE_GATE_ONLY_NO_MARKET_OR_PORTFOLIO_AUTHORITY",
+  "candidate_id": "codex-research-pullback-guidance-containment-guard-v1",
+  "candidate_sha256": "09bdd3977a33bb371fb51d9ccee56d8f38dbfa97a9dd06af461e736ddbb96c06",
+  "contract": "MISSION_CONVERGENCE_RECEIPT_v1",
   "coverage": [
     {
       "source_ref": "objective",
@@ -133,6 +87,52 @@
     }
   ],
   "gaps": [],
-  "authority": "CLOSURE_GATE_ONLY_NO_MARKET_OR_PORTFOLIO_AUTHORITY",
-  "receipt_sha256": "d619e51e5d3919dfb57521c6b64c6ba73e6920bc9890fa503fdcc1e5ef2baf9e"
+  "merge_commit_sha": "c65bb03d73267f01e624825677a153b4e287402b",
+  "pr_number": 1270,
+  "requirements": [
+    {
+      "kind": "OBJECTIVE",
+      "source_ref": "objective",
+      "text": "Implement the smallest static contract/consumer guard proving current active code and prompts do not use qualitative Pullback v0.2 labels as standalone mechanical action, rebuy, recovery-failure or calibration authority while the policy remains GUIDANCE_ONLY. Do not invent numeric bands or triggers."
+    },
+    {
+      "kind": "ACCEPTANCE_POSITIVE",
+      "source_ref": "acceptance:positive:1",
+      "text": "Descriptive pullback-label usage that preserves GUIDANCE_ONLY semantics passes the guard."
+    },
+    {
+      "kind": "ACCEPTANCE_POSITIVE",
+      "source_ref": "acceptance:positive:2",
+      "text": "A future owner-authorized mechanically derived artifact is not rejected merely for using a label when all required reproducibility fields and authority are explicit."
+    },
+    {
+      "kind": "ACCEPTANCE_NEGATIVE",
+      "source_ref": "acceptance:negative:1",
+      "text": "Fixture mapping Moderate directly to REDUCE fails."
+    },
+    {
+      "kind": "ACCEPTANCE_NEGATIVE",
+      "source_ref": "acceptance:negative:2",
+      "text": "Fixture using a qualitative label alone as rebuy unlock, recovery-failure state or calibration HIT/MISS fails."
+    },
+    {
+      "kind": "AUTHORITY_BOUNDARY",
+      "source_ref": "authority:allowed_change_scope",
+      "text": "tests/governance/directly related Pullback v0.2 containment tests | scripts/governance/directly related static pullback containment validator if required | 01_CORE_FRAMEWORK/directly related non-semantic machine-readable containment status artifact if existing routing requires it"
+    },
+    {
+      "kind": "AUTHORITY_BOUNDARY",
+      "source_ref": "authority:forbidden_changes",
+      "text": "market gates | model weights | canonical authority | portfolio logic | API budget | new policy semantics | new pullback thresholds | new drawdown bands | automatic pullback classification | qualitative-label portfolio authority"
+    },
+    {
+      "kind": "POST_FIX_GATE",
+      "source_ref": "post_fix_gate",
+      "text": "POSITIVE_AND_NEGATIVE_CONTAINMENT_FIXTURES_PASS_WITH_ZERO_MARKET_SEMANTIC_CHANGE"
+    }
+  ],
+  "signature": "4bc9351c84bc70cb0583",
+  "status": "CONVERGED",
+  "task_contract_sha256": "178d75139fe05303727ec578a839ee7b6b21f50320535f9c8f1fb85a5706913c",
+  "receipt_sha256": "685fcca54298d1108fefe1f184d194937dae6909de00ed658ee12bd0d6ed34da"
 }
