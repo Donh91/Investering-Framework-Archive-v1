@@ -1,0 +1,1325 @@
+{
+  "contract": "SENSOR_RELATIONSHIP_COMPRESSION_READOUT_v1",
+  "generated_from_registry_at_utc": "2026-09-23T17:58:17Z",
+  "authority": {
+    "research_only": true,
+    "binding": false,
+    "canonical_market_state": false,
+    "market_gate_change": false,
+    "model_weight_change": false,
+    "portfolio_action": false,
+    "automatic_sensor_promotion": false,
+    "automatic_sensor_retirement": false
+  },
+  "canonical_relationship_vocabulary": [
+    "CORRELATED",
+    "DATA_BLOCKED",
+    "NONLINEARLY_DEPENDENT",
+    "REDUNDANT",
+    "REGIME_DEPENDENT",
+    "SYNERGISTIC",
+    "UNIQUE",
+    "UNSTABLE"
+  ],
+  "presentation_roles": [
+    "AUDIT_ONLY",
+    "DATA_BLOCKED",
+    "PRIMARY",
+    "UNRESOLVED",
+    "VALIDATION"
+  ],
+  "historical_rows": [
+    {
+      "relationship_id": "HIST_ETHBTC_MOMENTUM_VOLATILITY",
+      "sensor_or_test_ids": [
+        "ETHBTC_20D_MOMENTUM",
+        "ETHBTC_14D_VOLATILITY"
+      ],
+      "relationship_classes": [
+        "NONLINEARLY_DEPENDENT"
+      ],
+      "evidence_class": "HISTORICAL_PROXY_AUDIT",
+      "sample_status": {
+        "aligned_daily_rows": 2886,
+        "subsamples": 8
+      },
+      "current_prospective_validation": false,
+      "presentation_role": "AUDIT_ONLY",
+      "source_refs": [
+        "06_RESEARCH_LAB/audit_summaries/2026-07-22__public-repo-methods-closed-lab-audit__shadow.md"
+      ]
+    },
+    {
+      "relationship_id": "HIST_BTC_MOMENTUM_ETH_PARTICIPATION_SURVIVAL",
+      "sensor_or_test_ids": [
+        "BTC_20D_MOMENTUM",
+        "ETH_RELATIVE_PARTICIPATION_PROXY"
+      ],
+      "relationship_classes": [
+        "SYNERGISTIC",
+        "REGIME_DEPENDENT"
+      ],
+      "evidence_class": "HISTORICAL_PROXY_AUDIT",
+      "sample_status": {
+        "aligned_daily_rows": 2886,
+        "sequence_episodes": 124
+      },
+      "current_prospective_validation": false,
+      "presentation_role": "AUDIT_ONLY",
+      "source_refs": [
+        "06_RESEARCH_LAB/audit_summaries/2026-07-22__public-repo-methods-closed-lab-audit__shadow.md"
+      ]
+    }
+  ],
+  "prospective_rows": [
+    {
+      "relationship_id": "EC-000ddca814a40d50c0a2",
+      "sensor_or_test_ids": [
+        "Legacy sensor pair P07: SENTIMENT_EXTREME_STATE + PRICE_ABSORPTION_STATE"
+      ],
+      "relationship_classes": [
+        "DATA_BLOCKED"
+      ],
+      "evidence_class": "PROSPECTIVE_CURRENT",
+      "sample_status": {
+        "state": "WAITING_FOR_MAPPING",
+        "scientific_admission_status": "WAITING_FOR_MAPPING",
+        "observation_count": 1,
+        "matured_outcome_count": 0
+      },
+      "current_prospective_validation": false,
+      "presentation_role": "DATA_BLOCKED",
+      "source_refs": [
+        "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json#EC-000ddca814a40d50c0a2"
+      ],
+      "semantic_fingerprint": "a4d539720fbd14c16d1af0c5b8e28cea1248960e26e12fa26fc13d896b37605b"
+    },
+    {
+      "relationship_id": "EC-00a5216dbcedd50c60f8",
+      "sensor_or_test_ids": [
+        "Legacy sensor pair P02: ETF_FLOW_STATE + PRICE_ABSORPTION_STATE"
+      ],
+      "relationship_classes": [
+        "REDUNDANT"
+      ],
+      "evidence_class": "PROSPECTIVE_CURRENT",
+      "sample_status": {
+        "state": "WAITING_FOR_MAPPING",
+        "scientific_admission_status": "SEMANTIC_DUPLICATE_KEEP_SHADOW",
+        "observation_count": 2,
+        "matured_outcome_count": 0
+      },
+      "current_prospective_validation": false,
+      "presentation_role": "AUDIT_ONLY",
+      "source_refs": [
+        "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json#EC-00a5216dbcedd50c60f8"
+      ],
+      "semantic_fingerprint": "a4d539720fbd14c16d1af0c5b8e28cea1248960e26e12fa26fc13d896b37605b"
+    },
+    {
+      "relationship_id": "EC-00a5216dbcedd50c60f8",
+      "sensor_or_test_ids": [
+        "Legacy sensor pair P02: ETF_FLOW_STATE + PRICE_ABSORPTION_STATE"
+      ],
+      "relationship_classes": [
+        "REDUNDANT"
+      ],
+      "evidence_class": "PROSPECTIVE_CURRENT",
+      "sample_status": {
+        "state": "WAITING_FOR_MAPPING",
+        "scientific_admission_status": "SEMANTIC_DUPLICATE_KEEP_SHADOW",
+        "observation_count": 2,
+        "matured_outcome_count": 0
+      },
+      "current_prospective_validation": false,
+      "presentation_role": "AUDIT_ONLY",
+      "source_refs": [
+        "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json#EC-00a5216dbcedd50c60f8"
+      ],
+      "semantic_fingerprint": "a4d539720fbd14c16d1af0c5b8e28cea1248960e26e12fa26fc13d896b37605b"
+    },
+    {
+      "relationship_id": "EC-02bd4e0576e858ee2411",
+      "sensor_or_test_ids": [
+        "Legacy sensor pair P01: ETHBTC_STATE + POINT_IN_TIME_BREADTH_STATE"
+      ],
+      "relationship_classes": [
+        "REDUNDANT"
+      ],
+      "evidence_class": "PROSPECTIVE_CURRENT",
+      "sample_status": {
+        "state": "WAITING_FOR_MAPPING",
+        "scientific_admission_status": "SEMANTIC_DUPLICATE_KEEP_SHADOW",
+        "observation_count": 1,
+        "matured_outcome_count": 0
+      },
+      "current_prospective_validation": false,
+      "presentation_role": "AUDIT_ONLY",
+      "source_refs": [
+        "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json#EC-02bd4e0576e858ee2411"
+      ],
+      "semantic_fingerprint": "a4d539720fbd14c16d1af0c5b8e28cea1248960e26e12fa26fc13d896b37605b"
+    },
+    {
+      "relationship_id": "EC-0556b05e8f99ad3b5ae5",
+      "sensor_or_test_ids": [
+        "Legacy sensor pair P05: BTCD_SURVIVAL_RECLAIM_CONTEXT + ETHBTC_STATE"
+      ],
+      "relationship_classes": [
+        "REDUNDANT"
+      ],
+      "evidence_class": "PROSPECTIVE_CURRENT",
+      "sample_status": {
+        "state": "WAITING_FOR_MAPPING",
+        "scientific_admission_status": "SEMANTIC_DUPLICATE_KEEP_SHADOW",
+        "observation_count": 1,
+        "matured_outcome_count": 0
+      },
+      "current_prospective_validation": false,
+      "presentation_role": "AUDIT_ONLY",
+      "source_refs": [
+        "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json#EC-0556b05e8f99ad3b5ae5"
+      ],
+      "semantic_fingerprint": "a4d539720fbd14c16d1af0c5b8e28cea1248960e26e12fa26fc13d896b37605b"
+    },
+    {
+      "relationship_id": "EC-0635053e6c1f7a4bd9c7",
+      "sensor_or_test_ids": [
+        "Emergent pair: spot.BTCUSDT.range_pct + derivatives.ETH-USDT-SWAP.funding.funding_rate"
+      ],
+      "relationship_classes": [],
+      "evidence_class": "PROSPECTIVE_CURRENT",
+      "sample_status": {
+        "state": "MATURED_INCONCLUSIVE",
+        "scientific_admission_status": "QUALIFIED_FOR_FORWARD_TEST",
+        "observation_count": 142,
+        "matured_outcome_count": 1
+      },
+      "current_prospective_validation": true,
+      "presentation_role": "UNRESOLVED",
+      "source_refs": [
+        "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json#EC-0635053e6c1f7a4bd9c7"
+      ],
+      "semantic_fingerprint": "fdcc974141cf796e50b70d15e6e381608917e56ae741a3052a34666464eca3fb"
+    },
+    {
+      "relationship_id": "EC-068729e16cc58aba2f37",
+      "sensor_or_test_ids": [
+        "Emergent pair: derivatives.BTC-USDT-SWAP.funding.next_funding_rate + spot.ETHUSDT.range_pct"
+      ],
+      "relationship_classes": [],
+      "evidence_class": "PROSPECTIVE_CURRENT",
+      "sample_status": {
+        "state": "MATURED_INCONCLUSIVE",
+        "scientific_admission_status": "QUALIFIED_FOR_FORWARD_TEST",
+        "observation_count": 146,
+        "matured_outcome_count": 1
+      },
+      "current_prospective_validation": true,
+      "presentation_role": "UNRESOLVED",
+      "source_refs": [
+        "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json#EC-068729e16cc58aba2f37"
+      ],
+      "semantic_fingerprint": "4c40903824cc93563888e7173bcf871d6aa5d4a5b6a7405ab6244f3cba719e08"
+    },
+    {
+      "relationship_id": "EC-0b00cbb5103a9b0e102a",
+      "sensor_or_test_ids": [
+        "Emergent pair: spot.ETHUSDT.volume + spot.BTCUSDT.range_pct"
+      ],
+      "relationship_classes": [],
+      "evidence_class": "PROSPECTIVE_CURRENT",
+      "sample_status": {
+        "state": "MATURED_INCONCLUSIVE",
+        "scientific_admission_status": "QUALIFIED_FOR_FORWARD_TEST",
+        "observation_count": 145,
+        "matured_outcome_count": 1
+      },
+      "current_prospective_validation": true,
+      "presentation_role": "UNRESOLVED",
+      "source_refs": [
+        "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json#EC-0b00cbb5103a9b0e102a"
+      ],
+      "semantic_fingerprint": "a13a21a17d350180670c382d7e439b3d0b6b97452462853d03998f6e658652f1"
+    },
+    {
+      "relationship_id": "EC-173e5b69a55e6ed9bd73",
+      "sensor_or_test_ids": [
+        "Emergent pair: spot.ETHUSDT.volume + spot.ETHBTC.range_pct"
+      ],
+      "relationship_classes": [],
+      "evidence_class": "PROSPECTIVE_CURRENT",
+      "sample_status": {
+        "state": "MATURED_INCONCLUSIVE",
+        "scientific_admission_status": "QUALIFIED_FOR_FORWARD_TEST",
+        "observation_count": 145,
+        "matured_outcome_count": 1
+      },
+      "current_prospective_validation": true,
+      "presentation_role": "UNRESOLVED",
+      "source_refs": [
+        "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json#EC-173e5b69a55e6ed9bd73"
+      ],
+      "semantic_fingerprint": "32f5ea00b9d228c8cf55d6e969678cf16525261c6786383140e81d2dce04788e"
+    },
+    {
+      "relationship_id": "EC-26623349f61c57f51d94",
+      "sensor_or_test_ids": [
+        "Emergent pair: derivatives.BTC-USDT-SWAP.funding.funding_rate + spot.ETHBTC.range_pct"
+      ],
+      "relationship_classes": [],
+      "evidence_class": "PROSPECTIVE_CURRENT",
+      "sample_status": {
+        "state": "MATURED_INCONCLUSIVE",
+        "scientific_admission_status": "QUALIFIED_FOR_FORWARD_TEST",
+        "observation_count": 146,
+        "matured_outcome_count": 1
+      },
+      "current_prospective_validation": true,
+      "presentation_role": "UNRESOLVED",
+      "source_refs": [
+        "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json#EC-26623349f61c57f51d94"
+      ],
+      "semantic_fingerprint": "cb954981473772de72f456383c7e87de5fd98361dd63a44743f582821e0b5986"
+    },
+    {
+      "relationship_id": "EC-319da53e424daa099a86",
+      "sensor_or_test_ids": [
+        "Emergent pair: spot.ETHUSDT.volume + spot.BTCUSDT.volume"
+      ],
+      "relationship_classes": [],
+      "evidence_class": "PROSPECTIVE_CURRENT",
+      "sample_status": {
+        "state": "MATURED_INCONCLUSIVE",
+        "scientific_admission_status": "QUALIFIED_FOR_FORWARD_TEST",
+        "observation_count": 145,
+        "matured_outcome_count": 1
+      },
+      "current_prospective_validation": true,
+      "presentation_role": "UNRESOLVED",
+      "source_refs": [
+        "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json#EC-319da53e424daa099a86"
+      ],
+      "semantic_fingerprint": "bad63e731a52ea10509862f6b592e600adda12a9c1a433a48219cb395a031cce"
+    },
+    {
+      "relationship_id": "EC-36d98f3c3574809e5580",
+      "sensor_or_test_ids": [
+        "Legacy sensor pair P04: STABLECOIN_AVAILABILITY_STATE + NORMALIZED_DEX_ACTIVITY_STATE"
+      ],
+      "relationship_classes": [
+        "REDUNDANT"
+      ],
+      "evidence_class": "PROSPECTIVE_CURRENT",
+      "sample_status": {
+        "state": "WAITING_FOR_MAPPING",
+        "scientific_admission_status": "SEMANTIC_DUPLICATE_KEEP_SHADOW",
+        "observation_count": 1,
+        "matured_outcome_count": 0
+      },
+      "current_prospective_validation": false,
+      "presentation_role": "AUDIT_ONLY",
+      "source_refs": [
+        "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json#EC-36d98f3c3574809e5580"
+      ],
+      "semantic_fingerprint": "a4d539720fbd14c16d1af0c5b8e28cea1248960e26e12fa26fc13d896b37605b"
+    },
+    {
+      "relationship_id": "EC-384516e20a60d33d628b",
+      "sensor_or_test_ids": [
+        "Emergent pair: spot.ETHBTC.volume + breadth.advancers"
+      ],
+      "relationship_classes": [
+        "DATA_BLOCKED"
+      ],
+      "evidence_class": "PROSPECTIVE_CURRENT",
+      "sample_status": {
+        "state": "WAITING_FOR_DATA",
+        "scientific_admission_status": "QUALIFIED_FOR_FORWARD_TEST",
+        "observation_count": 144,
+        "matured_outcome_count": 0
+      },
+      "current_prospective_validation": false,
+      "presentation_role": "DATA_BLOCKED",
+      "source_refs": [
+        "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json#EC-384516e20a60d33d628b"
+      ],
+      "semantic_fingerprint": "5e6959df22cb43cb38d41fb278e69b9ec8bdd35857dcc451a000e5aafed443b1"
+    },
+    {
+      "relationship_id": "EC-498900261a9bac8b3f11",
+      "sensor_or_test_ids": [
+        "Emergent pair: spot.BTCUSDT.range_pct + spot.ETHUSDT.volume"
+      ],
+      "relationship_classes": [
+        "REDUNDANT"
+      ],
+      "evidence_class": "PROSPECTIVE_CURRENT",
+      "sample_status": {
+        "state": "MATURED_INCONCLUSIVE",
+        "scientific_admission_status": "SEMANTIC_DUPLICATE_KEEP_SHADOW",
+        "observation_count": 143,
+        "matured_outcome_count": 1
+      },
+      "current_prospective_validation": true,
+      "presentation_role": "AUDIT_ONLY",
+      "source_refs": [
+        "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json#EC-498900261a9bac8b3f11"
+      ],
+      "semantic_fingerprint": "a13a21a17d350180670c382d7e439b3d0b6b97452462853d03998f6e658652f1"
+    },
+    {
+      "relationship_id": "EC-4e9651dc87db4fcd401d",
+      "sensor_or_test_ids": [
+        "Legacy sensor pair P06: A1_A2_URGENCY_STATE + C1_C2_LEAN_WARNING_STATE"
+      ],
+      "relationship_classes": [
+        "REDUNDANT"
+      ],
+      "evidence_class": "PROSPECTIVE_CURRENT",
+      "sample_status": {
+        "state": "WAITING_FOR_MAPPING",
+        "scientific_admission_status": "SEMANTIC_DUPLICATE_KEEP_SHADOW",
+        "observation_count": 1,
+        "matured_outcome_count": 0
+      },
+      "current_prospective_validation": false,
+      "presentation_role": "AUDIT_ONLY",
+      "source_refs": [
+        "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json#EC-4e9651dc87db4fcd401d"
+      ],
+      "semantic_fingerprint": "a4d539720fbd14c16d1af0c5b8e28cea1248960e26e12fa26fc13d896b37605b"
+    },
+    {
+      "relationship_id": "EC-5856a70a166daf756941",
+      "sensor_or_test_ids": [
+        "Emergent pair: derivatives.BTC-USDT-SWAP.funding.next_funding_rate + derivatives.BTC-USDT-SWAP.funding.funding_rate"
+      ],
+      "relationship_classes": [],
+      "evidence_class": "PROSPECTIVE_CURRENT",
+      "sample_status": {
+        "state": "MATURED_INCONCLUSIVE",
+        "scientific_admission_status": "QUALIFIED_FOR_FORWARD_TEST",
+        "observation_count": 146,
+        "matured_outcome_count": 1
+      },
+      "current_prospective_validation": true,
+      "presentation_role": "UNRESOLVED",
+      "source_refs": [
+        "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json#EC-5856a70a166daf756941"
+      ],
+      "semantic_fingerprint": "9a9414db9abb9fd8ad7dbe61780bd1c8f4abbd10ecdbca88a1cc6765ff72e9d9"
+    },
+    {
+      "relationship_id": "EC-59bbd2054b179e386d2a",
+      "sensor_or_test_ids": [
+        "Emergent pair: spot.ETHBTC.volume + spot.ETHBTC.range_pct"
+      ],
+      "relationship_classes": [
+        "DATA_BLOCKED"
+      ],
+      "evidence_class": "PROSPECTIVE_CURRENT",
+      "sample_status": {
+        "state": "WAITING_FOR_DATA",
+        "scientific_admission_status": "QUALIFIED_FOR_FORWARD_TEST",
+        "observation_count": 144,
+        "matured_outcome_count": 0
+      },
+      "current_prospective_validation": false,
+      "presentation_role": "DATA_BLOCKED",
+      "source_refs": [
+        "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json#EC-59bbd2054b179e386d2a"
+      ],
+      "semantic_fingerprint": "94a1e92597bf129b8ce78a777a1e91ec2b2c61932a4c8eecb977c229daddc5b4"
+    },
+    {
+      "relationship_id": "EC-5c7dec035ada21989b02",
+      "sensor_or_test_ids": [
+        "Emergent pair: spot.ETHBTC.volume + spot.ETHUSDT.range_pct"
+      ],
+      "relationship_classes": [
+        "DATA_BLOCKED"
+      ],
+      "evidence_class": "PROSPECTIVE_CURRENT",
+      "sample_status": {
+        "state": "WAITING_FOR_DATA",
+        "scientific_admission_status": "QUALIFIED_FOR_FORWARD_TEST",
+        "observation_count": 144,
+        "matured_outcome_count": 0
+      },
+      "current_prospective_validation": false,
+      "presentation_role": "DATA_BLOCKED",
+      "source_refs": [
+        "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json#EC-5c7dec035ada21989b02"
+      ],
+      "semantic_fingerprint": "91ee6f581d53892ed58b00c2f23234160583ad73a34a7773a5171a7782383474"
+    },
+    {
+      "relationship_id": "EC-64050f55a14c1809315f",
+      "sensor_or_test_ids": [
+        "Legacy sensor pair P01: ETHBTC_STATE + POINT_IN_TIME_BREADTH_STATE"
+      ],
+      "relationship_classes": [
+        "REDUNDANT"
+      ],
+      "evidence_class": "PROSPECTIVE_CURRENT",
+      "sample_status": {
+        "state": "WAITING_FOR_MAPPING",
+        "scientific_admission_status": "SEMANTIC_DUPLICATE_KEEP_SHADOW",
+        "observation_count": 2,
+        "matured_outcome_count": 0
+      },
+      "current_prospective_validation": false,
+      "presentation_role": "AUDIT_ONLY",
+      "source_refs": [
+        "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json#EC-64050f55a14c1809315f"
+      ],
+      "semantic_fingerprint": "a4d539720fbd14c16d1af0c5b8e28cea1248960e26e12fa26fc13d896b37605b"
+    },
+    {
+      "relationship_id": "EC-64050f55a14c1809315f",
+      "sensor_or_test_ids": [
+        "Legacy sensor pair P01: ETHBTC_STATE + POINT_IN_TIME_BREADTH_STATE"
+      ],
+      "relationship_classes": [
+        "REDUNDANT"
+      ],
+      "evidence_class": "PROSPECTIVE_CURRENT",
+      "sample_status": {
+        "state": "WAITING_FOR_MAPPING",
+        "scientific_admission_status": "SEMANTIC_DUPLICATE_KEEP_SHADOW",
+        "observation_count": 2,
+        "matured_outcome_count": 0
+      },
+      "current_prospective_validation": false,
+      "presentation_role": "AUDIT_ONLY",
+      "source_refs": [
+        "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json#EC-64050f55a14c1809315f"
+      ],
+      "semantic_fingerprint": "a4d539720fbd14c16d1af0c5b8e28cea1248960e26e12fa26fc13d896b37605b"
+    },
+    {
+      "relationship_id": "EC-69264981200e20adc193",
+      "sensor_or_test_ids": [
+        "Emergent pair: spot.BTCUSDT.range_pct + spot.ETHUSDT.range_pct"
+      ],
+      "relationship_classes": [],
+      "evidence_class": "PROSPECTIVE_CURRENT",
+      "sample_status": {
+        "state": "MATURED_INCONCLUSIVE",
+        "scientific_admission_status": "QUALIFIED_FOR_FORWARD_TEST",
+        "observation_count": 142,
+        "matured_outcome_count": 1
+      },
+      "current_prospective_validation": true,
+      "presentation_role": "UNRESOLVED",
+      "source_refs": [
+        "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json#EC-69264981200e20adc193"
+      ],
+      "semantic_fingerprint": "d40a3e298f0d80ad5ccfe8ef2f49b155182ee3c188e0d8bd20a2ffe096b5d11c"
+    },
+    {
+      "relationship_id": "EC-6f1b82f08232244b9f92",
+      "sensor_or_test_ids": [
+        "Legacy sensor pair P02: ETF_FLOW_STATE + PRICE_ABSORPTION_STATE"
+      ],
+      "relationship_classes": [
+        "REDUNDANT"
+      ],
+      "evidence_class": "PROSPECTIVE_CURRENT",
+      "sample_status": {
+        "state": "WAITING_FOR_MAPPING",
+        "scientific_admission_status": "SEMANTIC_DUPLICATE_KEEP_SHADOW",
+        "observation_count": 1,
+        "matured_outcome_count": 0
+      },
+      "current_prospective_validation": false,
+      "presentation_role": "AUDIT_ONLY",
+      "source_refs": [
+        "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json#EC-6f1b82f08232244b9f92"
+      ],
+      "semantic_fingerprint": "a4d539720fbd14c16d1af0c5b8e28cea1248960e26e12fa26fc13d896b37605b"
+    },
+    {
+      "relationship_id": "EC-7210121d0811ca304b89",
+      "sensor_or_test_ids": [
+        "Legacy sensor pair P08: BREADTH_PARTICIPATION_STATE + DERIVATIVES_POSITIONING_STATE"
+      ],
+      "relationship_classes": [
+        "REDUNDANT"
+      ],
+      "evidence_class": "PROSPECTIVE_CURRENT",
+      "sample_status": {
+        "state": "WAITING_FOR_MAPPING",
+        "scientific_admission_status": "SEMANTIC_DUPLICATE_KEEP_SHADOW",
+        "observation_count": 2,
+        "matured_outcome_count": 0
+      },
+      "current_prospective_validation": false,
+      "presentation_role": "AUDIT_ONLY",
+      "source_refs": [
+        "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json#EC-7210121d0811ca304b89"
+      ],
+      "semantic_fingerprint": "a4d539720fbd14c16d1af0c5b8e28cea1248960e26e12fa26fc13d896b37605b"
+    },
+    {
+      "relationship_id": "EC-7210121d0811ca304b89",
+      "sensor_or_test_ids": [
+        "Legacy sensor pair P08: BREADTH_PARTICIPATION_STATE + DERIVATIVES_POSITIONING_STATE"
+      ],
+      "relationship_classes": [
+        "REDUNDANT"
+      ],
+      "evidence_class": "PROSPECTIVE_CURRENT",
+      "sample_status": {
+        "state": "WAITING_FOR_MAPPING",
+        "scientific_admission_status": "SEMANTIC_DUPLICATE_KEEP_SHADOW",
+        "observation_count": 2,
+        "matured_outcome_count": 0
+      },
+      "current_prospective_validation": false,
+      "presentation_role": "AUDIT_ONLY",
+      "source_refs": [
+        "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json#EC-7210121d0811ca304b89"
+      ],
+      "semantic_fingerprint": "a4d539720fbd14c16d1af0c5b8e28cea1248960e26e12fa26fc13d896b37605b"
+    },
+    {
+      "relationship_id": "EC-75969af3fce5f3c85485",
+      "sensor_or_test_ids": [
+        "Emergent pair: spot.BTCUSDT.range_pct + spot.ETHUSDT.volume"
+      ],
+      "relationship_classes": [
+        "REDUNDANT"
+      ],
+      "evidence_class": "PROSPECTIVE_CURRENT",
+      "sample_status": {
+        "state": "MATURED_INCONCLUSIVE",
+        "scientific_admission_status": "SEMANTIC_DUPLICATE_KEEP_SHADOW",
+        "observation_count": 142,
+        "matured_outcome_count": 1
+      },
+      "current_prospective_validation": true,
+      "presentation_role": "AUDIT_ONLY",
+      "source_refs": [
+        "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json#EC-75969af3fce5f3c85485"
+      ],
+      "semantic_fingerprint": "a13a21a17d350180670c382d7e439b3d0b6b97452462853d03998f6e658652f1"
+    },
+    {
+      "relationship_id": "EC-7667a585a26fc1dcc931",
+      "sensor_or_test_ids": [
+        "Legacy sensor pair P03: FUNDING_OI_STATE + FOLLOW_THROUGH_STATE"
+      ],
+      "relationship_classes": [
+        "REDUNDANT"
+      ],
+      "evidence_class": "PROSPECTIVE_CURRENT",
+      "sample_status": {
+        "state": "WAITING_FOR_MAPPING",
+        "scientific_admission_status": "SEMANTIC_DUPLICATE_KEEP_SHADOW",
+        "observation_count": 2,
+        "matured_outcome_count": 0
+      },
+      "current_prospective_validation": false,
+      "presentation_role": "AUDIT_ONLY",
+      "source_refs": [
+        "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json#EC-7667a585a26fc1dcc931"
+      ],
+      "semantic_fingerprint": "a4d539720fbd14c16d1af0c5b8e28cea1248960e26e12fa26fc13d896b37605b"
+    },
+    {
+      "relationship_id": "EC-7667a585a26fc1dcc931",
+      "sensor_or_test_ids": [
+        "Legacy sensor pair P03: FUNDING_OI_STATE + FOLLOW_THROUGH_STATE"
+      ],
+      "relationship_classes": [
+        "REDUNDANT"
+      ],
+      "evidence_class": "PROSPECTIVE_CURRENT",
+      "sample_status": {
+        "state": "WAITING_FOR_MAPPING",
+        "scientific_admission_status": "SEMANTIC_DUPLICATE_KEEP_SHADOW",
+        "observation_count": 2,
+        "matured_outcome_count": 0
+      },
+      "current_prospective_validation": false,
+      "presentation_role": "AUDIT_ONLY",
+      "source_refs": [
+        "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json#EC-7667a585a26fc1dcc931"
+      ],
+      "semantic_fingerprint": "a4d539720fbd14c16d1af0c5b8e28cea1248960e26e12fa26fc13d896b37605b"
+    },
+    {
+      "relationship_id": "EC-76bc2c436064b5db847e",
+      "sensor_or_test_ids": [
+        "Emergent pair: spot.BTCUSDT.volume + spot.ETHUSDT.range_pct"
+      ],
+      "relationship_classes": [],
+      "evidence_class": "PROSPECTIVE_CURRENT",
+      "sample_status": {
+        "state": "MATURED_INCONCLUSIVE",
+        "scientific_admission_status": "QUALIFIED_FOR_FORWARD_TEST",
+        "observation_count": 142,
+        "matured_outcome_count": 1
+      },
+      "current_prospective_validation": true,
+      "presentation_role": "UNRESOLVED",
+      "source_refs": [
+        "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json#EC-76bc2c436064b5db847e"
+      ],
+      "semantic_fingerprint": "e0c9439ebdca546665c1460e0c88d32a96c98817266bafb1a99ac82ee09f192e"
+    },
+    {
+      "relationship_id": "EC-7a8c33eda2476704fad8",
+      "sensor_or_test_ids": [
+        "Legacy sensor pair P08: BREADTH_PARTICIPATION_STATE + DERIVATIVES_POSITIONING_STATE"
+      ],
+      "relationship_classes": [
+        "REDUNDANT"
+      ],
+      "evidence_class": "PROSPECTIVE_CURRENT",
+      "sample_status": {
+        "state": "WAITING_FOR_MAPPING",
+        "scientific_admission_status": "SEMANTIC_DUPLICATE_KEEP_SHADOW",
+        "observation_count": 1,
+        "matured_outcome_count": 0
+      },
+      "current_prospective_validation": false,
+      "presentation_role": "AUDIT_ONLY",
+      "source_refs": [
+        "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json#EC-7a8c33eda2476704fad8"
+      ],
+      "semantic_fingerprint": "a4d539720fbd14c16d1af0c5b8e28cea1248960e26e12fa26fc13d896b37605b"
+    },
+    {
+      "relationship_id": "EC-848a197f3e31a5becce2",
+      "sensor_or_test_ids": [
+        "Legacy sensor pair P06: A1_A2_URGENCY_STATE + C1_C2_LEAN_WARNING_STATE"
+      ],
+      "relationship_classes": [
+        "REDUNDANT"
+      ],
+      "evidence_class": "PROSPECTIVE_CURRENT",
+      "sample_status": {
+        "state": "WAITING_FOR_MAPPING",
+        "scientific_admission_status": "SEMANTIC_DUPLICATE_KEEP_SHADOW",
+        "observation_count": 2,
+        "matured_outcome_count": 0
+      },
+      "current_prospective_validation": false,
+      "presentation_role": "AUDIT_ONLY",
+      "source_refs": [
+        "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json#EC-848a197f3e31a5becce2"
+      ],
+      "semantic_fingerprint": "a4d539720fbd14c16d1af0c5b8e28cea1248960e26e12fa26fc13d896b37605b"
+    },
+    {
+      "relationship_id": "EC-848a197f3e31a5becce2",
+      "sensor_or_test_ids": [
+        "Legacy sensor pair P06: A1_A2_URGENCY_STATE + C1_C2_LEAN_WARNING_STATE"
+      ],
+      "relationship_classes": [
+        "REDUNDANT"
+      ],
+      "evidence_class": "PROSPECTIVE_CURRENT",
+      "sample_status": {
+        "state": "WAITING_FOR_MAPPING",
+        "scientific_admission_status": "SEMANTIC_DUPLICATE_KEEP_SHADOW",
+        "observation_count": 2,
+        "matured_outcome_count": 0
+      },
+      "current_prospective_validation": false,
+      "presentation_role": "AUDIT_ONLY",
+      "source_refs": [
+        "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json#EC-848a197f3e31a5becce2"
+      ],
+      "semantic_fingerprint": "a4d539720fbd14c16d1af0c5b8e28cea1248960e26e12fa26fc13d896b37605b"
+    },
+    {
+      "relationship_id": "EC-88efacd980e682f941ce",
+      "sensor_or_test_ids": [
+        "Emergent pair: spot.BTCUSDT.range_pct + spot.BTCUSDT.volume"
+      ],
+      "relationship_classes": [],
+      "evidence_class": "PROSPECTIVE_CURRENT",
+      "sample_status": {
+        "state": "MATURED_INCONCLUSIVE",
+        "scientific_admission_status": "QUALIFIED_FOR_FORWARD_TEST",
+        "observation_count": 142,
+        "matured_outcome_count": 1
+      },
+      "current_prospective_validation": true,
+      "presentation_role": "UNRESOLVED",
+      "source_refs": [
+        "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json#EC-88efacd980e682f941ce"
+      ],
+      "semantic_fingerprint": "6eea3cb124a20074d17f473a6eec74f743d677f0a87a6e0b3dbe4100333f88ed"
+    },
+    {
+      "relationship_id": "EC-8a1a5a458acb26f1654a",
+      "sensor_or_test_ids": [
+        "Emergent pair: spot.ETHUSDT.volume + spot.ETHBTC.volume"
+      ],
+      "relationship_classes": [],
+      "evidence_class": "PROSPECTIVE_CURRENT",
+      "sample_status": {
+        "state": "MATURED_INCONCLUSIVE",
+        "scientific_admission_status": "QUALIFIED_FOR_FORWARD_TEST",
+        "observation_count": 145,
+        "matured_outcome_count": 1
+      },
+      "current_prospective_validation": true,
+      "presentation_role": "UNRESOLVED",
+      "source_refs": [
+        "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json#EC-8a1a5a458acb26f1654a"
+      ],
+      "semantic_fingerprint": "de6f3ff35d51741c79846e4bf48e98deab7d3e65beb2e9f2525dd1aa54cf2ef0"
+    },
+    {
+      "relationship_id": "EC-8bf12f6540b9cc49a3f2",
+      "sensor_or_test_ids": [
+        "Emergent pair: derivatives.BTC-USDT-SWAP.funding.next_funding_rate + derivatives.ETH-USDT-SWAP.funding.funding_rate"
+      ],
+      "relationship_classes": [],
+      "evidence_class": "PROSPECTIVE_CURRENT",
+      "sample_status": {
+        "state": "INCUBATING",
+        "scientific_admission_status": "QUALIFIED_FOR_FORWARD_TEST",
+        "observation_count": 146,
+        "matured_outcome_count": 0
+      },
+      "current_prospective_validation": false,
+      "presentation_role": "UNRESOLVED",
+      "source_refs": [
+        "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json#EC-8bf12f6540b9cc49a3f2"
+      ],
+      "semantic_fingerprint": "be0c91ff3276078924c0cde267edb2825e5c7ec31bd3e4c2517fd4fef15bb15c"
+    },
+    {
+      "relationship_id": "EC-91c8c02cac35d27a7687",
+      "sensor_or_test_ids": [
+        "Legacy sensor pair P07: SENTIMENT_EXTREME_STATE + PRICE_ABSORPTION_STATE"
+      ],
+      "relationship_classes": [
+        "REDUNDANT"
+      ],
+      "evidence_class": "PROSPECTIVE_CURRENT",
+      "sample_status": {
+        "state": "WAITING_FOR_MAPPING",
+        "scientific_admission_status": "SEMANTIC_DUPLICATE_KEEP_SHADOW",
+        "observation_count": 2,
+        "matured_outcome_count": 0
+      },
+      "current_prospective_validation": false,
+      "presentation_role": "AUDIT_ONLY",
+      "source_refs": [
+        "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json#EC-91c8c02cac35d27a7687"
+      ],
+      "semantic_fingerprint": "a4d539720fbd14c16d1af0c5b8e28cea1248960e26e12fa26fc13d896b37605b"
+    },
+    {
+      "relationship_id": "EC-91c8c02cac35d27a7687",
+      "sensor_or_test_ids": [
+        "Legacy sensor pair P07: SENTIMENT_EXTREME_STATE + PRICE_ABSORPTION_STATE"
+      ],
+      "relationship_classes": [
+        "REDUNDANT"
+      ],
+      "evidence_class": "PROSPECTIVE_CURRENT",
+      "sample_status": {
+        "state": "WAITING_FOR_MAPPING",
+        "scientific_admission_status": "SEMANTIC_DUPLICATE_KEEP_SHADOW",
+        "observation_count": 2,
+        "matured_outcome_count": 0
+      },
+      "current_prospective_validation": false,
+      "presentation_role": "AUDIT_ONLY",
+      "source_refs": [
+        "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json#EC-91c8c02cac35d27a7687"
+      ],
+      "semantic_fingerprint": "a4d539720fbd14c16d1af0c5b8e28cea1248960e26e12fa26fc13d896b37605b"
+    },
+    {
+      "relationship_id": "EC-a0339e7c16281d6df849",
+      "sensor_or_test_ids": [
+        "Legacy sensor pair P05: BTCD_SURVIVAL_RECLAIM_CONTEXT + ETHBTC_STATE"
+      ],
+      "relationship_classes": [
+        "REDUNDANT"
+      ],
+      "evidence_class": "PROSPECTIVE_CURRENT",
+      "sample_status": {
+        "state": "WAITING_FOR_MAPPING",
+        "scientific_admission_status": "SEMANTIC_DUPLICATE_KEEP_SHADOW",
+        "observation_count": 2,
+        "matured_outcome_count": 0
+      },
+      "current_prospective_validation": false,
+      "presentation_role": "AUDIT_ONLY",
+      "source_refs": [
+        "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json#EC-a0339e7c16281d6df849"
+      ],
+      "semantic_fingerprint": "a4d539720fbd14c16d1af0c5b8e28cea1248960e26e12fa26fc13d896b37605b"
+    },
+    {
+      "relationship_id": "EC-a0339e7c16281d6df849",
+      "sensor_or_test_ids": [
+        "Legacy sensor pair P05: BTCD_SURVIVAL_RECLAIM_CONTEXT + ETHBTC_STATE"
+      ],
+      "relationship_classes": [
+        "REDUNDANT"
+      ],
+      "evidence_class": "PROSPECTIVE_CURRENT",
+      "sample_status": {
+        "state": "WAITING_FOR_MAPPING",
+        "scientific_admission_status": "SEMANTIC_DUPLICATE_KEEP_SHADOW",
+        "observation_count": 2,
+        "matured_outcome_count": 0
+      },
+      "current_prospective_validation": false,
+      "presentation_role": "AUDIT_ONLY",
+      "source_refs": [
+        "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json#EC-a0339e7c16281d6df849"
+      ],
+      "semantic_fingerprint": "a4d539720fbd14c16d1af0c5b8e28cea1248960e26e12fa26fc13d896b37605b"
+    },
+    {
+      "relationship_id": "EC-b1a17c720a9531ea37f0",
+      "sensor_or_test_ids": [
+        "Emergent pair: spot.BTCUSDT.range_pct + derivatives.ETH-USDT-SWAP.funding.next_funding_rate"
+      ],
+      "relationship_classes": [],
+      "evidence_class": "PROSPECTIVE_CURRENT",
+      "sample_status": {
+        "state": "MATURED_INCONCLUSIVE",
+        "scientific_admission_status": "QUALIFIED_FOR_FORWARD_TEST",
+        "observation_count": 142,
+        "matured_outcome_count": 1
+      },
+      "current_prospective_validation": true,
+      "presentation_role": "UNRESOLVED",
+      "source_refs": [
+        "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json#EC-b1a17c720a9531ea37f0"
+      ],
+      "semantic_fingerprint": "eef63878b1c5ef420067a92353b11162bd260a2433c240dd56d932b781923585"
+    },
+    {
+      "relationship_id": "EC-c438ef7489c1ea619dd9",
+      "sensor_or_test_ids": [
+        "Emergent pair: spot.BTCUSDT.range_pct + derivatives.ETH-USDT-SWAP.funding.funding_rate"
+      ],
+      "relationship_classes": [
+        "REDUNDANT"
+      ],
+      "evidence_class": "PROSPECTIVE_CURRENT",
+      "sample_status": {
+        "state": "MATURED_INCONCLUSIVE",
+        "scientific_admission_status": "SEMANTIC_DUPLICATE_KEEP_SHADOW",
+        "observation_count": 143,
+        "matured_outcome_count": 1
+      },
+      "current_prospective_validation": true,
+      "presentation_role": "AUDIT_ONLY",
+      "source_refs": [
+        "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json#EC-c438ef7489c1ea619dd9"
+      ],
+      "semantic_fingerprint": "fdcc974141cf796e50b70d15e6e381608917e56ae741a3052a34666464eca3fb"
+    },
+    {
+      "relationship_id": "EC-c73ccb22375967fa39b8",
+      "sensor_or_test_ids": [
+        "Emergent pair: spot.BTCUSDT.range_pct + spot.BTCUSDT.volume"
+      ],
+      "relationship_classes": [
+        "REDUNDANT"
+      ],
+      "evidence_class": "PROSPECTIVE_CURRENT",
+      "sample_status": {
+        "state": "MATURED_INCONCLUSIVE",
+        "scientific_admission_status": "SEMANTIC_DUPLICATE_KEEP_SHADOW",
+        "observation_count": 143,
+        "matured_outcome_count": 1
+      },
+      "current_prospective_validation": true,
+      "presentation_role": "AUDIT_ONLY",
+      "source_refs": [
+        "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json#EC-c73ccb22375967fa39b8"
+      ],
+      "semantic_fingerprint": "6eea3cb124a20074d17f473a6eec74f743d677f0a87a6e0b3dbe4100333f88ed"
+    },
+    {
+      "relationship_id": "EC-ccd732656739e43453b6",
+      "sensor_or_test_ids": [
+        "Emergent pair: spot.BTCUSDT.volume + spot.ETHUSDT.range_pct"
+      ],
+      "relationship_classes": [
+        "REDUNDANT"
+      ],
+      "evidence_class": "PROSPECTIVE_CURRENT",
+      "sample_status": {
+        "state": "MATURED_INCONCLUSIVE",
+        "scientific_admission_status": "SEMANTIC_DUPLICATE_KEEP_SHADOW",
+        "observation_count": 143,
+        "matured_outcome_count": 1
+      },
+      "current_prospective_validation": true,
+      "presentation_role": "AUDIT_ONLY",
+      "source_refs": [
+        "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json#EC-ccd732656739e43453b6"
+      ],
+      "semantic_fingerprint": "e0c9439ebdca546665c1460e0c88d32a96c98817266bafb1a99ac82ee09f192e"
+    },
+    {
+      "relationship_id": "EC-cf3a97917fc2f89dae3e",
+      "sensor_or_test_ids": [
+        "Emergent pair: derivatives.BTC-USDT-SWAP.funding.next_funding_rate + derivatives.ETH-USDT-SWAP.funding.next_funding_rate"
+      ],
+      "relationship_classes": [],
+      "evidence_class": "PROSPECTIVE_CURRENT",
+      "sample_status": {
+        "state": "INCUBATING",
+        "scientific_admission_status": "QUALIFIED_FOR_FORWARD_TEST",
+        "observation_count": 146,
+        "matured_outcome_count": 0
+      },
+      "current_prospective_validation": false,
+      "presentation_role": "UNRESOLVED",
+      "source_refs": [
+        "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json#EC-cf3a97917fc2f89dae3e"
+      ],
+      "semantic_fingerprint": "da92569e6c39ad9926c31b90d79effe044f1a009daf01105b105cd9beab2e331"
+    },
+    {
+      "relationship_id": "EC-d1084cf43796891f7760",
+      "sensor_or_test_ids": [
+        "Emergent pair: spot.ETHBTC.volume + spot.ETHUSDT.range_pct"
+      ],
+      "relationship_classes": [],
+      "evidence_class": "PROSPECTIVE_CURRENT",
+      "sample_status": {
+        "state": "MATURED_INCONCLUSIVE",
+        "scientific_admission_status": "QUALIFIED_FOR_FORWARD_TEST",
+        "observation_count": 145,
+        "matured_outcome_count": 1
+      },
+      "current_prospective_validation": true,
+      "presentation_role": "UNRESOLVED",
+      "source_refs": [
+        "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json#EC-d1084cf43796891f7760"
+      ],
+      "semantic_fingerprint": "8f32417e1e6f78b1c1099817e739dc78a024e6a6bb39da18594815e957f22af2"
+    },
+    {
+      "relationship_id": "EC-d466b9e4383def5909d7",
+      "sensor_or_test_ids": [
+        "Emergent pair: spot.ETHUSDT.volume + spot.ETHUSDT.range_pct"
+      ],
+      "relationship_classes": [],
+      "evidence_class": "PROSPECTIVE_CURRENT",
+      "sample_status": {
+        "state": "MATURED_INCONCLUSIVE",
+        "scientific_admission_status": "QUALIFIED_FOR_FORWARD_TEST",
+        "observation_count": 145,
+        "matured_outcome_count": 1
+      },
+      "current_prospective_validation": true,
+      "presentation_role": "UNRESOLVED",
+      "source_refs": [
+        "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json#EC-d466b9e4383def5909d7"
+      ],
+      "semantic_fingerprint": "12b2b9318e70fca108faffc4899102dd8d5a0a52834f1dbd57276539656e14f1"
+    },
+    {
+      "relationship_id": "EC-d692ee5194afb0186729",
+      "sensor_or_test_ids": [
+        "Legacy sensor pair P04: STABLECOIN_AVAILABILITY_STATE + NORMALIZED_DEX_ACTIVITY_STATE"
+      ],
+      "relationship_classes": [
+        "REDUNDANT"
+      ],
+      "evidence_class": "PROSPECTIVE_CURRENT",
+      "sample_status": {
+        "state": "WAITING_FOR_MAPPING",
+        "scientific_admission_status": "SEMANTIC_DUPLICATE_KEEP_SHADOW",
+        "observation_count": 2,
+        "matured_outcome_count": 0
+      },
+      "current_prospective_validation": false,
+      "presentation_role": "AUDIT_ONLY",
+      "source_refs": [
+        "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json#EC-d692ee5194afb0186729"
+      ],
+      "semantic_fingerprint": "a4d539720fbd14c16d1af0c5b8e28cea1248960e26e12fa26fc13d896b37605b"
+    },
+    {
+      "relationship_id": "EC-d692ee5194afb0186729",
+      "sensor_or_test_ids": [
+        "Legacy sensor pair P04: STABLECOIN_AVAILABILITY_STATE + NORMALIZED_DEX_ACTIVITY_STATE"
+      ],
+      "relationship_classes": [
+        "REDUNDANT"
+      ],
+      "evidence_class": "PROSPECTIVE_CURRENT",
+      "sample_status": {
+        "state": "WAITING_FOR_MAPPING",
+        "scientific_admission_status": "SEMANTIC_DUPLICATE_KEEP_SHADOW",
+        "observation_count": 2,
+        "matured_outcome_count": 0
+      },
+      "current_prospective_validation": false,
+      "presentation_role": "AUDIT_ONLY",
+      "source_refs": [
+        "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json#EC-d692ee5194afb0186729"
+      ],
+      "semantic_fingerprint": "a4d539720fbd14c16d1af0c5b8e28cea1248960e26e12fa26fc13d896b37605b"
+    },
+    {
+      "relationship_id": "EC-dfea0d6337013d4d91b2",
+      "sensor_or_test_ids": [
+        "Emergent pair: spot.ETHBTC.volume + spot.ETHUSDT.volume"
+      ],
+      "relationship_classes": [
+        "DATA_BLOCKED"
+      ],
+      "evidence_class": "PROSPECTIVE_CURRENT",
+      "sample_status": {
+        "state": "WAITING_FOR_DATA",
+        "scientific_admission_status": "QUALIFIED_FOR_FORWARD_TEST",
+        "observation_count": 144,
+        "matured_outcome_count": 0
+      },
+      "current_prospective_validation": false,
+      "presentation_role": "DATA_BLOCKED",
+      "source_refs": [
+        "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json#EC-dfea0d6337013d4d91b2"
+      ],
+      "semantic_fingerprint": "624a68de5a4983deb7ad8c98ecc42985b5645379a4f90c8d47110b17e2470de4"
+    },
+    {
+      "relationship_id": "EC-e8bd339d8bf666d09129",
+      "sensor_or_test_ids": [
+        "Emergent pair: spot.ETHBTC.volume + spot.BTCUSDT.volume"
+      ],
+      "relationship_classes": [
+        "DATA_BLOCKED"
+      ],
+      "evidence_class": "PROSPECTIVE_CURRENT",
+      "sample_status": {
+        "state": "WAITING_FOR_DATA",
+        "scientific_admission_status": "QUALIFIED_FOR_FORWARD_TEST",
+        "observation_count": 144,
+        "matured_outcome_count": 0
+      },
+      "current_prospective_validation": false,
+      "presentation_role": "DATA_BLOCKED",
+      "source_refs": [
+        "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json#EC-e8bd339d8bf666d09129"
+      ],
+      "semantic_fingerprint": "aecdefc099f0fab0336d448e4c9918abfe88403df2b1b57b82735e7bf46b5d80"
+    },
+    {
+      "relationship_id": "EC-eac57810e30b0b6f6272",
+      "sensor_or_test_ids": [
+        "Emergent pair: spot.ETHBTC.range_pct + spot.ETHUSDT.range_pct"
+      ],
+      "relationship_classes": [
+        "DATA_BLOCKED"
+      ],
+      "evidence_class": "PROSPECTIVE_CURRENT",
+      "sample_status": {
+        "state": "WAITING_FOR_DATA",
+        "scientific_admission_status": "QUALIFIED_FOR_FORWARD_TEST",
+        "observation_count": 144,
+        "matured_outcome_count": 0
+      },
+      "current_prospective_validation": false,
+      "presentation_role": "DATA_BLOCKED",
+      "source_refs": [
+        "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json#EC-eac57810e30b0b6f6272"
+      ],
+      "semantic_fingerprint": "0206c5556692feb07eefa83b40b653739e402f7f979b8a3adb69b77e73c51d71"
+    },
+    {
+      "relationship_id": "EC-f3533193161129e28b2d",
+      "sensor_or_test_ids": [
+        "Emergent pair: spot.BTCUSDT.range_pct + spot.ETHUSDT.range_pct"
+      ],
+      "relationship_classes": [
+        "REDUNDANT"
+      ],
+      "evidence_class": "PROSPECTIVE_CURRENT",
+      "sample_status": {
+        "state": "MATURED_INCONCLUSIVE",
+        "scientific_admission_status": "SEMANTIC_DUPLICATE_KEEP_SHADOW",
+        "observation_count": 143,
+        "matured_outcome_count": 1
+      },
+      "current_prospective_validation": true,
+      "presentation_role": "AUDIT_ONLY",
+      "source_refs": [
+        "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json#EC-f3533193161129e28b2d"
+      ],
+      "semantic_fingerprint": "d40a3e298f0d80ad5ccfe8ef2f49b155182ee3c188e0d8bd20a2ffe096b5d11c"
+    },
+    {
+      "relationship_id": "EC-f79206a764488f36e489",
+      "sensor_or_test_ids": [
+        "Emergent pair: derivatives.BTC-USDT-SWAP.funding.next_funding_rate + spot.ETHBTC.range_pct"
+      ],
+      "relationship_classes": [
+        "DATA_BLOCKED"
+      ],
+      "evidence_class": "PROSPECTIVE_CURRENT",
+      "sample_status": {
+        "state": "WAITING_FOR_DATA",
+        "scientific_admission_status": "QUALIFIED_FOR_FORWARD_TEST",
+        "observation_count": 146,
+        "matured_outcome_count": 0
+      },
+      "current_prospective_validation": false,
+      "presentation_role": "DATA_BLOCKED",
+      "source_refs": [
+        "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json#EC-f79206a764488f36e489"
+      ],
+      "semantic_fingerprint": "e05d065d2c8d5e5303364d56321db678fcb48e44fb5a34b782b449d3c12d925d"
+    },
+    {
+      "relationship_id": "EC-f9edd933ad3b7af58498",
+      "sensor_or_test_ids": [
+        "Legacy sensor pair P03: FUNDING_OI_STATE + FOLLOW_THROUGH_STATE"
+      ],
+      "relationship_classes": [
+        "REDUNDANT"
+      ],
+      "evidence_class": "PROSPECTIVE_CURRENT",
+      "sample_status": {
+        "state": "WAITING_FOR_MAPPING",
+        "scientific_admission_status": "SEMANTIC_DUPLICATE_KEEP_SHADOW",
+        "observation_count": 1,
+        "matured_outcome_count": 0
+      },
+      "current_prospective_validation": false,
+      "presentation_role": "AUDIT_ONLY",
+      "source_refs": [
+        "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json#EC-f9edd933ad3b7af58498"
+      ],
+      "semantic_fingerprint": "a4d539720fbd14c16d1af0c5b8e28cea1248960e26e12fa26fc13d896b37605b"
+    },
+    {
+      "relationship_id": "EC-fa693ee68c11cef39bf4",
+      "sensor_or_test_ids": [
+        "Emergent pair: spot.BTCUSDT.range_pct + derivatives.ETH-USDT-SWAP.funding.next_funding_rate"
+      ],
+      "relationship_classes": [
+        "REDUNDANT"
+      ],
+      "evidence_class": "PROSPECTIVE_CURRENT",
+      "sample_status": {
+        "state": "INCUBATING",
+        "scientific_admission_status": "SEMANTIC_DUPLICATE_KEEP_SHADOW",
+        "observation_count": 143,
+        "matured_outcome_count": 0
+      },
+      "current_prospective_validation": false,
+      "presentation_role": "AUDIT_ONLY",
+      "source_refs": [
+        "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json#EC-fa693ee68c11cef39bf4"
+      ],
+      "semantic_fingerprint": "eef63878b1c5ef420067a92353b11162bd260a2433c240dd56d932b781923585"
+    }
+  ],
+  "semantic_duplicate_groups": [
+    {
+      "semantic_fingerprint": "6eea3cb124a20074d17f473a6eec74f743d677f0a87a6e0b3dbe4100333f88ed",
+      "candidate_ids": [
+        "EC-88efacd980e682f941ce",
+        "EC-c73ccb22375967fa39b8"
+      ],
+      "presentation_rule": "COUNT_ONCE_MAXIMUM"
+    },
+    {
+      "semantic_fingerprint": "a13a21a17d350180670c382d7e439b3d0b6b97452462853d03998f6e658652f1",
+      "candidate_ids": [
+        "EC-0b00cbb5103a9b0e102a",
+        "EC-498900261a9bac8b3f11",
+        "EC-75969af3fce5f3c85485"
+      ],
+      "presentation_rule": "COUNT_ONCE_MAXIMUM"
+    },
+    {
+      "semantic_fingerprint": "a4d539720fbd14c16d1af0c5b8e28cea1248960e26e12fa26fc13d896b37605b",
+      "candidate_ids": [
+        "EC-000ddca814a40d50c0a2",
+        "EC-00a5216dbcedd50c60f8",
+        "EC-00a5216dbcedd50c60f8",
+        "EC-02bd4e0576e858ee2411",
+        "EC-0556b05e8f99ad3b5ae5",
+        "EC-36d98f3c3574809e5580",
+        "EC-4e9651dc87db4fcd401d",
+        "EC-64050f55a14c1809315f",
+        "EC-64050f55a14c1809315f",
+        "EC-6f1b82f08232244b9f92",
+        "EC-7210121d0811ca304b89",
+        "EC-7210121d0811ca304b89",
+        "EC-7667a585a26fc1dcc931",
+        "EC-7667a585a26fc1dcc931",
+        "EC-7a8c33eda2476704fad8",
+        "EC-848a197f3e31a5becce2",
+        "EC-848a197f3e31a5becce2",
+        "EC-91c8c02cac35d27a7687",
+        "EC-91c8c02cac35d27a7687",
+        "EC-a0339e7c16281d6df849",
+        "EC-a0339e7c16281d6df849",
+        "EC-d692ee5194afb0186729",
+        "EC-d692ee5194afb0186729",
+        "EC-f9edd933ad3b7af58498"
+      ],
+      "presentation_rule": "COUNT_ONCE_MAXIMUM"
+    },
+    {
+      "semantic_fingerprint": "d40a3e298f0d80ad5ccfe8ef2f49b155182ee3c188e0d8bd20a2ffe096b5d11c",
+      "candidate_ids": [
+        "EC-69264981200e20adc193",
+        "EC-f3533193161129e28b2d"
+      ],
+      "presentation_rule": "COUNT_ONCE_MAXIMUM"
+    },
+    {
+      "semantic_fingerprint": "e0c9439ebdca546665c1460e0c88d32a96c98817266bafb1a99ac82ee09f192e",
+      "candidate_ids": [
+        "EC-76bc2c436064b5db847e",
+        "EC-ccd732656739e43453b6"
+      ],
+      "presentation_rule": "COUNT_ONCE_MAXIMUM"
+    },
+    {
+      "semantic_fingerprint": "eef63878b1c5ef420067a92353b11162bd260a2433c240dd56d932b781923585",
+      "candidate_ids": [
+        "EC-b1a17c720a9531ea37f0",
+        "EC-fa693ee68c11cef39bf4"
+      ],
+      "presentation_rule": "COUNT_ONCE_MAXIMUM"
+    },
+    {
+      "semantic_fingerprint": "fdcc974141cf796e50b70d15e6e381608917e56ae741a3052a34666464eca3fb",
+      "candidate_ids": [
+        "EC-0635053e6c1f7a4bd9c7",
+        "EC-c438ef7489c1ea619dd9"
+      ],
+      "presentation_rule": "COUNT_ONCE_MAXIMUM"
+    }
+  ],
+  "rules": {
+    "low_linear_correlation_implies_unique": false,
+    "historical_proxy_counts_as_current_validation": false,
+    "aligned_sensor_count_adds_conviction": false,
+    "unresolved_relationships_fail_closed": true,
+    "presentation_roles_are_weights": false
+  },
+  "source_refs": [
+    "01_CORE_FRAMEWORK/governance/2026-07-22__sensor-relationship-and-incremental-value-standard__canonical.md",
+    "06_RESEARCH_LAB/audit_summaries/2026-07-22__public-repo-methods-closed-lab-audit__shadow.md",
+    "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json"
+  ]
+}
