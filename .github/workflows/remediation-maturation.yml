@@ -46,6 +46,8 @@ jobs:
           python scripts/remediation/merge_codex_research_intake_converged.py \
             --repo-root . \
             --output-dir research/remediation
+          python scripts/remediation/mission_convergence.py validate-active-completions \
+            --repo-root .
           cp research/remediation/LATEST_REMEDIATION_QUEUE.json LATEST_REMEDIATION_QUEUE.json
           cp research/remediation/LATEST_CODEX_READY_TASKS.json LATEST_CODEX_READY_TASKS.json
           cp research/remediation/LATEST_NEEDS_MORE_EVIDENCE.json LATEST_NEEDS_MORE_EVIDENCE.json
