@@ -17,9 +17,13 @@ on:
     # GitHub cron is UTC-only, so both CET and CEST candidates are scheduled.
     # The slot gate below activates exactly one candidate per local slot.
     - cron: '17 6 * * *'
+      timezone: 'UTC'
     - cron: '17 7 * * *'
+      timezone: 'UTC'
     - cron: '17 18 * * *'
+      timezone: 'UTC'
     - cron: '17 19 * * *'
+      timezone: 'UTC'
   workflow_dispatch:
     inputs:
       run_reason:
