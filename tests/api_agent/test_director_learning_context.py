@@ -3,6 +3,8 @@ from __future__ import annotations
 import csv
 import importlib.util
 import json
+import tempfile
+import unittest
 from pathlib import Path
 
 from tests.api_agent.test_weekly_director_intraday_sequence import WeeklyDirectorIntradaySequenceTests  # noqa: F401
@@ -143,3 +145,35 @@ def test_research_governance_learning_reports_missing_without_invention(tmp_path
     assert out["status"] == "UNAVAILABLE"
     assert out["reason"] == "RESEARCH_GOVERNANCE_STATE_MISSING"
     assert out["missing"] == ["decision_impact", "memory", "meta"]
+
+class DirectorLearningContextUnittestCollectionTests(unittest.TestCase):
+    """Unittest compatibility wrappers for the seven tmp_path-style tests above."""
+
+    def run_with_tmp_path(self, fn) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            fn(Path(directory))
+
+    def test_experiment_learning_prioritizes_supported_and_not_supported_collected(self) -> None:
+        self.run_with_tmp_path(test_experiment_learning_prioritizes_supported_and_not_supported)
+
+    def test_btc_dominance_uses_latest_direct_row_collected(self) -> None:
+        self.run_with_tmp_path(test_btc_dominance_uses_latest_direct_row)
+
+    def test_exit_warning_calibration_preserves_valid_report_collected(self) -> None:
+        self.run_with_tmp_path(test_exit_warning_calibration_preserves_valid_report)
+
+    def test_exit_warning_calibration_marks_missing_and_invalid_without_fabrication_collected(self) -> None:
+        self.run_with_tmp_path(test_exit_warning_calibration_marks_missing_and_invalid_without_fabrication)
+
+    def test_research_governance_learning_routes_bounded_prior_learning_collected(self) -> None:
+        self.run_with_tmp_path(test_research_governance_learning_routes_bounded_prior_learning)
+
+    def test_research_governance_learning_fails_closed_on_authority_breach_collected(self) -> None:
+        self.run_with_tmp_path(test_research_governance_learning_fails_closed_on_authority_breach)
+
+    def test_research_governance_learning_reports_missing_without_invention_collected(self) -> None:
+        self.run_with_tmp_path(test_research_governance_learning_reports_missing_without_invention)
+
+
+if __name__ == "__main__":
+    unittest.main()
