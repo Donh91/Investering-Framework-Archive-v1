@@ -92,8 +92,6 @@ def source_ticker_header_candidate(cells: list[str], asset: str) -> tuple[list[s
     tickers = [clean(value).upper() for value in cells[1:-1]]
     if not tickers:
         return None
-    if len(set(tickers)) != len(tickers):
-        raise ValueError("DUPLICATE_TICKER")
 
     schema = registered_schema(asset, tickers)
     if schema is not None:
@@ -102,11 +100,14 @@ def source_ticker_header_candidate(cells: list[str], asset: str) -> tuple[list[s
     # Issuer-name rows in the legacy two-row ETH layout also have blank...Total
     # edges. Only ticker-like rows are schema claims; issuer rows fall through so
     # the exact second-row ticker matcher below can handle them.
-    if all(re.fullmatch(r"[A-Z0-9]{2,6}", ticker) for ticker in tickers):
-        if any(set(tickers) == set(schema["tickers"]) for schema in FUND_SCHEMA_REGISTRY[asset]):
-            raise ValueError("UNKNOWN_SCHEMA_REVISION:REORDERED")
-        raise ValueError("UNKNOWN_SCHEMA_REVISION")
-    return None
+    ticker_like = all(re.fullmatch(r"[A-Z0-9]{2,6}", ticker) for ticker in tickers)
+    if not ticker_like:
+        return None
+    if len(set(tickers)) != len(tickers):
+        raise ValueError("DUPLICATE_TICKER")
+    if any(set(tickers) == set(schema["tickers"]) for schema in FUND_SCHEMA_REGISTRY[asset]):
+        raise ValueError("UNKNOWN_SCHEMA_REVISION:REORDERED")
+    raise ValueError("UNKNOWN_SCHEMA_REVISION")
 
 
 def two_row_header_candidate(rows: list[list[str]], asset: str) -> tuple[list[str], str] | None:
