@@ -1,0 +1,22 @@
+{
+  "contract": "CODEX_RESEARCH_DIRECT_MERGE_RECEIPT_v1",
+  "status": "DIRECT_MERGE_VERIFIED",
+  "resolution_mode": "DIRECT_NON_CODEX_REPAIR",
+  "authority": "OBSERVABILITY_ONLY_NO_COMPLETION_AUTHORITY",
+  "signature": "f976903834cfe0b49297",
+  "candidate_id": "codex-research-maturation-rejects-api-blind-automation-health-v1",
+  "candidate_sha256": "ea591396b267d7f7cc58d652e3e85def3d4e1ea0c5ad0c57f8bca9428dc6540d",
+  "task_contract_sha256": "fd6a5a285409a5c22ee3da4d29d56ed73cd86d785415fd7cdb8b7ce25f280a2e",
+  "branch": "agent/task-20260923-maturation-reject-api-blind-health",
+  "pr_number": 1249,
+  "merge_commit_sha": "cbc29156551ee6f19b78c4dd04fe60532391b994",
+  "merged_at_utc": "2026-09-23T19:59:41Z",
+  "verified_at_utc": "2026-09-23T21:30:00Z",
+  "post_fix_gate": "MATURATION_TESTS_PASS_PLUS_BLIND_INPUT_FIXTURE_NOOP",
+  "verification_evidence": [
+    "PR #1249 is merged at cbc29156551ee6f19b78c4dd04fe60532391b994 and implements the exact candidate scope without Codex.",
+    "Fresh main build_remediation_maturation.py rejects api_error and majority-unobserved scheduled-workflow health, carries prior state, and records maturation_refusal without post-fix credit or new blind signatures.",
+    "PR #1249 is a bounded defense-in-depth repair and changes no workflow schedule, API budget, market, portfolio, model or canonical market semantics."
+  ],
+  "receipt_sha256": "cb4fb2395e847f102cf19ef1018b16af21363ae0bc4701857ad673d55e4a2ec8"
+}
