@@ -1,0 +1,36 @@
+{
+  "allowed_change_scope": [
+    ".github/workflows/situation-room-shadow-bridge.yml",
+    "directly related scripts and tests"
+  ],
+  "branch": "agent/task-20260917-situation-room-unittest",
+  "clean_noop_condition": "The finding is absent from fresh health, is non-actionable under verified lifecycle semantics, or the target workflow has been superseded or retired.",
+  "contract": "REMEDIATION_TRANSITION_RECEIPT_v1",
+  "escalation_condition": "Escalate to the framework owner if resolution requires market gates, model weights, canonical authority, portfolio logic, API budget, or new policy semantics.",
+  "finding": "LATEST_RUN_FAILED",
+  "forbidden_changes": [
+    "market gates",
+    "model weights",
+    "canonical authority",
+    "portfolio logic"
+  ],
+  "latest_run_id": 35218661384,
+  "objective": "Resolve LATEST_RUN_FAILED for situation-room-shadow-bridge.yml with the smallest bounded code change that satisfies the existing acceptance gates.",
+  "post_fix_gate": "3_SUCCESSFUL_EXPECTED_RUNS",
+  "pr_number": null,
+  "precondition": "Fresh Automation Production Health still contains signature 67ed21de4e9d66074112 for situation-room-shadow-bridge.yml/LATEST_RUN_FAILED, and verified lifecycle state does not make the finding non-actionable.",
+  "receipt_sha256": "d340f70c150071a21ed7d140f336bbf3bdb8f80d0d7f946b3c1a6c6c42a2bb15",
+  "recorded_at_utc": "2026-09-17T20:25:52Z",
+  "signature": "67ed21de4e9d66074112",
+  "source_health_generated_at_utc": "2026-09-17T19:08:11.702116Z",
+  "state": "IN_REMEDIATION",
+  "stop_condition": "Stop without code changes if the precondition fails, the finding cannot be reproduced from scoped evidence, or the required fix exceeds allowed change scope.",
+  "success_evidence": [
+    "workflow job logs",
+    "reproduction or repeated identical signature",
+    "positive and negative acceptance tests",
+    "3_SUCCESSFUL_EXPECTED_RUNS"
+  ],
+  "task_contract_sha256": "5f5f6a1e5d76a1701fde5f4eae006f42651d9d5d1f20d807a6f8cda2cd3694c4",
+  "workflow": "situation-room-shadow-bridge.yml"
+}
