@@ -72,11 +72,70 @@ def forecast_backlog(root: Path) -> dict:
     }
 
 
+INCIDENT_RESOLUTION_CONTRACT = 'SOURCE_QA_INCIDENT_RESOLUTION_v1'
+
+
+def incident_resolution_state(root: Path) -> dict:
+    """Derive open incidents from immutable incident files plus append-only resolution receipts."""
+    incident_root = root / '09_SOURCE_QA/incidents'
+    incident_files = sorted(p for p in incident_root.glob('*.md') if p.is_file()) if incident_root.exists() else []
+    incident_paths = [p.relative_to(root).as_posix() for p in incident_files]
+    incident_set = set(incident_paths)
+    resolved: set[str] = set()
+    invalid_receipts: list[str] = []
+    receipt_paths: list[str] = []
+    resolution_root = incident_root / 'resolutions'
+
+    for receipt_path in sorted(resolution_root.glob('*.json')) if resolution_root.exists() else []:
+        rel_receipt = receipt_path.relative_to(root).as_posix()
+        receipt_paths.append(rel_receipt)
+        receipt = load(receipt_path)
+        if not isinstance(receipt, dict) or receipt.get('contract') != INCIDENT_RESOLUTION_CONTRACT:
+            invalid_receipts.append(rel_receipt)
+            continue
+        incident_path = receipt.get('incident_path')
+        owner = receipt.get('owner')
+        run_id = receipt.get('successful_run_id')
+        conclusion = str(receipt.get('successful_run_conclusion') or '').lower()
+        resolved_at = receipt.get('resolved_at_utc')
+        try:
+            stamp = datetime.fromisoformat(str(resolved_at).replace('Z', '+00:00'))
+            timestamp_ok = stamp.tzinfo is not None
+        except (TypeError, ValueError):
+            timestamp_ok = False
+        valid = (
+            isinstance(incident_path, str)
+            and incident_path in incident_set
+            and isinstance(owner, str)
+            and bool(owner.strip())
+            and isinstance(run_id, int)
+            and not isinstance(run_id, bool)
+            and run_id > 0
+            and conclusion == 'success'
+            and timestamp_ok
+        )
+        if not valid:
+            invalid_receipts.append(rel_receipt)
+            continue
+        resolved.add(incident_path)
+
+    open_incidents = [path for path in incident_paths if path not in resolved]
+    return {
+        'open_incidents': open_incidents,
+        'incident_file_count': len(incident_paths),
+        'resolved_incident_count': len(resolved),
+        'resolution_receipt_count': len(receipt_paths),
+        'invalid_resolution_receipts': invalid_receipts,
+        'open_incidents_truncated': False,
+    }
+
+
 def main():
     ap = argparse.ArgumentParser(); ap.add_argument('--repo-root', type=Path, default=Path('.')); a = ap.parse_args(); r = a.repo_root; now = datetime.now(timezone.utc)
     cap = latest(r/'03_DAILY_CAPTURE_LOGS/captures'); director = latest(r/'research/api_agent/outputs/daily', 'DAILY_DIRECTOR_OUTPUT.json'); weekly = latest(r/'research/api_agent/outputs/weekly', 'MASTER_MONDAY_DELIVERY_POINTER.json'); health = latest(r/'research/architecture_health')
     accepted = latest(r/'research/data_ping_bridge/accepted'); experiment = direct(r/'research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json'); dispatch = direct(r/'research/experiment_lifecycle/LATEST_EXPERIMENT_DISPATCH_MANIFEST.json'); receipt_sync = direct(r/'research/experiment_lifecycle/LATEST_EXPERIMENT_RECEIPT_SYNC.json'); remediation = direct(r/'research/remediation/LATEST_REMEDIATION_QUEUE.json'); codex = direct(r/'research/remediation/LATEST_CODEX_READY_TASKS.json')
-    incidents = [str(p) for p in sorted((r/'09_SOURCE_QA/incidents').glob('*.md'))[-20:]] if (r/'09_SOURCE_QA/incidents').exists() else []
+    incident_state = incident_resolution_state(r)
+    incidents = incident_state['open_incidents']
     backlog = forecast_backlog(r/'research/api_agent/forecast_candidates/PENDING')
 
     def ptr(row):
@@ -89,6 +148,11 @@ def main():
         'generated_at_utc': now.isoformat().replace('+00:00', 'Z'),
         'pointers': pointers,
         'open_incidents': incidents,
+        'incident_file_count': incident_state['incident_file_count'],
+        'resolved_incident_count': incident_state['resolved_incident_count'],
+        'incident_resolution_receipt_count': incident_state['resolution_receipt_count'],
+        'invalid_incident_resolution_receipts': incident_state['invalid_resolution_receipts'],
+        'open_incidents_truncated': incident_state['open_incidents_truncated'],
         'pending_forecast_candidates': backlog['actionable_paths'],
         'quarantined_legacy_forecast_candidates': backlog['quarantined_legacy_paths'],
         'quarantined_non_pending_forecast_candidates': backlog['quarantined_non_pending_paths'],
@@ -110,7 +174,9 @@ def main():
         f"Hash: `{handoff['handoff_sha256']}`", '',
     ] + [f"- **{k}**: `{(v or {}).get('path', 'UNAVAILABLE')}`" for k, v in handoff['pointers'].items()] + [
         '',
-        f"Open incidents: {len(incidents)}",
+        f"Open incidents: {len(incidents)} of {handoff['incident_file_count']} incident files",
+        f"Resolved incidents with valid receipts: {handoff['resolved_incident_count']}",
+        f"Invalid incident resolution receipts: {len(handoff['invalid_incident_resolution_receipts'])}",
         f"Pending forecast candidates: {handoff['pending_forecast_candidate_count']} distinct actionable",
         f"Pending candidate files scanned: {handoff['pending_forecast_candidate_file_count']}",
         f"Legacy candidates quarantined: {handoff['quarantined_legacy_forecast_candidate_count']}",
