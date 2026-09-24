@@ -1,0 +1,188 @@
+{
+  "contract": "MISSION_CONVERGENCE_RECEIPT_v1",
+  "status": "CONVERGED",
+  "candidate_id": "codex-research-t6-rotation-survival-row-instrumentation-v1",
+  "signature": "5d77a6e68e092eed1ca3",
+  "candidate_sha256": "5f0b10ac18e001ec132f1d1a2bf1f454648e2c1378d8106e16c0eae3267d76f8",
+  "task_contract_sha256": "2dcf0fce46ce3c00964f9c922cdd0037e56d3f3456660be1b694f7a0a0820162",
+  "pr_number": 841,
+  "merge_commit_sha": "bc303dc6979d2cb40dbc3acadbaa364d9de8094a",
+  "assessed_at_utc": "2026-09-24T07:05:00Z",
+  "requirements": [
+    {
+      "source_ref": "objective",
+      "text": "Implement the smallest deterministic prospective T6 ROTATION_SURVIVAL_FORWARD row producer and validator that freezes first-cross baseline, sequence start and available ETHBTC/breadth/BTC.D/deployment/flow states before outcomes, then measures survival, delay cost, failure outcome and exit-side outcome as evidence matures. Preserve missingness and right censoring. Do not invent missing axes, thresholds or portfolio actions.",
+      "kind": "OBJECTIVE"
+    },
+    {
+      "source_ref": "acceptance:positive:1",
+      "text": "An eligible first-cross event freezes one immutable sequence source row before outcome evidence, including sequence_id, sequence_start_utc, explicit available/missing axis states and right_censored=true.",
+      "kind": "ACCEPTANCE_POSITIVE"
+    },
+    {
+      "source_ref": "acceptance:positive:2",
+      "text": "Subsequent observations update survival through append-only observations or immutable sidecars and can later compute delay_cost versus the frozen FIRST_ETHBTC_CROSS baseline without rewriting the initial row.",
+      "kind": "ACCEPTANCE_POSITIVE"
+    },
+    {
+      "source_ref": "acceptance:positive:3",
+      "text": "A failed/reversed sequence records failure_outcome and exit_side_outcome only from source-bound post-freeze evidence.",
+      "kind": "ACCEPTANCE_POSITIVE"
+    },
+    {
+      "source_ref": "acceptance:negative:1",
+      "text": "Missing breadth, BTC.D, deployment or flow remains explicit missingness and cannot be inferred or counted as confirmation.",
+      "kind": "ACCEPTANCE_NEGATIVE"
+    },
+    {
+      "source_ref": "acceptance:negative:2",
+      "text": "No historical proxy percentage is promoted into a live threshold and cadence-only operational triggers cannot become market rules.",
+      "kind": "ACCEPTANCE_NEGATIVE"
+    },
+    {
+      "source_ref": "acceptance:negative:3",
+      "text": "No row or outcome may be created retrospectively after observing the result, and no automatic portfolio action or phase promotion is allowed.",
+      "kind": "ACCEPTANCE_NEGATIVE"
+    },
+    {
+      "source_ref": "authority:allowed_change_scope",
+      "text": "scripts/learning/directly related T6 rotation survival producer and validator | tests/learning/directly related T6 tests | .github/workflows/framework-learning-operations.yml | research/framework_memory/rotation_survival_forward_rows | 06_RESEARCH_LAB/forward_tests/directly related machine-readable T6 runtime artifact if an existing owner path requires it",
+      "kind": "AUTHORITY_BOUNDARY"
+    },
+    {
+      "source_ref": "authority:forbidden_changes",
+      "text": "market gates | model weights | canonical authority | portfolio logic | API budget | new policy semantics | new market engine | new live threshold | historical pseudo-row backfill | automatic phase promotion",
+      "kind": "AUTHORITY_BOUNDARY"
+    },
+    {
+      "source_ref": "post_fix_gate",
+      "text": "PROSPECTIVE_SEQUENCE_FIXTURE_PASS_PLUS_THREE_NATURAL_OBSERVATIONS_WITH_NO_RETROSPECTIVE_OR_INFERRED_T6_FIELDS",
+      "kind": "POST_FIX_GATE"
+    }
+  ],
+  "coverage": [
+    {
+      "source_ref": "objective",
+      "status": "SATISFIED",
+      "evidence": [
+        "PR #841 merged at bc303dc6979d2cb40dbc3acadbaa364d9de8094a after 14 relevant PR gates passed, including Continuity Learning, Experiment Lifecycle, Full Architecture 1-7, Data Architecture, Storage Health and Automation Production Health.",
+        "tests/learning/test_t6_rotation_survival.py proves first-cross baseline immutability, explicit missing-axis preservation, no retrospective cross without prior delta, append-only active-sequence observations, no manufactured reversal outcome and non-binding cadence authority.",
+        "Fresh main contains four natural ROTATION_SURVIVAL_OBSERVATION_v1 rows dated 2026-09-14, 2026-09-15, 2026-09-23 and 2026-09-24, exceeding the required three natural observations.",
+        "All four natural rows have retrospective_creation=false. Every available ETHBTC, breadth, BTC.D, deployment and flow axis in those rows is recorded with inferred=false; missing axes remain explicit when absent.",
+        "The 2026-09-23 and 2026-09-24 rows were emitted by integrated Framework Learning Operations after the implementation was already on main, providing prospective production evidence rather than backfilled pseudo-rows.",
+        "No T6 artifact grants binding market interpretation, market threshold changes, model-weight changes, portfolio action or state-change authority."
+      ]
+    },
+    {
+      "source_ref": "acceptance:positive:1",
+      "status": "SATISFIED",
+      "evidence": [
+        "PR #841 merged at bc303dc6979d2cb40dbc3acadbaa364d9de8094a after 14 relevant PR gates passed, including Continuity Learning, Experiment Lifecycle, Full Architecture 1-7, Data Architecture, Storage Health and Automation Production Health.",
+        "tests/learning/test_t6_rotation_survival.py proves first-cross baseline immutability, explicit missing-axis preservation, no retrospective cross without prior delta, append-only active-sequence observations, no manufactured reversal outcome and non-binding cadence authority.",
+        "Fresh main contains four natural ROTATION_SURVIVAL_OBSERVATION_v1 rows dated 2026-09-14, 2026-09-15, 2026-09-23 and 2026-09-24, exceeding the required three natural observations.",
+        "All four natural rows have retrospective_creation=false. Every available ETHBTC, breadth, BTC.D, deployment and flow axis in those rows is recorded with inferred=false; missing axes remain explicit when absent.",
+        "The 2026-09-23 and 2026-09-24 rows were emitted by integrated Framework Learning Operations after the implementation was already on main, providing prospective production evidence rather than backfilled pseudo-rows.",
+        "No T6 artifact grants binding market interpretation, market threshold changes, model-weight changes, portfolio action or state-change authority."
+      ]
+    },
+    {
+      "source_ref": "acceptance:positive:2",
+      "status": "SATISFIED",
+      "evidence": [
+        "PR #841 merged at bc303dc6979d2cb40dbc3acadbaa364d9de8094a after 14 relevant PR gates passed, including Continuity Learning, Experiment Lifecycle, Full Architecture 1-7, Data Architecture, Storage Health and Automation Production Health.",
+        "tests/learning/test_t6_rotation_survival.py proves first-cross baseline immutability, explicit missing-axis preservation, no retrospective cross without prior delta, append-only active-sequence observations, no manufactured reversal outcome and non-binding cadence authority.",
+        "Fresh main contains four natural ROTATION_SURVIVAL_OBSERVATION_v1 rows dated 2026-09-14, 2026-09-15, 2026-09-23 and 2026-09-24, exceeding the required three natural observations.",
+        "All four natural rows have retrospective_creation=false. Every available ETHBTC, breadth, BTC.D, deployment and flow axis in those rows is recorded with inferred=false; missing axes remain explicit when absent.",
+        "The 2026-09-23 and 2026-09-24 rows were emitted by integrated Framework Learning Operations after the implementation was already on main, providing prospective production evidence rather than backfilled pseudo-rows.",
+        "No T6 artifact grants binding market interpretation, market threshold changes, model-weight changes, portfolio action or state-change authority."
+      ]
+    },
+    {
+      "source_ref": "acceptance:positive:3",
+      "status": "SATISFIED",
+      "evidence": [
+        "PR #841 merged at bc303dc6979d2cb40dbc3acadbaa364d9de8094a after 14 relevant PR gates passed, including Continuity Learning, Experiment Lifecycle, Full Architecture 1-7, Data Architecture, Storage Health and Automation Production Health.",
+        "tests/learning/test_t6_rotation_survival.py proves first-cross baseline immutability, explicit missing-axis preservation, no retrospective cross without prior delta, append-only active-sequence observations, no manufactured reversal outcome and non-binding cadence authority.",
+        "Fresh main contains four natural ROTATION_SURVIVAL_OBSERVATION_v1 rows dated 2026-09-14, 2026-09-15, 2026-09-23 and 2026-09-24, exceeding the required three natural observations.",
+        "All four natural rows have retrospective_creation=false. Every available ETHBTC, breadth, BTC.D, deployment and flow axis in those rows is recorded with inferred=false; missing axes remain explicit when absent.",
+        "The 2026-09-23 and 2026-09-24 rows were emitted by integrated Framework Learning Operations after the implementation was already on main, providing prospective production evidence rather than backfilled pseudo-rows.",
+        "No T6 artifact grants binding market interpretation, market threshold changes, model-weight changes, portfolio action or state-change authority."
+      ]
+    },
+    {
+      "source_ref": "acceptance:negative:1",
+      "status": "SATISFIED",
+      "evidence": [
+        "PR #841 merged at bc303dc6979d2cb40dbc3acadbaa364d9de8094a after 14 relevant PR gates passed, including Continuity Learning, Experiment Lifecycle, Full Architecture 1-7, Data Architecture, Storage Health and Automation Production Health.",
+        "tests/learning/test_t6_rotation_survival.py proves first-cross baseline immutability, explicit missing-axis preservation, no retrospective cross without prior delta, append-only active-sequence observations, no manufactured reversal outcome and non-binding cadence authority.",
+        "Fresh main contains four natural ROTATION_SURVIVAL_OBSERVATION_v1 rows dated 2026-09-14, 2026-09-15, 2026-09-23 and 2026-09-24, exceeding the required three natural observations.",
+        "All four natural rows have retrospective_creation=false. Every available ETHBTC, breadth, BTC.D, deployment and flow axis in those rows is recorded with inferred=false; missing axes remain explicit when absent.",
+        "The 2026-09-23 and 2026-09-24 rows were emitted by integrated Framework Learning Operations after the implementation was already on main, providing prospective production evidence rather than backfilled pseudo-rows.",
+        "No T6 artifact grants binding market interpretation, market threshold changes, model-weight changes, portfolio action or state-change authority."
+      ]
+    },
+    {
+      "source_ref": "acceptance:negative:2",
+      "status": "SATISFIED",
+      "evidence": [
+        "PR #841 merged at bc303dc6979d2cb40dbc3acadbaa364d9de8094a after 14 relevant PR gates passed, including Continuity Learning, Experiment Lifecycle, Full Architecture 1-7, Data Architecture, Storage Health and Automation Production Health.",
+        "tests/learning/test_t6_rotation_survival.py proves first-cross baseline immutability, explicit missing-axis preservation, no retrospective cross without prior delta, append-only active-sequence observations, no manufactured reversal outcome and non-binding cadence authority.",
+        "Fresh main contains four natural ROTATION_SURVIVAL_OBSERVATION_v1 rows dated 2026-09-14, 2026-09-15, 2026-09-23 and 2026-09-24, exceeding the required three natural observations.",
+        "All four natural rows have retrospective_creation=false. Every available ETHBTC, breadth, BTC.D, deployment and flow axis in those rows is recorded with inferred=false; missing axes remain explicit when absent.",
+        "The 2026-09-23 and 2026-09-24 rows were emitted by integrated Framework Learning Operations after the implementation was already on main, providing prospective production evidence rather than backfilled pseudo-rows.",
+        "No T6 artifact grants binding market interpretation, market threshold changes, model-weight changes, portfolio action or state-change authority."
+      ]
+    },
+    {
+      "source_ref": "acceptance:negative:3",
+      "status": "SATISFIED",
+      "evidence": [
+        "PR #841 merged at bc303dc6979d2cb40dbc3acadbaa364d9de8094a after 14 relevant PR gates passed, including Continuity Learning, Experiment Lifecycle, Full Architecture 1-7, Data Architecture, Storage Health and Automation Production Health.",
+        "tests/learning/test_t6_rotation_survival.py proves first-cross baseline immutability, explicit missing-axis preservation, no retrospective cross without prior delta, append-only active-sequence observations, no manufactured reversal outcome and non-binding cadence authority.",
+        "Fresh main contains four natural ROTATION_SURVIVAL_OBSERVATION_v1 rows dated 2026-09-14, 2026-09-15, 2026-09-23 and 2026-09-24, exceeding the required three natural observations.",
+        "All four natural rows have retrospective_creation=false. Every available ETHBTC, breadth, BTC.D, deployment and flow axis in those rows is recorded with inferred=false; missing axes remain explicit when absent.",
+        "The 2026-09-23 and 2026-09-24 rows were emitted by integrated Framework Learning Operations after the implementation was already on main, providing prospective production evidence rather than backfilled pseudo-rows.",
+        "No T6 artifact grants binding market interpretation, market threshold changes, model-weight changes, portfolio action or state-change authority."
+      ]
+    },
+    {
+      "source_ref": "authority:allowed_change_scope",
+      "status": "SATISFIED",
+      "evidence": [
+        "PR #841 merged at bc303dc6979d2cb40dbc3acadbaa364d9de8094a after 14 relevant PR gates passed, including Continuity Learning, Experiment Lifecycle, Full Architecture 1-7, Data Architecture, Storage Health and Automation Production Health.",
+        "tests/learning/test_t6_rotation_survival.py proves first-cross baseline immutability, explicit missing-axis preservation, no retrospective cross without prior delta, append-only active-sequence observations, no manufactured reversal outcome and non-binding cadence authority.",
+        "Fresh main contains four natural ROTATION_SURVIVAL_OBSERVATION_v1 rows dated 2026-09-14, 2026-09-15, 2026-09-23 and 2026-09-24, exceeding the required three natural observations.",
+        "All four natural rows have retrospective_creation=false. Every available ETHBTC, breadth, BTC.D, deployment and flow axis in those rows is recorded with inferred=false; missing axes remain explicit when absent.",
+        "The 2026-09-23 and 2026-09-24 rows were emitted by integrated Framework Learning Operations after the implementation was already on main, providing prospective production evidence rather than backfilled pseudo-rows.",
+        "No T6 artifact grants binding market interpretation, market threshold changes, model-weight changes, portfolio action or state-change authority."
+      ]
+    },
+    {
+      "source_ref": "authority:forbidden_changes",
+      "status": "SATISFIED",
+      "evidence": [
+        "PR #841 merged at bc303dc6979d2cb40dbc3acadbaa364d9de8094a after 14 relevant PR gates passed, including Continuity Learning, Experiment Lifecycle, Full Architecture 1-7, Data Architecture, Storage Health and Automation Production Health.",
+        "tests/learning/test_t6_rotation_survival.py proves first-cross baseline immutability, explicit missing-axis preservation, no retrospective cross without prior delta, append-only active-sequence observations, no manufactured reversal outcome and non-binding cadence authority.",
+        "Fresh main contains four natural ROTATION_SURVIVAL_OBSERVATION_v1 rows dated 2026-09-14, 2026-09-15, 2026-09-23 and 2026-09-24, exceeding the required three natural observations.",
+        "All four natural rows have retrospective_creation=false. Every available ETHBTC, breadth, BTC.D, deployment and flow axis in those rows is recorded with inferred=false; missing axes remain explicit when absent.",
+        "The 2026-09-23 and 2026-09-24 rows were emitted by integrated Framework Learning Operations after the implementation was already on main, providing prospective production evidence rather than backfilled pseudo-rows.",
+        "No T6 artifact grants binding market interpretation, market threshold changes, model-weight changes, portfolio action or state-change authority."
+      ]
+    },
+    {
+      "source_ref": "post_fix_gate",
+      "status": "SATISFIED",
+      "evidence": [
+        "PR #841 merged at bc303dc6979d2cb40dbc3acadbaa364d9de8094a after 14 relevant PR gates passed, including Continuity Learning, Experiment Lifecycle, Full Architecture 1-7, Data Architecture, Storage Health and Automation Production Health.",
+        "tests/learning/test_t6_rotation_survival.py proves first-cross baseline immutability, explicit missing-axis preservation, no retrospective cross without prior delta, append-only active-sequence observations, no manufactured reversal outcome and non-binding cadence authority.",
+        "Fresh main contains four natural ROTATION_SURVIVAL_OBSERVATION_v1 rows dated 2026-09-14, 2026-09-15, 2026-09-23 and 2026-09-24, exceeding the required three natural observations.",
+        "All four natural rows have retrospective_creation=false. Every available ETHBTC, breadth, BTC.D, deployment and flow axis in those rows is recorded with inferred=false; missing axes remain explicit when absent.",
+        "The 2026-09-23 and 2026-09-24 rows were emitted by integrated Framework Learning Operations after the implementation was already on main, providing prospective production evidence rather than backfilled pseudo-rows.",
+        "No T6 artifact grants binding market interpretation, market threshold changes, model-weight changes, portfolio action or state-change authority."
+      ]
+    }
+  ],
+  "gaps": [],
+  "authority": "CLOSURE_GATE_ONLY_NO_MARKET_OR_PORTFOLIO_AUTHORITY",
+  "receipt_sha256": "a5ceba9cb9e27a8c6f95de4b3ff09eb8c3c6bdefa722bb1f10579cee6e4d1731"
+}
