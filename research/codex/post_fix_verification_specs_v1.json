@@ -43,8 +43,35 @@
           "value": "PASS"
         }
       ]
+    },
+    {
+      "candidate_id": "codex-automation-health-workflow-pagination-v1",
+      "predicates": [
+        {
+          "kind": "N_HEALTH_HISTORY_MATCH",
+          "count": 2,
+          "min_workflow_count": 101,
+          "min_registered_workflow_count": 101,
+          "require_api_error_none": true
+        }
+      ]
+    },
+    {
+      "candidate_id": "codex-automation-health-cadence-aware-staleness-v1",
+      "predicates": [
+        {
+          "kind": "N_HEALTH_HISTORY_MATCH",
+          "count": 2,
+          "min_workflow_count": 1,
+          "min_registered_workflow_count": 1,
+          "require_api_error_none": true,
+          "forbidden_findings": [
+            "cycle-navigator-autonomous-calibration-loop.yml:SCHEDULE_STALE"
+          ]
+        }
+      ]
     }
   ],
-  "contract_revision": "1.2.0",
-  "verification_note": "Only explicitly machine-verifiable gates are listed. N_CONSECUTIVE_SUCCESSFUL_RUNS may declare after_sha to reset evidence after a follow-up repair; the anchor must descend from the task merge. Machine predicates are necessary but not sufficient where Mission Convergence applies; semantic and sample-size research gates remain human/AI reviewed and are never inferred from a green workflow."
+  "contract_revision": "1.3.0",
+  "verification_note": "Only explicitly machine-verifiable gates are listed. N_CONSECUTIVE_SUCCESSFUL_RUNS may declare after_sha to reset evidence after a follow-up repair; the anchor must descend from the task merge. N_HEALTH_HISTORY_MATCH consumes immutable distinct-run health receipts bound to observed main HEAD and never infers evidence from mutable LATEST alone. Machine predicates are necessary but not sufficient where Mission Convergence applies; semantic and sample-size research gates remain human/AI reviewed and are never inferred from a green workflow."
 }
