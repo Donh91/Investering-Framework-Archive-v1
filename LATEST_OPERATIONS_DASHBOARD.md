@@ -1,20 +1,20 @@
 # Operations Dashboard
 
 Overall: **AMBER**
-Generated: `2026-09-24T19:48:45.758296Z`
+Generated: `2026-09-24T22:08:03.467992Z`
 
 ## Systems
 
 | System | Status | Detail | Age hours |
 |---|---:|---|---:|
-| `daily_capture` | **GREEN** | FRESH | 2.68 |
-| `openai_daily_director` | **GREEN** | FRESH | 1.848 |
-| `weekly_output` | **GREEN** | FRESH | 73.875 |
-| `automation_health` | **AMBER** | AMBER | 0.46 |
-| `architecture_health` | **AMBER** | AMBER | 0.42 |
-| `experiment_lifecycle` | **GREEN** | FRESH | 1.848 |
-| `experiment_receipt_sync` | **GREEN** | FRESH | 13.587 |
-| `remediation_maturation` | **GREEN** | FRESH | 0.319 |
+| `daily_capture` | **GREEN** | FRESH | 2.15 |
+| `openai_daily_director` | **AMBER** | SEMANTIC_STATUS_DEGRADED | 4.17 |
+| `weekly_output` | **GREEN** | FRESH | 76.196 |
+| `automation_health` | **AMBER** | AMBER | 0.045 |
+| `architecture_health` | **AMBER** | AMBER | 0.008 |
+| `experiment_lifecycle` | **GREEN** | FRESH | 4.169 |
+| `experiment_receipt_sync` | **GREEN** | FRESH | 15.909 |
+| `remediation_maturation` | **GREEN** | FRESH | 0.256 |
 
 ## AI and learning activity
 
@@ -33,6 +33,7 @@ Open incident references: **117**
 ## Required actions
 
 - **P1** `architecture_health` - ['OWNER_COVERAGE_DEGRADED']
-- **P1** `automation_health` - REQUIRED_INPUT_UNAVAILABLE
+- **P1** `automation_health` - SEMANTIC_STATUS_AMBER
+- **P1** `openai_daily_director` - SEMANTIC_STATUS_DEGRADED
 
-Dashboard SHA-256: `b1969c78b4c7d17bcf61e221f35bd19b67e77833ce19dc146cce53c7f80c7095`
+Dashboard SHA-256: `8484e84734d1d2d654d43e83c5d35ffde8bfde655a5aa83a7a06cfe0b74b4964`
