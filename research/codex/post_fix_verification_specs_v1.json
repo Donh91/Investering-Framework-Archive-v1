@@ -14,8 +14,36 @@
           "kind": "NO_MERGED_RESEARCH_ZOMBIES"
         }
       ]
+    },
+    {
+      "candidate_id": "codex-operational-observability-pointer-truth-v1",
+      "predicates": [
+        {
+          "kind": "N_CONSECUTIVE_SUCCESSFUL_RUNS",
+          "workflow": "operations-dashboard.yml",
+          "count": 2
+        },
+        {
+          "kind": "JSON_PATH_EQUALS",
+          "path": "LATEST_OPERATIONS_DASHBOARD.json",
+          "field": "consumer_receipt.status",
+          "value": "PASS"
+        },
+        {
+          "kind": "JSON_PATH_EQUALS",
+          "path": "LATEST_OPERATIONS_DASHBOARD.json",
+          "field": "source_status.latest_handoff",
+          "value": "PASS"
+        },
+        {
+          "kind": "JSON_PATH_EQUALS",
+          "path": "LATEST_OPERATIONS_DASHBOARD.json",
+          "field": "source_status.automation_health",
+          "value": "PASS"
+        }
+      ]
     }
   ],
-  "contract_revision": "1.0.2",
-  "verification_note": "Machine predicates are necessary but not sufficient. Any completion subject to Mission Convergence must have a valid existing CONVERGED receipt before the auto-verifier can materialize a completion receipt."
+  "contract_revision": "1.1.0",
+  "verification_note": "Only explicitly machine-verifiable gates are listed. Machine predicates are necessary but not sufficient where Mission Convergence applies; semantic and sample-size research gates remain human/AI reviewed and are never inferred from a green workflow."
 }
