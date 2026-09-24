@@ -84,9 +84,10 @@ def evaluate_predicate(
             and is_ancestor(repo_root, str(task.get("merge_commit_sha") or ""), str(row.get("head_sha") or ""))
         ]
         sample = eligible[:count]
-        ok = count > 0 and len(sample) == count and all(row.get("conclusion") == "success" for row in sample)
-        ids = [str(row.get("id")) for row in sample]
-        return ok, f"{workflow}: consecutive_success={len(sample)}/{count} run_ids={','.join(ids)}"
+        successes = sum(row.get("conclusion") == "success" for row in sample)
+        ok = count > 0 and len(sample) == count and successes == count
+        run_states = [f"{row.get('id')}:{row.get('conclusion')}" for row in sample]
+        return ok, f"{workflow}: successful_runs={successes}/{count} sampled_runs={','.join(run_states)}"
     if kind == "NO_MERGED_RESEARCH_ZOMBIES":
         state = read_json(repo_root / "LATEST_CODEX_EXECUTION_STATE.json", {}) or {}
         zombies: list[str] = []
