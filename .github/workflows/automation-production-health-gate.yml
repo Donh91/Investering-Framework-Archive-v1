@@ -33,7 +33,7 @@ jobs:
         with:
           python-version: '3.12'
       - name: Install test dependency
-        run: python -m pip install --disable-pip-version-check pytest
+        run: python -m pip install --disable-pip-version-check pytest 'pandas>=2.2,<3'
       - name: Compile health, remediation and handoff code
         run: |
           python -m py_compile \
