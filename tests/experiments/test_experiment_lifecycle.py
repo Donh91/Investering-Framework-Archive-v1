@@ -54,6 +54,45 @@ class ExperimentLifecycleTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as td:
             repo=Path(td);base={"kind":"SENSOR_COMBINATION","title":"Breadth plus ETH relative strength","hypothesis":"The conjunction may improve rotation discrimination.","falsifier":"It fails to beat the strongest single component after sufficient independent windows.","horizon_days":7,"components":[{"metric_path":"breadth.advancers","operator":"GT","threshold":50},{"metric_path":"spot.ETHBTC.close","operator":"GT","threshold":0.029}],"target_metric_path":"spot.BTCUSDT.close","target_direction":"UP","target_threshold_pct":1.0,"target_unit_contract_version":"FORECAST_TARGET_UNITS_v2","regime_dependency":"ROTATION_WATCH","novelty_reason":"PAIR_DISCOVERY","revisit_conditions":["Both metrics available"]};first=dict(base,evidence_basis=["first numeric print"]);second=dict(base,evidence_basis=["later numeric print"]);run_engine(repo,{"forecast_candidates":[],"experiment_candidates":[first]},context("2026-08-05T10:00:00Z","run-1"));run_engine(repo,{"forecast_candidates":[],"experiment_candidates":[second]},context("2026-08-05T14:00:00Z","run-2"));self.assertEqual(len(list((repo/"research/experiment_lifecycle/candidates").rglob("*.json"))),1);self.assertEqual(len(list((repo/"research/experiment_lifecycle/observations").rglob("*.json"))),2)
 
+    def test_registry_deduplicates_same_candidate_id_to_earliest_canonical_source(self):
+        with tempfile.TemporaryDirectory() as td:
+            repo=Path(td)
+            catalog=repo/"catalog.json"
+            catalog.write_text(json.dumps({"test_id":"SENSOR_PAIR_DISCOVERY_LAB_V0_1","pairs":[{"pair_id":"P99","sensor_a":"ODD_A","sensor_b":"ODD_B"}]}))
+            run_engine(repo,{"forecast_candidates":[],"experiment_candidates":[]},context("2026-08-05T10:00:00Z"),catalog)
+            first_path=next((repo/"research/experiment_lifecycle/candidates").rglob("*.json"))
+            first=json.loads(first_path.read_text())
+            duplicate=dict(first)
+            duplicate["created_at_utc"]="2026-09-01T10:00:00Z"
+            duplicate["registered_at_utc"]="2026-09-01T10:01:00Z"
+            duplicate["source"]={"source_run_id":"later-duplicate"}
+            later_path=repo/"research/experiment_lifecycle/candidates/2026/09"/first_path.name
+            later_path.parent.mkdir(parents=True,exist_ok=True)
+            later_path.write_text(json.dumps(duplicate))
+            run_engine(repo,{"forecast_candidates":[],"experiment_candidates":[]},context("2026-09-02T10:00:00Z"),None)
+            registry=json.loads((repo/"research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json").read_text())
+            self.assertEqual(registry["candidate_count"],1)
+            self.assertEqual(registry["duplicate_candidate_file_count"],1)
+            self.assertEqual(len(registry["candidates"]),1)
+            self.assertEqual(registry["candidates"][0]["created_at_utc"],first["created_at_utc"])
+            self.assertEqual(registry["rules"]["candidate_id_uniqueness"],"ONE_CURRENT_ROW_PER_CANDIDATE_ID_EARLIEST_CANONICAL_SOURCE")
+
+    def test_registry_fails_closed_on_same_candidate_id_with_conflicting_spec(self):
+        with tempfile.TemporaryDirectory() as td:
+            repo=Path(td)
+            catalog=repo/"catalog.json"
+            catalog.write_text(json.dumps({"test_id":"SENSOR_PAIR_DISCOVERY_LAB_V0_1","pairs":[{"pair_id":"P99","sensor_a":"ODD_A","sensor_b":"ODD_B"}]}))
+            run_engine(repo,{"forecast_candidates":[],"experiment_candidates":[]},context("2026-08-05T10:00:00Z"),catalog)
+            first_path=next((repo/"research/experiment_lifecycle/candidates").rglob("*.json"))
+            duplicate=json.loads(first_path.read_text())
+            duplicate["spec"]=dict(duplicate["spec"])
+            duplicate["spec"]["title"]="CONFLICTING SAME-ID SPEC"
+            later_path=repo/"research/experiment_lifecycle/candidates/2026/09"/first_path.name
+            later_path.parent.mkdir(parents=True,exist_ok=True)
+            later_path.write_text(json.dumps(duplicate))
+            with self.assertRaises(subprocess.CalledProcessError):
+                run_engine(repo,{"forecast_candidates":[],"experiment_candidates":[]},context("2026-09-02T10:00:00Z"),None)
+
     def test_same_capture_forecasts_share_event_window_and_frozen_controls(self):
         with tempfile.TemporaryDirectory() as td:
             repo=Path(td);output={"forecast_candidates":[pct_candidate("spot.BTCUSDT.close","UP",1.0,rationale="BTC candidate"),pct_candidate("spot.ETHUSDT.close","UP",1.5,rationale="ETH candidate")],"experiment_candidates":[]};run_engine(repo,output,context("2026-08-05T10:00:00Z","run-shared"));forecasts=[json.loads(path.read_text()) for path in (repo/"research/framework_memory/forecast_memory").rglob("*.json")];self.assertEqual(len(forecasts),2);self.assertEqual(len({row["causal_event_window_id"] for row in forecasts}),1);self.assertEqual(len({row["controls"]["deterministic_placebo_direction"] for row in forecasts}),1)
