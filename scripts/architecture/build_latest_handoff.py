@@ -1,7 +1,13 @@
 from __future__ import annotations
-import argparse, csv, hashlib, json
+import argparse, csv, hashlib, json, sys
 from datetime import datetime, timezone
 from pathlib import Path
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+from scripts.api_agent.api_gateway import validate_output
 
 TARGET_MODES = {'PCT_MOVE', 'ABSOLUTE_VALUE', 'ABSOLUTE_RANGE'}
 
@@ -31,6 +37,50 @@ def latest(root, name='*.json'):
 def direct(path):
     v = load(path)
     return (str(v.get('generated_at_utc') or v.get('created_at_utc') or '') if v else None, path, v) if v else (None, None, None)
+
+
+def trusted_daily_director(path: Path, value: dict | None) -> bool:
+    if not isinstance(value, dict):
+        return False
+    try:
+        validate_output(value)
+    except (TypeError, ValueError):
+        return False
+    output_hash = hashlib.sha256(path.read_bytes()).hexdigest()
+    for receipt_path in (path.with_name('DAILY_DIRECTOR_RECEIPT.json'), path.with_name('receipt.json')):
+        receipt = load(receipt_path)
+        if not isinstance(receipt, dict):
+            continue
+        if receipt.get('contract') != 'API_AGENT_RECEIPT_v3':
+            continue
+        if receipt.get('task') != 'DAILY_DIRECTOR_SHADOW':
+            continue
+        if receipt.get('output_hash') != output_hash:
+            continue
+        return True
+    return False
+
+
+def latest_trusted_daily_director(root: Path):
+    rows = []
+    if root.exists():
+        for path in root.rglob('DAILY_DIRECTOR_OUTPUT.json'):
+            value = load(path)
+            if not trusted_daily_director(path, value):
+                continue
+            raw = next((value.get(k) for k in (
+                'captured_at_utc', 'completed_at_utc', 'created_at_utc', 'generated_at_utc',
+                'freeze_utc', 'retrieved_at_utc', 'timestamp_utc'
+            ) if value.get(k)), None)
+            rows.append((str(raw or ''), path.as_posix(), path, value))
+    if not rows:
+        return (None, None, None)
+    _, _, path, value = sorted(rows, key=lambda x: (x[0], x[1]))[-1]
+    raw = next((value.get(k) for k in (
+        'captured_at_utc', 'completed_at_utc', 'created_at_utc', 'generated_at_utc',
+        'freeze_utc', 'retrieved_at_utc', 'timestamp_utc'
+    ) if value.get(k)), '')
+    return (str(raw or ''), path, value)
 
 
 def forecast_backlog(root: Path) -> dict:
@@ -132,7 +182,7 @@ def incident_resolution_state(root: Path) -> dict:
 
 def main():
     ap = argparse.ArgumentParser(); ap.add_argument('--repo-root', type=Path, default=Path('.')); a = ap.parse_args(); r = a.repo_root; now = datetime.now(timezone.utc)
-    cap = latest(r/'03_DAILY_CAPTURE_LOGS/captures'); director = latest(r/'research/api_agent/outputs/daily', 'DAILY_DIRECTOR_OUTPUT.json'); weekly = latest(r/'research/api_agent/outputs/weekly', 'MASTER_MONDAY_DELIVERY_POINTER.json'); health = latest(r/'research/architecture_health')
+    cap = latest(r/'03_DAILY_CAPTURE_LOGS/captures'); director = latest_trusted_daily_director(r/'research/api_agent/outputs/daily'); weekly = latest(r/'research/api_agent/outputs/weekly', 'MASTER_MONDAY_DELIVERY_POINTER.json'); health = latest(r/'research/architecture_health')
     accepted = latest(r/'research/data_ping_bridge/accepted'); experiment = direct(r/'research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json'); dispatch = direct(r/'research/experiment_lifecycle/LATEST_EXPERIMENT_DISPATCH_MANIFEST.json'); receipt_sync = direct(r/'research/experiment_lifecycle/LATEST_EXPERIMENT_RECEIPT_SYNC.json'); remediation = direct(r/'research/remediation/LATEST_REMEDIATION_QUEUE.json'); codex = direct(r/'research/remediation/LATEST_CODEX_READY_TASKS.json')
     incident_state = incident_resolution_state(r)
     incidents = incident_state['open_incidents']
