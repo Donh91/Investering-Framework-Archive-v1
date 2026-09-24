@@ -93,6 +93,18 @@ class ExperimentLifecycleTest(unittest.TestCase):
             with self.assertRaises(subprocess.CalledProcessError):
                 run_engine(repo,{"forecast_candidates":[],"experiment_candidates":[]},context("2026-09-02T10:00:00Z"),None)
 
+    def test_same_candidate_identity_is_not_recreated_in_new_month_partition(self):
+        with tempfile.TemporaryDirectory() as td:
+            repo=Path(td)
+            output={"forecast_candidates":[pct_candidate()],"experiment_candidates":[]}
+            run_engine(repo,output,context("2026-08-31T23:00:00Z","aug-run"))
+            run_engine(repo,output,context("2026-09-01T01:00:00Z","sep-run"))
+            files=list((repo/"research/experiment_lifecycle/candidates").rglob("*.json"))
+            self.assertEqual(len(files),1)
+            registry=json.loads((repo/"research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json").read_text())
+            self.assertEqual(registry["candidate_count"],1)
+            self.assertEqual(registry["duplicate_candidate_file_count"],0)
+
     def test_same_capture_forecasts_share_event_window_and_frozen_controls(self):
         with tempfile.TemporaryDirectory() as td:
             repo=Path(td);output={"forecast_candidates":[pct_candidate("spot.BTCUSDT.close","UP",1.0,rationale="BTC candidate"),pct_candidate("spot.ETHUSDT.close","UP",1.5,rationale="ETH candidate")],"experiment_candidates":[]};run_engine(repo,output,context("2026-08-05T10:00:00Z","run-shared"));forecasts=[json.loads(path.read_text()) for path in (repo/"research/framework_memory/forecast_memory").rglob("*.json")];self.assertEqual(len(forecasts),2);self.assertEqual(len({row["causal_event_window_id"] for row in forecasts}),1);self.assertEqual(len({row["controls"]["deterministic_placebo_direction"] for row in forecasts}),1)

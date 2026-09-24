@@ -300,11 +300,17 @@ def main() -> None:
         mapped = from_forecast(item, latest)
         if mapped: raw.append(mapped)
         else: rejected.append({"title": f"Prospective {item.get('metric_path')}", "error": "explicit_target_unit_contract_required"})
+    existing_candidate_rows, _ = unique_candidate_rows(args.candidate_root)
+    existing_candidate_ids = {str(value.get("candidate_id")) for _, value in existing_candidate_rows}
     new_ids = set()
     for item in raw:
         try:
             spec = normalize(item); candidate_id = "EC-" + sha(identity_spec(spec))[:20]; value = {"contract": "EXPERIMENT_CANDIDATE_v1", "candidate_id": candidate_id, "created_at_utc": captured, "registered_at_utc": now, "target_unit_contract_version": spec.get("target_unit_contract_version"), "spec": spec, "source": {**source, "daily_output_path": rel(root, args.daily_output), "daily_context_path": rel(root, args.daily_context), "daily_receipt_path": rel(root, args.daily_receipt)}, "dormancy_policy": {"automatic_age_expiry": False, "retain_until": "FALSIFIED_OR_GOVERNANCE_CLOSED"}, "authority": {"canonical_promotion": False, "framework_state_change": False, "model_weight_change": False, "portfolio_action": False}}
-            if write_new(args.candidate_root / when.strftime("%Y/%m") / f"{candidate_id}.json", value): new_ids.add(candidate_id)
+            if candidate_id in existing_candidate_ids:
+                continue
+            if write_new(args.candidate_root / when.strftime("%Y/%m") / f"{candidate_id}.json", value):
+                new_ids.add(candidate_id)
+                existing_candidate_ids.add(candidate_id)
         except Exception as exc: rejected.append({"title": str(item.get("title") or "UNKNOWN"), "error": str(exc)})
     new_forecasts = 0; dispatch = 0; candidate_rows, _ = unique_candidate_rows(args.candidate_root); candidate_rows.sort(key=lambda item: (0 if item[1].get("spec", {}).get("kind") == "FORECAST_TEST" else 1, str(item[1].get("candidate_id") or "")))
     for spec_path, candidate in candidate_rows:

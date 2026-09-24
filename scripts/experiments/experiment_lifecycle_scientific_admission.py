@@ -252,7 +252,8 @@ def main() -> None:
         else:
             rejected.append({"title": f"Prospective {item.get('metric_path')}", "error": "explicit_target_unit_contract_required"})
 
-    existing_candidates = {value["candidate_id"]: value for _, value in base.jsons(args.candidate_root, "EXPERIMENT_CANDIDATE_v1")}
+    existing_candidate_rows, _ = base.unique_candidate_rows(args.candidate_root)
+    existing_candidates = {value["candidate_id"]: value for _, value in existing_candidate_rows}
     new_ids: set[str] = set()
     for item in raw:
         try:
@@ -269,6 +270,8 @@ def main() -> None:
                 "dormancy_policy": {"automatic_age_expiry": False, "retain_until": "FALSIFIED_OR_GOVERNANCE_CLOSED"},
                 "authority": {"canonical_promotion": False, "framework_state_change": False, "model_weight_change": False, "portfolio_action": False},
             }
+            if candidate_id in existing_candidates:
+                continue
             path = args.candidate_root / when.strftime("%Y/%m") / f"{candidate_id}.json"
             if base.write_new(path, value):
                 new_ids.add(candidate_id)
@@ -298,7 +301,7 @@ def main() -> None:
 
     new_forecasts = 0
     dispatch = 0
-    candidate_rows = base.jsons(args.candidate_root, "EXPERIMENT_CANDIDATE_v1")
+    candidate_rows, _ = base.unique_candidate_rows(args.candidate_root)
     candidate_rows.sort(key=lambda item: (0 if item[1].get("spec", {}).get("kind") == "FORECAST_TEST" else 1, str(item[1].get("candidate_id") or "")))
     for spec_path, candidate in candidate_rows:
         spec = candidate["spec"]
