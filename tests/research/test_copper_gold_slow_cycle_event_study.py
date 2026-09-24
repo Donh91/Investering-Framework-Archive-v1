@@ -61,6 +61,14 @@ def test_pre_btc_copper_gold_events_are_not_mapped_to_first_btc_day():
     assert study.signal_events(rows, "TURNING_NEGATIVE", btc) == []
 
 
+def test_row_knowledge_at_helper_compatibility_fails_closed_without_any_time_anchor():
+    compat = {"bar_end_day": date(1990, 1, 31)}
+    assert study.row_knowledge_at(compat) == study.parse_utc("1990-01-31T23:59:59Z")
+
+    with pytest.raises(ValueError, match="row_missing_knowledge_time"):
+        study.row_knowledge_at({"bar_end_period": "1990-01"})
+
+
 def test_btc_loader_accepts_coinmetrics_time_and_rejects_duplicates():
     with tempfile.TemporaryDirectory() as tmp:
         path = Path(tmp) / "btc.csv"
