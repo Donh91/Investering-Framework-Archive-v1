@@ -3,11 +3,24 @@ from __future__ import annotations
 import json
 import os
 import subprocess
+import unittest
 
 from tests.learning.test_action_compass_accountability import AccountabilityHarness, canonical, sha
 
 
 class AcceptedDataPingActionCompassBindingTests(AccountabilityHarness):
+    def test_t9_reproducibility_suite_is_collected_and_green(self):
+        suite = unittest.defaultTestLoader.loadTestsFromName(
+            "tests.learning.test_action_compass_reproducibility"
+        )
+        self.assertGreater(suite.countTestCases(), 0)
+        result = unittest.TestResult()
+        suite.run(result)
+        self.assertTrue(
+            result.wasSuccessful(),
+            f"T9 suite failures={result.failures} errors={result.errors}",
+        )
+
     def test_native_accepted_packet_binds_exactly_once_to_action_compass(self):
         packet_path = self.repo / "research/data_ping_bridge/accepted/2026/W35/DPI-test.json"
         packet_path.parent.mkdir(parents=True, exist_ok=True)
