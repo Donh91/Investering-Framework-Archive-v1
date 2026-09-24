@@ -1,0 +1,21 @@
+{
+  "contract": "CODEX_RESEARCH_COMPLETION_RECEIPT_v1",
+  "status": "VERIFIED",
+  "candidate_id": "codex-research-t6-rotation-survival-row-instrumentation-v1",
+  "signature": "5d77a6e68e092eed1ca3",
+  "candidate_sha256": "5f0b10ac18e001ec132f1d1a2bf1f454648e2c1378d8106e16c0eae3267d76f8",
+  "task_contract_sha256": "2dcf0fce46ce3c00964f9c922cdd0037e56d3f3456660be1b694f7a0a0820162",
+  "pr_number": 841,
+  "merge_commit_sha": "bc303dc6979d2cb40dbc3acadbaa364d9de8094a",
+  "verified_at_utc": "2026-09-24T07:05:00Z",
+  "verification_evidence": [
+    "PR #841 merged at bc303dc6979d2cb40dbc3acadbaa364d9de8094a after 14 relevant PR gates passed, including Continuity Learning, Experiment Lifecycle, Full Architecture 1-7, Data Architecture, Storage Health and Automation Production Health.",
+    "tests/learning/test_t6_rotation_survival.py proves first-cross baseline immutability, explicit missing-axis preservation, no retrospective cross without prior delta, append-only active-sequence observations, no manufactured reversal outcome and non-binding cadence authority.",
+    "Fresh main contains four natural ROTATION_SURVIVAL_OBSERVATION_v1 rows dated 2026-09-14, 2026-09-15, 2026-09-23 and 2026-09-24, exceeding the required three natural observations.",
+    "All four natural rows have retrospective_creation=false. Every available ETHBTC, breadth, BTC.D, deployment and flow axis in those rows is recorded with inferred=false; missing axes remain explicit when absent.",
+    "The 2026-09-23 and 2026-09-24 rows were emitted by integrated Framework Learning Operations after the implementation was already on main, providing prospective production evidence rather than backfilled pseudo-rows.",
+    "No T6 artifact grants binding market interpretation, market threshold changes, model-weight changes, portfolio action or state-change authority."
+  ],
+  "post_fix_gate": "PROSPECTIVE_SEQUENCE_FIXTURE_PASS_PLUS_THREE_NATURAL_OBSERVATIONS_WITH_NO_RETROSPECTIVE_OR_INFERRED_T6_FIELDS",
+  "receipt_sha256": "f37a821759eff7e9a51ea9cbab9192a122f412482af958ae6787c2c1d3086b2c"
+}
