@@ -1,146 +1,146 @@
 {
-  "assessed_at_utc": "2026-09-23T22:49:00Z",
-  "authority": "CLOSURE_GATE_ONLY_NO_MARKET_OR_PORTFOLIO_AUTHORITY",
-  "candidate_id": "codex-research-experiment-simplification-review-v1",
-  "candidate_sha256": "92a10427c7afe897ac70a95f370533b5b14864a15531b8b3a6b74d8835d18cc1",
   "contract": "MISSION_CONVERGENCE_RECEIPT_v1",
+  "status": "CONVERGED",
+  "candidate_id": "codex-research-experiment-simplification-review-v1",
+  "signature": "d5f9cc11d5d7d05418b9",
+  "candidate_sha256": "92a10427c7afe897ac70a95f370533b5b14864a15531b8b3a6b74d8835d18cc1",
+  "task_contract_sha256": "6b23706c680820d9b4f380ef8b3040d8c44a017c948dbcb13be61a33ab712b5b",
+  "pr_number": 1280,
+  "merge_commit_sha": "e01087b707f9c289470c3d0b454f32a286b9c2e3",
+  "assessed_at_utc": "2026-09-24T06:55:00Z",
+  "requirements": [
+    {
+      "source_ref": "objective",
+      "text": "Implement the smallest deterministic read-only simplification review over the existing Experiment Lifecycle registry that flags semantic/path alias families, high-observation zero-outcome incubation and repeated matured-inconclusive families for governance review without automatically merging, retiring, promoting or changing weights.",
+      "kind": "OBJECTIVE"
+    },
+    {
+      "source_ref": "acceptance:positive:1",
+      "text": "Equivalent known path-alias candidates with the same kind/direction/horizon are grouped with every original candidate ID preserved.",
+      "kind": "ACCEPTANCE_POSITIVE"
+    },
+    {
+      "source_ref": "acceptance:positive:2",
+      "text": "The report separately flags high-observation zero-outcome incubation and repeated matured-inconclusive families.",
+      "kind": "ACCEPTANCE_POSITIVE"
+    },
+    {
+      "source_ref": "acceptance:negative:1",
+      "text": "Distinct hypotheses are not collapsed solely because they share a metric path.",
+      "kind": "ACCEPTANCE_NEGATIVE"
+    },
+    {
+      "source_ref": "acceptance:negative:2",
+      "text": "No candidate is deleted, rewritten, auto-retired, auto-merged, promoted or assigned a model weight by the review.",
+      "kind": "ACCEPTANCE_NEGATIVE"
+    },
+    {
+      "source_ref": "authority:allowed_change_scope",
+      "text": "scripts/experiments/directly related read-only experiment simplification review helper | tests/experiments/directly related simplification review tests | research/experiment_lifecycle/directly related generated simplification review artifact",
+      "kind": "AUTHORITY_BOUNDARY"
+    },
+    {
+      "source_ref": "authority:forbidden_changes",
+      "text": "market gates | model weights | canonical authority | portfolio logic | API budget | new policy semantics | automatic experiment retirement | automatic experiment merge | automatic promotion | candidate history deletion",
+      "kind": "AUTHORITY_BOUNDARY"
+    },
+    {
+      "source_ref": "post_fix_gate",
+      "text": "DETERMINISTIC_CLUSTER_FIXTURE_PASS_PLUS_GOVERNANCE_READBACK_NO_MUTATION",
+      "kind": "POST_FIX_GATE"
+    }
+  ],
   "coverage": [
     {
-      "evidence": [
-        "PR #1273 merged the deterministic read-only experiment simplification helper and focused fixtures at 161aa4bd2a5b7581fb2c61747ec2e4ef4d168cdb after Experiment Lifecycle, Data Architecture, Storage Health and Automation Production Health gates passed.",
-        "Follow-up PR #1277 merged the current-registry non-mutation regression at 10ffabb6e8ad77fdc7cf1bb27a8c1c7a403b9746; Experiment Lifecycle Gate run 35930222499 passed against the live registry/candidate corpus.",
-        "The live-registry regression runs the review twice, requires deterministic identical output, hashes every candidate JSON before and after and requires byte-for-byte equality, and reasserts zero automatic merge, retirement, promotion, model-weight, market-gate or portfolio authority.",
-        "Current registry readback exposed 387 registry rows, 379 unique candidate IDs and 8 duplicate-ID legacy families; the implementation preserves these as explicit read-only registry-duplication diagnostics rather than silently deleting, merging or treating them as hypothesis diversity.",
-        "Exact semantic alias clustering uses existing canonical metric normalization and full semantic identity; same target path alone remains explicitly insufficient merge authority."
-      ],
       "source_ref": "objective",
-      "status": "SATISFIED"
+      "status": "SATISFIED",
+      "evidence": [
+        "PR #1280 merged at e01087b707f9c289470c3d0b454f32a286b9c2e3 after Data Architecture, Storage Health, Experiment Lifecycle and Automation Production Health gates passed.",
+        "Experiment Lifecycle Gate run 35934421463 executed the live-registry simplification tests plus all four entrypoint regressions: isolated unittest collection, direct script execution from outside the repo, module execution and current-registry CLI read-only behavior; all passed.",
+        "The live-registry regression preserves 387 registry rows, 379 unique candidate IDs and 8 duplicate-ID legacy families as explicit read-only diagnostics, runs deterministically twice and proves candidate JSON bytes are unchanged.",
+        "Exact semantic alias clustering uses the existing canonical normalization and full semantic identity; same target path alone remains insufficient merge authority.",
+        "Fresh main retains zero automatic merge, retirement, promotion, candidate-history mutation, market-gate, model-weight or portfolio authority."
+      ]
     },
     {
-      "evidence": [
-        "PR #1273 merged the deterministic read-only experiment simplification helper and focused fixtures at 161aa4bd2a5b7581fb2c61747ec2e4ef4d168cdb after Experiment Lifecycle, Data Architecture, Storage Health and Automation Production Health gates passed.",
-        "Follow-up PR #1277 merged the current-registry non-mutation regression at 10ffabb6e8ad77fdc7cf1bb27a8c1c7a403b9746; Experiment Lifecycle Gate run 35930222499 passed against the live registry/candidate corpus.",
-        "The live-registry regression runs the review twice, requires deterministic identical output, hashes every candidate JSON before and after and requires byte-for-byte equality, and reasserts zero automatic merge, retirement, promotion, model-weight, market-gate or portfolio authority.",
-        "Current registry readback exposed 387 registry rows, 379 unique candidate IDs and 8 duplicate-ID legacy families; the implementation preserves these as explicit read-only registry-duplication diagnostics rather than silently deleting, merging or treating them as hypothesis diversity.",
-        "Exact semantic alias clustering uses existing canonical metric normalization and full semantic identity; same target path alone remains explicitly insufficient merge authority."
-      ],
       "source_ref": "acceptance:positive:1",
-      "status": "SATISFIED"
+      "status": "SATISFIED",
+      "evidence": [
+        "PR #1280 merged at e01087b707f9c289470c3d0b454f32a286b9c2e3 after Data Architecture, Storage Health, Experiment Lifecycle and Automation Production Health gates passed.",
+        "Experiment Lifecycle Gate run 35934421463 executed the live-registry simplification tests plus all four entrypoint regressions: isolated unittest collection, direct script execution from outside the repo, module execution and current-registry CLI read-only behavior; all passed.",
+        "The live-registry regression preserves 387 registry rows, 379 unique candidate IDs and 8 duplicate-ID legacy families as explicit read-only diagnostics, runs deterministically twice and proves candidate JSON bytes are unchanged.",
+        "Exact semantic alias clustering uses the existing canonical normalization and full semantic identity; same target path alone remains insufficient merge authority.",
+        "Fresh main retains zero automatic merge, retirement, promotion, candidate-history mutation, market-gate, model-weight or portfolio authority."
+      ]
     },
     {
-      "evidence": [
-        "PR #1273 merged the deterministic read-only experiment simplification helper and focused fixtures at 161aa4bd2a5b7581fb2c61747ec2e4ef4d168cdb after Experiment Lifecycle, Data Architecture, Storage Health and Automation Production Health gates passed.",
-        "Follow-up PR #1277 merged the current-registry non-mutation regression at 10ffabb6e8ad77fdc7cf1bb27a8c1c7a403b9746; Experiment Lifecycle Gate run 35930222499 passed against the live registry/candidate corpus.",
-        "The live-registry regression runs the review twice, requires deterministic identical output, hashes every candidate JSON before and after and requires byte-for-byte equality, and reasserts zero automatic merge, retirement, promotion, model-weight, market-gate or portfolio authority.",
-        "Current registry readback exposed 387 registry rows, 379 unique candidate IDs and 8 duplicate-ID legacy families; the implementation preserves these as explicit read-only registry-duplication diagnostics rather than silently deleting, merging or treating them as hypothesis diversity.",
-        "Exact semantic alias clustering uses existing canonical metric normalization and full semantic identity; same target path alone remains explicitly insufficient merge authority."
-      ],
       "source_ref": "acceptance:positive:2",
-      "status": "SATISFIED"
+      "status": "SATISFIED",
+      "evidence": [
+        "PR #1280 merged at e01087b707f9c289470c3d0b454f32a286b9c2e3 after Data Architecture, Storage Health, Experiment Lifecycle and Automation Production Health gates passed.",
+        "Experiment Lifecycle Gate run 35934421463 executed the live-registry simplification tests plus all four entrypoint regressions: isolated unittest collection, direct script execution from outside the repo, module execution and current-registry CLI read-only behavior; all passed.",
+        "The live-registry regression preserves 387 registry rows, 379 unique candidate IDs and 8 duplicate-ID legacy families as explicit read-only diagnostics, runs deterministically twice and proves candidate JSON bytes are unchanged.",
+        "Exact semantic alias clustering uses the existing canonical normalization and full semantic identity; same target path alone remains insufficient merge authority.",
+        "Fresh main retains zero automatic merge, retirement, promotion, candidate-history mutation, market-gate, model-weight or portfolio authority."
+      ]
     },
     {
-      "evidence": [
-        "PR #1273 merged the deterministic read-only experiment simplification helper and focused fixtures at 161aa4bd2a5b7581fb2c61747ec2e4ef4d168cdb after Experiment Lifecycle, Data Architecture, Storage Health and Automation Production Health gates passed.",
-        "Follow-up PR #1277 merged the current-registry non-mutation regression at 10ffabb6e8ad77fdc7cf1bb27a8c1c7a403b9746; Experiment Lifecycle Gate run 35930222499 passed against the live registry/candidate corpus.",
-        "The live-registry regression runs the review twice, requires deterministic identical output, hashes every candidate JSON before and after and requires byte-for-byte equality, and reasserts zero automatic merge, retirement, promotion, model-weight, market-gate or portfolio authority.",
-        "Current registry readback exposed 387 registry rows, 379 unique candidate IDs and 8 duplicate-ID legacy families; the implementation preserves these as explicit read-only registry-duplication diagnostics rather than silently deleting, merging or treating them as hypothesis diversity.",
-        "Exact semantic alias clustering uses existing canonical metric normalization and full semantic identity; same target path alone remains explicitly insufficient merge authority."
-      ],
       "source_ref": "acceptance:negative:1",
-      "status": "SATISFIED"
+      "status": "SATISFIED",
+      "evidence": [
+        "PR #1280 merged at e01087b707f9c289470c3d0b454f32a286b9c2e3 after Data Architecture, Storage Health, Experiment Lifecycle and Automation Production Health gates passed.",
+        "Experiment Lifecycle Gate run 35934421463 executed the live-registry simplification tests plus all four entrypoint regressions: isolated unittest collection, direct script execution from outside the repo, module execution and current-registry CLI read-only behavior; all passed.",
+        "The live-registry regression preserves 387 registry rows, 379 unique candidate IDs and 8 duplicate-ID legacy families as explicit read-only diagnostics, runs deterministically twice and proves candidate JSON bytes are unchanged.",
+        "Exact semantic alias clustering uses the existing canonical normalization and full semantic identity; same target path alone remains insufficient merge authority.",
+        "Fresh main retains zero automatic merge, retirement, promotion, candidate-history mutation, market-gate, model-weight or portfolio authority."
+      ]
     },
     {
-      "evidence": [
-        "PR #1273 merged the deterministic read-only experiment simplification helper and focused fixtures at 161aa4bd2a5b7581fb2c61747ec2e4ef4d168cdb after Experiment Lifecycle, Data Architecture, Storage Health and Automation Production Health gates passed.",
-        "Follow-up PR #1277 merged the current-registry non-mutation regression at 10ffabb6e8ad77fdc7cf1bb27a8c1c7a403b9746; Experiment Lifecycle Gate run 35930222499 passed against the live registry/candidate corpus.",
-        "The live-registry regression runs the review twice, requires deterministic identical output, hashes every candidate JSON before and after and requires byte-for-byte equality, and reasserts zero automatic merge, retirement, promotion, model-weight, market-gate or portfolio authority.",
-        "Current registry readback exposed 387 registry rows, 379 unique candidate IDs and 8 duplicate-ID legacy families; the implementation preserves these as explicit read-only registry-duplication diagnostics rather than silently deleting, merging or treating them as hypothesis diversity.",
-        "Exact semantic alias clustering uses existing canonical metric normalization and full semantic identity; same target path alone remains explicitly insufficient merge authority."
-      ],
       "source_ref": "acceptance:negative:2",
-      "status": "SATISFIED"
+      "status": "SATISFIED",
+      "evidence": [
+        "PR #1280 merged at e01087b707f9c289470c3d0b454f32a286b9c2e3 after Data Architecture, Storage Health, Experiment Lifecycle and Automation Production Health gates passed.",
+        "Experiment Lifecycle Gate run 35934421463 executed the live-registry simplification tests plus all four entrypoint regressions: isolated unittest collection, direct script execution from outside the repo, module execution and current-registry CLI read-only behavior; all passed.",
+        "The live-registry regression preserves 387 registry rows, 379 unique candidate IDs and 8 duplicate-ID legacy families as explicit read-only diagnostics, runs deterministically twice and proves candidate JSON bytes are unchanged.",
+        "Exact semantic alias clustering uses the existing canonical normalization and full semantic identity; same target path alone remains insufficient merge authority.",
+        "Fresh main retains zero automatic merge, retirement, promotion, candidate-history mutation, market-gate, model-weight or portfolio authority."
+      ]
     },
     {
-      "evidence": [
-        "PR #1273 merged the deterministic read-only experiment simplification helper and focused fixtures at 161aa4bd2a5b7581fb2c61747ec2e4ef4d168cdb after Experiment Lifecycle, Data Architecture, Storage Health and Automation Production Health gates passed.",
-        "Follow-up PR #1277 merged the current-registry non-mutation regression at 10ffabb6e8ad77fdc7cf1bb27a8c1c7a403b9746; Experiment Lifecycle Gate run 35930222499 passed against the live registry/candidate corpus.",
-        "The live-registry regression runs the review twice, requires deterministic identical output, hashes every candidate JSON before and after and requires byte-for-byte equality, and reasserts zero automatic merge, retirement, promotion, model-weight, market-gate or portfolio authority.",
-        "Current registry readback exposed 387 registry rows, 379 unique candidate IDs and 8 duplicate-ID legacy families; the implementation preserves these as explicit read-only registry-duplication diagnostics rather than silently deleting, merging or treating them as hypothesis diversity.",
-        "Exact semantic alias clustering uses existing canonical metric normalization and full semantic identity; same target path alone remains explicitly insufficient merge authority."
-      ],
       "source_ref": "authority:allowed_change_scope",
-      "status": "SATISFIED"
+      "status": "SATISFIED",
+      "evidence": [
+        "PR #1280 merged at e01087b707f9c289470c3d0b454f32a286b9c2e3 after Data Architecture, Storage Health, Experiment Lifecycle and Automation Production Health gates passed.",
+        "Experiment Lifecycle Gate run 35934421463 executed the live-registry simplification tests plus all four entrypoint regressions: isolated unittest collection, direct script execution from outside the repo, module execution and current-registry CLI read-only behavior; all passed.",
+        "The live-registry regression preserves 387 registry rows, 379 unique candidate IDs and 8 duplicate-ID legacy families as explicit read-only diagnostics, runs deterministically twice and proves candidate JSON bytes are unchanged.",
+        "Exact semantic alias clustering uses the existing canonical normalization and full semantic identity; same target path alone remains insufficient merge authority.",
+        "Fresh main retains zero automatic merge, retirement, promotion, candidate-history mutation, market-gate, model-weight or portfolio authority."
+      ]
     },
     {
-      "evidence": [
-        "PR #1273 merged the deterministic read-only experiment simplification helper and focused fixtures at 161aa4bd2a5b7581fb2c61747ec2e4ef4d168cdb after Experiment Lifecycle, Data Architecture, Storage Health and Automation Production Health gates passed.",
-        "Follow-up PR #1277 merged the current-registry non-mutation regression at 10ffabb6e8ad77fdc7cf1bb27a8c1c7a403b9746; Experiment Lifecycle Gate run 35930222499 passed against the live registry/candidate corpus.",
-        "The live-registry regression runs the review twice, requires deterministic identical output, hashes every candidate JSON before and after and requires byte-for-byte equality, and reasserts zero automatic merge, retirement, promotion, model-weight, market-gate or portfolio authority.",
-        "Current registry readback exposed 387 registry rows, 379 unique candidate IDs and 8 duplicate-ID legacy families; the implementation preserves these as explicit read-only registry-duplication diagnostics rather than silently deleting, merging or treating them as hypothesis diversity.",
-        "Exact semantic alias clustering uses existing canonical metric normalization and full semantic identity; same target path alone remains explicitly insufficient merge authority."
-      ],
       "source_ref": "authority:forbidden_changes",
-      "status": "SATISFIED"
+      "status": "SATISFIED",
+      "evidence": [
+        "PR #1280 merged at e01087b707f9c289470c3d0b454f32a286b9c2e3 after Data Architecture, Storage Health, Experiment Lifecycle and Automation Production Health gates passed.",
+        "Experiment Lifecycle Gate run 35934421463 executed the live-registry simplification tests plus all four entrypoint regressions: isolated unittest collection, direct script execution from outside the repo, module execution and current-registry CLI read-only behavior; all passed.",
+        "The live-registry regression preserves 387 registry rows, 379 unique candidate IDs and 8 duplicate-ID legacy families as explicit read-only diagnostics, runs deterministically twice and proves candidate JSON bytes are unchanged.",
+        "Exact semantic alias clustering uses the existing canonical normalization and full semantic identity; same target path alone remains insufficient merge authority.",
+        "Fresh main retains zero automatic merge, retirement, promotion, candidate-history mutation, market-gate, model-weight or portfolio authority."
+      ]
     },
     {
-      "evidence": [
-        "PR #1273 merged the deterministic read-only experiment simplification helper and focused fixtures at 161aa4bd2a5b7581fb2c61747ec2e4ef4d168cdb after Experiment Lifecycle, Data Architecture, Storage Health and Automation Production Health gates passed.",
-        "Follow-up PR #1277 merged the current-registry non-mutation regression at 10ffabb6e8ad77fdc7cf1bb27a8c1c7a403b9746; Experiment Lifecycle Gate run 35930222499 passed against the live registry/candidate corpus.",
-        "The live-registry regression runs the review twice, requires deterministic identical output, hashes every candidate JSON before and after and requires byte-for-byte equality, and reasserts zero automatic merge, retirement, promotion, model-weight, market-gate or portfolio authority.",
-        "Current registry readback exposed 387 registry rows, 379 unique candidate IDs and 8 duplicate-ID legacy families; the implementation preserves these as explicit read-only registry-duplication diagnostics rather than silently deleting, merging or treating them as hypothesis diversity.",
-        "Exact semantic alias clustering uses existing canonical metric normalization and full semantic identity; same target path alone remains explicitly insufficient merge authority."
-      ],
       "source_ref": "post_fix_gate",
-      "status": "SATISFIED"
+      "status": "SATISFIED",
+      "evidence": [
+        "PR #1280 merged at e01087b707f9c289470c3d0b454f32a286b9c2e3 after Data Architecture, Storage Health, Experiment Lifecycle and Automation Production Health gates passed.",
+        "Experiment Lifecycle Gate run 35934421463 executed the live-registry simplification tests plus all four entrypoint regressions: isolated unittest collection, direct script execution from outside the repo, module execution and current-registry CLI read-only behavior; all passed.",
+        "The live-registry regression preserves 387 registry rows, 379 unique candidate IDs and 8 duplicate-ID legacy families as explicit read-only diagnostics, runs deterministically twice and proves candidate JSON bytes are unchanged.",
+        "Exact semantic alias clustering uses the existing canonical normalization and full semantic identity; same target path alone remains insufficient merge authority.",
+        "Fresh main retains zero automatic merge, retirement, promotion, candidate-history mutation, market-gate, model-weight or portfolio authority."
+      ]
     }
   ],
   "gaps": [],
-  "merge_commit_sha": "161aa4bd2a5b7581fb2c61747ec2e4ef4d168cdb",
-  "pr_number": 1273,
-  "receipt_sha256": "7a905bfbdece922c8440552804c076b31097e7de730add3dbe5a7680f4ad7791",
-  "requirements": [
-    {
-      "kind": "OBJECTIVE",
-      "source_ref": "objective",
-      "text": "Implement the smallest deterministic read-only simplification review over the existing Experiment Lifecycle registry that flags semantic/path alias families, high-observation zero-outcome incubation and repeated matured-inconclusive families for governance review without automatically merging, retiring, promoting or changing weights."
-    },
-    {
-      "kind": "ACCEPTANCE_POSITIVE",
-      "source_ref": "acceptance:positive:1",
-      "text": "Equivalent known path-alias candidates with the same kind/direction/horizon are grouped with every original candidate ID preserved."
-    },
-    {
-      "kind": "ACCEPTANCE_POSITIVE",
-      "source_ref": "acceptance:positive:2",
-      "text": "The report separately flags high-observation zero-outcome incubation and repeated matured-inconclusive families."
-    },
-    {
-      "kind": "ACCEPTANCE_NEGATIVE",
-      "source_ref": "acceptance:negative:1",
-      "text": "Distinct hypotheses are not collapsed solely because they share a metric path."
-    },
-    {
-      "kind": "ACCEPTANCE_NEGATIVE",
-      "source_ref": "acceptance:negative:2",
-      "text": "No candidate is deleted, rewritten, auto-retired, auto-merged, promoted or assigned a model weight by the review."
-    },
-    {
-      "kind": "AUTHORITY_BOUNDARY",
-      "source_ref": "authority:allowed_change_scope",
-      "text": "scripts/experiments/directly related read-only experiment simplification review helper | tests/experiments/directly related simplification review tests | research/experiment_lifecycle/directly related generated simplification review artifact"
-    },
-    {
-      "kind": "AUTHORITY_BOUNDARY",
-      "source_ref": "authority:forbidden_changes",
-      "text": "market gates | model weights | canonical authority | portfolio logic | API budget | new policy semantics | automatic experiment retirement | automatic experiment merge | automatic promotion | candidate history deletion"
-    },
-    {
-      "kind": "POST_FIX_GATE",
-      "source_ref": "post_fix_gate",
-      "text": "DETERMINISTIC_CLUSTER_FIXTURE_PASS_PLUS_GOVERNANCE_READBACK_NO_MUTATION"
-    }
-  ],
-  "signature": "d5f9cc11d5d7d05418b9",
-  "status": "CONVERGED",
-  "task_contract_sha256": "6b23706c680820d9b4f380ef8b3040d8c44a017c948dbcb13be61a33ab712b5b"
+  "authority": "CLOSURE_GATE_ONLY_NO_MARKET_OR_PORTFOLIO_AUTHORITY",
+  "receipt_sha256": "43447b53f149bbd80c87cc7e45b455ebe559a188f7066c9f324a220229b82118"
 }
