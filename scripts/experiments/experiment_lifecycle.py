@@ -226,8 +226,36 @@ def jsons(root: Path, contract: str) -> list[tuple[Path, dict[str, Any]]]:
     return output
 
 
+def unique_candidate_rows(rows: list[tuple[Path, dict[str, Any]]]) -> tuple[list[tuple[Path, dict[str, Any]]], int, list[str]]:
+    ordered = sorted(
+        rows,
+        key=lambda item: (
+            str(item[1].get("created_at_utc") or ""),
+            str(item[1].get("registered_at_utc") or ""),
+            item[0].as_posix(),
+        ),
+    )
+    by_id: dict[str, tuple[Path, dict[str, Any]]] = {}
+    duplicate_ids: set[str] = set()
+    duplicate_file_count = 0
+    for path, value in ordered:
+        candidate_id = str(value.get("candidate_id") or "")
+        if not candidate_id:
+            raise ValueError(f"CANDIDATE_ID_MISSING:{path.as_posix()}")
+        previous = by_id.get(candidate_id)
+        if previous is None:
+            by_id[candidate_id] = (path, value)
+            continue
+        if identity_spec(previous[1].get("spec") or {}) != identity_spec(value.get("spec") or {}):
+            raise ValueError(f"CANDIDATE_ID_SPEC_CONFLICT:{candidate_id}")
+        duplicate_file_count += 1
+        duplicate_ids.add(candidate_id)
+    return list(by_id.values()), duplicate_file_count, sorted(duplicate_ids)
+
+
 def registry(candidate_root: Path, observation_root: Path, forecast_root: Path, outcome_root: Path, receipt_root: Path, now: str) -> dict[str, Any]:
-    candidates = [value for _, value in jsons(candidate_root, "EXPERIMENT_CANDIDATE_v1")]; observations = {}; candidate_forecasts = {}; outcomes = {}; receipts = {}
+    candidate_rows, duplicate_candidate_file_count, duplicate_candidate_ids = unique_candidate_rows(jsons(candidate_root, "EXPERIMENT_CANDIDATE_v1"))
+    candidates = [value for _, value in candidate_rows]; observations = {}; candidate_forecasts = {}; outcomes = {}; receipts = {}
     for _, value in jsons(observation_root, "EXPERIMENT_OBSERVATION_v1"): observations.setdefault(value["candidate_id"], []).append(value)
     for _, value in jsons(forecast_root, "FROZEN_FORECAST_v1"):
         candidate_id = value.get("source_candidate_id"); forecast_id = value.get("forecast_id")
@@ -252,7 +280,7 @@ def registry(candidate_root: Path, observation_root: Path, forecast_root: Path, 
         else: state = "PROPOSED"
         counts[state] = counts.get(state, 0) + 1
         rows.append({"candidate_id": candidate_id, "title": candidate["spec"]["title"], "kind": candidate["spec"]["kind"], "state": state, "created_at_utc": candidate["created_at_utc"], "observation_count": len(candidate_observations), "forecast_ids": forecast_ids, "matured_outcome_count": len(matured), "replication_receipts": sorted(set(item for item in receipts.get(candidate_id, []) if item)), "automatic_age_expiry": False})
-    return {"contract": "EXPERIMENT_LIFECYCLE_REGISTRY_v1", "generated_at_utc": now, "authority": "SHADOW_ONLY_NO_AUTOMATIC_PROMOTION", "candidate_count": len(rows), "state_counts": counts, "candidates": rows, "rules": {"idea_bank_capacity": "UNBOUNDED_WITH_SEMANTIC_DEDUPLICATION", "automatic_age_expiry": False, "max_new_forecasts_per_run_default": 5, "promotion_requires_governance_review": True}}
+    return {"contract": "EXPERIMENT_LIFECYCLE_REGISTRY_v1", "generated_at_utc": now, "authority": "SHADOW_ONLY_NO_AUTOMATIC_PROMOTION", "candidate_count": len(rows), "state_counts": counts, "candidates": rows, "duplicate_candidate_file_count": duplicate_candidate_file_count, "duplicate_candidate_ids": duplicate_candidate_ids, "rules": {"idea_bank_capacity": "UNBOUNDED_WITH_SEMANTIC_DEDUPLICATION", "automatic_age_expiry": False, "max_new_forecasts_per_run_default": 5, "promotion_requires_governance_review": True}}
 
 
 def main() -> None:
@@ -266,13 +294,19 @@ def main() -> None:
         mapped = from_forecast(item, latest)
         if mapped: raw.append(mapped)
         else: rejected.append({"title": f"Prospective {item.get('metric_path')}", "error": "explicit_target_unit_contract_required"})
+    existing_candidate_rows, _, _ = unique_candidate_rows(jsons(args.candidate_root, "EXPERIMENT_CANDIDATE_v1"))
+    existing_candidate_ids = {str(value.get("candidate_id")) for _, value in existing_candidate_rows}
     new_ids = set()
     for item in raw:
         try:
             spec = normalize(item); candidate_id = "EC-" + sha(identity_spec(spec))[:20]; value = {"contract": "EXPERIMENT_CANDIDATE_v1", "candidate_id": candidate_id, "created_at_utc": captured, "registered_at_utc": now, "target_unit_contract_version": spec.get("target_unit_contract_version"), "spec": spec, "source": {**source, "daily_output_path": rel(root, args.daily_output), "daily_context_path": rel(root, args.daily_context), "daily_receipt_path": rel(root, args.daily_receipt)}, "dormancy_policy": {"automatic_age_expiry": False, "retain_until": "FALSIFIED_OR_GOVERNANCE_CLOSED"}, "authority": {"canonical_promotion": False, "framework_state_change": False, "model_weight_change": False, "portfolio_action": False}}
-            if write_new(args.candidate_root / when.strftime("%Y/%m") / f"{candidate_id}.json", value): new_ids.add(candidate_id)
+            if candidate_id in existing_candidate_ids:
+                continue
+            if write_new(args.candidate_root / when.strftime("%Y/%m") / f"{candidate_id}.json", value):
+                new_ids.add(candidate_id)
+                existing_candidate_ids.add(candidate_id)
         except Exception as exc: rejected.append({"title": str(item.get("title") or "UNKNOWN"), "error": str(exc)})
-    new_forecasts = 0; dispatch = 0; candidate_rows = jsons(args.candidate_root, "EXPERIMENT_CANDIDATE_v1"); candidate_rows.sort(key=lambda item: (0 if item[1].get("spec", {}).get("kind") == "FORECAST_TEST" else 1, str(item[1].get("candidate_id") or "")))
+    new_forecasts = 0; dispatch = 0; candidate_rows, _, _ = unique_candidate_rows(jsons(args.candidate_root, "EXPERIMENT_CANDIDATE_v1")); candidate_rows.sort(key=lambda item: (0 if item[1].get("spec", {}).get("kind") == "FORECAST_TEST" else 1, str(item[1].get("candidate_id") or "")))
     for spec_path, candidate in candidate_rows:
         spec = candidate["spec"]; legacy_forecast_unit_ambiguous = spec.get("kind") == "FORECAST_TEST" and spec.get("target_unit_contract_version") != UNIT_CONTRACT_VERSION; results = [evaluate(item, latest, previous) for item in spec["components"]]; mapping = not spec["components"] and spec["kind"] != "FORECAST_TEST"; missing = any(item["matched"] is None for item in results); fired = not legacy_forecast_unit_ambiguous and not mapping and ((not spec["components"] and spec["kind"] == "FORECAST_TEST") or (results and not missing and all(item["matched"] for item in results)))
         status = "TARGET_UNIT_QUARANTINED" if legacy_forecast_unit_ambiguous else "WAITING_FOR_MAPPING" if mapping else "WAITING_FOR_DATA" if missing else "FIRED_NO_TARGET" if fired and spec["target_direction"] == "NONE" else "FIRED" if fired else "OBSERVED_NOT_FIRED"
