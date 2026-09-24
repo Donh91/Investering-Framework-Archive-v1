@@ -138,6 +138,137 @@ def test_scheduled_execution_failure_remains_red(monkeypatch) -> None:
     assert "LATEST_RUN_CANCELLED" not in findings
 
 
+def test_in_progress_rerun_preserves_previous_success_in_streak(monkeypatch) -> None:
+    latest = {
+        "id": 500,
+        "event": "workflow_dispatch",
+        "head_branch": "main",
+        "status": "in_progress",
+        "conclusion": None,
+        "run_attempt": 2,
+        "created_at": "2026-09-24T06:58:00Z",
+        "updated_at": "2026-09-24T06:58:30Z",
+    }
+    older_failures = [
+        {
+            "id": run_id,
+            "event": "workflow_dispatch",
+            "head_branch": "main",
+            "status": "completed",
+            "conclusion": "failure",
+            "run_attempt": 1,
+            "created_at": created_at,
+            "updated_at": created_at,
+        }
+        for run_id, created_at in (
+            (499, "2026-09-18T18:33:34Z"),
+            (498, "2026-09-18T18:20:00Z"),
+            (497, "2026-09-18T18:10:00Z"),
+        )
+    ]
+    previous_success = dict(
+        latest,
+        status="completed",
+        conclusion="success",
+        run_attempt=1,
+        updated_at="2026-09-18T19:12:08Z",
+    )
+
+    def fake_api(url: str, token: str) -> dict:
+        if url.endswith("/Investering-Framework-Archive-v1"):
+            return {"default_branch": "main"}
+        if "/actions/workflows?" in url:
+            return {"workflows": [{"id": 46, "path": ".github/workflows/manual.yml", "name": "Manual", "state": "active", "html_url": "https://example.invalid/manual"}]}
+        if "/actions/workflows/46/runs?per_page=10" in url:
+            return {"workflow_runs": [latest, *older_failures]}
+        if "/actions/runs/500/attempts/1" in url:
+            return previous_success
+        raise AssertionError(url)
+
+    monkeypatch.setattr(module.base, "api_json", fake_api)
+    live = module.live_workflows(
+        "Donh91/Investering-Framework-Archive-v1", "token", set()
+    )["manual.yml"]
+
+    assert live["latest_run"]["status"] == "in_progress"
+    assert live["latest_run"]["run_attempt"] == 2
+    assert live["recent_conclusions"][:4] == ["success", "failure", "failure", "failure"]
+    assert live["success_streak"] == 1
+    assert live["failure_streak"] == 0
+
+    row = _scheduled_row()
+    row["workflow"] = "manual.yml"
+    row["scheduled"] = False
+    row["cron_expressions"] = []
+    row["live"] = live
+    status, findings = module.classify(
+        row, datetime(2026, 9, 24, 7, tzinfo=timezone.utc)
+    )
+    assert status == "GREEN"
+    assert "REPEATED_CONSECUTIVE_FAILURES" not in findings
+
+
+def test_in_progress_rerun_preserves_previous_failure_in_streak(monkeypatch) -> None:
+    latest = {
+        "id": 600,
+        "event": "workflow_dispatch",
+        "head_branch": "main",
+        "status": "in_progress",
+        "conclusion": None,
+        "run_attempt": 2,
+        "created_at": "2026-09-24T06:58:00Z",
+        "updated_at": "2026-09-24T06:58:30Z",
+    }
+    older_failure = {
+        "id": 599,
+        "event": "workflow_dispatch",
+        "head_branch": "main",
+        "status": "completed",
+        "conclusion": "failure",
+        "run_attempt": 1,
+        "created_at": "2026-09-23T06:00:00Z",
+        "updated_at": "2026-09-23T06:01:00Z",
+    }
+    previous_failure = dict(
+        latest,
+        status="completed",
+        conclusion="failure",
+        run_attempt=1,
+        updated_at="2026-09-24T06:50:00Z",
+    )
+
+    def fake_api(url: str, token: str) -> dict:
+        if url.endswith("/Investering-Framework-Archive-v1"):
+            return {"default_branch": "main"}
+        if "/actions/workflows?" in url:
+            return {"workflows": [{"id": 47, "path": ".github/workflows/manual.yml", "name": "Manual", "state": "active", "html_url": "https://example.invalid/manual"}]}
+        if "/actions/workflows/47/runs?per_page=10" in url:
+            return {"workflow_runs": [latest, older_failure]}
+        if "/actions/runs/600/attempts/1" in url:
+            return previous_failure
+        raise AssertionError(url)
+
+    monkeypatch.setattr(module.base, "api_json", fake_api)
+    live = module.live_workflows(
+        "Donh91/Investering-Framework-Archive-v1", "token", set()
+    )["manual.yml"]
+
+    assert live["recent_conclusions"][:2] == ["failure", "failure"]
+    assert live["success_streak"] == 0
+    assert live["failure_streak"] == 2
+
+    row = _scheduled_row()
+    row["workflow"] = "manual.yml"
+    row["scheduled"] = False
+    row["cron_expressions"] = []
+    row["live"] = live
+    status, findings = module.classify(
+        row, datetime(2026, 9, 24, 7, tzinfo=timezone.utc)
+    )
+    assert status == "RED"
+    assert "REPEATED_CONSECUTIVE_FAILURES" in findings
+
+
 def test_empty_registry_is_one_global_degradation(monkeypatch) -> None:
     def fake_api(url: str, token: str) -> dict:
         if url.endswith("/Investering-Framework-Archive-v1"): return {"default_branch": "main"}
