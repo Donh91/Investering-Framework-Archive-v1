@@ -79,16 +79,20 @@ def evaluate_predicate(
         workflow = str(predicate.get("workflow") or "")
         count = int(predicate.get("count") or 0)
         runs = sorted(run_provider(workflow), key=lambda x: str(x.get("created_at") or ""), reverse=True)
+        task_merge_sha = str(task.get("merge_commit_sha") or "")
+        evidence_floor_sha = str(predicate.get("after_sha") or task_merge_sha)
+        if predicate.get("after_sha") and not is_ancestor(repo_root, task_merge_sha, evidence_floor_sha):
+            return False, f"{workflow}: INVALID_EVIDENCE_FLOOR after_sha={evidence_floor_sha} task_merge_sha={task_merge_sha}"
         eligible = [
             row for row in runs
             if row.get("status") == "completed"
-            and is_ancestor(repo_root, str(task.get("merge_commit_sha") or ""), str(row.get("head_sha") or ""))
+            and is_ancestor(repo_root, evidence_floor_sha, str(row.get("head_sha") or ""))
         ]
         sample = eligible[:count]
         successes = sum(row.get("conclusion") == "success" for row in sample)
         ok = count > 0 and len(sample) == count and successes == count
         run_states = [f"{row.get('id')}:{row.get('conclusion')}" for row in sample]
-        return ok, f"{workflow}: successful_runs={successes}/{count} sampled_runs={','.join(run_states)}"
+        return ok, f"{workflow}: evidence_floor={evidence_floor_sha} successful_runs={successes}/{count} sampled_runs={','.join(run_states)}"
     if kind == "NO_MERGED_RESEARCH_ZOMBIES":
         state = read_json(repo_root / "LATEST_CODEX_EXECUTION_STATE.json", {}) or {}
         zombies: list[str] = []
