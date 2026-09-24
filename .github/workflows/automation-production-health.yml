@@ -73,6 +73,7 @@ jobs:
           git config user.name 'framework-health-bot'
           git config user.email 'framework-health-bot@users.noreply.github.com'
           git add research/architecture_health 09_SOURCE_QA/incidents
+          python scripts/governance/check_append_only_evidence.py --repo-root . --cached
           if git diff --cached --quiet; then exit 0; fi
           git commit -m "health: audit automation production state ${GITHUB_RUN_ID}"
           pushed=false
