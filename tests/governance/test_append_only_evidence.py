@@ -51,6 +51,17 @@ def test_deleting_existing_receipt_is_rejected(tmp_path):
     assert check(root, base, "HEAD")
 
 
+def test_modifying_existing_convergence_receipt_is_rejected(tmp_path):
+    root, base = setup_repo(tmp_path)
+    path = root / "research/codex/convergence/example.json"
+    path.parent.mkdir(parents=True)
+    path.write_text('{"v":1}\\n')
+    base = commit(root, "add convergence")
+    path.write_text('{"v":2}\\n')
+    commit(root, "mutate convergence")
+    assert check(root, base, "HEAD")
+
+
 def test_unrelated_file_change_is_allowed(tmp_path):
     root, base = setup_repo(tmp_path)
     path = root / "README.md"

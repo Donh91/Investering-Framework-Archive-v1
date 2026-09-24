@@ -10,6 +10,7 @@ PROTECTED_PREFIXES = (
     "research/codex/merges/",
     "research/codex/direct_merges/",
     "research/codex/completions/",
+    "research/codex/convergence/",
     "research/architecture_health/history/",
     "09_SOURCE_QA/incidents/",
 )

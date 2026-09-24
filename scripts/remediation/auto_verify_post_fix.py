@@ -164,7 +164,7 @@ def verify(
                 continue
             checks.append({
                 "kind": "MISSION_CONVERGENCE",
-                "pass": true,
+                "pass": True,
                 "evidence": f"receipt_sha256={convergence.get('receipt_sha256')}",
             })
         if write:
