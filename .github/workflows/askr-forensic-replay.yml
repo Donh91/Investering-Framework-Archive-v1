@@ -34,7 +34,8 @@ jobs:
           cat > /tmp/replay.py <<'PY'
           import json, os, urllib.request, urllib.error, datetime, time
 
-          RPC=os.environ["RH_RPC"]\n          RPCS=[RPC,"https://robinhood-mainnet-rpc.blockreq.com/v1/rpc/public","https://rpc.nodeflare.app/robinhood/public"]
+          RPC=os.environ["RH_RPC"]
+          RPCS=[RPC,"https://robinhood-mainnet-rpc.blockreq.com/v1/rpc/public","https://rpc.nodeflare.app/robinhood/public"]
           FACTORY=os.environ["FACTORY"].lower()
           TOPIC0=os.environ["TOPIC0"].lower()
           CA=os.environ["CA"].lower()
