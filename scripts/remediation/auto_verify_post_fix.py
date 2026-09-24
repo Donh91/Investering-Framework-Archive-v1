@@ -6,8 +6,13 @@ import json
 import subprocess
 import urllib.parse
 import urllib.request
+import sys
 from pathlib import Path
 from typing import Any, Callable
+
+ROOT = Path(__file__).resolve().parents[2]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 from scripts.remediation.write_codex_research_completion_receipt import build_completion_receipt
 
