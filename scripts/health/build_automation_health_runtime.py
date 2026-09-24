@@ -243,6 +243,60 @@ def _leading_run_streak(
     return count
 
 
+def _completed_runs_with_latest_attempt_history(
+    api_base: str,
+    token: str,
+    production_runs: list[dict[str, Any]],
+    *,
+    max_history: int = 10,
+) -> list[dict[str, Any]]:
+    """Preserve hidden prior attempts when GitHub is rerunning the latest run.
+
+    GitHub exposes only the current attempt in the ordinary workflow-runs list.
+    During or after a rerun, the previous attempt of the same run id otherwise
+    disappears from streak history and can make older failures look consecutive.
+    Previous-attempt readback is bounded and best-effort; on API failure we keep
+    the visible history unchanged rather than inventing an outcome.
+    """
+    visible_completed = [
+        run for run in production_runs if run.get("status") == "completed"
+    ]
+    latest = production_runs[0] if production_runs else None
+    if not isinstance(latest, dict):
+        return visible_completed
+
+    try:
+        run_id = int(latest.get("id"))
+        current_attempt = int(latest.get("run_attempt") or 1)
+    except (TypeError, ValueError):
+        return visible_completed
+    if current_attempt <= 1:
+        return visible_completed
+
+    recovered: list[dict[str, Any]] = []
+    lower = max(1, current_attempt - max_history + 1)
+    for attempt_number in range(current_attempt - 1, lower - 1, -1):
+        try:
+            prior = base.api_json(
+                f"{api_base}/actions/runs/{run_id}/attempts/{attempt_number}",
+                token,
+            )
+        except Exception:
+            break
+        if not isinstance(prior, dict):
+            break
+        if prior.get("id") != run_id or prior.get("status") != "completed":
+            continue
+        recovered.append(prior)
+
+    if not recovered:
+        return visible_completed
+
+    current = [run for run in visible_completed if run.get("id") == run_id]
+    older = [run for run in visible_completed if run.get("id") != run_id]
+    return (current + recovered + older)[:max_history]
+
+
 def live_workflows(
     repo: str,
     token: str,
@@ -314,9 +368,11 @@ def live_workflows(
             )
 
         latest = production_runs[0] if production_runs else None
-        recent_completed = [
-            run for run in production_runs if run.get("status") == "completed"
-        ]
+        recent_completed = _completed_runs_with_latest_attempt_history(
+            api_base,
+            token,
+            production_runs,
+        )
         conclusions = [run.get("conclusion") for run in recent_completed]
         execution_failures = [run for run in recent_completed if _is_execution_failure(run)]
         cancellations = [run for run in recent_completed if _is_cancelled(run)]
