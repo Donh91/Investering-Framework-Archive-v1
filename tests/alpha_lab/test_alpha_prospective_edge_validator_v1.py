@@ -5,7 +5,7 @@ import json
 import unittest
 from pathlib import Path
 
-ROOT=Path(__file__).resolve().parents[3]
+ROOT=Path(__file__).resolve().parents[2]
 VALIDATOR=ROOT/"06_RESEARCH_LAB/alpha_lab/tools/validate_alpha_prospective_edge_v1.py"
 CONTRACT_PATH=ROOT/"06_RESEARCH_LAB/alpha_lab/ALPHA_LAB_PROSPECTIVE_EDGE_EXPERIMENTS_v1.json"
 spec=importlib.util.spec_from_file_location("alpha_edge_validator",VALIDATOR)
