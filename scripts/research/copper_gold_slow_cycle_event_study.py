@@ -100,7 +100,21 @@ def row_knowledge_at(row: dict[str, Any]) -> datetime:
         return parse_utc(value)
     # Compatibility for pure helper tests only. Production build_study always
     # annotates knowledge time before joining or creating signal events.
-    return parse_utc(row["bar_end_timestamp"])
+    bar_end_timestamp = row.get("bar_end_timestamp")
+    if isinstance(bar_end_timestamp, str):
+        return parse_utc(bar_end_timestamp)
+    bar_end_day = row.get("bar_end_day")
+    if isinstance(bar_end_day, date):
+        return datetime(
+            bar_end_day.year,
+            bar_end_day.month,
+            bar_end_day.day,
+            23,
+            59,
+            59,
+            tzinfo=timezone.utc,
+        )
+    raise ValueError("row_missing_knowledge_time")
 
 
 def load_btc(path: Path) -> list[tuple[date, float]]:
