@@ -1,0 +1,40 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/adaptive-decision-miss-validation.yml",
+    ".github/workflows/adaptive-gap-validation-gate.yml",
+    "scripts/api_agent/adaptive_budget_lane_eligibility.py",
+    "tests/api_agent/test_adaptive_gap_validation_v1_1.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": ".github",
+  "episode_id": "OE-6756dd91dcdd0ebc",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "UPDATE",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* reliability: separate adaptive lane eligibility * reliability: decouple adaptive API budget lanes * test: prove adaptive lane budget independence * ci: cover adaptive lane budget eligibility helper",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/adaptive-decision-miss-validation.yml": "5135bcb32e52b859c013bd5a96b8ea7a52d843e4",
+    ".github/workflows/adaptive-gap-validation-gate.yml": "bff76aa75b6a662bcfc98381708ebc46aa8af1ba",
+    "scripts/api_agent/adaptive_budget_lane_eligibility.py": "7450cb4235087d30bac57f43b53d305ce9d5b5a0",
+    "tests/api_agent/test_adaptive_gap_validation_v1_1.py": "f1b4177066e298c4b23e0974d173b583522e47f8"
+  },
+  "source_commit_sha": "6756dd91dcdd0ebc432b5575cd8b21eb1be4a6a0",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-09-24T09:15:24+02:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "reliability: decouple adaptive API budget lanes"
+}

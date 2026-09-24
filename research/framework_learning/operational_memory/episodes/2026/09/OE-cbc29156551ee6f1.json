@@ -1,0 +1,36 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "scripts/remediation/build_remediation_maturation.py",
+    "tests/remediation/test_remediation_maturation_api_blind_health.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "scripts",
+  "episode_id": "OE-cbc29156551ee6f1",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "fail-closed-api-blind-remediation-maturation",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "Reject API-degraded or majority-unobserved Automation Health during remediation maturation, carry prior state unchanged, and prevent false post-fix credit or blind signature creation. Direct repair without Codex.",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "scripts/remediation/build_remediation_maturation.py": "baba91bac3d5805887a2e77dc641fbf2aed5d950",
+    "tests/remediation/test_remediation_maturation_api_blind_health.py": "31d22aba27fdd7085d1393f6a30e817739408f34"
+  },
+  "source_commit_sha": "cbc29156551ee6f19b78c4dd04fe60532391b994",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-09-23T21:59:40+02:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "repair: fail closed on API-blind remediation maturation"
+}

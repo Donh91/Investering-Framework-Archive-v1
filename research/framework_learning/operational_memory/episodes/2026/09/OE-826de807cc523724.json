@@ -1,0 +1,38 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/daily-capture-architecture-gate.yml",
+    "scripts/data_terminal/farside_etf_owner.py",
+    "tests/data_terminal/test_farside_etf_owner_schema.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": ".github",
+  "episode_id": "OE-826de807cc523724",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "fail-closed-farside-etf-schema-registry-msse",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "Recover the live ETF owner without Codex by binding exact registered ticker schemas, including the new ETH MSSE layout, while removing unsafe width-only schema authority and preserving live parity/finality guards.",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/daily-capture-architecture-gate.yml": "468207e01b01bd0d63afb2c44b8e7551623b4136",
+    "scripts/data_terminal/farside_etf_owner.py": "3069db0293ec9cc715548d4b07695b4e1831bcba",
+    "tests/data_terminal/test_farside_etf_owner_schema.py": "c0cd095302d716cf363037d7b96bdeb1b797aa00"
+  },
+  "source_commit_sha": "826de807cc5237248a5e658798e8cd9f10ccd1e9",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-09-23T21:29:24+02:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "repair: fail-closed Farside ETF schema registry with MSSE"
+}

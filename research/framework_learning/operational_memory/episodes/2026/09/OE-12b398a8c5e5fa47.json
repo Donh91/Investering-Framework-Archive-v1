@@ -1,0 +1,40 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "research/codex/transitions/f7ca0bb8cce97bea8619.json",
+    "scripts/learning/action_compass_reproducibility.py",
+    "tests/fixtures/action_compass_reproducibility/T9_SYNTHETIC_BASE_v1.json",
+    "tests/learning/test_action_compass_reproducibility.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "tests",
+  "episode_id": "OE-12b398a8c5e5fa47",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "RESEARCH",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* remediation: bind T9 Action Compass reproducibility * research: add T9 Action Compass reproducibility comparator * test: add frozen synthetic T9 replay fixture * test: lock T9 controlled replay semantics",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "research/codex/transitions/f7ca0bb8cce97bea8619.json": "f7245f3e104a6036c8b2579d2b052e8ade6e3515",
+    "scripts/learning/action_compass_reproducibility.py": "7a1b3207cc904d8489f954c5a364cb35eda52b06",
+    "tests/fixtures/action_compass_reproducibility/T9_SYNTHETIC_BASE_v1.json": "5dc6fac63ed1eaa9dcdd3ebf1dc855b590aac5a2",
+    "tests/learning/test_action_compass_reproducibility.py": "3a3070fb3766ab3bb96c50009bfb4fcafef1a087"
+  },
+  "source_commit_sha": "12b398a8c5e5fa4747e40408655453ae5a55dbf2",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-09-24T00:54:16+02:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "research: instrument T9 Action Compass controlled replay"
+}

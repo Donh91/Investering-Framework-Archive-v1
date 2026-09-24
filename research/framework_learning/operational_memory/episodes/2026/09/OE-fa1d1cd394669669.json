@@ -1,0 +1,38 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/askr-launch-sentinel.yml",
+    "research/remediation/transitions/05c92d54e9d1c9bfeea7.json",
+    "tests/health/test_automation_production_health.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": ".github",
+  "episode_id": "OE-fa1d1cd394669669",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "reliability-superseded-askr-target-watcher",
+  "operation_type": "HARDEN",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* reliability: retire superseded ASKR launch watcher * remediation: bind ASKR sentinel retirement * test: bind ASKR watcher retirement to frozen launch evidence",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/askr-launch-sentinel.yml": "b49dfb94e3a78f7c9d5cb759f3570c8f4bbecd5c",
+    "research/remediation/transitions/05c92d54e9d1c9bfeea7.json": "3f1b614fa42997d472ae88a283293507aa5ce849",
+    "tests/health/test_automation_production_health.py": "65313787266621ee06a9d6cdb0e689966b696802"
+  },
+  "source_commit_sha": "fa1d1cd39466966985bcfae087c2e6a3d2efc550",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-09-24T09:15:29+02:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "reliability: retire superseded ASKR target watcher"
+}

@@ -1,12 +1,12 @@
 # Operational Memory Post-Production Audit
 
 Status: **PASS**
-Source head: `59ab633d63f0725dd6a8519945f9d5de60d97246`
-Episodes: 472
-New episodes this run: 148
-Procedural candidates: 3
-Compatibility: `{"DRIFTED": 44, "EXACT": 122, "PARTIAL": 305, "UNKNOWN": 1}`
-Retrieval probe precision: 0.8333
+Source head: `f212ff024cf0c0de362cacc6f9a6cdc75f65ddc7`
+Episodes: 695
+New episodes this run: 223
+Procedural candidates: 8
+Compatibility: `{"DRIFTED": 95, "EXACT": 173, "PARTIAL": 424, "UNKNOWN": 3}`
+Retrieval probe precision: 1.0
 Recommended action: `CONTINUE_SHADOW_AUTONOMOUSLY`
 
 ## Failures

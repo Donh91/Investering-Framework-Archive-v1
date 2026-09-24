@@ -1,0 +1,40 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "scripts/experiments/strategy_factor_leakage_e1_production.py",
+    "scripts/research/copper_gold_slow_cycle_event_study.py",
+    "tests/experiments/test_strategy_factor_leakage_e1_production.py",
+    "tests/research/test_copper_gold_slow_cycle_event_study.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "scripts",
+  "episode_id": "OE-4b34fa172a6bc260",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "copper-gold-event-study-knowledge-time-join",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "Implement owner-recorded publication knowledge time plus explicit no-default lower-bound fallback, move signal entry/state joins to knowledge time, preserve v2, and make E1X RT-A06b pass. Direct repair without Codex.",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "scripts/experiments/strategy_factor_leakage_e1_production.py": "389fc950fd1212953ed2c8223a869160dfc3cdf4",
+    "scripts/research/copper_gold_slow_cycle_event_study.py": "7f2274284062dfa3160894f256c06c0f35fe9e18",
+    "tests/experiments/test_strategy_factor_leakage_e1_production.py": "fa514772ba478b2af478b33c7c7fe8f965a9ee2a",
+    "tests/research/test_copper_gold_slow_cycle_event_study.py": "7d404fd6192c9036594653fd6a08faef1657767b"
+  },
+  "source_commit_sha": "4b34fa172a6bc260a98e8d3017b5b398896a232f",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-09-23T21:55:07+02:00",
+  "task_class": "RESEARCH_ARCHIVE",
+  "task_summary": "research: repair copper-gold event study knowledge-time join"
+}

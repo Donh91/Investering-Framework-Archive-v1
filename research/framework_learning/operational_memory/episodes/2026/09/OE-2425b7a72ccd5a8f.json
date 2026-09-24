@@ -1,0 +1,36 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/adaptive-decision-miss-validation.yml",
+    "tests/api_agent/test_adaptive_gap_validation_v1_1.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": ".github",
+  "episode_id": "OE-2425b7a72ccd5a8f",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "treat-clean-adaptive-api-budget-exhaustion-hold",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* fix: treat clean API budget exhaustion as expected hold * test: preserve fail-closed adaptive budget hold semantics",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/adaptive-decision-miss-validation.yml": "5f20c31c8f44f4236f9e8912f6986d8b1c4ebb7f",
+    "tests/api_agent/test_adaptive_gap_validation_v1_1.py": "9d6b09ec3724cd4cc632ea4dcceeea5f44feaf0f"
+  },
+  "source_commit_sha": "2425b7a72ccd5a8fc12a0764a876ed82f54b3bcd",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-09-24T00:13:52+02:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "fix: treat clean adaptive API budget exhaustion as HOLD"
+}

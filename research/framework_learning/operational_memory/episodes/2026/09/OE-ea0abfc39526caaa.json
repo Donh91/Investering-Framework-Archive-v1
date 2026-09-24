@@ -1,0 +1,36 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "scripts/health/build_automation_health_runtime.py",
+    "tests/health/test_automation_health_production_scope.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "scripts",
+  "episode_id": "OE-ea0abfc39526caaa",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "ARCHIVE",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "Preserve completed previous attempts of the latest rerun in Automation Production Health streak history. Prevents older failures from becoming falsely consecutive while retaining fail-conservative behavior if attempt readback is unavailable.",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "scripts/health/build_automation_health_runtime.py": "c913eae7acf672ccade3a356790f3cc9b33e1719",
+    "tests/health/test_automation_health_production_scope.py": "586422bdd36215d3dcd0024892ed3cb818273e47"
+  },
+  "source_commit_sha": "ea0abfc39526caaafff66b377ce67efd56d78a65",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-09-24T09:11:35+02:00",
+  "task_class": "RESEARCH_ARCHIVE",
+  "task_summary": "health: preserve prior outcomes across GitHub rerun attempts"
+}

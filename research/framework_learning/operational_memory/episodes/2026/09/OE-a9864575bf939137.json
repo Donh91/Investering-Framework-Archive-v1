@@ -1,0 +1,40 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/remediation-maturation-gate.yml",
+    "research/codex/transitions/5d77a6e68e092eed1ca3.json",
+    "tests/experiments/test_experiment_yield_shadow.py",
+    "tests/remediation/test_remediation_maturation.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "tests",
+  "episode_id": "OE-a9864575bf939137",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "UPDATE",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* test: make experiment yield shadow unittest-collectable * test: enforce research transition receipt self-hashes * ci: validate research transition receipts on change * remediation: repair T6 transition self-hash",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/remediation-maturation-gate.yml": "3177ed4a19c73f7563ed804e416016e99d875385",
+    "research/codex/transitions/5d77a6e68e092eed1ca3.json": "ae73deb749bf611a09e8dd96cf014fe08a97dfdd",
+    "tests/experiments/test_experiment_yield_shadow.py": "0b418f23c9f798f314f2a332d9a3173687965ecb",
+    "tests/remediation/test_remediation_maturation.py": "38b9b084d5f766624508b4023d35ef106b5c346f"
+  },
+  "source_commit_sha": "a9864575bf939137b9bae024e15fa7b712bed3dd",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-09-24T09:01:44+02:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "reliability: collect experiment-yield test and validate transition hashes"
+}

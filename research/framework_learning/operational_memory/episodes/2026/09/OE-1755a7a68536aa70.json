@@ -1,0 +1,42 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "research/api_agent/meme_alpha/project_memory_p1.py",
+    "research/codex/transitions/fb4a2d5e71b40ba39d61.json",
+    "scripts/api_agent/meme_alpha/project_memory_p1.py",
+    "tests/api_agent/meme_alpha/test_project_memory_p1.py",
+    "tests/meme_alpha/test_project_memory_p1.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "research",
+  "episode_id": "OE-1755a7a68536aa70",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "alpha-project-ca-p1-project-memory",
+  "operation_type": "HARDEN",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* alpha: harden P1 project-memory temporal integrity * test: lock P1 temporal and hindsight boundaries * alpha: retire orphan duplicate P1 implementation * test: retire orphan duplicate P1 test copy * remediation: bind Project-CA P1 review hardening",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "research/api_agent/meme_alpha/project_memory_p1.py": "ecd7835812fa11f3f4c73da5560123c3c777b428",
+    "research/codex/transitions/fb4a2d5e71b40ba39d61.json": "0eaa0db1c0e11c8bbaa82d0a4e33f74e1fabb571",
+    "scripts/api_agent/meme_alpha/project_memory_p1.py": null,
+    "tests/api_agent/meme_alpha/test_project_memory_p1.py": null,
+    "tests/meme_alpha/test_project_memory_p1.py": "b06a7ab73925fe0115f6f3aa995677fd57e5485b"
+  },
+  "source_commit_sha": "1755a7a68536aa709c00716906f0c9de485d8eb6",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-09-24T01:38:52+02:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "alpha: harden Project-CA P1 project memory"
+}

@@ -1,0 +1,36 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "scripts/orchestration/build_data_consumer_index.py",
+    "tests/orchestration/test_data_consumer_index.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "scripts",
+  "episode_id": "OE-9e95211429a89025",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "make-data-consumer-index-direct-cli-execution-reliable",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "Fix the active Framework Learning Operations failure by making direct script execution resolve the repository package path, with exact CLI regression coverage. No market or policy semantics changed.",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "scripts/orchestration/build_data_consumer_index.py": "0b1eaed22e1c5da90af1944c0d47cfb89638c704",
+    "tests/orchestration/test_data_consumer_index.py": "20ea547f1124eace1b2ba437920ea3d095412c8c"
+  },
+  "source_commit_sha": "9e95211429a89025288f0f9fc39359d1be7e451c",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-09-23T10:16:20+02:00",
+  "task_class": "GENERAL_FRAMEWORK",
+  "task_summary": "repair: make data consumer index direct CLI execution reliable"
+}

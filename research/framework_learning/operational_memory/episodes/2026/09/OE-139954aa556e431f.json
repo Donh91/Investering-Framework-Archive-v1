@@ -1,0 +1,40 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "research/codex/transitions/0d8e569e7924526a7378.json",
+    "scripts/architecture/build_latest_handoff.py",
+    "scripts/health/build_operations_dashboard.py",
+    "tests/health/test_operations_dashboard.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "scripts",
+  "episode_id": "OE-139954aa556e431f",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "UPDATE",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* remediation: bind incident resolution repair * repair: derive open incidents from append-only resolution evidence * ops: expose unresolved incident accounting * test: verify append-only incident resolution semantics",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "research/codex/transitions/0d8e569e7924526a7378.json": "c6c868572e04ec76e3ebcfe561540d06dc741890",
+    "scripts/architecture/build_latest_handoff.py": "e2123edbeea8526fb4a947b64b8b47ac1e63b3c5",
+    "scripts/health/build_operations_dashboard.py": "36a3cfdfb6276c7a5ade1f6d7cf11f9e599603e5",
+    "tests/health/test_operations_dashboard.py": "debf20f005fa6e048b742d594008081999b17be7"
+  },
+  "source_commit_sha": "139954aa556e431f8d4f5a1dff47cbe0fa2d819e",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-09-23T23:48:27+02:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "ops: make open incident count resolution-aware"
+}

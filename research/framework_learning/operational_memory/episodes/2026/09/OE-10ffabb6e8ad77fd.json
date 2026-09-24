@@ -1,0 +1,36 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "scripts/experiments/experiment_simplification_review.py",
+    "tests/experiments/test_experiment_simplification_review.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "scripts",
+  "episode_id": "OE-10ffabb6e8ad77fd",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "UPDATE",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* test: prove T03 current-registry readback is non-mutating * research: expose duplicate registry candidate IDs explicitly * test: preserve duplicate registry rows as diagnostics",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "scripts/experiments/experiment_simplification_review.py": "041657bcc67baf9e47509e63c44288fd7ed862ae",
+    "tests/experiments/test_experiment_simplification_review.py": "554626672b8e61c75d9de0c0a8cacb420b9c21a6"
+  },
+  "source_commit_sha": "10ffabb6e8ad77fdc7cf1bb27a8c1c7a403b9746",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-09-24T00:48:00+02:00",
+  "task_class": "RESEARCH_ARCHIVE",
+  "task_summary": "test: prove T03 simplification readback is non-mutating"
+}

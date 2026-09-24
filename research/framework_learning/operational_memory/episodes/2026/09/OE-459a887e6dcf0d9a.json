@@ -1,0 +1,56 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "04_MARKET_LEARNING/truth_layer/etf_flows/2026-09-23__us-spot-crypto-etf-flow-history-v1_1/CHECKSUMS.sha256",
+    "04_MARKET_LEARNING/truth_layer/etf_flows/2026-09-23__us-spot-crypto-etf-flow-history-v1_1/README.md",
+    "04_MARKET_LEARNING/truth_layer/etf_flows/2026-09-23__us-spot-crypto-etf-flow-history-v1_1/data/us_spot_btc_etf_flows_daily_2024.csv",
+    "04_MARKET_LEARNING/truth_layer/etf_flows/2026-09-23__us-spot-crypto-etf-flow-history-v1_1/data/us_spot_btc_etf_flows_daily_2025.csv",
+    "04_MARKET_LEARNING/truth_layer/etf_flows/2026-09-23__us-spot-crypto-etf-flow-history-v1_1/data/us_spot_btc_etf_flows_daily_2026.csv",
+    "04_MARKET_LEARNING/truth_layer/etf_flows/2026-09-23__us-spot-crypto-etf-flow-history-v1_1/data/us_spot_eth_etf_flows_daily_2024.csv",
+    "04_MARKET_LEARNING/truth_layer/etf_flows/2026-09-23__us-spot-crypto-etf-flow-history-v1_1/data/us_spot_eth_etf_flows_daily_2025.csv",
+    "04_MARKET_LEARNING/truth_layer/etf_flows/2026-09-23__us-spot-crypto-etf-flow-history-v1_1/data/us_spot_eth_etf_flows_daily_2026.csv",
+    "04_MARKET_LEARNING/truth_layer/etf_flows/2026-09-23__us-spot-crypto-etf-flow-history-v1_1/manifest.json",
+    "04_MARKET_LEARNING/truth_layer/etf_flows/2026-09-23__us-spot-crypto-etf-flow-history-v1_1/scripts/build_etf_flow_features.py",
+    "04_MARKET_LEARNING/truth_layer/etf_flows/2026-09-23__us-spot-crypto-etf-flow-history-v1_1/scripts/validate_etf_flow_history.py",
+    "tests/research/test_etf_flow_history_v1_1.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "04_MARKET_LEARNING",
+  "episode_id": "OE-459a887e6dcf0d9a",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "RESEARCH",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "Create immutable ETF history pack v1.1 without Codex: repair 11 malformed rows, label 26 NYSE full closures, keep trailing features trading-session-only, preserve v1 bytes and keep knowledge-time authority separate.",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "04_MARKET_LEARNING/truth_layer/etf_flows/2026-09-23__us-spot-crypto-etf-flow-history-v1_1/CHECKSUMS.sha256": "a3ce51fc119d300bd18be62eb19963a8298db3b2",
+    "04_MARKET_LEARNING/truth_layer/etf_flows/2026-09-23__us-spot-crypto-etf-flow-history-v1_1/README.md": "a239c35fdcb425e1ccffa89c565a246b8c33b2e6",
+    "04_MARKET_LEARNING/truth_layer/etf_flows/2026-09-23__us-spot-crypto-etf-flow-history-v1_1/data/us_spot_btc_etf_flows_daily_2024.csv": "ef336308c3beae924bf6664cde65eaa1aae94b71",
+    "04_MARKET_LEARNING/truth_layer/etf_flows/2026-09-23__us-spot-crypto-etf-flow-history-v1_1/data/us_spot_btc_etf_flows_daily_2025.csv": "8c3bf36fea21b486114c14a683915fa1669e8f8c",
+    "04_MARKET_LEARNING/truth_layer/etf_flows/2026-09-23__us-spot-crypto-etf-flow-history-v1_1/data/us_spot_btc_etf_flows_daily_2026.csv": "4bc34d07192ae55e844ce529056e9d4431f76923",
+    "04_MARKET_LEARNING/truth_layer/etf_flows/2026-09-23__us-spot-crypto-etf-flow-history-v1_1/data/us_spot_eth_etf_flows_daily_2024.csv": "b3e5b3e0f65d69b2c9b9cb9a7c1c47c5de94b839",
+    "04_MARKET_LEARNING/truth_layer/etf_flows/2026-09-23__us-spot-crypto-etf-flow-history-v1_1/data/us_spot_eth_etf_flows_daily_2025.csv": "e6d8290506c9d1db466e9b29a5800b0cda92a0d2",
+    "04_MARKET_LEARNING/truth_layer/etf_flows/2026-09-23__us-spot-crypto-etf-flow-history-v1_1/data/us_spot_eth_etf_flows_daily_2026.csv": "23a173fbc09e54972f296dbfb18c84d9f022ecab",
+    "04_MARKET_LEARNING/truth_layer/etf_flows/2026-09-23__us-spot-crypto-etf-flow-history-v1_1/manifest.json": "6f5fbe39e0c687d2e7f1bfc17834f1c8bcd9d760",
+    "04_MARKET_LEARNING/truth_layer/etf_flows/2026-09-23__us-spot-crypto-etf-flow-history-v1_1/scripts/build_etf_flow_features.py": "d1bc10c10c0b5d03a9dedb7af0998aa7416f9ea4",
+    "04_MARKET_LEARNING/truth_layer/etf_flows/2026-09-23__us-spot-crypto-etf-flow-history-v1_1/scripts/validate_etf_flow_history.py": "83c72760a8751d0f280c8ab72b9bc21e86849831",
+    "tests/research/test_etf_flow_history_v1_1.py": "17ddc3f9def50949081e185f3b9b746e0910ecd5"
+  },
+  "source_commit_sha": "459a887e6dcf0d9a24d032c8c1f3dc74a9344762",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-09-23T21:45:19+02:00",
+  "task_class": "RESEARCH_ARCHIVE",
+  "task_summary": "research: fresh-main ETF history pack v1.1"
+}

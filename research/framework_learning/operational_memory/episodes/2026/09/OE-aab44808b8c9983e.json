@@ -1,0 +1,38 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/automation-production-health-gate.yml",
+    ".github/workflows/framework-learning-operations.yml",
+    "tests/health/test_canonical_automation_health_writer.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": ".github",
+  "episode_id": "OE-aab44808b8c9983e",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "UPDATE",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "Keep FLO's static automation-health build non-canonical and enforce token-bearing canonical ownership with regression coverage.",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/automation-production-health-gate.yml": "bc8ae5a275d0a1d6020204e0bbd58afa61327eda",
+    ".github/workflows/framework-learning-operations.yml": "bc10a03187af50e6681f0be909630bb1e1ffc83b",
+    "tests/health/test_canonical_automation_health_writer.py": "220ad6e8c495637b8bda139dc5e1103045432c86"
+  },
+  "source_commit_sha": "aab44808b8c9983e69d59a06db34b5175d28efc4",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-09-23T17:16:09+02:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "ops: stop Framework Learning Operations publishing tokenless automation health"
+}

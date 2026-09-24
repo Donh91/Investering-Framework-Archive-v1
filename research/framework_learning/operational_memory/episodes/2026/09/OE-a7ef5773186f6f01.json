@@ -1,0 +1,36 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/remediation-maturation.yml",
+    "tests/remediation/test_codex_research_merge_reconciliation.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": ".github",
+  "episode_id": "OE-a7ef5773186f6f01",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "UPDATE",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "Validate active post-activation completion convergence before queue pointers are copied/published. Adds regression coverage for ordering. No market semantics or portfolio authority changes.",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/remediation-maturation.yml": "105d3c0df9133092cd3505e5b0e5a80997aa90fa",
+    "tests/remediation/test_codex_research_merge_reconciliation.py": "ef3f55a821d7190a2bf47656cb69f23f9d525d4b"
+  },
+  "source_commit_sha": "a7ef5773186f6f010c0b91e9913a49ca42ea883a",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-09-24T08:55:08+02:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "remediation: block queue publication on invalid mission convergence"
+}

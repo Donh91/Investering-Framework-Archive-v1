@@ -1,0 +1,34 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "tests/learning/test_data_ping_action_compass_binding.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "tests",
+  "episode_id": "OE-651bb47e29a9faae",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "t9-replay-input-binding",
+  "operation_type": "HARDEN",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* research: harden T9 replay input binding * test: lock T9 input-binding and output-root guards * test: bind T9 synthetic fixture to frozen input contract * test: correct T9 owner-canonical fixture hash * test: collect T9 reproducibility suite in continuity gate * test: execute T9 suite in continuity gate",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "tests/learning/test_data_ping_action_compass_binding.py": "37265a621cf20c8d17560833ca7beb995a9fe82d"
+  },
+  "source_commit_sha": "651bb47e29a9faae1dfcb045c91e5d9ca7d5715d",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-09-24T09:01:39+02:00",
+  "task_class": "GENERAL_FRAMEWORK",
+  "task_summary": "research: harden T9 replay input binding"
+}

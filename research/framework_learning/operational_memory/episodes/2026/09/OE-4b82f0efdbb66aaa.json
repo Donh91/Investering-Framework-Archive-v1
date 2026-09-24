@@ -1,0 +1,38 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "research/codex/transitions/b753d6295680eb62d7a3.json",
+    "tests/api_agent/test_director_learning_context.py",
+    "tests/orchestration/test_consumer_receipt.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "tests",
+  "episode_id": "OE-4b82f0efdbb66aaa",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "UPDATE",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* remediation: bind silent test collection repair * test: make director learning context unittest-collectable * test: make consumer receipt module functions unittest-collectable",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "research/codex/transitions/b753d6295680eb62d7a3.json": "0d5f9c9c054aa016f4f732840cc0a28295c4d30d",
+    "tests/api_agent/test_director_learning_context.py": "74f968722218f6eaba158884d87d414ca2f2ae8b",
+    "tests/orchestration/test_consumer_receipt.py": "2c8a2685f8e9feb9d2caab42533ac8658cf738ea"
+  },
+  "source_commit_sha": "4b82f0efdbb66aaa1154c50246158a0dde997f18",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-09-23T23:42:31+02:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "test: stop gateway gates from silently skipping 15 tests"
+}

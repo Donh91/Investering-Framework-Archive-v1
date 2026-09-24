@@ -1,0 +1,40 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "backtest_engine/etf_pit_replay.py",
+    "scripts/experiments/strategy_factor_leakage_e1_production.py",
+    "tests/backtest_engine/test_etf_pit_replay_v2.py",
+    "tests/experiments/test_strategy_factor_leakage_e1_production.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "tests",
+  "episode_id": "OE-6d55711dac99002c",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "enforce-etf-pit-knowledge-time-contract-historical-replay",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* repair: add owner-ratified ETF PIT replay v2 * repair: route E1X ETF production replay through PIT v2 * test: lock ETF PIT knowledge-time contract * test: prove E1X official ETF PIT path is leak-free * test: keep E1X routing assertion dependency-free",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "backtest_engine/etf_pit_replay.py": "2e0184077f557bd9615c4e819b014ba6567d3316",
+    "scripts/experiments/strategy_factor_leakage_e1_production.py": "bb1401e3e4e510f08739c7b2b314c8e8de0af296",
+    "tests/backtest_engine/test_etf_pit_replay_v2.py": "9df7225be0d6b8f1929427bd3a0cc6893f83f09c",
+    "tests/experiments/test_strategy_factor_leakage_e1_production.py": "e0b24cb4cb0700ea02bc84bae94fcfbeed7865e4"
+  },
+  "source_commit_sha": "6d55711dac99002c9b9ca53310d08438cb806954",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-09-23T22:33:20+02:00",
+  "task_class": "GENERAL_FRAMEWORK",
+  "task_summary": "repair: enforce ETF PIT knowledge-time contract in historical replay"
+}

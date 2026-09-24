@@ -1,0 +1,38 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "research/codex/transitions/4bc9351c84bc70cb0583.json",
+    "scripts/governance/pullback_guidance_containment.py",
+    "tests/governance/test_pullback_guidance_containment.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "research",
+  "episode_id": "OE-c65bb03d73267f01",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "UPDATE",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* remediation: bind pullback guidance containment guard * governance: add Pullback v0.2 containment validator * test: enforce Pullback v0.2 guidance containment",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "research/codex/transitions/4bc9351c84bc70cb0583.json": "580e104f9994d48dbecd916babb7e85bbdaab96b",
+    "scripts/governance/pullback_guidance_containment.py": "8388bb6641b341f222d459d1f28b876ec68f5c8b",
+    "tests/governance/test_pullback_guidance_containment.py": "ff33f5ca03fe204b9b348d26186787cf4199aced"
+  },
+  "source_commit_sha": "c65bb03d73267f01e624825677a153b4e287402b",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-09-24T00:25:15+02:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "governance: enforce Pullback v0.2 guidance-only containment"
+}

@@ -1,0 +1,38 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/remediation-maturation-gate.yml",
+    "research/codex/completions/codex-research-direct-landing-bypasses-merge-reconciliation-v1.json",
+    "research/codex/convergence/codex-research-direct-landing-bypasses-merge-reconciliation-v1.json"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "research",
+  "episode_id": "OE-b7ab316145c74f59",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "UPDATE",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* remediation: converge direct-landing reconciliation * remediation: verify direct-landing reconciliation completion * ci: execute API-blind maturation regression suite",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/remediation-maturation-gate.yml": "646269e5fcaeddf13f40c2619352e20957819d10",
+    "research/codex/completions/codex-research-direct-landing-bypasses-merge-reconciliation-v1.json": "fceb673a36252b0c040ebae770aaaeccb981f546",
+    "research/codex/convergence/codex-research-direct-landing-bypasses-merge-reconciliation-v1.json": "99b30bfe73ecfe177b89c79dfb70bd2d35a44293"
+  },
+  "source_commit_sha": "b7ab316145c74f59acf02f9ba0269c8a7da94571",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-09-23T23:36:34+02:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "remediation: close direct-landing gate and execute API-blind regression"
+}

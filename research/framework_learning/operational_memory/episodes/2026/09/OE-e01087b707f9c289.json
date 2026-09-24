@@ -1,0 +1,38 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "research/codex/transitions/d5f9cc11d5d7d05418b9.json",
+    "scripts/experiments/experiment_simplification_review.py",
+    "tests/experiments/test_experiment_simplification_review_entrypoints.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "research",
+  "episode_id": "OE-e01087b707f9c289",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "remediation-simplification-review-entrypoints",
+  "operation_type": "HARDEN",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* experiments: make simplification review entrypoints robust * test: lock simplification review entrypoints * remediation: regenerate simplification transition receipt",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "research/codex/transitions/d5f9cc11d5d7d05418b9.json": "41b6e9b3ea90114cd6d6dc1e6909264bc4100ad4",
+    "scripts/experiments/experiment_simplification_review.py": "0bfc433a4387685342a06ed970c5c7b9af94dc5e",
+    "tests/experiments/test_experiment_simplification_review_entrypoints.py": "dfcf987f898b32aa89771f77509414df212feaaa"
+  },
+  "source_commit_sha": "e01087b707f9c289470c3d0b454f32a286b9c2e3",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-09-24T01:38:48+02:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "remediation: harden simplification review entrypoints"
+}

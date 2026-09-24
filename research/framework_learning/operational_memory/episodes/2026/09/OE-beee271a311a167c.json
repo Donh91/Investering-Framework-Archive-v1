@@ -1,0 +1,42 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    ".github/workflows/remediation-maturation-gate.yml",
+    "research/codex/transitions/719d63ce62a65a3c08f7.json",
+    "scripts/remediation/merge_codex_research_intake.py",
+    "scripts/remediation/reconcile_codex_research_merges.py",
+    "tests/remediation/test_reconcile_direct_landing.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "scripts",
+  "episode_id": "OE-beee271a311a167c",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "remediation-direct-main-landings-safely",
+  "operation_type": "FIX",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* remediation: bind direct-landing reconciliation task * remediation: verify direct landings are on main * remediation: reconcile direct-main landing receipts * test: prove direct-main landing reconciliation fails closed * remediation: preserve merged-PR receipt compatibility * ci: execute direct-landing reconciliation regressions",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    ".github/workflows/remediation-maturation-gate.yml": "7b0d046ed74f0d86d34b57c54cf8a35df12315b8",
+    "research/codex/transitions/719d63ce62a65a3c08f7.json": "45384fea1a311b2571042f6b709001e1c404471f",
+    "scripts/remediation/merge_codex_research_intake.py": "38966faf8ac7f091849f435a2ede527ab17cbd79",
+    "scripts/remediation/reconcile_codex_research_merges.py": "1c5d39a605b25b96c283d081c902cfb0e116781e",
+    "tests/remediation/test_reconcile_direct_landing.py": "39c17a2bf758ca10c112e6edf08f57803fbfd820"
+  },
+  "source_commit_sha": "beee271a311a167cc9e1b6dd50f3b1d980ade755",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-09-23T23:28:02+02:00",
+  "task_class": "AUTOMATION_REMEDIATION",
+  "task_summary": "remediation: reconcile direct-main research landings safely"
+}

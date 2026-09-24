@@ -1,0 +1,40 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "scripts/learning/action_compass_reproducibility.py",
+    "tests/fixtures/action_compass_reproducibility/T9_SYNTHETIC_BASE_v1.json",
+    "tests/learning/test_action_compass_accountability.py",
+    "tests/learning/test_action_compass_reproducibility.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "tests",
+  "episode_id": "OE-18c2081271420933",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": "t9-frozen-input-replay-binding",
+  "operation_type": "HARDEN",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* research: harden T9 replay input binding * test: lock T9 input-binding and output-root guards * test: bind T9 synthetic fixture to frozen input contract * test: correct T9 owner-canonical fixture hash * test: collect T9 reproducibility suite in continuity gate",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "scripts/learning/action_compass_reproducibility.py": "9be3b2e277e9f8fe256187fc1089ef1eb9dbe1a8",
+    "tests/fixtures/action_compass_reproducibility/T9_SYNTHETIC_BASE_v1.json": "fb7508a55463f6034e66b31196d687255430038a",
+    "tests/learning/test_action_compass_accountability.py": "7fa8950ebb072b638cee5ac7b1ebcb82990c7449",
+    "tests/learning/test_action_compass_reproducibility.py": "abf7f705b5092930e60fd87bfb91306464cd2a3f"
+  },
+  "source_commit_sha": "18c20812714209336cc71d9f77b07d5814ea24cc",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-09-24T01:43:09+02:00",
+  "task_class": "GENERAL_FRAMEWORK",
+  "task_summary": "research: harden T9 frozen-input replay binding"
+}

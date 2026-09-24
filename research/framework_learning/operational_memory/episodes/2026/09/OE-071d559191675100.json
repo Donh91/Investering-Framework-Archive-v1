@@ -1,0 +1,36 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "automatic_repository_write": false,
+    "automatic_skill_activation": false,
+    "canonical_effect": false,
+    "portfolio_execution": false
+  },
+  "changed_paths": [
+    "scripts/api_agent/meme_alpha_robinhood_pons_v2.py",
+    "tests/api_agent/test_meme_alpha_robinhood_pons_v2.py"
+  ],
+  "contract": "OPERATIONAL_EPISODE_v1",
+  "dominant_path_prefix": "scripts",
+  "episode_id": "OE-071d559191675100",
+  "evidence_limits": [
+    "Merged commit proves accepted repository change, not causal effectiveness by itself.",
+    "No failed approach is inferred unless separately evidenced.",
+    "No chain-of-thought or raw prompt is stored."
+  ],
+  "failed_approaches": [],
+  "failure_signature": null,
+  "operation_type": "UPDATE",
+  "outcome": "MERGED_TO_MAIN",
+  "resolution_summary": "* alpha: materialize Pons provider and cursor health * test: gate Pons HEALTHY_ZERO on liveness proof",
+  "reusable_pattern": null,
+  "source_blob_shas": {
+    "scripts/api_agent/meme_alpha_robinhood_pons_v2.py": "432bbc1754a2e917479581f3a507bff6d10c316e",
+    "tests/api_agent/test_meme_alpha_robinhood_pons_v2.py": "c975f7e913800807fe06fc7398aeb43a4aacf7cc"
+  },
+  "source_commit_sha": "071d559191675100dc19d25f5677df47bfc8eb0d",
+  "source_kind": "MERGED_MAIN_COMMIT",
+  "source_timestamp": "2026-09-23T20:52:39+02:00",
+  "task_class": "API_AGENT",
+  "task_summary": "Alpha Lab: prove Pons provider health before HEALTHY_ZERO"
+}
