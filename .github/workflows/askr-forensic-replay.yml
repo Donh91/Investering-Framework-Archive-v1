@@ -32,9 +32,9 @@ jobs:
           GH_REPO: ${{ github.repository }}
         run: |
           cat > /tmp/replay.py <<'PY'
-          import json, os, urllib.request, datetime, time
+          import json, os, urllib.request, urllib.error, datetime, time
 
-          RPC=os.environ["RH_RPC"]
+          RPC=os.environ["RH_RPC"]\n          RPCS=[RPC,"https://robinhood-mainnet-rpc.blockreq.com/v1/rpc/public","https://rpc.nodeflare.app/robinhood/public"]
           FACTORY=os.environ["FACTORY"].lower()
           TOPIC0=os.environ["TOPIC0"].lower()
           CA=os.environ["CA"].lower()
@@ -45,12 +45,22 @@ jobs:
 
           def rpc(method, params):
               data=json.dumps({"jsonrpc":"2.0","id":1,"method":method,"params":params}).encode()
-              req=urllib.request.Request(RPC,data=data,headers={"Content-Type":"application/json"})
-              with urllib.request.urlopen(req,timeout=25) as r:
-                  out=json.load(r)
-              if "error" in out:
-                  raise RuntimeError(f"{method}: {out['error']}")
-              return out["result"]
+              errors=[]
+              for url in RPCS:
+                  for attempt in range(3):
+                      req=urllib.request.Request(url,data=data,headers={"Content-Type":"application/json","User-Agent":"ASKR-Forensic-Replay/1.1"})
+                      try:
+                          with urllib.request.urlopen(req,timeout=25) as r:
+                              out=json.load(r)
+                          if "error" in out:
+                              raise RuntimeError(f"{method}: {out['error']}")
+                          return out["result"]
+                      except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError, OSError, RuntimeError) as e:
+                          errors.append(f"{url}:{type(e).__name__}:{e}")
+                          if isinstance(e, urllib.error.HTTPError) and e.code not in {403,429,500,502,503,504}:
+                              break
+                          time.sleep(min(0.5*(2**attempt),2.0))
+              raise RuntimeError(f"{method}: RPC_FAILOVER_EXHAUSTED: {' | '.join(errors[-6:])}")
 
           def gh(path):
               req=urllib.request.Request(
