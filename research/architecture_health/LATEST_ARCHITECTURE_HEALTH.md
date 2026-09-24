@@ -2,22 +2,22 @@
 Status: **AMBER**
 Status scope: **ARCHITECTURE_EVIDENCE_ONLY_NOT_AGGREGATE_SYSTEM_HEALTH**
 Aggregate system health claim: **NOT ASSERTED**
-Generated: 2026-09-24T07:02:54.025089Z
+Generated: 2026-09-24T07:14:41.328952Z
 
 Owners: 4/6 PASS
 Accepted DATA PINGs: 0
 CFGI credits remaining: UNKNOWN
 Experiment candidates: 389
-Codex-ready remediation tasks: 10
+Codex-ready remediation tasks: 5
 
 ## Freshness hours
-- capture: 2.1761180802777775
-- daily_director: 7.138895858055555
-- weekly_calibration: 61.11042212388889
-- etf_owner: 0.8233816497222222
-- experiment_registry: 0.8216736358333334
-- experiment_receipt_sync: 0.8230625247222223
-- remediation_queue: 0.11250696916666666
+- capture: 2.3725913755555554
+- daily_director: 7.335369153333334
+- weekly_calibration: 61.30689541916667
+- etf_owner: 1.019854945
+- experiment_registry: 1.018146931111111
+- experiment_receipt_sync: 1.01953582
+- remediation_queue: 0.17759137555555554
 
 ## Evidence health (last 14d)
 - Forecasts due in window: 284
