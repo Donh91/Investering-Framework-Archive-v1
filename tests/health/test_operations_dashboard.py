@@ -10,8 +10,8 @@ class OperationsDashboardTests(unittest.TestCase):
         path=root/rel;path.parent.mkdir(parents=True,exist_ok=True);path.write_text(json.dumps(data,sort_keys=True)+'\n',encoding='utf-8');return path
     def base_repo(self,root):
         capture=self.write_json(root,'captures/capture.json',{'captured_at_utc':'2026-08-04T12:00:00Z','status':'PASS'})
-        director=self.write_json(root,'research/api_agent/outputs/daily/2026/08/04/121000/DAILY_DIRECTOR_OUTPUT.json',{'status':'READY'})
-        self.write_json(root,'research/api_agent/outputs/daily/2026/08/04/121000/DAILY_DIRECTOR_RECEIPT.json',{'contract':'API_AGENT_RECEIPT_v3','created_unix':1785845400,'status':'PASS','model':'gpt-5.6-luna','task':'DAILY_DIRECTOR_SHADOW','response_id':'resp-1','input_tokens':100,'output_tokens':20,'estimated_cost_usd':0.001})
+        director=self.write_json(root,'research/api_agent/outputs/daily/2026/08/04/121000/DAILY_DIRECTOR_OUTPUT.json',{'status':'READY','summary':'ok','evidence_for':[],'evidence_against':[],'uncertainties':[],'hypotheses':[],'forecast_candidates':[]})
+        self.write_json(root,'research/api_agent/outputs/daily/2026/08/04/121000/DAILY_DIRECTOR_RECEIPT.json',{'contract':'API_AGENT_RECEIPT_v3','created_unix':1785845400,'status':'PASS','model':'gpt-5.6-luna','task':'DAILY_DIRECTOR_SHADOW','response_id':'resp-1','input_tokens':100,'output_tokens':20,'estimated_cost_usd':0.001,'output_hash':module.sha256_path(director)})
         weekly_package=self.write_json(root,'weekly/MASTER_MONDAY_MACHINE_PACKAGE.json',{'contract':'MASTER_MONDAY_MACHINE_PACKAGE_v1','created_at_utc':'2026-08-03T08:00:00Z','status':'READY'})
         weekly=self.write_json(root,'weekly/MASTER_MONDAY_DELIVERY_POINTER.json',{'contract':'MASTER_MONDAY_DELIVERY_POINTER_v1','machine_package_path':str(weekly_package.relative_to(root)),'machine_package_sha256':module.sha256_path(weekly_package),'status':'READY'})
         self.write_json(root,'LATEST_HANDOFF.json',{'contract':'LATEST_HANDOFF_v2','generated_at_utc':'2026-08-04T12:15:00Z','open_incidents':[],'pending_forecast_candidates':[],'pointers':{'latest_capture':{'path':str(capture.relative_to(root)),'sha256':module.sha256_path(capture)},'latest_director_output':{'path':str(director.relative_to(root)),'sha256':module.sha256_path(director)},'latest_weekly_output':{'path':str(weekly.relative_to(root)),'sha256':module.sha256_path(weekly)}}})
@@ -33,6 +33,31 @@ class OperationsDashboardTests(unittest.TestCase):
     def test_skipped_no_delta_receipt_overrides_blocked_output(self):
         with tempfile.TemporaryDirectory() as tmp:
             root=Path(tmp);self.base_repo(root);out=root/'research/api_agent/outputs/daily/2026/08/04/121000/DAILY_DIRECTOR_OUTPUT.json';out.write_text(json.dumps({'status':'BLOCKED'})+'\n');receipt=out.with_name('DAILY_DIRECTOR_RECEIPT.json');value=json.loads(receipt.read_text());value.update({'status':'SKIPPED_NO_DELTA','input_tokens':0,'output_tokens':0,'estimated_cost_usd':0.0});receipt.write_text(json.dumps(value)+'\n');handoff=json.loads((root/'LATEST_HANDOFF.json').read_text());handoff['pointers']['latest_director_output']['sha256']=module.sha256_path(out);(root/'LATEST_HANDOFF.json').write_text(json.dumps(handoff)+'\n');row=module.build_dashboard(root,datetime(2026,8,4,13,0,tzinfo=UTC))['systems']['openai_daily_director'];self.assertEqual(row['status'],'GREEN');self.assertEqual(row['reason'],'EXPECTED_SKIP_NO_COMPARABLE_DELTA')
+
+    def test_degraded_output_is_not_hidden_by_pass_receipt(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);self.base_repo(root)
+            out=root/'research/api_agent/outputs/daily/2026/08/04/121000/DAILY_DIRECTOR_OUTPUT.json'
+            value=json.loads(out.read_text());value['status']='DEGRADED';out.write_text(json.dumps(value,sort_keys=True)+'\n')
+            receipt=out.with_name('DAILY_DIRECTOR_RECEIPT.json');receipt_value=json.loads(receipt.read_text());receipt_value['status']='PASS';receipt_value['output_hash']=module.sha256_path(out);receipt.write_text(json.dumps(receipt_value,sort_keys=True)+'\n')
+            handoff=json.loads((root/'LATEST_HANDOFF.json').read_text());handoff['pointers']['latest_director_output']['sha256']=module.sha256_path(out);(root/'LATEST_HANDOFF.json').write_text(json.dumps(handoff)+'\n')
+            row=module.build_dashboard(root,datetime(2026,8,4,13,0,tzinfo=UTC))['systems']['openai_daily_director']
+            self.assertEqual(row['status'],'AMBER')
+            self.assertEqual(row['semantic_status'],'DEGRADED')
+            self.assertEqual(row['execution_status'],'PASS')
+            self.assertEqual(row['reason'],'SEMANTIC_STATUS_DEGRADED')
+
+    def test_owner_already_analyzed_skip_remains_expected_green(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);self.base_repo(root)
+            out=root/'research/api_agent/outputs/daily/2026/08/04/121000/DAILY_DIRECTOR_OUTPUT.json'
+            value=json.loads(out.read_text());value['status']='BLOCKED';value['uncertainties']=['SKIPPED_OWNER_RUN_ALREADY_ANALYZED'];out.write_text(json.dumps(value,sort_keys=True)+'\n')
+            receipt=out.with_name('DAILY_DIRECTOR_RECEIPT.json');receipt_value=json.loads(receipt.read_text());receipt_value['status']='SKIPPED_OWNER_RUN_ALREADY_ANALYZED';receipt_value['output_hash']=module.sha256_path(out);receipt.write_text(json.dumps(receipt_value,sort_keys=True)+'\n')
+            handoff=json.loads((root/'LATEST_HANDOFF.json').read_text());handoff['pointers']['latest_director_output']['sha256']=module.sha256_path(out);(root/'LATEST_HANDOFF.json').write_text(json.dumps(handoff)+'\n')
+            row=module.build_dashboard(root,datetime(2026,8,4,13,0,tzinfo=UTC))['systems']['openai_daily_director']
+            self.assertEqual(row['status'],'GREEN')
+            self.assertEqual(row['execution_status'],'SKIPPED_OWNER_RUN_ALREADY_ANALYZED')
+            self.assertEqual(row['reason'],'EXPECTED_SKIP_OWNER_RUN_ALREADY_ANALYZED')
     def test_hash_mismatch_is_red(self):
         with tempfile.TemporaryDirectory() as tmp:
             root=Path(tmp);self.base_repo(root);handoff=json.loads((root/'LATEST_HANDOFF.json').read_text());handoff['pointers']['latest_capture']['sha256']='0'*64;(root/'LATEST_HANDOFF.json').write_text(json.dumps(handoff)+'\n');self.assertEqual(module.build_dashboard(root,datetime(2026,8,4,13,0,tzinfo=UTC))['systems']['daily_capture']['status'],'RED')
@@ -74,8 +99,8 @@ class OperationsDashboardTests(unittest.TestCase):
     def test_refresh_handoff_promotes_newer_valid_producer_before_dashboard(self):
         with tempfile.TemporaryDirectory() as tmp:
             root=Path(tmp);self.base_repo(root)
-            newer=self.write_json(root,'research/api_agent/outputs/daily/2026/08/04/124500/DAILY_DIRECTOR_OUTPUT.json',{'completed_at_utc':'2026-08-04T12:45:00Z','status':'READY'})
-            self.write_json(root,'research/api_agent/outputs/daily/2026/08/04/124500/DAILY_DIRECTOR_RECEIPT.json',{'contract':'API_AGENT_RECEIPT_v3','created_unix':1785847500,'status':'PASS','output_hash':module.sha256_path(newer)})
+            newer=self.write_json(root,'research/api_agent/outputs/daily/2026/08/04/124500/DAILY_DIRECTOR_OUTPUT.json',{'completed_at_utc':'2026-08-04T12:45:00Z','status':'READY','summary':'new','evidence_for':[],'evidence_against':[],'uncertainties':[],'hypotheses':[],'forecast_candidates':[]})
+            self.write_json(root,'research/api_agent/outputs/daily/2026/08/04/124500/DAILY_DIRECTOR_RECEIPT.json',{'contract':'API_AGENT_RECEIPT_v3','task':'DAILY_DIRECTOR_SHADOW','created_unix':1785847500,'status':'PASS','output_hash':module.sha256_path(newer)})
             self.refresh_handoff(root)
             handoff=json.loads((root/'LATEST_HANDOFF.json').read_text())
             pointer=handoff['pointers']['latest_director_output']
@@ -90,6 +115,26 @@ class OperationsDashboardTests(unittest.TestCase):
             root=Path(tmp);self.base_repo(root)
             malformed=root/'research/api_agent/outputs/daily/2026/08/04/124500/DAILY_DIRECTOR_OUTPUT.json'
             malformed.parent.mkdir(parents=True,exist_ok=True);malformed.write_text('{not-json\n')
+            original=json.loads((root/'LATEST_HANDOFF.json').read_text())['pointers']['latest_director_output']
+            self.refresh_handoff(root)
+            refreshed=json.loads((root/'LATEST_HANDOFF.json').read_text())['pointers']['latest_director_output']
+            self.assertEqual(refreshed,original)
+
+    def test_refresh_handoff_rejects_parseable_schema_invalid_producer(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);self.base_repo(root)
+            invalid=self.write_json(root,'research/api_agent/outputs/daily/2026/08/04/124500/DAILY_DIRECTOR_OUTPUT.json',{'completed_at_utc':'2026-08-04T12:45:00Z','status':'READY'})
+            self.write_json(root,'research/api_agent/outputs/daily/2026/08/04/124500/DAILY_DIRECTOR_RECEIPT.json',{'contract':'API_AGENT_RECEIPT_v3','task':'DAILY_DIRECTOR_SHADOW','created_unix':1785847500,'status':'PASS','output_hash':module.sha256_path(invalid)})
+            original=json.loads((root/'LATEST_HANDOFF.json').read_text())['pointers']['latest_director_output']
+            self.refresh_handoff(root)
+            refreshed=json.loads((root/'LATEST_HANDOFF.json').read_text())['pointers']['latest_director_output']
+            self.assertEqual(refreshed,original)
+
+    def test_refresh_handoff_rejects_receipt_hash_mismatch(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);self.base_repo(root)
+            newer=self.write_json(root,'research/api_agent/outputs/daily/2026/08/04/124500/DAILY_DIRECTOR_OUTPUT.json',{'completed_at_utc':'2026-08-04T12:45:00Z','status':'READY','summary':'new','evidence_for':[],'evidence_against':[],'uncertainties':[],'hypotheses':[],'forecast_candidates':[]})
+            self.write_json(root,'research/api_agent/outputs/daily/2026/08/04/124500/DAILY_DIRECTOR_RECEIPT.json',{'contract':'API_AGENT_RECEIPT_v3','task':'DAILY_DIRECTOR_SHADOW','created_unix':1785847500,'status':'PASS','output_hash':'0'*64})
             original=json.loads((root/'LATEST_HANDOFF.json').read_text())['pointers']['latest_director_output']
             self.refresh_handoff(root)
             refreshed=json.loads((root/'LATEST_HANDOFF.json').read_text())['pointers']['latest_director_output']
