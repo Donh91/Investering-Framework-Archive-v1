@@ -1,7 +1,7 @@
 {
   "contract": "CODEX_READY_TASKS_v1",
   "contract_revision": "1.2",
-  "generated_at_utc": "2026-09-23T23:52:25Z",
+  "generated_at_utc": "2026-09-24T00:00:01Z",
   "queue_sources": [
     "AUTOMATION_HEALTH",
     "RESEARCH_INTAKE"
@@ -48,7 +48,7 @@
         "private watchlist publication"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 61b8772f2bc07deba31b --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-09-23T23:52:25Z",
+      "last_observed_at_utc": "2026-09-24T00:00:01Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -120,7 +120,7 @@
         "rewrite of frozen base candidate"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 923de2eed113038e8a6c --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-09-23T23:52:25Z",
+      "last_observed_at_utc": "2026-09-24T00:00:01Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -153,69 +153,6 @@
       "transition_receipt_path": "research/codex/transitions/923de2eed113038e8a6c.json",
       "transition_receipt_required": true,
       "workflow": "research-intake/codex-research-memes-v3-solana-cross-chain-expansion-v1"
-    },
-    {
-      "allowed_change_scope": [
-        "scripts/learning/directly related T5 FNP row producer and validator",
-        "tests/learning/directly related T5 FNP tests",
-        ".github/workflows/framework-learning-operations.yml",
-        "research/framework_memory/fnp_forward_rows",
-        "06_RESEARCH_LAB/forward_tests/directly related machine-readable T5 runtime artifact if an existing owner path requires it"
-      ],
-      "candidate_id": "codex-research-t5-fnp-prospective-row-instrumentation-v1",
-      "candidate_path": "research/codex/intake/2026/08/codex-research-t5-fnp-prospective-row-instrumentation-v1.json",
-      "candidate_sha256": "4272b07446390d568ebd5ceab6654a494beb76fa2e536985043b05a2eea1b6f4",
-      "clean_noop_condition": "The candidate is superseded, already fixed, duplicates a current health task, or fresh evidence no longer reproduces the bounded code defect.",
-      "escalation_condition": "Escalate to FRAMEWORK_OWNER if resolution requires market gates, model weights, canonical authority, portfolio logic, API budget or new policy semantics.",
-      "failure_streak": 0,
-      "finding": "T5_FNP_ROW_PRODUCTION_MISSING",
-      "first_observed_at_utc": "2026-08-29T16:14:20Z",
-      "forbidden_changes": [
-        "API budget",
-        "automatic portfolio execution",
-        "canonical authority",
-        "market gates",
-        "model weights",
-        "new exit threshold",
-        "new market engine",
-        "new policy semantics",
-        "portfolio logic",
-        "retrospective row backfill"
-      ],
-      "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature b14f0f264547ba5e6ed0 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-09-23T23:52:25Z",
-      "latest_run_id": null,
-      "latest_run_url": null,
-      "lifecycle_state": "ACTIVE",
-      "objective": "Implement the smallest deterministic prospective row producer and validator that lets existing T5 FNP_CUMULATIVE record genuine decision divergence, frozen horizons and later outcome attachment from already-authoritative decision/evidence artifacts. Do not create new actions, thresholds, asset-tier semantics or classifications. Fail closed when divergence, lineage, frozen horizons or required observations are unavailable.",
-      "observations": 1,
-      "post_fix_gate": "PROSPECTIVE_ROW_FIXTURE_PASS_PLUS_THREE_NATURAL_FRAMEWORK_LEARNING_RUNS_WITH_NO_INVALID_OR_DUPLICATE_T5_ROWS",
-      "precondition": "Candidate codex-research-t5-fnp-prospective-row-instrumentation-v1 still exists on main at research/codex/intake/2026/08/codex-research-t5-fnp-prospective-row-instrumentation-v1.json with SHA-256 4272b07446390d568ebd5ceab6654a494beb76fa2e536985043b05a2eea1b6f4, status SUBMITTED and authority_boundary CODE_REMEDIATION_ONLY; no superseding fix or duplicate task has made it stale.",
-      "requested_priority": "EXPEDITED",
-      "required_evidence": [
-        "06_RESEARCH_LAB/forward_tests/2026-07-10__active-test-registry__canonical.md",
-        "06_RESEARCH_LAB/forward_tests/2026-07-10__offensive-divergence-and-fnp-ledger__operational.md",
-        "ce3099eb420a1700293f07b31f28cb42203427de",
-        "reproduction",
-        "positive and negative acceptance tests"
-      ],
-      "risk_class": "B_CODEX_PR_RESEARCH",
-      "route": "CODEX_PR",
-      "signature": "b14f0f264547ba5e6ed0",
-      "source_type": "RESEARCH_INTAKE",
-      "state": "CODEX_READY",
-      "stop_condition": "Stop without code changes if candidate hash/status/authority changed, reproduction fails, or the required fix exceeds allowed_change_scope.",
-      "submitted_at_utc": "2026-08-29T16:14:20Z",
-      "success_evidence": [
-        "candidate-linked reproduction",
-        "positive and negative acceptance tests",
-        "PROSPECTIVE_ROW_FIXTURE_PASS_PLUS_THREE_NATURAL_FRAMEWORK_LEARNING_RUNS_WITH_NO_INVALID_OR_DUPLICATE_T5_ROWS"
-      ],
-      "success_streak": 0,
-      "task_contract_sha256": "1db7ad852ee9b63c58b82033ebf65dbf9d5c153fddf4d9a5dd04b492f77d447c",
-      "transition_receipt_path": "research/codex/transitions/b14f0f264547ba5e6ed0.json",
-      "transition_receipt_required": true,
-      "workflow": "research-intake/codex-research-t5-fnp-prospective-row-instrumentation-v1"
     },
     {
       "allowed_change_scope": [
@@ -254,7 +191,7 @@
         "portfolio logic"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature b62105cfe794e5c80c70 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-09-23T23:52:25Z",
+      "last_observed_at_utc": "2026-09-24T00:00:01Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -515,7 +452,7 @@
         "portfolio logic"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature e42a4face457d80066d7 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-09-23T23:52:25Z",
+      "last_observed_at_utc": "2026-09-24T00:00:01Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
