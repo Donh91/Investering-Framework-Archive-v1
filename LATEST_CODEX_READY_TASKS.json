@@ -1,7 +1,7 @@
 {
   "contract": "CODEX_READY_TASKS_v1",
   "contract_revision": "1.2",
-  "generated_at_utc": "2026-09-24T08:46:41Z",
+  "generated_at_utc": "2026-09-24T09:16:22Z",
   "queue_sources": [
     "AUTOMATION_HEALTH",
     "RESEARCH_INTAKE"
@@ -48,7 +48,7 @@
         "private watchlist publication"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 61b8772f2bc07deba31b --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-09-24T08:46:41Z",
+      "last_observed_at_utc": "2026-09-24T09:16:22Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -120,7 +120,7 @@
         "rewrite of frozen base candidate"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature 923de2eed113038e8a6c --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-09-24T08:46:41Z",
+      "last_observed_at_utc": "2026-09-24T09:16:22Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -191,7 +191,7 @@
         "portfolio logic"
       ],
       "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature b62105cfe794e5c80c70 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-09-24T08:46:41Z",
+      "last_observed_at_utc": "2026-09-24T09:16:22Z",
       "latest_run_id": null,
       "latest_run_url": null,
       "lifecycle_state": "ACTIVE",
@@ -226,68 +226,6 @@
       "transition_receipt_path": "research/codex/transitions/b62105cfe794e5c80c70.json",
       "transition_receipt_required": true,
       "workflow": "research-intake/codex-research-alpha-adversarial-runtime-wiring-v1"
-    },
-    {
-      "allowed_change_scope": [
-        "scripts/learning/directly related T8 multi-ping prospective row producer and validator",
-        "tests/learning/directly related T8 tests",
-        "02_DATA_PING/directly related non-canonical T8 runtime row root if existing routing requires it",
-        "06_RESEARCH_LAB/forward_tests/directly related machine-readable T8 runtime artifact",
-        ".github/workflows/framework-learning-operations.yml if the existing learning workflow is the established owner for row materialization"
-      ],
-      "candidate_id": "codex-research-t8-multi-ping-delay-cost-v1",
-      "candidate_path": "research/codex/intake/2026/08/codex-research-t8-multi-ping-delay-cost-v1.json",
-      "candidate_sha256": "ab95592653adcf4009cd036f3ecb5d33e12343b1e054b73d70f2cafdfb4622b5",
-      "clean_noop_condition": "The candidate is superseded, already fixed, duplicates a current health task, or fresh evidence no longer reproduces the bounded code defect.",
-      "escalation_condition": "Escalate to FRAMEWORK_OWNER if resolution requires market gates, model weights, canonical authority, portfolio logic, API budget or new policy semantics.",
-      "failure_streak": 0,
-      "finding": "T8_MULTI_PING_DELAY_COST_ROW_INSTRUMENTATION_MISSING",
-      "first_observed_at_utc": "2026-08-29T18:30:00Z",
-      "forbidden_changes": [
-        "API budget",
-        "automatic signal promotion",
-        "canonical authority",
-        "historical pseudo-row backfill",
-        "market gates",
-        "model weights",
-        "multi-ping promotion to market authority",
-        "new consensus engine",
-        "new policy semantics",
-        "portfolio logic"
-      ],
-      "fresh_state_preflight_command": "python scripts/remediation/write_codex_research_transition_receipt.py --signature e42a4face457d80066d7 --branch <TASK_BRANCH>",
-      "last_observed_at_utc": "2026-09-24T08:46:41Z",
-      "latest_run_id": null,
-      "latest_run_url": null,
-      "lifecycle_state": "ACTIVE",
-      "objective": "Implement the smallest deterministic prospective row producer and validator for the existing MULTI_PING_AGGREGATION_VALUE / T8 test, freezing latest-ping baseline, aggregation state, dependency/redundancy and timing before outcome, then measuring false-flip reduction and delay cost after eligible framework outcomes without creating a new consensus authority.",
-      "observations": 1,
-      "post_fix_gate": "PROSPECTIVE_T8_FIXTURE_PASS_PLUS_10_ELIGIBLE_STATE_CHANGES_BEFORE_VALUE_CONCLUSION",
-      "precondition": "Candidate codex-research-t8-multi-ping-delay-cost-v1 still exists on main at research/codex/intake/2026/08/codex-research-t8-multi-ping-delay-cost-v1.json with SHA-256 ab95592653adcf4009cd036f3ecb5d33e12343b1e054b73d70f2cafdfb4622b5, status SUBMITTED and authority_boundary CODE_REMEDIATION_ONLY; no superseding fix or duplicate task has made it stale.",
-      "requested_priority": "NORMAL",
-      "required_evidence": [
-        "06_RESEARCH_LAB/forward_tests/2026-07-10__active-test-registry__canonical.md",
-        "06_RESEARCH_LAB/existing_system_improvement_12x/T04_DELAY_COST_EXISTING_CONFIRMATION.md",
-        "reproduction",
-        "positive and negative acceptance tests"
-      ],
-      "risk_class": "B_CODEX_PR_RESEARCH",
-      "route": "CODEX_PR",
-      "signature": "e42a4face457d80066d7",
-      "source_type": "RESEARCH_INTAKE",
-      "state": "CODEX_READY",
-      "stop_condition": "Stop without code changes if candidate hash/status/authority changed, reproduction fails, or the required fix exceeds allowed_change_scope.",
-      "submitted_at_utc": "2026-08-29T18:30:00Z",
-      "success_evidence": [
-        "candidate-linked reproduction",
-        "positive and negative acceptance tests",
-        "PROSPECTIVE_T8_FIXTURE_PASS_PLUS_10_ELIGIBLE_STATE_CHANGES_BEFORE_VALUE_CONCLUSION"
-      ],
-      "success_streak": 0,
-      "task_contract_sha256": "821d8be04a50e3555b052dace9b3f88bec6eb49d6bb887e279e63298947dda6e",
-      "transition_receipt_path": "research/codex/transitions/e42a4face457d80066d7.json",
-      "transition_receipt_required": true,
-      "workflow": "research-intake/codex-research-t8-multi-ping-delay-cost-v1"
     }
   ]
 }
