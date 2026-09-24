@@ -9,6 +9,7 @@ on:
   workflow_dispatch:
 
 permissions:
+  actions: read
   contents: write
   issues: write
   pull-requests: read
@@ -46,6 +47,10 @@ jobs:
             git fetch origin main
             git reset --hard origin/main
 
+            python scripts/remediation/auto_verify_post_fix.py \
+              --repo-root . \
+              --repository "$GITHUB_REPOSITORY" \
+              --token "$GH_TOKEN"
             python scripts/remediation/build_remediation_maturation.py \
               --repo-root . \
               --output-dir research/remediation
@@ -68,6 +73,8 @@ jobs:
             git add \
               research/remediation \
               research/codex/merges \
+              research/codex/completions \
+              research/codex/post_fix_verification \
               research/codex/LATEST_CODEX_EXECUTION_STATE.json \
               research/codex/LATEST_CODEX_INTAKE_STATUS.json \
               research/codex/CODEX_EXECUTION_LEDGER.jsonl \
@@ -144,6 +151,8 @@ jobs:
           path: |
             research/remediation/
             research/codex/merges/
+            research/codex/completions/
+            research/codex/post_fix_verification/
             research/codex/LATEST_CODEX_EXECUTION_STATE.json
             research/codex/LATEST_CODEX_INTAKE_STATUS.json
             research/codex/CODEX_EXECUTION_LEDGER.jsonl

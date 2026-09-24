@@ -1,0 +1,86 @@
+from __future__ import annotations
+
+import json
+import subprocess
+from pathlib import Path
+
+from scripts.remediation.auto_verify_post_fix import verify
+
+
+def git(root: Path, *args: str) -> str:
+    return subprocess.run(["git", "-C", str(root), *args], check=True, text=True, capture_output=True).stdout.strip()
+
+
+def test_auto_verifier_writes_completion_only_when_all_predicates_pass(tmp_path: Path):
+    git(tmp_path, "init")
+    git(tmp_path, "config", "user.name", "test")
+    git(tmp_path, "config", "user.email", "test@example.com")
+    marker = tmp_path / "marker.txt"
+    marker.write_text("base\n")
+    git(tmp_path, "add", ".")
+    git(tmp_path, "commit", "-m", "base")
+    merge_sha = git(tmp_path, "rev-parse", "HEAD")
+
+    candidate_id = "candidate-a"
+    task = {
+        "candidate_id": candidate_id,
+        "source_type": "RESEARCH_INTAKE",
+        "state": "POST_FIX_OBSERVATION",
+        "signature": "abc",
+        "candidate_sha256": "candidate-sha",
+        "task_contract_sha256": "task-sha",
+        "post_fix_gate": "TEST_GATE",
+        "merge_commit_sha": merge_sha,
+        "pr_number": 7,
+    }
+    (tmp_path / "LATEST_CODEX_EXECUTION_STATE.json").write_text(json.dumps({"tasks": [task]}))
+    merge_path = tmp_path / "research/codex/merges" / f"{candidate_id}.json"
+    merge_path.parent.mkdir(parents=True)
+    merge_path.write_text("{}\n")
+    specs = {
+        "contract": "CODEX_POST_FIX_VERIFICATION_SPECS_v1",
+        "candidates": [{
+            "candidate_id": candidate_id,
+            "predicates": [
+                {"kind": "N_CONSECUTIVE_SUCCESSFUL_RUNS", "workflow": "x.yml", "count": 2},
+                {"kind": "NO_MERGED_RESEARCH_ZOMBIES"},
+            ],
+        }],
+    }
+    spec_path = tmp_path / "specs.json"
+    spec_path.write_text(json.dumps(specs))
+    runs = [
+        {"id": 2, "status": "completed", "conclusion": "success", "head_sha": merge_sha, "created_at": "2026-09-24T12:00:00Z"},
+        {"id": 1, "status": "completed", "conclusion": "success", "head_sha": merge_sha, "created_at": "2026-09-24T11:00:00Z"},
+    ]
+    report = verify(tmp_path, spec_path, lambda workflow: runs)
+    assert [row["candidate_id"] for row in report["verified"]] == [candidate_id]
+    completion = json.loads((tmp_path / "research/codex/completions/candidate-a.json").read_text())
+    assert completion["status"] == "VERIFIED"
+    assert completion["merge_commit_sha"] == merge_sha
+
+
+def test_auto_verifier_does_not_write_on_failed_predicate(tmp_path: Path):
+    git(tmp_path, "init")
+    git(tmp_path, "config", "user.name", "test")
+    git(tmp_path, "config", "user.email", "test@example.com")
+    (tmp_path / "marker.txt").write_text("base\n")
+    git(tmp_path, "add", ".")
+    git(tmp_path, "commit", "-m", "base")
+    merge_sha = git(tmp_path, "rev-parse", "HEAD")
+    task = {
+        "candidate_id": "candidate-b", "source_type": "RESEARCH_INTAKE", "state": "POST_FIX_OBSERVATION",
+        "signature": "def", "candidate_sha256": "c", "task_contract_sha256": "t",
+        "post_fix_gate": "TEST_GATE", "merge_commit_sha": merge_sha, "pr_number": 8,
+    }
+    (tmp_path / "LATEST_CODEX_EXECUTION_STATE.json").write_text(json.dumps({"tasks": [task]}))
+    specs = {"contract": "CODEX_POST_FIX_VERIFICATION_SPECS_v1", "candidates": [{
+        "candidate_id": "candidate-b",
+        "predicates": [{"kind": "N_CONSECUTIVE_SUCCESSFUL_RUNS", "workflow": "x.yml", "count": 2}],
+    }]}
+    spec_path = tmp_path / "specs.json"
+    spec_path.write_text(json.dumps(specs))
+    runs = [{"id": 1, "status": "completed", "conclusion": "success", "head_sha": merge_sha, "created_at": "2026-09-24T11:00:00Z"}]
+    report = verify(tmp_path, spec_path, lambda workflow: runs)
+    assert report["blocked"]
+    assert not (tmp_path / "research/codex/completions/candidate-b.json").exists()
