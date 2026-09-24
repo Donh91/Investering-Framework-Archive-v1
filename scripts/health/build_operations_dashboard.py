@@ -166,6 +166,7 @@ def build_dashboard(repo_root,reference=None):
     director_output_status=(director or {}).get('status'); director_execution_status=(director_receipt or {}).get('status'); semantic_source=director_output_status or director_execution_status; director_semantic=normalized_status(semantic_source)
     if str(director_execution_status or '').upper()=='SKIPPED_NO_DELTA': director_semantic='GREEN'; director_reason='EXPECTED_SKIP_NO_COMPARABLE_DELTA'
     elif str(director_execution_status or '').upper()=='SKIPPED_NO_ELIGIBLE_INPUT': director_semantic='GREEN'; director_reason='EXPECTED_SKIP_NO_ELIGIBLE_INPUT'
+    elif str(director_execution_status or '').upper()=='SKIPPED_OWNER_RUN_ALREADY_ANALYZED': director_semantic='GREEN'; director_reason='EXPECTED_SKIP_OWNER_RUN_ALREADY_ANALYZED'
     elif director_fresh=='GREEN' and director_semantic!='GREEN': director_reason=f"SEMANTIC_STATUS_{str(semantic_source or 'UNKNOWN').upper()}"
     experiment_system,experiment=direct_system(repo_root,Path('research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json'),'EXPERIMENT_LIFECYCLE_REGISTRY_v1',36,72,reference,'NO_EXPERIMENT_REGISTRY_YET'); sync_system,sync=direct_system(repo_root,Path('research/experiment_lifecycle/LATEST_EXPERIMENT_RECEIPT_SYNC.json'),'EXPERIMENT_RECEIPT_SYNC_v1',48,96,reference,'NO_EXPERIMENT_RECEIPT_SYNC_YET')
     if sync and sync.get('status')=='UNAVAILABLE': sync_system['status']='AMBER'; sync_system['reason']='EXECUTION_PLANE_UNAVAILABLE'
