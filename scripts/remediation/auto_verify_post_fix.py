@@ -16,6 +16,7 @@ if str(ROOT) not in sys.path:
 
 from scripts.remediation.write_codex_research_completion_receipt import build_completion_receipt
 from scripts.remediation.mission_convergence import completion_requires_convergence, validate_receipt as validate_convergence_receipt
+from scripts.health.automation_health_resolution import valid_history
 
 SPEC_CONTRACT = "CODEX_POST_FIX_VERIFICATION_SPECS_v1"
 
@@ -93,6 +94,57 @@ def evaluate_predicate(
         ok = count > 0 and len(sample) == count and successes == count
         run_states = [f"{row.get('id')}:{row.get('conclusion')}" for row in sample]
         return ok, f"{workflow}: evidence_floor={evidence_floor_sha} successful_runs={successes}/{count} sampled_runs={','.join(run_states)}"
+    if kind == "N_HEALTH_HISTORY_MATCH":
+        count = int(predicate.get("count") or 0)
+        task_merge_sha = str(task.get("merge_commit_sha") or "")
+        evidence_floor_sha = str(predicate.get("after_sha") or task_merge_sha)
+        if predicate.get("after_sha") and not is_ancestor(repo_root, task_merge_sha, evidence_floor_sha):
+            return False, f"health_history: INVALID_EVIDENCE_FLOOR after_sha={evidence_floor_sha} task_merge_sha={task_merge_sha}"
+        history_root = repo_root / "research/architecture_health/history"
+        latest_by_run: dict[int, dict[str, Any]] = {}
+        for path in sorted(history_root.glob("*.json")) if history_root.exists() else []:
+            row = valid_history(path)
+            if not row:
+                continue
+            row_run_id = int(row.get("run_id") or 0)
+            row_head_sha = str(row.get("head_sha") or "")
+            if row_run_id <= 0 or not row_head_sha or not is_ancestor(repo_root, evidence_floor_sha, row_head_sha):
+                continue
+            previous = latest_by_run.get(row_run_id)
+            if previous is None or int(row.get("run_attempt") or 0) > int(previous.get("run_attempt") or 0):
+                latest_by_run[row_run_id] = row
+        rows = sorted(
+            latest_by_run.values(),
+            key=lambda x: (str(x.get("generated_at_utc") or ""), int(x.get("run_id") or 0)),
+            reverse=True,
+        )
+        sample = rows[:count]
+        forbidden_findings = {str(item) for item in predicate.get("forbidden_findings", [])}
+        forbidden_warnings = {str(item) for item in predicate.get("forbidden_warnings", [])}
+        failures: list[str] = []
+        for row in sample:
+            run_id = int(row.get("run_id") or 0)
+            if int(row.get("workflow_count") or 0) < int(predicate.get("min_workflow_count") or 0):
+                failures.append(f"{run_id}:workflow_count={row.get('workflow_count')}")
+            if int(row.get("registered_workflow_count") or 0) < int(predicate.get("min_registered_workflow_count") or 0):
+                failures.append(f"{run_id}:registered_workflow_count={row.get('registered_workflow_count')}")
+            if predicate.get("require_api_error_none") and row.get("api_error") not in (None, "", False):
+                failures.append(f"{run_id}:api_error={row.get('api_error')!r}")
+            max_red = predicate.get("max_red_count")
+            if max_red is not None and int(row.get("red_count") or 0) > int(max_red):
+                failures.append(f"{run_id}:red_count={row.get('red_count')}")
+            findings = {str(item) for item in row.get("findings", [])}
+            warnings = {str(item) for item in row.get("warnings", [])}
+            bad_findings = sorted(findings & forbidden_findings)
+            bad_warnings = sorted(warnings & forbidden_warnings)
+            if bad_findings:
+                failures.append(f"{run_id}:forbidden_findings={','.join(bad_findings)}")
+            if bad_warnings:
+                failures.append(f"{run_id}:forbidden_warnings={','.join(bad_warnings)}")
+        ok = count > 0 and len(sample) == count and not failures
+        sampled = ",".join(str(row.get("run_id")) for row in sample)
+        detail = "PASS" if not failures else ";".join(failures)
+        return ok, f"health_history: evidence_floor={evidence_floor_sha} matched={len(sample)}/{count} runs={sampled} checks={detail}"
     if kind == "NO_MERGED_RESEARCH_ZOMBIES":
         state = read_json(repo_root / "LATEST_CODEX_EXECUTION_STATE.json", {}) or {}
         zombies: list[str] = []
