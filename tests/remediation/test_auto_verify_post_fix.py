@@ -62,6 +62,72 @@ def test_auto_verifier_writes_completion_only_when_all_predicates_pass(tmp_path:
     assert completion["merge_commit_sha"] == merge_sha
 
 
+def test_auto_verifier_evidence_floor_excludes_pre_repair_runs(tmp_path: Path):
+    git(tmp_path, "init")
+    git(tmp_path, "config", "user.name", "test")
+    git(tmp_path, "config", "user.email", "test@example.com")
+    marker = tmp_path / "marker.txt"
+    marker.write_text("base\n")
+    git(tmp_path, "add", ".")
+    git(tmp_path, "commit", "-m", "base")
+    merge_sha = git(tmp_path, "rev-parse", "HEAD")
+    marker.write_text("repair\n")
+    git(tmp_path, "add", ".")
+    git(tmp_path, "commit", "-m", "repair")
+    repair_sha = git(tmp_path, "rev-parse", "HEAD")
+    task = {
+        "candidate_id": "candidate-floor", "source_type": "RESEARCH_INTAKE", "state": "POST_FIX_OBSERVATION",
+        "signature": "floor", "candidate_sha256": "c", "task_contract_sha256": "t",
+        "post_fix_gate": "TWO_RUNS", "merge_commit_sha": merge_sha, "pr_number": 11,
+    }
+    (tmp_path / "LATEST_CODEX_EXECUTION_STATE.json").write_text(json.dumps({"tasks": [task]}))
+    spec_path = tmp_path / "specs.json"
+    spec_path.write_text(json.dumps({"contract": "CODEX_POST_FIX_VERIFICATION_SPECS_v1", "candidates": [{
+        "candidate_id": "candidate-floor",
+        "predicates": [{"kind": "N_CONSECUTIVE_SUCCESSFUL_RUNS", "workflow": "x.yml", "count": 2, "after_sha": repair_sha}],
+    }]}))
+    runs = [
+        {"id": 3, "status": "completed", "conclusion": "success", "head_sha": repair_sha, "created_at": "2026-09-24T13:00:00Z"},
+        {"id": 2, "status": "completed", "conclusion": "success", "head_sha": merge_sha, "created_at": "2026-09-24T12:00:00Z"},
+        {"id": 1, "status": "completed", "conclusion": "success", "head_sha": merge_sha, "created_at": "2026-09-24T11:00:00Z"},
+    ]
+    report = verify(tmp_path, spec_path, lambda workflow: runs, write=False)
+    assert report["verified"] == []
+    check = report["blocked"][0]["checks"][0]
+    assert check["pass"] is False
+    assert f"evidence_floor={repair_sha}" in check["evidence"]
+    assert "successful_runs=1/2" in check["evidence"]
+
+
+def test_auto_verifier_rejects_evidence_floor_outside_task_lineage(tmp_path: Path):
+    git(tmp_path, "init")
+    git(tmp_path, "config", "user.name", "test")
+    git(tmp_path, "config", "user.email", "test@example.com")
+    (tmp_path / "base.txt").write_text("base\n")
+    git(tmp_path, "add", ".")
+    git(tmp_path, "commit", "-m", "base")
+    merge_sha = git(tmp_path, "rev-parse", "HEAD")
+    git(tmp_path, "checkout", "--orphan", "other")
+    (tmp_path / "base.txt").write_text("other\n")
+    git(tmp_path, "add", ".")
+    git(tmp_path, "commit", "-m", "other")
+    other_sha = git(tmp_path, "rev-parse", "HEAD")
+    task = {
+        "candidate_id": "candidate-floor-invalid", "source_type": "RESEARCH_INTAKE", "state": "POST_FIX_OBSERVATION",
+        "signature": "floor-invalid", "candidate_sha256": "c", "task_contract_sha256": "t",
+        "post_fix_gate": "ONE_RUN", "merge_commit_sha": merge_sha, "pr_number": 12,
+    }
+    (tmp_path / "LATEST_CODEX_EXECUTION_STATE.json").write_text(json.dumps({"tasks": [task]}))
+    spec_path = tmp_path / "specs.json"
+    spec_path.write_text(json.dumps({"contract": "CODEX_POST_FIX_VERIFICATION_SPECS_v1", "candidates": [{
+        "candidate_id": "candidate-floor-invalid",
+        "predicates": [{"kind": "N_CONSECUTIVE_SUCCESSFUL_RUNS", "workflow": "x.yml", "count": 1, "after_sha": other_sha}],
+    }]}))
+    report = verify(tmp_path, spec_path, lambda workflow: [], write=False)
+    assert report["verified"] == []
+    assert "INVALID_EVIDENCE_FLOOR" in report["blocked"][0]["checks"][0]["evidence"]
+
+
 def test_auto_verifier_does_not_write_on_failed_predicate(tmp_path: Path):
     git(tmp_path, "init")
     git(tmp_path, "config", "user.name", "test")
