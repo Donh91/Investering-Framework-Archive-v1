@@ -1,0 +1,36 @@
+{
+  "contract": "REMEDIATION_TRANSITION_RECEIPT_v1",
+  "signature": "05c92d54e9d1c9bfeea7",
+  "state": "IN_REMEDIATION",
+  "workflow": "askr-launch-sentinel.yml",
+  "finding": "REPEATED_CONSECUTIVE_FAILURES",
+  "branch": "sol/retire-askr-launch-sentinel",
+  "pr_number": null,
+  "recorded_at_utc": "2026-09-24T07:10:00Z",
+  "source_health_generated_at_utc": "2026-09-24T07:00:49.223214Z",
+  "latest_run_id": 35384573876,
+  "objective": "Resolve REPEATED_CONSECUTIVE_FAILURES for askr-launch-sentinel.yml with the smallest bounded code change that satisfies the existing acceptance gates.",
+  "precondition": "Fresh Automation Production Health still contains signature 05c92d54e9d1c9bfeea7 for askr-launch-sentinel.yml/REPEATED_CONSECUTIVE_FAILURES, and verified lifecycle state does not make the finding non-actionable.",
+  "success_evidence": [
+    "workflow job logs",
+    "reproduction or repeated identical signature",
+    "positive and negative acceptance tests",
+    "CI_PLUS_ONE_PRODUCTION_SHAPE_RUN"
+  ],
+  "clean_noop_condition": "The finding is absent from fresh health, is non-actionable under verified lifecycle semantics, or the target workflow has been superseded or retired.",
+  "stop_condition": "Stop without code changes if the precondition fails, the finding cannot be reproduced from scoped evidence, or the required fix exceeds allowed change scope.",
+  "escalation_condition": "Escalate to the framework owner if resolution requires market gates, model weights, canonical authority, portfolio logic, API budget, or new policy semantics.",
+  "allowed_change_scope": [
+    ".github/workflows/askr-launch-sentinel.yml",
+    "directly related scripts and tests"
+  ],
+  "forbidden_changes": [
+    "market gates",
+    "model weights",
+    "canonical authority",
+    "portfolio logic"
+  ],
+  "post_fix_gate": "CI_PLUS_ONE_PRODUCTION_SHAPE_RUN",
+  "task_contract_sha256": "b2d891ebe072f961a5e06692707e11c5660cd36a14541991b062084186135cb1",
+  "receipt_sha256": "c27930d7487b01be01267ded78c744daedd52f5df1154e88e52b6c1c23f5c3db"
+}
