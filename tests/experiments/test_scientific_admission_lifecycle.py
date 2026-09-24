@@ -51,11 +51,11 @@ def pair(title, first_path="breadth.advancers"):
     }
 
 
-def run(repo: Path, output: dict):
+def run(repo: Path, output: dict, captured: str = "2026-08-23T20:00:00Z"):
     daily = repo / "daily"
     daily.mkdir(parents=True, exist_ok=True)
     (daily / "output.json").write_text(json.dumps(output))
-    (daily / "context.json").write_text(json.dumps(context()))
+    (daily / "context.json").write_text(json.dumps(context(captured)))
     (daily / "receipt.json").write_text(json.dumps({"contract": "API_AGENT_RECEIPT_v3"}))
     cmd = [
         sys.executable, str(SCRIPT),
@@ -90,6 +90,18 @@ class ScientificAdmissionLifecycleTest(unittest.TestCase):
             manifest = json.loads((repo / "research/experiment_lifecycle/LATEST_EXPERIMENT_DISPATCH_MANIFEST.json").read_text())
             self.assertEqual(manifest["contract"], "EXPERIMENT_DISPATCH_MANIFEST_v2_SCIENTIFIC_ADMISSION")
             self.assertTrue(all(row["candidate_id"] for row in manifest["requests"]))
+
+    def test_scientific_admission_writer_does_not_recreate_same_candidate_across_months(self):
+        with tempfile.TemporaryDirectory() as td:
+            repo = Path(td)
+            output = {"forecast_candidates": [], "experiment_candidates": [pair("Stable pair")]}
+            run(repo, output, "2026-08-31T23:00:00Z")
+            run(repo, output, "2026-09-01T01:00:00Z")
+            candidate_files = list((repo / "research/experiment_lifecycle/candidates").rglob("*.json"))
+            self.assertEqual(len(candidate_files), 1)
+            registry = json.loads((repo / "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json").read_text())
+            self.assertEqual(registry["candidate_count"], 1)
+            self.assertEqual(registry["duplicate_candidate_file_count"], 0)
 
     def test_historical_candidate_requalification_is_non_retroactive(self):
         with tempfile.TemporaryDirectory() as td:
