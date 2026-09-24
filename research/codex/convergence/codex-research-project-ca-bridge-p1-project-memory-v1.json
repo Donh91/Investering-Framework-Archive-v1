@@ -1,0 +1,324 @@
+{
+  "contract": "MISSION_CONVERGENCE_RECEIPT_v1",
+  "status": "CONVERGED",
+  "candidate_id": "codex-research-project-ca-bridge-p1-project-memory-v1",
+  "signature": "fb4a2d5e71b40ba39d61",
+  "candidate_sha256": "e3080d0f045f887a2bafd198588beeaa2e9812ec238e2911be182fffe37ad40b",
+  "task_contract_sha256": "16e428f8aa8063c80eaceddf6bb79f343d6312aa0b5ded4b21ce8711c2da697f",
+  "pr_number": 1281,
+  "merge_commit_sha": "1755a7a68536aa709c00716906f0c9de485d8eb6",
+  "assessed_at_utc": "2026-09-24T06:55:00Z",
+  "requirements": [
+    {
+      "source_ref": "objective",
+      "text": "Implement only P1 of the frozen Project-to-CA shadow build: the smallest child project-memory schema/adapter and focused tests needed to persist a unique eligible project trial before any token exists, while reusing existing Meme Alpha prospective evidence and runtime owners and preserving the frozen A/B/C experiment.",
+      "kind": "OBJECTIVE"
+    },
+    {
+      "source_ref": "acceptance:positive:1",
+      "text": "A no-token eligible project can be frozen and persisted with stable project_trial_id, method_version, frozen_at_utc, eligibility_manifest_sha256, discovery, project_identity, source_observations, project_memory_before, material_delta, token_state, CA candidates, lineage and authority.",
+      "kind": "ACCEPTANCE_POSITIVE"
+    },
+    {
+      "source_ref": "acceptance:positive:2",
+      "text": "Repeated observations that resolve to the same authenticated/bounded project lineage do not create a second denominator trial merely because alias, URL ordering or non-semantic field ordering differs.",
+      "kind": "ACCEPTANCE_POSITIVE"
+    },
+    {
+      "source_ref": "acceptance:positive:3",
+      "text": "Source observations preserve exact observed_at, available_at where known, source/content hash and authentication/conflict state.",
+      "kind": "ACCEPTANCE_POSITIVE"
+    },
+    {
+      "source_ref": "acceptance:positive:4",
+      "text": "Historical observations are append-only or explicitly superseded with lineage. No silent rewrite.",
+      "kind": "ACCEPTANCE_POSITIVE"
+    },
+    {
+      "source_ref": "acceptance:positive:5",
+      "text": "8-Ball-style serious project with NO_TOKEN_OBSERVED persists as an eligible project trial and remains available for later material-change handling.",
+      "kind": "ACCEPTANCE_POSITIVE"
+    },
+    {
+      "source_ref": "acceptance:positive:6",
+      "text": "HoodStack-style contradictory mutable sources preserve both timestamped observations and conflict state rather than choosing the newest-looking prose.",
+      "kind": "ACCEPTANCE_POSITIVE"
+    },
+    {
+      "source_ref": "acceptance:positive:7",
+      "text": "Focused deterministic tests pass and prove no outcome field is required to create/freeze project memory.",
+      "kind": "ACCEPTANCE_POSITIVE"
+    },
+    {
+      "source_ref": "acceptance:negative:1",
+      "text": "Ticker, project name, logo or alias alone cannot establish project identity or token identity.",
+      "kind": "ACCEPTANCE_NEGATIVE"
+    },
+    {
+      "source_ref": "acceptance:negative:2",
+      "text": "Pons/factory token occurrence cannot by itself convert project memory into a project-to-CA BOUND_HIGH relation. P2 semantics remain unimplemented.",
+      "kind": "ACCEPTANCE_NEGATIVE"
+    },
+    {
+      "source_ref": "acceptance:negative:3",
+      "text": "No new scanner, scheduler, standalone ledger, scoring engine, alert path or learning owner is introduced.",
+      "kind": "ACCEPTANCE_NEGATIVE"
+    },
+    {
+      "source_ref": "acceptance:negative:4",
+      "text": "No JEV behavior, A/B/C thresholds, survival margins, denominator classes, market gates, model weights, API budget, portfolio logic or production authority changes.",
+      "kind": "ACCEPTANCE_NEGATIVE"
+    },
+    {
+      "source_ref": "acceptance:negative:5",
+      "text": "NET, SAFIX and DARK cannot increment prospective performance counters through P1 fixtures.",
+      "kind": "ACCEPTANCE_NEGATIVE"
+    },
+    {
+      "source_ref": "acceptance:negative:6",
+      "text": "Missing source data remains UNKNOWN and cannot become zero, false or negative evidence.",
+      "kind": "ACCEPTANCE_NEGATIVE"
+    },
+    {
+      "source_ref": "acceptance:negative:7",
+      "text": "P1 must not implement P2-P6 opportunistically.",
+      "kind": "ACCEPTANCE_NEGATIVE"
+    },
+    {
+      "source_ref": "authority:allowed_change_scope",
+      "text": "Donh91/Investering-Framework-Archive-v1:scripts/api_agent/meme_alpha/** | Donh91/Investering-Framework-Archive-v1:tests/**/meme_alpha/** | Donh91/Investering-Framework-Archive-v1:research/api_agent/meme_alpha/**",
+      "kind": "AUTHORITY_BOUNDARY"
+    },
+    {
+      "source_ref": "authority:forbidden_changes",
+      "text": "market gates | model weights | canonical authority | portfolio logic | API budget | new policy semantics | production activation | automatic trading | BUY or SELL authority | user alerts | automatic merge | new scanner | new scheduler | parallel ledger | P2-P6 implementation | frozen A/B/C experiment semantics | NET/SAFIX/DARK prospective credit",
+      "kind": "AUTHORITY_BOUNDARY"
+    },
+    {
+      "source_ref": "post_fix_gate",
+      "text": "P1_FOCUSED_TESTS_AND_8BALL_HOODSTACK_REGRESSIONS_PASS_PLUS_FRESH_MAIN_READBACK_PLUS_INDEPENDENT_REVIEW_WITH_ZERO_FROZEN_SEMANTIC_DRIFT",
+      "kind": "POST_FIX_GATE"
+    }
+  ],
+  "coverage": [
+    {
+      "source_ref": "objective",
+      "status": "SATISFIED",
+      "evidence": [
+        "PR #1281 merged at 1755a7a68536aa709c00716906f0c9de485d8eb6 after eight relevant gates passed: Meme Alpha Runtime, Continuity Learning, API Agent Gateway, Full Architecture 1-7, Owner-Bound Daily Director Manual, Data Architecture, Storage Health and Automation Production Health.",
+        "Meme Alpha Runtime Gate run 35934558282 / job 107428564883 executed 94 tests PASS, including all P1 base regressions, 8-Ball, HoodStack and seven independent-review temporal/hindsight tests.",
+        "Independent review proved observations and availability after frozen_at_utc fail closed, later evidence enters only through an explicitly later append-only supersession, backdated supersession is rejected, timestamps require exact UTC and nested outcome-derived discovery fields are rejected recursively.",
+        "Fresh-main readback contains the temporal guards and recursive discovery firewall in research/api_agent/meme_alpha/project_memory_p1.py, and fresh code search finds no remaining consumers of the retired duplicate scripts/api_agent/meme_alpha/project_memory_p1.py path.",
+        "Existing P2 binding tests passed in the same runtime gate, showing P1 hardening did not pregrant Project-to-CA binding or alter P2 semantics.",
+        "No new scanner, scheduler, standalone ledger, scoring engine, alert path, learning owner, JEV behavior, A/B/C threshold, market gate, model weight, API budget, portfolio/trading or prospective-credit authority was introduced."
+      ]
+    },
+    {
+      "source_ref": "acceptance:positive:1",
+      "status": "SATISFIED",
+      "evidence": [
+        "PR #1281 merged at 1755a7a68536aa709c00716906f0c9de485d8eb6 after eight relevant gates passed: Meme Alpha Runtime, Continuity Learning, API Agent Gateway, Full Architecture 1-7, Owner-Bound Daily Director Manual, Data Architecture, Storage Health and Automation Production Health.",
+        "Meme Alpha Runtime Gate run 35934558282 / job 107428564883 executed 94 tests PASS, including all P1 base regressions, 8-Ball, HoodStack and seven independent-review temporal/hindsight tests.",
+        "Independent review proved observations and availability after frozen_at_utc fail closed, later evidence enters only through an explicitly later append-only supersession, backdated supersession is rejected, timestamps require exact UTC and nested outcome-derived discovery fields are rejected recursively.",
+        "Fresh-main readback contains the temporal guards and recursive discovery firewall in research/api_agent/meme_alpha/project_memory_p1.py, and fresh code search finds no remaining consumers of the retired duplicate scripts/api_agent/meme_alpha/project_memory_p1.py path.",
+        "Existing P2 binding tests passed in the same runtime gate, showing P1 hardening did not pregrant Project-to-CA binding or alter P2 semantics.",
+        "No new scanner, scheduler, standalone ledger, scoring engine, alert path, learning owner, JEV behavior, A/B/C threshold, market gate, model weight, API budget, portfolio/trading or prospective-credit authority was introduced."
+      ]
+    },
+    {
+      "source_ref": "acceptance:positive:2",
+      "status": "SATISFIED",
+      "evidence": [
+        "PR #1281 merged at 1755a7a68536aa709c00716906f0c9de485d8eb6 after eight relevant gates passed: Meme Alpha Runtime, Continuity Learning, API Agent Gateway, Full Architecture 1-7, Owner-Bound Daily Director Manual, Data Architecture, Storage Health and Automation Production Health.",
+        "Meme Alpha Runtime Gate run 35934558282 / job 107428564883 executed 94 tests PASS, including all P1 base regressions, 8-Ball, HoodStack and seven independent-review temporal/hindsight tests.",
+        "Independent review proved observations and availability after frozen_at_utc fail closed, later evidence enters only through an explicitly later append-only supersession, backdated supersession is rejected, timestamps require exact UTC and nested outcome-derived discovery fields are rejected recursively.",
+        "Fresh-main readback contains the temporal guards and recursive discovery firewall in research/api_agent/meme_alpha/project_memory_p1.py, and fresh code search finds no remaining consumers of the retired duplicate scripts/api_agent/meme_alpha/project_memory_p1.py path.",
+        "Existing P2 binding tests passed in the same runtime gate, showing P1 hardening did not pregrant Project-to-CA binding or alter P2 semantics.",
+        "No new scanner, scheduler, standalone ledger, scoring engine, alert path, learning owner, JEV behavior, A/B/C threshold, market gate, model weight, API budget, portfolio/trading or prospective-credit authority was introduced."
+      ]
+    },
+    {
+      "source_ref": "acceptance:positive:3",
+      "status": "SATISFIED",
+      "evidence": [
+        "PR #1281 merged at 1755a7a68536aa709c00716906f0c9de485d8eb6 after eight relevant gates passed: Meme Alpha Runtime, Continuity Learning, API Agent Gateway, Full Architecture 1-7, Owner-Bound Daily Director Manual, Data Architecture, Storage Health and Automation Production Health.",
+        "Meme Alpha Runtime Gate run 35934558282 / job 107428564883 executed 94 tests PASS, including all P1 base regressions, 8-Ball, HoodStack and seven independent-review temporal/hindsight tests.",
+        "Independent review proved observations and availability after frozen_at_utc fail closed, later evidence enters only through an explicitly later append-only supersession, backdated supersession is rejected, timestamps require exact UTC and nested outcome-derived discovery fields are rejected recursively.",
+        "Fresh-main readback contains the temporal guards and recursive discovery firewall in research/api_agent/meme_alpha/project_memory_p1.py, and fresh code search finds no remaining consumers of the retired duplicate scripts/api_agent/meme_alpha/project_memory_p1.py path.",
+        "Existing P2 binding tests passed in the same runtime gate, showing P1 hardening did not pregrant Project-to-CA binding or alter P2 semantics.",
+        "No new scanner, scheduler, standalone ledger, scoring engine, alert path, learning owner, JEV behavior, A/B/C threshold, market gate, model weight, API budget, portfolio/trading or prospective-credit authority was introduced."
+      ]
+    },
+    {
+      "source_ref": "acceptance:positive:4",
+      "status": "SATISFIED",
+      "evidence": [
+        "PR #1281 merged at 1755a7a68536aa709c00716906f0c9de485d8eb6 after eight relevant gates passed: Meme Alpha Runtime, Continuity Learning, API Agent Gateway, Full Architecture 1-7, Owner-Bound Daily Director Manual, Data Architecture, Storage Health and Automation Production Health.",
+        "Meme Alpha Runtime Gate run 35934558282 / job 107428564883 executed 94 tests PASS, including all P1 base regressions, 8-Ball, HoodStack and seven independent-review temporal/hindsight tests.",
+        "Independent review proved observations and availability after frozen_at_utc fail closed, later evidence enters only through an explicitly later append-only supersession, backdated supersession is rejected, timestamps require exact UTC and nested outcome-derived discovery fields are rejected recursively.",
+        "Fresh-main readback contains the temporal guards and recursive discovery firewall in research/api_agent/meme_alpha/project_memory_p1.py, and fresh code search finds no remaining consumers of the retired duplicate scripts/api_agent/meme_alpha/project_memory_p1.py path.",
+        "Existing P2 binding tests passed in the same runtime gate, showing P1 hardening did not pregrant Project-to-CA binding or alter P2 semantics.",
+        "No new scanner, scheduler, standalone ledger, scoring engine, alert path, learning owner, JEV behavior, A/B/C threshold, market gate, model weight, API budget, portfolio/trading or prospective-credit authority was introduced."
+      ]
+    },
+    {
+      "source_ref": "acceptance:positive:5",
+      "status": "SATISFIED",
+      "evidence": [
+        "PR #1281 merged at 1755a7a68536aa709c00716906f0c9de485d8eb6 after eight relevant gates passed: Meme Alpha Runtime, Continuity Learning, API Agent Gateway, Full Architecture 1-7, Owner-Bound Daily Director Manual, Data Architecture, Storage Health and Automation Production Health.",
+        "Meme Alpha Runtime Gate run 35934558282 / job 107428564883 executed 94 tests PASS, including all P1 base regressions, 8-Ball, HoodStack and seven independent-review temporal/hindsight tests.",
+        "Independent review proved observations and availability after frozen_at_utc fail closed, later evidence enters only through an explicitly later append-only supersession, backdated supersession is rejected, timestamps require exact UTC and nested outcome-derived discovery fields are rejected recursively.",
+        "Fresh-main readback contains the temporal guards and recursive discovery firewall in research/api_agent/meme_alpha/project_memory_p1.py, and fresh code search finds no remaining consumers of the retired duplicate scripts/api_agent/meme_alpha/project_memory_p1.py path.",
+        "Existing P2 binding tests passed in the same runtime gate, showing P1 hardening did not pregrant Project-to-CA binding or alter P2 semantics.",
+        "No new scanner, scheduler, standalone ledger, scoring engine, alert path, learning owner, JEV behavior, A/B/C threshold, market gate, model weight, API budget, portfolio/trading or prospective-credit authority was introduced."
+      ]
+    },
+    {
+      "source_ref": "acceptance:positive:6",
+      "status": "SATISFIED",
+      "evidence": [
+        "PR #1281 merged at 1755a7a68536aa709c00716906f0c9de485d8eb6 after eight relevant gates passed: Meme Alpha Runtime, Continuity Learning, API Agent Gateway, Full Architecture 1-7, Owner-Bound Daily Director Manual, Data Architecture, Storage Health and Automation Production Health.",
+        "Meme Alpha Runtime Gate run 35934558282 / job 107428564883 executed 94 tests PASS, including all P1 base regressions, 8-Ball, HoodStack and seven independent-review temporal/hindsight tests.",
+        "Independent review proved observations and availability after frozen_at_utc fail closed, later evidence enters only through an explicitly later append-only supersession, backdated supersession is rejected, timestamps require exact UTC and nested outcome-derived discovery fields are rejected recursively.",
+        "Fresh-main readback contains the temporal guards and recursive discovery firewall in research/api_agent/meme_alpha/project_memory_p1.py, and fresh code search finds no remaining consumers of the retired duplicate scripts/api_agent/meme_alpha/project_memory_p1.py path.",
+        "Existing P2 binding tests passed in the same runtime gate, showing P1 hardening did not pregrant Project-to-CA binding or alter P2 semantics.",
+        "No new scanner, scheduler, standalone ledger, scoring engine, alert path, learning owner, JEV behavior, A/B/C threshold, market gate, model weight, API budget, portfolio/trading or prospective-credit authority was introduced."
+      ]
+    },
+    {
+      "source_ref": "acceptance:positive:7",
+      "status": "SATISFIED",
+      "evidence": [
+        "PR #1281 merged at 1755a7a68536aa709c00716906f0c9de485d8eb6 after eight relevant gates passed: Meme Alpha Runtime, Continuity Learning, API Agent Gateway, Full Architecture 1-7, Owner-Bound Daily Director Manual, Data Architecture, Storage Health and Automation Production Health.",
+        "Meme Alpha Runtime Gate run 35934558282 / job 107428564883 executed 94 tests PASS, including all P1 base regressions, 8-Ball, HoodStack and seven independent-review temporal/hindsight tests.",
+        "Independent review proved observations and availability after frozen_at_utc fail closed, later evidence enters only through an explicitly later append-only supersession, backdated supersession is rejected, timestamps require exact UTC and nested outcome-derived discovery fields are rejected recursively.",
+        "Fresh-main readback contains the temporal guards and recursive discovery firewall in research/api_agent/meme_alpha/project_memory_p1.py, and fresh code search finds no remaining consumers of the retired duplicate scripts/api_agent/meme_alpha/project_memory_p1.py path.",
+        "Existing P2 binding tests passed in the same runtime gate, showing P1 hardening did not pregrant Project-to-CA binding or alter P2 semantics.",
+        "No new scanner, scheduler, standalone ledger, scoring engine, alert path, learning owner, JEV behavior, A/B/C threshold, market gate, model weight, API budget, portfolio/trading or prospective-credit authority was introduced."
+      ]
+    },
+    {
+      "source_ref": "acceptance:negative:1",
+      "status": "SATISFIED",
+      "evidence": [
+        "PR #1281 merged at 1755a7a68536aa709c00716906f0c9de485d8eb6 after eight relevant gates passed: Meme Alpha Runtime, Continuity Learning, API Agent Gateway, Full Architecture 1-7, Owner-Bound Daily Director Manual, Data Architecture, Storage Health and Automation Production Health.",
+        "Meme Alpha Runtime Gate run 35934558282 / job 107428564883 executed 94 tests PASS, including all P1 base regressions, 8-Ball, HoodStack and seven independent-review temporal/hindsight tests.",
+        "Independent review proved observations and availability after frozen_at_utc fail closed, later evidence enters only through an explicitly later append-only supersession, backdated supersession is rejected, timestamps require exact UTC and nested outcome-derived discovery fields are rejected recursively.",
+        "Fresh-main readback contains the temporal guards and recursive discovery firewall in research/api_agent/meme_alpha/project_memory_p1.py, and fresh code search finds no remaining consumers of the retired duplicate scripts/api_agent/meme_alpha/project_memory_p1.py path.",
+        "Existing P2 binding tests passed in the same runtime gate, showing P1 hardening did not pregrant Project-to-CA binding or alter P2 semantics.",
+        "No new scanner, scheduler, standalone ledger, scoring engine, alert path, learning owner, JEV behavior, A/B/C threshold, market gate, model weight, API budget, portfolio/trading or prospective-credit authority was introduced."
+      ]
+    },
+    {
+      "source_ref": "acceptance:negative:2",
+      "status": "SATISFIED",
+      "evidence": [
+        "PR #1281 merged at 1755a7a68536aa709c00716906f0c9de485d8eb6 after eight relevant gates passed: Meme Alpha Runtime, Continuity Learning, API Agent Gateway, Full Architecture 1-7, Owner-Bound Daily Director Manual, Data Architecture, Storage Health and Automation Production Health.",
+        "Meme Alpha Runtime Gate run 35934558282 / job 107428564883 executed 94 tests PASS, including all P1 base regressions, 8-Ball, HoodStack and seven independent-review temporal/hindsight tests.",
+        "Independent review proved observations and availability after frozen_at_utc fail closed, later evidence enters only through an explicitly later append-only supersession, backdated supersession is rejected, timestamps require exact UTC and nested outcome-derived discovery fields are rejected recursively.",
+        "Fresh-main readback contains the temporal guards and recursive discovery firewall in research/api_agent/meme_alpha/project_memory_p1.py, and fresh code search finds no remaining consumers of the retired duplicate scripts/api_agent/meme_alpha/project_memory_p1.py path.",
+        "Existing P2 binding tests passed in the same runtime gate, showing P1 hardening did not pregrant Project-to-CA binding or alter P2 semantics.",
+        "No new scanner, scheduler, standalone ledger, scoring engine, alert path, learning owner, JEV behavior, A/B/C threshold, market gate, model weight, API budget, portfolio/trading or prospective-credit authority was introduced."
+      ]
+    },
+    {
+      "source_ref": "acceptance:negative:3",
+      "status": "SATISFIED",
+      "evidence": [
+        "PR #1281 merged at 1755a7a68536aa709c00716906f0c9de485d8eb6 after eight relevant gates passed: Meme Alpha Runtime, Continuity Learning, API Agent Gateway, Full Architecture 1-7, Owner-Bound Daily Director Manual, Data Architecture, Storage Health and Automation Production Health.",
+        "Meme Alpha Runtime Gate run 35934558282 / job 107428564883 executed 94 tests PASS, including all P1 base regressions, 8-Ball, HoodStack and seven independent-review temporal/hindsight tests.",
+        "Independent review proved observations and availability after frozen_at_utc fail closed, later evidence enters only through an explicitly later append-only supersession, backdated supersession is rejected, timestamps require exact UTC and nested outcome-derived discovery fields are rejected recursively.",
+        "Fresh-main readback contains the temporal guards and recursive discovery firewall in research/api_agent/meme_alpha/project_memory_p1.py, and fresh code search finds no remaining consumers of the retired duplicate scripts/api_agent/meme_alpha/project_memory_p1.py path.",
+        "Existing P2 binding tests passed in the same runtime gate, showing P1 hardening did not pregrant Project-to-CA binding or alter P2 semantics.",
+        "No new scanner, scheduler, standalone ledger, scoring engine, alert path, learning owner, JEV behavior, A/B/C threshold, market gate, model weight, API budget, portfolio/trading or prospective-credit authority was introduced."
+      ]
+    },
+    {
+      "source_ref": "acceptance:negative:4",
+      "status": "SATISFIED",
+      "evidence": [
+        "PR #1281 merged at 1755a7a68536aa709c00716906f0c9de485d8eb6 after eight relevant gates passed: Meme Alpha Runtime, Continuity Learning, API Agent Gateway, Full Architecture 1-7, Owner-Bound Daily Director Manual, Data Architecture, Storage Health and Automation Production Health.",
+        "Meme Alpha Runtime Gate run 35934558282 / job 107428564883 executed 94 tests PASS, including all P1 base regressions, 8-Ball, HoodStack and seven independent-review temporal/hindsight tests.",
+        "Independent review proved observations and availability after frozen_at_utc fail closed, later evidence enters only through an explicitly later append-only supersession, backdated supersession is rejected, timestamps require exact UTC and nested outcome-derived discovery fields are rejected recursively.",
+        "Fresh-main readback contains the temporal guards and recursive discovery firewall in research/api_agent/meme_alpha/project_memory_p1.py, and fresh code search finds no remaining consumers of the retired duplicate scripts/api_agent/meme_alpha/project_memory_p1.py path.",
+        "Existing P2 binding tests passed in the same runtime gate, showing P1 hardening did not pregrant Project-to-CA binding or alter P2 semantics.",
+        "No new scanner, scheduler, standalone ledger, scoring engine, alert path, learning owner, JEV behavior, A/B/C threshold, market gate, model weight, API budget, portfolio/trading or prospective-credit authority was introduced."
+      ]
+    },
+    {
+      "source_ref": "acceptance:negative:5",
+      "status": "SATISFIED",
+      "evidence": [
+        "PR #1281 merged at 1755a7a68536aa709c00716906f0c9de485d8eb6 after eight relevant gates passed: Meme Alpha Runtime, Continuity Learning, API Agent Gateway, Full Architecture 1-7, Owner-Bound Daily Director Manual, Data Architecture, Storage Health and Automation Production Health.",
+        "Meme Alpha Runtime Gate run 35934558282 / job 107428564883 executed 94 tests PASS, including all P1 base regressions, 8-Ball, HoodStack and seven independent-review temporal/hindsight tests.",
+        "Independent review proved observations and availability after frozen_at_utc fail closed, later evidence enters only through an explicitly later append-only supersession, backdated supersession is rejected, timestamps require exact UTC and nested outcome-derived discovery fields are rejected recursively.",
+        "Fresh-main readback contains the temporal guards and recursive discovery firewall in research/api_agent/meme_alpha/project_memory_p1.py, and fresh code search finds no remaining consumers of the retired duplicate scripts/api_agent/meme_alpha/project_memory_p1.py path.",
+        "Existing P2 binding tests passed in the same runtime gate, showing P1 hardening did not pregrant Project-to-CA binding or alter P2 semantics.",
+        "No new scanner, scheduler, standalone ledger, scoring engine, alert path, learning owner, JEV behavior, A/B/C threshold, market gate, model weight, API budget, portfolio/trading or prospective-credit authority was introduced."
+      ]
+    },
+    {
+      "source_ref": "acceptance:negative:6",
+      "status": "SATISFIED",
+      "evidence": [
+        "PR #1281 merged at 1755a7a68536aa709c00716906f0c9de485d8eb6 after eight relevant gates passed: Meme Alpha Runtime, Continuity Learning, API Agent Gateway, Full Architecture 1-7, Owner-Bound Daily Director Manual, Data Architecture, Storage Health and Automation Production Health.",
+        "Meme Alpha Runtime Gate run 35934558282 / job 107428564883 executed 94 tests PASS, including all P1 base regressions, 8-Ball, HoodStack and seven independent-review temporal/hindsight tests.",
+        "Independent review proved observations and availability after frozen_at_utc fail closed, later evidence enters only through an explicitly later append-only supersession, backdated supersession is rejected, timestamps require exact UTC and nested outcome-derived discovery fields are rejected recursively.",
+        "Fresh-main readback contains the temporal guards and recursive discovery firewall in research/api_agent/meme_alpha/project_memory_p1.py, and fresh code search finds no remaining consumers of the retired duplicate scripts/api_agent/meme_alpha/project_memory_p1.py path.",
+        "Existing P2 binding tests passed in the same runtime gate, showing P1 hardening did not pregrant Project-to-CA binding or alter P2 semantics.",
+        "No new scanner, scheduler, standalone ledger, scoring engine, alert path, learning owner, JEV behavior, A/B/C threshold, market gate, model weight, API budget, portfolio/trading or prospective-credit authority was introduced."
+      ]
+    },
+    {
+      "source_ref": "acceptance:negative:7",
+      "status": "SATISFIED",
+      "evidence": [
+        "PR #1281 merged at 1755a7a68536aa709c00716906f0c9de485d8eb6 after eight relevant gates passed: Meme Alpha Runtime, Continuity Learning, API Agent Gateway, Full Architecture 1-7, Owner-Bound Daily Director Manual, Data Architecture, Storage Health and Automation Production Health.",
+        "Meme Alpha Runtime Gate run 35934558282 / job 107428564883 executed 94 tests PASS, including all P1 base regressions, 8-Ball, HoodStack and seven independent-review temporal/hindsight tests.",
+        "Independent review proved observations and availability after frozen_at_utc fail closed, later evidence enters only through an explicitly later append-only supersession, backdated supersession is rejected, timestamps require exact UTC and nested outcome-derived discovery fields are rejected recursively.",
+        "Fresh-main readback contains the temporal guards and recursive discovery firewall in research/api_agent/meme_alpha/project_memory_p1.py, and fresh code search finds no remaining consumers of the retired duplicate scripts/api_agent/meme_alpha/project_memory_p1.py path.",
+        "Existing P2 binding tests passed in the same runtime gate, showing P1 hardening did not pregrant Project-to-CA binding or alter P2 semantics.",
+        "No new scanner, scheduler, standalone ledger, scoring engine, alert path, learning owner, JEV behavior, A/B/C threshold, market gate, model weight, API budget, portfolio/trading or prospective-credit authority was introduced."
+      ]
+    },
+    {
+      "source_ref": "authority:allowed_change_scope",
+      "status": "SATISFIED",
+      "evidence": [
+        "PR #1281 merged at 1755a7a68536aa709c00716906f0c9de485d8eb6 after eight relevant gates passed: Meme Alpha Runtime, Continuity Learning, API Agent Gateway, Full Architecture 1-7, Owner-Bound Daily Director Manual, Data Architecture, Storage Health and Automation Production Health.",
+        "Meme Alpha Runtime Gate run 35934558282 / job 107428564883 executed 94 tests PASS, including all P1 base regressions, 8-Ball, HoodStack and seven independent-review temporal/hindsight tests.",
+        "Independent review proved observations and availability after frozen_at_utc fail closed, later evidence enters only through an explicitly later append-only supersession, backdated supersession is rejected, timestamps require exact UTC and nested outcome-derived discovery fields are rejected recursively.",
+        "Fresh-main readback contains the temporal guards and recursive discovery firewall in research/api_agent/meme_alpha/project_memory_p1.py, and fresh code search finds no remaining consumers of the retired duplicate scripts/api_agent/meme_alpha/project_memory_p1.py path.",
+        "Existing P2 binding tests passed in the same runtime gate, showing P1 hardening did not pregrant Project-to-CA binding or alter P2 semantics.",
+        "No new scanner, scheduler, standalone ledger, scoring engine, alert path, learning owner, JEV behavior, A/B/C threshold, market gate, model weight, API budget, portfolio/trading or prospective-credit authority was introduced."
+      ]
+    },
+    {
+      "source_ref": "authority:forbidden_changes",
+      "status": "SATISFIED",
+      "evidence": [
+        "PR #1281 merged at 1755a7a68536aa709c00716906f0c9de485d8eb6 after eight relevant gates passed: Meme Alpha Runtime, Continuity Learning, API Agent Gateway, Full Architecture 1-7, Owner-Bound Daily Director Manual, Data Architecture, Storage Health and Automation Production Health.",
+        "Meme Alpha Runtime Gate run 35934558282 / job 107428564883 executed 94 tests PASS, including all P1 base regressions, 8-Ball, HoodStack and seven independent-review temporal/hindsight tests.",
+        "Independent review proved observations and availability after frozen_at_utc fail closed, later evidence enters only through an explicitly later append-only supersession, backdated supersession is rejected, timestamps require exact UTC and nested outcome-derived discovery fields are rejected recursively.",
+        "Fresh-main readback contains the temporal guards and recursive discovery firewall in research/api_agent/meme_alpha/project_memory_p1.py, and fresh code search finds no remaining consumers of the retired duplicate scripts/api_agent/meme_alpha/project_memory_p1.py path.",
+        "Existing P2 binding tests passed in the same runtime gate, showing P1 hardening did not pregrant Project-to-CA binding or alter P2 semantics.",
+        "No new scanner, scheduler, standalone ledger, scoring engine, alert path, learning owner, JEV behavior, A/B/C threshold, market gate, model weight, API budget, portfolio/trading or prospective-credit authority was introduced."
+      ]
+    },
+    {
+      "source_ref": "post_fix_gate",
+      "status": "SATISFIED",
+      "evidence": [
+        "PR #1281 merged at 1755a7a68536aa709c00716906f0c9de485d8eb6 after eight relevant gates passed: Meme Alpha Runtime, Continuity Learning, API Agent Gateway, Full Architecture 1-7, Owner-Bound Daily Director Manual, Data Architecture, Storage Health and Automation Production Health.",
+        "Meme Alpha Runtime Gate run 35934558282 / job 107428564883 executed 94 tests PASS, including all P1 base regressions, 8-Ball, HoodStack and seven independent-review temporal/hindsight tests.",
+        "Independent review proved observations and availability after frozen_at_utc fail closed, later evidence enters only through an explicitly later append-only supersession, backdated supersession is rejected, timestamps require exact UTC and nested outcome-derived discovery fields are rejected recursively.",
+        "Fresh-main readback contains the temporal guards and recursive discovery firewall in research/api_agent/meme_alpha/project_memory_p1.py, and fresh code search finds no remaining consumers of the retired duplicate scripts/api_agent/meme_alpha/project_memory_p1.py path.",
+        "Existing P2 binding tests passed in the same runtime gate, showing P1 hardening did not pregrant Project-to-CA binding or alter P2 semantics.",
+        "No new scanner, scheduler, standalone ledger, scoring engine, alert path, learning owner, JEV behavior, A/B/C threshold, market gate, model weight, API budget, portfolio/trading or prospective-credit authority was introduced."
+      ]
+    }
+  ],
+  "gaps": [],
+  "authority": "CLOSURE_GATE_ONLY_NO_MARKET_OR_PORTFOLIO_AUTHORITY",
+  "receipt_sha256": "13371ca6f8c88ecbc79c12ba6c1868c91a6f83df1b3ab6d4c12ebf64da87773e"
+}
