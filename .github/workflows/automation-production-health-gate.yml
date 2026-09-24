@@ -33,7 +33,7 @@ jobs:
         with:
           python-version: '3.12'
       - name: Install test dependency
-        run: python -m pip install --disable-pip-version-check pytest
+        run: python -m pip install --disable-pip-version-check pytest 'pandas>=2.2,<3'
       - name: Compile health, remediation and handoff code
         run: |
           python -m py_compile \
@@ -60,16 +60,14 @@ jobs:
             --repo-root . \
             --base-ref "origin/${{ github.base_ref }}" \
             --head-ref HEAD
-      - name: Prove critical governance tests are collected
+      - name: Prove repository tests are globally collectable
         shell: bash
         run: |
-          python -m pytest --collect-only --import-mode=importlib -q tests/governance tests/lib > /tmp/critical-test-collection.txt
-          cat /tmp/critical-test-collection.txt
+          python -m pytest --collect-only --import-mode=importlib -q tests | tee /tmp/repository-test-collection.txt
           python scripts/governance/check_test_collection_truth.py \
             --repo-root . \
-            --collection-file /tmp/critical-test-collection.txt \
-            --root tests/governance \
-            --root tests/lib
+            --collection-file /tmp/repository-test-collection.txt \
+            --root tests
       - name: Execute critical governance tests
         run: python -m pytest -q --import-mode=importlib tests/governance tests/lib
       - name: Validate main writer configuration
