@@ -1,0 +1,19 @@
+{
+  "contract": "CODEX_POST_FIX_VERIFICATION_SPECS_v1",
+  "authority": "DETERMINISTIC_POST_FIX_VERIFICATION_ONLY",
+  "candidates": [
+    {
+      "candidate_id": "codex-research-completion-reconciliation-v1",
+      "predicates": [
+        {
+          "kind": "N_CONSECUTIVE_SUCCESSFUL_RUNS",
+          "workflow": "remediation-maturation.yml",
+          "count": 2
+        },
+        {
+          "kind": "NO_MERGED_RESEARCH_ZOMBIES"
+        }
+      ]
+    }
+  ]
+}
