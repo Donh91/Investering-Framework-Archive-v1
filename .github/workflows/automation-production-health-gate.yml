@@ -63,7 +63,7 @@ jobs:
       - name: Prove repository tests are globally collectable
         shell: bash
         run: |
-          python -m pytest --collect-only --import-mode=importlib -q tests > /tmp/repository-test-collection.txt
+          python -m pytest --collect-only --import-mode=importlib -q tests | tee /tmp/repository-test-collection.txt
           python scripts/governance/check_test_collection_truth.py \
             --repo-root . \
             --collection-file /tmp/repository-test-collection.txt \
