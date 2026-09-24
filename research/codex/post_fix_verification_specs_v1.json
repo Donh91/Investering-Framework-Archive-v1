@@ -21,7 +21,8 @@
         {
           "kind": "N_CONSECUTIVE_SUCCESSFUL_RUNS",
           "workflow": "operations-dashboard.yml",
-          "count": 2
+          "count": 2,
+          "after_sha": "59cebf63bf6bdc44f00358346d5c1b4b7f3a64d5"
         },
         {
           "kind": "JSON_PATH_EQUALS",
@@ -44,6 +45,6 @@
       ]
     }
   ],
-  "contract_revision": "1.1.0",
-  "verification_note": "Only explicitly machine-verifiable gates are listed. Machine predicates are necessary but not sufficient where Mission Convergence applies; semantic and sample-size research gates remain human/AI reviewed and are never inferred from a green workflow."
+  "contract_revision": "1.2.0",
+  "verification_note": "Only explicitly machine-verifiable gates are listed. N_CONSECUTIVE_SUCCESSFUL_RUNS may declare after_sha to reset evidence after a follow-up repair; the anchor must descend from the task merge. Machine predicates are necessary but not sufficient where Mission Convergence applies; semantic and sample-size research gates remain human/AI reviewed and are never inferred from a green workflow."
 }
