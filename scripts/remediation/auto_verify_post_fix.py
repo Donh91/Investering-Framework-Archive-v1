@@ -157,7 +157,7 @@ def verify(
             if convergence is None:
                 checks.append({
                     "kind": "MISSION_CONVERGENCE",
-                    "pass": false,
+                    "pass": False,
                     "evidence": "MISSION_CONVERGENCE_REQUIRED",
                 })
                 report["blocked"].append({"candidate_id": candidate_id, "checks": checks})
