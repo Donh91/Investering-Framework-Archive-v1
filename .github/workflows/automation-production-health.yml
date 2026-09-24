@@ -57,7 +57,8 @@ jobs:
           python scripts/health/automation_health_resolution.py record \
             --repo-root . \
             --run-id "$GITHUB_RUN_ID" \
-            --run-attempt "$GITHUB_RUN_ATTEMPT"
+            --run-attempt "$GITHUB_RUN_ATTEMPT" \
+            --head-sha "$(git rev-parse HEAD)"
           python scripts/health/automation_health_resolution.py resolve \
             --repo-root . \
             --run-id "$GITHUB_RUN_ID"
