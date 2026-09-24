@@ -165,6 +165,20 @@ class RemediationMaturationTests(unittest.TestCase):
         row2 = build(root)['items'][0]
         self.assertEqual(row2['state'], 'IN_REMEDIATION')
 
+    def test_all_research_transition_receipts_have_valid_self_hash(self):
+        repo = Path(__file__).resolve().parents[2]
+        root = repo / 'research/codex/transitions'
+        checked = 0
+        for path in sorted(root.glob('*.json')):
+            data = json.loads(path.read_text(encoding='utf-8'))
+            if data.get('contract') != 'CODEX_RESEARCH_TRANSITION_RECEIPT_v1':
+                continue
+            checked += 1
+            declared = str(data.get('receipt_sha256') or '')
+            actual = canonical_hash({k: v for k, v in data.items() if k != 'receipt_sha256'})
+            self.assertEqual(declared, actual, path.relative_to(repo).as_posix())
+        self.assertGreater(checked, 0)
+
     def test_no_automatic_code_or_merge(self):
         root = self.make_repo({'workflow':'daily.yml','scheduled':True,'cron_count':5,'findings':['LATEST_RUN_FAILED'],'live':{'failure_streak':1}})
         out = build(root)
