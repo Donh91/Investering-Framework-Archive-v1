@@ -15,6 +15,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from scripts.remediation.write_codex_research_completion_receipt import build_completion_receipt
+from scripts.remediation.mission_convergence import completion_requires_convergence, validate_receipt as validate_convergence_receipt
 
 SPEC_CONTRACT = "CODEX_POST_FIX_VERIFICATION_SPECS_v1"
 
@@ -151,6 +152,21 @@ def verify(
             int(task.get("pr_number") or 0),
             evidence,
         )
+        if completion_requires_convergence(receipt):
+            convergence = validate_convergence_receipt(repo_root, task, receipt)
+            if convergence is None:
+                checks.append({
+                    "kind": "MISSION_CONVERGENCE",
+                    "pass": False,
+                    "evidence": "MISSION_CONVERGENCE_REQUIRED",
+                })
+                report["blocked"].append({"candidate_id": candidate_id, "checks": checks})
+                continue
+            checks.append({
+                "kind": "MISSION_CONVERGENCE",
+                "pass": true,
+                "evidence": f"receipt_sha256={convergence.get('receipt_sha256')}",
+            })
         if write:
             completion_path.parent.mkdir(parents=True, exist_ok=True)
             completion_path.write_text(json.dumps(receipt, indent=2, sort_keys=True) + "\n", encoding="utf-8")
