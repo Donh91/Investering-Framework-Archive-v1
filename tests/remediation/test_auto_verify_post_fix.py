@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import subprocess
 from pathlib import Path
+from unittest.mock import patch
 
 from scripts.remediation.auto_verify_post_fix import verify
 
@@ -53,7 +54,8 @@ def test_auto_verifier_writes_completion_only_when_all_predicates_pass(tmp_path:
         {"id": 2, "status": "completed", "conclusion": "success", "head_sha": merge_sha, "created_at": "2026-09-24T12:00:00Z"},
         {"id": 1, "status": "completed", "conclusion": "success", "head_sha": merge_sha, "created_at": "2026-09-24T11:00:00Z"},
     ]
-    report = verify(tmp_path, spec_path, lambda workflow: runs)
+    with patch("scripts.remediation.auto_verify_post_fix.completion_requires_convergence", return_value=False):
+        report = verify(tmp_path, spec_path, lambda workflow: runs)
     assert [row["candidate_id"] for row in report["verified"]] == [candidate_id]
     completion = json.loads((tmp_path / "research/codex/completions/candidate-a.json").read_text())
     assert completion["status"] == "VERIFIED"
@@ -84,3 +86,36 @@ def test_auto_verifier_does_not_write_on_failed_predicate(tmp_path: Path):
     report = verify(tmp_path, spec_path, lambda workflow: runs)
     assert report["blocked"]
     assert not (tmp_path / "research/codex/completions/candidate-b.json").exists()
+
+
+def test_auto_verifier_blocks_machine_gate_without_required_convergence(tmp_path: Path):
+    git(tmp_path, "init")
+    git(tmp_path, "config", "user.name", "test")
+    git(tmp_path, "config", "user.email", "test@example.com")
+    (tmp_path / "marker.txt").write_text("base\n")
+    git(tmp_path, "add", ".")
+    git(tmp_path, "commit", "-m", "base")
+    merge_sha = git(tmp_path, "rev-parse", "HEAD")
+    task = {
+        "candidate_id": "candidate-c", "source_type": "RESEARCH_INTAKE", "state": "POST_FIX_OBSERVATION",
+        "signature": "ghi", "candidate_sha256": "c", "task_contract_sha256": "t",
+        "post_fix_gate": "TEST_GATE", "merge_commit_sha": merge_sha, "pr_number": 9,
+    }
+    (tmp_path / "LATEST_CODEX_EXECUTION_STATE.json").write_text(json.dumps({"tasks": [task]}))
+    specs = {"contract": "CODEX_POST_FIX_VERIFICATION_SPECS_v1", "candidates": [{
+        "candidate_id": "candidate-c",
+        "predicates": [{"kind": "N_CONSECUTIVE_SUCCESSFUL_RUNS", "workflow": "x.yml", "count": 1}],
+    }]}
+    spec_path = tmp_path / "specs.json"
+    spec_path.write_text(json.dumps(specs))
+    runs = [{"id": 1, "status": "completed", "conclusion": "success", "head_sha": merge_sha, "created_at": "2026-09-24T11:00:00Z"}]
+    with patch("scripts.remediation.auto_verify_post_fix.completion_requires_convergence", return_value=True), \
+         patch("scripts.remediation.auto_verify_post_fix.validate_convergence_receipt", return_value=None):
+        report = verify(tmp_path, spec_path, lambda workflow: runs)
+    assert report["verified"] == []
+    assert report["blocked"][0]["checks"][-1] == {
+        "kind": "MISSION_CONVERGENCE",
+        "pass": False,
+        "evidence": "MISSION_CONVERGENCE_REQUIRED",
+    }
+    assert not (tmp_path / "research/codex/completions/candidate-c.json").exists()
