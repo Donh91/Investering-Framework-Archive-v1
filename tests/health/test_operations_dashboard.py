@@ -46,6 +46,18 @@ class OperationsDashboardTests(unittest.TestCase):
             self.assertEqual(row['semantic_status'],'DEGRADED')
             self.assertEqual(row['execution_status'],'PASS')
             self.assertEqual(row['reason'],'SEMANTIC_STATUS_DEGRADED')
+
+    def test_owner_already_analyzed_skip_remains_expected_green(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);self.base_repo(root)
+            out=root/'research/api_agent/outputs/daily/2026/08/04/121000/DAILY_DIRECTOR_OUTPUT.json'
+            value=json.loads(out.read_text());value['status']='BLOCKED';value['uncertainties']=['SKIPPED_OWNER_RUN_ALREADY_ANALYZED'];out.write_text(json.dumps(value,sort_keys=True)+'\n')
+            receipt=out.with_name('DAILY_DIRECTOR_RECEIPT.json');receipt_value=json.loads(receipt.read_text());receipt_value['status']='SKIPPED_OWNER_RUN_ALREADY_ANALYZED';receipt_value['output_hash']=module.sha256_path(out);receipt.write_text(json.dumps(receipt_value,sort_keys=True)+'\n')
+            handoff=json.loads((root/'LATEST_HANDOFF.json').read_text());handoff['pointers']['latest_director_output']['sha256']=module.sha256_path(out);(root/'LATEST_HANDOFF.json').write_text(json.dumps(handoff)+'\n')
+            row=module.build_dashboard(root,datetime(2026,8,4,13,0,tzinfo=UTC))['systems']['openai_daily_director']
+            self.assertEqual(row['status'],'GREEN')
+            self.assertEqual(row['execution_status'],'SKIPPED_OWNER_RUN_ALREADY_ANALYZED')
+            self.assertEqual(row['reason'],'EXPECTED_SKIP_OWNER_RUN_ALREADY_ANALYZED')
     def test_hash_mismatch_is_red(self):
         with tempfile.TemporaryDirectory() as tmp:
             root=Path(tmp);self.base_repo(root);handoff=json.loads((root/'LATEST_HANDOFF.json').read_text());handoff['pointers']['latest_capture']['sha256']='0'*64;(root/'LATEST_HANDOFF.json').write_text(json.dumps(handoff)+'\n');self.assertEqual(module.build_dashboard(root,datetime(2026,8,4,13,0,tzinfo=UTC))['systems']['daily_capture']['status'],'RED')
