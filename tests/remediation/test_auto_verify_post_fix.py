@@ -88,6 +88,36 @@ def test_auto_verifier_does_not_write_on_failed_predicate(tmp_path: Path):
     assert not (tmp_path / "research/codex/completions/candidate-b.json").exists()
 
 
+def test_auto_verifier_accepts_valid_required_convergence(tmp_path: Path):
+    git(tmp_path, "init")
+    git(tmp_path, "config", "user.name", "test")
+    git(tmp_path, "config", "user.email", "test@example.com")
+    (tmp_path / "marker.txt").write_text("base\\n")
+    git(tmp_path, "add", ".")
+    git(tmp_path, "commit", "-m", "base")
+    merge_sha = git(tmp_path, "rev-parse", "HEAD")
+    task = {
+        "candidate_id": "candidate-converged", "source_type": "RESEARCH_INTAKE", "state": "POST_FIX_OBSERVATION",
+        "signature": "conv", "candidate_sha256": "c", "task_contract_sha256": "t",
+        "post_fix_gate": "TEST_GATE", "merge_commit_sha": merge_sha, "pr_number": 10,
+    }
+    (tmp_path / "LATEST_CODEX_EXECUTION_STATE.json").write_text(json.dumps({"tasks": [task]}))
+    spec_path = tmp_path / "specs.json"
+    spec_path.write_text(json.dumps({"contract": "CODEX_POST_FIX_VERIFICATION_SPECS_v1", "candidates": [{
+        "candidate_id": "candidate-converged",
+        "predicates": [{"kind": "N_CONSECUTIVE_SUCCESSFUL_RUNS", "workflow": "x.yml", "count": 1}],
+    }]}))
+    runs = [{"id": 1, "status": "completed", "conclusion": "success", "head_sha": merge_sha, "created_at": "2026-09-24T11:00:00Z"}]
+    with patch("scripts.remediation.auto_verify_post_fix.completion_requires_convergence", return_value=True), \\
+         patch("scripts.remediation.auto_verify_post_fix.validate_convergence_receipt", return_value={"receipt_sha256": "abc"}):
+        report = verify(tmp_path, spec_path, lambda workflow: runs)
+    assert [row["candidate_id"] for row in report["verified"]] == ["candidate-converged"]
+    assert report["verified"][0]["checks"][-1] == {
+        "kind": "MISSION_CONVERGENCE", "pass": True, "evidence": "receipt_sha256=abc"
+    }
+    assert (tmp_path / "research/codex/completions/candidate-converged.json").exists()
+
+
 def test_auto_verifier_blocks_machine_gate_without_required_convergence(tmp_path: Path):
     git(tmp_path, "init")
     git(tmp_path, "config", "user.name", "test")
