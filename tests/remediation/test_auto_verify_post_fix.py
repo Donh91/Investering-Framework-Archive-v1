@@ -108,8 +108,10 @@ def test_auto_verifier_accepts_valid_required_convergence(tmp_path: Path):
         "predicates": [{"kind": "N_CONSECUTIVE_SUCCESSFUL_RUNS", "workflow": "x.yml", "count": 1}],
     }]}))
     runs = [{"id": 1, "status": "completed", "conclusion": "success", "head_sha": merge_sha, "created_at": "2026-09-24T11:00:00Z"}]
-    with patch("scripts.remediation.auto_verify_post_fix.completion_requires_convergence", return_value=True), \\
-         patch("scripts.remediation.auto_verify_post_fix.validate_convergence_receipt", return_value={"receipt_sha256": "abc"}):
+    with (
+        patch("scripts.remediation.auto_verify_post_fix.completion_requires_convergence", return_value=True),
+        patch("scripts.remediation.auto_verify_post_fix.validate_convergence_receipt", return_value={"receipt_sha256": "abc"}),
+    ):
         report = verify(tmp_path, spec_path, lambda workflow: runs)
     assert [row["candidate_id"] for row in report["verified"]] == ["candidate-converged"]
     assert report["verified"][0]["checks"][-1] == {
