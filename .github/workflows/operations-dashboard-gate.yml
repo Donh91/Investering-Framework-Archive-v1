@@ -26,6 +26,15 @@ jobs:
         run: python -m py_compile scripts/health/build_operations_dashboard.py scripts/architecture/build_latest_handoff.py
       - name: Run simulations
         run: python -m unittest -v tests.health.test_operations_dashboard
+      - name: Validate event-driven health refresh wiring
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          text=Path('.github/workflows/operations-dashboard.yml').read_text(encoding='utf-8')
+          assert 'workflow_run:' in text
+          assert 'workflows: ["Automation Production Health"]' in text
+          assert "github.event.workflow_run.conclusion == 'success'" in text
+          PY
       - name: Build dashboard from repository state
         run: |
           python scripts/health/build_operations_dashboard.py \
