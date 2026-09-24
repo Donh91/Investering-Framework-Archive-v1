@@ -21,6 +21,16 @@ def protected(path: str) -> bool:
     return any(path.startswith(prefix) for prefix in PROTECTED_PREFIXES)
 
 
+def parse_entries(text: str) -> list[tuple[str, list[str]]]:
+    rows: list[tuple[str, list[str]]] = []
+    for raw in text.splitlines():
+        if not raw.strip():
+            continue
+        parts = raw.split("\t")
+        rows.append((parts[0], parts[1:]))
+    return rows
+
+
 def diff_entries(repo_root: Path, base_ref: str, head_ref: str) -> list[tuple[str, list[str]]]:
     proc = subprocess.run(
         ["git", "-C", str(repo_root), "diff", "--name-status", "-M", f"{base_ref}...{head_ref}"],
@@ -28,13 +38,17 @@ def diff_entries(repo_root: Path, base_ref: str, head_ref: str) -> list[tuple[st
         capture_output=True,
         check=True,
     )
-    rows: list[tuple[str, list[str]]] = []
-    for raw in proc.stdout.splitlines():
-        if not raw.strip():
-            continue
-        parts = raw.split("\t")
-        rows.append((parts[0], parts[1:]))
-    return rows
+    return parse_entries(proc.stdout)
+
+
+def cached_entries(repo_root: Path) -> list[tuple[str, list[str]]]:
+    proc = subprocess.run(
+        ["git", "-C", str(repo_root), "diff", "--cached", "--name-status", "-M"],
+        text=True,
+        capture_output=True,
+        check=True,
+    )
+    return parse_entries(proc.stdout)
 
 
 def violations(entries: list[tuple[str, list[str]]]) -> list[str]:
@@ -53,13 +67,19 @@ def check(repo_root: Path, base_ref: str, head_ref: str) -> list[str]:
     return violations(diff_entries(repo_root, base_ref, head_ref))
 
 
+def check_cached(repo_root: Path) -> list[str]:
+    return violations(cached_entries(repo_root))
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-root", type=Path, default=Path("."))
-    parser.add_argument("--base-ref", required=True)
+    mode = parser.add_mutually_exclusive_group(required=True)
+    mode.add_argument("--base-ref")
+    mode.add_argument("--cached", action="store_true")
     parser.add_argument("--head-ref", default="HEAD")
     args = parser.parse_args()
-    bad = check(args.repo_root, args.base_ref, args.head_ref)
+    bad = check_cached(args.repo_root) if args.cached else check(args.repo_root, args.base_ref, args.head_ref)
     if bad:
         print("APPEND_ONLY_EVIDENCE_VIOLATION")
         for row in bad:
