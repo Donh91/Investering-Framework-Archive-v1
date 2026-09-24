@@ -4,7 +4,7 @@
       "candidate_id": "codex-research-completion-reconciliation-v1",
       "checks": [
         {
-          "evidence": "remediation-maturation.yml: successful_runs=1/2 sampled_runs=36060739643:success,36060065561:failure",
+          "evidence": "remediation-maturation.yml: evidence_floor=40e2158c6a0855ca1c9b5d9dbf20bd92d364cc9a successful_runs=1/2 sampled_runs=36060739643:success,36060065561:failure",
           "kind": "N_CONSECUTIVE_SUCCESSFUL_RUNS",
           "pass": false
         },
@@ -19,9 +19,9 @@
       "candidate_id": "codex-operational-observability-pointer-truth-v1",
       "checks": [
         {
-          "evidence": "operations-dashboard.yml: successful_runs=2/2 sampled_runs=36050632101:success,35979561169:success",
+          "evidence": "operations-dashboard.yml: evidence_floor=59cebf63bf6bdc44f00358346d5c1b4b7f3a64d5 successful_runs=0/2 sampled_runs=",
           "kind": "N_CONSECUTIVE_SUCCESSFUL_RUNS",
-          "pass": true
+          "pass": false
         },
         {
           "evidence": "LATEST_OPERATIONS_DASHBOARD.json:consumer_receipt.status='PASS'",
@@ -37,16 +37,163 @@
           "evidence": "LATEST_OPERATIONS_DASHBOARD.json:source_status.automation_health='PASS'",
           "kind": "JSON_PATH_EQUALS",
           "pass": true
-        },
-        {
-          "evidence": "MISSION_CONVERGENCE_REQUIRED",
-          "kind": "MISSION_CONVERGENCE",
-          "pass": false
         }
       ]
     }
   ],
   "contract": "CODEX_POST_FIX_VERIFICATION_REPORT_v1",
+  "coverage": {
+    "machine_spec_configured": 2,
+    "machine_spec_unconfigured": 29,
+    "post_fix_total": 31
+  },
   "skipped": [],
+  "unconfigured": [
+    {
+      "candidate_id": "codex-automation-health-cadence-aware-staleness-v1",
+      "post_fix_gate": "TWO_CONSECUTIVE_AUTOMATION_HEALTH_RUNS_WITH_CADENCE_CORRECT_WEEKLY_AND_DAILY_STALE_CLASSIFICATION",
+      "reason": "NO_MACHINE_VERIFICATION_SPEC"
+    },
+    {
+      "candidate_id": "codex-automation-health-workflow-pagination-v1",
+      "post_fix_gate": "TWO_CONSECUTIVE_AUTOMATION_HEALTH_RUNS_WITH_COMPLETE_REGISTRY_COUNT_AND_NO_PAGE_TRUNCATION_FALSE_POSITIVES",
+      "reason": "NO_MACHINE_VERIFICATION_SPEC"
+    },
+    {
+      "candidate_id": "codex-daily-director-directional-threshold-root-cause-v1",
+      "post_fix_gate": "ONE_PRODUCTION_SHAPE_PASS_PLUS_ONE_NATURAL_DAILY_DIRECTOR_PASS_WITH_NO_DIRECTIONAL_THRESHOLD_PARSE_ERROR",
+      "reason": "NO_MACHINE_VERIFICATION_SPEC"
+    },
+    {
+      "candidate_id": "codex-research-accepted-data-ping-lineage-v1",
+      "post_fix_gate": "CI plus main readback and one production-shaped lineage observation with no duplicate or fabricated accepted packet.",
+      "reason": "NO_MACHINE_VERIFICATION_SPEC"
+    },
+    {
+      "candidate_id": "codex-research-adaptive-cadence-sampling-independence-v1",
+      "post_fix_gate": "PROVENANCE_FIXTURE_PASS_PLUS_T6_INDEPENDENCE_NEGATIVE_CONTROL_PLUS_THREE_NATURAL_ADAPTIVE_CAPTURES_WITH_EXPLICIT_ORIGIN",
+      "reason": "NO_MACHINE_VERIFICATION_SPEC"
+    },
+    {
+      "candidate_id": "codex-research-audit-current-test-contracts-v1",
+      "post_fix_gate": "POSITIVE_AND_NEGATIVE_REGRESSIONS_PLUS_PRODUCTION_SHAPE_REPLAY_PLUS_CI_AND_MAIN_READBACK",
+      "reason": "NO_MACHINE_VERIFICATION_SPEC"
+    },
+    {
+      "candidate_id": "codex-research-audit-director-freshness-v1",
+      "post_fix_gate": "POSITIVE_AND_NEGATIVE_REGRESSIONS_PLUS_PRODUCTION_SHAPE_REPLAY_PLUS_CI_AND_MAIN_READBACK",
+      "reason": "NO_MACHINE_VERIFICATION_SPEC"
+    },
+    {
+      "candidate_id": "codex-research-confidence-binding-calibration-v1",
+      "post_fix_gate": "CONFIDENCE_BINDING_FIXTURE_PASS_PLUS_MINIMUM_SAMPLE_REMAINS_LOW_SAMPLE_UNTIL_NATURAL_OUTCOMES",
+      "reason": "NO_MACHINE_VERIFICATION_SPEC"
+    },
+    {
+      "candidate_id": "codex-research-copper-gold-event-study-knowledge-time-join-v1",
+      "post_fix_gate": "FOCUSED_REGRESSION_PASS_PLUS_E1X_RT_A06B_PASS_PLUS_V2_BYTE_READBACK",
+      "reason": "NO_MACHINE_VERIFICATION_SPEC"
+    },
+    {
+      "candidate_id": "codex-research-etf-history-pack-v1-1-row-integrity-v1",
+      "post_fix_gate": "V1_BYTE_READBACK_PLUS_V1_1_SCHEMA_TOTAL_SESSION_VALIDATION_PLUS_FOCUSED_REGRESSION_PASS",
+      "reason": "NO_MACHINE_VERIFICATION_SPEC"
+    },
+    {
+      "candidate_id": "codex-research-evidence-gap-mixed-capability-routing-v1",
+      "post_fix_gate": "CI and mixed-capability positive and negative fixtures must pass, followed by registry readback preserving both existing route classes.",
+      "reason": "NO_MACHINE_VERIFICATION_SPEC"
+    },
+    {
+      "candidate_id": "codex-research-fomo-robinhood-runtime-failclosed-v1",
+      "post_fix_gate": "FOMO_FAILCLOSED_FIXTURES_PASS_PLUS_FRESH_MAIN_READBACK_PLUS_SOL_INDEPENDENT_REVIEW_BEFORE_ANY_RUNTIME_WIRING",
+      "reason": "NO_MACHINE_VERIFICATION_SPEC"
+    },
+    {
+      "candidate_id": "codex-research-forecast-error-taxonomy-v1",
+      "post_fix_gate": "FAILURE_TAXONOMY_FIXTURES_PASS_PLUS_ORIGINAL_HIT_MISS_LEDGER_RECONCILES_UNCHANGED",
+      "reason": "NO_MACHINE_VERIFICATION_SPEC"
+    },
+    {
+      "candidate_id": "codex-research-intraday-retired-entry-dependency-v1",
+      "post_fix_gate": "NEGATIVE_RETIRED_ENTRY_AUTHORITY_TEST_PLUS_POSITIVE_NON_DEAD_RESEARCH_ELIGIBILITY_TEST_PLUS_MAIN_READBACK",
+      "reason": "NO_MACHINE_VERIFICATION_SPEC"
+    },
+    {
+      "candidate_id": "codex-research-live-breadth-stablecoin-exclusion-integrity-v1",
+      "post_fix_gate": "STABLECOIN_TAXONOMY_FIXTURE_PASS_PLUS_ONE_NATURAL_BREADTH_CAPTURE_WITH_ZERO_KNOWN_STABLE_SYMBOLS_IN_CONSTITUENTS",
+      "reason": "NO_MACHINE_VERIFICATION_SPEC"
+    },
+    {
+      "candidate_id": "codex-research-macro-series-freshness-propagation-v1",
+      "post_fix_gate": "MIXED_FRESHNESS_FIXTURE_PASS_PLUS_ONE_NATURAL_MORNING_ANCHOR_WITH_PER_SERIES_QUALITY_READBACK",
+      "reason": "NO_MACHINE_VERIFICATION_SPEC"
+    },
+    {
+      "candidate_id": "codex-research-outcome-censor-reason-observability-v1",
+      "post_fix_gate": "SUMMARY_RECONCILES_EXACTLY_TO_IMMUTABLE_OUTCOMES_PLUS_ONE_NATURAL_HEALTH_PUBLICATION",
+      "reason": "NO_MACHINE_VERIFICATION_SPEC"
+    },
+    {
+      "candidate_id": "codex-research-pdlt-discovery-completed-candle-anchor-v1",
+      "post_fix_gate": "FOCUSED_REGRESSION_PASS_PLUS_E1X_RT_A07_PASS_PLUS_PDLT_RUNTIME_GATE_GREEN",
+      "reason": "NO_MACHINE_VERIFICATION_SPEC"
+    },
+    {
+      "candidate_id": "codex-research-prospective-p0-validity-repair-v1",
+      "post_fix_gate": "FULL_P0_NEGATIVE_CONTROL_PASS_THEN_NEW_FUTURE_FLOOR_AFTER_COMPLETE_POST_REPAIR_OWNERS",
+      "reason": "NO_MACHINE_VERIFICATION_SPEC"
+    },
+    {
+      "candidate_id": "codex-research-shadow-registry-runtime-integrity-v1",
+      "post_fix_gate": "SHADOW_SCHEMA_NEGATIVE_CONTROL_PASS_PLUS_EVALUATOR_READINESS_NEGATIVE_CONTROL_PLUS_SAME_WEEK_IMMUTABILITY_REPLAY_PASS_PLUS_COMPLIANT_WRITER_ROUTE_PLUS_CI_AND_MAIN_READBACK",
+      "reason": "NO_MACHINE_VERIFICATION_SPEC"
+    },
+    {
+      "candidate_id": "codex-research-skill-quality-runtime-harness-v1",
+      "post_fix_gate": "OFFLINE_RUNTIME_HARNESS_REGRESSION_SUITE_PASS_PLUS_BOUNDED_REAL_CODEX_SMOKE_WHEN_AVAILABLE_PLUS_MAIN_READBACK_WITH_NO_UNCALIBRATED_JUDGE_RELEASE_AUTHORITY",
+      "reason": "NO_MACHINE_VERIFICATION_SPEC"
+    },
+    {
+      "candidate_id": "codex-research-skill-validator-completeness-v2",
+      "post_fix_gate": "FOCUSED_REGRESSION_PASS_AND_EXACT_MAIN_READBACK; CURRENT_METADATA_DRIFT_MAY_REMAIN_EXPLICITLY_FAILING_UNTIL_SEPARATELY_GOVERNED_RECONCILIATION",
+      "reason": "NO_MACHINE_VERIFICATION_SPEC"
+    },
+    {
+      "candidate_id": "codex-research-t10-forward-lineage-completeness-v1",
+      "post_fix_gate": "FORWARD_LINEAGE_REPORT_RECONCILES_TO_OFFICIAL_ROWS_AND_PRESERVES_W28_UNSCORED",
+      "reason": "NO_MACHINE_VERIFICATION_SPEC"
+    },
+    {
+      "candidate_id": "codex-research-t5-fnp-prospective-row-instrumentation-v1",
+      "post_fix_gate": "PROSPECTIVE_ROW_FIXTURE_PASS_PLUS_THREE_NATURAL_FRAMEWORK_LEARNING_RUNS_WITH_NO_INVALID_OR_DUPLICATE_T5_ROWS",
+      "reason": "NO_MACHINE_VERIFICATION_SPEC"
+    },
+    {
+      "candidate_id": "codex-research-t8-multi-ping-delay-cost-v1",
+      "post_fix_gate": "PROSPECTIVE_T8_FIXTURE_PASS_PLUS_10_ELIGIBLE_STATE_CHANGES_BEFORE_VALUE_CONCLUSION",
+      "reason": "NO_MACHINE_VERIFICATION_SPEC"
+    },
+    {
+      "candidate_id": "codex-research-t9-action-compass-reproducibility-v1",
+      "post_fix_gate": "CONTROLLED_REPLAY_FIXTURE_PASS_PLUS_10_ELIGIBLE_REPLAYS_BEFORE_ANY_REPRODUCIBILITY_CONCLUSION",
+      "reason": "NO_MACHINE_VERIFICATION_SPEC"
+    },
+    {
+      "candidate_id": "codex-research-techdev-t7-calibration-reconciliation-v1",
+      "post_fix_gate": "T7_READOUT_RECONCILES_LATER_CANONICAL_CALIBRATION_WITH_NO_HISTORY_REWRITE",
+      "reason": "NO_MACHINE_VERIFICATION_SPEC"
+    },
+    {
+      "candidate_id": "codex-research-temporal-alignment-readout-v1",
+      "post_fix_gate": "TEMPORAL_ALIGNMENT_FIXTURES_PASS_WITH_ONLY_EXISTING_CONTRACT_THRESHOLDS",
+      "reason": "NO_MACHINE_VERIFICATION_SPEC"
+    },
+    {
+      "candidate_id": "codex-situation-room-daily-static-root-cause-v1",
+      "post_fix_gate": "ONE_NATURAL_SCHEDULED_RUN_PLUS_SITUATION_ROOM_OWNER_LIVE_GATE_PASS",
+      "reason": "NO_MACHINE_VERIFICATION_SPEC"
+    }
+  ],
   "verified": []
 }
