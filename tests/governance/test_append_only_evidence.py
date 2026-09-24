@@ -3,7 +3,7 @@ from __future__ import annotations
 import subprocess
 from pathlib import Path
 
-from scripts.governance.check_append_only_evidence import check
+from scripts.governance.check_append_only_evidence import check, check_cached
 
 
 def git(root: Path, *args: str) -> str:
@@ -68,3 +68,26 @@ def test_unrelated_file_change_is_allowed(tmp_path):
     path.write_text("ok\n")
     commit(root, "docs")
     assert check(root, base, "HEAD") == []
+
+
+def test_cached_new_receipt_is_allowed_but_cached_mutation_is_rejected(tmp_path):
+    root, _ = setup_repo(tmp_path)
+    new_path = root / "research/codex/completions/new.json"
+    new_path.parent.mkdir(parents=True)
+    new_path.write_text('{"v":1}\n')
+    git(root, "add", str(new_path.relative_to(root)))
+    assert check_cached(root) == []
+    git(root, "reset")
+    (root / "research/codex/transitions/abc.json").write_text('{"v":2}\n')
+    git(root, "add", "research/codex/transitions/abc.json")
+    assert check_cached(root)
+
+
+def test_direct_main_writers_enforce_cached_append_only_guard():
+    root = Path(__file__).parents[2]
+    for rel in (
+        ".github/workflows/remediation-maturation.yml",
+        ".github/workflows/automation-production-health.yml",
+    ):
+        text = (root / rel).read_text(encoding="utf-8")
+        assert "check_append_only_evidence.py --repo-root . --cached" in text
