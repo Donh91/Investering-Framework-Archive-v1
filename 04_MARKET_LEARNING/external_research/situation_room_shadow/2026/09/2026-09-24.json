@@ -1,0 +1,54 @@
+{
+  "authority": "SHADOW_RESEARCH_ONLY_NON_CANONICAL",
+  "authority_firewall": {
+    "canonical_effect": false,
+    "execution_authority": false,
+    "market_state_effect": false,
+    "portfolio_effect": false,
+    "topup_authority": false
+  },
+  "contract": "SITUATION_ROOM_VERIFICATION_SHADOW_BRIDGE_v1",
+  "generated_at_utc": "2026-09-24T11:47:32Z",
+  "observation_date_utc": "2026-09-24",
+  "pending_verification": [
+    {
+      "canonical_effect": false,
+      "detection_time_utc": "2026-09-24T11:47:01Z",
+      "event_time_utc": "2026-09-24T06:00:23.011000Z",
+      "market_state_effect": false,
+      "portfolio_effect": false,
+      "shadow_admission": "NOT_ADMITTED_PENDING_VERIFICATION",
+      "shadow_id": "SRSH_e11b835a1ba7c0e8a3eb",
+      "source": "SITUATION_ROOM",
+      "source_receipt": {
+        "bytes": 110121,
+        "error_class": null,
+        "fetched_at_utc": "2026-09-24T11:47:02Z",
+        "http_status": 200,
+        "role": "DISCOVERY_ONLY",
+        "sha256": "9cdd5420f0fcfb393062003f63e1ba2083e5acd0cb515d278972b3e07c79a3b4",
+        "source_id": "SITUATION_ROOM",
+        "status": "PASS",
+        "url": "https://situationroom.space/briefing/2026-09-24"
+      },
+      "title": "StarkWare slashes quantum-safe Bitcoin transaction cost 79 percent \u2014 Situation Room",
+      "url": "https://situationroom.space/briefing/2026-09-24",
+      "verification_status": "PENDING_PRIMARY_VERIFICATION"
+    }
+  ],
+  "source_owner_contract": "SITUATION_ROOM_DAILY_OWNER_v1",
+  "source_owner_path": "03_DAILY_CAPTURE_LOGS/catalyst_overlay/situation_room/2026/09/2026-09-24.json",
+  "source_run_id": "SRDO_b28acf98d2ee7fb4",
+  "status": "PENDING_VERIFICATION",
+  "verification_policy": {
+    "accepted_methods": [
+      "OWNER_PRIMARY_EVENT_TITLE_OVERLAP",
+      "SITUATION_ROOM_LINKED_PRIMARY_SOURCE"
+    ],
+    "automatic_admission_requires_primary_corroboration": true,
+    "minimum_shared_tokens": 2,
+    "minimum_title_overlap": 0.45,
+    "situation_room_is_discovery_only": true
+  },
+  "verified_shadow_context": []
+}
