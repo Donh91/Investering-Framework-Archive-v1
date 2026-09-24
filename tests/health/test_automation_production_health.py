@@ -782,3 +782,27 @@ def test_current_cfgi_terminal_audit_accepts_v2_paid_ledger() -> None:
     assert "HISTORICAL_ALTSEASON_CFGI_PAID_ATTEMPT_LEDGER_v2" in audit
     assert "ledger['cumulative_actual_credits_used']==10518" in audit
     assert "verified_prior_cumulative_actual_credits_used" in audit
+
+
+def test_askr_target_watcher_is_retired_after_verified_launch() -> None:
+    repo = Path(__file__).parents[2]
+    path = repo / ".github/workflows/askr-launch-sentinel.yml"
+    row = module.workflow_static(path)
+    text = path.read_text()
+    adapter = json.loads(
+        (repo / "research/api_agent/meme_alpha/MEME_ALPHA_ROBINHOOD_PONS_V2_SHADOW_ADAPTER_v1.json").read_text()
+    )
+    positive = adapter["frozen_regression_fixtures"]["positive"]
+    assert row["lifecycle_state"] == "RETIRED"
+    assert row["lifecycle_reason"] == "ASKR_LAUNCH_HISTORICALLY_VERIFIED_AND_GOVERNED_PONS_V2_ADAPTER_SUPERSEDES_TARGET_WATCHER"
+    assert row["scheduled"] is False
+    assert row["manual"] is True
+    assert "on:\n  workflow_dispatch:" in text
+    assert "on:\n  push:" not in text
+    assert adapter["learning"]["historical_askr_result"] == "MISS"
+    assert adapter["learning"]["post_repair_askr_result"] == "REGRESSION_PASS_NO_HISTORICAL_CREDIT"
+    assert positive["symbol"] == "ASKR"
+    assert positive["token_ca"].lower() == "0xa92768863a55d8a0591709f7f5e594a249d36ea3"
+    assert positive["launch_block"] == 66443556
+    assert positive["launch_tx"] == "0xa5ffe87bd1e9b6b91f84bb237c2d6408a7df39cb0651f85760004712074585f3"
+
