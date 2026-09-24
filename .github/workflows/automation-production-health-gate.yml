@@ -6,11 +6,16 @@ on:
       - '.github/workflows/**'
       - 'scripts/health/**'
       - 'scripts/remediation/**'
+      - 'scripts/governance/**'
       - 'scripts/architecture/**'
       - 'scripts/orchestration/build_framework_handoff_manifest.py'
       - 'research/codex/**'
       - '.agents/skills/codex-intake/**'
       - 'tests/health/**'
+      - 'tests/remediation/**'
+      - 'tests/governance/**'
+      - 'tests/lib/**'
+      - '09_SOURCE_QA/incidents/**'
   workflow_dispatch:
 
 permissions:
@@ -22,6 +27,8 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
@@ -35,11 +42,34 @@ jobs:
             scripts/health/build_architecture_health.py \
             scripts/health/build_operations_dashboard.py \
             scripts/health/check_writer_trigger_safety.py \
+            scripts/health/automation_health_resolution.py \
+            scripts/remediation/auto_verify_post_fix.py \
             scripts/remediation/merge_codex_research_intake.py \
             scripts/remediation/write_codex_research_transition_receipt.py \
             scripts/remediation/write_codex_research_completion_receipt.py \
+            scripts/governance/check_append_only_evidence.py \
+            scripts/governance/check_test_collection_truth.py \
             scripts/architecture/build_latest_handoff.py \
             scripts/orchestration/build_framework_handoff_manifest.py
+      - name: Enforce append-only evidence history
+        if: github.event_name == 'pull_request'
+        shell: bash
+        run: |
+          git fetch origin "${{ github.base_ref }}"
+          python scripts/governance/check_append_only_evidence.py \
+            --repo-root . \
+            --base-ref "origin/${{ github.base_ref }}" \
+            --head-ref HEAD
+      - name: Prove critical governance tests are collected
+        shell: bash
+        run: |
+          python -m pytest --collect-only --import-mode=importlib -q tests/governance tests/lib > /tmp/critical-test-collection.txt
+          cat /tmp/critical-test-collection.txt
+          python scripts/governance/check_test_collection_truth.py \
+            --repo-root . \
+            --collection-file /tmp/critical-test-collection.txt \
+            --root tests/governance \
+            --root tests/lib
       - name: Validate main writer configuration
         run: python scripts/health/check_writer_trigger_safety.py --workflow-root .github/workflows --output /tmp/writer-trigger-safety.json
       - name: Run health and Codex intake unit tests
@@ -52,7 +82,11 @@ jobs:
             tests/health/test_writer_trigger_safety_v2.py \
             tests/health/test_observer_and_orchestration_semantics.py \
             tests/health/test_codex_research_intake.py \
-            tests/health/test_canonical_automation_health_writer.py
+            tests/health/test_canonical_automation_health_writer.py \
+            tests/health/test_automation_health_resolution.py \
+            tests/remediation/test_auto_verify_post_fix.py \
+            tests/governance/test_append_only_evidence.py \
+            tests/governance/test_test_collection_truth.py
       - name: Run static repository inventory without API
         run: |
           python scripts/health/build_automation_health.py --workflow-root .github/workflows --json-output /tmp/automation-health.json --md-output /tmp/automation-health.md || code=$?
