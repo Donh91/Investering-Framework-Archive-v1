@@ -151,3 +151,45 @@ def test_auto_verifier_blocks_machine_gate_without_required_convergence(tmp_path
         "evidence": "MISSION_CONVERGENCE_REQUIRED",
     }
     assert not (tmp_path / "research/codex/completions/candidate-c.json").exists()
+
+
+def test_auto_verifier_surfaces_unconfigured_post_fix_debt(tmp_path: Path):
+    tasks = [
+        {
+            "candidate_id": "configured",
+            "state": "POST_FIX_OBSERVATION",
+            "post_fix_gate": "ONE_RUN",
+        },
+        {
+            "candidate_id": "semantic-only",
+            "state": "POST_FIX_OBSERVATION",
+            "post_fix_gate": "TEN_NATURAL_ROWS_PLUS_SEMANTIC_REVIEW",
+        },
+        {
+            "candidate_id": "done",
+            "state": "RESOLVED",
+            "post_fix_gate": "DONE",
+        },
+    ]
+    (tmp_path / "LATEST_CODEX_EXECUTION_STATE.json").write_text(json.dumps({"tasks": tasks}))
+    spec_path = tmp_path / "specs.json"
+    spec_path.write_text(json.dumps({
+        "contract": "CODEX_POST_FIX_VERIFICATION_SPECS_v1",
+        "candidates": [{
+            "candidate_id": "configured",
+            "predicates": [{"kind": "JSON_PATH_EQUALS", "path": "probe.json", "field": "ok", "value": True}],
+        }],
+    }))
+    (tmp_path / "probe.json").write_text(json.dumps({"ok": False}))
+    report = verify(tmp_path, spec_path, lambda workflow: [], write=False)
+    assert report["coverage"] == {
+        "post_fix_total": 2,
+        "machine_spec_configured": 1,
+        "machine_spec_unconfigured": 1,
+    }
+    assert report["unconfigured"] == [{
+        "candidate_id": "semantic-only",
+        "post_fix_gate": "TEN_NATURAL_ROWS_PLUS_SEMANTIC_REVIEW",
+        "reason": "NO_MACHINE_VERIFICATION_SPEC",
+    }]
+    assert report["blocked"][0]["candidate_id"] == "configured"
