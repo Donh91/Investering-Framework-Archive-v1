@@ -35,19 +35,36 @@ def write_new_json(path: Path, value: dict[str, Any]) -> bool:
     return True
 
 
-def record_status(repo_root: Path, run_id: int, run_attempt: int) -> Path:
+def record_status(repo_root: Path, run_id: int, run_attempt: int, head_sha: str = "") -> Path:
     health_path = repo_root / "research/architecture_health/LATEST_AUTOMATION_HEALTH.json"
     health = read_json(health_path)
     if not health or not health.get("generated_at_utc"):
         raise ValueError("AUTOMATION_HEALTH_UNAVAILABLE")
+    compact_findings = sorted({
+        f"{str(row.get('workflow') or '').strip()}:{str(finding).strip()}"
+        for row in health.get("workflows", [])
+        if isinstance(row, dict) and str(row.get("workflow") or "").strip()
+        for finding in row.get("findings", [])
+        if str(finding).strip()
+    })
     receipt: dict[str, Any] = {
         "contract": HISTORY_CONTRACT,
         "run_id": run_id,
         "run_attempt": run_attempt,
+        "head_sha": str(head_sha or "").strip(),
         "generated_at_utc": health.get("generated_at_utc"),
         "status": health.get("status"),
         "red_count": int(health.get("red_count") or 0),
         "amber_count": int(health.get("amber_count") or 0),
+        "workflow_count": int(health.get("workflow_count") or 0),
+        "registered_workflow_count": int(health.get("registered_workflow_count") or 0),
+        "scheduled_workflow_count": int(health.get("scheduled_workflow_count") or 0),
+        "api_error": health.get("api_error"),
+        "warnings": sorted(str(item) for item in health.get("warnings", []) if str(item)),
+        "findings": compact_findings,
+        "orphaned_registered_workflows": sorted(
+            str(item) for item in health.get("orphaned_registered_workflows", []) if str(item)
+        ),
         "source_path": "research/architecture_health/LATEST_AUTOMATION_HEALTH.json",
         "source_sha256": hashlib.sha256(health_path.read_bytes()).hexdigest(),
     }
@@ -131,12 +148,13 @@ def main() -> None:
     rec.add_argument("--repo-root", type=Path, default=Path("."))
     rec.add_argument("--run-id", type=int, required=True)
     rec.add_argument("--run-attempt", type=int, required=True)
+    rec.add_argument("--head-sha", default="")
     res = sub.add_parser("resolve")
     res.add_argument("--repo-root", type=Path, default=Path("."))
     res.add_argument("--run-id", type=int, required=True)
     args = parser.parse_args()
     if args.command == "record":
-        path = record_status(args.repo_root, args.run_id, args.run_attempt)
+        path = record_status(args.repo_root, args.run_id, args.run_attempt, args.head_sha)
         print(json.dumps({"status": "RECORDED", "path": path.relative_to(args.repo_root).as_posix()}, sort_keys=True))
     else:
         created = resolve_recovered(args.repo_root, args.run_id)

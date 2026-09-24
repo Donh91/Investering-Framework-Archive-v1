@@ -14,7 +14,32 @@ def write_health(root: Path, generated: str, red: int, amber: int = 0):
         "status": "AMBER" if amber else "GREEN",
         "red_count": red,
         "amber_count": amber,
+        "workflow_count": 178,
+        "registered_workflow_count": 202,
+        "scheduled_workflow_count": 41,
+        "api_error": None,
+        "warnings": [],
+        "orphaned_registered_workflows": [],
+        "workflows": [
+            {"workflow": "cycle-navigator-autonomous-calibration-loop.yml", "findings": []},
+            {"workflow": "situation-room-daily-static.yml", "findings": ["RECOVERING_AFTER_RECENT_FAILURES"]},
+        ],
     }) + "\n")
+
+
+def test_record_status_preserves_compact_machine_verification_evidence(tmp_path):
+    write_health(tmp_path, "2026-09-24T10:00:00Z", 0, 1)
+    path = record_status(tmp_path, 10, 1, "abc123")
+    row = json.loads(path.read_text())
+    assert row["head_sha"] == "abc123"
+    assert row["workflow_count"] == 178
+    assert row["registered_workflow_count"] == 202
+    assert row["scheduled_workflow_count"] == 41
+    assert row["api_error"] is None
+    assert row["warnings"] == []
+    assert row["findings"] == [
+        "situation-room-daily-static.yml:RECOVERING_AFTER_RECENT_FAILURES"
+    ]
 
 
 def test_two_zero_red_runs_resolve_health_incidents_without_mutation(tmp_path):
