@@ -61,4 +61,77 @@ class ExperimentLifecycleTest(unittest.TestCase):
                 self.assertEqual(row["controls"]["control_freeze_time_utc"],"2026-08-05T10:00:00Z");self.assertEqual(row["controls"]["always_wait"],"ALWAYS_WAIT");self.assertEqual(row["unit_contract_version"],"FORECAST_TARGET_UNITS_v2")
 
 
+    def test_same_candidate_identity_is_not_recreated_across_month_partitions(self):
+        with tempfile.TemporaryDirectory() as td:
+            repo = Path(td)
+            output = {"forecast_candidates": [pct_candidate()], "experiment_candidates": []}
+            run_engine(repo, output, context("2026-08-31T23:00:00Z", "aug-run"))
+            run_engine(repo, output, context("2026-09-01T01:00:00Z", "sep-run"))
+            candidate_files = list((repo / "research/experiment_lifecycle/candidates").rglob("*.json"))
+            self.assertEqual(len(candidate_files), 1)
+            registry = json.loads((repo / "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json").read_text())
+            self.assertEqual(registry["candidate_count"], 1)
+            self.assertEqual(registry["duplicate_candidate_file_count"], 0)
+            self.assertEqual(registry["duplicate_candidate_ids"], [])
+
+    def test_registry_deduplicates_identical_historical_candidate_files_without_rewriting_history(self):
+        with tempfile.TemporaryDirectory() as td:
+            repo = Path(td)
+            output = {"forecast_candidates": [pct_candidate()], "experiment_candidates": []}
+            run_engine(repo, output, context("2026-08-31T23:00:00Z", "aug-run"))
+            original = next((repo / "research/experiment_lifecycle/candidates").rglob("*.json"))
+            candidate = json.loads(original.read_text())
+            duplicate = repo / "research/experiment_lifecycle/candidates/2026/09" / original.name
+            duplicate.parent.mkdir(parents=True, exist_ok=True)
+            candidate["created_at_utc"] = "2026-09-01T01:00:00Z"
+            candidate["registered_at_utc"] = "2026-09-01T01:05:00Z"
+            candidate["source"]["source_run_id"] = "sep-run"
+            duplicate.write_text(json.dumps(candidate))
+            before_original = original.read_bytes()
+            before_duplicate = duplicate.read_bytes()
+            rebuild = SCRIPT.parent / "rebuild_experiment_registry.py"
+            registry_path = repo / "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json"
+            subprocess.run([
+                sys.executable, str(rebuild),
+                "--candidate-root", str(repo / "research/experiment_lifecycle/candidates"),
+                "--observation-root", str(repo / "research/experiment_lifecycle/observations"),
+                "--forecast-root", str(repo / "research/framework_memory/forecast_memory"),
+                "--outcome-root", str(repo / "research/framework_memory/outcome_memory"),
+                "--receipt-root", str(repo / "research/experiment_lifecycle/receipts"),
+                "--output", str(registry_path),
+            ], check=True, capture_output=True, text=True)
+            registry = json.loads(registry_path.read_text())
+            self.assertEqual(registry["candidate_count"], 1)
+            self.assertEqual(registry["duplicate_candidate_file_count"], 1)
+            self.assertEqual(registry["duplicate_candidate_ids"], [candidate["candidate_id"]])
+            self.assertEqual(original.read_bytes(), before_original)
+            self.assertEqual(duplicate.read_bytes(), before_duplicate)
+
+    def test_registry_fails_closed_on_same_candidate_id_with_conflicting_identity(self):
+        with tempfile.TemporaryDirectory() as td:
+            repo = Path(td)
+            output = {"forecast_candidates": [pct_candidate()], "experiment_candidates": []}
+            run_engine(repo, output, context("2026-08-31T23:00:00Z", "aug-run"))
+            original = next((repo / "research/experiment_lifecycle/candidates").rglob("*.json"))
+            candidate = json.loads(original.read_text())
+            duplicate = repo / "research/experiment_lifecycle/candidates/2026/09" / original.name
+            duplicate.parent.mkdir(parents=True, exist_ok=True)
+            candidate["created_at_utc"] = "2026-09-01T01:00:00Z"
+            candidate["registered_at_utc"] = "2026-09-01T01:05:00Z"
+            candidate["spec"]["title"] = "conflicting identity"
+            duplicate.write_text(json.dumps(candidate))
+            rebuild = SCRIPT.parent / "rebuild_experiment_registry.py"
+            proc = subprocess.run([
+                sys.executable, str(rebuild),
+                "--candidate-root", str(repo / "research/experiment_lifecycle/candidates"),
+                "--observation-root", str(repo / "research/experiment_lifecycle/observations"),
+                "--forecast-root", str(repo / "research/framework_memory/forecast_memory"),
+                "--outcome-root", str(repo / "research/framework_memory/outcome_memory"),
+                "--receipt-root", str(repo / "research/experiment_lifecycle/receipts"),
+                "--output", str(repo / "research/experiment_lifecycle/LATEST_EXPERIMENT_REGISTRY.json"),
+            ], capture_output=True, text=True)
+            self.assertNotEqual(proc.returncode, 0)
+            self.assertIn("CANDIDATE_ID_SPEC_CONFLICT", proc.stderr)
+
+
 if __name__ == "__main__": unittest.main()
