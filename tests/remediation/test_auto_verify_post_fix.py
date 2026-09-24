@@ -6,6 +6,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from scripts.remediation.auto_verify_post_fix import verify
+from scripts.health.automation_health_resolution import record_status
 
 
 def git(root: Path, *args: str) -> str:
@@ -97,6 +98,117 @@ def test_auto_verifier_evidence_floor_excludes_pre_repair_runs(tmp_path: Path):
     assert check["pass"] is False
     assert f"evidence_floor={repair_sha}" in check["evidence"]
     assert "successful_runs=1/2" in check["evidence"]
+
+
+def _write_health_probe(root: Path, *, generated: str, findings: list[str] | None = None, workflow_count: int = 178, registered: int = 202, api_error=None):
+    path = root / "research/architecture_health/LATEST_AUTOMATION_HEALTH.json"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps({
+        "generated_at_utc": generated,
+        "status": "AMBER",
+        "red_count": 0,
+        "amber_count": 1,
+        "workflow_count": workflow_count,
+        "registered_workflow_count": registered,
+        "scheduled_workflow_count": 41,
+        "api_error": api_error,
+        "warnings": [],
+        "orphaned_registered_workflows": [],
+        "workflows": [
+            {"workflow": "cycle-navigator-autonomous-calibration-loop.yml", "findings": findings or []}
+        ],
+    }))
+
+
+def test_auto_verifier_matches_two_distinct_immutable_health_runs(tmp_path: Path):
+    git(tmp_path, "init")
+    git(tmp_path, "config", "user.name", "test")
+    git(tmp_path, "config", "user.email", "test@example.com")
+    (tmp_path / "marker.txt").write_text("base\n")
+    git(tmp_path, "add", ".")
+    git(tmp_path, "commit", "-m", "base")
+    merge_sha = git(tmp_path, "rev-parse", "HEAD")
+    task = {
+        "candidate_id": "candidate-health",
+        "source_type": "RESEARCH_INTAKE",
+        "state": "POST_FIX_OBSERVATION",
+        "signature": "health",
+        "candidate_sha256": "c",
+        "task_contract_sha256": "t",
+        "post_fix_gate": "TWO_HEALTH_RUNS",
+        "merge_commit_sha": merge_sha,
+        "pr_number": 13,
+    }
+    (tmp_path / "LATEST_CODEX_EXECUTION_STATE.json").write_text(json.dumps({"tasks": [task]}))
+    _write_health_probe(tmp_path, generated="2026-09-24T10:00:00Z")
+    record_status(tmp_path, 100, 1, merge_sha)
+    _write_health_probe(tmp_path, generated="2026-09-24T18:00:00Z")
+    record_status(tmp_path, 101, 1, merge_sha)
+    spec_path = tmp_path / "specs.json"
+    spec_path.write_text(json.dumps({
+        "contract": "CODEX_POST_FIX_VERIFICATION_SPECS_v1",
+        "candidates": [{
+            "candidate_id": "candidate-health",
+            "predicates": [{
+                "kind": "N_HEALTH_HISTORY_MATCH",
+                "count": 2,
+                "min_workflow_count": 101,
+                "min_registered_workflow_count": 101,
+                "require_api_error_none": True,
+                "forbidden_findings": ["cycle-navigator-autonomous-calibration-loop.yml:SCHEDULE_STALE"],
+            }],
+        }],
+    }))
+    with patch("scripts.remediation.auto_verify_post_fix.completion_requires_convergence", return_value=False):
+        report = verify(tmp_path, spec_path, lambda workflow: [], write=False)
+    assert [row["candidate_id"] for row in report["verified"]] == ["candidate-health"]
+    assert "matched=2/2" in report["verified"][0]["checks"][0]["evidence"]
+
+
+def test_auto_verifier_health_history_fails_closed_on_forbidden_finding(tmp_path: Path):
+    git(tmp_path, "init")
+    git(tmp_path, "config", "user.name", "test")
+    git(tmp_path, "config", "user.email", "test@example.com")
+    (tmp_path / "marker.txt").write_text("base\n")
+    git(tmp_path, "add", ".")
+    git(tmp_path, "commit", "-m", "base")
+    merge_sha = git(tmp_path, "rev-parse", "HEAD")
+    task = {
+        "candidate_id": "candidate-health-bad",
+        "source_type": "RESEARCH_INTAKE",
+        "state": "POST_FIX_OBSERVATION",
+        "signature": "health-bad",
+        "candidate_sha256": "c",
+        "task_contract_sha256": "t",
+        "post_fix_gate": "TWO_HEALTH_RUNS",
+        "merge_commit_sha": merge_sha,
+        "pr_number": 14,
+    }
+    (tmp_path / "LATEST_CODEX_EXECUTION_STATE.json").write_text(json.dumps({"tasks": [task]}))
+    _write_health_probe(tmp_path, generated="2026-09-24T10:00:00Z")
+    record_status(tmp_path, 100, 1, merge_sha)
+    _write_health_probe(
+        tmp_path,
+        generated="2026-09-24T18:00:00Z",
+        findings=["SCHEDULE_STALE"],
+    )
+    record_status(tmp_path, 101, 1, merge_sha)
+    spec_path = tmp_path / "specs.json"
+    spec_path.write_text(json.dumps({
+        "contract": "CODEX_POST_FIX_VERIFICATION_SPECS_v1",
+        "candidates": [{
+            "candidate_id": "candidate-health-bad",
+            "predicates": [{
+                "kind": "N_HEALTH_HISTORY_MATCH",
+                "count": 2,
+                "forbidden_findings": ["cycle-navigator-autonomous-calibration-loop.yml:SCHEDULE_STALE"],
+            }],
+        }],
+    }))
+    report = verify(tmp_path, spec_path, lambda workflow: [], write=False)
+    assert report["verified"] == []
+    evidence = report["blocked"][0]["checks"][0]["evidence"]
+    assert "forbidden_findings=cycle-navigator-autonomous-calibration-loop.yml:SCHEDULE_STALE" in evidence
 
 
 def test_auto_verifier_rejects_evidence_floor_outside_task_lineage(tmp_path: Path):
