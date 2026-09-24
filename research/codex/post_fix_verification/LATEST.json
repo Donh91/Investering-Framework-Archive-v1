@@ -4,7 +4,7 @@
       "candidate_id": "codex-research-completion-reconciliation-v1",
       "checks": [
         {
-          "evidence": "remediation-maturation.yml: successful_runs=1/2 sampled_runs=36060065561:failure,36059710363:success",
+          "evidence": "remediation-maturation.yml: successful_runs=1/2 sampled_runs=36060739643:success,36060065561:failure",
           "kind": "N_CONSECUTIVE_SUCCESSFUL_RUNS",
           "pass": false
         },
@@ -12,6 +12,36 @@
           "evidence": "merged_research_zombies=0",
           "kind": "NO_MERGED_RESEARCH_ZOMBIES",
           "pass": true
+        }
+      ]
+    },
+    {
+      "candidate_id": "codex-operational-observability-pointer-truth-v1",
+      "checks": [
+        {
+          "evidence": "operations-dashboard.yml: successful_runs=2/2 sampled_runs=36050632101:success,35979561169:success",
+          "kind": "N_CONSECUTIVE_SUCCESSFUL_RUNS",
+          "pass": true
+        },
+        {
+          "evidence": "LATEST_OPERATIONS_DASHBOARD.json:consumer_receipt.status='PASS'",
+          "kind": "JSON_PATH_EQUALS",
+          "pass": true
+        },
+        {
+          "evidence": "LATEST_OPERATIONS_DASHBOARD.json:source_status.latest_handoff='PASS'",
+          "kind": "JSON_PATH_EQUALS",
+          "pass": true
+        },
+        {
+          "evidence": "LATEST_OPERATIONS_DASHBOARD.json:source_status.automation_health='PASS'",
+          "kind": "JSON_PATH_EQUALS",
+          "pass": true
+        },
+        {
+          "evidence": "MISSION_CONVERGENCE_REQUIRED",
+          "kind": "MISSION_CONVERGENCE",
+          "pass": false
         }
       ]
     }
