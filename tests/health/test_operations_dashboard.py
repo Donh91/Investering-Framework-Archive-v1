@@ -54,6 +54,15 @@ class OperationsDashboardTests(unittest.TestCase):
     def test_invalid_upstream_health_is_red_and_p0(self):
         with tempfile.TemporaryDirectory() as tmp:
             root=Path(tmp);self.base_repo(root);path=root/'research/architecture_health/LATEST_AUTOMATION_HEALTH.json';path.write_text('{broken-json\n',encoding='utf-8');dashboard=module.build_dashboard(root,datetime(2026,8,4,13,0,tzinfo=UTC));row=dashboard['systems']['automation_health'];self.assertEqual(row['status'],'RED');self.assertEqual(row['reason'],'INVALID_JSON');self.assertEqual(row['input_error'],'INVALID_JSON');action=next(item for item in dashboard['required_actions'] if item['system']=='automation_health');self.assertEqual(action['priority'],'P0');self.assertEqual(dashboard['overall_status'],'RED')
+    def test_semantic_amber_health_does_not_claim_input_unavailable(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);self.base_repo(root)
+            self.write_json(root,'research/architecture_health/LATEST_AUTOMATION_HEALTH.json',{'status':'AMBER','generated_at_utc':'2026-08-04T12:20:00Z','red_count':0,'amber_count':2,'blockers':[]})
+            dashboard=module.build_dashboard(root,datetime(2026,8,4,13,0,tzinfo=UTC))
+            action=next(item for item in dashboard['required_actions'] if item['system']=='automation_health')
+            self.assertEqual(action['priority'],'P1')
+            self.assertEqual(action['reason'],'SEMANTIC_STATUS_AMBER')
+
     def test_missing_inputs_never_false_green(self):
         with tempfile.TemporaryDirectory() as tmp:
             dashboard=module.build_dashboard(Path(tmp),datetime(2026,8,4,13,0,tzinfo=UTC));self.assertNotEqual(dashboard['overall_status'],'GREEN');self.assertTrue(dashboard['required_actions'])
