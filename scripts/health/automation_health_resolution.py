@@ -86,9 +86,20 @@ def resolve_recovered(repo_root: Path, run_id: int) -> list[str]:
         if data:
             rows.append(data)
     rows.sort(key=lambda x: (str(x.get("generated_at_utc") or ""), int(x.get("run_id") or 0), int(x.get("run_attempt") or 0)))
-    if len(rows) < 2:
+    latest_by_run: dict[int, dict[str, Any]] = {}
+    for row in rows:
+        row_run_id = int(row.get("run_id") or 0)
+        if row_run_id > 0:
+            latest_by_run[row_run_id] = row
+    distinct_rows = sorted(
+        latest_by_run.values(),
+        key=lambda x: (str(x.get("generated_at_utc") or ""), int(x.get("run_id") or 0), int(x.get("run_attempt") or 0)),
+    )
+    if len(distinct_rows) < 2:
         return []
-    recent = rows[-2:]
+    recent = distinct_rows[-2:]
+    if int(recent[-1].get("run_id") or 0) != run_id:
+        return []
     if any(int(row.get("red_count") or 0) != 0 for row in recent):
         return []
     incident_root = repo_root / "09_SOURCE_QA/incidents"
