@@ -1,10 +1,10 @@
 # Automation Production Health
 Status: **RED**
-Generated: `2026-09-24T07:12:00.901665Z`
+Generated: `2026-09-24T07:21:54.929559Z`
 Workflows: 178 local / 202 registered
 Scheduled: 54
 Writers: 58
-GREEN / AMBER / RED: 156 / 21 / 1
+GREEN / AMBER / RED: 155 / 22 / 1
 
 ## Workflow matrix
 | Workflow | Lifecycle | Schedule | Writer | Last conclusion | Last run | Status | Findings |
@@ -19,13 +19,13 @@ GREEN / AMBER / RED: 156 / 21 / 1
 | `alpha-shadow04-prospective.yml` | `ACTIVE` | yes | no | success | 2026-09-24T01:27:59Z | **GREEN** | None |
 | `api-agent-gateway-gate.yml` | `ACTIVE` | no | no | success | 2026-09-24T07:07:00Z | **GREEN** | None |
 | `askr-forensic-replay.yml` | `ACTIVE` | no | no | success | 2026-09-24T07:05:13Z | **AMBER** | RECOVERING_AFTER_RECENT_FAILURES |
-| `askr-launch-sentinel.yml` | `ACTIVE` | no | no | in_progress | 2026-09-18T19:11:54Z | **GREEN** | None |
+| `askr-launch-sentinel.yml` | `RETIRED` | no | no | in_progress | 2026-09-18T19:11:54Z | **AMBER** | RETIRED_WORKFLOW_LOCAL_FILE_PRESENT |
 | `astra-landing-zone-gate.yml` | `ACTIVE` | no | no | success | 2026-09-18T06:11:13Z | **GREEN** | None |
 | `auto-trading-e2-candidate-selection-v4.yml` | `ACTIVE` | no | no | success | 2026-09-14T14:33:03Z | **GREEN** | None |
 | `auto-trading-e2-candidate-selection.yml` | `ACTIVE` | no | no | success | 2026-09-14T12:58:08Z | **GREEN** | None |
 | `auto-trading-e2-compiler-reliability.yml` | `ACTIVE` | no | no | success | 2026-09-14T10:39:09Z | **GREEN** | None |
 | `auto-trading-e2-reproducibility.yml` | `ACTIVE` | no | no | success | 2026-09-13T22:46:04Z | **GREEN** | None |
-| `automation-production-health-gate.yml` | `ACTIVE` | no | no | in_progress | 2026-09-24T07:12:00Z | **GREEN** | None |
+| `automation-production-health-gate.yml` | `ACTIVE` | no | no | success | 2026-09-24T07:12:00Z | **GREEN** | None |
 | `automation-production-health.yml` | `ACTIVE` | yes | yes | in_progress | 2026-09-23T19:08:16Z | **GREEN** | None |
 | `autonomous-research-governance-gate.yml` | `ACTIVE` | no | no | success | 2026-09-19T09:41:34Z | **GREEN** | None |
 | `autonomous-research-governance-loop.yml` | `ACTIVE` | yes | yes | success | 2026-09-23T10:09:48Z | **GREEN** | None |
@@ -40,7 +40,7 @@ GREEN / AMBER / RED: 156 / 21 / 1
 | `buildwithclaude-shadow-prospective-observer.yml` | `ACTIVE` | no | no | success | 2026-09-04T23:29:35Z | **GREEN** | None |
 | `buildwithclaude-shadow-round1.yml` | `ACTIVE` | no | no | success | 2026-09-02T16:22:23Z | **GREEN** | None |
 | `cfgi-recovery-launch-once.yml` | `ACTIVE` | no | no | success | 2026-08-23T07:25:36Z | **GREEN** | None |
-| `cfgi-recovery-launch-trigger.yml` | `ACTIVE` | no | yes | pending | 2026-09-24T07:12:22Z | **GREEN** | None |
+| `cfgi-recovery-launch-trigger.yml` | `ACTIVE` | no | yes | skipped | 2026-09-24T07:12:22Z | **GREEN** | None |
 | `cfgi-v3-launch-receipt-publish.yml` | `ACTIVE` | no | yes | success | 2026-08-23T07:24:14Z | **GREEN** | None |
 | `cn-site-v2-gate.yml` | `ACTIVE` | no | no | success | 2026-09-21T19:16:06Z | **GREEN** | None |
 | `codex-intake-dispatch.yml` | `ACTIVE` | no | no | success | 2026-09-24T07:02:10Z | **GREEN** | None |
@@ -218,6 +218,7 @@ GREEN / AMBER / RED: 156 / 21 / 1
 - REGISTERED_WITHOUT_LOCAL_FILE:zero-manual-feed-graduation.yml
 - adaptive-decision-miss-validation.yml:RECOVERING_AFTER_RECENT_FAILURES
 - askr-forensic-replay.yml:RECOVERING_AFTER_RECENT_FAILURES
+- askr-launch-sentinel.yml:RETIRED_WORKFLOW_LOCAL_FILE_PRESENT
 - daily-settled-etf-calibration.yml:LATEST_RUN_CANCELLED
 - daily-settled-etf-calibration.yml:RECOVERING_AFTER_RECENT_FAILURES
 - daily-slow-cycle-shadow.yml:RECOVERING_AFTER_RECENT_FAILURES
