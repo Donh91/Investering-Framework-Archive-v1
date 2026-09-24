@@ -52,12 +52,21 @@ jobs:
             --repo-root . \
             --json-output research/architecture_health/LATEST_ARCHITECTURE_HEALTH.json \
             --md-output research/architecture_health/LATEST_ARCHITECTURE_HEALTH.md
+      - name: Record immutable health status and resolve recovered health incidents
+        run: |
+          python scripts/health/automation_health_resolution.py record \
+            --repo-root . \
+            --run-id "$GITHUB_RUN_ID" \
+            --run-attempt "$GITHUB_RUN_ATTEMPT"
+          python scripts/health/automation_health_resolution.py resolve \
+            --repo-root . \
+            --run-id "$GITHUB_RUN_ID"
       - name: Materialize incident when production health is RED
         if: steps.health.outputs.exit_code != '0'
         run: |
           mkdir -p 09_SOURCE_QA/incidents
           cp research/architecture_health/LATEST_AUTOMATION_HEALTH.md \
-            "09_SOURCE_QA/incidents/INCIDENT_automation-production-health-${GITHUB_RUN_ID}.md"
+            "09_SOURCE_QA/incidents/INCIDENT_automation-production-health-${GITHUB_RUN_ID}-attempt-${GITHUB_RUN_ATTEMPT}.md"
       - name: Commit health, incidents and verify main readback
         shell: bash
         run: |
@@ -110,5 +119,6 @@ jobs:
           path: |
             research/architecture_health/LATEST_AUTOMATION_HEALTH.json
             research/architecture_health/LATEST_AUTOMATION_HEALTH.md
+            research/architecture_health/history/
           retention-days: 14
           if-no-files-found: error
