@@ -1,7 +1,10 @@
 import json, subprocess, sys
+import pytest
 from pathlib import Path
 
 ROOT=Path(__file__).resolve().parents[2]
+
+from scripts.api_agent.adaptive_budget_lane_eligibility import decide
 
 def test_validation_policy_is_shadow_only():
     p=json.loads((ROOT/'research/evidence_gap/ADAPTIVE_EVIDENCE_GAP_VALIDATION_POLICY_v1_1.json').read_text())
@@ -50,26 +53,69 @@ def test_decision_miss_registry_marks_discovery_only_and_bounds_attribution(tmp_
     assert payload['attribution_semantics']['aligned_sensor_count_proves_independence'] is False
     assert payload['authority']['automatic_sensor_promotion'] is False
 
-def test_adaptive_workflow_treats_only_clean_budget_exhaustion_as_hold():
+def guard(status="PASS", *, remaining=1.0, reserve=0.05, errors=None):
+    return {
+        "status": status,
+        "remaining_usd": remaining,
+        "reserve_usd": reserve,
+        "cost_evidence_errors": [] if errors is None else errors,
+    }
+
+
+def test_adaptive_budget_lanes_are_independent_under_clean_lane_hold():
+    out = decide(
+        guard(), 0,
+        guard("BLOCKED", remaining=0.03), 1,
+        guard(), 0,
+    )
+    assert out["decision_eligible"] == "true"
+    assert out["validation_eligible"] == "false"
+    assert out["decision_hold_reason"] == "NONE"
+    assert out["validation_hold_reason"] == "EVIDENCE_GAP_VALIDATION"
+
+    reverse = decide(
+        guard("BLOCKED", remaining=0.03), 1,
+        guard(), 0,
+        guard(), 0,
+    )
+    assert reverse["decision_eligible"] == "false"
+    assert reverse["validation_eligible"] == "true"
+    assert reverse["decision_hold_reason"] == "DECISION_MISS_AUDIT"
+    assert reverse["validation_hold_reason"] == "NONE"
+
+
+def test_monthly_budget_hold_blocks_both_lanes_without_changing_lane_caps():
+    out = decide(
+        guard(), 0,
+        guard(), 0,
+        guard("BLOCKED", remaining=1.5, reserve=2.0), 1,
+    )
+    assert out["decision_eligible"] == "false"
+    assert out["validation_eligible"] == "false"
+    assert out["decision_hold_reason"] == "MONTHLY_API_COST"
+    assert out["validation_hold_reason"] == "MONTHLY_API_COST"
+
+
+def test_malformed_or_inconsistent_budget_evidence_still_fails_closed():
+    with pytest.raises(ValueError, match="budget_guard_block_not_clean"):
+        decide(
+            guard("BLOCKED", remaining=0.03, errors=[{"reason":"bad"}]), 1,
+            guard(), 0,
+            guard(), 0,
+        )
+    with pytest.raises(ValueError, match="budget_guard_pass_inconsistent"):
+        decide(guard(), 1, guard(), 0, guard(), 0)
+
+
+def test_adaptive_workflow_preserves_budgets_and_gates_each_lane_independently():
     text=(ROOT/'.github/workflows/adaptive-decision-miss-validation.yml').read_text()
-    assert 'id: budget' in text
-    assert 'clean_budget_hold = (' in text
-    assert 'errors == []' in text
-    assert 'remaining <= reserve' in text
-    assert 'budget_guard_block_not_clean' in text
-    assert 'Record expected budget hold' in text
-    assert "if: steps.budget.outputs.eligible != 'true'" in text
-    for name in (
-        'Audit matured evidence for decision and timing misses',
-        'Persist decision miss memory',
-        'Route miss-derived evidence gaps through existing closure engine',
-        'Validate gap value on non-discovery evidence',
-        'Materialize immutable audit receipts',
-        'Commit miss and validation memory with verified readback',
-    ):
-        marker=f'- name: {name}\n        if: steps.budget.outputs.eligible == \'true\''
-        assert marker in text
+    assert 'adaptive_budget_lane_eligibility.py' in text
+    assert "steps.budget.outputs.eligible" not in text
+    assert "if: steps.budget.outputs.decision_eligible == 'true'" in text
+    assert "if: steps.budget.outputs.validation_eligible == 'true'" in text
+    assert "steps.budget.outputs.decision_eligible == 'true' || steps.budget.outputs.validation_eligible == 'true'" in text
+    assert 'DECISION_ELIGIBLE: ${{ steps.budget.outputs.decision_eligible }}' in text
+    assert 'VALIDATION_ELIGIBLE: ${{ steps.budget.outputs.validation_eligible }}' in text
     assert '--task DECISION_MISS_AUDIT --cap-usd 1.5 --reserve-usd 0.05' in text
     assert '--task EVIDENCE_GAP_VALIDATION --cap-usd 1.5 --reserve-usd 0.05' in text
     assert '--hard-stop-usd 20 --reserve-usd 2.0' in text
-
