@@ -124,7 +124,35 @@ def verify(
     if specs.get("contract") != SPEC_CONTRACT:
         raise ValueError("POST_FIX_SPEC_CONTRACT_INVALID")
     tasks = {str(row.get("candidate_id")): row for row in state.get("tasks", []) if isinstance(row, dict) and row.get("candidate_id")}
-    report: dict[str, Any] = {"contract": "CODEX_POST_FIX_VERIFICATION_REPORT_v1", "verified": [], "blocked": [], "skipped": []}
+    post_fix_tasks = {
+        candidate_id: row for candidate_id, row in tasks.items()
+        if row.get("state") == "POST_FIX_OBSERVATION"
+    }
+    configured_ids = {
+        str(row.get("candidate_id") or "") for row in specs.get("candidates", [])
+        if isinstance(row, dict) and row.get("candidate_id")
+    }
+    unconfigured = [
+        {
+            "candidate_id": candidate_id,
+            "post_fix_gate": row.get("post_fix_gate"),
+            "reason": "NO_MACHINE_VERIFICATION_SPEC",
+        }
+        for candidate_id, row in sorted(post_fix_tasks.items())
+        if candidate_id not in configured_ids
+    ]
+    report: dict[str, Any] = {
+        "contract": "CODEX_POST_FIX_VERIFICATION_REPORT_v1",
+        "coverage": {
+            "post_fix_total": len(post_fix_tasks),
+            "machine_spec_configured": len(set(post_fix_tasks) & configured_ids),
+            "machine_spec_unconfigured": len(unconfigured),
+        },
+        "unconfigured": unconfigured,
+        "verified": [],
+        "blocked": [],
+        "skipped": [],
+    }
     for spec in specs.get("candidates", []):
         candidate_id = str(spec.get("candidate_id") or "")
         task = tasks.get(candidate_id)
@@ -196,7 +224,14 @@ def main() -> None:
     out = args.repo_root / "research/codex/post_fix_verification/LATEST.json"
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    print(json.dumps({"verified": len(report["verified"]), "blocked": len(report["blocked"]), "skipped": len(report["skipped"])}, sort_keys=True))
+    print(json.dumps({
+        "verified": len(report["verified"]),
+        "blocked": len(report["blocked"]),
+        "skipped": len(report["skipped"]),
+        "post_fix_total": report["coverage"]["post_fix_total"],
+        "machine_spec_configured": report["coverage"]["machine_spec_configured"],
+        "machine_spec_unconfigured": report["coverage"]["machine_spec_unconfigured"],
+    }, sort_keys=True))
 
 
 if __name__ == "__main__":
