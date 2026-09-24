@@ -37,6 +37,14 @@ jobs:
             --rejected-root research/data_ping_bridge/rejected \
             --processed-root research/data_ping_bridge/processed \
             --run-id "${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+      - name: Capture prospective T8 multi-ping source rows
+        run: |
+          python -m unittest tests.learning.test_t8_multi_ping_delay_cost -v
+          python scripts/learning/t8_multi_ping_delay_cost.py scan \
+            --accepted-root research/data_ping_bridge/accepted \
+            --output-root research/framework_memory/t8_multi_ping_rows \
+            --repo-root .
+
       - name: Capture prospective T6 rotation-survival observation
         run: |
           python -m unittest tests.learning.test_t6_rotation_survival -v
