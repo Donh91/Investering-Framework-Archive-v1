@@ -17,11 +17,16 @@ DEFAULT_DECISION_ROOT = Path("09_SOURCE_QA/native_market_recovery/decisions")
 
 POLICY = {
     "hourly_market": {"workflow": "hourly-sequence-capture.yml", "streak": 2, "cooldown_hours": 2},
+    "derivatives": {"workflow": "hourly-sequence-capture.yml", "streak": 2, "cooldown_hours": 2},
     "live_anchor": {"workflow": "daily-raw-owner-capture.yml", "streak": 2, "cooldown_hours": 4},
     "breadth": {"workflow": "daily-raw-owner-capture.yml", "streak": 2, "cooldown_hours": 4},
-    "stablecoin_liquidity": {"workflow": "daily-stablecoin-liquidity.yml", "streak": 2, "cooldown_hours": 12},
     "sentiment": {"workflow": "daily-raw-owner-capture.yml", "streak": 2, "cooldown_hours": 4},
+    "altseason_context": {"workflow": "daily-raw-owner-capture.yml", "streak": 2, "cooldown_hours": 4},
     "macro_risk": {"workflow": "daily-raw-owner-capture.yml", "streak": 2, "cooldown_hours": 4},
+    "btc_dominance": {"workflow": "research-owner-btcd-daily.yml", "streak": 2, "cooldown_hours": 12},
+    "settled_etf": {"workflow": "daily-settled-etf-calibration.yml", "streak": 2, "cooldown_hours": 12},
+    "stablecoin_liquidity": {"workflow": "daily-stablecoin-liquidity.yml", "streak": 2, "cooldown_hours": 12},
+    "entry_signal_reference": {"workflow": "entry-signal-ledger.yml", "streak": 2, "cooldown_hours": 2},
 }
 SUPPRESS_RETRY_TOKENS = (
     "QUOTA", "RATE_LIMIT", "USAGE_LIMIT", "TOKEN", "CREDIT", "BUDGET", "INSUFFICIENT_FUNDS",
@@ -105,7 +110,7 @@ def decide(auto: Mapping[str, Any], prior: Mapping[str, Any], now: datetime) -> 
             "retry_suppressed_provider_limit": limited,
         }
 
-    # One live-anchor run repairs live_anchor+breadth+sentiment+macro_risk; never dispatch it repeatedly.
+    # Shared owners are deduplicated so one repair run can cover multiple degraded lanes.
     unique: dict[str, dict[str, Any]] = {}
     for action in actions:
         workflow = action["workflow"]
