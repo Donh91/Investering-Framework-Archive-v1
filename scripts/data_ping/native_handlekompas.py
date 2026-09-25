@@ -310,6 +310,9 @@ def action_context(auto_state: Mapping[str, Any], *, as_of: datetime | None = No
 def build(auto_state: Mapping[str, Any], *, external_budget: Mapping[str, Any] | None = None, now: datetime | None = None) -> dict[str, Any]:
     generated = (now or datetime.now(timezone.utc)).astimezone(timezone.utc).replace(microsecond=0)
     provider = classify_provider_health(auto_state)
+    freshness = owner_freshness(auto_state, generated)
+    source_validation = str(auto_state.get("validation_status") or "UNKNOWN")
+    effective_data_status = source_validation if freshness.get("status") == "PASS" else "DEGRADED"
     packet = {
         "contract": CONTRACT,
         "generated_at_utc": generated.isoformat().replace("+00:00", "Z"),
@@ -323,10 +326,12 @@ def build(auto_state: Mapping[str, Any], *, external_budget: Mapping[str, Any] |
         },
         "action": action_context(auto_state, as_of=generated),
         "DATA_HEALTH": {
-            "status": auto_state.get("validation_status"),
+            "status": effective_data_status,
+            "source_validation_status": auto_state.get("validation_status"),
             "decision_context_status": auto_state.get("decision_context_status"),
             "blockers": list(auto_state.get("blockers") or []),
             "optional_degraded_lanes": list(auto_state.get("optional_degraded_lanes") or []),
+            "owner_freshness": freshness,
             "provider_health": provider,
         },
         "BUDGET_HEALTH": budget_health(auto_state, external_budget),
