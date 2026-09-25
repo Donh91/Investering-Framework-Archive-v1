@@ -120,15 +120,30 @@ jobs:
           machine=json.loads(machine_path.read_text())
           receipt=machine.get('consumer_receipt') or {}
           original=str(machine.get('status') or 'DEGRADED').upper()
-          if original=='BLOCKED': effective='BLOCKED'
-          elif original=='DEGRADED': effective='DEGRADED'
-          else: effective='READY' if receipt.get('consumption_state')=='VERIFIED' else 'DEGRADED'
+          raw_reasons=machine.get('status_reason_codes')
+          reasons=[str(reason) for reason in raw_reasons] if isinstance(raw_reasons,list) else []
+          reasons=list(dict.fromkeys(reasons))
+          if original=='BLOCKED':
+              effective='BLOCKED'
+              if not reasons: reasons=['LEGACY_NON_READY_CAUSE_UNAVAILABLE']
+          elif original=='DEGRADED':
+              effective='DEGRADED'
+              if not reasons: reasons=['LEGACY_NON_READY_CAUSE_UNAVAILABLE']
+          elif receipt.get('consumption_state')=='VERIFIED':
+              effective='READY'
+              reasons=[]
+          else:
+              effective='DEGRADED'
+              if 'CONSUMER_RECEIPT_UNVERIFIED' not in reasons:
+                  reasons.append('CONSUMER_RECEIPT_UNVERIFIED')
           machine['status']=effective
+          machine['status_reason_codes']=reasons
           machine_path.write_bytes(canonical(machine))
           digest=hashlib.sha256(canonical(machine)).hexdigest()
           for path in (root/'CYCLE_NAVIGATOR_DELIVERY_POINTER.json',latest):
               value=json.loads(path.read_text())
               value['status']=effective
+              value['status_reason_codes']=reasons
               value['consumer_receipt_status']=receipt.get('status','UNAVAILABLE')
               value['consumer_receipt_state']=receipt.get('consumption_state','UNKNOWN')
               value['machine_package_sha256']=digest
@@ -163,6 +178,11 @@ jobs:
           if receipt.get('contract')!='CONSUMER_RECEIPT_v1': raise SystemExit('consumer_receipt_missing')
           if ptr.get('consumer_receipt_state')!=receipt.get('consumption_state'): raise SystemExit('consumer_receipt_pointer_mismatch')
           if receipt.get('consumption_state')!='VERIFIED' and ptr.get('status')!='DEGRADED': raise SystemExit('unverified_consumption_must_degrade_pointer')
+          reasons=machine.get('status_reason_codes')
+          if not isinstance(reasons,list): raise SystemExit('status_reason_codes_missing')
+          if ptr.get('status_reason_codes')!=reasons: raise SystemExit('status_reason_codes_pointer_mismatch')
+          if machine.get('status')=='READY' and reasons: raise SystemExit('ready_status_reason_codes_must_be_empty')
+          if machine.get('status') in {'DEGRADED','BLOCKED'} and not reasons: raise SystemExit('non_ready_status_requires_reason_code')
           if freeze.get('scoring_contract')!='CN_PUBLIC_CONTINUITY_v1': raise SystemExit('forecast_scoring_contract_invalid')
           if not (root/'CYCLE_NAVIGATOR_READABLE.md').read_text().strip(): raise SystemExit('readable_empty')
           if not (root/'CYCLE_NAVIGATOR_X_READY.md').read_text().strip(): raise SystemExit('x_ready_empty')
