@@ -84,3 +84,5 @@ Public continuity/style is not evidence of model edge and must remain separate f
 ## Authority firewall
 
 Cycle Navigator may summarize, forecast and communicate the final Master Monday state. It may not modify Master Monday evidence, canonical thresholds, portfolio-execution authority, market-rule semantics or retrospective outcomes. X publication style can never override canonical market evidence.
+
+Typed 2-3 week and 4-8 week `action_posture` fields remain navigation proposals with no independent Main-Framework action permission. Official Compass may expose a proactive `BUY` or `PREPARE_BUY` posture only up to the current Main-Framework permission ceiling; otherwise the action must fail closed while the frozen Cycle Navigator state/direction remains intact.
