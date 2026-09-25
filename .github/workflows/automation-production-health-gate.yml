@@ -71,7 +71,12 @@ jobs:
       - name: Execute critical governance tests
         run: |
           python -m pytest -q --import-mode=importlib tests/governance tests/lib
-          python -m unittest             tests.data_ping.test_native_handlekompas             tests.data_ping.test_official_daily_compass             tests.learning.test_compass_outcomes             tests.learning.test_decision_economics_ledger -v
+          python -m unittest \
+            tests.data_ping.test_native_handlekompas \
+            tests.data_ping.test_official_daily_compass \
+            tests.data_ping.test_compass_event_refresh \
+            tests.learning.test_compass_outcomes \
+            tests.learning.test_decision_economics_ledger -v
       - name: Validate main writer configuration
         run: python scripts/health/check_writer_trigger_safety.py --workflow-root .github/workflows --output /tmp/writer-trigger-safety.json
       - name: Run health and Codex intake unit tests
