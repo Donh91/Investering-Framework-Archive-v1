@@ -67,6 +67,8 @@ The contract also preserves the late-section analytical sequence when evidence i
 
 The 2-3 week and 4-8 week compass lines are public navigation context but are not part of the normal weekly precision score unless a separate prospective scoring protocol is defined in advance.
 
+A typed long-cycle `action_posture` is a Cycle Navigator navigation proposal with `NONE_BY_ITSELF` action authority. When Official Compass consumes that projection, proactive `BUY` / `PREPARE_BUY` output remains bounded by the current Main-Framework action permission. Cycle Navigator may not self-ratify a stronger user-facing action merely because the typed projection is schema-valid.
+
 For current short-horizon website fields such as `NEXT DAYS`, prefer an existing autonomous canonical output. If none exists or it is stale/not public-safe, publish `NOT PUBLISHED`/`UNAVAILABLE`; do not synthesize a new signal in the presentation layer.
 
 ## What this folder should prove
